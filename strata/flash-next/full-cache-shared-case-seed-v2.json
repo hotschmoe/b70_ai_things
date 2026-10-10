@@ -1,0 +1,274 @@
+{
+  "schema": "full-cache-shared-source-seed-v2",
+  "source_lane": "source35",
+  "slots": 2,
+  "genuine_runtime_preparable": false,
+  "messages": {
+    "warm": [
+      [
+        {
+          "role": "system",
+          "content": "Warm independent owner W0. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. "
+        },
+        {
+          "role": "user",
+          "content": "Warm W0: count upward in words."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "Warm independent owner W1. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. Warm-only context that must not supply shared document state. "
+        },
+        {
+          "role": "user",
+          "content": "Warm W1: count upward in words."
+        }
+      ]
+    ],
+    "prime_shared": [
+      [
+        {
+          "role": "system",
+          "content": "Shared read-only prefix owner S. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. "
+        },
+        {
+          "role": "user",
+          "content": "Prime the shared document. Reply with READY."
+        }
+      ]
+    ],
+    "target_shared": [
+      [
+        {
+          "role": "system",
+          "content": "Shared read-only prefix owner S. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. "
+        },
+        {
+          "role": "user",
+          "content": "Divergent owner D0: count odd positive integers in words until the client ends this stream."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "Shared read-only prefix owner S. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. "
+        },
+        {
+          "role": "user",
+          "content": "Divergent owner D1: count even positive integers in words until the client ends this stream."
+        }
+      ]
+    ],
+    "independent": [
+      [
+        {
+          "role": "system",
+          "content": "Independent owner I0. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. "
+        },
+        {
+          "role": "user",
+          "content": "Private I0: count upward in words."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "Independent owner I1. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. This private document is unrelated to shared owner S. "
+        },
+        {
+          "role": "user",
+          "content": "Private I1: count upward in words."
+        }
+      ]
+    ],
+    "prefill_cancel": [
+      [
+        {
+          "role": "system",
+          "content": "Shared read-only prefix owner S. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. "
+        },
+        {
+          "role": "user",
+          "content": "Prefill victim P0. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Then count upward in words."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "Shared read-only prefix owner S. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. "
+        },
+        {
+          "role": "user",
+          "content": "Prefill victim P1. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Read this divergent suffix before responding. Then count upward in words."
+        }
+      ]
+    ],
+    "decode_cancel": [
+      [
+        {
+          "role": "system",
+          "content": "Shared read-only prefix owner S. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. "
+        },
+        {
+          "role": "user",
+          "content": "Decode owner C0: count upward in words until the client ends this stream."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "Shared read-only prefix owner S. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. "
+        },
+        {
+          "role": "user",
+          "content": "Decode owner C1: count upward in words until the client ends this stream."
+        }
+      ]
+    ],
+    "eviction_unpinned": [
+      [
+        {
+          "role": "system",
+          "content": "Unpinned eviction owner E0. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. "
+        },
+        {
+          "role": "user",
+          "content": "E0: answer with your exact owner label."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "Unpinned eviction owner E1. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. "
+        },
+        {
+          "role": "user",
+          "content": "E1: answer with your exact owner label."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "Unpinned eviction owner E2. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. "
+        },
+        {
+          "role": "user",
+          "content": "E2: answer with your exact owner label."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "Unpinned eviction owner E3. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. "
+        },
+        {
+          "role": "user",
+          "content": "E3: answer with your exact owner label."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "Unpinned eviction owner E4. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. "
+        },
+        {
+          "role": "user",
+          "content": "E4: answer with your exact owner label."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "Unpinned eviction owner E5. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. This unique eviction namespace owns its whole conversation. "
+        },
+        {
+          "role": "user",
+          "content": "E5: answer with your exact owner label."
+        }
+      ]
+    ],
+    "fresh_shared": [
+      [
+        {
+          "role": "system",
+          "content": "Shared read-only prefix owner S. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. "
+        },
+        {
+          "role": "user",
+          "content": "Divergent owner D0: count odd positive integers in words until the client ends this stream."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "Shared read-only prefix owner S. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. This document belongs to every divergent question and must remain identical. "
+        },
+        {
+          "role": "user",
+          "content": "Divergent owner D1: count even positive integers in words until the client ends this stream."
+        }
+      ]
+    ]
+  },
+  "shared_boundary_resolution": "authentic tokenized first system-message prefix accepted tokens [0,N), before first user im_start; no N invented",
+  "phase_policy": {
+    "warm": {
+      "strata_fresh": true
+    },
+    "prime_shared": {
+      "strata_fresh": false,
+      "strata_shared_prefix": {
+        "tokens": "AUTHENTIC_SHARED_N"
+      }
+    },
+    "target_shared": {
+      "strata_fresh": false,
+      "strata_shared_prefix": {
+        "tokens": "AUTHENTIC_SHARED_N"
+      }
+    },
+    "independent": {
+      "strata_fresh": false
+    },
+    "prefill_cancel": {
+      "strata_fresh": false,
+      "strata_shared_prefix": {
+        "tokens": "AUTHENTIC_SHARED_N"
+      }
+    },
+    "decode_cancel": {
+      "strata_fresh": false,
+      "strata_shared_prefix": {
+        "tokens": "AUTHENTIC_SHARED_N"
+      }
+    },
+    "eviction_unpinned": {
+      "strata_fresh": false
+    },
+    "fresh_shared": {
+      "strata_fresh": true
+    }
+  },
+  "prime_max_new": 1,
+  "target_max_new_by_request": [
+    64,
+    64
+  ],
+  "shared_target_expected_reused": "AUTHENTIC_SHARED_N",
+  "shared_target_expected_new_prefill": "actualinputlen - AUTHENTIC_SHARED_N",
+  "sharedpin_solo_reuse_ceiling": "AUTHENTIC_SHARED_N; mustnotclaim last-live entireprompt handoff",
+  "continuation_user_message": "Continue your own previous answer for this same owner; preserve the actual assistant text from this stream.",
+  "continuation_input_ids_required": "NEW authentic template/tokenizer replay with actual assistant decoded output, never guessed IDs",
+  "stale_restart_model_alias": "hotschmoe-dd unchanged; newengine actualPID/generation and emptycache required",
+  "persisted_negative_scope": "separate one-card batch0 SAVE/RESTORE; parallel/layer-split routes mustactuallyrefuse501/SERR",
+  "checkpoint_victim_observer_required": true,
+  "parked_cache_eviction_scope": "separate unpinned owners + ccache512MiB/slots2; actual PCL evict instance/key/bytes evidence and fresh controls required",
+  "memory_scope": "actual chain capacities/PCL snapshotbytes + ownedSLOT/MIRROR USM extents/free joins; physical RSS/device residency needs separate actual measurements",
+  "actual_runtime_qualified": false,
+  "full_model_math_qualified": false,
+  "latency_qualified": false,
+  "prime_scope": "freshfalse+pinN under actualownedempty/coldnamespace; actualzero counters prerequisite; freshtruecontrols pinABSENT",
+  "combined_fresh_pin_admitted": false,
+  "source_combined_fresh_pin_syntax_implemented_but_runtime_unqualified": true
+}
