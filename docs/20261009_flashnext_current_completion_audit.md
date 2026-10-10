@@ -807,3 +807,43 @@ cachehandoff collection and exactfresh serial49 comparisons still required.
 Complete shared/divergent/history/eviction/cancel/stale state, realvictim/cache
 memory/expertresidency, broadquality, criticalpath traces, cleanmatched P50/P95
 TTFT/token gaps/completion/fairness and reproducibleverifiedshelf remain open.
+
+
+## 2026-10-10 - Exact-input reference and numerical collection update
+
+The original goal above remains unchanged. Source37 pair instrumentation OFF
+and ON actual runs78197/15143 passed bounded collection/lifecycle gates. ON
+contains196 raw full-head/postFFN vector observations across four jobs. The
+original serial parent62605 failed its cacheON reuse predicate against actual
+cacheOFF; its first49 bitwise comparisons were recovered only by explicit
+readonly adjudication18377. Original parent remains failed, historical PIN0
+and unobserved supervisor EOF remain limitations. Remaining147 new parent43
+run70200 is live, admitted and starting strict health. No full196 join yet.
+
+Source35 exact235 serial fresh0/fresh1 controls31395 passed: all four target
+controls returned3833,248046. Independent fresh-process llama.cpp CPU control
+71408 now passed435s: both exact235 targets also returned3833,248046 (One+EOS),
+with accepted render/token IDs, normal owned teardown and new postterminal
+completefour publisher hashes/pages. This narrows the investigation but does
+not establish the EOS cause, original/native arithmetic equivalence or quality.
+Actual shortwarm API69544 failed: targets naturally completed before BGEN and
+real cancellation, so no actual two-target overlap/cachehandoff qualification.
+
+FirstHC conditional exploration73859 completed with the original independent
+input. Prior normalized vector and complete Q8_1 packet matched native; the
+FMA/reduction candidate differed at one scale byte (block59). Conditional
+native-input-to-GDN agreement is explicitly separate from independent original
+math. A new unchanged-native RMS discrimination leaf remains source-only.
+
+Strict JSON-domain serial/private V3 closures now pass26+20 CPU controls and
+114/127 hashes, committed fc15bc4. The remaining3 genuine preparation passed
+15962. Source38 cache diagnostics pass12 CPU controls and53 dependency hashes,
+but independent C++ review, fresh8 ABI build, upload/baseline and OFF/ON runtime
+checks are still required. Entries-only logical memory does not establish full
+reservation or physical memory accounting; full-cache runtime V2 is unfinished.
+
+Full original-model fidelity, complete state-cache qualification, API/private
+concurrency at1/2/4 and bounded6, cache/expert memory tradeoffs, correlated x2
+critical-path traces, clean matched latency/fairness improvements, reproducible
+serving instructions and verified shelf remain missing. No decode speed or
+production stability promotion follows from these bounded controls.
