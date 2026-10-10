@@ -11810,3 +11810,24 @@ Pairednative4 CPUprepare48882 alsoPASS, no pairednative4 runtime yet.
 VERDICT -> Concrete reviewed API lane ready for later registry/CPU/runtime
 admission. Positive cachehandoff source route localized but unqualified. Full
 native4 final392, native6/pair/API/fullmath/cache/profiling/latency/shelf open.
+
+
+## 2026-10-10 - Paired bounded6 admission and immutable numerical recollection
+
+CONFIG -> Exact source35/C113 paired32/16 sixslot bounded32 diagnostic.
+Separate new readonly recollection outputs outside original V9 run trees.
+COMMAND -> CPUprepare47787 terminal0/PASS. Save/compile root readonly reader;
+strict V9 validator + complete original-tree fileSHA/stat inventory before/after.
+RESULT -> Paired6 plan /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/batch-v7-pair-native6-diag1-prepared/plan.json
+SHA 10869feb927707126fc19e94bb009e089e6532f31019415a8424c9b108793361.
+Reader /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/native4-v9-readonly-recollection-v1/reader.py
+SHA de13fa7fc7cfe637ee08325dc4b051873bb3c85e2c321fa7663b625a2e192db7.
+Reader not executed yet: serial0 parent78416 confirmed live in full4 scan,
+child sixrequests/294 comparisons alreadyPASS; serial1 remains unexecuted.
+Root identified drafttracer export shortcircuit fclose bug and graph-pointer
+reuse stale-generation risk; agent notified for CPU controls before freeze/build.
+Positive cached slot restore source route established; sourcecase preparation
+ongoing, no cachedhandoff numerical claim. Currentcanonicalregistry unchanged.
+VERDICT -> All one/pair2/4/bounded6 native diagnostic plans nowready ormeasured
+within declaredscopes; actualremaining runtime+parity and publicAPI/cache,
+fullmath, profiling, matchedlatency and shelf remain required. Goalactive.
