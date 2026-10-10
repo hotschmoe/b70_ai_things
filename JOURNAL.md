@@ -14843,3 +14843,21 @@ CurrentGPUbundlecoverage/output pending; newELF cannotprovehistoricalJIT
 ororiginaldirectlaunchmoduleassociation. SourcepeerV4 pending.
 VERDICT -> Concretecorrectedmodelprep andactualGPUdiagnostic, no modelmath
 fix/tolerance orfullcache/latencyclaim. Fulloriginalgoalactive.
+
+
+## 2026-10-10 - Actual direct bundle GPU query succeeds
+
+CONFIG -> NewELFhelperc2c34/source9712, original3kernelbodies/rawinputde82
+andraw12outputprotocol unchanged. OrdinarySYCLexecutablebundle+ZE native
+binary APIs, no interposition. Newreplay only, UUIDzero retained.
+COMMAND -> ActualGPU87832 runtimecommandterminal0/PASS; rootall12output
+bytecomparisons to originalqualified replay exact. No newmodelmath reference.
+RESULT -> Executablebundle exact3kernel names queried; modulesload/store/
+expression4456/4456/4376bytes retrievedordinaryAPI, hashes8d0d89a1/584e27ba/
+43ebbe9a. Exactbundlemodule namedroster/logs retainedunder
+build/half37-native-bundle-gpu-v1-20261010/native-output/native-bundle.
+Direct+twographreplays complete/graphsallocationsretired. Posthealthstilllive.
+Actual_direct_launch_module_provenFalse/historicalJITFalse explicitly.
+VERDICT -> ActualGPUbundlecodeobservables andunchangednumericoutput, useful
+nextdisassembly; noactualhistoricalJITcausal/modelmathqualification. Corrected
+QSA V4prepare14476CPUlive, sourcepeerpending; fullgoalactive.
