@@ -1,0 +1,81 @@
+{
+  "schema": "full-cache-native-allocation-contract-source-plan-v3",
+  "source_only": true,
+  "runtime_ready": false,
+  "actual_native_producer_implemented": false,
+  "source_generations_proposed": [
+    39,
+    40
+  ],
+  "files": [
+    {
+      "path": "strata/flash-next/full_cache_native_allocation_contract_v3.py",
+      "sha256": "c3fcd151859bc390edf5b5a8d645f79552da03499e25200b461dd0604e48bc1d"
+    },
+    {
+      "path": "strata/flash-next/test_full_cache_native_allocation_contract_cpu_v3.py",
+      "sha256": "6d8af540ad1f97d8576f888cc9a1405f52e1695a00083b61ddb6c880880aa1cb"
+    },
+    {
+      "path": "strata/flash-next/full-cache-native-allocation-contract-design-v3.md",
+      "sha256": "18f631c5683a5d4ee192c254c5d7067f615ab20d1e698abff83491220d3463e8"
+    }
+  ],
+  "consumed_source": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/sycl/src/core/expert_cache.cpp",
+      "sha256": "5f89f0950ac001a3649b49ef78b218f00dd4d5c7b388ec92caa75d5f3857dacc"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/sycl/include/strata/sycl_queue.hpp",
+      "sha256": "696ad9d9073b50f2b68033a94040e96ecb9747ac8dcfb40bbeefd2b71eccbe45"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/include/strata/core/expert_cache.hpp",
+      "sha256": "ff3cd4357e397ff944bc8c814e769975ecd243b3445b050234cbb62d9260bd54"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/include/strata/core/expert_source.hpp",
+      "sha256": "a5c1f39bcaf91eb90f76e96b3924922ad9237b51a94b711b2d2ae9820b7310a6"
+    }
+  ],
+  "cpu_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_full_cache_native_allocation_contract_cpu_v3 -q",
+  "physical_residency_qualified": false,
+  "full_cache_runtime_qualified": false,
+  "preserved_v1": {
+    "source_plan_sha256": "273c3b8bd2856c023d61c835a8ed1ff9cf2e731c095f3d44898468485740c096",
+    "files": [
+      {
+        "path": "strata/flash-next/full_cache_native_allocation_contract_v1.py",
+        "sha256": "ed6a0ce68c292de0402043b59a405d18f0cc9cb1b1cf1218e1635666b00c54c8"
+      },
+      {
+        "path": "strata/flash-next/test_full_cache_native_allocation_contract_cpu_v1.py",
+        "sha256": "b7bb2db9421bab711c229619d6a18d875ea05e183a6b93ed028b0cf705fffd9b"
+      },
+      {
+        "path": "strata/flash-next/full-cache-native-allocation-contract-design-v1.md",
+        "sha256": "8f4f248e1d4aa0c3db477a2d750424c0bb84fc725ceea3ea985e19d7618ee1e5"
+      }
+    ]
+  },
+  "declared_expert_roster_required": true,
+  "preserved_v2": {
+    "source_plan_sha256": "d1fc9231fd91c1a15c93eaf414c1d82a4cd56c56b5e400cf64a6d9b7e3d7d0c6",
+    "files": [
+      {
+        "path": "strata/flash-next/full_cache_native_allocation_contract_v2.py",
+        "sha256": "de983fa22e89ee8a6806096efae464d977902a4affb510b0c3e1f604f6c2baa8"
+      },
+      {
+        "path": "strata/flash-next/test_full_cache_native_allocation_contract_cpu_v2.py",
+        "sha256": "5896d6f3e1b647a791812dcea21d3afd4a2b22e630dfec3687bca142122c919e"
+      },
+      {
+        "path": "strata/flash-next/full-cache-native-allocation-contract-design-v2.md",
+        "sha256": "62eaa6c5427f660d81a0cb792c2f7c471b8dcf2942b79f11c6dd6c63110aa557"
+      }
+    ]
+  },
+  "virtual_or_mapping_backing_lineage_implemented": false
+}
