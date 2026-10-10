@@ -14755,3 +14755,21 @@ VERDICT -> Devloopsource finding, currentrun retained. Original48fidelity,
 completeprefixcache/APIwaiterclosure/concurrentstreams/memoryplacement/
 x2profile/matchedTTFT/gaps/fairness/reproducibleshelf allremainunproven.
 Fullgoalactive, no reinterpretationofsuccess fromboundedbaselinecontrols.
+
+
+## 2026-10-10 - QSA V3 preREADY traversal alias refusal localized
+
+CONFIG -> Actual15830/sourceaaa39/prepared92ba, exactmodel/ownreference
+unchanged; parentpre-full4 passesfourshards.
+COMMAND -> ActualOFFchild startsbutByteEpoch rejectsbeforesemanticREADY.
+Rootboundedreadonlytraversal diagnostic logsoriginalrejectionpathwithout
+admitting it orchangingruntime/frozen source.
+RESULT -> original_path('/bin/bash') rejects /bin symlink->usr/bin.
+roots_and_files appliesstrictpath predicate toallabsolutestrings before
+checkingallowedhistoricalresults/build prefixes, so legitimatecommand
+metadata is mistakenforevidencepath. ActualOFFrc1/forcedcleanupreceipt,
+no modelGPUleaf launched. Parentposthealth/fullidentitystilllive.
+VERDICT -> Concreteprep/traversalbug, notmodelnumerical failure. NEWV4
+mustclassifydeclaredlexical evidenceprefix beforestrictpath andretain
+foreignroot/aliasnegativechecks; addactualpreparedplan regression. No
+unchangedrerun/gateglobalwaiver. Fulloriginalgoalactive.
