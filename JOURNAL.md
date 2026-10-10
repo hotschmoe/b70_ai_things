@@ -11340,3 +11340,48 @@ VERDICT -> Current actualV2 qualification pending raw36/free/ownedteardown/
 health/newfull4; no modelqualclaim. Devloopaudit checkpoint24d86ef pushed.
 Next cachetesting usesexistingALLsuite toreduce repeatedparentgate overhead,
 after HCfidelity diagnostics. Fullgoal remains active.
+
+
+## 2026-10-10 - HC primitive PASS; cache reader recovered without GPU rerun
+
+CONFIG -> Source35/C113 exact UD-Q4_K_XL and native math unchanged. HC V2
+fresh synthetic public projection; separate conditional original-weight HC
+prefix4 row3. V9 remaining-seven one-card serial cache suite, NEW CPU reader.
+
+COMMAND -> HC parent72004 terminal PASS215s; conditional51256 complete with
+new post-CPU source/full4 evidence. V9 parent55814 terminalFAIL1521s; NEW strict
+read-only adjudication34115 PASS with all19CPU controls and independent review.
+CPU two-stream replay58238 reproduces event-scope defect, scoped audit PASS.
+Fresh paired V10 prepare and leased47979 acquired0/1, pre-health now underway.
+CPU-only fresh llama.cpp V3 build64755 live, source completeness PASS3579files;
+V1 missing nested model source and V2 unused-option failures preserved.
+
+RESULT -> HC13cases/36words/2negatives BITWISE; owned cleanup, health/kernel/
+source/new4 gates PASS. ParentSHA
+1fccb38232e9e586019dba06d4382907105e0a0f11492bc71df269f6ede0f34d.
+During manual HC reread, raw_proofs rewrote two derived JSON files with identical
+bytes; hashes were checked unchanged. Future revalidation uses readonly collect.
+Conditional eight selected up/inject projection values BITWISE under native
+F32 FMA/XOR contract; same-input F64 reference differs in F32 bytes. These are
+supplied-native-input conditional diagnostics, not fullmodel math proof.
+Conditional reportSHA95f6cac73e7586ec20be391a7301ad7f9eef90e7b2366901be2b0b00870ce604.
+V9 allseven groups numerical/teardown PASS but finalizer falsely rejects raw
+JSON saved before extract adds derived committed IDs. Original failure remains.
+NEW reader derives complete copies before equality and replays40requests,
+seven production branches, exact tokenizer continuation, source/SDK/identity,
+owned commands/health/teardown/kernel/new4/page chronology; PASS and evidence
+tree unchanged. Turn reuse63, RAMrestore42/49, live51/79; all comparisons match.
+Reader reportSHA 0ba8b1eacb88a687fdf058e702656d8307a74521ab611a677d386a7c940f44a2.
+Path: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/serial-cache-v9-onecard-readonly-adjudication-v1/adjudication/report.json.
+Two-stream V6 parent failed solely whole-trace duplicate event namespace after
+warm/ARM reset; exact replay observes warm32/32, cancel6 and survivor32 length,
+scoped31events/196vectors. No native64/natural/concurrency/math/speed claim.
+V3 CPU configure recipe removes only two unused FetchContent cache variables;
+networknone/backendOFF/sourceV2 provenance preserved; no model mounted/read.
+
+VERDICT -> Primitive HC and bounded serial cache proof advance full goal;
+whole model/quality, paired remaining cache, API stale identity/concurrency,
+1/2/4/bounded6 streams, profiling/latency and shelf still incomplete. Paired GPU
+47979 and CPU build64755 are live, not restarted on observation timeout. Group
+bundling and reader replay reduce repeated work; no matched timing gain claim.
+Preserve all failed history and unrelated dirty files. Full goal remains active.

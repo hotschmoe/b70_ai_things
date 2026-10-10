@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "status": "SOURCE_CPU_ONLY; no GPU or complete-prefix qualification",
+  "groups": [
+    "turn",
+    "parked",
+    "eviction",
+    "cancel",
+    "cancel_decode",
+    "cancel_prefill_isolation",
+    "real_live"
+  ],
+  "cold_establish_changed_labels": [
+    "independent-context",
+    "independent-context2",
+    "other-evict_A",
+    "other-evict_C",
+    "other-evict_D"
+  ],
+  "cold_establish_protocol": {
+    "fresh": 0,
+    "pin": 0,
+    "actual_reused": 0,
+    "candidate_resume": 0
+  },
+  "files": {
+    "strata/flash-next/serial_prefix_qualification_v9.py": "b4bd9f68a6e77e0d6f35349f471106b9c9cf5f66aee0081e70f46a8eedea8d80",
+    "strata/flash-next/qualify_serial_prefix_v9.py": "42669fb5d83ebb84ed99ab7e5ec4040775a3b42f301e39c969cb631f411adc40",
+    "strata/flash-next/test_serial_prefix_v9_cpu.py": "45e3e75ad2d72270997bab7c65b458e3eccc8e025c5f9143bee1cc0053804489",
+    "strata/flash-next/serial_prefix_qualification_v8.py": "c0bac8dbfca4f84e9883db87855e3eea832c0d1422cd9e0d52c4ee103933a9bc",
+    "strata/flash-next/qualify_serial_prefix_v8.py": "ab510a43e0cde3359cbc09f29ff78b94d21c685dd9d6dcf5ae1efcbaa2d48486",
+    "strata/flash-next/serial_prefix_prompt_fixture_v6.py": "a682d5ef1bfa4cc8d5702448fe20b27953df0644cffa515d6468e6cb92aa7c6d",
+    "strata/flash-next/audit_fidelity_observer_coverage.py": "c23f73131b4d525c7e322f913ae6f0b600b07073c0125b9d1d66824725dbec47",
+    "strata/flash-next/run_source_upload_oracle_full.py": "87240dd20ad7b7330a5bde5c50a66b7d7243068dd41936955d240105a8d418cf",
+    "strata/flash-next/source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+    "strata/flash-next/current-ple-prompt35-engine-build-plan-v1.json": "82004f6cee0f975c433d245b304aff10d67dd33e028cf926a08ef5eead892ef7",
+    "strata/flash-next/serial-prefix-source35-v8-source-plan.json": "f37e86eca829fda1c2fd6433a6d7290195b4bca555efd5165a8ebd58e4b9ad0e"
+  },
+  "CPU_commands": [
+    "python3 strata/flash-next/test_serial_prefix_v9_cpu.py"
+  ],
+  "required_gates_unchanged": [
+    "V8 raw basic prerequisites",
+    "per-case new owned engine",
+    "same-source full logits/all48 vectors",
+    "complete-state route and victim proofs",
+    "owned teardown",
+    "strict and compiled pair pre/post health",
+    "new postterminal/posthealth full4 publisher hashes",
+    "known pages before/after full4"
+  ],
+  "qualification_claim": false
+}

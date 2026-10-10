@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "scope": "Source CPU read-only closed-evidence adjudicator for exact V9 finalizer derivation failure; original FAIL preserved",
+  "GPU_execution": false,
+  "required_original_failure": "V9 finalize rejected qualification / Cold raw request copy changed at frozen line502",
+  "files": {
+    "strata/flash-next/adjudicate_serial_prefix_v9_v1.py": "aea297d286be9291adcebd314aeb2ebf10945b114e2a7923990b8460edd1b061",
+    "strata/flash-next/test_adjudicate_serial_prefix_v9_cpu_v1.py": "54c2c970870c1d02bdadd3d0879662b7499df7115d76cb18d49887fa8e6d3859",
+    "strata/flash-next/serial_request_recollection_v1.py": "cdde848d6ca50251ef5d9fe7a0f26ac3b64b9fcaba81420bd78168a09fc9c855",
+    "strata/flash-next/test_serial_request_recollection_cpu_v1.py": "d8b130b400dce9bfc0e5e02718f5e0af9f2d5432941b7266a6e9f1d2d085d7ef",
+    "strata/flash-next/serial_prefix_qualification_v9.py": "b4bd9f68a6e77e0d6f35349f471106b9c9cf5f66aee0081e70f46a8eedea8d80",
+    "strata/flash-next/qualify_serial_prefix_v9.py": "42669fb5d83ebb84ed99ab7e5ec4040775a3b42f301e39c969cb631f411adc40",
+    "strata/flash-next/serial-prefix-source35-v9-source-plan.json": "e7ae64b9a588c4e75f3a82429bfd6a552f8406e18423dd1b482f618ede51cc10",
+    "strata/flash-next/serial_prefix_prompt_fixture_v6.py": "a682d5ef1bfa4cc8d5702448fe20b27953df0644cffa515d6468e6cb92aa7c6d"
+  },
+  "CPU_commands": [
+    "python3 strata/flash-next/test_adjudicate_serial_prefix_v9_cpu_v1.py",
+    "python3 strata/flash-next/test_serial_request_recollection_cpu_v1.py"
+  ]
+}
