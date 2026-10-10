@@ -12164,3 +12164,27 @@ all36 actualcomponent frames pass, device/universal/fullmodelflags false.
 VERDICT -> FreshABI andboundsourceintake readyfornew390 upload/requalification.
 FulltwoGPU/API/cache/fidelity/profiling/latency/shelf goal remainsactive; no
 priorC113 model/success orABI artifacts transferred toNEWgeneration.
+
+
+## 2026-10-10 - New37 selected390 upload and authenticshared272 prefix PASS
+
+CONFIG -> Fresh source37 SDK/oracle eu0sgjai, NEW boundHC/PLE390 sourcebytes;
+separate17-row readonly CPUtokenizer fixture, noGPU/GGUF mounts.
+COMMAND -> Oracle21507 terminal0/PASS48s, explicitnew37compile admissionPASS;
+pairleasedupload72133 terminal0/PASS317s. ReceiptSHA0b8a1e8169d8ca543c7e48d417bd26361742dc2264019f5e3e60af9570037eba.
+CPUfixture6683 terminal0/PASS ownednormalexit/removal/tokenizer/source/image
+hashes; authenticsharedboundary272tokens and17rows/7phases. FixtureSHA
+93df9a5d46aa4332f080a84cdc326cb67e0ed6486b1d29b122260105b72e9efd.
+RESULT -> Source37 selectedHC387/PLE3 upload/readback pluscard0/card1/24-24
+ownership/staticbounds/health/new4/sourcepage/lifecycle gates passed. It does
+NOTqualify ordinarypayload/fullmath/newpairedbatch/rootcache/serving. Shared
+fixture creates realtokens only, not cachedreuse/runtime. Fullcache V2 source85/
+CPU12 retainsall shared/divergent/cancel/stale/victim/memory requirements.
+StaleINFO public_pin_fresh unsupported literal isNOTprotocolauthority: actual
+source implementsfresh+pin, combination runtimeunqualified; conservativeV2
+case excludesitbyCASEscope, not falsebackendunsupportedclaim. C137V2chrono
+crossjoin gapcaughtbeforebaseline, new1373 parent/source19CPU controls ready
+independentreview. No actualbaseline serve untilstrongparentreviewcomplete.
+VERDICT -> NewABI deliberately requalifiedonselectedsource bytes; genuine
+sharedprefix input foundation improvescachetests. Fulloriginalgoal active,
+metadata/prototypefailures kept, no speed/shelf/cache/fullmodel promotion.

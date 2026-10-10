@@ -720,3 +720,22 @@ association neverclaims that originalgateor rawproof is newlyqualified.
 NewpositiveAPI2 genuinepreparePASS; leased10435 running. No positivecached
 state transfer/math or APIcoherence PASS yet. Remainingfullgoal requirements
 above intact. Fresh-recompute aliases unregistered; no shelf promotion.
+
+
+## 2026-10-10 - Fresh37 build and source upload; fullgoal remains open
+
+WholeHC source35 synthetic36-frame actualcompiled/graph/alias component PASS218s
+and newstrict readonlylog adjudication PASS withoriginaltreeunchanged. All
+18heldout frames matchfusedmix anddivergefromseparatemix; analytic18bothmatch.
+Thischaracterizes testedcompiledsyntheticinputs, not universalFP/full48 math.
+Combined36+37 freshbuild PASS308s/eightnewELFs; actualC13764/28/37/8/6 source
+metadata gate PASS. NEWsource390oracle compilePASS48s andactualselectedHC/PLE
+sourceupload PASS317s onbothcards/topologies, with normalownedhealth/new4/pages.
+C137 serving andpairedobserver37 requalification remainpending. Baselineparent
+1371/1372 unexecutedprototypes havejournalcrossjoin gaps;1373 newreviewrequired.
+Authenticshared17-row CPUfixtures yield272-token commonprefix; no cachedshared
+execution yet. APIpositiveV2 failed observerEOS guard afteractualclient+producer
+stop replies, andwarmactualrows2 absent. No targets/handoff qualified. Newbuffer
+observer/strictterminal parser andseparatecase changes mustretain realoverlap
+checks andmatchedIO comparison scopes. API/cache/stale/memory/fullmath/quality/
+criticalpath/latency/fairness/verifiedshelf requirements stayactive.
