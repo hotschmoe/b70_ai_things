@@ -1,0 +1,1470 @@
+# Active evaluation identities after the 2026-08-26 cleanup.
+# Always confirm the live identity through /v1/models before scoring.
+
+endpoint: http://192.168.10.5:18080/v1
+
+defaults:
+  temperature: 0.0
+  top_p: 1.0
+  seed: 1234
+  max_tokens: 2048
+  concurrency: 1
+
+models:
+  - label: qwen36-27b-nvfp4-modelopt
+    served_model_id: qwen3.6-27b-NVFP4-modelopt-fused-graph-mtp5
+    family: qwen3.6-27b
+    weights: nvfp4-modelopt-mixed
+    activations: bf16
+    calibration: nvidia-modelopt
+    serve_cmd: "rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh"
+    notes: "Paused pre-refresh vLLM control; rebuild native libraries before use."
+
+  - label: qwen38-27b-nvfp4-radixark
+    served_model_id: qwen3.8-27b-NVFP4-radixark
+    family: qwen3.8-27b
+    weights: nvfp4
+    activations: bf16
+    calibration: radixark
+    serve_cmd: "rdy_to_serve/vllm/qwen38-27b-nvfp4/serve.sh"
+    notes: "Pre-refresh vLLM control; rebuild native libraries before use."
+
+  - label: qwen38-27b-nvfp4-radixark-sglang-w8a16-full-tp2
+    served_model_id: qwen3.8-27b-NVFP4-radixark-sglang-w8a16-full-tp2
+    family: qwen3.8-27b
+    weights: nvfp4-modelopt-mixed
+    activations: bf16-with-fp8-weight-only-decode-projections
+    calibration: radixark
+    serve_cmd: "FP8_W8A16_M_MAX=1 DECODE_GRAPH=full GRAPH_BS=1 MAXREQ=1 SERVED=qwen3.8-27b-NVFP4-radixark-sglang-w8a16-full-tp2 sglang/nvfp4/serve_qwen38_nvfp4_refresh.sh start"
+    notes: "Current TP2 single-stream research winner at 32.6206 tok/s for p879/o512. Below the 40 tok/s objective and not a shelf promotion."
+
+  - label: qwen38-27b-w8a8-gptq
+    served_model_id: qwen3.8-27b-W8A8-gptq
+    family: qwen3.8-27b
+    weights: int8
+    activations: int8-dynamic-per-token
+    calibration: gptq
+    serve_cmd: "NATIVE=1 MTP=0 DECODE_GRAPH=breakable PORT=18080 NAME=qwen38_w8a8_sglang SERVED=qwen3.8-27b-W8A8-gptq sglang/w8a8/serve_qwen38_w8a8.sh start"
+    notes: "Refreshed target-only breakable research winner; NEXTN s1 is coherent but slower. Not a shelf promotion."
+
+  - label: qwen38-27b-bf16-reference
+    reference: true
+    served_model_id: qwen3.8-27b-BF16-reference
+    family: qwen3.8-27b
+    weights: bf16
+    activations: bf16
+    calibration: none
+    serve_cmd: ""
+    notes: "Weights retained as the quality ceiling; no current shelf entry."
+
+  - label: ornith15-35b-a3b-w8a8-rtn-shisa-target
+    served_model_id: ornith-1.5-35b-a3b-W8A8-rtn-shisa-target
+    family: ornith-1.5-35b-a3b
+    weights: int8
+    activations: int8-dynamic-per-token
+    calibration: rtn-per-output-channel
+    serve_cmd: "MTP=0 DENSE_NATIVE=0 DECODE_GRAPH=breakable THINKCAP= PORT=18080 SERVED=ornith-1.5-35b-a3b-W8A8-rtn-shisa-target sglang/w8a8/serve_ornith15_w8a8_refresh.sh start"
+    notes: "Refreshed target-only short-context research winner. Breakable graph is disqualified for long agent trajectories; use DECODE_GRAPH=0 for that work."
+
+  - label: ornith15-35b-a3b-bf16-mtp-shisa
+    served_model_id: ornith-1.5-35b-a3b-BF16-mtp-shisa
+    family: ornith-1.5-35b-a3b
+    weights: bf16
+    activations: bf16
+    calibration: none
+    serve_cmd: ""
+    notes: "Reference weights retained; no current shelf entry."
+
+  - label: ornith15-35b-a3b-nvfp4-modelopt
+    served_model_id: ornith-1.5-35b-a3b-NVFP4-modelopt
+    family: ornith-1.5-35b-a3b
+    weights: nvfp4
+    activations: bf16
+    calibration: nvidia-modelopt
+    serve_cmd: ""
+    notes: "Retained research weights; requalify after backend refresh."
+
+  - label: ornith15-35b-a3b-gptq-int4-mixedcal-v2
+    served_model_id: ornith-1.5-35b-a3b-GPTQ-int4-mixedcal-v2
+    family: ornith-1.5-35b-a3b
+    weights: int4
+    activations: bf16
+    calibration: gptq-mixedcal-v2
+    serve_cmd: ""
+    notes: "Retained research weights; requalify after backend refresh."
+
+  - label: hotschmoe-dd
+    served_model_id: hotschmoe-dd
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: publisher-AutoRound
+    serve_cmd: "python3 vllm/cache800k/serve_fp8_trial.py start"
+    notes: "Permanent primary public name across model/backend updates. 20260909 full-feature user trial: INT4 weights, calibrated FP8 E4M3 KV, MTP3 TP2, XPU graphs and prefix on, CPU tier off, 200K/c4, 860K logical KV pool. Detailed model ID remains a secondary research alias; evidence in vllm/cache800k/20260909_campaign.md."
+
+  - label: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu0g-kvcampaign
+    served_model_id: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu0g-kvcampaign
+    family: qwen3.8-27b
+    weights: fp8-official-W8A16
+    activations: float16
+    calibration: publisher-weights
+    serve_cmd: ""
+    notes: "20260908 campaign identity; R187/MTP3 TP2, KV auto, native CPU tier 0 GiB. Experimental, not promoted. Stable public alias maps to preserved manifest."
+
+  - label: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu32g-kvcampaign
+    served_model_id: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu32g-kvcampaign
+    family: qwen3.8-27b
+    weights: fp8-official-W8A16
+    activations: float16
+    calibration: publisher-weights
+    serve_cmd: ""
+    notes: "20260908 campaign identity; R187/MTP3 TP2, KV auto, native CPU tier 32 GiB. Experimental, not promoted. Stable public alias maps to preserved manifest."
+
+  - label: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu32g-kvcampaign-gdnfix
+    served_model_id: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu32g-kvcampaign-gdnfix
+    family: qwen3.8-27b
+    weights: fp8-official-W8A16
+    activations: float16
+    calibration: publisher-weights
+    serve_cmd: ""
+    notes: "Experimental prompt-only native offload with Mamba draft-group fallback repair. Not promoted."
+
+  - label: qwen3.8-27b-FP8-official-W8A16-mtp3-fp8_e4m3kv-cpu0g-kvcampaign
+    served_model_id: qwen3.8-27b-FP8-official-W8A16-mtp3-fp8_e4m3kv-cpu0g-kvcampaign
+    family: qwen3.8-27b
+    weights: fp8-official-W8A16
+    activations: float16
+    calibration: publisher-weights-and-static-kv-max-tp2-h110-20260908
+    kv_calibration_artifact: vllm/fp8/kv_scales/qwen38_official_fp8_kv_e4m3_cal20260908_h110.json
+    serve_cmd: ""
+    notes: "20260908 campaign identity; R187/MTP3 TP2, KV fp8_e4m3, native CPU tier 0 GiB. Experimental, not promoted. Stable public alias maps to preserved manifest."
+
+  - label: qwen3.8-27b-FP8-official-W8A16-mtp3-fp8_e4m3kv-cpu32g-kvcampaign
+    served_model_id: qwen3.8-27b-FP8-official-W8A16-mtp3-fp8_e4m3kv-cpu32g-kvcampaign
+    family: qwen3.8-27b
+    weights: fp8-official-W8A16
+    activations: float16
+    calibration: publisher-weights-and-static-kv-max-tp2-h110-20260908
+    kv_calibration_artifact: vllm/fp8/kv_scales/qwen38_official_fp8_kv_e4m3_cal20260908_h110.json
+    serve_cmd: ""
+    notes: "20260908 campaign identity; R187/MTP3 TP2, KV fp8_e4m3, native CPU tier 32 GiB. Experimental, not promoted. Stable public alias maps to preserved manifest."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp0-fp16kv-strict
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp0-fp16kv-strict
+    family: qwen3.8-27b
+    weights: autoround-int4-W4A16-g128-gptq-relabel
+    activations: float16
+    calibration: devan-carlin-bce40cac
+    serve_cmd: ""
+    notes: "20260908 R276 replica; experimental, not promoted. FP16 KV. Tensor-identical R212 relabel."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp0-fp16kv-daily
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp0-fp16kv-daily
+    family: qwen3.8-27b
+    weights: autoround-int4-W4A16-g128-gptq-relabel
+    activations: float16
+    calibration: devan-carlin-bce40cac
+    serve_cmd: ""
+    notes: "20260908 R276 replica; experimental, not promoted. FP16 KV. Tensor-identical R212 relabel."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp4-fp16kv-strict
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp4-fp16kv-strict
+    family: qwen3.8-27b
+    weights: autoround-int4-W4A16-g128-gptq-relabel
+    activations: float16
+    calibration: devan-carlin-bce40cac
+    serve_cmd: ""
+    notes: "20260908 R276 replica; experimental, not promoted. FP16 KV. Tensor-identical R212 relabel."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp4-fp16kv-daily
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp4-fp16kv-daily
+    family: qwen3.8-27b
+    weights: autoround-int4-W4A16-g128-gptq-relabel
+    activations: float16
+    calibration: devan-carlin-bce40cac
+    serve_cmd: ""
+    notes: "20260908 R276 replica; experimental, not promoted. FP16 KV. Tensor-identical R212 relabel."
+
+  - label: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu32g-kvcampaign-merged
+    served_model_id: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu32g-kvcampaign-merged
+    family: qwen3.8-27b
+    weights: fp8-official-W8A16
+    activations: float16
+    calibration: publisher-weights
+    serve_cmd: ""
+    notes: "20260908 campaign identity; R187/MTP3 TP2, KV auto, native CPU tier 32 GiB; merged scheduler PRs 52771/52807/54288. Experimental, not promoted. Stable public alias maps to preserved manifest."
+
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp4-fp16kv-daily-prefixoff
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp4-fp16kv-daily-prefixoff
+    family: qwen3.8-27b
+    weights: autoround-int4-W4A16-g128-gptq-relabel
+    activations: float16
+    calibration: devan-carlin-bce40cac
+    serve_cmd: ""
+    notes: "20260908 R276 replica; experimental, not promoted. FP16 KV, prefix caching disabled. Tensor-identical R212 relabel."
+
+
+  - label: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu0g-kvcampaign-prefixoff
+    served_model_id: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu0g-kvcampaign-prefixoff
+    family: qwen3.8-27b
+    weights: fp8-official-W8A16
+    activations: float16
+    calibration: publisher-weights
+    serve_cmd: ""
+    notes: "20260908 campaign identity; R187/MTP3 TP2, KV auto, native CPU tier 0 GiB. Prefix caching disabled. Experimental, not promoted. Stable public alias maps to preserved manifest."
+
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp4-fp16kv-prefix
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp4-fp16kv-prefix
+    family: qwen3.8-27b
+    weights: autoround-int4-W4A16-g128-gptq-relabel
+    activations: float16
+    calibration: devan-carlin-bce40cac
+    serve_cmd: ""
+    notes: "20260908 GPU prefix campaign; FP16 KV, CPU tier off, experimental until qualified."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp0-fp16kv-prefix
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp0-fp16kv-prefix
+    family: qwen3.8-27b
+    weights: autoround-int4-W4A16-g128-gptq-relabel
+    activations: float16
+    calibration: devan-carlin-bce40cac
+    serve_cmd: ""
+    notes: "20260908 GPU prefix campaign; FP16 KV, CPU tier off, experimental until qualified."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp2-fp16kv-prefix
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp2-fp16kv-prefix
+    family: qwen3.8-27b
+    weights: autoround-int4-W4A16-g128-gptq-relabel
+    activations: float16
+    calibration: devan-carlin-bce40cac
+    serve_cmd: ""
+    notes: "20260908 GPU prefix campaign; FP16 KV, CPU tier off, experimental until qualified."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp3-fp16kv-prefix
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp3-fp16kv-prefix
+    family: qwen3.8-27b
+    weights: autoround-int4-W4A16-g128-gptq-relabel
+    activations: float16
+    calibration: devan-carlin-bce40cac
+    serve_cmd: ""
+    notes: "20260908 GPU prefix campaign; FP16 KV, CPU tier off, experimental until qualified."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-sglang-mtp0-fp16kv-cache800k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-sglang-mtp0-fp16kv-cache800k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: cache800k-20260909-research
+    serve_cmd: ""
+    notes: "Unqualified SGLang campaign identity; exact flags in arm manifest."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp0-fp16kv-cache800k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp0-fp16kv-cache800k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: cache800k-20260909-research
+    serve_cmd: ""
+    notes: "Unqualified campaign identity; exact flags in arm manifest. Not a serving promotion."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp0-fp8-e4m3-calkv-cache800k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp0-fp8-e4m3-calkv-cache800k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: cache800k-20260909-research
+    serve_cmd: ""
+    notes: "Unqualified campaign identity; exact flags in arm manifest. Not a serving promotion."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp3-fp16kv-cache800k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp3-fp16kv-cache800k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: cache800k-20260909-research
+    serve_cmd: ""
+    notes: "Unqualified campaign identity; exact flags in arm manifest. Not a serving promotion."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp3-fp8-e4m3-calkv-cache800k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp3-fp8-e4m3-calkv-cache800k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: cache800k-20260909-research
+    serve_cmd: ""
+    notes: "Unqualified campaign identity; exact flags in arm manifest. Not a serving promotion."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-tp1-mtp3-fp8-e4m3-calkv-bang-isolation
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-tp1-mtp3-fp8-e4m3-calkv-bang-isolation
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: cache800k-20260909-research
+    serve_cmd: ""
+    notes: "Unqualified TP isolation: MTP3, FP8 KV, prefix and graphs on, P2P off. Stable primary alias hotschmoe-dd. No shelf promotion."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-tp2-mtp3-fp8-e4m3-calkv-bang-isolation
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-tp2-mtp3-fp8-e4m3-calkv-bang-isolation
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: cache800k-20260909-research
+    serve_cmd: ""
+    notes: "Unqualified TP isolation: MTP3, FP8 KV, prefix and graphs on, P2P off. Stable primary alias hotschmoe-dd. No shelf promotion."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-tp1-mtp3-fp8-e4m3-calkv-bang-isolation-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-tp1-mtp3-fp8-e4m3-calkv-bang-isolation-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: cache800k-20260909-research
+    serve_cmd: ""
+    notes: "Unqualified matched TP isolation at100K; FP8 KV, MTP3, prefix/graphs on, P2P off. Capacity control, not a200K shelf recipe."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-tp2-mtp3-fp8-e4m3-calkv-bang-isolation-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-tp2-mtp3-fp8-e4m3-calkv-bang-isolation-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: cache800k-20260909-research
+    serve_cmd: ""
+    notes: "Unqualified matched TP isolation at100K; FP8 KV, MTP3, prefix/graphs on, P2P off. Capacity control, not a200K shelf recipe."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-tp2-mtp0-fp8-e4m3-calkv-bang-isolation-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-tp2-mtp0-fp8-e4m3-calkv-bang-isolation-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: cache800k-20260909-research
+    serve_cmd: ""
+    notes: "Unqualified MTP0 ablation at100K, TP2/P2P0; calibrated FP8 KV, prefix and graphs on. Stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-gdnphase-tp2-mtp3-fp8-e4m3-calkv-bang-isolation-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-gdnphase-tp2-mtp3-fp8-e4m3-calkv-bang-isolation-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: cache800k-20260909-research
+    serve_cmd: ""
+    notes: "Unqualified one-call-site GDN phase candidate. TP2/P2P0, MTP3, FP8 KV, prefix/graphs on,100K. Stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-gdnphase-tp2-mtp0-fp8-e4m3-calkv-bang-isolation-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-gdnphase-tp2-mtp0-fp8-e4m3-calkv-bang-isolation-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: cache800k-20260909-research
+    serve_cmd: ""
+    notes: "Unqualified GDN-only delta versus matched TP2/MTP0 control. P2P0, FP8 KV, prefix/graphs on,100K. Stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-stock-gdn-tp1-mtp0-fp16kv-eager-prefixoff-ctx8k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-stock-gdn-tp1-mtp0-fp16kv-eager-prefixoff-ctx8k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified isolated GDN tiny-prefill screen,8K/c4/batch512,TP1/P2P0,eager,MTP0,prefixoff. Stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-patched-gdn-tp1-mtp0-fp16kv-eager-prefixoff-ctx8k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-patched-gdn-tp1-mtp0-fp16kv-eager-prefixoff-ctx8k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified isolated GDN tiny-prefill screen,8K/c4/batch512,TP1/P2P0,eager,MTP0,prefixoff. Stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-v029-stock-tp1-mtp0-fp16kv-eager-prefixoff-ctx8k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-v029-stock-tp1-mtp0-fp16kv-eager-prefixoff-ctx8k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Current-upstream XPU TP1 viability,8K/c1/batch8192,eager,MTP0,prefixoff,FP16KV. Stable primary hotschmoe-dd. Unqualified."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-v029-gdnphase-tp1-mtp0-fp16kv-eager-prefixoff-ctx8k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-v029-gdnphase-tp1-mtp0-fp16kv-eager-prefixoff-ctx8k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Current-upstream XPU TP1 viability,8K/c1/batch8192,eager,MTP0,prefixoff,FP16KV. Stable primary hotschmoe-dd. Unqualified."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-gdnphase-tp1-mtp3-fp8-e4m3-calkv-bang-isolation-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-gdnphase-tp1-mtp3-fp8-e4m3-calkv-bang-isolation-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: preserved-tp2-fp8kv-scales
+    serve_cmd: ""
+    notes: "Unqualified TP1 phase-only all-feature100K control, stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp2-mtp3-fp16kv-freshcal-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp2-mtp3-fp16kv-freshcal-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified fresh calibration investigation, verified publisher weights, stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp2-mtp3-auto-freshcal-qualify-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp2-mtp3-auto-freshcal-qualify-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified fresh calibration investigation, verified publisher weights, stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp2-mtp3-fp8_e4m3-freshcal-qualify-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp2-mtp3-fp8_e4m3-freshcal-qualify-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-pending-fp8kv
+    serve_cmd: ""
+    notes: "Unqualified fresh calibration investigation, verified publisher weights, stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp3-fp16kv-prefixon-c4-ctx8192
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp3-fp16kv-prefixon-c4-ctx8192
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified TP1 prefixon control, MTP3 FULL_DECODE_ONLY c4 ctx8192, fresh cache, stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp3-fp16kv-prefixoff-c4-ctx8192
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp3-fp16kv-prefixoff-c4-ctx8192
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified TP1 prefixoff control, MTP3 FULL_DECODE_ONLY c4 ctx8192, fresh cache, stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp0-fp16kv-prefixon-c4-ctx8192
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp0-fp16kv-prefixon-c4-ctx8192
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified TP1 prefixon MTP0 control, FULL_DECODE_ONLY c4 ctx8192, fresh cache; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp3-fp16kv-prefixon-c4-ctx8192-crossover
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp3-fp16kv-prefixon-c4-ctx8192-crossover
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified TP1 prefixon MTP3 control, FULL_DECODE_ONLY c4 ctx8192, fresh cache; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp3-fp16kv-prefixoff-c4-ctx8192-crossover
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp3-fp16kv-prefixoff-c4-ctx8192-crossover
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified TP1 prefixoff MTP3 control, FULL_DECODE_ONLY c4 ctx8192, fresh cache; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp3-fp16kv-prefixon-c4-ctx8192
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp3-fp16kv-prefixon-c4-ctx8192
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified MRV1 accepted-count candidate, TP1 prefixON MTP3 FULL_DECODE_ONLY c4 ctx8192; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp3-fp8kv-freshcal-prefixon-records360-c4-ctx8192
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp3-fp8kv-freshcal-prefixon-records360-c4-ctx8192
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-be02d915-fp8kv
+    serve_cmd: ""
+    notes: "Unqualified calibrated FP8 reuse control, records360 TP1 MTP3 FULL_DECODE_ONLY c4 ctx8192; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp3-fp8kv-freshcal-prefixon-records360-c4-ctx8192
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp3-fp8kv-freshcal-prefixon-records360-c4-ctx8192
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-be02d915-fp8kv
+    serve_cmd: ""
+    notes: "Unqualified calibrated FP8 reuse control, records360 TP1 MTP3 FULL_DECODE_ONLY c4 ctx8192; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp2-mtp3-fp8kv-freshcal-qualify-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp2-mtp3-fp8kv-freshcal-qualify-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-be02d915-fp8kv
+    serve_cmd: ""
+    notes: "Unqualified MRV1 TP2 P2P0 MTP3 FP8 freshcal 100K FULL/prefix control, startup host trace, records360; stable primary hotschmoe-dd. Prepared only."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp2-mtp3-fp8kv-freshcal-long200k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp2-mtp3-fp8kv-freshcal-long200k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-be02d915-fp8kv
+    serve_cmd: ""
+    notes: "Prepared only: MRV1 TP2 P2P0 MTP3 FP8 cache/graphs context200K, four185K retrieval/guide streams. Calibration <=96K; long-context validation pending. Primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp3-fp8kv-freshcal-agent2-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp3-fp8kv-freshcal-agent2-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-be02d915-fp8kv
+    serve_cmd: ""
+    notes: "Prepared TP1 phase-only control, agent2 warm+target2, FP8 freshcal MTP3 cache/graphs100K; primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp3-fp8kv-freshcal-agent2-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp3-fp8kv-freshcal-agent2-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-be02d915-fp8kv
+    serve_cmd: ""
+    notes: "Prepared TP1 MRV1 control, agent2 warm+target2, FP8 freshcal MTP3 cache/graphs100K; primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp2-mtp3-fp8kv-freshcal-daytrial-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp2-mtp3-fp8kv-freshcal-daytrial-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-be02d915-fp8kv
+    serve_cmd: ""
+    notes: "Explicit user-authorized day trial, full qualification incomplete; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp2-mtp3-fp8kv-freshcal-daytrial-ctx200k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp2-mtp3-fp8kv-freshcal-daytrial-ctx200k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-be02d915-fp8kv
+    serve_cmd: ""
+    notes: "Explicit user-authorized day trial, full qualification incomplete; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp3-fp8kv-freshcal-prefixon-recurrence-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp3-fp8kv-freshcal-prefixon-recurrence-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-be02d915-fp8kv
+    serve_cmd: ""
+    notes: "Unqualified recurrence isolation TP1 MTP3 FP8 prefixFULL100K; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp0-fp8kv-freshcal-prefixon-recurrence-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp0-fp8kv-freshcal-prefixon-recurrence-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-be02d915-fp8kv
+    serve_cmd: ""
+    notes: "Unqualified recurrence isolation TP1 MTP0 FP8 prefixFULL100K; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp3-fp8kv-freshcal-prefixoff-recurrence-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp3-fp8kv-freshcal-prefixoff-recurrence-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-be02d915-fp8kv
+    serve_cmd: ""
+    notes: "Unqualified recurrence TP1 MTP3 FP8 prefixOFF FULL100K control; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp0-fp16kv-prefixon-recurrence-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp0-fp16kv-prefixon-recurrence-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified serial early-EOS control, MTP0 FP16KV prefixON FULL; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp0-fp16kv-prefixon-recurrence-ctx65536
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp0-fp16kv-prefixon-recurrence-ctx65536
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified serial early-EOS control, MTP0 FP16KV prefixON FULL; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp0-fp16kv-prefixon-eager-recurrence-ctx65536
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp0-fp16kv-prefixon-eager-recurrence-ctx65536
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified early-EOS eager control; MTP0 FP16KV prefixON context65536; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-native5802-tp2-mtp3-fp8kv-freshcal-backend-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-native5802-tp2-mtp3-fp8kv-freshcal-backend-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-fp8-kv-be02d915
+    serve_cmd: ""
+    notes: "PREPARED backend100K scope, native5802; known array512 earlyEOS quality failure retained. Primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-native5802-tp2-mtp3-fp8kv-freshcal-backend-ctx200k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-native5802-tp2-mtp3-fp8kv-freshcal-backend-ctx200k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-fp8-kv-be02d915
+    serve_cmd: ""
+    notes: "TEMPLATE ONLY native5802 backend200K; requires complete new100K and own200K qualification. Known arrayEOS quality limitation retained."
+
+  - label: qwen38-flash-next-unsloth-udq4xl-llamacpp-static-control
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192
+    family: qwen3.8-flash-next
+    weights: unsloth-ud-q4-k-xl-mixed-gguf
+    activations: upstream-sycl-f16-off-control
+    calibration: unsloth-dynamic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement static --image
+      IMAGE_ID --primitive-receipt PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
+    notes: Research-only C1 no-MTP FP16-KV 8K control; primary alias hotschmoe-dd. No
+      shelf or quality-authority qualification.
+
+  - label: qwen38-flash-next-unsloth-udq4xl-llamacpp-static-control-warmup
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192-warmup1
+    family: qwen3.8-flash-next
+    weights: unsloth-ud-q4-k-xl-mixed-gguf
+    activations: upstream-sycl-f16-off-control
+    calibration: unsloth-dynamic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement static --warmup
+      on --image IMAGE_ID --primitive-receipt PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
+    notes: Research-only warmup arm of the same static C1 FP16-KV no-MTP control; default
+      upstream warmup clears recurrent/KV state. Qualification pending.
+
+  - label: qwen38-flash-next-unsloth-udq4xl-llamacpp-cache32768-control-warmup
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-cache32768-fp16kv-mtp0-ctx8192-warmup1
+    family: qwen3.8-flash-next
+    weights: unsloth-ud-q4-k-xl-mixed-gguf
+    activations: upstream-sycl-f16-off-control
+    calibration: unsloth-dynamic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement cache --moe-cache-mib
+      32768 --warmup on --image IMAGE_ID --primitive-receipt PRIMITIVE_RECEIPT --output
+      NEW_RESULT_DIR
+    notes: Research-only all-host experts with 32768MiB total GPU cache, layer split48/52,
+      FP16-KV C1 no-MTP. No semantic, deterministic, async-refill or speed qualification
+      yet.
+
+  - label: qwen38-flash-next-unsloth-udq4xl-llamacpp-cache32768-control-warmup-opt0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-cache32768-fp16kv-mtp0-ctx8192-warmup1-opt0
+    family: qwen3.8-flash-next
+    weights: unsloth-ud-q4-k-xl-mixed-gguf
+    activations: upstream-sycl-f16-off-control
+    calibration: unsloth-dynamic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement cache --moe-cache-mib
+      32768 --warmup on --image IMAGE_ID --primitive-receipt PRIMITIVE_RECEIPT --output
+      NEW_RESULT_DIR --sycl-opt 0
+    notes: Diagnostic opt0 exclusion arm of cache32768; no deterministic, lossless or
+      speed qualification.
+
+  - label: qwen38-flash-next-unsloth-udq4xl-llamacpp-static-control-warmup-opt0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192-warmup1-opt0
+    family: qwen3.8-flash-next
+    weights: unsloth-ud-q4-k-xl-mixed-gguf
+    activations: upstream-sycl-f16-off-control
+    calibration: unsloth-dynamic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement static --warmup
+      on --image IMAGE_ID --primitive-receipt PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
+      --sycl-opt 0
+    notes: Matched static opt0 diagnostic control for cache-history logit drift; no
+      speed qualification.
+
+  - served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192-warmup1-ctxcp0
+    family: qwen3.8-flash-next
+    method: Unsloth
+    scheme: UD-Q4_K_XL
+    backend: llamacpp
+    status: unqualified_checkpoint_history_diagnostic
+
+  - served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192-warmup1-fusion0
+    family: qwen3.8-flash-next
+    method: Unsloth
+    scheme: UD-Q4_K_XL
+    backend: llamacpp
+    status: unqualified_fusion_history_diagnostic
+
+  - served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192-warmup1-resetdiag-off
+    family: qwen3.8-flash-next
+    method: Unsloth
+    scheme: UD-Q4_K_XL
+    backend: llamacpp
+    status: unqualified_reset_off_diagnostic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement static --warmup
+      on --build RESET_DIAGNOSTIC_BUILD --build-receipt QUALIFIED_BUILD_RECEIPT
+      --reset-diagnostic off --capture-profile
+      --image IMAGE_ID --primitive-receipt SAME_BUILD_PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
+    notes: Research-only bounded reset diagnostic; hotschmoe-dd remains first.
+      Metadata does not inspect numerical state; numeric waits may hide races.
+      Failed strict screens remain failed and prohibit shelf promotion.
+
+  - served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192-warmup1-resetdiag-metadata
+    family: qwen3.8-flash-next
+    method: Unsloth
+    scheme: UD-Q4_K_XL
+    backend: llamacpp
+    status: unqualified_reset_metadata_diagnostic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement static --warmup
+      on --build RESET_DIAGNOSTIC_BUILD --build-receipt QUALIFIED_BUILD_RECEIPT
+      --reset-diagnostic metadata --capture-profile
+      --image IMAGE_ID --primitive-receipt SAME_BUILD_PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
+    notes: Research-only bounded reset diagnostic; hotschmoe-dd remains first.
+      Metadata does not inspect numerical state; numeric waits may hide races.
+      Failed strict screens remain failed and prohibit shelf promotion.
+
+  - served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192-warmup1-resetdiag-numeric
+    family: qwen3.8-flash-next
+    method: Unsloth
+    scheme: UD-Q4_K_XL
+    backend: llamacpp
+    status: unqualified_reset_numeric_diagnostic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement static --warmup
+      on --build RESET_DIAGNOSTIC_BUILD --build-receipt QUALIFIED_BUILD_RECEIPT
+      --reset-diagnostic numeric --capture-profile
+      --image IMAGE_ID --primitive-receipt SAME_BUILD_PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
+    notes: Research-only bounded reset diagnostic; hotschmoe-dd remains first.
+      Metadata does not inspect numerical state; numeric waits may hide races.
+      Failed strict screens remain failed and prohibit shelf promotion.
+
+  - served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192-warmup1-opt0-resetdiag-off
+    family: qwen3.8-flash-next
+    method: Unsloth
+    scheme: UD-Q4_K_XL
+    backend: llamacpp
+    status: unqualified_reset_off_diagnostic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement static --warmup
+      on --build RESET_DIAGNOSTIC_BUILD --build-receipt QUALIFIED_BUILD_RECEIPT
+      --reset-diagnostic off --capture-profile
+      --image IMAGE_ID --primitive-receipt SAME_BUILD_PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
+      --sycl-opt 0
+    notes: Research-only bounded reset diagnostic; hotschmoe-dd remains first.
+      Metadata does not inspect numerical state; numeric waits may hide races.
+      Failed strict screens remain failed and prohibit shelf promotion.
+
+  - served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192-warmup1-opt0-resetdiag-metadata
+    family: qwen3.8-flash-next
+    method: Unsloth
+    scheme: UD-Q4_K_XL
+    backend: llamacpp
+    status: unqualified_reset_metadata_diagnostic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement static --warmup
+      on --build RESET_DIAGNOSTIC_BUILD --build-receipt QUALIFIED_BUILD_RECEIPT
+      --reset-diagnostic metadata --capture-profile
+      --image IMAGE_ID --primitive-receipt SAME_BUILD_PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
+      --sycl-opt 0
+    notes: Research-only bounded reset diagnostic; hotschmoe-dd remains first.
+      Metadata does not inspect numerical state; numeric waits may hide races.
+      Failed strict screens remain failed and prohibit shelf promotion.
+
+  - served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192-warmup1-opt0-resetdiag-numeric
+    family: qwen3.8-flash-next
+    method: Unsloth
+    scheme: UD-Q4_K_XL
+    backend: llamacpp
+    status: unqualified_reset_numeric_diagnostic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement static --warmup
+      on --build RESET_DIAGNOSTIC_BUILD --build-receipt QUALIFIED_BUILD_RECEIPT
+      --reset-diagnostic numeric --capture-profile
+      --image IMAGE_ID --primitive-receipt SAME_BUILD_PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
+      --sycl-opt 0
+    notes: Research-only bounded reset diagnostic; hotschmoe-dd remains first.
+      Metadata does not inspect numerical state; numeric waits may hide races.
+      Failed strict screens remain failed and prohibit shelf promotion.
+
+  - label: qwen38-flash-next-unsloth-udq4xl-strata-native-source-c1-onecard
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048
+    family: qwen3.8-flash-next
+    weights: unsloth-ud-q4-k-xl-mixed-gguf-original-hc-ple
+    activations: original-f32-native-hc-ple-projections
+    calibration: unsloth-dynamic
+    serve_cmd: python3 strata/flash-next/c1_serve_controller.py launch --prepared NEW_RUN --pre-health CURRENT_HEALTH_RECEIPT
+    notes: Prepared source controller only. Exact artifact/API runtime and passing native upload lifecycle are required. C1 MTP0 context2048, primary hotschmoe-dd. No model or shelf qualification.
+
+  - label: qwen38-flash-next-unsloth-udq4xl-strata-native-source-c1-twocard
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192
+    family: qwen3.8-flash-next
+    weights: unsloth-ud-q4-k-xl-mixed-gguf-original-hc-ple
+    activations: original-f32-native-hc-ple-projections
+    calibration: unsloth-dynamic
+    serve_cmd: python3 strata/flash-next/c1_serve_controller.py launch --prepared NEW_RUN --pre-health CURRENT_HEALTH_RECEIPT --one-card-receipt MATCHED_ONE_CARD_RECEIPT
+    notes: Prepared source controller only. Two B70s with explicit trimmed layer32 split and stage-owned mirrors. C1 MTP0 context8192, primary hotschmoe-dd. Matched one-card qualification required. No model or shelf qualification.
+
+  - label: qwen38-flash-next-unsloth-udq4xl-strata-c1-onecard-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-seg1024-adapt0-borrow0
+    family: qwen3.8-flash-next
+    weights: unsloth-ud-q4-k-xl-mixed-gguf-original-hc-ple
+    activations: original-f32-native-hc-ple-projections
+    calibration: unsloth-dynamic
+    serve_cmd: python3 strata/flash-next/c1_serve_controller.py launch --prepared NEW_RUN --pre-health CURRENT_HEALTH_RECEIPT
+    notes: Research-only strict0011/0012 segmented stage mirror profile; segment1024MiB, adaptation0, no prefill borrowing, full390 source/account/logical-free prerequisite and full model identity required. Primary hotschmoe-dd; no model or shelf promotion.
+
+  - label: qwen38-flash-next-unsloth-udq4xl-strata-c1-twocard-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-seg1024-adapt0-borrow0
+    family: qwen3.8-flash-next
+    weights: unsloth-ud-q4-k-xl-mixed-gguf-original-hc-ple
+    activations: original-f32-native-hc-ple-projections
+    calibration: unsloth-dynamic
+    serve_cmd: python3 strata/flash-next/c1_serve_controller.py launch --prepared NEW_RUN --pre-health CURRENT_HEALTH_RECEIPT --one-card-receipt MATCHED_SEGMENTED_ONE_CARD_RECEIPT
+    notes: Research-only strict0011/0012 segmented stage mirror profile; segment1024MiB, adaptation0, no prefill borrowing, full390 source/account/logical-free prerequisite and full model identity required. Primary hotschmoe-dd; no model or shelf promotion.
+
+  - label: flashnext-strata-combined-v5-one-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-srccombined24v2-api22v2-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v5.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Unqualified research configuration; actual combined51/all8 SDK, strict uploadrunnerV2 with final post-health full4 identity, current all4 source identity, six Python hashes and measured API lifecycle gates required."
+  - label: flashnext-strata-combined-v5-one-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-seg1024-adapt0-borrow0-srccombined24v2-api22v2-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v5.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Unqualified research configuration; actual combined51/all8 SDK, strict uploadrunnerV2 with final post-health full4 identity, current all4 source identity, six Python hashes and measured API lifecycle gates required."
+  - label: flashnext-strata-combined-v5-two-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-seg1024-adapt0-borrow0-srccombined24v2-api22v2-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v5.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Unqualified research configuration; actual combined51/all8 SDK, strict uploadrunnerV2 with final post-health full4 identity, current all4 source identity, six Python hashes and measured API lifecycle gates required."
+  - label: flashnext-strata-combined-v5-two-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-srccombined24v2-api22v2-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v5.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Unqualified research configuration; actual combined51/all8 SDK, strict uploadrunnerV2 with final post-health full4 identity, current all4 source identity, six Python hashes and measured API lifecycle gates required."
+
+  - label: flashnext-strata-import28-one-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-srccombined24v2-api22v2-import28-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v6.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Source0028 Python package import fix; matching new engine/sourceuploadV2/full4/C1parent6 proof mandatory. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-import28-one-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-seg1024-adapt0-borrow0-srccombined24v2-api22v2-import28-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v6.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Source0028 Python package import fix; matching new engine/sourceuploadV2/full4/C1parent6 proof mandatory. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-import28-two-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-seg1024-adapt0-borrow0-srccombined24v2-api22v2-import28-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v6.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Source0028 Python package import fix; matching new engine/sourceuploadV2/full4/C1parent6 proof mandatory. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-import28-two-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-srccombined24v2-api22v2-import28-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v6.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Source0028 Python package import fix; matching new engine/sourceuploadV2/full4/C1parent6 proof mandatory. No native math/concurrency/shelf claim."
+
+# Experimental integrated25-29 identities; qualification pending.
+  - label: flashnext-strata-integrated25-29-one-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-srcintegrated25-29-api22v2-owner29-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v8.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-29 source generation; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent8 proof mandatory. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-29-one-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-seg1024-adapt0-borrow0-srcintegrated25-29-api22v2-owner29-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v8.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-29 source generation; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent8 proof mandatory. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-29-two-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-seg1024-adapt0-borrow0-srcintegrated25-29-api22v2-owner29-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v8.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-29 source generation; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent8 proof mandatory. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-29-two-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-srcintegrated25-29-api22v2-owner29-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v8.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-29 source generation; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent8 proof mandatory. No native math/concurrency/shelf claim."
+
+# Experimental prefix30/mirror31 baselines; qualification pending.
+  - label: flashnext-strata-integrated25-31-one-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-srcintegrated25-31-api22v2-prefix30-mirror31-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v9.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-31 source generation; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent9 proof mandatory. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-31-one-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-seg1024-adapt0-borrow0-srcintegrated25-31-api22v2-prefix30-mirror31-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v9.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-31 source generation; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent9 proof mandatory. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-31-two-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-seg1024-adapt0-borrow0-srcintegrated25-31-api22v2-prefix30-mirror31-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v9.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-31 source generation; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent9 proof mandatory. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-31-two-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-srcintegrated25-31-api22v2-prefix30-mirror31-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v9.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-31 source generation; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent9 proof mandatory. No native math/concurrency/shelf claim."
+
+  - label: flashnext-strata-integrated25-33-one-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-srcintegrated25-33-api22v2-prefix30-mirror31-currentPLE32-input33-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v11.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-33 source generation restores current PLE input staging; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent11 proof mandatory. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-33-one-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-seg1024-adapt0-borrow0-srcintegrated25-33-api22v2-prefix30-mirror31-currentPLE32-input33-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v11.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-33 source generation restores current PLE input staging; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent11 proof mandatory. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-33-two-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-seg1024-adapt0-borrow0-srcintegrated25-33-api22v2-prefix30-mirror31-currentPLE32-input33-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v11.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-33 source generation restores current PLE input staging; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent11 proof mandatory. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-33-two-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-srcintegrated25-33-api22v2-prefix30-mirror31-currentPLE32-input33-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v11.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-33 source generation restores current PLE input staging; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent11 proof mandatory. No native math/concurrency/shelf claim."
+
+  - label: flashnext-numerical-currentPLE32-input33off-0-batch2-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-33-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-C111-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v5.py --plan <genuine-currentPLE32-input33off-C111-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/33/eight/six SDK/source390/upload/current4/publicC111proof11, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-input33off-0-batch2-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-33-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-C111-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v5.py --plan <genuine-currentPLE32-input33off-C111-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/33/eight/six SDK/source390/upload/current4/publicC111proof11, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-input33off-0-batch4-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-33-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-C111-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v5.py --plan <genuine-currentPLE32-input33off-C111-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/33/eight/six SDK/source390/upload/current4/publicC111proof11, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-input33off-0-batch4-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-33-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-C111-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v5.py --plan <genuine-currentPLE32-input33off-C111-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/33/eight/six SDK/source390/upload/current4/publicC111proof11, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-input33off-0-batch6-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-33-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-C111-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v5.py --plan <genuine-currentPLE32-input33off-C111-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/33/eight/six SDK/source390/upload/current4/publicC111proof11, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-input33off-0-batch6-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-33-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-C111-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v5.py --plan <genuine-currentPLE32-input33off-C111-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/33/eight/six SDK/source390/upload/current4/publicC111proof11, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-input33off-0-1-batch2-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-33-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-C111-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v5.py --plan <genuine-currentPLE32-input33off-C111-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/33/eight/six SDK/source390/upload/current4/publicC111proof11, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-input33off-0-1-batch2-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-33-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-C111-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v5.py --plan <genuine-currentPLE32-input33off-C111-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/33/eight/six SDK/source390/upload/current4/publicC111proof11, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-input33off-0-1-batch4-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-33-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-C111-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v5.py --plan <genuine-currentPLE32-input33off-C111-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/33/eight/six SDK/source390/upload/current4/publicC111proof11, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-input33off-0-1-batch4-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-33-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-C111-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v5.py --plan <genuine-currentPLE32-input33off-C111-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/33/eight/six SDK/source390/upload/current4/publicC111proof11, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-input33off-0-1-batch6-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-33-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-C111-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v5.py --plan <genuine-currentPLE32-input33off-C111-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/33/eight/six SDK/source390/upload/current4/publicC111proof11, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-input33off-0-1-batch6-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-33-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-C111-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v5.py --plan <genuine-currentPLE32-input33off-C111-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/33/eight/six SDK/source390/upload/current4/publicC111proof11, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+
+  - label: flashnext-strata-integrated25-34-one-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-srcintegrated25-34-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v12.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-34 source generation restores current PLE input staging and fixes final prompt window observer publication; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent12 source32/33/final_window_PLE_observer_fix34 proof mandatory; STRATA_VERIFY_EAGER absent. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-34-one-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-seg1024-adapt0-borrow0-srcintegrated25-34-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v12.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-34 source generation restores current PLE input staging and fixes final prompt window observer publication; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent12 source32/33/final_window_PLE_observer_fix34 proof mandatory; STRATA_VERIFY_EAGER absent. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-34-two-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-seg1024-adapt0-borrow0-srcintegrated25-34-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v12.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-34 source generation restores current PLE input staging and fixes final prompt window observer publication; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent12 source32/33/final_window_PLE_observer_fix34 proof mandatory; STRATA_VERIFY_EAGER absent. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-34-two-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-srcintegrated25-34-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v12.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-34 source generation restores current PLE input staging and fixes final prompt window observer publication; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent12 source32/33/final_window_PLE_observer_fix34 proof mandatory; STRATA_VERIFY_EAGER absent. No native math/concurrency/shelf claim."
+
+  - label: flashnext-strata-integrated25-35-one-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-srcintegrated25-35-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-prompt35-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v13.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-35 source generation restores current PLE input staging and fixes final prompt window observer publication; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent13 source32/33/final_window_PLE_observer_fix34/prompt_verifier_P30_capture35 proof mandatory; STRATA_VERIFY_EAGER absent. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-35-one-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-seg1024-adapt0-borrow0-srcintegrated25-35-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-prompt35-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v13.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-35 source generation restores current PLE input staging and fixes final prompt window observer publication; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent13 source32/33/final_window_PLE_observer_fix34/prompt_verifier_P30_capture35 proof mandatory; STRATA_VERIFY_EAGER absent. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-35-two-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-seg1024-adapt0-borrow0-srcintegrated25-35-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-prompt35-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v13.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-35 source generation restores current PLE input staging and fixes final prompt window observer publication; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent13 source32/33/final_window_PLE_observer_fix34/prompt_verifier_P30_capture35 proof mandatory; STRATA_VERIFY_EAGER absent. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-35-two-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-srcintegrated25-35-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-prompt35-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v13.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-35 source generation restores current PLE input staging and fixes final prompt window observer publication; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent13 source32/33/final_window_PLE_observer_fix34/prompt_verifier_P30_capture35 proof mandatory; STRATA_VERIFY_EAGER absent. No native math/concurrency/shelf claim."
+
+# Source35/C113 batch research identities; qualification pending.
+  - label: flashnext-numerical-source35-currentPLE32-input33off-lastwindow34-prompt35-0-batch2-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-35-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-C113-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v6.py --plan <genuine-currentPLE32-input33off-C113-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/35/eight/six SDK/source390/upload/current4/publicC113proof13, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-source35-currentPLE32-input33off-lastwindow34-prompt35-0-batch2-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-35-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-C113-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v6.py --plan <genuine-currentPLE32-input33off-C113-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/35/eight/six SDK/source390/upload/current4/publicC113proof13, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-source35-currentPLE32-input33off-lastwindow34-prompt35-0-batch4-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-35-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-C113-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v6.py --plan <genuine-currentPLE32-input33off-C113-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/35/eight/six SDK/source390/upload/current4/publicC113proof13, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-source35-currentPLE32-input33off-lastwindow34-prompt35-0-batch4-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-35-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-C113-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v6.py --plan <genuine-currentPLE32-input33off-C113-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/35/eight/six SDK/source390/upload/current4/publicC113proof13, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-source35-currentPLE32-input33off-lastwindow34-prompt35-0-batch6-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-35-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-C113-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v6.py --plan <genuine-currentPLE32-input33off-C113-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/35/eight/six SDK/source390/upload/current4/publicC113proof13, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-source35-currentPLE32-input33off-lastwindow34-prompt35-0-batch6-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-35-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-C113-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v6.py --plan <genuine-currentPLE32-input33off-C113-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/35/eight/six SDK/source390/upload/current4/publicC113proof13, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-source35-currentPLE32-input33off-lastwindow34-prompt35-0-1-batch2-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-35-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-C113-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v6.py --plan <genuine-currentPLE32-input33off-C113-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/35/eight/six SDK/source390/upload/current4/publicC113proof13, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-source35-currentPLE32-input33off-lastwindow34-prompt35-0-1-batch2-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-35-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-C113-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v6.py --plan <genuine-currentPLE32-input33off-C113-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/35/eight/six SDK/source390/upload/current4/publicC113proof13, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-source35-currentPLE32-input33off-lastwindow34-prompt35-0-1-batch4-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-35-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-C113-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v6.py --plan <genuine-currentPLE32-input33off-C113-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/35/eight/six SDK/source390/upload/current4/publicC113proof13, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-source35-currentPLE32-input33off-lastwindow34-prompt35-0-1-batch4-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-35-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-C113-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v6.py --plan <genuine-currentPLE32-input33off-C113-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/35/eight/six SDK/source390/upload/current4/publicC113proof13, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-source35-currentPLE32-input33off-lastwindow34-prompt35-0-1-batch6-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-35-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-C113-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v6.py --plan <genuine-currentPLE32-input33off-C113-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/35/eight/six SDK/source390/upload/current4/publicC113proof13, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-source35-currentPLE32-input33off-lastwindow34-prompt35-0-1-batch6-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-35-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-C113-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v6.py --plan <genuine-currentPLE32-input33off-C113-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new63/27/35/eight/six SDK/source390/upload/current4/publicC113proof13, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-source35-positive-cachedhandoff-gpu0-batch2-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch2-pcache3-chain25-pub27-fresh0-cachedhandoff-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_cache_positive_v2.py --plan <genuine-positive-cache-plan> --output <new-owned-output>"
+    notes: "Experimental positive closed-slot last-live fullchain transfer; authentic fixtures and actual positive counters/full49 cached-fresh controls required. Only2 fixture currentlyobserved;4/6 cannotprepare yet. Fullcache/quality/math/latency/shelf pending."
+  - label: flashnext-source35-positive-cachedhandoff-gpu0-batch2-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch2-pcache3-chain25-pub27-fresh0-cachedhandoff-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_cache_positive_v2.py --plan <genuine-positive-cache-plan> --output <new-owned-output>"
+    notes: "Experimental positive closed-slot last-live fullchain transfer; authentic fixtures and actual positive counters/full49 cached-fresh controls required. Only2 fixture currentlyobserved;4/6 cannotprepare yet. Fullcache/quality/math/latency/shelf pending."
+  - label: flashnext-source35-positive-cachedhandoff-gpu0-batch4-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch4-pcache3-chain25-pub27-fresh0-cachedhandoff-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_cache_positive_v2.py --plan <genuine-positive-cache-plan> --output <new-owned-output>"
+    notes: "Experimental positive closed-slot last-live fullchain transfer; authentic fixtures and actual positive counters/full49 cached-fresh controls required. Only2 fixture currentlyobserved;4/6 cannotprepare yet. Fullcache/quality/math/latency/shelf pending."
+  - label: flashnext-source35-positive-cachedhandoff-gpu0-batch4-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch4-pcache3-chain25-pub27-fresh0-cachedhandoff-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_cache_positive_v2.py --plan <genuine-positive-cache-plan> --output <new-owned-output>"
+    notes: "Experimental positive closed-slot last-live fullchain transfer; authentic fixtures and actual positive counters/full49 cached-fresh controls required. Only2 fixture currentlyobserved;4/6 cannotprepare yet. Fullcache/quality/math/latency/shelf pending."
+  - label: flashnext-source35-positive-cachedhandoff-gpu0-batch6-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch6-pcache3-chain25-pub27-fresh0-cachedhandoff-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_cache_positive_v2.py --plan <genuine-positive-cache-plan> --output <new-owned-output>"
+    notes: "Experimental positive closed-slot last-live fullchain transfer; authentic fixtures and actual positive counters/full49 cached-fresh controls required. Only2 fixture currentlyobserved;4/6 cannotprepare yet. Fullcache/quality/math/latency/shelf pending."
+  - label: flashnext-source35-positive-cachedhandoff-gpu0-batch6-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch6-pcache3-chain25-pub27-fresh0-cachedhandoff-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_cache_positive_v2.py --plan <genuine-positive-cache-plan> --output <new-owned-output>"
+    notes: "Experimental positive closed-slot last-live fullchain transfer; authentic fixtures and actual positive counters/full49 cached-fresh controls required. Only2 fixture currentlyobserved;4/6 cannotprepare yet. Fullcache/quality/math/latency/shelf pending."
+  - label: flashnext-source35-positive-cachedhandoff-gpu0-1-split32-16-batch2-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch2-pcache3-chain25-pub27-fresh0-cachedhandoff-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_cache_positive_v2.py --plan <genuine-positive-cache-plan> --output <new-owned-output>"
+    notes: "Experimental positive closed-slot last-live fullchain transfer; authentic fixtures and actual positive counters/full49 cached-fresh controls required. Only2 fixture currentlyobserved;4/6 cannotprepare yet. Fullcache/quality/math/latency/shelf pending."
+  - label: flashnext-source35-positive-cachedhandoff-gpu0-1-split32-16-batch2-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch2-pcache3-chain25-pub27-fresh0-cachedhandoff-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_cache_positive_v2.py --plan <genuine-positive-cache-plan> --output <new-owned-output>"
+    notes: "Experimental positive closed-slot last-live fullchain transfer; authentic fixtures and actual positive counters/full49 cached-fresh controls required. Only2 fixture currentlyobserved;4/6 cannotprepare yet. Fullcache/quality/math/latency/shelf pending."
+  - label: flashnext-source35-positive-cachedhandoff-gpu0-1-split32-16-batch4-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch4-pcache3-chain25-pub27-fresh0-cachedhandoff-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_cache_positive_v2.py --plan <genuine-positive-cache-plan> --output <new-owned-output>"
+    notes: "Experimental positive closed-slot last-live fullchain transfer; authentic fixtures and actual positive counters/full49 cached-fresh controls required. Only2 fixture currentlyobserved;4/6 cannotprepare yet. Fullcache/quality/math/latency/shelf pending."
+  - label: flashnext-source35-positive-cachedhandoff-gpu0-1-split32-16-batch4-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch4-pcache3-chain25-pub27-fresh0-cachedhandoff-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_cache_positive_v2.py --plan <genuine-positive-cache-plan> --output <new-owned-output>"
+    notes: "Experimental positive closed-slot last-live fullchain transfer; authentic fixtures and actual positive counters/full49 cached-fresh controls required. Only2 fixture currentlyobserved;4/6 cannotprepare yet. Fullcache/quality/math/latency/shelf pending."
+  - label: flashnext-source35-positive-cachedhandoff-gpu0-1-split32-16-batch6-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch6-pcache3-chain25-pub27-fresh0-cachedhandoff-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_cache_positive_v2.py --plan <genuine-positive-cache-plan> --output <new-owned-output>"
+    notes: "Experimental positive closed-slot last-live fullchain transfer; authentic fixtures and actual positive counters/full49 cached-fresh controls required. Only2 fixture currentlyobserved;4/6 cannotprepare yet. Fullcache/quality/math/latency/shelf pending."
+  - label: flashnext-source35-positive-cachedhandoff-gpu0-1-split32-16-batch6-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch6-pcache3-chain25-pub27-fresh0-cachedhandoff-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_cache_positive_v2.py --plan <genuine-positive-cache-plan> --output <new-owned-output>"
+    notes: "Experimental positive closed-slot last-live fullchain transfer; authentic fixtures and actual positive counters/full49 cached-fresh controls required. Only2 fixture currentlyobserved;4/6 cannotprepare yet. Fullcache/quality/math/latency/shelf pending."
+# NEW C137 baseline LIST ENTRIES ONLY; append inside existing models list.
+# Frozen V1 document preserved; no top-level models key in this fragment.
+  - label: flashnext-strata-integrated25-37-one-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-srcintegrated25-37-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-prompt35-hosttrace36-batchstamp37-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v137.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-37 source generation restores current PLE input staging and fixes final prompt window observer publication; baseline batch0 and feature flagsOFF including STRATA_CRITICAL_PATH_TRACE=OFF; matching new engine/sourceuploadV2/full4/C1parent137 source32/33/final_window_PLE_observer_fix34/prompt_verifier_P30_capture35/bounded_host_critical_path_trace36/earlier_stage_batch_observer_stamp37 proof mandatory; STRATA_VERIFY_EAGER absent. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-37-one-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-prompt35-hosttrace36-batchstamp37-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v137.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-37 source generation restores current PLE input staging and fixes final prompt window observer publication; baseline batch0 and feature flagsOFF including STRATA_CRITICAL_PATH_TRACE=OFF; matching new engine/sourceuploadV2/full4/C1parent137 source32/33/final_window_PLE_observer_fix34/prompt_verifier_P30_capture35/bounded_host_critical_path_trace36/earlier_stage_batch_observer_stamp37 proof mandatory; STRATA_VERIFY_EAGER absent. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-37-two-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-prompt35-hosttrace36-batchstamp37-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v137.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-37 source generation restores current PLE input staging and fixes final prompt window observer publication; baseline batch0 and feature flagsOFF including STRATA_CRITICAL_PATH_TRACE=OFF; matching new engine/sourceuploadV2/full4/C1parent137 source32/33/final_window_PLE_observer_fix34/prompt_verifier_P30_capture35/bounded_host_critical_path_trace36/earlier_stage_batch_observer_stamp37 proof mandatory; STRATA_VERIFY_EAGER absent. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-37-two-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-srcintegrated25-37-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-prompt35-hosttrace36-batchstamp37-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v137.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-37 source generation restores current PLE input staging and fixes final prompt window observer publication; baseline batch0 and feature flagsOFF including STRATA_CRITICAL_PATH_TRACE=OFF; matching new engine/sourceuploadV2/full4/C1parent137 source32/33/final_window_PLE_observer_fix34/prompt_verifier_P30_capture35/bounded_host_critical_path_trace36/earlier_stage_batch_observer_stamp37 proof mandatory; STRATA_VERIFY_EAGER absent. No native math/concurrency/shelf claim."
+# NEW source37 batch LIST ENTRIES ONLY; append inside existing models list.
+# Frozen V1 full-document proposal preserved; this fragment has no models key.
+  - label: flashnext-source37-batch2-onecard-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch2-onecard-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch4-onecard-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch4-onecard-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch6-onecard-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch6-onecard-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch2-pair-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch2-pair-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch4-pair-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch4-pair-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch6-pair-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch6-pair-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."

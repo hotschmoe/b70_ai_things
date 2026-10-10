@@ -12764,3 +12764,22 @@ and currentstat5. NEWV2 plus mutationnegatives and explicitcachepersistent0
 beingprepared; frozenV1 preserved unexecuted, not launchready.
 VERDICT -> Source/CPU review advances; no RS/math/runtime proof assigned.
 PrivateV4 final4616 remains confirmedlive CPU revalidating existingcorpus.
+
+
+## 2026-10-10 - Private196 closes; actual C139 header-ledger rejection
+
+CONFIG -> FrozenV4 source37 actual OFF/ON/first49/new147, current165registry.
+COMMAND -> Actualfinal4616 terminal0/PASS196; readonlyreportSHA
+c05d9416ac7b92a78f9d770283c22dd118017a4ef6281c2740b46eb6eb4bc9f1.
+Rootactualreport confirms full196 bitwise, actual2rows, histories/ownership
+joins; firstfailedparent remainsfalse/PIN0/unobservedhistoricalEOF limitations.
+RootC13933CPU/85+87 sourceSHA PASS, then actual sourcegate61868 terminal1
+BEFOREGPU: consumed batch_fidelity_contract header payload differs.
+RESULT -> Actual39code all66finalhashes/8ELFsPASS, but inherited added_header
+payload ledger records two historicalpre38 headerbytes while finalexpected
+source66 reflects source38 contract/observer changes. Newexplicitconsumer
+repair required; actual39build86bc/receipt/code remain unchanged. Current
+C139source-only proposal preserved, not runtimequalified.
+VERDICT -> Scoped private2 numerical control established, not originalmath/
+fullcache/latency. Metadata source-admission issue localized withoutGPUrerun.
+Full goal active; new139consumer and ownedRMSV2 peerreview pending.
