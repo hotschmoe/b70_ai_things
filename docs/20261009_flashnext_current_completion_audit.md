@@ -1392,3 +1392,26 @@ namespace negative experiment are being implemented with original reference
 math unchanged. SharedV3 source checkpoint796b5dd is pushed; freshC1401403
 one/pair, actual wholecache suite/changedloadedidentity behavior/physical
 accounting, reference fidelity/concurrentstreams/profile/latency/shelf open.
+
+
+## 2026-10-10 - Source40 actual GPU baseline and observer review status
+
+Original ELF finalrecollection37439 completedPASS; canonical169 deliberate
+source40 association8a005baf preserves alloriginal165 entries. Currentactual
+C1401403onecard model2057 loadedREADY andpassed sixrepeat/coherence/live
+identity/token-consumption screens ce1ab5fc. Ownedmodelremoved; strictand
+compiledpairposthealthlogsHEALTHY; finalsource/full4/parentqualificationpending.
+Pairedpreparation618e9d9e completedlaunchallowed, not yetGPUserved.
+
+ActualunchangedhalfGPUreplay32169 passed all12outputbytes andpreposthealth
+withnormalteardown; reportd1605aa1. IGC dumpcoverageFAILzero files, notJITabsence.
+Offline original direct/graph expressioncompiledcode removesroundtrip while
+materializedstore/loadretainhalfinstructions; actualruntimeJITcauseunproven.
+
+QSAownedruntimeV1 1b3d/429 and22CPU pass butpeerHOLD: byte-roster/alias/
+aggregatebounds, exactrawhealth/journalACK gates, liveparent/leasecheckafter
+postACKseal andlateDockercreation/forceddrain ownership remainunclosed.
+NewV2 requiredbeforelaunch; no math/tolerance gate relaxed. Livecacheidentity
+source workcoversloadedowner drift/rebind but actualnegative/reloadproofmissing.
+Original48 fidelity/fullcache/statefamilies/1-2-4-bounded6/profile/interactive
+latency/memoryplacement/reproducibleshelf remainopen. UserGPUpriority active.
