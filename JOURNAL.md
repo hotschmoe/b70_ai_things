@@ -14207,3 +14207,19 @@ need explicitassociation beforeuseasfull6 manifest. OriginalJIT/ISAunobserved.
 VERDICT -> Actualoffline narrowing only. Runtimecapture next; no modelmath
 fix/tolerance change or wholecache/latency/shelf qualification. Originalfull
 recollection37439 remainsCPUactive, canonical165 preserved.
+
+
+## 2026-10-10 - User GPU priority: unchanged helper runtime capture begins
+
+CONFIG -> User requests prioritizing actualGPUruns; original Half37 executed
+ELF4d86d9b8/inputde82 unchanged. Newruntime diagnosticrequestsIGC dumps
+via documented local IGC_ShaderDumpEnable, freshoutput /tmp/igc bind.
+COMMAND -> Root32169 solepairlease actor, card0 actualaffinity/selector.
+Pre/poststrict+compiledpair/kernel and all originaldirect/tworeplay output
+bytecomparisons required. No kernelrecompile/modelreference modification.
+RESULT -> Actual pre-strict health live; GPUhelper/dumps/outputqualification
+pending. Runtime historicalJITfalse, actualnewdump coverageunproven.
+VERDICT -> RealGPU diagnostic inprogress; retainlease/normalEOF/ownedremoval
+through health. Source40 observer launchordering/byteepoch integration still
+unsealed; no earlymodel/cache/latency qualification. OriginalCPUreader37439
+continues, canonical165 unchanged. Fullgoal active.
