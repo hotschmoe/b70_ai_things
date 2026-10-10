@@ -12783,3 +12783,18 @@ C139source-only proposal preserved, not runtimequalified.
 VERDICT -> Scoped private2 numerical control established, not originalmath/
 fullcache/latency. Metadata source-admission issue localized withoutGPUrerun.
 Full goal active; new139consumer and ownedRMSV2 peerreview pending.
+
+
+## 2026-10-10 - RMS V2 review preserved and CPU screen source committed
+
+CONFIG -> OwnedRMS V2 c842/139, CPU all8x2 e633/115, no actualmodel/GPU run.
+COMMAND -> Root17RMS CPU/139SHA and13screen CPU/115bindings PASS. RMS V2
+source checkpointdbcc337 preserves NONREADY lifecycle review. Initial combined
+staging stopped on an external runtime receipt; Git rejected it. Corrected
+staging verifies everyexternal binding but commits only repository sources.
+RESULT -> V2 timeout container-stop-before-EOF and exacthealth/journal argv
+gaps require NEWV3. No V2 launch despite narrowed intrinsic review PASS. CPU
+screen actualrawstop_type/all16/seed1234/source/normalowned/memory proof source
+nowcommitted; oldresponse/continuation/GPU proofs do nottransfer.
+VERDICT -> Rejected drafts preserved; CPU wrapper smoke and independent
+screen review pending. Fullgoal staysactive with scoped private196 established.
