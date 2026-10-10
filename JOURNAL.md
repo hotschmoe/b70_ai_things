@@ -14326,3 +14326,19 @@ Parentposthealth/newcompletefour/finalproof are pending; no earlybaselinePASS.
 VERDICT -> ActualGPUmodel screen success, scoped asdeclared. Native logtok/s
 are diagnostic and notmatchedcleanlatency/serving promotion. Pairprepared
 ready; pairedGPUqualifier followsactualonefinalpass, no secondGPUactor.
+
+
+## 2026-10-10 - Source40 onecard finalPASS; paired GPU baseline launches
+
+CONFIG -> Exact corrected SDK40d877/currentC1401403/runtimec388/modelpin,
+canonical1698a005baf, actualpreparedoneeed24/pair618e9.
+COMMAND -> Actualone2057 terminal0/PASS486s. Root finalone receiptandactual
+parent checks; immediatelylaunchpaired95154 withactualonequalification.
+RESULT -> Oneparent79827db080281a0f9dcbf7f500280c748067e10b19da78d02e48a02176a1edb3;
+onequalificationcc39b3b654f36e3602478b4287aeac35e0108d41a48d5e51c7908b67e4fe3afa.
+Sixrepeat/coherence/liveidentity/tokenconsumption, normalownedteardown,
+strictandcompiledpairpreposthealth/kernelfault/newfull4/sourceproof pass.
+Paired95154 nowsolepairleaseGPUactor; no pairedscreen/finalPASSclaimed.
+VERDICT -> Actualscopedsource40servingbaseline establishedonecard. Original
+reference/full-logitmath, prefixstate/fullcache/concurrentstreams andmatched
+cleanlatency/shelf remain unqualified. Pairedmodelqualification underway.
