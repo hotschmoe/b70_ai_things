@@ -1,0 +1,22 @@
+{
+  "schema": 2,
+  "status": "Frozen SOURCE/CPU10 unintegrated conservative callback purity subset",
+  "files": {
+    "strata/flash-next/operation_evidence_snapshot_v2.py": "7721fa7a19c6313fcfe58ffd98ee96a29f4ebeaa6fb6de265094dd99cd796f99",
+    "strata/flash-next/test_operation_evidence_snapshot_cpu_v2.py": "d04fdfd000cb13f31cd89c63d1d6fc8fcdc8ad5f0c70034cc2ecc28786163a1f",
+    "strata/flash-next/operation_evidence_snapshot_v1.py": "d085b3152f2da04b15a8d536c60964d993fda89b0c12f0f775b19459bb3f1810",
+    "strata/flash-next/test_operation_evidence_snapshot_cpu_v1.py": "f8476fcc7bd78e25c59363dca2ea364a528159502ebde4cb5bd6ac531ff40c98",
+    "strata/flash-next/serial37_canonical_json_v3.py": "afdbdc4729cc6a2cfb68de5cb1106d79d1b81db79c9da91b1c157d5c1b85f57d",
+    "strata/flash-next/operation_pack_hash_witness_v2.py": "340c88c67745806900e4969306e62db8b7da3bb386144ca9bdf4a3ce864cf83e",
+    "docs/20261010_flashnext_evidence_snapshot_purity_v2.md": "996075376b325cb3d0fbdcf138354400cbe566e6f414f8dce931c0399d90e8dd"
+  },
+  "cpu_tests": 10,
+  "closure_default_bound_callable_or_mutable_global_reuse": false,
+  "complete_explicit_immutable_global_binding_required": true,
+  "nested_code_objects_checked": true,
+  "restricted_immutable_validator_view": true,
+  "original_logical_parser_wrapper_admitted_as_pure": false,
+  "actual_evidence_SDK_pack_model_payload_read": false,
+  "actual_GPU_touch": false,
+  "actual_runtime_integration_or_speed_qualified": false
+}
