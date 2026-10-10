@@ -12103,3 +12103,25 @@ retains exactrawschema/flush proof andseparatetruthfulterminal association.
 VERDICT -> TwoGPUstate/math unqualified; fixeslocalizedtoobservers/admission.
 WholeHC runtimecanproceedafterfreshlink; allfullAPI/cache/fidelity/profiling/
 latency/shelf requirements remainactive. Allfailed/prototype evidence preserved.
+
+
+## 2026-10-10 - Earlier-stage batch observer stamp repair and wholeHC device run
+
+CONFIG -> NEW metadata-only stamp37 afterexistingthree earlystage handoffcopies,
+beforele<n_layers return; oldhead stamp/modelops/defaultOFF unchanged. Separate
+wholeHC source35 compiledactual/shadow arithmetic undercorrectedV3supervisor.
+COMMAND -> Root10CPU stampcontrols/11SHAclosure PASS. Standalone37 plan2cb8c255
+andcombined36+37 plan2e940d51 frozen, all8 freshABI andsameNNmodel required.
+Root tracked-source freshleaf23651 PASS22s afterd1db0a9 checkpoint; preliminary
+untrackedintake build86242 retained. Runtime48761 pairleased/currentcard0pin
+nowlive, usesnewtracked-source receipt, 36frames/19fields andstrictV3ownerlabel.
+RESULT -> Pair35failed66128 retainsEOF/exit139/observerseal exception and
+posthealth/new4PASS. Real twoGPUcoherence stillunqualified, newC137 intake
+beingprepared beforepair2OFF/ON. PositiveAPIfailed10435 warmnative21EOSs have
+producer-owned stopBDONE beforeengine_end, staleengine_last causedV2guard
+rejection; no rewrite/pass transfer. Warmactual38rowevents ALLrows1/zero2row,
+so honestnewobserver alonecannotgrantrequiredwarmoverlap. BufferedV3 and
+separateterminalsource admission +newcase planning ongoing; targetsunexecuted.
+VERDICT -> Specificobserverbug repairedinsource; needsfreshbuild/runtime.
+ActualwholeHCdevice qualification nowprogresses. Fullmodel/API/cache/profiling/
+latency/shelf goalactive, no productionor speed claim. Allolder evidence kept.

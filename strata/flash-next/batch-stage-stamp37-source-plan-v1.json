@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "status": "Frozen source/CPU preparation only; native build/runtime UNEXECUTED",
+  "cpu_tests": 10,
+  "cpu_test_scope": "Source-indexed semantic roster and exact source closure/composition; no compiled SYCL/GPU execution",
+  "actual_native_compile": false,
+  "actual_GPU_run": false,
+  "actual_model_payload_read": false,
+  "actual_paired_batch_observer_qualified": false,
+  "full_model_math_qualified": false,
+  "files": {
+    "strata/flash-next/prepare_batch_stage_stamp37_v1.py": "c2bc2e187cb1ef9f3e29600818d1b05cddede8398c7fe99e3ee65660d4f6edf1",
+    "strata/flash-next/test_batch_stage_stamp37_cpu_v1.py": "6701077c13bf2f9fa597c3281c51b48c9627f781645974c3ec451778d5f1f45b",
+    "strata/flash-next/patches/0037-default-off-batch-observer-earlier-stage-stamp.patch": "2a43013afb1b7c528e7041775a2283e1dae990559ee31ef8615fff3b0f73fffe",
+    "strata/flash-next/batch-stage-stamp37-engine-build-plan-v1.json": "2cb8c2559970cd3830e58081df97b213b6d4e07599ad98cdad6c76ab07c2f972",
+    "strata/flash-next/hosttrace36-batchstamp37-engine-build-plan-v1.json": "2e940d51c61abe5366526b926f89dcf9f42bf778feee5d13c9b72aefc2785ace",
+    "docs/20261010_flashnext_batch_stage_stamp37_source_audit_v1.md": "69ce9f4f41ba30a347f597a496df9b06dd79e33a8167dbfdd3c4f4252f031d82",
+    "strata/flash-next/current-ple-prompt35-engine-build-plan-v1.json": "82004f6cee0f975c433d245b304aff10d67dd33e028cf926a08ef5eead892ef7",
+    "strata/flash-next/host-critical-path36-engine-build-plan-v1.json": "c2b80b7e7b0bccdfe98e5771e88a604888e86443d5e2f6c3468a8ed0d7b46709",
+    "strata/flash-next/prepare_host_critical_path36_v1.py": "ce883ace7cc5e31e024c3cc5d2276edf91929e9da505f507a22ba2113f603b03",
+    "strata/flash-next/host_critical_path36_header_v2.hpp": "99dbe2074b30d3fc6f1aa3c51921f98e8d370a9089bf036117c9019ea8b063bd",
+    "strata/flash-next/patches/0036-default-off-bounded-host-critical-path-trace.patch": "a6b0a029977ae59bf6757a9beabd12221a11068e00c14206da2366878595ab46"
+  },
+  "failed_runtime_evidence": {
+    "root": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/batch-v7-pair-native2-diag1-regpos2-run/child",
+    "report_sha256": "48c91e9b8569d79a018151b175fa2f9d1767cfbb66b8789f48ae208a9444713b",
+    "engine_log_sha256": "c84da2ca140957b0857d449cb9d797471fdbbbb69820eac9d5ea06eddf700afc"
+  },
+  "source35_sdk": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source",
+  "source35_verify_sha256": "cdd837fd3dd31873094587e549623bae887765c48d8c4de7f542185f52c4d84f",
+  "source35_observer_sha256": "ddd2475f38f42e731a99ff52678cda9e742b20c75ead38383a735ca0add9db39",
+  "fresh_abi_targets": 8,
+  "root_owns_native_build_and_runtime": true
+}

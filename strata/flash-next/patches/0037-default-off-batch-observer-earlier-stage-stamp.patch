@@ -1,0 +1,10 @@
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -1639,6 +1639,7 @@
+         copy_from_mapped(hout, R_, (int64_t) T * HC * N, cs);
+         copy_from_mapped(hout + (size_t) T * HC * N, bo_, (int64_t) T * N, cs);
+         copy_from_mapped(hout + (size_t) T * (HC + 1) * N, inj2_, (int64_t) T * HC, cs);
++        if(batch_observe_ && batch_snapshot_)batch_snapshot_->stamp(*cs);
+         return true;
+     }
+ 
