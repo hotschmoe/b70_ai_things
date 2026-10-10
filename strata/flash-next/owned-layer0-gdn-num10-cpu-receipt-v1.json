@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "CONFIG": "real role geometry synthetic ownedlayer0 CPU equations, strictsource35 config/source3 route, frozenNUM10 publicadmission interface, no modelpayload",
+  "COMMAND": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python3 strata/flash-next/test_owned_layer0_gdn_replay_cpu_v1.py",
+  "RESULT": {
+    "CPU_tests_passed": 13,
+    "all_55_dependencies_current": true,
+    "prefixes1234_roster_note": "exactprefix1/2/4/8",
+    "own_initial_state_reset_verified": true,
+    "state_and_history_permutations_verified": true,
+    "captured_input_API_rejected": true,
+    "NUM10_target_changed_extent_symlink_requests_rejected": true,
+    "completed_original_allrow_and_finalstate_replay_controls_passed": true,
+    "original_payload_or_GPU_execution": false,
+    "numeric_pass_claim": false
+  },
+  "VERDICT": "PASS CPU/source contracts only; actualoriginal/nativeNUM10 exploration pending",
+  "files": {
+    "strata/flash-next/owned_layer0_gdn_replay_v1.py": "66307c953a3d0ed3589b709ee26374d3b3f39251612fd9420231a363b1424188",
+    "strata/flash-next/explore_owned_layer0_gdn_num10_v1.py": "090fb5e412dd4843ef626db600ae36ff2d649447aa8eaaac78364b365965d993",
+    "strata/flash-next/test_owned_layer0_gdn_replay_cpu_v1.py": "1531dc8e47c093b6814bb3172df02244580926a5946b92d91413ea7d80bc1c10",
+    "strata/flash-next/owned-layer0-gdn-num10-design-v1.md": "05011d2340f4b8cd18ca136d0f077179d4cdcbaaefc74b3c9dcb67efac62633f",
+    "strata/flash-next/owned-layer0-gdn-num10-source-plan-v1.json": "890a5e5b5ffa5a76e2dced293555beea2cfc01c9b0b80ad2ed0dd59c4d3fd1d3"
+  }
+}

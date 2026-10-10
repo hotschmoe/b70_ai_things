@@ -366,3 +366,35 @@ fidelity. Existing retained21/23 hooks can observe real GDNstate/conv before/
 after row3 and qkv/decay/beta; newsource35 NUM10 wrapper is beingprepared,
 no backendpatch needed. Realprefix4/8 discrepancy remains material. V8basic
 one92970 live; completecache/concurrency/criticalpath/latency/shelf remain pending.
+
+
+## 2026-10-10 - V8 onebasic PASS; real-state NUM10 capture started
+
+CONFIG -> Exact source35/C113 SDK/model unchanged. V8 defaultpin absent,
+explicit zero/positive preserved. New NUM10 matched same-source OFF/ON,
+rawfinalT1 prefixes1/2/4/8, 33 L0fields including true before/after GDNstates.
+Separate original-owned layer0 microreplay never receives native mathinputs.
+
+COMMAND -> V8one92970 terminal0/publicrawrecollection64261; NUM10 genuine
+prepare98335, CPU34field/packet +10parent +7admission/24file closure PASS;
+ownedL0microCPU13/55frozen closure PASS. Real NUM10parent98868 nowlive.
+
+RESULT -> V8onebasic PASS713s: absent-pin commandsource checks, naturaloutputs/
+LP20/matchedobserverfullhead/all48, ownedcleanexit/removal/posthealth/kernel/
+newfull4/pages/source PASS. ChildSHA
+0d32f4717a4c0e2f3e7b4ae1acd47107e1c199386cdf8f0a1ba6082342ea245c.
+NUM10 actualplan under f16-source35-20261009/num10-onecard-prepared,
+sourceplan SHA2026b454e437eef53155fd2dd05121beb630db630e3e5487b19fce6ab65c6210.
+Parent98868 at num10-onecard-run holds pairlease, strict/compiled prehealth
+running; no finalcapture/state result yet. Retained21/23 hooks already compiled
+in35; no backendpatch/ABIchange. Native actual 31 fields+2derived retain scope.
+New ownedL0replay sourceplanSHA
+890a5e5b5ffa5a76e2dced293555beea2cfc01c9b0b80ad2ed0dd59c4d3fd1d3.
+Original-only embeddings/HC/GDN preservezero ownhistory and physicalstate
+permutations; full48 savedrow/state replay guards prepared, no payloadrun yet.
+
+VERDICT -> Corrected client prerequisite qualified and actualmodelstate
+observation begun. GDNsynthetic27 parity doesnotsettle realprefix4/8gap.
+Require NUM10actual terminal/rawpacket/lifetime/OFFON/source4 proof, then
+original-own row3 state/params comparison. V8paired basic/cachegroups,
+concurrency/criticalpath/cleanlatency/shelf remain required. Fullgoalactive.
