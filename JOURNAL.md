@@ -14684,3 +14684,22 @@ prioractorretires; source40modeldiagnosticnowsoleGPUowner. ReviewedQSA
 VERDICT -> ActualGPUcampaign moves tofullmodelQSA localization whilecapture
 sourceinvestigation remainsbounded. Fulloriginalmath/cache/concurrency/
 physical/profile/latency/shelfgoalactive.
+
+
+## 2026-10-10 - EOS background waiter qualification gap localized
+
+CONFIG -> ActualV6warmcall2 rawEOS248046/nativeBDONEstop21, original
+frontendengine_end retainslegacyGeneratorExit/terminal_pinned_eosFalse.
+COMMAND -> Independentconsumedsource40serverbatchedgenerator/_release_slot
+sourceaudit; rootprotocolobserver code/actualsmallheader extraction.
+RESULT -> YieldEOS thenconsumerclose skipsnormalBDONE self.lastupdate;
+background releasewait consumesBDONE andupdatesheld/busy withoutself.last
+retirementreceipt. Actualbackgroundwaiterexit unobservedbyV6, so native
+late-stop grammar alone cannotqualifyAPIcoherence. Originalerrorpreserved.
+NEWoutput-onlysame-source waiterobserver/namedadjudication inprogress, must
+joinactualRID/gen/terminalqueueconsume/threadexit/client/native/text proofs.
+ActualCPU4SYCLbundleAPI headers extracted/verified; directnewELF modulequery
+willobservednewreplay only, nohistoricalJIT authority. QSA15830ownspairlease
+whileleasedparentsemanticrecheck livePID1204182, no modelleaf/outputyet.
+VERDICT -> ConcreteAPIqualification gap andrealnextobservables. No bypass
+orlegacyerrorrewrite; fullmodel/cache/concurrency/latency/shelf active.
