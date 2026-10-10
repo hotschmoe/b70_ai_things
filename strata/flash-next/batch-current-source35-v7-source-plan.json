@@ -12,16 +12,17 @@
     "actual_GPU_Docker_or_model_forward_execution": false,
     "actual_genuine_plan_preparation_by_source_agent": false,
     "native_serial_numerical_comparison_completed": false,
-    "model_math_qualified": false
+    "model_math_qualified": false,
+    "final_source_join_CPU_tests_passed": 11
   },
   "VERDICT": "PASS source/CPU integration contracts only; independentreview androotgenuinepreparation/native2serial controls next",
   "files": {
-    "strata/flash-next/audit_batch_numerical_suite_v7.py": "a240318f774a3dbe1e1bc9656f1b2330561ff774c8db7231a4b1c092b79316c4",
+    "strata/flash-next/audit_batch_numerical_suite_v7.py": "a7bf95ffadd0bd7fb97a37b3f77a5114be223a0b5fb85f7eb77f63eac49fc033",
     "strata/flash-next/parse_usm_logical_free_trace.py": "71714821736fe98790b80f85d1ab72ac59f58ee6336298721f0aaee2753ca665",
     "strata/flash-next/audit_fidelity_observer_coverage.py": "c23f73131b4d525c7e322f913ae6f0b600b07073c0125b9d1d66824725dbec47",
     "strata/flash-next/collect_fidelity_observer.py": "5c29e5925682d4cd5b075b549b8b12dd42ed995109f0d86675bb2e59a6c3889b",
     "strata/flash-next/batch_numerical_execution_v7.py": "34946addb91fff11e888c603c0ad50d84456667726b9a536d42b87fa205cbb1f",
-    "strata/flash-next/qualify_batch_numerical_v7.py": "b75002f9cae3938277f2a570848ca2a275382057dda4d776be7cc9f07d503bd1",
+    "strata/flash-next/qualify_batch_numerical_v7.py": "14cb9761faef7ed02501e35ac505684312e759d5b238783f39bd0fb9ea8aa52e",
     "strata/flash-next/batch_numerical_proofs_v7.py": "53a53259366b221274d4aa32adc0227d22b50b76b1331087d0c04a6b34759a47",
     "strata/flash-next/batch_numerical_proofs_v6.py": "290e52921e7618195e6b2e5bd3affcdab6116574e1b3bc2c5023609674d82c81",
     "strata/flash-next/run_batch_numerical_pilot_v7.py": "007cfc79109c441eb45b5ed5fe115d8c265f5d563889768df71db3c0de59c9ab",
@@ -49,11 +50,12 @@
     "strata/flash-next/c1-combined-v13-source-plan.json": "ecfeab161e4f833777cd2a50274b1250f32fd98202aeca2a826c8f8b85536f72",
     "strata/flash-next/c1-combined-v13-parent-source-plan.json": "6e7c2602ecd6b8a1724a611eea1d4f8f4b3371f8e54b9875c3562ef683da9c63",
     "strata/flash-next/current-ple-prompt35-engine-build-plan-v1.json": "82004f6cee0f975c433d245b304aff10d67dd33e028cf926a08ef5eead892ef7",
-    "strata/flash-next/batch-current-source35-v7-design.md": "b7a2f8f72a989305cd7b5cf96228f683b41886ae7474b947137560acf7416951",
+    "strata/flash-next/batch-current-source35-v7-design.md": "c15fcd06fa2d9832b8ac6c9f97fb2367130672d0f260a5836efdc31440f4839d",
     "strata/flash-next/test_batch_current_source35_cpu_v7.py": "b3d29a1a95f39ada3c41f2eddd135f3a565068422cbbbc12180b4fcb175ea1e2",
     "strata/flash-next/batch-numerical-case2-source35-v2.json": "e39ecfbf38ebf67e42655710104d2bf53b53b30423f706c5e62e98555085386e",
     "strata/flash-next/batch-numerical-case4-source35-v2.json": "2ded25c365c0fe79db09f3218ee329be715eb84a917db647484966264bf1af6d",
-    "strata/flash-next/batch-numerical-case6-source35-v2.json": "c240d32b2ff911185ed59f61cbd71b935a42655021974e93ae023f651cb20470"
+    "strata/flash-next/batch-numerical-case6-source35-v2.json": "c240d32b2ff911185ed59f61cbd71b935a42655021974e93ae023f651cb20470",
+    "strata/flash-next/test_batch_v7_final_source_join_cpu.py": "f73f442f6f80aa8dbcd6c7dbceeceb91eb08408ace5b73c4835af0cc657d0084"
   },
   "budgets": {
     "native_warm_and_target": 32,
@@ -79,5 +81,16 @@
     "strata/flash-next/run_batch_numerical_pilot_v7.py": "007cfc79109c441eb45b5ed5fe115d8c265f5d563889768df71db3c0de59c9ab",
     "strata/flash-next/batch-ARM-event-scope-v5-source-plan.json": "b69ef773ee807562c7dc0e46e81ac24fab71fd9d04561f1ba83783135e0eb0b6"
   },
-  "engine_plan_sha256": "82004f6cee0f975c433d245b304aff10d67dd33e028cf926a08ef5eead892ef7"
+  "engine_plan_sha256": "82004f6cee0f975c433d245b304aff10d67dd33e028cf926a08ef5eead892ef7",
+  "post_checkpoint_hardening": {
+    "prototype_commit": "092b3e0",
+    "prototype_source_plan_sha256": "3623297cbf45f2ed94301d8b9a0ee2da6dd2b5f428435863e2c302c7f1b830d3",
+    "actual_genuineV7_preparation_before_hardening": false,
+    "external_input_child_JSON_and_SHA_join": true,
+    "parent_postidentity_exact_path_revision_current_orderedstat5": true,
+    "scan_after_native_terminal_childfinish_and_posthealth": true,
+    "both_preserved_known_page_views_bracket_NEW_full4": true,
+    "current_genuine_C113_SDK_topology_path_pages_admitted_before_after_readerwork": true,
+    "independentreview_required_before_root_genuine_preparation": true
+  }
 }

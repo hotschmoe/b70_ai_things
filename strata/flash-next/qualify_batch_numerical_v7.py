@@ -192,9 +192,11 @@ def main():
    post=health('post');faults('post-kernel-journal');parent['kernel_fault_gate_passed']=True
   except Exception as e:parent['errors'].append('Post-health/journal: '+str(e))
   child_report=read(child_dir/'report.json') if (child_dir/'report.json').exists() else {}
-  after=max(child_terminal_epoch or time.time(),child_report.get('finished_epoch',0));identity=None
+  after=max(child_terminal_epoch or time.time(),child_report.get('finished_epoch',0),parent.get('post_health_finished_epoch',0));identity=None
   try:
+   parent['known_pages_before_hash']=preserve_source_pages(shards[2],out,'before-full4');require(parent['known_pages_before_hash']['passed'],'Both known source pages failed before full4');save()
    identity=full_buffered_identity(lock_path,lock,shards,out/'post-model-identity.json',after)
+   parent['known_pages_after_hash']=preserve_source_pages(shards[2],out,'after-full4');require(parent['known_pages_after_hash']['passed'],'Both known source pages failed after full4');save()
    if not identity['passed']:parent['errors'].append('Complete post-run buffered model identity failed; no mutation/repair attempted')
    source_watch('post')
   except Exception as e:parent['errors'].append('Post-model identity scan: '+str(e))

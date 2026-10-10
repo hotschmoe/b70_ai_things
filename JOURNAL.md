@@ -11448,3 +11448,34 @@ teardownpassed, posthealth/new4 still live and pending.
 VERDICT -> Documentationprovenance correction, no experiment relabel or model
 qualification claim. Use separateactualevidence documents for frozen designs.
 Fullgoal remains active; unrelatedworktree changes preserved.
+
+
+## 2026-10-10 - Paired remaining cache PASS and matched one/pair raw parity
+
+CONFIG -> Source35/C113 exact original UD-Q4_K_XL; V10paired remaining-seven
+suite, V9onecard originalfailure retained plus qualified readonlyadjudication.
+COMMAND -> Leased47979 terminal0/PASS926s including ownedteardown/posthealth/
+kernel/newfull4/page/source gates. NEW pinnedCPUread-only2122 recollects both
+closed trees/all40 requests each/sevenproductionbranches, source/SDK/full4/
+ownedcommands/currentraws, then compares matched uncancelled requests.
+RESULT -> PairedparentSHA edc5eeb6e306e3f5a882c1c2714ed07c7fb142bd70d069fe03f4d7fa751801a2.
+Path: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/serial-cache-v10-pair-remaining/parent-qualification.json.
+Both layouts all40requests recollected, fullhead/all48 firstwindow vectors,
+outputs/LP20 bitwise for36uncancelled crosslayout pairs. Four asynchronous
+cancel requests skippedforcrosslayout parity but eachlayout isolation/cleanup
+was qualified. Both originalevidence trees unchanged. ComparisonSHA
+6d6c45d9b6e80fbe5c4040990a121cdf085c1113b4c95342f9ed089f6827377a.
+Path: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/serial-cache-v9-v10-remaining-topology-recollection-v1/comparison/report.json.
+No GPU/model-forward inreader, no oldfalse flagflip. V7genuine2native prepare
+1168 underwayCPUonly after36CPU controls/39fileclosure independentreviewPASS.
+CPUfunctionalpilot initialsourceV1 root11CPU PASS, unexecuted; independent
+review found memorymonitor errors do notinterrupt blocking1200sHTTP. Checkpoint
+prototypebeforefix; no inference launch until ownedimmediatestop is verified.
+InitialpilotplanSHA2a4e1abc032583d02cf765a375738d0e89b1f448e9f8385c2dbf833057437573.
+VERDICT -> Bounded serial remaining cache qualified onone/pair with matched
+noncancelled numericalparity. CompleteAPI/concurrentcache/staleidentity/cache
+memorylatency/fullmodelquality/profile/latency/shelf stillrequired. CPUmodel
+functionalpilot next afterprelaunchmemorycancel fix, no broadquality/speedclaim.
+Source-only prototypes may be hardenedbeforeactualplans/runtimes withinitial
+source/hashes preserved in git; do not rewrite actualoldexperiment evidence.
+Fullgoal remainsactive; unrelatedworktree changes preserved.

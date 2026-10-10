@@ -73,3 +73,24 @@ Root must use new plans and source fingerprints. No old source-harness
 plan transfer, cached pass boolean, reconstructed native token history,
 model-quality threshold, speed claim, serving shelf promotion or campaign
 completion follows from this integration.
+
+## Prelaunch hardening after prototype checkpoint092b3e0
+
+The initial source-only prototype/sourceplan3623297cbf45f2ed94301d8b9a0ee2da6d
+d2b5f428435863e2c302c7f1b830d3 is preserved in git history. No genuineV7 plan
+or native run existed before this revision. New V7 files may be hardened
+before launch; all executed/frozen V6, ARM auditorV5 and pilotV7 remain exact.
+
+The parent now preserves both actual known page views immediately before
+and after its NEW four-shard scan, requiring both to pass. The scan's
+boundary is max(childterminal, childreportfinished, posthealthfinished).
+The final reader joins external/input/child snapshot JSON and SHA exactly,
+requires the postidentity's canonical parent path and publisher revision,
+checks ordered shard paths and currentstat5, admits genuine current C113
+and exactSDK/topology/path before and after reader work, and checks current
+page views. Stored page offsets/digests/stat/path must match the recorded
+four-shard identity and current views; preserved4096-byte views must have
+correct SHA/extent, stay inside the owned parent directory and bracket the
+scan before parent finish. Serial preparation inherits that complete
+readonly proof before any GPU action. Eleven additional tiny synthetic
+final-join positive/negative controls pass; no actual model file is read.
