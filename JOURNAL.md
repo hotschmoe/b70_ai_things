@@ -14391,3 +14391,20 @@ Newexplicitregistryassociation consumerneeded; oldledger/failurepreserved.
 VERDICT -> Concreteone/pairGPUbaselinesdone; no reference/fullcache/speed
 promotion. Nativecapturelive, wholecache successorprepareportinprogress.
 Fullmath/state/concurrency/physical/profile/latency/shelfgoalactive.
+
+
+## 2026-10-10 - Actual GPU nativecaptureV2 dispatch coverage fails
+
+CONFIG -> UnchangedoriginalGPUhelper4d86/inputde82/testedV2SO9f008,
+pairlease65012/card0leaf, collector571a CPU4/nativefakeABI4 passed.
+COMMAND -> Actualruntimecommand terminal0/PASS/all3frames; rawmaps confirms
+/interposer/half37_native_interposer.so loaded. Originaloutput/health parent
+finalgates stillpending. Readactualnative-code/events.jsonl.
+RESULT -> Onlyterminal event, failedfalse/events0/binary_bytes0. No module/
+kernel/input/nativecode observed despiteactualGPUexecution. Export/proctable
+preloadcapture coverageFAIL; no inferenceofJITabsence or successfulcapture.
+Author notified forNEWspecific-handle dlsym successor with fakeexplicit
+dlopen/dlsym CPU case. FrozenV2/results preserved; no modelmathchange.
+VERDICT -> RealGPUcoverage finding; keephealthyhelperreplay scope separate.
+SharedNEWV4 explicit171association portprogressing afterV3prepare refusal.
+Fullfidelity/cache/streams/profile/latency/shelf remainactive.
