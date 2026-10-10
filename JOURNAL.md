@@ -15010,3 +15010,10 @@ RESULT -> Actualqueuewaitsbusycard0; noGPUconcurrentactor orstalesaved
 semanticPASS reused. Servicehealth retainsleaseuntiloriginalexit.rc.
 VERDICT -> Concreteexternalstate recovery/progression, fullsemantic/model
 identity/health/numerical gates mustrequalify currentboot. Fullgoalactive.
+
+## 2026-10-10: Previous boot shutdown evidence and cautious GPU resume
+
+CONFIG -> Fixed kernel 7.1.0-070100; post-reboot campaign recovery.
+COMMAND -> journalctl previous-boot shutdown window and targeted previous-boot kernel scan. Current full four-shard publisher hashing, then self-leased SOURCE40 whole-390 upload refresh.
+RESULT -> At 23:19:21 UTC systemd-logind records Power key pressed short, Powering off, and System is powering down, followed by orderly teardown. The targeted kernel scan found no matching panic/OOM/lockup/GPU-wedge messages. Current full four-shard hashes passed. Upload refresh session 68770 acquired the pair lease; completion remains pending. Runtime evidence: f17-source37-20261010/previous-boot-shutdown-observation-v1.json and companion logs.
+VERDICT -> Shutdown cause is unresolved; logs support an orderly power-key-triggered shutdown, not attribution to a test crash. Continue one leased GPU workload at a time with pre/post health; preserve interrupted attempts as incomplete. Full campaign goal remains incomplete.
