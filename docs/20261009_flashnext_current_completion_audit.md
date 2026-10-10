@@ -936,3 +936,36 @@ cache0 is refused and separate correctly configured API work remains required.
 The controller removes duplicate parent admission only; child and runner
 semantic checks remain. No measured dev-loop saving or actual4/6 runtime
 qualification is established yet. All original completion requirements stay.
+
+
+## 2026-10-10 - Genuine native4 preparation and passive CPU retry readiness
+
+H46 actual preparation79819 is terminal0/PASS. Its immutable generated plan
+SHAeb857c056dac88148dce006ae942a3580269f80584484219e63f473265218d8c
+binds native4 OFF, source37, both cards and frozen9361 controller. Root actual
+parent19472 acquired pair exclusion and is live in full semantic admission;
+no native4 result/parity/health/postidentity PASS is claimed yet. The same
+original prepare handle was polled to terminal, never restarted on silence.
+
+Process metadata observation at63.69s records47,675,602,809 logical read bytes
+and0 physical read bytes for admissionPID959083. This documents cached read
+amplification, not storage bandwidth or serving latency. Artifact is
+f17-source37-20261010/h46-off-admission-read-observation-v1.json. New H47 explicit
+process-local pack witness ports retain complete predevice/postoperation byte
+reads and original producer provenance. Root current32 witness/port/case CPU
+controls pass, including call routing and mutation rejection. Integration
+source freeze/peer review and matched runtime speed measurement remain pending.
+
+Passive CPU observer V3 source plan0b4fa9e0/128 and14 CPU controls now have
+independent READY review. It closes exact artifact/error/current-source reader
+gaps while preserving explicit census coverage errors and causal attribution
+false. Source-guarded same-recipe retry orchestration1dd69176/132 plus3 CPU
+controls is committed3550e57, awaiting lifecycle review. It must retain the
+outer pair exclusion across idle30, unchanged e633 all16 fresh completions
+and passive observation. No actual observer idle/model retry has run, and
+strict memory guards remain unchanged. No overlap with liveGPU/model actors.
+
+Original full-model fidelity, complete prefix/cache state and memory costs,
+API1/2/4 and bounded6, correlated x2 traces, clean matched latency/fairness
+improvements and verified reproducible shelf remain incomplete. No new decode
+speed or production stability claim follows from these source/readiness steps.
