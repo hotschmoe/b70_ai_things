@@ -12477,3 +12477,27 @@ review rejects globalwarms-only chronology and droppingERR/SERR/FATAL; new
 freeze required beforeanyactualcontrol run. OriginalV6 failure preserved.
 VERDICT -> Concrete twoGPU observer/runtime corrected37 proof advances;
 complete originalmath/cache/quality/profiling/latency/shelf goal active.
+
+
+## 2026-10-10 - Serial cache-policy parser failure closed; fresh-state controls live
+
+CONFIG -> New37/40 sameSDK freshserial exactprefix comparison; separate
+source35 same235 state controls preserving actualtarget/warm/configuration.
+COMMAND -> Serial62605 terminal1/FAIL471s, engine0/removed/noForcedCleanup,
+posthealth/kernel/new4 PASS; parentSHAbe7f5eddc39d4cdc14f48a106dcee871156c6c9df10961a9ac7879d0ac0b43f6.
+Root/independent corrected same23516CPU/170SHAASCIIAST closure PASS, sourceplan
+a18dee2d6d5868b409a4379a7cbf7164fe2c754974f474e69436d1eb0bed8080;
+tracked5172251 beforegenuineprepare15013 terminal0/PASS and leased31395start.
+RESULT -> Serial firstjob has49 captures, fails inheritedcacheON reusable
+predicate. Actualsource37/PCL tuple is publishedFALSE/chain_updatedTRUE/
+live_reusableFALSE; earlier proposed chainFALSE wasincorrect. LegacyPIN0
+request mustremain explicitlyhistorical, not falselyabsentPINqualified. New
+strictreadonlypartialadjudicator and absentPIN successor beingprepared.
+Same235 controller enforces owncompletedwarm2 beforeeachscalar target,
+disjointcohorts, oneengine/PID and nativeerrors; actualprehealthPASS/childlive.
+Sharedobserver process64MiB budget preventsmonolithic16phaseactor; newbounded
+scenarioactors mustretainfullrequirements withcoldpriming peractor and no
+assumed state transfer. Realvictim/stale/history/fresh49 requirements remain.
+VERDICT -> Realfailure preserved andlocalized; no paired196comparison yet.
+Actualexactinput fresh-state test nowrunning, no EOS/state/cache/math claim.
+Fulloriginal goal active; source37 kernels/weights untouched.
