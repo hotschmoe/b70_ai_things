@@ -1,0 +1,436 @@
+{
+  "actual_GPU_touch": false,
+  "actual_binding_canonical_sha256": "e06681a1b570c2ad6fb009b2cc88c6a372213477058d20aab4c461dea26f499d",
+  "actual_model_inference": false,
+  "actual_session_id": 1992,
+  "actual_terminal_return_code": 0,
+  "full_model_math_qualified": false,
+  "matched_devloop_speedup_qualified": false,
+  "model_cache_latency_or_shelf_qualified": false,
+  "native_python_equal": false,
+  "native_type_differences": [
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[0].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[1].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[2].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[3].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[4].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[5].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[6].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[7].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[8].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[9].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[10].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[11].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[12].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[13].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[14].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[15].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[16].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[17].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[18].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[19].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[20].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[21].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[22].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[0].allocations[23].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.owners[1].allocations[0].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.expected_owners[0]",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.mirror.expected_owners[1]",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.snapshots.owners[0].key",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.snapshots.owners[1].key",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[0].allocations[0].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[0].allocations[1].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[0].allocations[2].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[0].allocations[3].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[0].allocations[4].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[0].allocations[5].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[0].allocations[6].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[0].allocations[7].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[0].allocations[8].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[0].allocations[9].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[0].allocations[10].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[0].allocations[11].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[0].allocations[12].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[0].allocations[13].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[0].allocations[14].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[0].allocations[15].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[0].allocations[16].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[1].allocations[0].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[1].allocations[1].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[1].allocations[2].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[1].allocations[3].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[1].allocations[4].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[1].allocations[5].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[1].allocations[6].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[1].allocations[7].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[1].allocations[8].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[1].allocations[9].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[1].allocations[10].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[1].allocations[11].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[1].allocations[12].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[1].allocations[13].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[1].allocations[14].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[1].allocations[15].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[1].allocations[16].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[2].allocations[0].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[2].allocations[1].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[2].allocations[2].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[2].allocations[3].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[2].allocations[4].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[2].allocations[5].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[2].allocations[6].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[2].allocations[7].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[2].allocations[8].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[3].allocations[0].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[3].allocations[1].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[3].allocations[2].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[3].allocations[3].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[3].allocations[4].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[3].allocations[5].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[3].allocations[6].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[3].allocations[7].owner",
+      "saved_type": "list"
+    },
+    {
+      "actual_type": "tuple",
+      "path": "$.actual_private_off_on_binding.actual_ON_owner_logical_frees.private_slots.owners[3].allocations[8].owner",
+      "saved_type": "list"
+    }
+  ],
+  "new_4_or_6_runtime_qualified": false,
+  "original_H46_failed_parent_rewritten": false,
+  "original_H47_failed_preparation_rewritten": false,
+  "original_plan_path": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/batch46-pair-native4-off-prepared-v1/plan.json",
+  "original_plan_sha256": "eb857c056dac88148dce006ae942a3580269f80584484219e63f473265218d8c",
+  "pack_complete_byte_boundaries": [
+    "admission_start",
+    "predevice_complete_byte_recheck",
+    "postoperation_complete_byte_recheck"
+  ],
+  "pack_semantic_digest_calls": 3080,
+  "report_path": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/h46-paired-binding-types48-readonly-v1.json",
+  "report_sha256": "6ed05cab321e67733043fd22541911d3b320aa0695b57fb4b41dcafc78739930",
+  "reported_wrapper_seconds": 559,
+  "saved_binding_canonical_sha256": "e06681a1b570c2ad6fb009b2cc88c6a372213477058d20aab4c461dea26f499d",
+  "schema": 1,
+  "source_plan_sha256": "cf26331e4549db30eb6adf42e44d603dabf20d1c73d6af71aa866b2ee6459165",
+  "typed_canonical_JSON_equal": true
+}
