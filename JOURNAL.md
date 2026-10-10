@@ -13969,3 +13969,22 @@ identity joins are required; this operation is not merely a small-code read.
 VERDICT -> Supported original image extraction only, no original JIT/ISA or
 conversion cause/model fidelity qualification. Tool translation waits until
 the sole pair actor finishes. Full original goal remains active.
+
+
+## 2026-10-10 - Original executed embedded half conversions observed
+
+CONFIG -> Frozen originalELF extractor a674e0f0, unchanged executed helper
+4d86d9b8d50655949cd30ded27e20337e7ed03ab20549ba29915dae9abcedb63.
+COMMAND -> Root bounded symbol-extent ELF/SPIRV parsing; all six original
+entrypoints and module SHA256 identities retained. No tool/kernel execution.
+RESULT -> Original direct33 and graph-wrapper21 Expression each retain two
+FConvert instructions forming float32->float16->float32. Original store36/24
+and load38/25 each retain one conversion and distinct float16 types. Receipt
+f17/half37-original-elf-bounded-code-observation-v4.json SHA256
+8c2b23561ae502a8302f8d173c0913d2de33e3f0790c76b42760f30862c03f68.
+Full current original public/runtime/source recollection37439 still live; this
+bounded-code receipt explicitly does not claim that admission is complete.
+VERDICT -> Conversion deletion before original embedded SPIRV is unsupported
+by these observed instructions. Runtime JIT/ISA and discrepancy cause remain
+unproven; original model/reference/tolerances unchanged. H54group1 original
+qualifier82490 has actual READY/health/ACK; remaining98 qualification pending.

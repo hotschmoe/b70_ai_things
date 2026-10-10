@@ -1330,3 +1330,15 @@ qualified within native-batch-versus-serial scope. Group1 qualifier82490 remains
 live with actual child PID1142789; READY has not yet been observed. Remaining
 98 comparisons, complete392 public join, original48 reference math, complete
 cache/concurrency/profile/latency/shelf requirements remain open.
+
+
+## 2026-10-10 - Original executed embedded SPIRV narrowing
+
+Original unchanged executed Half37 ELF4d86d9b8 bounded symbol/entrypoint
+inspection confirms direct33 and graph21 Expression contain float32->float16
+->float32 FConvert roundtrips. Actual bounded-code receipt8c2b2356 retains six
+module extents/hashes/instructions and explicitly leaves full current runtime
+recollection unproven; job37439 is live. Runtime JIT/ISA/cause and model fidelity
+remain unqualified. Supported original-binary text controller is prepared but
+unexecuted until pair actor retires. H54group1 actual READY/health/ACK complete,
+serial child now present; remaining98/full392/public qualification still pending.
