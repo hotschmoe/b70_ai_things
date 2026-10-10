@@ -13481,3 +13481,19 @@ localization before changing the independent reference. No full-model math,
 normal-model graph, cache, serving latency or shelf qualification follows.
 
 Runtime artifacts: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/owned-layer3-qsa-control-v4-run-v1/
+
+
+## 2026-10-10 - QSA indexer tail storage discrepancy localized
+
+CONFIG -> Own original raw input97a and actual source37 QSA46835 output;
+small384-element final tail only, original independent arithmetic unchanged.
+COMMAND -> Agent small-array audit plus root independent NumPy bitwise reads
+of raw.f32 and route0/indexer_tail_windows.f32 final window.
+RESULT -> Device final tail exactly equals original F32 raw rows0..2. It differs
+from FP16-RNE then F32 widening in all384 words. Agent independently confirms
+own tail equals that half-roundtrip and own raw matches prepared input. Consumed
+native indexer source explicitly includes F32-to-half-RTE-to-F32 conversion.
+VERDICT -> Observed storage-contract discrepancy before normalization; compiler
+or lowering cause is not qualified. New minimal expression-roundtrip versus
+materialized-half discrimination proposed. No tolerance adjustment/reference
+shortcut. Parent46835 final admission remains live; full goal incomplete.

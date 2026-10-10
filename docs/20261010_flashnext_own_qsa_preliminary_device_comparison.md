@@ -24,3 +24,13 @@ localization before changing the independent reference. No full-model math,
 normal-model graph, cache, serving latency or shelf qualification follows.
 
 Runtime artifacts: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/owned-layer3-qsa-control-v4-run-v1/
+
+## Tail storage localization
+
+Independent small-array recollection finds the final device tail BITWISE equal
+to original F32 raw rows0..2, and different from FP16-RNE followed by widening
+in all384 words. The owned candidate tail follows the half-roundtrip. The
+consumed native source explicitly requests float-to-half-RTE-to-float. This
+localizes the discrepancy before normalization; its execution cause remains
+unproven. A minimal expression-versus-materialized-half test is being prepared,
+preserving the original independent reference and frozen runtime sources.
