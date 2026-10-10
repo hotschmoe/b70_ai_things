@@ -1,0 +1,23 @@
+"""Read-only actual two-prompt Strata functional parent/raw/current-source join."""
+from pathlib import Path
+import strata_functional_screen_v1 as ctrl
+from batch_numerical_proofs_v7 import validate_artifacts
+import qualify_batch_numerical_v7 as shared_parent
+from audit_batch_numerical_suite_v7 import final_source_join
+
+def finalized_binding(run_root):
+ root=Path(run_root).resolve();parent=ctrl.read(root/'parent-qualification.json');child=ctrl.read(root/'child/report.json');plan=ctrl.read(root/'input-plan.snapshot.json');chain=ctrl.manifest_binding(plan)
+ ctrl.require(parent['passed'] is True and parent['scoped_collection_or_serial_arm_qualified'] is True and parent['child_return_code']==0 and parent['owned_containers_terminal'] is True and parent['forced_cleanup'] is False and parent['interrupted'] is False and parent['errors']==[] and parent['post_health_passed'] is True and parent['pre_health_passed'] is True and parent['kernel_fault_gate_passed'] is True,'Actual functional parent lifecycle failed')
+ ctrl.require(child['collection_and_teardown_passed'] is True and child['error'] is None and child['screen_generation']==1 and child['engine_rc']==0 and child['removed'] is True and child['state']['ExitCode']==0 and not child['state']['Running'] and not child['state']['OOMKilled'],'Actual native functional owned terminal differs')
+ ctrl.require(parent['wrapper_sha256']==ctrl.sha(Path(__file__).with_name('qualify_strata_functional_screen_v1.py')) and parent['controller_sha256']==ctrl.sha(Path(ctrl.__file__)) and parent['child_report_sha256']==ctrl.sha(root/'child/report.json') and chain==parent['prepared_chain'],'Functional actual controller/parent/source association differs')
+ for stage in ('pre','post'):
+  health=ctrl.read(root/(stage+'-health.json'));ctrl.require(health['passed'] is True and health['cards']==[0,1] and len(health['files'])==2 and health['health_image']==shared_parent.HEALTH,'Actual strict percard/compiledpair health missing')
+  expected_health=[[str(ctrl.ROOT/'vllm/int4/diagnostics/xpu_health_strict.sh'),'--img',shared_parent.HEALTH],[str(ctrl.ROOT/'bin/xpu-collective-health'),'--img',shared_parent.HEALTH,'--p2p','0','--timeout','180']]
+  for row,command in zip(health['files'],expected_health):ctrl.require(row['return_code']==0 and row['error'] is None and ctrl.sha(row['path'])==row['sha256'] and row['command']==command and ctrl.sha(root/(Path(row['path']).stem+'.command.json'))==row['command_file_sha256'],'Actual functional health log/command changed')
+ ctrl.require(child['native_supervisor_pid']==parent['child_pid'],'Actual functional native supervisor differs from owned parent');expected_command,expected_container=ctrl.native_command(plan,root/'child/native',child['native_supervisor_pid']);ctrl.require(ctrl.read(root/'child/native/command.json')==expected_command,'Actual functional full command recipe changed');ctrl.require(expected_container in expected_command,'Native source container recipe invalid');source=final_source_join(root,parent,plan,child);validate_artifacts(root/'child',child['artifact_bindings']);rows=ctrl.read(root/'child/native/requests.json');ctrl.require(rows==child['semantic_cases_and_repeats'] and child['requests_sha256']==ctrl.sha(root/'child/native/requests.json') and len(rows)==4,'Actual four fresh native records changed')
+ for row,(case,repeat) in zip(rows,[(0,0),(0,1),(1,0),(1,1)]):
+  ctrl.require(row['case']==case and row['repeat']==repeat,'Native meaningful-case repeat roster differs');raw=row['raw'];text=ctrl.serial.decode_output(plan['pack'],raw['output_ids']);gate=ctrl.functional_request(raw,case,text,plan['fixtures'][case]['ids']);meta=ctrl.serial.extract(raw,root/'child/native/captures',False,False,ctrl.expected_stage_ranges(plan['args']));ctrl.require(text==row['decoded_output'] and gate==row['functional'] and meta==row['work_ledger'] and meta['ledger']['actual_reused']==0,'Actual meaningful output/decode/functional/work proof changed')
+ for case in (0,1):
+  first,second=rows[case*2:case*2+2];ctrl.require(first['raw']['output_ids']==second['raw']['output_ids'] and first['decoded_output']==second['decoded_output'],'Actual native deterministic repeat differs')
+ ctrl.require(ctrl.manifest_binding(plan)==chain,'Functional current source/config changed during raw recollection');after_source=final_source_join(root,parent,plan,child)
+ return parent,child,plan,{'source_join':source,'post_raw_source_join':after_source,'meaningful_two_prompt_functional_passed':True,'fresh_native_repeats_passed':True,'report_sha256':ctrl.sha(root/'child/report.json'),'registered_quality_qualified':False,'full_model_math_qualified':False,'CPU_native_token_bitwise_authority':False}

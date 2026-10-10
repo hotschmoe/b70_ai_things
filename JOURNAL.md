@@ -11610,3 +11610,32 @@ VERDICT -> Realcurrent native2collector proved andfreshserialreference arm
 nowrunning. CPUtwo-promptreference PASS stands; fullmodel/nativequality and
 concurrency/completecache/profiling/latency/shelf remainopen. No speedclaim.
 Fullgoal remainsactive; alloldfailures and unrelateddirtychanges preserved.
+
+
+## 2026-10-10 - Cache-off serial reader mismatch; functional screen prepared
+
+CONFIG -> V7freshserial GEN1/cacheOFF, actualnative2collector qualified. Separate
+source35Stratafunctional screen exactCPUV3two-prompts/freshGEN64 observerOFF.
+COMMAND -> Serial9143 terminal1/FAIL421s. Firstjob engineexit0/normalremoved,
+posthealth/kernel/new4/pages/source gates; no numericalcomparison attempted.
+Existingcache.extract fails becauseitrequiresnoncancelled live-reusablechain.
+Root12functionalCPU controls+57fileclosure/independentreview PASS; genuine
+onecardfunctionalprepare16788 PASS withsuccessfulCPUreport/30+39IDs bound.
+RESULT -> SerialactualfirstGEN1 fresh1 pin0 finishlength,59inputs/59evaluated,
+reused0/generated1/decode0. Genuine committed_live tuple (publishedfalse,
+chain_updatedtrue,live_reusablefalse) isexpectedwithcacheOFF; oldcachevalidator
+isappropriateforcachequalification butnotpurefreshnumericalreference.
+ParentSHA ce8ab07df9a4cb4be2b4f84f0d16a7c82eb92cd2f7d3978146b7b49f20be424f.
+Path: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/batch-v7-onecard-native2-serial0-run/parent-qualification.json.
+Agentreadonlynumericextract+firstprivatecomparison finds49vectors/fullhead+
+48residuals BITWISE; preliminaryonly, remaining3jobs uncaptured. NEWspecific
+cacheOFFcollector/mergedProtocol adapter preservesactualtuple andstrictsource/
+freshconsumption/spans/data; no falsifiedcacheflag oroldproofwaiver. Review
+caughtwrongtwo-FD protocolforfrozenexec2>&1 beforeanynewGPUattempt; fixpending.
+Functionalsourceplan1d353f69d619cca48545d9794a1697e502d450d7265fc475b77368ca8c5d5203,
+actualgenuineonecardplan prepared; no functionalGPUexecution yet.
+VERDICT -> SerialFAIL isreader-scope mismatch, notNN mismatch orhardwarefault;
+oldfailedV7retained. FreshremainingserialGPUjobs neednewpurpose-specificparser
+beforefull196join. Functionalnativecounterpart readyfornextlease; source/math/
+registry frozen, wholemodelquality/completecache/concurrency/latency/shelf open.
+Fullgoal remainsactive; unrelatedworktreechanges preserved.
