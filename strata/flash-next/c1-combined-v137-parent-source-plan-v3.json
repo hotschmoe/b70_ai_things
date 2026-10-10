@@ -1,0 +1,29 @@
+{
+  "schema": 1373,
+  "status": "Frozen source/CPU19 only; actual baseline runtime unexecuted",
+  "controller_generation": 137,
+  "parent_generation": 1373,
+  "engine_plan_sha256": "2e940d51c61abe5366526b926f89dcf9f42bf778feee5d13c9b72aefc2785ace",
+  "files": {
+    "qualify_c1_serving_combined_v137_v3.py": "46e348d958242587dda704ff8b61c32a04aaf7269e77dc277910bebd48443778",
+    "c137_journal_binding_v3.py": "f7794b4cb26189acb5449276c23677af1fa03316a4cf0c98bb356ccd3679ef36",
+    "test_c137_parent_journal_cpu_v3.py": "c0b17463738ae3b5f40277d5be8ce4153164865ae0df63138ea894714f6ac597",
+    "c1-combined-v137-parent-journal-v3.md": "79a02058a2d2a5281fc36dfc708df6982f7764a733dcc24067c29b5772947d29",
+    "c1_serve_controller_combined_v137.py": "ad129cf6f9a0832615df88e985437168af0c40082049dc9c2e05dac27147ac53",
+    "c1-combined-v137-source-plan.json": "f18bcec13d2864e5f8c55bc15156e0ec653ce26206ed0ff4f4b70e95b2c47b6a",
+    "c1-combined-v137-parent-source-plan-v2.json": "7f7ad7303df5348cab130201669998e8d558a6694239a014a9237704636203a4",
+    "qualify_c1_serving_combined_v137_v2.py": "0c70f97bc25837d8d09423355dca320d9a67139c592368207afd5da6768a9290",
+    "c137_journal_binding_v2.py": "9aef8b9eb6e3aa3c6b72b7f628c3711d75ac39a1d13cd8f74612e204ff9fc510",
+    "run_source_upload_oracle_full_v2.py": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec",
+    "source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+    "hosttrace36-batchstamp37-engine-build-plan-v1.json": "2e940d51c61abe5366526b926f89dcf9f42bf778feee5d13c9b72aefc2785ace"
+  },
+  "cpu_tests": 19,
+  "old_parent_runtime_proof_transfer_allowed": false,
+  "actual_c1_qualified": false,
+  "full_model_math_qualified": false,
+  "concurrency_qualified": false,
+  "proof_helper": "qualify_c1_serving_combined_v137_v3.validate_final_source_proof(directory,prepared)",
+  "source_proof": "c1-source-identity-proof-v137-v3.json",
+  "post_identity": "c1-post-model-identity-v137-v3.json"
+}

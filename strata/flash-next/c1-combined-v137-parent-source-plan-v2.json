@@ -1,0 +1,28 @@
+{
+  "schema": 1372,
+  "status": "Frozen source/CPU12 only; actual baseline runtime unexecuted",
+  "controller_generation": 137,
+  "parent_generation": 1372,
+  "engine_plan_sha256": "2e940d51c61abe5366526b926f89dcf9f42bf778feee5d13c9b72aefc2785ace",
+  "files": {
+    "qualify_c1_serving_combined_v137_v2.py": "0c70f97bc25837d8d09423355dca320d9a67139c592368207afd5da6768a9290",
+    "c137_journal_binding_v2.py": "9aef8b9eb6e3aa3c6b72b7f628c3711d75ac39a1d13cd8f74612e204ff9fc510",
+    "test_c137_parent_journal_cpu_v2.py": "2c0f5c8c69a6b259ca09b1b12432f8890d8732484e044166240ed98206a8026a",
+    "c1-combined-v137-parent-journal-v2.md": "038d8f242549846f25332de7d173a500f66b3dc1d001586426f595a01c4685c7",
+    "c1_serve_controller_combined_v137.py": "ad129cf6f9a0832615df88e985437168af0c40082049dc9c2e05dac27147ac53",
+    "c1-combined-v137-source-plan.json": "f18bcec13d2864e5f8c55bc15156e0ec653ce26206ed0ff4f4b70e95b2c47b6a",
+    "c1-combined-v137-parent-source-plan.json": "b20e725c7e25257d363a57a065a5bf8460af8c296052ec7eb3ee2c50ec6c246f",
+    "qualify_c1_serving_combined_v137.py": "f1108c0419f92d64b9cdee3ffdc941c6947505e04bc9204cc2f50b7e931dd035",
+    "run_source_upload_oracle_full_v2.py": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec",
+    "source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+    "hosttrace36-batchstamp37-engine-build-plan-v1.json": "2e940d51c61abe5366526b926f89dcf9f42bf778feee5d13c9b72aefc2785ace"
+  },
+  "cpu_tests": 12,
+  "old_parent_runtime_proof_transfer_allowed": false,
+  "actual_c1_qualified": false,
+  "full_model_math_qualified": false,
+  "concurrency_qualified": false,
+  "proof_helper": "qualify_c1_serving_combined_v137_v2.validate_final_source_proof(directory,prepared)",
+  "source_proof": "c1-source-identity-proof-v137-v2.json",
+  "post_identity": "c1-post-model-identity-v137-v2.json"
+}

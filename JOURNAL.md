@@ -12188,3 +12188,22 @@ independentreview. No actualbaseline serve untilstrongparentreviewcomplete.
 VERDICT -> NewABI deliberately requalifiedonselectedsource bytes; genuine
 sharedprefix input foundation improvescachetests. Fulloriginalgoal active,
 metadata/prototypefailures kept, no speed/shelf/cache/fullmodel promotion.
+
+
+## 2026-10-10 - Strong C137parent1373 ready; semanticregistry bug blockedbeforewrite
+
+CONFIG -> NEW C137parentV3 exactjournal/health/identity/snapshot crossjoin,
+samefresh37 SDK/controller/source/recipe; no old1371/1372prooftransfer.
+COMMAND -> Root+independent19CPU controls and12SHA/ASCII/AST closure PASS,
+sourceplan cdf2a877c3d2d3c3e9b3d7a74b08a36c683ade49907762860d194099e4f258ce.
+RootYAMLsemantic registrationpreflight rejects proposedbatch delta2acfc1:
+appended top-level models key replacesold149+baseline4 list with12 inparse.
+RESULT -> Exactcanonical E0abd unchanged, no registrationwrite. Source-only
+SHA/byte preservation tests missed YAML semantics; NEW listentries-onlyV2
+proposal +duplicate-key-reject/alloldrows+topkeys tests beingprepared. CPU
+prepare32468 inadvertentlystartedafterfailedfirstshellstatement; rootstopped
+only ownedverifiedPID865040 SIGINT, terminal130 duringhash, noGPU/modelserve.
+Partialc137-onecard-segmented retained+abortreceipt; nextgenuineprepare newdir.
+VERDICT -> Actualcaughtsemantic configurationbug; userregistry/weights untouched.
+Strongbaseline supervisor nowreadyafter correctedregistration. Freshupload390
+andrealshared272token fixture remainvalid; fulloriginalgoal active.
