@@ -14511,3 +14511,20 @@ Actualruntimecapturecoveragepending; no unchangedfailedV3rerun. QSAfix
 actualimmediatePopenexit andexactREADYparentproof sourcecontrols pass.
 VERDICT -> Concrete nextGPUpaths prepared; actualmodel seal<300 unknownuntil
 run. Fullmodelmath/cache/streams/physical/profile/latency/shelf goalactive.
+
+
+## 2026-10-10 - Failedcache suite retires; corrected actualGPUcapture starts
+
+CONFIG -> SharedV4 originalwhole72322/suite3a6dc6, capturedfirstactorfail
+and exactownedrecovery preserved. NEWcaptureV4 testedSODD155/sourceb3db.
+COMMAND -> Originalsuite72322 terminal1/391s, firstparentpoststrict/compiled
+health/kernel/newfourPASS. RootcollectorV3hash30644/CPU9PASS0.014 and
+actualCPUABI5 previouslyPASS, launchactualGPU15207 underpairlease/card0leaf.
+RESULT -> Cachefailuredoesnotclaimactor/fullcachequalification; actualmodel
+wasrefusedbeforeloadonartifactenv plusbindordercleanupdefect. No otherGPU
+actoractive; currentcaptureV4 prehealth/livecoverage pending.
+Sourceauthorfoundbatch0manifestunfilteredenv inV5 sourcefix; V5heldsource
+andNEWV6 willprojectall signedfrontendfamilies viaactualoriginalvalidator.
+VERDICT -> Concrete realruntime successors, notunchangedfailedreruns.
+QSAfreshV3CPUprepare98835 remainslive/sourcepeerREADY; actualGPUobserver
+seal/numerics stillrequired. Fullmodel/cache/concurrency/latency/shelfactive.
