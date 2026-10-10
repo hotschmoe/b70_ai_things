@@ -14961,3 +14961,19 @@ transientlibrary/historicalJIT/directlaunchauthorityfalse, notrewritten.
 VERDICT -> Concretefreshcurrentimage libraryevidence alongside original
 replay/code/output/health, notretroactiveprocesscapture orfullmodelmath.
 QSA V5heldpre-readalias edge, freshsource6 pending; fullgoalactive.
+
+
+## 2026-10-10 - QSA V6 actual metadata preflight and source controls pass
+
+CONFIG -> NEW3dd2b9dbf934076004454c14e0a18fa662bb0c982c1eeb2b5813277bb3cae5c8,
+518 sourcebindings, allauthJSONleaf/candidatepaths checkedbeforestat/read,
+completefixedpoint andlease-first semantics retained. HeldV5 preserved.
+COMMAND -> Rootall518SHA/ASCII/AST+38CPU PASS13.580; actualreadonly
+metadata-only originalplantraversal/layout completes5.724s. Startfresh
+correctedprepare40691 withactualC1401403one/ownreferenceV4.
+RESULT -> Actual15roots/18689files3,399,865,555bytes/zerolinks metadata
+proof, no tensor/SDKpayload hashes; earlyrefusalsprecedefullsemantics.
+Preparationlive, peerV6reviewpending; originalheldV5prepare28862stilllive.
+VERDICT -> Concretecorrectedfullmodel observer preparation, no freshGPU
+numerical/internalfidelity/latencyproof yet. Fullgoalcache/API/streams/
+physical/profile/matchedinteractive latency/shelf remainsactive.
