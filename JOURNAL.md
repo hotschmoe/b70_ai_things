@@ -12501,3 +12501,25 @@ assumed state transfer. Realvictim/stale/history/fresh49 requirements remain.
 VERDICT -> Realfailure preserved andlocalized; no paired196comparison yet.
 Actualexactinput fresh-state test nowrunning, no EOS/state/cache/math claim.
 Fulloriginal goal active; source37 kernels/weights untouched.
+
+
+## 2026-10-10 - First49 recovery and exact235 serial fresh matrix closed
+
+CONFIG -> Strictreadonly historicalV40 firstjob, PIN0 exception only; actual
+source35 same235 fourcontrol matrix afterownwarm47cohorts, unchangedNNconfig.
+COMMAND -> Firstadjud18377 terminal0/PASS49 andunchangedoriginaltree, saved
+receiptSHA4caabd8e11098bf2833e9d6787d2bd38f8f9fae9e324bebbcd8097b78d76938b.
+Same23531395 terminal0/PASS1144s; rootcurrent publicreader65883 PASS. ParentSHA
+f9644629c1f2d38846447f42b571b288bb006a100948ff16cf5b5c5093370d65.
+RESULT -> Four serial fresh0/fresh1 xexacttarget0/1 allproduce3833,248046
+(One+EOS), full235read/reused0/reset markers afterdistinctproperwarmcohorts.
+Normalowned/EOF/health/journal/new4/pages/source gates complete. No full49
+state/cache/math qualification; queuedfresh1 andindependentreference remain.
+First49 historicalbyte comparisons BITWISE, originalparentfalse/PIN0 scope
+retained; historicalsupervisorEOF unobserved. Remaining147 newparent42 needs
+prospectiveEOF/rawfile/sourcepostjoin proofs, sourceV2review stillpending.
+Sharedruntime checkpoint211SHA/13CPU tracked6cc5663 NOTlaunch-ready: actual
+static64MiB plus6RID ledger bounds require boundedcapture actors andseparate
+qualifieddiagnostic extension forfullhistory/eviction/victim/solo evidence.
+VERDICT -> Concrete numericalrecovery +exactflagdifferential closes, no
+underlyingEOScause orcache/fidelity/speed/shelf promotion. Fullgoal active.
