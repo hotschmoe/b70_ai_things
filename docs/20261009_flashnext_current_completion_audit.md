@@ -1370,3 +1370,25 @@ Original48 reference math, solo migration/cancellation/full cache, actual
 1/2/4/bounded6 qualified serving and clean interactive profile/latency/shelf
 remain incomplete. OriginalELF fullcurrent recollection37439 stillCPUlive;
 canonical165 remains unchanged until that original consumer finishes.
+
+
+## 2026-10-10 - Original code publication and current compiler census
+
+Original executed ELF extraction37439 published six symbol-sized images after
+1022.6408s full current original runtime/source qualification. PublicationSHA
+4d63475831fa62f477a9a769a4ce53c327d02ec80c4da698a73407c600f1cca1;
+all six exact extent/hash/entrypoint/roster checks pass. Same job is still live
+in independent finalrecollection; no canonical165 registry change yet.
+
+Actual supported compiler-help51de and bounded current library censusf16d
+completed normal owned commands under card0 lease. Original mapped IGC bytes
+aebe/e962 remain exact; actual ocloc ldd resolveslibocloc without an IGC map.
+Offline dynamiccompiler linkage and original runtimeJIT/ISA/cause unproved.
+Currenthost B70 devicee223 metadata is separate from originalJIT target proof.
+
+Complete H54native4 eightprefix/392 numerical/lifecycle/public qualification
+remains closed. Full source40 QSA observer runtime parent/reader and livecache
+namespace negative experiment are being implemented with original reference
+math unchanged. SharedV3 source checkpoint796b5dd is pushed; freshC1401403
+one/pair, actual wholecache suite/changedloadedidentity behavior/physical
+accounting, reference fidelity/concurrentstreams/profile/latency/shelf open.
