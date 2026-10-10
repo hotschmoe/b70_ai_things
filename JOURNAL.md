@@ -12460,3 +12460,20 @@ reader states stdin-cancel timing inferred fromsourcepredicate+actualACK, not
 independentlylogged. Same235 fresh controls/newshared runtime source pending.
 VERDICT -> Actualpairedcontrol closes; matchedobserver arm nowexecuting.
 Originalfullmath/APIcache/quality/profiling/latency/shelf goal stays active.
+
+
+## 2026-10-10 - Source37 paired2 ON closes; actual serial49 starts
+
+CONFIG -> Samecurrent SDK37/native2 harness40 after OFF462s PASS; actual
+one-adjudication/currentpair1374 baselines; diagnostic toggles only.
+COMMAND -> ON15143 terminal0/PASS386s; rootreadonly current parent_arm +vectors
+PASS196 vectors, parentSHA13462ad721085c3d410aeafe461ffce58713819cda4970e3fa29abe4eb6ec9d5.
+Four actualselected prefixes/each48 residual+head; serial0CPUprepare15661 PASS.
+Root starts leasedserial0 withsameSDK/corpus/currentON identity.
+RESULT -> ON collected/normalteardown/ownerfrees/health/journal/new4/pages
+complete. Actual196 exactfreshserial comparisons stillpending; no paired
+numerical progression4/6 or fidelity/latency claim yet. Same235 draft130dc
+review rejects globalwarms-only chronology and droppingERR/SERR/FATAL; new
+freeze required beforeanyactualcontrol run. OriginalV6 failure preserved.
+VERDICT -> Concrete twoGPU observer/runtime corrected37 proof advances;
+complete originalmath/cache/quality/profiling/latency/shelf goal active.
