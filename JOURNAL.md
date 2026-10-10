@@ -13532,3 +13532,19 @@ source/health/EOF/full4 gates reviewed. CPU fixture preparation14303 is live;
 QSA46835 remains sole pairedGPU/model coordinator in final source validation.
 VERDICT -> Source-ready for isolated compile and fresh diagnostic after leases
 free. No actual half compile/run, lowering cause or candidate correction.
+
+
+## 2026-10-10 - Own QSA actual control finalizes PASS
+
+CONFIG -> Frozen QSA V4e122, currentSDK37, independently own projection/input97a.
+COMMAND -> Actual46835 terminal0/PASS1324s; reportSHA256
+c50be35d4e36af91f4894cc980fcd4d22a2187efa91c34fda9276c5b46a14d13.
+RESULT -> Fresh compile and actualruntime0/EOF/owned removal;14 fullfields
+bitwise direct+two graphreplays; owninputecho/metadata/flags/library/source/
+prepoststrict+compiledpairhealth/kernel/freshcompletefour/pages PASS.
+Descriptive owncandidate differences retained, including F32-versus-F16 indexer
+tail discrepancy. Fullmath/nativeintrinsics/normalmodelgraph flags false.
+VERDICT -> Actual diagnostic/lifecycle only. Independent public32721 is live;
+fullmodel native seam via freshobserver40 remainsrequired. Root fresh source40
+all8build93799 acquiredpairlease with--leased and clean localggml exactpin;
+no runtime ABI transferred. HalfinputCPU14303 remainslive.

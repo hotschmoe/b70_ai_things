@@ -34,3 +34,13 @@ consumed native source explicitly requests float-to-half-RTE-to-float. This
 localizes the discrepancy before normalization; its execution cause remains
 unproven. A minimal expression-versus-materialized-half test is being prepared,
 preserving the original independent reference and frozen runtime sources.
+
+## Actual parent final admission
+
+Control46835 finished PASS/exit0 in1324s, with reportSHA256
+c50be35d4e36af91f4894cc980fcd4d22a2187efa91c34fda9276c5b46a14d13.
+The final parent includes normal compile/runtime retirement, pre/post strict and
+compiled-pair health, kernel checks, original source/input bindings, new four
+shard hashes and page brackets. The independent public reader32721 is pending.
+Numeric observations retain their descriptive scope; full-model/native-intrinsic
+and normal-model graph qualification remain false.
