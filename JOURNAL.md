@@ -14108,3 +14108,18 @@ compile/disassembly/device target guessed; actual census result pending.
 VERDICT -> Original embedded SPIRV publication, not originalJIT ISA or cause.
 Full reference fidelity/cache/concurrent serving/profile/latency/shelf remain
 active. No frozen prior proof altered to shorten the expensive validation.
+
+
+## 2026-10-10 - Runtime compiler library census actual PASS
+
+CONFIG -> Frozen019b census, unchanged original runtimec388; root card0 lease.
+COMMAND -> Actual59411 only original-library-census, bounded streaming ELF/SHA/
+stat5 and ldd dependency census, exact command/EOF/normal removal retained.
+RESULT -> Terminal0/PASS11s capturef16dc3e7f10a0635a4cb2f890218560334826b5beb43bacc0accc84cafb3382d;
+JSON80e40a0d34eb86a9a1cd8a00b849a686d4dd9695d9ac93800bae87c9867903a7.
+Current original mapped IGClib bytes match aebe3597/e962be41. Actualocloc ldd
+resolveslibocloc and hostlibs, not IGC; dynamicIGCloading remains unobserved.
+VERDICT -> Actual byte/tool linkage census, no runtimeJIT ISA/cause authority.
+OriginalELF independentfullrecollection37439 stilllive; next supportedoffline
+recipe must bind actual library loading and currenthost target separately.
+Full original model/cache/interactive latency/shelf goal remains active.
