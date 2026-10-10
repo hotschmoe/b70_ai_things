@@ -12312,3 +12312,21 @@ scalar ELF equivalence required. No actual helper runtime or model math yet.
 VERDICT -> Enables deliberate original48 arithmetic refinement after actual
 qualification; source tests do not substitute for compiler/runtime evidence.
 Full fidelity/cache/concurrency/profiling/latency/shelf goal stays active.
+
+
+## 2026-10-10 - Fresh CPU bulk HC helper compile and actual equivalence PASS
+
+CONFIG -> Tracked0630fce sourceplan c752635b, pinned ordinary compiler image,
+no devices/model/SDK mounts, observed2CPU/2GiB/no-network container; original
+qualified scalar executable retained as actual same-operand comparator.
+COMMAND -> Root fresh compile/qualification14222 terminal0/PASS. Newreadonly
+finalized_binding independently recollects preserved operands/commands/outputs
+and current source/build/host runtime, PASS. Root build hc35-host-bulk-fma-v1-
+20261010; reportSHA9fb2fcb0c7651fa8f62df7638c9e79beecf7f5672e10e7e40666f7c8c9de184f.
+RESULT -> Fifteen scalar known answers, nine bulk fixtures and17 actual
+qualified-scalar equivalence rows BITWISE. CompileSHA082c3d6f8f2e1f9ae18e8178bfbc814d90b577db0764765ac79f03cd5384caee;
+helperSHA1aea3a954d2a7dd0b90cecbe5d7f906ad2cecf37858737480ebf5ba1140391d2.
+Normal owned exit0/noOOM/removal and identical pre/post hostruntime gates PASS.
+VERDICT -> Actual CPU arithmetic prerequisite established for efficient
+original48 HC-only refinement. Device intrinsic/fullmodel math flags false;
+no measured dev-loop or serving speed claim. Original full campaign active.
