@@ -11971,3 +11971,20 @@ Remaining sixserial1 planalreadyadmitted. No full588 serialparity yet.
 VERDICT -> Avoidable metadatafailure nowcaughtcheaply withreal sourceencoded
 value, no tolerancewaiver orNN/modelchange. Tracercollector token/print/flush
 coverage reviewadvances. FullAPI/cache/fidelity/profiling/latency/shelf open.
+
+
+## 2026-10-10 - Firstsix native6 serial parent PASS; correctedownedHC V2 starts
+
+CONFIG -> Frozen source35 native6 firstsix freshcacheOFF GEN1 jobs; separate
+V2 exact-F32 originalweight HCblock35 control in declared one-thread CPU env.
+COMMAND -> Serial0 parent8220 terminal0/PASS430s, actual294BITWISE comparisons,
+normalownedexit/posthealth/kernel/new4/pages. Independent readonly25757 starts
+withcomplete originaltree inventory/currentV9 finalproof. CPU V2 payload35758
+starts NEWoutput owned-hc35-f32-block-prefix4-v2; noGPU running concurrently.
+RESULT -> Remainingnative6 serial1 sixjobs alreadyprepared, unexecuted. Root
+newpositive cacheOFF counterpart9CPU controls PASS; sourceclosure/reviewpending.
+Existing native6 readonly script saved outsideoriginalruns withidentical generic
+reader bytes andcopyreceipt under native6-v9-readonly-recollection-v1.
+VERDICT -> Actual294 serial6 vectorpairs havecompleteparent gates, independent
+readonly proofpending. Correctedoriginal arithmetic nowexecutes; no native
+intrinsic/fullmodel/tolerance PASS before realresults. Fullgoal remainsactive.
