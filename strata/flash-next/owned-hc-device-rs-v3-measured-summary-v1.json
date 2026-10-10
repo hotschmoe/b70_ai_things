@@ -1,0 +1,39 @@
+{
+  "actual_session_id": 18877,
+  "actual_terminal_return_code": 0,
+  "full_model_math_qualified": false,
+  "independent_binding_path": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/owned-hc-device-rs-v3-readonly-binding-v1.json",
+  "independent_binding_sha256": "770fe1a023fe893afee718bc8aaeb5943d661d829e8e2ef766965ffaeb3ff020",
+  "latency_or_shelf_qualified": false,
+  "native_HC_internal_argument_observed": false,
+  "normal_model_graph_qualified": false,
+  "original_failed_V2_rewritten": false,
+  "own_operand_and_device_request_count": 386,
+  "post_full_four_passed": true,
+  "prefix4_attempted": true,
+  "prefix4_comparison_count": 577,
+  "prefix4_head_diagnostic": {
+    "bitwise_equal": false,
+    "first_bitwise_differing_index": 0,
+    "max_normalized": 0.05251488383778164,
+    "native_value_at_first_difference": 7.104341983795166,
+    "nmse": 0.007888246485733295,
+    "numeric_gate_assigned": false,
+    "own_value_at_first_difference": 6.8566765785217285
+  },
+  "reference_first_gate": {
+    "full_Q81_packet_bytes_equal": true,
+    "native_normalized_sha256": "71630e766f7ae4e025a4b7041b9d3a16cb5627151e82035416a52aefd4eefec4",
+    "native_packet_sha256": "cc48a618697d045bfb3fd1c83f2aa87dd06816a2e7c71b283320df090c6c3177",
+    "normalized_bytes_equal": true,
+    "normalized_sha256": "71630e766f7ae4e025a4b7041b9d3a16cb5627151e82035416a52aefd4eefec4",
+    "packet_sha256": "cc48a618697d045bfb3fd1c83f2aa87dd06816a2e7c71b283320df090c6c3177",
+    "passed": true,
+    "scope": "Original first HC normalized vector and complete mixed Q81 packet only"
+  },
+  "report_path": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/owned-hc-device-rs-v3-run-v1/report.json",
+  "report_sha256": "502566b296bb5809f01c5c5cd3b3938f460a7c862d61aae8573bdd7028983d2a",
+  "reported_wrapper_seconds": 696,
+  "schema": 1,
+  "source_plan_sha256": "93d9329bcfca286244f78e096542b14f7c8b820fd46880ad6c11870495ee575a"
+}
