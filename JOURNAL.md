@@ -11674,3 +11674,33 @@ VERDICT -> Meaningfulnativeonecard semantics nowqualifiedwithin twopromptscope;
 supplement. Pairfunctional runtimepending. Fullmodel/nativearithmetictolerances,
 API2/4/bounded6/concurrentcache/staleidentity/memory/profiling/matchedlatency/
 verifiedshelf remainrequired. Fullgoal active/unrelateddirtychanges preserved.
+
+
+## 2026-10-10 - Paired semantic reference and closed196-pair numerical proof PASS
+
+CONFIG -> Exact source35/C113 originalUD-Q4_K_XL; pairedfreshGEN64 semantic
+counterpart andcacheOFF4fresh GEN1 originalV8numericaldata, samebackend math.
+COMMAND -> Pair38570 terminal0/PASS318s; currentreadonlysemanticreader97627
+PASS. All4 nativepairedoutputIDs/texts exactlyCPU V3 andonecard. NEWreadonly
+adjudicator14365 terminal0/PASS all196vectors usingexplicitderivedmissing
+childSHA; currentsource/SDK/health/modelstats/pages/fullcommands/raw49 and
+originaltreehash/stat5 predicates retained. Root9CPU metadata tests+peerreview.
+RESULT -> PairedparentSHA c80881eee2a0524b0dc2b43e3f0cbf2a147619f8692c8bbdb058fd6c0ed3dcec.
+Path: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/functional-screen-v1-pair-run/parent-qualification.json.
+ReadonlynumericaladjudicationSHA 0f6128e863f394ba1aa8170150d40b437f2f6033d0f9d6b71dc34a49263f61e1.
+Path: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/batch-serial-cacheoff-v8-adjudication-v1.json.
+Fouractualconsumed-prefix jobs:4full248320heads+192layerresiduals BITWISE with
+actualN2privatecollector. Onlymissingmetadatahash derivedfromidenticalactual
+external/input/childsnapshots(parentSHAec35f9c56d115b847661defab55884d9c71abc7e5f9daeefd45374d173d177d6).
+Originalchildfield remainsabsent; originalsuccessfulparent/child hashes/data
+unchanged, no fakecacheflags/noGPUrerun. ActualC0tuplefalse,true,false preserved;
+no cachequalification orfullmodel arithmetic transfer. OldV7failedrun preserved.
+Future V9producer emitsrealchildsnapshotSHA +actualjob/paircounts, unexecuted.
+API2diag genuineCPUprepare63120 PASS; leased46522 nowlive prehealth/collector,
+APIbudget64 distinctnative32. Actualcancel/solo-migration/APIboundary/rawjoin/
+source4/health qualification stillpending. Allruntime/backend/registryfrozen.
+VERDICT -> Declaredlimitedsemanticbaseline nowworks CPU/oneB70/twoB70 with
+exactoutputparity, andprivateN2numericalequivalence hasclosedreadonlyproof.
+Broadeval/nativefullmath, API2/4/bounded6+concurrent/stalecache/memorylatency,
+criticalpath/cleanABBA/P50P95/fairness andverifiedshelf remainrequired. Fullgoal
+active; userdirtyworktreeandalloriginalfailed/passingevidence preserved.

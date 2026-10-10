@@ -606,3 +606,43 @@ join, OFF/ON/API and 4/6 topology arms remain pending. All other full-goal
 requirements above remain open, including whole-model fidelity, complete API/
 concurrent cache identity/memory/TTFT, critical-path profiling, matched latency
 and final verified shelf. Completion remains unproven.
+
+## 2026-10-10 - Native meaningful answers and private two-stream numerical data
+
+The one-card Strata functional parent finished PASS418s. Its current read-only
+final verifier reproduced all four freshGEN64 requests, original30/39-token
+inputs, natural finish, semantics, deterministic repeats, commands, current
+C113/SDK/source/identity/page views and health/owned teardown. All four emitted
+ID arrays and output strings exactly equal the independent CPU reference.
+This qualifies two meaningful prompts on one card; broad quality, numerical
+CPU/native authority and public API serving are not thereby established.
+
+The four fresh cache-off serial jobs finished PASS479s and all196 comparisons
+against the actual two-stream native collector are BITWISE (4full heads plus
+192 layer vectors). Its final read-only join currently rejects a missing child
+plan-hash field; original parent/source/raw/snapshots remain intact. A NEW
+read-only supplement will explicitly derive that hash from the already-bound
+plan snapshots and retain every current source/health/identity/raw predicate.
+No original report or measurement will be patched to hide the omission.
+
+Two-card functional plan is genuinely prepared; runtime38570 is live. The
+original V7 cache-reader failure remains FAILED, and the new V8 measured
+comparisons are separate evidence. API/OFF-ON/4/bounded6, complete concurrent
+cache/stale identity/memory cost/TTFT, broad full-model fidelity, critical-path
+profiling, matched latency and verified shelf requirements remain open.
+
+Timing audit records observed lazy graph capture and diagnostic first-token
+receipt intervals; it does not measure capture/JIT attribution or establish
+clean performance. See docs/20261010_flashnext_onecard_functional_timing_audit_v1.md.
+
+The two-card functional parent subsequently finished PASS318s; the read-only
+verifier also passed and all four output ID arrays/texts exactly match the
+CPU and one-card runs. This establishes the same declared two-prompt semantic
+and deterministic-repeat baseline on both B70s. It is not broad quality or
+full-model numerical authority.
+
+The actual two-stream HTTP API diagnostic46522 has started from a genuine V7
+plan with API64 budgets, after the two-card functional run closed. Numerical
+V8 metadata adjudication14365 is independently running read-only against the
+existing196-pair dataset; its result is pending. No extra GPU rerun is used
+to supply an omitted deterministic plan hash.
