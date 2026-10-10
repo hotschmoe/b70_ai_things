@@ -12330,3 +12330,19 @@ Normal owned exit0/noOOM/removal and identical pre/post hostruntime gates PASS.
 VERDICT -> Actual CPU arithmetic prerequisite established for efficient
 original48 HC-only refinement. Device intrinsic/fullmodel math flags false;
 no measured dev-loop or serving speed claim. Original full campaign active.
+
+
+## 2026-10-10 - Genuine source37 two-card preparation started
+
+CONFIG -> Same fresh combined36+37 SDK/source390/runtimec388, registered
+two-card-segmented profile, new directory and port18338; CPU-only preparation.
+COMMAND -> Strict current165-entry YAML/alias/hash preflight PASS. Root starts
+prepare21840 with --verify-model-shards; polls same handle and confirms live.
+Directory f17-source37-20261010/c137-two-card-segmented-prepared-v1.
+RESULT -> Complete4 scan in progress; no preparation or pairserving PASS yet.
+Independent actualone1373 adjudicator draft found no further evidence blocker,
+but CPU/source freeze and actualreadonly validation still pending. Future
+parent must explicitly accept bound adjudicatedone without rewriting failure.
+VERDICT -> Advance pair prerequisites while CPU-only source work continues;
+no GPU launch before correctedparent and actualone evidence admission. Full
+original fidelity/cache/concurrency/profiling/latency/shelf goal unchanged.
