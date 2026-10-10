@@ -14773,3 +14773,20 @@ VERDICT -> Concreteprep/traversalbug, notmodelnumerical failure. NEWV4
 mustclassifydeclaredlexical evidenceprefix beforestrictpath andretain
 foreignroot/aliasnegativechecks; addactualpreparedplan regression. No
 unchangedrerun/gateglobalwaiver. Fulloriginalgoalactive.
+
+
+## 2026-10-10 - QSA refusedarm posthealth passes; EOS observer controls
+
+CONFIG -> FailedpreREADYQSA V3/sourceaaa39, no actualmodelleaf; unchanged
+core posthealth/source gates retainpairlease15830. EOSobserverdraft source40.
+COMMAND -> Rootactualpoststrict/compiledpair/kernelcommand receipts read
+PASSrc0; post-full4identityscan stilllive(partial2shards). Rootwaiter
+13CPUcontrols PASS2.614 beforefinalexpanded16 freeze, noGPUobserver action.
+RESULT -> Originalwaiter code preserved, retainedThread objects include
+started/ident/native_id/alive state; stalepacket/sinkfailure/unstarted/
+foreignowner andunknownerror controls exercised. Expandedfinalreview pending,
+noAPIclosureadjudication appliedtooldV6rawerrors. NewQSA V4traversalfix/
+lease-first semantics sourcebeingprepared; separateentrydraft unexecuted.
+VERDICT -> Concretehealthyteardownguard/protocolcontrol progress, notmath
+qualification orsuccess onfailedarm. Fulloriginalcache/concurrency/latency/
+physical/profile/shelfgoalactive; no changeddeadline/foreignpath waiver.
