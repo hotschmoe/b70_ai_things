@@ -12386,3 +12386,22 @@ Root starts pair1374 leased73796 atport18338 with exactnewadjud prerequisite
 and genuinesameSDK prepare. Original48HC prefix4 actual51315 stilllive.
 VERDICT -> Validated boundedone evidence without GPU rerun; freshpairbaseline
 nowexecuting with correctedproducer. Full goal intact, no shelf/speed claim.
+
+
+## 2026-10-10 - Original48 HC prefix4 closed without fidelity improvement
+
+CONFIG -> NEW independent HC-only FMA candidate; original source35 P30V4
+comparison/nativecapturesTARGETONLY. Original GDN/QSA/FFN/PLE/head retained.
+COMMAND -> Actual51315 terminal0/exploratory complete, noerrors/new4/pages.
+Rootreadonly12605 recomputes577 saved metrics andpostidentity, originaltree
+SHA/stat5 unchanged. ReportSHAdce363ee8e533595ba42733bbc0e55c423fdd85f1e5a24954d78404fc4f5b27e.
+RESULT -> HeadNMSE0.01330947575 versus original0.00932149853; firstbitwise
+difference p0_l0_attention NMSE3.9609885e-7. Candidate doesnot improve fullhead
+agreement. No tolerance/numericPASS assigned; hostexpf/rsqrt remainunqualified.
+Curated result docs/20261010_flashnext_original48_hc_fma_prefix4_result_v1.md.
+V6 shortwarm source10CPU/158SHA closure PASS/tracked9470172; docCLIcasepath
+erratum: actualcase OUTSIDEfixture at f16/api-shortwarm-authentic-case-v1.json.
+Actualpair73796 screencoherence/repeat PASS, ownednormal/posthealth PASS;
+parent finalfull4 stilllive, no completepairbaseline PASS yet.
+VERDICT -> Important negative fidelity evidence narrows nextlocalization;
+fullgoal remainsactive. No rawfailure rewritten or syntheticPASS promoted.
