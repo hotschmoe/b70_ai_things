@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "status": "READY CPU source prototype; C++ never compiled or executed; native arithmetic unqualified",
+  "files": {
+    "strata/flash-next/hc_f32_arithmetic35_host_v1.cpp": "cf12835a10659b997446f87419d771396846a5305943778a33e1b7ddb6cbb9bf",
+    "strata/flash-next/hc_f32_arithmetic35_host_v1.py": "db2698ae18af1116db34585cfa0260a184358d11479256d48d95dfbeaf77871f",
+    "strata/flash-next/test_hc_f32_arithmetic35_host_cpu_v1.py": "d52af3c0b31f38462b5b5cbe774b665991b8b30f8a1b976cc8583135290fd0fb",
+    "strata/flash-next/full48_owned_composition_storage_v1.py": "9f98e1b7b7088dc0b12ec0474bcad5660f60878d23ecd24cfabc3032661d1d28",
+    "strata/flash-next/full48_owned_composition_storage_v2.py": "1a26df2aaaf990a33c96fd0ca8961293c211b97d7cd954bfbad49e2707f5ec6b",
+    "strata/flash-next/independent_q8_1_activation_v1.py": "b58d73282051bfa301ebb6f781d5d59c63128d9074a42d53cf4d9ff05d75a714",
+    "strata/flash-next/current-ple-prompt35-engine-build-plan-v1.json": "82004f6cee0f975c433d245b304aff10d67dd33e028cf926a08ef5eead892ef7",
+    "strata/flash-next/hc-f32-arithmetic35-host-design-v1.md": "48821bc2fbdafb7f83e11660db0a4ed9b329506c63fcaedfa950451a9cc56bed"
+  },
+  "source35_dependencies": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/sycl/src/kernels/hc_native_projection.cpp",
+      "sha256": "40a14446456199a4532e9e52b78c8131944afbe7c1615e75a6231e850cb2c025"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/sycl/src/kernels/hc_native_composition.cpp",
+      "sha256": "c63ce71dee3572daca974f03587db54ade1d9ec842176bd83bb81dc7d22bb83f"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/sycl/include/strata/core/native_hc_dispatch.hpp",
+      "sha256": "e6ebfc7da2e4e66af349413e50acc134463f02488ed156b1ada9b5ac47d047ef"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/libstrata_kernels.a",
+      "sha256": "d13ac6c1a92ea93846e1158dbc8b85ea2cb88bc63e48097ccfa8de7a5fa4af8e"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/libstrata_core.a",
+      "sha256": "7471ffb49efdd1f92fbb7bed50362e106cc8022df985b92a24e2d572b99c4e74"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/build.ninja",
+      "sha256": "717e840d054d5804705dfaa26250bb72a56c972e2cbdb3e845ab9a9ee2137565"
+    }
+  ],
+  "operations": [
+    "single_row_F32_FMA32lane_XOR_projection",
+    "single_row_Q8_0_F32_operand_FMA32lane_XOR_projection",
+    "elementwise_FMA_F32_write_primitive"
+  ],
+  "unimplemented_and_unqualified": [
+    "HC exp/rsqrt/division exactdeviceintrinsics",
+    "ordinaryHCmix compiler contraction",
+    "fullHCcomposition",
+    "nativecompiledbitwiseemulation",
+    "modelquality/fidelity"
+  ],
+  "native_graph_or_intrinsic_qualification": false,
+  "actual_CXX_compile": false,
+  "actual_CXX_helper_execution": false,
+  "actual_GPU_Docker_runtime_model_payload_execution": false,
+  "model_math_qualified": false,
+  "tolerance_gate": null,
+  "original_full48_helpers_modified": false,
+  "quantizer_or_halfD_code_rule_modified": false,
+  "archive_association_limit": "Current library hashes only; no retrospective original SDK archive provenance claim",
+  "future_root_CPU_compile_argv": [
+    "c++",
+    "-std=c++20",
+    "-O2",
+    "-fno-fast-math",
+    "-ffp-contract=off",
+    "-frounding-math",
+    "strata/flash-next/hc_f32_arithmetic35_host_v1.cpp",
+    "-o",
+    "<NEW-host-helper>"
+  ],
+  "cpu_tests": 15,
+  "cpu_command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p 'test_hc_f32_arithmetic35_host_cpu_v1.py'"
+}

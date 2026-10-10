@@ -385,3 +385,42 @@ isolation, cache latency or speed. Paired root is live and unqualified pending
 terminal/raw/lifecycle/health/new4. Pin/turn/parked/eviction/cancellation/live
 continuation, concurrency2/4/bounded6, fidelity, critical-path profiling,
 matched per-stream latency and verified shelf remain required. Fullgoalactive.
+
+
+## 2026-10-10 - Paired checkpoint reuse PASS and host arithmetic controls
+
+CONFIG -> Exact source35/C113 SDK/UD-Q4_K_XL, paired serial root boundary21;
+separate source-indexed HC host prototype, original FP64 reference unchanged.
+No GPU/model payload touched by host arithmetic compilation or controls.
+
+COMMAND -> Paired root93880 terminal0 in331s; public raw extract/compare of
+sixrequests/allthree comparisons plus final health/identity chronology checks.
+Host compiler preflight failed (no c++ installed), retained failed receipt;
+compiled fresh host C++ in pinned image39992 with no GPU device/model mounts,
+FE_TONEAREST/FTZ-DAZ OFF, -fno-fast-math/-ffp-contract=off/-frounding-math.
+Independent review found directPython subnormal and XORorder test gaps;
+preserved frozenV1 and prepared V2 mandatorybehavioral probes/ordernegative.
+Final V2CPU18 PASS and actualcompiled adapter3 PASS afterfinalsource freeze.
+
+RESULT -> Pairedroot bothcheckpoint hits reuse21/evaluate28 of49prompttokens;
+full248320-logit heads/all48 residuals/outputIDs/LP20/naturalfinish BITWISE
+for allthreecomparisons. Normalownedexit0/removal, noforcedcleanup/errors,
+strict/compiledpair pre/posthealth/kernel/newfull4/pages/source PASS.
+Parent path: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/serial-cache-v8-pair-root/parent-qualification.json.
+ParentSHA 5bf7f8035b826844ef4dfdd02f1e4584edab0f09c24740e4f3737883503ea0a5.
+CPUhost helperfreshELF d97ea12b9b805e3e8d9520ae8452dcf2a8129216e7666af6f5e44926e80b48e8;
+compile receipt1fba58350b0fe82987bf1916e7f1a663cbadfee5ee8bad985d2cb51cf9bdbac1;
+15 directanalytic controls receiptb05cf281b7bc1ec63a4164459194e465589b488951c974e06b9d4feb65bff1cb.
+Host root: /mnt/vm_8tb/b70/build/hc-f32-arithmetic35-host-v1-container-20261010.
+FinalV2plan b5eca831ca6725b0674d8e06584e0fbb2c42da551756b9f6d63876ea24cf9aae;
+finaladapter3 receipt425d397b0a5d6228f5990af0392132d0e9fe68c8fad3e95be2f4fb6a7ef22309.
+Earlier draftadapter receipt retained, not substituted for finalized binding.
+Next onecard explicitpin parent71624 acquiredpair lease at
+/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/serial-cache-v8-onecard-pin.
+
+VERDICT -> Both topologies qualify this serial shared-prefix checkpoint case.
+CPUanalytic/source-shaped arithmetic controls are established; exp/rsqrt/mix
+contraction/fullHC/GPU equivalence/modelquality remain unqualified. Newpin
+run is live, not yet qualified. Othercachegroups, concurrent2/4/bounded6,
+fullfidelity/quality, criticalpath/cleanlatency and shelf remain required.
+Fullgoalactive; no speed or production qualification claim.
