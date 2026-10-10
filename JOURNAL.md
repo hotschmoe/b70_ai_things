@@ -11953,3 +11953,21 @@ Originaltmp kept; copyreceipt pins allbytes, not a newruntime execution.
 VERDICT -> Native6 source/lifecycle gatepassed; 588serialproof stillpending.
 PositiveAPI and tracer actualCPU evidence advance source readiness. Fullmath,
 publicAPI/cache, profiling/matchedlatency/shelf remainrequired. Registryunchanged.
+
+
+## 2026-10-10 - Exact F32 epsilon admission repaired in newownedHC V2
+
+CONFIG -> NEW V2 token-driven originalHCblock35 control, exact original GGUF
+FLOAT32 epsilon9.999999974752427e-07/LEbytesbd378635. V1 remainsfrozenfailed.
+COMMAND -> Sourceplan427a44571c4573253d573be61ce0d9685b4dbd131e8f8df85cf3d6bf36034cdf
+82SHA/ASCII/AST closure PASS. Root+agent6newCPU tests PASS: actualsavedmetadata
+ctoracceptance withouttensorreads, +/-1ULP/F64/type/shape/digestfail before
+sourcebinding/rows. V1mathfunctionAST unchanged. Source/host/CLIadmissionPASS.
+RESULT -> Control60346496.../adapter562449a6.../receipt9723d160... frozen.
+ActualV2runtime pending untilcurrentGPU armterminal; original69970failedreport
+andnew4/page sourceproof pinned innewclosure. Sixserial0 childhas294 full49
+BITWISE comparisons/normalteardown; leased8220 live finalposthealth/new4.
+Remaining sixserial1 planalreadyadmitted. No full588 serialparity yet.
+VERDICT -> Avoidable metadatafailure nowcaughtcheaply withreal sourceencoded
+value, no tolerancewaiver orNN/modelchange. Tracercollector token/print/flush
+coverage reviewadvances. FullAPI/cache/fidelity/profiling/latency/shelf open.

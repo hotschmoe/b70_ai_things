@@ -1,0 +1,21 @@
+{
+  "CONFIG": "Exact saved original scalar F32 metadata6/bd378635 admission; no payload rows",
+  "COMMAND": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p test_owned_hc35_f32_block_control_cpu_v2.py -v",
+  "RESULT": {
+    "passed": true,
+    "tests": 6,
+    "failures": 0,
+    "V1_arithmetic_function_AST_unchanged": true
+  },
+  "VERDICT": "Admission fix only; V1 source/run FAIL preserved; no actual arithmetic/device/fullmodel authority",
+  "tested_sources": {
+    "owned_hc35_f32_block_control_v2.py": "60346496b0ba2a78f37c062ca984ce2a1f8a9a72603ee296d13d5b6421abd4e5",
+    "explore_owned_hc35_f32_block_v2.py": "562449a6cae035314f8b771c9952f5ce5e3f3315a7d79eb924f56321e6b39956",
+    "test_owned_hc35_f32_block_control_cpu_v2.py": "cb53bc553ae17be4b753d608de4f9580a1c05efdacfc47693e3b389ca68ae8a5"
+  },
+  "GPU_touch": false,
+  "Docker_execution": false,
+  "compiled_helper_execution": false,
+  "model_payload_read": false,
+  "tolerance_gate": null
+}
