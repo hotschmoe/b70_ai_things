@@ -847,3 +847,27 @@ concurrency at1/2/4 and bounded6, cache/expert memory tradeoffs, correlated x2
 critical-path traces, clean matched latency/fairness improvements, reproducible
 serving instructions and verified shelf remain missing. No decode speed or
 production stability promotion follows from these bounded controls.
+
+
+## 2026-10-10 - Remaining147 parent and corrected private reader
+
+Actual serial70200 is now terminal0/PASS724s. All147 remaining full-head/all48
+vector pairs matched bitwise; engine0/removal, percard/compiledpair pre/post
+health, kernel journal, new completefour hashes and known pages passed.
+Parent SHA a2524d4ab09067a952f344cd74077a971b86688fea92155ad5fc96ede8b0c195.
+
+Private V3 roster53284 failed before publication because it compared the
+per-arm page-read epoch as configuration. New V4 source28e90418/131 files
+passes19 CPU controls and independent review, retaining immutable canonical
+20/26 prerequisite controls. Root actual matcher accepts both snapshots only
+after proving full4.finished<=original page epoch<=actual parent.started and
+exact agreement for every other identity field with the fresh guard. Source
+checkpoint43ce0a2 is pushed. Genuine V4 roster87154 is live; no private196 final
+qualification yet, and first49 historical PIN0/EOF limitations remain.
+
+Source39 memory/later-batch diagnostics remain uncompiled. Review found the
+CPU terminal grammar must support multiple BT per actual BSTEP window before
+runtime qualification. Owned RMS qualifier is also under review: actual late
+loaded-library capture and graceful timeout/EOF/owned cleanup must be proven.
+These source/runtime preparations do not close original-model fidelity, full
+cache, API1/2/4/6, clean latency/fairness or verified shelf requirements.
