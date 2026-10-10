@@ -12346,3 +12346,24 @@ parent must explicitly accept bound adjudicatedone without rewriting failure.
 VERDICT -> Advance pair prerequisites while CPU-only source work continues;
 no GPU launch before correctedparent and actualone evidence admission. Full
 original fidelity/cache/concurrency/profiling/latency/shelf goal unchanged.
+
+
+## 2026-10-10 - Pair preparation and authentic shortwarm PASS; original48 starts
+
+CONFIG -> Fresh source37 pair baseline preparation; separate source35 CPU
+shortwarm fixture; independent original48 HC-only prefix4 refinement.
+COMMAND -> Pairprepare21840 terminal0/PASS launch_allowedtrue, preparedSHA
+8aa7a4a15d1eca94edf07722678cdae6dbf807f7469844041b1d342f031afbaf.
+Shortwarm93054 terminal0/PASS and freshreadonlyadmission PASS; genuinecase
+generated port18339. Independent/root7 HC-refinement CPU and94SHAASCIIAST
+PASS, sourceplan6f3e29e263d58636b439d0abc3703846645bd2d03122a44b440c7fa8b7b5c33b;
+trackedf1c58d7 beforeactual root CPUoriginal48 session51315 started.
+RESULT -> Original47/47 warm and exactunchanged235/235 target tokens; fixture
+SHAb05d5528afa5b1103eef3180a2569790292563854f841c6f91f6ad63af0e4d52, receipt
+ad0fac499906031d87a56b356c82afaf0dc28b7fcaf658aff6cfb1b9c48a3942. Normal
+owned CPUcontainer removal and source/tokenizer checks PASS. PairGPUserve
+pending strictone/newparent admission. Original48 HC exploration nowlive;
+no numerical outcome/tolerance claimed. Capturednative data comparisononly.
+VERDICT -> Concrete prerequisites closed and fullmodel fidelity experiment
+advancing. Actualshortwarm2row/cachehandoff/completeAPI andcleanlatency/shelf
+remain unqualified. Full original goal active, unrelateduserchanges preserved.
