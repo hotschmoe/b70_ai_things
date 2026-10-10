@@ -14373,3 +14373,21 @@ Actualpairedmodel95154 sixAPI screensPASS repeat/coherence andnormalstop;
 posthealth/newfour/finalproof pending. Diagnosticnative ratesnotmatchedspeed.
 VERDICT -> ConcreteCPU ABI controls and actualpairedGPU screen progress.
 Next runtimecaptureafterpairlease retires; fulloriginalmodel/cache/latency open.
+
+
+## 2026-10-10 - Paired GPU baseline finalPASS; capture and cache next
+
+CONFIG -> Correctedsource40/currentC1401403 one/pair/model/runtime, paired
+prepared618e andactualonequalificationcc39.
+COMMAND -> Actualpaired95154 terminal0/PASS361s; root finalqualification
+SHA5fce21cbb96e57e280c474f876cb7915d1f8fdd52271b23cb496e6fdde935506. NextactualGPU nativecapture65012solepairlease
+usesunchangedhelper/input/testedV2SO9f008/4CPUABI+collector4controls.
+Rootexact171purposeassociation appliedonlyafterone/pairterminalPASS;
+registryfec00c10a7fc29f882217dc8ceb0309616966a13dd81e0cef62da4b0c9c5a50c.
+RESULT -> Pairedbaseline screens/normalteardown/preposthealth/kernel/newfour
+sourceproof pass withinlimitedscope. Actualwholecacheprepare refusesbefore
+output/GPU: frozenV3b6ea source_binding includesold165 models.yamlSHA.
+Newexplicitregistryassociation consumerneeded; oldledger/failurepreserved.
+VERDICT -> Concreteone/pairGPUbaselinesdone; no reference/fullcache/speed
+promotion. Nativecapturelive, wholecache successorprepareportinprogress.
+Fullmath/state/concurrency/physical/profile/latency/shelfgoalactive.
