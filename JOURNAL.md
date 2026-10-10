@@ -14495,3 +14495,19 @@ retrychildwithrecoveryreceipt. No normalqualification/fromcleanup fabricated.
 VERDICT -> Actualfailedfirstactor, not fullcachePASS. Parent/suiteposthealth
 finalization stillliveunderlease; NEWV5mustfixbothmanifestprojection and
 mount/retirement behavior withoriginalnegativecontrols. Fullgoalunchanged.
+
+
+## 2026-10-10 - Corrected capture CPU5 and QSA V3 preparation
+
+CONFIG -> NEWcaptureV4b3db/fakedrivera676/fakemaind498, failedV3 preserved.
+CPUonly/no devices/image39992/actualheaders; actualGPU72322posthealth holds
+solepairlease. QSA V3aaa39/464 withcurrent171/exact1403baseline.
+COMMAND -> Actual70640 C++3builds+5ABI scenarios terminal0/PASS. RootQSA
+all464SHA/ASCII/AST+28CPU PASS1.925; peer28PASS1.895/SOURCEREADY.
+StartfreshV3QSAoneprepare98835; previousheldV2prepare completed/preserved.
+RESULT -> CaptureSOdd1557fb8489f8c465c4f4fa506bc13e46f3350e8eea6bf95649a13534e91cc3,
+internal-loadernegative6lookups/other5; failurelatchedtrue/positivecasesfalse.
+Actualruntimecapturecoveragepending; no unchangedfailedV3rerun. QSAfix
+actualimmediatePopenexit andexactREADYparentproof sourcecontrols pass.
+VERDICT -> Concrete nextGPUpaths prepared; actualmodel seal<300 unknownuntil
+run. Fullmodelmath/cache/streams/physical/profile/latency/shelf goalactive.
