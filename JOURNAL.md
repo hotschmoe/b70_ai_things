@@ -13194,3 +13194,18 @@ RESULT -> water-cycle inputs warm57/56,target185/186; inputsonly, noCPUoutput/
 state/length/counter/cache/observerPASS transfer. Source39actualactor separate.
 VERDICT -> Concrete usefulGPU-input preparation, not GPU orfullmath proof.
 H49OFF7881 andONprepare83996 remainlive; no restart orsecondmodelactor.
+
+
+## 2026-10-10 - Own layer3 QSA projection source proposal independently reviewed
+
+CONFIG -> NEW frozen8b615f3a9528f0f1e7eb84d9ea8481056f142a04e9720b79de16181da1e45567,
+249repo+14consumedsourcebindings, inheritedHC V3 unchanged. Actualruntimefalse.
+COMMAND -> Root18CPU PASS0.806s/allhashes; independentpeer18PASS0.792s/READY
+for SOURCE PROPOSAL scope only. No payload/GPU/build by research agents.
+RESULT -> Exactprefix4/identity/one-shot/ownzero-history guards, ownoriginal
+projectioninput/output/gamma rawSHA/stat/shape joins. Production devicehelper
+contract preservesQstride512 and2/1/1windows; no executablequalifier yet.
+VERDICT -> Sourcecheckpoint only; helper+actualoriginalcompute/device/lifecycle
+stillrequired. Prefix4 originalhead mismatch notqualified/tolerance unchanged.
+H49ONprepare83996terminal0 plan1f0469671123bc06eaef860bcfd1cf0fb3004085d7f076c24d448c60e0aeae18;
+OFF7881prehealthPASS/child1068991live, no finalmodelruntime result yet.
