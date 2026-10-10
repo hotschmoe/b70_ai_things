@@ -11988,3 +11988,24 @@ reader bytes andcopyreceipt under native6-v9-readonly-recollection-v1.
 VERDICT -> Actual294 serial6 vectorpairs havecompleteparent gates, independent
 readonly proofpending. Correctedoriginal arithmetic nowexecutes; no native
 intrinsic/fullmodel/tolerance PASS before realresults. Fullgoal remainsactive.
+
+
+## 2026-10-10 - Independent original HC rounding seam reproduced; serialpositive ready
+
+CONFIG -> Exact originalweight token-driven V2 HCblock35, observed prefix4row3.
+COMMAND -> Root35758 terminal0/errors[], originalsource/host/NEWpostCPU4/pages
+PASS. Report6634cea052a0b5b9942a82a6f1b1dfec788f20d62b42faf5b6c206837790b495.
+RESULT -> Ownnormalized10240+inject4 BITWISE native. LowNMSE1.53e-17 and
+selectedgate128NMSE5.69e-16 nonbitwise. Separate32mixNMSE4.715e-15/oneQ81code
+71vs72. Preregisteredfused32mix+entire36Bpacket BITWISE native, no capturedinput
+orstate used. Not devicecontract/fullmodel/tolerance qualification. Curated
+result docs/20261010_flashnext_owned_hc_f32_block35_result_v2.md.
+Native6 serial1 leased34910 nowlive posthealth/new4; source12job588 closure
+stillpending. Positive serialV10 CURRENTfb7e869c304bc0d8ff24015a662e612a9127b41e2f08c6a71e855472a0bc64ce
+92SHA/ASCII/AST +independent11CPU PASS, exactproducerPID/CLI/snapshots/full49/
+allgroups+actualsolorole. Originalnumericalproducer/extractor/math unchanged;
+actualpositiveAPI and freshcounterpart stillunexecuted. TracerV2 CPU9PASS,
+durable identical35files+buildsnapshot copied; nativepatch/buildplan pending.
+VERDICT -> Actualoriginal arithmetic evidence explains localized threshold,
+not wholemodel fidelity. Fullcache shared/divergent/stale/memory sourcework
+assigned; registry willremainunchanged until native6 closedproofs complete.
