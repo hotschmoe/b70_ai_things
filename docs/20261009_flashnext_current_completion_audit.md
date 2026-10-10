@@ -1003,3 +1003,35 @@ source review before same-recipe all16 retry. No inference/memory guard relaxed.
 Complete original-model fidelity and broad quality, complete state-cache and
 memory/residency tradeoffs, API1/2/4 and bounded6, x2 critical-path correlation,
 matched clean latency/fairness and reproducible verified shelf remain required.
+
+
+## 2026-10-10 - All16 CPU measurements closed; next fidelity source frozen
+
+Observed CPU retryV3 actual50448 terminal0/PASS1066s. All16 fresh-process cases,
+eight deterministic pairs, independent token/text decode, exact CPU recipe,
+owned lifecycle/source and new complete publisher4/knownpages gates pass.
+ParentSHA1ddfa62231906f5bce3462c729308874be13a7f6d1fafd9b4030eb1ebe415cd5;
+screenSHAb771e30775dbb93a4b65588979cb0b2f36df5b04cba8969315bd8346e939b9b3.
+Independent root readers reproduce parent bindings, external68de34a5435091418c5d36034ff6d038b6b276aac60be35d21d92d16302ebf1d.
+Observer464samples/238owned observations pass; isolated launch session empty,
+allowned absent, zero recoveries and no sealed artifact changes. This closes
+observed CPU measurement/lifecycle scope, not causal swap attribution.
+
+Every response reached64token limit. selected_candidate=null and continuation
+eligibility remains FALSE; no natural-EOS positive overlap corpus/API control
+qualified. New finite seedV2 requests useful single-sentence12-20word answers;
+its3 sourceCPU controls pass, but fresh authentic export and all16 newscreen
+remain required. Original responses/token counts are not transferred.
+
+Root genuine H48 preparation87440/PID1036205 is live against actual6ed05cab
+representation diagnosis and frozen19c47079/263/69CPU+peerREADY. No H48 model
+runtime/parity PASS yet. SDK37 byte witness plus isolated digest ports map
+repeated8ELF/oracle checks and pass17 tinyCPU controls; this is source-only and
+not imported by H48. No matched dev-loop saving established.
+
+Independent HC device-RS referenceV1 peerheld for exact consumedbyte/chronology
+joins. NEW V2 de8dd545/227 passes95 rootCPU and sourceSHA/ASCII/AST, frozen44afb28;
+final peerreview/isolatedcompile/actual firstnorm+Q81 gate and optional fresh
+prefix4 remain pending. Existing native arrays stay comparison targets only.
+Fulloriginal-model fidelity, broadquality, complete cache/memory, API1/2/4/6,
+x2 correlated profiling, matched latency/fairness and verified shelf remain open.
