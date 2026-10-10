@@ -12729,3 +12729,22 @@ Three coherent finite promptpairs plus2warmups preregistered; no output
 continuation/model inference/token IDs claimed before authentic export.
 VERDICT -> Compilation advances current39, fullgoal active; genuine tokenizer
 export and new-purpose CPU continuation screen precede positiveAPI overlap.
+
+
+## 2026-10-10 - Authentic new overlap corpus exported
+
+CONFIG -> Frozen c31 overlap corpus, exactoriginal tokenizer/template and
+source35 renderer; metadata-only c388 container/noGPU/modelmount/network.
+COMMAND -> Actual36119 terminal0/PASS, owned normalremoval; fixture receiptSHA
+74b6072df8d3fdc9c2565e9983d99b7da0a65f5b0ad7678529eeb202e9f67b2b.
+Genuine screen-plan metadata preparation terminal0 at f17-source37-20261010/
+api-positive-overlap-cpu-screen-plan-v1.json, samplingseed1234/temp0/natural64.
+RESULT -> Warm IDs50/50; target IDs178/179/177/178/183/184. All8 exactroles
+remain preregistered; no continuation/modelquality/overlap/cache proof.
+Current CPUcompletion API has stop_type, not legacy stopped_eos/stopped_limit;
+NEW actualscreen producer must source-bound interpret rawresponse and preserve
+it fully, rather than assume those absent fields. All16 fresh repeats required.
+OwnedRMS draft10CPU/134SHA nowPASS, but runtimeimage must match actualserving
+c388 rather than compiler39992 before usingit for nativecontract diagnosis.
+VERDICT -> Authentic inputs prepared; CPUmodel screen and actualAPI/raw49
+checks remain required. V4final reader4616 stilllive; fullgoal staysactive.
