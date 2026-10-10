@@ -11704,3 +11704,33 @@ exactoutputparity, andprivateN2numericalequivalence hasclosedreadonlyproof.
 Broadeval/nativefullmath, API2/4/bounded6+concurrent/stalecache/memorylatency,
 criticalpath/cleanABBA/P50P95/fairness andverifiedshelf remainrequired. Fullgoal
 active; userdirtyworktreeandalloriginalfailed/passingevidence preserved.
+
+
+## 2026-10-10 - API required capability disabled; explicit newlane andnative4
+
+CONFIG -> OldV7API2 diagnosticpcache0/chain0/public0, genuineINFOslot_cache0;
+source35backend/weights unchanged. Separate fullyadmittednative4diag32 profile.
+COMMAND -> API46522 terminal1/FAIL504s afterwarm requestsbeforetargetARM;
+actualengineexit0/normalremoved/posthealth/kernel/new4/pages/source gates PASS.
+Childrequires slot_cache1 forplannedsolo migration butoldprofiledisabledit.
+Source+peerreview identify cache3/chain25/public27/freshtrue support; no NNpatch.
+Rootgenuinenative4prepare30098 PASS thenleased88372 startsnative4collector.
+RESULT -> OldAPIparentSHA 22d7cae5f76efc99d70b6c9716234c092ddb7534fa4c9b48cc423756694f0893.
+Path: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/batch-v7-onecard-api2-diag1-run/parent-qualification.json.
+Targetcancel/migration/numerical proofabsent, oldFAILED runpreserved. NEWAPI
+proposal enablestruthfulcapability andexplicitfresh throughout forrealowned
+slot->main continuation withfullprefixrecompute andstrict0/0/-1 counters.
+Migrationlineageevent precedescacheselection; itdoesNOTprove cachedstatecopy.
+Positivecachedhandoff remainsseparatefullgoal gate. Proposal mustrejectold
+impossibleprofile beforeGPU/hash, emitactualchildplanSHA/schema/copycounts and
+admitallstatic/chain/state limits. Registryaliasproposal/coupling assessment
+pending; no canonicalglobalregistry/oldsource edits orpolicywaivers.
+Native4planSHA 54612361d00df9ee81ba331897199d3bdd50448409e412c66770a64757e72e49.
+Path: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/batch-v7-onecard-native4-diag1-prepared/plan.json.
+Actual88372 pending GPUcollection/ownedhealth/postsource4 thenfreshserialNN
+joins; no4/6/APIcoherencequalified yet. Native2actual196closedreadonlyproof
+andCPU/one/pair2promptsemantic parity remainprovedseparately.
+VERDICT -> Exactcapability/configuration conflict localized; honest scopednew
+APIrecompute lane preparedinparallel while4stream testing advances. Fullmath,
+broadquality,4/bounded6/API/concurrentcache/cachedmigration/memory/profiling/
+cleanlatency/shelf stillrequired. Goalactive; allolduserdata/evidence preserved.

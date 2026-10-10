@@ -646,3 +646,10 @@ plan with API64 budgets, after the two-card functional run closed. Numerical
 V8 metadata adjudication14365 is independently running read-only against the
 existing196-pair dataset; its result is pending. No extra GPU rerun is used
 to supply an omitted deterministic plan hash.
+
+Readonly196-pair adjudication14365 PASS with originaltreeunchanged. API46522
+thenfinishedFAIL504s afterwarm becauseoldcacheOFFprofile disabledtherequired
+slot-cache capability; cleanup/posthealth/new4/sourcepassed. NEWexplicitAPI
+freshrecompute migrationprofile remainsunderreview, withcachedstatecopystill
+aseparaterequiredgate. Native4diagnostic88372 nowstarted; no4/6/API/latency/
+concurrentcache/shelfgatehasbeenclaimedcomplete.
