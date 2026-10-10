@@ -14667,3 +14667,20 @@ VERDICT -> Concretegrammar/terminalorder cause independentofCPUcost; no
 deadlineincrease orbroadcancellationPASS. NEWsuccessor mustpreserveactual
 terminalcount/finish anddistinguishsameworkownerlatehousekeeping from
 livecancel/migration andnewowner leakage. Fullgoalactive.
+
+
+## 2026-10-10 - CaptureV6 refuses; QSA model actor acquires GPUs
+
+CONFIG -> TestedimmutableendpointcaptureV6/sourcea9ad/SOb2ccc; original
+helper/input unchanged, root41241soleleasedGPUdiagnostic. QSAplan92ba/aaa39.
+COMMAND -> Actual41241 terminal1/138s; runtimefailsIGCinternalcompilererror
+beforeframes. Poststrict/compiledpair/kernelPASS, containernormalretirement.
+RESULT -> Report4b2da1c82ecbac186b9d794a02ed09b8de8ce5723cb3090bf69112b4f983c747;
+codefiles1 istraceonly, no successfulnativecapture. CPUdomainfixpassedbut
+realruntimefailure persists; no unchangedrerun ororiginalJITcauseclaim.
+QSA15830 completesinitialsemanticpreflight, wrapperacquirespairleaseafter
+prioractorretires; source40modeldiagnosticnowsoleGPUowner. ReviewedQSA
+50ownedsource checkpoint1442262 pushed, heldversionspreserved.
+VERDICT -> ActualGPUcampaign moves tofullmodelQSA localization whilecapture
+sourceinvestigation remainsbounded. Fulloriginalmath/cache/concurrency/
+physical/profile/latency/shelfgoalactive.
