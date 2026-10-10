@@ -95,3 +95,22 @@ eb9b244df7b85dc079fa7c88df5a8b3b7baf11eb181dc992aeaaf311fd5db743.
 Report: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/cross-topology-prefix35-v1-frozen.json
 This is native topology parity for four short prefixes, not original-model
 math or speed qualification. Route-aware original prefixes2/4/8 remain next.
+
+
+## 2026-10-10 - Saved original/native prefix1 distribution diagnostic
+
+CONFIG -> Completed independent original48 prefix1V4 report SHA
+c4cc4ca6caae9e67ad57867adf9f65dc10f8cea03474c984e7fb78d082e2a244;
+its bound original/native full248320 F32 heads, no new weight or GPU access.
+
+COMMAND -> original_head_distribution_v1.py with exact report SHA and new
+original-head-distribution-v1.json; CPU5 analytic/shift/extreme/negative controls.
+
+RESULT -> Same argmax and10/10 top-token overlap. KL(original||native)
+8.552987271077312e-7; total variation0.0006415135246005365. Actual saved
+head SHA/extent/finite checks and completed original provenance pass.
+Report SHA ae71beb8fa6a2eedffc19cd97f26a111a2f2d3bc1c03488e24a3e9078fdf9223.
+
+VERDICT -> Diagnostic probability difference on one short prefix only.
+No tolerance, quality or fullmodelmath PASS. Longer independent prefixes,
+statecache/concurrent serving and matched latency remain required.
