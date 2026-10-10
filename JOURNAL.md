@@ -14123,3 +14123,19 @@ VERDICT -> Actual byte/tool linkage census, no runtimeJIT ISA/cause authority.
 OriginalELF independentfullrecollection37439 stilllive; next supportedoffline
 recipe must bind actual library loading and currenthost target separately.
 Full original model/cache/interactive latency/shelf goal remains active.
+
+
+## 2026-10-10 - New source40 observer health ordering review
+
+CONFIG -> Unsealed source40 observer runtime draft; original ELF current
+qualification37439 remains active, publication actual1022.6408s measured.
+COMMAND -> Root source review of manifest/candidate/own producer admission
+paths and child semantic READY/healthACK/preleaf source sealing order.
+RESULT -> Draft repeats full semantic manifest after fresh healthACK; own
+producer/prior/C137 historical gates can exceed300s and safely refuse launch.
+No model launched from this draft. Author notified to move complete expensive
+admission before READY and bind cheap current immutable source/SDK/pack edges
+afterACK while preserving every semantic predicate and unchanged300s limit.
+VERDICT -> Concrete source ordering defect identified before runtime; requires
+explicit witness successor/control, not longer health validity or skippedmath
+checks. Full native/reference/math/cache/concurrency/latency goal unchanged.
