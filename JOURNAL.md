@@ -13643,3 +13643,26 @@ own2d9862b6fixture/card0baseline. Source/producer validation live beforedevice.
 PublicQSA32721 remainslive CPUonly. No secondGPU/modelactor.
 VERDICT -> Actualdirect/materialized512 comparison andteardown/posthealth/new4
 not yet observed; no rounding/lowering cause or reference correction assigned.
+
+
+## 2026-10-10 - QSA public admission closes; H52 peer ready
+
+CONFIG -> ActualQSA control c50be35d/current frozene122 and original owninputs.
+COMMAND -> Public32721 terminal0/PASS; readonlybinding
+24077dfc6bc33699fffec871a705e715241f44ad9f98d384bbc98af3534037f7.
+RESULT -> Original source/producer/fixture/14field/direct-replay/actual recipe/
+receipt/EOF/normalterminal/health/journal/full4/page joins independently admitted.
+VERDICT -> Diagnostic replay/lifecycle only; original fullmodel math/cache/
+concurrency/latency/shelf remain incomplete.
+
+CONFIG -> NEW H52 944e252bb89d088d23cfb1c29b86e1a639e402e9dc4df6fb17462b53c1eeb0c5
+362-file closure, serial-only source37 versus genuine originalH50 collector50.
+COMMAND -> Root362SHA/ASCII/AST+30CPU PASS0.257s; peer30PASS0.254/allbindings.
+Root independently exercised real group.binding synthetic files beforefreeze:
+consistentpositive admitted, foreignrecipe and contradictoryDockerError refused.
+RESULT -> H51terminal/recipe gap closed innewH52; all8actualjobs/2groups6,2/
+392full49 pairs preregistered, absentPIN/fresh1/cacheOFF unchanged; no solojob
+invented. Fullactualcommand/counts/individualJSON/raw49/group/source/lifecycle
+joins retained. CPUprepare77157group0 and61871group1 nowlive, no model actor.
+VERDICT -> Source/preparation only. Actualtwo serialarms andfinal392comparison
+remainrequired. Half27860 solepairGPU/modelparent live beforedevicevalidation.
