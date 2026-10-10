@@ -12964,3 +12964,19 @@ H45 source-only controller held under unresolved corpus/spec exactjoin;
 NEW successor beingprepared without changing priorcase/evidence.
 VERDICT -> Actual arithmetic discrimination progresses; no internalargument/
 fullmodel math/cache/latency/shelf claim. Full goal remains active.
+
+
+## 2026-10-10 - H46 prospective case/recipe ownership source frozen
+
+CONFIG -> Exactsource37 native4/bounded6 numericalcontrol, current165registry
+and actualprivateV4 closed196 prerequisite; all historical40/43/44/45 retained.
+COMMAND -> Root31CPU/184SHA PASS, sourceplan
+4d1bbcb5e9d4385154eb14613320c74f01278b19f23dbfb596f5b2c2287a58ee.
+RESULT -> Exactauthenticated casepath/SHA plus tokens/messages/APIinputIDs/
+cancel/counters/budgets/port/privatecontrol/tokenizer rejoin beforedevice.
+Baseline args/env/image/pack/cards reconstruct strictly. Exactadmitted bytes
+survive lease/health/child snapshots. Parent-only duplicateadmission removal
+is explicit; children/runners retain currentsemantic checks. APIcache0 purpose
+refusedprelease; separatecorrect APIpurpose stillneeded forfullgoal.
+VERDICT -> Source/CPU only, peerreview and actualprepare/run pending; no4/6
+completion or dev-loop/serving speed claim. V8deviceop actual94059 stilllive.
