@@ -1,0 +1,288 @@
+--- /dev/null
++++ b/sycl/include/strata/core/layer3_qsa_target_observer.hpp
+@@ -0,0 +1,72 @@
++#pragma once
++// Default-OFF native output targets only. No captured value is a math input.
++#include "strata/core/prefix_residual_capture.hpp"
++#include "strata/core/layer.hpp"
++#include <array>
++#include <cerrno>
++#include <stdexcept>
++namespace strata::core::qsa3_target {
++struct field {const char*name;size_t bytes;const char*encoding;bool rows;};
++inline const std::array<field,29>& fields(){static const std::array<field,29> value{{
++ {"hc_residual",40960,"LE_F32[rows,4,2560]",true},{"hc_mixed",10240,"LE_F32[rows,2560]",true},
++ {"mixed_q81",2880,"Q8_1[rows,80,36]",true},{"indexer_key_projected",512,"LE_F32[rows,128]",true},
++ {"k_projected",2048,"LE_F32[rows,2,256]",true},{"v_projected",2048,"LE_F32[rows,2,256]",true},
++ {"k_fused_RoPE",2048,"LE_F32[rows,2,256]",true},{"q_full_projected",49152,"LE_F32[rows,24,2,256]",true},
++ {"q_fused_RoPE",24576,"LE_F32[rows,24,256]",true},{"indexer_query_projected",2048,"LE_F32[rows,4,128]",true},
++ {"indexer_query_fused_RoPE",2048,"LE_F32[rows,4,128]",true},{"step",16,"LE_I32[rows,4]",true},
++ {"selected_ids_capacity4",16,"LE_I32[rows,4];active_width=step[3]",true},
++ {"attention",24576,"LE_F32[rows,24,256]",true},{"gated",24576,"LE_F32[rows,24,256]",true},
++ {"gated_q81",6912,"Q8_1[rows,192,36]",true},{"output_projected",10240,"LE_F32[rows,2560]",true},
++ {"q_gamma",1024,"LE_F32[256]",false},{"k_gamma",1024,"LE_F32[256]",false},
++ {"indexer_q_gamma",512,"LE_F32[128]",false},{"indexer_k_gamma",512,"LE_F32[128]",false},
++ {"indexer_before",3076,"LE_BYTES;tail384F32,dead128F32,pooled256F32,blockposI32",false},
++ {"indexer_after",3076,"LE_BYTES;tail384F32,dead128F32,pooled256F32,blockposI32",false},
++ {"page_before",4,"LE_I32[1]",false},{"page_resolved",4,"LE_I32[1]",false},
++ {"K_physical_page0_before",4096,"LE_F16[1,2,4,256]",false},
++ {"V_physical_page0_before",4096,"LE_F16[1,2,4,256]",false},
++ {"K_physical_page0_after_resolve",4096,"LE_F16[1,2,4,256]",false},
++ {"V_physical_page0_after_resolve",4096,"LE_F16[1,2,4,256]",false}}};return value;}
++inline int index(const char*name){for(size_t i=0;i<fields().size();++i)if(!std::strcmp(name,fields()[i].name))return int(i);throw std::invalid_argument("QSA3 unknown target field");}
++struct config {
++ bool enabled=false;const char*dir=nullptr;const char*binding=nullptr;
++ config(){const char*p=std::getenv("STRATA_QSA3_TARGET");enabled=p&&!std::strcmp(p,"1");if(!enabled)return;
++  dir=std::getenv("STRATA_QSA3_TARGET_DIR");binding=std::getenv("STRATA_QSA3_TARGET_BINDING_SHA256");struct stat st;
++  if(!prefix_residual30::settings().enabled||!fidelity_diag::settings().enabled||!fidelity_diag::settings().activations||std::getenv("STRATA_VERIFY_EAGER")||!dir||dir[0]!='/'||stat(dir,&st)||!S_ISDIR(st.st_mode)||!binding||std::strlen(binding)!=64)throw std::invalid_argument("QSA3 requires existing P30/SFDactivations, absoluteDIR, binding64 and EAGERabsent");
++  for(int i=0;i<64;++i)if(!std::isxdigit(static_cast<unsigned char>(binding[i])))throw std::invalid_argument("QSA3 binding nothex");
++ }
++};
++inline const config&settings(){static const config c;return c;}
++class snapshot {
++ sycl::queue&q_;int stage_,lb_,le_;bool owner_;uint8_t*data_=nullptr;size_t bytes_=0;
++ std::array<size_t,29> offsets_{};std::array<std::array<bool,2>,29> seen_{};bool sealed_[3]={};int recording_=0,rows_=0;unsigned request_=0;int64_t p0_=0;std::string route_;uint64_t nonce_=0,zero_=0;
++ int64_t n_pages_=0,n_slots_=0,max_cells_=0;int fd_=-1;bool released_=false;
++ public:
++ snapshot(sycl::queue&q,int stage,int lb,int le):q_(q),stage_(stage),lb_(lb),le_(le),owner_(lb<=3&&3<le){
++  if(lb<0||lb>=le||le>48||(stage!=0&&stage!=1)||(owner_&&stage!=0))throw std::invalid_argument("QSA3 actual stage bounds/owner");
++  fd_=::open(settings().dir,O_RDONLY|O_DIRECTORY|O_NOFOLLOW);if(fd_<0)throw std::invalid_argument("QSA3 output directory open");
++  try{if(owner_){for(size_t i=0;i<fields().size();++i){offsets_[i]=bytes_;const size_t extent=fields()[i].bytes*(fields()[i].rows?2:1);if(extent>size_t(-1)-bytes_)throw std::overflow_error("QSA3 bytequota overflow");bytes_+=extent;}data_=static_cast<uint8_t*>(sycl::malloc_device(bytes_+16,q_));if(!data_)throw std::bad_alloc();}}catch(...){::close(fd_);fd_=-1;throw;}
++  std::fprintf(stderr,"QSA3 allocation pid=%ld stage=%d lb=%d le=%d owner=%d bytes=%zu target_only=1\n",long(getpid()),stage,lb,le,int(owner_),owner_?bytes_+16:0);
++ }
++ ~snapshot(){try{release();}catch(...){}if(fd_>=0)::close(fd_);}
++ void release(){if(released_)return;if(data_){q_.wait_and_throw();sycl::free(data_,q_);data_=nullptr;}released_=true;std::fprintf(stderr,"QSA3 release_returned pid=%ld stage=%d owner=%d\n",long(getpid()),stage_,int(owner_));}
++ void record_begin(int rows){if(rows<1||rows>2)throw std::invalid_argument("QSA3 record rows1/2");recording_=rows;sealed_[rows]=false;for(auto&v:seen_)v={false,false};}
++ void copy(const char*name,const void*source,int first,int count,int total,sycl::queue&q){
++  if(!owner_||!data_)throw std::invalid_argument("QSA3 nonowner copy");const int f=index(name);const auto&d=fields()[f];if(!source||&q!=&q_||total!=recording_||first<0||count<1||first+count>total||(!d.rows&&(first!=0||count!=1)))throw std::invalid_argument("QSA3 field source/row/queue");
++  const int slots=d.rows?count:1;for(int i=0;i<slots;++i){const int row=d.rows?first+i:0;if(seen_[f][row])throw std::invalid_argument("QSA3 duplicate row/field");seen_[f][row]=true;}q.memcpy(data_+offsets_[f]+(d.rows?size_t(first)*d.bytes:0),source,size_t(slots)*d.bytes);
++ }
++ void state(const char*name,const QsaState&st,sycl::queue&q){
++  if(!owner_||!data_||&q!=&q_||st.kv_mode!=0||st.kv_int8||st.kv_q4||st.kv_hybrid||st.kv_rot||st.kv_elastic!=-1||st.n_pages<1||st.n_slots!=st.n_pages||st.max_cells!=2048||st.idx_pooled_rows<2||!st.k_pool||!st.v_pool||!st.page_table||!st.idx_tail||!st.idx_dead||!st.idx_pooled||!st.idx_block_pos)throw std::invalid_argument("QSA3 unsupported actual resident state/capacity");n_pages_=st.n_pages;n_slots_=st.n_slots;max_cells_=st.max_cells;
++  const int f=index(name);if(seen_[f][0])throw std::invalid_argument("QSA3 duplicate state");seen_[f][0]=true;uint8_t*out=data_+offsets_[f];q.memcpy(out,st.idx_tail,1536);q.memcpy(out+1536,st.idx_dead,512);q.memcpy(out+2048,st.idx_pooled,1024);q.memcpy(out+3072,st.idx_block_pos,4);
++ }
++ void record_end(int rows,sycl::queue&q){if(&q!=&q_||recording_!=rows||rows<1||rows>2)throw std::invalid_argument("QSA3 record seal shape");if(owner_){for(size_t f=0;f<fields().size();++f)for(int r=0;r<(fields()[f].rows?rows:1);++r)if(!seen_[f][r])throw std::invalid_argument("QSA3 missing recorded field/row");q.memcpy(data_+bytes_+8,data_+bytes_,8);}sealed_[rows]=true;}
++ void begin(const char*route,int64_t p0,int rows){const auto&r=fidelity_diag::current();const int64_t ids[4]={248045,8678,198,15666};if(!r.active||r.resume!=0||r.ids.size()!=4||r.ordinal<1||r.ordinal>4||std::getenv("STRATA_VERIFY_EAGER")||!((p0==0&&rows==2&&!std::strcmp(route,"prompt_verifier"))||(p0==2&&rows==1&&!std::strcmp(route,"prompt_verifier"))||(p0==3&&rows==1&&!std::strcmp(route,"verifier"))))throw std::invalid_argument("QSA3 exact fresh prefix4/2,1,1 windows required");for(int i=0;i<4;++i)if(r.ids[i]!=ids[i])throw std::invalid_argument("QSA3 actual accepted IDs differ");route_=route;p0_=p0;rows_=rows;request_=r.ordinal;nonce_=(uint64_t(uint32_t(getpid()))<<32)|(uint64_t(r.ordinal)<<24)|(uint64_t(p0)<<16)|(uint64_t(rows)<<8)|uint64_t(stage_+1);if(owner_){q_.memcpy(data_+bytes_,&nonce_,8);q_.memcpy(data_+bytes_+8,&zero_,8);}}
++ void dump(){const auto&r=fidelity_diag::current();if(!r.active||r.ordinal!=request_||!rows_||!nonce_||!sealed_[rows_])throw std::invalid_argument("QSA3 unsealed current window/request");q_.wait_and_throw();uint64_t marker=nonce_;if(owner_){q_.memcpy(&marker,data_+bytes_+8,8).wait_and_throw();if(marker!=nonce_)throw std::invalid_argument("QSA3 stale graph replay nonce");}
++  char stem[192];std::snprintf(stem,sizeof stem,"qsa3-%ld-r%u-s%d-%s-p%lld-n%d",long(getpid()),r.ordinal,stage_,route_.c_str(),(long long)p0_,rows_);std::string base(stem);int mfd=::openat(fd_,(base+".json").c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW,0600);if(mfd<0)throw std::runtime_error("QSA3 metadata exclusiveopen");FILE*meta=fdopen(mfd,"w");if(!meta){::close(mfd);throw std::runtime_error("QSA3 metadata fdopen");}
++  std::fprintf(meta,"{\"schema\":1,\"pid\":%ld,\"request\":%u,\"stage\":%d,\"lb\":%d,\"le\":%d,\"layer\":3,\"owner\":%s,\"route\":\"%s\",\"first_position\":%lld,\"rows\":%d,\"nonce\":%llu,\"device_nonce_observed\":%s,\"binding_sha256\":\"%s\",\"n_pages\":%lld,\"n_slots\":%lld,\"max_cells\":%lld,\"indexer_before_active_pooled_rows\":%lld,\"indexer_after_active_pooled_rows\":%lld,\"unused_padding_is_native_math_target\":false,\"forward_state_is_committed_state\":false,\"fields\":[",long(getpid()),r.ordinal,stage_,lb_,le_,owner_?"true":"false",route_.c_str(),(long long)p0_,rows_,(unsigned long long)marker,owner_?"true":"false",settings().binding,(long long)n_pages_,(long long)n_slots_,(long long)max_cells_,(long long)(p0_?p0_/4+1:0),(long long)((p0_+rows_)/4+1));
++  try{if(owner_){for(size_t f=0;f<fields().size();++f){const auto&d=fields()[f];const size_t bytes=d.bytes*(d.rows?rows_:1);std::vector<uint8_t>raw(bytes);q_.memcpy(raw.data(),data_+offsets_[f],bytes).wait_and_throw();std::string file=base+"-"+d.name+".bin";int fd=::openat(fd_,file.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW,0600);if(fd<0)throw std::runtime_error("QSA3 field exclusiveopen");size_t done=0;while(done<bytes){ssize_t n=::write(fd,raw.data()+done,bytes-done);if(n>0)done+=size_t(n);else if(n<0&&errno==EINTR)continue;else{::close(fd);throw std::runtime_error("QSA3 field shortwrite");}}if(::close(fd))throw std::runtime_error("QSA3 field close");std::fprintf(meta,"%s{\"name\":\"%s\",\"bytes\":%zu,\"file\":\"%s\",\"encoding\":\"%s\"}",f?",":"",d.name,bytes,file.c_str(),d.encoding);}}
++   std::fprintf(meta,"],\"internal_norm_argument_or_rsqrt_observed\":false,\"internal_attention_score_softmax_observed\":false,\"captures_are_math_inputs\":false,\"full_model_math_qualified\":false}\n");if(::fclose(meta))throw std::runtime_error("QSA3 metadata close");meta=nullptr;
++  }catch(...){if(meta)::fclose(meta);throw;}
++  std::fprintf(stderr,"QSA3 frame pid=%ld request=%u stage=%d owner=%d route=%s p0=%lld rows=%d fields=%zu nonce=%llu metadata=%s/%s.json\n",long(getpid()),r.ordinal,stage_,int(owner_),route_.c_str(),(long long)p0_,rows_,owner_?fields().size():0,(unsigned long long)marker,settings().dir,base.c_str());rows_=0;nonce_=0;
++ }
++};
++}
+--- a/sycl/include/strata/core/verify.hpp
++++ b/sycl/include/strata/core/verify.hpp
+@@ -21,6 +21,7 @@
+ // selection, native indexer) and a profile-filled VRAM expert tier with its residency table on the device.
+ #pragma once
+ #include "strata/core/prefix_residual_capture.hpp"
++#include "strata/core/layer3_qsa_target_observer.hpp"
+ 
+ #include "strata/core/batch_fidelity_contract.hpp"
+ #include <sycl/sycl.hpp>
+@@ -475,6 +476,7 @@
+     void* hit_scratch_ = nullptr;
+     float *head_mixed_ = nullptr, *head_inj_ = nullptr, *head_logits_ = nullptr;
+     std::shared_ptr<prefix_residual30::snapshot> prefix30_snapshot_;
++    std::shared_ptr<qsa3_target::snapshot> qsa3_snapshot_;
+     std::shared_ptr<fidelity_diag::snapshot> fidelity_snapshot_;
+     bool fidelity_first_=false;
+     bool prefix30_prompt_=false;int prefix30_prompt_rows_=0;int64_t prefix30_prompt_pos_=0;
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -389,6 +389,7 @@
+     for(auto& mode:prefix30_prompt_exec_)for(auto& graph:mode){if(graph)delete graph;graph=nullptr;}
+     prefix30_prompt_=false;
+     prefix30_snapshot_.reset(); // Only retired serialfidelity/combined graphs reference P30.
++    qsa3_snapshot_.reset(); // Only the retired P30/fidelity graphs can reference these targets.
+     release_batch_observer();
+     layer0_snapshot_.reset();layer0_first_=false;
+     fidelity_snapshot_.reset();
+@@ -424,6 +425,7 @@
+     for(auto& mode:prefix30_prompt_exec_)for(auto& graph:mode){if(graph)delete graph;graph=nullptr;}
+     prefix30_prompt_=false;
+     prefix30_snapshot_.reset(); // All serial graphs retired; owning queue still alive.
++    qsa3_snapshot_.reset();
+     if (arena_b_) sycl::free(arena_b_, dpct::get_in_order_queue());
+     if (h_commitb_) sycl::free(h_commitb_, dpct::get_in_order_queue());
+     if (qcnt_) sycl::free(qcnt_, dpct::get_in_order_queue());
+@@ -763,6 +765,10 @@
+         fidelity_snapshot_=std::make_shared<fidelity_diag::snapshot>(*cs_,device_,int(lb_),int(le_),le_==g.n_layers);
+         if(prefix_residual30::settings().enabled)prefix30_snapshot_=std::make_shared<prefix_residual30::snapshot>(*cs_,device_,int(lb_),int(le_));
+     }
++    if(qsa3_target::settings().enabled) {
++        if(!native_hc_requested()||!native_qsa_enabled()||!native_rope_enabled()||!native_qsa_indexer_enabled()||g.n_embd!=2560||g.hc!=4||g.n_layers!=48||max_t!=2||g_qfuse()||std::getenv("STRATA_VERIFY_EAGER")||std::getenv("STRATA_ROPE_TABLE")||std::getenv("STRATA_NO_NORM_ROPE")||std::getenv("STRATA_ATTN_LANECELL")||layer0_diag::settings().enabled){err="QSA3 unsupported source geometry/native/flags";return false;}
++        qsa3_snapshot_=std::make_shared<qsa3_target::snapshot>(*cs_,device_,int(lb_),int(le_));
++    }
+     if (std::getenv("STRATA_VERIFY_DEBUG") != nullptr) {   // SYCL port: the per-layer residual ladder (token 0)
+         dbgR_ = (float*) sycl::malloc_device((size_t) g.n_layers * g.n_embd * 4, dpct::get_in_order_queue());
+         dbgM_ = (float*) sycl::malloc_device((size_t) g.n_layers * g.n_embd * 4, dpct::get_in_order_queue());
+@@ -894,6 +900,8 @@
+         if(fidelity_first_ && prefix30_snapshot_ && T==1 && grp==0)prefix30_snapshot_->copy("input",int(l),Rt(0),1,*cs);
+         const int tb = tb_[grp], te = te_[grp], n = te - tb;
+         if(prefix30_prompt_ && prefix30_snapshot_)prefix30_snapshot_->copy_rows("input",int(l),Rt(tb),n,tb,T,*cs);
++        const bool q3_capture=qsa3_snapshot_&&(prefix30_prompt_||fidelity_first_)&&l==3;
++        if(q3_capture&&(grp!=0||n!=T||batch_rec_))throw std::invalid_argument("QSA3 unsupported split/batch source ownership");
+         stamp(l, 0, grp);
+         const LayerView v(wt, l);
+         const char* pfx[2] = {"hc_attn_", "hc_ffn_"};
+@@ -1014,6 +1022,7 @@
+                         layer0_snapshot_->copy("attn_mixed",a.mixed,10240,*cs);
+                     }
+                     if(l0_capture && half==1)layer0_snapshot_->copy("ffn_mixed",a.mixed,10240,*cs);
++                    if(q3_capture&&half==0){qsa3_snapshot_->copy("hc_residual",a.R,t,1,T,*cs);qsa3_snapshot_->copy("hc_mixed",a.mixed,t,1,T,*cs);}
+                 }
+                 return false; // Native HC deliberately does not produce qfuse images.
+             }
+@@ -1134,6 +1143,10 @@
+                 // #783 PR-f (stuchapin909): the per-head RMSNorm and the rope in one launch, bit-identical to the pair
+                 // (rope_parity check 6); STRATA_NO_NORM_ROPE=1 keeps the two; off on HIP until its parity check passes
+                 const bool fuse_nr = native_qsa_enabled() && native_rope_enabled() && native_norm_rope_usable((int) HD, (int) s.n_rot);
++                if(q3_capture){if(!fuse_nr||!dec_batch||st.kv_rot||st.kv_int8||st.kv_q4||st.kv_hybrid)throw std::invalid_argument("QSA3 unsupported actual fused/KV source route");
++                    qsa3_snapshot_->copy("q_gamma",wqn->data,0,1,T,*cs);qsa3_snapshot_->copy("k_gamma",wkn->data,0,1,T,*cs);qsa3_snapshot_->copy("indexer_q_gamma",wiqn->data,0,1,T,*cs);qsa3_snapshot_->copy("indexer_k_gamma",wikn->data,0,1,T,*cs);
++                    qsa3_snapshot_->state("indexer_before",st,*cs);qsa3_snapshot_->copy("page_before",st.page_table,0,1,T,*cs);qsa3_snapshot_->copy("K_physical_page0_before",st.k_pool,0,1,T,*cs);qsa3_snapshot_->copy("V_physical_page0_before",st.v_pool,0,1,T,*cs);
++                }
+                 auto norm_rope = [&](float* data, const WeightRef* norm, int rows, int cols, const int32_t* pos) {
+                     if (fuse_nr && native_norm_rope_usable(cols, (int) s.n_rot)) {
+                         native_qsa_rms_norm_rope(data, cols, (const float*) norm->data, data, rows, cols, (int) s.n_rot, EPS,
+@@ -1150,12 +1163,15 @@
+                 // window's rows each - row-wise identical arithmetic (STRATA_DEC_BATCH=0: token by token)
+                 const bool qb = dec_batch && n > 1 && native_qsa_enabled() && native_rope_enabled() && !st.kv_q4;
+                 if (!q8_attn) native_quantize_q8_1(xm, xq_, (int) N, n, cs);
++                if(q3_capture)qsa3_snapshot_->copy("mixed_q81",xq_,tb,n,T,*cs);
+                 if (qb) bf16_gemv_fp32_mmvf_multi(mixed_ + tb * N, N, (const uint16_t*) wik->data, idx_raw + tb * ID, ID, N, ID, n, cs);
+                 else for (int t = tb; t < te; ++t)
+                     bf16_gemv_fp32_mmvf(mixed_ + t * N, (const uint16_t*) wik->data, idx_raw + t * ID, (int) N, (int) ID, cs);
++                if(q3_capture)qsa3_snapshot_->copy("indexer_key_projected",idx_raw+tb*ID,tb,n,T,*cs);
+                 stamp(l, 7, grp);
+                 native_mmvq(wk->native_type, wk->native_data, xq_, kcur_ + tb * NKV * HD, (int) N, (int) (NKV * HD), n, cs);
+                 native_mmvq(wv->native_type, wv->native_data, xq_, vcur_ + tb * NKV * HD, (int) N, (int) (NKV * HD), n, cs);
++                if(q3_capture){qsa3_snapshot_->copy("k_projected",kcur_+tb*NKV*HD,tb,n,T,*cs);qsa3_snapshot_->copy("v_projected",vcur_+tb*NKV*HD,tb,n,T,*cs);}
+                 if (qb) norm_rope(kcur_ + tb * NKV * HD, wkn, (int) (n * NKV), (int) HD, pos_k + tb * NKV);
+                 else for (int t = tb; t < te; ++t) norm_rope(kcur_ + t * NKV * HD, wkn, (int) NKV, (int) HD, pos_ + t * NH);
+                 if (st.kv_rot) {   // K and V rotated before they are stored (kv_q4.hpp)
+@@ -1164,6 +1180,7 @@
+                 } else if (st.kv_hybrid) {   // K8V4: only V is rotated
+                     fwht256_inplace_cuda(vcur_ + tb * NKV * HD, (int64_t) n * NKV, cs);
+                 }
++                if(q3_capture)qsa3_snapshot_->copy("k_fused_RoPE",kcur_+tb*NKV*HD,tb,n,T,*cs);
+                 stamp(l, 8, grp);
+                 if (batch_rec_) {   // snapshot each slot's indexer tail before its first proposed row
+                     for (int t = tb; t < te; ++t)
+@@ -1228,9 +1245,11 @@
+                                                   rope_scaling(), cs);
+                     }
+                 }
++                if(q3_capture)qsa3_snapshot_->state("indexer_after",st,*cs);
+                 stamp(l, 9, grp);
+                 native_mmvq(wq->native_type, wq->native_data, xq_, qfull_ + tb * NH * 2 * HD, (int) N, (int) (NH * 2 * HD),
+                             n, cs);
++                if(q3_capture)qsa3_snapshot_->copy("q_full_projected",qfull_+tb*NH*2*HD,tb,n,T,*cs);
+                 if (qb) {
+                     if (fuse_nr) {   // the q/gate split reads q straight out of the q|gate rows (stride 2 * HD)
+                         native_qsa_rms_norm_rope(qfull_ + tb * NH * 2 * HD, (int) (2 * HD), (const float*) wqn->data,
+@@ -1257,6 +1276,7 @@
+                     if (st.kv_rot) fwht256_inplace_cuda(qcur_ + tb * NH * HD, (int64_t) n * NH, cs);   // <Hq, Hk> = <q, k>
+                     bf16_gemv_fp32_mmvf_multi(mixed_ + tb * N, N, (const uint16_t*) wiq->data, qidx_ + tb * IQ * ID, IQ * ID,
+                                               N, IQ * ID, n, cs);
++                    if(q3_capture)qsa3_snapshot_->copy("indexer_query_projected",qidx_+tb*IQ*ID,tb,n,T,*cs);
+                     norm_rope(qidx_ + tb * IQ * ID, wiqn, (int) (n * IQ), (int) ID, pos_i + tb * IQ);
+                 } else {
+                 for (int t = tb; t < te; ++t) {
+@@ -1286,9 +1306,11 @@
+                 for (int t = tb; t < te; ++t) {
+                     float* qx = qidx_ + t * IQ * ID;
+                     bf16_gemv_fp32_mmvf(mixed_ + t * N, (const uint16_t*) wiq->data, qx, (int) N, (int) (IQ * ID), cs);
++                    if(q3_capture)qsa3_snapshot_->copy("indexer_query_projected",qx,t,1,T,*cs);
+                     norm_rope(qx, wiqn, (int) IQ, (int) ID, pos_ + t * NH);
+                 }
+                 }
++                if(q3_capture){qsa3_snapshot_->copy("q_fused_RoPE",qcur_+tb*NH*HD,tb,n,T,*cs);qsa3_snapshot_->copy("indexer_query_fused_RoPE",qidx_+tb*IQ*ID,tb,n,T,*cs);}
+                 stamp(l, 10, grp);
+                 if (batch_rec_) {   // each row selects and attends over its own slot's K/V
+                     for (int t = tb; t < te; ++t) {
+@@ -1311,11 +1333,13 @@
+                 stamp(l, 11, grp);
+                 // KV streaming: the n selections' blocks resident (device-side, inside the graph)
+                 qsa_kv_resolve(st, *g_, sel_ + (size_t) tb * cap_, step_ + tb * kStepCount, n, cap_, cs);
++                if(q3_capture){for(int t=tb;t<te;++t){qsa3_snapshot_->copy("step",step_+t*kStepCount,t,1,T,*cs);qsa3_snapshot_->copy("selected_ids_capacity4",sel_+(size_t)t*cap_,t,1,T,*cs);}qsa3_snapshot_->copy("page_resolved",st.page_table,0,1,T,*cs);qsa3_snapshot_->copy("K_physical_page0_after_resolve",st.k_pool,0,1,T,*cs);qsa3_snapshot_->copy("V_physical_page0_after_resolve",st.v_pool,0,1,T,*cs);}
+                 stamp(l, 12, grp);
+                 const QsaAttnPools pools = qsa_attn_pools(st);
+                 qsa_decode_attn_batch(qcur_ + tb * NH * HD, pools, sel_ + (size_t) tb * cap_, step_ + tb * kStepCount, cap_,
+                                       s, attn_scratch_ + (size_t) tb * attn_scratch_floats_, attn_ + tb * NH * HD, n, cs);
+                 }
++                if(q3_capture)qsa3_snapshot_->copy("attention",attn_+tb*NH*HD,tb,n,T,*cs);
+                 stamp(l, 13, grp);
+                 if (st.kv_rot || st.kv_hybrid) fwht256_inplace_cuda(attn_ + tb * NH * HD, (int64_t) n * NH, cs);   // back: H^-1 = H
+                 if (qb) native_qsa_gate_apply(attn_ + tb * NH * HD, qfull_ + tb * NH * 2 * HD, attn32_ + tb * NH * HD,
+@@ -1328,9 +1352,12 @@
+                     else
+                         qsa_gate_apply_f32(attn_ + t * NH * HD, qfull_ + t * NH * 2 * HD, s, attn32_ + t * NH * HD, cs);
+                 }
++                if(q3_capture)qsa3_snapshot_->copy("gated",attn32_+tb*NH*HD,tb,n,T,*cs);
+                 stamp(l, 14, grp);
+                 native_quantize_q8_1(attn32_ + tb * NH * HD, xq_, (int) (NH * HD), n, cs);
++                if(q3_capture)qsa3_snapshot_->copy("gated_q81",xq_,tb,n,T,*cs);
+                 native_mmvq(wo->native_type, wo->native_data, xq_, bo_ + tb * N, (int) (NH * HD), (int) N, n, cs);
++                if(q3_capture)qsa3_snapshot_->copy("output_projected",bo_+tb*N,tb,n,T,*cs);
+             }
+         } catch (const std::exception& e) {
+             err = "verify layer " + std::to_string(l) + ": " + e.what();
+@@ -1634,6 +1661,7 @@
+             if (l + 1 < le_ && !pre(l + 1, grp)) return false;
+         }
+     if(prefix30_prompt_ && prefix30_snapshot_)prefix30_snapshot_->stamp_rows(T,*cs);
++    if(qsa3_snapshot_&&(prefix30_prompt_||fidelity_first_))qsa3_snapshot_->record_end(T,*cs);
+     if(fidelity_first_ && prefix30_snapshot_ && T==1)prefix30_snapshot_->stamp(*cs);
+     if (le_ < g.n_layers) {   // a layer split's earlier stage: hand the residual on, no head
+         float* hout = hand_out_ + (size_t) hrow0 * HB;
+@@ -1797,6 +1825,7 @@
+     if (exec_t != nullptr) { strata::program::host_trace36::graph_mark(reinterpret_cast<uintptr_t>(exec_t),false); return true; }
+     strata::program::host_trace36::Scope h36_Capture(strata::program::host_trace36::Capture);
+     if(prefix30_prompt_ && prefix30_snapshot_)prefix30_snapshot_->begin_rows(T);
++    if(qsa3_snapshot_&&(prefix30_prompt_||fidelity_first_))qsa3_snapshot_->record_begin(T);
+     if (std::getenv("STRATA_VERIFY_EAGER") != nullptr) return true;   // SYCL port: no graph, run() replays the body
+     if(batch_observe_ && batch_admission_ && batch_snapshot_)batch_snapshot_->begin_roster(batch_fidelity::graph_layout::make(nullptr,1,batch_phase_,ar_off_?1:0),*cs_);
+     if (DPCT_CHECK_ERROR(dpct::experimental::begin_recording(cs_)) != 0) {
+@@ -3591,6 +3620,7 @@
+     for(auto& mode:prefix30_prompt_exec_)for(auto& graph:mode){if(graph)delete graph;graph=nullptr;}
+     prefix30_prompt_=false;
+     if(prefix30_snapshot_){prefix30_snapshot_->release();prefix30_snapshot_.reset();}
++    qsa3_snapshot_.reset(); // P30/fidelity graphs retired before target memory.
+     if(next_)next_->release_fidelity_observer();
+ }
+ 
+@@ -3601,6 +3631,7 @@
+     if(!prefix30_snapshot_||rows<1||rows>2||pos<0||pos+rows>int64_t(r.ids.size())-1||!tokens||fidelity_first_||layer0_first_||batch_observe_||std::getenv("STRATA_VERIFY_EAGER")||!native_hc_requested()){err="P30 unsupported actual prompt verifier selection";return false;}
+     for(int row=0;row<rows;++row){if(tokens[row]!=r.ids[size_t(pos+row)]){err="P30 prompt verifier accepted token mismatch";return false;}prefix30_prompt_tokens_[row]=tokens[row];}
+     if(!prefix30_snapshot_->begin("prompt_verifier",pos,rows,err))return false;
++    if(qsa3_snapshot_)qsa3_snapshot_->begin("prompt_verifier",pos,rows);
+     prefix30_prompt_request_=r.ordinal;prefix30_prompt_rows_=rows;prefix30_prompt_pos_=pos;prefix30_prompt_=true;
+     std::fprintf(stderr,"P30 prompt_select pid=%ld request=%u stage=%d pos=%lld T=%d ids=",long(getpid()),r.ordinal,device_,(long long)pos,rows);
+     for(int row=0;row<rows;++row)std::fprintf(stderr,"%s%d",row?",":"",tokens[row]);std::fprintf(stderr,"\n");std::fflush(stderr);
+@@ -3615,12 +3646,14 @@
+     for(int row=0;row<last_t_;++row)if(last_tokens_[row]!=prefix30_prompt_tokens_[row]||last_tokens_[row]!=r.ids[size_t(last_pos0_+row)]){err="P30 prompt verifier returned token mismatch";return false;}
+     std::fprintf(stderr,"P30 prompt_returned pid=%ld request=%u stage=%d pos=%lld T=%d rc=0\n",long(getpid()),r.ordinal,device_,(long long)last_pos0_,last_t_);std::fflush(stderr);
+     if(!prefix30_snapshot_->dump(err))return false;
++    if(qsa3_snapshot_)qsa3_snapshot_->dump();
+     return next_==nullptr||next_->dump_prefix30_prompt(err);
+ } catch(const std::exception&e){err=std::string("P30 prompt verifier dump: ")+e.what();return false;}
+ 
+ void Verifier::select_fidelity_first(bool on) {
+     fidelity_first_=on && fidelity_snapshot_!=nullptr;
+     if(fidelity_first_ && prefix30_snapshot_){std::string err;if(!prefix30_snapshot_->begin("verifier",int64_t(fidelity_diag::current().ids.size())-1,1,err))throw std::runtime_error(err.empty()?"P30 unsupported request/prefix/resume":err);}
++    if(fidelity_first_&&qsa3_snapshot_)qsa3_snapshot_->begin("verifier",int64_t(fidelity_diag::current().ids.size())-1,1);
+     if(next_)next_->select_fidelity_first(on);
+ }
+ 
+@@ -3629,6 +3662,7 @@
+     if (!fidelity_diag::first_row(rows,0,pos,fidelity_diag::current().tokens)) { fidelity_diag::skipped("first_window","unsupported_row_or_token_mapping"); return true; }
+     if (!fidelity_snapshot_) { fidelity_diag::skipped("first_window","snapshot_not_allocated"); return true; }
+     if(prefix30_snapshot_ && !prefix30_snapshot_->dump(err))return false;
++    if(qsa3_snapshot_)qsa3_snapshot_->dump();
+     if (!fidelity_snapshot_->dump("first_window_residual",pos,token,true,err)) return false;
+     return next_==nullptr || next_->dump_fidelity_first(rows,pos,token,err);
+ } catch (const std::exception& e) { err=std::string("fidelity diagnostic: ")+e.what(); return false; }
