@@ -1150,3 +1150,43 @@ Complete original model math, complete-state cache and physical accounting,
 actual1/2/4/bounded6 qualified serving, x2 critical-path traces, natural useful
 interactive fairness/latency comparisons and reproducible verified shelf remain
 open. All earlier source/failure evidence and unrelated changes are preserved.
+
+
+## 2026-10-10 - Independent native4 ON and OFF/ON history admission
+
+Both H50 native4 collection/lifecycle arms are now independently admitted:
+OFF57caeb3d86dd901fa9349a343b0aeccf32b1085217230e4ec8a71ae88ea33975;
+ON2b340fe2750bbe3067ee69a7840197935d4135dc06fbf83764b80693435544c8.
+Root recollected the original saved token histories and rechecked all eight
+consumed plan/request/child/parent files with byte hashes and stat brackets.
+Three uncanceled slots have exact IDs and finish; canceled slot0 has an actual
+four-token common trajectory and cancellation terminal in both arms. Separate
+admitted-history artifact e2750de4c6cdddc90505edf656cec9704f69eea846b5b553acfce75432f75fce
+retains the preliminary artifact and binds both independent reader receipts.
+Exact-prefix serial controls and all49 raw comparisons remain required. H50
+explicitly rejects serial/API, so a reviewed fresh serial successor is needed;
+this does not qualify actual complete 1/2/4/6 serving or prefix-cache behavior.
+
+QSA V4 original producer61041 and independent readerc028 passed. The ten own
+inputs97a are prepared; real device control46835 remains live, currently in
+prerequisite validation and complete publisher identity checks. Observer40
+source2b4d/73 bindings and CPU14 passed independent review, but fresh all8 SDK,
+new390 oracle/upload and model-target runtime remain outstanding. No source39
+SDK or old runtime proof transfers to source40.
+
+Measured dev-loop preparation bottleneck remains repeated logical parsing:
+15,600 parses, 73.55percent of an instrumented profile. Worker V2 source75f2
+passed CPU34; consumerV1 remains held on actual method-shadow bypass. No matched
+clean dev-loop speed improvement is yet established.
+
+Full shared-cache V2 is still unsealed. CPU family controls are source evidence
+only; actual batch0 lacks the concurrent identity/BMF protocol, requiring its
+own source-bound prefix/PCL persisted lineage. Native allocation contractV3
+passed typed ownership/backed-placement CPU controls but does not establish
+physical residency or whole-model expert accounting. Full fidelity, complete
+cache, requested concurrency, x2 critical-path profiling, matched interactive
+latency/fairness and reproducible verified shelf remain incomplete.
+
+Historical read-only permission paragraphs above no longer apply to the resumed
+session. Own coherent history checkpoints4b0cb54 and9e7e89f are pushed, with
+unrelated dirty files preserved. This update makes no new completion claim.
