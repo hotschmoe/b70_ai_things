@@ -116,3 +116,27 @@ cleanup passed compiledCPU on/off fast/natural tests, but freshGPUengine
 qualification remainsrequired. Fresh PTI budgetbuild passed; native_exit also
 skips PTI final exports, so separatetool/native43 finalizer and mappedcensus
 are stillrequired. No cleanlatency/bandwidth/API/shelf promotion.
+
+## 2026-10-11 - Original comparison completed; model math still unqualified
+
+CONFIG -> Independent original48/PLE/layer3 reference unchanged, mode1 actual
+source41 capture; native targets are not original-math operands.
+
+COMMAND -> Enclosing30061 terminalPASS923.188s, reportdb105c9cfd45e716fe8ee4e67e5340675dc77843931151da98584e90f76a52c9.
+Independent source33 streamedaudit1eb72af6/scriptd82ad1a9 preserved inB17.
+
+RESULT -> All2308 full48/head comparison rows repeat exactly across4requests;
+alloriginal PLEinput33 andfourL0 embeddings bitwise. Layer3 tailbitwise; dead/
+pooled differences remainaround1e-15. Layer3 p3 gatedNMSE1.727042225e-12 and
+output_projected3.326869081e-8; retained singleQ8code threshold diagnostic
+explains thatoutput seam conditionally, notwholemodel. Earliest bitwise
+difference is L0attention at~1e-14; p3 L3input2.84e-14, attention8.64e-10,
+FFN3.39e-7, thenL4attention1.96e-6. FullheadNMSE0.007888246485733295/
+maxnormalized0.05251488383778164, p3L47FFN0.008102880027766652. Original
+reference/captured-operand/tolerance policies unchanged; no numericPASS gate
+assigned. Scoring/softmax internals remainunobserved.
+
+VERDICT -> ReaderPASS closes evidence/comparison mechanics, notmodelcorrectness.
+full_model_math_qualified=false. Nextboundaries: fixed-input Q8packing and
+zero-state L0GDN/output/HCwrite, withconditional-native-input provenance
+explicit andoriginal reference preserved. No serving/performance promotion.
