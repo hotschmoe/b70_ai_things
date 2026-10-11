@@ -16965,3 +16965,19 @@ payload; prior'designno modelmounted' wordingisincorrect, notanewlaunchgate.
 VERDICT -> ActualNUM38capture/equivalence/lifecycle closed, notfullmodelmath.
 Concretecompilefixanddirectretry next; no addedframework/inheritedtests.
 UnexecutedwarmV3d72 source archivedbeforedependency update; fullgoalactive.
+
+## 2026-10-11 Actual paused graph compute coverage repair passed
+
+CONFIG -> Freshf52f/c72 collector defaultOFF/ON retention, two-kernel sameUR
+regular-list graph oncard0; actualheaderfixgraph.hpp, no modelpayloadread.
+COMMAND -> Actual12035 terminalPASS66s/reportead4530510357315c8d2d6874378c92a5f3522f345c333c05b6173ffd6ad8dc9.
+Independentfixture2 publicCLIterminalPASS0.233s, originalraw/IPC/childIDs/
+compile/normalretirement/card0health/source joins preserved.
+RESULT -> OFFselectedchildnone; ONexactA/Boneeach IDs1,2, actualregular-list
+API/rawticks/graphandallocationretirement pass. Actualcoverage discrimination
+closesfixturecause; fullmodeltrace/clockalignment/idle/bandwidthunqualified.
+UpdatedwarmV3 962682284pins/6CPU0.012 usesexactfixture2/historicalnormal35ab;
+committed2fe9fa3 pushed. CPUoriginalreference88910 stillLIVE; waitretirement
+forquietactualmodelcapture. V1compilefailure preserved, noextrafixtures.
+VERDICT -> RealGPUreplaycompute coverage fixclosed, notmodelcoverage orspeed.
+Nextfullmodelcapture readyaftercurrentCPUcomparison; fullgoalactive.

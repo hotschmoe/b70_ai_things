@@ -1862,3 +1862,20 @@ VERDICT -> Components and actual numerical capture progressed. Originalfull48
 fidelity, complete all-statecache/persistedfamilies, actual1/2/4/bounded6streams,
 physicaltiertraffic, naturalinteractive latency/fairness gains and reproducible
 verifiedshelf remain incomplete. No speed/stability or completion promotion.
+
+## 2026-10-11 - NUM38 capture and actual profiler replay coverage closed
+
+CONFIG -> Full original model and serving goal unchanged.
+COMMAND -> NUM38 parent95513 PASS1189s/report23e5; OFF/ON4requests
+bitwise49-output equivalence, raw38 captures, health/full4/teardown closed.
+Original CPU diagnostic88910 is live; numeric full48 qualification still open.
+Profiler fixture12035 PASS66s/reportead45305 and independentpublic passed: OFF
+misses both compute children, ON capturesA/B exactlyonce with rawtick/ID and
+normalretirement/card0health joins. This qualifies fixture scope only.
+RESULT -> Fresh model profiling V3 uses rebuiltcollector and namedimmutable
+normalhistory, avoiding repeated historical model checks. Standalone dev-loop
+ABBA skipped at user request; no measured gain claim. Fullmodelcapture follows
+CPU diagnostic retirement. No extra proof framework or inherited test sweep.
+VERDICT -> Actual numerical observer and tiny GPU profiling blockers closed.
+Original full48 fidelity, complete cache/streams/tiertraffic, natural latency/
+fairness gains and qualified reproducible shelf remain incomplete.
