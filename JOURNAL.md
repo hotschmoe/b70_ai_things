@@ -15024,3 +15024,10 @@ CONFIG -> Unchanged SOURCE40 V3 SDK/oracle and pinned UD-Q4_K_XL; sole pair-leas
 COMMAND -> run_source_upload_oracle_full_v2.py, session 68770, root source40-v3-upload390-postboot-run-v2; exact command saved in postboot-upload390-root-command-v1.json.
 RESULT -> All five whole390 cases exited cleanly: card0, card1, same-device24/24, two-device24/24, and actual model static bounds. Owned teardown and strict per-card plus compiled two-rank post-health passed. PID8866 remains live in the new final full-four publisher hash scan; no terminal PASS claimed. Fresh one/pair C140 preparation commands saved at postboot-c140-preparation-commands-v3.json, gated on upload completion.
 VERDICT -> Actual postboot GPU and teardown progress; final upload qualification pending identity completion. This does not qualify inference, original model fidelity, full cache, concurrency, interactive latency or shelf. Preserve the live process and poll the same handle. Full campaign remains active.
+
+## 2026-10-11: Postboot SOURCE40 whole390 final PASS and fresh C140 started
+
+CONFIG -> Corrected source40 V3 SDK, genuine matched upload oracle, canonical registry171; exact selected model remains unchanged.
+COMMAND -> Whole390 upload session68770 terminal0 in342s. Fresh one-card prepare then self-leased qualify_c1_serving_combined_v140_v3.py, root session15276, c140-v3-one-segmented-postboot-prepared-v3.
+RESULT -> Upload finalPASS, receiptSHA b11bf45c1230677601ca572c4f9c7d41bc53f9c99bf5c7c36ed99c6aad4b1b1c. All five actual GPU cases, owned terminal, post strict/compiled pair health, source guards and new complete four-shard publisher hashes passed. Fresh C140 one-card preparation is live; no serving result yet. New pair preparation command is saved but not executed.
+VERDICT -> Currentboot upload qualified only within whole390 HC/PLE source and logical-free scope. No inference/reference/cache/concurrent/latency/shelf qualification from this upload. Continue same live session15276; pair follows actual onecard success. Full goal remains incomplete.
