@@ -16947,3 +16947,21 @@ immutablehistoricalreceipts mustnot trigger redundantcurrentmodelscans.
 VERDICT -> Concrete workflowredirection toactualGPU/results overvalidation
 scaffolding. No measureddevloopgain yet; fullfidelity/cache/concurrency/
 latency/shelfgoal remainsactive.
+
+## 2026-10-11 Actual NUM38 model passed; profiler fixture compile failed
+
+CONFIG -> Original44/mode1 freshprefix1 observerOFF/ON4requests perarm,
+unchangedmodel/173/threadpins. Tinyfixture usesonlyGPU0/no modelpayloadread.
+COMMAND -> Actual95513 terminalPASS1189s/report23e5c2f9c5d09195ae859e99a103517e6b371b8821028dfff503323a59d75248.
+Observerequivalence true; botharmnormalExit0/noforced4requests, ON156field
+files=four38-field+metadata captures. Arm/aggregatehealth/full4closed.
+CoreoriginalCPUdriver88910LIVE; itsactualpublicbefore/after checks replace
+a redundantstandalonepublicreader. No numericalresultyet.
+RESULT -> Fixture93092 failed27s/report614cd649d22cd711c8888796be78b6e12ddd8f7530c691519dc3780d2b82e09f
+beforeGPUreplay: missingcommand_graph.hpp inactualC388 include tree. SDKuses
+graph.hpp. Failedoriginalsource20a/raw retained; narrowfixture2 retryprepared.
+Read-onlyrepositorymount includesmodelsdirectory butfixturedoesnotreadmodel
+payload; prior'designno modelmounted' wordingisincorrect, notanewlaunchgate.
+VERDICT -> ActualNUM38capture/equivalence/lifecycle closed, notfullmodelmath.
+Concretecompilefixanddirectretry next; no addedframework/inheritedtests.
+UnexecutedwarmV3d72 source archivedbeforedependency update; fullgoalactive.
