@@ -1,0 +1,96 @@
+{
+  "schema": 2,
+  "status": "SOURCE-ONLY bounded real-model capture recommendation; not executable runtime qualification",
+  "preserved_prior_proposal": {
+    "path": "/tmp/b70-normal-model-profile-next-source-proposal-v1.json",
+    "sha256": "dbca90ae55d2e7b6d31c003c682a71d2f0f8ab84a19f82058312bc73d8d5656c",
+    "correction": "The actual inherited GEN command omits seed; temperature=0 is retained. Do not claim seed1."
+  },
+  "source_bindings": {
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/run_source41_host_lpdisabled_v1.py": "ce1b15d8895feaeef5f3d5798e4abe594e0f18ae83d4f1aa6e117dde7613ba86",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/validate_source41_host_lpdisabled_v1.py": "a3f80e81bd31cb8fb254ed38ab4b6aa0470746246582bd91afb53d6b3ff68e01",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/source41_lpdisabled_contract_v1.py": "38b1e51c4da52a5d3eaef8027ece34f565ad071ab02d99a0feecb648010302f1",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/collect_source41_lpdisabled_host_v1.py": "ed5341d5ae74e65f207862edfce1f0e1d93f52196ad40e30f355ab684fee8d37",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/source41-host-lpdisabled-source-plan-v1.json": "f304423d65052b0cb09e2bdb3d37b7feb29f88d06e1828c2205286db6783d1dd",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/probe_unitrace_indexer40_v5.py": "a8343175bf119c06de050f4fd2f11097e0ba5e282e8dc0da90f00dd982b124e7",
+    "/mnt/vm_8tb/b70/build/pti-unitrace-clock-bridge-source-v1/tools/unitrace/src/unitrace.cc": "d5a275a78d6d99a4aa82b1e7cb464ff4974c4eb4c46f068f9f1f5b9978d04293",
+    "/mnt/vm_8tb/b70/build/pti-unitrace-clock-bridge-source-v1/tools/unitrace/src/chromelogger.h": "3f34ed620df70270afe2bac30c3dcebe2ae68cb66448244bedfc1c15e246a493",
+    "/mnt/vm_8tb/b70/build/pti-unitrace-clock-bridge-source-v1/tools/unitrace/src/unitimer.h": "a19c62b21703e59bd806eed0990bbe28adb8c73567e8cb7f7bb88fa0a09888dc",
+    "/mnt/vm_8tb/b70/build/pti-unitrace-clock-bridge-source-v1/tools/unitrace/src/levelzero/ze_collector.h": "ccc4a663ebb0d33b2ee1593f722c8668762e8dbc3ddc7243fab93ee2bdfdf2c9",
+    "/mnt/vm_8tb/b70/build/pti-unitrace-clock-bridge-source-v1/tools/unitrace/src/pti_unitrace_clock_export_v1.h": "69ea05711a37de419158c4f37a28e598ea200e177977617991cabc9a3879c1ae"
+  },
+  "CONFIG": {
+    "base_actor": "run_source41_host_lpdisabled_v1 + its unchanged public reader; new explicit successor required",
+    "model": "actual source41 mode0; current exact source41 SDK/ELF/runtime/model/intake; one GPU ordinal0",
+    "requests": "exact independently tokenized useful short/long/long/short, four GEN64 fresh1 ckpt1 temperature0, absent PIN/logprobs/seed, normal EOS; no MTP/ignoreEOS/cache reuse",
+    "reference": "Prior actual source40/source41 OFF equivalence remains an independent prerequisite. No captured operands or original math comparison imported into this profiler control.",
+    "arms": "Keep H36+DECODE_TIMING ON and LPdisabled in BOTH matched arms. OFF executes native directly; ON execs unitrace with unchanged native argv. Compare PTI ON against this H36-bearing OFF, not an uninstrumented serving baseline.",
+    "tool_install": "/mnt/vm_8tb/b70/build/pti-unitrace-clock-bridge-c388-build-v1/install",
+    "tool_sha256": "611b5a4a8329792c2a718fc4d06b1be09b1131007db56db0f77bd4172a4b196f",
+    "injection_sha256": "dfac680989f8abda89f8c826acb172ca0db00de18748440a2ff16ed2a3442722",
+    "ON_options": [
+      "--chrome-call-logging",
+      "--chrome-kernel-logging",
+      "--chrome-device-logging",
+      "--chrome-event-buffer-size",
+      "16384",
+      "--output-dir-path",
+      "/results/unitrace"
+    ],
+    "ON_env": {
+      "UNITRACE_CLOCK_METADATA_PATH": "/results/unitrace/clock.{pid}.jsonl",
+      "UNITRACE_HOST_CLOCK_BRIDGE": "1"
+    },
+    "OFF_env": "Both clock-export flags and all UNITRACE inherited overrides absent; no preload injection. Do not reuse capability -d/-s/-t/verbose tables as mandatory model evidence.",
+    "new_recipe": "Original full actual native Docker recipe plus exactly one fresh tool install RO mount and profiler output RW directory. Preserve C388/image/groups/devices/mask0/CPU/thread settings/full cfg/env. Reconstruct actual inspection and terminal, not planned argv alone."
+  },
+  "COMMAND": {
+    "implementation_minimum": [
+      "New thin immutable actor/request/reader namespace over LPdisabled source; exact command builder wraps native with tool, and reader derives the same submitted argv. No original controller globals or profile mutations.",
+      "Pin fresh install/source/build receipt/current dependency census and original launcher exec branch; inventory commands strip both clock flags. Require KernelMetrics/ChromeKmdLogging and other inherited profiler overrides absent.",
+      "Add owned bounded raw output watcher and failure latch under original launch/session retirement; capture actual logs before rm and require complete retired raw artifacts before qualification.",
+      "Reuse strict model protocol, ordered source/raw T/DONE, no LP/no LP scopes, known pages/continuous guardian, pre/post full4, strict+compiled P2P0 health, raw journal faults, exact Docker stdout EOF/session/normal removal/source closure.",
+      "Public reader independently replays all owner/raw/query/clock/replay predicates and closes model identity after all actual model reads."
+    ],
+    "launch_policy": "Root only, bin/gpu-run pair exclusion plus native ordinal0. No agent GPU/tool/container or model payload actions. Do not launch until complete new source/CPU proof and peer review."
+  },
+  "RESULT_existing_source_evidence": {
+    "tool_launch": "unitrace.cc1234 checks KernelMetrics or ChromeKmdLogging before fork branch; otherwise1424 execvp replaces the launcher. With those controls absent and original bash exec/no-init/private namespace, native PID1 association can remain valid; actual inspection+process identity must rejoin clock/H36/Chrome PID.",
+    "bounded_buffer": "unitrace.cc339 exposes supported finite event buffer; chromelogger.h929-959 flushes existing buffer at capacity rather than intentionally dropping events. This bounds per-thread event buffering, not total trace bytes or collector command maps.",
+    "clock_budget": "pti_unitrace_clock_export_v1.h116 has fixed 8 MiB output cap and4096B row cap; overflow calls _exit86. Accepted fixture used2415 rows/1234122B. Model-load and four GEN64 event counts are not measured; same cap cannot be called sufficient.",
+    "added_waits": [
+      "ze_collector.h3053 DestroyCommandList timestamp event synchronize",
+      "ze_collector.h3119 ResetCommandList timestamp event synchronize",
+      "ze_collector.h3183 PrepareToExecuteCommandListsLocked timestamp event synchronize",
+      "ze_collector.h4808 PrepareGraphExecution synchronizes lists carrying reused graph events",
+      "ze_collector.h5481 additionally synchronizes command events during processing"
+    ],
+    "clock_bridge": "Existing six original GPU timestamp-query sites bracketed by CPU RAW clocks only. RAW-MONO-RAW gives a local offset interval, not a continuous drift bound. Actual fixture observed sites1/3/4; do not demand all6 sites in model.",
+    "known_projection_counterexample": "Actual fixture device-domain order can disagree with per-operation host projections. Keep integer device ticks/frequency/mask and original normalization; never use host-projected union as physical busy truth."
+  },
+  "required_coverage_and_analysis": [
+    "Derive model-specific operation expectations from source41 linked launch sites and actual complete command-list/graph append ownership. Fixture126 compute/631 copies/162 fills/12 replays are not model count requirements.",
+    "Join every actual GPU instance clock ID to original Chrome ID, PID/context/device/engine and source command append/list record; require actual host submit-flow association for each replay. Report orphan/ambiguous/missing rows explicitly.",
+    "H36 graph and queue pointers are SYCL identities, not Level Zero handles. Use source-known submission API and clock-bracketed unique temporal association only where unique. If uniqueness fails, add a separately reviewed output-only mapping hook or keep attribution false.",
+    "Preserve graph replays, including identical kernel names; source-flow IDs and actual command-instance IDs distinguish repeats. Missing completion flow is not automatically a missing device operation.",
+    "Compute raw device-domain intervals/unions per actual clock/engine after validbits/nowrap checks. Copy bytes require actual memory-copy API size/source ownership, not kernel-name inference. Never call gaps whole-device idle; internal injected commands and unknown engines may be absent.",
+    "Rejoin returned origin query tuple, init/final bridges and each submit-pair query. Compare actual driver host value against recorded RAW bracket; report violations, widths and pair variation. H36 MONOTONIC association needs measured local bridge interval; no unbounded interpolation or wall-clock claim."
+  ],
+  "necessary_gaps_before_runtime_ready": [
+    "Resolve fixed8MiB clock budget explicitly: either a new output-only tool successor with a fixed preregistered larger metadata limit and unchanged query/math/queue code, or accept a deliberately bounded smaller diagnostic workload under a separately named scope. Do not silently truncate, rotate, disable export, or call a short diagnostic the four-GEN64 control.",
+    "Declare total raw disk cap and watching interval/overshoot semantics. On overflow stop through original exact owned retirement, preserve failure; finite Chrome buffer alone is not a disk budget.",
+    "No actual model PTI graph/replay/kernel/copy cardinality or handle association qualified yet. Actual fixture coverage is tool capability only.",
+    "Stock collector synchronization origin is known from source, but model per-site added wait counts/durations are unobserved. An output-only bracket around existing waits is a separate later patch; host API duration alone is not proof the model requested that wait.",
+    "Matched timing requires quiet window, identical guardian/health/cohort/input/output/finish and all attempted trials retained; ABBA fresh-process order with startup reported separately. Current recommendation does not establish overhead or latency."
+  ],
+  "VERDICT": {
+    "source_recommendation_complete": true,
+    "runtime_ready": false,
+    "actual_model_profiling_qualified": false,
+    "clock_calibration_qualified": false,
+    "physical_idle_qualified": false,
+    "zero_added_waits": false,
+    "serving_speed_claim": false,
+    "GPU_or_model_payload_read_by_agent": false
+  }
+}
