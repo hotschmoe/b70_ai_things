@@ -69,3 +69,23 @@ Full-model launches are held while source audit and bounded phase controls
 investigate the recurrence. Small independent fixture profiling can continue
 with its own integrity/output/health gates. The host-profile failure contains
 no model execution or host critical-path trace and supplies no latency result.
+## Fresh source41 CLI prerequisites after clock capture
+
+CONFIG -> CPU-only identity refresh after the completed clock-enabled fixture
+capture. No model process, device access, source write or cache invalidation.
+
+COMMAND -> Root scan52582 preserved all three known buffered pages before and
+after the original complete four-shard identity function. Scan79478 separately
+ran the original tokenizer in a no-device container against fresh source41.
+
+RESULT -> Complete111334654784B publisher hashes passed in81.496s, with all
+three pages correct before/after. Full4 receipt SHA256:
+43993ee00f9278ac6072719c2ebabb2df05b3cd77422eb6ddf2507719875a377.
+The tokenizer passed with54/524 input IDs and normal owned retirement.
+Evidence is under f17/source41-cli-postclock-identity-v1 and
+f17/source41-cli-tokenizer-no-device-v1.
+
+VERDICT -> Fresh metadata/byte prerequisites for the pending real-model
+control, not proof of stable hardware or original model mathematics. Page
+reads can populate cache. Actual model arms still require their own complete
+identity and health brackets; these receipts do not replace those scans.

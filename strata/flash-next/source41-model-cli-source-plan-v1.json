@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "scope": "fresh source41 native CLI intake/guardian/staged constructor OFF equivalence and ON original fidelity plan only",
+  "files": {
+    "strata/flash-next/source41_model_cli_v1.py": "73bd7efce4d5c03c1cddd7c28200a14bba76dd47ad947e3fce321e9a85c3aa4b",
+    "strata/flash-next/test_source41_model_cli_cpu_v1.py": "17055106dae727655a1ed7f3363fd278e3499e6acd42fac380e5ec6c627cd972",
+    "docs/20261011_flashnext_source41_real_model_cli_plan_v1.md": "6eff2bdf747114f695d992bc8cb473f43a4da556f607976b0bd9b8f46d1cf1e1",
+    "strata/flash-next/source41_sdk_binding_v1.py": "3b99f01fe8b4e8136d9fdccaf225d7eae686f89ae381bce5b237e3592835a4a0",
+    "strata/flash-next/admit_source_upload41_v1.py": "525b740b1be24fa38ff57e0db6508ed7ebf2f2cdc8ffbe9757c1536f369e8453",
+    "strata/flash-next/qualify_indexer_materialized41_masked_v2.py": "9e576f2aaaf5c3a4607ee1eefafa25a231124e648ce13a7296e45e72bbe3a268",
+    "strata/flash-next/indexer-materialized41-masked-source-plan-v2.json": "1e75ff25862af8672fe918906ac85815c11f8896aefa8ae806283ca327549625",
+    "strata/flash-next/prepare_decode40_host_profile_v1.py": "e9230624b311802a3bb0e15af462b4a6d974053f9a4109686fdcdcdd8ff4e1a4",
+    "strata/flash-next/prefill-chunk64-512-control-source-plan-v2.json": "239f41838885d83e2784c81b3b5788e1922834b15e65534fdc5c31d07ea64d90",
+    "strata/flash-next/source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+    "strata/flash-next/readonly-page-recurrence-source-plan-v2.json": "cfb6a3190b1650c336bb15681caded7e558456ef1b5e4aba0a658827d7bfbb4a"
+  },
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p test_source41_model_cli_cpu_v1.py -q",
+  "CPU_controls": 4,
+  "actual_model_or_GPU_run": false,
+  "model_launch_ready": false,
+  "canonical_registry_modified": false,
+  "full_model_math_qualified": false
+}

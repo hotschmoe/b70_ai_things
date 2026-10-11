@@ -74,3 +74,40 @@ Independent conversion/serialization precision and replay-flow audit remain
 separate. Instrumentation adds observer work and stock collector waits; no
 normal-model GPU idle fraction, bandwidth saturation or serving gain follows.
 No model file was mounted in these fixture containers.
+
+## Independent clock audit findings
+
+CONFIG -> Read-only root checks of the completed V3 capture, preserving raw
+clock SHA5b08ab76 and Chrome SHA6094ed00 before and after each query.
+
+COMMAND -> Reproduce the source's F64 epoch conversion and six-decimal Chrome
+serialization for all919 operations, using Decimal for the consumed JSON.
+Separately compare operation23 and24 in raw device and normalized host time.
+
+RESULT -> All919 displayed start/duration values match the original source
+conversion exactly. Epoch F64 spacing is0.25us; maximum serialization error
+against the exact integer epoch is0.125us. Duration serialization is exact for
+these records. This verifies serialization, not physical clock calibration.
+
+Operations23/24 share the same device and engine. Their raw GPU timestamps
+are ordered with a133-tick gap (6927.083ns at19.2MHz), but separate submit-pair
+normalizations reverse their starts and create a200ns host-time overlap.
+Between the two submit pairs, host time advances67857ns while device time
+advances1614ticks (84062.5ns): a16205.5ns residual. The apparent overlap is
+not proof of parallel execution. The profiler can allocate another synthetic
+track to represent such overlap; track count is not physical engine count.
+
+VERDICT -> Use original device-clock ordering for descriptive fixture
+intervals. Do not treat separately normalized host-track unions as physical
+GPU busy time or infer model idle time from their complement. Host-clock pair
+variability, boot-versus-MONOTONIC_RAW origin handling and observer overhead
+remain explicit limits before host/model critical-path correlation.
+
+The complete independent audit is preserved under f17 as
+b70-unitrace-v3-clock-raw-coverage-audit-v1.json (SHA256
+c6f3ea2f645606c479ad3f10465e1774e4b158364aedd324d310bc5c83bdc040),
+alongside its exact script and analysis plan. It joins all126 compute,631 copy
+and162 fill operations, all12 replay flows and all18 source frames. Root
+independently confirmed no overlapping raw device intervals and union42150
+ticks over all919 operations. This is an instrumented fixture description,
+not a model idle or latency measurement.
