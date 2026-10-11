@@ -16220,3 +16220,33 @@ never inferred physicalidle/bandwidth/calibration/completeness or fixturecounts.
 Native GDN contracts not emulated by FP64 include Q81 inputs, BF16 alpha/beta,
 FMA/reduction and intrinsics. Actual enclosed comparisons remain necessary;
 full model correctness and complete serving goal remain open.
+
+## 2026-10-11 Actual numeric reader failure localized and repaired
+
+CONFIG -> Preserve successful native NUM10 parentd6713012 and failed enclosed
+reference4041583724ae60e47aa400903be3077cebc5b1a2af14056637c9cfd8a1d9a761.
+
+COMMAND -> CPU81513 terminalFAIL before mathematical model construction;
+original/current capture attempts failed JSON parsing, while fresh final
+publisher/page closure passed with closing2ba4bcdb. Root direct numeric call
+localized blind AST prompt4->1 replacement to PCL line[4:] becomingline[1:].
+All actual saved PCL lines parse correctly with original prefix4; no emptyJSON
+files found. Localization saved as source43-num10-prefix-slice-reader-localization-v1.json.
+
+RESULT -> Corrected readercad8c00b/168 preserves PCL slice4 andchanges only
+seven prompt literals; root19CPU0.182s/peer0.188s. Root saved8case parsing and
+four full49 OFF/ON comparisons passed:4fullheads+192layerresiduals bitwise,
+all bounded IDs/LP/finish equal. Diagnostic8208d7fa remains separate from full
+public/model admission. ReferenceV4/CLI2 ca15a7e1/197 root31CPU0.782s/peer0.783s,
+original math/actor3/source777/corpusc9ca unchanged. Root40900 now corrected
+CPU reference retry in newv2 output, exact original three thread pins.
+
+Normal native40259 terminalPASS1497s, report96624d15371daa621eb5e00dae2dc8fd2400ab2b63a6390e72af82fda44398b0,
+both4GEN64 processes/lifecycle/full4/source gates and IDs/finish comparison
+passed. Independent publicnormalreader88707 live. Root70280 sole new pairlease
+Q81output-gated helper qualifier live; prepared fixed original fixture unchanged.
+
+VERDICT -> No native rerun for parser bug; preserve all failed evidence.
+Original reference result, publicnormal admission andactualQ81 helper pending.
+CanonicalABBA harnessccb6/5 root8CPU0.010s/peer0.011s ready but real120MB timing
+has not run; wait for quiet CPU window before claims. Fullgoal remains active.
