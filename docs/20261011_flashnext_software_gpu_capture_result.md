@@ -35,3 +35,23 @@ idle gaps. The helper has deliberate reset/dump waits and does not represent
 normal model overlap. Observer overhead, injected-child library attribution,
 full-model mathematics and serving latency remain unqualified. Model launches
 are separately held on the recurring buffered-byte discrepancy.
+
+FOLLOW-UP -> Immutable SQLite inspection and an independent root query expose
+575 GPU rows:42 named compute intervals,343 copies and190 fills. The unchanged
+helper source executes126 body compute calls and631 copies across direct plus
+two replays. The visible compute counts match the direct routes; per-node replay
+coverage is missing. The288 replay-body copies are also unobserved. Source
+calls need not map one-to-one to backend operations; these counts establish a
+coverage boundary rather than missing physical execution. Fill attribution is
+open. No calibration pairs were found in the queried SQLite sync table; raw
+binary synchronization records have not been decoded.
+
+The complete raw roster and database hashes stayed unchanged. Saved audit
+b70-vtune-v5-raw-coverage-audit-v1.json SHA:
+35273dd9c38dbc3e9ecff6566bd4ca355d29c239225edb9d4e222adc83fa906c.
+Database SHA before and after the independent root query:
+b2f6e2aae4288f92aa3a4d4310638e915932ed67faa3b91a49aca93d7a4a3801.
+Compute count fields are zero, not invocation multiplicities. Complete replay
+timing, exact busy/idle unions and calibration remain unqualified. A pinned
+PTI source audit identifies replay-aware callbacks, but actual current-stack
+coverage and its added synchronizations require separate qualification.
