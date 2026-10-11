@@ -17443,3 +17443,30 @@ or full48math qualification. Proceed minimal currentmode1 original full48
 own-state candidate; rootrequested sourceport and actualprefix1 recipe.
 Source46all8NoDri compile94364 remainslive; source48build5271 queued.
 2000/50, fullfidelity/cache/streams/traffic/latency/shelf remainopen.
+
+
+## 2026-10-11: HC46 operator passed, full48 CPU live, staging namespace repair
+
+CONFIG -> DefaultOFF HC46 rowbatch, unchanged45 projection as renamed GPU
+reference, alltoken1..8 actual down/up shapes, groupedF16OFF.
+COMMAND -> Freshall8build94364 PASS311s/receipt82dd13bb; rootrehashallsource
+andbinaries. NoDrioperatorcompile50915 failedsetup3 beforecompiler; preserved.
+Corrected52730 compilePASS24.5s/ELFb822fd9e. Realcard0operator52220 via
+bin/gpu-run with explicitcardpin.
+RESULT -> PASS40s, sixteenbitwise cases, ownedexit0/removal, preposthealth,
+no freshkernel faults. No model speed/fullmath qualification.
+
+CONFIG -> Original full48 own-state mode1 CPU candidate, explicitbulk83c289
+and actualfirstHC parity936e. Exactsource43APIbaseline config551efe20.
+COMMAND -> Actual90151 live atF17/current-full48-own-state-bulk-mode1-v1,
+freshinputidentitye178bb8e; alloriginalinputs/zero-ownedstate, no nativefeeds.
+RESULT -> No numerical result yet. Full48 finalhash/pages runs evenfailure.
+
+CONFIG -> Singleton mirror staging source48 candidate over47 groupingOFF.
+COMMAND -> Actual5271 NoDri all8 build.
+RESULT -> FAILED184s, verify.cpp709 unqualified helper namespace. Failed
+SDK /mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T232045Z-4ofz28jx.
+New49 patch qualifies exactlythreecalls; exactapply/undo passed. Actual56943
+nowholds pairlease for fresh49 all8 build; original48 failure preserved.
+VERDICT -> Independent CPUfidelity and useful GPU paths advance. No unsafe
+groupingretry. Fullmath/cache/streams/traffic/latency/shelf and2000/50 open.

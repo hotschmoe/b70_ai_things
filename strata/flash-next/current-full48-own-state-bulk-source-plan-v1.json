@@ -1,0 +1,47 @@
+{
+  "CPU_command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_current_full48_own_state_bulk_cpu_v1 -q",
+  "explicit_bulk_ELF_sha256": "83c289ccd11ef6fed8cb9c0563328795f1fbd665110edace7efcfb4fc710fb47",
+  "files": {
+    "docs/20261011_flashnext_current_full48_bulk_mode1_candidate_v1.md": "0fc638fcda1cfca19177ab3ae46bfb60cab4e1bc82937498a335ea5949ada32e",
+    "strata/flash-next/current_full48_own_state_bulk_v1.py": "6bb9b3b84234eee8b3b80115049e61281d0891c76ae9dd1d11de0f6b2bc67214",
+    "strata/flash-next/ffn_full48_owned_storage_v1.py": "4487bd8a603b21784fc07e47e4498a6f5a7582d317c65f1d0e9c06ffa6495bb4",
+    "strata/flash-next/full48_owned_composition_storage_v1.py": "9f98e1b7b7088dc0b12ec0474bcad5660f60878d23ecd24cfabc3032661d1d28",
+    "strata/flash-next/full48_owned_composition_storage_v2.py": "1a26df2aaaf990a33c96fd0ca8961293c211b97d7cd954bfbad49e2707f5ec6b",
+    "strata/flash-next/independent_q8_1_activation_v1.py": "b58d73282051bfa301ebb6f781d5d59c63128d9074a42d53cf4d9ff05d75a714",
+    "strata/flash-next/native43-engine-build-proposal-v1.json": "17ff9e21276cbab2e802435ec3fcda6f6a1bb57444d53f4fb31156a0615b1b5c",
+    "strata/flash-next/native47-grouped-f16-usm-engine-build-proposal-v1.json": "e01caf2bfbdeda5c22c4d67b666431b744c2eb5b2e2540cdd0fcce2baf48c6c2",
+    "strata/flash-next/native_storage_first_gdn_estimate_v1.py": "43a2beeafabcd5a8ed040139a5122b7b18d0518b94b3700d4f6601d685e93d2a",
+    "strata/flash-next/original-gguf-reference-foundation-plan-v1.json": "7d5217d844b411b427e4c6c6df2b4837b66970937c044389b40270346804bd2b",
+    "strata/flash-next/original_first_gdn_layer_v1.py": "c6352dc69f22e5940e0c6799fe83137225b8126fe7ce771983de682e00abd67f",
+    "strata/flash-next/original_gguf_vector_decoder_v2.py": "130f1a525e366e5d33fcb67a3c765ee50d5c4eaedb2b4a0495ae2386cd18c7b9",
+    "strata/flash-next/original_native_hc_bulk_f32_v1.py": "a3518692f67fd600eee2d7cd75b76ffc30bc29c4d44f0766f53a3d1eeca5cf33",
+    "strata/flash-next/original_native_hc_f32_v1.py": "6c041765000c883a94d456ab3e0ac582ecb42723a20baf57ad7b3498c76a06ae",
+    "strata/flash-next/ple_owned_history_storage_v1.py": "e4a58cf9a88118487a4aa0b483d8068b57010d8fd6aa28c2b39a2110eb265df8",
+    "strata/flash-next/prefill_first_gdn_owned_storage_v1.py": "5ca886ac3f1d7786e34699238fb1c1cd8303ae7b0ec4555d0f2dccdfedb20718",
+    "strata/flash-next/qsa_owned_state_storage_v1.py": "cf67609d3efb3fe815f3e75ac8561fa173eb858cb3e64673a5ea013e5fd77d65",
+    "strata/flash-next/run_current_full48_own_state_bulk_v1.py": "20c28ad2ddb08cf6d099b8e0bc1ab17f23bfdc44b03e4dbfc5668b4dad14132a",
+    "strata/flash-next/run_source44_num38_original_reference_v2.py": "cde3b83809003f2472993bd70d03b2bd5088403758020948b059b7486a20f7ba",
+    "strata/flash-next/serial37_canonical_json_v3.py": "afdbdc4729cc6a2cfb68de5cb1106d79d1b81db79c9da91b1c157d5c1b85f57d",
+    "strata/flash-next/source43_sdk_binding_v1.py": "43d0f5f5ef6b602801636511d9ab59f8dcbd61448a6625649ef212c4f9f20b6c",
+    "strata/flash-next/source47_grouped_model_binding_v1.py": "3ee3c5bd8f7e0ccce6e1b84b00789d0bc1abb4f4bf8387f98dfc90fe18a3c310",
+    "strata/flash-next/test_current_full48_own_state_bulk_cpu_v1.py": "c32749f57574de41d96af50c2300cb95e6e09cf02b5e7083d93b189df9084996"
+  },
+  "first_HC_actual_report_sha256": "936e75f64ad8384501f76e4a267b47fa5abdb1ff5f44cbf38c0d4496649fc38e",
+  "full_model_math_qualified": false,
+  "grouped_F16_supported": false,
+  "materialized_mode": 1,
+  "mode0_supported": false,
+  "prefix_ids": [
+    248045
+  ],
+  "schema": 1,
+  "scope": "source candidate original full48 own-state mode1 with explicit bulk HC; not full native math or whole transitive runtime qualification",
+  "source_contract_small_bytes_checked": {
+    "43": 6,
+    "47": 6
+  },
+  "source_generations": [
+    43,
+    47
+  ]
+}
