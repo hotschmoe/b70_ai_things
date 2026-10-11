@@ -1,0 +1,31 @@
+CONFIG -> Synthetic one-queue planner/fetch/rebase control only. New source48
+SDK required for resident_plan_bound's new default-false final argument. The
+unchanged actual47 canonical verify_kernels.hpp declarations supply copy/rebase.
+No model/pack/GGUF inputs. Maximum total owned USM device+host allocation64KiB.
+Card0 pin: ZE_AFFINITY_MASK=0 ONEAPI_DEVICE_SELECTOR=level_zero:gpu.
+Set STRATA_PF_GROUPED_F16=0. Root owns lease, timeout, pre/post health/kernel and
+normal process/container retirement. No automatic orchestrator is provided.
+
+COMMAND -> Root compiles in current C388/39992 after fresh source48 build, with
+new SDK source /src, build /build, harness /harness.cpp and new /results output:
+/opt/intel/oneapi/compiler/2026.1/bin/icpx -O3 -std=c++20 -fsycl -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -I/src/sycl/include -I/src/include /harness.cpp -Wl,--start-group /build/libstrata_kernels.a /build/libstrata_core.a /build/libstrata_kernels_cpu.a /build/libstrata_engine.a /build/ggml/src/libggml-cpu.a /build/ggml/src/libggml-base.a -Wl,--end-group /usr/lib/x86_64-linux-gnu/libze_loader.so -Xsycl-target-backend=spir64 -cl-fp32-correctly-rounded-divide-sqrt -o /results/mirror_t1_staging_harness
+Execute under bin/gpu-run --card 0:
+/results/mirror_t1_staging_harness --synthetic
+
+RESULT -> Source only, no build/GPU execution by author. Four cases: allVRAM,
+allMirror, mixed with duplicate IDs, missingMirror. Fixed singleton top10 IDs,
+16 possible experts, blob64B (aligned/multiple16), nonuniform128B cache slot
+offsets, original CPU-published two-tier layout contract built independently on
+host. New actual planner must match all active count/start/dst/tok/pointer fields
+before copy. Both new and CPU plans execute the unchanged SDK fetch/rebase and
+byte-echo kernels. Every destination's complete64B blob must equal the original
+selected expert bytes; new/CPU outputs must match exactly. Rebased pointers must
+equal staging+group*64. Duplicate destinations are retained. Missing mirror
+must retain original skip0 fallback, with no fetch/computation attempted.
+
+The reference layout follows expert_source.cpp:3203-3234, not a copied device
+planner. Byte echo observes routing and copy only; no expert GU/down arithmetic
+is claimed. No rates, bandwidth, idle or model qualification. One queue retires
+before all owned buffers free; context is destroyed before finalPASS marker.
+Existing plan input validation is preserved, including missing-mirror fallback.
+Future actual model testing still needs its identity/output/health/teardown gates.
