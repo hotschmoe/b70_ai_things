@@ -17489,3 +17489,29 @@ helpers. Exactcurrent46SDK72/all8 andbothactualcommandpreflight passed.
 RESULT -> No model resultyet. ActualHC46operator previouslyPASS16bitwise
 cases/health/teardown; actualmodelcoherence/timing stillrequired.
 VERDICT -> Fullmath/cache/streams/physicaltraffic/latency/shelf and2000/50open.
+
+
+## 2026-10-11: full48 mode1 native comparison and staging49 build closed
+
+CONFIG -> Actual independent current43 mode1 prefix1 own37dba63f, matched
+historical43 NUM10 d6713012 four freshrequests, original publisher bytes.
+COMMAND -> compare_current_full48_num10_v1.py, no GPU/model/provider reads.
+RESULT -> Directcomparison df8295d8dea16f27ad57d35d78a36d50dc853ec1530007d5841bf035e0281619.
+All4matchobservations: inputbitwiseexact; L0attentionNMSE3.960988499e-7,
+L0FFN1.476465561e-6, head0.0001059580329/maxnormalized0.002389562478.
+Own/native firsttoken846 andtop20sets agree; savedrankreceipt31b543b5.
+Only48postFFN/head+L0input/attention observed; otherphase targetsnull.
+Saved43HCseam abb89360 establishes onepacketbyte2124: tiny mixeddifference
+straddles halfscale midpoint; allcode/sumbytes agree. Independentencoder of
+nativemixed reproducesnativepacket exactly, conditionaldiagnosticonly.
+VERDICT -> No numericPASS/tolerancefit/old.007888matchedimprovement claim.
+Firstnormalization rsqrt implementation remainsunqualified; independent
+firstGDN instrumentation sourceprep continues, no nativeinputs asmathfeeds.
+
+CONFIG -> Staging49 namespacecorrected candidate, groupedF16OFF.
+COMMAND -> Actual56943 all8NoDri buildPASS310s/receipt2d6490ad; root rehash
+all72/all8 before actual64173 NoDrioperatorcompile.
+RESULT -> CompilePASS19.3s/ELFab8f033c. Realcard0operator25152 queued
+behindlive HC46model12379. No stagingGPU/model resultyet. Both genuine49
+model commandpreflight+GEN64metadata passedb5f2b70f; frozenbeforelaunch.
+VERDICT -> Fullcampaign/speed2000/50/fidelity/cache/streams/traffic/shelf open.
