@@ -15122,3 +15122,10 @@ CONFIG -> Same source40 SDK/currente9/freshoneC140; independently admitted origi
 COMMAND -> Initialprepare37928 rejected omittedhostthread settings; corrected NEWprepare84828 terminal0 at native-qsa40-v9-one-postboot-prepared-v2. Self-leased qualifier52724 at native-qsa40-v9-one-postboot-run-v1.
 RESULT -> CompleteplanSHA 6fa64995f0b4b9a4bf08025d7649ca9a05505f60ec62201b4c513beb4c5f9c57; initialrejection preserved and no partialplan used. CPUprep PID38989 actively read~170GB throughbuffered/cached source checks, no arbitraryrestart. Qualifier52724 acquiredpairleases, onlycard0 modelpin plus pairhealth guards; no observer/modelcapture result yet. CacheV10 all10plans remainverifiedqueued.
 VERDICT -> Actual GPU qualification launched onlyafter terminalpreparation; original referencefidelity/QSA rawtarget/all49 equality andhealthy ownedteardown still required. No speed/modelmath/shelf claim. Fullgoalactive.
+
+## 2026-10-11: Scoped live frontend identity source checkpoint
+
+CONFIG -> FrozenV2 0aa148e2/1031 bindings, actual frontend tokenizer/template/source/metadata mutation/restoration and separate rebind/restart controls; same originalnativeweight scope. OldV1 held false-attempt gate preserved.
+COMMAND -> Root1031SHA/ASCII/AST/18CPU PASS0.050s; independentpeer1031/18CPU PASS0.052s.
+RESULT -> Requires actualfour mutator attempts/changedsnapshots/exactowner+source restoration, admittedprime/repeat, explicitfalse mutation flags forrebind/restart, originalproducer/HTTP/source joins. No actualactor/fresh49 GPU execution yet. Alternate nativeweights/hotreload/modelkey/fullcache qualification remainfalse. CurrentQSA52724/PID39594 confirmed CPUactive in leased semanticpreflight; no actualmodeltarget proofyet.
+VERDICT -> Source/CPU checkpoint with honest frontendidentity scope; oldV1 flags neverpromoted. Run genuine source/currentABI/actor+fresh49 qualification after priorwork. Completeoriginalmodel/cache/concurrency/placement/profile/latency/shelf objective unchanged.
