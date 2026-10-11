@@ -1842,3 +1842,23 @@ VERDICT -> Actual scoped profiling closure and source repair progressed.
 Original full48 fidelity, all-state prefix cache, active1/2/4/bounded6 streams,
 physical tier traffic, natural latency/fairness gains and verified shelf remain
 incomplete. Full goal remains active.
+
+## 2026-10-11 - Fresh44 masked closed and NUM38 model capture live
+
+CONFIG -> Full original goal intact. ActualSDK44/806, all390 upload4c/public05d,
+masked48 component02e and independentpublica443 closed. Current173 unchanged.
+COMMAND -> NUM38V2 source97170326/883SHA/11CPU and focusedpeer ready. Actual
+intake59807 passed/planf3a24; solemodel95513 live in first OFF arm after fresh
+tokenizer/current first-arm full4 and strict+compiled health passed.
+RESULT -> NUM38 observer adds core/RMS fields with actual7048460 snapshot
+lifetime grammar. OFF/ON whole49 output equivalence and actual38 readbacks
+still pending. Original diagnostic driverc99f/915SHA/5CPU is ready, retaining
+existingF32 full48 primary; FP64 and conditional captured-input lanes separate.
+Freshpausedregularlist collector actualbuild98013 passed123s/f52f, installed
+bytes verified/c72 injection. Tiny same-UR kernel replay coverage still pending.
+Normal historical association component completed0.519s/746d over6.63MB, with
+currentmodel/full4/healthFalse. Matched ABBA benchmark73dd prepared but notrun.
+VERDICT -> Components and actual numerical capture progressed. Originalfull48
+fidelity, complete all-statecache/persistedfamilies, actual1/2/4/bounded6streams,
+physicaltiertraffic, naturalinteractive latency/fairness gains and reproducible
+verifiedshelf remain incomplete. No speed/stability or completion promotion.
