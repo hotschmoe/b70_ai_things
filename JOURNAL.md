@@ -16489,3 +16489,18 @@ under reconstruction. User informed. Unrelatedjournalcontent notstaged.
 VERDICT -> CompletePTIcapture/physicalidle/bandwidth unqualified; bounded
 collection/export audit before retry. Originalfull48 math/cache/actual1/2/4/
 bounded6/naturalinteractive latency-fairness/stableAPI/verifiedshelf open.
+
+## 2026-10-11 Journal history-position recovery completed
+
+CONFIG -> Recover exact1188pre-existing uncommitted lines after root journal
+write failure; preserve unrelated changes and all tracked evidence.
+COMMAND -> Independent chronological reconstruction uses original successful
+write/patch expressions, exact Sep5 dualreadbacks and nexttracked append
+anchors. Root verified every segmentSHA; removing recoveredsegments yields
+currentHEAD bytes exactly, joining them yields9d3baa1f exact77091B/1188lines.
+RESULT -> History-position candidate de218e13403db182b3766c149fe7da217127e8fb805003b0b674e6a2c09525bb
+restored; gitdiff1188added/0removed. Durable originals/manifests/byte backups
+in F17/journal-write-recovery-v1. Exact historical wholefile SHA unavailable;
+no such claim. User informed; recoveredunrelated content remainsunstaged.
+VERDICT -> Evidence-backed content and chronology restoration complete.
+Continue campaign; use byte-preserving append and isolatedindex entries.
