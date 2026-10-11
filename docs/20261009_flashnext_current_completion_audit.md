@@ -1573,3 +1573,27 @@ fidelity/coherence, complete-state cache V12 runtime, one/two/four/bounded-six
 streams, measured placement costs, calibrated normal critical path, natural
 TTFT/gap/completion/fairness gains and the reproducible verified shelf remain
 required. Completion is unproven and the full goal stays active.
+
+## 2026-10-11 - Actual source41 mode0 model control
+
+CONFIG -> Full original campaign unchanged; this is a bounded one-card native
+CLI control, not API/shelf or full original mathematics qualification.
+
+COMMAND -> Source41 OFF parent25467 terminalPASS1477s and independent
+reader23647 PASS. See docs/20261011_flashnext_source41_model_control_results.md.
+
+RESULT -> Actual source40 and fresh41 each constructed and completed the same
+four GEN64 requests. Repeated/cross-engine IDs and finishes matched; per-arm
+full4/page/health/kernel/source and normal ownership/EOF/removal passed. New
+source41 mode1 original-fidelity arm44487 is live, with comparisons pending.
+Raw clock export/replay/serialization audit also passed for the919-operation
+fixture; per-submit host normalization reorders an actually serial copy pair,
+so host-aligned physical idle remains unqualified. DefaultOFF CPU clock bridge
+source, fresh isolated build and no-device metadata passed; actual bridge
+sampling, observer overhead and normal model coverage still require runs.
+
+VERDICT -> Source41 constructor/mode0 bounded coherence is now observed.
+Original full48 fidelity, materialized mode1, complete-state cache runtime,
+all requested stream counts, physical tier traffic, normal profiling and
+natural latency/fairness gains, API identity and verified shelf remain open.
+No completion or serving-speed promotion.
