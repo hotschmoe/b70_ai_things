@@ -16194,3 +16194,29 @@ VERDICT -> Native diagnostic execution closed, original mathematics still
 unresolved. Fresh normal mode0 constructor/control, actual profiler capture,
 Q81 helper compile/runtime, full fidelity/cache/streams/traffic/interactive
 latency/fairness/API/reproducible shelf remain required. Fullgoal unchanged.
+
+## 2026-10-11 Observed timeline analyzer and measured admission hotpaths
+
+CONFIG -> Saved raw timeline analysis only after successful actual PTI public
+admission; first-GDN contract audit is source-only and changes no reference.
+
+COMMAND -> Analysis941bb1/206 root6CPU0.023s/peer0.026s/allsource hashes match.
+Initial root unittest used a nonexistent guessed module name and failed import;
+correct declared test_source43_pti_analysis_cpu_v1 command then passed.
+FirstGDN audit998298a4/12 source bindings match; native/FP64/F32 differences
+are explicit, with no unique cause inferred. Devloop metadata audit4edced2e
+was preserved in F17 from agent's exact source-only saved-witness analysis.
+
+RESULT -> Retired masked43 witness120,621,314B:26,397files/4,175,683,220bytes
+perseal; all7 seals86.429s total; initial semantic gap208.063s; helper8.933s.
+Recursive HC/prior/baseline admission and repeated whole-witness canonical
+conversion are concrete hotpaths, but their individual time share is unproven.
+Root-only isolated ABBA canonical benchmark is being prepared; no frozen gate
+has been weakened or persistent cached PASS introduced. Root81513 original
+comparison and40259 normalcontrol remain live; numerical outcome not yetknown.
+
+VERDICT -> Analysis reports host unions and observed raw per-device tick gaps,
+never inferred physicalidle/bandwidth/calibration/completeness or fixturecounts.
+Native GDN contracts not emulated by FP64 include Q81 inputs, BF16 alpha/beta,
+FMA/reduction and intrinsics. Actual enclosed comparisons remain necessary;
+full model correctness and complete serving goal remain open.

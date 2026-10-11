@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "scope": "source-only operation/storage/order audit; no runtime or causal attribution",
+  "SDK43_receipt_sha256": "6f6517ac5f6b77e7fd8f0487d62869ef108a490bf6409ebc254bf5e1cfb93bc4",
+  "files": {
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T120045Z-kfiohqmn/source/sycl/src/core/verify.cpp": "dc3ba9cfac3a707f3ab8262c9bcd6fe70f33e2685bc558d24b971332692d17ba",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T120045Z-kfiohqmn/source/sycl/src/kernels/cuda/verify_kernels.dp.cpp": "1617c1322a1fe7aced3d37cab01a7c46b8f68f8ed07cefc3ab8dd0257bf64a66",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T120045Z-kfiohqmn/source/sycl/src/kernels/cuda/native_mmvq.dp.cpp": "bf87197ea14da23c278e1e174d575503ec9f933e58c2fa267f919f5cdda8fe14",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T120045Z-kfiohqmn/source/sycl/include/strata/kernels/q8_1_finite.hpp": "6a3c49cabd87bf2b0b2f163c03986066f13c708c96adc34a83ad0234918e115b",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T120045Z-kfiohqmn/source/sycl/src/kernels/hc_native_composition.cpp": "c63ce71dee3572daca974f03587db54ade1d9ec842176bd83bb81dc7d22bb83f",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/original_first_gdn_layer_v1.py": "c6352dc69f22e5940e0c6799fe83137225b8126fe7ce771983de682e00abd67f",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/prefill_first_gdn_owned_storage_v1.py": "5ca886ac3f1d7786e34699238fb1c1cd8303ae7b0ec4555d0f2dccdfedb20718",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/full48_owned_composition_storage_v1.py": "9f98e1b7b7088dc0b12ec0474bcad5660f60878d23ecd24cfabc3032661d1d28",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/full48_owned_hc_device_rs_v1.py": "fd09e504a5dca583a578f3c8993afc0de59259537f965558dcd89fd311ed5dd0",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/full48_owned_hc_device_rs_v3.py": "859c8e77764eb6e56ee71405831da2ea85985a6fac04b824a0d392d47f963933",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/full48_owned_hc_fma_refinement_v1.py": "b3fe19b0f56e8144364dfa9f63b688115e813c9ce2e4d7e6ffb58ddfa3c14970",
+    "/mnt/vm_8tb/github/b70_ai_things/docs/20261011_flashnext_source43_first_gdn_contract_audit.md": "64ab95ad0473b2fa53eb759e240e43d0b86593c72a6351529d73618a493e6e48"
+  }
+}
