@@ -17303,3 +17303,18 @@ F17/source45-grouped-f16-model-v1-run-v1.
 VERDICT -> Larger placement gain and real operator/fidelity progress. Current
 minimum2000prefill/50decode unmet; originalfullmath/allstatecache/concurrency/
 latency-fairness and reproducible verifiedshelf remain active requirements.
+
+## 2026-10-11: CPU HC bulk helper preserved for full48 reference work
+
+CONFIG -> Explicit opt-in x86 row-FMA/XOR32 CPU helper, original scalar
+reference untouched, no captured inputs introduced.
+COMMAND -> AgentNoDri C388 compile1CPU512MiB plus5tiny scalar comparisons.
+Root verified11 receipt hashes/ELF and copied evidence to runtime
+/mnt/vm_8tb/b70/build/hc-rows-dot32-cpu-v1 without changing original paths.
+RESULT -> CPU ELF83c289ccd11ef6fed8cb9c0563328795f1fbd665110edace7efcfb4fc710fb47;
+sourceplanea7c26eb. Original case-sensitive absence check FAILED and remains
+failed; separate exact-ID absence supplement preserved. Actual compiler
+terminal/removal and numerical tests support bounded component scope.
+VERDICT -> Per-call float-mode probes replace costly per-FMA Python calls
+for later independent HC rows; no actualmodel speed gain or full48 numerical
+claim. Current model45 GPU comparison26611 remains live and separate.

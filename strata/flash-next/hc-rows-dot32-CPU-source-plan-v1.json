@@ -1,0 +1,36 @@
+{
+  "CPU_command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 HCROWS_CPU_ELF=/tmp/b70-hc-rows-dot32-owned-CPU-build-v2-447241/hc-rows.so HCROWS_CPU_ELF_SHA256=83c289ccd11ef6fed8cb9c0563328795f1fbd665110edace7efcfb4fc710fb47 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_hc_rows_dot32_ctypes_cpu_v1 -q",
+  "CPU_tests": 5,
+  "GPU_or_provider_or_GGUF_read_by_author": false,
+  "actual_CPU_ELF_path": "/tmp/b70-hc-rows-dot32-owned-CPU-build-v2-447241/hc-rows.so",
+  "actual_CPU_ELF_sha256": "83c289ccd11ef6fed8cb9c0563328795f1fbd665110edace7efcfb4fc710fb47",
+  "actual_CPU_receipts": {
+    "/tmp/b70-hc-rows-dot32-owned-CPU-build-v2-447241/absence.stderr": "81e7c586be359459aad29f8961cf40e06dc7d1a32d4013e673a266569e0a779d",
+    "/tmp/b70-hc-rows-dot32-owned-CPU-build-v2-447241/absence.stdout": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "/tmp/b70-hc-rows-dot32-owned-CPU-build-v2-447241/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/tmp/b70-hc-rows-dot32-owned-CPU-build-v2-447241/compile.stdout": "59d1cbef41d4ae78d5063d525b7aa13d18dc0493ea00537efc19b2ee398cb5a8",
+    "/tmp/b70-hc-rows-dot32-owned-CPU-build-v2-447241/created-inspection.json": "ffa24935f2768dd47422ff7e9dfd2117dc706615c2e5ee429beed2c9f3a625c5",
+    "/tmp/b70-hc-rows-dot32-owned-CPU-build-v2-447241/receipt.json": "e93dfd2a78bc6ed42ffb77e4172a53e55fc85096c3502339e991a14af658c2c4",
+    "/tmp/b70-hc-rows-dot32-owned-CPU-build-v2-447241/retirement-supplement.json": "ff9adad2e0ca53b74fdc34ed8d06f4d10ad7e76b0e8dc8934b503de17c0d2926",
+    "/tmp/b70-hc-rows-dot32-owned-CPU-build-v2-447241/terminal-inspection.json": "45cb25193d176b58ac1f300badce9a1c6aabe39736631f22e92cfc37d4caa138",
+    "/tmp/b70-hc-rows-dot32-owned-CPU-build-v2-447241/tests.receipt.json": "0f840d97ef201c98df926b45cd414032701aefd97d23d42c0f4aa6a9b7b29709",
+    "/tmp/b70-hc-rows-dot32-owned-CPU-build-v2-447241/tests.stderr": "6d9c2a77dc636c1f976299ad65da76028e4da8366db2b9620ddd63636f55cb96",
+    "/tmp/b70-hc-rows-dot32-owned-CPU-build-v2-447241/tests.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "actual_NoDri_CPU_compile": true,
+  "device_intrinsics_qualified": false,
+  "files": {
+    "docs/20261011_flashnext_HC_rows_dot32_CPU_bulk_v1.md": "7efb0fa5b18835b9df42f1726544a5960afc9e7b5c438a2807e2fa6dddfd634c",
+    "strata/flash-next/hc_f32_arithmetic35_host_v1.cpp": "cf12835a10659b997446f87419d771396846a5305943778a33e1b7ddb6cbb9bf",
+    "strata/flash-next/hc_rows_dot32_ctypes_v1.cpp": "7a8313af4ed1324d71a5d70ed8f05621a10298fc812b581a2f7d86ced937cdd2",
+    "strata/flash-next/original_native_hc_bulk_f32_v1.py": "a3518692f67fd600eee2d7cd75b76ffc30bc29c4d44f0766f53a3d1eeca5cf33",
+    "strata/flash-next/original_native_hc_f32_v1.py": "6c041765000c883a94d456ab3e0ac582ecb42723a20baf57ad7b3498c76a06ae",
+    "strata/flash-next/test_hc_rows_dot32_ctypes_cpu_v1.py": "ecf8f352bec9c8495ed325b28630f93f6b5a016f3b7a5e2d5df2686a00674492"
+  },
+  "full_model_math_qualified": false,
+  "full_model_speed_gain_claimed": false,
+  "normal_compile_terminal_and_removal_with_separate_absence_supplement": true,
+  "scalar_reference_monkeypatched": false,
+  "schema": 1,
+  "whole48_computation_by_author": false
+}
