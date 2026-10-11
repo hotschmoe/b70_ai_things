@@ -16856,3 +16856,18 @@ RESULT -> Freshmasked44 prerequisiteclosed, notnormalmodelgraph/fullmath/
 latency. NUM38V2 focusedpeer97170326/11CPU0.354 READY; intake59807stillLIVE.
 VERDICT -> Actualindependentcomponent evidence progressesfullfidelitywork.
 NextNUM38actualOFF/ONaftergenuinepreparedplan; fullgoalactive.
+
+## 2026-10-11 Genuine NUM38 V2 preparation passed and model actor launched
+
+CONFIG -> FreshSDK44/806/upload4c/masked02e/publica443, current173 original
+model/template/tokenizer and OMP/MKL/OPENBLAS one-thread pins/noNUMEXPR.
+COMMAND -> Intake59807 terminalPASS; actualpreparedplanf3a24c49504175a6428856822af4e6595d079cfb8bfaa7a42471f5dc31bc8091.
+Actual95513 acquiredsolepairlease run_source44_num38_zero_v2, newF17/
+source44-num38-v2-run-v1, phase num38-equivalence, exactdeclaredspeedinputtrace.
+RESULT -> ActualSDKassociation165803Z confirmed fromplan source44 envelope.
+Rootinitialsummary probe expected nonexistenttop-level engine_generation and
+failedKeyError; correctedprobe verifiedactualnestedSDK, actoradmission remains
+mandatory. Source97170326/root883SHA/11CPU andfocusedpeer11CPU0.354 ready.
+Modelactor currentlyliveprerequisiteadmission; noactualOFF/ONresult yet.
+VERDICT -> Actualnumericalcapturequalification inprogress; nooriginalfull48
+math, observerequivalence, profile, cache, streams orspeed claim. Fullgoalactive.
