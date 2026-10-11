@@ -15743,3 +15743,24 @@ H36-to-LevelZero association remain unqualified. No GPU/build/model action.
 VERDICT -> Source prototype is not runtime ready. Fresh512MiB-budget build,
 ELFs/dependency/device receipts and corrected actor still required. Current
 LP20 host73892 unaffected; tracingON prefull4 passed, startup pending.
+
+## 2026-10-11 PTI V2 held for interrupted watcher startup
+
+CONFIG -> Source-only PTI prototypeV2 1c45b825/150bindings; live host actor
+unaffected. Fresh profiler runtime stillunfilled and launch refused.
+
+COMMAND -> Root10CPU PASS0.038s, source33 peer10CPU PASS0.035s, then peer
+actual tiny Thread.start interruption regression. No GPU/model/tool work.
+
+RESULT -> Canonical reference and finalpostwrite budget gaps fixed, original
+V1 bytes unchanged. New material HOLD: watch.start before protectedtry/finally
+leaves actualnon-daemon thread alive if interrupted immediatelyafterstart.
+Peer explicitly retired testthread. V3 protectedstartup/failure retirement
+requested; V2 keptimmutable.
+
+Actual host73892 tracingON completedall4requests and phasepassed with normal
+retirement; postfull4 pending. OFFpostfull4 alreadypassed.
+
+VERDICT -> PTI V2 notruntimeready; pending V3 andfreshbuild/DSO/device/mapped
+injection proof. Current boundedhostcapture remains separate, notfullmodel
+math, physicalidle/bandwidth, API orservingspeed qualification.
