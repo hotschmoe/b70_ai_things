@@ -24,13 +24,21 @@ Latest continuation state (2026-10-11):
   /mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T223956Z-0b555kgw,
   receipt31a2227f. Larger-ne single/twoqueue GPU fixtures PASSED, each six
   cases with exact outputs/owned retirement/posthealth/no kernel faults.
-  Corrected47 model OFF/ON run is now LIVE through bin/gpu-run: inspect
-  F17/source47-grouped-f16-model-v1-run-v1/report.json and owned processes.
-  Do not duplicate that launch or presume model PASS from fixture passes.
+  Corrected47 OFF completed twoGEN4 requests: warm524 prefill15482.3ms
+  (33.8tok/s), decode366.0ms (10.9tok/s). ON failed after PP320of524
+  with UR_RESULT_ERROR_DEVICE_LOST, Xe null/low-address faults at23:09:41
+  and engine exit139 at23:10:50. Its container is removed; per-arm strict
+  and compiled pair posthealth passed. Final actor closing gates still live
+  when updated. Inspect actual50457 and report before proceeding.
+  Do not retry unchanged47 ON or infer model reliability from fixtures.
   Proposal: strata/flash-next/native47-grouped-f16-usm-engine-build-proposal-v1.json.
   Fixture evidence is in F17/grouped-f16-operator47-singleq-v2 and
-  grouped-f16-operator47-twoq-v2. Assess the live corrected model next. New46 HC rowbatch source exists but is uncompiled; grouped45
-  muststay0 if investigating that unrelated branch.
+  grouped-f16-operator47-twoq-v2. Source46 HC rowbatch build is queued
+  under94364 with indefinite lease wait; previous28224 timed out124
+  BEFORE compilation. Do not duplicate94364. GroupedF16 muststay0
+  on46/48. Source48 default-off singleton mirror staging is committed;
+  kernels/mirror_t1_staging_harness_v1.cpp and .txt cover bounded routing
+  and copy, not math/speed. Build proposal native48-mirror-t1-staging-engine-build-proposal-v1.json.
 - Independent original first HC computation PASSED with fresh identity close.
   Original packet differs one scale byte; allcodes/sumbytes match. Conditional
   independent encoder of native mixed values matches nativepacket bitwise.
@@ -93,15 +101,13 @@ Next priorities:
    emitted-token counts, warmup, TTFT and token gaps. Avoid converting profiler
    durations or kernel sums into production tok/s. Compare mode/storage paths
    deliberately, not across unmatched configurations.
-3. Test --short-read0 against default64 for the54-token short prompt: default
-   runs53 prefill rows as26 T2 windows plus one T1; short-read0 forces batched
-   Prefill::run. The524-token long prompt ALREADY uses batched prefill, so this
-   change cannot explain poor long-prefill speed. Existing focused control:
-   strata/flash-next/run_source43_shortread0_v1.py and
-   docs/20261011_flashnext_source43_shortread0_control_v1.md. Its frozen
-   historical registry173 association needs a minimal deliberate update for
-   current174, or use a direct controlled serving experiment. Do not build
-   another wrapper chain to do a one-flag comparison.
+3. Short-read0 is ALREADY tested. Source43 shortread0V2 warm54 prefill
+   fell4297.0->1516.2ms; decode unchanged374.3->374.6ms. Do not repeat
+   this sweep. Long524 is already batched. Decode lanes32 gained only
+   about1.9percent; no extra lane sweep. Prior chunk64->512 long524
+   improved33.6->85.7inputtok/s with changed output, not promotion.
+   Next substantial costs are grouped batching (currently faults), quant
+   native kernels, HC row batching, and mapped-host expert staging.
 4. Compare genuine two-GPU execution. Existing source43 paired CLI control
    passed bitwise equality against single GPU (four head/192 residual arrays).
    Strata currently uses serial layer split32/16 and a51216-byte/token pinned
