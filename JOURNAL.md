@@ -16352,3 +16352,35 @@ arithmetic/state recurrence/fidelity or current model-admission promotion.
 Profiler34631 remains sole live GPU job; paired147source ready but notrun.
 Full original objective/cache/streams/physicaltraffic/interactive gains and
 stable API/verified shelf remain unproven.
+
+## 2026-10-11 Real profiler census failed; Btrfs domain mismatch reproduced
+
+CONFIG -> Actual43 LPdisabled H36/PTI OFF/ON, protected rawbudget and current
+finalizer tool. No current model speed/idle result from incomplete capture.
+
+COMMAND -> Root34631 terminalFAIL1684s, parenta2f334d72bc4ad8da5da1e50c80e2d3b378e9d778d2e45101930b66961d3d28f.
+OFF4requests passed/H36SESSION1. ON reachedREADY thenowned metadataexec failed
+beforeGEN; native wasforcedretired137. Poststrict/compiledpair/kernel/fresh
+full4 passed. No reset invoked because health passed and no TPworker failure.
+
+RESULT -> Original execstdout was discarded by require(rc0) before write;
+observabilityV2/ownedexecV3 74de8e46/201 root32CPU0.387s/peer0.383s nowretains
+command/stdout/rc/ownerafter/failure receipt before refusal; no predicate waiver.
+NoDri reproV1 actualunitrace launcher couldnotinitializeL0 withoutdevices;
+this is not evidence for changing host paranoid settings. ReproV2/V3 used
+synthetic executable mmap of exact3,818,408B ELF, no tool/model/GPU code run.
+Actual helper failed mapdev/inode check. V3 rawmetadata: path/openedFD/PID1FD3
+statdev0:45, maps00:32(dev0:50), SAMEinode17686394; exactlibpath, covering
+RO btrfs mount dev0:50. map_filesreadlink exact, statEPERM. Scripts/commands/
+rawfailure/owners/terminal preserved in F17/pti-census-no-device-repro-v1..v3.
+
+Primary Linuxv7.1 fs/btrfs/inode.c btrfs_getattr uses root->anon_dev forstat;
+fs/proc/task_mmu.c show_map_vma uses inode->i_sb->s_dev forVMA. This supports
+an explicit filesystem-domain association, not arbitrary mismatch acceptance.
+Original loststderr means exact real-model cause stillunconfirmed. No privilege,
+process-memory, file-content, model or identity gate changes were made.
+
+VERDICT -> Preserve failed capture and fix exact metadata semantics/diagnostics
+before retrying. Root33954 nowsolepairlease matchedfresh43 one/split32-16
+modelcontrol; nativeprofiling unavailablewhile sourcecensus repair proceeds.
+Fullmodel fidelity/cache/streams/traffic/interactive gains/API/shelf remainopen.
