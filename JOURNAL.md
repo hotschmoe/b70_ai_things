@@ -16743,3 +16743,16 @@ actualcompiled44layoutmarkers agree. SDK/rootlibrary/sourcechecks preserved.
 VERDICT -> Freshuploadcomponent closed, not ordinarypayloadreadback/model
 math/NUM38runtime/latency. Masked44sealing withgenuineactualpins next;
 correctedwarmV2 awaitsfocusedpeer fornextGPUprofile. Fullgoalactive.
+
+## 2026-10-11 Corrected actual warm profiling retry launched
+
+CONFIG -> SameSDK43mode0/newactualsampledtool/current173 short54 paused
+warmup+selectedGEN4, original3threadpins/noNUMEXPR. PreservefailedV1ff5c.
+COMMAND -> Root7625ace7250source+6actualfixture+4toolanchors reverified;
+86CPU0.674/realNoDri2bfaaCLIstateproof. Solepairlease35802nowLIVE new
+F17/source43-warm-pti-short-v2-run-v1 withunchangednormalplan/prereq/e87bintake.
+RESULT -> ActualprerequisiteCPUadmission live; noactualselectedprofileyet.
+CorrectedCLI andliveproducercontext replaceonlytwoobservercontroldefects.
+Peerrequested/concretefindingwillbehandled; noAGENTSmandatoryapprovalgate.
+VERDICT -> Newqualificationattempt, not modelmath/cleanlatency orwarm
+profilePASS. Fulloriginalgoal intact; no parallelGPUrun/registryappend.
