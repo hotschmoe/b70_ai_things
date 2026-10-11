@@ -15790,3 +15790,24 @@ nowpairleased fresh clock-budget profilerbuild, noDri exposed.
 VERDICT -> Preserveactualfailedcapture, no lifetimegatewaiver or qualified
 latency/speed promotion. LPdisabled run held until shutdown repair. Original
 fidelityV5 retry, completecache/streams/placement/profile/shelf remainneeded.
+
+## 2026-10-11 Fresh profiler budget build and original-fidelity retry
+
+CONFIG -> Fresh full PTI source with512MiB metadata ceiling only. Model
+SDK/arithmetic/reference unchanged; H36 shutdown repair separate.
+
+COMMAND -> Pairleased noDri build19516 PASS124s, normalowned removal and
+complete source verification before/after. Root thenlaunched source41 V5
+original-fidelity39182 underpairlease withsame actualintake/V3OFF prerequisite
+andregistry173 inputtrace, newoutput/source41-cli-original-fidelity-v5-urtrace-run-v1.
+
+RESULT -> Buildreceipt152e5d3a2c9e19b59b8def05ed179aaabd42f2d40b48f428468fd33112f54247.
+Fresh tool df2ac322d45fd81b83b4423876e30c93514641ec36de19c205feacae1212bde3
+and injection ac983bc83813f27ce53e1ffd2efaf96b934ed84b0556f2480a07d63c9627a066
+installed at build/pti-unitrace-clock-budget-c388-build-v1/install.
+V5model live inprerequisites; usesUR2/128MiB/1000000lines, numericobservers
+ON/H36OFF. Its owning P30/SFD shutdown doesnotdepend onH36atexit.
+
+VERDICT -> Freshprofilerbuild qualifiedonly; nofilledruntime/device/capture
+orlatency authority. Tool finalexport acrossnative fast_exit andmappedDSO
+census remainrequired. Originalnumericcomparison stillpending; fullgoalactive.
