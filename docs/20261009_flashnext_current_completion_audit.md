@@ -1720,3 +1720,23 @@ fresh mode1 API/state-cache qualification, actual1/2/4/bounded6 streams,
 measured tier traffic and token critical path, natural interactive latency/
 fairness improvements, stable client identity and verified reproducible shelf
 remain incomplete. Keep the full goal active.
+
+## 2026-10-11 - Q81 public component closure and profiler bound failure
+
+CONFIG -> Fixed independently owned output-gated four-row input; source43
+unchanged quantizer, direct plus two replays. Separate PTI3 model timeline.
+COMMAND -> Q81 public reader53567 completed successfully; binding45178db4
+at F17/own-q81-quantizer43-output-gated-root-public-binding-v2.json joins
+original helper reportc38b9ff5. Actual PTI3 parent61440 failed1595s,
+report943ca683; failure documented in
+docs/20261011_flashnext_pti3_metadata_cap_failure.md.
+RESULT -> All27648Q81packet bytes match CPU exactly in all three routes;
+direct/replays bitwise, no mismatched blocks or shadow data. This does not
+qualify full model math or the normal model graph. PTI3 real-model census
+passed afterREADY, then the512MiBclock metadata limit stopped ON during
+request2. OFF four-request host session completed. Actual ON exit86, no
+forced cleanup/OOM; per-card/compiled-pair post-health and fresh full4 scans
+passed. Complete device timeline remains missing; success-only analysis was
+not run on the failed capture. Bounded collection/export is the next repair.
+VERDICT -> Component correctness advanced; physical idle/bandwidth/clean
+interactive latency and the remaining original campaign gates stay open.

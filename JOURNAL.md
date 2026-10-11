@@ -16465,3 +16465,27 @@ benchmarks remainrunning. This is distinct from failedold1684s capture.
 VERDICT -> Genuine correctednative topology parity for declared bounded
 workload, not original fullmath/API/cache/concurrency/50tok speed/shelf.
 OriginalF32wholehead divergence remainsopen. Fullcampaign goal unchanged.
+
+## 2026-10-11 PTI3 limit failure, Q81 public closure and journal recovery
+
+CONFIG -> Full original model/twoGPU/cache/latency campaign unchanged. PTI3
+LPdisabled OFF/ON actor, strict source/model/health lifecycle.
+COMMAND -> Parent61440 terminalFAIL1595s/report943ca683; actualREADY census
+f20f565 passed. ON request1 completed then request2 clock export hit512MiB;
+nativeexit86/noOOM/noforcedcleanup. ON and aggregate posthealth/full4 passed.
+RootQ81public53567 PASS binding45178db4 joins originalhelperc38b9ff5.
+RESULT -> CPU/native all27648packet bytes exact direct+2replays, no mismatch
+blocks/shadow; component only, original fullmath remains open. AnalysisV2
+466ebc23/228hashes/9CPU rootPASS0.265; APIparts6b3cbbf2/17/11CPUroot0.970
+and independentpeer0.992 ready, explicit noAPIlaunchqualification. Source
+checkpoint720a94b pushed; newmode1 ownedparent/source integration in progress.
+
+Root journal ASCII rewrite failed on historical Unicode and truncatedfile.
+TrackedHEAD bytes restored; actualhistorical command writes and two matching
+Sep5readbacks recovered all1188uncommitted lines,77091B/SHA9d3baa1f. Bytecopy
+backups/provenance retained in F17/journal-write-recovery-v1. Recoveredcontent
+is preserved aschronological appendblock; originalinsertionpositions remain
+under reconstruction. User informed. Unrelatedjournalcontent notstaged.
+VERDICT -> CompletePTIcapture/physicalidle/bandwidth unqualified; bounded
+collection/export audit before retry. Originalfull48 math/cache/actual1/2/4/
+bounded6/naturalinteractive latency-fairness/stableAPI/verifiedshelf open.
