@@ -17037,3 +17037,19 @@ commands preserved F17/source43-api174-ready-v1; canonical173unchanged
 untilallcurrentprofile/public/analyzerconsumersclose.
 VERDICT -> Actualsmallnumericalaudit andsource/hostdispatch evidence narrow
 nextwork withoutprovider repetition. Fulloriginalgoal remainsactive.
+
+## 2026-10-11 Warm V3 temporal host binding failed; cheap authentic preflight fixed
+
+CONFIG -> Same43warm54/GEN4/freshc72 collector, current173 unchanged.
+COMMAND -> Parent18181 terminalFAIL1453s/reportf9f99fd39ee12dc82debcc75cf58fc805f8501d78271a1dce533bdcac06bef5f.
+OFFtwofreshrequests passednormalExit0/noforced. ONfailedbeforeGEN/forced137;
+actualafter_READYcensus passed, temporal-before-warmup rejectedoldexpected
+sampled-install root againstnewactualpausedregular-install bind.
+RESULT -> Aggregateandarmhealth/full4closed. NoONmodeltimeline/count/gain.
+Rootexec3source7fdd11bee all7SHA/2CPU0.015PASS; actualsavedcommand/owner/
+recipe preflight passed0.080s/cd922b59aedfb4f22ce8517f1eb2913c0319ba6dd6626f31628da629e00c5b65.
+Originalfailedparent/runtime authority remainsFalse. NoGPU/providerread.
+VERDICT -> Exactprelaunchmetadatafix, notreplayqualification. ON-onlyretry
+willreusecompletedOFFcomponent (failedparentstaysFAILED), avoidingOFFmodel
+reloadandhistoricalfullmodelscans. Currentarmsretainfreshidentity/health/
+teardown. Short-read0control similarlyreusesOFF; fullgoalactive.

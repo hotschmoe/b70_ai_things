@@ -1,0 +1,18 @@
+{
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_pti_warm_owned_exec_cpu_v3 -q",
+  "CPU_tests": 2,
+  "GPU_or_model_payload_executed_by_author": false,
+  "actual_original_parent_passed": false,
+  "actual_saved_metadata_preflight_satisfied": true,
+  "files": {
+    "strata/flash-next/pti-warm-owned-exec-design-v3.md": "b44cfe0c89fdd631137978d31ad8517d6c2646128346f9949d797feeaa655058",
+    "strata/flash-next/pti_census_owned_exec_v4.py": "156d5be2f8b359414e73daf5132c5cb1016a0b3a9cb7ea4b4ba21d4c9e4e2ac3",
+    "strata/flash-next/pti_owned_temporal_control_v2.py": "21543e6cf1be1aaecfd6efc16796887ba4f7170eccc7d16f89941377b100f37a",
+    "strata/flash-next/pti_paused_census_exec_v1.py": "895f727a24e177e05cc0409912b01f9675217c6297779ba92e6e25f0ddba6509",
+    "strata/flash-next/pti_warm_owned_exec_v2.py": "4fbd679e0c0efd709bdefc8c622338be8b5b26b5a40660dbd403077b6321ab61",
+    "strata/flash-next/pti_warm_owned_exec_v3.py": "cdf849a3a840e5bdb6b157a837b725bdf054da585ebfb56287591cd4cb4ecbe6",
+    "strata/flash-next/test_pti_warm_owned_exec_cpu_v3.py": "5422183c68967b4391bbc671e0a1791054e567948cc0b4e0021615c256d82c6d"
+  },
+  "runtime_qualified": false,
+  "schema": 3
+}
