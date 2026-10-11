@@ -1,0 +1,24 @@
+{
+  "schema": 2,
+  "scope": "exact captured T1 commit using sealed compact actual original CLI2 projection or full saved descriptor; no reconstruction/current admission/model authority",
+  "files": {
+    "strata/flash-next/audit_source43_t1_conv_commit_v1.py": "8c10b32066d40b0a0a7a57c9ecbceaec13a499fdd8b0e4b61a4b8dcf2682c4e9",
+    "strata/flash-next/test_source43_t1_conv_commit_cpu_v1.py": "e74c6be004eaeb49768eaef380cdb43f1003cd42adabcb0363e20f37c6cfcc39",
+    "strata/flash-next/source43-t1-conv-commit-audit-design-v1.md": "e56ba4b927724ef6c5d216f0a27ae887738f8c3c16c88d5d1ed9c3d698b76005",
+    "strata/flash-next/serial37_canonical_json_v3.py": "afdbdc4729cc6a2cfb68de5cb1106d79d1b81db79c9da91b1c157d5c1b85f57d",
+    "strata/flash-next/source43-num10-reader-fix-source-plan-v1.json": "cad8c00be8d28ed5818310457da3770f02be3bb48d6762edbc6167db1ad31253",
+    "strata/flash-next/source43-num10-model-source-plan-v3.json": "7772809bb253e74b0f3a204ccfa1a38489e821a5c41881984fe8de42b6fdf885",
+    "strata/flash-next/audit_source43_t1_conv_commit_v2.py": "7fefded3cbb15c4508f9fdd9dddb3350d81a30081ee495e3efc559d6e16cd75c",
+    "strata/flash-next/test_source43_t1_conv_commit_cpu_v2.py": "361db5f3f367c28e7cca435a216f8e30e69215afee74c600a97d466f3a241a5b",
+    "strata/flash-next/source43-t1-conv-commit-audit-design-v2.md": "7d8e88383410497425fa6a3c74790bcedaf6d647297325cf8bc425869a3b681a",
+    "strata/flash-next/source43-t1-conv-commit-audit-source-plan-v1.json": "76127c4952db3b360ceafe566c7f7d5b7dc628829692df98a6863a8d53c40b16",
+    "strata/flash-next/source43-num10-original-cli-source-plan-v2.json": "ca15a7e1837f7324f16b479204c4683c34f7563de4d5b56e5ca9c5d34969de82"
+  },
+  "actual_metadata_fixture": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/source43-num10-original-reference-v2/report.json",
+    "sha256": "06476d2eb7a97ee18729bee68f8773e0aa990496c27d6e8b0cc448bf36b78a30",
+    "bytes": 182910,
+    "inspected_metadata_only": true
+  },
+  "cpu_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_source43_t1_conv_commit_cpu_v2 -q"
+}

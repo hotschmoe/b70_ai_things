@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+"""Weight-free exact captured T1 history commit; no current model admission."""
+import argparse,hashlib,json,os,struct,time
+from pathlib import Path
+from serial37_canonical_json_v3 import unique_object,finite_constant
+HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[1];PLAN=HERE/'source43-t1-conv-commit-audit-source-plan-v1.json';READER_FIX='cad8c00be8d28ed5818310457da3770f02be3bb48d6762edbc6167db1ad31253';ACTOR_SOURCE='7772809bb253e74b0f3a204ccfa1a38489e821a5c41881984fe8de42b6fdf885'
+MAX_METADATA=128<<20;CHANNELS=10240
+FIELDS={'gdn_qkv':CHANNELS*4,'gdn_conv_before':CHANNELS*3*4,'gdn_conv_after':CHANNELS*3*4}
+def require(ok,msg):
+ if not ok:raise ValueError(msg)
+def sig(s):return [s.st_dev,s.st_ino,s.st_size,s.st_mtime_ns,s.st_ctime_ns]
+def consumed(path,wanted,limit,size=None):
+ p=Path(path);require(p.is_absolute()and not any(x.is_symlink()for x in(p,*p.parents))and p.is_file(),'Exact regular nonaliased evidence required');before=sig(p.stat());require(before[2]<=limit and(size is None or before[2]==size),'Exact bounded evidence before read required')
+ with p.open('rb')as f:
+  require(sig(os.fstat(f.fileno()))==before,'Evidence descriptor changed');raw=f.read(limit+1);require(sig(os.fstat(f.fileno()))==before,'Evidence descriptor changed during read')
+ require(len(raw)==before[2]and sig(p.stat())==before and not any(x.is_symlink()for x in(p,*p.parents))and hashlib.sha256(raw).hexdigest()==wanted,'Consumed evidence SHA/stat/alias differs');require(p.read_bytes()==raw and sig(p.stat())==before,'Evidence reread differs')
+ return raw,{'path':str(p),'sha256':wanted,'bytes':len(raw),'stat5':before}
+def parse(raw):return json.loads(raw,object_pairs_hook=unique_object,parse_constant=finite_constant)
+def source_binding():
+ raw=PLAN.read_bytes();record=parse(raw)
+ for n,w in record['files'].items():consumed(ROOT/n,w,16<<20)
+ return hashlib.sha256(raw).hexdigest()
+def exact_commit(qkv,before,after,channels=CHANNELS):
+ require(type(channels)is int and channels>0 and len(qkv)==channels*4 and len(before)==len(after)==channels*12,'Exact qkv/history geometry required');require(not any(before),'Actual initial history must be bytezero');expected=b''.join(b'\0'*8+qkv[i*4:i*4+4]for i in range(channels));difference=[i for i,(a,b)in enumerate(zip(expected,after))if a!=b]
+ return {'exact_channel_zero_zero_qkv':not difference,'different_bytes':len(difference),'first_differing_byte':difference[0]if difference else None,'expected_after_sha256':hashlib.sha256(expected).hexdigest(),'actual_after_sha256':hashlib.sha256(after).hexdigest(),'before_bytezero':True,'channels':channels,'native_layout':'[channel,history3]','arithmetic_or_tolerance_used':False}
+def audit(actor_root,actor_report,descriptor):
+ root=Path(actor_root);capture=root/'source43-num10-ON';public=descriptor['public_actor_admission'];require(public['passed']is True and public['root']==str(root)and public['report_sha256']==actor_report['sha256']and public['readonly_reader_fix_source_plan_sha256']==READER_FIX,'Exact sealed corrected-reader4 descriptor required');report=actor_report['value'];require(report['passed']is True and report['errors']==[]and descriptor['capture_root']==str(capture)and descriptor['source_generation']==43 and type(descriptor['materialized_mode'])is int and descriptor['materialized_mode']==1 and descriptor['NUM10_enabled']is True and descriptor['QSA3_enabled']is False,'Exact actual source43 NUM10 diagnostic context required');require(public['source_plan_sha256']==report['source_plan_sha256']==descriptor['binding_sha256']and report['source_plan_sha256']==ACTOR_SOURCE and descriptor['plan_sha256']==report['plan_sha256'],'Original actor source and distinct corpus bindings required');rows=descriptor['requests'];pid=descriptor['engine_pid'];require(type(pid)is int and pid>0 and len(rows)==4,'Four same-engine fresh requests required');results=[];evidence=[];requests=[]
+ for index,row in enumerate(rows,1):
+  frame=row['layer0']['frame'];raw=row['raw'];ordinal=frame['request'];require(row['ordinal']==index and raw['ids']==[248045]and type(raw['fresh'])is int and raw['fresh']==1 and raw.get('pin')is None and frame['gen_ids']==[248045]and frame['token']==248045 and frame['position']==0 and frame['rows']==1 and frame['layer']==0 and frame['stage']==0 and frame['reused']==0,'Exact accepted T1/fresh row required');require(frame['pid']==pid and type(ordinal)is int and ordinal>0 and ordinal not in requests and frame['completed_nonce']==(((pid&0xffffffff)<<32)|ordinal)and frame['binding_sha256']==descriptor['binding_sha256'],'Actual owner/request/nonce required');requests.append(ordinal)
+  meta=Path(row['layer0']['metadata']);require(meta.parent==capture/'layer0','Metadata confinement required');relative=str(meta.relative_to(root));require(report['artifacts'][relative]==row['layer0']['metadata_sha256'],'Original actor metadata artifact SHA differs');metadata,binding=consumed(meta,row['layer0']['metadata_sha256'],1<<20);require(parse(metadata)==frame,'Original descriptor/frame metadata differs');evidence.append(binding)
+  fields={f['name']:f for f in row['layer0']['observed']};require(len(fields)==len(row['layer0']['observed'])==33,'Exact original raw33 roster required');values={}
+  for name,size in FIELDS.items():
+   f=fields[name];p=Path(f['path']);require(p.parent==capture/'layer0'and f['bytes']==size and f['provenance']=='actual_buffer'and f['encoding'].startswith('LE_F32'),'Exact actual qkv/history field required');require(report['artifacts'][str(p.relative_to(root))]==f['sha256'],'Original closed raw artifact SHA differs');values[name],binding=consumed(p,f['sha256'],size,size);evidence.append(binding)
+  check=exact_commit(values['gdn_qkv'],values['gdn_conv_before'],values['gdn_conv_after']);results.append({'ordinal':index,'actual_request':ordinal,**check})
+ return {'requests':results,'all_four_exact':all(r['exact_channel_zero_zero_qkv']for r in results),'consumed_evidence':evidence,'weights_read':False,'GPU_execution':False,'current_model_or_semantic_admission_performed':False,'public_descriptor_reexecuted':False,'full_model_math_qualified':False,'scope':'current captured qkv/history byte identity under exact sealed prior reader4/actor3 context only'}
+def run(actor_root,report_sha,descriptor_path,descriptor_sha,out):
+ root=Path(actor_root);out=Path(out);require(out.is_absolute()and not out.exists()and root not in out.parents and root!=out,'New external diagnostic output required');out.mkdir(parents=True);result={'schema':1,'passed':False,'errors':[],'producer_pid':os.getpid(),'started_epoch':time.time(),'weights_read':False,'GPU_execution':False,'current_model_or_semantic_admission_performed':False,'full_model_math_qualified':False};source=None;report_before=descriptor_before=None
+ try:
+  source=source_binding();report_raw,report_before=consumed(root/'report.json',report_sha,MAX_METADATA);descriptor_raw,descriptor_before=consumed(descriptor_path,descriptor_sha,MAX_METADATA);result['source_plan_sha256']=source;result['original_report']=report_before;result['sealed_descriptor']=descriptor_before;report=parse(report_raw);descriptor=parse(descriptor_raw);result['audit']=audit(root,{'sha256':report_sha,'value':report},descriptor);require(result['audit']['all_four_exact'],'Actual T1 convolution commit byte identity differs');result['passed']=True
+ except BaseException as error:result['errors'].append(type(error).__name__+': '+str(error))
+ finally:
+  if report_before is not None and descriptor_before is not None:
+   try:
+    _,r=consumed(root/'report.json',report_sha,MAX_METADATA);_,d=consumed(descriptor_path,descriptor_sha,MAX_METADATA);require(r==report_before and d==descriptor_before and source_binding()==source,'Original report/descriptor/source changed during audit')
+    for e in result.get('audit',{}).get('consumed_evidence',[]):
+     _,current=consumed(e['path'],e['sha256'],e['bytes'],e['bytes']);require(current==e,'Original target stat/path changed across audit')
+    result['source_data_guards_beforeafter']=True
+   except BaseException as error:result['passed']=False;result['errors'].append('Closing: '+str(error))
+  result['finished_epoch']=time.time();(out/'report.json').write_text(json.dumps(result,indent=2,allow_nan=False)+'\n')
+ require(result['passed'],'Captured T1 commit audit failed; original data preserved');return result
+if __name__=='__main__':
+ p=argparse.ArgumentParser();p.add_argument('--actor-root',type=Path,required=True);p.add_argument('--expected-actor-report-sha256',required=True);p.add_argument('--public-descriptor',type=Path,required=True);p.add_argument('--expected-descriptor-sha256',required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args();run(a.actor_root,a.expected_actor_report_sha256,a.public_descriptor,a.expected_descriptor_sha256,a.output)

@@ -16328,3 +16328,27 @@ preparing explicit successor before any actual data use; no evidence changed.
 VERDICT -> Paired source/control ready, actual twoGPU test still needed after
 profiling. Full serving objective stays active; no new runtime/performance
 claim from source-only probes or incomplete capture.
+
+## 2026-10-11 Exact saved T1 convolution commit relation passed
+
+CONFIG -> Actual four NUM10 fresh literal248045/position0 captures, sealed
+corrected originalCLI2 compact report06476. Weight-free saved-data audit only.
+
+COMMAND -> T1V2 fe9a7fdd/11 root14CPU0.195s/peer0.168s; heldV1 external output
+symlink bug fixed before mkdir with regression, oldsource preserved. Root
+actual audit_source43_t1_conv_commit_v2.py --actor-root actualNUM10 --sealed-
+reference-report actualCLI2 --explicitactor/reportSHA --output newexternal
+terminalPASS, no model weights/GPU/new fulladmission or dense model scan.
+
+RESULT -> New F17/source43-t1-conv-commit-v2-root-v1/report.json
+c2aa3f4d2917470dc0b2be84a19a67af0184afc5763ba11976be5e46f0f99559
+passed/errors[]. Current original artifact/meta/raw3 SHA/stat/reread checks
+and each owner/nonce/freshID/pos crossjoin passed; all4x10240channel before
+history bytezero and after exactly[0,0,capturedQKV]. No reconstructed full
+public descriptor: actual compact before/after retained admission hashes used.
+
+VERDICT -> Exact captured T1 history/commit relation only, no complete GDN
+arithmetic/state recurrence/fidelity or current model-admission promotion.
+Profiler34631 remains sole live GPU job; paired147source ready but notrun.
+Full original objective/cache/streams/physicaltraffic/interactive gains and
+stable API/verified shelf remain unproven.
