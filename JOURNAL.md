@@ -16304,3 +16304,27 @@ currentadmission live. No competing model scans/CPU benchmarks left running.
 VERDICT -> Actual component correctness and usable diagnostic boundaries, not
 original full48 fidelity. Runtime capture/calibration/coverage/tier traffic,
 cache/streams/natural interactive latency/fairness/API/shelf remain required.
+
+## 2026-10-11 Two-GPU43 control source ready during profiler admission
+
+CONFIG -> Fresh43 onecard versus split32/16, same useful4GEN64,ctx2048/
+pref64/PLE65536/mode0, same SFD/PCL observers and explicit stage owners.
+
+COMMAND -> Sourcef29bf34c/all147bindings root29CPU0.495s/peer0.494s pass.
+Only declared split/trim/device access differs; full49x4 and bounded output/
+LP/finish matches mandatory. Existing genuine normal43 preparedplan reused;
+actual pair model run not yet launched. Root34631 profiler live, initial
+admission completed and tokenizer/input preparation begun.
+
+RESULT -> New pair actor/public reader preserve per-arm source/model/page/
+strict+compiledpair health/ownedEOF/normal absence and fresh CPU failure-close.
+Two native mirror/cache ranges and actual stage entries/returns required.
+Existing final free-memory log covers currentdevice only; no bothVRAM floor/
+physicalalloc/free/speed/math promotion. Weight-freeT1audit76127c49 held after
+peer tiny regression demonstrates external output symlink can write original
+actor tree; root8CPU0.069s/peer0.071s do not override that real gap. Author is
+preparing explicit successor before any actual data use; no evidence changed.
+
+VERDICT -> Paired source/control ready, actual twoGPU test still needed after
+profiling. Full serving objective stays active; no new runtime/performance
+claim from source-only probes or incomplete capture.
