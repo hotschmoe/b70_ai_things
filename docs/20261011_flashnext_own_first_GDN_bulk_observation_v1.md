@@ -1,0 +1,13 @@
+# Own first GDN intermediate observation
+
+CONFIG -> Existing executed bulk HC backend and unchanged original own-state GDN storage arithmetic, source43 mode1/cacheOFF/fresh zero state/literal [248045]. Primary function accepts only an original model object; no capture, routes, scales or native operands enter it. Frozen full48 candidate and runner are untouched.
+
+COMMAND -> Root after GPU timing ends supplies the same small executed args/env config551efe and a fresh full4 receipt/SHA:
+
+```
+OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 strata/flash-next/run_current_first_gdn_bulk_observation_v1.py --native-root /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/source43-num10-v3-run-v1 --config EXACT_CONFIG_JSON --expected-config-sha256 EXACT_CONFIG_SHA --model-identity FRESH_FULL4_JSON --expected-identity-sha256 EXACT_IDENTITY_SHA --bulk-elf /mnt/vm_8tb/b70/build/hc-rows-dot32-cpu-v1/hc-rows.so --first-HC-report /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/original-first-HC-bulk-vs-scalar-v1/report.json --output /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/own-first-GDN-bulk-observation-v1
+```
+
+RESULT -> One independent first-layer computation compared to four saved native43 fresh targets. It records HC square_sum/rms_argument/rms_scale; GDN qkv/z/alpha/beta-pre/log-decay/beta/conv-pre-SiLU/conv-SiLU/normalized-qkv/core/gated/output and own before/after state. The only mixer AST edit retains existing local variables immediately before its original return; undo exactly matches original AST. No nonlinear or reduction replacement. Existing raw33 targets cover qkv/z/decay-beta/normalized-qkv/gated/block/own state and after-attention, plus HC fields/packets. Extra own RMS/alpha/beta-pre/raw-conv/core intermediates have no saved native43 targets and are explicitly unobserved. No new hardware observer is needed. One mandatory fresh full4/pages close runs after all provider and target reads, even on failure. No historical recursive public readmission.
+
+VERDICT -> SOURCE ONLY until root executes. Cannot recover unrecorded own intermediates from the previous full48 run without a new own first-layer calculation. This is not the old FP64 reference lane: it calls the same existing F32 storage own-state GDN methods used in current full48 candidate. Device intrinsics, integer-dot reduction, GDN/core math and full48 fidelity remain unqualified; descriptive errors get no fitted tolerance. Conditional native-operand lanes are not added.
