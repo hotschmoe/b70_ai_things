@@ -1662,3 +1662,30 @@ streams, physical tier traffic/criticalpath, natural interactive improvements,
 stable client API and reproducible verified shelf remain incomplete. No model
 speed/stability promotion. New PTI runtime/live mapped-census integration is
 under development; fixed-input Q81 candidate is held for its old41 byte roster.
+
+## 2026-10-11 - Fresh43 native controls and original diagnostic closure
+
+CONFIG -> Exact original campaign remains: selected model across two B70s+RAM,
+original fidelity/all-state cache/1-2-4-bounded6 streams/criticalpath and natural
+interactive latency/fairness/stable clientAPI/reproducible qualified shelf.
+COMMAND -> NUM10 native1376s reportd6713012; normal native1497s report96624d15
+and independent public398.085s binding899efe22 passed. Corrected originalCPU
+CLI2 report06476d2e passed663.463s after parser repair; old failed404158 report
+preserved. Fixed-own Q81 helper662s reportc38b9ff5 passed; independent reader
+still pending. Actual source43 model PTI OFF/ON34631 is live.
+RESULT -> Observer OFF/ON4heads+192residuals bitwise and boundedIDs/LP/finish
+match. Independent FP64 diagnostic and conditional native-input lanes remain
+separate from original F32/device full48 reference. Native-gated conditional
+Q81 packets exact and original Q8_0 projectionNMSE6.003e-15 all4; primary FP64
+lane omits Q81 projection input storage and is not native arithmetic emulation.
+Exact saved T1 conv auditc2aa3f4d passes beforezero/after[0,0,capturedQKV] all
+4x10240channels. Quiet retired canonicalABBA step median6.154->2.628s, not
+an integrated full-admission speed gain. Profiler baseline emitted4H36files/
+1SESSION and retired normally; instrumented arm/fullparent not yet complete.
+VERDICT -> Actual fresh43 onecard constructor/repeat/observer and component
+proofs progressed. Source43 paired32/16 full49 control is source/CPU ready only.
+Complete original full48 math, actualcorrectedpair/complete-statecache/1-2-4-
+bounded6 streams, measured tiertraffic/clockcoverage andnatural interactive
+latency/fairness gains, stableAPI identity and verified shelf remain unproven.
+No completion or production speed/stability claim. Earlier source41 head
+NMSE.007888 remains unresolved; the FP64 diagnostic has not replaced that lane.
