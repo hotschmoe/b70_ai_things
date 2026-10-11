@@ -16606,3 +16606,17 @@ Profiler53490 stilllive, OFFrequestsclosed/posthealthpassed/postfull4scanlive;
 no SDK/build/query/cardchanges forobserverduringcurrentprofile.
 VERDICT -> Instrumentation proposalonly, notfidelityfix orruntimeproof.
 Fullcampaign remainsactive; nevertransferold43ABIqualification tonew44.
+
+## 2026-10-11 Bounded GEN4 profile failed long-prefill volume; closed healthy
+
+CONFIG -> Current43mode0/current173 fourfreshGEN4, sampledquerytoolON.
+COMMAND -> Soleparent53490 terminalFAIL1616s/reportc445a56d5ac7fd45f7e131281018845b5d6123a30d9dd47f320286606195632d.
+OFF4requests/H36session normalretired/health/full4 passed. ONrequest1done then
+longrequest2 PP448clock512MiBcap, exit86/forcedcleanupTrue.
+RESULT -> Clock536870223B,lastseq663485/instance661659, bounded16KiBtail19
+normalizationrows, notfullfiledistribution. Parentalsofailspostwriteaggregate
+rawbudget1265985145B. ON andaggregate percard/compiledhealth/freshfull4 PASS;
+leasesreleased. Observation4a9fa74c andfailedraworiginalfilespreserved.
+VERDICT -> Querysampling+GEN4 insufficientforwholelongprefill. Nextshort54
+warmselectedcapture viaownedpause/resume, then scoped/losslesscompactprefill.
+No capwaiver/dropnativeops/successanalyzer orspeedclaim. Fullgoalactive.
