@@ -16414,3 +16414,27 @@ lastrow scope relaxation. Currentone43phase4GEN64 passed; paired33954 live.
 VERDICT -> Metadata repair validated in bounded CPU fixture; actual model
 census/capture stillrequired. Hostnumbers are observedfailed-parent diagnostic,
 not clean client speed orphysicalGPU idle. Full original objective unchanged.
+
+## 2026-10-11 Paired native parent passed and repaired census wiring reviewed
+
+CONFIG -> Fresh43 onecard versus split32/16, same4GEN64 useful inputs/2048/
+64/65536/mode0, bounded control distinct from original fullmath/serving speed.
+
+COMMAND -> Root33954 terminalPASS1278s, parentde12e0d629daddee3002ac1b3ec2e716a6f461818c631e364b4eb497fb3386f4.
+Both nativearms4requests, perdevice actualstage work/startup/ownership and
+per-arm source/page/full4/strictcompiledhealth/normal retirement passed.
+Parent boundedIDs/finish matches; root publicpairreader93148 nowlive and must
+independently compare4heads+192residuals/LP before any topology-parity claim.
+
+RESULT -> Btrfs standalone09b84ed6/6repo+2actual metadata and18CPU root0.021s/
+peer0.025s ready; actualsyntheticNoDri4 helper2 passedbe293. Profilerwiring3
+0e7d6591/213 root56CPU0.479s/peer0.439s/allsource hashes match. Actualhost
+ROinstall/helper2 +explicitbindroot/filesystemsource, VMA-to-mount device,
+heldFD/pathstat/inode/SHA, owner/PID/maps/maplinks, failure-retention andpublic
+rawreconstruction preserved. No arbitrarydev mismatch, privilege change or
+confirmation of originalloststderr cause. Existing SDK/tool/math untouched.
+
+VERDICT -> Preserve old failed1684s profile and all frozen versions. Actual
+one/two GPU bounded control parent closed, independent full49 admission pending.
+Corrected realmodel capture retry remains next once reader/model scans close;
+no new speed/stability/physicalidle/math/API/shelf promotion. Fullgoal active.
