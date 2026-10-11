@@ -15115,3 +15115,10 @@ CONFIG -> NewreaderV3 with exact model/host/threeCPP remount associations; immut
 COMMAND -> Actualroot16524 terminal0, matchedOMP/MKL/OPENBLAS1 NUMEXPRabsent; supplemental postboot-original-qsa-reference-admission-v3.json. NativeoneQSA9prepare37928 started withcurrente9 identity and freshoneC140 root.
 RESULT -> Authenticrecursive historical reference/arrays/source/host/currentfreshnative separation admitted; receiptSHA e71fe4142a64ca0ae416ebfc2b701f307b0bb1be41b520bb7e5cc6f06d31b62a. Originalstat/currenthost/GPU-health transfer gates remainfalse, capturedoperandsfalse and fullmathfalse. Everyoriginalfailure preserved. WholecacheV10all10planhashes verified, suiteSHA180ab2219a620ac2bd3f4ca9bde74beef81a34b4706e4a4300b9887da487d72a.
 VERDICT -> Reference evidence association nowconcrete, not newnativeQSA/modelmathqualification. Prepareone observer thenpair aftergenuineonePASS; completeV10cache campaign remainsqueued. Full original fidelity/cache/concurrency/placement/profile/latency/shelf goal active.
+
+## 2026-10-11: Native QSA9 genuine preparation completes and GPU qualifier starts
+
+CONFIG -> Same source40 SDK/currente9/freshoneC140; independently admitted originalreferenceV3 and matchedOMP/MKL/OPENBLAS1 NUMEXPRabsent. Fourprefix4 requests, PINabsent and OFF/ON math/lifecycle gates unchanged.
+COMMAND -> Initialprepare37928 rejected omittedhostthread settings; corrected NEWprepare84828 terminal0 at native-qsa40-v9-one-postboot-prepared-v2. Self-leased qualifier52724 at native-qsa40-v9-one-postboot-run-v1.
+RESULT -> CompleteplanSHA 6fa64995f0b4b9a4bf08025d7649ca9a05505f60ec62201b4c513beb4c5f9c57; initialrejection preserved and no partialplan used. CPUprep PID38989 actively read~170GB throughbuffered/cached source checks, no arbitraryrestart. Qualifier52724 acquiredpairleases, onlycard0 modelpin plus pairhealth guards; no observer/modelcapture result yet. CacheV10 all10plans remainverifiedqueued.
+VERDICT -> Actual GPU qualification launched onlyafter terminalpreparation; original referencefidelity/QSA rawtarget/all49 equality andhealthy ownedteardown still required. No speed/modelmath/shelf claim. Fullgoalactive.
