@@ -16927,3 +16927,23 @@ actualPythonrc1, receipt87e82322, latchedInterruptedError, finally/named
 recovery reached usingmockcreator/absence. NoDocker/devicebuildqualification.
 VERDICT -> Durableactualcomponent/interruption evidence, notservingspeed/
 fullmath. Currentauditupdatedwithoriginalfullgoalremainingrequirements.
+
+## 2026-10-11 User redirects dev loop toward necessary tests and actual runs
+
+CONFIG -> User explicitly asks howtospeedup andskipfrivoloustesting. Full
+originalmodel/servinggoal unchanged; current95513 liveONpre-full4 afterOFF
+normalfourrequests/posthealth/full4 passed.
+COMMAND -> Skip unexecuted standalone normal-history ABBA benchmark. Assign
+c112 concretewarmV3 actor replacingduplicated historicalnormal reader with
+exactimmutable35ab association; cache35 finishdirecttinyfixture, source33
+reviewonlyconcretecoverage/lifetimebugs. Noextraadapters/proposalframeworks.
+RESULT -> Previousbenchmarkplans retained asunexecutedhistory, notmandatory
+nextgate. Usefocusedchanged-path tests; norepeatedinheritedCPU suites or
+independentreaderduplicates unlessnewfailure/unresolvedconcernrequiresit.
+Keep currentSDK/config/modelbinding, observeroutputequivalence/numerical
+localization, twoactualkerneltracecoverage andownedteardown/posthealth.
+Freshfullmodelhashes remainnecessarygivenobservedcached-pagecorruption;
+immutablehistoricalreceipts mustnot trigger redundantcurrentmodelscans.
+VERDICT -> Concrete workflowredirection toactualGPU/results overvalidation
+scaffolding. No measureddevloopgain yet; fullfidelity/cache/concurrency/
+latency/shelfgoal remainsactive.
