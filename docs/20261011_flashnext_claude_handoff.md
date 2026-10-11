@@ -4,6 +4,11 @@ Work in /mnt/vm_8tb/github/b70_ai_things as hotschmoe. Read AGENTS.md and
  model, usable HTTP serving, and measured prefill/decode latency. Avoid adding
  another validation framework or repeating historical test sweeps.
 
+Performance targets from the user: at least2000 tok/s prefill and50 tok/s
+ decode on the selected artifact. Treat current rates as far below target.
+ Compare actual source/recipes in Steve, Sergio and Strata; prefer experiments
+ that address batching, latency and transfer overlap, rather than more wrappers.
+
 Hardware/model: two Intel B70s, 64 GiB total VRAM, approximately128 GiB host
  RAM; fixed kernel7.1.0-070100, Compute Runtime26.22. Exact Unsloth
  Qwen3.8-Flash-Next UD-Q4_K_XL across four GGUF shards. Runtime root:
@@ -18,12 +23,12 @@ Current concrete action: the genuine source43 mode1 API baseline was launched
  coherent, owned teardown clean, pre/post health and full4 checks passed.
  Report SHA256: c894ba56fd719b84b447f51de666390e28b7ea9e528d662bb4f4a17c2affbae9.
  No live baseline server remains; do not mistake this for shelf qualification.
- Independent public reader exited1 with KeyError: WorkingDir while comparing
- Docker image/config metadata; fresh public closing full4 succeeded. Preserve
- producer PASS and public FAIL separately. Inspect actual image Config and
- terminal Config; repair the absent optional WorkingDir handling narrowly,
- update required source bindings deliberately, and reuse saved GPU evidence.
- Do not rerun the model solely for this validator bug. The exact actor is
+ Original public reader V3 exited1 with KeyError: WorkingDir. New V4 reader
+ preserves original source and normalizes only missing image WorkingDir to
+ empty, matching observed terminal Config. V4 public check PASSED, including
+ fresh closing full4, reusing saved GPU evidence without another model run.
+ Public receipt is source43-api-mode1-baseline-v4-root-public-binding-v1.json.
+ Use validate_source43_api_baseline_v4.py; preserved V3 remains failed. The exact actor is
  strata/flash-next/run_source43_api_baseline_v3.py; port18083, primary served
  name hotschmoe-dd, GPU0, ctx2048/prefill64/PLE65536, MTP0, cacheOFF,
  batch0, parallel1. Canonical registry now has174 entries, including the exact

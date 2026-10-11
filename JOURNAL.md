@@ -17166,3 +17166,19 @@ VERDICT -> Producer PASS retained; independent public validation FAILED due
 metadata-reader exception. No shelf/public qualification claimed. Handoff
 requires narrow optional-metadata repair and saved-evidence reuse rather than
 repeating the GPU actor.
+
+## 2026-10-11: API public closure and stronger performance targets
+
+CONFIG -> Completed exact source43 mode1 API producer c894ba56, registry174.
+COMMAND -> New validate_source43_api_baseline_v4.py preserves original V3 and
+changes only missing image WorkingDir to empty, matching actual terminal
+config. Original source/prepared/producer hashes remain unchanged.
+RESULT -> V4 public PASS including fresh closing four-shard identity; source
+reader SHA and preserved V3 hash included in output. Public SHA256: 51f6604f16fc55cb525424e9ea286ea02e2af38a131c82e559e171cb4030b3a1
+Closing evidence copied to F17/source43-api-v4-public-closing-v1. No GPU rerun.
+User now specifies minimum2000 tok/s prefill and50 tok/s decode. Historical
+chunk64/512 control already shows warm long prefill33.6->85.7, decode8.8->8.6;
+do not repeat that sweep. CPU agents prepare shortread0 current174 control
+and investigate current upstream recipes/long-prefill implementation.
+VERDICT -> Research API/public lifecycle closure, no fullmath/shelf promotion.
+New performance thresholds are targets, not attained or promised measurements.
