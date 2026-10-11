@@ -17242,3 +17242,29 @@ F32 laneFMA/XOR order and HCrawF32 activations, preserving whole48 ownstate;
 actual numerical comparison pending, host transcendental equivalence unproven.
 VERDICT -> Small lane result redirects work to placement and grouped expert
 products. Full model/cache/concurrency/latency/shelf and2000/50 remain open.
+
+## 2026-10-11: Split-tracer guard found; fresh grouped-prefill build passed
+
+CONFIG -> Source43 balanced24/24 shortread0 control, exact original artifact.
+COMMAND -> Actual78244 FAILED451s/reportSHA 9a3e2f658de26203d9483843a77be4354e25aeb7e67967b749fc4ff1f910b79a
+RESULT -> No GEN: generate.cpp2190 requires layer_split/split_device empty
+when H36 enabled. Native startup refused with rc2; closing health/full4 passed.
+The attempted two-stage observer wrapper cannot override engine capability.
+VERDICT -> Preserve failed1. Latency-only successor removes H36/graph parsing
+without changing SDK or model: actual79067 nowlive under pairlease, trace0
+guard-aware command2ff836 passed, sourceplan90a5ddf5; twoGEN4/normal teardown/
+startuprosters and fresh identity/health remain required. H36/device/full49
+coverage false. OutputF17/source43-pair24-latency-v2-run-v1.
+
+CONFIG -> Source45 branches directly from43 with defaultOFF grouped FP16
+expert products; eight decoded slots add56.25MiB.
+COMMAND -> Actual66150 all8fresh buildPASS303s in NoDri compiler container.
+Rootverified all72 expected final sources/all8 ELF hashes and immutableplan.
+RESULT -> Receipt5fdc05b59de353b0194fd776515d9dcd1fd36d00ffb7899f606592ee1e8cd649 at
+/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T213247Z-b271t8yt/receipt.json.
+Focused synthetic actualshape/variable-ne/partialgroup harness source prepared,
+not compiled or run. Bounded original firstHC->NUM38 comparison17pins/ee8ba9f3
+ready using fresh publisher identity and saved comparison targets only.
+VERDICT -> Actual operator compilation progressed; math/runtime/speed unproven.
+No extra390 observer oracle required solely for this operator source delta.
+Full original fidelity/cache/concurrent latency/fairness/shelf and2000/50 open.

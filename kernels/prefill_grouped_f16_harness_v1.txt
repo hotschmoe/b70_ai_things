@@ -1,0 +1,45 @@
+CONFIG -> Synthetic mixed-precision grouped-F16 operator control only. Fresh
+source45 SDK is mandatory; original43 libraries do not export f16_grouped.
+Card0: ZE_AFFINITY_MASK=0, ONEAPI_DEVICE_SELECTOR=level_zero:gpu, in-order queue.
+Use bin/gpu-run --card 0 for execution, with root-owned pre/post health and
+normal container/process removal. This file does not run anything automatically.
+
+COMMAND -> In the original C388/39992 compiler environment, mount the actual
+new SDK source at /src and its build at /build, this source at /harness.cpp,
+and a fresh owned output directory at /results. After setvars:
+
+/opt/intel/oneapi/compiler/2026.1/bin/icpx -O3 -DNDEBUG -std=c++20 -fsycl
+  -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel
+  -fp-model=precise -qmkl=sequential -I/src/sycl/include -I/src/include
+  /harness.cpp -Wl,--start-group /build/libstrata_prefill.a
+  /build/libstrata_engine.a /build/libstrata_kernels.a /build/libstrata_core.a
+  /build/libstrata_kernels_cpu.a /build/ggml/src/libggml-cpu.a
+  /build/ggml/src/libggml-base.a -Wl,--end-group
+  /usr/lib/x86_64-linux-gnu/libze_loader.so
+  -Xsycl-target-backend=spir64 -cl-fp32-correctly-rounded-divide-sqrt
+  -o /results/prefill_grouped_f16_harness
+
+Join the displayed compiler command onto one shell line. Link choices follow
+the SDK's existing xmx_gemm_bench target. No model/pack/GGUF mounts are needed.
+Actual compiler/link/API success remains for root to observe, not assumed.
+Execute: /results/prefill_grouped_f16_harness --synthetic
+
+RESULT -> Six cases: group sizes1,3,8 each with GU(N1280,K2560) and
+down(N2560,K640); expert row counts1,2,3,5,7,9,11,13. Each case compares original
+SDK Gemm::f16 and three asynchronous grouped calls to independently computed
+known outputs. Weights have three exact FP16 dyadic nonzero entries per row;
+all products/sums are exactly representable in FP32. Full output checks reject
+NaN/unwritten values. Equality accepts either sign of exact zero. Sparse inputs
+are explicitly synthetic and cannot qualify real quantized/native operands.
+
+Maximum caller-owned device bytes: GU53,734,400; down28,368,640, sequential
+cases, below128MiB. One dense host upload matrix at a time: maximum6,553,600B.
+oneMKL/driver internal memory is not counted or bounded by this source cap.
+No timings/rates are measured. Upload/result-read waits and final owned release
+are intentional fixture operations. Group metadata caller arrays are destroyed
+before the queue wait, testing the operation's copied-metadata lifetime.
+
+VERDICT -> Source only. Grouped event-dependent host_task cleanup may serialize
+the in-order queue; no zero-overhead claim. Actual output/ownership success does
+not establish model math, sustained throughput, or real-model speed. Retain the
+actual compile/run stdout, stderr and terminal/removal receipts externally.
