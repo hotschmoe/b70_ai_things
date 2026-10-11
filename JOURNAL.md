@@ -16647,3 +16647,17 @@ VERDICT -> Freshcompilation proof only. Newheaderuploadoracle/allprofiles/
 NUM38modelOFFONfull49/fivefieldwitness/lifecycle/currentidentity/health still
 required. Fullmodelmath/latency/cache/streams/shelfremainopen. Warmshortprofile
 sourceauthoringcontinues; leasesfreeafternormalbuildreturn.
+
+## 2026-10-11 Actual short54 warm-window qualification launched
+
+CONFIG -> SameSDK43mode0/current173/newactualsampledtool; pausedwarmup and
+selectedsamefresh54-token GEN4 in eachOFFONprocess. Long524refused.
+COMMAND -> Root457eb929241repo+4controlanchors/83CPU0.630 andcurrenttool
+intakePASS; generatedhook/IPCenum/clockendpoint/order checked. Solepairlease
+45943 nowLIVE withoriginal3threadpins/noNUMEXPR, sameclosednormal43plan/
+prerequisite/intakee87b, F17/source43-warm-pti-short-v1-run-v1.
+RESULT -> PrerequisiteCPUadmission live; noactualwarmreuse/control/trace yet.
+Focusedpeerreview stillrunning, concretefindingwillbehandledwithoutsource
+mutation/duplicateGPUwork. No mandatoryexternalapproval requiredbyAGENTS.
+VERDICT -> Actualqualificationattempt, not warmdecode/speed/physicalidle
+proof. Fulloriginalcampaignscope/fidelity/cache/streams/shelf remainsopen.
