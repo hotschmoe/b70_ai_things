@@ -15129,3 +15129,10 @@ CONFIG -> FrozenV2 0aa148e2/1031 bindings, actual frontend tokenizer/template/so
 COMMAND -> Root1031SHA/ASCII/AST/18CPU PASS0.050s; independentpeer1031/18CPU PASS0.052s.
 RESULT -> Requires actualfour mutator attempts/changedsnapshots/exactowner+source restoration, admittedprime/repeat, explicitfalse mutation flags forrebind/restart, originalproducer/HTTP/source joins. No actualactor/fresh49 GPU execution yet. Alternate nativeweights/hotreload/modelkey/fullcache qualification remainfalse. CurrentQSA52724/PID39594 confirmed CPUactive in leased semanticpreflight; no actualmodeltarget proofyet.
 VERDICT -> Source/CPU checkpoint with honest frontendidentity scope; oldV1 flags neverpromoted. Run genuine source/currentABI/actor+fresh49 qualification after priorwork. Completeoriginalmodel/cache/concurrency/placement/profile/latency/shelf objective unchanged.
+
+## 2026-10-11: Prelaunch shard2 identity gate refuses current bytes
+
+CONFIG -> Pinned UD-Q4_K_XL unchanged; QSA52724 actualprelaunch full4 gate beforemodel arm.
+COMMAND -> Completepre/post buffered full4 scans, independentcoreutils completehash81402; separate read-only O_DIRECT diagnostic6619 live (notqualification/cache eviction).
+RESULT -> Shard2 actualSHAee52b322f3213cc2b993c5a80516b54cf5b9e4df7b0b10d4a98485198e3e0393 repeats bothfull4 andindependentcoreutils; publisherexpected3f342f1c1580473f1ee94ddd5b28206e8c07a70fa1a366f59d1d6c922919a6c9. All stat5 values/49,859,583,136 size unchanged. Otherthree shards match. No model arm/capture directories; poststrict/compiledpairhealth pass. Parent52724 stillfinishingfinalevidence, no terminalPASS. Source-only reachableprovider/write audit found rb/O_RDONLY+pread/immutablebytes and no modelwrites; cause remainsunresolved.
+VERDICT -> Stop further modelGPU runs untilvalid pinnedidentity isestablished. Preservebadbytes/receipts; do notwaivehash ordeclarehardware/testcause. Direct/backingfile vsbuffered comparison pending; fullcampaign remainsactive, no model/cache/latency qualification.
