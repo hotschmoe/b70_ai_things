@@ -1538,3 +1538,30 @@ models:
     activations: native-Q8_1-and-prefill-F16-BF16
     serve_cmd: python3 strata/flash-next/qualify_full_cache_shared_batch0_persisted_v3.py --plan <new-source40-plan> --output <new-owned-root>
     notes: Separate serial PCL/full49 persisted diagnostic with fresh source40/C1401403 and owned native HTTP/file lineage. No strict-batch RID invention or whole-cache/math/latency qualification.
+
+  - label: flashnext-source40-single-b70-chunk64-control
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-prefill64-ple65536-seg1024-adapt0-borrow0-chunkcontrol1-srcintegrated25-40-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-prompt35-hosttrace36-batchstamp37-fullcache38-memory39-qsa40-OFF-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: python3 strata/flash-next/prefill_chunk64_512_control_v1.py launch --prepared
+      <new-control> --pre-health <actual-parent-health>
+    notes: SOURCE-only single-B70 chunk64/512 diagnostic. Same original UD-Q4_K_XL/nativeHC/PLE,
+      ctx2048/fp16/PLEmmap65536, noMTP/no suffix drafts/no borrowing. Actual memory/coverage
+      admission and output/coherence/health/full4/teardown required. No hardware-only
+      speed or full-model fidelity/shelf claim. Two-row proposal only; registry171 unchanged
+      while consumers live.
+  - label: flashnext-source40-single-b70-chunk512-control
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-prefill512-ple65536-seg1024-adapt0-borrow0-chunkcontrol1-srcintegrated25-40-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-prompt35-hosttrace36-batchstamp37-fullcache38-memory39-qsa40-OFF-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: python3 strata/flash-next/prefill_chunk64_512_control_v1.py launch --prepared
+      <new-control> --pre-health <actual-parent-health>
+    notes: SOURCE-only single-B70 chunk64/512 diagnostic. Same original UD-Q4_K_XL/nativeHC/PLE,
+      ctx2048/fp16/PLEmmap65536, noMTP/no suffix drafts/no borrowing. Actual memory/coverage
+      admission and output/coherence/health/full4/teardown required. No hardware-only
+      speed or full-model fidelity/shelf claim. Two-row proposal only; registry171 unchanged
+      while consumers live.
