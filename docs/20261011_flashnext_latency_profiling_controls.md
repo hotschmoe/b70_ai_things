@@ -38,3 +38,21 @@ real-model inputs with declared numerical/output gates and natural completion,
 TTFT/token-gap/completion distributions and concurrency fairness. Synthetic
 speed, peak bandwidth and summed kernel durations cannot qualify the serving
 shelf or replace correctness, health, identity and teardown evidence.
+
+For each measured token, report wall time, covered GPU busy union, uncovered
+intervals, idle-gap distribution and host preparation/submission/wait time.
+Report per-card intervals separately: serial layer stages cannot be treated
+as concurrent work merely because both devices are allocated. Distinguish
+device-memory traffic from host-mirror PCIe traffic and count useful bytes
+separately from repeated reads. Bandwidth estimates need an explicit byte
+model; allocation inventories do not provide one.
+
+Rank candidates by removable critical-path milliseconds per token. Compare
+real replay with dependency-preserving no-op work to isolate scheduling cost;
+compare captured real operands in resident and host-mirror placements to
+isolate access cost. Sweep actual matrix shapes, chunk sizes and alignment
+before choosing GEMV/GEMM tiles. Evaluate fusion by both saved launches and
+saved intermediate traffic, including any occupancy or scratch penalty.
+Keep output and dependency checks for each conditional control. Run timing
+arms without competing model scans, builds or audits, and use repeated
+matched runs to distinguish gains from observer overhead and cache warming.
