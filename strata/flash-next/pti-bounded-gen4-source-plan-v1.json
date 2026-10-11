@@ -1,0 +1,27 @@
+{
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_pti_bounded_gen4_cpu_v1 -q",
+  "CPU_tests": 9,
+  "actor_integration_qualified": false,
+  "alignment_qualified": false,
+  "all_instance_normalizations_unchanged": true,
+  "base_source": {
+    "tools/unitrace/src/levelzero/ze_collector.h": "ccc4a663ebb0d33b2ee1593f722c8668762e8dbc3ddc7243fab93ee2bdfdf2c9",
+    "tools/unitrace/src/pti_unitrace_clock_export_v1.h": "8a3284a2ce792f61a3e40f35ec7cb783b09669a5d9d33c3f60e7b4513569087e",
+    "tools/unitrace/src/unitimer.h": "a19c62b21703e59bd806eed0990bbe28adb8c73567e8cb7f7bb88fa0a09888dc"
+  },
+  "expected_reconstructed_source_sha256": {
+    "tools/unitrace/src/levelzero/ze_collector.h": "6d8374f6a04df012a21069f90ae90ed6a29cb3e318d24d0bf72a6c4d94ad84c9",
+    "tools/unitrace/src/pti_unitrace_clock_export_v1.h": "d3ccfd2f8a3ad1a30881f4206f07b28ff5c811038d689d3e332811b308ca6fe2"
+  },
+  "files": {
+    "strata/flash-next/prepare_pti_clock_sampled_queries_v1.py": "d9b716bcb33d18eb5bcaf618fe70178fad5c7fb8b055bccc31929d0e4f9688d0",
+    "strata/flash-next/pti-bounded-gen4-design-v1.md": "265e3773dfb3b3a9eeebe7763ff05350c6695e48eee298f23d8e252bddaed7af",
+    "strata/flash-next/pti-clock-sampled-queries-v1.patch": "e89a4e25b042a9a84c47b1d85cd4410b4c0f59ce36c2cefe3ee7ff5a26d357b8",
+    "strata/flash-next/pti_bounded_gen4_contract_v1.py": "a4fa4e782b4098bedb19ae4276af4f33066a909c27dbfabe9850dafcf9cd699e",
+    "strata/flash-next/test_pti_bounded_gen4_cpu_v1.py": "5f83472acfb66190e6c26821a96e7ecc304182a1deba74f4d0b06a39b091876d"
+  },
+  "original_GPU_query_calls_unchanged": true,
+  "schema": 1,
+  "source_only": true,
+  "warm_process_decode_qualified": false
+}

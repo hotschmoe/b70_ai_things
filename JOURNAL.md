@@ -16504,3 +16504,19 @@ in F17/journal-write-recovery-v1. Exact historical wholefile SHA unavailable;
 no such claim. User informed; recoveredunrelated content remainsunstaged.
 VERDICT -> Evidence-backed content and chronology restoration complete.
 Continue campaign; use byte-preserving append and isolatedindex entries.
+
+## 2026-10-11 Actual Q81 boundaries exact and bounded profiler source prepared
+
+CONFIG -> Sealed NUM10actor3 d6713012 and unchanged enclosed originalCLI2
+06476d2e; weight-free conditional native-input packet diagnostic only.
+COMMAND -> Rootplan17bf975f/10hashes and8CPU PASS0.126s; actualpacket audit
+root-v1 terminalPASS0.009s/report0b54e71145289a8d967526b355d3809f842d2bf25cd2e3bc4c9c0b56ae282c8f.
+RESULT -> All8packets EXACT: fourattn_mixed->attn_input_q81 and fourgated->
+output_q81, zero differingbytes, originalroster/PIDnonce/T1/seals intact.
+Originalfullmath divergence remainsupstream/otheroperators, not uniquelynamed.
+BoundedGEN4/toolquerysample planfd554715/5bindings plusbaseheaderpins and9CPU
+rootPASS0.040s; actualorigin kindchecked, exactsample/emitted/suppressed closure.
+Toolproposal0d8303d8 actualnewABIbuild/runtimeintake/actorparser stillpending.
+API2plan0e1ab28b/843hashes and28CPUrootPASS1.038s; peerrequired beforegenuineprep.
+VERDICT -> Componentmeasurement advancescorrectness; coldGEN4 is firstbounded
+profilecontrol, not warmdecode/fullcoverage/bandwidth/speed. Fullgoalactive.
