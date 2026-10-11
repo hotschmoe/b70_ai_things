@@ -16564,3 +16564,18 @@ APIgenuineprep83541 stilllive, currentregistry173 unchanged.
 VERDICT -> Packingandfirststate seams nowexactunderdeclaredconditionalinputs;
 upstreamprojection/norm/core/gating and originalfull48 fidelity remainopen.
 Boundedactualprofileactor/intake next; no serving/speed/shelfpromotion.
+
+## 2026-10-11 Genuine API3 preparation and sampled runtime intake closed
+
+CONFIG -> Current173/fresh43mode1 APIbaseline separatefromcoldGEN4 PTI.
+COMMAND -> APIgenuineprep83541 terminalPASS; prepared562a2a25bdc4522f377909ac37d29f5e2de4f021ea0712e20e263a727f3d4298, sourcec342/851.
+ActualNoDri initial818receipt lackedrequiredschemafields; oldreceipt andfailed
+intakev1preserved. Sameexecution successor58cb9748 joinsoriginalcommand/
+terminal/absence/ELFs/9DSOs; no rerun. Runtimeintakev2 rootPASS0.060s/e87b3e14
+and currentbinder recheckPASS0.048s; actualclockproperties unchanged.
+RESULT -> Boundedactor d07f3190/233hashes/75CPUrootPASS0.602s and--helpchecked.
+FourcoldfreshGEN4/54,524,524,54; alloperationnormalizations retained; sampled
+queries explicitlynotperinstancecalibration. Exactnewtool/lib/deps/APIproperty
+intake/currentmodel guards remain. Independentactorpeerpendingbeforelaunch.
+VERDICT -> ActualAPIprepnotservingqualification. Readyboundedsource/intake
+notcompletedGPUprofile. Canonical173 unchanged, noAPI/speed/shelfpromotion.
