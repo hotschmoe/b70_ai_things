@@ -15657,3 +15657,25 @@ receipt.json. Fresh build controller prepared in/tmp, not executed.
 VERDICT -> Source/CPU ready only. Fresh ELFs/dependencies and real capture
 remain required. Metadata cap does not bound Chrome disk or collector memory;
 real model coverage, observer cost, physical idle and speed remain unqualified.
+
+## 2026-10-11 Source41 full-state cache and concurrency scope audit
+
+CONFIG -> Read-only current source41 mode1 cache-path audit and existing
+source40 V12 prepared whole-suite metadata. Actual model math remains pending.
+
+COMMAND -> Independent source33 reviewed persistent/scratch ownership; root
+verified all8 source hashes and prepared suite SHA, then preserved audit
+strata/flash-next/source41-mode1-fullcache-source-audit-v1.json.
+
+RESULT -> No demonstrated persistent-state copy omission: checkpoint/snapshot
+paths cover QSA tail/dead/block position/pooled spare, GDN, PLE and KV/scales.
+Materialized half/expanded arrays regenerate as scratch on owned in-order
+queue. Disk mode fingerprint exists; in-memory mode safety relies on static
+process mode. Existing V12 actors all use2 active slots; six captured request
+IDs do not establish six-way concurrency. No payload/GPU/runtime by audit.
+
+VERDICT -> Need deliberate new source41 baseline/full-suite port, accepted
+row/window/block-boundary cached-vs-fresh full49 and separate actual1/2/4/
+bounded6 qualification. No cache-copy patch justified by this source audit.
+Timing73892 verified live; initial intake finished/outputcreated and prior
+OFF public admission is now pending. Current run unchanged.
