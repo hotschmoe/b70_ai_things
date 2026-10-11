@@ -16438,3 +16438,30 @@ VERDICT -> Preserve old failed1684s profile and all frozen versions. Actual
 one/two GPU bounded control parent closed, independent full49 admission pending.
 Corrected realmodel capture retry remains next once reader/model scans close;
 no new speed/stability/physicalidle/math/API/shelf promotion. Fullgoal active.
+
+## 2026-10-11 Actual one/two GPU full49 topology parity closed
+
+CONFIG -> Fresh43mode0, fixedexactUDQ4XL,oneGPU0all48 versusGPU0L0-31/
+GPU1L32-47, same2048/64/65536/MTP0/cacheOFF, useful4GEN64 withdeclaredSFD/PCL.
+
+COMMAND -> Independent rootpairreader93148 terminalPASS389.370s through
+unchanged original model/source/per-card+compiledpair health/teardown/full4/
+three-page/public failure-close and actual stage-owner/raw vector gates.
+Binding0da818a6992440e71352a64ecd6d1ae643e381f8fd12e656aa7310dd371d3ba3
+at F17/source43-pair-model-cli-v1-root-public-binding-v1.json.
+
+RESULT -> All4 full248320-float heads +192full10240-float residuals BITWISE
+one versuspair. Input/outputIDs/LP/finish exact all4. Required vector rows
+are finalprompt0-based53/523 as appropriate; optional first2 prefillchunk
+snapshots do not substitute for lastprompt. Actual perGPU0/1 stage entries/
+returns and exact mirrored/resident startup coverage passed; no physical
+allocation/free/bothVRAMheadroom/traffic or speed claim from logical proof.
+
+Root61440 nowsolepairlease repaired PTI3 OFF/ON actualmodelcapture using
+normal43plan/publicprerequisite/runtime d2c910a5, original three thread pins,
+explicit Btrfs domain helper2 +retainedfailurelogging. No CPUmodel scans or
+benchmarks remainrunning. This is distinct from failedold1684s capture.
+
+VERDICT -> Genuine correctednative topology parity for declared bounded
+workload, not original fullmath/API/cache/concurrency/50tok speed/shelf.
+OriginalF32wholehead divergence remainsopen. Fullcampaign goal unchanged.
