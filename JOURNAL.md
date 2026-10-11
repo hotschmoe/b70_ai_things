@@ -15234,3 +15234,10 @@ CONFIG -> Unchanged original source40 public append/steps/batch functions and C+
 COMMAND -> Root657repo+48SDK SHA/ASCII/AST PASS and25CPU PASS0.473s; independentpeer sameclosure/25CPU PASS0.460s. Plan3958e2baa8a09d76d0bf1936ffaa5053186f2cd65c3e28306020fef42294ac7d.
 RESULT -> Exact six-call/seven-label byte witness includes compile/predevice/runtime/postrun/new4/postproof chronology.18 direct/two-replay frames span allthree actual APIs, materializedhalf/expandedfloat/fullstate and actualwrongraw-store shadow controls. No compilation/device execution yet. MatchedgeometryV1 held on incomplete fullstartup config/runtime/card joins; narrow successor in progress.
 VERDICT -> Reviewed source/CPU checkpoint for isolated storage candidate, notsemantic model correction/compiler cause/fullmath. Root CPUfixture preparation can proceed independently; compile/GPU waits scheduledpairQSA1602/cacheV1052745. Fullgoal unchanged.
+
+## 2026-10-11: Original-input materialized fixture preparation completes
+
+CONFIG -> Reviewed materializedV3 source3958e2ba, independently owned original four-row key/gamma/epsilon/Rope values, no captured operands used as reference.
+COMMAND -> CPU-only prepare51670 terminal0 at indexer-materialized40-v3-owned-inputs-v1; root raw/gamma/sourceplan receipt SHA edges rechecked. InputbindingSHAbe36c23b8db19fa8d6c7e36ee086935953e8375acb671c47e0d07746c4841043.
+RESULT -> Five-file exact fixture produced, fullmodelmathfalse. ActivepairQSA1602 prefull4 allfourPASS; OFF four requests completed but childfinalteardown result notyetpublished. Cache52745 remains queued. MatchedV2 root18SHA/ASCII/AST/13CPU PASS1.414s butpeerHOLD on prelease/legacy-return metadata read-boundary gap; minimalV3 successor in progress, canonical171 unchanged.
+VERDICT -> Concrete isolated input prep ready for laterroot compile/GPU, notstorage/model/cause qualification. Preserveheld matchedV1/V2 and finishV3 byte-boundary checks before matchedruntime. Fulloriginalgoalactive.
