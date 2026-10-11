@@ -16704,3 +16704,16 @@ F17/pti-temporal-nodri-fixture-v2. Old45943aggregatefull4stilllive.
 VERDICT -> GenuinecorrectedCLI/IPCsimplefixtureproof, not modelruntime/
 calibration/latency. V2actualwarmretry afterfrozenbindingsandownedoldclosure.
 Fullcampaign unchanged andactive.
+
+## 2026-10-11 Actual fresh44 oracle compiled and full upload launched
+
+CONFIG -> FreshSDK44/806 all71sources/new8ABI, canonicalcoreheader; original
+full390oraclebody retained, samepack/modelpublisher. No originalmath claim.
+COMMAND -> Root81902 actualcompilePASSneworacle-hdnco2jv receipt190f4720072bd2353c2bd478788432181714a2e1b380e4ccf7d559a436b6fb33.
+Solepairlease7883 nowLIVE all5profiles run_source_upload44_oracle_v1 using
+exact573608plan/packv4/latestcompletedwarmV1postfull4, newF17/source44-upload390-run-v1.
+RESULT -> Genuinefreshoraclebuildrc0/libraryunchanged/newbinarybca6926f;
+upload/runtime/public/health/full4stillpending. Bare--helpwraprefusedwithout
+mandatoryoracleargs beforeGPU; noextra workload. WarmV2source fixesawaitseal.
+VERDICT -> Actualprerequisitework progressesNUM38, notmodelmath/profile/
+servingqualification. Fullcampaign remainsactive; no parallelGPUtests.
