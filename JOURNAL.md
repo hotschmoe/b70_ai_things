@@ -16689,3 +16689,18 @@ Parentfailureclosingposthealth/full4 stilllive; no normal/speedprofileclaim.
 VERDICT -> PreservefrozenV1, correctV2oneCLIseam andexerciseactualNoDri
 named1024BTemporalControl fixture beforeanothermodelrun; no cap/source/
 model/math waiver. Fullcampaign active, notblockedonexternalinput.
+
+## 2026-10-11 Real NoDri temporal CLI successor fixture passed
+
+CONFIG -> Sameactualsampledtool9f481/15c1, syntheticowned1024B IPC, noGPU
+or model process/payload. HelperV2corrects--resume NAME only; V1preserved.
+COMMAND -> Root70685 actualCPUcontainer terminalPASS~5s. Receipt2bfaa4ac0ece1cd981a3a6965e49b2d413dbe41ff006d1b1b89024db8a2e964e;
+insideac2fc4f35ed9d6cfa6cb119a447d17838cb793e402463680b39201d42a729cde.
+RESULT -> RealinstalledCLI pause0->1 andactualhelperargvresume1->0 passed;
+unknownsessionCLIreturns0buthelperrefusesabsentIPC/noobjectcreated. Synthetic
+IPCremoved/actualcontainerExit0/noOOM/normalremoved/exactabsence captured.
+Command/terminal/rawstate/argv/stdout/stderr androotcontroller archived in
+F17/pti-temporal-nodri-fixture-v2. Old45943aggregatefull4stilllive.
+VERDICT -> GenuinecorrectedCLI/IPCsimplefixtureproof, not modelruntime/
+calibration/latency. V2actualwarmretry afterfrozenbindingsandownedoldclosure.
+Fullcampaign unchanged andactive.
