@@ -15038,3 +15038,10 @@ CONFIG -> SOURCE40/C1401403 current171 baseline wrapper; full nine actors plus p
 COMMAND -> Root full SHA/ASCII/AST closure and exact CPU command:180 tests PASS6.023s; independent peer180 PASS6.135s.
 RESULT -> Peer HOLD found two material source seams: raw49 public reader still invokes old associate_events instead of recomputed waiter-adjudicated terminals; noncancelled pinned-EOS waiter accepted native cancel although consumed source40 prioritizes EOS finish stop. Frozen source/checks retained, no V7 GPU launch or promotion. New V8 and strict waiter successor in progress. Fresh C140 onecard GPU session15276 passed actual six-request API screen; parent teardown/posthealth/final identity remain live.
 VERDICT -> Source/CPU checkpoint is explicitly unqualified and held; tiny green checks do not prove actual terminal routing. Require source-exact corrections and producer-shaped regression before launch. Original full model/cache/concurrency/latency/shelf goal active.
+
+## 2026-10-11: Fresh postboot C140 onecard final PASS; pair started
+
+CONFIG -> SOURCE40 V3/C1401403, current171 registry, fixed host stack and pinned artifact.
+COMMAND -> Root15276 onecard prepare plus self-leased qualifier terminal0; GPU397s. Start root43122 freshpair prepare then qualifier with actual freshone qualification.json.
+RESULT -> Onecard full scopedPASS: six-request coherence/repeat/APIidentity/tokenconsumption; normalownedteardown; strict per-card/compiledtwo-rank preposthealth; kernel/source checks and newfourpublisher hashes. QualificationSHA abb952bbb0558acaac2bb347fe7bf2928370c484776990e2541d9b431042800f, parentSHA ff4bf9c7cf564b978652ef22d194d25818d05e488ff4394a59bacf888d722d28. Pair preparation live; no pairedPASS yet. Root NEWcacheV8 source01b14892/924SHA ASCII AST/184CPU PASS6.850s; independentpeerpending.
+VERDICT -> Fresh serving baseline qualified within bounded C140 scope, not original48 math/fullcache/concurrency/latency/shelf. ActualGPUprogress continues, sole workload coordinator; oldcacheV7 holds preserved. Full objective remains active.
