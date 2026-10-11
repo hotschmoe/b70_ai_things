@@ -17515,3 +17515,30 @@ RESULT -> CompilePASS19.3s/ELFab8f033c. Realcard0operator25152 queued
 behindlive HC46model12379. No stagingGPU/model resultyet. Both genuine49
 model commandpreflight+GEN64metadata passedb5f2b70f; frozenbeforelaunch.
 VERDICT -> Fullcampaign/speed2000/50/fidelity/cache/streams/traffic/shelf open.
+
+
+## 2026-10-11: HC46 no measured benefit, staging operator passed and model live
+
+CONFIG -> Matched46 short54/twoGEN64/defaultshortread64, onlyHCrowbatch0/1.
+COMMAND -> Actual12379 terminalPASS861s, independentpublic36126PASS.
+RESULT -> Producer21d80aace6120f03fbbf7925c8b1cc8e4c3ae23c6b397db2f3a529431d3ed37e;
+publica3531e239e34248e6c1fd819494024096e1fe3eb6463edef643a784e5e70f715.
+Outputs match; currentallsource/all8, full4, strict/compiledhealth, kernel
+and ownedteardownpassed. WarmPP4295.3/4294.6ms andGEN64decode6810.3/6806.1ms.
+VERDICT -> No meaningfulbenefit; no furtherHCrowcount sweep/speedpromotion.
+
+CONFIG -> New49 singletonmirrorrouting/copy kernel, syntheticonly.
+COMMAND -> Actual25152 card0 operator via bin/gpu-run.
+RESULT -> PASS38s/allfour cases, report223bd206d425a214b9c043bbed0b2a57f7ef6835505316b7b5c53e0437b49f95,
+normalexit0/removal, preposthealth/no newfaults. Actual68017 onecard49OFF/ON
+modelnowlive, spec1/pipeline0/short54/twoGEN64/cacheOFF/grouped0/trace0.
+Balanced24/24 candidate1023845e iscommitted/deferred untilonecardruntimePASS.
+VERDICT -> Routingfixture qualifiescopies only; modeloutputs/timingpending.
+
+CONFIG -> Independently original firstGDN mode1 ownstate plusbulkHC, native43
+fields comparison only. No capturedmathfeeds/arithmeticreplacement.
+COMMAND -> Actual75223 afterHCtimingends andduring49setup.
+RESULT -> PASS/errors[]/freshfull4pages, report77ee20cfda70b55e2aa5c69bda1d8c88fe549aa8850922cfa2a470796abc838e.
+Initialconv/statebitwiseexact; qkvNMSE3.393e-9,gated5.258e-9,block4.988e-7,
+postattention3.961e-7; bothQ81packetsdiffer. Savedpacketbyteanalysis next.
+VERDICT -> No numericalPASS; fullmath/cache/streams/traffic/latency/shelf/2000/50open.
