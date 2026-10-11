@@ -16772,3 +16772,17 @@ smallmatchingpausedcapture/resumefixture beforeanothermodelprofile.
 VERDICT -> Genuinecontrol/request/lifecycle closure, not fullreplaycoverage/
 physicalidle/bandwidth/cleanlatency. Originalstrictpubliccoverage notwaived;
 awaitreader andfixsourcebackedcoverage seam. Fullcampaign remainsactive.
+
+## 2026-10-11 Genuine masked44 CPU preparation launched
+
+CONFIG -> ExactSDK44/806/oracle190/upload4c/public05d/packv4, independently
+ownedQSAproducer-v4-run-v2 originalfourrows, notnativecapturedinput.
+COMMAND -> Root575866730repo/28CPU0.280, focusedpeer14owned/28CPU0.298 READY.
+Actual80196 CPUprepare LIVE threeoriginalthreadpins/noNUMEXPR, newF17/
+source44-masked-fixture-v1 andsource44-masked-prerequisite-v1. NoGPUtouch.
+RESULT -> Actualinput/prerequisiteadmission underway; maskedGPU48frames/
+public/normalgraph/NUM38 stillpending. Warmpublic45500 remainsliveCPUreader
+ofclosed66d7producer; actualtrace89onlyfill/barrier/zero noMODELcompute.
+VERDICT -> Genuinequalificationprep advancesfidelitycomponents alongside
+source-backedregularlistcollectorrepair. Fullmodelmath/speed/cache/streams/
+verifiedshelf remainsunqualified; current173 unchanged.
