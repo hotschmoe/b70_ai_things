@@ -17000,3 +17000,18 @@ historical35ab route, originalthreepins/noNUMEXPR, pairlease forbothhealth.
 AnalyzerV3d45570dd all310SHA/2targetedCPU0.011PASS, noactualanalysisyet.
 VERDICT -> Genuinecorelocalization andnextactualmodeltraceprogress; preserve
 failedreport/fullgoal. No competingmodel/provider/largeCPUduringprofiling.
+
+## 2026-10-11 Minimal NUM38 serialization fix checked without provider rerun
+
+CONFIG -> FailedV1/ec203 calculationsandclosing evidence remainimmutable.
+COMMAND -> Rootb8d7825078b043f3e2bd773a2070d6e9ce23998bc0682b49fc4a70173c6f45c9
+all920sourcebindings/oneactualtinyenclosed-serializationCPU0.002PASS.
+RESULT -> Exactlytwo ast.keyword outputlabels current43->current44 corrected;
+referenceequations/callbacks/model/closing gates unchanged. Fourownedone-byte
+publisher fixtures testrealenclosed-to-compact/capture serialization; no
+model/provider/GPU/fullscan rerun. Savedactualdiagnostics willbeauditedwith
+explicitfailedserialization provenance andconditional scope.
+Warm18181 nowLIVE aftertokenizer, firstOFFfull4scan; historicalrouteworks
+withoutoldnormalpublic recursion. No modeltrace/latencyresultyet.
+VERDICT -> Directbugfix/actualprofiling progress, notfullfidelity orspeed
+promotion. Fulloriginalgoal active; no expensivecalculation repetition.
