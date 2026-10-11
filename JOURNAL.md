@@ -17200,3 +17200,22 @@ ReplayWait4668.654ms over request4671.348ms; nested spans not additive,
 wait interval is not physical device execution/idle attribution.
 VERDICT -> Direct one-flag GPU control underway; no candidate benefit claimed
 yet. Targets2000prefill/50decode remain unmet. Full original goal stays active.
+
+## 2026-10-11: Batched short-prefill closed and expert lanes control live
+
+CONFIG -> Exact SDK43 mode0 short54, two fresh GEN4, native --short-read0;
+original quantization unchanged, MTP0/cacheOFF.
+COMMAND -> Actual38842 exit0/PASS508s/reportf0b3a67de9bf2601d680b95969a4999de4d1e06e7f3822bd8e1fd6c072446fb9;
+independent shortread2 public15138 PASS/fb3bd7cd14f94872b37994233881c443b98c4d92d717c0711e196192c8e2dc54.
+RESULT -> Selected nativePP4297.0->1516.2ms, four-output374.3->374.6ms;
+all IDs760/2919/10458/369 match. Actual promptVerify0, normalteardown, arm
+and aggregate health/source full4 passed. Historical bounded comparison only;
+full arrays/natural sustained decode remain unobserved.
+COMMAND -> Next actual52414 acquired solepairlease for nativeGU/DOWNlanes32
+versus default8, same shortread0/config/SDK/requests, sourceplan18339abf.
+Actualpurecommandpreflightfc1dec passed, no sourcebuild needed. Output
+F17/source43-expert-lanes32-v1-run-v1; terminal outcome pending.
+VERDICT -> Concrete prefill candidate (~2.83x in warm sample), no decode gain
+yet and targets2000/50 unmet. Long expert FP16 expansion/groupedGEMM patch
+being prepared deliberately; no legitimate current SYCL KQuantMMQ flag.
+Original full model/cache/concurrency/latency/shelf goal remains active.
