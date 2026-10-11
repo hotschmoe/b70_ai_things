@@ -15871,3 +15871,31 @@ VERDICT -> Complete owning capture opensoriginalmath comparison; not fullmath
 qualification. CPUcallback/writer evidence doesnot qualify actualtool/native
 shutdown ordevice clocks. Fresh43/toolbuilds/mappedcensus/complete rawoutputs
 stillrequired. Curatedmodelresults/completionaudit updated, wholegoalactive.
+
+## 2026-10-11 Genuine tool/native43 builds and original divergence data
+
+CONFIG -> Fullgoal unchanged. Separate lifecycle-only tool/native changes,
+no arithmetic/quantization/reference substitution or oldruntime transfer.
+
+COMMAND -> Source/proposalpeer f97d3fec/8c20a456 ready. Fullfresh895-file tool
+build59963 PASS132s; native43 all8build25774 PASS309s. Root independently
+checked all70 final sources/all8 new binaries against actual43 plan/receipt.
+
+RESULT -> Toolreceipt54a47028897d6fe51e35a8d98a70189fa6f5352a7c2ed80f115a453f54e20d1f;
+freshtoold6595250aacaa82e3c330d8e235a493bf07040c9d8a08155d534a3b40fb56b2d,
+injectionf2b1e3c2048d6afdf03bb197d9c24167abc764725ba892f77b712a262dbf7178,
+versionedexport actualELFverified. Native43 receipt6f6517ac5f6b77e7fd8f0487d62869ef108a490bf6409ebc254bf5e1cfb93bc4,
+rootbuild/strata-native-hc-engine-20261011T120045Z-kfiohqmn. NoDri exposed.
+Originalreader30061 PASS923.188s/reportdb105c9c (comparisonmechanics only);
+headNMSE.007888246485733295/p3L47FFN.008102880027766652, fullmathfalse.
+Independent audit1eb72af6/scriptd82ad1a9 preserved B17: repeated2308rows exact,
+originalinputs bitwise, firstL0attn~1e-14, thenp3 L3/L4 amplification.
+Layer3tailbitwise now; fixed-inputQ8 andzeroL0GDN diagnostic cases requested.
+
+MaskeduploadV2 18914962 all695sourcebindings and13CPUrootPASS0.018s/peer0.019s;
+completeexplicit consumedfile roster/PID beforeafterseals adds two binary/log
+reads. No actorintegration or actualspeedup claim.
+
+VERDICT -> Build/source scopes only. Fresh43 upload/ABI/model runtime, actual
+loadedtool census/completed output/device profiling, originalmath, complete
+cache/streams/placement/natural latency andverifiedshelf remainrequired.
