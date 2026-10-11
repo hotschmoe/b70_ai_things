@@ -1801,3 +1801,23 @@ under F17/pti-temporal-nodri-fixture-v2. This is control syntax/state evidence,
 not a model profile. Corrected successor must requalify actual model runtime.
 VERDICT -> Warm timeline still missing. Full model math, cache/active streams,
 tier traffic, natural latency/fairness and verified shelf remain incomplete.
+
+## 2026-10-11 - Fresh44 upload closed and corrected warm retry live
+
+CONFIG -> Full original goal unchanged. Source44 observer and source43 warm
+profiling remain separate generations with independent runtime gates.
+COMMAND -> Actual44 all8 build309s/receipt806ac528; root71source/eight ELF
+hashes verified. Fresh44 oracle receipt190f4720 passed compilation. All five
+upload profiles7883 passed288s/producer4c401379; independent reader28513
+passed/public05d17ed3. Corrected warm V2 actor7625ace7 passed86CPU controls
+and the genuine NoDri CLI fixture; actual retry35802 is live.
+RESULT -> Fresh44 upload/context/ownership/logical-free/layout/health/full4
+component evidence closes. No ordinary payload-readback or model math follows.
+Masked44 and NUM38 actual observers are still required. Warm V2 corrects the
+resume CLI and premature final-report read, with actual producer PID/start/
+source context. Its current model timeline and public admission are pending.
+Analysis V2c4ded18a/272bindings/tenCPU controls is prepared, success-only.
+VERDICT -> Actual build/upload and observer-control work progressed. Original
+full48 fidelity, complete cache/active1/2/4/bounded6, tier traffic and natural
+interactive latency/fairness improvements, stable serving and shelf remain
+incomplete. No profile success, speed improvement or goal completion claim.
