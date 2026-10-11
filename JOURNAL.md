@@ -15101,3 +15101,10 @@ CONFIG -> FrozenV10 7527f8c0/1057, owned continuous source/sequence reader durin
 COMMAND -> Root1057hash/ASCII/AST/207CPU PASS7.280s; independentpeer1057/207CPU PASS7.143s; actual C388 no-device bootstrap4621 terminal0, shared-v10-flat-no-device-smoke-v1.
 RESULT -> Actualimage flatimports/tokenizer EOS and tiny synthetic binarysink/anchor/normalclose pass, no nativeengine/modelweights/GPU. ReviewedbinarytraceV6 preserves original JSON/raw/meta/hash/quota/shortwrite evidence; finalmatchedCPUABBA34.84percent componentwall lower (report387faf96), noGPU/inference claim. AuthenticQSA V2admit72254 FAIL preserved: four HCprerequisite conjuncts equal, onlythree originaldispatch CPP file stat5[0]51->45; newreaderV3/runtime9 source579/636 and77CPU rootPASS13.460s, peerpending.
 VERDICT -> Reviewed V10 source ready for actualwhole preparation/model qualification, notcache/math/speed/shelf proof. Actual QSA V3admission must precede observerGPU. Alloriginal objective requirements remain active.
+
+## 2026-10-11: Three original dispatch source identities associated explicitly
+
+CONFIG -> FrozenreaderV3 dfa94dfc/579 andruntime9 a8eea0b6/636; exact threeCPP source association with oldcurrent-source gatefalse. Alloriginal math/bytes/flags/reports remain immutable.
+COMMAND -> Rootfull579/636 SHA/ASCII/AST and77CPU PASS13.460s; independentpeer579/35CPU0.252s and636/77CPU13.535s. Actualnewrootadmission16524 using matchedOMP/MKL/OPENBLAS1/NUMEXPRabsent.
+RESULT -> Authenticboundedconstructor diagnostic21.56s confirms fourpreviousprerequisite conjuncts exact; only verify/prefill/generate CPP stat5[0]51->45 differs, allsource hashes/inode/size/timestamps unchanged. New source validates exactpaths/currentbytes/remount; no equality/stat/read patch oroldNNruntime transfer. Actual16524/PID38435 confirmedlive; no admission result yet. CompletecacheV10prepare99592 terminal0; GPUlaunch waits actualreference actor.
+VERDICT -> Sourcepeerready checkpoint, authenticreference andGPUobserver qualification pending. Keep originalV1/V2 failedadmissions and frozenruntime7/8. Fullgoal/math/cache/streams/profile/latency/shelf remain open.
