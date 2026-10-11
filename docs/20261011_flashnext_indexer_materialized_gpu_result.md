@@ -37,3 +37,14 @@ layer decode and prefill, including actual scratch allocation, stride and graph
 lifetime. Full cache/concurrency/placement/profile/interactive latency/shelf
 requirements remain active. Whole cacheV11 session66431 acquired pair leases
 after37443 retired; no overlapping GPU actor was launched.
+
+CONFIG -> Same completed original helper and immutable source/fixture.
+COMMAND -> Independent public reader88302 completed terminal0; actual
+f17/indexer-materialized40-v3-public-binding-v1.json SHA256
+953b5fa16e183f6173bac7801d1553bb0d70e82278dd3314e35c50245c25b686.
+RESULT -> Original parent report and full comparison rejoined, actual own
+half conversion observed. Public full_model_math_qualified,
+normal_model_graph_qualified and latency_qualified remain false. Raw-map
+independent mapped-library roster reconstruction remains explicitly false.
+VERDICT -> Isolated producer/public storage qualification closes. Actual
+model integration and original48 fidelity remain outstanding.

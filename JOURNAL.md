@@ -15304,3 +15304,10 @@ CONFIG -> Reviewed source40 isolated materialized storage, original weights/refe
 COMMAND -> Original37443 terminal0/691s/PASS5cbea445ba75ed22c3d18c61f2fc14831b321c69e27f2f0ebc53fa29d0c16794; root195artifact edges rehashed and separate74-byte-file rounding audit retained. Independent publicreader88302 live.
 RESULT -> All18 direct/two-replay frames,512 half/expanded values, complete materialized all3 API states and wrongrawshadow discriminate PASS. Normalowned/prepoststrict+compiledpair/kernel/freshfour/source gatesPASS. Existingwholecache66431 acquiredpairlease andfirstactorprehealth started. Actualspeed startup inventories show one8092resident/16484mirrored(51660083200B), pair17041resident/7535mirrored(23557120000B); these are counts, not transfer costs/hit rates.
 VERDICT -> Isolatedcandidate works forsuppliedinputs; integratedmodel/originalfidelity/compiler cause/performance remainunqualified. Curated result docs/20261011_flashnext_indexer_materialized_gpu_result.md. Source41 callercoverage andsource40 chunk64/512 control workcontinue inparallel, no newregistry/model changes. Fullgoal active.
+
+## 2026-10-11: Independent materialized indexer public qualification closes
+
+CONFIG -> Same immutable source40 helper, independently owned original fixture and completedparent5cbea445.
+COMMAND -> Publicreader88302 terminal0/PASS; actualindexer-materialized40-v3-public-binding-v1.json SHA953b5fa16e183f6173bac7801d1553bb0d70e82278dd3314e35c50245c25b686.
+RESULT -> Producer/public fullcomparison andactualhalf conversion rejoined; originalmodelmath/normalmodelgraph/latency/rawmaproster independence remainfalse. Clean upstream fb58e0 tree rootverifiedtrackedclean: iq_pack.py HC projectionsBF16 andSYCLfused_gr.cpp1882 Q8readsnotbuilt. ExactQ8/F32HC isoursource40 path; no compatibilitypack authorizedasoriginalfidelitybaseline.
+VERDICT -> Isolatedstorage qualification closed, source41 fullcaller integration andfreshmodel/originalreference qualification stillrequired. Actualwholecache66431 remainslive with firstleafowned. Chunk64/512 sameartifact performancecontrol inprogress; noRAMspill-only speedattribution. Fullgoalactive.
