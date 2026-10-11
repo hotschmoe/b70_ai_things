@@ -1784,3 +1784,20 @@ nine cache families, persisted state and actual four/six active slots remain
 additional mandatory evidence; two-slot source readiness cannot close them.
 VERDICT -> Continue original fidelity, serving/cache/concurrency and latency
 work. Build/source/component evidence does not qualify a production shelf.
+
+## 2026-10-11 - Warm capture control failure and real CLI fixture
+
+CONFIG -> Short54 warmup/selected GEN4, actual named start-paused session,
+unchanged SDK43 and current173. Full original goal remains unchanged.
+COMMAND -> Warm parent45943 failed1584s/reportff5c1662. OFF two requests and
+same-process graph reuse passed; ON paused-state observation and warmup passed,
+then resume CLI refused its missing session argument before selected GEN.
+RESULT -> Failure diagnostics retained; ON forced cleanup137, final health
+and fresh full4 passed. Corrected helper uses `unitrace --resume SESSION`.
+Actual CPU-only synthetic1024B IPC fixture70685 passed: installed CLI
+pause0->1/resume1->0, missing-object helper refusal, no GPU/model payload,
+normal container/IPC removal. Receipt2bfaa4ac and insideac2fc4f3 are retained
+under F17/pti-temporal-nodri-fixture-v2. This is control syntax/state evidence,
+not a model profile. Corrected successor must requalify actual model runtime.
+VERDICT -> Warm timeline still missing. Full model math, cache/active streams,
+tier traffic, natural latency/fairness and verified shelf remain incomplete.
