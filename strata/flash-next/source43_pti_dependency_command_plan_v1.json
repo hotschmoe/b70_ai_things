@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "status": "SOURCE-ONLY pending root no-device metadata/census; runtimeReady false",
+  "image": "sha256:c388186da30785b302c9c76c0ce8ca5e5351c9783c628177f6f7b9eed2f4ad17",
+  "fresh_install_root": "/mnt/vm_8tb/b70/build/pti-unitrace-model-finalizer-c388-build-v1/install",
+  "fresh_build_receipt_sha256": "54a47028897d6fe51e35a8d98a70189fa6f5352a7c2ed80f115a453f54e20d1f",
+  "expected_tool_sha256": "d6595250aacaa82e3c330d8e235a493bf07040c9d8a08155d534a3b40fb56b2d",
+  "expected_injection_sha256": "f2b1e3c2048d6afdf03bb197d9c24167abc764725ba892f77b712a262dbf7178",
+  "no_device_recipe": {
+    "network": "none",
+    "user": "1000:1000",
+    "cpus": 1,
+    "memory_bytes": 536870912,
+    "memory_swap_bytes": 536870912,
+    "pids_limit": 128,
+    "read_only": true,
+    "device_requests": [],
+    "devices": [],
+    "group_add": [],
+    "mounts": ["FRESH_INSTALL:/pti:ro", "NEW_METADATA_OUTPUT:/results:rw"],
+    "clock_profiler_finalizer_flags": "all UNITRACE_* flags and LD_PRELOAD absent during inventory"
+  },
+  "commands": [
+    ["/pti/bin/unitrace", "--help"],
+    ["/pti/bin/unitrace", "--version"],
+    ["/usr/bin/ldd", "/pti/bin/unitrace"],
+    ["/usr/bin/ldd", "/pti/lib/libunitrace_tool.so"],
+    ["/usr/bin/readelf", "--wide", "--dyn-syms", "/pti/lib/libunitrace_tool.so"]
+  ],
+  "required_exports": "Every resolved ldd DSO original_container_path plus readonly complete backing bytes to a new regular exported_host_path, SHA, size, dev/inode/stat before/after; current dependency source/image/tool/library joins; no model files mounted or read.",
+  "mapped_census_future_boundaries": ["after_READY", "after_last_DONE_before_QUIT"],
+  "mapped_census_helper_mount": "pti_mapped_injection_census_v1.py:/pti-census.py:ro",
+  "mapped_census_original_path": "/pti/lib/libunitrace_tool.so",
+  "process_memory_or_LevelZero_handle_proof": false,
+  "future_native_source_generation": 43,
+  "source41_proof_transferred": false,
+  "runtime_ready": false
+}

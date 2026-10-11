@@ -15919,3 +15919,23 @@ VERDICT -> Actualbasic tool/image/dependency metadata passed; source43 upload/
 model runtime, actualmapped beforeafter census andcomplete GPUprofiles still
 pending. Originalhead discrepancy remainsunqualified; stagedzeroL0GDN and
 fixedinput Q8 cases nowprepared usingexisting capture fields. Fullgoalactive.
+
+## 2026-10-11 Reviewed own-Q8 intake and mapped backing-file census
+
+CONFIG -> Source-only own layer3 quantizer intake and future43 mapped helper;
+no runtime proof borrowed from source41 or synthetic fixtures.
+
+COMMAND -> Root/peer combined11CPU PASS0.016s each; Q8plan5b8bfa3a all692
+source+3actualsemantic anchors andcensusa94e2c97 all7sources verified bypeer.
+
+RESULT -> Exactfour acceptedIDs/position/predecessor/role/dims/finite rawbytes
+and originalproducer beforeafter required for ownmixed2560/gated6144. No
+nativeoperand replacement into originalreference. Census ties actualPID1
+start, mappeddev/inode/path andread-only backingELF export to sourcebytes;
+originalcontainerpath separatehostexport, originalownedDockerexec retirement
+retains lease throughactualclientcompletion. Actorwiring notimplemented.
+
+VERDICT -> Narrow source/CPU ready only; no process-memory/L0/symbolorigin/
+actualmapped/GPU/runtime authority. Fresh43 oracle/upload andactualzeroL0/
+Q8 probes remainneeded. Existing numericalfidelity discrepancy unchanged;
+whole campaignactive.
