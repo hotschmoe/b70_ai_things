@@ -20,12 +20,16 @@ Latest continuation state (2026-10-11):
   Failed root: F17/source45-grouped-f16-model-v1-run-v1.
 - Source47 corrects the ordinary-heap metadata allocation concern with host
   USM and shared ownership/context-only cleanup. Cause remains unconfirmed.
-  Its fresh all8 NoDri build is LIVE through bin/gpu-run; inspect processes and
-  latest /mnt/vm_8tb/b70/build/strata-native-hc-engine-*/build.log/receipt.json.
+  Its fresh all8 build PASSED (304s), all72/all8 rootverified; SDK is
+  /mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T223956Z-0b555kgw,
+  receipt31a2227f. Larger-ne single/twoqueue GPU fixtures PASSED, each six
+  cases with exact outputs/owned retirement/posthealth/no kernel faults.
+  Corrected47 model OFF/ON run is now LIVE through bin/gpu-run: inspect
+  F17/source47-grouped-f16-model-v1-run-v1/report.json and owned processes.
+  Do not duplicate that launch or presume model PASS from fixture passes.
   Proposal: strata/flash-next/native47-grouped-f16-usm-engine-build-proposal-v1.json.
-  First run kernels/prefill_grouped_f16_harness_v2.cpp larger-ne single-queue,
-  then two-queue controls against fresh47 after healthy close. No model retry
-  before that. New46 HC rowbatch source exists but is uncompiled; grouped45
+  Fixture evidence is in F17/grouped-f16-operator47-singleq-v2 and
+  grouped-f16-operator47-twoq-v2. Assess the live corrected model next. New46 HC rowbatch source exists but is uncompiled; grouped45
   muststay0 if investigating that unrelated branch.
 - Independent original first HC computation PASSED with fresh identity close.
   Original packet differs one scale byte; allcodes/sumbytes match. Conditional

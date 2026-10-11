@@ -17349,3 +17349,26 @@ Source46 HC Q8 rowbatch weightreuse candidate source-only and defaultOFF;
 its old45 grouping mustremain0 before unrelated tests. Handoff updated.
 VERDICT -> Repair concrete unsupported allocation concern before new model.
 Fullfidelity/cache/streams/physicaltraffic/latency/shelf and2000/50 stillopen.
+
+## 2026-10-11: Corrected47 high-ne and two-queue GPU controls passed
+
+CONFIG -> Actual47 hostUSM Info/shared event-gated ownership; same grouped
+GEMM math/strides. Exact all72/all8 root rehash passed, build304s, receipt
+31a2227f167dac12c326c22faa7c550940b7e8fb3f892bc1a63ea9e0647cc4d7.
+COMMAND -> NoDri V2harness compile25s/ELF56aa6c58; actualcard0single
+28156 PASS42s then twoqueue41250 PASS41s, eachwithpre/posthealth and fresh
+kernel-log fault refusal.
+RESULT -> Each six cases GU/down/partialgroups/ne16,32,48,64 exactoutputs
+and asynchronous ownership/drain/removal passed; twoqueue adds ringreuse
+with copy->compute/used->copy dependencies and no uploadprewait. Synthetic
+copy is a dequant dependency stand-in, not complete real-model integration.
+REPORT -> grouped-f16-operator47-singleq-v2 SHA256 e49af46669b058a04b27bb231ce89c236fae790522bf5229a9b0c46fffa33cae
+REPORT -> grouped-f16-operator47-twoq-v2 SHA256 f0adcab7cc622f0a2732e4c907bf30ea9e35cc9362d6373b39747bc9258b8398
+
+COMMAND -> Actual50457 nowowns pairlease for corrected47 modelOFF/ON, same
+long524/pref64/ctx2048/default8/cacheOFF/MTP0/traceOFF/twoGEN4perarm.
+Actualbothcommandpreflight34b64ab6; compactsourceplane40e3b0b. Output
+F17/source47-grouped-f16-model-v1-run-v1. Original45fault retained.
+VERDICT -> Corrected allocation context passes stronger component tests;
+original faultcause and actual47 model behavior/performance still unproven.
+Fullgoal/fidelity/cache/streams/traffic/latency/shelf and2000/50 remainopen.
