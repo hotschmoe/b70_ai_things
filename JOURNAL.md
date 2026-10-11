@@ -16047,3 +16047,24 @@ VERDICT -> Actor source/CPU ready only. Prior V1/V2 and failed launches remain
 preserved. Profile actual per-card busy unions and critical-path gaps with
 clock coverage and observer overhead; rank changes by removable ms/token.
 No fresh model math, speed, bandwidth, stability or shelf claim follows.
+
+## 2026-10-11 Fresh43 masked helper actual GPU qualification
+
+CONFIG -> Actual SDK43, independently owned accepted-mask input, compiled
+helper with modes0/1, GPU0 workload and pair lease/health. No model serving.
+
+COMMAND -> Session31169 terminalPASS621s with original OMP/MKL/OPENBLAS1.
+Independent current upload-view reader1866 now reexecutes saved predicates.
+
+RESULT -> Report1672651dd5b9271ebd0be6225c6db13ebdce5d5743436adb83064cdbdafc7dbd
+at F17/source43-masked-runtime-v2/report.json: errors[], OFF24+ON24frames;
+direct/two-replays, all3 API states, accepted0/1/2 masks and grouped/scalar
+owners bitwise. Actual linked43 materializer bytes observed. Normal retirement,
+owned frees, per-card/compiled pair post-health and complete postfull4 pass.
+Public independent reader remains live; no final reader claim yet.
+
+VERDICT -> Fresh43 helper component runtime passed. Normal model constructor,
+original48 numerical fidelity, cache/concurrency, physical bandwidth/idle,
+interactive speed/fairness and shelf remain unqualified. NUM10V3 source and
+referenceV3 have passed root68 totalCPU checks and focused peer; fresh actual
+model diagnostic still requires closed current masked reader/preparation.
