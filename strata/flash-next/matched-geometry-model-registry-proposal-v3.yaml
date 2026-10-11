@@ -1,0 +1,24 @@
+- label: flashnext-strata-source40-matched-one-ctx2048-prefill64-ple65536
+  served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-prefill64-ple65536-seg1024-adapt0-borrow0-matchedgeometry1-srcintegrated25-40-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-prompt35-hosttrace36-batchstamp37-fullcache38-memory39-qsa40-OFF-gpu0
+  primary_client_id: hotschmoe-dd
+  family: qwen3.8-flash-next
+  weights: Unsloth-UD-Q4_K_XL-original-GGUF
+  activations: native-Q8_1-and-prefill-F16-BF16
+  serve_cmd: python3 strata/flash-next/matched_geometry_c140_diagnostic_v3.py launch
+    --prepared <new-matched-dir> --pre-health <parent-health-receipt>
+  notes: SOURCE proposal only. Matched ctx2048/prefill64/PLE65536; topology one48
+    vs pair32/16. Stable hotschmoe-dd first. No old runtime/math proof transfer, no
+    shelf or hardware-only speed claim until actual cross-topology numerical and source/health/teardown
+    gates. Registry append blocked while original171 consumers active.
+- label: flashnext-strata-source40-matched-pair-ctx2048-prefill64-ple65536
+  served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-prefill64-ple65536-seg1024-adapt0-borrow0-matchedgeometry1-srcintegrated25-40-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-prompt35-hosttrace36-batchstamp37-fullcache38-memory39-qsa40-OFF-gpu0-1-split32-16
+  primary_client_id: hotschmoe-dd
+  family: qwen3.8-flash-next
+  weights: Unsloth-UD-Q4_K_XL-original-GGUF
+  activations: native-Q8_1-and-prefill-F16-BF16
+  serve_cmd: python3 strata/flash-next/matched_geometry_c140_diagnostic_v3.py launch
+    --prepared <new-matched-dir> --pre-health <parent-health-receipt>
+  notes: SOURCE proposal only. Matched ctx2048/prefill64/PLE65536; topology one48
+    vs pair32/16. Stable hotschmoe-dd first. No old runtime/math proof transfer, no
+    shelf or hardware-only speed claim until actual cross-topology numerical and source/health/teardown
+    gates. Registry append blocked while original171 consumers active.

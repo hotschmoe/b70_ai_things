@@ -15241,3 +15241,10 @@ CONFIG -> Reviewed materializedV3 source3958e2ba, independently owned original f
 COMMAND -> CPU-only prepare51670 terminal0 at indexer-materialized40-v3-owned-inputs-v1; root raw/gamma/sourceplan receipt SHA edges rechecked. InputbindingSHAbe36c23b8db19fa8d6c7e36ee086935953e8375acb671c47e0d07746c4841043.
 RESULT -> Five-file exact fixture produced, fullmodelmathfalse. ActivepairQSA1602 prefull4 allfourPASS; OFF four requests completed but childfinalteardown result notyetpublished. Cache52745 remains queued. MatchedV2 root18SHA/ASCII/AST/13CPU PASS1.414s butpeerHOLD on prelease/legacy-return metadata read-boundary gap; minimalV3 successor in progress, canonical171 unchanged.
 VERDICT -> Concrete isolated input prep ready for laterroot compile/GPU, notstorage/model/cause qualification. Preserveheld matchedV1/V2 and finishV3 byte-boundary checks before matchedruntime. Fulloriginalgoalactive.
+
+## 2026-10-11: Matched geometry V3 source ready without live registry change
+
+CONFIG -> Same source40/weights/quant/runtime and common2048context/64prefill/65536PLEcache for one48 andpair32/16 topology. V1/V2 held startup/read-boundary gaps preserved.
+COMMAND -> Root finalV3 23SHA/ASCII/AST PASS and17newCPU PASS1.477s; independent23bindings/36CPU PASS1.978s includingunchanged19SSEcontrols. Plan5fec2d8951c99dde6407ef86465075a0c9a5e32d1ba89ed3cf10db688015cefb.
+RESULT -> Complete typedcfg/runtime/receipt/image/cards/port/profile/alias joins andfreshsmallbyte snapshots before/after legacyvalidation preventforeignreturnedimage/cards, interveningwrites andwrite-restore. ExplicitnewV3namespace/source/PLAN reacheslaunch; actualqualification.json prerequisite remains. Canonicalregistry171 unchanged; exact171+2 futureproposal only. Activepair OFF resultpassedTrue/errors empty/fourrequests; ONpreparation live, no wholepairqualificationyet.
+VERDICT -> Reviewable source-only matchedcontrol ready after active171 consumersfinish androotdeliberately registersnewaliases. No modelpayload/ABI/GPU/performance proof fornewcontroller. Fullcache52745 queued, materializedfixture51670 completed; fulloriginalgoal active.
