@@ -17318,3 +17318,21 @@ terminal/removal and numerical tests support bounded component scope.
 VERDICT -> Per-call float-mode probes replace costly per-FMA Python calls
 for later independent HC rows; no actualmodel speed gain or full48 numerical
 claim. Current model45 GPU comparison26611 remains live and separate.
+
+## 2026-10-11: Grouped model integration GPU fault, no optimization promotion
+
+CONFIG -> Actual SDK45 groupedF16 OFF/ON, long524/pref64/ctx2048, native
+MTP0/cacheOFF/traceOFF/LPomitted/default8, two fresh GEN4 per process.
+COMMAND -> Actual26611 FAILED1128s; reportSHA d9eb3601c46e6d01da0c626d15eb62d624e1600dabad5021d7164bd33f5d5e58
+RESULT -> OFF passed2requests, warmPP15614.5ms/33.6input tok/s, fouroutputs
+366.1ms/10.9output tok/s. ON completed0requests, stalled firstchunk then
+engine_exit139; no forcedcleanup. Xe0b:00.0 logged null/0x1000 VM faults
+and CCS engine reset22:10:58; libsycl CPUsegfault22:12:05. Actual final
+strict/compiledpairhealth and fresh full4 passed, but kernel-fault gates fail.
+Neither working fixture nor posthealth exonerates this failed integration.
+VERDICT -> No grouped speed/math/stability claim, no unchanged model retry.
+PrimaryIntelUSM contract exposes ordinary-heap matrix pointer-array concern
+in current make_sharedInfo; not yet a proven cause. Source-only corrected
+USM metadata allocation and high-ne16/32/48/64 single/two-queue fixture are
+being prepared before another model. HCrowbatch46 remains source-only,
+grouped45 flag muststay0 in that unrelated candidate. Fullgoal active.
