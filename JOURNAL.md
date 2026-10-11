@@ -15811,3 +15811,23 @@ ON/H36OFF. Its owning P30/SFD shutdown doesnotdepend onH36atexit.
 VERDICT -> Freshprofilerbuild qualifiedonly; nofilledruntime/device/capture
 orlatency authority. Tool finalexport acrossnative fast_exit andmappedDSO
 census remainrequired. Originalnumericcomparison stillpending; fullgoalactive.
+
+## 2026-10-11 Source42 explicit host-trace terminal CPU qualification
+
+CONFIG -> Exact two-file shutdown-only patch42 on frozen source41; normal
+fast_exit preserved, no arithmetic/GPU query/wait changes. PTI closure separate.
+
+COMMAND -> Root/peer five sourceCPU PASS0.093/0.094s, all14 bindings exact,
+plan203adde98. Root compiled actual C++ header fixture with pinned C388 icpx
+2026.1 in noDri owned container; actual fast/natural exit with ON/OFF.
+
+RESULT -> All4 casesPASS: ON emits exactly1SESSION/1CLOSED/1file after repeated
+explicitclose andlateratexit; OFF emitsnone andownsno ring. Receiptc3d0e4a24074b7d1bb3401b58d96b12a6b5735a7df9a5dd9cb7de2f30da8a5d6
+at B17/host-terminal42-cpu-header-root-v1/receipt.json. Normalownedremoval,
+actual compiler/source/binary hashes preserved. Root39182 actualfidelityV5
+stilllive inintake; no concurrent GPU action inheader test.
+
+VERDICT -> RealCPU headerlifetime qualifiedonly; fresh42 all8ABI/source/upload/
+model qualification remainrequired. PTI Fini/Chrome/clockwriter exports are
+also skippedby_exit; separatelyversioned explicitdiagnostic finalizer needed,
+notfixed by42. Oldruntime/source41 evidence unchanged, no model/speed claim.
