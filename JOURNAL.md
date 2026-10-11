@@ -16143,3 +16143,28 @@ VERDICT -> NUM10actual model result pending. Device properties alone do not
 calibrate clock alignment, provide model-operation counts or establish idle/
 bandwidth. Actual model/PTI finalizer/mapped-census/runtime and all fullgoal
 math/cache/concurrency/placement/interactive/shelf gates remain required.
+
+## 2026-10-11 Current43 quantizer fixture and profiler intake ready
+
+CONFIG -> Exact original goal remains active. Fixed-own-input primitive and
+LPdisabled profiler control are diagnostics, not original-model qualification.
+
+COMMAND -> Root Q81V2 plus retainedV1 CPU controls PASS59tests0.813s; peerV2
+46tests0.699s/all727hashes. NewV2 fixes current-use SDK/helper/fixture rosters;
+V1 remains held. Root fixture94435 terminalPASS from original layer3 producer,
+role output_gated, with original OMP/MKL/OPENBLAS1. No Q81GPUhelper launched.
+
+RESULT -> Fixture F17/own-q81-quantizer43-output-gated-fixture-v2 raw
+571445cbb91f74830867fd97c26a2255dfeb9a4447f020947f3c8c27d78b6f3a.
+PTI43source212a3935/195 root29CPU0.335s/peer0.323s; actualruntimeprepare and
+public binding pass, intake F17/source43-pti-runtime-intake-v1.json SHA
+ d2c910a5ee4fe855e8938ff7e62bba68ee81b97ef1440358b839a413788c855d.
+Actual current finalizer bytes/nine exported DSOs/GPU0property joins passed;
+no loaded model census/finalizer/Chrome trace has executed. NUM10OFF model
+phase4fresh/MAX1 produced846 each and phase/retirement passed; parent70565
+remains live with ON arm pending, so no complete observer equivalence result.
+
+VERDICT -> Fixture and runtime intake ready. Normal43 model-control/public
+admission is still required before PTI capture; root sole GPU coordinator.
+Actual Q81compile/runtime/public admission and NUM10ON/original reference
+remain required. Fullmath/cache/streams/placement/latency/shelf stay open.
