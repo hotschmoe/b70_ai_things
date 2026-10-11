@@ -17268,3 +17268,38 @@ ready using fresh publisher identity and saved comparison targets only.
 VERDICT -> Actual operator compilation progressed; math/runtime/speed unproven.
 No extra390 observer oracle required solely for this operator source delta.
 Full original fidelity/cache/concurrent latency/fairness/shelf and2000/50 open.
+
+## 2026-10-11: Balanced pair closed, actual grouped operator and HC seam verified
+
+CONFIG -> Source43 traceOFF balanced24/24/default8/shortread0, short54/twoGEN4.
+COMMAND -> Actual79067 PASS379s/report2e1657c2; independentpublic84455
+PASS4f182d653ee887157eea846f3a7d79dbd2af5c364e8e858e7d0f3e1d5dd440b5.
+RESULT -> Warm nativePP936.8ms/four-output245.9ms(~16.3output tok/s), IDs
+760/2919/10458/369 unchanged. Resident18185(primary9210,secondary8975),
+versus8092single. Normal teardown/health/full4 pass. Relative single comparison
+changes topology AND trace flag; no pure hardware or sustained speed claim.
+
+CONFIG -> Actual source45 grouped mixedprecision GPU operator, synthetic only.
+COMMAND -> NoDri standalonecompilePASS26.5s, ELF02e17a24; actual6963 card0
+lease/affinityPASS40s, six actualshape/variable-ne/partialgroup cases.
+RESULT -> Exact known dyadic outputs, asynchronous metadata retirement,
+normalowned removal and pre/postcard0health pass; report26d92e8f. No rates.
+
+CONFIG -> Independent original embedding->HC F32 candidate, four saved NUM38
+targets, fresh identity99f9068f, no native operands into primary math.
+COMMAND -> Actual66797 CPU PASS94.93s including new complete publisher close,
+report e62ef3552a9ee8a94aa42330b80e5e930458d22b693ac7b1cd89e0762411b170.
+RESULT -> Embedding/residual bitwise; normalized/mixed NMSE1.327e-14/1.619e-14.
+Own first Q81 packet differs one scale byte at2124; zero code/sum byte changes.
+Conditional capturednative mixed->independentencoder exactlymatches native
+packet. This narrows first packet seam to upstream arithmetic, not missing
+encoder. Full model numerical qualification remains open.
+
+COMMAND -> Actual26611 nowlive pairedlease for fresh45 groupedOFF/ON long524,
+prefill64/ctx2048/cacheOFF/MTP0/LPomitted/traceOFF/twoGEN4perprocess.
+Sourceplan055e4421 binds10minimum runtime refs plus genuine72source/8ABI
+receipt5fdc05b5; actualbothcommandpreflight54414e81 passed. Output
+F17/source45-grouped-f16-model-v1-run-v1.
+VERDICT -> Larger placement gain and real operator/fidelity progress. Current
+minimum2000prefill/50decode unmet; originalfullmath/allstatecache/concurrency/
+latency-fairness and reproducible verifiedshelf remain active requirements.
