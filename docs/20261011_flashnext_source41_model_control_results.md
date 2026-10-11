@@ -92,3 +92,27 @@ trace budget plus actual EOF counters. Prior matching traced captures were
 46.6..53.7MB; proposed128MiB/300000-line/1MiB-line limits are headroom only.
 Cheap lifetime preflight will precede heavy admission in a separate successor;
 successful comparisons must still retain all original admission gates.
+
+## 2026-10-11 - Trace-enabled V5 capture and original comparison pending
+
+CONFIG -> Same fresh source41 mode1, four literal-prefix4/MAX1 requests,
+original model/SDK/reference and unchanged owning-lifetime/numerical gates.
+
+COMMAND -> V4 UR2 attempt hit300000-line cap and was preservedfailed; V5
+fidelity-only cap1000000lines/128MiB/1MiBline. Actual39182 terminalPASS1129s,
+report113c194ef4c1cc0932575ef97d3fefd5291ced888cdad9fe307d73133480561b.
+Root metadata-only owningUR preflight passed in0.414s, receipt8411ea786649c089046e170f72efdd08dab17f8ca2ae4ac62057e5b5591bad7e.
+
+RESULT -> Actual4requests/12QSAframes and complete SFD/P30/input artifacts.
+Recorded/observed47577228B/395954lines exactlyequal, maxline1123, EOFtrue,
+return0 and noforcedcleanup. Normalownedretirement/removal, perarm/final
+full4/page/health/kernel/source passed. Native capture is not original math.
+EnclosingV3 reader30061 islive against independent original reference.
+
+VERDICT -> Owning-lifetime capture prerequisite closed; numerical comparison
+remains pending. HostV2 LP20 capture separatelyfailed terminalH36 ownership:
+native _Exit skipped atexit SESSION/free. Source42 explicitidempotent host
+cleanup passed compiledCPU on/off fast/natural tests, but freshGPUengine
+qualification remainsrequired. Fresh PTI budgetbuild passed; native_exit also
+skips PTI final exports, so separatetool/native43 finalizer and mappedcensus
+are stillrequired. No cleanlatency/bandwidth/API/shelf promotion.

@@ -1597,3 +1597,29 @@ Original full48 fidelity, materialized mode1, complete-state cache runtime,
 all requested stream counts, physical tier traffic, normal profiling and
 natural latency/fairness gains, API identity and verified shelf remain open.
 No completion or serving-speed promotion.
+
+## 2026-10-11 - Complete UR model capture, shutdown gaps and remaining scope
+
+CONFIG -> Full original campaign unchanged: exact UD-Q4_K_XL, two B70s+RAM,
+full original fidelity/all-state cache, actual1/2/4/bounded6 streams, measured
+placement/criticalpath and naturalinteractive latency/fairness with stableAPI
+and reproducible verifiedshelf.
+
+COMMAND -> Source41 mode1 V5 capture39182 PASS1129s and unchanged owningUR
+preflightPASS. See source41_model_control_results.md for exact receipts.
+
+RESULT -> Four actualrequests/12QSAframes, complete395954-line47.6MB trace,
+normalownedretirement/EOF and freshfull4/health/source gates passed. Original
+comparison30061 stilllive; no numerical/fullmath qualification yet. Separate
+LP20 hostcapture failed requiredterminalmarker because native_exit bypassed
+H36atexit. Explicit hostshutdown patch42 passed actualcompiledCPU fixtures,
+notfreshGPUengine. PTI's finalChrome/clock exports need a distinct explicit
+finalizer despite freshbudgetbuildPASS. Existing cacheV12 is source40 with
+ONLY2 active slots; six selectedRIDcaptures do notprove sixconcurrent streams.
+Source41 persistentstate audit found no demonstrated missingcopy, but actual
+mode1 cache/fresh/history/accepted-row boundaries stillneed qualification.
+
+VERDICT -> Real capture and lifecycle-localization progress; every fullgoal
+requirement remains in scope. Originalmath, newsource43 GPU/tool qualification,
+completecache/streams, physicaltier traffic/idle attribution, matchednatural
+TTFT/gaps/completion/fairness gains, stableclientAPI and shelf remainunproven.
