@@ -38,3 +38,18 @@ nested intervals or infer physical idle from host waits. Test promising
 controls in repeated matched real-model runs with original-reference and
 quantized-packet checks, normal completion, health and teardown. Use removable
 critical-path time to decide between fusion, kernel tuning and placement.
+
+## Warm-window collection source correction
+
+CONFIG -> Fresh sampled-tool source, no actual warm-window runtime yet.
+COMMAND -> Inspect `tools/unitrace/src/unitrace.cc:1152-1155` and
+`tools/unitrace/src/levelzero/ze_collector.h:6151-6163` in
+`/mnt/vm_8tb/b70/build/pti-unitrace-sampled-query-source-v1`.
+RESULT -> The launcher calls TemporalPause for the named session before
+target execution when start-paused is requested. Graph Stage and Submit both
+check IsCollectionEnabled. Inspecting CreateTemporalControl alone missed the
+following explicit pause. An existing supported pause/resume route is therefore
+a source-backed candidate for excluding warmup, without another tool rebuild.
+VERDICT -> Actual warmup exclusion, retained graph replay coverage, named
+session ownership and control-state chronology still require a separate run.
+The cold GEN4 actor remains unchanged and grants no warm-decode authority.
