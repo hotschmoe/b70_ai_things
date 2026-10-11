@@ -17408,3 +17408,23 @@ VERDICT -> USM Info repair and component controls did not qualify full-model
 grouping. Keep grouped F16 disabled for independent HC46 and staging48
 experiments. No speed/stability/fidelity claim, no unchanged grouped retry.
 Source-only multiple-chunk lifetime localization requested.
+
+
+## 2026-10-11: grouped47 failed close and independent bulk reference launched
+
+CONFIG -> Corrected47 grouped model OFF/ON, original524/GEN4 mode0.
+COMMAND -> Actual50457 terminal1138s/exit1, no unchanged retry.
+RESULT -> Report6558b6ef467d84dcd7429ddd20eb47425f58bfbf4ed05467b093e82373c8164e
+FAILED with actual kernel fault signatures. ON engine139; container removed.
+Final strict/compiledpair health passed and completefour publisherhashes passed
+(identity94eee0a95cdeeadcfb808fc050a3617aaf0648687015ee2f27ec37eed1727448).
+VERDICT -> Keep groupingOFF; componentPASS and recoveredhealth are not stability.
+
+CONFIG -> Explicit independent CPU firstHC bulk backend83c289, oldscalar e62e
+reference outputs only; original embedding/HC inputs/weights recomputed.
+COMMAND -> Actual61890 launched with final47 identity, output
+F17/original-first-HC-bulk-vs-scalar-v1; sevenowned outputs mustbitwisematch.
+RESULT -> Live, no numerical result yet. Source46 NoDri build94364 nowholds
+pairlease; source48 NoDri build5271 queued. Bothbuilds all8 from source.
+VERDICT -> Fast own-state reference and independent decode/prefill paths advance;
+full48math/cache/streams/physicaltraffic/latency/shelf and2000/50 remainopen.
