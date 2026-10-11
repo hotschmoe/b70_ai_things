@@ -16024,3 +16024,26 @@ Noactualreference/GPU/model math computation from these adaptertests.
 VERDICT -> Preserveallheldversions. MaskedGPU51997 live; model/referencelaunch
 requirescorrectactor/adapterintegration plusclosedactualmasked evidence.
 Originalhead error persists andfullcampaign/shelf remainunqualified.
+
+## 2026-10-11 Latency priority and corrected masked43 launch
+
+CONFIG -> User requests latency and bandwidth saturation analysis across the
+complete request path, including idle gaps, launch counts, fusion and actual
+GEMV/GEMM shapes. Synthetic resident/no-op controls remain diagnostic only.
+
+COMMAND -> Preserve masked runtime v1 environment refusal: launcher omitted
+OMP/MKL/OPENBLAS thread pins. Retry session31169 uses all three original pins
+at1, no added NUMEXPR, fresh source43-masked-runtime-v2 output and pair lease.
+Root NUM10 V3 CPU command runs the seven declared unittest modules with the
+same pins. Focused peer checks all162 source bindings and inherited closing
+attributes. CPU-only PTI43 integration audit delegated; no parallel GPU job.
+
+RESULT -> Root46CPU PASS2.879s; peer46CPU PASS2.914s for frozen7772809b actorV3.
+Masked runtime v2 remains live, complete pre-full4 present and strict health
+started; no terminal GPU/helper result yet. Existing logprob source finding
+requires omitted GEN field to disable full-vocabulary readback/CPU work.
+
+VERDICT -> Actor source/CPU ready only. Prior V1/V2 and failed launches remain
+preserved. Profile actual per-card busy unions and critical-path gaps with
+clock coverage and observer overhead; rank changes by removable ms/token.
+No fresh model math, speed, bandwidth, stability or shelf claim follows.
