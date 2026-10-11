@@ -16813,3 +16813,19 @@ Public passes narrowdeclaredscope whilemodel-completecoverage/idlefalse.
 VERDICT -> Honesthostdiagnostics/controlclosure, notcleanservingspeed,
 GPUidle/bandwidthorfullmath. Tinyloadedregular-listrepairfixture next;
 fulloriginalgoalactive. Detailsdocs/20261011_flashnext_warm_v2_observed_latency_and_coverage.md.
+
+## 2026-10-11 Actual masked44 parent passed; NUM38 V2 and tool build advance
+
+CONFIG -> Actual44 SDK806/upload4c/oracle190/ownQSA fixture, current173.
+COMMAND -> Parent89432 terminalPASS619s/report02e57252a93ae37715928732b5c1456f6940ed4f2bf680ef6d8011abe65390c7.
+Independentreader59834LIVE. Freshpausedtoolbuild98013 acquiredpairlease
+afterparentterminal, CPU-onlynoDri2CPU4GB; actualcreatorinspection recorded.
+NUM38V297170326 all883sourcebindings/root11CPU0.349PASS; checkpoint
+5dae918 pushed. GenuineNUM38CPUintake59807LIVE originalthreepins.
+RESULT -> Masked48 actualOFF/ONdirect/replay fields/restoration/graphretirement/
+ownedfree andpostpercard+compiledhealth/full4 closed. Public stillpending.
+V2 corrects7048460 snapshot allocation grammar andrejectsold7023304/foreign
+context, preservesV1. Toolbuildnormalcreatorpath live; focusedreviewfound
+attemptedPopenexceptionambiguity inunusedfailurepath, named successor needed.
+VERDICT -> Actual component progress, notoriginalfull48 math/NUM38modelPASS/
+completeprofile/cache/streams/tiertraffic/servingqualification. Fullgoalactive.
