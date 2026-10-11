@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "scope": "provisional client/native host timer diagnostic with original C140 owned lifecycle; not model math or shelf qualification",
+  "files": [
+    {
+      "path": "strata/flash-next/provisional_speed_screen_v1.py",
+      "sha256": "5d9ade642fc907967788864881775a41cb57a3c6cb5d02c95b7122ad0d2966fa",
+      "bytes": 9140
+    },
+    {
+      "path": "strata/flash-next/run_provisional_speed_screen_v1.py",
+      "sha256": "2eaf7e6705a2b825a7b1df05b2e95a1f57502afbd9f38143c3580ecac98f0745",
+      "bytes": 8772
+    },
+    {
+      "path": "strata/flash-next/test_provisional_speed_screen_cpu_v1.py",
+      "sha256": "375950aaec50a2906ecc4090f7e1d79b6f04e261802ff3c670cb4a371a7b65f3",
+      "bytes": 3241
+    },
+    {
+      "path": "docs/20261011_flashnext_provisional_speed_screen_v1.md",
+      "sha256": "85db1876e4bae3c447643cafe08c2427537e9641bc81af75211339fb643d4e37",
+      "bytes": 4170
+    },
+    {
+      "path": "strata/flash-next/c1_serve_controller_combined_v140_v3.py",
+      "sha256": "5daa1f2d0c9d8c147202724314bc013889dfaf1a102fc04fb6ea021c454d78b4",
+      "bytes": 64298
+    },
+    {
+      "path": "strata/flash-next/qualify_c1_serving_combined_v140_v3.py",
+      "sha256": "0b896b29e3d689628655aab1279ee2dd63ca0406cd2d91fcde7cfd202405c2d9",
+      "bytes": 25448
+    },
+    {
+      "path": "strata/flash-next/run_source_upload_oracle_full_v2.py",
+      "sha256": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec",
+      "bytes": 20530
+    },
+    {
+      "path": "strata/flash-next/source_page_watchdog_v3.py",
+      "sha256": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+      "bytes": 1806
+    },
+    {
+      "path": "strata/flash-next/c140_journal_binding_v3.py",
+      "sha256": "207da0d1d707fc1e9c323aff55c0c2922d52a5b9f469433dc63e610927500b29",
+      "bytes": 6159
+    }
+  ],
+  "cpu_command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p test_provisional_speed_screen_cpu_v1.py",
+  "cpu_tests": 11,
+  "actual_GPU_run": false,
+  "actual_performance_measured": false,
+  "existing_parent_source_plan": "strata/flash-next/c1-combined-v140-parent-source-plan-v3.json",
+  "client_chunks_are_tokens": false,
+  "one_pair_hardware_only_comparison": false
+}
