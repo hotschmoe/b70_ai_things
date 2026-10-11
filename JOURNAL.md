@@ -16717,3 +16717,16 @@ upload/runtime/public/health/full4stillpending. Bare--helpwraprefusedwithout
 mandatoryoracleargs beforeGPU; noextra workload. WarmV2source fixesawaitseal.
 VERDICT -> Actualprerequisitework progressesNUM38, notmodelmath/profile/
 servingqualification. Fullcampaign remainsactive; no parallelGPUtests.
+
+## 2026-10-11 Warm V2 source closes real CLI and postrun report defects
+
+CONFIG -> Same43model/tool/math, onlynewhelper/actor/public sourceversion.
+COMMAND -> Root7625ace7250repo+6actualfixture+4toolanchors allSHA PASS;
+86CPUroot0.674PASS includingactualNoDri2bfaa/insideac2fc proof andreal
+postrunwrapperwithmissingfinalreport. Sourcepeerpendingbeforemodelretry.
+RESULT -> --resume NAME correct; originalV1/ff5c failure preserved. Producer
+postruncontrol predicate nowreceivesactualPID/start/source context insteadof
+readingreportfilethatdoesnotexistuntilfinally. Public originalowned joins
+remain; nofuturefilefabrication. Actual44upload7883stilllive solepairlease.
+VERDICT -> Correctedsource/fixture readiness, not warmmodeltrace/latency.
+Nextretryafteruploadclosure; fulloriginalcampaign remainsactive.
