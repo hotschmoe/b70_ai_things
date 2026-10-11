@@ -16520,3 +16520,17 @@ Toolproposal0d8303d8 actualnewABIbuild/runtimeintake/actorparser stillpending.
 API2plan0e1ab28b/843hashes and28CPUrootPASS1.038s; peerrequired beforegenuineprep.
 VERDICT -> Componentmeasurement advancescorrectness; coldGEN4 is firstbounded
 profilecontrol, not warmdecode/fullcoverage/bandwidth/speed. Fullgoalactive.
+
+## 2026-10-11 Fresh sampled-query tool build launched
+
+CONFIG -> Unchanged native43 model/math/SDK and actualtoolparent; newdefaultOFF
+query-bracket export sampling preserves all original GPUquery calls and every
+operation normalization. ColdfourGEN4scope separatefromfuturewarmprofile.
+COMMAND -> Rootbuilder469dde0b/13hashes and14CPU PASS0.042s; actualleased
+CPU-onlybuild12041 live withnoDridevices, sameC388/compiler/full895sources.
+Freshsource/output pti-unitrace-sampled-query-source-v1 andc388-build-v1.
+RESULT -> Configurecompleted; compilation stilllive. ActualnewELF/dependency/
+clockproperty/intake/actor/publiccapture remainpending. API3c3423f88/851hashes
+and36CPUrootPASS1.061s, allfourpriorpeerholesfixedsource, finalpeerpending.
+VERDICT -> Genuinebuild inprogress, nospeed/deviceprofiling/APIclaim.
+Canonicalregistry173 unchanged; defer174appenduntiloldintakesclosed.
