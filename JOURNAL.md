@@ -15724,3 +15724,22 @@ VERDICT -> Source/CPU ready only. Deferred helper still needs reviewed
 caller integration. Host analysis is ready after actualclosed parent and
 independent public admission; no nested-duration, physicalidle/bandwidth or
 cleanserving claim. All full original campaign requirements remain active.
+
+## 2026-10-11 Held bounded real-model PTI source prototype
+
+CONFIG -> Separate source41 LPdisabled PTI control, H36 in botharms. Fresh
+profiler runtime intake explicitly unfilled; no old ELF reuse or launch.
+
+COMMAND -> Root checked d1f293e0 plan/all144 bindings and sevenCPU controls
+PASS0.034s, then reviewed actual run_phase source before runtime integration.
+
+RESULT -> SourceV1 held: base.canonical references an absent module attribute,
+and raw watcher closes before leaf.stderr/hostcoverage writes. New V2 required
+for direct canonical import plus final postwrite total-budget enforcement.
+Original frozen prototype retained. Clock/Chrome port observes actual IDs
+instead of fixture counts, but model-source completeness, copy sizes and
+H36-to-LevelZero association remain unqualified. No GPU/build/model action.
+
+VERDICT -> Source prototype is not runtime ready. Fresh512MiB-budget build,
+ELFs/dependency/device receipts and corrected actor still required. Current
+LP20 host73892 unaffected; tracingON prefull4 passed, startup pending.
