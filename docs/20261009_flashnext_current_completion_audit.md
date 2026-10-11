@@ -1623,3 +1623,20 @@ VERDICT -> Real capture and lifecycle-localization progress; every fullgoal
 requirement remains in scope. Originalmath, newsource43 GPU/tool qualification,
 completecache/streams, physicaltier traffic/idle attribution, matchednatural
 TTFT/gaps/completion/fairness gains, stableclientAPI and shelf remainunproven.
+
+## 2026-10-11 - Numerical comparison result and fresh43 build status
+
+CONFIG -> Full original objective unchanged; no fittedtolerance or substituted
+reference operands.
+COMMAND -> Originalenclosing30061 completed/reportdb105c9c; independent audit
+1eb72af6. Freshfinalizer tool andnative43all8 built and sourceverified; actual
+noDri metadata help/version/dependencies/exports passed with9DSObytecopies.
+RESULT -> Comparisonmechanics passed but full_model_math_qualified=false:
+headNMSE.0078882465 andp3L47FFN.00810288 remain. Inputs/repeatedrows match;
+L3tail nowbitwise. FirstbitwisedeltaL0attention~1e-14, withp3amplification
+throughL3/L4. Nextprobes isolateQ8packing andzeroL0GDN usingexistingNUM10
+fields, no newnativecapturehook needed forfourfreshprefix1/MAX1 controls.
+VERDICT -> Source43build/basictoolmetadata are notfreshmodel/runtime proof.
+New43oracle/upload/modelcontrols, mappedinjection/completeprofiles, original
+fidelity/cache/actual1/2/4/bounded6/physicalplacement/naturalTTFT-gaps-fairness
+andstableAPI/verifiedshelf allremain required.

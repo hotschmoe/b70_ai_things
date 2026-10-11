@@ -15899,3 +15899,23 @@ reads. No actorintegration or actualspeedup claim.
 VERDICT -> Build/source scopes only. Fresh43 upload/ABI/model runtime, actual
 loadedtool census/completed output/device profiling, originalmath, complete
 cache/streams/placement/natural latency andverifiedshelf remainrequired.
+
+## 2026-10-11 Actual new-tool no-device dependency census
+
+CONFIG -> Newfinalizer tool d6595250/f2b1e3c2 in pinnedC388, read-only
+noDri/no-network inventory, allUNITRACE flags/LD_PRELOAD removed.
+
+COMMAND -> Actual23423 help/version/toolldd/injectionldd/readelf, owned
+containerinspection/normalretirement/removal. Exactfreshfile hashes before
+launch and actual exportedDSO bytes afterward.
+
+RESULT -> All5return0;9 distinctsharedlibraries exportedwithoriginal and
+resolvedcontainerpaths plus separatehostexportedpath, stat5 beforeafter/SHA/
+size. Actualversionedsymbol visible. Receiptcb9aa2e6a98f43dff450cb20f4e58a5bcabb533cd0f8a3f12a364a5819d54294
+at B17/pti-model-finalizer-no-device-metadata-v1/receipt.json. No model,
+deviceclockquery or live mapped/memory/census authority fromthis inventory.
+
+VERDICT -> Actualbasic tool/image/dependency metadata passed; source43 upload/
+model runtime, actualmapped beforeafter census andcomplete GPUprofiles still
+pending. Originalhead discrepancy remainsunqualified; stagedzeroL0GDN and
+fixedinput Q8 cases nowprepared usingexisting capture fields. Fullgoalactive.
