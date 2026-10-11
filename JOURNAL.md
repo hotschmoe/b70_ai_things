@@ -17470,3 +17470,22 @@ New49 patch qualifies exactlythreecalls; exactapply/undo passed. Actual56943
 nowholds pairlease for fresh49 all8 build; original48 failure preserved.
 VERDICT -> Independent CPUfidelity and useful GPU paths advance. No unsafe
 groupingretry. Fullmath/cache/streams/traffic/latency/shelf and2000/50 open.
+
+
+## 2026-10-11: actual independent full48 computation and HC46 model queued
+
+CONFIG -> Current43 mode1 original own-state full48 prefix1, bulkHC83c289,
+independent original weights/zero state; no native operands.
+COMMAND -> Actual90151 atF17/current-full48-own-state-bulk-mode1-v1.
+RESULT -> PASS/errors[], report37dba63f1dcbe8d2ffb28280c5ebf184155fa762442bc1b710e5cdf9799367b4;
+387bulk calls/278savedarrays, math48.663s, complete127.608s includingfresh
+fourpublisherhashes/pages. Agreementwithnative notyetcomputed; no numericPASS.
+VERDICT -> FasterfaithfulCPUtransport enables iterativefull48localization.
+
+CONFIG -> HC46 matchedOFF/ON short54/twoGEN64/defaultshortread64, original
+mode0/cacheOFF/MTP0, groupedF16fixed0, soleHCrowbatch0/1.
+COMMAND -> Actual12379 queuedafter49build usingnewexperimentboundaryidentity
+helpers. Exactcurrent46SDK72/all8 andbothactualcommandpreflight passed.
+RESULT -> No model resultyet. ActualHC46operator previouslyPASS16bitwise
+cases/health/teardown; actualmodelcoherence/timing stillrequired.
+VERDICT -> Fullmath/cache/streams/physicaltraffic/latency/shelf and2000/50open.
