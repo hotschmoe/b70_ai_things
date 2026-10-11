@@ -17542,3 +17542,19 @@ RESULT -> PASS/errors[]/freshfull4pages, report77ee20cfda70b55e2aa5c69bda1d8c88f
 Initialconv/statebitwiseexact; qkvNMSE3.393e-9,gated5.258e-9,block4.988e-7,
 postattention3.961e-7; bothQ81packetsdiffer. Savedpacketbyteanalysis next.
 VERDICT -> No numericalPASS; fullmath/cache/streams/traffic/latency/shelf/2000/50open.
+
+
+## 2026-10-11: staging49 reserved-window guard rejected native pack
+
+CONFIG -> Actual49 singleton staging model OFF/ON, spec1 per mistakenCLIguard.
+COMMAND -> Actual68017 parentterminalFAILED392s.
+RESULT -> OFF engineexit2 beforeREADY; nativeIQpack requires specT>=2.
+No requests or forcedcleanup. Parent67af1f435dd9ecaff79904a8172ba27b6e97ff5fc137c742f3fbf5e7ba4df640
+failed; finalstrict/compiledhealth and freshfull4 passed. No kernel fault.
+VERDICT -> Guard conflatedreserved windowcapacitywithactivespeculation.
+New50 sourcepatch willallowsupportedreserved spec2 withnoMTP/no draft/
+no batch/no pipeline; actualT1/G1/top10 stagingkernel guard remainsunchanged.
+Preservefailed49actor/source/receipt; no unchangedspec1modelretry.
+CurrentHC46spec2/MTP0 observedall64windowsT1 provides matching scope evidence.
+Stagingfixture49passedrouting/copyonly; no stagingmodel latency resultexists.
+Fullcampaign/2000/50/fidelity/cache/streams/traffic/shelf remainopen.
