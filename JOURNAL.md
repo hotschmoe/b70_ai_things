@@ -17391,3 +17391,20 @@ weight reuse. Stop low-value lane sweeps. Audit future actors to share full
 111 GB identity scans across matched arms, retaining per-arm health, faults,
 source/config and teardown. Do not alter the live actor or claim sustained
 speed from four-token diagnostics.
+
+
+## 2026-10-11: corrected grouped47 model device loss
+
+CONFIG -> Actual source47 grouped F16 ON; same524/pref64/ctx2048/GEN4
+requests as closed OFF arm, original weights, onecard model placement.
+COMMAND -> Existing50457 actor, no unchanged restart or new GPU touch.
+RESULT -> ON reached PP320of524 then UR_RESULT_ERROR_DEVICE_LOST at
+prefill.cpp4627. Xe0b:00.0 kernel at23:09:41 reports null/low-address VM
+faults. Root preserved raw kernel observation in actual run directory.
+Actor still live at observation; teardown/post-health/finalidentity pending.
+Queued46 compiler never started:600s lease timeout124; requeued94364 with
+B70_GPU_LOCK_TIMEOUT=0 while47 retains lease.
+VERDICT -> USM Info repair and component controls did not qualify full-model
+grouping. Keep grouped F16 disabled for independent HC46 and staging48
+experiments. No speed/stability/fidelity claim, no unchanged grouped retry.
+Source-only multiple-chunk lifetime localization requested.
