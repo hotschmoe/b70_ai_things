@@ -17428,3 +17428,18 @@ RESULT -> Live, no numerical result yet. Source46 NoDri build94364 nowholds
 pairlease; source48 NoDri build5271 queued. Bothbuilds all8 from source.
 VERDICT -> Fast own-state reference and independent decode/prefill paths advance;
 full48math/cache/streams/physicaltraffic/latency/shelf and2000/50 remainopen.
+
+
+## 2026-10-11: actual independent bulk firstHC scalar parity passed
+
+CONFIG -> Original-weight firstHC, explicit CPU bulk ELF83c289; no captured
+native math inputs. Executed scalar e62e output bytes only as comparator.
+COMMAND -> Actual61890 terminal0, outputF17/original-first-HC-bulk-vs-scalar-v1.
+RESULT -> Report936e75f64ad8384501f76e4a267b47fa5abdb1ff5f44cbf38c0d4496649fc38e
+PASS/errors[];55bulkdot calls, sixownedF32fields and encodedpacket allbitwise
+equal executedscalar. Fresh postCPU full4 publisherhashes/pages passed.
+VERDICT -> CPUtransport parity qualifies this firstHC scope; no hostnonlinear
+or full48math qualification. Proceed minimal currentmode1 original full48
+own-state candidate; rootrequested sourceport and actualprefix1 recipe.
+Source46all8NoDri compile94364 remainslive; source48build5271 queued.
+2000/50, fullfidelity/cache/streams/traffic/latency/shelf remainopen.
