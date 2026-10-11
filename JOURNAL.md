@@ -16168,3 +16168,29 @@ VERDICT -> Fixture and runtime intake ready. Normal43 model-control/public
 admission is still required before PTI capture; root sole GPU coordinator.
 Actual Q81compile/runtime/public admission and NUM10ON/original reference
 remain required. Fullmath/cache/streams/placement/latency/shelf stay open.
+
+## 2026-10-11 NUM10 native parent closed; reference and normal control live
+
+CONFIG -> Actual SDK43 mode1, four fresh literal248045/MAX1 per arm, NUM10
+OFF/ON only. Parent bounded ID/finish parity is separate from public full49/
+LP/zero-state recollection and original FP64 diagnostic mathematics.
+
+COMMAND -> Root70565 terminalPASS1376s. Parentreport
+ d6713012b9d821ce7507a00d827044931bf7108501889e9df970bdf42f6d4f20;
+post-full4 0d5c7c5a379a6eef7101f16f9ca8ebcbdd30dec285fb666ef7b69ed1311f2b13.
+Root81513 now CPU enclosed original-reference CLI with those explicit hashes,
+original three thread pins and conditional lanes declared. Root40259 is the
+sole new pair-leased normal43/source40 GEN64 control using prepared planab0305.
+
+RESULT -> Parent errors[], both4request phases/retirement and per-arm health/
+complete model/page/source checks passed; eachON output846, four raw33 metadata
+frames saved. Parent ID/finish observer comparison passed. Independent public
+full49/LP/bytezero recollection and original-reference result remain pending in
+81513; no broad numeric result inferred from parent. Normalcontrol40259 live.
+Concurrent CPU source/reference work means these are coherence controls, not
+clean latency arms. PTI capture will run separately after its prerequisites.
+
+VERDICT -> Native diagnostic execution closed, original mathematics still
+unresolved. Fresh normal mode0 constructor/control, actual profiler capture,
+Q81 helper compile/runtime, full fidelity/cache/streams/traffic/interactive
+latency/fairness/API/reproducible shelf remain required. Fullgoal unchanged.
