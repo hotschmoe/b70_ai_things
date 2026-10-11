@@ -17,7 +17,13 @@ Current concrete action: the genuine source43 mode1 API baseline was launched
  The producer completed successfully in522 seconds: all eight HTTP requests
  coherent, owned teardown clean, pre/post health and full4 checks passed.
  Report SHA256: c894ba56fd719b84b447f51de666390e28b7ea9e528d662bb4f4a17c2affbae9.
- No live baseline server remains; do not mistake this for shelf qualification. The exact actor is
+ No live baseline server remains; do not mistake this for shelf qualification.
+ Independent public reader exited1 with KeyError: WorkingDir while comparing
+ Docker image/config metadata; fresh public closing full4 succeeded. Preserve
+ producer PASS and public FAIL separately. Inspect actual image Config and
+ terminal Config; repair the absent optional WorkingDir handling narrowly,
+ update required source bindings deliberately, and reuse saved GPU evidence.
+ Do not rerun the model solely for this validator bug. The exact actor is
  strata/flash-next/run_source43_api_baseline_v3.py; port18083, primary served
  name hotschmoe-dd, GPU0, ctx2048/prefill64/PLE65536, MTP0, cacheOFF,
  batch0, parallel1. Canonical registry now has174 entries, including the exact

@@ -17154,3 +17154,15 @@ Producer report SHA256: c894ba56fd719b84b447f51de666390e28b7ea9e528d662bb4f4a17c
 VERDICT -> Actual research API baseline passed. Tiny-output native rates are
 observations, not sustained decode/speed qualification. Original fullmath,
 cache, native concurrent computation and shelf qualification remain open.
+
+## 2026-10-11: API public reader metadata failure
+
+CONFIG -> Completed genuine source43 API producer above, immutable saved
+GPU/API/health/source evidence.
+COMMAND -> Original validate_source43_api_baseline_v3.py with CPU thread pins.
+RESULT -> Exit1: KeyError WorkingDir in Docker image/terminal config comparison.
+Public failure-closing full4 completed without closing-source exception.
+VERDICT -> Producer PASS retained; independent public validation FAILED due
+metadata-reader exception. No shelf/public qualification claimed. Handoff
+requires narrow optional-metadata repair and saved-evidence reuse rather than
+repeating the GPU actor.
