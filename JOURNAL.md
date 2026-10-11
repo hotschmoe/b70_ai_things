@@ -17182,3 +17182,21 @@ do not repeat that sweep. CPU agents prepare shortread0 current174 control
 and investigate current upstream recipes/long-prefill implementation.
 VERDICT -> Research API/public lifecycle closure, no fullmath/shelf promotion.
 New performance thresholds are targets, not attained or promised measurements.
+
+## 2026-10-11: Actual short-prefill batched control launched
+
+CONFIG -> Actual source43 mode0, short54 warmup/selected GEN4, observerOFF,
+unchanged ctx2048/pref64/PLE65536/cacheOFF/MTP0 and SDK; native argv sole
+delta --short-read0. Current registry174 exact association preserves all173
+rows. Original history contributes software recipe only, not current health.
+COMMAND -> Root launched run_source43_shortread0_v2.py through paired gpu-run
+lease with OMP/MKL/OpenBLAS1 and exactAPI prepared562a. Sourceplan
+4a662f5f94b0f50f9f9f886671e7eb933cecbc31cc1970d2cd78b152393eec6b; actual saved-template
+command preflight eaadf2df passed before admission; private callback rebound.
+RESULT -> Actual38842 live; output F17/source43-shortread0-v2-run-v1. Fresh
+arm identity, health, output repeat and normal teardown remain mandatory.
+Saved selected OFF host trace observations: ReplaySubmit0.539ms versus
+ReplayWait4668.654ms over request4671.348ms; nested spans not additive,
+wait interval is not physical device execution/idle attribution.
+VERDICT -> Direct one-flag GPU control underway; no candidate benefit claimed
+yet. Targets2000prefill/50decode remain unmet. Full original goal stays active.
