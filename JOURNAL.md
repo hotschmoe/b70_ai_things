@@ -15939,3 +15939,25 @@ VERDICT -> Narrow source/CPU ready only; no process-memory/L0/symbolorigin/
 actualmapped/GPU/runtime authority. Fresh43 oracle/upload andactualzeroL0/
 Q8 probes remainneeded. Existing numericalfidelity discrepancy unchanged;
 whole campaignactive.
+
+## 2026-10-11 Fresh source43 oracle compiled for upload qualification
+
+CONFIG -> ActualSDK43 all70/32/43/8/6, no old43/41oracle orconstructor transfer.
+
+COMMAND -> Sourceintakef15a7476/15bindings root/peer3CPU eachPASS0.003s.
+RootnewSDKbinding confirmsactual6f6517ac. Correctcompilercommand is
+bin/gpu-run python3 strata/flash-next/build_source_upload43_oracle_v1.py
+--engine-receipt SDK43/receipt.json --plan native-source-upload-plan-full-source43-v1.json.
+Builder hasNO --output; frozen docexample extraoutput option isincorrect.
+Runner MUST receive --model-identity plusoracle/pack/plan/output; frozen
+docexample omittedthis requiredargument. Softwarepredicates unchanged.
+
+RESULT -> Actual30763 compilerPASS49s, neworacle receipt
+/mnt/vm_8tb/b70/build/strata-source-upload-oracle-full-zzk5p02u/receipt.json.
+Actualruntimefivecase test notyetlaunched. Root5399 nowfreshbuffered complete
+selectedmodel preidentity withallthree pageguards; CPU-only noSDK41 runtime
+proof from generic reusable model byteguard.
+
+VERDICT -> Oracle compilation only. Fivecasefresh43 upload/health/logicalfree/
+postidentity andnewmasked/model cases stillrequired. Originalhead discrepancy
+notresolved, runtime/profiling/API/shelf qualification remainpending.

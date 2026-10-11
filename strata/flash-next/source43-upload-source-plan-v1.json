@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "scope": "fresh43 source70/32/43/8/6 and new original390 compiler/upload intake only",
+  "files": {
+    "strata/flash-next/source43_sdk_binding_v1.py": "43d0f5f5ef6b602801636511d9ab59f8dcbd61448a6625649ef212c4f9f20b6c",
+    "strata/flash-next/build_source_upload43_oracle_v1.py": "3e394ec6c74b303d3c07694078166db0549323eceb34706e7e0ec0e09b8b7347",
+    "strata/flash-next/run_source_upload43_oracle_v1.py": "df0d74a038d2660017cfafd05a6af5ce3791fe0fd1760f3c9bb25dece772f9cf",
+    "strata/flash-next/admit_source_upload43_v1.py": "e91921f0f9efbe9a7458b15696e642dadfa418f13cb5df010bc291bab9a3e9d1",
+    "strata/flash-next/native_source_upload43_gpu_oracle_v1.cpp": "7ac27c42e124c37792deed289f12f641e60c7d7c77212e1cbbbc2d437b12f4d0",
+    "strata/flash-next/native-source-upload-plan-full-source43-v1.json": "e2691ab4752627a2a8de8a58ca0ed07acfd42ff3158d6b2919fdb38a20f2b84f",
+    "strata/flash-next/test_source43_upload_intake_cpu_v1.py": "b32167bee5744bf2236050cd350232c8cd4fb3e8683c62ab30e66a79f23103c0",
+    "strata/flash-next/native43-engine-build-proposal-v1.json": "17ff9e21276cbab2e802435ec3fcda6f6a1bb57444d53f4fb31156a0615b1b5c",
+    "strata/flash-next/source41-upload-source-plan-v1.json": "f731bdb4cbe49975a06fab9955659fb0c9a39b6e71de1ded50e31649563ae2fa",
+    "strata/flash-next/source41_sdk_binding_v1.py": "3b99f01fe8b4e8136d9fdccaf225d7eae686f89ae381bce5b237e3592835a4a0",
+    "strata/flash-next/native_source_upload41_gpu_oracle_v1.cpp": "cd05d71d1324effe4a7d9c2097303cf51216b7b3ad185912fb5ce00589ade65e",
+    "strata/flash-next/build_source_upload_oracle_full.py": "5dc477c1a85b9e58deb154e4fb63ce2129e30859e7ed1f60ddacd3e0be34db15",
+    "strata/flash-next/run_source_upload_oracle_full_v2.py": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec",
+    "strata/flash-next/c1_serve_controller_combined_v140_v3.py": "5daa1f2d0c9d8c147202724314bc013889dfaf1a102fc04fb6ea021c454d78b4",
+    "docs/20261011_flashnext_source43_oracle_upload_intake_v1.md": "84a1de541472a63bb14523872e173806f3ba9cdbe1073d2c35188dcb5be8760c"
+  },
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_source43_upload_intake_cpu_v1 -q",
+  "CPU_controls": 3,
+  "actual_oracle_upload_model_qualified": false,
+  "old_source35_41_proof_transferred": false,
+  "GPU_build_model_or_archive_payload_actions_by_author": false
+}
