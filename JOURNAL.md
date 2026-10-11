@@ -16250,3 +16250,27 @@ VERDICT -> No native rerun for parser bug; preserve all failed evidence.
 Original reference result, publicnormal admission andactualQ81 helper pending.
 CanonicalABBA harnessccb6/5 root8CPU0.010s/peer0.011s ready but real120MB timing
 has not run; wait for quiet CPU window before claims. Fullgoal remains active.
+
+## 2026-10-11 Normal43 independent admission passed; quantizer leaf executed
+
+CONFIG -> Fresh43 mode0 one-card native normal control, bounded useful4GEN64;
+fixed-own layer3 output-gated quantizer remains a separate primitive diagnostic.
+
+COMMAND -> Root publicnormalreader88707 terminalPASS398.085s, original guards
+and new CPU full4 close. Binding899efe224ae62672e50b2c1cb3857eb93941deafc97eb78c0714be7d643ce646
+at F17/source43-normal-cli-v1-root-public-binding-v1.json. Root70280 Q81helper
+still live after nativecompile/runtime; root40900 corrected original reference
+still live. No duplicate GPU job or native NUM10 rerun started.
+
+RESULT -> Genuine normal43 constructor/bounded IDs+finish/repeat/lifecycle
+admission closed; no original fullmodel math or LP numeric parity inferred.
+Q81 runtime log reports original four rows6144cols, direct+two replay, every
+mismatch_blocks=0, graph retirement/owned frees. Parent/post-health/full4/
+current source byte-epoch proof still pending, so no complete helper PASS yet.
+Current device profiler runtime/source/analysis remain ready for actualcapture,
+which will wait until GPU lease and competing original CPU work are clear.
+
+VERDICT -> Concrete serving-control prerequisite progress. Both-GPU control
+source port and exact raw33 convolution commit audit are being prepared.
+Full original mathematics/cache/actualstreamcounts/physicaltier traffic and
+calibrated criticalpath/natural latency/fairness/clientAPI/shelf remain open.
