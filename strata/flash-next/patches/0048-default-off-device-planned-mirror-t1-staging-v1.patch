@@ -1,0 +1,162 @@
+--- a/sycl/include/strata/kernels/resident_plan_mirror.hpp
++++ b/sycl/include/strata/kernels/resident_plan_mirror.hpp
+@@ -1,7 +1,20 @@
+ // SYCL port: experts mirrored in pinned host memory (GgufExpertSource::mirror) in the device-built verify plan.
+ #pragma once
+ #include <cstdint>
++#include <cstdlib>
++#include <cstring>
++#include <cstdio>
+ namespace strata::kernels {
++inline bool mirror_stage_t1_requested() {
++    static const bool enabled=[] {
++        const char* v=std::getenv("STRATA_VERIFY_MIRROR_STAGE_T1");
++        if (!v || std::strcmp(v,"0")==0) return false;
++        if (std::strcmp(v,"1")==0) return true;
++        std::fprintf(stderr,"STRATA_VERIFY_MIRROR_STAGE_T1 must be absent, 0 or 1\n");
++        std::abort();
++    }();
++    return enabled;
++}
+ /// From now on (and in every graph captured after this call) the device-built plan (resident_plan) treats an expert
+ /// that is not in the VRAM cache but has a non-zero entry in `mirror_table` ([n_layers][n_expert] device-readable
+ /// addresses, 0 = none) as planned: the expert kernels read it from that address, over PCIe. `d_res` is the residency
+@@ -11,6 +24,6 @@
+ void resident_plan_bound(const int32_t* ids,int n_entries,int k,const int32_t* res_layer,int n_expert,
+     const uint8_t* cache_base,const unsigned long long* slot_off,long long blob,int32_t* plan,
+     long long capx,uint32_t* skip,uint32_t ring,void* stream,
+-    const unsigned long long* mirror_layer,uint32_t* plan_err=nullptr);
++    const unsigned long long* mirror_layer,uint32_t* plan_err=nullptr,bool stage_t1=false);
+ 
+ }
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -706,6 +706,9 @@
+     // exact, but neutral on RIBPC 1-2 GPUs: off by default)
+     {
+         const char* v = std::getenv("STRATA_VERIFY_DEVICE_PLAN");
++        if (mirror_stage_t1_requested() && (!hits.stage_mirror || always_publish_)) {
++            err="mirror T1 staging requires owned stage mirror and no always-publish overlap"; return false;
++        }
+         // (not with set_always_publish: the device table may lag the host's while windows are in flight)
+         if (hits.stage_mirror && always_publish_) { err="stage mirror: always-publish overlap is unqualified"; return false; }
+         device_plan_ = !all_resident_ && !always_publish_ && (hits.stage_mirror || (v != nullptr && std::atoi(v) != 0));
+@@ -1423,7 +1426,8 @@
+                 if (!table) { err="stage mirror: verifier layer outside its owner"; return false; }
+                 resident_plan_bound(ids_+tb*K,n*int(K),int(K),res,int(g.n_expert),hits_.cache_base,
+                     slot_off_d_,(long long)hits_.blob,plan_+size_t(grp)*size_t(plan_i32_+16),
+-                    (long long)max_t_*K,skip,ring,cs,table,plan_err);
++                    (long long)max_t_*K,skip,ring,cs,table,plan_err,
++                    mirror_stage_t1_requested() && T==1 && !batch_rec_ && G==1 && n*K<=kStagingBlobs);
+             } else resident_plan(ids_+tb*K,n*int(K),int(K),res,int(g.n_expert),hits_.cache_base,
+                     slot_off_d_,(long long)hits_.blob,plan_+size_t(grp)*size_t(plan_i32_+16),
+                     (long long)max_t_*K,skip,ring,cs,plan_err);
+@@ -1569,7 +1573,8 @@
+             stamp(l, 20, grp);
+             if (device_plan_) wait_flag_ge_or(m_flagB_, ring, skip_ + grp, cs);
+             else wait_flag_ge(m_flagB_, ring, cs);                 // the PCIe share is in staging (DMA) or mapped
+-            if (sink_.pcie_mode == 2) {                            // stage it with a copy kernel, then point at staging
++            if (sink_.pcie_mode == 2 || (mirror_stage_t1_requested() && device_plan_ && T==1 && !batch_rec_ && G==1)) {
++                // Singleton device-plan mirror groups use the existing ptr2 copy/rebase path.
+                 const int64_t per = G == 2 ? kStagingBlobs / 2 : kStagingBlobs;
+                 uint8_t* stage = staging_ + (size_t) (grp * per) * lay.max_blob;
+                 fetch_blobs(p_ptr2, p_counts + 2, stage, (int64_t) lay.blob_bytes(l), (int) per, cs);
+--- a/sycl/src/kernels/cuda/verify_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+@@ -2077,7 +2077,7 @@
+                      const unsigned long long *slot_off, long long blob,
+                      int32_t *__restrict__ pl, long long capx, uint32_t *skip,
+                      uint32_t ring, const unsigned long long *__restrict__ mir,
+-                     volatile uint32_t *plan_err) {
++                     volatile uint32_t *plan_err, bool stage_t1) {
+     auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+ auto &s_ids = *sycl::ext::oneapi::group_local_memory_for_overwrite<
+     int32_t[kResidentPlanMax]>(
+@@ -2120,6 +2120,42 @@
+                     *plan_err = 1;
+                     sycl::atomic_fence(sycl::memory_order::acq_rel,
+                                        sycl::memory_scope::system);
++            }
++        }
++        return;
++    }
++
++    if (stage_t1 && n==k && n<=16 && capx>=n) {
++        if (tid==0) {
++            int32_t* counts=pl; int32_t* start=pl+4;
++            int32_t* dst=start+capx+1; int32_t* tok=dst+capx;
++            const long long po=((4+(capx+1)+2*capx)+1)&~1ll;
++            auto* ptr=(unsigned long long*)(pl+po); auto* ptr2=ptr+capx;
++            int32_t* start2=pl+po+4*capx;
++            int groups=0,mirrors=0,entries=0;
++            // Same shared dst/tok layout as CPU-published plan: VRAM first, mirror second.
++            for (int tier=0;tier<2;++tier) {
++                for (int i=0;i<n;++i) {
++                    const int e=s_ids[i]; const int sl=res[e];
++                    if ((tier==0)!=(sl>=0)) continue;
++                    bool first=true;
++                    for (int j=0;j<i;++j) if(s_ids[j]==e) first=false;
++                    if (!first) continue;
++                    if (tier==0) {
++                        ptr[groups]=(unsigned long long)(cache_base+(slot_off?size_t(slot_off[sl]):size_t(sl)*size_t(blob)));
++                        start[groups++]=entries;
++                    } else {
++                        ptr2[mirrors]=mir[e];start2[mirrors++]=entries;
++                    }
++                    for (int j=i;j<n;++j) if(s_ids[j]==e) {dst[entries]=j;tok[entries]=j/k;++entries;}
++                }
++                if(tier==0)start[groups]=entries;
++            }
++            start2[mirrors]=entries;
++            counts[0]=groups;counts[1]=entries;counts[2]=mirrors;
++            if(skip) {
++                sycl::atomic_fence(sycl::memory_order::acq_rel,sycl::memory_scope::device);
++                strata::sys_store(skip,ring);
+             }
+         }
+         return;
+@@ -2364,12 +2400,12 @@
+     const unsigned long long* mir = nullptr;   // SYCL port: the layer's slice of the host-mirror table, if any
+     if (g_mirror_table != nullptr && g_mirror_res != nullptr && res_layer >= g_mirror_res)
+         mir = g_mirror_table + (res_layer - g_mirror_res);
+-    resident_plan_bound(ids,n_entries,k,res_layer,n_expert,cache_base,slot_off,blob,plan,capx,skip,ring,stream,mir,plan_err);
++    resident_plan_bound(ids,n_entries,k,res_layer,n_expert,cache_base,slot_off,blob,plan,capx,skip,ring,stream,mir,plan_err,false);
+ }
+ void resident_plan_bound(const int32_t* ids,int n_entries,int k,const int32_t* res_layer,int n_expert,
+     const uint8_t* cache_base,const unsigned long long* slot_off,long long blob,int32_t* plan,
+     long long capx,uint32_t* skip,uint32_t ring,void* stream,
+-    const unsigned long long* mir,uint32_t* plan_err) {
++    const unsigned long long* mir,uint32_t* plan_err,bool stage_t1) {
+     {
+         auto exp_props = sycl::ext::oneapi::experimental::properties{
+             sycl::ext::oneapi::experimental::use_root_sync};
+@@ -2383,7 +2419,7 @@
+                     [[sycl::reqd_sub_group_size(32)]] {
+                         resident_plan_kernel(
+                             ids, n_entries, k, res_layer, n_expert, cache_base,
+-                            slot_off, blob, plan, capx, skip, ring, mir, plan_err);
++                            slot_off, blob, plan, capx, skip, ring, mir, plan_err,stage_t1);
+                     });
+     }
+     check("resident_plan");
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -90,6 +90,7 @@
+ #include "strata/spec/draft_policy.hpp"
+ #include "strata/spec/draft_source.hpp"
+ #include "strata/spec/suffix_drafter.hpp"
++#include "strata/kernels/resident_plan_mirror.hpp"
+ #include "strata/kernels/cvec.hpp"
+ #include "strata/core/progress.hpp"
+ #include "strata/core/device.hpp"
+@@ -2187,6 +2188,10 @@
+         o.prefill_auto = false;       // nothing to lend from: the buffers are reserved for the session, so keep them small
+         o.prefill_chunk = 2048;
+     }
++    if (strata::kernels::mirror_stage_t1_requested() &&
++        (o.batch!=0 || !o.mtp.empty() || o.spec>1 || o.batch_mtp || o.pipeline_windows!=0 || o.suffix_draft!=0 || o.lookup_chain!=0)) {
++        std::fprintf(stderr,"mirror T1 staging requires serial no-MTP/no-draft/no-pipeline mode\n");return 2;
++    }
+     if (!strata::program::host_trace36::init(o.serve && o.batch==0 && o.pipeline_windows==0 && o.mtp.empty() && o.layer_split.empty() && o.split_device.empty() && o.suffix_draft==0 && o.lookup_chain==0)) { std::fprintf(stderr,"host trace36 requires bounded native serial graph mode and valid DIR/binding\n"); return 2; }
+     if (!have_tokens && o.serve) {   // plan v0.3 P8: requests bring their own tokens
+         o.tokens = {248045};

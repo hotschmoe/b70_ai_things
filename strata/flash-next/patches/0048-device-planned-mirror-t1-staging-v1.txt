@@ -1,0 +1,42 @@
+CONFIG -> SOURCE ONLY defaultOFF STRATA_VERIFY_MIRROR_STAGE_T1. Exact1 enables
+owned stage-mirror singleton device plans; absent/0 keeps old path. Native serial
+noMTP/no-draft/no-pipeline only: CLI rejects batch, MTP, spec>1, suffix/lookup,
+and pipeline. Stage initialization requires owned mirror/no always-publish.
+Only T1 nonbatch one-group <=16 entries opts into partition; T2+ plan unchanged.
+STRATA_PF_GROUPED_F16 must remain0 unless separately qualified. No live47 edits.
+
+COMMAND -> Existing builder obtains pair lease:
+python3 strata/flash-next/build_native_hc_engine.py --plan strata/flash-next/native48-mirror-t1-staging-engine-build-proposal-v1.json --jobs 4
+
+RESULT -> Exact four-file apply and reverse passed against actual47 source.
+No compiler/GPU/model execution. Source generation48 directly branches47,
+72 final sources,32 inherited header payloads,46 ordered patches,all8 targets.
+No HC46 branch is included. Public resident_plan_bound gets a new default-false
+argument; fresh ABI build required. No arithmetic or quantization body changes.
+
+Original device plan merges VRAM and mirrored pointers into ptr/count0, with
+count2=0; hence ptr2 copy/rebase cannot stage its mapped-memory groups. New
+singleton branch writes the existing CPU-published plan layout: VRAM groups first
+in ptr/start, mirror groups second in ptr2/start2; dst/tok lists contain original
+entry destinations in first-occurrence/group order. count1 remains all entries;
+count0/2 are group counts. Duplicate selected IDs retain all destinations. Every
+mirror has already passed original valid-ID/residency/mirror checks; missing
+mirror/error/fallback semantics before the branch remain untouched.
+
+Existing verify post path computes VRAM groups, copies only ptr2 blobs using
+fetch_blobs, rebases to staging, computes ptr2 groups, zeros CPU rows when device
+plan supplied all entries, then uses existing moe_hit_add and unchanged combine.
+The enabled singleton forces this copy/rebase path regardless of pcie_mode;
+other CPU-published plans retain original configured mode. No new host wait,
+GPU query or device allocation. Added execution is existing copy+rebase kernels.
+Existing allocation is16*max_blob per verifier, independent of this flag; singleton
+top10 fits16. Shared group splitting halves capacity, so it is excluded here.
+Logical copied blob bytes=sum(layer blob size per UNIQUE mirrored expert), not
+measured PCIe/DRAM traffic. Copy kernel's16-byte blob alignment contract remains.
+
+VERDICT -> Candidate routing/storage path, not runtime/math/speed qualification.
+Fresh operator controls must cover all VRAM, all mirror, mixed/duplicate IDs and
+missing mirrors, preserving complete output bits/routing. Then matched actual
+model outputs, identity, health/kernel and owned retirement gates are required.
+Contiguous staging may improve mapped-weight access but adds a copy and can be
+slower. Startup residency counts and stub counters do not establish actual hits.

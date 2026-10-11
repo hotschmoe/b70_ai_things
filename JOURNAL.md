@@ -17372,3 +17372,22 @@ F17/source47-grouped-f16-model-v1-run-v1. Original45fault retained.
 VERDICT -> Corrected allocation context passes stronger component tests;
 original faultcause and actual47 model behavior/performance still unproven.
 Fullgoal/fidelity/cache/streams/traffic/latency/shelf and2000/50 remainopen.
+
+
+## 2026-10-11: aggressive Flash-Next targets and next performance controls
+
+CONFIG -> Original Unsloth UD-Q4_K_XL, two B70s plus host RAM. User minimum
+targets remain 2000 input tok/s and 50 output tok/s; neither is achieved.
+COMMAND -> Continue actual source47 grouped-F16 OFF/ON model experiment under
+existing GPU lease; queue default-off source46 HC row-batch build. Prepare
+default-off source48 singleton mirror staging on actual47 source; no GPU
+execution of source48 yet.
+RESULT -> Source47 OFF warm diagnostic: 524 input tokens in 15482 ms, four
+output tokens in 366 ms (33.8 input / 10.9 output tok/s). OFF post-health passed;
+complete model identity close still running when this entry was written. ON
+pending. Source48 exact source apply/undo passed; runtime/math/speed unqualified.
+VERDICT -> Prioritize grouped expert GEMMs, mapped-host expert staging, and HC
+weight reuse. Stop low-value lane sweeps. Audit future actors to share full
+111 GB identity scans across matched arms, retaining per-arm health, faults,
+source/config and teardown. Do not alter the live actor or claim sustained
+speed from four-token diagnostics.
