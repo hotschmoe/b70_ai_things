@@ -1,0 +1,191 @@
+--- a/include/strata/kernels/verify_kernels.hpp
++++ b/include/strata/kernels/verify_kernels.hpp
+@@ -19,6 +19,17 @@
+ namespace strata::kernels {
+ 
+ inline constexpr int kVerifyMaxT = 8;
++
++// Source44 output-only buffers owned by the existing NUM38 snapshot.
++struct GdnCoreCapture44 {
++ float* core=nullptr; float* square_sum=nullptr; float* argument=nullptr;
++ float* scale=nullptr; float* inverse_s=nullptr; uint32_t* error=nullptr;
++};
++void gdn_step_norm_observed44(float* state,const float* h,int conv_channels,
++ const float* gate,const float* beta,const float* z,const float* gamma,
++ float eps,float* y,int h_k,int h_v,int n_tok,const int32_t* n_keep,
++ void* stream,GdnCoreCapture44 observed);
++
+ 
+ /// For token t of T: conv over [history(3) | qkv_0 .. qkv_t] -> SiLU -> L2 norm of the q/k heads -> h[t].
+ /// `history` is NOT written, but with `commit` (one token): it then keeps the token, as gdn_conv_commit.  Bitwise
+--- a/sycl/src/kernels/cuda/verify_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+@@ -15,6 +15,7 @@
+ #include <cstdio>
+ #include <cstdlib>
+ #include <cmath>
++#include <stdexcept>
+ 
+ #ifndef STRATA_PLAN_LOCAL
+ #define STRATA_PLAN_LOCAL 1   // 0: the original one-thread plan kernel (A/B)
+@@ -327,7 +328,7 @@
+     if (idx % 32 == 0) xq[idx / 32].ds = sycl::half2(d, sum);
+ }
+ 
+-template <bool ALL_OUT, bool Q>
++template <bool ALL_OUT, bool Q, bool CAPTURE44=false>
+ /*
+ DPCT1110: The total declared local variable size in device function
+ gdn_step_norm_multi_kernel exceeds 128 bytes and may cause high register
+@@ -341,7 +342,7 @@
+     const float *__restrict__ z, const float *__restrict__ gamma, float eps,
+     float *__restrict__ y, int h_k, int h_v, int T,
+     const int32_t *__restrict__ n_keep, int t_out_begin,
+-    GdnQ81 *__restrict__ xq) {
++    GdnQ81 *__restrict__ xq,GdnCoreCapture44 observed={}) {
+     auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+ auto &sk = *sycl::ext::oneapi::group_local_memory_for_overwrite<float[2][S]>(
+     sycl::ext::oneapi::this_work_item::get_work_group<3>());
+@@ -364,6 +365,7 @@
+     const int qk = S * h_k;             // q at [0, qk), k at [qk, 2qk), v at [2qk, ...)
+     const int value_dim = S * h_v;
+     const int n = ALL_OUT ? T : (n_keep ? *n_keep : T);
++    if constexpr(CAPTURE44){if(n!=1||T!=1||t_out_begin!=0){if(head==0&&col==0&&rg==0)*observed.error|=4096u;return;}}
+     if (n > 0) {
+         if (rg == 0) sk[0][col] = hbuf[qk + qh * S + col];
+         else if (rg == 1 && (ALL_OUT || 0 >= t_out_begin)) sq[0][col] = hbuf[qh * S + col];
+@@ -443,9 +445,16 @@
+         item_ct1.barrier();
+         float oc = 0.0f, sq_part = 0.0f;
+         if (rg == 0) {
++            if constexpr(CAPTURE44){
++             const float inverse_s=sycl::rsqrt((float)S);
++             oc=(red_o[0][col]+red_o[1][col]+red_o[2][col]+red_o[3][col])*inverse_s;
++             observed.core[head*S+col]=oc;
++             if(head==0&&col==0)observed.inverse_s[0]=inverse_s;
++            }else{
+             oc = (red_o[0][col] + red_o[1][col] + red_o[2][col] +
+                   red_o[3][col]) *
+                  sycl::rsqrt((float)S);
++            }
+             sq_part = oc * oc;
+         }
+         // every thread takes the shuffles, as the single-token kernel does: inside the `rg == 0` branch hipcc on
+@@ -473,7 +482,10 @@
+         item_ct1.barrier();
+         if (rg == 0) {
+             const float ss = wsum[0] + wsum[1] + wsum[2] + wsum[3];
+-            const float scale = sycl::rsqrt(ss / (float)S + eps);
++            float scale;
++            if constexpr(CAPTURE44){const float argument=ss/(float)S+eps;scale=sycl::rsqrt(argument);
++             if(col==0){observed.square_sum[head]=ss;observed.argument[head]=argument;observed.scale[head]=scale;}
++            }else{scale=sycl::rsqrt(ss / (float)S + eps);}
+             const float zz = z[(size_t) t * value_dim + head * S + col];
+             const float yv =
+                 oc * scale * gam * (1.0f / (1.0f + sycl::native::exp(-zz)));
+@@ -2043,6 +2055,21 @@
+     check("gdn_step_norm_multi");
+ }
+ 
++void gdn_step_norm_observed44(float* state,const float* h,int conv_channels,
++ const float* gate,const float* beta,const float* z,const float* gamma,
++ float eps,float* y,int h_k,int h_v,int n_tok,const int32_t* n_keep,
++ void* stream,GdnCoreCapture44 observed){
++ if(!state||!h||!gate||!beta||!z||!gamma||!y||!stream||!n_keep||h_k!=16||h_v!=48||conv_channels!=10240||n_tok!=1||!observed.core||!observed.square_sum||!observed.argument||!observed.scale||!observed.inverse_s||!observed.error)
++  throw std::invalid_argument("GDN44 requires complete owned T1 NUM38 outputs");
++ const dpct::dim3 grid((unsigned)h_v),block(S,RG);
++ auto props=sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
++ strata::q_of(stream)->parallel_for<dpct_kernel_name<class gdn_core44_observed_kernel>>(
++  sycl::nd_range<3>(grid*block,block),props,[=](sycl::nd_item<3> item_ct1) [[sycl::reqd_sub_group_size(32)]] {
++   gdn_step_norm_multi_kernel<false,false,true>(state,h,conv_channels,gate,beta,z,gamma,eps,y,h_k,h_v,n_tok,n_keep,0,nullptr,observed);
++  });
++ check("gdn_step_norm_observed44");
++}
++
+ namespace {
+ __dpct_inline__ void wait_flag_ge_kernel(const volatile uint32_t *flag,
+                                          uint32_t value, uint32_t spin_max) {
+--- a/sycl/include/strata/core/layer0_numerical_contract.hpp
++++ b/sycl/include/strata/core/layer0_numerical_contract.hpp
+@@ -11,7 +11,7 @@
+ inline constexpr std::size_t maximum_frames=4, byte_cap=64u*1024u*1024u;
+ // One final T1 verifier row per raw GEN prefix1/2/4/8. Source state is physical
+ // [i,head,j] and convolution is [channel,history]. No raw fused hidden invented.
+-inline constexpr std::array<Field,33> fields{{
++inline constexpr std::array<Field,38> fields{{
+  {"residual_input","LE_F32[4,2560]",40960},
+  {"attn_hc_normalized","LE_F32[4,2560]",40960},
+  {"attn_hc_low","LE_F32[320]",1280},
+@@ -44,7 +44,12 @@
+  {"expert_hidden_DERIVED","LE_F32[10,640]",25600},
+  {"expert_hq81","Q8_1_LE[10,20,36]",7200},
+  {"ffn_block_output","LE_F32[2560]",10240},
+- {"residual_after_ffn","LE_F32[4,2560]",40960}
++ {"residual_after_ffn","LE_F32[4,2560]",40960},
++ {"gdn_core_scaled","LE_F32[48,128]",24576},
++ {"gdn_rms_square_sum","LE_F32[48]",192},
++ {"gdn_rms_argument","LE_F32[48]",192},
++ {"gdn_rms_scale","LE_F32[48]",192},
++ {"gdn_rsqrt128","LE_F32[1]",4}
+ }};
+ constexpr std::size_t frame_bytes(){std::size_t n=0;for(auto f:fields)n+=f.bytes;return n;}
+ static_assert(frame_bytes()*maximum_frames<=byte_cap,"Bounded layer0 capture overflow");
+--- a/sycl/include/strata/core/layer0_numerical_observer.hpp
++++ b/sycl/include/strata/core/layer0_numerical_observer.hpp
+@@ -3,6 +3,7 @@
+ #include "strata/core/layer0_numerical_contract.hpp"
+ #include <sycl/sycl.hpp>
+ #include "strata/kernels/layer0_producer_hooks.hpp"
++#include "strata/kernels/verify_kernels.hpp"
+ #include <cstdio>
+ #include <cstdlib>
+ #include <cstring>
+@@ -88,14 +89,21 @@
+   });
+  }
+ 
++
++ strata::kernels::GdnCoreCapture44 gdn_core_targets44(sycl::queue&q){
++  affinity(q);if(!settings().enabled||!data_||building_<0)throw std::invalid_argument("GDN44 targets outside owned graph construction");
++  auto target=[&](const char*name,std::size_t bytes){auto i=index(name);copy_extent(i,bytes);rosters_[building_][i]=true;return reinterpret_cast<float*>(data_+offset(i));};
++  return {target("gdn_core_scaled",24576),target("gdn_rms_square_sum",192),target("gdn_rms_argument",192),target("gdn_rms_scale",192),target("gdn_rsqrt128",4),reinterpret_cast<std::uint32_t*>(data_+frame_bytes()+56)};
++ }
++
+  void begin_roster(int key){if(key<0||key>=4)throw std::invalid_argument("Layer0 graph key invalid");building_=key;rosters_[key].fill(false);sealed_[key]=false;}
+- void seal_roster(int key){if(key!=building_||key<0||key>=4)throw std::invalid_argument("Layer0 graph construction mismatch");for(std::size_t i=0;i<fields.size();++i)if(!rosters_[key][i])throw std::invalid_argument("Layer0 graph does not contain exact33 producer hooks");sealed_[key]=true;building_=-1;}
++ void seal_roster(int key){if(key!=building_||key<0||key>=4)throw std::invalid_argument("Layer0 graph construction mismatch");for(std::size_t i=0;i<fields.size();++i)if(!rosters_[key][i])throw std::invalid_argument("Layer0 graph does not contain exact38 producer hooks");sealed_[key]=true;building_=-1;}
+  void arm(int key,int rows,std::int64_t pos,int token,sycl::queue&q){affinity(q);const auto&r=current();if(!r.active||r.reused!=0||!first_position(r.ids.size(),rows,pos,token,r.ids)||key<0||key>=4||!sealed_[key])throw std::invalid_argument("Layer0 current frame/graph not qualified for replay");
+   armed_key_=key;armed_request_=r.ordinal;armed_pos_=pos;armed_token_=token;nonce_=(std::uint64_t(std::uint32_t(getpid()))<<32)|r.ordinal;
+   // Persistent member backing survives until run completes or owning release drains q.
+   q.memcpy(data_+frame_bytes()+8,&nonce_,8);q.memcpy(data_+frame_bytes(),&zero_,8);q.memcpy(data_+frame_bytes()+16,&invalid_,8);q.memset(data_+frame_bytes()+56,0,168);
+  }
+- void stamp(sycl::queue&q){affinity(q);if(building_<0)throw std::invalid_argument("Layer0 stamp outside graph construction");for(std::size_t i=0;i<fields.size();++i)if(!rosters_[building_][i])throw std::invalid_argument("Layer0 stamp before exact33 producer copies");q.memcpy(data_+frame_bytes(),data_+frame_bytes()+8,8);q.memcpy(data_+frame_bytes()+16,data_+frame_bytes()+24+building_*8,8);}
++ void stamp(sycl::queue&q){affinity(q);if(building_<0)throw std::invalid_argument("Layer0 stamp outside graph construction");for(std::size_t i=0;i<fields.size();++i)if(!rosters_[building_][i])throw std::invalid_argument("Layer0 stamp before exact38 producer copies");q.memcpy(data_+frame_bytes(),data_+frame_bytes()+8,8);q.memcpy(data_+frame_bytes()+16,data_+frame_bytes()+24+building_*8,8);}
+  void copy(const char*name,const void*src,std::size_t bytes,sycl::queue&q){if(!settings().enabled)return;auto i=index(name);copy_extent(i,bytes);affinity(q);if(!data_||!src)throw std::invalid_argument("Layer0 null copy descriptor");if(building_<0)throw std::invalid_argument("Layer0 copy outside graph construction");q.memcpy(data_+offset(i),src,bytes);rosters_[building_][i]=true;}
+  void pair(const char*name,const void*a,const void*b,std::size_t bytes,sycl::queue&q){if(!settings().enabled)return;auto i=index(name);copy_extent(i,bytes*2);affinity(q);if(!data_||!a||!b)throw std::invalid_argument("Layer0 null pair descriptor");if(building_<0)throw std::invalid_argument("Layer0 copy outside graph construction");q.memcpy(data_+offset(i),a,bytes);q.memcpy(data_+offset(i)+bytes,b,bytes);rosters_[building_][i]=true;}
+  bool dump(int key,int rows,std::int64_t pos,int token,std::string&err){const auto&r=current();if(!r.active)return true;
+@@ -115,7 +123,7 @@
+   std::fprintf(out," ],\"graph_key\":%d,\"completed_nonce\":%llu,\"request_replay_marker_verified\":true,",key,(unsigned long long)completed);
+   std::fprintf(out,"\"expert_blob_addresses\":[");for(int j=0;j<10;++j)std::fprintf(out,"%s%llu",j?",":"",(unsigned long long)blobs[j]);
+   std::fprintf(out,"],\"expert_tiers\":[");for(int j=0;j<10;++j)std::fprintf(out,"%s%u",j?",":"",tiers[j]);std::fprintf(out,"],\"producer_mapping_verified\":true,");
+-  std::fprintf(out,"\"raw_fused_hidden_observed\":false,\"complete_preregistered_layout\":true,\"full_model_math_qualified\":false,\"fields\":[");bool ok=true;
++  std::fprintf(out,"\"numerical_source_generation\":44,\"gdn_core_output_observed\":true,\"raw_fused_hidden_observed\":false,\"complete_preregistered_layout\":true,\"full_model_math_qualified\":false,\"fields\":[");bool ok=true;
+   for(std::size_t i=0;i<fields.size();++i){std::string path=stem+"-"+fields[i].name+".bin";
+    if(rosters_[key][i]){std::vector<std::uint8_t>raw(fields[i].bytes);q_.memcpy(raw.data(),data_+offset(i),raw.size()).wait_and_throw();int fd=::open(path.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW,0600);if(fd<0){ok=false;break;}std::size_t done=0;while(done<raw.size()){ssize_t n=::write(fd,raw.data()+done,raw.size()-done);if(n>0)done+=std::size_t(n);else if(n<0&&errno==EINTR)continue;else{ok=false;break;}}if(::close(fd))ok=false;if(!ok)break;}
+    std::fprintf(out,"%s{\"name\":\"%s\",\"encoding\":\"%s\",\"bytes\":%zu,\"observed\":%s,\"file\":\"%s\",\"provenance\":\"%s\"}",i?",":"",fields[i].name,fields[i].encoding,fields[i].bytes,rosters_[key][i]?"true":"false",rosters_[key][i]?path.c_str():"",rosters_[key][i]?(i==25||i==29?"DERIVED_gpu_native_exp_from_actual_gate_up":"actual_buffer"):"UNOBSERVED_no_producer_hook");
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -1111,9 +1111,12 @@
+                                             (const float*) wnm->data, EPS, y_ + (size_t) first * ZV,
+                                             (int) HK, (int) HV, t - first, nullptr, cs, 0);
+                     }
+-                } else
++                } else {
++                 if(l0_capture)gdn_step_norm_observed44(state,hb,(int)C,gate,beta,z_,(const float*)wnm->data,EPS,y_,(int)HK,(int)HV,te,self_commit?one_:nullptr,cs,layer0_snapshot_->gdn_core_targets44(*cs));
++                 else
+                 gdn_step_norm_multi(state, hb, (int) C, gate, beta, z_, (const float*) wnm->data, EPS, y_, (int) HK,
+                                     (int) HV, te, self_commit ? one_ : nullptr, cs, tb, g_qfuse() ? (void*) xq_ : nullptr);
++                }
+                 stamp(l, 6, grp);
+                 if (!g_qfuse()) native_quantize_q8_1(y_ + (size_t) tb * ZV, xq_, (int) ZV, n, cs);   // STRATA_QFUSE: done above
+                 if(l0_capture) {

@@ -16592,3 +16592,17 @@ RESULT -> Admitted launch only; constructor/GEN/clock/normalfinalizer/rawbudget/
 public/health/full4/teardown remainpending. Canonical173 unchanged.
 VERDICT -> ColdGEN4boundedcontrolnotwarmdecode/physicalidle/bandwidth/clean
 speed. Warmprocesshandshake sourcequeued; originalfullcampaign active.
+
+## 2026-10-11 Source44 GDN core/RMS observer source checked
+
+CONFIG -> Output-only defaultOFF NUM observer successor; original43 untouched.
+Five missingtargets scaledcore6144/square_sum48/RMSarg48/scale48/rsqrt128scalar;
+25156extra bytes/frame andfiveadditionaldiagnosticreadbacks, costunmeasured.
+COMMAND -> Rootb5ec08ea6repo+5actualSDK43anchors verified and8CPU PASS0.049s.
+Patch0044/newproposal0c336fb0 requires71sources/44patches/all8freshABI later.
+RESULT -> Source/patchundo/originalhostdispatch/arithmetic checks pass; actual
+compilation/NUM38/PIDnonce/fieldwitness/OFFONfull49/health/runtime pending.
+Profiler53490 stilllive, OFFrequestsclosed/posthealthpassed/postfull4scanlive;
+no SDK/build/query/cardchanges forobserverduringcurrentprofile.
+VERDICT -> Instrumentation proposalonly, notfidelityfix orruntimeproof.
+Fullcampaign remainsactive; nevertransferold43ABIqualification tonew44.

@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "scope": "source44 output-only existing NUM diagnostic defaultOFF/NUM38; no build/runtime/model authority",
+  "files": {
+    "strata/flash-next/prepare_gdn_core44_capture_v1.py": "128baee82ec6410d3b524f874c6f88b864ff990547dbe5067dc46285487079e3",
+    "strata/flash-next/test_gdn_core44_capture_cpu_v1.py": "ec7e263d3a353eed649232d4cb0f13b269c54634729adb75d4e5a0498e7c905d",
+    "strata/flash-next/gdn-core44-capture-design-v1.md": "85132e6d3a6195a76ae8ea1cb05aa90e9c5393ff6397d88bced153592b13db7c",
+    "strata/flash-next/patches/0044-gdn-core-rms-output-observer-v1.patch": "6527a6e5ea14961348e268551490d4199dfaa11c9f56ff98a4171c6a4b951860",
+    "strata/flash-next/native44-engine-build-proposal-v1.json": "0c336fb01c662fce98a11bf8a0101e6b0d7127742eb6b0b7566e467a5f3dc9eb",
+    "strata/flash-next/native43-engine-build-proposal-v1.json": "17ff9e21276cbab2e802435ec3fcda6f6a1bb57444d53f4fb31156a0615b1b5c"
+  },
+  "actual_source43_inputs": {
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T120045Z-kfiohqmn/source/include/strata/kernels/verify_kernels.hpp": "499bd7e4ae2ec194fa1377adaed74e6e383200fec400e229d7b0baa690940553",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T120045Z-kfiohqmn/source/sycl/src/kernels/cuda/verify_kernels.dp.cpp": "1617c1322a1fe7aced3d37cab01a7c46b8f68f8ed07cefc3ab8dd0257bf64a66",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T120045Z-kfiohqmn/source/sycl/include/strata/core/layer0_numerical_contract.hpp": "86a83df856829674f03b9eb6c80bac0817cb2cdfa4459b3186f5480600e8dfdd",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T120045Z-kfiohqmn/source/sycl/include/strata/core/layer0_numerical_observer.hpp": "d6c3661f24928c2dab3da6878b0a8b2829ece952b6b45b7f4482dde6d1c78481",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T120045Z-kfiohqmn/source/sycl/src/core/verify.cpp": "dc3ba9cfac3a707f3ab8262c9bcd6fe70f33e2685bc558d24b971332692d17ba"
+  },
+  "expected_reconstructed_source_sha256": {
+    "include/strata/kernels/verify_kernels.hpp": "2b40cbeee31f2e41276d01cb9fc7e5636c862ff653e2ea84b9916055e2c8f3e7",
+    "sycl/include/strata/core/layer0_numerical_contract.hpp": "f9d3998ac67fa5b3dc7c9e20a487356ba445dc47888c51807626c0cbb3591ecf",
+    "sycl/include/strata/core/layer0_numerical_observer.hpp": "f566ef3ebff892bd53b03ad889e1ae351984174c9ce0caa041bb152528c49d1b",
+    "sycl/src/kernels/cuda/verify_kernels.dp.cpp": "4e7067300128efcf754fa4efc3952925898f1b7040736d2ab7f3204db2dfe784",
+    "sycl/src/core/verify.cpp": "370a076467394104f4e87e8bef0db1116b7362829c3569ba799dcfa857d0a44e"
+  },
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_gdn_core44_capture_cpu_v1 -q",
+  "CPU_tests": 8,
+  "field_count": 38,
+  "additional_raw_bytes_per_frame": 25156,
+  "additional_dump_readbacks_per_frame": 5,
+  "new_GPU_queries_or_barriers": 0,
+  "required_fresh_all8_build": true,
+  "original_source43_or_SDK_mutated": false,
+  "source43_runtime_proof_transferred": false,
+  "actual_capture_qualified": false,
+  "full_model_math_qualified": false
+}
