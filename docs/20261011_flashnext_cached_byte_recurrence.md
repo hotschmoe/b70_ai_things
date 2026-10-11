@@ -50,3 +50,22 @@ source41-upload390-v2-root-public-binding-v1.json SHA is
 403e52a761097d021721ece962c7bd57165c4103091c65bc06c47105e013b945.
 This qualifies the declared HC/PLE upload scope; full-model mathematics,
 ordinary weight readback and normal model graphs remain unqualified.
+
+RECURRENCE -> Host-profile run 32006 subsequently stopped before tokenization
+or inference: both its complete pre- and post-model scans reproduced the
+same shard3 SHA bcbdc432...; other shards passed. The run failed in 229 seconds
+and post-health passed. Root preserved the current page without refreshing it
+under h36-v3-shard3-recurrence-page-readonly-v1. Buffered/direct/buffered reads
+again showed exactly E7/C7 at 33,530,452,716; the buffered page stayed unchanged
+across the direct read and all stat fields remained unchanged.
+
+The intervening work included a CPU-only original-reference admission and a
+model-independent GPU fixture. These facts do not establish which operation,
+if either, caused the recurrence. No matching MCE/EDAC error was found in the
+queried kernel journal; no memory-controller error counters were exposed in
+the inspected EDAC tree. This does not exclude a hardware fault.
+
+Full-model launches are held while source audit and bounded phase controls
+investigate the recurrence. Small independent fixture profiling can continue
+with its own integrity/output/health gates. The host-profile failure contains
+no model execution or host critical-path trace and supplies no latency result.

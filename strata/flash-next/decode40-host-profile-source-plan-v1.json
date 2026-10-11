@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "scope": "metadata-only onecard bounded64 existing-H36 recipe; no GPU runtime qualification",
+  "files": {
+    "strata/flash-next/prepare_decode40_host_profile_v1.py": "e9230624b311802a3bb0e15af462b4a6d974053f9a4109686fdcdcdd8ff4e1a4",
+    "strata/flash-next/test_decode40_host_profile_cpu_v1.py": "929c2be806a32cec78b22f4711c4ac4c8e0c6e5088eec7e8696cf3442043be03",
+    "docs/20261011_flashnext_decode40_critical_path_plan_v1.md": "76ddcb2aaef0e643f9b5395ae9c6ccc5fe3ab3b6d3664a20855da996a513eaec",
+    "strata/flash-next/provisional_speed_screen_v2.py": "a82a72872ad4f0e6e5b88ffb9929bfe7661b25542526e0b571ad0f1955511bff",
+    "strata/flash-next/collect_host_critical_path36_v1.py": "60dfc04ee630f2e080208b10d396ded6a1abd4d9e4c5260ff4f4bf0bd26a165a",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T193019Z-1kl6uepo/source/sycl/src/program/generate.cpp": "7c9f3989dd454545e3a38b0581b0a5569d038c356626603848fe3cacdd116643",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T193019Z-1kl6uepo/source/sycl/src/core/verify.cpp": "0658c5c16484c751787ab174cc48968b82ab3601a4cbbcf474a72ab12452d6e3",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T193019Z-1kl6uepo/source/sycl/src/kernels/hc_native_composition.cpp": "c63ce71dee3572daca974f03587db54ade1d9ec842176bd83bb81dc7d22bb83f",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T193019Z-1kl6uepo/source/sycl/include/strata/program/host_critical_path_trace.hpp": "99dbe2074b30d3fc6f1aa3c51921f98e8d370a9089bf036117c9019ea8b063bd",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T193019Z-1kl6uepo/source/sycl/src/kernels/cuda/verify_kernels.dp.cpp": "1617c1322a1fe7aced3d37cab01a7c46b8f68f8ed07cefc3ab8dd0257bf64a66",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T193019Z-1kl6uepo/source/sycl/include/strata/core/native_hc_dispatch.hpp": "e6ebfc7da2e4e66af349413e50acc134463f02488ed156b1ada9b5ac47d047ef",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T193019Z-1kl6uepo/source/serve/server.py": "3166f70fa013b905adf713dba404a2eb91a4f3381842dafb542af98cf978d241",
+    "strata/flash-next/collect_decode40_host_trace_v1.py": "912516983f704a3a8c156c631a046b9616d6f37855a625aafea3b4a517ffe880",
+    "strata/flash-next/test_host_critical_path36_cpu_v1.py": "c22fd97e27cd2ac2e2049e2d44388c2c72ed40d6810d836be82129be318c2573",
+    "strata/flash-next/prepare_host_critical_path36_v1.py": "ce883ace7cc5e31e024c3cc5d2276edf91929e9da505f507a22ba2113f603b03"
+  },
+  "cpu_command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p test_decode40_host_profile_cpu_v1.py -q",
+  "CPU_controls": 6,
+  "actual_GPU_run": false,
+  "device_timestamps_observed": false,
+  "dynamic_expert_bytes_observed": false,
+  "two_card50tok_target_tested": false
+}
