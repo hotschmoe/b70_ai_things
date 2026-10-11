@@ -15961,3 +15961,22 @@ proof from generic reusable model byteguard.
 VERDICT -> Oracle compilation only. Fivecasefresh43 upload/health/logicalfree/
 postidentity andnewmasked/model cases stillrequired. Originalhead discrepancy
 notresolved, runtime/profiling/API/shelf qualification remainpending.
+
+## 2026-10-11 Source43 first genuine five-case GPU upload underway
+
+CONFIG -> Actualfresh43 oraclelinked toSDK43 all8 currentarchives; selected
+UD-Q4_K_XL/modelpack unchanged. Runtimequalification scope separatefrommath.
+
+COMMAND -> Root5399 fresh completebuffered preidentity andallthree pageguards
+PASS. Root86866 nowpairleased run_source_upload43_oracle_v1.py withnew43plan,
+newzzk5p02u oracle, currentpackreceipt, explicitfresh--model-identity, andnew
+B17/source43-upload390-run-v1. Corrected frozenCLIusage retained in priorentry.
+
+RESULT -> GPUrunner confirmedlive; zero completedcases atlatestpoll, source/
+startup checks pending. No duplicate process started. Compilation49s passed,
+butactualfivecase layout/ownership/health/logicalfree/fullpostidentity result
+notyetknown.
+
+VERDICT -> ActiveGPU qualification, no PASS/runtime/math/speed claim from
+incomplete receipt. Originalhead error persists; zeroL0GDN andownfixedinput
+Q8 cases andfreshmasked43/source43model intake remainnext. Fullgoalactive.
