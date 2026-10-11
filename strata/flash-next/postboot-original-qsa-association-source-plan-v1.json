@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "status": "SOURCE/CPU3 typed st_dev-only association/publisher foundation; full dependent reference-reader port pending",
+  "files": {
+    "strata/flash-next/postboot_original_model_association_v1.py": "f4c8ad088f0ed891607b796bb2770fe05ae54d1fe749a864562a9dc5fc5bca5e",
+    "strata/flash-next/postboot_original_publisher_reader_v1.py": "59ab13bb5328b04524c6fd082ff3cc0e120105e9ca0a88f42fcbf01a4f3b0362",
+    "strata/flash-next/test_postboot_original_model_association_cpu_v1.py": "35617df135f050b1aa2239bae42dae26808f1c5dc079fdeedcaabaa2763c5d18",
+    "strata/flash-next/postboot-original-qsa-association-design-v1.md": "75daffeffa2d3aca177b85927e1ed603ef5bd0adb59ded3fed0dfa3b4b3b55fa",
+    "strata/flash-next/serial37_canonical_json_v3.py": "afdbdc4729cc6a2cfb68de5cb1106d79d1b81db79c9da91b1c157d5c1b85f57d",
+    "strata/flash-next/native_rms_publisher_binding_v2.py": "fdda0c30f9513e1715be9ac07ddd66df05b558acfbaaa801f41977d6869e5139",
+    "strata/flash-next/source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+    "strata/flash-next/model-lock.json": "5f324a3c166eea2952f78248be5753e69944892a88f44a75697139636814061b"
+  },
+  "CPU_tests": 3,
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p test_postboot_original_model_association_cpu_v1.py -q",
+  "actual_current_full4_receipt_sha256": "e9e43a28d660ac6c67dd3338667db03d8198ec1803d49b8a51f0bd914267ed21",
+  "old_current_stat_gate_passed": false,
+  "original_reference_current_admitted": false,
+  "historical_GPU_health_transferred": false,
+  "stat_or_read_monkeypatch_used": false,
+  "original_reports_changed": false,
+  "current_runtime_qualified": false,
+  "full_model_math_qualified": false
+}

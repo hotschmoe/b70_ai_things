@@ -15080,3 +15080,10 @@ CONFIG -> FrozenV9 34c3a4fe, same source40 SDK/current171/freshC140 pair, whole 
 COMMAND -> Completeprepare87852 terminal0; all10plan hashes independently checked. Self-leased suite45892 from shared-v9-whole-suite-postboot-prepared-v1/suite-plan.json to shared-v9-whole-suite-postboot-run-v1.
 RESULT -> SuiteSHA39e09b482a252b9f82770554d408b41177e0433842ce881988a52ed735243e76; both leases acquired. Actualimage/no-device startup and independentpeer passed before launch; no actor or cachefamily result yet. Exactlaunch saved at f17/shared-v9-root-launch-command-v1.json.
 VERDICT -> Concrete soleGPU campaign executing with corrected imports and pre-removal logs, not a cache/modelmath/latency claim. OldV8 and originalQSA V1 failures retained. Full originalcampaign remains active and incomplete.
+
+## 2026-10-11: Postboot original QSA historical reader successor source ready
+
+CONFIG -> FrozenreaderV2 7f2f0dc/567 andruntime8 e7fb4bf/605; declared hostassociation0e8ecf/15, immutable original math/receipts/source. EarlierreaderV1/runtime7 and authentic51978 FAIL preserved.
+COMMAND -> Rootfull567/605 SHA/ASCII/AST and73CPU PASS13.962s; focusedindependentpeer35tinyCPU PASS0.218s. Host8CPU rootPASS0.018s.
+RESULT -> Exact51->45 filedevice association keeps path/SHA/inode/size/timestamps, all original fixtures/output predicates. PATH recordedold/new separately; absolute ldd and same libraries/Python/CPU/affinity/rounding, actual hostthread pins/nonPATH environment exact. Oldcurrenthost/GPU authority false, fresh genuineC1401403 separate. No authenticnewadmission or QSAmodel run yet. LivecacheGPU45892 warmactualtrace/modelaliasverified; no cachephasefinalized.
+VERDICT -> Reviewedsource checkpoint only. Run actual admission with OMP/MKL/OPENBLAS1 and NUMEXPR absent after soleGPU actor retires; preserve full RAM discipline. Original48 math/fullcache/streams/physicalplacement/x2profile/latency/shelf remain required; fullgoalactive.

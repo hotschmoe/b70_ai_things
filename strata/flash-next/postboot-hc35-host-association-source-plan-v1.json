@@ -1,0 +1,32 @@
+{
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_postboot_hc35_host_identity_cpu_v1",
+  "CPU_tests": 8,
+  "bulk_API": "postboot_hc35_bulk_host_v1.finalized_binding(build_root,model_association)",
+  "current_GPU_or_model_runtime_qualified": false,
+  "files": {
+    "strata/flash-next/hc35_host_bulk_fma_v1.cpp": "135e3b325ea4691032cdcb5eb68daaf1d117205185c939ba398f3c63e22217cc",
+    "strata/flash-next/hc35_host_bulk_fma_v1.py": "1cbdc3f900ba02e4e25f1468853c2d9e5f68dbdb82065a3e5981bb6cf986aa30",
+    "strata/flash-next/hc_f32_arithmetic35_host_v1.cpp": "cf12835a10659b997446f87419d771396846a5305943778a33e1b7ddb6cbb9bf",
+    "strata/flash-next/hc_f32_arithmetic35_host_v2.py": "a166e812264acdaa2859d656b043420df514c2d1bad58e0ab4054bbf4bd7a767",
+    "strata/flash-next/postboot-hc35-host-association-design-v1.md": "0ebff95fe6d2afeaecf9cbe4a25d8ffab17764c08d4bbd90e74a7d46dadea2e5",
+    "strata/flash-next/postboot-original-controller-source-plan-v1.json": "e22b544088bd66266e0472577b177b1cc92a59413f96437dc3c5a2a166176163",
+    "strata/flash-next/postboot_hc35_bulk_host_v1.py": "1a686a25b7ccf2428774f7607ac66acf15f8999be3cf8c4f94997e611b534155",
+    "strata/flash-next/postboot_hc35_host_identity_v1.py": "d9e9d10be87da3a071e29cd98a9ca7a56adb87dc1d68d964ad71b062b818cda7",
+    "strata/flash-next/postboot_hc35_scalar_host_v1.py": "1222b7b590af668449b88c0b0c1b896c41f14e675667ed666ea672138febba59",
+    "strata/flash-next/postboot_original_model_association_v1.py": "f4c8ad088f0ed891607b796bb2770fe05ae54d1fe749a864562a9dc5fc5bca5e",
+    "strata/flash-next/postboot_original_native_manifest_v1.py": "a116b01381a88eb40daf9d0d0b570e106efe8189bb5af6de64def8ccbc0854c2",
+    "strata/flash-next/qualify_hc35_host_bulk_runtime_v1.py": "b88e940681e04be88edc2bd100bbdbb1377506585dd2cabd6dc5096b7946231c",
+    "strata/flash-next/qualify_hc35_host_runtime_v1.py": "bc40f0546d570dc2741edb2c6cfc346ab8dc1af3605df95387839c8144a02aa5",
+    "strata/flash-next/serial37_canonical_json_v3.py": "afdbdc4729cc6a2cfb68de5cb1106d79d1b81db79c9da91b1c157d5c1b85f57d",
+    "strata/flash-next/test_postboot_hc35_host_identity_cpu_v1.py": "0eee69c0190decb67f1923728685e4e6ea113fc364d7d0bb353605cdda9a251b"
+  },
+  "full_model_math_qualified": false,
+  "helper_numeric_execution_repeated_by_agent": false,
+  "historical_GPU_health_transferred": false,
+  "old_current_runtime_gate_passed": false,
+  "original_reports_changed": false,
+  "scalar_API": "postboot_hc35_scalar_host_v1.finalized_binding(run_root,helper,build_root,model_association)",
+  "schema": 1,
+  "stat_read_environment_monkeypatch_used": false,
+  "status": "SOURCE/CPU8 explicit scalar/bulk historical file and PATH association; complete root reference admission pending"
+}
