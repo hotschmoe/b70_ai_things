@@ -47,3 +47,30 @@ this does not establish the cause of the earlier cached-byte mismatch or
 qualify host stability. Default-off export of already queried raw clock data
 is being prepared. Source41 accepted-row GPU qualification is a separate live
 experiment; full-model fidelity, cache, concurrency and serving shelf remain open.
+# Clock-enabled capture on 2026-10-11
+
+CONFIG -> Fresh clock-export PTI build, unchanged source40 indexer fixture,
+GPU0 workload with pair exclusion for health. Source plan V3 b593f409; the
+previous stock-profiler capture remains intact.
+
+COMMAND -> Root actual run41083 used probe_unitrace_indexer40_v3.py with a new
+unitrace-indexer40-v3-clock-capability-run-v1 output directory. Nine CPU controls
+and the focused peer passed. Actual no-device inventory resolved all16 helper,
+5 tool and9 injection dependencies. The actor acquired bin/gpu-run exclusion.
+
+RESULT -> PASS151s, report SHA256
+91b08034d2e7fa1121175c9ce7ebc3542085d2bea083e29f012941dca5b51ad2.
+The independent public reader passed. All18 OFF/ON frames and eight fields
+match bitwise; exact-owned normal terminal/removal, current source/dependencies,
+pre/post strict and compiled health and kernel journals passed. Actual clock
+file738304B has921 records: one host origin, one device origin and919 unique
+operation records, matching919 original Chrome GPU IDs. Each raw timestamp
+normalization recomputes exactly using its retained frequency, mask and scalar.
+Clock file SHA256:
+5b08ab763f9070f720b265b120f900572cd30b08015856d6b2df1e50e42df610.
+
+VERDICT -> Raw per-operation clock export and fixture correctness now pass.
+Independent conversion/serialization precision and replay-flow audit remain
+separate. Instrumentation adds observer work and stock collector waits; no
+normal-model GPU idle fraction, bandwidth saturation or serving gain follows.
+No model file was mounted in these fixture containers.
