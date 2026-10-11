@@ -39,3 +39,14 @@ does not identify RAM, CPU, driver, storage or power as the cause. Unchanged
 file metadata and sentinel checks cannot replace complete publisher hashes.
 Do not reuse the failed upload as a successful qualification or infer model
 fidelity from the restored file identity.
+
+FOLLOW-UP -> New upload 13661 completed PASS in 288 seconds. All five cases,
+owned teardown, pre/post strict and compiled health, source guards and final
+four-shard publisher hashes passed. Independent root reader 11072 also passed,
+including the fresh source41 ABI/layout and original upload predicates.
+Upload receipt SHA is
+da34526988f525080449bbc192ac46641d5dd0de46a15f747c87b08290d2feb2;
+source41-upload390-v2-root-public-binding-v1.json SHA is
+403e52a761097d021721ece962c7bd57165c4103091c65bc06c47105e013b945.
+This qualifies the declared HC/PLE upload scope; full-model mathematics,
+ordinary weight readback and normal model graphs remain unqualified.
