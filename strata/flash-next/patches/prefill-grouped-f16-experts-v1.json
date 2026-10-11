@@ -1,0 +1,23 @@
+{
+  "base_sdk": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T120045Z-kfiohqmn",
+  "patch": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/patches/prefill-grouped-f16-experts-v1.patch",
+  "patch_sha256": "536cfe91f224c5ac05049c4dde3934ad023a9467955979081a1c6607f7c9b520",
+  "files": {
+    "include/strata/prefill/gemm.hpp": {
+      "before_sha256": "f0c30f5f73df10506be20c83aa538b06b5e10692ea82e5063249e6fe89e69bf7",
+      "after_sha256": "0184836cb635cd7e097ebe4e9593d237604fc005c4198652bea8bcb77173df14"
+    },
+    "sycl/src/prefill/gemm.dp.cpp": {
+      "before_sha256": "8b40704b892c50db1fae376336a3159a35390c96f58b65f5ab3295912c388584",
+      "after_sha256": "7a0da359b7dd91a0689ef376ffa28a3689991c325377b39aadba5dc27da2c0a4"
+    },
+    "sycl/src/prefill/prefill.cpp": {
+      "before_sha256": "a1cbd73403aa71e38b8f589572852d628dc04b70f45fdaa6aad6956403bfd364",
+      "after_sha256": "c5e3d4409a26bf6e052ca693e3770dabdd866d68e1ee1bf474be56e4b5987e17"
+    }
+  },
+  "actual_build": false,
+  "actual_math": false,
+  "actual_speed": false,
+  "exact_apply_and_undo": true
+}

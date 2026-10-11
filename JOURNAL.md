@@ -17219,3 +17219,26 @@ VERDICT -> Concrete prefill candidate (~2.83x in warm sample), no decode gain
 yet and targets2000/50 unmet. Long expert FP16 expansion/groupedGEMM patch
 being prepared deliberately; no legitimate current SYCL KQuantMMQ flag.
 Original full model/cache/concurrency/latency/shelf goal remains active.
+
+## 2026-10-11: Expert lane control closed; balanced pair and kernel build queued
+
+CONFIG -> Exact SDK43/shortread0/mode0, native GU/DOWN32 versus default8,
+short54/twoGEN4/MTP0/cacheOFF.
+COMMAND -> Actual52414 PASS485s; reportSHA a206299a6c3bd857b129b26f5a9a9e13ee1745e9de8ad026c5981b46c494b6d6
+Root scoped descriptive comparison rejoined exact config/argv/requests and
+only two lane env changes, raw artifact SHAs and matching output IDs. No new
+public full-model rescan solely for this negative candidate.
+RESULT -> WarmPP1516.2->1516.8ms; four-output374.6->367.4ms (~1.9percent),
+IDs760/2919/10458/369 unchanged. Producer health/full4/teardown passed.
+Scoped file F17/source43-expert-lanes32-descriptive-only-v1.json; full public
+validation not performed and no performance promotion. Skip wider lane sweep.
+COMMAND -> Actual78244 balanced24/24 acquiredpairlease, same SDK/default8/
+shortread0/requests; plan02fbcf9e, outputF17/source43-pair24-latency-v1-run-v1.
+Fresh source45 groupedF16 all8 build66150 is queued behind it under bin/gpu-run,
+proposal3118c830. No overlapping GPU/compile work; copied ggml source clean at
+3cf03257. Patch defaultOFF; eight slots add56.25MiB accounted scratch.
+RESULT -> New CPU independentHC candidate9ad227f9/5tinytests handles source
+F32 laneFMA/XOR order and HCrawF32 activations, preserving whole48 ownstate;
+actual numerical comparison pending, host transcendental equivalence unproven.
+VERDICT -> Small lane result redirects work to placement and grouped expert
+products. Full model/cache/concurrency/latency/shelf and2000/50 remain open.

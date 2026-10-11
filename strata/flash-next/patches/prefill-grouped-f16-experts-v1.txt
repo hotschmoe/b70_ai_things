@@ -1,0 +1,48 @@
+CONFIG -> SDK43 source, default-off STRATA_PF_GROUPED_F16=1, native single-device
+FP16 expert prefill only. Absent/0 keeps the existing path; other values refuse.
+Not enabled for MMQ/fused/peer paths. No running SDK or model was changed.
+
+COMMAND -> Apply prefill-grouped-f16-experts-v1.patch with patch -p1 to a fresh
+SDK43 source copy. Rebuild before use. A fresh process is required for each arm.
+The exact base/after file digests and patch digest are in the adjacent JSON.
+The immutable existing-builder proposal is
+strata/flash-next/native45-grouped-f16-engine-build-proposal-v1.json.
+Root command (builder obtains the pair lease itself):
+python3 strata/flash-next/build_native_hc_engine.py --plan
+strata/flash-next/native45-grouped-f16-engine-build-proposal-v1.json --jobs 4
+Put this command on one shell line. Generation45 branches directly from43;
+generation44's numerical observer patch is not part of this proposal.
+
+RESULT -> SOURCE ONLY. No compiler, GPU, model weights or native execution used.
+The local bundled DPCT detail/blas_utils_detail.hpp:372-413 establishes the
+grouped oneMKL interface; blas_utils.hpp:1203-1210 instantiates FP16 inputs and
+FP32 outputs/scaling. Existing Gemm::f16 uses trans/nontrans, alpha=1, beta=0,
+FP32 compute and the descriptor's math mode. This patch uses those same choices
+with group_count<=8, group_size=1 and independent per-expert row counts.
+
+Each decoded expert needs GU 1280*2560*2 plus down 2560*640*2 = 9,830,400 bytes.
+Eight slots need 75 MiB instead of 18.75 MiB: delta 58,982,400 bytes / 56.25 MiB.
+Both actual allocation and bytes_needed use the same default-off slot selector.
+No extra device scratch is added by this code beyond those six extra slots;
+oneMKL internal workspace is not bounded by this accounting. Host metadata is
+bounded to eight groups per submitted operation and retained through its event.
+
+For each routed expert the original native dequantization and source-blob release
+event remain. Its rows retain original expert offsets. A full group or final tail
+submits grouped GU, then the existing SwiGLU per expert in original group order,
+then grouped down. Original combine/scatter is unchanged. Reuse of a decoded slot
+is ordered after down on the required in-order queue. Streamed/resident experts
+use the same pending slot count; skipped streamed entries do not create holes.
+
+No normal explicit wait is added. Metadata lifetime uses the bundled DPCT
+event-dependent host_task pattern. This may add CPU queue overhead; failure-only
+queue retirement preserves metadata after a failed submission. BLAS can choose
+different tiling/accumulation for grouped calls: neither bitwise equality nor a
+speed improvement is assumed. Quantization formulas, FP16 intermediate storage,
+router, shared expert, SwiGLU expression and scatter order are preserved.
+
+VERDICT -> Candidate source, not runtime or math qualification. Next: fresh
+compiler/API check, then bounded same-operand original-vs-grouped products with
+variable ne and partial groups, followed by matched real-model OFF/ON prompt
+outputs and latency with original identity/lease/health/teardown gates. Do not
+call duration sums critical path or infer physical memory bandwidth from shapes.
