@@ -15579,3 +15579,21 @@ CONFIG -> Source41mode0/4GEN64LP20 hostdiagnostic; H36OFF/ON only, no numeric/QS
 COMMAND -> HostV2 d8b523983078ab7658fce385119474adeb22a4177633c1ef965e148ea1c619c9 all125bindings root/peerPASS;23CPUroot0.061s/peer0.061s. V1held/preserved.
 RESULT -> Usesexistingdecode-onlycollector withoutclaimingoptimizedpromptinternals. Mandatory1LP20/T orderedraw/event/sourceID/cardinality+OFFON/repeat equality, actualprivate/no-init/directexec nativePID1 andstricttypedmeta/events/footer nowjoined. UnusedARM pollingremoved; H36exportIObeyondrequestspan explicit; omittedLPdisabledrecipeonly, notLP0. Per-armcurrentidentity/3pages/health/kernel/normalownedEOF gates unchanged.
 VERDICT -> Source/CPUready only; actualhostcontrol waitsfortracedmodel59267retirement. No physicalidle/cleanlatency/shelf claim. Whole originalgoalactive.
+
+## 2026-10-11 Source41 log-probability-disabled latency control
+
+CONFIG -> Same source41 mode0 model geometry and four fresh GEN64 requests as
+host V2 LP20, preserving omitted seed and temperature0 greedy policy. Both
+H36 OFF/ON arms omit the GEN logprobs field; logprobs0 would retain readback.
+
+COMMAND -> Root reran test_source41_lpdisabled_cpu_v1 and actual source closure;
+independent source33 peer repeated controls and checked all132 bindings.
+
+RESULT -> Six CPU controls PASS root0.098s/peer0.091s; frozen plan
+f304423d65052b0cb09e2bdb3d37b7feb29f88d06e1828c2205286db6783d1dd.
+Tiny actual protocol process proves omission and normal EOF. Both arms reject
+LP rows; ON rejects LPReadback/LPCPU spans. Optional closed LP20 comparison
+checks configuration, IDs and finish. No GPU/model runtime yet.
+
+VERDICT -> Source ready for a separate matched runtime control. No measured
+latency gain, device-idle, bandwidth, original-math or shelf qualification.
