@@ -17071,3 +17071,20 @@ Short-read0singlearmcontrolreadyafterretry, noOFFbaseline reload/numeric
 headobservationsinvented. Registry173unchanged, API174metadatareadynext.
 VERDICT -> Concreteactualretry plusduplicatedbaseline modelscansremoved, not
 modeltracePASS orlatencygain. Fulloriginalgoal remainsactive.
+
+## 2026-10-11 Actual command preflight fixes copied runtime binding before scans
+
+CONFIG -> V4/86991 stoppedbeforemodelcommand creation; failedsource retained.
+COMMAND -> Actual86991 terminalFAIL745s/NoneType notsubscriptable. Root
+introspectionprovedlife.contract.native_command stillboundoriginalV3globals
+with_RUNTIME=None whileactualnewnative_command correctlyusedprivateNS.
+V5d0ed9b26 all299SHA/3targetedCPU0.052PASS; rootactualsavedconfig/runtime
+phase_recipe+life.contract.native_command preflightPASS1.57s/proof
+734b72fa5affb1a1225c84177fe1fc7cc502c2f766f4324f356188d58c4139a0.
+RESULT -> Private life/command callback rebound; actualconstruction nowruns
+beforeexpensivecurrentadmission/full4/health. NoGPU/Docker inpreflight.
+Actual69524 acquiredsolepairlease newF17/source43-warm-pti-short-v5-ON-run-v1,
+originalthreepins/noNUMEXPR, samec72+exec3+historicalOFFcomponent.
+ONanalyzerc70e609a all323SHA/2CPU0.019 ready, noactualmodelanalysisyet.
+VERDICT -> Concretefailure-loopcost reduction andactualretry, notmodelcapture
+PASS. Currentidentity/health/teardown guards remain; fullgoalactive.
