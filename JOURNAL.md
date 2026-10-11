@@ -15108,3 +15108,10 @@ CONFIG -> FrozenreaderV3 dfa94dfc/579 andruntime9 a8eea0b6/636; exact threeCPP s
 COMMAND -> Rootfull579/636 SHA/ASCII/AST and77CPU PASS13.460s; independentpeer579/35CPU0.252s and636/77CPU13.535s. Actualnewrootadmission16524 using matchedOMP/MKL/OPENBLAS1/NUMEXPRabsent.
 RESULT -> Authenticboundedconstructor diagnostic21.56s confirms fourpreviousprerequisite conjuncts exact; only verify/prefill/generate CPP stat5[0]51->45 differs, allsource hashes/inode/size/timestamps unchanged. New source validates exactpaths/currentbytes/remount; no equality/stat/read patch oroldNNruntime transfer. Actual16524/PID38435 confirmedlive; no admission result yet. CompletecacheV10prepare99592 terminal0; GPUlaunch waits actualreference actor.
 VERDICT -> Sourcepeerready checkpoint, authenticreference andGPUobserver qualification pending. Keep originalV1/V2 failedadmissions and frozenruntime7/8. Fullgoal/math/cache/streams/profile/latency/shelf remain open.
+
+## 2026-10-11: Authentic postboot original QSA reference admission complete
+
+CONFIG -> NewreaderV3 with exact model/host/threeCPP remount associations; immutable original source/data/math, fresh currentC1401403 runtime authorization.
+COMMAND -> Actualroot16524 terminal0, matchedOMP/MKL/OPENBLAS1 NUMEXPRabsent; supplemental postboot-original-qsa-reference-admission-v3.json. NativeoneQSA9prepare37928 started withcurrente9 identity and freshoneC140 root.
+RESULT -> Authenticrecursive historical reference/arrays/source/host/currentfreshnative separation admitted; receiptSHA e71fe4142a64ca0ae416ebfc2b701f307b0bb1be41b520bb7e5cc6f06d31b62a. Originalstat/currenthost/GPU-health transfer gates remainfalse, capturedoperandsfalse and fullmathfalse. Everyoriginalfailure preserved. WholecacheV10all10planhashes verified, suiteSHA180ab2219a620ac2bd3f4ca9bde74beef81a34b4706e4a4300b9887da487d72a.
+VERDICT -> Reference evidence association nowconcrete, not newnativeQSA/modelmathqualification. Prepareone observer thenpair aftergenuineonePASS; completeV10cache campaign remainsqueued. Full original fidelity/cache/concurrency/placement/profile/latency/shelf goal active.
