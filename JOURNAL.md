@@ -15572,3 +15572,10 @@ CONFIG -> Same original source41 mode1 four-prefix4/MAX1 workload; original refe
 COMMAND -> V4d105a522/119 rootclosure+22CPU PASS2.592s; peer119/22CPU PASS2.563s. Original-fidelityonlySYCL_UR_TRACE2 and128MiB/300000linequota (1MiBline), actualobserved/recorded bytes/lines/maxline counters withpublicfile crossjoins; ordinaryOFF retains64MiB/100000. Root59267 nowselfpairleased actualtracedrerun, CPUadmission pending.
 RESULT -> EnclosingV2 52f0fdbb/19repo+5preservedfixture root/peerPASS;7CPUroot0.010s/peer0.011s. RootactualknownbadV3 preflight trialrefused0.646ms; fullV2wrapper metadatarefusal1.441ms withactor/referencecalls/newmodelscanfalse. Necessaryconditionrefusal hasno model/math authority; validpath stillactualV4 publicbefore/after/full4/source plusunchangedraw/originalcomparison. NoSDK/kernel/model/registry modification.
 VERDICT -> Concrete dev-loop ordering fix avoids expensive admission for knownmissingUR evidence. Trace-enabledrerun nowauthorized andlive; numericaloriginalfidelity stillunobserved. HostV2correcteddecode-only/LP20/PID/typescontrol beingprepared separately. Alloriginalcache/concurrency/placement/latency/shelf requirements remainactive.
+
+## 2026-10-11: Corrected source41 host latency control source ready
+
+CONFIG -> Source41mode0/4GEN64LP20 hostdiagnostic; H36OFF/ON only, no numeric/QSA/physicaldevice observation. Originalmodel/SDK/registryunchanged.
+COMMAND -> HostV2 d8b523983078ab7658fce385119474adeb22a4177633c1ef965e148ea1c619c9 all125bindings root/peerPASS;23CPUroot0.061s/peer0.061s. V1held/preserved.
+RESULT -> Usesexistingdecode-onlycollector withoutclaimingoptimizedpromptinternals. Mandatory1LP20/T orderedraw/event/sourceID/cardinality+OFFON/repeat equality, actualprivate/no-init/directexec nativePID1 andstricttypedmeta/events/footer nowjoined. UnusedARM pollingremoved; H36exportIObeyondrequestspan explicit; omittedLPdisabledrecipeonly, notLP0. Per-armcurrentidentity/3pages/health/kernel/normalownedEOF gates unchanged.
+VERDICT -> Source/CPUready only; actualhostcontrol waitsfortracedmodel59267retirement. No physicalidle/cleanlatency/shelf claim. Whole originalgoalactive.
