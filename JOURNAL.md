@@ -17138,3 +17138,19 @@ source43-api-mode1-baseline-v3-prepared-v1. Claude handoff records next actions.
 VERDICT -> Disk-source identity observed intact; cached-page corruption cause
 unknown. Prior warm5 public closure remains failed. Actual API serving now
 underway; no new speed, stability, fullmath or shelf qualification claimed.
+
+## 2026-10-11: Genuine source43 API producer passed
+
+CONFIG -> Source43 mode1/GPU0/ctx2048/prefill64/PLE65536/MTP0/cacheOFF/
+batch0/parallel1, exact registry174 identity, hotschmoe-dd primary.
+COMMAND -> Original run_source43_api_baseline_v3.py under paired gpu-run lease;
+then original public reader, whose separate result is pending.
+RESULT -> Producer exit0 in522 seconds; all eight HTTP coherence cases and
+deterministic repeats passed, actual two-client overlap passed; native FIFO
+remains serial. Owned stop removed container normally. Pre/post health and
+fresh four-shard publisher checks passed. Warm repeat native logs:23/51-token
+prompts at13.4/13.9 tok/s prefill;5/9 generated tokens at9.8/10.7 tok/s.
+Producer report SHA256: c894ba56fd719b84b447f51de666390e28b7ea9e528d662bb4f4a17c2affbae9
+VERDICT -> Actual research API baseline passed. Tiny-output native rates are
+observations, not sustained decode/speed qualification. Original fullmath,
+cache, native concurrent computation and shelf qualification remain open.

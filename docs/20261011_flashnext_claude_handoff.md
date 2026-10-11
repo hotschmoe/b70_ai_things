@@ -14,8 +14,10 @@ Hardware/model: two Intel B70s, 64 GiB total VRAM, approximately128 GiB host
 Current concrete action: the genuine source43 mode1 API baseline was launched
  through bin/gpu-run on2026-10-11, using this prepared directory:
  /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/source43-api-mode1-baseline-v3-prepared-v1
- Inspect its report.json, supervisor.log and owned processes before doing
- anything. Do not duplicate the launch or assume it passed. The exact actor is
+ The producer completed successfully in522 seconds: all eight HTTP requests
+ coherent, owned teardown clean, pre/post health and full4 checks passed.
+ Report SHA256: c894ba56fd719b84b447f51de666390e28b7ea9e528d662bb4f4a17c2affbae9.
+ No live baseline server remains; do not mistake this for shelf qualification. The exact actor is
  strata/flash-next/run_source43_api_baseline_v3.py; port18083, primary served
  name hotschmoe-dd, GPU0, ctx2048/prefill64/PLE65536, MTP0, cacheOFF,
  batch0, parallel1. Canonical registry now has174 entries, including the exact
@@ -39,8 +41,10 @@ A real warm source43 GPU profiling producer passed. Results root:
  current identity and health checks; do not call this resolved hardware.
 
 Next priorities:
-1. Finish the active API baseline and report actual coherent responses, timings
-   and any failures. Keep hotschmoe-dd first in /v1/models.
+1. Inspect the completed API baseline/public reader result. Warm repeated
+   requests logged13.4-13.9 tok/s prefill and9.8-10.7 tok/s generation
+   on23/51-token prompts and5/9 generated tokens. These tiny-output log
+   observations are not a sustained decode benchmark. Keep hotschmoe-dd first.
 2. Measure actual uninstrumented prefill and decode with fixed model/config,
    emitted-token counts, warmup, TTFT and token gaps. Avoid converting profiler
    durations or kernel sums into production tok/s. Compare mode/storage paths
