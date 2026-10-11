@@ -16274,3 +16274,33 @@ VERDICT -> Concrete serving-control prerequisite progress. Both-GPU control
 source port and exact raw33 convolution commit audit are being prepared.
 Full original mathematics/cache/actualstreamcounts/physicaltier traffic and
 calibrated criticalpath/natural latency/fairness/clientAPI/shelf remain open.
+
+## 2026-10-11 Original diagnostic and fixed-input quantizer completed
+
+CONFIG -> Four fresh NUM10 first-GDN cases, unchanged original FP64 diagnostic
+plus explicitly conditional native-input lanes. Full model math remains open.
+
+COMMAND -> Root40900 corrected CLI2 terminalPASS663.463s, actualbefore/after
+publicreader4/full49/raw33/source and newfull4/three-page closing passed.
+Report06476d2eb7a97ee18729bee68f8773e0aa990496c27d6e8b0cc448bf36b78a30.
+Root70280 Q81helper terminalPASS662s, parentc38b9ff5508759cd0ae26e2a5f60be6804b6f0213a931ec45c1afeb9ffcc6f82.
+ActualCPU math and model scans finished before benchmark/profiler timing.
+
+RESULT -> Four diagnostic tuples exactly repeat. Original embedding/before
+state+conv bitwise; HCmixed NMSE3.134e-15, inputQ81packet bitwise. Unquantized
+FP64 QKV9.432e-6/gated1.861e-5/block6.630e-5 reflect a lane that omits native
+Q81 projection storage; no native defect inferred. Conditionalnativegated own
+Q81 packet exact, originalQ8_0 outputprojectionNMSE6.003467811343193e-15 all4.
+Before/after actualdescriptor hash7ca7fc0d equal. Q81fixed-own4x6144 direct+
+two replay exact27,648B packets, zero mismatch blocks, retirement/health/full4/
+current byte seals passed. Independent helper reader remains future work.
+
+Root47370 quiet saved-witness canonicalABBA2rounds passed all7 comparisons,
+source/raw/report guards. A21calls about6.15s median versus B9calls about2.63s,
+roughly3.5s saved in this isolated step; no integrated admission speed claim.
+Root34631 now sole pairlease actual LPdisabled H36/PTI OFF/ON modelcapture;
+currentadmission live. No competing model scans/CPU benchmarks left running.
+
+VERDICT -> Actual component correctness and usable diagnostic boundaries, not
+original full48 fidelity. Runtime capture/calibration/coverage/tier traffic,
+cache/streams/natural interactive latency/fairness/API/shelf remain required.
