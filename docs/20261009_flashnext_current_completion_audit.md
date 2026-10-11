@@ -1821,3 +1821,24 @@ VERDICT -> Actual build/upload and observer-control work progressed. Original
 full48 fidelity, complete cache/active1/2/4/bounded6, tier traffic and natural
 interactive latency/fairness improvements, stable serving and shelf remain
 incomplete. No profile success, speed improvement or goal completion claim.
+
+## 2026-10-11 - Warm V2 narrow closure and paused-list repair
+
+CONFIG -> Full original campaign unchanged; SDK43 mode0 warmed short54/GEN4
+profiling and SDK44 numerical prerequisite components remain separate.
+COMMAND -> Actualwarm35802 PASS/report66d7c2a5; independentpublic45500
+PASS094ffb0d; observedanalysis92649 closeda040d748. Repair26aba5 all12source
+plusparent hashes checked; nineCPU0.032PASS; checkpoint9bb0ab3 pushed.
+RESULT -> NativeTTFT OFF4364.685889ms/ON4373.040876ms; token-gapP50
+106.677347/106.676356ms. Single instrumented pair, no clean-serving gain.
+Public passes declared narrow scope with model-complete device coverage false.
+Trace89GPUoperations are zero/fill/barrier; actual model compute absent.
+Paused ordinary regular-list descriptor retention is defaultOFF and ready for
+a fresh tool build and two-kernel same-UR fixture before any model retry.
+It executes timestamp queries during paused capture; no zero-overhead claim.
+Actualmasked44/89432 runtime48frames and posthealth passed; parent closing
+identity/public still pending. Fresh tool build98013 waits for that exact lease.
+VERDICT -> Actual scoped profiling closure and source repair progressed.
+Original full48 fidelity, all-state prefix cache, active1/2/4/bounded6 streams,
+physical tier traffic, natural latency/fairness gains and verified shelf remain
+incomplete. Full goal remains active.
