@@ -1,0 +1,28 @@
+{
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_pti_paused_regular_lists_cpu_v1 test_pti_paused_builder_cpu_v1 -q",
+  "CPU_tests": 9,
+  "actual_build_executed_by_author": false,
+  "actual_parent_source": {
+    "path": "/mnt/vm_8tb/b70/build/pti-unitrace-sampled-query-source-v1/tools/unitrace/src/levelzero/ze_collector.h",
+    "sha256": "6d8374f6a04df012a21069f90ae90ed6a29cb3e318d24d0bf72a6c4d94ad84c9"
+  },
+  "files": {
+    "strata/flash-next/build_pti_paused_regular_lists_v1.py": "77594645b8735462eb98b71c54d748cf2a67e35810a9562f68b8cd1874345b69",
+    "strata/flash-next/prepare_pti_finalizer_build_proposal_v1.py": "c1bb2b95240e14cd7de1d385cb2cd2c35f0d9eba6709adcd0793b1c47866579a",
+    "strata/flash-next/prepare_pti_paused_regular_lists_v1.py": "ad7de4afd6da70094d7b4467105c21d49d381740db54ba36000a4a5cf242c852",
+    "strata/flash-next/pti-paused-regular-list-design-v1.md": "b62cf546512de2f32926747402583901ff7114006ddb5d7bb6f9c7c16bdce76c",
+    "strata/flash-next/pti-paused-regular-list-tool-build-proposal-v1.json": "42e4e3de36b3b376a254f46e0bc91648d9e4a64705421cd544e7f8ed68cd6c14",
+    "strata/flash-next/pti-paused-regular-lists-v1.patch": "697d47dbad3bea6cb554186055c1c442e54041f029827c6a790165cf2b4c420e",
+    "strata/flash-next/pti-sampled-query-tool-build-proposal-v1.json": "0d8303d8214d70bc7d9d85c0db3c71a61f2ea05ea3f2fdebb990cc98cced79ee",
+    "strata/flash-next/pti_paused_fixture_coverage_v1.py": "109a054b8badb5080320aadda6f753ec3d0d28e0f2df124a65f7ee9c18dace40",
+    "strata/flash-next/pti_paused_regular_list_fixture_v1.cpp": "4055a37dac9153495e70a78e6290b49bec1e10dd07573075e93559cba91ce863",
+    "strata/flash-next/pti_unitrace_build_recipe_v1.py": "8dc0b7e9b1a6163757ac4664c021f274bf95fd6bbad168ee9803c8f929f85b0d",
+    "strata/flash-next/test_pti_paused_builder_cpu_v1.py": "df84c2468ed90d7d61c2d10793ab698a649bc98cf1609e9c29ec0eb7bb3bb296",
+    "strata/flash-next/test_pti_paused_regular_lists_cpu_v1.py": "486d9c6414ec5e9493619a763e878f45423bd62efd839a74f64895e4864ab96e"
+  },
+  "full_model_coverage_qualified": false,
+  "loaded_fixture_qualified": false,
+  "no_extra_GPU_query_claim": false,
+  "schema": 1,
+  "scope": "source-only defaultOFF retention plus owned fresh tool build and same-UR loaded fixture source"
+}

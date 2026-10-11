@@ -16799,3 +16799,17 @@ Warmpublic45500 remainsCPUreaderofclosedproducer66d7; no latencybenchmark
 runsinparallel. Frozen575866/guidepreserved, separateCLIerratumrequested.
 VERDICT -> Actualprerequisiteprogress, notNUM38/modelmath qualification.
 Fullcampaign active; do not waive actualownproducer or oldsourcegate.
+
+## 2026-10-11 Warm V2 public closure and observed host latency
+
+CONFIG -> Same43 short54/GEN4 warmed graph OFF/ON, unchangedmodel/173.
+COMMAND -> Independent45500 terminalPASS094ffb0d; observed92649 terminal
+analysisa040d748, both rawSHA checked. Root paused-retention26aba all12source
+plusparenthashes checked; nineCPU0.032PASS. Actualmasked44/89432stillLIVE.
+RESULT -> NativeTTFT OFF4364.685889ms/ON4373.040876ms; gapP50
+106.677347/106.676356ms; completionONminusOFF8.386448ms singlepair.
+Public passes narrowdeclaredscope whilemodel-completecoverage/idlefalse.
+89deviceops includeonlyzero/fill/barrier; actualmodelcomputekernels absent.
+VERDICT -> Honesthostdiagnostics/controlclosure, notcleanservingspeed,
+GPUidle/bandwidthorfullmath. Tinyloadedregular-listrepairfixture next;
+fulloriginalgoalactive. Detailsdocs/20261011_flashnext_warm_v2_observed_latency_and_coverage.md.

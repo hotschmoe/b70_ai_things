@@ -1,0 +1,37 @@
+--- a/tools/unitrace/src/levelzero/ze_collector.h
++++ b/tools/unitrace/src/levelzero/ze_collector.h
+@@ -4568,12 +4568,33 @@
+   // Whether an append on this command list should be instrumented. Always
+   // true when collection is enabled; while paused, still true if the list is
+   // mid graph-capture, so the captured graph is populated for later replay.
++
++  // Opt-in descriptor/event retention for SYCL graphs implemented as ordinary
++  // non-immediate closed command lists. Collection/normalization submission
++  // remains controlled by the original named pause/resume state.
++  bool RetainPausedRegularCommandList(ze_command_list_handle_t list) {
++    static const bool enabled=[] {
++      const char* value=std::getenv("UNITRACE_RETAIN_PAUSED_REGULAR_LISTS");
++      if(value==nullptr||value[0]=='\0'||std::strcmp(value,"0")==0)return false;
++      if(std::strcmp(value,"1")!=0||!b70_pti_clock_v1::Enabled())
++        b70_pti_clock_v1::Fail("paused regular-list retention requires exact1 and metadata");
++      return true;
++    }();
++    if(!enabled)return false;
++    if(options_.metric_query||options_.metric_stream)
++      b70_pti_clock_v1::Fail("paused regular-list retention excludes metric modes");
++    std::shared_lock<std::shared_mutex> held(command_lists_mutex_);
++    const auto found=command_lists_.find(list);
++    return found!=command_lists_.end()&&!found->second->immediate_;
++  }
++
+   bool ShouldCaptureAppend(ze_command_list_handle_t command_list,
+                            uint32_t num_wait_events,
+                            ze_event_handle_t* wait_events) {
+     return UniController::IsCollectionEnabled() ||
+            IsCommandListGraphCapturing(command_list) ||
+-           WouldTriggerGraphCapture(num_wait_events, wait_events);
++           WouldTriggerGraphCapture(num_wait_events, wait_events) ||
++           RetainPausedRegularCommandList(command_list);
+   }
+ 
+   // Release all resources owned by a ZeGraph (events, metric queries, commands)
