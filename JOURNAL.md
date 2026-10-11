@@ -16674,3 +16674,18 @@ include teardown, noalignment/physicalidle/bandwidth/cleanspeed. Actualwarm
 compile/all390/masked48/NUM38 actualruntime stillpending, no43prooftransfer.
 VERDICT -> Sourcegatesclosedandanalysisready, noactualprofileororiginal
 fullmathqualification. Canonical173 unchanged; fullcampaign active.
+
+## 2026-10-11 Warm capture resume CLI error localized
+
+CONFIG -> Live45943 originalwarmV1source457eb; actualpausedwarmup controls.
+COMMAND -> OFF2requests/H36/warmedgraphreuse passed. ONactualREADY census
+andIPCpaused1->1receiptpassed; warmupGEN4 completed. Originalresumehelper
+calledunitrace --session NAME --resume, missingrequired--resumeVALUE.
+RESULT -> ControlCLIrc1 stderrOption--resumerequiresvalue; selectedrequest
+notexecuted. Failuremetadata retained77793d92 externalobservationandoriginal
+controlreceipt/stdout/ownerlogs. Sourceunitrace.cc419 Opt::Value/549 confirms
+correctaction consumes--resume NAME. Rootmissedsourcecheck/userinformed.
+Parentfailureclosingposthealth/full4 stilllive; no normal/speedprofileclaim.
+VERDICT -> PreservefrozenV1, correctV2oneCLIseam andexerciseactualNoDri
+named1024BTemporalControl fixture beforeanothermodelrun; no cap/source/
+model/math waiver. Fullcampaign active, notblockedonexternalinput.
