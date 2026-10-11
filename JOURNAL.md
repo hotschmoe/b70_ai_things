@@ -16548,3 +16548,19 @@ clockproperty/newintake/actualboundedmodelcapture remainpending.
 API3 independentpeer851/36 READY; genuineCPUprep83541 nowlive while173current.
 VERDICT -> ActualnewABI compilation proof only, noactualloadedtool/model
 profile/math/speed qualification. Fullcampaign unchanged and active.
+
+## 2026-10-11 Actual zero-state GDN update agrees word for word
+
+CONFIG -> Same sealedNUM10actor3/d671 and enclosedoriginalCLI2/06476;
+conditionalnative normalizedQKV/beta, ownzero initialstate, no weight/GPUreads.
+COMMAND -> Rootplan9c038ab7/12repo+1native hash PASS and7CPU1.789s; actual
+CLIroot-v1 terminalPASS0.255s report97d215f4033466d53fede19715f984a76b5988e92e734d874c0cda78710d1d7d.
+RESULT -> Allfour128x48x128 state tensors EXACT, zerodifferentwords; actual
+bytezero beforestate andhead%16 source layout preserved. No q reduction/
+exp/rsqrt/device operation performed; firststate only, fullmathfalse.
+FreshsampledtoolNoDri metadata65800PASS/nineDSO818d548b; card0APIproperty99793
+PASS35s withpreposthealth, ca646c42 gives19.2MHz/64bits, notcalibration.
+APIgenuineprep83541 stilllive, currentregistry173 unchanged.
+VERDICT -> Packingandfirststate seams nowexactunderdeclaredconditionalinputs;
+upstreamprojection/norm/core/gating and originalfull48 fidelity remainopen.
+Boundedactualprofileactor/intake next; no serving/speed/shelfpromotion.
