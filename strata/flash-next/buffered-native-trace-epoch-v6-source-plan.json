@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "status": "CPU_PROTOTYPE_ONLY; no live producer integration or GPU/latency qualification",
+  "files": {
+    "strata/flash-next/buffered_native_trace_epoch_v6.py": "a9320501b5561c07bdc22430693402342c24ad75c9cba9472d64f9c49e4e3b4c",
+    "strata/flash-next/test_buffered_native_trace_epoch_v6_cpu.py": "dc1bde8040e4ff6dc690e604a3734dd1456cbd35d09de474bebff09363ef1554",
+    "strata/flash-next/benchmark_buffered_native_trace_epoch_v6_cpu.py": "ea5314c23b05eb1202e09a99ecfffd21bb56d277ed2ac94a2f95a8bb67687e4d",
+    "strata/flash-next/buffered_native_trace_epoch_v5.py": "9e58af37a41a9aace6c21b87bfbc544c6012a5840fe57917109f275dd6671a3a",
+    "strata/flash-next/buffered_api_trace_sink_v3.py": "8a3c9eebf7cf82af5d3ab01948f3d29bda4140b41d31e6312e1e05e0e7d39a70",
+    "strata/flash-next/full_cache_trace_process_identity_v1.py": "6d2b947ca4cb9b626e753cf691aa7c722beadf39154fe55ae2ab8c2cbc7eb064"
+  },
+  "CPU_commands": [
+    "python3 strata/flash-next/test_buffered_native_trace_epoch_v6_cpu.py"
+  ],
+  "benchmark_report": "/tmp/flashnext-trace-v6-CPU-benchmark-20261011-v2/report.json",
+  "benchmark_report_sha256": "387faf96e2d5ae6a822ea4d767cc0b6e573c22c504a449f9edc1807283232d90",
+  "constraints": [
+    "No event/combined line filtering or dropping",
+    "Exact V5 sequence/epoch/process/file namespace/phase marker/ACK anchor/prefix SHA/offset semantics",
+    "Same declared total quota and exact first rejected bytes",
+    "Same mandatory semantic flushes and bounded periodic flush visibility",
+    "No actual runtime speed claim; requires new producer epoch/source/identity qualification before integration"
+  ],
+  "actual_live_sample_read_bound_bytes": 5242880,
+  "sample": {
+    "copied_path": "/tmp/flashnext-trace-CPU-sample-5s806dx6/sample.json",
+    "sha256": "6ebdc895da2dd1ee1c9c005c9bf197dbf6282a7b9112e88eaa037d49504b75b4",
+    "records": 3611,
+    "capture_sources": [
+      "api-native-trace.jsonl prefix2MiB",
+      "engine.combined.log prefix1MiB",
+      "api-native-trace.jsonl tail2MiB"
+    ],
+    "no_live_files_modified": true
+  },
+  "benchmark_COMMAND": "benchmark_buffered_native_trace_epoch_v6_cpu.py --sample /tmp/flashnext-trace-CPU-sample-5s806dx6/sample.json --output /tmp/flashnext-trace-v6-CPU-benchmark-20261011-v2 --repeats 3",
+  "benchmark_results_component_only": {
+    "old_mean_wall_seconds": 0.36672306600030424,
+    "candidate_mean_wall_seconds": 0.23897228149962757,
+    "wall_reduction_percent": 34.83576473495417,
+    "record_rate_ratio": 1.5345841103369797
+  }
+}
