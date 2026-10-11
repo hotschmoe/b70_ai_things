@@ -16534,3 +16534,17 @@ clockproperty/intake/actor/publiccapture remainpending. API3c3423f88/851hashes
 and36CPUrootPASS1.061s, allfourpriorpeerholesfixedsource, finalpeerpending.
 VERDICT -> Genuinebuild inprogress, nospeed/deviceprofiling/APIclaim.
 Canonicalregistry173 unchanged; defer174appenduntiloldintakesclosed.
+
+## 2026-10-11 Actual sampled-query tool build passed
+
+CONFIG -> Fresh895-file sampled-query toolsource, unchangedcompiler/C388,
+CPU-only2CPU/4GiB ownedcontainer, noDri devices.
+COMMAND -> Root12041 terminalPASS129s. Newbuildreceipt288beb7f742685d77b9925618e25c86ffaa1ebda7085128dec45c36dcd766b21.
+RESULT -> tool410936B SHA9f481a37a2884f7c7d499f33b5f41dbc00e2c0d089a9e786d059881803417b0c;
+lib3826744B SHA15c1c54b837631705904eea906d34bd20d3a78f6dc61c6f38e9ceb3acfe3f64a.
+OriginalterminalExit0/noOOM, finalizerGLOBALDEFAULT defined, normalremoved/
+exactabsence, allsourceclosurebeforeafter PASS. RuntimeNoDri metadata/API
+clockproperty/newintake/actualboundedmodelcapture remainpending.
+API3 independentpeer851/36 READY; genuineCPUprep83541 nowlive while173current.
+VERDICT -> ActualnewABI compilation proof only, noactualloadedtool/model
+profile/math/speed qualification. Fullcampaign unchanged and active.
