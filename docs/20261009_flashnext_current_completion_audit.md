@@ -1879,3 +1879,24 @@ CPU diagnostic retirement. No extra proof framework or inherited test sweep.
 VERDICT -> Actual numerical observer and tiny GPU profiling blockers closed.
 Original full48 fidelity, complete cache/streams/tiertraffic, natural latency/
 fairness gains and qualified reproducible shelf remain incomplete.
+
+## 2026-10-11 - Current ON-only retry and reduced setup duplication
+
+CONFIG -> Full original goal unchanged; registry173 remains current.
+COMMAND -> Warm3 failed f9f in temporal stale-install preflight after OFF
+passed. Warm4 failed f075 before model launch because the copied command
+builder retained old globals. Both failures and closing health/full4 preserved.
+Warm5 d0ed now runs actual command construction before expensive admission;
+real saved-config/runtime preflight734b passed. Actual69524 is live after
+tokenizer and pre-full4, in prehealth. Historical OFF00f20b admits only saved
+phase evidence, current model/health/hash authority false; no baseline reload.
+RESULT -> Conditional core and captured RMS sum/argument match source F32
+order in four NUM38 requests. Original diagnostic ec203 remains FAILED due
+serialization; calculations retained and keyword fix b8d tested without rerun.
+Supported full48 reference does model Q81 activation storage; native arithmetic
+order remains unsupported. Original full48 fidelity remains incomplete.
+Short54 defaults to27 small verify windows; short-read0 commandd971 passed
+pure preflight and is next control. Long524 already uses batched prefill.
+VERDICT -> Necessary actual checks retained; duplicate history scans and OFF
+reloads removed. Full model trace/speed, cache/active streams, tier traffic,
+natural latency/fairness and verified shelf remain open.
