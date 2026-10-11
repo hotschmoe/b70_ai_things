@@ -1740,3 +1740,25 @@ passed. Complete device timeline remains missing; success-only analysis was
 not run on the failed capture. Bounded collection/export is the next repair.
 VERDICT -> Component correctness advanced; physical idle/bandwidth/clean
 interactive latency and the remaining original campaign gates stay open.
+
+## 2026-10-11 - First-state localization and actual profiler/API preparation
+
+CONFIG -> Original full campaign unchanged. Small supplied-input diagnostics
+remain separate from the independently owned original full48 reference.
+COMMAND -> Actual packet-boundary report0b54e711 verifies both complete Q81
+seams across four NUM10 requests. Zero-state report97d215f4 verifies the first
+128x48x128 GDN state update in all four captures. API3 genuine preparation
+83541 passed, prepared562a2a25. Fresh sampled tool build12041 passed129s;
+NoDri metadata and GPU0 property99793 passed35s with health.
+RESULT -> Packet bytes and first supplied-input state update are exact;
+upstream projections, normalization, core/RMS/gating and original full48 math
+remain unqualified. No tolerance fitted or original operand substituted.
+Fresh tool build288beb7f, NoDri schema successor58cb9748, propertyca646c42
+and runtime intakee87b3e14 bind the actual new ELF and source. API3 has signed
+mode1 configuration and immutable prerequisites, without actual serving yet.
+Bounded profile actord07f3190 passed root233hash/75CPU checks; actual capture
+and independent public closure remain pending. Registry173 stays current.
+VERDICT -> Genuine build and preparation progressed. Warm replay capture,
+physical tier traffic, original fidelity, all-state cache/current1/2/4/bounded6
+streams, natural interactive latency/fairness gains and qualified reproducible
+shelf remain incomplete. No speed/stability promotion or completion claim.

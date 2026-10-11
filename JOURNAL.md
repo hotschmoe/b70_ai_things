@@ -16579,3 +16579,16 @@ queries explicitlynotperinstancecalibration. Exactnewtool/lib/deps/APIproperty
 intake/currentmodel guards remain. Independentactorpeerpendingbeforelaunch.
 VERDICT -> ActualAPIprepnotservingqualification. Readyboundedsource/intake
 notcompletedGPUprofile. Canonical173 unchanged, noAPI/speed/shelfpromotion.
+
+## 2026-10-11 Actual bounded sampled-tool profile launched
+
+CONFIG -> Exactnative43 mode0/current173/54,524,524,54 usefulprompts/fourGEN4,
+LPdisabled/H36botharms/newactualsampledtoolONonly; threeoriginalthreadpins.
+COMMAND -> Root233hash/75CPU0.602 andindependent233/75CPU0.608 READY. Sole
+pairlease53490 nowLIVE run_source43_bounded_pti_v1.py withintakee87b3e14,
+normal43plan/prerequisite andactualspeedtrace, outputF17/source43-bounded-
+pti-v1-run-v1. No competingGPU/modelscan/build/CPUbenchmark.
+RESULT -> Admitted launch only; constructor/GEN/clock/normalfinalizer/rawbudget/
+public/health/full4/teardown remainpending. Canonical173 unchanged.
+VERDICT -> ColdGEN4boundedcontrolnotwarmdecode/physicalidle/bandwidth/clean
+speed. Warmprocesshandshake sourcequeued; originalfullcampaign active.
