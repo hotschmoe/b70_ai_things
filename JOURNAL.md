@@ -16068,3 +16068,50 @@ original48 numerical fidelity, cache/concurrency, physical bandwidth/idle,
 interactive speed/fairness and shelf remain unqualified. NUM10V3 source and
 referenceV3 have passed root68 totalCPU checks and focused peer; fresh actual
 model diagnostic still requires closed current masked reader/preparation.
+
+## 2026-10-11 Observed host costs from incomplete-session diagnostic
+
+CONFIG -> Read-only source41 LP20/H36 capture whose whole-session parent
+FAILED the missing terminal SESSION marker. No marker waived or PASS granted.
+
+COMMAND -> Root b70_source41_incomplete_session_host_diagnostic_v1.py consumes
+exact parentad8485818d67f97e0c505bd21a474f53ade85616144383189e242e3c1cda191d,
+four original report-rostered per-request JSONL files, original typed request
+parser and unchanged interval-union math. Report/source/raw SHA+stat rechecked.
+Script preserved in F17; no new model/weights/GPU execution.
+
+RESULT -> Diagnosticdf52faf7930254be9b197c14397341eca6b3bc61ef8b69a25b6641e276b1736c.
+Each request64tokens. Request4/54prompt: native Request11264.946ms,
+Request-to-TEmit4366.148ms, token-gap P50/P95 109.639/137.640ms;
+LP combined mean2.535ms/intertoken window, CPU135.620ms and readback26.480ms
+unions across request. ReplayWait11095.290ms, ReplaySubmit3.784ms.
+Nested spans are not additive; wait includes unobserved device/queue/transfer
+costs. No claim that removing LP work saves its entire observed interval.
+
+VERDICT -> LP readback/CPU cost is measurable but does not explain most of this
+observed request. Actual device/replay timeline remains the profiling priority.
+Whole-session, physical GPU idle/bandwidth, clean serving latency and original
+fidelity stay unqualified. Actual fresh43 model/PTI capture remains necessary.
+
+## 2026-10-11 Independent masked43 admission and new model preparations
+
+CONFIG -> Fresh43 component independent current-call upload-view admission;
+NUM10 mode1/prefix1 and normal mode0/GEN64 are distinct declared workloads.
+
+COMMAND -> Reader1866 terminalPASS289.287s, no old cached PASS substitution.
+Root normal43 CPU command test_source43_normal_model_cpu_v1 plus source41
+launch/actorV5 controls PASS36tests2.879s; focusedpeer36tests2.873s/all139hashes.
+Root prepares NUM10V3 session89018 and normalCLI session64902 concurrently
+CPU-only with original three thread pins, actual current upload/masked and
+masked runtime post-full4. No second GPU workload launched.
+
+RESULT -> Independent mask bindinge8809d3969de5c8e0e31a704d0a1a1d23eabb44ca048b8e30db56a4ea828fbd0.
+Normal source d17fcce3574d2ee81124555f83f42cd2f7f20b16e860bca970cc8264b2a21947
+is ready only for bounded source40/source43 IDs+finish/repeat parity; submitted
+LP20 is preserved but this control does not compare LP rows numerically.
+NUM10 has a separate actual full49/LP comparison. Both preparations are live;
+no new model runtime or original math result exists yet.
+
+VERDICT -> Genuine masked43 prerequisite closed. Actual model runs and original
+NUM10 reference diagnostics are next, alongside separate LPdisabled/H36/PTI
+integration. Full fidelity/cache/streams/placement/latency/shelf remain open.
