@@ -16384,3 +16384,33 @@ VERDICT -> Preserve failed capture and fix exact metadata semantics/diagnostics
 before retrying. Root33954 nowsolepairlease matchedfresh43 one/split32-16
 modelcontrol; nativeprofiling unavailablewhile sourcecensus repair proceeds.
 Fullmodel fidelity/cache/streams/traffic/interactive gains/API/shelf remainopen.
+
+## 2026-10-11 Census2 exact-domain CPU fixture passed and host baseline measured
+
+CONFIG -> CPU-only synthetic executable mmap of actualfresh tracer ELF; no
+tracer/model/GPU execution. Exact domain-aware helper2 preserves all identity
+checks while using confirmed Btrfs stat/VMA/mount namespaces.
+
+COMMAND -> RootNoDri4 terminalrc0/PASS using helper2, explicitexpectedbindroot
+/b70/build/pti-unitrace-model-finalizer-c388-build-v1/install and/dev/sdc1.
+Root18CPU0.021s; independent source peer stillpending. Script archived in
+F17/pti-census-no-device-repro-v4; maps/mountinfo/path+openedFD stats/ELF SHA/
+owner beforeafter and normal metadata CLI completion retained.
+
+RESULT -> Actualcensus receiptbe293aa11be5dc9b52897d41ac292e7ebba83435aa6d9e2141fdd61068560178
+has passedtrue. Syntheticmapping proves this metadata path, not actual injected
+model/code or symbol origin; original lostmodelstderr cause remainsunconfirmed.
+Root retainedOFFhost diagnostic5035e0bf uses exactfailedparenta2f334d7+original
+report-rostered typedH36request files and unchanged interval math. Warmreq4
+P50/P95 token-gap107.205/135.251ms, nativeTTFT4367.257ms; repeated524prompt
+TTFT15680.704ms. NoLPreadback/CPU spans. Req4 ReplayWait11098.648ms versus
+request11103.747ms; nestedspans nonadditive, device work/idle unobserved.
+
+Source-only logaudit confirms livepairedcontrol request3 has additional first
+2prefill chunk snapshotspos63/127 plus final first_window_residual andhead
+pos523/token271; parser selects actualfinalprompt full49. No gatechange or
+lastrow scope relaxation. Currentone43phase4GEN64 passed; paired33954 live.
+
+VERDICT -> Metadata repair validated in bounded CPU fixture; actual model
+census/capture stillrequired. Hostnumbers are observedfailed-parent diagnostic,
+not clean client speed orphysicalGPU idle. Full original objective unchanged.
