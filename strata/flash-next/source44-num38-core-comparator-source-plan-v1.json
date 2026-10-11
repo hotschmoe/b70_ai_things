@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "scope": "source-only NUM38 independent FP64 target extension and separate conditional CPU F32/FMA core helper; no actor/provider authority",
+  "files": {
+    "strata/flash-next/source44_num38_core_comparator_v1.py": "f00dba5dacf2fa617d7f38e32876bb73c4126eafbb4e5d2259ce86d5c2db7d21",
+    "strata/flash-next/test_source44_num38_core_comparator_cpu_v1.py": "0ed2da48960bd504ea181269e4ef61fbbc0f08637c3a8e98825c321110bc495d",
+    "strata/flash-next/source44-num38-core-comparator-design-v1.md": "ae009dc5831d8810ac72090fc2c5eea140fb6df5fb6f3bd8c87085148a4e5e50",
+    "strata/flash-next/source43_num10_original_reference_v3.py": "68ae1a38c2dd17a5fe3c1bf825ca471e1918a8b4b8a5db93c3d7aeef78c95c63",
+    "strata/flash-next/source43-num10-original-reference-source-plan-v3.json": "37f0a04dd5f9b63b272f52972644e6952bb24680c5161ab8fcef40b92d0fff4d",
+    "strata/flash-next/original_first_gdn_layer_v1.py": "c6352dc69f22e5940e0c6799fe83137225b8126fe7ce771983de682e00abd67f",
+    "strata/flash-next/native44-engine-build-proposal-v1.json": "0c336fb01c662fce98a11bf8a0101e6b0d7127742eb6b0b7566e467a5f3dc9eb",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T165803Z-5xbo5_f0/source/sycl/src/kernels/cuda/verify_kernels.dp.cpp": "4e7067300128efcf754fa4efc3952925898f1b7040736d2ab7f3204db2dfe784"
+  },
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_source44_num38_core_comparator_cpu_v1 -q",
+  "CPU_controls": 4,
+  "actual_model_or_capture_execution": false,
+  "existing_F32_full48_reference_replaced": false,
+  "runtime_ready": false,
+  "full_model_math_qualified": false,
+  "numeric_gate_assigned": false
+}
