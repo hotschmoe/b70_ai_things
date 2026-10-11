@@ -1,0 +1,42 @@
+CONFIG -> Source46 defaultOFF Q8 HC rowbatch reuse over source45. Exact1
+STRATA_HC_Q8_ROWBATCH enables token2..8 specialization. Token1 uses unchanged
+old kernel. F32 injection remains old kernel. Other values refuse. No source45
+SDK or running model was modified; all model/speed authority is still absent.
+
+COMMAND -> Existing builder (obtains pair lease):
+python3 strata/flash-next/build_native_hc_engine.py --plan strata/flash-next/native46-hc-rowbatch-engine-build-proposal-v1.json --jobs 4
+
+After fresh build, root compiles one operator harness in current C388/39992.
+Mount NEW46 source at /src, NEW46 build at /build, unchanged45 source projection
+at /original.cpp, harness at /harness.cpp, fresh output at /results. No models.
+Use original -O3 -std=c++20 -fsycl -fsycl-default-sub-group-size=32
+-fsycl-device-code-split=per_kernel -fp-model=precise compiler flags and includes
+-I/src/sycl/include -I/src/include. Compile /original.cpp with
+-Dhc_q8_0_project_f32=b70_original_hc_q8_0_project_f32
+-Dhc_f32_project_f32=b70_original_hc_f32_project_f32
+-DHcProjectionKernel=B70OriginalHcProjectionKernel
+to /results/original.o. Link harness + original.o with new libstrata_kernels.a,
+libstrata_core.a and /usr/lib/x86_64-linux-gnu/libze_loader.so, -fsycl. Include
+-Xsycl-target-backend=spir64 -cl-fp32-correctly-rounded-divide-sqrt as existing SDK.
+Execute only under bin/gpu-run --card 0 with ZE_AFFINITY_MASK=0,
+ONEAPI_DEVICE_SELECTOR=level_zero:gpu, STRATA_HC_Q8_ROWBATCH=1; pre/post card0
+health and owned process/container retirement are root responsibilities.
+
+RESULT -> SOURCE ONLY. Sixteen cases: actual HC down K10240/M320 and up
+K320/M10240, every token count1..8. Unchanged actual45 source compiles as a
+separate renamed reference; no copied reference arithmetic. Same packed Q8_0
+weights and exact F32 input bits feed both methods. All output bits, including
+zero signs, must match; nonfinite/unwritten results refuse. Synthetic operands
+are not genuine model data or primary original-reference qualification.
+
+New subgroup keeps one accumulator per token, with identical column lane+32
+FMA sequence and XOR16/8/4/2/1 reduction for each. Weight scale/code decoding is
+performed once per column and shared across token registers. No allocation,
+wait, query, quantization, precision or dataflow change in the operator. Tokens
+are compile-time specialized to bound register arrays. More registers can hurt
+occupancy; no XMX or speed promise. No F32 injection grouping, avoiding shrinking
+its 4*tokens subgroups to just4 without separate measurement.
+
+VERDICT -> Fresh compiler/API and bitwise harness results required, then actual
+matched model outputs/numeric comparisons and identity/health/teardown gates.
+Weight instruction reuse does not establish reduced physical DRAM traffic.

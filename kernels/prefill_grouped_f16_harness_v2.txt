@@ -1,0 +1,52 @@
+CONFIG -> Actual failed source45 implementation, synthetic operands only.
+Preserve V1 harness and all source45 SDK/patch/proposal bytes. Do not retry the
+failed real-model ON arm. Source46 HC testing must keep STRATA_PF_GROUPED_F16=0.
+
+COMMAND -> Compile/link as harnessV1 using unchanged actual source45 SDK/static
+libraries and current C388/39992; select this new CPP. Root leased card0 execution:
+prefill_grouped_f16_harness_v2 --synthetic --single-queue
+Then, ONLY after the first closes healthy:
+prefill_grouped_f16_harness_v2 --synthetic --two-queue
+ZE_AFFINITY_MASK=0 and ONEAPI_DEVICE_SELECTOR=level_zero:gpu are mandatory.
+Root owns timeout, raw logs, normal retirement, pre/post health and kernel gate.
+
+RESULT -> Source only; no compile/GPU execution by author. Both modes cover
+group1/3/8, GU(N1280,K2560) and down(N2560,K640), variable expert rows
+16/32/48/64/16/32/48/64. Known FP16 sparse/dyadic operands and complete expected
+output checks are inherited from V1. Original f16 plus three grouped calls use
+exactly the same operands. Every call/wait/slot transfer has flushed stderr
+progress markers so a stall/fault is localized, without any rate claim.
+
+Single-queue uploads complete before products. Two-queue uploads do NOT prewait:
+copy queue copies stable pinned-host weights into independent eight-slot stage;
+compute waits for that copied-event, copies it into independent decoded slot,
+records used-event immediately, then grouped products. Next round's copy waits
+for used-event before reusing the stage slot. Three rounds wrap the same slots.
+Compute in-order prevents decoded-slot overwrite ahead of its prior products.
+Input activations upload only once, avoiding a concurrent input overwrite.
+The copy is a dequant dependency/lifetime stand-in, not a real quantizer or full
+prefill router/stager. Both queues drain before owned memory frees, also on error.
+
+Maximum device allocation: GU113,049,600B (<128MiB), including eight stage and
+eight decoded weight buffers, inputs and four complete outputs. Pinned host
+weights+inputs54,067,200B, separately capped96MiB. Driver/oneMKL internal memory
+is unmeasured. No actual full-model or expert-worker context is transferred.
+
+PRIMARY DOC CHECK -> Intel DPC++ BLAS introduction, USM section:
+https://www.intel.com/content/www/us/en/docs/onemkl/developer-reference-dpcpp/2025-0/introduction-to-the-intel-oneapi-math-kernel.html
+It requires vector/matrix pointer inputs allocated through USM APIs and excludes
+ordinary malloc/new. Current gemm_batch group input array definitions:
+https://www.intel.com/content/www/us/en/docs/onemkl/developer-reference-dpcpp/2026-0/gemm-batch.html
+Executed source45 puts a/b/c pointer arrays in make_shared<Info> ordinary heap;
+the matrices themselves are device USM. Bundled DPCT allocates scalar/shape
+metadata with malloc but accepts pointer arrays separately from its caller, so
+that implementation does not validate this pointer-array allocation choice.
+This is a concrete allocation-contract concern, not established fault causality.
+The routine page does not separately enumerate allowed allocation for each
+metadata array. Source45 lifetime does retain Info through returned event via
+event-dependent host_task. Fault address0/0x1000 does not itself prove its origin.
+
+VERDICT -> Discriminating operator/control only. A larger-ne failure in one queue
+would narrow toward size-dependent API/metadata behavior; two-queue-only failure
+would narrow toward ordering/runtime interaction. Either needs actual evidence.
+No tolerance fit, model proof, performance or clean stability claim.

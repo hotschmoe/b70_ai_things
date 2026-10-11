@@ -17336,3 +17336,16 @@ in current make_sharedInfo; not yet a proven cause. Source-only corrected
 USM metadata allocation and high-ne16/32/48/64 single/two-queue fixture are
 being prepared before another model. HCrowbatch46 remains source-only,
 grouped45 flag muststay0 in that unrelated candidate. Fullgoal active.
+
+## 2026-10-11: Corrected grouped metadata build launched
+
+CONFIG -> Source47 over immutable failed45, full Info hostUSM/shared ownership
+with context-only postevent cleanup; same GEMM math/strides. Faultcause unknown.
+COMMAND -> Actual82537 nowowns pairlease for existing NoDri all8 builder,
+proposal e01caf2bfbdeda5c22c4d67b666431b744c2eb5b2e2540cdd0fcce2baf48c6c2.
+RESULT -> Buildlive; larger-ne single/two-queue fixtureV2 sourceprepared
+bc16ef67. No actual47 GPU/model retry yet; failed45 remains immutable.
+Source46 HC Q8 rowbatch weightreuse candidate source-only and defaultOFF;
+its old45 grouping mustremain0 before unrelated tests. Handoff updated.
+VERDICT -> Repair concrete unsupported allocation concern before new model.
+Fullfidelity/cache/streams/physicaltraffic/latency/shelf and2000/50 stillopen.

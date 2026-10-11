@@ -9,6 +9,35 @@ Performance targets from the user: at least2000 tok/s prefill and50 tok/s
  Compare actual source/recipes in Steve, Sergio and Strata; prefer experiments
  that address batching, latency and transfer overlap, rather than more wrappers.
 
+Latest continuation state (2026-10-11):
+- Balanced source43 24/24 producer and independent public checks PASSED.
+  Short54/four-output warm diagnostic: PP936.8ms, decode245.9ms (16.3tok/s).
+  Only18185/24576 experts resident; this is not sustained speed/fullmath.
+- Source45 grouped-F16 built all8 and passed six isolated GPU operator cases.
+  Real model OFF passed, but ON completed0 requests and exited139 after Xe
+  null-address VM faults/CCS reset and libsycl segfault. Posthealth/full4 passed;
+  kernel-fault gate FAILED. Do NOT rerun unchanged grouped45 ON.
+  Failed root: F17/source45-grouped-f16-model-v1-run-v1.
+- Source47 corrects the ordinary-heap metadata allocation concern with host
+  USM and shared ownership/context-only cleanup. Cause remains unconfirmed.
+  Its fresh all8 NoDri build is LIVE through bin/gpu-run; inspect processes and
+  latest /mnt/vm_8tb/b70/build/strata-native-hc-engine-*/build.log/receipt.json.
+  Proposal: strata/flash-next/native47-grouped-f16-usm-engine-build-proposal-v1.json.
+  First run kernels/prefill_grouped_f16_harness_v2.cpp larger-ne single-queue,
+  then two-queue controls against fresh47 after healthy close. No model retry
+  before that. New46 HC rowbatch source exists but is uncompiled; grouped45
+  muststay0 if investigating that unrelated branch.
+- Independent original first HC computation PASSED with fresh identity close.
+  Original packet differs one scale byte; allcodes/sumbytes match. Conditional
+  independent encoder of native mixed values matches nativepacket bitwise.
+  This is a first arithmetic seam, not full48 qualification. CPUbulk row-FMA
+  helper was built/tested and preserved at /mnt/vm_8tb/b70/build/hc-rows-dot32-cpu-v1.
+- Existing NO_HOST/device-plan mirror reads feed mapped RAM directly to GEMV.
+  The existing ptr2 staging path is bypassed by device-planned mirror groups;
+  --pcie-mode kernel alone cannot fix this. Source-only audit is in agent/root
+  history; inspect verify.cpp and resident_plan_kernel before patching routing.
+  Do not equate logical blob bytes with physical PCIe traffic.
+
 Hardware/model: two Intel B70s, 64 GiB total VRAM, approximately128 GiB host
  RAM; fixed kernel7.1.0-070100, Compute Runtime26.22. Exact Unsloth
  Qwen3.8-Flash-Next UD-Q4_K_XL across four GGUF shards. Runtime root:

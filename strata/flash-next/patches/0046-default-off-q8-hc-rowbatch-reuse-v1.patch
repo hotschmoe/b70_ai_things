@@ -1,0 +1,80 @@
+--- a/sycl/src/kernels/hc_native_projection.cpp
++++ b/sycl/src/kernels/hc_native_projection.cpp
+@@ -2,6 +2,9 @@
+ #include "strata/kernels/hc_native_projection.hpp"
+ #include "strata/sycl_queue.hpp"
+ #include <sycl/sycl.hpp>
++#include <cstdlib>
++#include <cstdio>
++#include <cstring>
+ 
+ namespace strata::kernels {
+ namespace {
+@@ -11,6 +14,59 @@
+         value += sycl::permute_group_by_xor(group, value, mask);
+     }
+     return value;
++}
++
++
++bool hc_q8_rowbatch_enabled() {
++    static const bool enabled = [] {
++        const char* v = std::getenv("STRATA_HC_Q8_ROWBATCH");
++        if (!v || std::strcmp(v,"0") == 0) return false;
++        if (std::strcmp(v,"1") == 0) return true;
++        std::fprintf(stderr,"STRATA_HC_Q8_ROWBATCH must be absent, 0 or 1\n");
++        std::abort();
++    }();
++    return enabled;
++}
++template<int Tokens> class HcQ8RowbatchKernel;
++template<int Tokens>
++void launch_q8_rowbatch(sycl::queue& queue, const uint8_t* weights,
++                        const float* input, float* output, int k, int m) {
++    // One subgroup per output row, sharing each decoded weight across Tokens accumulators.
++    queue.parallel_for<HcQ8RowbatchKernel<Tokens>>(
++        sycl::nd_range<1>(sycl::range<1>(size_t(m)*32),sycl::range<1>(32)),
++        [=](sycl::nd_item<1> item) [[sycl::reqd_sub_group_size(32)]] {
++            const size_t row=item.get_group_linear_id();
++            const unsigned lane=item.get_local_linear_id();
++            float acc[Tokens] = {};
++            for (int column=int(lane);column<k;column+=32) {
++                const size_t offset=(row*(k/32)+column/32)*34;
++                const uint16_t bits=uint16_t(weights[offset]) | (uint16_t(weights[offset+1])<<8);
++                const float scale=float(sycl::bit_cast<sycl::half>(bits));
++                const unsigned raw=weights[offset+2+column%32];
++                const int code=raw<128 ? int(raw) : int(raw)-256;
++                const float weight=scale*float(code);
++#pragma unroll
++                for (int t=0;t<Tokens;++t)
++                    acc[t]=sycl::fma(weight,input[size_t(t)*k+column],acc[t]);
++            }
++#pragma unroll
++            for (int t=0;t<Tokens;++t) {
++                const float result=sum32(item.get_sub_group(),acc[t]);
++                if (lane==0) output[size_t(t)*m+row]=result;
++            }
++        });
++}
++bool launch_q8_rows(sycl::queue& q,const uint8_t* w,const float* x,float* y,int k,int m,int tokens) {
++    switch(tokens) {
++        case 2:launch_q8_rowbatch<2>(q,w,x,y,k,m);return true;
++        case 3:launch_q8_rowbatch<3>(q,w,x,y,k,m);return true;
++        case 4:launch_q8_rowbatch<4>(q,w,x,y,k,m);return true;
++        case 5:launch_q8_rowbatch<5>(q,w,x,y,k,m);return true;
++        case 6:launch_q8_rowbatch<6>(q,w,x,y,k,m);return true;
++        case 7:launch_q8_rowbatch<7>(q,w,x,y,k,m);return true;
++        case 8:launch_q8_rowbatch<8>(q,w,x,y,k,m);return true;
++        default:return false;
++    }
+ }
+ 
+ template<bool Q8> class HcProjectionKernel;
+@@ -57,6 +113,7 @@
+         weight_bytes < size_t(m)*(k/32)*34) { return false; }
+     auto * queue = strata::q_of(stream);
+     if (!queue->has_property<sycl::property::queue::in_order>()) { return false; }
++    if (hc_q8_rowbatch_enabled() && launch_q8_rows(*queue,weights,input,output,k,m,tokens)) return true;
+     launch<true>(*queue,weights,input,output,k,m,tokens);
+     return true;
+ }

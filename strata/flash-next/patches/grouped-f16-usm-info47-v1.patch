@@ -1,0 +1,43 @@
+--- a/sycl/src/prefill/gemm.dp.cpp
++++ b/sycl/src/prefill/gemm.dp.cpp
+@@ -20,6 +20,7 @@
+ #include <array>
+ #include <exception>
+ #include <stdexcept>
++#include <new>
+ 
+ #if defined(__HIPCC__) && defined(STRATA_HIPBLASLT_AVAILABLE)
+ // The HIP compatibility shim maps CUDA shuffle spellings to Strata helpers.
+@@ -825,10 +826,22 @@
+         std::array<const sycl::half*, 8> a, b;
+         std::array<float*, 8> c;
+     };
+-    auto info = std::make_shared<Info>();
++    // Matrix-pointer arrays a/b/c must be device-accessible USM, not plain heap.
+     for (int i = 0; i < count; ++i) {
+         if (!X[i] || !W[i] || !Y[i] || rows[i] < 1 || rows[i] > INT_MAX)
+             throw std::invalid_argument("prefill grouped f16: invalid group");
++    }
++    const auto context = q.get_context();
++    Info* raw_info = sycl::malloc_host<Info>(1, q);
++    if (!raw_info) throw std::bad_alloc();
++    ::new (static_cast<void*>(raw_info)) Info{};
++    // The ordinary-heap shared_ptr control block is never a BLAS parameter.
++    // Its pointee and all pointer/scalar/shape arrays are host USM.
++    auto info = std::shared_ptr<Info>(raw_info, [context](Info* p) {
++        p->~Info();
++        sycl::free(p, context);
++    });
++    for (int i = 0; i < count; ++i) {
+         info->ta[i] = oneapi::mkl::transpose::trans;
+         info->tb[i] = oneapi::mkl::transpose::nontrans;
+         info->m[i] = N; info->n[i] = rows[i]; info->k[i] = K;
+@@ -848,7 +861,7 @@
+             , dpct::blas::deduce_compute_mode(dpct::compute_type::f32, desc->get_math_mode(), false)
+ #endif
+         );
+-        // Follow the bundled DPCT gemm_batch metadata lifetime pattern. No normal wait.
++        // The MKL event gates the captured shared owner lifetime. No normal wait.
+         q.submit([&](sycl::handler& h) {
+             h.depends_on(e);
+             h.host_task([info] {});

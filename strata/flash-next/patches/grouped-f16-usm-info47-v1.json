@@ -1,0 +1,12 @@
+{
+  "base_sdk": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T213247Z-b271t8yt",
+  "changed_file": "sycl/src/prefill/gemm.dp.cpp",
+  "before_sha256": "7a0da359b7dd91a0689ef376ffa28a3689991c325377b39aadba5dc27da2c0a4",
+  "after_sha256": "8f27400a82d7c1f2224cc8259c9731c525e6f0c80d4ef051323628ddcb09280a",
+  "patch_sha256": "17a5a8c3fa0e5cefe478757270cc06d1863e14be6642d941c462d99d471385e3",
+  "actual_compile_or_GPU_by_author": false,
+  "crash_cause_confirmed": false,
+  "pointee_allocation": "sycl::malloc_host<Info>(1,q)",
+  "retirement": "shared_ptr captured by event-dependent host_task; context-only free",
+  "normal_explicit_waits_or_GPU_queries_added": false
+}
