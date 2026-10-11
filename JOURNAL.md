@@ -15073,3 +15073,10 @@ CONFIG -> Fullscope successorV9 34c3a4fe/988 source bindings. Standalone stdlib 
 COMMAND -> Root988SHA/ASCII/AST and192CPU PASS6.860s, independentpeer988/192 PASS6.860s. Actual Python3.12/C388 no-device startup53574 at shared-v9-flat-no-device-smoke-v1.
 RESULT -> Actualflat /controller imports13 producer modules, real source40 serve/server, signed config/tokenizer EOS248046 PASS. No native engine/modelweights/GPU devices mounted or started; exactowner inspected and removed. StdoutSHA6468a26ba4a3f86c307828ac27ca7637d8651239a30cda0378d8ee6244cf3108. Fullnine+persisted/fresh49 scope and originaldeadlines preserved. AuthenticoriginalQSA reader51978 failedhosthelper buildbinding despite550source/20CPU andruntime569/62CPU13.555s passing; explicitnewhost association inprogress.
 VERDICT -> CacheV9 source/startup reviewedready, actualcachequalification still required. QSA V1/runtime7 preservedunadmitted, no oldcurrentstat/runtimePASS substituted. FreshC140 servingbaselines remain scope-limited; originalmath/fullcache/concurrency/latency/shelf goalactive.
+
+## 2026-10-11: Complete cache V9 GPU campaign launched after actual startup proof
+
+CONFIG -> FrozenV9 34c3a4fe, same source40 SDK/current171/freshC140 pair, whole nine actors plus serial persisted and everyactual-prefix fresh49 controls.
+COMMAND -> Completeprepare87852 terminal0; all10plan hashes independently checked. Self-leased suite45892 from shared-v9-whole-suite-postboot-prepared-v1/suite-plan.json to shared-v9-whole-suite-postboot-run-v1.
+RESULT -> SuiteSHA39e09b482a252b9f82770554d408b41177e0433842ce881988a52ed735243e76; both leases acquired. Actualimage/no-device startup and independentpeer passed before launch; no actor or cachefamily result yet. Exactlaunch saved at f17/shared-v9-root-launch-command-v1.json.
+VERDICT -> Concrete soleGPU campaign executing with corrected imports and pre-removal logs, not a cache/modelmath/latency claim. OldV8 and originalQSA V1 failures retained. Full originalcampaign remains active and incomplete.
