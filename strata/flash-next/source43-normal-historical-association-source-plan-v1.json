@@ -1,0 +1,19 @@
+{
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_source43_normal_historical_association_cpu_v1 -q",
+  "CPU_tests": 7,
+  "GPU_execution": false,
+  "actual_historical_raw_recollection_performed_by_author": false,
+  "current_actor_integration": false,
+  "files": {
+    "strata/flash-next/serial37_canonical_json_v3.py": "afdbdc4729cc6a2cfb68de5cb1106d79d1b81db79c9da91b1c157d5c1b85f57d",
+    "strata/flash-next/source43-normal-historical-association-design-v1.md": "be06e8e020456286cdb8d67719bc6f4038542179681be572b6809a1fc090f7a4",
+    "strata/flash-next/source43_api_baseline_profile_v1.py": "45af33903547815263671917eb551fb2a0d0995d2435930935d1389e1db1f13e",
+    "strata/flash-next/source43_api_prerequisite_bytes_v1.py": "8a2743fa5c13cab843be21d75a7405f3fbb983233d93119e4c182c38e19fc90b",
+    "strata/flash-next/source43_normal_historical_association_v1.py": "e0657384b766bd6b2b1713b291431b33cfe8d7ae74b7fa322fb28a309117825f",
+    "strata/flash-next/test_source43_normal_historical_association_cpu_v1.py": "9cc0d0daa7b0a506a055d4850688e5b6c70fe25fb995f727c1a50158e2fe98c2"
+  },
+  "original_model_shard_files_read_by_author": false,
+  "performance_improvement_measured": false,
+  "schema": 1,
+  "scope": "source-only named closed normal43 historical bytes; no current model/identity authority or actor integration"
+}
