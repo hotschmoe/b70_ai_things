@@ -15637,3 +15637,23 @@ VERDICT -> Failed capture preserved; reviewed V5 retry is pending. Current
 latency control is running, with LPdisabled successor reviewed for the next
 separate matched run. Neither host source controls nor pending timelines
 qualify physical idle, bandwidth, original fidelity or serving speed.
+
+## 2026-10-11 Profiler metadata budget source and fresh overlay
+
+CONFIG -> Separate output-only profiler successor, metadata ceiling512MiB
+versus8MiB; row4096B, queries/waits/clock arithmetic/serialization unchanged.
+Model timing73892 remains live; build held to avoid measurement competition.
+
+COMMAND -> Root/independent cache-source35 peer checked budget planabb68239
+and six CPU controls eachPASS0.013s. Root reconstructed fresh full source at
+/mnt/vm_8tb/b70/build/pti-unitrace-clock-budget-source-v1 and checked complete
+base/fresh source before/after. No build/GPU/model payload action in prep.
+
+RESULT -> All893 tracked files plus one added clock header verified; exact
+new header1042a101816113325090f8ed4f94b973affce958dd5d1b64a89f5f2a262081c7.
+Source preparation receipt is at build/pti-clock-budget-v1-source-preparation-
+receipt.json. Fresh build controller prepared in/tmp, not executed.
+
+VERDICT -> Source/CPU ready only. Fresh ELFs/dependencies and real capture
+remain required. Metadata cap does not bound Chrome disk or collector memory;
+real model coverage, observer cost, physical idle and speed remain unqualified.
