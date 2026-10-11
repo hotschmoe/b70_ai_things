@@ -27,23 +27,42 @@ Latest continuation state (2026-10-11):
   Corrected47 OFF completed twoGEN4 requests: warm524 prefill15482.3ms
   (33.8tok/s), decode366.0ms (10.9tok/s). ON failed after PP320of524
   with UR_RESULT_ERROR_DEVICE_LOST, Xe null/low-address faults at23:09:41
-  and engine exit139 at23:10:50. Its container is removed; per-arm strict
-  and compiled pair posthealth passed. Final actor closing gates still live
-  when updated. Inspect actual50457 and report before proceeding.
-  Do not retry unchanged47 ON or infer model reliability from fixtures.
-  Proposal: strata/flash-next/native47-grouped-f16-usm-engine-build-proposal-v1.json.
-  Fixture evidence is in F17/grouped-f16-operator47-singleq-v2 and
-  grouped-f16-operator47-twoq-v2. Source46 HC rowbatch build is queued
-  under94364 with indefinite lease wait; previous28224 timed out124
-  BEFORE compilation. Do not duplicate94364. GroupedF16 muststay0
-  on46/48. Source48 default-off singleton mirror staging is committed;
-  kernels/mirror_t1_staging_harness_v1.cpp and .txt cover bounded routing
-  and copy, not math/speed. Build proposal native48-mirror-t1-staging-engine-build-proposal-v1.json.
+  and engine exit139 at23:10:50. Actual50457 FAILED1138s; final strict/
+  compiledpairhealth and allfour publisherhashes passed, kernel gates FAILED.
+  Report6558b6ef. Do not retry unchanged47 ON.
+- Source46 HC rowbatch all8 build PASSED311s, receipt82dd13bb, SDK
+  /mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T231533Z-dvcpbv09.
+  Operator16cases PASSED40s with bitwise outputs/health/retirement.
+  Actual12379 model comparison is live in final identity close:
+  F17/source46-hc-rowbatch-model-v1-run-v1. Warmshort54/twoGEN64
+  OFF/ON PP4295.3/4294.6ms, decode6810.3/6806.1ms, no meaningful gain.
+  GroupedF16 fixed0. Do not run more HC rowcount sweeps.
+- Source48 staging build FAILED namespace qualification. Preserved failed SDK
+  /mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T232045Z-4ofz28jx.
+  Source49 fixes exactlythree helpercall qualifications and all8 buildPASSED
+  310s, receipt2d6490ad, SDK
+  /mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T232453Z-g6w93h0o.
+  Routing/copy fixture compiled19.3s, ELF ab8f033c; actualcard0operator25152
+  queuedbehind12379. Do not duplicate either launch. Only afteroperatorPASS
+  run source49 onecard stagingOFF/ON actor with genuineSDK/receipt args.
+  Matchedshort54/twoGEN64/spec1/pipeline0/grouped0/trace0, sourceplan3f9b900c.
+  Balanced24/24 source49 staging actor prepared/pinned1023845e, deferred
+  untilonecard modelPASS. Same originaltiers and existing perverifierbuffer.
 - Independent original first HC computation PASSED with fresh identity close.
   Original packet differs one scale byte; allcodes/sumbytes match. Conditional
   independent encoder of native mixed values matches nativepacket bitwise.
   This is a first arithmetic seam, not full48 qualification. CPUbulk row-FMA
   helper was built/tested and preserved at /mnt/vm_8tb/b70/build/hc-rows-dot32-cpu-v1.
+- Independent original full48 mode1 CPU bulk computation PASSED/errors[]
+  with freshfull4/pages, 48.7s math/127.6s total, report37dba63f in
+  F17/current-full48-own-state-bulk-mode1-v1. Same43 NUM10 native comparison
+  df8295d8: inputbitwiseexact, L0attentionNMSE3.96e-7, head1.05958e-4,
+  maxnormalized0.00238956. Firsttoken846/top20sets match forliteralprefix1.
+  This is not numericalPASS or a matched improvement over old0.007888.
+  Saved packet seam abb89360: exactlyone halfscale byte crosses rounding
+  midpoint after tiny normalization differences; codes/sums allmatch.
+  IndependentfirstGDN instrumentation is source-ready; run onlyafterGPU
+  timingsend, preserving onefreshidentity close and no capturedmathfeeds.
 - Existing NO_HOST/device-plan mirror reads feed mapped RAM directly to GEMV.
   The existing ptr2 staging path is bypassed by device-planned mirror groups;
   --pcie-mode kernel alone cannot fix this. Source-only audit is in agent/root
@@ -122,8 +141,8 @@ Next priorities:
    collect more fields. Test promising default-off candidates with focused
    numerical checks before full-model comparison.
 
-Limits: full original-model numerical qualification remains open (full48 head
- NMSE about0.007888); successful lifecycle/bitwise observer controls do not
+Limits: full original-model numerical qualification remains open; current
+ literalprefix1 mode1 headNMSE is0.000105958, and successful controls do not
  prove original-model fidelity. Full-state prefix cache, persisted restore,
  true1/2/4/bounded6-stream usability and shelf qualification remain unfinished.
  Do not promote a shelf or claim speed/stability without matched identity,
