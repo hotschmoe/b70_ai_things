@@ -21,7 +21,7 @@
     "strata/flash-next/validate_source47_grouped_f16_model_v2.py": "f8cd5bdf1520335eeefa84b09660df7200daf129cc69d9926537b758b5dbf1f1",
     "strata/flash-next/test_source47_campaign_identity_cpu_v2.py": "9e0e0846e34ee3a3aec4329dfaea8105ba033d424295f61ed8688ef404a989ff",
     "strata/flash-next/source46_hc_rowbatch_model_binding_v1.py": "0fba1ab37e5a2cca45348a9a7c84dd159db7bd893512b0c985d5095a333c4371",
-    "strata/flash-next/run_source46_hc_rowbatch_model_v1.py": "a52626f1900f7402849fa0ce8b7da874ae21c030119120ae42245f7c84ae6608",
+    "strata/flash-next/run_source46_hc_rowbatch_model_v1.py": "6729186582948a9b5f1ee0b8c00594f8365e2b800fe1d81e04f59cc35af1c9b8",
     "strata/flash-next/validate_source46_hc_rowbatch_model_v1.py": "31a523e306de0d538e2d342bab227365e8709c4f3e394bbd66b09809c5f04ba5"
   },
   "full_model_math_qualified": false,

@@ -60,7 +60,7 @@ def derive():
  for n in ast.walk(phase):
   if isinstance(n,ast.keyword)and n.arg=='PTI_enabled':n.value=ast.Constant(False);count+=1
  original.require(count==1,'Sole native OFF phase predicate required')
- phase.body[-1:-1]=ast.parse("require('--short-read'not in recipe['native_argv'],'Default shortread64 geometry required');recipe.update(short_read_control=64,only_native_argument_delta=[],numeric_head_residual_observed=False);[row.update(max_new=64)for row in recipe['requests']];recipe['maximum_total_output_tokens']=128").body
+ phase.body[-1:-1]=ast.parse("require('--short-read'not in recipe['native_argv'],'Default shortread64 geometry required');recipe.update(short_read_control=64,only_native_argument_delta=[],numeric_head_residual_observed=False);[row.update(max_new=64)for row in recipe['requests']];recipe['maximum_total_output_tokens']=128;recipe['selected_request_count']=2;recipe['bounded_window_schema']=2").body
  phase.body[-1:-1]=ast.parse("descriptor.update(source=str(fresh.SDK/'source'),executable=str(fresh.SDK/'build/strata'),alias='source46-mode0-hc-rowbatch-native-CLI-diagnostic');recipe['engine_generation']=46;recipe['native_env']['STRATA_CRITICAL_PATH_TRACE']='0';recipe['native_env']['STRATA_PF_GROUPED_F16']='0';recipe['native_env']['STRATA_HC_Q8_ROWBATCH']='1'if phase==PHASES[1]else'0';require(all(recipe['native_env'].get(k)in(None,'8')for k in('STRATA_GU_LANES','STRATA_DOWN_LANES')),'Default8 decode lanes retained');recipe.update(host_trace_enabled=False,both_arms_H36_enabled=False,capture_kind='fresh46 short54 twoGEN64 warmup selected; defaultshortread64 verifierT2; no profiler',graph_coverage_qualified=False,full_model_math_qualified=False)").body
  # The run-phase's unchanged graph proof executes with the actual new reader.
  class ReaderName(ast.NodeTransformer):
@@ -84,7 +84,7 @@ def derive():
  actual=next(n for n in nodes if n.name=='run_phase');actual.body=ast.parse("out,phase=args[:2];watch=Watcher(out,lambda:os.kill(os.getpid(),signal.SIGUSR1));result=None\ntry:\n watch.start();result=_PORTS['native_phase'](*args,**kwargs)\nfinally:\n proof=watch.close()\n if (out/phase).is_dir():proof=publish_final((out/phase)/'raw-budget.json',proof,out)\nrequire(proof['passed'],'Actual raw quota failed');fresh.binding();return result").body
  insert=next(i for i,n in enumerate(port.body)if isinstance(n,ast.Assign)and any(isinstance(t,ast.Name)and t.id=='result'for t in n.targets))
  port.body[insert:insert]=ast.parse("source=source.replace('metadata, cfg = admission(plan)','command_preflight = preflight(plan, a.output)\\n    metadata, cfg = admission(plan)')").body
- exec(compile(ast.fix_missing_locations(ast.Module(nodes,type_ignores=[])),__file__+'[single-OFF-short-read0]', 'exec'),namespace)
+ exec(compile(ast.fix_missing_locations(ast.Module(nodes,type_ignores=[])),__file__+'[HC46-short54-two-GEN64]', 'exec'),namespace)
  namespace['intake']=SimpleNamespace(**{**vars(original.intake),'SDK':fresh.SDK});namespace['life']=SimpleNamespace(**{**vars(original.life),'contract':SimpleNamespace(**{**vars(original.life.contract),'native_command':namespace['native_command']})});namespace['_PORTS']=boundary_ports(namespace);return namespace
 NS=derive()
 for name in('PLAN','PHASES','contract','closure','set_case','set_runtime','admission','prerequisite','phase_recipe','native_command','life','warm_control','mapped','native_pid','run_phase','ports'):
