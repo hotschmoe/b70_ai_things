@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "scope": "genuine fresh native43/all8 and complete fixed-budget PTI finalizer source/build proposals only",
+  "files": {
+    "strata/flash-next/prepare_native43_build_proposal_v1.py": "815abe57c543b55d924bd118481677474f987db1c7210ba978878a81b4a14107",
+    "strata/flash-next/prepare_pti_finalizer_build_proposal_v1.py": "c1bb2b95240e14cd7de1d385cb2cd2c35f0d9eba6709adcd0793b1c47866579a",
+    "strata/flash-next/test_finalizer_build_proposals_cpu_v1.py": "fe39d3ee6d6b52e4b4b70e81f83b9fb69d235b5a73c6523031fb854c07879087",
+    "strata/flash-next/native43-engine-build-proposal-v1.json": "17ff9e21276cbab2e802435ec3fcda6f6a1bb57444d53f4fb31156a0615b1b5c",
+    "strata/flash-next/pti-finalizer-tool-build-proposal-v1.json": "b70e97d3ed4ac953af51080e509aebe2937081703d8445216474b321aedc699a",
+    "strata/flash-next/pti-explicit-model-finalizer-source-plan-v1.json": "f97d3fec4352ef08edc73c65a9c2b8f8ec34e2e10b2396b9cf3fa3136b226c2a",
+    "strata/flash-next/host-terminal42-engine-build-proposal-v1.json": "4aff63791192ab6283ca32c0f5ff49ef99fbe2e92e8ac14906fa7e565ff7245a",
+    "strata/flash-next/prepare_pti_explicit_finalize_v1.py": "a617454ac4c4f6b2f18fe91c94c6353b7302fdceac10befeac6cdd0f185f2f72",
+    "strata/flash-next/prepare_pti_native_hook43_v1.py": "e540f12d709d8ec9bbb8b1d1e116452f6412be054cf77cbc17ca48db77dc63d0",
+    "strata/flash-next/pti_unitrace_build_recipe_v1.py": "8dc0b7e9b1a6163757ac4664c021f274bf95fd6bbad168ee9803c8f929f85b0d",
+    "strata/flash-next/pti-unitrace-source-manifest-v1.json": "7593e5381a7373cebbe861b0ffb464afaa5374db0c122972d638c39849b82a11",
+    "strata/flash-next/pti-unitrace-clock-bridge-source-plan-v1.json": "110ca7f1b376ddd253e4b47410590fb7b7900778fc03fb535c7d168a10948def",
+    "strata/flash-next/pti-unitrace-clock-budget-source-plan-v1.json": "abb68239d79f0cbbf8a517ca2b05c4d1e42cc22151f9616fc724c29c33465ee8",
+    "docs/20261011_flashnext_native43_and_pti_finalizer_build_proposals_v1.md": "4c05e9e348f7a47db9c364cfcc5695de9a0f2d79d96ef073c7d2a7d2ad847bc3"
+  },
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_finalizer_build_proposals_cpu_v1 -q",
+  "CPU_controls": 4,
+  "native_actual_roster": [
+    70,
+    32,
+    43,
+    8,
+    6
+  ],
+  "tool_full_source_rows": 895,
+  "frozen_finalizer_prototype_preserved": true,
+  "build_GPU_model_or_payload_actions_by_author": false,
+  "old_build_or_runtime_transfer": false
+}

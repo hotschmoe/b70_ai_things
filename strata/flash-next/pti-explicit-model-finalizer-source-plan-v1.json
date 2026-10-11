@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "scope": "SOURCE PROTOTYPE opt-in owned PTI Teardown+explicit clock final close/native source43 hook; no runtime PASS",
+  "files": {
+    "strata/flash-next/prepare_pti_explicit_finalize_v1.py": "a617454ac4c4f6b2f18fe91c94c6353b7302fdceac10befeac6cdd0f185f2f72",
+    "strata/flash-next/prepare_pti_native_hook43_v1.py": "e540f12d709d8ec9bbb8b1d1e116452f6412be054cf77cbc17ca48db77dc63d0",
+    "strata/flash-next/pti_model_finalize_guard_v1.hpp": "f578ee7f80852c14672379c68c5c8c064831f3d0cf5f0a66f67583a178324365",
+    "strata/flash-next/pti_native_finalize43_v1.hpp": "162fc0013547fef8ae62b2565c55aff618b84e9c154f2bc2161f386972b7bad9",
+    "strata/flash-next/pti_clock_explicit_finalize_v1.hpp": "8a3284a2ce792f61a3e40f35ec7cb783b09669a5d9d33c3f60e7b4513569087e",
+    "strata/flash-next/pti_model_finalize_cpu_fixture_v1.cpp": "3d379b9abe1289a407f9aada7aac7ee36d498f48c465f520c13a50bfcda97890",
+    "strata/flash-next/pti_clock_close_cpu_fixture_v1.cpp": "31f8de04ae2d1eaedaf558d831eed3f818fe9efbb36fc7efe9db8a5d45483b08",
+    "strata/flash-next/test_pti_explicit_finalize_cpu_v1.py": "8dd3ab89a7d10c5008b4c5b11a46078cbfeca8d48626e91f9e489f6bae24fb1d",
+    "strata/flash-next/pti-explicit-model-finalizer-v1.patch": "dc020c5bd5256fdedc839d9d8c4e319df35feecfe1373d052479bed912d2c10c",
+    "strata/flash-next/patches/0043-opt-in-owned-pti-native-terminal-hook.patch": "d702451404e04355e92965e18fc35d85e0bded4317e7857be07c74525663b448",
+    "strata/flash-next/host-terminal42-source-plan-v1.json": "203adde987e681f7af24269b584f2ee2549f9afc59c64ea34c3f490cac9eeda3",
+    "strata/flash-next/host-terminal42-engine-build-proposal-v1.json": "4aff63791192ab6283ca32c0f5ff49ef99fbe2e92e8ac14906fa7e565ff7245a",
+    "strata/flash-next/pti-unitrace-clock-budget-source-plan-v1.json": "abb68239d79f0cbbf8a517ca2b05c4d1e42cc22151f9616fc724c29c33465ee8",
+    "docs/20261011_flashnext_pti_explicit_finalizer_source_v1.md": "5d8e9f3134ce39ad503c0f4296f9b95445a34a4b4a9633d31a30d962b4cde5be"
+  },
+  "actual_tool_parent_source": {
+    "/mnt/vm_8tb/b70/build/pti-unitrace-clock-budget-source-v1/tools/unitrace/src/tracer.cc": "e770574b66edce42941fd211ae934c10db3eab4dc44a92d05a719099be1eac85",
+    "/mnt/vm_8tb/b70/build/pti-unitrace-clock-budget-source-v1/tools/unitrace/src/tracer.h": "2cdfffb4f48043853e29f29432231bc0305f84f7e88785f0bcd502f0f57d21ba",
+    "/mnt/vm_8tb/b70/build/pti-unitrace-clock-budget-source-v1/tools/unitrace/src/chromelogger.h": "3f34ed620df70270afe2bac30c3dcebe2ae68cb66448244bedfc1c15e246a493",
+    "/mnt/vm_8tb/b70/build/pti-unitrace-clock-budget-source-v1/tools/unitrace/src/pti_unitrace_clock_export_v1.h": "1042a101816113325090f8ed4f94b973affce958dd5d1b64a89f5f2a262081c7"
+  },
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_pti_explicit_finalize_cpu_v1 -q",
+  "CPU_controls": 6,
+  "native_CPU_fixtures_compiled_by_author": false,
+  "fresh_tool_and_full_native_build_required": true,
+  "mapped_census_implemented": false,
+  "normal_default_fast_exit_preserved": true,
+  "GPU_model_or_tool_actions_by_author": false,
+  "runtime_ready": false
+}

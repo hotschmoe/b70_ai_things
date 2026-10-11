@@ -1,0 +1,131 @@
+--- a/tools/unitrace/src/pti_unitrace_clock_export_v1.h
++++ b/tools/unitrace/src/pti_unitrace_clock_export_v1.h
+@@ -64,20 +64,30 @@
+   pid_t owner = 0;
+   uint64_t sequence = 0;
+   uint64_t bytes = 0;
+-  ~Writer() {
+-    if (fd >= 0) {
+-      if (BridgeEnabled()) {
+-        const auto sample = ReadHostBridge();
+-        Emit("host_clock_bridge", {{"site", 2}, {"raw_before_ns", sample.raw_before},
+-             {"monotonic_ns", sample.monotonic}, {"raw_after_ns", sample.raw_after}});
+-      }
+-      if (::close(fd) != 0) Fail("final close failed");
++  bool closed = false;
++  bool close_error = false;
++  ~Writer() { if (!CloseOnce(false)) Fail("final close failed"); }
++  bool CloseOnce(bool require_opened) {
++    std::lock_guard<std::mutex> held(lock);
++    if (closed) return !close_error;
++    if (fd < 0) { closed=true;close_error=require_opened;return !close_error; }
++    if (owner != ::getpid()) { close_error=true;return false; }
++    if (BridgeEnabled()) {
++      const auto sample=ReadHostBridge();
++      EmitLocked("host_clock_bridge", {{"site",2},{"raw_before_ns",sample.raw_before},
++          {"monotonic_ns",sample.monotonic},{"raw_after_ns",sample.raw_after}});
+     }
++    const int result=::close(fd);fd=-1;closed=true;close_error=result!=0;
++    return !close_error;
+   }
+   void Emit(const char* kind, std::initializer_list<std::pair<const char*,uint64_t>> fields) {
+     // OFF performs no allocation, lock, file operation or extra clock query.
+     if (!Enabled()) return;
+     std::lock_guard<std::mutex> held(lock);
++    if (closed) Fail("metadata emission after explicit close");
++    EmitLocked(kind,fields);
++  }
++  void EmitLocked(const char* kind, std::initializer_list<std::pair<const char*,uint64_t>> fields) {
+     const pid_t pid = ::getpid();
+     if (fd < 0) {
+       const char* supplied = std::getenv("UNITRACE_CLOCK_METADATA_PATH");
+@@ -110,10 +120,14 @@
+     bytes += value.size();
+   }
+ };
++inline Writer& OwnedWriter() { static Writer writer; return writer; }
+ inline void Emit(const char* kind, std::initializer_list<std::pair<const char*,uint64_t>> fields) {
+   if (!Enabled()) return;
+-  static Writer writer;
+-  writer.Emit(kind, fields);
++  OwnedWriter().Emit(kind,fields);
++}
++inline bool CloseOnce() {
++  if (!Enabled() || !BridgeEnabled()) return false;
++  return OwnedWriter().CloseOnce(true);
+ }
+ 
+ inline void HostBridge(uint64_t site) {
+--- a/tools/unitrace/src/tracer.cc
++++ b/tools/unitrace/src/tracer.cc
+@@ -1,3 +1,5 @@
++#include "pti_model_finalize_guard_v1.hpp"
++#include "pti_unitrace_clock_export_v1.h"
+ //==============================================================
+ // Copyright (C) Intel Corporation
+ //
+@@ -275,6 +277,12 @@
+ }
+ 
+ void CONSTRUCTOR Init(void) {
++  const char* model_role=std::getenv("UNITRACE_MODEL_FINALIZE_V1");
++  if (model_role && std::strcmp(model_role,"0")!=0) {
++    if (std::strcmp(model_role,"1")!=0 || !b70_pti_clock_v1::Enabled() || !b70_pti_clock_v1::BridgeEnabled())
++      b70_pti_clock_v1::Fail("invalid explicit model finalizer role");
++    b70_pti_finalize_v1::state().Initialize();
++  }
+   std::string unitrace_version = utils::GetEnv("UNITRACE_VERSION");
+   if (unitrace_version.size() > 0) {
+     auto libunitrace_version = get_version();
+@@ -356,6 +364,16 @@
+   }
+ }
+ 
++extern "C" int b70_pti_model_finalize_v1(uint32_t version,uint64_t pid,uint64_t tid) noexcept {
++  const char* role=std::getenv("UNITRACE_MODEL_FINALIZE_V1");
++  if (!role || std::strcmp(role,"1")!=0) return 1;
++  const int result=b70_pti_finalize_v1::state().Finalize(version,pid,tid,
++      [] { Teardown(); }, [] { return b70_pti_clock_v1::CloseOnce(); });
++  std::fprintf(stderr,"B70_PTI_MODEL_FINALIZE_V1 pid=%ld result=%d\n",long(::getpid()),result);
++  std::fflush(stderr);
++  return result;
++}
++
+ void DESTRUCTOR Fini(void) {
+   Teardown();
+ }
+--- /dev/null
++++ b/tools/unitrace/src/pti_model_finalize_guard_v1.hpp
+@@ -0,0 +1,32 @@
++// Standalone CPU-testable owner/idempotence guard; no GPU/model dependencies.
++#ifndef B70_PTI_MODEL_FINALIZE_GUARD_V1_H
++#define B70_PTI_MODEL_FINALIZE_GUARD_V1_H
++#include <atomic>
++#include <cstdint>
++#include <unistd.h>
++#include <sys/syscall.h>
++namespace b70_pti_finalize_v1 {
++struct Guard {
++    std::atomic<bool> ready{false}, failed{false};
++    uint64_t owner_pid=0, owner_tid=0;
++    bool teardown_done=false, clock_done=false;
++    void Initialize() noexcept {
++        if(ready.load(std::memory_order_acquire)){failed.store(true,std::memory_order_release);return;}
++        owner_pid=uint64_t(::getpid());owner_tid=uint64_t(::syscall(SYS_gettid));
++        ready.store(true,std::memory_order_release);
++    }
++    template<class Teardown,class Close>
++    int Finalize(uint32_t version,uint64_t pid,uint64_t tid,Teardown teardown,Close close) noexcept {
++        if(!ready.load(std::memory_order_acquire))return 1;
++        if(version!=1||pid!=owner_pid||tid!=owner_tid||pid!=uint64_t(::getpid())||tid!=uint64_t(::syscall(SYS_gettid))){failed.store(true,std::memory_order_release);return 2;}
++        // Only the immutable owner touches callback completion flags.
++        try {
++            if(!teardown_done){teardown();teardown_done=true;}
++            if(!clock_done){if(!close()){failed.store(true,std::memory_order_release);return 3;}clock_done=true;}
++        } catch(...) {failed.store(true,std::memory_order_release);return 4;}
++        return failed.load(std::memory_order_acquire)?5:0;
++    }
++};
++inline Guard& state(){static Guard guard;return guard;}
++} // namespace b70_pti_finalize_v1
++#endif
