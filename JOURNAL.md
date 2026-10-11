@@ -16115,3 +16115,31 @@ no new model runtime or original math result exists yet.
 VERDICT -> Genuine masked43 prerequisite closed. Actual model runs and original
 NUM10 reference diagnostics are next, alongside separate LPdisabled/H36/PTI
 integration. Full fidelity/cache/streams/placement/latency/shelf remain open.
+
+## 2026-10-11 Fresh model diagnostic launch and current clock properties
+
+CONFIG -> NUM10V3 mode1 four fresh literalprefix1/MAX1 requests per arm;
+separate normal43 mode0 short/long/long/short GEN64 plan. No serving promotion.
+
+COMMAND -> CPU prepares89018/64902 terminal0 using exact original three pins,
+actual current upload/masked and complete masked post-full4. NUM10 plan
+c9ca347fc96961197e344fada6230664e1b450cd3ff8b894f0005fd4fa24c0f5;
+normal planab0305fa8e3a18e898684e991e239dba6f9aaafc1f8399e31db21c233e2f7975.
+Root70565 nowpairleased run_source43_num10_zero_v3.py --phase num10-equivalence
+with exact plan and actual chunk64 input trace; still current CPU admission.
+
+RESULT -> Fresh finalizer tool GPU0 property-only query86486 PASS39s, card0
+lease+affinity0, actual sycl-ls, pre/post card0 health, normal owned removal.
+Receiptbd20c2db65bd94909b66a5d9d770f396755786b30b1aa4d00a1ebada0f7e8c0b;
+propertyd211fd32374fd9293a2d628f515e54cd6adaeabed7f8488b8b7caf0f9aabe02e
+under F17/pti-finalizer-gpu0-clock-property-v1. Actual19.2MHz,64validbits,
+mask18446744073709551615, UUIDwords3793977478/11. Raw APIclock/source preserved.
+Original-reference CLI d7eccc90 all185bindings, root6CPU0.011s/peer0.018s;
+no original computation yet. Q81V1 1febb500 held afterpeer found inherited
+old41 current-use byte roster, despite root38CPU0.457s; explicit successor
+must bind current43/helper/fixture bytes. No actual Q81helper launched.
+
+VERDICT -> NUM10actual model result pending. Device properties alone do not
+calibrate clock alignment, provide model-operation counts or establish idle/
+bandwidth. Actual model/PTI finalizer/mapped-census/runtime and all fullgoal
+math/cache/concurrency/placement/interactive/shelf gates remain required.

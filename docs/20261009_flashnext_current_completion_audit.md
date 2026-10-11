@@ -1640,3 +1640,25 @@ VERDICT -> Source43build/basictoolmetadata are notfreshmodel/runtime proof.
 New43oracle/upload/modelcontrols, mappedinjection/completeprofiles, original
 fidelity/cache/actual1/2/4/bounded6/physicalplacement/naturalTTFT-gaps-fairness
 andstableAPI/verifiedshelf allremain required.
+
+## 2026-10-11 - Fresh43 component closure and model/profiling follow-up
+
+CONFIG -> Full original objective and selected model remain unchanged.
+COMMAND -> Masked43 runtime31169 passed621s; independent public upload-view
+reader1866 passed289.287s. Root numerical and normal model preparations passed;
+actual NUM10V3 model run70565 is live, not a completed numerical result.
+RESULT -> Actual48 frames/OFF24+ON24/direct+two replay/accepted masks/grouped
+state comparisons, teardown and post-health/full4 pass. Report1672651d and
+public bindinge8809d39 are under F17/source43-masked-runtime-v2 and its external
+reader artifact. Fresh-tool GPU0 API properties passed39s with card0 health;
+propertyd211fd32 gives19.2MHz/64bits, not clock calibration or a model timeline.
+Retained FAILED source41 host session has individually complete request files:
+request4 observed host P50 token gap109.639ms versus LP work about2.535ms per
+intertoken window; ReplayWait dominates the request. Diagnosticdf52faf7 does
+not waive the missing session marker or qualify clean latency/GPU idle.
+VERDICT -> Fresh43 upload/materializer components are closed. Actual normal
+constructor, original full48 fidelity, complete-state cache and1/2/4/bounded6
+streams, physical tier traffic/criticalpath, natural interactive improvements,
+stable client API and reproducible verified shelf remain incomplete. No model
+speed/stability promotion. New PTI runtime/live mapped-census integration is
+under development; fixed-input Q81 candidate is held for its old41 byte roster.
