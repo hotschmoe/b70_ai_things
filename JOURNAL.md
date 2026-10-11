@@ -15017,3 +15017,10 @@ CONFIG -> Fixed kernel 7.1.0-070100; post-reboot campaign recovery.
 COMMAND -> journalctl previous-boot shutdown window and targeted previous-boot kernel scan. Current full four-shard publisher hashing, then self-leased SOURCE40 whole-390 upload refresh.
 RESULT -> At 23:19:21 UTC systemd-logind records Power key pressed short, Powering off, and System is powering down, followed by orderly teardown. The targeted kernel scan found no matching panic/OOM/lockup/GPU-wedge messages. Current full four-shard hashes passed. Upload refresh session 68770 acquired the pair lease; completion remains pending. Runtime evidence: f17-source37-20261010/previous-boot-shutdown-observation-v1.json and companion logs.
 VERDICT -> Shutdown cause is unresolved; logs support an orderly power-key-triggered shutdown, not attribution to a test crash. Continue one leased GPU workload at a time with pre/post health; preserve interrupted attempts as incomplete. Full campaign goal remains incomplete.
+
+## 2026-10-10: Post-reboot whole390 GPU cases and health complete
+
+CONFIG -> Unchanged SOURCE40 V3 SDK/oracle and pinned UD-Q4_K_XL; sole pair-leased workload.
+COMMAND -> run_source_upload_oracle_full_v2.py, session 68770, root source40-v3-upload390-postboot-run-v2; exact command saved in postboot-upload390-root-command-v1.json.
+RESULT -> All five whole390 cases exited cleanly: card0, card1, same-device24/24, two-device24/24, and actual model static bounds. Owned teardown and strict per-card plus compiled two-rank post-health passed. PID8866 remains live in the new final full-four publisher hash scan; no terminal PASS claimed. Fresh one/pair C140 preparation commands saved at postboot-c140-preparation-commands-v3.json, gated on upload completion.
+VERDICT -> Actual postboot GPU and teardown progress; final upload qualification pending identity completion. This does not qualify inference, original model fidelity, full cache, concurrency, interactive latency or shelf. Preserve the live process and poll the same handle. Full campaign remains active.
