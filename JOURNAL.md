@@ -16884,3 +16884,18 @@ Mockattemptedcreate confirmsfailedreceipt/originalname census. ActualtinyHUP
 controlrerunrequested; no realDocker/GPU/nativebuild qualificationofV2.
 VERDICT -> Scopedsourcefixforfuturetoolbuilds, notdeviceprofilecoverage/
 fullmath/currentserving. Modelcaptureandtinyprofilingfixture pending; fullgoalactive.
+
+## 2026-10-11 NUM38 original core diagnostic driver source closed
+
+CONFIG -> Actual44 raw38, unchangedindependentOriginalTensorRows/FirstGdnLayer
+FP64diagnostic; existingF32full48primary reference retained. Noactualproviderread.
+COMMAND -> Rootc99f08389ffda8b01e51db6f1aafbfdded5563352032ec77bbdb3d15bd531dce
+all915sourcebindings/5CPU0.185PASS; authorownedfivepaths frozen.
+RESULT -> New driverbindsactual44reader2/raw38owner/nonce/zero-beforestate/
+allfiveextra fields, retainsindependentFP64coretargets andseparatecaptured
+normalizedQKV/beta/actualinverseS conditionalCPUfmaf ownzerocore comparison.
+Initialadmissionfailure attemptsclosingcaptureandpublisher; freshfull4/pages
+afterclosingreadrequired. No tolerance/numericPASS/fullmathauthority assigned.
+VERDICT -> ReadyforactualclosedNUM38capture, not numericalresults. Solemodel
+95513 remainsliveprerequisiteadmission; no competingmodelreadorGPUrun.
+Fullcampaign remainsactive.
