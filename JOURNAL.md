@@ -15157,3 +15157,10 @@ CONFIG -> Same pinnedartifact andunchangedsourcefilestat5; preservedbad cachedpa
 COMMAND -> Ordinarycomplete buffered4 root54756 terminal0 aftertargeted4096B cachepageadvisory; freshqualification root26217/native-qsa40-v9-one-postcache-run-v2 viaownlease before anymodeltouch.
 RESULT -> Allfour currentpublisherhashes PASS, identitySHA 06c0bcac413f24d428f87c9836219a11d3e5ab980fee0fb2eae65f46d4f8242a. Shard2 restoredcachedSHA3f342f1c; backingfile/stat5 unchanged. Root26217 acquiredpairleases withmatchedhostthread environment; entirefreshpre/postfull4/source/health/ownedteardown gates retained, no captureresult yet. CacheV10 completeverifiedsuite remainsprepared.
 VERDICT -> Currentordinaryidentity re-established withpreservedforensics, notrootcause/stability/modelmath qualification. Continuecautious soleGPU workload andstrict identitygates; fulloriginalgoalactive.
+
+## 2026-10-11: Fresh QSA9 OFF and ON model arms complete
+
+CONFIG -> Same frozen runtime9/source40 SDK, pinned original UD-Q4_K_XL, matched host thread environment, one-card device pin0 with sole pair lease for surrounding health. Full four-shard ordinary prelaunch identity passed after separately recorded cached-page recovery.
+COMMAND -> Existing self-leased qualifier26217 at f17/native-qsa40-v9-one-postcache-run-v2; same process observed live throughout, no duplicate launch or deadline change.
+RESULT -> Both OFF and ON result.json report passed true/errors empty; each completed four prefix requests and normal owned teardown. ON produced twelve QSA frame metadata files. Parent remains live in numerical/source/reference comparison; numerical-comparison/localization/final report not yet published. No whole-run qualification or original-model fidelity claimed.
+VERDICT -> Actual observer model capture advances beyond preparation. Require complete OFF/ON full49/P30 equivalence, original input33 and independent original QSA localization, fresh post-health/full4/source and final reader before pair qualification. Full cache/concurrency/placement/profile/latency/shelf objective remains active.
