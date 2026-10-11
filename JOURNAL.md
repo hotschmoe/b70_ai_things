@@ -15150,3 +15150,10 @@ CONFIG -> Sameoriginal shard2/backingfile/stat5; modelGPU qualification held unt
 COMMAND -> Pairedcomplete buffered/direct comparison48913 terminal0; preserved8MiB range at offset45164265472. TargetedreadonlyFD posix_fadvise DONTNEED forone4096B page at45171400704 after preservation. Freshordinary complete4scan54756 live.
 RESULT -> Exactlyonebyte differs at45171403500: buffered0xE5, direct0xC5 (xor0x20); allother filechunks identical, bufferedwholeSHAee52b322/directpublisher3f342f1c. Pageadvisory reload observes0xC5, sourceinode/size/mtime/ctime unchanged, no backingfilewrite. Preservedpage/range bytes andhashes remain at shard2-buffered-direct-chunk-comparison-v1 and shard2-targeted-pagecache-refresh-v1. Ordinaryfull4notyetcomplete; priorhashfailures neverpromoted.
 VERDICT -> Localizedcached-byte discrepancy andreadonly recovery observation, notrootcauseproof/hardwareexoneration ornewmodelqualification. Require freshordinarypublisher4 thencomplete GPU source/health/coherence requalification; full originalgoalactive.
+
+## 2026-10-11: Freshordinary publisher4 passes after isolatedcache refresh
+
+CONFIG -> Same pinnedartifact andunchangedsourcefilestat5; preservedbad cachedpage/range andbackingreference. No hashwaiver ormodelquant/source substitution.
+COMMAND -> Ordinarycomplete buffered4 root54756 terminal0 aftertargeted4096B cachepageadvisory; freshqualification root26217/native-qsa40-v9-one-postcache-run-v2 viaownlease before anymodeltouch.
+RESULT -> Allfour currentpublisherhashes PASS, identitySHA 06c0bcac413f24d428f87c9836219a11d3e5ab980fee0fb2eae65f46d4f8242a. Shard2 restoredcachedSHA3f342f1c; backingfile/stat5 unchanged. Root26217 acquiredpairleases withmatchedhostthread environment; entirefreshpre/postfull4/source/health/ownedteardown gates retained, no captureresult yet. CacheV10 completeverifiedsuite remainsprepared.
+VERDICT -> Currentordinaryidentity re-established withpreservedforensics, notrootcause/stability/modelmath qualification. Continuecautious soleGPU workload andstrict identitygates; fulloriginalgoalactive.
