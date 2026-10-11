@@ -15045,3 +15045,10 @@ CONFIG -> SOURCE40 V3/C1401403, current171 registry, fixed host stack and pinned
 COMMAND -> Root15276 onecard prepare plus self-leased qualifier terminal0; GPU397s. Start root43122 freshpair prepare then qualifier with actual freshone qualification.json.
 RESULT -> Onecard full scopedPASS: six-request coherence/repeat/APIidentity/tokenconsumption; normalownedteardown; strict per-card/compiledtwo-rank preposthealth; kernel/source checks and newfourpublisher hashes. QualificationSHA abb952bbb0558acaac2bb347fe7bf2928370c484776990e2541d9b431042800f, parentSHA ff4bf9c7cf564b978652ef22d194d25818d05e488ff4394a59bacf888d722d28. Pair preparation live; no pairedPASS yet. Root NEWcacheV8 source01b14892/924SHA ASCII AST/184CPU PASS6.850s; independentpeerpending.
 VERDICT -> Fresh serving baseline qualified within bounded C140 scope, not original48 math/fullcache/concurrency/latency/shelf. ActualGPUprogress continues, sole workload coordinator; oldcacheV7 holds preserved. Full objective remains active.
+
+## 2026-10-11: Full cache V8 source reviewed ready for genuine GPU execution
+
+CONFIG -> Versioned V8 successor, strict source40 EOS helper2/native lifetime5; frozenV7 and raw failures unchanged. Complete nine actors plus persisted/every fresh49 family and original60s/300s deadlines preserved.
+COMMAND -> Root source924hash/ASCII/AST checks and184CPU PASS6.850s; independent sourcepeer same924hashes/184CPU PASS6.695s.
+RESULT -> Both V7 blockers closed: public raw49 roles use independently recomputed waiter-adjudicated actual_terminals; noncancelled pinnedEOS requires native finishstop while actual clientcancel/errorNone is distinct. Phase/proof/ACK/source namespace/Thread retirement/current171 genuineC140 bindings reviewed. Frozen sourceplan01b148929d192db55274d53d9a16f67e07ba875ec1a9d1ae2d7387e24846c634. Actual fresh paired baseline43122 remains live; no V8 suite prepared or GPU launch yet.
+VERDICT -> Source review READY only. Require freshpair finalqualification, whole suite preparation and actual GPU/persisted/fresh49 results. No cache/modelmath/physicalmemory/latency/shelf qualification from CPU controls. Full goal active.
