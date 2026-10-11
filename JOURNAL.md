@@ -15849,3 +15849,25 @@ Actual39182 fidelityV5 prefull4 nowPASS all4 shards, startup next.
 VERDICT -> View-only source/CPU qualification, no model/GPU action or actor
 speedup claimed. Actualoriginalnumericcomparison andsource42 GPUbuild/model
 trace requalification pending; fullgoalactive.
+
+## 2026-10-11 Complete mode1 capture and realCPU finalizer fixtures
+
+CONFIG -> Frozen source41V5 original-fidelity mode1; sameoriginal model/
+reference. SeparateCPU-only finalizer guard/writer prototype, no tool library.
+
+COMMAND -> Actual39182 terminalPASS1129s, parent113c194ef4c1cc0932575ef97d3fefd5291ced888cdad9fe307d73133480561b.
+Root owningUR preflightPASS0.414s/8411ea78; enclosingoriginalreader30061live.
+CPU C388 fixtures77487 compiled/run, actualcontainerExit0/normalremoved.
+
+RESULT -> Model4requests/12QSAframes/complete47577228B395954lines, max1123,
+recorded=observed/normalEOF/no forcedcleanup/prepostfull4/health/sourcePASS.
+Numeric comparison pending. RealCPUguard owned/idempotent/partialfailure
+casesPASS; clock fast/natural/late files preserve3rows/sequence1..3/site1,2,
+late emiterror86. Initialroot readback wronglyexpectedsequence0..2 andfailed;
+preservedrefusal, correctedexternalreadbackec386760c8136eeb1aa45fcfa9a53814dfbcd3446e145cc9d17c79a77fae199e PASS.
+Sourceprototype f97d3fec sixCPUrootPASS0.078s; peerreview/builds stillpending.
+
+VERDICT -> Complete owning capture opensoriginalmath comparison; not fullmath
+qualification. CPUcallback/writer evidence doesnot qualify actualtool/native
+shutdown ordevice clocks. Fresh43/toolbuilds/mappedcensus/complete rawoutputs
+stillrequired. Curatedmodelresults/completionaudit updated, wholegoalactive.
