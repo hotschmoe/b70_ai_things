@@ -1531,3 +1531,45 @@ waiterretirement neededbeforeAPIerroradjudication. Raworiginalerrorsuntouched.
 Fullreferencefidelity/allstatecache/actual1-2-4-bounded6/physicalplacement/
 x2criticalpath/cleanTTFT/gaps/completion/fairness/reproducibleshelfremainopen.
 Fullgoalactive; completionnotclaimedfromnarrowdiagnosticpasses.
+
+## 2026-10-11 - Source41 component and replay trace qualification
+
+CONFIG -> The complete original goal remains unchanged. Canonical registry173,
+selected UD-Q4_K_XL files and original independent reference remain intact.
+No serving shelf or model speed promotion follows from these component tests.
+
+COMMAND -> Fresh source41 SDK/new390 oracle upload13661 passed allfive profiles
+and independent reader11072. Linked41 accepted-row helper64631 passed620s:
+48frames, OFF/ON24each, direct/two-replays, single/steps/batch, accepted0/1/2
+and grouped/scalar independent owners. Independent public reader8365 passed,
+report26f2878b0e35d9d451f9621beac50de98c6bb8213c71f509e75eae5303c556c8,
+publicdd70449588830782d7341cbe1ac45e63fd7b88dfcb262c984d1a99f556c56077.
+
+RESULT -> Materialized binary16 RNE/expanded bytes and complete indexer states
+are qualified for the declared fixture; normal model constructor/graphs and
+full original48 fidelity are not. A source41 CLI plan avoids premature registry
+append and requires fresh OFF/source40 equivalence, then ON/original fidelity.
+Its real actor and reader adapters remain under development.
+
+Fresh PTI replay capture85357 passed147s/18frame output equality/owned teardown/
+health. Immutable raw919 GPU operations exactly join126 compute,631 copies,
+162 fills and12 actual replay calls. This closes earlier VTune replay blindness
+for this fixture;372 graph D2H host-completion flows remain absent. Raw clock
+inputs were not exported, so physical busy/idle and calibration remain open.
+Separate default-off clock-export source and fresh build passed. A real GPU0
+API-only smoke exported actual host/device origins,19.2MHz frequency,64-bit
+valid bits and mask. Kernel-instance normalization joins still require actual
+capture. Source clock arithmetic is unchanged; no latency improvement claimed.
+
+The same one-bit cached model-page mismatch recurred before host profiling.
+It was preserved and restored by a read-only single-page cache refresh. Fresh
+complete model hashes, watched CPU hash/reader controls and watched small GPU
+controls subsequently passed. The active watcher can change cache residency;
+the cause and host stability remain unqualified. Full model runs require fresh
+complete identity and additional page guards; no stat-only identity transfer.
+
+VERDICT -> Concrete component fidelity and replay-coverage progress. Full-model
+fidelity/coherence, complete-state cache V12 runtime, one/two/four/bounded-six
+streams, measured placement costs, calibrated normal critical path, natural
+TTFT/gap/completion/fairness gains and the reproducible verified shelf remain
+required. Completion is unproven and the full goal stays active.
