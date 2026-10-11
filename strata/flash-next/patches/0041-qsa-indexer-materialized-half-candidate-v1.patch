@@ -1,0 +1,246 @@
+--- a/include/strata/kernels/native_qsa_indexer.hpp
++++ b/include/strata/kernels/native_qsa_indexer.hpp
+@@ -3,6 +3,14 @@
+ #include "strata/kernels/rope_scaling.hpp"
+ 
+ namespace strata::kernels {
++
++// Source41 candidate. OFF returns raw without launches or scratch access.
++// Owned scratch must survive graph replay; ignored device positions are zeroed
++// without reading raw. This is a SYCL-only model integration, not a cache proof.
++bool native_qsa_indexer_materialized_half_enabled();
++const float* native_qsa_indexer_materialize_input(const float* raw,
++    const int32_t* positions, int stride, int rows, int64_t p0, int64_t max_cells, int idx_dim,
++    uint16_t* half_store, float* expanded, void* stream);
+ 
+ // Configure before session construction/capture. Disabled independently of the
+ // native QSA norm/gate switch; existing captures retain their selected kernels.
+--- a/include/strata/core/layer.hpp
++++ b/include/strata/core/layer.hpp
+@@ -370,6 +370,8 @@
+     float* qcur = nullptr;         ///< n_head * head_dim: the FIRST half of each head, contiguously
+     float* kcur = nullptr;         ///< n_head_kv * head_dim
+     float* vcur = nullptr;         ///< n_head_kv * head_dim
++    uint16_t* idx_half_store = nullptr; // conditional arena scratch, never cache state
++    float* idx_expanded = nullptr;
+     float* idx_raw = nullptr;      ///< idx_key_dim: NEVER normed and NEVER rotated
+     float* q_idx = nullptr;        ///< idx_q_heads * idx_key_dim
+     float* cell_scores = nullptr;  ///< max_cells
+--- a/sycl/include/strata/core/verify.hpp
++++ b/sycl/include/strata/core/verify.hpp
+@@ -460,6 +460,8 @@
+     uint8_t* sh_xq_ = nullptr;                                // T columns of q8_1 for shared expert branch
+     float *qkv_L_ = nullptr, *h_L_ = nullptr, *gate_L_ = nullptr, *beta_L_ = nullptr;   // per GDN layer
+     float *z_ = nullptr, *y_ = nullptr, *y_dummy_ = nullptr;
++    uint16_t* idx_half_store_L_ = nullptr; // nQ * MT * ID, arena lifetime
++    float* idx_expanded_L_ = nullptr;
+     float *qfull_ = nullptr, *qcur_ = nullptr, *kcur_ = nullptr, *vcur_ = nullptr, *idx_raw_L_ = nullptr;
+     float *qidx_ = nullptr, *scores_ = nullptr, *attn_ = nullptr, *attn32_ = nullptr, *attn_scratch_ = nullptr;
+     float* tail_snap_ = nullptr;                              // per QSA layer
+--- a/sycl/src/kernels/cuda/native_qsa_indexer.dp.cpp
++++ b/sycl/src/kernels/cuda/native_qsa_indexer.dp.cpp
+@@ -26,6 +26,8 @@
+ #include "strata/kernels/mrope.hpp"
+ #include <atomic>
+ #include <cmath>
++#include <cstdlib>
++#include <cstring>
+ #include <cstddef>
+ #include <cstdint>
+ #include <limits>
+@@ -373,6 +375,53 @@
+ 
+ void native_qsa_indexer_set_enabled(bool value) { enabled.store(value, std::memory_order_relaxed); }
+ bool native_qsa_indexer_enabled() { return enabled.load(std::memory_order_relaxed); }
++bool native_qsa_indexer_materialized_half_enabled() {
++    static const bool requested = [] {
++        const char* value = std::getenv("STRATA_QSA_INDEXER_MATERIALIZED_HALF");
++        if (!value || std::strcmp(value, "0") == 0) return false;
++        if (std::strcmp(value, "1") == 0) return true;
++        throw std::invalid_argument("materialized indexer mode requires absent/0/1");
++    }();
++    if (requested && !native_qsa_indexer_enabled())
++        throw std::invalid_argument("materialized indexer requires native indexer route");
++    return requested;
++}
++const float* native_qsa_indexer_materialize_input(const float* raw,
++    const int32_t* positions, int stride, int rows, int64_t p0, int64_t max_cells, int idx_dim,
++    uint16_t* half_store, float* expanded, void* stream) {
++    if (!native_qsa_indexer_materialized_half_enabled()) return raw;
++    if (idx_dim != D || rows < 1 || rows > INT32_MAX / D || stride < 0 || max_cells < 1 || max_cells > INT32_MAX ||
++        (!positions && (p0 < 0 || p0 + rows > max_cells)) || !stream)
++        throw std::invalid_argument("materialized indexer bounded input/position/stream required");
++    const std::size_t count = std::size_t(rows) * D;
++    const Span spans[] = {{raw,count*4},{half_store,count*2},{expanded,count*4}};
++    for (const auto& span : spans) validate(span);
++    for (int a=0;a<3;++a) for (int b=a+1;b<3;++b)
++        if (overlaps(spans[a],spans[b])) throw std::invalid_argument("materialized indexer scratch overlaps");
++    if (positions) {
++        const Span pos{positions,(std::size_t(rows-1)*std::size_t(stride)+1)*4};validate(pos);
++        for (const auto& span : spans) if (overlaps(pos,span)) throw std::invalid_argument("materialized indexer positions overlap");
++    }
++    auto* queue = strata::q_of(stream);
++    if (!queue->has_property<sycl::property::queue::in_order>())
++        throw std::invalid_argument("materialized indexer requires ordered owned queue");
++    static_assert(sizeof(sycl::half)==2 && sizeof(float)==4);
++    auto* half = reinterpret_cast<sycl::half*>(half_store);
++    queue->parallel_for<class Indexer41MaterializedStore>(sycl::range<1>(count),[=](sycl::id<1> item) {
++        const std::size_t i=item[0],row=i/D;
++        const int64_t pos=positions ? positions[row*std::size_t(stride)] : p0+int64_t(row);
++        // Match the production append mask before touching rejected raw rows.
++        if (pos>=0 && pos<max_cells)
++            half[i]=sycl::vec<float,1>(raw[i]).convert<sycl::half,sycl::rounding_mode::rte>()[0];
++        else half[i]=sycl::half(0.0f);
++    });
++    queue->parallel_for<class Indexer41MaterializedLoad>(sycl::range<1>(count),[=](sycl::id<1> item) {
++        const std::size_t i=item[0];
++        expanded[i]=sycl::vec<sycl::half,1>(half[i]).convert<float,sycl::rounding_mode::automatic>()[0];
++    });
++    return expanded;
++}
++
+ void native_qsa_indexer_append_steps(const float* raw, const int32_t* relative_pos_device,
+                                      int pos_stride, int n_steps, int32_t pos_base,
+                                      const float* gamma, float epsilon, const QsaIndexerBuffers& b,
+--- a/sycl/src/core/layer.cpp
++++ b/sycl/src/core/layer.cpp
+@@ -1069,8 +1069,9 @@
+ // attn_q8k
+ n += strata::kernels::qsa_decode_attn_scratch_floats(cap, s) * 4 + 16;
+ // attn_scratch
++if (strata::kernels::native_qsa_indexer_materialized_half_enabled()) n += (uint64_t) g.idx_key_dim * 6 + 32;
+ return align_up16(n) + 256;}
+-uint64_t qsa_buffers_init(const ModelGeometry& g, int64_t max_cells, void* base, QsaBuffers& b) {    const QsaShapes s = qsa_shapes(g);    const int64_t cap = strata::kernels::qsa_selection_width(strata::kernels::kTopkMaxCells, s);    Cursor c{(uint8_t*) base};    b.x_q8k = c.take_bytes(q8k_bytes(g.n_embd));    b.x_q8_0 = c.take_bytes((uint64_t) (g.n_embd / 32) * 34);    b.x_bf16 = c.take<uint16_t>((uint64_t) g.n_embd);    b.q_full = c.take<float>((uint64_t) g.n_head * 2 * g.head_dim);    b.qcur = c.take<float>((uint64_t) g.n_head * g.head_dim);    b.kcur = c.take<float>((uint64_t) g.n_head_kv * g.head_dim);    b.vcur = c.take<float>((uint64_t) g.n_head_kv * g.head_dim);    b.idx_raw = c.take<float>((uint64_t) g.idx_key_dim);    b.q_idx = c.take<float>((uint64_t) g.idx_q_heads * g.idx_key_dim);    b.cell_scores = c.take<float>((uint64_t) max_cells);    b.ids = c.take<int32_t>((uint64_t) cap);    b.k_scratch = c.take<uint16_t>((uint64_t) cap * g.n_head_kv * g.head_dim);    b.v_scratch = c.take<uint16_t>((uint64_t) cap * g.n_head_kv * g.head_dim);    b.attn = c.take<float>((uint64_t) g.n_head * g.head_dim);    b.attn16 = c.take<uint16_t>((uint64_t) g.n_head * g.head_dim);    b.attn32 = c.take<float>((uint64_t) g.n_head * g.head_dim);    b.attn_q8k = c.take_bytes(q8k_bytes(g.n_head * g.head_dim));    b.attn_scratch = c.take<float>(strata::kernels::qsa_decode_attn_scratch_floats(cap, s));    return c.used;}
++uint64_t qsa_buffers_init(const ModelGeometry& g, int64_t max_cells, void* base, QsaBuffers& b) {    const QsaShapes s = qsa_shapes(g);    const int64_t cap = strata::kernels::qsa_selection_width(strata::kernels::kTopkMaxCells, s);    Cursor c{(uint8_t*) base};    b.x_q8k = c.take_bytes(q8k_bytes(g.n_embd));    b.x_q8_0 = c.take_bytes((uint64_t) (g.n_embd / 32) * 34);    b.x_bf16 = c.take<uint16_t>((uint64_t) g.n_embd);    b.q_full = c.take<float>((uint64_t) g.n_head * 2 * g.head_dim);    b.qcur = c.take<float>((uint64_t) g.n_head * g.head_dim);    b.kcur = c.take<float>((uint64_t) g.n_head_kv * g.head_dim);    b.vcur = c.take<float>((uint64_t) g.n_head_kv * g.head_dim);    b.idx_raw = c.take<float>((uint64_t) g.idx_key_dim); if (strata::kernels::native_qsa_indexer_materialized_half_enabled()) { b.idx_half_store = c.take<uint16_t>((uint64_t) g.idx_key_dim); b.idx_expanded = c.take<float>((uint64_t) g.idx_key_dim); }    b.q_idx = c.take<float>((uint64_t) g.idx_q_heads * g.idx_key_dim);    b.cell_scores = c.take<float>((uint64_t) max_cells);    b.ids = c.take<int32_t>((uint64_t) cap);    b.k_scratch = c.take<uint16_t>((uint64_t) cap * g.n_head_kv * g.head_dim);    b.v_scratch = c.take<uint16_t>((uint64_t) cap * g.n_head_kv * g.head_dim);    b.attn = c.take<float>((uint64_t) g.n_head * g.head_dim);    b.attn16 = c.take<uint16_t>((uint64_t) g.n_head * g.head_dim);    b.attn32 = c.take<float>((uint64_t) g.n_head * g.head_dim);    b.attn_q8k = c.take_bytes(q8k_bytes(g.n_head * g.head_dim));    b.attn_scratch = c.take<float>(strata::kernels::qsa_decode_attn_scratch_floats(cap, s));    return c.used;}
+ // ================================ PER-STAGE TIMING, DEBUG ONLY ================================
+ //
+ // **THE ENGINE SPENDS 1.047 ms PER LAYER WITH THE EXPERTS OFF, AND EVERY COST MODEL IN `bench/` PREDICTS LESS
+@@ -1283,8 +1284,7 @@
+     strata::kernels::kv_append_q4_step(st.k_q4, st.v_q4, st.page_table, st.step, b.kcur, b.vcur, s, stream, &st.host);
+ } else if (st.kv_int8) kv_append_q8_step(st.k_q, st.v_q, st.k_scale, st.v_scale, st.page_table, st.step, b.kcur, b.vcur, s, stream, &st.host);    else kv_append_step(st.k_pool, st.v_pool, st.page_table, st.step, b.kcur, b.vcur, s, stream, &st.host); } /* not K8V4 */    {        const uint64_t nvk = (uint64_t) g.n_head_kv * g.head_dim;        const uint64_t base = (uint64_t) 2 * g.n_embd + 2 * g.hc + (uint64_t) g.n_head * g.head_dim + 2 * nvk + 8;        if (!st.kv_int8 && !st.kv_hybrid) dump_slot(dump, g, layer, (const float*) st.k_pool, base, nvk / 2, stream);        if (!st.kv_int8 && !st.kv_hybrid) dump_slot(dump, g, layer, (const float*) st.v_pool, base + nvk / 2, nvk / 2, stream);        dump_slot(dump, g, layer, b.vcur, base + nvk, nvk, stream);        dump_slot(dump, g, layer, b.kcur, base + 2 * nvk, nvk, stream);    }    {        const QsaIndexerBuffers ib{st.idx_tail, st.idx_dead, st.idx_pooled, st.idx_block_pos};        if (native_qsa_indexer_enabled()) {
+     try {
+-        native_qsa_indexer_append(b.idx_raw, st.step + kStepPos, pos_base,
+-            (const float*) w_ikn->data, RMS_EPS, ib, s, st.max_cells, rope_scaling(), stream);
++        native_qsa_indexer_append(strata::kernels::native_qsa_indexer_materialize_input(b.idx_raw, st.step + kStepPos, 0, 1, 0, st.max_cells, s.idx_dim, b.idx_half_store, b.idx_expanded, stream), st.step + kStepPos, pos_base, (const float*) w_ikn->data, RMS_EPS, ib, s, st.max_cells, rope_scaling(), stream);
+     } catch (const std::exception& error) { err = v.name("native_indexer") + ": " + error.what(); return false; }
+ } else indexer_key_append(b.idx_raw, st.pos_dev, pos_base, (const float*) w_ikn->data, RMS_EPS, ib, s,
+                           st.cos_tab, st.sin_tab, stream);    }
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -594,7 +594,8 @@
+         z_ = b.take<float>(T * ZV); y_ = b.take<float>(T * ZV); y_dummy_ = b.take<float>(T * ZV);
+         qfull_ = b.take<float>(T * NH * 2 * HD); qcur_ = b.take<float>(T * NH * HD);
+         kcur_ = b.take<float>(T * NKV * HD); vcur_ = b.take<float>(T * NKV * HD);
+-        idx_raw_L_ = b.take<float>(nQ * T * ID); qidx_ = b.take<float>(T * IQ * ID);
++        idx_raw_L_ = b.take<float>(nQ * T * ID);
++        if (native_qsa_indexer_materialized_half_enabled()) { idx_half_store_L_ = b.take<uint16_t>(nQ * T * ID); idx_expanded_L_ = b.take<float>(nQ * T * ID); } qidx_ = b.take<float>(T * IQ * ID);
+         scores_ = b.take<float>(T * (uint64_t) max_blocks_); sel_ = b.take<int32_t>(T * (uint64_t) cap_);
+         attn_ = b.take<float>(T * NH * HD); attn32_ = b.take<float>(T * NH * HD);
+         attn_scratch_ = b.take<float>(T * (uint64_t) attn_scratch_floats_);
+@@ -1233,16 +1234,12 @@
+                 }
+                 if (dec_batch && !g_no_batch_kv && !batch_rec_) {
+                     const QsaIndexerBuffers ib{st.idx_tail, st.idx_dead, st.idx_pooled, st.idx_block_pos};
+-                    native_qsa_indexer_append_steps(idx_raw + tb * ID, step_ + tb * kStepCount + kStepPos, kStepCount,
+-                                                    n, 0, (const float*) wikn->data, EPS, ib, s, st.max_cells,
+-                                                    rope_scaling(), cs);
++                    native_qsa_indexer_append_steps(strata::kernels::native_qsa_indexer_materialize_input(idx_raw + tb * ID, step_ + tb * kStepCount + kStepPos, kStepCount, n, 0, st.max_cells, s.idx_dim, idx_half_store_L_ + qi * MT * ID + tb * ID, idx_expanded_L_ + qi * MT * ID + tb * ID, cs), step_ + tb * kStepCount + kStepPos, kStepCount, n, 0, (const float*) wikn->data, EPS, ib, s, st.max_cells, rope_scaling(), cs);
+                 } else {
+                     for (int t = tb; t < te; ++t) {
+                         const QsaState& sx = slot_ss(t).qsa_states[qi];
+                         const QsaIndexerBuffers ib{sx.idx_tail, sx.idx_dead, sx.idx_pooled, sx.idx_block_pos};
+-                        native_qsa_indexer_append(idx_raw + t * ID, step_ + t * kStepCount + kStepPos, 0,
+-                                                  (const float*) wikn->data, EPS, ib, s, sx.max_cells,
+-                                                  rope_scaling(), cs);
++                        native_qsa_indexer_append(strata::kernels::native_qsa_indexer_materialize_input(idx_raw + t * ID, step_ + t * kStepCount + kStepPos, 0, 1, 0, sx.max_cells, s.idx_dim, idx_half_store_L_ + qi * MT * ID + t * ID, idx_expanded_L_ + qi * MT * ID + t * ID, cs), step_ + t * kStepCount + kStepPos, 0, (const float*) wikn->data, EPS, ib, s, sx.max_cells, rope_scaling(), cs);
+                     }
+                 }
+                 if(q3_capture)qsa3_snapshot_->state("indexer_after",st,*cs);
+@@ -1978,13 +1975,10 @@
+                 copy_from_mapped(st.idx_tail, tail_snap_ + (size_t) qsa_index * TS, TS, cs_);
+                 const QsaIndexerBuffers ib{st.idx_tail, st.idx_dead, st.idx_pooled, st.idx_block_pos};
+                 if (!g_no_batch_kv) {
+-                    native_qsa_indexer_append_steps(idx_raw_L_ + (size_t) qsa_index * MT * ID, commit_ + 2, 1, (int) MT, 0,
+-                                                    (const float*) wikn->data, EPS, ib, s, st.max_cells, rope_scaling(), cs_);
++                    native_qsa_indexer_append_steps(strata::kernels::native_qsa_indexer_materialize_input(idx_raw_L_ + (size_t) qsa_index * MT * ID, commit_ + 2, 1, (int) MT, 0, st.max_cells, s.idx_dim, idx_half_store_L_ + (size_t) qsa_index * MT * ID, idx_expanded_L_ + (size_t) qsa_index * MT * ID, cs_), commit_ + 2, 1, (int) MT, 0, (const float*) wikn->data, EPS, ib, s, st.max_cells, rope_scaling(), cs_);
+                 } else {
+                     for (int64_t t = 0; t < MT; ++t)
+-                        native_qsa_indexer_append(idx_raw_L_ + (size_t) (qsa_index * MT + t) * ID, commit_ + 2 + t, 0,
+-                                                  (const float*) wikn->data, EPS, ib, s, st.max_cells,
+-                                                  rope_scaling(), cs_);
++                        native_qsa_indexer_append(strata::kernels::native_qsa_indexer_materialize_input(idx_raw_L_ + (size_t) (qsa_index * MT + t) * ID, commit_ + 2 + t, 0, 1, 0, st.max_cells, s.idx_dim, idx_half_store_L_ + (size_t) (qsa_index * MT + t) * ID, idx_expanded_L_ + (size_t) (qsa_index * MT + t) * ID, cs_), commit_ + 2 + t, 0, (const float*) wikn->data, EPS, ib, s, st.max_cells, rope_scaling(), cs_);
+                 }
+                 ++qsa_index;
+             }
+@@ -2958,10 +2952,7 @@
+                                      TS, cs_);
+                     const QsaIndexerBuffers ib{st.idx_tail, st.idx_dead, st.idx_pooled, st.idx_block_pos};
+                     for (int u = first; u < t; ++u)
+-                        native_qsa_indexer_append(idx_raw_L_ + (size_t) (qsa_index * MT + u) * ID,
+-                                                  commitb_ + (size_t) rows[first] * CB + 2 + (u - first),
+-                                                  0, (const float*) wikn->data, EPS, ib, s, st.max_cells,
+-                                                  rope_scaling(), cs_);
++                        native_qsa_indexer_append(strata::kernels::native_qsa_indexer_materialize_input(idx_raw_L_ + (size_t) (qsa_index * MT + u) * ID, commitb_ + (size_t) rows[first] * CB + 2 + (u - first), 0, 1, 0, st.max_cells, s.idx_dim, idx_half_store_L_ + (size_t) (qsa_index * MT + u) * ID, idx_expanded_L_ + (size_t) (qsa_index * MT + u) * ID, cs_), commitb_ + (size_t) rows[first] * CB + 2 + (u - first), 0, (const float*) wikn->data, EPS, ib, s, st.max_cells, rope_scaling(), cs_);
+                 }
+                 ++qsa_index;
+             }
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -652,6 +652,8 @@
+     uint16_t* y_h = nullptr;
+     // QSA
+     float *Kc = nullptr, *Vc = nullptr, *Qf = nullptr, *q = nullptr, *idx_raw = nullptr, *q_idx = nullptr, *attn = nullptr;
++    uint16_t* idx_half_store = nullptr;
++    float* idx_expanded = nullptr;
+     uint16_t* attn_h = nullptr;
+     int32_t* steps_dev = nullptr;
+     std::vector<int32_t> steps_host;
+@@ -833,7 +835,8 @@
+                        const strata::kernels::QsaShapes& s) {
+     Alloc a; a.count_only = true; bool ok = true;
+     a.take<float>(T * 512, ok); a.take<float>(T * 512, ok); a.take<float>(T * 12288, ok); a.take<float>(T * ZV, ok);
+-    a.take<float>(T * 128, ok); a.take<float>(T * 512, ok); a.take<float>(T * ZV, ok);
++    a.take<float>(T * 128, ok);
++    if (strata::kernels::native_qsa_indexer_materialized_half_enabled()) { a.take<uint16_t>(T * 128, ok); a.take<float>(T * 128, ok); } a.take<float>(T * 512, ok); a.take<float>(T * ZV, ok);
+     a.take<uint16_t>(T * (ZV + (pf_pad() ? ZV_PAD : 0)), ok);
+     a.take<int32_t>(T * (size_t) cap, ok);
+     a.take<float>((size_t) sel_batch * (size_t) max_blocks, ok);
+@@ -1187,7 +1190,8 @@
+         Alloc b;
+         b.base = base; b.cap = region; b.owned = &m.owned;
+         m.Kc = b.take<float>(T * 512, ok); m.Vc = b.take<float>(T * 512, ok); m.Qf = b.take<float>(T * 12288, ok);
+-        m.q = b.take<float>(T * ZV, ok); m.idx_raw = b.take<float>(T * 128, ok); m.q_idx = b.take<float>(T * 512, ok);
++        m.q = b.take<float>(T * ZV, ok); m.idx_raw = b.take<float>(T * 128, ok);
++        if (strata::kernels::native_qsa_indexer_materialized_half_enabled()) { m.idx_half_store = b.take<uint16_t>(T * 128, ok); m.idx_expanded = b.take<float>(T * 128, ok); } m.q_idx = b.take<float>(T * 512, ok);
+         m.attn = b.take<float>(T * ZV, ok); m.attn_h = b.take<uint16_t>(T * (ZV + (pf_pad() ? ZV_PAD : 0)), ok);
+         m.sel_ids = b.take<int32_t>(T * (size_t) m.cap, ok);
+         m.sel_scores = b.take<float>((size_t) m.sel_batch * (size_t) m.max_blocks, ok);
+@@ -3031,15 +3035,11 @@
+                     try {
+                         static const bool per_token = std::getenv("STRATA_INDEXER_PER_TOKEN") != nullptr;
+                         if (!per_token) {
+-                            strata::kernels::native_qsa_indexer_append_batch(m.idx_raw, T, p0, 0, (const float*) wikn->data,
+-                                                                             EPS, ib, s, st.max_cells,
+-                                                                             strata::kernels::rope_scaling(), m.cs);
++                            strata::kernels::native_qsa_indexer_append_batch(strata::kernels::native_qsa_indexer_materialize_input(m.idx_raw, nullptr, 0, T, p0, st.max_cells, s.idx_dim, m.idx_half_store, m.idx_expanded, m.cs), T, p0, 0, (const float*) wikn->data, EPS, ib, s, st.max_cells, strata::kernels::rope_scaling(), m.cs);
+                         }
+                         for (int64_t t = 0; per_token && t < T; ++t) {
+                             const int32_t* step_t = m.steps_dev + t * strata::kernels::kStepCount;
+-                            strata::kernels::native_qsa_indexer_append(m.idx_raw + t * 128, step_t + strata::kernels::kStepPos, 0,
+-                                                                       (const float*) wikn->data, EPS, ib, s, st.max_cells,
+-                                                                       strata::kernels::rope_scaling(), m.cs);
++                            strata::kernels::native_qsa_indexer_append(strata::kernels::native_qsa_indexer_materialize_input(m.idx_raw + t * 128, step_t + strata::kernels::kStepPos, 0, 1, 0, st.max_cells, s.idx_dim, m.idx_half_store + t * 128, m.idx_expanded + t * 128, m.cs), step_t + strata::kernels::kStepPos, 0, (const float*) wikn->data, EPS, ib, s, st.max_cells, strata::kernels::rope_scaling(), m.cs);
+                         }
+                     } catch (const std::exception& e) { err = std::string("prefill indexer: ") + e.what(); return false; }
+                     pt.mark(kPfQsaSel, cs);
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -7503,6 +7503,8 @@
+                     {"keep_canonical", o.keep_canonical}, {"no_fused_gr", o.no_fused_gr},
+                     {"no_fast_attn", o.no_fast_attn}, {"no_fused_gdn", o.no_fused_gdn},
+                     {"no_fast_select", o.no_fast_select}, {"vision", o.vision}};
++                if (strata::kernels::native_qsa_indexer_materialized_half_enabled())
++                    c.switches.emplace_back("native_qsa_indexer_materialized_half", int64_t(1));
+                 config_fp = strata::core::session_config_fingerprint(c);
+             }
+             id.model = *model_fp;
