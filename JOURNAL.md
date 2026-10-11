@@ -16000,3 +16000,27 @@ VERDICT -> Actualfresh43 upload component closed. Ordinarymodelconstructor,
 materializedmode1/modelmath/completecache/streams/memorytraffic/profiling/
 shelf remainunqualified. Freshmasked43 andzeroL0NUM10 modelcase next; no
 token/speed claim. Existing originalhead divergence unchanged. Fullgoalactive.
+
+## 2026-10-11 Masked43 GPU qualification and protected reference closure
+
+CONFIG -> Actualsource43/owninput/accepted-mask helper; CPU-only FP64
+referenceadapter remains independent from F32 wholemodel/device emulation.
+
+COMMAND -> Maskedsoftware dceed621/dc279a34 root22CPU PASS0.269s/peer0.270s.
+Firstprepare71318 refusedNonPATHenvironment: newdoc addedNUMEXPR1 absentfrom
+recordedhc35 qualification environment. Preserved refusal/localization.
+Retry15648 usingoriginalOMP/MKL/OPENBLAS1 andnewv2dirs terminalPASS, noENV
+predicate waiver. Root51997 nowpairleased actualmasked43 helper run.
+
+RESULT -> Newactual43 fixture/prerequisite prepared andfresh390qualification
+joined; maskedGPUresult pending. Sourcef328 actor147/35+3peerCPU ready but
+heldfor newlyfound finalartifact/source boundary afteradditionalNUM10 reads.
+FP64referenceV1 79d4 held initialadmission/finalcallbackclosing chronology;
+V2 8dcdc root20CPU PASS0.384s/peer0.383s fixesboth unchangedarithmetic.
+Actualactor descriptor separatescorpusplanSHA fromnativebindingSHA; V2
+adapter checkedwrongfield, so explicitV3needed withdistinctidentity controls.
+Noactualreference/GPU/model math computation from these adaptertests.
+
+VERDICT -> Preserveallheldversions. MaskedGPU51997 live; model/referencelaunch
+requirescorrectactor/adapterintegration plusclosedactualmasked evidence.
+Originalhead error persists andfullcampaign/shelf remainunqualified.

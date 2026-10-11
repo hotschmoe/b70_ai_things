@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "scope": "unchanged original FP64 first GDN equations and separately labeled conditional current43 NUM10 targets; current actor/provider/closing authority caller-owned",
+  "files": {
+    "strata/flash-next/source43_num10_original_reference_v1.py": "024c7d7d0bb4861d67905c32fb6f8b03ddf0de596547218e27df6334e8bc5260",
+    "strata/flash-next/test_source43_num10_original_reference_cpu_v1.py": "42153631414dafe12168e5dc0a39ca382ad3d964b97471328416477e1787977e",
+    "strata/flash-next/source43-num10-original-reference-design-v1.md": "d4c7d3c8b470482e1662b621afada2d54de46ec2eda2614fbffe366c2bf69a04",
+    "strata/flash-next/original_first_gdn_layer_v1.py": "c6352dc69f22e5940e0c6799fe83137225b8126fe7ce771983de682e00abd67f",
+    "strata/flash-next/original_gguf_reference.py": "6498bfd01ad06b7439a6dc07c753306bbf1d0b173f8ba1ab9763da7d11a3ddb5",
+    "strata/flash-next/original_gguf_vector_decoder_v2.py": "130f1a525e366e5d33fcb67a3c765ee50d5c4eaedb2b4a0495ae2386cd18c7b9",
+    "strata/flash-next/independent_q8_1_activation_v1.py": "b58d73282051bfa301ebb6f781d5d59c63128d9074a42d53cf4d9ff05d75a714",
+    "strata/flash-next/serial37_canonical_json_v3.py": "afdbdc4729cc6a2cfb68de5cb1106d79d1b81db79c9da91b1c157d5c1b85f57d",
+    "strata/flash-next/layer0_numerical_contract_v1.hpp": "86a83df856829674f03b9eb6c80bac0817cb2cdfa4459b3186f5480600e8dfdd",
+    "strata/flash-next/original-gguf-reference-foundation-plan-v1.json": "7d5217d844b411b427e4c6c6df2b4837b66970937c044389b40270346804bd2b",
+    "strata/flash-next/model-lock.json": "5f324a3c166eea2952f78248be5753e69944892a88f44a75697139636814061b"
+  },
+  "expected_current_actor_reader": "validate_source43_num10_zero_v1.captured_binding",
+  "historical_native_runtime_authority_transferred": false,
+  "actual_source43_runtime_admitted": false,
+  "cpu_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_source43_num10_original_reference_cpu_v1 -q"
+}
