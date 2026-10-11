@@ -15255,3 +15255,10 @@ CONFIG -> Existing source40/runtime9 paired32/16 stage plan, pinnedoriginalartif
 COMMAND -> Original1602 handle remainslive; root actual off/result.json andon/result.json inspected. Reviewed matchedV3 sourcecheckpoint3946e0e pushed; canonical171 unchanged.
 RESULT -> OFF andON each reportpassedTrue/errorsempty withfourrequests andnormalownedexit. Parent numerical/reference comparisons andpost-health/newfull4/finalreader stillpending. MaterializedV3 CPUfixture completed andsourcepeerready, no isolatedcompiler/device execution. WholecacheV1052745 remains queuedbehindpairlease.
 VERDICT -> Actualpairmodel capture progress, notwholepairqualification ororiginalfidelity. Continuecompleteparent/publicreader andqueuedfullcache; matched173aliasproposal deferreduntilactive171 consumersfinish. Fulloriginalgoalactive.
+
+## 2026-10-11: Paired numerical joins publish and prefix4 topology targets match
+
+CONFIG -> Completed actualsource40 one/pair QSA9 OFF/ON four-prefix captures, originalreference unchanged, pairedparent stilllive.
+COMMAND -> Root publishedpaired196full49/2304prefix/144original diagnostics inspected; boundedcross-topology rawtarget consumption with actual per-request indices andregular/stat/read/reread brackets, noGPU.
+RESULT -> PairedOFFON196/2304BITWISE andoriginalPLEinputPASS; comparison/localization/input33 JSONhashes equalone diagnosticrecords. Separateactualrawvector comparison392one-pair full49 vectors BITWISE acrossOFF/ON, reportSHA98334e68ba64c5a54e288ea520befdfdf81d89968e94b7e8f67025ea962c3ed2 binds784 files. Initialindex assumptionrejected thenactualper-requestindex verified. Pairedpoststrict/compiledhealthHEALTHY; finalfull4/parent/publicreader pending.
+VERDICT -> Actualshortprefix topologyparity, notlongprefix/originalfidelity/fullpaired qualification. Wholecache52745 queued; newdevloop source task separatesfinalreadonly phase fromGPUlease with allbyte/source/health/qualification gates retained andCPU modelread full4 closing ifneeded. Fullgoalactive.
