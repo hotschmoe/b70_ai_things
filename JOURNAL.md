@@ -17120,3 +17120,21 @@ corrected19086nowLIVE withOMP/MKL/OPENBLAS1/noNUMEXPR. Nodata/sourcechange.
 VERDICT -> GenuinefullmodelGPUcomputeobservations/controlclosure, notyet
 complete semanticcoverage/idle/bandwidth/quality/speedpromotion. Public/
 analysis thenactualshort-read0control; fulloriginalgoal remainsactive.
+
+## 2026-10-11: Page-specific recovery and genuine source43 API launch
+
+CONFIG -> Exact four-shard FlashNext source43 API mode1, GPU0 under paired
+lease, ctx2048/prefill64/PLE65536/MTP0/cacheOFF/batch0/parallel1, port18083.
+COMMAND -> Completed prefaulted O_DIRECT versus buffered shard3 comparison;
+performed POSIX_FADV_DONTNEED only on preserved mismatched4096-byte page at
+10933211136; applied reviewed registry174 bytes and launched original API3
+actor via bin/gpu-run with CPU thread pins.
+RESULT -> Direct full SHA matches publisher56758f40269cad5cd9b0d3d6fbae0f40f6d5be6de49e4ab392dbe83157d9cbd3.
+Buffered fullSHA2fbe24ba1158c906ead14d279f969ad0a9a96dc513e7c2a7dbc4eae70de1d72f
+differs on exactly one page/one byte, XOR32. Post-discard buffered page matches
+direct, source stat unchanged, no file writes/global flush. API actor launched;
+terminal result pending. Evidence in F17/warm5-public-page-recurrence-v1 and
+source43-api-mode1-baseline-v3-prepared-v1. Claude handoff records next actions.
+VERDICT -> Disk-source identity observed intact; cached-page corruption cause
+unknown. Prior warm5 public closure remains failed. Actual API serving now
+underway; no new speed, stability, fullmath or shelf qualification claimed.
