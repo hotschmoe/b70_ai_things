@@ -17015,3 +17015,25 @@ Warm18181 nowLIVE aftertokenizer, firstOFFfull4scan; historicalrouteworks
 withoutoldnormalpublic recursion. No modeltrace/latencyresultyet.
 VERDICT -> Directbugfix/actualprofiling progress, notfullfidelity orspeed
 promotion. Fulloriginalgoal active; no expensivecalculation repetition.
+
+## 2026-10-11 Bounded RMS audit and short-prefill dispatch localization
+
+CONFIG -> ExistingfailedNUM38referenceec203/capture23e5 only, noGGUF/provider
+readornewGPUwork. Currentwarmprofile18181 remainsLIVE OFFarm.
+COMMAND -> ActualboundedRMSaudit0.143s/report8acd2b0d0e4c67367766b0c262ed19058d17dccb07a090055b0c2d6ee30310cc
+rootrejoined33SHA/stat inputs andpreservedreport/controller inF17/num38-
+observed-core-rms-audit-v1.
+RESULT -> Allfourcaptured-core F32xor square sums andsum/128+EPS1e-6
+arguments exactlymatchnativefields; scale<=1ULPvsF64sqrt narrowedF32, no
+tolerancegate. Gatingunobserved. Supportedfull48storagereference DOESmodel
+Q81activationpack; FP64diagnosticdoesnot. HCnormalization/FMA/reduction/native
+packed-dot orderremainexplicitunsupportedarithmetic, notmissingQ81packer.
+ClosedwarmV2H36/sourceaudit proves54shortpromptuses27verifywindows
+(26T2+1T1), then4decodeT1; defaultshort_read64 avoidsPrefillGEMM. Long524
+alreadyusesbatchedprefill, soitsperformanceisnotexplainedbythisfinding.
+Nextsingleflag short-read0 OFFcontrolprepared, IDs/finish/timingonlyinitially;
+no head/residualobservations fabricated orfullmathclaim. ExactAPI174bytes/
+commands preserved F17/source43-api174-ready-v1; canonical173unchanged
+untilallcurrentprofile/public/analyzerconsumersclose.
+VERDICT -> Actualsmallnumericalaudit andsource/hostdispatch evidence narrow
+nextwork withoutprovider repetition. Fulloriginalgoal remainsactive.
