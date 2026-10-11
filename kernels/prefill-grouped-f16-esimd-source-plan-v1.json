@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY; not compiled/device/model/speed qualified",
+  "files": {
+    "kernels/prefill_grouped_f16_esimd_v1.hpp": "284dd2905f8bc30d6d930568e33ca62659d267ef383b0def197d33fbf27527c8",
+    "kernels/prefill_grouped_f16_esimd_harness_v1.cpp": "67f2fd8e175190ad0d3232821fe491b70761e269f1b32f333fac6fdcc296e4da",
+    "kernels/prefill_grouped_f16_esimd_harness_v1.txt": "44771a76233e9a1a4ddc3f3f553921ab6640d8c7f4d347d021aeb539da46388a",
+    "kernels/test_prefill_grouped_f16_esimd_layout_cpu_v1.py": "86e67cc6688cf756de8ecfd941b513f06d1a0c53d1c6ee1913aab0d585c7db39"
+  },
+  "reference_SDK49": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T232453Z-g6w93h0o",
+  "reference_SDK49_receipt_sha256": "2d6490ad93a172f10309077e2134567a97d4bef7846b7ece66d4722871af4079",
+  "reference_operator": "individual strata::prefill::Gemm::f16; never grouped oneMKL",
+  "operand_contract": "original F16 X/W, F32 Y/accumulator, alpha1 beta0; no requantization",
+  "count": [
+    1,
+    3,
+    8
+  ],
+  "rows": [
+    1,
+    2,
+    7,
+    16,
+    32,
+    48,
+    64,
+    64
+  ],
+  "shapes": [
+    [
+      16,
+      16
+    ],
+    [
+      32,
+      32
+    ],
+    [
+      1280,
+      2560
+    ],
+    [
+      2560,
+      640
+    ]
+  ],
+  "CPU_command": "python3 kernels/test_prefill_grouped_f16_esimd_layout_cpu_v1.py",
+  "normal_device_submissions_per_GEMM_group": 1,
+  "normal_host_task_count": 0,
+  "normal_explicit_wait_count": 0,
+  "production_patch_created": false,
+  "no_GPU_build_model_reads_by_author": true
+}
