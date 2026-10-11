@@ -15701,3 +15701,26 @@ requests.json; normal teardown, postidentity and ON arm remain pending.
 VERDICT -> Held helper controls do not establish runtime correctness. Their
 fixes must preserve failures and original artifact ownership. Live model
 timing remains a separate experiment without completed latency qualification.
+
+## 2026-10-11 Reviewed identity composition and host-analysis successors
+
+CONFIG -> V1 held helpers preserved; live host timing actor unchanged.
+
+COMMAND -> Root/peer reviewed deferredV2 b170ad69/9bindings with11CPU each
+PASS0.025s. H36analysisV2 be300058/140bindings root10CPU PASS0.023s and
+peer10CPU PASS0.024s, actual sourceclosure exact before runtime analysis.
+
+RESULT -> Identity closing failures now latch all attempted errors/epochs;
+later valid scan can retire identity but require_closed staysfailed. H36
+analysis consumes its own sourceplan before/after and ties each used original
+raw artifact to closed report roster, with explicit parent plan SHA. Trace
+and savedcoverage mutual edits fail against unchanged original report.
+No model admission/scan/GPU or actual trace analysis in these controls.
+
+Actual tracing-OFF model arm completed all4 requests with normal retirement
+and passed phase result; closingfull4 pending. ON arm and parent stillpending.
+
+VERDICT -> Source/CPU ready only. Deferred helper still needs reviewed
+caller integration. Host analysis is ready after actualclosed parent and
+independent public admission; no nested-duration, physicalidle/bandwidth or
+cleanserving claim. All full original campaign requirements remain active.
