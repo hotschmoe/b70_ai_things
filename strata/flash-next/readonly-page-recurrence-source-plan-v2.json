@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "scope": "ROOT_CPU_ONLY_PAGE_OBSERVATION",
+  "files": {
+    "strata/flash-next/probe_readonly_page_recurrence_v1.py": "7b8f3275e5afface0967ca55193defceaa6fa5ba99e4b3f89a59fd2ad5fc88a9",
+    "strata/flash-next/test_readonly_page_recurrence_cpu_v1.py": "ea8f9b09abb73c4bad3c3dd442fc779346a883d00643f61c78cea39c2e96b661",
+    "strata/flash-next/readonly-page-recurrence-design-v1.md": "34ead9741bd35e49b8367413419add2838b94029e45c504b22ed2ccb0bf249c1",
+    "strata/flash-next/admit_postboot_original_qsa_reference_v4.py": "61125a71be7210857945bad50c8c44cfd0e44c88e900cd6d908d8b12759921a8",
+    "strata/flash-next/probe_readonly_page_recurrence_v2.py": "db32bffeed7477a1bc1b54c4828773f53892c97458a956a3f4c97f14a90895fb",
+    "strata/flash-next/test_readonly_page_recurrence_cpu_v2.py": "b430b6b99499124a5851629135cf493b4170e7d9fbcb29f96ad2c20fc1a82382",
+    "strata/flash-next/readonly-page-recurrence-design-v2.md": "63fdfd91e18c6ad7ffb7fa93587818f89c34105c8208f3b4a244ecf1c7b320cc",
+    "strata/flash-next/readonly-page-recurrence-source-plan-v1.json": "ed7f68d805ee2afc572988097a60a3d132bace5850abb6067b28943be339b28d"
+  },
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_readonly_page_recurrence_cpu_v2 -q",
+  "CPU_tests": 8,
+  "GPU_touched_by_author": false,
+  "actual_model_page_read_by_author": false,
+  "full_model_identity_qualified": false,
+  "cause_attributed": false,
+  "held_V1_source_plan_sha256": "ed7f68d805ee2afc572988097a60a3d132bace5850abb6067b28943be339b28d",
+  "direct_destination_prefaulted": true,
+  "postaction_baseline_separate_from_recurrence": true,
+  "watcher_is_passive": false,
+  "watcher_can_affect_atime_and_cache_residency": true
+}
