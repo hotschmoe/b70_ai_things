@@ -16756,3 +16756,19 @@ CorrectedCLI andliveproducercontext replaceonlytwoobservercontroldefects.
 Peerrequested/concretefindingwillbehandled; noAGENTSmandatoryapprovalgate.
 VERDICT -> Newqualificationattempt, not modelmath/cleanlatency orwarm
 profilePASS. Fulloriginalgoal intact; no parallelGPUrun/registryappend.
+
+## 2026-10-11 Warm V2 producer closed; device graph coverage remains missing
+
+CONFIG -> Same43mode0 short54 pausedwarmup/resumedselected GEN4, source7625.
+COMMAND -> Actual35802terminalPASS1522s/producer66d7c2a5ae4b17786d85ab06bb634af1c8f67f2e574cb3d015e26e007cb4d6e6.
+IPC1->0rc0/2requests/H36graphreuse/finalizer0/normalExit0/no forced cleanup
+passed; arm+aggregatehealth/freshfull4 allPASS. Public45500nowlive.
+RESULT -> Closedclock105rows/89normalizations ALLgraph_command0; external
+diagnostic6d0137ee retainsrawSHA/H36reuse. Chrome6598events includes57actual
+zeCommandListImmediateAppendCommandListsExp andnoZEGraphnames. Sourcepaused
+ShouldCaptureAppend retains explicitgraph/fork captures but ordinaryregular
+lists maylackdescriptors forlaterimmediate-list replay. Actualcause requires
+smallmatchingpausedcapture/resumefixture beforeanothermodelprofile.
+VERDICT -> Genuinecontrol/request/lifecycle closure, not fullreplaycoverage/
+physicalidle/bandwidth/cleanlatency. Originalstrictpubliccoverage notwaived;
+awaitreader andfixsourcebackedcoverage seam. Fullcampaign remainsactive.
