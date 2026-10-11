@@ -1,6 +1,6 @@
 # ON-only warm retry observations
 
-CONFIG -> Require successful warm V4 ON producer/public admission and the
+CONFIG -> Require successful warm V5 ON producer/public admission and the
 exact recorded historical OFF component. Its original whole parent remains
 failed with original errors; no OFF model rerun or current health/identity
 qualification is inferred from that component.
@@ -20,3 +20,6 @@ semantic completeness. Post-resume intervals may contain teardown. No clock
 calibration, complete coverage, physical idle, bandwidth or clean speed claim.
 All consumed original artifacts and source bytes are checked before/after;
 this analyzer performs no new model/health admission or payload reads.
+
+The unexecuted c70 analyzer was snapshotted externally before this same-file
+actor/public5 import and source-pin update. Algorithms and scopes stay unchanged.

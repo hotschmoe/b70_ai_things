@@ -5,8 +5,8 @@ from pathlib import Path
 from serial37_canonical_json_v3 import canonical,read_unique
 import analyze_source41_h36_latency_v2 as host
 import collect_source43_sampled_model_pti_v1 as pti
-import run_source43_warm_pti_v4 as warm_actor
-import validate_source43_warm_pti_v4 as warm_public
+import run_source43_warm_pti_v5 as warm_actor
+import validate_source43_warm_pti_v5 as warm_public
 import validate_source43_bounded_pti_v1 as cold_public
 import ast,copy
 import source41_host_trace_contract_v2 as strict
@@ -94,7 +94,7 @@ def analyze(root,public_admission,expected_report_sha256,expected_public_sha256,
     producer_plan=warm_actor.PLAN
     require(bind(producer_plan)['sha256']==report['source_plan_sha256'],'Current original producer source plan differs');producer=read_unique(producer_plan)
     for name,want in producer['files'].items():require(bind(ROOT/name)['sha256']==want,'Current producer dependency changed '+name)
-    require(producer['OFF_model_rerun']is False and producer['original_baseline_whole_parent_passed']is False and producer['historical_OFF_component_metadata_only']is True,'ON-only retry must preserve failed-parent historical OFF scope')
+    require(producer['OFF_native_rerun']is False and producer['fresh_current_model_identity_health_and_EOF_gates_preserved']is True,'ON-only retry must preserve failed-parent historical OFF scope')
     full_rosters={}
     for admitted_root,original_report in original_reports.items():
         full_rosters[admitted_root]={str(p.relative_to(admitted_root)):host.bound(p,1<<30)['sha256']for p in admitted_root.rglob('*')if p.is_file()and p.name!='report.json'}

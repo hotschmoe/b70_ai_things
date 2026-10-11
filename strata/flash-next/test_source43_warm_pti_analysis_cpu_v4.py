@@ -11,7 +11,7 @@ class Tests(unittest.TestCase):
    (root/'report.json').write_text(json.dumps({'passed':False,'errors':['changed']}))
    with self.assertRaises(ValueError):a.component_join(component,parent,admit)
  def test_v4_route_and_unchanged_interval_math(self):
-  expected=a.host.bound(a.warm_actor.PLAN)['sha256'];self.assertEqual(a.generation_gate({'source_plan_sha256':expected},{'source_plan_sha256':expected,'source_generation':43,'materialized_mode':0}),expected)
+  self.assertEqual(a.warm_actor.__name__,'run_source43_warm_pti_v5');self.assertEqual(a.warm_public.__name__,'validate_source43_warm_pti_v5');expected=a.host.bound(a.warm_actor.PLAN)['sha256'];self.assertEqual(a.generation_gate({'source_plan_sha256':expected},{'source_plan_sha256':expected,'source_generation':43,'materialized_mode':0}),expected)
   self.assertEqual(a.PHASES,('source43-warm-pti-ON',))
   def node(file,name):return next(n for n in ast.parse(Path(file).read_bytes()).body if isinstance(n,ast.FunctionDef)and n.name==name)
   for name in('raw_device_metrics','selected_host_metric','kernel_counts'):
