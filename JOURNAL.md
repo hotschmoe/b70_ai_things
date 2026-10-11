@@ -17053,3 +17053,21 @@ VERDICT -> Exactprelaunchmetadatafix, notreplayqualification. ON-onlyretry
 willreusecompletedOFFcomponent (failedparentstaysFAILED), avoidingOFFmodel
 reloadandhistoricalfullmodelscans. Currentarmsretainfreshidentity/health/
 teardown. Short-read0control similarlyreusesOFF; fullgoalactive.
+
+## 2026-10-11 Historical OFF component closed and ON-only retry launched
+
+CONFIG -> Originalfailedwarm3/f9f immutable; completedOFF2requestcomponent
+retained. Freshcurrent ON stillindependentlyadmitsSDK/config/model/health.
+COMMAND -> Rootwarm4 3aaebcd6 all294SHA/shortcontrolf460b81b all300SHA and
+7targetedCPU0.004PASS. Metadata-onlyOFFreader86338 actualPASS/public
+00f20b5c116915eaa3a11c3fe69aba6013bceac7d686cf2b41b5002ac3f457c6.
+No recursivecurrent admission/provider/fullhash inhistoricalreader; current
+model/SDK/health/hashauthorityFalse. Savedphase/identity/health/EOF/source
+roster replayed, wholeparent remainsFAILED.
+RESULT -> Actual86991 acquiredsolepairlease ON-onlywarm4 newF17/source43-
+warm-pti-short-v4-ON-run-v1, originalthreepins/noNUMEXPR, freshc72 andfixed
+exec3 alreadyreal-metadata-preflighted. Currentadmission/full4 nowlive.
+Short-read0singlearmcontrolreadyafterretry, noOFFbaseline reload/numeric
+headobservationsinvented. Registry173unchanged, API174metadatareadynext.
+VERDICT -> Concreteactualretry plusduplicatedbaseline modelscansremoved, not
+modeltracePASS orlatencygain. Fulloriginalgoal remainsactive.
