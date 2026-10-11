@@ -15764,3 +15764,29 @@ retirement; postfull4 pending. OFFpostfull4 alreadypassed.
 VERDICT -> PTI V2 notruntimeready; pending V3 andfreshbuild/DSO/device/mapped
 injection proof. Current boundedhostcapture remains separate, notfullmodel
 math, physicalidle/bandwidth, API orservingspeed qualification.
+
+## 2026-10-11 Actual host capture refuses bypassed tracer shutdown
+
+CONFIG -> Source41 LP20 H36OFF/ON,4GEN64 perarm. Observer terminal gate
+unchanged; no session/free marker synthesized from file-close markers.
+
+COMMAND -> Actual73892 terminalFAIL2020s. Root replayed unchanged strict
+collector against closed originalON artifacts into external refusal receipt.
+PTIV3 prototype bd148298/155 root11CPU PASS0.036s, peer11CPU PASS0.036s.
+
+RESULT -> Actualparent ad8485818d67f97e0c505bd21a474f53ade85616144383189e242e3c1cda191d
+failed Missing/failed terminal host tracer ownership/free boundary. All4
+requests perarm/nativephase/normalownedEOF/removal/perarm andfailure-closing
+full4/finalGPUhealth passed. Four H36files/closemarkers exist but SESSION
+marker absent: generate.cpp12025 std::_Exit(0) bypasses std::atexit cleanup.
+Root raw-only refusal B17/source41-host-latency-v2-root-collector-refusal-v1.json
+reproduces sameerror, no modelpayload/GPU. Minimal explicitidempotent source42
+H36 shutdown requested; PTI final export path must be inspected for samegap.
+
+PTIV3 fixes actualstartup-interruption threadleak, verifiedrealThread.start
+test stops/joins andretainsfailure; sourceonly, nofilledruntime. Root19516
+nowpairleased fresh clock-budget profilerbuild, noDri exposed.
+
+VERDICT -> Preserveactualfailedcapture, no lifetimegatewaiver or qualified
+latency/speed promotion. LPdisabled run held until shutdown repair. Original
+fidelityV5 retry, completecache/streams/placement/profile/shelf remainneeded.
