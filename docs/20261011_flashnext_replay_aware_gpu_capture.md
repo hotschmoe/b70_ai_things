@@ -111,3 +111,36 @@ and162 fill operations, all12 replay flows and all18 source frames. Root
 independently confirmed no overlapping raw device intervals and union42150
 ticks over all919 operations. This is an instrumented fixture description,
 not a model idle or latency measurement.
+
+## Actual CPU clock bridge capture
+
+CONFIG -> Fresh bridge-enabled tool, original18-frame fixture, actualV5
+reader e8c9723e. V4 was held after CPU mutations exposed missing initialization
+order and origin-query joins; V5 closes both without changing profiler code.
+Concurrent CPU reference admission makes this a diagnostic timing capture.
+
+COMMAND -> Parent48190 terminalPASS147s, report SHA256
+c98156bd23fbdfde69c5e12556b8ede597d6845b409166531020f1b7816f4b80.
+Independent public reader passed. Read-only audit373137ff is preserved with
+its exact script and plan under f17/b70-unitrace-v5-clock-bridge-raw-audit-v2.json.
+
+RESULT -> All18 eight-field outputs,919 GPU/clock IDs,126 compute/631 copy/
+162 fill operations and12 replay joins pass with unchanged raw bytes. Actual
+746 queries occurred at sites1(rootorigin)=1,3(executeLists)=12 and
+4(prepareAppendContext)=733; other static sites did not execute. All returned
+host timestamps lie inside their measured RAW CPU call brackets. Query widths
+range17803..358603ns (median18665ns);748 CPU bridge widths range40..391ns.
+Observed MONOTONIC-minus-RAW intervals span607373993..607399442ns across this
+capture. A constant offset or drift bound is not assumed.
+
+Current operations23/24 are ordered with108 raw ticks (5625ns) between them.
+Separate host normalization reverses their order, leaving a2187ns disjoint
+gap. This is reordering with zero overlap, unlike the earlier V3 overlap.
+Root independently confirmed these values, all919 disjoint raw intervals and
+union33678ticks. The earlier auditV1 anomaly label was corrected in separateV2;
+original raw files were not changed.
+
+VERDICT -> Actual CPU bridge/query observations and replay coverage now have
+evidence. Per-operation host projections remain unsuitable for physical
+ordering. Clock alignment, model/device idle, collector overhead and clean
+latency remain unqualified; this fixture is not a model speed result.

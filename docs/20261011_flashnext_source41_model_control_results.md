@@ -49,3 +49,21 @@ VERDICT -> No mode1 numerical PASS or tolerance change. Complete cache,
 one/two/four/bounded-six streams, measured tier traffic, calibrated normal
 profiling, natural interactive latency/fairness and reproducible shelf remain
 part of the active goal.
+
+## Actual mode1 capture result
+
+CONFIG -> Same source41 mode1/observerON fixed-prefix diagnostic; original
+reference and all model files remain unchanged.
+
+COMMAND -> Parent44487 completed under the lease, followed by post-health and
+complete publisher hashes. Enclosing reader31977 started separately after
+normal retirement and is still comparing/admitting evidence.
+
+RESULT -> Parent PASS1155s including admission, body862.647s. Report SHA256:
+2549ccfe23e07d390685a5c56840038e585a57db6b1a04c468459e41f170f7f8.
+Four requests and12 QSA frames completed with normal EOF/removal. All73 active
+guardian samples, per-arm identity, strict/compiled health and kernel checks
+passed. The actual materialized constructor and capture path are observed.
+
+VERDICT -> Numerical original-reference verdict pending. Successful capture
+and readable outputs do not establish original-model fidelity or speed.
