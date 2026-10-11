@@ -15248,3 +15248,10 @@ CONFIG -> Same source40/weights/quant/runtime and common2048context/64prefill/65
 COMMAND -> Root finalV3 23SHA/ASCII/AST PASS and17newCPU PASS1.477s; independent23bindings/36CPU PASS1.978s includingunchanged19SSEcontrols. Plan5fec2d8951c99dde6407ef86465075a0c9a5e32d1ba89ed3cf10db688015cefb.
 RESULT -> Complete typedcfg/runtime/receipt/image/cards/port/profile/alias joins andfreshsmallbyte snapshots before/after legacyvalidation preventforeignreturnedimage/cards, interveningwrites andwrite-restore. ExplicitnewV3namespace/source/PLAN reacheslaunch; actualqualification.json prerequisite remains. Canonicalregistry171 unchanged; exact171+2 futureproposal only. Activepair OFF resultpassedTrue/errors empty/fourrequests; ONpreparation live, no wholepairqualificationyet.
 VERDICT -> Reviewable source-only matchedcontrol ready after active171 consumersfinish androotdeliberately registersnewaliases. No modelpayload/ABI/GPU/performance proof fornewcontroller. Fullcache52745 queued, materializedfixture51670 completed; fulloriginalgoal active.
+
+## 2026-10-11: Both paired QSA9 model arms complete
+
+CONFIG -> Existing source40/runtime9 paired32/16 stage plan, pinnedoriginalartifact and independently admitted original reference; no source/registry/model changes duringrun.
+COMMAND -> Original1602 handle remainslive; root actual off/result.json andon/result.json inspected. Reviewed matchedV3 sourcecheckpoint3946e0e pushed; canonical171 unchanged.
+RESULT -> OFF andON each reportpassedTrue/errorsempty withfourrequests andnormalownedexit. Parent numerical/reference comparisons andpost-health/newfull4/finalreader stillpending. MaterializedV3 CPUfixture completed andsourcepeerready, no isolatedcompiler/device execution. WholecacheV1052745 remains queuedbehindpairlease.
+VERDICT -> Actualpairmodel capture progress, notwholepairqualification ororiginalfidelity. Continuecompleteparent/publicreader andqueuedfullcache; matched173aliasproposal deferreduntilactive171 consumersfinish. Fulloriginalgoalactive.
