@@ -15980,3 +15980,23 @@ notyetknown.
 VERDICT -> ActiveGPU qualification, no PASS/runtime/math/speed claim from
 incomplete receipt. Originalhead error persists; zeroL0GDN andownfixedinput
 Q8 cases andfreshmasked43/source43model intake remainnext. Fullgoalactive.
+
+## 2026-10-11 Actual fresh43 upload and independent reader pass
+
+CONFIG -> New43 actualSDK/oracle/currentselectedweights; component only.
+
+COMMAND -> Upload86866 terminalPASS287s. Rootindependent publicreader87905
+reexecuted originalstrict/currentSDK/layout predicates andpassed1.755s.
+
+RESULT -> Parent3875dac6e375cb211d27c59a4a9ba7940efe770fdc4adc94b1c7e36a5452100e,
+neworaclereceipted4106e7a5d3ce292c1e38ee12a2fa98270d48dde59ffbe8525a389e6f71d2c2.
+All5 profiles full390_card0/card1/same_device24_24/two_device24_24/
+actual_model_static_bounds passed; identicalcompiled43 publiclayout/mode0,
+logicalfree/ownership/health/currentABI/source and completepostfourshard
+identity passed. Independent binding1ec3ceb65aa432378fdc246011528962ffbe319fe0fe15628848ce7c97682ce8
+at B17/source43-upload390-root-public-binding-v1.json.
+
+VERDICT -> Actualfresh43 upload component closed. Ordinarymodelconstructor,
+materializedmode1/modelmath/completecache/streams/memorytraffic/profiling/
+shelf remainunqualified. Freshmasked43 andzeroL0NUM10 modelcase next; no
+token/speed claim. Existing originalhead divergence unchanged. Fullgoalactive.
