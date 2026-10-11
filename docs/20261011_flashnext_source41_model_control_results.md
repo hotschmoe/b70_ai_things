@@ -67,3 +67,28 @@ passed. The actual materialized constructor and capture path are observed.
 
 VERDICT -> Numerical original-reference verdict pending. Successful capture
 and readable outputs do not establish original-model fidelity or speed.
+
+## Original-reference intake refusal
+
+CONFIG -> Preserved actual ON capture2549ccfe and enclosing reader111a6cb3.
+No reference arithmetic or tolerance change.
+
+COMMAND -> Enclosing reader31977 completed its actual actor admissions before
+and after raw intake, then refused the P30/SFD lifetime gate. Root independently
+replayed audit_prefix30_lifecycle_v1 against the original combined log.
+
+RESULT -> Actor admissions and closing full4 scans passed, but the numerical
+comparison did not execute. Errors begin at allocation markers466..469:
+the auditor cannot bind any owning device allocation. The153430B log has zero
+UR device-allocation/free lines; actual recipe, Docker command and original
+terminal environment omit SYCL_UR_TRACE. Capture markers and releases alone
+do not supply the required owning-context UR evidence. The unchanged lifetime
+auditor correctly rejects them.
+
+VERDICT -> Producer integration omission, not evidence of a numerical failure.
+Keep this attempted capture and failed reader intact. A new producer must
+enable SYCL_UR_TRACE=2 for original-fidelity capture and retain a bounded
+trace budget plus actual EOF counters. Prior matching traced captures were
+46.6..53.7MB; proposed128MiB/300000-line/1MiB-line limits are headroom only.
+Cheap lifetime preflight will precede heavy admission in a separate successor;
+successful comparisons must still retain all original admission gates.

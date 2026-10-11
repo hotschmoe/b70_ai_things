@@ -83,3 +83,31 @@ then use loaded-context, matched uninstrumented controls to measure saved
 launch latency and intermediate traffic. Validate intermediate quantized bytes
 and original-reference outputs before accepting a change. Prior single-code
 Q8_1 sensitivity makes numerical validation necessary even for a small fusion.
+
+## Request and observer costs to separate
+
+CONFIG -> Read-only inspection of actual source41 generate.cpp, server_intel.py
+and host_critical_path_trace.hpp. Existing bounded model controls request
+logprobs20. This differs from ordinary serving without log probabilities.
+
+COMMAND -> Inspect the request parser and token-emission branch. The default
+req_logprobs is-1. Every nonnegative setting, including logprobs0, copies a
+full vocabulary logit row to host and computes a CPU log-sum-exp using double
+exp. Positive settings also partially sort vocabulary indices and print the
+requested alternatives. The server omits the GEN logprobs field when the
+feature is not requested. A disabled control must omit that field; setting0
+does not disable the work.
+
+RESULT -> H36 explicitly exposes LPReadback and LPCPU spans. Its records use
+CLOCK_MONOTONIC and a bounded memory buffer, without SYCL queries or device
+waits. RequestScope records its final event before exporting the JSONL file;
+export I/O is outside the recorded request span and can delay the next GEN.
+The model actor also leaves an ARM marker when numeric observers are OFF;
+the inherited protocol then polls up to1s after DONE for a missing numeric
+finish marker. The new host-only control will omit that unused ARM marker.
+
+VERDICT -> Keep LP20 as an explicitly matched diagnostic, then compare a
+separately declared log-probability-disabled workload with the same inputs and
+output gates. Account for export and protocol time separately. No measured
+gain follows from these source observations; H36 cannot establish physical
+GPU execution, bandwidth or idle time.
