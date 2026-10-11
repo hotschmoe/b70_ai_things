@@ -1,0 +1,65 @@
+CONFIG -> Source-only direct ESIMD FP16 DPAS prototype. Original GGUF quantized
+weights and dequantizers unchanged; harness uses synthetic FP16 operands only.
+Reference is actual SDK49 individual strata::prefill::Gemm::f16, NEVER grouped
+oneMKL. No production integration, compiler/device support or speed claim.
+
+Actual SDK49 admitted by root:
+/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T232453Z-g6w93h0o
+receipt SHA256 2d6490ad93a172f10309077e2134567a97d4bef7846b7ece66d4722871af4079.
+Do not substitute source45/47 ABI binaries. Root rechecks this actual receipt.
+
+COMMAND -> NoDri compile in pinned compiler image39992, explicit
+--entrypoint /bin/bash, NO --device or GPU mounts. Mount actual SDK49 read-only
+at /sdk, repository kernels read-only at /candidate, fresh output at /results.
+Use actual image sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7.
+After source /opt/intel/oneapi/setvars.sh:
+
+/opt/intel/oneapi/compiler/2026.1/bin/icpx -O3 -DNDEBUG -std=c++20 -fsycl
+  -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel
+  -fp-model=precise -qmkl=sequential -I/candidate -I/sdk/source/sycl/include
+  -I/sdk/source/include /candidate/prefill_grouped_f16_esimd_harness_v1.cpp
+  -Wl,--start-group /sdk/build/libstrata_prefill.a
+  /sdk/build/libstrata_engine.a /sdk/build/libstrata_kernels.a
+  /sdk/build/libstrata_core.a /sdk/build/libstrata_kernels_cpu.a
+  /sdk/build/ggml/src/libggml-cpu.a /sdk/build/ggml/src/libggml-base.a
+  -Wl,--end-group /usr/lib/x86_64-linux-gnu/libze_loader.so
+  -Xsycl-target-backend=spir64 -cl-fp32-correctly-rounded-divide-sqrt
+  -o /results/prefill_grouped_f16_esimd_harness_v1
+
+Join the compiler command onto one line. No model/pack/GGUF mounts are needed.
+Retain exact argv, compiler output, ELF and source/SDK/library fingerprints.
+This links current actual49 archives; it does not prove identical device-image
+composition to a full model executable. Do not infer integration safety from it.
+
+Root GPU execution ONLY after compilation and current card0 pre-health:
+bin/gpu-run --card 0 ... /results/prefill_grouped_f16_esimd_harness_v1
+  --synthetic --single-queue
+Then after owned normal retirement, post-health and kernel fault check, root
+may run a separately owned --synthetic --two-queue case. Device pin requires
+ZE_AFFINITY_MASK=0 and ONEAPI_DEVICE_SELECTOR=level_zero:gpu; keep groupedF16=0.
+No direct GPU invocation by the source author; root owns deadlines/lease/logs.
+
+RESULT -> Prepared twelve cases per mode: group sizes1/3/8 with tiny16x16,
+32x32 (multiple K steps), actual GU N1280/K2560 and down N2560/K640. Mixed
+expert rows1/2/7/16/32/48/64/64, partial groups, three repeated asynchronous
+DPAS submissions and individual oneMKL reference. Every valid output compared
+against independent sparse-dyadic exact known values, including all work-items,
+not only tile0. Mod29 input pattern breaks the old modulus17 column symmetry.
+Numeric equality accepts either sign of exact zero; NaN/unwritten values fail.
+Eight output guard rows per expert/arm must retain exact0xffffffff bytes.
+Caller pointer/shape arrays are destroyed immediately after each DPAS submit.
+
+128MiB total caller-owned device cap,96MiB pinned-host cap, unchanged V2
+allocation/drain pattern. Two-queue mode gates stage copies by used-event and
+compute by copied-event; in-order compute protects decoded buffers until their
+previous products finish. All queues drain before free, including exceptions.
+Stage memcpy is a dequant dependency/lifetime stand-in, NOT quantizer coverage.
+Driver/oneMKL internal allocations are outside the explicit cap and unmeasured.
+Original SwiGLU, FP16 H storage, scatter and decoded ring layout stay unchanged
+in the proposed integration; the operator harness does not perform those steps.
+
+VERDICT -> Real kernel source prepared, not compiled/executed/qualified. First
+actual linked fixture must pass all outputs, guard bytes, copied metadata and
+normal lifetime before any default-off production patch is considered. Actual
+model fidelity/coherence/latency and2000tok/s prefill remain unproven. No unsafe
+unchanged source45/47 grouped-oneMKL model retry is requested.
