@@ -1,0 +1,13 @@
+{
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_pti_paused_builder_cpu_v1 test_pti_paused_builder_cpu_v2 -q",
+  "CPU_tests": 5,
+  "actual_build_executed_by_author": false,
+  "files": {
+    "strata/flash-next/build_pti_paused_regular_lists_v1.py": "77594645b8735462eb98b71c54d748cf2a67e35810a9562f68b8cd1874345b69",
+    "strata/flash-next/build_pti_paused_regular_lists_v2.py": "c866430881fd581ec06223900a2a0f68237c13f93eb9f01093e7cca2be63889b",
+    "strata/flash-next/pti-paused-regular-list-tool-build-proposal-v1.json": "42e4e3de36b3b376a254f46e0bc91648d9e4a64705421cd544e7f8ed68cd6c14",
+    "strata/flash-next/test_pti_paused_builder_cpu_v2.py": "1bd4ba079b5d32954f3e8a0fff168601f639bbb2445230a10ea1c232f0d316a6"
+  },
+  "schema": 2,
+  "scope": "future attempted-create ambiguity retirement and SIGHUP containment; no new runtime qualification"
+}

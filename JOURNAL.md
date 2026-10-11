@@ -16871,3 +16871,16 @@ mandatory. Source97170326/root883SHA/11CPU andfocusedpeer11CPU0.354 ready.
 Modelactor currentlyliveprerequisiteadmission; noactualOFF/ONresult yet.
 VERDICT -> Actualnumericalcapturequalification inprogress; nooriginalfull48
 math, observerequivalence, profile, cache, streams orspeed claim. Fullgoalactive.
+
+## 2026-10-11 Future collector builder interruption successor checked
+
+CONFIG -> CompletedactualV1buildf52f remainsimmutable and suppliesfixture
+ELFs; no duplicatebuild. FuturebuilderV2 onlychangedfailureownership.
+COMMAND -> Rootcb02455f1fe12133af573aad72cb34ec5c1ad16170519adbcabf6ae6e85bb1c3
+all4sourcebindings/5CPU0.002PASS. ActualNUM38model95513stillLIVE.
+RESULT -> V2attemptedPopenexception path recovers exactnamedowner/absence
+withoutabandoningambiguouscreator; SIGHUP handlers nowprotectmainandcleanup.
+Mockattemptedcreate confirmsfailedreceipt/originalname census. ActualtinyHUP
+controlrerunrequested; no realDocker/GPU/nativebuild qualificationofV2.
+VERDICT -> Scopedsourcefixforfuturetoolbuilds, notdeviceprofilecoverage/
+fullmath/currentserving. Modelcaptureandtinyprofilingfixture pending; fullgoalactive.
