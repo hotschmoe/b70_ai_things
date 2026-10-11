@@ -15597,3 +15597,23 @@ checks configuration, IDs and finish. No GPU/model runtime yet.
 
 VERDICT -> Source ready for a separate matched runtime control. No measured
 latency gain, device-idle, bandwidth, original-math or shelf qualification.
+
+## 2026-10-11 Source41 fidelity capture line-quota successor
+
+CONFIG -> Actual V4 UR2 capture hit300000-line bound. Model/source/reference
+remain unchanged. Original failed capture is preserved under
+source41-cli-original-fidelity-v4-urtrace-run-v1. Outer closing scans pending
+at this checkpoint; already completed per-card/compiled posthealth PASS.
+
+COMMAND -> Root and independent cache-source35 peer tested producer V5,23 CPU
+controls each and exact125 source bindings.
+
+RESULT -> V4 recorded300000lines/36004736B, observed374621lines/45490517B,
+maxline1121B, forced cleanup137 and failed pipe. V5 plan
+8b8cc8414be32ed67a6d621f875840555ebd63778ba74d24935043391e3fab64
+permits fidelity1000000lines, retaining128MiB/1MiBline and OFF64MiB/100000.
+Root testsPASS2.703s; peerPASS2.664s. Actual V3 OFF prerequisite preserved.
+
+VERDICT -> V5 source ready; not executed. V4 is capture failure without
+numerical conclusions. Neither observed cap headroom nor CPU controls
+qualify runtime stability, original fidelity or performance.
