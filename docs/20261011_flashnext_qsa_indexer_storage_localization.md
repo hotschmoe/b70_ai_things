@@ -52,3 +52,39 @@ abb952bbb0558acaac2bb347fe7bf2928370c484776990e2541d9b431042800f and
 The pair QSA9 CPU preparation is running; its model diagnostic has not run.
 These baselines do not qualify original fidelity, full cache/concurrency,
 matched interactive latency, sustained decode speed or a serving shelf.
+
+## Subsequent evidence
+
+CONFIG -> Same original model, references and completed ON captures.
+No native operand enters the independent whole-model reference.
+
+COMMAND -> Root independently executed the bounded conditional packet audit
+with PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1. Preserved final
+qsa-output-packet-localization-v2.json SHA256
+1679d255e4773e289598fc601dd7c177c7c7da17e0f6c45f284aa6104b34d25d and
+recipe SHA25657e19885a5751b56c92cf10a22676544a1b7f4292ab5592669e352490c1587b1.
+This diagnostic explicitly uses a captured gated activation conditionally;
+it cannot qualify or replace original model computation.
+
+RESULT -> A single Q8_1 code at block144/lane27 crosses from-6 to-7:
+the original/native FP32 quotients are-6.4990568/-6.5000992. Conditional
+encoding of the native gated activation matches the captured packet bitwise.
+All stored block scales match. The other changed byte is a block98 stored
+sum that the original Q8_0 output projection does not consume. Applying
+only the changed-code column contribution from locked original weights
+reduces output NMSE3.326869e-8 to1.727756e-14, with480/2560 elements bitwise
+equal. The audit reads192775 original weight bytes including exact rereads
+and header checks; it performs no full-model scan or GPU operation.
+
+VERDICT -> This output seam is explained by amplification across an input
+quantization threshold. It does not establish the cause of the earlier
+gated difference or the complete model head error. Selected indexer IDs
+match all visible cells for this prefix, so the half-storage discrepancy
+alone must not be used to explain its output drift. No packet/reference/
+tolerance/native implementation was adjusted to match observations.
+
+The one-card parent subsequently published report.json passed true/errors
+empty and a new post-run full4 publisher PASS. Its inline final reader was
+still live when this follow-up was recorded. Pair QSA preparation completed
+with plan SHA25600c8c324e6b5ae3bebf27c584b3ca8c15062c60af7c7beff80ad2660a05406b5;
+its model run still requires finalized one-card evidence.
