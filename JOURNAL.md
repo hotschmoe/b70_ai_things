@@ -16981,3 +16981,22 @@ committed2fe9fa3 pushed. CPUoriginalreference88910 stillLIVE; waitretirement
 forquietactualmodelcapture. V1compilefailure preserved, noextrafixtures.
 VERDICT -> RealGPUreplaycompute coverage fixclosed, notmodelcoverage orspeed.
 Nextfullmodelcapture readyaftercurrentCPUcomparison; fullgoalactive.
+
+## 2026-10-11 Actual core calculation saved despite serialization failure; model profile launched
+
+CONFIG -> ActualNUM38capture23e5, independentFP64diagnostic plusconditional
+CPUF32ownzero recurrence, no tolerance/fullmathpromotion.
+COMMAND -> Reference88910 terminalFAIL/reportec203ace16f0e4dc8f7b3601ef90eb4c17afaecb1a21c9914961dad39a03a4f5.
+Actualcomputationattempted/completediagnostics andfreshclosing-receipt identity
+PASS/errors[] retained. FailureonlyKeyErrorcurrent44_capture_before: private
+ASTlabelport didnotrenamecurrent43 keyword args. Newminimalserializationfix
+andobserved-results recoveryrequested; no expensiveprovider rerun.
+RESULT -> Savedfourconditionalcores allbitwiseexact/NMSE0; primaryFP64core
+NMSE3.7264410742406176e-6, RMSsum8.295410417326253e-6, argument
+2.515405626193739e-6, scale3.857419180874789e-8, inverseS bitwiseexact.
+Theseare scoped diagnostics fromfailedserialization, notend-to-endPASS.
+WarmV3actual18181 nowLIVE with962682 actor/freshfixtureead453/c72 and
+historical35ab route, originalthreepins/noNUMEXPR, pairlease forbothhealth.
+AnalyzerV3d45570dd all310SHA/2targetedCPU0.011PASS, noactualanalysisyet.
+VERDICT -> Genuinecorelocalization andnextactualmodeltraceprogress; preserve
+failedreport/fullgoal. No competingmodel/provider/largeCPUduringprofiling.
