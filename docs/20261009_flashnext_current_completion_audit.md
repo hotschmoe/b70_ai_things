@@ -1762,3 +1762,25 @@ VERDICT -> Genuine build and preparation progressed. Warm replay capture,
 physical tier traffic, original fidelity, all-state cache/current1/2/4/bounded6
 streams, natural interactive latency/fairness gains and qualified reproducible
 shelf remain incomplete. No speed/stability promotion or completion claim.
+
+## 2026-10-11 - Long-prefill profile volume failure and cache port status
+
+CONFIG -> Same original campaign. Query-sampled tool and four fresh GEN4
+requests were a bounded diagnostic; cold scope did not replace warm decode.
+COMMAND -> Parent53490 failed1616s/reportc445a56d. OFF four requests and
+host session passed. ON hit512MiBclock metadata during long request2 after
+PP448/524; aggregate raw output1265985145bytes also exceeded its budget.
+RESULT -> Both arm and aggregate closing health/full4 passed; ON result records
+exit86 and forced cleanup. Failed raw traces remain preserved. No success-only
+analysis or complete timeline claim. Warm short-prompt collection is being
+prepared using actual named start-paused/resume support; long-prefill coverage
+needs a scoped or lossless compact capture. Source44 fresh all8 build44632 is
+live to expose missing GDN core/RMS fields, without changing source43 SDK.
+
+Cache2 source V2 is ready: root1899hashes/12CPU checks and focused peer fixes
+pass. The actual API43 runtime/public baseline under registry174 is still
+required, then the truthful cache alias175 and new two-slot runtime. Whole
+nine cache families, persisted state and actual four/six active slots remain
+additional mandatory evidence; two-slot source readiness cannot close them.
+VERDICT -> Continue original fidelity, serving/cache/concurrency and latency
+work. Build/source/component evidence does not qualify a production shelf.
