@@ -15617,3 +15617,23 @@ Root testsPASS2.703s; peerPASS2.664s. Actual V3 OFF prerequisite preserved.
 VERDICT -> V5 source ready; not executed. V4 is capture failure without
 numerical conclusions. Neither observed cap headroom nor CPU controls
 qualify runtime stability, original fidelity or performance.
+
+## 2026-10-11 Source41 V4 trace failure closed; host latency running
+
+CONFIG -> Actual V4 UR2 source41 mode1 fidelity capture, then separate
+source41 mode0 LP20 H36 OFF/ON control under exclusive pair health lease.
+
+COMMAND -> V4 actor terminalexit1 after1549s. Root examined final report;
+then launched run_source41_host_latency_v2.py with unchanged actual intake,
+closed V3 OFF prerequisite and registry173 chunk64 input trace.
+
+RESULT -> V4 final report SHA256 c14abdaab10700f4dd3faadbfba43a6f8caed77fb650d3f4e6683ed8d8e27185.
+Failed native phase retains quota/forced-cleanup137 failure; all per-arm
+and failure-closing full4 publisher scans and final GPU health PASS.
+No original-math conclusion follows. Host V2 acquired cards0/1, workload
+pinnedGPU0; session73892 live at checkpoint, no timing result yet.
+
+VERDICT -> Failed capture preserved; reviewed V5 retry is pending. Current
+latency control is running, with LPdisabled successor reviewed for the next
+separate matched run. Neither host source controls nor pending timelines
+qualify physical idle, bandwidth, original fidelity or serving speed.
