@@ -17102,3 +17102,21 @@ RESULT -> Nextcontrolcommand andactor5/public5 traceanalysisready; noactual
 control/modelkernel/latencyresultyet. Current69524 verifiedlive.
 VERDICT -> Cheapexecution-pathpreflights replaceexpensivefailurediscovery;
 fullfidelity/cache/streams/tiertraffic/interactiveperformance/shelfgoal active.
+
+## 2026-10-11 Actual full-model compute trace captured and producer closed
+
+CONFIG -> SDK43mode0 warm54/GEN4 singleON withfreshc72 retainedregularlist
+collector, matchedoldOFFcomponent00f20b; registry173/threadpins unchanged.
+COMMAND -> Actual69524 terminalPASS816s/reportf2e4399ebb63aef87ecd351771303247101e9253c98754383760ad9dd75cece4.
+Two requests/nativeExit0/noforced/H36close/finalizerPID1rc0 andallarm+
+aggregatehealth/full4 passed. OriginalOFFcomparisonpassed, failed3 untouched.
+RESULT -> ClosedChrome84198995B has98621GPUrows/115names, includingrealHC,
+quantize/MMVQ/expert kernels. Earlier89fill-only coverageproblem no longer
+persists. Externalobserved duration-sums71928ef916697437465fd0fb57401b2ef86b10a30fc0046200da3571dfa9efdc
+showsgu_port12/8 anddown7/8largest groups; sumsarenotadditivecriticalpath.
+InstrumentedselectedPP5993ms/decode153.33ms/window, notcleanservingspeed.
+Firstpublic51426 refusednonPATHenvironment because rootomittedthreadpins;
+corrected19086nowLIVE withOMP/MKL/OPENBLAS1/noNUMEXPR. Nodata/sourcechange.
+VERDICT -> GenuinefullmodelGPUcomputeobservations/controlclosure, notyet
+complete semanticcoverage/idle/bandwidth/quality/speedpromotion. Public/
+analysis thenactualshort-read0control; fulloriginalgoal remainsactive.
