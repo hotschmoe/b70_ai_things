@@ -1689,3 +1689,34 @@ bounded6 streams, measured tiertraffic/clockcoverage andnatural interactive
 latency/fairness gains, stableAPI identity and verified shelf remain unproven.
 No completion or production speed/stability claim. Earlier source41 head
 NMSE.007888 remains unresolved; the FP64 diagnostic has not replaced that lane.
+
+## 2026-10-11 - Paired topology parity and latency capture successor
+
+CONFIG -> Original model, two B70s plus RAM and all completion requirements
+remain unchanged. Native43 mode0 one-card48 versus split32/16; four useful
+GEN64 controls, ctx2048/prefill64/PLE65536/MTP0/cacheOFF, SFD/PCL observers.
+COMMAND -> Paired parent33954 passed1278s, reportde12e0d6. Independent public
+reader93148 passed389.370s, binding0da818a6. Exact artifacts are under
+F17/source43-pair-model-cli-v1-run-v1 and its external public-binding-v1.json.
+RESULT -> All four full248320-float heads and192full10240-float residuals
+are bitwise one-versus-two GPU; inputs/outputIDs/LP/finish match. Actual
+per-device stage ownership and logical resident/mirror coverage, normal
+retirement, source/model integrity and per-card/compiled-pair health pass.
+This proves bounded topology parity; it does not prove original-model math,
+physical allocation/headroom, tier traffic, clean speed or API concurrency.
+
+Old PTI parent34631 failed before instrumented GEN at mapped-library census;
+its captured exec stderr was lost. A CPU-only executable-mapping fixture
+established Btrfs path-stat and proc-maps use different device domains. Strict
+successor helper2 binds map device to the read-only covering mount and checks
+held FD/path stat, inode, exact path, ELF SHA and unchanged owner/maps/mounts.
+Actual PTI3 process61440 is live; pre-run health passed and OFF model startup
+is underway. The old failed capture is preserved, without claiming its lost
+cause is confirmed by the fixture. Matched device coverage/observer cost and
+latency analysis remain pending. Source-backed next controls are recorded in
+docs/20261011_flashnext_latency_experiment_queue.md.
+VERDICT -> Corrected native two-GPU control progressed. Original full48 math,
+fresh mode1 API/state-cache qualification, actual1/2/4/bounded6 streams,
+measured tier traffic and token critical path, natural interactive latency/
+fairness improvements, stable client identity and verified reproducible shelf
+remain incomplete. Keep the full goal active.

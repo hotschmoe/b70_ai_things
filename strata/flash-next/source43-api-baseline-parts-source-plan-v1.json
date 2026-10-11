@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "status": "SOURCE_CPU_READY_PARTS_API_LAUNCH_BLOCKED",
+  "API_launch_allowed": false,
+  "native_source_generation": 43,
+  "mode": 1,
+  "matched_context_prefill_PLE": [
+    2048,
+    64,
+    65536
+  ],
+  "primary_model_name": "hotschmoe-dd",
+  "registry_append_performed": false,
+  "proposed_registry_count": 174,
+  "serial_API_cases": 6,
+  "actual_HTTP_clients": 2,
+  "concurrent_native_execution_qualified": false,
+  "engine_token_text_provenance_qualified": false,
+  "owned_parent_public_proof_implemented": false,
+  "full_model_math_qualified": false,
+  "files": {
+    "strata/flash-next/source43_api_baseline_profile_v1.py": "45af33903547815263671917eb551fb2a0d0995d2435930935d1389e1db1f13e",
+    "strata/flash-next/source43_api_baseline_client_v1.py": "404ff1877c742c53a18272eb85ffa6e63630e1d6e0de00a021f366ccb822734e",
+    "strata/flash-next/registry_source43_api174_association_v1.py": "3ff00329be9d6ab522a8152bf8fb9a90802b239f43fec379a91f04cd75576a78",
+    "strata/flash-next/source43-api-registry173-snapshot-v1.yaml": "d4242070dff786a5977254f1ff0fa4deae6487ec308765aa2b4e5a4607234167",
+    "strata/flash-next/source43-api-registry-proposal-v1.yaml": "a5a6c1c8b1983bbc291f080cfb86707980c4a51bb839acf3486132251385844b",
+    "strata/flash-next/c1_api_trace43_concurrent_v1.py": "270761c9aac415a7f6547f93bf1d4da9eab558af138ff0d30d6b479a270a829b",
+    "strata/flash-next/test_source43_api_baseline_parts_cpu_v1.py": "c49a5db64da90f78b74094c2334187e541a0dd2d6d4bac6fe1593428daa7b85b",
+    "strata/flash-next/test_c1_api_trace43_concurrent_cpu_v1.py": "9d8a2d4a626cba8f9327b0f8b838937aca1d112ed6e0c81bac8aeb350e764244",
+    "strata/flash-next/prepare_source43_api_baseline_preview_v1.py": "59a276da552ab5f6404ccf741af3988fa70567cef21e1a3d22eb4bf37d8c41ad",
+    "strata/flash-next/strict_registry_yaml_v3.py": "5371425df71a63dceec3ef60a26694af2a6fdf24c6ddfa2f0e722c4850fa8e4c",
+    "strata/flash-next/registry_c140_shared_association_v3.py": "7c039221371397f23f248215262585e5095188aa390a70a624c50a94cf153089",
+    "strata/flash-next/c1_api_trace.py": "212b21ab7251a95c01764f23aa3ff2085cef35e741340f0bc7e8b02eeb8d472a",
+    "strata/flash-next/c1_trace_contract.py": "ee557bb1e9eb6a31b67714c93034461aa24572f20781cfcb9a858c25dd825e20",
+    "strata/flash-next/source43-normal-model-source-plan-v1.json": "d17fcce3574d2ee81124555f83f42cd2f7f20b16e860bca970cc8264b2a21947",
+    "strata/flash-next/run_source43_normal_model_cli_v1.py": "a064f91bd9eb1a1ffe4d51a942438fca8f0102662ffbe7d160a7d5286440c655",
+    "strata/flash-next/validate_source43_normal_model_cli_v1.py": "643cb5079f96ef9a9a60fd6a0a50012154337b48100a8c423994f2bcb5c5bcf3",
+    "docs/20261011_flashnext_source43_mode1_api_baseline_parts_v1.md": "1fb43d8569ebb5c3c6222ee40c30c17b39e3f7b83b42521065fd8e549c5a7d9f"
+  },
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_source43_api_baseline_parts_cpu_v1 test_c1_api_trace43_concurrent_cpu_v1 -q"
+}
