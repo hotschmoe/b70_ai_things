@@ -15031,3 +15031,10 @@ CONFIG -> Corrected source40 V3 SDK, genuine matched upload oracle, canonical re
 COMMAND -> Whole390 upload session68770 terminal0 in342s. Fresh one-card prepare then self-leased qualify_c1_serving_combined_v140_v3.py, root session15276, c140-v3-one-segmented-postboot-prepared-v3.
 RESULT -> Upload finalPASS, receiptSHA b11bf45c1230677601ca572c4f9c7d41bc53f9c99bf5c7c36ed99c6aad4b1b1c. All five actual GPU cases, owned terminal, post strict/compiled pair health, source guards and new complete four-shard publisher hashes passed. Fresh C140 one-card preparation is live; no serving result yet. New pair preparation command is saved but not executed.
 VERDICT -> Currentboot upload qualified only within whole390 HC/PLE source and logical-free scope. No inference/reference/cache/concurrent/latency/shelf qualification from this upload. Continue same live session15276; pair follows actual onecard success. Full goal remains incomplete.
+
+## 2026-10-11: Frozen cache V7 CPU source checkpoint held by peer
+
+CONFIG -> SOURCE40/C1401403 current171 baseline wrapper; full nine actors plus persisted/fresh49 scope preserved, frozen V7 plan93754a86/865 repository bindings.
+COMMAND -> Root full SHA/ASCII/AST closure and exact CPU command:180 tests PASS6.023s; independent peer180 PASS6.135s.
+RESULT -> Peer HOLD found two material source seams: raw49 public reader still invokes old associate_events instead of recomputed waiter-adjudicated terminals; noncancelled pinned-EOS waiter accepted native cancel although consumed source40 prioritizes EOS finish stop. Frozen source/checks retained, no V7 GPU launch or promotion. New V8 and strict waiter successor in progress. Fresh C140 onecard GPU session15276 passed actual six-request API screen; parent teardown/posthealth/final identity remain live.
+VERDICT -> Source/CPU checkpoint is explicitly unqualified and held; tiny green checks do not prove actual terminal routing. Require source-exact corrections and producer-shaped regression before launch. Original full model/cache/concurrency/latency/shelf goal active.
