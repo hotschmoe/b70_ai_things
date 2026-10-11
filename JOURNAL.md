@@ -15283,3 +15283,10 @@ CONFIG -> Frozen V11 source fc8f4009580bcdbef6318fd48461bfbb4e5899903188b0b4d240
 COMMAND -> Root1122 repo plus2 actualSDK byte bindings/ASCII/AST PASS; exact plan CPU command220 PASS7.451s including results-filesystem tiny controls. Actual C388 no-device/no-model bootstrap97350 terminal0,13 flat imports and owned container removal0. Admission receipt f17/shared-v11-root-source-cpu-admission-v1.json SHAb1368503cf38dd25bc1742f170d7cc2463833794b1f53ed3605d04ff4b2e4e0d.
 RESULT -> Independent peer pending; fresh full suite CPU preparation35794 started at shared-v11-whole-suite-postboot-prepared-v1. Existing isolated materialized37443 re-polled live, no restart or overlapping GPU actor. New split QSA root10 source bindings and11 CPU controls PASS; peer review pending.
 VERDICT -> Concrete harness/source preparation progress, no new model math/cache/runtime/performance qualification. Whole campaign remains active. Clean upstream same-artifact Intel baseline feasibility audit assigned separately; no weights/quant/runtime changed.
+
+## 2026-10-11: QSA split finalization source independently reviewed
+
+CONFIG -> New hardware-worker/unleased-CPU QSA split source plan5f171b3854557edaa8afb4df397fb1e2aa5b95a867ce3708fe407141b17165ea retains original9 child/numerical/model gates.
+COMMAND -> Root10 SHA/ASCII/AST and11 CPU PASS0.037s; independentpeer same10/11 PASS0.037s and READY after failed-read closing, producer saved full4/page chronology, runtime-package/artifact identity and leased-shell EOF/retirement review.
+RESULT -> Source ready to release actual GPU ownership before readonly numerical finalization; no actual split runtime/utilization result. Existing materialized37443 actual log now records all18 direct/two-replay frames, graph retirement and owned allocation free; parent numerical/post-health/newfour/final proof still pending. WholecacheV11 prepare35794 remainslive, canonical171 untouched.
+VERDICT -> Concrete reviewed dev-loop successor, not decode speedup or original fidelity/cache/serving qualification. Full goal remains active.
