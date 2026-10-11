@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "status": "SOURCE ONLY fixed metadata output budget; no build/runtime authority",
+  "files": {
+    "strata/flash-next/prepare_pti_unitrace_clock_budget_v1.py": "98bfdc40a0b096305d789579074a52ce699cf7cbf3045ef0fdb53548447c5bb5",
+    "strata/flash-next/test_pti_unitrace_clock_budget_cpu_v1.py": "c46e03cfee74b4648189cbe75744a62d31d3197345de56ce5182204a2ec460b5",
+    "strata/flash-next/pti-unitrace-clock-budget-v1.patch": "1bce2130504a9c2132feb2e112ba10d6ed72033572b621010436adfe166440bf",
+    "strata/flash-next/pti-unitrace-clock-budget-design-v1.md": "81c37bdbaf1a4807b0302c8630e22cee4cb063299866d93bd49efe59ac7cf7ff",
+    "strata/flash-next/pti-unitrace-clock-bridge-source-plan-v1.json": "110ca7f1b376ddd253e4b47410590fb7b7900778fc03fb535c7d168a10948def",
+    "strata/flash-next/pti-unitrace-source-manifest-v1.json": "7593e5381a7373cebbe861b0ffb464afaa5374db0c122972d638c39849b82a11"
+  },
+  "actual_base_source_files": {
+    "/mnt/vm_8tb/b70/build/pti-unitrace-clock-bridge-source-v1/tools/unitrace/src/pti_unitrace_clock_export_v1.h": "69ea05711a37de419158c4f37a28e598ea200e177977617991cabc9a3879c1ae",
+    "/mnt/vm_8tb/b70/build/pti-unitrace-clock-bridge-source-v1/tools/unitrace/src/levelzero/ze_collector.h": "ccc4a663ebb0d33b2ee1593f722c8668762e8dbc3ddc7243fab93ee2bdfdf2c9",
+    "/mnt/vm_8tb/b70/build/pti-unitrace-clock-bridge-source-v1/tools/unitrace/src/unitimer.h": "a19c62b21703e59bd806eed0990bbe28adb8c73567e8cb7f7bb88fa0a09888dc"
+  },
+  "explicit_base": "/mnt/vm_8tb/b70/build/pti-unitrace-clock-bridge-source-v1",
+  "base_bridge_plan_sha256": "110ca7f1b376ddd253e4b47410590fb7b7900778fc03fb535c7d168a10948def",
+  "source_commit": "6c0d6b0b80c6dbac4b5902d9d5ade1c75b9e9033",
+  "expected_reconstructed_source_sha256": {
+    "tools/unitrace/src/pti_unitrace_clock_export_v1.h": "1042a101816113325090f8ed4f94b973affce958dd5d1b64a89f5f2a262081c7"
+  },
+  "CONFIG": {
+    "metadata_cap_bytes": 536870912,
+    "original_cap_bytes": 8388608,
+    "row_cap_bytes": 4096,
+    "modified_files": 1,
+    "modified_literal_occurrences": 1,
+    "separate_CPU_reference_fixture_cap_bytes": 32
+  },
+  "COMMAND": "Fresh overlay only; root must rebuild from complete pinned source, bind new receipt/ELFs and requalify before runtime. Do not alter accepted source/install.",
+  "RESULT": {
+    "exact_byte_undo": true,
+    "actual_tiny_git_apply_reverse_control": true,
+    "bounded_CPU_writer_reference_control": true,
+    "native_CPP_writer_executed": false
+  },
+  "VERDICT": {
+    "source_only": true,
+    "new_build_qualified": false,
+    "GPU_or_model_payload_actions": false,
+    "additional_GPU_queries": false,
+    "changed_waits_math_serialization_or_clock_sampling": false,
+    "Chrome_total_disk_bounded_by_metadata_cap": false,
+    "model_observer_cost_measured": false,
+    "runtime_ready": false
+  },
+  "cpu_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_pti_unitrace_clock_budget_cpu_v1 -q",
+  "CPU_controls": 6
+}
