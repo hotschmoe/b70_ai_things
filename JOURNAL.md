@@ -15679,3 +15679,25 @@ row/window/block-boundary cached-vs-fresh full49 and separate actual1/2/4/
 bounded6 qualification. No cache-copy patch justified by this source audit.
 Timing73892 verified live; initial intake finished/outputcreated and prior
 OFF public admission is now pending. Current run unchanged.
+
+## 2026-10-11 Held composition/analyzer source and first timing requests
+
+CONFIG -> Two source-only helpers, separate from unchanged live hostV2 actor.
+Deferred original OFF identity composition and H36 host interval analysis.
+
+COMMAND -> Root ran seven CPU controls perhelper, bothPASS0.012/0.010s.
+Independent source33 reviewed deferred helper; root reviewed H36 analyzer.
+
+RESULT -> DeferredV1 plan063cc04b held: failed caller scan checks were not
+latched and retry could erase failure. H36V1 plan3b974ba1 held: consumed raw
+files were not checked against closed report artifact hashes, and its own
+analysis source plan was not consumed. Both original versions preserved;
+minimal successors requested before integration/runtime analysis. No GPU or
+model payload action in these controls.
+
+Actual host73892 stayslive. OFF model has completed2 requests in its original
+requests.json; normal teardown, postidentity and ON arm remain pending.
+
+VERDICT -> Held helper controls do not establish runtime correctness. Their
+fixes must preserve failures and original artifact ownership. Live model
+timing remains a separate experiment without completed latency qualification.

@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "scope": "source-only unqualified original V3 OFF predicates with mandatory caller fresh identity closure",
+  "files": {
+    "strata/flash-next/source41_off_deferred_identity_v1.py": "3099a965cd6535b3d5ba5a8b000f47614c0093391c259df602506117ce675528",
+    "strata/flash-next/test_source41_off_deferred_identity_cpu_v1.py": "b26775af5529bb73fd0b12e9cf819a824a7aa0b4a591697f0cfbd10ba91975cf",
+    "strata/flash-next/source41-off-deferred-identity-design-v1.md": "71f9d873938010210b12616a0820c28ead1f28d09baa2c1eefc8c9131f228cd7",
+    "strata/flash-next/validate_source41_model_cli_v3.py": "1053fa9d720a574a90163f48f68c3baedeee4804086008451be89feaf7195936",
+    "strata/flash-next/source41-model-actor-source-plan-v3.json": "9ab752253d46929609ba73503aeb7a13a8d604ea6537f376fc4df01e33d41743"
+  },
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_source41_off_deferred_identity_cpu_v1 -q",
+  "CPU_controls": 7,
+  "original_V3_public_wrapper_changed": false,
+  "separate_V3_current_public_full4_rehashed_claimed": false,
+  "actual_arm_pre_post_gates_changed": false,
+  "integrated_into_live_actor": false,
+  "standalone_model_or_runtime_qualified": false,
+  "actual_model_payload_read_by_author": false,
+  "actual_GPU_touched_by_author": false
+}
