@@ -19405,3 +19405,26 @@ after ABBA released pair.
 RESULT -> Checkpoint2CPU6GiB and incremental59 4CPU16GiB now compile
 independent outputs; no real model timing overlaps their CPU work.
 VERDICT -> Actual compile/CPUcontract/newSDK authority still pending.
+
+
+## 2026-10-12: native original checkpoint CPU and GPU proof complete
+
+CONFIG -> Exact original34 pack/fourprivate sessions; complete bounded
+checkpoint, synthetic teacher inputs, no MAIN model execution.
+COMMAND -> Actual24464 NoDri compile PASS71s + seven real CPU controls;
+actual48113 GPU fixture PASS138s; independent lifecycle/hash replay.
+RESULT -> GPU report 09658b78e17c576b20ba5b6ffabc3b82ee0f7ba89df9750dae03e1ee6ae764f1; fullbanks/head/reset/
+rewind-to-saved5/shared-owner import and prefix/hash negatives pass.
+Health/kernel/wholeoriginalSHA/normalExit0/EOF/remove pass.
+VERDICT -> Reset/fullstate roundtrip proof, NOT cached continuation: no
+new row after restore was evaluated. V2 continuation5->9 and compound
+actual paired target publication/restore are being implemented.
+
+CONFIG -> Actual59 isolated incremental source and matched pacing.
+COMMAND -> Actual56155 PASS130s; actual31040 constructor PASS;
+actual72583 now follows checkpoint under both leases.
+RESULT -> Receipt df52f1b799d013e84438dc50e77c4b81b7d5f655fa04ba14c0af05b6d0ea74d0;
+123 unchanged objects/one fresh main/all8 fresh links, parent unchanged.
+Both phases cooperation1; sole single-window0/1.
+VERDICT -> Native build and pure constructor passed; actual model
+histories/latency/service census/current health still pending.
