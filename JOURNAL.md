@@ -18009,3 +18009,20 @@ RESULT -> No V6GPU/capture result yet. Onearmperexperiment explicit,
 no fake secondbranch or matchedtraceclaim. Existing OFFobservations separate.
 VERDICT -> Awaitcleanleaseclose before ONcapture; rawclock/wholehostprep/
 coverage/totalphysicalBW qualification remainsopen.
+
+
+## 2026-10-12: observed selected kernel costs identify HC reuse candidate
+
+CONFIG -> ImmutableV5 OFFarm observedselected20..583306,581094Clock/
+Chromejoins; failedaggregate remainsunadmitteddiagnostic.
+COMMAND -> CPUfamilyaggregate961d90ce573c2f133abff3b0561f3548c065f01dcbe2c4dbd1ee777174dee0ed
+reproduces prior rawinspector reduction; sourceunionhelpersealed.
+RESULT -> NativeHCunion4.555/4.272s, Q8HcProjection3.601/3.321s dominates;
+dequant1.434/1.533s, GEMM.437/.472s, GDN.0715/.0707s,QSA.146/.145s.
+These are nonadditiveobservedfamilyunions, no prefill/decode phase split or
+physicalidle/BW attribution. Largeuncoveredhulls includeothercard/unknown
+work/profiler effects, notprovenCPUdelay.
+VERDICT -> Source52 Q8projection repeatsweightdecode pertoken. NewdefaultOFF
+multi-tokenreuse candidate preserves peroutputFMA/reduction order; no46
+rowbatchrepeat, no numerical/speedclaim yet. Cleancache50629live. Original
+MTPfullstep sourcecomposition/loadedfixture awaitingcompilequalification.

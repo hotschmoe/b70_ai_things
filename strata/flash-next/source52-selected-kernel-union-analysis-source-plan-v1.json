@@ -1,0 +1,12 @@
+{
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_source52_selected_kernel_unions_cpu_v1 -q",
+  "actual_output_sha256": "961d90ce573c2f133abff3b0561f3548c065f01dcbe2c4dbd1ee777174dee0ed",
+  "files": {
+    "docs/20261012_flashnext_source52_selected_kernel_union_audit_v1.md": "d6863588d6a3431050bc6f95e861f02c83a63982fc66b924f9352872c48c50f0",
+    "strata/flash-next/analyze_source52_selected_kernel_unions_v1.py": "a38259077c2266065e74c538935b122361c4c1fe3d6b781e23a860ba3b623085",
+    "strata/flash-next/inspect_source52_p2048_profile_v1.py": "78a8a85c62ba8ad5477cc412497402fb23fa43c0d5d53e60738ac0d25c06ec49",
+    "strata/flash-next/test_source52_selected_kernel_unions_cpu_v1.py": "cd12af46fd160f769f3ea9dcd455d84d92fd4f44c55f2dca4e1c680e144c0e4d"
+  },
+  "schema": 1,
+  "scope": "same actual selected raw domains named-operation unions; UNADMITTED"
+}
