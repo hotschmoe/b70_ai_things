@@ -19269,3 +19269,25 @@ Producer report SHA256 b86da0aac41fb817f280b8b3424bfeeb347663dade8f875e8c36a355d
 VERDICT -> Loaded private-slot numerical/isolation/lifetime fixture
 qualified. Synthetic inputs do not qualify MAIN math, API, prefix cache
 or model speed. Real model host timing66379 follows under both leases.
+
+
+## 2026-10-12: actual host timing and original-slot serving source progress
+
+CONFIG -> Exact paired original-MTP P2048/GEN512 diagnostic, timerON,
+headskip0/HC0/expertreuse0 and unchanged logical prefill boundaries.
+COMMAND -> Actual66379 model process completed; independent root raw
+history/parser check passed512 IDs against faithful V6;10227 spans.
+RESULT -> Prompt40183.919488ms/decode30181.647776ms; decode target_run
+21391.833ms, draft_record_wait8084.702ms, own head348.007ms. Teacher
+prefill38689.305ms encloses own draft wait15218.771ms.
+VERDICT -> Host-only nested/nonadditive diagnostic, not GPU idle/BW
+or clean performance. Arm health/normal close passed; final full5 and
+aggregate report remain live. Teacher-head ABBA42436 queued behind it.
+
+CONFIG -> New original serving slots bridge source, shared private V4
+reset, actual paired commit then catchup before terminal/cache boundary.
+COMMAND -> Source review only, no native compile/runtime authority.
+RESULT -> Fresh reset and stale-RID-generation controls implemented;
+V1 fixed two-row seam cannot handle legitimate tailT1 yet.
+VERDICT -> Source59 pacing, bridge tailT1 and actual native reset proof
+being prepared. Full cache checkpoints/API wiring still required.
