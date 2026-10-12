@@ -1,0 +1,32 @@
+CONFIG -> NEW source52 pair-only linked transport/lifetime fixture. Existing
+source52 proposal/patch/single-device fixture remain frozen and unchanged.
+This includes the frozen single-device CPP under a renamed main, so a single
+leased pair process covers its complete2MiB/32-job/2-slot byte/ring/marker checks
+on EACH actual card, then the same-process two-device queue registry lifetime.
+
+COMMAND -> Use copy_engine_prefill52_harness_v1.txt NoDri compile argv, replacing
+only CPP and ELF basenames with copy_engine_prefill52_pair_harness_v1. Keep both
+CPP files in /candidate; same pinned compiler image and fresh actual52 archives.
+No /dev/dri or model/pack mounts during compilation. No source50 archive reuse.
+
+Root owns bin/gpu-run pair lease (no --card), workload ZE_AFFINITY_MASK=0,1 and
+ONEAPI_DEVICE_SELECTOR=level_zero:gpu, SYCL_UR_USE_LEVEL_ZERO_V2=1. Two separately
+owned fresh processes, sole STRATA_COPY_ENGINE=0 then1 difference:
+copy_engine_prefill52_pair_harness_v1 --synthetic
+Root health/kernel/normal retirement/deadline evidence remains applicable.
+Use this pair fixture directly; no redundant single-device runs are needed.
+
+RESULT -> OFF must create no native copy queue. ON must query the ACTUAL native
+immediate command list with zeCommandListGetOrdinal and GetDeviceHandle, cross
+check that ordinal against enumerated COPY&&!COMPUTE groups, and match the SYCL
+queue's actual native device. Missing query APIs/failures reject the diagnostic.
+Both cards independently pass full byte/ring/marker checks. Then both native
+queues coexist, are distinct devices, have second references acquired/released,
+and release0 must leave1 usable for a real checked H2D/D2H copy. Recreate0 and
+query its route; release1 must leave recreated0 usable. Final registry inactive.
+Exactly3 route receipts (0,1,reopened0),2 full ring PASS rows and1 pair PASS row.
+Failure paths drain owned queues before release; no cleanup failure is a PASS.
+
+VERDICT -> Source only. No compiler/device/latency/overlap qualification by the
+author. Admit only actual fresh52 linked compile/operator results before model
+A/B. Original UD weights/math remain fixed; no XMX/grouped-oneMKL retry.

@@ -1,0 +1,310 @@
+--- a/sycl/include/strata/copy_queue.hpp
++++ b/sycl/include/strata/copy_queue.hpp
+@@ -0,0 +1,29 @@
++// include/strata/copy_queue.hpp - SYCL port, 0.1.43: a queue on the GPU's dedicated copy (blitter) engine.
++//
++// WHY.  With the Level Zero "v2" adapter (the default on Xe2 / Battlemage and newer), every SYCL queue, including a queue
++// that only holds host-to-device copies, runs on the compute engine: a 2 MB expert copy (~80 us at 25 GB/s) blocks the
++// kernels behind it for that long.  A prompt chunk streams ~10,000 experts: ~0.8 s of the 3.8 s of a 4K prompt on an Arc
++// Pro B70 is the compute engine waiting for its own copies (unitrace: every H2D copy sits on "L0 Compute Engine<0,0>"
++// and none overlaps a kernel).  The device does expose a copy-only queue group (zeDeviceGetCommandQueueGroupProperties:
++// group 1, flags COPY, 1 queue); the v2 adapter just does not use it for in-order queues.
++//
++// WHAT.  make_copy_engine_queue() creates an immediate command list on that group and wraps it with
++// sycl::make_queue<ext_oneapi_level_zero>, so everything built on SYCL queues (memcpy, events, ext_oneapi_submit_barrier
++// across queues) keeps working, only the engine changes.  It returns nullptr (the caller keeps an ordinary in-order queue)
++// when the backend is not Level Zero, the device has no copy-only group, the loader or the call fails, or
++// STRATA_COPY_ENGINE is not exactly 1. This port is default OFF; a leased B70 fixture must admit the
++// explicit =1 route before model use. Transport changes only; output equality remains an actual-run gate.
++#pragma once
++#include <sycl/sycl.hpp>
++
++namespace strata {
++/// `what` names the first user in the one log line.  One in-order queue per device, reference counted.
++/// The caller must drain it and call release_copy_engine_queue, never dpct destroy_queue.
++sycl::queue* make_copy_engine_queue(const char* what);
++/// true once a copy-engine queue has been made in this process
++bool copy_engine_active();
++/// Release one drained factory reference, destroying the SYCL wrapper before its native command list.
++void release_copy_engine_queue(sycl::queue* q);
++/// true for the queue make_copy_engine_queue() returned: it runs copies and barriers only, no kernel (not even queue::fill)
++bool is_copy_engine_queue(const sycl::queue* q);
++}  // namespace strata
+--- a/sycl/src/core/copy_queue.cpp
++++ b/sycl/src/core/copy_queue.cpp
+@@ -0,0 +1,161 @@
++// src/core/copy_queue.cpp - see include/strata/copy_queue.hpp.
++#include "strata/copy_queue.hpp"
++#include "strata/sycl_queue.hpp"
++
++#include <dpct/dpct.hpp>
++#include <sycl/ext/oneapi/backend/level_zero.hpp>
++
++#if defined(__has_include)
++#if __has_include(<level_zero/ze_api.h>)
++#include <level_zero/ze_api.h>
++#define STRATA_HAVE_ZE_API 1
++#endif
++#endif
++
++#include <atomic>
++#include <mutex>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <vector>
++#include <functional>
++#include <algorithm>
++#include <memory>
++
++#ifdef STRATA_HAVE_ZE_API
++#if defined(_WIN32)
++#include <windows.h>
++#else
++#include <dlfcn.h>
++#endif
++#endif
++
++namespace strata {
++namespace {
++std::atomic<bool> g_active{false};
++
++#ifdef STRATA_HAVE_ZE_API
++struct ZeFns {
++    decltype(&zeDeviceGetCommandQueueGroupProperties) get_groups = nullptr;
++    decltype(&zeCommandListCreateImmediate) create_imm = nullptr;
++    decltype(&zeCommandListDestroy) destroy_list = nullptr;
++};
++bool load_ze(ZeFns& f) {
++#if defined(_WIN32)
++    HMODULE h = LoadLibraryA("ze_loader.dll");
++    if (!h) return false;
++    auto sym = [&](const char* n) { return (void*) GetProcAddress(h, n); };
++#else
++    void* h = dlopen("libze_loader.so.1", RTLD_NOW | RTLD_NOLOAD);   // already loaded by the SYCL runtime
++    if (!h) h = dlopen("libze_loader.so.1", RTLD_NOW);
++    if (!h) return false;
++    auto sym = [&](const char* n) { return dlsym(h, n); };
++#endif
++    f.get_groups = (decltype(f.get_groups)) sym("zeDeviceGetCommandQueueGroupProperties");
++    f.create_imm = (decltype(f.create_imm)) sym("zeCommandListCreateImmediate");
++    f.destroy_list = (decltype(f.destroy_list)) sym("zeCommandListDestroy");
++    return f.get_groups && f.create_imm && f.destroy_list;
++}
++#endif
++}  // namespace
++
++bool copy_engine_active() { return g_active.load(); }
++
++namespace {
++// one copy-engine queue per device (a layer split calls this once per card): device -> queue; a device that has none maps to nullptr
++struct DevQ { sycl::device dev; sycl::queue* q; size_t refs = 0; std::function<void()> destroy; };
++std::vector<DevQ>& dev_queues() { static std::vector<DevQ> v; return v; }
++std::mutex& dev_mu() { static std::mutex m; return m; }
++}  // namespace
++bool is_copy_engine_queue(const sycl::queue* q) {
++    if (q == nullptr) return false;
++    std::lock_guard<std::mutex> lk(dev_mu());
++    for (const DevQ& d : dev_queues()) if (d.q == q) return true;
++    return false;
++}
++
++
++sycl::queue* make_copy_engine_queue(const char* what) {
++    static const bool off = [] { const char* v = std::getenv("STRATA_COPY_ENGINE"); return !v || std::strcmp(v, "1") != 0; }();
++    if (off) return nullptr;
++#ifndef STRATA_HAVE_ZE_API
++    (void) what;
++    return nullptr;
++#else
++    std::lock_guard<std::mutex> lk(dev_mu());
++    sycl::device dev = dpct::get_current_device();
++    for (DevQ& d : dev_queues()) if (d.dev == dev) { if (d.q) ++d.refs; return d.q; }   // asked before for this card (nullptr: it has none)
++    dev_queues().push_back({dev, nullptr});
++    const size_t slot = dev_queues().size() - 1;
++    ZeFns zf;
++    ze_command_list_handle_t cl = nullptr;
++    try {
++
++        if (dev.get_backend() != sycl::backend::ext_oneapi_level_zero) return nullptr;
++        // The legacy Level Zero adapter already puts memcpy on the copy engine (and its kernel launches are slower); only
++        // the v2 adapter needs this.  SYCL_UR_USE_LEVEL_ZERO_V2=0 selects the legacy one.
++        const char* v2 = std::getenv("SYCL_UR_USE_LEVEL_ZERO_V2");
++        if (v2 && v2[0] == '0') return nullptr;
++        if (!load_ze(zf)) return nullptr;
++        sycl::context ctx = dpct::get_default_context();
++        auto zctx = sycl::get_native<sycl::backend::ext_oneapi_level_zero>(ctx);
++        auto zdev = sycl::get_native<sycl::backend::ext_oneapi_level_zero>(dev);
++        uint32_t ng = 0;
++        if (zf.get_groups(zdev, &ng, nullptr) != ZE_RESULT_SUCCESS || ng == 0) return nullptr;
++        std::vector<ze_command_queue_group_properties_t> g(ng);
++        for (auto& x : g) { std::memset(&x, 0, sizeof(x)); x.stype = ZE_STRUCTURE_TYPE_COMMAND_QUEUE_GROUP_PROPERTIES; }
++        if (zf.get_groups(zdev, &ng, g.data()) != ZE_RESULT_SUCCESS) return nullptr;
++        int ord = -1;
++        for (uint32_t i = 0; i < ng; ++i)
++            if ((g[i].flags & ZE_COMMAND_QUEUE_GROUP_PROPERTY_FLAG_COPY) &&
++                !(g[i].flags & ZE_COMMAND_QUEUE_GROUP_PROPERTY_FLAG_COMPUTE) && g[i].numQueues > 0) { ord = (int) i; break; }
++        if (ord < 0) return nullptr;
++        ze_command_queue_desc_t d;
++        std::memset(&d, 0, sizeof(d));
++        d.stype = ZE_STRUCTURE_TYPE_COMMAND_QUEUE_DESC;
++        d.ordinal = (uint32_t) ord;
++        d.index = 0;
++        d.flags = ZE_COMMAND_QUEUE_FLAG_IN_ORDER;
++        d.mode = ZE_COMMAND_QUEUE_MODE_ASYNCHRONOUS;
++        d.priority = ZE_COMMAND_QUEUE_PRIORITY_NORMAL;
++        if (zf.create_imm(zctx, zdev, &d, &cl) != ZE_RESULT_SUCCESS || cl == nullptr) return nullptr;
++        sycl::backend_input_t<sycl::backend::ext_oneapi_level_zero, sycl::queue> in(
++            cl, dev, sycl::ext::oneapi::level_zero::ownership::keep,
++            sycl::property_list{sycl::property::queue::in_order{}});
++        auto owned_q = std::make_unique<sycl::queue>(sycl::make_queue<sycl::backend::ext_oneapi_level_zero>(in, ctx));
++        auto* q = owned_q.get();
++        dev_queues()[slot].destroy = [cl, destroy = zf.destroy_list] { destroy(cl); };
++        dev_queues()[slot].refs = 1;
++        dev_queues()[slot].q = owned_q.release();
++        cl = nullptr; // registered owner now holds the native list
++        g_active.store(true);
++        static std::atomic<bool> said{false};
++        if (!said.exchange(true))
++            std::fprintf(stderr, "strata: copy engine: %s copies run on the GPU's copy engine (queue group %d), not the "
++                                 "compute engine (STRATA_COPY_ENGINE=0 turns it off)\n", what, ord);
++        return q;
++    } catch (const std::exception& e) {
++        if (cl && zf.destroy_list) zf.destroy_list(cl);
++        std::fprintf(stderr, "strata: copy engine queue not available (%s): ordinary queue\n", e.what());
++        return nullptr;
++    }
++#endif
++}
++
++void release_copy_engine_queue(sycl::queue* q) {
++    if (!q) return;
++    std::lock_guard<std::mutex> lk(dev_mu());
++    auto& v = dev_queues();
++    for (auto it = v.begin(); it != v.end(); ++it) if (it->q == q) {
++        if (it->refs == 1) q->wait_and_throw(); // all copies and marker sources are still live
++        if (--it->refs == 0) {
++            delete q;           // ownership::keep: native list remains ours
++            if (it->destroy) it->destroy();
++            v.erase(it);
++            g_active.store(std::any_of(v.begin(), v.end(), [](const DevQ& d) { return d.q != nullptr; }));
++        }
++        return;
++    }
++}
++
++}  // namespace strata
+--- a/sycl/CMakeLists.txt
++++ b/sycl/CMakeLists.txt
+@@ -211,7 +211,8 @@
+                        src/core/arch_defaults.cpp src/core/vmm.cpp   # vmm.cpp is the port's stub: no driver VMM on Level Zero
+                        src/core/conversation_file.cpp
+                        src/core/peer_experts.cpp src/core/remote_expert_opt_stub.cpp)         # 0.1.36+: --peer-device (a stub in the port: no second GPU tier yet)
+-add_library(strata_engine STATIC ${_engine} ${CMAKE_CURRENT_SOURCE_DIR}/src/core/gguf_expert_source.cpp)
++add_library(strata_engine STATIC ${_engine} ${CMAKE_CURRENT_SOURCE_DIR}/src/core/gguf_expert_source.cpp
++            ${CMAKE_CURRENT_SOURCE_DIR}/src/core/copy_queue.cpp)
+ target_include_directories(strata_engine PRIVATE ${STRATA_ROOT}/src/core)   # conversation_checked.hpp (#include "...")
+ target_link_libraries(strata_engine PUBLIC strata_core strata_kernels strata_kernels_cpu)
+ 
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -9,6 +9,7 @@
+ #include <sycl/sycl.hpp>
+ #include <dpct/dpct.hpp>
+ #include "strata/sycl_queue.hpp"
++#include "strata/copy_queue.hpp"
+ #include "strata/prefill/prefill.hpp"
+ #include "strata/core/gguf_expert_source.hpp"
+ #include "../../../src/prefill/mmq_resident_sort.hpp"
+@@ -371,6 +372,7 @@
+     std::vector<char> pinned;
+     std::vector<std::vector<uint8_t>> pageable;   // the fallback when no more RAM can be pinned
+     std::vector<dpct::event_ptr> dma_done;
++    uint64_t* src_seq = nullptr;             // copy-only completion values, kept live through DMA
+     uint64_t* done_seq = nullptr;            // page-locked: the copy queue's last finished DMA per buffer
+     std::vector<uint64_t> want;              // the sequence number each buffer's last DMA writes
+     uint64_t issue_seq = 0;
+@@ -388,7 +390,7 @@
+     std::vector<std::thread> threads;
+     int device = 0;
+ 
+-    bool init(size_t blob_bytes, int nthreads) {
++    bool init(size_t blob_bytes, int nthreads, bool copy_engine = false) {
+         if (const char* v = std::getenv("STRATA_STAGER_RING")) kRing = std::clamp(std::atoi(v), 2, 256);
+         buf.assign((size_t) kRing, nullptr);
+         pinned.assign((size_t) kRing, 0);
+@@ -397,6 +399,11 @@
+         done_seq = sycl::malloc_host<uint64_t>((size_t) kRing, dpct::get_in_order_queue());
+         if (done_seq == nullptr) return false;
+         for (int i = 0; i < kRing; ++i) done_seq[i] = 0;
++        if (copy_engine) {
++            src_seq = sycl::malloc_host<uint64_t>((size_t) 4 * kRing, dpct::get_in_order_queue());
++            if (src_seq == nullptr) return false;
++            for (int i = 0; i < 4 * kRing; ++i) src_seq[i] = 0;
++        }
+         pageable.resize(kRing);
+         for (int i = 0; i < kRing; ++i) {
+             /*
+@@ -429,6 +436,7 @@
+         cv.notify_all();
+         for (auto& t : threads) t.join();
+         if (done_seq) sycl::free(done_seq, dpct::get_in_order_queue());
++        if (src_seq) sycl::free(src_seq, dpct::get_in_order_queue());
+         for (int i = 0; i < kRing; ++i) {
+             if (dma_done[i]) dpct::destroy_event(dma_done[i]);
+             if (buf[i] && pinned[i])
+@@ -515,7 +523,16 @@
+     void issued_one(int j, dpct::queue_ptr copy) {
+         const uint64_t s = ++issue_seq;
+         want[(size_t) (j % kRing)] = s;
+-        copy->fill<uint64_t>(done_seq + j % kRing, s, 1);
++        if (src_seq != nullptr) {
++            // The copy-only command list cannot run queue::fill (a kernel).
++            // The worker drains buffer j-kRing before j can issue; four rings
++            // of pinned source values therefore outlive every queued marker.
++            uint64_t* v = src_seq + (size_t) (s % (uint64_t) (4 * kRing));
++            *v = s;
++            copy->memcpy(done_seq + j % kRing, v, sizeof(uint64_t));
++        } else {
++            copy->fill<uint64_t>(done_seq + j % kRing, s, 1);
++        }
+         issued.store(j + 1, std::memory_order_release);
+     }
+     bool buffer_free(int b) const {
+@@ -814,7 +831,11 @@
+         if (impl_->ple_emb_host[b] && impl_->ple_pageable[b].empty())
+             sycl::free(impl_->ple_emb_host[b], dpct::get_in_order_queue());
+     }
+-    if (impl_->copy) dpct::get_current_device().destroy_queue(impl_->copy);
++    if (impl_->copy) {
++        if (strata::is_copy_engine_queue(impl_->copy)) strata::release_copy_engine_queue(impl_->copy);
++        else dpct::get_current_device().destroy_queue(impl_->copy);
++    }
++    impl_->copy = nullptr;
+     if (impl_->kv_copy) dpct::get_current_device().destroy_queue(
+         impl_->kv_copy);
+     if (impl_->kv_released) dpct::destroy_event(impl_->kv_released);
+@@ -997,7 +1018,13 @@
+     DPCT1025: The SYCL queue is created ignoring the flag and priority
+     options.
+     */
+-    if (DPCT_CHECK_ERROR(
++    const char* copy_flag = std::getenv("STRATA_COPY_ENGINE");
++    const bool copy_requested = copy_flag && std::strcmp(copy_flag, "1") == 0;
++    m.copy = strata::make_copy_engine_queue("the prompt path's expert");
++    if (copy_requested && m.copy == nullptr) {
++        err = "prefill: requested dedicated copy engine is unavailable"; return false;
++    }
++    if (m.copy == nullptr && DPCT_CHECK_ERROR(
+             m.copy = dpct::get_current_device().create_queue(true)) != 0) {
+         err = "prefill: copy stream"; return false;
+     }
+@@ -1022,7 +1049,7 @@
+             for (int64_t e = 0; !files && e < g.n_expert; ++e) files = src->transient(l, e);
+         const int threads = stv ? std::clamp(std::atoi(stv), 1, 32) : files ? 32 : std::max(2, std::min(4, hw / 4));
+         if (files && std::getenv("STRATA_STAGER_RING") == nullptr) m.stager->kRing = 4 * threads;
+-        if (!m.stager->init((size_t) MAXBLOB(), threads)) ok = false;
++        if (!m.stager->init((size_t) MAXBLOB(), threads, strata::is_copy_engine_queue(m.copy))) ok = false;
+     }
+     m.steps_host.resize(T * strata::kernels::kStepCount);
+     m.ids_host.resize(T * K); m.slot_host.resize(T * K); m.src_host.resize(T * K); m.cnt.resize(m.g->n_expert); m.off.resize(m.g->n_expert + 1);

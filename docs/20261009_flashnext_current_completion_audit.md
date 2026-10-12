@@ -1940,3 +1940,40 @@ streams and longprefill alongsidedecode; P50/P95 TTFT/token gaps/fairness;
 measured tier traffic/cache-residency tradeoffs; representative2000input/50output
 minimum targets; reproducible qualified launch/stop configuration and shelf.
 Successful narrow GPU controls do not discharge these requirements.
+
+
+## 2026-10-12 - Natural baseline terminal and source52 transport candidate
+
+The previous live source51 comparison is terminal FAILED: cross-arm outputs
+differ at index10 and the candidate is slower. Health/full4/teardown passed,
+no fresh GPU fault. Keep ESIMD off; operator fixtures did not qualify model
+arithmetic. Producer33afb222 preserves the failed comparison.
+
+Source50 pair natural P2048 benchmark is terminal PASS, independent reader
+PASS and CPU-decoded outputs available. Warm native rates183-185 inputtok/s
+and20.4-22.4 outputtok/s; root pipe TTFT about11.1-11.2s. Six requests each
+emitted512 with EOS enabled but finished length, so task completion remains
+unproved. Complete per-prompt repeat IDs and source/all8/full4/health/owned
+teardown passed. See 20261012_flashnext_pair_natural_p2048_baseline.md for
+configuration, observed token gaps and immutable report hashes. HTTP/API
+latency, natural completed tasks, full original math/cache/concurrency/shelf
+are not qualified by this baseline.
+
+Source52 dedicated copy-engine port is default-off and changes transport only
+on direct accepted50 source. Full NoDri all8 compilation is active; linked
+pair transfer fixture and matched natural COPY_ENGINE0/1 model comparison
+remain pending. Latest mixed expert profile is format-compatible with the
+48x512 expert ID space and can be a separate data-only placement comparison.
+No speed or full-model proof follows from compatibility or compilation.
+
+
+Source52 follow-up: full74-source/all8 NoDri build94123 PASS308s, receipt
+8f6c09aa60493dd6403771cd10592bdb780947110c3035379b4493d0a4298d94.
+Linked pair fixture80745 compiled without devices PASS22s. Real pair
+operator63193 PASS76s: OFF/ON complete32x2MiB copies per card, two-slot ring,
+markers, shared owners/recreate, actual ordinal1 COPY-only on both cards,
+normal exit/removal and per-card pre/post health/kernel window passed.
+Report521432f8b4fbab1ee76e2a8d405199ef89e6430f5f138eb0d1523e2962149427.
+Matched natural model72698 is live under the pair lease, source52 COPY_ENGINE
+0/1, original shared profile, same six P2048 requests each. Model output
+equality and speed remain pending; no promotion from transport fixtures.

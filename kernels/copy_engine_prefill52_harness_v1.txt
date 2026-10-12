@@ -1,0 +1,54 @@
+CONFIG -> Source52 direct source50 transport-only control. No model or kernel
+arithmetic change. Unset/0 is the old queue path; exactly1 requests the native
+copy-only Level Zero v2 command list and fails if unavailable. Enumerate queue
+groups with COPY and without COMPUTE; ordinal1 is observed upstream, not assumed.
+
+COMMAND -> Root builds source52 all8 ABI targets with the proposal. Then compile
+the linked fixture in image39992 without /dev/dri, model, GGUF or pack mounts.
+Mount completed actual52 SDK read-only at /sdk, kernels read-only at /candidate,
+fresh output at /results. Use the pinned 2026.1 compiler after setvars:
+
+icpx -O3 -DNDEBUG -std=c++20 -fsycl -fsycl-default-sub-group-size=32
+  -fsycl-device-code-split=per_kernel -fp-model=precise -qmkl=sequential
+  -I/sdk/source/sycl/include -I/sdk/source/include
+  /candidate/copy_engine_prefill52_harness_v1.cpp
+  -Wl,--start-group /sdk/build/libstrata_engine.a /sdk/build/libstrata_kernels.a
+  /sdk/build/libstrata_core.a /sdk/build/libstrata_kernels_cpu.a
+  /sdk/build/ggml/src/libggml-cpu.a /sdk/build/ggml/src/libggml-base.a
+  -Wl,--end-group -ldl /usr/lib/x86_64-linux-gnu/libze_loader.so
+  -Xsycl-target-backend=spir64 -cl-fp32-correctly-rounded-divide-sqrt
+  -o /results/copy_engine_prefill52_harness_v1
+
+Join compiler argv into one command. No source50 archive can provide the NEW
+copy engine symbols; bind actual52 receipt, archive hashes and compiled ELF.
+
+Root-owned leased fixture: STRATA_COPY_ENGINE=0 then1, each fresh process,
+bin/gpu-run --card0 with workload ZE_AFFINITY_MASK=0 and
+ONEAPI_DEVICE_SELECTOR=level_zero:gpu, SYCL_UR_USE_LEVEL_ZERO_V2=1:
+copy_engine_prefill52_harness_v1 --synthetic
+Retain root health/kernel/owned process retirement evidence; no device work by
+the source author. Root uses its existing bounded operator runner, no controller.
+
+RESULT -> One transport case,32 jobs,2MiB/job,2 reused host/device buffers:
+copy waits for prior compute consumer before slot reuse; compute waits for the
+copy event; every transferred byte is checked by a compute kernel. Device writes
+the pinned completion marker after H2D; source value survives4 marker rings.
+ON copy queue runs only memcpy/barrier, never queue.fill or a kernel. Two factory
+owners share a queue; dropping one leaves the other live; final owner retires the
+SYCL wrapper then the native immediate list. Recreate and another actual copy
+exercise registry lifetime. Explicit caller memory is under9MiB. Failures drain
+owned queues before freeing memory; failed drains retain resources until process
+retirement. No throughput or actual overlap claim follows from this fixture.
+
+VERDICT -> CPU patch apply and all4 after hashes PASS; NoDri compile/operator
+and matched model A/B remain root work. If fixture admitted, use actual50 pair
+P2048/pref512 natural six-request recipe, sole COPY_ENGINE0/1 difference;
+GROUPED_F16=0, ESIMD/XMX off, original weights/math/borrow/config preserved.
+Upstream reports 4K IQ3_S prompt3.82->3.25s and16K15.5->13.5s for this route;
+different quant/card/config, NOT an expected local speedup or2000tok/s promise.
+
+Source audit: source50 has no COPY_ENGINE/GEMM_STAGE/LEND_MIRROR env handlers.
+Its individual oneMKL GEMM already runs directly without high-offset staging,
+so upstream B70 default-no-stage offers no new local arm. Lend-mirror tail/refill
+is absent, but current ctx2048 no-borrow control does not exercise that mechanism;
+do not add it to this copy-engine comparison. No historical XMX retry requested.

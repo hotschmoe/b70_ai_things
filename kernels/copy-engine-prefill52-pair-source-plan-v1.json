@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "scope": "NEW source-only linked pair fixture; existing52 patch/proposal immutable",
+  "files": {
+    "kernels/copy_engine_prefill52_pair_harness_v1.cpp": "34777350a872666cf820eb75cb4b2b024ae002d945358880f26b7c776512503f",
+    "kernels/copy_engine_prefill52_pair_harness_v1.txt": "9c76840d8e460e40981df09069580dee52935395ed2a2cd557a69bb977e54a41",
+    "kernels/copy_engine_prefill52_harness_v1.cpp": "6b745580454f122cfe667c55686a2e8c0114dbbac6de1424c64a3670e8d8216d",
+    "kernels/copy_engine_prefill52_harness_v1.txt": "bea3291df6b5cf918b749eea87835a8b34041e9f007c2dde26f0966e2a07d53d"
+  },
+  "source52_proposal_sha256": "25c8b73f8fa0d92f0e7c562f232776844405dc62b7e3524d1584a92283f4630d",
+  "source52_patch_sha256": "9ac977903fff0ef43abe25291174a9300853bb541cc2e34d6a4db5d561ab25fb",
+  "actual_compiler_device_qualified": false
+}

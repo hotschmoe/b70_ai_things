@@ -17727,3 +17727,30 @@ RESULT -> Latest upstream reports copy-engine overlap and mixed expertprofile
 improvements. SDK50 lacks those flags; GEMM operand staging already absent.
 MixedSTRP v1 profile48x512 complete IDs format-compatible, no quant/model SHA.
 VERDICT -> Separate actual copy/profile comparisons next, no projected gains.
+
+
+## 2026-10-12: source52 copy-engine transport passed, matched model running
+
+CONFIG -> DefaultOFF dedicated prefill copy queue directly from accepted50,
+original weights/math/individualGEMM/borrow unchanged. Actual SDK52
+/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261012T012115Z-_kwur0ww.
+COMMAND -> NoDri all74/all8 build94123 through bin/gpu-run PASS308s, receipt
+8f6c09aa60493dd6403771cd10592bdb780947110c3035379b4493d0a4298d94;
+linked pair fixture compile80745PASS22s, ELF8a8d52e0ff9e19ed2370900910ae3bbe629fb663f323eede0b1237c7183d1499.
+Real leased pair OFF/ON operator63193PASS76s.
+RESULT -> Both cards32x2MiB completebytes, two-slot crossqueue ring reuse,
+pinned completion markers/shared owner release/recreate PASS. Actualnative
+queue ordinal1/flags2 COPY-only device binding passed0/1/reopened0; pre/post
+per-card health/kernel/normal exit/owned removal passed. Transport report
+521432f8b4fbab1ee76e2a8d405199ef89e6430f5f138eb0d1523e2962149427.
+VERDICT -> Transport admitted, no actualoverlap/modelmath/speed claim.
+
+CONFIG -> Matched natural52 pair24/24 pref512 ctx4096 staging1/noMTP/
+ESIMD0/grouped0/cacheOFF; same original profile, sole COPY_ENGINE0/1;
+six meaningful P2048/G512/naturalEOS/freshstate requests perprocess.
+COMMAND -> Genuine52 bothcommand construction PASS; model72698 nowlive
+through bin/gpu-run in F17/natural-p2048-copy-engine-v2-run-v1.
+RESULT -> Model outputs/TTFT/gaps/timing and finalfull4/health/source remain
+pending. Frozen naturalv1 baseline unchanged; newv2 twoarm reader required.
+VERDICT -> Concrete upstream latency candidate executing; mixed expertprofile
+remains separatedata-only next comparison. Fullcampaign objective active.
