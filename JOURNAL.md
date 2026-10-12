@@ -18754,3 +18754,30 @@ RESULT -> New ON full5/health/retirement and exact64/residency comparison
 pending. PriorfailedOFF parent retained, only executed component reused.
 VERDICT -> Avoid identical OFF rerun for metadata repair; separated-run
 diagnostic only, fullclean ABBA qualification remains open.
+
+
+## 2026-10-12: expert paired-entry reuse model diagnostic positive
+
+CONFIG -> OriginalMTP enabled botharms, sole expert reuse0/1, same
+compiled model ELF, authentic54 prompt/full64, card0. Historical completed
+OFF component independently reconstructed; new ON only.
+COMMAND -> Actual14886 PASS505s; new saved-data reader PASS.
+RESULT -> All64 IDs/EOS and windows exact;30accept/2reject/1tail unchanged.
+Actual7269 resident/17307 mirrored/54,234,726,400B and51segmentmaps,
+profile/prefix hashes equal. OFFdecode16550.932ms ->ON15179.088ms,
+8.2886percent less elapsed; target33window sum16355.433->14986.500ms,
+median480.684->455.753ms. Newfull5/source/ELF/ownedexit0/removal/
+post-health/kernel close passed. Producer232f83a04c398d1b67a263d1ae26f005021cfd364ae666380d69c4797ec8a361;
+public840fdd6754d5f332e9b4faf3968fbad3414e14ce9b1fd565a45d1a56787eab6a.
+VERDICT -> Positive separated-run singlecard diagnostic, not cleanABBA/
+population/dualGPU speedpromotion. Actual E2 opportunities notobserved.
+No smaller model, draft replacement or residency policy patch used.
+Original fullgoal incl2000/50, mathematical/serving/cachefamily gates open.
+
+CONFIG -> Independent readback initially compared tuple segmentmaps to
+savedJSON arrays, then assumed identityscan JSON object rather than5rows.
+COMMAND -> Inspected actual schema, preserved all producer evidence;
+new validate_original_mtp53_expert_pair_saved_v1.py reconstructs exact
+serialized raw values, dictterminal and allfive identity rows.
+RESULT -> Final readbackPASS; no source/model/identity gate relaxed.
+VERDICT -> Reader schema correction only, no new GPU/model execution.
