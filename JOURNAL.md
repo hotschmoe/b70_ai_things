@@ -18725,3 +18725,32 @@ RESULT ->64 tokens/useful/noEOS, actualwindows and592 hostphase rows,
 segments rejoined. Prefix hash now uses actual consumed4B/entry.
 VERDICT -> Read-only parser fix admitted; no new runtime/identity or
 ONspeed proof. Historical failedV1 preserved. Pair fairness28018 live.
+
+
+## 2026-10-12: default-scheduler latency probe admitted; cut-boundary stall found
+
+CONFIG -> Current52 pair24/24 native2, defaultdecode_share0.5, mirror0,
+no heavy capture. A P2048/GEN512; C P2048/GEN64 arrives after actual A256.
+COMMAND -> Producer28018 PASS742s; independent18588 PASS.
+RESULT -> Both complete512/64 histories/finish exact versus serial;
+63 actual completed rows2 events, no raw capture, full4/source/all8/
+normalexit/EOF/ownedretirement/health/collective/kernel close pass.
+Native long TTFT25.986s, gapsP50 47.416/P95 73.206/max9740.653ms;
+incoming TTFT22.035s, completion27.121s, gapsP50 72.100/P95 77.308/
+max683.602ms. During incoming request, longP50 54.843/P95 77.043ms.
+Top long gaps4640.466,4266.993,9740.653ms. Last gap straddles
+incomingfirsttoken:9.057140s before firsttoken and~0.6835s after.
+Producer4e80a8e5f44aaa8f9abe70270742d63fdae0b8a1c29f6ea836b8d744dfda0f88; publicbf91278a04a78b7c53934c7a11b0a0337d30d6b5ca94038f25785602d5ba0dd2.
+VERDICT -> Real bounded CLI tail-latency evidence, not HTTP/population
+stability or causal serial-vs-native speedup. Savedlogs/source identify
+read_part's q>=b0 skip across1536pin/2041/2047 logical boundaries;
+existing singlechunk parts never yielddecode. No physical idle claim.
+GEN source explicitly T1 withoutMTP; no throwaway spec2-row diagnosis.
+
+CONFIG -> Expert reuse corrected ON-only V3, originalMTP enabled.
+COMMAND -> SavedOFF parser/lifecycle/source/identity component replay
+PASS; actual14886 acquired card0 after fairrun.
+RESULT -> New ON full5/health/retirement and exact64/residency comparison
+pending. PriorfailedOFF parent retained, only executed component reused.
+VERDICT -> Avoid identical OFF rerun for metadata repair; separated-run
+diagnostic only, fullclean ABBA qualification remains open.
