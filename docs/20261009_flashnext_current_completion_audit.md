@@ -1900,3 +1900,43 @@ pure preflight and is next control. Long524 already uses batched prefill.
 VERDICT -> Necessary actual checks retained; duplicate history scans and OFF
 reloads removed. Full model trace/speed, cache/active streams, tier traffic,
 natural latency/fairness and verified shelf remain open.
+
+## 2026-10-12 - Current GPU optimization checkpoint
+
+The full objective remains active. Runtime/Git/network access is available;
+older restriction paragraphs above remain historical. No verified shelf exists
+for this exact Flash-Next artifact.
+
+- Independent original full48 mode1 CPU computation37dba63f completes in48.7s
+  of math with fresh full4/pages. Same43 NUM10 comparisondf8295d8 has exact
+  input and headNMSE0.000105958/maxnormalized0.00238956 for literalprefix1;
+  firsttoken/top20 agree. This is descriptive, not full-model numericPASS.
+  FirstHC/GDN packet encoders reproduce own/native packets from their respective
+  operands; normalization/reduction/intrinsic differences remain unqualified.
+- Source50 singleton RAM-expert staging passes matched model/lifecycle/identity
+  controls on onecard and balanced24/24. Warm64-output diagnostics: onecard
+  9.05->9.97 outputtok/s; pair13.54->14.29. Pair producer59e6f6a/public8d853b4c
+  accepted complete output/finish repeats, allsource/all8, health/full4/teardown.
+  These are single comparisons, not natural>=256-output or latency distributions.
+- Faulting grouped-oneMKL45/47 remains disabled. Nativepack spec1 rejection49
+  is preserved; source50 corrects only reservedcapacity tospec2, while actual
+  staging requiresT1/nonbatch/G1/capacity. Original quantized weights unchanged.
+- DirectESIMD XMX source51 builds all8. Standalone linked49 GPU single/twoqueue
+  12cases each pass; fresh51wrapper single/twoqueue3cases each pass, including
+  safe65-row fallback. Actual51long524/twoGEN64 OFF/ON model26302 is live.
+  No model XMX speed, dense arithmetic or production stability claim yet.
+- Three naturalprose/code/document inputs are authentically2048tokenIDs each,
+  including chat template, corpus61b5caab. Context4096/cap512/naturalEOS and
+  actual>=256-output eligibility remain to execute; earlyEOS must not be padded.
+- Historical trace gap audit corrected the large barriers->mapped-copy gaps to
+  mainT2 completion->commit-graph submission. T1 alreadyselfcommits; current
+  shortread0 bypasses that oldpromptT2 path. Earlycommit work stopped. Physical
+  idle, calibrated host/device criticalpath and actual tier bandwidth remain open.
+
+Missing completion evidence still includes broader original numerical and
+state-isolation qualification; full-state prefix reuse/restoration/shared and
+divergent histories/eviction/cancellation/stale identity; true1/2/4/bounded6
+streams and longprefill alongsidedecode; P50/P95 TTFT/token gaps/fairness;
+measured tier traffic/cache-residency tradeoffs; representative2000input/50output
+minimum targets; reproducible qualified launch/stop configuration and shelf.
+Successful narrow GPU controls do not discharge these requirements.
