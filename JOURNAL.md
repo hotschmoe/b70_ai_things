@@ -19723,3 +19723,22 @@ no fresh publisher scan or speed/shelf/native-promotion claim.
 VERDICT -> Four-stream real runtime still pending. Independent firstGDN
 reference executable is sealed; root will run after profiling model work
 ends, avoiding provider/hash IO during measured host intervals.
+
+
+## 2026-10-12: profiling model closes; independent original compute starts
+
+CONFIG -> Actual61 loaded first512 diagnostic, same four-owner workload.
+COMMAND -> Root inspected native phase result under actual13439.
+RESULT -> Native passed=true/errors=[]/engine_rc0; parent final eight-trace
+admission/health/full4 remains pending. Model measurement intervals ended.
+VERDICT -> Actual60623 original own-firstGDN CPU reference launched only
+after profiling model exit; current0 recovered targets used solely for
+comparison, never primary operands. Numeric result/closing hashes pending.
+
+CONFIG -> Default-off original compound HTTP source adapter, exact58.
+COMMAND -> Root49302 isolated source preparation PASS, no API launch.
+RESULT -> Independent source tree constructed under
+/mnt/vm_8tb/b70/build/original-mtp53-http-source-inputs-v1; original save/load
+verbs and explicit stream/file ownership gates prepared.
+VERDICT -> Source preparation only; actual compound schema/RID, serving
+identity, HTTP concurrency/persistence/eviction/fullstate still unqualified.
