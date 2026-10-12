@@ -19646,3 +19646,16 @@ RESULT -> MAIN4874a047 candidate prepared; builder requires fresh MAIN and
 header consumer plus actual11 CPU controls; no compiler result yet.
 VERDICT -> Real native4 controller in preparation, no serving/API/cache or
 new speed qualification. Current59 capture58166 remains live; fullgoal open.
+
+
+## 2026-10-12: current mode0 capture reaches real four-request terminal
+
+CONFIG -> Actual59 mode0 NUM33 V3, exact pair24/24, four fresh prefix1
+requests [248045], MAX1, unchanged native arithmetic and residency gates.
+COMMAND -> Root inspected live58166 native phase result/protocol/raw files.
+RESULT -> Native passed=true/errors=[]/engine_rc0/requests4; all four IDs846.
+Actual captures196files/11,837,440B, P30 584files/23,676,804B,
+PLE input12files/44,984B, layer0 136files/28,117,496B.
+VERDICT -> Actual current-target arrays exist; parent closing health/full4
+and independent public reader remain pending. Native repeat identity is
+not original arithmetic qualification, API/cache/speed or goal completion.
