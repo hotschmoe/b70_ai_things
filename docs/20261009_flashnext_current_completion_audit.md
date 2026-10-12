@@ -2075,3 +2075,15 @@ exact, diagnosticflagsOFF, hitTTFT4.576-4.753s versusrepeatedfresh13.858-14.021s
 See20261012_flashnext_clean_serial_cache_results.md. Nativecapture-free
 latencyobserved, noHTTP/fullfamily/shelfclaim;all64cap/length. Separate
 singlearm ONdeviceprofile59431 is live; originalMTPcompile notexecuted.
+
+
+## 2026-10-12 - OFF component admitted without rewriting failed parent
+
+Scopedreader95911 PASSbe61d764: exactoriginalfailedV5 parent retained,
+A-only originalcomplete boundary/control/clock/budget/outputs/health/
+retirement/sourceidentity holds. componentTrue/producerFalse; original
+aggregatefailure remains. Newobservedcomponent70782 PASS. OFFengine0
+zeroobservedcopy-compute overlap andexplicitH2D40.46GB mayguide optimization;
+no fulloperationcoverage/physicalbusBW/clockalignment/idle claim.
+SeparateON59431live. OriginalMTPV1 uncompiledq_of pointerseam found;
+V2interfacefix pending, no loadedmath/MTPacceptance/speed proof.

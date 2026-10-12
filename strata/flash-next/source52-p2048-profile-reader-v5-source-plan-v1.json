@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "scope": "narrow producer/component proof; no physical calibration/coverage claim",
+  "files": {
+    "strata/flash-next/validate_source52_p2048_profile_v5.py": "d18723dbc3a469eba452b01e0422fae329acd2750a866b435f39ee0c8c636c59",
+    "strata/flash-next/validate_source47_grouped_f16_model_v2.py": "f8cd5bdf1520335eeefa84b09660df7200daf129cc69d9926537b758b5dbf1f1",
+    "strata/flash-next/validate_source43_bounded_pti_v1.py": "d18bfe96ae7736923f3848acd1ef37018eeb9275f13acfece373c2b4dcdd6c21",
+    "strata/flash-next/validate_source43_warm_pti_v3.py": "c2b2e73ea6dfd40e92ba3e9262c066be48eb9e955a05cc12331469d25f8c6868",
+    "strata/flash-next/validate_source41_pti_latency_v3.py": "e79dad106fc84d51f23f59cbee5cf432f5dcd45d153fbc6ab7bae627474cdbb2",
+    "strata/flash-next/source52-profile-producer-readers-v1.txt": "746eb0b5316bc4d27e5be3e27d7e2a836299a5e923b88d7356a8268c810c087e"
+  },
+  "model_payload_read_by_author": false,
+  "GPU_execution_by_author": false
+}

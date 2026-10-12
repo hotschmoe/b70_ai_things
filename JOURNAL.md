@@ -18071,3 +18071,20 @@ twoarmbudgetPASS imported.
 VERDICT -> DirectONdeviceevidence next; originalMTPthreefixture NoDri
 compile prepared44e47160 butnotexecutedyet. HCtilecandidate sourcework
 preservesexact arithmetic/old8tokencaller; fullcampaign remainsactive.
+
+
+## 2026-10-12: completed OFF profile component independently admitted
+
+CONFIG -> ImmutableV5 A copy0 component; failedoriginalparent777s retained.
+COMMAND -> Scopedreader95911PASS, proofbe61d764340d57b1c26b7f506645d35cb5ae34154bd1f4761cecbd4875588e76.
+RESULT -> Exactfailedparent/source/allrawroster/identity/health/closure and
+A-ownednormalexit/EOF/removal/twoGEN8/controlclock/finalizer0/original
+passedbudget hold. component_admittedTrue/producer_admittedFalse/
+original_aggregate_budget_failedTrue explicit. Observedinspector70782PASS
+toNEWcomponentJSON; previousunadmittedanalysis/raw remainunchanged.
+VERDICT -> Avoid repeatedOFFreload; OFFengine0/nooverlap explicitcopy40.46GB
+isadmittedcomponentobservation, notfullcoverage/physicalBW/hostcalibration
+orwholeV5PASS. SeparateON59431live; matchedtracecomparisonstillpending.
+OriginalMTPV1 CPUcompilepreparedonly; discoveredq_ofpointer seam prevents
+compile, minimalV2fix beingprepared withactualheader/signaturechecks.
+HCtile sourcework andwholegoal remainactive; no shelfpromoted.
