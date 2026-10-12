@@ -1,0 +1,177 @@
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -11,6 +11,7 @@
+ #include "strata/sycl_queue.hpp"
+ #include "strata/copy_queue.hpp"
+ #include "strata/prefill/prefill.hpp"
++#include "strata/prefill/host60.hpp"
+ #include "strata/core/gguf_expert_source.hpp"
+ #include "../../../src/prefill/mmq_resident_sort.hpp"
+ #include "../../../src/prefill/wmma_gemm.h"
+@@ -2191,7 +2192,9 @@
+                        std::string &err) try {
+     err.clear();
+     Impl& m = *impl_;
++    host60::Trace host_trace(this,m.device,pos0,n);
+     const core::OnDevice on_device(m.device);
++    host_trace.mark("device_scope_ready");
+     const core::ModelGeometry& g = *m.g;
+     core::SessionState& ss = *m.ss;
+     const auto t_start = Clock::now();
+@@ -2261,6 +2264,7 @@
+             std::swap(m.pp, m.help_pp);
+         }
+     } help_scope{m, helped};
++    host_trace.mark("run_preparation_ready");
+     PfTimer pt;
+     PeTimer pe;
+     if (m.pp) pe.dev = m.pp->dev; else pe.on = false;
+@@ -2317,6 +2321,7 @@
+         if (should_stop && should_stop()) { err = "cancelled"; return false; }
+         if (std::getenv("STRATA_TRACE")) { std::fprintf(stderr, "strata trace: prompt chunk %lld of %lld\n", (long long) c0, (long long) n); std::fflush(stderr); }
+         const int64_t T = chunk_len(c0), p0 = pos0 + c0;
++        host_trace.mark("chunk_prepare_begin");
+         core::progress_at("reading the prompt (batched): preparing the chunk from token", p0);   // #251
+         ++stats_.chunks;
+         pt.mark(kPfStart, cs);
+@@ -2412,6 +2417,7 @@
+             if(!fidelity_chunk)core::fidelity_diag::skipped("prefill","chunk_capture_bound");
+         }
+         lap("embeddings");
++        host_trace.mark("embedding_submission_end");
+         // ---- the PLE rows of the whole chunk, one batched SSD request on a thread (see ple_gather).  A later chunk's
+         // were read ahead during the previous chunk; the first chunk's are read beside layer 0 - they are needed from
+         // layer 1 on, and gathering them here first left the GPU idle for the whole read (~0.4 s of a 32K prompt)
+@@ -2425,10 +2431,12 @@
+             if (!ple_pending) return true;
+             ple_pending = false;
+             const auto tp = Clock::now();
++            host_trace.mark("ple_future_get_begin");
+             if (!ple_next.get()) {
+                 err = ple_next_err;
+                 return false;
+             }
++            host_trace.mark("ple_future_get_end");
+             /*
+             DPCT1124: cudaMemcpyAsync is migrated to asynchronous memcpy
+             API. While the origin API might be synchronous, it depends on the
+@@ -2493,6 +2501,7 @@
+         };
+         for (int64_t t = 0; t < T; ++t) { prev[0] = prev[1]; prev[1] = (int32_t) tokens[c0 + t]; }
+         lap("PLE rows");
++        host_trace.mark("ple_schedule_end");
+         // ---- the QSA step records of every position in the chunk
+         for (int64_t t = 0; t < T; ++t) strata::kernels::qsa_step_fill(m.steps_host.data() + t * strata::kernels::kStepCount, p0 + t, s);
+         /*
+@@ -2616,6 +2625,7 @@
+           std::exit(1);
+         }
+         };
++        host_trace.mark("expert_plan_begin");
+         struct StreamEntry { int32_t l, e; const uint8_t* blob; int job; };
+         std::vector<StreamEntry> seq;
+         std::vector<size_t> seq_start;
+@@ -2819,6 +2829,7 @@
+             else issue_until(upto + (size_t) m.ring);
+         };
+         lap("expert stream plan");
++        host_trace.mark("expert_plan_issuer_start_end");
+         if (ps_on) {
+             int pd = 0;
+             pd = dpct::get_current_device_id();
+@@ -2872,6 +2883,7 @@
+             core::progress_beat();   // the serve watchdog: a prompt chunk of 8192 tokens is still moving
+             if (l > LB) pf_step("reading the prompt (batched, step sync): the experts and the rest of layer", l - 1);
+             core::progress_at("reading the prompt (batched): layer", l, p0);   // #251: a stall names layer and chunk
++            if(host_trace.early(l,LB))host_trace.mark("layer_enter",int(l));
+             const core::LayerView v(*m.wt, l);
+             if(prefix30_chunk)m.prefix30_snapshot->copy("input",int(l),m.R,int(T),*m.cs);
+             if (l == std::max<int64_t>(LB, 1) && !ple_land()) return false;   // the PLE rows, read from layer 1 on
+@@ -3484,14 +3496,18 @@
+                         // work), not the host: the watchdog's report says so (only its text changes)
+                         core::progress_at("reading the prompt (batched): waiting for the GPU (attention, router) at layer",
+                                           l, p0);
++                        if(host_trace.early(l,LB))host_trace.mark("router_existing_wait_begin",int(l));
+                         m.cs->wait();
++                        if(host_trace.early(l,LB))host_trace.mark("router_existing_wait_end",int(l));
+                         // Existing completion only: router and earlier compute are done.
+                         // PLE gather owns mutable PleTable state until consumed at layer 1.
+                         if (cooperative_ticket_ && !ple_next.valid()) {
+                             cooperative::Point point;
+                             point.device = m.device; point.layer = int(l);
+                             point.position = p0; point.rows = T;
++                            if(host_trace.early(l,LB))host_trace.mark("cooperative_ticket_begin",int(l));
+                             const auto answer = cooperative_ticket_->yield(point, cooperative_callback_);
++                            if(host_trace.early(l,LB))host_trace.mark("cooperative_ticket_end",int(l));
+                             if (!answer.ok) { err = answer.error; return false; }
+                         }
+                         core::progress_at("reading the prompt (batched): layer", l, p0);
+@@ -4100,6 +4116,7 @@
+                           std::exit(1);
+                         }
+                         };
++                        bool host_first_f16 = false;
+                         int pending_f16 = 0;
+                         int64_t f16_off[DQ_GROUP] = {}, f16_rows[DQ_GROUP] = {};
+                         auto flush_f16 = [&] {
+@@ -4180,6 +4197,8 @@
+                                 m.mmq_ctx->run(dn, m.cs);
+                                 return true;
+                             }
++                            const bool host_first = host_trace.early(l,LB) && !host_first_f16;
++                            if(host_first){host_first_f16=true;host_trace.mark("first_dequant_submission_begin",int(l));}
+                             const int q = grouped_f16 ? pending_f16 : (int) (j % DQ);
+                             if (lay.native) {
+                                 // plan v0.3 P6: a native pack's layer, dequantized by llama.cpp's own formulas
+@@ -4190,6 +4209,7 @@
+                             } else {
+                                 blob_dequant_f16(blob_dev, m.dq_gu[q], m.dq_d[q], m.cs);
+                             }
++                            if(host_first)host_trace.mark("first_dequant_submission_end",int(l));
+                             if (slot >= 0) {
+                                 dpct::sync_barrier(m.used[slot], m.cs);
+                                 m.used_of[slot] = slot;
+@@ -4201,10 +4221,14 @@
+                                 return true;
+                             }
+                             pt.mark(kPfGemmGU, cs);
++                            if(host_first)host_trace.mark("first_f16_gu_host_call_begin",int(l),ne);
+                             m.gemm.f16(m.Xs + o0 * N, m.dq_gu[q], m.GU + o0 * 1280, ne, 1280, N);
++                            if(host_first)host_trace.mark("first_f16_gu_host_call_end",int(l),ne);
+                             swiglu_interleaved(m.GU + o0 * 1280, m.Hh + o0 * 640, ne, m.cs);
+                             pt.mark(kPfGemmD, cs);
++                            if(host_first)host_trace.mark("first_f16_down_host_call_begin",int(l),ne);
+                             m.gemm.f16(m.Hh + o0 * 640, m.dq_d[q], m.Dm + o0 * N, ne, N, 640);
++                            if(host_first)host_trace.mark("first_f16_down_host_call_end",int(l),ne);
+                             return true;
+                         }
+                         catch (sycl::exception const &exc) {
+@@ -4472,6 +4496,7 @@
+                 if (half==1 && fidelity_chunk && m.fidelity_snapshot) m.fidelity_snapshot->layer(int(l),m.R+size_t(T-1)*D,*m.cs);
+             }
+         }
++        host_trace.mark("chunk_layers_submitted");
+         if (!ple_land()) return false;   // a stage that ends before layer 1: the rows land anyway, the next gather starts
+         if (issuer.joinable()) {
+             issuer.join();
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -85,6 +85,7 @@
+ #include "strata/program/logits_selection.hpp"
+ #include "strata/program/conv_cache.hpp"
+ #include "strata/core/slot_session_arena.hpp"
++#include "strata/prefill/host60.hpp"
+ #include "strata/program/prefix_diagnostic.hpp"
+ #include "strata/program/message_boundary.hpp"
+ #include "strata/spec/draft_policy.hpp"
+@@ -10485,6 +10486,10 @@
+                 std::printf("ERR layer cooperation requires strict paired native2 owned static no-MTP slots\n");
+                 return 1;
+             }
++            if(strata::prefill::host60::enabled() && !layer_cooperate) {
++                std::printf("ERR host60 diagnostic requires admitted layer cooperation\n");return 1;
++            }
++            strata::prefill::host60::set_owner(req_rid,req_slot_generation,admit_slot);
+             // Source ownership plus retained exact lengths. This does not replace
+             // runtime coherence, USM/page guards or health admission.
+             auto extent_disjoint = [](const void* a,uint64_t na,const void* b,uint64_t nb) {

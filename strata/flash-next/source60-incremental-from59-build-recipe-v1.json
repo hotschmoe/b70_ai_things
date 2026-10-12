@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "scope": "Source60 host localization only; current122 objects reused, main/Prefill recompiled, one Prefill archive updated, all8 fresh links; no new math/pacing or GPU operations",
+  "pins": {
+    "strata/flash-next/build_native60_incremental_from59_v1.py": "918cd6812657d0bd1758f355384b9132df1f9ed0e2ae1fecba51b510b9563898",
+    "strata/flash-next/native60_incremental_ninja_audit_v1.py": "566d1ded61e40696fdb50ee142dcee7b0fb2b03839f74fe9c0fd29b139aa0cec",
+    "strata/flash-next/build_native_hc_engine.py": "147929bfa3b43dd162db415f6ac68700521aa7e21819705f46e6a9fcaeebca1d",
+    "strata/flash-next/build_native58_fresh_from52_v2.py": "2c15acd5c2c240ba7cfdc8cb7eb2025cf8fd3ca2d2526992eb4203fc5b4054d8",
+    "strata/flash-next/native59-cooperative-single-window-engine-build-proposal-v1.json": "56dbe870d3192df6f5c3821b44c9683d982ac5cd3577bc60d39c3421f7a72270",
+    "strata/flash-next/native60-first512-host-diagnostic-engine-build-proposal-v1.json": "91123f9c740742685e8d95a30e45624a7e880f781eda5495758fb49297ab94fb",
+    "strata/flash-next/source60_model_sdk_binding_v1.py": "4fb3e9bd77ddc785fb3e7f3de3f610f53608bb392b9b2635486ccb87e2fa8c53",
+    "strata/flash-next/patches/candidate-prefill-host-first512-diagnostic-v1.patch": "e1b1588f4476a32f0722d750ffe917dfc31c292a9034460c93dcd668a2392ddb",
+    "strata/flash-next/patches/candidate-prefill-host-first512-header-v1.patch": "fcf7e48bb74a4c34e0193f87ebfba91ee13816107a56efca4c1a7cc6e5f6fba5",
+    "strata/flash-next/prefill-host60/host_trace_v1.hpp": "32b660ec345029d0180833426976c869629adb70192beeb307ef03f35d192165"
+  },
+  "parent_root": "/mnt/vm_8tb/b70/build/strata-native59-incremental58-v1-20261012T215430Z-tmxlm889",
+  "parent_receipt_sha256": "df52f1b799d013e84438dc50e77c4b81b7d5f655fa04ba14c0af05b6d0ea74d0",
+  "argv": [
+    "python3",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/build_native60_incremental_from59_v1.py",
+    "--parent",
+    "/mnt/vm_8tb/b70/build/strata-native59-incremental58-v1-20261012T215430Z-tmxlm889",
+    "--parent-receipt-sha256",
+    "df52f1b799d013e84438dc50e77c4b81b7d5f655fa04ba14c0af05b6d0ea74d0",
+    "--jobs",
+    "4",
+    "--lease-card",
+    "1"
+  ],
+  "bounds": {
+    "cpus": 4,
+    "memory_bytes": 17179869184,
+    "memory_swap_bytes": 17179869184,
+    "pids_limit": 512,
+    "NoDri": true,
+    "network_none": true
+  },
+  "retirement": "Exact frozen58V2 owned compiler helper; normal typed original exit/EOF/owned removal, retain lease on unknown",
+  "compiler_or_GPU_executed_by_author": false,
+  "header_deps": "New private host60 header must appear in normalized actual post-compile dependencies exactly twice; unchanged headers fully bound before reuse"
+}

@@ -19535,3 +19535,18 @@ receipt1d832123a7c715650db14f96b836d3561a46702ca10d0e57a7c078c71df36ee9;
 parent59 unchanged. Loaded two-cohort actor/reader still being sealed.
 VERDICT -> Native build proof only; no cold/warm timing or GPU diagnostic
 qualification yet. Actual shifted38724 nowpairleased numerical fixture.
+
+
+## 2026-10-12: loaded first512 diagnostic constructor and source sealed
+
+CONFIG -> Actual60 one loaded process, two fresh A512/C64 cohorts,
+fixed cap1/cooperation1/diag1/share0.5/copy0/mirror0. Bounded eight
+owner/stage host traces; no new GPU wait/query/copy/alloc or math change.
+COMMAND -> Actual78066 genuine command construction PASS; exact real
+protected Protocol call with launch intercepted reached Popen once,
+without duplicate kwargs. Root replayed all18 sealed owned-file hashes.
+RESULT -> Constructor3273527c56698537cb6d4802225867c6fe2ad195c5eb24d17722f09094b252e4;
+actual32541 loaded diagnostic queued behind shifted38724 pair lease.
+VERDICT -> CPU/constructor/build evidence only. Actual four full histories,
+first/warm host spans, ownership/health/normal teardown/public reader
+required; no device time or clean cap-causality/speed claim.
