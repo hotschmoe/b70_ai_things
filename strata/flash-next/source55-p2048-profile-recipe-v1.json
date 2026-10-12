@@ -1,0 +1,40 @@
+{
+  "Chrome_CPU_host_lane_recorded": false,
+  "V5_supported_flag_change": "Remove BOTH --chrome-call-logging and --chrome-kernel-logging; keep --chrome-device-logging identical ZeChromeKernelLoggingCallback GPU IDs/bytes/clock normalization",
+  "V6_scope": "One whole independent diagnostic per execution, exactly one pair-owned model lifetime, warm/selected P2048GEN8, explicit copy0 OR1; original1GiB per experiment unchanged",
+  "actual_sdk55_receipt_sha256": "c9d197af57ada11b7bff6436d42996064de779cddd22fec099f08e8321184705",
+  "clock_cap_bytes": 536870912,
+  "clock_lane_rule": "Same-device raw ticks only for copy/compute overlap; host H36 separate until fresh calibration; exact Clock/Chrome instance-ID joins, dynamic counts",
+  "files": {
+    "docs/20261012_flashnext_source55_P2048_device_profile_v1.md": "a3166d8881bcd1921d741b10d8e8c3dbf02c0c5489823e30c4a0087b8b1b7141",
+    "strata/flash-next/analyze_source52_selected_kernel_unions_v1.py": "a38259077c2266065e74c538935b122361c4c1fe3d6b781e23a860ba3b623085",
+    "strata/flash-next/inspect_source52_p2048_profile_v1.py": "78a8a85c62ba8ad5477cc412497402fb23fa43c0d5d53e60738ac0d25c06ec49",
+    "strata/flash-next/inspect_source55_p2048_profile_v1.py": "e4427cd349919cdcc9927f2e46604ab2174c0f7b04318533abe62f2032204e83",
+    "strata/flash-next/native52_startup_option_preflight_v1.py": "6e2250cb9970b2cc5aa341beb801fb83d5474ebee734290af8802634c6d20e79",
+    "strata/flash-next/run_source55_hc_prefill_natural_v1.py": "78fa1f908cfb8bac88c36d0adff011c8b422d73cdfb040aa88643f92b25e8f94",
+    "strata/flash-next/run_source55_p2048_profile_v1.py": "fb00735fecfdfdb5d4e21321d8bf90346a54d3541a185f1eacf629a53ade8693",
+    "strata/flash-next/source55-hc-prefill-natural-source-recipe-v1.json": "c49efe7b6218e6af3b2b06f8efd1e1dfab5a9aa7a8e3cfce939b80ab32052045",
+    "strata/flash-next/source55_model_sdk_binding_v1.py": "bf8e92e523a4a8bff5b71e62e332ee101b6a6a18a33f6fcc1d792692f351ffe6"
+  },
+  "full_model_operation_coverage_qualified": false,
+  "matched_trace_arms_qualified": false,
+  "max_new_choices": [
+    8
+  ],
+  "only_configuration": "copy0/HCTILE2/HCcoalescing1",
+  "paired_H36_instrumentation_qualified": false,
+  "per_tier_rule": "Exact tracer MemoryCopy[bytes] command payload and source/destination allocation kinds, not startup residency or measured bus bandwidth",
+  "preserved_V4_actual_failure": "Selected DONE8 seen, aggregate472861176clock+720237386Chrome exceeded1GiB; old parent failed, no profile qualification",
+  "preserved_v1_CPU_failure": "Actual construction raised NoneType _RUNTIME in inherited PTI-enabled BASE_COMMAND; no GPU",
+  "preserved_v2_constructed_recorder_sha256": "3a131a5961e5da24de2ad8a0916661c4e7bd5f4d0a546f7c76282fd2b3e24926",
+  "preserved_v3_actual_failure": "Root66480 native H36 startup guard refuses layer_split/split_device before model/requests; original V3 remains failed",
+  "query_sample_every": 512,
+  "raw_cap_bytes": 1073741824,
+  "schema": 1,
+  "scope": "current55 fixed tile2/coalescing1/copy0 P2048 GEN8 device-only recorder",
+  "selected_requests": 1,
+  "source_generation": 55,
+  "two_roots_total_storage_budget_bytes": 2147483648,
+  "v4_delta": "H36 OFF/no H36 collect or coverage claims; same pair PTI/Chrome GEN8 paused warm/selected copy0/1",
+  "warmup_requests": 1
+}
