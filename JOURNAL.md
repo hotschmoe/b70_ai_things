@@ -17579,3 +17579,30 @@ pairlease foronecard50OFF/ON, short54/twoGEN64/spec2/grouped0/trace0.
 RESULT -> In preparation, no modeltiming/coherence resultyet. Failed49
 constructor and45/47GPUfaults remainpreserved.
 VERDICT -> Fullcampaign/2000/50/fullmath/cache/streams/traffic/shelf remainopen.
+
+
+## 2026-10-12: XMX integration queued and commit-boundary trace refinement
+
+CONFIG -> Source51 directESIMDF16 overactual50; revieweddefaultOFF2-slot
+individualpath/ON8slotgroupedDPAS, safeindividualfallbackforrows>64/unsupported
+shape/alignment. LegacygroupedoneMKLflag refused, originalDQ/SwiGLU/H/scatter
+unchanged; bothallocator/accounting extra56.25MiB.
+COMMAND -> Sourcepatch1b2c582d apply/hash/rootreview passed. Actual10222
+NoDri all8build queuedbehind50model93054. Finalproposalbd247e89.
+RESULT -> No51build/model resultyet; earlierlinked12single/12twoqueuecases
+passed. Primitive success doesnotqualifydense model numericalorder or speed.
+
+CONFIG -> Source50 matchedonecard staging0/1, short54/twoGEN64/spec2/cacheOFF.
+COMMAND -> Actual93054 stillliveclosing gates.
+RESULT -> WarmOFF/ON PP1537.9/1529.1ms,64decode7071.3/6420.7ms.
+VERDICT -> Preliminary~9.2percentdecodeelapsed reduction; finalidentity/
+coherence/health/teardown requiredbeforeaccepted comparison. 2000/50unmet.
+
+CONFIG -> Historicalwarm5 rawdevicegap audit refinedwithsource+commandlists.
+COMMAND -> Readonlysavedsource43/capture_commit andrawendpointmetadata.
+RESULT -> New1110ed15 linksallfivebiggap rightcopy_i32->gdn_conv_commit->
+gdn_step_norm_multi tocommitgraph, leftbarrier tomainT2graph. Different
+commandlists+originalsubmittimestamps: gapcrossessubmissions. Supersedes
+preliminaryexpert-plan hypothesis. PLEGather only.523ms/31calls here.
+VERDICT -> Source-localizeearly/fusedcommit opportunity; physicalidle/current
+clockalignment remainunqualified. Fullmath/cache/streams/latency/shelf open.
