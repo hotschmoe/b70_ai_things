@@ -1,0 +1,10 @@
+{
+  "schema": 2,
+  "files": {
+    "strata/flash-next/build_original_mtp53_serve_v2.py": "c8e0a4a98c1ea7cc3903074e02dd7a2aa776fd8355b917ff7668cee6d073b832",
+    "strata/flash-next/original-mtp53-serve-compile-source-plan-v2.json": "6b6bc740af7065cef9ca0f59779f2c8abc3c2d109175bcbcdfbb7893567e8970",
+    "strata/flash-next/original-mtp53-serve-source-plan-v2.json": "5aad1e06c40c6df969f086ee82e221aa42d69a10003294e88f087966366c765a",
+    "strata/flash-next/source58_model_sdk_binding_v1.py": "c12945d19841c3e58d493491790270e192dfed129aea36c9bc5ac550e6cbb74d"
+  },
+  "scope": "Root-owned NoDri fresh MAIN, header-consumer, link and CPU7 execution; no model or GPU execution"
+}

@@ -19574,3 +19574,34 @@ FAILED and now completes posthealth/wholeoriginal/source closure.
 VERDICT -> Preserve failure, new semanticmount validation/reader may
 admit unchanged numeric bytes using authentic recovery +closing proofs.
 Actual60 loaded diagnostic32541 stillwaits on retainedpair lease.
+
+
+## 2026-10-12: shifted recovery admitted and diagnostic coverage refusal
+
+CONFIG -> Original shifted38724 producer stays FAILED after ordered Docker
+bind comparison; authentic normal native numerical terminal/recovery saved.
+COMMAND -> Root ran admit_original_mtp53_shifted_recovery_v1.py against exact
+e64f1d9afb52b59e3080c080758506d2e19f8569d2ce25193bb7c0cb82289570.
+RESULT -> Public fdf9ba2b2d04fd9ffc05ce05c22ad893f54b4d4862adf1767197ba8a31b219b2;
+numeric_component_admitted=true, original_producer_passed=false,
+synthetic_only=true, MAIN_executed=false, math/API=false.
+VERDICT -> Isolated shifted numerical component admitted; no real target
+cache/API qualification and original failure remains unchanged.
+
+CONFIG -> Actual60 loaded first512 host diagnostic; four owners/two stages.
+COMMAND -> Actual32541 completed; root inspected original report/raw log.
+RESULT -> Native result PASS/Exit0, controller FAILED required eight-run
+coverage. Actual log has184 PFH60 lines and six run ends, not zero traces.
+Long stage0 calls enter with1512 before actual512 chunk and fail selector;
+long stage1 and incoming both stages captured. Post-health passes.
+VERDICT -> Preserve failed60. Minimal successor selects actual chunk without
+changing math/pacing/GPU operations or weakening coverage.
+
+CONFIG -> Current59 mode0 NUM33 V2 and exact-byte serving V2.
+COMMAND -> Actual84249 capture acquired pair lease; actual56720 serving
+NoDri build queued under card0 lease, fresh MAIN/header-consumer/CPU7.
+RESULT -> Capture native phase refused original bounded startup: UR2 log
+18,597,326B exceeds frozen topology16MiB; READY exists, zero requests,
+controlled native exit137. Parent cleanup/health/hash still live.
+VERDICT -> No current math capture PASS. Fix bounded startup observation
+before another model launch; serving build/real cache/API remain pending.
