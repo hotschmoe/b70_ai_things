@@ -2099,3 +2099,16 @@ OriginalMTPV2 NoDri3fixtures compile17084 PASS100s, freshoriginalSHA8087
 verified. Loadedcard0 step99096 PASS49s withfinite/direct/replay/rejected
 state restoration, health/removal. ActualMAINexecuted0/numericalqualified0.
 DefaultOFFactualtargethook sourcework next; shelf/goalcompletion unproved.
+
+
+## 2026-10-12 - HC arithmetic-exact operator and target MTP control
+
+HCQ8tokenreuse NoDri62721 PASS24s, card0operator37114 PASS38s:10bitwise
+shape/direct/graph changedinput cases, healthyownedretirement. Uniformtile2
+T8submit+wait improvesdown140.327->114.197us andup133.204->88.088us;tile4
+downregresses. These are operator measurements, notfullmodel latency.
+Fresh54all8build61320 active; naturalP2048 GEN512 matchedmodel0/2 next.
+OriginalMTPstepV2 loadedcomponent99096 PASS49s butnumerical/mainintegration
+unqualified. ActualtargetT1/T2 diagnostic source nowprepared preserving
+mainloader/math/commit, forcedcontrol labels andactualdraftproposal.
+Compiler/GPU targethook result remainsmissing. Fullgoal remainsunproved.

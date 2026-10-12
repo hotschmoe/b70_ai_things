@@ -18168,3 +18168,26 @@ RESULT -> RealT1seed/T1control/T2commitwait/actualhidden-picks catchup
 sourcehook prepared; labeledforcedreject/accept thenactualdraftproposal.
 VERDICT -> Compile/loadedtarget/state/numerical/64-512equivalence pending;
 fullcampaign math/cachefamily/streams/profiling/shelf remainsactive.
+
+
+## 2026-10-12: fresh54 engine built; real MAIN compile seam localized
+
+CONFIG -> Direct52 plusHCQ8tokenreuse,74source/all8targets productionflags.
+COMMAND -> NoDri61320PASS309s; SDK54
+/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261012T032543Z-3_j1w16w
+receipt7684031d565fb800e7a3e71f9fc59717ed43c02d20d49daee03844cae6b790af.
+RESULT -> Matchednatural54 TILE0/2 actorpreparation ongoing, no modelrunyet.
+VERDICT -> Bitwise/operatorgain doesnotpromote modelbeforeactualoutputs/
+latency/lifecycle check. No quant/caller changes.
+
+CONFIG -> RealMAINoriginalMTP diagnosticV1, exact52 code/libs, NoDri.
+COMMAND -> Actual37960FAILED16s, noGPU/modelpayload; reserveguard uses
+undeclaredn_stages atgeneratedline3963.
+RESULT -> Native stages vectorrepresentsadditionalstages; onecard requires
+stages.empty(), notsize1. NamedV2 soleguardfix beingprepared, V1preserved.
+VERDICT -> Fastactualcompilerlocalizedinterfaceerror, no targetMTPmath/
+acceptance/performanceproof. Wholegoal/cachefamily/concurrency/shelf open.
+
+CONFIG -> NamedrealMAINMTPV2 fixesonlysingle-stageguard toactualvector.
+COMMAND -> CPUpreparePASS, actualleasedNoDri15479nowlive.
+RESULT -> Compilerresultpending; no targetGPUpass or draftspeedclaim.

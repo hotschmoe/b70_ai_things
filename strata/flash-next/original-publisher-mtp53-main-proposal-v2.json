@@ -1,0 +1,23 @@
+{
+  "schema": 2,
+  "scope": "Standalone default-OFF actual MAIN T1/T2 diagnostic; no server/shelf promotion or qualified draft numerics",
+  "base_component_proposal_sha256": "d79b1b156a617a2b8dbecba8efdaa5ca9ed95fc72b9ad4e5ecccc6ff3934a70b",
+  "actual52_generate_sha256": "2ce4a5819561eeb9e3aea6847358c9058bbf12cb1b2ff2c590e15f095d9cc6e3",
+  "own_source_sha256": {
+    "strata/flash-next/original-mtp53/loaded_main_adapter_v1.hpp": "22f51a41813090fa0749d32ff0d19501600ac9c987bfc6e379395e81939d2b83",
+    "strata/flash-next/prepare_original_mtp53_main_compile_v2.py": "7cc72d64bcc4850c91129800a1d74a8889adaff869a4cd1b87e592304b8308f0",
+    "strata/flash-next/test_original_mtp53_main_source_cpu_v2.py": "b98aae9116319dcc00cd2c57cec338980af7c601f96e7ef612449382fc8cf64d",
+    "strata/flash-next/original-mtp53/loaded_main_adapter_design_v1.md": "0d2c3a9cbd364679284151722ea671a7ef25aecf6fcb004500a7d437a5311b13"
+  },
+  "original_draft_tensor_payload_bytes": 2775258112,
+  "original_asset_required_sha256": "8087dbb39fc73f79ac069b1debe4069a44b73ada900c8bd761569d43a5a90231",
+  "single_card": 0,
+  "mirror_stage_t1": 0,
+  "stock_mtp_enabled": false,
+  "target_verification_unchanged": true,
+  "root_compile_GPU_required": true,
+  "draft_numerical_qualified": false,
+  "full64_greedy_equivalence_qualified": false,
+  "preserved_v1_proposal_sha256": "53e14d1159ba86b5454877abd70c5e9debd7582b56ec36ce29b9a412f3da6747",
+  "generated_cpp_delta": "n_stages!=1 -> !stages.empty(); stages counts additional devices, primary state separate"
+}
