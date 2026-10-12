@@ -18538,3 +18538,22 @@ V1/V2 failuresretained. Root restored frozen56docbinding aftermistaken
 resultsappend, movedpositivechainevidence toseparatedoc; genuine56
 constructionnowPASS. Model56natural0/1 queued76704 behindphasecompile33774.
 No new56modelgain or MTPspeed claim. Fullcampaign remainsactive.
+
+
+## 2026-10-12: pref-only tile4 model gain accepted; MTP phase probe live
+
+CONFIG -> Fresh56 pair24/24 P2048/pref512 sixGEN512 each, coalesce1/
+globaltile2/mirror1/copy0/noMTP/cacheOFF; sole preftile4flag0/1.
+COMMAND -> Producer76704 PASS1095s; independent53683 PASS.
+RESULT -> All12 full512 IDs/finish exact andfresh repeats; actualT511tail
+covered. Source/all8/full4/health/collective/kernel/EOF/retirement pass.
+WarmPP243.43/239.14/240.68 ->255.78/253.06/252.23; decodeunchanged.
+MeanwarmPPelapsedreduction4.97percent. Producer33b5bc24fbd30b2ebcb37cb12f5bf40fbde0c0d2f085ea1b6f4145ebf7f1deb1; public4282bfdacff740a586cd2556333975d3a9409e6a456af51e1ae73986b0dde7f2.
+VERDICT -> Acceptedmodelprefgain, not2000/50/fullmath/HTTP/shelf.
+
+CONFIG -> OriginalMTP existing-sync hostphase probe, freshOFF/ON54+64,
+CPUonlytimingbuffer, noaddedGPUwait/query/workspace.
+COMMAND -> Actual22434 acquiredcard0lease after56 atF17/
+original-mtp53-greedy64-phase-card0-run-v1.
+RESULT -> Phase/equivalence/identity/health/teardown pending.
+VERDICT -> DiagnoseflatMTPtime withresolvedresidencyconfoundexplicit.
