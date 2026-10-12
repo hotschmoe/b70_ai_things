@@ -2163,3 +2163,32 @@ checkpoint and touchedKV, verifies byte restoration, then unchangedT2.
 Compiled62500 PASS98s; actualcard0 diagnostic76687 live. No sustained
 MTP64/512 equivalence or numerical/speed proof exists yet.
 Full original objective/fidelity/cachefamily/streams/profile/shelf open.
+
+
+## 2026-10-12 - Sustained original MTP and bounded native2 cache milestones
+
+Original MTP corrected nativeV2/runnerV3 actual41041 PASS587s; independent
+saved readback passed. Authentic54 prompt, separate fresh OFF/ON, all64
+IDs/EOS exact, all5 identity scans, each normalexit0/EOF/ownedremove/
+health/kernel pass. ON30 accepted/2 rejected/1tail windows versus63 OFF.
+Decode wall6.747/6.733s is effectively flat; actual OFF8160 vsON7270
+resident experts are not matched. See original_MTP_greedy64_equivalence
+result document. No numerical/full512/production speed qualification.
+
+Native2 cache V1 failed observer gate because coldA cap8 ended during B
+prefill; it really lacked cold two-row observations. V2 uses existing
+DECODE_SHARE0 for diagnostic co-admission, actual3113 PASS450s/public11085
+PASS: cold/cache rows2/mask3, complete49 observed arrays bitwise, matching
+all8 output histories after owner swap, real reused1536/new487-512,
+source/full4/percard/collective/kernel/ownedretirement pass. See
+docs/20261012_flashnext_native2_cache_result.md. This does not qualify
+HTTP, normal scheduling/fairness, cancellation/eviction/stale identity/
+restart, native4/6, or clean latency. Full objective remains incomplete.
+
+Direct55->56 strict incremental NoDri V3 passed68s: one body compiled,
+123 verified objects reused, all8 fresh links, unchanged parent/config/
+deps. Prior full55 build309s is a different work strategy, not GPU speed.
+Pref-only tile4 fullHC operator passed all10 cases/replay/health; genuine
+model commands passed after frozen-doc binding restored. Actual56
+matched naturalP2048/GEN512 run76704 live, no gain yet. MTP existing-sync
+host phase probe compiled33774 PASS98s; actual phase run pending.
