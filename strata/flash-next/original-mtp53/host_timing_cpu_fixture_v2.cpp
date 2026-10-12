@@ -1,0 +1,3 @@
+#include "phase_timing_v2.hpp"
+// Optional root NoDri CPU-only fixture; NO GPU, model or device handles.
+int main(){setenv("STRATA_ORIGINAL_MTP53_PHASE_TIMING","1",1);using namespace strata::kernels::original_mtp53;PhaseTiming53 timer;int fake=0;for(int i=0;i<9000;++i){PhaseScope53 phase(&timer,"synthetic_original_phase");}timer.prompt=false;{TargetHostSpan53 outer(&fake,0,0,24,2,2048);outer.submitting();outer.submitted(true);{TargetHostSpan53 inner(&fake,1,24,48,2,2048);inner.submitting();inner.submitted(true);inner.returned(true);}outer.returned(true);}timer.dump();return timer.rows.size()==9004?0:1;}

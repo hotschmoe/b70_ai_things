@@ -19210,3 +19210,47 @@ COMMAND -> Actual15426 nowbothleases atF17/hc-t2-marked-paired-natural-v3.
 RESULT -> FreshV2 controls66ef/source/ELF/full512parentbcaf pins filled.
 VERDICT -> Actualmatchedmodel/coherence/residency/health/normalretirement
 required beforekernel benefit. Fullcampaign remainsactive.
+
+
+## 2026-10-12: bounded stage-host timing and shared-slot fixture prepared
+
+CONFIG -> OptionalpairedP2048GEN512 hosttiming:32768CPUrows, real
+monotonic/PID/TID spans, exactexistingrun/submit/commit/wait calls.
+COMMAND -> Rootprepared original-mtp53-host-timing-compile-inputs-v1.
+RESULT -> Sourcepland0a2e22723b8d2411136307bebd00f496374920bad4b083fd13d44193c93abef;
+actualrecipe244be15890742db7bc2b2d5f708f3f92009637e0c9e8cffa005f43207a493fb1.
+VERDICT -> Sourceconstruction only; compiler/runtime pending. Nested
+stage0/1/outer scopes nonadditive, no deviceidle/BW/calibration claim.
+
+CONFIG -> Loadedsharedoriginal34pack logicalGPU1/four private slots,
+five syntheticfinite teacherrows crossingcompress4; interleavedvsserial
+fullheads/proposals/fulltwo-bank state/staleowner/packlifetime checks.
+COMMAND -> Rootprepared original-mtp53-shared-loaded-compile-inputs-v1;
+actual87085 NoDri compile queuedbehind15426 currentpairedHCmodel.
+RESULT -> Loadedplan6a40dd90613d5af9def764194ac44d3c208c0be65f7b9b9796dd3d933fa6f6c0;
+actualreciped9f3dc2288697f078ab08d1248a1143024d10c6ad5191590f521b6b8e92e32ad.
+VERDICT -> ActualcompiledELF/wholeMTPidentity/currenthealth/normalclose
+andGPU numerical/isolation/lifetime proof pending. BothGPUvisibility
+required forlogical1 (no card1-only remap). No MAIN/modelanswer/API
+faithfulness orspeed qualification fromsyntheticfixture.
+
+
+## 2026-10-12: paired HC raw replay and two fresh builds completed
+
+CONFIG -> Same MTP-ON paired P2048/GEN512, sole HC reuse OFF/ON.
+COMMAND -> Actual15426 terminal Exit0; independent CPU raw/parser replay
+and all52 artifact hashes verified.
+RESULT -> Both512 IDs and EOS equal; prompt43768.756374->40341.620893ms,
+decode37596.477026->28670.911860ms. Both normal retirement and health
+gates pass in preserved producer report.
+VERDICT -> One instrumented ordered pair, encouraging decode result;
+unchanged prefill variation prevents clean repeat-qualified speed claim.
+
+CONFIG -> New shared original-MTP/private-slot fixture and bounded host
+timing builds, NoDri compiler image and original source52 dependencies.
+COMMAND -> Actual87085 PASS55s; actual92933 PASS114s. Root launched
+shared loaded GPU fixture51877 using both card leases and logicalGPU1.
+RESULT -> Shared receipt65fac64bc7172e992341094b857d18dbfe9f2eaed29a4a997c44203f70fb6a01;
+ELF7b6f3776e1b95ca59a3b25f1e40186851ab49c559a4e071dcb3f42856eb7a82d.
+VERDICT -> Compiles complete; actual private-slot GPU isolation and real
+model host-timing evidence pending. Full serving campaign remains active.

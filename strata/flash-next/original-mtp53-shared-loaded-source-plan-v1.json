@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/original-mtp53/shared_weights_sessions_v3.hpp": "09eae384af12100b354224f42888063c8dc03f6eb3b0cc21367a206e5b86a56c",
+    "strata/flash-next/original-mtp53/shared_sessions_loaded_fixture_v1.cpp": "5ac0515773c1c02f85c2df87fc10e1638a96e2912b17ee8452a0f2af35dbd543",
+    "strata/flash-next/prepare_original_mtp53_shared_loaded_compile_v1.py": "2e8bbf8d697fd30b897019f0c19186107a471952f59f66416c46ae946b90211c",
+    "strata/flash-next/test_original_mtp53_shared_loaded_cpu_v1.py": "aa206822edf411947e1324f60b82b9ca14c1d34ff0258bcafa6351f615c58244",
+    "strata/flash-next/original-mtp53/shared_sessions_loaded_design_v1.md": "6e9ccc97ed3fdea6a8ddc9c94fdc3a26def40a68ac8fbafbe036399773af9630",
+    "strata/flash-next/original-mtp53-shared-compile-source-plan-v1.json": "c61a0ba94f4f54cf6542b404bea23c67b107cac676921ca992476e6b38b13517",
+    "strata/flash-next/original-mtp53/shared_weights_sessions_v2.hpp": "3837e0a78f55bc5dc10c3e22b1cf69605fb28429697c8d8b32fc7962f79d74e9",
+    "strata/flash-next/prepare_original_mtp53_two_stage_compile_v6.py": "50ca77dc0c880f81a12a97c5f7bbd4236d041928fbef219357e0712e844bde65",
+    "strata/flash-next/original-publisher-mtp53-two-stage-proposal-v6.json": "eaf1239278657f964ba537a56d778c1ac9cabfc0997684f34afad4a88026f470"
+  },
+  "overlay_sources": {
+    "strata/flash-next/original-mtp53/shared_weights_sessions_v3.hpp": "sycl/include/strata/kernels/original_mtp53_shared_sessions.hpp",
+    "strata/flash-next/original-mtp53/shared_sessions_loaded_fixture_v1.cpp": "sycl/src/kernels/original_mtp53_shared_slots_loaded_fixture.cpp"
+  },
+  "source_only": true,
+  "math_qualified": false,
+  "MAIN_executed": false,
+  "fresh_original_whole_SHA_required": true
+}

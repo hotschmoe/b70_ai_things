@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/run_original_mtp53_shared_loaded_v1.py": "3bef21870c83d0a94948e533bc0beb0cbbf7cb5cab72f9cb64d4190b01213f30",
+    "strata/flash-next/test_original_mtp53_shared_loaded_controller_cpu_v1.py": "e966b915c0974b80833413c75fc99134a4daae24bcc326574b4e1207f72f3c24",
+    "strata/flash-next/original-mtp53-shared-loaded-builder-source-plan-v1.json": "ffd716f385b6f5732f59422bb46203f5dd28e870163a620ceaa38aba3dffbf24",
+    "strata/flash-next/original-mtp53-shared-loaded-source-plan-v1.json": "6a40dd90613d5af9def764194ac44d3c208c0be65f7b9b9796dd3d933fa6f6c0",
+    "strata/flash-next/run_hc_t2_operator_v1.py": "e270a7846ee97cbdd1ab544e9e3d2f9664423ebf653c76695e4425b7019886c8"
+  },
+  "scope": "Bounded original34 shared/private synthetic fixture runtime; no MAIN fidelity/API/speed qualification",
+  "actual_build_receipt_and_ELF_required": true,
+  "source_only": true
+}
