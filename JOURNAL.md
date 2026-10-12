@@ -17809,3 +17809,34 @@ agent bothcommandconstruction511456a0d4d957b690c928cdf306b906a730e2504e04719f820
 VERDICT -> No cacheGPUproofyet; no enginerebuildneeded. OriginalMTP34tensor
 losslessprimitive/source53 underpreparation; full draftgraph notsupportedyet.
 Campaign objective remainsactive, no shelf promoted.
+
+
+## 2026-10-12: larger prefill loses; actual serial cache test launched
+
+CONFIG -> Source50 exact naturalpair24/24 P2048/sixGEN512, solepref512->2048.
+COMMAND -> Producer50219PASS638s; independent82505PASS.
+RESULT -> OneactualPP2047step/request, nofallback; resident17163vs17967 at512,
+primaryfree2453MiB. RepeatedwarmPP173.30/172.17/172.24 vs185.17/183.93/183.06
+(about6.3%moreelapsed);decode21.34/21.99/20.50. Allrepeat/finish/health/full4/
+sourceall8/kernel/ownedretirementpassed. ALLsix outputIDarrays differ512baseline.
+Producer9bbf16259469953553ef152ecfefcec00e5e96416f5d4f2e5e460233d6a7116a;
+public48016420dc5058a638704c1e7530a8ad0ad5e1dde6a08c495807db34c03cdd89.
+VERDICT -> Negativeperformance/crossconfigurationoutput result; keep512.
+No fullhead/intermediate comparison to attribute cause/quality.
+See docs/20261012_flashnext_pref2048_natural_result.md.
+
+CONFIG -> ActualSDK52 serialcache matched1536pin, cold/cache A2048/B2023,
+sixGEN64 each, mirror0/copy0/pref512/noMTP, fullfirsthead capture.
+COMMAND -> Actual29871nowholds pairlease inF17/source52-serial-cache-latency-v3-run-v1.
+RESULT -> Preparationlive; actualreused/new work/fullheads/output/latencypending.
+V3authcommandconstructionpassed beforelaunch; independentreader beingprepared.
+VERDICT -> Directcomplete-state nativecachepath needsnoengine rebuild, but
+actualproofrequired; fullcache/cancel/eviction/concurrency/shelf notclaimed.
+Profiler sourcework targets currentwarmP2048/GEN8 devicecopy-overlap/traffic
+andhostscopes, with clockalignment explicitlyunqualified. OriginalMTP graph
+sourceintegration ongoing; source53primitive alone isnot a completedadapter.
+Fullcampaign objective remainsactive;2000/50unmet.
+
+CALC -> Correction to the preceding larger-prefill elapsed summary: repeated
+PP elapsed increases6.85/6.83/6.28percent, mean6.65percent (about6.7%), not6.3.
+The exact recorded times/rates and negative verdict are unchanged.

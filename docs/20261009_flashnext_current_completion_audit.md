@@ -1991,3 +1991,16 @@ memory/residency/output guards pending. Capacity and original-MTP adapter-gap
 audits document concrete remaining work. Basicserialcache needs no engine
 rebuild; authenticCPUfixtureV2 passes, fixed adapterV3 commandconstruction
 passes, actual cache run remains pending. Fulloriginal objective remainsopen.
+
+
+## 2026-10-12 - Large-chunk result and actual serial cache run
+
+Source50 pref2048 producer50219 PASS638s and reader82505 PASS. Actualone
+PP2047 chunk, resident17163; repeatedwarm173tok/s versus184 at512 and
+allsix outputIDarrays differ baseline. Keep512; no numerical/quality cause
+attribution. See20261012_flashnext_pref2048_natural_result.md.
+ActualcacheV3 29871 is live onSDK52, matchedcold/reuse1536pin with authentic
+A2048/B2023, GEN64/fullfirstheads, copy0/mirror0. Actualwork/head/latency
+proof remains pending; fullcache and actualmulti-streams still open.
+CurrentwarmP2048 profiler preparation keeps unqualified host/device clocks
+separate. OriginalMTP graph/loader gaps remain; primitive53 isnot fullMTP.
