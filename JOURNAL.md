@@ -18515,3 +18515,26 @@ Parents unchanged, no reusedobjects/compiledspeed admitted. V3 preserves
 originalverifiedconfig/generatedfiles andrefuses unexpectedregen, now26743
 queued behindnative2 lease. Fullfreshbuilder remainsfallback.
 VERDICT -> Preservefailures; no relaxeddeps or currentnew56model claim.
+
+
+## 2026-10-12: native2 cache observed; incremental56 build speedup accepted
+
+CONFIG -> Revised52native2 coldAB/cacheBA, shared1536/divergentsuffix,
+GEN8, schedulingdiagnosticDECODE_SHARE0. OldfailedV1preserved.
+COMMAND -> Actual3113 PASS450s; independent11085 PASS.
+RESULT -> Bothcohorts realrows2/mask3, full49 snapshots byteexact and
+greedy, complete8 historiesbyrole exact afterownerswap, reused1536/new
+487-512. Source/full4/health/collective/kernel/EOF/ownedretirement pass.
+Producerabe02a0c36e502fae8b38bab9ed5b10744192b22705da99d3f41f519d1df2d25; publicc269f085d20f53bbe688de194d329a7a5778b9691e18fd8c563685f2d59e0317.
+VERDICT -> Boundednative2state/cache qualification, notHTTP/fairness/fullfamily/4-6.
+
+CONFIG -> Direct55->56 incrementalV3 NoDri, strictsame-stack deps.
+COMMAND -> Actual26743 PASS68s vs priorfull55build309s (differentbuildwork).
+RESULT -> Onebodyrecompiled,123objectsreused afterexacthash/dependency/
+config checks, archiveupdated, alleightELFs deleted/relinked; parent
+unchanged. Actualreceipt58aa4da5bd31616d7cf1611fd078fe5f67fe9e29c28d9024d49e7e9446a9233b.
+VERDICT -> Concretecompile-loop improvement, notall74freshcompilation.
+V1/V2 failuresretained. Root restored frozen56docbinding aftermistaken
+resultsappend, movedpositivechainevidence toseparatedoc; genuine56
+constructionnowPASS. Model56natural0/1 queued76704 behindphasecompile33774.
+No new56modelgain or MTPspeed claim. Fullcampaign remainsactive.

@@ -44,11 +44,3 @@ The selected flag is evaluated once per process, before HC submission; runtime
 flag mutation is not supported. If coalescing is OFF, the old APIs remain and
 this prefill-only flag has no effect. The original request's earlier unrelated
 GPU work is not covered by the zero-HC-submission refusal statement.
-
-## Root actual whole-chain follow-up
-
-NoDri53587 PASS31s; actualcard1GPU89906 PASS46s. Immutable old55
-whole-chain fixture ran against the new56 composition with prefilltile4=1.
-All10 cases and changed-input captured replay are bitwise equal, with
-normalexit0/ownedremove/posthealth/kernel pass. Report SHA6a371efcb7b82c60392d8536c1038ad925fac356a4dba752231a9e1b324a0b58.
-This remains operator evidence; whole56 engine/model gain is unproven.
