@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/run_original_mtp53_joint_v1.py": "dbc6900378daba224012e8577517a6a0ff384d74331f34535564e32f4765911c",
+    "strata/flash-next/original-mtp53-joint-builder-source-plan-v1.json": "ce1ce383a884ada1b514e7149c2478021a0b77b5bad4753cd499725ae40f23af",
+    "strata/flash-next/original-mtp53-joint-checkpoint-source-plan-v1.json": "505ebf2c83e0288c89c1596b616e4633069249e998e6b4c0524a89eca12b8a59",
+    "strata/flash-next/source58_model_sdk_binding_v1.py": "c12945d19841c3e58d493491790270e192dfed129aea36c9bc5ac550e6cbb74d",
+    "strata/flash-next/run_original_mtp53_checkpoint_v1.py": "750796912fe18be9d9cb948b2da62d13f370de6e925e97ce32188458b9b73015"
+  },
+  "scope": "Actual58 semantic/jointCPU8/continuation outputs, NoDri CPU execution and stronger loaded V2 private-state runtime; no MAIN/API proof",
+  "source_only": true,
+  "actual_CPU8_execution_required": true,
+  "actual_receipt_ELF_required": true
+}

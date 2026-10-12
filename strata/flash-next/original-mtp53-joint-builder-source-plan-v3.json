@@ -1,0 +1,14 @@
+{
+  "schema": 3,
+  "files": {
+    "strata/flash-next/build_original_mtp53_joint_v3.py": "57f998725eb0654dc2aea25be0ab5993b21b42f600ab91a26375d2378acc87cc",
+    "strata/flash-next/original-mtp53-joint-checkpoint-source-plan-v2.json": "b5927e7bd415297ca89c091dda4b011c9b09b88d0e453a95fad74679b40a1c32",
+    "strata/flash-next/source58_model_sdk_binding_v1.py": "c12945d19841c3e58d493491790270e192dfed129aea36c9bc5ac550e6cbb74d",
+    "strata/flash-next/build_original_mtp53_joint_v2.py": "2855ae508d3361b34f8e2d7307585b683530a4ffe13a8b874d7b0d20ab23b952",
+    "strata/flash-next/original-publisher-mtp53-two-stage-proposal-v6.json": "eaf1239278657f964ba537a56d778c1ac9cabfc0997684f34afad4a88026f470"
+  },
+  "scope": "Fresh explicit-return corrected joint source, finaldest overlay resolution, actualCPU8/continuation required; failedV1/V2 preserved",
+  "source_only": true,
+  "actual_CPU8_execution_required": true,
+  "actual_receipt_ELF_required": true
+}

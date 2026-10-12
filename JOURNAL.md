@@ -19428,3 +19428,35 @@ RESULT -> Receipt df52f1b799d013e84438dc50e77c4b81b7d5f655fa04ba14c0af05b6d0ea74
 Both phases cooperation1; sole single-window0/1.
 VERDICT -> Native build and pure constructor passed; actual model
 histories/latency/service census/current health still pending.
+
+
+## 2026-10-12: source59 matched pacing closes, joint failures retained
+
+CONFIG -> Same actual59/coop1 both, cap0/1 only, native2 A512/C64.
+COMMAND -> Actual72583 Exit0; reader94491PASS.
+RESULT -> Public158826d72760a7237ecc1a83c52f668685b41120a215bad355b5833b8a144bb1;
+fullhistories==52serial/58ON, source/all8/full4/health/normalclose pass.
+LongP95 208.071->210.517ms; max9101.714->918.388ms; incomingTTFT
+44964.237->27020.257ms. OFF no rows2; ON63 actualrows2.
+VERDICT -> No P95 improvement or clean causal gain. Audit shows large
+OFF gap BEFORE first cap-sensitive service; upstream variability is open.
+Cap actually bounds service to1 vs real93/40-window OFF bursts.
+
+CONFIG -> Joint ownership/continuation prototype, real serving HELD
+for shifted NEXT-token envelope and real first-gen1 binding.
+COMMAND -> JointV1 attempt16654 stopped preflight: duplicate destinations
+mischecked as simultaneous sourcebytes. V2 attempt52870 actually compiled
+and failed16s on deduced-return accessors used before definition; CPU8
+NOT executed. NoGPU/weights touched; owned compiler removed.
+RESULT -> Immutable V3 source correction prepared new recipe
+8651abe46985c26780022ae63900936aea3e551c375f4479b661ae86ea5f61d5;
+actual48187 queued behind current decode-head matched GPU run21094.
+VERDICT -> Failed originals remainfailed. Synthetic ownership/continuation
+qualification cannot substitute real shifted-prefix model cache semantics.
+
+CONFIG -> Separate decode-first-kept-row head omission, waits preserved.
+COMMAND -> Wrong card1 lease preflight compilednothing; corrected card0
+actual43057 PASS99s. Actual21094 now real matched512 OFF/ON.
+RESULT -> Receipt7eb5427b02dd4161da2a092d3e254a1727e72fee86376c40738f864a709f4f71;
+ELF2efd626bf78eea21178c5ae02f89f861acde89c05becdb7da76c3737b56c35b4.
+VERDICT -> Actual model result/current health/normal closure stillrequired.

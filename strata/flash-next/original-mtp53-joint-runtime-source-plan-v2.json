@@ -1,0 +1,14 @@
+{
+  "schema": 2,
+  "files": {
+    "strata/flash-next/run_original_mtp53_joint_v2.py": "f4c7a70c2cbbff1d6044efdc4daaf5d728d3880ab0a0c0bfd7ade69f68624225",
+    "strata/flash-next/original-mtp53-joint-builder-source-plan-v2.json": "db90ab4ecfeec4b6bec56ce07e8dc99f01487b94d63960b20284884d375340cd",
+    "strata/flash-next/original-mtp53-joint-checkpoint-source-plan-v1.json": "505ebf2c83e0288c89c1596b616e4633069249e998e6b4c0524a89eca12b8a59",
+    "strata/flash-next/source58_model_sdk_binding_v1.py": "c12945d19841c3e58d493491790270e192dfed129aea36c9bc5ac550e6cbb74d",
+    "strata/flash-next/run_original_mtp53_joint_v1.py": "dbc6900378daba224012e8577517a6a0ff384d74331f34535564e32f4765911c"
+  },
+  "scope": "Final resolved destination source overlay map, all original source hashes retained; same prepared d9fb/CPU8/continuation runtime; failedV1 preserved",
+  "source_only": true,
+  "actual_CPU8_execution_required": true,
+  "actual_receipt_ELF_required": true
+}
