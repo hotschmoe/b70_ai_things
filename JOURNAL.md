@@ -18336,3 +18336,25 @@ VERDICT -> Skip known-invalid V3 GPU diagnostic; preserve compiledsource.
 New control must save/restore full checkpoint plus touched KV/indexer
 pages via existing SDK APIs before unchanged T2 verification. PLE-only
 restore is inadequate. Actual repaired-control proof remains pending.
+
+
+## 2026-10-12: MTP target control restoration prepared, GPU unexecuted
+
+CONFIG -> MAIN V4/V5 uses unchanged52 checkpoint and KV snapshot APIs
+only around independent T1 baseline, before unchanged actualT2 target.
+COMMAND -> Root V4 andV5 CPU compile-input preparation passed; V5 two
+focused source checks passed. Model55 pairlease remains held.
+RESULT -> All-device queues drain before save/restore; checkpoint first
+then exact touched K/V/pooled image restore; original committed input IDs
+retained, touched cellsposition+2, restored checkpoint andKV bytes verified.
+Actual checkpoint fields are vector<uint8_t>; V4 equality already byte
+exact. V5 size+memcmp makes that contract explicit; root's preliminary
+float-vector concern was incorrect. Main math/tolerances unchanged.
+Proposal7cc6bee3f41f4b901205f84494479ad875fbb8f78cf672755678e4794bccc14d.
+VERDICT -> Known-invalidV3 GPU run skipped. V5 actual leased compile
+and model diagnostic remain pending, no targetMTP/speed qualification.
+
+CONFIG -> Live source55 matched natural model run76995.
+RESULT -> Baseline arm completed six512 outputs; coalesced arm now
+prefilling. Crossarm outputs/speed/fullcampaign lifecycle pending.
+VERDICT -> No intermediate gain claim; follow existing process to terminal.
