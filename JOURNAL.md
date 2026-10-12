@@ -18026,3 +18026,22 @@ VERDICT -> Source52 Q8projection repeatsweightdecode pertoken. NewdefaultOFF
 multi-tokenreuse candidate preserves peroutputFMA/reduction order; no46
 rowbatchrepeat, no numerical/speedclaim yet. Cleancache50629live. Original
 MTPfullstep sourcecomposition/loadedfixture awaitingcompilequalification.
+
+
+## 2026-10-12: original publisher MTP draft-step source composed
+
+CONFIG -> Separate exactoriginal34tensor Unsloth MTP Q4_K_M artifact,
+no requantization/mainheadborrowing, immutableSDK52 primitives. DefaultOFF.
+COMMAND -> Sourceproposal d91ae5896b6bffbbf0ee4b85783f14b0653df912e1518b2e2359444792167a5c
+sealed;3source/applyreverse/acceptrejectcorrection controlsPASS. RootCPU
+compileprepare actual52/all74/all8/Ninja flags succeeded withoutcompiler/
+GPU/weightreads; recipe44e471608f5b3726e85133694ecff698bc84afc6e9883228dff2c91bb7256a61.
+RESULT -> OwnQ4embedding/EHHC/compress4QSA/F32router/Q4GU-Q8down/
+sharedgate/HC/ownQ6head composed. Mainrun/commit/wait+actualfinalR/picks
+catchup bothoutcomes explicit; failedtransition latched. SafeV2owners drain
+then graphdelete thencontextfree; fatalfailed drain retainsresources.
+VERDICT -> Readyfor leasedNoDri standalonecompile AFTERactiveclean50629
+andnextONcapture. Freshseparate MTP wholeSHA requiredbeforeloadedGPU.
+Loadedfixture usesSYNTHETICdecisions, actualMAINexecution false; numerical/
+sparse score-tie/target integration/API/concurrency/speed/shelf notqualified.
+Completeoriginalgoal staysactive; no MTPdecode benchmark yet.
