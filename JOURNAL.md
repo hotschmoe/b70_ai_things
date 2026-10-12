@@ -18641,3 +18641,27 @@ COMMAND -> Cold pure saved-data audit PASS; queued compile56509 reached
 RESULT -> Cold actual rows4/mask15, first/later49 fourowners, all8
 histories/counters and normal exit PASS; primed process nowlive.
 VERDICT -> Whole cache4 result and operator compile remain pending.
+
+
+## 2026-10-12: native4 shared/divergent cache admitted; expert operator compiled
+
+CONFIG -> Current52 two owned fresh processes: coldABCD, then primeABCD
+and hitBACD; cachepin1536, cap8, SHARE0, exact52 pair24/24 source.
+COMMAND -> Actual55708 PASS892s; independent84696 PASS.
+RESULT -> Allthree cohorts actual rows4/mask15. Allfour hits reuse1536,
+new A512/B487/C512/D512. First and later49 cold/hit bitwise byrole;
+all12 full8 histories equal. Full4/source/all8/health/collective/kernel/
+normal EOF/exit0/ownedretirement gates pass. Producer265f4500945d9016ad2faa80557c833694ca1ffdb12be83aa398494a8b037377;
+public97a50c2788857bd9db6f604b6ab3ce140b9c785ff6498267266f5e6a4054c990.
+VERDICT -> Bounded native4 shared/divergent cache proof; no eviction/
+cancel/stale/restart/fullfamily/fairness/API/fullmath/shelf qualification.
+
+CONFIG -> Original expert E2 standalone NoDri buildv3, fresh IQ object
+first, copied kernelarchive exactly one old IQ member removed.
+COMMAND -> Actual54472 PASS45s after leased waiting. Receiptb21f21d3418864f2e7946e10e9efe9de81b26f5ccbc89e85f6b84d9963f807bd.
+RESULT -> Original archives/objects/includes unchanged; freshELF
+c6ba7cb427d4b7f1c873624984becd9f6f946d73a5c630f167de6a0ffac40cc3.
+Initial root nested launch closedFD9 and refused before GPU/output;
+corrected direct actor25459 is live card1 with PCI44:00.0 required.
+VERDICT -> Compile-only accepted; actual bitwise/graph/latency/health
+checks pending. Full MTP model comparison conditional on operatorPASS.
