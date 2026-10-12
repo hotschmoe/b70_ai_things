@@ -18371,3 +18371,19 @@ source/all8/health/compiledcollective/kernel/ownedretirement pass. WarmPP
 Mean warm PP elapsed reduction13.64percent. Producer232c5dc2fb07f4508cb547e56cc24b9e3069fc119cde6ce9a695273c3c54a81a; publicb5e9361d8e4483f75bd1fae3f2e1442c744c5d7f009fe475c9ad0852fd3a0530.
 VERDICT -> Real original-arithmetic prefill gain; current config profile
 next, not blind tuning. No totalBW/idle/2000/50/fullmath/streams/shelf.
+
+
+## 2026-10-12: state-preserving MAIN MTP diagnostic running
+
+CONFIG -> Original MTP34 plus unchanged52 target, MAIN V5; baseline
+T1 wrapped in full checkpoint+KV save/restore/exact verification, ENV0.
+COMMAND -> Leased NoDri62500 PASS98s, ELF
+1385c3a746cd484feba189e32866beca422395d5956e2ae5254dc259e9a6c40c,
+receipt6a78890f9d952bca7384bbca5a19626eb455d6bfaee342d222b7cc592a09710b.
+Actual76687 now holds card0 lease atF17/
+original-mtp53-main-v5-state-preserving-card0-run-v1.
+RESULT -> Blueprintfe00ce211a02000c78251c34907bf4369ab8042ce1db6e2f775c96ba6a6c750f;
+forced reject/accept/own proposal target trials,3 exact restored-state rows
+and cleanup/full4+MTP/health/kernel still pending.
+VERDICT -> Concrete repaired control, not speed/full64 or numerical
+qualification. Preserve failed implicit/explicitcommit attempts.

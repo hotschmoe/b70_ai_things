@@ -2145,3 +2145,21 @@ Card1 earlier early UMD hostsegfault retained. Fresh55 all8 engine build
 is active; model A/B gain unproven. No2000/50, full original model
 numerical qualification, concurrent service or shelf promotion exists.
 Original objective remains intact and incomplete.
+
+
+## 2026-10-12 - Coalesced HC model prefill gain accepted
+
+Fresh55 sameP2048/pref512/pair24/24/sixGEN512 each, tile2 fixed,
+sole coalescing0/1: producer76995 PASS1004s and independent62892 PASS.
+Full outputs/finish and repeated inputs exact; source/full4/all8/health/
+collective/kernel/owned retirement passed. Warm repeat PP205-208 ->
+238-241tok/s,13.64% less prompt time; decode unchanged. See
+docs/20261012_flashnext_HC_prefill_coalescing_natural_results.md.
+Ordered A/B remains short of ABBA/population stability or HTTP service.
+
+Source inspection proved uncommitted T1 mutates PLE and QSA, invalidating
+previous MAIN MTP baseline controls. V5 saves/restores unchanged SDK
+checkpoint and touchedKV, verifies byte restoration, then unchangedT2.
+Compiled62500 PASS98s; actualcard0 diagnostic76687 live. No sustained
+MTP64/512 equivalence or numerical/speed proof exists yet.
+Full original objective/fidelity/cachefamily/streams/profile/shelf open.
