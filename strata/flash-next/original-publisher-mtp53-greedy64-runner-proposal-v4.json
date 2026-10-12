@@ -1,0 +1,20 @@
+{
+  "schema": 4,
+  "scope": "Root-run optional existing-boundary host phase timing with same independent64 output equivalence; actual residency confound retained",
+  "bindings": {
+    "/tmp/b70-original-mtp53-main-v5-card0-state-preserving-blueprint.json": "fe00ce211a02000c78251c34907bf4369ab8042ce1db6e2f775c96ba6a6c750f",
+    "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/source43-normal-cli-v1-run-v1/tokenizer-fixtures.json": "ef69506938d86efb6fd764bf4dadb09057e4391294fcc1b3ece14d3948949932",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/run_original_mtp53_greedy64_v4.py": "4cc781446ef712c9a0579b2ba6fc949b24238bd9894d4dd4c65abf254da0dde4",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_original_mtp53_phase_rows_cpu_v1.py": "daf18a2f7d0647026af5755c887a3560b5a8e866a091d945b363a28aa57fbafc",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/original-publisher-mtp53-greedy64-proposal-v3.json": "f61becb12ae0b5af92c350cb2e39e217e764635da350e3742d98d92063ded536"
+  },
+  "compile_receipt_and_ELF_required_actual_CLI_arguments": true,
+  "GPU_executed_by_author": false,
+  "model_payload_read_by_author": false,
+  "timing_speed_qualified": false,
+  "preserved_v1_runner_plan_sha256": "400297cea55456c497de461849f099b047f930ba8cbe1b9de17b89fc16427311",
+  "native_exit139_qualified": false,
+  "unresolved_original_ownership_must_retain_lease": true,
+  "preserved_runner_v2_sha256": "91b5bb57816551c6b0cb4ea5f5eda9b7fabff56c46da9b7d113344255f511e4c",
+  "preserved_runner_v3_sha256": "bbafe84f710cd0596b5b92093a9318de22a01b17557a113d1932df42fdddc3a3"
+}
