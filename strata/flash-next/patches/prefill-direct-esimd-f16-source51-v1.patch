@@ -1,0 +1,210 @@
+--- a/include/strata/prefill/gemm.hpp
++++ b/include/strata/prefill/gemm.hpp
+@@ -44,6 +44,12 @@
+     // Same transposed FP16 weights, FP16 activations, FP32 output/compute, alpha=1/beta=0.
+     void f16_grouped(const uint16_t* const* X, const uint16_t* const* W,
+                      float* const* Y, const int64_t* rows, int count, int64_t N, int64_t K);
++
++    // Direct F16 ESIMD group; unsupported row/shape/alignment uses individual f16.
++    // No oneMKL grouped API, host metadata allocation or host_task.
++    void f16_esimd_grouped(const uint16_t* const* X, const uint16_t* const* W,
++                           float* const* Y, const int64_t* rows, int count,
++                           int64_t N, int64_t K);
+ 
+     /// W given as native GGUF blocks of `ggml_type`, dequantized to FP16 in the scratch, X in FP16.  `ldx` (> K) is
+     /// X's padded row stride, taken only by STRATA_PF_PAD's path (0 = K).
+--- a/sycl/src/prefill/gemm.dp.cpp
++++ b/sycl/src/prefill/gemm.dp.cpp
+@@ -4,6 +4,7 @@
+ #include <dpct/dpct.hpp>
+ #include "strata/sycl_queue.hpp"
+ #include "strata/prefill/gemm.hpp"
++#include "strata/prefill/grouped_f16_esimd_v1.hpp"
+ #include "strata/kernels/dequant_bf16.hpp"
+ #include <dpct/blas_utils.hpp>
+ 
+@@ -812,6 +813,32 @@
+ }
+ 
+ 
++void Gemm::f16_esimd_grouped(const uint16_t* const* X, const uint16_t* const* W,
++                             float* const* Y, const int64_t* rows, int count,
++                             int64_t N, int64_t K) {
++    if (!handle_ || !X || !W || !Y || !rows || count<1 || count>8 ||
++        N<1 || K<1 || N>INT_MAX || K>INT_MAX)
++        throw std::invalid_argument("direct F16 ESIMD invalid group/shape");
++    auto* desc=(dpct::blas::descriptor_ptr)handle_;
++    auto& q=desc->get_queue();
++    if (!q.is_in_order()) throw std::invalid_argument("direct F16 ESIMD in-order queue required");
++    bool supported=(N==1280 && K==2560)||(N==2560 && K==640);
++    for (int i=0;i<count;++i) {
++        if (!X[i] || !W[i] || !Y[i] || rows[i]<1 || rows[i]>INT_MAX)
++            throw std::invalid_argument("direct F16 ESIMD invalid operand/rows");
++        supported=supported && rows[i]<=64 &&
++            !(reinterpret_cast<uintptr_t>(X[i])&15) &&
++            !(reinterpret_cast<uintptr_t>(W[i])&15) &&
++            !(reinterpret_cast<uintptr_t>(Y[i])&15);
++    }
++    if (!supported) {
++        // Same original individual BLAS, never the faulted grouped oneMKL API.
++        for (int i=0;i<count;++i) f16(X[i],W[i],Y[i],rows[i],N,K);
++        return;
++    }
++    b70::prefill_esimd_v1::launch(q,X,W,Y,rows,count,int(N),int(K));
++}
++
+ void Gemm::f16_grouped(const uint16_t* const* X, const uint16_t* const* W,
+                        float* const* Y, const int64_t* rows, int count, int64_t N, int64_t K) {
+     if (count < 1 || count > 8 || N < 1 || K < 1 || N > INT_MAX || K > INT_MAX)
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -241,7 +241,21 @@
+     }();
+     return enabled;
+ }
+-int dq_slots() { return grouped_f16_experts() ? DQ_GROUP : DQ; }
++bool esimd_f16_experts() {
++    static const bool enabled=[] {
++        if (grouped_f16_experts()) {
++            std::fprintf(stderr,"direct F16 ESIMD requires STRATA_PF_GROUPED_F16=0\n");
++            std::abort();
++        }
++        const char* v=std::getenv("STRATA_PF_ESIMD_F16");
++        if (!v || std::strcmp(v,"0")==0) return false;
++        if (std::strcmp(v,"1")==0) return true;
++        std::fprintf(stderr,"STRATA_PF_ESIMD_F16 must be absent, 0 or 1\n");
++        std::abort();
++    }();
++    return enabled;
++}
++int dq_slots() { return esimd_f16_experts() ? DQ_GROUP : DQ; }
+ // The BF16-weight projections (hyper-connection, SSM alpha/beta, indexer, router, shared gate, PLE key/value) take
+ // BF16 activations here and FP32 ones in decode. STRATA_PREFILL_BF16X2=1 adds each activation's BF16 remainder as a
+ // second GEMM (Y = W.hi + W.lo, ~16 mantissa bits): a router that picks its top 10 from the same x decode would.
+@@ -3272,9 +3286,9 @@
+                     const bool fused_only = mmq_plan().any && mmq_plan().fo[(size_t) l];
+                     const bool fused_nat = (use_mmq || fused_only) && stream_all && no_peer && lay.native && fused::native_supported(mmq_gt, mmq_dt);
+                     const bool fused_l = (use_mmq && stream_all && no_peer && !lay.native && fused::enabled()) || fused_nat;
+-                    const bool grouped_f16 = grouped_f16_experts();
++                    const bool grouped_f16 = esimd_f16_experts();
+                     if (grouped_f16 && (!lay.native || use_mmq || fused_l || !no_peer || m.pp)) {
+-                        err = "prefill grouped f16: native single-device FP16 expert route required";
++                        err = "direct F16 ESIMD: native single-device FP16 expert route required";
+                         return false;
+                     }
+                     // #583 / #954: the fused layout's GU/H/Xq hold the grouping tables and the int8 rows, sized for
+@@ -3992,7 +4006,7 @@
+                                 w[i] = m.dq_gu[i]; y[i] = m.GU + f16_off[i] * 1280;
+                             }
+                             pt.mark(kPfGemmGU, cs);
+-                            m.gemm.f16_grouped(x, w, y, f16_rows, pending_f16, 1280, N);
++                            m.gemm.f16_esimd_grouped(x, w, y, f16_rows, pending_f16, 1280, N);
+                             for (int i = 0; i < pending_f16; ++i)
+                                 swiglu_interleaved(m.GU + f16_off[i] * 1280,
+                                                    m.Hh + f16_off[i] * 640, f16_rows[i], m.cs);
+@@ -4001,7 +4015,7 @@
+                                 w[i] = m.dq_d[i]; y[i] = m.Dm + f16_off[i] * N;
+                             }
+                             pt.mark(kPfGemmD, cs);
+-                            m.gemm.f16_grouped(x, w, y, f16_rows, pending_f16, N, 640);
++                            m.gemm.f16_esimd_grouped(x, w, y, f16_rows, pending_f16, N, 640);
+                             pending_f16 = 0;
+                         };
+                         // one expert's products from its blob on the device; `slot` (a ring slot, or -1 for a resident
+--- /dev/null
++++ b/sycl/include/strata/prefill/grouped_f16_esimd_v1.hpp
+@@ -0,0 +1,94 @@
++// Source-only bounded prototype: original FP16 operands, FP32 output, alpha1/beta0.
++// No oneMKL metadata, host_task, allocation, normal wait, SwiGLU or scatter change.
++#pragma once
++#include <sycl/sycl.hpp>
++#include <sycl/ext/intel/esimd.hpp>
++#include <array>
++#include <cstdint>
++#include <stdexcept>
++#include <type_traits>
++
++namespace b70::prefill_esimd_v1 {
++namespace esimd = sycl::ext::intel::esimd;
++struct Group {
++    const sycl::half* x;
++    const sycl::half* w;  // Original dequantized W[N][K], not permanently repacked.
++    float* y;
++    int rows;
++    std::uint64_t first_tile;
++    std::uint64_t end_tile;
++};
++struct Batch { std::array<Group,8> group{}; int count; int n; int k; };
++static_assert(std::is_trivially_copyable_v<Batch>);
++
++// Caller owns USM operands in q's context until the returned event completes.
++// q must be the SAME in-order compute queue used by the dequant/SwiGLU/down ring.
++// This bounded prototype accepts actual GU/down shapes plus two small operators.
++inline sycl::event launch(sycl::queue& q,const std::uint16_t*const* x,
++                          const std::uint16_t*const* w,float*const* y,
++                          const std::int64_t* rows,int count,int n,int k) {
++    if (!q.is_in_order() || !x || !w || !y || !rows || count<1 || count>8 ||
++        !((n==1280 && k==2560)||(n==2560 && k==640)||
++          (n==16 && k==16)||(n==32 && k==32)))
++        throw std::invalid_argument("bounded direct F16 DPAS shape/queue required");
++    Batch batch{}; batch.count=count; batch.n=n; batch.k=k;
++    std::uint64_t total=0;
++    for (int g=0;g<count;++g) {
++        if (!x[g] || !w[g] || !y[g] || rows[g]<1 || rows[g]>64 ||
++            (reinterpret_cast<std::uintptr_t>(x[g])&15) ||
++            (reinterpret_cast<std::uintptr_t>(w[g])&15) ||
++            (reinterpret_cast<std::uintptr_t>(y[g])&15))
++            throw std::invalid_argument("owned aligned USM rows1..64 required");
++        const auto next=total+std::uint64_t((rows[g]+7)/8)*(n/16);
++        batch.group[g]={reinterpret_cast<const sycl::half*>(x[g]),
++                        reinterpret_cast<const sycl::half*>(w[g]),y[g],
++                        int(rows[g]),total,next};
++        total=next;
++    }
++    // All pointer/shape descriptors are kernel captures BY VALUE. The ordinary
++    // caller arrays may disappear after launch; pointed-to ring buffers may not.
++    return q.parallel_for(sycl::range<1>(total),
++        [=](sycl::id<1> id) [[intel::sycl_explicit_simd]] {
++            const std::uint64_t tile=id[0]; int selected=0;
++            for (int i=0;i<batch.count;++i)
++                if (tile>=batch.group[i].first_tile && tile<batch.group[i].end_tile)
++                    selected=i;
++            const Group g=batch.group[selected];
++            const std::uint64_t local=tile-g.first_tile;
++            const int m0=int(local/(batch.n/16))*8;
++            const int n0=int(local%(batch.n/16))*16;
++            esimd::simd<float,128> acc(0.0f);
++            for (int k0=0;k0<batch.k;k0+=16) {
++                esimd::simd<sycl::half,128> a(sycl::half(0.0f));
++                esimd::simd<sycl::half,256> b(sycl::half(0.0f));
++#pragma unroll
++                for (int r=0;r<8;++r) {
++                    if (m0+r<g.rows) {
++                        auto xr=esimd::block_load<sycl::half,16>(
++                            g.x+std::int64_t(m0+r)*batch.k+k0);
++                        a.template select<16,1>(r*16)=xr;
++                    }
++                }
++#pragma unroll
++                for (int c=0;c<16;++c) {
++                    auto wr=esimd::block_load<sycl::half,16>(
++                        g.w+std::int64_t(n0+c)*batch.k+k0);
++#pragma unroll
++                    for (int kk=0;kk<16;++kk)
++                        b[(kk/2)*32+c*2+(kk%2)]=wr[kk];
++                }
++                // A:8x16 row-major. B:16x16 vertical FP16 pairs (VNNI).
++                // Current Intel header deduces fp16 precision from sycl::half.
++                acc=esimd::xmx::dpas<8,8,float>(acc,b,a);
++            }
++#pragma unroll
++            for (int r=0;r<8;++r) {
++                if (m0+r<g.rows) {
++                    esimd::simd<float,16> result=acc.template select<16,1>(r*16);
++                    esimd::block_store<float,16>(
++                        g.y+std::int64_t(m0+r)*batch.n+n0,result);
++                }
++            }
++        });
++}
++} // namespace b70::prefill_esimd_v1
