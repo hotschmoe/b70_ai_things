@@ -19181,3 +19181,32 @@ RESULT -> Planbb977add1af4d1a15c170a8297997f78fd663b6d6327773cdf443b797769fc15;
 fullypinned naturalHC0/1 MTPonboth launchreadyaftercurrent58 probe.
 VERDICT -> Reader schema correction only, no newGPU/model/compile
 authority or discardedcontrols rerun. FailedV1 remainsfailed.
+
+
+## 2026-10-12: layer-level paired cooperation cuts largest pause
+
+CONFIG -> Source58 paired/noMTP/native2/defaultshare0.5, A512/C64 after
+actualA256, copy0/mirror0/trace1, unchangedmodel/math/cuts.
+COMMAND -> Actual35331PASS; independentreader75616PASS.
+RESULT -> Allfull512/64 IDs equalOFF/ON andaccepted52serial; both63
+actualrows2/448rows1 events. ON151services (GPU0=73,GPU1=78).
+Longmaxgap13427.507->942.970ms, incomingTTFT37111.952->28063.166ms,
+longcompletion87027.268->79922.917ms; tradeofflongP50/P95
+47.772/148.201->72.775/224.102ms. Source/all8/full4/health/kernel/
+normalExit0/creatorEOF/ownedremove PASS. Producer3e3531721d7593a8c79520d3905ab7509ca52424208c12d0564157011cb65db7;
+public81aebab33636fc019d15557432f3341f0830cb3d3a7959b826e7f2408252ded5.
+VERDICT -> Encouragingfirst diagnosticpair, notcleanrepeat/API/fairness
+stability/physicalidle/BW orruntimebudget/cancel/4/6/shelf proof.
+
+CONFIG -> Sharedoriginal34/private-slotV2 semanticC++ NoDri fixture,
+onefreshobject only; no weights/read/runtimeantiation.
+COMMAND -> Actual59166 compilePASS24s; objecthashreadbackPASS.
+RESULT -> Receipt1aec864a6d519975d92256e12ac181c5b617f2c9d912583140c4ccd2266585ed;
+objectc583ec7f87b3413036bc5647be4533d0b193a89b1553ffbc485f06a8751ac140.
+VERDICT -> Compilecontract only, private-slotmath/lifetimeGPU stillpending.
+
+CONFIG -> CorrectedmarkedHC pairednatural, MTPONbotharms, HC0/1 only.
+COMMAND -> Actual15426 nowbothleases atF17/hc-t2-marked-paired-natural-v3.
+RESULT -> FreshV2 controls66ef/source/ELF/full512parentbcaf pins filled.
+VERDICT -> Actualmatchedmodel/coherence/residency/health/normalretirement
+required beforekernel benefit. Fullcampaign remainsactive.

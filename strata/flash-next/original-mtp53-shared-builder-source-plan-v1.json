@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/build_original_mtp53_shared_semantic_v1.py": "47fcd1b9e358924df50a437d70e4b3538194390640bc57e74413a9247e08a5dc",
+    "strata/flash-next/test_original_mtp53_shared_builder_cpu_v1.py": "26d2bddf3035aa454fe8987259f20c01d26e681b45cdff717b375ff48111832e",
+    "strata/flash-next/build_original_mtp53_two_stage_v6.py": "9015e633ef91d4aea059a1d4542da70d2d26f13ab0c68eaf84efe0e76dfca209",
+    "strata/flash-next/original-publisher-mtp53-two-stage-proposal-v6.json": "eaf1239278657f964ba537a56d778c1ac9cabfc0997684f34afad4a88026f470",
+    "strata/flash-next/original-mtp53-shared-compile-source-plan-v1.json": "c61a0ba94f4f54cf6542b404bea23c67b107cac676921ca992476e6b38b13517"
+  },
+  "scope": "One fresh NoDri semantic object only; actual fixture/header/V6/SDK/recipe pins, no linked executable, model or runtime",
+  "compiler_executed": false
+}
