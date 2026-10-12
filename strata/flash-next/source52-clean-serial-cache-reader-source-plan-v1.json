@@ -1,0 +1,18 @@
+{
+  "CPU_command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_source52_clean_serial_cache_cpu_v1 -q",
+  "files": {
+    "docs/20261012_flashnext_source52_clean_serial_cache_v1.md": "087d7d2f28779f13a72bfca676dd380d63bf1c0916982629720fc42cbd72e726",
+    "strata/flash-next/native52_startup_option_preflight_v1.py": "6e2250cb9970b2cc5aa341beb801fb83d5474ebee734290af8802634c6d20e79",
+    "strata/flash-next/run_natural_p2048_native_v2.py": "2fcaac854d0f379799905fcfc6e7fe1bbfbdfa03be7bb6a17e3fecf1f099fd52",
+    "strata/flash-next/run_source52_clean_serial_cache_latency_v1.py": "29f1b9c3bb4c980cbbad50231272f7ee85dac06ad3fba3fced3b72269f91e5cd",
+    "strata/flash-next/source52-clean-serial-cache-latency-recipe-v1.json": "f1f68e4ed755ab7e6f1e3383ff5ff4ad47c9fbc706dc8115bfe86156b0b58c70",
+    "strata/flash-next/source52_clean_serial_cache_contract_v1.py": "35bb947fc14d6bb9f9e7fddc43fd0d19cb091eedc9843c9c3b97777e300656e0",
+    "strata/flash-next/test_source52_clean_serial_cache_cpu_v1.py": "1b956212932b7e5b9e8564512298782a60cb4f6cd49671f2a04d735036ad1615",
+    "strata/flash-next/validate_source47_grouped_f16_model_v2.py": "f8cd5bdf1520335eeefa84b09660df7200daf129cc69d9926537b758b5dbf1f1",
+    "strata/flash-next/validate_source52_clean_serial_cache_latency_v1.py": "ddd8b3f71901e6550bdcf8b6f95ea13668ae55695c1473d9a1f9e51940078d80"
+  },
+  "full_cache_qualified": false,
+  "instrumented_cache_diagnostic": false,
+  "schema": 1,
+  "scope": "current original boundary plus clean native count/ID/finish/timing observer-OFF joins"
+}

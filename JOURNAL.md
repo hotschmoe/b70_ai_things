@@ -17963,3 +17963,19 @@ VERDICT -> SameactualGPUcallback/IDs/copybytes retained; CPUhostlane/H36/
 calibration/fullcoverage/totalbusbandwidth remainunqualified. PriorV4
 failedbudgetartifacts unchanged. Cleancache companion and composedoriginal
 MTPdraftstep sourcework ongoing; fullcampaign objective active.
+
+
+## 2026-10-12: device-only OFF observations; two-arm aggregate limit
+
+CONFIG -> V5 pairP2048GEN8/device-onlyPTI, same1GiB whole-rootcap.
+COMMAND -> A warm/selected/finalizer0/per-armraw810159793B; readonly47823
+inspectormatched581094Clock/Chromeinstances inactualselected20..583306.
+RESULT -> OFFobserveddevice0/1 allengine0,0; H2D22.0995GB+18.3587GB,
+copyunion1.613/1.324s, compute6.826/6.647s, overlap0each. No physicalbus
+traffic/hostalignment/fullcoverage/idle claim; diagnosticUNADMITTED.
+B pusheswholeaggregatepastcap peak1571860968B; producer96965cleanup live.
+VERDICT -> Preservefailedaggregate, no matchedONprofilePASS. Independent
+single-arm ownedroots withsamecap pluslatermatchedreadonlyjoin next.
+Cleancache actualconstruction56150PASS; no cleanGPUlatencyresultyet.
+OriginalMTPcomposed FFN/ownhead/targetdecision step sourcework progressing;
+loadedmath/accept-reject position/state proof stillrequired. Goalactive.

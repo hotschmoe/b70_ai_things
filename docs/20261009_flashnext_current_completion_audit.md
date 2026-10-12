@@ -2030,3 +2030,15 @@ a flags-only device capture can omit CPU-call rows within the same budget,
 leaving host preparation/timing and calibration explicitly incomplete.
 Current cheap source52 option preflight rejects unsupported H36+pair before
 lease/model scans. Whole original MTP graph and loaded fidelity remain open.
+
+
+## 2026-10-12 - Device-only profiler volume and aggregation
+
+V5 device-only removes CPUcall callback, retaining actual GPU rows/IDs and
+clock. First arm selectedP2048GEN8 has DONE and clock472894937B/Chrome324271640B
+(~797MB), below1GiB for that arm. The inherited Watcher(out) counts the
+WHOLE experiment acrossbotharms, so this is not yet an admitted two-arm
+capture. Current live run/caps are unchanged. Separate complete owned
+single-arm experiments could retain each1GiB cap and later matched CPUjoin;
+no filtering/relabeling a failed aggregate. Whole host prep/calibration/
+physical total bandwidth and complete operation coverage remain unproven.
