@@ -1,0 +1,61 @@
+{
+  "actual52_SDK": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261012T012115Z-_kwur0ww",
+  "actual52_generate_sha256": "2ce4a5819561eeb9e3aea6847358c9058bbf12cb1b2ff2c590e15f095d9cc6e3",
+  "actual52_receipt_sha256": "8f6c09aa60493dd6403771cd10592bdb780947110c3035379b4493d0a4298d94",
+  "capacity": 4096,
+  "compiled": false,
+  "constructor_source_mapping_drain_order_fixed": true,
+  "draft_device": 1,
+  "draft_step_delta": "remaining max64->512 only; recurrence/quantization byte-exact",
+  "explicit_both_stage_PLE_prev_metadata_save_restore": true,
+  "forced_controls_mode_separate_fresh_process": true,
+  "fullmath_API_cache_concurrency_speed_qualified": false,
+  "last_prefill_owned_original_recurrence": true,
+  "natural_GEN_cap": 512,
+  "natural_prompt_tokens": 2048,
+  "new_overlay_sources": {
+    "strata/flash-next/original-mtp53/draft_step_pair_v1.hpp": "sycl/include/strata/kernels/original_mtp53_draft_step.hpp",
+    "strata/flash-next/original-mtp53/loaded_main_adapter_pair_v1.hpp": "sycl/include/strata/kernels/original_mtp53_loaded_main_adapter.hpp",
+    "strata/flash-next/original-mtp53/owned_runtime_pair_v1.hpp": "sycl/include/strata/core/original_mtp53_owned_runtime.hpp",
+    "strata/flash-next/original-mtp53/paired_greedy_v1.hpp": "sycl/include/strata/kernels/original_mtp53_pair_greedy.hpp"
+  },
+  "newall8_engine_required": false,
+  "original_arithmetic_changed": false,
+  "own_source_sha256": {
+    "strata/flash-next/original-mtp53/draft_step_pair_v1.hpp": "4172105ba819283a1cd375c5818fb258e77a5d437d08ff0803f482612e1e990d",
+    "strata/flash-next/original-mtp53/loaded_main_adapter_pair_v1.hpp": "363eae00e59bf7f5132d4eeda43ddceda6bc9009e4ff72a53b43501bfede3ce3",
+    "strata/flash-next/original-mtp53/owned_runtime_pair_v1.hpp": "6c074948d2d416939d8eadb4b7be7e63bd9518f404933db5923e87c8704d2b03",
+    "strata/flash-next/original-mtp53/paired_greedy_v1.hpp": "ddd3f556a98c8763b68e92c47ed5617e9690cd1311f8477263560f1fb461e3b3",
+    "strata/flash-next/original-mtp53/two_stage_source_design_v1.md": "96c1ba1e24cb2efb9c6ef1a9203beef0289532322f4083716f37853ed4ab90dc",
+    "strata/flash-next/prepare_original_mtp53_two_stage_compile_v1.py": "cf6d62a1efaccc991920e69d947edeb548da9125afc06ef68fb7fb26e57298f0"
+  },
+  "pending_prefill_callback_retain_exit86": true,
+  "prefill_chunk": 512,
+  "real_MAIN_batched_prefill": true,
+  "required_next_actual_proofs": [
+    "Fresh NoDri overlay MAIN compile/package/source/archive closure",
+    "Actual LAST queue/context/USM ownership and GPU1 residency/cache budget",
+    "Both-stage forced reject/accept exact checkpoint/QSA byte restoration",
+    "Real pairedP2048/GEN512 OFF/ON natural outputs/repeats/currentidentity/health/teardown",
+    "Independent serial-reference comparison without tolerance fitting"
+  ],
+  "required_phase_timing": "absent or0 only; no2048buffer overflow/truncation",
+  "runtime_qualified": false,
+  "schema": 1,
+  "scope": "SOURCE_ONLY_original34_tensor_LASTGPU_pair_diagnostic_not_serving",
+  "static_original_tensor_bytes_resident_both_OFF_ON": 2775258112,
+  "stock_target_run_commit_wait_preserved": true,
+  "target_last_context_pointer_guard": true,
+  "target_stages": [
+    [
+      0,
+      0,
+      24
+    ],
+    [
+      1,
+      24,
+      48
+    ]
+  ]
+}

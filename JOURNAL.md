@@ -18800,3 +18800,31 @@ source57-native2-boundary-v1-run-v1. Both57OFF/ON incoming-after256
 controls must match full512/64 oldserial reference and eachother.
 VERDICT -> Compile/constructor accepted; current latency/coherence/
 health/teardown outcome pending, no API/4stream/fairness promotion.
+
+
+## 2026-10-12: source57 cadence fix admitted with latency tradeoff
+
+CONFIG -> Fresh57 OFF/ON native2, P2048 A512/C64 after actual A256,
+defaultshare0.5, mirror0, unchanged512 chunks/pin/turn/tail boundaries.
+COMMAND -> Actual16955 PASS769s; independent47281 PASS.
+RESULT -> Bothfull512/64 histories exact acrossarms andaccepted52serial;
+63 completed rows2 events/arm, normalexit/EOF/ownedretirement/source/
+all8/full4/health/collective/kernel PASS. Longmaxgap11983.327->8515.676ms
+(-28.94percent); incomingTTFT31.151->36.624s (+5.473s), completion
+40.466->45.083s. LongP50 85.341->89.209ms, P95 144.892->147.438.
+Producerb34cd5711cb775fd02935b1b2de5f2506fe73d7467061bb39a9739de51d60fd6; publicad88647b2f5892270216bd6c136652333bb64da45f5dab4740bcafd839f2be61.
+VERDICT -> Cadence hole split, remaining chunk-level pauses stillseconds;
+tradeoff explicit, no cleanABBA/stability/API/native4 promotion.
+
+CONFIG -> Original34-tensor MTP onlastGPU1, capacity4096, realbatched
+prompt callback andbothstage target/commit/forcedstate snapshots.
+COMMAND -> V2NoDri compile11938 FAILED13s missingphaseheader. SourceV3
+adds unchangedphase header; rootpreemptively foundconstructor parameter
+namecollisions, V4onlyrenamesparams. V1/V2/V3 preserved.
+RESULT -> Actual38037 V4compile PASS97s, ELF
+b10bf3c60a3bef4b04f5b3dfd5655612094f0e717632e0f2fc33ba7d6a0a841a,
+receiptdb0d4e10c9724d772958a8bcabe217c3effc333acf960aaa4b58f07272aa64bb.
+Root corrected malformed /tmp launchseparator/PYTHONPATH and actual
+pairedcontrols28486 nowbothleases. No previous MTPpair GPUproof yet.
+VERDICT -> Compileaccepted, forced6frames/3steps andcurrent identity/
+health/teardown gates pending beforeactualP2048/GEN512 pairrun.

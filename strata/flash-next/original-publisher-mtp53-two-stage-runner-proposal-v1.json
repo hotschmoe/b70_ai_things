@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "scope": "fresh actual V4 paired controls then original P2048/GEN512 native OFF/ON; no API/fullmath/speed qualification",
+  "bindings": {
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/run_original_mtp53_two_stage_v1.py": "821de460e65d88664727f5b8b2576b3ba5644fd7c56068a33d83fdf09df8f71b",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_original_mtp53_two_stage_runner_cpu_v1.py": "c8ce8931fd9e2cf688a3bcf03b759cf9e70a031f29cd49b66195f5322d24e412",
+    "/mnt/vm_8tb/github/b70_ai_things/docs/20261012_flashnext_original_mtp_two_stage_runner_v1.md": "b6271c84299a9196ee975568efa5748b77aedafa37dc4a65db5f53eff6fec433",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/original-publisher-mtp53-two-stage-proposal-v4.json": "5717838d627ca867e5b8f213cadf9c1ddbe409f7d28745d47d7a8cc58dc15d0b",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/run_original_mtp53_greedy64_v4.py": "4cc781446ef712c9a0579b2ba6fc949b24238bd9894d4dd4c65abf254da0dde4",
+    "/tmp/b70-original-mtp53-main-v5-card0-state-preserving-blueprint.json": "fe00ce211a02000c78251c34907bf4369ab8042ce1db6e2f775c96ba6a6c750f",
+    "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/natural-p2048-tokenizer-v1/corpus.json": "61b5caabf76bfedfda334973741366a8341e9f600cf00b42ac042f6700afdbef",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/original-mtp53/draft_step_pair_v1.hpp": "4172105ba819283a1cd375c5818fb258e77a5d437d08ff0803f482612e1e990d",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/original-mtp53/loaded_main_adapter_pair_v3.hpp": "84c5ba57e7622719f29e1eecc95391a31c33b5c3af21abed1137354fcacaf799",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/original-mtp53/owned_runtime_pair_v1.hpp": "6c074948d2d416939d8eadb4b7be7e63bd9518f404933db5923e87c8704d2b03",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/original-mtp53/paired_greedy_v1.hpp": "ddd3f556a98c8763b68e92c47ed5617e9690cd1311f8477263560f1fb461e3b3",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/original-mtp53/phase_timing_v1.hpp": "f053a5d853e96c0f4d1709cb988177bb0cfc53d5dd65055e8dd7b6da07d81242",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/original-mtp53/two_stage_source_design_v1.md": "96c1ba1e24cb2efb9c6ef1a9203beef0289532322f4083716f37853ed4ab90dc",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/prepare_original_mtp53_two_stage_compile_v4.py": "f3656ef6e03cedc47a27e1da9acaa1bc8efddc36b1bb8eb32e792652809e756b"
+  },
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_original_mtp53_two_stage_runner_cpu_v1",
+  "runtime_performed": false,
+  "both_leases": [
+    0,
+    1
+  ],
+  "draft_device": 1,
+  "target_stages": [
+    [
+      0,
+      0,
+      24
+    ],
+    [
+      1,
+      24,
+      48
+    ]
+  ],
+  "natural_processes": 12,
+  "whole_phase_fresh_full5_scans": 2,
+  "phase_timing_enabled": false
+}
