@@ -18690,3 +18690,25 @@ RESULT -> Same native cache policy; require equal actual resident/profile
 prefix/mirrorbytes/segmentmaps. No E2 opportunity counter introduced.
 VERDICT -> Model result pending; no residency-source workaround or
 combined prefill gain claim. Full campaign remains active.
+
+
+## 2026-10-12: expert pair model parser refusal; normal scheduler live
+
+CONFIG -> Both originalMTP arms intended; reuse0/1 only, unchanged
+cachepolicy, full64 control, equal resolved residency required.
+COMMAND -> Native model compile97453 PASS101s; actual71908 FAILED560s.
+RESULT -> OFF emitted64 IDs/EOS exactly matching accepted prior original
+MTP64, exited0, ownedremoved and post-health/kernel/full5 close passed.
+Parser rejected complete profile before ON. Actual profile uses uint16
+layer/expert ranked pairs followed by int32 inverse ranks; V1 mistook
+the full payload for uint32 pairs. Producer058379bcf984ef3c49764adbf08d301e0f18ce45c81b46f487aa146f6861658e.
+VERDICT -> Failed diagnostic retained, no speedcomparison. New parser
+version must replay saved OFF and validate exact consumed prefix. No
+GPUfault/reset or nativecode change required by this refusal.
+
+CONFIG -> Current52 native2 default scheduler, decodeSHARE absent0.5,
+mirror0, authentic A512/C64, second P2048 arrives after actual A256.
+COMMAND -> Genuine constructionPASS; actual28018 acquired pairlease.
+RESULT -> Compact existing window events only, observerARM absent;
+serial versus overlapped completehistories and perstream latency pending.
+VERDICT -> Direct latency/fairness goal probe, not cleanAPI/shelf proof.
