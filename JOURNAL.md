@@ -18045,3 +18045,29 @@ andnextONcapture. Freshseparate MTP wholeSHA requiredbeforeloadedGPU.
 Loadedfixture usesSYNTHETICdecisions, actualMAINexecution false; numerical/
 sparse score-tie/target integration/API/concurrency/speed/shelf notqualified.
 Completeoriginalgoal staysactive; no MTPdecode benchmark yet.
+
+
+## 2026-10-12: capture-free serial cache latency accepted
+
+CONFIG -> SameSDK52 paircache1536pin/P2048A/P2023B/sixGEN64 each
+cold/reuse, SFD/PCL/PREFIXOFF/mirror0/copy0/noMTP/pref512.
+COMMAND -> Producer50629PASS762s; independent29925PASS.
+RESULT -> Twelveoutputs/finish identicalcoldhit androle repeats, actual
+0firstthen1536x5/new512or487, full4/sourceall74/all8/health/kernel/owned
+retirementpass. RepeatedfreshpipeTTFT13.858-14.021s vs4.576-4.753hits,
+about66-67%lower;64-token hitcompletion7.39-7.55s. Alllength/cap64.
+Producerf708548c1d92e78aab43be99b5295c2b13a052638b3ae4eb5851da5877c5ea6e;
+publica593c5ad713debcd04f37feed564abf1efbbd21b212655e1785acd33bd3ac7b7.
+VERDICT -> Nativecapture-free latencyobserved, nohead/stagecapturetransfer,
+HTTP/fullcachefamily/nativeconcurrency/originalfullmath/shelf remainsopen.
+See docs/20261012_flashnext_clean_serial_cache_results.md.
+
+CONFIG -> Separateonearmcopy1 current52 deviceprofile P2048GEN8,
+pausedwarm/selected, oneownedpair lifetime, rootcap1GiB/clock512MiB.
+COMMAND -> Genuineconstruction1ca452c2+startupPASS; actual59431nowholds
+pairlease atF17/source52-p2048-copy1-profile-v6-run-v1.
+RESULT -> ONcapture/clockjoins/overlap/guards pending. Noexistingfailed
+twoarmbudgetPASS imported.
+VERDICT -> DirectONdeviceevidence next; originalMTPthreefixture NoDri
+compile prepared44e47160 butnotexecutedyet. HCtilecandidate sourcework
+preservesexact arithmetic/old8tokencaller; fullcampaign remainsactive.

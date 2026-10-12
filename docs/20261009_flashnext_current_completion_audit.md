@@ -2054,3 +2054,24 @@ Clean cache companion50629 nowlive, identical1536pin A2048/B2023 GEN64
 cold/reuse withSFD/PCL/PREFIX OFF. Genuine command construction passed;
 actual latency/output/work/health proof pending. OriginalMTP loadedstep
 sourcework continues; no compiled/math/accepted-draft claim yet.
+
+
+## 2026-10-12 - HC prefill source bottleneck
+
+Observed OFF raw namedHCunion4.555/4.272s, Q8projection3.601/3.321s,
+versus GEMM.437/.472s, is an unadmitted selected-window lead. Current native
+HCprojection descriptor accepts<=8tokens; prefill.cpp2867 splits512 into64
+independent8-token submissions. First candidate reuses Q8decode across2/4
+tokens with the same peroutput FMA/reduction order and unchanged caller
+sequence. Wider descriptor/composition batching requires separate original
+math/workspace proof. No sourcecandidate/GPU/modelspeed qualification yet.
+Clean cache fresharm6 completed; hitarm/finalchecks remainlive50629.
+
+
+## 2026-10-12 - Capture-free serial cache result
+
+Cleanproducer50629 PASS762s/reader29925 PASS: outputs/workcounts/repeats
+exact, diagnosticflagsOFF, hitTTFT4.576-4.753s versusrepeatedfresh13.858-14.021s.
+See20261012_flashnext_clean_serial_cache_results.md. Nativecapture-free
+latencyobserved, noHTTP/fullfamily/shelfclaim;all64cap/length. Separate
+singlearm ONdeviceprofile59431 is live; originalMTPcompile notexecuted.
