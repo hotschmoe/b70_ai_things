@@ -19085,3 +19085,28 @@ COMMAND -> Rootprepared original-mtp53-shared-compile-inputs-v1.
 RESULT -> Sourceplanc61a0ba94f4f54cf6542b404bea23c67b107cac676921ca992476e6b38b13517.
 VERDICT -> C++ compilation/private-slot math andserving stillpending;
 no legacyKV-only snapshot replacement orper-token stat/hash overhead.
+
+
+## 2026-10-12: marked HC route observer misses early stage; model healthy
+
+CONFIG -> MarkedV1 pairedHC T2 controls, original34drafter/24-24target.
+COMMAND -> Actual65345 terminalFAILED aggregateparse; rawsixstateframes/
+threesteps independentlypass, nativeExit0/EOF/ownedremove normal.
+RESULT -> GPU1 capture48eligible/48selected and3submitted/3completed;
+GPU0 missing, observerFINALfailed1. Strictpercard andcompiledpair
+posthealth HEALTHY, freshkernel/nohardwarefault gatesclose. Producer
+d429619faf1cc68addb65f13dfc8299c1e146f95b69333a54cc197c1c4b9d201.
+Rootsource localization: earlierstage handoffreturns beforehost
+hc_record.finish; missingpendingrecord preventsstage0 graphseal.
+VERDICT -> Failedobserver proof remainsFAILED, not reclassifiedpass.
+V2 addsfinish onlybefore successful earlierstage return, noGPUcmd/ABI/
+mathchange. Incrementalcompiler willcopy3verified unchangedobjects/
+archives, freshlycompile verify andfreshlink; actualbuild pending.
+
+CONFIG -> Teacher-only unusedheadskip V2 directnatural, MTPenabledboth
+arms, allweights/recurrence/decode/cuts/residency unchanged.
+COMMAND -> Root19552 nowbothleases atF17/
+original-mtp53-teacher-head-natural-v2-run-v1.
+RESULT -> Baselinehead0 mustpass full512/reference/counters/health/
+ownedretirement beforehead1; changed-path counters2048versus1 required.
+VERDICT -> ActualmatchedprefixTTFT testlive; no benefitclaimyet.
