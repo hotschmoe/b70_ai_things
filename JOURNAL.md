@@ -18620,3 +18620,24 @@ run. Fixture covers40 type/storage/group cases plus changed-input graphs
 and complete-byte OFF/ON outputs/scratch/Q8. Root runtime wrapper ready.
 VERDICT -> No operator arithmetic or speed claim before actual run.
 Full model E2 trial conditional on operatorPASS; full campaign active.
+
+
+## 2026-10-12: expert operator retirement guard tightened
+
+CONFIG -> Standalone expert-pair OFF/ON onecard owner; V1 preserved.
+COMMAND -> C112 source review found unknown-inspection lease-release
+seam. Root V2 retains lease until exact owned terminal absence. V3 also
+latches deferred signals and makes pending-evidence writes best-effort.
+RESULT -> Actual V3 retirement AST fault injection PASS for inspection
+timeout, evidence disk failure and deferred SIGTERM. No Docker/GPU in
+these CPU controls. Initial mock lacked DEVNULL and was terminated as
+CPU-only process795737; corrected bounded mock passed, no runtime claim.
+VERDICT -> Actual operator GPU run still pending. Source guard now
+prevents post-health while owner retirement is unknown.
+
+CONFIG -> Native4 cache55708 live pair lease, operator compile waiting.
+COMMAND -> Cold pure saved-data audit PASS; queued compile56509 reached
+600s lease timeout124 without executing. Requeued54472 with timeout0.
+RESULT -> Cold actual rows4/mask15, first/later49 fourowners, all8
+histories/counters and normal exit PASS; primed process nowlive.
+VERDICT -> Whole cache4 result and operator compile remain pending.
