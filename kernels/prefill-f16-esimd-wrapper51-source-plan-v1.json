@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "status": "SOURCE ONLY; fresh51 actual build receipt deferred to root; no GPU/math/speed qualification",
+  "files": {
+    "kernels/prefill_f16_esimd_wrapper51_harness_v1.cpp": "67a60d99aa51ddf7ad4c9884519bf09f85bdc8ca5136f31eee12bef436836731",
+    "kernels/prefill_f16_esimd_wrapper51_harness_v1.txt": "8cf23750011bb3145651db6bb3d9bfe35bc80666c5ba29451d1d75507d3b62aa",
+    "strata/flash-next/patches/prefill-direct-esimd-f16-source51-v1.patch": "1b2c582d2da9afe50f229388753025fbefaa7e00eb7697a8e479311574123ec1",
+    "strata/flash-next/native51-direct-esimd-f16-engine-build-proposal-v1.json": "bd247e89d6ed2abf9ec4e239609c0d78f87f8609a844621c2d169cb7f360afff"
+  },
+  "expected_actual51_build_plan_sha256": "bd247e89d6ed2abf9ec4e239609c0d78f87f8609a844621c2d169cb7f360afff",
+  "reference": "SDK51 individual Gemm::f16",
+  "candidate": "SDK51 Gemm::f16_esimd_grouped; no direct header invocation",
+  "cases": 3,
+  "qualified_shapes": [
+    [
+      1280,
+      2560
+    ],
+    [
+      2560,
+      640
+    ]
+  ],
+  "qualified_rows": [
+    1,
+    2,
+    7,
+    16,
+    32,
+    48,
+    64,
+    64
+  ],
+  "fallback_rows": [
+    1,
+    2,
+    65
+  ],
+  "guard_rows_per_output": 8,
+  "production_header_modified": false
+}

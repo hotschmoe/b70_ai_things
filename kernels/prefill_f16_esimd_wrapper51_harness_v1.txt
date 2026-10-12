@@ -1,0 +1,42 @@
+CONFIG -> Fresh source51-linked descriptor/queue/glue and safe fallback fixture.
+Existing standalone-header 12-case single/two-queue results remain unchanged.
+No GPU/build/model access by the author; actual51 build receipt is deferred.
+
+COMMAND -> Compile as kernels/prefill_grouped_f16_esimd_harness_v1.txt using
+fresh ACTUAL source51 SDK after root validates its completed build receipt,
+all73 source files and all8 ABI binaries. Substitute this new CPP and output
+prefill_f16_esimd_wrapper51_harness_v1. Retain image39992/2026.1 compiler/link
+flags and current51 libstrata_prefill/engine/kernels/core/kernels_cpu plus
+current51 ggml-cpu/base archives. NoDri compilation: no /dev/dri, model or pack
+mount. No direct prototype header include: all products call the new SDK51
+Gemm::f16_esimd_grouped method, reference calls individual Gemm::f16 only.
+No old source49/50 libraries may supply the new method.
+
+Root-owned GPU fixture commands, separately admitted and retired:
+prefill_f16_esimd_wrapper51_harness_v1 --synthetic --single-queue
+prefill_f16_esimd_wrapper51_harness_v1 --synthetic --two-queue
+Use bin/gpu-run --card 0 with ZE_AFFINITY_MASK=0 and
+ONEAPI_DEVICE_SELECTOR=level_zero:gpu. Root owns health/kernel/deadline/normal
+retirement evidence. No inference or sustained-rate claim.
+
+RESULT -> Exactly three cases per mode, no old sweeps:
+1. GU N1280/K2560,8 experts, rows1/2/7/16/32/48/64/64.
+2. Down N2560/K640, same8 experts/rows.
+3. GU N1280/K2560,3 experts, rows1/2/65. The entire batch must take safe
+   ORIGINAL individual f16, never the faulted grouped-oneMKL method.
+Each uses the same sparse exact-dyadic operands/reference, three asynchronous
+wrapper calls, caller pointer/shape arrays destroyed immediately after submit,
+full output comparison, NaN initial sentinel and8 protected output guard rows.
+Marker fallback_expected1 is emitted only for the third case. This plus the
+admitted wrapper source proves dispatch conditions; no private GPU route is
+claimed to be observed from numeric equality alone.
+
+A void wrapper is followed by an in-order event marker for diagnostic product
+ordering only; no wait is added per call. Existing compute/copy queue dependent
+stage-ring reuse and exception drains are retained. Both queues retire before
+free. Explicit128MiB device/96MiB pinned-host caps retained, oneMKL internal
+allocations unmeasured. No dequantizer or router/model math qualification.
+
+VERDICT -> Fresh51 wrapper needs actual linked compile/GPU pass before model
+integration use. Qualified prototype math/order is unchanged; dense operand
+FP32 sum order and full-model outputs still require matched OFF/ON evidence.
