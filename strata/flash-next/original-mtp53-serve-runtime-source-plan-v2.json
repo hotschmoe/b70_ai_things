@@ -1,0 +1,10 @@
+{
+  "schema": 2,
+  "files": {
+    "strata/flash-next/prepare_original_mtp53_serve_runtime_v2.py": "a0ba95aa75c00d8322841b5c4af0a1288ac4ad305e8d6bf0026203d35c0109b4",
+    "strata/flash-next/original-mtp53-serve-source-plan-v3.json": "42afec9a2dcc17cb71ad6b9540f606f99cc29c2d0ad7bd1ddaec2ed572239365",
+    "strata/flash-next/original-mtp53-serve-builder-source-plan-v3.json": "65ff8e60c9c4e3cad8ccd80e507c9d54bcb1ff3439866a0659bf427ffa390b00",
+    "strata/flash-next/original-mtp53-serve-compile-source-plan-v3.json": "352556d2cd99767cb5272623db4095edf0cb3d0fdaee9beb6fb5effc23ba9d3b"
+  },
+  "scope": "Pure intake requires actual fresh serving V3 native64/header MAIN+CPU11 proof; source/model/API/GPU qualification not inferred"
+}
