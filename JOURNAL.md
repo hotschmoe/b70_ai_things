@@ -18712,3 +18712,16 @@ COMMAND -> Genuine constructionPASS; actual28018 acquired pairlease.
 RESULT -> Compact existing window events only, observerARM absent;
 serial versus overlapped completehistories and perstream latency pending.
 VERDICT -> Direct latency/fairness goal probe, not cleanAPI/shelf proof.
+
+
+## 2026-10-12: exact profile parser repaired against saved real OFF
+
+CONFIG -> Parser-only V2, unchanged compiled model assemblya4ab and
+operator/ELF pins; packed uint16 rankpairs then int32 inverse table.
+COMMAND -> Agent two schema/negative controlsPASS; real saved OFF replay
+PASS, d2b105bcde346de55f97c5431d1daa8409774e095c4c2d0b878aeae077f9073f.
+RESULT ->64 tokens/useful/noEOS, actualwindows and592 hostphase rows,
+7269 resident/17307 mirrored,54,234,726,400 mirrorbytes and51 contiguous
+segments rejoined. Prefix hash now uses actual consumed4B/entry.
+VERDICT -> Read-only parser fix admitted; no new runtime/identity or
+ONspeed proof. Historical failedV1 preserved. Pair fairness28018 live.
