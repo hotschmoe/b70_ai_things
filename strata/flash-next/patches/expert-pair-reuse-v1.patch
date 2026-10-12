@@ -1,0 +1,238 @@
+--- a/sycl/src/kernels/cuda/iq_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/iq_kernels.dp.cpp
+@@ -1780,10 +1780,154 @@
+ }
+ 
+ // The entries e0..e1 of one row: chunks of 4 through the multi-entry dot, the rest one at a time.
++
++// Original type load/apply bodies from the disabled S27 reference, no AMD launch/LDS machinery.
++template<int TY> struct ExpertPairV1;
++template<> struct ExpertPairV1<12> {   // Q4_K
++    struct W { int v[2]; uint16_t aux[2]; sycl::half2 dm; };
++    static W load(const void* __restrict__ vbq, int kbx, int iqs) {
++        const block_q4_K* b = (const block_q4_K*) vbq + kbx;
++        W r;
++        const int bq8_offset = QR4_K * ((iqs / 2) / (QI8_1 / 2));
++        const int* q4 = (const int*) (b->qs + 16 * bq8_offset + 4 * ((iqs / 2) % 4));
++        r.v[0] = q4[0];
++        r.v[1] = q4[4];
++        k_scale_min(b->scales, bq8_offset, r.aux);
++        r.dm = b->dm;
++        return r;
++    }
++    static float apply(const W& r, const block_q8_1* __restrict__ bq8_1, int iqs) {
++        const int bq8_offset = QR4_K * ((iqs / 2) / (QI8_1 / 2));
++        int u[2 * QR4_K];
++        float d8[QR4_K];
++#pragma unroll
++        for (int i = 0; i < QR4_K; ++i) {
++            const block_q8_1* bq8i = bq8_1 + bq8_offset + i;
++            d8[i] = bq8i->ds[0];
++            const int* q8 = (const int*) bq8i->qs + ((iqs / 2) % 4);
++            u[2 * i + 0] = q8[0];
++            u[2 * i + 1] = q8[4];
++        }
++        const uint8_t* sc = (const uint8_t*) r.aux;
++        const uint8_t* m = sc + 2;
++        return vec_dot_q4_K_q8_1_impl_vmmq(r.v, u, sc, m, r.dm, d8);
++    }
++};
++template<> struct ExpertPairV1<13> {   // Q5_K
++    struct W { int vl[2]; int vh[2]; uint16_t aux[2]; sycl::half2 dm; };
++    static W load(const void* __restrict__ vbq, int kbx, int iqs) {
++        const block_q5_K* b = (const block_q5_K*) vbq + kbx;
++        W r;
++        const int bq8_offset = QR5_K * ((iqs / 2) / (QI8_1 / 2));
++        const int* ql = (const int*) (b->qs + 16 * bq8_offset + 4 * ((iqs / 2) % 4));
++        const int* qh = (const int*) (b->qh + 4 * ((iqs / 2) % 4));
++        r.vl[0] = ql[0];
++        r.vl[1] = ql[4];
++        r.vh[0] = qh[0] >> bq8_offset;
++        r.vh[1] = qh[4] >> bq8_offset;
++        k_scale_min(b->scales, bq8_offset, r.aux);
++        r.dm = b->dm;
++        return r;
++    }
++    static float apply(const W& r, const block_q8_1* __restrict__ bq8_1, int iqs) {
++        const int bq8_offset = QR5_K * ((iqs / 2) / (QI8_1 / 2));
++        int u[2 * QR5_K];
++        float d8[QR5_K];
++#pragma unroll
++        for (int i = 0; i < QR5_K; ++i) {
++            const block_q8_1* bq8i = bq8_1 + bq8_offset + i;
++            d8[i] = bq8i->ds[0];
++            const int* q8 = (const int*) bq8i->qs + ((iqs / 2) % 4);
++            u[2 * i + 0] = q8[0];
++            u[2 * i + 1] = q8[4];
++        }
++        const uint8_t* sc = (const uint8_t*) r.aux;
++        const uint8_t* m = sc + 2;
++        return vec_dot_q5_K_q8_1_impl_vmmq(r.vl, r.vh, u, sc, m, r.dm, d8);
++    }
++};
++template<> struct ExpertPairV1<7> {   // Q5_1
++    struct W { int vl[VDR_Q5_1]; int qh; sycl::half2 dm; };
++    static W load(const void* __restrict__ vbq, int kbx, int iqs) {
++        const block_q5_1* b = (const block_q5_1*) vbq + kbx;
++        W r;
++#pragma unroll
++        for (int i = 0; i < VDR_Q5_1; ++i) r.vl[i] = get_int_b4(b->qs, iqs + i);
++        r.qh = get_int_b4(b->qh, 0);
++        r.dm = b->dm;
++        return r;
++    }
++    static float apply(const W& r, const block_q8_1* __restrict__ bq8_1, int iqs) {
++        int sumi = 0, sumu = 0;
++#pragma unroll
++        for (int i = 0; i < VDR_Q5_1; ++i) {
++            const int vl = r.vl[i];
++            const int vh = r.qh >> (4 * (iqs + i));
++            const int u0 = get_int_b4(bq8_1->qs, iqs + i), u1 = get_int_b4(bq8_1->qs, iqs + i + QI5_1);
++            int vi0 = (vl >> 0) & 0x0F0F0F0F;
++            vi0 |= (vh << 4) & 0x00000010;
++            vi0 |= (vh << 11) & 0x00001000;
++            vi0 |= (vh << 18) & 0x00100000;
++            vi0 |= (vh << 25) & 0x10000000;
++            sumi = ggml_cuda_dp4a(vi0, u0, sumi);
++            int vi1 = (vl >> 4) & 0x0F0F0F0F;
++            vi1 |= (vh >> 12) & 0x00000010;
++            vi1 |= (vh >> 5) & 0x00001000;
++            vi1 |= (vh << 2) & 0x00100000;
++            vi1 |= (vh << 9) & 0x10000000;
++            sumi = ggml_cuda_dp4a(vi1, u1, sumi);
++            sumu = ggml_cuda_dp4a(0x01010101, u1, ggml_cuda_dp4a(0x01010101, u0, sumu));
++        }
++        const sycl::float2 dm5 =
++            (r.dm).template convert<float, sycl::rounding_mode::automatic>();
++        const float d8 = bq8_1->ds[0];
++        return sumi * (dm5.x() * d8) + sumu * (dm5.y() * d8);
++    }
++};
++template<> struct ExpertPairV1<8> {   // Q8_0
++    struct W { int q[VDR_Q8_0]; float d; };
++    static W load(const void* __restrict__ vbq, int kbx, int iqs) {
++        const block_q8_0* b = (const block_q8_0*) vbq + kbx;
++        W r;
++#pragma unroll
++        for (int i = 0; i < VDR_Q8_0; ++i) r.q[i] = get_int_b2(b->qs, iqs + i);
++        r.d = sycl::vec<sycl::half, 1>(b->d)
++                  .convert<float, sycl::rounding_mode::automatic>()[0];
++        return r;
++    }
++    static float apply(const W& r, const block_q8_1* __restrict__ bq8_1, int iqs) {
++        int sumi = 0;
++#pragma unroll
++        for (int i = 0; i < VDR_Q8_0; ++i) sumi = ggml_cuda_dp4a(r.q[i], get_int_b4(bq8_1->qs, iqs + i), sumi);
++        const float d8_1 = bq8_1->ds[0];
++        return r.d * d8_1 * ((float) sumi);
++    }
++};
++
++template <int TY, int LANES>
++__dpct_inline__ void row_dot_pair_v1(const uint8_t* row,const block_q8_1* x0,const block_q8_1* x1,int nb,int sub,float* out){
++    using F=Fmt<TY>;using P=ExpertPairV1<TY>;
++    float a=0.0f,b=0.0f;
++    for(int k=sub;k<nb*F::ipb;k+=LANES){
++        const int kbx=k/F::ipb,iqs=F::step*(k%F::ipb);
++        const auto weights=P::load(row,kbx,iqs);
++        a+=P::apply(weights,x0+kbx*(F::qk/32),iqs);
++        b+=P::apply(weights,x1+kbx*(F::qk/32),iqs);
++    }
++    out[0]=lanes_sum<LANES>(a);out[1]=lanes_sum<LANES>(b);
++}
++
+ template <int TY, int LANES>
+ __dpct_inline__ void row_entries(const uint8_t* wr, const block_q8_1* x, int x_stride, const int32_t* ent_idx,
+                                  int e0, int e1, int nb, int sub, float* dst, size_t dst_stride,
+-                                 const void* grid = nullptr) {
++                                 const void* grid = nullptr, bool pair_reuse = false) {
++    if constexpr(TY==12 || TY==13){
++        if(pair_reuse && e1-e0==2){
++            float paired[2];row_dot_pair_v1<TY,LANES>(wr,x+size_t(ent_idx[e0])*x_stride,x+size_t(ent_idx[e0+1])*x_stride,nb,sub,paired);
++            if(sub==0){dst[size_t(e0)*dst_stride]=paired[0];dst[size_t(e0+1)*dst_stride]=paired[1];}
++            return;
++        }
++    }
+     int e = e0;
+     if constexpr (Multi<TY>::has) {
+         for (; e + 4 <= e1; e += 4) {
+@@ -1816,7 +1960,7 @@
+     const unsigned long long *__restrict__ grp_ptr,
+     const int32_t *__restrict__ grp_start, const int32_t *__restrict__ n_groups,
+     const int32_t *__restrict__ ent_tok, const block_q8_1 *__restrict__ xq,
+-    NativeExpertLayout L, float *__restrict__ gate, float *__restrict__ up) {
++    NativeExpertLayout L, float *__restrict__ gate, float *__restrict__ up, bool pair_reuse = false) {
+     auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+     // #363: group g is computed by block row g % gridDim.y (a launch sized for fewer rows than possible groups strides);
+     // a block row with no group returns before the barrier below (uniform over the work-group)
+@@ -1848,7 +1992,7 @@
+     for (int g = (int) item_ct1.get_group(1); g < ng; g += (int) item_ct1.get_group_range(1)) {
+         const uint8_t* wr = (const uint8_t*) grp_ptr[g] + off;
+         const int e0 = grp_start[g], e1 = grp_start[g + 1];
+-        row_entries<TG, LN>(wr, xq, xb, ent_tok, e0, e1, nb, sub, (is_up ? up : gate) + r, (size_t) L.n_ff, grid);
++        row_entries<TG, LN>(wr, xq, xb, ent_tok, e0, e1, nb, sub, (is_up ? up : gate) + r, (size_t) L.n_ff, grid, pair_reuse);
+     }
+ }
+ 
+@@ -1985,7 +2129,7 @@
+     const unsigned long long *__restrict__ grp_ptr,
+     const int32_t *__restrict__ grp_start, const int32_t *__restrict__ n_groups,
+     const int32_t *__restrict__ ent_dst, const block_q8_1 *__restrict__ hq,
+-    NativeExpertLayout L, float *__restrict__ out) {
++    NativeExpertLayout L, float *__restrict__ out, bool pair_reuse = false) {
+     auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+     const int ng = *n_groups;   // #363: the group stride, as native_gu_kernel
+     const int rib = item_ct1.get_local_id(2) / LN,
+@@ -1998,6 +2142,13 @@
+     for (int g = (int) item_ct1.get_group(1); g < ng; g += (int) item_ct1.get_group_range(1)) {
+         const uint8_t* wr = (const uint8_t*) grp_ptr[g] + off;
+         const int e0 = grp_start[g], e1 = grp_start[g + 1];
++        if constexpr(TD==7 || TD==8){
++            if(pair_reuse && e1-e0==2){
++                float paired[2];row_dot_pair_v1<TD,LN>(wr,hq+size_t(e0)*hb,hq+size_t(e0+1)*hb,nb,sub,paired);
++                if(sub==0){out[size_t(ent_dst[e0])*L.n_embd+r]=paired[0];out[size_t(ent_dst[e0+1])*L.n_embd+r]=paired[1];}
++                continue;
++            }
++        }
+         int e = e0;
+         if constexpr (Multi<TD>::has) {
+             for (; e + 4 <= e1; e += 4) {
+@@ -4103,19 +4254,21 @@
+     const int n = v ? std::atoi(v) : kExpertLanes;
+     return n == 4 || n == 8 || n == 16 || n == 32 ? n : kExpertLanes;
+ }
++inline bool expert_pair_reuse_enabled_v1(){static const bool on=[](){const char* v=std::getenv("STRATA_EXPERT_PAIR_REUSE");return v && v[0]=='1' && v[1]=='\0';}();return on;}
+ inline int gu_lanes() { static const int v = lanes_env("STRATA_GU_LANES"); return v; }
+ inline int down_lanes() { static const int v = lanes_env("STRATA_DOWN_LANES"); return v; }
+ template <int TG, int LN>
+ void launch_gu_port(unsigned groups, dpct::queue_ptr s, const unsigned long long *grp_ptr, const int32_t *grp_start,
+                     const int32_t *n_groups, const int32_t *ent_tok, const block_q8_1 *X,
+                     const NativeExpertLayout &L, float *gate, float *up) {
++    const bool pair_reuse=expert_pair_reuse_enabled_v1();
+     constexpr int ROWS = 256 / LN;
+     const unsigned gx = (unsigned) ((2 * L.n_ff + ROWS - 1) / ROWS);
+     auto exp_props = sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
+     s->parallel_for<dpct_kernel_name<class native_gu_port, dpct_kernel_scalar<TG>, dpct_kernel_scalar<LN>>>(
+         sycl::nd_range<3>(sycl::range<3>(1, groups, (size_t) gx * 256), sycl::range<3>(1, 1, 256)), exp_props,
+         [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {
+-            native_gu_kernel<TG, LN>(grp_ptr, grp_start, n_groups, ent_tok, X, L, gate, up);
++            native_gu_kernel<TG, LN>(grp_ptr, grp_start, n_groups, ent_tok, X, L, gate, up, pair_reuse);
+         });
+ }
+ template <int TG>
+@@ -4133,13 +4286,14 @@
+ void launch_down_port(unsigned groups, dpct::queue_ptr s, const unsigned long long *grp_ptr, const int32_t *grp_start,
+                       const int32_t *n_groups, const int32_t *ent_dst, const block_q8_1 *hq,
+                       const NativeExpertLayout &L, float *out) {
++    const bool pair_reuse=expert_pair_reuse_enabled_v1();
+     constexpr int ROWS = 256 / LN;
+     const unsigned gx = (unsigned) ((L.n_embd + ROWS - 1) / ROWS);
+     auto exp_props = sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
+     s->parallel_for<dpct_kernel_name<class native_down_port, dpct_kernel_scalar<TD>, dpct_kernel_scalar<LN>>>(
+         sycl::nd_range<3>(sycl::range<3>(1, groups, (size_t) gx * 256), sycl::range<3>(1, 1, 256)), exp_props,
+         [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {
+-            native_down_kernel<TD, LN>(grp_ptr, grp_start, n_groups, ent_dst, hq, L, out);
++            native_down_kernel<TD, LN>(grp_ptr, grp_start, n_groups, ent_dst, hq, L, out, pair_reuse);
+         });
+ }
+ template <int TD>

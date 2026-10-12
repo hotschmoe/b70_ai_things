@@ -18595,3 +18595,28 @@ Producer0b9b60f8bd8e7937fb58eb70fa9c219d566c63883c321a041fac4d1d5fee3164; public
 VERDICT -> Bounded native4 coherence, not cache4/fullmath/fairness/API/shelf.
 Next source work: original-quant paired-entry expert weight reuse and
 native4 shared/divergent cache qualification; root retains GPU ownership.
+
+
+## 2026-10-12: native4 cache live; paired-entry expert candidate prepared
+
+CONFIG -> Current52 four-role cold/prime/hit cache, selected4 observer
+RIDs/process, actual rows4 and first/later49/full8 history gates.
+COMMAND -> Genuine construction PASS; initial root launch68647 refused
+because construction-only had written a file at intended runtime root.
+Root preserved that receipt under a separate filename, then launched55708.
+RESULT -> Corrected controller55708 acquired pair lease and is live; no
+cache4 result yet. No observer/engine/math/gate relaxed.
+VERDICT -> Await actual cache reuse/coherence/normalretirement/post-health.
+
+CONFIG -> DefaultOFF original expert paired-entry weight reuse for
+GU12/13 and down7/8, exactly two same-expert entries. Original stride,
+float terms and XOR reduction retained, no new workspace/waits/queries.
+COMMAND -> Agent four targeted CPU controls PASS; root standalone build
+v1 had wrong image-entrypoint arguments and no compile; v2 real NoDri
+compile failed missing neighboring s26_tsum.dp.hpp include path.
+RESULT -> Both failure receipts preserved; v3 binds original neighboring
+headers and corrected include path, queued56509 behind actual cache GPU
+run. Fixture covers40 type/storage/group cases plus changed-input graphs
+and complete-byte OFF/ON outputs/scratch/Q8. Root runtime wrapper ready.
+VERDICT -> No operator arithmetic or speed claim before actual run.
+Full model E2 trial conditional on operatorPASS; full campaign active.
