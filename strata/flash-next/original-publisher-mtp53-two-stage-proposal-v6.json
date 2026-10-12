@@ -1,0 +1,90 @@
+{
+  "actual52_SDK": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261012T012115Z-_kwur0ww",
+  "actual52_generate_sha256": "2ce4a5819561eeb9e3aea6847358c9058bbf12cb1b2ff2c590e15f095d9cc6e3",
+  "actual52_receipt_sha256": "8f6c09aa60493dd6403771cd10592bdb780947110c3035379b4493d0a4298d94",
+  "capacity": 4096,
+  "compiled": false,
+  "constructor_source_mapping_drain_order_fixed": true,
+  "draft_device": 1,
+  "draft_step_delta": "remaining max64->512 only; recurrence/quantization byte-exact",
+  "explicit_both_stage_PLE_prev_metadata_save_restore": true,
+  "forced_controls_mode_separate_fresh_process": true,
+  "fullmath_API_cache_concurrency_speed_qualified": false,
+  "last_prefill_owned_original_recurrence": true,
+  "natural_GEN_cap": 512,
+  "natural_prompt_tokens": 2048,
+  "new_overlay_sources": {
+    "strata/flash-next/original-mtp53/draft_step_pair_v1.hpp": "sycl/include/strata/kernels/original_mtp53_draft_step.hpp",
+    "strata/flash-next/original-mtp53/loaded_main_adapter_pair_v3.hpp": "sycl/include/strata/kernels/original_mtp53_loaded_main_adapter.hpp",
+    "strata/flash-next/original-mtp53/owned_runtime_pair_v1.hpp": "sycl/include/strata/core/original_mtp53_owned_runtime.hpp",
+    "strata/flash-next/original-mtp53/phase_timing_v1.hpp": "sycl/include/strata/kernels/original_mtp53_phase_timing.hpp",
+    "strata/flash-next/original-mtp53/paired_greedy_v2.hpp": "sycl/include/strata/kernels/original_mtp53_pair_greedy.hpp"
+  },
+  "newall8_engine_required": false,
+  "only_V2_behavioral_change": "Identity page upload backing is owner.host<int32_t>(capacity/4), survives all failed-construction drains",
+  "only_V3_delta": "Explicit unchanged frozen phase_timing_v1.hpp overlay dependency; timing remains strictly OFF for real shape",
+  "only_V4_delta": "Constructor parameter names device/capacity -> owner_device/context_capacity and matching member initializers; unchanged body/arithmetic",
+  "original_arithmetic_changed": false,
+  "own_source_sha256": {
+    "strata/flash-next/original-mtp53/draft_step_pair_v1.hpp": "4172105ba819283a1cd375c5818fb258e77a5d437d08ff0803f482612e1e990d",
+    "strata/flash-next/original-mtp53/loaded_main_adapter_pair_v3.hpp": "84c5ba57e7622719f29e1eecc95391a31c33b5c3af21abed1137354fcacaf799",
+    "strata/flash-next/original-mtp53/owned_runtime_pair_v1.hpp": "6c074948d2d416939d8eadb4b7be7e63bd9518f404933db5923e87c8704d2b03",
+    "strata/flash-next/original-mtp53/phase_timing_v1.hpp": "f053a5d853e96c0f4d1709cb988177bb0cfc53d5dd65055e8dd7b6da07d81242",
+    "strata/flash-next/original-mtp53/two_stage_source_design_v1.md": "96c1ba1e24cb2efb9c6ef1a9203beef0289532322f4083716f37853ed4ab90dc",
+    "strata/flash-next/test_original_mtp53_pair_fresh_reset_cpu_v5.py": "3fe2791bbdb88115bd3c055f0be0b3df273eade5daf17e1cc005e8eee0433f70",
+    "docs/20261012_flashnext_original_mtp_pair_fresh_reset_v5.md": "ff4fdc5f16e9e263a08fcf9525485bb1233550b6f746bf56a7d6a2011b5f4f5e",
+    "strata/flash-next/original-mtp53/paired_greedy_v2.hpp": "2542e38e42323c721cd66d193c53fa11352113e4cde32f691b5eb49d30e7458c",
+    "strata/flash-next/prepare_original_mtp53_two_stage_compile_v6.py": "50ca77dc0c880f81a12a97c5f7bbd4236d041928fbef219357e0712e844bde65",
+    "strata/flash-next/original_mtp53_reference_pp_policy_v1.py": "d6f0061b6dba035dd6f7c3a0a450437ae4532128a5972f5034b81a2c3637d11d",
+    "strata/flash-next/test_original_mtp53_reference_pp_cuts_cpu_v1.py": "9a3dd893873e50d3252a27894f84c50791a95edeec9a0f761e875e8153e1af77",
+    "docs/20261012_flashnext_original_mtp_normal_prefix_cuts_v6.md": "a4838253b577adbccdeb53ce0c720d517c769b6cc76c16a4102ab0f54cbd40ad",
+    "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/source52-native2-fairness-v1-run-v1/source52-native2-fairness-serial/recipe.json": "7d4edcacf40206f26270f28fdc3343bd698344e41a2f85237b51f74b86fced06"
+  },
+  "pending_prefill_callback_retain_exit86": true,
+  "prefill_chunk": 512,
+  "preserved_V2_actual_compile_failure": "/mnt/vm_8tb/b70/build/original-mtp53-two-stage-compile-v2/output/compile.stderr missing original_mtp53_phase_timing.hpp",
+  "preserved_source_prepare_V1": "Actual root original-mtp53-two-stage-compile-v1 source prepare only; uncompiled/noGPU",
+  "previous_plan_sha256": "7f8cb44ee3138881e327eb002a9aa2ae5c51dabf33ef5c5c96101242c802de1b",
+  "real_MAIN_batched_prefill": true,
+  "required_next_actual_proofs": [
+    "Fresh NoDri overlay MAIN compile/package/source/archive closure",
+    "Actual LAST queue/context/USM ownership and GPU1 residency/cache budget",
+    "Both-stage forced reject/accept exact checkpoint/QSA byte restoration",
+    "Real pairedP2048/GEN512 OFF/ON natural outputs/repeats/currentidentity/health/teardown",
+    "Independent serial-reference comparison without tolerance fitting"
+  ],
+  "required_phase_timing": "absent or0 only; no2048buffer overflow/truncation",
+  "runtime_qualified": false,
+  "schema": 1,
+  "scope": "SOURCE_ONLY_original34_tensor_LASTGPU_pair_diagnostic_not_serving",
+  "static_original_tensor_bytes_resident_both_OFF_ON": 2775258112,
+  "stock_target_run_commit_wait_preserved": true,
+  "target_last_context_pointer_guard": true,
+  "target_stages": [
+    [
+      0,
+      0,
+      24
+    ],
+    [
+      1,
+      24,
+      48
+    ]
+  ],
+  "only_V5_delta": "Before target bind/controls/natural execute exact actual52 public fresh device-state reset on BOTH target carved SessionState owners. Omit only absent pre-request live/checkpoint host bookkeeping.",
+  "both_target_fresh_reset_before_bind": true,
+  "reset_body_native52_source_derived": true,
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_original_mtp53_reference_pp_cuts_cpu_v1",
+  "only_V6_delta": "Actual reference-derived root/PIN/last-turn prefix segmentation only, each actual prompt positions scanned; cache remains0 and target/draft arithmetic/slot/profile unchanged",
+  "normal_reference_recipe_path": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/source52-native2-fairness-v1-run-v1/source52-native2-fairness-serial/recipe.json",
+  "normal_reference_recipe_sha256": "7d4edcacf40206f26270f28fdc3343bd698344e41a2f85237b51f74b86fced06",
+  "normal_reference_prefix_policy": {
+    "turn_token": 248045,
+    "tail_role_token": -1,
+    "root_min": 1,
+    "pin": 1536,
+    "request_checkpoint": true
+  },
+  "generated_policy_header_sha256": "8996bfe964ef3a910c599ac8e30610d5eaaaab45993fa3db24854132f7eb7238"
+}

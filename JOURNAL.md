@@ -18923,3 +18923,34 @@ actual34177 queued under bin/gpu-run --card0 (actual option --card 0).
 RESULT -> Builderplancb9aa5943153d86f5af0ef76b42831322e2d66d5c91b0c15685d78e6066a5023; currentlease prevents overlapwithnaturalpair.
 VERDICT -> Actual compilation andfullfieldGPUoperator proof remainpending;
 no model/pairedkernel/speedqualification transferred.
+
+
+## 2026-10-12: fresh-reset natural MTP closes; HC leaf compiles
+
+CONFIG -> V5 twofresh P2048/GEN512 OFF/ON, same originaldraft reserve.
+COMMAND -> Actual10108 terminalPASS; independent rawsemantic/all52
+artifactdigests/full5/normalownedterminal replayPASS.
+RESULT -> All512 OFF/ON IDs/EOS exact andidenticaloldV4OFF; reference
+difference still103(17295 vs71367). Decode34614.724->33685.113ms,
+2.6856percent observedelapsed reduction versus prior15.786percent.
+Producerf1c5b98f3d08f2321d9dfad11b710cbb5cc4188b12db6ea8e16ecf65009b601d; public5cf87b72396f62260ab4a50e995f10dd63db12abf449651a8ae87af0fd2110c0.
+VERDICT -> Sameprototype-target lossless/healthy, notfaithfulnormalserve
+or repeatablespeed. Fullgoal/API/cache/fairness/shelf remainsopen.
+
+CONFIG -> HC T2 operatorNoDri card0/2CPU4GiB, fresh4objects/copiedarchive.
+COMMAND -> Actual34177 PASS55s; rootalloriginalinputs/raw/outputs rehashPASS.
+RESULT -> Receiptc13468d7a888765aeb51ba7b8b10cf946f7f43b53f6fdbb47a122f031e37e84c;
+ELF78bf32ae3389592461ec38ae772c548486ed8c1aa55fc74b6996edc93f11f8d4; normalownedcompilerretirement, noGPU/modelpayload.
+VERDICT -> Actualcompile accepted, fullfieldGPU/operator/model proofpending.
+
+CONFIG -> HC pairedT2 V2 onlyrelaxes whole-model guard withboundedstage/
+mirror/handoff/owner checks; same localpartsbank/math/noextrabuffer.
+COMMAND -> Rootsourceconstruction and2focusedCPUcontrolsPASS0.012s.
+RESULT -> Proposalfa76a0401e4732cc5e2003a94b9c82cc4437390bb83f3e88daaf2b51b4f3dce3.
+VERDICT -> Pairedsource only, actualmodel stillunqualified.
+
+CONFIG -> OriginalMTP V6 onlymatches normalreference prefillcuts; unchanged
+cache0/fixed6500/globalverifier/quant/math andV5 bothstagefreshreset.
+COMMAND -> Rootsourcepreparer plus2focusedCPUcontrolsPASS0.002s.
+RESULT -> Proposaleaf1239278657f964ba537a56d778c1ac9cabfc0997684f34afad4a88026f470; case0physical24/512/512/488/505/6, per-prompt boundariesderived.
+VERDICT -> Nextisolated fidelitycandidate; compilation/runtime remainpending.
