@@ -19254,3 +19254,18 @@ RESULT -> Shared receipt65fac64bc7172e992341094b857d18dbfe9f2eaed29a4a997c44203f
 ELF7b6f3776e1b95ca59a3b25f1e40186851ab49c559a4e071dcb3f42856eb7a82d.
 VERDICT -> Compiles complete; actual private-slot GPU isolation and real
 model host-timing evidence pending. Full serving campaign remains active.
+
+
+## 2026-10-12: loaded shared MTP four-session GPU fixture passes
+
+CONFIG -> One original34 tensor pack on logicalGPU1, four private
+sessions, five synthetic teacher rows crossing compression4. No MAIN.
+COMMAND -> Actual51877 PASS140s; root replayed health raw hashes,
+normal typed terminal and fresh pre/post whole-MTP identity.
+RESULT -> Full248320 heads, proposals and complete two-bank state equal
+interleaved/serial; stale owner refused; owner retired; both strict and
+compiled collective health pass; kernel clean; normalExit0/EOF/remove.
+Producer report SHA256 b86da0aac41fb817f280b8b3424bfeeb347663dade8f875e8c36a355d27a7a32.
+VERDICT -> Loaded private-slot numerical/isolation/lifetime fixture
+qualified. Synthetic inputs do not qualify MAIN math, API, prefix cache
+or model speed. Real model host timing66379 follows under both leases.
