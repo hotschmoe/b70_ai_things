@@ -1,0 +1,22 @@
+{
+  "SDK55_runtime_intake": "REQUIRED actual fresh55 receipt, no prefilled or old54 runtime authority",
+  "cards": [
+    0,
+    1
+  ],
+  "copy": 0,
+  "files": {
+    "strata/flash-next/native55-hc-prefill-coalescing-engine-build-proposal-v1.json": "24137c6d3f32721167e71d27c1267dd48f0891e539bceafd496e375614947687",
+    "strata/flash-next/run_source55_hc_prefill_natural_v1.py": "78fa1f908cfb8bac88c36d0adff011c8b422d73cdfb040aa88643f92b25e8f94",
+    "strata/flash-next/source55_model_sdk_binding_v1.py": "bf8e92e523a4a8bff5b71e62e332ee101b6a6a18a33f6fcc1d792692f351ffe6",
+    "strata/flash-next/validate_source55_hc_prefill_natural_v1.py": "02cc9ccfe359f13847146f1c2c7e1b97f872accffd629528fc18824512dfe326"
+  },
+  "fixed_HC_Q8_TOKEN_TILE": 2,
+  "full_model_math_qualified": false,
+  "input_corpus_sha256": "61b5caabf76bfedfda334973741366a8341e9f600cf00b42ac042f6700afdbef",
+  "mirror": 1,
+  "only_arm_delta": "STRATA_HC_PREFILL_COALESCE0/1",
+  "prefill": 512,
+  "schema": 1,
+  "scope": "fresh55 matched naturalP2048/GEN512 prefill coalescing0/1; fixed Q8tile2, original boundaries; no fullmath/shelf"
+}

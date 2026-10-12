@@ -1,0 +1,23 @@
+"""Supplied actual SDK55 receipt pins; no invented build proof or old ABI transfer."""
+import hashlib,json
+from pathlib import Path
+SDK=None;RECEIPT_SHA=None
+HERE=Path(__file__).resolve().parent
+PLAN=HERE/'native55-hc-prefill-coalescing-engine-build-proposal-v1.json'
+PLAN_SHA='24137c6d3f32721167e71d27c1267dd48f0891e539bceafd496e375614947687'
+def require(ok,msg):
+ if not ok:raise ValueError(msg)
+def sha(path):
+ path=Path(path);require(path.resolve()==path and path.is_file()and not path.is_symlink(),'Canonical actual SDK file required');before=path.stat();h=hashlib.sha256()
+ with path.open('rb')as f:
+  for data in iter(lambda:f.read(8<<20),b''):h.update(data)
+ after=path.stat();require((before.st_dev,before.st_ino,before.st_size,before.st_mtime_ns,before.st_ctime_ns)==(after.st_dev,after.st_ino,after.st_size,after.st_mtime_ns,after.st_ctime_ns),'SDK file changed during hash');return h.hexdigest()
+def configure(root,receipt_sha):
+ global SDK,RECEIPT_SHA
+ require(type(receipt_sha)is str and len(receipt_sha)==64 and all(c in '0123456789abcdef'for c in receipt_sha),'Actual receipt SHA required');root=Path(root);require(root.is_absolute()and root.resolve()==root,'Canonical actual SDK55 root required');require(sha(root/'receipt.json')==receipt_sha,'Original actual receipt bytes changed');receipt=json.loads((root/'receipt.json').read_bytes());require(receipt['plan_sha256']==PLAN_SHA,'Receipt must belong to actual55 proposal');SDK=root;RECEIPT_SHA=receipt_sha
+ return {'SDK55_root':str(root),'SDK55_receipt_sha256':receipt_sha,'actual_build_bytes_still_rechecked_before_model':True}
+def binding():
+ require(SDK is not None and RECEIPT_SHA is not None,'Actual SDK55 build not configured; no placeholder proof allowed');require(sha(PLAN)==PLAN_SHA and sha(SDK/'receipt.json')==RECEIPT_SHA,'Exact actual55 plan/receipt required');plan=json.loads(PLAN.read_bytes());receipt=json.loads((SDK/'receipt.json').read_bytes());require(type(receipt['build_rc'])is int and receipt['build_rc']==0 and receipt['devices_exposed']is False and receipt['external_source_unchanged']is True and receipt['plan_snapshot_unchanged']is True and receipt['plan_sha256']==PLAN_SHA,'Fresh actual55 build/isolation proof required');require(len(plan['expected_patched_source_sha256'])==74 and len(receipt['binary_sha256'])==8,'Fresh74 source/all8 ABI required')
+ for name,want in plan['expected_patched_source_sha256'].items():require(sha(SDK/'source'/name)==want,'Actual55 source changed '+name)
+ for name,want in receipt['binary_sha256'].items():require(Path(name).parent==SDK/'build'and sha(name)==want,'Actual55 binary changed '+name)
+ require(sha(PLAN)==PLAN_SHA and sha(SDK/'receipt.json')==RECEIPT_SHA,'Closing55 proof changed');return {'source_generation':55,'SDK':str(SDK),'receipt_sha256':RECEIPT_SHA,'plan_sha256':PLAN_SHA,'patched_source_files':74,'all_fresh_ABI_binaries':8,'old47_runtime_proof_transferred':False,'model_qualified':False}
