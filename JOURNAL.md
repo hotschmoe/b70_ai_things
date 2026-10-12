@@ -19045,3 +19045,43 @@ RESULT -> Plan885606d5ddccf407fc4cc3dfaa74dd814844718797f5383dc2bc2bc35c83c1f4,
 no2.775GB reload perstream; originaltwo-bank recurrence retained.
 VERDICT -> Source only; compile/math/concurrency/API/cachestate proof
 stillrequired. No legacyKV-only serialization substituted.
+
+
+## 2026-10-12: original paired MTP firstcase matches normal reference
+
+CONFIG -> V6 onlynormalreferenceprefill boundaries, physical24/512/512/
+488/505/6; allmath/cache/profile/dispatch andV5 freshreset unchanged.
+COMMAND -> Actual66502 terminalPASS; independent52artifacts/rawgeometry/
+full512/residency/all5prepostidentity/normalownedclose replayPASS.
+RESULT -> ALL512 OFF/ON IDs/EOS exactlyacceptednormal52 reference;
+oldwholepref differs103(17295), V6/ref71367. ON229accepted53rejected.
+Prompt41407.406->41886.479ms, decode46067.005->32803.301ms,28.7922
+percent observedelapsed reduction. Producerbcaf3f5d4764727f4a21384af656dcede9ce04faf3dc86a571bf5228b499cb92;
+publicf54564e66d7dafcb468c22667922ace29d4d1df0c7f90d6ba6c738175b3bd6de.
+VERDICT -> Firstlong faithful-to-normal-reference pairedMTP case;
+no three-role/repeat/cleanABBA/API/shelf orfullmath promotion.
+Prefill grouping was causal for thisoutputdifference; noquantchange.
+Fullgoal and2000/50 targets remainopen.
+
+
+CONFIG -> Two independent NoDri builds under one root-owned pairlease,
+aggregate4CPU12GiB, no GPUdevices/modelpayload; isolatedcandidate inputs.
+COMMAND -> Actual36741 BOTHcompilePASS in140s; rootindependent
+alloriginalinputs/raw/outputs replayPASS forbothbuilders.
+RESULT -> MarkedHC receipt09292c9a41a28af6ab187a57650360a5af9766fc54dea253f5f19b700983fa06;
+ELF1de8aaa6824f9a2be93df9c2df6e03b2aeafa8cacf67a3da8f17fc6a376cd8d1.
+Teacher-head receipt67faac4856a112b3bd1e5be10ef45075e8dd61bbca9d4d77d89dbc319b33228d;
+ELF9368d358e07d3def3b92b28c852639d31785e44b2e4e8ba01dfed1338156bda5.
+VERDICT -> Actualcompilation, not modelbenefit. Root65345 markedHC
+controls nowbothleases; typed actualT2record/submit/complete proof
+required. TeacherHead V2 checks actualbaseline0 full512/currenthealth
+andnormalclose BEFORE headskip1; both MTPenabled. Unchangedliteral
+controls containZERO teacherrows, so they cannotqualify thischange and
+are not rerun for teacher-onlyskip. No fabricatedfreshforcedproof.
+
+CONFIG -> Shared originalpack V2 only adds GPU1contextmatch guard;
+NoDri semanticcompile fixture prepared, no payload reads.
+COMMAND -> Rootprepared original-mtp53-shared-compile-inputs-v1.
+RESULT -> Sourceplanc61a0ba94f4f54cf6542b404bea23c67b107cac676921ca992476e6b38b13517.
+VERDICT -> C++ compilation/private-slot math andserving stillpending;
+no legacyKV-only snapshot replacement orper-token stat/hash overhead.

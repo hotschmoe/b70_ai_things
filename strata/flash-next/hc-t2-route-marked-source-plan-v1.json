@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "scope": "new host-only marked pairedHC route; no compiler/GPU/model actions",
+  "files": {
+    "strata/flash-next/hc_t2_route_proof_v1.hpp": "e483f1131a1bf492fafa48003e0f03bc4463fe60b07116da93a361abcc25f31b",
+    "strata/flash-next/prepare_hc_t2_route_marked_v1.py": "3b978c2ef5aa5002dda8b522c6b239c8acd2fce6e2c355c7e6a82606dbf94e8d",
+    "strata/flash-next/test_hc_t2_route_marked_source_cpu_v1.py": "5f2d5ec64b5f757bb716ab5f47a194bfb4a82550318dc6ff8d8321404aa6a5b7",
+    "strata/flash-next/hc_t2_route_proof_cpu_fixture_v1.cpp": "16b244f6c4abb267ec5c51519c0356eb9b1bb23932647a780e6ba4adb57a7976",
+    "docs/20261012_flashnext_hc_t2_marked_route_v1.md": "7d0e4df1618c32ae2881792fd38d738581aa08c808253511868d247522ab7363"
+  },
+  "parent_recipe_path": "/mnt/vm_8tb/b70/build/hc-t2-paired-mtp-compile-inputs-v1/compile-recipe.json",
+  "parent_recipe_sha256": "fa613f414ac1d6b96d8d576132537eb9d556db8cfafc7644346f01930ad2da2f",
+  "expected_marked_verify_sha256": "ba50d2f97335146f2cd733dc90603a7160c02017436fa4668f5c77cb2c2167a6",
+  "Verifier_public_private_layout_changed": false,
+  "new_GPU_waits_queries_copies": 0,
+  "new_per_layer_logging": false,
+  "record_only_is_not_execution": true,
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_hc_t2_route_marked_source_cpu_v1",
+  "actual_marked_build_required": true,
+  "model_or_speed_qualified": false
+}

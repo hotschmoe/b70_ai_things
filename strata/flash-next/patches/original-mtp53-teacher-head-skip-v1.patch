@@ -1,0 +1,68 @@
+--- a/sycl/include/strata/kernels/original_mtp53_draft_step.hpp
++++ b/sycl/include/strata/kernels/original_mtp53_draft_step.hpp
+@@ -40,19 +40,22 @@
+ struct StepWeights53{EhHcWeights front;QsaWeights attention;HcWeights53 ffn_hc;FfnWeights53 ffn;HcWeights53 head_hc;const void* own_head_q6;};
+ struct StepScratch53{EhHcScratch front;QsaScratch attention;float* after_attention;HcScratch53 ffn_hc;FfnScratch53 ffn;float* next_hidden;HcScratch53 head_hc;float* logits;float* write_weights;float* write_products;void* head_q8;};
+ class OriginalDraftStep53{
+-    DraftQsaTransaction& state_;float* committed_hidden_;float* tentative_hidden_;void* stream_;int32_t token_=-1;bool active_=false;bool main_failed_=false;PhaseTiming53* timing_=nullptr;
++    DraftQsaTransaction& state_;float* committed_hidden_;float* tentative_hidden_;void* stream_;int32_t token_=-1;bool active_=false;bool main_failed_=false;PhaseTiming53* timing_=nullptr;uint64_t head_calls_=0,head_skips_=0;bool head_ready_=false;
+ public:
+     void set_timing(PhaseTiming53* p){timing_=p;}
+     OriginalDraftStep53(DraftQsaTransaction& state,float* committed_hidden,float* tentative_hidden,void* stream):state_(state),committed_hidden_(committed_hidden),tentative_hidden_(tentative_hidden),stream_(stream){require_on();if(!committed_hidden || !tentative_hidden || committed_hidden==tentative_hidden || !stream)throw std::invalid_argument("own draft53 hidden/queue required");}
+     void prepare_candidate(int32_t candidate){require_on();if(main_failed_ || active_ || candidate<0 || candidate>=248320)throw std::runtime_error("draft53 invalid/active candidate");state_.prepare(stream_);token_=candidate;active_=true;}
+-    void record(const int32_t* device_token,const float* hidden,const StepWeights53& w,const StepScratch53& s){
+-        require_on();if(!active_ || s.next_hidden!=tentative_hidden_)throw std::runtime_error("draft53 recording outside own transaction");
++    void record(const int32_t* device_token,const float* hidden,const StepWeights53& w,const StepScratch53& s,bool compute_head=true){
++        require_on();head_ready_=false;if(!active_ || s.next_hidden!=tentative_hidden_)throw std::runtime_error("draft53 recording outside own transaction");
+         eh_hc_front(device_token,hidden,w.front,s.front,stream_);state_.record(s.front.mixed,w.attention,s.attention,stream_);
+         hc_write53(s.front.residual,s.attention.output,s.front.injection,s.write_weights,s.write_products,s.after_attention,stream_);
+         hc_read53(s.after_attention,w.ffn_hc,s.ffn_hc,stream_);original_ffn53(s.ffn_hc.mixed,w.ffn,s.ffn,stream_);
+         hc_write53(s.after_attention,s.ffn.output,s.ffn_hc.injection,s.write_weights,s.write_products,s.next_hidden,stream_);
+-        hc_read53(s.next_hidden,w.head_hc,s.head_hc,stream_);own_head(w.own_head_q6,s.head_hc.mixed,s.head_q8,s.logits,1,stream_);
++        if(compute_head){hc_read53(s.next_hidden,w.head_hc,s.head_hc,stream_);own_head(w.own_head_q6,s.head_hc.mixed,s.head_q8,s.logits,1,stream_);++head_calls_;head_ready_=true;}else ++head_skips_;
+     }
++    uint64_t head_calls()const noexcept{return head_calls_;}
++    uint64_t head_skips()const noexcept{return head_skips_;}
++    bool head_ready()const noexcept{return head_ready_;}
+     // Synthetic fixture calls exercise state machinery ONLY; they cannot assert actual MAIN validation.
+     void settle_fixture(bool accepted){if(!active_)throw std::runtime_error("draft53 no candidate");state_.settle_after_main(accepted,stream_);if(accepted)strata::q_of(stream_)->memcpy(committed_hidden_,tentative_hidden_,10240*4);active_=false;}
+     // Actual MAIN window/catch-up adapter. The MTP cache cell i holds the pair
+--- a/sycl/include/strata/kernels/original_mtp53_loaded_main_adapter.hpp
++++ b/sycl/include/strata/kernels/original_mtp53_loaded_main_adapter.hpp
+@@ -16,14 +16,15 @@
+  sycl::queue& q;int device_=1,capacity_=4096;std::unique_ptr<strata::core::original_mtp53::TensorViews> source_keep_;OwnedRuntime53 owner;
+  strata::core::Verifier* target_=nullptr;strata::core::Verifier* last_=nullptr;const float* target_rows_=nullptr;const float* prompt_rows_=nullptr;int prompt_count_=0;StepWeights53 W{};StepScratch53 S{};
+  std::unique_ptr<DraftQsaTransaction> state;std::unique_ptr<OriginalDraftStep53> draft;
+- float* incoming=nullptr;float* committed_h=nullptr;int32_t* token=nullptr;int32_t* host_token=nullptr;bool failed=false;PhaseTiming53* timing_=nullptr;
++ float* incoming=nullptr;float* committed_h=nullptr;int32_t* token=nullptr;int32_t* host_token=nullptr;bool failed=false;PhaseTiming53* timing_=nullptr;bool teacher_head_skip_=false,first_head_reported_=false;uint64_t teacher_rows_=0;
+  void check(){if(failed)throw std::runtime_error("MTP53 MAIN diagnostic failure latched");}
+  static bool same_bytes(const std::vector<uint8_t>& a,const std::vector<uint8_t>& b){return a.size()==b.size() && (a.empty() || std::memcmp(a.data(),b.data(),a.size())==0);}
+- void catchup(int32_t next,const float* hidden){check();check_hidden(hidden);{PhaseScope53 phase(timing_,"draft_prepare_submit");*host_token=next;draft->prepare_candidate(next);q.memcpy(token,host_token,4);}{PhaseScope53 phase(timing_,"draft_record_wait");draft->record(token,hidden,W,S);q.wait_and_throw();}{PhaseScope53 phase(timing_,"draft_settle_wait");draft->settle_fixture(true);q.wait_and_throw();}}
+- int32_t proposal(){std::vector<float> logits(248320);q.memcpy(logits.data(),S.logits,logits.size()*4).wait_and_throw();int32_t best=0;for(int32_t i=0;i<248320;++i){if(!std::isfinite(logits[i]))throw std::runtime_error("MTP53 own head nonfinite");if(logits[i]>logits[best])best=i;}return best;}
++ void catchup(int32_t next,const float* hidden,bool compute_head=true){check();check_hidden(hidden);{PhaseScope53 phase(timing_,"draft_prepare_submit");*host_token=next;draft->prepare_candidate(next);q.memcpy(token,host_token,4);}{PhaseScope53 phase(timing_,"draft_record_wait");draft->record(token,hidden,W,S,compute_head);q.wait_and_throw();}{PhaseScope53 phase(timing_,"draft_settle_wait");draft->settle_fixture(true);q.wait_and_throw();}}
++ int32_t proposal(){if(!draft->head_ready())throw std::runtime_error("teacher head logits stale/uncomputed");std::vector<float> logits(248320);q.memcpy(logits.data(),S.logits,logits.size()*4).wait_and_throw();int32_t best=0;for(int32_t i=0;i<248320;++i){if(!std::isfinite(logits[i]))throw std::runtime_error("MTP53 own head nonfinite");if(logits[i]>logits[best])best=i;}return best;}
+ public:
+  explicit LoadedMainDraft53(const char* path,sycl::queue& queue,int owner_device,int context_capacity):q(queue),device_(owner_device),capacity_(context_capacity),source_keep_(new strata::core::original_mtp53::TensorViews),owner(q){
+     const strata::core::OnDevice on(device_);
++    const char* skip=std::getenv("STRATA_ORIGINAL_MTP53_TEACHER_HEAD_SKIP");if(skip && std::strcmp(skip,"0")!=0 && std::strcmp(skip,"1")!=0)throw std::runtime_error("teacher head skip must0/1");teacher_head_skip_=skip && std::strcmp(skip,"1")==0;
+     if(device_!=1 || capacity_!=4096)throw std::runtime_error("pair53 exact LAST device1/context4096 required");
+     auto& source=*source_keep_;std::string error;if(!source.load(path,error))throw std::runtime_error(error);
+     if(!q.get_device().is_gpu() || !q.is_in_order())throw std::runtime_error("owned ordered GPU queue required");
+@@ -50,7 +51,7 @@
+  ~LoadedMainDraft53(){const strata::core::OnDevice on(device_);owner.retire();}
+  void set_timing(PhaseTiming53* p){const strata::core::OnDevice on(device_);timing_=p;draft->set_timing(p);}
+  void advance_actual(int32_t next,const float* target_hidden){const strata::core::OnDevice on(device_);try{catchup(next,target_hidden);}catch(...){failed=true;throw;}}
+- int32_t propose_actual(){const strata::core::OnDevice on(device_);check();PhaseScope53 phase(timing_,"own_head_read_argmax");return proposal();}
++ int32_t propose_actual(){const strata::core::OnDevice on(device_);check();if(!first_head_reported_){if(!draft->head_ready())throw std::runtime_error("first proposal requires fresh original head");std::printf("MTP53_TEACHER_HEAD_COUNTS mode=%d teacher_rows=%llu calls=%llu skips=%llu committed_cells=%lld fresh_head=1\n",int(teacher_head_skip_),(unsigned long long)teacher_rows_,(unsigned long long)draft->head_calls(),(unsigned long long)draft->head_skips(),(long long)cells());std::fflush(stdout);first_head_reported_=true;}PhaseScope53 phase(timing_,"own_head_read_argmax");return proposal();}
+  int64_t cells()const{return state->committed_cells();}
+  bool verify_actual(strata::core::Verifier& main,int32_t input,int32_t guess,int64_t position,strata::core::PoolMultiFn pool,void* user,int remaining,std::array<int32_t,2>& actual,bool& accepted,std::string& error){
+   const strata::core::OnDevice on(device_);check();if(&main!=target_ || main.final_R_all()!=target_rows_)throw std::runtime_error("pair53 target owner changed");const bool ok=draft->verify_bounded_and_catchup(main,input,guess,position,pool,user,actual,token,host_token,W,S,remaining,accepted,error);if(!ok)failed=true;return ok;
+@@ -74,7 +75,7 @@
+   const strata::core::OnDevice on(device_);check();
+   if(T<1 || T>512 || pos!=cells() || pos+T>=int64_t(prompt.size()) || !rows || sycl::get_pointer_type(rows,q.get_context())!=sycl::usm::alloc::device || sycl::get_pointer_device(rows,q.get_context())!=q.get_device())throw std::runtime_error("pair53 actual LAST prefill source/position/context differs");
+   prompt_rows_=rows;prompt_count_=T;
+-  try{for(int t=0;t<T;++t){const int64_t next=prompt[size_t(pos+t+1)];if(next<0 || next>=248320)throw std::runtime_error("pair53 prompt next token differs");advance_actual(int32_t(next),rows+size_t(t)*10240);}}
++  try{for(int t=0;t<T;++t){const int64_t next=prompt[size_t(pos+t+1)];if(next<0 || next>=248320)throw std::runtime_error("pair53 prompt next token differs");catchup(int32_t(next),rows+size_t(t)*10240,!teacher_head_skip_);++teacher_rows_;}}
+   catch(...){prompt_rows_=nullptr;prompt_count_=0;throw;}
+   prompt_rows_=nullptr;prompt_count_=0;
+   if(cells()!=pos+T)throw std::runtime_error("pair53 original prompt recurrence count differs");return true;
