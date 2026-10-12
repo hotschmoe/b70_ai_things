@@ -17558,3 +17558,24 @@ Preservefailed49actor/source/receipt; no unchangedspec1modelretry.
 CurrentHC46spec2/MTP0 observedall64windowsT1 provides matching scope evidence.
 Stagingfixture49passedrouting/copyonly; no stagingmodel latency resultexists.
 Fullcampaign/2000/50/fidelity/cache/streams/traffic/shelf remainopen.
+
+
+## 2026-10-12: direct XMX GPU fixtures passed and corrected staging model live
+
+CONFIG -> Frozen directESIMDF16DPAS prototype284dd290, currentSDK49 individual
+f16reference; syntheticmixedne1/2/7/16/32/48/64/64, partialgroups, exact
+sparse-dyadic outputs/guardrows/asyncownership. No groupedoneMKL calls.
+COMMAND -> NoDri79791 compilePASS29.3s/ELFf2d895a5; bin/gpu-run card0
+singleq42438 then twoq52575 with preposthealth/ownedretirement/freshkernelchecks.
+RESULT -> SinglePASS43s/twoPASS49s,12cases each, nofreshfaults.
+VERDICT -> Linked componentqualified only; no actualprefillspeed/modelmathclaim.
+DefaultOFF integration source51 over50 requested, preserveallquantizedweights,
+DQ/SwiGLU/FP16H/scatter/rings; no unsafe groupedAPI fallback.
+
+CONFIG -> Source50 fixesnativepack reserved-spec2 guard; actualT1stagingonly.
+COMMAND -> All8build23853PASS308s/receipt812bf43f; genuineonecard/paircommands
+passed e13a851e/a0686ea5 withoutGPU/modelreads. Actual93054 nowholds
+pairlease foronecard50OFF/ON, short54/twoGEN64/spec2/grouped0/trace0.
+RESULT -> In preparation, no modeltiming/coherence resultyet. Failed49
+constructor and45/47GPUfaults remainpreserved.
+VERDICT -> Fullcampaign/2000/50/fullmath/cache/streams/traffic/shelf remainopen.
