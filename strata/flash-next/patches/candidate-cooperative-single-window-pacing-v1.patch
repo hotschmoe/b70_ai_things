@@ -1,0 +1,30 @@
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -10469,6 +10469,16 @@
+                 if (std::strcmp(v,"1")!=0) throw std::invalid_argument("STRATA_BATCH_PREFILL_LAYER_COOPERATE=0|1");
+                 return true;
+             }();
++            const bool single_layer_window = [] {
++                const char* v = std::getenv("STRATA_BATCH_PREFILL_SINGLE_WINDOW");
++                if (!v || std::strcmp(v,"0")==0) return false;
++                if (std::strcmp(v,"1")!=0) throw std::invalid_argument("STRATA_BATCH_PREFILL_SINGLE_WINDOW=0|1");
++                return true;
++            }();
++            if (single_layer_window && !layer_cooperate) {
++                std::printf("ERR single-window pacing requires layer cooperation\n");
++                return 1;
++            }
+             if (layer_cooperate && (!strict_batch_identity || !batch_chain_enabled || !batch_public_enabled ||
+                     o.batch != 2 || !o.no_prefill_borrow || use_mtp || piped || o.pipeline_windows != 0 ||
+                     stages.size()!=1 || split_same || o.peer_device>=0 || o.adapt_swaps!=0 || o.adapt_async)) {
+@@ -10529,7 +10539,9 @@
+                             const auto begin=Clock::now();
+                             do {
+                                 if(!batch_step()) {batch_fatal=true;return {false,"cooperative batch window failed",std::chrono::duration<double,std::milli>(Clock::now()-begin).count()};}
+-                            } while(batch_on() && std::chrono::duration<double,std::milli>(Clock::now()-begin).count()<allowance);
++                            // Default OFF: carry unused credit to later router safe points
++                            // instead of draining it in a first-layer multi-window burst.
++                            } while(!single_layer_window && batch_on() && std::chrono::duration<double,std::milli>(Clock::now()-begin).count()<allowance);
+                             const double used=std::chrono::duration<double,std::milli>(Clock::now()-begin).count();
+                             ++il_parts; il_ms+=used;
+                             if(trace) std::fprintf(stderr,"strata cooperate: owner service device=%d layer=%d pos=%lld rows=%lld host_ms=%.3f\n",point.device,point.layer,(long long)point.position,(long long)point.rows,used);

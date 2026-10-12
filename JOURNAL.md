@@ -19304,3 +19304,26 @@ RESULT -> Producer65af1c952e546054b57bb8b0890bb70219f39ae2c35839f6f222df21d8d95f
 retirement pass. Target21391.833ms, draftwait8084.702ms, submit31.283ms.
 VERDICT -> Host-only nonadditive source-owned intervals; no deviceidle/BW
 or clean speed claim. ABBA42436 now follows under the next pair lease.
+
+
+## 2026-10-12: tail/reset native intake and evidence-driven pacing ready
+
+CONFIG -> Original serving bridgeV2 handles variable actualT1/T2 groups
+within8 packed rows, new in-place private reset with full-state/freshserial
+loaded fixture. Source58 exact archives/headers used for native semantic
+object and reset ELF, no production target bypass.
+COMMAND -> Root prepared compile inputs; reviewed source and typed NoDri
+builder/runtime ownership. No native compile yet while ABBA42436 active.
+RESULT -> Recipe c8bfef69e36ed3d8cafdd1084d3c3283606d9b678f99fa966e71d587a3d80b1f; runtime9da4340d9b718e1df758439d458be7847e5133273a639ce579177283da8e4db7.
+VERDICT -> Source-only serving progress; actual reset and native semantics
+pending. Complete original cache checkpoints/API still required.
+
+CONFIG -> Source59 defaultOFF single-window layer pacing, only generate
+changes; original58 sources/evidence remain immutable.
+COMMAND -> Source review with exact current58 evidence131e96b58c4f4ff2a6f3cb98dfed7d7ed548ed9c9271a3d30c5f9c521c795ee7.
+RESULT -> Four early callbacks served8/2/2/6 windows; consecutive-layer
+gapP95163.489ms versus two-layer248.396ms supports carrying credit to
+later points. New knob caps one unchanged batch_step per layer ticket.
+VERDICT -> Runtime hypothesis only, not guaranteed P95/max improvement.
+Matched same59 OFF/ON with cooperation1 both, fullhistories and lifecycle
+is next. No operator fixture needed for unchanged math.

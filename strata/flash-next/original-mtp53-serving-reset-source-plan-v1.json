@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/original-mtp53/serving_slot_bridge_v2.hpp": "831459dc4278998180909ae8445e812593ca392c99997c549b23d03774e05244",
+    "strata/flash-next/original-mtp53/serving_slot_semantic_fixture_v1.cpp": "21f929e6073b7627c7920db15631bddde7c775556edcff1010197dd30193b292",
+    "strata/flash-next/original-mtp53/shared_sessions_reset_loaded_fixture_v1.cpp": "2eb1f71f0f2395a83dd0c6ee37ae77b57fdd985216321bb1cf3a8588b0bf7ec0",
+    "strata/flash-next/prepare_original_mtp53_serving_reset_compile_v1.py": "338d24854944d343d221d8d5b3a30ceee2b94aa78c505ce959c5b077e2ca9b8b",
+    "strata/flash-next/original-mtp53/serving_reset_design_v1.md": "682c115934bab6ca6852a2b3ef158b4b9f704e071ff5aa872ef49918634adc7b",
+    "strata/flash-next/original-mtp53/shared_weights_sessions_v4.hpp": "e315b580b8227f1e73e536fdaef036377ecaa4a37390b282c53084d56f82fdbf",
+    "strata/flash-next/original-mtp53/serving_slot_bridge_v1.hpp": "5be426be8729ed7c1a7feb0fb0a9c105edead28aa19305410073792bafc71897",
+    "strata/flash-next/original-mtp53-serving-slot-bridge-source-plan-v1.json": "3bd42c1c9f99508adec2024eff358ccbe35cd87812bea61b9c416c17ccccc898",
+    "strata/flash-next/original-mtp53/shared_sessions_loaded_fixture_v1.cpp": "5ac0515773c1c02f85c2df87fc10e1638a96e2912b17ee8452a0f2af35dbd543",
+    "strata/flash-next/original-publisher-mtp53-step-proposal-v2.json": "d79b1b156a617a2b8dbecba8efdaa5ca9ed95fc72b9ad4e5ecccc6ff3934a70b",
+    "strata/flash-next/original-publisher-mtp53-two-stage-proposal-v6.json": "eaf1239278657f964ba537a56d778c1ac9cabfc0997684f34afad4a88026f470",
+    "strata/flash-next/source58_model_sdk_binding_v1.py": "c12945d19841c3e58d493491790270e192dfed129aea36c9bc5ac550e6cbb74d"
+  },
+  "overlay_sources": {
+    "strata/flash-next/original-mtp53/shared_weights_sessions_v4.hpp": "sycl/include/strata/kernels/original_mtp53_shared_sessions.hpp",
+    "strata/flash-next/original-mtp53/serving_slot_bridge_v2.hpp": "sycl/include/strata/kernels/original_mtp53_serving_slots.hpp",
+    "strata/flash-next/original-mtp53/serving_slot_semantic_fixture_v1.cpp": "sycl/src/kernels/original_mtp53_serving_semantic.cpp",
+    "strata/flash-next/original-mtp53/shared_sessions_reset_loaded_fixture_v1.cpp": "sycl/src/kernels/original_mtp53_shared_reset_loaded_fixture.cpp"
+  },
+  "source_only": true,
+  "semantic_compiled": false,
+  "reset_runtime_qualified": false,
+  "complete_cache_integration_required": true,
+  "actual_source58_SDK_and_receipt_required": true
+}

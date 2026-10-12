@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "scope": "Source59 defaultOFF pacing successor; actual58 evidence only; no compiler/GPU/model execution",
+  "files": {
+    "strata/flash-next/native59-cooperative-single-window-engine-build-proposal-v1.json": "56dbe870d3192df6f5c3821b44c9683d982ac5cd3577bc60d39c3421f7a72270",
+    "strata/flash-next/source58-pacing-observed-evidence-v1.json": "131e96b58c4f4ff2a6f3cb98dfed7d7ed548ed9c9271a3d30c5f9c521c795ee7",
+    "strata/flash-next/patches/candidate-cooperative-single-window-pacing-v1.patch": "ec1b8b39f0cd2ac47465499c6e34d39bb5f0b3a5994fc3aebccbc244d1e338f0",
+    "docs/20261012_flashnext_source58_pacing_audit_source59_v1.md": "acbddcfaecb0a7a760fb818d0a88aab823eecc904e2a12501f3e5efc7ed59a3c"
+  },
+  "parent_actual58_receipt_sha256": "9d39acecc1b34c641311e831107eddb280ef5830ef1e85f3c785d3ede8777490",
+  "one_current_source_changed": "sycl/src/program/generate.cpp",
+  "unchanged_headers_ABI": true,
+  "runtime_budget_ledger_qualified": false,
+  "speed_qualified": false
+}
