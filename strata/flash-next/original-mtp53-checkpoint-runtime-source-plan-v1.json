@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/run_original_mtp53_checkpoint_v1.py": "750796912fe18be9d9cb948b2da62d13f370de6e925e97ce32188458b9b73015",
+    "strata/flash-next/test_original_mtp53_checkpoint_controller_cpu_v1.py": "9e0e1201e1950e75aa3a2460cbbba5f878fd90e690dd552b7eb782e245e86259",
+    "strata/flash-next/original-mtp53-checkpoint-builder-source-plan-v1.json": "432a01f07e1769023402db3610b3f06c847f220bb2a5bd2dc7c68164f86ce2a3",
+    "strata/flash-next/original-mtp53-checkpoint-source-plan-v1.json": "d12c259ea3fbed4a5f0a6742322c1fe483d8177231d52baf8634b2ab62abca05",
+    "strata/flash-next/source58_model_sdk_binding_v1.py": "c12945d19841c3e58d493491790270e192dfed129aea36c9bc5ac550e6cbb74d",
+    "strata/flash-next/run_original_mtp53_serving_reset_v1.py": "0d3e70a19a1db7d0345d1f4fe1fd20fe9c7b9aee14900292a7ec7e1de8ed833b"
+  },
+  "scope": "Three actual58 outputs plus actual NoDri CPU7 behavioral controls and stronger loaded reset/checkpoint runtime; no MAIN/API proof",
+  "source_only": true,
+  "actual_CPU_executable_result_required": true,
+  "actual_receipt_ELF_required": true
+}

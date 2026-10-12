@@ -19350,3 +19350,20 @@ VERDICT -> Uncompiled source candidate; no predicted8s saving. ABBA42436
 first raw OFF/ON512 histories equal: prefill40405.573401->37994.084255ms;
 unchanged decode29933.843561->29976.446721ms. Remaining repetitions and
 normal aggregate closure still pending; no clean speed claim yet.
+
+
+## 2026-10-12: stronger checkpoint qualification queued after timed ABBA
+
+CONFIG -> Complete V5 checkpoint builder compiles semantic object, CPU
+behavioral executable and loaded checkpoint ELF. CPU executable runs
+inside same NoDri owner and requires seven real behavioral controls.
+COMMAND -> Root queued24464 on card0 lease behind actualABBA42436;
+source59 incremental build56155 queued on card1 behind same pair lease.
+RESULT -> New runtime plan0d6775e564cb201866aa4c8d8976f84c145e4e9d56e8e0f22a762ba376a02d4e.
+Loaded V5 retains all reset checks and adds rewind/shared-prefix restore,
+so redundant V4 reset GPU run is intentionally skipped, not marked PASS.
+VERDICT -> No compile/native/GPU authority yet. Both NoDri builders
+start only after timed model work releases both cards; independent
+outputs and read-only SDK58 parent. Joint actual target/original cache
+ownership and full-byte hashing now being implemented at frozen-prefix
+capture/restore boundaries; existing target digest is metadata only.
