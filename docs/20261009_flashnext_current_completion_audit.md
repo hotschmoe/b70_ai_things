@@ -2015,3 +2015,18 @@ Instrumented hitTTFT4.58-4.75s vswarmfresh13.77-14.12s. See current results
 in20261012_flashnext_serial_cache_current_results.md. This closes a bounded
 corrected-model serial reuse gap, notfullcachefamily/cleanlatency/API/
 originalfullmath/concurrency/shelf. No new token-throughput target met.
+
+
+## 2026-10-12 - Paired profiler scope and retained limits
+
+ProfilerV3 refused startup because native H36 excludes layer splitting.
+Cleanup/full4/source/health passed; no model requests. V4 retains pair model
+work but disables H36 and records PTI/Chrome. Its first selected request
+finished, but aggregate capture exceeded1GiB: clock472861176B +Chrome720237386B,
+postwrite total1202054447B. Controlled interrupt/owned cleanup is active;
+no admitted trace/overlap/bandwidth result. Failed data is preserved.
+CPU-call rows account257448562B, GPU rows162362172B and flow rows300424245B;
+a flags-only device capture can omit CPU-call rows within the same budget,
+leaving host preparation/timing and calibration explicitly incomplete.
+Current cheap source52 option preflight rejects unsupported H36+pair before
+lease/model scans. Whole original MTP graph and loaded fidelity remain open.

@@ -17909,3 +17909,29 @@ calibratedhost-device/totalphysicalbusBW claim. Legacy H36-equivalence key
 fromtwo-row helper comparescopy-armoutputs, not H36 qualification (disabled).
 Startupsourcepreflight/failure-loop improvements beingprepared CPU-only.
 Fullcampaign objective active; cachefamilies/realstreams/math/shelf open.
+
+
+## 2026-10-12: paired capture exceeds budget; source-backed volume reduction
+
+CONFIG -> Current52 V4 pairP2048 pausedwarmup/selectedGEN8, H36OFF,
+PTIclock+Chrome call/kernel/device logging, aggregate1GiB/clock512MiB caps.
+COMMAND -> Actual13066 A selectedDONE8 observed, thencontrolledparent
+interruption afterrawbudgetexceeded; cleanup/postguards remainlive.
+RESULT -> Clock472861176B/Chrome720237386B, postwrite1202054447B,
+128312623B overshoot. Failed capture remainsfailed; noafterselectedboundary
+proof/trace admission or physicalbandwidth/overlap conclusion. Compact
+categoryaudit: CPU257448562B/1729816rows, Flow300424245B/2304194rows,
+GPU162362172B/578827rows. Clock581094 normalizations dominate472122552B.
+VERDICT -> Sourceexacttracer callbacks require device-only Chrome flags:
+removingcallflagalone retainsCPUcallback via kernel flag. Newdevice-only
+recorder preserves GPUcallback/instanceIDs/bytes+clock underexistingcaps;
+hostlane/calibration/fullcoverage remainopen. No budgetincrease/modelchange.
+
+CONFIG -> Cheap current52 native startup preflight, no GPU/modelpayload.
+COMMAND -> Sourceplan2858b6f6fb0bc69906050f4e5f873c39cf02e4e29784e1947957f33b8b25ca02 sealed;
+3tiny controlsPASS; actualV4 two commands pass exactsourceguardcheck.
+RESULT -> H36+layerSplit refused beforelease/scans. Removingtheonlyclose
+identityscan isnotjustified: wrapperalreadyreadsmodel beforeleafstartup.
+VERDICT -> Avoid known invalidlaunches early; retainactualmodelguards and
+reusetruthfulduplicateaggregate receipts onlywithchronology/no laterreads.
+Fullmodelmath/cachefamily/realstreams/latency/traffic/shelf remainopen.

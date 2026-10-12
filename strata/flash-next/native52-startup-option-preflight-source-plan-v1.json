@@ -1,0 +1,13 @@
+{
+  "CPU_command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_native52_startup_option_preflight_cpu_v1 -q",
+  "actual_V4_metadata_check": "/tmp/source52-p2048-profile-v4-startup-option-check-v1.json",
+  "files": {
+    "docs/20261012_flashnext_native52_startup_guard_preflight_v1.md": "0b596dc77567605497b314a5f82f2778cc6fd363d6921fc27fcdca2480439d3c",
+    "strata/flash-next/native52-copy-engine-prefill-engine-build-proposal-v1.json": "25c8b73f8fa0d92f0e7c562f232776844405dc62b7e3524d1584a92283f4630d",
+    "strata/flash-next/native52_startup_option_preflight_v1.py": "6e2250cb9970b2cc5aa341beb801fb83d5474ebee734290af8802634c6d20e79",
+    "strata/flash-next/test_native52_startup_option_preflight_cpu_v1.py": "9e3f0b7b7c643bf221dfb913264208331d60b74af8ec4019390761fb2aa3442a"
+  },
+  "no_frozen_actor_or_bin_edits": true,
+  "schema": 1,
+  "scope": "exact source startup-option preflight only; no ABI/model/device qualification"
+}
