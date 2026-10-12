@@ -9,7 +9,27 @@ Performance targets from the user: at least2000 tok/s prefill and50 tok/s
  Compare actual source/recipes in Steve, Sergio and Strata; prefer experiments
  that address batching, latency and transfer overlap, rather than more wrappers.
 
-Latest continuation state (2026-10-11):
+Latest update (2026-10-12):
+- Source49 model FAILED392s beforeREADY: nativepack requiresreserved spec>=2,
+  conflictingwith49CLIguard spec1. Engine2/no requests/no forcedcleanup;
+  finalhealth/full4 passed, no GPUfault. Report67af1f43. Do notretry49spec1.
+- Source50 changes ONLY CLIguard toexactreservedspec2, preservingactualT1/G1/
+  nK<=16 andnoMTP/draft/batch/pipeline. All8buildPASSED308s, receipt812bf43f,
+  SDK /mnt/vm_8tb/b70/build/strata-native-hc-engine-20261011T235405Z-2977a1i2.
+  Onecard andpair50actualcommandpreflights passed. Actual93054 currentlyholds
+  pairlease foronecard50OFF/ONmodel atF17/source50-mirror-t1-model-v1-run-v1.
+  Inspectthatlivehandle/report; do notduplicatelaunch. Botharms short54,
+  twoGEN64/spec2/cacheOFF/groupedF160/trace0; solemirrorT1flag0/1.
+- DirectESIMDF16DPASprototype compiled29.3s andbothlinkedcard0GPUfixtures
+  PASSED: single43s/two49s,12cases each, exactoutputs/guardrows/ownership,
+  ownedretirement/posthealth/nofreshkernel faults. F17/prefill-f16-esimd-
+  linked49-{singleq,twoq}-v1. Originalindividualf16 reference, no groupedMKL.
+  Header284dd290 andELFf2d895a5 arefrozen. DefaultOFF integration51 over50
+  is sourceworkinprogress; no productionXMXmodel or speed resultyet.
+- HC46modelcomparison CLOSED PASS861s/publicPASS: warmPP4295.3/4294.6ms,
+  GEN64decode6810.3/6806.1ms, no meaningfulgain. No furtherHCrowcount sweep.
+
+Prior continuation evidence (2026-10-11):
 - Balanced source43 24/24 producer and independent public checks PASSED.
   Short54/four-output warm diagnostic: PP936.8ms, decode245.9ms (16.3tok/s).
   Only18185/24576 experts resident; this is not sustained speed/fullmath.
