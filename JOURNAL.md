@@ -19742,3 +19742,28 @@ RESULT -> Independent source tree constructed under
 verbs and explicit stream/file ownership gates prepared.
 VERDICT -> Source preparation only; actual compound schema/RID, serving
 identity, HTTP concurrency/persistence/eviction/fullstate still unqualified.
+
+
+## 2026-10-12: complete loaded trace and first-GDN observations
+
+CONFIG -> Exact61 loaded first512 diagnostic, two fresh repeated A/C cohorts.
+COMMAND -> Actual13439 producer PASS; root34167 independent reader PASS.
+RESULT -> Producerc4878dd7d5b325a9e961aef4696db4e0f1314691e435c67ce702107d54dd0eb7;
+public62581423cc9abf21c716a60f1c7df423aa39a32166ce8012574b70f7848fed66;
+eight actual owner/stage runs, full histories/source/full4/health/close.
+First cohort stage0 PLE future get: RID1 5060.521ms, RID2 2870.429ms;
+repeated RID3/RID4 0.004ms each. Other long adjacent spans include remaining
+layer work and cannot be labelled idle or a single kernel.
+VERDICT -> Host localization admitted, not GPU clocks/physicalBW/clean speed
+or fairness. Actual32123 mmap/direct comparison queued using GPUchild and
+CPU closing scan split; source/identity/health/owned-close gates retained.
+
+CONFIG -> Actual original own firstGDN reference, current59 mode0 targets.
+COMMAND -> Actual60623 completes/errors[]/fresh postCPU full4 PASS.
+RESULT -> Producer620a4ec5f3c8a1bf053afe8529658eb6e02a01a792d1ea403b0013cc6c32a504;
+one independent computation/four comparisons/no captured primary inputs.
+HC NMSE~1e-14, QKV3.3934e-9, GDN output4.9880e-7, residual3.96099e-7.
+First inputQ81 has unchanged integer codes but one half-scale differs among
+80 blocks; outputQ81 differs in18 scales/16 codes.
+VERDICT -> Arithmetic observations only, no tolerance/numericPASS or whole48
+qualification. Scale rounding/local HC contract remains to localize.

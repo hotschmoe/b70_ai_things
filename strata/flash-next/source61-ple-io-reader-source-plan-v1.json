@@ -1,0 +1,10 @@
+{
+  "schema": "source61-ple-io-reader-v1",
+  "files": {
+    "strata/flash-next/validate_source61_ple_io_v1.py": "4237b7bd7f9c4ee2f3f9e075ca9fe436a7a54042ebb066e8eddf5a68295b16db",
+    "strata/flash-next/source61-ple-io-recipe-v1.json": "1a68ca250fa5469a20c54ab4bfbe620440333463d07bc344d0d76e64e7404420",
+    "strata/flash-next/validate_source61_loaded_host_v1.py": "ff2cd8bc3247eb25a91bfc55f5725aff67820e8f3467a0dd80c7eda3f235741d",
+    "strata/flash-next/source61_ple_identity_ports_v1.py": "1504805d1e838619ea4ea9ecd62540633a85eda9cf9bc56912cfd3f7fedfbe55",
+    "strata/flash-next/test_source61_ple_identity_cpu_v1.py": "c43f2bfa6e9cedd1bf823180e9d3af853f6bbad612a412daf7818a9b820bc5dc"
+  }
+}
