@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "scope": "directactual55->56 V3 preserves verified configuration/generated headers; exact isolated NoDri incremental gates; root executes",
+  "pins": {
+    "strata/flash-next/build_native56_incremental_from55_v1.py": "e15970bf8748d547ddc5a4a559284d6dfa6cf53c7d23b53d7c2b5dea6e7d1379",
+    "strata/flash-next/native56_incremental_ninja_audit_v1.py": "1a45aa4c0e505c9348c632b31d8b147af03a283fce7ec4a92dce344afa63f311",
+    "strata/flash-next/test_native56_incremental_ninja_audit_v1.py": "0e59ae520189df7f6fd3502c7aa0a79c73001f0764e73a6b84719ce9613387ab",
+    "strata/flash-next/build_native_hc_engine.py": "147929bfa3b43dd162db415f6ac68700521aa7e21819705f46e6a9fcaeebca1d",
+    "strata/flash-next/native55-hc-prefill-coalescing-engine-build-proposal-v1.json": "24137c6d3f32721167e71d27c1267dd48f0891e539bceafd496e375614947687",
+    "strata/flash-next/native56-hc-prefill-tile4-engine-build-proposal-v1.json": "6ddb4574f4ae3288d9e73cbe82bc21434d95f25f2a46a56bbb80b24060100fe8",
+    "docs/20261012_flashnext_source56_incremental_build_v1.md": "d7b01ffbbec16db48e0e3aa6983113dc39612dc9f668c8318b72a413b4d8abf6",
+    "strata/flash-next/build_native56_incremental_from55_v2.py": "9b00cabd66207ba009e625c07fa3cceb790cbc5e10e82a0320e320a49675dd06",
+    "strata/flash-next/test_native56_incremental_startup_v2.py": "614bc7e69e58c56c4ca67b39cd00ebd8d3183f33494e0ee2f059f2466ecb538b",
+    "docs/20261012_flashnext_source56_incremental_build_v2.md": "ef43c9e9fa969b45ec2eb8dca85da192c785478c35eca94fa181002402d1c828",
+    "strata/flash-next/source56-incremental-from55-build-recipe-v1.json": "6108ceeef3ac85bd46965302454fe50eb416df61c4b17a90e43d1236b02c1055",
+    "strata/flash-next/build_native56_incremental_from55_v3.py": "035ba3673a056fc5a771d7cf68804abf855ae1845e1a0ad7cff32a5d4b11227e",
+    "strata/flash-next/test_native56_incremental_startup_v3.py": "c0084f6b4e23c69884cc3b33d9bceeee5046ff77436b2dd7264bdcb63ef28267",
+    "docs/20261012_flashnext_source56_incremental_build_v3.md": "704679222da3f26d0b333ebdb3d3ee0eca9e54a114219d778ceb4fa5bc61e8b0",
+    "strata/flash-next/source56-incremental-from55-build-recipe-v2.json": "68ba9583ae95c46d1749c433cec14b78b8c478f94e3e0eecf326812e52783f9c"
+  },
+  "argv": [
+    "/usr/bin/python3",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/build_native56_incremental_from55_v3.py",
+    "--parent",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261012T041742Z-stwovdcr",
+    "--parent-receipt-sha256",
+    "c9d197af57ada11b7bff6436d42996064de779cddd22fec099f08e8321184705",
+    "--jobs",
+    "4",
+    "--lease-card",
+    "1"
+  ],
+  "devices_exposed": false,
+  "compile_executed_by_author": false,
+  "all_source_fresh_compilation_claim": false,
+  "preserved_failed_V1_receipt": {
+    "path": "/mnt/vm_8tb/b70/build/strata-native56-incremental55-20261012T053309Z-iqiumnbb/receipt.json",
+    "sha256": "74115b6756314a7944dbe412373df06f476d4adec8bae3e4a3e1e2871fef4f61"
+  },
+  "preserved_failed_V2_receipt": {
+    "path": "/mnt/vm_8tb/b70/build/strata-native56-incremental55-v2-20261012T054127Z-0y0emfhg/receipt.json",
+    "sha256": "65ed63549e3f7243f4132080928bc4bd0fa088c8b1596f1754ac4a3262b361d2"
+  }
+}

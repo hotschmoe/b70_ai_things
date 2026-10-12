@@ -18486,3 +18486,32 @@ RESULT -> Native/sequence/full5/health/retirement pending. OldV1failed139/
 controller137 remains preserved, recovery94362 posthealth/full5 passed.
 VERDICT -> Targetedcorrected retry, nofull64/512 or speed qualification.
 No wholegoal completion/shelf promotion.
+
+
+## 2026-10-12: original MTP full64 equivalence accepted; native2 cache live
+
+CONFIG -> CorrectednativeV2/runnerV3, original54prompt/64naturalEOS,
+freshcard0OFF/ON sameoriginal primary+MTP artifacts, fixedrequested6500.
+COMMAND -> Actual41041 PASS587s; independent saved-readback PASS.
+RESULT -> All64 IDs exact,64 useful both,30/32 speculativewindowsaccepted,
+ON33 vsOFF63windows, position117. Bothnormalexit0/EOF/ownedremove/
+health/kernel/full5 andclosingsource/ELF pass. Producer03cd317e16e31f523eedd2f661e9260220e6cc6febec0bc61a865a01dfb156c5; public1402a35792bd8bb1699b419237122bcdc9a22c816d591acdb5f6ab1fabbbdef4.
+Decodewall6746.735 ->6732.815ms, effectivelyflat. OFF8160resident vs
+ON7270, mirrors51446579200/54231654400B; actualresidencynotmatched.
+VERDICT -> One sustained64target-equivalencepair, not512/numerical/speed.
+Defaultoff existing-sync CPUphase timings next; no pure-draftattribution.
+
+CONFIG -> Source52 native2 cache, serialA/B then coldAB andcachedBA
+owner swap, shared1536/divergent suffix, sixGEN8, privatefull49captures.
+COMMAND -> Rootgenuine construction12136 PASS; actual25323 pairlease
+live atF17/source52-native-batch2-cache-v1-run-v1.
+RESULT -> Actualrows2/mask3/fullheads/reusecounts/lifecycle pending.
+VERDICT -> Advance realtwo-streamcache isolation, notHTTP/latency/fullfamily.
+
+CONFIG -> Direct55->56 NoDri incremental reuse, strictdependencies/all8links.
+RESULT -> V1failed23s startup; V2failed19s generatedggml-version.h audit.
+Copied Git indexinodes made redundantconfigure mark clean-source dirty.
+Parents unchanged, no reusedobjects/compiledspeed admitted. V3 preserves
+originalverifiedconfig/generatedfiles andrefuses unexpectedregen, now26743
+queued behindnative2 lease. Fullfreshbuilder remainsfallback.
+VERDICT -> Preservefailures; no relaxeddeps or currentnew56model claim.
