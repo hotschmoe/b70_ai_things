@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/run_natural_p2048_native59_v1.py": "d2511daba4f184331fe5fa6f14e99568c52f3b7ff277339556c0e9acc2c581c5",
+    "strata/flash-next/native59-natural-parent-source-recipe-v1.json": "854da41ab51c45e6883c02b89331934d4ec9cf4d642eb419ac5dc41bf8f0b490",
+    "strata/flash-next/source59_model_sdk_binding_v1.py": "3c55492c561a5350393fdfcd65f2f37bff452e402ab22aa06e3a8113ab069fd2",
+    "strata/flash-next/native59-cooperative-single-window-engine-build-proposal-v1.json": "56dbe870d3192df6f5c3821b44c9683d982ac5cd3577bc60d39c3421f7a72270",
+    "strata/flash-next/run_source59_native2_pacing_v1.py": "ab93e9af0e66a922ba6bc963a8483a7397922ce3620cc8f6268a6a1dca45b134",
+    "strata/flash-next/source59_native2_pacing_contract_v1.py": "a7f9a0bf3e7ed7cfc41c7cc1583a4fc71ffa4afb9ac30a812493b7866d2d116b",
+    "strata/flash-next/source58_native2_cooperative_contract_v1.py": "9e8cf51004397554a63c5753a04cd18437d9b1d5293004c1903fa15290fc2b1f",
+    "strata/flash-next/source58_native2_fairness_observations_v1.py": "d886af6017b78e948d0566046312d8fa23673772e27c58699271b6f33277de83",
+    "strata/flash-next/source57_native2_boundary_contract_v1.py": "44f527f070753f67f80f3c418d8392a87c2f8b369f3f0fe24fac771c3c5d91df",
+    "strata/flash-next/source52_native2_fairness_contract_v1.py": "1b651c4f7aa9a9dbab6b2868bd6e59f7e9f9eb821be641b5bc8f3107abbf7f8b",
+    "strata/flash-next/native2_fairness_protocol_v1.py": "8108393bf2d58081ffef306f2f17f1df03621b92ddf8d6eec53ed6e02425dbf0",
+    "strata/flash-next/native59_startup_option_preflight_v1.py": "4287797222b49061baa1e8a071df596c76daa18f90b9d49afa5c6674caa32100",
+    "strata/flash-next/source59-native2-pacing-recipe-v1.json": "4e2170fa3ade39bab7a6837379a5c770ea9cee5c0d8bbfa4e11eb963ed0f866f",
+    "strata/flash-next/validate_source59_native2_pacing_v1.py": "566f2dd1ce8f151b13c325a800d5884eee2653debefc6af237e0647ea1edb0cb",
+    "strata/flash-next/validate_source47_grouped_f16_model_v2.py": "f8cd5bdf1520335eeefa84b09660df7200daf129cc69d9926537b758b5dbf1f1"
+  },
+  "scope": "Independent59 lifecycle/source/identity/page/health/normalclose + exact original histories and actual per-service window limit; no forged budget or overlap",
+  "fresh_weight_hash_reread": false
+}
