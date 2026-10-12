@@ -18387,3 +18387,28 @@ forced reject/accept/own proposal target trials,3 exact restored-state rows
 and cleanup/full4+MTP/health/kernel still pending.
 VERDICT -> Concrete repaired control, not speed/full64 or numerical
 qualification. Preserve failed implicit/explicitcommit attempts.
+
+
+## 2026-10-12: original MAIN MTP control passed; accepted55 profile live
+
+CONFIG -> MAIN V5 original34 sidecar, unchanged52 target, singlecard0/
+mirror0/ONE_TOKEN_COMMIT0, exact checkpoint+KV restoration around T1.
+COMMAND -> Actual76687 PASS439s, independent root readback PASS.
+RESULT -> All3 restored controls byte exact. Forcedreject picks198/198
+and main/draftposition2; forcedaccept1/1 position4; actualownproposal198
+accepted198 position6. Nativeexit0/ownedremove/posthealth/kernel/full4
+plus originalMTPwholeSHA passed; closing sources/ELF/receipt passed.
+Producer8356256dcca853fa1c15c72ac68c4fd64a6119d50ae641d2fa0d746fd94944a6;
+public968968a1a8f2797ebefb92108f6d5b2d633f62b721280b7b8fcc56f1cd533a99.
+VERDICT -> Actual unchanged target/draft integration control accepted.
+No sustained64/512, originaldraftnumerical or MTPspeed proof. Specialtoken
+control is diagnostic, not natural completion quality/acceptance estimate.
+
+CONFIG -> Current accepted55 pair24/24 P2048 GEN8 warmup+selected,
+HCtile2/coalesce1/copy0/mirror1, H36/ChromeCPU OFF, bounded device trace.
+COMMAND -> Root genuine command construction PASS; actual86336 acquired
+pairlease atF17/source55-p2048-hc-coalesced-profile-v1-run-v1.
+RESULT -> Native profile/trace/health/currentfull4/ownedretirement pending.
+VERDICT -> Measure current kernel/count/unions before further optimization;
+no fulltracecoverage/clockalignment/physicalidle/busBW claim.
+Full campaign fidelity/cachefamily/1-2-4-6streams/shelf still open.
