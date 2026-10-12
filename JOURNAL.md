@@ -18298,3 +18298,25 @@ New ENV0 blueprint ec3419198ccabdec232231afbdde85e4492f50963a951cfaa86fd9b67a1d5
 prepared, actual MAIN GPU attempt pending after fresh55 lease.
 VERDICT -> Diagnostic discriminates existing failure, not another blind
 unchanged retry or speed qualification. Whole objective remains open.
+
+
+## 2026-10-12: fresh55 all8 build passed and natural model A/B launched
+
+CONFIG -> Original selected UDQ4, direct54 plus default-off whole-HC
+prefill coalescing; same74 source/all8 targets, pinned compiler/GGML.
+COMMAND -> Actual62469 PASS309s, SDK041742Z-stwovdcr receipt
+c9d197af57ada11b7bff6436d42996064de779cddd22fec099f08e8321184705.
+RESULT -> Genuine55 both-command construction passed, SHA
+2597450032924053a70a1e79bbb38a295f31df876439441ebd57134d55328be3.
+VERDICT -> NoDri compilation and command integrity, not model qualification.
+
+CONFIG -> Fresh55 pair24/24 P2048/pref512/ctx4096, six naturalEOS
+GEN512 requests per arm; tile2 fixed, sole HC_PREFILL_COALESCE0/1,
+mirror1/copy0/grouped0/ESIMD0/noMTP/cacheOFF, original profile/tensors.
+COMMAND -> Actual76995 acquired pairlease atF17/
+source55-hc-prefill-natural-v1-run-v1.
+RESULT -> Producer live, outputs/latency/currentfull4/health/retirement
+pending; independent finalized reader required after terminal.
+VERDICT -> Actual representative model timing next. Do not add independent
+copy-engine gain or promote source launch-count claims. MAIN V3 awaits
+lease after this model attempt. Full fidelity/cache/streams/shelf open.
