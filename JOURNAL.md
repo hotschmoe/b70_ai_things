@@ -18954,3 +18954,24 @@ cache0/fixed6500/globalverifier/quant/math andV5 bothstagefreshreset.
 COMMAND -> Rootsourcepreparer plus2focusedCPUcontrolsPASS0.002s.
 RESULT -> Proposaleaf1239278657f964ba537a56d778c1ac9cabfc0997684f34afad4a88026f470; case0physical24/512/512/488/505/6, per-prompt boundariesderived.
 VERDICT -> Nextisolated fidelitycandidate; compilation/runtime remainpending.
+
+
+## 2026-10-12: full HC T2 direct/graph composition passes on card0
+
+CONFIG -> Fresh HC leaf, original-shaped syntheticweights, T2 scalar
+reference, pending0/1; borrowedparts51200 with20480float gate.
+COMMAND -> Actual20716 PASS38s undercard0 lease; rootindependent
+normalterminal/EOF/absence/marker/healthrawhash checksPASS.
+RESULT -> Allseven fields exact directandgraph; borrowedtailcanary
+unchanged, pre/posthealth/kernel/ownedretirement normal. Producer
+cc5b51f7c5f7487b3e63a14552bd30c0052aa81e1c377e17d74e6a1b01d3ff00; public15f3da81890278d03b97df734b6a4629140c3ef5f0177d41b9869a641a32d8e9.
+VERDICT -> Completeoperator prerequisite, not model/pairedcaller/speed
+qualification. NoGPU timing or bandwidthbenefit claimed.
+
+CONFIG -> V6 normalcutscandidate freshroot NoDri compiler, typedcard0
+FD8,2CPU6GiB, immutableoriginalSDK andnewoneELF.
+COMMAND -> Actual58332 nowlive; source/intake focusedCPUcontrolPASS0.004s.
+RESULT -> V6 runnerproposal1144f037b1c03cc4840369af01757a899a3edddf87d584b1c53b98d6b6eb3df5; actualcompiled receipt/ELF pending.
+VERDICT -> Freshcontrols/natural actorintake preservesall5/health/owned
+retirement andrequires actualreference-derivedcut markers/physicalrows.
+No runtime/fidelity/speed proof claimed before those runs.
