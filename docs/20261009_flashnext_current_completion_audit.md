@@ -2112,3 +2112,36 @@ OriginalMTPstepV2 loadedcomponent99096 PASS49s butnumerical/mainintegration
 unqualified. ActualtargetT1/T2 diagnostic source nowprepared preserving
 mainloader/math/commit, forcedcontrol labels andactualdraftproposal.
 Compiler/GPU targethook result remainsmissing. Fullgoal remainsunproved.
+
+
+## 2026-10-12 - Accepted HC model gain, serial cache latency, MTP blocker
+
+Exact original UD-Q4_K_XL pair24/24 P2048/pref512/ctx4096, three
+natural-EOS GEN512 prompts and fresh repeats: source54 scalar/tile2
+outputs/finish match across all12 requests. Warm-repeat PP183-185 ->
+204-206 tok/s, about10.1% less PP time; decode20.5-22.4 unchanged.
+Source/full4/all8/health/kernel/owned retirement passed. See
+docs/20261012_flashnext_HC_token_reuse_natural_results.md. Ordered A/B
+does not supply interleaved ABBA, population stability or task completion.
+
+Complete-state serial prefix reuse has real1536 reused tokens and matched
+full heads in an instrumented control. Capture-free repeated prefix TTFT
+13.858-14.021 ->4.576-4.753s, exact full output/finish match. See
+docs/20261012_flashnext_clean_serial_cache_results.md. Eviction,
+cancellation, stale identity, concurrent cache-family isolation, RAM
+parking/restart and true1/2/4/bounded6 stream fairness remain open.
+
+Original MTP loaded first-step conditional independent Q8_1 arithmetic
+closely matches; pure float activation changes routing. No numerical gate
+is claimed. Actual MAIN ENV0 control passes forced rejection then fails
+a later combined greedy/acceptance assertion. V3 pre-assert diagnostic
+compiled; actual run pending. See
+docs/20261012_flashnext_original_MTP_reference_and_MAIN_failure.md.
+No sustained MTP64/512 target equivalence or speed proof exists.
+
+New whole-chain HC prefill coalescing standalone passes10 bitwise cases
+and changed-input graph replay oncard0 with clean retirement/health.
+Card1 earlier early UMD hostsegfault retained. Fresh55 all8 engine build
+is active; model A/B gain unproven. No2000/50, full original model
+numerical qualification, concurrent service or shelf promotion exists.
+Original objective remains intact and incomplete.
