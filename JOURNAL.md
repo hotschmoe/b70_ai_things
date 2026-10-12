@@ -18145,3 +18145,26 @@ COMMAND -> Freshpatched52 standaloneNoDri62721 live withproductionO3/
 C++20/precise/correctly-rounded device-link flags.
 RESULT -> Compile/operatorbitwise/T8timing pending, noGPUmodelgainclaim.
 VERDICT -> Operatorbenefitbeforefresh54all8modelbuild, noold46rowsweep.
+
+
+## 2026-10-12: arithmetic-exact HC token reuse operator passes
+
+CONFIG -> SafeHCfixtureV2/patched52 standalone, randomdenseoriginalQ8
+rows/F32activation, originalperlaneFMA/XOR reduction, tiles2/4.
+COMMAND -> NoDri62721PASS24s/ELFfc134b3f; card0leased37114PASS38s.
+RESULT -> Tenbitwise shapes/T1,3,7,8,512/direct+changedinputgraphreplay,
+invalidtile rejection,54T8latencyrows, health/kernel/ownedretirementpassed.
+Report7ec4f2c2acedea3c08833fc4eb116812f8d53f968aa0dead05b2126e96ef9232.
+T8medianhostsubmit+wait downold140.327us/tile2=114.197/tile4=173.611;
+upold133.204/tile2=88.088/tile4=66.857. No fullmodelspeedauthority.
+VERDICT -> Uniformtile2 improvesboth operator directions; tile4downloses.
+Fresh54all74/all8 NoDri61320 nowlive, naturalP2048sixGEN5120/2 matching
+actorbeingprepared. No productioncallercoalescing or old46rowsweep.
+
+CONFIG -> FrozenactualMAIN originalMTP diagnostic, onecard/spec2/mirror0.
+COMMAND -> CPUprepareactual52 realgenerate/unchangedlibs completed, no
+compiler/GPU/weights inthis step.
+RESULT -> RealT1seed/T1control/T2commitwait/actualhidden-picks catchup
+sourcehook prepared; labeledforcedreject/accept thenactualdraftproposal.
+VERDICT -> Compile/loadedtarget/state/numerical/64-512equivalence pending;
+fullcampaign math/cachefamily/streams/profiling/shelf remainsactive.
