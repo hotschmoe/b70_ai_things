@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "scope": "Root-owned source61 selector repair; actual76 sources, two header consumers recompiled/one Prefill archive/all8 links; main may be byte-identical; no math/workload/pacing change",
+  "pins": {
+    "strata/flash-next/build_native61_incremental_from60_v1.py": "cb498108f95bedfcbb271641fd50044c867acc4886bbba8dc0deb333bd707d26",
+    "strata/flash-next/native61_incremental_ninja_audit_v1.py": "9f703ab9f77c51ba772a261e63a02037ce1020d9de502c7ce067569e1e550289",
+    "strata/flash-next/build_native_hc_engine.py": "147929bfa3b43dd162db415f6ac68700521aa7e21819705f46e6a9fcaeebca1d",
+    "strata/flash-next/build_native58_fresh_from52_v2.py": "2c15acd5c2c240ba7cfdc8cb7eb2025cf8fd3ca2d2526992eb4203fc5b4054d8",
+    "strata/flash-next/native60-first512-host-diagnostic-engine-build-proposal-v1.json": "91123f9c740742685e8d95a30e45624a7e880f781eda5495758fb49297ab94fb",
+    "strata/flash-next/native61-host-actual-chunk-selection-engine-build-proposal-v1.json": "34d49ee71fcee30b4059c37cb166c20a1356454dc0abe2565f21f2be59ab659e",
+    "strata/flash-next/source61_model_sdk_binding_v1.py": "7bcce9be54124f9f5f536d115ddab1af9a820aac04e776c2f1cec6b59d2649ae",
+    "strata/flash-next/patches/candidate-prefill-host-actual-chunk-selection-v1.patch": "c3c17959cec07f3fc3a99319f9f6840341a9c620d960f54d00877af50e7b53c4",
+    "strata/flash-next/prefill-host60/host_trace_actual_chunk_v1.hpp": "e75cacd43667157e9160c185a67fd1a8162204104198252b80500af9b88ea948",
+    "kernels/prefill_host61_selection_cpu_v1.cpp": "6aac3fd449b6a069cce4cf44cb77f242f8fd216dbadc14f37aa870bb8ab5b342"
+  },
+  "targeted_CPU_control": {
+    "source": "kernels/prefill_host61_selection_cpu_v1.cpp",
+    "sha256": "6aac3fd449b6a069cce4cf44cb77f242f8fd216dbadc14f37aa870bb8ab5b342",
+    "argv": [
+      "g++",
+      "-std=c++20",
+      "-O2",
+      "-I/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/prefill-host60",
+      "/mnt/vm_8tb/github/b70_ai_things/kernels/prefill_host61_selection_cpu_v1.cpp",
+      "-o",
+      "NEW_EXTERNAL_CPU_CONTROL_ELF"
+    ],
+    "author_compiled_or_ran": false
+  },
+  "argv": [
+    "python3",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/build_native61_incremental_from60_v1.py",
+    "--parent",
+    "/mnt/vm_8tb/b70/build/strata-native60-incremental59-v1-20261012T224908Z-gwvz2yz5",
+    "--parent-receipt-sha256",
+    "1d832123a7c715650db14f96b836d3561a46702ca10d0e57a7c078c71df36ee9",
+    "--jobs",
+    "4",
+    "--lease-card",
+    "1"
+  ],
+  "bounds": {
+    "cpus": 4,
+    "memory_bytes": 17179869184,
+    "memory_swap_bytes": 17179869184,
+    "pids_limit": 512,
+    "NoDri": true,
+    "network_none": true
+  },
+  "retirement": "Exact frozen58V2 owned compiler helper; normal typed original exit/EOF/removal; unknown retains lease",
+  "compiler_or_GPU_executed_by_author": false
+}

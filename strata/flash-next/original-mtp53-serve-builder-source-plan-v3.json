@@ -1,0 +1,10 @@
+{
+  "schema": 3,
+  "files": {
+    "strata/flash-next/build_original_mtp53_serve_v3.py": "321ae45cf759c1d3deff354a391a89ffd9fa14013632fd4029906de10fe94e37",
+    "strata/flash-next/original-mtp53-serve-compile-source-plan-v3.json": "352556d2cd99767cb5272623db4095edf0cb3d0fdaee9beb6fb5effc23ba9d3b",
+    "strata/flash-next/original-mtp53-serve-source-plan-v3.json": "42afec9a2dcc17cb71ad6b9540f606f99cc29c2d0ad7bd1ddaec2ed572239365",
+    "strata/flash-next/source58_model_sdk_binding_v1.py": "c12945d19841c3e58d493491790270e192dfed129aea36c9bc5ac550e6cbb74d"
+  },
+  "scope": "NoDri fresh MAIN/headerconsumer/link and actual CPU11; no runtime/model/GPU qualification"
+}

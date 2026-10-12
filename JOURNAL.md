@@ -19626,3 +19626,23 @@ to original teacher/best vector<int32_t> interfaces. Semantic object built;
 MAIN link and CPU7 did not execute. Owned compiler removed, no GPU exposed.
 VERDICT -> Range-checked explicit token conversion successor required; no
 compiled original serving/runtime/API/cache qualification. Full goal open.
+
+
+## 2026-10-12: actual selector CPU control and serving token boundary repair
+
+CONFIG -> Exact source61 diagnostic header, actual outer1512/first512/later512.
+COMMAND -> Root CPU97736 g++20/O2 in C399, NoDri/networknone,1CPU/512MiB,
+real kernels/prefill_host61_selection_cpu_v1.cpp executable.
+RESULT -> Exit0/PFH61_SELECTION_CPU_PASS, deferred4 records, input_n1512,
+actualT512 and ignored later chunk. No GPU/model or operator timing.
+VERDICT -> Selection behavior verified. Actual61 incremental builder90193
+queued card1 after current59 capture58166; all8 links/runtime remain needed.
+
+CONFIG -> Original native serving V3 over exact58 with checked native64
+to original32 token boundary, unchanged target math and exact state bytes.
+COMMAND -> Root source/compile preparation PASS; actual6445 NoDri builder
+queued card0, new source/compile inputs preserve failedV2 artifacts.
+RESULT -> MAIN4874a047 candidate prepared; builder requires fresh MAIN and
+header consumer plus actual11 CPU controls; no compiler result yet.
+VERDICT -> Real native4 controller in preparation, no serving/API/cache or
+new speed qualification. Current59 capture58166 remains live; fullgoal open.

@@ -1,0 +1,61 @@
+{
+  "schema": "source61-loaded-host-v1",
+  "files": {
+    "strata/flash-next/run_natural_p2048_native61_v1.py": "980863cbfb2e5fd193098193c96e7d929991c7005e12632843e3ffe39091559a",
+    "strata/flash-next/native61-natural-parent-source-recipe-v1.json": "11a579242ccf463423071b482f9dd3af8b4387fd2325b882e6c4f30fc572cd44",
+    "strata/flash-next/source61_model_sdk_binding_v1.py": "7bcce9be54124f9f5f536d115ddab1af9a820aac04e776c2f1cec6b59d2649ae",
+    "strata/flash-next/native61-host-actual-chunk-selection-engine-build-proposal-v1.json": "34d49ee71fcee30b4059c37cb166c20a1356454dc0abe2565f21f2be59ab659e",
+    "strata/flash-next/run_source61_loaded_host_v1.py": "968066a0bd53d23d36600748d970c3f0b78d85049429effeefb18b9c35c777c0",
+    "strata/flash-next/source61_loaded_host_contract_v1.py": "4a184bb7bf55b7bde6e223cfdee9f226e913529f2c499eb1a2547db7df041051",
+    "strata/flash-next/source60_loaded_fairness_observations_v1.py": "2a2a5a04956910e07d5d1262cb7b75114e0375fb2f318fcbf39fea9b5ab9d764",
+    "strata/flash-next/native60_loaded_fairness_protocol_v1.py": "2e90d20ea1203d24ff1d3509fb2bf728a699d11d84837eaa8f06b760ecad4b2e",
+    "strata/flash-next/source59_native2_pacing_contract_v1.py": "a7f9a0bf3e7ed7cfc41c7cc1583a4fc71ffa4afb9ac30a812493b7866d2d116b",
+    "strata/flash-next/source58_native2_cooperative_contract_v1.py": "9e8cf51004397554a63c5753a04cd18437d9b1d5293004c1903fa15290fc2b1f",
+    "strata/flash-next/source57_native2_boundary_contract_v1.py": "44f527f070753f67f80f3c418d8392a87c2f8b369f3f0fe24fac771c3c5d91df",
+    "strata/flash-next/source52_native2_fairness_contract_v1.py": "1b651c4f7aa9a9dbab6b2868bd6e59f7e9f9eb821be641b5bc8f3107abbf7f8b",
+    "strata/flash-next/native61_startup_option_preflight_v1.py": "9669170262fd7e6756f45f8384c11725832a6bd846ee2aae0e8eb36dc93f5743"
+  },
+  "scope": "One loaded current60 process; sequential fresh A512/C64 twice; source-bound host spans of first512 only; no cap causality/device-clock/cleanperf/budget claim",
+  "request_RIDs": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "request_slots": [
+    0,
+    1,
+    0,
+    1
+  ],
+  "cohorts": [
+    0,
+    0,
+    1,
+    1
+  ],
+  "max_new": [
+    512,
+    64,
+    512,
+    64
+  ],
+  "incoming_after_actual_long_tokens": 256,
+  "fixed_flags": {
+    "STRATA_PREFILL_HOST60": "1",
+    "STRATA_BATCH_PREFILL_LAYER_COOPERATE": "1",
+    "STRATA_BATCH_PREFILL_SINGLE_WINDOW": "1",
+    "STRATA_COPY_ENGINE": "0",
+    "STRATA_VERIFY_MIRROR_STAGE_T1": "0",
+    "STRATA_BATCH_DECODE_SHARE": "absent/default0.5"
+  },
+  "host_row_bound": 64,
+  "selected_run_bound": 8,
+  "histories_match": [
+    "52 serial",
+    "58 ON"
+  ],
+  "coadmission_and_API_qualified": false,
+  "requires_actual61_completed_SDK": true,
+  "selection_fix": "Actual first512 within outer1512, recorded input_n, eight complete owner/stage traces mandatory"
+}
