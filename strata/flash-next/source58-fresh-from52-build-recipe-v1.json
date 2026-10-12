@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "scope": "Root-owned fresh all-source58/all8 NoDri build; compiler/model unqualified",
+  "pins": {
+    "strata/flash-next/build_native58_fresh_from52_v1.py": "6cd4f33fdfb09529f0ef99f230c16f3a874679d29ae0938738e95740499317f5",
+    "strata/flash-next/native58-paired-prefill-cooperative-engine-build-proposal-v1.json": "92931ba113dd47241774a79f75669375f62bcd23313ee5617ea68ec91e9f6ab7",
+    "strata/flash-next/cooperative-prefill/paired-candidate-source-plan-v2.json": "966dbb36161ad220d542526fadbf056143268cced327b8337e0264249f95a7e2",
+    "strata/flash-next/patches/candidate-paired-prefill-cooperative-core-v1.patch": "4e8203a4509fcf0844da1c132c5e86e9c9beb79d4362f4c6d3828d7761040d25",
+    "strata/flash-next/patches/candidate-paired-prefill-cooperative-scheduler-v2.patch": "a8788333f7655f90ee2d589da0a4f4c87aa025f6cccfad9f9216e98722b0775a",
+    "strata/flash-next/patches/candidate-paired-prefill-cooperative-header-v1.patch": "c59031b8b6b1b6c835fbabb158cea5adaf0c1b89fac74da7fdb2514e2e4a013b",
+    "strata/flash-next/source58_model_sdk_binding_v1.py": "c12945d19841c3e58d493491790270e192dfed129aea36c9bc5ac550e6cbb74d"
+  },
+  "parent_sdk": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261012T012115Z-_kwur0ww",
+  "parent_receipt_sha256": "8f6c09aa60493dd6403771cd10592bdb780947110c3035379b4493d0a4298d94",
+  "argv": [
+    "python3",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/build_native58_fresh_from52_v1.py",
+    "--jobs",
+    "4",
+    "--lease-card",
+    "1"
+  ],
+  "source_delta_files": [
+    "include/strata/prefill/prefill.hpp",
+    "sycl/include/strata/core/verify.hpp",
+    "sycl/src/core/verify.cpp",
+    "sycl/src/prefill/prefill.cpp",
+    "sycl/src/program/generate.cpp",
+    "include/strata/prefill/cooperative.hpp"
+  ],
+  "fresh_build_directory": true,
+  "reuse_objects": false,
+  "reuse_archives": false,
+  "NoDri": true,
+  "header_consumption": "Actual Ninja deps hash every consumed source/ggml/generated/system file, all object coverage checked after compilation",
+  "model_probe": "New58 OFF/ON A512/C64 arrival after actual256 long tokens; default share0.5; existing authentic corpus; output histories reference52; no cancellation usability/full4/6/API claim",
+  "model_corpus_bindings": {
+    "corpus": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/natural-p2048-tokenizer-v1/corpus.json",
+    "corpus_sha256": "61b5caabf76bfedfda334973741366a8341e9f600cf00b42ac042f6700afdbef",
+    "roles": {
+      "long": "cases[0]; prompt2048, natural EOS, output cap512",
+      "incoming": "cases[1]; prompt2048, natural EOS, output cap64"
+    },
+    "arrival": "Send incoming only after actual long output token256 and while long remains admitted",
+    "flags": {
+      "STRATA_BATCH_PREFILL_LAYER_COOPERATE": "matched0/1 only differing flag",
+      "STRATA_BATCH_DECODE_SHARE": "unset: native default0.5",
+      "STRATA_COPY_ENGINE": "0 in both arms, same accepted52/57 fairness control",
+      "STRATA_VERIFY_MIRROR_STAGE_T1": "0",
+      "STRATA_SYCL_NATIVE_HC": "1",
+      "STRATA_PF_GROUPED_F16": "0",
+      "STRATA_PREFILL_HELP": "0",
+      "STRATA_PREFILL_CPU_SHARE": "0",
+      "STRATA_BATCH_FULL_STATE_CHAIN": "1",
+      "STRATA_BATCH_PUBLIC_PREFIX": "1"
+    },
+    "reference52_public": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/source52-native2-fairness-v1-public-v1.json",
+    "reference52_public_sha256": "bf91278a04a78b7c53934c7a11b0a0337d30d6b5ca94038f25785602d5ba0dd2",
+    "limitation": "No actual58 model constructor/runtime receipt yet; do not invoke old52/57 actor against new58 SDK; new actor port must bind exact58 receipt first",
+    "native_argv_required": [
+      "--batch",
+      "2",
+      "--batch-groups",
+      "1",
+      "--no-prefill-borrow",
+      "--prefill",
+      "512",
+      "--adapt-swaps",
+      "0",
+      "--adapt-async",
+      "0",
+      "--adapt-every",
+      "0"
+    ]
+  },
+  "source_only_checks": {
+    "builder_ast": true,
+    "binder_ast": true,
+    "exact_core_scheduler_application_to_actual52": true,
+    "new_header_patch_matches_sealed_CPU_control": true,
+    "author_ran_compiler": false,
+    "author_ran_GPU": false
+  },
+  "fresh_configuration_note": "CMAKE_EXPORT_COMPILE_COMMANDS=ON added only for actual compile provenance; every object/archive freshly rebuilt, no same-ABI object reuse claimed",
+  "immutable_source_note": "Build dependency is actualSDK52 source snapshot, not current live external Git checkout. Receipt records external_source_root and identity_kind explicitly; parent source/dependency/all8 ELF hashes close unchanged."
+}

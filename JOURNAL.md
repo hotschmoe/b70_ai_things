@@ -19110,3 +19110,39 @@ original-mtp53-teacher-head-natural-v2-run-v1.
 RESULT -> Baselinehead0 mustpass full512/reference/counters/health/
 ownedretirement beforehead1; changed-path counters2048versus1 required.
 VERDICT -> ActualmatchedprefixTTFT testlive; no benefitclaimyet.
+
+
+## 2026-10-12: teacher head work skipped with full512 parity
+
+CONFIG -> MTPon botharms, soleteacher-head-skip0/1; sameoriginalmath/
+weights/recurrence/cuts/decode andequalactualresidency.
+COMMAND -> Actual19552 PASS; independentall52artifacts/rawcounters/
+full512/ref/full5/normalownedretirement replayPASS.
+RESULT -> Firstproposal headcalls2048->1, skips0->2047, cells2048/
+freshhead1 both; all512 IDs/EOS matchparentandeachother.
+Producer81691b40a02dc56b308d2939e464d7b43279e438c0689c4a64fd5b9d66ad277d; publicac0dfa8329a7af2c96be5bf467a5453f99fcf140bafa386db098f8f29472eb5a.
+Prompt59761.300->37897.617ms(-36.585percent), unchangeddecode
+55235.772->30620.117ms(-44.565percent).
+VERDICT -> Removedwork/fidelity pass, orderedtiming confounded; no
+cleanbenefit/HTTP TTFT claim. SameELF ABBA0123 order0/1/1/0 prepared.
+
+CONFIG -> MarkedHC observerV2 onlyearly-successfinishline changed,
+parentcompiler/headers/flags/arithmetic/3objects/2archives unchanged.
+COMMAND -> Actual50002 incrementalcompilePASS67s; independentall
+input/raw/output closure rehashPASS, onlyverify compiled andnewELF linked.
+RESULT -> Receipt606de5e0f289d551b9ed9658676e9897b87c445bd8b4fdc12f42340ab0f9861b;
+ELF41517ddc3e94712ba3750c4df0a2ebdac9ae7cd53d8eb3c9120521a419008517.
+VERDICT -> Actualcompile prerequisite; correctedcontrols54636 queued
+behind bounded fullsource58 build60982. No modelprooftransferred.
+
+
+CONFIG -> Fullsource58 pairedprefill cooperation, exactsource52 parent,
+newheader/privateextent fields require actualall8 freshABI builds.
+COMMAND -> Actual60982 boundedNoDri4CPU16GiB compilePASS325s; root
+independent75source hashes/all8ELFs/freshaudit/normalretirement checksPASS.
+RESULT -> SDKstrata-native58-fresh52-v2-20261012T204001Z-id823bdv,
+receipt9d39acecc1b34c641311e831107eddb280ef5830ef1e85f3c785d3ede8777490;
+124freshobjects/1285consumeddependencies, noobject/archive reuse,
+parent unchanged/ownednormalcompilerexit/EOF/removal.
+VERDICT -> Actualcompile prerequisite, not model/cooperation/budget/
+cancellation/4stream/API/shelf proof. Fresh58 actorpins beingfinalized.

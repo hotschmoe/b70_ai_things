@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "scope": "new host-only marked pairedHC route; no compiler/GPU/model actions",
+  "files": {
+    "strata/flash-next/hc_t2_route_proof_v1.hpp": "e483f1131a1bf492fafa48003e0f03bc4463fe60b07116da93a361abcc25f31b",
+    "strata/flash-next/hc_t2_route_proof_cpu_fixture_v1.cpp": "16b244f6c4abb267ec5c51519c0356eb9b1bb23932647a780e6ba4adb57a7976",
+    "docs/20261012_flashnext_hc_t2_marked_route_v1.md": "7d0e4df1618c32ae2881792fd38d738581aa08c808253511868d247522ab7363",
+    "strata/flash-next/prepare_hc_t2_route_marked_v2.py": "f373745e648e5933cc2b28ff1b8e143f12f228b11815dad5c1615134433c797f",
+    "strata/flash-next/test_hc_t2_route_marked_source_cpu_v2.py": "8fa065872e25e5838dfd82cc61419170480d6d108725579827e8660eab5e84d5",
+    "docs/20261012_flashnext_hc_t2_marked_early_return_v2.md": "0db84e5f1671dd730fe7bcf372d66838219618247e1ef922d0fba5ac1eec53c1",
+    "strata/flash-next/prepare_hc_t2_route_marked_v1.py": "3b978c2ef5aa5002dda8b522c6b239c8acd2fce6e2c355c7e6a82606dbf94e8d",
+    "strata/flash-next/hc-t2-route-marked-source-plan-v1.json": "be18f059db9446cc937972c403b859de285f655f4e48d88a1fc2b3e7e7f0f93a"
+  },
+  "parent_recipe_path": "/mnt/vm_8tb/b70/build/hc-t2-paired-mtp-compile-inputs-v1/compile-recipe.json",
+  "parent_recipe_sha256": "fa613f414ac1d6b96d8d576132537eb9d556db8cfafc7644346f01930ad2da2f",
+  "expected_marked_verify_sha256": "3629a628e5314564d3eec80e49727e9991e9ffa87974396cfee6d28b7ac843da",
+  "Verifier_public_private_layout_changed": false,
+  "new_GPU_waits_queries_copies": 0,
+  "new_per_layer_logging": false,
+  "record_only_is_not_execution": true,
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_hc_t2_route_marked_source_cpu_v2",
+  "actual_marked_build_required": true,
+  "model_or_speed_qualified": false,
+  "only_V2_delta": "Call hc_record.finish on successful earlier-stage handoff return, before it leaves record_window; numerical/ABI/queue/returns unchanged",
+  "preserved_actual_V1_controls": "FAILED 65345; native normalexit0; stage0 capture marker missing, proof failed1"
+}

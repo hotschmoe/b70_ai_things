@@ -1,0 +1,121 @@
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -1075,6 +1075,8 @@
+     strata::core::NativeDense dense;
+     strata::core::NativeHead head;
+     strata::core::SessionState ss;
++    void* session_owner = nullptr;
++    uint64_t session_owner_bytes = 0;
+     dpct::queue_ptr stream = &dpct::get_in_order_queue();
+     strata::core::ExpertCache cache;
+     std::shared_ptr<strata::core::StageExpertMirror> expert_mirror;
+@@ -3794,6 +3796,8 @@
+             std::fprintf(stderr, "strata generate: layer split, CUDA%d: the session state failed\n", st.dev);
+             return 1;
+         }
++        st.session_owner = sbuf_s;
++        st.session_owner_bytes = strata::core::session_bytes(g, o.max_context, K, st.lb, st.le);
+         const bool last = i + 1 == stages.size();
+         const strata::core::WeightRef* wo_s = st.wt.find("output.weight");
+         if (wo_s == nullptr ||
+@@ -10459,6 +10463,47 @@
+             // far is copied into <slot> (this admission's own, or a free one the server reserved for a solo request),
+             // the request ends with `YIELDED <slot> <tokens>` + DONE cancel, and the server sends it again later: it
+             // continues from the slot with the same chunks.  #656's cooperative preemption, with a slot as the park.
++            const bool layer_cooperate = [] {
++                const char* v = std::getenv("STRATA_BATCH_PREFILL_LAYER_COOPERATE");
++                if (!v || std::strcmp(v,"0")==0) return false;
++                if (std::strcmp(v,"1")!=0) throw std::invalid_argument("STRATA_BATCH_PREFILL_LAYER_COOPERATE=0|1");
++                return true;
++            }();
++            if (layer_cooperate && (!strict_batch_identity || !batch_chain_enabled || !batch_public_enabled ||
++                    o.batch != 2 || !o.no_prefill_borrow || use_mtp || piped || o.pipeline_windows != 0 ||
++                    stages.size()!=1 || split_same || o.peer_device>=0 || o.adapt_swaps!=0 || o.adapt_async)) {
++                std::printf("ERR layer cooperation requires strict paired native2 owned static no-MTP slots\n");
++                return 1;
++            }
++            // Source ownership plus retained exact lengths. This does not replace
++            // runtime coherence, USM/page guards or health admission.
++            auto extent_disjoint = [](const void* a,uint64_t na,const void* b,uint64_t nb) {
++                if (!a || !b || !na || !nb) return false;
++                const auto x=reinterpret_cast<uintptr_t>(a), y=reinterpret_cast<uintptr_t>(b);
++                if (na>UINTPTR_MAX-x || nb>UINTPTR_MAX-y) return false;
++                return x+na<=y || y+nb<=x;
++            };
++            auto admit_cooperative_owners = [&](std::string& e) {
++                for (size_t k=0;k<=stages.size();++k) {
++                    auto& path=k==0?sp:stages[k-1]->sp;
++                    auto& verifier=k==0?ver:stages[k-1]->ver;
++                    std::vector<std::pair<const void*,uint64_t>> ranges;
++                    if (!path.owned_device_extents(ranges)) {e="cooperative Prefill owner extents incomplete";return false;}
++                    const void* state=k==0?sbuf:stages[k-1]->session_owner;
++                    const uint64_t nstate=k==0?strata::core::session_bytes(g,o.max_context,K,0,split_at[0]):stages[k-1]->session_owner_bytes;
++                    for(const auto& range:ranges) {
++                        if(!extent_disjoint(range.first,range.second,state,nstate) ||
++                           !extent_disjoint(range.first,range.second,verifier.owned_arena(),verifier.owned_arena_bytes()) ||
++                           !extent_disjoint(range.first,range.second,verifier.owned_batch_arena(),verifier.owned_batch_arena_bytes())) {
++                            e="cooperative Prefill intersects state or Verifier scratch";return false;
++                        }
++                        for(const auto& slot:bslot_ss[k]) if(!extent_disjoint(range.first,range.second,slot->base(),slot->allocation_bytes())) {
++                            e="cooperative Prefill intersects slot state";return false;
++                        }
++                    }
++                }
++                return true;
++            };
+             auto read_part = [&](int64_t a0, int64_t b0, std::string& e) -> bool {
+                 // (a layer split reads its stages as a pipeline over one run's chunks: in pieces only beside slots)
+                 if (o.batch <= 0 || piped || (!stages.empty() && !batch_on())) {
+@@ -10469,10 +10514,39 @@
+                 for (int64_t q = a0; q < b0;) {
+                     const int64_t r = std::min(b0, q + C);
+                     const auto tq = Clock::now();
+-                    if (!sp.run(ids.data() + q, r - q, q, e)) return false;
++                    std::shared_ptr<strata::prefill::cooperative::Ticket> cooperation;
++                    if(layer_cooperate) {
++                        if(!admit_cooperative_owners(e)) return false;
++                        cooperation=std::make_shared<strata::prefill::cooperative::Ticket>();
++                        auto service=[&](const strata::prefill::cooperative::Point& point) -> strata::prefill::cooperative::Result {
++                            bool control=stop_req.load();
++                            {std::lock_guard<std::mutex> lk(in_mu);for(const auto& line:in_lines)
++                                control=control || line.rfind("BSTOP ",0)==0 || line.rfind("BYIELD ",0)==0;}
++                            // Keep control publication at existing complete-chunk boundaries.
++                            if(control || !batch_on() || decode_share<=0) return {};
++                            const double allowance=decode_share*point.prefill_ms-cooperation->spent_ms();
++                            if(allowance<=0) return {};
++                            const auto begin=Clock::now();
++                            do {
++                                if(!batch_step()) {batch_fatal=true;return {false,"cooperative batch window failed",std::chrono::duration<double,std::milli>(Clock::now()-begin).count()};}
++                            } while(batch_on() && std::chrono::duration<double,std::milli>(Clock::now()-begin).count()<allowance);
++                            const double used=std::chrono::duration<double,std::milli>(Clock::now()-begin).count();
++                            ++il_parts; il_ms+=used;
++                            if(trace) std::fprintf(stderr,"strata cooperate: owner service device=%d layer=%d pos=%lld rows=%lld host_ms=%.3f\n",point.device,point.layer,(long long)point.position,(long long)point.rows,used);
++                            return {true,"",used};
++                        };
++                        sp.set_cooperative_ticket(cooperation,service);
++                    }
++                    const bool prefill_ok=sp.run(ids.data() + q, r - q, q, e);
++                    if(cooperation) sp.set_cooperative_ticket(nullptr,{});
++                    if(!prefill_ok) { if(cooperation) batch_fatal=true; return false; }
+                     prefix_diag.evaluated(q,r,"prefill_chunk");
+                     q = r;
+-                    if (q >= b0) continue;
++                    if (q >= b0) {
++                        // The default path stays unchanged. Cooperative service has
++                        // already debited this chunk, including logical final cuts.
++                        continue;
++                    }
+                     int ys = -1;
+                     {   // a BSTOP that came meanwhile ends its slot at its next window; a BYIELD is for this read
+                         std::lock_guard<std::mutex> lk(in_mu);
+@@ -10524,7 +10598,9 @@
+                                      (long long) n, ye.empty() ? "" : ": ", ye.c_str());
+                     }
+                     if (decode_share <= 0.0 || !batch_on()) continue;
+-                    const double budget = decode_share * std::chrono::duration<double, std::milli>(Clock::now() - tq).count();
++                    const double total_ms=std::chrono::duration<double,std::milli>(Clock::now()-tq).count();
++                    const double budget=cooperation?cooperation->remaining(total_ms,decode_share):decode_share*total_ms;
++                    if(cooperation && budget<=0) continue;
+                     const auto td = Clock::now();
+                     do {
+                         if (!batch_step()) { batch_fatal = true; e = "a batch window failed"; return false; }

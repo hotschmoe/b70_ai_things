@@ -1,0 +1,412 @@
+--- a/include/strata/prefill/prefill.hpp
++++ b/include/strata/prefill/prefill.hpp
+@@ -17,10 +17,13 @@
+ #include "strata/core/weights.hpp"
+ 
+ #include <cstdint>
++#include "strata/prefill/cooperative.hpp"
+ #include <functional>
+ #include <future>
+ #include <memory>
+ #include <string>
++#include <utility>
++#include <vector>
+ 
+ namespace strata::core { class PeerExperts; }
+ namespace strata::kernels::cpu { class ExpertPool; }
+@@ -75,6 +78,11 @@
+     /// request lends only the slots its prompt needs.  The stream must be idle (between prompts).
+     bool relayout(int64_t chunk, void* borrow, uint64_t borrow_bytes, std::string& err);
+     int64_t chunk() const;
++    // Original owner calls this only between fully drained runs. Propagates one ticket to both stages.
++    void set_cooperative_ticket(std::shared_ptr<cooperative::Ticket> ticket,
++        std::function<cooperative::Result(const cooperative::Point&)> callback);
++    // Owned device allocations only; empty/false rejects a borrowed layout.
++    bool owned_device_extents(std::vector<std::pair<const void*, uint64_t>>& out) const;
+ 
+     /// The share of the streamed experts' bytes DMA-able straight from pinned RAM (1 = all).  Sizes the streamed
+     /// ring (a big one only pays when the copy engine, not the host copies, is the limit); set before bytes_needed.
+@@ -193,6 +201,8 @@
+ 
+     int64_t stage_lb_ = 0, stage_le_ = -1;
+     Prefill* next_ = nullptr;
++    std::shared_ptr<cooperative::Ticket> cooperative_ticket_;
++    std::function<cooperative::Result(const cooperative::Point&)> cooperative_callback_;
+     Prefill* helper_ = nullptr;         ///< set_stage_helper
+     bool single_chunk_ = false;         ///< a later stage: the prompt is one chunk (set by the stage before)
+     bool bind_stage_helper(int64_t T);  // binds the helper's buffers for a one-chunk prompt of T tokens
+--- a/sycl/include/strata/core/verify.hpp
++++ b/sycl/include/strata/core/verify.hpp
+@@ -235,6 +235,10 @@
+     void set_always_publish(bool on) { always_publish_ = on; }
+     dpct::queue_ptr stream() const { return cs_; }
+     int device() const { return device_; }
++    const void* owned_arena() const { return arena_; }
++    uint64_t owned_arena_bytes() const { return arena_bytes_; }
++    const void* owned_batch_arena() const { return arena_b_; }
++    uint64_t owned_batch_arena_bytes() const { return arena_b_bytes_; }
+     /// Capture every window size and the commit graph now (a capture syncs the stream: never with a window in flight).
+     bool capture_all(std::string& err);
+     bool pl_launch(int T, const int32_t* tokens, int64_t pos0, std::string& err);
+@@ -453,6 +457,7 @@
+ 
+     // device
+     void* arena_ = nullptr;
++    uint64_t arena_bytes_ = 0, arena_b_bytes_ = 0;
+     int32_t *tok_ = nullptr, *step_ = nullptr, *pos_ = nullptr, *commit_ = nullptr;
+     float *ple_ = nullptr, *emb_ = nullptr, *R_ = nullptr, *mixed_ = nullptr, *bo_ = nullptr;
+     float *inj_ = nullptr, *inj2_ = nullptr, *lo_ = nullptr, *rs_ = nullptr, *xn_ = nullptr;
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -626,6 +626,7 @@
+         err = "verify: the device arena (" + std::to_string(count.used >> 20) + " MiB) does not fit";
+         return false;
+     }
++    arena_bytes_ = count.used;
+     strata::big_fill_zero(dpct::get_in_order_queue(), arena_, count.used);
+     if (g_trace && trace_h_ == nullptr) {   // #649: the breadcrumbs, mapped so they read while the GPU hangs
+         trace_n_ = (size_t) (g.n_layers + 1) * kProfPer * 2;
+@@ -2812,6 +2813,7 @@
+         return false;
+     }
+     arena_b_ = d;
++    arena_b_bytes_ = a + (uint64_t)S * std::max<int64_t>(nQ, 1) * TS * 4;
+     commitb_ = (int32_t*) d;
+     tail_snap_b_ = (float*) ((uint8_t*) d + a);
+     slots_ = slots;
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -321,6 +321,7 @@
+     uint64_t granule = 0;               ///< count_only: each take rounds up to this (cudaMalloc's 2 MiB pages: owned buffers)
+     bool count_only = false;
+     std::vector<void*>* owned = nullptr;
++    std::vector<std::pair<const void*, uint64_t>>* extents = nullptr;
+     template <typename T> T *take(size_t n, bool &ok) try {
+         uint64_t bytes = ((uint64_t) n * sizeof(T) + 256 + 255) & ~255ull;
+         if (count_only) {
+@@ -340,6 +341,7 @@
+             ok = false; failed_bytes = bytes; return nullptr;
+         }
+         owned->push_back(p);
++        if (extents) extents->emplace_back(p, bytes);
+         used += bytes;
+         return (T*) p;
+     }
+@@ -385,6 +387,8 @@
+     std::atomic<int> issued{0}, active{0};
+     uint32_t gen = 0;
+     bool quit = false;
++    std::atomic<bool> cancel_generation{false};
++    std::atomic<int> failed_job{-1};
+     std::mutex mu;
+     std::condition_variable cv;
+     std::vector<std::thread> threads;
+@@ -463,21 +467,42 @@
+                 if (j < 0) { active.fetch_sub(1, std::memory_order_acq_rel); break; }
+                 const int b = j % kRing;
+                 if (j >= kRing)   // job j - kRing's DMA from this buffer is queued
+-                    while (issued.load(std::memory_order_acquire) <= j - kRing) std::this_thread::yield();
++                    while (issued.load(std::memory_order_acquire) <= j - kRing && !cancel_generation.load(std::memory_order_acquire)) std::this_thread::yield();
+                 // and done (#385) - for a generation's first kRing jobs that is the previous generation's last DMA from
+                 // the buffer, which nothing else waits for when a chunk ends without a sync (no MTP)
+-                while (!buffer_free(b)) std::this_thread::yield();
++                while (!buffer_free(b) && !cancel_generation.load(std::memory_order_acquire)) std::this_thread::yield();
++                if (cancel_generation.load(std::memory_order_acquire)) { active.fetch_sub(1, std::memory_order_acq_rel); break; }
+                 const Job& jb = jobs[(size_t) j];
++                try {
+                 if (jb.gsrc != nullptr) {
+                     if (!jb.gsrc->read_into(jb.l, jb.e, buf[b], jb.bytes)) {
+                         std::fprintf(stderr, "prefill: reading expert %d of layer %d from the GGUF failed\n", jb.e, jb.l);
+-                        std::memset(buf[b], 0, jb.bytes);
++                        failed_job.store(j, std::memory_order_release);
++                        ready[(size_t) j].store(-1, std::memory_order_release);
++                        active.fetch_sub(1, std::memory_order_acq_rel);
++                        continue;
+                     }
+                 } else if (jb.from == nullptr) {
+                     std::memcpy(buf[b], jb.src, jb.bytes);
+                 } else if (!jb.from->copy_blob(jb.l, jb.e, buf[b])) {
+                     std::fprintf(stderr, "prefill: the expert source could not copy expert %d of layer %d\n", jb.e, jb.l);
+-                    std::abort();
++                    failed_job.store(j, std::memory_order_release);
++                    ready[(size_t) j].store(-1, std::memory_order_release);
++                    active.fetch_sub(1, std::memory_order_acq_rel);
++                    continue;
++                }
++                } catch (const std::exception& e) {
++                    std::fprintf(stderr, "prefill: expert source copy exception: %s\n", e.what());
++                    failed_job.store(j, std::memory_order_release);
++                    ready[(size_t) j].store(-1, std::memory_order_release);
++                    active.fetch_sub(1, std::memory_order_acq_rel);
++                    continue;
++                } catch (...) {
++                    std::fprintf(stderr, "prefill: expert source copy nonstandard exception\n");
++                    failed_job.store(j, std::memory_order_release);
++                    ready[(size_t) j].store(-1, std::memory_order_release);
++                    active.fetch_sub(1, std::memory_order_acq_rel);
++                    continue;
+                 }
+                 ready[(size_t) j].store(1, std::memory_order_release);
+                 active.fetch_sub(1, std::memory_order_acq_rel);
+@@ -504,14 +529,21 @@
+         }
+         for (size_t i = 0; i < jobs.size(); ++i) ready[i].store(0, std::memory_order_relaxed);
+         issued.store(0);
++        failed_job.store(-1, std::memory_order_release);
++        cancel_generation.store(false, std::memory_order_release);
+         ++gen;
+         head.store((uint64_t) gen << 32 | (uint64_t) jobs.size() << 16, std::memory_order_release);
+         cv.notify_all();
+     }
+     /// Job j's bytes, in a pinned buffer (waits for the copy).
+-    const uint8_t* wait(int j) {
+-        while (!ready[(size_t) j].load(std::memory_order_acquire)) std::this_thread::yield();
+-        return buf[j % kRing];
++    const uint8_t* wait(int j, const std::atomic<bool>* stop = nullptr) {
++        for (;;) {
++            const int state = ready[(size_t) j].load(std::memory_order_acquire);
++            if (state < 0 || failed_job.load(std::memory_order_acquire) >= 0) return nullptr;
++            if (cancel_generation.load(std::memory_order_acquire) || (stop && stop->load(std::memory_order_acquire))) return nullptr;
++            if (state == 1) return buf[j % kRing];
++            std::this_thread::yield();
++        }
+     }
+     /// The launching thread queued job j's DMA on `copy`: its buffer is free once that is done.
+     /// The launching thread queued job j's DMA on `copy`: its buffer is free once that is done.
+@@ -541,7 +573,7 @@
+     /// No job is running after this (the end of a layer, or an early return in the middle of one).
+     void finish() {
+         head.store((uint64_t) gen << 32, std::memory_order_release);   // n = 0: nothing more to claim
+-        issued.store(1 << 30, std::memory_order_release);
++        cancel_generation.store(true, std::memory_order_release);
+         while (active.load(std::memory_order_acquire) != 0) std::this_thread::yield();
+     }
+ };
+@@ -664,6 +696,7 @@
+                     copy = &dpct::get_in_order_queue();
+     Gemm gemm;
+     std::vector<void*> owned;
++    std::vector<std::pair<const void*, uint64_t>> owned_extents;
+     std::shared_ptr<core::prefix_residual30::snapshot> prefix30_snapshot;
+     std::shared_ptr<core::fidelity_diag::snapshot> fidelity_snapshot;
+     unsigned fidelity_request=0,fidelity_chunks=0;
+@@ -772,6 +805,7 @@
+     if (stage_own() && o_borrowed.count_only) return;
+     Alloc own;
+     own.owned = o_borrowed.owned;
++    own.extents = o_borrowed.extents;
+     Alloc& o = stage_own() ? own : o_borrowed;
+     const size_t rows = (size_t) q0.n_pages * s.n_head_kv * s.page_size;
+     if (q0.kv_hybrid) {   // K8V4: the three runs of kKvHybrid; pools_of() then reads as the hybrid pools (mode 3)
+@@ -802,6 +836,21 @@
+ 
+ Prefill::Prefill() : impl_(new Impl) {}
+ Prefill::~Prefill() { release(); }
++
++void Prefill::set_cooperative_ticket(std::shared_ptr<cooperative::Ticket> ticket,
++        std::function<cooperative::Result(const cooperative::Point&)> callback) {
++    if (next_run_.valid()) throw std::runtime_error("prefill: cannot replace cooperation with a live stage");
++    cooperative_ticket_ = ticket;
++    cooperative_callback_ = callback;
++    if (next_) next_->set_cooperative_ticket(std::move(ticket), std::move(callback));
++}
++
++bool Prefill::owned_device_extents(std::vector<std::pair<const void*, uint64_t>>& out) const {
++    out.clear();
++    if (!impl_ || impl_->borrowed || impl_->owned_extents.size() != impl_->owned.size()) return false;
++    out = impl_->owned_extents;
++    return !out.empty();
++}
+ 
+ void Prefill::reset() {
+     release();
+@@ -1012,6 +1061,7 @@
+             return false;
+         }
+         m.owned.push_back(m.tok_dev);
++        m.owned_extents.emplace_back(m.tok_dev, uint64_t(chunk) * sizeof(int32_t));
+         m.tok_host.resize((size_t) chunk);
+     }
+     /*
+@@ -1134,14 +1184,17 @@
+             DPCT_CHECK_ERROR(dpct::get_in_order_queue().memcpy(
+                 m.ident_table, ident.data(), ident.size() * 4).wait()) != 0)
+             ok = false;
+-        else
++        else {
+             m.owned.push_back(m.ident_table);
++            m.owned_extents.emplace_back(m.ident_table, ident.size() * sizeof(int32_t));
++        }
+     }
+     if (!ok) { err = "prefill: host buffers or events for a chunk of " + std::to_string(chunk) + " tokens"; return false; }
+     Alloc o;
+     o.base = (uint8_t*) borrow;
+     o.cap = borrow_bytes;
+     o.owned = &m.owned;
++    o.extents = &m.owned_extents;
+     {
+         uint16_t* gs = o.take<uint16_t>((size_t) GEMM_SCRATCH, ok);
+         void* ws = o.take<uint8_t>(GEMM_WS, ok);
+@@ -1307,6 +1360,7 @@
+     o.base = (uint8_t*) borrow;
+     o.cap = borrow_bytes;
+     o.owned = &m.owned;
++    o.extents = &m.owned_extents;
+     uint16_t* gs = o.take<uint16_t>((size_t) GEMM_SCRATCH, ok);
+     void* ws = o.take<uint8_t>(GEMM_WS, ok);
+     if (ok) m.gemm.rebind(gs, GEMM_SCRATCH, ws, GEMM_WS);
+@@ -2142,6 +2196,11 @@
+     core::SessionState& ss = *m.ss;
+     const auto t_start = Clock::now();
+     const int64_t LB = stage_lb_, LE = stage_le_;
++    if (cooperative_ticket_ && (n > m.T || m.borrowed || m.pp || helper_ ||
++            core::peer_portable() || cpu_pool_ || m.fused_bufs || next_run_.valid())) {
++        err = "prefill cooperation: one owned non-helper non-peer non-fused chunk required";
++        return false;
++    }
+     const auto batch_prefill_id=core::batch_fidelity::admitting();
+     int64_t lifecycle_completed_rows=0;
+     core::prefix_lifecycle::stage("prefill_body",m.device,LB,LE,pos0,pos0+n,false);
+@@ -2639,6 +2698,7 @@
+                     ++stats_.experts_dma;
+                 } else {
+                     const uint8_t* hb = m.stager->wait(en.job);
++                    if (!hb) throw std::runtime_error("prefill: expert source copy failed before issue");
+                     /*
+                     DPCT1124: cudaMemcpyAsync is migrated to asynchronous
+                     memcpy API. While the origin API might be synchronous, it
+@@ -2671,7 +2731,8 @@
+             return v == nullptr || std::atoi(v) != 0;
+         }();
+         std::atomic<size_t> a_issued{0}, a_consumed{0};
+-        std::atomic<bool> a_stop{false};
++        std::atomic<bool> a_stop{false}, a_failed{false};
++        std::string a_error; // one issuer writer; release/acquire through a_failed
+         double iss_ms = 0;
+         int64_t iss_streamed = 0, iss_dma = 0;
+         std::thread issuer;
+@@ -2683,6 +2744,7 @@
+         const bool threaded_issue = stream_all && issuer_on;
+         if (threaded_issue) {
+             issuer = std::thread([&] {
++                try {
+                 const core::OnDevice od(m.device);
+                 for (size_t idx = 0; idx < seq.size(); ++idx) {
+                     while (idx >= a_consumed.load(std::memory_order_acquire) + (size_t) m.ring) {
+@@ -2706,7 +2768,14 @@
+                         m.copy->memcpy(m.stage_dev[sl], en.blob, bytes);
+                         ++iss_dma;
+                     } else {
+-                        const uint8_t* hb = m.stager->wait(en.job);
++                        const uint8_t* hb = m.stager->wait(en.job, &a_stop);
++                        if (!hb) {
++                            if (m.stager->failed_job.load(std::memory_order_acquire) >= 0) {
++                                a_error = "prefill: expert source copy failed before issue";
++                                a_failed.store(true, std::memory_order_release);
++                            }
++                            return;
++                        }
+                         /*
+                         DPCT1124: cudaMemcpyAsync is migrated to
+                         asynchronous memcpy API. While the origin API might be
+@@ -2723,6 +2792,13 @@
+                     ++iss_streamed;
+                     a_issued.store(idx + 1, std::memory_order_release);
+                 }
++                } catch (const std::exception& e) {
++                    a_error = std::string("prefill: issuer failed: ") + e.what();
++                    a_failed.store(true, std::memory_order_release);
++                } catch (...) {
++                    a_error = "prefill: issuer failed with nonstandard exception";
++                    a_failed.store(true, std::memory_order_release);
++                }
+             });
+         } else if (stream_all) {
+             issue_until((size_t) m.ring);   // layer 0's first experts, behind the embedding and the PLE
+@@ -2730,7 +2806,13 @@
+         // the consumer's side: entry k's copy is on the copy stream (the thread issued it), then k is given back
+         auto wait_issued = [&](size_t k) {
+             if (!threaded_issue) return;
+-            while (a_issued.load(std::memory_order_acquire) <= k) std::this_thread::yield();
++            while (a_issued.load(std::memory_order_acquire) <= k) {
++                if (a_failed.load(std::memory_order_acquire)) throw std::runtime_error(a_error);
++                if (m.stager->failed_job.load(std::memory_order_acquire) >= 0)
++                    throw std::runtime_error("prefill: issuer stopped after expert source copy failure");
++                if (a_stop.load(std::memory_order_acquire)) throw std::runtime_error("prefill: issuer cancelled before requested issue");
++                std::this_thread::yield();
++            }
+         };
+         auto give_back = [&](size_t upto) {
+             if (threaded_issue) a_consumed.store(upto, std::memory_order_release);
+@@ -3403,6 +3485,15 @@
+                         core::progress_at("reading the prompt (batched): waiting for the GPU (attention, router) at layer",
+                                           l, p0);
+                         m.cs->wait();
++                        // Existing completion only: router and earlier compute are done.
++                        // PLE gather owns mutable PleTable state until consumed at layer 1.
++                        if (cooperative_ticket_ && !ple_next.valid()) {
++                            cooperative::Point point;
++                            point.device = m.device; point.layer = int(l);
++                            point.position = p0; point.rows = T;
++                            const auto answer = cooperative_ticket_->yield(point, cooperative_callback_);
++                            if (!answer.ok) { err = answer.error; return false; }
++                        }
+                         core::progress_at("reading the prompt (batched): layer", l, p0);
+                         pt.fold();
+                         if (pe.on) {   // the peer's marks so far are done: the primary waited for its last rows
+@@ -3930,6 +4021,7 @@
+                             } else {
+                                 // copied to a pinned buffer by the stager (waits only if it is behind), then DMA
+                                 const uint8_t* hb = m.stager->wait(job_of[j]);
++                                if (!hb) { err = "prefill: expert source copy failed"; return false; }
+                                 if (m.stage_live[sl])(m.copy)
+                                     ->ext_oneapi_submit_barrier(
+                                         {*m.used[m.used_of[sl]]});
+@@ -4383,6 +4475,10 @@
+         if (!ple_land()) return false;   // a stage that ends before layer 1: the rows land anyway, the next gather starts
+         if (issuer.joinable()) {
+             issuer.join();
++            if (a_failed.load(std::memory_order_acquire)) {
++                err = a_error;
++                return false;
++            }
+             stats_.ms_experts_host += iss_ms;
+             stats_.experts_streamed += iss_streamed;
+             stats_.experts_dma += iss_dma;
+@@ -4659,6 +4755,13 @@
+     bool ok = true;
+ 
+     if (next_run_.valid()) {
++        // The successor never runs decode. The original owner services one parked
++        // producer at its existing router completion, then ACKs its same stack.
++        if (cooperative_ticket_ && cooperative_ticket_->on_owner()) {
++            while (next_run_.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready) {
++                if (!cooperative_ticket_->pump(cooperative_callback_)) std::this_thread::yield();
++            }
++        }
+         if (!next_run_.get()) {
+             err = next_err_;
+             ok = false;
+@@ -4677,10 +4780,19 @@
+ }
+ 
+ bool Prefill::run(const int64_t* tokens, int64_t n, int64_t pos0, std::string& err) {
+-    const bool body_ok = run_impl(tokens, n, pos0, err);
+-
++    bool body_ok = false;
++    try { body_ok = run_impl(tokens, n, pos0, err); }
++    catch (const std::exception& e) { err = e.what(); }
++    catch (...) { err = "prefill: nonstandard host execution failure"; }
++
++    // Close on the owner, outside service: a parked successor must resume and
++    // finish its issuer/stager joins before run returns a failure to the caller.
++    if (!body_ok && cooperative_ticket_) cooperative_ticket_->close(err);
+     std::string drain_err;
+-    const bool drain_ok = drain_pipeline(drain_err);
++    bool drain_ok = false;
++    try { drain_ok = drain_pipeline(drain_err); }
++    catch (const std::exception& e) { drain_err = e.what(); }
++    catch (...) { drain_err = "prefill: nonstandard successor failure"; }
+ 
+     if (!body_ok) return false;
+     if (!drain_ok) {

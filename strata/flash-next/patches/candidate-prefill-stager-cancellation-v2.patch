@@ -1,0 +1,201 @@
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -385,6 +385,8 @@
+     std::atomic<int> issued{0}, active{0};
+     uint32_t gen = 0;
+     bool quit = false;
++    std::atomic<bool> cancel_generation{false};
++    std::atomic<int> failed_job{-1};
+     std::mutex mu;
+     std::condition_variable cv;
+     std::vector<std::thread> threads;
+@@ -463,21 +465,42 @@
+                 if (j < 0) { active.fetch_sub(1, std::memory_order_acq_rel); break; }
+                 const int b = j % kRing;
+                 if (j >= kRing)   // job j - kRing's DMA from this buffer is queued
+-                    while (issued.load(std::memory_order_acquire) <= j - kRing) std::this_thread::yield();
++                    while (issued.load(std::memory_order_acquire) <= j - kRing && !cancel_generation.load(std::memory_order_acquire)) std::this_thread::yield();
+                 // and done (#385) - for a generation's first kRing jobs that is the previous generation's last DMA from
+                 // the buffer, which nothing else waits for when a chunk ends without a sync (no MTP)
+-                while (!buffer_free(b)) std::this_thread::yield();
++                while (!buffer_free(b) && !cancel_generation.load(std::memory_order_acquire)) std::this_thread::yield();
++                if (cancel_generation.load(std::memory_order_acquire)) { active.fetch_sub(1, std::memory_order_acq_rel); break; }
+                 const Job& jb = jobs[(size_t) j];
++                try {
+                 if (jb.gsrc != nullptr) {
+                     if (!jb.gsrc->read_into(jb.l, jb.e, buf[b], jb.bytes)) {
+                         std::fprintf(stderr, "prefill: reading expert %d of layer %d from the GGUF failed\n", jb.e, jb.l);
+-                        std::memset(buf[b], 0, jb.bytes);
++                        failed_job.store(j, std::memory_order_release);
++                        ready[(size_t) j].store(-1, std::memory_order_release);
++                        active.fetch_sub(1, std::memory_order_acq_rel);
++                        continue;
+                     }
+                 } else if (jb.from == nullptr) {
+                     std::memcpy(buf[b], jb.src, jb.bytes);
+                 } else if (!jb.from->copy_blob(jb.l, jb.e, buf[b])) {
+                     std::fprintf(stderr, "prefill: the expert source could not copy expert %d of layer %d\n", jb.e, jb.l);
+-                    std::abort();
++                    failed_job.store(j, std::memory_order_release);
++                    ready[(size_t) j].store(-1, std::memory_order_release);
++                    active.fetch_sub(1, std::memory_order_acq_rel);
++                    continue;
++                }
++                } catch (const std::exception& e) {
++                    std::fprintf(stderr, "prefill: expert source copy exception: %s\n", e.what());
++                    failed_job.store(j, std::memory_order_release);
++                    ready[(size_t) j].store(-1, std::memory_order_release);
++                    active.fetch_sub(1, std::memory_order_acq_rel);
++                    continue;
++                } catch (...) {
++                    std::fprintf(stderr, "prefill: expert source copy nonstandard exception\n");
++                    failed_job.store(j, std::memory_order_release);
++                    ready[(size_t) j].store(-1, std::memory_order_release);
++                    active.fetch_sub(1, std::memory_order_acq_rel);
++                    continue;
+                 }
+                 ready[(size_t) j].store(1, std::memory_order_release);
+                 active.fetch_sub(1, std::memory_order_acq_rel);
+@@ -504,14 +527,21 @@
+         }
+         for (size_t i = 0; i < jobs.size(); ++i) ready[i].store(0, std::memory_order_relaxed);
+         issued.store(0);
++        failed_job.store(-1, std::memory_order_release);
++        cancel_generation.store(false, std::memory_order_release);
+         ++gen;
+         head.store((uint64_t) gen << 32 | (uint64_t) jobs.size() << 16, std::memory_order_release);
+         cv.notify_all();
+     }
+     /// Job j's bytes, in a pinned buffer (waits for the copy).
+-    const uint8_t* wait(int j) {
+-        while (!ready[(size_t) j].load(std::memory_order_acquire)) std::this_thread::yield();
+-        return buf[j % kRing];
++    const uint8_t* wait(int j, const std::atomic<bool>* stop = nullptr) {
++        for (;;) {
++            const int state = ready[(size_t) j].load(std::memory_order_acquire);
++            if (state < 0 || failed_job.load(std::memory_order_acquire) >= 0) return nullptr;
++            if (cancel_generation.load(std::memory_order_acquire) || (stop && stop->load(std::memory_order_acquire))) return nullptr;
++            if (state == 1) return buf[j % kRing];
++            std::this_thread::yield();
++        }
+     }
+     /// The launching thread queued job j's DMA on `copy`: its buffer is free once that is done.
+     /// The launching thread queued job j's DMA on `copy`: its buffer is free once that is done.
+@@ -541,7 +571,7 @@
+     /// No job is running after this (the end of a layer, or an early return in the middle of one).
+     void finish() {
+         head.store((uint64_t) gen << 32, std::memory_order_release);   // n = 0: nothing more to claim
+-        issued.store(1 << 30, std::memory_order_release);
++        cancel_generation.store(true, std::memory_order_release);
+         while (active.load(std::memory_order_acquire) != 0) std::this_thread::yield();
+     }
+ };
+@@ -2639,6 +2669,7 @@
+                     ++stats_.experts_dma;
+                 } else {
+                     const uint8_t* hb = m.stager->wait(en.job);
++                    if (!hb) throw std::runtime_error("prefill: expert source copy failed before issue");
+                     /*
+                     DPCT1124: cudaMemcpyAsync is migrated to asynchronous
+                     memcpy API. While the origin API might be synchronous, it
+@@ -2671,7 +2702,8 @@
+             return v == nullptr || std::atoi(v) != 0;
+         }();
+         std::atomic<size_t> a_issued{0}, a_consumed{0};
+-        std::atomic<bool> a_stop{false};
++        std::atomic<bool> a_stop{false}, a_failed{false};
++        std::string a_error; // one issuer writer; release/acquire through a_failed
+         double iss_ms = 0;
+         int64_t iss_streamed = 0, iss_dma = 0;
+         std::thread issuer;
+@@ -2683,6 +2715,7 @@
+         const bool threaded_issue = stream_all && issuer_on;
+         if (threaded_issue) {
+             issuer = std::thread([&] {
++                try {
+                 const core::OnDevice od(m.device);
+                 for (size_t idx = 0; idx < seq.size(); ++idx) {
+                     while (idx >= a_consumed.load(std::memory_order_acquire) + (size_t) m.ring) {
+@@ -2706,7 +2739,14 @@
+                         m.copy->memcpy(m.stage_dev[sl], en.blob, bytes);
+                         ++iss_dma;
+                     } else {
+-                        const uint8_t* hb = m.stager->wait(en.job);
++                        const uint8_t* hb = m.stager->wait(en.job, &a_stop);
++                        if (!hb) {
++                            if (m.stager->failed_job.load(std::memory_order_acquire) >= 0) {
++                                a_error = "prefill: expert source copy failed before issue";
++                                a_failed.store(true, std::memory_order_release);
++                            }
++                            return;
++                        }
+                         /*
+                         DPCT1124: cudaMemcpyAsync is migrated to
+                         asynchronous memcpy API. While the origin API might be
+@@ -2723,6 +2763,13 @@
+                     ++iss_streamed;
+                     a_issued.store(idx + 1, std::memory_order_release);
+                 }
++                } catch (const std::exception& e) {
++                    a_error = std::string("prefill: issuer failed: ") + e.what();
++                    a_failed.store(true, std::memory_order_release);
++                } catch (...) {
++                    a_error = "prefill: issuer failed with nonstandard exception";
++                    a_failed.store(true, std::memory_order_release);
++                }
+             });
+         } else if (stream_all) {
+             issue_until((size_t) m.ring);   // layer 0's first experts, behind the embedding and the PLE
+@@ -2730,7 +2777,13 @@
+         // the consumer's side: entry k's copy is on the copy stream (the thread issued it), then k is given back
+         auto wait_issued = [&](size_t k) {
+             if (!threaded_issue) return;
+-            while (a_issued.load(std::memory_order_acquire) <= k) std::this_thread::yield();
++            while (a_issued.load(std::memory_order_acquire) <= k) {
++                if (a_failed.load(std::memory_order_acquire)) throw std::runtime_error(a_error);
++                if (m.stager->failed_job.load(std::memory_order_acquire) >= 0)
++                    throw std::runtime_error("prefill: issuer stopped after expert source copy failure");
++                if (a_stop.load(std::memory_order_acquire)) throw std::runtime_error("prefill: issuer cancelled before requested issue");
++                std::this_thread::yield();
++            }
+         };
+         auto give_back = [&](size_t upto) {
+             if (threaded_issue) a_consumed.store(upto, std::memory_order_release);
+@@ -3930,6 +3983,7 @@
+                             } else {
+                                 // copied to a pinned buffer by the stager (waits only if it is behind), then DMA
+                                 const uint8_t* hb = m.stager->wait(job_of[j]);
++                                if (!hb) { err = "prefill: expert source copy failed"; return false; }
+                                 if (m.stage_live[sl])(m.copy)
+                                     ->ext_oneapi_submit_barrier(
+                                         {*m.used[m.used_of[sl]]});
+@@ -4383,6 +4437,10 @@
+         if (!ple_land()) return false;   // a stage that ends before layer 1: the rows land anyway, the next gather starts
+         if (issuer.joinable()) {
+             issuer.join();
++            if (a_failed.load(std::memory_order_acquire)) {
++                err = a_error;
++                return false;
++            }
+             stats_.ms_experts_host += iss_ms;
+             stats_.experts_streamed += iss_streamed;
+             stats_.experts_dma += iss_dma;
+@@ -4677,10 +4735,16 @@
+ }
+ 
+ bool Prefill::run(const int64_t* tokens, int64_t n, int64_t pos0, std::string& err) {
+-    const bool body_ok = run_impl(tokens, n, pos0, err);
++    bool body_ok = false;
++    try { body_ok = run_impl(tokens, n, pos0, err); }
++    catch (const std::exception& e) { err = e.what(); }
++    catch (...) { err = "prefill: nonstandard host execution failure"; }
+ 
+     std::string drain_err;
+-    const bool drain_ok = drain_pipeline(drain_err);
++    bool drain_ok = false;
++    try { drain_ok = drain_pipeline(drain_err); }
++    catch (const std::exception& e) { drain_err = e.what(); }
++    catch (...) { drain_err = "prefill: nonstandard successor failure"; }
+ 
+     if (!body_ok) return false;
+     if (!drain_ok) {

@@ -1,0 +1,73 @@
+#pragma once
+// CPU coordination only. Never completes a GPU copy or marks failed data ready.
+#include <algorithm>
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <cstdint>
+#include <functional>
+#include <mutex>
+#include <stdexcept>
+#include <string>
+#include <thread>
+namespace strata::prefill::cooperative {
+enum class ReadyResult { ready, cancelled, failed };
+inline ReadyResult wait_ready(const std::atomic<int>& value,
+                              const std::atomic<bool>& cancel) {
+    for (;;) {
+        const int state=value.load(std::memory_order_acquire);
+        if(state<0)return ReadyResult::failed; // failure wins over cancellation
+        if(cancel.load(std::memory_order_acquire))return ReadyResult::cancelled;
+        if(state==1)return ReadyResult::ready;
+        std::this_thread::yield();
+    }
+}
+struct Point { uint64_t request=0, sequence=0; int device=-1,layer=-1; int64_t position=0,rows=0; double prefill_ms=0; };
+struct Result { bool ok=true; std::string error; double service_ms=0; };
+class Ticket {
+    using Clock=std::chrono::steady_clock;
+    std::thread::id owner_=std::this_thread::get_id();
+    std::mutex mutex_; std::condition_variable cv_;
+    bool pending_=false,servicing_=false,closed_=false; uint64_t issued_=0,ack_=0;
+    Point point_; Result result_; std::string close_error_;
+    Clock::time_point started_=Clock::now(); double pause_ms_=0,service_ms_=0;
+    static double ms(Clock::time_point a,Clock::time_point b){return std::chrono::duration<double,std::milli>(b-a).count();}
+    Result invoke(const Point& point,const std::function<Result(const Point&)>& fn){
+        try{return fn(point);}catch(const std::exception& e){return {false,e.what(),0};}
+        catch(...){return {false,"nonstandard cooperative callback failure",0};}
+    }
+public:
+    Ticket()=default;Ticket(const Ticket&)=delete;Ticket& operator=(const Ticket&)=delete;
+    bool pending(){std::lock_guard<std::mutex> lock(mutex_);return pending_;}
+    bool on_owner()const{return std::this_thread::get_id()==owner_;}
+    Result yield(Point point,const std::function<Result(const Point&)>& direct){
+        const auto before=Clock::now();
+        if(on_owner()){
+            {std::lock_guard<std::mutex> lock(mutex_);if(closed_)return {false,close_error_,0};point.sequence=++issued_;point.prefill_ms=ms(started_,before)-pause_ms_;}
+            Result answer=invoke(point,direct);
+            {std::lock_guard<std::mutex> lock(mutex_);pause_ms_+=ms(before,Clock::now());service_ms_+=answer.service_ms;ack_=point.sequence;}
+            return answer;
+        }
+        std::unique_lock<std::mutex> lock(mutex_);
+        if(closed_)return {false,close_error_,0};
+        if(pending_||servicing_)throw std::runtime_error("more than one parked prefill compute producer");
+        point.sequence=++issued_;point.prefill_ms=ms(started_,before)-pause_ms_;point_=point;pending_=true;cv_.notify_all();
+        cv_.wait(lock,[&]{return closed_||ack_==point.sequence;});
+        pause_ms_+=ms(before,Clock::now());
+        if(closed_&&ack_!=point.sequence)return {false,close_error_,0};
+        return result_;
+    }
+    bool pump(const std::function<Result(const Point&)>& fn){
+        if(!on_owner())throw std::runtime_error("prefill ticket pump needs original owner");
+        Point point;
+        {std::lock_guard<std::mutex> lock(mutex_);if(!pending_||closed_)return false;point=point_;pending_=false;servicing_=true;}
+        Result answer=invoke(point,fn);
+        {std::lock_guard<std::mutex> lock(mutex_);result_=answer;service_ms_+=answer.service_ms;ack_=point.sequence;servicing_=false;cv_.notify_all();}
+        return true;
+    }
+    void close(const std::string& reason){std::lock_guard<std::mutex> lock(mutex_);closed_=true;close_error_=reason;cv_.notify_all();}
+    double paused_ms(){std::lock_guard<std::mutex> lock(mutex_);return pause_ms_;}
+    double spent_ms(){std::lock_guard<std::mutex> lock(mutex_);return service_ms_;}
+    double remaining(double total_ms,double share){return share*std::max(0.0,total_ms-paused_ms())-spent_ms();}
+};
+}
