@@ -17650,3 +17650,32 @@ ctx4096,3prose/code/documentprompts, naturalEOS/cap512/eligibleactual>=256
 outputseparate. No GPU/modelreads/newactorchain or chunk sweep requested.
 VERDICT -> Continue substantiveXMX modeltestafterwrapper; benchmarkconfig
 chosenfromactualresults, notfromunusedCPUplans. Fullgoal active.
+
+
+## 2026-10-12: paired staging accepted and XMX model comparison launched
+
+CONFIG -> Source50 balanced24/24 OFF/ONstaging, short54/twoGEN64/cacheOFF.
+COMMAND -> Producer48803PASS610s; independent73212PASS.
+RESULT -> Producer59e6f6a17aef6ef4cb49f38c0c705e159bad24a0f37eef308d10acdeba38fbf3,
+public8d853b4c79cd5c8d421820ec2cedd4e9e972d7c3b217b013e88a97708d331eda.
+Completeoutputs/finish repeatmatch, freshsource/all8/full4/strict+compiled
+health/kernel/ownedteardownpassed. WarmPP937.0/946.5ms,decode64
+4727.8/4479.3ms (13.5->14.3 outputtok/s).
+VERDICT -> Narrow~5.3percentdecodeelapsed reduction, notnatural256-output
+qualification/shelf; huge2000/50 gap remains.
+
+CONFIG -> Fresh51 compiledwrapper againstoriginalindividualf16.
+COMMAND -> NoDri16791PASS27.6s/ELF293b0e55; realcard0single82694 then
+two58385 through bin/gpu-run,3cases each GU/down/safe65rowfallback.
+RESULT -> BothPASS39s, fulloutputs/guardrows/asyncownership/retirement/
+posthealth/nofreshfaults. Reportsb3a75cd1(single)/f5925bb3(two).
+Actual26302nowholds pairlease for51long524/twoGEN64/pref64/ctx2048
+OFF/ONsoleESIMDflag, mirror/groupedF16/H36OFF, cacheOFF/spec2.
+VERDICT -> Realmodelresultpending; no originalmath/speed claimfromfixtures.
+
+CONFIG -> NaturalEOS P2048/ctx4096/cap512 prose/code/document corpus.
+COMMAND -> Actual93824NoDriCPUtokenizer.
+RESULT -> PASS10.9s,3actualtemplateinputs each2048 IDs, corpus61b5caabf76bfedfda334973741366a8341e9f600cf00b42ac042f6700afdbef.
+No GPU/modelpayload read. Outputlength>=256 targetnotyetobserved.
+VERDICT -> Genuineinputsready forconfigchosenafter51timing; no paddingEOS
+or newbackendchain. Fullgoal/math/cache/streams/traffic/latency/shelf open.
