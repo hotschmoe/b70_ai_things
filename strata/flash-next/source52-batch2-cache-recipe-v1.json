@@ -1,0 +1,30 @@
+{
+  "schema": "source52-bounded-native2-cache-v1",
+  "files": {
+    "strata/flash-next/run_natural_p2048_native_v2.py": "2fcaac854d0f379799905fcfc6e7fe1bbfbdfa03be7bb6a17e3fecf1f099fd52",
+    "strata/flash-next/source52_model_sdk_binding_v1.py": "f036bb60914352770a2fc28a0918912fae9de69f294d244ba0eb3ed2178cb121",
+    "strata/flash-next/native52_startup_option_preflight_v1.py": "6e2250cb9970b2cc5aa341beb801fb83d5474ebee734290af8802634c6d20e79",
+    "strata/flash-next/native_source41_cli_protocol_v4.py": "c8fe90f4e442653f79cb3f4d3c474b9f1d5e7dad19b02288a6d2c15024cfa65a",
+    "strata/flash-next/batch_numerical_protocol_v2.py": "aaa87efa3a771fbe4b2f09985947e13749124cdef74b584492bc80c441c78fe9",
+    "strata/flash-next/run_source52_batch2_cache_v1.py": "351f6a95b029650421bf6a89119ce6613ff2aef713978ef51768dd5a0598079a",
+    "strata/flash-next/source52_batch2_cache_contract_v1.py": "1d162b11e06f914df80916da5f02b4d7feafc3306bfaafaba77fc37a02b50296",
+    "strata/flash-next/test_source52_batch2_cache_v1.py": "4f171eb02df9aa57d89696f7b1e27c994722b839329617b17be33a1081055bea",
+    "strata/flash-next/validate_source47_grouped_f16_model_v2.py": "f8cd5bdf1520335eeefa84b09660df7200daf129cc69d9926537b758b5dbf1f1",
+    "docs/20261012_flashnext_source52_native2_cache_v1.md": "431a5655ff698dfe7edc013cff88659b11e92b0c156140e20264ce5048df2dfe"
+  },
+  "scope": "One owned process; serialAB/coldAB/cachedBA; actual rows2 and all49 first/later vectors required",
+  "expected_reused": [
+    0,
+    0,
+    0,
+    0,
+    1536,
+    1536
+  ],
+  "maximum_total_output_tokens": 48,
+  "observer_static_original_cap_bytes": 67108864,
+  "requested_raw_bytes": 29593600,
+  "full_cache_qualified": false,
+  "API_qualified": false,
+  "clean_latency_qualified": false
+}
