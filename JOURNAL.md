@@ -17949,3 +17949,17 @@ VERDICT -> Failedtrace cannotqualifyphysicaloverlap/BW. Device-onlyChrome
 sourcepath removesCPUcallback while retainingGPUcallback/IDs/copybytes.
 Revisedcapture sourcepreparation ongoing; fullworkload/caps unchanged.
 See docs/20261012_flashnext_profile_v4_budget_failure.md. Fullgoalactive.
+
+
+## 2026-10-12: device-only paired capture launched
+
+CONFIG -> NewV5 current52 pairP2048/GEN8 pausedwarm/selected copy0/1,
+H36OFF/device-onlyChrome+clock512, unchangedmodel/math/profile andcaps.
+COMMAND -> Genuineconstructd450ed49590f6d6c9049dee7dcddebfd928dfc7d8e69f7bf7524c4c3637dcc28
+and exactCPUstartupchecksPASS; actual96965 nowholds pairlease at
+F17/source52-p2048-copy-profile-v5-run-v1.
+RESULT -> Capture/clockjoins/copy-overlap/ownedterminal/finalchecks pending.
+VERDICT -> SameactualGPUcallback/IDs/copybytes retained; CPUhostlane/H36/
+calibration/fullcoverage/totalbusbandwidth remainunqualified. PriorV4
+failedbudgetartifacts unchanged. Cleancache companion and composedoriginal
+MTPdraftstep sourcework ongoing; fullcampaign objective active.

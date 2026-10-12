@@ -1,0 +1,44 @@
+CONFIG -> NEW V5 device-only recorder, actual52 pair0+1/original UD weights/
+static profile/math, P2048/pref512/GEN8 paused warmup+selected, COPY_ENGINE0/1.
+Failed V4 remains failed: selected DONE8 appeared, aggregate clock472,861,176B
+plus Chrome720,237,386B exceeded1GiB; no after-selected control/profile PASS.
+
+COMMAND -> Same V4 launch inputs, substitute run_source52_p2048_profile_v5.py.
+Root --construction-only first, then existing pair gpu-run lease. V5 preflight
+calls native52_startup_option_preflight_v1.check on both actual52 recipes before
+GPU admission/model scans. No extra GPU query/build/model/tokenizer required.
+
+Actual PTI options now ONLY --chrome-device-logging, same event buffer16384 and
+output dir, start-paused/session, clock metadata512MiB, query sample512 and
+explicit finalizer. Remove BOTH --chrome-call-logging and --chrome-kernel-logging.
+Admitted tracer.h107..119: chrome-kernel sets BOTH the GPU callback and host
+ChromeCallLoggingCallback, so removing call-logging alone is insufficient.
+Device-only uses the SAME ZeChromeKernelLoggingCallback without host callback:
+GPU instance IDs/names/explicit copy payload bytes and raw clock normalizations
+remain. Device-side flow records remain; there is no supported flow-only off
+knob in the inspected admitted source. No raw filtering or silent drop.
+
+RESULT -> Actual failed V4 Chrome categories: CPU1,729,816 rows/257,448,562B;
+flows2,304,194 rows/300,424,245B; GPU578,827 rows/162,362,172B. Clock has581,094
+instance normalizations/472,122,552B; query brackets only428,661B. Increasing
+query sampling cannot materially reduce that file and the admitted source only
+exposes its exact512 boolean option. Do not change clock instance coverage.
+Removing host callback drops the CPU rows and host-side flow endpoints. Even
+conservatively retaining every existing flow gives about936MB clock+Chrome,
+below1GiB before other files; actual size remains a runtime measurement.
+No caps are enlarged: total1GiB/clock512MiB with original overflow/overshoot
+failure evidence. The same current workload can still fail a bound.
+
+H36 remains OFF; no Chrome CPU host lane, full host preparation, calibration,
+complete model operation/physical-idle/total-bandwidth claim. Exact DMA payload
+and same-device raw copy/compute overlap remain the target. Inspector keeps
+dynamic exact Clock/Chrome GPU joins, actual selected sequence controls and
+per-device RAW bracket/geometry checks; direct mapped-RAM loads remain unmeasured.
+Native append/submit fields in clock data are preserved but do not substitute
+for Chrome API durations or calibrated H36 host/device correlation.
+
+VERDICT -> Flags-only recorder change; no model/device/downsize/engine/tool
+patch. V4 source/results/caps remain untouched. Actual V5 current52/runtime
+construction and cheap startup-option checks must pass before root execution;
+complete producer, both clocks/Chrome joins and post-health/identity/teardown
+remain actual gates. No profile PASS is inferred from the failed V4 trace.
