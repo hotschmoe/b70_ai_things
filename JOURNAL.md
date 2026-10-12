@@ -17840,3 +17840,17 @@ Fullcampaign objective remainsactive;2000/50unmet.
 CALC -> Correction to the preceding larger-prefill elapsed summary: repeated
 PP elapsed increases6.85/6.83/6.28percent, mean6.65percent (about6.7%), not6.3.
 The exact recorded times/rates and negative verdict are unchanged.
+
+
+## 2026-10-12: current cache reader sealed; actual reuse observed
+
+CONFIG -> Live cacheV3 cold/reuse1536pin pair, PCL/fullfirsthead instrumented.
+COMMAND -> Independent narrow reader/sourceplan84287781abfa9039ef747e23873043a907211bb94bd01bbd0e4b4ba73e1d5d37 sealed;
+4 focused CPU controls passed including actualfirstcold raw work parser.
+RESULT -> Runtime29871stilllive. Cold6GEN64 completed; cachearm actualrequest4
+records1536reused/487newpromptrows/974aggregate stagepromptrows, PP4531.2ms
+versus freshB about14s. Fullhead/crossarm/teardown/reader stillpending.
+VERDICT -> Real reuseworkobserved, no completedcachequalification or clean
+latencyclaim. Newreader explicitly instrumented_cache_diagnosticTrue and
+clean_latency_qualifiedFalse. Source53 originalMTP EH/HC front segment and
+currentP2048/GEN8 profiler candidates preparedsource-only, notruntimeproof.
