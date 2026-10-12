@@ -19605,3 +19605,24 @@ RESULT -> Capture native phase refused original bounded startup: UR2 log
 controlled native exit137. Parent cleanup/health/hash still live.
 VERDICT -> No current math capture PASS. Fix bounded startup observation
 before another model launch; serving build/real cache/API remain pending.
+
+
+## 2026-10-12: traced startup limit repaired; serving type errors retained
+
+CONFIG -> Actual59 mode0 NUM33 V2; unchanged model, verboseUR2 startup.
+COMMAND -> Actual84249 terminal FAILED; original producer/raw preserved.
+RESULT -> Producer28c684db6d7005f3bb756b7022e21cae2631724db33f165079dc1c348819c1fc;
+zero requests, validREADY but startup18.6MB exceeds original16MiB.
+Post strict/compiled health/full4 PASS, lease released. Exact saved startup
+passes scoped128MiB V3 parser; malformed secondary and byte bound refuse.
+VERDICT -> Harness refusal, no math evidence. Immutable V3 actual58166
+launched with same SDK/current33 hooks and unchanged residency gates.
+
+CONFIG -> Exact58 original serving V2, checked state bytes, NoDri fresh
+MAIN/header consumer and actual CPU7 recipe7b54ab01f66ff54a4c5be010c98d214ee8c187f1bacf7044851164e0bb5c4f24.
+COMMAND -> Actual56720 terminal FAILED31s; compiler output preserved.
+RESULT -> Two MAIN type errors: vector<int64_t> native prompt/request passed
+to original teacher/best vector<int32_t> interfaces. Semantic object built;
+MAIN link and CPU7 did not execute. Owned compiler removed, no GPU exposed.
+VERDICT -> Range-checked explicit token conversion successor required; no
+compiled original serving/runtime/API/cache qualification. Full goal open.
