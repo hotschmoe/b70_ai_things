@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "scope": "CPU-testable prerequisites; paired model prototype not admitted",
+  "files": {
+    "strata/flash-next/cooperative-prefill/control_v1.hpp": "1d420c975bcce9a13a78f49e504f72d904f5c92da44ba95a77d7773c5fcfead5",
+    "kernels/prefill_cooperative_ticket_cpu_v1.cpp": "f9c61d1f08f002ad6fba65a7c516839cf67b1fdf6741d6acecb1ec8693cecab5",
+    "strata/flash-next/patches/candidate-prefill-stager-cancellation-v1.patch": "4a7999b19d954fb38a9a73fd0d4114f61d9c6a571b78f6588288d392375cec0f",
+    "docs/20261012_flashnext_cooperative_prefill_safety_prerequisites_v1.md": "e19d0537642bb6c6f4c6dcf7eea632c2b56c87fac088a35d3b8da9cabcfccd4a"
+  },
+  "compiler_executed_by_author": false,
+  "GPU_executed_by_author": false,
+  "paired_hook_runtime_ready": false
+}

@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/original-mtp53/shared_weights_sessions_v1.hpp": "569cc5b267d9241b6bd3b5a1ac8841aa84adbb83295cbfb9a5c7e41ccce2b943",
+    "strata/flash-next/test_original_mtp53_shared_sessions_cpu_v1.py": "f4ae5e9cea0c1dd9e9ad855af8ddd0de0731ec30dc2a33dd0617843d5b814d3c",
+    "strata/flash-next/original-mtp53/shared_weights_sessions_design_v1.md": "aac1d2444163b14114986aa92061c0a467686e0938957ed2026b5eb788ec836b",
+    "strata/flash-next/original-mtp53/loaded_main_adapter_pair_v3.hpp": "84c5ba57e7622719f29e1eecc95391a31c33b5c3af21abed1137354fcacaf799",
+    "strata/flash-next/original-mtp53/owned_runtime_pair_v1.hpp": "6c074948d2d416939d8eadb4b7be7e63bd9518f404933db5923e87c8704d2b03",
+    "strata/flash-next/original-mtp53/draft_step_pair_v1.hpp": "4172105ba819283a1cd375c5818fb258e77a5d437d08ff0803f482612e1e990d",
+    "strata/flash-next/original-mtp53/qsa_state_segment_v2.hpp": "a93cc684872b3fad5165f520738066b4ca7197803653262791723011785d6240",
+    "strata/flash-next/original-mtp53/tensor_views_v1.hpp": "c86e99f3297035d330257ad4a3aac25c0cff4eafc0723b566fb2e7e0010e9508",
+    "strata/flash-next/original-mtp53/eh_hc_front_v2.hpp": "8b2337f97899fb0a21b1e704e19ec371fd150e3b1d85887fb3643cc1fb1c6f22",
+    "strata/flash-next/original-mtp53/typed_primitives_v2.hpp": "e2dd3ed58ed740a1bfe14747eb8711879ef27df7aa4b220c3b8fae07a77c1d56",
+    "strata/flash-next/original-mtp53/phase_timing_v1.hpp": "f053a5d853e96c0f4d1709cb988177bb0cfc53d5dd65055e8dd7b6da07d81242"
+  },
+  "scope": "Source-only original34 immutable shared GPU1 weight owner plus private4096 sessions; serving integration not qualified",
+  "overlay_header": "sycl/include/strata/kernels/original_mtp53_shared_sessions.hpp",
+  "inherits_exact_paired_v6_overlay_dependencies": true,
+  "fresh_whole_MTP_identity_required_by_caller": true,
+  "source_only": true,
+  "compiled": false,
+  "serving_qualified": false,
+  "complete_snapshot_import_export_available": false,
+  "tests": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_original_mtp53_shared_sessions_cpu_v1"
+}

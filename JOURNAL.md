@@ -19002,3 +19002,46 @@ minustwoHCmembers, exactmembercounts andfreshobjectsfirstrequired.
 VERDICT -> Sourceconstruction only. Actualcompiledreceipt/ELF, matched
 pairedOFF/ON fulloutput/identity/residency/health/normalretirement and
 interactive benefit remainunproven. Fullgoal notnarrowed.
+
+
+## 2026-10-12: cooperative prefill CPU ticket/retirement core executes
+
+CONFIG -> Sealed70b22 sourcecontrol core, realthreads, no GPU/model.
+COMMAND -> Hostg++absent; rootC399 NoDri/networknone2CPU1GiB nativeCPU
+compileandexecution (no-fsycl), actual66558 PASS12.79s, foregroundexit0.
+RESULT -> Owner-onlyfailedACK, cancellationofblockedreadiness, failure
+priority(no fabricatedready), actualparkedworkerclose/unpark/join PASS.
+ExternalF17/cooperative-prefill-ticket-cpu-v1/report.json SHA2561a13a740f66db3b0341478db4ae498d6ec8d642d751e45f62fff2f5f9cec6315.
+VERDICT -> CPU coordination prerequisite only. Complete per-deviceowner
+extents andexception-safe stager/issuer/copyfail integration remain
+required before actual pairedGPUyield. SealedsourceV1 notruntimeadmitted.
+
+
+## 2026-10-12: reference-cut controls pass; paired HC build closes
+
+CONFIG -> OriginalMTP V6, reference-derived prefillcuts only, same
+originalmath/weights/cache/profile andboth-target freshreset.
+COMMAND -> Actual85477 terminalPASS; rootrawsemantic/full29artifact
+replay/all5prepostidentity/normalExit0/EOF/ownedremove verified.
+RESULT -> Sixrestoredstageframes/threesteps pass, health/kernel close
+normal; producer7f0a36ae8b6249813ac54a956bc291a90044259bbd5d0fc3ca6775a3b1e7bc6e.
+Actual66502 full512 firstcase OFF/ON comparison nowrunningbehindlease.
+VERDICT -> Controls accepted, naturalnormal-reference fidelitypending.
+
+CONFIG -> PairedHC T2 unmarked V1 NoDri2CPU6GiB; exactfreshfour
+objects/copyengine1verifyremoval/copykernels2HCremovals.
+COMMAND -> Actual35848 compilePASS133s, independentallinputs/raw/
+outputs/exactmemberfilter replayPASS; focusedbuilderCPU PASS0.001s.
+RESULT -> Receiptf788875270f007ea95be9acd2691cd9737443c16990f9396e13ff1642a42f5f4;
+ELF642cf02de1329a3ec8af3cf5870b521c35a00f2c330f59a426efa10725dfc1ea.
+VERDICT -> Actualcompile, notactualmodelroute proof. Successor mustprove
+newHCroute recordedandsubmitted beforemodelbenefit claims; frozenV1
+inputs preserved. No model/speed promotion fromunmarkedbuild.
+
+CONFIG -> Original34weight sharedpackGPU1/private4096 draftsession
+sourceport; exactweightuploads/privateallocations, RID-generation guard.
+COMMAND -> Rootreviewed source andthreefocusedCPUcontrolsPASS.
+RESULT -> Plan885606d5ddccf407fc4cc3dfaa74dd814844718797f5383dc2bc2bc35c83c1f4,
+no2.775GB reload perstream; originaltwo-bank recurrence retained.
+VERDICT -> Source only; compile/math/concurrency/API/cachestate proof
+stillrequired. No legacyKV-only serialization substituted.
