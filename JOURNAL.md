@@ -19709,3 +19709,17 @@ closed. Phase FAILED earlyEOF; posthealth gates pass, parent closing whole5
 still live. Actualnative parse_i64_list accepts both spaces and commas.
 VERDICT -> Runtime-only V2 stdin-forwarding fix required; no engine rebuild
 and no GPU fault inferred. Preserve failedV1/normal native close evidence.
+
+
+## 2026-10-12: stdin-forwarding retry and fast diagnostic identity
+
+CONFIG -> Native4 V2, same serving V3 executable/input/runtime, Docker-i.
+COMMAND -> Root genuine constructor PASS and independently checked both
+commands forward stdin; authentic prior completed full5/current stat5 PASS.
+RESULT -> Actual87273 queued behind loaded source61 diagnostic13439.
+No engine rebuild. Prior completed whole5 is used only in an explicitly
+unqualified diagnostic: current pages/source/health/EOF gates retained,
+no fresh publisher scan or speed/shelf/native-promotion claim.
+VERDICT -> Four-stream real runtime still pending. Independent firstGDN
+reference executable is sealed; root will run after profiling model work
+ends, avoiding provider/hash IO during measured host intervals.

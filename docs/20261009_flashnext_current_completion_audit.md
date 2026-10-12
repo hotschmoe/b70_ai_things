@@ -2192,3 +2192,38 @@ Pref-only tile4 fullHC operator passed all10 cases/replay/health; genuine
 model commands passed after frozen-doc binding restored. Actual56
 matched naturalP2048/GEN512 run76704 live, no gain yet. MTP existing-sync
 host phase probe compiled33774 PASS98s; actual phase run pending.
+
+## 2026-10-12 - Current capture and serving boundary
+
+The original objective remains intact. Current0 numerical targets are now
+independently admitted from saved source59 V3, without a GPU rerun. Recovery
+report0df16e374eb0fbbd5883292475ac369c4e6fb5e5ae7a2d406d0fad7e04431d41
+validates four fresh prefix1 requests, NUM33/P30/SFD49/PLE-input observations,
+source/all8, normal native exit and original health/full4 closure. The original
+producer remains FAILED because its reader expected an omitted LP20 option.
+See docs/20261012_flashnext_source59_fidelity_saved_recovery_v1.md. This
+provides current comparison targets, not independent full-model arithmetic.
+
+Original serving V3 has a fresh MAIN/header-consumer build and actual11
+CPU controls, including exact state bytes and checked token64 conversion.
+Receiptae032da4e6d0d04ee0309f3207208e32f0c64cc670a7ff5393cd2a02b2a40541
+and ELFd1333ea9f06d05c5ef188d829e3822fe283ec17772f55f00754df383ead77eea
+are recorded in JOURNAL.md. The first native4 controller attempt failed before
+requests: Docker lacked stdin forwarding, and the native program exited0
+after READY. Post-health and complete MAIN+MTP hashes passed. No native4
+coherence/cache/cancellation claim follows from compilation or that attempt.
+
+Source61's actual-chunk profiling selector passes its real-header CPU control
+and incremental build. Its loaded diagnostic is active; complete eight-trace
+coverage and independent reader admission remain pending. Failed source60
+partial traces identified a 4.678s PLE future wait. Current mmap bypasses the
+configured row cache; existing Direct mode offers batched reads. This is a
+lead for a matched test, not a storage bandwidth or speed conclusion.
+
+Still required: independent current-mode full-model fidelity; complete cache
+family and persisted restart; actual usable HTTP with hotschmoe-dd first;
+one/two/four streams and bounded six with cancellation/isolation/fairness;
+correlated profiling and clean matched latency; RAM/NVMe/cache memory tradeoffs;
+and a qualified reproducible shelf with launch/stop instructions. No new
+2000tok/s prefill or50tok/s decode result is admitted here. Completion is
+unproven. Prior historical paragraphs retain their original scope.
