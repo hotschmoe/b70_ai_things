@@ -19659,3 +19659,32 @@ PLE input12files/44,984B, layer0 136files/28,117,496B.
 VERDICT -> Actual current-target arrays exist; parent closing health/full4
 and independent public reader remain pending. Native repeat identity is
 not original arithmetic qualification, API/cache/speed or goal completion.
+
+
+## 2026-10-12: serving and selector builds pass; real native4 launched
+
+CONFIG -> Original serving V3 over exact58, checked token64 boundary.
+COMMAND -> Actual6445 NoDri builder PASS; root independently hashed all18
+raw compiler outputs and ran genuine qualification command construction.
+RESULT -> Receiptae032da4e6d0d04ee0309f3207208e32f0c64cc670a7ff5393cd2a02b2a40541;
+ELFd1333ea9f06d05c5ef188d829e3822fe283ec17772f55f00754df383ead77eea;
+fresh MAIN/header consumer linked and actual11 byte/token controls PASS.
+VERDICT -> Native build proof only. Actual65816 pair-leased native4
+baseline/original/cache/cancel/stale qualification launched; API/persisted
+restart/full state and math still unqualified.
+
+CONFIG -> Source61 actual first512 host selection, unchanged math/pacing.
+COMMAND -> Actual90193 incremental NoDri PASS125s.
+RESULT -> SDKstrata-native61-incremental60-v1-20261012T233538Z-lrau0o0c;
+receipt096dc246a877482a5e2f18789a2a79847f4ba31269f57c581433e6e7bd45a1c5;
+122 reuse/two actual compiles/all8 links/parentunchanged/auditPASS. MAIN
+object byte-identical permitted; Prefill object changed.
+VERDICT -> Loaded eight-trace coverage still required, not speed proof.
+
+CONFIG -> Current59 V3 actual four fresh prefix1 NUM33 capture.
+COMMAND -> Actual58166 terminal455s; nativePASS/Exit0/posthealth/full4PASS.
+RESULT -> Producer2efcaa63076d6421ea3476e29aea62c44e38809d2199c42ca23d6a54ae947bc8
+FAILED on reader command check: stale formatter expects logprobs=20, actual
+preregistered GEN deliberately omits it. CorrectIDs/fresh/MAX1/pin intact.
+VERDICT -> Reader-only independent recovery pending; preserve failed parent
+and saved native arrays. Do not rerunGPU for this formatter mismatch.
