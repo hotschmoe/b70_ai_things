@@ -18191,3 +18191,22 @@ acceptance/performanceproof. Wholegoal/cachefamily/concurrency/shelf open.
 CONFIG -> NamedrealMAINMTPV2 fixesonlysingle-stageguard toactualvector.
 COMMAND -> CPUpreparePASS, actualleasedNoDri15479nowlive.
 RESULT -> Compilerresultpending; no targetGPUpass or draftspeedclaim.
+
+
+## 2026-10-12: HC natural model comparison live; actual MAIN hook compiled
+
+CONFIG -> Fresh54 exactoriginalUD pair24/24 P2048/pref512/ctx4096/
+sixGEN512 perarm, mirror1/copy0/grouped0/noMTP/cacheOFF/naturalEOS,
+soleSTRATA_HC_Q8_TOKEN_TILE0/2.
+COMMAND -> Genuinefrozen54constructionV2PASS; actual54311holds pairlease
+atF17/source54-hc-token-natural-v1-run-v1.
+RESULT -> Modeloutput/latency/health/source/full4/teardown pending.
+VERDICT -> Realrepresentative modeltest followsbitwiseopgain, notpromoted
+fromoperator. OriginalkernelFMA/reduction/caller orderpreserved.
+
+CONFIG -> NamedMAINMTPV2 one-card diagnostic, correctsstages.empty guard.
+COMMAND -> NoDri15479PASS94s; ELF0ada89c203d5084e9e3fc109ba3fb9060b3449ad845c97d8921dd4f0355ba581.
+RESULT -> Realtargetrun/commit/wait controlcompiled, no actualtargetGPU
+acceptance/state/64-512sequence/speedproofyet.
+VERDICT -> SinglecardloadedMAINcommand/headroomprep next afterHClease,
+separateoriginalMTPidentity mandatory. Fullcampaign objective active.
