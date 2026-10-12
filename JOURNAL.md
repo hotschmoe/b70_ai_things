@@ -18441,3 +18441,27 @@ Publicf1d8caaff96ee821efda370af1cdc577cb887a08c04041b22859c5876d1fd00b; observed
 VERDICT -> Current kernel costs guide focusedT5122/2vs2/4 operator
 work. No additivecard/familycriticalpath, physicalidle/BW, calibrated
 phase/host alignment or clean serving speed claim. Fullgoal open.
+
+
+## 2026-10-12: T512 HC tile4 wins; MTP64 attempt failed teardown
+
+CONFIG -> Exact55 syntheticT512 down/up2/4, card1PCI0000:44:00.0.
+COMMAND -> NoDri34964 PASS24s; GPU71991 PASS41s.
+RESULT -> Bitwise direct/changedgraphs,36alternatingtimings, health/kernel/
+ownedretirement pass. Down median5322.06 ->4472.59us; up5324.53
+->4008.56us. Producer844f5772b8926496ba64cc5223c4151b1e957e0941dfa2d4e9b24528873cdc5d.
+VERDICT -> New default-off56 pref-only4 candidate; oldT8/decode2 unchanged.
+Whole56 chain compiler53587 nowlive, freshengine/model stillunproven.
+
+CONFIG -> Original MTP greedy64 fresh OFF/ON attempt42587.
+RESULT -> OFFgenerated64 then nativeSIGSEGV139 at teardown; ONnotrun.
+Controllerlooped afterownedcontainer/clientgone because Docker absence
+waslowercase. Root verifiedterminal/absence/clientexit thenSIGKILL only
+stuckcontroller694770; wrapper137, failedattemptpreserved.
+COMMAND -> Newleasedrecovery94362 PASS175s: card0posthealth andfull5
+identitypass. KernelrecordsNXjump0x3ff3e000, nativePID695178.
+VERDICT -> Failed native/teardown, noequivalence/speed qualification.
+Sourcehook earlyreturn bypasses SDK52 explicitserveshutdown11990-12038;
+ordinarydestructors aredocumentedexit139 risk. Correct ownedshutdown
+beforetargetedretry; fixrunner lowercaseclassifier separately, preserveV1.
+Exactfaulting destructorunproven. Fullgoal remainsactive/incomplete.
