@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "scope": "current52 bounded P2048 copy/compute recorder only; no physical alignment/coverage claim",
+  "files": {
+    "strata/flash-next/run_source52_p2048_profile_v2.py": "3a131a5961e5da24de2ad8a0916661c4e7bd5f4d0a546f7c76282fd2b3e24926"
+  },
+  "raw_cap_bytes": 1073741824,
+  "clock_cap_bytes": 536870912,
+  "query_sample_every": 512,
+  "warmup_requests": 1,
+  "selected_requests": 1,
+  "max_new_choices": [
+    8,
+    16
+  ],
+  "clock_lane_rule": "Same-device raw ticks only for copy/compute overlap; host H36 separate until fresh calibration; exact Clock/Chrome instance-ID joins, dynamic counts",
+  "per_tier_rule": "Exact tracer MemoryCopy[bytes] command payload and source/destination allocation kinds, not startup residency or measured bus bandwidth",
+  "full_model_operation_coverage_qualified": false,
+  "preserved_v1_CPU_failure": "Actual construction raised NoneType _RUNTIME in inherited PTI-enabled BASE_COMMAND; no GPU"
+}

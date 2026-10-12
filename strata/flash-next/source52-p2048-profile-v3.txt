@@ -1,0 +1,69 @@
+CONFIG -> Current SDK52/original UD weights/static profile, pair0+1, ctx4096,
+prefill512, mirror0, grouped/ESIMD/XMX0, cache0, noMTP/spec capacity2. Each of two
+fresh processes: one P2048 GEN8 warmup while PTI paused, then identical fresh
+P2048 GEN8 selected request. Sole model-control difference COPY_ENGINE0/1.
+Optional --profile-gen 16 remains bounded. Natural EOS enabled with8/16 cap;
+this is a profiler diagnostic, not natural512/sustained-rate qualification.
+
+COMMAND -> Use current natural52 copy launch arguments, replacing the actor by
+run_source52_p2048_profile_v3.py; append --profile-gen 8. Keep exact current52 SDK
+receipt, existing natural corpus SHA, model/template/API prerequisite and actual
+paused regular-list PTI intake/DSO hashes. No new model/tokenizer/build needed.
+Run --construction-only first; then root's existing pair gpu-run owner after
+current workload retires. The original complete parent keeps current pre/post
+health, journal, pages, campaign-level fresh full4 and owned normal EOF/removal.
+Agent performs source/CPU only. Existing recorder/tool sources remain unchanged.
+
+Actual command includes: /pti/bin/unitrace --start-paused --session SOURCE_OWNER
+--chrome-call-logging --chrome-kernel-logging --chrome-device-logging
+--chrome-event-buffer-size 16384 --output-dir-path /results/unitrace
+/build/strata --serve ... [original current52 model arguments].
+H36 host instrumentation is enabled in BOTH arms; LP and SYCL_UR_TRACE2 omitted.
+Source52 calls the admitted explicit PTI finalizer. No profiler syscall/helper
+acts outside the root-owned container. Before/after selected IPC observations
+save exact native clock file offsets/sequences; warmup normalization is paused.
+
+RESULT -> Existing raw watcher retains1GiB aggregate cap,1s polling and observed
+overshoot/failure evidence. Clock writer retains512MiB cap, sampled query every
+512 original calls and its overflow failure record. Limits are not increased.
+GEN8 removes the old512-output trace expansion; P2048 prefill may still exhaust
+the cap. That is a retained failed capture, never filtered/truncated into PASS.
+Both normal warm/selected output/finish pairs and cross-arm outputs must match.
+H36 complete host request coverage is recollected with both actual stage ranges.
+Host optimized-prefill internals absent from existing H36 remain unobserved;
+Chrome CPU calls add native submission/synchronization API durations. Nested
+H36 scopes overlap and must not be added into a wall-time total.
+
+Read-only observed-device inspection after root admits complete producer:
+python3 strata/flash-next/inspect_source52_p2048_profile_v1.py
+  --directory ACTUAL_ARM --output NEW_OBSERVED_JSON
+It uses the actual before/after-selected normalization sequence slice, continuous
+PID1 records, per-device origins/frequency/mask, successful returned-host query
+brackets and exact dynamic Clock/Chrome instance IDs. Two devices are required.
+Raw ticks must be ordered and span less than half their timer mask; no inferred
+wrap/host-normalized reorder. Compute/copy interval unions and intersection are
+computed separately per native device. Engine ordinal/index counts are retained.
+This is observed-command analysis, not a public model qualification reader.
+
+The existing tool formats explicit MemoryCopy(H2D/D2D/...)[bytes] from its actual
+memory-command size and allocation kinds. The inspector sums that exact payload
+by direction. It excludes MemoryFill and never replaces it with startup mirror
+size or DONE logical counters. These are explicit DMA payload bytes, not PCIe
+transactions, memory-bus bandwidth, DRAM read+write traffic, or direct mapped-RAM
+loads inside expert kernels. Current mirror0 decode may read RAM in a kernel:
+that traffic remains unmeasured by the DMA trace.
+
+Clock qualification limit: actual fixed-clock V5 fixture validated919 instances
+and746 returned-host timestamps inside RAW query brackets; physical host/device
+alignment remainedfalse. Paused sampled runtime intake explicitly preservesfalse.
+Warm5 observed RAW-to-MONOTONIC offset drift4.735ms. Therefore inspector uses
+same-device raw ticks for observed overlap, H36 host intervals separately, reports
+fresh query-bracket width and observed bridge drift, and keeps host/device
+alignment, continuous drift bounds, complete model coverage/physical idle/bus
+bandwidth/clean serving speed flagsfalse. Cross-device times are never compared.
+
+VERDICT -> Source-only recorder. Actual V2 command construction passed on genuine
+current52/runtime inputs; V1 stale PTI BASE_COMMAND namespace failure preserved.
+V3 corrects only inherited GEN4 scope wording and pins this inspector/recipe.
+Inspector CPU exact2MiB payload/5tick overlap on2devices and wrap refusal PASS.
+No model/GPU execution or new performance/clock qualification by the author.

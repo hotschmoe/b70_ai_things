@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "scope": "current52 bounded P2048 copy/compute recorder only; no physical alignment/coverage claim",
+  "files": {
+    "strata/flash-next/run_source52_p2048_profile_v1.py": "c1cda0c02e88ffaa96728bfaa182eeb4b5051ad98656ab8482608b1a823a0c1b"
+  },
+  "raw_cap_bytes": 1073741824,
+  "clock_cap_bytes": 536870912,
+  "query_sample_every": 512,
+  "warmup_requests": 1,
+  "selected_requests": 1,
+  "max_new_choices": [
+    8,
+    16
+  ],
+  "clock_lane_rule": "Same-device raw ticks only for copy/compute overlap; host H36 separate until fresh calibration; exact Clock/Chrome instance-ID joins, dynamic counts",
+  "per_tier_rule": "Exact tracer MemoryCopy[bytes] command payload and source/destination allocation kinds, not startup residency or measured bus bandwidth",
+  "full_model_operation_coverage_qualified": false
+}

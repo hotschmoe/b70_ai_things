@@ -2004,3 +2004,14 @@ A2048/B2023, GEN64/fullfirstheads, copy0/mirror0. Actualwork/head/latency
 proof remains pending; fullcache and actualmulti-streams still open.
 CurrentwarmP2048 profiler preparation keeps unqualified host/device clocks
 separate. OriginalMTP graph/loader gaps remain; primitive53 isnot fullMTP.
+
+
+## 2026-10-12 - Current serial checkpoint result accepted
+
+Producer29871 PASS720s and independent89341 PASS: full248320 finiteheads/
+greedyargmax, allsix cold/hit bitwiseheads and outputIDs/finish, role repeats,
+actual1536x5 reuse/new512or487/bothstagework, full4/source/health/retirement.
+Instrumented hitTTFT4.58-4.75s vswarmfresh13.77-14.12s. See current results
+in20261012_flashnext_serial_cache_current_results.md. This closes a bounded
+corrected-model serial reuse gap, notfullcachefamily/cleanlatency/API/
+originalfullmath/concurrency/shelf. No new token-throughput target met.

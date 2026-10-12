@@ -17854,3 +17854,34 @@ VERDICT -> Real reuseworkobserved, no completedcachequalification or clean
 latencyclaim. Newreader explicitly instrumented_cache_diagnosticTrue and
 clean_latency_qualifiedFalse. Source53 originalMTP EH/HC front segment and
 currentP2048/GEN8 profiler candidates preparedsource-only, notruntimeproof.
+
+
+## 2026-10-12: current serial checkpoint reuse accepted
+
+CONFIG -> SDK52 pair24/24 pref512 ctx4096/noMTP/copy0/mirror0,
+matched1536positivepin; cold/reuse A2048/B2023 A,A,B,B,A,B eachGEN64.
+Fullfirstheads/PCL instrumented; no cleanHTTP claim.
+COMMAND -> Producer29871terminalPASS720s; independent89341PASS.
+RESULT -> Twelvefinite full248320heads/greedyargmax; allsix cold/hit headbytes
+and outputIDs/finish exact, withinrole repeats exact. Cachefirst0reuse then
+1536x5; actualnew512/487 rows withbothstagecompletedbodycoverage.
+HitpipeTTFT4.58-4.75s vswarmfresh13.77-14.12s, about66%lower instrumented.
+Originalfull4/sourceall74/all8/health/kernel/ownedretirementpassed.
+Producerfb01b62f3e45f36cf214deb97ba7cf21e935a8a6002ca6f2a1ac6d027e244825;
+publicba7c99be664d8f480eb6148cdc325f9d5e8ad3b54d25b353736cfdc49da4092a.
+VERDICT -> Narrow useful actualreused-state proof, notfullcachefamily/
+originalmath/cleanlatency/nativeconcurrency/shelf qualification. All64cap/length.
+See docs/20261012_flashnext_serial_cache_current_results.md.
+Next boundedP2048/GEN8 physicalcommand profile prepared; sourceMTPgraph
+work advances anoriginal EH/HCfront, full compress4draft stillincomplete.
+Fullcampaign remainsactive;2000/50rawtargetsunmet.
+
+
+CONFIG -> Source52 bounded profiler pair24/24 P2048/GEN8, onepausedwarmup
+and oneselectedfresh request percopy0/1 process, mirror0/H36ON/PTI sampled512.
+COMMAND -> Rootgenuine89801commandconstructionPASS; actual66480 nowholds
+pairlease inF17/source52-p2048-copy-profile-v3-run-v1 aftercacheterminalPASS.
+RESULT -> Capture/actualclockquerybrackets/explicitDMApayload/deviceoverlap
+notyetobserved. Raw1GiB/clock512MiB caps retained; noURtraceflood.
+VERDICT -> Instrumenteddiagnostic only, no sustainedspeed/physicalbusBW/
+mappedRAMtraffic/calibratedhost-device/wholemodelcoverage claim.
