@@ -18557,3 +18557,25 @@ COMMAND -> Actual22434 acquiredcard0lease after56 atF17/
 original-mtp53-greedy64-phase-card0-run-v1.
 RESULT -> Phase/equivalence/identity/health/teardown pending.
 VERDICT -> DiagnoseflatMTPtime withresolvedresidencyconfoundexplicit.
+
+
+## 2026-10-12: target verification dominates MTP phase diagnostic
+
+CONFIG -> Original54+64 OFF/ON, defaultoff CPUphase buffer enabled,
+existing wait/query roster unchanged, noGPUworkspace/timer nesting.
+COMMAND -> Actual22434 PASS599s; independentrootreadbackPASS.
+RESULT -> Full64 IDs exact; nativeexit0/EOF/ownedremove/source/ELF/
+full5/health/kernel pass. ONtargetrun15803.596/15994.666ms=98.81percent;
+OFFtarget16972.710ms. MedianT2window473.794 vsT1 245.681ms.
+Ownhead42.242/draftrecord120.079ms, bothsmall. Producerfdaf82bfa21dd9e7f6ffd51aa25d96ec7bce06e580f515d651db5dc3394efaaa;
+public3e0e5b7067f7a15a1322df13aca39a74857578fe35d88b5d78aad0eea17daf1d.
+VERDICT -> Targetwork next. Inclusive hostscope notGPUexecution/idle,
+OFF8160/ON7270 residencyconfound, overlappingcounters notadditive,
+prior6.7s pairdiff prevents clean-speed/population attribution.
+
+CONFIG -> Current52 native4 source candidate twofreshphases/fourunique
+serial thennativecontrols, cap8/DECODE_SHARE0, all49/exacthistorygate.
+COMMAND -> Genuine rootconstructionPASS; actual98320 nowpairlease
+atF17/source52-native4-coherence-v1-run-v1.
+RESULT -> Realrows4/mask15/VRAMcapacity/lifecycle pending.
+VERDICT -> Coldnative4 probe only, no4cache/fairness/fullgoal proof.
