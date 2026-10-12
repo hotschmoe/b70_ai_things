@@ -18901,3 +18901,25 @@ RESULT -> Sourceproposal1492acfa252cc377b8212d6bd83b79b0599030d37dd5dd6d7776df51
 dc3c5ab0c9c3879d4f6bed73e1fc6052fab7a91c7ed7e838135297649c241de3.
 VERDICT -> Freshsource construction only; actual compile, seven-field
 direct/graph operatorproof andpairedmodel benefit remainunproven.
+
+
+## 2026-10-12: paired fresh-reset OFF narrows reference investigation
+
+CONFIG -> V5 firstcase P2048/GEN512 OFF, same originaltensor reserve
+GPU1 andwholepref512/512/512/511. ONcomparison stillrunning10108.
+COMMAND -> Root independently parsed completedOFF rawids/residency/
+freshreset marker, checked rawdigests andnormalterminal.
+RESULT -> OFFpassed512/healthyownedretirement; all512 IDs identical to
+oldV4 OFF. Firstdifference versusaccepted normal52 remains token103
+(17295 versus71367). No speedclaim or wholecomparison verdict.
+VERDICT -> Resetgap repaired but doesnot explain thisreference mismatch.
+Nextisolated candidate matchesnormalprefillcuts withoutotherchanges.
+
+CONFIG -> Rootowned HC T2 NoDri builder withtyped device0 leaseFD8,
+2CPU/4GiB, freshfourobjects/copiedarchive/twooldHCmemberremovals,
+originalsource/compiler/packages/archives preserved andownedretirement.
+COMMAND -> Onefocused genuine-recipe/archive negativeCPUcontrolPASS;
+actual34177 queued under bin/gpu-run --card0 (actual option --card 0).
+RESULT -> Builderplancb9aa5943153d86f5af0ef76b42831322e2d66d5c91b0c15685d78e6066a5023; currentlease prevents overlapwithnaturalpair.
+VERDICT -> Actual compilation andfullfieldGPUoperator proof remainpending;
+no model/pairedkernel/speedqualification transferred.

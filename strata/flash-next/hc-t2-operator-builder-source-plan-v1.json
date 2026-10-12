@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "scope": "root-owned direct NoDri HC T2 compile only; no actual author compile/GPU/model reads",
+  "files": {
+    "strata/flash-next/build_hc_t2_operator_v1.py": "fcafd5e5566ea6d17c8c1565745c05847856659adee34df3ccd1bb0af2c3c0da",
+    "strata/flash-next/test_build_hc_t2_operator_cpu_v1.py": "63fe798fe41f93460302a7b84617cb3aa0a6f0cfb5281acc4c813ed71dca8a3c",
+    "docs/20261012_flashnext_hc_t2_operator_builder_v1.md": "7ebe04cbb8279212aca3897464611d9564050c1f4ba9d82ad9afae5cbd81ab82"
+  },
+  "actual_compile_plan_sha256": "dc3c5ab0c9c3879d4f6bed73e1fc6052fab7a91c7ed7e838135297649c241de3",
+  "actual_prepared_recipe_sha256": "744722155e94d8e8c83cd176601d08dd63087f70e01a828a34544e800bcbe4df",
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_build_hc_t2_operator_cpu_v1",
+  "runtime_performed": false
+}
