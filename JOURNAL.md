@@ -18828,3 +18828,27 @@ Root corrected malformed /tmp launchseparator/PYTHONPATH and actual
 pairedcontrols28486 nowbothleases. No previous MTPpair GPUproof yet.
 VERDICT -> Compileaccepted, forced6frames/3steps andcurrent identity/
 health/teardown gates pending beforeactualP2048/GEN512 pairrun.
+
+
+## 2026-10-12: original MTP two-stage forced controls admitted
+
+CONFIG -> Original34 tensor drafter owns GPU1, capacity4096; target24/24
+run/commit acrossboth stages, literal248045 control, phaseOFF.
+COMMAND -> Actual28486 PASS417s; root independently reconstructed all
+control/residency fields and every saved artifact digest, full5 rowsPASS.
+RESULT -> Six exact restored stageframes andthree steps: forcedreject
+keep1/position2, forcedaccept keep2/position4, ownproposal accepted
+keep2/position6. Nativeexit0/EOF/ownedremove, all5 sources/prepost,
+strictpercard/compiledcollective/kernel close pass. Producer
+fa4fd662916a26d0b60b3414fc643f1588ea2c92230ba7151fae4da7888f737a.
+VERDICT -> Paired state/ownership prerequisite, not natural acceptance/
+longcontext/fullmath/serving/speed proof.
+
+CONFIG -> First actual pairednatural P2048/GEN512 OFF/ON case0, same
+originaldraft tensor/state reserve botharms, no serialMAINprompt path.
+COMMAND -> V3 bounded firstcase source/constructor controlsPASS; root
+actual57647 nowbothleases atF17/original-mtp53-paired-natural-firstcase-v3.
+RESULT -> Firstcase actual2processes, fullhistories/residency/health
+pending. Full3roles/tworepeats matrix remains open and explicitlyfalse.
+VERDICT -> Real meaningful prompt/decode nowrunning; no substituted
+short/debug success or wholecampaign completion.
