@@ -17979,3 +17979,33 @@ single-arm ownedroots withsamecap pluslatermatchedreadonlyjoin next.
 Cleancache actualconstruction56150PASS; no cleanGPUlatencyresultyet.
 OriginalMTPcomposed FFN/ownhead/targetdecision step sourcework progressing;
 loadedmath/accept-reject position/state proof stillrequired. Goalactive.
+
+
+## 2026-10-12: aggregate profiler closed and clean cache measurement started
+
+CONFIG -> V5 sameP2048GEN8 paireddevice-only capture, whole-root1GiB cap.
+COMMAND -> Producer96965terminalFAILED777s afterBcap; postguardsPASS.
+RESULT -> Reportf4c69e0d08e7c6d23a04683593c8c5a15767c662bdca6e130685e7648c357b5f;
+strict+compiledhealth/full4/source/kernel/ownedretirementpass. OFFraw
+observations remainunadmitted, no matchedtrace or speedclaim.
+VERDICT -> Singlearmindependentroots preserveperexperimentcap; nofailed
+aggregate rewritten. ONrecorder sourceprep before nextlease.
+
+CONFIG -> Same52 cache1536pin/A2048B2023/sixGEN64 eachcold/reuse,
+mirror0/copy0/pref512/noMTP; diagnosticSFD/PCL/PREFIX flagsOFF.
+COMMAND -> ActualCPU56150constructionPASS; real50629nowholds pairlease
+inF17/source52-clean-serial-cache-latency-v1-run-v1.
+RESULT -> Preparationlive; cleanTTFT/gaps/completion/output/counts/closing
+guards remainpending. No head/stagecoverage prooftransfer.
+VERDICT -> Useful cleanlatencycompanion toaccepted fullheadcache diagnostic;
+wholeoriginalgoal/fidelity/cachefamily/concurrency/profiling/shelf open.
+
+
+CONFIG -> Single-armV6 source52 P2048GEN8 profile, copy1, onecomplete
+ownedpair lifetime andselectedwindow, device-only/caps1GiB+clock512MiB.
+COMMAND -> Frozenactualconstruction1ca452c212c87e01b96651d374934694bcb7b2dda688aeb368142d592dc51a26
+and cheapstartupchecksPASS; sourceprepared whileclean50629live.
+RESULT -> No V6GPU/capture result yet. Onearmperexperiment explicit,
+no fake secondbranch or matchedtraceclaim. Existing OFFobservations separate.
+VERDICT -> Awaitcleanleaseclose before ONcapture; rawclock/wholehostprep/
+coverage/totalphysicalBW qualification remainsopen.

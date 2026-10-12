@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "scope": "current52 bounded P2048 copy/compute recorder only; no physical alignment/coverage claim",
+  "files": {
+    "strata/flash-next/run_source52_p2048_profile_v6.py": "94e8eabe39221c00b223eb5e85055923ff99478ebc998c39dc0bec944d3ff72a",
+    "strata/flash-next/inspect_source52_p2048_profile_v1.py": "78a8a85c62ba8ad5477cc412497402fb23fa43c0d5d53e60738ac0d25c06ec49",
+    "strata/flash-next/native52_startup_option_preflight_v1.py": "6e2250cb9970b2cc5aa341beb801fb83d5474ebee734290af8802634c6d20e79",
+    "strata/flash-next/source52-p2048-profile-v6.txt": "d3877503c332ceae4f0de07c887febdf47e3de36f427c1a9d869e755b77c21c4"
+  },
+  "raw_cap_bytes": 1073741824,
+  "clock_cap_bytes": 536870912,
+  "query_sample_every": 512,
+  "warmup_requests": 1,
+  "selected_requests": 1,
+  "max_new_choices": [
+    8,
+    16
+  ],
+  "clock_lane_rule": "Same-device raw ticks only for copy/compute overlap; host H36 separate until fresh calibration; exact Clock/Chrome instance-ID joins, dynamic counts",
+  "per_tier_rule": "Exact tracer MemoryCopy[bytes] command payload and source/destination allocation kinds, not startup residency or measured bus bandwidth",
+  "full_model_operation_coverage_qualified": false,
+  "preserved_v1_CPU_failure": "Actual construction raised NoneType _RUNTIME in inherited PTI-enabled BASE_COMMAND; no GPU",
+  "preserved_v2_constructed_recorder_sha256": "3a131a5961e5da24de2ad8a0916661c4e7bd5f4d0a546f7c76282fd2b3e24926",
+  "preserved_v3_actual_failure": "Root66480 native H36 startup guard refuses layer_split/split_device before model/requests; original V3 remains failed",
+  "v4_delta": "H36 OFF/no H36 collect or coverage claims; same pair PTI/Chrome GEN8 paused warm/selected copy0/1",
+  "paired_H36_instrumentation_qualified": false,
+  "preserved_V4_actual_failure": "Selected DONE8 seen, aggregate472861176clock+720237386Chrome exceeded1GiB; old parent failed, no profile qualification",
+  "V5_supported_flag_change": "Remove BOTH --chrome-call-logging and --chrome-kernel-logging; keep --chrome-device-logging identical ZeChromeKernelLoggingCallback GPU IDs/bytes/clock normalization",
+  "Chrome_CPU_host_lane_recorded": false,
+  "V6_scope": "One whole independent diagnostic per execution, exactly one pair-owned model lifetime, warm/selected P2048GEN8, explicit copy0 OR1; original1GiB per experiment unchanged",
+  "two_roots_total_storage_budget_bytes": 2147483648,
+  "matched_trace_arms_qualified": false
+}

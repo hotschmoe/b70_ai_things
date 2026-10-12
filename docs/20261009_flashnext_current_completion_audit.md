@@ -2042,3 +2042,15 @@ capture. Current live run/caps are unchanged. Separate complete owned
 single-arm experiments could retain each1GiB cap and later matched CPUjoin;
 no filtering/relabeling a failed aggregate. Whole host prep/calibration/
 physical total bandwidth and complete operation coverage remain unproven.
+
+
+## 2026-10-12 - Aggregate capture closed; clean cache run active
+
+V5 producer96965 terminalFAILED777s on second-arm aggregate1GiB cap;
+posthealth/full4/source/kernel/ownedretirement passed. Reportf4c69e0d08e7c6d23a04683593c8c5a15767c662bdca6e130685e7648c357b5f.
+Observed OFF arm remains explicitlyunadmitted diagnostic; no matched ON
+trace or wholeexperiment PASS. Single-owned arm capture preparation next.
+Clean cache companion50629 nowlive, identical1536pin A2048/B2023 GEN64
+cold/reuse withSFD/PCL/PREFIX OFF. Genuine command construction passed;
+actual latency/output/work/health proof pending. OriginalMTP loadedstep
+sourcework continues; no compiled/math/accepted-draft claim yet.
