@@ -17935,3 +17935,17 @@ identityscan isnotjustified: wrapperalreadyreadsmodel beforeleafstartup.
 VERDICT -> Avoid known invalidlaunches early; retainactualmodelguards and
 reusetruthfulduplicateaggregate receipts onlywithchronology/no laterreads.
 Fullmodelmath/cachefamily/realstreams/latency/traffic/shelf remainopen.
+
+
+## 2026-10-12: profiler V4 terminal cap failure closed
+
+CONFIG -> Current52 originalmodel pairP2048/GEN8, PTI+Chrome allchannels,
+unchanged1GiB aggregate/512MiBclock caps.
+COMMAND -> Producer13066terminalFAILED545s; nosecondarm.
+RESULT -> Reporta13fe69ed372c51cf098926caf8b82106934d414e386957f24a223a80901bda3.
+Controlledcapinterrupt/nativeexit137; ownedremoval/poststrict+compiledhealth/
+full4/source/kernel passed, no recovery. Noafterselectedboundaryproof.
+VERDICT -> Failedtrace cannotqualifyphysicaloverlap/BW. Device-onlyChrome
+sourcepath removesCPUcallback while retainingGPUcallback/IDs/copybytes.
+Revisedcapture sourcepreparation ongoing; fullworkload/caps unchanged.
+See docs/20261012_flashnext_profile_v4_budget_failure.md. Fullgoalactive.
