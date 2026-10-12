@@ -18878,3 +18878,26 @@ RESULT -> NewrunnerV4 source bindings/negative reset controlPASS;
 actual28844 both-lease controls nowlive atF17/original-mtp53-paired-controls-v4.
 VERDICT -> Isolate reset change first; oldcontrol/runtime proofs do not
 substitute for newV5. Fullgoal and2000/50 targets remainopen.
+
+
+## 2026-10-12: fresh-reset paired MTP controls pass
+
+CONFIG -> V5 both-target fresh reset, exact original34 tensors GPU1,
+24/24 target, capacity4096 and unchanged forced control arithmetic.
+COMMAND -> Actual28844 PASS368s; root independent rawsemantic/residency/
+freshmarker replay plus all29 artifact digests and full5 pre/post checks.
+RESULT -> Six restored stageframes/three forced steps, strictpercard/
+compiledpair health/kernel/source/full5/normalExit0/EOF/ownedremove PASS.
+Producer22a0927264130c8ce13862795153c9373855f09de8b8a6dbbf333dbf9817b393.
+VERDICT -> Newfreshness prerequisite admitted; actual10108 longfirstcase
+V5 OFF/ON nowrunning. Natural/reference fidelity andspeed stillpending;
+fullgoal including API/cache/fairness/shelf and2000/50 remainsopen.
+
+CONFIG -> DefaultOFF HC T2 whole-model caller uses deadparts bank, no new
+workspace/waits or public layout change; pairedextension remains required.
+COMMAND -> Root prepared exact SDK52 bounded NoDri operator inputs and
+ran four focused caller/compile-recipe CPUcontrols, allPASS0.018s.
+RESULT -> Sourceproposal1492acfa252cc377b8212d6bd83b79b0599030d37dd5dd6d7776df51d1a54bb6; compileplan
+dc3c5ab0c9c3879d4f6bed73e1fc6052fab7a91c7ed7e838135297649c241de3.
+VERDICT -> Freshsource construction only; actual compile, seven-field
+direct/graph operatorproof andpairedmodel benefit remainunproven.

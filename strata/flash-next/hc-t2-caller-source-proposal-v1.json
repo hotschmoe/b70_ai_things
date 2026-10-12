@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "scope": "Source-only narrow T2 HC caller/dead-bank prototype; fresh complete operator proof required",
+  "actual52_root": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261012T012115Z-_kwur0ww",
+  "actual52_receipt_sha256": "8f6c09aa60493dd6403771cd10592bdb780947110c3035379b4493d0a4298d94",
+  "original_sha256": {
+    "sycl/src/core/verify.cpp": "5636ff38fcadf7f0f95bd1d77c746bf41e84d529d454b2a189765290beb54897",
+    "sycl/src/kernels/hc_native_composition.cpp": "c63ce71dee3572daca974f03587db54ade1d9ec842176bd83bb81dc7d22bb83f",
+    "sycl/include/strata/kernels/hc_native_composition.hpp": "4706658cea7273adf76995d9cffb2eb9ce22b07a3d7255f62351e0eb65fd2b6e",
+    "sycl/src/kernels/hc_native_projection.cpp": "40a14446456199a4532e9e52b78c8131944afbe7c1615e75a6231e850cb2c025",
+    "sycl/include/strata/kernels/hc_native_projection.hpp": "4a9cf6735a9ee5b607d45a30302503d2ca57c2dffca8602df24c321dd79fda86"
+  },
+  "constructed_sha256": {
+    "sycl/src/core/verify.cpp": "5937ac111847faff80031e0e9fb3c74b1c508f5150f52cee24d903bd0cf310f4",
+    "sycl/src/kernels/hc_native_composition.cpp": "25acb39ff28fbb623088dfdc779854fdb092a94614ae2945211069b7395a6304",
+    "sycl/include/strata/kernels/hc_native_composition.hpp": "cc0b60d54687288a5d244ac49055716106bbda6dcebf0fc74ffd4c46e8fa843c",
+    "sycl/src/kernels/hc_native_projection.cpp": "865f30dd63f1b1f2a334a35be120e883e73df0f3a4a980a6918e9c5628011313",
+    "sycl/include/strata/kernels/hc_native_projection.hpp": "19f756021cbd88a57feabd9ad3204b66dd47367cfa3cc1ecf5e80d088e2e3537"
+  },
+  "own_source_sha256": {
+    "strata/flash-next/prepare_hc_t2_caller_v1.py": "4607edea113d8a439866a9a4aaa896872375ec1c138f34e62113845986628ad4",
+    "strata/flash-next/test_hc_t2_caller_source_cpu_v1.py": "570e37154f17c145aa298cfbb2b0a918636e3536f6cd7d194223180cdb552e27",
+    "strata/flash-next/patches/hc-t2-caller-reuse-v1.patch": "7b9affc6f50b9c360a32432d0d712ff67b97e3d4fd8017ac6d1bc088edbe035d",
+    "strata/flash-next/hc-t2-caller-design-v1.md": "f51f285b4798520ad30363ca3b83c8b54fcf31e33504a79f721895781db7244f",
+    "kernels/hc_t2_dead_bank_fixture_v1.cpp": "0ec0dc2f9b7339b753ce6e38e5b2cd1c57e00a2e3f4bae076f631518fced6eb9",
+    "strata/flash-next/patches/candidate-default-off-hc-q8-token-reuse-v1.patch": "8992f39a5853964453f975bb9ace183e7043dd00da9bb111c39cbec5bddc4ff0"
+  },
+  "default_off": true,
+  "flag": "STRATA_VERIFY_HC_T2_REUSE",
+  "parts_capacity_floats": 51200,
+  "gate_required_floats": 20480,
+  "new_GPU_workspace_bytes": 0,
+  "new_GPU_waits": 0,
+  "new_GPU_queries": 0,
+  "public_struct_layout_changed": false,
+  "new_exported_kernel_helper_requires_fresh_link": true,
+  "head_route_unchanged": true,
+  "PLE_GDN_QSA_commit_changed": false,
+  "operator_fixture": "kernels/hc_t2_dead_bank_fixture_v1.cpp",
+  "operator_pass_transferred": false,
+  "model_or_GPU_executed_by_author": false,
+  "HC_runtime_share_measured": false,
+  "speed_qualified": false
+}

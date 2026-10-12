@@ -1,0 +1,174 @@
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -997,6 +997,24 @@
+         bool native_gr_ok=true;
+         auto gr_read_group = [&](int half, bool apply, float* inj_prev, float* inj_out) {
+             if (native_hc_requested()) {
++                static const bool t2_hc=[](){const char* v=std::getenv("STRATA_VERIFY_HC_T2_REUSE");return v && std::strcmp(v,"1")==0;}();
++                // parts_ is dead before current post and after prior post's combine on ordered cs.
++                // No batch/G2/pipeline/observer/remote alias is admitted to this bank.
++                const bool pair=t2_hc && T==2 && G==1 && tb==0 && te==2 && !batch_rec_ && !batch_observe_ &&
++                    !prefix30_prompt_ && !fidelity_first_ && !layer0_first_ && !remote_opt_ &&
++                    hits_.stage_mirror && device_plan_ && !ar_on() && next_==nullptr && lb_==0 && le_==g.n_layers && ext_stream_==nullptr && cs==cs_ && cs_->is_in_order() &&
++                    parts_ && K>=HC && max_t_>=2;
++                if(pair){
++                    if(apply && !native_hc_write_rows(Rt(0),bo_,inj_prev,2,cs,err)){native_gr_ok=false;return false;}
++                    HcNativeArgs a;a.eps=EPS;a.tokens=2;
++                    if(!native_hc_bind(wn[half],wd[half],wu[half],wi[half],a,err)){native_gr_ok=false;return false;}
++                    a.R=Rt(0);a.R_floats=size_t(2*HC*N);
++                    a.xn=xn_;a.xn_floats=size_t(2*HC*N);a.lo=lo_;a.lo_floats=size_t(2*g.hc_lr);
++                    a.gate=parts_;a.gate_floats=size_t(2*HC*N);a.rs=rs_;a.rs_floats=size_t(2*HC);
++                    a.mixed=mixed_;a.mixed_floats=size_t(2*N);a.inject_out=inj_out;a.inject_out_floats=size_t(2*HC);
++                    if(!strata::kernels::hc_native_read_f32_t2(a,cs)){err="native HC T2 descriptor/queue refused";native_gr_ok=false;return false;}
++                    return false; // Same no-QFUSE contract as the per-row native route.
++                }
+                 // Rt(t) is explicitly R_+t*HC*N. One-row calls avoid interpreting
+                 // recurrent slot pointers or grouped pointer arrays as matrices.
+                 for (int t=tb;t<te;++t) {
+--- a/sycl/src/kernels/hc_native_composition.cpp
++++ b/sycl/src/kernels/hc_native_composition.cpp
+@@ -12,7 +12,7 @@
+ float sigmoid(float x) { return 1.0f/(1.0f+sycl::exp(-x)); }
+ class HcPending; class HcNorm; class HcSilu; class HcMix; class HcStandaloneWrite;
+ }
+-bool hc_native_read_f32(const HcNativeArgs& a, void *stream) {
++static bool hc_native_read_impl_t2(const HcNativeArgs& a, void *stream,bool reuse) {
+     if (!hc_native_descriptor_ok(a)) return false;
+     auto& q = *strata::q_of(stream);
+     if (!q.has_property<sycl::property::queue::in_order>()) return false;
+@@ -36,12 +36,12 @@
+         for (size_t d=lane;d<N;d+=32) { const size_t i=c*N+d; a.xn[t*D+i]=(R[t*D+i]*a.w.norm[i])*rs; }
+     });
+     // All projection descriptors are implied by the complete preflight above.
+-    if (!hc_q8_0_project_f32(a.w.down,a.w.down_bytes,a.xn,T*D,a.lo,T*L,D,L,a.tokens,stream))
++    if (!(reuse ? hc_q8_0_project_f32_token_reuse(a.w.down,a.w.down_bytes,a.xn,T*D,a.lo,T*L,D,L,a.tokens,2,stream) : hc_q8_0_project_f32(a.w.down,a.w.down_bytes,a.xn,T*D,a.lo,T*L,D,L,a.tokens,stream)))
+         throw std::logic_error("native HC down rejected after descriptor preflight");
+     q.parallel_for<HcSilu>(sycl::range<1>(T*L), [=](sycl::id<1> i) {
+         const float x=a.lo[i[0]]/float(H); a.lo[i[0]]=x*sigmoid(x);
+     });
+-    if (!hc_q8_0_project_f32(a.w.up,a.w.up_bytes,a.lo,T*L,a.gate,T*D,L,D,a.tokens,stream))
++    if (!(reuse ? hc_q8_0_project_f32_token_reuse(a.w.up,a.w.up_bytes,a.lo,T*L,a.gate,T*D,L,D,a.tokens,2,stream) : hc_q8_0_project_f32(a.w.up,a.w.up_bytes,a.lo,T*L,a.gate,T*D,L,D,a.tokens,stream)))
+         throw std::logic_error("native HC up rejected after descriptor preflight");
+     if (a.w.inject && !hc_f32_project_f32(a.w.inject,a.w.inject_floats,a.xn,T*D,
+             a.inject_out,T*H,D,H,a.tokens,stream))
+@@ -54,6 +54,8 @@
+     });
+     return true;
+ }
++bool hc_native_read_f32(const HcNativeArgs& a,void* stream){return hc_native_read_impl_t2(a,stream,false);}
++bool hc_native_read_f32_t2(const HcNativeArgs& a,void* stream){return a.tokens==2 && hc_native_read_impl_t2(a,stream,true);}
+ bool hc_native_write_f32(float* R,size_t R_floats,const float* bo,size_t bo_floats,
+                         const float* inject,size_t inject_floats,int tokens,void* stream) {
+     if (!R || !bo || !inject || !hc_native_write_shape_ok(R_floats,bo_floats,inject_floats,tokens)) return false;
+--- a/sycl/include/strata/kernels/hc_native_composition.hpp
++++ b/sycl/include/strata/kernels/hc_native_composition.hpp
+@@ -56,6 +56,8 @@
+ // SYCL submission/execution exceptions propagate: caller must abort the request;
+ // no compatibility fallback or retry on partly written state is permitted.
+ bool hc_native_read_f32(const HcNativeArgs& a, void *stream);
++// Explicit two-row caller path; same layout/math, qualified tile2 projection source.
++bool hc_native_read_f32_t2(const HcNativeArgs& a,void* stream);
+ // Contiguous token-major residual write, same FMA/sigmoid math as pending read.
+ // Invalid pointer/capacity/row count or queue returns false before submission.
+ inline bool hc_native_write_shape_ok(size_t R,size_t bo,size_t inject,int tokens) {
+--- a/sycl/src/kernels/hc_native_projection.cpp
++++ b/sycl/src/kernels/hc_native_projection.cpp
+@@ -2,6 +2,8 @@
+ #include "strata/kernels/hc_native_projection.hpp"
+ #include "strata/sycl_queue.hpp"
+ #include <sycl/sycl.hpp>
++#include <cstdlib>
++#include <cstring>
+ 
+ namespace strata::kernels {
+ namespace {
+@@ -48,6 +50,45 @@
+             if (lane == 0) { output[row_token] = result; }
+         });
+ }
++
++// Token reuse only: each output keeps its original lane FMA order and sum32.
++// No shared/local memory, atomics, barriers, host callback, quantization, or wait.
++template<int Tile> class HcQ8TokenReuseKernel;
++template<int Tile>
++void launch_q8_token_reuse(sycl::queue& queue,const uint8_t* weights,
++        const float* input,float* output,int k,int m,int tokens) {
++    const size_t blocks=(size_t(tokens)+Tile-1)/Tile;
++    queue.parallel_for<HcQ8TokenReuseKernel<Tile>>(
++        sycl::nd_range<1>(sycl::range<1>(size_t(m)*blocks*32),sycl::range<1>(32)),
++        [=](sycl::nd_item<1> item) [[sycl::reqd_sub_group_size(32)]] {
++            const size_t group=item.get_group_linear_id();
++            const int row=int(group%size_t(m)),first=int(group/size_t(m))*Tile;
++            const unsigned lane=item.get_local_linear_id();float acc[Tile]={};
++            for(int column=int(lane);column<k;column+=32) {
++                const size_t offset=(size_t(row)*(k/32)+column/32)*34;
++                const uint16_t bits=uint16_t(weights[offset])|(uint16_t(weights[offset+1])<<8);
++                const float scale=float(sycl::bit_cast<sycl::half>(bits));
++                const unsigned raw=weights[offset+2+column%32];
++                const int code=raw<128?int(raw):int(raw)-256;
++                const float weight=scale*float(code);
++                for(int j=0;j<Tile;++j)if(first+j<tokens)
++                    acc[j]=sycl::fma(weight,input[size_t(first+j)*k+column],acc[j]);
++            }
++            for(int j=0;j<Tile;++j) {
++                // Each token's validity is uniform across this whole subgroup.
++                const float result=sum32(item.get_sub_group(),acc[j]);
++                if(lane==0 && first+j<tokens)output[size_t(first+j)*m+row]=result;
++            }
++        });
++}
++int token_tile_requested() {
++    static const int tile=[] {const char* v=std::getenv("STRATA_HC_Q8_TOKEN_TILE");
++        if(!v || std::strcmp(v,"0")==0)return 0;
++        if(std::strcmp(v,"2")==0)return 2;
++        if(std::strcmp(v,"4")==0)return 4;
++        return -1;}();
++    return tile;
++}
+ }
+ 
+ bool hc_q8_0_project_f32(const uint8_t * weights, size_t weight_bytes,
+@@ -57,6 +98,9 @@
+         weight_bytes < size_t(m)*(k/32)*34) { return false; }
+     auto * queue = strata::q_of(stream);
+     if (!queue->has_property<sycl::property::queue::in_order>()) { return false; }
++    const int tile=token_tile_requested();
++    if(tile<0)return false;
++    if(tile && tokens>=2)return hc_q8_0_project_f32_token_reuse(weights,weight_bytes,input,input_floats,output,output_floats,k,m,tokens,tile,stream);
+     launch<true>(*queue,weights,input,output,k,m,tokens);
+     return true;
+ }
+@@ -71,4 +115,18 @@
+     launch<false>(*queue,weights,input,output,k,m,tokens);
+     return true;
+ }
++
++bool hc_q8_0_project_f32_token_reuse(const uint8_t* weights,size_t weight_bytes,
++        const float* input,size_t input_floats,float* output,size_t output_floats,
++        int k,int m,int tokens,int tile,void* stream) {
++    // Explicit operator-only T512 entry; production descriptors/caller remain <=8.
++    if(!weights || !input || !output || k<=0 || k>10240 || k%32 || m<=0 || m>10240 ||
++       tokens<1 || tokens>512 || input_floats<size_t(k)*tokens || output_floats<size_t(m)*tokens ||
++       weight_bytes<size_t(m)*(k/32)*34 || (tile!=2 && tile!=4))return false;
++    auto* queue=strata::q_of(stream);
++    if(!queue->has_property<sycl::property::queue::in_order>())return false;
++    if(tile==2)launch_q8_token_reuse<2>(*queue,weights,input,output,k,m,tokens);
++    else launch_q8_token_reuse<4>(*queue,weights,input,output,k,m,tokens);
++    return true;
+ }
++}
+--- a/sycl/include/strata/kernels/hc_native_projection.hpp
++++ b/sycl/include/strata/kernels/hc_native_projection.hpp
+@@ -19,6 +19,12 @@
+ bool hc_q8_0_project_f32(const uint8_t * weights, size_t weight_bytes,
+         const float * input, size_t input_floats, float * output, size_t output_floats,
+         int k, int m, int tokens, void * stream);
++// Explicit experimental token reuse; tokens1..512/tile2 or4 only. Same F32 lane arithmetic.
++// STRATA_HC_Q8_TOKEN_TILE absent/0 preserves old production launch;2/4 uses this on tokens>=2.
++// Production composition descriptors/caller still split prefill into batches<=8.
++bool hc_q8_0_project_f32_token_reuse(const uint8_t* weights,size_t weight_bytes,
++        const float* input,size_t input_floats,float* output,size_t output_floats,
++        int k,int m,int tokens,int tile,void* stream);
+ bool hc_f32_project_f32(const float * weights, size_t weight_floats,
+         const float * input, size_t input_floats, float * output, size_t output_floats,
+         int k, int m, int tokens, void * stream);
