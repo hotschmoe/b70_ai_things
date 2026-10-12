@@ -19171,3 +19171,13 @@ actualservice stagecensus andfull512/64 history checks pending.
 VERDICT -> Diagnosticrealinteractive workload underway. Rows2optional
 census preventsrejecting earlyAcompletion; simultaneousdecodecoherence,
 runtimebudgetledger/cancel/API/4/6/cleanperf remainopen.
+
+
+CONFIG -> CPU-only V3 HCcontrols intake normalizes JSON integer-key
+representation, explicitly accepts sameELF successfulimmutableV2 proof.
+COMMAND -> Actual54636 rawreplayCPUcontrolPASS0.003s; oldint-vs-string
+comparison reproduced, alteredstage0count2 rejected.
+RESULT -> Planbb977add1af4d1a15c170a8297997f78fd663b6d6327773cdf443b797769fc15;
+fullypinned naturalHC0/1 MTPonboth launchreadyaftercurrent58 probe.
+VERDICT -> Reader schema correction only, no newGPU/model/compile
+authority or discardedcontrols rerun. FailedV1 remainsfailed.
