@@ -19483,3 +19483,34 @@ new independent arithmetic candidate has no native operand feeds.
 VERDICT -> Current completion checkpoint corrected. Current59 capture
 lifecycle/reader and mode0 full reference remain required; no arbitrary
 tolerance or512-ID fullmath surrogate.
+
+
+## 2026-10-12: verified unused decode heads and current capture queued
+
+CONFIG -> Isolated decode keep2,row0 own-head skip, MTP ON both, all
+other optimization/timing flags OFF and original waits/recurrence intact.
+COMMAND -> Actual21094 Exit0; both raw collector/counter/residency/reset
+views and all52 artifact hashes independently replayed.
+RESULT -> Producerad2a753e5701cb8fe52f1d6bbb12a07ed40ff7ac6901f8a7bc48c8503c2c8586;
+full512 faithful/health/full5/normalclose pass. Decode56075.152->51965.463ms;
+prompt56072.352->55141.589ms; heads511->282/skips0->229, teacher2048both.
+VERDICT -> Encouraging7.33percent ordered diagnostic, no clean benefit
+or pooled comparison to earlier much faster absolute runs. Loaded
+context/initialization localization and matched repeats remain needed.
+
+CONFIG -> Immutable joint accessor correction and real shifted repair.
+COMMAND -> Actual48187 jointV3 compilePASS91s/CPU8 executedPASS;
+actual27446 shifted compilePASS70s/CPU4 executedPASS.
+RESULT -> Jointreceiptc081555b3752acc40ba2368971817de3336bbee7e3268084a8732ee93fd1e4fe;
+shiftedreceipt85c34d45f802df40c499c54c48ddc48d1b28d96e3f53c065a28840c532b3416b.
+VERDICT -> Actual native semantic objects/CPU contracts qualified, not
+GPU continuation/real coupled target restore/API. Shifted38724 GPUqueued.
+
+CONFIG -> Current59 mode0 existing NUM33, not absent NUM38 fields.
+COMMAND -> Actual25402 ONEprocess/fourfresh248045 MAX1 capture;
+existing unchanged hooks, no engine rebuild.
+RESULT -> Exact33-field7,023,048B roster, P30/SFD49/PLE-input33; extra
+five core/RMS fields explicitly unobserved. No-launch wrong38 refusal
+retained. Source60 host-diagnostic compiler68903 waits on card1 lease.
+VERDICT -> Current raw/math capture/public admission still pending;
+root remains sole GPU coordinator and full original goal remains open.
