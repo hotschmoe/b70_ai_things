@@ -17885,3 +17885,27 @@ RESULT -> Capture/actualclockquerybrackets/explicitDMApayload/deviceoverlap
 notyetobserved. Raw1GiB/clock512MiB caps retained; noURtraceflood.
 VERDICT -> Instrumenteddiagnostic only, no sustainedspeed/physicalbusBW/
 mappedRAMtraffic/calibratedhost-device/wholemodelcoverage claim.
+
+
+## 2026-10-12: paired host-trace startup refusal preserved; device profile live
+
+CONFIG -> ProfilerV3 SDK52 pairP2048/GEN8 withH36ON.
+COMMAND -> Actual66480terminalFAILED370s beforeREADY/zero modelrequests.
+RESULT -> Nativeexit2 explicitH36 guard atsycl/src/program/generate.cpp2195
+requires layer_split/split_device empty. No model capture. Finalstrict/compiled
+health/full4/source/kernel/ownedcontainerremoval pass; no recovery used.
+Report2626050e63a8748b7ce6584900a12c5e5aa3179ea4d883511fd831b38e260046.
+VERDICT -> No unchangedretry or traceclaim. Sourceaudit proves singleton
+H36owner/context and missingoptimized-prefill worker scopes; pairedhost
+instrumentation needsstage/thread/request ownership, notguardrelaxation.
+
+CONFIG -> New V4 samepairedoriginalmodel/PTI/Chrome sample512,
+H36OFF/noH36collector, onepausedP2048GEN8 warmup and selectedGEN8 eachcopy0/1.
+COMMAND -> Genuinefrozenconstructionb6b226d82ac986cb57a100c400018153764c352b94ac44f1aef30a2ee451946b PASS;
+actual13066nowholds pairlease inF17/source52-p2048-copy-profile-v4-run-v1.
+RESULT -> Deviceclock/explicitDMA/observedoverlap/output/finalguards pending.
+VERDICT -> NativeChromeAPIhostlane only; noStratahostprep/fullcoverage/
+calibratedhost-device/totalphysicalbusBW claim. Legacy H36-equivalence key
+fromtwo-row helper comparescopy-armoutputs, not H36 qualification (disabled).
+Startupsourcepreflight/failure-loop improvements beingprepared CPU-only.
+Fullcampaign objective active; cachefamilies/realstreams/math/shelf open.

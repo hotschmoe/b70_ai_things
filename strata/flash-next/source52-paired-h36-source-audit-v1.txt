@@ -1,0 +1,43 @@
+CONFIG -> Source-only audit of actual52; no paired H36 engine change proposed
+for the immediate V4 recorder. Existing H36OFF pair PTI/Chrome remains runnable.
+
+COMMAND -> Read actual52 sycl/src/program/generate.cpp2195 and
+sycl/include/strata/program/host_critical_path_trace.hpp22..94, plus
+sycl/src/core/verify.cpp2111..2328 and sycl/src/prefill/prefill.cpp4434.
+
+RESULT -> Admission rejects nonempty layer_split or split_device. Header State
+is one process singleton, one pthread owner, one mutable Context, used/span and
+graph table128. writer() rejects a foreign thread and latches thread_error.
+Frame83 already annotates device/layer bounds/queue for Verifier run/commit;
+linked decode-stage calls are synchronous, so those frames are useful existing
+hooks. Prefill has a successor std::async at4434, issuer thread2685, PLE futures
+2360/2427 and persistent stager workers. It currently has no H36 optimized prompt
+scopes. Allowing the pair flag alone cannot expose their preparation/issue work.
+The retained primitive collector additionally requires stages exactly[[0,0,48]]
+at collect_host_critical_path36_v1.py11; old reader cannot qualify pair coverage.
+
+Small substantive future port, preserving strict serial/noMTP/no-draft scope:
+1. Admit exactly two distinct staged devices/queues and complete nonoverlapping
+   layer ranges, with a recorded current stage roster after actual init. Keep
+   one-card scope and the unsupported batch/pipeline/helper guards unchanged.
+2. Retain one request owner/epoch. Attach explicit immutable request+stage tokens
+   to each asynchronous successor/issuer task when submitted. Give worker lanes
+   private context/span state; bind every event to thread, owner epoch, device,
+   layer range and actual queue. Do not make writer() accept every thread or let
+   stages overwrite one shared context. Reject late/stale worker publication.
+3. Add bounded host scopes around actual optimized prefill setup/group/issue/
+   dependency waits and handoff. Existing verifier Frame hooks can remain for
+   synchronous staged decode. Avoid GPU waits/query additions to create a trace.
+4. Join admitted producer tasks before one owner export; preserve record/graph
+   quotas, overflow, clock/thread errors and close/error evidence. Serialize only
+   recorder append/graph identity as needed; no filtering or silent event loss.
+5. Extend the existing collector to the exact admitted two-stage/thread roster,
+   per-thread balanced spans, monotonic clocks, queue/graph associations, matching
+   per-stage windows and one head-stage emission. All48 stage coverage is not
+   inferred from one main-thread span. Keep overlapping durations non-additive.
+
+VERDICT -> This is an implementation finding, not an approved/build-tested
+paired H36 port. A narrower owner-thread paired-decode trace could reuse existing
+frames after explicit stage admission/reader work, but still leaves async prompt
+preparation unobserved. The complete user-requested host-preparation profile needs
+the worker/request binding above. V4 does not claim that coverage.
