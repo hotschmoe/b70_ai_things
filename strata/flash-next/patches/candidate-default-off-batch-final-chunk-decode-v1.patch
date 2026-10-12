@@ -1,0 +1,38 @@
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -10472,7 +10472,34 @@
+                     if (!sp.run(ids.data() + q, r - q, q, e)) return false;
+                     prefix_diag.evaluated(q,r,"prefill_chunk");
+                     q = r;
+-                    if (q >= b0) continue;
++                    if (q >= b0) {
++                        // Default OFF: service only the final chunk previously skipped at
++                        // logical pin/turn/tail boundaries. Keep its math and checkpoint cuts.
++                        static const bool final_chunk_decode = [] {
++                            const char* v = std::getenv("STRATA_BATCH_FINAL_CHUNK_DECODE");
++                            return v != nullptr && std::strcmp(v, "1") == 0;
++                        }();
++                        bool pending_control = stop_req.load();
++                        if (final_chunk_decode && !pending_control) {
++                            std::lock_guard<std::mutex> lk(in_mu);
++                            pending_control = std::any_of(in_lines.begin(), in_lines.end(), [](const std::string& s) {
++                                return s.rfind("BSTOP ", 0) == 0 || s.rfind("BYIELD ", 0) == 0;
++                            });
++                        }
++                        if (final_chunk_decode && !pending_control && decode_share > 0.0 && batch_on() &&
++                                strict_batch_identity && batch_chain_enabled && batch_public_enabled && o.batch == 2 &&
++                                o.no_prefill_borrow && !use_mtp && !piped && o.pipeline_windows == 0) {
++                            const double budget = decode_share * std::chrono::duration<double, std::milli>(Clock::now() - tq).count();
++                            const auto td = Clock::now();
++                            do {
++                                if (!batch_step()) { batch_fatal = true; e = "a final-chunk batch window failed"; return false; }
++                            } while (batch_on() && std::chrono::duration<double, std::milli>(Clock::now() - td).count() < budget);
++                            ++il_parts;
++                            il_ms += std::chrono::duration<double, std::milli>(Clock::now() - td).count();
++                        }
++                        // Final-boundary BYIELD/BSTOP remain queued for their existing path.
++                        continue;
++                    }
+                     int ys = -1;
+                     {   // a BSTOP that came meanwhile ends its slot at its next window; a BYIELD is for this read
+                         std::lock_guard<std::mutex> lk(in_mu);

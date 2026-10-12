@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "pins": {
+    "strata/flash-next/build_native57_incremental_from52_v1.py": "f1dd89db0af55cb50cdf62c75e7bc670b983521502769cf4d3d9d440355cfd67",
+    "strata/flash-next/native57_incremental_ninja_audit_v1.py": "da1ede422ace57bfdd08a2f1108408c5c4846ccf624cbee44e3af33a21b4b2f0",
+    "strata/flash-next/native57-batch-final-chunk-decode-engine-build-proposal-v1.json": "f9825be417925ff6188b865782fa46e4e5989d9aad19e5adc6ffe96a57ffea06",
+    "strata/flash-next/native52-copy-engine-prefill-engine-build-proposal-v1.json": "25c8b73f8fa0d92f0e7c562f232776844405dc62b7e3524d1584a92283f4630d",
+    "strata/flash-next/build_native_hc_engine.py": "147929bfa3b43dd162db415f6ac68700521aa7e21819705f46e6a9fcaeebca1d",
+    "strata/flash-next/patches/candidate-default-off-batch-final-chunk-decode-v1.patch": "cdd07d3480cffdf4feafa47134c4163a3236a62ebcded146abfc2ce3eb1af899",
+    "docs/20261012_flashnext_source57_boundary_decode_candidate_v1.md": "04c2264b782eda882c04160ef31aea6e8e9bfb228deeac1837595bf22e1a90e1"
+  },
+  "scope": "directactual52->57 isolated currentABI main compile and all8 ELF relink; no source author compiler/GPU",
+  "argv": [
+    "/usr/bin/python3",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/build_native57_incremental_from52_v1.py",
+    "--parent",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261012T012115Z-_kwur0ww",
+    "--parent-receipt-sha256",
+    "8f6c09aa60493dd6403771cd10592bdb780947110c3035379b4493d0a4298d94",
+    "--jobs",
+    "4",
+    "--lease-card",
+    "1"
+  ],
+  "devices_exposed": false,
+  "fresh_all_source_compilation": false
+}

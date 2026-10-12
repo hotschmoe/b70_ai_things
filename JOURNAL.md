@@ -18781,3 +18781,22 @@ new validate_original_mtp53_expert_pair_saved_v1.py reconstructs exact
 serialized raw values, dictterminal and allfive identity rows.
 RESULT -> Final readbackPASS; no source/model/identity gate relaxed.
 VERDICT -> Reader schema correction only, no new GPU/model execution.
+
+
+## 2026-10-12: source57 final-part decode prototype built and live
+
+CONFIG -> DefaultOFF final-q>=b0 decode service, unchanged chunk512/math/
+checkpoint cuts, static strict public native2 chain/noMTP/noBorrow.
+Pending BYIELD/BSTOP or stop_req skips new service; SHARE0 remainsno-op.
+N2 restriction is firstprobe scope, not a mathematical dependency;
+native4/bounded6 generalization still requires its own qualification.
+COMMAND -> Incremental52->57 actual71234 PASS107s. Only main object
+compiled;123 objects and all8archives verified unchanged; all8 fresh
+links, no CMake reconfiguration, parent source/build unchanged.
+RESULT -> SDKstrata-native57-incremental52-v1-20261012T173843Z-3cwiio8q,
+receiptb0ecde3221b9045bf1581405c5fed190d8fedb1c3db6a48d27228d706574f946.
+Genuine57 constructionPASS; actual16955 nowpairlease atF17/
+source57-native2-boundary-v1-run-v1. Both57OFF/ON incoming-after256
+controls must match full512/64 oldserial reference and eachother.
+VERDICT -> Compile/constructor accepted; current latency/coherence/
+health/teardown outcome pending, no API/4stream/fairness promotion.

@@ -1,0 +1,21 @@
+{
+  "schema": "source57-native2-boundary-v1",
+  "files": {
+    "strata/flash-next/run_natural_p2048_native57_v1.py": "a1f5bcefa346e61a5e9ff72a3f5661702fdeaea19652b563aa0ce38c80552430",
+    "strata/flash-next/native57-natural-parent-source-recipe-v1.json": "a05cd7cb0a58bbbb4cd64f7bae65f9d05b11bb99655f297fcd541b4597ca5632",
+    "strata/flash-next/source57_model_sdk_binding_v1.py": "a5bb697e2d2a8fda4cd4c32a8bebc7722d248285f5ef3218fedec7be5836d4cf",
+    "strata/flash-next/native57-batch-final-chunk-decode-engine-build-proposal-v1.json": "f9825be417925ff6188b865782fa46e4e5989d9aad19e5adc6ffe96a57ffea06",
+    "strata/flash-next/run_source57_native2_boundary_v1.py": "c3a11bfcded60ec981d2bba73d644f9b7b3ae1c9a2baf893eafe7960e8de1f69",
+    "strata/flash-next/source57_native2_boundary_contract_v1.py": "44f527f070753f67f80f3c418d8392a87c2f8b369f3f0fe24fac771c3c5d91df",
+    "strata/flash-next/native2_fairness_protocol_v1.py": "8108393bf2d58081ffef306f2f17f1df03621b92ddf8d6eec53ed6e02425dbf0",
+    "strata/flash-next/source52_native2_fairness_contract_v1.py": "1b651c4f7aa9a9dbab6b2868bd6e59f7e9f9eb821be641b5bc8f3107abbf7f8b",
+    "strata/flash-next/native52_startup_option_preflight_v1.py": "6e2250cb9970b2cc5aa341beb801fb83d5474ebee734290af8802634c6d20e79",
+    "docs/20261012_flashnext_source57_boundary_decode_candidate_v1.md": "04c2264b782eda882c04160ef31aea6e8e9bfb228deeac1837595bf22e1a90e1",
+    "strata/flash-next/native57_startup_option_preflight_v1.py": "1f60e0568b831584b24a46707d924f4d8680feb123378f77ade7921f18a174d1"
+  },
+  "scope": "actual57 defaultOFF/ON native overlap matchedfull histories; old52history reference only",
+  "requires_actual57_completed_SDK": true,
+  "fullmath_qualified": false,
+  "API_qualified": false,
+  "speed_promotion_qualified": false
+}
