@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "kind": "representative natural-generation corpus; tokenizer-only preparation",
+  "output_directory": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/natural-p2048-tokenizer-v1",
+  "create_output_directory_before_command": true,
+  "command": [
+    "docker",
+    "run",
+    "--name",
+    "b70-natural-p2048-tokenizer-v1",
+    "--network",
+    "none",
+    "--read-only",
+    "--memory",
+    "1g",
+    "--memory-swap",
+    "1g",
+    "--cpus",
+    "1",
+    "--pids-limit",
+    "128",
+    "--user",
+    "1000:1000",
+    "--entrypoint",
+    "/usr/bin/env",
+    "-v",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/render_natural_p2048_corpus_v1.py:/harness/render.py:ro",
+    "-v",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/natural-p2048-corpus-seed-v1.json:/seed.json:ro",
+    "-v",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261012T001656Z-bwbal_dn/source/tools/strata_tokenizer.py:/tools/strata_tokenizer.py:ro",
+    "-v",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261012T001656Z-bwbal_dn/source/serve/frontend.py:/serve/frontend.py:ro",
+    "-v",
+    "/mnt/vm_8tb/b70/models/flashnext-native-source-pack-20261009-v3/tokenizer:/tokenizer:ro",
+    "-v",
+    "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/natural-p2048-tokenizer-v1:/results:rw",
+    "sha256:c388186da30785b302c9c76c0ce8ca5e5351c9783c628177f6f7b9eed2f4ad17",
+    "-i",
+    "PATH=/usr/bin:/bin",
+    "LANG=C",
+    "LC_ALL=C",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "/opt/b70-c1-python/bin/python",
+    "/harness/render.py"
+  ],
+  "inspect_command": [
+    "docker",
+    "inspect",
+    "b70-natural-p2048-tokenizer-v1"
+  ],
+  "remove_after_terminal_command": [
+    "docker",
+    "rm",
+    "b70-natural-p2048-tokenizer-v1"
+  ],
+  "source_sha256": {
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/render_natural_p2048_corpus_v1.py": "2709425144ce484fd7ece97aa1fd0bab3a484f3daf3745031bb534b5fb3fbc07",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/natural-p2048-corpus-seed-v1.json": "3ce33d6a3d81d3e224b7f57ad03273e031ac67fd32d7da4d51f80d01cf27b515",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261012T001656Z-bwbal_dn/source/tools/strata_tokenizer.py": "d2fdcd2e55b4bc47c3ee6a10a0a7efa2029128cc229fb1de18da6e22d3606ff2",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261012T001656Z-bwbal_dn/source/serve/frontend.py": "095bbac7d49b19d815d2634457d14d216ba9bd4e98998a4e3b4288f20a25e923"
+  },
+  "NoDri": true,
+  "model_weights_mounted": false,
+  "benchmark": {
+    "backend_config": "deferred until source51 A/B outcome",
+    "ctx": 4096,
+    "input_tokens_including_template": 2048,
+    "cap_new_tokens": 512,
+    "native_eos_ids": [
+      248044,
+      248046
+    ],
+    "native_required_flags": [
+      "--stop-eos",
+      "--eos-ids",
+      "248044,248046"
+    ],
+    "eos_padding_or_forced_length": false,
+    "requested_prefill_candidates": [
+      64,
+      512,
+      2048
+    ],
+    "launch_sweep": false,
+    "memory_admission": "Record resolved prefill, actual startup allocations and successful context admission before requests; do not infer capacity from configured size.",
+    "schedule": "For each of three prompts: fresh process cold request, then identical fresh-state warm request in the same process. Keep prompt-state reuse disabled; distinguish graph/process warm from conversation-cache reuse.",
+    "report_separately": [
+      "native cold PP ms and actual input count",
+      "native warm PP ms and actual input count",
+      "native decode ms and useful decoded non-EOS tokens",
+      "native finish stop/length and total emitted IDs",
+      "client TTFT from send to first emitted useful token",
+      "client total completion wall time",
+      "decoded text SHA and meaningful-output review"
+    ],
+    "minimum_natural_output_target": 256,
+    "short_output_policy": "Retain natural EOS result; report actual useful token count and mark target unmet, never pad or suppress EOS.",
+    "qualification": "No speed/coherence/stability claim from corpus preparation. Actual matched config/model identity/health/kernel/owned teardown remain required."
+  }
+}
