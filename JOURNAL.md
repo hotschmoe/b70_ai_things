@@ -17703,3 +17703,27 @@ RESULT -> Preparationlive, no naturalPP/decode/text resultyet. Nativepack
 context/pref/EOSflags andbothcards/stages explicit. Actualfilesfrozen.
 VERDICT -> Genuineusability/latencymeasurementnext; fullmath/cache/streams/
 criticalpath/traffic/shelf/2000/50 completion remainopen.
+
+
+## 2026-10-12: sustained natural paired baseline and upstream transfer leads
+
+CONFIG -> SDK50 originalUDQ4XL pair24/24 pref512 ctx4096 spec2 noMTP,
+mirror1 ESIMD0 grouped0 shortread0 cacheOFF; six P2048 natural requests cap512.
+COMMAND -> Producer69849 terminalPASS622s; independent86920PASS;
+CPU decoded25331PASS10.3s. See docs/20261012_flashnext_pair_natural_p2048_baseline.md.
+RESULT -> WarmPP183-185tok/s, decode20.4-22.4tok/s; all512 and length,
+all repeatIDs/source/all8/full4/health/kernel/ownedretirementPASS. Decoded
+texts task-related but truncated; no completed task/runnable-code claim.
+Producer4e738312ec0e00d0712b78300ce305103f1540f8111f24692612bd44876b89f2;
+public00261157dee03d2de9beac250442f505690d3d11bd757da335cb0a58840aced4.
+VERDICT -> Genuine sustained baseline;2000/50 and full original fidelity,
+cache/concurrency/criticalpath/traffic/shelf remainopen.
+
+CONFIG -> Latest remote heads inspected CPU/network only: Steve9b300bf,
+Sergio1a76136, Strata7695859. FullFlashNext only, prunedCoder excluded.
+COMMAND -> Source/profile inspection; fresh source52 all8 NoDri build94123
+through bin/gpu-run from accepted50, dedicated copy transport defaultOFF.
+RESULT -> Latest upstream reports copy-engine overlap and mixed expertprofile
+improvements. SDK50 lacks those flags; GEMM operand staging already absent.
+MixedSTRP v1 profile48x512 complete IDs format-compatible, no quant/model SHA.
+VERDICT -> Separate actual copy/profile comparisons next, no projected gains.
