@@ -18852,3 +18852,29 @@ RESULT -> Firstcase actual2processes, fullhistories/residency/health
 pending. Full3roles/tworepeats matrix remains open and explicitlyfalse.
 VERDICT -> Real meaningful prompt/decode nowrunning; no substituted
 short/debug success or wholecampaign completion.
+
+
+## 2026-10-12: paired MTP natural same-target coherence; freshness gap found
+
+CONFIG -> V4assembly/V3runner two fresh P2048/GEN512 processes, both
+original tensor reserves GPU1, samewhole-pref512/512/512/511 andcache0.
+COMMAND -> Actual57647 PASS739s relativeprototype target; root saved
+full512/raw/residency/artifact replayPASS withqualifiedscope explicit.
+RESULT -> OFF/ON512 IDs/EOS exact, ON231accepted/49reject windows.
+Observed decode51.290->43.193s (-15.786percent); prompt41.385->37.648s.
+Producer5fcc090d9e6f588f5e3c9ccb5dbaefc7d97dfee549dc4d4fbfca260c0a800ef1; public23b82d930767e4b10c43978982308d75bb5b6550eec40647a59dc58cdb53ebcd.
+First102 IDs match accepted normal-serving A512, token103 differs
+(17295 vs71367). Differentcuts, cache/profile andslotdispatch are
+confounds. Sourceaudit also provesmissing freshreset ofsecondary
+target: startupzeros onlyprimary while normalserve resetsboth.
+VERDICT -> Same-execution-target coherence only; no fidelity/speed/API
+qualification, no fullmatrixclaim. Reference cause notassigned.
+
+CONFIG -> Narrow V5 adds normal source52 both-target reset beforebind;
+all originalmath/callbacks/cuts/weights remainunchanged.
+COMMAND -> Actual59400 NoDricompilePASS97s; ELF1316eceb3a2d901d6811855779307a5cd0d7907530e2dde0815e439c24220963,
+receipt830e1bd2cb7bcbbc1465426d47d0e0fdad7b460b0fa5fc35c1d582b7ed5d2415.
+RESULT -> NewrunnerV4 source bindings/negative reset controlPASS;
+actual28844 both-lease controls nowlive atF17/original-mtp53-paired-controls-v4.
+VERDICT -> Isolate reset change first; oldcontrol/runtime proofs do not
+substitute for newV5. Fullgoal and2000/50 targets remainopen.
