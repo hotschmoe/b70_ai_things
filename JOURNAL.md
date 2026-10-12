@@ -18320,3 +18320,19 @@ pending; independent finalized reader required after terminal.
 VERDICT -> Actual representative model timing next. Do not add independent
 copy-engine gain or promote source launch-count claims. MAIN V3 awaits
 lease after this model attempt. Full fidelity/cache/streams/shelf open.
+
+
+## 2026-10-12: source-proven uncommitted MTP control contamination
+
+CONFIG -> Exact SDK52 verifier source, ENV ONE_TOKEN_COMMIT0, unchanged
+T1 baseline followed by T2 target window. CPU/source inspection only.
+COMMAND -> Inspected verify.cpp978-991,1195-1257,1991 and2725-2728.
+RESULT -> T1 still advances ss.ple.hist directly and writes QSA K/V and
+indexer tail/dead/pooled/block position. ENV0 protects GDN self-commit but
+does not make run() a read-only peek. Existing adapter baseline assumption
+is invalid even after disabling implicit T1 commit. No failure attributed
+to draft arithmetic or T1/T2 rounding.
+VERDICT -> Skip known-invalid V3 GPU diagnostic; preserve compiledsource.
+New control must save/restore full checkpoint plus touched KV/indexer
+pages via existing SDK APIs before unchanged T2 verification. PLE-only
+restore is inadequate. Actual repaired-control proof remains pending.
