@@ -19383,3 +19383,25 @@ VERDICT -> New SDK/receipt fields intentionally unbound until actual
 build passes. Matched single-window0/1 with cooperation1 both must prove
 full512/64 reference histories, real service census and health/lifecycle.
 No source-only P95 benefit or subsecond maximum guarantee.
+
+
+## 2026-10-12: faithful teacher-head ABBA closes, parallel builds start
+
+CONFIG -> Four fresh same-ELF teacher-head OFF/ON/ON/OFF original-MTP
+P2048/GEN512 arms; other optimization flags OFF and normal prefix cuts.
+COMMAND -> Actual42436 Exit0; root replayed all four exact raw reports,
+head counters, residency/reset and all98 artifact hashes.
+RESULT -> Allfull512 equal faithful V6; head calls2048->1, skips0->2047;
+bothfull5 scans/health/kernel/normalclose PASS. Producer
+abb9f044a36b7e285b8db95b09ee8011a6b42d5c07c49ec46ed88c4830e9d544.
+Prefill40405.573/37994.084/38607.309/45428.227ms; unchangeddecode
+29933.844/29976.447/30238.808/33265.025ms.
+VERDICT -> Repeat output/counter evidence; finalOFF timing drift confounds
+mean prefill gain. No clean speed or earlier36-percent effect-size claim.
+
+CONFIG -> Separate queued NoDri builders, read-only actual58 parent.
+COMMAND -> Actual24464 acquiredcard0; actual56155 acquiredcard1 only
+after ABBA released pair.
+RESULT -> Checkpoint2CPU6GiB and incremental59 4CPU16GiB now compile
+independent outputs; no real model timing overlaps their CPU work.
+VERDICT -> Actual compile/CPUcontract/newSDK authority still pending.
