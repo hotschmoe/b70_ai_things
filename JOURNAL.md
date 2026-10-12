@@ -19514,3 +19514,24 @@ five core/RMS fields explicitly unobserved. No-launch wrong38 refusal
 retained. Source60 host-diagnostic compiler68903 waits on card1 lease.
 VERDICT -> Current raw/math capture/public admission still pending;
 root remains sole GPU coordinator and full original goal remains open.
+
+
+## 2026-10-12: current math capture refused before model, host60 builds
+
+CONFIG -> Actual59 mode0 NUM33/P30 capture, protected protocol wrapper.
+COMMAND -> Actual25402 Exit1; result/health artifacts inspected.
+RESULT -> Protocol constructor duplicate pipe_bytes keyword raised before
+model start: engine_rcnull/requests0/terminalnull. Post strict/compiled
+health/full4 pass; no native model/GPU crash or reset required.
+VERDICT -> No current math targets captured. FailedV1 preserved; immutable
+V2 merges recorder kwargs once and must test real parent call signature.
+
+CONFIG -> Current60 narrow first512 host-only diagnostic, defaultOFF,
+new private header consumed by exactly main/Prefill, math/pacing unchanged.
+COMMAND -> Actual68903 NoDri incremental PASS117s.
+RESULT -> SDKstrata-native60-incremental59-v1-20261012T224908Z-gwvz2yz5;
+receipt1d832123a7c715650db14f96b836d3561a46702ca10d0e57a7c078c71df36ee9;
+122 unchangedobjects/2 fresh/one Prefill archive update/all8 links,
+parent59 unchanged. Loaded two-cohort actor/reader still being sealed.
+VERDICT -> Native build proof only; no cold/warm timing or GPU diagnostic
+qualification yet. Actual shifted38724 nowpairleased numerical fixture.
