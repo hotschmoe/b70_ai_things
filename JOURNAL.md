@@ -18358,3 +18358,16 @@ CONFIG -> Live source55 matched natural model run76995.
 RESULT -> Baseline arm completed six512 outputs; coalesced arm now
 prefilling. Crossarm outputs/speed/fullcampaign lifecycle pending.
 VERDICT -> No intermediate gain claim; follow existing process to terminal.
+
+
+## 2026-10-12: whole HC prefill coalescing model gain accepted
+
+CONFIG -> Fresh55 pair24/24 P2048/pref512/ctx4096 sixGEN512 each,
+tile2 fixed/mirror1/copy0/noMTP/cacheOFF, sole coalescing0/1.
+COMMAND -> Producer76995 PASS1004s; independent62892 PASS.
+RESULT -> All12 full512 IDs/finish exact, fresh repeats exact, full4/
+source/all8/health/compiledcollective/kernel/ownedretirement pass. WarmPP
+208.14/205.71/205.46 ->241.47/238.11/237.52tok/s; decodeunchanged.
+Mean warm PP elapsed reduction13.64percent. Producer232c5dc2fb07f4508cb547e56cc24b9e3069fc119cde6ce9a695273c3c54a81a; publicb5e9361d8e4483f75bd1fae3f2e1442c744c5d7f009fe475c9ad0852fd3a0530.
+VERDICT -> Real original-arithmetic prefill gain; current config profile
+next, not blind tuning. No totalBW/idle/2000/50/fullmath/streams/shelf.
