@@ -18465,3 +18465,24 @@ Sourcehook earlyreturn bypasses SDK52 explicitserveshutdown11990-12038;
 ordinarydestructors aredocumentedexit139 risk. Correct ownedshutdown
 beforetargetedretry; fixrunner lowercaseclassifier separately, preserveV1.
 Exactfaulting destructorunproven. Fullgoal remainsactive/incomplete.
+
+
+## 2026-10-12: pref-only tile4 chain passed; checked MTP retry running
+
+CONFIG -> New56 composition/current55 projection, original whole-HC
+fixture immutable, PREFILL_TILE4=1; olddecode/eight-row reference unchanged.
+COMMAND -> NoDri53587 PASS31s; card1GPU89906 PASS46s.
+RESULT -> Ten complete-chain cases andchanged-input graph bitwise; normal
+exit0/ownedremove/posthealth/kernel pass. Operator reportSHA6a371efcb7b82c60392d8536c1038ad925fac356a4dba752231a9e1b324a0b58.
+VERDICT -> Whole-chain operator only; fresh56 relink/model0/1 stillpending.
+Direct55->56 NoDri incrementalbuild investigation aims to recompileonly
+changedbody+relinkall8 whileclosingactualmatchedABI/object provenance.
+
+CONFIG -> New nativegreedy64 V2 uses exactSDK52 checkedserve shutdown
+plus draftownerretire, lowercase-safe source-bound runnerV3.
+COMMAND -> NoDri87172 PASS105s; ELF3411025229dad58b9fd0cdd1f1c0b7a874efc748b875b431b51bf2a603f90be1.
+Actual41041 card0nowrunsfreshOFF/ON atF17/original-mtp53-greedy64-card0-run-v2.
+RESULT -> Native/sequence/full5/health/retirement pending. OldV1failed139/
+controller137 remains preserved, recovery94362 posthealth/full5 passed.
+VERDICT -> Targetedcorrected retry, nofull64/512 or speed qualification.
+No wholegoal completion/shelf promotion.
