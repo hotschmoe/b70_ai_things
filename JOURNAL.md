@@ -18412,3 +18412,18 @@ RESULT -> Native profile/trace/health/currentfull4/ownedretirement pending.
 VERDICT -> Measure current kernel/count/unions before further optimization;
 no fulltracecoverage/clockalignment/physicalidle/busBW claim.
 Full campaign fidelity/cachefamily/1-2-4-6streams/shelf still open.
+
+
+## 2026-10-12: sustained original MTP greedy64 prepared and compile queued
+
+CONFIG -> Original34 draft and unchanged52 target, separate freshOFF/ON
+processes, authentictokenizer prompt<=192 plusGEN64, owncache256.
+COMMAND -> RootCPUprepare passed; leasedNoDri86433 queued behind actual
+source55 profile86336. Sourceproposal77abd773e206dcb1269e17fe6740c3d59d7579e12b676adc7e305539f1b76bf5.
+RESULT -> No ON baselinepeek. Actual nextprompt IDs condition draftprefix;
+last prompt row uses targetfirstpick. TargetT2 verifiedprefix commits1/2,
+remaining1 usesT1; naturalEOS/budgetshortens actualcommit/catchup.
+VERDICT -> Root source review accepted budget/position path; actual
+compiler/output equivalence/natural64/health/full5/teardown pending.
+Serialprompt diagnostic is not optimized production prefill. NoMTP
+50tok/s, originalnumerical/full512 or fullcampaign qualification claimed.
