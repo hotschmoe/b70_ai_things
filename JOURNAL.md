@@ -18989,3 +18989,16 @@ Rootfilledactualpins andlaunched85477 both-lease controls atF17/
 original-mtp53-paired-controls-v5; stdout boundedexternalcontrollerlog.
 VERDICT -> Actualcompile admitted, freshcontrols andnaturalreference
 comparison pending. No fidelity/speed/API/cache/shelf promotion yet.
+
+
+## 2026-10-12: paired HC T2 model compile construction prepared
+
+CONFIG -> ExactoriginalMTP V6 MAIN plus pairedHC callerV2, defaultOFF,
+expertpairOFF; no quant/math/layout changes beyond qualifiedT2operator.
+COMMAND -> Rootprepared hc-t2-paired-mtp-compile-inputs-v1 andtwo
+focusedcompile-recipeCPUcontrolsPASS; currentcontrols85477 remainlive.
+RESULT -> Sourceplan8be1215274d21335283a5205602d9ba7d52170ede193b0c0c6407f17c10105b3, fourfreshobjects plus copiedengine minusverify andcopiedkernels
+minustwoHCmembers, exactmembercounts andfreshobjectsfirstrequired.
+VERDICT -> Sourceconstruction only. Actualcompiledreceipt/ELF, matched
+pairedOFF/ON fulloutput/identity/residency/health/normalretirement and
+interactive benefit remainunproven. Fullgoal notnarrowed.
