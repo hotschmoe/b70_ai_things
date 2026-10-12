@@ -1,0 +1,82 @@
+{
+  "schema": 2,
+  "status": "SOURCE ONLY complete standaloneT1 original34-tensor draft-step composition; no compiled/numerical/main-inference/speed qualification",
+  "base52_proposal_sha256": "25c8b73f8fa0d92f0e7c562f232776844405dc62b7e3524d1584a92283f4630d",
+  "compiler_image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+  "patch_sha256": "b95825b7a2171ff491fd78b4a11692fa98d79e502872706ac6f0caa34944162d",
+  "patch_note": "FULL add-only overlay againstunchanged52; do not apply earlier component patches then this duplicate full overlay",
+  "added_files": {
+    "sycl/include/strata/core/original_mtp53_tensor_views.hpp": "c86e99f3297035d330257ad4a3aac25c0cff4eafc0723b566fb2e7e0010e9508",
+    "sycl/include/strata/kernels/original_mtp53_typed_primitives.hpp": "e2dd3ed58ed740a1bfe14747eb8711879ef27df7aa4b220c3b8fae07a77c1d56",
+    "sycl/include/strata/kernels/original_mtp53_eh_hc_front.hpp": "8b2337f97899fb0a21b1e704e19ec371fd150e3b1d85887fb3643cc1fb1c6f22",
+    "sycl/include/strata/kernels/original_mtp53_qsa_state.hpp": "a93cc684872b3fad5165f520738066b4ca7197803653262791723011785d6240",
+    "sycl/include/strata/core/original_mtp53_owned_runtime.hpp": "c37245f19d6834871c48a55ab7b73754e8cdf58dbb8a322c2d5aa69401032b2d",
+    "sycl/include/strata/kernels/original_mtp53_draft_step.hpp": "10921eab669943066904d7203de2d037d4cf12c04465fb266f20951dc19eebe8",
+    "sycl/src/kernels/original_mtp53_primitive_fixture_v2.cpp": "b7906aeb413bddcd7723d36607efa3694ea5f75a6aa297c6d58c975a311c180d",
+    "sycl/src/kernels/original_mtp53_eh_hc_loaded_fixture_v2.cpp": "334cd032ced3f1bdf01ff78e96e09b09aaa36effa3271c8bdff79063e524fcad",
+    "sycl/src/kernels/original_mtp53_draft_step_loaded_fixture.cpp": "a2eb0803053f1eb8abdf50251a0f3d80e7cd8545f2402c7258e1492270a926fe"
+  },
+  "overlay_sources": {
+    "strata/flash-next/original-mtp53/tensor_views_v1.hpp": "sycl/include/strata/core/original_mtp53_tensor_views.hpp",
+    "strata/flash-next/original-mtp53/typed_primitives_v2.hpp": "sycl/include/strata/kernels/original_mtp53_typed_primitives.hpp",
+    "strata/flash-next/original-mtp53/eh_hc_front_v2.hpp": "sycl/include/strata/kernels/original_mtp53_eh_hc_front.hpp",
+    "strata/flash-next/original-mtp53/qsa_state_segment_v2.hpp": "sycl/include/strata/kernels/original_mtp53_qsa_state.hpp",
+    "strata/flash-next/original-mtp53/owned_runtime_v1.hpp": "sycl/include/strata/core/original_mtp53_owned_runtime.hpp",
+    "strata/flash-next/original-mtp53/draft_step_v2.hpp": "sycl/include/strata/kernels/original_mtp53_draft_step.hpp",
+    "strata/flash-next/original-mtp53/primitive_fixture_v2.cpp": "sycl/src/kernels/original_mtp53_primitive_fixture_v2.cpp",
+    "strata/flash-next/original-mtp53/eh_hc_loaded_fixture_v2.cpp": "sycl/src/kernels/original_mtp53_eh_hc_loaded_fixture_v2.cpp",
+    "strata/flash-next/original-mtp53/draft_step_loaded_fixture_v1.cpp": "sycl/src/kernels/original_mtp53_draft_step_loaded_fixture.cpp"
+  },
+  "defaultOFF": "STRATA_ORIGINAL_MTP53 must exactly1, checked beforequeue/file/alloc in fixtures",
+  "original_asset_sha256": "8087dbb39fc73f79ac069b1debe4069a44b73ada900c8bd761569d43a5a90231",
+  "original_asset_bytes": 2786204800,
+  "root_fresh_original_whole_hash_required": true,
+  "operator_chain": "ownQ4embedding->originalcombinedEH/HC->owncompress4QSA->HCcombine->originalF32router/top10/Q4GU+Q8down+sharedF32gate->HCcombine->originalheadHC->ownQ6head full248320 logits",
+  "lossless_experts": "Original gate/up/down raw blocks concatenate perexpert in native_expert_layout12/8/2560/640; no quantization or alternate checkpoint",
+  "positions": {
+    "source": "generate.cpp10696..10771 and MtpDrafter::draft1245..1280/capture_round1039..1082",
+    "draft_cache_cell_i": "MAIN hidden afterinputi plus MAIN nexttokeni+1",
+    "MAIN_window": "inputs[base_token,guess] atp,p+1; compareguess==MAINpick0; commit2accepted or1reject",
+    "catchup": "BOTH outcomes discardtentativeMTP hidden/cache then processMAINpairsp..p+keep-1 from actual_picks[row] +laststage main.final_R_all()[row*10240]",
+    "next_base": "p+keep; actual_picks[keep-1] (bonus onaccept/correction onreject)",
+    "failure": "run/commit/wait/catchup failure latchmain_failed; no futureprepare or silentadvance"
+  },
+  "verification": "Actual verify_and_catchup invokesunchangedCoreVerifier.run/commit/wait; targetneutralgreedy/callback/lifecycle mustbeprovided; mirrorT1=1 refused. Fixtures useexplicit SYNTHETIC decisions and claim main_verification_executed=0.",
+  "compile_preparer": "prepare_original_mtp53_step_compile_v2.py --sdk GENUINE52 --sdk-receipt-sha256 ACTUAL --output NEW",
+  "link": "unchanged52 libstrata_engine/prefill/spec/kernels/core/kernels_cpu +ggml-cpu/base grouped staticarchives +ze_loader with exact production device-link math flags",
+  "loaded_fixture": "original-mtp53-step ORIGINAL_PUBLISHER_MTP.gguf EMPTYOUTPUTDIR: three accepted ownsteps0..2, block-completingstep3 rejection +2replayed rejects +accept, full21fields/fullcommittedK/V/tail/dead/pooled/blockpos/hidden; currentMAIN execution false, payloadschema34 plusfreshwholeSHA externalmandatory",
+  "owner": "NewOwnedRuntime53 tracksgraphheaphandles+USM. SUCCESS drain then destroygraphhandles thencontext-only frees. FAILED drain logsretainedresources and_Exit86 beforeanyfree/librarydestruction; rootownedcontainerretirement+health mandatory. OldunsafeV1fixtures/proposals untouched, compileONLYsafeV2fixtures here.",
+  "memory": {
+    "entire_original_packed_weights_bytes": 2775258112,
+    "expert_pool_bytes": 1835008000,
+    "other31_tensors_bytes": 940250112,
+    "USM_payload_requantized": false,
+    "state_fixture_capacity": 64,
+    "state_full_context_possible": 4096,
+    "plus": "actualtyped scratch/fullvocablogits/QSAcommitted+workbanks/graph metadata/allocator reserve; ~10MiB fixture or~30MiB at4096 beyondweights, actualdriverheadroomstillmustbeadmitted"
+  },
+  "unqualified": [
+    "nativeFP32/Q8_1/serialF32router/reduction numericparity",
+    "compress4 score/tie sparse >2051 parity",
+    "actualMAIN pair/catchup/next-base GPU semantics",
+    "inference EOS/budget orchestration and fullmodel MTPconcurrency",
+    "latency/speed/stability/API/shelf"
+  ],
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_original_mtp53_step_source_cpu_v2",
+  "actual_build_GPU_payload_download_by_author": false,
+  "own_source_sha256": {
+    "strata/flash-next/original-mtp53/tensor_views_v1.hpp": "c86e99f3297035d330257ad4a3aac25c0cff4eafc0723b566fb2e7e0010e9508",
+    "strata/flash-next/original-mtp53/typed_primitives_v2.hpp": "e2dd3ed58ed740a1bfe14747eb8711879ef27df7aa4b220c3b8fae07a77c1d56",
+    "strata/flash-next/original-mtp53/eh_hc_front_v2.hpp": "8b2337f97899fb0a21b1e704e19ec371fd150e3b1d85887fb3643cc1fb1c6f22",
+    "strata/flash-next/original-mtp53/qsa_state_segment_v2.hpp": "a93cc684872b3fad5165f520738066b4ca7197803653262791723011785d6240",
+    "strata/flash-next/original-mtp53/owned_runtime_v1.hpp": "c37245f19d6834871c48a55ab7b73754e8cdf58dbb8a322c2d5aa69401032b2d",
+    "strata/flash-next/original-mtp53/draft_step_v2.hpp": "10921eab669943066904d7203de2d037d4cf12c04465fb266f20951dc19eebe8",
+    "strata/flash-next/original-mtp53/primitive_fixture_v2.cpp": "b7906aeb413bddcd7723d36607efa3694ea5f75a6aa297c6d58c975a311c180d",
+    "strata/flash-next/original-mtp53/eh_hc_loaded_fixture_v2.cpp": "334cd032ced3f1bdf01ff78e96e09b09aaa36effa3271c8bdff79063e524fcad",
+    "strata/flash-next/original-mtp53/draft_step_loaded_fixture_v1.cpp": "a2eb0803053f1eb8abdf50251a0f3d80e7cd8545f2402c7258e1492270a926fe",
+    "strata/flash-next/prepare_original_mtp53_step_compile_v2.py": "438bdcb66e216148779bb210d5947d8b5c76475347d431ed4a2fb3af827c0628",
+    "strata/flash-next/test_original_mtp53_step_source_cpu_v2.py": "211cb7e5038eb6dbcb6116475b7a692559feea505acc294df9299e404960e567"
+  },
+  "prior_frozen_v1_sha256": "d91ae5896b6bffbbf0ee4b85783f14b0653df912e1518b2e2359444792167a5c",
+  "only_semantic_delta": "Correct actual SDK q_of pointer API dereference/arrow usage, NO math/layout/state/control changes"
+}

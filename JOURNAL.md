@@ -18088,3 +18088,37 @@ orwholeV5PASS. SeparateON59431live; matchedtracecomparisonstillpending.
 OriginalMTPV1 CPUcompilepreparedonly; discoveredq_ofpointer seam prevents
 compile, minimalV2fix beingprepared withactualheader/signaturechecks.
 HCtile sourcework andwholegoal remainactive; no shelfpromoted.
+
+
+## 2026-10-12: copy-engine overlap admitted; MTP NoDri compile live
+
+CONFIG -> Current52 pairP2048GEN8 device-only pausedwarm/selected,
+COPY0admittedoldcomponent versusCOPY1 independentroot.
+COMMAND -> ONproducer59431PASS421s; independent63007PASS; inspector43083PASS.
+RESULT -> Outputs/payload/model/toolargv afterownerSession removal match.
+OFFallengine0/overlap0; ONengine1copies7087/5821, sameH2D22.0995/18.3587GB,
+observedcopy-compute intersection461.433/369.167ms. Source/all8/full4/
+health/kernel/ownednormalretirement/clockcontrols/cap pass.
+ONreport208b720757bdb60c7f44253795bc82307c35f11ef89806914d13b6c563996142;
+publicc0bcc1a742d82c0e0f51d0e547edd0a4179c8710af84f5896ef24c2b23877d08.
+VERDICT -> Actualoverlap supportsprior~5%cleanprefillgain; notbusBW/
+wholecoverage/physicalidle/phasecalibration. See actualoverlapdoc.
+
+CONFIG -> Frozen originalMTPstepV2 correctsq_of pointer seam,
+original34tensorweights/main52 untouched, no modelpayload.
+COMMAND -> CPUprepareV2PASS; leasedNoDri17084 compiles3loadedfixtures
+againstunchangedactual52archives/exactproductionmathflags.
+RESULT -> Compilerlive, no errorsyet, no loadedMTPGPU/numericalproof.
+VERDICT -> Awaitactualcompile then freshseparate originalMTPwholeSHA,
+ownedloadedstep/graph/rejectrestore proof before targetdecode. HCtile
+operator sourcecandidate also queued; fullcampaign objective staysactive.
+
+
+CONFIG -> OriginalMTPV2 exact52 productionflags/staticarchives, NoDri.
+COMMAND -> Compiler17084PASS100s,3ELFs; stepd72ec30ea389481389245a6e1928190e247ce346b6852cc5ff6b00d7f2a6bef2.
+Fresh originalMTPwholeSHA64280PASS5.3s matches8087dbb39fc73f79ac069b1debe4069a44b73ada900c8bd761569d43a5a90231.
+RESULT -> Real99096card0leasedloadedstep nowlive withonlyoriginalMTPfile
+ROmount, bounded2.585GiBweights+scratch/64cell state, syntheticdecisions.
+VERDICT -> Awaitcomponentdirect/replay/rejectrestore/health/teardown proof;
+no actualMAINverified drafts/modelnumerics/performanceclaim. V1uncompiled
+queuepointerseam preserved; V2 onlyexplicitqueue dereference/interface fix.
