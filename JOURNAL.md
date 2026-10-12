@@ -18210,3 +18210,74 @@ RESULT -> Realtargetrun/commit/wait controlcompiled, no actualtargetGPU
 acceptance/state/64-512sequence/speedproofyet.
 VERDICT -> SinglecardloadedMAINcommand/headroomprep next afterHClease,
 separateoriginalMTPidentity mandatory. Fullcampaign objective active.
+
+
+## 2026-10-12: HC token reuse model gain accepted; target MTP control live
+
+CONFIG -> Fresh54 pair24/24 P2048/pref512/sixGEN512 each, soleHCtile0/2,
+originalquant/math/caller8/mirror1/copy0/noMTP/cacheOFF.
+COMMAND -> Producer54311PASS988s; independent4483PASS.
+RESULT -> Exactfulloutput/finish crossarms+role repeats, all512length,
+source74/all8/full4/health/kernel/ownedretirementpassed. RepeatedwarmPP
+scalar184.99/183.50/182.70 ->tile205.56/203.95/203.58tok/s; decodeunchanged.
+Producer93fe2f39be192cbefa84c9271ce38c3e09f93a2ef32a169b9d521e24a65aa93c;
+publicf5c35f7a12b3a0317c6af24a7f10e18438a70fdd2e1773dca4bdc78580033221.
+VERDICT -> Usefuloriginalarithmeticgain, not2000/50/fullmath/streams/shelf.
+Source55read/write coalescingcandidate nextwholechainoperator; copygainnot
+addedwithoutcombinedmatchedmeasurement.
+
+CONFIG -> OriginalMAINMTPV2 actualT1/T2 control, onecard0/spec2,6500
+explicitexpertblobs/mirror0/draft2.585GiB+scratch/capacityrefusals.
+COMMAND -> Blueprint2fc9e20a prepared; actual99879card0lease nowprepares
+freshfull4+separateMTP identity thennativeboundeddiagnostic.
+RESULT -> No actualtargetaccepted/rejectedstate result yet. Requires3
+labeledtrials, PASS/exit0/ownedEOF/health/kernel/full4+MTPpostSHA.
+VERDICT -> Actualtargetacceptance next, stillno sustainedMTPdecode/numerical
+proof. Wholecampaign goal active; no shelfpromoted.
+
+
+## 2026-10-12: MAIN explicit-commit failure and independent MTP reference
+
+CONFIG -> Original MAIN V2 single-card diagnostic, same compiled target,
+STRATA_ONE_TOKEN_COMMIT default1 then explicit0; original MTP34 tensors.
+COMMAND -> First99879 FAILED436s; ENV0 retry29329 FAILED372s.
+RESULT -> ENV0 forced-reject trial passed expected198/actual0198, main/draft
+position2; later combined greedy/acceptance assertion failed before trial1
+publication. Both owned removals, posthealth, full4+MTP hashes passed.
+Reports e3752dd8732040f2c2cd002704c4396aafc0161a78f8b2b6ca86f91cd58ea28b
+and128d0d0eeb7e6bbec4228ddd1afa28869f75cc396b4612816d36b5fb01ce1374.
+VERDICT -> Not MTP-qualified. New V3 prints values before unchanged assertion
+so next actual diagnostic distinguishes greedy mismatch from acceptance.
+
+CONFIG -> Independent original34 first-step CPU reference, own token248045/
+position0/hidden fixture, full248320 head; no captured native input/routing.
+COMMAND -> Actual74024 PASS execution28.731s, not numerical gate.
+RESULT -> Conditional independently encoded Q8_1 lane exact expert IDs,
+indexer half bytes and head top10; logits NMSE6.217e-15/maxabs9.537e-7.
+Pure float-activation lane differs in routing/logits (NMSE0.015024).
+Report0e5cf70ef574937067e0ae0c842d30060a7f950f1e3f7baba4f468e86b811987.
+VERDICT -> Conditional first-step arithmetic evidence only; no fitted
+tolerance, history-state/full-model/MAIN/speed numerical qualification.
+
+CONFIG -> Source55 complete native HC prefill composition, synthetic only.
+COMMAND -> NoDri compile67564 PASS43s; card1 fixture PID662318 FAILED41s.
+RESULT -> ELF2206ed42a32abcb66072d4c824c508ba7cb5814003328f2f67e9e17fe7ba5a17;
+rc139, early libze_intel_gpu host segfault, no case publication.
+Posthealth passed; kernel segfault retained as failure, owned container removed.
+VERDICT -> No unchanged retry. SameELF card0 exposure/mask0 control66943
+now runs to distinguish device enumeration/runtime from operator faults.
+Full source55 engine/model gain unproven. Full campaign remains active.
+
+
+## 2026-10-12: HC prefill whole-chain card0 control passed
+
+CONFIG -> Same fresh55 standalone ELF as failed card1 attempt; only card0
+exposure/affinity0 replaces card1 exposure/affinity1.
+COMMAND -> Actual66943 PASS42s.
+RESULT -> All10 T1/7/8/9/512 applyFalse/True fields bitwise equal; changed
+input captured replay passed. Native exit0/owned removal/posthealth/kernel
+passed. Report SHAfe3fbc98595b5919cf67033ca1998e5be9d8f0d3f1e7ce31dd6e6e8325c04a7f.
+VERDICT -> Whole-chain synthetic arithmetic/lifecycle accepted on card0.
+Early card1 UMD hostsegfault remains preserved, enumeration suspected but
+not independently proven. Fresh55 all8 engine build next, no model/speed
+promotion. Original UDQ4 full campaign/cache/concurrency/shelf still open.

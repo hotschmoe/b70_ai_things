@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "scope": "source-only independent original34 first-step CPU math, no fitted gate",
+  "files": {
+    "strata/flash-next/original_mtp_cpu_decode_v1.py": "c5d890b277feb50a1a4485720ba60a889aba97ce1562d6d8212dd09c7fa80a77",
+    "strata/flash-next/original_mtp53_first_step_cpu_v1.py": "08a6d253fc497480f08a957ba6a3c838f7930dc4bc9c74494983a26e66c92ce3",
+    "strata/flash-next/original-mtp53-first-step-cpu-v1.txt": "df8ff8dc84d8a5a808e766c65d0d3bdda24498aedc874dcccc8d99c6d7450075",
+    "strata/flash-next/original_gguf_vector_decoder_v2.py": "130f1a525e366e5d33fcb67a3c765ee50d5c4eaedb2b4a0495ae2386cd18c7b9",
+    "strata/flash-next/independent_q8_1_activation_v1.py": "b58d73282051bfa301ebb6f781d5d59c63128d9074a42d53cf4d9ff05d75a714",
+    "strata/flash-next/original-publisher-mtp53-primitive-proposal-v1.json": "de3a293a682d9445ac82fbd0c31e78916c87a5c38227ec17615c12f2d383fe1a"
+  },
+  "primary_sources": {
+    "/mnt/vm_8tb/github/llama.cpp-flashnext/ggml/src/ggml-quants.c": "5574a2dccf7c07e75b143733e04a5412d3d8c819e7945f5217a7b83a2b2ff8ab",
+    "/mnt/vm_8tb/github/llama.cpp-flashnext/src/models/qwen4exp.cpp": "c30ef376bd19ea19fcd8c360ec94adb18fa6f7912911fdd4389c91c9af8606f6"
+  },
+  "author_weight_payload_read": false,
+  "actual_root_CPU_reference_execution_pending": true,
+  "full_numerical_gate_passed": false
+}

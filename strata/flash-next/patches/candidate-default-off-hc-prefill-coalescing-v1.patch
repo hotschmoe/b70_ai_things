@@ -1,0 +1,216 @@
+--- a/sycl/include/strata/kernels/hc_native_composition.hpp
++++ b/sycl/include/strata/kernels/hc_native_composition.hpp
+@@ -52,10 +52,30 @@
+     } else if (a.bo_prev || a.bo_floats || a.inj_prev || a.prev_floats || a.R_out || a.R_out_floats) return false;
+     return true;
+ }
++// Explicit contiguous prefill entry; old descriptor remains bounded at eight.
++inline bool hc_native_prefill_descriptor_ok(const HcNativeArgs& a) {
++    if (a.n_embd != 2560 || a.hc != 4 || a.lr != 320 || a.tokens < 1 || a.tokens > 512 ||
++        !(a.eps > 0) || !std::isfinite(a.eps)) return false;
++    const size_t D = 10240, T = size_t(a.tokens), N = 2560, H = 4, L = 320;
++    if (!a.w.norm || a.w.norm_floats < D || !a.w.down || a.w.down_bytes < L*(D/32)*34 ||
++        !a.w.up || a.w.up_bytes < D*(L/32)*34 ||
++        !a.R || a.R_floats < T*D || !a.xn || a.xn_floats < T*D ||
++        !a.lo || a.lo_floats < T*L || !a.gate || a.gate_floats < T*D ||
++        !a.rs || a.rs_floats < T*H || !a.mixed || a.mixed_floats < T*N) return false;
++    if (a.w.inject) {
++        if (a.w.inject_floats < H*D || !a.inject_out || a.inject_out_floats < T*H) return false;
++    } else if (a.w.inject_floats || a.inject_out || a.inject_out_floats) return false;
++    if (a.apply) {
++        if (!a.bo_prev || a.bo_floats < T*N || !a.inj_prev || a.prev_floats < T*H ||
++            !a.R_out || a.R_out_floats < T*D) return false;
++    } else if (a.bo_prev || a.bo_floats || a.inj_prev || a.prev_floats || a.R_out || a.R_out_floats) return false;
++    return true;
++}
+ // False: descriptor or queue rejected, zero kernels submitted.
+ // SYCL submission/execution exceptions propagate: caller must abort the request;
+ // no compatibility fallback or retry on partly written state is permitted.
+ bool hc_native_read_f32(const HcNativeArgs& a, void *stream);
++bool hc_native_prefill_read_f32(const HcNativeArgs& a, void *stream);
+ // Contiguous token-major residual write, same FMA/sigmoid math as pending read.
+ // Invalid pointer/capacity/row count or queue returns false before submission.
+ inline bool hc_native_write_shape_ok(size_t R,size_t bo,size_t inject,int tokens) {
+@@ -64,4 +84,7 @@
+ }
+ bool hc_native_write_f32(float* R,size_t R_floats,const float* bo,size_t bo_floats,
+                         const float* inject,size_t inject_floats,int tokens,void* stream);
++bool hc_native_prefill_write_f32(float* R,size_t R_floats,const float* bo,size_t bo_floats,
++        const float* inject,size_t inject_floats,int tokens,void* stream);
++
+ }
+--- a/sycl/src/kernels/hc_native_composition.cpp
++++ b/sycl/src/kernels/hc_native_composition.cpp
+@@ -12,8 +12,8 @@
+ float sigmoid(float x) { return 1.0f/(1.0f+sycl::exp(-x)); }
+ class HcPending; class HcNorm; class HcSilu; class HcMix; class HcStandaloneWrite;
+ }
+-bool hc_native_read_f32(const HcNativeArgs& a, void *stream) {
+-    if (!hc_native_descriptor_ok(a)) return false;
++static bool hc_read_impl(const HcNativeArgs& a, void *stream,bool prefill) {
++    if (prefill ? !hc_native_prefill_descriptor_ok(a) : !hc_native_descriptor_ok(a)) return false;
+     auto& q = *strata::q_of(stream);
+     if (!q.has_property<sycl::property::queue::in_order>()) return false;
+     constexpr size_t D=10240,N=2560,H=4,L=320;
+@@ -36,15 +36,17 @@
+         for (size_t d=lane;d<N;d+=32) { const size_t i=c*N+d; a.xn[t*D+i]=(R[t*D+i]*a.w.norm[i])*rs; }
+     });
+     // All projection descriptors are implied by the complete preflight above.
+-    if (!hc_q8_0_project_f32(a.w.down,a.w.down_bytes,a.xn,T*D,a.lo,T*L,D,L,a.tokens,stream))
++    if (!(prefill ? hc_q8_0_project_f32_token_reuse(a.w.down,a.w.down_bytes,a.xn,T*D,a.lo,T*L,D,L,a.tokens,2,stream)
++                  : hc_q8_0_project_f32(a.w.down,a.w.down_bytes,a.xn,T*D,a.lo,T*L,D,L,a.tokens,stream)))
+         throw std::logic_error("native HC down rejected after descriptor preflight");
+     q.parallel_for<HcSilu>(sycl::range<1>(T*L), [=](sycl::id<1> i) {
+         const float x=a.lo[i[0]]/float(H); a.lo[i[0]]=x*sigmoid(x);
+     });
+-    if (!hc_q8_0_project_f32(a.w.up,a.w.up_bytes,a.lo,T*L,a.gate,T*D,L,D,a.tokens,stream))
++    if (!(prefill ? hc_q8_0_project_f32_token_reuse(a.w.up,a.w.up_bytes,a.lo,T*L,a.gate,T*D,L,D,a.tokens,2,stream)
++                  : hc_q8_0_project_f32(a.w.up,a.w.up_bytes,a.lo,T*L,a.gate,T*D,L,D,a.tokens,stream)))
+         throw std::logic_error("native HC up rejected after descriptor preflight");
+-    if (a.w.inject && !hc_f32_project_f32(a.w.inject,a.w.inject_floats,a.xn,T*D,
+-            a.inject_out,T*H,D,H,a.tokens,stream))
++    if (a.w.inject && !(prefill ? hc_f32_project_f32_prefill(a.w.inject,a.w.inject_floats,a.xn,T*D,a.inject_out,T*H,D,H,a.tokens,stream)
++            : hc_f32_project_f32(a.w.inject,a.w.inject_floats,a.xn,T*D,a.inject_out,T*H,D,H,a.tokens,stream)))
+         throw std::logic_error("native HC injection rejected after descriptor preflight");
+     q.parallel_for<HcMix>(sycl::range<1>(T*N), [=](sycl::id<1> index) {
+         const size_t td=index[0],t=td/N,d=td%N;
+@@ -54,9 +56,10 @@
+     });
+     return true;
+ }
+-bool hc_native_write_f32(float* R,size_t R_floats,const float* bo,size_t bo_floats,
+-                        const float* inject,size_t inject_floats,int tokens,void* stream) {
+-    if (!R || !bo || !inject || !hc_native_write_shape_ok(R_floats,bo_floats,inject_floats,tokens)) return false;
++static bool hc_write_impl(float* R,size_t R_floats,const float* bo,size_t bo_floats,
++                        const float* inject,size_t inject_floats,int tokens,void* stream,bool prefill) {
++    if (!R || !bo || !inject || (prefill ? !(tokens>=1 && tokens<=512 && R_floats>=size_t(tokens)*10240 && bo_floats>=size_t(tokens)*2560 && inject_floats>=size_t(tokens)*4)
++        : !hc_native_write_shape_ok(R_floats,bo_floats,inject_floats,tokens))) return false;
+     auto& q=*strata::q_of(stream);
+     if (!q.has_property<sycl::property::queue::in_order>()) return false;
+     // Same kernel name/body as the pending-write launch cannot be reused with
+@@ -69,4 +72,13 @@
+     return true;
+ }
+ 
++bool hc_native_read_f32(const HcNativeArgs& a,void* stream) {return hc_read_impl(a,stream,false);}
++bool hc_native_prefill_read_f32(const HcNativeArgs& a,void* stream) {return hc_read_impl(a,stream,true);}
++bool hc_native_write_f32(float* R,size_t nr,const float* bo,size_t nb,const float* inject,size_t ni,int tokens,void* stream) {
++    return hc_write_impl(R,nr,bo,nb,inject,ni,tokens,stream,false);
+ }
++bool hc_native_prefill_write_f32(float* R,size_t nr,const float* bo,size_t nb,const float* inject,size_t ni,int tokens,void* stream) {
++    return hc_write_impl(R,nr,bo,nb,inject,ni,tokens,stream,true);
++}
++
++}
+--- a/sycl/include/strata/kernels/hc_native_projection.hpp
++++ b/sycl/include/strata/kernels/hc_native_projection.hpp
+@@ -28,4 +28,9 @@
+ bool hc_f32_project_f32(const float * weights, size_t weight_floats,
+         const float * input, size_t input_floats, float * output, size_t output_floats,
+         int k, int m, int tokens, void * stream);
++// Explicit contiguous prefill F32 injection; same launch/reduction, old bound unchanged.
++bool hc_f32_project_f32_prefill(const float* weights,size_t weight_floats,
++        const float* input,size_t input_floats,float* output,size_t output_floats,
++        int k,int m,int tokens,void* stream);
++
+ }
+--- a/sycl/src/kernels/hc_native_projection.cpp
++++ b/sycl/src/kernels/hc_native_projection.cpp
+@@ -129,4 +129,16 @@
+     else launch_q8_token_reuse<4>(*queue,weights,input,output,k,m,tokens);
+     return true;
+ }
++bool hc_f32_project_f32_prefill(const float* weights,size_t weight_floats,
++        const float* input,size_t input_floats,float* output,size_t output_floats,
++        int k,int m,int tokens,void* stream) {
++    if(!weights || !input || !output || k<=0 || k>10240 || k%32 || m<=0 || m>10240 ||
++       tokens<1 || tokens>512 || input_floats<size_t(k)*tokens || output_floats<size_t(m)*tokens ||
++       weight_floats<size_t(m)*k)return false;
++    auto* queue=strata::q_of(stream);
++    if(!queue->has_property<sycl::property::queue::in_order>())return false;
++    launch<false>(*queue,weights,input,output,k,m,tokens);
++    return true;
+ }
++
++}
+--- a/sycl/include/strata/core/native_hc_dispatch.hpp
++++ b/sycl/include/strata/core/native_hc_dispatch.hpp
+@@ -1,5 +1,7 @@
+ // Shared exact-source dispatch: ordinary decode, prompt chunks and verifier rows.
+ #pragma once
++#include <cstdlib>
++#include <cstring>
+ #include "strata/core/weights.hpp"
+ #include "strata/core/native_hc_policy.hpp"
+ #include "strata/kernels/hc_native_composition.hpp"
+@@ -46,4 +48,36 @@
+     err="native HC: kernel build disabled"; return false;
+ #endif
+ }
++// Default OFF. Only prefill callers consult this selection; decode is unchanged.
++inline int native_hc_prefill_coalesce() {
++    static const int value=[] {const char* v=std::getenv("STRATA_HC_PREFILL_COALESCE");
++        if(!v || std::strcmp(v,"0")==0)return 0;
++        if(std::strcmp(v,"1")==0)return 1;
++        return -1;}();
++    return value;
+ }
++inline bool native_hc_prefill_submit(const strata::kernels::HcNativeArgs& a,void* stream,std::string& err) {
++#ifdef STRATA_SYCL_Q8_HC_BUILT
++    if(!strata::kernels::hc_native_prefill_read_f32(a,stream)){err="native HC: prefill composed read rejected";return false;}
++    return true;
++#else
++    err="native HC: kernel build disabled";return false;
++#endif
++}
++inline bool native_hc_prefill_write_rows(float* R,const float* bo,const float* injection,int rows,void* stream,std::string& err) {
++    const int selected=native_hc_prefill_coalesce();
++    if(selected<0){err="native HC: invalid prefill coalescing flag";return false;}
++    if(!selected)return native_hc_write_rows(R,bo,injection,rows,stream,err);
++#ifdef STRATA_SYCL_Q8_HC_BUILT
++    if(rows<1 || !R || !bo || !injection){err="native HC: empty or null prefill write";return false;}
++    for(int t=0;t<rows;t+=512){const int n=rows-t<512?rows-t:512;
++        if(!strata::kernels::hc_native_prefill_write_f32(R+size_t(t)*10240,size_t(n)*10240,
++            bo+size_t(t)*2560,size_t(n)*2560,injection+size_t(t)*4,size_t(n)*4,n,stream)){
++            err="native HC: prefill residual write rejected";return false;}}
++    return true;
++#else
++    err="native HC: kernel build disabled";return false;
++#endif
++}
++
++}
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -2864,8 +2864,11 @@
+                     if (!m.xn || !m.gated || !m.lo || !m.grs || T<1 || T>INT_MAX) {
+                         err="native HC prefill: unsupported workspace/layout"; return false;
+                     }
+-                    for (int64_t tb=0;tb<T;tb+=8) {
+-                        const int n=int(std::min<int64_t>(8,T-tb));
++                    const int coalesced=core::native_hc_prefill_coalesce();
++                    if(coalesced<0){err="native HC prefill: invalid coalescing flag";return false;}
++                    const int rows=coalesced?512:8;
++                    for (int64_t tb=0;tb<T;tb+=rows) {
++                        const int n=int(std::min<int64_t>(rows,T-tb));
+                         strata::kernels::HcNativeArgs a; a.tokens=n; a.eps=EPS;
+                         if (!core::native_hc_bind(wn,wd,wu,wi,a,err)) return false;
+                         a.R=m.R+tb*D; a.R_floats=size_t(n)*D;
+@@ -2875,7 +2878,7 @@
+                         a.rs=m.grs+tb*HC; a.rs_floats=size_t(n)*HC;
+                         a.mixed=m.mixed+tb*N; a.mixed_floats=size_t(n)*N;
+                         a.inject_out=m.inj+tb*HC; a.inject_out_floats=size_t(n)*HC;
+-                        if (!core::native_hc_submit(a,m.cs,err)) return false;
++                        if (!(coalesced ? core::native_hc_prefill_submit(a,m.cs,err) : core::native_hc_submit(a,m.cs,err))) return false;
+                     }
+                     // Precision views only at the downstream operator boundary.
+                     to_f16(m.mixed,m.mixed_h,T*N,m.cs);
+@@ -4371,7 +4374,7 @@
+                     normed = true;
+                 } else {
+                     if (core::native_hc_requested()) {
+-                        if (T>INT_MAX || !core::native_hc_write_rows(m.R,m.bo,m.inj,int(T),m.cs,err)) return false;
++                        if (T>INT_MAX || !core::native_hc_prefill_write_rows(m.R,m.bo,m.inj,int(T),m.cs,err)) return false;
+                     } else gr_write(m.R, m.bo, m.inj, HC, T, m.cs);
+                 }
+                 if (steered && !cv_fused)   // --control-vector-scaled
