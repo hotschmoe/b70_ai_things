@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/original-mtp53/checkpoint_contract_v1.hpp": "9b89586b81a4430a783fffb639fa3fc303c772a96fa7ee722789b58b844a04f0",
+    "strata/flash-next/original-mtp53/qsa_state_checkpoint_v1.hpp": "385508ab869b39b92dc7a2cdcb63112c78b98bc5826825f722d69a29f0fe3d5a",
+    "strata/flash-next/original-mtp53/shared_weights_sessions_v5.hpp": "1079ed6365fb4003e28587b46cddf496bb29695ecb52852bb27f7f8a2fc226c9",
+    "strata/flash-next/original-mtp53/serving_slot_checkpoint_bridge_v1.hpp": "efbc860a39fd6ac046671ecece73bf6f88072ddff14786f74dfba9c12f701f71",
+    "strata/flash-next/original-mtp53/checkpoint_contract_cpu_fixture_v1.cpp": "306db43ad4ec7c2e5605d1234eebdbb81ef141b88183be84dfd10eab303896be",
+    "strata/flash-next/original-mtp53/checkpoint_session_semantic_fixture_v1.cpp": "cd18c8055c2b0e63c38ff03fbd9ad783d54f3992d8f36bc47f66a7ac24f40f99",
+    "strata/flash-next/original-mtp53/shared_sessions_checkpoint_loaded_fixture_v1.cpp": "b8714c25ee3e428b54522c4dee93c50e493a7cbd9ac0b3e7906a588242ad5dba",
+    "strata/flash-next/prepare_original_mtp53_checkpoint_compile_v1.py": "be5964ef8d66a7d37158e7b78d1573826e6487deefea8f5c67bdc2abf701264d",
+    "strata/flash-next/original-mtp53/checkpoint_design_v1.md": "8eadec08e8c2a34efe06164fd2e9d488ac285490a90cd5016b7295dc1e884dc2",
+    "strata/flash-next/original-mtp53/shared_weights_sessions_v4.hpp": "e315b580b8227f1e73e536fdaef036377ecaa4a37390b282c53084d56f82fdbf",
+    "strata/flash-next/original-mtp53/qsa_state_segment_v2.hpp": "a93cc684872b3fad5165f520738066b4ca7197803653262791723011785d6240",
+    "strata/flash-next/original-mtp53/serving_slot_bridge_v2.hpp": "831459dc4278998180909ae8445e812593ca392c99997c549b23d03774e05244",
+    "strata/flash-next/original-mtp53-serving-reset-source-plan-v1.json": "bd5cc5ffcd8f2fa0cfc0544f028087d7c3e90777d5086d918967fb0e7623ae41",
+    "strata/flash-next/source58_model_sdk_binding_v1.py": "c12945d19841c3e58d493491790270e192dfed129aea36c9bc5ac550e6cbb74d",
+    "strata/flash-next/original-publisher-mtp53-step-proposal-v2.json": "d79b1b156a617a2b8dbecba8efdaa5ca9ed95fc72b9ad4e5ecccc6ff3934a70b",
+    "strata/flash-next/original-publisher-mtp53-two-stage-proposal-v6.json": "eaf1239278657f964ba537a56d778c1ac9cabfc0997684f34afad4a88026f470"
+  },
+  "overlay_sources": {
+    "strata/flash-next/original-mtp53/checkpoint_contract_v1.hpp": "sycl/include/strata/kernels/original_mtp53_checkpoint_contract.hpp",
+    "strata/flash-next/original-mtp53/qsa_state_checkpoint_v1.hpp": "sycl/include/strata/kernels/original_mtp53_qsa_state.hpp",
+    "strata/flash-next/original-mtp53/shared_weights_sessions_v5.hpp": "sycl/include/strata/kernels/original_mtp53_shared_sessions.hpp",
+    "strata/flash-next/original-mtp53/serving_slot_checkpoint_bridge_v1.hpp": "sycl/include/strata/kernels/original_mtp53_serving_slots.hpp",
+    "strata/flash-next/original-mtp53/checkpoint_contract_cpu_fixture_v1.cpp": "sycl/src/kernels/original_mtp53_checkpoint_cpu.cpp",
+    "strata/flash-next/original-mtp53/checkpoint_session_semantic_fixture_v1.cpp": "sycl/src/kernels/original_mtp53_checkpoint_session_semantic.cpp",
+    "strata/flash-next/original-mtp53/shared_sessions_checkpoint_loaded_fixture_v1.cpp": "sycl/src/kernels/original_mtp53_shared_checkpoint_loaded_fixture.cpp"
+  },
+  "scope": "Complete original full-state checkpoint CPU/code primitive and callable per-slot cache bridge; actual paired target checkpoint joins/API publication still pending",
+  "source_only": true,
+  "compiled": false,
+  "GPU_executed": false,
+  "full_cache_serving_qualified": false,
+  "independently_pinned_checkpoint_digest_required": true
+}

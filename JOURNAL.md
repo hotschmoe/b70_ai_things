@@ -19327,3 +19327,26 @@ later points. New knob caps one unchanged batch_step per layer ticket.
 VERDICT -> Runtime hypothesis only, not guaranteed P95/max improvement.
 Matched same59 OFF/ON with cooperation1 both, fullhistories and lifecycle
 is next. No operator fixture needed for unchanged math.
+
+
+## 2026-10-12: complete draft checkpoint and unused decode head prepared
+
+CONFIG -> Original private V5 checkpoint preserves both complete banks,
+indexer fields, hidden, current head, counts, accepted prefix and exact
+publisher/draft/target contracts. Bounded canonical LE serialization with
+independently pinned SHA256; older prefix requires its saved full state.
+COMMAND -> Root reviewed source and prepared three native outputs.
+RESULT -> Recipe d77bfd8adc35dda8c1f0e60b75bee23eaed4a50141abcbad4531538974154b3a.
+VERDICT -> Source only. Native CPU behavioral controls, loaded rewind/shared
+prefix proof and actual paired target/cache publication remain required.
+
+CONFIG -> Default-off decode first-kept-row own-head skip, accepted keep2
+row0 only. All original recurrence, weights, waits and final head retained;
+teacher skip/HC/expert/fence flags remain0. MTP ON in both matched arms.
+COMMAND -> Root reviewed exact transform and prepared compile recipe.
+RESULT -> Recipe 4bdeec0b6dc6dda90500e178a0839a0dc95f2784dd4fb02cc47b622d652d02b9.
+Actual future counters join actual windows, not fixed assumed acceptance.
+VERDICT -> Uncompiled source candidate; no predicted8s saving. ABBA42436
+first raw OFF/ON512 histories equal: prefill40405.573401->37994.084255ms;
+unchanged decode29933.843561->29976.446721ms. Remaining repetitions and
+normal aggregate closure still pending; no clean speed claim yet.
