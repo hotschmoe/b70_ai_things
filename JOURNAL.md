@@ -17631,3 +17631,22 @@ CONFIG -> Correctedhistoricalwarm5 mainT2->commit boundarysourceaudit.
 RESULT -> T1alreadyselfcommits; currentshortread0 bypassespromptT2.
 VERDICT -> Earlycommitpatchworkstopped, sourceonlyproposalunqualified; no
 GPUtest/buildscheduled forthatobsoletecurrentbenchmarkpath.
+
+
+## 2026-10-12: balanced staging diagnostic and representative benchmark preparation
+
+CONFIG -> Actual50 balanced24/24, short54/twoGEN64/spec2/cacheOFF/noMTP/
+shortread0/traceOFF, soleactualT1staging0/1.
+COMMAND -> Actual48803 stilllive finalfull4 close.
+RESULT -> WarmOFF/ON PP937.0/946.5ms;64decode4727.8/4479.3ms,
+13.5/14.3 outputtok/s. Finalcoherence/identity/health/retirement gatespending.
+VERDICT -> Preliminarymodest~5.3percentelapsed reduction;2000/50unmet.
+Fresh51wrapperGPU82694 queued; genuine51all73/all8 andbothcommands
+preflight passed80ee318d. No51model or originalmathqualificationyet.
+
+CONFIG -> Requiredrepresentative naturalserving workloads remainunfinished.
+COMMAND -> CPU-only input/recipepreparation requested: exacttemplateP2048/
+ctx4096,3prose/code/documentprompts, naturalEOS/cap512/eligibleactual>=256
+outputseparate. No GPU/modelreads/newactorchain or chunk sweep requested.
+VERDICT -> Continue substantiveXMX modeltestafterwrapper; benchmarkconfig
+chosenfromactualresults, notfromunusedCPUplans. Fullgoal active.
