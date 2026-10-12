@@ -19291,3 +19291,16 @@ RESULT -> Fresh reset and stale-RID-generation controls implemented;
 V1 fixed two-row seam cannot handle legitimate tailT1 yet.
 VERDICT -> Source59 pacing, bridge tailT1 and actual native reset proof
 being prepared. Full cache checkpoints/API wiring still required.
+
+
+## 2026-10-12: real original-MTP host timing closes successfully
+
+CONFIG -> Protected instrumented original-MTP paired full512 same source,
+weights, normal cuts, headskip0/HC0/expertreuse0.
+COMMAND -> Actual66379 Exit0; independent closed-report analysis PASS,
+all producer artifact hashes replayed, full512 faithful reference equal.
+RESULT -> Producer65af1c952e546054b57bb8b0890bb70219f39ae2c35839f6f222df21d8d95f21;
+10227spans,229accepted/53rejected; twofull5 scans, health/kernel/normal
+retirement pass. Target21391.833ms, draftwait8084.702ms, submit31.283ms.
+VERDICT -> Host-only nonadditive source-owned intervals; no deviceidle/BW
+or clean speed claim. ABBA42436 now follows under the next pair lease.
