@@ -19550,3 +19550,27 @@ actual32541 loaded diagnostic queued behind shifted38724 pair lease.
 VERDICT -> CPU/constructor/build evidence only. Actual four full histories,
 first/warm host spans, ownership/health/normal teardown/public reader
 required; no device time or clean cap-causality/speed claim.
+
+
+## 2026-10-12: original native serve source and owned retirement recovery
+
+CONFIG -> Default-off original serving source over exact58, genuine first
+generation1, shifted current/pre-last/hidden envelope, privateT1/T2 slots,
+terminal catchup and compound publication/persistence. Stock path retained.
+COMMAND -> Root source prepare PASS, no actual serving compilation yet.
+RESULT -> Planef405e2c6e7ca609ada0151704662c2346293baff4db9ac9ff355233fc065cd2;
+constructedMAIN519b866423cb4dbee7b39221ef747f4761b9a3d098df9bf645b289c38c14e8b7.
+VERDICT -> Concrete source integration, NOT runtime/API/cache/quality or
+shelf authority. Native compile/dependency audit and actual model needed.
+
+CONFIG -> Shifted38724 numerical program printedcompletePASS and exited0,
+but controller retainedlease on ordered Binds comparison after Docker
+returned same twoRO mounts in reversed order.
+COMMAND -> Root independently verified exactowner994505/image/entrypoint/
+command/mountmultiset/normaltypedterminal/creatorgone; saved fullterminal
+and recoveryproof, removed exact already-exited ownedID8c799be9e0ed.
+RESULT -> No GPU/model rerun or forcedstop; original controller remains
+FAILED and now completes posthealth/wholeoriginal/source closure.
+VERDICT -> Preserve failure, new semanticmount validation/reader may
+admit unchanged numeric bytes using authentic recovery +closing proofs.
+Actual60 loaded diagnostic32541 stillwaits on retainedpair lease.

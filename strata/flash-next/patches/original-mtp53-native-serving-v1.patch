@@ -1,0 +1,236 @@
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -1,3 +1,4 @@
++#include "strata/kernels/original_mtp53_serving_context.hpp"
+ #include "strata/program/host_critical_path_trace.hpp"
+ #include "strata/core/prefix_lifecycle.hpp"
+ #include "strata/core/ple_input_observer33.hpp"
+@@ -3825,6 +3826,10 @@
+     // engine still starts and serves one request at a time.
+     // --batch-mtp / STRATA_BATCH_MTP=1 (opt-in): a slot also verifies one MTP proposal per window.  Recommend, never
+     // force: when it cannot run it is said and left off (plain batching still starts); default off = exactly 0.1.39.
++    const char* original_mode_env=std::getenv("STRATA_ORIGINAL_MTP53_SERVING");
++    const bool original_serving=original_mode_env && std::strcmp(original_mode_env,"1")==0;
++    if(original_mode_env && std::strcmp(original_mode_env,"0") && std::strcmp(original_mode_env,"1")){std::fprintf(stderr,"original serving must0/1\n");return 2;}
++    if(original_serving && (!strata::core::original_mtp53::enabled() || !std::getenv("STRATA_ONE_TOKEN_COMMIT") || std::strcmp(std::getenv("STRATA_ONE_TOKEN_COMMIT"),"0") || !native_pack || !strata::core::native_hc_requested() || g.n_layers!=48 || g.n_embd!=2560 || g.hc!=4 || !o.serve || o.batch<2 || o.batch>6 || o.batch_groups!=1 || stages.size()!=1 || !last_st || last_st->dev!=1 || last_st->lb!=24 || last_st->le!=48 || o.spec!=2 || !o.mtp.empty() || o.batch_mtp || o.pipeline_windows!=0 || o.max_context!=4096 || o.adapt_every!=0 || !o.no_prefill_borrow || o.lookup_chain!=0 || o.suffix_draft!=0 || o.short_read!=0 || o.kv_grow || std::getenv("STRATA_VERIFY_MIRROR_STAGE_T1") && std::strcmp(std::getenv("STRATA_VERIFY_MIRROR_STAGE_T1"),"0") || !o.stop_eos || o.eos_ids!=std::vector<int64_t>{248044,248046})){std::fprintf(stderr,"original serving requires exact native paired24/24 greedy/spec2/private slots/no-stock-MTP scope\n");return 2;}
+     const char* batch_mtp_env = std::getenv("STRATA_BATCH_MTP");
+     bool batch_mtp = o.batch_mtp || (batch_mtp_env != nullptr && batch_mtp_env[0] != '\0' && batch_mtp_env[0] != '0');
+     if (batch_mtp) {
+@@ -3959,6 +3964,9 @@
+ 
+     // Secure MTP's CUDA0 allocations before the large host arena is registered with both CUDA contexts.
+     // In particular WDDM can refuse the draft weights after mapping tens of GiB of host pages.
++    std::unique_ptr<strata::kernels::original_mtp53::OriginalServeContext53> originalServe;
++    uint64_t original_solo_generation=0;
++    if(original_serving){const strata::core::OnDevice on(1);const char* path=std::getenv("STRATA_ORIGINAL_MTP53_MAIN_GGUF");const char* d=std::getenv("STRATA_ORIGINAL_MTP53_DRAFT_CONTRACT_SHA256");const char* t=std::getenv("STRATA_ORIGINAL_MTP53_TARGET_CONTRACT_SHA256");struct stat st{};if(!path || !d || !t || ::stat(path,&st)){std::fprintf(stderr,"original serving actual original file/contracts required\n");return 2;}strata::kernels::original_mtp53::OriginalDraftIdentity53 identity{path,"8087dbb39fc73f79ac069b1debe4069a44b73ada900c8bd761569d43a5a90231",uint64_t(st.st_dev),uint64_t(st.st_ino),uint64_t(st.st_size),int64_t(st.st_mtim.tv_sec)*1000000000+st.st_mtim.tv_nsec,int64_t(st.st_ctim.tv_sec)*1000000000+st.st_ctim.tv_nsec};originalServe.reset(new strata::kernels::original_mtp53::OriginalServeContext53(path,identity,dpct::get_in_order_queue(),o.batch,uint64_t(o.conversation_cache_mib)<<20,uint64_t(o.conversation_cache_min_free_mib)<<20,d,t));}
+     strata::core::MtpDrafter mtp;
+     // the draft layer's geometry (the canonical model's MTP head), `static` because MtpDrafter keeps a reference; the batch
+     // slots' draft-KV copies use this one too
+@@ -7223,10 +7231,10 @@
+             ver_b.set_next(&gs.ver_b, &split_drive_b);   // the setters reach it; the pipeline never chains run/commit
+         }
+         ver.set_remote_expert_opt(remote_opt.get());
+-        if (batch_mtp) ver.set_batch_graph_limit(64);   // --batch-mtp only: slot rotation makes many layouts (LRU); 0.1.39 keeps all
++        if (batch_mtp || original_serving) ver.set_batch_graph_limit(64);   // --batch-mtp only: slot rotation makes many layouts (LRU); 0.1.39 keeps all
+         if(first_stage_mirror)first_stage_mirror->trace_expect_verifier(&ver);
+         if (!ver.init(wt, g, ss, vh, native_head.loaded() ? &native_head : nullptr,
+-                      batch_mtp ? strata::kernels::kVerifyMaxT : std::max(o.spec, o.batch), err) ||
++                      (batch_mtp || original_serving) ? strata::kernels::kVerifyMaxT : std::max(o.spec, o.batch), err) ||
+             (use_mtp && !mtp.bind(last_st ? last_st->wt : wt, last_st ? &last_st->head : &native_head,
+                                   pipe ? pl_mtp_R : ver.final_R_all(), err))) {
+             std::fprintf(stderr, "strata serve: %s\n", err.c_str());
+@@ -7295,6 +7303,7 @@
+         // the pool the verify windows call: with a layer split, the wrapper that routes each layer to its stage
+         const strata::core::PoolMultiFn win_pool_fn = n_stages > 1 ? &drive_pool_split : &drive_pool_multi;
+         void* const win_pool_user = n_stages > 1 ? (void*) &split_drive : (void*) &drive;
++        if(originalServe)originalServe->bind_target(ver,last_st->ver);
+         mem_mark("the verifier and the drafter's binding");
+         ver.set_split(o.spec_split);
+         // auto: the copy kernel for every pack.  DMA (the native packs' default until 0.1.13) has the host call
+@@ -7714,6 +7723,7 @@
+         };
+         auto checkpoint_at = [&](int64_t L, std::vector<ConvCheckpoint>* parts = nullptr, bool as_tail = false, bool as_pin = false) -> bool {
+             ckpt_why.clear();
++            if(originalServe){if(L>0 && L<int64_t(cur.size())){std::vector<int32_t> prefix(cur.begin(),cur.begin()+L);originalServe->publish_admission(ss,last_st->ss,g,prefix);}return true;}
+             if (o.prompt_cache <= 0 || L < 1) return true;
+             for (ConvCheckpoint& c : checks)
+                 if ((int64_t) c.ids.size() == L) {
+@@ -7783,6 +7793,7 @@
+             return true;
+         };
+         sp.on_chunk = [&](const float* R_rows, int64_t T, int64_t p0, std::string& e) -> bool {
++            if(originalServe)originalServe->teacher(R_rows,int(T),p0,cur);
+             std::vector<int32_t> nxt((size_t) T);
+             for (int64_t t = 0; t < T; ++t) nxt[(size_t) t] = (int32_t) cur[(size_t) (p0 + t + 1)];
+             // E-9: batched through the prompt path when it can (one GPU: a layer split's drafter is on the last stage)
+@@ -8809,6 +8820,7 @@
+                 }
+             }
+             bs[(size_t)b].stop=true;
++            if(originalServe && bs[(size_t)b].active)originalServe->slots().request_cancel(b,{bs[(size_t)b].request_id,bs[(size_t)b].generation});
+             strata::core::full_cache_memory39::lifetime("BSTOP_applied",bs[(size_t)b].request_id,bs[(size_t)b].generation,b,0,bs[(size_t)b].p,bs[(size_t)b].ids.size(),bs[(size_t)b].produced,-1,"cancel");
+         };
+         auto batch_on = [&] { for (const BSlot& b : bs) if (b.active) return true; return false; };
+@@ -8841,6 +8853,7 @@
+         };
+         // An idle slot's complete branch is parked before its private positional cells are overwritten.
+         auto park_slot=[&](int b,std::string& e)->bool{
++            if(originalServe)return true; // complete compound already captured at its actual terminal boundary
+             const auto& slot=bs.at(size_t(b));if(!batch_chain_enabled||!slot.cached||slot.active||slot.img||slot.ids.empty()||!conversations.enabled())return true;
+             const auto identity=donor_identity(b);if(!strata::core::batch_prefix::eligible(identity,false)){e="batch parked slot identity invalid";return false;}std::vector<ConvCheckpoint> local;if(!chain_clone(local,slot.checks,slot.ids,int64_t(slot.ids.size()),e))return false;
+             auto split=strata::core::conversation_checkpoints_split(std::move(local),stages.size());const std::vector<ImgKey> no_images;size_t estimate=0;
+@@ -9018,16 +9031,17 @@
+             static size_t next_slot = 0;
+             // Each MTP slot uses two rows; rotate slots when more than four are active.
+             int A = 0;
+-            for (size_t offset = 0; offset < bs.size() && S + (batch_mtp ? 2 : 1) <= strata::kernels::kVerifyMaxT; ++offset) {
++            for (size_t offset = 0; offset < bs.size() && S + (originalServe ? 1 : batch_mtp ? 2 : 1) <= strata::kernels::kVerifyMaxT; ++offset) {
+                 const int b = (int) ((next_slot + offset) % bs.size());
+                 if (bs[(size_t) b].active) {
++                    const int width53=originalServe && bs[size_t(b)].max_new-bs[size_t(b)].produced>=2 && bs[size_t(b)].p+2<=o.max_context?2:1;if(originalServe && S+width53>strata::kernels::kVerifyMaxT)continue;
+                     first[A] = S;
+                     active[A++] = b;
+                     rows[S] = b;
+                     tok[S] = bs[(size_t) b].x;
+                     pos[S] = bs[(size_t) b].p;
+                     ++S;
+-                    if (batch_mtp) {
++                    if (batch_mtp || (originalServe && bs[(size_t)b].max_new-bs[(size_t)b].produced>=2 && bs[(size_t)b].p+2<=o.max_context)) {
+                         rows[S] = b;
+                         if (!bs[(size_t) b].draft_ready) {
+                             err = "batch MTP: a live slot has no draft";
+@@ -9039,7 +9053,7 @@
+                     }
+                 }
+             }
+-            if (batch_mtp && A > 0) next_slot = ((size_t) active[A - 1] + 1) % bs.size();
++            if ((batch_mtp || originalServe) && A > 0) next_slot = ((size_t) active[A - 1] + 1) % bs.size();
+             if (S == 0) return true;
+             const bool was_busy = strata::core::progress().busy.load();
+             strata::core::progress().busy.store(true);
+@@ -9076,7 +9090,8 @@
+                 keep[b] = batch_mtp && outb[i] == tok[i + 1] && !eos && !sl.stop &&
+                           sl.produced + 2 <= sl.max_new && sl.p + 3 <= o.max_context ? 2 : 1;
+             }
+-            if (!(batch_mtp ? ver.commit_slot_prefixes(keep.data(), err) : ver.commit_slots(err))) {
++            if(originalServe){std::vector<strata::kernels::original_mtp53::OriginalSlotCompletedRows53> completed;for(int a=0;a<A;++a){const int b=active[a],i=first[a],width=(a+1<A?first[a+1]:S)-i;const auto& sl=bs[size_t(b)];completed.push_back({b,i,width,{sl.request_id,sl.generation},sl.p,width==2?tok[i+1]:-1,{outb[i],width==2?outb[i+1]:-1},int(sl.max_new-sl.produced),outb[i]==248044 || outb[i]==248046,sl.stop});}originalServe->slots().commit_and_catchup(completed,keep,err);}
++            if (!originalServe && !(batch_mtp ? ver.commit_slot_prefixes(keep.data(), err) : ver.commit_slots(err))) {
+                 std::printf("ERR %s\n", err.c_str());
+                 return false;
+             }
+@@ -9099,6 +9114,7 @@
+                     const char* fin = eos ? "stop" : sl.stop ? "cancel" : sl.produced >= sl.max_new ? "length"
+                                     : sl.p + 2 > o.max_context ? "length" : nullptr;
+                     if (fin != nullptr) {
++                        if(originalServe){originalServe->slots().finish(b,{sl.request_id,sl.generation},sl.ids.size());originalServe->publish_slot(b,{sl.request_id,sl.generation},*bslot_ss[0][size_t(b)],*bslot_ss[1][size_t(b)],g,sl.ids);}
+                         const double ms = std::chrono::duration<double, std::milli>(Clock::now() - sl.t0).count();
+                         std::printf("BDONE %d %lld %s %.1f%s\n", b,(long long)sl.produced,fin,ms,strict_batch_identity?(" rid="+std::to_string(sl.request_id)+" slotgen="+std::to_string(sl.generation)).c_str():"");
+                         if(strata::core::batch_fidelity::settings().enabled)strata::core::batch_fidelity::close_slot(sl.request_id,sl.generation,b,sl.stop && !eos);
+@@ -9110,6 +9126,7 @@
+                     sl.x = y;
+                     sl.p += 1;
+                 }
++                if(originalServe && sl.active){sl.draft[0]=originalServe->slots().proposal(b,{sl.request_id,sl.generation});sl.draft_ready=true;}
+                 if (batch_mtp && sl.active) {
+                     const size_t stride = (size_t) g.hc * (size_t) g.n_embd;
+                     if (DPCT_CHECK_ERROR(dpct::get_in_order_queue().memcpy(
+@@ -9343,6 +9360,13 @@
+             // (fingerprint file, state capture, file flush, rename + folder flush, validation, device transfer):
+             // that step is allowed <seconds> (session_phase_limit_s) by the watchdog and by the server, no more.
+             // (A verifier commit that fails before the command still answers ERR and exits, as for a request.)
++            if(originalServe && (line.rfind("ORIGINAL_SAVE ",0)==0 || line.rfind("ORIGINAL_LOAD ",0)==0)){
++                try{strata::core::SessionFileIdentity identity;if(!session_identity(identity,err,[]{}))throw std::runtime_error(err);std::array<strata::core::SessionFileIdentity,2> identities{identity,identity};
++                    if(line.rfind("ORIGINAL_SAVE ",0)==0){originalServe->save_file(line.substr(14),identities);std::printf("ORIGINAL_SAVED compound=1\n");}
++                    else{std::istringstream input(line.substr(14));std::string digest,path;input>>digest;std::getline(input,path);if(!path.empty() && path.front()==' ')path.erase(0,1);std::array<strata::core::SessionReadLimits,2> limits;const strata::core::QsaState no_draft{};for(int i=0;i<2;++i){const auto& state=i==0?ss:last_st->ss;if(!strata::core::conversation_session_read_limits(limits[i],state,g,no_draft,4096,64,err))throw std::runtime_error(err);limits[i].max_file_bytes=strata::core::session_read_max_file_bytes(limits[i]);limits[i].admit=[&](uint64_t need,std::string& why){if(!strata::core::conversation_memory_admit(strata::core::conversation_available_memory(),need,uint64_t(o.conversation_cache_min_free_mib)<<20)){why="original compound load RAM refused";return false;}return true;};}originalServe->load_file(path,digest,identities,limits);std::printf("ORIGINAL_LOADED compound=1 activation=0\n");}
++                }catch(const std::exception& e){std::printf("ERR original compound file: %s\n",e.what());}std::fflush(stdout);continue;
++            }
++            if(originalServe && (line.rfind("SAVE ",0)==0 || line.rfind("RESTORE ",0)==0)){std::printf("ERR original mode requires complete ORIGINAL_SAVE/ORIGINAL_LOAD schema\n");std::fflush(stdout);continue;}
+             if (line.rfind("SAVE ", 0) == 0 || line.rfind("RESTORE ", 0) == 0) {
+                 const bool save = line[0] == 'S';
+                 const std::string path = line.substr(save ? 5 : 8);
+@@ -9658,6 +9682,7 @@
+                 std::printf("ERR strict native batch needs positive rid and greedy text; penalties/images/control-vector changes/logprobs unsupported\n");continue;
+             }
+             if(strict_batch_identity && admit_slot>=0)req_slot_generation=++slot_generations[(size_t)admit_slot];
++            if(originalServe){if(admit_slot<0)req_slot_generation=++original_solo_generation;originalServe->begin_admission({req_rid,req_slot_generation});}
+             strata::core::full_cache38::begin(req_rid,req_slot_generation,admit_slot,ids,req_fresh,req_pin_present,req_pin);
+             const auto batch_admission_id=strata::core::batch_fidelity::begin(strict_batch_identity?req_rid:0,req_slot_generation,admit_slot,n);
+             req_imgs.clear();
+@@ -9847,7 +9872,7 @@
+             }
+             int64_t resume = 0;
+             bool from_live = false;
+-            if (cache_prefix_ceiling>0 && o.prompt_cache > 0 && want_cvec == cvec_cached) {
++            if (!originalServe && cache_prefix_ceiling>0 && o.prompt_cache > 0 && want_cvec == cvec_cached) {
+                 if (live_ok && starts_with(live, live_imgs)) { resume = (int64_t) live.size(); from_live = true; }
+                 for (const ConvCheckpoint& c : checks)
+                     if ((int64_t) c.ids.size() > resume && starts_with(c.ids, c.imgs)) {
+@@ -9862,7 +9887,7 @@
+             int64_t slot_tokens = 0;
+             bool resumed_from0 = false;   // a prompt read parked in a slot (BYIELD) that had started at token 0
+             const ConvCheckpoint* slot_ck = nullptr;   // the slot's checkpoint the prompt continues from (else its end)
+-            if (cache_prefix_ceiling>0 && o.prompt_cache > 0 && req_imgs.empty())
++            if (!originalServe && cache_prefix_ceiling>0 && o.prompt_cache > 0 && req_imgs.empty())
+                 for (int b = 0; b < (int) bs.size(); ++b) {
+                     const BSlot& sl = bs[(size_t) b];
+                     if ((batch_chain_enabled?(!sl.active && !sl.cached):(sl.active || !sl.cached)) || sl.cvec != want_cvec || sl.img) continue;
+@@ -9878,9 +9903,9 @@
+                             slot_ck = &c;
+                         }
+                 }
+-            const auto parked=cache_prefix_ceiling>0?conversations.best(ids,req_imgs,want_cvec,cache_prefix_ceiling):strata::core::ConversationCache::Match{};
++            const auto parked=!originalServe && cache_prefix_ceiling>0?conversations.best(ids,req_imgs,want_cvec,cache_prefix_ceiling):strata::core::ConversationCache::Match{};
+             std::optional<strata::core::SavedConversation> incoming;
+-            if (cache_prefix_ceiling>0 && parked.tokens > std::max(resume, slot_tokens)) incoming.emplace(conversations.take(parked.index));
++            if (!originalServe && cache_prefix_ceiling>0 && parked.tokens > std::max(resume, slot_tokens)) incoming.emplace(conversations.take(parked.index));
+             if (incoming) slot_source = -1;
+             // Reject the entire image before parking/overwriting the outgoing
+             // state. Invalid entries can safely fall back to its existing prefix.
+@@ -10107,6 +10132,7 @@
+                     return 1;
+                 }
+             }
++            if(originalServe && !req_fresh){auto joint=originalServe->best(ids,std::min<int64_t>(cache_prefix_ceiling,n-1));if(joint){originalServe->restore_targets(joint,ss,last_st->ss,g);resume=joint->original().target_inputs.size();originalServe->restore_admission(joint,joint->original().target_inputs,ids[size_t(resume)]);std::fprintf(stderr,"MTP53_SERVE_REUSED rid=%llu gen=%llu tokens=%lld shifted_repair=1\n",(unsigned long long)req_rid,(unsigned long long)req_slot_generation,(long long)resume);}}
+             // KV streaming: the drafter's ring may hold cells past `resume` from a longer turn; the main layers'
+             // host copies and slots are always current (every writer writes both), so they need nothing
+             if (use_mtp && resume > 0 && reread_to <= 0) mtp.kv_restore(resume);
+@@ -10577,6 +10603,7 @@
+                             sl.ids = std::move(pre);
+                             sl.cached = true;
+                             sl.request_id=req_rid;sl.generation=++slot_generations[(size_t)ys];
++                            if(originalServe){originalServe->move_admission_to_slot(ys,{sl.request_id,sl.generation},sl.ids,ids[size_t(q)]);originalServe->slots().finish(ys,{sl.request_id,sl.generation},sl.ids.size());originalServe->publish_slot(ys,{sl.request_id,sl.generation},*bslot_ss[0][size_t(ys)],*bslot_ss[1][size_t(ys)],g,sl.ids);}
+                             sl.partial = true;
+                             sl.partial_from0 = read_from == 0 || resumed_from0;
+                             sl.cvec = cvec_cached;
+@@ -11621,6 +11648,7 @@
+                     std::printf("ERR %s\n", err.c_str());
+                     return 1;
+                 }
++                if(originalServe){if(T!=1 || a!=0 || !ver.wait_commit(err))throw std::runtime_error("original solo admission exactT1 commit required");originalServe->admission_committed(p,outv[0],ver.final_R_all());}
+                 prefix_diag.evaluated(p,p+T,"target_verify");
+                 // the window's first a + 1 tokens are in the session now (the last output is not: it is next x)
+                 for (int i = 0; i <= a; ++i) consumed.push_back(window[(size_t) i]);
+@@ -11733,6 +11761,7 @@
+                 live_imgs = imgs_below(req_imgs, (int64_t) live.size());
+                 live_ok = o.prompt_cache > 0 && req_ckpt;   // ckpt=0: nothing to continue or park (#830)
+             }
++            if(originalServe && !cancelled && !live.empty())originalServe->publish_admission(ss,last_st->ss,g,live);
+             strata::core::prefix_lifecycle::state("committed_live",live,!cancelled,live_ok,cancelled?"prefill":std::strcmp(finish,"cancel")==0?"decode":"complete",finish);
+             strata::core::full_cache38::work(resume,read_from,reread_to,cancelled?pp_reached:n,n,produced_n,cancelled||std::strcmp(finish,"cancel")==0,finish);
+             strata::core::full_cache38::points("main_body_complete",checks,o.prompt_cache,tail_ckpt_len);
+@@ -11927,6 +11956,7 @@
+                     sl.max_new = admit_max_new;
+                     sl.t0 = Clock::now();
+                     sl.ids = live;
++                    if(originalServe){originalServe->move_admission_to_slot(admit_slot,{sl.request_id,sl.generation},sl.ids,sl.x);sl.draft[0]=originalServe->slots().proposal(admit_slot,{sl.request_id,sl.generation});sl.draft_ready=true;}
+                     if (batch_mtp) {
+                         if (!slot_mtp[(size_t) admit_slot]->draft_first(1, ver.final_R_all(), sl.x,
+                                                                         sl.p - 1, sl.draft.data(), err)) {
+@@ -12102,6 +12132,7 @@
+             std::fflush(stderr);
+             std::_Exit(1);
+         }
++        if(originalServe)originalServe.reset();
+         if (strata::program::host_trace36::enabled())
+             strata::program::host_trace36::exit_export();
+         if (!strata::program::diagnostic_pti_finalize43()) {
