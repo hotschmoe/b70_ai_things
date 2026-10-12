@@ -18427,3 +18427,17 @@ VERDICT -> Root source review accepted budget/position path; actual
 compiler/output equivalence/natural64/health/full5/teardown pending.
 Serialprompt diagnostic is not optimized production prefill. NoMTP
 50tok/s, originalnumerical/full512 or fullcampaign qualification claimed.
+
+
+## 2026-10-12: current coalesced HC device profile admitted
+
+CONFIG -> Accepted55 pair24/24 P2048/pref512 GEN8 warmup/selected,
+HCtile2/coalesce1/copy0/mirror1; H36/CPUChrome OFF, bounded trace.
+COMMAND -> Producer86336 PASS445s; public81683 PASS; inspector10926 PASS.
+RESULT -> Joined411750 selected Clock/Chrome operations. HC Q8
+384/card union2140/2128ms, DQ1480/1616ms, GEMM435/481ms, explicit
+DMA1616/1325ms. Source/full4/health/kernel/ownedretirement pass.
+Publicf1d8caaff96ee821efda370af1cdc577cb887a08c04041b22859c5876d1fd00b; observedc57c78dbb0468a4316f33f615a158ac8d87fbdd8d3a58e52621c79391bffda66.
+VERDICT -> Current kernel costs guide focusedT5122/2vs2/4 operator
+work. No additivecard/familycriticalpath, physicalidle/BW, calibrated
+phase/host alignment or clean serving speed claim. Fullgoal open.
