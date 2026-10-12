@@ -52,3 +52,22 @@ plus host RAM. Requested performance targets remain 2000 tok/s prefill and
 
 No shelf promotion or full-goal completion is claimed. Preserve failed controls
 and frozen source plans. Root remains the sole GPU experiment coordinator.
+
+## Fidelity and cache boundary correction
+
+The historical post-PLE layer2 gap was removed in the actual source35 prefix1
+comparison (layer2 postFFN NMSE1.593836659759951e-14). Later-layer/head
+differences remained. This does not qualify current52/58/59: the latest
+independent full48 comparison is source43 mode1, whereas current runs use
+mode0 and the old full48 reference explicitly refuses that mode. See
+docs/20261012_flashnext_current_mode0_fidelity_oracle_audit_v1.md for exact
+report identities, source arithmetic/storage differences and current capture
+requirements. The current fidelity requirement remains open.
+
+Full original checkpoint roundtrip is also insufficient for actual target
+prefix reuse. The original MTP consumes NEXT tokens with the prior target
+hidden row; a saved target prefix requires an explicit lookahead and full
+pre-last original state plus authoritative target hidden. See
+docs/20261012_flashnext_original_mtp_shifted_cache_boundary.md. The new
+shifted envelope and genuine first generation1 binding are source-only until
+compiled and tested, then wired to actual compound cache publication/restore.

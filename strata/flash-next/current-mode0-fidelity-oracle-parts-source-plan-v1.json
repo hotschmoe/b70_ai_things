@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/original_q80_q81_wide32_reference_v1.py": "79fc9776139d116c910cd5b355ac7e6368299a4a6744ca12b783a5c0c247c031",
+    "strata/flash-next/test_original_q80_q81_wide32_cpu_v1.py": "d5f97e09bf58d1fc23601aaa1adda8a7f700feac656ec63002f7f0e9fe746d58",
+    "strata/flash-next/current_mode0_fidelity_capture_recipe_v1.py": "013778191ca40e98a29d26f7f78463a956d7584db64c78cb19eacd94d7ef2f37",
+    "docs/20261012_flashnext_current_mode0_fidelity_oracle_audit_v1.md": "b0264704ed0649018be2ea84372cb7f1879a77e0c73dceb521be4365f097bd43"
+  },
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_original_q80_q81_wide32_cpu_v1",
+  "source_only": true,
+  "current_mode0_capture_runtime_integrated": false,
+  "current_full48_mode0_reference_implemented": false,
+  "full_model_math_qualified": false,
+  "device_arithmetic_qualified": false
+}

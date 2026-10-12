@@ -19460,3 +19460,26 @@ actual43057 PASS99s. Actual21094 now real matched512 OFF/ON.
 RESULT -> Receipt7eb5427b02dd4161da2a092d3e254a1727e72fee86376c40738f864a709f4f71;
 ELF2efd626bf78eea21178c5ae02f89f861acde89c05becdb7da76c3737b56c35b4.
 VERDICT -> Actual model result/current health/normal closure stillrequired.
+
+
+## 2026-10-12: shifted original cache and current fidelity sources ready
+
+CONFIG -> Explicit UNBOUND0/0 to real first-gen1; original CP2 permits
+empty pre-last/head absent. Full shifted envelope tracks actual NEXT feed,
+currentP, pre-lastP-1 and authoritative LAST hidden. Different next token
+repairs one unchanged original step; matching token reuses exact currentP.
+COMMAND -> Root source review/preparation, no native compile yet.
+RESULT -> Recipe a44b33af9dd119b00b406af3070257643e7985b8e86fe77d640122960330463d;
+extra private rolling DEVICE backup18907144B/session reserved beforecache.
+VERDICT -> Source-only correction of real prefix/generation semantics.
+No original weights/arithmetic changed; actual native/API/cache proof pending.
+
+CONFIG -> Current mode0 fidelity audit, actual52/58/59 identical NUM/P30
+hooks, independent first-GDN Q80/Q81/BF16 arithmetic candidate.
+COMMAND -> Source/report audit and four tiny synthetic CPU controls only.
+RESULT -> Historical source35 L2 gap removed, but later FFN/head error
+remained. Latest ownfull48 comparison43mode1 cannot qualify currentmode0;
+new independent arithmetic candidate has no native operand feeds.
+VERDICT -> Current completion checkpoint corrected. Current59 capture
+lifecycle/reader and mode0 full reference remain required; no arbitrary
+tolerance or512-ID fullmath surrogate.
