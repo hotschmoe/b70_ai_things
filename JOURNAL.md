@@ -17679,3 +17679,27 @@ RESULT -> PASS10.9s,3actualtemplateinputs each2048 IDs, corpus61b5caabf76bfedfda
 No GPU/modelpayload read. Outputlength>=256 targetnotyetobserved.
 VERDICT -> Genuineinputsready forconfigchosenafter51timing; no paddingEOS
 or newbackendchain. Fullgoal/math/cache/streams/traffic/latency/shelf open.
+
+
+## 2026-10-12: XMX model comparison failed and natural benchmark launched
+
+CONFIG -> Source51 long524/pref64/twoGEN64/ctx2048/shortread0/cacheOFF,
+soleESIMDF16flag0/1; mirror/groupedMKL/H36OFF.
+COMMAND -> Actual26302terminalFAILED1006s.
+RESULT -> Report33afb2220b026752e00bd8f7c9ec7d391eb944114fc90fdf01be5c3d125bfec1
+failedMatchedarmsdiffer. Within-armwarmup/selected repeatIDs match; crossarm
+firstdifference atzero-basedindex10. WarmOFF/ON PP15427.8/16660.7ms,
+64decode6932.8/7009.2ms. Finalstrict/compiledhealth/full4/ownedteardownPASS,
+noGPUfault. Fixturespassdoesnotqualifydensearithmeticsorwholemodel.
+VERDICT -> No XMXpromotion; keepflagOFF andpreservefailure.
+
+CONFIG -> NaturalP2048 corpus61b5caab, SOURCE50paired24/24/pref512/ctx4096/
+spec2/staging1/ESIMD0/grouped0/noMTP/cacheOFF/shortread0/naturalEOS248044,248046.
+SixGEN512fresh-state requests inoneprocess; onlyfirst isprocess-cold; meaningful
+>=256nonEOSoutputiseligibilitytarget, neverforced/padded.
+COMMAND -> Selectedactualpurepreflight69834e86 passed; actual69849 nowholds
+pairlease through bin/gpu-run, outputF17/natural-p2048-native-v1-run-v1.
+RESULT -> Preparationlive, no naturalPP/decode/text resultyet. Nativepack
+context/pref/EOSflags andbothcards/stages explicit. Actualfilesfrozen.
+VERDICT -> Genuineusability/latencymeasurementnext; fullmath/cache/streams/
+criticalpath/traffic/shelf/2000/50 completion remainopen.
