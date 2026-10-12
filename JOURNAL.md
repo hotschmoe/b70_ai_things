@@ -18665,3 +18665,28 @@ Initial root nested launch closedFD9 and refused before GPU/output;
 corrected direct actor25459 is live card1 with PCI44:00.0 required.
 VERDICT -> Compile-only accepted; actual bitwise/graph/latency/health
 checks pending. Full MTP model comparison conditional on operatorPASS.
+
+
+## 2026-10-12: original expert paired-entry operator bitwise PASS
+
+CONFIG -> Fresh patched IQ ELF, original types12/13/7/8, device and
+pinned-host synthetic weights, five directed group plans, separate0/1
+processes on PCI44:00.0, unchanged exported native expert interface.
+COMMAND -> Actual25459 PASS54s; root independent saved-byte/phase reader
+PASS, all248 files perarm byteequal.
+RESULT -> Forty cases/arm and forty changed-input graphs/arm PASS;
+complete scratch/output/Q8/input/weight bytes exact. Normalexit0/removal,
+no forcedcleanup, post-health/kernel/ELF checks pass. Sixteen seven-sample
+phase medians improve19.0-44.3percent device and2.6-10.1percent pinnedhost.
+These are hostsubmit+wait synthetic observations, not device-only/model
+speed/bandwidth. Producer c23c040de52c0ebaf5dbb06c13a5a7815fc4c35862de8dee1dc7e970b106a430; public ee1fb9d48739decb4a29ef0b51bc1ceb2b6aba4cc619f4ebb81702d53bc26070.
+VERDICT -> Operator candidate admitted for matched model experiment,
+no original fullmath/speed/API/shelf qualification transferred.
+
+CONFIG -> Original MTP enabled in both fresh model arms; sole reuse0/1.
+COMMAND -> Genuine source preparePASS; actual97453 NoDri model MAIN
+compile live, new IQ object first plus filtered copied kernelarchive.
+RESULT -> Same native cache policy; require equal actual resident/profile
+prefix/mirrorbytes/segmentmaps. No E2 opportunity counter introduced.
+VERDICT -> Model result pending; no residency-source workaround or
+combined prefill gain claim. Full campaign remains active.
