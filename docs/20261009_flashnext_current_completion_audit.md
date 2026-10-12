@@ -1977,3 +1977,17 @@ Report521432f8b4fbab1ee76e2a8d405199ef89e6430f5f138eb0d1523e2962149427.
 Matched natural model72698 is live under the pair lease, source52 COPY_ENGINE
 0/1, original shared profile, same six P2048 requests each. Model output
 equality and speed remain pending; no promotion from transport fixtures.
+
+
+## 2026-10-12 - Copy-engine terminal and subsequent latency candidates
+
+Copy52 producer72698 PASS1038s and independent63447 PASS. Full output/finish
+IDs match both arms and repeats, with full4/source/all8/health/retirement
+admitted. Repeated warm PP elapsed improves about5.0%, to194-195tok/s;
+decode20.5-22.4tok/s unchanged. See20261012_flashnext_copy_engine_natural_results.md.
+One ordered A/B is not full stability/physical overlap/original-math/shelf proof.
+Source50 pref2048 single-chunk candidate50219 nowlive, exactactual chunk and
+memory/residency/output guards pending. Capacity and original-MTP adapter-gap
+audits document concrete remaining work. Basicserialcache needs no engine
+rebuild; authenticCPUfixtureV2 passes, fixed adapterV3 commandconstruction
+passes, actual cache run remains pending. Fulloriginal objective remainsopen.

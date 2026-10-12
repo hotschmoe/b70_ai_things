@@ -17754,3 +17754,58 @@ RESULT -> Model outputs/TTFT/gaps/timing and finalfull4/health/source remain
 pending. Frozen naturalv1 baseline unchanged; newv2 twoarm reader required.
 VERDICT -> Concrete upstream latency candidate executing; mixed expertprofile
 remains separatedata-only next comparison. Fullcampaign objective active.
+
+
+## 2026-10-12: larger-chunk capacity and original MTP path identified
+
+CONFIG -> CurrentSDK52 and accepted50 pair24/24 P2048/pref512 noBorrow,
+original full model retained. Metadata/source-only parallel audits.
+COMMAND -> Existing source/log capacity arithmetic; existing fullGGUFinventory
+and nativepack/MtpDrafter source inspection. No GPU/build/payload byagents.
+RESULT -> pref2048 covers2047prefillrows inonechunk. Reserve1886vs500MiB/card,
+estimatedworkspace1052vs414MiB/card; expertbudget decreases1386MiB/card,
+actualfuture slotcounts/headroom/fallback still require realstartup. Existing
+source50 naturalv1 supports this bounded candidate without newengine/build.
+See docs/20261012_flashnext_pref2048_source_capacity_audit_v1.md.
+Original publisher MTP alreadydownloaded atsame pinnedrevision,34tensors,
+2.585GiBtensorbytes. Mainshards/pack have noMTP. CurrentSDK expectsQ2_0 and
+borrowsmainQ8embedding/head, whereas originaldraft isQ4Kembedding/Q6Khead
+andQ4KGU/Q8down. Lossless originaladapter and freshseparatefileSHA required.
+See docs/20261012_flashnext_original_mtp_adapter_gap.md.
+VERDICT -> Concrete nextcapacity/source actions, not speeds or mathqualification.
+Mixedprofile assets persisted immutable atF17/mixed-expert-profile-intake-v1,
+full48x512 permutations/SHA/reverseindexes revalidated CPU-only. Actual
+copycomparison72698 remainslive; OFFsixrequestsfinished, ONloading.
+Fullgoal/math/cache/streams/traffic/latency/shelf remainactive/open.
+
+
+## 2026-10-12: copy-engine matched model accepted and larger prefill launched
+
+CONFIG -> SDK52 pair24/24 pref512 ctx4096 originalprofile/noMTP/mirror1,
+soleCOPY_ENGINE0/1; six P2048/naturalEOS/cap512 requests perprocess.
+COMMAND -> Producer72698 terminalPASS1038s; independent63447PASS.
+RESULT -> Fulloutput/finish acrossarms and freshstate repeatIDs equal.
+Originalfull4/sourceall74/all8/health/kernel/ownedteardownpassed. Repeated
+warmPP OFF186.42/184.48/182.81 -> ON194.98/194.15/193.77tok/s, about5.0%
+meanelapsedreduction. Decode21.69/22.36/20.57 ->21.68/22.38/20.54 unchanged.
+Producerbeab962fadfa8de324462573a76726ea24643ccb70e6f915311bcc397a00263b;
+public2aaff799a6c1f319c8cdfa5560377b9e1c4a4fbed3b95b9942855f05a9bdeed4.
+VERDICT -> Narrowpreflillbenefit, no calibratedphysicaloverlap/ABBA/stability/
+fullmath/cache/concurrency/shelf proof;2000/50unmet. Resultsdoc preserved.
+
+CONFIG -> Source50 same natural pair config exceptpref2048, no rebuild;
+capacityaudit reserves1886vs500MiB/card, reducesexpertbudget1386MiB/card.
+COMMAND -> Actualpureconstruction68124PASS; real50219 nowholds pairlease
+in F17/natural-p2048-pref2048-source50-v1-run-v1.
+RESULT -> Startupfallback/headroom/output/timing/finalguards pending.
+VERDICT -> Test larger usefulonechunk P2048 beforemorekernelwork.
+
+CONFIG -> ExistingSDK52 serialfullstatecache, matchedpositive1536pin;
+new authentic A2048/B2023 divergent suffixes, cold/reuse fullfirstheads.
+COMMAND -> CPUrenderer97401 failedNameError not1536; preservedV1. Corrected
+V2 CPU42568PASS18.6s/fixture27685dc74865eccd54cff98346351b2ba18a0aa13391fdefe96233b305aed1c7.
+RootV2 construction86587failedstale_Runtimebinding, beforeGPU. NewV3 genuine
+agent bothcommandconstruction511456a0d4d957b690c928cdf306b906a730e2504e04719f8209f62d370169ba PASS.
+VERDICT -> No cacheGPUproofyet; no enginerebuildneeded. OriginalMTP34tensor
+losslessprimitive/source53 underpreparation; full draftgraph notsupportedyet.
+Campaign objective remainsactive, no shelf promoted.

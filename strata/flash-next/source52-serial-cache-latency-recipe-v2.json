@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "scope": "bounded serial cache latency only; no engine patch/no full qualification",
+  "files": {
+    "strata/flash-next/run_source52_serial_cache_latency_v2.py": "e15ca26ba242dfac3e49dda23a964fbcfbd4f88362895acd1eaa13c109242ff3",
+    "strata/flash-next/render_source52_serial_cache_fixture_v2.py": "50b6c1462db3e64229ccf080e30f00490a42f741b4daeb9e96d7da3ce7aa237a",
+    "strata/flash-next/source52-serial-cache-latency-v2.txt": "7dbd13110a21e4f2f6eafc67dada089fb7f0a1cab10500d4e64e57dee507471e"
+  },
+  "engine_generation": 52,
+  "source52_SDK": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261012T012115Z-_kwur0ww",
+  "cold_positive_pin_is_deliberate_matched_chunk_boundary": 1536,
+  "current_construction_pending_authentic_fixture": true,
+  "CPU_checks": [
+    "py_compile",
+    "import",
+    "private original lifecycle native_phase Protocol and contract route association"
+  ],
+  "actual_GPU_execution_by_agent": false,
+  "preserved_v1_recipe_sha256": "b1bce82acbd06563f21ef4b35da664f7b682f0530784ed10538f408f60939737",
+  "v2_changes": [
+    "fix renderer NameError not1536",
+    "route exact new renderer/recipe",
+    "truthful inherited EOS-enabled64 cap metadata",
+    "native DONE/count/finish/receive-timing checks"
+  ]
+}

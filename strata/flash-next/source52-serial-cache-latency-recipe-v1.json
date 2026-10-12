@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "scope": "bounded serial cache latency only; no engine patch/no full qualification",
+  "files": {
+    "strata/flash-next/run_source52_serial_cache_latency_v1.py": "fd200f93d2b078b3e04a0a69e6995b902a6beed7abd7a31ecee28b58da41d2a4",
+    "strata/flash-next/render_source52_serial_cache_fixture_v1.py": "85a33dceab9606292f55cefd9c5c69932259d74c7c6bbaedd54ffb9acb9e8e32",
+    "strata/flash-next/source52-serial-cache-latency-v1.txt": "7e494397b1c8419160d5f8c6689ceb96e6f629d0c3e2a72a4319a4a4730b3b27"
+  },
+  "engine_generation": 52,
+  "source52_SDK": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261012T012115Z-_kwur0ww",
+  "cold_positive_pin_is_deliberate_matched_chunk_boundary": 1536,
+  "current_construction_pending_authentic_fixture": true,
+  "CPU_checks": [
+    "py_compile",
+    "import",
+    "private original lifecycle native_phase Protocol and contract route association"
+  ],
+  "actual_GPU_execution_by_agent": false
+}

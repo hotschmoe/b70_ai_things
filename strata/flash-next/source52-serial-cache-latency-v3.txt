@@ -1,0 +1,66 @@
+CONFIG -> No engine rebuild. Actual SDK52 inherits the existing complete serial
+cache from50. The current natural experiment disables cache and sends fresh1:
+it cannot reuse history. The retained source43 design asks for a controller port,
+not a missing kernel. Old V8/V12 source35/source40/global-registry gates are not
+current52 runtime authority and are not bypassed by this separate bounded actor.
+
+COMMAND -> First prepare authentic B in a CPU-only pinned-runtime container:
+mount current52 source/tools at /tools, source/serve at /serve, exact current
+tokenizer directory at /tokenizer, existing natural corpus at /corpus.json, this
+new renderer at /worker.py, fresh output at /results. No /dev/dri, model or GGUF
+mount. python3 /worker.py writes cache-fixture.json. A is byte-exact original
+P2048 case0; B keeps its context and changes only the final Task instruction.
+The producer requires a common1536-token prefix and records source/tokenizer
+hashes, messages, renderedB and IDs. Root must admit this receipt before launch.
+
+Use the existing natural v2 current52 command, replacing the actor basename by
+run_source52_serial_cache_latency_v3.py and adding:
+  --cache-fixture /actual/cache-fixture.json --cache-fixture-sha256 ACTUAL_SHA
+Keep --generation52 --experiment copy --cards2 --prefill512 --esimd0 --mirror0
+and the same actual SDK52 receipt/current template/model identity/PTI intake/
+original static profile/corpus inputs. Run --construction-only first: it uses
+only source/metadata, no GPU lease/model payload reads. Root owns actual execution
+under the original pair gpu-run lease after the live copy/profile actor retires.
+The actor forces COPY_ENGINE0 in both cache arms; do not mix two optimizations.
+
+Cold-control arm: A,A,B,B,A,B, every GEN64 fresh1 pin1536 ckpt1 temperature0.
+Reuse arm: same six prompts, GEN64 fresh0 pin1536 ckpt1 temperature0. The first
+ownedempty request must reuse0; every subsequent request must reuse1536 and
+evaluate exactly len(prompt)-1536 new rows on BOTH stage ranges0..24/24..48.
+Positive pin is matched in both arms so the cold prompt also breaks at1536;
+comparing a differently chunked cold prompt could confound cache with rounding.
+Fresh+positivepin is source-admitted serial syntax at SDK52 generate.cpp9643;
+the CPU source rule alone is not treated as actual cache qualification.
+
+RESULT -> Existing merged protocol, bounded pipe reader, page guardian, normal
+QUIT/owned exit/container retirement, per-arm health/journal and campaign-level
+fresh complete4 scans remain. Only a private request adapter applies scheduled
+fresh/pin rather than the natural actor's hardcoded fresh1. Both arms observe
+PREFIX_DIAG/PCL and capture first full248320 FP32 logits, with no48-layer sweep.
+Require finite full head, greedy argmax association, exact output IDs/head bytes
+against each independently fresh request, actual reused/new contiguous work and
+full stage multiplier. Report actual first-token receive latency for each row.
+No cache state is imported from a prior process. RAM parking/persistence/batch/
+cancel/restart/full-state family qualification is outside this bounded experiment.
+
+Cache state source: conversation_state.cpp checkpoint_save/restore includes
+GDN state, PLE history+previous IDs, QSA tails/dead/block positions and the pooled
+current row; live session retains already computed attention KV/pooled prefixes.
+Changing branches restores the selected running checkpoint on all stage parts.
+Snapshot capture/restore additionally transfers all full attention KV/index pages
+for RAM parking; not needed for these shared-prefix branches in one live session.
+
+VERDICT -> Source/import/py_compile/private lifecycle routing PASS only. Root
+must perform tokenizer fixture and complete pure command construction before
+GPU admission. No engine fix found necessary. Hit TTFT is measured against the
+same cold prompt/chunk boundary; the recent11s cold TTFT is motivation, not a
+claimed cache latency or2000tok/s prefill result.
+
+V2 preserves executed rendererV1 NameError not1536 failure. Only the new
+renderer fixes that identifier. Actual EOS stop remains enabled with64-token cap;
+natural_EOS metadata is true and no complete512-token natural speed claim exists.
+
+V3 preserves actualV2 construction failure. Parent set_runtime/set_case and
+preflight are temporarily routed to the private child namespace in BOTH CPU
+construction and runtime branches, then restored in finally. Renderer remains
+V2, already authenticated by root CPU42568; no tokenizer repeat is required.
