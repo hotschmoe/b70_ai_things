@@ -18975,3 +18975,17 @@ RESULT -> V6 runnerproposal1144f037b1c03cc4840369af01757a899a3edddf87d584b1c53b9
 VERDICT -> Freshcontrols/natural actorintake preservesall5/health/owned
 retirement andrequires actualreference-derivedcut markers/physicalrows.
 No runtime/fidelity/speed proof claimed before those runs.
+
+
+## 2026-10-12: reference-cut V6 MTP binary built; controls live
+
+CONFIG -> PairedoriginalMTP V6, onlynormalreferenceprefillcuts changed
+fromfresh-resetV5; exactoriginalSDK52 math/weights/cache/profile retained.
+COMMAND -> Actual58332 NoDri compilePASS97s; rootindependently rehashed
+alloriginalinputs/raw/artifacts andnormalownedcompiler receipt.
+RESULT -> Receipt4aa9c76dd337482758fa942d5f90f576ac04f08cdd2d19541aeb7a2c9b01245c;
+ELF294bd11c3ddb119a20294e8c5ea7414fb44296dfb90c8f0ec42180feb3a22cdd.
+Rootfilledactualpins andlaunched85477 both-lease controls atF17/
+original-mtp53-paired-controls-v5; stdout boundedexternalcontrollerlog.
+VERDICT -> Actualcompile admitted, freshcontrols andnaturalreference
+comparison pending. No fidelity/speed/API/cache/shelf promotion yet.
