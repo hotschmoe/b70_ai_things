@@ -18281,3 +18281,20 @@ VERDICT -> Whole-chain synthetic arithmetic/lifecycle accepted on card0.
 Early card1 UMD hostsegfault remains preserved, enumeration suspected but
 not independently proven. Fresh55 all8 engine build next, no model/speed
 promotion. Original UDQ4 full campaign/cache/concurrency/shelf still open.
+
+
+## 2026-10-12: fresh55 build active and MAIN V3 diagnostic compiled
+
+CONFIG -> Fresh55 all74/all8 source build, original54 GGML dependency.
+COMMAND -> Root62469 acquired pair lease, unchangedbuilder/jobs4, NoDri.
+RESULT -> Compiler is live; no full55 SDK or model result yet.
+VERDICT -> Follow exact handle to terminal; source-derived launch reduction
+does not establish latency gain. Next model A/B keeps HCtile2 fixed.
+
+CONFIG -> MAIN V3 unchanged model/control/math plus flushed pre-assert row.
+COMMAND -> Leased NoDri10029 PASS101s, targeted2 CPU source checks pass.
+RESULT -> ELF35662937bb3c2e0490102f3935097f3b3ed52f52f0a54dc605be2ecc6f308dc9.
+New ENV0 blueprint ec3419198ccabdec232231afbdde85e4492f50963a951cfaa86fd9b67a1d58c3
+prepared, actual MAIN GPU attempt pending after fresh55 lease.
+VERDICT -> Diagnostic discriminates existing failure, not another blind
+unchanged retry or speed qualification. Whole objective remains open.
