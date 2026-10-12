@@ -18122,3 +18122,26 @@ ROmount, bounded2.585GiBweights+scratch/64cell state, syntheticdecisions.
 VERDICT -> Awaitcomponentdirect/replay/rejectrestore/health/teardown proof;
 no actualMAINverified drafts/modelnumerics/performanceclaim. V1uncompiled
 queuepointerseam preserved; V2 onlyexplicitqueue dereference/interface fix.
+
+
+## 2026-10-12: original quantized MTP loaded component passes
+
+CONFIG -> Standaloneoriginal34tensor MTPstepV2, oneB70, full2.585GiB
+originalweights,64cell owncommitted/work banks, syntheticMAINdecisions.
+COMMAND -> Actual99096throughcard0 bin/gpu-run PASS49s.
+RESULT -> Finite21fields/3direct/twographreplays, blockcompletionreject
+restoresallcommittedK/V/tail/dead/pooled/blockposition/hidden, nativeexit0/
+ownedremoval/posthealth/kernelnofault/postoriginalSHA8087 passed.
+Reportc7f240bca17c8319ccb968a4b3efccd52989d1a819d98c22d973ff003f6ffa25.
+VERDICT -> Componentstate/ownership proof, notoriginal numericalparity
+or actualMAINacceptance/speed. ConcretedefaultOFFtargetverifierhook source
+next; unchangedmainloader/weights/kernelpath retained. HCQ8tile operator
+sourceprepared forNoDri bitwise/T8latencytest, no modelpromotion.
+Fullcampaign math/cachefamily/concurrency/criticalpath/shelf remainsopen.
+
+CONFIG -> HCQ8tokenreuse defaultOFF candidate, exactFMA/reduction,
+unchangedproduction8-token calls; safefixtureV2 sealed6ec94436.
+COMMAND -> Freshpatched52 standaloneNoDri62721 live withproductionO3/
+C++20/precise/correctly-rounded device-link flags.
+RESULT -> Compile/operatorbitwise/T8timing pending, noGPUmodelgainclaim.
+VERDICT -> Operatorbenefitbeforefresh54all8modelbuild, noold46rowsweep.

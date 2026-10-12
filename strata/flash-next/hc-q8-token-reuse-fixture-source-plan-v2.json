@@ -1,0 +1,14 @@
+{
+  "CPU_source_apply_undo_receipt": "/tmp/b70-native54-HC-source-apply-undo-v1.json",
+  "GPU_or_compile_executed_by_author": false,
+  "files": {
+    "docs/20261012_flashnext_HC_Q8_token_reuse_fixture_v2.md": "20a041f9ab56b266ef9bd20abacc33130f75845ebd6cb121027eb69c30479769",
+    "kernels/hc_q8_token_reuse_fixture_v2.cpp": "6ec944368f96ad523f713e1144c66fbddad4bf76ee209b5b14bd37b942e9fb60",
+    "strata/flash-next/native54-hc-q8-token-reuse-engine-build-proposal-v1.json": "3956f069ac96395bb9a96c4eb9fd2ce270cfc68265333e5bd77302af0dd1de93",
+    "strata/flash-next/patches/candidate-default-off-hc-q8-token-reuse-v1.patch": "8992f39a5853964453f975bb9ace183e7043dd00da9bb111c39cbec5bddc4ff0"
+  },
+  "old_V1_fixture_preserved": true,
+  "performance_threshold": null,
+  "schema": 2,
+  "scope": "source-only safe original owner and meaningful productionT8 operator latency/bitwise fixture"
+}

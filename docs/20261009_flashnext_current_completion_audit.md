@@ -2087,3 +2087,15 @@ zeroobservedcopy-compute overlap andexplicitH2D40.46GB mayguide optimization;
 no fulloperationcoverage/physicalbusBW/clockalignment/idle claim.
 SeparateON59431live. OriginalMTPV1 uncompiledq_of pointerseam found;
 V2interfacefix pending, no loadedmath/MTPacceptance/speed proof.
+
+
+## 2026-10-12 - Actual overlap and loaded original MTP component
+
+ONproducer59431 PASS421s/reader63007 PASS; observed43083 PASS. Sameoutputs
+andexplicitpayload, OFFengine0overlap0 -> ONcopyengine1 intersectscompute
+461/369ms oncards0/1. See20261012_flashnext_actual_copy_engine_overlap.md;
+no fullcoverage/hostalignment/physicaltotalBW claim.
+OriginalMTPV2 NoDri3fixtures compile17084 PASS100s, freshoriginalSHA8087
+verified. Loadedcard0 step99096 PASS49s withfinite/direct/replay/rejected
+state restoration, health/removal. ActualMAINexecuted0/numericalqualified0.
+DefaultOFFactualtargethook sourcework next; shelf/goalcompletion unproved.

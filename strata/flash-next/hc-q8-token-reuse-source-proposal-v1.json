@@ -1,0 +1,34 @@
+{
+  "F32_injection_unchanged": true,
+  "actual_bitwise_or_performance_qualified": false,
+  "added_device_or_host_wait": false,
+  "candidate_source_sha256": {
+    "sycl/include/strata/kernels/hc_native_projection.hpp": "19f756021cbd88a57feabd9ad3204b66dd47367cfa3cc1ecf5e80d088e2e3537",
+    "sycl/src/kernels/hc_native_projection.cpp": "865f30dd63f1b1f2a334a35be120e883e73df0f3a4a980a6918e9c5628011313"
+  },
+  "explicit_operator_tokens_max": 512,
+  "files": {
+    "docs/20261012_flashnext_HC_Q8_token_reuse_candidate_v1.md": "321203015087effc1562831ecc4913c8ddb6e998b870faccdf8afe49b5c4f285",
+    "kernels/hc_q8_token_reuse_fixture_v1.cpp": "1c0f574417fa9f62651483b5222a07d41c598d7aeb65ecd7ba27c2e7b714f12b"
+  },
+  "fixture_source_sha256": "1c0f574417fa9f62651483b5222a07d41c598d7aeb65ecd7ba27c2e7b714f12b",
+  "fresh_all8_rebuild_required": true,
+  "input_load_count_reduced": false,
+  "parent_source_sha256": {
+    "sycl/include/strata/kernels/hc_native_projection.hpp": "4a9cf6735a9ee5b607d45a30302503d2ca57c2dffca8602df24c321dd79fda86",
+    "sycl/src/kernels/hc_native_projection.cpp": "40a14446456199a4532e9e52b78c8131944afbe7c1615e75a6231e850cb2c025"
+  },
+  "patch": "strata/flash-next/patches/candidate-default-off-hc-q8-token-reuse-v1.patch",
+  "patch_sha256": "8992f39a5853964453f975bb9ace183e7043dd00da9bb111c39cbec5bddc4ff0",
+  "production_prefill_loop_changed": false,
+  "production_tokens_bound_changed": false,
+  "schema": 1,
+  "scope": "source52-base defaultOFF multi-token Q8 decode reuse; no rowbatch/GEMM/quant/arithmetic change",
+  "source52_SDK": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261012T012115Z-_kwur0ww",
+  "source52_proposal_sha256": "25c8b73f8fa0d92f0e7c562f232776844405dc62b7e3524d1584a92283f4630d",
+  "tile_choices": [
+    2,
+    4
+  ],
+  "weight_decode_reuse": true
+}
