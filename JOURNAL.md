@@ -17606,3 +17606,28 @@ commandlists+originalsubmittimestamps: gapcrossessubmissions. Supersedes
 preliminaryexpert-plan hypothesis. PLEGather only.523ms/31calls here.
 VERDICT -> Source-localizeearly/fusedcommit opportunity; physicalidle/current
 clockalignment remainunqualified. Fullmath/cache/streams/latency/shelf open.
+
+
+## 2026-10-12: single-card staging accepted, paired control live, XMX build passed
+
+CONFIG -> Matched50 onecard0/1 staging, originalshort54/twoGEN64/spec2/cacheOFF.
+COMMAND -> Actual93054PASS958s; newboundarypublic21063PASS withoutnewfullscan.
+RESULT -> Producer3e25b0c43054bf8ff05364f561d734a300d86168e9d17c002ba30fd66fd8c603,
+public2e3f60942328307eb00965853ac9c644ce59a948ba1867865d1ff4fd838e0429;
+completeoutputs/finish repeatmatch, source/all8/full4/health/kernel/ownedretirePASS.
+Warm54PP1537.9/1529.1ms;64decode7071.3/6420.7ms,9.05->9.97outputtok/s.
+VERDICT -> Singlematched9.2percentelapsed reduction, notnatural256-output
+qualification/distribution/originalmath/cache/concurrent/API/shelf promotion.
+Actual48803 nowholds pairlease forbalanced24/24 same50OFF/ON staging.
+
+CONFIG -> NewdefaultOFF source51 directESIMDF16 originalexpertprefill.
+COMMAND -> Actual10222NoDri freshall8build.
+RESULT -> PASS314s at /mnt/vm_8tb/b70/build/strata-native-hc-engine-20261012T001656Z-bwbal_dn.
+Freshlinkedwrapper+safe65rowfallback fixture sourceprep; modelactualcommand
+preflight usesgenuinereceipt, futurelong524GEN64soleESIMDflag0/1.
+VERDICT -> Buildonly, no modelarithmeticspeedclaim; fullgoal/2000/50open.
+
+CONFIG -> Correctedhistoricalwarm5 mainT2->commit boundarysourceaudit.
+RESULT -> T1alreadyselfcommits; currentshortread0 bypassespromptT2.
+VERDICT -> Earlycommitpatchworkstopped, sourceonlyproposalunqualified; no
+GPUtest/buildscheduled forthatobsoletecurrentbenchmarkpath.
