@@ -19146,3 +19146,28 @@ receipt9d39acecc1b34c641311e831107eddb280ef5830ef1e85f3c785d3ede8777490;
 parent unchanged/ownednormalcompilerexit/EOF/removal.
 VERDICT -> Actualcompile prerequisite, not model/cooperation/budget/
 cancellation/4stream/API/shelf proof. Fresh58 actorpins beingfinalized.
+
+
+## 2026-10-12: bothstage HC route proof admitted; real scheduler probe live
+
+CONFIG -> ObserverV2 fixes successful earlierstage finish; unchanged
+T2kernel/ABI/queue/math, sameoriginalMTP forcedcontrols.
+COMMAND -> Actual54636 terminalPASS; rootindependentall29artifacts/
+rawsemantic/normalizedJSON/full5/normalterminal replayPASS.
+RESULT -> Bothstages48eligible/48selected and3submitted/3completed;
+FINALfailed0, strictpercard/compiledpair/kernel/identity closehealthy.
+Producer66ef31547eea2532bbfa08895e667441260e70a8ccb6adf4e94e604a275acb01.
+VERDICT -> Actualrecordedandcompleted graphroute prerequisite, not
+physicalkernelcount/bandwidth orpaired512model benefit yet. Rootcaught
+JSON integer-key vsstring-key comparison; CPUintake successor will
+normalize representation without rerunning unchangedGPUcontrols.
+
+CONFIG -> RealSDK58 native2 diagnostic0/1cooperation/defaultshare/
+copy0/mirror0/noMTP, A512/C64 arrivingafteractualA256, trace1botharms.
+COMMAND -> CPUconstruction10211PASS, SHA4bb0e4300f6e6c4a65a8286057022bbadf8c9dfbc95bce4eae163af12a9ef59b;
+root35331 nowbothleases atF17/source58-native2-cooperative-v1-run-v1.
+RESULT -> ExactcompiledSDK9d39/... andsoleflagdifference verified;
+actualservice stagecensus andfull512/64 history checks pending.
+VERDICT -> Diagnosticrealinteractive workload underway. Rows2optional
+census preventsrejecting earlyAcompletion; simultaneousdecodecoherence,
+runtimebudgetledger/cancel/API/4/6/cleanperf remainopen.
