@@ -19688,3 +19688,24 @@ FAILED on reader command check: stale formatter expects logprobs=20, actual
 preregistered GEN deliberately omits it. CorrectIDs/fresh/MAX1/pin intact.
 VERDICT -> Reader-only independent recovery pending; preserve failed parent
 and saved native arrays. Do not rerunGPU for this formatter mismatch.
+
+
+## 2026-10-12: current0 capture recovery admitted; native4 launcher EOF
+
+CONFIG -> Saved actual59 V3 four fresh literalprefix1 NUM33/P30/SFD49.
+COMMAND -> Root actual5438 independent recovery reader PASS without GPU
+rerun, raw mutation, tokenizer execution or new publisher scan.
+RESULT -> Public0df16e374eb0fbbd5883292475ac369c4e6fb5e5ae7a2d406d0fad7e04431d41;
+normal native0/current0 source+all8/health/full4/raw admitted. Original
+producer2efc remains FAILED; corrected formatter omits LP20, and consume
+imports authentic existing native_qsa41_targets_v1 function.
+VERDICT -> Current own-reference comparison targets admitted; full math,
+API and speed false. Four token equality is not arithmetic qualification.
+
+CONFIG -> Native4 serving V1 target baseline, actual65816.
+COMMAND -> Root inspected native READY then normalExit0/owned teardown.
+RESULT -> Zero requests: Docker command lacked -i, so container stdin
+closed. Phase FAILED earlyEOF; posthealth gates pass, parent closing whole5
+still live. Actualnative parse_i64_list accepts both spaces and commas.
+VERDICT -> Runtime-only V2 stdin-forwarding fix required; no engine rebuild
+and no GPU fault inferred. Preserve failedV1/normal native close evidence.
