@@ -1,0 +1,11 @@
+{
+  "schema": 5,
+  "files": {
+    "strata/flash-next/original-mtp53-serve-compile-source-plan-v5.json": "4f94de54520919fcf1b66cf1ca511feff1734522bc3ca135068f40a6e4cee333",
+    "strata/flash-next/original-mtp53-serve-source-plan-v5.json": "c77d428b7f5100d1659f447b9d98ed16c6e73bd22dd071d7cc5342a0f2acf0d6",
+    "strata/flash-next/source58_model_sdk_binding_v1.py": "c12945d19841c3e58d493491790270e192dfed129aea36c9bc5ac550e6cbb74d",
+    "strata/flash-next/build_original_mtp53_target_p117_v1.py": "1113a3466e885ff733d2257924be83c902d656f64294dc7a93eb46516e1e92e1",
+    "strata/flash-next/original-mtp53-target-p117-compile-source-plan-v1.json": "c8b0c0e3761b98cbfcb0b0a2b69cb94bcd60c8221be93e20e1a3e1ff765586f9"
+  },
+  "scope": "Root-only fresh NoDri MAIN/header consumer and verifier link for P117 diagnostic overlay; frozen V5 untouched."
+}

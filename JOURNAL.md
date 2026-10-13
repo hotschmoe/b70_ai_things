@@ -20169,3 +20169,17 @@ PP112.18/decode19.41 reflectsloadedfirstuse, notcoldcausalproof.
 VERDICT -> Timedphase complete; finalproducer/postwholeidentity/publicreader
 stillpending. No speedpromotion/HTTP/fullmath/shelf claim. Deliberate source
 port keeps61 instrumentation and56 kernels; combinedcompile notyetlaunched.
+
+
+## 2026-10-13: P117 real target-state diagnostic build prepared
+
+CONFIG -> DefaultOFF observer of existingV5 bothstage target snapshots;
+publication/load/restore boundaries, independent fresh117prefill reference.
+COMMAND -> Root sourcepreparePASS from exact58 and authenticatedV5MAIN;
+actual17284 NoDri compiler queuedthroughcard0gpu-run afterall56timingsended.
+RESULT -> Observer records perfieldstate bytes, includingGDN/conv/PLE/KV/
+scales/QSA/indexer/meta. FreshELF requiresgenuinefreshartifactmanifest;
+replay54+63decode and newcompound identity, notoldLOADidentitybypass.
+VERDICT -> Distinguish snapshot restoration from prefill/decode pathparity.
+No runtime/statecomparison yet; draftrepair andoriginal current/prelast
+are separate boundaries. Native56 finalidentity92681 remainslive.
