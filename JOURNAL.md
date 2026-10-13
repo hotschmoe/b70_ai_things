@@ -19767,3 +19767,35 @@ First inputQ81 has unchanged integer codes but one half-scale differs among
 80 blocks; outputQ81 differs in18 scales/16 codes.
 VERDICT -> Arithmetic observations only, no tolerance/numericPASS or whole48
 qualification. Scale rounding/local HC contract remains to localize.
+
+
+## 2026-10-13: four-slot baseline passes; paired original guard and lease cancellation
+
+CONFIG -> Native4 V2 fast diagnostic, corrected Docker stdin, exactV3.
+COMMAND -> Actual87273 terminal FAILED; original evidence preserved.
+RESULT -> Baseline all3 cohorts PASS: four64-token fresh and cache histories,
+cancellation11-token exactprefix/stalerefusal, normalExit0/removal/health.
+Original arm reaches RID1 admission and RID2 prefill then refuses grouped
+slot rows with layer split. ProducerSHA 29eb9a27e4bc92128d579d9dcb41beac431f1d2646d4538c55099b4d244f8df8.
+VERDICT -> Correct paired original private T2 integration needed; no guard
+deletion, four-stream original/API/persist or speed qualification.
+
+CONFIG -> Still-queued V4 eviction-only compile, superseded by paired fix.
+COMMAND -> Root incorrectly terminated its flock waiter alone; gpu-run's
+unhandled TIMEOUT0 flock failure continued into NoDri builder. Root then
+signalled exact owned builder1052415 for its protected compiler retirement.
+RESULT -> Actual6512 FAILED/interrupted/forcedcleanup, owned_removed=true,
+devices_exposed=false. Attempt invalid; no accepted build or GPU model touch.
+VERDICT -> Preserve failure. Fix lease acquisition failure and queued signal
+handling, with applicable live-shelf smoke before bin commit. Future V5
+combines paired verification and V4 idle eviction/status in one fresh build.
+
+CONFIG -> Current59 source-expression full48 reference V2 over original
+weights/own states; packed grouped/shared integer routes replace V1 FP64
+projection estimates.
+COMMAND -> Source sealed/targeted CPU controls by agent; root has NOT run
+full48 provider yet. It waits for the PLE model timing intervals to end.
+RESULT -> Actual device intrinsic/nonlinear/contraction contracts remain
+unqualified. FirstGDN real result is curated in
+docs/20261013_flashnext_current59_first_gdn_reference_result.md.
+VERDICT -> Source/dataflow progress, not full model math or completion.
