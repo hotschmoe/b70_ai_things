@@ -21879,3 +21879,72 @@ raptorq-rfc6330-prng timeout fail 3/8. End health ok. Run dir
 VERDICT: arm A scores 17/19 under the scored protocol (15 first pass + 2 on
 rerun). Only two tasks of headroom remain, so arm B can at best reach the
 +2 threshold by passing all 19. Arm A stopped after this run.
+
+## 2026-10-13 -- A/B arm B S1/S2: stock ISTA IQ3 all-VRAM Strata
+
+CONFIG: both B70s, kernel 7.1.0-070100-generic; stock Strata
+ a0116b2782a5b82622358c04a06496485d12b2d6/v0.1.43.1,
+ strata-ab-build:ocloc. Exact ISTA GSQ-RCO IQ3_S and IQ3_XXS artifacts in
+ strata/flash-next/model-lock-ista-iq3.json. Explicit layer split, int8 KV,
+ direct NVMe PLE, prefill4096/no borrowing, VERIFY_NO_HOST=1,
+ MIRROR_MIB=0, KV_WIDE_HOST=0; successful launches use STAGE_TRIM=1.
+ Final: IQ3_XXS, split25, ctx131072 per stream, parallel2, reserve1024 MiB,
+ upstream Q2_0 MTP runtime (--spec 4 --spec-min-p 0.5), conversation parking
+ 8192 MiB/4 entries. Primary served ID hotschmoe-dd; secondary
+ qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata, registered in models.yaml.
+COMMAND: bin/gpu-run bin/xpu-health --timeout 400 before and after stages;
+ prepared launch wrapper plus stock config variants; chat-format adaptation
+ of evals/orchestrator/longctx_probe.py with near-full retrieval, stock
+ concurrent_probe.py, 30k growing/interleaved chats, and a 1500-output coding
+ prompt. Exact commands/configs/raw evidence and every cell are in
+ /mnt/vm_8tb/b70/results/flashnext_iq3_ab_20261013/armB/report.md and adjacent
+ logs. Persistent launch/stop commands are in armB/launch-and-stop.txt.
+ Smoke: python3 evals/abfast/run_arm.py --base-url
+ http://192.168.10.5:18085/v1 --model hotschmoe-dd --arm-label armB-smoke
+ --parallel 1 --timeout-s 2700 --max-output-tokens 32768 --thinking xhigh
+ --tasks click-help-spec (no API-key file).
+RESULT: initial checks found arm A stopped and both leases free; never
+ started arm A. Both cards passed pre-health, S1 post-health and S2
+ post-health. IQ3_S and IQ3_XXS passed coherent arithmetic, the arm-A-shaped
+ lookup_build_status round trip, and enable_thinking=true with reasoning
+ separately in reasoning_content. /v1/models lists the stable ID first.
+ IQ3_S proved 130423 tokens at ctx131072 and 199323 at ctx200000 (one stream),
+ and 130490 with MTP4 at ctx131072. IQ3_XXS proved two concurrent near-full
+ ctx131072 retrievals, 130492/130491 tokens without MTP and 130493/130491
+ with MTP; all needles correct and all 24576 main experts resident.
+ Observed peak VRAM GiB, card0/card1: IQ3_S 131k 28.15/29.19; 200k
+ 28.62/29.66; 131k MTP 28.17/30.17; IQ3_XXS two slots 25.43/28.52 off,
+ 25.44/29.51 on. Failed all-VRAM cells/refused expert counts: untrimmed 8k
+ 801; split24 131k 397; split25 200k/reserve1536 128; IQ3_S two slots 197;
+ IQ3_S MTP/reserve1536 353. Failed starts have no after-load/peak sample.
+ Default caching reuses an immediate follow-up but interleaved chats evict
+ each other with either one or two slots. Stock conversation parking fixes
+ this: one-slot interleaved returns reuse 30029/30007 tokens; two-slot MTP
+ returns reuse 30050/30009, TTFT 0.535/0.595 s. Initial two-slot MTP 30k chat
+ TTFT 17.776 s; immediate follow-up 0.318 s, only 18 prompt-eval tokens.
+ Matched IQ3_XXS two-slot/parking single speed measurements, off/on MTP:
+ P512 decode 40.9/92.3 tok/s, prefill 305.0/380.2, TTFT 1.607/1.283 s;
+ P4096 decode 58.8/65.3, prefill 1260.6/1277.3, TTFT 3.235/3.193 s
+ (off stopped at 13 output tokens); P32768 decode 40.5/65.4, prefill
+ 2052.2/1902.0, TTFT 15.957/17.217 s; coding 1500 output 45.2/80.6 tok/s.
+ Concurrent aggregate decode 53.9/54.4 tok/s. All actual server token
+ counts and supplemental IQ3_S/default-cache rows are in report.md.
+ Smoke line: [click-help-spec] completed pass=True 664/664 agent=134.5s
+ turns=28 tok=269414/6393. Pi: 30 tool calls, 8657 uncached prompt tokens,
+ 260757 cache-read tokens; final stop reason stop; run-end endpoint health
+ ok. Raw smoke copied to armB/abfast/armB-smoke-20261013T103825Z/.
+ Prepared PLE target/symlink mismatch caused duplicate shard rejection;
+ using the same symlink path fixed it while retaining NVMe. MTP packer
+ needed PyYAML 6.0.3 in the venv. Corrected fdinfo MiB/KiB handling; raw
+ load value corrected and already-recorded peaks unchanged. Initial nohup
+ did not survive the tool shell; final persistence uses a transient user
+ systemd unit. No engine patch, DEVICE_LOST, v0.1.42 fallback or full eval.
+VERDICT: measured S1/S2 gates passed for the final configuration; quality
+ and migration decisions remain with the orchestrator. Final endpoint
+ intentionally left running as strata-armB.service / strata-ab-serve,
+ lease PID 1383418, server PID 1383475, engine PID 1383502; both cards
+ leased. URL http://192.168.10.5:18085/v1 verified inside abfast:1.
+ Exact config /mnt/vm_8tb/b70/build/strata-ab/serve-armB-final.json.
+ Stop: docker stop -t 30 strata-ab-serve (service exits/releases leases).
+ These are single measurements, not a sustained-stability claim. No commit;
+ pre-existing dirty worktree changes preserved.
