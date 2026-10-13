@@ -20529,3 +20529,29 @@ RESULT -> Actual54 full64 baseline bound. 117 control explicitlyderived
 [savedlookahead11]+actual118 first63; not an actual117 reference.
 VERDICT -> Queue after QSA35 normalclosure; no recompile or finalqualification
 shortcut. Later-token/wholemodel/cache/speed proof remains open.
+
+
+## 2026-10-13: QSA35 diagnostic closes; user requests pause
+
+CONFIG -> New QSA35 SDK8f1e, producer29000cc6, fourfreshliteral/MAX1,
+NUM33OFF/sqrt1/HC2/1/1/mirror1/Direct, opt-in diagnostic model identity.
+COMMAND -> Root46549 PASS252s; report
+d6d56400b56a0edbdf58948806ec427edcab355f75cbe2b439a2342dcce83343.
+RESULT -> Fourfirstoutputs846 andeightQSAframes, original normal native
+close/health/identity/source gates PASS; root1198 artifact hashes verified.
+Pre/post identity boundaries0.00482/0.00329s with no freshfullshardreads.
+This is diagnostic identity, not speed/stability/shelf qualification.
+Independent reader53312 FAILED KeyError pre_full4 in inherited phase_binding;
+failedreceipt lives outside frozen capture root at
+B17/source62-qsa35-numeric-v1-public-reader-failure-v1.json.
+VERDICT -> Saved-data reader repair/review pending; no GPU rerun required for
+metadata failure. No fullmath/cache/HTTP/speed/shelf claim. User explicitly
+requests pause after currentrun; sustainedGEN64 remains unrun, agents stopped.
+
+CONFIG -> Source-only RAW coverage proposal212647d3, no integrated runtime.
+COMMAND -> Bounded source checks by research agent; no new GPU/provider run.
+RESULT -> Existing paired host coverage absent; submit-window excludes
+earlier submissions. Mapping must distinguish actual queues/context/device
+and cross-stage expert helper ownership; prototype not wired or compiled.
+VERDICT -> 5.201s remains uncovered time, not measured GPU idle. Resume later
+with explicit bounded integration and requalification; full goal unchanged.

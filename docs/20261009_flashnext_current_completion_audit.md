@@ -2317,3 +2317,26 @@ changed stat falls back to a fresh scan. Actual time saving is unmeasured.
 The next useful layer35 numeric probe is being prepared, rather than another
 identical cached benchmark. Final fresh identity and every remaining full
 objective gate remain required. No2000/50 or shelf promotion is claimed.
+
+
+## 2026-10-13 - Paused after QSA35 diagnostic closure
+
+User requested pause after the live test. Actual new QSA35 SDK8f1e producer
+d6d56400 passes fourfreshliteral/MAX1 with repeated firsttoken846, eight
+owner/nonowner frames, normal process retirement and current health/source
+checks. All1198 capture artifacts are root-hash-verified. Diagnostic identity
+pre/post boundaries0.00482/0.00329s reuse authenticated prior whole hashes
+with current stat5/known pages; no freshfullscan or speed/stability authority.
+
+Independent public reader fails KeyError pre_full4 in inherited phase_binding
+under the diagnostic identity lane. Frozen producer/captures remain preserved;
+repair the saved-data reader before any numerical/public admission. A GPU
+rerun is not required for that metadata failure. Longer projectionGEN64 is
+sealed but remains unrun. RAW coverage proposal212647d3 is source-only and
+not integrated/compiled. Agents have stopped; current GPU run has closed.
+
+Resume with saved-data reader repair and original-reference layer35 review,
+then the prepared sustained projection control. All original requirements
+remain intact: full-model fidelity, complete cache family, actual HTTP and
+1/2/4/bounded6 streams, calibrated latency/profile/memory tradeoffs and a
+reproducible verified shelf. No2000/50 or promotion is claimed.

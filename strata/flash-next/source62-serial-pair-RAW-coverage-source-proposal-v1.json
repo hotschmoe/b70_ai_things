@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "scope": "Source prototype and exact unimplemented integration hooks, no executable/runtime authority",
+  "files": {
+    "strata/flash-next/original-mtp53/serial_pair_native_queue_mapping_v1.hpp": "1c34bff79ee7ac1d17f906569bcf7ba3d3ceda441820f515e9c0a9a3cd63b07e",
+    "strata/flash-next/source62-serial-pair-RAW-coverage-proposal-v1.md": "e19cb17633ebdc28aed4a02884d258476c4f0b88fc71b30108897ac5d109ea05",
+    "strata/flash-next/inspect_source62_cached_RAW_clock_v1.py": "0874238ebc4aed1136d8415a4fea5f803a8096c8c6b46be82c464643d23275b6",
+    "strata/flash-next/prepare_pti_unitrace_clock_export_v1.py": "42890df5cbfbe147c54f09d99b3c2368ea8ae48ab3c75795feff11e24838229a",
+    "kernels/copy_engine_prefill52_pair_harness_v1.cpp": "34777350a872666cf820eb75cb4b2b024ae002d945358880f26b7c776512503f",
+    "docs/20261013_flashnext_optimized_cached_RAW_profile.md": "7c50302c99921112543655c412e592eeba26b9bd4f63bd99671508d1e485574e"
+  },
+  "actual_source_files": {
+    "/mnt/vm_8tb/b70/build/strata-native62-incremental61-v1-20261013T020818Z-wcsa7gom/source/sycl/src/core/verify.cpp": "4ed11a872e827c70051dfdb76b8610e68aad8a5c3872d39f31aa7eb88c5d64c5",
+    "/mnt/vm_8tb/b70/build/strata-native62-incremental61-v1-20261013T020818Z-wcsa7gom/source/sycl/src/program/generate.cpp": "b2fa42a366195f804869b0bd4849d1de704f1dc94c559cd0abaab07f0fde9929",
+    "/mnt/vm_8tb/b70/build/strata-native62-incremental61-v1-20261013T020818Z-wcsa7gom/source/sycl/src/prefill/prefill.cpp": "e09e683a4dfa209ac6230a79b1e3b9d5443c0cd85ac80aa438878c50f62b17d7",
+    "/mnt/vm_8tb/b70/build/strata-native62-incremental61-v1-20261013T020818Z-wcsa7gom/source/sycl/include/strata/program/host_critical_path_trace.hpp": "8717302759c3a90f948963edefad49c2277d1bba1d356e9187918f2857c39bec",
+    "/mnt/vm_8tb/b70/build/strata-native62-incremental61-v1-20261013T020818Z-wcsa7gom/source/include/strata/prefill/host60.hpp": "e75cacd43667157e9160c185a67fd1a8162204104198252b80500af9b88ea948"
+  },
+  "default_OFF": true,
+  "native_stage_mapping_implemented": false,
+  "host_scopes_pair_port_implemented": false,
+  "context_clock_join_implemented": false,
+  "uncovered_interval_means_GPU_idle": false,
+  "compiled_or_GPU_executed": false,
+  "new_device_waits_barriers_queries_in_prototype": false,
+  "get_native_materialization_cost_unqualified": true
+}
