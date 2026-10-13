@@ -20066,3 +20066,29 @@ actual32292 pairleased save/evict/restart same/divergent test launched.
 RESULT -> Uses passedNoDri receipt2b7e031a and unchangedbinding26476; no
 bypassedidentityguard. Actualpersistence/coherence/closing result pending.
 VERDICT -> Full original objective remainsactive; no2000/50/API/shelfclaim.
+
+
+## 2026-10-13: HC lineage gap and persisted restart divergence
+
+CONFIG -> Actual61 clean ABBA versus earlier accepted56 bestHC build.
+COMMAND -> Source audit actual56/61 flag consumers and PLE bodies.
+RESULT -> Actual61 has no consumers of HC_Q8_TOKEN_TILE, HC_PREFILL_COALESCE,
+or HC_PREFILL_TILE4; its52->58 lineage omitted55/56 optimizations.
+PLE ngram/reader/direct bodies match. Flags alone cannot restore kernels.
+VERDICT -> Prepare existing56 best2/1/1 Direct control; source difference
+explicit. Deliberate successor port required for optimized61 profiling.
+
+CONFIG -> GenuineV5 compound cache V2, fresh restarted native process.
+COMMAND -> Actual32292 baseline/publication arm results and restart readback.
+RESULT -> Baseline/publication PASS; save/evict clearsroots/payload/publication
+with privatebanksreserved. Restart reuses117/new1 but same-input continuation
+differs at outputindex9 (expected13057, actual864), both64 outputs.
+Restart arm FAILED; final identity/owner closure stilllive.
+VERDICT -> Persisted restart is NOT qualified. Preserve failure and localize
+missing state/arithmetic path; reuse receipt alone is insufficient.
+
+CONFIG -> Isolated explicit sqrt/divide HC variant, productionMAIN unchanged.
+COMMAND -> Two targeted CPU suites PASS; real NoDri build40620 queued via
+card0 gpu-run behindcache lease.
+RESULT -> Independent exactRNE helper retains existingCPU value, no+ULPfit.
+VERDICT -> Actual ELF/GPU operator result pending; fullmath remainsunqualified.
