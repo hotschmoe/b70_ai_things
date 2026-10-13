@@ -20156,3 +20156,16 @@ Actual56 Directcontrol92681 confirmedlive; no heavybuild/providerIO added.
 VERDICT -> Newmodelcapture must compare OFF all48/head bitwisetoactual59,
 then ON against independent full48ownreference. IsolatedRMS PASS doesnot
 qualify other unsupported arithmetic, fullmath, HTTP or shelf.
+
+
+## 2026-10-13: optimized56 Direct model timings finish
+
+CONFIG -> Actual56 compiledHC2/1/1, PLEdirect, sixP2048/GEN512 requests.
+COMMAND -> Actual92681 timedphase resultPASS/nativeexit0; root comparesall
+six complete512-ID histories andlengthfinish againstboth closed61 directarms.
+RESULT -> Allsix historiesmatch. RawwarmrepeatPP259.53/255.29/254.47tok/s,
+decode21.65/22.37/20.54tok/s; nativeDONE intervals only. Firstrequest
+PP112.18/decode19.41 reflectsloadedfirstuse, notcoldcausalproof.
+VERDICT -> Timedphase complete; finalproducer/postwholeidentity/publicreader
+stillpending. No speedpromotion/HTTP/fullmath/shelf claim. Deliberate source
+port keeps61 instrumentation and56 kernels; combinedcompile notyetlaunched.
