@@ -20043,3 +20043,26 @@ RESULT -> Build1e0cce29522cd7db1f5aa765a8a0fb3db56fac8cd6cc673f46bfc43aadeb4890;
 ELFabf40815573aa28d8614133035e046e1d8ff984a4533ea0a8a39d3879841ab41;
 export56ba4c46f62a67a030eb7e86bff6d0fd0ad95596040a80a1937934626ec0189c.
 VERDICT -> Actualoperator result/health/close pending, noMAIN RMS orfullmathclaim.
+
+
+## 2026-10-13: exact HC oracle matches MAIN and localizes rsqrt
+
+CONFIG -> Isolated exact59/61 HcNorm, actual originalprefix1 R/norm, card0.
+COMMAND -> Actual95377 PASS; root28 rawartifact hashes independentlyverified.
+RESULT -> Reportf64f387c97635f24c146af6ef44a8254ff542bab8eafbe810d843639a04073f4;
+PCI0000:0b:00.0, observer/baseline/savedMAINnormalized BITWISEequal,
+original/changed graphreplay and guards PASS; health/kernel/ownedclosePASS.
+Four square_sums0.13046026229858398 and RMSarguments5.1961040298920125e-5
+BITWISEindependentCPU; device rs138.72703552246094 versusCPU
+138.72702026367188 (oneF32ULP).
+VERDICT -> FirstHC normalization discrepancy localized toreciprocal-sqrt
+semantics for theseinputs, notsum/argument/encoder. Isolatedoperatoronly,
+actual_MAIN_RMS_observed=false/whole48qualified=false. Independent reference
+correction mustderivecontract, no hardcodednativevalue or tolerancefit.
+
+CONFIG -> Genuine artifact-backed nativecompound cache V2, sameV5.
+COMMAND -> Root48848 actualartifact-aware threecommand constructor PASS;
+actual32292 pairleased save/evict/restart same/divergent test launched.
+RESULT -> Uses passedNoDri receipt2b7e031a and unchangedbinding26476; no
+bypassedidentityguard. Actualpersistence/coherence/closing result pending.
+VERDICT -> Full original objective remainsactive; no2000/50/API/shelfclaim.
