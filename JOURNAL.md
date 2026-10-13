@@ -19929,3 +19929,19 @@ RESULT -> Same three useful roles/repeats, batch/cache/trace/cooperation/cap
 OFF, mirror1/copy0 fixed; onlyPLEmode changes.
 VERDICT -> ReferenceCPU98594terminal; no other CPU scan/build/model work
 will overlaptimed ABBA arms. Actualspeed/equivalence/close remains pending.
+
+
+## 2026-10-13: saved HC packet amplification independently replayed
+
+CONFIG -> Admitted current59/native fields and independently computed
+original own-firstGDN fields; no provider, weights, model or GPU execution.
+COMMAND -> Root analyze_current59_first_hc_packet_boundary_v1.py PASS0.74s.
+RESULT -> Report49e92e535dc3521a0d6878e80e9e762094fd4ccc57b057c7f2a974e13b3175ec; HC normalized differs
+before encoding (max2F32ULPs), one input halfscale boundary amplifies
+raw mixedNMSE1.619e-14 to reconstructed packetNMSE1.2545e-8.
+Independent conditional encoder ofnativevalues matches bothnativepackets
+bitwise for allfour requests (diagnosticonly, notprimaryreference).
+VERDICT -> No encoder patch or tolerance fit justified. Exact HC source
+RMS/intrinsic/compiler boundary remains to observe with a small isolated
+actual-kernel oracle; oldNUM38 addedGDN RMS, nottheseHCfields. No whole48
+blind recapture; deferallGPU arithmetic work untilcleanABBA closes.
