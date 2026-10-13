@@ -19898,3 +19898,34 @@ processes, typed stdin/compile/identity recipe; no GPU cache run yet.
 RESULT -> New launch recipe prepared; actual model wait follows basic
 native4 result and healthy retirement.
 VERDICT -> Concrete source/constructor only, no cache-persistence proof.
+
+
+## 2026-10-13: paired histories close and full48 computation completes
+
+CONFIG -> V5 original four-slot V3 diagnostic with authenticated baseline.
+COMMAND -> Actual35726 PASS; root all39 rawartifact hashes verified.
+RESULT -> Report6fba8a58cf98f2279a2694af50057b671b5c62ea6c99b7331526eef67ba17624;
+allfresh/cache-request full64 histories match; cancelled14-token exactprefix,
+staleowner refused, normalEOF/removal/health/currentstat-pages sourceclose.
+Observed shifted reuse events ZERO; do not qualify cachehit fromfresh0 alone.
+VERDICT -> Successful bounded diagnostic observations, not promoted native
+coherence/speed/API/fullstate/persistence. Actual49698 freshwhole5 native
+save/evict/restart matching/divergent test nowrunning.
+
+CONFIG -> Current59 original own full48 V3, exact packed consumer routes.
+COMMAND -> Actual98594 PASSexecution/closingfull4; root288artifact hashes
+andallfourcomparisonmetrics independentlyverified.
+RESULT -> Reportd9fabca3bca0e9d1fd94d507820c0bf179c65eb405d2856a46c47f29aefdc093;
+144layer phases+full248320head computed fromownzero/originalweights;
+no capturedprimary inputs ordecodedFP64projectionfallback. HeadNMSE
+8.8281279e-5/maxabs0.0459429/maxnorm0.00217816; finalFFN2.98913e-5.
+VERDICT -> Working fullmodel reference observation, numericPASSfalse/eight
+device arithmetic contracts stillunqualified. No fittedtolerance claim.
+
+CONFIG -> Clean source61 PLE mmap/direct naturalP2048 GEN512 ABBA.
+COMMAND -> Root59486 genuine four-command constructor PASS; actual88714
+queued behindnativecache49698 usingregular leased campaign boundaries.
+RESULT -> Same three useful roles/repeats, batch/cache/trace/cooperation/cap
+OFF, mirror1/copy0 fixed; onlyPLEmode changes.
+VERDICT -> ReferenceCPU98594terminal; no other CPU scan/build/model work
+will overlaptimed ABBA arms. Actualspeed/equivalence/close remains pending.

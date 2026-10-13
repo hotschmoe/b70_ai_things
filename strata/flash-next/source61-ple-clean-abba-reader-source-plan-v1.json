@@ -1,0 +1,9 @@
+{
+  "schema": "source61-PLE-clean-ABBA-reader-v1",
+  "files": {
+    "strata/flash-next/validate_source61_ple_clean_abba_v1.py": "a1f626ba96edd22810c09cdd5e916d91e632717411259fdedde226dfc1978a51",
+    "strata/flash-next/source61-ple-clean-abba-recipe-v1.json": "4db2f60a308a94e87b010ba0136371c54f97d620d7a9c30646ae7be05bf27b5a",
+    "strata/flash-next/validate_source47_grouped_f16_model_v2.py": "f8cd5bdf1520335eeefa84b09660df7200daf129cc69d9926537b758b5dbf1f1",
+    "strata/flash-next/source61_ple_identity_ports_v1.py": "1504805d1e838619ea4ea9ecd62540633a85eda9cf9bc56912cfd3f7fedfbe55"
+  }
+}

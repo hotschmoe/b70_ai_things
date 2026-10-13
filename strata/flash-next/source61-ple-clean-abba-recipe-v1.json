@@ -1,0 +1,38 @@
+{
+  "schema": "source61-PLE-clean-ABBA-v1",
+  "files": {
+    "strata/flash-next/run_natural_p2048_native61_v1.py": "980863cbfb2e5fd193098193c96e7d929991c7005e12632843e3ffe39091559a",
+    "strata/flash-next/native61-natural-parent-source-recipe-v1.json": "11a579242ccf463423071b482f9dd3af8b4387fd2325b882e6c4f30fc572cd44",
+    "strata/flash-next/source61_model_sdk_binding_v1.py": "7bcce9be54124f9f5f536d115ddab1af9a820aac04e776c2f1cec6b59d2649ae",
+    "strata/flash-next/native61-host-actual-chunk-selection-engine-build-proposal-v1.json": "34d49ee71fcee30b4059c37cb166c20a1356454dc0abe2565f21f2be59ab659e",
+    "strata/flash-next/native61_startup_option_preflight_v1.py": "9669170262fd7e6756f45f8384c11725832a6bd846ee2aae0e8eb36dc93f5743",
+    "strata/flash-next/run_source61_ple_clean_abba_v1.py": "07bb742f7f412130b76777fd3a35d77b0a66011049010f13dba7b2dbf94e08ee",
+    "strata/flash-next/source61_ple_clean_abba_contract_v1.py": "656eee350ed68ad24635583bb0a226c0e447d9b3d71cfb0ece769d5d946d6c66",
+    "strata/flash-next/source61_ple_identity_ports_v1.py": "1504805d1e838619ea4ea9ecd62540633a85eda9cf9bc56912cfd3f7fedfbe55"
+  },
+  "scope": "Four fresh serial native owners, sole PLE mmap/direct/direct/mmap; three P2048 roles with repeats, GEN512 naturalEOS; no task/fullmath/shelf claim",
+  "ABBA_order": [
+    "mmap",
+    "direct",
+    "direct",
+    "mmap"
+  ],
+  "requests_per_arm": 6,
+  "case_roles": [
+    "prose_operations_review",
+    "code_event_pipeline",
+    "document_decision_memo"
+  ],
+  "instrumentation_cooperation_single_window_copy": 0,
+  "mirror_stage_T1": 1,
+  "batch": 0,
+  "prompt_cache": 0,
+  "PLE_row_cache": 65536,
+  "PLE_inflight": 256,
+  "PLE_raw_IQ4_NL_cache_payload_bytes": 5898240,
+  "native_instrumentation_OFF": true,
+  "cold_cache_qualified": false,
+  "physical_IO_bytes_qualified": false,
+  "clean_host_IO_exclusion_required": true,
+  "maximum_total_output_tokens": 12288
+}
