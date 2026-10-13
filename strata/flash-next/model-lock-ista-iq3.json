@@ -1,0 +1,88 @@
+{
+  "schema": 1,
+  "repo": "ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+  "revision": "ed59f92082b1e93c0e96d60a8b11aab089b52f09",
+  "license": "apache-2.0",
+  "verified_all_ok": true,
+  "models": [
+    {
+      "model_id": "qwen3.8-flash-next/ista-gsq-rco-iq3-s",
+      "destination": "models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-s",
+      "research_alias": "qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_S",
+      "primary_served_name": "hotschmoe-dd",
+      "files": [
+        {
+          "path": "Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
+          "size": 54817524224,
+          "hub_path": "IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
+          "sha256": "4c1eb2ceb4915e1192f4f386021897bde56a97f40a0bb78bb86465e0f7d2aca3"
+        },
+        {
+          "path": "Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+          "size": 28800138432,
+          "hub_path": "IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+          "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+          "resolves_to": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf"
+        },
+        {
+          "path": "mmproj-Qwen3.8-Flash-Next-BF16.gguf",
+          "size": 907543008,
+          "hub_path": "mmproj-Qwen3.8-Flash-Next-BF16.gguf",
+          "sha256": "b1a82259702816a5330d7bd7607cd9676b11780e79ff7348c21103ff3ce49bd0"
+        },
+        {
+          "path": "README.md",
+          "size": 15693,
+          "hub_path": "README.md",
+          "git_blob": "5e40a3fea99859d23fe175a3d2b18065a2621833"
+        },
+        {
+          "path": "tensor-allocation/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.rco-allocation.txt",
+          "size": 39368,
+          "hub_path": "tensor-allocation/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.rco-allocation.txt",
+          "git_blob": "8d567cadd225d8b5133a7ee2ad7ef1c1f01d33ba"
+        }
+      ]
+    },
+    {
+      "model_id": "qwen3.8-flash-next/ista-gsq-rco-iq3-xxs",
+      "destination": "models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-xxs",
+      "research_alias": "qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS",
+      "primary_served_name": "hotschmoe-dd",
+      "files": [
+        {
+          "path": "Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+          "size": 47039860096,
+          "hub_path": "IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+          "sha256": "219ea929900dfa9ef091f3aa473fdba6874b65fcb36526d7d851ac9e95856d15"
+        },
+        {
+          "path": "Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+          "size": 28800138432,
+          "hub_path": "IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+          "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+          "resolves_to": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf"
+        },
+        {
+          "path": "mmproj-Qwen3.8-Flash-Next-BF16.gguf",
+          "size": 907543008,
+          "hub_path": "mmproj-Qwen3.8-Flash-Next-BF16.gguf",
+          "sha256": "b1a82259702816a5330d7bd7607cd9676b11780e79ff7348c21103ff3ce49bd0",
+          "resolves_to": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-s/mmproj-Qwen3.8-Flash-Next-BF16.gguf"
+        },
+        {
+          "path": "README.md",
+          "size": 15693,
+          "hub_path": "README.md",
+          "git_blob": "5e40a3fea99859d23fe175a3d2b18065a2621833"
+        },
+        {
+          "path": "tensor-allocation/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.rco-allocation.txt",
+          "size": 39445,
+          "hub_path": "tensor-allocation/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.rco-allocation.txt",
+          "git_blob": "beb5e7c0bbe56aed2a29121a27baddc1fb89407a"
+        }
+      ]
+    }
+  ]
+}
