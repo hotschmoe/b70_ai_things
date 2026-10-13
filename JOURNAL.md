@@ -21948,3 +21948,27 @@ VERDICT: measured S1/S2 gates passed for the final configuration; quality
  Stop: docker stop -t 30 strata-ab-serve (service exits/releases leases).
  These are single measurements, not a sustained-stability claim. No commit;
  pre-existing dirty worktree changes preserved.
+
+## 2026-10-13 -- A/B S3 arm B: abfast on Flash-Next IQ3_XXS (scored protocol)
+
+CONFIG: stock Strata v0.1.43.1, ISTA GSQ-RCO IQ3_XXS, all experts in VRAM,
+split 25, two 131072 slots, MTP4 min-p 0.5, int8 KV, conversation parking
+8192 MiB / 4 entries, STRATA_KV_WIDE_HOST=0
+(/mnt/vm_8tb/b70/build/strata-ab/serve-armB-final.json). Served ID
+hotschmoe-dd first, alias qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata.
+evals/abfast, Pi 1.2.0, thinking xhigh, 19 tasks, parallel 2, agent cap
+2700 s, max output 32768.
+COMMAND: python3 evals/abfast/run_arm.py --base-url http://192.168.10.5:18085/v1
+--model hotschmoe-dd --arm-label armB-iq3xxs-2slot --parallel 2
+--timeout-s 2700 --max-output-tokens 32768 --thinking xhigh
+RESULT: 18/19 pass (95 percent). Only fail: bangguard-auto-recovery
+(completed, 13/15). raptorq-rfc6330-prng passed 8/8 (at the 2700 s cap).
+End reasons: 15 completed, 4 timeout (all 4 passed). Agent wall median 527 s,
+mean 1042 s. 617 turns, prompt 16,831,505 tokens (16,302,957 cached),
+completion 287,830. Run wall 11104 s, end health ok, endpoint alive after.
+Run dir /mnt/vm_8tb/b70/evals/abfast/runs/armB-iq3xxs-2slot-20261013T104837Z.
+VERDICT: paired against arm A (17/19): one win (raptorq), no losses, both
+fail bangguard at 13/15. Net +1, below the pre-registered +2 bar, so quality
+is a tie within noise. No endpoint instability. Arm A's first pass was at
+parallel 4 / 900 s / 16384, so time-to-completion is not yet matched; a full
+arm A rerun at parallel 2 under the scored protocol follows.
