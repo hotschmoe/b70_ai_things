@@ -20183,3 +20183,16 @@ replay54+63decode and newcompound identity, notoldLOADidentitybypass.
 VERDICT -> Distinguish snapshot restoration from prefill/decode pathparity.
 No runtime/statecomparison yet; draftrepair andoriginal current/prelast
 are separate boundaries. Native56 finalidentity92681 remainslive.
+
+
+## 2026-10-13: optimized HC Direct control independently admitted
+
+CONFIG -> Actual56 HC2/1/1 Direct, sixP2048/GEN512 serial requests.
+COMMAND -> Producer92681 PASS605s; independentreader94090 PASS.
+RESULT -> Producerfb0395163f26919c9288688f3fe64191eff09ad7075da17ef02c88934c451de7;
+public95bfbffc669477ca16cf1a49408c9b2c78c05cbe2e352fcd7f01f02fce4487e9.
+All6fullhistories/reference/repeats/identity/source/health/normalclose PASS.
+WarmrepeatPP254.47-259.53/decode20.54-22.37; TTFT7.94-8.09s;
+perrequestgapP9553.06-58.47ms. See exacttable in optimized_HC_direct_control document.
+VERDICT -> Knownoptimizedconfig recovered, no same-sourceflag-only orDirect
+steadygain/fullmath/API/concurrent/shelf/2000-50 claim.
