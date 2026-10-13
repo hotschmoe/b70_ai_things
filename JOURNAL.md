@@ -20128,3 +20128,18 @@ posthealth andkernel PASS. No originalweight/provider reread.
 VERDICT -> Principled explicit arithmetic operator qualified for these
 operands; productionMAIN unchanged, actualMAIN RMS unobserved and whole48
 unqualified. Prepare deliberate realmodel opt-in then full48 requalification.
+
+
+## 2026-10-13: actual optimized56 Direct control launched
+
+CONFIG -> Existing actual56 SDK58aa4da5, compiledHC2/1/1, paired24/24,
+PLEdirect, three authenticP2048 roles plusrepeats, GEN512, tracingOFF.
+COMMAND -> Genuine nativecommand constructorPASS; root source6pins verified;
+actual92681 selfleasespair throughgpu-run, no new compiler required.
+RESULT -> Recipeb923ed65bb55582f1a5cda5533576e7836d2172ba80a95332deee999e1f2bab5.
+Common CLI/profile/prompts equal current61 B1/B2, with explicit HCflags
+and true disabled diagnostic binding; compiled source/SDK difference retained.
+Actual handle confirmedlive andpairleaseacquired; resultpending.
+VERDICT -> Not same-source flagonlyAB. Do not promote speed until complete
+histories/source/modelidentity/health/normalteardown/publicreader close.
+Root defers heavybuild/modelhash/providerIO duringtimedmodelphase.
