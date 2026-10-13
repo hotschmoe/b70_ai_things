@@ -20112,3 +20112,19 @@ Root creates preparedroot with frozen sourceprepare, binds actualrecipe
 Actual1975 NoDri leased build nowlive; old proposedrecipehash not reused.
 RESULT -> No compiler/GPU result yet; originalMAIN untouched.
 VERDICT -> Await actual build and operator proof; no mathqualification.
+
+
+## 2026-10-13: explicit HC sqrt/divide isolated GPU oracle passes
+
+CONFIG -> Actual isolated native59/61 HCnorm, original saved operands, card0.
+COMMAND -> Root1975 NoDri buildPASS17s; actual11347 GPUoperatorPASS40s.
+RESULT -> Build307c51dd18db7829b76611b5316a518be367826f97d8809f395e6e64fdfcc002;
+ELFe3026c4de3a920b8ecf1f296c1ca6ff632e684c96381ea46450e56803d58ff6e;
+operator773c67f338f3b61f5ce7aaf2c1bae581536a008dcbe64a3bf6d075d7e5eed9b1.
+Root independently verifies all reportartifactSHA. Baseline/observer/savedMAIN
+normalized bitwiseequal; explicit sqrt/divide normalized and RS bitwiseequal
+independent own result. Three graphs, changedinput, guards, normaltypedclose,
+posthealth andkernel PASS. No originalweight/provider reread.
+VERDICT -> Principled explicit arithmetic operator qualified for these
+operands; productionMAIN unchanged, actualMAIN RMS unobserved and whole48
+unqualified. Prepare deliberate realmodel opt-in then full48 requalification.
