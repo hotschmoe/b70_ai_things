@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/test_original_mtp53_artifact_preflight_cpu_v1.py": "51cd7e7493e1eeffb5627d3cc092a278441b48c0004efe53e40d68425d290ac7",
+    "strata/flash-next/prepare_original_mtp53_artifact_identity_v1.py": "64b64cad4e5c55825edcba79c8a91b214c75454a5cdba7f795b8de81e61b20ae",
+    "strata/flash-next/preflight_original_mtp53_artifact_inside_v1.py": "31b166d03ad8424f6fabac55b1af25607cce96285183c64e1b377a36d906bc03",
+    "strata/flash-next/original-mtp53-artifact-identity-source-plan-v1.json": "47e8a6c1e90464a72d534ca6ff79dcc1fa0fad0193d16ca328d76bab7bc1a33f",
+    "strata/flash-next/run_original_mtp53_target_p117_artifact_preflight_v1.py": "0203e72583c01461ebc3ef6735149d2b3f45b2411152e72694a85c4eb63f2a8e",
+    "strata/flash-next/prepare_original_mtp53_target_p117_artifact_v1.py": "3c0a7c5e98fd05a4fcc0b1fd0eb1ab610554ad5b1ada4ff78392b49f6bb3b10d",
+    "strata/flash-next/original-mtp53-target-p117-artifact-source-plan-v1.json": "218e094ef95c81509d794126a05d8d647bcc234c3b511c4c3d3368dbbe25dceb"
+  },
+  "scope": "RootNoDri C388 CPU2 RAM2 actualAPI runtimevalidator; exact original foregroundDocker recipe, typed owner/domain/terminal andEOF/removal, source/artifactclosure; noGPU/native model run",
+  "cache_V2_receipt_schema_compatible": true,
+  "deadline_seconds": 180,
+  "pipe_output_bytes": 4194304,
+  "unknown_state_retains_ownership": true,
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_original_mtp53_artifact_preflight_cpu_v1"
+}

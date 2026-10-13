@@ -20196,3 +20196,17 @@ WarmrepeatPP254.47-259.53/decode20.54-22.37; TTFT7.94-8.09s;
 perrequestgapP9553.06-58.47ms. See exacttable in optimized_HC_direct_control document.
 VERDICT -> Knownoptimizedconfig recovered, no same-sourceflag-only orDirect
 steadygain/fullmath/API/concurrent/shelf/2000-50 claim.
+
+
+## 2026-10-13: actual P117 observer compiled and genuine artifact prepared
+
+CONFIG -> Exact58/V5 math, defaultOFF bothstageP117 field observer.
+COMMAND -> Actual17284 NoDri buildPASS143s, root26rawhashesverified.
+RESULT -> Builda62c55f7710ae6e25ccd42c935556273d85efdd0146e67fa373d32e2707ffb10;
+ELF40eec66654149f7dd80095f17b0eb435a3127ec132903958de0223515851c775.
+Actual CPUcontracts/pairedcontrols pass; genuine newartifactprepare37694PASS,
+binding08d126b0904a5985449f03d1dac566f05b79f5d476f847cc872e42acb69f850d.
+Qualifiedvenv protectedNoDri preflight31818 nowlive.
+VERDICT -> No cache/math/API proof yet. Runtime replays original64history,
+saves own newidentityP117, fresh117GEN1, then restoresowncompound118GEN1.
+SerializedLOADguardretained; oldfailedcompoundidentity notbypassed.

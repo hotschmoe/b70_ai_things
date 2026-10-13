@@ -1,0 +1,12 @@
+{
+  "schema": 4,
+  "files": {
+    "strata/flash-next/original-mtp53-serve-source-plan-v5.json": "c77d428b7f5100d1659f447b9d98ed16c6e73bd22dd071d7cc5342a0f2acf0d6",
+    "strata/flash-next/original-mtp53-serve-builder-source-plan-v5.json": "fe11ad55cc1775cbc534c34e69501888439362b1bcc84b80db5cd7aa4e7af028",
+    "strata/flash-next/original-mtp53-serve-compile-source-plan-v5.json": "4f94de54520919fcf1b66cf1ca511feff1734522bc3ca135068f40a6e4cee333",
+    "strata/flash-next/prepare_original_mtp53_target_p117_runtime_v1.py": "4b37b6fe0b9b1a9b082fbe57e80b79a01a210702eb8038ffa0770c8f60c186d3",
+    "strata/flash-next/original-mtp53-target-p117-builder-source-plan-v1.json": "f2c19f98eaaf81501a0c1f3988024ebd7ea7e3eb7f460e8528be58939a4beabf",
+    "strata/flash-next/original-mtp53-target-p117-compile-source-plan-v1.json": "c8b0c0e3761b98cbfcb0b0a2b69cb94bcd60c8221be93e20e1a3e1ff765586f9"
+  },
+  "scope": "Diagnostic P117 observer fresh actual ELF/artifact contract; no saved identity bypass or cache/math/performance qualification"
+}
