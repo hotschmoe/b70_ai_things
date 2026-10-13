@@ -1,0 +1,627 @@
+{
+ "image": "abfast:1",
+ "note": "parent/real are source-repo shas; hidden_files are overwritten from real sha before the verifier; hidden_inline lists zig files whose new test blocks are appended",
+ "tasks": [
+  {
+   "id": "zmoltcp-payload-clamp",
+   "repo": "zmoltcp",
+   "lang": "zig",
+   "parent": "5d3f65bf9ae83af1eceb64658319492e2197bde9",
+   "real": "154e3752f638bd176bbd716efafc6f2b10a126c7",
+   "description": "IPv4/IPv6/UDP payloadSlice ignore Ethernet padding",
+   "instruction": "Ethernet pads short frames to 60 bytes, so a pure TCP ACK arrives with trailing zero pad bytes after the IP packet. In this Zig stack the payload extraction functions for IPv4, IPv6 and UDP (payloadSlice in src/wire/ipv4.zig, ipv6.zig, udp.zig) return everything after the header instead of honoring the length the protocol header declares, so the pad bytes get delivered upward as phantom payload. Make each payloadSlice return only the declared payload (IPv4 total length, IPv6 payload length, UDP length field) and keep existing callers working; if the codebase has a separate clamped variant, collapse to one always-clamping function. Run the tests with: zig test src/root.zig",
+   "test_cmd": "zig test src/root.zig 2>&1",
+   "parse": "zig",
+   "hidden_files": [],
+   "hidden_inline": [
+    "src/wire/ipv4.zig",
+    "src/wire/ipv6.zig",
+    "src/wire/udp.zig"
+   ],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 818,
+     "total": 821,
+     "pass": false,
+     "secs": 12.2
+    },
+    "real": {
+     "rc": 0,
+     "passed": 820,
+     "total": 820,
+     "pass": true,
+     "secs": 12.0
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "zmoltcp-udp-overlength",
+   "repo": "zmoltcp",
+   "lang": "zig",
+   "parent": "5a57da0244c0d8b01f56da894393adc25f7f196c",
+   "real": "c730c7110ec6f51fef462d126f16194a9e771ce5",
+   "description": "UDP rejects over-declared datagram length",
+   "instruction": "In src/wire/udp.zig a UDP datagram whose length field claims more bytes than the buffer actually holds is currently accepted. Make payloadSlice return error.Truncated in that case, make verifyChecksum and verifyChecksumV6 return false for such malformed datagrams (even if the checksum field is zero/disabled), and make checksum verification cover exactly the declared UDP length so that trailing Ethernet padding beyond the declared length does not break a valid checksum. Run the tests with: zig test src/root.zig",
+   "test_cmd": "zig test src/root.zig 2>&1",
+   "parse": "zig",
+   "hidden_files": [],
+   "hidden_inline": [
+    "src/wire/udp.zig"
+   ],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 827,
+     "total": 830,
+     "pass": false,
+     "secs": 14.1
+    },
+    "real": {
+     "rc": 0,
+     "passed": 830,
+     "total": 830,
+     "pass": true,
+     "secs": 12.7
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "zmoltcp-ipv4-ingress",
+   "repo": "zmoltcp",
+   "lang": "zig",
+   "parent": "7b8c177433eb20ccf409c30ed8b72ec9ff70be89",
+   "real": "79b4ac6486646901fb0a814d1f45ffd60ca62469",
+   "description": "IPv4 ingress validation",
+   "instruction": "The Zig IPv4 stack accepts malformed inbound IPv4 packets. Add validation: (1) in src/wire/ipv4.zig payloadSlice must return error.Truncated when the header's total length is larger than the bytes supplied; (2) the stack's ingress path (src/stack.zig, and src/iface.zig if needed) must drop an IPv4 packet whose header checksum is wrong, including for Medium::Ip devices, without generating any reply and without crashing. Run the tests with: zig test src/root.zig",
+   "test_cmd": "zig test src/root.zig 2>&1",
+   "parse": "zig",
+   "hidden_files": [],
+   "hidden_inline": [
+    "src/wire/ipv4.zig",
+    "src/stack.zig"
+   ],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 843,
+     "total": 845,
+     "pass": false,
+     "secs": 13.6
+    },
+    "real": {
+     "rc": 0,
+     "passed": 845,
+     "total": 845,
+     "pass": true,
+     "secs": 10.0
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "raptorq-rfc6330-prng",
+   "repo": "raptorq",
+   "lang": "zig",
+   "parent": "d63705744eaa82c60b06e207f3e78f37ee200392",
+   "real": "f4500755715019f409a0c9d3a1e5a2d52ab271a4",
+   "description": "RFC 6330 PRNG compliance bugs found by interop vectors",
+   "instruction": "This Zig RaptorQ (RFC 6330) codec passes all of its own round-trip and conformance tests, but symbols produced by an independent RFC 6330 implementation (the Rust raptorq crate) fail to decode: the repair-symbol tuples and/or random numbers do not match the RFC. The self-consistency tests hide the problem because encoder and decoder share the same mistakes. Interop test vectors will be placed under test/interop/ and run with `zig build test-interop`. Audit src/math/rng.zig (Rand, tuple generation and anything feeding them) against RFC 6330 section 5.3.5 and fix every deviation so that externally generated source and repair symbols decode, including loss recovery, padded and minimum-K cases. Keep `zig build test-conformance` green.",
+   "test_cmd": "zig build test-interop --summary all 2>&1",
+   "parse": "zig",
+   "hidden_files": [
+    "test/interop/fixtures/v01_small_source_only.bin",
+    "test/interop/fixtures/v02_medium_with_repair.bin",
+    "test/interop/fixtures/v03_large_symbol.bin",
+    "test/interop/fixtures/v04_loss_10pct.bin",
+    "test/interop/fixtures/v05_loss_50pct.bin",
+    "test/interop/fixtures/v06_padding_uneven.bin",
+    "test/interop/fixtures/v07_minimum_k.bin",
+    "test/interop/fixtures/v08_repair_only.bin",
+    "test/interop/test_interop.zig",
+    "build.zig"
+   ],
+   "hidden_inline": [],
+   "test_timeout": 900,
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 3,
+     "total": 8,
+     "pass": false,
+     "secs": 21.1
+    },
+    "real": {
+     "rc": 0,
+     "passed": 8,
+     "total": 8,
+     "pass": true,
+     "secs": 31.1
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "bangguard-auto-recovery",
+   "repo": "bang-guard",
+   "lang": "typescript",
+   "parent": "3ccd9e445bedfd41fc13a3d497fb39f96d0137ff",
+   "real": "d87dbb8fcbba9342b9064a3746cc9895cb0527e2",
+   "description": "Pi extension: bounded automatic recovery after runaway '!' output",
+   "instruction": "bang-guard (src/bang-guard.ts) is a Pi/OMP extension that aborts a run when the model emits 32 or more consecutive '!' characters. Add automatic recovery. (a) After the aborted run ends (agent_end hook, only once per aborted run), queue exactly one custom continuation via api.sendMessage({customType:'bang-guard-recovery', content: RECOVERY_MESSAGE, display:true, details:{attempt, maxRetries, cacheSalt}}, {triggerTurn:true, deliverAs:'followUp'}); do not fabricate user input and do nothing if the run was not tripped, if the session was shut down (session_shutdown hook), or if recovery is paused. Tool calls stay blocked until the next agent_start. Export a RECOVERY_MESSAGE string constant. (b) Retries are bounded: default 3 consecutive attempts, configurable via BANG_GUARD_MAX_RETRIES through an exported retryLimit(value = process.env.BANG_GUARD_MAX_RETRIES) that accepts only integers 0..100 without leading zeros and otherwise returns 3 (0 means manual mode: no auto recovery, the run is still aborted). When the allowance is spent, notify with a message containing 'stopped after N'. A later clean turn_end (stopReason 'stop' or 'toolUse' without bangs) resets the counter, and so does a non-extension 'input' event or session_start. (c) The /bang-guard command accepts 'status' (default), 'pause' and 'resume' (resume resets the counter). (d) Add exported usesCacheSalt(model, setting = process.env.BANG_GUARD_CACHE_SALT_PROVIDERS): when the setting is defined it is a comma-separated, whitespace-trimmed provider allowlist (empty string disables everywhere); when undefined it returns true only for model.id === 'hotschmoe-dd' with model.api === 'openai-completions'. Use it for the before_provider_request cache_salt injection (a fresh salt after each trip) and report it in the recovery message details. Run the existing tests with: node --experimental-strip-types --test tests/guard.test.ts",
+   "test_cmd": "node --experimental-strip-types --test --test-reporter=tap tests/guard.test.ts 2>&1",
+   "parse": "node",
+   "hidden_files": [
+    "tests/guard.test.ts"
+   ],
+   "hidden_inline": [],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 0,
+     "total": 1,
+     "pass": false,
+     "secs": 0.3
+    },
+    "real": {
+     "rc": 0,
+     "passed": 15,
+     "total": 15,
+     "pass": true,
+     "secs": 0.3
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "click-help-spec",
+   "repo": "click",
+   "lang": "python",
+   "parent": "be13b152cf5949a362926322c835fa76019cc6fe",
+   "real": "271effb3d96da5575eb527216ce3552bd7628fab",
+   "description": "click Option.get_help_spec",
+   "instruction": "In Click's core.py, Option.get_help_record builds the left column of an option's help line (its spellings and metavar, e.g. '-v, --verbose', '--config TEXT', '--color / --no-color', or '/debug; /no-debug' for slash prefixes) inline, and returns None for hidden options. Add a public method Option.get_help_spec(ctx) -> str that returns just that left column and works even for hidden options, and make get_help_record reuse it (hidden options still produce no help record). Add a docstring with a versionadded note and a CHANGES entry.",
+   "test_cmd": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_options.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_options.py"
+   ],
+   "hidden_inline": [],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 656,
+     "total": 664,
+     "pass": false,
+     "secs": 2.8
+    },
+    "real": {
+     "rc": 0,
+     "passed": 664,
+     "total": 664,
+     "pass": true,
+     "secs": 2.6
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "click-args-section",
+   "repo": "click",
+   "lang": "python",
+   "parent": "86949d19b930ef68a45566544cb4b9508d895d0d",
+   "real": "f25f697a439acc2b0d84aa8f5413330f4e2e75cf",
+   "description": "click Positional arguments help lists all arguments",
+   "instruction": "Click's command help prints a 'Positional arguments:' section only for arguments that have a help text, so undocumented arguments silently disappear from it. Change Command.format_arguments so that when at least one argument has help (help is not None; an empty string counts, and a deprecated argument counts because its label is shown), the section lists every argument of the command, giving undocumented ones an empty description (use the argument's metavar for the left column when it has no help record). When no argument has help, no section is printed. Update docs briefly.",
+   "test_cmd": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_arguments.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_arguments.py"
+   ],
+   "hidden_inline": [],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 110,
+     "total": 113,
+     "pass": false,
+     "secs": 1.5
+    },
+    "real": {
+     "rc": 0,
+     "passed": 113,
+     "total": 113,
+     "pass": true,
+     "secs": 1.4
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "click-edit-pathlib",
+   "repo": "click",
+   "lang": "python",
+   "parent": "2103e157683c5e4cadc8ee1838df526a54bde9a4",
+   "real": "a1d87858abd77fa8e3ffc204670ccd75b96c4781",
+   "description": "click.edit accepts pathlib paths",
+   "instruction": "click.edit(filename=...) only works with str filenames (or an iterable of str). Make it accept os.PathLike values as well, both as a single path and inside an iterable of paths, so that e.g. click.edit(filename=pathlib.Path('file.txt'), editor=\"sed -i~ 's/$/Test/'\") edits the file in place and returns None. Update the type hints and the docstring accordingly.",
+   "test_cmd": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_termui.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_termui.py"
+   ],
+   "hidden_inline": [],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 258,
+     "total": 259,
+     "pass": false,
+     "secs": 1.9
+    },
+    "real": {
+     "rc": 0,
+     "passed": 259,
+     "total": 259,
+     "pass": true,
+     "secs": 1.7
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "click-help-option-order",
+   "repo": "click",
+   "lang": "python",
+   "parent": "00e592cea702e0b2caa0dee42489fdb1c22cd845",
+   "real": "047adef258fc25566163ffc3efd14effc0ef7352",
+   "description": "click help option names keep declaration order",
+   "instruction": "Command.get_help_option_names(ctx) in Click returns the names for the automatic help option, but it goes through a set so the order of Context.help_option_names is lost (output varies, e.g. '-h, --help' vs '--help, -h'). Make it return a list that preserves the declaration order of ctx.help_option_names, drops duplicates (keeping the first occurrence), and still removes any name that another parameter already claims (including both spellings of a feature switch such as --shout/--no-shout). Document the behavior.",
+   "test_cmd": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_commands.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_commands.py"
+   ],
+   "hidden_inline": [],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 98,
+     "total": 103,
+     "pass": false,
+     "secs": 1.5
+    },
+    "real": {
+     "rc": 0,
+     "passed": 103,
+     "total": 103,
+     "pass": true,
+     "secs": 1.3
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "attrs-ne-validator",
+   "repo": "attrs",
+   "lang": "python",
+   "parent": "f616f732c6c5f87a8f7a762176422baed250a6be",
+   "real": "5aa76a4450c311d87eda43946ec0ecd743572649",
+   "description": "attrs validators.ne",
+   "instruction": "attrs has comparison validators lt, le, ge and gt in attr.validators (also exposed as attrs.validators). Add the matching 'ne' validator: ne(val) returns a validator that raises ValueError when the attribute value is equal to val (the message should follow the style of the existing comparison validators), and accepts anything else. Export it everywhere the siblings are exported, add the type stub, and add a short docs entry and a changelog fragment (changelog.d, see existing ones).",
+   "test_cmd": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_validators.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_validators.py"
+   ],
+   "hidden_inline": [],
+   "validation": {
+    "parent": {
+     "rc": 2,
+     "passed": 0,
+     "total": 1,
+     "pass": false,
+     "secs": 1.4
+    },
+    "real": {
+     "rc": 0,
+     "passed": 168,
+     "total": 168,
+     "pass": true,
+     "secs": 1.4
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "packaging-pure-python-tags",
+   "repo": "packaging",
+   "lang": "python",
+   "parent": "7cea5e88671ed14016e9ab3dd08eab064f596564",
+   "real": "77e9ed42b6db9c5c011a5148047a356ebe42692a",
+   "description": "packaging.tags.pure_python_tags",
+   "instruction": "Add a public generator packaging.tags.pure_python_tags(python_version=None) that yields Tag objects for platform-independent pure-Python wheels: first Tag('py<major><minor>','none','any') for the given version, then Tag('py<major>','none','any'), then 'py<major><minor-1>' ... down to minor 0. python_version is a tuple like (3, 3); None means sys.version_info[:2]-style default from the running interpreter; a one-item tuple (3,) yields only py3; an empty tuple raises ValueError with a message containing 'must contain at least one item'. It must not query the running platform. Export/document it like the other tag generators (docs/tags.rst) and keep __all__ consistent.",
+   "test_cmd": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_tags.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_tags.py"
+   ],
+   "hidden_inline": [],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 229,
+     "total": 234,
+     "pass": false,
+     "secs": 2.0
+    },
+    "real": {
+     "rc": 0,
+     "passed": 234,
+     "total": 234,
+     "pass": true,
+     "secs": 1.6
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "packaging-specifier-relations",
+   "repo": "packaging",
+   "lang": "python",
+   "parent": "189a76d54d64899adbca907c2a3efa5b6befdb28",
+   "real": "ba0188d4f1e3a376f37b6264d9aa8ce378f42dd5",
+   "description": "SpecifierSet is_subset/is_superset/is_disjoint",
+   "instruction": "packaging.specifiers.SpecifierSet can already be converted with to_range() (a VersionRange from packaging.ranges that supports set-relation questions). Add three methods on SpecifierSet: is_subset(other), is_superset(other) and is_disjoint(other), each returning a bool describing the set of versions the two SpecifierSets accept (not the specifier objects), and consistent with spec.to_range().is_subset(other.to_range()) etc. (an unsatisfiable set like '>=2.0,<1.0' is a subset of everything; the empty set '' accepts everything). Validation: `other` must be a SpecifierSet else raise TypeError mentioning 'SpecifierSet'; if the two sets were constructed with different `prereleases` arguments (the argument, not the derived value) raise ValueError mentioning 'pre-release'; if either contains an arbitrary-equality '===' specifier raise ValueError mentioning '==='. Add docs to docs/specifiers.rst.",
+   "test_cmd": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_specifiers.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_specifiers.py"
+   ],
+   "hidden_inline": [],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 1994,
+     "total": 2031,
+     "pass": false,
+     "secs": 7.0
+    },
+    "real": {
+     "rc": 0,
+     "passed": 2031,
+     "total": 2031,
+     "pass": true,
+     "secs": 4.6
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "packaging-pylock-prefer-sdist",
+   "repo": "packaging",
+   "lang": "python",
+   "parent": "8af75907bf1140071a6a706874fcf1d73cc39c71",
+   "real": "9c652e4b4ced3c94f133a1b91c726023f0950b4f",
+   "description": "Pylock.select prefer_sdist_predicate",
+   "instruction": "packaging.pylock.Pylock.select() picks, for each package, a compatible wheel or falls back to the sdist. Add an optional keyword parameter prefer_sdist_predicate: Callable[[NormalizedName], bool] | None = None. For a package that has an sdist, call the predicate with the package name; if it returns True select the sdist before even trying wheel compatibility. If the package has no sdist the predicate must not be called and normal wheel selection proceeds; if the predicate is None or returns False behavior is unchanged. Document it in the docstring with a versionchanged note.",
+   "test_cmd": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_pylock_select.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_pylock_select.py"
+   ],
+   "hidden_inline": [],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 20,
+     "total": 25,
+     "pass": false,
+     "secs": 1.4
+    },
+    "real": {
+     "rc": 0,
+     "passed": 25,
+     "total": 25,
+     "pass": true,
+     "secs": 1.2
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "packaging-pylock-unknown-extras",
+   "repo": "packaging",
+   "lang": "python",
+   "parent": "7b898d9f0b343ca06993157fc328d7caad51d5c2",
+   "real": "23669b1b69fb5fffbc773a68fc099166fc847356",
+   "description": "Pylock.select fails on undeclared extras/groups",
+   "instruction": "Pylock.select(extras=..., dependency_groups=...) in packaging/pylock.py silently ignores names the lock file does not declare. Make it raise PylockSelectError listing the undeclared ones: message 'Undeclared extras: x3, x4' and 'Undeclared dependency groups: g3, g4' (comma+space separated, in the order given, names compared after normalization so 'X1' matches declared 'x1'). Names listed in the lock's default_groups count as declared dependency groups even though the spec says they are not repeated in dependency-groups.",
+   "test_cmd": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_pylock_select.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_pylock_select.py"
+   ],
+   "hidden_inline": [],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 29,
+     "total": 32,
+     "pass": false,
+     "secs": 1.2
+    },
+    "real": {
+     "rc": 0,
+     "passed": 32,
+     "total": 32,
+     "pass": true,
+     "secs": 1.1
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "packaging-unbounded-bound",
+   "repo": "packaging",
+   "lang": "python",
+   "parent": "4840c3a6817fbd0831f7e520c9a55367472a4a08",
+   "real": "55cbf1b9426f44455fa1a9e0836f1fc082cc8452",
+   "description": "LowerBound/UpperBound unbounded ends are canonical",
+   "instruction": "In packaging/_ranges.py, LowerBound(None, True) and LowerBound(None, False) (and likewise UpperBound) are two spellings of the same infinity, yet they compare, hash and order as different values, so unbounded bounds can sort above each other. Make an unbounded end (version None) canonical: inclusive is forced to False, so both spellings are equal to NEG_INF / POS_INF, hash equal, are not ordered strictly relative to each other, and de-duplicate in sets. Update the docstrings.",
+   "test_cmd": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_ranges.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_ranges.py"
+   ],
+   "hidden_inline": [],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 330,
+     "total": 334,
+     "pass": false,
+     "secs": 2.1
+    },
+    "real": {
+     "rc": 0,
+     "passed": 334,
+     "total": 334,
+     "pass": true,
+     "secs": 1.8
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "werkzeug-int-converter-404",
+   "repo": "werkzeug",
+   "lang": "python",
+   "parent": "a2bf38cf9c9501cc64fb324f5229543023c527bb",
+   "real": "ab16e62df72374059345eb0af07132ad7e5db9ce",
+   "description": "IntegerConverter 404 on huge digit strings",
+   "instruction": "Werkzeug routing: a rule like '/<int:a>' matched against a path whose digits exceed Python's sys.get_int_max_str_digits() limit makes int() raise ValueError out of the matcher instead of simply not matching. Make the match fail cleanly so MapAdapter.match raises NotFound for such URLs (look at routing/converters.py and routing/matcher.py). Add a changelog entry.",
+   "test_cmd": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_routing.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_routing.py"
+   ],
+   "hidden_inline": [],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 117,
+     "total": 118,
+     "pass": false,
+     "secs": 4.6
+    },
+    "real": {
+     "rc": 0,
+     "passed": 118,
+     "total": 118,
+     "pass": true,
+     "secs": 4.1
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "werkzeug-part-converter-order",
+   "repo": "werkzeug",
+   "lang": "python",
+   "parent": "05ff3fe46845c8650e74c71b34f3f881392c478b",
+   "real": "6d7c0b4e2f78c337f55a8a87c34fbb936a608f70",
+   "description": "Routing matcher sorts converter groups numerically",
+   "instruction": "A Werkzeug Rule with 11 or more converters in one URL part, such as '/<int:a0>-<int:a1>-...-<int:a10>', returns the wrong values for the arguments because the matcher orders the generated regex group names (__werkzeug_2, __werkzeug_10, ...) as strings so group 10 sorts before group 2. Fix the ordering so arguments map to the right converters, and add a changelog entry.",
+   "test_cmd": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_routing.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_routing.py"
+   ],
+   "hidden_inline": [],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 118,
+     "total": 119,
+     "pass": false,
+     "secs": 4.0
+    },
+    "real": {
+     "rc": 0,
+     "passed": 119,
+     "total": 119,
+     "pass": true,
+     "secs": 3.9
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "moreitertools-numeric-range",
+   "repo": "more-itertools",
+   "lang": "python",
+   "parent": "2fe1b2eeb9d75f994113fe3ac76d14b6bcd6fb10",
+   "real": "dc2664b4a7c66209485c9f5e359137bf4b365eb3",
+   "description": "numeric_range consistent for float steps",
+   "instruction": "more_itertools.numeric_range produces items by repeated multiplication (start + i*step) but derives len(), `in`, index() and count() by dividing, so with float steps they disagree with what iteration actually yields: len() may be one too many/few (e.g. numeric_range(-8.732, -13.532, -2.4), numeric_range(4.51, 10.375, 0.255), numeric_range(0.0, 1.0, 0.1), numeric_range(0.0, 3.0, 0.7)) and a range may deny membership of its own items or index() may point at the wrong position. Make len, __contains__, index and count agree with the items iteration/indexing produce (every item is a member, index(v) == its position, count 1, non-items stay out and index raises ValueError). Exact types (int, Fraction, Decimal) must keep their current behaviour.",
+   "test_cmd": "python -m pytest -q -p no:cacheprovider tests/test_more.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_more.py"
+   ],
+   "hidden_inline": [],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 592,
+     "total": 594,
+     "pass": false,
+     "secs": 17.8
+    },
+    "real": {
+     "rc": 0,
+     "passed": 594,
+     "total": 594,
+     "pass": true,
+     "secs": 17.5
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "moreitertools-split-maxsplit",
+   "repo": "more-itertools",
+   "lang": "python",
+   "parent": "d92f081a089714e0aa92434c797fdd1a06da1290",
+   "real": "ce676d24136e6efa932df8a4f3bf4801b89e1dd0",
+   "description": "split_before/after/when with maxsplit=0 on empty input",
+   "instruction": "more_itertools.split_before, split_after and split_when have a fast path for maxsplit == 0 that yields list(iterable) unconditionally, so an empty input yields [[]] while the normal path yields nothing for an empty iterable. Make the maxsplit=0 path consistent: for an empty iterable all three yield nothing for every maxsplit (-1,0,1,2,3). split_at must keep its current behaviour, which mirrors ''.split(',', maxsplit) including maxsplit 0. Update docs/versions.rst.",
+   "test_cmd": "python -m pytest -q -p no:cacheprovider tests/test_more.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_more.py"
+   ],
+   "hidden_inline": [],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 598,
+     "total": 601,
+     "pass": false,
+     "secs": 18.7
+    },
+    "real": {
+     "rc": 0,
+     "passed": 598,
+     "total": 598,
+     "pass": true,
+     "secs": 16.6
+    },
+    "valid": true
+   }
+  }
+ ]
+}
