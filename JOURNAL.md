@@ -20478,3 +20478,19 @@ RESULT -> Real load_identity/validate_runtime/engine args/child env executed;
 first GGUF full hash and exported tokenizer metadata agree; hotschmoe-dd first.
 No devices exposed, native not started, EOF/exit0/removal and closure passed.
 VERDICT -> Identity preflight only, no HTTP/cache/service qualification.
+
+
+## 2026-10-13: candidate closes observed first-row GDN seam
+
+CONFIG -> Actual observed model70031, sourcecd066114/runtime3479b03f,
+report7c00bc5cec384eca298db01b97ab2b5f0b1ad6932a53ac026044d35bd0f291d6.
+COMMAND -> Root saved-data reader0.13s, sourceplan8503f714, output
+B17/prefill-gdn-observed-model-v2-comparison-root-v1.json SHA
+bf7df2d533717df1d1551436523f0bb5fe449cb2b652d793fb42ceb10078c3f9.
+RESULT -> Both ON firstrows(Prefill53/first64 of116) bitwise against own
+independent decoderP1: residual/mixed/inputQ81/QKV/Z/decay/beta/normalizedQKV/
+gatedY/outputQ81/block. Cross-arm decoder fields bitwise. OFF first mismatch
+QKV; blockNMSE6.63715e-5/maxabs.00511988. Beforestate/conv bytezero.
+VERDICT -> Closes observed L0 firstrow seam; no original independent math
+reference, later-token/alllayer/fullT/cache/speed qualification. Longer
+continuation source control using existing ELF is next; QSA35 build preparing.

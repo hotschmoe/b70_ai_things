@@ -39,3 +39,26 @@ VRAM scratch lending and conflicts with active stage mirrors. There is no
 safe same-config flag-only borrow control. Mapped-host dequantization of
 missing experts is a separate candidate requiring actual ownership/math/
 performance proof, not an inferred physical-bandwidth gain.
+
+
+## Source-bound first-row result
+
+Observed model producer7c00bc5c passes six serial fresh requests, two fresh
+whole4 scans, current source/all8 and normal EOF/exit0/removal/health gates.
+Root verifies all211 artifact hashes. Comparison sourceplan8503f714 binds
+typed source/role/PID/current nonce, exact field shapes and zero prestate;
+Q81 packets are compared as bytes, never interpreted as F32. Root saved-data
+result bf7df2d5 closes the observed L0 firstrow prefill/decoder seam:
+
+- Candidate ON: both first53 and first64 chunks match own independent
+  decoderP1 bitwise through mixed input, Q81, QKV/Z, decay/beta, normalized
+  QKV, gated F32 y, output Q81 and final GDN block.
+- Candidate OFF: first mismatchQKV, NMSE9.45943e-6/maxabs.02300525; final
+  blockNMSE6.63715e-5/maxabs.00511988.
+- Independent decoder selected fields are bitwise across OFF/ON arms.
+
+The decoder is a separately captured native path, not an independent
+original-math reference. OFF F32 gated y and ON raw AB are unobserved.
+No later-token, other-layer, whole-T recurrence, complete cache, numerical
+model or speed qualification follows. Next test uses the existing candidate
+ELF for longer authentic continuations; no recompile for that diagnostic.
