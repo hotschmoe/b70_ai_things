@@ -19873,3 +19873,28 @@ ONLY, originalfailedparent unchanged. NewV5 source/ELF/health remainfresh.
 VERDICT -> Avoids repeating12 identical baseline requests; no oldbinary,
 performance or model authority transfer. Actualoriginal/cache/cancel/stale
 result still pending; full objective and six/API/persist/fidelity gates open.
+
+
+## 2026-10-13: actual paired first cohort matches; reference scalar route fixed
+
+CONFIG -> V5 paired original ON-only four-slot diagnostic, actual35726.
+COMMAND -> Root independently compared saved cohort0 against authenticated
+V2 target-baseline cohort0.
+RESULT -> All four complete64-token input/output/finish histories match;
+no previous grouped-layer-split refusal. Later cache/cancel/close pending.
+VERDICT -> Actual first-cohort progress, not full serving/API qualification.
+
+CONFIG -> Current59 full48 original own-state V3.
+COMMAND -> Agent actual inventory/rank regression localizes V2 error to
+shared gate originalF32 shape[2560], native one-scalar BF16 consumer.
+Root actual98594 corrected CPU runner launched, singleBLAS thread.
+RESULT -> Exact rank1 path replaces erroneous shape[1] matrix assumption;
+role/shape/traceback preservation added. No arbitrary flatten/tolerance fit.
+VERDICT -> Full48 computation/numeric/closing identity still pending.
+
+CONFIG -> V5 native compound save/evict/restart same/divergent qualification.
+COMMAND -> Root genuine cachecontroller construction PASS for three fresh
+processes, typed stdin/compile/identity recipe; no GPU cache run yet.
+RESULT -> New launch recipe prepared; actual model wait follows basic
+native4 result and healthy retirement.
+VERDICT -> Concrete source/constructor only, no cache-persistence proof.
