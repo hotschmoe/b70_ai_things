@@ -20210,3 +20210,16 @@ Qualifiedvenv protectedNoDri preflight31818 nowlive.
 VERDICT -> No cache/math/API proof yet. Runtime replays original64history,
 saves own newidentityP117, fresh117GEN1, then restoresowncompound118GEN1.
 SerializedLOADguardretained; oldfailedcompoundidentity notbypassed.
+
+
+## 2026-10-13: genuine P117 preflight passes and paired diagnostic starts
+
+CONFIG -> Fresh compiled observerELF40eec666, genuineartifact08d126b0.
+COMMAND -> Actual31818 NoDri preflightPASS13s, receipt
+48e01c77974aeb8d9675d1522d53c32924dadeecb66f85100d141d1a4af0b431.
+Pureconstructor89349PASS. Firstactualruntime stopsbeforemodel because
+construction createdsameoutput; preservedrun-v1 andlaunchfreshrun-v2.
+RESULT -> Actual32361 pairleased diagnosticlive, output
+B17/original-mtp53-target-p117-v1-run-v2. Manifest/ELF/sourceunchanged.
+VERDICT -> Await real bothstage statecomparison/identity/health/normalclose.
+No rewrite oforiginalrestartfailure or correctness/speed/APIpromotion.
