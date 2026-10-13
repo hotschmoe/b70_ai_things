@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/prepare_original_mtp53_http_identity_v1.py": "7d92c25bf9bed885f594b33671997f6d79e6138e53e5e7ea8220b06982192a23",
+    "strata/flash-next/preflight_original_mtp53_http_identity_v1.py": "0474a898b0ecc5ef1cf523f752b7f497475db62d2954fb4cc3b523ebf297816a",
+    "strata/flash-next/original-mtp53-http-compound-source-plan-v1.json": "74c490efa241360bb3515f548cdcf961af46102dfbc2341fe6d68b8a7e25b38c",
+    "strata/flash-next/prepare_original_mtp53_http_source_v1.py": "0f4edb60d21710180839fb24c4a135fa923476fedc0d644b2ce237fd8d8e2b9a",
+    "strata/flash-next/original_mtp53_http_compound_v1.py": "619805be83dfdbb85f7b8b725a82a97ebcf2f217355a096380ff242fdb3f5791",
+    "strata/flash-next/original-mtp53-artifact-identity-source-plan-v1.json": "47e8a6c1e90464a72d534ca6ff79dcc1fa0fad0193d16ca328d76bab7bc1a33f",
+    "strata/flash-next/prepare_original_mtp53_artifact_identity_v1.py": "64b64cad4e5c55825edcba79c8a91b214c75454a5cdba7f795b8de81e61b20ae",
+    "strata/flash-next/original-mtp53-serve-runtime-source-plan-v4.json": "ca127f0f6497a946eaceb87d29a9a158e3727c2e4466dea54e4790b37d076368",
+    "strata/flash-next/original-mtp53-serve-source-plan-v5.json": "c77d428b7f5100d1659f447b9d98ed16c6e73bd22dd071d7cc5342a0f2acf0d6"
+  },
+  "actual58_python_source_sha256": {
+    "serve/server.py": "3166f70fa013b905adf713dba404a2eb91a4f3381842dafb542af98cf978d241",
+    "serve/artifact_identity.py": "47619fcd5def60d13861773b359e9bab35499212f858ba649ce6462feb15027f",
+    "tools/strata_tokenizer.py": "d2fdcd2e55b4bc47c3ee6a10a0a7efa2029128cc229fb1de18da6e22d3606ff2",
+    "tools/gguf_reader.py": "5ecf739bb3c2f07bc7f889f7f3a455e3dfdb40068409e10781a1a9b2be289b5e"
+  },
+  "runtime_image": "sha256:c388186da30785b302c9c76c0ce8ca5e5351c9783c628177f6f7b9eed2f4ad17",
+  "qualified_interpreter": "/opt/b70-c1-python/bin/python",
+  "served_primary": "hotschmoe-dd",
+  "source_only": true,
+  "NoDri_preflight_executed": false,
+  "API_qualified": false,
+  "cache_qualified": false,
+  "scope": "Actual modified API manifest/config + root-only exact load_identity and validate_runtime using original GGUF metadata and full first-shard SHA. Native artifact source/guard unchanged; HTTP launch held behind cache and model qualification."
+}

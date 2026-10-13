@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/prepare_prefill_first_gdn_compile_v1.py": "b7ecf8436d24b5e71e63372de0d4bdb37def8be750fa4cbf4a6eaff958894e6a",
+    "strata/flash-next/patches/prefill-first-gdn-observer-v1.patch": "3d374910253540fbee9abda95a3d20ed7187e4d5a7425b374328ca6a377f4af9",
+    "strata/flash-next/original-mtp53/prefill_first_gdn_observer_v1.hpp": "5181b6ca85a3faa15826d995ee107a3d491efa676787a3ee36b2a7bbdddce368"
+  },
+  "actual58_source_sha256": {
+    "sycl/src/prefill/prefill.cpp": "adaa05146ba04fb92fb7cba13817fa6b3870ecae25679673b303ba18b17b5873",
+    "sycl/src/prefill/gemm.dp.cpp": "8f27400a82d7c1f2224cc8259c9731c525e6f0c80d4ef051323628ddcb09280a",
+    "sycl/src/prefill/kernels.dp.cpp": "e24493d4df90660234cdd44bd48c659e7b8cebd5842a036872e0a24b09c7160a",
+    "sycl/src/core/verify.cpp": "4ed11a872e827c70051dfdb76b8610e68aad8a5c3872d39f31aa7eb88c5d64c5",
+    "sycl/include/strata/core/layer0_numerical_observer.hpp": "d6c3661f24928c2dab3da6878b0a8b2829ece952b6b45b7f4482dde6d1c78481",
+    "sycl/include/strata/core/layer0_numerical_contract.hpp": "86a83df856829674f03b9eb6c80bac0817cb2cdfa4459b3186f5480600e8dfdd",
+    "src/prefill/mmq_resident_sort.hpp": "a9f3302e6fffba281134a4a1d101f671da9fe4e834c4bc2a22f6928b41bacc29",
+    "src/prefill/wmma_gemm.h": "57bd2a9caf6e179b837680b908d830d3c28c2bcab82c6f3b7d7c71f7e7cad0de"
+  },
+  "actual58_receipt_sha256": "9d39acecc1b34c641311e831107eddb280ef5830ef1e85f3c785d3ede8777490",
+  "constructed_prefill_sha256": "a9dfdb53d39bb9fd99b0144c6483a44c3bc6385740c79768fafe7762f4beadd1",
+  "exact_hook": "                    strata::core::prefill_first_gdn::observe(l,half,p0,T,n,tokens,m.device,m.f16_io,bf16x2_mode(m.f16_io),m.R,m.mixed,m.mixed_h,m.mixed_bf,m.mixed_bf_lo,m.qkv,m.z,m.ab,m.gate,m.beta,state,conv,wqkv->native_type,wqkv->ne0,wqkv->ne1,wg->native_type,wg->ne0,wg->ne1,m.cs);\n",
+  "scope": "First same token0 output-only before first GDN conv/recurrence, record actual F16/BF16 optional low view. Existing decoder NUM10 independently observed comparison only; no reference replacement, quantization/math or speed qualification",
+  "decoder_runtime_required": {
+    "STRATA_LAYER0_Q8_DIAG": "1",
+    "STRATA_ONE_TOKEN_COMMIT": "1",
+    "STRATA_QFUSE": "0",
+    "STRATA_ORIGINAL_MTP53_SERVING": "0",
+    "STRATA_VERIFY_MIRROR_STAGE_T1": "0"
+  },
+  "prefill_runtime_required": {
+    "STRATA_PREFILL_FIRST_GDN_DIR": "actual owned existing RW path",
+    "STRATA_PREFILL_FIRST_GDN_BINDING_SHA256": "actual this sourceplan hash"
+  },
+  "actual_executions": false
+}

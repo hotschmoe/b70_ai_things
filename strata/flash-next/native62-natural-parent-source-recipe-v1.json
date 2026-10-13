@@ -1,0 +1,78 @@
+{
+  "schema": "native62-natural-parent-v1",
+  "files": {
+    "strata/flash-next/c1_source43_api_controller_v3.py": "14be464ac846c7c8cfe81c06e24c5f86f2cf6107b981866940ea810115c0dcb8",
+    "strata/flash-next/native51-direct-esimd-f16-engine-build-proposal-v1.json": "bd247e89d6ed2abf9ec4e239609c0d78f87f8609a844621c2d169cb7f360afff",
+    "strata/flash-next/registry_source43_api174_association_v1.py": "3ff00329be9d6ab522a8152bf8fb9a90802b239f43fec379a91f04cd75576a78",
+    "strata/flash-next/run_source47_grouped_f16_model_v2.py": "f64968d3fe4e2296581d442d44d12bd20de01275e4537ab359d3ff04d69524fc",
+    "strata/flash-next/run_source51_esimd_f16_model_v1.py": "f959004f0b0dbcec4ddc9f6e589a92f9158829bc0c8884b75551aa156ec21c4d",
+    "strata/flash-next/source43-api-runtime-source-plan-v3.json": "c3423f8849442b033b452feb48298722e709830d21e4a6a5673018f19440da12",
+    "strata/flash-next/source51_model_sdk_binding_v1.py": "0a4abc50d89702ceeac211725799ffa2b68aa6df506efa32f38f3292457f014d",
+    "strata/flash-next/validate_source47_grouped_f16_model_v2.py": "f8cd5bdf1520335eeefa84b09660df7200daf129cc69d9926537b758b5dbf1f1",
+    "strata/flash-next/validate_source51_esimd_f16_model_v1.py": "28f6aa1c3d6d8084e122473213f5e3693d12101cd9e1b45b8c41859c1051b5c6",
+    "strata/flash-next/run_natural_p2048_native_v1.py": "d87f532ea82f49f4218d67f1766a254217c881b6e65f750bbff245562c8d4e65",
+    "strata/flash-next/validate_natural_p2048_native_v1.py": "e5b132be55be6d5282af3a1e9e429f58007f9e2428c3936af5244680c33f3f6c",
+    "strata/flash-next/decode_natural_native_output_v1.py": "755d91c10d345d19f72ae6c570f7d3f2a90f67bdf5b3b281ba6966c4748b5089",
+    "strata/flash-next/source51-esimd-f16-model-source-plan-v1.json": "cbd798b2aeb083b7c00f2068d84523e73d0c673ad9434d3f48e6255326d5be5d",
+    "strata/flash-next/run_source50_pair24_mirror_t1_model_v1.py": "4c9020702a86e02449bb9d5c72561293c7e94b3cb9e3873627370c527a53414d",
+    "strata/flash-next/source50_model_sdk_binding_v1.py": "a91cc1e40c744808c7a196d5326fa50af719865b39f79a10216f3425e7dbe168",
+    "strata/flash-next/test_natural_p2048_native_cpu_v1.py": "a434c2f70ad6bafc7d0ce736116eec680ea17dec2f7216e13ce753e98d0045b7",
+    "strata/flash-next/run_natural_p2048_native_v2.py": "2fcaac854d0f379799905fcfc6e7fe1bbfbdfa03be7bb6a17e3fecf1f099fd52",
+    "strata/flash-next/validate_natural_p2048_native_v2.py": "69a72ab2b6245d5ef886a690959633cc26c7e620e64117d76718c7a386df1d09",
+    "strata/flash-next/source52_model_sdk_binding_v1.py": "f036bb60914352770a2fc28a0918912fae9de69f294d244ba0eb3ed2178cb121",
+    "strata/flash-next/test_natural_p2048_matched_cpu_v2.py": "6b4734d461cf8d82ce62e4345977bf6f1e8d437afaaf0eb72cf0ff278cc4f42d",
+    "strata/flash-next/native52-copy-engine-prefill-engine-build-proposal-v1.json": "25c8b73f8fa0d92f0e7c562f232776844405dc62b7e3524d1584a92283f4630d",
+    "strata/flash-next/natural-p2048-native-source-recipe-v1.json": "a7fcfead3487b2b47a0969d2f2f25ccfc8ca0983ddbdd32258e4525cdfc2eab3",
+    "strata/flash-next/run_natural_p2048_native61_v1.py": "980863cbfb2e5fd193098193c96e7d929991c7005e12632843e3ffe39091559a",
+    "strata/flash-next/run_natural_p2048_native62_v1.py": "5c9a84acefbcf58ac12e451dca9887d363926e8220cdc24bcbbad4b7a1a616d4",
+    "strata/flash-next/source62_model_sdk_binding_v1.py": "3a323590d607c0aded9fb4ef8f84a13b59e614f510e0ad8f9ae49f4b476fd0ba",
+    "strata/flash-next/native62-HC-perf-explicit-sqrt-engine-proposal-v1.json": "f05021bcd5d3e90fa8fcca69cace830f834cf3c0928ca0fc32b2cf522a89cf68"
+  },
+  "input_corpus_sha256": "61b5caabf76bfedfda334973741366a8341e9f600cf00b42ac042f6700afdbef",
+  "requests": 6,
+  "processes": 2,
+  "P": 2048,
+  "context": 4096,
+  "cap": 512,
+  "EOS": [
+    248044,
+    248046
+  ],
+  "cold_request_ordinals": [
+    1
+  ],
+  "warm_process_request_ordinals": [
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "input_repeat_ordinals": [
+    2,
+    4,
+    6
+  ],
+  "grouped_F16": 0,
+  "actual_config_selection": "deferred source51 A/B outcome",
+  "prefill_candidates": [
+    64,
+    512,
+    2048
+  ],
+  "launch_sweep": false,
+  "identity": "existing boundary pre/post full4; per-arm owned health/kernel/pages/stat/source/retirement",
+  "numeric_math_qualified": false,
+  "actual_GPU_or_model_by_author": false,
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_natural_p2048_matched_cpu_v2",
+  "decoded_text": "Separate pinned tokenizer-only CPU decode of original requests.json; decoded UTF8 SHA and actual meaningful-output review, no EOS padding.",
+  "unexecuted_prior_snapshot": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/natural-controller-unexecuted-6b776-before-entry-fix-v1",
+  "unexecuted_prior_topology_snapshot": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/natural-controller-unexecuted-577352-before-topology-metadata-v1",
+  "requests_per_process": 6,
+  "max_total_output_tokens": 6144,
+  "experiments": {
+    "profile": "source50, two explicit SHA-pinned complete48x512 RO files, identical command path, copy flag0 both",
+    "copy": "actual52 receipt required, copy flag0/1, one shared SHA-pinned profile"
+  },
+  "scope": "Protected current60 identity/source/health/normalretirement; current76 source files and honest122-object reuse/two-object/one Prefill archive/all8 new links"
+}

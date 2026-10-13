@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "scope": "Current saved producer/public admission, no fresh model payload read; RAW alignment is separate inspector gate",
+  "files": {
+    "strata/flash-next/run_source62_cached_window_profile_v1.py": "ef40d712757a6e96ac6acaa09ebe7a4fd19c46e164b9279de793999d10ec0949",
+    "strata/flash-next/source62_profile_protocol_raw_v1.py": "dd81b00ee846b4e1f97de16cfef7cb2756defccc20d7ea09773802a8b7d913cb",
+    "strata/flash-next/source62_cached_window_profile_contract_v1.py": "12e0020374c67a064a120cdd498d2d3db1a69c3c08bfe6fc5a7a8a032421fe32",
+    "strata/flash-next/run_natural_p2048_native62_v1.py": "5c9a84acefbcf58ac12e451dca9887d363926e8220cdc24bcbbad4b7a1a616d4",
+    "strata/flash-next/native62-natural-parent-source-recipe-v1.json": "ffd9c0a9e41708ed152c9b02a63d40835b18e3ebe14d323f8994952378cc7353",
+    "strata/flash-next/source62_model_sdk_binding_v1.py": "3a323590d607c0aded9fb4ef8f84a13b59e614f510e0ad8f9ae49f4b476fd0ba",
+    "strata/flash-next/native62-HC-perf-explicit-sqrt-engine-proposal-v1.json": "f05021bcd5d3e90fa8fcca69cace830f834cf3c0928ca0fc32b2cf522a89cf68",
+    "strata/flash-next/native61_startup_option_preflight_v1.py": "9669170262fd7e6756f45f8384c11725832a6bd846ee2aae0e8eb36dc93f5743",
+    "strata/flash-next/source61_ple_clean_abba_contract_v1.py": "656eee350ed68ad24635583bb0a226c0e447d9b3d71cfb0ece769d5d946d6c66",
+    "strata/flash-next/run_natural_p2048_native61_v1.py": "980863cbfb2e5fd193098193c96e7d929991c7005e12632843e3ffe39091559a",
+    "strata/flash-next/native61-natural-parent-source-recipe-v1.json": "11a579242ccf463423071b482f9dd3af8b4387fd2325b882e6c4f30fc572cd44",
+    "strata/flash-next/source60_loaded_fairness_observations_v1.py": "2a2a5a04956910e07d5d1262cb7b75114e0375fb2f318fcbf39fea9b5ab9d764",
+    "strata/flash-next/source62-cached-window-profile-recipe-v1.json": "c553d91e55c91ba1a26acf32bae5c0cef8d038fdfd30d8f1356b9137f7945577",
+    "strata/flash-next/validate_source62_cached_window_profile_v1.py": "c3b7c996f5e1501658c0c5390b4a18748eebc71245de2b58db1cd597b37b1ea8",
+    "strata/flash-next/inspect_source62_cached_RAW_clock_v1.py": "0874238ebc4aed1136d8415a4fea5f803a8096c8c6b46be82c464643d23275b6",
+    "strata/flash-next/validate_source52_p2048_profile_v5.py": "d18723dbc3a469eba452b01e0422fae329acd2750a866b435f39ee0c8c636c59",
+    "strata/flash-next/source52-p2048-profile-reader-v5-source-plan-v1.json": "8880a8aa134d0369be6ae89043631d08c15fe2927c5aa3dab5c3d4dbea5bdaae",
+    "strata/flash-next/source62-cached-window-profile-v1.txt": "dc1fa74f8ff26304a73754acda4c69e7a19272d024bf8f2e26c3ab696bf571de",
+    "strata/flash-next/test_source62_cached_RAW_cpu_v1.py": "86ddbcd27aa448314ce3bb1e9a4ce512c1514c47694fbb8fcff42f934ac6349f"
+  }
+}

@@ -20323,3 +20323,38 @@ P30all48/SFD49/head/currentPLE; omittedLPformatter repairretained.
 VERDICT -> RequireOFF904tensorbitwiseold59, then ONall48/headcomparison
 againstindependentownedV3. No numericPASS/fullmath assigned inadvance;
 identity/health/normalownedclose andindependentreader stillpending.
+
+
+## 2026-10-13: saved OFF904 recovery passes; optimized RAW profile launches
+
+CONFIG -> Actual62 OFF native4fresh/MAX1 endednormally; aggregatefailedreader.
+COMMAND -> Original93058 FAILED445s on duplicateactorSDKnamespace. Root
+provisionalCPUconfigures importedactor andcorrectsconsumearity in-memory:
+904tensorsbitwiseold59. Formal38756 recoveryPASS withoutGPU/model/fullhashrerun.
+RESULT -> Failedparent72e1867f56f2748483f1529cb33ff00c9075bf7069c6cfa0c50cda796bc201d5
+retained; newrecoveryce2d2e0d64b7be3925249039a2d8d4b18eb63f182d28c6d282dc8ce07682bcde
+validates actualsource/ABI/nativeEOF/health/full4/pages/raw/baseline904.
+VERDICT -> OFF component admitted, aggregateFAILED unchanged; ON-only
+successor mustfixexplicitactorinjection andboundedconsumeAPI/sha gates.
+
+CONFIG -> Actualoptimized62 mirror1/copy0/Direct HC2/1/1/RS0, PIN1536.
+COMMAND -> GenuineconstructorPASS; actual93567 pairleased cachedwindowRAW
+profile launched, selectednew512/GEN8 underunchanged1GiB cap.
+RESULT -> Producerc553d91e/reader d2cf282e; actualclock/output/work/health
+proofpending. No ignoredflags or inheritedmirror0 slowbranch.
+VERDICT -> Host/devicecriticalpathdiagnostic only; clean speed/fullcoverage
+remainunqualified. Do not stageheavybuild/modelhash duringtimedintervals.
+
+CONFIG -> Firstrow GDN Prefill arithmetic observer, authentic54/117/1 probes.
+COMMAND -> Actual33910 NoDri buildPASS111s, root18hashesverified.
+RESULT -> Buildd65a853afe4d4842f81c455b9cf68a72965df7d193beace849f08bd202b03244;
+ELFfdc9855a6a5c144fadb4bb8382b08ca0a61ba5732cc766864b6757624c27ed9c.
+VERDICT -> Compiledobserveronly, nativearithmeticsubstitutionnone; live first
+row projection operands/runtimecomparison pending. ActualsavedP117 single
+BF16AB/noBF16lowpart andhalfQKV/Z differfromQ81/F32decoder contract.
+
+CONFIG -> ModifiedHTTPsource genuineartifact identity.
+COMMAND -> Root37917 preparationPASS; manifest6cec0b9c/configfa6eadc1.
+RESULT -> hotschmoe-dd first; actualmodifiedserver/helper sourcepin included.
+ProtectedNoDri load_identity/validate_runtime preflightnotyetexecuted.
+VERDICT -> Sourceidentitypreparation, no API/cache/servicequalification.

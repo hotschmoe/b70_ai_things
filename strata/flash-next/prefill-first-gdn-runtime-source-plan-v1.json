@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/prepare_prefill_first_gdn_runtime_v1.py": "a9fcdffa67d7c4f03b0cf97e971c4da6f398ffe67f111c4e2d8288d1bba09374",
+    "strata/flash-next/prefill-first-gdn-observer-source-plan-v1.json": "d951364fc6b76fb093447728ca7f3984405090ed9c5e8e9ebe94a2e41cd601fd",
+    "strata/flash-next/prefill-first-gdn-builder-source-plan-v1.json": "0e59e82f14c4e78f3df73d1d2f22929e881bbe0ca135865c50b0a19deabb72e2"
+  },
+  "scope": "Fresh actual58 observer build/ELF + exact first-row environment; actual model payload/generation not yet run"
+}

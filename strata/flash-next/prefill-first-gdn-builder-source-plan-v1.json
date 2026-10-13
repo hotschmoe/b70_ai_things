@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/build_prefill_first_gdn_v1.py": "ce7748bc462ad449025aef4b9831c210a6f0206402a77857f94dcf4c550a6b8c",
+    "strata/flash-next/prefill-first-gdn-observer-source-plan-v1.json": "d951364fc6b76fb093447728ca7f3984405090ed9c5e8e9ebe94a2e41cd601fd"
+  },
+  "scope": "Root-only exact58 fresh MAIN/Prefill observer/header compile and copied archive filtering; no CPU/model/GPU execution or numerical claim"
+}

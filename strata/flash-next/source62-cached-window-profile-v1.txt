@@ -1,0 +1,41 @@
+CONFIG -> Current actual SDK62, HC2/1/1, explicit sqrt/divide0, mirror1,
+copy0, PLEdirect/cache65536, pair24+24, noMTP/spec2, cache3/pin1536.
+Warmup authenticP2048 GEN8 fresh1; selected sameP2048 GEN8 fresh0.
+Selected must observe reused1536/new512 and match original accepted52 first8
+and its actual fresh warmup. This is a capped diagnostic, not clean speed,
+full math, task completion, API, shelf or full internal-operation coverage.
+
+COMMAND -> /tmp/b70-source62-cached-window-profile-v1-launch-agent.json
+contains root-run argv/environment with actual62 receipt613694ec.
+A real construction receipt is /tmp/b70-source62-cached-window-profile-v1-
+genuine-construction-mirror1-agent.json. No model/GPU launch in construction.
+Use bin/gpu-run via actor normal entry; never add --leased outside root lease.
+
+RESULT -> Runtime pending. Individual root raw cap1GiB and clock512MiB,
+original clockquery sampling512 unchanged; no UR trace, no budget increase.
+Paused warmup and before/after selected owned IPC controls are retained.
+Recorder adds bounded CPU RAW receive points alongside unchanged original
+MONOTONIC protocol stamps. Actual container/client time namespace must match.
+Native RID is an explicit GEN input; serial outputs do not independently echo
+RID or prove native layer/stage mapping. H36 remains OFF for pair support.
+
+VERDICT -> Independent reader must PASS before clock inspector runs.
+Reader: python3 strata/flash-next/validate_source62_cached_window_profile_v1.py
+--root ROOT --output NEW_PUBLIC_JSON
+Inspector: python3 strata/flash-next/inspect_source62_cached_RAW_clock_v1.py
+--directory ROOT/source62-cache1536-copy0-host-device-profile
+--producer-public NEW_PUBLIC_JSON --producer-public-sha256 EXACT_PUBLIC_SHA
+--output NEW_ANALYSIS_JSON
+Clock inspector requires original exported epoch/RAW query brackets, per-device
+frequency/mask, two distinct physical UUIDs, exact Clock/Chrome instance IDs,
+source-derived floating serialization bounds and actual CPU->GPU flow endpoints.
+Equal/wrapped/ambiguous device epochs are refused rather than repaired.
+Observed API/device spans, explicit copy command payload and receiver points
+can localize selected request work. Unknown native preparation/sampling and
+stage semantics stay unqualified; device gaps do not prove physical idle and
+command payload is not measured bus traffic. GPU tail after DONE is explicit.
+
+Tiny CPU controls invoke the actual protected base request with only its send
+mocked, checking RID/fresh/pin/max/omitted LP and saved RAW copies; quota fails
+before original queue put. Serialization bound follows actual F64 geometry.
+No compiler/GPU/model payload touched by preparation or these controls.

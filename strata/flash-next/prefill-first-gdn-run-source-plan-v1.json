@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/run_prefill_first_gdn_v1.py": "5fc17f4d951e0f26cf7227447bfef3a290cbda11e99e25d06bb323ac6cd9c4f6",
+    "strata/flash-next/prepare_prefill_first_gdn_runtime_v1.py": "a9fcdffa67d7c4f03b0cf97e971c4da6f398ffe67f111c4e2d8288d1bba09374",
+    "strata/flash-next/prefill-first-gdn-runtime-source-plan-v1.json": "b3631dba0bba00e8fa3e1a98d1cd623892d724ceeb4ef77da3f5acc430eae765",
+    "strata/flash-next/prefill-first-gdn-observer-source-plan-v1.json": "d951364fc6b76fb093447728ca7f3984405090ed9c5e8e9ebe94a2e41cd601fd",
+    "strata/flash-next/prefill-first-gdn-builder-source-plan-v1.json": "0e59e82f14c4e78f3df73d1d2f22929e881bbe0ca135865c50b0a19deabb72e2",
+    "strata/flash-next/native_source41_cli_protocol_v4.py": "c8fe90f4e442653f79cb3f4d3c474b9f1d5e7dad19b02288a6d2c15024cfa65a",
+    "strata/flash-next/batch_numerical_protocol_v2.py": "aaa87efa3a771fbe4b2f09985947e13749124cdef74b584492bc80c441c78fe9",
+    "strata/flash-next/run_original_mtp53_shifted_v2.py": "6ba052c11ed8c0aa086b4425af16b135be3598d4bea7653e4f5a64a86fb26556",
+    "strata/flash-next/source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1"
+  },
+  "scope": "One actual model process, fresh authentic54/pinned117/firsttoken1, each GEN1; output-only first-row Prefill and independent NUM10 decoder; fresh full4/health/kernel/owned EOF+retirement; no draft weights or session SAVE/LOAD used; no math/speed/cache promotion"
+}

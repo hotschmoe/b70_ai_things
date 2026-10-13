@@ -1,0 +1,15 @@
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -1,3 +1,4 @@
++#include "strata/core/prefill_first_gdn_observer.hpp"
+ #include "strata/core/prefix_lifecycle.hpp"
+ #include "strata/core/fidelity_observer.hpp"
+ #include "strata/core/prefix_residual_capture.hpp"
+@@ -3053,6 +3054,7 @@
+                     if (!bf16_proj(m.gemm, wb, m.mixed_bf, m.ab + HV, T, v.name("ssm_beta.weight"), err, 2 * HV, m.mixed_bf_lo)) return false;
+                     pt.mark(kPfGdnConv, cs);   // "gdn" is the projections in; the rest on their own lines
+                     gdn_gates(m.ab, (const float*) wdt->data, (const float*) wsa->data, m.gate, m.beta, T, m.cs);
++                    strata::core::prefill_first_gdn::observe(l,half,p0,T,n,tokens,m.device,m.f16_io,bf16x2_mode(m.f16_io),m.R,m.mixed,m.mixed_h,m.mixed_bf,m.mixed_bf_lo,m.qkv,m.z,m.ab,m.gate,m.beta,state,conv,wqkv->native_type,wqkv->ne0,wqkv->ne1,wg->native_type,wg->ne0,wg->ne1,m.cs);
+                     gdn_conv(conv, m.qkv, (const float*) wc->data, m.hbuf, T, EPS, m.cs);
+                     pt.mark(kPfGdnRec, cs);
+                     const int64_t ld_y = pf_pad() && T >= std::max<int64_t>(pf_switch_min_t(), 64) ? ZV + ZV_PAD : 0;
