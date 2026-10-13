@@ -21972,3 +21972,30 @@ fail bangguard at 13/15. Net +1, below the pre-registered +2 bar, so quality
 is a tie within noise. No endpoint instability. Arm A's first pass was at
 parallel 4 / 900 s / 16384, so time-to-completion is not yet matched; a full
 arm A rerun at parallel 2 under the scored protocol follows.
+
+## 2026-10-13 -- A/B S3 matched: arm A rerun at parallel 2, paired verdict
+
+CONFIG: arm A vLLM TP=2 27B INT4 AutoRound endpoint restarted (pre-health
+HEALTHY, XPU_HEALTH_TIMEOUT=400), otherwise idle. Same scored protocol as
+arm B: abfast 19 tasks, Pi 1.2.0, thinking xhigh, parallel 2, cap 2700 s,
+max output 32768.
+COMMAND: python3 evals/abfast/run_arm.py --base-url http://192.168.10.5:18080/v1
+--api-key-file /mnt/vm_8tb/b70/secrets/dd_api_key --model hotschmoe-dd
+--arm-label armA-matched-p2 --parallel 2 --timeout-s 2700
+--max-output-tokens 32768 --thinking xhigh; then
+python3 evals/abfast/report.py <armA-matched-p2> <armB-iq3xxs-2slot>
+RESULT: arm A 18/19 (fail bangguard-auto-recovery 14/15; raptorq passed 8/8
+at the cap). Arm B 18/19 (fail bangguard 13/15). Paired: 0 wins, 0 losses,
+19 ties. Agent wall, 18 tasks both passed: median A 526 s, B 491 s; mean all
+tasks A 863 s, B 1042 s (B has two extra cap hits on tasks that passed).
+Run wall A 8857 s, B 11104 s. Prompt tokens A 19.30 M (88.6 percent cached),
+B 16.83 M (96.9 percent cached); completion A 0.362 M, B 0.288 M. Both end
+health ok. Run dirs armA-matched-p2-20261013T140703Z and
+armB-iq3xxs-2slot-20261013T104837Z under /mnt/vm_8tb/b70/evals/abfast/runs/;
+paired table /mnt/vm_8tb/b70/results/flashnext_iq3_ab_20261013/abfast/paired_matched_p2.txt.
+VERDICT: tie on quality and tie on per-task time at two streams. The
+pre-registered bar (+2 net) is not met, so by the brief the 27B stays the
+daily driver. The eval is close to saturated at 18/19, so it rules out a
+large Flash-Next deficit but cannot detect a long-horizon advantage. Arm A's
+earlier 17/19 used a different rerun path; arm A is 17-18 of 19 across two
+samples. Arm A left running.

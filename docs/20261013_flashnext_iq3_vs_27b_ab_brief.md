@@ -144,3 +144,19 @@ S4 Only if S3 is ambiguous: extend to the full local-70 lock.
   SWE-bench via Harbor + Pi 1.2.0 work; runners and report are in
   evals/ab and evals/terminalbench/ab_report.py. Estimated 12-24 h per arm
   for the 24 tasks, so it stays an optional overnight confirmation.
+
+## Outcome (2026-10-13)
+
+- Arm B as run: ISTA GSQ-RCO IQ3_XXS on stock Strata v0.1.43.1, two 131072
+  slots, MTP4, conversation parking. IQ3_S fits one stream only (200k
+  proved without MTP, 131072 with MTP).
+- Matched abfast (parallel 2, 2700 s, 32768 output): 18/19 each, 19 paired
+  ties, same single failure. Median agent wall on tasks both passed: 526 s
+  (A) vs 491 s (B).
+- Decision rule result: bar not met. 27B INT4 stays the daily driver.
+- What changed from the going-in assumptions: Flash-Next is not slower per
+  task here. Prefill 1.3-2.0k tok/s and near-total prefix reuse offset its
+  lower concurrency (2 streams at 131072 vs 4 at 200k).
+- Limit of the evidence: abfast is near saturation, so a long-horizon
+  quality advantage is untested. Terminal-Bench 24 through Harbor is the
+  available harder eval (12-24 h per arm).
