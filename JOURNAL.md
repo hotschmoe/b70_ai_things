@@ -20385,3 +20385,31 @@ pairedrunlive.
 RESULT -> Explicit executingactor injection andcorrect boundedconsume/sha
 checks; no newOFF modelprocess.
 VERDICT -> Await ONfull48/raw/identity/health/normalclose/reference comparison.
+
+
+## 2026-10-13: ON full48 computation improves early fidelity; reader identity join pending
+
+CONFIG -> Actual62 sameSDK/flags/input except explicit sqrt/divide1; savedOFF
+ce2d baseline all904bitwiseold59.
+COMMAND -> Actual4670 ONproducerPASS; producer
+18f8aec9cd3a23c0d47c67ef84255f90c9b1d61b3eb88c24e18e44e15c392646.
+Actual77758 readerFAILED metadata-comparison gate, rawparentPASS retained.
+RESULT -> Fourrequests repeatidenticalmetrics. L0attnNMSE1.486e-14/FFN
+1.217e-14; layers32-34~1e-12; L35attn4.015e-9/FFN2.651e-8.
+HeadNMSE5.119943861e-5 versuspreviousOFF8.828127912e-5; no numericPASS.
+ENVdifference exactlysqrt0/1 plusfivebindinglabels, eachold3d706->newf503.
+VERDICT -> Immutable scopedreader mustprove labels=their actualproducer
+sourceSHA andnonmathconsumers, thencompare onlyarithmeticflag. No ONGPUrerun
+or frozenraw/source rewrite. Furtherlayer35localization andPrefill parity open.
+
+CONFIG -> Corrected firstrow targetserialGEN1 observer, existingELF.
+COMMAND -> PureV2constructorPASS, actual63037pairleasedrunqueued andlive
+behindON; controlskeep requirednativepackspec2reserved, batch0/noPIN/RID.
+RESULT -> No changedheader/kernel/modelpayload; runtimecomparisonpending.
+VERDICT -> Sourceguarded truthfulhostrequestjoin insteadunavailable nativeRID.
+
+CONFIG -> Matched actual62 cached1536/new512/GEN8 untraced companion.
+COMMAND -> Source/genuineconstructor sealed andcommitted; noGPUlaunchyet.
+RESULT -> Neededtoquantify profilingoverhead beforeattributing5.201s trace
+uncoveredtime tokernels/idle.
+VERDICT -> Preserve full fidelity/cache/API/streams/latency/memory/shelf goal.
