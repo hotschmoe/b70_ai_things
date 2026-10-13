@@ -1,0 +1,33 @@
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -1,3 +1,4 @@
++#include "strata/core/original_mtp53_paired_slot_rows.hpp"
+ #include "strata/program/host_critical_path_trace.hpp"
+ #include "strata/core/prefix_lifecycle.hpp"
+ #include "strata/core/fidelity_observer.hpp"
+@@ -3010,8 +3011,15 @@
+                            const int32_t *tokens, const int64_t *pos,
+                            std::string &err) try {
+     using namespace strata::kernels;
++    auto original_flag=[](const char* key){const char* value=std::getenv(key);return value && std::strcmp(value,"1")==0;};
++    const bool paired_original_rows=next_ && strata::core::original_mtp53::paired_slot_rows53(
++        original_flag("STRATA_ORIGINAL_MTP53_SERVING"),original_flag("STRATA_ORIGINAL_MTP53"),original_flag("STRATA_BATCH_FULL_STATE_CHAIN"),
++        device_,int(lb_),int(le_),g_?int(g_->n_layers):0,max_t_,int(slots_.size()),hbase,
++        next_->device_,int(next_->lb_),int(next_->le_),next_->max_t_,int(next_->slots_.size()),next_->g_==g_,hand_out_ && next_->hand_in_==hand_out_ && next_->next_==nullptr);
++    if(paired_original_rows && !strata::core::original_mtp53::grouped_t1_t2_rows53(rows,pos,S,int(slots_.size()))){err="verify: original paired rows require private contiguous T1/T2 at actual4096 positions";return false;}
++    const int paired_handoff_rows=paired_original_rows?8:int(slots_.size());
+     if (S < 1 || S > max_t_ || hbase < 0 ||
+-        (next_ != nullptr && hbase + S > (int) slots_.size())) {
++        (next_ != nullptr && hbase + S > paired_handoff_rows)) {
+         err = "verify: batch rows out of range (init_slots)";
+         return false;
+     }
+@@ -3029,7 +3037,7 @@
+             err = "verify: proposed rows must have consecutive positions";
+             return false;
+         }
+-        if (t > 0 && rows[t] == rows[t - 1] && next_ != nullptr) {
++        if (t > 0 && rows[t] == rows[t - 1] && next_ != nullptr && !paired_original_rows) {
+             err = "verify: grouped slot rows do not support a layer split yet";
+             return false;
+         }

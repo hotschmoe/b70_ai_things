@@ -1,0 +1,73 @@
+--- a/bin/gpu-run
++++ b/bin/gpu-run
+@@ -57,25 +57,64 @@
+ esac
+ 
+ CMDLINE="$*"   # the actual user command (for the owner record), captured before acquire() shadows $*
++OWNED=()
++WAITER=""
++RUNNING=0
++INTERRUPTED=0
++cleanup() { for f in "${OWNED[@]+"${OWNED[@]}"}"; do : > "$f" 2>/dev/null || true; done; }
++interrupted() {
++  local status="$1"
++  # Keep the foreground workload and lease alive until its own retirement.
++  # For immediate active cancellation, signal that owned workload directly.
++  if [ "$RUNNING" = 1 ]; then INTERRUPTED="$status"; return; fi
++  local waiter
++  # jobs covers a signal between spawning the lock waiter and recording $!.
++  for waiter in ${WAITER:-$(jobs -pr)}; do
++    kill -TERM "$waiter" 2>/dev/null || true
++    wait "$waiter" 2>/dev/null || true
++  done
++  exit "$status"
++}
++trap cleanup EXIT
++trap 'interrupted 130' INT
++trap 'interrupted 143' TERM
++
+ acquire() {  # $1=card 0|1 ; $2=fd ; $3=lockfile ; $4=ownerfile
+   eval "exec $2>\"$3\"" || { echo "gpu-run: cannot open lock $3" >&2; exit 1; }
+-  if ! flock -n "$2"; then
++  flock -n "$2"
++  local status=$?
++  if [ "$status" = 1 ]; then
+     echo "gpu-run: card $1 busy (held by: $(cat "$4" 2>/dev/null || echo unknown)); waiting up to ${TIMEOUT}s ..." >&2
+-    if [ "$TIMEOUT" = 0 ]; then flock "$2"; else flock -w "$TIMEOUT" "$2" || { echo "gpu-run: timed out after ${TIMEOUT}s on card $1" >&2; exit 124; }; fi
++    if [ "$TIMEOUT" = 0 ]; then flock "$2" & else flock -w "$TIMEOUT" "$2" & fi
++    WAITER=$!
++    wait "$WAITER"
++    status=$?
++    WAITER=""
++    if [ "$status" != 0 ]; then
++      echo "gpu-run: lock acquisition failed (exit $status) on card $1; command will not run" >&2
++      if [ "$TIMEOUT" != 0 ] && [ "$status" = 1 ]; then exit 124; fi
++      exit "$status"
++    fi
++  elif [ "$status" != 0 ]; then
++    echo "gpu-run: lock acquisition failed (exit $status) on card $1; command will not run" >&2
++    exit "$status"
+   fi
++  # Register cleanup before publishing ownership, including signal windows.
++  OWNED+=("$4")
+   printf '%s pid=%s since=%s cmd: %s\n' "$AGENT" "$$" "$(date '+%F %T')" "$CMDLINE" > "$4" 2>/dev/null || true
+ }
+-cleanup() { for f in "${OWNED[@]+"${OWNED[@]}"}"; do : > "$f" 2>/dev/null || true; done; }
+ 
+-OWNED=()
+-trap cleanup EXIT INT TERM
+ for c in "${CARDS[@]}"; do
+-  if [ "$c" = 0 ]; then acquire 0 8 "$L0" "$O0"; OWNED+=("$O0"); else acquire 1 9 "$L1" "$O1"; OWNED+=("$O1"); fi
++  if [ "$c" = 0 ]; then acquire 0 8 "$L0" "$O0"; else acquire 1 9 "$L1" "$O1"; fi
+ done
+ 
+ echo "gpu-run: [$AGENT] acquired card(s) ${CARDS[*]} -> $*" >&2
+ start=$(date +%s)
++RUNNING=1
++if [ "$INTERRUPTED" != 0 ]; then exit "$INTERRUPTED"; fi
+ "$@"
+ rc=$?
++RUNNING=0
++if [ "$INTERRUPTED" != 0 ]; then rc="$INTERRUPTED"; fi
+ echo "gpu-run: [$AGENT] done in $(( $(date +%s) - start ))s (exit $rc)" >&2
+ exit $rc

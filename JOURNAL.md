@@ -19799,3 +19799,34 @@ RESULT -> Actual device intrinsic/nonlinear/contraction contracts remain
 unqualified. FirstGDN real result is curated in
 docs/20261013_flashnext_current59_first_gdn_reference_result.md.
 VERDICT -> Source/dataflow progress, not full model math or completion.
+
+
+## 2026-10-13: queued cancellation failure closes; paired rebuild and full48 run
+
+CONFIG -> Invalid V4 NoDri attempt after failed lock-wait cancellation.
+COMMAND -> Exact builder1052415 SIGTERM; actual6512 terminal FAILED.
+RESULT -> Owned compiler removed/devices_exposed=false; interruption/forced
+cleanup/signals15 recorded. No accepted V4 build. Lease candidate remains
+OUTSIDE bin; final source699747 before/after bound root CPU7 PASS0.806s.
+Earlier unbound pre-seal test timed out on second-card case; retain UNKNOWN
+source binding, do not attribute it to the selector without evidence.
+VERDICT -> Shared bin/runtime unchanged. Required all-shelf smoke cannot
+run honestly through stale NVFP4 ABI and FP8 unsupported-smoke/P2P paths;
+no unsafe shelf launch or false green gate. Candidate is reviewable only.
+
+CONFIG -> Paired original serving V5 includes idle eviction/status and
+proper repeated-slot capability/capacity on both exact24/24 stages.
+COMMAND -> Root pure source/compile preparation PASS; actual89555 queued
+card0 NoDri fresh MAIN/verify/private consumer, copied private enginearchive,
+required actual pairedCPU7 plus byte/tokenCPU11.
+RESULT -> Source-only gate prepared; actual paired runtime still needed.
+VERDICT -> No blanket guard drop or old failed-runtime proof transfer.
+Four-stream/HTTP/persisted cache and bounded6 remain unqualified.
+
+CONFIG -> Both actual61 PLE mmap/direct model phases passed/Exit0; final
+whole-identity/reader comparison remains pending under actual32123.
+COMMAND -> Root actual28611 full48 original own-state V2 CPU launch after
+both model intervals ended, single BLAS thread, explicit packed routes.
+RESULT -> Provider/comparison/closing identity work now active.
+VERDICT -> No full48 numericPASS yet; continue unsupported device arithmetic
+contracts. Full objective remains active and incomplete.
