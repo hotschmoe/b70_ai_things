@@ -20143,3 +20143,16 @@ Actual handle confirmedlive andpairleaseacquired; resultpending.
 VERDICT -> Not same-source flagonlyAB. Do not promote speed until complete
 histories/source/modelidentity/health/normalteardown/publicreader close.
 Root defers heavybuild/modelhash/providerIO duringtimedmodelphase.
+
+
+## 2026-10-13: model arithmetic opt-in source contract prepared
+
+CONFIG -> Existing optimized56 HC composition, explicit sqrt/divide defaultOFF.
+COMMAND -> Root verifies six proposalpins and two targeted CPU controlsPASS.
+RESULT -> Proposal80fe187b933bb91fc47b0e9598b1d2eefe2223b76ce9becc1dde9ffdf47a5af8;
+small patch preserves optimizedprojection/coalescing/layout/FMA/XOR topology.
+Candidate is source-only untilcombined56->61 port and freshSDKreceipt exist.
+Actual56 Directcontrol92681 confirmedlive; no heavybuild/providerIO added.
+VERDICT -> Newmodelcapture must compare OFF all48/head bitwisetoactual59,
+then ON against independent full48ownreference. IsolatedRMS PASS doesnot
+qualify other unsupported arithmetic, fullmath, HTTP or shelf.
