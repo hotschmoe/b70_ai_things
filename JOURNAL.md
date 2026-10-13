@@ -20092,3 +20092,23 @@ COMMAND -> Two targeted CPU suites PASS; real NoDri build40620 queued via
 card0 gpu-run behindcache lease.
 RESULT -> Independent exactRNE helper retains existingCPU value, no+ULPfit.
 VERDICT -> Actual ELF/GPU operator result pending; fullmath remainsunqualified.
+
+
+## 2026-10-13: persisted restart failure closed; explicit operator build started
+
+CONFIG -> Actual artifact-backed cacheV2, three fresh native processes.
+COMMAND -> Actual32292 terminalFAILED901s; root independently verifies111
+report artifacts and fresh closingfull5.
+RESULT -> Report55c64a81ef7b428d1194532e18749ad8a18ddfeda84deba87561b0af37514bf9;
+all artifactSHA match, freshfull5PASS, no additional health/source errors.
+Restart same-input outputdifferenceindex9 remains; protectedfailed close
+is not normalclose. Divergent restart was not reached.
+VERDICT -> Persisted cache correctness remains FAILED, not qualified.
+
+CONFIG -> Explicit sqrt/divide isolated operatorV2.
+COMMAND -> Initial40620 stopped beforecompilation: preparedroot notcreated.
+Root creates preparedroot with frozen sourceprepare, binds actualrecipe
+04d9725eea67f739569ef9dd009ebcade7f017cfa14075bae8c4bbe46e87871c.
+Actual1975 NoDri leased build nowlive; old proposedrecipehash not reused.
+RESULT -> No compiler/GPU result yet; originalMAIN untouched.
+VERDICT -> Await actual build and operator proof; no mathqualification.

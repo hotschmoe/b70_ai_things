@@ -2244,3 +2244,27 @@ cache controllers are prepared, not qualifying runtime evidence. Stable
 hotschmoe-dd identity, complete cache family, one/two/four/bounded-six service,
 calibrated critical-path profiling, memory tradeoffs, clean matched latency
 and a reproducible promoted shelf remain required. No2000/50 result is claimed.
+
+
+## 2026-10-13 - Optimized lineage and restart failure
+
+Actual source61 does not consume the three HC optimization switches present
+in source56. Its source52->58->59->60->61 lineage omitted the source55/56
+optimized kernels. The admitted source61 ABBA therefore cannot represent
+source56 best-config performance. Restoring environment variables alone is
+ineffective. An existing56 Direct control is being prepared; profiling61
+needs a deliberate optimized-kernel port and fresh qualification.
+
+Compound cache V2 actual baseline and publication/eviction arms pass. A fresh
+process loads the pinned publication and reports reused117/new1, but the
+same-input continuation differs at output index9 (expected13057, actual864).
+Both histories contain64 tokens. Restart arm is FAILED; final whole-identity
+closure remains live. Persisted restart and full cache correctness remain
+unqualified. Do not treat the reuse receipt as output/state equivalence.
+
+The independent reciprocal-square-root rounding audit supports the existing
+CPU value, without a fitted one-ULP correction. A separate sqrt/divide
+operator preserves productionMAIN and is queued for source-bound NoDri
+compilation; six targeted CPU checks pass. Actual GPU arithmetic and full48
+requalification remain required. HTTP, concurrent1/2/4/bounded6, calibrated
+profiling, matched latency, memory tradeoffs and verified shelf remain open.
