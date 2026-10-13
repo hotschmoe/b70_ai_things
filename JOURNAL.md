@@ -20246,3 +20246,24 @@ RESULT -> Six consumerobjects scheduled/118reused,3archives/8freshlinks;
 compile/modelproofpending.
 VERDICT -> Do not lose optimizedkernels whileprofiling; freshqualification
 andcontrolledOFF/ON full48 comparisons required.
+
+
+## 2026-10-13: actual P117 restore equals saved target state
+
+CONFIG -> DefaultOFF actual observer, authentic117 boundary, twofreshprocesses.
+COMMAND -> Root independently verifies412field artifacts acrosssaved/fresh/
+loaded/restored scopes; both actual32361 modelarm resultsPASS.
+RESULT -> Saved vsloaded andvsactualrestored both90targetfields BITWISEequal.
+Freshprefill differs42fields. Fresh117pick11 equals savedlookahead11;
+restored118pick26961 equals closedfresh118firstpick. Finalfreshfull5/source
+closure stilllive; no longsuffix outputqualification added.
+VERDICT -> Bounded target-state restoration is exact at observedboundary;
+prefill/decode parity remainslead. This doesnot qualify allcachefamilies,
+originaldraftruntimebanks, unobservedbuffers orheadreadback.
+
+CONFIG -> LaststagePLE metadata sourceaudit.
+COMMAND -> Sourceaudit2639c8554b8af35b4dc733a873401edfa9aff16b403db4a44236c5d56ca1ecc9.
+RESULT -> ActualPLEconsumption gatedonlystage containinglayer1. Stage24..48
+ple_prev isunusedmetadata, inheritedprompt54admission vsfresh116prefill.
+VERDICT -> Difference isexplained andnotcauseofactiveGDN/KV/leadingPLE
+drift. Nextcompareactivefielddata separatelyfrompadding/unusedcapacity.
