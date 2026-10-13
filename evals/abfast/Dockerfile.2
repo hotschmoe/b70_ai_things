@@ -1,0 +1,9 @@
+# abfast:2 = abfast:1 + extra pure-python test deps for the hard tier. Build with:
+#   docker build -t abfast:2 -f evals/abfast/Dockerfile.2 evals/abfast
+FROM abfast:1
+USER root
+RUN /opt/venv/bin/pip install --no-cache-dir \
+      flask blinker httpx httpcore h11 h2 anyio sniffio idna certifi urllib3 requests charset-normalizer \
+      pygments markdown-it-py mdurl rich pyyaml tomli exceptiongroup pytest-asyncio trio brotli \
+      python-dateutil pydantic pytest-xdist 2>&1 | tail -3 || true
+USER 1000

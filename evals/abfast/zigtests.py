@@ -64,3 +64,29 @@ def new_blocks(parent_src, real_src):
     """Test blocks present (by name) in real_src but not in parent_src, in order."""
     old = test_blocks(parent_src)
     return [t for n, t in test_blocks(real_src).items() if n not in old]
+
+
+def top_decl(src, name):
+    """Text of the top-level `[pub] const|fn|var NAME ...` declaration (with preceding // comments)."""
+    m = re.search(r'^(?:pub\s+)?(?:const|var|fn|inline fn)\s+' + re.escape(name) + r'\b', src, re.M)
+    if not m:
+        raise ValueError("decl not found: " + name)
+    first_end = src.find('\n', m.start())
+    first = src[m.start():first_end if first_end >= 0 else len(src)]
+    if first.rstrip().endswith(';') and '{' not in first:
+        end = first_end
+    else:
+        # the body brace: when the first line ends with '{' it is the last '{' of that line
+        # (the return type may itself contain `struct {`/`error{` braces); else the first '{' after the decl
+        body = (m.start() + first.rindex('{')) if first.rstrip().endswith('{') else src.index('{', m.start())
+        end = _match_brace(src, body)
+        while end < len(src) and src[end] in ' \t':
+            end += 1
+        if end < len(src) and src[end] == ';':
+            end += 1
+    lines_before = src[:m.start()].split('\n')
+    k = len(lines_before) - 1
+    pre = []
+    while k > 0 and lines_before[k - 1].lstrip().startswith('//'):
+        pre.append(lines_before[k - 1]); k -= 1
+    return ('\n'.join(reversed(pre)) + '\n' if pre else '') + src[m.start():end]

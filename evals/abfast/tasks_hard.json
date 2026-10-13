@@ -1,0 +1,936 @@
+{
+ "image": "abfast:1",
+ "note": "HARD tier. Same semantics as tasks.json; each task has its own image (abfast:1 or abfast:2). parent/real are source-repo shas; hidden_files overwritten from real; hidden_inline zig files get the real new test blocks appended, hidden_decls = file-scope test-only helpers appended with them.",
+ "tasks": [
+  {
+   "id": "raptorq-pi-solver-conformance",
+   "repo": "raptorq",
+   "lang": "zig",
+   "parent": "f63530e951858801837e315e233c435ba5978438",
+   "real": "ac9bda278dc153e40f6e5cdb344303c23f5757eb",
+   "description": "Rewrite RaptorQ PI (inactivation) solver per RFC 6330 5.4.2; fix SingularMatrix for K'>=18 and padding handling in decoder",
+   "instruction": "This Zig RaptorQ (RFC 6330) codec has a conformance suite run with `zig build test-conformance`; 15 of its 86 tests currently fail. The intermediate-symbol solver in src/solver/pi_solver.zig returns error.SingularMatrix on the real constraint matrices for K' >= 18 (and for decoding with repair symbols / non-sequential ISIs), so encoding, decoding and round trips fail for most block sizes. Rework the inactivation decoding so that it follows RFC 6330 section 5.4.2 (with its known errata) and solves every valid system, while still returning error.SingularMatrix for a genuinely singular one. The final argument of `pi_solver.solve(allocator, &matrix, symbols, k_prime)` must be the padded symbol count K' (the solver needs it to look up S, H and W); update the encoder and decoder callers accordingly. The decoder must also pad the received symbols with the implicit zero padding symbols (ISI K..K'-1), so that `fullySpecified()` becomes true once K symbols (not K') have been received and decoding then succeeds. Make all of `zig build test-conformance` pass.",
+   "test_cmd": "zig build test-conformance --summary all 2>&1",
+   "parse": "zig",
+   "hidden_files": [
+    "test/conformance/test_pi_solver.zig"
+   ],
+   "hidden_inline": [],
+   "test_timeout": 900,
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 70,
+     "total": 86,
+     "pass": false,
+     "secs": 19.3
+    },
+    "real": {
+     "rc": 0,
+     "passed": 86,
+     "total": 86,
+     "pass": true,
+     "secs": 27.9
+    },
+    "valid": true
+   },
+   "stats": {
+    "src_files": 3,
+    "src_lines": 518,
+    "test_files_or_blocks": 1,
+    "commits": 1
+   },
+   "image": "abfast:1",
+   "tier": "hard"
+  },
+  {
+   "id": "zmoltcp-udp-icmp-slaac-ingress",
+   "parent": "2889e62193280ceb4551d0b4462b98de2e4a4503",
+   "real": "bbec632e4b0558d6a7845d41372cca4ac0f4660c",
+   "description": "Validate embedded UDP in ICMP errors, UDP ingress checksums, withdraw stale SLAAC state",
+   "instruction": "Harden this Zig TCP/IP stack in three areas. (1) ICMP error handling: the ICMP socket (src/socket/icmp.zig), when bound to a UDP endpoint, must only accept a destination-unreachable-style error (IPv4 and ICMPv6) if the quoted packet is really UDP, is a well-formed IP header, and its source address equals the socket's bound address (when one is set), in addition to the quoted UDP source port matching. (2) UDP ingress in the Stack (src/stack.zig, IPv4 and IPv6, including Medium::Ip devices): a datagram with a bad length, or a bad checksum when the device is configured to verify UDP checksums, must be silently dropped before reaching any UDP, DHCP or DNS socket or generating a port-unreachable reply; for IPv6 a zero UDP checksum is invalid. Delivery and replies must use only the declared UDP length. Existing tests that feed IPv6 UDP datagrams with a zero checksum will need valid checksums. (3) SLAAC (src/iface.zig and the stack's RA handling): when a prefix expires, or a Router Advertisement carries a prefix with valid lifetime 0, the SLAAC-derived global address must be removed from the interface (v6 address list) together with its solicited-node multicast group unless the link-local address still needs that group, the neighbor cache flushed, and if no valid prefix remains the SLAAC phase must return to soliciting. A Router Advertisement with router lifetime 0 from the current default router must clear the default router and its lifetime timer without touching the configured address or phase. Run the tests with: zig test src/root.zig",
+   "hidden_inline": [
+    "src/socket/icmp.zig",
+    "src/stack.zig"
+   ],
+   "hidden_decls": {
+    "src/socket/icmp.zig": [
+     "TestSocketV6",
+     "LOCAL_ADDR_V6",
+     "REMOTE_ADDR_V6",
+     "EMBEDDED_UDP_ERROR_PAYLOAD",
+     "EMBEDDED_UDP_ERROR_PAYLOAD_V6",
+     "makeSocketV6"
+    ],
+    "src/stack.zig": [
+     "slaacAddrForPrefix"
+    ]
+   },
+   "stats": {
+    "src_files": 3,
+    "src_lines": 288,
+    "test_files_or_blocks": 7,
+    "commits": 3
+   },
+   "repo": "zmoltcp",
+   "lang": "zig",
+   "test_cmd": "zig test src/root.zig 2>&1",
+   "parse": "zig",
+   "hidden_files": [],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 848,
+     "total": 855,
+     "pass": false,
+     "secs": 14.7
+    },
+    "real": {
+     "rc": 0,
+     "passed": 855,
+     "total": 855,
+     "pass": true,
+     "secs": 14.0
+    },
+    "valid": true
+   },
+   "image": "abfast:1",
+   "tier": "hard"
+  },
+  {
+   "id": "zmoltcp-dhcp-dns-hardening",
+   "parent": "bbec632e4b0558d6a7845d41372cca4ac0f4660c",
+   "real": "9b9c86395132a036de30eb8c6c43f6ac68210020",
+   "description": "Randomized DHCP/DNS transaction IDs, response source validation, IPv6 DNS AAAA",
+   "instruction": "Harden the DHCP client and DNS resolver sockets of this Zig TCP/IP stack and add IPv6 DNS support. DHCP (src/socket/dhcp.zig): the fixed transaction id 0x12345678 must go. Add Socket.initWithTransactionSeed(hardware_address, seed: u64) (and have init pick a default seed) so that the current transaction id (the Socket.transaction_id field) is pseudo-random, never zero, and each DISCOVER and each REQUEST/renew dispatch rotates to a fresh different id; with a given seed the sequence is deterministic. Replies must still be matched against the current transaction_id. While requesting, an ACK or NAK is accepted only if the packet source IP and the DHCP server identifier both equal the server from the chosen offer. While renewing, a reply must come from the configured server; while rebinding any server is allowed provided the source IP equals its server identifier. Forged replies are ignored without any state change. DNS (src/socket/dns.zig, generic over IPv4/IPv6): add Socket.initWithSeed(queries, servers, seed: u64) (init picks a default seed). Query transaction ids and source ports must be pseudo-random per query (source port in 49152..65535, deterministic per seed) instead of the fixed 0xABCD/49152. Socket.process now takes the sender: process(src_ip, dst_port, pkt_data) and ignores (does not consume the query for) responses not from the server the query was sent to (mDNS queries exempt). A response whose question type or name does not match the pending query is ignored, including NXDomain responses, which must only fail the query after the question matches. The stack (src/stack.zig) must pass the packet source address through. For IPv6 sockets add AAAA support: wire/dns.zig RecordData gains an `aaaa: [16]u8` variant parsed from 16-byte AAAA records (other lengths are Truncated), an IPv6 DNS socket collects AAAA answers (following CNAMEs) and ignores A answers, and an IPv4 socket ignores AAAA answers. Existing tests that depend on the old fixed ids, ports and call signatures will need updating. Run the tests with: zig test src/root.zig",
+   "hidden_inline": [
+    "src/socket/dhcp.zig",
+    "src/socket/dns.zig",
+    "src/wire/dns.zig"
+   ],
+   "hidden_decls": {
+    "src/socket/dhcp.zig": [
+     "ATTACKER_IP"
+    ],
+    "src/socket/dns.zig": [
+     "DnsSock6",
+     "DNS_SERVER_6_1",
+     "createSocket6",
+     "buildAaaaResponse"
+    ]
+   },
+   "stats": {
+    "src_files": 4,
+    "src_lines": 260,
+    "test_files_or_blocks": 11,
+    "commits": 3
+   },
+   "repo": "zmoltcp",
+   "lang": "zig",
+   "test_cmd": "zig test src/root.zig 2>&1",
+   "parse": "zig",
+   "hidden_files": [],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 0,
+     "total": 0,
+     "pass": false,
+     "secs": 7.8
+    },
+    "real": {
+     "rc": 0,
+     "passed": 866,
+     "total": 866,
+     "pass": true,
+     "secs": 15.3
+    },
+    "valid": true
+   },
+   "image": "abfast:1",
+   "tier": "hard"
+  },
+  {
+   "id": "zmoltcp-tcp-isn-checksum-mld",
+   "parent": "9b9c86395132a036de30eb8c6c43f6ac68210020",
+   "real": "492e0540ae253163cebd8483ff685dd7e64559bd",
+   "description": "Per-tuple randomized TCP ISNs, TCP ingress checksum verification, MLD gated on ICMPv6 checksum",
+   "instruction": "Harden TCP and ICMPv6 ingress in this Zig TCP/IP stack. (1) TCP initial sequence numbers (src/socket/tcp.zig) are currently the constant 10000. Make them unpredictable but deterministic for a given secret: a keyed hash of the connection 4-tuple (local/remote address and port) plus a per-socket counter that advances on every new SYN/connection attempt. Add Socket.setInitialSequenceSecret(secret: u64) (resets the counter; secret 0 must still work), Socket.initWithInitialSequenceSecret(rx, tx, secret) and have init derive a default secret. Consequences: connecting twice on one socket (after reset) must yield different ISNs, and two listeners seeing SYNs from different remote ports must pick different ISNs under the same secret. Existing tests that hard-code the local sequence number will need to read it from the socket. (2) Add public verifyChecksum(src_ip, dst_ip, tcp_data) -> bool and verifyChecksumV6(src_ip, dst_ip, tcp_data) -> bool to src/wire/tcp.zig (IPv4 and IPv6 pseudo-headers; true when the segment checksum is valid). The Stack (src/stack.zig) must drop TCP segments with a bad checksum, for IPv4 and IPv6, before they reach sockets or produce an RST, when the device is configured to verify TCP checksums on receive. Test helpers that build TCP frames will need to emit valid checksums. (3) For IPv6 the Stack must parse ICMPv6 (including its checksum) once up front and drop the packet if that fails, so MLD queries and Router Advertisements are only acted on when the ICMPv6 checksum is valid. Run the tests with: zig test src/root.zig",
+   "hidden_inline": [
+    "src/socket/tcp.zig",
+    "src/stack.zig",
+    "src/wire/tcp.zig"
+   ],
+   "hidden_decls": {
+    "src/socket/tcp.zig": [
+     "TEST_ISN_SECRET"
+    ],
+    "src/stack.zig": [
+     "buildTcpSegment"
+    ]
+   },
+   "stats": {
+    "src_files": 3,
+    "src_lines": 190,
+    "test_files_or_blocks": 6,
+    "commits": 3
+   },
+   "repo": "zmoltcp",
+   "lang": "zig",
+   "test_cmd": "zig test src/root.zig 2>&1",
+   "parse": "zig",
+   "hidden_files": [],
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 0,
+     "total": 0,
+     "pass": false,
+     "secs": 13.1
+    },
+    "real": {
+     "rc": 0,
+     "passed": 872,
+     "total": 872,
+     "pass": true,
+     "secs": 11.5
+    },
+    "valid": true
+   },
+   "image": "abfast:1",
+   "tier": "hard"
+  },
+  {
+   "id": "zmoltcp-medium-ip",
+   "repo": "zmoltcp",
+   "lang": "zig",
+   "parent": "225d1580a8343254e835b7ab79170516a83a85ab",
+   "real": "10b0d51847b21c9d55c9fe6e20116e627a7094af",
+   "description": "Add Medium.ip raw-IP (TUN/PPP) device support to the Stack: no Ethernet framing, no ARP/NDP, raw IP fragmentation",
+   "instruction": "This Zig TCP/IP stack (Stack(Device, Sockets) in src/stack.zig) only supports Ethernet devices. Add support for raw IP devices such as TUN or PPP, which exchange bare IP packets with no link-layer header. Introduce `pub const Medium = enum { ethernet, ip }` in src/iface.zig. A device type may declare `pub const medium: iface.Medium = .ip;` (iface is imported as iface_mod in stack.zig); a device that declares nothing keeps today's Ethernet behaviour, and the phy middleware wrappers Tracer and FaultInjector in src/phy.zig must forward the inner device's medium (defaulting to .ethernet). For an .ip device the Stack must behave as follows. Received frames are bare IP packets: dispatch on the IP version nibble (4 or 6) and run the normal IPv4/IPv6 processing (ICMP echo replies, UDP port-unreachable, TCP RST generation, and routing to UDP/TCP sockets) exactly as for Ethernet. Every transmitted frame is a bare IPv4/IPv6 packet whose first byte is the IP header (0x45 for a plain IPv4 header, high nibble 6 for IPv6). No Ethernet header is emitted, no neighbor resolution happens, and no ARP or NDP packets are ever generated or required: replies and socket egress go out immediately even though the neighbor cache is empty. IPv4 fragmentation on egress (when a UDP payload exceeds the device MTU reported by the device's optional `pub fn capabilities() iface.DeviceCapabilities`, e.g. max_transmission_unit = 576) and reassembly on ingress must work for the .ip medium too, with the same one-fragment-per-poll egress behaviour as the Ethernet path, emitting raw IP fragments. To support this, the `Fragmenter` type in src/fragmentation.zig changes signature to `Fragmenter(comptime buffer_size: usize, comptime emit_ethernet: bool)`: when emit_ethernet is false its emitNext writes just the IPv4 header plus payload at the start of the buffer (returned length = IPv4 header length + fragment payload, first byte 0x45) and when true it behaves as before; update the existing users and existing tests of Fragmenter for the new parameter. Existing Ethernet behaviour and all existing tests must keep passing. Run the tests with: zig test src/root.zig",
+   "test_cmd": "zig test src/root.zig 2>&1",
+   "parse": "zig",
+   "hidden_files": [],
+   "hidden_inline": [
+    "src/stack.zig",
+    "src/fragmentation.zig"
+   ],
+   "hidden_decls": {
+    "src/stack.zig": [
+     "TestIpDevice",
+     "TestIpStack",
+     "testIpStack",
+     "testIpStackV6",
+     "buildRawIpv4",
+     "buildRawIpv6",
+     "TestIpSmallMtuDevice"
+    ]
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 0,
+     "total": 0,
+     "pass": false,
+     "secs": 6.0
+    },
+    "real": {
+     "rc": 0,
+     "passed": 688,
+     "total": 688,
+     "pass": true,
+     "secs": 15.9
+    },
+    "valid": true
+   },
+   "stats": {
+    "src_files": 4,
+    "src_lines": 805,
+    "test_files_or_blocks": 12,
+    "commits": 1
+   },
+   "image": "abfast:1",
+   "tier": "hard"
+  },
+  {
+   "id": "zmoltcp-v6-sockets",
+   "repo": "zmoltcp",
+   "lang": "zig",
+   "parent": "a74f3691315a1cdb5500315e5e84618b0b0daa08",
+   "real": "77e3efdc3e405a0cead001eeb6b0e9db37eb094b",
+   "description": "Wire IPv6 TCP/UDP/ICMPv6/raw sockets through Stack ingress/egress/pollAt, IPv6 fragment reassembly, extension header walking, mandatory UDP-over-IPv6 checksum",
+   "instruction": "The Stack(Device, Sockets) in src/stack.zig already routes IPv4 sockets (tcp4_sockets, udp4_sockets, ...) and has IPv6 interface handling (NDP, ICMPv6, neighbor_cache_v6, setIpv6Addrs), but IPv6 sockets are not wired in. Complete the IPv6 side. The Sockets config struct may now contain optional fields tcp6_sockets, udp6_sockets, icmp6_sockets and raw6_sockets (and dns6_sockets), each a slice of pointers to sockets instantiated over ipv6, e.g. `udp_socket_mod.Socket(ipv6, .{ .payload_size = 64 })`, `tcp_socket.Socket(ipv6, 4)`, `icmp_socket_mod.Socket(ipv6, .{ .payload_size = 128 })`, `raw_socket_mod.Socket(ipv6, ...)`. Ingress: IPv6 packets are offered to the matching sockets before the interface's built-in replies. A UDP datagram to a bound udp6 socket is delivered and no ICMPv6 port-unreachable is emitted; a SYN to a listening tcp6 socket yields a SYN-ACK; an ICMPv6 echo reply whose identifier matches a bound icmp6 socket (`bind(.{ .ident = ... })`) is delivered to it as the serialized ICMPv6 message (so the ICMP socket type must work for IPv6 addresses, including the ICMPv6 checksum computed against the pseudo-header); a raw6 socket bound to a next-header protocol receives the IP payload, and when a raw socket consumes a packet of an otherwise unknown protocol no ICMPv6 parameter-problem is generated. The IPv6 receive path must walk extension headers (e.g. hop-by-hop options) to find the upper-layer protocol, so a TCP SYN behind a hop-by-hop header to an unserved port still produces a TCP RST. It must also reassemble IPv6 fragments (Fragment extension header, next-header 44): a UDP datagram split in two fragments is delivered to the socket only after the second fragment arrives. Egress: pending data on v6 sockets is sent by poll(): a connecting tcp6 socket emits its SYN (with a valid IPv6 pseudo-header TCP checksum), a udp6 socket emits its datagram with the mandatory non-zero UDP checksum, an icmp6 socket sends the already-serialized ICMPv6 packet given to sendSlice(bytes, dst_addr). If the destination's neighbor is not in neighbor_cache_v6, a Neighbor Solicitation is emitted instead of the packet. pollAt(): pending v6 TCP SYN-SENT or pending v6 UDP data returns Instant.ZERO; idle v6 sockets return null. In src/wire/udp.zig add `pub fn computeChecksumV6(src_ip: [16]u8, dst_ip: [16]u8, udp_data: []const u8) u16`, `pub fn fillChecksumV6(buf: []u8, src_ip: [16]u8, dst_ip: [16]u8) void` (writes the checksum into bytes 6..8 of the serialized datagram, substituting 0xFFFF for a computed zero) and `pub fn verifyChecksumV6(data: []const u8, src_ip: [16]u8, dst_ip: [16]u8) bool` (a stored checksum of zero is invalid over IPv6). Existing IPv4 behaviour and tests must keep passing. Run the tests with: zig test src/root.zig",
+   "test_cmd": "zig test src/root.zig 2>&1",
+   "parse": "zig",
+   "hidden_files": [],
+   "hidden_inline": [
+    "src/stack.zig",
+    "src/wire/udp.zig"
+   ],
+   "hidden_decls": {
+    "src/wire/udp.zig": [
+     "SRC_V6",
+     "DST_V6"
+    ]
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 0,
+     "total": 0,
+     "pass": false,
+     "secs": 14.0
+    },
+    "real": {
+     "rc": 0,
+     "passed": 676,
+     "total": 676,
+     "pass": true,
+     "secs": 12.4
+    },
+    "valid": true
+   },
+   "stats": {
+    "src_files": 4,
+    "src_lines": 1158,
+    "test_files_or_blocks": 17,
+    "commits": 1
+   },
+   "image": "abfast:1",
+   "tier": "hard"
+  },
+  {
+   "id": "zmoltcp-dhcp-dns-stack",
+   "repo": "zmoltcp",
+   "lang": "zig",
+   "parent": "3bdd1ec36414cfe9366c23f86699f155506eb517",
+   "real": "aa1f1df83208ee1f95a629375bcd8fe219cbca01",
+   "description": "Integrate DHCP and DNS client sockets into Stack poll/pollAt; fix TCP window-update decision to use the adjusted last-advertised window",
+   "instruction": "Stack(Device, Sockets) in src/stack.zig routes TCP/UDP/ICMP/raw sockets but the DHCP and DNS client sockets (src/socket/dhcp.zig, src/socket/dns.zig) are not driven by it. Let the Sockets config struct carry optional fields `dhcp_sockets: []*dhcp_socket_mod.Socket` and `dns_sockets: []*dns_socket_mod.Socket` and integrate them. src/stack.zig must expose these file-scope imports under exactly these names (they are used by the stack's own test code): `const dhcp_wire = @import(\"wire/dhcp.zig\");`, `const dhcp_socket_mod = @import(\"socket/dhcp.zig\");`, `const dns_socket_mod = @import(\"socket/dns.zig\");`. Egress: on poll(), a DHCP socket's pending message is sent as UDP from port 68 to port 67, IPv4 source 0.0.0.0, destination 255.255.255.255, in an Ethernet frame addressed to the Ethernet broadcast address, so a fresh socket's first poll transmits a DHCPDISCOVER. A DNS socket's pending query is sent as UDP from local port 49152 to port 53 of the configured server, with the interface's IPv4 address as source. Ingress: UDP datagrams from port 67 to port 68 are fed to the DHCP socket(s) (the stack must accept them even for a not-yet-configured interface when the interface has any_ip set), so that an OFFER makes the socket move on to requesting; datagrams from port 53 to the DNS socket's local port are fed to the DNS socket so that a pending A-record query can be resolved via getQueryResult. pollAt(): include the DHCP and DNS sockets' own deadlines, e.g. ZERO before the first DISCOVER is sent, Instant 10 s after the discover was sent (DHCP retry), and 1 s after a DNS query was transmitted (DNS retransmit). Separately, in the TCP socket (src/socket/tcp.zig) the decision to send a window-update ACK is currently approximate. It must compare the newly available scaled window against the window the peer still has available relative to what we last advertised: the last advertised window edge is remote_last_ack + (remote_last_win << remote_win_shift); the window remaining relative to what has already been received (next ack = remote_seq_no + rx_buffer length) is the difference between that edge and the next ack, shifted back down and clamped to u16. Send an update when the new scaled window is non-zero and new_win / 2 >= that remaining window; never when nothing has been advertised yet. This must hold even while a delayed ACK is pending (receive buffer filled, then reading 2 bytes of 6 triggers an immediate ACK advertising window 2, while a subsequent read of one more byte does not). Existing behaviour and tests must keep passing. Run the tests with: zig test src/root.zig",
+   "test_cmd": "zig test src/root.zig 2>&1",
+   "parse": "zig",
+   "hidden_files": [],
+   "hidden_inline": [
+    "src/stack.zig",
+    "src/socket/tcp.zig"
+   ],
+   "hidden_decls": {
+    "src/stack.zig": [
+     "buildIpv4FrameFrom"
+    ]
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 0,
+     "total": 0,
+     "pass": false,
+     "secs": 11.7
+    },
+    "real": {
+     "rc": 0,
+     "passed": 400,
+     "total": 400,
+     "pass": true,
+     "secs": 9.4
+    },
+    "valid": true
+   },
+   "stats": {
+    "src_files": 2,
+    "src_lines": 527,
+    "test_files_or_blocks": 7,
+    "commits": 1
+   },
+   "image": "abfast:1",
+   "tier": "hard"
+  },
+  {
+   "id": "zmoltcp-stack-sockets-egress",
+   "repo": "zmoltcp",
+   "lang": "zig",
+   "parent": "598e6d75aa4924c747853f429bcb8fa6fcf5bf84",
+   "real": "3bdd1ec36414cfe9366c23f86699f155506eb517",
+   "description": "Make Stack generic over a socket set: route ingress to TCP/UDP/ICMP sockets, generate TCP RSTs, dispatch socket egress, pollAt() scheduling, IPv4 address classifiers",
+   "instruction": "The `Stack(Device)` in src/stack.zig currently only answers ARP/ICMP echo/UDP port-unreachable by itself; it knows nothing about sockets. Make it drive sockets. Change the signature to `Stack(comptime Device: type, comptime SocketConfig: type)` and `init(hw_addr, sockets: SocketConfig)`; SocketConfig is either `void` (no sockets, init(LOCAL_HW, {})) or a struct with any of the optional fields `tcp_sockets: []*TcpSock`, `udp_sockets: []*UdpSock`, `icmp_sockets: []*IcmpSock` (slices of pointers to src/socket/tcp.zig Socket(4), src/socket/udp.zig Socket(.{ .payload_size = N }), src/socket/icmp.zig Socket(.{ .payload_size = N })). Update the existing code and tests that use Stack so the alias `TestStack = Stack(TestDevice, void)` and the helper `testStack()` keep working. `poll(timestamp, device)` keeps returning true when anything happened. src/stack.zig must expose these file-scope imports under exactly these names (they are used by the stack's own test code): `udp_wire` (wire/udp.zig), `tcp_wire` (wire/tcp.zig), `udp_socket_mod` (socket/udp.zig), `tcp_socket` (socket/tcp.zig) and `icmp_socket_mod` (socket/icmp.zig); src/socket/udp.zig and src/socket/icmp.zig must likewise have a file-scope `const Instant = time.Instant;` (time = @import(\"../time.zig\")). Ingress: a received TCP segment is offered to the TCP sockets (`accepts`, then `process`), and any reply a socket produces is transmitted back; a UDP datagram is offered to the UDP sockets, and the interface's ICMP port-unreachable is suppressed when a socket took the datagram; ICMP packets are also delivered to ICMP sockets whose bound identifier matches while the interface still auto-replies to echo requests. RST generation: a TCP segment that no socket accepts must be answered with a RST (nothing for an incoming RST, nothing when the source or destination address is 0.0.0.0, nothing when a socket handled it). Add `pub fn processTcp(self: *const Interface, ip_repr: ipv4.Repr, tcp_data: []const u8, socket_handled: bool) ?Response` to Interface in src/iface.zig that returns that RST (a Response whose `.ipv4.payload` is `.tcp` carrying a TcpRepr: ports swapped, control .rst; for a SYN without ACK, seq 0 and ack = peer seq + 1; with an ACK, seq = the peer's ack number); `Interface.processIcmp(ip_repr, payload, is_broadcast)` must also be callable from outside the file. Add `pub fn rstReply(repr: TcpRepr) TcpRepr` (module level function) and `TcpRepr.fromWireRepr(w: wire_tcp.Repr, payload)` / `toWireRepr()` in src/socket/tcp.zig, and the Response payload type needs a `.tcp` variant holding a socket-level TcpRepr. The RST on the wire must carry a correct TCP checksum. Egress: on poll() pending data on every socket is sent: a connecting TCP socket emits its SYN (valid checksum, source address from the socket tuple), a UDP socket emits its queued datagram (valid UDP checksum, source = interface address), an ICMP socket sends the already-serialized ICMP message given to `sendSlice(bytes, dst_addr)` as the IPv4 payload. The Ethernet destination is the neighbor-cache entry for the destination when present; frames for the destination are still sent when the neighbor is unknown. Scheduling: add `pub fn pollAt(self: Self) ?Instant` to the TCP, UDP and ICMP sockets (UDP/ICMP: Instant.ZERO when a packet is queued for transmission, null otherwise; TCP: null when it has no tuple, ZERO when it needs to transmit now (e.g. SYN-SENT) and otherwise the earliest of its ack-delay, keep-alive/timeout and retransmit timers) and make `Stack.pollAt()` return the earliest of its sockets' values (null with no sockets or idle sockets; after a SYN has been dispatched at t=0 the retransmit deadline is 1000 ms). In src/wire/ipv4.zig add `UNSPECIFIED` (0.0.0.0) and `BROADCAST` (255.255.255.255) constants and `isUnspecified`, `isBroadcast`, `isMulticast`, `isLinkLocal`, `isLoopback` predicates over an Address (each address belongs to at most one class; e.g. UNSPECIFIED is not broadcast and vice versa). Existing behaviour and tests must keep passing. Run the tests with: zig test src/root.zig",
+   "test_cmd": "zig test src/root.zig 2>&1",
+   "parse": "zig",
+   "hidden_files": [],
+   "hidden_inline": [
+    "src/stack.zig",
+    "src/iface.zig",
+    "src/socket/tcp.zig",
+    "src/socket/udp.zig",
+    "src/socket/icmp.zig",
+    "src/wire/ipv4.zig"
+   ],
+   "hidden_decls": {
+    "src/stack.zig": [
+     "buildIpv4Frame"
+    ]
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 0,
+     "total": 0,
+     "pass": false,
+     "secs": 9.6
+    },
+    "real": {
+     "rc": 0,
+     "passed": 393,
+     "total": 393,
+     "pass": true,
+     "secs": 13.6
+    },
+    "valid": true
+   },
+   "stats": {
+    "src_files": 6,
+    "src_lines": 1330,
+    "test_files_or_blocks": 22,
+    "commits": 7
+   },
+   "image": "abfast:1",
+   "tier": "hard",
+   "size": "xl"
+  },
+  {
+   "id": "zmoltcp-tcp-timestamps-sack",
+   "repo": "zmoltcp",
+   "lang": "zig",
+   "parent": "4332a99a38d0e543116caa822502af85c4528937",
+   "real": "0befc81328c999fcfa0bd2272c9dcbe5f100e020",
+   "description": "TCP timestamp option (negotiated, echoed) and SACK blocks: wire option encode/parse with headerLen, socket tsval generator and SACK ranges in ACKs",
+   "instruction": "The TCP wire module (src/wire/tcp.zig) currently ignores the SACK and Timestamps options when parsing and writes no options at all when emitting, and the TCP socket (src/socket/tcp.zig) never reports SACK blocks or timestamps. Implement both. Wire level: add `pub const SackRange = struct { left: u32, right: u32 }` and `pub const Timestamp = struct { tsval: u32, tsecr: u32 }`, and extend `Repr` with `sack_ranges: [3]?SackRange` (default all null) and `timestamp: ?Timestamp` (default null). `parse` must decode the SACK option (up to 3 ranges) and the Timestamps option (length 10). Add `pub fn headerLen(repr: Repr) usize`: 20 bytes plus the options that are present (MSS 4, window scale 3, SACK-permitted 2, or, when sack_permitted is false, a SACK option of 2 + 8*count bytes for the non-null ranges, timestamps 10), rounded up to a multiple of 4. `emit` must now actually write the options that are set in the Repr (MSS, window scale, SACK-permitted, SACK ranges, timestamp) in a valid padded options area, set the data offset from headerLen (ignoring the incoming data_offset field), and return the header length; `parse(emit(repr))` must give the same option values back. Segments built by the Stack's TCP serialization should carry these options too. Socket level: the socket-level `TcpRepr` also gets `sack_ranges` and `timestamp` fields (copied to and from the wire repr). Add `pub fn setTsvalGenerator(self: *Self, gen: ?*const fn () u32) void` and `pub fn timestampEnabled(self: Self) bool` (true while a generator is set). While enabled, every segment the socket emits (SYN, data, ACK replies) carries a timestamp option with tsval = gen() and tsecr = the tsval of the most recent segment received from the peer (0 before any). Timestamps are only used when both sides agree: if a SYN (passive open) or SYN-ACK (active open) arrives without a timestamp option, the socket turns the feature off (generator cleared) for that connection and never sends the option, while a socket with no generator never sends it even if the peer offers one. Reset the remembered peer tsval on socket reset. ACK replies to a received segment echo that segment's tsval as tsecr. SACK: when the peer announced SACK-permitted during the handshake (the socket already records this), an ACK that the socket sends while it holds out-of-order data (data received above the cumulative ack) lists up to three ranges of that buffered data as absolute sequence numbers (left inclusive, right exclusive) in `sack_ranges`, in ascending order; the cumulative ack number stays at the first hole. With no out-of-order data, or when SACK was not negotiated, all ranges are null. Existing behaviour and tests must keep passing. Run the tests with: zig test src/root.zig",
+   "test_cmd": "zig test src/root.zig 2>&1",
+   "parse": "zig",
+   "hidden_files": [],
+   "hidden_inline": [
+    "src/wire/tcp.zig",
+    "src/socket/tcp.zig"
+   ],
+   "hidden_decls": {
+    "src/socket/tcp.zig": [
+     "testTsvalGenerator"
+    ]
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 0,
+     "total": 0,
+     "pass": false,
+     "secs": 9.6
+    },
+    "real": {
+     "rc": 0,
+     "passed": 419,
+     "total": 419,
+     "pass": true,
+     "secs": 10.4
+    },
+    "valid": true
+   },
+   "stats": {
+    "src_files": 5,
+    "src_lines": 965,
+    "test_files_or_blocks": 15,
+    "commits": 2
+   },
+   "image": "abfast:1",
+   "tier": "hard"
+  },
+  {
+   "id": "zmoltcp-arp-resolution-reassembly",
+   "repo": "zmoltcp",
+   "lang": "zig",
+   "parent": "0befc81328c999fcfa0bd2272c9dcbe5f100e020",
+   "real": "01aa852ae2156f52450799d047c7b3bab34b706b",
+   "description": "Stack ARP neighbor-resolution pipeline (hold packets, rate-limited requests, pollAt delay, opportunistic learning) and IPv4 fragment reassembly on ingress",
+   "instruction": "Stack(Device, Sockets) in src/stack.zig currently sends a socket's packet immediately even when the destination's MAC is not in `iface.neighbor_cache`, and it cannot receive fragmented IPv4 packets. Add (1) a neighbor-resolution pipeline and (2) IPv4 reassembly. Neighbor resolution: for socket egress (TCP, UDP, ICMP) and replies to unicast destinations that are on the interface's network, when the destination has no cache entry the stack must emit an ARP request for it (Ethernet broadcast, ARP operation request, source protocol address = the interface IPv4 address, target = the destination) instead of the packet, and keep the socket's packet queued (a TCP socket's SYN is held back, a UDP socket's datagram stays in its tx queue; `UdpSocket.peekDstAddr() ?Address` must return the queued datagram's destination without dequeuing) so nothing is lost. At most one ARP request per `iface_mod.NeighborCache.SILENT_TIME` (a new `pub const` Duration of 1000 ms on NeighborCache in src/iface.zig, rate limit applied through the cache) is emitted: polls within that window produce no frames, the first poll at or after t + SILENT_TIME re-issues the request if the neighbor is still unknown. Once the neighbor has been filled (`neighbor_cache.fill(ip, mac, now)`) and the silent window has passed, the held packet is sent normally. A destination of 255.255.255.255 (broadcast) skips resolution and is sent to the Ethernet broadcast address immediately. `Stack.pollAt()` must not return Instant.ZERO for a socket that is only waiting for neighbor resolution during the silent window: it returns a time not earlier than the end of that window. The stack also learns neighbors opportunistically: after receiving a unicast IPv4 packet addressed to us from some IP and Ethernet source, `neighbor_cache.lookup(src_ip, now)` returns that Ethernet source, so a reply (e.g. ICMP echo reply) is emitted immediately without ARP. Reassembly: ingress IPv4 packets with the more-fragments flag or a non-zero fragment offset (offset in 8-byte units) are collected, keyed by (identification, source, destination, protocol), tolerating out-of-order arrival, and only when the whole payload is present is it processed as one packet (e.g. a two-fragment ICMP echo request produces an echo reply only after the second fragment; a two-fragment UDP datagram arriving second-fragment-first is delivered to the bound socket only once both are in). Partial packets produce no output, a slot for in-flight reassembly is released on completion or timeout, a different key evicts a stale partial assembly, and non-fragmented packets never touch the reassembler. The stack exposes this as a field `reassembler` whose `isFree() bool` is true when no assembly is in progress (the Stack already has `fragmenter` for egress and `emitIpv4Frame(src, dst, protocol, hop_limit, payload, device)`; keep those working). The tests in stack.zig reach these names through `frag_mod` (= @import(\"fragmentation.zig\")) and `iface_mod`, both already imported. Existing behaviour and tests must keep passing (note that existing stack tests that send without an ARP exchange may need to populate the neighbor cache first). Run the tests with: zig test src/root.zig",
+   "test_cmd": "zig test src/root.zig 2>&1",
+   "parse": "zig",
+   "hidden_files": [],
+   "hidden_inline": [
+    "src/stack.zig"
+   ],
+   "hidden_decls": {
+    "src/stack.zig": [
+     "emitTestFrame",
+     "buildFragment"
+    ]
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 0,
+     "total": 0,
+     "pass": false,
+     "secs": 10.3
+    },
+    "real": {
+     "rc": 0,
+     "passed": 445,
+     "total": 445,
+     "pass": true,
+     "secs": 11.3
+    },
+    "valid": true
+   },
+   "stats": {
+    "src_files": 6,
+    "src_lines": 1085,
+    "test_files_or_blocks": 12,
+    "commits": 2
+   },
+   "image": "abfast:1",
+   "tier": "hard"
+  },
+  {
+   "id": "attrs-setattr-generator-hooks",
+   "repo": "attrs",
+   "lang": "python",
+   "parent": "d3a98cf05ab15769003dcca3eae91cdd6504b83b",
+   "real": "4b5b295bb815bf845fa3570bf63781a88212db40",
+   "description": "attrs on_setattr hooks may be generator functions",
+   "instruction": "attrs lets you pass an on_setattr hook (callable taking instance, attribute, value and returning the value to store) via attr.ib/attrs.field, or class-wide via attr.s/attrs.define. Extend this so a hook may also be a generator function that yields exactly once: the code before the yield runs before the assignment, the yielded value is what gets stored on the instance, and the code after the yield runs after the value has been set (so it sees the new value on the instance). Ordinary function hooks keep working unchanged, and hooks still do not run during __init__. If the generator raises before yielding, nothing is stored; if it raises after yielding, the value is already stored and the exception propagates. If it yields a second time, close the generator (so its finally blocks run), leave the first yielded value stored, and raise RuntimeError('Generator on_setattr hook yielded more than once.'). Whether a hook is a generator function should be decided lazily (only when the generated __setattr__ is first needed for a hook, not at class-definition import cost) and cached. This must work for per-attribute hooks and for class-level hooks, with both the attr.s and attrs.define APIs. Update the docstrings of the public APIs taking on_setattr, the type stubs in src/attrs/__init__.pyi so generator hooks type-check, add a short example to docs/examples.md and a changelog fragment under changelog.d.",
+   "test_cmd": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_setattr.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_setattr.py"
+   ],
+   "hidden_inline": [],
+   "stats": {
+    "src_files": 5,
+    "src_lines": 95,
+    "test_files_or_blocks": 2,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 38,
+     "total": 46,
+     "pass": false,
+     "secs": 1.4
+    },
+    "real": {
+     "rc": 0,
+     "passed": 46,
+     "total": 46,
+     "pass": true,
+     "secs": 1.3
+    },
+    "valid": true
+   },
+   "image": "abfast:1",
+   "tier": "hard"
+  },
+  {
+   "id": "werkzeug-apply-conditions-range",
+   "repo": "werkzeug",
+   "lang": "python",
+   "parent": "671537e0e5c7dcec4ac61ffc755dbd8936cefcfb",
+   "real": "34e4c1c3cc6732dee9e04f46a0eca9ac006e49b0",
+   "description": "Split Response.make_conditional into apply_conditions and apply_range",
+   "instruction": "werkzeug's Response.make_conditional mixes precondition handling and range handling and gets several HTTP details wrong. Add two new methods on Response (keep make_conditional working or deprecate it as you see fit). `Response.apply_conditions(request, *, exists=True)` evaluates the request's preconditions in RFC 9110 order and applies to every method: If-Match (strong comparison; `*` matches only when `exists` is true; failure raises werkzeug.exceptions.PreconditionFailed), then If-Unmodified-Since (only when If-Match is absent; fails with PreconditionFailed when the response's last_modified is later; a missing last_modified passes), then If-None-Match (weak comparison; `*` matches when `exists` is true; a match sets status 304 for GET/HEAD and raises PreconditionFailed for other methods), then If-Modified-Since (only for GET/HEAD and only when If-None-Match is absent; not modified -> 304; missing last_modified -> 200). `Response.apply_range(request)` always advertises `Accept-Ranges: bytes` on a 200, and for GET requests with a satisfiable `bytes` Range header and a known non-zero content length it turns the response into a 206 with Content-Range and a sliced body and Content-Length. Only the first range is used when several are given, a too-large stop is clamped to the end, a suffix range larger than the body returns the whole body, a start beyond the end raises RequestedRangeNotSatisfiable, other range units and non-GET methods are ignored, and nothing is done if the response status is already not 200 (e.g. 304). An If-Range header (ETag or date form) only allows the range when it strongly matches the response etag / equals the response last_modified exactly; otherwise the full 200 response is returned. Both methods read the response's existing `etag`, `last_modified`, `content_length` and body.",
+   "test_cmd": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_apply_conditions.py tests/test_apply_range.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_apply_conditions.py",
+    "tests/test_apply_range.py"
+   ],
+   "hidden_inline": [],
+   "stats": {
+    "src_files": 4,
+    "src_lines": 362,
+    "test_files_or_blocks": 2,
+    "commits": 3
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 0,
+     "total": 45,
+     "pass": false,
+     "secs": 1.8
+    },
+    "real": {
+     "rc": 0,
+     "passed": 45,
+     "total": 45,
+     "pass": true,
+     "secs": 1.5
+    },
+    "valid": true
+   },
+   "image": "abfast:1",
+   "tier": "hard"
+  },
+  {
+   "id": "werkzeug-send-file-fileobj",
+   "repo": "werkzeug",
+   "lang": "python",
+   "parent": "34e4c1c3cc6732dee9e04f46a0eca9ac006e49b0",
+   "real": "655b5daa016564a5bd4748e347c0a123ba4e900c",
+   "description": "send_file detects metadata from file objects; SharedDataMiddleware uses send_file",
+   "instruction": "Improve werkzeug.utils.send_file. (1) When given an open binary file object (including a real file opened with open(path,'rb') or io.BytesIO), detect the path from the file's `name` if it has one, the size (via seek/fileno stat), and the modification time from the file descriptor when available, and use them for Content-Length, Last-Modified, the Content-Disposition filename and the mimetype guess, just as when a path is passed. The file position is reset to the start if the file is seekable, so range responses report correct lengths. (2) If neither mimetype nor a download name is available, fall back to application/octet-stream instead of raising TypeError. (3) Text-mode files (open(path) or io.StringIO) must still raise ValueError. (4) The generated ETag must no longer contain a hash of the path: it is built only from the modification time and size that are known, joined with '-', so a path-based file yields exactly one '-' in the header value (mtime-size). (5) With use_x_sendfile=True and a known path, the response sets X-Sendfile and has an empty response iterable (no body iterator), and the file is still closed when the response is closed. (6) Conditional/range handling should use the Response.apply_conditions / apply_range methods and let HTTP errors (e.g. RequestedRangeNotSatisfiable) propagate after closing the response. Also rework SharedDataMiddleware so it serves files through send_file instead of its own hand-rolled conditional/ETag logic, keeping its existing externally visible behaviour.",
+   "test_cmd": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_send_file.py tests/middleware/test_shared_data.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_send_file.py"
+   ],
+   "hidden_inline": [],
+   "stats": {
+    "src_files": 2,
+    "src_lines": 471,
+    "test_files_or_blocks": 1,
+    "commits": 2
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 30,
+     "total": 33,
+     "pass": false,
+     "secs": 1.5
+    },
+    "real": {
+     "rc": 0,
+     "passed": 33,
+     "total": 33,
+     "pass": true,
+     "secs": 1.2
+    },
+    "valid": true
+   },
+   "image": "abfast:1",
+   "tier": "hard"
+  },
+  {
+   "id": "werkzeug-strict-int-float-converters",
+   "repo": "werkzeug",
+   "lang": "python",
+   "parent": "ef518e429b67a91a307de37a1845c93110180371",
+   "real": "c678a2310328d2ecd082f0c77a514eb738bbe9d2",
+   "description": "Stricter int and float URL converters (matching and building)",
+   "instruction": "Make werkzeug's routing `int` and `float` URL converters strict, both when matching URLs and when building them. int: only ASCII digits match (no Unicode digits); a digit string longer than sys.get_int_max_str_digits() never matches (NotFound, not an exception); the negative sign does not count toward `fixed_digits`; signed=True is required for negative values (both match and build); fixed_digits requires exactly that many digits (zero padded when building, and a value that does not fit raises BuildError), min/max bounds are enforced on match and also when building (an out of range value raises werkzeug.routing.BuildError). float: requires digits on both sides of the dot (`.4` and `4.` do not match), only ASCII digits, values that overflow to inf are not matched, signed/min/max behave as for int, -0.0 is accepted when signed, and building never produces scientific notation (0.00001 builds as '0.00001' and 1e16 builds as '10000000000000000.0'; a float always builds with a decimal point and a fraction digit, e.g. 5.0 -> '5.0' and -0.0 -> '-0.0') and refuses inf, nan, unsigned negatives and out of range values with BuildError.",
+   "test_cmd": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_routing.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_routing.py"
+   ],
+   "hidden_inline": [],
+   "stats": {
+    "src_files": 1,
+    "src_lines": 177,
+    "test_files_or_blocks": 1,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 175,
+     "total": 186,
+     "pass": false,
+     "secs": 4.3
+    },
+    "real": {
+     "rc": 0,
+     "passed": 186,
+     "total": 186,
+     "pass": true,
+     "secs": 3.9
+    },
+    "valid": true
+   },
+   "image": "abfast:1",
+   "tier": "hard"
+  },
+  {
+   "id": "pathspec-gitignore-errors-arg",
+   "repo": "python-pathspec",
+   "lang": "python",
+   "parent": "811bde1c624e85accee683b9cbf07c01538afacb",
+   "real": "ea7c7fd28c218cc5c95b100c2e9e86215a16e727",
+   "description": "pathspec GitIgnore pattern errors= argument, trailing backslash and lone '!' become null patterns",
+   "instruction": "Invalid gitignore notation currently has fixed handling in pathspec's GitIgnoreBasicPattern and GitIgnoreSpecPattern: a pattern that is a lone backslash or a lone '!' raises GitIgnorePatternError, and the two classes disagree on malformed bracket ranges. Add a keyword-only argument `errors` to both pattern constructors and to their `pattern_to_regex` classmethods (RegexPattern.__init__ must accept extra keyword arguments and forward them to pattern_to_regex). Valid values are 'literal' (most invalid notation, such as an unclosed bracket or a bad range, is treated as a literal string), 'null' (invalid notation makes the whole pattern a null operation: include is None and regex is None) and 'raise' (invalid notation raises GitIgnorePatternError); any other value raises ValueError. When errors is None the default is 'literal' for GitIgnoreBasicPattern (its historic behaviour) and 'null' for GitIgnoreSpecPattern (Git's behaviour). A pattern ending in a trailing backslash is invalid in every mode: it is a null operation for 'literal' and 'null' and raises GitIgnorePatternError only for 'raise'. A lone '!' is never an error: it is a null operation in all three modes, for both classes. Document the argument in the docstrings.",
+   "test_cmd": "python -m pytest -q -p no:cacheprovider tests/test_03_gitignore_basic.py tests/test_04_gitignore_spec.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_03_gitignore_basic.py",
+    "tests/test_04_gitignore_spec.py"
+   ],
+   "hidden_inline": [],
+   "stats": {
+    "src_files": 5,
+    "src_lines": 420,
+    "test_files_or_blocks": 2,
+    "commits": 2
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 122,
+     "total": 134,
+     "pass": false,
+     "secs": 1.4
+    },
+    "real": {
+     "rc": 0,
+     "passed": 122,
+     "total": 122,
+     "pass": true,
+     "secs": 1.3
+    },
+    "valid": true
+   },
+   "image": "abfast:1",
+   "tier": "hard"
+  },
+  {
+   "id": "pathspec-gitignore-excluded-dir-negation",
+   "repo": "python-pathspec",
+   "lang": "python",
+   "parent": "93e0179cb2d7a6d830050c62f3eab950b9263bf3",
+   "real": "07ce100332ea8f67d929ed3461730e70fa34d91d",
+   "description": "pathspec GitIgnoreSpec: file negation cannot re-include files under an excluded directory",
+   "instruction": "GitIgnoreSpec currently lets a later negation re-include a file whose parent directory is excluded, which Git forbids. With lines `build` and `!keep.log`, the path `build/keep.log` must still be reported as ignored by spec.check_files / match_file (while a top-level `keep.log` is not), and with `build` and `!build/keep.log` (also `a` with `!a/b/keep.log`, a grandparent) the negated file under the excluded directory also stays ignored. Cases that must keep working: `build/*` followed by `!build/keep.log` (keep.log is not ignored, drop.log is), and `log`, `!log/`, `!log/keep.log` where the directory exclusion is undone before the file negation (log/keep.log is not ignored). The matching logic is duplicated in the simple, re2 and hyperscan gitignore backends; keep them consistent (only the simple backend can be exercised locally).",
+   "test_cmd": "python -m pytest -q -p no:cacheprovider tests/test_06_gitignore.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_06_gitignore.py"
+   ],
+   "hidden_inline": [],
+   "stats": {
+    "src_files": 3,
+    "src_lines": 146,
+    "test_files_or_blocks": 3,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 22,
+     "total": 26,
+     "pass": false,
+     "secs": 1.3
+    },
+    "real": {
+     "rc": 0,
+     "passed": 22,
+     "total": 22,
+     "pass": true,
+     "secs": 1.2
+    },
+    "valid": true
+   },
+   "image": "abfast:1",
+   "tier": "hard"
+  },
+  {
+   "id": "pathspec-gitignore-reincluded-ancestor",
+   "repo": "python-pathspec",
+   "lang": "python",
+   "parent": "f0fb3f4aaaca490d7667e4dc1d565d52a25158b0",
+   "real": "c842c9433b2c134ccfe351200864687cf3a41c76",
+   "description": "pathspec GitIgnoreSpec: excluded-directory rule must not fire for an ancestor the spec re-includes",
+   "instruction": "GitIgnoreSpec wrongly ignores files whose ancestor directory matches an exclude pattern but is later re-included by the spec itself. With the lines `.*` and `!**/node_modules/**`, the file `vendor/deps/npm/node_modules/.bin/x.txt` (and `node_modules/.bin/z.txt`, `vendor/deps/npm/node_modules/.bin/.hide.txt`) must not be ignored, because the node_modules directories are re-included, while `.hidden` and `vendor/.cache/y.txt` are still ignored and `vendor/keep.txt` is untouched. The rule that a file under an excluded directory stays excluded must only apply when some strict ancestor directory is actually excluded by the spec as a whole (Git stops descending at the first excluded directory, so ancestors are considered outermost first). A pattern can match both a strict ancestor of the file and the file itself, so account for both. Keep the simple, re2 and hyperscan backends consistent (only simple can be exercised locally) and add a CHANGES entry.",
+   "test_cmd": "python -m pytest -q -p no:cacheprovider tests/test_06_gitignore.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_06_gitignore.py"
+   ],
+   "hidden_inline": [],
+   "stats": {
+    "src_files": 5,
+    "src_lines": 108,
+    "test_files_or_blocks": 1,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 29,
+     "total": 31,
+     "pass": false,
+     "secs": 1.4
+    },
+    "real": {
+     "rc": 0,
+     "passed": 29,
+     "total": 29,
+     "pass": true,
+     "secs": 1.2
+    },
+    "valid": true
+   },
+   "image": "abfast:1",
+   "tier": "hard"
+  },
+  {
+   "id": "anyio-future",
+   "repo": "anyio",
+   "lang": "python",
+   "image": "abfast:2",
+   "parent": "40435079f10d31b165134fe55ddd85d637da8b13",
+   "real": "2613773ecc00f93c8af979b29739466a50ed87a7",
+   "description": "anyio.Future synchronization primitive with status and exceptions",
+   "instruction": "Add an awaitable one-shot value holder anyio.Future (generic, Future[T](name=None) with keyword-only name) that lets one task wait for a value or exception supplied by another task, similar to asyncio.Future but in the style of anyio's TaskHandle. Export from the top-level anyio package also four new exceptions: FutureFailed(Exception), FutureCancelled(FutureFailed), FutureNotFinished(Exception) and FutureAlreadyFinished(Exception). Behaviour: Future.Status is an Enum with PENDING, FINISHED, CANCELLED, FAILED; future.status reports it (a future that was given a value is FINISHED, given an exception is FAILED, cancelled while pending is CANCELLED). The value is supplied by assigning the property future.return_value = x and the failure by assigning future.exception = exc; assigning when already finished raises FutureAlreadyFinished('future has already finished') (for a failed one: 'future already failed') and assigning after cancel() raises FutureCancelled('future was cancelled'). future.cancel() on a pending future cancels it, and does nothing if it already has a result or exception. Reading future.return_value raises FutureNotFinished('the future has not finished yet') while pending, FutureCancelled('the future was cancelled') if cancelled, and FutureFailed('the future raised an exception') (chained from the stored exception) if failed. Reading future.exception raises FutureNotFinished/FutureCancelled the same way, returns None for a successful future and the exception object for a failed one. 'await future' waits and then returns the value or raises as return_value would; 'await future.wait()' only waits until the future is finished (any outcome). Several tasks may await the same future, and cancelling one waiter must not affect the others. repr is '<Future pending name=None>' style: '<Future {status lowercased} name={name!r}>'. Add API docs and a version history entry.",
+   "test_cmd": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_futures.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_futures.py"
+   ],
+   "hidden_inline": [],
+   "stats": {
+    "src_files": 3,
+    "src_lines": 224,
+    "test_files_or_blocks": 1,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 2,
+     "passed": 0,
+     "total": 1,
+     "pass": false,
+     "secs": 1.6
+    },
+    "real": {
+     "rc": 0,
+     "passed": 51,
+     "total": 51,
+     "pass": true,
+     "secs": 1.7
+    },
+    "valid": true
+   },
+   "tier": "hard"
+  },
+  {
+   "id": "anyio-concurrency-helpers",
+   "repo": "anyio",
+   "lang": "python",
+   "image": "abfast:2",
+   "parent": "dab48c6cb65922e45ef02116d847fb0f8d0934b5",
+   "real": "c7096d303dd30e81711568da83a211ed7e8293f8",
+   "description": "anyio gather, as_completed, amap concurrency helpers",
+   "instruction": "Add three concurrency helpers to anyio, exported from the top-level package: (1) 'await gather(*coros)' runs coroutine objects concurrently in a task group and returns a tuple of their return values in argument order (not completion order); failures propagate as the task group's exception group. (2) 'amap(func, args)' runs the coroutine function func once per element of the iterable args concurrently and returns a list of results in input order ([] for no args); failures propagate as an exception group. (3) 'as_completed(*awaitables)' is an async context manager that runs the awaitables as tasks in a task group and yields an async-iterable receive stream of the finished TaskHandle objects, in the order the tasks complete (use handle.return_value to read results). It raises ValueError mentioning 'at least one awaitable' when called with none. Task handles for coroutine objects must be named after the coroutine function (so two different awaitables get different handle names), plain awaitable objects get no explicit name. If a task fails the exception propagates out of the context as an exception group; leaving the context early (e.g. after the first result) cancels the unfinished tasks. Add API docs and a version history entry.",
+   "test_cmd": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_concurrency_utils.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_concurrency_utils.py"
+   ],
+   "hidden_inline": [],
+   "stats": {
+    "src_files": 2,
+    "src_lines": 159,
+    "test_files_or_blocks": 1,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 2,
+     "passed": 0,
+     "total": 1,
+     "pass": false,
+     "secs": 1.6
+    },
+    "real": {
+     "rc": 0,
+     "passed": 30,
+     "total": 30,
+     "pass": true,
+     "secs": 1.6
+    },
+    "valid": true
+   },
+   "tier": "hard"
+  },
+  {
+   "id": "platformdirs-place-find-files",
+   "repo": "platformdirs",
+   "lang": "python",
+   "image": "abfast:2",
+   "parent": "46843f1a57258c7e287e7d9ff7eea1022f079a5a",
+   "real": "f88693c08b379989e4fb548b3a2c4ecc462dfbfa",
+   "description": "platformdirs place_*_file and find_*_file(s) methods",
+   "instruction": "Add file-level helpers to PlatformDirsABC (so every platform class has them). place_<kind>_file(name) for kind in config, data, cache, state, log, runtime returns Path(user_<kind>_dir) / name and creates the missing parent directories, every directory it creates (including the user directory itself and any intermediate ones, but not directories that already exist, whose mode is left alone) with mode 0o700, regardless of whether ensure_exists is set; it never creates the file itself. name may be a str or os.PathLike. A name that is absolute/rooted (also with backslashes or UNC), has a drive, or climbs out with '..' raises ValueError via the existing 'name must stay inside the base directory, got <repr>' check; an empty name or '.' raises ValueError('name must point to a file, got <repr>'); a rejected name creates nothing. If the user directory starts with '~' (home unknown) raise RuntimeError('could not determine the home directory, refusing to create ...') before creating anything (share this check with the existing ensure_exists behaviour). place_runtime_file on Unix keeps raising PermissionError when the temp runtime fallback is owned by another user. find_<kind>_file(name) -> Path | None and find_<kind>_files(name) -> list[Path] (same six kinds) search the directories yielded by the matching iter_<kind>_paths(), user directory first, and return the first / all regular files named name (directories with that name are skipped; name may include sub-directories and be a PathLike; the same escaping rules raise ValueError with the same message). They only read the disk: no directory may be created even when ensure_exists is True, and the instance's ensure_exists attribute must not be changed. Add a short how-to section and changelog fragments.",
+   "test_cmd": "printf '__version__ = \"0.0\"\\n__version_tuple__ = (0, 0)\\nversion = __version__\\nversion_tuple = __version_tuple__\\n' > src/platformdirs/version.py; PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/test_api.py tests/test_unix.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_api.py",
+    "tests/test_unix.py"
+   ],
+   "hidden_inline": [],
+   "stats": {
+    "src_files": 1,
+    "src_lines": 216,
+    "test_files_or_blocks": 3,
+    "commits": 2
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 825,
+     "total": 926,
+     "pass": false,
+     "secs": 7.3
+    },
+    "real": {
+     "rc": 0,
+     "passed": 926,
+     "total": 926,
+     "pass": true,
+     "secs": 4.8
+    },
+    "valid": true
+   },
+   "tier": "hard"
+  },
+  {
+   "id": "platformdirs-isolated-dirs",
+   "repo": "platformdirs",
+   "lang": "python",
+   "image": "abfast:2",
+   "parent": "dfaeabf9219f7f1c4c701c63f674f2c7b2c6c243",
+   "real": "9f2ee085a72c9bb554540b890879367798c9c482",
+   "description": "platformdirs.testing.isolated_dirs and platformdirs_isolated pytest fixture",
+   "instruction": "Add test isolation helpers to platformdirs. New module platformdirs.testing with a context manager isolated_dirs(root: str | os.PathLike) that, while active, makes every directory of the class currently bound to platformdirs.PlatformDirs resolve under root, and yields Path(root). Each directory kind maps to <root>/<kind> where kind is the property name without the _dir suffix (user_data, site_data, user_config, site_config, user_cache, site_cache, user_state, site_state, user_log, site_log, user_runtime, site_runtime, user_preference, user_documents, user_downloads, user_pictures, user_videos, user_music, user_desktop, user_projects, user_publicshare, user_templates, user_fonts, user_bin, site_bin, user_applications, site_applications). For the data, config, cache, state, log, runtime and preference kinds (user and site variants) the appname and version are appended as usual (PlatformDirs('app','author','1.0').user_config_path == root/user_config/app/1.0); the media/bin/applications kinds are exactly <root>/<kind>. All accessors must be covered: *_dir strings, *_path Paths, iter_* iterators, multipath=True variants, and the module-level functions such as platformdirs.user_data_path('app'); ensure_exists=True creates the directories under root. Nothing may resolve outside root, also when platformdirs.PlatformDirs has been replaced by another platform class such as platformdirs.android.Android. On exit (normally or by exception) the class must be restored exactly to its previous state, including class attributes of the platform class that were added; nested isolated_dirs contexts restore the outer redirection. Also add module platformdirs.pytest_plugin with a pytest fixture platformdirs_isolated(tmp_path) that runs the test inside isolated_dirs(tmp_path) and yields tmp_path; register the module as a pytest11 entry point named platformdirs in pyproject.toml. The fixture is opt-in (not autouse), and importing platformdirs or platformdirs.testing must not import pytest into the process. Add docs.",
+   "test_cmd": "printf '__version__ = \"0.0\"\\n__version_tuple__ = (0, 0)\\nversion = __version__\\nversion_tuple = __version_tuple__\\n' > src/platformdirs/version.py; PYTHONPATH=src python -m pytest -q -p no:cacheprovider -p platformdirs.pytest_plugin tests/test_testing.py tests/test_pytest_plugin.py",
+   "parse": "pytest",
+   "hidden_files": [
+    "tests/test_testing.py",
+    "tests/test_pytest_plugin.py"
+   ],
+   "hidden_inline": [],
+   "stats": {
+    "src_files": 3,
+    "src_lines": 140,
+    "test_files_or_blocks": 2,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 0,
+     "total": 0,
+     "pass": false,
+     "secs": 0.4
+    },
+    "real": {
+     "rc": 0,
+     "passed": 39,
+     "total": 39,
+     "pass": true,
+     "secs": 1.6
+    },
+    "valid": true
+   },
+   "tier": "hard"
+  }
+ ]
+}

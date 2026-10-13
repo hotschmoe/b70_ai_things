@@ -525,7 +525,8 @@
      "secs": 4.1
     },
     "valid": true
-   }
+   },
+   "pysrc": true
   },
   {
    "id": "werkzeug-part-converter-order",
@@ -557,7 +558,8 @@
      "secs": 3.9
     },
     "valid": true
-   }
+   },
+   "pysrc": true
   },
   {
    "id": "moreitertools-numeric-range",

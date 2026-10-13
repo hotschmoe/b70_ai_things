@@ -67,8 +67,8 @@ class Box:
         if r.returncode:
             raise RuntimeError(r.stderr)
 
-    def exec(self, script, timeout=None, stdin=None, env=None, out=None):
-        cmd = ["docker", "exec", "-i"]
+    def exec(self, script, timeout=None, stdin=None, env=None, out=None, user=None):
+        cmd = ["docker", "exec", "-i"] + (["-u", user] if user else [])
         for k, v in (env or {}).items():
             cmd += ["-e", f"{k}={v}"]
         cmd += [self.name, "bash", "-c", script]
@@ -127,7 +127,10 @@ def build_hidden_tar(task):
     for p in task.get("hidden_inline", []):
         old = git_show(task["repo"], task["parent"], p).decode()
         new = git_show(task["repo"], task["real"], p).decode()
-        appends[p] = "\n\n" + "\n\n".join(zigtests.new_blocks(old, new)) + "\n"
+        # hidden_decls: {file: [names]} = test-only helper declarations (devices, frame builders) that
+        # exist in the real file but are not test blocks; appended before the new test blocks.
+        decls = [zigtests.top_decl(new, n) for n in task.get("hidden_decls", {}).get(p, [])]
+        appends[p] = "\n\n" + "\n\n".join(decls + zigtests.new_blocks(old, new)) + "\n"
     return buf.getvalue(), appends
 
 
@@ -148,8 +151,27 @@ def apply_hidden_and_test(box, task, hidden, appends, log_path):
     return {"rc": rc, "passed": p, "total": t, "pass": ok}
 
 
-def init_repo(box, tar_bytes):
+# Opt-in per task ("pysrc": true). Some test suites spawn subprocesses (e.g. werkzeug's dev-server
+# fixture) with PYTHONPATH overridden, so `PYTHONPATH=src` alone leaves the child unable to import
+# the package and the fixture's `while True: wait_ready()` loop spins forever (the hang seen in
+# werkzeug-part-converter-order when the agent ran the full suite). Make the repo importable and
+# give it package metadata, as an editable install would, without network.
+PYSRC_SETUP = r"""
+import tomllib, pathlib
+r = pathlib.Path('/work/repo'); p = tomllib.load(open(r / 'pyproject.toml', 'rb')).get('project', {})
+sp = pathlib.Path('/opt/venv/lib/python3.12/site-packages')
+(sp / 'abfast_src.pth').write_text(str(r / 'src' if (r / 'src').is_dir() else r) + '\n')
+d = sp / (p['name'].replace('-', '_') + '-0.0.dist-info'); d.mkdir(exist_ok=True)
+(d / 'METADATA').write_text('Metadata-Version: 2.1\nName: %s\nVersion: %s\n' % (p['name'], p.get('version', '0.0')))
+"""
+
+
+def init_repo(box, tar_bytes, task=None):
     box.put_tar(tar_bytes, "/work/repo")
+    if task and task.get("pysrc"):
+        rc, o = box.exec("python3 -c %s" % shlex.quote(PYSRC_SETUP), user="0")
+        if rc:
+            raise RuntimeError(o)
     rc, o = box.exec("cd /work/repo && git init -q && git add -A && git -c user.name=abfast -c user.email=a@b commit -qm 'initial state'")
     if rc:
         raise RuntimeError(o)
@@ -172,7 +194,7 @@ def validate_task(task, image, tag):
     for which, sha in (("parent", task["parent"]), ("real", task["real"])):
         box = Box(f"abfast-val-{tag}-{task['id']}-{which}", image)
         try:
-            init_repo(box, git_tar(task["repo"], sha))
+            init_repo(box, git_tar(task["repo"], sha), task)
             t0 = time.time()
             if which == "parent":
                 r = apply_hidden_and_test(box, task, hidden, appends, f"{d}/{which}.log")
@@ -198,10 +220,10 @@ def run_task(task, a, key, run_dir):
     d = f"{run_dir}/tasks/{tid}"
     os.makedirs(d, exist_ok=True)
     res = {"id": tid, "repo": task["repo"], "end_reason": "agent_error", "pass": False}
-    box = Box(f"abfast-{os.path.basename(run_dir)}-{tid}"[:100], a.image)
+    box = Box(f"abfast-{os.path.basename(run_dir)}-{tid}"[:100], a.image or task.get("image", "abfast:1"))
     t_start = time.time()
     try:
-        init_repo(box, git_tar(task["repo"], task["parent"]))
+        init_repo(box, git_tar(task["repo"], task["parent"]), task)
         mj = pi_models_json(a.base_url, key or "EMPTY", a.model, a.context_window, a.max_output_tokens)
         rc, o = box.exec("mkdir -p $PI_CODING_AGENT_DIR /logs/pi && cat > $PI_CODING_AGENT_DIR/models.json",
                          stdin=json.dumps(mj).encode())
@@ -213,7 +235,8 @@ def run_task(task, a, key, run_dir):
         t0 = time.time()
         try:
             with open(raw, "wb") as f:
-                rc, _ = box.exec(script, timeout=a.timeout_s + 60, out=f)
+                # PYTEST_ADDOPTS: a hung test fails after 120 s instead of blocking the agent's shell forever
+                rc, _ = box.exec(script, timeout=a.timeout_s + 60, out=f, env={"PYTEST_ADDOPTS": "--timeout=120"})
         except subprocess.TimeoutExpired:
             rc = 124
         res["agent_wall_s"] = round(time.time() - t0, 1)
@@ -272,15 +295,21 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--base-url"); ap.add_argument("--api-key-file"); ap.add_argument("--model", default="hotschmoe-dd")
     ap.add_argument("--arm-label"); ap.add_argument("--parallel", type=int, default=1)
-    ap.add_argument("--timeout-s", type=int, default=900)
+    ap.add_argument("--timeout-s", type=int, default=None, help="default 900 (3600 with --tier hard)")
     ap.add_argument("--thinking", default="xhigh", choices=["off", "xhigh"])
     ap.add_argument("--max-output-tokens", type=int, default=None)
     ap.add_argument("--context-window", type=int, default=131072)
     ap.add_argument("--tasks", default="", help="comma-separated task ids (default: all validated)")
-    ap.add_argument("--tasks-file", default=os.path.join(HERE, "tasks.json"))
-    ap.add_argument("--image", default="abfast:1")
+    ap.add_argument("--tasks-file", default=None)
+    ap.add_argument("--tier", default="", choices=["", "hard"],
+                    help="hard: use tasks_hard.json with defaults --timeout-s 3600 --max-output-tokens 32768")
+    ap.add_argument("--image", default=None, help="override; default is the task's 'image' field, else abfast:1")
     ap.add_argument("--validate", action="store_true"); ap.add_argument("--write", action="store_true")
     a = ap.parse_args()
+    if a.tasks_file is None:
+        a.tasks_file = os.path.join(HERE, "tasks_hard.json" if a.tier == "hard" else "tasks.json")
+    if a.timeout_s is None:
+        a.timeout_s = 3600 if a.tier == "hard" else 900
     spec = json.load(open(a.tasks_file))
     tasks = spec["tasks"]
     if a.tasks:
@@ -288,7 +317,7 @@ def main():
     if a.validate:
         tag = str(os.getpid())
         with cf.ThreadPoolExecutor(a.parallel) as ex:
-            futs = {ex.submit(validate_task, t, a.image, tag): t for t in tasks}
+            futs = {ex.submit(validate_task, t, a.image or t.get("image", "abfast:1"), tag): t for t in tasks}
             for f in cf.as_completed(futs):
                 t = futs[f]
                 try:
@@ -308,7 +337,7 @@ def main():
     if not (a.base_url and a.arm_label):
         ap.error("--base-url and --arm-label required")
     if a.max_output_tokens is None:
-        a.max_output_tokens = 8192 if a.thinking == "off" else 16384
+        a.max_output_tokens = 8192 if a.thinking == "off" else (32768 if a.tier == "hard" else 16384)
     if not a.tasks:
         tasks = [t for t in tasks if t.get("validation", {}).get("valid")]
     key = open(a.api_key_file).readline().strip() if a.api_key_file else ""
@@ -320,7 +349,7 @@ def main():
     os.makedirs(run_dir)
     meta = {"arm": a.arm_label, "base_url": a.base_url, "model": a.model, "served_ids": ids, "thinking": a.thinking,
             "max_output_tokens": a.max_output_tokens, "context_window": a.context_window, "parallel": a.parallel,
-            "timeout_s": a.timeout_s, "image": a.image, "tasks": [t["id"] for t in tasks], "started": stamp}
+            "timeout_s": a.timeout_s, "image": a.image or "per-task", "tier": a.tier or "base", "tasks": [t["id"] for t in tasks], "started": stamp}
     json.dump(meta, open(f"{run_dir}/meta.json", "w"), indent=1)
     print("run dir", run_dir, flush=True)
     t0 = time.time()
