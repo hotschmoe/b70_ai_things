@@ -21814,3 +21814,33 @@ RESULT -> AOT and 127-step build PASS; strata --help exit 0, ELF 78 MiB,
   Raw logs and exact commands: /mnt/vm_8tb/b70/results/flashnext_iq3_ab_20261013/build/.
 VERDICT -> S0 build/pack ready for S1. No source patches, GPU touch, device
   mount, lease, host-stack change, serving qualification, or commit.
+
+### 2026-10-13 Arm A S1/S2 follow-up: daily driver running
+CONFIG -> Unchanged native5802 d55637b3, Qwen3.8-27B AutoRound W4A16 g128,
+  r212 GPTQ relabel, TP2/P2P0, MTP3, fp8_e4m3 KV, ctx200000, max sequences4.
+  Live IDs: hotschmoe-dd first; registered alias
+  qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-native5802-tp2-mtp3-fp8kv-freshcal-backend-ctx200k.
+COMMAND -> XPU_HEALTH_TIMEOUT=400 XPU_COLLECTIVE_HEALTH_TIMEOUT=400;
+  leased pinned-image card/collective health; nohup serve.py start; ready --pid
+  1215559; armA/run-probes.sh (fresh nonces, server usage); authenticated tools.
+RESULT -> External card health passed in 183s; ten compiled collectives in 58s.
+  Internal pre-health and all five startup fixtures passed. SATA import waited
+  on file pages; prior 60s timeout was not wedge evidence. October10 STOP during
+  startup caused clean backend exit; STOP initiator unknown. HTTP health both200.
+| Cell (streams) | Decode tok/s per stream | Prefill tok/s per stream | TTFT ms per stream |
+| --- | --- | --- | --- |
+| P512 (1) | 82.9 | 558.9 | 957 |
+| P4096 (1) | 80.1 | 694.3 | 5943 |
+| P32768 (1) | N/A EOS | N/A | N/A |
+| P512 (2) | N/A EOS / 73.7 | N/A / 613.5 | N/A / 880 |
+| P4096 (2) | 38.2 / 65.9 | 722.5 / 356.1 | 5712 / 11590 |
+| P32768 (2) | N/A EOS / 104.3 | N/A / 352.1 | N/A / 93126 |
+| Chat (2), aggregate98.5 | 51.0 / 51.0 | 77.2 / 96.0 | 1503 / 1239 |
+| Chat (4), aggregate143.1 | 35.8 / 39.5 / 38.0 / 41.0 | 381.8 / 118.4 / 119.7 / 118.7 | 306 / 997 / 994 / 994 |
+| Coding (1), output1500 | 53.90 | 484.4 | 372 |
+VERDICT -> Running; tool round trip passed. Coding1500 was reasoning-only,
+  length-limited; P512 single output82; three raw cells immediate EOS. No
+  teardown/post-GPU-health or new stability/long200K qualification claimed.
+  Owner1217240, lease1215559, backend1217479, frontdoor1233100; stop:
+  python3 vllm/int4/native5802_trial/serve.py stop
+  Raw: /mnt/vm_8tb/b70/results/flashnext_iq3_ab_20261013/armA/ (service-run symlink).
