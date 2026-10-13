@@ -19981,3 +19981,16 @@ typed NoDri close/removal is mandatory before GPU cache qualification.
 VERDICT -> Preparation hashes1.486GB derivedpack/libraries (no wholeGGUF),
 so defer it untilallcleanABBA88714 timingarmsclose. No inventedmanifest,
 cachePASStranfer or APIproof; actualfullHTTP identity load remainsrequired.
+
+
+## 2026-10-13: protected artifact preflight source ready during cleanABBA
+
+CONFIG -> ActualV5 artifactcacheV2 requires realC388 validator receipt.
+COMMAND -> Root reviewed new NoDri preflight runner/source-only handoff;
+no manifest payloadhashing, Docker launch or GPU work byroot thisstage.
+RESULT -> Runner writes exactconsumer receipt schema with actual command,
+stdout/stderr/terminal paths+SHA, validator marker, normaloriginalEOF/removal,
+runtimeimage/artifactbinding; unknown retirement retainsforeground owner.
+VERDICT -> Actualpreflight remainspending aftercleanABBA. First mmaparm
+passed6requests; firstdirectarm has5/6, secondB/finalA stillrequired.
+No backgroundbuild/provider/model hashing during timedmodelwork.
