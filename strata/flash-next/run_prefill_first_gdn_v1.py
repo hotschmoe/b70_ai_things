@@ -1,5 +1,5 @@
 """Root-owned first-row target observation; no draft, cache, math or speed authority."""
-import argparse,hashlib,json,os,queue,re,shlex,signal,subprocess,time,threading
+import argparse,hashlib,json,os,queue,re,shlex,signal,subprocess,time,threading,struct
 from pathlib import Path
 from batch_numerical_protocol_v2 import Roster
 from native_source41_cli_protocol_v4 import Protocol as ProtectedProtocol
@@ -163,6 +163,8 @@ def main(a):
     need(type(producer_pid)is int and producer_pid>0 and frame['producer_pid']==producer_pid,'One actual native producer required')
     for field in frame['fields']:
      raw=path.parent/(field['name']+'.bin');need(raw.resolve()==raw and not raw.is_symlink()and raw.stat().st_size==field['bytes']and sha(raw)==field['sha256'],'Actual first-row complete current field required')
+     if field['name']=='actual_prefill_input_tokens':
+      actual_tokens=list(struct.unpack('<'+str(frame['prefill_n'])+'q',raw.read_bytes()));expected_tokens=fixture[0]['ids'][:-1]if frame['prefill_n']==53 else prefix117[:-1];need(actual_tokens==expected_tokens,'Actual consumed first Prefill token history differs from submitted source-bound input')
    meta_paths=list((d/'num10').glob('*.json'));need(len(meta_paths)==1,'Independent decoder actual NUM10 complete metadata required');meta=read(meta_paths[0]);need(meta['schema']==1 and meta['pid']==producer_pid and meta['request']==3 and meta['stage']==0 and meta['layer']==0 and meta['rows']==1 and meta['position']==0 and meta['token']==248045 and meta['gen_ids']==[248045]and meta['reused']==0 and meta['binding_sha256']==sha(HERE/'prefill-first-gdn-observer-source-plan-v1.json')and meta['request_replay_marker_verified']is True and meta['producer_mapping_verified']is True and meta['complete_preregistered_layout']is True and type(meta['completed_nonce'])is int and meta['completed_nonce']>0,'Exact current decoder independent zero-P1/source/owner/nonce required')
    contract=(sdk/'source/sycl/include/strata/core/layer0_numerical_contract.hpp').read_text();expected=[(name,encoding,int(size))for name,encoding,size in re.findall(r'\{"([^"]+)","([^"]+)",(\d+)\}',contract)];need(len(expected)==33 and [(f['name'],f['encoding'],f['bytes'])for f in meta['fields']]==expected,'Exact actual-source33 decoder fields required')
    decoder=[]

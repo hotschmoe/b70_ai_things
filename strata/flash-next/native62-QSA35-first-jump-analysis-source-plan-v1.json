@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/analyze_native62_QSA35_first_jump_v1.py": "c071faf456de2618a9d936acebf64926f6e648f9611100558f63c9de47aee91d",
+    "strata/flash-next/test_native62_QSA35_first_jump_cpu_v1.py": "b8ea35ca5117723cebb1de18e820fd6002a105330f9a71e34b21487643e467fa",
+    "strata/flash-next/native62_hc_rms_comparison_v2.py": "a7d4fc4a88209a26942ded41880d8593778e6d7c74c9c0c9d3adc3a440fbed94",
+    "strata/flash-next/native_qsa41_targets_v1.py": "de39eb476d8b8ab7217ddd66b7ec0e00b983d155795561465a6898db9100eb06",
+    "strata/flash-next/compare_current_full48_num10_v1.py": "9d8eb7dd1a015312767cb6cea89db63c651f859c658742b6d7ff6d7207f138cb",
+    "strata/flash-next/serial37_canonical_json_v3.py": "afdbdc4729cc6a2cfb68de5cb1106d79d1b81db79c9da91b1c157d5c1b85f57d",
+    "strata/flash-next/qsa_owned_state_storage_v1.py": "cf67609d3efb3fe815f3e75ac8561fa173eb858cb3e64673a5ea013e5fd77d65",
+    "/mnt/vm_8tb/b70/build/strata-native62-incremental61-v1-20261013T020818Z-wcsa7gom/source/sycl/src/core/verify.cpp": "4ed11a872e827c70051dfdb76b8610e68aad8a5c3872d39f31aa7eb88c5d64c5",
+    "/mnt/vm_8tb/b70/build/strata-native62-incremental61-v1-20261013T020818Z-wcsa7gom/source/sycl/src/kernels/cuda/native_qsa.dp.cpp": "a935d8edbad66eb341d6e4a1c45fa51a81b9dc8606a062a0b1e95ba0e1318f37",
+    "/mnt/vm_8tb/b70/build/strata-native62-incremental61-v1-20261013T020818Z-wcsa7gom/source/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp": "3d10c20f4ca04a9ea83994a660525bf5bc15577c32171132487c4d445a9495c7"
+  },
+  "scope": "Saved admitted current62/independent own-state five-layer residual comparisons; no nativeprimaryfeeds or new model/GPU execution",
+  "public_reader_plan_sha256": "60194326072d360960eafde6b35025ef9006eea05f0aee0b93f51c312c737777",
+  "producer_report_sha256": "18f8aec9cd3a23c0d47c67ef84255f90c9b1d61b3eb88c24e18e44e15c392646",
+  "QSA35_intermediate_native_capture_available": false,
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_native62_QSA35_first_jump_cpu_v1"
+}

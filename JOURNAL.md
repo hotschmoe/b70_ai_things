@@ -20413,3 +20413,37 @@ COMMAND -> Source/genuineconstructor sealed andcommitted; noGPUlaunchyet.
 RESULT -> Neededtoquantify profilingoverhead beforeattributing5.201s trace
 uncoveredtime tokernels/idle.
 VERDICT -> Preserve full fidelity/cache/API/streams/latency/memory/shelf goal.
+
+
+## 2026-10-13: ON/source-label admission and firstrow projection evidence close
+
+CONFIG -> ActualON full48 capture, authenticatedOFF andoriginalownreference.
+COMMAND -> Root1594 immutableV3readerPASS, public
+f9521a50b18f47338d95354a4953d5506b2869bda065bfb9826cd8f751920471.
+RESULT -> Five actualsource labels explicitlyjoined/nonmathscopeproved;
+all remainingconfig equal exceptsqrt0/1. Originalfailedreader preserved.
+VERDICT -> Firstprefixnumerical observation, no numeric/fullmodel gate.
+
+CONFIG -> ActualfirstrowPrefill53/116 vsdecoderzeroT1, originalweights.
+COMMAND -> Actual63037PASS417s report57dc1489, root99artifactSHAverified;
+sourcecomparison83e6aee6PASS.
+RESULT -> Mixed/residualbitwise andbeforestatezeros; QKV/Z/decay/beta differ
+beforeconv/recurrence. RuntimeV1currentsealedbytes confirmedauthenticfailed
+761b namespace; earliercheckpoint precededfinalsealing. Stageactualbytes.
+VERDICT -> Projectioncontract gap established; candidate operator/model
+qualification pending, no primaryreference usescapturedvalues.
+
+CONFIG -> Same62 cached1536/new512/GEN8 capturefree companion.
+COMMAND -> Actual98538PASS396s, root38835readerPASS publicabd1e077.
+RESULT -> PP3473.4vs8650.1ms, decode350.1vs702.0ms traced; exactoutputs/work/
+source/modelidentity/health/normalclosePASS.
+VERDICT -> Recorder overhead substantial, don'tinterpret5.201s uncovered
+trace asGPUidle; sustainedspeed/fairness/serving remainsunqualified.
+
+CONFIG -> Originalpacked-weight decoderprojection operator.
+COMMAND -> Export66470PASS freshpostfull4, reported27d9f8; NoDribuild54078
+PASS48s reporte827a0e9/ELF6dfc0d1d. Actual85835runtimeFAILED39s beforebinary.
+RESULT -> setvars alreadyinitialized returns3 underset-e; stdout/err empty,
+card0health/kernelclosurePASS. Failedreport2188cc70 retained.
+VERDICT -> Command-only guardedstartup successor; no recompile/export or
+modelrerun required. Actualoperator andfullGDN parity unqualified.
