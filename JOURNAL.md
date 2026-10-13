@@ -20012,3 +20012,34 @@ metadata. Freshimage/install/contract bypass notused. Actualqualifiedvenv
 interpreter mustbe bound inimmutable successor; V1artifacts/failure retained.
 VERDICT -> Manifestgenerated but runtimepreflightNOTpassed; no GPUcacheV2
 retry untilgenuineinterpreter/dependency/source validation succeeds.
+
+
+## 2026-10-13: natural ABBA independently admitted; artifact preflight passes
+
+CONFIG -> Source61 serial mirror1/copy0, nativeinstrument/cooperation/capOFF,
+threeP2048 roles with fresh repeats; mmap/direct/direct/mmap.
+COMMAND -> Actual88714 producer PASS, root82318 publicreader PASS.
+RESULT -> Producer04eb743e5ab5043e5e3f24dabdfeadcac15c0743e683d214e076098ed56f687a;
+public5092765bfb438c2175d05558eb6ccdb07e877d74a1f3197d15b7fdb2fa8efc78;
+all24 full512 histories/reference/repeats/source/full4/health/close match.
+Warm mmapPP182.83-185.90/decode20.55-22.37; directPP183.82-186.07/
+decode20.52-22.38 tok/s. Firstuse stalls differ andfirstA startupdrifts.
+VERDICT -> Directhelps observed firstuse tails, notlarge warmsteady gain.
+Root serialized build/hash/provider jobs, butpublicreader doesnotproveall
+hostactivity/coldcache; no2000/50/taskcompletion/productionpromotion.
+
+CONFIG -> ActualV5 genuineartifactbinding26476, originalfailedpreflight
+usedsystemPython; command-only stageV2 usesqualifiedvenv.
+COMMAND -> Root74742 artifactprep PASS; root61117 NoDri actualvalidator PASS.
+RESULT -> Receipt2b7e031abefb23b0c36232accd1c543d4dd4c3f1006cf40830e9b0c3f8cdbf7c,
+normalEOF/typedterminal/removal/actualC388 source+dependenciesvalidated;
+manifestsandbindingunchanged, no packrehashforinterpreterfix.
+VERDICT -> CacheV2 genuineconstruction nowruns; no persistence result yet.
+
+CONFIG -> Isolated actualHC norm, original residual/norm andcomparisonMAIN.
+COMMAND -> Root64769 NoDri build PASS and53607 originalexport PASS after
+ABBAmodeltimingsended; actual95377 card0oracle nowrunning.
+RESULT -> Build1e0cce29522cd7db1f5aa765a8a0fb3db56fac8cd6cc673f46bfc43aadeb4890;
+ELFabf40815573aa28d8614133035e046e1d8ff984a4533ea0a8a39d3879841ab41;
+export56ba4c46f62a67a030eb7e86bff6d0fd0ad95596040a80a1937934626ec0189c.
+VERDICT -> Actualoperator result/health/close pending, noMAIN RMS orfullmathclaim.

@@ -1,0 +1,13 @@
+{
+  "schema": 2,
+  "files": {
+    "strata/flash-next/prepare_original_mtp53_artifact_preflight_stage_v2.py": "3644ffd8e6fe73e7bf276365efc92489a99bca13aa778e705e5a66cbb20afab6",
+    "strata/flash-next/test_original_mtp53_artifact_preflight_stage_cpu_v2.py": "1edbb158e0ff6d93f9de2ba842bcfea3192c9c8d8380066c4be084095a3ac96d",
+    "strata/flash-next/c1_runtime/Dockerfile": "47201964893d3afd1f602c1e1604bee9f82ad3c0acd82c6599cdf7483b2f7b1f",
+    "strata/flash-next/c1_runtime/probe.py": "aa3fe96d7033335969fa90ebf1cc284efa3a09d151534ba78f9f296d07382c95",
+    "strata/flash-next/original-mtp53-artifact-identity-source-plan-v1.json": "47e8a6c1e90464a72d534ca6ff79dcc1fa0fad0193d16ca328d76bab7bc1a33f",
+    "strata/flash-next/original-mtp53-artifact-preflight-runner-source-plan-v1.json": "d3265d4f8b627a7c856c7a14f67fdfa5b3625ef81a980a1416609767f709eea2"
+  },
+  "scope": "Immutable preflight command/staging successor only, actual unchanged native artifact manifest hashes, actual C388 qualifiedvenv; originalfailedpreflight retained; no packageinstall/imagechange/guardwaiver",
+  "qualified_interpreter": "/opt/b70-c1-python/bin/python"
+}
