@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/original_mtp53_serve_baseline_history_v1.py": "1ec18de079a849f14069418eaa396dc911dc8ad114e8c2517ec31fc366d7188b",
+    "strata/flash-next/original-mtp53-serve-qualification-source-plan-v2.json": "0fd3d8474d861b2539367bf7faa6bd522f0fd46a7101d7dc271dfba5f9e47afc",
+    "strata/flash-next/original-mtp53-serve-source-plan-v3.json": "42afec9a2dcc17cb71ad6b9540f606f99cc29c2d0ad7bd1ddaec2ed572239365",
+    "strata/flash-next/original-mtp53-serve-source-plan-v5.json": "c77d428b7f5100d1659f447b9d98ed16c6e73bd22dd071d7cc5342a0f2acf0d6",
+    "strata/flash-next/test_original_mtp53_serve_default0_cpu_v1.py": "d50f46b401c672489f14e41787f2d4bbd73954b846baf6b23a1c61c4938ce05a",
+    "strata/flash-next/prepare_original_mtp53_serve_source_v3.py": "75e6e976206c63071fd41a5e767f452d6536d4751d25c9b725e00cba78afe031",
+    "strata/flash-next/prepare_original_mtp53_serve_source_v5.py": "43d36b1c5fe9f3d643804ad699c342e8c28d3756708e843b530b2e5f595d76b4"
+  },
+  "scope": "Named failedparent baseline component and exact default0 entire source normalization; no oldbinary/current source/model/performance authority"
+}

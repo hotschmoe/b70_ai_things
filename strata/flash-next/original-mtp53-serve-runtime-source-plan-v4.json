@@ -1,0 +1,10 @@
+{
+  "schema": 4,
+  "files": {
+    "strata/flash-next/prepare_original_mtp53_serve_runtime_v4.py": "19289df0fb4a20cf14244185b0eb0ce5fa34d816440c1110fc699e9de076ed6a",
+    "strata/flash-next/original-mtp53-serve-source-plan-v5.json": "c77d428b7f5100d1659f447b9d98ed16c6e73bd22dd071d7cc5342a0f2acf0d6",
+    "strata/flash-next/original-mtp53-serve-builder-source-plan-v5.json": "fe11ad55cc1775cbc534c34e69501888439362b1bcc84b80db5cd7aa4e7af028",
+    "strata/flash-next/original-mtp53-serve-compile-source-plan-v5.json": "4f94de54520919fcf1b66cf1ca511feff1734522bc3ca135068f40a6e4cee333"
+  },
+  "scope": "Requiresactualfresh pairedV5source/private MAIN/verify/copiedengine/CPU11+7; no runtimeadmission inferred"
+}

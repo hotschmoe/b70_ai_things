@@ -19859,3 +19859,17 @@ IndexError tuple index out of range. Original exception role/traceback not
 saved by driver, so next successor must make exact failure actionable.
 VERDICT -> No full48 numerical result; fix real dimensionality/source route
 before rerun, not arbitrary flattening or reference tolerance changes.
+
+
+## 2026-10-13: corrected paired ON-only diagnostic launched
+
+CONFIG -> ActualV5 paired original serve, privatefour slots, byte/paired
+CPU11+7 compiled proof; old target-baseline V2 component authenticated.
+COMMAND -> Root genuine V3 constructor PASS including baseline association;
+actual35726 pair-leased ON-only diagnostic launched.
+RESULT -> Source MAIN/default0 and verifier/default0 equivalence guarded;
+complete old baseline histories/health/normalclose retained as comparison
+ONLY, originalfailedparent unchanged. NewV5 source/ELF/health remainfresh.
+VERDICT -> Avoids repeating12 identical baseline requests; no oldbinary,
+performance or model authority transfer. Actualoriginal/cache/cancel/stale
+result still pending; full objective and six/API/persist/fidelity gates open.
