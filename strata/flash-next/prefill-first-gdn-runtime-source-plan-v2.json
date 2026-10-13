@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/prepare_prefill_first_gdn_runtime_v2.py": "b065a96e2eff8f4372bb639b19ac3958f3813fed057c2ace4d7e810d1612633f",
+    "strata/flash-next/prefill-first-gdn-observer-source-plan-v1.json": "d951364fc6b76fb093447728ca7f3984405090ed9c5e8e9ebe94a2e41cd601fd",
+    "strata/flash-next/prefill-first-gdn-builder-source-plan-v1.json": "0e59e82f14c4e78f3df73d1d2f22929e881bbe0ca135865c50b0a19deabb72e2"
+  },
+  "scope": "Serial batch0 RESERVED spec2 source-required nativepack capacity, no MTP/PIN/cache; actual GEN1 no native RID, serialized host-order join plus source33 NUM10 request3/PID/nonce; frozen compiled first-row header/ELF unchanged"
+}

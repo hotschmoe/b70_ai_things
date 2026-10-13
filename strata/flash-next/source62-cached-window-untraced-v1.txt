@@ -1,0 +1,28 @@
+CONFIG -> Same actual62 SDK, HC2/1/1 arithmetic0 mirror1 COPY0 PLEdirect,
+cache3 pin1536, P2048 warm GEN8 fresh1 then selected GEN8 fresh0.
+Actual selected reused1536/new512 and every output ID must equal the admitted
+profile and accepted52 prefix. Fixed input/native CLI/non-tool environment
+are checked against the exact admitted profile recipe during construction.
+
+COMMAND -> /tmp/b70-source62-cached-window-untraced-v1-launch-agent.json
+Root executes normal actor entry, which acquires bin/gpu-run before runtime.
+No engine build or math change. Fresh campaign pre/post whole identity, current
+source/all8/health/kernel/normal owned retirement gates remain unchanged.
+Only PTI/unitrace/clock/API/device recording and aggregate decode timing are
+removed. Bounded CPU RAW pipe receive points remain, with original MONOTONIC
+stamps preserved. Dormant admitted tool intake metadata is still authenticated;
+the actual native command has no tracer/tool mount/finalizer environment.
+
+RESULT -> Genuine CPU construction passed, no GPU/model/compile launch.
+Actual runtime pending. Reader command:
+python3 strata/flash-next/validate_source62_cached_window_untraced_v1.py
+--root ACTUAL_ROOT --output NEW_PUBLIC_JSON
+Compare selected native PP/decode and actual packet->first-token/completion
+against admitted profile93567. This ordered companion estimates instrumentation
+impact on this request, not clean sustained speed, stability or task completion.
+Coldness/residency/order and the small remaining RAW observer must be stated.
+
+VERDICT -> No profiling/clock-join output is claimed for this companion.
+No internal fullmath, sampling/stage mapping, physical BW, API or shelf claim.
+The actual profile remains immutable; its unions count observed overlapping
+spans once. Neither-recorded intervals cannot establish physical GPU idle.

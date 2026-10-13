@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/run_prefill_first_gdn_v2.py": "13e44a573bcd65a28384ce8c970c450e7713096fe458d1ce144781b014959380",
+    "strata/flash-next/prepare_prefill_first_gdn_runtime_v2.py": "b065a96e2eff8f4372bb639b19ac3958f3813fed057c2ace4d7e810d1612633f",
+    "strata/flash-next/prefill-first-gdn-runtime-source-plan-v2.json": "450786e8ce67780fb78a07e408c9158fabfb4fb81cdf754c39c738c18e59fe6a",
+    "strata/flash-next/prefill-first-gdn-observer-source-plan-v1.json": "d951364fc6b76fb093447728ca7f3984405090ed9c5e8e9ebe94a2e41cd601fd",
+    "strata/flash-next/prefill-first-gdn-builder-source-plan-v1.json": "0e59e82f14c4e78f3df73d1d2f22929e881bbe0ca135865c50b0a19deabb72e2",
+    "strata/flash-next/native_source41_cli_protocol_v4.py": "c8fe90f4e442653f79cb3f4d3c474b9f1d5e7dad19b02288a6d2c15024cfa65a",
+    "strata/flash-next/batch_numerical_protocol_v2.py": "aaa87efa3a771fbe4b2f09985947e13749124cdef74b584492bc80c441c78fe9",
+    "strata/flash-next/run_original_mtp53_shifted_v2.py": "6ba052c11ed8c0aa086b4425af16b135be3598d4bea7653e4f5a64a86fb26556",
+    "strata/flash-next/source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1"
+  },
+  "scope": "Serial batch0 RESERVED spec2 source-required nativepack capacity, no MTP/PIN/cache; actual GEN1 no native RID, serialized host-order join plus source33 NUM10 request3/PID/nonce; frozen compiled first-row header/ELF unchanged"
+}

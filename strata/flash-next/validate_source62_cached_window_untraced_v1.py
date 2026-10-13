@@ -1,0 +1,31 @@
+"""Current62 capture-free matched cached request; no clean speed promotion."""
+import argparse,types,re
+from pathlib import Path
+from types import SimpleNamespace
+import run_source62_cached_window_untraced_v1 as actor
+import validate_source52_p2048_profile_v5 as common
+from validate_source47_grouped_f16_model_v2 import boundary_reader_ports
+from serial37_canonical_json_v3 import canonical
+c=actor.c;require=actor.require;ROOT=actor.ROOT;HERE=actor.HERE
+PLAN=HERE/'source62-cached-window-untraced-reader-plan-v1.json'
+def source_binding():
+ for name,want in c.read(PLAN)['files'].items():require(c.sha(ROOT/name)==want,'Cached profile reader source changed '+name)
+ return c.sha(PLAN)
+def finalized_binding(root):
+ root=Path(root).resolve();reader=source_binding();report=c.read(root/'report.json');report_sha=c.sha(root/'report.json');phases=list(report['per_arm']);require(len(phases)==1,'One actual untraced owner required');phase=phases[0];recipe=c.read(root/phase/'recipe.json');flag=recipe['single_arm_copy_engine'];require(phase=='source62-cache1536-copy%d-untraced-companion'%flag and flag==0,'Exact current62 COPY0 companion phase required');roster={str(p.relative_to(root)):c.sha(p) for p in root.rglob('*') if p.is_file() and p.name!='report.json'};require(roster==report['artifacts'],'Whole owned raw roster changed')
+ parent=actor.parent;old=(actor.COPY,actor.PHASES,parent.PHASES,parent.NS,actor.NS['PHASES'])
+ try:
+  actor.COPY=flag;actor.PHASES=(phase,);parent.PHASES=(phase,);actor.NS['PHASES']=(phase,);parent.NS=actor.NS;parent.configure(recipe['natural_settings']);parent.set_sdk(report['SDK_root'],report['SDK_receipt_sha256']);ns=actor.NS;ns['fresh']=parent.fresh;ns['set_api'](report['API_prepared_root'],report['API_prepared_sha256']);ns['set_case'](report['role_input'],report['producer_pid'],report['producer_start_ticks']);rt=recipe['tool_runtime'];ns['set_runtime'](rt['intake_path'],rt['exact_intake_sha256']);ns['_PORTS']=parent.base.boundary_ports(ns);active=SimpleNamespace(**{**vars(actor),**ns})
+  proof=boundary_reader_ports(active)['finalized_binding'](root);directory=root/phase;rows=c.read(directory/'requests.json');views=actor.profile_requests(rows,recipe['requests']);require(recipe['engine_generation']==62 and recipe['cards']==[0,1] and recipe['stages']==[[0,0,24],[1,24,48]] and recipe['PTI_enabled'] is False,'Current optimized paired scope required');env=recipe['native_env'];argv=recipe['native_argv']
+  require(all(env[k]==v for k,v in {'STRATA_HC_Q8_TOKEN_TILE':'2','STRATA_HC_PREFILL_COALESCE':'1','STRATA_HC_PREFILL_TILE4':'1','STRATA_HC_EXPLICIT_SQRT_DIVIDE':'0','STRATA_VERIFY_MIRROR_STAGE_T1':'1','STRATA_BATCH_PREFILL_LAYER_COOPERATE':'0','STRATA_PREFILL_HOST60':'0','STRATA_CRITICAL_PATH_TRACE':'0'}.items()) and not any('/pti' in x or x.startswith('--chrome') for x in argv),'Actual optimized HC/API/device/H36OFF scope differs')
+  owner=c.read(directory/'host-clock-owner.json');require(owner['passed'] is True and owner['client_pid']==report['producer_pid'] and owner['native_namespace_pid']==1 and owner['native_time_namespace']==owner['client_time_namespace'],'Exact actual host/native clock ownership required')
+  terminal=c.read(directory/'result.json')['terminal'];require(active.native_pid(terminal,c.read(directory/'command.json'),False)==1,'Original owned nativePID1 required')
+  for row in rows:require(canonical(row['raw'])==canonical(c.read(directory/('request-%d.json'%row['ordinal']))),'Individual cached protocol record changed')
+  require(not list((directory/'unitrace').glob('*')) and not list(directory.glob('temporal-*')) and 'B70_PTI_MODEL_FINALIZE'not in (directory/'engine.combined.log').read_text(),'Untraced companion emitted profiler artifacts');ledger=[__import__('json').loads(x) for x in (directory/'host-protocol-RAW.jsonl').read_text(encoding='ascii').splitlines()];require([x['seq'] for x in ledger]==list(range(len(ledger))) and [x for x in ledger if x['rid'] in(1,2)]==[x for row in rows for x in row['raw']['profile_RAW_receive_rows']],'Complete RAW receive ledger differs');require(len([x for x in ledger if x['line'] is None])==1,'Owned RAW EOF missing')
+  comparison=active.contract.equivalence(views);require(canonical(comparison)==canonical(report['H36_OFF_ON_comparison']),'Actual cached output comparison changed');require(not list((directory/'host-traces').glob('*')),'H36OFF emitted internal host trace');require(actor.closure()==report['source_plan_sha256'],'Current profile source changed')
+  proof.update(bounded62_cached_window_untraced_passed=True,producer_admitted=True,producer_report_sha256=report_sha,reader_source_plan_sha256=reader,actual62_SDK=active.fresh.binding(),source_generation=62,requests=views,profiler_recording_enabled=False,actual_optimized_HC_consumers_enabled=True,Chrome_CPU_host_lane_recorded=False,RAW_protocol_receives_recorded=True,clock_alignment_qualified=False,complete_model_operation_coverage_qualified=False,native_stage_handle_mapping_qualified=False,internal_sampling_preparation_coverage_qualified=False,physical_bus_bandwidth_qualified=False,clean_serving_speed_qualified=False,full_model_math_qualified=False,API_qualified=False,shelf_qualified=False,inspector_execution_allowed=False);return proof
+ finally:
+  actor.COPY,actor.PHASES,parent.PHASES,parent.NS,actor.NS['PHASES']=old
+  require(source_binding()==reader and c.sha(root/'report.json')==report_sha and roster=={str(p.relative_to(root)):c.sha(p) for p in root.rglob('*') if p.is_file() and p.name!='report.json'},'Final current raw/source association changed')
+if __name__=='__main__':
+ p=argparse.ArgumentParser();p.add_argument('--root',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args();require(not a.output.exists(),'New public output required');c.write(a.output,finalized_binding(a.root))

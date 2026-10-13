@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "scope": "Exact admitted profile CLI/cache/work/current62 SDK, without PTI/tracer/decode aggregate diagnostics. Bounded CPU RAW pipe points remain. One ordered companion does not establish clean speed or quantify all observer overhead.",
+  "files": {
+    "strata/flash-next/run_source62_cached_window_untraced_v1.py": "4c9f7551048a67e4f46559cb8a1ccfb1d24ad070712905551dc5256aeb088dc5",
+    "strata/flash-next/source62_profile_protocol_raw_v1.py": "dd81b00ee846b4e1f97de16cfef7cb2756defccc20d7ea09773802a8b7d913cb",
+    "strata/flash-next/source62_cached_window_profile_contract_v1.py": "12e0020374c67a064a120cdd498d2d3db1a69c3c08bfe6fc5a7a8a032421fe32",
+    "strata/flash-next/run_natural_p2048_native62_v1.py": "5c9a84acefbcf58ac12e451dca9887d363926e8220cdc24bcbbad4b7a1a616d4",
+    "strata/flash-next/native62-natural-parent-source-recipe-v1.json": "ffd9c0a9e41708ed152c9b02a63d40835b18e3ebe14d323f8994952378cc7353",
+    "strata/flash-next/source62_model_sdk_binding_v1.py": "3a323590d607c0aded9fb4ef8f84a13b59e614f510e0ad8f9ae49f4b476fd0ba",
+    "strata/flash-next/native62-HC-perf-explicit-sqrt-engine-proposal-v1.json": "f05021bcd5d3e90fa8fcca69cace830f834cf3c0928ca0fc32b2cf522a89cf68",
+    "strata/flash-next/native61_startup_option_preflight_v1.py": "9669170262fd7e6756f45f8384c11725832a6bd846ee2aae0e8eb36dc93f5743",
+    "strata/flash-next/source61_ple_clean_abba_contract_v1.py": "656eee350ed68ad24635583bb0a226c0e447d9b3d71cfb0ece769d5d946d6c66",
+    "strata/flash-next/run_natural_p2048_native61_v1.py": "980863cbfb2e5fd193098193c96e7d929991c7005e12632843e3ffe39091559a",
+    "strata/flash-next/native61-natural-parent-source-recipe-v1.json": "11a579242ccf463423071b482f9dd3af8b4387fd2325b882e6c4f30fc572cd44",
+    "strata/flash-next/source60_loaded_fairness_observations_v1.py": "2a2a5a04956910e07d5d1262cb7b75114e0375fb2f318fcbf39fea9b5ab9d764",
+    "strata/flash-next/source62-cached-window-untraced-v1.txt": "8792a8521a155ccb90cefd48ddc492ff724b56baaabe24d1b14f8350bedc32a7"
+  },
+  "raw_cap_bytes": 1073741824,
+  "prior_profile_public_sha256": "f3390633f5205ecfe45b523153b894e7b1a36260d7b5dd67267b55f3235370a3"
+}

@@ -20358,3 +20358,30 @@ COMMAND -> Root37917 preparationPASS; manifest6cec0b9c/configfa6eadc1.
 RESULT -> hotschmoe-dd first; actualmodifiedserver/helper sourcepin included.
 ProtectedNoDri load_identity/validate_runtime preflightnotyetexecuted.
 VERDICT -> Sourceidentitypreparation, no API/cache/servicequalification.
+
+
+## 2026-10-13: optimized RAW profile admitted; firstrow protocol corrected
+
+CONFIG -> Actual62 cached1536/new512/GEN8 mirror1/HC2/1/1/Direct.
+COMMAND -> Producer93567PASS, rootreader38079PASS, clock57433PASS.
+RESULT -> Producer2efab8ed/publicf3390633/analysisd90fa944;281MBtracecapPASS,
+136212deviceinstances/393318CPU_APIspans. Selected9.353s, observed device
+union3.645/API2.144/overlap1.637/neither5.201s.
+VERDICT -> NotGPUidle/wholecriticalpath or clean speed. Matched untraced
+companionprepared; don'tsum queuedwaits aswalltime.
+
+CONFIG -> FirstrowPrefillGDN target-only V1.
+COMMAND -> Actual91027FAILED beforefirstrequest due unsupportedPIN under
+inheritedbatch4. Parent761b02c50fc4df2bacb9e4089431ebe25e6cfa88568d9634ce43ada4712ec7c0
+preserved. Actualnative sourcealso showsserialRIDabsent andfreshnewcounter14.
+RESULT -> V2 runtimeonly switchesbatch0, keepsrequirednativepackspec2
+(reservedrows;GEN1T1only), omitsPIN/RID, correctfreshcounts andserialINFO.
+RootconstructorPASS; actual63037correctedrunqueued behindON4670.
+VERDICT -> No header/ELF rebuild; V1failure andsource untouched.
+
+CONFIG -> ON-only actual62 arithmetic capture, authenticated savedOFFce2d.
+COMMAND -> Rootgenuineconstructor76574PASS, fourCPUcontrolsPASS; actual4670
+pairedrunlive.
+RESULT -> Explicit executingactor injection andcorrect boundedconsume/sha
+checks; no newOFF modelprocess.
+VERDICT -> Await ONfull48/raw/identity/health/normalclose/reference comparison.
