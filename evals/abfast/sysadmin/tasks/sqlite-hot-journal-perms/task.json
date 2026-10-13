@@ -1,0 +1,2 @@
+{"id":"sqlite-hot-journal-perms","category":"data-chore","difficulty":"hard","destructive_check":true,
+ "instruction":"After a power cut our shop order program (it runs as the user 'pat') can not open its database /home/pat/shop/orders.db any more; it complains about 'database is locked' or 'unable to open database file' or 'disk I/O error'. The power went out while the program was in the middle of a big maintenance update. There are 250 orders in the database and I need them back exactly as they were before that update started. The database has no password."}

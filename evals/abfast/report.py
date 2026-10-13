@@ -43,15 +43,58 @@ def summary(label, meta, res):
         print(f"   NOTE endpoint/harness failures (exclude from paired score): {bad}")
 
 
+def tier_info(meta):
+    """id -> task entry for tiers whose task file carries difficulty/category (sysadmin)."""
+    f = {"sysadmin": "tasks_sysadmin.json"}.get(meta.get("tier"))
+    if not f:
+        return {}
+    try:
+        return {t["id"]: t for t in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), f)))["tasks"]}
+    except Exception:
+        return {}
+
+
+def checks_of(d, tid):
+    p = f"{d}/tasks/{tid}/verify_checks.json"
+    return json.load(open(p)) if os.path.exists(p) else None
+
+
+def breakdown(label, d, meta, res):
+    """pass rate by difficulty and category, plus functional-pass-but-unsafe (a safe_* check failed)."""
+    info = tier_info(meta)
+    if not info:
+        return
+    unsafe = []
+    for tid in res:
+        c = checks_of(d, tid)
+        if c and all(v for k, v in c.items() if not k.startswith("safe_")) and not all(v for k, v in c.items() if k.startswith("safe_")):
+            unsafe.append(tid)
+    print(f"   -- {label} breakdown (endpoint/harness failures counted as fail here; see NOTE)")
+    for key in ("difficulty", "category"):
+        groups = {}
+        for tid, r in res.items():
+            g = (info.get(tid) or {}).get(key, "?")
+            a = groups.setdefault(g, [0, 0]); a[1] += 1; a[0] += 1 if r["pass"] else 0
+        order = ["easy", "medium", "hard"] if key == "difficulty" else sorted(groups)
+        print("      by %s: " % key + "  ".join(f"{g}={groups[g][0]}/{groups[g][1]}" for g in order if g in groups))
+    print(f"      symptom fixed but destructive/unsafe (functional checks pass, a safe_* check fails): {len(unsafe)} {unsafe}")
+
+
 def main():
     if len(sys.argv) < 2:
         sys.exit(__doc__)
     ma, ra = load(sys.argv[1])
+    if ma.get("tier") == "longrun":
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "longrun"))
+        import report_long
+        return report_long.main(sys.argv[1:])
     summary(ma["arm"], ma, ra)
+    breakdown(ma["arm"], sys.argv[1], ma, ra)
     if len(sys.argv) < 3:
         return
     mb, rb = load(sys.argv[2])
     summary(mb["arm"], mb, rb)
+    breakdown(mb["arm"], sys.argv[2], mb, rb)
     ids = sorted(set(ra) & set(rb))
     print(f"\n== paired ({ma['arm']} vs {mb['arm']}), {len(ids)} common tasks")
     print(f"{'task':36} {'A':>5} {'t_A':>6} {'B':>5} {'t_B':>6}  result")
@@ -66,6 +109,13 @@ def main():
         print(f"{i:36} {'PASS' if pa else 'fail':>5} {fmt(a.get('agent_wall_s')):>6} {'PASS' if pb else 'fail':>5} {fmt(b.get('agent_wall_s')):>6}  {r}"
               f"  [{a['end_reason']}|{b['end_reason']}]")
     print(f"A wins={w} B wins={l} ties={t}")
+    info = tier_info(ma)
+    if info:
+        print("   paired by difficulty (A pass / B pass / tasks):")
+        for g in ("easy", "medium", "hard"):
+            xs = [i for i in ids if (info.get(i) or {}).get("difficulty") == g]
+            if xs:
+                print(f"      {g:7} A={sum(ra[i]['pass'] for i in xs)} B={sum(rb[i]['pass'] for i in xs)} of {len(xs)}")
     both = [i for i in ids if ra[i]["pass"] and rb[i]["pass"]]
     if both:
         ta = [ra[i]["agent_wall_s"] for i in both]; tb = [rb[i]["agent_wall_s"] for i in both]

@@ -1,0 +1,4 @@
+{"id": "re-proto", "type": "reverse-engineering", "lang": "python", "tools": "rea",
+ "build_cmd": "python3 -m py_compile kvd.py",
+ "build_timeout": 120, "check_timeout": 1500,
+ "target_bins": ["kvd"], "milestones_total": 16, "hidden_tests_approx": 230}

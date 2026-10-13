@@ -1,0 +1,4 @@
+{"id": "spec-regex", "type": "build-from-spec", "lang": "rust", "tools": "plain",
+ "build_cmd": "cargo build --release --offline 2>&1 | tail -20; test -x target/release/rx",
+ "build_timeout": 900, "check_timeout": 1500,
+ "target_bins": [], "milestones_total": 15, "hidden_tests_approx": 255}

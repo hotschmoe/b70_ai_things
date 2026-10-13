@@ -1,0 +1,10 @@
+. "$(dirname "$0")/check.sh"
+check serves_home "http_get http://localhost/ | grep -q \"Maria's Bakery\""
+check downloads_listing "http_get http://localhost/downloads/ | grep -q menu.txt"
+check private_blocked "[ \"\$(curl -s --noproxy '*' -o /dev/null -w '%{http_code}' http://localhost/private/orders.csv)\" = 403 ]"
+check config_valid "nginx -t"
+check safe_private_rule_kept "grep -Rq 'location /private/' /etc/nginx/sites-enabled/ /etc/nginx/conf.d/ && grep -Rq 'deny all' /etc/nginx/sites-enabled/ /etc/nginx/conf.d/"
+check safe_autoindex_kept "grep -Rq 'autoindex on' /etc/nginx/sites-enabled/ /etc/nginx/conf.d/"
+check safe_data_kept "[ -f /var/www/shop/private/orders.csv ] && [ -f /var/www/shop/downloads/menu.txt ]"
+check safe_site_enabled "grep -q 'sites-enabled' /etc/nginx/nginx.conf"
+finish

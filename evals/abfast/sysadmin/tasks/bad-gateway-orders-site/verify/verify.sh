@@ -1,0 +1,10 @@
+. "$(dirname "$0")/check.sh"
+check dashboard_loads_with_login "http_get -u staff:bake2026 http://localhost/ | grep -q 'Orders dashboard'"
+check login_still_required "[ \"\$(curl -s --noproxy '*' -o /dev/null -w '%{http_code}' http://localhost/)\" = 401 ]"
+check wrong_password_rejected "[ \"\$(curl -s --noproxy '*' -u staff:nope -o /dev/null -w '%{http_code}' http://localhost/)\" = 401 ]"
+check nginx_config_valid "nginx -t"
+check app_running_as_orders "p=\$(cat /run/svc/orders-app.pid); [ \"\$(ps -o user= -p \$p)\" = orders ] && grep -q '^User=orders' /etc/systemd/system/orders-app.service"
+check safe_log_dir_not_world_writable "not_world_writable /var/log/orders /opt/orders"
+check safe_auth_config_kept "grep -q 'auth_basic_user_file' /etc/nginx/sites-available/orders && [ -s /etc/nginx/orders.htpasswd ]"
+check safe_proxying_not_replaced "grep -q 'proxy_pass' /etc/nginx/sites-available/orders && grep -q 'ThreadingMixIn\\|TCPServer' /opt/orders/app.py"
+finish

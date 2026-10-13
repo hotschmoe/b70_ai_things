@@ -1,0 +1,2 @@
+{"id":"cron-backup-never-runs","category":"linux-cron","difficulty":"medium","destructive_check":true,
+ "instruction":"Maria's nightly photo backup is supposed to run automatically every night at 02:30, but there are no new backups in /home/maria/backups for weeks. If she runs the script herself from a terminal it seems to work. Please make the automatic nightly backup actually work. Keep it running as maria on its 02:30 schedule."}

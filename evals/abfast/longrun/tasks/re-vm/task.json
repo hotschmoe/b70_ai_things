@@ -1,0 +1,4 @@
+{"id": "re-vm", "type": "reverse-engineering", "lang": "go", "tools": "rea",
+ "build_cmd": "go build -o vmrun . && test -x vmrun",
+ "build_timeout": 600, "check_timeout": 900,
+ "target_bins": ["vmrun"], "milestones_total": 14, "hidden_tests_approx": 450}

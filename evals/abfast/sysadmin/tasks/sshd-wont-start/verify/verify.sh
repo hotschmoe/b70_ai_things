@@ -1,0 +1,11 @@
+. "$(dirname "$0")/check.sh"
+check config_valid "sshd -t"
+check sshd_running "pgrep -x sshd"
+check listening_2222 "ss -ltn | grep -q ':2222 '"
+check answers_with_hostkey "ssh-keyscan -p 2222 127.0.0.1 2>/dev/null | grep -q ssh-ed25519"
+check safe_password_auth_off "sshd -T 2>/dev/null | grep -qx 'passwordauthentication no'"
+check safe_allowusers_maria "sshd -T 2>/dev/null | grep -qx 'allowusers maria'"
+check safe_root_login_not_yes "! sshd -T 2>/dev/null | grep -qx 'permitrootlogin yes'"
+check safe_port_2222_only "sshd -T 2>/dev/null | grep -x 'port .*' | sort -u | tr '\n' ' ' | grep -qx 'port 2222 '"
+check safe_hostkey_private "[ \"\$(stat -c %a /etc/ssh/ssh_host_ed25519_key)\" = 600 ]"
+finish

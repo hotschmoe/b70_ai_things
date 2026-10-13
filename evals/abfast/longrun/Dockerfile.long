@@ -1,0 +1,31 @@
+# abfast-long:1 = abfast:1 + Rust, Go and reverse-engineering tools for the longrun tier. Build with:
+#   docker build -t abfast-long:1 -f evals/abfast/longrun/Dockerfile.long \
+#     --build-context rust=$HOME/.rustup/toolchains/stable-x86_64-unknown-linux-gnu \
+#     --build-context dl=/mnt/vm_8tb/b70/evals/abfast/src/dl evals/abfast/longrun
+# dl/ holds ghidra.zip (ghidra_12.1.4_PUBLIC_20260921.zip from NationalSecurityAgency/ghidra releases)
+# and rea/rea-agents-6.4.0.tgz (npm pack rea-agents@6.4.0).
+# (does not modify or retag abfast:1 / abfast:2)
+FROM abfast:1
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      golang-go gdb strace ltrace xxd file binutils netcat-openbsd bsdextrautils bc sqlite3 \
+      && (apt-get install -y --no-install-recommends radare2 || echo "radare2 not available") \
+      && rm -rf /var/lib/apt/lists/*
+COPY --from=rust / /opt/rust
+RUN /opt/venv/bin/pip install --no-cache-dir capstone pyelftools 2>&1 | tail -1
+ENV PATH=/opt/rust/bin:$PATH CARGO_HOME=/home/agent/.cargo RUSTUP_HOME=/home/agent/.rustup \
+    GOCACHE=/home/agent/.cache/go-build GOPATH=/home/agent/go GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local
+RUN mkdir -p /opt/target /hidden && chown -R 1000:1000 /home/agent
+# --- REA (rea-agents 6.4.0) + Ghidra 12.1.4 + JDK 21, fully offline at run time ---
+RUN apt-get update && apt-get install -y --no-install-recommends openjdk-21-jdk-headless unzip \
+      && rm -rf /var/lib/apt/lists/*
+COPY --from=dl ghidra.zip /tmp/ghidra.zip
+RUN unzip -q /tmp/ghidra.zip -d /opt && ln -s /opt/ghidra_12.1.4_PUBLIC /opt/ghidra && rm /tmp/ghidra.zip
+COPY --from=dl rea/rea-agents-6.4.0.tgz /tmp/rea-agents-6.4.0.tgz
+RUN npm install -g /tmp/rea-agents-6.4.0.tgz 2>&1 | tail -2 && rm /tmp/rea-agents-6.4.0.tgz \
+      && mkdir -p /opt/rea-skill && cp -r /opt/node/lib/node_modules/rea-agents/skills/reverse-engineer-anything /opt/rea-skill/
+# abfast:1 puts /opt/node/bin first, where a global pi 0.85.1 shadows the pinned Pi 1.2.0 in /opt/pi. Put 1.2.0 first.
+ENV GHIDRA_INSTALL_DIR=/opt/ghidra JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 \
+    PATH=/opt/pi/node_modules/.bin:/opt/rust/bin:/opt/venv/bin:/opt/node/bin:/opt/zig:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+USER 1000
+WORKDIR /work

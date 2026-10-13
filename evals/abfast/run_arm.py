@@ -9,6 +9,9 @@ import argparse, concurrent.futures as cf, datetime, io, json, os, re, shlex, su
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import zigtests  # noqa: E402
+import langs_prep  # noqa: E402  (tier langs: rust/go/dart prep cache + parsers)
+sys.path.insert(0, os.path.join(HERE, "sysadmin"))
+import sysrun  # noqa: E402  (tier sysadmin hooks, keyed on task["sys"])
 
 DATA = "/mnt/vm_8tb/b70/evals/abfast"
 SRC = f"{DATA}/src"
@@ -62,7 +65,7 @@ def render_prompt(instruction, thinking):
 class Box:
     def __init__(self, name, image):
         self.name = name
-        r = sh(["docker", "run", "-d", "--name", name, "--network", "host", "--memory", "12g", "--cpus", "6",
+        r = sh(["docker", "run", "-d", "--name", name, "--network", os.environ.get("ABFAST_NETWORK", "host"), "--memory", "12g", "--cpus", "6",
                 "--pids-limit", "4096", "-e", "ZIG_GLOBAL_CACHE_DIR=/home/agent/.zigcache", image, "sleep", "infinity"])
         if r.returncode:
             raise RuntimeError(r.stderr)
@@ -112,6 +115,8 @@ def parse_counts(kind, log):
         m = re.search(r"(\d+) passed; (\d+) skipped; (\d+) failed", log)
         if m:
             return int(m.group(1)), int(m.group(1)) + int(m.group(3))
+    if kind in ("cargo", "go", "dart"):
+        return langs_prep.parse_counts(kind, log)
     return 0, 0
 
 
@@ -121,7 +126,7 @@ def build_hidden_tar(task):
     with tarfile.open(fileobj=buf, mode="w") as tf:
         for p in task.get("hidden_files", []):
             data = git_show(task["repo"], task["real"], p)
-            ti = tarfile.TarInfo(p); ti.size = len(data); ti.mode = 0o644
+            ti = tarfile.TarInfo(p); ti.size = len(data); ti.mode = 0o644; ti.mtime = int(time.time())  # fresh mtime: cargo compares mtimes
             tf.addfile(ti, io.BytesIO(data))
     appends = {}
     for p in task.get("hidden_inline", []):
@@ -175,6 +180,8 @@ def init_repo(box, tar_bytes, task=None):
     rc, o = box.exec("cd /work/repo && git init -q && git add -A && git -c user.name=abfast -c user.email=a@b commit -qm 'initial state'")
     if rc:
         raise RuntimeError(o)
+    if task and task.get("prep"):  # tier langs: warm dependency/build caches
+        langs_prep.inject(box, task, touch_sources=bool(task.get("_touch")))
 
 
 def models_ident(base_url, key):
@@ -187,6 +194,8 @@ def models_ident(base_url, key):
 
 # ---- validate ----
 def validate_task(task, image, tag):
+    if task.get("sys"):
+        return sysrun.validate_task(task, image, tag)
     out = {}
     hidden, appends = build_hidden_tar(task)
     d = f"{DATA}/runs/validate/{task['id']}"
@@ -194,7 +203,7 @@ def validate_task(task, image, tag):
     for which, sha in (("parent", task["parent"]), ("real", task["real"])):
         box = Box(f"abfast-val-{tag}-{task['id']}-{which}", image)
         try:
-            init_repo(box, git_tar(task["repo"], sha), task)
+            init_repo(box, git_tar(task["repo"], sha), dict(task, _touch=True) if which == "real" else task)
             t0 = time.time()
             if which == "parent":
                 r = apply_hidden_and_test(box, task, hidden, appends, f"{d}/{which}.log")
@@ -220,16 +229,20 @@ def run_task(task, a, key, run_dir):
     d = f"{run_dir}/tasks/{tid}"
     os.makedirs(d, exist_ok=True)
     res = {"id": tid, "repo": task["repo"], "end_reason": "agent_error", "pass": False}
-    box = Box(f"abfast-{os.path.basename(run_dir)}-{tid}"[:100], a.image or task.get("image", "abfast:1"))
+    _bn, _img = f"abfast-{os.path.basename(run_dir)}-{tid}"[:100], a.image or task.get("image", "abfast:1")
+    box = sysrun.make_box(Box, _bn, _img, task) if task.get("sys") else Box(_bn, _img)
     t_start = time.time()
     try:
-        init_repo(box, git_tar(task["repo"], task["parent"]), task)
+        if task.get("sys"):
+            sysrun.prepare(box, task, d)
+        else:
+            init_repo(box, git_tar(task["repo"], task["parent"]), task)
         mj = pi_models_json(a.base_url, key or "EMPTY", a.model, a.context_window, a.max_output_tokens)
         rc, o = box.exec("mkdir -p $PI_CODING_AGENT_DIR /logs/pi && cat > $PI_CODING_AGENT_DIR/models.json",
                          stdin=json.dumps(mj).encode())
         prompt = render_prompt(task["instruction"], a.thinking)
-        script = (f"cd /work/repo && timeout --signal=TERM --kill-after=15 {a.timeout_s} "
-                  f"pi --print --mode json --session-dir /logs/pi --provider harbor-endpoint "
+        script = (f"cd {task.get('cwd', '/work/repo')} && timeout --signal=TERM --kill-after=15 {a.timeout_s} "
+                  f"/opt/pi/node_modules/.bin/pi --print --mode json --session-dir /logs/pi --provider harbor-endpoint "
                   f"--model {shlex.quote(a.model)} --thinking {a.thinking} {shlex.quote(prompt)} </dev/null")
         raw = f"{d}/pi_stdout.jsonl"
         t0 = time.time()
@@ -277,8 +290,11 @@ def run_task(task, a, key, run_dir):
         rc3, patch = box.exec("cd /work/repo && git add -A && git diff --cached --stat && git diff --cached")
         open(f"{d}/agent_diff.patch", "w").write(patch)
         res["files_changed"] = len(re.findall(r"^diff --git", patch, re.M))
-        hidden, appends = build_hidden_tar(task)
-        tr = apply_hidden_and_test(box, task, hidden, appends, f"{d}/hidden_test.log")
+        if task.get("sys"):
+            tr = sysrun.verify(box, task, d)
+        else:
+            hidden, appends = build_hidden_tar(task)
+            tr = apply_hidden_and_test(box, task, hidden, appends, f"{d}/hidden_test.log")
         res.update(hidden_rc=tr["rc"], hidden_passed=tr["passed"], hidden_total=tr["total"], **{"pass": tr["pass"]})
     except Exception as e:  # harness failure, not a model failure
         res["end_reason"] = "harness_error"; res["error"] = repr(e)[:400]
@@ -292,6 +308,12 @@ def run_task(task, a, key, run_dir):
 
 
 def main():
+    # longrun tier (own runner; see longrun/run_long.py)
+    if any(a == "--tier=longrun" or (a == "longrun" and i and sys.argv[i] == "longrun" and sys.argv[i - 1] == "--tier")
+           for i, a in enumerate(sys.argv)):
+        sys.path.insert(0, os.path.join(HERE, "longrun"))
+        import run_long
+        return run_long.main([a for a in sys.argv[1:]])
     ap = argparse.ArgumentParser()
     ap.add_argument("--base-url"); ap.add_argument("--api-key-file"); ap.add_argument("--model", default="hotschmoe-dd")
     ap.add_argument("--arm-label"); ap.add_argument("--parallel", type=int, default=1)
@@ -301,11 +323,13 @@ def main():
     ap.add_argument("--context-window", type=int, default=131072)
     ap.add_argument("--tasks", default="", help="comma-separated task ids (default: all validated)")
     ap.add_argument("--tasks-file", default=None)
-    ap.add_argument("--tier", default="", choices=["", "hard"],
+    ap.add_argument("--tier", default="", choices=["", "langs", "hard", "sysadmin"],
                     help="hard: use tasks_hard.json with defaults --timeout-s 3600 --max-output-tokens 32768")
     ap.add_argument("--image", default=None, help="override; default is the task's 'image' field, else abfast:1")
     ap.add_argument("--validate", action="store_true"); ap.add_argument("--write", action="store_true")
     a = ap.parse_args()
+    langs_prep.tier_defaults(a, HERE)
+    sysrun.tier_defaults(a, HERE)  # --tier sysadmin: tasks_sysadmin.json, timeout 1800, max-output 32768
     if a.tasks_file is None:
         a.tasks_file = os.path.join(HERE, "tasks_hard.json" if a.tier == "hard" else "tasks.json")
     if a.timeout_s is None:
@@ -337,7 +361,7 @@ def main():
     if not (a.base_url and a.arm_label):
         ap.error("--base-url and --arm-label required")
     if a.max_output_tokens is None:
-        a.max_output_tokens = 8192 if a.thinking == "off" else (32768 if a.tier == "hard" else 16384)
+        a.max_output_tokens = 8192 if a.thinking == "off" else (32768 if a.tier in ("hard", "langs") else 16384)
     if not a.tasks:
         tasks = [t for t in tasks if t.get("validation", {}).get("valid")]
     key = open(a.api_key_file).readline().strip() if a.api_key_file else ""

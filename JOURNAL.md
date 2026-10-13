@@ -21999,3 +21999,18 @@ daily driver. The eval is close to saturated at 18/19, so it rules out a
 large Flash-Next deficit but cannot detect a long-horizon advantage. Arm A's
 earlier 17/19 used a different rerun path; arm A is 17-18 of 19 across two
 samples. Arm A left running.
+
+## 2026-10-13 -- abfast harness correction: Pi 0.85.1 was used, not 1.2.0
+
+CONFIG: abfast:1 image PATH lists /opt/node/bin (host Node tree, carries a
+global Pi 0.85.1) before /opt/pi/node_modules/.bin (pinned Pi 1.2.0).
+COMMAND: docker run --rm --entrypoint bash abfast:3 -c 'pi --version;
+/opt/pi/node_modules/.bin/pi --version'
+RESULT: 0.85.1 and 1.2.0. So every abfast run recorded above on 2026-10-13
+(arm A 15/19 first pass, 17/19 rerun protocol, matched 18/19; arm B 18/19)
+ran Pi 0.85.1 on both arms. The Harbor calibration did use Pi 1.2.0.
+VERDICT: the base-tier comparison stays matched (same Pi on both arms) but is
+not a Pi 1.2.0 result. run_arm.py and longrun/run_long.py now call
+/opt/pi/node_modules/.bin/pi explicitly. New tiers (langs, sysadmin) are run
+with Pi 1.2.0 from here; the partial langs run on arm A under 0.85.1 (2 tasks)
+is discarded.

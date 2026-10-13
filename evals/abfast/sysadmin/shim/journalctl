@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+"""abfast journalctl shim: reads /var/log/svc/*.log. Supports -u NAME, -n N, -x, -e, -r, --no-pager, -f (prints tail only)."""
+import sys, glob, os
+a = sys.argv[1:]; units = []; n = 200; i = 0; rev = False
+while i < len(a):
+    x = a[i]
+    if x in ("-u", "--unit"): units.append(a[i + 1].replace(".service", "")); i += 1
+    elif x.startswith("--unit="): units.append(x[7:].replace(".service", ""))
+    elif x == "-n" and i + 1 < len(a): n = int(a[i + 1]); i += 1
+    elif x.startswith("-n") and x[2:].isdigit(): n = int(x[2:])
+    elif x.startswith("--lines="): n = int(x[8:])
+    elif x in ("-r", "--reverse"): rev = True
+    elif x.startswith("-xe") or x == "-e": n = max(n, 10)
+    i += 1
+lines = []
+for f in sorted(glob.glob("/var/log/svc/*.log")):
+    nm = os.path.basename(f)[:-4]
+    if units and nm not in units: continue
+    lines += open(f, errors="replace").read().splitlines()
+lines = lines[-n:]
+print("-- Logs begin --" if lines else "-- No entries --")
+for l in (reversed(lines) if rev else lines): print(l)

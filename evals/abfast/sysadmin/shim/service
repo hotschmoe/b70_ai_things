@@ -1,0 +1,4 @@
+#!/bin/sh
+# abfast shim: `service NAME ACTION` -> systemctl ACTION NAME
+[ "$1" = "--status-all" ] && exec systemctl list-units --type=service
+exec systemctl "$2" "$1"

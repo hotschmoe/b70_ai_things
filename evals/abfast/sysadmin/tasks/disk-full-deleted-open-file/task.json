@@ -1,0 +1,3 @@
+{"id":"disk-full-deleted-open-file","category":"linux-storage","difficulty":"hard","destructive_check":true,
+ "docker_args":["--tmpfs","/srv/data:rw,exec,size=40m"],
+ "instruction":"The shop drive (/srv/data) is completely full and the door camera recorder can not save anything anymore. Yesterday I deleted the big camera log (/srv/data/recordings/cam.log) to make room, but the drive is STILL full and I cannot find what is using the space. Please free the space properly. The camera recorder service ('camrec') has to be running and recording again afterwards, and all the family and shop files on the drive must stay."}

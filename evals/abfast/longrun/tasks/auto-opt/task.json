@@ -1,0 +1,4 @@
+{"id": "auto-opt", "type": "autoresearch", "lang": "rust", "tools": "plain",
+ "build_cmd": "cargo build --release --offline 2>&1 | tail -20; test -x target/release/nnjoin",
+ "build_timeout": 900, "check_timeout": 1500, "milestones_total": 13, "stub_may_pass_milestones": 4,
+ "hidden_tests_approx": 60}

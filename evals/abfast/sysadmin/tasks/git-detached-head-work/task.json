@@ -1,0 +1,2 @@
+{"id":"git-detached-head-work","category":"git","difficulty":"easy","destructive_check":true,
+ "instruction":"I keep our household budget in a git folder at /home/pat/budget. I looked at an older version, then made two changes and committed them, but when I go back to my normal branch they are gone and git keeps talking about a 'detached HEAD'. Please make sure my two new commits are part of the normal main branch and I am back on it. Don't lose any of the history."}

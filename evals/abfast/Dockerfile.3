@@ -1,0 +1,22 @@
+# abfast:3 = abfast:1 + Rust (stable), Go and Dart SDK for the "langs" tier. Build with:
+#   docker build -t abfast:3 -f evals/abfast/Dockerfile.3 \
+#     --build-context rust=/mnt/vm_8tb/b70/tooling/langs/rust \
+#     --build-context go=/mnt/vm_8tb/b70/tooling/langs/go \
+#     --build-context dart=/mnt/vm_8tb/b70/tooling/langs/dart-sdk evals/abfast
+# Dependencies are NOT in the image: per-task prepared caches (cargo registry + warm target/, Go module
+# cache + build cache, pub cache + .dart_tool) are built by langs_prep.py and injected by run_arm.py.
+FROM abfast:1
+USER root
+COPY --from=rust / /opt/rust
+COPY --from=go / /opt/go
+COPY --from=dart / /opt/dart
+RUN chmod -R a+rX /opt/rust /opt/go /opt/dart
+ENV PATH=/opt/rust/bin:/opt/go/bin:/opt/dart/bin:$PATH \
+    CARGO_HOME=/home/agent/.cargo CARGO_NET_OFFLINE=true CARGO_BUILD_JOBS=4 CARGO_TERM_COLOR=never \
+    RUST_BACKTRACE=0 \
+    GOPATH=/home/agent/go GOMODCACHE=/home/agent/go/pkg/mod GOCACHE=/home/agent/.cache/go-build \
+    GOPROXY=off GOFLAGS=-mod=mod GOTOOLCHAIN=local GOSUMDB=off GOMAXPROCS=4 \
+    PUB_CACHE=/home/agent/.pub-cache DART_SUPPRESS_ANALYTICS=true CI=1
+RUN mkdir -p /home/agent/.cargo /home/agent/go /home/agent/.cache /home/agent/.pub-cache \
+    && chown -R 1000:1000 /home/agent
+USER 1000

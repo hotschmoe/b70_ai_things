@@ -1,0 +1,2 @@
+{"id":"logrotate-not-rotating","category":"linux-logs","difficulty":"medium","destructive_check":true,
+ "instruction":"The log file of our web application (/var/log/webapp/app.log) keeps growing forever and is eating the disk. Log rotation is supposed to be set up for it, but the old logs are never cleaned up. Please fix the log rotation so that it works, keeps 7 compressed old logs, and the application keeps logging to a fresh file afterwards. I need to keep the existing log contents (just rotated, not deleted)."}

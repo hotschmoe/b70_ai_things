@@ -1,0 +1,1187 @@
+{
+ "image": "abfast-sys:1",
+ "note": "sysadmin tier: broken-machine repair tasks, Pi runs as root in a bridge-network container; see evals/abfast/sysadmin/sysrun.py",
+ "tasks": [
+  {
+   "id": "backup-script-permission",
+   "category": "linux-files",
+   "difficulty": "easy",
+   "destructive_check": true,
+   "instruction": "The backup script in my home folder (/home/maria/bin/backup-docs.sh) says 'permission denied' when I run it. It used to work. Please fix it so I can run it as myself (user maria) and it makes the backup of my Documents folder.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "4/6"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "6/6"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "4/6"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "4/6"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "6/6"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "4/6"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "cpu-hog-one-process",
+   "category": "linux-processes",
+   "difficulty": "easy",
+   "destructive_check": true,
+   "instruction": "This computer has become very slow and the fan is screaming. Please find out what is using all the CPU and stop it. Careful: our accounting program (the ledger server) must keep running, people are using it right now.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "3/5"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "5/5"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "2/5"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "3/5"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "5/5"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "2/5"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "disk-full-hidden-cache",
+   "category": "linux-storage",
+   "difficulty": "easy",
+   "destructive_check": true,
+   "docker_args": [
+    "--tmpfs",
+    "/srv/data:rw,exec,size=40m"
+   ],
+   "instruction": "The family file drive (mounted at /srv/data) says it is full and I cannot save anything new, even though I do not think we have that many files. Please free up space so we can save things again. Do not delete any of our family photos or documents.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "1/3"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "3/3"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "0/3"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "1/3"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "3/3"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "0/3"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "git-detached-head-work",
+   "category": "git",
+   "difficulty": "easy",
+   "destructive_check": true,
+   "instruction": "I keep our household budget in a git folder at /home/pat/budget. I looked at an older version, then made two changes and committed them, but when I go back to my normal branch they are gone and git keeps talking about a 'detached HEAD'. Please make sure my two new commits are part of the normal main branch and I am back on it. Don't lose any of the history.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "4/7"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "7/7"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "4/7"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "4/7"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "7/7"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "4/7"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "nginx-config-typo",
+   "category": "linux-service",
+   "difficulty": "easy",
+   "destructive_check": true,
+   "instruction": "Hi, my bakery website stopped loading after I edited the web server config yesterday. Visitors just get connection refused. Can you get it working again? I want to keep my changes: the /downloads/ page with the file listing, and the /private/ folder staying blocked from the public.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "4/8"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "8/8"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "6/8"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "4/8"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "8/8"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "6/8"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "reg-file-fix",
+   "category": "windows-pwsh",
+   "difficulty": "easy",
+   "destructive_check": true,
+   "windows_flavour": true,
+   "instruction": "(Sandbox note: this is a Linux box with PowerShell 7 standing in for the Windows PC, so there is no real registry; the fixed file will be checked by parsing it.) My cousin sent me a registry file, /home/pat/Desktop/show-files.reg, that should make Windows Explorer show hidden files and file extensions for MY user. When I double click it Windows says it is not a valid registry script. Please fix the file. I only want it to change my own user's settings, nothing machine-wide.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "0/7"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "7/7"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "3/7"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "0/7"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "7/7"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "3/7"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "shared-folder-broken-link",
+   "category": "linux-files",
+   "difficulty": "easy",
+   "destructive_check": true,
+   "instruction": "The Shared shortcut in Pat's home folder (/home/pat/Shared) opens with an error and shows nothing. Everybody says the office documents are still on this computer. Please make the Shared shortcut show the office documents again.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "2/5"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "5/5"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "2/5"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "2/5"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "5/5"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "2/5"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "cron-backup-never-runs",
+   "category": "linux-cron",
+   "difficulty": "medium",
+   "destructive_check": true,
+   "instruction": "Maria's nightly photo backup is supposed to run automatically every night at 02:30, but there are no new backups in /home/maria/backups for weeks. If she runs the script herself from a terminal it seems to work. Please make the automatic nightly backup actually work. Keep it running as maria on its 02:30 schedule.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "5/8"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "8/8"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "5/8"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "5/8"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "8/8"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "5/8"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "csv-mixed-encoding",
+   "category": "data-chore",
+   "difficulty": "medium",
+   "destructive_check": true,
+   "instruction": "I merged two customer lists into /home/pat/contacts/customers_merged.csv. In the accounting program some names look broken (things like 'Jos?' and 'M?ller', and a few company names with a euro sign) and the import program rejects the file. Please produce a clean file /home/pat/contacts/customers_clean.csv that the importer accepts (there is a checker at /opt/accounting/import_check.py) with every customer's name spelled correctly. Keep my original merged file untouched, and keep all customers.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "1/3"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "3/3"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "1/3"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "1/3"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "3/3"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "1/3"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "event-log-reboot-cause",
+   "category": "windows-pwsh",
+   "difficulty": "medium",
+   "destructive_check": false,
+   "windows_flavour": true,
+   "instruction": "(Sandbox note: this is a Linux box with PowerShell 7 standing in for the Windows PC; the Windows event log was exported to XML for you.) My Windows PC restarted by itself several times last week. I exported the System event log to /home/pat/logs/System-export.xml (about 800 events). Please find out what happened and write the answer to /home/pat/logs/answer.txt in exactly this format, 5 lines, nothing else:\nbluescreens=<number of unexpected restarts that were caused by a blue screen>\npower_loss=<number of unexpected restarts that were NOT a blue screen>\nfirst_bluescreen_utc=<time of the first blue-screen restart event as YYYY-MM-DDTHH:MM:SSZ>\nbugcheck_code=<the bugcheck code as 0x followed by 8 hex digits, lower case>\nsuspect_driver=<the display driver name, lower case, without .sys>",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "1/7"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "7/7"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "4/7"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "1/7"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "7/7"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "4/7"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "git-lost-commits-reflog",
+   "category": "git",
+   "difficulty": "medium",
+   "destructive_check": true,
+   "instruction": "Help! In our website folder (/home/maria/website, it is a git repository) I wanted to undo only my very last change, ran some git command I found online, and now the last three days of work (the contact page, the footer fix and the new prices) are gone from the main branch. After that I fixed a typo and committed it. I need the three days of work back on main, together with my typo fix, and the 'staging' branch must stay exactly as it is.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "5/7"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "7/7"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "5/7"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "5/7"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "7/7"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "5/7"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "inventory-api-crash",
+   "category": "linux-service",
+   "difficulty": "medium",
+   "destructive_check": true,
+   "instruction": "Our little stock inventory web service (the one the shop tablets use, it should answer on port 8090) died after somebody tidied up its settings. The tablets just show 'cannot connect'. Please get it running again with all the stock data still there. It is set up as the 'inventory' service.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "3/6"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "6/6"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "3/6"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "3/6"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "6/6"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "3/6"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "logrotate-not-rotating",
+   "category": "linux-logs",
+   "difficulty": "medium",
+   "destructive_check": true,
+   "instruction": "The log file of our web application (/var/log/webapp/app.log) keeps growing forever and is eating the disk. Log rotation is supposed to be set up for it, but the old logs are never cleaned up. Please fix the log rotation so that it works, keeps 7 compressed old logs, and the application keeps logging to a fresh file afterwards. I need to keep the existing log contents (just rotated, not deleted).",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "3/8"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "8/8"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "4/8"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "3/8"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "8/8"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "4/8"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "ps1-backup-script-fix",
+   "category": "windows-pwsh",
+   "difficulty": "medium",
+   "destructive_check": true,
+   "windows_flavour": true,
+   "instruction": "(Sandbox note: this is a Linux box with PowerShell 7 (pwsh) standing in for the Windows PC.) The PowerShell script /home/pat/scripts/Backup-Documents.ps1 is supposed to zip my Word and Excel files from /home/pat/Documents (keeping the folder structure) into a dated zip file in /home/pat/Backups and keep only the newest 5 backups. Since I edited it, it throws errors when I run it with pwsh. Please make it work as described. I have old backups in /home/pat/Backups that I want to keep (apart from the normal 'keep newest 5' cleanup).",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "4/8"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "8/8"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "4/8"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "4/8"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "8/8"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "4/8"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "python-venv-broken",
+   "category": "python-env",
+   "difficulty": "medium",
+   "destructive_check": true,
+   "instruction": "Every Monday I run /opt/reports/run_report.sh to produce the weekly sales summary in /home/maria/reports/summary.txt. Since the IT guy 'cleaned up Python' last week it fails with some strange 'bad interpreter' / 'no such file' error. Please get the weekly report working again. This computer has no internet access. Don't change what the report looks like.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "3/5"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "5/5"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "3/5"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "3/5"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "5/5"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "3/5"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "scheduled-task-xml-fix",
+   "category": "windows-pwsh",
+   "difficulty": "medium",
+   "destructive_check": true,
+   "windows_flavour": true,
+   "instruction": "(Sandbox note: this is a Linux box with PowerShell 7 standing in for the Windows PC, so Task Scheduler itself is not here; the file will be checked by parsing it.) I exported my daily backup job from Windows Task Scheduler to /home/pat/tasks/DailyBackup.xml and edited it by hand to run at 2:00 AM every day. Now importing it says the file is not valid. Please fix the file so it is a valid task definition that runs every day at 02:00 for my own user account without administrator rights, running exactly the same script as before.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "0/11"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "11/11"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "9/11"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "0/11"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "11/11"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "9/11"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "sshd-wont-start",
+   "category": "linux-service",
+   "difficulty": "medium",
+   "destructive_check": true,
+   "instruction": "I changed some settings on the office server so that I can log in remotely with SSH on port 2222, and now SSH does not work at all, nothing answers on that port. Please get SSH working on port 2222 again. Keep the security settings I chose (no password logins, only the user maria allowed).",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "1/9"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "9/9"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "6/9"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "1/9"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "9/9"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "6/9"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "wiki-unreachable-from-lan",
+   "category": "linux-network",
+   "difficulty": "medium",
+   "destructive_check": true,
+   "instruction": "Our office wiki should be reachable by everyone in the office on port 8080 of this server, but colleagues' browsers can not connect. Strangely, when I open http://localhost:8080 on the server itself I see a wiki page, but it looks old. Please make the real, current wiki reachable from other computers on port 8080. It must still ask for the office login (user 'office'). The accounting server on port 9000 must keep running.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "2/6"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "6/6"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "3/6"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "2/6"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "6/6"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "3/6"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "apt-broken-offline-install",
+   "category": "packages",
+   "difficulty": "hard",
+   "destructive_check": true,
+   "instruction": "I need the new version of our office app installed ('officeapp' version 2.0 from the office package repository on this machine, there is no internet here). When I run 'apt-get install officeapp' it just prints errors and nothing gets installed. Please get officeapp 2.0 installed properly. The label printer software ('labelprinter') is already on this machine and the label printers depend on it, so it has to stay installed and working.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "1/7"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "7/7"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "4/7"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "1/7"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "7/7"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "4/7"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "bad-gateway-orders-site",
+   "category": "linux-service",
+   "difficulty": "hard",
+   "destructive_check": true,
+   "instruction": "Our internal orders website (http://localhost/ on this server, login user 'staff', password 'bake2026') shows a '502 Bad Gateway' page since this morning. The web server itself seems to be up. Please get the orders dashboard working again. It must keep asking for the login, and the 'orders' application should keep running under its own limited account.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "6/8"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "8/8"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "3/8"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "6/8"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "8/8"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "3/8"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "cbs-update-failure-cause",
+   "category": "windows-pwsh",
+   "difficulty": "hard",
+   "destructive_check": false,
+   "windows_flavour": true,
+   "instruction": "(Sandbox note: this is a Linux box with PowerShell 7 standing in for the Windows PC; the log was copied over for you.) Windows Update keeps failing to install the October update on my PC. I copied the servicing log C:\\Windows\\Logs\\CBS\\CBS.log to /home/pat/logs/CBS.log (about 1700 lines, lots of noise). Please find out why the MOST RECENT install attempt failed and write the answer to /home/pat/logs/answer.txt in exactly this format, 4 lines, nothing else:\nfailed_update=<KB number, like KB1234567>\nerror_code=<the HRESULT of the failure that made the install fail, 0x followed by 8 hex digits, lower case>\nroot_cause=<exactly one of: disk_full, corrupt_component_store, missing_file, pending_reboot, access_denied>\nsession_id=<the session id of that most recent failed attempt>",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "1/6"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "6/6"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "4/6"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "1/6"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "6/6"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "4/6"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "disk-full-deleted-open-file",
+   "category": "linux-storage",
+   "difficulty": "hard",
+   "destructive_check": true,
+   "docker_args": [
+    "--tmpfs",
+    "/srv/data:rw,exec,size=40m"
+   ],
+   "instruction": "The shop drive (/srv/data) is completely full and the door camera recorder can not save anything anymore. Yesterday I deleted the big camera log (/srv/data/recordings/cam.log) to make room, but the drive is STILL full and I cannot find what is using the space. Please free the space properly. The camera recorder service ('camrec') has to be running and recording again afterwards, and all the family and shop files on the drive must stay.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "3/6"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "6/6"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "2/6"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "3/6"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "6/6"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "2/6"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "sqlite-hot-journal-perms",
+   "category": "data-chore",
+   "difficulty": "hard",
+   "destructive_check": true,
+   "instruction": "After a power cut our shop order program (it runs as the user 'pat') can not open its database /home/pat/shop/orders.db any more; it complains about 'database is locked' or 'unable to open database file' or 'disk I/O error'. The power went out while the program was in the middle of a big maintenance update. There are 250 orders in the database and I need them back exactly as they were before that update started. The database has no password.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": true,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "5/7"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "7/7"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "4/7"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "5/7"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "7/7"
+      },
+      "lazy": {
+       "pass": false,
+       "checks": "4/7"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": true,
+    "deterministic": true,
+    "valid": true
+   }
+  },
+  {
+   "id": "tar-backup-corrupt-recovery",
+   "category": "linux-storage",
+   "difficulty": "hard",
+   "destructive_check": true,
+   "instruction": "My Documents folder (/home/pat/Documents) got wiped when the disk was replaced. I have two backups in /mnt/backup: docs-2026-07.tar.gz and docs-2026-09.tar.gz (the newer one). The newer one gives errors when I try to open it. Please restore as many of my files as you can into /home/pat/Documents, using the newest version of each file that can be recovered intact. Do not leave half-written, broken files in the restored folder. Afterwards write a short summary to /home/pat/recovery.txt in exactly this format (one line): latest=<number of files restored from the September backup> older=<number of files restored from the July backup>. Do not modify the backup files themselves.",
+   "sys": true,
+   "repo": "sysadmin",
+   "image": "abfast-sys:1",
+   "cwd": "/root",
+   "has_lazy_check": false,
+   "validation": {
+    "rounds": [
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "3/5"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "5/5"
+      }
+     },
+     {
+      "setup_only": {
+       "pass": false,
+       "checks": "3/5"
+      },
+      "ref_fix": {
+       "pass": true,
+       "checks": "5/5"
+      }
+     }
+    ],
+    "setup_fails_verify": true,
+    "ref_fix_passes": true,
+    "lazy_fix_fails": null,
+    "deterministic": true,
+    "valid": true
+   }
+  }
+ ]
+}

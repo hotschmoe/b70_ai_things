@@ -1,0 +1,2 @@
+{"id":"git-lost-commits-reflog","category":"git","difficulty":"medium","destructive_check":true,
+ "instruction":"Help! In our website folder (/home/maria/website, it is a git repository) I wanted to undo only my very last change, ran some git command I found online, and now the last three days of work (the contact page, the footer fix and the new prices) are gone from the main branch. After that I fixed a typo and committed it. I need the three days of work back on main, together with my typo fix, and the 'staging' branch must stay exactly as it is."}

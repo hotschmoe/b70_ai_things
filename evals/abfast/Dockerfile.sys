@@ -1,0 +1,28 @@
+# abfast-sys:1 = abfast:1 (same Pi/Node) + a small Linux "office server" userland for the sysadmin tier.
+# Build (extra network only at build time; tasks need none at run time):
+#   docker build -t abfast-sys:1 -f evals/abfast/Dockerfile.sys evals/abfast
+# Runs as root (the agent plays the local admin). systemctl/journalctl/service are small shims
+# (sysadmin/shim) because there is no systemd as PID 1; the runner starts containers with --init.
+FROM abfast:1
+USER root
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      nginx-light openssh-server cron logrotate sqlite3 rsync acl attr lsof psmisc iproute2 \
+      netcat-openbsd zip unzip bzip2 file dos2unix libxml2-utils iputils-ping dnsutils \
+      dpkg-dev less vim-tiny nano libicu74 \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -f /etc/nginx/sites-enabled/default
+RUN mkdir -p /opt/wheelhouse && /opt/venv/bin/pip download --no-cache-dir -d /opt/wheelhouse tabulate pyyaml >/dev/null
+RUN curl -fsSL -o /tmp/pwsh.tgz https://github.com/PowerShell/PowerShell/releases/download/v7.4.6/powershell-7.4.6-linux-x64.tar.gz \
+    && mkdir -p /opt/microsoft/powershell/7 && tar -xzf /tmp/pwsh.tgz -C /opt/microsoft/powershell/7 \
+    && chmod +x /opt/microsoft/powershell/7/pwsh && ln -s /opt/microsoft/powershell/7/pwsh /usr/local/bin/pwsh && rm /tmp/pwsh.tgz
+COPY sysadmin/shim/systemctl /usr/local/bin/systemctl
+COPY sysadmin/shim/journalctl /usr/local/bin/journalctl
+COPY sysadmin/shim/service /usr/sbin/service
+RUN chmod 755 /usr/local/bin/systemctl /usr/local/bin/journalctl /usr/sbin/service \
+    && mkdir -p /var/log/svc /run/svc /run/sshd /etc/systemd/system \
+    && useradd -m -s /bin/bash maria && useradd -m -s /bin/bash pat
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 POWERSHELL_TELEMETRY_OPTOUT=1 POWERSHELL_UPDATECHECK=Off \
+    HOME=/root DEBIAN_FRONTEND=
+WORKDIR /root
+USER root

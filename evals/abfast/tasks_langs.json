@@ -1,0 +1,906 @@
+{
+ "image": "abfast:3",
+ "note": "LANGS tier (Rust/Go/Dart). Same semantics as tasks.json; hidden_files overwritten from the real sha. Dependencies are pre-fetched per task by langs_prep.py (prep tar in /mnt/vm_8tb/b70/evals/abfast/langprep/<id>.tar, injected by run_arm.py); tasks need image abfast:3.",
+ "tasks": [
+  {
+   "id": "glob-doublestar-zero-dirs",
+   "repo": "dart-tools",
+   "lang": "dart",
+   "real": "a22c3a687dc1b35630fb34c296157d66565429cd",
+   "description": "Allow `**/` in glob patterns to match zero directories (matching and listing)",
+   "instruction": "The Dart `glob` package (pkgs/glob) treats `**` followed by a `/` as requiring at least one directory separator, so `**/foo` does not match the path `foo`, `a/**/b` does not match `a/b`, and `**/*.dart` does not match `foo.dart`. Make a `**` that stands at the start of a pattern or directly after a `/`, and is directly followed by `/`, match zero or more whole directory components (so `**/foo` matches `foo` and `bar/foo`, `a/**/b` matches `a/b` and `a/x/b`, `**/*.dart` matches `foo.dart`), in `Glob.matches`/`contains` and consistently in `Glob.list`/`listSync` (for example a listing of `deep/**/?/?` must now also return `deep/a/b` when that is a matching path). A `**` embedded in a segment such as `foo**/*.dart` must keep its current meaning (it matches `foo/a.dart` but not `foobar.dart`). Run the package tests with `cd pkgs/glob && dart test`.",
+   "test_cmd": "cd pkgs/glob && dart test -r expanded 2>&1",
+   "parse": "dart",
+   "hidden_files": [
+    "pkgs/glob/test/list_test.dart",
+    "pkgs/glob/test/match_test.dart"
+   ],
+   "test_timeout": 600,
+   "difficulty": "hard",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "cd pkgs/glob && dart pub get",
+   "prep_paths": [
+    "pkgs/glob/.dart_tool",
+    "pkgs/glob/pubspec.lock"
+   ],
+   "parent": "a4b459cca3ab39466bf8fe6734622b92015b5e15",
+   "hidden_inline": [],
+   "tier": "langs",
+   "stats": {
+    "src_files": 2,
+    "src_lines": 66,
+    "test_files_or_blocks": 2,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 140,
+     "total": 144,
+     "pass": false,
+     "secs": 10.5
+    },
+    "real": {
+     "rc": 0,
+     "passed": 144,
+     "total": 144,
+     "pass": true,
+     "secs": 10.9
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "yaml-edit-flow-trailing-comma",
+   "repo": "dart-tools",
+   "lang": "dart",
+   "real": "5f02a37cc049f362a2e43d04cd03cb132d73e172",
+   "description": "yaml_edit: append to / add keys in flow collections that already have a trailing comma, keep multiline indentation",
+   "instruction": "In the Dart `yaml_edit` package (pkgs/yaml_edit), appending to a flow list `[...]` (`appendToList`) or adding a key to a flow map `{...}` (via `update`) unconditionally prepends a comma, so a collection that already ends in a trailing comma (`[0, 1, ]`, or a multiline flow list/map whose last element is followed by `,`, optionally with a `# comment` after the comma) produces invalid YAML and trips the internal assertion. Fix this: if the collection already has a trailing comma, do not add another one before the new entry, keep a trailing comma after the new entry, and for multiline flow collections indent the new entry like the preceding entries while the closing bracket stays on its own line with its original indentation. Examples: `[\\n  0,\\n  1,\\n]` + append 2 gives `[\\n  0,\\n  1,\\n  2,\\n]`; `[\\n  0,\\n  1, # comment\\n]` + append 2 gives `[\\n  0,\\n  1, # comment\\n  2,\\n]`; `[0, 1, ]` + append 2 gives `[0, 1, 2,]`; a nested multiline flow list (`analyzer:\\n  exclude:\\n    [\\n      foo/**,\\n      build/**,\\n    ]`) keeps the nested indentation for the new `android/**,` entry. A flow collection WITHOUT a trailing comma keeps its current output (e.g. `[\\n  0,\\n  1\\n]` + append 2 gives `[\\n  0,\\n  1\\n, 2]`). The same must hold for adding a key to flow maps. Run with `cd pkgs/yaml_edit && dart test`.",
+   "test_cmd": "cd pkgs/yaml_edit && dart test -r expanded 2>&1",
+   "parse": "dart",
+   "hidden_files": [
+    "pkgs/yaml_edit/test/append_test.dart",
+    "pkgs/yaml_edit/test/update_test.dart"
+   ],
+   "test_timeout": 600,
+   "difficulty": "hard",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "cd pkgs/yaml_edit && dart pub get",
+   "prep_paths": [
+    "pkgs/yaml_edit/.dart_tool",
+    "pkgs/yaml_edit/pubspec.lock"
+   ],
+   "parent": "7a3be9ae1e701df9266517f692826921aa664f68",
+   "hidden_inline": [],
+   "tier": "langs",
+   "stats": {
+    "src_files": 3,
+    "src_lines": 114,
+    "test_files_or_blocks": 2,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 9365,
+     "total": 9375,
+     "pass": false,
+     "secs": 24.2
+    },
+    "real": {
+     "rc": 0,
+     "passed": 9375,
+     "total": 9375,
+     "pass": true,
+     "secs": 23.1
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "json-rpc-client-strict-protocol",
+   "repo": "dart-tools",
+   "lang": "dart",
+   "real": "2337f995afab2f1f9aeb1d378dcfb97a52a1bea1",
+   "description": "json_rpc_2: strictProtocolChecks option on Client/Peer to accept responses without the jsonrpc key",
+   "instruction": "In the Dart `json_rpc_2` package (pkgs/json_rpc_2), `Server` and `Peer` already take `strictProtocolChecks` to accept requests that omit the `jsonrpc` field, but `Client` rejects every response lacking `\"jsonrpc\": \"2.0\"`, so it cannot talk to peers that omit it. Add a named `bool strictProtocolChecks` parameter (default `true`, also exposed as a public final field `strictProtocolChecks`) to both `Client(...)` and `Client.withoutJson(...)`. When it is `false` a response that has no `jsonrpc` key is accepted, but a response whose `jsonrpc` is present and not `\"2.0\"` must still be rejected (and ignored as an invalid response). `Peer` with `strictProtocolChecks: false` must relax this for its internal client too. Default behaviour is unchanged. Update the doc comments. Run with `cd pkgs/json_rpc_2 && dart test`.",
+   "test_cmd": "cd pkgs/json_rpc_2 && dart test -r expanded -p vm 2>&1",
+   "parse": "dart",
+   "hidden_files": [
+    "pkgs/json_rpc_2/test/client/client_test.dart",
+    "pkgs/json_rpc_2/test/client/utils.dart"
+   ],
+   "test_timeout": 600,
+   "difficulty": "medium",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "cd pkgs/json_rpc_2 && dart pub get",
+   "prep_paths": [
+    "pkgs/json_rpc_2/.dart_tool",
+    "pkgs/json_rpc_2/pubspec.lock"
+   ],
+   "parent": "c65c69ed1eb5ed12e3358ce646c146dafb4bf028",
+   "hidden_inline": [],
+   "tier": "langs",
+   "stats": {
+    "src_files": 2,
+    "src_lines": 52,
+    "test_files_or_blocks": 2,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 117,
+     "total": 118,
+     "pass": false,
+     "secs": 10.2
+    },
+    "real": {
+     "rc": 0,
+     "passed": 130,
+     "total": 130,
+     "pass": true,
+     "secs": 10.2
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "json-rpc-method-request-id",
+   "repo": "dart-tools",
+   "lang": "dart",
+   "real": "0740d9bccc4cf25b6aafb54b9089ba6f772cea3a",
+   "description": "json_rpc_2: expose request id and notification flag on Parameters",
+   "instruction": "In the Dart `json_rpc_2` package (pkgs/json_rpc_2), a method registered with `Server.registerMethod` receives a `Parameters` object that names the `method` but not the request ID. Add two public final members to `Parameters`: `Object? id` (the ID of the request being answered: an int, a String, or null) and `bool isNotification` (true when the request had no `id` key at all, false otherwise, including when `id` is explicitly `null`). The `Parameters` constructor keeps its two positional arguments and gains optional named `id` and `isNotification` (default `false`). The `Parameter` objects obtained by indexing (`params['name']`, nested too) must report the same `id` and `isNotification` as the request they came from. `Server` must fill them in for each call. Run with `cd pkgs/json_rpc_2 && dart test`.",
+   "test_cmd": "cd pkgs/json_rpc_2 && dart test -r expanded -p vm 2>&1",
+   "parse": "dart",
+   "hidden_files": [
+    "pkgs/json_rpc_2/test/server/server_test.dart"
+   ],
+   "test_timeout": 600,
+   "difficulty": "medium",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "cd pkgs/json_rpc_2 && dart pub get",
+   "prep_paths": [
+    "pkgs/json_rpc_2/.dart_tool",
+    "pkgs/json_rpc_2/pubspec.lock"
+   ],
+   "parent": "d9320c718f14b2000afd2e0154a18bdb5a7f3930",
+   "hidden_inline": [],
+   "tier": "langs",
+   "stats": {
+    "src_files": 2,
+    "src_lines": 24,
+    "test_files_or_blocks": 1,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 113,
+     "total": 114,
+     "pass": false,
+     "secs": 12.0
+    },
+    "real": {
+     "rc": 0,
+     "passed": 128,
+     "total": 128,
+     "pass": true,
+     "secs": 10.6
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "markdown-linear-link-definitions",
+   "repo": "dart-tools",
+   "lang": "dart",
+   "real": "a55965844fbacd4277291f4b559bd1c5e2c88204",
+   "description": "markdown: parse consecutive link reference definitions in linear time (lines read O(1) times)",
+   "instruction": "In the Dart `markdown` package (pkgs/markdown), a block of N consecutive link reference definitions (`[#1]: https://example.com/pull/1` one per line, followed by a blank line and a paragraph that uses them) is parsed in quadratic time: for each definition the `LinkReferenceDefinitionSyntax` consumes every remaining line of the block, joins them, parses one definition, splits the rest again and retreats the `BlockParser`, so line k is read O(k) times. Make the parsing consume from the `BlockParser` only the lines that one definition needs (a definition can span several lines for its title/destination), without changing the rendered output for any input. Concretely, parsing `Document().parseLineList(lines)` where `lines` is 100 consecutive `Line`s for definitions followed by an empty `Line` and `See [#1] and [#100].` must render the same HTML as before while each `Line.content` getter is read fewer than 20 times per line (a subclass of `Line` counting reads of `content` is used to check this). All existing markdown tests and CommonMark spec tests must keep passing. Run with `cd pkgs/markdown && dart test`.",
+   "test_cmd": "cd pkgs/markdown && dart test -r expanded -p vm 2>&1",
+   "parse": "dart",
+   "hidden_files": [
+    "pkgs/markdown/test/regression_test.dart"
+   ],
+   "test_timeout": 600,
+   "difficulty": "hard",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "cd pkgs/markdown && dart pub get",
+   "prep_paths": [
+    "pkgs/markdown/.dart_tool",
+    "pkgs/markdown/pubspec.lock"
+   ],
+   "parent": "2b54c71af39b1ec937237b842068fdef5a7c2523",
+   "hidden_inline": [],
+   "tier": "langs",
+   "stats": {
+    "src_files": 2,
+    "src_lines": 254,
+    "test_files_or_blocks": 1,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 2764,
+     "total": 2765,
+     "pass": false,
+     "secs": 12.4
+    },
+    "real": {
+     "rc": 0,
+     "passed": 2765,
+     "total": 2765,
+     "pass": true,
+     "secs": 13.3
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "checks-prints-expectation",
+   "repo": "dart-test",
+   "lang": "dart",
+   "real": "f927df26f70f80592749b5b23a9d18152b500cd5",
+   "description": "package:checks: prints() expectations for sync and async callbacks",
+   "instruction": "In package:checks (pkgs/checks of the Dart test repository; run with `cd pkgs/checks && dart test`) add expectations on captured `print()` output. Add `extension FunctionPrints on Subject<void Function()>` with `Subject<String> prints([Condition<String>? that])` and `extension AsyncFunctionPrints on Subject<Future<void> Function()>` with `Future<Subject<String>> prints([Condition<String>? printCondition])`, both exported from `package:checks/checks.dart` (extend the existing `export 'src/extensions/function.dart' show ...` line) and implemented in lib/src/extensions/function.dart with the same `context.nest` / `context.nestAsync` style as the existing `FunctionChecks`. They run the callback in a zone that intercepts `print` and extract the captured text (each print adds its line plus `\\n`, so `print('Hello'); print('world!')` captures `Hello\\nworld!\\n` and a callback that prints nothing captures the empty string), described as `prints ...` in failure messages. If the callback throws (synchronously, or for the async variant also by completing its Future with an error) the check is rejected with `actual: ['a function that throws']` and `which: ['threw <Bad state: oops!> at:', '  fake trace']` (message in the style of `throws`: `threw <exception literal> at:` followed by the stack trace lines indented by two spaces). For the sync variant, if the callback returns a Future at runtime (a `Future<void> Function()` statically typed as `void Function()`), an `assert` must fail with a message telling the user to provide a `Future<void> Function()`. The nested condition failure shows the usual `differs at offset 0:` output for `.equals`. Also document the new extensions (CHANGELOG entry; the existing runnable examples under pkgs/checks/example/function are optional).",
+   "test_cmd": "cd pkgs/checks && dart test -r expanded 2>&1",
+   "parse": "dart",
+   "hidden_files": [
+    "pkgs/checks/test/extensions/function_test.dart"
+   ],
+   "hidden_inline": [],
+   "test_timeout": 600,
+   "difficulty": "medium",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "dart pub get",
+   "prep_paths": [
+    ".dart_tool",
+    "pubspec.lock"
+   ],
+   "parent": "347a5af26026aebb28f01a6947b2ccaa11082ea0",
+   "tier": "langs",
+   "stats": {
+    "src_files": 4,
+    "src_lines": 136,
+    "test_files_or_blocks": 1,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 407,
+     "total": 408,
+     "pass": false,
+     "secs": 32.3
+    },
+    "real": {
+     "rc": 0,
+     "passed": 431,
+     "total": 431,
+     "pass": true,
+     "secs": 24.2
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "gojq-date-out-of-range",
+   "repo": "gojq",
+   "lang": "go",
+   "real": "0e573fae31fdf9874328f3e384ea02a212879729",
+   "description": "gojq: date/time builtins error cleanly on non-finite and out-of-range numbers",
+   "instruction": "gojq (a jq implementation in Go; the CLI tests are cases in cli/test.yaml run by cli/cli_test.go) misbehaves when the date and time builtins get non-finite or out-of-range numbers (for example `infinite | gmtime`, `[1e19,0,1] | mktime`, `nan | todate`): results are garbage or overflow instead of a catchable error. Make `gmtime`, `localtime`, `mktime`, `strftime`, `strflocaltime`, `todate` and the other date builtins built on them reject such input with errors that `try ... catch .` can read, using exactly these messages: for epoch-seconds input outside the representable range (infinity, -infinity, nan, 1e19, -1e19, 9223372036854775807, -9223372036854775808) `gmtime cannot be applied to <value>: number of seconds is out of range` (the value rendered like gojq renders it in other type errors, so nan is `null` and infinity is `1.7976931348623157e+308`); for a broken-down time array whose number is outside the range of an int (infinite, nan, 1e19, 9223372036854775807 as any of the first 6 fields) `mktime cannot be applied to <array>: number is out of range` (array truncated by gojq's usual error formatting, e.g. `[2001,0,1,0,0,1.797693134 ...]`); a non-numeric element still gives `expected an array of 8 numbers`; `strftime`-family functions report the function name with its format, e.g. `strftime(\"%Y-%m-%dT%H:%M:%SZ\") cannot be applied to 1.7976931348623157e+308: number of seconds is out of range` for `infinite | todate` and `strftime(\"%Y\") cannot be applied to [10000000000000000000,0,1]: number is out of range`. In-range inputs, including fractional and negative timestamps, must behave as before. Run `go test ./...`.",
+   "test_cmd": "go test -json ./... 2>&1",
+   "parse": "go",
+   "hidden_files": [
+    "cli/test.yaml"
+   ],
+   "test_timeout": 900,
+   "difficulty": "medium",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "go mod download && go test -json -count=1 -run XXX_none ./... >/dev/null 2>&1; go vet ./... >/dev/null 2>&1 || true",
+   "prep_paths": [],
+   "parent": "b623a453a0983512ce17a9ad2e39952209722064",
+   "hidden_inline": [],
+   "tier": "langs",
+   "stats": {
+    "src_files": 2,
+    "src_lines": 59,
+    "test_files_or_blocks": 1,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 1160,
+     "total": 1163,
+     "pass": false,
+     "secs": 2.6
+    },
+    "real": {
+     "rc": 0,
+     "passed": 1163,
+     "total": 1163,
+     "pass": true,
+     "secs": 4.3
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "gojq-match-empty-after-nonempty",
+   "repo": "gojq",
+   "lang": "go",
+   "real": "3e52c08c59380dda45703aef84a5e581657abff3",
+   "description": "gojq: match/scan/gsub/split/splits report an empty match following a non-empty match",
+   "instruction": "In gojq (a jq implementation in Go; CLI behaviour tests are cases in cli/test.yaml), the regex builtins `match` (flag `g`), `scan`, `gsub`, `sub`, `split/2`, `splits` skip an empty match that occurs immediately after a non-empty match, unlike jq/oniguruma. For input \"a1b-c d\": `[match(\"a*\"; \"g\").offset]` must be `[0,1,2,3,4,5,6,7]`; `[scan(\"[a-z]*\")]` must be `[\"a\",\"\",\"b\",\"\",\"c\",\"\",\"d\",\"\"]`; `gsub(\"[0-9]*\"; \"#\")` must be `\"#a##b#-#c# #d#\"`; `split(\"-*\"; \"\")` must be `[\"\",\"a\",\"1\",\"b\",\"\",\"c\",\" \",\"d\",\"\"]`. Empty matches must still work with anchors/assertions (`gsub(\"(?m)^a*\"; \"#\")` on \"a-a b\" is \"#-a b\", `gsub(\"\\\\ba*\"; \"#\")` is \"##-## #b#\", `gsub(\"[a-z]*\\\\b\"; \"#\")` is \"##-## ##\"), with captures (on \"1a-A\" `[match(\"(a|)\"; \"g\") | [.offset, .captures[0].offset]]` is `[[0,0],[1,1],[2,2],[3,3],[4,4]]` and `[scan(\"[^a]*\"; \"i\")]` is `[\"1\",\"\",\"-\",\"\",\"\"]`), and offsets must be in code points for multibyte text (on \"\u2606\u26051\u2606\u2605\" `[scan(\"[\u2606\u2605]*\")]` is `[\"\u2606\u2605\",\"\",\"\u2606\u2605\",\"\"]`, `[match(\"[\u2606\u2605]*\"; \"g\").offset]` is `[0,2,3,5]`, `gsub(\"[\u2606\u2605]*\"; \"#\")` is `\"##1##\"`). Existing cases must keep passing. Run `go test ./...`.",
+   "test_cmd": "go test -json -skip 'TestCliRun/stream_option_with_unterminated_input' ./... 2>&1",
+   "parse": "go",
+   "hidden_files": [
+    "cli/test.yaml"
+   ],
+   "test_timeout": 900,
+   "difficulty": "medium",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "go mod download && go test -json -count=1 -run XXX_none ./... >/dev/null 2>&1; go vet ./... >/dev/null 2>&1 || true",
+   "prep_paths": [],
+   "parent": "901844d4b97498449462e4e50fed11ef59ecf8ac",
+   "hidden_inline": [],
+   "tier": "langs",
+   "stats": {
+    "src_files": 1,
+    "src_lines": 60,
+    "test_files_or_blocks": 1,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 1091,
+     "total": 1095,
+     "pass": false,
+     "secs": 2.5
+    },
+    "real": {
+     "rc": 0,
+     "passed": 1095,
+     "total": 1095,
+     "pass": true,
+     "secs": 4.3
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "gojq-public-number-conversion",
+   "repo": "gojq",
+   "lang": "go",
+   "real": "b623a453a0983512ce17a9ad2e39952209722064",
+   "description": "gojq: public ToInt and ToFloat64 number conversion helpers",
+   "instruction": "gojq (github.com/itchyny/gojq) has unexported helpers that its built-in functions use to convert number values; users of `WithFunction` have to rewrite them. Add two exported functions to package gojq: `func ToInt(v any) (int, bool)` and `func ToFloat64(v any) (float64, bool)`. Both accept the number types gojq uses (`int`, `float64`, `*big.Int`, `json.Number`) and return `false` for any other type (strings, nil, bool, int64, ...). ToInt truncates floats toward zero, clamps values outside the int range and infinities to math.MinInt / math.MaxInt (positive -> MaxInt, negative -> MinInt, big integers too), converts NaN to math.MinInt, and parses a json.Number (integer syntax, or decimal/exponent syntax via float64; integers beyond the int range clamp; unparsable out-of-range literals become +/- infinity before conversion). ToFloat64 converts ints exactly, passes float64 through, converts *big.Int and json.Number to the nearest float64 (very large values become +/-Inf, large integers may lose precision). Switch gojq's own internal conversions to these helpers, and mention them in the `WithFunction` doc comment. The hidden tests include an external test (package gojq_test) and the `ExampleWithFunction` examples, which call `gojq.ToFloat64`. Run `go test ./...`.",
+   "test_cmd": "go test -json ./... 2>&1",
+   "parse": "go",
+   "hidden_files": [
+    "number_test.go",
+    "option_function_test.go"
+   ],
+   "test_timeout": 900,
+   "difficulty": "medium",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "go mod download && go test -json -count=1 -run XXX_none ./... >/dev/null 2>&1; go vet ./... >/dev/null 2>&1 || true",
+   "prep_paths": [],
+   "parent": "5d9a8ddfaac0ea535d3f016ee860b42d28e70e25",
+   "hidden_inline": [],
+   "tier": "langs",
+   "stats": {
+    "src_files": 4,
+    "src_lines": 234,
+    "test_files_or_blocks": 2,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 947,
+     "total": 947,
+     "pass": false,
+     "secs": 2.7
+    },
+    "real": {
+     "rc": 0,
+     "passed": 1160,
+     "total": 1160,
+     "pass": true,
+     "secs": 4.2
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "lo-case-conversion-with-language",
+   "repo": "samber-lo",
+   "lang": "go",
+   "real": "ad892e5af5b514d4ce12a46c8e6b108161185a1f",
+   "description": "lo: locale-aware WithLanguage variants of the case-conversion helpers",
+   "instruction": "The Go library lo (github.com/samber/lo, root package) has string case helpers Capitalize, PascalCase, CamelCase, KebabCase, SnakeCase that use fixed English casing. Add locale-aware variants taking a golang.org/x/text/language.Tag as an extra last parameter: `CapitalizeWithLanguage(str string, tag language.Tag) string`, `PascalCaseWithLanguage`, `CamelCaseWithLanguage`, `KebabCaseWithLanguage`, `SnakeCaseWithLanguage` (same shape: `(str string, tag language.Tag) string`). They must use x/text casing for that language: with Turkish (`language.Turkish`) lowercase `i` capitalizes to `\\u0130` (dotted capital I) and capital `I` lowercases to `\\u0131` (dotless i), so for example Kebab/Snake output lowercases per locale. With `language.English` they must return exactly the same results as the existing non-language functions, and the existing functions must keep their current outputs. Reuse cased transformers across calls reasonably (they are not safe for concurrent use, so pool or create per call) and acquire one per call for multi-word helpers; concurrent use of the functions from many goroutines must be safe. Add docs under docs/data/core-*.md if you like. Run `go test .` in the repository root.",
+   "test_cmd": "go test -json . 2>&1",
+   "parse": "go",
+   "hidden_files": [
+    "string_test.go"
+   ],
+   "test_timeout": 900,
+   "difficulty": "medium",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "go mod download && go test -json -count=1 -run XXX_none ./... >/dev/null 2>&1; go vet ./... >/dev/null 2>&1 || true",
+   "prep_paths": [],
+   "parent": "e3da5067ded2937461c70be71473ef7abe7514db",
+   "hidden_inline": [],
+   "tier": "langs",
+   "stats": {
+    "src_files": 1,
+    "src_lines": 168,
+    "test_files_or_blocks": 1,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 0,
+     "total": 0,
+     "pass": false,
+     "secs": 0.8
+    },
+    "real": {
+     "rc": 0,
+     "passed": 904,
+     "total": 904,
+     "pass": true,
+     "secs": 11.7
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "gotoml-omit-empty-super-tables",
+   "repo": "go-toml",
+   "lang": "go",
+   "real": "db0b22293e48f5be6d05ed8c5d36eb5bee8a5946",
+   "description": "go-toml: Encoder.SetOmitEmptySuperTables option",
+   "instruction": "In go-toml v2 (github.com/pelletier/go-toml/v2, package at the repo root), add an opt-in encoder option `func (enc *Encoder) SetOmitEmptySuperTables(v bool) *Encoder` (same chaining style as the other Set* methods). When enabled, the header of a table that does not directly contain any key/value pair (a \"super-table\" whose only content is sub-tables) is not emitted, because emitting any of its sub-tables already defines it implicitly; e.g. `{a: {b: {x: 1}}}` encodes as `[a.b]\\nx = 1\\n` instead of `[a]\\n\\n[a.b]\\nx = 1\\n`. A table with no content at all (an empty table) keeps its header, since that header is its only definition, and a table that carries a comment tag (`comment:\"...\"`) keeps its header so the comment has a line to attach to. This applies for nested tables, arrays of tables and with the other encoder options (indent, array multiline, inline tables, ...); the default (option off) output must not change. Also fix the test helper `setFlags` in marshaler_test.go if you notice that it ignores per-setter bits (hidden tests replace that file anyway). Run `go test .` in the repo root.",
+   "test_cmd": "go test -json . 2>&1",
+   "parse": "go",
+   "hidden_files": [
+    "marshaler_test.go",
+    "marshaler_raw_test.go"
+   ],
+   "test_timeout": 900,
+   "difficulty": "hard",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "go mod download && go test -json -count=1 -run XXX_none ./... >/dev/null 2>&1; go vet ./... >/dev/null 2>&1 || true",
+   "prep_paths": [],
+   "parent": "61cbe9ecd8d507c2693477fdb6e4c66f5f688481",
+   "hidden_inline": [],
+   "tier": "langs",
+   "stats": {
+    "src_files": 1,
+    "src_lines": 103,
+    "test_files_or_blocks": 2,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 1,
+     "passed": 0,
+     "total": 0,
+     "pass": false,
+     "secs": 0.4
+    },
+    "real": {
+     "rc": 0,
+     "passed": 2858,
+     "total": 2858,
+     "pass": true,
+     "secs": 3.1
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "hyperfine-shell-operator-guard",
+   "repo": "hyperfine",
+   "lang": "rust",
+   "real": "6cb7bb01d141678e79c0169557dba06875399995",
+   "description": "hyperfine: refuse unquoted shell operators unless a shell choice is made explicitly",
+   "instruction": "hyperfine (Rust CLI benchmark tool) now runs commands directly (no shell) by default, so a command like `rm -rf cache/ && ./my_command` silently passes `&&` as a literal argument. Add a guard in the program's startup: when the executor would run commands without a shell (default raw execution, no `-N`/`--shell=none`, no `--shell`/`-S` given) and a command line contains an unquoted standalone shell operator, fail before benchmarking with this exact stderr (the operator is the first one found; `{cmd}` is the command line as given):\\n\"Error: Command '{cmd}' contains unquoted shell syntax ('{op}').\\nExplicitly choose how to execute it:\\n  -S / --shell=default  Interpret shell syntax.\\n  -N / --shell=none     Run directly, passing '{op}' as a literal argument.\\n\". Standalone operators to detect (outside single/double quotes and not part of a larger word): `&&`, `||`, `|`, `;`, `&`, `>`, `>>`, `<`, `2>` style redirections. With `--shell=default` (or `-S`) the same command runs in the shell, and with `--shell=none` (or `-N`) it runs directly with the operator as a literal argument (e.g. `echo before && echo after` prints `before && echo after`). Commands without operators (including quoted ones like `echo 'a && b'`) are unaffected. Put the tokenizer in a new module `src/shell_syntax.rs` (public function names are up to you; tests only drive the binary). The hidden tests are in tests/integration_tests.rs (they use insta inline snapshots); run `cargo test --test integration_tests --test execution_order_tests`.",
+   "test_cmd": "cargo test --offline --test integration_tests --test execution_order_tests 2>&1",
+   "parse": "cargo",
+   "hidden_files": [
+    "tests/integration_tests.rs"
+   ],
+   "test_timeout": 1200,
+   "difficulty": "hard",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "cargo test --no-run --test integration_tests --test execution_order_tests",
+   "prep_paths": [
+    "target"
+   ],
+   "parent": "e8cdbf25b1e94415baf5ad025288a7e3548a0a85",
+   "hidden_inline": [],
+   "tier": "langs",
+   "stats": {
+    "src_files": 2,
+    "src_lines": 244,
+    "test_files_or_blocks": 1,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 101,
+     "passed": 70,
+     "total": 71,
+     "pass": false,
+     "secs": 8.5
+    },
+    "real": {
+     "rc": 0,
+     "passed": 71,
+     "total": 71,
+     "pass": true,
+     "secs": 6.7
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "hyperfine-env-option",
+   "repo": "hyperfine",
+   "lang": "rust",
+   "real": "6dddb02d73de28517cc2a228f5053271be7416ca",
+   "description": "hyperfine: --env option for per-benchmark environment overrides",
+   "instruction": "hyperfine (Rust CLI benchmark tool) has no way to set environment variables for the benchmarked commands now that commands run without a shell by default. Add an `--env <ASSIGNMENTS>` option (repeatable). Its value is a space-separated list of `NAME=value` assignments with shell-style quoting but no expansion (`--env 'OMP_NUM_THREADS=8 CFLAGS=\"-O3 -march=native\"'`); the variables apply to the benchmarked command and to its setup, prepare, conclude and cleanup commands. Specify it once to apply to all commands, or once per benchmark command (like `--command-name`, matched by position: `--env A=1 cmd1 --env B=2 cmd2`); an empty `--env=''` means no overrides. Values may contain parameter placeholders (`-P value 1 2 --env HYPERFINE_TEST=hello-{value}` gives `hello-1` and `hello-2` for the two runs). With `--shell=default --runs=1 --show-output --command-name=env-test --env 'HYPERFINE_TEST=\"hello, world\"' 'echo \"$HYPERFINE_TEST\"'` stdout must contain `hello, world`. An invalid assignment fails with stderr containing exactly `Invalid value 'OMP_NUM_THREADS' for '--env': expected an assignment like NAME=value or NAME=\"quoted value\".` (using the offending value). Also, a command that starts with a variable assignment and is run directly (no shell chosen), e.g. `hyperfine --runs=1 'SOME_ENV_VAR=$HOME my_command'`, must fail with stderr containing `starts with a variable assignment`, pointing the user at `--env` or `-S`/`--shell=default`. Document the option in the README and man page if you like. Hidden tests are in tests/integration_tests.rs; run `cargo test --test integration_tests --test execution_order_tests`.",
+   "test_cmd": "cargo test --offline --test integration_tests --test execution_order_tests 2>&1",
+   "parse": "cargo",
+   "hidden_files": [
+    "tests/integration_tests.rs"
+   ],
+   "test_timeout": 1200,
+   "difficulty": "hard",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "cargo test --no-run --test integration_tests --test execution_order_tests",
+   "prep_paths": [
+    "target"
+   ],
+   "parent": "067ee70f20a4b93e1f76c6b9f661800309a54c53",
+   "hidden_inline": [],
+   "tier": "langs",
+   "stats": {
+    "src_files": 9,
+    "src_lines": 211,
+    "test_files_or_blocks": 1,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 101,
+     "passed": 71,
+     "total": 75,
+     "pass": false,
+     "secs": 7.1
+    },
+    "real": {
+     "rc": 0,
+     "passed": 75,
+     "total": 75,
+     "pass": true,
+     "secs": 7.0
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "bat-number-nonblank",
+   "repo": "bat",
+   "lang": "rust",
+   "real": "061fb216cb08a2f3755ca411fd14f0b28730afd0",
+   "description": "bat: -b / --number-nonblank flag (cat -b compatible numbering)",
+   "instruction": "bat (Rust cat clone) lacks `cat -b`. Add `-b` / `--number-nonblank`: it shows line numbers only for non-blank lines (lines consisting only of the line terminator are printed with an empty number column and do not advance the counter), implies `--style=numbers` like `-n` does, takes precedence over `-n` (`-bn` and `-nb` both behave like `-b`), is disabled by plain mode (`-bp` prints plain text, numbering off), and works for files, stdin and piped output (piped, `bat -b` with stdin `hello\\n\\nworld\\n` prints `   1 hello\\n     \\n   2 world\\n`; with `--decorations=always` the numbering of tests/examples/empty_lines.txt gives `   1 line 1`, three blank rows `     `, `   2 line 5`, ..., `   7 line 30`). Add it to the help texts (doc/short-help.txt and doc/long-help.txt are checked by tests) and CHANGELOG. Hidden tests are in tests/integration_tests.rs; run `cargo test --test integration_tests`.",
+   "test_cmd": "cargo test --offline --test integration_tests 2>&1",
+   "parse": "cargo",
+   "hidden_files": [
+    "tests/integration_tests.rs"
+   ],
+   "test_timeout": 1200,
+   "difficulty": "hard",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "cargo test --no-run --test integration_tests",
+   "prep_paths": [
+    "target"
+   ],
+   "parent": "78951393e29bfd2f2a45f4326b9d2bb5e737dd2a",
+   "hidden_inline": [],
+   "tier": "langs",
+   "stats": {
+    "src_files": 6,
+    "src_lines": 98,
+    "test_files_or_blocks": 1,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 101,
+     "passed": 245,
+     "total": 250,
+     "pass": false,
+     "secs": 12.2
+    },
+    "real": {
+     "rc": 0,
+     "passed": 250,
+     "total": 250,
+     "pass": true,
+     "secs": 13.6
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "tokio-file-set-times",
+   "repo": "tokio",
+   "lang": "rust",
+   "real": "e279adbfcd8831412c3f19edf2e16d28345f0f95",
+   "description": "tokio: File::set_times / File::set_modified and tokio::fs::FileTimes",
+   "instruction": "tokio's `tokio::fs::File` has no way to set file timestamps. Add `pub async fn set_times(&self, times: FileTimes) -> io::Result<()>` and `pub async fn set_modified(&self, t: SystemTime) -> io::Result<()>` to `tokio::fs::File` (mirroring std's `File::set_times` / `set_modified`, running on the blocking pool, working with the file's pending buffered writes the same way `set_permissions` does), and a new public builder type `tokio::fs::FileTimes` (`Debug + Clone + Default`, `Send + Sync + Unpin`, `#[must_use]`) with `FileTimes::new()`, `set_accessed(SystemTime) -> Self`, `set_modified(SystemTime) -> Self` (and on Windows/Apple `set_created`), unset timestamps left unchanged. The new futures must be `Send + Sync + !Unpin` like the other File async fns. The unit-test mock for File in src/fs/mocks.rs should learn `set_times`. Hidden tests: tokio/tests/fs_file.rs and tokio/tests/async_send_sync.rs; run `cargo test -p tokio --features full --test fs_file --test async_send_sync`.",
+   "test_cmd": "cargo test --offline -p tokio --features full --test fs_file --test async_send_sync 2>&1",
+   "parse": "cargo",
+   "hidden_files": [
+    "tokio/tests/fs_file.rs",
+    "tokio/tests/async_send_sync.rs"
+   ],
+   "test_timeout": 1200,
+   "difficulty": "medium",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "cargo test --no-run -p tokio --features full --test fs_file --test async_send_sync",
+   "prep_paths": [
+    "target",
+    "Cargo.lock"
+   ],
+   "parent": "916ef20c63eed09b6088ea6dbf2dd2cba304c149",
+   "hidden_inline": [],
+   "tier": "langs",
+   "stats": {
+    "src_files": 4,
+    "src_lines": 126,
+    "test_files_or_blocks": 2,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 101,
+     "passed": 0,
+     "total": 0,
+     "pass": false,
+     "secs": 3.9
+    },
+    "real": {
+     "rc": 0,
+     "passed": 20,
+     "total": 20,
+     "pass": true,
+     "secs": 7.1
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "regex-lazy-macro",
+   "repo": "regex",
+   "lang": "rust",
+   "real": "e358341229ebd5feb9a78d8cc85b459c3c7b6600",
+   "description": "regex: regex! macro for lazily compiled static regexes (str and bytes)",
+   "instruction": "The Rust `regex` crate has no convenient way to compile a regex once and reuse it from inside a function. Add a macro `regex!` (usable as `use regex::regex;`) so that `regex!(r\"\\\\d+\")` is an expression of type `&'static regex::Regex` built lazily on first use (compile once, reuse; panics with the usual message if the pattern is invalid, which the docs should state), and `regex::bytes::regex!` (usable as `use regex::bytes; bytes::regex!(\"foo\")`) giving `&'static regex::bytes::Regex`. Two or more uses in the same scope must work (each expansion owns its own static), it must work with the crate's default features and without std where `regex-automata`'s lazy support allows, and it must not add new dependencies (build it on `regex_automata::util::lazy::Lazy` re-exported through a `#[doc(hidden)] pub mod __private`). Add documentation with an example to the crate docs. Hidden tests: tests/misc.rs (part of the `integration` test target); run `cargo test --test integration`.",
+   "test_cmd": "cargo test --offline --test integration 2>&1",
+   "parse": "cargo",
+   "hidden_files": [
+    "tests/misc.rs"
+   ],
+   "test_timeout": 1200,
+   "difficulty": "hard",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "cargo test --no-run --test integration",
+   "prep_paths": [
+    "target"
+   ],
+   "parent": "c42033379c8760105ef90287f319de73d1572242",
+   "hidden_inline": [],
+   "tier": "langs",
+   "stats": {
+    "src_files": 4,
+    "src_lines": 139,
+    "test_files_or_blocks": 1,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 101,
+     "passed": 0,
+     "total": 0,
+     "pass": false,
+     "secs": 2.4
+    },
+    "real": {
+     "rc": 0,
+     "passed": 66,
+     "total": 66,
+     "pass": true,
+     "secs": 16.6
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "ripgrep-git-config-env-vars",
+   "repo": "ripgrep",
+   "lang": "rust",
+   "real": "241b87b3377136659ef0f57948b8e0739e9a691b",
+   "description": "ripgrep/ignore: honor GIT_CONFIG_GLOBAL and GIT_CONFIG_SYSTEM when resolving core.excludesFile",
+   "instruction": "ripgrep's `ignore` crate (crates/ignore) finds the user's global gitignore by reading `core.excludesFile` from `$HOME/.gitconfig` and `$XDG_CONFIG_HOME/git/config`. Since git 2.32 `GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` override those locations, but ignore does not consult them, so users who point `GIT_CONFIG_GLOBAL` at a nonstandard file (e.g. NixOS) have their global excludes ignored. Make the lookup follow git: if `GIT_CONFIG_GLOBAL` is set it replaces both the `$HOME/.gitconfig` and XDG locations; additionally consult the system config (path from `GIT_CONFIG_SYSTEM`, falling back to `/etc/gitconfig`) as the lowest-priority source of `core.excludesFile`, which was not considered at all before. Priority otherwise unchanged. Example: with `GIT_CONFIG_GLOBAL=/tmp/x/global-config-nonstandard` containing `[core]\\n\\texcludesFile = /tmp/x/global-excludes-nonstandard` (which contains `foo2`), `rg --files foo` in a repo with files foo/foo1 and foo/foo2 lists only `foo/foo1`. Add a CHANGELOG entry. Hidden tests: tests/regression.rs and tests/util.rs (the helper gains `TestCommand::env`); run `cargo test --test integration`.",
+   "test_cmd": "cargo test --offline --test integration 2>&1",
+   "parse": "cargo",
+   "hidden_files": [
+    "tests/regression.rs",
+    "tests/util.rs"
+   ],
+   "test_timeout": 1200,
+   "difficulty": "medium",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "cargo test --no-run --test integration",
+   "prep_paths": [
+    "target"
+   ],
+   "parent": "b6849daee84a67b42b0844b2f6a91e47c24705b1",
+   "hidden_inline": [],
+   "tier": "langs",
+   "stats": {
+    "src_files": 1,
+    "src_lines": 90,
+    "test_files_or_blocks": 2,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 101,
+     "passed": 331,
+     "total": 332,
+     "pass": false,
+     "secs": 7.1
+    },
+    "real": {
+     "rc": 0,
+     "passed": 332,
+     "total": 332,
+     "pass": true,
+     "secs": 8.3
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "tokio-stream-fused-adapters",
+   "repo": "tokio",
+   "lang": "rust",
+   "real": "42c5d2b415a6fba075a6180ef68291be3cd66ab2",
+   "description": "tokio-stream/tokio-util: FusedStream for more adapters",
+   "instruction": "Several tokio stream adapters do not implement `futures_core::stream::FusedStream` although they can report termination. Implement `FusedStream` for `tokio_stream::StreamExt::chunks_timeout` adapter (`ChunksTimeout`), for `tokio_stream::StreamExt::peekable` adapter (`Peekable`; it must account for the peeked item that has not yet been consumed), and for `tokio_util::io::ReaderStream`, so that `is_terminated()` becomes true exactly when the adapter has yielded its final `None` / is done (and false while buffered items or a pending peeked value remain). Hidden tests: tokio-stream/tests/stream_fused.rs and tokio-util/tests/io_reader_stream.rs; run `cargo test --offline -p tokio-stream --features full --test stream_fused` and `cargo test --offline -p tokio-util --features full --test io_reader_stream`.",
+   "test_cmd": "cargo test --offline -p tokio-stream --features full --test stream_fused 2>&1 && cargo test --offline -p tokio-util --features full --test io_reader_stream 2>&1",
+   "parse": "cargo",
+   "hidden_files": [
+    "tokio-stream/tests/stream_fused.rs",
+    "tokio-util/tests/io_reader_stream.rs"
+   ],
+   "test_timeout": 1200,
+   "difficulty": "medium",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "cargo test --no-run -p tokio-stream --features full --test stream_fused && cargo test --no-run -p tokio-util --features full --test io_reader_stream",
+   "prep_paths": [
+    "target",
+    "Cargo.lock"
+   ],
+   "parent": "95e21014596539e46654fdd366195cbd1c462fae",
+   "hidden_inline": [],
+   "tier": "langs",
+   "stats": {
+    "src_files": 3,
+    "src_lines": 23,
+    "test_files_or_blocks": 2,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 101,
+     "passed": 0,
+     "total": 0,
+     "pass": false,
+     "secs": 3.2
+    },
+    "real": {
+     "rc": 0,
+     "passed": 38,
+     "total": 38,
+     "pass": true,
+     "secs": 11.9
+    },
+    "valid": true
+   }
+  },
+  {
+   "id": "fd-sanitize-error-messages",
+   "repo": "fd",
+   "lang": "rust",
+   "real": "24198d904a074f2943b2a3be925e53134c994734",
+   "description": "fd: sanitize control characters in error messages, quote search paths with Debug formatting",
+   "instruction": "fd (Rust find alternative) escapes control characters in the file names it prints, but not in its error messages, so a file name containing ESC or other terminal-active characters can inject escape sequences through errors, and some messages quote paths inconsistently. Make every `[fd error]` message that includes a path or command name go through sanitization, while genuine newlines in the message body stay unescaped (messages that print several lines, such as one line per missing search path, stay multi-line). Exact expectations (backslashes below are literal characters in the output): (1) a missing search path is reported with the path in Rust Debug (double-quote) form: `[fd error]: Search path \"fake\" is not a directory.` (it used single quotes; `No valid search paths given.` is unchanged). (2) `fd Hello --exec {}` where the match is a broken symlink named `Hello<ESC><CR> World!<DEL>with<U+009B><U+1F600><U+200B>a<U+FEFF>b` reports `[fd error]: Command not found: \"./Hello\\u{1b}\\r World!\\u{7f}with\\u{9b}<U+1F600>\\u{200b}a\\u{feff}b\"` where the command is printed with Rust Debug escaping: control characters, the zero-width space and the BOM appear as `\\u{..}` / `\\r` escapes while the emoji stays as is. (3) with `--follow --show-errors`, a symlink loop `loop/foo<ESC>b` pointing at its ancestor `loop` is reported as `[fd error]: File system loop found: ./loop/foo\\x1Bb points to an ancestor ./loop` (the path sanitized in fd's existing `\\xNN` style). Hint: a macro-style `print_error!` that formats lazily and sanitizes avoids building strings with `format!` first. Hidden tests: tests/tests.rs and tests/testenv/mod.rs (new helper `create_symlink`); run `cargo test --test tests`.",
+   "test_cmd": "cargo test --offline --test tests 2>&1",
+   "parse": "cargo",
+   "hidden_files": [
+    "tests/tests.rs",
+    "tests/testenv/mod.rs"
+   ],
+   "test_timeout": 1200,
+   "difficulty": "hard",
+   "image": "abfast:3",
+   "prep": true,
+   "prep_cmd": "cargo test --no-run --test tests",
+   "prep_paths": [
+    "target"
+   ],
+   "parent": "b422e5d8c9cffaa1ae43ba68e7b97a60fb3e8ae5",
+   "hidden_inline": [],
+   "tier": "langs",
+   "stats": {
+    "src_files": 8,
+    "src_lines": 243,
+    "test_files_or_blocks": 2,
+    "commits": 1
+   },
+   "validation": {
+    "parent": {
+     "rc": 101,
+     "passed": 110,
+     "total": 113,
+     "pass": false,
+     "secs": 1.7
+    },
+    "real": {
+     "rc": 0,
+     "passed": 113,
+     "total": 113,
+     "pass": true,
+     "secs": 2.5
+    },
+    "valid": true
+   }
+  }
+ ]
+}

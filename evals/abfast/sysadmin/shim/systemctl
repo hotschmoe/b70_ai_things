@@ -1,0 +1,317 @@
+#!/usr/bin/env python3
+"""abfast systemd emulation shim (no PID 1 systemd in the sandbox).
+Reads /etc/systemd/system/*.service and /lib/systemd/system/*.service. Supports start/stop/restart/reload/
+status/is-active/is-enabled/is-failed/enable/disable/daemon-reload/list-units/cat/show/mask/unmask/reset-failed.
+Restart= is NOT honoured. Logs go to /var/log/svc/NAME.log (journalctl shim reads them)."""
+import os, sys, time, shlex, subprocess, signal, pwd, grp, glob, datetime
+
+DIRS = ["/etc/systemd/system", "/lib/systemd/system", "/usr/lib/systemd/system"]
+RUN, LOG = "/run/svc", "/var/log/svc"
+BASEPATH = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+for d in (RUN, LOG):
+    os.makedirs(d, exist_ok=True)
+
+
+def unit_path(name):
+    if not name.endswith(".service"):
+        name += ".service"
+    for d in DIRS:
+        p = f"{d}/{name}"
+        if os.path.exists(p) and os.path.realpath(p) != "/dev/null":
+            return name[:-8], p
+    return name[:-8], None
+
+
+def parse(path):
+    sec, u = None, {}
+    for line in open(path, errors="replace"):
+        line = line.strip()
+        if not line or line[0] in "#;":
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            sec = line[1:-1]; continue
+        if "=" in line and sec:
+            k, v = line.split("=", 1)
+            u.setdefault((sec, k.strip()), []).append(v.strip())
+    return u
+
+
+def log(name, msg):
+    with open(f"{LOG}/{name}.log", "a") as f:
+        f.write(f"{datetime.datetime.now():%b %d %H:%M:%S} {os.uname().nodename} {name}: {msg}\n")
+
+
+def pid_of(name):
+    try:
+        pid = int(open(f"{RUN}/{name}.pid").read())
+        st = open(f"/proc/{pid}/stat").read().rsplit(")", 1)[1].split()[0]
+        return pid if st != "Z" else None
+    except Exception:
+        return None
+
+
+def userargs(u):
+    kw = {}
+    usr = (u.get(("Service", "User")) or [None])[0]
+    if usr:
+        try:
+            pw = pwd.getpwnam(usr)
+        except KeyError:
+            return None, f"Failed to determine user credentials: No such process (User={usr})"
+        kw["user"] = pw.pw_uid
+        g = (u.get(("Service", "Group")) or [None])[0]
+        kw["group"] = grp.getgrnam(g).gr_gid if g else pw.pw_gid
+        kw["extra_groups"] = []
+    return kw, None
+
+
+def build_env(u):
+    env = {"PATH": BASEPATH, "LANG": "C.UTF-8"}
+    for ef in u.get(("Service", "EnvironmentFile"), []):
+        opt = ef.startswith("-"); ef = ef.lstrip("-")
+        if not os.path.exists(ef):
+            if opt: continue
+            return None, f"Failed to load environment files: No such file or directory ({ef})"
+        for line in open(ef):
+            line = line.strip()
+            if line and line[0] not in "#;" and "=" in line:
+                k, v = line.split("=", 1)
+                try:
+                    v = " ".join(shlex.split(v)) if v[:1] in "\"'" else v
+                except ValueError:
+                    pass
+                env[k.strip()] = v
+    for e in u.get(("Service", "Environment"), []):
+        for tok in shlex.split(e):
+            if "=" in tok:
+                k, v = tok.split("=", 1); env[k] = v
+    return env, None
+
+
+def cmdline(c):
+    c = c.lstrip("-@+!")
+    return c
+
+
+def run_cmd(name, c, u, env, wait):
+    optional = c.startswith("-")
+    kw, err = userargs(u)
+    if err: return 1, err
+    wd = (u.get(("Service", "WorkingDirectory")) or [None])[0]
+    lf = open(f"{LOG}/{name}.log", "a")
+    argv = shlex.split(cmdline(c))
+    argv = [a.replace("$MAINPID", "") for a in argv]
+    try:
+        p = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=lf, stderr=lf, env=env, cwd=wd,
+                             start_new_session=True, **kw)
+    except Exception as e:
+        log(name, f"Failed to execute {argv[0]}: {e}")
+        return 203, f"{e}"
+    if wait:
+        rc = p.wait()
+        return (0 if optional else rc), None
+    return p, None
+
+
+def do_start(name, quiet=False):
+    n, path = unit_path(name)
+    if not path:
+        print(f"Failed to start {name}.service: Unit {name}.service not found.", file=sys.stderr); return 5
+    if pid_of(n):
+        return 0
+    u = parse(path)
+    for f in (f"{RUN}/{n}.failed",):
+        if os.path.exists(f): os.remove(f)
+    env, err = build_env(u)
+    fail = lambda why, code: (open(f"{RUN}/{n}.failed", "w").write(f"{why}\n{code}\n"),
+                              log(n, f"{n}.service: Failed ({why})"),
+                              print(f"Job for {n}.service failed because {why}.\nSee \"systemctl status {n}.service\" and \"journalctl -xeu {n}.service\" for details.", file=sys.stderr), 1)[-1]
+    if err:
+        log(n, err); return fail("of an environment problem: " + err, 1)
+    for c in u.get(("Service", "ExecStartPre"), []):
+        rc, e = run_cmd(n, c, u, env, True)
+        if rc:
+            return fail(f"the control process exited with error code (ExecStartPre status={rc})", rc)
+    ex = (u.get(("Service", "ExecStart")) or [None])[0]
+    if not ex:
+        return fail("no ExecStart", 1)
+    typ = (u.get(("Service", "Type")) or ["simple"])[0]
+    log(n, f"Starting {n}.service ...")
+    if typ in ("forking", "oneshot"):
+        rc, e = run_cmd(n, ex, u, env, True)
+        if rc:
+            return fail(f"the control process exited with error code (status={rc})", rc)
+        if typ == "oneshot":
+            return 0
+        time.sleep(0.5)
+        pf = (u.get(("Service", "PIDFile")) or [None])[0]
+        try:
+            open(f"{RUN}/{n}.pid", "w").write(open(pf).read().strip())
+        except Exception:
+            return fail("the PID file could not be read", 1)
+        return 0
+    p, e = run_cmd(n, ex, u, env, False)
+    if e or isinstance(p, int):
+        return fail(f"the main process could not be executed ({e})", 203)
+    open(f"{RUN}/{n}.pid", "w").write(str(p.pid))
+    time.sleep(1.0)
+    rc = p.poll()
+    if rc is not None:
+        # like systemd Type=simple: start "succeeds", the unit is then failed
+        open(f"{RUN}/{n}.failed", "w").write(f"exit-code\n{rc}\n")
+        os.remove(f"{RUN}/{n}.pid")
+        log(n, f"{n}.service: Main process exited, code=exited, status={rc}")
+        log(n, f"{n}.service: Failed with result 'exit-code'.")
+    else:
+        threading_reap(p)
+    return 0
+
+
+def threading_reap(p):
+    # leave the process running detached; a double fork is unnecessary because PID 1 is an init
+    pass
+
+
+def kill_tree(pid, sig):
+    try:
+        os.killpg(os.getpgid(pid), sig)
+    except Exception:
+        try: os.kill(pid, sig)
+        except Exception: pass
+
+
+def do_stop(name, sig=signal.SIGTERM):
+    n, path = unit_path(name)
+    if not path:
+        print(f"Failed to stop {name}.service: Unit {name}.service not found.", file=sys.stderr); return 5
+    u = parse(path)
+    pid = pid_of(n)
+    for c in u.get(("Service", "ExecStop"), []):
+        env, _ = build_env(u)
+        if env is not None: run_cmd(n, c, u, env, True)
+        time.sleep(0.3)
+    pid = pid_of(n)
+    if pid:
+        kill_tree(pid, signal.SIGTERM)
+        for _ in range(50):
+            if not pid_of(n): break
+            time.sleep(0.1)
+        if pid_of(n):
+            kill_tree(pid, signal.SIGKILL); time.sleep(0.3)
+    for f in (f"{RUN}/{n}.pid", f"{RUN}/{n}.failed"):
+        if os.path.exists(f): os.remove(f)
+    log(n, f"Stopped {n}.service.")
+    return 0
+
+
+def do_reload(name):
+    n, path = unit_path(name)
+    if not path:
+        print(f"Failed to reload {name}.service: Unit {name}.service not found.", file=sys.stderr); return 5
+    u = parse(path)
+    if not pid_of(n):
+        print(f"Failed to reload {n}.service: Unit {n}.service is not active.", file=sys.stderr); return 1
+    rl = (u.get(("Service", "ExecReload")) or [None])[0]
+    if rl:
+        env, _ = build_env(u)
+        rc, _ = run_cmd(n, rl.replace("$MAINPID", str(pid_of(n))), u, env or {}, True)
+        if rc:
+            print(f"Job for {n}.service failed because the control process exited with error code.", file=sys.stderr); return 1
+    else:
+        kill_tree(pid_of(n), signal.SIGHUP)
+    return 0
+
+
+def enabled(n):
+    return os.path.exists(f"/etc/systemd/system/multi-user.target.wants/{n}.service")
+
+
+def status(name):
+    n, path = unit_path(name)
+    if not path:
+        print(f"Unit {name}.service could not be found.", file=sys.stderr); return 4
+    u = parse(path)
+    desc = (u.get(("Unit", "Description")) or [""])[0]
+    pid = pid_of(n)
+    print(f"{'*' if pid else 'x'} {n}.service - {desc}")
+    print(f"     Loaded: loaded ({path}; {'enabled' if enabled(n) else 'disabled'}; preset: enabled)")
+    if pid:
+        print(f"     Active: active (running)\n   Main PID: {pid}")
+    elif os.path.exists(f"{RUN}/{n}.failed"):
+        print("     Active: failed (Result: exit-code)")
+    else:
+        print("     Active: inactive (dead)")
+    lf = f"{LOG}/{n}.log"
+    if os.path.exists(lf):
+        print()
+        for l in open(lf, errors="replace").read().splitlines()[-10:]:
+            print(l)
+    return 0 if pid else 3
+
+
+def main():
+    a = [x for x in sys.argv[1:] if not x.startswith("-") or x in ("-")]
+    flags = [x for x in sys.argv[1:] if x.startswith("-")]
+    if not a:
+        return 0
+    cmd, names = a[0], a[1:]
+    rc = 0
+    if cmd in ("daemon-reload", "daemon-reexec", "reset-failed", "mask", "unmask", "set-default", "isolate"):
+        if cmd == "reset-failed":
+            for f in glob.glob(f"{RUN}/*.failed"):
+                if not names or os.path.basename(f)[:-7] in [x.replace(".service", "") for x in names]: os.remove(f)
+        return 0
+    if cmd in ("list-units", "list-unit-files", "list-units-all"):
+        seen = set()
+        for d in DIRS:
+            for p in sorted(glob.glob(f"{d}/*.service")):
+                n = os.path.basename(p)[:-8]
+                if n in seen or os.path.realpath(p) == "/dev/null": continue
+                seen.add(n)
+                st = "running" if pid_of(n) else ("failed" if os.path.exists(f"{RUN}/{n}.failed") else "dead")
+                print(f"{n}.service  loaded  {'active' if st=='running' else st}  {st}")
+        return 0
+    for nm in names:
+        if cmd == "start": rc = do_start(nm) or rc
+        elif cmd == "stop": rc = do_stop(nm) or rc
+        elif cmd in ("restart", "try-restart"):
+            do_stop(nm); rc = do_start(nm) or rc
+        elif cmd in ("reload", "reload-or-restart"):
+            r = do_reload(nm)
+            if r and cmd == "reload-or-restart": r = do_start(nm)
+            rc = r or rc
+        elif cmd == "status": rc = status(nm) or rc
+        elif cmd == "is-active":
+            n, p = unit_path(nm); s = "active" if pid_of(n) else ("failed" if os.path.exists(f"{RUN}/{n}.failed") else "inactive")
+            print(s); rc = 0 if s == "active" else 3
+        elif cmd == "is-failed":
+            n, p = unit_path(nm); f = os.path.exists(f"{RUN}/{n}.failed"); print("failed" if f else "active"); rc = 0 if f else 1
+        elif cmd == "is-enabled":
+            n, p = unit_path(nm)
+            if not p: print("not-found", file=sys.stderr); rc = 1
+            else: print("enabled" if enabled(n) else "disabled"); rc = 0 if enabled(n) else 1
+        elif cmd in ("enable", "disable"):
+            n, p = unit_path(nm)
+            if not p: print(f"Failed to {cmd} unit: Unit file {nm}.service does not exist.", file=sys.stderr); rc = 1; continue
+            w = f"/etc/systemd/system/multi-user.target.wants/{n}.service"
+            os.makedirs(os.path.dirname(w), exist_ok=True)
+            if cmd == "enable":
+                if not os.path.lexists(w): os.symlink(p, w)
+                if "--now" in flags: rc = do_start(nm) or rc
+            else:
+                if os.path.lexists(w): os.remove(w)
+                if "--now" in flags: do_stop(nm)
+        elif cmd == "cat":
+            n, p = unit_path(nm)
+            if p: print(f"# {p}"); print(open(p).read())
+            else: print(f"No files found for {nm}.service.", file=sys.stderr); rc = 1
+        elif cmd == "show":
+            n, p = unit_path(nm); pid = pid_of(n)
+            print(f"Id={n}.service\nActiveState={'active' if pid else 'inactive'}\nMainPID={pid or 0}\nFragmentPath={p or ''}")
+        else:
+            print(f"Unknown command verb {cmd}.", file=sys.stderr); return 1
+    return rc
+
+
+if __name__ == "__main__":
+    sys.exit(main())

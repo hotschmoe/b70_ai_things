@@ -1,0 +1,4 @@
+{"id": "re-bundle", "type": "reverse-engineering", "lang": "python", "tools": "rea",
+ "build_cmd": "python3 -c \"import ast; ast.parse(open('app.py').read())\"",
+ "build_timeout": 120, "check_timeout": 1500,
+ "target_bins": ["app.js"], "milestones_total": 14, "hidden_tests_approx": 430}
