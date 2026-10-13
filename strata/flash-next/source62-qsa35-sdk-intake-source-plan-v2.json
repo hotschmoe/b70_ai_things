@@ -1,0 +1,15 @@
+{
+  "schema": 2,
+  "scope": "One exact provenance string fixed; actual builder/compiled artifacts unchanged",
+  "files": {
+    "strata/flash-next/source62_qsa35_sdk_binding_v2.py": "2783693b358e717cc9b9341f3987d4c9da42f6c91783ad02b008482c2455c46e",
+    "strata/flash-next/test_source62_qsa35_sdk_intake_cpu_v2.py": "c8a591de3b40f7a09a6a67ff93a234dde5b350151b6460bf819c3eddc59b715c",
+    "strata/flash-next/source62-qsa35-sdk-intake-v2.md": "bb8e7c3b8b2795a58e6b4c0e53e48ee0c014ab71e809c8fcdc524d2df923772b",
+    "strata/flash-next/source62_qsa35_sdk_binding_v1.py": "7609e59a6a071eebc96d9f467c5cb0d17695fc6f245eac319650a01e714f3b34",
+    "strata/flash-next/build_native62_qsa35_incremental_v1.py": "0d053c91fdb0d8ad57ff59a44648e6c06dced1df61638c75d6e0879ddb3183c8",
+    "strata/flash-next/native62-qsa35-session-math-engine-proposal-v1.json": "69d3e02e2d97aa8fd3921e90da9f48e8b4520cfe3515067b0dac09775b83cd61",
+    "strata/flash-next/source62-qsa35-incremental-build-recipe-v1.json": "f9c4864e377877be5990d2a5b84097e6751f387fe61d113e24c9e291d1f06124"
+  },
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_source62_qsa35_sdk_intake_cpu_v2",
+  "compile_or_model_rerun_needed_for_metadata_fix": false
+}

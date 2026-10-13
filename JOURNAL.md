@@ -20494,3 +20494,18 @@ QKV; blockNMSE6.63715e-5/maxabs.00511988. Beforestate/conv bytezero.
 VERDICT -> Closes observed L0 firstrow seam; no original independent math
 reference, later-token/alllayer/fullT/cache/speed qualification. Longer
 continuation source control using existing ELF is next; QSA35 build preparing.
+
+
+## 2026-10-13: QSA35 incremental SDK closes; real V2 binder admitted
+
+CONFIG -> Immutable actual62 parent plus three-file QSA35/sessionidentityv8 overlay.
+COMMAND -> Root54983 NoDri card1 lease, four CPU/16GiB/networknone, PASS123s.
+RESULT -> ActualSDK strata-native62-qsa35-v1-20261013T042812Z-u6tj6qss, receipt
+8f1e0e257655839451efd55ec5781131bf950d7b130065cfc0c98635635104f9.
+Exactly2fresh/122reuse/oneenginearchive/all8freshlinks; parent unchanged.
+Root realbinderV2 intake0.82s rechecks current sources/objects/ELFs/dependencies
+and owned normal EOF/exit0/removal. No GPU/model execution in compilation.
+VERDICT -> QSA35 capability built, numeric runtime pending. SealedbinderV1
+has wrong provenance label; V2 changes exactly that literal, keeps all gates.
+Source-only focused3CPU checks pass; no recompile/model rerun for reader typo.
+Full objective and2000/50 targets remain incomplete.

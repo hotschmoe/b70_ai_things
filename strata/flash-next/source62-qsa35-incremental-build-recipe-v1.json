@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "pins": {
+    "strata/flash-next/build_native62_qsa35_incremental_v1.py": "0d053c91fdb0d8ad57ff59a44648e6c06dced1df61638c75d6e0879ddb3183c8",
+    "strata/flash-next/source62_qsa35_sdk_binding_v1.py": "7609e59a6a071eebc96d9f467c5cb0d17695fc6f245eac319650a01e714f3b34",
+    "strata/flash-next/native62-qsa35-session-math-engine-proposal-v1.json": "69d3e02e2d97aa8fd3921e90da9f48e8b4520cfe3515067b0dac09775b83cd61",
+    "strata/flash-next/patches/qsa35-session-math-identity-v1.patch": "b468d0d2948005ea94ae6f96e2040b948f8f99b2ffafe7ef5e6a89f1728e0a20",
+    "strata/flash-next/test_source62_qsa35_incremental_cpu_v1.py": "76c2315faa5a80170b1bf696c1a6c469d0a4e9ce280513a0e8821b47b9d664ec",
+    "strata/flash-next/source62-qsa35-incremental-build-v1.md": "b6b926b6ea881c7b165fdbda84ed17e48762eff9c43a46a5930abf9a8a94e3b3",
+    "strata/flash-next/build_native_hc_engine.py": "147929bfa3b43dd162db415f6ac68700521aa7e21819705f46e6a9fcaeebca1d",
+    "strata/flash-next/build_native58_fresh_from52_v2.py": "2c15acd5c2c240ba7cfdc8cb7eb2025cf8fd3ca2d2526992eb4203fc5b4054d8",
+    "strata/flash-next/native62_incremental_ninja_audit_v1.py": "01acf1eb71370482e39b8adab5dd6030aa46a7acc6fb0215fc64fed37f426f96",
+    "strata/flash-next/build_native62_incremental_from61_v1.py": "f366c57eba6bf3c871490f7836ca3c18e064ce641edba5183bd200cc9255e2a9",
+    "strata/flash-next/source62_model_sdk_binding_v1.py": "3a323590d607c0aded9fb4ef8f84a13b59e614f510e0ad8f9ae49f4b476fd0ba",
+    "strata/flash-next/native62-HC-perf-explicit-sqrt-engine-proposal-v1.json": "f05021bcd5d3e90fa8fcca69cace830f834cf3c0928ca0fc32b2cf522a89cf68",
+    "strata/flash-next/qsa35-session-math-identity-source-plan-v1.json": "e5c37cc4f6c2e6e2ab089db3d58a11ab042a5c2c21aaa6753d53192555691363",
+    "strata/flash-next/prepare_qsa35_session_math_identity_v1.py": "0cd07bf2a39ba260195ad186bff9ca114492d56a531b43146a8701156d7b5d61"
+  },
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_source62_qsa35_incremental_cpu_v1",
+  "build_scope": "actual62 ->QSA35/identity,2fresh/122reuse/engine/archive/all8freshlinks",
+  "compiled_or_GPU_executed_by_author": false
+}
