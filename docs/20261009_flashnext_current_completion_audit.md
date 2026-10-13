@@ -2227,3 +2227,20 @@ correlated profiling and clean matched latency; RAM/NVMe/cache memory tradeoffs;
 and a qualified reproducible shelf with launch/stop instructions. No new
 2000tok/s prefill or50tok/s decode result is admitted here. Completion is
 unproven. Prior historical paragraphs retain their original scope.
+
+## 2026-10-13 - Updated evidence and remaining gates
+
+| Requirement | New actual evidence | Remaining proof |
+| --- | --- | --- |
+| Current full-model reference | Original own-state V3 computes all48 layers and full248320 head against four current59 mode0 targets; report d9fabca3, root288 artifacts verified | Head NMSE8.8281e-5; HC/device intrinsic/contraction and other declared arithmetic contracts remain unqualified. Execution PASS is not numeric PASS |
+| Paired original four-slot usability | V5/V3 diagnostic6fba8a58 matches all complete fresh/cache-request histories and cancellation prefix; stale owner refused; normal close/health | Diagnostic identity scope only; zero observed shifted reuse. No cache-hit, HTTP, six-stream or promotion proof |
+| Compound persistence and eviction | Real native49698 reaches SAVE after64 target outputs | Refused missing STRATA_ARTIFACT_IDENTITY_SHA256. Generate and bind actual runtime manifest; retain native identity guard, then qualify publication/eviction/fresh-process same/divergent restoration |
+| PLE latency lead | Source61 mmap/direct producer e1ba52b4 and public9fdf9cc6 pass full histories,16 stage traces, identity/health/close | First-cohort waits improve, but unmatched compiler host load and ordered instrumentation prevent clean causal throughput claim |
+| Clean latency/speed | Four-arm natural P2048/GEN512 ABBA constructor passed, actual88714 queued | Serialize against all CPU/provider/build/staging IO; actual output/repeat/identity/health/latency result pending |
+| Lease integrity | Failure after cancelling queued flock reproduced; sealed candidate passes source-bound seven real CPU controls | Live bin/runtime unchanged. Required shelf smoke is unavailable through stale retained ABI/unsupported smoke paths; candidate is not an applied shared-tool fix |
+
+Keep the full original completion requirements above. HTTP source and native
+cache controllers are prepared, not qualifying runtime evidence. Stable
+hotschmoe-dd identity, complete cache family, one/two/four/bounded-six service,
+calibrated critical-path profiling, memory tradeoffs, clean matched latency
+and a reproducible promoted shelf remain required. No2000/50 result is claimed.
