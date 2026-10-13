@@ -19830,3 +19830,32 @@ both model intervals ended, single BLAS thread, explicit packed routes.
 RESULT -> Provider/comparison/closing identity work now active.
 VERDICT -> No full48 numericPASS yet; continue unsupported device arithmetic
 contracts. Full objective remains active and incomplete.
+
+
+## 2026-10-13: PLE comparison admitted; paired build closes; full48 shape failure
+
+CONFIG -> Actual61 mmap/direct loaded host diagnostic, sole PLE flag.
+COMMAND -> Actual32123 PASS and root94846 independentreader PASS.
+RESULT -> Producere1ba52b4b85cb00ca764e9785c12a3ce9f47dedee97cce52f3cbdc646e71ff8a;
+public9fdf9cc610c7acf2428c49ce6f343135cf4d9af16aa3c9be66de8d7717b37f1f;
+histories/eight traces perarm/source/full4/health/typed close PASS.
+Selected first stage0 PLE waits mmap1297.674/1580.601ms ->direct0.005/0.004ms;
+warmboth~0.004ms. Unmatched invalidNoDriV4 hostcompile overlapped mmap;
+cleanperformance false, no coldcache/physicalbyte/counter claim.
+VERDICT -> Concrete existingflag lead, clean naturalABBA preparation next.
+See docs/20261013_flashnext_PLE_mmap_direct_result.md for bounded scope.
+
+CONFIG -> Paired original serving V5, fresh MAIN/verify/privateconsumer.
+COMMAND -> Actual89555 NoDri PASS144.74s; root26 rawartifact hashes verified.
+RESULT -> Receipt1fb04e328a59540480c872beac7398dc581842d68424ed6b09b54ebe7f4d0ccd;
+ELFa98070bfb9504352589a5aaf65b3ad8cc898d8ce333a2b7612662d5520841988;
+actualpairedCPU7/byte-tokenCPU11 PASS. New real runtime still required.
+VERDICT -> No source-only paired serving/persistence/API promotion.
+
+CONFIG -> Current59 full48 independent original V2.
+COMMAND -> Actual28611 terminal FAILED, freshpostCPU full4 retained.
+RESULT -> Reportaadee540edb4caa17ac546356aa593470c12a5076127b011d1548a606f534c2d;
+IndexError tuple index out of range. Original exception role/traceback not
+saved by driver, so next successor must make exact failure actionable.
+VERDICT -> No full48 numerical result; fix real dimensionality/source route
+before rerun, not arbitrary flattening or reference tolerance changes.
