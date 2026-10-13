@@ -20288,3 +20288,24 @@ RESULT -> Engineproposalf05021bc/builderrecipe197a8a2f, no frozeninputs
 changedafterlaunch. FreshSDKreceipt/modelproofpending.
 VERDICT -> Fullgoalactive; next genuinefull48OFF/ON numericalcapture and
 latencyprofiling mustuse measuredHCkernels, notignoredflags.
+
+
+## 2026-10-13: actual combined62 build closes
+
+CONFIG -> Exact61 parent plus optimized56HC/currentprofiling/explicitRSflag.
+COMMAND -> Actual9887 NoDri directincremental buildPASS93s; root8ELFhashes
+verified.
+RESULT -> SDKstrata-native62-incremental61-v1-20261013T020818Z-wcsa7gom;
+receipt613694ec6fda4b0136a090406ec5f8c40070e31d967a9af726d308bab4ca48db.
+Six currentconsumers compiled,118 authoritativeobjects reused, threearchives
+rebuilt,8freshlinks, parent/audit/ownednormalclose PASS.
+VERDICT -> Compilation/ABI evidence only. Full48OFF/ON genuineconstructor
+andcurrentownreference comparisons next; no numerical/speedpromotion.
+
+CONFIG -> P117 active-state selectedrange audit, real bothstage captures.
+COMMAND -> Source-bound typed audit e2aa15864783e4353b8ca204a1a4139bce35a73b739d8fe17807657af314c631.
+RESULT -> ActiveL0recurrent NMSE2.559958e-6/maxabs.00638592 andL0conv
+NMSE2.94827e-6/maxabs.0243225 differ; activeL1PLEhistory differs too.
+ActualQSA page4/cells120/FP16format0, notolderguessedpage128layout.
+VERDICT -> Difference includesactive numericalstate, notonlypadding orLAST
+metadata; no causaloperation or fullmathPASS established.
