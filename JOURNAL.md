@@ -20309,3 +20309,17 @@ NMSE2.94827e-6/maxabs.0243225 differ; activeL1PLEhistory differs too.
 ActualQSA page4/cells120/FP16format0, notolderguessedpage128layout.
 VERDICT -> Difference includesactive numericalstate, notonlypadding orLAST
 metadata; no causaloperation or fullmathPASS established.
+
+
+## 2026-10-13: real combined62 full48 arithmetic OFF/ON capture launches
+
+CONFIG -> Actualcombined62 wcsa7gom/receipt613694ec, pair24/24, mode0,
+HC2/1/1 fixed, fourfreshliteral[248045]/MAX1 eacharm, noPTI.
+COMMAND -> GenuineactualnativeconstructorPASS9c44814e; root116sourceplan
+pinsverified/fourtargetedCPUchecksPASS. Actual93058 pairleasedrun nowlive.
+RESULT -> Captureplan3d70628296d6f96be5315d46085a7586db4523d76dfdcb47394d112f9a410ae1;
+only STRATA_HC_EXPLICIT_SQRT_DIVIDE0/1 actualmathdelta. CorrectNUM33,
+P30all48/SFD49/head/currentPLE; omittedLPformatter repairretained.
+VERDICT -> RequireOFF904tensorbitwiseold59, then ONall48/headcomparison
+againstindependentownedV3. No numericPASS/fullmath assigned inadvance;
+identity/health/normalownedclose andindependentreader stillpending.
