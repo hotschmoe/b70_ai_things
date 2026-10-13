@@ -20509,3 +20509,23 @@ VERDICT -> QSA35 capability built, numeric runtime pending. SealedbinderV1
 has wrong provenance label; V2 changes exactly that literal, keeps all gates.
 Source-only focused3CPU checks pass; no recompile/model rerun for reader typo.
 Full objective and2000/50 targets remain incomplete.
+
+
+## 2026-10-13: useful diagnostic identity lane launches at QSA35
+
+CONFIG -> Actual QSA35 successor8f1e, sqrt1/HC2/1/1/mirror1/Direct,
+fourfreshliteral248045/MAX1/ctx4096, NUM33OFF/P30/SFD/QSA29 stage1.
+COMMAND -> Genuine constructor3af4 and realProtocol/rawarity/shellpreflight
+PASS; root46549 starts pairleased producer source29000cc6, readerb0f424f0.
+RESULT -> New actual SDK and source pins verified. Opt-in diagnostic prior
+whole4 343f6c34 authenticated with currentstat5/knownpage checks; no previous
+health/ABI or freshhash claim transfers. Model run remains live.
+VERDICT -> Pending actual numeric targets and whole-lifecycle closure.
+
+CONFIG -> Existing observed ELF10dd projectionON, sqrt0, observer flagsOFF.
+COMMAND -> Sustained source539d3c45 genuine constructorPASS0.23s, no native
+execution yet. Four serial freshGEN64: authentic54 twice, saved117 twice.
+RESULT -> Actual54 full64 baseline bound. 117 control explicitlyderived
+[savedlookahead11]+actual118 first63; not an actual117 reference.
+VERDICT -> Queue after QSA35 normalclosure; no recompile or finalqualification
+shortcut. Later-token/wholemodel/cache/speed proof remains open.
