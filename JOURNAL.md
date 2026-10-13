@@ -21864,3 +21864,18 @@ end health ok. Run dir /mnt/vm_8tb/b70/evals/abfast/runs/armA-20261013T072816Z.
 VERDICT: plumbing works and the eval is not saturated, but the 900 s cap is
 binding at parallel 4 and confounds quality with speed. The three timeout
 fails are being rerun at 2700 s; arm B runs at 2700 s (brief Amendment 2).
+
+## 2026-10-13 -- A/B S3 arm A: abfast rerun of first-pass failures (scored protocol)
+
+CONFIG: same arm A endpoint, otherwise idle. Scored protocol from brief
+Amendment 2: agent cap 2700 s, max output 32768, thinking xhigh, parallel 4.
+COMMAND: python3 evals/abfast/run_arm.py ... --arm-label armA-retry2700-out32k
+--parallel 4 --timeout-s 2700 --max-output-tokens 32768 --thinking xhigh
+--tasks zmoltcp-payload-clamp,raptorq-rfc6330-prng,bangguard-auto-recovery,moreitertools-numeric-range
+RESULT: zmoltcp-payload-clamp pass 820/820 in 558 s; moreitertools-numeric-range
+pass 594/594 in 2004 s; bangguard-auto-recovery timeout fail 13/15;
+raptorq-rfc6330-prng timeout fail 3/8. End health ok. Run dir
+/mnt/vm_8tb/b70/evals/abfast/runs/armA-retry2700-out32k-20261013T084229Z.
+VERDICT: arm A scores 17/19 under the scored protocol (15 first pass + 2 on
+rerun). Only two tasks of headroom remain, so arm B can at best reach the
++2 threshold by passing all 19. Arm A stopped after this run.
