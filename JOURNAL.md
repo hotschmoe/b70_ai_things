@@ -20223,3 +20223,26 @@ RESULT -> Actual32361 pairleased diagnosticlive, output
 B17/original-mtp53-target-p117-v1-run-v2. Manifest/ELF/sourceunchanged.
 VERDICT -> Await real bothstage statecomparison/identity/health/normalclose.
 No rewrite oforiginalrestartfailure or correctness/speed/APIpromotion.
+
+
+## 2026-10-13: first P117 boundary observations and combined62 queue
+
+CONFIG -> Actual32361 source-bound P117 saveddecode/freshprefill captures.
+COMMAND -> Root compares two smallfields.json rosters and reads16B PLEmeta.
+RESULT -> Both report90targetfields/159341548totalbytes;42targetfield
+digests differ before restart. GDN/conv/indexer/QSAk/v/pooled bothstages,
+stage0PLEhistory andstage1PLEprev. Stage0prevboth(1308,27549);
+stage1saved(248069,271) vsfresh(1472,1308). Metadata tuple geometry/cvec
+match. Restorecomparison and producerfullartifacthash closurepending.
+VERDICT -> Prefill/decode stateparity discrepancy alreadyobserved; source
+meaning and causal effect ofstage1PLEprev remainunderreview. No omitted
+snapshotfield or numericPASS inferredfromdigestdifferences alone.
+
+CONFIG -> Combined62 carries optimized56HC plus61profiling plusdefaultOFF
+explicit sqrt/divide.
+COMMAND -> Root reviewed exactbuilderrecipe197a8a2f andallsevenpins; actual
+9887 card1leasedNoDri buildqueued behind32361.
+RESULT -> Six consumerobjects scheduled/118reused,3archives/8freshlinks;
+compile/modelproofpending.
+VERDICT -> Do not lose optimizedkernels whileprofiling; freshqualification
+andcontrolledOFF/ON full48 comparisons required.

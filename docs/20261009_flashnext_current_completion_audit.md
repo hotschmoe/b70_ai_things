@@ -2268,3 +2268,29 @@ operator preserves productionMAIN and is queued for source-bound NoDri
 compilation; six targeted CPU checks pass. Actual GPU arithmetic and full48
 requalification remain required. HTTP, concurrent1/2/4/bounded6, calibrated
 profiling, matched latency, memory tradeoffs and verified shelf remain open.
+
+
+## 2026-10-13 - Optimized control closes and state diagnostic launches
+
+Actual56 bestHC2/1/1+Direct producerfb039516 and independent public95bfbffc
+PASS. All six complete512-token histories match both source61 Direct
+references; repeats, fresh full4/source/health and normal teardown pass.
+Warm repeats PP254.47-259.53tok/s, decode20.54-22.37tok/s, stdout-client
+TTFT7.94-8.09s and perrequest gapP9553.06-58.47ms. See
+docs/20261013_flashnext_optimized_HC_direct_control.md for exact matching
+configuration, all six rows and scope. This is a known optimized baseline
+recovered, not a same-source flag-only comparison or new Direct steady gain.
+
+The P117 observer compiled in143s with CPU contracts and actual26 artifact
+hashes verified, new genuine artifact/preflight and native constructor PASS.
+Paired32361 is live at original-mtp53-target-p117-v1-run-v2. It replays the
+authenticated original64 output history, saves its own new-identity compound,
+compares fresh117 prefill, then observes serialized load and target restore
+before118. No old artifact identity is bypassed; runtime comparisons remain
+pending. The earlier restart failure remains FAILED.
+
+Remaining full scope: independent fullmodel fidelity and arithmetic contracts;
+complete cache-family isolation/divergence/cancel/evict/stale/restart; actual
+HTTP hotschmoe-dd with one/two/four/bounded-six streams; calibrated host/device
+critical path, matched latency/fairness, memory hierarchy tradeoffs, verified
+shelf and reproducible launch/stop. No2000/50 or production promotion.
