@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/prepare_original_mtp53_artifact_identity_v1.py": "64b64cad4e5c55825edcba79c8a91b214c75454a5cdba7f795b8de81e61b20ae",
+    "strata/flash-next/preflight_original_mtp53_artifact_inside_v1.py": "31b166d03ad8424f6fabac55b1af25607cce96285183c64e1b377a36d906bc03",
+    "strata/flash-next/test_original_mtp53_artifact_modes_cpu_v1.py": "4db168780801cd7f4c0d6eae55516383fa15f0064abab3c2447d672c2db334c6",
+    "strata/flash-next/prepare_original_mtp53_serve_runtime_v4.py": "19289df0fb4a20cf14244185b0eb0ce5fa34d816440c1110fc699e9de076ed6a",
+    "strata/flash-next/original-mtp53-serve-runtime-source-plan-v4.json": "ca127f0f6497a946eaceb87d29a9a158e3727c2e4466dea54e4790b37d076368",
+    "strata/flash-next/original-mtp53-serve-builder-source-plan-v5.json": "fe11ad55cc1775cbc534c34e69501888439362b1bcc84b80db5cd7aa4e7af028",
+    "strata/flash-next/original-mtp53-serve-source-plan-v5.json": "c77d428b7f5100d1659f447b9d98ed16c6e73bd22dd071d7cc5342a0f2acf0d6",
+    "strata/flash-next/model-lock.json": "5f324a3c166eea2952f78248be5753e69944892a88f44a75697139636814061b"
+  },
+  "scope": "ActualV5customELF/MAIN/verify/copiedengine/nativepack/modelpublisher/tokenizer/currentPython manifest; no arbitrary artifacthex; actualNoDriAPI runtimevalidation required beforeGPU; modelwholehash staysrootboundary",
+  "native_CPP_consumes_manifest_SHA": true,
+  "publication_restart_same_original_manifest": true,
+  "HTTP_load_identity_GGUF_metadata_validation_pending": true,
+  "GPU_or_model_executed": false
+}

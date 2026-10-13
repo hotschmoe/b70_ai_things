@@ -19966,3 +19966,18 @@ toactualkernel, baseline/observed bitwise+savedMAIN agreement gates.
 VERDICT -> No compiler/GPU/originalnorm read. Export and actual isolated
 operator wait untilcleanABBA88714 timingdone. ActualMAIN RMS fields remain
 unobserved evenifisolatedoracle succeeds; fullmodelmath unqualified.
+
+
+## 2026-10-13: real artifact manifest fix prepared without disturbing ABBA
+
+CONFIG -> Compound native cache V2 requires actualV5 artifact contract.
+COMMAND -> Source-only manifest/controller handoff reviewed; root has NOT
+executed artifact hashing/NoDri runtime preflight or GPU retry yet.
+RESULT -> Manifest binds actualELF/MAIN/verify/filteredarchive/source/native
+pack/config/tokenizer/runtime receipt. Digest excludes onlyits ownenv key.
+Publication and restart useidentical original-mode manifest despiteouter
+paths. Guard remains, and actualC388 SDK58 validate_runtime preflight plus
+typed NoDri close/removal is mandatory before GPU cache qualification.
+VERDICT -> Preparation hashes1.486GB derivedpack/libraries (no wholeGGUF),
+so defer it untilallcleanABBA88714 timingarmsclose. No inventedmanifest,
+cachePASStranfer or APIproof; actualfullHTTP identity load remainsrequired.
