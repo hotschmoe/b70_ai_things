@@ -111,6 +111,7 @@ HARBOR_ARGS=(
   --ak "prompt_template_path=$PROMPT_TEMPLATE_PATH"
   --allow-agent-host "$AGENT_HOST"
   --agent-timeout-multiplier "$AGENT_TIMEOUT_MULT"
+  --environment-build-timeout-multiplier "${BUILD_TIMEOUT_MULT:-4}"   # image builds are slow on a busy disk; not an agent setting
   -n "$N_CONCURRENT" -k 1
   -o "$JOBS_ROOT" --job-name "$JOB_NAME" --yes
 )

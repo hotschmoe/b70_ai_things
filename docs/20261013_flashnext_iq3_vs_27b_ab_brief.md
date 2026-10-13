@@ -133,3 +133,14 @@ S4 Only if S3 is ambiguous: extend to the full local-70 lock.
   1.40 M uncached) and 0.216 M completion tokens in 4134 s. Uncached prefill
   of tool output is the larger share of server time, so prefix reuse and
   prefill speed on arm B matter as much as decode speed.
+- Output cap: with thinking on and a 16384 max-output cap, one reasoning
+  turn can use the whole cap and Pi ends the run (stop reason "length").
+  That is what failed moreitertools-numeric-range on arm A, and the
+  Terminal-Bench calibration saw the same thing. The scored protocol is
+  therefore 2700 s and 32768 max output tokens: arm A's four first-pass
+  failures are rerun under it, arm B runs under it throughout.
+- Terminal-Bench calibration on arm A (2 tasks outside the 24): reward 0 on
+  both, best partial 23 of 27 verifier tests in 50 min. Plumbing and
+  SWE-bench via Harbor + Pi 1.2.0 work; runners and report are in
+  evals/ab and evals/terminalbench/ab_report.py. Estimated 12-24 h per arm
+  for the 24 tasks, so it stays an optional overnight confirmation.
