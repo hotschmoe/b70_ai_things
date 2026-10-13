@@ -7520,6 +7520,159 @@ VERDICT -> READY for LAN quality testing at
 not a speed, stability, or shelf claim. Post-health for the current lifecycle
 remains pending until its tracked teardown.
 
+### 2026-09-05a - R187 MTP 3/5/7 c1-c4 matrix at 150K, p2048/tg512
+
+CONFIG -> Official Qwen3.8-27B FP8, R156 image, R187 whole-graph XPU
+graph, TP2, cache off, max_model_len=150016, max_num_seqs=4,
+max_num_batched_tokens=16384, greedy ignore_eos completions of ~2090
+prompt tokens and 512 output tokens. Arms: MTP3, MTP5, MTP7. One batch
+per concurrency 1/2/4. Same image/model as the prior MTP5 daily serve.
+
+COMMAND -> Drain the idle 237K MTP5 daily lifecycle (post-health passed
+after TERM). Run `vllm/fp8/run_qwen38_fp8_r187_mtp_conc_150k_matrix.sh`
+under `bin/gpu-run`. Result dir
+`/mnt/vm_8tb/b70/results/qwen38_fp8_steve_mtp_conc_150k_r187/20260905T040359Z`.
+
+RESULT -> All three arms ready, probe_rc 0, MATRIX READY substring in
+each 8-token canary (extra tokens because ignore_eos). No matching Xe
+fault. Post-card and compiled P2P-off collective health passed. KV
+capacity at 150K was 351332 / 340739 / 330766 tokens (2.34x / 2.27x /
+2.20x), so four full 150K requests still do not fit. Decode:
+
+  arm   c1 agg   c2 agg (med/stream)   c4 agg (med/stream)   c1 TTFT
+  MTP3  70.47    88.34 (52.24)         236.10 (61.51)        1.57 s
+  MTP5  76.10   119.47 (62.99)         157.64 (58.27)        1.60 s
+  MTP7  74.88   109.11 (61.82)         207.35 (55.06)        1.60 s
+
+MTP5 is the c1 winner. MTP3 is the c4 aggregate winner. MTP5 c4
+aggregate is the weakest of the three. Single-batch, not a two-ladder
+identity claim.
+
+VERDICT -> GO as a local 150K envelope speed screen. Prefer MTP5 for
+one stream, MTP3 for c=4. Do not claim 4x 150K occupancy. Do not
+shelf-promote. Quality review remains
+`docs/20260905_qwen38_fp8_vs_int4_quality_review.md`.
+
+### 2026-09-05b - MTP3 cache-on 200K daily serve is live for overnight c=4
+
+CONFIG -> Same R187 official-FP8 image and TP2 XPU-graph path as the
+MTP5 daily candidate. Change to MTP3, max_model_len=200000, prefix
+cache on (align), max_num_seqs=4, batched tokens 32768, capture sizes
+1..16, qwen3_coder / qwen3 parsers, thinking xhigh default. Frontdoor
+0.0.0.0:18080 with the existing daily-driver key; vLLM loopback
+127.0.0.1:18124. Served ID
+`qwen3.8-27b-FP8-official-W8A16-mtp3-r187-xpugraph-cacheon-ctx200000-daily`.
+
+COMMAND -> `tmux new-session -d -s qwen38_mtp3_daily` running
+`vllm/fp8/serve_qwen38_fp8_steve_r187_mtp3_daily.sh start` under
+`bin/gpu-run`. Pre-card and compiled P2P-off collective health, then
+LAN unauth/auth /v1/models and an exact chat smoke.
+
+RESULT -> Both leases held. Health 200, unauthenticated /v1/models 401,
+authenticated identity exact, chat returned exactly `MTP3 DAILY READY`.
+KV 292,968 tokens (1.46x at 200,000). Graph capture 3 s / 0.12 GiB.
+Prefix cache enabled. Post-health pending teardown.
+
+VERDICT -> READY for overnight c=4 long runs at
+`http://192.168.10.5:18080/v1`. Four simultaneous full 200K chats will
+not fit; the engine will queue or reclaim under KV pressure, which is
+the intended observation. Not a speed or shelf claim. Stop through the
+tracked script / tmux session so teardown health runs.
+
+### 2026-09-07a - Daily-driver boot audit and punctuation-corruption review
+
+CONFIG -> Unchanged live R187 FP8 MTP3 TP2, cache-on 200K/c4 lifecycle
+20260905T051117Z. Dirty worktree preserved. No GPU inference or restart.
+
+COMMAND -> Read live identity, logs, kernel journal, Prometheus history,
+installed cache-manager source, systemd units, and upstream reports. Fetch
+Steve origin/main without changing the serving checkout. Prepare the current
+launcher as hotschmoe-dd.service with readiness/teardown helpers and a
+boot-only installer; validate shell syntax and systemd unit parsing.
+
+RESULT -> Installed b70-daily-driver unit is enabled but failed and points
+to retired Qwen3.6. New unit files validate; root installation is blocked by
+interactive sudo authentication. Live MTP3 remains untouched. All 412
+preemptions occurred September 5; none afterward in the inspected history.
+Nine unsupported reasoning-effort template errors and eight stale-model-ID
+errors exist; response text is not logged. Upstream vLLM issue 53912 matches
+intermittent !!!! with MTP plus prefix caching. The installed Mamba finder
+ignores drop_eagle_block, matching the reported suspect pattern; PR 48375
+is unmerged. Steve FP8 package changes through 8121d831b mainly parameterize
+INT4 experiments; no demonstrated repetition fix found there.
+
+VERDICT -> Leading hypothesis is cached recurrent-state corruption, not a
+proved local cause. Prefer a matched cache-off MTP3 experiment before assuming
+MTP1 fixes it. No runtime patch, parameter change, preservation archive, or
+offline rebuild performed. Full findings, installer command, remaining live
+validation, and exact source/image/release preservation scope are in
+docs/20260907_daily_driver_service_repetition_and_source_preservation.md.
+
+## Stable client model alias (2026-09-07 22:10 UTC)
+
+CONFIG -> User explicitly requests the model ID `hotschmoe-dd` to survive
+physical model changes across Pi/OMP installations. This supersedes the
+repository's descriptive served-ID convention for this client endpoint;
+the launcher's config still records the pinned model/source/image and shape.
+Installed `hotschmoe-dd.service` is enabled and directly executes the editable
+MTP3 launcher, with only `NAME=hotschmoe-dd` in its environment.
+
+COMMAND -> Change the launcher SERVED default and readiness helper default to
+`hotschmoe-dd`; make readiness compare against SERVED; add an explicit
+`Environment=SERVED=hotschmoe-dd` to the source systemd unit. Update installer
+instructions to cover an already-running systemd service. Run bash syntax,
+launcher --print-config, systemd-analyze verify, authenticated public models
+and health requests, and a noninteractive systemctl restart attempt.
+
+RESULT -> Static checks passed (systemd reported unrelated installed-unit
+warnings). Public /health and /v1/models return HTTP 200. The running process
+still advertises the previous long Qwen ID. Both sudo and systemctl require
+interactive authentication, so the restart did not occur. The installed unit
+has no SERVED override and will use the edited default on its next boot/start.
+No inference, GPU workload, runtime change, or teardown was performed.
+
+VERDICT -> Boot launcher and readiness are prepared for the stable alias;
+live activation and live alias verification await the following privileged
+commands. The installer backs up existing units and keeps serving running;
+restart uses the normal leased launcher and its health/teardown lifecycle.
+
+```bash
+sudo bash /mnt/vm_8tb/github/b70_ai_things/vllm/fp8/install-hotschmoe-dd-systemd.sh
+sudo systemctl restart hotschmoe-dd.service
+```
+
+After readiness completes, clients use base URL `http://192.168.10.5:18080/v1`
+and model ID `hotschmoe-dd`, with the existing API key. Future backend swaps
+must retain `SERVED=hotschmoe-dd` in the unit and pass it as the backend served
+model name. A changing physical model may still require client capability or
+context-limit updates. No fresh stability/performance qualification is claimed.
+
+## Stable model alias live verification (2026-09-07 22:18 UTC)
+
+CONFIG -> Same pinned Qwen3.8 FP8 R187 MTP3 service, stable served ID
+`hotschmoe-dd`. A new lifecycle was observed starting at 22:11:58 UTC under
+leased systemd MainPID 17224. Evidence root:
+`/mnt/vm_8tb/b70/results/qwen38_fp8_steve_mtp3_daily_r187/20260907T221158Z/`.
+
+COMMAND -> Read systemd state and lifecycle logs while startup completed;
+query backend models/OpenAPI and authenticated public /health and /v1/models.
+No further restart or inference request was issued for this verification.
+
+RESULT -> Startup pre-card/compiled collective health passed; weight integrity
+verification completed, followed by model initialization and kernel warmup.
+Service entered active/running at 22:17:23 UTC and remains enabled for boot.
+Both public endpoints returned HTTP 200 and public/backend model lists
+advertise exactly `hotschmoe-dd`. The installed unit environment still contains
+only NAME, so its referenced launcher uses the updated SERVED default; the
+source unit additionally pins SERVED explicitly for future installations.
+Live OpenAPI includes `cache_salt` in both ChatCompletionRequest and
+CompletionRequest: nullable string, minimum length 1, documented prefix-cache
+salting. This verifies schema support, not end-to-end cache recovery behavior.
+
+VERDICT -> Stable client model ID is now live and persists through the current
+boot launcher. Pi/OMP clients can use `http://192.168.10.5:18080/v1`, model
+`hotschmoe-dd`, and the existing API key. No inference/coherence, performance,
+or repetition-recovery qualification is claimed by these read-only checks.
 ## 2026-09-08 -- Deferred R187 KV offload and calibrated FP8 research
 
 CONFIG -> User requests research/plan only while hotschmoe-dd is in use.
@@ -8475,6 +8628,23 @@ leased crash recovery/health, then qualify an explicit FP16-conv S0d arm.
 Full evidence: vllm/cache800k/20260909_campaign.md and raw
 /mnt/vm_8tb/b70/results/cache800k_20260909/s0c-cpu-diagnosis-1758/.
 
+### 2026-09-09 - Begin authorized cache800K maintenance campaign
+
+CONFIG -> User explicitly authorizes stopping the in-use vLLM endpoint and
+starting the SGLang/vLLM/FP8-KV/RAM campaign. R276 INT4 MTP3 FP16 KV,
+prefix on, TP2, no RAM tier; zero running or waiting requests at drain.
+COMMAND -> Preserve systemd/config/model identity; use the daily lifecycle
+STOP interface and wait for owned cleanup. Run CPU preparation tests and
+start a fresh reference through bin/gpu-run.
+RESULT -> Production stopped normally; lifecycle exit0; both card probes
+and compiled two-rank post-health pass. Fourteen CPU tests pass after
+extending calibration to explicit INT4 identity and target-only coverage.
+Reference pre-health passes and serving startup is in progress. No driver
+or native runtime change; existing user worktree edits preserved.
+VERDICT -> Campaign active, not qualified or complete. Raw root
+/mnt/vm_8tb/b70/results/cache800k_20260909/. New evidence belongs in
+vllm/cache800k/20260909_campaign.md and the relevant SGLang campaign root.
+
 ## 2026-09-09 18:11 UTC review: S0c lifecycle repair
 
 CONFIG -> No campaign coordinator, server process or serving container alive.
@@ -8879,6 +9049,864 @@ named leased coordinator with bounded recovery and health. The topology
 override is a candidate, not a diagnosed cause. No GPU attempt this review.
 SGLang long context, four-active-200K FP8, prefix/MTP/graphs and RAM reload
 remain pending. Timer enabled; production offline; no input required.
+
+## 2026-09-10 01:32 UTC - live Pi bang investigation
+
+CONFIG -> Live R276 INT4/calibrated FP8 KV, MTP3, graphs/prefix on; user
+reports frequent Pi bang-guard trips from LAN 192.168.10.56 during last hour.
+COMMAND -> Snapshot identity, metrics, logs, installed cache source and
+scale-load records; compare prior concurrent-history findings and guard.
+RESULT -> Zero lifetime preemptions; last-hour sampled max KV19.8 percent,
+max running3, no waiting. Both ranks load all17 exact calibrated layers.
+Mamba lookup still ignores drop_eagle_block in both lookup paths. Earlier
+FP16-KV MTP3 already had4/132 raw bangs; today's rate cannot be counted
+from server logs, which omit generated text. LAN SSH public-key denied;
+requested transcript/access details.
+VERDICT -> Concurrency/MTP/recurrent prefix state is the strongest existing
+lead; FP8 contribution, NaNs and today's initiating cause are unconfirmed.
+No live serving change, restart or inference. Details and raw evidence:
+vllm/int4/20260910_live_bang_investigation.md.
+
+CONFIG -> Same image, separate CPU-only container without GPU mounts,
+network disabled,2 CPUs/2 GiB and60-second bound.
+COMMAND -> test_mamba_eagle_drop.py --expect-bug.
+RESULT -> Exit0, six cases reproduce expected aligned-boundary behavior;
+full attention drops80 to64 while Mamba retains80.
+VERDICT -> CPU defect reconfirmed, not linked to a captured live bang yet.
+
+## 2026-09-10 - Pi diagnostic bundle resolves incident counts
+
+CONFIG -> Three affected Pi sessions/RPC logs, manifest and failure timeline
+from pi-corruption-20260910T022712Z.tar.gz; temperature0.7, thinking enabled,
+MTP3/calibrated FP8-KV live endpoint. World paused by other team.
+COMMAND -> Safe data-only extraction; audit_pi_corruption_bundle.py matches
+session content, RPC trip notifications and declared timeline; correlate
+server samples. Preserve bundle hash and derived audit outside Git.
+RESULT ->41 bangs/317 non-429 attempt records (12.93 percent in selected
+sessions);33 thinking,5 tool arguments,3 text. All36 queued guard recoveries
+initially get local429, starting0-3ms after aborted message persistence.
+First12 bangs precede second agent's birth; nearby server samples show0/1
+running.16 bangs total have one listed world agent alive. Actual forwarded
+salts and failed-request final usage are absent; responseIds ARE in sessions.
+VERDICT -> Generation corruption plus a separate gateway recovery/cleanup
+race. Concurrent world agents are not required; MTP/cache boundary and FP8
+remain hypotheses, not a causal diagnosis. No inference/restart/live patch.
+Full evidence and gateway handoff steps:
+vllm/int4/20260910_live_bang_investigation.md.
+
+## 2026-09-10 - authorized bang isolation campaign begins
+
+CONFIG -> User authorizes downtime, kernel/op/image work, requests feature
+parity and flags TP1 versus TP2 as a hypothesis.
+COMMAND -> Normal leased shutdown; SGLang C1 topology control; TP1 exact
+feature startup; source review of Steve and Sergio; CPU replay preparation.
+RESULT -> Production exit0 with per-card/compiled collective post-health.
+SGLang C1 still stalls asymmetrically on20MiB subgroup; timeout, rebind and
+post-health complete. TP1 200K refuses capacity (needs7.26GiB, available4.25),
+not corruption. Matched100K TP plans prepared; TP1 100K launched after health.
+Actual-source GDN classification8 stock/8 candidate CPU cases pass; lifecycle
+single-card containment tests7/7. Reconstructed Pi payload limitations retained.
+VERDICT -> Investigation active, no repair or feature-parity promotion.
+Details: vllm/int4/20260910_bang_isolation_campaign.md.
+
+## 2026-09-10 - TP1 reconstruction fails broader coherence
+
+CONFIG -> Exact R276, INT4, MTP3/FP8 KV/prefix/graphs on,100K context,TP1/P2P0.
+COMMAND -> Nine reconstructed Pi history requests; offline structure and
+repetition review; normal leased teardown and card0 post-health.
+RESULT -> Zero32-bang trips but3/9 visibly degenerate outputs (XML,404 dash
+fragments,225 semicolon fragments); last uses8192 output tokens. Exit0,
+post-health pass. Original bang-only pass markers preserved with caveat.
+VERDICT -> TP1 is not corruption-free on this control. Specific bang/TP2
+causality still unproved. Matched TP2 is running; no endpoint promotion.
+
+## 2026-09-10 - TP2 matched reconstruction and MTP ablation
+
+CONFIG -> R276 TP2/P2P0, same100K FP8 KV/MTP3/prefix/graph nine-request replay.
+COMMAND -> Run leased server, audit responses, normal teardown/post-health.
+RESULT ->0 bangs/9; agent1 avoids TP1's loops, agent2 contaminated history
+still ends in malformed prose. Per-card and compiled collective post-health
+pass; lifecycle0. MTP0 arm launched, keeping FP8 KV/prefix/graphs.
+VERDICT -> No simple TP2-only explanation. Neither zero bangs nor the
+heuristic zero-flags result establishes semantic coherence or stability.
+
+## 2026-09-10 - local GDN-shaped bang reproduction without MTP
+
+CONFIG -> R276 TP2/P2P0,MTP0,FP8 KV/prefix/graphs,100K; Steve24-case tiny
+screen after9 Pi reconstructed requests.
+COMMAND -> Leased serial/c4 tiny prompts with64-token cap; normal teardown.
+RESULT ->5/6 one-token prompts return64 bang tokens; first also garbled.
+18 longer controls avoid gate failure. Pi9 has no bangs/heuristic flags.
+Early-history job skipped after screen failure. Both cards and compiled
+collective pass post-health; lifecycle0. Paired TP1 stock/phase candidate
+screens launched on separate card leases after full release.
+VERDICT -> GDN-shaped local bang mechanism reproduced without MTP; causal
+patch comparison pending, and original long-Pi trigger still unproved.
+
+## 2026-09-10 - GDN phase fix confirmed by two-card TP1 crossover
+
+CONFIG -> R276stock versus phase-onlycandidate0328900c,TP1/FP16KV/eager/
+MTP0/prefixoff/8K/c4/batch512. Firstpair stock0/patched1, then swap cards.
+COMMAND -> Same24-case tiny screen, full token-array comparisons, independent
+single-card leases, verified teardown and selected-card post-health.
+RESULT -> Stock2bangs/24 on EACH card; patched0/24 on EACH card. All24patched
+arrays match acrosscards; all22 nonfailed stock arrays match patched percard.
+Allfour lifecycle exits0 and selected-card post-health complete.
+VERDICT -> Local bang mechanism fixed by GDN phase handling, independent of
+TP2/FP8/MTP/cache/graph requirements. Original Pi trigger/fullfeature safety
+still need qualification and request correlation. No endpoint promoted.
+
+2026-09-10 04:17UTC CONFIG -> Current official vLLM0.29 phase-only TP1 screen. COMMAND ->24-case pinned tiny-prefill probe plus strict card0 health. RESULT -> stock six singleton loops, patched24/24 pass and match both R276 patched arrays; normal teardown and strict health pass. VERDICT -> updating alone insufficient, phase guard fixes bounded mechanism; originalPi trigger/fullfeature qualification pending. See vllm/int4/20260910_runtime_freshness.md.
+
+2026-09-10 04:28UTC CONFIG -> R276 GDN-phase TP1 fullfeatures100K. COMMAND -> frozen nine Pi replay + broadaudit. RESULT ->0bangs,2agent2qualityflags in pre-corruptedhistory; agent1longrepeats noflags; teardown0+strictcard0healthpass. VERDICT -> bounded improvement, notwholePi causality/stability; TP2 next.
+
+2026-09-10 04:52UTC CONFIG -> PhaseR276 TP2 fullfeature100K and separate FP8numericoracle. COMMAND -> four-stage replay/tiny/clean/concurrent suite; exactwrite/read q1/q4 oracle. RESULT -> allworkloads pass, lifecycles0, strictpercard+compiledpairposthealthpass. VERDICT -> boundedphasefixqualification; historicalcalibrationidentity unresolved, freshverifiedcalibrationstarted; productionstilloffline.
+
+## 2026-09-10 Fresh KV calibration completed
+
+CONFIG -> R276 phase-only0328900c, TP2/P2P0, MTP3, FP16 KV, eager/prefixoff, 100K/c4/batch32768; current complete 17-file publisher-checked manifest.
+COMMAND -> fresh-calibration-plan/record.plan.json via leased run_arm; verify_and_freeze.py verify-pre before launch and freeze after exit0.
+RESULT -> 262 requests completed: 256 short, 32/64/80/96K prompts, two4096-token continuations. Exact corpus IDs/prompt hashes, no errors/cancellations/extreme repetition, pre/post file content and stat identity agree. All17 target/MTP layers observed on both ranks. Normal teardown, strict per-card and compiled P2P0 post-health pass. New artifact SHA256 be02d915a8ac188341870cc9f642d77665b744235e142330a7a37b8f4c711062; old artifact unchanged.
+VERDICT -> Fresh calibration provenance repaired for this100K experiment; graph/prefix-on FP16-versus-FP8 serving qualification remains pending. Raw: /mnt/vm_8tb/b70/results/bang_isolation_20260910/fresh-calibration-plan/. Shared short responses247/256 exact;25/34 K/V scales exact, differences do not establish historical loaded bytes.
+
+## 2026-09-10 Current SGLang main first FP8 oracle
+
+CONFIG -> Rebuilt immutable bdc51c5f, paired lease, P2P0, synthetic67-token MHA FP8 cache, distinct K/V scales and permuted slots; physical card0.
+COMMAND -> sglang/refresh/20260910_main/oracle_campaign.py --run under bin/gpu-run.
+RESULT -> Strict per-card and compiled pair preflight pass. Card0 oracle exits1 at K exact-byte comparison against CPU FP16-intermediate reference, before attention checks. Card1 skipped by failure gate. Owned containers removed; strict per-card and compiled pair post-health pass.
+VERDICT -> Preserve failure; investigate division/cast/reference semantics before any acceptance change. No FP8 qualification. Raw: /mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-main-fp8-oracle-campaign/. FP16-only current-main baseline then launched on card1 with its own lease, leaving card0 for isolated diagnostics.
+
+## 2026-09-10 Current SGLang main text baseline passes
+
+CONFIG -> bdc51c5f, card1, GPTQ INT4/FP16, Triton attention/GDN, 8K/c4/chunk512, eager/MTP0/prefixoff, fresh cache, skip-server-warmup.
+COMMAND -> tp1_viability.py --card1 with tp1-text-only-retry-plan/job.json, real26-case HTTP diagnostic timeout300.
+RESULT -> 26/26 pass, four mixed batches of4, job0/lifecycle0 and strictcard1posthealthPASS. Previous arm failed automatic image warmup via absent native vision FMHA; blockedclient was explicitly stopped after verifiedserverfailure, originalrun preserved with life1 and strictposthealthPASS.
+VERDICT -> Current source text-only baseline viable; no vision or graph/MTP/FP8/prefix qualification. First coldcanary112s includescompilation, not a matchedspeedresult. Raw: /mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-main-tp1-fp16-triton-card1-skip-warmup/.
+
+CONFIG -> Sameimage card0 FP8 cache67tokens, distinctscales. COMMAND -> byte diagnostic then explicitXPUscalarpromotion reference oracle. RESULT -> All156Kbytedifferences explained by FP16-rounded divisor, FP8cast/scatter identical for identicalinputs; power2storeexact. Revisedwritegatepasses; attentionassertfails48/6144 elements, maxabs0.03187394. Both selected-cardposthealthpass. VERDICT -> Separatecomputequantizationlead: groupedQandP are casttoFP8. No attentionqualification or tolerance relaxation. Raw: sglang-fp8-byte-diagnostic/ and sglang-fp8-scalar-reference/ under sameinvestigationroot.
+
+## 2026-09-10 Phase guard is not a complete remedy: concurrent cached answer bangs
+
+CONFIG -> R276phase03289 TP2/P2P0, MTP3, FP16KV, prefixON/FULLdecode,100K/c4/batch32768.
+COMMAND -> fresh-calibration-plan/qualify-auto.plan.json four-stage suite underpairedlease.
+RESULT -> Pi9/tiny24/clean-history3 pass; concurrent tools25/26 pass with one512-bang answer from its first emittedtoken. Session0 turn0 answer should730; prompt2360,cached832. Exacttool andanswerrequests match earlierpassingphaseFP8 aftergeneratedtoolIDnormalization; that armcached0. Workloadstagefails, servernormalteardown0, strictper-card+compiledpairposthealthPASS. Raw outcome-quality-review.json preservesIDs/timestamps/SSE/inputhashes.
+VERDICT -> GDNphaseguard fixeslocalinitialization butnotallfullfeaturebangs. ActualFP16block832 vsFP8block1600 changesEaglecachehit/drop:2blocks-minus1 leaves832 vs1-minus1 leaves0. Storage dtype isconfoundedwithactualprefixreuse. NextparallelTP1prefixON/OFFcontrols useidenticalfixture andFP16MTP3graphsettings; no rootcauseclaimyet.
+
+## 2026-09-10 TP1 prefix comparison reproduces concurrent bang
+
+CONFIG -> Phase-only R276, FP16 KV, MTP3, FULL decode graphs, c4, context/batch8192. Card0 prefix on versus card1 prefix off, fresh caches, same concurrent tool fixture; no prior Pi warmup.
+COMMAND -> Parallel per-card run_arm plans under tp1-fp16-prefix-controls/.
+RESULT -> Prefix on passes26/27 completed checks; session2 turn1 tool selection emits512 bangs from its first output. Prompt2388, cached832. Prefix off passes32/32; identical normalized counterpart returns lookup_stock(part-2-1),31 tokens,cached0. Both lifecycle exit0 and strict selected-card post-health pass. Both requested teardowns force-kill a remaining engine; cache-off logs EngineDead only after shutdown begins, with no pre-shutdown serving error.
+VERDICT -> TP2 is not required for this full-feature concurrent defect. Prefix reuse is a strong lead; card crossover launched before attributing the difference solely to cache policy. Raw initial-pair-outcome-review.json preserves request/SSE identities and lifecycle ordering.
+
+## 2026-09-10 Prefix crossover confirms setting-dependent concurrent failure
+
+CONFIG -> Same matched TP1 FP16/MTP3/FULL/c4 fixture, swapping prefix ON to card1 and OFF to card0.
+COMMAND -> Fresh crossover plans under tp1-fp16-prefix-controls/.
+RESULT -> ON again fails1/27; OFF passes32/32. OFF request/choice arrays match across cards after generated tool-call ID normalization. ON failure moves from session2 to session0, both turn1 tool selection,2388 prompt/832 cached tokens,512 bangs. Both lifecycle exit0 and strict selected-card post-health pass.
+VERDICT -> Failure follows cache setting in this bounded fixture, not physical card or TP2. Actual cache/state/MTP root cause remains under investigation. MRV1 candidate7b107d passes separate strict per-card and compiled pair preflight; MTP0 prefixON/card0 and candidate MTP3 prefixON/card1 then launched, neither yet qualified.
+
+## 2026-09-10 FP8 actual-cache accepted-count comparison
+
+CONFIG -> Phase-only versus phase plus MRV1 accepted-count fix, TP1/MTP3,
+FULL decode graphs, prefix on, fresh calibrated FP8 KV, context/batch8192,
+four concurrent sessions, records360. COMMAND ->32-check streamed tool fixture
+and per-session positive-cache gate, first pair on cards0 and1 respectively.
+RESULT -> Phase-only passes26/27 completed checks and fails session2 turn1
+TOOL with512 bangs, prompt4368/cached1600. The fixed build passes32/32 and
+returns lookup_stock(part-2-1) for the identical normalized failed payload,
+with the same1600-token cache hit. Every session has positive reuse in BOTH
+arms. Both lifecycles exit0 and strict selected-card post-health passes; both
+require force-killing a remaining EngineCore after requested shutdown.
+VERDICT -> The earlier no-hit FP8 pass was insufficient. This bounded result
+supports accepted-count ordering as a second corruption mechanism with actual
+FP8 reuse. A card crossover is running before attributing the split solely to
+the patch. Raw: tp1-fp8-reuse-controls/initial-pair-outcome-review.json.
+
+
+## 2026-09-10 repaired TP2 strict replay gate failure
+
+CONFIG ->7b phase/MRV1, TP2/P2P0, FP8be02, MTP3/graph/prefix100K, startup
+hosttrace, internalshutdown30. COMMAND ->mrv1-tp2-fp8-qualification/plan.json.
+RESULT ->9/9 no bang/error, but agent2target0/1 malformed secondtoolarguments
+with gibberishsuffix; strictgate1 stops furtherjobs. Matched138AR/3gather
+profile boundaries perrank, gracefulteardown andstrictpercard/compiledpair
+posthealthPASS. VERDICT -> Not a passedqualification; contaminatedhistory
+is a confounder, not provenexplanation. Preservefailedgate and prepare
+separatecleanworkload qualification. No productionpromotion.
+
+## 2026-09-10 SGLang FP8 numeric read-policy comparison
+
+CONFIG ->Currentmainbdc/card0 versus loader+readpolicy14ee/card1, identical
+frozenfixture/helper, exactsourceperimage, FP8cache, no modelweights.
+COMMAND ->14ee pairpreflight then parallelselectedleases allnineoracles.
+RESULT ->Old9/9FAIL; patched9/9PASS, zero mismatchedelements; worstmaxabs
+0.137542 versus0.000921488. Exactbytes/untouchedslotsPASS; strictpairpreflight
+andselectedpre/posthealthPASS, allownedcleanupverified. VERDICT ->Narrow
+actualTritonFP8readpolicyfixsupported; notfullmodelorfullfeaturequalification.
+No cardcrossover; sourcepredictionmatchesresults.
+
+## 2026-09-10 user-directed test pause and200K day trial
+
+CONFIG -> User asks pause testing, servepatchedvLLMforday, resume nextdowntime;
+userexplicitlychooses200K. COMMAND -> SIGTERM onlyrun_arm coordinator todrain
+inflightjob, normalSTOP/teardown/strictposthealth; prepareseparate200Ktrial
+wrapper/dropin. RESULT -> Beforepause128/128concurrentchecks+tiny24+early3
+pass; remainingqualificationunfinished. VERDICT -> User-authorizeddaytrial,
+notcompleted200Kqualification; nofurtherresearchGPUruns. Startupverification
+andnormalservicehealthremainrequired.
+
+## 2026-09-10 07:32 UTC authorized200K endpoint live
+
+CONFIG ->7bphase+MRV1/freshbe02, TP2/P2P0/MTP3/FULLdecode/prefixFP8,200K,
+hotschmoe-ddfirst, existingauth18080/loopback18124. COMMAND ->Userinstalled
+daytrialrootdropinandreloaded/startedservice; startupstricthealth/34scales/
+tiny24; oneauthenticatedstreamingsmoke. RESULT ->active/running, modelID
+firsthotschmoe-dd, max_model_len200000, unauth401, streamed42/stop; tiny24
+andstrictbothcard/compiledpairprehealthPASS. Rawqwen38_mrv1fix_day_trial/
+20260910T072531Z. VERDICT ->LIVEuser-authorizeddaytrial, notfullqualification.
+Researchpauseduntildowntime; no furtherexperimentalGPUlaunches.
+
+## 2026-09-10 campaign handoff before overnight pivot
+
+CONFIG -> User requested remaining campaign items be recorded for another
+session; the200K daytrial remainslive. COMMAND -> Read existingplans/results
+andwrite docs/20260910_bang_campaign_resume.md; linkfromcuratedinvestigation.
+RESULT -> Standalonebacklog records128strictchecks versus32drained/unreviewed,
+missingseed44, failedPi diagnostic, launchcommands/prerequisites, parallelcard
+allocation, SGsampling/TP2gaps, clientrace, guarddraft andlive-serviceboundary.
+VERDICT -> Campaignresumablewithoutreconstructingchat; noGPUtests, service
+changes, ornewovernightinvestigationsstarted.
+
+
+## 2026-09-10: new citizen Pi corruption on patched day trial
+
+CONFIG -> Read-only current-world-5 capture from citizen-pi-sessions-20260910T172335Z.tar.gz; SHA256 e1848e97c91533d2224a0903ba3e419bc6b1216413e7f7a293716be7452b3578. Running hotschmoe-dd image7b107d0e, TP2/P2P0 MTP3 FULL prefix FP8 freshbe02 200K unchanged.
+
+COMMAND -> Safe extraction and 136 supplied hash checks; independent session/RPC/gateway audits; actual live source/scale verification and timestamped server-log correlation. Preserve five pre-failure case manifests and portable CPU audit scripts. No generated tool commands executed.
+
+RESULT -> All supplied hashes match. Current1256 Pi attempts include188 generated32-bang aborts,206 per-agent429 errors and19 incomplete streams;36 additional non-bang strict repetition flags, plus shorter garbling. Earliest clear garble07:44:11 UTC has9544 prompt/6400 cached tokens; prior distinctive garble absent from history. Both repairs actually loaded; no preemptions/engine errors, max logged KV27.6%. Gateway has no overlapping citizen request at earliest garble, but backend reports2 running requests within that interval, so not proved server-isolated. All188 bangs join disconnects; none has same-unit429 within+/-1s, unlike original capture. Exact wire requests/settings absent.
+
+VERDICT -> Controlled fixes remain supported but overall corruption repair is incomplete. New failures cannot be dismissed as original Pi bang history, stale deployment or near200K context. Earliest pre-degeneration case plus cancellation/cache reuse and MTP/graph/precision controls take priority at directed downtime; no shelf qualification. Full findings in docs/20260910_pi_bang_recurrence.md; raw evidence /mnt/vm_8tb/b70/results/bang_recurrence_20260910T172335Z. Endpoint remains serving; original dirty files preserved and this mixed JOURNAL remains unstaged.
+
+
+## 2026-09-10: authorized downtime, direct MTP boundary reproduction
+
+CONFIG -> User authorized client pause/endpoint shutdown. Stopped daytrial via owned helper: parentexit0, inactive/dead, strictbothcard andcompiledpairhealthPASS. New matched7b/freshbe02 FP8/prefixFULL100K TP1 MTP3card0/MTP0card1, allGPUworkleased.
+
+COMMAND -> Frozen reconstructedPi andexactarraylength jobs; newamplebudgetcorpus afterinitialcaplimitations; exactCPUtokenizer paddingmatrix. No Pi/gateway in directinference path. NativePREcopyoracle separately selectedcard0 aftermodelteardown.
+
+RESULT -> BothPi reconstructions broadlycoherent butprompt7855vsoriginal9544; noexactreplayclaim. MTP3array256garblesat769outputtokens, absolute4800; MTP0 passeswithamplebudget. Eightpaddingcold/reusecases allbangMTP3 at4800/4801 versus8/8exactMTP0pass. MTP3cold512passesbutreusebangs near6400. Bothinitialserversnormalteardown0/strictselectedposthealthPASS. PREcopyoracle failedbeforekernel onpointer-to-int64 overflow; pre/posthealthPASS. Newallocator-matchedadapterprepared; nofakekernelpass.
+
+VERDICT -> Strong MTP cache-boundary localization, source defect notyetproven; nextMTP3card1crossover andMTP3card0prefixOFF isolatecard/cachepath. Exactreports/raw under docs/20260910_pi_recurrence_testing.md and /mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910. Endpointremainsdownforauthorizedtesting. Preservealloldfailedcorpora andoriginaldirtywork.
+
+
+## 2026-09-10: native GDN convolution contract mismatch
+
+CONFIG -> Same repaired 7b image, TP1, MTP3, FP8 KV, FULL graph. Compare
+prefixOFF on card0 against prefixON on card1; keep the earlier independent
+MTP0 results. Numerical probes use the exact installed native library,
+SHA256 271db0d4882124e21ac6a4d080bfeab303fbb08b9ec10e11f21d10fb0723998f.
+
+COMMAND -> Run the focused array256 cold/repeated pair on both controls;
+then the eight-request padding boundary matrix on card1. Run actual PREcopy
+with the production allocator, actual POSTcopy, and native publication/read
+probes through their owned, leased lifecycles.
+
+RESULT -> PrefixOFF card0 passes both focused requests with zero cache hits.
+PrefixON card1 initially passes both focused requests, then fails four of
+its eight boundary requests (padding0 and256, cold/reused); padding128 and512
+pass. All model arms stop normally and pass strict selected-card post-health.
+The defect is therefore not exclusive to card0 or TP2, and its occurrence
+depends on state history as well as boundary crossing.
+
+With the serving allocator, all twelve actual PREcopy cases pass byte-exactly.
+All twelve actual POSTcopy cases also pass, including positive-bias self-copy
+and accepted-count reset. These kernels correctly implement their copy rules.
+
+The actual native GDN producer implements different rules: it publishes a
+three-row convolution history in each speculative column and reads column
+accepted-1. The worker expects a six-row rolling history in column0 and copies
+starting at row accepted-1. For accepted counts2-4, a boundary copy can therefore
+combine correct temporal state with stale convolution history. All four native
+prefix checkpoints match their independent numerical reference exactly; their
+trailing three rows remain untouched. Subsequent native calls match the
+per-prefix reference and diverge strongly from the worker rolling reference.
+All numerical probe teardown and strict health checks pass. The original
+rolling-contract oracle fails as expected and remains preserved unchanged.
+
+VERDICT -> Confirmed native/worker state representation mismatch, with a
+concrete corruption mechanism matching direct model failures at cache block
+boundaries. This is a third issue beyond the earlier phase initialization and
+accepted-count reorder patches. Updating Pi alone cannot repair this backend
+defect. It does not establish the cause of every historical client error.
+See [the numerical evidence](../vllm/int4/native_gdn_oracle/RESULT.md)
+for complete measured evidence. Upstream native commit
+5802a414d47855b01b63121bce3655795ef8dfa8 repairs this representation; an exact-stack
+source rebuild and a narrowly gated Python copy adapter are under test.
+Neither candidate is qualified for serving yet.
+
+
+## 2026-09-10: first matched GDN convolution adapter comparison
+
+CONFIG -> Candidate image09fc6b75041566c9248d76b985f2a30a4d32e5a847389f637d2a6043436f3bce
+changes only the two approved Python copy-selection/metadata files from7b.
+All2106 native files and282 packages are unchanged. Same candidate image on
+both cards, TP1/MTP3/FP8/FULL/prefixON/100K; explicit adapter0 on card0 and
+adapter1 on card1. Stable served name hotschmoe-dd remains first, with the
+registered detailed research alias second. Corpus and client are hash-frozen.
+
+COMMAND -> Strict both-card health and compiled pair P2P0, ten iterations at
+4x5120, pass before serving. Run focused array256 cold/reused followed by the
+eight-request boundary matrix on each card. Query live model identity in each
+job. Compare exact generated arrays and actual cache reuse, not HTTP status.
+
+RESULT -> AdapterOFF passes6/10 and corrupts padding0 and256 cold/reused;
+adapterON passes10/10 exactly. Both focused requests pass even on OFF, showing
+why short isolated successes are insufficient. OFF then stops normally with
+lifecycle0 and strict selected-card post-health0. ON remains running for
+longer output, concurrent, cancellation/recovery and reconstructed Pi tests.
+The actual composed native/PRE/POST numerical oracle is running separately.
+
+VERDICT -> Initial causal model evidence supports the contract correction.
+This is not final stability, TP2, 200K, or speed qualification. Card assignment
+is explicit; the earlier prefixON crossover already reproduced the defect on
+card1. The rebuilt upstream native correction remains a separate candidate.
+Raw plans/results are under bang_recurrence_testing_20260910, including
+conv-adapter-first-comparison.json and tp1-card*-mtp3-conv-adapter*-ctx100k/.
+
+
+## 2026-09-10: adapter composition passes; concurrent qualification fails
+
+CONFIG -> Same09fc adapterON image, unchanged FP8 scales and model settings.
+Card0 runs the actual native -> POSTcopy -> PREcopy -> native composition;
+card1 retains the running model for long output, cancellation and concurrency.
+
+COMMAND -> Execute the frozen composed-boundary-plan-card0 through its selected
+lease lifecycle. Run four ample-budget array cases, five cancellation/recovery
+steps, sixteen four-client requests, and three existing Pi reconstructions.
+The first concurrency launcher fails argument parsing before requests because
+--alias is unsupported; preserve rc2 and use a separate identity wrapper for
+the unchanged client in the replacement job03b.
+
+RESULT -> All ten composed cases pass. Synchronized and unsynchronized results
+are exact, as are the no-move native controls. Explicit metadata selects the
+new copy function, conv widths[0,0], inner sizes[30720,786432], and hybrid page
+strides3276800. Second-output max absolute reference error is4.76837e-7;
+maximum checked state error is4.53508e-6. Oracle, strict pre/post health and
+owned cleanup all pass. This validates composition, not full-model graph
+execution or concurrent serving.
+
+The model passes all four ample-budget requests and all five cancellation,
+idle-drain, restart and follow-up steps. The three reconstructed Pi requests
+pass the existing checks; these are not exact captured wire replays or full
+semantic qualification.
+
+Concurrency does not qualify: only8/16 pass the combined content/cache gate.
+Two session0 thinkingOFF responses stop early despite max_tokens4096, with
+2058 and2055 output tokens, at complete433 plus comma and partial433 respectively.
+Raw SSE joins match the parser and finish_reason is stop. Reuse has cached0
+on7/8 requests, a separate gate failure that masks one of the two content
+failures. Cache pressure reached75-80%; misses must not automatically be
+called kernel corruption. Independent content review and a same-payload
+serial control are pending. No bangs were observed in these two truncations.
+
+VERDICT -> The adapter fixes the reproduced boundary cases and passes composed
+numerics, but the extended model qualification remains incomplete/failed.
+Do not promote it. Continue a same-card ON crossover and the source-rebuilt
+native correction, with serial/concurrent comparisons for the new truncation.
+
+
+
+
+CONFIG -> Exact failing concurrent session0 payload, cap4096, now alone on
+unchanged adapterON card1. Fresh serial cache namespace; content and cache
+checks are independent.
+COMMAND -> Run frozen card1-serial-session0.job.json after all prior jobs.
+RESULT -> Both serial requests also stop early: cold2055 output tokens and
+reused2058, ending around433 as before. Cold cached0 and reused cached1600;
+both cache gates pass, both content gates fail. Final concurrent audit is
+14/16 content passes,9/16 cache passes,8/16 combined passes. Corrected card1
+then stops normally with lifecycle0; strict post-health passes.
+VERDICT -> Concurrency and cache misses are not necessary for this remaining
+early-stop failure. Compare the same payload under MTP0 and rebuilt native
+before attributing it to another kernel bug or ordinary model behavior.
+
+
+
+
+CONFIG -> Same physicalcard0 crossover, image09fc, adapterON. Config differs
+from prior card0 OFF only by B70_XPU_GDN_PREFIX_CONV_COPY=1; paths/port/name
+are fresh, while source, corpus, scales and serving settings match.
+COMMAND -> Execute the same ten focused/boundary cases, then normal STOP and
+strict selected-card post-health.
+RESULT -> All10 responses pass exact content and required cache checks, versus
+6/10 under OFF on the same card. Lifecycle0 and post-health0; output is
+same-card tp1-card0-mtp3-conv-adapter1-crossover-ctx100k.
+VERDICT -> Same-card evidence confirms the adapter corrects the reproduced
+boundary cases. Remaining serial early stops are a separate unresolved
+qualification finding; MTP0 and source-rebuilt native comparisons are next.
+
+
+
+
+CONFIG -> Original repaired7b, same physicalcard1, MTP0/FP8/FULL/prefixON100K,
+exact serial session0 prompt and4096 output cap. Adapter is absent.
+COMMAND -> Run tp1-card1-mtp0-serial-session0-ctx100k's two frozen requests,
+then normal STOP and strict selected-card post-health.
+RESULT -> Both requests stop prematurely at2055 output tokens, with the same
+partial433 prefix. Cold cached0 and reused cached3200; content0/2 and cache2/2.
+Lifecycle0 and strict post-health0. No bangs observed in this counterexample.
+VERDICT -> Speculative decoding is also not necessary for this remaining
+premature-stop behavior. The native GDN contract correction remains supported
+by distinct numerical and same-card boundary evidence. An explicit65536-context
+FP16 KV diagnostic is prepared because100K FP16 capacity is not established;
+if it passes, a matched65536 FP8 comparison is required before attributing the
+difference to KV precision.
+
+
+
+
+## Source-rebuilt native correction: numerical qualification
+
+CONFIG -> Native-only image d55637b3353eaf470677627dc1627c3dda3ec6a6abb0298451aed34b73937067
+contains new_xpu_C SHA6717e3ec7fe3e7cdc26cd66b84aabdd076f211e5bed62b8711b7377fca8668d9.
+All other2105 native files, packages and2227 vLLM Python files match7b.
+Upstream5802 was ported to pinned1e90 plus original Steve patches and rebuilt
+with exact Intel2026.1.1. Source/recipe/ABI receipts are tracked under
+vllm/int4/native_gdn_oracle/native5802_build/. The Python adapter stays absent.
+
+COMMAND -> Run strict both-card and compiled pair P2P0 preflight. Deliberately
+repin only image/native identity in the original rolling-history oracle;
+AST equality preserves every numerical and state-layout expectation. Run
+128steps/all12gates on card0 TP1 geometry, then card1 local TP2 geometry.
+
+RESULT -> Candidate pair health passes. Both numerical runs complete128steps
+and all12gates at each step; strict pre/post health and owned cleanup pass.
+The original deployed native failed this same rolling contract at step0.
+Card1 uses localK8/V24, hybrid1638400-byte and packed1634304-byte pages; this
+is not a two-rank serve or collective performance result.
+
+The first full-model launcher accidentally acquired an already-owned lease.
+It was stopped by terminating only its verified flock waiter before any GPU
+work or output directory creation; rc124 and evidence are retained. V2 checks
+the inherited selected FD and passes --leased once. Its CPU test exercises
+the actual server lease branch. V2 is now serving the prepared native-only
+boundary10/serial2/ample4 jobs. No model qualification is claimed yet.
+
+VERDICT -> The source repair passes the unchanged failing native contract and
+math oracle in both local geometries. Full-model/graph, actual TP2 serving,
+concurrency, long-context and teardown qualification remain separate.
+
+CONFIG -> FP16KV/MTP0/FULL at65536 context, exact same early-stop serial pair.
+COMMAND -> Execute the two frozen requests, normal STOP, strict post-health.
+RESULT -> Both stop at2058 tokens after433 plus comma, with cached0/3328;
+content0/2, cache2/2. Lifecycle0 and post-health0.
+VERDICT -> FP8 is not necessary for this same premature-stop pattern. The
+context-cap change is explicit; this is not a matched precision performance
+comparison. A same65536 eager FP16 control is now starting to test graph
+necessity. No model/quantization cause has been established.
+
+
+## 2026-09-10: completed native model and corrected eager early-stop controls
+
+CONFIG -> Native-only imaged55637b3353eaf470677627dc1627c3dda3ec6a6abb0298451aed34b73937067
+on card0, TP1/MTP3, fresh-be02 FP8 KV, prefix caching and FULL decode,
+context100000/c4/batch32768. The Python adapter is absent. This completes the
+previously pending V2 model run; historical pending statements remain intact.
+
+COMMAND -> Run the frozen boundary10, exact serial-session0 pair and ample4
+jobs, collect all outcomes, then normal STOP and strict selected-card
+post-health. Raw: bang_recurrence_testing_20260910/
+native5802-model-card0-plan-v2/run/.
+
+RESULT -> Boundary10 passes10/10 and ample4 passes4/4. Independent CPU review
+parses every successful output as the exact consecutive integer array;
+all repeated cases report1600 cached tokens. Boundary outputs complete256
+integers; ample outputs complete256/512 integers at1173/2453 tokens for the
+spaced format. The separate serial pair fails2/2: prompt4045, completion2055,
+finish_reason=stop, ending after432 plus a partial '4'. Both outputs are
+invalid JSON; cache gates pass with cold0/reuse1600. Job returns are0/1/0,
+so lifecycleexit0 is not an overall workload pass. Normal resource teardown
+completes, strict selected pre/post-health passes, and no EngineCore forced
+kill is recorded.
+
+VERDICT -> The native source repair passes these former boundary/length
+failures in the model as well as the earlier unchanged native math/publication
+oracles. It does not resolve the separate premature-stop payload. This is
+bounded TP1 evidence, not production, concurrent or actual TP2 qualification.
+
+CONFIG -> Original7b on card1, TP1/MTP0, FP16 KV, prefix caching,
+context65536/c4/batch32768, eager mode (compilation0/cudagraphNONE and
+XPU graphs disabled). Exact session0 payload uses max_tokens4096.
+
+COMMAND -> Preserve the initial240-second deadline attempt. After that
+inadequate deadline and interruption of the unfinished pair, issue one
+corrected600-second-deadline request in a fresh cache namespace, then normal
+STOP and strict selected-card post-health. Raw:
+bang_recurrence_testing_20260910/
+tp1-card1-mtp0-fp16kv-eager-serial-session0-ctx65536/.
+
+RESULT -> The initial first request hits the client total deadline at240.024
+seconds, without final usage or finish reason; the pair job is interrupted
+with return-15 and does not complete two results. This is an infrastructure
+limit, not a completed model outcome. The corrected single600 request
+completes in253.777 seconds, prompt4045/completion2058/total6103,
+finish_reason=stop, cached0/created3328. It stops after433 and a comma,
+invalid JSON, and returns semanticfailure1. This is a natural stop despite
+4096-token allowance, not the earlier timeout. Lifecycleexit0, completed
+normal teardown and strict selected pre/post-health all pass.
+
+VERDICT -> Graph execution is not necessary for this premature-stop pattern:
+it persists in eager MTP0/FP16 serving. Together with the prior serial/MTP0
+and FP16 controls, neither concurrency, MTP nor FP8 KV is necessary for this
+specific residual pattern. Its cause remains unresolved; model or
+quantization attribution has not been established. One corrected eager
+request is not a completed two-request cache-reuse qualification.
+
+Evidence review: native-eager-completed-outcome-review.json records independent
+array checks and hashes of the retained results and lifecycle evidence.
+
+
+## 2026-09-10: native repair actual TP2 outcome
+
+CONFIG -> Native-only d55637b3353e / native6717e3ec7fe3, preserved TP2
+MTP3/FP8 be02/prefixON/FULL_DECODE_ONLY100K, c4/batch32768, P2P0.
+hotschmoe-dd remains first served ID. No Python layout adapter.
+COMMAND -> Run native5802-tp2-100k-plan with strict startup trace, boundary10
+and serial2 gates, then automatic STOP after the first failed job.
+RESULT -> Startup trace passes matched per-rank138 all-reduce entry/returns
+at FP16[32768,5120] and3 all-gather entry/returns at FP16[32768,2560].
+These are host boundaries, not device completion or replay counts. Both ranks
+load17 calibrated attention scales each, all34 matching be02. Resolved hybrid
+block1600, KV budget15.65GiB and reported logical capacity773076 tokens.
+Graph capture completes. Boundary10 passes exact content/cache10/10. Serial2
+fails content2/2, with normal stop below4096 output allowance; cache gates pass.
+The strict parent exits1, while normal server lifecycle and strict both-card
+and compiled pair post-health exit0. Owned serving container is absent. No
+WORKLOADS_PASSED marker exists; later concurrent/tool rounds were not reached.
+VERDICT -> The native correction repairs the targeted corruption cases in
+actual TP2 as well as TP1. The separate early-stop counterexample prevents an
+overall qualification pass. No200K, speed or production promotion is implied.
+A separately frozen independent diagnostic arm will retain the strict failure
+and collect stop-token/concurrent/tool evidence without a qualification marker.
+Raw: bang_recurrence_testing_20260910/native5802-tp2-100k-plan/.
+
+
+## Observed native TP2 session0 terminal token
+
+CONFIG -> Native d55637b3353e / 6717e3ec7fe3, TP2 MTP3 FP8/be02,
+FULL_DECODE_ONLY, prefixON100K. Exact namespace-adjusted session0 wire request,
+temperature0, seed42, thinkingOFF, max_tokens4096, no requested stop strings or
+stop-token IDs. Only diagnostic field added: return_token_ids=true.
+COMMAND -> Parent ran the separately queued raw stop-token diagnostic on the
+owned independent TP2 server. CPU review verified request equality against the
+frozen wire payload after removing only return_token_ids.
+RESULT -> Response chatcmpl-86760a94858fab8c completed with [DONE], no stream
+errors, finish_reason=stop, stop_reason=null. It returned4045 prompt IDs and2058
+output IDs, exactly matching usage prompt4045/completion2058/total6103. The final
+chunk contains token248046, the tokenizer's special <|im_end|> EOS. Visible text
+ends with 431, 432, 433, and lacks the remaining requested numbers and closing
+bracket. Cached_tokens=0; created_cache_tokens=1600. Raw IDs and terminal empty
+text delta are retained. The native backend selected a terminating EOS; the API
+omitted it from visible text as the reviewed detokenizer specifies.
+VERDICT -> This occurrence is not Pi or gateway/parser truncation and not the
+4096-token request limit. Greedy backend EOS selection ended an incomplete
+answer. Whether that premature selection reflects ordinary model behavior or
+a remaining model/kernel/runtime numerical defect is unresolved. Diagnostic
+completion is not semantic success, full100K qualification, or promotion.
+Raw evidence:
+/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native5802-tp2-independent-diagnostics-plan/run/stop-token-observation/
+
+
+CONFIG -> Independent TP2 diagnostic arm, original prepared concurrent16 job.
+COMMAND -> Parent queued the frozen concurrent probe; subsequent CPU audit ran
+only --help for all ten prepared job commands and compared supported options.
+RESULT -> Original concurrent job exited2 before HTTP or output creation because
+its frozen parser lacks --alias. Parent preserved that failure, separately
+verified both served IDs/health, and queued01b with only unsupported --alias
+removed and a fresh output. concurrent-parser-correction.json records it. The
+remaining CLI audit found no other unsupported flags; every help command exited0.
+VERDICT -> This was diagnostic preparation infrastructure failure, not a model
+inference result. Original frozen plans remain unchanged; do not reuse their
+concurrent --alias unchanged. Corrected inference results require separate
+review. Raw remaining-cli-audit.json is in the independent diagnostic plan root.
+
+
+CONFIG -> Independent native5802 TP2 diagnostic arm, same100K/MTP3/FP8/be02/
+prefix/FULL_DECODE_ONLY configuration. Semantic negatives do not erase other
+independent observations; this arm creates no qualification marker.
+COMMAND -> Run corrected concurrent16, tiny24, earlyhistory3 plus quality,
+deterministic32 plus quality, and sampled32 T0.7/seed42 plus quality.
+RESULT -> Concurrent semantic14/16, cache16/16, zero detected text bangs. Both
+content negatives are non-thinking session0 early stops (cold2038 tokens after
+429comma, reuse2055 after432partial4); all8 reused requests hit1600 tokens.
+Tiny24 passes with no sequential-repeat drift. Earlyhistory3 passes heuristic
+review; independent manual review finds one coherent, valid bash tool call in
+each, with identical normalized content/reasoning/function hashes and6400-token
+reuse. Generated tools were never executed. Deterministic32 and sampled32 each
+pass their strict tool/answer/cache quality checks across four sessions.
+VERDICT -> This broadens the native repair evidence to concurrent and agent
+workloads, including sampled decoding. The retained exact-array negative is
+unresolved; whole100K/200K promotion and speed qualification are not claimed.
+Teardown/post-health for this still-running diagnostic arm remain pending.
+Raw: native5802-tp2-independent-diagnostics-plan/run/.
+
+
+CONFIG -> Same native5802 TP2 independent server. Original agent2 warm and
+target payloads retained byte-for-byte (ba90fc63807b/08fe725e90f6); T0.7,
+seed1160881401, thinkingmedium, outputcap8192. Warm1 followed by target2.
+Only a separate cache-salt literal and result path distinguish the replay
+client from the retained original control; reconstructed-input limits remain.
+COMMAND -> Run native5802-agent2-counterexample-plan/job.json, strict quality
+gate and manual inspection of every actual tool argument JSON.
+RESULT -> All3 have no bang/error/quality flags. Warm prompt22930/output771;
+targets prompt23240/output1102 each, both cached20800. Warm emits one write
+call; targets emit two valid bash calls with identical function hashes. The
+prior malformed second-tool suffix is absent. Tool commands were never
+executed; their functional correctness is not established by this review.
+VERDICT -> The native correction also clears the retained original malformed-
+tool reproduction with its input unchanged. This argues against attributing
+that specific failure solely to contaminated Pi history, while not proving
+all histories safe. Final paired trace passes. Normal STOP requested; strict
+post-health/teardown still pending at this entry. No qualification marker.
+Raw: native5802-tp2-independent-diagnostics-plan/run/agent2-counterexample/.
+
+
+CONFIG -> Completed native5802 TP2 independent diagnostic arm.
+COMMAND -> Final paired host-trace review, normal STOP, owned-container removal,
+strict both-card and compiled P2P0 post-health.
+RESULT -> Trace0, server lifecycle0, owned container absent, both strict card
+probes pass and10 compiled pair all-reduces pass. The retained job exits include
+concurrent infrastructure2 and corrected semantic1; these are not converted
+to success. All other queued diagnostic/quality jobs return0. No whole-arm
+qualification marker exists. Parent-final-outcome.json records all job statuses.
+VERDICT -> Teardown and post-health close this diagnostic arm successfully.
+The native corruption repair has bounded positive model/agent evidence, while
+separate EOS and200K qualification questions remain. Public endpoint stays
+inactive; card1 is allocated to the reviewed independent SGLang control.
+
+
+CONFIG -> Independent same-AutoRound CPU teacher-forced reference, exact captured
+4045 prompt IDs plus2057 visible output IDs, terminalEOS248046 excluded. Frozen
+full-plan-v1 image d55637, explicit Torch fallbacks, FP16-rounded weights except
+FP32 A_log, FP32 activations/accumulation,8CPU/12GiB, no devices/network.
+COMMAND -> Parent-authorized layer-streamed64-layer run with final RMSNorm and
+last8 causal-position logits, full17-file pre/post hashes/stats, actual image
+inspect,3600-second wrapper deadline and owned-container cleanup.
+RESULT -> Computation exit0, all64 layers finite, full provenance checks pass,
+22.44minutes, peak4.88GiB. At zero-based input position6101 (prefix length6102,
+after433comma), EOS248046 ranks1 and exceeds expected space220 by0.27469 logits.
+At position6098 (prefix6099, after432partial4), expected digit3 ranks1 and exceeds
+EOS by0.19073 logits. Exact input IDs match the GPU token capture. Original
+wrapper exit1/container_removed=false is preserved: Docker absence output was
+lowercase, while the frozen check expected uppercase. Parent exact-ID absence
+verification confirms removal; live future wrapper now checks case-insensitively.
+Two host-only cleanup tests pass, including daemon-error negative cases.
+VERDICT -> A separate CPU implementation with the same quantized weights also
+prefers EOS at the observed433comma boundary. This supports a narrow model/quant
+ranking explanation for this residual early stop, independent of the vLLM/XPU
+model kernels. It does not distinguish original-model from quantization effects,
+prove endpointFP16 equivalence, or qualify the whole serving configuration.
+No further full CPU inference was run. Raw root:
+/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/reference-feasibility/
+Result: full-reference-v1/result/result.json; audit: full-reference-v1-review.json;
+cleanup correction: full-plan-v1/execution/parent-cleanup-verification.json.
+
+
+## 2026-09-10: Independent CPU and fresh-prefill GPU agree on the early EOS
+
+CONFIG -> Same AutoRound GPTQ INT4 artifact. Independent streamed CPU reference
+uses reviewed FP16-rounded effective weights (A_log retained FP32), FP32
+activations/accumulation, all64 layers and actual observed6102-token prefix.
+GPU control uses native d556 TP1/card0, FP16 KV, MTP0, eager, context65536,
+prefix enabled but distinct fresh salts and observed zero hits. Primary alias
+hotschmoe-dd retained. GPU settings are cloned from the earlier FP16 eager
+control; fresh prefill differs from the original incremental decode trajectory.
+
+COMMAND -> CPU frozen full-plan-v1/inputs/plan.json and launch_reference.py;
+GPU vllm/cache800k/run_arm.py with token-prefix-card0-plan/plan.json. Two raw
+/v1/completions token-ID prompts6099 and6102, temperature0 seed42 max_tokens2,
+logprobs20, retained token IDs. No rendering or tool execution. Independently
+compare raw request/response IDs and first-token logprob differences to CPU
+logit differences; audit token-prefix-independent-audit.json under
+/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910.
+
+RESULT -> CPU all64 layers finite, full17 model-file pre/post hashes and stats
+match,22.44 minutes and4.88GiB peak RSS (not a serving speed claim). At prefix6099
+ending432-partial4, expected digit3/token18 beats EOS248046 by0.1907310486 CPU
+and0.1875 GPU. GPU returns[18,18], finish length at max2. At prefix6102 ending
+433-comma, EOS248046 beats required space/token220 by0.2746887207 CPU and
+0.265625 GPU; GPU returns[248046], finish stop. Absolute margin differences are
+0.0032310486 and0.0090637207. EOS248044 is much lower in both comparisons.
+Both GPU responses retain exact supplied prompt IDs and report cached_tokens0.
+GPU lifecycleexit0, strict selected-card pre/post HEALTHY, normal engine drain
+and teardown22:28:46-22:28:50 UTC with no EngineCore forcekill observed.
+
+VERDICT -> The same quantized artifact independently prefers this premature EOS
+at433-comma. The synthetic array remains an actual invalid/truncated answer;
+this evidence supports a model/quantized-artifact quality limitation instead
+of requiring a new backend defect to explain this specific stop. It does not
+separate original model behavior from quantization effects. Fresh prefill and
+CPU teacher forcing are not the original incremental trajectory, and nearby
+logit agreement is not full backend equivalence. Original bang/state-contract
+failures and their repairs remain separate measured findings. Do not change
+prior failed array/qualification markers or claim the model passes this task.
+
+
+CONFIG -> Prior SGLang14ee v2 selected card1 attempt used extra_buffer.
+COMMAND -> Ran the frozen v2 feature plan after valid old numeric/health gates.
+RESULT -> Current-main XPU explicitly rejects extra_buffer before model loading.
+Owned cleanup and strict selected-card post-health passed; lifecycle rc1.
+VERDICT -> Preserve the configuration failure, not a model/kernel failure.
+The v3 opt-in no_buffer/page1 change leaves default launcher argv identical;
+actual-source CPU test_no_buffer_cpu.py verifies XPU policy, valid page1 and
+rejection of page128/overlap. Existing features and strict tests are unchanged.
+
+
+## Measured v3 FP8/cache and independent serial outcomes
+
+CONFIG -> Same14ee TP1/card1 FP8/be02/Triton/eager/MTP0; explicit no_buffer
+and required page1, overlap disabled. V2 extra_buffer failure stays preserved.
+COMMAND -> Root allocated card1 after prior TP2 teardown/strict health. Ran
+exact frozen plan-v3 through feature_gate; no outer lease and no public serve.
+RESULT -> Strict pre-health passed. Startup resolved the supported policy and
+loaded target16-layer calibrated scales. Cold compilation completed. All26 text
+checks and32 concurrent tool checks passed,32 attempts, zero bangs/retries.
+The strict cache counter increased6 ->126304 (delta126298); live c4 observed.
+This is the gate's aggregate metric delta, not an independent unique-token count.
+
+Both separate session0 serial requests returned prompt4045/completion2058,
+finish stop, raw matched_stop248046, text ending433comma. Their visible output
+is byte-identical to each other and the vLLM raw EOS diagnostic, SHA256
+4d85ef8116e01fee788f0acaaac2506029606c51820f781742a95fd39dc72311.
+Raw durations200.735s/196.316s are observation bounds, not matched speed claims.
+SGLang usage returned prompt_tokens_details=null; the unchanged serial client
+raised AttributeError while reading cache fields. Preserve its rc1 and missing
+metadata separately from actual cache reuse. The incomplete array is also a
+real independent semantic negative; raw matching EOS remains available.
+
+Normal cleanup completed, owned container absent, strict card1 post-health
+passed. Parent/lifecycle/job rc1 reflect the separate serial diagnostic failure;
+fp8-cache-stage-outcome.json remains strict26+32 PASS. No reset or further GPU
+retry occurred. Card1 was returned to parent allocation.
+VERDICT -> Bounded full-model FP8/no_buffer cache gate passes, but not whole-job
+semantic success, graph/MTP/TP2/long-context feature parity, speed or promotion.
+Cross-backend exact EOS output is evidence separating the early-stop case from
+the repaired vLLM native cache-contract corruption. Raw output:
+/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-prefix-eager-mtp0-card1-v3/
+
+
+## 2026-09-10 23:03 UTC - Complete native5802 backend100K-v2 qualification
+
+CONFIG -> Image d55637/native6717, TP2/P2P0/MTP3, be02 FP8 KV,
+prefix ON, FULL_DECODE_ONLY, context100000, concurrency4, batch32768.
+Stable primary hotschmoe-dd and registered native5802 backend100K alias.
+
+COMMAND -> Existing leased run_arm lifecycle with the new immutable
+native5802-backend100k-v2/plan.json, followed by native5802_service/serve.py
+audit100k after the run and full teardown completed.
+
+RESULT -> All16 jobs exit0: tiny24, three clean Pi-history replays plus quality
+gate, three deterministic32 and three sampled32 rounds (seeds42/43/44), and
+matched startup host trace. All192 strict tool/answer/cache checks pass.
+Both ranks loaded17 expected be02 scale records each. Actual startup profile
+matches138 all-reduce and3 all-gather entry/return pairs per rank at32768rows.
+Graph capture succeeds. Server and parent lifecycle exit0; strict per-card
+and compiled pair pre/post health pass. Owned container absent. The auditor
+checks371 backing hashes and emits qualification-receipt.json with SHA256
+16a0b1f2ccd5f725e5a6802fb5603deeeb3a2f07de959f1f551cc9ed603b9c2d.
+
+VERDICT -> Exact backend100K workload scope qualified. Known numeric-array
+quality failure remains false in the receipt; old failures/markers unchanged.
+This is not unrestricted model-quality or200K qualification. A new200K plan
+was frozen only after this complete receipt passed its prerequisite check.
+Its exact d556 CPU tokenizer check matches all eight original near185K
+payloads. The separate200K run has now started; public service remains down.
+
+Raw: /mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native5802-backend100k-v2/
+New arm: /mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native5802-backend200k/
+
+
+## 2026-09-10 23:18 UTC: user pauses200K qualification for monitored endpoint trial
+
+CONFIG -> Repaired native d556/native6717 with existing GDN-phase/MRV1 fixes,
+freshbe02 calibrated FP8 KV, TP2/P2P0 MTP3 cache/FULL graph configuration.
+Permanent primary alias hotschmoe-dd. User explicitly requested pausing tests
+and using the repaired endpoint for a monitored few hours; full200K scope was
+reported incomplete. The new native trial is separate from completed
+qualification and from the original7b day trial.
+
+COMMAND -> Full native5802-backend100k-v2 completed first. Its reviewed receipt
+SHA16a0b1f2ccd5f725e5a6802fb5603deeeb3a2f07de959f1f551cc9ed603b9c2d
+binds actual model/source/native/scales/workload/health evidence. Independently
+rechecked every evidence hash. At2026-09-10T23:18:49Z parent sent SIGTERM to the
+exact200K coordinator and in-flight CPU HTTP probe and set owned STOP; existing
+leased lifecycle owns normal server teardown and strict post-health.
+
+RESULT -> New100K-v2 PASSED its bounded backend scope:192/192 strict tool checks
+(three deterministic and three sampled rounds),24tiny,3early, actual prefix
+reuse, startup trace, identity/scales and strict pre/post health plus lifecycle.
+Known array512 premature EOS remains an independently explained quality
+negative, explicitly known_numeric_array_quality_passed=false. Model versus
+quantization cause remains unresolved. The new200K attempt is USER_PAUSED,
+qualification_passed=false/full_200k_qualification_complete=false, recorded in
+native5802-backend200k/user-pause.json. At this append normal teardown/post-health
+were still pending, so no healthy completion or trial startup is claimed yet.
+
+VERDICT -> A user-authorized monitored200K trial is not full200K qualification.
+Preserve this interrupted run, original incomplete/failed checks, and all prior
+negative evidence. Resume long-context retrieval/reuse/guide/cancel/recovery in
+a fresh reviewed plan and output directory at the next testing window; do not
+write a pass marker into the paused run or reuse its output as a completed gate.
+The new native5802_trial source is being prepared independently, keeping exact
+features, stable alias and existing authentication; no service installation or
+start was performed by this documentation/review task. Final live identity,
+strict startup/health and owned readiness remain required before reporting the
+endpoint restored. Raw roots are under
+/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910.
+
+
+Paused200K teardown follow-up: plan.lifecycle-rc=0 and run/exit.rc=0;
+strict both-card post-health HEALTHY and compiled two-rank10-iteration P2P0
+collective post-health HEALTHY (23:20:10 UTC). This records successful cleanup
+of the user-interrupted attempt, not a passed200K workload qualification.
+
+
+Paused200K shutdown clarification: lifecycle0 and passing health do not mean
+an entirely graceful drain. The actual server log records shutdown signal at
+23:18:51, EngineCore drain beginning23:19:09, and forced EngineCore kill at
+23:19:21 after the MPClient30-second budget. Preserve this forced process stop
+alongside successful post-health; it followed user interruption and is not by
+itself evidence of a bang or new coherence failure. Parent started a separate
+lease-protected rebind plus strict both-card/compiled-pair recovery under
+native5802-userpause-recovery. The monitored trial must require its successful
+receipt, not relabel the interrupted run normal_stop. Recovery was pending at
+this clarification; no trial startup is claimed here.
+
+
+## 2026-09-10 - Monitored native5802 endpoint started
+
+CONFIG -> User-authorized monitored200K trial; d556/native6717, TP2/P2P0,
+MTP3, be02 FP8 KV, prefix ON and FULL_DECODE_ONLY. Primary hotschmoe-dd,
+registered native5802 200K secondary alias, existing authenticated18080 frontdoor.
+
+COMMAND -> User installed90-native5802-monitored-trial.conf, reloaded systemd
+and started the existing hotschmoe-dd.service. Parent monitored startup and
+queued the final frontdoor smoke inside the existing serving lease.
+
+RESULT -> Service active/running. Both-card and compiled-pair pre-health pass;
+model load/compilation/graph capture complete. All88 startup checks pass.
+Nine final frontdoor checks pass: missing/wrong credentials401, Bearer and
+X-API-Key authorized identity/context200000, and four exact concurrent answers.
+No live key logged. Evidence and deployment-receipt.json are in:
+/mnt/vm_8tb/b70/results/qwen38_native5802_monitored_trial/20261010T234208Z/
+
+VERDICT -> Endpoint open for user-monitored use; campaign remains paused.
+This is not full long200K qualification or an unrestricted stability claim.
+The interrupted near185K campaign, forced drain/recovery and known numeric EOS
+quality failure remain recorded. Service is running; teardown/post-health will
+belong to the next actual downtime.
 
 
 ## 2026-10-08 - Flash-Next Unsloth Q4 campaign authorized and prepared
@@ -9609,6 +10637,28 @@ publisher hashes pass. Bounded eviction suite started under pair lease at
 F06/serial-eviction-twocard-v1; no result.
 VERDICT -> Bounded actual two-stage snapshot restore observable consistency,
 not raw persistent-state/complete-cache/API/concurrency/latency qualification.
+
+## 2026-10-09 Serial cache lifecycle and stage slot owner source checkpoint
+
+CONFIG -> Separate patches0019/0020 plus V6 controller/fixture/parent wrapper,
+original sourcefb58 and GGML3cf, image39992 unchanged. Combined immutable
+engine plan SHA05041bd19eed14a9758ab00c9b02784308a126ce7a6b6414727668bda6c9fa1c.
+COMMAND -> Parent CPU test_prefix_lifecycle_cpu.py,
+test_serial_prefix_qualification_v6_cpu.py, test_stage_slot_owner_cpu.py and
+test_qualify_serial_prefix_v6_cpu.py.
+RESULT -> PASS portable actual cache/header ASan/UBSan and keyed lifecycle
+controls; V6 fullraw/phase/stage/budget/victim negatives and tokenizer synthetic
+continuation; pristine plus20-patch reconstruction with all38 consumed hashes,
+actual owner-header/release/rebind mocked allocator controls; V6 parent mocked
+success/failure/old18 rejection and unchanged lifecycle helper contracts.
+Default-off host telemetry adds observed snapshot instances, live-chain and
+actual completed stage spans. Slot owner adds explicit null/partial cleanup,
+resize/fallback frees, shifted QSA ordinal release and identical RoPE rebind.
+No model math/cache selection/scheduling change is claimed by the draft.
+VERDICT -> CPU/source preparation only. Full real SYCL compilation, bounded
+one/pair logical-free ownership oracle, NEW full390/new prepared engine gate,
+off/on model requalification and actual V6 cache tests remain required.
+Current V5 cache receipts do not qualify this new generation or concurrency.
 
 ## 2026-10-09 Cache lifecycle and stage slot ownership source checkpoint
 
@@ -10692,6 +11742,144 @@ no actualgenuineprep/GPU/modelweights byagent. FreshSDK66369 stilllive.
 VERDICT -> Sourcecheckpointonly. Fullmath/30capture/31mirror lifecycle/newSDK
 serving/concurrency/cache/latency remainrequired. V3source29 counterfix/specs
 beingprepared; source29 uses-1 no-reread sentinel ratherthanV2assumedzero.
+
+
+## 2026-10-09 - Prefix30/mirror31 freshSDK/upload andowned48 CPU PASS
+
+CONFIG -> Combined31/source62/header26/eightfreshABI/sixPython, originalmodel/
+images/kernel unchanged. Ownfull48 referenceusesrealrole geometry/syntheticrows.
+
+COMMAND -> Freshengine66369/oracle48333/sourceupload4329; independentC19source
+gate/CPU67 andowned48CPU9. Allruntimewriterslaunchedbeforepermissionrestriction.
+
+RESULT -> SDKPASS309s/oraclelinkPASS45s/source390PASS276s fivecases/context/UR
+logicalfree/health/twopages/ownedterminal/newallfourpublisherhashes. UploadSHA
+cd30d9d87fff4cc6a8dc6e931a563d6d10061a0405f2b95452ad8bdf8af6f10f.
+Owned48CPU9PASS17.419s; no capturedvalues accepted, nativefullmathstillfalse.
+ExistingC19one preparation completed; process44072handlemissingafterenvironment
+transition andpreparedartifactconfirmedcurrent. No modelserve waslaunched.
+
+VERDICT -> Concretebuild/source/CPUproof only; originalfullmath/cache/concurrency/
+latency/shelf unqualified. Currentpermissionwritesonlyrepo/tmp, runtime/.git
+readonly: source/CPUworkcontinues, newGPU/runtimewrites/commitcurrentlyunavailable.
+OwnJournalentry saved/tmp forlaterselectivestaging; unrelateduserchanges preserved.
+
+
+## 2026-10-09 - Real original48 prefix1 localizes missingPLE staging
+
+CONFIG -> Actualreadonlyoriginalweights/ownedzero states/tokenIDs only;
+finalizedV9 nativeone observations, CPUone BLASthread, outputs/tmp.
+
+COMMAND -> Original48prefix1 explorer11050; postCPUfull4/knownpages; source
+run/gather/reset/ngram audit andCPUpacknormoriginalbyte comparison.
+
+RESULT -> Complete/noerrors/newfull4PASS. Inputexact, L0FFNnmse6.05e-14;
+L1postFFN firstBIGnmse1.17209/max1.98084, headnmse.005295/max.02703.
+Normpack4rolesexactoriginal; PLE-specificEOS248044 correctdistincttokenizerEOS.
+NativeVerifier.run sourcegap: mirror/device-plan !ar/no-host branch computes
+PLErowids thenlaunchesgraph withoutcurrentgather; latergather skipped/racy.
+
+VERDICT -> No numericPASS/fullmathclaim. Semanticfix32/sourceCPU matrix and
+explicitzeroPLE diagnosticablation inprogress. Actualoldstagingcontents unknown,
+GPUrequalificationneeded. Existingcoherencecontrols notfulloriginalfidelity.
+Currentrepo/tmpwrite-only restrictionrespectfullypreserved; git/runtimeuntouched.
+
+
+## 2026-10-09 - ZeroPLE control supports missinggather; semantic32 CPU PASS
+
+CONFIG -> ExplicitmodifiedPLEinputzero, originalweights/lookup/IDs owned;
+actualV9 observations, CPUonly/tmp, no referencefeedfromcaptures.
+
+COMMAND -> CPU32branch9/ablation6/P30runtime22; pristine32patch62source26
+header reconstruction; actualmodifiedexplorer27653/newpostfull4.
+
+RESULT -> Complete/noerrors/postCPUall4PASS. L1nmse1.172->3.453e-13,
+strongcausalsupportfor sourcegather omission; actualmappedhplezero initialized
+andserialnohostwritersskipped. RemainingL2~8e-7/head8.933e-5 unresolved;
+Q5K storedsumhunch contradictedbyinspectedcodeSum consumers, no unsupportedfix.
+
+VERDICT -> Neveroriginal-model/native/PASSqualification for modifiedreference.
+Semantic32 prelaunchgather/fences/exactonceCPUtested; freshGPUneeded. Existing
+boundedcoherence proofsdo notestablishoriginalfull48fidelity. Runtime/.git
+readonlyrespected; sourceworkcontinues. Ownentrysaved/tmpforlaterselectivestage.
+
+
+## 2026-10-09 - ExactL0 packet localization andcorrectedsource admission
+
+CONFIG -> FinalizedV9 prefix1 actualpackets vs independentlyownedoriginal/
+explicitmodifiedzeroPLE CPUreports; source32semanticfix/newC110/V4 admission.
+
+COMMAND -> Packet auditoronbothreports (no originalweightreads); CPU5packet/
+7Q5Ksource/72C110/8V4 controls andfrozenfilehash checks.
+
+RESULT -> All36mappedL0 consumerspacketSHA exact inBOTH references, whileown
+rawF32inputSHA differ. SmallL0F32seams didnotchange packetbytes here; nothing
+inferredforL2. Q5K inspectedsourceusescodesum; no storedSfix justified.
+C110/V4 admitonlyfreshsemanticfix32/currentmodelproof, rejectold29/31 goal-
+positivechains; allCPUcontrols PASS. No newGPU/runtimewriter/git operations.
+
+VERDICT -> ScopedL0 localization/sourcegates only. L2 arithmetic/operands
+stillunobserved, fullmath/cache/concurrency/latency/shelf pending. ActualPLE
+prelaunchinput observer33 beingprepared forfutureGPUproof; source32notGPU
+qualified. OwnJournalentrysaved/tmp forlaterselectivestaging.
+
+
+## 2026-10-09 - BoundedcurrentPLE observer33 source checkpoint
+
+CONFIG -> Semantic32 unchanged; defaultOFF33 hostcurrent row/input observer,
+63source/27headers/all33patches/eightfreshABI/sixPython recipe.
+
+COMMAND -> Independent21CPU controls; frozenfile/dependency hasheschecked.
+
+RESULT -> PASS rawfilebinding/SFDrequest-resume-publication-submit-return-
+terminal ordering/exclusivefiles/sourcepristine GNUpatch reconstruction. New
+originalinputchecker recollectsproducerproof andpreflights4frames beforeoriginal
+lookup. No actualCPP compilation/execution, ASAN, SDK orGPU qualification.
+SourceplanSHA38f79a33cdc417dee068dd5200802f028d5dbca2d5da8ae30cee32534699b1d2;
+SDKplan81798dff3fd012f7b95984403ea1088a1f157d37ee2d2e6e1b612711052cd34c.
+
+VERDICT -> CPUreviewedprototype, actualGPUconsumption/fullmath/cache/serving
+qualificationfalse. C111/P30V2 orchestration/newnativeSDK/390/current-source/
+actualhostinputdecoder comparison remainrequired. Runtime/.gitreadonly; no
+newDocker/GPU/commit. OwnJournalentry saved/tmp forlaterselectivestaging.
+
+
+## 2026-10-09 - Source33 C111 admission CPU checkpoint
+
+CONFIG -> Exact33patch/source63/header27/eightfreshABI/sixPython, semantic32
+currentPLEgather and33boundedhostobservercode. Baselineallobservers/cacheOFF.
+
+COMMAND -> IndependentC111 unittest77 andfrozenmanifestfilehashes.
+
+RESULT -> PASS77, oldC110/C19/legacyproofs rejected. Earliercontrollersunchanged.
+NoactualnewSDK/compiler/390/genuineC111/modelserve/GPUbyagents orroot. Parent
+sourceplanSHA4a04447a81d81debc5956a63910cf8b79b0631e15e47ed9c5e90fdecbd1b1453.
+
+VERDICT -> CPU/sourceadmissiononly; actualcorrectedmodel/cache/concurrency/
+latency/shelf incomplete. SeparateP30V2 actualprelaunchraworiginalinput
+comparisonandfullsource/lifecycle/health closure beingprepared. Runtime/.git
+readonlystillrespected; ownJournalentrysaved/tmpforlaterselectivestaging.
+
+
+## 2026-10-09 - Source33 P30V2 capture-wrapper CPU checkpoint
+
+CONFIG -> Exact33/C111 publicproof11 required; hostinput33/SFD1 botharms,
+P30off/ononly. No oldwrongPLE/nativeprooftransfer.
+
+COMMAND -> Independent26CPUtests/frozenfile hashes; previoussource33CPU21.
+
+RESULT -> PASS26 botharmtiny-sourcepositive/changedpartialproofrefusal; final
+actualproducer/rawinputrecollection plusoriginalrow/embeddingdecoder proof
+afterterminal/posthealth/newsource4 mandatory. All128MiB/192P30-SFD/196
+offonvectors/owner/free/health/stop gates preserved. Sourceplan
+SHA4f5ed3c3f5fcdf745662da3ac89f507529dc2b98909b6977a3644245e1fbd67e.
+
+VERDICT -> FrozenCPU/sourcecheckpoint, noactual33compile/SDK/390/C111serve/
+inputcapture/P30runtime/originalfidelity/cache/concurrency/latency/shelf proof.
+Researchworkers completedboundedassignedsourcework; nextcriticalstepfresh
+nativebuild requiresruntimewritescurrentlyforbidden. Currentrepo/tmp-only
+permissionboundary/.gitreadonly/networkrestriction preventsrequiredGPU
+lifecycle andcommit/push; no bypassattempt. Ownentrysaved/tmpforlaterstage.
 
 
 ## 2026-10-09 - Source33 resume, fresh SDK and isolated runtime PASS
@@ -20555,3 +21743,74 @@ earlier submissions. Mapping must distinguish actual queues/context/device
 and cross-stage expert helper ownership; prototype not wired or compiled.
 VERDICT -> 5.201s remains uncovered time, not measured GPU idle. Resume later
 with explicit bounded integration and requalification; full goal unchanged.
+
+
+## 2026-10-13 S0 Flash-Next IQ3_S stock Strata build worker
+CONFIG -> Fresh /mnt/vm_8tb/b70/build/strata-ab/src, upstream main
+  a0116b2782a5b82622358c04a06496485d12b2d6; v0.1.42 fallback
+  61b3fb5dd3f1e8ec09cf7e4e05208bc6d3c46406. No source patches or GPU mount.
+  Reused image sha256:64284c46a66e82463a49929fd0cbfca218c2aab7f9f409087f46a60304adce8a,
+  icpx 2026.1.0 (20260617), MKL 2026.1.0-236, CMake 3.28.3, Python 3.12.3.
+  Host kernel 7.1.0-070100-generic; NEO 26.22.38646.4-0, Level Zero 1.28.2-2.
+COMMAND -> git clone --branch main https://github.com/Niko1221/Strata;
+  docker run --memory 90g, JOBS=4 MAX_JOBS=4 AOT=bmg-g31,
+  REPO=/work/src BUILD_DIR=/work/src/build-sycl-aot: bash sycl/tools/build.sh strata.
+  python3 -m unittest tools.test_setup_sycl; compile-only icpx B70 AOT probe.
+RESULT -> 17 CPU setup tests passed in 0.019s. AOT probe failed: ocloc missing;
+  VTune's bundled ocloc rejects bmg-g31. Build stopped during pinned ggml fetch
+  (exit 137 from explicit stop); no engine artifact produced. Image NEO is
+  26.18.38308.4, not host 26.22; numpy absent. No model or GPU test executed.
+  Raw logs and exact future launch commands: /mnt/vm_8tb/b70/results/flashnext_iq3_ab_20261013/build/.
+  launch.txt specifies split 24, direct NVMe PLE, ctx 8192, port 8085, names,
+  native packing, MTP/batch toggles, NO_HOST=1, MIRROR_MIB=0, KV_WIDE_HOST=0.
+  Direct Docker env is necessary: upstream strata-sycl.sh drops zero values.
+VERDICT -> S0 build blocked on B70 AOT compiler prerequisite; no new image,
+  patch, large model download, runtime qualification, or commit. Resolve the
+  documented ocloc prerequisite before S1; all-resident capacity is unmeasured.
+
+### 2026-10-13 Arm A S1/S2: unchanged daily-driver bring-up blocked
+CONFIG -> Qwen3.8-27B AutoRound INT4 W4A16 g128, GPTQ relabel r212;
+  native5802 image d55637b3, TP2/P2P0, MTP3, calibrated fp8_e4m3 KV,
+  context 200000, max sequences 4, prefix ON, FULL_DECODE_ONLY; recipe unchanged.
+  Planned IDs: hotschmoe-dd first, then registered alias
+  qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-native5802-tp2-mtp3-fp8kv-freshcal-backend-ctx200k.
+COMMAND -> bin/gpu-run bin/xpu-health; bin/gpu-run bin/xpu-collective-health;
+  nohup python3 vllm/int4/native5802_trial/serve.py start; ready --pid 1202615;
+  serve.py status; final bin/gpu-run bin/xe-reset --method rebind.
+RESULT -> October 10 STOP was created at 23:47:01 and modified at 23:47:35,
+  during startup. Backend exited 0; post-health passed. Stop initiator unknown.
+  Today default-image pre-health passed both cards and 10 compiled collectives.
+  Run 20261013T045947Z failed pinned-image pre-health: both cards timed out at
+  60 seconds. Automatic rebind completed; pinned post-health passed card 0,
+  timed out on card 1. No server launched, READY absent, wrapper/backend rc=1.
+  Final leased rebind passed both default-image cards and 10 compiled TP2
+  collectives. Leases free; launcher 1202615/backend 1203319 exited, no frontdoor.
+  Probe scripts now nonce each request and require server usage; concurrent
+  timing includes reasoning tokens. Python compilation passed.
+
+| Speed cell | Decode tok/s | Prefill tok/s | TTFT ms |
+| --- | --- | --- | --- |
+| P512/P4096/P32768, single and paired | not run | not run | not run |
+| Chat concurrency 2 and 4; coding 1500 output tokens | not run | not run | not run |
+
+VERDICT -> S1 blocked by pinned-image health; S2 and frontdoor tools not run.
+  No retry while pinned post-health failed; no recipe edits or commit.
+  Raw logs: /mnt/vm_8tb/b70/results/flashnext_iq3_ab_20261013/armA/.
+
+
+## 2026-10-13 S0 follow-up: stock Strata B70 AOT build and IQ3_S pack
+CONFIG -> Clean upstream a0116b27 (0.1.43.1), fresh pinned ggml 3cf03257;
+  derived strata-ab-build:ocloc ID e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2.
+  Official Intel NEO/ocloc 26.22.38646.4, IGC 2.36.3; icpx 2026.1.0.
+COMMAND -> Dockerfile adds release debs and python3-venv; ocloc ids bmg-g31;
+  compile-only AOT probe; stock cmake --build --target strata -j4, --memory 90g.
+  Full sha256sum -c against pinned HF metadata; CPU tools/iq_pack.py.
+RESULT -> AOT and 127-step build PASS; strata --help exit 0, ELF 78 MiB,
+  /mnt/vm_8tb/b70/build/strata-ab/src/build-sycl-aot/strata; version 0.1.43.1.
+  Both IQ3_S shard hashes PASS; pack 1079 tensors, 302 native, arena 1.43 GiB,
+  zero conversions, tokenizer exported. Python 3.12 venv/server --help PASS.
+  Configs serve-iq3-s.json (65536) and serve-iq3-s-8192.json (first boot),
+  split 24, hotschmoe-dd first plus IQ3_S alias, direct NVMe PLE, port 18085.
+  Raw logs and exact commands: /mnt/vm_8tb/b70/results/flashnext_iq3_ab_20261013/build/.
+VERDICT -> S0 build/pack ready for S1. No source patches, GPU touch, device
+  mount, lease, host-stack change, serving qualification, or commit.

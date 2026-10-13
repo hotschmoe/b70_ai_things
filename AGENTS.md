@@ -21,6 +21,14 @@ other backends, custom kernels, profiling and GPU-service downtime are in scope.
 This deliberately expands the older backend/model scope below; archive rules,
 GPU leases, identity and qualification gates still apply.
 
+Redirect (2026-10-13, user decision): the no-substitution rule is dropped and
+UD-Q4_K_XL RAM-spill work is paused. Current task is the A/B in
+docs/20261013_flashnext_iq3_vs_27b_ab_brief.md: ~3-bit Flash-Next with all
+experts in VRAM on stock upstream Strata versus the Qwen3.8-27B INT4 AutoRound
+daily driver. Keep evidence light: one JOURNAL entry per stage, no
+admission/receipt/source-plan machinery. NVMe is /mnt/cache; /mnt/vm_8tb is
+SATA.
+
 Backends:
 
 - sglang is the primary serving and new-development backend.

@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "dataset": "terminal-bench/terminal-bench",
+  "dataset_version": "3.0.0",
+  "campaign": "TB3-AB24",
+  "selection_rule": "Pre-registered 2026-10-13 before any arm ran. Take the 70 tasks of tb3_local70_manifest.json in sorted-name order (0-based index) and keep every 3rd starting at index 0 (indices 0,3,...,69). No model result was consulted.",
+  "parent_manifest": "tb3_local70_manifest.json",
+  "parent_manifest_sha256": "b67a6fd54c4e3db8020f54891966b460230baeb8feec324faef21786526f3196",
+  "parent_local_tasks_digest": "f42c7d0ac925d58d603dfd8f40ceebaac610d376ef1fa48bfe54f760a0970d3d",
+  "hash_algorithm": "sha256",
+  "hash_scope": "task.toml bytes only",
+  "local_task_count": 24,
+  "local_tasks_digest": "57fa6373fc7218fcf4e7b8d002378bcd3ff60f601e2f323e41271a0c050d4512",
+  "tasks": [
+    {
+      "name": "atrx-vep-crispr",
+      "task_toml_sha256": "4951a73fa554698d3575f98e0905585ce1fecb97825042c22d656d7e25ac3c3d"
+    },
+    {
+      "name": "bun-sourcemap-leak",
+      "task_toml_sha256": "94aa694dbed255b3bba35f97d4adee34227a8346e643aa7637ebdcab4914784c"
+    },
+    {
+      "name": "cli-2ph-simplex",
+      "task_toml_sha256": "6db2ad834371b29367fca69a9c0bc62b29a8d9658d7fceac7083f6bdbbc6058f"
+    },
+    {
+      "name": "cumulative-layout-shift",
+      "task_toml_sha256": "eacd325f23c67583ce71d66e54a6858ec9b974656ce9f26d8dcaa96f6979afbb"
+    },
+    {
+      "name": "embedding-drift-monitor",
+      "task_toml_sha256": "5455ffde12eb668b0b93d82b861e808c2e52df611b50ad791d238d8bb4fc65dd"
+    },
+    {
+      "name": "fix-uautomizer-soundness",
+      "task_toml_sha256": "fc6cb78fc201240427172323f4f52226331762a13c112c863aaa7406d1c2ccb1"
+    },
+    {
+      "name": "freecad-impeller",
+      "task_toml_sha256": "4f7aa37785e50aa3606a278cad5c51c9717eac79da4d40c139a9f1bef19e63c4"
+    },
+    {
+      "name": "freight-dispatch-shift",
+      "task_toml_sha256": "e18ca53438b7575a5eec743f9172407b8f6309c0dc95d77898b64266d7659d27"
+    },
+    {
+      "name": "gsea-proteomics",
+      "task_toml_sha256": "745bbf10cac5ec8ca45434c7103de1a409eb5fb108912f89934372d7df13ddcc"
+    },
+    {
+      "name": "html-js-filter",
+      "task_toml_sha256": "282df8b13d9d4b9748a6ed82770a9f2fafc7b618ea7cb6928dfd4eb2c504448b"
+    },
+    {
+      "name": "intrastat-meldung",
+      "task_toml_sha256": "44a535d12789fd4443028b6ff30b76d0b5df54fab9447c8d1282e93bfbdfff93"
+    },
+    {
+      "name": "lake-temp-glm",
+      "task_toml_sha256": "7628c008068e8f32bfc282dacaea2ba1db0d3fe93eef8a727b7f9ed45d334c20"
+    },
+    {
+      "name": "lean-midpoint-proof",
+      "task_toml_sha256": "26bb6084fa21a3c03b787dfe9ddbeb46c177873fadc7f9fc07f204b0d32c8827"
+    },
+    {
+      "name": "medical-claims-processing",
+      "task_toml_sha256": "d16e416b0441aa281f959d21d1b532a43f4b4fbe1bb771b13a70cc812ccb85f8"
+    },
+    {
+      "name": "music-harmony",
+      "task_toml_sha256": "4ef5c748cf657d5e912f6aa10bec57eda5c3027c4c98e447ebe846f44cdce893"
+    },
+    {
+      "name": "ontology-kg-querying",
+      "task_toml_sha256": "2c0ddeb8448c3847c8353c9efa49fc302db72f2862698db2568642db04e648a3"
+    },
+    {
+      "name": "pretrain-shard-corruption",
+      "task_toml_sha256": "85dcbc56698952648aa9ed7db62abdc02cd270528c30c7ae425fbd4c9ff8cba7"
+    },
+    {
+      "name": "react-lead-form",
+      "task_toml_sha256": "35a8342cc46de99507d3436bfa4153238d9d5e4069b2524d1c6d7fafa4a4701a"
+    },
+    {
+      "name": "roy-polymorph-cn",
+      "task_toml_sha256": "46ddd38757451f6bc2ea6a799a3ca73ec591273c0b3d8476dc5add0aa366f044"
+    },
+    {
+      "name": "session-window-debug",
+      "task_toml_sha256": "241f829bbbf5ee2fc31a26fea3116db93958baa7bf31111eb8986f9b39dd7e99"
+    },
+    {
+      "name": "sound-change-cascade",
+      "task_toml_sha256": "d322822f48f346965269d3ec06e601a578036520912929d3f26231d85294ac57"
+    },
+    {
+      "name": "uefi-bootkit",
+      "task_toml_sha256": "5f7d6d811e47f5e9373c9b43981308a5081689eb82cbf7e967bcf36f793c52d4"
+    },
+    {
+      "name": "vllm-deepseek-streaming",
+      "task_toml_sha256": "f5b48e53f4588a5def56e1fcfb6b083facd18d82565722075c3ac31a23a67a19"
+    },
+    {
+      "name": "wdm-design",
+      "task_toml_sha256": "f84e87bcfbc51885950952cee69469e2d275dc6b0211fa0c4adb84071f295b31"
+    }
+  ],
+  "shards": [
+    {
+      "id": "tb3-ab24-01",
+      "tasks": [
+        "atrx-vep-crispr",
+        "bun-sourcemap-leak",
+        "cli-2ph-simplex",
+        "cumulative-layout-shift",
+        "embedding-drift-monitor",
+        "fix-uautomizer-soundness"
+      ]
+    },
+    {
+      "id": "tb3-ab24-02",
+      "tasks": [
+        "freecad-impeller",
+        "freight-dispatch-shift",
+        "gsea-proteomics",
+        "html-js-filter",
+        "intrastat-meldung",
+        "lake-temp-glm"
+      ]
+    },
+    {
+      "id": "tb3-ab24-03",
+      "tasks": [
+        "lean-midpoint-proof",
+        "medical-claims-processing",
+        "music-harmony",
+        "ontology-kg-querying",
+        "pretrain-shard-corruption",
+        "react-lead-form"
+      ]
+    },
+    {
+      "id": "tb3-ab24-04",
+      "tasks": [
+        "roy-polymorph-cn",
+        "session-window-debug",
+        "sound-change-cascade",
+        "uefi-bootkit",
+        "vllm-deepseek-streaming",
+        "wdm-design"
+      ]
+    }
+  ]
+}

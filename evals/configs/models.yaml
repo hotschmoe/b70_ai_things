@@ -626,8 +626,8 @@ models:
     weights: AutoRound-INT4-W4A16-g128
     activations: float16
     calibration: fresh-fp8-kv-be02d915
-    serve_cmd: ""
-    notes: "TEMPLATE ONLY native5802 backend200K; requires complete new100K and own200K qualification. Known arrayEOS quality limitation retained."
+    serve_cmd: "sudo systemctl start hotschmoe-dd.service (drop-in 90-native5802-monitored-trial.conf -> vllm/int4/native5802_trial/serve.py start)"
+    notes: "ARM A of the 20261013 Flash-Next IQ3 A/B (docs/20261013_flashnext_iq3_vs_27b_ab_brief.md). Live monitored 200K trial recipe 20261010T234208Z: weights models/files/qwen3.8-27b/int4-autoround-gptq-relabel-r212, vLLM image d55637b3, TP2 P2P0, MTP3, calibrated FP8 E4M3 KV, prefix ON, max-model-len 200000, max-num-seqs 4, one endpoint over both cards. Primary hotschmoe-dd (authenticated frontdoor 18080, backend 127.0.0.1:18124). Monitored trial, not long200K qualified; known arrayEOS quality limitation retained."
 
   - label: qwen38-flash-next-unsloth-udq4xl-llamacpp-static-control
     served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192
@@ -1576,3 +1576,13 @@ models:
       fresh43 SDK/upload/masked and normal43control required. Sixserial plus twooverlapping
       HTTPclients/nativeDONE provenance/identity/full4/health/normalteardown mandatory.
       No fullmath/cache/speed/shelf promotion.'
+
+  - label: qwen38-flash-next-ista-gsq-rco-iq3s-strata
+    served_model_id: qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_S-strata
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: ISTA-DASLab-Qwen3.8-Flash-Next-GSQ-RCO-GGUF-IQ3_S
+    activations: strata-native
+    calibration: ista-gsq-rco
+    serve_cmd: ""
+    notes: "ARM B of the 20261013 A/B brief. PLACEHOLDER: confirm exact artifact hash, Strata revision, layer-split and KV dtype from the live /v1/models and server log before any graded run; update served_model_id if the detailed alias differs."
