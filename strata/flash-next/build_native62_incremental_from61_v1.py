@@ -1,0 +1,116 @@
+#!/usr/bin/env python3
+"""Opt-in direct61->62 isolated NoDri exact header-consumer reuse; no all-source fresh-compile claim."""
+import argparse, hashlib, json, os, shlex, shutil, subprocess, sys, tempfile, time
+from pathlib import Path
+import build_native_hc_engine as base
+from build_native58_fresh_from52_v2 import owned_compile
+ROOT=base.REPO; HERE=Path(__file__).resolve().parent
+PARENT_PLAN=HERE/'native61-host-actual-chunk-selection-engine-build-proposal-v1.json'
+CHILD_PLAN=HERE/'native62-HC-perf-explicit-sqrt-engine-proposal-v1.json'
+PARENT_PLAN_SHA='34d49ee71fcee30b4059c37cb166c20a1356454dc0abe2565f21f2be59ab659e'
+CHILD_PLAN_SHA='f05021bcd5d3e90fa8fcca69cace830f834cf3c0928ca0fc32b2cf522a89cf68'
+CHANGED={'sycl/src/kernels/hc_native_projection.cpp','sycl/include/strata/kernels/hc_native_projection.hpp','sycl/include/strata/kernels/hc_native_composition.hpp','sycl/src/kernels/hc_native_composition.cpp','sycl/include/strata/core/native_hc_dispatch.hpp','sycl/src/prefill/prefill.cpp'}
+ARCHIVES={'libstrata_engine.a','libstrata_kernels.a','libstrata_prefill.a'}
+DIRECT_OBJECTS={'CMakeFiles/strata_kernels.dir/src/kernels/hc_native_composition.cpp.o','CMakeFiles/strata_kernels.dir/src/kernels/hc_native_projection.cpp.o','CMakeFiles/strata_prefill.dir/src/prefill/prefill.cpp.o'}
+
+def require(ok,msg):
+ if not ok: raise ValueError(msg)
+def sha(path):
+ path=Path(path);require(path.is_file() and not path.is_symlink(),'Exact regular file required '+str(path));before=path.stat();value=base.sha(path);after=path.stat();require((before.st_dev,before.st_ino,before.st_size,before.st_mtime_ns,before.st_ctime_ns)==(after.st_dev,after.st_ino,after.st_size,after.st_mtime_ns,after.st_ctime_ns),'File changed during hash '+str(path));return value
+
+def tree(root, skip_git=False):
+ out={}
+ for path in sorted(root.rglob('*')):
+  if skip_git and '.git' in path.relative_to(root).parts: continue
+  require(not path.is_symlink(),'Symlink not admitted in copied inputs '+str(path))
+  if path.is_file(): out[str(path.relative_to(root))]=sha(path)
+ return out
+
+def inspect_parent(parent,receipt_sha):
+ require(parent.is_absolute() and parent.resolve()==parent,'Canonical current parent required'); require(sha(parent/'receipt.json')==receipt_sha,'Actual parent receipt SHA differs')
+ receipt=json.loads((parent/'receipt.json').read_bytes());a=json.loads(PARENT_PLAN.read_bytes());b=json.loads(CHILD_PLAN.read_bytes())
+ require(sha(PARENT_PLAN)==PARENT_PLAN_SHA and sha(CHILD_PLAN)==CHILD_PLAN_SHA and sha(parent/'plan.snapshot.json')==PARENT_PLAN_SHA,'Exact direct parent/child plans required')
+ for k in ('source_revision','ggml','cmake_flags','build_targets','source_file_sha256'):require(a[k]==b[k],'Unchanged source/build ABI prerequisite differs '+k)
+ require(b['patches'][:-1]==a['patches'] and len(b['patches'])==len(a['patches'])+1,'Only direct62 six-file HC perf/arithmetic delta permitted')
+ require({k for k in a['expected_patched_source_sha256'] if a['expected_patched_source_sha256'][k]!=b['expected_patched_source_sha256'][k]}==CHANGED and set(b['expected_patched_source_sha256'])==set(a['expected_patched_source_sha256']),'Exactly six current HC/caller/header sources differ')
+ require(receipt['image']==base.IMAGE and receipt['build_rc']==0 and receipt['devices_exposed'] is False and receipt['external_source_unchanged'] is True and receipt['plan_snapshot_unchanged'] is True and receipt['plan_sha256']==PARENT_PLAN_SHA,'Authoritative same-image completed61 receipt required')
+ require(receipt['fresh_all_source_compilation'] is False and receipt['parent_unchanged'] is True and receipt['owned_normal_exit'] is True and receipt['owned_removed'] is True and receipt['original_foreground_EOF'] is True and receipt['forced_cleanup'] is False and receipt['compiler_return_code']==0,'Actual61 incremental owned normal compilation required')
+ require(receipt['compiler_resource_bounds']=={'cpus':4,'memory_bytes':16<<30,'memory_swap_bytes':16<<30,'pids_limit':512,'network':'none','NoDri':True},'Actual61 typed compiler bounds required')
+ require(json.loads((parent/'build'/'incremental-audit.json').read_bytes())==receipt['incremental_dependency_audit'] and receipt['incremental_dependency_audit']['passed'] is True,'Parent actual dependency audit changed')
+ require(receipt['source_copy']==str(parent/'source') and receipt['ggml_source']==str(parent/'ggml-source') and receipt['build']==str(parent/'build'),'Parent exact isolated paths required')
+ require(len(receipt['binary_sha256'])==8 and set(Path(x).name for x in receipt['binary_sha256'])==set(b['build_targets']),'Actual all8 parent executables required')
+ for name,want in receipt['binary_sha256'].items():require(Path(name).parent==parent/'build' and sha(name)==want,'Parent executable changed '+name)
+ for name,want in a['expected_patched_source_sha256'].items():require(sha(parent/'source'/name)==want,'Parent61 source changed '+name)
+ for patch in b['patches']:require(sha(ROOT/patch['path'])==patch['sha256'],'Reviewed current patch changed '+patch['path'])
+ build=parent/'build'; require(sha(build/'CMakeCache.txt')==receipt['cmake_cache_sha256'],'Parent cache differs')
+ changed_objects=set(b['expected_changed_objects']);require(sha(build/'incremental-final-dependencies.txt')==b['parent_saved_final_dependencies_sha256'],'Exact parent saved final dependencies required')
+ ninja=(build/'build.ninja').read_text(encoding='ascii')
+ require(all('build '+name+': CXX_COMPILER_' in ninja for name in changed_objects),'Every exact current changed-consumer Ninja edge required')
+ objects={str(p.relative_to(build)):sha(p) for p in sorted(build.rglob('*.o'))};require(len(objects)==124 and changed_objects <= set(objects),'Exact current61 object census required')
+ expected_objects={**receipt['reused_objects_sha256'],**{row['path']:row['after_sha256'] for row in receipt['newly_compiled_objects']}};require(objects==expected_objects,'Parent61 authoritative compiled-object bytes changed')
+ archives={str(p.relative_to(build)):sha(p) for p in sorted(build.rglob('*.a'))}; require(archives and (build/'.ninja_deps').is_file() and (build/'.ninja_log').is_file(),'Existing actual Ninja dependencies/log/archives required')
+ require(archives=={**receipt['reused_archives_sha256'],**receipt['updated_archive_sha256']},'Parent61 authoritative current archives changed')
+ metadata={name:sha(build/name) for name in ('CMakeCache.txt','build.ninja','.ninja_deps','.ninja_log','compile_commands.json','compiler-version.txt','packages.txt')}
+ return a,b,dict(receipt_sha256=receipt_sha,parent_root=str(parent),source_tree=tree(parent/'source',True),ggml_tree=tree(parent/'ggml-source',True),object_sha256=objects,archive_sha256=archives,build_metadata_sha256=metadata,changed_objects=sorted(changed_objects),build_dependency_sha256={str(p.relative_to(build)):sha(p) for p in build.rglob('*') if p.is_file() and not p.is_symlink() and p.suffix not in ('.o','.a') and p.name not in a['build_targets']},compiler_image=base.IMAGE,changed_files=sorted(CHANGED),expected_child_sources=b['expected_patched_source_sha256'],scheduled_archives=sorted(ARCHIVES))
+
+def source_closure():
+ path=HERE/'source62-incremental-from61-build-recipe-v1.json'
+ for name,want in json.loads(path.read_bytes())['pins'].items():require(sha(ROOT/name)==want,'Frozen incremental builder source changed '+name)
+ return sha(path)
+
+def main():
+ parser=argparse.ArgumentParser();parser.add_argument('--parent',type=Path,required=True);parser.add_argument('--parent-receipt-sha256',required=True);parser.add_argument('--jobs',type=int,choices=range(1,9),default=4);parser.add_argument('--lease-card',type=int,choices=(0,1),default=1);parser.add_argument('--inspect-only',type=Path);parser.add_argument('--leased',action='store_true');a=parser.parse_args()
+ if a.inspect_only:
+  _,_,proof=inspect_parent(a.parent,a.parent_receipt_sha256);require(not a.inspect_only.exists(),'New inspection output required');a.inspect_only.write_text(json.dumps(proof,indent=2)+'\n',encoding='ascii');return 0
+ if not a.leased:os.execv(str(ROOT/'bin/gpu-run'),['gpu-run','--card',str(a.lease_card),sys.executable,__file__,*sys.argv[1:],'--leased'])
+ require(os.path.samefile('/proc/self/fd/'+str(8+a.lease_card),'/mnt/vm_8tb/b70/gpu.lock.'+str(a.lease_card)),'Inherited selected compiler owner lease required')
+ builder_source_plan_sha256=source_closure()
+ parent_plan,child_plan,proof=inspect_parent(a.parent,a.parent_receipt_sha256)
+ require(base.output(['docker','image','inspect',base.IMAGE,'--format','{{.Id}}'])==base.IMAGE,'Exact same compiler image required')
+ directory=Path(tempfile.mkdtemp(prefix='strata-native62-incremental61-v1-'+time.strftime('%Y%m%dT%H%M%SZ',time.gmtime())+'-',dir='/mnt/vm_8tb/b70/build'))
+ (directory/'plan.snapshot.json').write_bytes(CHILD_PLAN.read_bytes());(directory/'controller.py').write_bytes(Path(__file__).read_bytes());(directory/'parent-provenance.json').write_text(json.dumps(proof,indent=2)+'\n',encoding='ascii')
+ source=directory/'source';dependency=directory/'ggml-source';build=directory/'build'
+ receipt=dict(schema=1,build_strategy='direct61_to62_isolated_incremental_v1',fresh_all_source_compilation=False,CMake_reconfiguration_performed=False,parent_provenance_sha256=sha(directory/'parent-provenance.json'),parent_receipt_sha256=a.parent_receipt_sha256,parent_root=str(a.parent),external_source_root=str(a.parent/'source'),external_source_identity_kind='immutable_actual61_source_snapshot',image=base.IMAGE,devices_exposed=False,source_revision=child_plan['source_revision'],ggml_revision=child_plan['ggml']['revision'],source_copy=str(source),ggml_source=str(dependency),build=str(build),plan_snapshot=str(directory/'plan.snapshot.json'),plan_sha256=CHILD_PLAN_SHA,patches=child_plan['patches'],builder_sha256=sha(Path(__file__)),dependency_auditor_sha256=sha(HERE/'native62_incremental_ninja_audit_v1.py'),builder_source_plan_sha256=builder_source_plan_sha256,commands=[],build_rc=1,status='preparing incremental',reused_objects_sha256={},newly_compiled_objects=[],all8_ELFs_deleted_before_relink=False)
+ def run(command,log):receipt['commands'].append(command);subprocess.run(command,stdout=log,stderr=subprocess.STDOUT,check=True)
+ try:
+  with (directory/'build.log').open('w',encoding='ascii') as log:
+   for old,new in ((a.parent/'source',source),(a.parent/'ggml-source',dependency),(a.parent/'build',build)):
+    shutil.copytree(old,new,copy_function=shutil.copy2);require(all(p.stat().st_ino!= (old/p.relative_to(new)).stat().st_ino or p.stat().st_dev!=(old/p.relative_to(new)).stat().st_dev for p in new.rglob('*') if p.is_file()),'Isolated copies must not share parent inodes')
+   require(tree(source,True)==proof['source_tree'] and tree(dependency,True)==proof['ggml_tree'],'Exact isolated source/dependency copies differ')
+   for name,want in proof['object_sha256'].items():require(sha(build/name)==want,'Copied object differs '+name)
+   for name,want in proof['archive_sha256'].items():require(sha(build/name)==want,'Copied archive differs '+name)
+   for delta in child_plan['patches'][-1:]:
+    run(['git','-C',str(source),'apply','--check',str(ROOT/delta['path'])],log);run(['git','-C',str(source),'apply',str(ROOT/delta['path'])],log)
+   require({k:sha(source/k) for k in child_plan['expected_patched_source_sha256']}==child_plan['expected_patched_source_sha256'],'All76 child source bytes required')
+   changed_tree=tree(source,True);require({name for name in changed_tree if changed_tree[name]!=proof['source_tree'].get(name)}==CHANGED and set(changed_tree)==set(proof['source_tree']),'Only six named HC/caller/header files may change')
+   for target in child_plan['build_targets']:(build/target).unlink()
+   receipt['all8_ELFs_deleted_before_relink']=True
+   configure=['cmake','-S','/src/sycl','-B','/build','-G','Ninja']+['-D'+k+'='+v for k,v in sorted(child_plan['cmake_flags'].items())]
+   # The shell runs only in the exact compiler image; no DRI or GPU device mount.
+   script='\n'.join(['set -Eeo pipefail',"trap 'rc=$?; echo incremental-startup-or-build-failed line=$LINENO rc=$rc >&2; exit $rc' ERR",'test ! -e /dev/dri','if [[ ${SETVARS_COMPLETED:-0} != 1 ]]; then source /opt/intel/oneapi/setvars.sh; fi','icpx --version > /build/incremental-compiler-version.txt','dpkg-query -W > /build/incremental-packages.txt','cmp /build/compiler-version.txt /build/incremental-compiler-version.txt','cmp /build/packages.txt /build/incremental-packages.txt','ninja -C /build -t commands '+shlex.join(child_plan['build_targets'])+' > /build/incremental-parent-commands.txt','ninja -C /build -t commands '+shlex.join(child_plan['build_targets'])+' > /build/incremental-child-commands.txt','cmp /build/incremental-parent-commands.txt /build/incremental-child-commands.txt','ninja -C /build -t deps > /build/incremental-dependencies.txt','ninja -C /build -n -v '+shlex.join(child_plan['build_targets'])+' > /build/incremental-dryrun.txt','python3 /audit.py', 'ninja -C /build -v '+shlex.join(child_plan['build_targets'])+' -j '+str(a.jobs),'ninja -C /build -t deps > /build/incremental-final-dependencies.txt','python3 /audit.py --final'])
+   receipt['container_script']=script
+   mounts=[str(source)+':/src:ro',str(dependency)+':/ggml:ro',str(build)+':/build',str(directory/'parent-provenance.json')+':/proof.json:ro',str(HERE/'native62_incremental_ninja_audit_v1.py')+':/audit.py:ro']
+   command=['docker','run','--network','none','--cpus','4','--memory','16g','--memory-swap','16g','--pids-limit','512','--user',str(os.getuid())+':'+str(os.getgid())]
+   for mount in mounts:command+=['-v',mount]
+   command+=['--entrypoint','/bin/bash',base.IMAGE,'-lc',script]
+   owned_compile(command,mounts,directory,receipt,log,a.lease_card)
+  after={name:sha(build/name) for name in proof['object_sha256']};require({n for n in after if after[n]!=proof['object_sha256'][n]} <= set(proof['changed_objects']) and all(after[n]!=proof['object_sha256'][n] for n in DIRECT_OBJECTS),'Only six rebuilt consumers may mutate; three direct CPP objects must change; header-only objects may be byte-identical')
+  for name in ('CMakeCache.txt','build.ninja','compile_commands.json','compiler-version.txt','packages.txt'):require(sha(build/name)==proof['build_metadata_sha256'][name],'Preserved compiler configuration changed '+name)
+  receipt['copied_config_unchanged']=True
+  receipt['reused_archives_sha256']={name:sha(build/name) for name in proof['archive_sha256']}
+  require({name for name,want in receipt['reused_archives_sha256'].items() if want!=proof['archive_sha256'][name]}<=ARCHIVES,'Only three scheduled current archives may mutate')
+  receipt['updated_archive_sha256']={name:receipt['reused_archives_sha256'].pop(name) for name in sorted(ARCHIVES)}
+  receipt['newly_compiled_objects']=[dict(path=name,before_sha256=proof['object_sha256'][name],after_sha256=after[name]) for name in proof['changed_objects']]
+  receipt['reused_objects_sha256']={n:w for n,w in after.items() if n not in proof['changed_objects']}
+  require(len(receipt['reused_objects_sha256'])+len(proof['changed_objects'])==len(proof['object_sha256']),'Object reuse census differs')
+  receipt['binary_sha256']={str(build/n):sha(build/n) for n in child_plan['build_targets']};require(all((build/n).read_bytes()[:4]==b'\x7fELF' for n in child_plan['build_targets']),'All8 newly linked ELF targets required')
+  receipt['patched_source_sha256']={n:sha(source/n) for n in child_plan['overlay_files']};receipt['cmake_cache_sha256']=sha(build/'CMakeCache.txt');receipt['incremental_dependency_audit']=json.loads((build/'incremental-audit.json').read_bytes());receipt['final_incremental_dependency_audit']=json.loads((build/'incremental-final-audit.json').read_bytes());require(all(receipt['final_incremental_dependency_audit'][k]==receipt['incremental_dependency_audit'][k] for k in ('passed','dependency_objects','changed_objects','scheduled_commands','unchanged_source_headers_rechecked','all_changed_header_consumers_accounted','compiler_system_dependencies_bound_by_identical_image')) and all(receipt['final_incremental_dependency_audit']['dependency_lists_sha256'][n]==receipt['incremental_dependency_audit']['dependency_lists_sha256'][n] for n in proof['object_sha256'] if n not in proof['changed_objects']),'Final all-object/current-header-consumer proof or reused-object dependency lists changed');receipt['ggml_tree']=base.output(['git','-C',str(dependency),'rev-parse','HEAD^{tree}']);receipt.update(build_rc=0,status='incrementally built; 118 authoritative objects reused, six current consumers compiled, three current archives rebuilt, all8 ELFs freshly linked; performance/arithmetic/model unqualified')
+ except BaseException as error:receipt.update(build_rc=1,status='failed incremental; use full builder without reusing this failed tree',error=type(error).__name__+': '+str(error))
+ finally:
+  try: _,_,closing=inspect_parent(a.parent,a.parent_receipt_sha256);require(closing==proof,'Parent provenance changed during isolated incremental build');receipt['parent_unchanged']=True;require(source_closure()==builder_source_plan_sha256,'Incremental builder closure changed during execution')
+  except BaseException as error:receipt.update(build_rc=1,parent_unchanged=False,closing_error=str(error))
+  receipt['external_source_unchanged']=receipt.get('parent_unchanged',False);receipt['plan_snapshot_unchanged']=sha(directory/'plan.snapshot.json')==CHILD_PLAN_SHA and sha(CHILD_PLAN)==CHILD_PLAN_SHA
+  if not receipt['external_source_unchanged'] or not receipt['plan_snapshot_unchanged']:receipt['build_rc']=1
+  (directory/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n',encoding='ascii')
+ print(json.dumps(dict(receipt=str(directory/'receipt.json'),build_rc=receipt['build_rc'],build_strategy=receipt['build_strategy'])));return receipt['build_rc']
+if __name__=='__main__':raise SystemExit(main())
