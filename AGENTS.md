@@ -3,6 +3,20 @@
 Keep this file short. Detailed evidence lives in JOURNAL.md and the curated
 documents listed below.
 
+## Flash-Next goals (user, 2026-10-13)
+
+Targets for the Flash-Next serving stack, for one or two users:
+
+- Prefill: 2000+ tok/s.
+- Decode: 150+ tok/s per stream.
+- Context: 200k per stream at concurrency 2.
+- KV eviction to system RAM under load, restored without recompute.
+
+Backend focus is Strata (upstream head, small measured changes, no long-lived
+fork). vLLM stays parked and ready to port, not active work. The 27B INT4
+AutoRound vLLM endpoint remains the fallback daily driver. Measured status
+against these targets lives in docs/20261013_flashnext_goals.md.
+
 ## Style and evidence
 
 - ASCII only in repository files and terminal output.
