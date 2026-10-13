@@ -110,3 +110,26 @@ S4 Only if S3 is ambiguous: extend to the full local-70 lock.
 - Arm A is one vLLM TP=2 endpoint: hotschmoe-dd.service recipe
   (vllm/int4/native5802_trial/serve.py), MTP3, calibrated fp8 KV, 200k, 4
   streams. Launch with XPU_HEALTH_TIMEOUT=400 while the SATA disk is busy.
+
+## Amendment 2 (2026-10-13, decision eval changed)
+
+- Terminal-Bench through Harbor has still not produced a trustworthy local
+  score (calibration runs scored 0 with harness errors). The decision eval is
+  now evals/abfast: 19 validated commit-replay tasks (6 from the owner's
+  repos, 13 from post-July-2026 open-source commits), Pi 1.2.0 run directly
+  in a throwaway container, context window 131072, thinking on, hidden tests
+  graded after the agent stops. Terminal-Bench and SWE-bench stay as optional
+  overnight confirmation.
+- The decision rule is unchanged but applied to abfast: arm B must win by
+  more than one or two task flips, i.e. at least +2 tasks net with more
+  paired wins than losses, and no extra endpoint instability.
+- Timeout: the first arm A run used a 900 s agent cap at 4 parallel tasks and
+  11 of 19 tasks hit the cap (3 of the 4 failures were timeouts). Quality is
+  therefore scored as "passes within 2700 s": arm A tasks that failed by
+  timeout at 900 s are rerun at 2700 s; arm B runs at 2700 s throughout.
+  Time-to-completion is reported separately and is only comparable at
+  matched parallelism.
+- Arm A server load in that run: 7.24 M prompt tokens (5.84 M cache hits,
+  1.40 M uncached) and 0.216 M completion tokens in 4134 s. Uncached prefill
+  of tool output is the larger share of server time, so prefix reuse and
+  prefill speed on arm B matter as much as decode speed.

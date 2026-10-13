@@ -21844,3 +21844,23 @@ VERDICT -> Running; tool round trip passed. Coding1500 was reasoning-only,
   Owner1217240, lease1215559, backend1217479, frontdoor1233100; stop:
   python3 vllm/int4/native5802_trial/serve.py stop
   Raw: /mnt/vm_8tb/b70/results/flashnext_iq3_ab_20261013/armA/ (service-run symlink).
+
+## 2026-10-13 -- A/B S3 arm A: abfast on 27B INT4 AutoRound (first pass)
+
+CONFIG: arm A vLLM TP=2 endpoint, hotschmoe-dd via frontdoor :18080, ctx 200k
+server / 131072 Pi window, MTP3, fp8 KV, prefix cache on. evals/abfast at
+2a7ee73, Pi 1.2.0, thinking xhigh, 19 tasks, parallel 4, agent cap 900 s. A
+Terminal-Bench calibration shared the endpoint during the run (up to 5
+clients on a 4-sequence server).
+COMMAND: python3 evals/abfast/run_arm.py --base-url http://192.168.10.5:18080/v1
+--api-key-file /mnt/vm_8tb/b70/secrets/dd_api_key --model hotschmoe-dd
+--arm-label armA --parallel 4 --timeout-s 900 --thinking xhigh
+RESULT: 15/19 pass (79 percent). End reasons: 11 timeout, 8 completed. Fails:
+zmoltcp-payload-clamp (timeout, 818/822), raptorq-rfc6330-prng (timeout, 3/8),
+bangguard-auto-recovery (timeout, 0/1), moreitertools-numeric-range
+(completed, 592/594). Agent wall median 900 s, mean 814 s. 452 turns, prompt
+7,237,115 tokens (5,836,800 cached), completion 215,887. Run wall 4134 s,
+end health ok. Run dir /mnt/vm_8tb/b70/evals/abfast/runs/armA-20261013T072816Z.
+VERDICT: plumbing works and the eval is not saturated, but the 900 s cap is
+binding at parallel 4 and confounds quality with speed. The three timeout
+fails are being rerun at 2700 s; arm B runs at 2700 s (brief Amendment 2).
