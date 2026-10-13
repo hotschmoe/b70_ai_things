@@ -19994,3 +19994,21 @@ runtimeimage/artifactbinding; unknown retirement retainsforeground owner.
 VERDICT -> Actualpreflight remainspending aftercleanABBA. First mmaparm
 passed6requests; firstdirectarm has5/6, secondB/finalA stillrequired.
 No backgroundbuild/provider/model hashing during timedmodelwork.
+
+
+## 2026-10-13: ABBA model intervals finish; actual artifact preflight finds Python boundary
+
+CONFIG -> Clean source61 mmap/direct/direct/mmap, fourfresh owned arms.
+COMMAND -> Actual88714 allfour modelphase results PASS, eachsixGEN512.
+RESULT -> Modeltimingintervalsended; finalwholeidentity/publicreader pending.
+VERDICT -> Now safe to run deferred artifact/export IO; no finalspeedclaim.
+
+CONFIG -> ActualV5 native artifact manifest, realC388 validation.
+COMMAND -> Root74742 artifactprepare PASS aftertimings; binding
+26476b9141e2cba9a2158b3d26708b3c8d3b9ce353d6dd42d3a6b039c833db93.
+Root89618 protectedNoDri preflight FAILED, typedowned cleanup retained.
+RESULT -> APIvalidator used systemPython3.12 and couldnotfindregex package
+metadata. Freshimage/install/contract bypass notused. Actualqualifiedvenv
+interpreter mustbe bound inimmutable successor; V1artifacts/failure retained.
+VERDICT -> Manifestgenerated but runtimepreflightNOTpassed; no GPUcacheV2
+retry untilgenuineinterpreter/dependency/source validation succeeds.
