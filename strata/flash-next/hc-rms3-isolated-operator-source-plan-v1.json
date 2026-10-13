@@ -1,0 +1,93 @@
+{
+  "schema": 1,
+  "files": {
+    "kernels/hc_rms3_operator_fixture_v1.cpp": "6b6684add24ae0ccbcdf3c2d41fc649d2fc63102d44b96c440a53c93540d199c",
+    "strata/flash-next/prepare_hc_rms3_operator_v1.py": "6b4bb26995e93d498a383514554e73f003437c2d41852649f6228bee659741c4",
+    "strata/flash-next/test_hc_rms3_operator_cpu_v1.py": "3ef21cfc67ad710bf452b505f469d0b1a3f1549f576b8c5ad3615fd3de0bdfd3",
+    "/mnt/vm_8tb/b70/build/strata-native59-incremental58-v1-20261012T215430Z-tmxlm889/source/sycl/src/kernels/hc_native_composition.cpp": "c63ce71dee3572daca974f03587db54ade1d9ec842176bd83bb81dc7d22bb83f",
+    "/mnt/vm_8tb/b70/build/strata-native59-incremental58-v1-20261012T215430Z-tmxlm889/source/sycl/include/strata/kernels/hc_native_composition.hpp": "4706658cea7273adf76995d9cffb2eb9ce22b07a3d7255f62351e0eb65fd2b6e",
+    "/mnt/vm_8tb/b70/build/strata-native59-incremental58-v1-20261012T215430Z-tmxlm889/receipt.json": "df52f1b799d013e84438dc50e77c4b81b7d5f655fa04ba14c0af05b6d0ea74d0",
+    "/mnt/vm_8tb/b70/build/strata-native61-incremental60-v1-20261012T233538Z-lrau0o0c/source/sycl/src/kernels/hc_native_composition.cpp": "c63ce71dee3572daca974f03587db54ade1d9ec842176bd83bb81dc7d22bb83f",
+    "/mnt/vm_8tb/b70/build/strata-native61-incremental60-v1-20261012T233538Z-lrau0o0c/source/sycl/include/strata/kernels/hc_native_composition.hpp": "4706658cea7273adf76995d9cffb2eb9ce22b07a3d7255f62351e0eb65fd2b6e",
+    "/mnt/vm_8tb/b70/build/strata-native61-incremental60-v1-20261012T233538Z-lrau0o0c/receipt.json": "096dc246a877482a5e2f18789a2a79847f4ba31269f57c581433e6e7bd45a1c5",
+    "strata/flash-next/run_current59_first_gdn_reference_v1.py": "6f4efd93cdbf85dcad402718d1f0fea83fbfbadf3ca4e3a788640c27550fbaca",
+    "strata/flash-next/test_current59_first_gdn_reference_cpu_v1.py": "2669acd38619a632bdc46abff6d925c6cc6d744c036b3ad108a6e61ce4425499",
+    "strata/flash-next/original_q80_q81_wide32_reference_v1.py": "79fc9776139d116c910cd5b355ac7e6368299a4a6744ca12b783a5c0c247c031",
+    "strata/flash-next/test_original_q80_q81_wide32_cpu_v1.py": "d5f97e09bf58d1fc23601aaa1adda8a7f700feac656ec63002f7f0e9fe746d58",
+    "strata/flash-next/current_first_gdn_bulk_observation_v1.py": "5886f5b36a59629a97104eb0e2d5a7683a5c96dfd0cb5982091c7fcbe3bd2c96",
+    "strata/flash-next/original_native_hc_bulk_f32_v1.py": "a3518692f67fd600eee2d7cd75b76ffc30bc29c4d44f0766f53a3d1eeca5cf33",
+    "strata/flash-next/original_native_hc_f32_v1.py": "6c041765000c883a94d456ab3e0ac582ecb42723a20baf57ad7b3498c76a06ae",
+    "strata/flash-next/hc_f32_arithmetic35_host_v2.py": "a166e812264acdaa2859d656b043420df514c2d1bad58e0ab4054bbf4bd7a767",
+    "strata/flash-next/prefill_first_gdn_owned_storage_v1.py": "5ca886ac3f1d7786e34699238fb1c1cd8303ae7b0ec4555d0f2dccdfedb20718",
+    "strata/flash-next/full48_owned_composition_storage_v1.py": "9f98e1b7b7088dc0b12ec0474bcad5660f60878d23ecd24cfabc3032661d1d28",
+    "strata/flash-next/original_first_gdn_layer_v1.py": "c6352dc69f22e5940e0c6799fe83137225b8126fe7ce771983de682e00abd67f",
+    "strata/flash-next/original_gguf_reference.py": "6498bfd01ad06b7439a6dc07c753306bbf1d0b173f8ba1ab9763da7d11a3ddb5",
+    "strata/flash-next/original_gguf_vector_decoder_v2.py": "130f1a525e366e5d33fcb67a3c765ee50d5c4eaedb2b4a0495ae2386cd18c7b9",
+    "strata/flash-next/independent_q8_1_activation_v1.py": "b58d73282051bfa301ebb6f781d5d59c63128d9074a42d53cf4d9ff05d75a714",
+    "strata/flash-next/native_storage_first_gdn_estimate_v1.py": "43a2beeafabcd5a8ed040139a5122b7b18d0518b94b3700d4f6601d685e93d2a",
+    "strata/flash-next/source43_num10_original_reference_v3.py": "68ae1a38c2dd17a5fe3c1bf825ca471e1918a8b4b8a5db93c3d7aeef78c95c63",
+    "strata/flash-next/source43_num10_original_reference_v2.py": "c50b64096eba40f480a67a15cdd40d88ca67071416e236a240d9e9c26c7777e6",
+    "strata/flash-next/source43_num10_original_reference_v1.py": "024c7d7d0bb4861d67905c32fb6f8b03ddf0de596547218e27df6334e8bc5260",
+    "strata/flash-next/compare_current_full48_num10_v1.py": "9d8eb7dd1a015312767cb6cea89db63c651f859c658742b6d7ff6d7207f138cb",
+    "strata/flash-next/run_source44_num38_original_reference_v2.py": "cde3b83809003f2472993bd70d03b2bd5088403758020948b059b7486a20f7ba",
+    "strata/flash-next/serial37_canonical_json_v3.py": "afdbdc4729cc6a2cfb68de5cb1106d79d1b81db79c9da91b1c157d5c1b85f57d",
+    "strata/flash-next/original-gguf-reference-foundation-plan-v1.json": "7d5217d844b411b427e4c6c6df2b4837b66970937c044389b40270346804bd2b",
+    "strata/flash-next/current59-first-gdn-reference-source-plan-v1.json": "086a73576350a8b219c76a7008d27659fc614371e5f97de66f92b2ea9d9390be"
+  },
+  "CONFIG": {
+    "scope": "Isolated actual59/61 HcNorm source arithmetic oracle, prefix1/token1/layer0 originalR andnorm only",
+    "observer_default_OFF": true,
+    "mathematical_source_same59_61": true,
+    "actual_MAIN_RMS_observed": false,
+    "whole48_qualification": false,
+    "native_RMS_values_as_primary_reference": false,
+    "original_public_layout_changed": false,
+    "patch0044_reusable_for_HC": false,
+    "patch0044_scope": "GDN core/RMS, not HC"
+  },
+  "COMMAND": {
+    "source_prepare": [
+      "python3",
+      "strata/flash-next/prepare_hc_rms3_operator_v1.py",
+      "--output",
+      "/mnt/vm_8tb/b70/build/hc-rms3-operator-compile-inputs-v1"
+    ],
+    "root_only_export": [
+      "python3",
+      "strata/flash-next/prepare_hc_rms3_operator_v1.py",
+      "--export-original",
+      "--own-root",
+      "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/current59-own-first-GDN-wide32-reference-v1",
+      "--model-identity",
+      "ROOT_SUPPLIED_FRESH_FULL4_JSON",
+      "--identity-sha256",
+      "ROOT_SUPPLIED_FRESH_FULL4_SHA256",
+      "--output",
+      "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/hc-rms3-original-inputs-v1"
+    ],
+    "compiler_recipe": "compile-recipe.json under source_prepare output; root-only NoDri C39992, productionO3/C++20/precise/correctdivide-sqrt",
+    "runtime_leaf": [
+      "/out/hc-rms3",
+      "/inputs",
+      "/results"
+    ],
+    "runtime_env": {
+      "B70_HC_RMS3_OBSERVE": "1",
+      "B70_HC_EXPECTED_PCI": "ROOT_ACTUAL_LEASED_GPU0_PCI",
+      "ZE_AFFINITY_MASK": "0"
+    },
+    "runtime_requires": "root protected card0 lease/fullDRI/owner metadata/prepost health/kernel/normalEOF/removal; original input report+all exported file hashes must be checked beforeafter; no extra modelmount"
+  },
+  "RESULT": {
+    "source_construction_only": true,
+    "NoDri_compile_executed": false,
+    "GPU_executed": false,
+    "original_norm_payload_read_by_author": false
+  },
+  "VERDICT": {
+    "useful_if": "Unmodified kernel normalized and rs outputs match observed variant bitwise and normalized also matches saved actualMAIN target; changed-input graph replay andguards pass",
+    "still_unobserved": "actualMAIN square_sum/argument/rs values; isolated output never reclassified asMAIN capture",
+    "native_scalar_replacement_in_primary": false
+  },
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_hc_rms3_operator_cpu_v1"
+}

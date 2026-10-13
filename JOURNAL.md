@@ -19945,3 +19945,24 @@ VERDICT -> No encoder patch or tolerance fit justified. Exact HC source
 RMS/intrinsic/compiler boundary remains to observe with a small isolated
 actual-kernel oracle; oldNUM38 addedGDN RMS, nottheseHCfields. No whole48
 blind recapture; deferallGPU arithmetic work untilcleanABBA closes.
+
+
+## 2026-10-13: persistence refusal closes; cleanABBA owns GPUs
+
+CONFIG -> V5 native compound persistence controller V1, actual49698.
+COMMAND -> Terminal FAILED; root closing health and whole5 inspected.
+RESULT -> Report6e37aabea0920ec0b924a7a0bdf524a1a59425f5f3274e78a15a603dbe28082c;
+SAVE refused missing artifact identity manifest after original64 output.
+Controlled failed-protocol retirement native137; poststrict/compiledhealth0,
+allfive closing publisher hashes PASS. No persistence or normal-closeclaim.
+VERDICT -> Explicit genuine runtime manifest generation/binding required,
+never arbitrary64hex or nativeguard removal. FailedV1 preserved.
+
+CONFIG -> Exact59/61 HC normalization isolated RMS3 oracle.
+COMMAND -> Root source-only prepare_hc_rms3_operator_v1.py PASS, noexport.
+RESULT -> Newfixture/inc/header/compile recipe at
+/mnt/vm_8tb/b70/build/hc-rms3-isolated-operator-compile-inputs-v1; exactundo
+toactualkernel, baseline/observed bitwise+savedMAIN agreement gates.
+VERDICT -> No compiler/GPU/originalnorm read. Export and actual isolated
+operator wait untilcleanABBA88714 timingdone. ActualMAIN RMS fields remain
+unobserved evenifisolatedoracle succeeds; fullmodelmath unqualified.
