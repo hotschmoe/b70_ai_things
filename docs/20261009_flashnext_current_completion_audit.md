@@ -2294,3 +2294,26 @@ complete cache-family isolation/divergence/cancel/evict/stale/restart; actual
 HTTP hotschmoe-dd with one/two/four/bounded-six streams; calibrated host/device
 critical path, matched latency/fairness, memory hierarchy tradeoffs, verified
 shelf and reproducible launch/stop. No2000/50 or production promotion.
+
+
+## 2026-10-13 - Projection diagnostic and identity preflight close
+
+Original packed-weight projection operator runtimeV2 passes T1/7/8/9,
+changed-input replay and post-store checks (becaaaaf). The observed OFF/ON
+model producer completes six fresh GEN1 requests with original health,
+source/all8, fresh full4 and normal lifecycle gates. All211 result artifacts
+are root-hash-verified. Prompt54 changes760->16; prompt117 stays11.
+This is not a numerical or speed qualification; saved-data comparison is next.
+
+The guarded modified HTTP NoDri preflight now passes actual load_identity,
+validate_runtime, engine args/child environment and original first-GGUF
+identity checks in the qualified C388 interpreter. Receipt288c994f, normal
+EOF/exit0/owned removal. Stable hotschmoe-dd is first. No native engine or
+HTTP server started, so API/concurrent/cache qualification remains absent.
+
+A sealed opt-in diagnostic identity helper avoids redundant whole scans only
+when authenticated prior identity, opened-FD stat5 and known pages agree;
+changed stat falls back to a fresh scan. Actual time saving is unmeasured.
+The next useful layer35 numeric probe is being prepared, rather than another
+identical cached benchmark. Final fresh identity and every remaining full
+objective gate remain required. No2000/50 or shelf promotion is claimed.

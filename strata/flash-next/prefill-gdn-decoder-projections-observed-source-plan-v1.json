@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/patches/prefill-gdn-decoder-projections-observed-v1.patch": "abb57f4702981b488456c5ce48cfb14b46c3fd12aca2582387cbd3c1c01a0c88",
+    "strata/flash-next/original-mtp53/prefill_gdn_decoder_projection_observed_v1.hpp": "e8b73e8d8153ac498aa596619d1c005d34a3670441f999286b7c1f658e96a05e",
+    "strata/flash-next/original-mtp53/prefill_first_gdn_candidate_observer_v1.hpp": "b565791f1888a2e4f94cee2aa35462b7c55fcc9679113f7299df3659ca2925c1",
+    "strata/flash-next/prepare_prefill_gdn_observed_compile_v1.py": "607ea86ba01f8d778a4b8734f4bce03c26e23d47549b18082784192240125e72",
+    "strata/flash-next/prefill-gdn-decoder-projections-source-plan-v1.json": "8f54b6369742f7e87eb4e67e708cb2196567a5c1bce92052791efb130b51d59e"
+  },
+  "actual62_sdk": "/mnt/vm_8tb/b70/build/strata-native62-incremental61-v1-20261013T020818Z-wcsa7gom",
+  "actual62_receipt_sha256": "613694ec6fda4b0136a090406ec5f8c40070e31d967a9af726d308bab4ca48db",
+  "actual_source_sha256": {
+    "sycl/src/prefill/prefill.cpp": "e09e683a4dfa209ac6230a79b1e3b9d5443c0cd85ac80aa438878c50f62b17d7",
+    "sycl/src/prefill/kernels.dp.cpp": "e24493d4df90660234cdd44bd48c659e7b8cebd5842a036872e0a24b09c7160a",
+    "include/strata/kernels/native_mmvq.hpp": "95c3ea0cb9802b93dc8eb23857349182d1bc1b6988ab875fc289812549042fb0",
+    "include/strata/kernels/verify_kernels.hpp": "499bd7e4ae2ec194fa1377adaed74e6e383200fec400e229d7b0baa690940553",
+    "sycl/src/kernels/cuda/verify_kernels.dp.cpp": "6e5f2ca2ee9b99bca8ce7d51cdc9646ad95897a204f83842bbf889ff1d9e2c1e",
+    "sycl/src/core/verify.cpp": "4ed11a872e827c70051dfdb76b8610e68aad8a5c3872d39f31aa7eb88c5d64c5",
+    "sycl/src/kernels/cuda/native_mmvq.dp.cpp": "bf87197ea14da23c278e1e174d575503ec9f933e58c2fa267f919f5cdda8fe14"
+  },
+  "candidate_arithmetic_source_plan_sha256": "8f54b6369742f7e87eb4e67e708cb2196567a5c1bce92052791efb130b51d59e",
+  "constructed_source_sha256": {
+    "sycl/src/prefill/prefill.cpp": "e2266463105e2b1a2b964fc71f640b9e09d9550c7ffc14966ae590db763014a4",
+    "sycl/src/prefill/kernels.dp.cpp": "905d42484e4d7df25beda7ed0d071a2b6c65ac0e08370902f0a2481380905b0e"
+  },
+  "overlay_sources": {
+    "sycl/include/strata/kernels/prefill_gdn_decoder_projection.hpp": "strata/flash-next/original-mtp53/prefill_gdn_decoder_projection_observed_v1.hpp",
+    "sycl/include/strata/core/prefill_first_gdn_candidate_observer.hpp": "strata/flash-next/original-mtp53/prefill_first_gdn_candidate_observer_v1.hpp"
+  },
+  "raw_AB_ON_observed": false,
+  "Q81_scope": "first row in first <=8 chunk before scratch overwritten, BOTH input/output",
+  "OFF_projection_route_unchanged": true,
+  "observer_absent_no_copies_files_or_waits": true,
+  "firstrow_scope": "pos0 token248045 of actual53/116 Prefill inputs; independent decoderP1 NUM10",
+  "flag": "STRATA_PF_GDN_DECODER_PROJ",
+  "scratch_bytes": 55296,
+  "fresh_compile_required": [
+    "sycl/src/prefill/prefill.cpp",
+    "sycl/src/prefill/kernels.dp.cpp"
+  ],
+  "copy_archive_remove": [
+    "prefill.cpp.o",
+    "kernels.dp.cpp.o"
+  ],
+  "mathematics_qualified": false,
+  "speed_qualified": false,
+  "model_execution": false
+}

@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "files": {
+    "strata/flash-next/prepare_prefill_gdn_observed_runtime_v1.py": "22a602f83ff31a93c6dffef5b47b1f38be0cd1e6fdfe471c9f8b7f88a5db4ed8",
+    "strata/flash-next/prefill-gdn-observed-runtime-source-plan-v1.json": "aeb82bc9830dd1775fc24b5f60cb74adc0aceba938687cfd7109f242f2a356eb",
+    "strata/flash-next/prefill-gdn-decoder-projections-observed-source-plan-v1.json": "cd0661145cec46db0fd29d5819d8f15f56f872c62453bc2e6e22f9d1bc0d94f5",
+    "strata/flash-next/prefill-gdn-observed-builder-source-plan-v1.json": "86dfa055a80f6019cae2fc12e6c305e9907e1d571f2c6a7754177ca9e7906197",
+    "strata/flash-next/native_source41_cli_protocol_v4.py": "c8fe90f4e442653f79cb3f4d3c474b9f1d5e7dad19b02288a6d2c15024cfa65a",
+    "strata/flash-next/source62_model_sdk_binding_v1.py": "3a323590d607c0aded9fb4ef8f84a13b59e614f510e0ad8f9ae49f4b476fd0ba",
+    "strata/flash-next/run_prefill_gdn_observed_model_v2.py": "82563837acdc931c90b27d8b1fc00d0b9775e629fa19035d45f4a61cd59c4198",
+    "strata/flash-next/prefill-gdn-projection-runtime-source-plan-v2.json": "8daa357e4aec02a150d78f179b90be74ecd779dbc09d907b592add541dca3dfb",
+    "strata/flash-next/prefill-gdn-projection-operator-source-plan-v1.json": "cea1e701ddea6e995ac518deab172d28888d2d5fb2c2fe24cebe02131be0e5ba",
+    "strata/flash-next/run_prefill_gdn_projection_operator_v2.py": "4e116ef443cd7beaa5181630a8ece5d6b785c10e2f813ae31561274e8903a54e"
+  },
+  "operator_source_plan_sha256": "cea1e701ddea6e995ac518deab172d28888d2d5fb2c2fe24cebe02131be0e5ba",
+  "operator_passed_actual_receipt_required": true,
+  "scope": "One leased matched OFF/ON first-row diagnostic; fresh actual62 filtered Prefill/candidate ELF; source packet observation, not original independent math reference. Complete cache/other layer/router/wholeTrecurrence parity NOT inferred. HC2/1/1 sqrt0 unchanged botharms; no PIN/MTP/cache. Deliberate operator runtimeV2 namespace with authentic unchanged V1 build/export association.",
+  "operator_runtime_source_plan_sha256": "8daa357e4aec02a150d78f179b90be74ecd779dbc09d907b592add541dca3dfb"
+}

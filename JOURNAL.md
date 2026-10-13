@@ -20447,3 +20447,34 @@ RESULT -> setvars alreadyinitialized returns3 underset-e; stdout/err empty,
 card0health/kernelclosurePASS. Failedreport2188cc70 retained.
 VERDICT -> Command-only guardedstartup successor; no recompile/export or
 modelrerun required. Actualoperator andfullGDN parity unqualified.
+
+
+## 2026-10-13: projection operator and observed model close; faster diagnostics prepared
+
+CONFIG -> Original-weight projection operator runtimeV2, same ELF/export as V1.
+COMMAND -> Actual15697 PASS; reportbecaaaafd47c575b60e20b1d7759207a92b63f1b7cec09a53e1963a594771778.
+RESULT -> T1/7/8/9 five projection fields bitwise, two changed-input graphs,
+packet/canary/post-store checks and health/normal close passed.
+VERDICT -> Projection/post-store scope only; whole-T recurrence/model unqualified.
+
+CONFIG -> Observed candidate sourcecd066114, actual62 HC2/1/1, sqrt0 both arms.
+COMMAND -> NoDri build26084 PASS125s; model70031 PASS590s.
+RESULT -> B17/prefill-gdn-observed-model-v2-run-v1/report.json, all211 artifact
+hashes verified by root. OFF/ON six fresh GEN1 requests and normal lifecycle
+passed. Prompt54 outputs760/16; prompt117 both11; fresh literal both846.
+VERDICT -> Saved-data operand comparison required; no numerical/speed promotion.
+
+CONFIG -> Diagnostic identity helper, authenticated prior full4/stat5/pages.
+COMMAND -> Source-only CPU controls and genuine constructor passed.
+RESULT -> Unchanged diagnostic files can reuse prior whole-file identity;
+changed stat falls back to fresh full scan, changed bytes/prior rejects.
+VERDICT -> Ready for next useful QSA35 probe, saving not yet measured.
+Fresh qualifying hash/health/source/lease/teardown requirements unchanged.
+
+CONFIG -> Actual modified HTTP identity NoDri C388/qualified Python, CPU2/RAM2.
+COMMAND -> Root46368 PASS11s via card0 lease; receipt
+288c994f416b1735f59271530c07d13a5d07e98fef39943867284a5717fedad0.
+RESULT -> Real load_identity/validate_runtime/engine args/child env executed;
+first GGUF full hash and exported tokenizer metadata agree; hotschmoe-dd first.
+No devices exposed, native not started, EOF/exit0/removal and closure passed.
+VERDICT -> Identity preflight only, no HTTP/cache/service qualification.
