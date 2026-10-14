@@ -22045,3 +22045,29 @@ VERDICT: arm B wins 8 paired tasks to 0 across the two new tiers (41/43 vs
 extra instability. Single run per arm. Combined with the base-tier tie
 (18/19 each, Pi 0.85.1) the decision rule says continue Flash-Next. Arm B
 left running on :18085.
+
+## 2026-10-14 -- Flash-Next optimization S1: upstream head matched screen
+
+CONFIG: ISTA GSQ-RCO IQ3_XXS, all main experts in VRAM, split25, two 131072
+slots, int8 KV, MTP4/min-p0.5, prefill4096/no borrowing, reserve1024 MiB,
+parking8192 MiB/4 entries. Old a0116b27/v0.1.43.1 -> clean upstream
+296b59d2/v0.1.44.1. Same image e41d59c0, kernel7.1, UMD26.22, oneAPI2026.1.
+COMMAND: fetch/fast-forward Strata; fresh bmg-g31 AOT build-sycl-head build;
+bench_serving.py, 3 fresh prompts per case, 105/4059/32728 input and
+1500/256/256 output; concurrent arithmetic plus existing reasoning/tool
+probe directed to new output. Leased per-card and compiled two-rank health
+before/after; normal Docker stop. Commands and component/binary identities
+are in docs/20261014_flashnext_strata_optimization.md and raw evidence.
+RESULT: medians old/head, engine decode: coding83.1/83.5, 4K64.5/65.4,
+32K64.0/64.7 tok/s; prefill4K1317.6/1238.5, 32K1903.2/1853.7 tok/s.
+All nine timing rows have zero prompt reuse. 10/11 responses byte-identical;
+coding repeat2 diverges late at character5728. Concurrent arithmetic,
+separate reasoning and tool round trip pass. Pre/post health and ten compiled
+all-reduces pass, teardown gpu-run exit0. Old intake uptime10.7h. Observer
+sample passes, resident VRAM25.32/29.37 GiB; fallback prerequisites pass.
+Raw root: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_opt_20261014.
+VERDICT: upstream head is the next-stage baseline, no measured decode win;
+4K prefill6.0% and 32K2.6% lower in this sequential screen. No shelf promotion
+or full quality re-eval. Expert-parallel #1798/#2205 remain unmerged and
+untested here. Preserve the old binary and unrelated dirty changes. Next:
+split27, two200k slots with MTP, then actual parked-state restoration.
