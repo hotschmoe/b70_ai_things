@@ -160,3 +160,19 @@ S4 Only if S3 is ambiguous: extend to the full local-70 lock.
 - Limit of the evidence: abfast is near saturation, so a long-horizon
   quality advantage is untested. Terminal-Bench 24 through Harbor is the
   available harder eval (12-24 h per arm).
+
+## Amendment 3 (2026-10-14)
+
+- Correction: the abfast base-tier runs in "Outcome" used Pi 0.85.1 on both
+  arms, not 1.2.0 (image PATH order). The comparison is matched but is not a
+  Pi 1.2.0 result. The runner is now pinned to Pi 1.2.0.
+- The owner's real uses are Rust/Dart/Go/Python coding, family and office
+  machine troubleshooting, and long autonomous runs; not Zig. New abfast
+  tiers follow that: langs (19 tasks), sysadmin (24 tasks), longrun (7 tasks
+  with milestones, REA + Ghidra available). The Zig-heavy hard tier is not
+  used for the decision.
+- Being run now on both arms with Pi 1.2.0, parallel 2: langs (2700 s cap)
+  and sysadmin (1800 s cap). The longrun tier is deferred.
+- Direction regardless of a tie: Strata is the focus backend and the goals
+  are in docs/20261013_flashnext_goals.md; a clear arm B loss on langs or
+  sysadmin would reopen that.

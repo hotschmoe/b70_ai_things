@@ -1585,4 +1585,14 @@ models:
     activations: strata-native
     calibration: ista-gsq-rco
     serve_cmd: ""
-    notes: "ARM B of the 20261013 A/B brief. PLACEHOLDER: confirm exact artifact hash, Strata revision, layer-split and KV dtype from the live /v1/models and server log before any graded run; update served_model_id if the detailed alias differs."
+    notes: "ARM B of the 20261013 A/B brief. IQ3_S fits one stream only (200k no MTP, 131072 with MTP4); not the config used for graded runs. Hashes in strata/flash-next/model-lock-ista-iq3.json."
+
+  - label: qwen38-flash-next-ista-gsq-rco-iq3xxs-strata
+    served_model_id: qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: ISTA-DASLab-Qwen3.8-Flash-Next-GSQ-RCO-GGUF-IQ3_XXS
+    activations: strata-native
+    calibration: ista-gsq-rco
+    serve_cmd: ""
+    notes: "ARM B capacity fallback in the 20261013 A/B. Exact hashes in strata/flash-next/model-lock-ista-iq3.json. Stock a0116b27/v0.1.43.1; verify live alias, layer split, KV and MTP config in armB raw logs before graded use."

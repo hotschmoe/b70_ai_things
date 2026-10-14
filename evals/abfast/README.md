@@ -1,5 +1,10 @@
 # abfast: small paired agentic-coding eval (Pi 1.2.0, no Harbor)
 
+Tiers: base (19 commit replays, this section), hard, langs (Rust/Go/Dart), sysadmin,
+longrun (built, not yet run). Pi is called as /opt/pi/node_modules/.bin/pi: the image
+PATH also carries a Pi 0.85.1 from the host Node tree, and runs before 2026-10-14 used
+that older Pi by mistake (see JOURNAL.md).
+
 19 validated "commit replay" tasks: repo at the parent commit, instruction written from
 the real commit's intent, hidden verifier = the real commit's tests (withheld files are
 overwritten from the real sha; Zig inline tests are appended from the real file).

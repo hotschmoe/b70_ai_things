@@ -28,20 +28,24 @@ against these targets lives in docs/20261013_flashnext_goals.md.
 
 ## Current scope
 
-Active user-authorized campaign (2026-10-08): Qwen3.8-Flash-Next Unsloth
-UD-Q4_K_XL on two B70s plus host RAM. See
-docs/20261008_flashnext_udq4xl_campaign.md. Fresh llama.cpp and Strata source,
-other backends, custom kernels, profiling and GPU-service downtime are in scope.
-This deliberately expands the older backend/model scope below; archive rules,
-GPU leases, identity and qualification gates still apply.
-
-Redirect (2026-10-13, user decision): the no-substitution rule is dropped and
-UD-Q4_K_XL RAM-spill work is paused. Current task is the A/B in
-docs/20261013_flashnext_iq3_vs_27b_ab_brief.md: ~3-bit Flash-Next with all
-experts in VRAM on stock upstream Strata versus the Qwen3.8-27B INT4 AutoRound
-daily driver. Keep evidence light: one JOURNAL entry per stage, no
-admission/receipt/source-plan machinery. NVMe is /mnt/cache; /mnt/vm_8tb is
+Flash-Next on two B70s, Strata backend (user direction, 2026-10-13). Targets
+are in the "Flash-Next goals" section above. Work on upstream Strata head with
+small measured changes; no long-lived fork, no admission/receipt/source-plan
+machinery, one JOURNAL entry per stage. NVMe is /mnt/cache; /mnt/vm_8tb is
 SATA.
+
+- Serving candidate: ISTA GSQ-RCO ~3-bit GGUF, all experts in VRAM
+  (strata/flash-next/model-lock-ista-iq3.json, build under
+  /mnt/vm_8tb/b70/build/strata-ab).
+- Fallback daily driver: Qwen3.8-27B INT4 AutoRound on vLLM TP=2
+  (vllm/int4/native5802_trial/serve.py).
+- Model comparison: docs/20261013_flashnext_iq3_vs_27b_ab_brief.md, run with
+  evals/abfast (Pi 1.2.0). The no-substitution rule is dropped.
+- Paused: the UD-Q4_K_XL RAM-spill campaign. Its evidence is in
+  docs/flashnext_udq4xl_paused/. vLLM for Flash-Next is parked, ready to port.
+
+Archive rules, GPU leases, identity and qualification gates still apply. The
+backend and model lists below describe the retained dense-model stack.
 
 Backends:
 
