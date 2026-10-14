@@ -60,7 +60,8 @@ PUSH source update78cea7a1 is on the same stacked author-branch PR.
 S10 now has complete per-operation prefill and decode traces. Return-path
 GPU service: pull reduction/read0.64/11.08ms -> PUSH reduction+write/local
 read4.23/0.31ms per4044-token layer. Attention is612ms at4K and uses32-query
-batches. One traced four-token decode window shows peer waiting19.60ms
+batches (126 full batches plus a tail). S11 query batches128/256 give
+less than1% gain, so the research knob is reverted. One traced four-token decode window shows peer waiting19.60ms
 versus row returns1.06ms; overlapping primary work must be profiled next.
 Explicit stop/flush and tracing during graph capture are required for valid
 coverage. Profiler overhead is large; these are diagnostic, not benchmarks.
@@ -72,7 +73,7 @@ open.
 Final layer spec4 is serving :18085, observer off, final functional gates
 and post-experiment GPU health pass. The only config update is log path.
 
-Evidence: docs/20261014_flashnext_strata_optimization.md, JOURNAL.md S1/S2/S3/S4/S5/S6/S7/S8/S9/S10
+Evidence: docs/20261014_flashnext_strata_optimization.md, JOURNAL.md S1/S2/S3/S4/S5/S6/S7/S8/S9/S10/S11
 entries dated 2026-10-14, and raw results under
 /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_opt_20261014.
 EP/MTP raw results: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_ep_mtp_20261014.

@@ -22317,3 +22317,21 @@ Track CSV summarizer and latency summaries; raw traces retained in PFRAW.
 Evidence: stage doc S10, clock/window/census/operations/health files.
 No full200k/daily promotion, soak off, no crash/reset. Commit/push stage;
 unrelated dirty work preserved.
+
+
+## 2026-10-14 -- Flash-Next optimization S11: larger query batches are neutral
+
+CONFIG: same-binary query batches32/128/256, same math/PUSH/exact12288/
+IQ3_XXS/spec4/two200k and all24576 experts. Five-line research knob only.
+COMMAND: three matched4K/32K prompts each arm plus functional/identity/
+residency gates, normal stop and per-card/ten compiled collectives.
+RESULT: all12 output pairs and MTP counts equal.4K1218.2/1220.6/1218.1,
+32K1532.9/1536.7/1540.7 tok/s. Client32K TTFT21.414/21.360/21.307s;
+max0.51% gain, no material benefit. All health passes; no crash/reset.
+VERDICT: revert knob, no source or config promotion; frozen PUSH-s9 stays
+control. Rejected source/build/report retained under PFRAW. S10 count
+clarification:126 FULL32-query batches plus one12-query tail per layer,
+127 total; exported shapes remain correct. Next existing lane-cell variant
+trades more key traffic for fewer shuffles, preserving score expressions.
+Details: stage doc S11 and attn-batch-s11-report.json. No full200k/daily
+promotion, observer off, fallback available. Commit/push measured stage.

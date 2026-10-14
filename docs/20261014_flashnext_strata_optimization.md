@@ -691,3 +691,45 @@ uses32-query batches (126 batches/layer at4044 tokens). Begin a small
 same-math attention-batch experiment, retaining all measured controls.
 No daily/shelf/full200k/stability promotion. Summarizer and benchmark
 latency summary are tracked; full raw trace stays outside git.
+
+
+## S11 -- attention launch batching is neutral; knob reverted
+
+CONFIG: same-binary frozen strata-attn-batch-s11/dd21808c,109-line reduction/
+PUSH plus5-line experimental attention-batch environment override. Only
+query batching/scratch footprint varies32/128/256; default32 and per-query
+math preserved. Same all24576/reserve1024/spec4/.5/two200k/int8/exact12288/
+parking16GiB4/timing on; all banks still7440+17136, native slot0 passed.
+COMMAND: same-image CPU main-target build; each arm three matched fresh4K/
+32K requests, concurrent arithmetic, reasoning/tools; actual config/identity,
+normal stop and per-card/ten compiled collectives between arms and after.
+RESULT: all12 matched output pairs AND draft offered/accepted counts equal.
+Three-repeat medians (native prefill ms, client TTFT seconds):
+
+| Query batch | 4K tok/s | 4K ms / TTFT s | 32K tok/s | 32K ms / TTFT s |
+|---|---|---|---|---|
+| 32 | 1218.2 | 3332.1 /3.364 | 1532.9 | 21350.0 /21.414 |
+| 128 | 1220.6 | 3325.3 /3.357 | 1536.7 | 21296.9 /21.360 |
+| 256 | 1218.1 | 3332.3 /3.365 | 1540.7 | 21242.7 /21.307 |
+
+Largest32K gain0.51%, no4K gain; no material launch-batch benefit or new
+2000+ result. All functional/teardown health gates pass; no crash/reset.
+No source/config promotion; revert the5-line knob. Source is back to the
+109-line measured PUSH patch, unfrozen build output still has the rejected
+experimental knob, so use the frozen strata-push-s9 control. Preserve the
+failed/neutral experiment's source/config/build/report/raw responses in
+PFRAW: attn-batch-s11.patch and attn-batch-s11-report.json. Nothing is
+rewritten as a win. Correction to S10 attention count:1512 is the FULL
+32-query kernel shape (126 full batches per layer);4044 queries also need
+one12-query tail per layer, so127 batches total. Exported CSV retains the
+separate tail shape. The approximately612ms figure is the full-batch row,
+with a small extra tail; do not confuse it with all attention kernel time.
+VERDICT: launch batching is not the main attention lever here. Next test
+existing STRATA_ATTN_LANECELL=1 using frozen PUSH-s9, no source/build
+change. It reproduces the original score butterfly without subgroup
+shuffle reductions but loads keys more often (three heads/thread instead
+of the original twelve heads sharing each load). This is a shuffle-versus-
+traffic trade, not more key reuse. A commentary initially described the
+reuse direction incorrectly; corrected after rereading the kernel before
+running it. Exact outputs and measured times decide whether it helps B70.
+Soak off;27B wrapper retained; no candidate full200k or daily promotion.
