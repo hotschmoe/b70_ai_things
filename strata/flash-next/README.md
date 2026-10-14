@@ -93,3 +93,30 @@ Retain raw trace, submission report and calibration. Kernel copies require
 source geometry to annotate transfer bytes; profiled host copy calls include
 queue waits. Measure speed separately without tracing. See S10 for complete
 prefill/decode census, the clock issue and matched timings.
+
+
+S13 rejects an isolated attention value-transpose/four-row preload:36 INT8
+cases are numerically exact, with no useful latency gain. The rejected diff
+is in experiments/attn-value-gather-s13.patch; attn_value_probe.cpp compares
+baseline and renamed implementations without model weights. It is not a
+production patch.
+
+Optional concurrent MTP: serve-iq3xxs-ep-batch-mtp-experiment.json uses the
+same frozen PUSH-s9 plus STRATA_BATCH_MTP=1. Solo spec4 offers at most three
+drafts; upstream's batch path offers ONE proposal per slot. CPU-quiet paired
+coding improves total68.72 ->93.89 output tok/s, all experts remain resident,
+and functional/teardown health passes. Extra MTP state changes expert
+placement. Cross-arm texts differ, no candidate full200k/parking promotion.
+Native batch output proves accepted proposals, while HTTP draft counters
+remain incorrectly zero because BDONE lacks the slot counts. Do not use
+those zeros to infer that this opt-in path is not drafting. S14 has evidence.
+
+bench_mixed.py starts a fresh32K prefill after a second stream begins decode;
+bench_serving.py retains SSE content-event arrival times and p50/p95 gaps.
+These are client-visible event gaps, potentially several tokens per event.
+bench_context_four.py is PREPARED ONLY (syntax/help checks): it requires
+32768MiB parking and samples process/cgroup RAM at50ms while four distinct
+near-full conversations exchange two GPU slots. It has not qualified the
+candidate. The provisional cached-return working gate is p95 TTFT <=2s,
+including RAM restore; the user preference is pending. Restore bytes still
+need separate transfer evidence. See the stage document before using it.

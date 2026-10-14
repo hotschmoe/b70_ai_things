@@ -839,3 +839,119 @@ Raw evidence: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_value
 probe-card0.log, probe-summary.json and pre/post health). Tracked numerical
 probe: strata/flash-next/attn_value_probe.cpp; rejected diff:
 strata/flash-next/experiments/attn-value-gather-s13.patch.
+
+
+## S14 -- opt-in EP batch MTP improves overlapping coding
+
+CONFIG: exact frozen strata-push-s9 SHA256932d2f347219edd6, same upstream/
+PR2205/reduction/PUSH/runtime/host as S9. Spec4/min-p.5/two200k/int8KV,
+exact12288/reserve1024/parking16GiB4; only STRATA_BATCH_MTP=0/1 differs.
+Solo spec4 offers at most THREE drafts. Existing upstream batch MTP caps
+EACH slot at ONE proposal, regardless of the solo limit. This experiment
+uses that implementation unchanged. Layer splitting disables batch MTP;
+EP is accepted by its guard. Keep the qualified clean-layer daily config
+recoverable. No source edit, ABI-library import, driver change or long soak.
+
+COMMAND: same frozen binary, three two-request coding windows per arm,
+107 fresh input/1500 output tokens each; one solo coding request and one
+mixed window each. In the mixed window a fresh32719-token prefill arrives
+only after the first decoder content event and before its completion.
+Save every raw SSE event, content-event arrival and output hash. Stable and
+research IDs checked against registry; native slot0 and expert fill checked.
+MTP private state changes residency from7440+17136 to7152+17424 experts;
+all24576 remain in VRAM. Each added drafter shares weights and has242 MiB
+private state/buffers. Main verifier capacity increases4 ->8 rows.
+Concurrent arithmetic, separate reasoning and tool round trips pass in
+both arms. Normal stops and per-card/ten compiled collectives pass after
+each arm, no crash/reset. Raw orchestration: run-s14.py in RAW below.
+
+RESULT: three-window median total output69.321 ->93.417 tok/s (+34.76%)
+including prefill/admission. Per-request latency statistics over THREE
+observations per requested stream (empirical quantiles, not an SLO):
+
+| Arm / requested stream | Client decode p50 tok/s | TTFT p50 / p95 s | Completion p50 / p95 s | Median request p95 content gap ms |
+|---|---|---|---|---|
+| off /0 | 36.67 | 2.388 /2.428 | 43.265 /43.458 | 54.48 |
+| off /1 | 35.57 | 1.084 /1.092 | 43.222 /43.414 | 54.63 |
+| on /0 | 49.02 | 1.092 /2.223 | 31.782 /32.113 | 37.91 |
+| on /1 | 50.44 | 2.378 /2.401 | 31.807 /32.070 | 37.90 |
+
+Admission order varies. SSE content events can group multiple tokens,
+especially with accepted drafts or detokenization; the benchmark labels
+these as CONTENT-EVENT gaps, not unavailable exact per-token timestamps.
+Live checks validate monotonic arrival times, first arrival=TTFT, chunk
+references and gap counts. All six cross-arm coding outputs differ; both
+expert placement and verification grouping change, so no numerical/token
+parity or isolated kernel-speed claim. Functional checks pass in both arms.
+Single solo runs are81.5/93.5 tok/s (diagnostic, not a matched3-run gain).
+
+Native evidence resolves the misleading draft counters: ordinary batching
+verifies one token per active slot and does no MTP. Opt-in batching builds
+two rows per slot and accepts the proposal when it matches. On-arm native
+coding logs show788/799/801 windows at3.80/3.75/3.74 emitted rows/window
+with at most two active slots. More than two emitted rows proves accepted
+proposals. Yet every coding HTTP response still says draft_n=0 because
+BDONE carries no draft counts and Python _apply_bdone preserves the
+admission's zeros. Exact offered/accepted totals are UNAVAILABLE for the
+batch leg; these zeros must not be interpreted as no drafting. This does
+not invalidate the earlier plain-batch zero-draft finding. A small native/
+server accounting fix remains to contribute; no telemetry patch is applied
+or claimed tested in this stage.
+
+Contention remains: off/on mixed decoder completion48.356/44.463s,
+maximum content gaps7.852/7.816s, incoming32K TTFT29.281/29.247s and
+completion36.981/35.405s. Native mixed prompt throughput1129/1131tok/s,
+compared with clean isolated S9 PUSH1531 at32K. Batching helps overlap
+decode but does not remove long-prefill interruption. Mixed decoder draft
+counts include the solo leg; its batch leg still lacks accounting.
+
+The initial screens overlapped a CPU-only dense/GR AOT probe build (one
+backend CPU job,32 logical CPUs, no GPU device attached). These are bounded
+diagnostic screens. A separate CPU-quiet, uninstrumented confirmation is
+recorded below before using a causal throughput claim. Probe binaries were
+built from unchanged main; build-dense-gr-probes.log records the build,
+and no tuning option from them has been run or promoted yet.
+
+CPU-quiet confirmation: no compiler/profiler running, one fresh matched
+1500-token pair per arm, normal functional/identity/residency and health
+checks repeated. Total68.720 ->93.895 tok/s (+36.63%); per-stream client
+rates35.34/36.39 ->48.91/50.80. Per-stream content-event p95 gaps54.79/
+54.95 ->37.88/37.86ms. This confirms the configuration gain; the initial
+three-window results supply the broader bounded sample. Exact within-arm
+repeat0 response parity across initial and quiet runs is 4 of4;
+no cross-arm token parity. Stats and all raw responses: quiet-confirm/
+quiet-report.json. This is a bounded throughput improvement, not a150+
+per-stream result or full-context qualification.
+
+VERDICT: the existing opt-in batch MTP path is a promising EP candidate,
+still far below150 tok/s per stream. Do not increase solo depth beyond
+three/four to explain the old zero-draft overlaps. Keep frozen PUSH-s9 as
+the source/build control; no extra kernel knob or source PR update from
+this stage. Candidate full200k, RAM restore and four distinct full chats
+remain UNQUALIFIED, as does the provisional prefix-return latency gate.
+Working gate: p95 TTFT <=2s for retained~200k + short follow-up with two
+returning streams, including RAM restore; separately report resident and
+RAM-restored returns. User preference was requested and remains pending;
+2s is a provisional working threshold, not a user-approved SLA.
+A prepared bench_context_four.py samples native RSS/container cgroup RAM
+at50ms and requires live32768MiB parking, correct distinct needles, all
+retained history reused, two full GPU slots and measured RAM-restore
+counter changes. It has syntax/help checks ONLY, not a qualification run;
+restore byte measurement still needs transfer evidence. No success claim.
+
+RAW: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_concurrent_20261014
+(identity-before.json, actual configs, s14-report.json, both arms' solo/
+concurrency/mixed/functional outputs, native logs, health and teardown).
+CPU-quiet repeat lives under RAW/quiet-confirm. Primary operation analysis
+from S10's actual middle four-token window lives in the S13 raw root:
+decode-primary-window-analysis.json. Primary dense mmvq13.467ms and GR
+residual mixing5.695ms are service-time sums within that diagnostic window;
+peer returns1.059ms overlap primary work, not additive critical-path time.
+
+S14 final state: clean-layer daily config is restored unchanged, binary
+16f592e7e2f20178e4775ede7e6de306b6695b9444d1e399f68844cffb1e130b,
+:18085/hotschmoe-dd, two200k/spec4/parking16GiB4. Final functional and
+identity checks pass; soak inactive;27B prerequisite check exit0. No full
+fallback wrapper switch performed. Native logging is append-only: original
+S12 log prefix is preserved, and S14 restoration sessions have separate
+copies under RAW; final-state.json records the current offset/container.

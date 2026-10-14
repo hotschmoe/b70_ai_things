@@ -57,6 +57,9 @@ def main():
         window = dict(repeat=repeat, wall_s=wall,
                       aggregate_output_tps=sum(r["usage"]["completion_tokens"] for r in rows)/wall,
                       ttft_s=[r["ttft_s"] for r in rows],
+                      completion_s=[r["wall_s"] for r in rows],
+                      client_decode_tps=[r["client_decode_tps"] for r in rows],
+                      content_event_gap_ms=[r["content_event_gap_ms"] for r in rows],
                       timings=[r["timings"] for r in rows],
                       hashes=[r["output_sha256"] for r in rows])
         windows.append(window)

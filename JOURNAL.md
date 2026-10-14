@@ -22383,3 +22383,43 @@ No source PR update, full-context qualification or promotion from this stage.
 Details: docs/20261014_flashnext_strata_optimization.md S13; raw value_20261014
 under /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_*.
 Unrelated dirty work preserved; no observer/soak started.
+
+
+## 2026-10-14 -- Flash-Next optimization S14: concurrent MTP is a measured gain
+
+CONFIG: frozen PUSH-s9/932d2f34, only STRATA_BATCH_MTP0/1, same IQ3_XXS/
+exact12288/two200k/int8/spec4/.5/reserve1024/parking16GiB4/runtime. Solo
+spec4 is at most THREE drafts; unchanged upstream batch path offers ONE
+proposal per slot. Added state changes7440+17136 ->7152+17424 experts,
+all24576 still resident. No source/native-library/driver change.
+COMMAND: three matched two-request coding windows per arm,107 fresh input/
+1500 output each; solo single screen and32K prefill arriving after another
+decoder's first content. Stable/registry identity, native slot0/residency,
+concurrent arithmetic/reasoning/tools, normal stops/per-card/ten compiled
+collectives both arms. Initial screens overlap one CPU-only AOT job; repeat
+one fresh pair per arm CPU-quiet with functional/residency/health again.
+RESULT: initial total medians69.321 ->93.417 tok/s; CPU-quiet68.720 ->93.895
+(+36.63%), client per-stream35.34/36.39 ->48.91/50.80, content-event p95
+54.79/54.95 ->37.88/37.86ms. Four within-arm repeat0 text hashes reproduce
+exactly; all six cross-arm texts differ, no token-parity/isolated-kernel
+claim. Native3.74-3.80 emitted rows/window over <=2 slots proves accepted
+proposals. HTTP still says0 drafts: native BDONE/Python parser lack slot
+counts, so exact offered/accepted totals are unavailable for the batch leg.
+Earlier ordinary-batch no-draft finding stays valid. Mixed off/on max gap
+7.852/7.816s, new32K TTFT29.281/29.247s; MTP does not fix prefill blocking.
+All functional/teardown health passes, no crash/reset. Dense/GR probes built
+CPU-only from unchanged main, knobs not yet tested. SSE arrival metadata
+validated against live chunks; gaps can group tokens, correctly labelled.
+VERDICT: useful optional concurrent-MTP candidate, still below150/stream;
+no full200k/four-distinct parking qualification or daily/shelf promotion.
+Prepared four-chat32GiB/50ms-RAM harness has syntax/help checks ONLY; restore
+bytes still need transfer evidence. Working cached-return p95TTFT<=2s
+(including RAM restore) is provisional pending user preference. Exact slot
+draft accounting and measured primary dense/shared/sync tuning remain.
+Qualified clean-layer daily16f592e7 restored on:18085; final identity,
+concurrent arithmetic/reasoning/tools pass, soak inactive,27B check passes.
+Native log appends; original S12 prefix retained and S14 sessions copied
+separately. Evidence: docs/20261014_flashnext_strata_optimization.md S14;
+/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_concurrent_20261014,
+including quiet-confirm/quiet-report.json and final-state.json. Preserve
+unrelated dirty files; commit/push the measured checkpoint.

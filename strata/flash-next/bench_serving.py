@@ -19,7 +19,7 @@ def get(base, path):
         return json.load(response)
 
 
-def send(base, model, messages, cap, *, spec_min_p=None):
+def send(base, model, messages, cap, *, spec_min_p=None, on_first_content=None):
     body = dict(model=model, messages=messages, max_tokens=cap, temperature=0,
                 stream=True, stream_options={"include_usage": True},
                 chat_template_kwargs={"enable_thinking": False})
@@ -31,27 +31,49 @@ def send(base, model, messages, cap, *, spec_min_p=None):
     start = time.perf_counter()
     first = None
     chunks = []
+    content_events = []
     usage = timings = None
     with urllib.request.urlopen(request, timeout=1800) as response:
         for line in response:
             if not line.startswith(b"data: ") or line.strip() == b"data: [DONE]":
                 continue
+            arrived = time.perf_counter()
             chunk = json.loads(line[6:])
             if chunk.get("error"):
                 raise RuntimeError(chunk["error"])
             chunks.append(chunk)
             usage = chunk.get("usage") or usage
             timings = chunk.get("timings") or timings
-            for choice in chunk.get("choices", []):
-                delta = choice.get("delta", {})
-                if first is None and (delta.get("content") or delta.get("reasoning_content")):
-                    first = time.perf_counter()
+            has_content = any(choice.get("delta", {}).get("content") or
+                              choice.get("delta", {}).get("reasoning_content")
+                              for choice in chunk.get("choices", []))
+            if has_content:
+                content_events.append(dict(chunk_index=len(chunks)-1, elapsed_s=arrived-start))
+                if first is None:
+                    first = arrived
+                    if on_first_content is not None:
+                        on_first_content()
     end = time.perf_counter()
     if not usage or first is None or not timings:
         raise RuntimeError("Missing usage, first token, or engine timings")
     text = "".join(choice.get("delta", {}).get("content") or ""
                    for chunk in chunks for choice in chunk.get("choices", []))
+    gaps_ms = [(b["elapsed_s"]-a["elapsed_s"])*1000
+               for a, b in zip(content_events, content_events[1:])]
+    # An SSE delta can contain several tokens; these are client content-event gaps.
+    # Keep every arrival for analysis without claiming unavailable per-token timestamps.
+    def percentile(values, p):
+        if not values:
+            return None
+        ordered = sorted(values)
+        position = (len(ordered)-1)*p
+        lower = int(position)
+        return ordered[lower] + (ordered[min(lower+1, len(ordered)-1)]-ordered[lower])*(position-lower)
     return dict(request=body, ttft_s=first-start, wall_s=end-start,
+                content_events=content_events,
+                content_event_gap_ms=dict(count=len(gaps_ms), p50=percentile(gaps_ms, .5),
+                                          p95=percentile(gaps_ms, .95),
+                                          maximum=max(gaps_ms) if gaps_ms else None),
                 client_decode_tps=(usage["completion_tokens"]-1)/(end-first),
                 usage=usage, timings=timings, text=text,
                 output_sha256=hashlib.sha256(text.encode()).hexdigest(), chunks=chunks)

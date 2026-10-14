@@ -9,6 +9,7 @@ vLLM parked, ready to port. 27B INT4 AutoRound on vLLM is the fallback.
 | Decode | 150+ tok/s per stream | median 83.8 coding, 64.5-65.7 after 4k, 64.9-65.0 after 32k, spec4 (at most 3 drafts) | about 2x short |
 | Context | 200k per stream, 2 streams | IQ3_XXS: 2 x 200000 slots with spec4 (at most 3 MTP drafts); both retrieved three needles in 199501-token prompts | capacity screen passed; sustained load remains |
 | KV eviction to RAM | restore without recompute under load | both GPU slots overwritten, then concurrent returns reused 199555/199582 tokens; 54/27 new tokens read. RAM restore 430/422 ms, client TTFT 1.97/4.40 s (parking16384 MiB/4 entries) | bounded forced-eviction test passed; sustained use remains |
+| Cached prefix latency | Provisional p95 <=2 s TTFT for retained ~200k + short follow-up at concurrency2, including RAM restore | Existing clean-layer forced returns1.97/4.40 s are only two samples; no p95 qualification | Measure GPU-resident reuse and forced RAM returns separately; working threshold awaits user preference |
 
 Quality: on 2026-10-14 Flash-Next IQ3_XXS beat the 27B INT4 8-0 on paired
 langs + sysadmin tasks (41/43 vs 33/43); see the A/B brief, Outcome 2.
@@ -78,6 +79,22 @@ Four DISTINCT full200k conversations are unqualified; production retains
 open.
 Final layer spec4 is serving :18085, observer off, final functional gates
 and post-experiment GPU health pass. The only config update is log path.
+
+
+S13 value-transpose/four-load pipeline passes36 exact INT8 output/scratch
+cases but is neutral; no production patch. S14 tests existing opt-in EP
+batch MTP on frozen PUSH-s9. CPU-quiet paired coding total68.72 ->93.89
+output tok/s, roughly49-51 per stream; initial three-window medians69.32
+->93.42. All24576 experts stay resident, functional and teardown health
+pass. Solo spec4 remains at most three drafts; the existing batch path
+limits each slot to ONE proposal. Native3.74-3.80 emitted rows/window
+proves acceptance with two slots, but HTTP draft counters incorrectly stay
+zero because slot BDONE lacks counts. Earlier ordinary-batch zero-draft
+findings remain valid. New source accounting fix remains open work.
+Mixed long-prefill arrival still interrupts decode for about7.8s; incoming
+32K TTFT29.25s. This candidate is not full200k/four-distinct qualified or
+promoted. The prepared four-chat harness requires32GiB parking and bounded
+RAM sampling; it has not run. Dense/GR microprobes are built, no knob tested.
 
 Evidence: docs/20261014_flashnext_strata_optimization.md, JOURNAL.md S1/S2/S3/S4/S5/S6/S7/S8/S9/S10/S11/S12
 entries dated 2026-10-14, and raw results under
