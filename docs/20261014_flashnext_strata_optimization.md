@@ -602,3 +602,92 @@ buckets include idle/waits. First profiler collection produced an empty
 file: native successful serve shutdown uses std::_Exit(0), bypassing library
 flush; model teardown/health passed. Preserve this failed diagnostic and
 explicitly stop/flush the session in the next capture before shutting down.
+
+
+## S10 -- individual operation latency and a complete EP decode window
+
+CONFIG: frozen PUSH-s9 binary/runtime unchanged; pull/PUSH both have timing
+on and same IQ3_XXS/spec4/.5/two200k/exact12288/all24576. Intel unitrace
+2.4.0 source6c0d6b0b; binary00fc84e5, library66ec9ee2. No driver/runtime
+upgrade. Leased server wraps native executable with -d -h -s plus Chrome
+kernel/API logging, collection paused for load/warmup. Stable/research IDs,
+Docker actual config path, native primary7440/peer17136 and slot0 checked.
+COMMAND: resume -> fresh4051-input/32-output request -> pause, then a
+45-input/128-output decode request. Explicit stop, post-stop arithmetic
+canary to make native observe stop/flush, JSON validation, normal teardown,
+per-card/ten compiled collectives. Every native touch stays under its pair
+lease. Raw records, unitrace kernel-submission report, configs/wrappers,
+trace windows and per-operation CSV/JSON are retained under PFRAW.
+
+Collection repairs: first file0 bytes because successful native serve
+shutdown uses std::_Exit(0), bypassing library destructors. Stop/flush is
+required BEFORE shutting down. A second orchestration attempt reached a
+stale server while its intended unit was still waiting for the lease; its
+session controls reported already stopped. Discarded and fixed readiness
+to match actual container config/native counts; all teardown/health clean.
+Never treat either failed collection as a benchmark or a valid trace.
+The current pti-gpu UniTimer calibrates epoch against CLOCK_BOOTTIME but
+adds CLOCK_MONOTONIC_RAW timestamps. Measured trace/client offset about
+9.70 seconds; record host clock calibration in trace-timebase.json and pass
+--timestamp-shift-us explicitly to summarize_trace.py. This changes event
+alignment, never durations. Later calibration can drift by milliseconds;
+main-prefill census (48 reducers/consumers,1512 attention chunks) is checked
+independently of boundary events. Per-query shapes distinguish the main
+4044-token prefill from the seven-token tail and returned decode tokens.
+
+RESULT: both155MiB traces contain about1.03million events and valid JSON;
+all48 full-chunk reducers/consumers are present per arm. Median/p95 GPU
+operation durations below (microseconds; exact counts in exported CSV):
+
+| Operation | Card | Count | Pull median/p95 us | PUSH median/p95 us |
+|---|---|---|---|---|
+| routed peer FP32 reduction / reduction+posted write | 1 | 48 | 640.62 /700.49 | 4227.97 /4271.77 |
+| FP32 sum consumer: remote read / local uncached read | 0 | 48 | 11077.66 /11154.42 | 306.61 /319.58 |
+| primary routed+shared finish | 0 | 48 | 499.37 /627.71 | 499.06 /627.91 |
+| inbound FP16 local uncached read | 1 | 48 | 150.78 /188.75 | 150.62 /203.04 |
+| sparse attention chunk kernel | 0 | 1512 | 441.14 /494.34 | 441.04 /494.67 |
+| GDN recurrence | 0 | 36 | 6664.27 /6936.25 | 6663.96 /6665.99 |
+| peer expert dequantization | 1 | 11724 | 21.88 /32.19 | 21.77 /32.81 |
+| primary expert dequantization | 0 | 5300 | 22.50 /32.71 | 22.50 /32.50 |
+
+Main-chunk return41410560 bytes per layer (4044*2560*4),1.99GB across48;
+inbound FP16 data20705280 bytes/layer in the opposite direction. The two
+return operations' serial service costs are about11.7ms pull versus4.5ms
+PUSH, though primary work can overlap reduction and kernel sums are NOT
+request critical-path time. Physical trace devices:0 at0000:0b:00.0,
+1 at0000:44:00.0. Sparse attention totals about612ms, GDN241ms; peer and
+primary dequantization249/117ms. All operation shapes, counts, totals,
+means, medians, p95 and ranges are exported, with per-device interval union
+instead of adding overlapping times from the two cards.
+
+Host API latency is different from device time:85593 launch-with-arguments
+calls, median5.56/5.47us and p957.76/7.93us, summed510/513ms in the two
+traces. A161760-byte device-to-host routing-table copy takes about28-32us
+on the GPU while its append API call can wait about65ms for earlier work.
+The copy API's1627ms total in PUSH includes queue dependencies. It does not
+prove slow transfer bandwidth. Tracing roughly doubles4K wall time, so
+native uninstrumented speed remains S9's matched1214/1531 figures; do not
+use profiler wall/CPU totals as production latency estimates.
+
+Graph coverage repair: capturing graphs while collection is paused hides
+replayed kernels (first decode subset had no peer events and only69ms of
+primary activity). Recollect PUSH with tracing ON through native load and
+64-output graph warmup, then pause/resume the measured request. Complete
+411MiB trace,269027 GPU events in its request window; same output hash and
+108 offered/75 accepted drafts as the paused-capture request. Profiler
+slows native decode73.4 ->58.4 tok/s, so again diagnostic only. A middle
+steady window has40 routed entries (four verify tokens): each card48 EP
+waits; primary48 sends, peer48 returns. Its bump-to-bump intervals43.708/
+43.714ms include host gaps, draft/verification scheduling and instrumentation,
+not a per-token graph execution latency. Peer waits19.601ms, primary waits
+3.516ms; peer row-return kernels1.059ms, primary input-push kernels0.133ms.
+Do not add peer wait to primary compute: they overlap. This points to the
+primary dense/shared path and rendezvous before faster decode transport.
+Single-window events/census are saved in decode-single-window*.json.
+Post-stop arithmetic, clean teardown and health all pass; no crash/reset.
+VERDICT: the PUSH prefill gain is backed by device-operation latency and
+exact output parity. Attention is the next prefill target: the fallback
+uses32-query batches (126 batches/layer at4044 tokens). Begin a small
+same-math attention-batch experiment, retaining all measured controls.
+No daily/shelf/full200k/stability promotion. Summarizer and benchmark
+latency summary are tracked; full raw trace stays outside git.

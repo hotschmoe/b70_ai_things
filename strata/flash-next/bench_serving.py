@@ -116,8 +116,11 @@ def main():
                 raise RuntimeError("Fresh-prompt benchmark reused more than 64 tokens")
             rows.append(result)
         summaries[case] = {key: statistics.median(r["timings"][key] for r in rows)
-                           for key in ["prompt_per_second", "predicted_per_second"]}
+                           for key in ["prompt_per_second", "predicted_per_second",
+                                       "prompt_ms", "predicted_per_token_ms"]}
         summaries[case]["client_decode_tps"] = statistics.median(r["client_decode_tps"] for r in rows)
+        summaries[case]["ttft_s"] = statistics.median(r["ttft_s"] for r in rows)
+        summaries[case]["wall_s"] = statistics.median(r["wall_s"] for r in rows)
     (args.output / "health-end.json").write_text(json.dumps(get(base, "/health"), indent=2) + "\n")
     (args.output / "summary.json").write_text(json.dumps(summaries, indent=2) + "\n")
     print(json.dumps(summaries), flush=True)

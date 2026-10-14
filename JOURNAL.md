@@ -22292,3 +22292,28 @@ failure and collect with explicit stop/flush in S10. Details in stage doc,
 push-s9-report.json and configs/build/bench/health under PFRAW fromS5.
 Fallback check passes; observer inactive; unrelated dirty files preserved.
 Commit/push this measured milestone.
+
+
+## 2026-10-14 -- Flash-Next optimization S10: complete operation latency traces
+
+CONFIG: same frozen PUSH-s9/pull binary/configs, unitrace2.4.0/6c0d6b0b,
+no runtime/driver change. Pair lease; actual serving config/identity/residency.
+COMMAND: cold matched4K plus bounded decode, Chrome kernel/API and submission
+reports; explicit stop/flush canary; normal stop and per-card/ten collectives.
+RESULT: valid155MiB traces,48 reducers/consumers. Peer reduction+return:
+pull0.641+11.078ms vs PUSH4.228+0.307ms per4044-token layer. Attention
+1512 kernels/612ms, GDN36/241ms.85,593 host launches median5.5us; a162KB
+copy is30us device time but can wait65ms in its host API call. Trace adds
+large overhead, so S9 remains the throughput/TTFT benchmark. Record9.70s
+clock alignment correction; durations unchanged, full-frame counts verified.
+Failed _Exit flush and stale-server attempts discarded/repaired, all health
+clean. Paused graph capture misses replay kernels; ON-at-capture follow-up
+closes decode census,411MiB trace and exact response/draft parity. One
+four-token window:48 waits each card,43.71ms intervals; peer wait19.60ms,
+primary3.52ms, sends0.133ms/returns1.059ms. These overlap and include
+profiling/host gaps; no per-token graph speed or production idle claim.
+VERDICT: profile supports PUSH and identifies attention batching next.
+Track CSV summarizer and latency summaries; raw traces retained in PFRAW.
+Evidence: stage doc S10, clock/window/census/operations/health files.
+No full200k/daily promotion, soak off, no crash/reset. Commit/push stage;
+unrelated dirty work preserved.

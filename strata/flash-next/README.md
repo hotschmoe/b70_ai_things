@@ -78,3 +78,18 @@ to full-row combine. This configuration has short-prompt/functional and
 teardown-health evidence, not full200k or shelf qualification. See S9.
 Build only the `strata` target when editing this patch; the optional
 standalone numerical probe also accepts `--push`.
+
+
+For operation latency use Intel unitrace -d -h -s with Chrome kernel/API
+logging around the leased native engine. Stop/flush the session and run a
+canary before native shutdown (_Exit bypasses profiler destructors). Capture
+SYCL graphs with collection ON before pausing, or replayed kernels are
+missing. Match the actual serving config, not just the stable model alias.
+`summarize_trace.py trace.json --output <directory>` exports counts, GPU and
+host operation median/p95/range plus per-device busy interval unions. Use
+--start-us/--end-us for retained request windows and an explicitly calibrated
+--timestamp-shift-us when the profiler clock differs from the client clock.
+Retain raw trace, submission report and calibration. Kernel copies require
+source geometry to annotate transfer bytes; profiled host copy calls include
+queue waits. Measure speed separately without tracing. See S10 for complete
+prefill/decode census, the clock issue and matched timings.
