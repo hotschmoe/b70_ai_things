@@ -8,8 +8,8 @@ Current measured config: serve-iq3xxs-200k.json, stock upstream
 296b59d2/v0.1.44.1. Split27, two200k, MTP4, int8 KV, all main experts in
 VRAM, parking16384 MiB/4 entries. Bounded capacity, forced RAM restoration,
 concurrent coherence, reasoning/tool checks and teardown health passed.
-Evidence: docs/20261014_flashnext_strata_optimization.md. Multi-day soak
-is started separately and remains unqualified.
+Evidence: docs/20261014_flashnext_strata_optimization.md. The soak observer
+is stopped at user request; multi-day stability remains unqualified.
 
 Start persistently after the previous endpoint has stopped and GPU health
 has passed:
@@ -34,6 +34,15 @@ Probe scripts operate through the already-leased server:
 - soak.py: HTTP metadata, container RAM, per-card DRM fdinfo, and error lines;
   no test prompts, GPU queries or automatic restarts. Stop its persistent
   observer with `systemctl --user stop strata-soak.service`.
+
+Experimental EP: serve-iq3xxs-ep-experiment.json uses the temporary upstream
+PR2205/1798 build. Decode improves, but prefill regresses to about580 tok/s;
+this is not the daily-driver config. launch.sh adds SYS_PTRACE only for EP
+to permit Level Zero IPC with Docker's default seccomp profile. Upstream:
+https://github.com/Niko1221/Strata/pull/2468. ep_ipc_probe.cpp records import
+status; ep_transfer_probe.cpp failed before large-transfer measurement and
+must have its memory lifetime/copy path reviewed before another GPU run.
+Build/run details and recovery evidence are in the S3 document/raw logs.
 
 The paused UD-Q4_K_XL RAM-spill campaign code that used to live here was
 moved to the gitignored archive/flashnext-udq4xl-paused-20261014/ on

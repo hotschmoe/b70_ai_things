@@ -16,16 +16,20 @@ langs + sysadmin tasks (41/43 vs 33/43); see the A/B brief, Outcome 2.
 Current serving config: strata/flash-next/serve-iq3xxs-200k.json, clean
 upstream 296b59d2/v0.1.44.1. Peak sampled resident VRAM 28.22/29.27 GiB;
 all 24576 main experts in VRAM. Health, concurrent coherence, reasoning,
-tool round trip and clean teardown passed. The final same-config restart
-starts a once-per-minute real-use soak observer; multi-day stability is
+tool round trip and clean teardown passed. The soak observer is stopped at user request; multi-day stability is
 still unqualified. Intake observed uptime was 10.7 h on the old config.
 
 Two-stream aggregate decode has no established improvement: two 1500-token
 displacement answers took 54.51 s including prefill (55.0 output tok/s
-overall). IQ3_S with a rebalanced split, expert-parallel #1798/#2205,
-MTP depth tuning and short-prompt prefill tuning remain untested here.
+overall). EP #1798/#2205 on head296b59d2 measures91.9 coding and71-72
+prose decode, but only578-579 prefill at4K/32K, so it is not promoted.
+A4K trace puts52.8% of prefill in combine (peer wait/row collection included).
+Docker IPC launcher fix: https://github.com/Niko1221/Strata/pull/2468.
+A transfer microprobe crashed before large timing; rebind/per-card/compiled
+collective health recovered, and no native copy-path patch was promoted.
+IQ3_S, depth3/4 MTP comparison and short-prompt tuning remain open.
 
-Evidence: docs/20261014_flashnext_strata_optimization.md, JOURNAL.md S1/S2
+Evidence: docs/20261014_flashnext_strata_optimization.md, JOURNAL.md S1/S2/S3
 entries dated 2026-10-14, and raw results under
 /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_opt_20261014.
 The original 2026-10-13 measurements remain in the A/B armB report and

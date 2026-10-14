@@ -160,3 +160,88 @@ are needed for a multi-day verdict. Stop observation with
 `systemctl --user stop strata-soak.service`; stop serving with the Docker
 stop command above. The retained 27B prerequisite check passed throughout;
 the one-command fallback remains `bash strata/flash-next/fallback-27b.sh`.
+
+
+## S3: expert parallelism, Docker IPC fix, prefill cost
+
+CONFIG: same IQ3_XXS, image/compiler/runtime and two200k/MTP4/min-p0.5
+settings as S2. Clean head296b59d2 remains untouched. Temporary detached
+src-ep worktree applies PR2205's three-commit diff through
+c7bb8dd5d5a8f90f2a7f1cf0d30c9307aaf25bba (includes PR1798 decode EP).
+Build src-ep/build-sycl-ep/strata, oneAPI2026.1/AOT bmg-g31, pinned ggml
+3cf03257f219afbe7334045ff7c6a06ac68c627d. Only topology changes:
+--layer-split27 -> --expert-parallel-device1. Tracked experimental config:
+strata/flash-next/serve-iq3xxs-ep-experiment.json. No shelf promotion.
+Diagnostic mirror/row verification are enabled only in the separate
+rowcheck config and disabled in speed measurements.
+
+Raw root EPRAW:
+/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_ep_mtp_20261014
+
+COMMAND: fetch PR1798/2205 refs, git diff/apply --3way onto head in a
+worktree, build CPU-only with the same image (no GPU device mount).
+Leased single-card EP and original planner parity. Launch under pair lease,
+with per-card and compiled collective health around EP serves. Run
+bench_serving.py --repeats3 --output EPRAW/ep-mtp4-p05; separate reasoning
+and tool round trip. Relaunch with STRATA_PREFILL_TIMING=1 and read one
+fresh4K prompt. The native EP IPC probe is built from ep_ipc_probe.cpp
+with -fsycl/-fsycl-targets=spir64_gen, AOT bmg-g31 and -lze_loader.
+All native probes, serving and health are under bin/gpu-run.
+
+RESULT: planner parity420 EP cases and641 original cases, zero failures.
+Initial EP launch exits1 at IPC import with0x78000004, not a GPU crash;
+post-refusal health passes. Standalone cold/warm cross-card and self-import
+probes reproduce all eight failures under default Docker settings, despite
+peer access=true both directions. SYS_PTRACE alone permits all eight
+imports with default seccomp retained; seccomp-unconfined alone also works.
+Local launcher adds the capability only for the EP flag and uses each
+config's cwd so the matching PR frontend runs. No driver/kernel changes.
+Exact blocked syscall has not been traced.
+
+Fixed full-model EP places190 experts/layer on card0 (9120,14.83 GiB) and
+322/layer on card1 (15456,25.13 GiB); all24576 experts resident. Two200k
+slot sessions allocate2.82 GiB each on the primary and the MTP head remains
+resident. This establishes startup fit, not an actual near-full EP context
+and parking qualification. With diagnostic mirror,768 generated tokens
+and zero peer-row mismatches. Concurrent arithmetic, reasoning and tool
+round trip pass. Timing medians with diagnostics off:
+
+| Workload | Prefill tok/s | Decode tok/s |
+|---|---|---|
+| coding,105 input /1500 output | 112.5 | 91.9 |
+| 4K,4059 input /256 output | 578.8 | 72.3 |
+| 32K,32728 input /256 output | 578.4 | 71.0 |
+
+Every timing prompt has zero reuse. Nine output hashes are preserved;
+coding repeats0/1 and all prose responses match the S2 control. Coding
+repeat2 differs late from S2 but matches all new layer/MTP controls too:
+no universal bit-identical claim across runs. All EP model serves stop
+normally; per-card and ten compiled all-reduces pass after each teardown.
+
+Prefill trace:4053 chunk tokens,7007 ms GPU timeline and7028 ms wall;
+combine3698 ms (52.8%), gather796 ms (11.4%), QSA attention670 ms (9.6%).
+Peer timeline has1205 ms GEMM and5581 ms idle. The combine bucket includes
+waiting for the peer and collecting its rows, so it is not an isolated
+copy-bandwidth measurement. It identifies the next optimization area.
+
+A separate ep_transfer_probe.cpp compares uncached reads, ordinary memcpy
+and a copy-engine queue with changing full-buffer patterns. All twelve
+16KiB checks pass, then UR_RESULT_ERROR_DEVICE_LOST and exit139 occur
+before the large-transfer timing; kernel records card0 CCS memory CAT
+errors and an engine reset. This probe is INCONCLUSIVE and not a serving
+patch. Do not rerun it until its memory/IPC lifetime and copy path are
+reviewed. Retain source/logs, discard any speed inference. bin/xe-reset
+recovers by rebind without reboot; both cards and ten compiled all-reduces
+pass, boot ID unchanged. Source, hashes, configs, build logs, startup/
+teardown logs and kernel/recovery evidence are in EPRAW.
+
+VERDICT: EP gives a useful single-stream decode screen (91.9 coding,
+71-72 prose) but loses most prefill throughput versus S2's1337/2004.
+Keep the qualified layer-split daily driver while investigating peer-row
+collection. The tested conditional Docker capability fix is submitted
+upstream as https://github.com/Niko1221/Strata/pull/2468, commit
+f85b6c3f191ab093310e4ae09b3faca428e70f44; only wrapper/docs changed.
+It is independent preparation for the open EP PRs. No native optimization
+is promoted from the failed microprobe, and no long-lived engine fork.
+The long-soak observer is stopped at user request; not a stability verdict.
+27B prerequisite check passes; fallback command remains available.

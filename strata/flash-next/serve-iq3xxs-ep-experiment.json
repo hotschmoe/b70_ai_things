@@ -1,0 +1,53 @@
+{
+  "backend": "sycl",
+  "exe": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/strata",
+  "cwd": "/mnt/vm_8tb/b70/build/strata-ab/src-ep",
+  "tokenizer": "/mnt/vm_8tb/b70/build/strata-ab/packs/ista-gsq-rco-iq3-xxs/tokenizer",
+  "model_name": "hotschmoe-dd",
+  "aliases": [
+    "qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata"
+  ],
+  "gpu": [
+    0,
+    1
+  ],
+  "gpu_order": "as_given",
+  "parallel": 2,
+  "args": [
+    "--pack",
+    "/mnt/vm_8tb/b70/build/strata-ab/packs/ista-gsq-rco-iq3-xxs",
+    "--native",
+    "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-xxs/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+    "--ple-gguf",
+    "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-xxs/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+    "--ple-io",
+    "direct",
+    "--expert-parallel-device",
+    "1",
+    "--stream-experts",
+    "--expert-profile",
+    "/mnt/vm_8tb/b70/build/strata-ab/src/data/expert-profile-sycl.bin",
+    "--expert-cache",
+    "auto",
+    "--vram-reserve-mib",
+    "1024",
+    "--prefill",
+    "4096",
+    "--no-prefill-borrow",
+    "--max-context",
+    "200000",
+    "--kv",
+    "int8",
+    "--spec",
+    "4",
+    "--mtp",
+    "/mnt/vm_8tb/b70/build/strata-ab/mtp-bf16/rt",
+    "--spec-min-p",
+    "0.5",
+    "--conversation-cache-mib",
+    "16384",
+    "--conversation-cache-slots",
+    "4"
+  ],
+  "log": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_ep_mtp_20261014/ep-mtp4-engine.log"
+}

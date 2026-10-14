@@ -22107,3 +22107,34 @@ Details: docs/20261014_flashnext_strata_optimization.md. Raw root:
 /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_opt_20261014.
 Next: expert-parallel #1798/#2205, MTP depth and short-prompt tuning; IQ3_S
 rebalanced capacity remains untested. Unrelated dirty changes preserved.
+
+
+## 2026-10-14 -- Flash-Next optimization S3: EP measured, IPC fix upstream
+
+CONFIG: clean Strata296b59d2 preserved; temporary PR2205 c7bb8dd5 diff
+(including1798) on that head, same oneAPI2026.1/AOT/image/runtime, IQ3_XXS,
+two200k, MTP4/min-p0.5/int8 KV/parking16384 MiB4. EP replaces split27.
+COMMAND: planner parity; leased IPC probe and row-mirror diagnostic; three
+fresh prompts each coding/4K/32K plus concurrent arithmetic/reasoning/tool
+round trip. One STRATA_PREFILL_TIMING chunk. Native transfer microprobe,
+normal EP teardowns and health; reset ladder after microprobe crash.
+RESULT: EP planner420 and original641 cases pass. Default Docker IPC
+imports all fail0x78000004; SYS_PTRACE alone fixes all eight imports with
+seccomp retained. EP all24576 experts resident, two200k allocations fit;
+actual full-context EP restore not qualified. Rowcheck768 tokens has no
+mismatched peer rows. Decode medians91.9 coding,72.3/71.0 prose; prefill
+578.8/578.4 at4K/32K. Zero reused timing prompts, coherence/reasoning/tool
+pass, normal model teardown plus per-card/collective health pass. Prefill
+combine3698/7007 ms (52.8%); bucket includes peer wait and row copy.
+Separate transfer probe passes twelve16KiB freshness checks then exits139
+with device-lost before large timing; card0 CCS CAT errors. Inconclusive:
+no copy-path change promoted. xe-reset rebind recovers; both cards and ten
+compiled collectives pass, no reboot. Upstream conditional launcher/docs
+fix PR2468 opened, commitf85b6c3f. Long-soak observer stopped per user.
+VERDICT: EP decode gain is offset by severe prefill regression. Keep
+qualified layer split; profile peer-row transfer next. Full evidence,
+configuration and explicit failed-probe boundary are in
+ docs/20261014_flashnext_strata_optimization.md S3. Raw root:
+/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_ep_mtp_20261014.
+No shelf entry or stability claim. 27B fallback prerequisite passes;
+unrelated dirty work preserved. Follow with depth3/4 MTP and concurrency.
