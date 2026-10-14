@@ -102,3 +102,9 @@ entries dated 2026-10-14, and raw results under
 EP/MTP raw results: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_ep_mtp_20261014.
 The original 2026-10-13 measurements remain in the A/B armB report and
 JOURNAL.md.
+
+S15 bounded dense/GR knob screens find no broad candidate. Disabling the
+shared-expert stream gives93.61 ->92.81 total concurrent tok/s; all six
+response hashes and functional/teardown health pass. Keep default execution,
+no promotion. Claude Fable5.1/Opus5.5 consultation and loop-cost decisions
+are recorded with the stage evidence. Candidate cache qualification is next.

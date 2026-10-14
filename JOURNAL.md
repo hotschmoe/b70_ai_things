@@ -22423,3 +22423,30 @@ separately. Evidence: docs/20261014_flashnext_strata_optimization.md S14;
 /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_concurrent_20261014,
 including quiet-confirm/quiet-report.json and final-state.json. Preserve
 unrelated dirty files; commit/push the measured checkpoint.
+
+
+## 2026-10-14 -- Flash-Next optimization S15: reject broad dense/shared knobs
+
+CONFIG: main296b59d2 dense/GR probes; frozen PUSH-s9 EP/batch-MTP1,
+exact12288/spec4/two200k/int8/parking16GiB4, all24576 experts resident.
+Refresh main/three contribution PRs unchanged. No source tuning patch.
+COMMAND: leased card0 graph-replay dense shapes/columns1-4; diagnostic GR
+hot-weight tokens1-6; matched Q5-only control and repeated end controls.
+SH_STREAM0 alone gets three solo/three concurrent coding windows per arm,
+identity/residency/arithmetic/reasoning/tools, normal stops/per-card/ten
+compiled collectives. Serving timing CPU-quiet and uninstrumented.
+RESULT: Q6PF2/rows2/rows4 median latency ratios1.128/1.106/1.509;
+Q5rows2/rows4 .946/1.310, but rows2 hurts small shapes and head not covered.
+GRunroll8/4/ILP1.139/1.627/1.223; max4 neutral. All matched hashes equal;
+end-control medians1.000. SH_STREAM0 solo93.300 ->92.236, concurrent total
+93.607 ->92.805tok/s, all six text hashes equal. Functional/residency and
+teardown health pass; no crash/reset. No broad candidate or further loser
+serving/prefill/context matrix. Server cleanly stopped for next stage.
+VERDICT: retain defaults, PUSH-s9/batch-MTP1 experimental; no promotion.
+Consulted claude-fable-5-1/claude-opus-5-5 twice. Focused review briefs and
+smallest missing RNG control cut wasted work; future micro arms share setup.
+Do not accept unsupported reviewer claims or lower user goals. Strengthen
+cache harness and accounting separately before full candidate qualification.
+Details: stage doc S15; raw dense_20261014 root includes s15-report.json,
+review-decisions.txt, configurations, outputs and health evidence. Preserve
+unrelated dirty work; commit/push measured negative stage checkpoint.

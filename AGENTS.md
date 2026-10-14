@@ -26,6 +26,13 @@ against these targets lives in docs/20261013_flashnext_goals.md.
   identity, health, and teardown evidence.
 - Preserve user changes in a dirty worktree.
 
+## Development loop (user, 2026-10-14)
+
+- Consult Claude Fable 5.1 and Claude 5.5 often at experiment decision points;
+  record the actual responding model IDs and evidence-based decisions.
+- Reflect on setup and testing cost each stage. Remove redundant tests and
+  repeated setup while preserving required correctness and GPU health checks.
+
 ## Current scope
 
 Flash-Next on two B70s, Strata backend (user direction, 2026-10-13). Targets

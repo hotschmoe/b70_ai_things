@@ -955,3 +955,65 @@ identity checks pass; soak inactive;27B prerequisite check exit0. No full
 fallback wrapper switch performed. Native logging is append-only: original
 S12 log prefix is preserved, and S14 restoration sessions have separate
 copies under RAW; final-state.json records the current offset/container.
+
+
+## S15: bound dense/shared screening and reject synchronization toggle
+
+CONFIG: unchanged main296b59d2 builds dense_bench/gr_bench; frozen PUSH-s9
+932d2f34 for serving, EP batch-MTP1/spec4/int8/exact12288/two200k/parking16GiB4.
+Refresh upstream/main and contribution PRs2205/2468/recutita1: unchanged,
+all open. Image/kernel/binary hashes recorded in RAW/identity-before.json.
+
+COMMAND: leased card0/pin0 dense graph-replay microprobes,24 matrices/shape,
+columns1-4, Q6_K/Q5_K; GR diagnostic host-enqueue probe tokens1-6. Separate
+Q5-only control matches the RNG fixture of Q5-only variants. Repeat end
+controls, per-card/ten compiled collective health. Only SH_STREAM0 receives
+a full serving A/B: three solo coding and three concurrent coding windows,
+identity/residency/concurrent arithmetic/reasoning/tools, normal stop and
+per-card/ten compiled collectives per arm. No profiler/compiler during
+serving timing. Each arm retains all24576 experts in the same placement.
+
+RESULT: micro latency ratios to matched control (below1 is faster):
+
+| Option | Median ratio | Decision |
+|---|---|---|
+| Q6 prefetch2 | 1.1281 | reject |
+| Q6 rows/workgroup2 /4 | 1.1057 /1.5087 | reject |
+| Q5 rows/workgroup2 /4 | 0.9461 /1.3103 | no broad candidate |
+| GR unroll8 /4 | 1.1394 /1.6271 | reject |
+| GR ILP /max4 | 1.2227 /0.9974 | reject /neutral |
+
+All corresponding output hashes match. Q5 rows2 helps large3/4-column
+shapes12-28% but hurts512-row shapes16-50%; this probe lacks the248320-row
+vocabulary head. Projected observed-shape saving is below1ms/window,
+insufficient evidence for a full serving arm. Q6 rows2 benefits the wider
+out-projection but regresses other shapes. Dense end-control40 cases
+median1.000, GR6 cases1.000. GR repeats hot weights and does not replay a
+graph; its timings are diagnostic and not production latency estimates.
+
+SH_STREAM0 removes the shared-expert queue fork/join but does not improve
+serving: solo client93.300 ->92.236 tok/s; concurrent median93.607 ->92.805
+total output tok/s (-0.856%). All six paired concurrent text hashes match.
+Functional, expert residency and teardown health pass; no crash/reset.
+Retain default shared-stream execution. No prefill or large-context reruns
+for this losing toggle. Exact per-stream TTFT/completion/content-event gaps
+and request timings live in RAW/s15-report.json and original responses.
+HTTP batch draft totals remain unavailable until the accounting fix.
+
+VERDICT: no production tuning patch or new knob. Keep PUSH-s9/batch-MTP1
+as the experimental candidate and clean-layer daily recoverable. The GPU
+server is stopped cleanly with post-health while the next accounting build
+runs; no promotion, no soak. Two active200k and four full distinct chats
+remain candidate qualifications to run next. Stage16 source work is
+separate from these measured stage15 results.
+
+Development-loop review: consulted actual claude-fable-5-1 and
+claude-opus-5-5 twice; see RAW/review-decisions.txt for accepted/rejected
+advice. Focused briefs cut consultation times168.5/91.6 ->43.5/38.4s.
+Avoid future repeated Docker/oneAPI setup for micro arms, retain required
+health checks, and repair mismatched fixtures with the smallest missing
+control. Do not repeat loser matrices or infer speed from reviewer advice.
+
+RAW: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_dense_20261014
+(micro-configs/report, run scripts, actual serving configs, s15-report,
+review-round1/2, review-decisions, functional and health records).
