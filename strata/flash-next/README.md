@@ -6,7 +6,8 @@ The serving build and configs are outside the repo under
 
 Current measured config: serve-iq3xxs-200k.json, stock upstream
 296b59d2/v0.1.44.1. Split27, two200k, MTP4, int8 KV, all main experts in
-VRAM, parking16384 MiB/4 entries. Bounded capacity, forced RAM restoration,
+VRAM, parking16384 MiB/4 entries. Strata spec4 includes the seed and offers
+at most three MTP drafts. Bounded capacity, forced RAM restoration,
 concurrent coherence, reasoning/tool checks and teardown health passed.
 Evidence: docs/20261014_flashnext_strata_optimization.md. The soak observer
 is stopped at user request; multi-day stability remains unqualified.
@@ -28,7 +29,10 @@ its complete model switch has not been exercised in this stage.
 
 Probe scripts operate through the already-leased server:
 
-- bench_serving.py: raw SSE, live identity, matched fresh prompts and timings.
+- bench_serving.py: raw SSE, live identity, matched fresh prompts/timings;
+  --spec-min-p varies the per-request draft-confidence cutoff.
+- bench_concurrency.py --template <saved-coding-response.json>: matched two
+  overlapping requests, aggregate output, per-stream timings and hashes.
 - bench_context.py --parking: near-full concurrent retrievals, overwrite both
   GPU slots with short chats, then verify concurrent cached-prefix returns.
 - soak.py: HTTP metadata, container RAM, per-card DRM fdinfo, and error lines;
@@ -37,7 +41,10 @@ Probe scripts operate through the already-leased server:
 
 Experimental EP: serve-iq3xxs-ep-experiment.json uses the temporary upstream
 PR2205/1798 build. Decode improves, but prefill regresses to about580 tok/s;
-this is not the daily-driver config. launch.sh adds SYS_PTRACE only for EP
+this is not the daily-driver config. EP/spec3 also failed a new tool
+continuation that completes on layer/spec4. Two-stream EP total improves
+about10%, but both measured paths offer no concurrent MTP drafts.
+launch.sh adds SYS_PTRACE only for EP
 to permit Level Zero IPC with Docker's default seccomp profile. Upstream:
 https://github.com/Niko1221/Strata/pull/2468. ep_ipc_probe.cpp records import
 status; ep_transfer_probe.cpp failed before large-transfer measurement and

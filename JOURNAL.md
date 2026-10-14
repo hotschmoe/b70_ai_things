@@ -22138,3 +22138,38 @@ configuration and explicit failed-probe boundary are in
 /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_ep_mtp_20261014.
 No shelf entry or stability claim. 27B fallback prerequisite passes;
 unrelated dirty work preserved. Follow with depth3/4 MTP and concurrency.
+
+
+## 2026-10-14 -- Flash-Next optimization S4: retain three drafts, batch limitation
+
+CONFIG: same clean head296b59d2/layer split27 and upstream EP PR build,
+IQ3_XXS/two200k/int8 KV/prefill4096/parking16384 MiB4. --spec T includes
+seed, so T4 is at most THREE drafts and T3 is at most two. Focus3/4 per user.
+COMMAND: three matched coding/prose prompts per window/cutoff, quiet T4
+control also32K. New bench_concurrency.py: three two-request windows,
+107 input/1500 output per stream, identical requests across layer3/4/EP3.
+Identity/cache/health/hashes; functional tool check and exact baseline
+comparison; clean teardown, per-card/compiled health and final T4 restart.
+RESULT: quiet layer T3/.5 coding77.7/prose64.7; T4/.3 84.0/64.0,
+T4/.5 83.8/65.7, T4/.7 81.6/64.5 tok/s. Acceptance can rise while speed
+falls. Deeper exploratory6/8 windows do not beat balanced4; no further
+work on them. Quiet4 prefill1260.3/1952.2 at4K/32K versus S2 1337/2004.
+Concurrent total medians layer3 63.56, layer4 63.94, EP3 69.99 tok/s,
+including prefill/admission/tails. All six outputs match across arms; zero
+MTP drafts offered in EVERY overlap response. EP3 single timing screen
+85.5 coding/71.1 prose; NOT serving qualification: a new tool continuation
+repeats an introduction without requested17/0 counts. Exact request on
+restored layer4 completes correctly. One-sentence request succeeds on
+both. Cannot isolate topology vs depth without the remaining2x2 arms.
+Normal EP3 stop exit0, both cards and ten compiled all-reduces pass.
+Final clean layer4 identity, concurrent arithmetic, separate reasoning and
+complete tool round trip pass; observer inactive, no added capability.
+VERDICT: keep split27/T4/min-p0.5, at most three drafts, two200k plus RAM
+parking. EP's10.1% overlap gain does not outweigh prefill loss/failed new
+tool gate; no promotion. Investigate peer prefill collection and concurrent
+MTP, isolate tool case. Same serving parameters restored; only log path
+changes. No stability claim, native patch or shelf entry. Stage evidence:
+ docs/20261014_flashnext_strata_optimization.md S4; raw EP/MTP root fromS3,
+including stage4-report.json and final identity/functional/memory files.
+Fallback27B prerequisites pass, one-command wrapper retained, full switch
+untested. Preserve unrelated dirty files; checkpoint this measured stage.

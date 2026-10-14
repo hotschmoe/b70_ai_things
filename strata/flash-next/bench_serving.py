@@ -19,10 +19,12 @@ def get(base, path):
         return json.load(response)
 
 
-def send(base, model, messages, cap):
+def send(base, model, messages, cap, *, spec_min_p=None):
     body = dict(model=model, messages=messages, max_tokens=cap, temperature=0,
                 stream=True, stream_options={"include_usage": True},
                 chat_template_kwargs={"enable_thinking": False})
+    if spec_min_p is not None:
+        body["strata_tune"] = {"spec_min_p": spec_min_p}
     request = urllib.request.Request(base + "/v1/chat/completions",
                                      json.dumps(body).encode(),
                                      {"Content-Type": "application/json"})
@@ -62,6 +64,7 @@ def main():
     parser.add_argument("--alias", default="qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--repeats", type=int, default=3)
+    parser.add_argument("--spec-min-p", type=float)
     parser.add_argument("--cases", nargs="+", choices=["coding", "p4096", "p32768"],
                         default=["coding", "p4096", "p32768"])
     args = parser.parse_args()
@@ -76,7 +79,7 @@ def main():
     if args.alias not in registry:
         raise RuntimeError("Research alias absent from eval model registry")
     def record(name, messages, cap):
-        result = send(base, args.model, messages, cap)
+        result = send(base, args.model, messages, cap, spec_min_p=args.spec_min_p)
         (args.output / (name + ".json")).write_text(json.dumps(result, indent=2, ensure_ascii=True) + "\n")
         print(json.dumps(dict(name=name, usage=result["usage"], timings=result["timings"],
                               client_decode_tps=result["client_decode_tps"],

@@ -245,3 +245,102 @@ It is independent preparation for the open EP PRs. No native optimization
 is promoted from the failed microprobe, and no long-lived engine fork.
 The long-soak observer is stopped at user request; not a stability verdict.
 27B prerequisite check passes; fallback command remains available.
+
+
+## S4: MTP windows3/4, confidence cutoff, concurrent output
+
+CONFIG: same clean layer-split head and temporary upstream EP build as S3,
+IQ3_XXS, two200k, int8 KV, reserve1024, prefill4096, parking16384 MiB/4.
+Vary only --spec and per-request strata_tune.spec_min_p, except switching
+between the recorded layer/EP topologies. Strata --spec T is the verification
+window INCLUDING the seed token: T=4 offers at most three MTP draft tokens;
+T=3 offers at most two. This matters when comparing other engines' settings.
+No further deeper-window work after the user steered toward3/4.
+
+COMMAND: bench_serving.py --cases coding p4096 --repeats3; --spec-min-p
+0.3/0.5/0.7 on window4. Quiet window4/min-p0.5 also runs p32768. The new
+bench_concurrency.py --template EPRAW/layer-mtp4-p05-quiet/coding-0.json
+--output EPRAW/<arm>-concurrent sends two synchronized107-token coding
+requests,1500 output each, in three fresh windows. Repeat for layer T4,
+layer T3 and EP T3. Save live identity, request/output hashes, raw SSE,
+TTFT, engine timings and health; reject prefix reuse over64 tokens.
+Per-card health between layer variants; per-card plus compiled two-rank
+health before and after EP. Exact scripts/configs in EPRAW/run-depth34.py,
+run-ep3.py and serve-*.json. Roll back to the qualified layer T4 config,
+then validate stable identity, concurrent arithmetic, separate reasoning,
+tool round trip and one memory/HTTP snapshot. Observer remains stopped.
+
+RESULT: quiet single-stream medians, three prompts per cell; all prompts
+have zero reuse. Coding105 input/1500 output; prose4059/256:
+
+| Topology | Verify window | min-p | Coding decode | Prose decode | Draft acceptance coding/prose |
+|---|---|---|---|---|---|
+| layer | 3 | 0.5 | 77.7 | 64.7 | 87.2% /76.2% |
+| layer | 4 | 0.3 | 84.0 | 64.0 | 77.5% /56.6% |
+| layer | 4 | 0.5 | 83.8 | 65.7 | 83.6% /67.6% |
+| layer | 4 | 0.7 | 81.6 | 64.5 | 90.4% /81.8% |
+| EP | 3 | 0.5 | 85.5 | 71.1 | timing screen; tool gate below |
+| EP | 4 | 0.5 | 91.9 | 72.3 | S3 screen,83.0% /67.5% |
+
+Units: tok/s. Higher acceptance alone does not maximize throughput. Window4
+wins the layer coding screen by7.9% versus3; prose differences are small.
+Cutoff0.3 gives no broad win,0.7 slows coding. Retain T4/min-p0.5.
+Quiet control prefill1260.3 at4K and1952.2 at32K;32K decode64.9. The
+previous same-behavior S2 medians were1337.2/2004.2, so2000+ prefill is
+near the boundary, not established as a stable floor.
+
+Earlier deeper screens (overlapping the CPU-only EP build) recorded
+T4/0.5 coding82.8/prose65.8, T6/0.5 84.6/62.4, T8/0.5 79.3/59.0.
+Acceptance falls83.3/67.6 ->74.4/59.4 ->68.0/54.1 percent. Quiet T8/0.7
+recovers83.0/65.2, without beating the balanced T4 default. These are
+exploratory screens; the final3/4 comparison runs without the build.
+
+| Concurrent arm | Median total output tok/s | Engine per-stream range tok/s |
+|---|---|---|
+| layer T3/min-p0.5 | 63.56 | 32.4-33.8 |
+| layer T4/min-p0.5 | 63.94 | 32.6-33.4 |
+| EP T3/min-p0.5 | 69.99 | 35.8-37.1 |
+
+Total output divides3000 tokens by wall time INCLUDING both prefills,
+admission and tails; it is not the sum of single-stream medians. Each arm
+has three windows of two requests, six outputs. All six request
+hashes and outputs match across the layer3/4 and EP3 arms. Every overlap
+response reports draft_n=0: these runs use ordinary batch decode, so the
+window3/4 choice does not provide concurrent drafting. Upstream's opt-in
+--batch-mtp is disabled by default and rejects layer splits. EP's combination
+with that option has NOT been tested here. EP total is10.1% above layer3,
+but still below one lone MTP-assisted coding stream. No parallel speed
+qualification or150 tok/s claim.
+
+Functional caveat: EP T3 passes concurrent arithmetic and separated
+reasoning. A new forced-tool round trip emits the correct tool name/args,
+but its final answer is only "Here's the build status for **b70-demo**:"
+and omits17 passed/0 failed counts. An exact repeat does the same. The
+IDENTICAL request body on restored layer T4 completes with the correct
+counts and full answer. Explicitly requesting one sentence completes with
+correct counts on both. This is an EP/T3 qualification failure, not evidence
+that either EP alone or T3 alone caused it: the other two arms of that
+functional2x2 remain untested. Retain the failed check-functional-v1.py,
+run-ep3.log and response JSON; do not reinterpret the failed gate as a pass.
+S3's separate EP T4 tool probe did pass, but used a different request.
+
+EP T3 stops normally (gpu-run exit0); both cards and ten compiled all-reduces
+pass. Its one snapshot has primary/peer resident29.83/25.76 GiB and RSS
+2.94 GiB; this is startup/short-prompt evidence, not a near-full EP context
+or long soak qualification. Final layer T4 restart has stable identity,
+ctx200000, concurrent323/667, separated391 reasoning and a complete tool
+round trip. Final snapshot has no endpoint errors; source clean296b59d2,
+binary16f592e7e2f20178e4775ede7e6de306b6695b9444d1e399f68844cffb1e130b,
+image unchanged, no added capabilities. Final-identity.json records these.
+
+VERDICT: retain the qualified split27/T4/min-p0.5/two200k configuration,
+which is at most three MTP draft tokens. More drafts or higher acceptance
+alone do not help. Concurrent MTP and peer-row prefill collection are the
+next engineering targets; EP/T3 also needs the failed tool continuation
+isolated before promotion. No native patch, new shelf entry or renewed
+long-soak observer. Final strata-optimized.service serves :18085/v1 with
+hotschmoe-dd first. Tracked config and /build/strata-ab/serve-optimized.json
+match; only log destination changes to EPRAW/final-layer-engine.log.
+Final HTTP/memory evidence: final-functional/, final-memory.jsonl and
+final-identity.json. 27B prerequisite check passes; fallback remains
+bash strata/flash-next/fallback-27b.sh. Complete wrapper switch untested.
