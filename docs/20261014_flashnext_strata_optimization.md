@@ -507,3 +507,48 @@ https://github.com/intel/pti-gpu/tree/master/tools/unitrace.
 The next stage tests PUSH transport with repeated freshness checks; no
 PUSH full-model claim is made in this stage. Qualified layer driver is
 running during CPU builds; observer off; fallback one command away.
+
+
+## S8 -- topology-aware PUSH transport measured independently
+
+CONFIG: fixed full-sized native Level Zero allocations, source owned by GPU1,
+destination owned by GPU0 and imported on GPU1. Same compiler/image/AOT,
+no vLLM library loaded. Add vector4 posted writes with64 workgroups and a
+system release fence after each work item's stores; GPU0 reads destination
+uncached into a separate local buffer before checking. Allocations stay alive.
+COMMAND: leased ep-transfer-push-probe after clean serving stop and per-card/
+compiled collective health. Two sizes, ten methods, four producer epochs each;
+all returned words checked. Post-probe per-card/ten compiled collectives pass,
+normal probe exit0, then qualified layer driver restarted for CPU builds.
+RESULT:80 complete-buffer freshness checks pass. Warm medians (epochs2-4):
+
+| Operation, GPU1 -> GPU0 | Bytes | Host enqueue-through-completion ms | GB/s |
+|---|---|---|---|
+| primary uncached peer read | 256235520 | 77.249 | 3.317 |
+| ordinary peer memcpy | 256235520 | 144.615 | 1.772 |
+| copy-engine peer memcpy | 256235520 | 155.428 | 1.649 |
+| peer posted-write PUSH | 256235520 | 22.837 | 11.220 |
+| primary uncached peer read | 16384 | 0.017 | 0.969 |
+| peer posted-write PUSH | 16384 | 0.011 | 1.472 |
+
+These are host wall durations INCLUDING queue submission and wait, not
+isolated kernel execution. PUSH timing excludes the later local uncached
+consumer copy used for verification. Full-model comparison must include
+that copy and synchronization. Retained vLLM source118/119 and P2P_GPU
+J/K describe the same fabric preference; its historical all-reduce timings
+are context, not a current Strata all-reduce result. Strata needs only the
+peer expert contribution return, not a bidirectional TP all-reduce.
+VERDICT: PUSH is a measured transport candidate. Prepare optional
+STRATA_EP_PREFILL_PUSH=1 on top of FP32 reduction, changing ownership of
+the sum region and applying a system release fence. Preserve uncached
+primary consumption and existing host rendezvous. It is not qualified in
+the full model at this checkpoint. Individual-kernel/API/submission traces
+will follow; Intel pti-gpu6c0d6b0b was built CPU-only into PF build root.
+Runtime/compiler/driver unchanged; source idea deliberately ported.
+
+S7 latency erratum: the initial latency extraction selected repeats1/2,
+instead of all0/1/2. Throughput medians were already correct (harness uses
+all three). Correct three-repeat medians: async off/on TTFT3.910/4.082s
+at4K,26.014/26.401s at32K; exact12288 TTFT24.983s and native prefill
+24919.1ms. Exact8192 TTFT25.882s, attention-v1 TTFT25.864s. Preserve the
+original checkpoint as history and use these corrected latencies onward.

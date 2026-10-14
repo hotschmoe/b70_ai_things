@@ -22249,3 +22249,24 @@ full-context/promoted. Rejected async source kept only as raw evidence.
 Details: docs/20261014_flashnext_strata_optimization.md S7, PFRAW fromS5.
 Qualified layer driver restored for builds;27B wrapper ready, observer off.
 Commit/push this measured checkpoint; preserve unrelated dirty files.
+
+
+## 2026-10-14 -- Flash-Next optimization S8: PUSH fabric latency verified
+
+CONFIG: native full-size GPU1 source/GPU0 destination,64-workgroup vector4
+posted writes/system release fence, separate local uncached consumer.
+COMMAND: leased standalone transfer probe,80 full-buffer changing-pattern
+checks; clean stop and per-card/ten compiled collectives before/after.
+RESULT: warm256235520-byte median read77.249ms/3.317GB/s vs PUSH
+22.837ms/11.220GB/s;16KiB17us vs11us. All80 checks pass, exit0;
+health passes, no crash/reset. These durations include enqueue/wait;
+PUSH excludes later local consumer copy. Native serving test is pending.
+S7 correction: all three repeats give exact12288 TTFT24.983s and native
+prompt24919.1ms (prior extraction accidentally used only repeats1/2);
+throughput1313.4 was correct. Detailed latency erratum in stage document.
+VERDICT: port retained custom PUSH source idea into Strata's one-way
+peer return; never load the old ABI-specific library. Kernel/API/submission
+profiling tooling built from Intel pti-gpu6c0d6b0b. No model-speed claim or
+promotion yet. Qualified layer driver running during builds, observer off.
+Evidence: docs/20261014_flashnext_strata_optimization.md S8, raw PFRAW.
+Commit/push standalone measured milestone; unrelated dirt preserved.

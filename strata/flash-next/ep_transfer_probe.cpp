@@ -10,6 +10,17 @@
 #include "strata/sycl_doorbell.hpp"
 
 template<int V, size_t CAP> class BulkCopyProbe;
+class PushCopyProbe;
+static void push_copy(void* dst,const void* src,size_t bytes,sycl::queue& q) {
+    constexpr size_t WG=256,GROUPS=64;
+    const size_t count=bytes/16;
+    auto* d=static_cast<sycl::uint4*>(dst);
+    auto* s=static_cast<const sycl::uint4*>(src);
+    q.parallel_for<PushCopyProbe>(sycl::nd_range<1>(GROUPS*WG,WG),[=](sycl::nd_item<1> it){
+        for(size_t i=it.get_global_id(0);i<count;i+=GROUPS*WG)d[i]=s[i];
+        sycl::atomic_fence(sycl::memory_order::release,sycl::memory_scope::system);
+    }).wait();
+}
 template<int V, size_t CAP>
 static void bulk_copy(void* dst,const void* src,size_t bytes,sycl::queue& q) {
     using Vec=sycl::vec<uint32_t,V>;
@@ -31,10 +42,11 @@ int main() {
     auto* dma = strata::make_copy_engine_queue("EP transfer probe");
     if (!dma) { std::puts("FAIL no copy engine"); return 3; }
     constexpr size_t capacity = size_t(25023)*2560*4;
-    EpRegion region, destination;
+    EpRegion region, destination, local_check;
     std::string error;
     if (!ep_region_alloc(1, 0, capacity, region, error) ||
-        !ep_region_alloc(0, 1, capacity, destination, error)) {
+        !ep_region_alloc(0, 1, capacity, destination, error) ||
+        !ep_region_alloc(0, 1, capacity, local_check, error)) {
         std::printf("FAIL %s\n", error.c_str()); return 4;
     }
     auto* dst = static_cast<uint32_t*>(destination.local);
@@ -44,7 +56,7 @@ int main() {
     std::vector<uint32_t> host(capacity/4);
     for (size_t bytes : {size_t(16384), capacity}) {
         const size_t words = bytes/4;
-        for (int mode=0; mode<9; ++mode) {
+        for (int mode=0; mode<10; ++mode) {
             for (uint32_t epoch=1; epoch<=4; ++epoch) {
                 auto* src = static_cast<uint32_t*>(region.local);
                 uint32_t salt = epoch + mode*100;
@@ -64,9 +76,13 @@ int main() {
                 else if(mode==5) bulk_copy<4,1024>(dst,region.remote,bytes,consumer);
                 else if(mode==6) bulk_copy<8,256>(dst,region.remote,bytes,consumer);
                 else if(mode==7) bulk_copy<16,256>(dst,region.remote,bytes,consumer);
-                else bulk_copy<1,256>(dst,region.remote,bytes,consumer);
+                else if(mode==8) bulk_copy<1,256>(dst,region.remote,bytes,consumer);
+                else push_copy(destination.remote,region.local,bytes,producer);
                 double ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
-                consumer.memcpy(host.data(),dst,bytes).wait();
+                if(mode==9) {
+                    strata::kernels::ep_copy_uncached(local_check.local,destination.local,bytes,&consumer);
+                    consumer.memcpy(host.data(),local_check.local,bytes).wait();
+                } else consumer.memcpy(host.data(),dst,bytes).wait();
                 size_t bad=0;
                 for(size_t i=0;i<words;++i) bad += host[i] != (uint32_t(i)*2654435761u ^ salt);
                 std::printf("TRANSFER bytes=%zu mode=%d epoch=%u ms=%.3f GBps=%.3f mismatches=%zu\n",bytes,mode,epoch,ms,bytes/ms/1e6,bad);
@@ -77,6 +93,7 @@ int main() {
     }
     producer.wait(); consumer.wait(); dma->wait();
     ep_region_free(destination);
+    ep_region_free(local_check);
     ep_region_free(region);
     std::puts("PASS all IPC transfer bytes fresh");
 }
