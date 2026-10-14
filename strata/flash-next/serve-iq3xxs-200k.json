@@ -49,5 +49,5 @@
     "--conversation-cache-slots",
     "4"
   ],
-  "log": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_ep_mtp_20261014/final-layer-engine.log"
+  "log": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_ep_prefill_20261014/final-layer-s12-engine.log"
 }

@@ -65,6 +65,12 @@ less than1% gain, so the research knob is reverted. One traced four-token decode
 versus row returns1.06ms; overlapping primary work must be profiled next.
 Explicit stop/flush and tracing during graph capture are required for valid
 coverage. Profiler overhead is large; these are diagnostic, not benchmarks.
+S12 lane-cell score variant gives no broad gain (4K1221/32K1515); leave
+it off. Final clean main still equals refreshed origin/main296b59d2 and is
+serving the qualified split27/spec4/two200k configuration. Final stable
+identity, concurrent arithmetic, reasoning, tools and27B check pass.
+Attention value gather/accumulation and primary dense/shared decode work
+remain the next operation-level targets; no extra candidate promotion.
 Four full RAM snapshots project14.47 GiB and a fifth during swap18.08 GiB;
 24-32GiB parking is appropriate to test two active/two parked conversations.
 Four DISTINCT full200k conversations are unqualified; production retains
@@ -73,7 +79,7 @@ open.
 Final layer spec4 is serving :18085, observer off, final functional gates
 and post-experiment GPU health pass. The only config update is log path.
 
-Evidence: docs/20261014_flashnext_strata_optimization.md, JOURNAL.md S1/S2/S3/S4/S5/S6/S7/S8/S9/S10/S11
+Evidence: docs/20261014_flashnext_strata_optimization.md, JOURNAL.md S1/S2/S3/S4/S5/S6/S7/S8/S9/S10/S11/S12
 entries dated 2026-10-14, and raw results under
 /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_opt_20261014.
 EP/MTP raw results: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_ep_mtp_20261014.

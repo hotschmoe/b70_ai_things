@@ -733,3 +733,43 @@ traffic trade, not more key reuse. A commentary initially described the
 reuse direction incorrectly; corrected after rereading the kernel before
 running it. Exact outputs and measured times decide whether it helps B70.
 Soak off;27B wrapper retained; no candidate full200k or daily promotion.
+
+
+## S12 -- lane-cell score variant gives no useful gain; final daily restore
+
+CONFIG: same frozen strata-push-s9 binary as S9; existing
+STRATA_ATTN_LANECELL=1 only. Other flags, expert residency, context, quant,
+MTP and RAM budget unchanged. Original per-score expression/butterfly is
+reproduced by the source variant, but full math identity is not assumed.
+COMMAND: three fresh4K/32K requests, compare exact requests/hashes with S9
+PUSH control. Concurrent arithmetic, reasoning/tools, actual config/identity/
+all24576 and native slot0 checks. Normal stop, per-card/ten compiled
+collectives. Restore clean main daily driver, then repeat stable identity,
+concurrent arithmetic, separate reasoning and tool round trip; memory
+snapshot and27B prerequisite check. Re-fetch upstream main identity.
+RESULT:4K1214.4 ->1220.9 tok/s (native3342.4 ->3324.7ms, TTFT3.375
+->3.357s);32K1530.9 ->1515.4 (21378.6 ->21596.7ms,21.444 ->21.661s).
+No broad gain. All six matched texts exactly equal; offered/accepted MTP
+counts equal in only4/6, so no additional bitwise-math claim. Functional
+and teardown/health gates pass, no crash/reset. Leave the variant off.
+Main296b59d2 still equals origin/main and is clean; temporary EP source
+again exactly matches the tracked109-line PUSH patch (SHA59ba0a85).
+Final native serve uses clean-head binary16f592e7 on:18085 under
+strata-optimized.service; split27, two200k/int8KV, spec4 (at most THREE
+drafts)/min-p.5, prefill4096/reserve1024, RAM parking16384MiB/4. Config
+matches the prior qualified daily config except the log path. Final
+concurrent arithmetic/reasoning/tools/identity and27B check pass, observer
+inactive. The one-time memory observation is not a restarted soak.
+VERDICT: measured EP win remains reduced sums + PUSH (matched32K1531,
+4K1214), source upstream via stacked author-branch PR
+https://github.com/recutita/Strata/pull/1,78cea7a1. Individual kernel/API/
+submission latency and full decode-window census are saved in S10. Query
+batching and lane-cell variants did not recover2000. Next focused work is
+attention value gather/accumulation and primary dense/shared decode work,
+using operation latency and traffic/occupancy evidence. No shelf/candidate
+full200k/daily promotion, four DISTINCT full contexts still unqualified.
+Existing two-full200k forced parking/restore evidence is retained for the
+qualified layer driver. Fallback remains one command:
+`bash strata/flash-next/fallback-27b.sh`; full wrapper switch still untested,
+prerequisites passed. No user dirty file changed. Raw S12 and final records
+are in PFRAW from S5, including lane-cell-s12-report.json and final-s12*.

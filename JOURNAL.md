@@ -22335,3 +22335,26 @@ clarification:126 FULL32-query batches plus one12-query tail per layer,
 trades more key traffic for fewer shuffles, preserving score expressions.
 Details: stage doc S11 and attn-batch-s11-report.json. No full200k/daily
 promotion, observer off, fallback available. Commit/push measured stage.
+
+
+## 2026-10-14 -- Flash-Next optimization S12: reject lane-cell, restore daily
+
+CONFIG: existing lane-cell score variant on frozen PUSH-s9, no other flags
+changed; same IQ3_XXS/all24576/two200k/spec4/parking16GiB4.
+COMMAND: three matched4K/32K prompts, identity/residency/coherence/tools,
+normal stop/per-card/ten compiled collectives. Restore clean layer driver,
+final concurrent arithmetic/reasoning/tools, memory snapshot and27B check.
+RESULT:4K1214.4 ->1220.9,32K1530.9 ->1515.4 tok/s, no broad gain;
+32K native21378.6 ->21596.7ms, client21.444 ->21.661s. Six response
+pairs exactly equal, MTP counts4/6 equal; no full numerical identity claim.
+All functional/teardown health pass, no crash/reset. Source knob fromS11
+reverted; current EP source equals tracked PUSH109-line patch. MainHEAD
+296b59d2 equals refreshed origin/main and is clean. Final clean-head
+layer split27/spec4 (THREE drafts)/two200k is serving:18085, stable ID,
+concurrent arithmetic, reasoning/tool round trip pass. Same daily config
+except log path, observer inactive,27B prerequisites pass.
+VERDICT: retain measured PUSH contribution, no extra attention changes.
+Below2000; no candidate full200k, four-distinct200k or shelf promotion.
+Evidence: stage doc S12, lane-cell-s12-report/final-s12* in PFRAW. PR
+https://github.com/recutita/Strata/pull/1 updated78cea7a1; operation traces
+are S10. Commit/push final milestone; preserve unrelated dirty work.
