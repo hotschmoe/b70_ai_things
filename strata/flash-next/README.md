@@ -67,3 +67,14 @@ text can differ due to FP32 regrouping. Functional and teardown checks pass,
 but no full-context candidate qualification or daily-driver promotion.
 Upstream contribution targets PR2205's author branch:
 https://github.com/recutita/Strata/pull/1. S6 records full evidence.
+
+
+Optional EP PUSH return experiment: `serve-iq3xxs-ep-push-experiment.json`
+uses frozen `strata-push-s9`, exact workspace12288 and both
+STRATA_EP_PREFILL_REDUCE=1 / STRATA_EP_PREFILL_PUSH=1. Same-binary pull/PUSH
+32K medians1308.4/1530.9 tok/s and25.077/21.444s client TTFT; nine matched
+responses exactly equal. Reduction changes FP32 addition order relative
+to full-row combine. This configuration has short-prompt/functional and
+teardown-health evidence, not full200k or shelf qualification. See S9.
+Build only the `strata` target when editing this patch; the optional
+standalone numerical probe also accepts `--push`.

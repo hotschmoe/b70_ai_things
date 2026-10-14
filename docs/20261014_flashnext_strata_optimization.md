@@ -552,3 +552,53 @@ all three). Correct three-repeat medians: async off/on TTFT3.910/4.082s
 at4K,26.014/26.401s at32K; exact12288 TTFT24.983s and native prefill
 24919.1ms. Exact8192 TTFT25.882s, attention-v1 TTFT25.864s. Preserve the
 original checkpoint as history and use these corrected latencies onward.
+
+
+## S9 -- PUSH raises EP prefill to1531, exact transport A/B
+
+CONFIG: same109-line opt-in peer-reduction patch on upstream296b59d2 plus
+PR2205. Frozen strata-push-s9 SHA256932d2f347219edd668f60048204b6578a823df03c213a45edf043861b823184e.
+Same binary, PUSH0/1 only: IQ3_XXS, all24576 experts resident, spec4/.5,
+two200k/int8KV/reserve1024/parking16GiB4, exact workspace/prefill12288,
+phase timing on in both arms. Sum region changes owner; producer64-group
+FP32 reducer stores directly to the primary IPC mapping/system release
+fence. Existing peer host wait and primary uncached local copy remain.
+No math or decode-path change relative to FP32 reduction.
+COMMAND: same-image CPU main-target build completes with identical live/
+frozen hashes. Initial all-target build was stopped AFTER main linked,
+while compiling unused parity executables; no failed GPU compilation.
+Pair-leased52-case oracle (26 PUSH plus26 pull); native slot0/total expert
+checks; three matched fresh105/4059/32728-token inputs,1500/256/256 output;
+compare requests, text hashes and draft counts. Concurrent arithmetic,
+separate reasoning/tools; normal stop and per-card/ten compiled collectives
+pass on both arms. No GPU crash/reset. Native source PR updated below.
+RESULT: all52 oracle cases pass; max original-order reference error9.54e-7,
+max tolerance ratio0.0913. All nine matched model response pairs exactly
+match (including identical MTP offered/accepted counts). Three-run medians:
+
+| Case | Pull prefill tok/s | PUSH prefill tok/s | Native prefill ms, pull -> PUSH | Client TTFT s, pull -> PUSH | Decode tok/s, pull -> PUSH |
+|---|---|---|---|---|---|
+| short coding | 100.8 | 103.5 | 1042.0 ->1014.2 | 1.068 ->1.040 | 88.9 ->88.9 |
+| 4K | 1047.1 | 1214.4 | 3876.4 ->3342.4 | 3.909 ->3.375 | 70.7 ->70.6 |
+| 32K | 1308.4 | 1530.9 | 25013.0 ->21378.6 | 25.077 ->21.444 | 70.0 ->69.9 |
+
+4K/32K throughput gains16.0%/17.0%; native latency falls13.8%/14.5%.
+The first32K run reaches1557.2, but1530.9 is the three-run median.
+Coding decode unchanged in this matched comparison. Context here is
+configured capacity, NOT actual two-full200k qualification of the patch.
+Native filled7440 primary +17136 peer, both slot0 verified; peer2490MiB
+free after prefill buffers. Prefix cache zero in every timed request.
+The original FP32 reduction still differs from full-row combine; only PUSH
+versus reduced pull has measured response parity. No overall quality or
+long-stability claim. Full source/commands/configs and push-s9-report.json
+remain in PFRAW. The patch and standalone probe are tracked in strata.
+VERDICT: retain optional PUSH atop optional reduction; below2000, no shelf
+or daily-driver promotion. Update stacked author-branch PR
+https://github.com/recutita/Strata/pull/1 with commit78cea7a1, preserving
+small source changes and no long-lived serving fork. Keep the clean main
+layer driver as qualified daily configuration,27B check passes, soak off.
+Next stage collects actual kernel/API/submission latency, since phase
+buckets include idle/waits. First profiler collection produced an empty
+file: native successful serve shutdown uses std::_Exit(0), bypassing library
+flush; model teardown/health passed. Preserve this failed diagnostic and
+explicitly stop/flush the session in the next capture before shutting down.

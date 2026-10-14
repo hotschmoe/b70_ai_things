@@ -51,7 +51,15 @@ prompts; TTFT24.983s). All experts resident and functional/teardown health
 pass. This is an experimental control, not full200k qualification. Next
 measure PUSH peer returns and individual operation latency. S8 standalone
 256MB PUSH is22.84ms/11.22GB/s versus uncached read77.25ms/3.32GB/s;
-80 freshness checks and post-health pass, full-model PUSH still pending.
+80 freshness checks and post-health pass. S9 same-binary PUSH0/1 gives
+4K1047 ->1214 and32K1308 ->1531 tok/s, native32K prefill25.013 ->21.379s,
+client TTFT25.077 ->21.444s. Nine matched outputs exactly equal,52 numerical
+cases and functional/teardown health pass. Coding decode88.9 both arms.
+Still below2000; candidate full200k and daily promotion remain unqualified.
+PUSH source update78cea7a1 is on the same stacked author-branch PR.
+Individual-operation profile capture is active work; first diagnostic file
+was empty because native _Exit bypassed flush, so explicit stop/flush is
+required. These profiler runs are not throughput benchmarks.
 Four full RAM snapshots project14.47 GiB and a fifth during swap18.08 GiB;
 24-32GiB parking is appropriate to test two active/two parked conversations.
 Four DISTINCT full200k conversations are unqualified; production retains
@@ -60,7 +68,7 @@ open.
 Final layer spec4 is serving :18085, observer off, final functional gates
 and post-experiment GPU health pass. The only config update is log path.
 
-Evidence: docs/20261014_flashnext_strata_optimization.md, JOURNAL.md S1/S2/S3/S4/S5/S6/S7/S8
+Evidence: docs/20261014_flashnext_strata_optimization.md, JOURNAL.md S1/S2/S3/S4/S5/S6/S7/S8/S9
 entries dated 2026-10-14, and raw results under
 /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_opt_20261014.
 EP/MTP raw results: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_ep_mtp_20261014.

@@ -22270,3 +22270,25 @@ profiling tooling built from Intel pti-gpu6c0d6b0b. No model-speed claim or
 promotion yet. Qualified layer driver running during builds, observer off.
 Evidence: docs/20261014_flashnext_strata_optimization.md S8, raw PFRAW.
 Commit/push standalone measured milestone; unrelated dirt preserved.
+
+
+## 2026-10-14 -- Flash-Next optimization S9: PUSH prefill1531, exact responses
+
+CONFIG: same frozen binary, optional PUSH0/1 only, IQ3_XXS/all24576,
+exact workspace12288/two200k/spec4/.5/int8KV/reserve1024/parking16GiB4.
+COMMAND: same-image main-target CPU build,52 numerical cases; three matched
+coding/4K/32K prompts, live identity/registry/slot0, concurrent arithmetic,
+reasoning/tools, normal stop and per-card/ten compiled collectives both arms.
+RESULT: nine matched outputs and MTP counts exactly equal.4K1047.1 ->1214.4,
+32K1308.4 ->1530.9 tok/s. Native prefill3876.4 ->3342.4ms and25013.0
+->21378.6ms; client TTFT3.909 ->3.375s and25.077 ->21.444s. Coding
+88.9 decode both arms. Numerical max error9.54e-7 versus original-order
+CPU oracle, all52 pass. All functional/teardown health pass, no crash/reset.
+VERDICT: measured16-17% prefill gain from transport, still below2000;
+no full200k qualification, shelf or daily promotion. Patch/probe/config
+tracked, source PR updated78cea7a1: https://github.com/recutita/Strata/pull/1.
+First unitrace file empty because native std::_Exit skips flush; preserve
+failure and collect with explicit stop/flush in S10. Details in stage doc,
+push-s9-report.json and configs/build/bench/health under PFRAW fromS5.
+Fallback check passes; observer inactive; unrelated dirty files preserved.
+Commit/push this measured milestone.
