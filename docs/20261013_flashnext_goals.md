@@ -10,6 +10,9 @@ vLLM parked, ready to port. 27B INT4 AutoRound on vLLM is the fallback.
 | Context | 200k per stream, 2 streams | IQ3_S: 1 x 200k (no MTP). IQ3_XXS: 2 x 131072 with MTP4 | 2 x 200k untested |
 | KV eviction to RAM | restore without recompute under load | conversation parking (8192 MiB, 4 entries) restores a 30k conversation in 0.54-0.60 s | works at 30k; not tested at 200k or under sustained load |
 
+Quality: on 2026-10-14 Flash-Next IQ3_XXS beat the 27B INT4 8-0 on paired
+langs + sysadmin tasks (41/43 vs 33/43); see the A/B brief, Outcome 2.
+
 Not yet shown: multi-day stability on Strata (longest clean run about 3 h),
 two-stream aggregate decode gain (54 tok/s total at 2 streams, same as 1).
 

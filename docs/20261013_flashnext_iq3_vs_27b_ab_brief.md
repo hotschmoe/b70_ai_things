@@ -176,3 +176,18 @@ S4 Only if S3 is ambiguous: extend to the full local-70 lock.
 - Direction regardless of a tie: Strata is the focus backend and the goals
   are in docs/20261013_flashnext_goals.md; a clear arm B loss on langs or
   sysadmin would reopen that.
+
+## Outcome 2 (2026-10-14): decision tiers on Pi 1.2.0
+
+| Tier | 27B INT4 (A) | Flash-Next IQ3_XXS (B) | Paired B wins / A wins |
+|---|---|---|---|
+| langs (Rust/Dart/Go, 19) | 15/19 | 18/19 | 3 / 0 |
+| sysadmin (24) | 18/24 | 23/24 | 5 / 0 |
+| total | 33/43 | 41/43 | 8 / 0 |
+
+Time per task on tasks both passed: langs median 1134 s (A) vs 991 s (B);
+sysadmin 73 s vs 117 s. B used about 30 percent fewer completion tokens.
+One unsafe sysadmin fix on A, none on B. Single run per arm.
+
+Decision rule result: met. Flash-Next continues; the next work is the Strata
+plan against docs/20261013_flashnext_goals.md. The 27B stays as fallback.

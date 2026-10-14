@@ -22014,3 +22014,34 @@ not a Pi 1.2.0 result. run_arm.py and longrun/run_long.py now call
 /opt/pi/node_modules/.bin/pi explicitly. New tiers (langs, sysadmin) are run
 with Pi 1.2.0 from here; the partial langs run on arm A under 0.85.1 (2 tasks)
 is discarded.
+
+## 2026-10-14 -- A/B S3: abfast langs + sysadmin tiers, Pi 1.2.0, both arms
+
+CONFIG: Pi 1.2.0 pinned (/opt/pi/node_modules/.bin/pi), thinking xhigh,
+context window 131072, max output 32768, parallel 2. langs tier (19 tasks:
+8 Rust, 6 Dart, 5 Go; cap 2700 s) and sysadmin tier (24 tasks; cap 1800 s).
+Arm A: 27B INT4 AutoRound vLLM TP=2 frontdoor :18080. Arm B: Flash-Next ISTA
+GSQ-RCO IQ3_XXS, stock Strata v0.1.43.1, 2 x 131072 slots, MTP4, parking,
+:18085 (serve-armB-final.json). Same tasks, same order, sequential arms.
+COMMAND: /mnt/vm_8tb/b70/results/flashnext_iq3_ab_20261013/abfast/chain2.sh;
+python3 evals/abfast/report.py RUN_A RUN_B
+RESULT:
+- langs: A 15/19, B 18/19. Paired: B wins 3 (gojq-match-empty-after-nonempty,
+  markdown-linear-link-definitions, yaml-edit-flow-trailing-comma), A wins 0.
+  Both fail gotoml-omit-empty-super-tables. A's markdown fail was a Pi stop on
+  output length after 4 turns. Median wall on 15 both-passed: A 1134 s,
+  B 991 s. Completion tokens A 818k, B 587k. Run wall A 13739 s, B 12920 s.
+- sysadmin: A 18/24, B 23/24. Paired: B wins 5 (apt-broken-offline-install,
+  csv-mixed-encoding, reg-file-fix, scheduled-task-xml-fix,
+  sqlite-hot-journal-perms), A wins 0. Both fail logrotate-not-rotating.
+  By difficulty A/B: easy 6/7, medium 8/10, hard 4/6 of 7/11/6. Unsafe fixes
+  (symptom fixed, safety check failed): A 1 (scheduled-task-xml-fix), B 0.
+  Median wall on 18 both-passed: A 73 s, B 117 s.
+- Endpoint health ok at the end of all four runs; no endpoint errors.
+Reports: /mnt/vm_8tb/b70/results/flashnext_iq3_ab_20261013/abfast/paired_langs_pi120.txt
+and paired_sys_pi120.txt; run dirs under /mnt/vm_8tb/b70/evals/abfast/runs/.
+VERDICT: arm B wins 8 paired tasks to 0 across the two new tiers (41/43 vs
+33/43), above the pre-registered +2 bar with more wins than losses and no
+extra instability. Single run per arm. Combined with the base-tier tie
+(18/19 each, Pi 0.85.1) the decision rule says continue Flash-Next. Arm B
+left running on :18085.
