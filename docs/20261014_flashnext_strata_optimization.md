@@ -469,3 +469,41 @@ experimental config: serve-iq3xxs-ep-reduce-experiment.json. PFRAW retains
 configs, hashes, builds, profiles, raw SSE, all functional results and
 health logs. The qualified clean layer-split driver resumes for CPU builds;
 soak stays off and27B fallback prerequisites remain passed.
+
+
+## S7 -- exact workspace and chunking; asynchronous submission rejected
+
+CONFIG: same head296b59d2 + PR2205, IQ3_XXS, all24576 experts resident,
+two200k/int8KV/spec4/min-p0.5/reserve1024/parking16GiB4. Frozen FP32
+reduction v1; phase timing on in all arms. Separate v2 CPU-submission
+prototype has identical math and correct thread-local device context.
+COMMAND: three fresh matched prompts per arm, stable model/registry,
+concurrent arithmetic, reasoning and tools; normal stop and per-card/ten
+compiled collective checks between arms. Benchmark fixtures and raw results
+are under PFRAW from S5. CPU builds run with no GPU device mounted.
+RESULT: asynchronous peer submission is slower in the same v2 binary:
+4K1046.8 ->1002.3 tok/s; 32K1261.2 ->1242.7. Client TTFT rises from
+3.901 to4.076 s and26.034 to26.418 s. Rejected; source restored to v1.
+With v1, STRATA_OWNED_PRICE=exact and chunk8192 reaches1267.6 at32K;
+chunk12288 reaches1313.4 (median client TTFT24.999 s; native prompt
+24934.95 ms). Three fresh prompts, decode70.0 tok/s. Primary155 plus
+peer357 experts per layer =24576; peer17136 experts/27.87GiB, peer free
+2370MiB and primary free1936MiB. Exact workspace5608MiB versus coarse
+8320MiB. V1 attention at8192 is1268.5, no material gain. Functional and
+normal teardown/health gates pass for all arms; no crash/reset.
+VERDICT: retain exact-workspace/chunk12288 as the next experimental
+control; do not promote without full-context/concurrency qualification.
+Still below2000. Profiling phase buckets include queue idle/waits and must
+not be described as individual kernel latency. New user direction requires
+operation duration, enqueue/submit delay, host wait, bytes and direction.
+Reviewed retained vLLM PUSH source118/119 and docs/P2P_GPU.md; reuse the
+posted-write source idea deliberately, never its ABI-specific binary.
+Reviewed neural.download shared endpoint harness (temperature0, fresh
+matched shapes, repeats and concurrent answers) and Steve's retained
+notes/2026-08-10-vdr2-unitrace-profile.md. Keep profiler timings diagnostic
+and distinguish filtered shares from whole-request time. Intel unitrace
+supports kernel timing/submission intervals plus host API and device traces:
+https://github.com/intel/pti-gpu/tree/master/tools/unitrace.
+The next stage tests PUSH transport with repeated freshness checks; no
+PUSH full-model claim is made in this stage. Qualified layer driver is
+running during CPU builds; observer off; fallback one command away.

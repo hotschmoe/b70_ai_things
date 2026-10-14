@@ -45,7 +45,11 @@ at32K, all experts resident.26 numerical cases and functional/teardown
 health gates pass; generated text differs later due to regrouping. Still
 below2000, no full-context candidate or daily-driver promotion. Source PR
 https://github.com/recutita/Strata/pull/1 targets the author branch behind
-upstream#2205; next inspect host peer submission.
+upstream#2205. S7 rejects asynchronous CPU submission (slower), and exact
+workspace plus12288-token chunks reaches1313.4 tok/s at32K (three fresh
+prompts; TTFT24.999s). All experts resident and functional/teardown health
+pass. This is an experimental control, not full200k qualification. Next
+measure PUSH peer returns and individual operation latency.
 Four full RAM snapshots project14.47 GiB and a fifth during swap18.08 GiB;
 24-32GiB parking is appropriate to test two active/two parked conversations.
 Four DISTINCT full200k conversations are unqualified; production retains
@@ -54,7 +58,7 @@ open.
 Final layer spec4 is serving :18085, observer off, final functional gates
 and post-experiment GPU health pass. The only config update is log path.
 
-Evidence: docs/20261014_flashnext_strata_optimization.md, JOURNAL.md S1/S2/S3/S4/S5/S6
+Evidence: docs/20261014_flashnext_strata_optimization.md, JOURNAL.md S1/S2/S3/S4/S5/S6/S7
 entries dated 2026-10-14, and raw results under
 /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_opt_20261014.
 EP/MTP raw results: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_ep_mtp_20261014.

@@ -22229,3 +22229,23 @@ of pending upstream Niko1221/Strata#2205. Preserve small diff and no long
 fork. Next: asynchronous peer host submission, math unchanged. Evidence:
 docs/20261014_flashnext_strata_optimization.md S6, PFRAW root fromS5.
 27B prerequisite check retained; unrelated dirt preserved.
+
+
+## 2026-10-14 -- Flash-Next optimization S7: workspace tuning reaches1313
+
+CONFIG: same head/PR2205/IQ3_XXS/two200k/spec4/parking16GiB4 and frozen
+FP32 reduction v1; phase timing on. Separate v2 asynchronous submission
+control/on use the same binary and math, CPU1 pin with successful affinity.
+COMMAND: three fresh4K/32K prompts plus functional checks; native expert
+residency/identity, normal stop, per-card and ten compiled collectives.
+RESULT: async4K1046.8 ->1002.3, 32K1261.2 ->1242.7, rejected/reverted.
+V1 exact workspace8192 gives1267.6;12288 gives1313.4 tok/s, client TTFT
+24.999s/native prompt24934.95ms, decode70.0. Primary7440+peer17136 all
+resident; free1936/2370MiB. V1 attention1268.5, no improvement. All gates
+pass; no GPU crash/reset. Unittrace/Steve and retained PUSH source reviewed
+for per-operation latency; current phase timers include idle/waits.
+VERDICT: use exact12288 as experimental control, still below2000 and not
+full-context/promoted. Rejected async source kept only as raw evidence.
+Details: docs/20261014_flashnext_strata_optimization.md S7, PFRAW fromS5.
+Qualified layer driver restored for builds;27B wrapper ready, observer off.
+Commit/push this measured checkpoint; preserve unrelated dirty files.
