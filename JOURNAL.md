@@ -22358,3 +22358,28 @@ Below2000; no candidate full200k, four-distinct200k or shelf promotion.
 Evidence: stage doc S12, lane-cell-s12-report/final-s12* in PFRAW. PR
 https://github.com/recutita/Strata/pull/1 updated78cea7a1; operation traces
 are S10. Commit/push final milestone; preserve unrelated dirty work.
+
+
+## 2026-10-14 -- Flash-Next optimization S13: value pipeline exact, neutral
+
+CONFIG: same upstream296b59d2/PR2205, frozen PUSH-s9 verified932d2f34;
+refresh main and all three contribution PRs, unchanged. Isolated attention
+value-only port from existing experimental CUDA idea: transpose weights
+into reused query SLM, issue four V loads before ascending original FMAs.
+No production source/binary/config change; same image/oneAPI/AOT.
+COMMAND: CPU-only two-translation-unit probe build, leased card0/pin0,
+36 INT8 numerical shapes; alternating20 warm timings per arm. Stop daily
+normally, pair per-card/ten compiled collectives before/after probe.
+RESULT: all36 cases have exact output AND scratch, including tails/missing
+pages/permuted page4/512 and query1/4/12/32. Independent small-case CPU
+softmax max error7.28e-8.32-query/2051-cell baseline530.071us ->531.112us;
+1-query47.200 ->47.019,4-query75.003 ->74.883. These include enqueue/wait
+and merge, not pure kernel or production-speed claims. All health passes;
+no crash/reset. Initial CPU build setup ordering repaired before compile.
+VERDICT: no useful latency gain, reject integration. Preserve numerical
+probe/rejected diff/raw results; original PUSH-s9 remains baseline. Continue
+to dense/shared decode and opt-in concurrent MTP, with spec4 solo depth3.
+No source PR update, full-context qualification or promotion from this stage.
+Details: docs/20261014_flashnext_strata_optimization.md S13; raw value_20261014
+under /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_*.
+Unrelated dirty work preserved; no observer/soak started.

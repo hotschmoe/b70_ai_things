@@ -773,3 +773,69 @@ qualified layer driver. Fallback remains one command:
 `bash strata/flash-next/fallback-27b.sh`; full wrapper switch still untested,
 prerequisites passed. No user dirty file changed. Raw S12 and final records
 are in PFRAW from S5, including lane-cell-s12-report.json and final-s12*.
+
+
+## S13 -- value-gather pipeline is numerically exact but neutral
+
+CONFIG: frozen PUSH-s9 remains the serving control, SHA256932d2f347219edd6
+(full hash in S9). Refreshed origin/main still296b59d2; PR2205 remains open
+atc7bb8dd5, reduction/PUSH contribution recutita/Strata#1 remains open at
+78cea7a1, launcher fix Niko1221/Strata#2468 remains open atf85b6c3f.
+No runtime, driver, production source or serving binary change. Read the
+S10 attention operation shape: INT8,32 queries,33 chunks of64 cells per
+KV head,2051 actual selected cells at the selection budget. Existing
+experimental CUDA code suggests transposing probabilities and fetching
+four values before their dependent FMA chains. Port ONLY this value path
+into an isolated translation unit, preserving score expressions and the
+ascending per-head FMA order. Reuse the query SLM after its last reader's
+workgroup barrier; no extra local allocation. Do not re-test the rejected
+lane-cell score path. Preserve rejected source under experiments/.
+
+COMMAND: CPU-only build in unchanged strata-ab-build:ocloc, same precise
+FP model, SIMD32, bmg-g31 AOT; separately compile baseline and renamed
+variant, link one numerical/timing probe. Baseline attention source SHA256
+00bf1c45f15b1899e0562006aa6a410da4baec164eff1b1690316a6f2a66dcdb.
+Probe SHA2567411d17bc61b49dcb516605cab4f7cde1aaaeff34892c2396d4364fad45bc4b2.
+Stop daily normally; pair-leased per-card and ten compiled collectives;
+`bin/gpu-run --card 0 docker run --rm --device /dev/dri
+-v /mnt/vm_8tb/b70/build/strata-ab:/work -e ZE_AFFINITY_MASK=0
+-e ONEAPI_DEVICE_SELECTOR=level_zero:gpu -e SYCL_CACHE_PERSISTENT=0
+--entrypoint bash strata-ab-build:ocloc -c
+'source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1;
+exec /work/attn-value-probe-s13'`.
+Repeat pair health after normal probe exit. No model serving claim is made
+for the modified kernel, so full model functional gates do not apply to it.
+The unchanged frozen serving candidate is tested separately in S14.
+
+RESULT: all36 INT8 cases pass (three seeds,12 shapes), both output AND
+entire initialized scratch exact. Covers1/4/12/32 queries,0/1/11/63/64/65/
+1999/2051 selected cells, capacity tails, shuffled page tables, page sizes
+4/512, and absent pages. Small one-query cases also match an independent
+double-precision dense softmax oracle, maximum absolute error7.28e-8.
+Twenty warm repeats per arm per case, alternating arm order; medians across
+three seeds below are HOST enqueue+wait for chunk AND merge, not a pure
+kernel timer and not a production-speed measurement:
+
+| Queries / actual cells / page | Baseline us | Value pipeline us | Change |
+|---|---|---|---|
+| 1 /2051 /4 | 47.200 | 47.019 | -0.38% |
+| 4 /2051 /4 | 75.003 | 74.883 | -0.16% |
+| 32 /2051 /4 | 530.071 | 531.112 | +0.20% |
+| 32 /2051 /512 | 527.877 | 528.647 | +0.15% |
+| 32 /1999 /4, missing pages | 477.019 | 478.682 | +0.35% |
+
+Both cards and ten compiled all-reduces pass before/after; no crash/reset.
+Initial build shell exited before compilation because strict shell mode
+preceded oneAPI setup; corrected setup ordering, no GPU work involved.
+
+VERDICT: reject this value-transpose/four-load pipeline for integration.
+The synthetic resident-pool screen shows no useful latency gain; it does
+not establish that all possible value-path changes are exhausted. Keep the
+original109-line PUSH contribution, below2000 tok/s prefill, and move to
+primary dense/shared decode and opt-in concurrent MTP. No source PR update,
+new production benchmark or promotion is justified by this experiment.
+Raw evidence: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_value_20261014
+(identity-before.json, both complete source copies, build recipe/log,
+probe-card0.log, probe-summary.json and pre/post health). Tracked numerical
+probe: strata/flash-next/attn_value_probe.cpp; rejected diff:
+strata/flash-next/experiments/attn-value-gather-s13.patch.
