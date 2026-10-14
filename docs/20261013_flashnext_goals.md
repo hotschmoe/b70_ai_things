@@ -38,11 +38,17 @@ collective health recovered, and no native copy-path patch was promoted.
 A new tool continuation fails on EP/spec3 and passes on layer/spec4;
 remaining functional2x2 arms are needed to isolate its cause. This further
 blocks EP/spec3 promotion. The original EP/spec4 tool probe did pass.
-IQ3_S, peer-row prefill collection and concurrent MTP remain open.
+S5 measures large peer reads at3.32 GB/s with the uncached kernel; DMA
+is slower (1.65 GB/s), so reducing returned row volume is the next test.
+Four full RAM snapshots project14.47 GiB and a fifth during swap18.08 GiB;
+24-32GiB parking is appropriate to test two active/two parked conversations.
+Four DISTINCT full200k conversations are unqualified; production retains
+16GiB/4 slots and two active GPU streams. IQ3_S and concurrent MTP remain
+open.
 Final layer spec4 is serving :18085, observer off, final functional gates
 and post-experiment GPU health pass. The only config update is log path.
 
-Evidence: docs/20261014_flashnext_strata_optimization.md, JOURNAL.md S1/S2/S3/S4
+Evidence: docs/20261014_flashnext_strata_optimization.md, JOURNAL.md S1/S2/S3/S4/S5
 entries dated 2026-10-14, and raw results under
 /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_opt_20261014.
 EP/MTP raw results: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_ep_mtp_20261014.

@@ -22173,3 +22173,29 @@ changes. No stability claim, native patch or shelf entry. Stage evidence:
 including stage4-report.json and final identity/functional/memory files.
 Fallback27B prerequisites pass, one-command wrapper retained, full switch
 untested. Preserve unrelated dirty files; checkpoint this measured stage.
+
+
+## 2026-10-14 -- Flash-Next optimization S5: peer copy measured, DMA rejected
+
+CONFIG: same upstream296b59d2/PR2205, IQ3_XXS/runtime/compiler/image/kernel.
+Fixed transfer fixture keeps full-sized native source/destination alive;
+no small-to-large IPC mapping replacement. Save original EP control binary.
+COMMAND: same-image AOT CPU build; normal daily-driver stop, leased
+per-card/compiled health, pair transfer probe, post-health and daily restore.
+Four producer updates per16KiB/256235520-byte buffer and each of three
+copy methods; check all returned words. Read S2 cache bytes for RAM sizing.
+RESULT: all24 checks pass, exit0. Warm large medians: uncached77.231 ms
+(3.318 GB/s), ordinary memcpy144.676 (1.771), copy engine155.406 (1.649).
+Both cards and ten compiled all-reduces pass before/after; no crash/reset.
+Current daily driver is restored for builds. Full snapshot at199502 tokens
+is3.616 GiB; four14.466, five during exchange18.082 GiB, plus retained
+buffer accounting. Four conversations with two decoding/two parked is
+technically feasible with24-32GiB RAM parking; not yet measured for four
+DISTINCT full conversations. Current budget16GiB remains unchanged.
+VERDICT: DMA is slower; reduce peer-return volume next. Regrouped FP32
+sums must be opt-in with numerical/model gates. Fixed fixture avoids the
+prior crash on this run but changes two factors, so no isolated root-cause
+claim. No native patch/shelf promotion/long-soak claim in this stage.
+Evidence: docs/20261014_flashnext_strata_optimization.md S5; raw:
+/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_ep_prefill_20261014.
+27B check passes; unrelated dirty work preserved.

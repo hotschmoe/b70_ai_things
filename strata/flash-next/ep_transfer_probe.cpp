@@ -1,4 +1,6 @@
 // Run under the pair lease; compare IPC reads with full-buffer freshness checks.
+// Keep full-sized native allocations alive across sizes/modes. Do not recycle an
+// IPC mapping while UR queues may still retain information about that pointer.
 #include <chrono>
 #include <cstdio>
 #include <vector>
@@ -13,19 +15,26 @@ int main() {
     dpct::select_device(0);
     auto* dma = strata::make_copy_engine_queue("EP transfer probe");
     if (!dma) { std::puts("FAIL no copy engine"); return 3; }
-    for (size_t bytes : {size_t(16384), size_t(25023)*2560*4}) {
-        EpRegion region;
-        std::string error;
-        if (!ep_region_alloc(1, 0, bytes, region, error)) {
-            std::printf("FAIL %s\n", error.c_str()); return 4;
-        }
+    constexpr size_t capacity = size_t(25023)*2560*4;
+    EpRegion region, destination;
+    std::string error;
+    if (!ep_region_alloc(1, 0, capacity, region, error) ||
+        !ep_region_alloc(0, 1, capacity, destination, error)) {
+        std::printf("FAIL %s\n", error.c_str()); return 4;
+    }
+    auto* dst = static_cast<uint32_t*>(destination.local);
+    std::printf("ALLOC capacity=%zu source=%p imported=%p destination=%p\n",
+                capacity, region.local, region.remote, dst);
+    std::fflush(stdout);
+    std::vector<uint32_t> host(capacity/4);
+    for (size_t bytes : {size_t(16384), capacity}) {
         const size_t words = bytes/4;
-        auto* dst = sycl::malloc_device<uint32_t>(words, consumer);
-        std::vector<uint32_t> host(words);
         for (int mode=0; mode<3; ++mode) {
             for (uint32_t epoch=1; epoch<=4; ++epoch) {
                 auto* src = static_cast<uint32_t*>(region.local);
                 uint32_t salt = epoch + mode*100;
+                std::printf("BEGIN bytes=%zu mode=%d epoch=%u\n",bytes,mode,epoch);
+                std::fflush(stdout);
                 producer.parallel_for(sycl::range<1>(words), [=](sycl::id<1> i) {
                     src[i] = uint32_t(i[0])*2654435761u ^ salt;
                 }).wait();
@@ -44,9 +53,9 @@ int main() {
                 if(bad) return 5;
             }
         }
-        consumer.wait(); dma->wait();
-        sycl::free(dst,consumer);
-        ep_region_free(region);
     }
+    producer.wait(); consumer.wait(); dma->wait();
+    ep_region_free(destination);
+    ep_region_free(region);
     std::puts("PASS all IPC transfer bytes fresh");
 }

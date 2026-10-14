@@ -344,3 +344,51 @@ match; only log destination changes to EPRAW/final-layer-engine.log.
 Final HTTP/memory evidence: final-functional/, final-memory.jsonl and
 final-identity.json. 27B prerequisite check passes; fallback remains
 bash strata/flash-next/fallback-27b.sh. Complete wrapper switch untested.
+
+
+## S5: peer transfer bandwidth and four-conversation RAM budget
+
+CONFIG: upstream head remains296b59d2; same image/oneAPI/UMD/kernel and
+PR2205 control. No production setting changes. New raw root PFRAW:
+/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_ep_prefill_20261014.
+Preserve the S4 EP binary as src-ep/build-sycl-ep/strata-s4-control.
+The transfer probe now allocates full-sized native source AND destination
+once and keeps them alive across sizes/modes; it no longer replaces a
+small IPC mapping with a larger one or changes the destination allocator.
+These are two fixture changes, not an isolated proof of the S3 crash cause.
+
+COMMAND: CPU-only same-image AOT build; stop daily driver normally; leased
+per-card and compiled collective health; pair-leased fixed transfer probe;
+post per-card and compiled health; restore clean layer split for CPU builds.
+Compare uncached kernel, ordinary queue memcpy and copy-engine memcpy on
+16KiB and256235520 bytes (25023 expert rows x2560 floats), four producer
+updates each, full returned-buffer pattern check every time. Timings below
+exclude the first epoch and are medians of the remaining three. Exact
+source, build/runtime logs and hashes are in PFRAW; old failed probe/logs
+remain preserved in the S3 raw root and git history.
+
+RESULT: all24 pattern checks pass, normal exit0, no device-lost error.
+For the large peer-read buffer: uncached kernel77.231 ms/3.318 GB/s;
+ordinary memcpy144.676 ms/1.771 GB/s; copy-engine155.406 ms/1.649 GB/s.
+These checks validate returned bytes; they do not separately prove a
+subsequent cached GPU consumer's coherence for a proposed DMA path.
+Both cards and ten compiled all-reduces pass before and after the probe.
+The daily driver resumes healthy while the next native build runs.
+
+The earlier two200k test logged a199502-token snapshot of3883090536 bytes
+(3.616 GiB). Four similar snapshots are14.466 GiB; five during an exchange
+would be18.082 GiB. ConversationCache::make_room counts the incoming image
+held during exchange, and bytes() also counts retained K/V. Therefore16GiB
+is tight for four DISTINCT full conversations with predictable swaps.
+Two active GPU streams plus two parked conversations is technically
+feasible; use a24-32GiB RAM budget for a four-conversation qualification,
+with simultaneous generation still limited to two. Current production
+parking remains16GiB/4 entries. No four-distinct-200k load test is claimed.
+Budget evidence: PFRAW/four-conversation-budget.json and the S2 cache logs.
+
+VERDICT: reject DMA as a prefill speed optimization on this host. Returning
+individual peer expert rows consumes hundreds of MiB per layer and is the
+measured bottleneck. Next test an opt-in peer reduction to one FP32 row per
+token, with explicit numerical-error and model checks: regrouping changes
+FP32 addition order. No native serving change is promoted by this stage,
+no stability claim, no soak observer. Fallback27B prerequisites pass.

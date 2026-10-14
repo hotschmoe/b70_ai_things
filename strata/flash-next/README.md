@@ -48,8 +48,11 @@ launch.sh adds SYS_PTRACE only for EP
 to permit Level Zero IPC with Docker's default seccomp profile. Upstream:
 https://github.com/Niko1221/Strata/pull/2468. ep_ipc_probe.cpp records import
 status; ep_transfer_probe.cpp failed before large-transfer measurement and
-must have its memory lifetime/copy path reviewed before another GPU run.
-Build/run details and recovery evidence are in the S3 document/raw logs.
+was revised to retain full-sized native mappings across modes; see S5.
+The fixed-lifetime S5 transfer probe passes24 returned-byte checks, but DMA
+is slower than the uncached kernel (1.65 vs3.32 GB/s on the large buffer).
+The S3 failure remains recorded; its cause is not isolated. Build/run and
+recovery evidence are in the S3/S5 document/raw logs.
 
 The paused UD-Q4_K_XL RAM-spill campaign code that used to live here was
 moved to the gitignored archive/flashnext-udq4xl-paused-20261014/ on
