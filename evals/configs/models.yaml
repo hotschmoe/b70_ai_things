@@ -1595,4 +1595,4 @@ models:
     activations: strata-native
     calibration: ista-gsq-rco
     serve_cmd: ""
-    notes: "ARM B capacity fallback in the 20261013 A/B. Exact hashes in strata/flash-next/model-lock-ista-iq3.json. Stock a0116b27/v0.1.43.1; verify live alias, layer split, KV and MTP config in armB raw logs before graded use."
+    notes: "Won the 20261014 langs/sysadmin A/B on a0116b27/v0.1.43.1. Current bounded serving qualification: clean upstream 296b59d2/v0.1.44.1, split27, two200k, MTP4, parking16384 MiB/4 entries; strata/flash-next/serve-iq3xxs-200k.json. Exact weights in model-lock-ista-iq3.json. Verify live identity/config before graded use; new backend has short coherence/retrieval checks, no full quality re-eval or multi-day soak qualification."

@@ -6,11 +6,11 @@ build=/mnt/vm_8tb/b70/build/strata-ab
 results=/mnt/vm_8tb/b70/results
 weights=$repo/models/files/qwen3.8-flash-next
 nvme=/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco
-config=${1:?Pass an absolute serving config path}
+config=$(realpath "${1:-$repo/strata/flash-next/serve-iq3xxs-200k.json}")
 cd "$repo"
 exec bin/gpu-run docker run --rm -i --name strata-ab-serve --network host \
   --memory 90g --device /dev/dri --ulimit memlock=-1 \
-  -v "$build:$build" -v "$results:$results" \
+  -v "$build:$build" -v "$results:$results" -v "$config:$config:ro" \
   -v "$weights/ista-gsq-rco-iq3-s:$weights/ista-gsq-rco-iq3-s:ro" \
   -v "$weights/ista-gsq-rco-iq3-xxs:$weights/ista-gsq-rco-iq3-xxs:ro" \
   -v "$nvme:$nvme:ro" \

@@ -47,6 +47,7 @@ def main():
     parser.add_argument("--sample", action="store_true")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--config", type=Path)
+    parser.add_argument("--server-log", type=Path)
     parser.add_argument("--base-url", default="http://127.0.0.1:18085")
     parser.add_argument("--interval", type=float, default=60)
     parser.add_argument("--once", action="store_true")
@@ -58,8 +59,10 @@ def main():
         parser.error("--output and --config are required")
     config = json.loads(args.config.read_text())
     config_sha256 = hashlib.sha256(args.config.read_bytes()).hexdigest()
-    log = Path(config["log"])
-    offset = log.stat().st_size if log.exists() else 0
+    logs = {"engine": Path(config["log"])}
+    if args.server_log:
+        logs["server"] = args.server_log
+    offsets = {name: log.stat().st_size if log.exists() else 0 for name, log in logs.items()}
     bad = re.compile(r"fatal|DEVICE_LOST|OUT_OF_RESOURCES|Traceback|(?<!no )\bERROR\b|\bHTTP[^\n]*\b5\d\d\b", re.I)
     script = Path(__file__).read_text()
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -70,6 +73,9 @@ def main():
                 try:
                     with urllib.request.urlopen(args.base_url + path, timeout=10) as response:
                         row[path] = json.load(response)
+                    if path == "/metrics":
+                        row[path] = {k: v for k, v in row[path].items() if k in
+                            {"engine", "live", "totals", "conversation_cache", "hardware", "hardware_static"}}
                 except (OSError, ValueError) as exc:
                     row["errors"].append(path + ": " + str(exc))
             try:
@@ -81,14 +87,15 @@ def main():
                 row["memory"] = json.loads(result.stdout)
             except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as exc:
                 row["errors"].append("memory: " + str(exc))
-            if log.exists():
-                if log.stat().st_size < offset:
-                    offset = 0
-                with log.open(errors="replace") as engine_log:
-                    engine_log.seek(offset)
-                    lines = engine_log.readlines()
-                    offset = engine_log.tell()
-                row["engine_error_lines"] = [line.rstrip() for line in lines if bad.search(line)]
+            for name, log in logs.items():
+                if log.exists():
+                    if log.stat().st_size < offsets[name]:
+                        offsets[name] = 0
+                    with log.open(errors="replace") as stream:
+                        stream.seek(offsets[name])
+                        lines = stream.readlines()
+                        offsets[name] = stream.tell()
+                    row[name + "_error_lines"] = [line.rstrip() for line in lines if bad.search(line)]
             output.write(json.dumps(row, ensure_ascii=True) + "\n")
             if args.once:
                 return

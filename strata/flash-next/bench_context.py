@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Two near-full chats, displace a slot, then restore both under concurrent load.
+"""Two near-full chats, overwrite both slots, then restore under concurrent load.
 
 The server must already hold bin/gpu-run's lease. Engine logs must also show
 parking/restore; cached_tokens proves reuse, not that a conversation was parked.
@@ -19,6 +19,8 @@ def main():
     parser.add_argument("--base-url", default="http://127.0.0.1:18085")
     parser.add_argument("--target", type=int, default=199600)
     parser.add_argument("--parking", action="store_true")
+    parser.add_argument("--resume-from", type=Path,
+                        help="Continue the parking test using saved restore-A/B requests")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
     base = args.base_url.rstrip("/")
@@ -57,16 +59,41 @@ def main():
         return row
 
     start = time.perf_counter()
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        first = list(pool.map(lambda i: record("initial-" + "AB"[i], i, chats[i]), range(2)))
-    if args.parking:
-        record("displace-C", 2, chats[2])
-        for i in range(2):
-            chats[i] += [dict(role="assistant", content=first[i]["text"]),
-                         dict(role="user", content="Return those same three deployment codes again, in order.")]
+    if args.resume_from:
+        for i, label in enumerate("AB"):
+            row = json.loads((args.resume_from / ("restore-" + label + ".json")).read_text())
+            chats[i] = row["request"]["messages"] + [dict(role="assistant", content=row["text"]),
+                dict(role="user", content="Return the same three deployment codes one more time, in order.")]
+        first = None
+    else:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            first = list(pool.map(lambda i: record("initial-" + "AB"[i], i, chats[i]), range(2)))
+    if args.parking or args.resume_from:
+        if first is not None:
+            for i in range(2):
+                chats[i] += [dict(role="assistant", content=first[i]["text"]),
+                             dict(role="user", content="Return those same three deployment codes again, in order.")]
+        # One lone chat may run on the parent session, leaving both batch slots
+        # intact. Two long answers force the batch path and overwrite both slots.
+        def displace(label):
+            prompt = f"[Slot displacement {label}] " + unit*330 + (
+                "\nImplement a complete typed Python binary search tree with insert, delete, "
+                "in-order iteration, balancing, and thorough tests. Explain the invariants "
+                "and provide full code and tests. Write at least 1000 tokens.")
+            row = send(base, "hotschmoe-dd", [dict(role="user", content=prompt)], 1500)
+            (args.output / ("displace-" + label + ".json")).write_text(json.dumps(row, indent=2) + "\n")
+            if row["usage"]["completion_tokens"] < 512:
+                raise RuntimeError("Displacement response too short to exercise batching")
+            print(json.dumps(dict(name="displace-"+label, usage=row["usage"], timings=row["timings"])), flush=True)
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            list(pool.map(displace, "CD"))
+        slots = get(base, "/slots")
+        (args.output / "displaced-slots.json").write_text(json.dumps(slots, indent=2) + "\n")
+        if len(slots) != 2 or any(slot["n_prompt_tokens"] > 10000 for slot in slots):
+            raise RuntimeError("Both long conversations were not displaced from the GPU slots")
         with ThreadPoolExecutor(max_workers=2) as pool:
             list(pool.map(lambda i: record("restore-" + "AB"[i], i, chats[i], True), range(2)))
-    summary = dict(passed=True, parking=args.parking, target=args.target,
+    summary = dict(passed=True, parking=args.parking or bool(args.resume_from), target=args.target,
                    elapsed_s=time.perf_counter()-start, health=get(base, "/health"))
     (args.output / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     print(json.dumps(summary), flush=True)

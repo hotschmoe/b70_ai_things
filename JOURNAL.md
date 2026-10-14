@@ -22071,3 +22071,39 @@ VERDICT: upstream head is the next-stage baseline, no measured decode win;
 or full quality re-eval. Expert-parallel #1798/#2205 remain unmerged and
 untested here. Preserve the old binary and unrelated dirty changes. Next:
 split27, two200k slots with MTP, then actual parked-state restoration.
+
+## 2026-10-14 -- Flash-Next optimization S2: two200k and forced RAM restoration
+
+CONFIG: clean Strata296b59d2/v0.1.44.1, same IQ3_XXS, all24576 main experts
+in VRAM, MTP4/min-p0.5 configured, int8 KV, direct NVMe PLE. Split25 ->27,
+context131072 ->200000 per slot, parking8192 ->16384 MiB/4 entries.
+Reserve1024 and prefill4096 unchanged. Tracked serve-iq3xxs-200k.json.
+COMMAND: two concurrent near-full three-needle chats; initial cached-return
+screen; stronger bench_context.py --resume-from test overwrites BOTH GPU
+slots with concurrent 4K/1500-output chats before returning to the long
+conversations. Three-prompt serving speed screen plus reasoning/tool probe.
+5-second fdinfo/memory observation, clean stop and leased per-card/compiled
+collective health, final same-config restart and concurrent arithmetic.
+RESULT: both initial199501-token prompts retrieve all three codes. /slots
+holds199529/199504 tokens, then proves forced displacement5521/5521.
+Returns at199609 prompt tokens reuse199555/199582, read54/27 new tokens;
+both codes correct. Logged RAM restores429.7/421.6 ms, client TTFT1.975/4.400s.
+Peak VRAM28.223/29.266 GiB, RSS15.835 GiB in139 samples; no observed errors.
+Median speed: coding83.8 decode, 4K1337.2 prefill/64.5 decode,
+32K2004.2 prefill/65.0 decode tok/s. Zero prompt reuse in timing rows;
+11/11 matched outputs equal the old binary. Reasoning/tool checks pass.
+Clean teardown gpu-run exit0, both cards and ten compiled all-reduces pass.
+Final restart verified identity, ctx200000, two slots and concurrent math.
+VERDICT: bounded capacity and forced RAM-restore gates passed; no prefix
+recompute, no local engine patch or shelf entry. MTP is configured; upstream
+uses non-drafted batch windows under overlap. Initial second long prefill
+was slower (1058.5 vs1805.6 tok/s); no sustained long-context throughput
+claim. Decode and short prefill targets remain open. Final endpoint left
+serving :18085 as strata-optimized.service with hotschmoe-dd first;
+strata-soak.service logs uptime/errors/memory every60s (first two samples
+clean), multi-day qualification pending. 27B fallback prerequisites pass;
+command bash strata/flash-next/fallback-27b.sh, full wrapper switch untested.
+Details: docs/20261014_flashnext_strata_optimization.md. Raw root:
+/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_opt_20261014.
+Next: expert-parallel #1798/#2205, MTP depth and short-prompt tuning; IQ3_S
+rebalanced capacity remains untested. Unrelated dirty changes preserved.

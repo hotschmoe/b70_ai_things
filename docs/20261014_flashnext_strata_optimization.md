@@ -85,3 +85,78 @@ systemd-run --user --unit=strata-optimized --collect \
 Stop with `docker stop -t 30 strata-ab-serve`; the owning service releases
 the pair lease. GPU health must pass before starting another configuration.
 The final config and soak status are recorded below when qualified.
+
+## S2: two200k, forced RAM restore, final serving rollout
+
+CONFIG: same clean upstream binary, IQ3_XXS artifacts and runtime as S1.
+Change split25 -> split27, max-context131072 -> 200000 per slot, and
+parking8192 -> 16384 MiB (still four entries). MTP4/min-p0.5 remains
+configured and its 950 MiB draft head resident. Upstream uses non-drafted
+batch windows while requests overlap; this does not prove concurrent MTP
+drafting or a decode-throughput gain. Every main expert remains in VRAM,
+host mirror/wide-host KV off, direct NVMe PLE, reserve1024, prefill4096.
+Final tracked config: `strata/flash-next/serve-iq3xxs-200k.json`; identical
+runtime copy: `/mnt/vm_8tb/b70/build/strata-ab/serve-optimized.json`.
+
+COMMAND: launch under the pair lease, send two simultaneous long chats
+with distinct deployment codes at 10%, 50% and 95% of each prompt, then
+exercise cached returns. The first lone third chat left the batch slots
+intact, so that test alone is not a forced slot-eviction proof. Strengthen
+it with the updated `bench_context.py --output RAW/context-200k-forced
+--resume-from RAW/context-200k`: two simultaneous 4K chats with 1500-token
+answers overwrite both batch slots; capture /slots, then return to both
+long conversations concurrently. Run bench_serving.py again (three fresh
+prompts per case) and the reasoning/tool probe into new S2 directories.
+Sample HTTP metadata and per-card DRM fdinfo every five seconds during
+the context tests. Normal stop, then leased per-card and compiled two-rank
+health. Restart the same behavior config, validate live identity/context
+and concurrent arithmetic, then start strata-soak.service at 60 seconds.
+
+RESULT: two configured 200000 slots, both initial prompts199501 tokens,
+all three needles correct. Initial client TTFT A/B111.42/302.98 s; engine
+prefill1805.6/1058.5 tok/s. Prefills are serialized and the second prompt
+was materially slower; no sustained 200k prefill-speed claim. Both long
+contexts held in the slots (/slots199529/199504 tokens). Forced displacement
+then proves /slots5521/5521, followed by both correct long-context returns:
+
+| Return | Prompt tokens | Reused tokens | Newly read | RAM restore ms | Client TTFT s |
+|---|---|---|---|---|---|
+| A | 199609 | 199555 | 54 | 429.7 | 1.975 |
+| B | 199609 | 199582 | 27 | 421.6 | 4.400 |
+
+Engine log explicitly reports both conversation-cache restores. Client
+TTFT also includes scheduling and prompt-tail work; batch admission copies
+can delay subsequent tokens. Only the short tails were evaluated, so the
+199k prefixes were restored without recompute. The two displacer answers
+produce3000 tokens in54.51 s including prefill (55.0 output tok/s overall);
+this is not a new matched two-stream throughput comparison.
+
+139 samples: peak resident VRAM28.223/29.266 GiB, process RSS15.835 GiB,
+container-accounted memory16.145 GiB; zero observed endpoint/native errors.
+All24576 main experts resident. New config's timing medians: coding83.8
+decode; 4K1337.2 prefill/64.5 decode; 32K2004.2 prefill/65.0 decode tok/s.
+All nine timing prompts have zero reuse and all eleven responses match the
+old a0116b27 run byte-for-byte. Separate reasoning and tool round trip pass.
+Both cards and ten compiled all-reduces pass after normal teardown;
+gpu-run exits0. No reset, model changes or local engine patches.
+
+VERDICT: bounded two200k capacity and forced RAM restoration gates passed
+with MTP4 configured; final short coherence checks also pass. This is a
+configuration qualification, with no shelf entry or multi-day stability
+claim. The 32K prefill median reaches2000 in this screen; 4K prefill and
+decode remain below their targets. The changed split/context/parking are
+tested together, so differences are not isolated causal speed gains.
+IQ3_S, expert-parallel, draft-depth tuning and short-prompt tuning remain.
+
+Final services: strata-optimized.service owns the leased strata-ab-serve
+container; strata-soak.service observes it, without generation or restart.
+URL http://192.168.10.5:18085/v1; stable name hotschmoe-dd first, IQ3_XXS
+alias retained. Config, source, binary and image identity at final startup
+are in `soak-start-identity.json`, with models/status and two arithmetic
+responses beside it. Soak JSONL: `RAW/soak.jsonl`; native/server logs:
+`RAW/soak-engine.log` and `RAW/soak-server.log`. Initial two observer samples
+have no endpoint, native or server errors. Continued real use and waiting
+are needed for a multi-day verdict. Stop observation with
+`systemctl --user stop strata-soak.service`; stop serving with the Docker
+stop command above. The retained 27B prerequisite check passed throughout;
+the one-command fallback remains `bash strata/flash-next/fallback-27b.sh`.
