@@ -58,3 +58,12 @@ The paused UD-Q4_K_XL RAM-spill campaign code that used to live here was
 moved to the gitignored archive/flashnext-udq4xl-paused-20261014/ on
 2026-10-14 and remains in git history before that commit. Its docs are in
 docs/flashnext_udq4xl_paused/.
+
+Opt-in FP32 peer reduction: patches/ep-prefill-reduce.patch applies after
+upstream PR2205 on296b59d2; serve-iq3xxs-ep-reduce-experiment.json points
+to the frozen tested binary.26-case two-card numerical probe source is
+ep_prefill_reduce_probe.cpp. Matched32K prefill576 ->1106,8192 chunk1265;
+text can differ due to FP32 regrouping. Functional and teardown checks pass,
+but no full-context candidate qualification or daily-driver promotion.
+Upstream contribution targets PR2205's author branch:
+https://github.com/recutita/Strata/pull/1. S6 records full evidence.

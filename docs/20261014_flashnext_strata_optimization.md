@@ -392,3 +392,80 @@ measured bottleneck. Next test an opt-in peer reduction to one FP32 row per
 token, with explicit numerical-error and model checks: regrouping changes
 FP32 addition order. No native serving change is promoted by this stage,
 no stability claim, no soak observer. Fallback27B prerequisites pass.
+
+
+## S6: opt-in FP32 peer reduction and8192 prefill chunks
+
+CONFIG: clean upstream296b59d2 + PR2205 c7bb8dd5 diff, same IQ3_XXS,
+image/oneAPI/runtime/host, spec4/min-p0.5, two200k configured, int8 KV,
+reserve1024, parking16384 MiB/4.94-line native reduction patch (three
+files) adds STRATA_EP_PREFILL_REDUCE=1; default off preserves individual
+rows. The peer returns one FP32 weighted sum per token instead of every
+expert row. Primary adds its own routed sum and shared expert, in the
+existing output buffer. Decode is unchanged. FP32 addition order changes.
+Control and candidate BOTH use STRATA_PREFILL_TIMING=1. Frozen binaries:
+strata-s4-control and strata-reduce-v1 under src-ep/build-sycl-ep.
+
+COMMAND: same-image AOT CPU build; independent pair-leased numerical
+probe against original router-order std::fma CPU reference: tokens1/17/256,
+all-primary/all-peer/mixed ownership, two updates each; full4096 mixed
+case twice (26 cases total). Save numerical max error. After health, three
+fresh coding/4K/32K requests per control/candidate; concurrent arithmetic,
+separate reasoning, forced-tool round trip plus the EXACT original tool
+continuation that previously failed on EP/spec3. Native per-card/compiled
+health after normal teardown. Then change ONLY prefill4096 ->8192 using
+same candidate binary; three4K/32K repeats and functional checks, normal
+stop and post-health. All native work remains under the GPU lease.
+
+RESULT:26 numerical cases pass. Max absolute error9.53674316e-7 versus
+original router-order FP32 sum; maximum error/tolerance0.0867. Tolerance
+is2e-6 times(1 + contribution magnitude + shared contribution). Repeated
+IPC updates and the final cached GPU consumer are exercised. No byte-exact
+math or complete model-quality equivalence claim. Full-model medians:
+
+| Arm | 4K prefill | 32K prefill | Coding decode | Prose decode4K/32K |
+|---|---|---|---|---|
+| original EP,chunk4096 | 569.7 | 575.6 | 91.9 | 72.3 /71.0 |
+| reduced FP32,chunk4096 | 1037.1 | 1106.0 | 92.7 | 74.0 /70.3 |
+| reduced FP32,chunk8192 | 1056.2 | 1265.4 | not measured | 72.0 /69.4 |
+
+Units tok/s, three fresh prompts per cell, zero timing-prefix reuse.
+Changed output text can alter decode timing; no causal decode-gain claim.
+Initial prefixes agree, but later responses differ as expected from changed
+FP32 summation. Concurrent323/667, separated391 reasoning and tool
+name/arguments/results pass on control and both candidates. The original
+EP/spec3 tool continuation completes correctly on ORIGINAL EP/spec4 AND
+reduced EP/spec4. The remaining layer/spec3 arm is untested; do not blame
+EP in general for that earlier functional failure.
+
+At4K, combine falls from about3698 to622 ms; the reduced FP32 return is
+about40MiB instead of roughly244MiB per layer. At8192, primary7488 plus
+peer17088 = all24576 experts resident; peer cache27.79GiB and native
+prefill reports2975MiB remaining after its extra buffers. Both slot0
+checks pass. EP's /metrics expert_slots reports PRIMARY only (7488);
+using it as a total caused one fixture assertion to stop BEFORE timing.
+Native filled counts prove total residency; then the benchmark resumed.
+No GPU crash or reset. This is configured capacity/short-prompt evidence,
+not actual full200k candidate-context qualification.
+
+Bulk-copy follow-up: same fixed allocations,72 changing-pattern checks
+pass over16KiB/244MiB, comparing scalar64/256 workgroups and vector4/8/16
+loads at64/256/1024 workgroups. Warm large GB/s: original scalar64 3.352,
+scalar256 2.350; vector4 about1.64-1.65, vector8 1.647, vector16 1.938.
+All wider options lose; no native wide-copy patch. Full fixture and logs
+preserve the negative result. Per-card and ten compiled collectives pass
+after each model arm and after this probe; clean stops exit0.
+
+VERDICT: FP32 reduction nearly doubles matched32K prefill (575.6 ->1106),
+and8192 reaches1265, still below2000. Ship as an opt-in research change,
+not a daily-driver/shelf promotion or a stability claim. Next isolate
+host-side peer submission, visible in the gather bucket; preserve math.
+Native fix plus numerical probe/manual build docs is submitted as
+https://github.com/recutita/Strata/pull/1, commit0897c76c, against the
+AUTHOR BRANCH of upstream Niko1221/Strata#2205 to keep the diff small.
+It is a contribution to that pending upstream feature, not a main merge.
+Tracked patch: strata/flash-next/patches/ep-prefill-reduce.patch; frozen
+experimental config: serve-iq3xxs-ep-reduce-experiment.json. PFRAW retains
+configs, hashes, builds, profiles, raw SSE, all functional results and
+health logs. The qualified clean layer-split driver resumes for CPU builds;
+soak stays off and27B fallback prerequisites remain passed.

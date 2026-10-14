@@ -22199,3 +22199,33 @@ claim. No native patch/shelf promotion/long-soak claim in this stage.
 Evidence: docs/20261014_flashnext_strata_optimization.md S5; raw:
 /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_ep_prefill_20261014.
 27B check passes; unrelated dirty work preserved.
+
+
+## 2026-10-14 -- Flash-Next optimization S6: peer reduction nearly doubles prefill
+
+CONFIG: same upstream296b59d2 + PR2205, IQ3_XXS/runtime/oneAPI/AOT/host,
+two200k/spec4/min-p0.5/int8 KV/reserve1024/parking16GiB4.94-line opt-in
+FP32 peer reduction; default retains full rows, decode unchanged. Timing
+on in BOTH arms. Then prefill4096 ->8192 only, same candidate binary.
+COMMAND: leased independent two-card numerical oracle,26 cases incl4096
+and repeated updates; three matched fresh prompts per coding/4K/32K;
+concurrent arithmetic, separate reasoning, tool round trips, normal
+teardown/per-card/compiled health. Wider-copy fixture afterward,72 checks.
+RESULT: oracle max error9.54e-7 within magnitude-scaled tolerance. Original
+EP4K/32K569.7/575.6 -> reduced1037.1/1106.0 tok/s;8192 chunk1056.2/1265.4.
+Later outputs change with summation order, so no bit parity or causal
+decode-gain claim. All functional checks incl EXACT original EP/spec3
+failed tool case pass on original EP/spec4 and reduced EP/spec4.8192
+residency7488 primary +17088 peer =24576; peer has2975MiB after prefill
+buffers. EP metrics reports primary only: incorrect total-count assertion
+stopped fixture before timing; native counts corrected the gate. No crash.
+Wider uncached copies all lose to scalar64 (3.35 GB/s);72 returned-byte
+checks pass. All model/probe stops and per-card/ten compiled collectives
+pass; no reset. Clean layer driver resumes during CPU builds, soak off.
+VERDICT: measured improvement, still short of2000; no shelf/daily promotion
+or full-context candidate qualification. Native patch/probe/docs PR:
+https://github.com/recutita/Strata/pull/1,0897c76c, targeted at author branch
+of pending upstream Niko1221/Strata#2205. Preserve small diff and no long
+fork. Next: asynchronous peer host submission, math unchanged. Evidence:
+docs/20261014_flashnext_strata_optimization.md S6, PFRAW root fromS5.
+27B prerequisite check retained; unrelated dirt preserved.

@@ -7,6 +7,21 @@
 #include "strata/core/ep_mem.hpp"
 #include "strata/copy_queue.hpp"
 #include "strata/kernels/ep_kernels.hpp"
+#include "strata/sycl_doorbell.hpp"
+
+template<int V, size_t CAP> class BulkCopyProbe;
+template<int V, size_t CAP>
+static void bulk_copy(void* dst,const void* src,size_t bytes,sycl::queue& q) {
+    using Vec=sycl::vec<uint32_t,V>;
+    constexpr size_t WG=256;
+    size_t count=bytes/(4*V),groups=std::min<size_t>((count+WG-1)/WG,CAP);
+    auto* d=static_cast<Vec*>(dst);
+    auto* s=static_cast<const Vec*>(src);
+    q.parallel_for<BulkCopyProbe<V,CAP>>(sycl::nd_range<1>(groups*WG,WG),[=](sycl::nd_item<1> it){
+        sycl::ext::oneapi::experimental::annotated_ptr<Vec,strata::doorbell_uncached_read> u(const_cast<Vec*>(s));
+        for(size_t i=it.get_global_id(0);i<count;i+=groups*WG)d[i]=u[i];
+    }).wait();
+}
 int main() {
     using namespace strata::core;
     if (dpct::device_count() != 2) return 2;
@@ -29,7 +44,7 @@ int main() {
     std::vector<uint32_t> host(capacity/4);
     for (size_t bytes : {size_t(16384), capacity}) {
         const size_t words = bytes/4;
-        for (int mode=0; mode<3; ++mode) {
+        for (int mode=0; mode<9; ++mode) {
             for (uint32_t epoch=1; epoch<=4; ++epoch) {
                 auto* src = static_cast<uint32_t*>(region.local);
                 uint32_t salt = epoch + mode*100;
@@ -43,7 +58,13 @@ int main() {
                     strata::kernels::ep_copy_uncached(dst,region.remote,bytes,&consumer);
                     consumer.wait();
                 } else if (mode==1) consumer.memcpy(dst,region.remote,bytes).wait();
-                else dma->memcpy(dst,region.remote,bytes).wait();
+                else if(mode==2) dma->memcpy(dst,region.remote,bytes).wait();
+                else if(mode==3) bulk_copy<4,64>(dst,region.remote,bytes,consumer);
+                else if(mode==4) bulk_copy<4,256>(dst,region.remote,bytes,consumer);
+                else if(mode==5) bulk_copy<4,1024>(dst,region.remote,bytes,consumer);
+                else if(mode==6) bulk_copy<8,256>(dst,region.remote,bytes,consumer);
+                else if(mode==7) bulk_copy<16,256>(dst,region.remote,bytes,consumer);
+                else bulk_copy<1,256>(dst,region.remote,bytes,consumer);
                 double ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
                 consumer.memcpy(host.data(),dst,bytes).wait();
                 size_t bad=0;

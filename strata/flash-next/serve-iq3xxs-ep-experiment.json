@@ -1,6 +1,6 @@
 {
   "backend": "sycl",
-  "exe": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/strata",
+  "exe": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/strata-s4-control",
   "cwd": "/mnt/vm_8tb/b70/build/strata-ab/src-ep",
   "tokenizer": "/mnt/vm_8tb/b70/build/strata-ab/packs/ista-gsq-rco-iq3-xxs/tokenizer",
   "model_name": "hotschmoe-dd",
