@@ -1,9 +1,0 @@
-{
-  "schema": 1,
-  "files": {
-    "strata/flash-next/prepare_prefill_gdn_observed_runtime_v1.py": "22a602f83ff31a93c6dffef5b47b1f38be0cd1e6fdfe471c9f8b7f88a5db4ed8",
-    "strata/flash-next/prefill-gdn-observed-builder-source-plan-v1.json": "86dfa055a80f6019cae2fc12e6c305e9907e1d571f2c6a7754177ca9e7906197",
-    "strata/flash-next/prefill-gdn-decoder-projections-observed-source-plan-v1.json": "cd0661145cec46db0fd29d5819d8f15f56f872c62453bc2e6e22f9d1bc0d94f5"
-  },
-  "scope": "Actual compiled observed candidate62/header/ELF only; old58 runtime proof never transferred; HC2/1/1 sqrtOFF fixed"
-}

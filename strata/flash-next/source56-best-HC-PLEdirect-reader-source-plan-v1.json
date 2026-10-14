@@ -1,9 +1,0 @@
-{
-  "schema": "actual56-best-HC-PLEdirect-reader-v1",
-  "files": {
-    "strata/flash-next/validate_source56_best_HC_PLEdirect_v1.py": "63016bc7769b26d6f141018c62d42fbe9791af20e657777380015943252ef792",
-    "strata/flash-next/source56-best-HC-PLEdirect-recipe-v1.json": "b923ed65bb55582f1a5cda5533576e7836d2172ba80a95332deee999e1f2bab5",
-    "strata/flash-next/validate_source56_hc_prefill_tile4_natural_v1.py": "5321abd0458386e6271600d11e894145f4f0d85931d5992393716196872fdcd2",
-    "strata/flash-next/validate_source47_grouped_f16_model_v2.py": "f8cd5bdf1520335eeefa84b09660df7200daf129cc69d9926537b758b5dbf1f1"
-  }
-}

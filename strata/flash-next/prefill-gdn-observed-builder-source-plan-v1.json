@@ -1,8 +1,0 @@
-{
-  "schema": 1,
-  "files": {
-    "strata/flash-next/build_prefill_gdn_observed_v1.py": "9d0050c8e1dd6fcece04d4d7425d9ed0f55e3eb79111267a3b2e12d8a5f87510",
-    "strata/flash-next/prefill-gdn-decoder-projections-observed-source-plan-v1.json": "cd0661145cec46db0fd29d5819d8f15f56f872c62453bc2e6e22f9d1bc0d94f5"
-  },
-  "scope": "Exact62 new observed candidate MAIN/Prefill/kernels fresh link with copied archive filtering; old binaries untouched; no math/model claims"
-}
