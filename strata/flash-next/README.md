@@ -192,3 +192,12 @@ twoC1 calls about2.01ms; same-depth slot-head batching is a source-only
 candidate, not a serving gain. Existing production PLE logging measures
 21 miss-ticket waits over24 batch windows (median667.9us,sum13.294ms).
 See lowlevel_probe/README.md and stageS25; per-card/collective health PASS.
+
+S26 adds experimental-batch-mtp-pair-head-s26.patch (default off, SYCL
+only). CPU syntax, extracted host binding checks and one AOT build pass;
+GPU serving is UNTESTED and held. Standalone EP freshness tests reproduce
+current inbox poison after native flag waits; completed host waits and
+uncached payload hints do not cure it. The latter patch is retained as
+rejected negative evidence. No production output corruption is established.
+Copy control and final per-card/compiled-collective health pass. See stage
+S26 and lowlevel_probe/README.md; use frozen binaries for prior measurements.

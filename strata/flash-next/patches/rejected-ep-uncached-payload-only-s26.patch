@@ -1,0 +1,15 @@
+--- ep_kernels_orig.dp.cpp	2026-10-14 20:17:14.881182320 +0000
++++ ep_kernels.dp.cpp	2026-10-15 03:05:14.015131394 +0000
+@@ -92,10 +92,10 @@
+     const size_t words = xq_bytes / 4;
+     q_of(stream)->parallel_for<class ep_push_kernel>(sycl::nd_range<1>(WG, WG), [=](sycl::nd_item<1> it) {
+         const size_t lid = it.get_local_id(0);
+-        for (size_t i = lid; i < (size_t) n_ids; i += WG) peer_ids[i] = ids[i];
++        for (size_t i = lid; i < (size_t) n_ids; i += WG) strata::sys_store_mapped(peer_ids + i, ids[i]);
+         const uint32_t* s = (const uint32_t*) xq;
+         uint32_t* d = (uint32_t*) peer_xq;
+-        for (size_t i = lid; i < words; i += WG) d[i] = s[i];
++        for (size_t i = lid; i < words; i += WG) strata::sys_store_mapped(d + i, s[i]);
+         // every work-item's stores into the peer before the flag
+         sycl::atomic_fence(sycl::memory_order::release, sycl::memory_scope::system);
+         sycl::group_barrier(it.get_group());

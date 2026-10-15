@@ -1637,3 +1637,53 @@ stopped. No fullRAM repeat, soak or daily-server restoration. Fresh focused
 agent review reduces repeated large-context setup. No150/stream claim.
 Raw: cachefix_20261014/head-profile-s25/{s25-report.json,head-runs,ple,fable,opus-head-review}.
 Source replay/parser: strata/flash-next/lowlevel_probe/. Data map refreshed.
+
+## S26: head-pair prototype held for EP freshness diagnosis (2026-10-15)
+
+CONFIG: same S21 base, optional same-depth two-slot Q5_K head pairing,
+SYCL-only and default off (STRATA_BATCH_MTP_PAIR_HEAD). Actual Claude
+Fable5.1 implemented in an isolated tree; actual Opus5.5 reviewed. Root
+corrected reversed active-slot binding, retained the allocation queue for
+partial initialization/teardown, propagated pair capture failures and added
+activation counts outside the intrusive verifier profiler. No backend,
+driver, quantization or serving default changed.
+
+COMMAND: CPU-only syntax checks of both changed translation units; host
+fixture extracting the actual caller binding and eligible/steps bodies;
+one incremental no-DRI AOT build, 141.101s, eight link jobs. Frozen prototype
+strata-head-pair-s26 SHA256
+264f221e2c1b02d4bdd9b332c46f91e91bf4f6301afbdabe563df5ff2a16e44a.
+Then coordinated pair-leased standalone EP tests of real push17520B and
+upper-bound return614400B, fresh salts/poison/guards each sample. Native
+kernel archives reused; payload variant compiled only in probe-local TU.
+
+RESULT: CPU checks pass forward/reverse slot order, distinct bindings,
+owner rejection and unequal context/proposal fallback. These do not prove
+GPU graph, draft-KV or serving correctness. No S26 model serve was run.
+Copy-control passes21 samples including first use. Native flag-mode push
+fails with1068 bad words at sample10 using owner poison. Producer poison
+also fails (1158 at sample3); distinct staging poison localizes later
+failures to current INBOX poison (1296 at sample8). Waiting on completed
+host events still fails (720 at first use). Changing both ep_push payload
+store sites to uncached hints also fails (440 at sample9), so that variant
+is rejected. Return/guards/spin status pass in these failed samples, and
+later source/inbox readbacks are clean. Matching flags/counters AFTER drain
+do not establish the epoch observed inside ep_wait. Neither the exact
+cause nor production serving-output corruption has been demonstrated.
+All failed-arm timings are excluded from performance conclusions.
+
+Every arm drains queues and exits normally with an oracle failure; no
+crash, timeout or reset. Final both-card health and ten compiled two-rank
+collectives (4x5120, P2P0) pass. Servers remain stopped. The runtime EP
+kernel source is unchanged (SHA164ea229); only the CPU-built head prototype
+is present in the external live source. Frozen S21 remains available.
+
+VERDICT: hold the head prototype unqualified. Preserve the failed
+uncached-payload-only patch as negative evidence. Next discriminators are
+observed wanted/seen wait epochs, consecutive receiver reads and actual
+BMG fence/cache-control ISA; Fable/Opus prepared CPU-only work independently.
+Stop losing arms on first failure, reuse standalone objects, skip full
+model/cache/soak repeats and daily-server restoration. No speed or shelf
+promotion. Tracked probes and patches are under strata/flash-next; raw
+cachefix_20261014/head-pair-s26/s26-report.json includes hashes, commands,
+root review dispositions, failures and final health logs.

@@ -6,10 +6,12 @@ path, which operations are expensive or wait, and how strong the evidence
 is for each claim. `operation-data.json` is the source of truth;
 `index.html` embeds a copy of it.
 
-Snapshot: 2026-10-15, S25 (S22 operation trace plus readiness, real-head
-and production PLE diagnostics). Runtime source: frozen
+Snapshot: 2026-10-15, S26 (S22 operation trace plus readiness, real-head,
+production PLE and EP correctness diagnostics). Runtime source:
 `/mnt/vm_8tb/b70/build/strata-ab/src-ep` (upstream Strata 296b59d2 base
-plus working-tree overlays for EP/PUSH/accounting/S19-S21). Evidence:
+plus working-tree overlays for EP/PUSH/accounting/S19-S21 and the
+GPU-untested S26 prototype). Timings reference preserved binaries, not
+the changing source directory. Evidence:
 `docs/20261014_flashnext_strata_optimization.md` S10 and S20-S22, plus raw
 summaries under
 `/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014`.
@@ -80,3 +82,10 @@ project-repository refer to this B70 repo; base/overlay paths refer to Strata.
 S25 adds the actual-weight C1/2/3/4/6/8 head curve and bounded production
 PLE miss-ticket waits. These are separate scopes from the S22 operation
 rollups; source-only C2 batching remains a hypothesis until serving tests.
+
+S26 records an unresolved standalone EP flag-mode freshness failure and
+a CPU-built, GPU-untested head-pair prototype. The reference trace remains
+the frozen S21 binary. The live src-ep source now has the optional S26
+prototype; reference source snapshots/provenance are recorded in the JSON.
+Both-card/compiled-collective post-health passes. Failed-arm timing data
+does not establish a serving gain or serving-output corruption.

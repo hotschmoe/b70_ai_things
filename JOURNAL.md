@@ -22744,3 +22744,26 @@ newlaunchcost), notservinggain; prepareoneguardedsame-depthprototype.
 DoNOTbatchautoregressivedepths. PLEloggingdiagnosticonly; deferengine
 rebuildforthatgap. No unchangedCPUsuites/fullRAM/soak/dailyrestore.
 Rawhead-profile-s25/s25-report.json; stagedocS25, data-map refreshed.
+
+
+## 2026-10-15 -- Flash-Next optimization S26: head prototype held, EP oracle fails
+
+CONFIG: S21base plus opt-in same-depth two-slot head, actual Fable5.1
+implementation/Opus5.5 review; root fixes reversed slot order, partial
+allocation cleanup, capture error propagation and nonintrusive counters.
+COMMAND: CPU syntax/extracted caller-binding fixture; one no-DRI AOT
+build141.101s; leased pair fresh-pattern EP push17520B/return614400B,
+producer/owner poison, poll/completed-event waits, two-site payload hints.
+RESULT: CPU PASS, frozen head264f221e GPU UNTESTED. Copy21PASS; nativeflag
+ownerFAILsample10/1068words, producerFAILsample3/1158. Distinct staging
+poison proves current INBOXpoison consumed: pollsample8/1296, hostwait
+firstsample0/720. Uncachedpayload-onlyFAILsample9/440, rejected. Returns,
+guards and spin codes pass; later inbox/source clean. Post-drain counters
+cannot prove wait-entry epoch. Production output corruption not demonstrated.
+Normal drained exits; no crash/timeout/reset. Final bothcard and ten
+compiled collective4x5120/P2P0 PASS. Servers stopped, EP source unchanged.
+VERDICT: hold head serving, exclude failed-arm timing. Preserve prototype,
+negative patch, probes/map and raw hashes/reviews. Fable triple-read/observed
+epoch and Opus offlineBMGISA prepared as next discriminators. Reuse objects,
+stop first-failure arms, no fullmodel/cache/soak/daily restoration or shelf.
+Details: stagedocS26; cachefix_20261014/head-pair-s26/s26-report.json.

@@ -109,3 +109,44 @@ Two107-input/64-output replies match S16 prefixes, active slots offer46
 and accept40 drafts each; arithmetic canary and both-card/10 compiled
 collective post-health pass. No clean throughput claim from this diagnostic.
 Raw commands, frozen hashes and trace summaries: cachefix_20261014/head-profile-s25/.
+
+
+## EP publication diagnostics (S26, unresolved correctness failure)
+
+    bash build_ep.sh
+    bash run_ep.sh copy producer 0 20
+    bash run_ep.sh flag producer 0 64
+
+The launcher takes the pair lease, pins both visible devices, gates their
+PCI BDFs, checks the binary hash and enables the same IPC capability as
+the serving launcher. It never runs outside the lease. Native EP source
+from the runtime is unchanged; the probe links its recorded kernel archive.
+
+Messages contain17520-byte ids/activation pushes and614400-byte
+upper-bound returns, with fresh nonzero salts, poison and4096-byte guards
+every sample. IPC mappings remain alive throughout each process.
+The spin and host status-poll bounds are finite. Host-sync1 waits on each
+event only after its bounded completion poll. Device times use START/END
+on the same card; inter-card clock alignment is unavailable.
+
+Copy mode passed21 messages including first use. Flag mode failed fresh
+data checks: owner poison sample10 (1068 bad push words); producer poison
+rev2 sample3 (1158). Rev3 separates stage and inbox poison: poll-only failed
+sample8 (1296 inbox-poison words), completed-event waits still failed
+first-use sample0 (720 inbox-poison words). Guards, return and spin codes
+passed; producer source and all later inbox rereads were correct. Post-run
+matching counters do not prove what the wait kernel observed at entry.
+
+A two-line probe-local change to use uncached payload stores also failed
+sample9 (440 inbox-poison words), so it is retained as rejected evidence.
+No timing or speed conclusion is drawn from these failed arms. This has
+not demonstrated serving-output corruption. Freshness diagnostics now
+take priority over evaluating the head-pair prototype. See the stage report
+and raw head-pair-s26/ep-readiness/ for exact preserved binaries/variants.
+The next tests inspect consecutive consumer reads, the wait's observed
+epoch, and actual BMG fence/store ISA.
+
+Prototype source: patches/experimental-batch-mtp-pair-head-s26.patch.
+It is CPU-built and unqualified on GPUs. Slot-order binding, allocation
+context and error propagation were corrected in review; its syntax and
+CPU argument-binding tests pass. The serving control remains frozen S21.
