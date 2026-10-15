@@ -1,0 +1,18 @@
+{
+  "status": "REMOTE_PUSH_PR_UPDATE_AND_REPLY_VERIFIED",
+  "epoch_ns": 1792087878808791796,
+  "PR": "https://github.com/Niko1221/Strata/pull/2511",
+  "old_head": "1fce5591a0ede4d5451316f462ad8acd528a21e6",
+  "new_head": "91b02a5c0fc45e782c02bd13e05204fdc5b0e698",
+  "fast_forward_no_force": true,
+  "title": "Report batch MTP draft counts across slot handoffs",
+  "reply_url": "https://github.com/Niko1221/Strata/pull/2511#issuecomment-6199010242",
+  "reply_id": 6199010242,
+  "target_comment": "https://github.com/Niko1221/Strata/pull/2511#issuecomment-6184235517",
+  "root_fullread_Opus_response_diff_tests_body_reply": true,
+  "actual_Opus": "claude-opus-5-5 session7e0d5376-ff79-40f0-b948-e80941fa0419 exit0/45.081s",
+  "CPU_tests": "6PASS/unittest1.937s/container11.236s; no GPU or network",
+  "runtime_scope": "Live src-ep and all measured builds/evidence unchanged. Followup is isolated docs+independenttelemetry removal; retainedserver/helpers/emitter math unchanged. No CUDA/SYCL rebuild/GPU rerun.",
+  "telemetry": "Independent patch parked locally, no newPR",
+  "initial_API_propagation": "First immediatePRread stillold after successfulpush; gitlsremote and subsequentfreshAPIreadboth91b verified before anyPRupdate/comment. No repeatpush."
+}

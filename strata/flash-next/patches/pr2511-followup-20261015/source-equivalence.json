@@ -1,0 +1,28 @@
+{
+  "serve/server.py": {
+    "unchanged_from_PR_head": true,
+    "sha256": "383b6672b6d780f984ea9726bd61e9ae78eb95b10a1bbff18df715bda1754092"
+  },
+  "serve/test_slot_drafts.py": {
+    "unchanged_from_PR_head": true,
+    "sha256": "5f024d0b818f27cc6dbc4aaf70f8a514a3dc22e485baf739398cf350e6a892ee"
+  },
+  "serve/test_parallel.py": {
+    "unchanged_from_PR_head": true,
+    "sha256": "7db35f97ad346d5fdb73d85fae9235553bcefe203f6f25ada11963e3bd54a36b"
+  },
+  "src/program/generate.cpp": {
+    "remaining_BDONE_BSlot_changed_lines_exact": true,
+    "before_after_changed_line_count": 15
+  },
+  "sycl/src/program/generate.cpp": {
+    "remaining_BDONE_BSlot_changed_lines_exact": true,
+    "before_after_changed_line_count": 9
+  },
+  "include/strata/core/conversation_cache.hpp": {
+    "identical_to_upstream_base": true
+  },
+  "src/core/conversation_cache_test.cpp": {
+    "identical_to_upstream_base": true
+  }
+}

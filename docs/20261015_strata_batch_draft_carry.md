@@ -116,3 +116,23 @@ Raw evidence is under:
 See `cpu-regression.json`, `cpu-project-tests.json`, `source-change.json`,
 `launch-input-hashes.json`, `live-fixed-api/native-counter-verdict.json`,
 the frozen first-pair protocol there, and `opus-carry-verdict/`.
+
+
+## PR2511 review follow-up (2026-10-15)
+
+The04:12 review comment predates carry fix1fce5591 at05:05. A fresh actual
+Opus5.5 consultation (45.081s) confirms the fix is present; root corrects
+its suggested legacy wording to preserve any existing admission counts.
+Follow-up91b02a5c documents optional BDONE accepted/offered fields and
+removes independent restore-payload telemetry from the PR. Non-MTP slot
+counts are0/0; accepted means verification-accepted, which can include a
+draft not emitted when the request stops. Server helpers/tests and draft
+emitter changes are unchanged; cache header/test return exactly to base.
+Six existing targeted CPU tests pass in1.937s (CPU-only container11.236s).
+No CUDA/SYCL rebuild or GPU rerun; CUDA remains inspected, not built.
+
+The existing fork branch was fast-forwarded, PR title/body updated and
+[the reply posted](https://github.com/Niko1221/Strata/pull/2511#issuecomment-6199010242).
+Final public six-file PR scope and reply body are verified. The measured
+local runtime/combined overlay is unchanged; telemetry is parked as a
+separate patch, with no new PR. [Exact small follow-up records](../strata/flash-next/patches/pr2511-followup-20261015/README.md).

@@ -1,0 +1,26 @@
+test_mixed_legs_keep_optional_drafts_in_request_timings (serve.test_slot_drafts.SlotDrafts.test_mixed_legs_keep_optional_drafts_in_request_timings) ... ok
+test_no_counts_stays_unknown_for_old_engine (serve.test_slot_drafts.SlotDrafts.test_no_counts_stays_unknown_for_old_engine) ... ok
+test_old_engine_line_preserves_admission (serve.test_slot_drafts.SlotDrafts.test_old_engine_line_preserves_admission) ... ok
+test_slot_counts_add_to_admission (serve.test_slot_drafts.SlotDrafts.test_slot_counts_add_to_admission) ... ok
+test_a_request_moved_between_solo_and_slot_keeps_its_totals (serve.test_parallel.ParallelService.test_a_request_moved_between_solo_and_slot_keeps_its_totals)
+#1869/#1870: a request that read its prompt and decoded on the solo path, was STOPped when another arrived and ... /pr/serve/telemetry.py:351: ResourceWarning: unclosed file <_io.TextIOWrapper name='/proc/stat' mode='r' encoding='utf-8'>
+  f = [int(x) for x in open("/proc/stat").readline().split()[1:]]
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/pr/serve/telemetry.py:334: ResourceWarning: unclosed file <_io.TextIOWrapper name='/proc/cpuinfo' mode='r' encoding='utf-8'>
+  return line.split(":", 1)[1].strip()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/pr/serve/telemetry.py:378: ResourceWarning: unclosed file <_io.TextIOWrapper name='/proc/meminfo' mode='r' encoding='utf-8'>
+  info = dict(line.split(":", 1) for line in open("/proc/meminfo"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+[strata] done: 10 tokens in 0 s (49.5 tok/s) (stop, cancel=False)
+[strata] answering: 47 of max 200 tokens, 47.1 tok/s, 1 s
+[strata] done: 55 tokens in 1 s (46.6 tok/s) (stop, cancel=False)
+ok
+test_slot_drafts_reach_http_and_metrics (serve.test_parallel.ParallelService.test_slot_drafts_reach_http_and_metrics) ... [strata] done: 10 tokens in 0 s (41.2 tok/s) (stop, cancel=False)
+[strata] done: 10 tokens in 0 s (49.4 tok/s) (stop, cancel=False)
+ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 1.937s
+
+OK

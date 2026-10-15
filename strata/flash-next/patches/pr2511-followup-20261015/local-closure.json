@@ -1,0 +1,81 @@
+{
+  "status": "LOCAL_FIX_TESTED_ROOT_REMOTE_REVIEW_READY",
+  "comment": {
+    "url": "https://github.com/Niko1221/Strata/pull/2511#issuecomment-6184235517",
+    "author": "qiuzan2001",
+    "author_association": "NONE",
+    "created_at": "2026-10-15T04:12:39Z",
+    "item1": "already fixed by1fce5591 committed05:05:50Z",
+    "item2": "fixed locally in docs",
+    "item3": "independent restore telemetry removed locally; parked separatepatch; no newPR"
+  },
+  "remote_old_head": "1fce5591a0ede4d5451316f462ad8acd528a21e6",
+  "local_new_head": "91b02a5c0fc45e782c02bd13e05204fdc5b0e698",
+  "base": "296b59d2f73c8f04a805df29c2fa97655adace78",
+  "remote_new_head": null,
+  "actual_Opus": {
+    "requested": "claude-opus-5-5",
+    "responding": [
+      "claude-opus-5-5"
+    ],
+    "session": "7e0d5376-ff79-40f0-b948-e80941fa0419",
+    "exit": 0,
+    "elapsed_s": 45.081463569018524,
+    "full_text": "claude-opus-5-5/assistant-text.txt",
+    "root_read": true
+  },
+  "root_corrections_to_Opus": "Legacy BDONE preserves already-known admission counts, not always unknown; no bound invented for verify-accepted but un-emitted drafts. NONE commenter is not described as maintainer. No source mechanism change for non-MTP0/0.",
+  "tests": {
+    "count": 6,
+    "unit_runtime_s": 1.937,
+    "container_runtime_s": 11.236159590014722,
+    "CPU_lease_wall_s": 12,
+    "exit": 0,
+    "log": "cpu-tests.log",
+    "command": "cpu-tests.json",
+    "no_GPU_or_network": true,
+    "ResourceWarnings": "existing unrelated telemetry file handles; preserved, not expanded"
+  },
+  "unchanged_source": "serve/server.py and bothPython tests byte-equal1fce; native BDONE/BSlot changedlines exact; header/cachetest exact296base. See source-equivalence.json.",
+  "no_CUDA_SYCL_rebuild": "docs/removal-only followup, retained emitters unchanged; old CUDA inspected/notbuilt disclosed.",
+  "remote_actions": 0,
+  "root_next": "refresh remotehead, fast-forward existingforkbranch91b, update existingPRtitle/body, post verifiedreply; noforce/newPR required",
+  "artifacts": {
+    "pr2511-followup.patch": {
+      "bytes": 8237,
+      "sha256": "e534e022ed6dc9617423a88e50a440e6ac408d790dc32a0382acb1530189931b"
+    },
+    "parked-restore-telemetry-only.patch": {
+      "bytes": 6354,
+      "sha256": "ace305ef11f2ef6e3d8d9548f70b947b78484689fd42c3d2430eb1e8f00704a4"
+    },
+    "pr-title.txt": {
+      "bytes": 51,
+      "sha256": "cac3d0163bad2f67d9767f26638001db3e0f753eb375d8c17f9e7877af5d85ed"
+    },
+    "pr-body.md": {
+      "bytes": 1900,
+      "sha256": "271a885c1723d408b052605587aa9eae06ca6354e786c17061a54e50cfc77cbe"
+    },
+    "reply-after-root-verification.md": {
+      "bytes": 998,
+      "sha256": "14e6948f836d295e68c12909c6235c3566df526351f29c8853c92d122dc83668"
+    },
+    "local-commit.json": {
+      "bytes": 513,
+      "sha256": "3fafc427f119e27614c1d5cf7a26d1afe95789c8e23f1b53008e476ba8093198"
+    },
+    "source-equivalence.json": {
+      "bytes": 909,
+      "sha256": "e5fcfd91f35750f7d08aba99a4e32e137e004d557eebc474bb457296687ae197"
+    },
+    "cpu-tests.json": {
+      "bytes": 1206,
+      "sha256": "d980e97bbce47ddff5d1851dae99d9c8c3cbc7ddc4e1d8c9d1a6574db068d43e"
+    },
+    "cpu-tests.log": {
+      "bytes": 2116,
+      "sha256": "6a278e95db06c3646477b049bec9fab28f1040398db324ecc4470594bbad94bf"
+    }
+  }
+}

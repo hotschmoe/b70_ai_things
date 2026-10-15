@@ -1,0 +1,112 @@
+{
+  "requested_model": "claude-opus-5-5",
+  "responding_model_ids": [
+    "claude-opus-5-5"
+  ],
+  "fresh_session": "7e0d5376-ff79-40f0-b948-e80941fa0419",
+  "exit": 0,
+  "elapsed_s": 45.081463569018524,
+  "result_events": [
+    {
+      "duration_api_ms": 44024,
+      "stop_reason": "end_turn",
+      "session_id": "7e0d5376-ff79-40f0-b948-e80941fa0419",
+      "total_cost_usd": 0.2362738,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 18797,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 4288,
+        "output_tokens_details": {
+          "thinking_tokens": 1265
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 18797,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 4288,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 18797,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 18797
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 4288,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 18797,
+          "webSearchRequests": 0,
+          "costUSD": 0.2362738,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 1265,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# PR #2511 follow-up: review of the 04:12 comment against head `1fce559`\n\n## Verdict per comment item\n\n**Item 1 (handback carry drops draft counts): already fixed at head.** The comment (04:12) predates the carry fix (head updated 05:05).\n\n- `carry_leg` now adds `drafts_offered`/`drafts_accepted` from each leg when they are present and not `None`.\n- `add_carry` adds the carried counts to the final `DONE`'s counts.\n- `test_mixed_legs_keep_optional_drafts_in_request_timings` covers all-reported, carried-only, final-only, known zero and all-absent.\n- The validation history shows this test failed on the old code and passes now. The native 64/512 handback run gave 40/46 + 304/371 = 344/417 at both the server and the API.\n- I traced the logic and found no remaining bug. A carried count plus a final `DONE` without counts gives the carried total. A final count with nothing carried passes through via `{**last}`. Absent stays absent.\n\n**Item 2 (docs/BATCHING.md BDONE row): valid and still pending.** The head row still lists four fields.\n\n**Item 3 (one change per PR): valid against AGENTS.md** (\"One change per pull request\"). The restore-telemetry change is independent: it touches no shared lines with the BDONE hunks, only the same two `generate.cpp` files in separate hunks. The reply should cite AGENTS.md and should not claim a maintainer asked for the split; the commenter's association is NONE.\n\n## Correctness points to flag (none blocking; disclose, don't fix now)\n\n1. **Non-MTP `--batch` output changed.** Both emitters now always append the two counts, so plain `--batch` without `--batch-mtp` prints `... 0 0`. The server then reports `draft_n: 0` as a known zero where it was previously absent, unless the admission reported drafts. This is arguably accurate (batch slots offered no drafts), but the engine's stdout protocol is no longer byte-identical on that non-MTP batch path. AGENTS.md asks for the default path to stay byte-identical, so either:\n   - (a) document \"always `0 0` without `--batch-mtp`\" (recommended; no source change), or\n   - (b) emit the counts only `if (batch_mtp)`. This changes both emitters, and AGENTS.md then requires building CUDA and SYCL. I would not do it unless asked.\n2. **\"Accepted\" means verify-accepted, not emitted.** `drafts_accepted += keep[b] - 1` is added before the emit loop, which can `break` on stop or length. A draft accepted on the final window can therefore be counted even when its token is not emitted, so accepted can exceed what actually reached the client by at most 1 per request. Say so in the doc row rather than changing the math.\n3. **Minor CUDA/SYCL asymmetry on non-finite logits.** CUDA increments `offered` before the non-finite check and `accepted` after it, so a non-finite window counts as offered and not accepted. The SYCL batch-MTP loop has no non-finite branch. Leave as is; it is consistent with \"offered\".\n\n## Minimal branch delta (no history rewrite, no force-push)\n\n### On the PR branch: one new commit on top of `1fce559`\n\n**1. Revert the restore-telemetry hunks only:**\n- `include/strata/core/conversation_cache.hpp`: remove both `restore_payload_bytes()` additions. The file becomes identical to base `296b59d2`.\n- `src/core/conversation_cache_test.cpp`: remove the added block. The file becomes identical to base.\n- `src/program/generate.cpp`: remove the `const size_t restored_payload_bytes = \u2026` line (around line 11078) and restore the original restore `fprintf`. Keep all four BDONE hunks and the `BSlot` fields.\n- `sycl/src/program/generate.cpp`: the same two restore hunks (around 9905 and 9961). Keep the BDONE hunks.\n\nThe simplest way is `git checkout 296b59d2 -- include/strata/core/conversation_cache.hpp src/core/conversation_cache_test.cpp`, then hand-revert the two hunks in each `generate.cpp`, or use `git checkout -p 296b59d2 -- <file>` and select only the restore hunks.\n\n**2. Update the docs row in `docs/BATCHING.md` (around line 315):**\n```diff\n-| `BDONE <slot> <generated> <stop/length/cancel> <ms>` | out | the slot is free again (it keeps its conversation) |\n+| `BDONE <slot> <generated> <stop/length/cancel> <ms> [<accepted> <offered>]` | out | the slot is free again (it keeps its conversation). The optional counts are the slot leg's batch-MTP drafts: offered once per window, accepted when verified (a draft accepted in the last window may not be emitted). Without `--batch-mtp` they are `0 0`; older engines omit them, and the server then keeps them unknown |\n```\n\n**3. Edit the PR title and body** (a local draft until ROOT approves):\n- New title: \"Expose batch MTP draft counts in BDONE\".\n- Delete the `restored_payload_bytes` paragraph and the near-200k restore sentence.\n- Delete \"4,222 conversation-cache C++ checks\", which no longer applies.\n- Keep the SYCL and handback validation, which exercised the BDONE math that remains unchanged.\n\n### Separate branch and PR for restore telemetry\n\n- Branch from base `296b59d2`, for example `restore-payload-bytes`.\n- Apply only the reverted hunks: both `.hpp` methods, the test block, and the two restore hunks per `generate.cpp`. Use `git diff 296b59d2 1fce559 -- <files> | git apply` and then drop the BDONE hunks, or use `git checkout -p 1fce559`.\n- Its body carries the original restore paragraph, the 3,163,725,744-byte measurement and the \"no full cache qualification\" caveat.\n- Opening it is a remote write, so ROOT approves it separately. It can also wait.\n\n## Checks\n\n**For the PR after the split** (removal and docs only; the BDONE math is unchanged):\n- `git diff 296b59d2 -- include/strata/core/conversation_cache.hpp src/core/conversation_cache_test.cpp` is empty.\n- `git diff 296b59d2 -- src/program/generate.cpp sycl/src/program/generate.cpp` shows only the BDONE/BSlot hunks.\n- `python -m unittest serve.test_slot_drafts serve.test_parallel` passes (CPU).\n\nNo CUDA build and no GPU rerun are needed. The removed lines return exactly to base text, and the remaining emitter hunks are byte-identical to what was already validated on SYCL. The caveat stays honest: CUDA was inspected, not built, as the body already says.\n\n**For the new restore PR:** build and run `src/core/conversation_cache_test.cpp` on CPU, which reproduces the earlier 4,222 checks. The existing SYCL restore measurement transfers because the hunks are identical. Disclose that CUDA was not built, as before.\n\n## Draft reply (post only after the commit is pushed and ROOT approves)\n\n> Thanks for checking.\n>\n> 1. Fixed in 1fce559 (pushed after your comment): `carry_leg`/`add_carry` now carry the slot leg's optional `drafts_offered`/`drafts_accepted` through the handback, so a final solo `DONE` adds to them rather than replacing them. Missing stays unknown, and an explicit zero stays a known zero. `serve/test_slot_drafts.py::test_mixed_legs_keep_optional_drafts_in_request_timings` failed on the old helpers and passes now. On two Arc Pro B70s (SYCL), a real 64/512 batch\u2192solo handback gave BDONE 40/46 + DONE 304/371 = 344/417 at both the server totals and the API.\n> 2. Done in <sha>: the `docs/BATCHING.md` BDONE row now lists the optional `<accepted> <offered>` counts. It notes that they are `0 0` without `--batch-mtp`, that older engines omit them, and that a draft accepted in the last window can be counted without being emitted.\n> 3. Agreed, per AGENTS.md: <sha> removes `restored_payload_bytes` from this PR, returning `conversation_cache.hpp`, its test and the two restore log lines to base. That change can go in a separate PR. The BDONE emitters and their math are unchanged from what was validated. Rechecked on CPU: `serve.test_slot_drafts` and `serve.test_parallel` pass. CUDA emitters are still inspected, not built, on this Intel host.\n\nFill in `<sha>` once the commit exists. If you choose option (b) for the non-MTP output instead, the reply's docs wording and the build statement both need to change.",
+      "ttft_ms": 15231,
+      "type": "result",
+      "duration_ms": 44148,
+      "uuid": "9f3c53e3-181a-487c-94d3-0f24d62d7d1b",
+      "ttft_stream_ms": 1326,
+      "time_to_request_ms": 116,
+      "first_content_frame_ms": 1327,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "prompt_sha256": "9e3a0ecb1a76a688e1a1b38fc385340791ccdd4cf59a3e40411c1ec54c77edda",
+  "root_read_required": true
+}

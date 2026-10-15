@@ -1,0 +1,16 @@
+{
+  "status": "PUBLIC_COMMENT_AND_FINAL_SIX_FILE_PR_SCOPE_VERIFIED",
+  "new_head": "91b02a5c0fc45e782c02bd13e05204fdc5b0e698",
+  "files": [
+    "docs/BATCHING.md",
+    "serve/server.py",
+    "serve/test_parallel.py",
+    "serve/test_slot_drafts.py",
+    "src/program/generate.cpp",
+    "sycl/src/program/generate.cpp"
+  ],
+  "cache_header_test_exact_base": true,
+  "server_and_tests_exact_oldhead": true,
+  "reply_url": "https://github.com/Niko1221/Strata/pull/2511#issuecomment-6199010242",
+  "reply_body_exact": true
+}

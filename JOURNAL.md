@@ -24369,3 +24369,24 @@ Keep S30 recovery evidence; no repeated cache/dailyrestore/timedC2/32Kwarm.
 Queue one current32K operation/readiness profile using retained tooling, NOTRUN.
 Raw: cachefix_20261014/qsa-prefill-serving-s89 and sibling build/main-ISA/reviews.
 Curated: strata/flash-next/lowlevel_probe/qsa_prefill_serving_s89/README.md.
+
+
+## 2026-10-15 - PR2511 comment follow-up: focused draft accounting
+
+CONFIG -> User requests actualOpus follow-up on qiuzan2001 comment6184235517.
+Fresh claude-opus-5-5 session7e0d5376-ff79-40f0-b948-e80941fa0419 exits0
+in45.081s; root fullreads response/diff/tests/body/reply. Comment04:12
+predates existing handback fix1fce5591 at05:05; no new carry regression.
+COMMAND -> Isolated PRheadworktree; document optional BDONE accepted/offered
+fields and remove independent restore telemetry, preserving all accounting
+helpers/tests/emitter changes. Run six existing targeted CPUtests.
+RESULT ->6PASS/unittest1.937s/container11.236s; noGPU/network/build. Commit
+91b02a5c fast-forwards fork PRbranch; title/body updated, reply6199010242
+posted once. Remote head/final six-file scope/comment exact body verified.
+VERDICT -> All three review points addressed; live measured source/builds
+and combined local overlay unchanged. Telemetry-only patch parked; no new
+PR or CUDA/SYCL rebuild. CUDA remains inspected/notbuilt. Root corrects
+Opus legacy wording: absent optional fields preserve known admission counts;
+verify-accepted does not necessarily mean emitted, with no invented bound.
+Evidence: strata/flash-next/patches/pr2511-followup-20261015/README.md;
+https://github.com/Niko1221/Strata/pull/2511#issuecomment-6199010242 .

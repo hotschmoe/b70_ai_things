@@ -1,0 +1,9 @@
+Batch MTP verifies drafts in each slot, but its BDONE figures previously omitted their counts. Append optional accepted/offered slot-leg counts in both CUDA and SYCL, add them to admission figures, and retain them through later solo/slot handoffs. A final solo DONE therefore adds to earlier batch counts instead of replacing them. Missing/None fields remain unreported; explicit zero remains known. Legacy BDONE lines preserve any existing admission counts.
+
+Document the optional protocol fields in docs/BATCHING.md. Non-MTP batch slots append 0 0; accepted means accepted by verification, including a draft that is not emitted because the request then stops. This PR's final diff contains only draft accounting, its tests and protocol documentation; independent restore-payload telemetry has been removed and parked for a separate contribution.
+
+Current CPU validation: six tests pass (unittest 1.937 seconds; CPU-only container 11.236 seconds): serve.test_slot_drafts (four tests, including the actual-helper mixed-leg cases), the existing solo/slot handoff totals test, and the HTTP draft-count/metrics test. The carry regression previously failed before the fix.
+
+Retained native validation on two Arc Pro B70s (SYCL): a concurrent 64/512-token pair exercised real batch-to-solo handback. BDONE 40 accepted/46 offered plus final DONE 304/371 equals server/API totals 344/417; the short request totals 39/46. Texts matched retained prefixes; arithmetic, reasoning, tool continuation, teardown and post-health passed. This is a bounded telemetry oracle, not a throughput or model-quality claim.
+
+The follow-up changes documentation and removes independent telemetry only. Server helpers/tests and retained BDONE/BSlot emitter changes are unchanged from head 1fce5591; no CUDA/SYCL rebuild or GPU rerun was performed for this follow-up. CUDA emitters were inspected, not built on this Intel host.
