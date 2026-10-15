@@ -3,6 +3,11 @@
 Date: 2026-10-15. Stage S28. Bounded correctness evidence, not a speed or
 long-run stability qualification. Flash-Next ISTA GSQ-RCO IQ3_XXS, two B70s.
 
+Submitted: [recutita/Strata PR2](https://github.com/recutita/Strata/pull/2),
+head69dee3c30e881b6d5afb70c197e813811423be40, one file/+1/-1. Target is
+the author branch sycl-ep-prefill-main behind upstream PR2205; current
+main296b59d2 has no EP kernel file. This fix is independent of PUSH PR1.
+
 ## Finding and change
 
 A standalone real-shape EP probe observes the expected ready epoch, but

@@ -1773,3 +1773,8 @@ batched drained numerical arms before health, one small model canary.
 No repeated four200k test, soak, framework setup or daily restoration.
 Tracked probe exact S28sourcea73dc02e; adapted wrapper bashsyntax only.
 Raw ep-ordering-s28/s28-report.json and sha256-s28.txt preserve provenance.
+
+Contribution submitted and API-verified:
+https://github.com/recutita/Strata/pull/2, head69dee3c3, onefile/+1/-1,
+target sycl-ep-prefill-main (upstream2205), independent of PUSH1.
+Current main296b59d2 lacks EPfile. Full checkpoint276b099 pushed.

@@ -22845,3 +22845,8 @@ Loop: reuseobjects/hiddenISA, stoplosersearly, batchdrainedarmsforhealth,
 smallcanary; nofour200k/soak/dailyrestore/frameworksetup. TrackedS28source
 exacta73dc02e; wrappersyntaxonly. Dateddoc20261015_strata_ep_publication_scope,
 stagedocS28/data-map/probeupdated; raw ep-ordering-s28/s28-report.json.
+Contribution follow-through: recutita/Strata PR2 OPEN, head69dee3c3,
+base sycl-ep-prefill-main; API verifies onefile/+1/-1, independent PUSH1.
+https://github.com/recutita/Strata/pull/2 . Checkpoint276b099 pushed;
+raw root-pr-verified.json added to S28report/hashmanifest. NextS29 prep
+is CPU/source-only; no new GPU touch after final health.
