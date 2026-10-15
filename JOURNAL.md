@@ -23595,3 +23595,39 @@ preflights concrete output write access after recurrence. Datedreport/exact
 patch/smallheadmap only;170historicalops/rollups unchanged. Frozen216files/
 13729315B; externalhead-serving-s55-manifestSHA256
 42d67d6dd37ab4cf391f845b6eb05fe0c1b5180deddb7d65d52d9e06cd3aafbb.
+
+
+## 2026-10-15 -- Flash-Next optimization S57: generic WideK history/resource pruning
+
+CONFIG: Source/history/header and existingAOT only. COMMAND: Audit S15
+correctedQ5-only controls, S31format/shapecounts and GGUF headers; extract
+6existing C6 resource records0.03957s/2.631MB. RESULT: S15Q5C1..4RPW2 mixed
+ratio0.946101/RPW4reject1.310344, not Q4/IQ4XS coverage. CurrentQ4RPW2
+spill2112/scratch4096,Q5 1728/2048, IQ4XS andallRPW1declarationsabsent,
+all128GRF/SIMD32. Headerjoins126calls/5.384218ms withoutper-eventlayer
+invention. No weightpayload/build/GPU/sourceedit/newreview. VERDICT: Defer
+Q4/Q5primaryoracle; prepareonlydistinctIQ4XS C6realqkv strictdiscriminator,
+not globaltoggle/sweep. Metadata not runtimezero/occupancy/traffic/speed,
+spillsalone do not negate separateQ5headmeasurements.
+Datedcandidate-pruning report/smallmap update retained, historical170ops/
+rollups unchanged. Frozen16files/110817B; externalmanifestSHA256
+4343f0014a99825810d8537b5d216d19a5c8d4be4762808db31f6bdba1688e27.
+
+
+## 2026-10-15 -- Flash-Next optimization S58: expert ownership HOLD
+
+CONFIG: Source/oldS31/startup/history only. COMMAND: Audit exactownership/
+cachepricing/peerworkspace/combine and priorarms, no GPU/build/payload or
+newreviews. RESULT: Experts7.738/8.066msprimary/peer,144calls each; peer
+waitcannotmove primarydense/HC/head. Snakealreadydeals hotranks nearlyevenly.
+149->144movesonly5rank-tail experts/layer, trafficunknown, kernelcountsfixed.
+Explicitcache5181bytebudget/sourcepredicts144/368+399.658MiBpeer; saved
+final2010->hypothetical1610MiB, notinitial3.5GiBspare. Keepreserve1024;
+raisingitcouplesprimaryquota/peerrequirement. PrefillchangesFMAgrouping,
+matchedtext/work not guaranteed. VERDICT: HOLD ownershipserve/noreserve
+sweep/collector. Revisitonlyactualtraffic/imbalanceevidence, mandatoryreal
+finalboth>=1024/all24576beforeanyfuture requests. No additiveidle/savings
+claim/newqualification.
+Datedcandidate-pruning report/smallmap update retained, historical170ops/
+rollups unchanged. Frozen4files/13478B; externalmanifestSHA256
+589d9e1f2dcc4b804deda9255a90d1884574a664eae9c1578d22315405af0eff.

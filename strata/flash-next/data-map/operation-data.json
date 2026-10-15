@@ -1015,7 +1015,8 @@
     "q6-dense-reference-s43-prep/{s43-report,bound-proof.md}; run-first-c6/gate.json",
     "q6-dense-reference-s44-prep/{s44-report,warm-report}.json; cpu-full/gate.json; run-clean/closure.json",
     "primary-dense-next-s56-prep/{source-audit,s31-dense-quant-pool,s15-q6-rpw2-rejection}.json",
-    "primary-dense-next-s56-prep/aot-resources/{embedded-resource-index,resource-summary}.json; C{1,6}-RPW{1,2}.ze_info.yaml"
+    "primary-dense-next-s56-prep/aot-resources/{embedded-resource-index,resource-summary}.json; C{1,6}-RPW{1,2}.ze_info.yaml",
+    "primary-widek-next-s57-prep/findings.md; primary-widek-resources-s57-20261015/resource-summary.json"
    ],
    "quoted": [
     {
@@ -1059,6 +1060,12 @@
      "value": "C6 RPW2 spill_size7936/per-thread scratch8192; corresponding C6 RPW1 and both C1 records omit those fields/buffers. All128GRF/SIMD32.",
      "basis": "Four exact embedded .ze_info records from frozen S55 exebb066900, DPC++2026.1.0; existing root hash/source/object binding reused. Absent fields are not measured runtime zeros. Compiler metadata establishes neither actual dispatch, occupancy, scratch traffic, bandwidth nor latency. HOLD C6 RPW2/no GPU probe.",
      "status": "source-only"
+    },
+    {
+     "label": "S57 generic WideK C6 compiled resource guard",
+     "value": "RPW2 Q4K spill2112/scratch4096; Q5K1728/2048; IQ4XS declarations absent. All RPW1 fields absent. All128GRF/SIMD32.",
+     "basis": "Existing frozenS55 AOTmetadata only,0.03957s/2.631MB; no dispatch/occupancy/runtimezero/traffic/speed inference. PriorQ5onlyC1..4 mixed, not Q4/IQ coverage. Prepare ONLYIQ4XS C6 strictrealweightoracle; no globaltoggle/threeformatGPU sweep.",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -1435,9 +1442,17 @@
    ],
    "evidence": [
     "draft-profile-s22/profile/steady-summary",
-    "draft-profile-s22/profile/engine.log:24-25,32-34 (7152 primary slots;17424 card1 experts)"
+    "draft-profile-s22/profile/engine.log:24-25,32-34 (7152 primary slots;17424 card1 experts)",
+    "ep-balance-next-s58-prep/findings.md"
    ],
-   "quoted": [],
+   "quoted": [
+    {
+     "label": "S58 ownership source/oldtrace decision",
+     "value": "S31 expert service7.738ms primary/8.066ms peer,144calls each; HOLDquota149->144 experiment.",
+     "basis": "Olddiagnostic clocks not joined. Profile already snake-deals hotranks; moves5rank-tail experts/layer withunknowntraffic, launchcountsfixed. Savedpeerfree2010MiB laterworkspace scope; sourcepredictsadditional399.658MiB only, notnewfree measurement.",
+     "status": "measured"
+    }
+   ],
    "upstream": [
     "peer_route_plan"
    ],
