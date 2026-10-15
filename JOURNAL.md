@@ -23448,3 +23448,23 @@ offline AOT-cache reuse claim, new framework or separate GPU file-copy test.
 Source audit/exact copy recipe/identities/dated report retained. Frozen
 S53 evidence manifest SHA256
 b862fd1de7372c9de9b02080188ce71b5af92d12851549f34b7ffd639649eb49
+
+
+## 2026-10-15 -- Flash-Next optimization S54: narrow upstream PLE draft
+
+CONFIG: Only exact S47 generic helper217550f5; no S49 wiring/counters/HC.
+COMMAND: Fresh main/overlap audit, isolated cpu-run checkout(<1s reported),
+apply/verify tested candidate, one-file commit627db622, explicit fork push/
+remote bytes, bug issue first then DRAFT PR, read back all bodies/state.
+RESULT: https://github.com/Niko1221/Strata/issues/2622 and draft PR
+https://github.com/Niko1221/Strata/pull/2623. OPEN/isDraft=true/no reviewers,
+one commit/one src/kernels/ngram.cpp, remote sourcef76bb2b9 equals tested
+candidate. No duplicate by targeted keyword search, not exhaustive diff
+review;1516 context-rebase risk noted. No new build/test/GPU/live mutation.
+VERDICT: Submitted useful fix as draft, NOT ready for review. Upstream
+AGENTS requires every affected backend built before asking review; CUDA/HIP
+builds unperformed and explicitly disclosed. Existing CPU88/SYCL evidence
+scoped; no speed claim or redundant rerun. No ready/reviewer request made,
+no publication rejection. Dated report/source/issue/PR readbacks retained.
+Frozen prep+submission evidence manifest SHA256
+df4d7472956bf08a946807ef27cc9812c2b6dd0d73bde1423dff6be8267f3a59
