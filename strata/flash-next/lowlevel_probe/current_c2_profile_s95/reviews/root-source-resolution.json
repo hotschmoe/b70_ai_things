@@ -1,0 +1,43 @@
+{
+  "status": "ROOT_SOURCE_CONDITIONS_CLOSED_GO_ONE_CURRENT_C2_PROFILE",
+  "actual_models": [
+    {
+      "model": "claude-opus-5-5",
+      "elapsed_s": 54.125192901992705,
+      "session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "full_answer_sha256": "196f481e56ef54bc7f313249ba3993c96ed9e6e21cfd036d7bf77297ddac3cea"
+    },
+    {
+      "model": "claude-fable-5-1",
+      "elapsed_s": 80.06948891200591,
+      "session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "full_answer_sha256": "a3947442fd886507f4f596e93516389933b5401a41c6935df6f9e9d81157174b"
+    }
+  ],
+  "root_fullread_both_answers": true,
+  "protocol": "ONE107prompt64outputEACH ordered C2pair, no generationwarmup, profilerinjectedfromstart/resumebeforeGEN, HOST_BOUNDARY1/TRACE1/VERIFY_PROFILEabsent, allcandidatesOFF, oneparseafterstop/fullhealth, no cache/dailyrestore/retry.",
+  "source_conditions": {
+    "session_parity": "inputs s95currentC2 matches wrapper --session and stop/controller commands exactly.",
+    "batch2": "serve/server.py2606 calls parallel_args;2613..2631 integerparallel2 emits --batch2; unchanged S94actualfirstline confirms. Root MUST assert actual S95nativeargv/proc before collection.",
+    "native_summary_timing": "generate.cpp9523 markswindow_end;9525..9548 if!batch_on emits batch+paired summary and flushesboundedCPUring before returns. Not QUIT-only.",
+    "environment_parity": "EXACTS94OFF env plus ONLYHOST_BOUNDARY1. TRACE1 and PLE_PREFETCH_DIAG1 alreadybaseline.",
+    "clock_anchor": "Pinnedunitimer.h default epoch_start~REALTIME-BOOTTIME; GetEpochTime adds rawhosttimestamp CLOCK_MONOTONIC_RAW. Trace is already epoch-anchored. client_epoch_us = trace_us + (BOOTTIME-MONOTONIC_RAW)/1000. Existingcalibratorcorrect; NOT treating trace raw monotonic as epoch. Native C++steadyidentity staysunverified/no join.",
+    "profiler_control": "--start-paused option exports UNITRACE_StartPaused; tracer.cc138conditional; named session attaches callback OnSessionStopped246..276 that calls tracer->Flush whileapplicationalive. Exact priorS90sameinstalledroute stoppedandclosedtrace, conditionalMAXONEunprofiledflush retained onlyifnecessary.",
+    "markers": "ExactQ6center and native107prompt-startstrings match completedS94baseline log.",
+    "analysis_counts": "Root appended ONLYtotal/complete/selected counts toexistingcycles/census outputs; oldanalyzerandmanifest retained. Selection/clock/controller logicunchanged; noGPU windowalreadyraises.",
+    "functional_scope": "No functionalcampaign in diagnosticS95; NOT_COMPLETED in normalstop expected/notfailedgate; priorS94OFFfunctionals remainseparate."
+  },
+  "model_corrections": [
+    "Opus estimated20minstartup; actualretainedS94startup31-32seconds, not20minutes. Source checks stilluseful, no timingclaim frommodelestimate.",
+    "Fable anchor concern resolvedbyactual epoch_start_time+raw formula above; no clockimplementationchange needed.",
+    "Fable singleparseefficiency rule is not a prohibition on correcting postprocessing if genuine defects arise; preserve raw canonicaltrace and preferderived/loadeddata withoutanotherGPUrun.",
+    "No modelanswer grantsGPUauthority; rootreview and leases/freshhealthcontinuity control execution.",
+    "Structuralreplay candidates remainreview-only untilactualC2motifs/EPnames/nativepairedcounts/CPUfirst-role evidence reconcile. No fastestcycle/causal/physicalidle/bandwidth/additivebudget claim."
+  ],
+  "new_manifest_sha256": "f807471427f06c7c0af027af4370c6e0e67fec2394266dfc0502d28908c86419",
+  "expected_source_sha256": "3b369c8644dc4bbc8274d764cad7a9fbc205e402eab24b5f09fd6977b865b303",
+  "preflight": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-root-continuity-preflight.json",
+  "reuse_prehealth": "S94mode1bothcard+compiled10healthyclosure onlyafterfreshrootbootkernel/modelstat/leases/docker/sharedlog/allagentnogpuaudit. Mandatoryposthealth afterthisprofile.",
+  "GPU_GO": true,
+  "utc": "2026-10-15T20:37:07.807251+00:00"
+}

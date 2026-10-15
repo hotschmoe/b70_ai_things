@@ -1,0 +1,38 @@
+{
+  "status": "ACCEPT_BOUNDED_C2_CENSUS_NO_NEW_HANDOFF_PATCH_SELECT_ROUTED_INTEGER_LOWERING_SOURCE_AUDIT",
+  "actual_models": [
+    {
+      "model": "claude-opus-5-5",
+      "elapsed_s": 38.252633488038555,
+      "resumed_own_source_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "assistant_text_sha256": "9af5eb78b44c1063c2b90eb3f44601646553fc883562c5861c35feb14bfed9e8"
+    },
+    {
+      "model": "claude-fable-5-1",
+      "elapsed_s": 49.75904882000759,
+      "resumed_own_source_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "assistant_text_sha256": "de39f9f054438b2b4f5d0524487a45fd62fe9700f134dbb706657e6541e4a461"
+    }
+  ],
+  "root_fullread_both_answers": true,
+  "root_decisions": [
+    "Accept completed onecurrentC2 operation/association census, allnormalhealth; no speed/default/promotion/fullcache/targetachievement.",
+    "KeepGPUstructuralcycles andCPUrolekey windows separate, no CPU/GPU-clockjoin or GPUindex==CPUwindowID. Extra2wholeC6heads remainunresolved.",
+    "No newhosthandoffpatch or readiness-wait deletion justified. Do notrepeatS15SH_STREAMoff/S79commit-overlap/S73MORE/GRF/S65denseSWAR/S75mapping onthisevidence.",
+    "ChooseONE source-only routedexpert integer-dot/load/decode-column-reuse audit with exact currentcaller/quantformat/compiledname mapping. Sourcefirst, selectedexistingISA only asneeded; no allmainimagewalk/newbuild/GPU or requantization.",
+    "Possiblecodegenlever must be demonstrated forTHISroutedport/source/image. Requireboundedinteger overflow/signedness/signextension/dotsemantic proof andunchangedFPconversion/scale/reductionledger before candidate. No arbitrarytolerance or claimedexactnessfrom integeralgebraalone.",
+    "Ifknownhardwaredot/wideload/decodehoisting alreadyhold withactualevidence, close that specificlever withoutbuild. Source canidentify where toinspect butdoesnotprovecompiledrematerialization/spillabsence."
+  ],
+  "model_statement_corrections": [
+    "BOTHmodels state routedGU/DOWN7.504ms is a subsetofnonvocabularyMMVQ12.680ms. FALSE: disjointkernel-namepredicates (native_gu_port/native_down_port versusmmvq) inretainedfacts. Do not use their nesting/percentage/payoffclaims.",
+    "Opus says existing13tagbindingmapsselectedexpertISA. That13tag/fourimageaudit coversattention kernels, notroutedexpert. Newexpertselector mustbinditsownactualregisteredname/image; do notreuseattentionmetadataasproof.",
+    "Fable refers toalreadyextractedallmainISA. No exhaustiveallmainISAwasextracted, onlypriorselectedkernelimages. Reuseexactrelevantexistingartifacts ifpresent; do notinventwholemaincoverage.",
+    "Fable integerproducts/sums exactinanyorder needsintegerdomain/overflow/sign proofs andsameFPscale+reductionoperations. Notblanketbit-exactguarantee for compiler/numericalchanges.",
+    "CPU0.785ms span is PLE-associated sourceordering, notprovenPLE-caused latency. Rootlimitedfacts no newunexplainedhandoffgap; do notcompareinstrumented3.235ms verifier submits directlytouninstrumentedS32.",
+    "Diagnosticcyclemedians~57ms coincidence acrossdomains isnotclockjoinorproofGPUbound. Servicefamiliesnotadditiveorremovablewallbudgets.",
+    "Opus rounded acceptance85-87percent agrees with actual39/46 and40/46 (~84.78/86.96percent). These remain one instrumented pair work counts, not an acceptance-quality or throughput result."
+  ],
+  "runtime_decision_sha256": "fe867c36cd488c1296451488fa5ffd0e79957ff5972ece4b09de44307bd1a0c6",
+  "next_stage": "S96 source-only routedexpert integerlowering audit assignednativeagent; noGPU/newnativecode/modelpayloadauthorized bythisrecord.",
+  "epoch_ns": 1792097644183349792
+}

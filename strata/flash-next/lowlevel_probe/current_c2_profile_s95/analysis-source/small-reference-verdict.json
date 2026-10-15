@@ -1,0 +1,144 @@
+{
+  "status": "PASS_SMALL_CPU_REFERENCE_ONLY_NO_TRACE_PARSE",
+  "source_sha256": "dcef349cd201c9e64cf8cb9c87c7724df59086da8127bd9321988d5fe079165d",
+  "optimized_sha256": "d9d21c1860ae011579857f0caa7dbd1b0f60cef014bb19b90820c3fa2e123e72",
+  "prefix_before_coverage_unchanged": true,
+  "cases": [
+    {
+      "start": -1,
+      "end": 0,
+      "expected": {},
+      "actual": {}
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "expected": {
+        "zeA": 2
+      },
+      "actual": {
+        "zeA": 2
+      }
+    },
+    {
+      "start": 1,
+      "end": 4,
+      "expected": {
+        "zeA": 2,
+        "zeB": 1,
+        "zeE": 1
+      },
+      "actual": {
+        "zeA": 2,
+        "zeB": 1,
+        "zeE": 1
+      }
+    },
+    {
+      "start": 4,
+      "end": 5,
+      "expected": {
+        "zeA": 2,
+        "zeB": 1
+      },
+      "actual": {
+        "zeA": 2,
+        "zeB": 1
+      }
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "expected": {
+        "zeA": 2,
+        "zeB": 1,
+        "zeF": 1
+      },
+      "actual": {
+        "zeA": 2,
+        "zeB": 1,
+        "zeF": 1
+      }
+    },
+    {
+      "start": 6,
+      "end": 8,
+      "expected": {
+        "zeA": 2,
+        "zeB": 2,
+        "zeF": 1
+      },
+      "actual": {
+        "zeA": 2,
+        "zeB": 2,
+        "zeF": 1
+      }
+    },
+    {
+      "start": 8,
+      "end": 10,
+      "expected": {
+        "zeA": 2
+      },
+      "actual": {
+        "zeA": 2
+      }
+    },
+    {
+      "start": 10,
+      "end": 12,
+      "expected": {
+        "zeA": 3
+      },
+      "actual": {
+        "zeA": 3
+      }
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "expected": {
+        "zeA": 2
+      },
+      "actual": {
+        "zeA": 2
+      }
+    },
+    {
+      "start": 13,
+      "end": 21,
+      "expected": {
+        "zeA": 2
+      },
+      "actual": {
+        "zeA": 2
+      }
+    },
+    {
+      "start": 21,
+      "end": 30,
+      "expected": {},
+      "actual": {}
+    },
+    {
+      "start": 30,
+      "end": 31,
+      "expected": {
+        "zeTail": 1
+      },
+      "actual": {
+        "zeTail": 1
+      }
+    },
+    {
+      "start": 31,
+      "end": 32,
+      "expected": {},
+      "actual": {}
+    }
+  ],
+  "second_device_queries": 3,
+  "semantics": "Exactly start<gapend AND start+duration>gapstart; duplicate names counted, nested/zero-duration/boundary intervals preserved. Per-device gaps have monotone endpoints; independent per-device sweep.",
+  "complexity": "Host list sorted once; each host event pushed/popped at most once per device. No host rescans per gap. Entire preceding census and one raw parse unchanged.",
+  "no_gpu_build_or_raw_trace_read": true
+}

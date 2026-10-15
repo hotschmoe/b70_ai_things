@@ -423,3 +423,18 @@ Actual S94post Opus34.340s/Fable20.127s/rootfullread acceptkeepOFF/pivot.
 ExistingS93inactive0/1 offered205each versusS94OFF207/ON205 allaccepted136/
 sameoutputSHA; differentbinary/processcontexts, not matchedOFF/OFF or a
 cause. Currentgate stays, no benignnondeterminism/promotion claim.
+
+
+S95 current C2 operation census closes one107/64each instrumented pair with
+normalteardown/fullhealthPASS. NonvocabularyMMVQ12.680488ms is the largest
+named primaryGPUfamily; mixedweight/shared attribution remains incomplete.
+CPU end->nextenter2.36us does not justify another hosthandoffpatch. Twelve
+reviewed GPUcycles retain cold/solo/tail context; two extra C6heads remain
+unresolved and native/GPU/peer clocks are unjoined. Choose one routed-expert
+integerdot/load/decode SOURCE feasibility next, no newGPU/buildcandidate or
+clean speed/promotion. [S95 census and limits](../../docs/20261015_strata_current_c2_profile.md).
+Actual S95post Opus38.253s/Fable49.759s/rootfullread select ONEsource-only
+routed-expert integerdot/load/decode-reuse audit. Routed7.504ms andMMVQ
+12.680ms predicates are DISJOINT, not subset/payoffpercent. Attention13tag
+binding is not expertISA; no all-mainISA extraction/automaticexactness.
+Integerdomain/overflow/signedness and unchanged FPledger proof first.

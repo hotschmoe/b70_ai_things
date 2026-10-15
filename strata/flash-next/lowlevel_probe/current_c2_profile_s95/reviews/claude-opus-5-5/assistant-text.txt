@@ -1,0 +1,47 @@
+# S95 instrumentation-source review
+
+## Disposition: conditional GO
+
+I found no structural blocker. The lifecycle is sound:
+
+- The profiler starts paused and is injected at process start. `resume` happens before the first request, and readiness asserts that no capture was logged before collection.
+- Pause and stop run in `finally`, the stop path in `stop.py` works on its own, and abnormal teardown hands off to the root recovery ladder with no automatic health checks.
+- The full raw parse runs only after a closed health pass.
+
+There are four read-only conditions to close before the GPU run. Any one that fails should be **HOLD**.
+
+1. **Session name parity.** `trace-engine.sh` hardcodes `--session s95currentC2`, while `controller.control` and the `stop.py` cleanup use `I['session']`. If these differ, `resume` fails and you lose the lease. Confirm `inputs.json` says `s95currentC2`, or derive both from one source.
+2. **`--batch 2` reaches the engine.** `config.json` has no `--batch` and relies on `"parallel": 2`. The S93 argv showed `--batch 2` appended last, which is consistent with `server_intel.py` adding it, but readiness never asserts this. Add one assert that the first line of `engine.log` contains `--batch 2`. Without it, C2 pairing can silently degrade to solo, and you would only notice afterwards.
+3. **Native summary timing.** `pair.py` waits about 10 s for the `strata batch pair head:` and `strata batch: N windows` lines. Confirm in the source that these print per request or per idle, not only at QUIT. If they print only at QUIT, the pair fails closed every time and the lease is wasted.
+4. **Environment parity with S94.**
+   - The env must equal the audited S94 production env, with only `HOST_BOUNDARY=1` and `TRACE=1` added.
+   - Confirm `STRATA_BATCH_MTP_PLE_PREFETCH_DIAG=1` is part of the baseline, not a new diagnostic that changes behavior.
+   - `XMX0` and `ROT0` are asserted in both config and probe, which is good.
+
+## Minor issues (non-blocking, fail-closed)
+
+- **`ring_snapshot` decoding.** It decodes a partially written log with strict UTF-8. A torn multibyte character would raise instead of retrying. The log is very likely ASCII, so this is low risk; `errors='replace'` or a byte-level parse would be safer.
+- **`start()` readiness errors.** Only `OSError` and `TimeoutError` are retried. A partial-JSON `ValueError`, or an assertion racing a log line that appears just after `loaded`, aborts `start()` while the server keeps the lease. Cleanup still works through `attempt.cid` and `stop.py`, so this is acceptable as long as root knows that path.
+- **Flush canary contamination.** If the optional post-stop canary is sent, it adds to the process-cumulative PLE and native counters. `aggregate-proof` already says so, and the CPU ring snapshot is taken before it. Keep those counters out of pair attribution.
+- **`capture.*(failed|produced no graph)`.** The regex is case-insensitive over the full log. This fails closed on benign text, which is acceptable.
+
+## Evidence limits
+
+These are already encoded correctly in the code:
+
+- The host Q6 marker shows host selection only, not GPU dispatch.
+- The S16 prefix match covers text, not token IDs.
+- The calibration covers BOOTTIME/RAW against the client clock only. The native steady clock remains unjoined, there is no cross-card join, and nothing here supports an additive budget.
+- Kernel names and grids cannot separate shared-expert projections from other dense projections.
+- Too few full S6/A2 replay cycles means the result is **INCONCLUSIVE with no rerun**.
+- An instrumented wall time or `aggregate_output_tps` in `pair.json` is not speed evidence. Either label it as instrumented-only in the report or drop it.
+
+## Dev-loop efficiency
+
+- **Good:**
+  - One pair with no warm-up and no matched OFF trace.
+  - The S32 parser reused byte-exact.
+  - A single parse after closure.
+  - Reusing S94 health only after a continuity audit.
+- **The four conditions cost seconds of source reading.** Each one, if missed, burns a full startup of about 20 minutes plus the lease. That is the same lesson as S93: prove the actual argv and logging contract before the GPU run.
+- **After the trace:** make exactly one mechanism decision, choosing between dense/shared/HC/head work and EP/PLE readiness. Do not schedule a follow-up trace matrix.

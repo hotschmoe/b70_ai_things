@@ -1,0 +1,13 @@
+{
+  "command": [
+    "docker",
+    "exec",
+    "5cb8d08a092190019cbb8d676dd2a3319ab7734ecb439b3fb201fdcd5e209d2a",
+    "/mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/build/unitrace",
+    "--pause",
+    "s95currentC2"
+  ],
+  "exit": 0,
+  "stdout": "",
+  "stderr": "[INFO] Session s95currentC2 is paused\n"
+}

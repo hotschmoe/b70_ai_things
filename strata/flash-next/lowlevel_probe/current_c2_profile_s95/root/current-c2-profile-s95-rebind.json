@@ -1,0 +1,31 @@
+{
+  "status": "SOURCE_ONLY_REBIND_READY_ROOT_FULLREAD_PENDING",
+  "old_binary_sha256": "551cca4140b3f014bfb800e2f6d2c5d9a46733da02b835d0b2ead9fa5cf05db3",
+  "new_binary_sha256": "d94e96ca399d8ecf1f15403db754b645697e82eaa72c052a2d18f4b29defc247",
+  "root_binary_proof": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build/build/root-build-closure.json",
+  "prefill_source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/prefill/prefill.cpp",
+  "prefill_source_sha256": "2a1d8faa8bd58f112f4555a5ba7ab988b143fdb773106c8907903f0ecfafe16e",
+  "old_manifest": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep-manifest-before-rebind.json",
+  "old_manifest_sha256": "bfe92b5dc0a3dc3a98bbc39f8c9e2c2459895e4a31720c1db764b42217e6b633",
+  "new_manifest": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep-manifest.json",
+  "new_manifest_sha256": "d2760cbaf2a1dda15388aa6bbbecc773d6181bcc4748bcac7f2657266b9fdd63",
+  "expected_source_sha256": "7b43563a6db60a518f64cedb27c2bd690a3070d8ea824b2eb45da697943655f6",
+  "diff": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-rebind.diff",
+  "diff_bytes": 10941,
+  "changed_files": [
+    "controller.py",
+    "trace-engine.sh",
+    "config.json",
+    "inputs.json",
+    "README.txt",
+    "preparation-checks.json",
+    "expected-source.sha256"
+  ],
+  "readiness_and_ring_source_audit": {
+    "startup_known_capture_absence": "verify.cpp1996/3060 exactly matches known captured-window regex; absence is only logged completion absence, not proof of no graph work",
+    "ring_source": "host_boundary_profile.hpp19..39:8192 cap/dropped/header records/no footer. No thread IDs; rings are thread_local. generate.cpp9514..9548 marks final window_end before !batch_on summary and flush. Controller requires both HTTP slots idle AND all declared records/dropped0/finalwindow_end, preserving all dumps/w0; no fastest/cold omission.",
+    "slots_source": "serve/server.py5401..5420 emits list per-slot is_processing=(state != idle).",
+    "clock": "UNVERIFIED native steady-to-MONOTONIC remains separate; no native-to-trace timestamp join."
+  },
+  "no_execution_or_other_work": true
+}

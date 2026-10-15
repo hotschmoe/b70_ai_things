@@ -1,0 +1,11 @@
+{
+  "status": "COMPLETE_VALIDATED",
+  "log": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep/run/pair-engine-complete.log",
+  "log_sha256": "fae20500d9269a4b471980efd8a35b1061680cb45f4ff152ecca60061b8b8b5e",
+  "dump_count": 1,
+  "declared_records": 820,
+  "actual_records": 820,
+  "dropped": 0,
+  "errors": [],
+  "external_precondition": "Root must establish normal process completion; markers have no end-of-file footer/thread IDs."
+}

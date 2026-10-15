@@ -1,0 +1,37 @@
+--- /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep/analyze_trace.py
++++ /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-analysis-prep/analyze_trace.py
+@@ -74,13 +74,33 @@
+ summary={'status':'ONE_PARSE_CURRENT_OPERATION_CENSUS_REQUIRES_REVIEW','trace_sha256':trace_sha256,'complete_events':len(selected),'total_trace_events':len(events),'total_complete_events':len(xs),'gpu_busy_union_ms':{n:union_us(es)/1000 for n,es in devices.items()},'gpu_engine_union_ms':[{'process':n,'engine':t,'union_ms':union_us(es)/1000}for(n,t),es in engines.items()],'all_cycle_count':len(cycles),'structural_replay_candidate_count':len(valid),'limits':['Per-device/engine service and host spans are not additive wall budgets.','No physical traffic/bandwidth/occupancy/idle or causal removable-gap conclusion.','Kernel name/grid/type/columns do not identify every weight or shared-expert branch.','Actual API invocation counts retain poll/timeout ambiguity.','One instrumented pair; nested cycles are not independent replication.','No native steady clock bridge: reconcile CPU markers ordinally only.']}
+ (a.output/'census.json').write_text(json.dumps(summary,indent=2,ensure_ascii=True)+'\n',encoding='ascii')
+ 
++# Per-device coverage gaps advance in both start and end. Index host APIs once;
++# the sweep keeps exact strict overlap semantics, including zero-duration APIs.
++class HostApiOverlapSweep:
++ def __init__(self, host_events):
++  import heapq
++  self.heapq=heapq;self.events=host_events;self.cursor=0;self.ends=[];self.active=Counter();self.previous=None
++ def query(self,start,end):
++  assert start<end
++  if self.previous is not None:assert start>=self.previous[0] and end>=self.previous[1]
++  self.previous=(start,end)
++  while self.cursor<len(self.events) and self.events[self.cursor]['ts']<end:
++   event=self.events[self.cursor];name=event['name']
++   self.heapq.heappush(self.ends,(event['ts']+event['dur'],self.cursor,name))
++   self.active[name]+=1;self.cursor+=1
++  while self.ends and self.ends[0][0]<=start:
++   _,_,name=self.heapq.heappop(self.ends);self.active[name]-=1
++   if self.active[name]==0:del self.active[name]
++  return dict(sorted(self.active.items()))
++host_l0_by_start=sorted(l0(selected),key=lambda e:e['ts'])
+ coverage=[]
+ for process,es in devices.items():
++ host_overlap=HostApiOverlapSweep(host_l0_by_start)
+  ordered=sorted(es,key=lambda e:e['ts'])
+  end=None;last=None
+  for e in ordered:
+   if end is not None and e['ts']>end:
+-   coverage.append({'process':process,'trace_start_us':end,'trace_end_us':e['ts'],'gap_us':e['ts']-end,'previous_operation':last['name'],'next_operation':e['name'],'overlapping_host_L0_API_names':counts([x for x in selected if x.get('cat')!='gpu_op'and x.get('name','').startswith('ze')and x['ts']<e['ts']and x['ts']+x['dur']>end])})
++   coverage.append({'process':process,'trace_start_us':end,'trace_end_us':e['ts'],'gap_us':e['ts']-end,'previous_operation':last['name'],'next_operation':e['name'],'overlapping_host_L0_API_names':host_overlap.query(end,e['ts'])})
+   if end is None or e['ts']+e['dur']>end:end=e['ts']+e['dur'];last=e
+ coverage.sort(key=lambda x:-x['gap_us'])
+ (a.output/'coverage-gaps.json').write_text(json.dumps({'scope':'Gaps in collected GPU-operation coverage per device, not measured physical idle or a causal CPU/data-readiness budget. Adjacent names/API overlaps are associations only; devices never joined.','total_count':len(coverage),'largest50':coverage[:50]},indent=2,ensure_ascii=True)+'\n',encoding='ascii')

@@ -1,0 +1,50 @@
+# S95 post-decision review
+
+## Disposition: accept the bounded census
+
+The collection is valid and closed:
+
+- The S16 prefixes, text, SSE and usage passed.
+- The pair produced 21 paired windows and 2 solo, with client lifetimes overlapping.
+- The CPU ring was complete: 820 of 820 records, `dropped0`.
+- One raw parse ran after a normal QUIT, CID and name were gone, the wrapper exited 0, and health passed.
+- Selecting the 12 structural cycles followed the stated rules (not the fastest cycles), and the cold, solo and tail data were retained.
+
+It is accepted as an **operation ranking and association census only**.
+
+## Evidence overreach to correct
+
+1. **The family service medians are not a wall-time share.** They are 12.68 ms (MMVQ), 6.72 ms (HC), 4.66 ms (heads) and 3.07 ms (EP wait) against a 57.07 ms cycle median. Do not subtract these from the cycle to infer GPU idle, overlap or headroom. The 57.07 ms GPU cycle and the 57.12 ms CPU cycle agreeing is coincidental consistency, not a join.
+2. **"\u2192next verifier submit 0.785 ms mainly PLE readiness"** is a CPU-marker association. Record it as "PLE-associated", not as caused by PLE.
+3. **Routed GU/DOWN (7.50 ms) is a subset of the 12.68 ms MMVQ family.** The analysis groups by kernel name and grid, so it cannot attribute time to individual weights or roles.
+4. **The 24 C6 heads on the GPU vs 22 S6 + 2 S3 on the CPU stays unresolved.** Do not infer a dummy warm-up or the capture origin.
+5. **Event-reset time (2.24 ms) and EP wait** are not removable production work.
+6. **The 85\u201387% acceptance and the 64-token pair** are instrumented single-sample work, not throughput.
+
+## Next: one source-only audit of the routed IQ3_XXS/IQ3_S MMVQ lowering
+
+**Target.** The routed native gate-up/down family (about 7.5 ms diagnostic). It is the largest single subfamily inside the largest family, and the C2 replay runs it at multiple activation columns (wide MMVQ, MAXC 8).
+
+**The question.** For the selected compiled ISA of the native IQ3 MMVQ, and then the IQ3_S multi-NC path, is each quantized weight block decoded exactly once per work item and reused across all active columns? Or does the inner loop repeat any of these per column:
+
+- the grid/codebook gather,
+- the sign unpack,
+- the scale extraction?
+
+Also identify where the codebook lives (constant, SLM, global or GRF) and the load instruction class in the hot loop.
+
+**Why it is distinct from the rejected work:**
+- Not SWAR (S65): no new arithmetic packing.
+- Not MORE rows (S73) or GRF sizing.
+- Not a DPAS/matrix mapping (S75).
+- Not the same-input projection pairing (S70).
+- It keeps the exact math. The integer dot products and their reduction order are unchanged, so results stay bitwise-identical and no tolerance changes are needed.
+
+**Method, all source and offline only:**
+- Map the kernel source to the exact ISA in the audited image, using the existing 13-tag binding.
+- Count the decode and gather instructions per weight block versus per column.
+- Compute static weight bytes per call from shapes and format, and divide by the median service time. Label the result as **derived bytes over service time**, not measured traffic or bandwidth.
+
+**Go/no-go for any later build.** Proceed only if the ISA shows column-redundant decode or codebook gathers inside the per-column loop, and only if the fix keeps reduction order bitwise-identical. If decode is already hoisted, close the lever and record the finding. Do not fall back to a flag sweep.
+
+**Payoff ceiling, stated honestly.** At most it reduces part of a 7.5 ms diagnostic family. Because the family timings are not additive, the wall-clock gain is unknown until a future matched serving gate. That is still a larger plausible lever than any of the roughly 1% flag campaigns, and it costs no GPU time to settle.

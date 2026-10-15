@@ -1,0 +1,120 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 80.06948891200591,
+  "launch_exception": null,
+  "source_packet_sha256": "df3bf40d0a4b47b6cca305cd73821096f3e9b5631556b6ce1e3ae29a61411c67",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 172498,
+      "stop_reason": "end_turn",
+      "session_id": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "total_cost_usd": 1.55814075,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 20660,
+        "cache_read_input_tokens": 30440,
+        "output_tokens": 4690,
+        "output_tokens_details": {
+          "thinking_tokens": 3543
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 20660,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 4690,
+            "cache_read_input_tokens": 30440,
+            "cache_creation_input_tokens": 20660,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 20660
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 6,
+          "outputTokens": 10724,
+          "thinkingTokens": 6504,
+          "cacheReadInputTokens": 51443,
+          "cacheCreationInputTokens": 50451,
+          "webSearchRequests": 0,
+          "costUSD": 1.55814075,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Verdict: GO for the lifecycle code, with three CPU-only confirmations before the GPU lease.** None requires a source change to the engine or a new test.\n\n**Concrete items to confirm or fix before launch**\n\n1. **Trace window anchor.** The calibration formula maps raw trace timestamps to BOOTTIME, but window.json start and end come from time.time_ns, which is epoch. The analyzer receives both and filters the trace by them. If the anchors differ, the filter can silently select nothing or everything. Since only one raw parse is allowed, analyze_trace must report in-window versus total event counts and mark the run INCONCLUSIVE on an empty window instead of exiting zero. Root should confirm the actual unitrace anchor from unitimer.h and align the units. This is the one item I would not launch without.\n2. **Profiler control semantics.** The readiness probe asserts the environment variable UNITRACE_StartPaused is 1 in the native process, and the collect phase assumes the stop command closes the Chrome JSON. If unitrace signals pause by another mechanism, the probe fails after a full model load. If the file only closes at process exit, the flush path will also fail and the run ends with a failed collection status despite retained data. Both are answerable from the unitrace source the root has already read. If stop does not close the file, let the stop phase record a closed trace after QUIT rather than asserting earlier.\n3. **Hard-coded host marker string.** The pair asserts the exact Q6 center line. A one-character format difference fails the run after both requests completed. Compare the string against the S94 engine log before launch. The same applies to the prompt start trace line the admission gate polls for.\n\n**Smaller observations, no blocker**\n\n- The ring snapshot requires the window end record before QUIT. That matches the stated final window flush, but it is the single assumption the whole CPU side rests on. The 30 second poll is adequate.\n- The engine log suffix is decoded as strict UTF-8 while the file is still being written. A split multibyte sequence would raise inside the poll loop. Using replace decoding costs nothing.\n- The pair writes client decode rates and aggregate output tokens per second into pair.json. They are raw and should be labelled non-evidence in the packet so they do not become a speed line later.\n- The functional verdict file never exists in S95, so normal-stop.json will always show NOT_COMPLETED. Document that so it is not read as a failed functional gate.\n- The readiness loop only swallows OSError and TimeoutError. Any other exception from the health client aborts start with the server running, which is the correct fail-fast behaviour but means the stop phase must still be run by root.\n\n**Evidence limits, restated for the packet**\n\nThe run yields an ordinal census of current dense, shared, HC and head operations, with CPU marker spans kept separate. It cannot join native steady clock to the trace, cannot join cards, and cannot turn wait returns into completion times. Insufficient full S6/A2 cycles stay inconclusive with no rerun.\n\n**Dev-loop efficiency**\n\nThe design is lean: one process, one pair, one parse, no warmup, no functional campaign. The avoidable waste is a startup assertion firing after the multi-minute load, which is why items 2 and 3 are worth ten minutes now. The expensive failure mode that cannot be fixed later is item 1, because the single-parse rule forbids a second pass.\n\nNo GPU GO is implied beyond these conditions. Root retains that authority.",
+      "ttft_ms": 58036,
+      "type": "result",
+      "duration_ms": 79120,
+      "uuid": "c737df67-ce42-4f66-b3be-d8f530c236a7",
+      "ttft_stream_ms": 1982,
+      "time_to_request_ms": 69,
+      "first_content_frame_ms": 1983,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

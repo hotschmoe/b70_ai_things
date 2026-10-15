@@ -1,0 +1,120 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 49.75904882000759,
+  "launch_exception": null,
+  "source_packet_sha256": "f10917f2e067f1b530f3130e692a99c88f21ccc12eb630dc38c284544a717ce9",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 221216,
+      "stop_reason": "end_turn",
+      "session_id": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "total_cost_usd": 1.87263575,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 8225,
+        "cache_read_input_tokens": 51100,
+        "output_tokens": 2744,
+        "output_tokens_details": {
+          "thinking_tokens": 1464
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 8225,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 2744,
+            "cache_read_input_tokens": 51100,
+            "cache_creation_input_tokens": 8225,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 8225
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 8,
+          "outputTokens": 13468,
+          "thinkingTokens": 7968,
+          "cacheReadInputTokens": 102543,
+          "cacheCreationInputTokens": 58676,
+          "webSearchRequests": 0,
+          "costUSD": 1.87263575,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Disposition: accept the bounded census as a PASS at the stated scope.** Both requests matched the S16 prefixes, work and usage are finite and paired, the ring closed with zero drops, teardown and health were normal, and the one parse rule held. It is a ranking of observed current operations and nothing more.\n\n**Evidence overreach to correct in the packet**\n\n- The CPU whole cycle median and the GPU cycle median are both near 57 ms. That coincidence invites a \"GPU bound\" reading. No clock join is allowed, so the packet must not say the CPU is waiting on the GPU or the reverse.\n- The 0.785 ms from pair return to the next verifier submit is described as \"mainly PLE readiness\". That is an inference from ordering, not a measured dependency. Record it as an unattributed span.\n- The service medians are listed next to each other and sum to something near the cycle. They are per-family service, overlap unknown, and must stay labelled non-additive.\n- The C6 head count of 24 against CPU coverage of 22 plus 2 stays open. Do not let \"dummy warm\" become the explanation by repetition.\n- The event reset family and the EP wait are instrumentation-sensitive or structural. Neither is removable work and the packet already says so. Keep it that way.\n\n**One next source-only investigation**\n\nAudit the integer inner dot of the routed expert MMVQ kernels, the native expert path plus the IQ3 multi-expert launcher, in the already extracted all-main AOT ISA. The question is narrow and answerable without a GPU:\n\n1. Does the compiled kernel use the hardware four-wide int8 dot instruction for the codebook-times-Q8 products, or scalar multiply-adds after byte unpacking?\n2. What width are the weight and codebook loads, and does the IQ3 grid table live in constant memory, SLM or registers?\n3. Is the integer accumulation across the block done in integer registers until the single float scale multiply?\n\nWhy this lever and not the alternatives on offer:\n\n- It is the largest reviewed family. Routed gate, up and down projections are about 7.5 ms of the 12.7 ms non-vocabulary MMVQ service, and nothing else in the census is both large and unexamined.\n- The exactness argument is by construction. Integer products and sums are exact in any order, so re-lowering the inner dot changes no bits as long as the final float scale product keeps its existing order. This is the only lever in the census where math preservation is provable rather than tolerance-argued, unlike the F32 HC to BF16 XMX idea, which is correctly set aside.\n- It is distinct from the rejected items. It is a vector ALU instruction and load width question, not XMX or DPAS mapping, not register budget, not software bit packing, not the shared stream or commit ordering.\n- The S70 same-input pair lead is weaker. The source already shares the quantized input and the convergence dependency makes the gain unbounded on both sides. Keep it as the second candidate only if the ISA audit closes clean.\n\n**Exit criteria for the audit, decided before reading**\n\n- If the dot instruction is already emitted and loads are already wide, record \"closed, no lever\" and do not build anything.\n- If scalar multiply-adds or narrow loads are present, the deliverable is an exact instruction count per block and the single source expression responsible, with a bit-exact argument written down before any candidate kernel is proposed.\n- No percentage gate is attached. A build and GPU arm, if ever, is a root decision after the written exactness proof and a caller reachability table, the lesson from S93.\n\n**Limits that carry forward**\n\nCold and extra head counts are retained, not explained. Kernel name and grid still do not identify weight roles, so the audit must pin the expert path by source call site, not by trace name. No new throughput, stability or cache evidence exists. S30 recovery stands, the absolute targets remain unmet.",
+      "ttft_ms": 26792,
+      "type": "result",
+      "duration_ms": 48789,
+      "uuid": "2169975b-2dc5-4e93-b233-dc2e3c299440",
+      "ttft_stream_ms": 1525,
+      "time_to_request_ms": 69,
+      "first_content_frame_ms": 1525,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

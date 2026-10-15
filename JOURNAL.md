@@ -24536,3 +24536,41 @@ ExistingS93inactive0/1 draft205/205 vsS94OFF207/ON205 allaccepted136/outputSHA
 exact; DIFFERENTbinary/processcontexts, not matchedOFF/OFF/control orbenign
 causeproof. Currentgatenotrelaxed. Productionpooloperatororacle deferred;
 wouldtouchGPU and require applicableGPU+CPUleases/health, not CPUonly.
+
+
+## 2026-10-15 - S95 current C2 census selects routed-expert source audit
+
+CONFIG -> Auditedd94e96ca VALUE0/QSA0/Q6center0/XMX0ROT0, currentEP149/363,
+107prompt64outputEACH orderedC2/depth2/headpairON. TRACE1/HOST_BOUNDARY1,
+noVERIFY_PROFILE/generationwarmup/nativechange/build. Actual sourceOpus
+54.125s/Fable80.069s/rootfullread; controller3bugs fixed BEFOREGPU.
+COMMAND -> ONEbothcardprofile/normalQUIT/fullCIDNAME/wrapper0/bothcard+
+compiled10healthPASS. RawparseONCE33.181s/CPUparser0.066s; analysis-only
+intervalsweep16boundarychecks, originalsource preserved; no extraGPU.
+RESULT -> Trace269853744B/SHA1139c4c8,1663171events/723519complete-selected,
+859canonicalCSVrows. Pairprefix/text/SSE/usage/nativefinitework/overlapPASS;
+native24windows/21paired/2solo. CPU820records/dropped0. TwelveGPUcycles5..16
+eachH2SS/H2SS/H6/48sameEPwait/9fullycontainedsubmits, instrumentedmedian
+57.067ms. AllnonvocabularyMMVQmedian12.680488ms includes native10.745196+
+IQ3_S~1.935ms/55calls; routedGUdown7.504495/HC6.718818/vocab4.664113/
+EPwait3.068313ms diagnostic nonadditive, namesnotallweight/sharedroles.
+CPU16conservativereplaywindows/14consecutivejoins end->nextenter2.36us;
+no newhosthandoffproblem/waitremoval justified. GPU42C2 reconcile21paired;
+whole24C6 vsCPU22S6+2S3 leaves2C6UNRESOLVED, notdummywarm/admission/capture
+proof, noGPUcycleindex==CPUwindowID. Clockdrift305.324us/native steady
+unproved, noCPU-GPU/crosscardjoin/physicalidle/traffic/additivewallbudget.
+VERDICT -> ONEroutedexpert integerdot/load/decode-reuse SOURCEaudit next,
+no kernel/build/GPUarm chosen. Do not repeat rejectedsharedstream/HC/head/
+DPAS knobs onrankingalone. Rawcold/solo/tail/extraheads retained; unprofiled
+31prompt4output poststopflush excludedpair/ringwork, PLEprocessincludesit.
+ActualpostOpus38.253s/Fable49.759s/rootFULLREAD acceptboundedcensus/sourceaudit.
+BOTHwrongly nest routed7.504ms insideMMVQ12.680ms: DISJOINTnamepredicates,
+not subset/payoffpercent. Prior13tagattentionbinding isNOTexpertISA; no
+exhaustiveallmainISA exists. Futureselectedexpert ownbinding/integerdomain/
+overflow/signedness/FPconversion-scale-reductionledger proof required;
+integeralgebraalone notbitguarantee, no roundingworkaround/newGPU.
+No throughput/promotion/S94cause/targetclaim, S30recovery unchanged.
+Completedmanifest132b4e91/107files277310984B, rawSHAreusedfromONEparse after
+statcontinuity;54exactsmallcopies, ONE859rowCSV. Historical170tail exact.
+Report: docs/20261015_strata_current_c2_profile.md; smallrecords:
+strata/flash-next/lowlevel_probe/current_c2_profile_s95/README.md.

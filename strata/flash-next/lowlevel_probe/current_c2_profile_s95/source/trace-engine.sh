@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+set -euo pipefail
+exec /mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/build/unitrace -d -h -s --chrome-call-logging --chrome-kernel-logging --start-paused --session s95currentC2 --follow-child-process 0 --output-dir-path /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep/run/trace -o /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep/run/trace/timing.csv /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build/build/strata-attn-value-resident-s94 "$@"

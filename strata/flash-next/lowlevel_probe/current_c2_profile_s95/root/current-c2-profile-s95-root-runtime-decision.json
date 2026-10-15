@@ -1,0 +1,118 @@
+{
+  "status": "PASS_BOUNDED_CURRENT_C2_OPERATION_CENSUS_SOURCE_LIMITED_ATTRIBUTION",
+  "binary": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build/build/strata-attn-value-resident-s94",
+  "binary_sha256": "d94e96ca399d8ecf1f15403db754b645697e82eaa72c052a2d18f4b29defc247",
+  "protocol": "One107prompt64outputEACH orderedpair, no generationwarmup, HOST_BOUNDARY1/TRACE1/VERIFY_PROFILEabsent; auditedS94allcandidatesOFF/XMX0ROT0.",
+  "pair": {
+    "prefixes_text_SSE_usage_finite": "PASS",
+    "work": [
+      {
+        "cache_n": 0,
+        "prompt_n": 107,
+        "predicted_n": 64,
+        "draft_n": 46,
+        "draft_n_accepted": 39
+      },
+      {
+        "cache_n": 0,
+        "prompt_n": 107,
+        "predicted_n": 64,
+        "draft_n": 46,
+        "draft_n_accepted": 40
+      }
+    ],
+    "native_windows": 24,
+    "paired": 21,
+    "solo": 2,
+    "client_overlap_ns": 8814277928,
+    "raw_token_ID_observation": false
+  },
+  "closure": {
+    "normal_QUIT": true,
+    "full_CID_NAME_absent": true,
+    "wrapper_exit": 0,
+    "percard_compiled10health_exit": 0,
+    "functional_campaign": "NOT_REQUESTED_IN_DIAGNOSTIC; baselineS94OFFfunctionalsseparate",
+    "source_binary_profiler_identity_rechecked": true
+  },
+  "trace": {
+    "bytes": 269853744,
+    "sha256": "1139c4c8cc9a4b0737a6c57e67a8b717151ec4276714fa355fb48e3cd9ab3583",
+    "total_events": 1663171,
+    "complete_events": 723519,
+    "selected_complete_events": 723519,
+    "operation_CSV_rows": 859,
+    "full_JSON_parses": 1,
+    "raw_parse_elapsed_s": 33.18053516902728,
+    "CPU_parse_elapsed_s": 0.06611000100383535
+  },
+  "reviewed_GPU_cycles": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "structural_cycle_limits": "H2SS-H2SS-H6,48sameEPwait/9fullycontainedL0submits each; source/counterconsistent but no perlayeridentity or GPUcycleindex==CPUwindowID claim. Othercold/solo/tailcyclesretained.",
+  "whole_vocabulary_head_counts": {
+    "6": 24,
+    "1": 14,
+    "3": 2,
+    "2": 42
+  },
+  "CPU_marker_closure": {
+    "records": 820,
+    "dropped": 0,
+    "positive_windows": 24,
+    "replay_windows": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      19,
+      20,
+      21,
+      22
+    ],
+    "native_clock_join_allowed": false
+  },
+  "service_ms_medians_diagnostic": {
+    "all_nonvocabulary_MMVQ": 12.680488,
+    "HC_four_kernels": 6.7188175,
+    "three_vocabulary_heads": 4.664113,
+    "EP_wait": 3.0683125
+  },
+  "CPU_handoff_median_us": 2.36,
+  "clock_drift_us": 305.3240000009537,
+  "excluded_poststop_flush": "One31prompt/4outputarithmeticcanary required totriggeralready-stoppedprofilerflush; excludedfrompairwindow/ring/nativepairwork; processPLEaggregatesincludesit.",
+  "unresolved": [
+    "Extra whole2C6heads versusCPU22S6/2S3 coverage remains unattributed; do not call dummywarm/capture/admission proven.",
+    "MMVQ name/grid/type doesnotuniquelyidentifyallweight/sharedroles.",
+    "CPUnativesteadyimplementationidentity notproven; noCPU/GPU/crosscardtimestampjoin."
+  ],
+  "verdict": [
+    "No currentnewhosthandoffproblem established; do not repeatS79/remove readinesswaits.",
+    "PriorS15sharedstreamOFF slower; no new source mechanism established, do not repeat.",
+    "PriorS55headRPW2/S87center/S65SWAR/S73MORE/S75DPAS outcomes stay separate.",
+    "Next source-only distinct exact-math nonvocabularyMMVQ lowering feasibility/selectedISA audit, rather than more prefill kernels or blind knob sweeps. No GPUcandidate/build selected by this census.",
+    "Instrumented timings are NOT new throughput, physicalidle/bandwidth/additivebudget/causal-removability/stability/cachequalification/default/shelf evidence. Goalsstillunmet/S30recoveryunchanged."
+  ],
+  "source_consultations_root_resolution": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-source-reviews-20261015/root-source-resolution.json",
+  "postconsultations": "PENDING separate closedpostroot; notincludedinruntimequalification",
+  "epoch_ns": 1792097415508599343
+}

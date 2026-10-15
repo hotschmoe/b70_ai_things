@@ -358,3 +358,19 @@ Actual S94post Opus34.340s/Fable20.127s/rootfullread acceptpark/pivot. Raw
 S93inactive0/1 offered205/205 vsS94OFF207/ON205 shareaccepted136/outputSHA;
 differentbinary/processcontext, not matchedOFF/OFF/control or benigncause.
 No retroactivegate relaxation or target/speed claim.
+
+
+S95 completes one current C2 diagnostic profile with all candidatesOFF,
+normal teardown and both-card/compiled health PASS. Twelve structurally
+reviewed GPU cycles place allnonvocabularyMMVQ12.680488ms above other named
+families; this is instrumented service, not attainable wall savings. CPU
+14consecutive replay handoffs median2.36us do not select a hosthandoffpatch.
+Two extra wholeC6heads remain unattributed; native CPU/GPU/peer clocks stay
+unjoined. Next is one routed-expert integerdot/load/decode SOURCE audit, no GPUcandidate
+or throughput/target/promotion gain. Goals/S30recovery remain unchanged.
+[S95 diagnostic](20261015_strata_current_c2_profile.md).
+Actual S95post Opus38.253s/Fable49.759s/rootfullread accept boundedcensus and
+ONEsource-only routed-expert integerdot/load/decode-reuse audit. Routed
+GU/down7.504ms and MMVQ12.680ms are disjoint name predicates, not nested.
+Attention13tagbinding is not expertISA; no exhaustiveallmainISA coverage or
+integeralgebra-only bitguarantee. No newGPU/build or throughput claim.

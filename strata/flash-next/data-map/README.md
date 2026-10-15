@@ -374,3 +374,17 @@ benignnondeterminism claim. Historical170operations/rollups/meta exact.
 Post Opus34.340s/Fable20.127s/rootfullread acceptpark/pivot. S93inactive
 offered205/205 vsS94OFF207/ON205 shareaccepted136/outputSHA; differentbinary/
 processcontexts are not matchedOFF/OFF/control/cause or gate-relaxation proof.
+
+
+S95's [canonical859-row current C2 operation CSV](../lowlevel_probe/current_c2_profile_s95/runtime/analysis/gpu/operations.csv)
+is copied ONCE and stays separate from historical170 operations/rollups/meta.
+Twelve reviewed cycles put allnonvocabularyMMVQ12.680488ms as largest named
+primaryGPUfamily; no additivewallbudget or exactdense/sharedweight split.
+CPU14consecutivejoins median2.36us does not select a hosthandofffix. Whole
+24C6 vsCPU22S6+2S3 leaves2C6unresolved; cold/admission/solo/tail retained and
+no native/GPU/peer clockjoin. [S95 report](../../../docs/20261015_strata_current_c2_profile.md).
+S95post Opus38.253s/Fable49.759s/rootfullread correct disjoint routedGU/down
+7.504ms vsMMVQ12.680ms pools; models' subset/payoffclaims rejected. ONE next
+source-only routed-expert integerdot/load/decode-reuse audit must bind its
+own kernel/image and integer/FPledger, not reuse attention13tag proof or
+claim allmainISAcoverage. No newGPU/build or clean gain selected.

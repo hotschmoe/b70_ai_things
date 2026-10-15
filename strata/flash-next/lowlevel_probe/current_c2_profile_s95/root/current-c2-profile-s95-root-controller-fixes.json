@@ -1,0 +1,18 @@
+{
+  "status": "ROOT_FIXED_THREE_DETERMINISTIC_CONTROLLER_ISSUES_BEFORE_GPU",
+  "old_manifest_sha256": "d2760cbaf2a1dda15388aa6bbbecc773d6181bcc4748bcac7f2657266b9fdd63",
+  "new_manifest_sha256": "96e9eef4ba3e39b5e90eb4f740008ebfbfa22a4fca9f9dc0eaaf6138b6b22101",
+  "old_sources_preserved": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-before-controller-fixes",
+  "changed_files": [
+    "pair.py",
+    "controller.py",
+    "README.txt",
+    "preparation-checks.json",
+    "expected-source.sha256"
+  ],
+  "new_cpu_parser_exact_S32_sha256": "25b1b1d0d176e069d624d7eeb9cd49d257f53bf995540d404598b42710dbb51d",
+  "expected_source_sha256": "94d2590c32179e8236f3ded784c6818637e2e06d583e5db363cb623b8cbcf6be",
+  "native_or_kernel_or_build_changed": false,
+  "runtime_or_GPU_executed": false,
+  "epoch_ns": 1792096324196738444
+}

@@ -1,0 +1,40 @@
+{
+  "status": "ROOT_FRESH_CONTINUITY_AUDIT_SOURCE_PINS_PASS_GPU_NOT_YET_GO",
+  "utc": "2026-10-15T20:33:42.773793+00:00",
+  "boot": "b785982c-4954-4d23-808c-48a7534ce3bd",
+  "kernel": "7.1.0-070100-generic",
+  "model_continuity": [
+    {
+      "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+      "resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+      "stat": {
+        "dev": 44,
+        "ino": 1156777,
+        "size": 47039860096,
+        "mtime_ns": 1792062519977528586
+      }
+    },
+    {
+      "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+      "resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+      "stat": {
+        "dev": 44,
+        "ino": 1068321,
+        "size": 28800138432,
+        "mtime_ns": 1791869062502802041
+      }
+    }
+  ],
+  "health_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/mode1/post-health.json",
+  "health_sha256": "43e8b29719199530095837f8c68afe7d663e9bea179a9e8271a9a7b6d5e86276",
+  "health_logs": {
+    "card-health.log": "e9819f8f95a5224080de28a97345b0847965cd4004197f73e227515bbfaade38",
+    "collective-health.log": "86b04d3ac0c64fc03b9d293a7c2a660d8c06c11f652747b0401cf85bfe751b02"
+  },
+  "prep_manifest_sha256": "96e9eef4ba3e39b5e90eb4f740008ebfbfa22a4fca9f9dc0eaaf6138b6b22101",
+  "source_expected_sha256": "94d2590c32179e8236f3ded784c6818637e2e06d583e5db363cb623b8cbcf6be",
+  "root_fullread14controllers_and_dependencies": true,
+  "source_repairs": "output hashkey/profilercontroltimeout/localexactparsercopy, no native/kernel/build/model changes",
+  "GPU_GO": false,
+  "revalidation": "Root and three nativeagents source/CPUonly sinceS94normalfullposthealth; sharedlog no interveningGPU; currentbothleasesfree/dockeronlyforeignmonitoring plus oldCreatedhealthcontainer, no runningserve. No exhaustive unloggedforeignGPU proof claimed."
+}

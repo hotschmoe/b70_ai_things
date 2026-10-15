@@ -1,0 +1,1022 @@
+{
+  "scope": "Gaps in collected GPU-operation coverage per device, not measured physical idle or a causal CPU/data-readiness budget. Adjacent names/API overlaps are associations only; devices never joined.",
+  "total_count": 214254,
+  "largest50": [
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1",
+      "trace_start_us": 1792096673346524.2,
+      "trace_end_us": 1792096674215989.2,
+      "gap_us": 869465.0,
+      "previous_operation": "strata::kernels::ep_send_rows(float*, float const*, int const*, int const*, int, long, unsigned int*, unsigned int*, unsigned int const*, void*)::ep_send_rows_kernel[SIMD32 {10; 1; 1} {256; 1; 1}]",
+      "next_operation": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 6,
+        "zeCommandListAppendEventReset": 2334,
+        "zeCommandListAppendLaunchKernel": 2918,
+        "zeCommandListAppendMemoryCopy": 217,
+        "zeCommandListClose": 5,
+        "zeCommandListCreate": 5,
+        "zeCommandListHostSynchronize": 694,
+        "zeCommandListImmediateAppendCommandListsExp": 3,
+        "zeContextMakeMemoryResident": 2,
+        "zeDriverGetExtensionFunctionAddress": 2,
+        "zeEventCreate": 2368,
+        "zeEventHostSynchronize": 217,
+        "zeEventPoolCreate": 37,
+        "zeKernelSetArgumentValue": 17542,
+        "zeKernelSetGroupSize": 2918,
+        "zeMemAllocDevice": 2,
+        "zexCounterBasedEventCreate2": 64
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1",
+      "trace_start_us": 1792096670200460.0,
+      "trace_end_us": 1792096670959764.2,
+      "gap_us": 759304.25,
+      "previous_operation": "strata::kernels::ep_send_rows(float*, float const*, int const*, int const*, int, long, unsigned int*, unsigned int*, unsigned int const*, void*)::ep_send_rows_kernel[SIMD32 {10; 1; 1} {256; 1; 1}]",
+      "next_operation": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 6,
+        "zeCommandListAppendEventReset": 2010,
+        "zeCommandListAppendLaunchKernel": 2472,
+        "zeCommandListAppendMemoryCopy": 217,
+        "zeCommandListClose": 5,
+        "zeCommandListCreate": 5,
+        "zeCommandListHostSynchronize": 706,
+        "zeCommandListImmediateAppendCommandListsExp": 3,
+        "zeContextMakeMemoryResident": 2,
+        "zeDriverGetExtensionFunctionAddress": 2,
+        "zeEventCreate": 2048,
+        "zeEventHostSynchronize": 217,
+        "zeEventPoolCreate": 32,
+        "zeKernelCreate": 10,
+        "zeKernelGetName": 20,
+        "zeKernelGetProperties": 10,
+        "zeKernelSetArgumentValue": 13850,
+        "zeKernelSetGroupSize": 2472,
+        "zeKernelSetIndirectAccess": 10,
+        "zeMemAllocDevice": 2,
+        "zeModuleCreate": 10,
+        "zeModuleGetProperties": 10,
+        "zexCounterBasedEventCreate2": 64
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096673510858.2,
+      "trace_end_us": 1792096674218915.0,
+      "gap_us": 708056.75,
+      "previous_operation": "zeCommandListAppendBarrier",
+      "next_operation": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 2,
+        "zeCommandListAppendEventReset": 2226,
+        "zeCommandListAppendLaunchKernel": 2808,
+        "zeCommandListClose": 3,
+        "zeCommandListCreate": 3,
+        "zeCommandListHostSynchronize": 26,
+        "zeCommandListImmediateAppendCommandListsExp": 2,
+        "zeDriverGetExtensionFunctionAddress": 2,
+        "zeEventCreate": 2240,
+        "zeEventPoolCreate": 35,
+        "zeKernelSetArgumentValue": 17040,
+        "zeKernelSetGroupSize": 2808
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1",
+      "trace_start_us": 1792096668919900.8,
+      "trace_end_us": 1792096669575622.5,
+      "gap_us": 655721.75,
+      "previous_operation": "strata::kernels::ep_prefill_reduce_kernel<true>[SIMD32 {64; 1; 1} {256; 1; 1}]",
+      "next_operation": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 2,
+        "zeCommandListAppendEventReset": 1782,
+        "zeCommandListAppendLaunchKernel": 2218,
+        "zeCommandListAppendLaunchKernelWithArguments": 316,
+        "zeCommandListAppendMemoryCopy": 40,
+        "zeCommandListClose": 3,
+        "zeCommandListCreate": 3,
+        "zeCommandListCreateImmediate": 8,
+        "zeCommandListHostSynchronize": 48,
+        "zeCommandListImmediateAppendCommandListsExp": 1,
+        "zeContextMakeMemoryResident": 2,
+        "zeDriverGetExtensionFunctionAddress": 4,
+        "zeEventCreate": 1792,
+        "zeEventHostSynchronize": 38,
+        "zeEventPoolCreate": 28,
+        "zeKernelCreate": 70,
+        "zeKernelGetName": 140,
+        "zeKernelGetProperties": 70,
+        "zeKernelSetArgumentValue": 11896,
+        "zeKernelSetGroupSize": 2534,
+        "zeKernelSetIndirectAccess": 70,
+        "zeMemAllocDevice": 2,
+        "zeMemGetAllocProperties": 760,
+        "zeModuleCreate": 70,
+        "zeModuleGetProperties": 68,
+        "zexCounterBasedEventCreate2": 128
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096670363052.8,
+      "trace_end_us": 1792096670961978.5,
+      "gap_us": 598925.75,
+      "previous_operation": "zeCommandListAppendBarrier",
+      "next_operation": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 2,
+        "zeCommandListAppendEventReset": 1902,
+        "zeCommandListAppendLaunchKernel": 2362,
+        "zeCommandListClose": 3,
+        "zeCommandListCreate": 3,
+        "zeCommandListHostSynchronize": 26,
+        "zeCommandListImmediateAppendCommandListsExp": 2,
+        "zeDriverGetExtensionFunctionAddress": 2,
+        "zeEventCreate": 1920,
+        "zeEventPoolCreate": 30,
+        "zeKernelCreate": 10,
+        "zeKernelGetName": 20,
+        "zeKernelGetProperties": 10,
+        "zeKernelSetArgumentValue": 13348,
+        "zeKernelSetGroupSize": 2362,
+        "zeKernelSetIndirectAccess": 10,
+        "zeModuleCreate": 10,
+        "zeModuleGetProperties": 10
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1",
+      "trace_start_us": 1792096675585154.2,
+      "trace_end_us": 1792096676120929.2,
+      "gap_us": 535775.0,
+      "previous_operation": "strata::kernels::ep_send_rows(float*, float const*, int const*, int const*, int, long, unsigned int*, unsigned int*, unsigned int const*, void*)::ep_send_rows_kernel[SIMD32 {60; 1; 1} {256; 1; 1}]",
+      "next_operation": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 4,
+        "zeCommandListAppendEventReset": 1963,
+        "zeCommandListAppendLaunchKernel": 2424,
+        "zeCommandListAppendMemoryCopy": 1,
+        "zeCommandListClose": 4,
+        "zeCommandListCreate": 4,
+        "zeCommandListHostSynchronize": 419,
+        "zeCommandListImmediateAppendCommandListsExp": 4,
+        "zeDriverGetExtensionFunctionAddress": 2,
+        "zeEventCreate": 1984,
+        "zeEventHostSynchronize": 3,
+        "zeEventPoolCreate": 31,
+        "zeKernelSetArgumentValue": 13638,
+        "zeKernelSetGroupSize": 2424
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096669045329.2,
+      "trace_end_us": 1792096669578529.8,
+      "gap_us": 533200.5,
+      "previous_operation": "zeCommandListAppendMemoryCopy(D2M)[4]",
+      "next_operation": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 2,
+        "zeCommandListAppendEventReset": 1782,
+        "zeCommandListAppendLaunchKernel": 2218,
+        "zeCommandListAppendMemoryCopy": 1,
+        "zeCommandListClose": 3,
+        "zeCommandListCreate": 3,
+        "zeCommandListCreateImmediate": 8,
+        "zeCommandListHostSynchronize": 25,
+        "zeCommandListImmediateAppendCommandListsExp": 2,
+        "zeContextMakeMemoryResident": 2,
+        "zeDriverGetExtensionFunctionAddress": 4,
+        "zeEventCreate": 1792,
+        "zeEventHostSynchronize": 1,
+        "zeEventPoolCreate": 28,
+        "zeKernelCreate": 65,
+        "zeKernelGetName": 130,
+        "zeKernelGetProperties": 65,
+        "zeKernelSetArgumentValue": 11896,
+        "zeKernelSetGroupSize": 2218,
+        "zeKernelSetIndirectAccess": 65,
+        "zeMemAllocDevice": 2,
+        "zeModuleCreate": 65,
+        "zeModuleGetProperties": 65,
+        "zexCounterBasedEventCreate2": 128
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096675618335.2,
+      "trace_end_us": 1792096676123138.5,
+      "gap_us": 504803.25,
+      "previous_operation": "zeCommandListAppendBarrier",
+      "next_operation": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 2,
+        "zeCommandListAppendEventReset": 1902,
+        "zeCommandListAppendLaunchKernel": 2362,
+        "zeCommandListClose": 3,
+        "zeCommandListCreate": 3,
+        "zeCommandListHostSynchronize": 26,
+        "zeCommandListImmediateAppendCommandListsExp": 2,
+        "zeDriverGetExtensionFunctionAddress": 2,
+        "zeEventCreate": 1920,
+        "zeEventPoolCreate": 30,
+        "zeKernelSetArgumentValue": 13348,
+        "zeKernelSetGroupSize": 2362
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1",
+      "trace_start_us": 1792096669625120.2,
+      "trace_end_us": 1792096670092180.0,
+      "gap_us": 467059.75,
+      "previous_operation": "strata::kernels::ep_send_rows(float*, float const*, int const*, int const*, int, long, unsigned int*, unsigned int*, unsigned int const*, void*)::ep_send_rows_kernel[SIMD32 {60; 1; 1} {256; 1; 1}]",
+      "next_operation": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 3,
+        "zeCommandListAppendEventReset": 1743,
+        "zeCommandListAppendLaunchKernel": 2107,
+        "zeCommandListAppendMemoryCopy": 6,
+        "zeCommandListClose": 3,
+        "zeCommandListCreate": 3,
+        "zeCommandListHostSynchronize": 30,
+        "zeCommandListImmediateAppendCommandListsExp": 3,
+        "zeContextMakeMemoryResident": 3,
+        "zeDriverGetExtensionFunctionAddress": 2,
+        "zeEventCreate": 1792,
+        "zeEventHostSynchronize": 1,
+        "zeEventPoolCreate": 28,
+        "zeKernelCreate": 16,
+        "zeKernelGetName": 32,
+        "zeKernelGetProperties": 16,
+        "zeKernelSetArgumentValue": 11106,
+        "zeKernelSetGroupSize": 2107,
+        "zeKernelSetIndirectAccess": 16,
+        "zeMemAllocDevice": 3,
+        "zeModuleCreate": 16,
+        "zeModuleGetProperties": 16,
+        "zexCounterBasedEventCreate2": 64
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096669640099.8,
+      "trace_end_us": 1792096670095017.2,
+      "gap_us": 454917.5,
+      "previous_operation": "dpct_kernel_name<strata::kernels::kv_append_q8_steps(signed char*, signed char*, unsigned short*, unsigned short*, int const*, int const*, int, float const*, float const*, int, int, strata::kernels::QsaShapes const&, void*, strata::kernels::KvHostPools const*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::kv_append_q8_kernel_b60fdc, dpct_kernel_scalar<1> >[SIMD32 {2; 4; 12} {64; 1; 1}]",
+      "next_operation": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 2,
+        "zeCommandListAppendEventReset": 1743,
+        "zeCommandListAppendLaunchKernel": 2080,
+        "zeCommandListAppendMemoryCopy": 1,
+        "zeCommandListClose": 2,
+        "zeCommandListCreate": 2,
+        "zeCommandListHostSynchronize": 18,
+        "zeCommandListImmediateAppendCommandListsExp": 2,
+        "zeDriverGetExtensionFunctionAddress": 1,
+        "zeEventCreate": 1792,
+        "zeEventHostSynchronize": 1,
+        "zeEventPoolCreate": 28,
+        "zeKernelCreate": 11,
+        "zeKernelGetName": 22,
+        "zeKernelGetProperties": 11,
+        "zeKernelSetArgumentValue": 10964,
+        "zeKernelSetGroupSize": 2080,
+        "zeKernelSetIndirectAccess": 11,
+        "zeModuleCreate": 11,
+        "zeModuleGetProperties": 11
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1",
+      "trace_start_us": 1792096670995036.5,
+      "trace_end_us": 1792096671202376.0,
+      "gap_us": 207339.5,
+      "previous_operation": "strata::kernels::ep_send_rows(float*, float const*, int const*, int const*, int, long, unsigned int*, unsigned int*, unsigned int const*, void*)::ep_send_rows_kernel[SIMD32 {30; 1; 1} {256; 1; 1}]",
+      "next_operation": "strata::kernels::ep_copy_uncached(void*, void const*, unsigned long, void*)::ep_copy_uncached_kernel[SIMD32 {64; 1; 1} {256; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 2,
+        "zeCommandListAppendEventReset": 58,
+        "zeCommandListAppendLaunchKernel": 59,
+        "zeCommandListAppendLaunchKernelWithArguments": 92,
+        "zeCommandListAppendMemoryCopy": 106,
+        "zeCommandListAppendMemoryFill": 39,
+        "zeCommandListClose": 1,
+        "zeCommandListCreate": 1,
+        "zeCommandListHostSynchronize": 462,
+        "zeCommandListImmediateAppendCommandListsExp": 3,
+        "zeEventCreate": 64,
+        "zeEventHostSynchronize": 104,
+        "zeEventPoolCreate": 1,
+        "zeKernelCreate": 2,
+        "zeKernelGetName": 4,
+        "zeKernelGetProperties": 2,
+        "zeKernelSetArgumentValue": 273,
+        "zeKernelSetGroupSize": 151,
+        "zeKernelSetIndirectAccess": 2,
+        "zeKernelSuggestGroupSize": 48,
+        "zeMemGetAllocProperties": 80,
+        "zeModuleCreate": 2,
+        "zeModuleGetProperties": 2
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096671024472.5,
+      "trace_end_us": 1792096671147602.0,
+      "gap_us": 123129.5,
+      "previous_operation": "zeCommandListAppendBarrier",
+      "next_operation": "zeCommandListAppendMemoryCopy(D2M)[117669888]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendMemoryCopy": 1,
+        "zeCommandListHostSynchronize": 17
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1",
+      "trace_start_us": 1792096673170356.8,
+      "trace_end_us": 1792096673277779.5,
+      "gap_us": 107422.75,
+      "previous_operation": "strata::kernels::ep_prefill_reduce_kernel<true>[SIMD32 {64; 1; 1} {256; 1; 1}]",
+      "next_operation": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 320,
+        "zeCommandListAppendMemoryCopy": 40,
+        "zeCommandListHostSynchronize": 23,
+        "zeCommandListImmediateAppendCommandListsExp": 1,
+        "zeEventHostSynchronize": 40,
+        "zeKernelSetGroupSize": 320,
+        "zeMemGetAllocProperties": 770
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1",
+      "trace_start_us": 1792096674269205.8,
+      "trace_end_us": 1792096674350524.8,
+      "gap_us": 81319.0,
+      "previous_operation": "strata::kernels::ep_send_rows(float*, float const*, int const*, int const*, int, long, unsigned int*, unsigned int*, unsigned int const*, void*)::ep_send_rows_kernel[SIMD32 {60; 1; 1} {256; 1; 1}]",
+      "next_operation": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 8,
+        "zeCommandListAppendEventReset": 207,
+        "zeCommandListAppendLaunchKernel": 229,
+        "zeCommandListAppendMemoryCopy": 2,
+        "zeCommandListClose": 6,
+        "zeCommandListCreate": 6,
+        "zeCommandListHostSynchronize": 539,
+        "zeCommandListImmediateAppendCommandListsExp": 8,
+        "zeDriverGetExtensionFunctionAddress": 2,
+        "zeEventCreate": 256,
+        "zeEventHostSynchronize": 4,
+        "zeEventPoolCreate": 4,
+        "zeKernelCreate": 2,
+        "zeKernelGetName": 4,
+        "zeKernelGetProperties": 2,
+        "zeKernelSetArgumentValue": 1055,
+        "zeKernelSetGroupSize": 229,
+        "zeKernelSetIndirectAccess": 2,
+        "zeModuleCreate": 2,
+        "zeModuleGetProperties": 2
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1",
+      "trace_start_us": 1792096666918552.5,
+      "trace_end_us": 1792096666984683.0,
+      "gap_us": 66130.5,
+      "previous_operation": "strata::kernels::ep_prefill_reduce_kernel<true>[SIMD32 {64; 1; 1} {256; 1; 1}]",
+      "next_operation": "strata::kernels::ep_copy_uncached(void*, void const*, unsigned long, void*)::ep_copy_uncached_kernel[SIMD32 {64; 1; 1} {256; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 468,
+        "zeCommandListAppendMemoryCopy": 2,
+        "zeCommandListHostSynchronize": 2,
+        "zeKernelCreate": 21,
+        "zeKernelGetName": 42,
+        "zeKernelGetProperties": 21,
+        "zeKernelSetGroupSize": 468,
+        "zeKernelSetIndirectAccess": 21,
+        "zeKernelSuggestGroupSize": 1,
+        "zeMemGetAllocProperties": 1120,
+        "zeModuleCreate": 21,
+        "zeModuleGetProperties": 15
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1",
+      "trace_start_us": 1792096670116124.0,
+      "trace_end_us": 1792096670179154.5,
+      "gap_us": 63030.5,
+      "previous_operation": "strata::kernels::ep_send_rows(float*, float const*, int const*, int const*, int, long, unsigned int*, unsigned int*, unsigned int const*, void*)::ep_send_rows_kernel[SIMD32 {10; 1; 1} {256; 1; 1}]",
+      "next_operation": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 6,
+        "zeCommandListAppendEventReset": 162,
+        "zeCommandListAppendLaunchKernel": 165,
+        "zeCommandListClose": 3,
+        "zeCommandListCreate": 3,
+        "zeCommandListHostSynchronize": 1415,
+        "zeCommandListImmediateAppendCommandListsExp": 4,
+        "zeEventCreate": 192,
+        "zeEventHostSynchronize": 2,
+        "zeEventPoolCreate": 3,
+        "zeKernelCreate": 12,
+        "zeKernelGetName": 24,
+        "zeKernelGetProperties": 12,
+        "zeKernelSetArgumentValue": 753,
+        "zeKernelSetGroupSize": 165,
+        "zeKernelSetIndirectAccess": 12,
+        "zeModuleCreate": 12,
+        "zeModuleGetProperties": 12
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096674281596.0,
+      "trace_end_us": 1792096674342499.8,
+      "gap_us": 60903.75,
+      "previous_operation": "zeCommandListAppendMemoryCopy(D2D)[122880]",
+      "next_operation": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {20; 7; 1} {256; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 8,
+        "zeCommandListAppendEventReset": 207,
+        "zeCommandListAppendLaunchKernel": 229,
+        "zeCommandListClose": 6,
+        "zeCommandListCreate": 6,
+        "zeCommandListHostSynchronize": 56,
+        "zeCommandListImmediateAppendCommandListsExp": 1,
+        "zeDriverGetExtensionFunctionAddress": 2,
+        "zeEventCreate": 256,
+        "zeEventHostSynchronize": 1,
+        "zeEventPoolCreate": 4,
+        "zeKernelCreate": 2,
+        "zeKernelGetName": 4,
+        "zeKernelGetProperties": 2,
+        "zeKernelSetArgumentValue": 1055,
+        "zeKernelSetGroupSize": 229,
+        "zeKernelSetIndirectAccess": 2,
+        "zeModuleCreate": 2,
+        "zeModuleGetProperties": 2
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096668956570.0,
+      "trace_end_us": 1792096669016718.5,
+      "gap_us": 60148.5,
+      "previous_operation": "dpct_kernel_name<strata::prefill::kv_append(float const*, float const*, long, long, int const*, long, unsigned short*, unsigned short*, signed char*, signed char*, unsigned short*, unsigned short*, void*, strata::kernels::KvHostPools const*, strata::kernels::KvHostPools const*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::kv_append_kernel_850222>[SIMD32 {100; 2; 8} {64; 1; 1}]",
+      "next_operation": "zeCommandListAppendMemoryCopy(D2M)[117669888]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendMemoryCopy": 1,
+        "zeCommandListHostSynchronize": 20
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096673187944.0,
+      "trace_end_us": 1792096673247922.8,
+      "gap_us": 59978.75,
+      "previous_operation": "dpct_kernel_name<strata::prefill::kv_append(float const*, float const*, long, long, int const*, long, unsigned short*, unsigned short*, signed char*, signed char*, unsigned short*, unsigned short*, void*, strata::kernels::KvHostPools const*, strata::kernels::KvHostPools const*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::kv_append_kernel_850222>[SIMD32 {100; 2; 8} {64; 1; 1}]",
+      "next_operation": "zeCommandListAppendMemoryCopy(D2M)[117669888]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendMemoryCopy": 1,
+        "zeCommandListHostSynchronize": 20
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096666860606.2,
+      "trace_end_us": 1792096666919377.8,
+      "gap_us": 58771.5,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {530; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 904,
+        "zeCommandListAppendMemoryCopy": 5,
+        "zeCommandListIsGraphCaptureEnabledExp": 2,
+        "zeDeviceGetProperties": 1,
+        "zeDeviceGetSubDevices": 1,
+        "zeEventHostSynchronize": 6,
+        "zeEventQueryStatus": 3,
+        "zeKernelCreate": 11,
+        "zeKernelGetName": 22,
+        "zeKernelGetProperties": 11,
+        "zeKernelSetGroupSize": 904,
+        "zeKernelSetIndirectAccess": 11,
+        "zeMemGetAllocProperties": 1802,
+        "zeModuleCreate": 11,
+        "zeModuleGetProperties": 6,
+        "zexCounterBasedEventCreate2": 64
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096673351803.0,
+      "trace_end_us": 1792096673410154.0,
+      "gap_us": 58351.0,
+      "previous_operation": "zeCommandListAppendBarrier",
+      "next_operation": "zeCommandListAppendMemoryCopy(D2M)[117669888]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendMemoryCopy": 1,
+        "zeCommandListHostSynchronize": 18
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096670205740.8,
+      "trace_end_us": 1792096670263659.5,
+      "gap_us": 57918.75,
+      "previous_operation": "zeCommandListAppendBarrier",
+      "next_operation": "zeCommandListAppendMemoryCopy(D2M)[117669888]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendMemoryCopy": 1,
+        "zeCommandListHostSynchronize": 18
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096670121775.5,
+      "trace_end_us": 1792096670170429.8,
+      "gap_us": 48654.25,
+      "previous_operation": "zeCommandListAppendBarrier",
+      "next_operation": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {10; 7; 1} {256; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 6,
+        "zeCommandListAppendEventReset": 162,
+        "zeCommandListAppendLaunchKernel": 165,
+        "zeCommandListClose": 3,
+        "zeCommandListCreate": 3,
+        "zeCommandListHostSynchronize": 30,
+        "zeCommandListImmediateAppendCommandListsExp": 1,
+        "zeEventCreate": 192,
+        "zeEventPoolCreate": 3,
+        "zeKernelCreate": 12,
+        "zeKernelGetName": 24,
+        "zeKernelGetProperties": 12,
+        "zeKernelSetArgumentValue": 753,
+        "zeKernelSetGroupSize": 165,
+        "zeKernelSetIndirectAccess": 12,
+        "zeModuleCreate": 12,
+        "zeModuleGetProperties": 12
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096671201902.8,
+      "trace_end_us": 1792096671239446.8,
+      "gap_us": 37544.0,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {532; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 908,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelSetGroupSize": 909,
+        "zeMemGetAllocProperties": 1815
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1",
+      "trace_start_us": 1792096674458803.5,
+      "trace_end_us": 1792096674493764.2,
+      "gap_us": 34960.75,
+      "previous_operation": "strata::kernels::ep_send_rows(float*, float const*, int const*, int const*, int, long, unsigned int*, unsigned int*, unsigned int const*, void*)::ep_send_rows_kernel[SIMD32 {60; 1; 1} {256; 1; 1}]",
+      "next_operation": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 2,
+        "zeCommandListAppendEventReset": 56,
+        "zeCommandListAppendLaunchKernel": 57,
+        "zeCommandListAppendMemoryCopy": 2,
+        "zeCommandListClose": 1,
+        "zeCommandListCreate": 1,
+        "zeCommandListHostSynchronize": 333,
+        "zeCommandListImmediateAppendCommandListsExp": 8,
+        "zeEventCreate": 64,
+        "zeEventHostSynchronize": 9,
+        "zeEventPoolCreate": 1,
+        "zeKernelSetArgumentValue": 260,
+        "zeKernelSetGroupSize": 57
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096667686898.5,
+      "trace_end_us": 1792096667721739.5,
+      "gap_us": 34841.0,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {519; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 618,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelCreate": 2,
+        "zeKernelGetName": 4,
+        "zeKernelGetProperties": 2,
+        "zeKernelSetGroupSize": 619,
+        "zeKernelSetIndirectAccess": 2,
+        "zeMemGetAllocProperties": 1235,
+        "zeModuleCreate": 2
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1",
+      "trace_start_us": 1792096674387811.2,
+      "trace_end_us": 1792096674422203.0,
+      "gap_us": 34391.75,
+      "previous_operation": "strata::kernels::ep_send_rows(float*, float const*, int const*, int const*, int, long, unsigned int*, unsigned int*, unsigned int const*, void*)::ep_send_rows_kernel[SIMD32 {60; 1; 1} {256; 1; 1}]",
+      "next_operation": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 2,
+        "zeCommandListAppendEventReset": 53,
+        "zeCommandListAppendLaunchKernel": 54,
+        "zeCommandListAppendMemoryCopy": 2,
+        "zeCommandListClose": 1,
+        "zeCommandListCreate": 1,
+        "zeCommandListHostSynchronize": 340,
+        "zeCommandListImmediateAppendCommandListsExp": 8,
+        "zeEventCreate": 64,
+        "zeEventHostSynchronize": 10,
+        "zeEventPoolCreate": 1,
+        "zeKernelSetArgumentValue": 243,
+        "zeKernelSetGroupSize": 54
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1",
+      "trace_start_us": 1792096675285422.8,
+      "trace_end_us": 1792096675318738.5,
+      "gap_us": 33315.75,
+      "previous_operation": "strata::kernels::ep_send_rows(float*, float const*, int const*, int const*, int, long, unsigned int*, unsigned int*, unsigned int const*, void*)::ep_send_rows_kernel[SIMD32 {60; 1; 1} {256; 1; 1}]",
+      "next_operation": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 2,
+        "zeCommandListAppendEventReset": 49,
+        "zeCommandListAppendLaunchKernel": 50,
+        "zeCommandListAppendMemoryCopy": 2,
+        "zeCommandListClose": 1,
+        "zeCommandListCreate": 1,
+        "zeCommandListHostSynchronize": 380,
+        "zeCommandListImmediateAppendCommandListsExp": 8,
+        "zeEventCreate": 64,
+        "zeEventHostSynchronize": 9,
+        "zeEventPoolCreate": 1,
+        "zeKernelSetArgumentValue": 221,
+        "zeKernelSetGroupSize": 50
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1",
+      "trace_start_us": 1792096675215108.0,
+      "trace_end_us": 1792096675248359.0,
+      "gap_us": 33251.0,
+      "previous_operation": "strata::kernels::ep_send_rows(float*, float const*, int const*, int const*, int, long, unsigned int*, unsigned int*, unsigned int const*, void*)::ep_send_rows_kernel[SIMD32 {60; 1; 1} {256; 1; 1}]",
+      "next_operation": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 2,
+        "zeCommandListAppendEventReset": 49,
+        "zeCommandListAppendLaunchKernel": 50,
+        "zeCommandListAppendMemoryCopy": 2,
+        "zeCommandListClose": 1,
+        "zeCommandListCreate": 1,
+        "zeCommandListHostSynchronize": 328,
+        "zeCommandListImmediateAppendCommandListsExp": 8,
+        "zeEventCreate": 64,
+        "zeEventHostSynchronize": 10,
+        "zeEventPoolCreate": 1,
+        "zeKernelSetArgumentValue": 221,
+        "zeKernelSetGroupSize": 50
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096670328200.0,
+      "trace_end_us": 1792096670359428.0,
+      "gap_us": 31228.0,
+      "previous_operation": "zeCommandListAppendMemoryCopy(D2D)[40960]",
+      "next_operation": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {10; 7; 1} {256; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 4,
+        "zeCommandListAppendEventReset": 108,
+        "zeCommandListAppendLaunchKernel": 110,
+        "zeCommandListClose": 2,
+        "zeCommandListCreate": 2,
+        "zeCommandListHostSynchronize": 18,
+        "zeCommandListImmediateAppendCommandListsExp": 1,
+        "zeContextMakeMemoryResident": 2,
+        "zeEventCreate": 128,
+        "zeEventHostSynchronize": 1,
+        "zeEventPoolCreate": 2,
+        "zeKernelSetArgumentValue": 502,
+        "zeKernelSetGroupSize": 110,
+        "zeMemAllocDevice": 2,
+        "zexCounterBasedEventCreate2": 64
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096673476395.0,
+      "trace_end_us": 1792096673507269.5,
+      "gap_us": 30874.5,
+      "previous_operation": "zeCommandListAppendMemoryCopy(D2D)[40960]",
+      "next_operation": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {10; 7; 1} {256; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendBarrier": 4,
+        "zeCommandListAppendEventReset": 108,
+        "zeCommandListAppendLaunchKernel": 110,
+        "zeCommandListClose": 2,
+        "zeCommandListCreate": 2,
+        "zeCommandListHostSynchronize": 18,
+        "zeCommandListImmediateAppendCommandListsExp": 1,
+        "zeContextMakeMemoryResident": 2,
+        "zeEventCreate": 128,
+        "zeEventHostSynchronize": 1,
+        "zeEventPoolCreate": 2,
+        "zeKernelSetArgumentValue": 502,
+        "zeKernelSetGroupSize": 110,
+        "zeMemAllocDevice": 2,
+        "zexCounterBasedEventCreate2": 64
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1",
+      "trace_start_us": 1792096671239360.8,
+      "trace_end_us": 1792096671266867.8,
+      "gap_us": 27507.0,
+      "previous_operation": "strata::kernels::ep_prefill_reduce_kernel<true>[SIMD32 {64; 1; 1} {256; 1; 1}]",
+      "next_operation": "strata::kernels::ep_copy_uncached(void*, void const*, unsigned long, void*)::ep_copy_uncached_kernel[SIMD32 {64; 1; 1} {256; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 468,
+        "zeCommandListAppendMemoryCopy": 2,
+        "zeCommandListHostSynchronize": 2,
+        "zeKernelSetGroupSize": 467,
+        "zeKernelSuggestGroupSize": 1,
+        "zeMemGetAllocProperties": 1120
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096671719566.8,
+      "trace_end_us": 1792096671746936.2,
+      "gap_us": 27369.5,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {587; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 673,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelSetGroupSize": 674,
+        "zeMemGetAllocProperties": 1345
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096667030822.0,
+      "trace_end_us": 1792096667057576.2,
+      "gap_us": 26754.25,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {545; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 568,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelCreate": 1,
+        "zeKernelGetName": 2,
+        "zeKernelGetProperties": 1,
+        "zeKernelSetGroupSize": 569,
+        "zeKernelSetIndirectAccess": 1,
+        "zeMemGetAllocProperties": 1135,
+        "zeModuleCreate": 1
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096671514975.8,
+      "trace_end_us": 1792096671541470.8,
+      "gap_us": 26495.0,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {540; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 663,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelSetGroupSize": 664,
+        "zeMemGetAllocProperties": 1325
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096667865808.2,
+      "trace_end_us": 1792096667892302.2,
+      "gap_us": 26494.0,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {589; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 658,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelSetGroupSize": 659,
+        "zeMemGetAllocProperties": 1315
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096672125354.0,
+      "trace_end_us": 1792096672151814.5,
+      "gap_us": 26460.5,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {588; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 663,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelSetGroupSize": 664,
+        "zeMemGetAllocProperties": 1325
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096667441857.0,
+      "trace_end_us": 1792096667468193.2,
+      "gap_us": 26336.25,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {594; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 658,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelSetGroupSize": 659,
+        "zeMemGetAllocProperties": 1315
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1",
+      "trace_start_us": 1792096667057322.2,
+      "trace_end_us": 1792096667083475.0,
+      "gap_us": 26152.75,
+      "previous_operation": "strata::kernels::ep_prefill_reduce_kernel<true>[SIMD32 {64; 1; 1} {256; 1; 1}]",
+      "next_operation": "strata::kernels::ep_copy_uncached(void*, void const*, unsigned long, void*)::ep_copy_uncached_kernel[SIMD32 {64; 1; 1} {256; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 410,
+        "zeCommandListAppendMemoryCopy": 1,
+        "zeCommandListHostSynchronize": 2,
+        "zeKernelCreate": 13,
+        "zeKernelGetName": 26,
+        "zeKernelGetProperties": 13,
+        "zeKernelSetGroupSize": 409,
+        "zeKernelSetIndirectAccess": 13,
+        "zeMemGetAllocProperties": 955,
+        "zeModuleCreate": 13,
+        "zeModuleGetProperties": 13
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096668311686.5,
+      "trace_end_us": 1792096668337614.2,
+      "gap_us": 25927.75,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {549; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 653,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelSetGroupSize": 654,
+        "zeMemGetAllocProperties": 1305
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096667238908.2,
+      "trace_end_us": 1792096667264731.5,
+      "gap_us": 25823.25,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {543; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 638,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelSetGroupSize": 639,
+        "zeMemGetAllocProperties": 1275
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096672371351.8,
+      "trace_end_us": 1792096672396884.0,
+      "gap_us": 25532.25,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {385; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 638,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelSetGroupSize": 639,
+        "zeMemGetAllocProperties": 1275
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096668113162.2,
+      "trace_end_us": 1792096668138635.8,
+      "gap_us": 25473.5,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {390; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 638,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelSetGroupSize": 639,
+        "zeMemGetAllocProperties": 1275
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096672788956.8,
+      "trace_end_us": 1792096672814364.8,
+      "gap_us": 25408.0,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {570; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 638,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelSetGroupSize": 639,
+        "zeMemGetAllocProperties": 1275
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096668530726.5,
+      "trace_end_us": 1792096668556007.2,
+      "gap_us": 25280.75,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {574; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 633,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelSetGroupSize": 634,
+        "zeMemGetAllocProperties": 1265
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096672569556.8,
+      "trace_end_us": 1792096672594837.0,
+      "gap_us": 25280.25,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {554; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 643,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelSetGroupSize": 644,
+        "zeMemGetAllocProperties": 1285
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096671956044.2,
+      "trace_end_us": 1792096671980689.5,
+      "gap_us": 24645.25,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {522; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 618,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelSetGroupSize": 619,
+        "zeMemGetAllocProperties": 1235
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096668357766.5,
+      "trace_end_us": 1792096668382378.5,
+      "gap_us": 24612.0,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {479; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 613,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelSetGroupSize": 614,
+        "zeMemGetAllocProperties": 1225
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096668652609.0,
+      "trace_end_us": 1792096668677080.0,
+      "gap_us": 24471.0,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {554; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 613,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelSetGroupSize": 614,
+        "zeMemGetAllocProperties": 1225
+      }
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "trace_start_us": 1792096667489369.2,
+      "trace_end_us": 1792096667513790.2,
+      "gap_us": 24421.0,
+      "previous_operation": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {545; 1; 1} {256; 1; 1}]",
+      "next_operation": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+      "overlapping_host_L0_API_names": {
+        "zeCommandListAppendLaunchKernelWithArguments": 593,
+        "zeCommandListAppendMemoryCopy": 3,
+        "zeKernelSetGroupSize": 594,
+        "zeMemGetAllocProperties": 1185
+      }
+    }
+  ]
+}

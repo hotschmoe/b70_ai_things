@@ -1,0 +1,34 @@
+**Disposition: accept the bounded census as a PASS at the stated scope.** Both requests matched the S16 prefixes, work and usage are finite and paired, the ring closed with zero drops, teardown and health were normal, and the one parse rule held. It is a ranking of observed current operations and nothing more.
+
+**Evidence overreach to correct in the packet**
+
+- The CPU whole cycle median and the GPU cycle median are both near 57 ms. That coincidence invites a "GPU bound" reading. No clock join is allowed, so the packet must not say the CPU is waiting on the GPU or the reverse.
+- The 0.785 ms from pair return to the next verifier submit is described as "mainly PLE readiness". That is an inference from ordering, not a measured dependency. Record it as an unattributed span.
+- The service medians are listed next to each other and sum to something near the cycle. They are per-family service, overlap unknown, and must stay labelled non-additive.
+- The C6 head count of 24 against CPU coverage of 22 plus 2 stays open. Do not let "dummy warm" become the explanation by repetition.
+- The event reset family and the EP wait are instrumentation-sensitive or structural. Neither is removable work and the packet already says so. Keep it that way.
+
+**One next source-only investigation**
+
+Audit the integer inner dot of the routed expert MMVQ kernels, the native expert path plus the IQ3 multi-expert launcher, in the already extracted all-main AOT ISA. The question is narrow and answerable without a GPU:
+
+1. Does the compiled kernel use the hardware four-wide int8 dot instruction for the codebook-times-Q8 products, or scalar multiply-adds after byte unpacking?
+2. What width are the weight and codebook loads, and does the IQ3 grid table live in constant memory, SLM or registers?
+3. Is the integer accumulation across the block done in integer registers until the single float scale multiply?
+
+Why this lever and not the alternatives on offer:
+
+- It is the largest reviewed family. Routed gate, up and down projections are about 7.5 ms of the 12.7 ms non-vocabulary MMVQ service, and nothing else in the census is both large and unexamined.
+- The exactness argument is by construction. Integer products and sums are exact in any order, so re-lowering the inner dot changes no bits as long as the final float scale product keeps its existing order. This is the only lever in the census where math preservation is provable rather than tolerance-argued, unlike the F32 HC to BF16 XMX idea, which is correctly set aside.
+- It is distinct from the rejected items. It is a vector ALU instruction and load width question, not XMX or DPAS mapping, not register budget, not software bit packing, not the shared stream or commit ordering.
+- The S70 same-input pair lead is weaker. The source already shares the quantized input and the convergence dependency makes the gain unbounded on both sides. Keep it as the second candidate only if the ISA audit closes clean.
+
+**Exit criteria for the audit, decided before reading**
+
+- If the dot instruction is already emitted and loads are already wide, record "closed, no lever" and do not build anything.
+- If scalar multiply-adds or narrow loads are present, the deliverable is an exact instruction count per block and the single source expression responsible, with a bit-exact argument written down before any candidate kernel is proposed.
+- No percentage gate is attached. A build and GPU arm, if ever, is a root decision after the written exactness proof and a caller reachability table, the lesson from S93.
+
+**Limits that carry forward**
+
+Cold and extra head counts are retained, not explained. Kernel name and grid still do not identify weight roles, so the audit must pin the expert path by source call site, not by trace name. No new throughput, stability or cache evidence exists. S30 recovery stands, the absolute targets remain unmet.

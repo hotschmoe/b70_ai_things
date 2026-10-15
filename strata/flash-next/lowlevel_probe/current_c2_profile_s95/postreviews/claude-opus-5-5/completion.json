@@ -1,0 +1,120 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 38.252633488038555,
+  "launch_exception": null,
+  "source_packet_sha256": "f10917f2e067f1b530f3130e692a99c88f21ccc12eb630dc38c284544a717ce9",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 178248,
+      "stop_reason": "end_turn",
+      "session_id": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "total_cost_usd": 0.7236132,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 7472,
+        "cache_read_input_tokens": 49504,
+        "output_tokens": 2451,
+        "output_tokens_details": {
+          "thinking_tokens": 1003
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 7472,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 2451,
+            "cache_read_input_tokens": 49504,
+            "cache_creation_input_tokens": 7472,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 7472
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 8,
+          "outputTokens": 12685,
+          "thinkingTokens": 5293,
+          "cacheReadInputTokens": 96326,
+          "cacheCreationInputTokens": 56327,
+          "webSearchRequests": 0,
+          "costUSD": 0.7236132,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# S95 post-decision review\n\n## Disposition: accept the bounded census\n\nThe collection is valid and closed:\n\n- The S16 prefixes, text, SSE and usage passed.\n- The pair produced 21 paired windows and 2 solo, with client lifetimes overlapping.\n- The CPU ring was complete: 820 of 820 records, `dropped0`.\n- One raw parse ran after a normal QUIT, CID and name were gone, the wrapper exited 0, and health passed.\n- Selecting the 12 structural cycles followed the stated rules (not the fastest cycles), and the cold, solo and tail data were retained.\n\nIt is accepted as an **operation ranking and association census only**.\n\n## Evidence overreach to correct\n\n1. **The family service medians are not a wall-time share.** They are 12.68 ms (MMVQ), 6.72 ms (HC), 4.66 ms (heads) and 3.07 ms (EP wait) against a 57.07 ms cycle median. Do not subtract these from the cycle to infer GPU idle, overlap or headroom. The 57.07 ms GPU cycle and the 57.12 ms CPU cycle agreeing is coincidental consistency, not a join.\n2. **\"\u2192next verifier submit 0.785 ms mainly PLE readiness\"** is a CPU-marker association. Record it as \"PLE-associated\", not as caused by PLE.\n3. **Routed GU/DOWN (7.50 ms) is a subset of the 12.68 ms MMVQ family.** The analysis groups by kernel name and grid, so it cannot attribute time to individual weights or roles.\n4. **The 24 C6 heads on the GPU vs 22 S6 + 2 S3 on the CPU stays unresolved.** Do not infer a dummy warm-up or the capture origin.\n5. **Event-reset time (2.24 ms) and EP wait** are not removable production work.\n6. **The 85\u201387% acceptance and the 64-token pair** are instrumented single-sample work, not throughput.\n\n## Next: one source-only audit of the routed IQ3_XXS/IQ3_S MMVQ lowering\n\n**Target.** The routed native gate-up/down family (about 7.5 ms diagnostic). It is the largest single subfamily inside the largest family, and the C2 replay runs it at multiple activation columns (wide MMVQ, MAXC 8).\n\n**The question.** For the selected compiled ISA of the native IQ3 MMVQ, and then the IQ3_S multi-NC path, is each quantized weight block decoded exactly once per work item and reused across all active columns? Or does the inner loop repeat any of these per column:\n\n- the grid/codebook gather,\n- the sign unpack,\n- the scale extraction?\n\nAlso identify where the codebook lives (constant, SLM, global or GRF) and the load instruction class in the hot loop.\n\n**Why it is distinct from the rejected work:**\n- Not SWAR (S65): no new arithmetic packing.\n- Not MORE rows (S73) or GRF sizing.\n- Not a DPAS/matrix mapping (S75).\n- Not the same-input projection pairing (S70).\n- It keeps the exact math. The integer dot products and their reduction order are unchanged, so results stay bitwise-identical and no tolerance changes are needed.\n\n**Method, all source and offline only:**\n- Map the kernel source to the exact ISA in the audited image, using the existing 13-tag binding.\n- Count the decode and gather instructions per weight block versus per column.\n- Compute static weight bytes per call from shapes and format, and divide by the median service time. Label the result as **derived bytes over service time**, not measured traffic or bandwidth.\n\n**Go/no-go for any later build.** Proceed only if the ISA shows column-redundant decode or codebook gathers inside the per-column loop, and only if the fix keeps reduction order bitwise-identical. If decode is already hoisted, close the lever and record the finding. Do not fall back to a flag sweep.\n\n**Payoff ceiling, stated honestly.** At most it reduces part of a 7.5 ms diagnostic family. Because the family timings are not additive, the wall-clock gain is unknown until a future matched serving gate. That is still a larger plausible lever than any of the roughly 1% flag campaigns, and it costs no GPU time to settle.",
+      "ttft_ms": 17600,
+      "type": "result",
+      "duration_ms": 37250,
+      "uuid": "83e42d69-a9d8-4acd-a12e-854ae6b3577a",
+      "ttft_stream_ms": 1837,
+      "time_to_request_ms": 80,
+      "first_content_frame_ms": 1837,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

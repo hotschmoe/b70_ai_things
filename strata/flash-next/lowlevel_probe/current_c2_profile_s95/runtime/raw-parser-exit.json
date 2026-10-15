@@ -1,0 +1,19 @@
+{
+  "command": [
+    "/usr/bin/python3",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-analysis-prep/analyze_trace.py",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep/run/trace/strata-attn-val.467.json",
+    "--timebase",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep/run/timebase-before.json",
+    "--start-us",
+    "1792096679003782.5",
+    "--end-us",
+    "1792096688558028.0",
+    "--output",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep/run/analysis/gpu"
+  ],
+  "exit": 0,
+  "elapsed_s": 33.18053516902728,
+  "one_full_raw_JSON_parse_only": true,
+  "scope": "Optimized overlap-query postprocessor only; executed runtime inputs unchanged."
+}

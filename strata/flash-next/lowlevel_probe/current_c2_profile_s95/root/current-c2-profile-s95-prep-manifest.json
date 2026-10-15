@@ -1,0 +1,79 @@
+{
+  "status": "FROZEN_SOURCE_ROOT_OUTPUT_COUNTS_ADDED_UNEXECUTED",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep",
+  "file_count": 14,
+  "bytes": 74776,
+  "files": [
+    {
+      "path": "README.txt",
+      "bytes": 5256,
+      "sha256": "28e1636d03d1f15fe1cf4e2984d68ad02869a5d1c1f5785cea96cf78bf9fa4cc"
+    },
+    {
+      "path": "analyze_trace.py",
+      "bytes": 9996,
+      "sha256": "dcef349cd201c9e64cf8cb9c87c7724df59086da8127bd9321988d5fe079165d"
+    },
+    {
+      "path": "calibrate.py",
+      "bytes": 1213,
+      "sha256": "9bedd1a11d0a7a5763074f150b2882c4ea0976eedf78950e52f638eab8a7e5f9"
+    },
+    {
+      "path": "clock_bridge.py",
+      "bytes": 1424,
+      "sha256": "b3a2fa2d75e49fa878f20166a3e3596143f054e03640ad8b627c6e811fdd0ad9"
+    },
+    {
+      "path": "config.json",
+      "bytes": 2481,
+      "sha256": "9dfb790bcd90624886ac8e5a1ddf36af6c24cfe5c5bac35ed8a64fb1a26f3e75"
+    },
+    {
+      "path": "controller.py",
+      "bytes": 14558,
+      "sha256": "419b398e20e75235cd08f71b62338069f40c8a497a81a1e73ce72f8bef6b9c68"
+    },
+    {
+      "path": "cpu_markers.py",
+      "bytes": 15240,
+      "sha256": "25b1b1d0d176e069d624d7eeb9cd49d257f53bf995540d404598b42710dbb51d"
+    },
+    {
+      "path": "expected-source.sha256",
+      "bytes": 3841,
+      "sha256": "3b369c8644dc4bbc8274d764cad7a9fbc205e402eab24b5f09fd6977b865b303"
+    },
+    {
+      "path": "inputs.json",
+      "bytes": 2373,
+      "sha256": "e5e08fe968b360da8856f98b0afa2136444699ef791124add3aeade2aab26b17"
+    },
+    {
+      "path": "launch.sh",
+      "bytes": 1964,
+      "sha256": "b1fb047f503bff3fc0553250e877436d47672b69633ca3535b75f80648062b6f"
+    },
+    {
+      "path": "pair.py",
+      "bytes": 7256,
+      "sha256": "2e6ab3aee41358d5c8e8a5cef6455e90676bf84f18b151ab02ec149470247154"
+    },
+    {
+      "path": "preparation-checks.json",
+      "bytes": 1255,
+      "sha256": "f7b3f364f72767c73cf0f9a2ad7ccb215bb60d141bfe0499c701b2ff332f1710"
+    },
+    {
+      "path": "stop.py",
+      "bytes": 7271,
+      "sha256": "47b3d1e8afd0f7754f1894c9cb6ea0bfd0cfb0d1c6f0c548a6028633d862ae13"
+    },
+    {
+      "path": "trace-engine.sh",
+      "bytes": 648,
+      "sha256": "0d0ef861b68fd4db57f7c20eb7f164bc7601081ef81a894b5d945e126d08e226"
+    }
+  ],
+  "scope": "No GPU/build/model/trace execution. Previous unexecuted rebind manifest and changed sources preserved outside root."
+}

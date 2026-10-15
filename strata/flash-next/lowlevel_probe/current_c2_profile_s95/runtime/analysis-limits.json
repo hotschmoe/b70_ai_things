@@ -1,0 +1,16 @@
+{
+  "status": "SEPARATE_CPU_GPU_DIAGNOSTICS_REQUIRE_ROOT_REVIEW",
+  "native_steady_to_MONOTONIC_identity": "UNVERIFIED",
+  "native_to_trace_timestamp_join_allowed": false,
+  "ordinal_reconciliation_only": true,
+  "no_speed_qualification": true,
+  "inadequate_replay_cycles": "INCONCLUSIVE_NO_RERUN",
+  "coverage_queries": "Sorted host API interval sweep preserves strict overlap, tested on16 CPU-only boundary/nested/duplicate/zero queries; not a GPU runtime change.",
+  "limits": [
+    "No physical idle/bandwidth/traffic/removable-gap claim.",
+    "No cross-card clock join or additive CPU/GPU budgets.",
+    "Structural C2x2/EP48 patterns require motif/nativecounter/CPUrole reconciliation.",
+    "Host L0 fully-contained counts and boundarycrossers separate; not total callstarts.",
+    "Allcold/solo/tail retained; kernelnames/grids mayconflateweights/sharedroles."
+  ]
+}

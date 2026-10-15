@@ -1,0 +1,120 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 54.125192901992705,
+  "launch_exception": null,
+  "source_packet_sha256": "df3bf40d0a4b47b6cca305cd73821096f3e9b5631556b6ce1e3ae29a61411c67",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 141081,
+      "stop_reason": "end_turn",
+      "session_id": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "total_cost_usd": 0.6049084,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 21826,
+        "cache_read_input_tokens": 27678,
+        "output_tokens": 3937,
+        "output_tokens_details": {
+          "thinking_tokens": 2349
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 21826,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 3937,
+            "cache_read_input_tokens": 27678,
+            "cache_creation_input_tokens": 21826,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 21826
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 6,
+          "outputTokens": 10234,
+          "thinkingTokens": 4290,
+          "cacheReadInputTokens": 46822,
+          "cacheCreationInputTokens": 48855,
+          "webSearchRequests": 0,
+          "costUSD": 0.6049084,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# S95 instrumentation-source review\n\n## Disposition: conditional GO\n\nI found no structural blocker. The lifecycle is sound:\n\n- The profiler starts paused and is injected at process start. `resume` happens before the first request, and readiness asserts that no capture was logged before collection.\n- Pause and stop run in `finally`, the stop path in `stop.py` works on its own, and abnormal teardown hands off to the root recovery ladder with no automatic health checks.\n- The full raw parse runs only after a closed health pass.\n\nThere are four read-only conditions to close before the GPU run. Any one that fails should be **HOLD**.\n\n1. **Session name parity.** `trace-engine.sh` hardcodes `--session s95currentC2`, while `controller.control` and the `stop.py` cleanup use `I['session']`. If these differ, `resume` fails and you lose the lease. Confirm `inputs.json` says `s95currentC2`, or derive both from one source.\n2. **`--batch 2` reaches the engine.** `config.json` has no `--batch` and relies on `\"parallel\": 2`. The S93 argv showed `--batch 2` appended last, which is consistent with `server_intel.py` adding it, but readiness never asserts this. Add one assert that the first line of `engine.log` contains `--batch 2`. Without it, C2 pairing can silently degrade to solo, and you would only notice afterwards.\n3. **Native summary timing.** `pair.py` waits about 10 s for the `strata batch pair head:` and `strata batch: N windows` lines. Confirm in the source that these print per request or per idle, not only at QUIT. If they print only at QUIT, the pair fails closed every time and the lease is wasted.\n4. **Environment parity with S94.**\n   - The env must equal the audited S94 production env, with only `HOST_BOUNDARY=1` and `TRACE=1` added.\n   - Confirm `STRATA_BATCH_MTP_PLE_PREFETCH_DIAG=1` is part of the baseline, not a new diagnostic that changes behavior.\n   - `XMX0` and `ROT0` are asserted in both config and probe, which is good.\n\n## Minor issues (non-blocking, fail-closed)\n\n- **`ring_snapshot` decoding.** It decodes a partially written log with strict UTF-8. A torn multibyte character would raise instead of retrying. The log is very likely ASCII, so this is low risk; `errors='replace'` or a byte-level parse would be safer.\n- **`start()` readiness errors.** Only `OSError` and `TimeoutError` are retried. A partial-JSON `ValueError`, or an assertion racing a log line that appears just after `loaded`, aborts `start()` while the server keeps the lease. Cleanup still works through `attempt.cid` and `stop.py`, so this is acceptable as long as root knows that path.\n- **Flush canary contamination.** If the optional post-stop canary is sent, it adds to the process-cumulative PLE and native counters. `aggregate-proof` already says so, and the CPU ring snapshot is taken before it. Keep those counters out of pair attribution.\n- **`capture.*(failed|produced no graph)`.** The regex is case-insensitive over the full log. This fails closed on benign text, which is acceptable.\n\n## Evidence limits\n\nThese are already encoded correctly in the code:\n\n- The host Q6 marker shows host selection only, not GPU dispatch.\n- The S16 prefix match covers text, not token IDs.\n- The calibration covers BOOTTIME/RAW against the client clock only. The native steady clock remains unjoined, there is no cross-card join, and nothing here supports an additive budget.\n- Kernel names and grids cannot separate shared-expert projections from other dense projections.\n- Too few full S6/A2 replay cycles means the result is **INCONCLUSIVE with no rerun**.\n- An instrumented wall time or `aggregate_output_tps` in `pair.json` is not speed evidence. Either label it as instrumented-only in the report or drop it.\n\n## Dev-loop efficiency\n\n- **Good:**\n  - One pair with no warm-up and no matched OFF trace.\n  - The S32 parser reused byte-exact.\n  - A single parse after closure.\n  - Reusing S94 health only after a continuity audit.\n- **The four conditions cost seconds of source reading.** Each one, if missed, burns a full startup of about 20 minutes plus the lease. That is the same lesson as S93: prove the actual argv and logging contract before the GPU run.\n- **After the trace:** make exactly one mechanism decision, choosing between dense/shared/HC/head work and EP/PLE readiness. Do not schedule a follow-up trace matrix.",
+      "ttft_ms": 32941,
+      "type": "result",
+      "duration_ms": 53172,
+      "uuid": "981283a0-2a0e-4fa3-80ae-f8f24f2c0fb3",
+      "ttft_stream_ms": 1856,
+      "time_to_request_ms": 82,
+      "first_content_frame_ms": 1857,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

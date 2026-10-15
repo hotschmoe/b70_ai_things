@@ -1,0 +1,10 @@
+{
+  "status": "ROOT_POST_REVIEW_OUTPUT_ONLY_REFINEMENT",
+  "preserved": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-before-output-counts",
+  "old_manifest_sha256": "96e9eef4ba3e39b5e90eb4f740008ebfbfa22a4fca9f9dc0eaaf6138b6b22101",
+  "new_manifest_sha256": "f807471427f06c7c0af027af4370c6e0e67fec2394266dfc0502d28908c86419",
+  "old_analyzer_sha256": "667ce9234f7897f2120f39ac54b12f1c359ea030eca671dc65699a1d44e0c119",
+  "new_analyzer_sha256": "dcef349cd201c9e64cf8cb9c87c7724df59086da8127bd9321988d5fe079165d",
+  "change": "Report total raw/complete and selected complete event counts in existing cycles/census JSON; no selection/clock/GPU/controller logic change. Existing no-GPU window already raises rather than passes.",
+  "GPU_executed": false
+}

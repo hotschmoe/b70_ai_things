@@ -1,0 +1,23 @@
+{
+  "start_us": 1792096686877035.5,
+  "end_us": 1792096687561348.5,
+  "trace_start_us": 1792096674533156.0,
+  "trace_end_us": 1792096675217469.0,
+  "cycle_indices": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "cycles": 12,
+  "timestamp_shift_us": 12343879.45,
+  "status": "PROPOSED_INTERIOR_REQUIRES_REVIEW"
+}

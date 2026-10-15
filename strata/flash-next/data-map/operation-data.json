@@ -1,7 +1,7 @@
 {
  "schema": 1,
  "title": "Strata Flash-Next data map",
- "snapshot": "2026-10-15: historical S22 operation rows; annotations through S94 activated/unmatched native work, S93 failed activation and S92 private value proof. Historical operation service/rollups remain unchanged.",
+ "snapshot": "2026-10-15: historical S22 operation rows; separate S95 current C2 diagnostic CSV/census plus S94 unmatched-work annotations. Historical operation service/rollups remain unchanged.",
  "scope": "Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two Arc Pro B70 cards, Strata SYCL engine, EP/PUSH, batch MTP depth2 (opt-in), two 200000-token slots, INT8 KV, 32 GiB / 4-entry RAM parking, all 24576 experts resident (7152 on GPU0 + 17424 on GPU1), greedy.",
  "warnings": [
   "Trace service times overlap: within a card (engines), across cards, and with CPU wall time. They are NOT additive and are not a latency budget.",
@@ -17,7 +17,9 @@
   "S91 actual host metadata coalesces despite distinct attention device images: GPU comparison held. The exact retained S13 probe also selects shared public metadata, so its distinct value-candidate correctness/neutrality attribution is unsupported; historical operation rows/logs remain unchanged.",
   "S92 passes corrected-binding private36-case value pipeline: full32 unmasked improves, masked32 regresses. Subsequent productionCAP2051 numeric-only three-seed gate PASS; no serving/default promotion or new historical operation timing.",
   "S93 FAILED_ACTIVATION: current fixed resident KvPlan mode0 excludes stagedmode1 caller guard. CAP/main binding PASS does not prove caller eligibility; no candidate speed/neutrality result, timed_summary null.",
-  "S94 value candidate HOST activates after caller-only resident fix, but offered drafts207OFF/205ON fail native-work parity at first4K. No candidate speed/neutrality/regression or benignnondeterminism conclusion; defaultOFF, no retry."
+  "S94 value candidate HOST activates after caller-only resident fix, but offered drafts207OFF/205ON fail native-work parity at first4K. No candidate speed/neutrality/regression or benignnondeterminism conclusion; defaultOFF, no retry.",
+  "S95 currentC2 diagnostic is separate:859CSVrows,12reviewed GPUcycles5..16, no native/trace/peer-clockjoin or additivewallbudget. Whole24C6 vsCPU22S6+2S3 leaves2C6unattributed, not proven dummywarm/admission/capture.",
+  "S95post: routed nativeGU/down7.504495ms and allnonvocabMMVQ12.680488ms are DISJOINT name predicates, not subset/payoffpercent. Priorattention13tagbinding is notexpertISA; no allmainISAextraction or integeralgebra-only bitguarantee."
  ],
  "status_legend": {
   "measured": "Directly observed in a retained trace summary, native log, or clean benchmark (evidence path given). Trace values are diagnostic.",
@@ -69,7 +71,8 @@
    "../../../docs/20261015_strata_attention_binding_audit.md (S91 CPU-only host binding/resource audit and S13 candidate-attribution correction)",
    "../../../docs/20261015_strata_attention_value_pipeline.md (S92 corrected-binding value pipeline primitive, masked regression and CAP2112/2051 gap)",
    "docs/20261015_strata_attention_value_serving.md",
-   "docs/20261015_strata_attention_value_resident.md"
+   "docs/20261015_strata_attention_value_resident.md",
+   "docs/20261015_strata_current_c2_profile.md"
   ],
   "results_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
   "prototype_binary": "S26 CPU-only strata-head-pair-s26 SHA256264f221e2c1b02d4bdd9b332c46f91e91bf4f6301afbdabe563df5ff2a16e44a; not GPU served; default pair option OFF.",
@@ -288,6 +291,18 @@
    "scope": "Residentcaller-only/sourcebuildbindingPASS; HOSTmarker1 but offered207/205drafts unmatched, no servingeffect. Actual Opus34.340s/Fable20.127s/rootfullread acceptkeepOFF/park/pivot; root correction preserves crossbinary/process scope.",
    "post_manifest_sha256": "4d7171f5ee54af72c7ad1c564e26e83f9c484bd7a896f842461fc87c9a75208f",
    "post_disposition": "attn-value-resident-s94-post-reviews-20261015/root-post-resolution.json"
+  },
+  "current_c2_profile_s95": {
+   "report": "docs/20261015_strata_current_c2_profile.md",
+   "records": "strata/flash-next/lowlevel_probe/current_c2_profile_s95/README.md",
+   "canonical_operations_csv": "strata/flash-next/lowlevel_probe/current_c2_profile_s95/runtime/analysis/gpu/operations.csv",
+   "runtime": "current-c2-profile-s95-root-runtime-decision.json",
+   "analysis": "current-c2-profile-s95-analysis-followup/{facts,extended-mmvq-and-cold-limits}.json",
+   "trace_sha256": "1139c4c8cc9a4b0737a6c57e67a8b717151ec4276714fa355fb48e3cd9ab3583",
+   "completed_manifest_sha256": "132b4e91433dbdfc76450f32985a5f860c48c6bfb469a013ccaa2d68f4dad22e",
+   "scope": "ONE107/64each d94e VALUE0/QSA0/Q6OFF/HB1TRACE1.12GPUcycles/16CPUreplaywindows ordinallyseparate, extra2C6unresolved. ActualpostOpus38.253/Fable49.759/rootfullread acceptcensus/source-only routedexpert integerdot/load/decode audit. No newbuild/GPU or gain.",
+   "post_manifest_sha256": "006af89f391223955693c17160600013fb7cac4d03c8f2c258879710240f954b",
+   "post_resolution": "current-c2-profile-s95-post-reviews-20261015/root-post-resolution.json"
   }
  },
  "geometry": {
@@ -1262,7 +1277,8 @@
     "iq3s-native-cost-s76-prep/{findings.md,source-cost-proof.json}; iq3s-native-cost-s76-manifest.json",
     "q6-center-native-isa-s83-root/findings.md;{report,centering-excerpts}.json",
     "q6-center-s85-prep-v2/run-clean/{comparison,closure}.json;q6-center-s85-isa/report.json",
-    "q6-center-serving-s87/{comparison,root-runtime-decision}.json; q6-center-main-s87-isa/{selection,report}.json; q6-center-serving-postreviews-s87-20261015/root-postclosure.json"
+    "q6-center-serving-s87/{comparison,root-runtime-decision}.json; q6-center-main-s87-isa/{selection,report}.json; q6-center-serving-postreviews-s87-20261015/root-postclosure.json",
+    "current-c2-profile-s95-analysis-followup/{facts,extended-mmvq-and-cold-limits}.json; lowlevel_probe/current_c2_profile_s95/runtime/analysis/gpu/operations.csv"
    ],
    "quoted": [
     {
@@ -1366,6 +1382,12 @@
      "value": "Medianaggregate103.088->104.279tok/s(+1.155%,ratioofmedians);all3matchedtimedpairwalls-1.141/-1.235/-1.267%. Perstream54.119/56.475ON,stillbelow150.",
      "basis": "Same-new-binarya1e35c4 OFFthenON freshprocesses, one warm+3fresh107/1500C2pairs. Fullrequests/text/SSEusage/native5workfields/windows/pairsolo/roundedrows/loggednewcaptures/functionals/QUIT/CIDNAME/posthealthPASS. Actualmain3compiles/2archives/1AOT219s, selectedISA12s confirms48DP4A/32sat->8add8XOR/SIMD32GRF128. No independentdispatch/perwindowlayout/processorderreplication/causeproof. KeepguardeddefaultOFFoptin.",
      "status": "measured"
+    },
+    {
+     "label": "S95 all nonvocabulary MMVQ primaryGPUfamily",
+     "value": "Median12.680488ms reviewedGPUcycles5..16; extends native_mmvq10.745196ms by IQ3_S~1.935ms/55calls.337-338calls/cycle.",
+     "basis": "Instrumented namedfamily service, not all dense/shared weight identity or savable wall budget. No comparison to old S31 pools with different definitions.",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -1387,7 +1409,9 @@
     "S74 resolves acceptance/lowering of the exact signed INT8 joint_matrix expression on the BMG AOT compiler path only. Runtime dispatch/all128integer outputs, block layout/coordinates, canonical IQ3_S/Q8 scale handling and native FP32 partial/XOR order remain unmeasured; no replacement math or serving result.",
     "S75 preserves canonical Q8 and native partial/stored-lane XOR order using a local ledger. Its exact runtime path is bounded-qualified for two shapes but 7.7-7.9x slower. No standalone S74 runtime run, serving arm, barrier-elision repeat or format sweep is justified by this result alone.",
     "S85 strict and compiled-mechanism gates qualify only two private C6/RPW1/A2/SG32 projection shapes. Main guarded integration/defaultOFF source prep is next; a matched two-card EP serving comparison must establish whether the primitive gain survives production quantization, weights and critical path. No extra streaming micro or 200K rerun selected.",
-    "S87 closes the bounded actual-main serving discriminator for the two guardedQ6C6shapes. One OFFthenON processsequence and3promptpairs leave order/thermal/cache effects unresolved at~1% magnitude. Hostmarker+successfulwarm is not independentGPUdispatch; no default/daily/shelf/fullcachepromotion or 150tok/s achievement."
+    "S87 closes the bounded actual-main serving discriminator for the two guardedQ6C6shapes. One OFFthenON processsequence and3promptpairs leave order/thermal/cache effects unresolved at~1% magnitude. Hostmarker+successfulwarm is not independentGPUdispatch; no default/daily/shelf/fullcachepromotion or 150tok/s achievement.",
+    "S95 ranks nonvocabularyMMVQ service; actualpost selects ONE separate routedexpert integerdot/load/decode SOURCE audit. Mixed names/grid/type do not label every dense/shared weight; prior rejectedknobs remain rejected, no newGPUcandidate.",
+    "RoutedGU/down7.504495ms is DISJOINT from allnonvocabMMVQ12.680488ms, not subset; no additivewallbudget/payoffpercent. Source/codegen nextmechanism not selected solelyfrom largestfamily."
    ],
    "hypotheses": [
     {
@@ -1721,9 +1745,17 @@
    ],
    "evidence": [
     "draft-profile-s22/profile/steady-summary",
-    "draft-profile-s22/profile/engine.log:24-25,32-34 (7152 primary slots;17424 card1 experts)"
+    "draft-profile-s22/profile/engine.log:24-25,32-34 (7152 primary slots;17424 card1 experts)",
+    "current-c2-profile-s95-analysis-followup/facts.json; current-c2-profile-s95-post-reviews-20261015/root-post-resolution.json"
    ],
-   "quoted": [],
+   "quoted": [
+    {
+     "label": "S95 routed nativeGU/down namedfamily",
+     "value": "Median7.504495ms/96calls per reviewedprimaryGPUcycle; DISJOINT from mmvq-name12.680488ms pool.",
+     "basis": "Instrumented service, no exactweight/fullmodelwallshare/physicaltraffic claim. Next source-only integerdot/load/decode audit requires own selectedkernel/image proof.",
+     "status": "measured"
+    }
+   ],
    "upstream": [
     "act_quant",
     "primary_route"
@@ -1732,7 +1764,8 @@
     "combine"
    ],
    "gaps": [
-    "Type names for ids 16-22 follow the stable ggml enum; only 42 = Q2_0 was re-read in source this session."
+    "Type names for ids 16-22 follow the stable ggml enum; only 42 = Q2_0 was re-read in source this session.",
+    "Source-only routedexpert audit must prove integerdomain/overflow/signedness/signextension and unchangedFPledger; priorattention13tagbinding is notexpertISA, no exhaustiveallmainISA exists. No build/GPU selected."
    ],
    "hypotheses": []
   },
@@ -2095,7 +2128,8 @@
     "draft-profile-s22/profile/steady-summary (host entries)",
     "head-pair-s31/analysis-prep/result/final-analysis.json",
     "host-boundary-s32/analysis/run2/analysis.json",
-    "decode-idle-criticalpath-s78-prep/findings.md"
+    "decode-idle-criticalpath-s78-prep/findings.md",
+    "current-c2-profile-s95-analysis-followup/facts.json"
    ],
    "quoted": [
     {
@@ -2127,6 +2161,12 @@
      "value": "681AppendMemoryCopycalls/14404.145ms union;143.952ms overlap primary uncovered intervals,14260.193ms overlap recorded activity.",
      "basis": "Same trace temporal overlap only; no queue/device/correlation arguments, transfer traffic, removable waiting or causal assignment.",
      "status": "measured"
+    },
+    {
+     "label": "S95 conservative CPU replay handoff",
+     "value": "16replaywindows/14same-dumpconsecutivetransitions, end->nextenter median2.36us.",
+     "basis": "Native same-clock marker intervals only; no CPU/GPUjoin, no GPUcompletion/forcedbarrier/wait-removal proof. Submit/wait spans include instrumentation/device work.",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -2137,7 +2177,8 @@
    ],
    "gaps": [
     "Host API time includes queue dependency waits; not CPU work cost.",
-    "Host API entries are not thread-attributed; counts are not proof of polling by the engine thread."
+    "Host API entries are not thread-attributed; counts are not proof of polling by the engine thread.",
+    "No new currenthosthandoffproblem established by S95; do not repeatS79/remove readinesswaits merelyfrom APIcounts."
    ],
    "hypotheses": [
     {
@@ -3062,6 +3103,13 @@
    "value": "FirstON4K offered draft207OFF/205ON, output/SSE/usage and otherworkmatch; timed_summaryNULL. HOSTmarker1; bothnormalhealthclosuresPASS.",
    "status": "parked",
    "note": "No candidate numericalfailure/regression/benignnondeterminism or speedclaim. No remainingONwork/retry. KeepdefaultOFF/unqualified; targets/S30 unchanged. ActualOpus/Fablepost/rootfullread acceptpark/pivot; priorS93countercontext is crossbinary/process, not matchedOFF/OFF or causeproof."
+  },
+  {
+   "stage": "S95",
+   "label": "Current C2 instrumented operation census (all candidatesOFF)",
+   "value": "12GPUcycles5..16 H2SS/H2SS/H6/48sameEPwait/9submits; allnonvocabMMVQ12.680488ms,HC6.718818/vocab4.664113/EPwait3.068313ms. CPUhandoff2.36us.",
+   "status": "measured",
+   "note": "One107/64each profile/normalhealthPASS. Diagnosticnonadditive service/no cleangain, extra2C6unresolved/no native-GPU-peerclockjoin. Actualpostrootacceptcensus/source-onlyroutedexpertintegeraudit; routed7.504ms is DISJOINT fromMMVQ12.680ms, no subset/payoffclaim or newGPU."
   }
  ],
  "rejected_parked": [
@@ -3188,7 +3236,9 @@
   "Private attention candidate attribution requires actual separate host DeviceKernelInfo/CompileTimeKernelInfo and registered-name pointers, plus actual device-image binding. Distinct image IDs/function exports alone did not suffice in S91 or retained S13. S92 later proves separate actual host/device binding and strict36 private fixtures; Subsequent cap2051 three-seed numeric-only gate closes that ID pitch for the reused S92 object; masked/short/decode applicability and actual main codegen/serving remain bounded/unqualified.",
   "S93 candidate activation unproven: actualresidentmode0 excluded by staged-only guard. Static host/image separation does not prove live caller eligibility. No candidate serving measurement; S94 source-only caller proof pending.",
   "S94 actual activation observed but offered native draft count differs207OFF/205ON. Cause unresolved; output equality alone cannot prove internal numeric/state equivalence. No matched candidate speed evidence; candidatesOFF C2 profile separate.",
-  "Existing S93inactive0/1 offered205/205 vsS94OFF207/ON205 allaccepted136/outputSHAexact; DIFFERENTbinary/processcontexts, not matchedOFF/OFF/control/benigncause or retroactive gate relaxation."
+  "Existing S93inactive0/1 offered205/205 vsS94OFF207/ON205 allaccepted136/outputSHAexact; DIFFERENTbinary/processcontexts, not matchedOFF/OFF/control/benigncause or retroactive gate relaxation.",
+  "S95 fullGPU24C6 vsCPU22S6+2S3 leaves2wholeC6heads unattributed; no dummywarm/admission/capture assertion or GPUcycleID==CPUwindowID. WholeCSV retainscold/solo/tail; kernelnames do not identify everyweight/sharedrole.",
+  "S95post corrections: routed nativeGU/down vsMMVQ namefamilies aredisjoint; attention13tag artifactproof doesnotbindexpertISA, and no exhaustiveallmainISA extraction exists. Integeralgebraalone cannotprove bitexactness withoutdomain/overflow/signedness and sameFPledger."
  ],
  "operations": [
   {

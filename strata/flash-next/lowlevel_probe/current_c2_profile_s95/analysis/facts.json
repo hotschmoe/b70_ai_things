@@ -1,0 +1,673 @@
+{
+  "status": "PASS_CURRENT_C2_INSTRUMENTED_CENSUS_WITH_SOURCE_AND_CLOCK_LIMITS",
+  "binary_sha256": "d94e96ca399d8ecf1f15403db754b645697e82eaa72c052a2d18f4b29defc247",
+  "trace_sha256": "1139c4c8cc9a4b0737a6c57e67a8b717151ec4276714fa355fb48e3cd9ab3583",
+  "trace_bytes": 269853744,
+  "total_trace_events": 1663171,
+  "total_complete_events": 723519,
+  "selected_complete_events": 723519,
+  "operation_CSV_rows": 859,
+  "GPU_full_vocabulary_head_counts": {
+    "6": 24,
+    "1": 14,
+    "3": 2,
+    "2": 42
+  },
+  "reviewed_cycles": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "all_structural_cycle_count": 15,
+  "cycle_ms": {
+    "median": 57.06675,
+    "range": [
+      56.59575,
+      57.38325
+    ]
+  },
+  "family_service_diagnostic": {
+    "GDN_related": {
+      "median_service_ms": 2.835186,
+      "range_service_ms": [
+        2.7960380000000002,
+        2.8486309999999997
+      ],
+      "calls_per_cycle_range": [
+        324,
+        324
+      ]
+    },
+    "routed_native_GU_DOWN": {
+      "median_service_ms": 7.504495,
+      "range_service_ms": [
+        7.318918999999999,
+        7.662565
+      ],
+      "calls_per_cycle_range": [
+        96,
+        96
+      ]
+    },
+    "HC_norm_down_reduce_up": {
+      "median_service_ms": 6.7188175,
+      "range_service_ms": [
+        6.696256999999999,
+        6.722722
+      ],
+      "calls_per_cycle_range": [
+        436,
+        436
+      ]
+    },
+    "other": {
+      "median_service_ms": 6.512257,
+      "range_service_ms": [
+        6.486998000000001,
+        6.527108999999998
+      ],
+      "calls_per_cycle_range": [
+        1015,
+        1017
+      ]
+    },
+    "nonvocabulary_native_mmvq": {
+      "median_service_ms": 10.745196,
+      "range_service_ms": [
+        10.728624,
+        10.766545
+      ],
+      "calls_per_cycle_range": [
+        282,
+        283
+      ]
+    },
+    "vocabulary_head": {
+      "median_service_ms": 4.664113,
+      "range_service_ms": [
+        4.660519000000001,
+        4.672082
+      ],
+      "calls_per_cycle_range": [
+        3,
+        3
+      ]
+    },
+    "QSA_attention_related": {
+      "median_service_ms": 3.9355654999999996,
+      "range_service_ms": [
+        3.878096,
+        3.960626
+      ],
+      "calls_per_cycle_range": [
+        508,
+        508
+      ]
+    },
+    "EP_wait_kernel": {
+      "median_service_ms": 3.0683125,
+      "range_service_ms": [
+        2.6931030000000002,
+        3.4883159999999998
+      ],
+      "calls_per_cycle_range": [
+        48,
+        48
+      ]
+    },
+    "GPU_event_reset_instrumentation_sensitive": {
+      "median_service_ms": 2.2389115,
+      "range_service_ms": [
+        2.2210199999999998,
+        2.259503
+      ],
+      "calls_per_cycle_range": [
+        2433,
+        2436
+      ]
+    }
+  },
+  "reviewed_cycle_motifs": [
+    {
+      "cycle": 5,
+      "sequence": [
+        "H2",
+        "S",
+        "S",
+        "H2",
+        "S",
+        "S",
+        "H6"
+      ],
+      "ep_wait_names": {
+        "strata::kernels::ep_wait(unsigned int const*, unsigned int const*, unsigned int, unsigned int*, unsigned int, void*)::ep_wait_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]": 48
+      }
+    },
+    {
+      "cycle": 6,
+      "sequence": [
+        "H2",
+        "S",
+        "S",
+        "H2",
+        "S",
+        "S",
+        "H6"
+      ],
+      "ep_wait_names": {
+        "strata::kernels::ep_wait(unsigned int const*, unsigned int const*, unsigned int, unsigned int*, unsigned int, void*)::ep_wait_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]": 48
+      }
+    },
+    {
+      "cycle": 7,
+      "sequence": [
+        "H2",
+        "S",
+        "S",
+        "H2",
+        "S",
+        "S",
+        "H6"
+      ],
+      "ep_wait_names": {
+        "strata::kernels::ep_wait(unsigned int const*, unsigned int const*, unsigned int, unsigned int*, unsigned int, void*)::ep_wait_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]": 48
+      }
+    },
+    {
+      "cycle": 8,
+      "sequence": [
+        "H2",
+        "S",
+        "S",
+        "H2",
+        "S",
+        "S",
+        "H6"
+      ],
+      "ep_wait_names": {
+        "strata::kernels::ep_wait(unsigned int const*, unsigned int const*, unsigned int, unsigned int*, unsigned int, void*)::ep_wait_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]": 48
+      }
+    },
+    {
+      "cycle": 9,
+      "sequence": [
+        "H2",
+        "S",
+        "S",
+        "H2",
+        "S",
+        "S",
+        "H6"
+      ],
+      "ep_wait_names": {
+        "strata::kernels::ep_wait(unsigned int const*, unsigned int const*, unsigned int, unsigned int*, unsigned int, void*)::ep_wait_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]": 48
+      }
+    },
+    {
+      "cycle": 10,
+      "sequence": [
+        "H2",
+        "S",
+        "S",
+        "H2",
+        "S",
+        "S",
+        "H6"
+      ],
+      "ep_wait_names": {
+        "strata::kernels::ep_wait(unsigned int const*, unsigned int const*, unsigned int, unsigned int*, unsigned int, void*)::ep_wait_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]": 48
+      }
+    },
+    {
+      "cycle": 11,
+      "sequence": [
+        "H2",
+        "S",
+        "S",
+        "H2",
+        "S",
+        "S",
+        "H6"
+      ],
+      "ep_wait_names": {
+        "strata::kernels::ep_wait(unsigned int const*, unsigned int const*, unsigned int, unsigned int*, unsigned int, void*)::ep_wait_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]": 48
+      }
+    },
+    {
+      "cycle": 12,
+      "sequence": [
+        "H2",
+        "S",
+        "S",
+        "H2",
+        "S",
+        "S",
+        "H6"
+      ],
+      "ep_wait_names": {
+        "strata::kernels::ep_wait(unsigned int const*, unsigned int const*, unsigned int, unsigned int*, unsigned int, void*)::ep_wait_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]": 48
+      }
+    },
+    {
+      "cycle": 13,
+      "sequence": [
+        "H2",
+        "S",
+        "S",
+        "H2",
+        "S",
+        "S",
+        "H6"
+      ],
+      "ep_wait_names": {
+        "strata::kernels::ep_wait(unsigned int const*, unsigned int const*, unsigned int, unsigned int*, unsigned int, void*)::ep_wait_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]": 48
+      }
+    },
+    {
+      "cycle": 14,
+      "sequence": [
+        "H2",
+        "S",
+        "S",
+        "H2",
+        "S",
+        "S",
+        "H6"
+      ],
+      "ep_wait_names": {
+        "strata::kernels::ep_wait(unsigned int const*, unsigned int const*, unsigned int, unsigned int*, unsigned int, void*)::ep_wait_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]": 48
+      }
+    },
+    {
+      "cycle": 15,
+      "sequence": [
+        "H2",
+        "S",
+        "S",
+        "H2",
+        "S",
+        "S",
+        "H6"
+      ],
+      "ep_wait_names": {
+        "strata::kernels::ep_wait(unsigned int const*, unsigned int const*, unsigned int, unsigned int*, unsigned int, void*)::ep_wait_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]": 48
+      }
+    },
+    {
+      "cycle": 16,
+      "sequence": [
+        "H2",
+        "S",
+        "S",
+        "H2",
+        "S",
+        "S",
+        "H6"
+      ],
+      "ep_wait_names": {
+        "strata::kernels::ep_wait(unsigned int const*, unsigned int const*, unsigned int, unsigned int*, unsigned int, void*)::ep_wait_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]": 48
+      }
+    }
+  ],
+  "host_L0_complete_counts_per_cycle_range": {
+    "zeCommandListAppendMemoryCopy": [
+      2,
+      2
+    ],
+    "zeCommandListHostSynchronize": [
+      294,
+      332
+    ],
+    "zeCommandListImmediateAppendCommandListsExp": [
+      9,
+      9
+    ],
+    "zeEventHostSynchronize": [
+      11,
+      11
+    ]
+  },
+  "host_API_scope": "Fully-contained API intervals only; boundary crossers in canonicalcyclesJSON. No forcedbarrier/totalstarts claim.",
+  "CPU": {
+    "validation": {
+      "status": "COMPLETE_VALIDATED",
+      "log": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep/run/pair-engine-complete.log",
+      "log_sha256": "fae20500d9269a4b471980efd8a35b1061680cb45f4ff152ecca60061b8b8b5e",
+      "dump_count": 1,
+      "declared_records": 820,
+      "actual_records": 820,
+      "dropped": 0,
+      "errors": [],
+      "external_precondition": "Root must establish normal process completion; markers have no end-of-file footer/thread IDs."
+    },
+    "replay_windows": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      19,
+      20,
+      21,
+      22
+    ],
+    "replay_same_window_stats_ms": {
+      "post_enter_to_run": {
+        "count": 16,
+        "min_ms": 0.00043,
+        "median_ms": 0.0005059999999999999,
+        "p95_ms": 0.000821,
+        "max_ms": 0.000821,
+        "sum_ms": 0.008866
+      },
+      "run_call_to_return": {
+        "count": 16,
+        "min_ms": 46.923221,
+        "median_ms": 48.0686695,
+        "p95_ms": 48.2842975,
+        "max_ms": 48.381841,
+        "sum_ms": 766.505682
+      },
+      "stage_capture": {
+        "count": 16,
+        "min_ms": 0.000822,
+        "median_ms": 0.0009515,
+        "p95_ms": 0.0017504999999999999,
+        "max_ms": 0.001983,
+        "sum_ms": 0.016672
+      },
+      "stage_PLE": {
+        "count": 16,
+        "min_ms": 0.033403,
+        "median_ms": 0.756362,
+        "p95_ms": 0.9643555,
+        "max_ms": 1.014304,
+        "sum_ms": 11.274101
+      },
+      "stage_inputs_after_PLE": {
+        "count": 16,
+        "min_ms": 0.00036,
+        "median_ms": 0.00043599999999999997,
+        "p95_ms": 0.00052625,
+        "max_ms": 0.000572,
+        "sum_ms": 0.006966
+      },
+      "stage_ready_to_verify_submit": {
+        "count": 16,
+        "min_ms": 8e-05,
+        "median_ms": 9.05e-05,
+        "p95_ms": 0.00010325,
+        "max_ms": 0.00011,
+        "sum_ms": 0.001512
+      },
+      "verify_submit": {
+        "count": 16,
+        "min_ms": 3.080173,
+        "median_ms": 3.2353685,
+        "p95_ms": 3.4873207500000003,
+        "max_ms": 3.549006,
+        "sum_ms": 51.927471
+      },
+      "verify_postsubmit_to_wait": {
+        "count": 16,
+        "min_ms": 0.00028,
+        "median_ms": 0.0004355,
+        "p95_ms": 0.00144775,
+        "max_ms": 0.002905,
+        "sum_ms": 0.010119
+      },
+      "verify_queue_wait": {
+        "count": 16,
+        "min_ms": 43.224799,
+        "median_ms": 43.762394,
+        "p95_ms": 44.0222175,
+        "max_ms": 44.283528,
+        "sum_ms": 700.161807
+      },
+      "verify_waitreturn_to_runreturn": {
+        "count": 16,
+        "min_ms": 0.158813,
+        "median_ms": 0.16847099999999998,
+        "p95_ms": 0.17798425,
+        "max_ms": 0.180313,
+        "sum_ms": 2.712721
+      },
+      "commit": {
+        "count": 16,
+        "min_ms": 2.844874,
+        "median_ms": 2.9128585,
+        "p95_ms": 2.99069425,
+        "max_ms": 3.038794,
+        "sum_ms": 46.649218
+      },
+      "pair_call_to_enter": {
+        "count": 16,
+        "min_ms": 3e-05,
+        "median_ms": 0.00012,
+        "p95_ms": 0.00016575000000000002,
+        "max_ms": 0.00024,
+        "sum_ms": 0.002013
+      },
+      "pair_capture": {
+        "count": 16,
+        "min_ms": 0.000671,
+        "median_ms": 0.000842,
+        "p95_ms": 0.0011722500000000001,
+        "max_ms": 0.001203,
+        "sum_ms": 0.014549
+      },
+      "pair_slots_idle": {
+        "count": 16,
+        "min_ms": 0.024226,
+        "median_ms": 0.0266355,
+        "p95_ms": 0.029892000000000002,
+        "max_ms": 0.029967,
+        "sum_ms": 0.432664
+      },
+      "pair_input_stage": {
+        "count": 16,
+        "min_ms": 0.001012,
+        "median_ms": 0.001132,
+        "p95_ms": 0.0015480000000000001,
+        "max_ms": 0.001623,
+        "sum_ms": 0.019516
+      },
+      "pair_inputs_to_submit": {
+        "count": 16,
+        "min_ms": 2e-05,
+        "median_ms": 3e-05,
+        "p95_ms": 0.00016025,
+        "max_ms": 0.000221,
+        "sum_ms": 0.0007920000000000001
+      },
+      "pair_submit": {
+        "count": 16,
+        "min_ms": 1.984503,
+        "median_ms": 2.0431405,
+        "p95_ms": 2.072361,
+        "max_ms": 2.074284,
+        "sum_ms": 32.590936
+      },
+      "pair_postsubmit_to_poll": {
+        "count": 16,
+        "min_ms": 0.00011,
+        "median_ms": 0.00017050000000000002,
+        "p95_ms": 0.0002735,
+        "max_ms": 0.000401,
+        "sum_ms": 0.002855
+      },
+      "pair_poll_and_PLE": {
+        "count": 16,
+        "min_ms": 0.979427,
+        "median_ms": 1.0179005,
+        "p95_ms": 1.0562115,
+        "max_ms": 1.057647,
+        "sum_ms": 16.355771
+      },
+      "pair_queue_wait": {
+        "count": 16,
+        "min_ms": 2.896813,
+        "median_ms": 2.9127785,
+        "p95_ms": 2.92232925,
+        "max_ms": 2.928273,
+        "sum_ms": 46.600285
+      },
+      "pair_waitdone_to_return": {
+        "count": 16,
+        "min_ms": 0.00027,
+        "median_ms": 0.000291,
+        "p95_ms": 0.000331,
+        "max_ms": 0.000331,
+        "sum_ms": 0.004732
+      },
+      "pair_return_to_caller": {
+        "count": 16,
+        "min_ms": 7e-05,
+        "median_ms": 8e-05,
+        "p95_ms": 0.0007945000000000001,
+        "max_ms": 0.002905,
+        "sum_ms": 0.004077
+      },
+      "pair_caller_to_flush": {
+        "count": 16,
+        "min_ms": 5e-05,
+        "median_ms": 6e-05,
+        "p95_ms": 0.00010250000000000001,
+        "max_ms": 0.00017,
+        "sum_ms": 0.001082
+      },
+      "stdout_flush": {
+        "count": 16,
+        "min_ms": 0.000461,
+        "median_ms": 0.000611,
+        "p95_ms": 0.0009237500000000001,
+        "max_ms": 0.001082,
+        "sum_ms": 0.010189
+      },
+      "post_flush_to_end": {
+        "count": 16,
+        "min_ms": 5e-05,
+        "median_ms": 0.00012,
+        "p95_ms": 0.00013,
+        "max_ms": 0.00013,
+        "sum_ms": 0.001502
+      },
+      "whole_window": {
+        "count": 16,
+        "min_ms": 56.006698,
+        "median_ms": 57.124179,
+        "p95_ms": 57.3803665,
+        "max_ms": 57.45019,
+        "sum_ms": 912.0370800000001
+      }
+    },
+    "replay_same_dump_cross_window_stats_ms": {
+      "pair_return->stage_ple_begin": {
+        "count": 14,
+        "min_ms": 0.027352,
+        "median_ms": 0.028414000000000002,
+        "p95_ms": 0.03238785,
+        "max_ms": 0.032603,
+        "sum_ms": 0.410793
+      },
+      "pair_return->verify_submit_begin": {
+        "count": 14,
+        "min_ms": 0.489613,
+        "median_ms": 0.784736,
+        "p95_ms": 0.99997595,
+        "max_ms": 1.043329,
+        "sum_ms": 10.838181
+      },
+      "pair_return->window_enter": {
+        "count": 14,
+        "min_ms": 0.002875,
+        "median_ms": 0.003251,
+        "p95_ms": 0.004455399999999999,
+        "max_ms": 0.005901,
+        "sum_ms": 0.047931
+      },
+      "pair_wait_done->stage_ple_begin": {
+        "count": 14,
+        "min_ms": 0.027622,
+        "median_ms": 0.02871,
+        "p95_ms": 0.03269385,
+        "max_ms": 0.032883,
+        "sum_ms": 0.414953
+      },
+      "pair_wait_done->verify_submit_begin": {
+        "count": 14,
+        "min_ms": 0.489904,
+        "median_ms": 0.7850364999999999,
+        "p95_ms": 1.00027945,
+        "max_ms": 1.0436,
+        "sum_ms": 10.842341
+      },
+      "pair_wait_done->window_enter": {
+        "count": 14,
+        "min_ms": 0.003176,
+        "median_ms": 0.0035465,
+        "p95_ms": 0.004752899999999999,
+        "max_ms": 0.006192,
+        "sum_ms": 0.052091
+      },
+      "window_end->stage_ple_begin": {
+        "count": 14,
+        "min_ms": 0.02651,
+        "median_ms": 0.0274375,
+        "p95_ms": 0.0314345,
+        "max_ms": 0.03148,
+        "sum_ms": 0.395686
+      },
+      "window_end->verify_submit_begin": {
+        "count": 14,
+        "min_ms": 0.485896,
+        "median_ms": 0.7839295,
+        "p95_ms": 0.99911495,
+        "max_ms": 1.042468,
+        "sum_ms": 10.823074
+      },
+      "window_end->window_enter": {
+        "count": 14,
+        "min_ms": 0.002044,
+        "median_ms": 0.00236,
+        "p95_ms": 0.0026155,
+        "max_ms": 0.002635,
+        "sum_ms": 0.032824
+      }
+    }
+  },
+  "clock": {
+    "before_shift_us": 12343879.45,
+    "after_shift_us": 12344184.774,
+    "drift_us": 305.3240000009537,
+    "native_steady_to_trace_join_allowed": false,
+    "crosscard_GPU_join_allowed": false
+  },
+  "source_interpretation": [
+    "C2heads42 reconcile21 nativepaired coordinator invocations; everyreviewedcycle hasH2,S,S,H2,S,S,H6 and48same EPwaitkernel. Sourcepairedtailcallsone mtp_select perowner perstep; no argmax required.",
+    "EPwait48 same name/count is consistent with48-layer source but does not individually label each layer. GPUC6coldcount attribution separatelychecked; no direct GPUcycleindex-to-CPUwindowID mapping asserted.",
+    "CPU14eligibleconsecutive same-dump transitions window_end->nextenter median2.36us; no newhosthandoffproblem established. Submit/waitspans contain instrumentation/device work.",
+    "Nonvocabulary MMVQ names/grid/type do not uniquely identify every dense/shared weight. Familyservice sums cannotbeaddedtoCPUspans or convertedtosavablewalltime.",
+    "S15SH_STREAMoff alreadyrejected93.61->92.81; no newforkmechanism proven, no repetition. S55headRPW2/S87center boundedresults notnewtest justification.",
+    "Allcold/capture/solo/tailrecords retained. Proposed12cycles selectedbystructural/capture rules, not fastestduration. No throughput/promotion/cachequalification."
+  ],
+  "raw_JSON_parses": 1,
+  "post_health_normal_teardown": "PASS_BOTH_CARDS_COMPILED10_FULL_CID_NAME_WRAPPER0",
+  "next_direction": "Source-only audit distinct math-preserving lowering in largest nonvocabularyMMVQ service family; no new GPU arm selected by this census."
+}

@@ -1,0 +1,98 @@
+{
+  "status": "EXPLICIT_EXTENDED_MMVQ_FAMILY_DIAGNOSTIC",
+  "definition": "name contains mmvq and excludes WideQ5K+62080 fullvocabulary. This extends facts.json native_mmvq-only pool by IQ3_S launch_mmvq_multi_nc21 calls, not new runtime or corrected timings.",
+  "rows": [
+    {
+      "cycle": 5,
+      "all_nonvocabulary_mmvq_service_ms": 12.661620999999998,
+      "all_nonvocabulary_mmvq_calls": 338,
+      "IQ3_S_extra_family_service_ms": 1.932997,
+      "IQ3_S_extra_family_calls": 55
+    },
+    {
+      "cycle": 6,
+      "all_nonvocabulary_mmvq_service_ms": 12.676423999999999,
+      "all_nonvocabulary_mmvq_calls": 338,
+      "IQ3_S_extra_family_service_ms": 1.93956,
+      "IQ3_S_extra_family_calls": 55
+    },
+    {
+      "cycle": 7,
+      "all_nonvocabulary_mmvq_service_ms": 12.712352999999998,
+      "all_nonvocabulary_mmvq_calls": 338,
+      "IQ3_S_extra_family_service_ms": 1.945808,
+      "IQ3_S_extra_family_calls": 55
+    },
+    {
+      "cycle": 8,
+      "all_nonvocabulary_mmvq_service_ms": 12.678398,
+      "all_nonvocabulary_mmvq_calls": 338,
+      "IQ3_S_extra_family_service_ms": 1.936329,
+      "IQ3_S_extra_family_calls": 55
+    },
+    {
+      "cycle": 9,
+      "all_nonvocabulary_mmvq_service_ms": 12.675483,
+      "all_nonvocabulary_mmvq_calls": 338,
+      "IQ3_S_extra_family_service_ms": 1.9296659999999999,
+      "IQ3_S_extra_family_calls": 55
+    },
+    {
+      "cycle": 10,
+      "all_nonvocabulary_mmvq_service_ms": 12.679549,
+      "all_nonvocabulary_mmvq_calls": 338,
+      "IQ3_S_extra_family_service_ms": 1.9269580000000002,
+      "IQ3_S_extra_family_calls": 55
+    },
+    {
+      "cycle": 11,
+      "all_nonvocabulary_mmvq_service_ms": 12.685489,
+      "all_nonvocabulary_mmvq_calls": 338,
+      "IQ3_S_extra_family_service_ms": 1.94102,
+      "IQ3_S_extra_family_calls": 55
+    },
+    {
+      "cycle": 12,
+      "all_nonvocabulary_mmvq_service_ms": 12.681427,
+      "all_nonvocabulary_mmvq_calls": 337,
+      "IQ3_S_extra_family_service_ms": 1.936852,
+      "IQ3_S_extra_family_calls": 55
+    },
+    {
+      "cycle": 13,
+      "all_nonvocabulary_mmvq_service_ms": 12.651941999999998,
+      "all_nonvocabulary_mmvq_calls": 337,
+      "IQ3_S_extra_family_service_ms": 1.915182,
+      "IQ3_S_extra_family_calls": 55
+    },
+    {
+      "cycle": 14,
+      "all_nonvocabulary_mmvq_service_ms": 12.691413,
+      "all_nonvocabulary_mmvq_calls": 338,
+      "IQ3_S_extra_family_service_ms": 1.938204,
+      "IQ3_S_extra_family_calls": 55
+    },
+    {
+      "cycle": 15,
+      "all_nonvocabulary_mmvq_service_ms": 12.707149,
+      "all_nonvocabulary_mmvq_calls": 338,
+      "IQ3_S_extra_family_service_ms": 1.940604,
+      "IQ3_S_extra_family_calls": 55
+    },
+    {
+      "cycle": 16,
+      "all_nonvocabulary_mmvq_service_ms": 12.682051,
+      "all_nonvocabulary_mmvq_calls": 337,
+      "IQ3_S_extra_family_service_ms": 1.9334149999999999,
+      "IQ3_S_extra_family_calls": 55
+    }
+  ],
+  "median_all_nonvocabulary_mmvq_service_ms": 12.680488,
+  "range_ms": [
+    12.651941999999998,
+    12.712352999999998
+  ],
+  "extra_C6_whole_count_attribution": "UNRESOLVED: GPUwhole24C6 heads vsCPU22S6+2S3; no explicitdummywarmexecute found. OtherunmarkedverifierAPIs exist but theiruse inthisrununproved. Do notattributeextra2 tographcapture/admission or equateGPUcycleIDswithCPUwindowIDs.",
+  "native_C2_head_reconciliation": "42C2heads =21paired coordinator rounds*2steps; reviewedH2SS H2SS H6 motifs/sourceperownerselectors agree.",
+  "limitation": "Same primaryGPUtimestamp order only; no CPU-GPU/crosscardjoin/additivebudget/speed/cause claim."
+}
