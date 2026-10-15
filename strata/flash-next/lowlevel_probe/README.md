@@ -240,3 +240,18 @@ recipe against its pinned archives; do not use the old no-op fast setter or
 S24 root-sync binary as a cross-GRF gate. Three raw timing rounds/case, not
 best-only. No clean timing, dynamic occupancy or production regression claim.
 See [S39 report](../../../docs/20261015_strata_grf_resource_probe.md).
+
+
+S41: `q6_dense_oracle.cpp` is the exact compiled0a768982 source, not a new
+kernel. Frozena09b4c32 links productionnativeMMVQ/Q8quantizer/Q6pack-unpack;
+one103s offlineCPUbuild/36squietcard1window including health. Firstactual
+6144->2560 C6 pairfailsstrictbits, guards/finites/tails/readonlyinputsPASS;
+no remainingpackedcolumns/shapes or graph replay. Bothhealth0/normalnumeric
+exit5/containerremoved. Savedactualinputs/outputs permit boundedCPUFP64/fsum
+reference withoutGPUrerun (19rows/114outputs/0.141s). OldstrictgateFAILED;
+no arbitrarytolerance or speedclaim. Current production source untouched.
+See [S41 report](../../../docs/20261015_strata_q6_dense_packed_probe.md)
+and raw q6-dense-packed-s41-prep/{build-closure,s41-report}.json, build-v2.sh,
+run-prep/ROOT_RUN.sh, run-profiled/ and cpu-reference/. Exactbuild requires
+its pinned production archives; do not substitute qualified152055a6's
+unavailable old archive or assume current unfrozen engine is promoted.

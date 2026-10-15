@@ -262,3 +262,12 @@ One29s adapter-only build, two39/47s card1quiet windows, all pre/posthealth/
 normalteardown PASS. No clean or serving regression claim. Main serving
 winner remains152055a6/headpairON/depth2; absolute targets remain unmet.
 See docs/20261015_strata_grf_resource_probe.md.
+
+
+S41 existingQ6packing failsfirstC6bitwisegate (maxabs9.54e-7), not a proof
+of invalidquantizeddotmath. IndependentCPU114outputs/19selectedrows support
+rounding explanation, no wholematrix or modelquality qualification. Keep
+winner152055a6/headpairON/depth2/strictgateFAILED; no new tolerance or speed
+claim. One103s adapterbuild/one36s card1window incl healthyteardown; no
+fullengine/serve/cache repeat. Source-derived numericalpolicy next, targets
+remain unmet. See docs/20261015_strata_q6_dense_packed_probe.md.

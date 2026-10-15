@@ -23176,3 +23176,34 @@ while optimized draftKV explicitly staysQ8. Existing Q8dense service pool
 Larger Q6dense packing source audit next, no speculative serving option.
 Dated report, exact tested adapter, goals/map/lowlevelREADME updated; old170
 operation rows/rollups unchanged. Full goal active; speed targets unmet.
+
+
+## 2026-10-15 -- Flash-Next optimization S41: real Q6 packed-path discriminator
+
+CONFIG: Existing production Q6 packed planes versus current wideA2, same
+actual6144->2560 blk.3.attn_output tensor, saved nativeQ8_1 input, physical
+card1. No engine source/loader/registry-lifetime edit or serving promotion.
+52 eligible main tensors would add803.90625MiB on primary, potentially
+changing expert residency; current head-onlyflag doesnotregister these.
+COMMAND: Actual Opus5.5/Fable5.1 exact-source/v2 reviews, one103s offline
+adapterbuild, binarya09b4c32/source0a768982; one36s CPUquiet/card1window
+including pre/posthealth/normalremoval. Existingunitrace same process,
+originalC6/1/2/3/4/8 then firstpackedC6; strictfirstmismatchstop.
+RESULT: PackedC6 strictFAIL11754/15360activeFP32, maxabs9.536743e-7,
+RMS1.905441e-7/relativeL2original1.298599e-7. Bothfinite/guards/fullunused
+tailPASS, actualQ8readonly/originalweightspre+postpackPASS. Originalgraph
+captured but neverreplayed; no remainingpackedcolumns/threepayloads run.
+Oracle/wrapperexit5expectednumeric, bothhealth0/containerremoved/noreset.
+ReportedC6registers128/private0/spill0 both, packedSLM4608vs0. Onecold
+profiled363750vs70833ns is NOT speedproof. After bothmodelsrecommendCPU
+referenceonlythenreview, independentstorageformatFP64/fsum checks114
+outputs/19selectedrows/95,760payloadbytes in0.141s; threeexactFractions
+match. Originalmax/RMSerror5.78616e-7/1.77038e-7, packed6.57094e-7/
+1.95475e-7. Extreme-selectedsubset supports rounding explanation, not
+wholematrix accuracy/modelquality or acceptabletokenchanges.
+VERDICT: KeepstrictgateFAILED and winner152055a6/headpairON/depth2.
+Do not confuse bitinequality with invalidrealmath; no arbitrarytolerance
+adopted. Next source-derivedbound review is separate, no GPUrerun merely
+toquantifythisfailure. Oneadapterbuild/onefinitewindow/no fullserve/cache
+repeat. DatedS41doc/compiledsource/data map; old170ops/rollups unchanged.
+Raw q6-dense-packed-s41-prep/s41-report.json + cpu-reference/. Fullgoalactive.

@@ -208,3 +208,12 @@ private/spill0 both. All12 instrumented whole-read cases are slower; keep
 default/no model-server test or fullcache repeat. Resources are reported
 metadata, not dynamic occupancy or cause. No new serving speed result.
 See [S39 report](../../../docs/20261015_strata_grf_resource_probe.md).
+
+
+S41 adds the existing packedQ6 numerical discriminator to dense projections.
+FirstactualC6 pair failsstrictbits/maxabs9.54e-7; selectedindependentCPU
+references supportrounding explanation only. Bothhealth/teardownPASS, no
+serving/tolerance/speedpromotion. Coldsinglekernelservice retained in raw,
+not a speed forecast. Original170operationrows/rollups unchanged;52eligible
+C6calls/3.569979ms source-supportedpool is ranking, not a wallbudget. See
+[S41 report](../../../docs/20261015_strata_q6_dense_packed_probe.md).

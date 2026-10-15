@@ -2104,3 +2104,22 @@ current Q8dense pool0.744ms/cycle gives no reason for a broad quant sweep.
 Larger Q6dense packing source audit next; no new candidate measured. See
 [dated report](20261015_strata_grf_resource_probe.md), raw
 `grf-oracle-s39-prep/{s39-report,build-closure}.json` and `run-profiled/`.
+
+
+## S41: real Q6 packed-path strict discriminator (2026-10-15)
+
+CONFIG -> Existing packed-plane path/currentwideA2 on actualmodelQ6, no
+mainloader hook or serving edit.52eligible tensors cost803.90625MiB extra;
+source-derivedC6 pool3.569979ms/cycle is ranking, not predicted savings.
+COMMAND -> Actual Opus/Fable source/v2 reviews, one103s offlineadapterbuild;
+one36squietcard1window with health, actualunitrace and firstmismatchstop.
+RESULT -> First6144->2560 C6 failsstrictbits11754/15360/maxabs9.54e-7.
+Finites/guards/unusedtails/readonlyQ8/originalweightbytesPASS atcomparison.
+Original6columns, packedC6only, no replay/otherfixtures; normalexit5numeric
+and pre/posthealth0/containerremoved. IndependentCPUFP64/fsum114outputs/
+19selectedrows/95,760modelbytes0.141s: maxerror original5.79e-7/packed6.57e-7,
+threeexactrationals match. Supports rounding explanation inselectedsubset.
+VERDICT -> PreserveFAILEDbitgate; noinvalidmathconclusion/arbitrarytolerance/
+speedclaim/servingpromotion. Keep152055a6/headpairON/depth2. Bothactualmodels
+recommendCPUreferencebeforegatepolicy. S42groupedGEMMpreparation proceeds
+withoutnewserve; S43bound preparation separate. See [S41 report](20261015_strata_q6_dense_packed_probe.md), raw q6-dense-packed-s41-prep/.

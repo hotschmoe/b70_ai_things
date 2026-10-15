@@ -238,3 +238,10 @@ both-card+compiled10 health PASS. Same9d30ad8b OFF/ON prefill4K1303.0->1326.2,
 152055a6/headpairON/depth2. No full-context/shelf promotion or new GPU trace.
 Optional patches/experimental-ep-prefill-gather-alias-s38.patch and
 [S38 report](../../docs/20261015_strata_peer_gather_serving.md) retain evidence.
+
+
+S41 existing packedQ6 path fails first actualC6 strict pair, while a bounded
+independent CPU reference supports rounding differences on selected outputs.
+No main loader hook or serving change; qualified152055a6 remains recoverable.
+[S41 report](../../docs/20261015_strata_q6_dense_packed_probe.md) records exact
+coverage, unchanged serving status and no speed/tolerance promotion.
