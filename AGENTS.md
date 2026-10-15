@@ -37,6 +37,7 @@ against these targets lives in docs/20261013_flashnext_goals.md.
 - Have Claude Fable 5.1 and Claude 5.5 prepare independent fixes/profiling
   candidates in parallel. Keep GPU execution leased and coordinated, with
   quiet CPU conditions when needed for meaningful latency comparisons.
+- Keep large scratch clones/build outputs on disk; host /tmp is tmpfs.
 
 ## Current scope
 

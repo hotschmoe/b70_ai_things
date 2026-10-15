@@ -22532,3 +22532,19 @@ initial35turn-cap/context loss. CPU16MiB warm-copy extrapolation rejected.
 Details: stage doc S18; raw cachefix_20261014/agents/opus/s18-report.json,
 all identities/commands/raw samples/reviews/health. Probe sources tracked in
 strata/flash-next/latency_probe/. User dirt preserved; all servers stopped.
+
+
+## 2026-10-15 -- Host maintenance: obsolete Claude scratch consumed swap
+
+CONFIG: user noticed high host swap; all servers stopped after S18, GPUs free.
+COMMAND: read meminfo/vmstat, process VmSwap, cgroups, tmpfs usage and process
+cwd/fd/maps references. Found inactive October13 Claude session in /tmp
+(tmpfs), 6.3GiB; no live reference. Began preserving to NVMe; user explicitly
+authorized deletion instead, so stopped copy and deleted only the old session
+and partial destination. Current agents/worktrees untouched.
+RESULT: initial swap6.878GiB, process-accounted0.504GiB, available112.890GiB;
+no swap-in/out over2s. After cleanup swap1.104GiB, available113.542GiB. Old
+scratch files explain most usage; no stale serving process or intentional
+KV offload. No global swappiness/swapoff/cache-drop change.
+VERDICT: continue optimization. Keep large scratch clones/build outputs on
+disk rather than RAM-backed /tmp. Raw: cachefix_20261014/swap-cleanup.json.
