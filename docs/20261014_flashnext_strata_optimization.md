@@ -2061,3 +2061,24 @@ deferred after measured small service-pool ranking. See the
 [S35 report](20261015_strata_peer_gather_alias.md), tracked
 `strata/flash-next/lowlevel_probe/peer_gather_oracle.cpp`, and raw
 `peer-gather-oracle-s35/{s35-report,build-closure}.json`.
+
+
+## S38: guarded one-gather alias in real IPC serving (2026-10-15)
+
+CONFIG -> Same frozen9d30ad8b, aliasOFF/ON only, C12288/Q0, depth2/headpairON,
+all24576 experts resident, two200k slots/32GiB parking. First diagnostic has
+buffered CPU markers; later timed samples capture no timestamps or dumps.
+COMMAND -> Exact actual Opus/Fable reviews, one183s CPU-only build, two finite
+servers. One4049-token diagnostic then3x4K/3x32K and3C2 pairs/arm; no new
+per-kernel trace, mixed/cache/full200k campaign, broad sweep or daily restore.
+RESULT -> Actual48/48 IPC activation, identical routes; all13 exact request/
+output/token/cache matches, four retained S16 hashes, functionals PASS.
+Prefill medians1303.0->1326.2 and1546.1->1556.1 tok/s; C2 aggregate
+104.516->104.017. Peer-loop CPU span median15.826->14.830ms/layer in the
+first diagnostic, not GPU service/physical idle or an additive budget.
+Normal container/wrapperexit0 and both-card+compiled10 health PASS eacharm.
+VERDICT -> Keep aliasOFF/qualified152055a6; optional patch retained. Small
+prefill gains/no decode benefit do not merit another full-context campaign.
+Existing GRF-resource numerical adapter is source preparation only. See
+[dated report](20261015_strata_peer_gather_serving.md), raw
+`peer-gather-serving-s38/{s38-report,serving-comparison,host-spans}.json`.

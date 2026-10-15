@@ -239,3 +239,15 @@ plus both9707-token outputs match across depths. Depth3 screen93.156 is
 rejected. Functional/teardown evidence is in S21 report/journal; no full RAM
 repeat or daily-shelf promotion. Main verifier and serial drafting costs
 now guide the next stage, rather than a2s cached-latency target.
+
+
+S38 guarded peer-input alias passes actual IPC serving: all48 layers activate,
+13 exact request/output/token/cache matches, reasoning/tools and both-arm
+normal teardown/per-card/compiled10 health PASS. Same9d30ad8b OFF/ON medians:
+4K1303.0->1326.2 (+1.78%),32K1546.1->1556.1 (+0.65%),C2 aggregate
+104.516->104.017 (-0.48%). Three observations each, fixed order; no stability
+or significance claim. Keep aliasOFF and qualified152055a6/headpairON/depth2.
+No full-context rerun or daily promotion for this small prefill-only change.
+Current CPU submission spans are now measured, without a GPU-clock join.
+Move to unchanged-kernel GRF numerical preparation; targets remain open.
+See docs/20261015_strata_peer_gather_serving.md and raw peer-gather-serving-s38.

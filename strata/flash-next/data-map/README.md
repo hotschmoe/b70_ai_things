@@ -186,3 +186,16 @@ byte-gather/finite/guard/tail checks and per-card pre/post health PASS.
 Ordinary device USM does not qualify production IPC or concurrent readers.
 Reference-first/candidate-second timings have cold/warm order bias; no
 serving speedup claim. See [S35 report](../../../docs/20261015_strata_peer_gather_alias.md).
+
+
+S38 adds current CPU submission spans and actual IPC alias serving. First
+4049-token diagnostic: peer-loop median15.826OFF->14.830ONms/layer, total
+859.107->815.047ms/48layers; gather-return->firstDQ-entry15.947->14.963ms.
+These are cold first-request CPU call spans, not GPU service or idle.
+Later timed requests retain inactive compiled checks but no timestamp/log
+capture:3x4K/3x32K/3C2 pairs perarm. All13 hashes/token/cache counts match;
+ON48active/OFF48fallback, functionals/normalteardown/fullhealth PASS.
+Prefill1303.0->1326.2/1546.1->1556.1 tok/s, C2 aggregate104.516->104.017.
+Keep aliasOFF; no fullcontext/shelf promotion. Old170 operation rows and
+rollups remain unchanged; no new GPU-clock join. See
+[S38 report](../../../docs/20261015_strata_peer_gather_serving.md).

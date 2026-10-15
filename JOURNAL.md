@@ -23098,3 +23098,42 @@ source audit is a larger HC lead, not a measured win. One build/two finite
 GPU cases/no new trace/full-cache/daily reload. Dated report, goals and
 data map updated; old operation rows/rollups unchanged. Raw S35 report and
 quiet-mean80/240 closures retained. Full goal active; serving targets open.
+
+
+## 2026-10-15 -- Flash-Next optimization S38: guarded peer gather IPC serving
+
+CONFIG: Same frozen9d30ad8b, alias0/1 only plus logs; C12288/Q0/FIRST0,
+depth2/headpairON, all24576 experts resident, two200k slots/32GiB parking.
+Actual defaultOFF patch guards full backed owner maps, ranges/capacity and
+in-order GEMM queue, gathers once into existing FP32-output/FP16-input alias,
+runs experts reverse-offset without changing math/reduction/waits/allocation.
+COMMAND: Actual Opus5.5/Fable5.1 exact source and quota reviews, one183s
+CPU-only offline build/compile2/link4, verified source/Python/live-exe hashes
+and one TLS. Two finite leased servers, first4049-token/cap32 CPU diagnostic
+each, then3fresh4K/3fresh32K cap256 plus3C2 1500-token pairs each. CPUquiet
+only measurement windows; native trace/timer presence env keys absent.
+RESULT: Complete req1 frame/all48layers/dropped0/failed0 eacharm. OFF48
+fallback/ON48active, exact routing/expert counts. All13 exact request/output/
+token/cache matches, four retained S16 hashes; concurrentmath/reason391/
+actual tool roundtrip PASS. Prefill median4K1303.0->1326.2 (+1.78%),
+32K1546.1->1556.1 (+0.65%); C2 aggregate104.516->104.017 (-0.48%).
+First diagnostic peer-loop CPU span median15.826->14.830ms/layer, sum
+859.107->815.047ms across48; gather-return->primaryDQ-entry median
+15.947->14.963ms, sum867.196->823.293ms. Cold CPU call spans overlap,
+not GPU completion, physical idle, bandwidth or an additive/removable budget.
+Normal owned container removal/wrapperexit0, both cards and compiled
+world2/4x5120/10/P2P0 health PASS aftereach, no reset. Reused immediate
+external E2a full health beforearm0; final leases released to E2b/E3.
+VERDICT: Keep aliasOFF/qualified152055a6/headpairON/depth2. Fixed-order
+3samples show small prefill changes/no decode improvement; no stability or
+significance claim. Do not spend another ABBA/full200k qualification on this
+option. Preserve optional patch and current host attribution; pivot to
+existing GRF resource knob with full-byte numerical/graph gate first. S39
+source-only prep is not a build/GPU/result. No new GPU trace, mixed-arrival
+repeat, daily restore, soak or broad sweep. Diagnostic requests excluded
+from timings; later compiled marker checks capture no timestamps/dumps.
+Dev-loop:187/186s finite measurement windows,61/60s final health; sharedlog
+prevents CPU-then-GPU waiters blocking API timing clients. Narrow harness
+fixes enforce exact work and safe capture-only resume, no extra GPU runs.
+Dated report, goals, optional patch and map updated; old170 operation rows/
+rollups unchanged. Full goal active; both absolute speed targets unmet.

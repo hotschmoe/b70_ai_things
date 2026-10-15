@@ -1,0 +1,111 @@
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -544,6 +544,7 @@
+     // (dpct gives each card its own context, so there is no P2P copy between them)
+     core::ExpertCache* ep = nullptr;
+     core::EpRegion x_reg, rows_reg;
++    size_t rows_bytes = 0;  // size of the existing IPC output allocation
+     bool reduce_rows = false;
+     bool reduce_push = false;
+     core::EpRegion sum_reg;
+@@ -1891,6 +1892,7 @@
+     pp->reduce_push = pp->reduce_rows && push && push[0] == '1';
+     bool ok = core::ep_region_alloc(device, primary, (size_t) m.T_max * N * 2, pp->x_reg, err) &&
+               core::ep_region_alloc(device, primary, (size_t) m.T_max * K * N * 4, pp->rows_reg, err);
++    if (ok) pp->rows_bytes = (size_t) m.T_max * K * N * 4;
+     if (ok && pp->reduce_rows)
+         ok = core::ep_region_alloc(pp->reduce_push ? primary : device, pp->reduce_push ? device : primary,
+                                    (size_t) m.T_max * N * 4, pp->sum_reg, err);
+@@ -2325,6 +2327,41 @@
+         if (should_stop && should_stop()) { err = "cancelled"; return false; }
+         if (std::getenv("STRATA_TRACE")) { std::fprintf(stderr, "strata trace: prompt chunk %lld of %lld\n", (long long) c0, (long long) n); std::fflush(stderr); }
+         const int64_t T = chunk_len(c0), p0 = pos0 + c0;
++        // Experimental peer input/output aliasing: opt-in, fixed Flash-Next shape only.
++        // Both owner tables must cover the whole model with backed, live slots.
++        static const bool peer_alias_opt = [] {
++            const char* v = std::getenv("STRATA_EP_PREFILL_GATHER_ALIAS");
++            return v && v[0] == '1';
++        }();
++        bool peer_alias_resident = false;
++        if (peer_alias_opt && !m.borrowed && LB == 0 && LE == 48 && !next_ && !hand_in_ &&
++            g.n_layers == 48 && g.n_embd == N && g.n_expert == 512 && g.n_expert_used == K &&
++            g.n_ff == 640 && g.n_ff_shexp == 640 && g.hc == 4 && g.hc_lr == 320 &&
++            ss.k == K && m.T_max == 12288 && m.cache && m.host_res && m.pp) {
++            const auto& P = *m.pp;
++            const auto& layout = strata::kernels::cpu::expert_layout();
++            const char* async = std::getenv("STRATA_EP_PREFILL_ASYNC");
++            peer_alias_resident = P.ipc() && !P.peer && P.p2p && P.reduce_rows && P.reduce_push &&
++                !P.out_pipe && !P.out_pending && P.ps_frac == 0.0 && P.ps_flag.empty() &&
++                !(async && async[0] == '1') && m.cache->valid() && P.ep->valid() &&
++                m.cache->slots() == m.cache->full_slots() && P.ep->slots() == P.ep->full_slots() &&
++                P.T_max == m.T_max && P.cap_rows == P.T_max * K && layout.native &&
++                layout.fmt.size() == (size_t) g.n_layers;
++            for (int64_t l = 0; peer_alias_resident && l < g.n_layers; ++l) {
++                const auto& f = layout.fmt[(size_t) l];
++                peer_alias_resident = f.n_embd == N && f.n_ff == 640 &&
++                    (f.gu_type == 16 || f.gu_type == 17 || f.gu_type == 18 || f.gu_type == 21 || f.gu_type == 22) &&
++                    (f.d_type == 20 || f.d_type == 42);
++                for (int64_t e = 0; peer_alias_resident && e < g.n_expert; ++e) {
++                    const int32_t a = m.cache->slot_of(l, e), b = P.ep->slot_of(l, e);
++                    const bool primary = a >= 0 && a < m.cache->slots() && m.cache->device_slot(a);
++                    const bool peer = b >= 0 && b < P.ep->slots() && P.ep->device_slot(b);
++                    peer_alias_resident = m.host_res[(size_t) l * g.n_expert + e] == a &&
++                        (primary != peer) && (primary || a == core::kNotResident) &&
++                        (peer || b == core::kNotResident);
++                }
++            }
++        }
+         core::progress_at("reading the prompt (batched): preparing the chunk from token", p0);   // #251
+         ++stats_.chunks;
+         pt.mark(kPfStart, cs);
+@@ -3657,15 +3694,47 @@
+                                 pe.mark(kPeMoeGemm, ps);
+                                 const auto& f = lay.fmt[(size_t) l];
+                                 float* rows = (float*) P.rows_reg.local;
++                                // Validate every range before overwriting any output-region bytes.
++                                bool peer_alias = peer_alias_resident && !use_mmq && ps && ps->is_in_order() &&
++                                    P.gemm && P.gemm->stream() == ps && T > 0 && T <= P.T_max &&
++                                    rows_local >= 0 && rows_peer > 0 && rows_local + rows_peer == T * K &&
++                                    rows_peer <= P.cap_rows && P.rows_bytes / (N * sizeof(float)) >= (size_t) rows_peer &&
++                                    P.rows_reg.local && P.mixed_h && P.src && !on_peer.empty() && n > 0 &&
++                                    (reinterpret_cast<uintptr_t>(P.rows_reg.local) % 16 == 0) &&
++                                    (reinterpret_cast<uintptr_t>(P.mixed_h) % 16 == 0) &&
++                                    (reinterpret_cast<uintptr_t>(P.src) % alignof(int32_t) == 0);
++                                int64_t alias_end = 0;
++                                int32_t alias_prev = -1;
++                                for (size_t j = 0; peer_alias && j < n; ++j) {
++                                    const int32_t e = order_peer[j];
++                                    if (e <= alias_prev || e < 0 || e >= g.n_expert) { peer_alias = false; break; }
++                                    const int64_t ne = m.cnt[(size_t) e], o = m.off[(size_t) e] - rows_local;
++                                    const int32_t slot = P.ep->slot_of(l, e);
++                                    peer_alias = ne > 0 && ne <= T && o == alias_end && ne <= rows_peer - alias_end &&
++                                        on_peer[(size_t) e] == 1 && slot >= 0 && slot < P.ep->slots() &&
++                                        P.ep->device_slot(slot) != nullptr;
++                                    if (!peer_alias) break;
++                                    alias_end += ne;
++                                    alias_prev = e;
++                                }
++                                peer_alias = peer_alias && alias_end == rows_peer;
++                                uint16_t* alias_x = reinterpret_cast<uint16_t*>(rows);
++                                if (peer_alias) {
++                                    gather_rows16(P.mixed_h, P.src, alias_x, rows_peer, N, ps);
++                                }
+                                 for (size_t j = 0; j < n; ++j) {
+-                                    const int32_t e = order_peer[j];
++                                    const int32_t e = order_peer[peer_alias ? n - 1 - j : j];
+                                     const int64_t o = m.off[(size_t) e] - rows_local, ne = m.cnt[(size_t) e];
+                                     const uint8_t* bd = P.slot_ptr(l, e);
+-                                    gather_rows16(P.mixed_h, P.src + o, P.Xs, ne, N, ps);
++                                    if (!peer_alias) gather_rows16(P.mixed_h, P.src + o, P.Xs, ne, N, ps);
++                                    const uint16_t* expert_x = peer_alias ? alias_x + o * N : P.Xs;
+                                     strata::kernels::iq_dequant_expert_f16(f.gu_type, f.d_type, bd, bd + f.up_off,
+                                                                            bd + f.down_off, f.n_ff, f.n_embd, P.dq_gu,
+                                                                            P.dq_d, ps);
+-                                    P.gemm->f16(P.Xs, P.dq_gu, P.GUf, ne, 1280, N);
++                                    // In reverse order, earlier unread input ends at 2*N*o bytes;
++                                    // this expert's output starts at 4*N*o. Its GU read finishes
++                                    // before its down write on this same in-order GEMM queue.
++                                    P.gemm->f16(expert_x, P.dq_gu, P.GUf, ne, 1280, N);
+                                     swiglu_interleaved(P.GUf, P.Hh, ne, ps);
+                                     P.gemm->f16(P.Hh, P.dq_d, rows + o * N, ne, N, 640);
+                                 }

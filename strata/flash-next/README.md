@@ -229,3 +229,12 @@ qualification. Recoverable experimental config:
 An existing batch->solo accounting hole drops earlier draft totals; retain
 raw counters but do not compare full-request acceptance until fixed. Tiny
 in-serve C2 trace is queued, not measured. See stageS29 and data map.
+
+
+S38 exercises guarded one-gather/reverse-alias through actual IPC:48active
+layers,13 exact request/output/token/cache matches, functionals/normalstop/
+both-card+compiled10 health PASS. Same9d30ad8b OFF/ON prefill4K1303.0->1326.2,
+32K1546.1->1556.1; C2 aggregate104.516->104.017. Keep aliasOFF and qualified
+152055a6/headpairON/depth2. No full-context/shelf promotion or new GPU trace.
+Optional patches/experimental-ep-prefill-gather-alias-s38.patch and
+[S38 report](../../docs/20261015_strata_peer_gather_serving.md) retain evidence.
