@@ -22485,3 +22485,22 @@ Clean-layer16f592e7 daily restored with final functional gates, observeroff,
 27B checkpasses. Later user instruction: no routine restore BETWEEN tests;
 queue ready leased GPU probes while other candidates are prepared. Details:
 stage doc S16 and raw accounting_20261014/s16-report.json; user dirt preserved.
+
+
+## 2026-10-15 -- Flash-Next optimization S17: fast cache failure oracle
+
+CONFIG: same accounting5aaca2f5/EP/PUSH/spec4/32GiB4, only slot8192;
+4x3997 prompts/256 replies, all24576 experts resident (12336+12240).
+COMMAND: context harness --target4096 --context-size8192; generic context
+preflight/usage guards retain full-size defaults and bind resume inputs.
+Normal stops/per-card/ten compiled health. CPU-only agents may work in
+background: correctness diagnostic, not an uninstrumented speed comparison.
+RESULT: all4 needles/two-active phases pass; forced B4080reuse/286read,
+255 retained-reply replay; A0reuse/4366read. Same two full-size failure
+modes in42.146s test phase/15988 fresh input, excluding startup/health.
+No GPU crash/reset; health passes. Server/cache kept for inspection then
+stopped normally. No new build/source fix and no daily restore between jobs.
+VERDICT: use this cheap oracle before another4x200k qualification. Fable
+source-fix and Opus topology/copy artifacts prepare independently; root
+queues leased GPU windows. No promotion. Details: stage doc S17; raw
+cachefix_20261014/small-baseline/result-summary.json and full request data.

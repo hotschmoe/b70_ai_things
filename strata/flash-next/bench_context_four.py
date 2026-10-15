@@ -48,6 +48,7 @@ def main():
     parser.add_argument('--config', type=Path, required=True)
     parser.add_argument('--base-url', default='http://127.0.0.1:18085')
     parser.add_argument('--target', type=int, default=199600)
+    parser.add_argument('--context-size', type=int, default=200000, help='Expected slot capacity; use8192 for the small cache oracle')
     parser.add_argument('--cached-ttft-target-s', type=float, default=2.0)
     parser.add_argument('--resume', action='store_true', help='Continue saved phases on the same live engine PID/container')
     args = parser.parse_args()
@@ -66,8 +67,10 @@ def main():
     registry = (Path(__file__).resolve().parents[2]/'evals/configs/models.yaml').read_text()
     if ids[0] != 'hotschmoe-dd' or alias not in ids or alias not in registry:
         raise RuntimeError('Model identity mismatch')
-    if identity['data'][0]['meta']['n_ctx'] < 200000:
-        raise RuntimeError('Two 200K slots required')
+    if identity['data'][0]['meta']['n_ctx'] < args.context_size:
+        raise RuntimeError('Live slots are smaller than the expected context size')
+    if int(argv[argv.index('--max-context')+1])!=args.context_size:
+        raise RuntimeError('Configured slot capacity differs from --context-size')
     (args.output/'models.json').write_text(json.dumps(identity,indent=2)+'\n')
     (args.output/'config.json').write_text(json.dumps(config,indent=2)+'\n')
     processes = subprocess.check_output(['docker','top','strata-ab-serve','-eo','pid,args'],text=True)
@@ -79,10 +82,12 @@ def main():
     meta_path=args.output/'run-meta.json'
     run_meta=dict(native_pid=pid,container_id=container['Id'],
                   config_sha256=hashlib.sha256(args.config.read_bytes()).hexdigest(),
-                  log_start=Path(config['log']).stat().st_size)
+                  log_start=Path(config['log']).stat().st_size,
+                  prompt_target=args.target,context_size=args.context_size)
     if args.resume:
         prior=json.loads(meta_path.read_text())
-        if any(prior[k]!=run_meta[k] for k in ['native_pid','container_id','config_sha256']):
+        if any(prior[k]!=run_meta[k] for k in ['native_pid','container_id','config_sha256']) or \
+           prior.get('prompt_target',199600)!=args.target or prior.get('context_size',200000)!=args.context_size:
             raise RuntimeError('Resume requires the original live engine and config')
         run_meta=prior
     else:
@@ -160,8 +165,8 @@ def main():
                                      {'Content-Type':'application/json'})
         with urllib.request.urlopen(req,timeout=30) as response:
             prompt_tokens = json.load(response)['input_tokens']
-        if prompt_tokens+cap>200000-8:
-            raise RuntimeError('Rendered prompt plus requested output exceeds the 200K budget')
+        if prompt_tokens+cap>args.context_size-8:
+            raise RuntimeError('Rendered prompt plus requested output exceeds the configured context budget')
         return messages,cap,prompt_tokens
 
     def record(label, name, restore, prepared):
@@ -176,8 +181,8 @@ def main():
         origin = marks['first']-row['content_events'][0]['elapsed_s']
         row['first_content_mono_s'] = origin+row['content_events'][0]['elapsed_s']
         row['last_content_mono_s'] = origin+row['content_events'][-1]['elapsed_s']
-        if row['usage']['prompt_tokens']+row['usage']['completion_tokens']>200000:
-            raise RuntimeError('The real rendered conversation exceeded its 200K slot')
+        if row['usage']['prompt_tokens']+row['usage']['completion_tokens']>args.context_size:
+            raise RuntimeError('The real rendered conversation exceeded its configured slot')
         if resident and row['usage']['completion_tokens']<128:
             raise RuntimeError('Resident reply too short for a meaningful overlap test')
         previous=next((r for r in reversed(all_rows) if r['conversation']==label),None)
@@ -303,7 +308,7 @@ def main():
         categories[kind]=dict(samples=len(rows),ttft_p50_s=percentile(values,.5),ttft_p95_s=percentile(values,.95),
                               p95_target_s=args.cached_ttft_target_s,
                               latency_target_met=percentile(values,.95)<=args.cached_ttft_target_s if values else None)
-    summary=dict(correctness_passed=True,four_distinct=True,forced_ram_exchange_passed=forced_exchange_passed,configured_parking_gib=32,
+    summary=dict(correctness_passed=True,four_distinct=True,context_size=args.context_size,prompt_target=args.target,forced_ram_exchange_passed=forced_exchange_passed,configured_parking_gib=32,
                  actual_prompt_tokens=[r['usage']['prompt_tokens'] for r in all_rows if r['phase']=='initial'],
                  cached_return_latency=categories,native_full_restores=full_restores,
                  retained_prompt_history_reused=all(r['retained_prompt_reused'] for r in cached),

@@ -1122,3 +1122,34 @@ RAW: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_accounting_202
 (s16-report.json, source/build/test identities, original context-four failure,
 context-retry partial-summary/cancel/health evidence, review-round3..6,
 final-state). Future candidates are under cachefix_20261014/agents.
+
+
+## S17: fast small-context cache oracle (2026-10-15)
+
+CONFIG: unchanged accounting binary5aaca2f5/EP/PUSH/spec4, parking32GiB4,
+only native slot limit8192 instead of200000; all24576 experts resident
+(12336+12240). Bench target4096 renders four3997-token prompts; cached
+replies256 tokens. Source/quant/identity unchanged. Background CPU-only
+Claude agent work is allowed: this is a CORRECTNESS oracle, not a clean
+latency comparison. No new AOT link or production source fix.
+COMMAND: extend bench_context_four.py with explicit --context-size and
+context-aware token preflight/usage gates, defaults199600/200000 retained.
+Run through leased matching server with --target4096 --context-size8192.
+Normal stop, per-card/ten compiled collective health before/after. Do not
+restore daily between this and the queued topology/copy probes.
+RESULT: all4 fresh prompts and both two-active reply phases pass. Forced
+exchange reproduces BOTH full-size failure modes, labels reversed: B
+reuses4080/reads286 including255 retained reply tokens; A reuses0 and
+re-reads4366. Correct code retrieval, no-recompute fails. Entire test phase
+42.146s/15988 fresh prompt tokens, excluding startup/health. This replaces
+full-context loops for diagnosing this bug; no new serving speed claim.
+Both health checks pass; no crash/reset. Healthy cache remained available
+for inspection, then stopped normally; no daily restore. Resume metadata
+also binds target and configured context size.
+VERDICT: concrete fast correctness gate established. Require this to pass
+before repeating four full contexts. Independent Fable cache-fix and Opus
+host/GPU topology-probe agents continue preparing source/artifacts. All
+real GPU work remains root-coordinated under leases, with CPU-quiet timing
+windows where required. No full-context promotion or source-fix claim.
+RAW: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/small-baseline
+(result-summary.json, config/residency, context request/phase data and health).

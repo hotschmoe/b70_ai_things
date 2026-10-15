@@ -135,3 +135,10 @@ and separate residency refills have different transfer behavior. Apply on
 main296b59d2; runtime validation uses the existing EP/PUSH overlay. Frozen
 PUSH-s9 still has the old native counters. Current full-context qualification
 status and limitations belong in S16 of the stage document.
+
+
+Fast cache correctness oracle: use --target4096 --context-size8192 with a
+matching8192-slot config on the already leased server. Full qualification
+keeps default --target199600 --context-size200000. S17 reproduces both
+retained-tail replay and total cache loss with15988 fresh input tokens in
+42s of test phase (startup/health excluded); run it before huge prefills.
