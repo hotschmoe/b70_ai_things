@@ -1210,3 +1210,62 @@ Fable correctness candidate still in progress; no cache-fix claim in S18.
 RAW: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/agents/opus
 (s18-report.json, root-summary/identity, topology, commands, samples, source
 reviews, build and health). Source: strata/flash-next/latency_probe/.
+
+
+## S19: preserve completed batch slots before overwrite (2026-10-15)
+
+CONFIG: upstream296b59d2 still current (GitHub rechecked), existing EP/PUSH/
+accounting plus batch-slot-cache-preserve.patch. Binaryb09c9bf3, frozen
+accounting5aaca2f5 unchanged. Same8K slots/spec4/parking32GiB4/all24576;
+STRATA_SNAPSHOT_VERIFY=1 adds draft-KV readback. No performance patch yet.
+COMMAND: actual claude-fable-5-1 prepares factored slot/main snapshot path,
+checkpoint carry and coverage helper;4271 CPU checks/SYCL syntax pass.
+Root freezes identical final source, one CPU-only AOT link (489.39s from
+log birth to last write, ~1s resolution), then existing4x3997/256-reply
+oracle, observed two-active proof, identity/math/reasoning/tools, normal
+stop/per-card/ten compiled post-health. Reuse S18 post-health before start:
+no GPU workload intervened. No duplicate new agent harness or cold baseline.
+RESULT: all four forced RAM returns reuse4335 held tokens,31 new tokens
+read, zero retained-tail replay; all needles and no cross-chat leak pass.
+Four restored draft-KV readbacks pass. All10 available S17 response hashes
+match exactly; C/D forced returns had no completed baseline for comparison.
+Four-small-chat qualification passes; full200k remains NOT TESTED here.
+Small-context sampled exchange peak native3755134976/container3648733184
+bytes,0cgroup swap/OOM. Diagnostic p95 TTFT (four samples each) RAM1.758s,
+resident2.161s; this does not qualify the provisional2s target at200k.
+Functional checks, identity/residency and teardown health pass; no crash/
+reset. Servers stopped, no daily restore or shelf promotion.
+
+Source finding: idle slot reply state was overwritten without RAM capture;
+the main snapshot held only the prompt-read state. Returning slots also
+lost their checkpoint chain, allowing old RAM versions to consume entries.
+Fable reconstructs this eviction sequence from full logs and cache policy;
+the small native run now verifies the complete remedy. Both overwrite
+callers park the outgoing idle slot with its own sessions, cvec/checks and
+independent draft K/V, using existing budget/admission/snapshot logic.
+Successful giveback carries the slot checkpoints back to main. No captured
+address/ownership swap, new entry cap or snapshot format. Existing fed ids
+are used unchanged: the last sampled un-fed token was already excluded.
+CPU rendering preserves the full4336-token canonical history prefix; actual
+sampled IDs were not retained, so segmentation was not independently proved.
+
+VERDICT: cheap latest-conversation cache gate passes. Text-only EP with
+batch-MTP on is measured. Images and MTP-without-batch-MTP skip slot parking;
+pipeline stages and CUDA are unexecuted. Coverage of a longer continuation
+does not guarantee arbitrary shorter-branch endpoint restoration. Do not
+generalize this qualification beyond its actual scope.
+
+Development loop: actual claude-opus-5-5 reviews frozen source; reject its
+invented acceptance floor and resolve checkpoint questions against code.
+Fable coding task produced concrete artifacts but hit35turn cap after2095s;
+use persistent streaming/narrow tasks. Follow-up decision briefs take25.83s
+(Fable) and14.96s (Opus). Both accept a separately built8line buffer-reuse
+candidate, cheap gate, then one full4x200k final qualification for absolute
+targets. Skip extra full cachefix-only baseline and unmatched relative speed
+claims. Reject invented vision scope, incorrect32GiB cgroup limit (90GiB
+actual), and redundant large prefill probes without a concrete failure.
+Next required build can test experimental parallel AOT flag supported by
+installed icpx; current build was serial, no flag change in S19.
+RAW: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014
+(cache-candidate/s19-report.json, small-first requests/bytes/health, agent
+findings/reviews, frozen patch/identities, next-stage-review-decisions.json).

@@ -1,0 +1,661 @@
+diff --git a/include/strata/core/conversation_cache.hpp b/include/strata/core/conversation_cache.hpp
+index 08e9cb80..296fb996 100644
+--- a/include/strata/core/conversation_cache.hpp
++++ b/include/strata/core/conversation_cache.hpp
+@@ -173,6 +173,24 @@ struct SavedConversation {
+     }
+ };
+ 
++/// `c` holds the state `ids` (with `images`) describes, or a continuation of it: its tokens start with `ids` and
++/// its pictures below ids.size() are exactly `images`.  What an idle batch slot holds is then parked already (or
++/// a longer continuation is), so the slot need not park it again before an admission overwrites it.
++template<class Token>
++bool conversation_covers(const ConversationCheckpoint& c, const std::vector<Token>& ids,
++                         const std::vector<ConversationImageKey>& images) {
++    const size_t n = ids.size();
++    if (n == 0 || c.ids.size() < n) return false;
++    for (size_t i = 0; i < n; ++i)
++        if ((int64_t) c.ids[i] != (int64_t) ids[i]) return false;
++    size_t j = 0;
++    for (const auto& image : c.imgs) {
++        if (image.start >= (int64_t) n) continue;
++        if (j == images.size() || !(images[j++] == image)) return false;
++    }
++    return j == images.size();
++}
++
+ template<class Token>
+ int64_t conversation_prefix(const ConversationCheckpoint& c, const std::vector<Token>& prompt,
+                             const std::vector<ConversationImageKey>& images) {
+@@ -254,6 +272,19 @@ public:
+         return best;
+     }
+ 
++    /// A parked conversation holds this state already (its live tokens or one of its checkpoints start with `ids`,
++    /// same pictures, same steering): see conversation_covers.  Read-only; no LRU effect.
++    template<class Token>
++    bool holds(const std::vector<Token>& ids, const std::vector<ConversationImageKey>& images, bool cvec) const {
++        for (const auto& e : entries_) {
++            if (e.cvec != cvec) continue;
++            if (conversation_covers(e.live, ids, images)) return true;
++            for (const auto& c : e.checkpoints)
++                if (conversation_covers(c, ids, images)) return true;
++        }
++        return false;
++    }
++
+     SavedConversation take(size_t index) {
+         SavedConversation out = std::move(entries_.at(index));
+         bytes_ -= out.bytes();
+diff --git a/src/core/conversation_cache_test.cpp b/src/core/conversation_cache_test.cpp
+index 665513e3..3f8c706a 100644
+--- a/src/core/conversation_cache_test.cpp
++++ b/src/core/conversation_cache_test.cpp
+@@ -217,6 +217,110 @@ int main() {
+         const auto s = cache.best(with(history, {40}), {}, true);
+         check(s.tokens == (int64_t) history.size() - 2, "SUB resumes from its last turn boundary");
+     }
++    {
++        // holds(): what an idle batch slot holds is parked already (or a continuation of it is)
++        auto s = image({1, 2, 3, 4, 5});
++        ConversationCheckpoint cp;
++        cp.ids = {1, 2, 3};
++        s.checkpoints.push_back(cp);
++        ConversationCache cache(4096, 4);
++        cache.put(std::move(s));
++        check(cache.holds(std::vector<int32_t>{1, 2, 3, 4, 5}, {}, true), "the parked live state itself");
++        check(cache.holds(std::vector<int32_t>{1, 2, 3, 4}, {}, true), "a prefix of the parked live state");
++        check(cache.holds(std::vector<int32_t>{1, 2}, {}, true), "a prefix of a parked checkpoint");
++        check(!cache.holds(std::vector<int32_t>{1, 2, 3, 4, 5, 6}, {}, true), "a longer state is not held");
++        check(!cache.holds(std::vector<int32_t>{1, 2, 9}, {}, true), "a diverging state is not held");
++        check(!cache.holds(std::vector<int32_t>{}, {}, true), "an empty state is never held");
++        check(!cache.holds(std::vector<int32_t>{1, 2, 3}, {}, false), "steering mode is isolated");
++        check(!cache.holds(std::vector<int32_t>{1, 2, 3}, {{1, 77}}, true), "a slot with pictures is not held by a text image");
++        auto p = image({1, 2, 3, 4});
++        p.live.imgs = {{1, 77}, {3, 78}};
++        cache.put(std::move(p));
++        check(cache.holds(std::vector<int32_t>{1, 2, 3}, {{1, 77}}, true), "pictures below the state must match");
++        check(!cache.holds(std::vector<int32_t>{1, 2, 3, 4}, {{1, 77}}, true), "a picture inside the state that the slot lacks");
++    }
++    {
++        // The 2026-10-14 four-conversation measurement replayed at policy level: two batch slots, four parked
++        // entries, conversations A..D.  Each has a prompt P (8 tokens; the read's periodic checkpoint at 4), a first
++        // reply R1 (3 tokens; the slot holds P + 2 of them), the next turn as the client renders it (P + R1 + end +
++        // header: 14 tokens, the read's turn checkpoint at 12), a second reply R2 (4 tokens; the slot holds 17) and
++        // a third turn (21 tokens).  The engine parks the MAIN session (the prompt as read, plus the admission's
++        // token) whenever another conversation displaces it; the replies are decoded in the slots.  Measured:
++        // A's third turn found 199584 of 199839 held tokens (its prompt-read state), B found nothing.
++        //   slot_parks:   an idle slot parks what it holds before an admission overwrites it
++        //   checks_back:  a slot that gives "all it holds" back to the main session gives its checkpoints with it,
++        //                 so the chain still supersedes (#342) the parked copies a turn back
++        auto replay = [&](bool slot_parks, bool checks_back) {
++            std::vector<std::vector<int32_t>> full(4);
++            for (int c = 0; c < 4; ++c) {
++                for (int32_t t = 1; t <= 8; ++t) full[(size_t) c].push_back(c * 100 + t);
++                for (int32_t t : {21, 22, 23, 9, 31, 32, 41, 42, 43, 44, 9, 51, 52}) full[(size_t) c].push_back(c * 100 + t);
++            }
++            auto st = [&](int c, size_t n) { return std::vector<int32_t>(full[(size_t) c].begin(), full[(size_t) c].begin() + (std::ptrdiff_t) n); };
++            auto cp = [&](int c, size_t n) { ConversationCheckpoint k; k.ids = st(c, n); return k; };
++            auto park = [&](ConversationCache& cache, int c, size_t n, const std::vector<size_t>& cks) {
++                SavedConversation s = image({});
++                s.live.ids = st(c, n);
++                for (size_t k : cks) s.checkpoints.push_back(cp(c, k));
++                check(cache.put(std::move(s)), "the replay's parks all fit the budget");
++            };
++            auto restore = [&](ConversationCache& cache, int c, size_t prompt) -> int64_t {
++                const auto m = cache.best(st(c, prompt), {}, true);
++                if (m.tokens > 0) cache.take(m.index);
++                return m.tokens;
++            };
++            // the main chain after a slot gave "all it holds" back: its checkpoints, or none
++            auto back = [&](const std::vector<size_t>& slot_cks) { return checks_back ? slot_cks : std::vector<size_t>{}; };
++            auto slot_park = [&](ConversationCache& cache, int c, size_t n, const std::vector<size_t>& cks) {
++                if (slot_parks && !cache.holds(st(c, n), {}, true)) park(cache, c, n, cks);
++            };
++            enum { A, B, C, D };
++            ConversationCache cache(1 << 20, 4);
++            // initial-AB: B solo then admitted (its prompt + the first token parked when A's request came), A
++            // admitted directly, then alone: solo again from its slot (A's prompt-read state parked first)
++            park(cache, B, 9, {4});
++            park(cache, A, 8, {4});
++            std::vector<size_t> chain_a = back({4});           // slot 1 gave back A's 10 tokens
++            // resident1-AB: B's request displaces A's solo state; B's slot gives back 10; B admitted with the turn
++            // checkpoint; A's request restores A's solo state from RAM and is admitted beside B
++            park(cache, A, 12, chain_a);
++            std::vector<size_t> chain_b = back({4});
++            chain_b.push_back(12);
++            // (a request takes its parked conversation before it parks the one it displaces)
++            check(restore(cache, A, 14) == 12, "A's second turn resumes from its parked solo state");
++            park(cache, B, 15, chain_b);
++            chain_a.push_back(12);
++            // both decode: slot 0 holds B's 17, slot 1 holds A's 17
++            // initial-CD: C's request displaces A's main state; D admitted into slot 0 (B's reply), C into slot 1
++            park(cache, A, 14, chain_a);
++            slot_park(cache, B, 17, {12});
++            park(cache, D, 9, {4});
++            slot_park(cache, A, 17, {12});
++            park(cache, C, 8, {4});                              // C alone: solo again from its slot
++            std::vector<size_t> chain_c = back({4});
++            // resident1-CD: C continues from the main session (no park), D's request displaces it (slot 1 held C's
++            // own earlier state: covered, no slot park), D's slot gives back 10 (covered as well)
++            chain_c.push_back(12);
++            park(cache, C, 15, chain_c);
++            std::vector<size_t> chain_d = back({4});
++            chain_d.push_back(12);
++            // both decode: slot 0 holds D's 17, slot 1 holds C's 17
++            // exchange1-AB: A's request takes A's parked state, displaces D's main state, is admitted into slot 1
++            // (C's reply); B's request displaces A's state
++            const int64_t a_found = restore(cache, A, 21);
++            park(cache, D, 14, chain_d);
++            slot_park(cache, C, 17, {12});
++            park(cache, A, 22, {12, 20});
++            const int64_t b_found = restore(cache, B, 21);
++            return std::pair<int64_t, int64_t>(a_found, b_found);
++        };
++        const auto baseline = replay(false, false);
++        check(baseline.first == 14 && baseline.second == 0, "baseline: A returns to its prompt-read state, B to nothing (as measured)");
++        const auto parks_only = replay(true, false);
++        check(parks_only.first == 17 && parks_only.second == 0, "slot parks alone: A whole, B's copy evicted by a stale initial image");
++        const auto both = replay(true, true);
++        check(both.first == 17 && both.second == 17, "slot parks + checkpoints back: both return whole");
++    }
+     {
+         // what is NOT superseded: another conversation sharing only the root, an entry without checkpoints, the
+         // other steering mode, a branch whose deepest checkpoint the new chain does not hold
+diff --git a/src/program/generate.cpp b/src/program/generate.cpp
+index ba00f94d..16794d70 100644
+--- a/src/program/generate.cpp
++++ b/src/program/generate.cpp
+@@ -8212,10 +8212,23 @@ int main(int argc, char** argv) {
+             id.config = *config_fp;
+             return true;
+         };
++        // What a park captures: the main session's conversation (park_current) or an idle batch slot's (park_slot:
++        // the reply it decoded, before an admission overwrites it).  One budget / admission / snapshot path for both.
++        struct ParkSource {
++            const std::vector<int32_t>& ids;
++            const std::vector<ImgKey>& imgs;
++            std::vector<ConvCheckpoint>& checks;          ///< moved apart into stage parts for the capture, put back after
++            bool cvec;
++            strata::core::SessionState& session;          ///< stage 0's
++            std::vector<strata::core::SessionState*> stage_sessions;   ///< the later stages', in stage order (stages[k]->dev)
++            const strata::core::QsaState* draft0;         ///< the draft layer's K/V saved with stage 0's image (or none)
++            const strata::core::QsaState* draft_last;     ///< ... with the last stage's image (a split: the drafter's GPU)
++            bool with_reuse;                              ///< the retained K/V describes this source (the main session's)
++            std::string what;                             ///< the log's words after the token count ("", " from slot 1")
++        };
+         // Save only on a switch/rewind, not on each continuing request. No graph
+         // addresses change: all parked images live in ordinary host vectors.
+-        auto park_current_body = [&](size_t held) -> bool {
+-            if (!conversations.enabled() || !live_ok || live.empty()) return true;
++        auto park_source = [&](const ParkSource& src, size_t held) -> bool {
+             // #2049: parking copies the outgoing conversation's running checkpoints and K/V into host memory, which
+             // is a silent stretch of the "request" stage; when the OS has paged that memory out it takes minutes.
+             // Named, so a stall report says "parking"; its copies beat (conversation_copy.hpp), so the watchdog
+@@ -8228,15 +8241,15 @@ int main(int argc, char** argv) {
+             // switch-time decision, so a client's small side requests would otherwise park themselves and, once the
+             // cache is full, evict the long conversation they were interleaved with (oldest first) - the reuse it
+             // wanted.  Returning true is the same non-error skip the byte-budget and RAM-floor paths below take.
+-            if (!conversations.wants((int64_t) live.size())) {
++            if (!conversations.wants((int64_t) src.ids.size())) {
+                 std::fprintf(stderr, "strata serve: conversation cache: skip parking (%zu tokens, below the %lld "
+                                      "minimum; parked=%zu)\n",
+-                             live.size(), (long long) o.conversation_cache_min_tokens, conversations.size());
++                             src.ids.size(), (long long) o.conversation_cache_min_tokens, conversations.size());
+                 return true;
+             }
+             // #342: before make_room evicts oldest-first, the copies of this conversation a turn back go (they hold
+             // nothing the outgoing chain does not, apart from the tail this conversation rewrote)
+-            if (const size_t dropped = conversations.drop_superseded(live, live_imgs, checks, cvec_cached))
++            if (const size_t dropped = conversations.drop_superseded(src.ids, src.imgs, src.checks, src.cvec))
+                 std::fprintf(stderr, "strata serve: conversation cache: dropped %zu superseded cop%s of this "
+                              "conversation; parked=%zu\n", dropped, dropped == 1 ? "y" : "ies", conversations.size());
+             // A layer split parks one image per stage: the first stage's (with the draft layer's K/V) and one per
+@@ -8245,16 +8258,17 @@ int main(int argc, char** argv) {
+             const size_t n_st = stages.size();
+             // the draft layer's K/V lives on the last stage's GPU (the drafter is loaded there): with a split it is
+             // saved with that stage's image, under its device; stage 0's image holds none
+-            const strata::core::QsaState* draft0 = (n_st > 0 && !mtp_first) || !use_mtp ? nullptr : &mtp.kv_state();   // no --mtp: no draft K/V (snapshots accept null)
+-            auto draft_of = [&](size_t k) -> const strata::core::QsaState* { return use_mtp && !mtp_first && k + 1 == n_st ? &mtp.kv_state() : nullptr; };
++            const strata::core::QsaState* draft0 = src.draft0;   // no --mtp: no draft K/V (snapshots accept null)
++            auto draft_of = [&](size_t k) -> const strata::core::QsaState* { return k + 1 == n_st ? src.draft_last : nullptr; };
++            std::vector<ConvCheckpoint>& checks = src.checks;
+             strata::core::ConversationCheckpointSplit cs;
+             if (n_st > 0) cs = strata::core::conversation_checkpoints_split(std::move(checks), n_st);   // #752: two-phase; a bad_alloc leaves `checks` whole
+             struct MergeBack {
+                 strata::core::ConversationCheckpointSplit& cs; std::vector<ConvCheckpoint>& checks; bool on;
+                 ~MergeBack() { if (on && !strata::core::conversation_checkpoints_merge(std::move(cs), checks)) checks.clear(); }
+             } merge_back{cs, checks, n_st > 0};
+-            const strata::core::ConversationView view{live, live_imgs, n_st > 0 ? cs.stage0 : checks, cvec_cached};
+-            auto reuse = conversations.take_reuse();
++            const strata::core::ConversationView view{src.ids, src.imgs, n_st > 0 ? cs.stage0 : checks, src.cvec};
++            auto reuse = src.with_reuse ? conversations.take_reuse() : strata::core::ConversationKvReuse{};
+             std::vector<strata::core::ConversationKvReuse> stage_reuse = std::move(reuse.stages);
+             stage_reuse.resize(n_st);
+             reuse.stages.clear();
+@@ -8263,9 +8277,9 @@ int main(int argc, char** argv) {
+             for (size_t k = 0; k < n_st; ++k) {
+                 auto& st = stages[k];
+                 const strata::core::OnDevice on(st->dev);
+-                const strata::core::ConversationView view_k{live, live_imgs, cs.parts[k], cvec_cached};
++                const strata::core::ConversationView view_k{src.ids, src.imgs, cs.parts[k], src.cvec};
+                 size_t b = 0;
+-                if (!strata::core::conversation_snapshot_bytes(view_k, st->ss, g, draft_of(k), b, err)) {
++                if (!strata::core::conversation_snapshot_bytes(view_k, *src.stage_sessions[k], g, draft_of(k), b, err)) {
+                     std::fprintf(stderr, "strata serve: conversation cache: skip parking (stage CUDA%d: %s)\n",
+                                  st->dev, err.c_str());
+                     err.clear();
+@@ -8273,8 +8287,8 @@ int main(int argc, char** argv) {
+                 }
+                 if (!stage_reuse[k].kv.empty()) {
+                     size_t r = 0;
+-                    if (strata::core::conversation_snapshot_capture_bytes(stage_reuse[k], view_k, st->ss, g, draft_of(k),
+-                                                                          r, err)) {
++                    if (strata::core::conversation_snapshot_capture_bytes(stage_reuse[k], view_k, *src.stage_sessions[k], g,
++                                                                          draft_of(k), r, err)) {
+                         b = r;
+                         stage_retained += stage_reuse[k].bytes();
+                     } else {
+@@ -8285,14 +8299,14 @@ int main(int argc, char** argv) {
+                 stage_estimate += b;
+             }
+             size_t estimate = 0;
+-            if (!strata::core::conversation_snapshot_bytes(view, ss, g, draft0, estimate, err)) {
++            if (!strata::core::conversation_snapshot_bytes(view, src.session, g, draft0, estimate, err)) {
+                 std::fprintf(stderr, "strata serve: conversation cache: skip parking (%s)\n", err.c_str());
+                 err.clear(); // A recoverable miss must not poison the batched draft prefill's error channel.
+                 return true;
+             }
+             const size_t fresh_estimate = estimate;
+             if (!reuse.kv.empty() && !strata::core::conversation_snapshot_capture_bytes(
+-                    reuse, view, ss, g, draft0, estimate, err)) {
++                    reuse, view, src.session, g, draft0, estimate, err)) {
+                 reuse = {};
+                 estimate = fresh_estimate;
+                 err.clear();
+@@ -8346,15 +8360,15 @@ int main(int argc, char** argv) {
+                                  (long long) o.conversation_cache_min_free_mib);
+                 strata::core::SavedConversation image;
+                 size_t reused_bytes = 0;
+-                if (!strata::core::conversation_snapshot_save(image, view, ss, g, draft0, err,
++                if (!strata::core::conversation_snapshot_save(image, view, src.session, g, draft0, err,
+                         std::move(reuse), &reused_bytes)) return false;
+                 for (size_t k = 0; k < n_st; ++k) {   // the later stages (the last one with the draft layer's K/V)
+                     auto& st = stages[k];
+                     const strata::core::OnDevice on(st->dev);
+                     if (cudaDeviceSynchronize() != cudaSuccess) { err = "stage sync failed"; return false; }
+-                    const strata::core::ConversationView view_k{live, live_imgs, cs.parts[k], cvec_cached};
++                    const strata::core::ConversationView view_k{src.ids, src.imgs, cs.parts[k], src.cvec};
+                     strata::core::SavedConversation part;
+-                    if (!strata::core::conversation_snapshot_save(part, view_k, st->ss, g, draft_of(k), err,
++                    if (!strata::core::conversation_snapshot_save(part, view_k, *src.stage_sessions[k], g, draft_of(k), err,
+                             std::move(stage_reuse[k]), &reused_bytes))
+                         return false;
+                     image.stage_images.push_back(std::move(part));
+@@ -8368,8 +8382,8 @@ int main(int argc, char** argv) {
+                 }
+                 const size_t snapshot_bytes = image.bytes();
+                 const bool stored = conversations.put(std::move(image), held);
+-                std::fprintf(stderr, "strata serve: conversation cache: %s %zu tokens in %.1f ms; parked=%zu bytes=%zu evictions=%zu snapshot_bytes=%zu reused_kv_bytes=%zu\n",
+-                             stored ? "parked" : "skipped", live.size(),
++                std::fprintf(stderr, "strata serve: conversation cache: %s %zu tokens%s in %.1f ms; parked=%zu bytes=%zu evictions=%zu snapshot_bytes=%zu reused_kv_bytes=%zu\n",
++                             stored ? "parked" : "skipped", src.ids.size(), src.what.c_str(),
+                              std::chrono::duration<double, std::milli>(Clock::now() - t0).count(),
+                              conversations.size(), conversations.bytes(), conversations.evictions(), snapshot_bytes, reused_bytes);
+             } catch (const std::bad_alloc&) {
+@@ -8379,6 +8393,15 @@ int main(int argc, char** argv) {
+             }
+             return true;
+         };
++        auto park_current_body = [&](size_t held) -> bool {
++            if (!conversations.enabled() || !live_ok || live.empty()) return true;
++            const size_t n_st = stages.size();
++            ParkSource src{live, live_imgs, checks, cvec_cached, ss, {},
++                           (n_st > 0 && !mtp_first) || !use_mtp ? nullptr : &mtp.kv_state(),
++                           use_mtp && !mtp_first && n_st > 0 ? &mtp.kv_state() : nullptr, true, ""};
++            for (auto& st : stages) src.stage_sessions.push_back(&st->ss);
++            return park_source(src, held);
++        };
+         // #752: the whole park (the checkpoint split included) is under one try, so a host OOM skips parking instead of
+         // ending the server
+         auto park_current = [&](size_t held) -> bool {
+@@ -9946,6 +9969,48 @@ int main(int argc, char** argv) {
+             return true;
+         };
+         auto stage_verifier = [&](int k) -> strata::core::Verifier& { return k == 0 ? ver : stages[(size_t) k - 1]->ver; };
++        // What an idle slot holds (the conversation it decoded last: its sessions, its draft K/V and its checkpoints)
++        // goes to the parked conversations before an admission overwrites it.  The main session was parked with that
++        // conversation's prompt only (the admission's copy), so the reply the slot decoded lives nowhere else: without
++        // this, the conversation's next turn finds its prompt-read state and reads the whole reply again (measured on
++        // four 200K chats over two slots: 255 of a 256-token reply re-read, and a chat whose copies the cache had
++        // evicted meanwhile read from token 0).  Nothing to do when the live main session or a parked conversation
++        // already holds that state (or a continuation of it).  Skips are logged and not errors; false only when the
++        // snapshot itself failed, as park_current.
++        auto park_slot = [&](int b) -> bool {
++            BSlot& sl = bs[(size_t) b];
++            if (!conversations.enabled() || sl.active || !sl.cached || sl.img || sl.ids.empty()) return true;
++            auto prefix_of = [&](const std::vector<int32_t>& whole) {
++                return whole.size() >= sl.ids.size() && std::equal(sl.ids.begin(), sl.ids.end(), whole.begin());
++            };
++            const bool in_main = live_ok && cvec_cached == sl.cvec && prefix_of(live) &&
++                                 imgs_below(live_imgs, (int64_t) sl.ids.size()).empty();
++            if (in_main || conversations.holds(sl.ids, {}, sl.cvec)) return true;
++            if (use_mtp && !batch_mtp) {   // no draft K/V of its own: an image without it would not restore beside the drafter
++                std::fprintf(stderr, "strata serve: conversation cache: slot %d not parked before its overwrite (its %zu tokens "
++                                     "have no per-slot draft K/V without --batch-mtp)\n", b, sl.ids.size());
++                return true;
++            }
++            if (cudaDeviceSynchronize() != cudaSuccess) { err = "parking a batch slot: device sync failed"; return false; }
++            std::string why;
++            if (batch_mtp && !slot_mtp[(size_t) b]->idle(why)) {
++                std::fprintf(stderr, "strata serve: conversation cache: slot %d not parked before its overwrite (%s)\n",
++                             b, why.c_str());
++                return true;
++            }
++            const size_t n_st = stages.size();
++            static const std::vector<ImgKey> no_imgs;
++            ParkSource src{sl.ids, no_imgs, sl.checks, sl.cvec, *bslot_ss[0][(size_t) b], {},
++                           (n_st > 0 && !mtp_first) || !batch_mtp ? nullptr : &slot_mtp[(size_t) b]->kv_state(),
++                           batch_mtp && !mtp_first && n_st > 0 ? &slot_mtp[(size_t) b]->kv_state() : nullptr, false,
++                           " from slot " + std::to_string(b)};
++            for (size_t k = 1; k < bslot_ss.size(); ++k) src.stage_sessions.push_back(bslot_ss[k][(size_t) b].get());
++            try { return park_source(src, 0); }
++            catch (const std::bad_alloc&) {
++                std::fprintf(stderr, "strata serve: conversation cache: allocation failed; skip parking slot %d\n", b);
++                return true;
++            }
++        };
+         // one batch window over the active slots only (row t is the t-th active slot): an idle slot is not touched,
+         // so it keeps the conversation it holds
+         auto batch_step = [&]() -> bool {
+@@ -11042,13 +11107,18 @@ int main(int argc, char** argv) {
+                     // checkpoints as if it had not stopped
+                     if (slot_ck == nullptr && bs[(size_t) slot_source].partial && admit_slot == slot_source) {
+                         resumed_from0 = bs[(size_t) slot_source].partial_from0;
+-                        for (const ConvCheckpoint& c : bs[(size_t) slot_source].checks) checks.push_back(c);
+                         bs[(size_t) slot_source].partial = false;
+                     }
++                    // the slot's checkpoints come along (the one continued from, and any shorter one: prefixes of what
++                    // was copied back, their K/V cells with it), so the chain keeps its branch points and the parked
++                    // copies of this conversation a turn back - whose deepest checkpoint the chain holds again - go
++                    // as superseded (#342) instead of taking a parked entry each until the cache evicts another chat
++                    for (const ConvCheckpoint& c : bs[(size_t) slot_source].checks)
++                        if ((int64_t) c.ids.size() <= slot_tokens) checks.push_back(c);
+                     if (slot_ck != nullptr) {
+                         live = slot_ck->ids;
+-                        checks.push_back(*slot_ck);   // the main session's chain has it now
+-                        checks.back().used = ++check_clock;
++                        for (ConvCheckpoint& c : checks)   // the main session's chain has it now
++                            if (c.ids.size() == slot_ck->ids.size()) c.used = ++check_clock;
+                     } else {
+                         live = bs[(size_t) slot_source].ids;
+                     }
+@@ -11610,6 +11680,11 @@ int main(int argc, char** argv) {
+                         std::string ye;
+                         const auto ty = Clock::now();
+                         std::vector<int32_t> pre(ids.begin(), ids.begin() + q);
++                        if (can && !park_slot(ys)) {   // the conversation the slot holds, before this read overwrites it
++                            batch_fatal = true;
++                            e = err;
++                            return false;
++                        }
+                         if (can && copy_to_slot(ys, pre, ye)) {
+                             BSlot& sl = bs[(size_t) ys];
+                             sl = BSlot{};
+@@ -12945,6 +13020,10 @@ int main(int argc, char** argv) {
+                 bool cont = !cancelled && produced_n == 1 && admit_max_new > 1 && std::strcmp(finish, "length") == 0 &&
+                             (int64_t) live.size() == p;
+                 const auto tc0 = Clock::now();
++                if (cont && !park_slot(admit_slot)) {   // the conversation the slot holds, before this one overwrites it
++                    std::printf("ERR %s\n", err.c_str());
++                    return 1;
++                }
+                 if (cont && !copy_to_slot(admit_slot, live, err)) {
+                     std::fprintf(stderr, "strata serve: batch admission failed: %s\n", err.c_str());
+                     bs[(size_t) admit_slot].cached = false;   // its sessions may be half written
+diff --git a/sycl/src/program/generate.cpp b/sycl/src/program/generate.cpp
+index 8f29ed18..5e08d9c9 100644
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -7579,13 +7579,26 @@ int main(int argc, char **argv) try {
+             id.config = *config_fp;
+             return true;
+         };
++        // What a park captures: the main session's conversation (park_current) or an idle batch slot's (park_slot:
++        // the reply it decoded, before an admission overwrites it).  One budget / admission / snapshot path for both.
++        struct ParkSource {
++            const std::vector<int32_t>& ids;
++            const std::vector<ImgKey>& imgs;
++            std::vector<ConvCheckpoint>& checks;          ///< moved apart into stage parts for the capture, put back after
++            bool cvec;
++            strata::core::SessionState& session;          ///< stage 0's
++            std::vector<strata::core::SessionState*> stage_sessions;   ///< the later stages', in stage order (stages[k]->dev)
++            const strata::core::QsaState* draft0;         ///< the draft layer's K/V saved with stage 0's image (or none)
++            const strata::core::QsaState* draft_last;     ///< ... with the last stage's image (a split: the drafter's GPU)
++            bool with_reuse;                              ///< the retained K/V describes this source (the main session's)
++            std::string what;                             ///< the log's words after the token count ("", " from slot 1")
++        };
+         // Save only on a switch/rewind, not on each continuing request. No graph
+         // addresses change: all parked images live in ordinary host vectors.
+-        auto park_current_body = [&](size_t held) -> bool {
+-            if (!conversations.enabled() || !live_ok || live.empty()) return true;
++        auto park_source = [&](const ParkSource& src, size_t held) -> bool {
+             // #342: before make_room evicts oldest-first, the copies of this conversation a turn back go (they hold
+             // nothing the outgoing chain does not, apart from the tail this conversation rewrote)
+-            if (const size_t dropped = conversations.drop_superseded(live, live_imgs, checks, cvec_cached))
++            if (const size_t dropped = conversations.drop_superseded(src.ids, src.imgs, src.checks, src.cvec))
+                 std::fprintf(stderr, "strata serve: conversation cache: dropped %zu superseded cop%s of this "
+                              "conversation; parked=%zu\n", dropped, dropped == 1 ? "y" : "ies", conversations.size());
+             // A layer split parks one image per stage: the first stage's (with the draft layer's K/V) and one per
+@@ -7594,16 +7607,17 @@ int main(int argc, char **argv) try {
+             const size_t n_st = stages.size();
+             // the draft layer's K/V lives on the last stage's GPU (the drafter is loaded there): with a split it is
+             // saved with that stage's image, under its device; stage 0's image holds none
+-            const strata::core::QsaState* draft0 = n_st > 0 || !use_mtp ? nullptr : &mtp.kv_state();   // no --mtp: no draft K/V (snapshots accept null)
+-            auto draft_of = [&](size_t k) -> const strata::core::QsaState* { return use_mtp && k + 1 == n_st ? &mtp.kv_state() : nullptr; };
++            const strata::core::QsaState* draft0 = src.draft0;   // no --mtp: no draft K/V (snapshots accept null)
++            auto draft_of = [&](size_t k) -> const strata::core::QsaState* { return k + 1 == n_st ? src.draft_last : nullptr; };
++            std::vector<ConvCheckpoint>& checks = src.checks;
+             strata::core::ConversationCheckpointSplit cs;
+             if (n_st > 0) cs = strata::core::conversation_checkpoints_split(std::move(checks), n_st);   // #752: two-phase; a bad_alloc leaves `checks` whole
+             struct MergeBack {
+                 strata::core::ConversationCheckpointSplit& cs; std::vector<ConvCheckpoint>& checks; bool on;
+                 ~MergeBack() { if (on && !strata::core::conversation_checkpoints_merge(std::move(cs), checks)) checks.clear(); }
+             } merge_back{cs, checks, n_st > 0};
+-            const strata::core::ConversationView view{live, live_imgs, n_st > 0 ? cs.stage0 : checks, cvec_cached};
+-            auto reuse = conversations.take_reuse();
++            const strata::core::ConversationView view{src.ids, src.imgs, n_st > 0 ? cs.stage0 : checks, src.cvec};
++            auto reuse = src.with_reuse ? conversations.take_reuse() : strata::core::ConversationKvReuse{};
+             std::vector<strata::core::ConversationKvReuse> stage_reuse = std::move(reuse.stages);
+             stage_reuse.resize(n_st);
+             reuse.stages.clear();
+@@ -7612,9 +7626,9 @@ int main(int argc, char **argv) try {
+             for (size_t k = 0; k < n_st; ++k) {
+                 auto& st = stages[k];
+                 const strata::core::OnDevice on(st->dev);
+-                const strata::core::ConversationView view_k{live, live_imgs, cs.parts[k], cvec_cached};
++                const strata::core::ConversationView view_k{src.ids, src.imgs, cs.parts[k], src.cvec};
+                 size_t b = 0;
+-                if (!strata::core::conversation_snapshot_bytes(view_k, st->ss, g, draft_of(k), b, err)) {
++                if (!strata::core::conversation_snapshot_bytes(view_k, *src.stage_sessions[k], g, draft_of(k), b, err)) {
+                     std::fprintf(stderr, "strata serve: conversation cache: skip parking (stage CUDA%d: %s)\n",
+                                  st->dev, err.c_str());
+                     err.clear();
+@@ -7622,8 +7636,8 @@ int main(int argc, char **argv) try {
+                 }
+                 if (!stage_reuse[k].kv.empty()) {
+                     size_t r = 0;
+-                    if (strata::core::conversation_snapshot_capture_bytes(stage_reuse[k], view_k, st->ss, g, draft_of(k),
+-                                                                          r, err)) {
++                    if (strata::core::conversation_snapshot_capture_bytes(stage_reuse[k], view_k, *src.stage_sessions[k], g,
++                                                                          draft_of(k), r, err)) {
+                         b = r;
+                         stage_retained += stage_reuse[k].bytes();
+                     } else {
+@@ -7634,14 +7648,14 @@ int main(int argc, char **argv) try {
+                 stage_estimate += b;
+             }
+             size_t estimate = 0;
+-            if (!strata::core::conversation_snapshot_bytes(view, ss, g, draft0, estimate, err)) {
++            if (!strata::core::conversation_snapshot_bytes(view, src.session, g, draft0, estimate, err)) {
+                 std::fprintf(stderr, "strata serve: conversation cache: skip parking (%s)\n", err.c_str());
+                 err.clear(); // A recoverable miss must not poison the batched draft prefill's error channel.
+                 return true;
+             }
+             const size_t fresh_estimate = estimate;
+             if (!reuse.kv.empty() && !strata::core::conversation_snapshot_capture_bytes(
+-                    reuse, view, ss, g, draft0, estimate, err)) {
++                    reuse, view, src.session, g, draft0, estimate, err)) {
+                 reuse = {};
+                 estimate = fresh_estimate;
+                 err.clear();
+@@ -7671,7 +7685,7 @@ int main(int argc, char **argv) try {
+                 }
+                 strata::core::SavedConversation image;
+                 size_t reused_bytes = 0;
+-                if (!strata::core::conversation_snapshot_save(image, view, ss, g, draft0, err,
++                if (!strata::core::conversation_snapshot_save(image, view, src.session, g, draft0, err,
+                         std::move(reuse), &reused_bytes)) return false;
+                 for (size_t k = 0; k < n_st; ++k) {   // the later stages (the last one with the draft layer's K/V)
+                     auto& st = stages[k];
+@@ -7680,9 +7694,9 @@ int main(int argc, char **argv) try {
+                                              .queues_wait_and_throw()) != 0) {
+                         err = "stage sync failed"; return false;
+                     }
+-                    const strata::core::ConversationView view_k{live, live_imgs, cs.parts[k], cvec_cached};
++                    const strata::core::ConversationView view_k{src.ids, src.imgs, cs.parts[k], src.cvec};
+                     strata::core::SavedConversation part;
+-                    if (!strata::core::conversation_snapshot_save(part, view_k, st->ss, g, draft_of(k), err,
++                    if (!strata::core::conversation_snapshot_save(part, view_k, *src.stage_sessions[k], g, draft_of(k), err,
+                             std::move(stage_reuse[k]), &reused_bytes))
+                         return false;
+                     image.stage_images.push_back(std::move(part));
+@@ -7693,8 +7707,8 @@ int main(int argc, char **argv) try {
+                 }
+                 const size_t snapshot_bytes = image.bytes();
+                 const bool stored = conversations.put(std::move(image), held);
+-                std::fprintf(stderr, "strata serve: conversation cache: %s %zu tokens in %.1f ms; parked=%zu bytes=%zu evictions=%zu snapshot_bytes=%zu reused_kv_bytes=%zu\n",
+-                             stored ? "parked" : "skipped", live.size(),
++                std::fprintf(stderr, "strata serve: conversation cache: %s %zu tokens%s in %.1f ms; parked=%zu bytes=%zu evictions=%zu snapshot_bytes=%zu reused_kv_bytes=%zu\n",
++                             stored ? "parked" : "skipped", src.ids.size(), src.what.c_str(),
+                              std::chrono::duration<double, std::milli>(Clock::now() - t0).count(),
+                              conversations.size(), conversations.bytes(), conversations.evictions(), snapshot_bytes, reused_bytes);
+             } catch (const std::bad_alloc&) {
+@@ -7704,6 +7718,15 @@ int main(int argc, char **argv) try {
+             }
+             return true;
+         };
++        auto park_current_body = [&](size_t held) -> bool {
++            if (!conversations.enabled() || !live_ok || live.empty()) return true;
++            const size_t n_st = stages.size();
++            ParkSource src{live, live_imgs, checks, cvec_cached, ss, {},
++                           n_st > 0 || !use_mtp ? nullptr : &mtp.kv_state(),
++                           use_mtp && n_st > 0 ? &mtp.kv_state() : nullptr, true, ""};
++            for (auto& st : stages) src.stage_sessions.push_back(&st->ss);
++            return park_source(src, held);
++        };
+         // #752: the whole park (the checkpoint split included) is under one try, so a host OOM skips parking instead of
+         // ending the server
+         auto park_current = [&](size_t held) -> bool {
+@@ -9002,6 +9025,56 @@ int main(int argc, char **argv) try {
+           std::exit(1);
+         }
+         };
++        // What an idle slot holds (the conversation it decoded last: its sessions, its draft K/V and its checkpoints)
++        // goes to the parked conversations before an admission overwrites it.  The main session was parked with that
++        // conversation's prompt only (the admission's copy), so the reply the slot decoded lives nowhere else: without
++        // this, the conversation's next turn finds its prompt-read state and reads the whole reply again (measured on
++        // four 200K chats over two slots: 255 of a 256-token reply re-read, and a chat whose copies the cache had
++        // evicted meanwhile read from token 0).  Nothing to do when the live main session or a parked conversation
++        // already holds that state (or a continuation of it).  Skips are logged and not errors; false only when the
++        // snapshot itself failed, as park_current.
++        auto park_slot = [&](int b) -> bool {
++            BSlot& sl = bs[(size_t) b];
++            if (!conversations.enabled() || sl.active || !sl.cached || sl.img || sl.ids.empty()) return true;
++            auto prefix_of = [&](const std::vector<int32_t>& whole) {
++                return whole.size() >= sl.ids.size() && std::equal(sl.ids.begin(), sl.ids.end(), whole.begin());
++            };
++            const bool in_main = live_ok && cvec_cached == sl.cvec && prefix_of(live) &&
++                                 imgs_below(live_imgs, (int64_t) sl.ids.size()).empty();
++            if (in_main || conversations.holds(sl.ids, {}, sl.cvec)) return true;
++            if (use_mtp && !batch_mtp) {   // no draft K/V of its own: an image without it would not restore beside the drafter
++                std::fprintf(stderr, "strata serve: conversation cache: slot %d not parked before its overwrite (its %zu tokens "
++                                     "have no per-slot draft K/V without --batch-mtp)\n", b, sl.ids.size());
++                return true;
++            }
++            try {
++                if (DPCT_CHECK_ERROR(dpct::get_current_device().queues_wait_and_throw()) != 0) {
++                    err = "parking a batch slot: device sync failed";
++                    return false;
++                }
++            } catch (sycl::exception const& exc) {
++                std::cerr << exc.what() << "Exception caught at file:" << __FILE__ << ", line:" << __LINE__ << std::endl;
++                std::exit(1);
++            }
++            std::string why;
++            if (batch_mtp && !slot_mtp[(size_t) b]->idle(why)) {
++                std::fprintf(stderr, "strata serve: conversation cache: slot %d not parked before its overwrite (%s)\n",
++                             b, why.c_str());
++                return true;
++            }
++            const size_t n_st = stages.size();
++            static const std::vector<ImgKey> no_imgs;
++            ParkSource src{sl.ids, no_imgs, sl.checks, sl.cvec, *bslot_ss[0][(size_t) b], {},
++                           n_st > 0 || !batch_mtp ? nullptr : &slot_mtp[(size_t) b]->kv_state(),
++                           batch_mtp && n_st > 0 ? &slot_mtp[(size_t) b]->kv_state() : nullptr, false,
++                           " from slot " + std::to_string(b)};
++            for (size_t k = 1; k < bslot_ss.size(); ++k) src.stage_sessions.push_back(bslot_ss[k][(size_t) b].get());
++            try { return park_source(src, 0); }
++            catch (const std::bad_alloc&) {
++                std::fprintf(stderr, "strata serve: conversation cache: allocation failed; skip parking slot %d\n", b);
++                return true;
++            }
++        };
+         // one batch window over the active slots only (row t is the t-th active slot): an idle slot is not touched,
+         // so it keeps the conversation it holds
+         auto batch_step = [&]() -> bool {
+@@ -9871,13 +9944,18 @@ int main(int argc, char **argv) try {
+                     // checkpoints as if it had not stopped
+                     if (slot_ck == nullptr && bs[(size_t) slot_source].partial && admit_slot == slot_source) {
+                         resumed_from0 = bs[(size_t) slot_source].partial_from0;
+-                        for (const ConvCheckpoint& c : bs[(size_t) slot_source].checks) checks.push_back(c);
+                         bs[(size_t) slot_source].partial = false;
+                     }
++                    // the slot's checkpoints come along (the one continued from, and any shorter one: prefixes of what
++                    // was copied back, their K/V cells with it), so the chain keeps its branch points and the parked
++                    // copies of this conversation a turn back - whose deepest checkpoint the chain holds again - go
++                    // as superseded (#342) instead of taking a parked entry each until the cache evicts another chat
++                    for (const ConvCheckpoint& c : bs[(size_t) slot_source].checks)
++                        if ((int64_t) c.ids.size() <= slot_tokens) checks.push_back(c);
+                     if (slot_ck != nullptr) {
+                         live = slot_ck->ids;
+-                        checks.push_back(*slot_ck);   // the main session's chain has it now
+-                        checks.back().used = ++check_clock;
++                        for (ConvCheckpoint& c : checks)   // the main session's chain has it now
++                            if (c.ids.size() == slot_ck->ids.size()) c.used = ++check_clock;
+                     } else {
+                         live = bs[(size_t) slot_source].ids;
+                     }
+@@ -10401,6 +10479,11 @@ int main(int argc, char **argv) try {
+                         std::string ye;
+                         const auto ty = Clock::now();
+                         std::vector<int32_t> pre(ids.begin(), ids.begin() + q);
++                        if (can && !park_slot(ys)) {   // the conversation the slot holds, before this read overwrites it
++                            batch_fatal = true;
++                            e = err;
++                            return false;
++                        }
+                         if (can && copy_to_slot(ys, pre, ye)) {
+                             BSlot& sl = bs[(size_t) ys];
+                             sl = BSlot{};
+@@ -11677,6 +11760,10 @@ int main(int argc, char **argv) try {
+                 bool cont = !cancelled && produced_n == 1 && admit_max_new > 1 && std::strcmp(finish, "length") == 0 &&
+                             (int64_t) live.size() == p;
+                 const auto tc0 = Clock::now();
++                if (cont && !park_slot(admit_slot)) {   // the conversation the slot holds, before this one overwrites it
++                    std::printf("ERR %s\n", err.c_str());
++                    return 1;
++                }
+                 if (cont && !copy_to_slot(admit_slot, live, err)) {
+                     std::fprintf(stderr, "strata serve: batch admission failed: %s\n", err.c_str());
+                     bs[(size_t) admit_slot].cached = false;   // its sessions may be half written

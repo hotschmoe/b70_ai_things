@@ -120,3 +120,16 @@ TTFT1.44-13.10s fails the provisional2s working target. Earlier short-reply
 screens did not exercise preservation of a256-token batched reply. Fix
 cache lifecycle with small contexts before another full run. Daily clean
 layer remains recoverable; no routine restoration between future tests.
+
+
+S19 cache candidate b09c9bf3 fixes both loss modes in the small oracle:
+4x3997-token distinct chats,256 replies,two-active proof,then four forced
+RAM returns all reuse4335 held tokens/31newread/0replay. Four draft-KV
+readbacks and10/10 available baseline hashes pass; functional/teardown
+health pass. Full200k remains untested for this patch, so the RAM goal is
+not newly qualified. Small-context p95 RAM1.758s/resident2.161s (4samples
+each, diagnostic) does not establish the provisional full-size2s target.
+Servers stopped between experiments; no routine daily restoration. Next:
+separate8line snapshot-buffer reuse, cheap oracle, then one final full4x200k
+qualification against absolute goals. No unmatched relative speed claim.
+Details: stage doc S19, raw cachefix_20261014/cache-candidate/s19-report.json.

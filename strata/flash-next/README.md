@@ -142,3 +142,13 @@ matching8192-slot config on the already leased server. Full qualification
 keeps default --target199600 --context-size200000. S17 reproduces both
 retained-tail replay and total cache loss with15988 fresh input tokens in
 42s of test phase (startup/health excluded); run it before huge prefills.
+
+patches/batch-slot-cache-preserve.patch parks a completed slot before either
+overwrite path, using its own session/draft state, and carries its checkpoint
+chain back to main. S19 binaryb09c9bf3 passes the fast oracle: all four RAM
+returns reuse4335 held tokens with zero replay, four draft readbacks pass,
+and all10 available baseline response hashes match. Functional and teardown
+health pass. Full200k is untested for this patch; no shelf promotion. Measured
+scope is text-only EP with batch-MTP on. CUDA/pipeline are unexecuted; image
+slots and MTP-without-batch-MTP skip slot parking. A covering continuation
+does not guarantee exact restoration of arbitrary shorter branch endpoints.

@@ -22548,3 +22548,34 @@ scratch files explain most usage; no stale serving process or intentional
 KV offload. No global swappiness/swapoff/cache-drop change.
 VERDICT: continue optimization. Keep large scratch clones/build outputs on
 disk rather than RAM-backed /tmp. Raw: cachefix_20261014/swap-cleanup.json.
+
+
+## 2026-10-15 -- Flash-Next optimization S19: batch slot cache preservation
+
+CONFIG: main296b59d2+EP/PUSH/accounting+cachefix;binaryb09c9bf3, old5aaca2f5
+frozen. Same8K/spec4/32GiB4/all24576; add draft snapshot readback check.
+COMMAND: Fable code+4271 CPU checks+SYCL syntax, Opus source review, one
+CPU-only AOT (489.39s logbirth-to-lastwrite). Existing4x3997/256reply oracle,
+two-active proof, ten available output hashes, ID/math/reasoning/tools.
+Reuse S18 prior health (no interveningGPUwork); normal stop/per-card/ten
+compiled collective post-health. No duplicate agent harness/cold baseline.
+RESULT: fourforcedRAMreturns all4335heldtokens reused,31newread,0replay,
+needles/no cross-chat leak pass. Four draft-KVreadbacks pass;10/10baseline
+hashes equal. Full200k NOT TESTED. Small exchange peak RSS3755134976/
+container3648733184bytes,0swap/OOM. Diagnostic p95RAM1.758/resident2.161s
+(four each), not full200k2squalification. Functional/teardownhealth pass,
+no crash/reset; servers stopped, no dailyrestore/promotion.
+VERDICT: latest-text-chat preservation fixed at small size. Slot capture
+before both overwritepaths and checkpoint carry fix two cache lifecycle
+losses. Same budgets/validation/cvec/stages/draft ownership; no pointer
+swaps. MTP-on without batch-MTP and image slots skip parking;
+CUDA/pipeline unexecuted and
+arbitrary shorterbranches not guaranteed by covering continuation.
+Actualclaude-fable-5-1/claude-opus-5-5 source/decision reviews recorded.
+Reject unsupported reviewer thresholds/newvisionrequirements/32GiBcgroup
+claim (actual90GiB). Fable2095s task hit35turncap after leaving usefulcode;
+focused briefs25.83/14.96s. Separate8linebufferreuse then cheapgate and one
+full4x200kfinalcandidate for absolute goals; skip redundant fullbaseline.
+Next required build may test installed experimental parallelAOT flag.
+Details: stage doc S19; raw cachefix_20261014/cache-candidate/s19-report.json.
+Tracked patch: strata/flash-next/patches/batch-slot-cache-preserve.patch.
