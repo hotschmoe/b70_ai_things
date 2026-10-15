@@ -6,12 +6,14 @@ path, which operations are expensive or wait, and how strong the evidence
 is for each claim. `operation-data.json` is the source of truth;
 `index.html` embeds a copy of it.
 
-Snapshot: 2026-10-15, S29 (S22 operation trace plus readiness, real-head,
-production PLE, EP publication fix/native ISA and paired-head serving).
+Snapshot: 2026-10-15, S30 (S22 operation trace plus readiness, real-head,
+production PLE, EP publication fix/native ISA, paired-head serving,
+draft-counter carry correction and full winning-candidate RAM recovery).
 Runtime source:
 `/mnt/vm_8tb/b70/build/strata-ab/src-ep` (upstream Strata 296b59d2 base
 plus working-tree overlays for EP/PUSH/accounting/S19-S21 and the
 default-OFF S26 head-pair prototype and S28 explicit EP barrier scope).
+S30 also updates the Python optional draft-counter carry helpers.
 Timings reference preserved binaries, not
 the changing source directory. Evidence:
 `docs/20261014_flashnext_strata_optimization.md` S10 and S20-S22, plus raw
@@ -121,3 +123,19 @@ remain the reference operation rollup. Full depth2/headpair cache and
 long-context performance are still unqualified. A pre-existing batch->solo
 counter carry bug loses prior draft totals, so acceptance comparisons are
 invalid; client wall-time and output comparisons remain valid. See stageS29.
+
+S30 fixes that carry loss for new requests; native summed344accepted/
+417offered equals finalserver/API after a real batch-to-solo handback.
+Six CPU tests and functionals pass. Same frozen152055a6/headpairON/depth2
+now passes four199501-token histories, two active256-token replies, and
+four forced RAM returns:199839held reused/31new/0retained-history replay.
+Draft KV byte-readback passes, peaknativeRSS16.255GiB, zero swap/OOM.
+Native663.3-685.1ms/clientTTFT2.992-6.918s are correctness-run diagnostics,
+not a clean speed comparison. Normal teardown/health is in stage evidence.
+The overlap gate is depth-aware: mean kept rows must exceed3 at depth2.
+
+Existing native timers from the first full pair show selection224/225ms
+at the first12288-token block ->6278/6284ms at block16; attention grows
+2291/2303->2630/2636ms. These are two ordinal sequences without A/B
+attribution or exact context offsets, not a joined GPU budget. Value-only
+cost remains unisolated. All170 S22 operation rows remain unchanged.

@@ -56,6 +56,14 @@ def main():
     base = args.base_url.rstrip('/')
     config = json.loads(args.config.read_text())
     argv = config['args']
+    startup_log = Path(config['log']).read_text()
+    depths = re.findall(r'--batch-mtp: up to (\d+) proposals per slot per window', startup_log)
+    batch_depth = int(depths[-1]) if depths else 1
+    if int(config.get('env', {}).get('STRATA_BATCH_MTP_DEPTH', '1')) > 1 and not depths:
+        raise RuntimeError('Deeper batch MTP lacks native startup confirmation')
+    if re.search(r'WARNING: --batch-mtp is off:', startup_log):
+        raise RuntimeError('Native startup disabled the requested batch MTP')
+    single_slot_max_rows = batch_depth+1
     if int(argv[argv.index('--conversation-cache-mib')+1]) != 32768:
         raise RuntimeError('This qualification requires a configured 32768 MiB parking budget')
     container = json.loads(subprocess.check_output(['docker','inspect','strata-ab-serve']))[0]
@@ -247,6 +255,7 @@ def main():
                              phase_log)]
         overlap=min(row['last_content_mono_s'] for row in rows)-max(row['first_content_mono_s'] for row in rows)
         report=dict(phase=phase,content_interval_overlap_s=overlap,
+                    native_batch_depth=batch_depth,single_slot_max_emitted_rows=single_slot_max_rows,
                     native_batch_windows=[dict(windows=int(n),emitted_rows_per_window=float(nr))
                                           for n,nr in batch_stats],actual_ram_restores=restored,
                     snapshot_restore_records=restore_records,
@@ -254,9 +263,9 @@ def main():
         phase_reports.append(report)
         (args.output/(phase+'-overlap.json')).write_text(json.dumps(report,indent=2)+'\n')
         (args.output/(phase+'-engine.log')).write_text(phase_log)
-        # Each MTP slot emits <=2 tokens/window. An average above2 requires
+        # Each MTP slot emits <=depth+1 tokens/window. An average above that requires
         # actual windows with two live decode slots; HTTP overlap alone is weaker.
-        if name.startswith('resident') and (overlap<.1 or not any(float(nr)>2 for _,nr in batch_stats)):
+        if name.startswith('resident') and (overlap<.1 or not any(float(nr)>single_slot_max_rows for _,nr in batch_stats)):
             raise RuntimeError('Two near-full active decodes were not proven: '+json.dumps(report))
         report['intended_ram_exchange']=restore
         report['forced_exchange_passed']=not restore or (restored==2 and len(restore_records)==2

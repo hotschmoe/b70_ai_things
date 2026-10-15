@@ -1840,3 +1840,91 @@ other session's source research wasn't isolated, run order isn't reversed,
 and clocks aren't controlled. Three pairs are not stability evidence.
 Raw head-pair-s29/{s29-report.json,analysis/analysis.json,sha256-s29.txt};
 prepared tracing/candidate steps are under head-pair-s29-prep/.
+
+## S30: carry correction and full paired-head cache qualification (2026-10-15)
+
+CONFIG -> Same frozen152055a6 engine as S29, paired headsON/depth2,
+CLI spec4, two200000 slots, INT8 KV, 32GiB/4 parking entries,
+all24576 experts7152primary/17424peer. Seven Python helper lines now
+carry optional draft totals across batch-to-solo handoff. Native argv,
+build, kernels, stack and scheduling are unchanged. Add snapshot draft-KV
+readback and a buffered completion observer for correctness; this is not
+a clean throughput run. Actual INFO spec6/mtp_max4/lookup3 reflects
+existing suffix expansion of the solo verifier, not extra batch depth.
+
+COMMAND -> Actual-helper old/new regression; six existing/project CPU
+tests in the serving image without DRI/network; one leased server for
+64/512-token handoff, functionals, cheap4k four-chat oracle, full four-chat
+oracle and one fresh32k arrival during decode. The cache harness now
+requires mean emitted rows above native depth+1 plus content overlap:
+at depth2 a single slot can emit3, so the old above2 test was too weak.
+Normal stop, leaseexit0, per-card and ten compiled two-rank collectives.
+
+RESULT -> Old helper regression reports28/21 instead of constructed
+1134/935; new helpers pass six cases including unknown/None and zero.
+Six project tests pass. Live long native BDONE40accepted/46offered plus
+solo DONE304/371 equals finalserver/API344/417; short39/46 also matches.
+Both output prefixes match S29. Stable ID/alias/registry, concurrent
+math323/667, separate reasoning391, tool continuation and residency pass.
+Fix pushed/API-verified on existing
+[Strata PR2511](https://github.com/Niko1221/Strata/pull/2511),
+head1fce5591a0ede4d5451316f462ad8acd528a21e6. No new native build.
+
+Full oracle: four distinct fresh199501-token prompts; all needles correct,
+no cross-conversation codes. Each resident reply emits256 tokens. AB/CD
+content intervals overlap8.677/8.719s; native means4.21/4.24 kept rows
+per window prove some windows contain both slots. Both resident pairs
+are genuinely resident in this run. Four forced RAM returns each reuse
+199839 held tokens, read31 new and replay0 retained-history tokens.
+All four draft-KV restored-byte comparisons pass (199840 cells).
+
+| Return phase | Native restore ms, observed order | Client TTFT s, named streams | API payload bytes each |
+| --- | ---: | ---: | ---: |
+| AB | 685.1 / 673.8 | A3.189 / B6.918 | 3168427056 |
+| CD | 670.1 / 663.3 | C2.992 / D6.842 | 3168427056 |
+
+Native restore records are phase-attributed; their observed order is
+not joined to individual client streams. API bytes are snapshot restore payload, not physical
+PCIe traffic. Client RAM-return p50/p95=5.015/6.907s on four samples,
+diagnostic only. Peak sampled nativeRSS16.255GiB/container16.244GiB;
+exchange-only15.161/15.166GiB. 15030 samples at50ms; zero container swap
+and OOM delta; minimum host available95.103GiB. These are bounded peaks,
+not a multi-day stability claim.
+
+Mixed arrival: fresh32719-token prefill arrives during1500-token decode;
+both finish, cache_n0 each. Decoder max content-event gap7.753s,
+completion43.900s; incoming TTFT29.564s/completion35.360s. Retain the
+interference bottleneck; SSE events can contain several tokens. Snapshot
+verification/observer/current cache population prevent a clean speed
+comparison against S14 or S29. Normalstop/leaseexit0 and final both-card
+plus ten compiled4x5120BF16/P2P0 collective checks all PASS; no reset.
+
+Existing full-prefill timers reused without more GPU work: two ordinal
+sequences each16x12288+2886 timed tokens. Equal full blocks1->16 show
+QSA select224/225->6278/6284ms while attention2291/2303->2630/2636ms.
+The199494 timed tokens omit seven prompt tokens; no A/B names or exact
+context offsets are assigned. Value gather is not separately isolated;
+peer idle is on its own timeline, not hardware utilization or additive
+CPU/GPU budget. S22's170 operation rows stay the reference; no new C2
+per-kernel trace is claimed.
+
+VERDICT -> Winning depth2/headpair candidate now passes the requested
+bounded two-active/four-distinct/32GiB RAM recovery qualification. Keep
+it recoverable at raw draft-carry-s30/config.json; no daily shelf change.
+Clean S29 coding remains102.279 aggregate,53-56clienttok/s perstream,
+well below150. Full-context correctness-run client decode18.44-29.38
+tok/s is diagnostic and a different workload. Prefill targets, mixed
+interference and paired-head critical-path profiling remain open.
+
+Actual Opus5.5/Fable5.1 IDs verified. Initial narrow source reviews hit
+their turn caps; resumed tool-free verdicts complete in15.6/12.1s.
+Opus approves bounded telemetry proof. Root rejects Fable's alternating
+single-slot explanation of mean>3 using actual bt_rows/bt_windows source;
+readback and phase RAM requests were already enabled. Its GR-down lead
+is distinct from S24 but not ready: direct retains four partials, changes
+reduction order, and source records sliced faster. No unqualified default
+arm or redundant numerical run. Loop: one server start/no build/no second
+old GPU arm/no1500 rebenchmark/no daily restore; full200k run only after
+the cheap oracle passes. Useful source/timer work overlaps necessary
+prefills. Raw draft-carry-s30/{s30-report.json,full-cache-verdict.json,
+prefill-phase-diagnostic.json,model-review-closure.json,post-health.json}.

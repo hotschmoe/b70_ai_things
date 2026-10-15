@@ -148,7 +148,7 @@ ul.plain{padding-left:1.1rem}
 {
  "schema": 1,
  "title": "Strata Flash-Next data map",
- "snapshot": "2026-10-15 S29: S22 operation rollups, S25 head replay, S28 EP fix, S29 bounded paired-head serving comparison",
+ "snapshot": "2026-10-15 S30: S22 operation rollups, S29 bounded head-pair gain, S30 carry fix and full winning-candidate RAM recovery (teardown health recorded in stage evidence)",
  "scope": "Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two Arc Pro B70 cards, Strata SYCL engine, EP/PUSH, batch MTP depth2 (opt-in), two 200000-token slots, INT8 KV, 32 GiB / 4-entry RAM parking, all 24576 experts resident (7152 on GPU0 + 17424 on GPU1), greedy.",
  "warnings": [
   "Trace service times overlap: within a card (engines), across cards, and with CPU wall time. They are NOT additive and are not a latency budget.",
@@ -157,7 +157,7 @@ ul.plain{padding-left:1.1rem}
   "Logical byte figures are arithmetic from shapes and quant block sizes. Physical PCIe bytes, cache hit rates and bandwidth saturation were NOT measured.",
   "Current EP transport is Level Zero IPC-mapped device memory written/read by kernels with flag counters. It is not an all-reduce or any oneCCL collective. oneCCL post-health checks are health checks, not serving performance.",
   "S28 explicit-scope EP push passes bounded standalone/native-TU and concurrent serving canaries. Old default barrier first-read failures retained; no speed, general IPC or long-run claim.",
-  "S29 same-binary C2 paired-head coding improves bounded median97.881->102.279aggregate tok/s. New C2 kernel timing not traced. Full-request draft counters can lose prior batch legs on handback to solo; do not infer acceptance parity from those totals."
+  "S29 bounded paired-head speed gain is unchanged; its raw prior-leg draft counts remain incomplete. S30 fixes Python carry and proves native/API sums in one64/512handback. Full-request acceptance parity across engines/schedules is not inferred."
  ],
  "status_legend": {
   "measured": "Directly observed in a retained trace summary, native log, or clean benchmark (evidence path given). Trace values are diagnostic.",
@@ -168,20 +168,21 @@ ul.plain{padding-left:1.1rem}
   "rejected": "Measured and rejected; do not repeat without a new mechanism."
  },
  "provenance": {
-  "runtime_source": "Reference trace: upstream296b59d2 plus EP/PUSH/accounting/S19-S21, frozen S21 db53efb2. Live src-ep adds S26 opt-in headpair and S28 scoped EP barrier. Frozen152055a6 tested headpairOFF/ON in S29; no source change during comparison. Full headpair/depth2 cache unqualified; batch-to-solo draft-counter loss found.",
+  "runtime_source": "Reference trace: upstream296b59d2 plus EP/PUSH/accounting/S19-S21, frozenS21 db53efb2. Live src-ep adds optionalS26 headpair, S28 scopedEPbarrier, and S30 Python draft-counter carry. Frozen152055a6 tested headpairOFF/ON inS29 and full depth2/headpair cache inS30; reference operation rollups remainS22.",
   "upstream_base": "github.com/Niko1221/Strata @ 296b59d2f73c8f04a805df29c2fa97655adace78 (path names below are relative to the repo root)",
   "traced_binary": "strata-batch-depth-s21 SHA256 db53efb23790f682478f8469eab5737cc0e9b569a0bdf6c7a98ea86c6272fba3 (control trace); strata-async-s22 487eb67a... for the same-binary mode0/2/1 screen",
   "overlay_files": "sycl/src/core/verify.cpp, sycl/src/core/mtp.cpp, sycl/src/program/generate.cpp, sycl/include/strata/core/ep_mem.hpp (new), sycl/include/strata/kernels/ep_kernels.hpp (new), sycl/src/kernels/cuda/ep_kernels.dp.cpp (new), sycl/src/kernels/cuda/verify_kernels.dp.cpp, include/strata/core/conversation_cache.hpp, include/strata/core/batch_depth.hpp (new), serve/server.py, sycl/src/prefill/prefill.cpp",
-  "tracked_patches": "strata/flash-next/patches/{ep-prefill-reduce, batch-mtp-restore-accounting, batch-slot-cache-preserve, batch-slot-image-reuse, batch-mtp-depth}.patch; rejected: rejected-batch-mtp-async-s22.patch; correctness: ep-push-system-barrier.patch (S28)",
+  "tracked_patches": "strata/flash-next/patches/{ep-prefill-reduce, batch-mtp-restore-accounting, batch-slot-cache-preserve, batch-slot-image-reuse, batch-mtp-depth}.patch; rejected: rejected-batch-mtp-async-s22.patch; correctness: ep-push-system-barrier.patch (S28); Python telemetry follow-up: batch-leg-draft-carry.patch (S30)",
   "docs": [
    "../../../docs/20261014_flashnext_strata_optimization.md (S10 prefill/decode census, S20-S22)",
    "../../../docs/20261013_flashnext_goals.md",
    "../README.md",
-   "../../../docs/20261015_strata_ep_publication_scope.md (S28, explicit hidden-ISA correction)"
+   "../../../docs/20261015_strata_ep_publication_scope.md (S28, explicit hidden-ISA correction)",
+   "../../../docs/20261015_strata_batch_draft_carry.md (S30 counter correction)"
   ],
   "results_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
   "prototype_binary": "S26 CPU-only strata-head-pair-s26 SHA256264f221e2c1b02d4bdd9b332c46f91e91bf4f6301afbdabe563df5ff2a16e44a; not GPU served; default pair option OFF.",
-  "ep_scope_binary": "strata-ep-scope-s28 SHA256152055a6204a3911e96b59aab8d6788a1a434891e1e1ebd9098c9e21b8d11f13; S28 OFFcanary and S29samebinary headpairOFF/ON coding,functionals,teardown/health PASS; not fullcache or shelf"
+  "ep_scope_binary": "strata-ep-scope-s28 SHA256152055a6204a3911e96b59aab8d6788a1a434891e1e1ebd9098c9e21b8d11f13; S28OFFcanary, S29samebinary OFF/ONcoding, S30depth2/headpair fullcache/counter/functionals/normalteardown/percard+10compiledhealth PASS; no shelf promotion."
  },
  "geometry": {
   "source": "Confirmed against served GGUF metadata with CPU-only tools/gguf_reader.py: lowlevel-s24/model-geometry.json. Derived: 12 QSA/36 GDN layers, ssm_conv_channels=2*128*16+6144; defaults cross-checked against include/strata/core/geometry.hpp.",
@@ -615,13 +616,20 @@ ul.plain{padding-left:1.1rem}
     }
    ],
    "evidence": [
-    "slot-reuse/s20-report.json"
+    "slot-reuse/s20-report.json",
+    "draft-carry-s30/full-cache-verdict.json"
    ],
    "quoted": [
     {
      "label": "S20 forced RAM returns",
      "value": "4/4 reuse 199839 held tokens, read 31 new, replay 0 retained-tail tokens",
      "basis": "native records, full 4x199501 run",
+     "status": "measured"
+    },
+    {
+     "label": "S30 winning-candidate recovery",
+     "value": "4forcedreturns:199839 reused,31new,0retainedreplay; native663.3-685.1ms; 3168427056BAPIpayload each",
+     "basis": "Full4x199501 histories, depth2/headpairON, snapshot draft-byte readback; observer timingsdiagnostic",
      "status": "measured"
     }
    ],
@@ -664,7 +672,8 @@ ul.plain{padding-left:1.1rem}
    "evidence": [
     "slot-reuse/s20-report.json",
     "docs S20",
-    "lowlevel-s24/readiness-summary.json"
+    "lowlevel-s24/readiness-summary.json",
+    "draft-carry-s30/full-cache-verdict.json"
    ],
    "quoted": [
     {
@@ -695,6 +704,12 @@ ul.plain{padding-left:1.1rem}
      "label": "S24 size-matched D2H staging diagnostic",
      "value": "614400 B producer-to-copy gap: pageable 121.20/116.93 us vs pinned 1.41/1.41 us (GPU0/GPU1)",
      "basis": "single-card synthetic producer, 11 warm samples, not full snapshot/serving/P2P measurement",
+     "status": "measured"
+    },
+    {
+     "label": "S30 winning-candidate recovery",
+     "value": "4forcedreturns:199839 reused,31new,0retainedreplay; native663.3-685.1ms; 3168427056BAPIpayload each",
+     "basis": "Full4x199501 histories, depth2/headpairON, snapshot draft-byte readback; observer timingsdiagnostic",
      "status": "measured"
     }
    ],
@@ -1902,13 +1917,20 @@ ul.plain{padding-left:1.1rem}
     }
    ],
    "evidence": [
-    "slot-reuse/s20-report.json"
+    "slot-reuse/s20-report.json",
+    "draft-carry-s30/full-cache-verdict.json"
    ],
    "quoted": [
     {
      "label": "Cache budget",
      "value": "32768 MiB, 4 entries (configured budget, not measured usage)",
      "basis": "config",
+     "status": "measured"
+    },
+    {
+     "label": "S30 winning-candidate recovery",
+     "value": "4forcedreturns:199839 reused,31new,0retainedreplay; native663.3-685.1ms; 3168427056BAPIpayload each",
+     "basis": "Full4x199501 histories, depth2/headpairON, snapshot draft-byte readback; observer timingsdiagnostic",
      "status": "measured"
     }
    ],
@@ -1999,7 +2021,8 @@ ul.plain{padding-left:1.1rem}
     }
    ],
    "evidence": [
-    "docs S10 (PFRAW trace CSV)"
+    "docs S10 (PFRAW trace CSV)",
+    "draft-carry-s30/prefill-phase-diagnostic.json"
    ],
    "quoted": [
     {
@@ -2019,6 +2042,12 @@ ul.plain{padding-left:1.1rem}
      "value": "4K 1214, 32K 1531 tok/s (S9 PUSH); 199501-token 1153.5-1174.4 tok/s (S20)",
      "basis": "clean",
      "status": "measured"
+    },
+    {
+     "label": "S30 long-context native timers",
+     "value": "Equal12288-token blocks: select224/225->6278/6284ms; attention2291/2303->2630/2636ms",
+     "basis": "Two ordinal199501-prompt sequences, blocks1->16; initial-AB phase, current152055a6; no additional GPU probe",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -2030,7 +2059,8 @@ ul.plain{padding-left:1.1rem}
    ],
    "gaps": [
     "No prefill trace on the S21/S22 binary; no 200k prefill trace.",
-    "Goal 2000 tok/s unmet."
+    "Goal 2000 tok/s unmet.",
+    "S30 native attention timer groups value gather/dequant/weighted sum; their individual costs remain unisolated. Timed records cover199494 of199501 prompt tokens, not exact context offsets."
    ],
    "hypotheses": [
     {
@@ -2288,6 +2318,13 @@ ul.plain{padding-left:1.1rem}
    "value": "97.881OFF ->102.279ON median aggregate tok/s (+4.493%,3pairs)",
    "status": "measured",
    "note": "6/6 matched requests/output hashes; clientperstream medians53.399/55.620, all24576experts, functionals/normalstop/bothposthealthPASS. No stability/fullcache/promotion; prior-leg draftcount loss found."
+  },
+  {
+   "stage": "S30",
+   "label": "Winning-candidate full RAM recovery",
+   "value": "4x199501 fresh histories, twoactive256-token replies, fourforcedRAMreturns reuse199839/read31/replay0",
+   "status": "measured",
+   "note": "Same152055a6, headpairON/depth2,32GiB/4parking; draftKV byte-readback, needles/isolation and strictermeanrows>3 overlap PASS. PeaknativeRSS16.255GiB/container16.244GiB,0swap/OOM; teardown health tracked by stage report. No daily or speed promotion."
   }
  ],
  "rejected_parked": [
@@ -2363,7 +2400,8 @@ ul.plain{padding-left:1.1rem}
   "S24 command_submit/start timestamp differences were inconsistent, including negative values. All queued-time values are excluded; device start/end service and cross-event gaps remain separate from host clocks.",
   "S28 native BMG ISA available: explicit barrier changes preflag UGM fence none.group to invalidate.gpu. Split boundary and explicit scope pass bounded probes; full failure mechanism and compiler legality unproven. Old standalone failure not proof of production output corruption.",
   "S29 headpair serving is measured only as bounded C2 coding with native window stats. The S22 operation rollups remain unchanged; do not relabel four old C1 heads as measured new C2 kernels. Queued tiny ON trace requires a new instrumented start.",
-  "S29 discovers carry_leg/add_carry omit prior draft totals on batch-to-solo transition: OFFrepeat3slot1 API28/21 is only final31token tail. Full-request acceptance comparisons invalid; measured wall/output parity remains valid."
+  "S29 discovers carry_leg/add_carry omit prior draft totals on batch-to-solo transition: OFFrepeat3slot1 API28/21 is only final31token tail. Full-request acceptance comparisons invalid; measured wall/output parity remains valid. S30 fixes new requests, not historical raw rows; live long native344accepted/417offered matches finalserver/API.",
+  "S30 full depth2/headpair RAM test reuses199839 held/read31new/replay0 on fourforcedreturns; native663.3-685.1ms and clientTTFT2.992-6.918s are correctness-run diagnostics with snapshot readback/counter observer, not a clean speed comparison. S22 per-op times are not relabeled."
  ],
  "operations": [
   {

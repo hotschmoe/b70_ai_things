@@ -22882,3 +22882,44 @@ postdated initial hashes. Preserve sha256-s29-before-final-annotations.txt;
 freeze final analysis/findings and refresh sha256-s29.txt, with explanation
 in manifest-finalization.json. All analysis input hashes, exact output
 comparisons and numeric results unchanged. Checkpointc4f5b73 pushed.
+
+
+## 2026-10-15 -- Flash-Next optimization S30: carry fixed, winning cache qualified
+
+CONFIG: samefrozen152055a6/headpairON/depth2, CLI spec4(two200kslots),
+32GiB/4parking, all24576experts7152/17424. Seven Pythonhelperlines carry
+optional drafttotals; kernel/build/stack/schedulingunchanged. NativeINFO
+spec6/mtp_max4/lookup3 isexisting suffix expansion, not extra batchdepth.
+COMMAND: actualhelper old/new regression;6projectCPUtests inexistingimage
+NO DRI/network; ONEleasedstart for64/512handoff,functionals,cheap4kcache,
+full4chat andonefresh32Karrival. Normalstop/leaseexit0/percard+10compiled.
+RESULT: originalconstructedmulti-leg28/21vs1134/935 FAIL; patched6cases
+PASS. Live longBDONE40/46+DONE304/371=finalserver/API344/417, short39/46;
+bothS29textprefixesmatch. Math323/667,reason391,tool,residencyPASS.
+Fourdistinctfresh199501prompts, twoactive256tokrepliesAB/CDoverlap
+8.677/8.719s, avgkept4.21/4.24aboveone-slotmax3; native-depthawareguard
+fixesoldabove2insufficiency. FourforcedRAMreturns each199839heldreused/
+31new/0retainedreplay; alldraftKVbyte-readbacksPASS(199840cells). Native
+663.3-685.1ms/3168427056BAPIpayload each; phaseonly,no perstreamjoin or
+physicalPCIebytes. ClientTTFT2.992-6.918s,p50/p955.015/6.907diagnostic.
+PeaknativeRSS16.255GiB/container16.244GiB,15030samples50ms,0swap/OOM.
+Mixed32719arrivesduring1500decode: gap7.753s,decodecompletion43.900s,
+incomingTTFT29.564/completion35.360s; observer/readback,nocleanspeedclaim.
+Normalstop/leaseexit0,bothcards+10compiled4x5120BF16/P2P0healthPASS,noreset.
+VERDICT: winningdepth2/headpair boundedfullcachequalificationPASS, nodaily
+shelfpromotion. Counterfollowup onexistingPR2511 head1fce5591 APIverified.
+OldS29rawdraftcounts remainpartial; cleanS29speed102.279aggregate/53-56
+perstream unchanged, stillfar150. Fullcontextclient18.44-29.38diagnostic,
+differentworkload. Prefilltargets,interference,C2peropcriticalpathremain.
+ActualOpus5.5/Fable5.1 IDsverified; initialcaps thencompletedtool-free
+verdicts15.6/12.1s. Opusapprovesboundedfix. RejectFablealternatingsolo
+mean>3claimusingbt_rows/bt_windows source; readback/RAMgatesalreadyenabled.
+GRdirectlead parked: stillpartials/differentreduction, sourcehistorically
+slicedfaster; noredundantGPUarm. Reused34prefilltimers: equal12288blocks
+select224/225->6278/6284ms, attention2291/2303->2630/2636ms; ordinalonly,
+notvalue-onlytime/joinedbudget. S22operationrollupsunchanged. Loopone
+start/nobuild/nooldGPUarm/no1500rebenchmark/nodailyrestore, cheapbefore
+full, sources/timersduringnecessaryprefills; hostJinjaabsent,image reused.
+Raw draft-carry-s30/{s30-report.json,full-cache-verdict.json,post-health.json};
+datedcounterdoc, stagedocS30, goals/data-map/patchupdated. NexttinyONtrace
+andprimarydense/shared/readinesswork; fullthreadgoalACTIVE.

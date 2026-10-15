@@ -36,6 +36,19 @@ and both teardown/health closures pass; full depth2/headpair RAM recovery
 is pending. A batch->solo draft-counter loss is identified, so complete
 acceptance comparisons are invalid until corrected. See stageS29.
 
+S30 corrects the Python batch-to-solo draft carry loss: six CPU tests and
+the actual native-completion/API sum oracle pass. The same frozen152055a6
+headpairON/depth2 candidate now passes full context/cache correctness:
+four distinct199501-token prompts, two near-full active256-token replies,
+and four forced RAM returns reuse199839 held tokens/read31new/replay0.
+Draft KV byte-readback checks pass. Configured parking32GiB/4entries;
+peak sampled nativeRSS16.255GiB, container16.244GiB, zero swap/OOM.
+Native restores663.3-685.1ms; clientTTFT2.992-6.918s, diagnostic only.
+One fresh32719-token arrival during decode still causes a7.753s content
+gap and29.564s TTFT. These correctness runs include a counter observer
+and snapshot verification; they do not replace clean S29 speed evidence.
+Final teardown/health closure is recorded with stageS30. No daily promotion.
+
 Quality: on 2026-10-14 Flash-Next IQ3_XXS beat the 27B INT4 8-0 on paired
 langs + sysadmin tasks (41/43 vs 33/43); see the A/B brief, Outcome 2.
 

@@ -39,6 +39,13 @@ Probe scripts operate through the already-leased server:
   no test prompts, GPU queries or automatic restarts. Stop its persistent
   observer with `systemctl --user stop strata-soak.service`.
 
+Optional telemetry follow-up: `patches/batch-leg-draft-carry.patch` applies
+after `patches/batch-mtp-restore-accounting.patch`. It preserves optional
+draft totals when a batched request finishes through solo decoding. S30's
+CPU red/green and live native-sum/API oracle pass; see
+`docs/20261015_strata_batch_draft_carry.md` from the repository root.
+This does not repair historical S29 draft counters or change kernel work.
+
 Experimental EP: serve-iq3xxs-ep-experiment.json uses the temporary upstream
 PR2205/1798 build. Decode improves, but prefill regresses to about580 tok/s;
 this is not the daily-driver config. EP/spec3 also failed a new tool
