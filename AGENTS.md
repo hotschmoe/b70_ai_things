@@ -17,6 +17,10 @@ fork). vLLM stays parked and ready to port, not active work. The 27B INT4
 AutoRound vLLM endpoint remains the fallback daily driver. Measured status
 against these targets lives in docs/20261013_flashnext_goals.md.
 
+Priority (user, 2026-10-15): once true eviction-to-RAM recovery without
+recompute works, prioritize concurrency, decode and MTP. Cached-prefix
+2-second TTFT is a diagnostic reference, not a hard target or promotion gate.
+
 ## Style and evidence
 
 - ASCII only in repository files and terminal output.

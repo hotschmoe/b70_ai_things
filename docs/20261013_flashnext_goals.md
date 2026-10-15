@@ -9,7 +9,7 @@ vLLM parked, ready to port. 27B INT4 AutoRound on vLLM is the fallback.
 | Decode | 150+ tok/s per stream | median 83.8 coding, 64.5-65.7 after 4k, 64.9-65.0 after 32k, spec4 (at most 3 drafts) | about 2x short |
 | Context | 200k per stream, 2 streams | IQ3_XXS: 2 x 200000 slots with spec4 (at most 3 MTP drafts); both retrieved three needles in 199501-token prompts | capacity screen passed; sustained load remains |
 | KV eviction to RAM | restore without recompute under load | both GPU slots overwritten, then concurrent returns reused 199555/199582 tokens; 54/27 new tokens read. RAM restore 430/422 ms, client TTFT 1.97/4.40 s (parking16384 MiB/4 entries) | bounded forced-eviction test passed; sustained use remains |
-| Cached prefix latency | Provisional p95 <=2 s TTFT for retained ~200k + short follow-up at concurrency2, including RAM restore | Existing clean-layer forced returns1.97/4.40 s are only two samples; no p95 qualification | Measure GPU-resident reuse and forced RAM returns separately; working threshold awaits user preference |
+| Cached prefix latency | Diagnostic reference: p95 2 s TTFT, including RAM restore; not a hard target or gate (user, 2026-10-15) | Record GPU-resident reuse and forced RAM returns separately; full S20 recovery run in progress | Once recovery avoids recompute, prioritize concurrency, decode and MTP |
 
 Quality: on 2026-10-14 Flash-Next IQ3_XXS beat the 27B INT4 8-0 on paired
 langs + sysadmin tasks (41/43 vs 33/43); see the A/B brief, Outcome 2.

@@ -123,8 +123,9 @@ to continue after a harness failure. Keep a healthy server/cache running
 while inspecting failures. A restart destroys RAM snapshots and requires
 fresh prefills. Classify actual native restores: a return intended to remain
 resident can move through RAM during its partner's slot handoff. Unknown
-mixed attribution stays unknown. The provisional cached-return working
-gate is p95 TTFT <=2s including RAM restore, pending user preference.
+mixed attribution stays unknown. Cached-return p95 TTFT 2s including RAM
+restore is a diagnostic reference, not a hard gate (user, 2026-10-15).
+Once true RAM recovery avoids recompute, prioritize concurrency/decode/MTP.
 
 patches/batch-mtp-restore-accounting.patch (upstream Strata PR2511) adds
 optional slot accepted/offered counts to BDONE and merges them with admission

@@ -22579,3 +22579,14 @@ full4x200kfinalcandidate for absolute goals; skip redundant fullbaseline.
 Next required build may test installed experimental parallelAOT flag.
 Details: stage doc S19; raw cachefix_20261014/cache-candidate/s19-report.json.
 Tracked patch: strata/flash-next/patches/batch-slot-cache-preserve.patch.
+
+
+## 2026-10-15 -- User priority: correct RAM recovery, then concurrency/decode/MTP
+
+User explicitly makes2s cached TTFT diagnostic, not a hard target or gate.
+Any true eviction-to-system-RAM recovery without recompute is valuable;
+prioritize concurrency, decode and MTP once that works. Finish the current
+bounded S20 full recovery run, then pivot to the prepared MTP work. Direct
+copy/main-park latency candidates stay queued. Running harness records
+latency booleans but does not reject correctness for missing2s; interpret
+those fields as diagnostic references. AGENTS/goals/README updated.
