@@ -24574,3 +24574,24 @@ Completedmanifest132b4e91/107files277310984B, rawSHAreusedfromONEparse after
 statcontinuity;54exactsmallcopies, ONE859rowCSV. Historical170tail exact.
 Report: docs/20261015_strata_current_c2_profile.md; smallrecords:
 strata/flash-next/lowlevel_probe/current_c2_profile_s95/README.md.
+
+
+## 2026-10-15 - S96 routed IQ2 source audit finds missing multi-entry reuse
+
+CONFIG -> Frozen d94e96ca/current S95 routed-port source; no new arm.
+COMMAND -> Read current expert callers/layouts, Fmt/Multi/KqSplit/row_entries,
+dp4a chain and derived S95 records; root full-read and ten pinned hashes PASS.
+No raw trace/model payload, compilation, ISA extraction, GPU or model call.
+RESULT -> Multi18/21/22 GU and20/42 DOWN already prepare weights once per
+E2/E4 chunk. Type16 IQ2_XXS and17 IQ2_XS have neither Multi nor KqSplit;
+kEntryMulti false sends each routed entry through row_dot_lanes/Fmt::dot,
+repeating source codebook/sign/scale work for the same expert row. Actual
+entry reuse frequency and compiled motion remain unmeasured. Preserve QT17
+uint32 shift extraction, integer truncation, FP scale/accumulation and LN8
+XOR4/2/1; conservative integer bounds are safe, not a new bitwise proof.
+VERDICT -> GO ONE existing native_gu_port<17,8,true> image audit, no candidate
+or build/GPU yet. Exact registered-name/image binding must be specific to
+this routed kernel; attention13tags/S66dense do not establish it. Close any
+already-optimal lever without another GPU test. Routed7.504ms and nonvocab
+MMVQ12.680ms are disjoint diagnostic groups, no additive/savings claim.
+Report/source pins: strata/flash-next/lowlevel_probe/routed_dot_lowering_s96/README.md.
