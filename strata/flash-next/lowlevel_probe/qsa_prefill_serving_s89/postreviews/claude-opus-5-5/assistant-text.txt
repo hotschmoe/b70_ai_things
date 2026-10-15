@@ -1,0 +1,44 @@
+# ACCEPT_DECISION
+
+The retain decision is accepted with one non-blocking label correction.
+
+## Scope separation (holds)
+
+- **Source and actual main AOT** are stated correctly. Candidate image 550 was independently audited: SIMD32, GRF128, SLM16512, one barrier, no CALL. The packet does not claim byte-equality with the private image or an unchanged top-k ISA. Both S89 arms used the same binary `b2a610ea\u2026`, the same source `28117295\u2026` and Q6center 0, so only the QSA flag differs between arms.
+- **S88** is kept to a single synthetic 16k fixture. Its \u22123.66% scorer result is not carried into any full-model serving claim.
+- **QSA activation** rests on one host marker (first active at 4097) plus chunks inferred from source. The packet correctly says this is not GPU dispatch, op-count or callback evidence.
+- **SSE** events are correctly not treated as token-level inter-token latency.
+
+## Match gating (holds)
+
+All six pairs pass the full set of checks: request, text and SSE, usage, cache 0, prompt and predicted counts, draft work, native part intervals and marker domain. The draft and accepted counts match exactly across arms (for example 205/136 in both arms of p4096-0), which is strong evidence of identical work. The warm pair, functionals, health, QUIT and CID/NAME checks also pass, so aggregation is allowed.
+
+## Arithmetic check
+
+Median throughput matches 4059 / ms and 32728 / ms: 1289.3, 1300.7, 1547.5 and 1559.2. The ranges are internally consistent.
+
+## Timing assessment
+
+**32K:** all three pairs went the same way, with prompt time changing by \u22120.43% to \u22120.75% (median \u22120.55%) and median TTFT down 0.159 s. This is a small, directionally consistent result.
+
+**4K:** the pairs are mixed, at +0.98%, +0.10% and \u22120.87%, so the median paired change is +0.10% (ON slightly slower). The 0.88% "gain" exists only as a ratio of medians, and median wall time is 6.675 s ON against 6.665 s OFF.
+
+**Non-blocking label fix:** the status says "SMALL_GAIN", but 4K is null or indeterminate. It should read "32K: consistent ~0.5% in one fixed-order sequence; 4K: null".
+
+**Confounds:** the fixed OFF-then-ON order means thermal drift, allocator or residency aging, and page-cache state all line up with the arm. Effects of about 0.5% are within the size such drift could produce. One process sequence with three pairs per shape does not allow causal attribution, which the packet acknowledges.
+
+## Retain opt-in versus park
+
+Retaining default-OFF opt-in is justified:
+
+- Outputs and work are exactly equal.
+- There is no observed regression beyond noise.
+- The cost is limited to a guarded path and a frozen executable.
+
+Parking would also be defensible. The decision is acceptable because there is no promotion, no merging with Q6, and no further campaign.
+
+## Goals
+
+QSA's effect is at most about 0.5%. The prefill rates of about 1300 and 1550 tok/s are 35% and 23% below the 2000 goal, and decode at 54\u201356 per stream is far below 150. QSA does not close any meaningful part of either gap.
+
+The proposed next step is appropriate: one 32K unitrace profile on the existing 149/363 ownership to separate GPU service from host waits and readiness. It addresses where the remaining roughly 25\u201335% sits better than more QSA timing would. The development loop costs about 156 s to compile and about 5\u20136 minutes per arm sequence, and the packet already excludes extra warm runs, C2 repeats, full-cache runs and daily restores.

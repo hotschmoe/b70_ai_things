@@ -1,0 +1,20 @@
+{
+  "status": "ROOT_REUSE_FULL_S87_POSTHEALTH_FOR_S88_CARD0_PREFLIGHT",
+  "utc": "2026-10-15T17:29:50.268926+00:00",
+  "epoch_ns": 1792085390268970572,
+  "source_posthealth": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-serving-s87/mode1/post-health.json",
+  "source_posthealth_sha256": "a8c4f9429522fe241020b07e2083eaa358ecbce8adf078a70856bf2f825db6ae",
+  "source_card_health_log": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-serving-s87/mode1/card-health.log",
+  "source_card_health_log_sha256": "6d5c9e384e9ef06cc2bb5386a4ebaa195b5eec1e50e92cbfe895bfb2e488a113",
+  "source_all_exit0": true,
+  "source_covers_physical_cards": [
+    0,
+    1
+  ],
+  "required_probe_card": 0,
+  "kernel": "7.1.0-070100-generic",
+  "no_intervening_GPU_or_stack_change": true,
+  "basis": "Root completed S87; allrootnativeagents report noGPU, sharedcoordinationlog latestonlyS87closure/CPUhash, bothleasesfree/noGPUwaiter/server. Mustrevalidateimmediatelybeforelaunch; expireifanyinterveningGPU/stackchange.",
+  "current_lease_status": "GPU lease:\n  card 0: free\n  card 1: free\n",
+  "scope": "Card0preflightonly; leasedpinnedprobe muststillownnormalremoval/postcard0health/quietCPU"
+}

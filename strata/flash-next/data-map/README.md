@@ -312,3 +312,14 @@ Full outputs/observable work/functionals/teardown/health match; keep guarded
 defaultOFF opt-in. Source/AOT and one-time host marker are not independent
 GPU dispatch or complete per-window layout proof. Historical170 operations,
 rollups and metadata stay unchanged. See the dated QSA/Q6 report.
+
+
+S88/S89 add annotations only; the170historical operation rows and rollups remain
+unchanged. S88's strict16K boundary scorer+top-k case improves3.661% paired,
+primitive only. S89 same-new-binary QSA0/1 serving passes all gates:32K median
+paired promptms-0.547%, throughput1547.5->1559.2tok/s,4K inactive path null.
+One fixed-order sequence; keep defaultOFF research opt-in. A once-eligible
+host marker and source-derived chunks do not measure GPU dispatch counts,
+critical-path share, traffic or readiness causes. One current32K trace using
+existing clock/capture/stop-flush tools is prepared, not executed. Actual
+Opus5.5/Fable5.1 postreviews accept; root corrects target units to2000tok/s.

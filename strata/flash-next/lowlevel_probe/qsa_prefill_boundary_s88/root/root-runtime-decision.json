@@ -1,0 +1,40 @@
+{
+  "status": "PASS_NEW16K_PRIMITIVE_GO_EARLIER_GUARD_SOURCEPREP",
+  "epoch_ns": 1792085941551463776,
+  "binary_sha256": "1c41f167836eb447bb8e5e8d75a5e5ede388e00bbd60d9e4f9e2f0bdf658e4d9",
+  "completed_wall_median_us": [
+    2433.2445,
+    2351.358
+  ],
+  "median_paired_delta_percent": -3.661228768581759,
+  "all_paired_delta_percent": [
+    -3.038969731545915,
+    -1.3712821981790246,
+    -5.751027122583596,
+    -4.283487805617603
+  ],
+  "files": 8,
+  "data_bytes": 25050112,
+  "full_strict_initial_changed_repeat_restore_poison_readonly_guards": true,
+  "own_full_CID_and_NAME_absent": true,
+  "prehealth_reuse_exit": 0,
+  "post_card0_health_exit": 0,
+  "quiet_CPU_GPU_wrapper_exit": 0,
+  "window_s": 41,
+  "leaf_s": 26,
+  "private_device_wrapper_unchanged": true,
+  "root_actual_source_models": [
+    "claude-opus-5-5",
+    "claude-fable-5-1"
+  ],
+  "source_review_elapsed_s": [
+    35.39681428897893,
+    49.60221365705365
+  ],
+  "decision": "One boundary provides a useful earlier minactive4097 candidate; retain4K/decode/tailsoriginal. No productionapply/servegain/defaultpromotion yet. S88postdecision tocombine with nextfresh S89sourceconsult instead of duplicated modelcalls.",
+  "limits": [
+    "Fourbalancedpairs inoneprocess/seededfixtures/fullscorer+unchangedtopk hostcompletion, notisolatedGPUservice/servinggain/traffic/cause/populationsignificance.",
+    "Caseends16384 butfirstquery16129; futureguardmeanslastqueryinclusive16384, notallqueries>=16384.",
+    "Source-only8193guardproposalnotapplied, standard32kzeroactivationobservedfromsource+retainedcounts. No33k-onlybenchmark substituted."
+  ]
+}

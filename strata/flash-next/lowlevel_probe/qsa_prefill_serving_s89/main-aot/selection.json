@@ -1,0 +1,142 @@
+{
+  "status": "ACTUAL_MAIN_QSA_TARGETS_SELECTED_UNIQUE",
+  "binary_sha256_from_root_build_record": "b2a610ea23856ad290cbca2a0dcdec4de676f3cdb519ddc0a01c5321942636be",
+  "build_records": {
+    "/out/strata-qsa-prefill-s89": "b2a610ea23856ad290cbca2a0dcdec4de676f3cdb519ddc0a01c5321942636be",
+    "libstrata_kernels.a": "6c192f4719effb37626e3d1f6cd2324d5c1161ced6e98f00de3587bba6e644c6",
+    "CMakeFiles/strata_kernels.dir/src/kernels/cuda/qsa_select.dp.cpp.o": "313c94d6050707a5ecebfd057f572960f99e236491c636f11677737fcb65a15f",
+    "libstrata_engine.a": "77a18ca2e4fd4cd35414a74e8386b760a904476022b24ecc7203339fd00180b7",
+    "CMakeCache.txt": "fee542911252057f97fac8113086ded01130c7888ac96a7490e28cdec814cc22"
+  },
+  "source_sha256": "28117295f242483d62c23e060adf0c3b49be9c1868d80669bff58b7fcdbfd5a1",
+  "main": {
+    "selected": {
+      "topk16k_metadata_only": {
+        "image_index": 530,
+        "executable_offset": 30084944,
+        "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels18qsa_block_topk_refEPKfPKilllRKNS1_9QsaShapesEPiPvE24block_topk_kernel_213104EE",
+        "image_bytes": 52728,
+        "image_sha256": "66053382fc3fb7cb176c5e373180bf6ee7e0cda1dfe9b31d58d6c0761b470c66",
+        "text_bytes": 35904,
+        "text_sha256": "bc9571b81c482134468a605f759d9f402d803d3ec324de033a98647932bd127e",
+        "ze_info_sha256": "8c5285505396a971dc8a1abaf98c94464e54cc20e4b769825bdd328e2d3e6974",
+        "build_options": "-cl-fp32-correctly-rounded-divide-sqrt",
+        "section_alias_on_copy": false
+      },
+      "candidate": {
+        "image_index": 550,
+        "executable_offset": 30594272,
+        "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels16qsa_block_scoresEPKfS3_S3_PKillRKNS1_9QsaShapesEPfPvlE30block_scores_prefill_tiled_s89EE",
+        "image_bytes": 38408,
+        "image_sha256": "236b43ee5f92be0142e42097a6196f4a18be0d524139685a6468e6b67cf1effe",
+        "text_bytes": 22592,
+        "text_sha256": "5610798a2ad4c46b00423108365808a016917ae27d8ed6321cf94dd48e344864",
+        "ze_info_sha256": "70409064a9c65f154f7276c8b62ade250e4ed4fbbb1ad915ba6bd873a758840d",
+        "build_options": "-cl-fp32-correctly-rounded-divide-sqrt",
+        "section_alias_on_copy": false
+      },
+      "original": {
+        "image_index": 551,
+        "executable_offset": 30632688,
+        "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels16qsa_block_scoresEPKfS3_S3_PKillRKNS1_9QsaShapesEPfPvlE26block_scores_kernel_925c9dEE",
+        "image_bytes": 13048,
+        "image_sha256": "0724e572ebd3ffc564ba9e8a6380123c535ace86d71b51351f480e50d5ae0aaf",
+        "text_bytes": 3456,
+        "text_sha256": "db2f5ffbae3b5f9564abef3202866fb459ea8b20b4c9ed890631978cdfd0780b",
+        "ze_info_sha256": "2a1a96d00f4c4b9edb576f14185d32c79c37a87e8a89f7717dd7100ee471f45e",
+        "build_options": "-cl-fp32-correctly-rounded-divide-sqrt",
+        "section_alias_on_copy": false
+      },
+      "topk": {
+        "image_index": 589,
+        "executable_offset": 31528976,
+        "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels14qsa_block_topkEPKfPKilllRKNS1_9QsaShapesEPiPvlE29block_topk_wide_kernel_5162c4EE",
+        "image_bytes": 64608,
+        "image_sha256": "df527c429b39066873010f1905652ae0cf1e62d6f203566709d2f6e68c941381",
+        "text_bytes": 43968,
+        "text_sha256": "430b04cbc61ec2905e4559093ced999d72d7a05808502fb0be81207f4ec190d0",
+        "ze_info_sha256": "5e0ed169175b291d8aa2bf60fd725c6ed51a7f8c73600c3e6d3546e85d577a3f",
+        "build_options": "-cl-fp32-correctly-rounded-divide-sqrt",
+        "section_alias_on_copy": false
+      }
+    },
+    "metadata_images_indexed": 1602,
+    "stat_unchanged": true,
+    "stat_bytes": 92158072,
+    "stat_mtime_ns": 1792086286842098551
+  },
+  "baseline_public_wrapper": {
+    "selected": {
+      "topk16k_metadata_only": {
+        "image_index": 17,
+        "executable_offset": 190240,
+        "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels18qsa_block_topk_refEPKfPKilllRKNS1_9QsaShapesEPiPvE24block_topk_kernel_213104EE",
+        "image_bytes": 52704,
+        "image_sha256": "656a82fec2036a2289c71d25f0425e37ff84fa233a1ffe42da4b26609573e19c",
+        "text_bytes": 35904,
+        "text_sha256": "5fc53d6c628a695c912af114f481a7e03cb8259d90abb5ef4286d1feba5c977d",
+        "ze_info_sha256": "8c5285505396a971dc8a1abaf98c94464e54cc20e4b769825bdd328e2d3e6974",
+        "build_options": "-cl-fp32-correctly-rounded-divide-sqrt",
+        "section_alias_on_copy": false
+      },
+      "original": {
+        "image_index": 18,
+        "executable_offset": 242944,
+        "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels16qsa_block_scoresEPKfS3_S3_PKillRKNS1_9QsaShapesEPfPvlE26block_scores_kernel_925c9dEE",
+        "image_bytes": 13048,
+        "image_sha256": "0724e572ebd3ffc564ba9e8a6380123c535ace86d71b51351f480e50d5ae0aaf",
+        "text_bytes": 3456,
+        "text_sha256": "db2f5ffbae3b5f9564abef3202866fb459ea8b20b4c9ed890631978cdfd0780b",
+        "ze_info_sha256": "2a1a96d00f4c4b9edb576f14185d32c79c37a87e8a89f7717dd7100ee471f45e",
+        "build_options": "-cl-fp32-correctly-rounded-divide-sqrt",
+        "section_alias_on_copy": false
+      },
+      "topk": {
+        "image_index": 19,
+        "executable_offset": 256000,
+        "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels14qsa_block_topkEPKfPKilllRKNS1_9QsaShapesEPiPvlE29block_topk_wide_kernel_5162c4EE",
+        "image_bytes": 64584,
+        "image_sha256": "d26399ff3a3c1bd1ce05864c11346d444426934cfed8afe98db9ed57b1e63b0f",
+        "text_bytes": 43968,
+        "text_sha256": "02239d74c3867a4570b62782346bd1bcc4d4b82edd17cf2120dc5be800e17ad3",
+        "ze_info_sha256": "5e0ed169175b291d8aa2bf60fd725c6ed51a7f8c73600c3e6d3546e85d577a3f",
+        "build_options": "-cl-fp32-correctly-rounded-divide-sqrt",
+        "section_alias_on_copy": false
+      }
+    },
+    "metadata_images_indexed": 22,
+    "stat_unchanged": true,
+    "stat_bytes": 705288,
+    "stat_mtime_ns": 1792081813389372805
+  },
+  "baseline_comparison": {
+    "original": {
+      "same_ID": true,
+      "text_byte_identical": true,
+      "whole_image_byte_identical": true,
+      "old_text_sha256": "db2f5ffbae3b5f9564abef3202866fb459ea8b20b4c9ed890631978cdfd0780b",
+      "old_image_sha256": "0724e572ebd3ffc564ba9e8a6380123c535ace86d71b51351f480e50d5ae0aaf"
+    },
+    "topk": {
+      "same_ID": true,
+      "text_byte_identical": false,
+      "whole_image_byte_identical": false,
+      "old_text_sha256": "02239d74c3867a4570b62782346bd1bcc4d4b82edd17cf2120dc5be800e17ad3",
+      "old_image_sha256": "d26399ff3a3c1bd1ce05864c11346d444426934cfed8afe98db9ed57b1e63b0f"
+    },
+    "topk16k_metadata_only": {
+      "same_ID": true,
+      "text_byte_identical": false,
+      "whole_image_byte_identical": false,
+      "old_text_sha256": "5fc53d6c628a695c912af114f481a7e03cb8259d90abb5ef4286d1feba5c977d",
+      "old_image_sha256": "656a82fec2036a2289c71d25f0425e37ff84fa233a1ffe42da4b26609573e19c"
+    }
+  },
+  "selected_ISA_images": 3,
+  "metadata_only_ref_topk_not_decoded": true,
+  "bytes_read": 9844726,
+  "no_whole_binary_archive_rehash": true,
+  "scope": "Static metadata/ISA, no runtime dispatch/timing/occupancy/spill measurement claim; absent spill fields do not mean measured zero. Main new MQ8 image identity inspected as actual, not assumed S84-identical.",
+  "GPU": 0,
+  "build": 0
+}

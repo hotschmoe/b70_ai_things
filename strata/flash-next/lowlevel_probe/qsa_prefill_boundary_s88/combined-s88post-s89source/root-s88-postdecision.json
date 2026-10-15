@@ -1,0 +1,29 @@
+{
+  "status": "ROOT_S88_POSTDECISION_CLOSED",
+  "epoch_ns": 1792086261374609812,
+  "combined_with": "S89frozenmainSOURCEreview, avoidsduplicatepostcalls",
+  "models": {
+    "claude-opus-5-5": {
+      "elapsed_s": 28.09062095801346,
+      "session_ids": [
+        "c567a612-586b-4fb7-8d8c-748fbbefd504"
+      ],
+      "answer_sha256": "5da8da49e0fb8822a914c2011912fde23e23d1e60646280825de7c12d7bf72c7",
+      "completion_sha256": "80ac6786850706cc217600def36d2bf3c2e2bbe2d660c013a9a40b202f8cccf9",
+      "root_fullread": true
+    },
+    "claude-fable-5-1": {
+      "elapsed_s": 41.46822455001529,
+      "session_ids": [
+        "a901b6d9-f90d-4806-bee3-eecc3621bbe6"
+      ],
+      "answer_sha256": "3ec2e7244668e4272abd4a545a0b00a4c0419723badd825bc7d5129488fbe184",
+      "completion_sha256": "7840350692a86e95998cf5543bee5280a6b4a5d92c22d4239934345be02848b4",
+      "root_fullread": true
+    }
+  },
+  "runtime_decision_sha256": "aa70589b726fd99f15ddda138c3c73caff5a0553093c8ab4ce0700e5f7f33153",
+  "source_resolution_sha256": "035e14fdfe6cf4c0b61b406f3ac9acf395ba5578ebce5a72d674f8d146911166",
+  "decision": "Acceptnew16Kboundaryevidence andearlierguardSOURCElead; S89actualbuild/servingpending, no promotion",
+  "S88production_mutations": 0
+}

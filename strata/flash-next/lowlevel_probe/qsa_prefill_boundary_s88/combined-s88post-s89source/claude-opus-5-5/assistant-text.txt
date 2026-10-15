@@ -1,0 +1,29 @@
+**Verdict: ACCEPT_S88_AND_GO_BOUNDED_BUILD**
+
+I found no blocking findings in the frozen packet. This review is source-only; I used no tools and executed nothing.
+
+**S88 decision**
+- One 16K case passed strict, identity, health, full CID/NAME and wrapper checks. All four balanced pairs were negative, with a median paired delta of \u22123.661%. That is enough to support source preparation of the earlier guard.
+- The limits are recorded correctly: one process, seeded fixtures, host completion. It shows no serving gain, cause or significance.
+- The 33K case is not substituted for 32K, and the zero ordinary-32K coverage of the old 8193 guard is acknowledged. The S88 decision is accepted as stated.
+
+**S89 source audit**
+- **Default OFF and marker:** Only the exact string `"1"` enables tiling. The static lambda runs once, at the first eligible call, and captures `first_active` by value. Init is thread-safe as a function-local static. The marker is host-branch evidence only. It proves no GPU dispatch and nothing about layout across all windows.
+- **Guard reachability:** `qsa_block_scores_tc` always returns false on SYCL (`qsa_select.dp.cpp:1700`), so the call reaches the guarded path. `active = last n_bid + 1`, so 4097 means the last query has `n_kv >= 16384` and the first may be 16129. Ragged tails with `nb < 256`, decode/verify (`active = -1`) and stride \u2260 50002 fall through to the original path unchanged.
+- **Bounds:** Each tile's `top` is the maximum `n_bid` over its 8 queries, at most 50000, so the speculative `kp` read at `b == top` stays within the 50002 pooled rows (`layer.cpp` `/4 + 2`). Each query keeps `b > n_bid \u2192 continue`, so dead rows are handled per query and the `+1e9` applies iff `n_kv % 4 != 0`. Unwritten entries past a query's `n_bid` match the original, and top-k receives the unchanged `active`.
+- **Grid and offsets:** The grid is 32 \xd7 256 workgroups with `wstride = 256\xb7SCORE_WARPS`. The early exit is uniform per workgroup, so the barrier is safe. Offsets `q0\xb7512`, `q0\xb7kStepCount` and `q0\xb7max_blocks` are consistent with the `[nq, \u2026]` layouts. The kernel receives `nq = MQ` exactly, so SLM `qs[MQ\xb7512]` and the `s_nkv`/`s_nbid` loads are in range.
+- **FP equivalence:** The `kd`/`kp` select reads the same values as the original pointer select. The float4 FMA order, XOR 16\u21921 butterfly and head0..3 positive-part sum are textually identical, so bitwise equality is expected, consistent with S88 score bits.
+- **`root_sync`:** Omitting `use_root_sync` matches S84v3, and the body has no grid-level sync.
+- **Includes:** `std::strcmp`/`std::getenv` are already used in this TU (`qsa_select.dp.cpp:1695`), so the patch needs no new include.
+
+**Notes (non-blocking)**
+1. With the flag absent, the default-OFF build still writes one new line to stderr on the first eligible prefill (`enabled=0`). Confirm that no wrapper, functional check or SSE harness treats stderr as part of its golden output.
+2. `first_active` records only the first eligible layer/batch. The marker string should not be cited as per-layer evidence.
+3. Run the fresh 32K arm with the marker captured. That is the only way to confirm activation empirically, since 32K by request label is not proof.
+
+**Gates retained before any latency claim**
+- The real main-build AOT, resources and IDs.
+- The same new binary on two cards with EP, flag 0 vs 1, covering full request, text, SSE usage, native work, cache, residency, functionals, QUIT, full CID/NAME and health.
+- Protocol: one C2 warm 1500 pair, plus three fresh 4K and three fresh 32K requests with 256 output tokens per arm, plus functionals. No extra timed repeats, profiler, full-cache run or daily restore.
+- Short 4K, tails, decode and unsupported capacities stay on the original path. Current Q6 center0 BOTH and S87 native are retained.
+- The reversible root CPU build may run in parallel after the full source audit, but resolve note 1 before GPU work.

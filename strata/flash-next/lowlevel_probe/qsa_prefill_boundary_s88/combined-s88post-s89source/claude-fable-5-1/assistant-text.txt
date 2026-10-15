@@ -1,0 +1,25 @@
+**Verdict: ACCEPT_S88_AND_GO_BOUNDED_BUILD**
+
+I read the full patch, the changed routine, the unchanged multi body, the original scorer, the caller, and the arena sizing. No blocking finding.
+
+**S88 acceptance.** One 16K case, strict/identity/health/CID+NAME/wrapper PASS, four balanced pairs all negative on byte-identical private and public images. That supports only what is claimed: an earlier guard is a reasonable source candidate. No serving claim follows, and the packet makes none. The conservative 8193 proposal stays unapplied and is not substituted by a 33K-only case. Accepted.
+
+**S89 source checks, all consistent:**
+
+- Default OFF. Enabling requires the exact string "1" via strcmp. Absent, "0", or anything else leaves the original path. The old multi branch needs nq<=8 and active<=0, so the two guards are disjoint.
+- Lazy marker. The static bool initializes on the first eligible call only, captures that call's active_blocks by value, and prints once with enabled 0 or 1. It is host branch evidence only, as stated.
+- Guard matches the arena. Production 200000 cells gives pooled_rows and prefill max_blocks both 50002. The body reads pooled only for b<=top<=50000 and the dead row at b==n_bid, so the spare pooled row covers the speculative read.
+- Causal bounds unchanged. The body keeps b>n_bid skip, dead key at own n_bid, and the +1e9 tail penalty iff n_kv%4!=0. Original float4 products, XOR 16..1 reduction, and positive-part head sum are byte-identical to S84v3.
+- Offsets correct. q0 multiplies 512 for q_idx, kStepCount for steps, and max_blocks for scores. These match the caller's per-query stride of 512 and the row-major score layout.
+- Grid correct. Global range gives 32 tiles by 256 workgroups with 256 threads each. Inside the body, group(2) and group_range(2) are the per-tile key workgroup and its count, so the stride loop and the tile-uniform early exit behave as in S84v3.
+- Tails retained. nq==256 excludes partial last batches, and nq<=8 decode stays original. Smaller capacities fail max_blocks==50002 and stay original.
+- No root_sync property on the new launch. The body uses only workgroup barriers and sub-group shuffles, so omitting it is safe and matches S84v3.
+- No new headers, buffers, events, or counters. getenv and strcmp are already used in this file.
+
+**Non-blocking notes for root:**
+
+1. The one-line stderr marker prints even when disabled. Any harness that diffs stderr on long prefills will see one new line. Acceptable, but record it before comparing logs.
+2. The marker reports eligibility, not dispatch. Keep the required gates: new main AOT and resource IDs, same-binary two-card flag 0/1 full requests, text and SSE usage, native work, cache, residency, functionals, QUIT, full CID+NAME, and health, all before any latency statement.
+3. Guard activation on a fresh 32K request must be observed from the marker, not inferred from the request label, since the first query in an eligible batch may sit below 16384.
+
+Proceed with the reversible CPU build in parallel with the full source audit. Resolve nothing further before GPU unless the build or AOT surfaces a concrete blocker. Protocol stays as frozen: one C2 warm 1500 pair plus three fresh 4K and 32K 256-output requests per arm, with functionals. No extra timed repeats, profiler, full cache rerun, or daily restore. Q6 center0 BOTH and S87 native remain in place.

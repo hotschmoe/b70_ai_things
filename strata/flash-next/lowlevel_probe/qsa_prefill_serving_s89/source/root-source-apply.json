@@ -1,0 +1,20 @@
+{
+  "status": "ROOT_FULLREAD_SOURCE_APPLIED_OFFLINE_BUILD_GO_REVIEWS_PENDING",
+  "utc": "2026-10-15T17:42:03.124782+00:00",
+  "target": "sycl/src/kernels/cuda/qsa_select.dp.cpp",
+  "original_sha256": "443c1c9d4e79b1eb13988507ab9a079c11651f15a610a317c4d0d3945e4f3978",
+  "candidate_sha256": "28117295f242483d62c23e060adf0c3b49be9c1868d80669bff58b7fcdbfd5a1",
+  "patch_sha256": "226b12cf59395f22129c575d543f2a46073ca4a2ad1c9537ca6f9e86eaa289bb",
+  "packet_sha256": "8ed80c9e37b57cebf0946c747389888873fccaa819101a62b237c1bed792905c",
+  "root_fullread": [
+    "completepacket+changedroutine+existingmulti/publicbody/callerdomain/topkboundssource",
+    "buildscripts+unchangedexpectedpins",
+    "S88actualall4pairs/fullbytecomparison/closure/removal/health"
+  ],
+  "source_mutations_only_this_TU": true,
+  "inverse_check": true,
+  "original_snapshot": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-serving-s89-prep/qsa_select.original.cpp",
+  "S87native_and_restored_hosts_unchanged": true,
+  "default_OFF": true,
+  "no_GPU_GO_until_reviews_AOT_harness_resolved": true
+}

@@ -1,0 +1,30 @@
+**Verdict: GO_BOUNDED_BUILD** (offline CPU build only; card0 window stays gated on root's own revalidation).
+
+**Delta scope is clean.** Only the CASES array, result counts, analyzer counts, paths, names, and public-wrapper reuse changed. The private header is unchanged and `s84::launch` captures nothing from CASES, so the device image should be byte-identical; the build-container `cmp leaf.images.o /public/leaf.images.o` makes that a hard, reversible gate. No math, geometry, quant, or topk change.
+
+**Case arithmetic checks out.**
+
+| Quantity | Value |
+|---|---|
+| first_nkv / last_nkv | 16129 / 16384 |
+| n_bid range | 4032..4096 |
+| active | 4097 |
+| nkv mod 4 residues | all four (256 consecutive values) |
+| causal empty tail | nk=16384, n_bid=4096=active-1, dead row scored with no +1e9 |
+
+Host bounds (`nq>8`, `last<=200000`, `n_bid+1<=active`, `active<STRIDE`) all hold. The batch straddles 16384 from below, which is exactly what a future inclusive 16384 guard needs. Analyzer size formulas are unchanged and consistent with `observe()` export widths.
+
+**Counts are consistent.** 1 case; 2 states \xd7 2 arms exported = 4 snapshots = 8 files; 4 pairs \xd7 2 slots = 8 timed samples; 3 warm per arm; AB,BA,BA,AB order unchanged. result.json, analyzer asserts, and the final print agree.
+
+**Gates preserved.** initial/changed/repeat/restored, changed-observable, known block0 score, finite active, inactive poison, ID range/ascending, guards, readonly on query/steps/pooled/dead all untouched. Correctness precedes timing.
+
+**Identity and binding.** expected-source pins the reused public prelink and expected private wrapper; identity.py maps `/public/` for both the pin file and build sha256.txt; closure checks binary name `scorer_leaf_s88`. Public prelink is linked from the read-only S84v3 mount; frozen object still cmp'd against archive extraction. No AOT invocation for public.
+
+**Non-blocking findings for root to resolve before the card0 window:**
+
+1. prehealth_reuse.py only verifies a static root-signed proof. The `no_intervening_GPU_or_stack_change` flag is asserted, not measured. Recommend root record boot_id and driver/firmware strings in the proof and compare at launch (reading `/proc` is not a GPU touch). This is the one claim the packet cannot self-verify.
+2. Stale comment in `State()` ("n_bid=50000 spare row") and the "S84 failure" stderr prefix are now inaccurate. Cosmetic; leave the header byte-exact, optionally fix leaf comment only.
+3. If the wrapper cmp fails, the cause is almost certainly compiler nondeterminism, not the delta. Do not relax the gate; report and HOLD.
+4. Confirm the unchanged post-health block in leased_run.sh still runs after the removal loop even on leaf exit 2/5, and that the NAME is also absent (not only OWN_CID) before health.
+
+**Evidence class.** Output is single-process scorer+topk host-completed time on one card with full-byte checks. It says nothing about serving gain, physical traffic, or causal cache effects, and the contract correctly labels it so.

@@ -1,0 +1,38 @@
+{
+  "status": "ROOT_ACCEPT_S88_AND_S89_SOURCE_GO_BUILD_GPU_PENDING",
+  "epoch_ns": 1792086261374381677,
+  "models": {
+    "claude-opus-5-5": {
+      "elapsed_s": 28.09062095801346,
+      "session_ids": [
+        "c567a612-586b-4fb7-8d8c-748fbbefd504"
+      ],
+      "answer_sha256": "5da8da49e0fb8822a914c2011912fde23e23d1e60646280825de7c12d7bf72c7",
+      "completion_sha256": "80ac6786850706cc217600def36d2bf3c2e2bbe2d660c013a9a40b202f8cccf9",
+      "root_fullread": true
+    },
+    "claude-fable-5-1": {
+      "elapsed_s": 41.46822455001529,
+      "session_ids": [
+        "a901b6d9-f90d-4806-bee3-eecc3621bbe6"
+      ],
+      "answer_sha256": "3ec2e7244668e4272abd4a545a0b00a4c0419723badd825bc7d5129488fbe184",
+      "completion_sha256": "7840350692a86e95998cf5543bee5280a6b4a5d92c22d4239934345be02848b4",
+      "root_fullread": true
+    }
+  },
+  "packet_sha256": "8ed80c9e37b57cebf0946c747389888873fccaa819101a62b237c1bed792905c",
+  "S88_runtime_decision_sha256": "aa70589b726fd99f15ddda138c3c73caff5a0553093c8ab4ce0700e5f7f33153",
+  "S89_candidate_sha256": "28117295f242483d62c23e060adf0c3b49be9c1868d80669bff58b7fcdbfd5a1",
+  "S88decision": "Acceptboundednew16Kstrict/nestedpairedresult as earlierguard sourcelead only; no servinggain claim.",
+  "stderr_note_resolved": "Nativeengine stderr is redirectedtoboundengine.log; HTTP/SSE/goldencontent originate stdoutprotocol. Harnesscompares specificcapturedlines/markerdomain, not rawstderr equality. One0/1markerdifferenceexpectedandrecorded.",
+  "marker_scope": "Onlyfirsteligiblehostcall/actualfirst_active not perlayer/opcount/GPUdispatch/allcachehitlayouts.",
+  "runtime_policy": "Newlaunch no root_sync matches executedS84v3/S88; no root-gridbarrier. Do not infer all originalpropertyruntimeeffect moot.",
+  "still_required": [
+    "actualmainbuild/AOT uniqueIDs/resources/unchangedpublicbindings",
+    "rootFULLREADfinalharness/pins/configs/modelcontinuity",
+    "freshboth-card+compiledprehealth (S88touchedcard0afterS87fullpairhealth)",
+    "same-new-binaryTWOcardEPQSAflag0/1fixedQ6center0alloutput/nativeworkbeforelatencyaggregation/functionals/QUIT/CIDNAME/posthealth"
+  ],
+  "GPU_GO": false
+}

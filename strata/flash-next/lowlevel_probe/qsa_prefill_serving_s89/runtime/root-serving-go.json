@@ -1,0 +1,40 @@
+{
+  "status": "ROOT_GO_FINITE_SAME_NEW_BINARY_TWO_CARD_QSA_PREFILL",
+  "epoch_ns": 1792086514936342678,
+  "binary_sha256": "b2a610ea23856ad290cbca2a0dcdec4de676f3cdb519ddc0a01c5321942636be",
+  "source_sha256": "28117295f242483d62c23e060adf0c3b49be9c1868d80669bff58b7fcdbfd5a1",
+  "main_build_audit": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-serving-s89-build/build/root-build-audit.json",
+  "AOT_report_sha256": "26149e9a858646dd65a23533e17f56c7cfcc57aae74b52c07ed5f8534913c45a",
+  "harness_manifest_sha256": "3258e383ab9e3875868eb89d4ca94eab7f08fbc414c49261d3daba4b509e69e3",
+  "root_fullread_all_six_controllers": true,
+  "same_configs_exceptflag_and_log": true,
+  "model_continuity": "S53primarycontenthash+qualifiedPLEhash+exactcurrentpath/dev/inode/size/mtime; no redundant75GBread",
+  "fresh_prehealth": {
+    "card": {
+      "command": [
+        "bin/xpu-health",
+        "--img",
+        "b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78",
+        "--timeout",
+        "400"
+      ],
+      "exit": 0,
+      "elapsed_s": 27.89369522803463,
+      "epoch_ns": 1792086393279550751
+    },
+    "collective": {
+      "command": [
+        "bin/xpu-collective-health",
+        "--timeout",
+        "400"
+      ],
+      "exit": 0,
+      "elapsed_s": 27.42087436100701,
+      "epoch_ns": 1792086420700794797
+    }
+  },
+  "source_reviews_closed": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-serving-source-reviews-s89-20261015/root-source-resolution.json",
+  "actual_AOT_limits": "OriginalscorerwholeimageexactS84; wide/refTOPKdifferentcross-linkbytes/metadataequal/no unchangedISA claim. BothS89armsuseSAMEnewtopk. Newmaincandidate independentlyaudited/staticnq8 not assumedprivatebyteidentical.",
+  "protocol": "OneC2warm+3fresh4059/32728prompt/256outputeacharm; no C2timedrepeats/extra32Kwarmedprefill/profiler/cache/dailyrestore; fulloutput/nativeworkbeforetimingaggregation",
+  "GPU_GO": true
+}

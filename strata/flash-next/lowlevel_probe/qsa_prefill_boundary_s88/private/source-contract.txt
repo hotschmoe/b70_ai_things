@@ -1,0 +1,12 @@
+CONFIG: One near16k case, nq256, last_nkv16384, active4097; all four nkv modulo4 residues.
+COMMAND: Root-only build.sh then ROOT_RUN.sh after accepted source review and actual root build closure.
+RESULT: NOT RUN. No build, GPU touch, payload read or model consultation during this preparation.
+VERDICT: Source-only prerequisite for deciding future main guard4097; no production edit or serving claim.
+Private kernel header byte exact to S84v3. Only leaf CASES and result counts changed.
+All initial/changed/repeat/restored/public score+topk/fullbytes/poison/readonly/guards remain.
+Three warmups/arm then four balanced AB,BA,BA,AB completed scorer+unchanged-topk pairs; no graph/DOT.
+Public prelink is reused exact from S84v3; current archive QSA member must equal frozen4cac object.
+Private leaf compiles/prelinks normally; its device wrapper must byte-match old private wrapper.
+Root-provided prehealth evidence is verified/copied, not rerun; root revalidates no intervening change.
+Full container-ID/name disappearance precedes mandatory card0 posthealth even after leaf failure.
+Descriptive single-process primitive evidence only; no serving, causal, isolated-kernel or population claim.

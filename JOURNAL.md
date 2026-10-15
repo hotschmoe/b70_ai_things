@@ -24312,3 +24312,60 @@ free/ownedserversgone/no rootwaiter; datedreport and data-mapannotatedwithout
 changing170historicaloperations/rollups/meta.
 
 S87 completed260files231808577B manifest40d31d4466bb47f78fdfabb72542057fc6bd2a5b8de6d90e3e05cb94e0b11f9d;83exactsmallcopies/85repofiles332868B retained. Rootallcopyhash/bytes/ASCII and unchangedhistoricalprefix/170ops checksPASS.
+
+
+## 2026-10-15 -- Flash-Next optimization S88: new16K scorer boundary passes
+
+CONFIG -> Exact S84v3 private8query kernel/publicreference+topk, ONE newcase
+nq256/last_nkv16384/first16129/active4097/stride50002/pooled50001, seededfinite/
+signedzero/changed queries. Conservative main8193guard proposal staysunapplied:
+standard API32728/main32721 lastfull256batchends32512, so0eligiblecalls.
+COMMAND -> Source/caller/causal-domain audit firstavoidsineffective32Kserve;
+rootchoosesONE16Kboundary, no oldcasererun/thresholdsweep/33Ksubstitution.
+OnlyhostCASES/resultcounts change; inverseexact/headerbyteidentical. Actual
+sourceOpus35.397s/Fable49.602sGO/rootfullread resolvesstrictmode/transitive
+wrapperbinding/proofreuse. CPUadapter20s reusesPUBLICprelink6f39b7a6 andprivate
+wrapper001c83c6 isbyteEXACT; bothwholebundles645888/78752B occuronceinactual
+exe1c41f167836eb447bb8e5e8d75a5e5ede388e00bbd60d9e4f9e2f0bdf658e4d9.
+No extraISAdecode/publicAOT/mainmutation. QuietCARD0run41s/leaf26s, existing
+S87fullhealthreusedonlyafterfreshboot/kernel/leases/containers/logaudit
+provesnointerveningGPU/stackchange; ownCID+NAMEgonebeforemandatoryposthealth.
+RESULT -> Allfullvalidscorebits+IDs/initialchanged/repeats/restored/known1->0/
+inactivepoison/read-only/guardsPASS;8files25050112B.3warm/arm then4balanced
+AB/BA/BA/AB pairedscorer+UNCHANGEDtopk host-completed times. Publicmedian
+2433.2445->2351.358us, medianpaired-3.66122877%; all4negative -3.039/-1.371/
+-5.751/-4.283%. Identity/prehealthreuse/posthealth/removal/wrappers0/no retry.
+VERDICT -> GO earlier4097guard SOURCEPREP, no serving/default/shelfclaim.
+Oneprocess/seededfixtures/nestedcompletedscorer+topk, notisolatedGPUservice,
+physicaltraffic/cause/p95/significance. Lastquerythreshold16384 doesnotmean
+allqueries>=16384. FreshactualcombinedS88post/S89source Opus28.091s/Fable41.468s
+bothACCEPT/rootfullread, avoidingduplicatepostcalls. S89source/mainbuildand
+serving are separatework. No dailyrestore/fullcache/oldcase/extraoracle.
+Completed138files27720705B manifestabadf5f91f98ce6a0ff1e24fe1cdc1fb7b0ae5dbac999ce66318152af3f3dddc;
+54exactsmallcopies/56repofiles193832B. Newactual32Kservingdiscriminatornext;
+absolute2000/150targetsremainunmet, S30RAMqualificationretained.
+
+
+## 2026-10-15 - S89 guarded QSA main build and finite serving comparison
+
+CONFIG -> Current upstream296b59d2 plus existing measured overlays; same fresh
+b2a610ea executable/QSA0vs1, Q6center0 both, depth2/headpairON/EP149-363,
+all24576 resident/two200000 slots/32GiB parking. DefaultOFF exact full256-query
+4x128/R4/stride50002/active4097..50001 path, original short/tail/decode.
+COMMAND -> OnlyQSAcompile+archive+link155.654s/CPUlease169s; selected-mainAOT10s.
+Fresh prehealth; eacharm oneC2warm coherence+3fresh4K+3fresh32K/256-output,
+functionals/normalQUIT/fullCIDNAME removal/fullpercard+compiledposthealth.
+ActualOpus/Fable combinedsource28.091/41.468s; post25.288/42.218s ACCEPT,
+root fullread and target/metric/scope corrections in root-postclosure.json.
+RESULT -> All20comparison gatesPASS before aggregation: fulltext/SSE/usage/
+cache0/prompt/predicted/draftwork/partintervals/warmwork/capture/admission/
+markers/identity/functionals/teardown/health. At32K pairedpromptms changes
+-0.5474/-0.4345/-0.7528%; medianpaired-0.5474%, native1547.5->1559.2tok/s,
+TTFT21.2129->21.0539s. Inactive4K mixed/null. Maincandidate SIMD32/GRF128/
+SLM16512/barrier_count1; mainTOPK differs vs standalone, same withinbotharms.
+VERDICT -> Retain defaultOFF opt-in, tiny directional32K effect only; no
+causal/stability/default/daily/shelf/combinedQ6/fullcache claim. Goals unmet.
+Keep S30 recovery evidence; no repeated cache/dailyrestore/timedC2/32Kwarm.
+Queue one current32K operation/readiness profile using retained tooling, NOTRUN.
+Raw: cachefix_20261014/qsa-prefill-serving-s89 and sibling build/main-ISA/reviews.
+Curated: strata/flash-next/lowlevel_probe/qsa_prefill_serving_s89/README.md.

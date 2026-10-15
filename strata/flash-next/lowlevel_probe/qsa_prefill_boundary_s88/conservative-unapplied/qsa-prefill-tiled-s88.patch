@@ -1,0 +1,33 @@
+--- a/sycl/src/kernels/cuda/qsa_select.dp.cpp
++++ b/sycl/src/kernels/cuda/qsa_select.dp.cpp
+@@ -1572,6 +1572,30 @@
+     if (s.idx_dim != IDX_DIM || s.idx_n_head != IDX_HEADS || s.idx_block != R || nq > 65535) {
+         std::fprintf(stderr, "qsa_block_scores: unsupported indexer geometry\n");
+         std::exit(1);
++    }
++    // S88 opt-in: S84's eight-query scorer tiles, only full long-prefill batches.
++    // active_blocks is the last query's floor(n_kv / 4) + 1, not capacity.
++    // 8193 means last n_kv >= 32768; a short/ragged batch keeps the old path.
++    // The 200000-cell production arena has max_blocks=50002 and a spare pooled row.
++    if (nq == 256 && max_blocks == 50002 && active_blocks >= 8193 && active_blocks <= 50001) {
++        static const bool tiled = [] {
++            const char* v = std::getenv("STRATA_QSA_PREFILL_TILED");
++            const bool enabled = v != nullptr && std::strcmp(v, "1") == 0;
++            std::fprintf(stderr, "strata QSA prefill tiled: enabled=%d nq=256 idx=4x128 R4 stride=50002 active=8193..50001 tile=8 key_wg=256 SG32\n", enabled ? 1 : 0);
++            return enabled;
++        }();
++        if (tiled) {
++            strata::q_of(stream)->parallel_for<dpct_kernel_name<class block_scores_prefill_tiled_s88>>(
++                sycl::nd_range<3>(sycl::range<3>(1, 256 / MQ, 256 * SCORE_WARPS * 32),
++                                  sycl::range<3>(1, 1, SCORE_WARPS * 32)),
++                [=](sycl::nd_item<3> item_ct1) [[sycl::reqd_sub_group_size(32)]] {
++                    const int q0 = (int)item_ct1.get_group(1) * MQ;
++                    block_scores_multi_kernel(pooled, dead, q_idx + (size_t)q0 * IDX_HEADS * IDX_DIM,
++                                              steps + (size_t)q0 * kStepCount, MQ, max_blocks,
++                                              scores + (size_t)q0 * max_blocks, true);
++                });
++            return;
++        }
+     }
+     // a block past a query's n_bid returns at once: the grid need only reach the batch's largest n_bid (C-1)
+     static const bool multi = [] { const char* v = std::getenv("STRATA_SCORES_MULTI"); return v == nullptr || std::atoi(v) != 0; }();

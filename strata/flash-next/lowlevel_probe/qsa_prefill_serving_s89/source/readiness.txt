@@ -1,0 +1,57 @@
+S89 guarded main-prefill QSA tiling SOURCE PREPARATION (2026-10-15)
+Author /root/ple_upstream. Root owns full read, actual combined S88post/S89source
+consultations, application, build/AOT audit and any finite serving run.
+
+CONFIG -> Current original qsa TU443c1c9d plus actual strict-PASS S84v3 and
+new S88 ONE16K boundary. Main source remains untouched. S88 conservative8193
+source proposal remains unapplied historical evidence; no33K substitution.
+
+COMMAND -> One insertion in qsa_block_scores. Full original/candidate,
+forward/inverse patches, exact source pins, full unchanged called multi body
+and compact review packet. Removing insertion reconstructs original exactly.
+Called block_scores_multi_kernel is byte-identical to S84v3 private body;
+no new FP expression, reduction/order, helper, header/API or buffer layout.
+S87 native c1cdeabe/defaultOFF Q6 and restored verify/generate hosts unchanged.
+
+RESULT -> Existing validation fixes INDEXER4heads x128FP32/block4. Attention
+head_dim256/24Q/2KV is distinct and untouched; scorer does not use those fields.
+Guard nq==256,max_blocks==50002,4097<=active_blocks<=50001. Production200000
+capacity allocates50002 pooled rows; only b<=50000 read here. S84fixture
+50001 rows already sufficed, including speculative pooled read at b==tail.
+Current eager prefill supplies positiveactive=lastquery.n_bid+1 and completed
+chunk indexer state. Each host step has pos=p0+t,n_kv=pos+1,n_bid=n_kv/4.
+4097 therefore means LAST query n_kv>=16384; first query may16129. Capacity is
+NOT live context. Decode/verify defaultactive(-1), smaller nq, short/partial
+prefill and unsupported capacities stay original. Standard fresh32K main
+has full256-query blocks beyond16384; firstactivation must still be observed,
+not inferred from approximate request label. No host device-step read/wait.
+
+The launch is32 independent query tiles x256key workgroups;256threads/SG32,
+exact S84v3 absence of root_sync property. q0=8*tile and offsets q0*512,
+q0*kStepCount,q0*scorestride. Full tiles only: no padded/tail work. Body keeps
+perquery b<=n_bid, dead at own n_bid, +1e9 iff n_kv%4!=0; original float4
+products, XOR16/8/4/2/1, head0..3 positive-part sum. Key stride2048, SLM/barriers
+and tile-uniform early exit unchanged. Completed same-queue launch precedes
+unchanged top-k/attention; inactive scores are ignored by perquery bounds.
+No new queue/event/allocations/copies/counters/profiling or eager graph gate.
+
+STRATA_QSA_PREFILL_TILED exact string1 enables; absent/0/other stay OFF.
+First ELIGIBLE host call initializes static bool with [active_blocks] value
+capture, prints enabled0/1, fixedguard and first_active actual value ONCE.
+No readiness requirement: eligible call occurs during sufficiently long
+prefill. This is host eligibility/branch evidence, not independent device
+dispatch or all capture-cache/layout evidence. Source changes/compiler effects
+still require actual build/AOT/fullmodel gates; private images are not main.
+
+S88 actual result:41squiet/26sleaf;8fullfiles25050112B; initial/changed/repeat/
+restore/fullvalid scorebits+IDs/poison/read-only/guards/health/CID+NAME/wrapper
+PASS. Four balanced scorer+UNCHANGEDtop-k pairs, public median2433.2445us ->
+2351.358us; medianpaired delta-3.66122877%, allfour negative. Seeded fixtures,
+one process, host completion; not isolated GPU service/traffic/cause/serving
+speed/significance. Decision exact record included below. No threshold sweep,
+oldcase retest, fullcache rerun or additional oracle in this source stage.
+
+VERDICT -> READY FOR ROOT FULLREAD + COMBINED ACTUAL CONSULTATION ONLY.
+Source-supported measured16K boundary permits earlierguard sourcepreparation;
+no default/daily/shelf promotion or serving gain claimed. No application,
+build, GPU/model call or model-payload read performed by this task.

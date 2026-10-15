@@ -1,0 +1,11 @@
+{"type":"identity","pci":"0000:0b:00.0","visible_devices":1,"device":"Intel(R) Arc(TM) Pro B70 Graphics","driver":"1.15.38646+4","execution":"eager_only_no_graph"}
+{"type":"case","case":"near16k","nq":256,"first_nkv":16129,"last_nkv":16384,"active":4097,"stride":50002,"pool_rows":50001,"nkv_mod4_mask":15}
+{"type":"correctness","case":"near16k","status":"PASS","snapshots":4,"valid_score_bytes":4162304,"valid_ID_bytes":2100224,"repeat_changed_restored":true,"inactive_poison_readonly_guards":true}
+{"type":"timing","case":"near16k","pair":0,"slot":0,"arm":"public","order":"AB","submit_us":29.597000,"complete_us":2408.382000,"full_scorer_plus_topk":true,"full_bytes_checked":true}
+{"type":"timing","case":"near16k","pair":0,"slot":1,"arm":"candidate","order":"AB","submit_us":31.019000,"complete_us":2335.192000,"full_scorer_plus_topk":true,"full_bytes_checked":true}
+{"type":"timing","case":"near16k","pair":1,"slot":0,"arm":"candidate","order":"BA","submit_us":32.733000,"complete_us":2389.546000,"full_scorer_plus_topk":true,"full_bytes_checked":true}
+{"type":"timing","case":"near16k","pair":1,"slot":1,"arm":"public","order":"BA","submit_us":31.731000,"complete_us":2422.769000,"full_scorer_plus_topk":true,"full_bytes_checked":true}
+{"type":"timing","case":"near16k","pair":2,"slot":0,"arm":"candidate","order":"BA","submit_us":33.965000,"complete_us":2303.181000,"full_scorer_plus_topk":true,"full_bytes_checked":true}
+{"type":"timing","case":"near16k","pair":2,"slot":1,"arm":"public","order":"BA","submit_us":32.302000,"complete_us":2443.720000,"full_scorer_plus_topk":true,"full_bytes_checked":true}
+{"type":"timing","case":"near16k","pair":3,"slot":0,"arm":"public","order":"AB","submit_us":31.800000,"complete_us":2473.475000,"full_scorer_plus_topk":true,"full_bytes_checked":true}
+{"type":"timing","case":"near16k","pair":3,"slot":1,"arm":"candidate","order":"AB","submit_us":31.270000,"complete_us":2367.524000,"full_scorer_plus_topk":true,"full_bytes_checked":true}

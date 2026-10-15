@@ -1,0 +1,24 @@
+{
+  "status": "PASS_ROOT_MAIN_QSA_ONLY_INCREMENTAL_BUILD_AOT_PENDING",
+  "epoch_ns": 1792086337596340880,
+  "binary_sha256": "b2a610ea23856ad290cbca2a0dcdec4de676f3cdb519ddc0a01c5321942636be",
+  "source_sha256": "28117295f242483d62c23e060adf0c3b49be9c1868d80669bff58b7fcdbfd5a1",
+  "build_records": {
+    "/out/strata-qsa-prefill-s89": "b2a610ea23856ad290cbca2a0dcdec4de676f3cdb519ddc0a01c5321942636be",
+    "libstrata_kernels.a": "6c192f4719effb37626e3d1f6cd2324d5c1161ced6e98f00de3587bba6e644c6",
+    "CMakeFiles/strata_kernels.dir/src/kernels/cuda/qsa_select.dp.cpp.o": "313c94d6050707a5ecebfd057f572960f99e236491c636f11677737fcb65a15f",
+    "libstrata_engine.a": "77a18ca2e4fd4cd35414a74e8386b760a904476022b24ecc7203339fd00180b7",
+    "CMakeCache.txt": "fee542911252057f97fac8113086ded01130c7888ac96a7490e28cdec814cc22"
+  },
+  "CPU_lease_s": 169,
+  "ninja_build_s": 155.654,
+  "actual_compiles": 1,
+  "archives": 1,
+  "main_AOT_link": 1,
+  "changed_archive_members_only": [
+    "qsa_select.dp.cpp.o"
+  ],
+  "other_archives_native_verify_generate_HC_cache_buildrules_unchanged": true,
+  "rollback_snapshot_present": true,
+  "GPU_GO": false
+}

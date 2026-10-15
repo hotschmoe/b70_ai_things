@@ -2567,7 +2567,8 @@ ul.plain{padding-left:1.1rem}
    "evidence": [
     "docs S10 (PFRAW trace CSV)",
     "draft-carry-s30/prefill-phase-diagnostic.json",
-    "qsa-prefill-tiled-s84-prep-v3/run-clean/{comparison,closure}.json"
+    "qsa-prefill-tiled-s84-prep-v3/run-clean/{comparison,closure}.json",
+    "qsa-prefill-serving-s89/{comparison,root-runtime-decision}.json; qsa-prefill-serving-postreviews-s89-20261015/root-postclosure.json"
    ],
    "quoted": [
     {
@@ -2604,6 +2605,12 @@ ul.plain{padding-left:1.1rem}
      "label": "S84 eager indexer scorer+unchanged top-k, separate from attention kernel",
      "value": "4K866.923->997.833us,32K4722.318->4363.269us,200K21490.156->17130.835us medians for256queries; fullbit+ID gates PASS.",
      "basis": "Oneprocess/fourbalancedpairs and deterministic finite/signedzero inputs per case, exact existing multi body tiled8queries. Not scorer-only service, serving throughput or physical traffic.",
+     "status": "measured"
+    },
+    {
+     "label": "S89 guarded QSA full-server discriminator",
+     "value": "32K median paired promptms -0.5474%;4K inactive path mixed/null; all matched correctness and health gates PASS.",
+     "basis": "Three exact prompt pairs/shape in one OFFthenON processsequence, same b2a610ea executable/Q6center0. Firsthostmarker4097 and source-derived chunks are not independent GPU dispatch evidence.",
      "status": "measured"
     }
    ],
@@ -3074,6 +3081,20 @@ ul.plain{padding-left:1.1rem}
    "value": "Medianaggregate103.088->104.279tok/s(+1.155%,ratioofmedians), threepairedwallsall~1.1-1.3%lower; alloutput/work/healthgatesPASS.",
    "status": "measured",
    "note": "OneOFFthenON freshprocesssequence; one warm+3fresh107/1500pairs each, TRACE1CPUloggingmatched/notdeviceprofile. KeepdefaultOFFoptin, no broadspeed/default/shelf/fullcacheclaim; perstream~54-56below150."
+  },
+  {
+   "stage": "S88",
+   "label": "16K QSA scorer plus unchanged top-k boundary",
+   "value": "Strict bits/IDs/changed/repeat/restore/poison/read-only/guards PASS; median paired -3.6612%, four balanced pairs/one fixture/process.",
+   "status": "measured",
+   "note": "One new active4097/full256-query boundary; completed host times2433.2445->2351.358us. Primitive only; no serving or isolated scorer-service claim."
+  },
+  {
+   "stage": "S89",
+   "label": "Guarded actual-main QSA, matched two-card EP serving",
+   "value": "32K median paired promptms -0.5474% (all3negative); native1547.5->1559.2tok/s, TTFT21.2129->21.0539s. Inactive4K mixed/null.",
+   "status": "measured",
+   "note": "All output/work/functionals/QUIT/CIDNAME/health gates PASS. One fixed OFFthenON sequence, no causal/stability/default/daily/fullcache or combinedQ6 promotion. Retain defaultOFF opt-in.2000tok/s prefill/150stream remain unmet."
   }
  ],
  "rejected_parked": [
@@ -3190,7 +3211,8 @@ ul.plain{padding-left:1.1rem}
   "S77 full-GU target and S78 commit-overlap lead are source contracts only. No new operand-byte/reference, grouped accuracy, ideal SiLU/down, hardware overlap or serving result is established; historical operation rows and rollups are unchanged.",
   "S80 measures full GU operand identity/reference accuracy for one saved compact fixture and complete-wave coherence, closing that bounded premise beyond S62. It does not establish ideal SiLU/down error, actual serving activation/model quality, full4K/32K throughput, GPU kernel timing or the cause of grouped regression. S42 historical strict failure is unchanged.",
   "S81-S84 distinguish indexer scoring from attention and long select-region totals. Tiled scorer strict output/ID checks pass for5synthetic cases; short context regresses, long full256-query improves. Whole-model 4K/32K/200K speed, other shapes/capacities and production guarding remain unqualified. S83 only shows baseline byte-saturation lowering survives; candidate ISA/runtime is separate.",
-  "S85 resolves private Q6 C6 centering correctness and repeated-weight projection cost only; actual public DOT/buffer bindings ARE validated. Frozen pre-runtime ISA pending wording stays historical; later runtime comparison supplies exact gates. Full-model production Q8/dispatch/throughput remains a future two-card EP comparison."
+  "S85 resolves private Q6 C6 centering correctness and repeated-weight projection cost only; actual public DOT/buffer bindings ARE validated. Frozen pre-runtime ISA pending wording stays historical; later runtime comparison supplies exact gates. Full-model production Q8/dispatch/throughput remains a future two-card EP comparison.",
+  "S89 has no current32K GPU operation census or joined readiness/host-submit criticalpath. One separate existing-tool profile is prepared for current149/363 ownership; historicalS10 155/357 4K cannot establish current cause. No new trace imported."
  ],
  "operations": [
   {

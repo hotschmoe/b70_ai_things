@@ -1,0 +1,42 @@
+{
+  "status": "ROOT_GO_ONE_FINITE_CARD0_NEW16K_CASE",
+  "utc": "2026-10-15T17:37:01.454094+00:00",
+  "source_reviews": {
+    "claude-opus-5-5": {
+      "elapsed_s": 35.39681428897893,
+      "session_ids": [
+        "96bb266e-87a5-4ce0-8c49-a9303397b746"
+      ],
+      "answer_sha256": "03d3a184484916071e5b6713519460bcc4886f49754469bd2994cdd510d78597",
+      "root_fullread": true
+    },
+    "claude-fable-5-1": {
+      "elapsed_s": 49.60221365705365,
+      "session_ids": [
+        "3cf9851d-2c21-4504-b2d3-734813437e43"
+      ],
+      "answer_sha256": "34ef6821d5b4fb5bbe73aca4c9a27bf95ae3ab8412d07960ec9e63b6c4940fd7",
+      "root_fullread": true
+    }
+  },
+  "packet_sha256": "7c6e59294526735dd4feee7e49c6a58df9bbbcfec0345701b3887a03dc5e62ff",
+  "root_build_closure_sha256": "286ba59dd944f25a3674a13d4cca37d862feba5e1ea4e9391d5a4cab66170dd2",
+  "conditions_resolved": [
+    "BuildcontaineroneAPIthenstrictset-e present; archive extractioncmpunchanged and actualbuildPASS20s.",
+    "Actualprivatewrapper001c EXACTcmp plus launchidentity checks itsrecorded001c and pinned/public001c; exactwholepublic645888B/private78752B bundles eachoccuronce innewexe. No sourceedit/rebuild needed for transitivebinding.",
+    "Rootlatestsharedlog+allnativeagents nointerveningGPU, noGPUholders/waiters, dockeronly3monitoringservices, samekernel/image/driverstack, currentbootprecedesS87health; no reboot. Originalfixedproofremainsimmutable plus this immediate rootaudit.",
+    "BothownfullCID+NAME removal loop beforeposthealth on allleaf exits confirmed fullread. CosmeticS84stderr/spare50000comment unchanged toavoidcomment-only rebuild."
+  ],
+  "boot_id": "b785982c-4954-4d23-808c-48a7534ce3bd",
+  "boot_precedes_closed_S87_health": true,
+  "GPU_lease_snapshot": "GPU lease:\n  card 0: free\n  card 1: free\n",
+  "docker_running": "5d04f34e963b9c32f36ac1dde359f4eb99a1cce2e114f3c8424365d96db49ca1 b70_grafana grafana/grafana:latest\n0cc1aad4ab1b03345c73455c1fb22d8f5798f9643ebec3ac439ed5c2e984a9db b70_prometheus prom/prometheus:latest\nee813f751899a489a29dad25891ada93939a4fd817eaaead23e1036ef344a0d1 open-webui ghcr.io/open-webui/open-webui:v0.11.1\n",
+  "health_reuse_proof_sha256": "1728d31c4b7f2f77a1c91796ee11e39f1346496e4f00a5db6d117e93caa27561",
+  "no_intervening_GPU_or_stack_change": true,
+  "review_corrections": [
+    "Proof is root-recorded plusSHA-bound, not cryptographicallysigned.",
+    "WholewrappercmpPASS observed, no inference about what a hypothetical mismatchcausewouldbe."
+  ],
+  "GPU_GO": true,
+  "scope": "Onequietphysicalcard0new16Kcase, strictfirst3warm+4pairs; no model/mainmutation/oldcasererun/graphs/fullcache/dailyrestore"
+}

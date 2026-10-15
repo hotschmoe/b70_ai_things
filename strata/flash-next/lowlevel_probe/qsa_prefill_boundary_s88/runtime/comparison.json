@@ -1,0 +1,73 @@
+{
+  "status": "PASS_PRIMITIVE_ONLY",
+  "files": {
+    "near16k/public-initial.scores.f32": {
+      "bytes": 4162304,
+      "sha256": "a82c0f86fe0bf18388aea2860313fbfd2a4decf72dbf7684aadb8b4903b20c50"
+    },
+    "near16k/candidate-initial.scores.f32": {
+      "bytes": 4162304,
+      "sha256": "a82c0f86fe0bf18388aea2860313fbfd2a4decf72dbf7684aadb8b4903b20c50"
+    },
+    "near16k/public-initial.ids.i32": {
+      "bytes": 2100224,
+      "sha256": "dcd1364c327f1317faef61fece0acbdba648255bc0b865155281574c79487763"
+    },
+    "near16k/candidate-initial.ids.i32": {
+      "bytes": 2100224,
+      "sha256": "dcd1364c327f1317faef61fece0acbdba648255bc0b865155281574c79487763"
+    },
+    "near16k/public-changed.scores.f32": {
+      "bytes": 4162304,
+      "sha256": "d74cdeda9f7ab7c5bf3509e39495ab47839dd492ebdd5bd5e33cb086b26901ce"
+    },
+    "near16k/candidate-changed.scores.f32": {
+      "bytes": 4162304,
+      "sha256": "d74cdeda9f7ab7c5bf3509e39495ab47839dd492ebdd5bd5e33cb086b26901ce"
+    },
+    "near16k/public-changed.ids.i32": {
+      "bytes": 2100224,
+      "sha256": "c163e1d989c7bef392e4a7c5103cf2d80196fe60e0ba2bec8f6819a474e7f8c9"
+    },
+    "near16k/candidate-changed.ids.i32": {
+      "bytes": 2100224,
+      "sha256": "c163e1d989c7bef392e4a7c5103cf2d80196fe60e0ba2bec8f6819a474e7f8c9"
+    }
+  },
+  "data_bytes": 25050112,
+  "timing": {
+    "near16k": {
+      "raw_pairs": [
+        {
+          "pair": 0,
+          "public": 2408.382,
+          "candidate": 2335.192,
+          "delta_percent": -3.038969731545915
+        },
+        {
+          "pair": 1,
+          "candidate": 2389.546,
+          "public": 2422.769,
+          "delta_percent": -1.3712821981790246
+        },
+        {
+          "pair": 2,
+          "candidate": 2303.181,
+          "public": 2443.72,
+          "delta_percent": -5.751027122583596
+        },
+        {
+          "pair": 3,
+          "public": 2473.475,
+          "candidate": 2367.524,
+          "delta_percent": -4.283487805617603
+        }
+      ],
+      "median_paired_delta_percent": -3.661228768581759,
+      "scope": "one process, four descriptive paired scorer+unchanged-topk waves; no significance/serving or isolated-kernel claim"
+    }
+  },
+  "graph_required": false,
+  "serving_qualified": false,
+  "speed_qualified": false
+}

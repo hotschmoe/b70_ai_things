@@ -1,0 +1,248 @@
+{
+  "candidate": [
+    {
+      "line": 57,
+      "text": "        mov (16|M16)             r15.0<1>:d    r10.1<2;1,0>:d                   {Compacted}"
+    },
+    {
+      "line": 58,
+      "text": "        send.slm (32|M0)         null     r24  r34:4  0x0            0x04001504           {I@5,$3} // wr:2+4, rd:0; store.slm.d32x2.a32"
+    },
+    {
+      "line": 59,
+      "text": "        send.slm (32|M0)         null     r24  r12:4  0x40000            0x04001504           {I@1,$4} // wr:2+4, rd:0; store.slm.d32x2.a32.flat[A+0x40]"
+    },
+    {
+      "line": 60,
+      "text": "L768:"
+    },
+    {
+      "line": 62,
+      "text": "L784:"
+    },
+    {
+      "line": 63,
+      "text": "(W)     send.slm (1|M0)          r4       r66  null:0  0x0            0x0210001F           {$5} // wr:1+0, rd:1; fence.slm.none.group"
+    },
+    {
+      "line": 64,
+      "text": "(W)     mov (1|M0)               r5.2<1>:f     3.58732e-43:f                              "
+    },
+    {
+      "line": 66,
+      "text": "(W)     mov (8|M0)               null<1>:ud    r4.0<1;1,0>:ud                   {$5.dst}"
+    },
+    {
+      "line": 67,
+      "text": "(W)     send.gtwy (1|M0)         null     r5  null:0  0x0            0x02000004           {I@2,$6} // wr:1+0, rd:0; signal barrier"
+    },
+    {
+      "line": 68,
+      "text": "(W)     sync.bar                             0x0                                "
+    },
+    {
+      "line": 152,
+      "text": "L2080:"
+    },
+    {
+      "line": 153,
+      "text": "(W)     send.slm (1|M0)          r4       r66  null:0  0x0            0x0210001F           {$11} // wr:1+0, rd:1; fence.slm.none.group"
+    },
+    {
+      "line": 154,
+      "text": "(W)     mov (1|M0)               r5.2<1>:f     3.58732e-43:f                              "
+    },
+    {
+      "line": 156,
+      "text": "(W)     mov (8|M0)               null<1>:ud    r4.0<1;1,0>:ud                   {$11.dst}"
+    },
+    {
+      "line": 157,
+      "text": "(W)     send.gtwy (1|M0)         null     r5  null:0  0x0            0x02000004           {I@2,$12} // wr:1+0, rd:0; signal barrier"
+    },
+    {
+      "line": 158,
+      "text": "(W)     sync.bar                             0x0                                "
+    },
+    {
+      "line": 305,
+      "text": "(f2.0)  sel (32|M0)              r6.0<1>:f     r46.0<1;1,0>:f    r38.0<1;1,0>:f  "
+    },
+    {
+      "line": 306,
+      "text": "        mad (32|M0)              acc0.0<1>:f   acc0.0<1;0>:f     r4.0<1;0>:f       r16.0<1>:f       {Compacted,F@3}"
+    },
+    {
+      "line": 307,
+      "text": "(W)     mov (16|M0)              a0.0<1>:uw    0x0:uw                             "
+    },
+    {
+      "line": 308,
+      "text": "(f2.0)  sel (32|M0)              r8.0<1>:f     r48.0<1;1,0>:f    r40.0<1;1,0>:f  "
+    },
+    {
+      "line": 309,
+      "text": "        mad (32|M0)              acc0.0<1>:f   acc0.0<1;0>:f     r6.0<1;0>:f       r20.0<1>:f       {Compacted,F@3}"
+    },
+    {
+      "line": 310,
+      "text": "        add (16|M0)              a0.0<1>:uw    r24.0<1;1,0>:uw   0x1000:uw              {I@2}"
+    },
+    {
+      "line": 457,
+      "text": "(f2.0)  sel (32|M0)              r4.0<1>:f     acc2.0<1;1,0>:f   acc0.0<1;1,0>:f "
+    },
+    {
+      "line": 458,
+      "text": "        send.ugm (32|M0)         null     r50  r4:2  0x0            0x08000584           {F@1,$10} // wr:4+2, rd:0; store.ugm.d32.a64"
+    },
+    {
+      "line": 459,
+      "text": "L6208:"
+    },
+    {
+      "line": 634,
+      "text": "(f3.0)  sel (32|M0)              r4.0<1>:f     acc2.0<1;1,0>:f   acc0.0<1;1,0>:f "
+    },
+    {
+      "line": 635,
+      "text": "        send.ugm (32|M0)         null     r6  r4:2  0x0            0x08000584           {A@1,$15} // wr:4+2, rd:0; store.ugm.d32.a64"
+    },
+    {
+      "line": 636,
+      "text": "L8400:"
+    }
+  ],
+  "original": [
+    {
+      "line": 86,
+      "text": "        mul (32|M0)              acc0.0<1>:f   r56.0<1;1,0>:f    r47.0<1;1,0>:f   {Compacted,$3.dst}"
+    },
+    {
+      "line": 87,
+      "text": "        mad (32|M0)              acc0.0<1>:f   acc0.0<1;0>:f     r45.0<1;0>:f      r54.0<1>:f      "
+    },
+    {
+      "line": 88,
+      "text": "        send.ugm (32|M0)         r41      r37  null:0  0x600000            0x08803580           {F@1,$7} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x600]"
+    },
+    {
+      "line": 89,
+      "text": "        mad (32|M0)              acc0.0<1>:f   acc0.0<1;0>:f     r49.0<1;0>:f      r58.0<1>:f       {Compacted}"
+    },
+    {
+      "line": 90,
+      "text": "        mad (32|M0)              r95.0<1>:f    acc0.0<1;0>:f     r51.0<1;0>:f      r60.0<1>:f       {Compacted}"
+    },
+    {
+      "line": 251,
+      "text": "        add (16|M16)             r21.0<1>:q    r17.0<1;1,0>:q    r3.0<0;1,0>:q    {Compacted,I@2}"
+    },
+    {
+      "line": 252,
+      "text": "        send.ugm (32|M0)         null     r19  r6:2  0x0            0x08000584           {I@1,$8} // wr:4+2, rd:0; store.ugm.d32.a64"
+    },
+    {
+      "line": 253,
+      "text": "L3216:"
+    }
+  ],
+  "topk": [
+    {
+      "line": 58,
+      "text": "        add (16|M16)             r12.0<1>:q    r103.0<0;1,0>:q   r8.0<1;1,0>:q    {Compacted}"
+    },
+    {
+      "line": 59,
+      "text": "        send.ugm (32|M0)         null     r10  r4:2  0x0            0x08000584           {I@1,$3} // wr:4+2, rd:0; store.ugm.d32.a64"
+    },
+    {
+      "line": 60,
+      "text": "(f0.0)  goto.b (32|M0)                       L784                  L608                "
+    },
+    {
+      "line": 106,
+      "text": "        mov (32|M0)              r8.0<1>:d     0:w                              "
+    },
+    {
+      "line": 107,
+      "text": "        send.slm (32|M0)         null     r6  r8:2  0x0            0x04000504           {I@1,$7} // wr:2+2, rd:0; store.slm.d32.a32"
+    },
+    {
+      "line": 108,
+      "text": "(~f0.0) goto (32|M0)                         L1408                  L1408                "
+    },
+    {
+      "line": 190,
+      "text": "L2272:"
+    },
+    {
+      "line": 191,
+      "text": "(W)     send.slm (1|M0)          r4       r98  null:0  0x0            0x0210001F           {$10} // wr:1+0, rd:1; fence.slm.none.group"
+    },
+    {
+      "line": 192,
+      "text": "(W)     mov (1|M0)               r5.2<1>:f     3.58732e-43:f                              "
+    },
+    {
+      "line": 194,
+      "text": "(W)     mov (8|M0)               null<1>:ud    r4.0<1;1,0>:ud                   {Compacted,$10.dst}"
+    },
+    {
+      "line": 195,
+      "text": "(W)     send.gtwy (1|M0)         null     r5  null:0  0x0            0x02000004           {I@2,$11} // wr:1+0, rd:0; signal barrier"
+    },
+    {
+      "line": 196,
+      "text": "(W)     sync.bar                             0x0                                "
+    },
+    {
+      "line": 201,
+      "text": "        add (32|M0)              r6.0<1>:d     r50.0<1;1,0>:d    268436736:d               {$7.src}"
+    },
+    {
+      "line": 202,
+      "text": "        send.slm (32|M0)         r12      r4  null:0  0x0            0x04200500           {I@2,$12} // wr:2+0, rd:2; load.slm.d32.a32"
+    },
+    {
+      "line": 203,
+      "text": "        send.slm (32|M0)         r14      r6  null:0  0x0            0x04200500           {I@1,$13} // wr:2+0, rd:2; load.slm.d32.a32"
+    },
+    {
+      "line": 309,
+      "text": "L3856:"
+    },
+    {
+      "line": 310,
+      "text": "(W)     send.slm (1|M0)          r4       r98  null:0  0x0            0x0210001F           {$15} // wr:1+0, rd:1; fence.slm.none.group"
+    },
+    {
+      "line": 311,
+      "text": "(W)     mov (1|M0)               r5.2<1>:f     3.58732e-43:f                               {$11.src}"
+    },
+    {
+      "line": 313,
+      "text": "(W)     mov (8|M0)               null<1>:ud    r4.0<1;1,0>:ud                   {$15.dst}"
+    },
+    {
+      "line": 314,
+      "text": "(W)     send.gtwy (1|M0)         null     r5  null:0  0x0            0x02000004           {I@2,$0} // wr:1+0, rd:0; signal barrier"
+    },
+    {
+      "line": 315,
+      "text": "(W)     sync.bar                             0x0                                "
+    },
+    {
+      "line": 3671,
+      "text": "        add (16|M16)             r8.0<1>:q     r28.0<1;1,0>:q    r2.4<0;1,0>:q    {Compacted}"
+    },
+    {
+      "line": 3672,
+      "text": "        send.ugm (32|M0)         null     r6  r4:2  0x0            0x08000584           {I@1,$11} // wr:4+2, rd:0; store.ugm.d32.a64"
+    },
+    {
+      "line": 3673,
+      "text": "(f2.0)  goto.b (32|M0)                       L43472                  L43360                "
+    }
+  ]
+}

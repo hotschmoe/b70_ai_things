@@ -1,0 +1,46 @@
+# S88 near16k Boundary Source Review
+
+**Verdict: GO_BOUNDED_BUILD.** There are no source blockers. Three build-closure conditions are listed at the end, and the build must fail closed on any of them.
+
+## Case geometry and bounds
+- `nq=256`, `last=16384`, so `first_nkv=16129` and `active=16384/4+1=4097`. This is \u2264POOL and <STRIDE.
+- `n_bid` runs from 4032 to 4096, so the top block equals `active-1`.
+- nkv 16129..16384 covers all four mod-4 residues, so `mods==15` holds.
+- 16384%4==0 gives the empty causal tail, where the dead block gets no +1e9.
+- The leaf check `need(...mods==15)` and the analyzer assert `last//4+1==4097` agree.
+- The analyzer's `ns` and `ni` formulas are unchanged and match the observe() valid-cell export.
+- Score buffer is 256\xd750002\xd74 \u2248 51 MB, which is fine.
+
+## Counts are consistent across leaf, result.json and analyzer
+- 1 case, 4 snapshots (public/candidate \xd7 initial/changed), 8 files.
+- 8 timed samples (4 pairs \xd7 2).
+- One correctness row and a `set(cases)=={'near16k'}` assert.
+
+## Gates and timing are preserved
+- All of these remain: initial/changed exact, both repeats, changed-observable, public/candidate restored, last-query known score (1\u21920), finite active, inactive score/ID poison, ID range/ascending, all-buffer guards, readonly pooled/dead/query/steps.
+- Timing is 3 warm/arm with full-byte checks, then AB,BA,BA,AB.
+- Each timed sample is fully byte-checked after it is timed.
+- `complete_us` is host-observed nested scorer+unchanged-topk time. It is not isolated kernel time, serving gain, physical traffic, or causal cache.
+
+## Kernel identity
+- The delta touches only host `CASES` and the result string.
+- The header is unchanged in the diff and pinned at `2c479f\u2026`.
+- Requiring `cmp leaf.images.o /public/leaf.images.o` is the right proof that the device image is unchanged.
+
+## Public binding
+- No public AOT is invoked, and the host link uses `/public/qsa.images.o`, pinned at `6f39\u2026`.
+- `/public` is mounted read-only.
+- Both `/public` pins are checked inside the container (`sha256sum -c`) and again by identity.py.
+- identity.py's `/public` mapping in sha256.txt is correct: the ternary is right-associative.
+
+## Conditions to resolve at the root build-closure audit
+1. **Fail-closed build.** The unseen header of `build-container.sh` must have `set -e`. Otherwise a failed `cmp` (private wrapper or `qsa-from-archive.o`) would not abort the build. Also confirm the archive-extraction lines that produce `qsa-from-archive.o` are unchanged from S84v3.
+2. **Bind the private wrapper at launch.** identity.py re-checks `build/leaf.images.o` only against the build's own sha256.txt. Either add a direct assert that `sha(b/'leaf.images.o')==pins['/public/leaf.images.o']`, or have `root-build-closure.json` record `unchanged_private_wrapper` and `reused_public_prelink` hashes that identity asserts. Because the build already enforces `cmp` under condition 1, this is a closure strengthening, not a source blocker.
+3. **Prehealth reuse.** `prehealth_reuse.py` trusts the root's boolean `no_intervening_GPU_or_stack_change`. Before the single leased card0 window, the root must actually verify that claim (GPU-lock log, docker ps, driver/kernel/image unchanged since S87 posthealth) and record that evidence in the proof JSON before hashing it.
+
+## Not blockers
+- The leaf stderr still says "S84 failure". This is cosmetic.
+- The cleanup and posthealth paths only change the message string. The full own-CID+NAME removal still runs before card0 posthealth, including after a leaf failure, as long as the unshown tail is unchanged from S84v3.
+
+## What a PASS can and cannot show
+A PASS shows exact-bytes parity and descriptive paired nested timing at the 16384/4097 boundary in one process. It does not show any 32K serving benefit. Whether an earlier 16384 guard covers meaningful 32K work, while preserving 4K, tail and decode behaviour, remains a root decision that needs separate evidence.

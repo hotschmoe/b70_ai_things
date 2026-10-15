@@ -1,0 +1,123 @@
+{
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-boundary-s88-prep",
+  "status": "FROZEN_SOURCE_PREP_ONLY",
+  "files": [
+    {
+      "path": "ROOT_RUN.sh",
+      "bytes": 736,
+      "sha256": "128fc2e9e30cdd2b9a93dacccc8f57f7cfedca6b6312539a4f111e0357ce6a55"
+    },
+    {
+      "path": "analyze.py",
+      "bytes": 2906,
+      "sha256": "24e4d5483010087542cd8ae0dd830a2157e530fb9aae298f4447a0e95df1a31e"
+    },
+    {
+      "path": "body-copy.json",
+      "bytes": 673,
+      "sha256": "14d7049946777ef1497de78edc81c4f09ee61c1226136a0ee98eb4f413b3cfae"
+    },
+    {
+      "path": "build-container.sh",
+      "bytes": 2361,
+      "sha256": "d64514b28dc5abd9806ff36c40e48e03cbbe0b61862a474c3cc17065de9b41cd"
+    },
+    {
+      "path": "build.sh",
+      "bytes": 1275,
+      "sha256": "2dd38b8e8101ef8426b6d859ff9b1f633cad6f2fe59f810e4701ca9d1c332195"
+    },
+    {
+      "path": "delta.patch",
+      "bytes": 13236,
+      "sha256": "6e7c732c57b8b4fc080d98362a55fd11f469f61c249bbf4f4e2a275f2220f747"
+    },
+    {
+      "path": "expected-source.sha256",
+      "bytes": 1790,
+      "sha256": "439ab59652c0f32c1bd5f49fc8862c1ae6c5e94c81e1fc2766699bad50f37ba8"
+    },
+    {
+      "path": "frozen/qsa_select.dp.cpp.o",
+      "bytes": 154712,
+      "sha256": "4cac1286456dbcfbf3618e0f0734bd05aceff6d82624d88770bb5b5277da2c3d"
+    },
+    {
+      "path": "identity.py",
+      "bytes": 2210,
+      "sha256": "a6edd996dd163c13394ea3fa264502097b8d02ebf561ebcdaa99d73ac30ba25f"
+    },
+    {
+      "path": "leased_run.sh",
+      "bytes": 5201,
+      "sha256": "f11eff9870c67b425bcd19eebaf9e10c232ea5abca2ccbd4da45d49343a08d87"
+    },
+    {
+      "path": "original/ROOT_RUN.sh",
+      "bytes": 733,
+      "sha256": "12c8019ae2f1e3ef6ea58a85a51bc5a4a06c6390d050a69d25d30423e3777f2f"
+    },
+    {
+      "path": "original/analyze.py",
+      "bytes": 2832,
+      "sha256": "e3874553a6d83e6b472a9a7be8867fde186696e30ecc3a15a49d2bec64d8f81f"
+    },
+    {
+      "path": "original/build-container.sh",
+      "bytes": 2184,
+      "sha256": "de5d57c7293c49e0eabc8ada83801b3f514302ad0f8a1d83806537c981eafc2d"
+    },
+    {
+      "path": "original/build.sh",
+      "bytes": 1144,
+      "sha256": "934b37052fc60b23bcf912e478419c42b90ad534a731b9ed71046df607848bf0"
+    },
+    {
+      "path": "original/identity.py",
+      "bytes": 1886,
+      "sha256": "c5b264c93fad7a511e78ee339a3e05299312fb23a8b7702d6b165496c8b74816"
+    },
+    {
+      "path": "original/leased_run.sh",
+      "bytes": 5222,
+      "sha256": "68d729e784f867f4956888c92d6faf2c6e06a44dfb3641caf982e107fef6db37"
+    },
+    {
+      "path": "original/scorer_leaf.cpp",
+      "bytes": 11418,
+      "sha256": "0c8a62b3ea252cd8a367dfbc11a3a1de02f2e6d9cb1495c7472f83db57bab9b0"
+    },
+    {
+      "path": "prehealth_reuse.py",
+      "bytes": 1788,
+      "sha256": "6bbe11730024c6f4f9142b8635cb616ae7013d6d5d3c410f3c52834af4b22e55"
+    },
+    {
+      "path": "private_tiled_scores.hpp",
+      "bytes": 5289,
+      "sha256": "2c479fb44d1be02677b49eb190e0b39fda07e8b905b4ed5337950277a0b252d2"
+    },
+    {
+      "path": "readiness.json",
+      "bytes": 1121,
+      "sha256": "e783751acdaf82cb6cd24ca480af67c655e259fceb6d0764c653ae27c1c48fb2"
+    },
+    {
+      "path": "review-packet.txt",
+      "bytes": 19544,
+      "sha256": "63f407b9d1a71ff716d4adc01bf072f6b468f340aa030cbfbebc7fb5c1723495"
+    },
+    {
+      "path": "scorer_leaf.cpp",
+      "bytes": 11332,
+      "sha256": "885616f47f1c902589a46eb779f781edc2a58cc50f3750b12b3a0388ea79c48d"
+    },
+    {
+      "path": "source-contract.txt",
+      "bytes": 1192,
+      "sha256": "d57fa944884fd12d7ec7f279f538c9d8ae21bf11d315365e343d1abc64be7d11"
+    }
+  ],
+  "file_count": 23,
+  "bytes": 250785
+}

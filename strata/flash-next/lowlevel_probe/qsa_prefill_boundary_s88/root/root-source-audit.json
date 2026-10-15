@@ -1,0 +1,23 @@
+{
+  "status": "ROOT_FULLREAD_SOURCE_GO_OFFLINE_BUILD_REVIEWS_PENDING",
+  "epoch_ns": 1792085660323888242,
+  "only_leaf_changes": "CASES tosingle near16k nq256last16384 and truthfulresult1case4snapshots8files8timings; inverseexact",
+  "kernel_header_byte_exact": true,
+  "delta_sha256": "6e7c732c57b8b4fc080d98362a55fd11f469f61c249bbf4f4e2a275f2220f747",
+  "expected_source_sha256": "439ab59652c0f32c1bd5f49fc8862c1ae6c5e94c81e1fc2766699bad50f37ba8",
+  "public_wrapper_reused": "6f39b7a6954ef3944293d2b23e6431c9026f4075582178804e46e0b43fb644ad",
+  "private_wrapper_build_must_equal": "001c83c6d6f37fad32f6a66e01706d25e403d796c2d83757a36355fe1fcd02b0",
+  "prehealth_reuse": "Exactrootproof+closedsourcehashes; rootrevalidatebeforeGPU; postcard0required",
+  "root_full_read": [
+    "oldandnewleaf/delta",
+    "exactheader",
+    "analyzer",
+    "identity",
+    "buildandcontainer",
+    "ROOT_RUN/leased_run",
+    "prehealth_reuse",
+    "sourcecontract"
+  ],
+  "production_mutation": false,
+  "GPU_GO": false
+}

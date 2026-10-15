@@ -1,0 +1,11 @@
+{
+  "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/qsa_select.dp.cpp",
+  "source_sha256": "443c1c9d4e79b1eb13988507ab9a079c11651f15a610a317c4d0d3945e4f3978",
+  "exact_existing_multi_body_sha256": "2376e5acc34c2c3beb6ac6dd4861d684efb29180dddb5b3213c5cfdefac43b66",
+  "body_copied_bytewise": true,
+  "object_source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/qsa_select.dp.cpp.o",
+  "object_snapshot_sha256": "4cac1286456dbcfbf3618e0f0734bd05aceff6d82624d88770bb5b5277da2c3d",
+  "object_bytes": 154712,
+  "source_object_recompile_proof": false,
+  "future_public_bit_anchor_required": true
+}

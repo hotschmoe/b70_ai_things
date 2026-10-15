@@ -360,3 +360,14 @@ post-health PASS. Three fresh C2 pairs103.088->104.279 aggregate tok/s
 opt-in; no daily/shelf/full-cache promotion. Fresh a1e35c4 main executable
 rebuilds restored S79 host dependencies; generic build is no longer stale03bb.
 [S87 build, AOT and serving evidence](../../docs/20261015_strata_qsa_tiling_and_q6_centering.md#s87-guarded-q6-serving-comparison-passes-with-a-small-bounded-gain).
+
+
+S88/S89 close the guarded QSA prefill discriminator. One new16K primitive
+boundary passes strict gates; actual main build and same-binary two-card QSA0/1
+pass all output/native-work/functionals/QUIT/fullposthealth gates. Medianpaired
+32K prompt time changes-0.547% (all3negative), throughput1547.5->1559.2tok/s;
+short4K inactive path is null/mixed. Keep defaultOFF opt-in; one OFFthenON
+sequence does not establish causal gain/stability/default/daily promotion.
+S87 Q6 is OFF in both S89 arms, so combined behavior is unqualified. Next
+prepared measurement is one current32K operation/readiness trace, not run here.
+[S89 report](../../docs/20261015_strata_qsa_tiling_and_q6_centering.md#s89-actual-main-guarded-qsa-serving-comparison-is-a-small-directional-result).

@@ -1,0 +1,118 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "96bb266e-87a5-4ce0-8c49-a9303397b746"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 35.39681428897893,
+  "launch_exception": null,
+  "source_packet_sha256": "7c6e59294526735dd4feee7e49c6a58df9bbbcfec0345701b3887a03dc5e62ff",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 34341,
+      "stop_reason": "end_turn",
+      "session_id": "96bb266e-87a5-4ce0-8c49-a9303397b746",
+      "total_cost_usd": 0.24032579999999998,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 21931,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 3237,
+        "output_tokens_details": {
+          "thinking_tokens": 1672
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 21931,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 3237,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 21931,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 21931
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 3237,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 21931,
+          "webSearchRequests": 0,
+          "costUSD": 0.24032579999999998,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 1672,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# S88 near16k Boundary Source Review\n\n**Verdict: GO_BOUNDED_BUILD.** There are no source blockers. Three build-closure conditions are listed at the end, and the build must fail closed on any of them.\n\n## Case geometry and bounds\n- `nq=256`, `last=16384`, so `first_nkv=16129` and `active=16384/4+1=4097`. This is \u2264POOL and <STRIDE.\n- `n_bid` runs from 4032 to 4096, so the top block equals `active-1`.\n- nkv 16129..16384 covers all four mod-4 residues, so `mods==15` holds.\n- 16384%4==0 gives the empty causal tail, where the dead block gets no +1e9.\n- The leaf check `need(...mods==15)` and the analyzer assert `last//4+1==4097` agree.\n- The analyzer's `ns` and `ni` formulas are unchanged and match the observe() valid-cell export.\n- Score buffer is 256\u00d750002\u00d74 \u2248 51 MB, which is fine.\n\n## Counts are consistent across leaf, result.json and analyzer\n- 1 case, 4 snapshots (public/candidate \u00d7 initial/changed), 8 files.\n- 8 timed samples (4 pairs \u00d7 2).\n- One correctness row and a `set(cases)=={'near16k'}` assert.\n\n## Gates and timing are preserved\n- All of these remain: initial/changed exact, both repeats, changed-observable, public/candidate restored, last-query known score (1\u21920), finite active, inactive score/ID poison, ID range/ascending, all-buffer guards, readonly pooled/dead/query/steps.\n- Timing is 3 warm/arm with full-byte checks, then AB,BA,BA,AB.\n- Each timed sample is fully byte-checked after it is timed.\n- `complete_us` is host-observed nested scorer+unchanged-topk time. It is not isolated kernel time, serving gain, physical traffic, or causal cache.\n\n## Kernel identity\n- The delta touches only host `CASES` and the result string.\n- The header is unchanged in the diff and pinned at `2c479f\u2026`.\n- Requiring `cmp leaf.images.o /public/leaf.images.o` is the right proof that the device image is unchanged.\n\n## Public binding\n- No public AOT is invoked, and the host link uses `/public/qsa.images.o`, pinned at `6f39\u2026`.\n- `/public` is mounted read-only.\n- Both `/public` pins are checked inside the container (`sha256sum -c`) and again by identity.py.\n- identity.py's `/public` mapping in sha256.txt is correct: the ternary is right-associative.\n\n## Conditions to resolve at the root build-closure audit\n1. **Fail-closed build.** The unseen header of `build-container.sh` must have `set -e`. Otherwise a failed `cmp` (private wrapper or `qsa-from-archive.o`) would not abort the build. Also confirm the archive-extraction lines that produce `qsa-from-archive.o` are unchanged from S84v3.\n2. **Bind the private wrapper at launch.** identity.py re-checks `build/leaf.images.o` only against the build's own sha256.txt. Either add a direct assert that `sha(b/'leaf.images.o')==pins['/public/leaf.images.o']`, or have `root-build-closure.json` record `unchanged_private_wrapper` and `reused_public_prelink` hashes that identity asserts. Because the build already enforces `cmp` under condition 1, this is a closure strengthening, not a source blocker.\n3. **Prehealth reuse.** `prehealth_reuse.py` trusts the root's boolean `no_intervening_GPU_or_stack_change`. Before the single leased card0 window, the root must actually verify that claim (GPU-lock log, docker ps, driver/kernel/image unchanged since S87 posthealth) and record that evidence in the proof JSON before hashing it.\n\n## Not blockers\n- The leaf stderr still says \"S84 failure\". This is cosmetic.\n- The cleanup and posthealth paths only change the message string. The full own-CID+NAME removal still runs before card0 posthealth, including after a leaf failure, as long as the unshown tail is unchanged from S84v3.\n\n## What a PASS can and cannot show\nA PASS shows exact-bytes parity and descriptive paired nested timing at the 16384/4097 boundary in one process. It does not show any 32K serving benefit. Whether an earlier 16384 guard covers meaningful 32K work, while preserving 4K, tail and decode behaviour, remains a root decision that needs separate evidence.",
+      "ttft_ms": 19205,
+      "type": "result",
+      "duration_ms": 34420,
+      "uuid": "d291121a-7a8e-4331-9d49-dd717cd8dc58",
+      "ttft_stream_ms": 1240,
+      "time_to_request_ms": 73,
+      "first_content_frame_ms": 1241,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

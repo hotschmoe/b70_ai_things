@@ -1,0 +1,41 @@
+{
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-serving-s88-build",
+  "status": "FROZEN_SOURCE_ONLY_MAIN_BUILD_PARKED_PENDING_PRIVATE16K",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1681,
+      "sha256": "22e3398d47902cc368c43b45b453cf918a4421f8fef3773eb638ecc12819ed04"
+    },
+    {
+      "path": "build-container.sh",
+      "bytes": 3524,
+      "sha256": "5a2a69286767ac943766cd6df9b67a320f2039afea3d3ef9d7096167914396bc"
+    },
+    {
+      "path": "build.sh",
+      "bytes": 1449,
+      "sha256": "9dd596a5570cc216e5b3efe1606391bc6aa1edf0e8ffc543287436d32a49b8d6"
+    },
+    {
+      "path": "expected-unchanged-source.sha256",
+      "bytes": 895,
+      "sha256": "b51f69620f166dfca031ceefe297030f1ac1069dd0b41756754baf031dabbf7f"
+    },
+    {
+      "path": "prebuild-pins.json",
+      "bytes": 3685,
+      "sha256": "7d1bb48c9fb40ef8a66be3ccec18f86d7ad01df0cb94190f6af1b311cf3c5d93"
+    },
+    {
+      "path": "qsa_select.original.cpp",
+      "bytes": 98307,
+      "sha256": "443c1c9d4e79b1eb13988507ab9a079c11651f15a610a317c4d0d3945e4f3978"
+    },
+    {
+      "path": "unchanged-source.json",
+      "bytes": 850,
+      "sha256": "b32ac93ed5bd7646ce6e1b7dd58dd5d9052151cf2ced9c54fe928020336b189d"
+    }
+  ]
+}

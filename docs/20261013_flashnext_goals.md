@@ -295,3 +295,15 @@ Three timed C2 pairs median103.088->104.279 aggregate tok/s (+1.155%);
 per-stream decode53.516/55.867->54.119/56.475. Retain default-OFF opt-in,
 no daily promotion or new full-cache qualification. One OFF-then-ON process
 sequence, not independent process replication. [S87 result](20261015_strata_qsa_tiling_and_q6_centering.md#s87-guarded-q6-serving-comparison-passes-with-a-small-bounded-gain).
+
+
+S88 adds the missing16K strict scorer+top-k boundary case (median paired
+-3.661%, primitive only), enabling an earlier4097-block guard. S89 actual-main
+same-binary QSA0/1 then passes all output/work/functionals/normalteardown/health
+gates. Three32K pairs have median prompt-time change-0.547%; native throughput
+medians1547.5->1559.2tok/s and clientTTFT21.213->21.054s. The inactive4K path
+is mixed/null, around1300tok/s. This is one fixed-order processsequence, not
+causal/stability/default/shelf promotion. Keep defaultOFF opt-in; Q6 is OFF in
+both arms and S87 remains separate.2000prefill/150stream goals remain open;
+S30 RAM recovery is not rerun. Next: one current32K operation/readiness trace.
+[S88/S89 evidence](20261015_strata_qsa_tiling_and_q6_centering.md).

@@ -1,0 +1,49 @@
+{
+  "name": "p4096-0",
+  "status": "PASS_LOCAL_GATES",
+  "usage": {
+    "prompt_tokens": 4059,
+    "completion_tokens": 256,
+    "total_tokens": 4315,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "work": {
+    "cache_n": 0,
+    "prompt_n": 4059,
+    "predicted_n": 256,
+    "draft_n": 205,
+    "draft_n_accepted": 136
+  },
+  "native_summary_raw": "strata serve: prompt 4059 tokens = 0 reused + 4059 read in 3400 ms (1193.7 tok/s), 256 generated in 3773 ms (67.9 tok/s), drafts accepted 136 of 205, 1 checkpoints",
+  "native_part_intervals": [
+    {
+      "raw": "strata batch prefill quantum: allocated 12288 requested 0 effective 12288 eligible 0 from 0 to 4052",
+      "allocated_C": 12288,
+      "effective_Q": 12288,
+      "from": 0,
+      "to": 4052,
+      "source_derived_chunks": [
+        {
+          "from": 0,
+          "to": 4052
+        }
+      ],
+      "interval_scope": "observed native read_part bounds; subdivisions derived from current Q0/C loop, not measured callback timestamps"
+    }
+  ],
+  "QSA_marker": null,
+  "matches_retained_S38_text_descriptive_only": true,
+  "native_prompt_tps": 1193.7,
+  "native_prompt_ms": 3400.3,
+  "ttft_s": 3.4333477379987016,
+  "wall_s": 7.18501085601747,
+  "content_event_gap_ms": {
+    "count": 246,
+    "p50": 0.12400653213262558,
+    "p95": 36.05556873662863,
+    "maximum": 70.12810598826036
+  },
+  "output_sha256": "4cc1afbabebee14a0f00b57b64d9ad10b331db0ad4c508fb39894cbfe3b1bca0"
+}

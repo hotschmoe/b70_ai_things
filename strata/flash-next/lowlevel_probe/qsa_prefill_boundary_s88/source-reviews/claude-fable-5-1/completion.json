@@ -1,0 +1,118 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "3cf9851d-2c21-4504-b2d3-734813437e43"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 49.60221365705365,
+  "launch_exception": null,
+  "source_packet_sha256": "7c6e59294526735dd4feee7e49c6a58df9bbbcfec0345701b3887a03dc5e62ff",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 48552,
+      "stop_reason": "end_turn",
+      "session_id": "3cf9851d-2c21-4504-b2d3-734813437e43",
+      "total_cost_usd": 0.63338225,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 23790,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 3148,
+        "output_tokens_details": {
+          "thinking_tokens": 1965
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 23790,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 3148,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 23790,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 23790
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 2,
+          "outputTokens": 3148,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 23790,
+          "webSearchRequests": 0,
+          "costUSD": 0.63338225,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "thinkingTokens": 1965,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Verdict: GO_BOUNDED_BUILD** (offline CPU build only; card0 window stays gated on root's own revalidation).\n\n**Delta scope is clean.** Only the CASES array, result counts, analyzer counts, paths, names, and public-wrapper reuse changed. The private header is unchanged and `s84::launch` captures nothing from CASES, so the device image should be byte-identical; the build-container `cmp leaf.images.o /public/leaf.images.o` makes that a hard, reversible gate. No math, geometry, quant, or topk change.\n\n**Case arithmetic checks out.**\n\n| Quantity | Value |\n|---|---|\n| first_nkv / last_nkv | 16129 / 16384 |\n| n_bid range | 4032..4096 |\n| active | 4097 |\n| nkv mod 4 residues | all four (256 consecutive values) |\n| causal empty tail | nk=16384, n_bid=4096=active-1, dead row scored with no +1e9 |\n\nHost bounds (`nq>8`, `last<=200000`, `n_bid+1<=active`, `active<STRIDE`) all hold. The batch straddles 16384 from below, which is exactly what a future inclusive 16384 guard needs. Analyzer size formulas are unchanged and consistent with `observe()` export widths.\n\n**Counts are consistent.** 1 case; 2 states \u00d7 2 arms exported = 4 snapshots = 8 files; 4 pairs \u00d7 2 slots = 8 timed samples; 3 warm per arm; AB,BA,BA,AB order unchanged. result.json, analyzer asserts, and the final print agree.\n\n**Gates preserved.** initial/changed/repeat/restored, changed-observable, known block0 score, finite active, inactive poison, ID range/ascending, guards, readonly on query/steps/pooled/dead all untouched. Correctness precedes timing.\n\n**Identity and binding.** expected-source pins the reused public prelink and expected private wrapper; identity.py maps `/public/` for both the pin file and build sha256.txt; closure checks binary name `scorer_leaf_s88`. Public prelink is linked from the read-only S84v3 mount; frozen object still cmp'd against archive extraction. No AOT invocation for public.\n\n**Non-blocking findings for root to resolve before the card0 window:**\n\n1. prehealth_reuse.py only verifies a static root-signed proof. The `no_intervening_GPU_or_stack_change` flag is asserted, not measured. Recommend root record boot_id and driver/firmware strings in the proof and compare at launch (reading `/proc` is not a GPU touch). This is the one claim the packet cannot self-verify.\n2. Stale comment in `State()` (\"n_bid=50000 spare row\") and the \"S84 failure\" stderr prefix are now inaccurate. Cosmetic; leave the header byte-exact, optionally fix leaf comment only.\n3. If the wrapper cmp fails, the cause is almost certainly compiler nondeterminism, not the delta. Do not relax the gate; report and HOLD.\n4. Confirm the unchanged post-health block in leased_run.sh still runs after the removal loop even on leaf exit 2/5, and that the NAME is also absent (not only OWN_CID) before health.\n\n**Evidence class.** Output is single-process scorer+topk host-completed time on one card with full-byte checks. It says nothing about serving gain, physical traffic, or causal cache effects, and the contract correctly labels it so.",
+      "ttft_ms": 32244,
+      "type": "result",
+      "duration_ms": 48660,
+      "uuid": "419a382b-36e2-44d0-a2c3-b4b6041a2be2",
+      "ttft_stream_ms": 2963,
+      "time_to_request_ms": 105,
+      "first_content_frame_ms": 2963,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

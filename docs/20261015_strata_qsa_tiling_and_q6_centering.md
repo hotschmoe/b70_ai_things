@@ -357,3 +357,109 @@ Completed external evidence:260files/231808577bytes, manifest SHA256
 `40d31d4466bb47f78fdfabb72542057fc6bd2a5b8de6d90e3e05cb94e0b11f9d`.
 Repository curation retains83 exact small records plus index/README (85files,
 332868bytes); large responses, images and binaries remain external.
+
+
+## S88: measure the missing 16K boundary before choosing a guard
+
+The first conservative integration proposal would activate only when the last
+query reaches32768 cells. Retained fresh32K requests have32721 main-prefill
+tokens; their final full256-query batch ends at32512, followed by a209-query
+tail. That guard would activate zero times. The proposal remains unapplied;
+a33K-only request was not substituted for the32K goal.
+
+One new16K case reuses the exact S84v3 scorer and public reference, with256
+queries ending at16384 (first16129, active4097). Only the host case and truthful
+result counts change. A20-second CPU build reuses the public prelink and proves
+the private device wrapper byte-identical. Both complete image bundles occur
+exactly once in the new executable; no repeated ISA audit is needed.
+
+All valid score bits/selected IDs, changed/repeat/restore, known observable
+1->0, inactive poison, read-only inputs and guards pass:8 exports/25050112bytes.
+One quiet card0 window41s includes26s leaf and post-health. Root reuses S87
+prehealth after checking no intervening GPU/stack change, current boot/kernel,
+leases and containers. Own full CID/name removal, post-health and wrappers pass.
+
+Three warm calls per arm precede four balanced AB/BA/BA/AB samples. Completed
+scorer plus unchanged top-k medians are2433.2445->2351.358us; median paired
+change-3.6612%, with all four negative (-3.039/-1.371/-5.751/-4.283%). This is
+one seeded process and host completion, not isolated scorer service, physical
+traffic, significance or a serving gain.
+
+The result supports source preparation of an earlier active-block guard4097,
+which means the LAST query reaches16384; earlier queries can be below it.
+Short4K, tails and decode remain original. Actual Opus35.397s/Fable49.602s
+source reviews pass; combined S88post/S89source Opus28.091s/Fable41.468s accept
+this bounded decision. Main build and serving qualification belong to S89.
+
+[Exact small records](../strata/flash-next/lowlevel_probe/qsa_prefill_boundary_s88/README.md)
+retain54 byte-exact copies plus index/README,56files/193832bytes. Completed
+external evidence138files/27720705bytes, manifest SHA256
+`abadf5f91f98ce6a0ff1e24fe1cdc1fb7b0ae5dbac999ce66318152af3f3dddc`.
+The development-loop saving is concrete: the source coverage check prevented
+an ineffective main build/serve; one boundary case reused its public AOT and
+health evidence, and the post review shares the next source consultation.
+
+
+## S89: actual-main guarded QSA serving comparison is a small directional result
+
+CONFIG -> Same new executable, two-card EP149/363, all24576 experts resident,
+depth2/headpairON, two200000 slots and32GiB parking. Only literal QSA tiled0/1
+varies. Q6center0 in both arms; the separate S87 Q6 result is not combined.
+The exact256-query/4x128/R4/stride50002 guard activates at active4097..50001;
+short4K, ragged tails and decode keep the original path. One first-eligible
+host marker records selection, without per-operation instrumentation.
+
+COMMAND -> Incremental CPU build169s (Ninja155.654s): only QSA TU compile,
+kernel archive update and main AOT link. All other archive members, native,
+restored verifier/generator objects, HC and CMake/build rules remain exact.
+New executable SHA256:
+`b2a610ea23856ad290cbca2a0dcdec4de676f3cdb519ddc0a01c5321942636be`.
+QSA source SHA256:
+`28117295f242483d62c23e060adf0c3b49be9c1868d80669bff58b7fcdbfd5a1`.
+
+The10s selected main-AOT audit independently finds candidate image550,
+SIMD32/GRF128/SLM16512/barrier_count1/text22592B/no CALL. Original scorer
+image551 is byte-exact S84. Wide/ref top-k compiled bytes differ across
+standalone/main links; both serving arms use the SAME new top-k/executable.
+Absent scratch/spill metadata is not zero. These are static resource facts,
+not occupancy, dynamic barrier counts or independent dispatch evidence.
+
+Each arm starts once, warms one107/1500 C2 coding pair for coherence, then
+runs three exact fresh4059-token and three32728-token requests,256 outputs
+each. All six full requests/text/SSE/usage/five native-work fields and actual
+native part intervals match; all cache_n0. Warm work/windows/captures and
+admission overlap match. First eligible marker is enabled0/1, first_active4097;
+source-derived subchunks are not observed GPU dispatches. Arithmetic, reasoning,
+tool round trips, normal QUIT, own full CID/name removal and per-card/compiled
+collective post-health pass in BOTH arms before aggregation.
+
+RESULT -> At32K all three paired prompt times improve: -0.5474/-0.4345/-0.7528%,
+median paired -0.5474%. Native prompt medians21148.8->20989.6ms; throughput
+1547.5->1559.2tok/s (+0.7561% ratio of medians, descriptive). Client TTFT
+21.2129->21.0539s, about159ms lower; request wall24.7185->24.6308s.
+The inactive4K path is null/mixed: paired +0.9830/+0.0995/-0.8704%, not a
+kernel gain. Its throughput medians1289.3/1300.7 are retained descriptively.
+One fixed OFF-then-ON process sequence with three samples per shape cannot
+separate this small effect from order/thermal/cache drift or establish
+significance, stability or population tail latency. SSE gaps are event gaps,
+not exact token inter-token latency. No isolated kernel cause is inferred.
+
+VERDICT -> Retain guarded default-OFF opt-in and frozen executable for research;
+no default/daily/shelf, combined-Q6 or new full-cache promotion. The paired
+32K effect is the headline;4K is null. Absolute2000+tok/s prefill and150+tok/s
+per-stream decode goals remain unmet. Existing S30 RAM recovery remains valid.
+Actual postreviews Opus25.288s/Fable42.218s accept; root corrects Fable's
+mistaken2000ms target to2000tok/s, and both answers' shorthand scorer-only
+for S88 means completed scorer PLUS unchanged top-k. All raw answers persist.
+
+The loop omits timed C2 repeats, extra32K warm, cache rerun and daily restore.
+Both GPUs are released. Next prepared discriminator is ONE separate current32K
+operation/readiness trace with existing S10/S31 unitrace/clock/stop-flush tools,
+current149/363 ownership and saved request capped32 outputs; NOT RUN in S89.
+This should distinguish GPU service from submission/wait/readiness intervals,
+without equating recorded gaps to physical idle or guessing PCIe traffic.
+[Exact small S89 records](../strata/flash-next/lowlevel_probe/qsa_prefill_serving_s89/README.md).
+
+S89 completed external evidence:266files/211396305bytes, manifest SHA256
+`560858c7e1b06d235398a5a907452f4add5c92b034512b0065d64d5fa1792cad`.
+Repository curation retains68 exact small copies plus index/README,70files/293254bytes.

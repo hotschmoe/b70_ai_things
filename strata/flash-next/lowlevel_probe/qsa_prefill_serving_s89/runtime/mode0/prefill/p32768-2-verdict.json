@@ -1,0 +1,62 @@
+{
+  "name": "p32768-2",
+  "status": "PASS_LOCAL_GATES",
+  "usage": {
+    "prompt_tokens": 32728,
+    "completion_tokens": 256,
+    "total_tokens": 32984,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "work": {
+    "cache_n": 0,
+    "prompt_n": 32728,
+    "predicted_n": 256,
+    "draft_n": 213,
+    "draft_n_accepted": 143
+  },
+  "native_summary_raw": "strata serve: prompt 32728 tokens = 0 reused + 32728 read in 21149 ms (1547.5 tok/s), 256 generated in 3801 ms (67.3 tok/s), drafts accepted 143 of 213, 2 checkpoints",
+  "native_part_intervals": [
+    {
+      "raw": "strata batch prefill quantum: allocated 12288 requested 0 effective 12288 eligible 0 from 0 to 32721",
+      "allocated_C": 12288,
+      "effective_Q": 12288,
+      "from": 0,
+      "to": 32721,
+      "source_derived_chunks": [
+        {
+          "from": 0,
+          "to": 12288
+        },
+        {
+          "from": 12288,
+          "to": 24576
+        },
+        {
+          "from": 24576,
+          "to": 32721
+        }
+      ],
+      "interval_scope": "observed native read_part bounds; subdivisions derived from current Q0/C loop, not measured callback timestamps"
+    }
+  ],
+  "QSA_marker": {
+    "enabled": 0,
+    "first_active": 4097,
+    "domain": "nq256/stride50002/active4097..50001",
+    "scope": "host selection only, not independent GPU dispatch"
+  },
+  "matches_retained_S38_text_descriptive_only": true,
+  "native_prompt_tps": 1547.5,
+  "native_prompt_ms": 21148.8,
+  "ttft_s": 21.213140862004366,
+  "wall_s": 24.99292519898154,
+  "content_event_gap_ms": {
+    "count": 245,
+    "p50": 0.10977900819852948,
+    "p95": 37.81064520590007,
+    "maximum": 38.24503696523607
+  },
+  "output_sha256": "a60024231063f96828d9765dfbd9af45708891034df5038de6cd3adf7ba36f43"
+}

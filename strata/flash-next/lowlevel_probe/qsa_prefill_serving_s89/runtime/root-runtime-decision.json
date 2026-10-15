@@ -1,0 +1,192 @@
+{
+  "status": "RETAIN_DEFAULT_OFF_OPTIN_BOUNDED_SMALL_GAIN",
+  "epoch_ns": 1792087350275453401,
+  "comparison_sha256": "789bb31662e85a2918675109bd14ca775fdf3ce7e098774f3c9d9ce91b90c640",
+  "all_observable_gates_pass": true,
+  "checks": {
+    "identity_image_and_native_process": true,
+    "warm_slot0": true,
+    "warm_slot1": true,
+    "warm_native_work_capture": true,
+    "warm_admission_overlap": true,
+    "p4096-0": true,
+    "p4096-1": true,
+    "p4096-2": true,
+    "p32768-0": true,
+    "p32768-1": true,
+    "p32768-2": true,
+    "functionals": true,
+    "health_teardown": true,
+    "full_CID_and_NAME_absent": true,
+    "final_diagnostics_complete": true,
+    "final_QSA_marker_0": true,
+    "common_Q6_off_0": true,
+    "final_QSA_marker_1": true,
+    "common_Q6_off_1": true
+  },
+  "binary_sha256": "b2a610ea23856ad290cbca2a0dcdec4de676f3cdb519ddc0a01c5321942636be",
+  "source_sha256": "28117295f242483d62c23e060adf0c3b49be9c1868d80669bff58b7fcdbfd5a1",
+  "same_new_binary_both_arms": true,
+  "Q6_center_both": "0",
+  "summary": {
+    "p4096": {
+      "summary": {
+        "native_prompt_tps": [
+          {
+            "median": 1289.3,
+            "range": [
+              1205.5,
+              1302.5
+            ]
+          },
+          {
+            "median": 1300.7,
+            "range": [
+              1193.7,
+              1301.2
+            ]
+          }
+        ],
+        "native_prompt_ms": [
+          {
+            "median": 3148.1,
+            "range": [
+              3116.3,
+              3367.2
+            ]
+          },
+          {
+            "median": 3120.7,
+            "range": [
+              3119.4,
+              3400.3
+            ]
+          }
+        ],
+        "ttft_s": [
+          {
+            "median": 3.180190342012793,
+            "range": [
+              3.1481275219703093,
+              3.400690793991089
+            ]
+          },
+          {
+            "median": 3.1528274369775318,
+            "range": [
+              3.1513445090386085,
+              3.4333477379987016
+            ]
+          }
+        ],
+        "wall_s": [
+          {
+            "median": 6.664971661986783,
+            "range": [
+              6.483067035034765,
+              7.147574142960366
+            ]
+          },
+          {
+            "median": 6.675474221992772,
+            "range": [
+              6.460135427012574,
+              7.18501085601747
+            ]
+          }
+        ]
+      },
+      "paired_prompt_ms_pct": [
+        0.983012592064636,
+        0.09947694381156058,
+        -0.8703662526603373
+      ],
+      "median_paired_prompt_ms_pct": 0.09947694381156058,
+      "ratio_median_tps_gain_pct": 0.8842007290777998,
+      "median_ttft_delta_s": -0.027362905035261065
+    },
+    "p32768": {
+      "summary": {
+        "native_prompt_tps": [
+          {
+            "median": 1547.5,
+            "range": [
+              1547.5,
+              1579.9
+            ]
+          },
+          {
+            "median": 1559.2,
+            "range": [
+              1554.3,
+              1588.6
+            ]
+          }
+        ],
+        "native_prompt_ms": [
+          {
+            "median": 21148.8,
+            "range": [
+              20715.4,
+              21149.0
+            ]
+          },
+          {
+            "median": 20989.6,
+            "range": [
+              20602.0,
+              21057.1
+            ]
+          }
+        ],
+        "ttft_s": [
+          {
+            "median": 21.21288241900038,
+            "range": [
+              20.780313009978272,
+              21.213140862004366
+            ]
+          },
+          {
+            "median": 21.05388356297044,
+            "range": [
+              20.66790347296046,
+              21.122174336982425
+            ]
+          }
+        ],
+        "wall_s": [
+          {
+            "median": 24.7184801879921,
+            "range": [
+              24.265396835980937,
+              24.99292519898154
+            ]
+          },
+          {
+            "median": 24.630795360018965,
+            "range": [
+              24.15547339100158,
+              24.83607180096442
+            ]
+          }
+        ]
+      },
+      "paired_prompt_ms_pct": [
+        -0.547418828504409,
+        -0.43453591186345397,
+        -0.7527613859888094
+      ],
+      "median_paired_prompt_ms_pct": -0.547418828504409,
+      "ratio_median_tps_gain_pct": 0.7560581583198722,
+      "median_ttft_delta_s": -0.1589988560299389
+    }
+  },
+  "disposition": "Retain guarded main QSA source/default-OFF opt-in and frozen executable for research. No default/daily/shelf promotion; S87 Q6 remains separate opt-in, not combined qualification.",
+  "scope": "One OFFthenON process sequence, one C2 warm coherence pair and three fresh exact requests per shape/arm. Three prompt pairs are not independent process replication; no significance/stability/population-p95 claim. Short inactive-path differences describe run variability, not a tiled-kernel gain.",
+  "activation_scope": "once eligible host marker + actual native part bounds; C12288 subintervals source-derived, not independent GPU dispatch or callback timestamps",
+  "SSE_scope": "content events may contain multiple tokens; not token ITL",
+  "absolute_goals": "4K/32K prefill below2000; last bounded C2 decode54-56/stream below150; no new full-cache qualification, retain S30 recovery evidence.",
+  "next": "One diagnostic current32K operation/readiness profile using existing unitrace capture/stop/flush/clock tooling, same149/363 ownership; distinguish GPU service from host waits/readiness association. No automatic retime/primitive/cache repeat.",
+  "dev_loop": "One QSA TU compile+archive+link155.654s (CPUlease169s), actual selected-main AOT audit10s, OFF/ON start42.266/36.276s; warm30/29s,prefill95/94s,functionals6/6s,normal teardown+fullhealth58/59s. No extra32K warm, timedC2 repeats, fullcache or daily restore."
+}

@@ -1,0 +1,37 @@
+{
+  "status": "ROOT_CLOSED_RETAIN_DEFAULT_OFF_32K_DIRECTIONAL_SMALL_EFFECT_4K_NULL",
+  "epoch_ns": 1792087427807146286,
+  "reviews": {
+    "claude-opus-5-5": {
+      "session_ids": [
+        "471a1e12-58bc-4140-bb9c-76d83a9e4845"
+      ],
+      "elapsed_s": 25.28775019699242,
+      "root_fullread": true,
+      "verdict": "ACCEPT_DECISION",
+      "response_sha256": "19a27fb4b1811e53360c75563400fda060471c73b1a1f2bfb64efca02337e85f"
+    },
+    "claude-fable-5-1": {
+      "session_ids": [
+        "2ece1e15-ecf7-4190-a50c-00be7b8a81d2"
+      ],
+      "elapsed_s": 42.21750178199727,
+      "root_fullread": true,
+      "verdict": "ACCEPT_DECISION",
+      "response_sha256": "41e59d1cbdecd1501e76bbee1bbe3862f1d70aba1bc729ab5b6ad229acbae685"
+    }
+  },
+  "root_fullread_comparison_all20checks": true,
+  "all_gate_checks_pass": true,
+  "final_interpretation": "Retain guarded opt-in defaultOFF and frozen binary. At32K median paired prompt-time change -0.5474% in ONE fixed OFFthenON sequence, all3pairsnegative;4K inactive path null/mixed (+0.0995%medianpaired), not a gain. No causal/stability/default/daily/shelf/fullcache or combinedQ6 qualification.",
+  "wording_corrections": [
+    "Use paired -0.5474% as headline; +0.7561%ratio of throughput medians retained descriptively and not causal. 4K +0.8842%ratio of medians does not establish gain.",
+    "Fable erroneously describes 2000ms prefill target; actual goal is 2000+tok/s at4K/32K. Cached2sTTFT is diagnostic only. At4059/32728tokens a2000tok/s reference is~2.03/~16.36s nativeprefill, not2s for32K.",
+    "S88 timings include completed scorer PLUS unchangedtopk; shorthand scorer-only in answers must not imply isolated scorer service.",
+    "Opus at-most~0.5% is an observation of this bounded comparison, not a universal upperbound. Barrier_count1 is metadata, not dynamic barrier-count proof."
+  ],
+  "next": "One separate current32K diagnostic operation/readiness profile using existing tooling; not executed inS89. No retime/threshold sweep/cache repeat/daily restore.",
+  "root_runtime_decision_sha256": "c423f60a3b394582b2b92a190caf3ce7784b4cb5c9ec5c52ac2223261832dc4f",
+  "packet_sha256": "dd40a97417462ee262c2be9e5234045b62c54b97f0f22e32d31872bd583dbc1f",
+  "GPU_leases_released": true
+}

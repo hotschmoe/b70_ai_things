@@ -1,0 +1,26 @@
+{
+  "status": "SOURCE_PREP_ONLY_WAIT_ROOT_GO",
+  "leaf_inverse_exact_S84v3": true,
+  "private_header_byte_exact_S84v3": true,
+  "source_syntax": "Python AST and bash -n only; no C++ compile",
+  "public_prelink": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-tiled-s84-prep-v3/build/qsa.images.o",
+  "public_prelink_sha256": "6f39b7a6954ef3944293d2b23e6431c9026f4075582178804e46e0b43fb644ad",
+  "private_wrapper_expected": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-tiled-s84-prep-v3/build/leaf.images.o",
+  "private_wrapper_expected_sha256": "001c83c6d6f37fad32f6a66e01706d25e403d796c2d83757a36355fe1fcd02b0",
+  "case": {
+    "tag": "near16k",
+    "nq": 256,
+    "last_nkv": 16384,
+    "first_nkv": 16129,
+    "active_blocks": 4097
+  },
+  "counts": {
+    "cases": 1,
+    "snapshots": 4,
+    "files": 8,
+    "timed_samples": 8
+  },
+  "prehealth_reuse_proof_sha256": "1728d31c4b7f2f77a1c91796ee11e39f1346496e4f00a5db6d117e93caa27561",
+  "gpu_or_build_executed": false,
+  "root_revalidate_no_intervening_change_required": true
+}

@@ -1,0 +1,107 @@
+{
+  "current_QSA_source": {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/qsa_select.dp.cpp",
+    "sha256": "443c1c9d4e79b1eb13988507ab9a079c11651f15a610a317c4d0d3945e4f3978",
+    "bytes": 98307
+  },
+  "actual_current_S87_build_record": {
+    "status": "PASS_ROOT_MAIN_INCREMENTAL_BUILD_BINDING_AOT_PENDING",
+    "binary_sha256": "a1e35c4ddecff6cfcca8cd61945d0243274f4867e8eff4d134c4ad535b920900",
+    "native_source_sha256": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584",
+    "build_record": {
+      "/out/strata-q6-center-s87": "a1e35c4ddecff6cfcca8cd61945d0243274f4867e8eff4d134c4ad535b920900",
+      "libstrata_kernels.a": "923c525edcb1c07b1be34728171cf55a706feedb9ff3fbc346b1bd793a70375a",
+      "libstrata_engine.a": "77a18ca2e4fd4cd35414a74e8386b760a904476022b24ecc7203339fd00180b7",
+      "CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o": "b9f931cb65927a2869a1b26bce8cfa834b112bccdfe08d26e9364634473294dd",
+      "CMakeFiles/strata_engine.dir/src/core/verify.cpp.o": "4d6777b12eb79490b5cb06e523a6b4e777df2e322a26e24cbf95d00e5b768309",
+      "CMakeFiles/strata.dir/src/program/generate.cpp.o": "ade001b0f6ba26045e3bd682d89d7c7c4fd18a55114886d839707618a5f1fbe7",
+      "CMakeCache.txt": "fee542911252057f97fac8113086ded01130c7888ac96a7490e28cdec814cc22"
+    },
+    "changed_archive_members_only": {
+      "libstrata_kernels.a": [
+        "native_mmvq.dp.cpp.o"
+      ],
+      "libstrata_engine.a": [
+        "verify.cpp.o"
+      ]
+    },
+    "actual_compiles": 3,
+    "archives": 2,
+    "main_AOT_link": 1,
+    "CMake_ABI_and_other_inputs_unchanged": true,
+    "restored_S79_host_source_recompiled": true,
+    "source_rollback_possible": true,
+    "GPU_GO": false
+  },
+  "ownership": {
+    ".ninja_log": {
+      "uid": 1000,
+      "gid": 1000,
+      "mode": "0o644",
+      "bytes": 22963,
+      "mtime_ns": 1792083712896190484,
+      "writable_now": true,
+      "parent_writable_now": true
+    },
+    ".ninja_deps": {
+      "uid": 1000,
+      "gid": 1000,
+      "mode": "0o644",
+      "bytes": 618284,
+      "mtime_ns": 1792083566185646513,
+      "writable_now": true,
+      "parent_writable_now": true
+    },
+    "strata": {
+      "uid": 1000,
+      "gid": 1000,
+      "mode": "0o755",
+      "bytes": 92117000,
+      "mtime_ns": 1792083711997162639,
+      "writable_now": true,
+      "parent_writable_now": true
+    },
+    "libstrata_kernels.a": {
+      "uid": 1000,
+      "gid": 1000,
+      "mode": "0o644",
+      "bytes": 19482272,
+      "mtime_ns": 1792083566423653884,
+      "writable_now": true,
+      "parent_writable_now": true
+    },
+    "CMakeFiles/strata_kernels.dir/src/kernels/cuda/qsa_select.dp.cpp.o": {
+      "uid": 1000,
+      "gid": 1000,
+      "mode": "0o644",
+      "bytes": 154712,
+      "mtime_ns": 1791995711564865971,
+      "writable_now": true,
+      "parent_writable_now": true
+    },
+    "CMakeCache.txt": {
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "bytes": 28555,
+      "mtime_ns": 1792048638598541390,
+      "writable_now": false,
+      "parent_writable_now": true
+    },
+    "build.ninja": {
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "bytes": 252839,
+      "mtime_ns": 1792048638854549348,
+      "writable_now": false,
+      "parent_writable_now": true
+    }
+  },
+  "existing_Ninja_timings_seconds": {
+    "S87_native_compile": 58.522,
+    "S87_full_main_AOT_link": 146.312,
+    "S87_total_wrapper_root_report": 219
+  },
+  "cost_estimate": "Only QSA TU compile replaces58.5s nativecompile; final full main AOT still expected to dominate (~146s prior, NOT measuredS88). Budget roughly2-4minCPU until actual logs. No new build timed here."
+}

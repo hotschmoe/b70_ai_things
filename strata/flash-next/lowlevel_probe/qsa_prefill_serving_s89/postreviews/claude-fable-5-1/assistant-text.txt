@@ -1,0 +1,16 @@
+**Verdict: ACCEPT_DECISION**, with two wording findings that do not change the disposition.
+
+**Gating before timing.** All six requests show request, full text, SSE, usage, cache/prompt/predicted, draft work, and native part intervals equal across arms, plus warm slots, admission overlap, functionals, health teardown, CID/NAME absence, and QSA/Q6 marker checks. Same image, same new executable, same source on both arms. Timing aggregation was therefore permitted and no NULL summary is required. No normalization, retime, or retry was applied, as required.
+
+**Evidence tiers kept distinct.** The packet correctly separates three things. The main-candidate AOT audit is of the independently built image, not a byte-equal private image, and the main TOPK bytes differ from standalone. Because both arms ran the same executable, that is not an arm confound, but it also supports no unchanged-ISA claim. The S88 standalone figure of about -3.7% paired is scorer-only on a synthetic 16k fixture and is not full-model service. The S89 full-model numbers are the only serving observations.
+
+**What the serving numbers support.** The guard first activates at 4097, and the 4K requests are 4059 tokens, so the 4K arm is the inactive path. Its three pairs straddle zero: two ON slower, one faster, median paired near 0.1%. That is run variability, which the scope note states. The 4K "ratio of medians" gain of about 0.9% cross-pairs medians from different requests and should not be read as a result. At 32K all three pairs favor ON by roughly 0.4% to 0.75%, with ranges overlapping. Direction is consistent but the sequence is OFF-then-ON in fixed order within one process, so thermal, clock, and cache-state ordering are uncontrolled. Three pairs are not process replication. No significance or p95 stability claim is made, and none should be. TTFT and native prompt throughput are used as primary; SSE is correctly excluded as token ITL. The single host marker plus source-derived chunk subintervals is not GPU dispatch or callback evidence, and the packet says so.
+
+**Findings.**
+- The status label "BOUNDED_SMALL_GAIN" applies only to the 32K active path. The 4K figures are null, not a small gain.
+- Drop the ratio-of-medians percentage from any headline. The median paired percentage is the honest figure.
+- Absolute goals remain unmet by a wide margin. 4K prefill is around 3.1s and 32K around 21s against a 2000 ms target. Nothing here moves toward them.
+
+**Retain opt-in versus park.** Retain opt-in is justified: gates pass, no regression at 4K or 32K, and the code path stays available for research at no serving cost by default. Promotion to default, daily, shelf, or combined Q6 qualification is correctly refused.
+
+**Next discriminator.** The proposed single 32K unitrace operation/readiness profile is the right next step. It directly addresses the missing GPU-service versus host-wait separation that the host marker cannot provide. The dev loop cost of roughly 155s compile plus about five minutes per arm is modest. No extra cache campaign, retime, or primitive repeat is warranted.

@@ -1,0 +1,74 @@
+S88 v1 guarded main-prefill QSA tiling SOURCE ONLY (2026-10-15)
+Author: /root/ple_upstream; root owns application/build/actual reviews/runtime.
+
+CONFIG -> Current Strata QSA TU/public prefill caller plus strict-PASS S84v3.
+Only qsa_select.dp.cpp candidate changes: one guarded launch before unchanged
+original dispatch. No header/API, kernel body, top-k, attention, allocation,
+queue, dependency, data layout, math policy, decode or restored host change.
+S87 native source c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584
+is pinned unchanged; source-pins also binds restored verify/generate sources.
+
+COMMAND -> Read current source and retained S84v3 fixture/launcher/analyzer.
+Save exact original and candidate, forward/inverse diff and full called body.
+Source-only inverse removal reconstructs exact original bytes. Called existing
+block_scores_multi_kernel is byte-identical to S84v3 private body. Nothing
+applied, built, model-reviewed, GPU-tested or read from model payloads.
+
+RESULT -> Guard nq==256, max_blocks==50002, 8193<=active_blocks<=50001, after
+existing validation idx_dim128/idx_heads4/block4. This is INDEXER width128;
+production ATTENTION head_dim256 with24Q/2KV heads is unchanged/unused by
+scorer. No assumption head_dim128. Actual production max_cells200000 gives
+score stride50002 and pooled allocation50002 rows. S84 used50001 pooled
+rows, enough even for speculative last valid b50000 at max200000. In public
+API positive active is an exact eager upper bound, not captured growing
+context. Current verify/decode calls use absent active(-1) and small nq;
+pooled16 debug also absent active. They remain original.
+
+Prefill qsa_step_fill computes per-query pos=p0+t, n_kv=pos+1, n_bid=n_kv/4.
+It appends the whole chunk on the same queue before scoring. sel_batch256;
+active=last query n_bid+1 from existing HOST steps, no new device copy/wait.
+Query FP32[nq,4,128], pooled FP32[block,128], dead[128], scores[nq,50002].
+Candidate32 query tiles each8queries;256key workgroups/tile,256threads/SG32.
+q0=tile*8; q/step/score offsets are q0*512/q0*4/q0*50002. All32tiles full;
+no padded/tail query is launched. Existing body uses tile-local per-query
+n_bid/n_kv, same float4 expression, XOR16/8/4/2/1, positive part/head0..3 sum,
+dead at b==n_bid and +1e9 iff n_kv%4!=0. It computes speculative pooled load
+before selecting dead, but max b50000 is inside even S84's50001-row fixture.
+Grid256 keys strides2048; key loops/tile-uniform early return/SLM barriers
+unchanged. Top-k remains ordered after complete launch with same row stride;
+its per-query valid bounds ignore inactive scores. No new root_sync property,
+matching actual S84v3 launcher; original paths/properties untouched.
+
+Default OFF STRATA_QSA_PREFILL_TILED: only exact string1 enables; missing,0
+or other strings remain off. First ELIGIBLE call initializes static selection
+and prints enabled0/1+exact domain once/process, not at readiness. It proves
+host branch selection, not independent GPU dispatch. No per-op logging,
+profiling counters or timing instrumentation. Scope is source eligibility,
+not current-main compiler equivalence, serving speed or concurrency proof.
+
+BOUNDARY -> active>=8193 means LAST query floor(n_kv/4)>=8192, hence last
+n_kv>=32768; first query may32513. It does not claim all256queries>=32768.
+A complete fresh main-prefill of32721 cells (retained API32728 minus7) ends
+its last full batch at32512 and has209-query tail, so this guard never fires.
+Even fresh API32768/main32761 has249-query tail and same lastfull32512.
+At p0=0 full batches end at multiples256; first eligible endpoint32768;
+main must actually contain that full batch. Cached p0/chunking alter endpoints,
+so activation must be observed, not inferred from approximate prompt labels.
+Parent rejected substituting a33K-only serve for32K goal.
+
+VERDICT -> ROOT HOLD MAIN APPLY/BUILD. Freeze this conservative v1 source
+proposal historical. Root selected ONE new private16K case (nq256,
+last_nkv16384, active4097) reusing exact S84v3 kernel to decide whether an
+earlier guard is justified; no threshold sweep/retest of oldcases. No source
+or performance evidence yet permits lowering guard to4097. Future main stage
+requires root decision after actual strict+paired16K evidence, not a new
+oracle here. S84 near32K/full256 scorer+unchanged top-k improved7.472%, near4K
+lost15.045%, near200K improved17.677%; those are private nested four-pair
+results, not serving/isolated-scorer/traffic/bandwidth/occupancy attribution.
+
+Existing S84 analyze.py is NOT directly one-case ready: checks result cases5,
+data_files40,timed_samples40; case/correctness row counts5; files40 (also final
+print). Per-case loops, exact valid bytes/IDs, four AB/BA/BA/AB pairs are generic.
+A narrow versioned adapter/analyzer can change expected case/counts to1/8/8
+with exact16K tag/bounds; do not loosen equality/memory/identity/health gates.
+No graph/DOT gate for this actual eager prefill path.

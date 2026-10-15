@@ -1,0 +1,118 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c567a612-586b-4fb7-8d8c-748fbbefd504"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 28.09062095801346,
+  "launch_exception": null,
+  "source_packet_sha256": "8ed80c9e37b57cebf0946c747389888873fccaa819101a62b237c1bed792905c",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 27006,
+      "stop_reason": "end_turn",
+      "session_id": "c567a612-586b-4fb7-8d8c-748fbbefd504",
+      "total_cost_usd": 0.1935618,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 17628,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 2620,
+        "output_tokens_details": {
+          "thinking_tokens": 1086
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 17628,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 2620,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 17628,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 17628
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 2620,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 17628,
+          "webSearchRequests": 0,
+          "costUSD": 0.1935618,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 1086,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Verdict: ACCEPT_S88_AND_GO_BOUNDED_BUILD**\n\nI found no blocking findings in the frozen packet. This review is source-only; I used no tools and executed nothing.\n\n**S88 decision**\n- One 16K case passed strict, identity, health, full CID/NAME and wrapper checks. All four balanced pairs were negative, with a median paired delta of \u22123.661%. That is enough to support source preparation of the earlier guard.\n- The limits are recorded correctly: one process, seeded fixtures, host completion. It shows no serving gain, cause or significance.\n- The 33K case is not substituted for 32K, and the zero ordinary-32K coverage of the old 8193 guard is acknowledged. The S88 decision is accepted as stated.\n\n**S89 source audit**\n- **Default OFF and marker:** Only the exact string `\"1\"` enables tiling. The static lambda runs once, at the first eligible call, and captures `first_active` by value. Init is thread-safe as a function-local static. The marker is host-branch evidence only. It proves no GPU dispatch and nothing about layout across all windows.\n- **Guard reachability:** `qsa_block_scores_tc` always returns false on SYCL (`qsa_select.dp.cpp:1700`), so the call reaches the guarded path. `active = last n_bid + 1`, so 4097 means the last query has `n_kv >= 16384` and the first may be 16129. Ragged tails with `nb < 256`, decode/verify (`active = -1`) and stride \u2260 50002 fall through to the original path unchanged.\n- **Bounds:** Each tile's `top` is the maximum `n_bid` over its 8 queries, at most 50000, so the speculative `kp` read at `b == top` stays within the 50002 pooled rows (`layer.cpp` `/4 + 2`). Each query keeps `b > n_bid \u2192 continue`, so dead rows are handled per query and the `+1e9` applies iff `n_kv % 4 != 0`. Unwritten entries past a query's `n_bid` match the original, and top-k receives the unchanged `active`.\n- **Grid and offsets:** The grid is 32 \u00d7 256 workgroups with `wstride = 256\u00b7SCORE_WARPS`. The early exit is uniform per workgroup, so the barrier is safe. Offsets `q0\u00b7512`, `q0\u00b7kStepCount` and `q0\u00b7max_blocks` are consistent with the `[nq, \u2026]` layouts. The kernel receives `nq = MQ` exactly, so SLM `qs[MQ\u00b7512]` and the `s_nkv`/`s_nbid` loads are in range.\n- **FP equivalence:** The `kd`/`kp` select reads the same values as the original pointer select. The float4 FMA order, XOR 16\u21921 butterfly and head0..3 positive-part sum are textually identical, so bitwise equality is expected, consistent with S88 score bits.\n- **`root_sync`:** Omitting `use_root_sync` matches S84v3, and the body has no grid-level sync.\n- **Includes:** `std::strcmp`/`std::getenv` are already used in this TU (`qsa_select.dp.cpp:1695`), so the patch needs no new include.\n\n**Notes (non-blocking)**\n1. With the flag absent, the default-OFF build still writes one new line to stderr on the first eligible prefill (`enabled=0`). Confirm that no wrapper, functional check or SSE harness treats stderr as part of its golden output.\n2. `first_active` records only the first eligible layer/batch. The marker string should not be cited as per-layer evidence.\n3. Run the fresh 32K arm with the marker captured. That is the only way to confirm activation empirically, since 32K by request label is not proof.\n\n**Gates retained before any latency claim**\n- The real main-build AOT, resources and IDs.\n- The same new binary on two cards with EP, flag 0 vs 1, covering full request, text, SSE usage, native work, cache, residency, functionals, QUIT, full CID/NAME and health.\n- Protocol: one C2 warm 1500 pair, plus three fresh 4K and three fresh 32K requests with 256 output tokens per arm, plus functionals. No extra timed repeats, profiler, full-cache run or daily restore.\n- Short 4K, tails, decode and unsupported capacities stay on the original path. Current Q6 center0 BOTH and S87 native are retained.\n- The reversible root CPU build may run in parallel after the full source audit, but resolve note 1 before GPU work.",
+      "ttft_ms": 12732,
+      "type": "result",
+      "duration_ms": 27102,
+      "uuid": "90d72665-0f1e-4038-95e7-2191990ff9ba",
+      "ttft_stream_ms": 1267,
+      "time_to_request_ms": 90,
+      "first_content_frame_ms": 1268,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}
