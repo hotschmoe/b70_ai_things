@@ -1,0 +1,41 @@
+{
+  "status": "PASS_TWO_BUILD_OUTPUTS_METADATA_ONLY",
+  "method": "Pinned no-network/noDRI root container chown exact two outputs; sudo unavailable.",
+  "before": {
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/libstrata_prefill.a": {
+      "uid": 0,
+      "gid": 0,
+      "mode": 33188,
+      "inode": 23643375,
+      "size": 1476254,
+      "mtime_ns": 1792048658283153332
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_prefill.dir/src/prefill/prefill.cpp.o": {
+      "uid": 0,
+      "gid": 0,
+      "mode": 33188,
+      "inode": 23643374,
+      "size": 706968,
+      "mtime_ns": 1792048658218151312
+    }
+  },
+  "after": {
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/libstrata_prefill.a": {
+      "uid": 1000,
+      "gid": 1000,
+      "mode": 33188,
+      "inode": 23643375,
+      "size": 1476254,
+      "mtime_ns": 1792048658283153332
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_prefill.dir/src/prefill/prefill.cpp.o": {
+      "uid": 1000,
+      "gid": 1000,
+      "mode": 33188,
+      "inode": 23643374,
+      "size": 706968,
+      "mtime_ns": 1792048658218151312
+    }
+  },
+  "initial_preflight": "Shell continued after sudo authentication failure; source pin check exited1 before any compile/plan/mutation. Frozen in preflight-unapplied."
+}

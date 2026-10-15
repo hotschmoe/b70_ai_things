@@ -1,0 +1,38 @@
+{
+  "status": "ROOT_ACCEPT_S92_GO_S93_CAP_MAIN_CONDITIONAL",
+  "epoch_ns": 1792092294918449212,
+  "models": {
+    "claude-opus-5-5": {
+      "session_ids": [
+        "b2074faf-37fb-4499-8dfe-5331418a878f"
+      ],
+      "elapsed_s": 40.77529995999066,
+      "verdict": "ACCEPT_S92_AND_GO_S93_CAP_BUILD_MAIN_AFTER_CAP_PASS",
+      "root_fullread": true
+    },
+    "claude-fable-5-1": {
+      "session_ids": [
+        "8b24cc8b-510b-4be8-b0d3-1fe758a1a074"
+      ],
+      "elapsed_s": 81.54143540700898,
+      "verdict": "ACCEPT_S92_AND_GO_S93_CAP_BUILD_MAIN_AFTER_CAP_PASS",
+      "root_fullread": true
+    }
+  },
+  "packet_sha256": "ced72e8ea8aa93d9175ff0f1e1500b0ead54e8ebbba3f25e2399665cdc55621b",
+  "S92_disposition": "Retain private correctlyboundvaluelead, no servinggain/defaultpromotion; maskedregressionretained.",
+  "S93_CAP_CPU_BUILD_GO": true,
+  "S93_CAP_GPU_conditional": "Actual binding/rootrunner/health revalidation beforeone3seednumeric-onlygate.",
+  "S93_MAIN_APPLY_BUILD_GO": false,
+  "S93_MAIN_condition": "All3newproductionCAP2051strictcasesPASS beforeanyapply/build; source/rootwritableNinjaplan preflight, actualmainAOT/hostbinding and matchedserving later.",
+  "root_resolutions": [
+    "Opus narrowshapesneutral/noisy is too broad: width1/zero controls null, but unmasked63/64/65 and1/2051 improve~14-16%,4/2051~7%,12/11~3.6%. Preserve ALL12shape results and maskedregression.",
+    "Callerfirstwidthisfirstqueryofeach32queryBATCH at t0, not firstqueryofwholechunk. Current2535hostfill/upload precedesallQSAcalls; widthmonotone saturatedcap2051.",
+    "Root independentlydiffed wrapper scratch partition/scale/grid/root_sync/fp16capability/mergeargumentorder againstoriginal; equal except newkerneltemplate andtags. Existingcstdio/cstdlibincluded.",
+    "Existingstagedidentitytable/publication contract excludes negative-page pattern for scopedcaller; not generalnewcachevalidity guarantee, and negativepagechecksremain inmathtemplate.",
+    "CAPoracle reusesS92compiledobject; itsPASSclosesruntimeIDpitch only, NOT actualnewmaincodegen. Latermainartifact/selectedoriginal+candidate+merge hostmetadata/imageownership/resources and exactsame-binaryserving gates remain required.",
+    "No old36rerun/timing/formatmatrix/publicAOTregen/wholeloopprimaryfirst/oldS7S38S80retry; CPUthinbuild overlapped reviews asendorsed. For numerical-onlynewcase normalCPUlease and recentS92posthealth reuse may be used only afterfreshrootnointerveningGPU/stack audit; mandatorycard0posthealth. No timedlatencyclaim."
+  ],
+  "root_whole_source_branches_reconstructed": true,
+  "serving_or_speed_qualified": false
+}

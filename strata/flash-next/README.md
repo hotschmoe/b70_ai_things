@@ -400,3 +400,13 @@ passes. Explicit defaultOFF staged INT8/full32/fullwidth main integration
 and matched serving remain separate, with no serving qualification here.
 Short/decode paths stay original; query count alone is not a prefill guard.
 [S92 result and limits](../../docs/20261015_strata_attention_value_pipeline.md).
+
+
+S93's staged-prefill value pipeline passes exact productionCAP2051 numeric
+gates and actual main host/image binding, then closes FAILED_ACTIVATION.
+The current fixed resident KvPlan uses mode0, so its stagedmode1 guard never
+selects the candidate. Completed OFF/ON requests match text/SSE/usage/work;
+marker0 stops ON after three4K/first32K, without a speed summary or retry.
+Both arms normal QUIT/fullCID+NAMEabsence/percard+compiledhealth pass. Keep
+defaultOFF/private lead; S94 resident caller mapping proof is source-only,
+not applied/built. [S93 serving scope](../../docs/20261015_strata_attention_value_serving.md).

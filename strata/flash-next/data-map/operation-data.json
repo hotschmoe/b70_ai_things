@@ -1,7 +1,7 @@
 {
  "schema": 1,
  "title": "Strata Flash-Next data map",
- "snapshot": "2026-10-15: historical S22 operation rows; annotations through S92 private attention value proof, separate S90 current32K census/S91 binding correction. Historical operation service/rollups remain unchanged.",
+ "snapshot": "2026-10-15: historical S22 operation rows; annotations through S93 failed activation, S92 private value proof and separate S90 current32K census. Historical operation service/rollups remain unchanged.",
  "scope": "Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two Arc Pro B70 cards, Strata SYCL engine, EP/PUSH, batch MTP depth2 (opt-in), two 200000-token slots, INT8 KV, 32 GiB / 4-entry RAM parking, all 24576 experts resident (7152 on GPU0 + 17424 on GPU1), greedy.",
  "warnings": [
   "Trace service times overlap: within a card (engines), across cards, and with CPU wall time. They are NOT additive and are not a latency budget.",
@@ -15,7 +15,8 @@
   "S41/S42 cross-algorithm bit mismatches are retained strict failures, not proof of invalid arithmetic. S43 independent first-C6 source-bound compliance is diagnostic, not production qualification or speed. Different reduction trees need predeclared accuracy criteria; same-algorithm replay/memory checks stay strict.",
   "S44 warmed C6 batch means reject packing integration as configured; repeated-weight cache regime and fixed GRID640 differ from full serving. CPU bound compliance is not production/model-quality qualification.",
   "S91 actual host metadata coalesces despite distinct attention device images: GPU comparison held. The exact retained S13 probe also selects shared public metadata, so its distinct value-candidate correctness/neutrality attribution is unsupported; historical operation rows/logs remain unchanged.",
-  "S92 passes corrected-binding private36-case value pipeline: full32 unmasked improves, masked32 regresses. Subsequent productionCAP2051 numeric-only three-seed gate PASS; no serving/default promotion or new historical operation timing."
+  "S92 passes corrected-binding private36-case value pipeline: full32 unmasked improves, masked32 regresses. Subsequent productionCAP2051 numeric-only three-seed gate PASS; no serving/default promotion or new historical operation timing.",
+  "S93 FAILED_ACTIVATION: current fixed resident KvPlan mode0 excludes stagedmode1 caller guard. CAP/main binding PASS does not prove caller eligibility; no candidate speed/neutrality result, timed_summary null."
  ],
  "status_legend": {
   "measured": "Directly observed in a retained trace summary, native log, or clean benchmark (evidence path given). Trace values are diagnostic.",
@@ -65,7 +66,8 @@
    "../../../docs/20261015_strata_iq3s_int8_dpas_probe.md",
    "../../../docs/20261015_strata_decode_overlap_and_prefill_contract.md",
    "../../../docs/20261015_strata_attention_binding_audit.md (S91 CPU-only host binding/resource audit and S13 candidate-attribution correction)",
-   "../../../docs/20261015_strata_attention_value_pipeline.md (S92 corrected-binding value pipeline primitive, masked regression and CAP2112/2051 gap)"
+   "../../../docs/20261015_strata_attention_value_pipeline.md (S92 corrected-binding value pipeline primitive, masked regression and CAP2112/2051 gap)",
+   "docs/20261015_strata_attention_value_serving.md"
   ],
   "results_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
   "prototype_binary": "S26 CPU-only strata-head-pair-s26 SHA256264f221e2c1b02d4bdd9b332c46f91e91bf4f6301afbdabe563df5ff2a16e44a; not GPU served; default pair option OFF.",
@@ -264,6 +266,15 @@
    "scope": "Corrected all11 private host/kernel tags plus actual linked metadata/registered-name/image proof; strict36 fixtures/1440timings in ONEprocess. Host completed chunk+merge/repeated pools; private lead only. Actual post Opus5.5/Fable5.1 ACCEPT/rootfullread; subsequent S93 productionCAP2051 three-seed numeric-only strict/memory/identity/cleanup/health PASS. Main integration/codegen/binding/serving remain separate.",
    "postreview": "attn-value-s92-post-s93-source-reviews-20261015/root-post-source-resolution.json; actual claude-opus-5-5 40.775s/claude-fable-5-1 81.541s, both exit0/rootfullread",
    "production_pitch": "attn-value-cap2051-s93-root-runtime-decision.json;32queries/width2051/cap2051/page4 seeds7/31/109 PASS, timing null; reuses S92 device object, not main-codegen/serving proof"
+  },
+  "attention_value_s93": {
+   "report": "docs/20261015_strata_attention_value_serving.md",
+   "records": "strata/flash-next/lowlevel_probe/attention_value_s93/README.md",
+   "root_disposition": "attn-value-main-s93-serving/root-runtime-decision.json",
+   "binary_sha256": "551cca4140b3f014bfb800e2f6d2c5d9a46733da02b835d0b2ead9fa5cf05db3",
+   "static_manifest_sha256": "c0d90bee656252bacf2a43e7197ca8f6cba8a0ce1fabbd960b7e581c32feebe5",
+   "runtime_manifest_sha256": "17754fe99be0380a33bfd7bddd7452df19dbaea077620557ec989954b9ec4596",
+   "scope": "CAP strict PASS/main13tag4image binding PASS; serving failed activation. DefaultOFF/no effect/no target or promotion claim."
   }
  },
  "geometry": {
@@ -1144,7 +1155,8 @@
    ],
    "gaps": [
     "Profiled with 107-token prompts; 200k-context attention cost per cycle not traced.",
-    "S92 private value pipeline passes full32 prefill fixtures; no decoder integration or full-model result. Planned explicit prefill caller guard keeps short/decode original."
+    "S92 private value pipeline passes full32 prefill fixtures; no decoder integration or full-model result. Planned explicit prefill caller guard keeps short/decode original.",
+    "S93 prefill candidate did not activate under fixed resident mode0; decode remains unchanged and no serving effect is measured."
    ],
    "hypotheses": [
     {
@@ -2451,7 +2463,8 @@
     "qsa-prefill-serving-s89/{comparison,root-runtime-decision}.json; qsa-prefill-serving-postreviews-s89-20261015/root-postclosure.json",
     "current32k-profile-s90-root-runtime-decision.json; current32k-profile-s90-analysis-followup/facts.json",
     "attn-value-binding-s92-root-runtime-decision.json; lowlevel_probe/attention_value_s92/{runtime/comparison, audit/facts}.json",
-    "attn-value-s92-post-s93-source-reviews-20261015/root-post-source-resolution.json; attn-value-cap2051-s93-root-runtime-decision.json"
+    "attn-value-s92-post-s93-source-reviews-20261015/root-post-source-resolution.json; attn-value-cap2051-s93-root-runtime-decision.json",
+    "attn-value-main-s93-serving/{root-runtime-decision,comparison}.json; attn-value-main-s93-build/build/root-build-closure.json"
    ],
    "quoted": [
     {
@@ -2507,6 +2520,12 @@
      "value": "Full32/width2051/cap2112 paired median -8.469% page4/-9.182% page512, all60rounds faster each; masked32/1999 +2.392%, all60slower. Strict36casesPASS.",
      "basis": "ONEprocess/3nestedseeds/20alternatingpairedrounds each, chunk+merge hostcompletion/repeatedsyntheticpools. No serving or isolatedGPU service/traffic/cause claim. Actual hostmetadata and selecteddevice images separated.",
      "status": "measured"
+    },
+    {
+     "label": "S93 same-main value pipeline activation gate",
+     "value": "OFF6prefills/functionals PASS; ON2warm+4prefills completed request/text/SSE/usage/nativework match, candidateHOSTmarker0 -> clientexit1; timed_summaryNULL. Both normalhealthclosuresPASS.",
+     "basis": "Actual default fixed resident KvPlan mode0 vs stagedmode1 caller guard. No candidate numerical/neutrality/performance comparison; source-only S94 resident mapping support remains unbuilt.",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -2521,7 +2540,8 @@
     "Goal 2000 tok/s unmet.",
     "S30 native attention timer groups value gather/dequant/weighted sum; their individual costs remain unisolated. Timed records cover199494 of199501 prompt tokens, not exact context offsets.",
     "S84 improves long/full256-query scoring+top-k while short4K regresses; retain private longshape lead only. Does not change sparse attention values, decode, RAM restore or qualify a production guard.",
-    "S92 initial capacity2112 differed production2051. Subsequent three-seed exact-cap2051 numeric-only gate passes; explicit staged INT8/full32/fullwidth main integration/binding/serving remain separate. Nonnegative identity table remains an existing caller contract. Masked regression retained; decode/short remain original."
+    "S92 initial capacity2112 differed production2051. Subsequent three-seed exact-cap2051 numeric-only gate passes; explicit staged INT8/full32/fullwidth main integration/binding/serving remain separate. Nonnegative identity table remains an existing caller contract. Masked regression retained; decode/short remain original.",
+    "S93 proves actual caller activation is missing despite CAP/main binding PASS. Trace live flags -> KvPlan -> caller before another GPU comparison; no broad guard loosening. Staged-only source excludes actualresidentmode0."
    ],
    "hypotheses": [
     {
@@ -3004,6 +3024,13 @@
    "value": "Full32 unmasked/width2051/cap2112: -8.469% page4, -9.182% page512; masked32/1999 +2.392%; unmasked1/2051 -13.803%. Strict36PASS/1440rawtimings.",
    "status": "measured",
    "note": "Median of3seed paired medians,20rounds per seed nested in ONEprocess. Host chunk+merge/repeatedpools, no clean-serving/causal/physicaltraffic/default claim. Actual Opus5.5/Fable5.1 postreviews ACCEPT/rootfullread; subsequent S93 three-seed cap2051 strict numeric-only gate PASS, no timing. Actual main integration/binding/serving remain separate."
+  },
+  {
+   "stage": "S93",
+   "label": "DefaultOFF staged-prefill value main: failed activation",
+   "value": "No candidate timed summary. OFF6prefills/functionals PASS; ONwarm+4prefills match output/work but HOSTmarker0, stop at first32K gate.",
+   "status": "parked",
+   "note": "Actual main551cca41/CAP2051strict/bindingPASS; actual residentmode0 fails stagedmode1guard. Both normalteardown/healthPASS. Not numericalfailure/neutrality/speed. S94 caller proof source-only; no promote/targets."
   }
  ],
  "rejected_parked": [
@@ -3127,7 +3154,8 @@
   "S81-S84 distinguish indexer scoring from attention and long select-region totals. Tiled scorer strict output/ID checks pass for5synthetic cases; short context regresses, long full256-query improves. Whole-model 4K/32K/200K speed, other shapes/capacities and production guarding remain unqualified. S83 only shows baseline byte-saturation lowering survives; candidate ISA/runtime is separate.",
   "S85 resolves private Q6 C6 centering correctness and repeated-weight projection cost only; actual public DOT/buffer bindings ARE validated. Frozen pre-runtime ISA pending wording stays historical; later runtime comparison supplies exact gates. Full-model production Q8/dispatch/throughput remains a future two-card EP comparison.",
   "S90 provides actual current32K dispatch census but includes cold capture/admission/prefill/32decode; no exact native phase endpoints, matched OFF trace, cross-card join or physical idle/traffic/cause. Host clock shift drift945.036us; source readiness motifs are hypotheses, not removable budgets.",
-  "Private attention candidate attribution requires actual separate host DeviceKernelInfo/CompileTimeKernelInfo and registered-name pointers, plus actual device-image binding. Distinct image IDs/function exports alone did not suffice in S91 or retained S13. S92 later proves separate actual host/device binding and strict36 private fixtures; Subsequent cap2051 three-seed numeric-only gate closes that ID pitch for the reused S92 object; masked/short/decode applicability and actual main codegen/serving remain bounded/unqualified."
+  "Private attention candidate attribution requires actual separate host DeviceKernelInfo/CompileTimeKernelInfo and registered-name pointers, plus actual device-image binding. Distinct image IDs/function exports alone did not suffice in S91 or retained S13. S92 later proves separate actual host/device binding and strict36 private fixtures; Subsequent cap2051 three-seed numeric-only gate closes that ID pitch for the reused S92 object; masked/short/decode applicability and actual main codegen/serving remain bounded/unqualified.",
+  "S93 candidate activation unproven: actualresidentmode0 excluded by staged-only guard. Static host/image separation does not prove live caller eligibility. No candidate serving measurement; S94 source-only caller proof pending."
  ],
  "operations": [
   {

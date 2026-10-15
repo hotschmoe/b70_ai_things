@@ -24475,3 +24475,31 @@ Public AOT/ISA reuse avoids redundant work. Historical170 map arrays/rollups/met
 2000prefill/150stream targets remain open; S30 recovery not repeated.
 Report: docs/20261015_strata_attention_value_pipeline.md; exact small records:
 strata/flash-next/lowlevel_probe/attention_value_s92/README.md.
+
+
+## 2026-10-15 - S93 value pipeline serving stops at activation gate
+
+CONFIG -> Same551cca41 main binary, STRATA_ATTN_VALUE_PIPELINE0/1;
+explicit staged INT8/full32/width2051/cap2051 prefill guard, defaultOFF.
+COMMAND -> Three-seed numerical-only productionCAP2051 gate PASS; main
+2TU/2archive/1link build174s, actual13tag/fourselectedimage hostbinding and
+resources PASS14s. Actual Opus5.5/Fable5.1 post/source and main/runner
+consultations/rootfullread resolved concrete conditions before serving.
+RESULT -> OFFsixprefills+functionalsPASS. ONtwo warmstreams+fourprefills
+(three4K/first32K) fullrequest/text/SSE/usage/nativework match OFF; candidate
+HOSTmarker0 in both final logs. ONclientexit1 atrequired32Kactivationgate;
+remainingtwo32K/ONfunctionals notattempted, noretry, timed_summaryNULL.
+BothnormalQUIT/fullCID+NAMEgone/wrapper0/percard+compiledposthealth0.
+Source: no --kv-resident -> kv_resident0 -> fixedresident KvPlanmode0,
+slots=pages -> st.kv_mode0; stagedmode1guardfalse. Static correctbindings
+do not prove actual caller eligibility. Not candidate numericalfailure,
+neutrality, regression or hardwarefault; NO candidate speedcomparison.
+VERDICT -> KeepprivateS92/CAPlead and defaultOFF, no promotion/targetclaim.
+S94 caller-only residentidentitymapping proof SOURCEONLY, notapplied/built.
+Devloop: stoppedquadraticread-onlysymbolparser113s; boundedNULparsing0.54s
+hostPASS then flexibleYAML/ELFdedup14s selectedaudit, no rebuild/GPUretry.
+Futureleasepreflight must trace actual flags/KVplan/caller before timing.
+Frozenstaticmanifestc0d90bee retained; separate closedruntime17754fe9.
+Historical170 operationtail exact; S30recovery/absolutegoals unchanged.
+Report: docs/20261015_strata_attention_value_serving.md; smallrecords:
+strata/flash-next/lowlevel_probe/attention_value_s93/README.md.

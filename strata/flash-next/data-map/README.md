@@ -353,3 +353,12 @@ memory/identity/cleanup/health. Actual post Opus5.5/Fable5.1 accept/rootfullread
 main codegen/binding/serving remain separate. No broad decode/short integration.
 Historical170 operations, rollups and metadata remain byte-exact; S92 only
 adds annotations. [S92 report](../../../docs/20261015_strata_attention_value_pipeline.md).
+
+
+S93 adds an activation finding, not operation timings: productionCAP2051
+strict checks and actual main host/image ownership pass, but fixed resident
+KvPlan mode0 excludes the stagedmode1 caller guard. Candidate HOSTmarker0;
+ON stops after three4K/first32K matched requests, timed_summaryNULL. Both
+normalteardown/percard+compiledhealth pass. No candidate numericalfailure,
+neutrality or speed claim. S94 caller support is source-only. Historical170
+operations/rollups/meta remain byte-exact. [S93 report](../../../docs/20261015_strata_attention_value_serving.md).

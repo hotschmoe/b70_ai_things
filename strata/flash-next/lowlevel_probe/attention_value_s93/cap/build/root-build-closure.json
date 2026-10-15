@@ -1,0 +1,14 @@
+{
+  "status": "PASS_ROOT_BUILD_AUDIT",
+  "binary_sha256": "6fb2a7b0ab7ce3f9f5cd7dd0448a5d32933eac89d8f8eb6cd33ef96110f1e24b",
+  "expected_source_sha256": "38e9178d4ee19e5a4c0d775d61ada3bbc0c43110eb748b63bffcbdc5106b7f37",
+  "public_object_sha256": "bbae92dcf61427f35078d498a240b1c9f23862e8bf13f7b63d95252e3b06baf2",
+  "kernel_bindings_audited": true,
+  "host_metadata_bindings_audited": true,
+  "offline_only": true,
+  "host_link_AOT_actions": 0,
+  "facts_sha256": "94143f86e05b7d5b3c496b29c07bf9f4f84b8ec6aaf58155f67ee70cbb672729",
+  "audit_manifest_sha256": "50ff15591b496a2390b2fef38fb338fdfed6bb7bbd9335585a70e858043e1660",
+  "root_fullread": true,
+  "scope": "Same exact attention objects/images; NEWfinal hostbindings verified. New productionIDpitch numericalcorrectness pending; no latency claim."
+}

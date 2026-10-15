@@ -1,0 +1,118 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "6de603bd-9566-4edb-ad15-e160f81524d4"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 109.72730358998524,
+  "launch_exception": null,
+  "source_packet_sha256": "6053589773855be5f37ec0c3c46a1f06b18484778c0b833a68131b6aa8dcc3ba",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 108617,
+      "stop_reason": "end_turn",
+      "session_id": "6de603bd-9566-4edb-ad15-e160f81524d4",
+      "total_cost_usd": 0.82239225,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 23738,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 6949,
+        "output_tokens_details": {
+          "thinking_tokens": 5744
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 23738,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 6949,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 23738,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 23738
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 2,
+          "outputTokens": 6949,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 23738,
+          "webSearchRequests": 0,
+          "costUSD": 0.82239225,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "thinkingTokens": 5744,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Verdict: GO_CONDITIONAL_ACTUAL_MAIN_AUDIT_PASS**, with the three necessary changes below applied before ROOT's audit acceptance. No benchmark launch from this review.\n\n**Executed evidence (accepted as stated)**\n- Corrected private value source passes all 36 strict scratch/finite/guard/readonly/restore cases and the cap2051/page4/nq32 seeds with the same compiled candidate. This qualifies the kernel numerically, not as serving gain.\n- Main build of the exact patch completed on fresh upstream, two TUs only, other objects unchanged, SHA frozen. The static audit did not complete, so the binary is unaudited. The earlier exit-1 preflight was a wasted build attempt caused by applying prereqs out of order, not a product defect.\n\n**Source reasoning on the main patch**\n- The guard is strict and correctly excludes masked widths, LANECELL, Q4 pools and partial batches. Decode, verify and MTP keep the original entrypoint through the default template parameter, so their code is unchanged.\n- The 4-wide fold correctly falls through to the scalar tail on any negative row, so masked rows cannot be folded.\n- Reusing the query shared buffer for softmax weights is the one hazard. It is safe only if a group barrier separates the last read of the query buffer from the first weight write, and nothing reads queries afterward. The strict tests make a race unlikely but cannot exclude a timing-dependent one. The completed static audit should confirm this by reading the surrounding kernel body.\n- The host-width check reads the first query of each batch and relies on monotone widths. That property is claimed from existing code and is not shown in the patch.\n\n**Necessary changes**\n1. **Do not hard-assert the ON marker at the first p4096 entry.** No executed evidence shows a 4059-token staged prefill reaches width 2051 with a full 32 batch. If that expectation is wrong, the per-entry assert aborts the ON arm with no timed data and forces a GPU rerun. Record the marker per request, capture which request first emitted it, and gate on exactly once by end of the prefill phase in compare.\n2. **Confirm `re` is imported in stop_and_health.py.** The new CID validation uses it, and the S89 import line is not in the delta. A NameError here would block the only cleanup path.\n3. **Finish the static audit with the bounded string fix and include the barrier confirmation above.** The symbol parser rescanning the whole string table per symbol was wasted time. The audit must also verify the marker string in the binary matches the controller constant byte for byte.\n\n**Wasted or weak setup**\n- The 1500-token warm pair per arm proves only that decode is untouched by the flag, which the patch already shows by construction. Cut outputs to a few hundred tokens or drop it.\n- The 256 output tokens on the timed requests mostly measure decode. Thirty two outputs would still allow usage and text equality checks.\n- Expected effect size is small. A 9 percent chunk-plus-merge gain on a kernel that is a minor share of 32K prefill will likely sit inside three-sample fixed-order noise. State that in advance so a flat result is read as unresolved, not as a regression. Fixed OFF-then-ON order also leaves a thermal confound unaddressed.\n\n**Future gates (unchanged, not met yet)**\nActual host metadata, name ownership bound to owned CID, device images, selected resources, and fresh per-card plus compiled collective prehealth all remain before any GPU use. The CID-file binding is a real improvement over name-only checks.",
+      "ttft_ms": 89858,
+      "type": "result",
+      "duration_ms": 108696,
+      "uuid": "c9f83d0f-e56c-487b-b351-25265d293de6",
+      "ttft_stream_ms": 1611,
+      "time_to_request_ms": 70,
+      "first_content_frame_ms": 1612,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

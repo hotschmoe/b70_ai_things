@@ -1,0 +1,98 @@
+{
+  "status": "STATIC_S93_HOST_DEVICE_AUDIT_PASS_ROOT_CLOSURE_PENDING",
+  "binary_sha256": "6fb2a7b0ab7ce3f9f5cd7dd0448a5d32933eac89d8f8eb6cd33ef96110f1e24b",
+  "expected_source_sha256": "38e9178d4ee19e5a4c0d775d61ada3bbc0c43110eb748b63bffcbdc5106b7f37",
+  "public_object_sha256": "bbae92dcf61427f35078d498a240b1c9f23862e8bf13f7b63d95252e3b06baf2",
+  "candidate_object_sha256": "1ce4c44f43c116c6c848e09d723ba76bdd4da893c2c7f3bcb5fd96a51c176490",
+  "source_pins_current_and_build_pre_post_PASS": true,
+  "S92_proof_manifest_sha256": "4683058ecf5659d820fec1962486a5b3ebd34e3769641eb5457319ca239eec43",
+  "inherited_attention_host_tags": {
+    "public": 11,
+    "private": 11,
+    "private_metadata_symbols": 56,
+    "overlap": []
+  },
+  "new_final_host_bindings_distinct": true,
+  "registered_names_match_selected_images": true,
+  "selected_full_images_exact_S92": true,
+  "both_bundles_and_selected_images_once": true,
+  "resources_and_ISA": {
+    "public": {
+      "barrier_count": 1,
+      "grf_count": 128,
+      "simd_size": 32,
+      "slm_size": 15872,
+      "private_size": "absent",
+      "spill_size": "absent",
+      "scratch_size": "absent",
+      "eu_thread_count": 8,
+      "per_thread_scratch_buffer": "absent",
+      "image_sha256": "80d9bfd4a34120824bb24dcded7d9a6574a90d9632b5d9ad446a20af48161e11",
+      "text_bytes": 19328,
+      "asm_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-score-reduce12-s91-prep/build-audit/public-disasm/.text._ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE.asm",
+      "asm_sha256": "2f31a36a256f274f7d262253941e76e1076159eea0735e731689e3f3f5590cef",
+      "ss_a32_pattern_sites": 0,
+      "ss_a32_pattern_lines": [],
+      "decode": "EXACT public image/ISA reused from S91, no decode"
+    },
+    "private": {
+      "barrier_count": 1,
+      "grf_count": 128,
+      "simd_size": 32,
+      "slm_size": 15872,
+      "private_size": "absent",
+      "spill_size": "absent",
+      "scratch_size": "absent",
+      "eu_thread_count": 8,
+      "per_thread_scratch_buffer": "absent",
+      "image_sha256": "518b913961dfce3ffb9b91e7d1fee0e2bc328adeb689ecfb6834f07541ce3f11",
+      "text_bytes": 21120,
+      "asm_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/private-disasm/.text._ZTS16dpct_kernel_nameIJZN6strata7kernels11value_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE36s92_private_attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE.asm",
+      "asm_sha256": "266d0dbf6f80bf92098de789da1ac2ab0ccb727059c5a5324d72faa4ea482aa2",
+      "ss_a32_pattern_sites": 0,
+      "ss_a32_pattern_lines": [],
+      "decode": "PRIVATE newly decoded"
+    }
+  },
+  "ISA_decode": "NONE; both selected full images byte-exact S92, inherited exact ISA/resource evidence",
+  "build": {
+    "exit": 0,
+    "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+    "compiler": "Intel(R) oneAPI DPC++/C++ Compiler 2026.1.0 (2026.1.0.20260617)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /opt/intel/oneapi/compiler/2026.1/bin/compiler\nConfiguration file: /opt/intel/oneapi/compiler/2026.1/bin/compiler/../icpx.cfg",
+    "ordinary_host_link_AOT_actions": 0,
+    "host_crtfastmath_absent": true,
+    "compile_and_link_precise": true,
+    "public_AOT_rebuilt": false,
+    "private_candidate_recompiled": false,
+    "wrapper_equality_informational": {
+      "public": {
+        "wrapper_sha256": "df7655d8eacbd93b6c8ce116ab1b7a8e04c5a8ccf031d2180c959c31bbdb8b6b",
+        "bundle_sha256": "e3da4edeeed9622b45a2dbce626f804325856357c46c2fdcc82a126b52852155",
+        "bundle_bytes": 836472,
+        "occurrences_in_final": 1,
+        "S92_wrapper_byte_exact": true,
+        "wrapper_images": 28
+      },
+      "private": {
+        "wrapper_sha256": "16cb5fd39f0461a01b54b6cb3223edd9e78dfe4ec3f4f86ae486fc3f364886ff",
+        "bundle_sha256": "2cd3d4084a7fa82f583154d0f40a35b0e49070d25df8fd7ab38e6202eb81250e",
+        "bundle_bytes": 929144,
+        "occurrences_in_final": 1,
+        "S92_wrapper_byte_exact": true,
+        "wrapper_images": 30
+      }
+    }
+  },
+  "parser_definitions_loaded_without_module_side_effects": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/host_binding.py": "37ecf55c43300319f0a3baaf15bede814934bd3ee1b0a11b32a38dc6066d4aa6",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/extract.py": "44d09a05cee33ac326410e5dcf9a839c792e4ca433057b63e63b7efe39b98d9d"
+  },
+  "limits": [
+    "Static actual host and image binding only; no S93 runtime correctness/performance or GPU dispatch claim.",
+    "Resource field absence is not zero; existing SS-pattern counts do not prove absence of all traffic.",
+    "S92 exact-object metadata and callsite proof inherited; no redundant 56-row audit copy or new ISA decode."
+  ],
+  "root_closure_written_by_this_audit": false,
+  "GPU": 0,
+  "new_builds": 0
+}

@@ -1,0 +1,118 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "a342d02e-b696-4ea6-9f2d-2e4c04640821"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 48.91794651496457,
+  "launch_exception": null,
+  "source_packet_sha256": "6053589773855be5f37ec0c3c46a1f06b18484778c0b833a68131b6aa8dcc3ba",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 47840,
+      "stop_reason": "end_turn",
+      "session_id": "a342d02e-b696-4ea6-9f2d-2e4c04640821",
+      "total_cost_usd": 0.2524498,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 21879,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 3864,
+        "output_tokens_details": {
+          "thinking_tokens": 2098
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 21879,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 3864,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 21879,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 21879
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 3864,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 21879,
+          "webSearchRequests": 0,
+          "costUSD": 0.2524498,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 2098,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# S93 Review: Changes Required Before GO\n\n**Verdict: Not GO yet.** The kernel and caller look sound for the guarded domain, but the race and launch-parity points below are argued from source, not tested. The controller has one regression and two cleanup-robustness defects. Fix those, finish the static audit, and this becomes **GO_CONDITIONAL_ACTUAL_MAIN_AUDIT_PASS**. Root still separately owns host/name/image/resources acceptance and fresh prehealth.\n\n## Already settled by executed runs\n\n- The private value-source cases (all36) pass, and paired timings improve 8.5\u20139.2%.\n- That gain is one-process, nested-seed, and kernel-only. It is **not** a serving gain.\n- Masked32 regresses 2.39%. The guard only selects full-width staged batches, so this should be excluded, but that exclusion is reasoned from source, not observed.\n- The production-shape numerical seeds (7/31/109) passed on the exact compiled candidate.\n- The main build exited 0 with unrelated objects unchanged.\n- The static audit is **incomplete** (the parser fix is pending). That alone blocks GPU work.\n\n## Source reasoning: things to prove before or during the audit\n\n1. **Possible race on `sq` reuse.** The ON path writes softmax weights into `sq`, the buffer that holds Q.\n   - This is safe only if a work-group barrier separates the last Q\u00b7K read of `sq` by any warp from the first weight write by any warp, and another barrier precedes `fold`.\n   - Please cite the exact `barrier` lines in `attn_chunk_kernel`. The scratch tests passing does not rule out a race.\n2. **Capacity and alignment of `sq`.**\n   - It needs at least 64 \u00d7 12 floats (3072 B).\n   - Its base must be 16-byte aligned for the `float4` reads.\n   - `fold` hard-codes G = 12; the guard enforces this through 24/2 heads.\n   - Confirm the declared type and size of `sq` and any `alignas`.\n3. **Launch parity with the original entrypoint.** The new entrypoint duplicates the original launch. Before selection, diff it against the INT8 path of `qsa_decode_attn_batch` and confirm:\n   - the same scale, stride, and grid,\n   - the same merge kernel,\n   - no omitted pre-zeroing, rotation, or error-check steps.\n4. **Caller predicate correctness.** The predicate trusts `steps_host` for the first query plus the claim that widths are monotone. It must also be read after the host steps are written for this chunk.\n   - Correctness does not actually depend on full width, since masked rows are handled. Only performance-domain selection does.\n   - This is acceptable as written.\n5. **Dead code (non-blocking).** The mode 2/3 and FP16 branches in `load_value` are unreachable because of `KV_MODE = 1` and the guard.\n\n## Controller: necessary changes\n\n1. **Regression in `stop_and_health.py`.** The S89 assertion `State.Running and not OOMKilled` was dropped. Restore it as a *recorded* field, so cleanup is not blocked, and make `compare.py` fail if the container was not running or was OOM-killed before stop.\n2. **Cleanup is not independently callable.** With `--rm`, if the container has already exited, `docker inspect <cid>` raises an error and cleanup aborts.\n   - Catch that case, record it, and continue with lease/wrapper teardown and the CID/name-gone verification.\n3. **Missing `re` import.** `re.fullmatch` is newly used in `stop_and_health.py`. Verify that `import re` is present; the S89 header is not in the delta.\n4. **`--cidfile` must not pre-exist.** Docker refuses to start if the file exists. Assert `attempt.cid` is absent in `start_arm.py`, so a stale file fails loudly before launch rather than mid-arm.\n\n## Waste\n\n- **The warm phase is oversized.** The warm C2 pair at 107/1500 output tokens per arm adds about 3000 decode tokens per arm. It exercises decode, which the flag does not touch. Its only value is confirming the marker stays absent during warm, and a much shorter output (around 64) proves the same thing. Recommend cutting it.\n- **Prefill requests over-decode.** 256 completion tokens on each of the 6 prefill requests is more than coherence needs; 64 would suffice. Keep it only if you need exact comparability with the S89 harness.\n- **Expect no resolvable signal.** The kernel gain applies only to full-width chunk attention, a fraction of prefill. Three fixed-order samples per shape are unlikely to resolve it end to end. Treat the timed summary as descriptive only (already stated), and do not schedule follow-up retries to chase significance.\n\n## Future gates (unchanged)\n\n- Bounded static audit pass, including the symbols for the two new `s93` kernel names in the device image.\n- Root's actual host, name, image, and resources audit.\n- Fresh per-card and compiled-collective prehealth.\n- The same new binary hash in both arms.\n- Full text, SSE, usage, native work, and part-bounds equality before any timed summary.\n- No promotion.",
+      "ttft_ms": 27966,
+      "type": "result",
+      "duration_ms": 47910,
+      "uuid": "b8cd61fc-5ca8-4cfd-9fe8-7c667938fc9d",
+      "ttft_stream_ms": 1465,
+      "time_to_request_ms": 65,
+      "first_content_frame_ms": 1465,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

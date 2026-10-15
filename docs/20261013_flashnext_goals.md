@@ -334,3 +334,13 @@ Actual post Opus5.5/Fable5.1 accept/rootfullread. The separate exact-cap2051
 three-seed numeric-only gate passes strict bytes/memory/identity/health;
 explicit defaultOFF staged-prefill main integration/serving remain separate,
 without a serving result here. Targets and S30 recovery remain unchanged. [S92 evidence](20261015_strata_attention_value_pipeline.md).
+
+
+S93 closes as FAILED_ACTIVATION, with no candidate serving speed result.
+ProductionCAP2051 strict bytes and actual main host/image binding pass, but
+current resident KvPlan mode0 makes the stagedmode1 caller guard false.
+OFFsixprefills/functionals and ONwarm+fourprefills match completed outputs/
+work; missing candidate marker stops ON before its remaining work. Both
+normal teardown/fullCID+NAMEabsence/percard+compiledhealth pass. DefaultOFF
+retained; S94 resident caller proof is source-only. Targets and S30 recovery
+remain unchanged. [S93 activation finding](20261015_strata_attention_value_serving.md).

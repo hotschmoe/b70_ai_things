@@ -1,0 +1,12 @@
+{
+  "utc": "2026-10-15T19:38:53.737745+00:00",
+  "pid": 3931100,
+  "verified_cmd": [
+    "python3",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-audit-prep/audit.py",
+    "551cca4140b3f014bfb800e2f6d2c5d9a46733da02b835d0b2ead9fa5cf05db3"
+  ],
+  "signal": "SIGINT",
+  "reason": "Read-only ELF parser splits full remaining local symbol string table for each symbol, quadratic. Main has68726symbols/5235737Bstrings (~180GBsuffixbytes); no host facts yet. Replace with bounded CString lookup, preserve executed source+output; no build/GPU restart.",
+  "main_build_unchanged": true
+}

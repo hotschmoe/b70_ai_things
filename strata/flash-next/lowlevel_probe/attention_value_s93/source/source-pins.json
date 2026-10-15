@@ -1,0 +1,78 @@
+{
+  "status": "SOURCE_ONLY_NOT_APPLIED_BUILT",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-prep",
+  "before": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp",
+      "bytes": 43287,
+      "sha256": "00bf1c45f15b1899e0562006aa6a410da4baec164eff1b1690316a6f2a66dcdb",
+      "candidate": "candidate/qsa_decode_attn.dp.cpp",
+      "candidate_sha256": "013e3b3df3cd4685af6330d9ab38223f41846e6a07aaeab2f7a534f66d1f36fe"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/prefill/prefill.cpp",
+      "bytes": 302640,
+      "sha256": "d2861c5c8573fc5dd57742bde1c13f5fb6738ca5c975d273fa3ec189dd34f346",
+      "candidate": "candidate/prefill.cpp",
+      "candidate_sha256": "b6f7d1e50073ba1dbc7f9dacc2ab2000e1237fa2b33220beb7cff25908062162"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/kernels/qsa_decode_attn.hpp",
+      "bytes": 2651,
+      "sha256": "6fa4b817f835c43783774d5946d14938f2867d7af16abb4db0f4b75d4622a915",
+      "modified": false
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/kernels/qsa.hpp",
+      "bytes": 25547,
+      "sha256": "87c02222284f842fcecb46a422b119af769c72c3914edc8da5b2ee782456dc74",
+      "modified": false
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/core/layout.hpp",
+      "bytes": 3400,
+      "sha256": "f0cb5d231b376f01eef62b28b33a7d8c073eb24667f18355f79b6998741d6524",
+      "modified": false
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/qsa.dp.cpp",
+      "bytes": 62693,
+      "sha256": "86a7f5499ba249d526d8b14158626cc9c9ce32d1a4b9bfb8716192bebd8b17ca",
+      "modified": false
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/qsa_prompt_attn.dp.cpp",
+      "bytes": 100645,
+      "sha256": "d57239375f2cbd8a2392516359f5f077c9c5d26af1c05af684f693c3e21f127a",
+      "modified": false
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp",
+      "bytes": 223107,
+      "sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2",
+      "modified": false
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp",
+      "bytes": 114902,
+      "sha256": "fcd5d2e4b029985a6e7768707a5aa489e4b5724a78db50fc2313d9c64e67ec31",
+      "modified": false
+    }
+  ],
+  "new_path": "include/strata/kernels/qsa_prefill_attn.hpp",
+  "new_path_absent_before": true,
+  "S92_byte_exact_math_source": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/qsa-value-gather.cpp",
+    "sha256": "49ff3788b2537bd8f73e2630e9597d7fb9bffb393073c0ce4a10f59466ec6b44"
+  },
+  "source_audit": {
+    "old_public_class_tags": 11,
+    "new_distinct_tags": [
+      "attn_chunk_value_prefill_s93",
+      "attn_merge_value_prefill_s93"
+    ],
+    "actual_binding_after_build": "PENDING_ROOT_AUDIT_REQUIRED",
+    "runtime": "NOT_RUN",
+    "cap2051_case": "PENDING_ROOT_SEPARATE_NUMERICAL_ONLY_CASE"
+  }
+}

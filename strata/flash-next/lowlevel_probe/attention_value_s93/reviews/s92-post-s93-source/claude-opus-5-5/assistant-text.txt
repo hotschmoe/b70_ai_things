@@ -1,0 +1,96 @@
+# S92/S93 Independent Review
+
+**Verdict: `ACCEPT_S92_AND_GO_S93_CAP_BUILD_MAIN_AFTER_CAP_PASS`**
+
+## Executed evidence (S92)
+
+- **Build and binding hold up.**
+  - One CPU build and public AOT reuse.
+  - All 11 host metadata entries are disjoint, with final-name pointers and device images separate.
+  - The old S13 misbinding is correctly attributed and not repeated.
+- **Strictness holds up.**
+  - 36/36 cases passed with exact full output and scratch.
+  - Guards, readonly, own-repeat, query sign-flip, changed-repeat and restored-bytes checks passed.
+  - Health was 0 before and after; CID/NAME residue was gone and driver tee was 0.
+  - All of this was established before timing was accepted.
+- **Primitive timing only.**
+  - Full32/2051: \u22128.47% at page 4 and \u22129.18% at page 512, with 60/60 seed pairs negative in each.
+  - Masked32/1999: +2.39%, 60/60 positive. This is a real regression and correctly retained.
+  - Narrow shapes are neutral or noisy.
+  - None of this is serving gain or isolated-GPU proof.
+- S92 is accepted as a correctly bound primitive result. It is not a throughput claim.
+
+## Source reasoning (S93 main, unapplied)
+
+**Template is sound.**
+- The `VALUE_PIPELINE=false` default keeps the original body. Only the probability destination and the V loop are under `if constexpr`.
+- Root's full-file recovery of 00bf, 49ff and d2861 confirms both branches reconstruct exactly. This is lexical proof only.
+
+**V loop logic is correct.**
+- The 4-wide group breaks on any negative row.
+- The scalar tail then re-checks `srow[c] >= 0`.
+- No masked row is folded, and no valid row is skipped.
+
+**Domain is bounded twice.**
+- The caller requires staged, `kv_int8`, nb==32, cap==2051 and first width == cap. Width is monotone within a chunk, so all 32 queries have width 2051.
+- The wrapper re-checks the flag (literal `"1"`), LANECELL not 1, shapes, INT8 pointers, no Q4 and non-null buffers. Anything else delegates to the original entrypoint.
+- Short widths, tails, decode/verify/MTP, direct pools and other formats are untouched.
+
+**Masked regression exposure.**
+- It is excluded only by the existing staged identity-table contract (`table[i]=i`, publication on `m.cs`), not by new proof.
+- This is acceptable because the negative-page logic remains and S92 masked equality passed.
+- It should be stated as a contract, not as a guarantee.
+
+**Host marker.**
+- The marker is a host-selection signal printed once. It is not a dispatch count.
+- The tiny first-4K print cost is disclosed.
+
+**Root must diff these against the original `qsa_decode_attn_batch` (source items, not blockers):**
+- Wrapper `stride` and part offsets.
+- `exp_props`/`use_root_sync`.
+- Merge nd_range and argument order.
+- The fp16 capability check.
+
+Any divergence becomes a blocker. Also confirm `<cstdlib>`/`<cstdio>` are available in the TU; the compile will reveal this.
+
+## Actual blockers
+None at source level. Main apply/build is gated on the CAP pass.
+
+## Necessary root conditions (future gates)
+
+1. **CAP gate.** One case (32/2051/cap2051/page4), seeds 7/31/109, all strict gates 3/3 PASS. Checks:
+   - Selected M1 full-image byte equality with S92.
+   - Bundle once.
+   - Separate final host name pointers.
+   - Public member `cmp` before and after.
+   - Wrapper inequality is informational only.
+   - Any fail means HOLD main.
+2. **Before apply.**
+   - Source-before hashes match.
+   - The patch applies cleanly.
+   - The new header is absent.
+   - Build outputs are writable by UID 1000.
+   - The Ninja plan touches exactly 2 TUs and 2 archives plus the main link.
+3. **Post-build, before GPU.** Audit the real main binary:
+   - The two new tags are distinct from the 11 originals.
+   - DeviceKernelInfo/CompileTimeKernelInfo and registered-name ownership.
+   - Device images and resources (registers, SLM, spill) for `<1,false,true>` versus S92.
+   - No nm-only or device-ID-only binding.
+   - Freeze one SHA for both arms.
+4. **GPU only after root binding and health GO.**
+   - Same binary, flag 0 vs 1, with everything else fixed to S89 (QSA tiling 0, Q6 centering 0, depth 2, headpair ON, 24576 experts resident, two 200k, 32 GiB).
+   - The marker must be present in the ON arm and absent in the OFF arm.
+   - Run order: one C2 warm, then 3 fresh 4K plus 3 fresh 32K runs with 256 outputs per arm.
+   - Functionals, normal QUIT, CID/NAME and health checks follow.
+   - All response and work gates must pass before any timing aggregate.
+   - If `qsa_prompt_attn` XMX succeeds, the branch is inactive; report that as such, not as a null result.
+5. **Exclusions.** No default, shelf, full-cache, daily-restore or combined-flag promotion, and no claim of meeting the 2000 tok/s goal.
+
+## Dev-loop cuts (endorsed)
+
+- No timing loop in CAP, and no rerun of the 36 cases or the format/tolerance/GPU shape matrix.
+- No public source compile or AOT regeneration. Only the fixture compile, private prelink and host link.
+- The CPU thin build may overlap this review.
+- A single C2 warm.
+- No 200k, full-cache or daily restore.
+- S92 next-mechanism triage: HOLD the primary-first whole-loop GPU arm, as proposed. No S7, S38 or S80 retry.

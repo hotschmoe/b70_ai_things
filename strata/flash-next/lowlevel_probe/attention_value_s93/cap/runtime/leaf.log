@@ -1,0 +1,5 @@
+device=Intel(R) Arc(TM) Pro B70 Graphics
+PASS seed=7 nq=32 width=2051 cap=2051 page=4 masked=0 scratch=exact output=exact guards=pass readonly=pass repeat_changed_restore=pass fp64_sanity=inactive_nq32
+PASS seed=31 nq=32 width=2051 cap=2051 page=4 masked=0 scratch=exact output=exact guards=pass readonly=pass repeat_changed_restore=pass fp64_sanity=inactive_nq32
+PASS seed=109 nq=32 width=2051 cap=2051 page=4 masked=0 scratch=exact output=exact guards=pass readonly=pass repeat_changed_restore=pass fp64_sanity=inactive_nq32
+ALL 3 CASES PASS

@@ -1,0 +1,9 @@
+{
+  "status": "PASS_ROOT_WHOLE_SOURCE_BRANCH_RECOVERY",
+  "default_sha256": "00bf1c45f15b1899e0562006aa6a410da4baec164eff1b1690316a6f2a66dcdb",
+  "value_sha256": "49ff3788b2537bd8f73e2630e9597d7fb9bffb393073c0ce4a10f59466ec6b44",
+  "prefill_default_sha256": "d2861c5c8573fc5dd57742bde1c13f5fb6738ca5c975d273fa3ec189dd34f346",
+  "candidate_sha256": "013e3b3df3cd4685af6330d9ab38223f41846e6a07aaeab2f7a534f66d1f36fe",
+  "S93_stage": "SOURCE_ONLY_UNAPPLIED",
+  "scope": "Fullsource lexicalbranchrecovery, not codegen/runtime proof"
+}

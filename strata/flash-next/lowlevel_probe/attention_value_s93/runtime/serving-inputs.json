@@ -1,0 +1,45 @@
+{
+  "arms": {
+    "0": {
+      "exe": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-build/build/strata-attn-value-s93",
+      "sha256": "551cca4140b3f014bfb800e2f6d2c5d9a46733da02b835d0b2ead9fa5cf05db3"
+    },
+    "1": {
+      "exe": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-build/build/strata-attn-value-s93",
+      "sha256": "551cca4140b3f014bfb800e2f6d2c5d9a46733da02b835d0b2ead9fa5cf05db3"
+    }
+  },
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "same_binary": true,
+  "HC_state": "COMMON_LO_ONCE_S51",
+  "S49_state": "OFF_BOTH",
+  "native": {
+    "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+    "sibling_path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+    "resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+    "expected_sha256": "219ea929900dfa9ef091f3aa473fdba6874b65fcb36526d7d851ac9e95856d15",
+    "size_bytes": 47039860096,
+    "sibling_resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+    "sibling_expected_sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+    "payload_SHA_verification": "ROOT_COPY_CLOSURE_REQUIRED_BEFORE_START;config_stat_is_not_hash_proof"
+  },
+  "base_config_sha256": "aa3a6e8a9a29b431c0dd8f6fac50ca3f262c8368587d0a5d56ab38e0d098faac",
+  "containers": {
+    "0": "strata-s93-mode0",
+    "1": "strata-s93-mode1"
+  },
+  "warm_pairs": 1,
+  "timed_fresh_pairs": 0,
+  "warm_output_tokens_per_stream": 256,
+  "prefill_cases": [
+    "p4096",
+    "p32768"
+  ],
+  "prefill_repeats": 3,
+  "prefill_completion_tokens": 256,
+  "common_trace": "STRATA_TRACE1_PROMPT_START_ONLY_CPU_RING_ABSENT",
+  "arm_difference": "STRATA_ATTN_VALUE_PIPELINE0/1 and arm-local log/container/service names only",
+  "capture_scope": "source/build/config+observed first-emission request; ON-only value HOST marker once by end and for all32K+raw native part headers+successful use/no errors; no independent GPU-dispatch/call-count visibility",
+  "latency_scope": "client wall/SSE content-event gaps; matched TRACE1 CPU logging, CPU ring/profile absent; not token ITL or device-only service",
+  "candidate_scope": "default-OFF explicit staged/full-width prefill-only nq32/cap2051/INT8/page4 value pipeline; QSA0/Q6center0 fixed; no daily promotion"
+}

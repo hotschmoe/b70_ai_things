@@ -1,0 +1,57 @@
+{
+  "status": "SELECTED_MAIN_IMAGES_MATCH_HOST_NAMES",
+  "binary_sha256_from_build": "551cca4140b3f014bfb800e2f6d2c5d9a46733da02b835d0b2ead9fa5cf05db3",
+  "selected": {
+    "original": {
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE",
+      "executable_offset": 28666688,
+      "image_bytes": 44384,
+      "image_sha256": "4eb838c95067f582e2ae35de9432971b1e555440eb9112a20d9801553c5a8470",
+      "text_bytes": 19328,
+      "text_sha256": "911483d5a69aef0d77dd5b4ba309531d4ff87cf163cd340b9653cd71228913e2",
+      "ze_info_sha256": "537fc84438ca3b15b9a5ac48a734099a0dec020e97919d9cddbcb11c4d782c04",
+      "build_options": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "unique_host_name_and_selected_image": true,
+      "reuse_exact_full_image_ISA": null
+    },
+    "candidate": {
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels28qsa_prefill_attn_value_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE28attn_chunk_value_prefill_s93EE",
+      "executable_offset": 27959936,
+      "image_bytes": 50504,
+      "image_sha256": "3d1324e41fb2bb86d690180079c575cb658a2985777f67247715246725578658",
+      "text_bytes": 21120,
+      "text_sha256": "fd424c4427f4c87fc175d609ca2f42c7559c23b3c8bc97642b778e4afb913858",
+      "ze_info_sha256": "1c8d7513acc1437845729f9de6cc0de9324d16307a6e31d66138e7e3ccb87209",
+      "build_options": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "unique_host_name_and_selected_image": true,
+      "reuse_exact_full_image_ISA": null
+    },
+    "oldmerge": {
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_merge_kernel_338175EE",
+      "executable_offset": 28524416,
+      "image_bytes": 11304,
+      "image_sha256": "3b70d26c50dcebd8c4e78d8f17b3fff8a6783af84e14a22945b265d039562f28",
+      "text_bytes": 2880,
+      "text_sha256": "ab7357c214fd13b0c469bd9fc913f8ef43bc555ecfb534ebdf9d6cf6345cb967",
+      "ze_info_sha256": "4ed391a103cd561591cf978afd34ef2cf717fc24ab91cdefab0e80608dadb437",
+      "build_options": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "unique_host_name_and_selected_image": true,
+      "reuse_exact_full_image_ISA": null
+    },
+    "newmerge": {
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels28qsa_prefill_attn_value_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE28attn_merge_value_prefill_s93EE",
+      "executable_offset": 27948560,
+      "image_bytes": 11368,
+      "image_sha256": "968e0a7691b26085b933716c6242f698a04b70aa4497b25451ec6ead7eaa99b6",
+      "text_bytes": 2880,
+      "text_sha256": "390d93c0119eb8fa8437b88ce7be55d058a0048a83bbf4b4eda76ee6d6d3c342",
+      "ze_info_sha256": "47b0f3a3ff77f42d993ea9231f24d2c198321cc17f5117fea588360aeda0f762",
+      "build_options": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "unique_host_name_and_selected_image": true,
+      "reuse_exact_full_image_ISA": null
+    }
+  },
+  "all_image_metadata_walk": false,
+  "selected_images": 4,
+  "binary_identity_scope": "Expected root SHA matches build record; mmap stat tracked, no redundant whole-main hash."
+}

@@ -1,0 +1,39 @@
+{
+  "status": "ROOT_GO_FINITE_SAME_NEW_BINARY_TWO_CARD_VALUE_PREFILL",
+  "utc": "2026-10-15T19:46:34.990915+00:00",
+  "binary_sha256": "551cca4140b3f014bfb800e2f6d2c5d9a46733da02b835d0b2ead9fa5cf05db3",
+  "main_closure_sha256": "20533d56d6e522fa29dff01af080769256ab13cee8b3f4af99f497e436420f4b",
+  "review_resolution_sha256": "c125b5b8d5bf3f8e5318807ef861b8e1b8498ab1bb6c73e834c584f81391b988",
+  "harness_pin_sha256": "df9ac72e2112ef2b511a21e9307711f6afea53b03c98a9fea6b7051a74cd237f",
+  "configs_same_except_value_flag_and_log": true,
+  "fresh_prehealth": {
+    "card": {
+      "command": [
+        "bin/xpu-health",
+        "--img",
+        "b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78",
+        "--timeout",
+        "400"
+      ],
+      "exit": 0,
+      "elapsed_s": 26.102694771019742,
+      "epoch_ns": 1792093495126043503
+    },
+    "collective": {
+      "command": [
+        "bin/xpu-collective-health",
+        "--timeout",
+        "400"
+      ],
+      "exit": 0,
+      "elapsed_s": 27.32111687998986,
+      "epoch_ns": 1792093522447507805
+    }
+  },
+  "no_intervening_GPU_since_prehealth": "Root checked shared log, allteam sourceonly, leasesfree, dockeronlyforeignmonitoring; sameboot/kernel/modelcontinuity.",
+  "warm": "ONE unmeasured C2pair107prompt/256outputs perstream eacharm; reduced on actual Opus/Fable advice.",
+  "timed": "3fresh4059+3fresh32728/256outputs eacharm; no warm32K/C2timing/profile/cache/full200k/dailyrestore/retry",
+  "GPU_GO": true,
+  "serving_qualified": false,
+  "speed_qualified": false
+}

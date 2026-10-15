@@ -1,0 +1,36 @@
+{
+  "bundles": {
+    "public": {
+      "wrapper_sha256": "df7655d8eacbd93b6c8ce116ab1b7a8e04c5a8ccf031d2180c959c31bbdb8b6b",
+      "bundle_sha256": "e3da4edeeed9622b45a2dbce626f804325856357c46c2fdcc82a126b52852155",
+      "bundle_bytes": 836472,
+      "occurrences_in_final": 1,
+      "S92_wrapper_byte_exact": true,
+      "wrapper_images": 28
+    },
+    "private": {
+      "wrapper_sha256": "16cb5fd39f0461a01b54b6cb3223edd9e78dfe4ec3f4f86ae486fc3f364886ff",
+      "bundle_sha256": "2cd3d4084a7fa82f583154d0f40a35b0e49070d25df8fd7ab38e6202eb81250e",
+      "bundle_bytes": 929144,
+      "occurrences_in_final": 1,
+      "S92_wrapper_byte_exact": true,
+      "wrapper_images": 30
+    }
+  },
+  "selected": {
+    "public": {
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE",
+      "image_bytes": 44376,
+      "image_sha256": "80d9bfd4a34120824bb24dcded7d9a6574a90d9632b5d9ad446a20af48161e11",
+      "occurrences_in_final": 1,
+      "exact_S92_selected_full_image": true
+    },
+    "private": {
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels11value_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE36s92_private_attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE",
+      "image_bytes": 50584,
+      "image_sha256": "518b913961dfce3ffb9b91e7d1fee0e2bc328adeb689ecfb6834f07541ce3f11",
+      "occurrences_in_final": 1,
+      "exact_S92_selected_full_image": true
+    }
+  }
+}

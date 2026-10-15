@@ -1,0 +1,118 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "b2074faf-37fb-4499-8dfe-5331418a878f"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 40.77529995999066,
+  "launch_exception": null,
+  "source_packet_sha256": "ced72e8ea8aa93d9175ff0f1e1500b0ead54e8ebbba3f25e2399665cdc55621b",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 39714,
+      "stop_reason": "end_turn",
+      "session_id": "b2074faf-37fb-4499-8dfe-5331418a878f",
+      "total_cost_usd": 0.2033578,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 17305,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 3239,
+        "output_tokens_details": {
+          "thinking_tokens": 1145
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 17305,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 3239,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 17305,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 17305
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 3239,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 17305,
+          "webSearchRequests": 0,
+          "costUSD": 0.2033578,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 1145,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# S92/S93 Independent Review\n\n**Verdict: `ACCEPT_S92_AND_GO_S93_CAP_BUILD_MAIN_AFTER_CAP_PASS`**\n\n## Executed evidence (S92)\n\n- **Build and binding hold up.**\n  - One CPU build and public AOT reuse.\n  - All 11 host metadata entries are disjoint, with final-name pointers and device images separate.\n  - The old S13 misbinding is correctly attributed and not repeated.\n- **Strictness holds up.**\n  - 36/36 cases passed with exact full output and scratch.\n  - Guards, readonly, own-repeat, query sign-flip, changed-repeat and restored-bytes checks passed.\n  - Health was 0 before and after; CID/NAME residue was gone and driver tee was 0.\n  - All of this was established before timing was accepted.\n- **Primitive timing only.**\n  - Full32/2051: \u22128.47% at page 4 and \u22129.18% at page 512, with 60/60 seed pairs negative in each.\n  - Masked32/1999: +2.39%, 60/60 positive. This is a real regression and correctly retained.\n  - Narrow shapes are neutral or noisy.\n  - None of this is serving gain or isolated-GPU proof.\n- S92 is accepted as a correctly bound primitive result. It is not a throughput claim.\n\n## Source reasoning (S93 main, unapplied)\n\n**Template is sound.**\n- The `VALUE_PIPELINE=false` default keeps the original body. Only the probability destination and the V loop are under `if constexpr`.\n- Root's full-file recovery of 00bf, 49ff and d2861 confirms both branches reconstruct exactly. This is lexical proof only.\n\n**V loop logic is correct.**\n- The 4-wide group breaks on any negative row.\n- The scalar tail then re-checks `srow[c] >= 0`.\n- No masked row is folded, and no valid row is skipped.\n\n**Domain is bounded twice.**\n- The caller requires staged, `kv_int8`, nb==32, cap==2051 and first width == cap. Width is monotone within a chunk, so all 32 queries have width 2051.\n- The wrapper re-checks the flag (literal `\"1\"`), LANECELL not 1, shapes, INT8 pointers, no Q4 and non-null buffers. Anything else delegates to the original entrypoint.\n- Short widths, tails, decode/verify/MTP, direct pools and other formats are untouched.\n\n**Masked regression exposure.**\n- It is excluded only by the existing staged identity-table contract (`table[i]=i`, publication on `m.cs`), not by new proof.\n- This is acceptable because the negative-page logic remains and S92 masked equality passed.\n- It should be stated as a contract, not as a guarantee.\n\n**Host marker.**\n- The marker is a host-selection signal printed once. It is not a dispatch count.\n- The tiny first-4K print cost is disclosed.\n\n**Root must diff these against the original `qsa_decode_attn_batch` (source items, not blockers):**\n- Wrapper `stride` and part offsets.\n- `exp_props`/`use_root_sync`.\n- Merge nd_range and argument order.\n- The fp16 capability check.\n\nAny divergence becomes a blocker. Also confirm `<cstdlib>`/`<cstdio>` are available in the TU; the compile will reveal this.\n\n## Actual blockers\nNone at source level. Main apply/build is gated on the CAP pass.\n\n## Necessary root conditions (future gates)\n\n1. **CAP gate.** One case (32/2051/cap2051/page4), seeds 7/31/109, all strict gates 3/3 PASS. Checks:\n   - Selected M1 full-image byte equality with S92.\n   - Bundle once.\n   - Separate final host name pointers.\n   - Public member `cmp` before and after.\n   - Wrapper inequality is informational only.\n   - Any fail means HOLD main.\n2. **Before apply.**\n   - Source-before hashes match.\n   - The patch applies cleanly.\n   - The new header is absent.\n   - Build outputs are writable by UID 1000.\n   - The Ninja plan touches exactly 2 TUs and 2 archives plus the main link.\n3. **Post-build, before GPU.** Audit the real main binary:\n   - The two new tags are distinct from the 11 originals.\n   - DeviceKernelInfo/CompileTimeKernelInfo and registered-name ownership.\n   - Device images and resources (registers, SLM, spill) for `<1,false,true>` versus S92.\n   - No nm-only or device-ID-only binding.\n   - Freeze one SHA for both arms.\n4. **GPU only after root binding and health GO.**\n   - Same binary, flag 0 vs 1, with everything else fixed to S89 (QSA tiling 0, Q6 centering 0, depth 2, headpair ON, 24576 experts resident, two 200k, 32 GiB).\n   - The marker must be present in the ON arm and absent in the OFF arm.\n   - Run order: one C2 warm, then 3 fresh 4K plus 3 fresh 32K runs with 256 outputs per arm.\n   - Functionals, normal QUIT, CID/NAME and health checks follow.\n   - All response and work gates must pass before any timing aggregate.\n   - If `qsa_prompt_attn` XMX succeeds, the branch is inactive; report that as such, not as a null result.\n5. **Exclusions.** No default, shelf, full-cache, daily-restore or combined-flag promotion, and no claim of meeting the 2000 tok/s goal.\n\n## Dev-loop cuts (endorsed)\n\n- No timing loop in CAP, and no rerun of the 36 cases or the format/tolerance/GPU shape matrix.\n- No public source compile or AOT regeneration. Only the fixture compile, private prelink and host link.\n- The CPU thin build may overlap this review.\n- A single C2 warm.\n- No 200k, full-cache or daily restore.\n- S92 next-mechanism triage: HOLD the primary-first whole-loop GPU arm, as proposed. No S7, S38 or S80 retry.",
+      "ttft_ms": 20826,
+      "type": "result",
+      "duration_ms": 39785,
+      "uuid": "1a27f068-d0a2-4380-b45e-408d2ddf2cfc",
+      "ttft_stream_ms": 8705,
+      "time_to_request_ms": 65,
+      "first_content_frame_ms": 8705,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

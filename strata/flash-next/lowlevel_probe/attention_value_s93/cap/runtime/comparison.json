@@ -1,0 +1,33 @@
+{
+  "status": "PASS_THREE_PRODUCTION_PITCH_CASES_NUMERICAL_ONLY",
+  "numerical_PASS": true,
+  "seeds": [
+    7,
+    31,
+    109
+  ],
+  "case": {
+    "nq": 32,
+    "width": 2051,
+    "cap": 2051,
+    "page": 4,
+    "masked": 0
+  },
+  "strict_markers": [
+    "full_scratch_exact",
+    "full_output_exact",
+    "guards",
+    "readonly",
+    "own_initial_repeat",
+    "query_signflip_changed_repeat",
+    "restored_initial"
+  ],
+  "SYCL_device_name": "Intel(R) Arc(TM) Pro B70 Graphics",
+  "FP64_sanity": "Existing n1 reference code inactive for nq32; no independent ideal attention accuracy claim",
+  "timing": null,
+  "timing_records": 0,
+  "processes": 1,
+  "graphs": 0,
+  "serving_qualified": false,
+  "speed_qualified": false
+}

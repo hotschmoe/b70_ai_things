@@ -1,0 +1,24 @@
+**Verdict: GO_CONDITIONAL_ACTUAL_MAIN_AUDIT_PASS**, with the three necessary changes below applied before ROOT's audit acceptance. No benchmark launch from this review.
+
+**Executed evidence (accepted as stated)**
+- Corrected private value source passes all 36 strict scratch/finite/guard/readonly/restore cases and the cap2051/page4/nq32 seeds with the same compiled candidate. This qualifies the kernel numerically, not as serving gain.
+- Main build of the exact patch completed on fresh upstream, two TUs only, other objects unchanged, SHA frozen. The static audit did not complete, so the binary is unaudited. The earlier exit-1 preflight was a wasted build attempt caused by applying prereqs out of order, not a product defect.
+
+**Source reasoning on the main patch**
+- The guard is strict and correctly excludes masked widths, LANECELL, Q4 pools and partial batches. Decode, verify and MTP keep the original entrypoint through the default template parameter, so their code is unchanged.
+- The 4-wide fold correctly falls through to the scalar tail on any negative row, so masked rows cannot be folded.
+- Reusing the query shared buffer for softmax weights is the one hazard. It is safe only if a group barrier separates the last read of the query buffer from the first weight write, and nothing reads queries afterward. The strict tests make a race unlikely but cannot exclude a timing-dependent one. The completed static audit should confirm this by reading the surrounding kernel body.
+- The host-width check reads the first query of each batch and relies on monotone widths. That property is claimed from existing code and is not shown in the patch.
+
+**Necessary changes**
+1. **Do not hard-assert the ON marker at the first p4096 entry.** No executed evidence shows a 4059-token staged prefill reaches width 2051 with a full 32 batch. If that expectation is wrong, the per-entry assert aborts the ON arm with no timed data and forces a GPU rerun. Record the marker per request, capture which request first emitted it, and gate on exactly once by end of the prefill phase in compare.
+2. **Confirm `re` is imported in stop_and_health.py.** The new CID validation uses it, and the S89 import line is not in the delta. A NameError here would block the only cleanup path.
+3. **Finish the static audit with the bounded string fix and include the barrier confirmation above.** The symbol parser rescanning the whole string table per symbol was wasted time. The audit must also verify the marker string in the binary matches the controller constant byte for byte.
+
+**Wasted or weak setup**
+- The 1500-token warm pair per arm proves only that decode is untouched by the flag, which the patch already shows by construction. Cut outputs to a few hundred tokens or drop it.
+- The 256 output tokens on the timed requests mostly measure decode. Thirty two outputs would still allow usage and text equality checks.
+- Expected effect size is small. A 9 percent chunk-plus-merge gain on a kernel that is a minor share of 32K prefill will likely sit inside three-sample fixed-order noise. State that in advance so a flat result is read as unresolved, not as a regression. Fixed OFF-then-ON order also leaves a thermal confound unaddressed.
+
+**Future gates (unchanged, not met yet)**
+Actual host metadata, name ownership bound to owned CID, device images, selected resources, and fresh per-card plus compiled collective prehealth all remain before any GPU use. The CID-file binding is a real improvement over name-only checks.

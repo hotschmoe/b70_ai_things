@@ -1,0 +1,107 @@
+{
+  "status": "PASS_ACTUAL_MAIN_HOST_BINDINGS",
+  "binary_sha256_from_build": "551cca4140b3f014bfb800e2f6d2c5d9a46733da02b835d0b2ead9fa5cf05db3",
+  "attention_object_sha256": "06eb664c9a991790c01b413117f78475d9ff2836cde77534d69fef2b2c85014d",
+  "source_candidate_sha256": "013e3b3df3cd4685af6330d9ab38223f41846e6a07aaeab2f7a534f66d1f36fe",
+  "selected": {
+    "original": {
+      "tag": "attn_chunk_kernel_2ad0a4",
+      "owner": "qsa_decode_attn_batch",
+      "object_host_relocation_count": 7,
+      "object_owning_functions": [
+        "_ZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS0_12QsaAttnPoolsEPKiS7_lRKNS0_9QsaShapesEPfSB_lPv"
+      ],
+      "compiletime_info_symbol": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels24attn_chunk_kernel_2ad0a4E18dpct_kernel_scalarILi1EEEEEE",
+      "info_address": 13487696,
+      "cache_guard_addresses": [
+        89407024,
+        89407016
+      ],
+      "registered_name_pointer": 12290683,
+      "registered_kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE"
+    },
+    "candidate": {
+      "tag": "attn_chunk_value_prefill_s93",
+      "owner": "qsa_prefill_attn_value_batch",
+      "object_host_relocation_count": 7,
+      "object_owning_functions": [
+        "_ZN4sycl3_V15queue12parallel_forI16dpct_kernel_nameIJN6strata7kernels28attn_chunk_value_prefill_s93EEELi3ENS0_3ext6oneapi12experimental10propertiesINSA_6detail20properties_type_listIJNSA_14property_valueINSA_17use_root_sync_keyEJEEEEEEEEJZNS5_28qsa_prefill_attn_value_batchEPKfRKNS5_12QsaAttnPoolsEPKiSP_lRKNS5_9QsaShapesEPfST_lPvEUlNS0_7nd_itemILi3EEEE_EEENSt9enable_ifIXaasr6detail23AreAllButLastReductionsIDpT2_EE5valuesr3ext6oneapi12experimental16is_property_listIT1_EE5valueENS0_5eventEE4typeENS0_8nd_rangeIXT0_EEES11_DpOSZ_"
+      ],
+      "compiletime_info_symbol": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels28attn_chunk_value_prefill_s93EEEEE",
+      "info_address": 13487960,
+      "cache_guard_addresses": [
+        89407072,
+        89407064
+      ],
+      "registered_name_pointer": 12291188,
+      "registered_kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels28qsa_prefill_attn_value_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE28attn_chunk_value_prefill_s93EE"
+    },
+    "oldmerge": {
+      "tag": "attn_merge_kernel_338175",
+      "owner": "qsa_decode_attn_batch",
+      "object_host_relocation_count": 7,
+      "object_owning_functions": [
+        "_ZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS0_12QsaAttnPoolsEPKiS7_lRKNS0_9QsaShapesEPfSB_lPv"
+      ],
+      "compiletime_info_symbol": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels24attn_merge_kernel_338175EEEEE",
+      "info_address": 13487872,
+      "cache_guard_addresses": [
+        89407056,
+        89407048
+      ],
+      "registered_name_pointer": 12291037,
+      "registered_kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_merge_kernel_338175EE"
+    },
+    "newmerge": {
+      "tag": "attn_merge_value_prefill_s93",
+      "owner": "qsa_prefill_attn_value_batch",
+      "object_host_relocation_count": 7,
+      "object_owning_functions": [
+        "_ZN4sycl3_V15queue12parallel_forI16dpct_kernel_nameIJN6strata7kernels28attn_merge_value_prefill_s93EEELi3ENS0_3ext6oneapi12experimental10propertiesINSA_6detail20properties_type_listIJNSA_14property_valueINSA_17use_root_sync_keyEJEEEEEEEEJZNS5_28qsa_prefill_attn_value_batchEPKfRKNS5_12QsaAttnPoolsEPKiSP_lRKNS5_9QsaShapesEPfST_lPvEUlNS0_7nd_itemILi3EEEE0_EEENSt9enable_ifIXaasr6detail23AreAllButLastReductionsIDpT2_EE5valuesr3ext6oneapi12experimental16is_property_listIT1_EE5valueENS0_5eventEE4typeENS0_8nd_rangeIXT0_EEES11_DpOSZ_"
+      ],
+      "compiletime_info_symbol": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels28attn_merge_value_prefill_s93EEEEE",
+      "info_address": 13488048,
+      "cache_guard_addresses": [
+        89407088,
+        89407080
+      ],
+      "registered_name_pointer": 12291350,
+      "registered_kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels28qsa_prefill_attn_value_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE28attn_merge_value_prefill_s93EE"
+    }
+  },
+  "materialized_tag_metadata_counts": {
+    "attn_chunk_kernel_2ad0a4": 4,
+    "attn_chunk_kernel_4fd923": 4,
+    "attn_chunk_kernel_5c04f7": 4,
+    "attn_chunk_kernel_6e87d5": 16,
+    "attn_chunk_kernel_7c8e09": 4,
+    "attn_chunk_kernel_b0d448": 4,
+    "attn_chunk_kernel_dfacfc": 4,
+    "attn_chunk_kernel_f262e6": 4,
+    "attn_chunk_kernel_f6855e": 4,
+    "attn_chunk_value_prefill_s93": 4,
+    "attn_merge_kernel_338175": 4,
+    "attn_merge_kernel_c055e7": 4,
+    "attn_merge_value_prefill_s93": 4
+  },
+  "old_tags": [
+    "attn_chunk_kernel_2ad0a4",
+    "attn_chunk_kernel_4fd923",
+    "attn_chunk_kernel_5c04f7",
+    "attn_chunk_kernel_6e87d5",
+    "attn_chunk_kernel_7c8e09",
+    "attn_chunk_kernel_b0d448",
+    "attn_chunk_kernel_dfacfc",
+    "attn_chunk_kernel_f262e6",
+    "attn_chunk_kernel_f6855e",
+    "attn_merge_kernel_338175",
+    "attn_merge_kernel_c055e7"
+  ],
+  "new_tags": [
+    "attn_chunk_value_prefill_s93",
+    "attn_merge_value_prefill_s93"
+  ],
+  "all_selected_info_cache_guard_name_pointers_distinct": true,
+  "parser_source_sha256": "37ecf55c43300319f0a3baaf15bede814934bd3ee1b0a11b32a38dc6066d4aa6",
+  "scope": "Object host relocations plus actual final metadata/name pointers; not runtime dispatch."
+}

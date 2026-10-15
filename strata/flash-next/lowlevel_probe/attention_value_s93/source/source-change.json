@@ -1,0 +1,39 @@
+{
+  "status": "SOURCE_ONLY_UNAPPLIED",
+  "baseline_sha256": "00bf1c45f15b1899e0562006aa6a410da4baec164eff1b1690316a6f2a66dcdb",
+  "candidate_attn_sha256": "013e3b3df3cd4685af6330d9ab38223f41846e6a07aaeab2f7a534f66d1f36fe",
+  "prefill_before_sha256": "d2861c5c8573fc5dd57742bde1c13f5fb6738ca5c975d273fa3ec189dd34f346",
+  "prefill_after_sha256": "b6f7d1e50073ba1dbc7f9dacc2ab2000e1237fa2b33220beb7cff25908062162",
+  "new_header_sha256": "87af3d42d17fe6f74343e90bbdea4b3aee8c7c5fb7095a19b22dc64d69d642c5",
+  "default_body_exact_recovery": true,
+  "prefill_default_exact_recovery": true,
+  "old_store": "        sp[h][lane] = ea;\n        sp[h][lane + 32] = eb;",
+  "new_store": "        reinterpret_cast<float*>(&sq[0][0])[lane * G + h] = ea;\n        reinterpret_cast<float*>(&sq[0][0])[(lane + 32) * G + h] = eb;",
+  "old_value_loop": "    for (int c = 0; c < n_here; ++c) {\n        if (srow[c] < 0) continue;   // masked above, weight 0\n        float v;\n        if constexpr (KV_MODE == 0) {\n            v = sycl::vec<sycl::half, 1>(\n                    sycl::bit_cast<sycl::half, unsigned short>(\n                        p.v_pool[srow[c] * HD + t]))\n                    .convert<float, sycl::rounding_mode::automatic>()[0];\n        } else if constexpr (KV_MODE == 1) {\n            const float sc =\n                sycl::vec<sycl::half, 1>(\n                    sycl::bit_cast<sycl::half, unsigned short>(\n                        p.v_scale[srow[c] * (HD / KV_Q8_GROUP) +\n                                  t / KV_Q8_GROUP]))\n                    .convert<float, sycl::rounding_mode::automatic>()[0];\n            v = (float) p.v_q[srow[c] * HD + t] * sc;\n        } else {   // modes 2 and 3: V is rotated Q4_0 (kv_q4.hpp); the caller rotates the output back\n            constexpr int bytes_per_head = (HD / QK4_0) * sizeof(block_q4_0);\n            const int b = t / QK4_0;\n            const int rem = t % QK4_0;\n            const block_q4_0* blk = reinterpret_cast<const block_q4_0*>(p.v_q4 + srow[c] * bytes_per_head) + b;\n            const float d =\n                sycl::vec<sycl::half, 1>(\n                    sycl::bit_cast<sycl::half, unsigned short>(blk->d))\n                    .convert<float, sycl::rounding_mode::automatic>()[0];\n            const int j = rem < 16 ? rem : (rem - 16);\n            const uint8_t byte = blk->qs[j];\n            const int nibble = (rem < 16) ? ((byte & 0x0F) - 8) : ((byte >> 4) - 8);\n            v = (float) nibble * d;\n        }\n#pragma unroll\n        for (int h = 0; h < G; ++h) acc[h] = sycl::fma(sp[h][c], v, acc[h]);\n    }",
+  "new_value_loop": "    const auto load_value = [&](long long row) {\n        float v;\n        if constexpr (KV_MODE == 0) {\n            v = sycl::vec<sycl::half, 1>(\n                    sycl::bit_cast<sycl::half, unsigned short>(\n                        p.v_pool[row * HD + t]))\n                    .convert<float, sycl::rounding_mode::automatic>()[0];\n        } else if constexpr (KV_MODE == 1) {\n            const float sc =\n                sycl::vec<sycl::half, 1>(\n                    sycl::bit_cast<sycl::half, unsigned short>(\n                        p.v_scale[row * (HD / KV_Q8_GROUP) +\n                                  t / KV_Q8_GROUP]))\n                    .convert<float, sycl::rounding_mode::automatic>()[0];\n            v = (float) p.v_q[row * HD + t] * sc;\n        } else {   // modes 2 and 3: V is rotated Q4_0 (kv_q4.hpp); the caller rotates the output back\n            constexpr int bytes_per_head = (HD / QK4_0) * sizeof(block_q4_0);\n            const int b = t / QK4_0;\n            const int rem = t % QK4_0;\n            const block_q4_0* blk = reinterpret_cast<const block_q4_0*>(p.v_q4 + row * bytes_per_head) + b;\n            const float d =\n                sycl::vec<sycl::half, 1>(\n                    sycl::bit_cast<sycl::half, unsigned short>(blk->d))\n                    .convert<float, sycl::rounding_mode::automatic>()[0];\n            const int j = rem < 16 ? rem : (rem - 16);\n            const uint8_t byte = blk->qs[j];\n            const int nibble = (rem < 16) ? ((byte & 0x0F) - 8) : ((byte >> 4) - 8);\n            v = (float) nibble * d;\n        }\n        return v;\n    };\n    const auto fold = [&](int c, float v) {\n        const sycl::float4* w4 = reinterpret_cast<const sycl::float4*>(\n            reinterpret_cast<const float*>(&sq[0][0]) + c * G);\n        const sycl::float4 w0 = w4[0], w1 = w4[1], w2 = w4[2];\n        acc[0] = sycl::fma(w0.x(), v, acc[0]); acc[1] = sycl::fma(w0.y(), v, acc[1]);\n        acc[2] = sycl::fma(w0.z(), v, acc[2]); acc[3] = sycl::fma(w0.w(), v, acc[3]);\n        acc[4] = sycl::fma(w1.x(), v, acc[4]); acc[5] = sycl::fma(w1.y(), v, acc[5]);\n        acc[6] = sycl::fma(w1.z(), v, acc[6]); acc[7] = sycl::fma(w1.w(), v, acc[7]);\n        acc[8] = sycl::fma(w2.x(), v, acc[8]); acc[9] = sycl::fma(w2.y(), v, acc[9]);\n        acc[10] = sycl::fma(w2.z(), v, acc[10]); acc[11] = sycl::fma(w2.w(), v, acc[11]);\n    };\n    int c = 0;\n    for (; c + 4 <= n_here; c += 4) {\n        const long long r0 = srow[c], r1 = srow[c+1], r2 = srow[c+2], r3 = srow[c+3];\n        if ((r0 | r1 | r2 | r3) < 0) break;\n        const float v0 = load_value(r0), v1 = load_value(r1);\n        const float v2 = load_value(r2), v3 = load_value(r3);\n        fold(c, v0); fold(c+1, v1); fold(c+2, v2); fold(c+3, v3);\n    }\n    for (; c < n_here; ++c) {\n        if (srow[c] >= 0) fold(c, load_value(srow[c]));\n    }",
+  "existing_public_class_tags_unchanged": 11,
+  "new_class_tags": [
+    "attn_chunk_value_prefill_s93",
+    "attn_merge_value_prefill_s93"
+  ],
+  "candidate_instantiation": "attn_chunk_kernel<1,false,true>",
+  "caller_only": "sycl/src/prefill/prefill.cpp; existing common header unchanged",
+  "existing_public_entrypoints_unchanged": true,
+  "no_extra_SLM_allocations": true,
+  "VALUE_true_body_recovers_entire_retained_S13_source": true,
+  "VALUE_true_recovered_sha256": "49ff3788b2537bd8f73e2630e9597d7fb9bffb393073c0ce4a10f59466ec6b44",
+  "production_cap": 2051,
+  "S92_fixture_cap": 2112,
+  "both_chunk_counts": 33,
+  "both_scratch_floats_per_query": 204400,
+  "production_page_size": 4,
+  "caller_contract": "staged && st.kv_int8 && nb32 && cap2051 && first-host-width2051; monotone width implies all32 full",
+  "masked_regression": "S92 masked32/1999 +2.392percent, retained. Candidate caller identity staged table excludes negative-page sparse mapping; no GPU table scan or masking bypass added.",
+  "new_common_header_modified": false,
+  "host_selection_marker": {
+    "text": "strata: prefill attention value pipeline selected (nq32 cap2051 INT8 page4)",
+    "location": "after all wrapper guards, before launch; thread-safe local static",
+    "default_OFF_prints": false,
+    "scope": "HOST selection, not GPU dispatch or counts"
+  }
+}

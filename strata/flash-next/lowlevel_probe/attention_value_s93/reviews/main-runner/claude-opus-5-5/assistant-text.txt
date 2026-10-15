@@ -1,0 +1,54 @@
+# S93 Review: Changes Required Before GO
+
+**Verdict: Not GO yet.** The kernel and caller look sound for the guarded domain, but the race and launch-parity points below are argued from source, not tested. The controller has one regression and two cleanup-robustness defects. Fix those, finish the static audit, and this becomes **GO_CONDITIONAL_ACTUAL_MAIN_AUDIT_PASS**. Root still separately owns host/name/image/resources acceptance and fresh prehealth.
+
+## Already settled by executed runs
+
+- The private value-source cases (all36) pass, and paired timings improve 8.5\u20139.2%.
+- That gain is one-process, nested-seed, and kernel-only. It is **not** a serving gain.
+- Masked32 regresses 2.39%. The guard only selects full-width staged batches, so this should be excluded, but that exclusion is reasoned from source, not observed.
+- The production-shape numerical seeds (7/31/109) passed on the exact compiled candidate.
+- The main build exited 0 with unrelated objects unchanged.
+- The static audit is **incomplete** (the parser fix is pending). That alone blocks GPU work.
+
+## Source reasoning: things to prove before or during the audit
+
+1. **Possible race on `sq` reuse.** The ON path writes softmax weights into `sq`, the buffer that holds Q.
+   - This is safe only if a work-group barrier separates the last Q\xb7K read of `sq` by any warp from the first weight write by any warp, and another barrier precedes `fold`.
+   - Please cite the exact `barrier` lines in `attn_chunk_kernel`. The scratch tests passing does not rule out a race.
+2. **Capacity and alignment of `sq`.**
+   - It needs at least 64 \xd7 12 floats (3072 B).
+   - Its base must be 16-byte aligned for the `float4` reads.
+   - `fold` hard-codes G = 12; the guard enforces this through 24/2 heads.
+   - Confirm the declared type and size of `sq` and any `alignas`.
+3. **Launch parity with the original entrypoint.** The new entrypoint duplicates the original launch. Before selection, diff it against the INT8 path of `qsa_decode_attn_batch` and confirm:
+   - the same scale, stride, and grid,
+   - the same merge kernel,
+   - no omitted pre-zeroing, rotation, or error-check steps.
+4. **Caller predicate correctness.** The predicate trusts `steps_host` for the first query plus the claim that widths are monotone. It must also be read after the host steps are written for this chunk.
+   - Correctness does not actually depend on full width, since masked rows are handled. Only performance-domain selection does.
+   - This is acceptable as written.
+5. **Dead code (non-blocking).** The mode 2/3 and FP16 branches in `load_value` are unreachable because of `KV_MODE = 1` and the guard.
+
+## Controller: necessary changes
+
+1. **Regression in `stop_and_health.py`.** The S89 assertion `State.Running and not OOMKilled` was dropped. Restore it as a *recorded* field, so cleanup is not blocked, and make `compare.py` fail if the container was not running or was OOM-killed before stop.
+2. **Cleanup is not independently callable.** With `--rm`, if the container has already exited, `docker inspect <cid>` raises an error and cleanup aborts.
+   - Catch that case, record it, and continue with lease/wrapper teardown and the CID/name-gone verification.
+3. **Missing `re` import.** `re.fullmatch` is newly used in `stop_and_health.py`. Verify that `import re` is present; the S89 header is not in the delta.
+4. **`--cidfile` must not pre-exist.** Docker refuses to start if the file exists. Assert `attempt.cid` is absent in `start_arm.py`, so a stale file fails loudly before launch rather than mid-arm.
+
+## Waste
+
+- **The warm phase is oversized.** The warm C2 pair at 107/1500 output tokens per arm adds about 3000 decode tokens per arm. It exercises decode, which the flag does not touch. Its only value is confirming the marker stays absent during warm, and a much shorter output (around 64) proves the same thing. Recommend cutting it.
+- **Prefill requests over-decode.** 256 completion tokens on each of the 6 prefill requests is more than coherence needs; 64 would suffice. Keep it only if you need exact comparability with the S89 harness.
+- **Expect no resolvable signal.** The kernel gain applies only to full-width chunk attention, a fraction of prefill. Three fixed-order samples per shape are unlikely to resolve it end to end. Treat the timed summary as descriptive only (already stated), and do not schedule follow-up retries to chase significance.
+
+## Future gates (unchanged)
+
+- Bounded static audit pass, including the symbols for the two new `s93` kernel names in the device image.
+- Root's actual host, name, image, and resources audit.
+- Fresh per-card and compiled-collective prehealth.
+- The same new binary hash in both arms.
+- Full text, SSE, usage, native work, and part-bounds equality before any timed summary.
+- No promotion.

@@ -1,0 +1,31 @@
+**Verdict: ACCEPT_S92_AND_GO_S93_CAP_BUILD_MAIN_AFTER_CAP_PASS.** S92 is accepted as a correctly bound primitive observation only. S93 CAP may build and run now. Main apply/build waits on cap2051 PASS plus the root conditions below.
+
+**Executed evidence (S92)**
+- 36 strict cases, 1440 balanced ABBA samples, all health/cleanup/identity/readonly/restore gates 0, all before timing acceptance. This is sufficient primitive proof for the retained S13 body at cap2112.
+- Full32 width2051 is negative in all 60 pairs at page4 and page512. Masked32/1999 is positive in all 60. Both must stay in the record. Neither is a serving, causal or isolated-GPU claim.
+- The cap2051 pitch gap is real: ids base is q*cap, and S92 never exercised cap==width packing. The single new case is the right closure, not a redundant matrix.
+
+**Source reasoning (S93 patch, unapplied)**
+- VALUE_PIPELINE=false path reconstructs 00bf and true reconstructs 49ff per root recovery. That makes the aliasing of probabilities into the sq region covered by S92 strict equality, not a new hazard. It remains source identity, not codegen identity.
+- Wrapper guards are independent of the caller guard and fail closed to the original entrypoint. LANECELL=1 override is preserved. Marker is host-only and once-only.
+- Vector loop `(r0|r1|r2|r3) < 0` break plus scalar tail is correct for negative pages.
+- Caller test reads host steps for the first query of the chunk. Width is monotone within a fresh chunk, so first==cap implies all 32==cap. This depends on steps_host still being populated at the attention loop, which root must confirm.
+- The cap fixture reuses the S92 candidate object. Cap is a runtime value, so reuse is valid. The main build will instantiate `attn_chunk_kernel<1,false,true>` fresh. Cap PASS therefore proves the pitch for the S92 object, not the main device image.
+
+**Actual blockers before main apply/build**
+1. Cap2051 PASS on all three seeds with scratch and output exact.
+2. Root post-build gate on the cap fixture: selected M1 full image byte-equal to S92, bundle once, separate final host name pointers. Wrapper equality stays informational.
+3. Root confirms in current source that `staged`, `st.kv_int8`, `m.steps_host` and `kStepWidth` are in scope and populated at the caller site, and that the new wrapper launch body differs from the original batch body only in template argument and class tags, including the same `exp_props`, scratch partition and `has_capability_or_fail`.
+4. Compile risk only: the attention TU must already include `<cstdlib>` and `<cstdio>`. Fine if the build catches it.
+
+**Necessary root conditions for main**
+- Ninja plan shows exactly two objects and two archives rebuilt, then main link/AOT. Any broader rebuild is a HOLD until explained.
+- Post-link audit of all 13 class tags, host DeviceKernelInfo/CompileTimeKernelInfo and registered-name ownership. No nm-only or device-ID-only acceptance, per the S13/S91 lesson.
+- One frozen executable SHA for both arms. Only the value flag varies; QSA tiling, Q6 centering and S89 knobs fixed.
+- All response, work, coherence, quit, CIDNAME and health gates pass before any timing aggregate. If a flag0 repeat is token-deterministic, require flag1 token-identical on the same prompts. S92 showed exact output equality, so divergence is a HOLD signal.
+- Marker must appear once on the first eligible 4K call and never on flag0.
+
+**Dev-loop cuts**
+- No 36-case rerun, no public object or AOT rebuild, no GPU shape or format sweep, no timing loop in the cap fixture.
+- No S7 async, S38 alias, S80 grouping or primary-first swap arm. The S92 triage HOLD stands.
+- No default, shelf, daily restore or full-cache promotion follows from any of this. The 2000 tok/s goal remains unmet regardless of outcome.

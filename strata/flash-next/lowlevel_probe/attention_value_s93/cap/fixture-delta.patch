@@ -1,0 +1,46 @@
+--- S92/attn_value_probe.cpp
++++ S93/attn_value_probe.cpp
+@@ -9,7 +9,6 @@
+ #include <cstdint>
+ #include <cstdlib>
+ #include <stdexcept>
+-#include <chrono>
+ #include <cmath>
+ #include <cstdio>
+ #include <cstring>
+@@ -65,10 +64,7 @@
+                                       sycl::property::queue::enable_profiling{}});
+     std::printf("device=%s\n", q.get_device().get_info<sycl::info::device::name>().c_str());
+     struct Case { int queries, width, cap, page, masked; };
+-    const Case cases[] = {{1,1,64,4,0}, {1,63,64,4,0}, {1,64,64,4,0},
+-        {1,65,128,4,0}, {1,65,128,4,1}, {1,2051,2112,4,0}, {4,2051,2112,4,0},
+-        {32,2051,2112,4,0}, {32,2051,2112,512,0}, {32,1999,2112,4,1},
+-        {12,11,64,4,0}, {32,0,128,4,0}};
++    const Case cases[] = {{32,2051,2051,4,0}};
+     for (unsigned seed : {7u, 31u, 109u}) for (const auto& c : cases) {
+         std::mt19937 rng(seed);
+         auto s = k::qsa_real_shapes(); s.page_size = c.page;
+@@ -166,19 +162,10 @@
+         if(std::memcmp(ha.data(),changed_out.data(),no*4)||std::memcmp(sa.data(),changed_scratch.data(),nf*4))throw std::runtime_error("own changed repeat");
+         put_readonly(dq,hq,q);reset();run(false);run(true);snapshot();
+         if(std::memcmp(ha.data(),initial_out.data(),no*4)||std::memcmp(sa.data(),initial_scratch.data(),nf*4))throw std::runtime_error("restored initial");
+-        std::vector<double> times[2];
+-        for(int rep=0;rep<24;++rep) for(int arm=0;arm<2;++arm) {
+-            int v=arm^(rep&1); auto start=std::chrono::steady_clock::now();run(v);
+-            double us=std::chrono::duration<double,std::micro>(std::chrono::steady_clock::now()-start).count();
+-            if(rep>=4) {times[v].push_back(us);std::printf("TIMING seed=%u nq=%d width=%d cap=%d page=%d masked=%d round=%d arm=%d host_completed_us=%.6f\n",seed,c.queries,c.width,c.cap,c.page,c.masked,rep-4,v,us);}
+-        }
+-        snapshot();
+-        if(std::memcmp(ha.data(),initial_out.data(),no*4)||std::memcmp(sa.data(),initial_scratch.data(),nf*4))throw std::runtime_error("timed final initial");
+-        for(auto& t:times)std::sort(t.begin(),t.end());
+-        std::printf("PASS seed=%u nq=%d width=%d cap=%d page=%d masked=%d scratch=exact output=exact oracle_max=%.9g base_us=%.3f candidate_us=%.3f\n",
+-            seed,c.queries,c.width,c.cap,c.page,c.masked,oracle_error,times[0][10],times[1][10]);std::fflush(stdout);
++        std::printf("PASS seed=%u nq=%d width=%d cap=%d page=%d masked=%d scratch=exact output=exact guards=pass readonly=pass repeat_changed_restore=pass fp64_sanity=inactive_nq32\n",
++            seed,c.queries,c.width,c.cap,c.page,c.masked);std::fflush(stdout);
+         release(q);
+     }
+-    std::puts("ALL 36 CASES PASS");
++    std::puts("ALL 3 CASES PASS");
+ }
+-catch(const std::exception& e) { std::fprintf(stderr,"S92 FAIL: %s\n",e.what());return 6; }
++catch(const std::exception& e) { std::fprintf(stderr,"S93 FAIL: %s\n",e.what());return 6; }

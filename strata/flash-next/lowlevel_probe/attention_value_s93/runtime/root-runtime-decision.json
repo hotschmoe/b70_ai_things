@@ -1,0 +1,247 @@
+{
+  "status": "FAILED_ACTIVATION_NO_CANDIDATE_SERVING_COMPARISON",
+  "utc": "2026-10-15T19:56:30.956646+00:00",
+  "same_binary_sha256": "551cca4140b3f014bfb800e2f6d2c5d9a46733da02b835d0b2ead9fa5cf05db3",
+  "OFF_prefill_completed": 6,
+  "ON_prefill_completed": 4,
+  "ON_client_exit": 1,
+  "ON_gate_error": "Missing ON selection for32K; effect unqualified",
+  "candidate_selected": false,
+  "matched_completed_cross_arm_responses": [
+    {
+      "phase": "coding/warm",
+      "name": "coding-0",
+      "full_request_text_SSE_usage_native_work_match": true,
+      "usage": {
+        "prompt_tokens": 107,
+        "completion_tokens": 256,
+        "total_tokens": 363,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "work": {
+        "cache_n": 0,
+        "prompt_n": 107,
+        "predicted_n": 256,
+        "draft_n": 188,
+        "draft_n_accepted": 160
+      },
+      "output_sha256": "276f3b7d226be7dc0df606b66e3a367acc6d39872a1242b5f1ad18085b120353"
+    },
+    {
+      "phase": "coding/warm",
+      "name": "coding-1",
+      "full_request_text_SSE_usage_native_work_match": true,
+      "usage": {
+        "prompt_tokens": 107,
+        "completion_tokens": 256,
+        "total_tokens": 363,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "work": {
+        "cache_n": 0,
+        "prompt_n": 107,
+        "predicted_n": 256,
+        "draft_n": 188,
+        "draft_n_accepted": 161
+      },
+      "output_sha256": "48d11e3fed8dcda66502ff1a86f0c83bbe8f460aff177c12ebb736bbdc53ceca"
+    },
+    {
+      "phase": "prefill",
+      "name": "p4096-0",
+      "full_request_text_SSE_usage_native_work_match": true,
+      "usage": {
+        "prompt_tokens": 4059,
+        "completion_tokens": 256,
+        "total_tokens": 4315,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "work": {
+        "cache_n": 0,
+        "prompt_n": 4059,
+        "predicted_n": 256,
+        "draft_n": 205,
+        "draft_n_accepted": 136
+      },
+      "output_sha256": "4cc1afbabebee14a0f00b57b64d9ad10b331db0ad4c508fb39894cbfe3b1bca0"
+    },
+    {
+      "phase": "prefill",
+      "name": "p4096-1",
+      "full_request_text_SSE_usage_native_work_match": true,
+      "usage": {
+        "prompt_tokens": 4059,
+        "completion_tokens": 256,
+        "total_tokens": 4315,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "work": {
+        "cache_n": 0,
+        "prompt_n": 4059,
+        "predicted_n": 256,
+        "draft_n": 228,
+        "draft_n_accepted": 147
+      },
+      "output_sha256": "6020ad772966a94e334d959bfdbc0eb281a0b45cfb5053a59d34cd15b07dfa2b"
+    },
+    {
+      "phase": "prefill",
+      "name": "p4096-2",
+      "full_request_text_SSE_usage_native_work_match": true,
+      "usage": {
+        "prompt_tokens": 4059,
+        "completion_tokens": 256,
+        "total_tokens": 4315,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "work": {
+        "cache_n": 0,
+        "prompt_n": 4059,
+        "predicted_n": 256,
+        "draft_n": 217,
+        "draft_n_accepted": 154
+      },
+      "output_sha256": "bf5c4f729df88fc5ae55e99761c99ba5d1c932abf1b3be063a2ea5bca5ec2312"
+    },
+    {
+      "phase": "prefill",
+      "name": "p32768-0",
+      "full_request_text_SSE_usage_native_work_match": true,
+      "usage": {
+        "prompt_tokens": 32728,
+        "completion_tokens": 256,
+        "total_tokens": 32984,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "work": {
+        "cache_n": 0,
+        "prompt_n": 32728,
+        "predicted_n": 256,
+        "draft_n": 212,
+        "draft_n_accepted": 154
+      },
+      "output_sha256": "c1784d40d27af69d3e2ec403d9ec8da85bedfc63d437811cf3cf93406a2c0646"
+    }
+  ],
+  "OFF_functionals": "PASS",
+  "ON_functionals": "NOT_ATTEMPTED_AFTER_ACTIVATION_GATE",
+  "remaining_ON_requests": "NOT_ATTEMPTED_NO_RETRY",
+  "closures": {
+    "0": {
+      "normal_stop": {
+        "status": "PASS_NORMAL_TEARDOWN",
+        "signal": "TERM to server -> QUIT to native engine",
+        "container_removed": true,
+        "lease_wrapper_exit": 0,
+        "all_wrapper_terminal_exits": [
+          0
+        ],
+        "prestop_state": {
+          "Running": true,
+          "OOMKilled": false,
+          "inspect_succeeded": true
+        },
+        "container_missing_or_inspect_failed_before_stop": false,
+        "diagnostic_before_any_forced_container_stop": true,
+        "no_force_stop_used": true,
+        "functional_status": "PASS",
+        "epoch_ns": 1792093812062065954
+      },
+      "post_health": {
+        "card": {
+          "command": [
+            "bin/gpu-run",
+            "bin/xpu-health",
+            "--img",
+            "b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78",
+            "--timeout",
+            "400"
+          ],
+          "exit": 0,
+          "elapsed_s": 27.188105332956184
+        },
+        "collective": {
+          "command": [
+            "bin/gpu-run",
+            "bin/xpu-collective-health",
+            "--timeout",
+            "400"
+          ],
+          "exit": 0,
+          "elapsed_s": 27.168138985987753
+        }
+      },
+      "full_cid": "1de7f45a216c0d2cb50ffe6e2ac6904353faf4ae64bf1da9646098e10f4620d7",
+      "full_cid_and_name_absent": true,
+      "value_host_marker_count": 0,
+      "final_log_sha256": "9d0d69fab2bc36bde3dc0fe8270325a939da44421a49f6898a9418cfd3ba26bc"
+    },
+    "1": {
+      "normal_stop": {
+        "status": "PASS_NORMAL_TEARDOWN",
+        "signal": "TERM to server -> QUIT to native engine",
+        "container_removed": true,
+        "lease_wrapper_exit": 0,
+        "all_wrapper_terminal_exits": [
+          0
+        ],
+        "prestop_state": {
+          "Running": true,
+          "OOMKilled": false,
+          "inspect_succeeded": true
+        },
+        "container_missing_or_inspect_failed_before_stop": false,
+        "diagnostic_before_any_forced_container_stop": true,
+        "no_force_stop_used": true,
+        "functional_status": "NOT_COMPLETED_FAILED_OR_INVALID",
+        "epoch_ns": 1792094047039439928
+      },
+      "post_health": {
+        "card": {
+          "command": [
+            "bin/gpu-run",
+            "bin/xpu-health",
+            "--img",
+            "b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78",
+            "--timeout",
+            "400"
+          ],
+          "exit": 0,
+          "elapsed_s": 26.786953028989956
+        },
+        "collective": {
+          "command": [
+            "bin/gpu-run",
+            "bin/xpu-collective-health",
+            "--timeout",
+            "400"
+          ],
+          "exit": 0,
+          "elapsed_s": 26.612633792043198
+        }
+      },
+      "full_cid": "8c305a1dfb4e84931c7c57053fd50195bad230ed7018032bed75c2d1f1241093",
+      "full_cid_and_name_absent": true,
+      "value_host_marker_count": 0,
+      "final_log_sha256": "d597897c7b633cd8f6772122a1bbd20e524d657697bbd69d2e500ef05e613e54"
+    }
+  },
+  "timed_summary": null,
+  "speed_qualified": false,
+  "serving_qualified": false,
+  "interpretation": "Candidate not selected. Not a candidate numerical failure, neutrality result, regression or hardware fault. Main guard requires KVstream mode1, but actual default fixed resident plan is mode0 (no --kv-resident); caller domain needs source-proven resident mapping support before any next build/test.",
+  "recovery_S30_unchanged": true,
+  "absolute_targets_unmet": true
+}

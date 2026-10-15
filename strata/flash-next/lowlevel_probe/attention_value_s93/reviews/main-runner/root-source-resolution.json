@@ -1,0 +1,66 @@
+{
+  "status": "ROOT_ACCEPT_AFTER_CONCRETE_REVIEW_CONDITIONS_RESOLVED",
+  "utc": "2026-10-15T19:45:58.063573+00:00",
+  "models": {
+    "claude-opus-5-5": {
+      "responding_models": [
+        "claude-opus-5-5"
+      ],
+      "session_ids": [
+        "a342d02e-b696-4ea6-9f2d-2e4c04640821"
+      ],
+      "elapsed_s": 48.91794651496457,
+      "exit": 0
+    },
+    "claude-fable-5-1": {
+      "responding_models": [
+        "claude-fable-5-1"
+      ],
+      "session_ids": [
+        "6de603bd-9566-4edb-ad15-e160f81524d4"
+      ],
+      "elapsed_s": 109.72730358998524,
+      "exit": 0
+    }
+  },
+  "root_fullread_both_actual_answers_and_final_six_scripts": true,
+  "source_review_packet_sha256": "6053589773855be5f37ec0c3c46a1f06b18484778c0b833a68131b6aa8dcc3ba",
+  "final_controller_pins_sha256": "df9ac72e2112ef2b511a21e9307711f6afea53b03c98a9fea6b7051a74cd237f",
+  "root_resolutions": [
+    "Opus initially NOT GO until cleanup/launch/capacity/barrier conditions; Fable conditional GO. Final never-executed controllers amended in place and pinned after root read.",
+    "prestop Running/OOM recorded and required true/false by compare; stale attempt.cid precheck; missing/stopped owned CID has no TERM and gets authoritative absence/wrapper-terminal recording. Abnormal/nonzero teardown fails normalqualification and returns to root recovery ladder before further GPU/collectives.",
+    "re already imported in original and final stop helper; both review concerns arose from diff-only header visibility, no new import needed.",
+    "Fable early4K marker gate relaxed to observation/firstemission; finalONexactonce and every32KON marker still required. 4K activation report follows observation, not source expectation.",
+    "Both recommend shorterwarm; reduce unmeasured warm1500->256 perstream botharms. Keep107prompt/fullretainedS16prefix/pairednativework/capture equality, prefill6requests/256outputs unchanged. Warm not compared to historicalS89 speed.",
+    "Barrier248 after all query reads precedes probability writes260/261; barrier274 precedes values. sq12*256floats=12288B vs64*12weights=3072B. Original uses same sq float4 reads; actual candidate fold ISA c*48+3584/+3616 is16aligned. No portablealignment/occupancy claim.",
+    "Actualmain13materializedtags/fourselectedInfo/cache/guard/namepointers/deviceimages/resources PASS14s; literalONmarker once in binary. Actualwholedefault/value sourcebranchrecovery and INT8 launch parity checked; sourcehoststeps filled/uploaded beforecaller, batchfirstwidthmonotone.",
+    "Main still defaultOFF; no speed until allactualresponse/nativework/functional/normalhealth closures and matchedcompare. Threefixedorder samples descriptive/no significance/p95. No fullcache/profile/dailyrestore.",
+    "StaticInfo/imagebinding is separate from liveCID/nativePID/exe/env identity; later startup checks both via own fullCID."
+  ],
+  "main_audit_closure": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-build/build/root-build-closure.json",
+  "fresh_prehealth": {
+    "card": {
+      "command": [
+        "bin/xpu-health",
+        "--img",
+        "b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78",
+        "--timeout",
+        "400"
+      ],
+      "exit": 0,
+      "elapsed_s": 26.102694771019742,
+      "epoch_ns": 1792093495126043503
+    },
+    "collective": {
+      "command": [
+        "bin/xpu-collective-health",
+        "--timeout",
+        "400"
+      ],
+      "exit": 0,
+      "elapsed_s": 27.32111687998986,
+      "epoch_ns": 1792093522447507805
+    }
+  },
+  "GPU_SERVING_GO_AFTER_CONFIG_PINS": true
+}

@@ -1,0 +1,207 @@
+--- a/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp
++++ b/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp
+@@ -5,6 +5,7 @@
+ #include <dpct/dpct.hpp>
+ #include "strata/sycl_queue.hpp"
+ #include "strata/kernels/qsa_decode_attn.hpp"
++#include "strata/kernels/qsa_prefill_attn.hpp"
+ #include "strata/kernels/kv_q8.hpp"
+ #include "strata/kernels/kv_q4.hpp"
+ 
+@@ -109,7 +110,7 @@
+     } else load8_q4(p, value, row, d0, out);
+ }
+ 
+-template <int KV_MODE, bool LANE_CELL = false>
++template <int KV_MODE, bool LANE_CELL = false, bool VALUE_PIPELINE = false>
+ /*
+ DPCT1110: The total declared local variable size in device function
+ attn_chunk_kernel exceeds 128 bytes and may cause high register pressure.
+@@ -255,8 +256,13 @@
+         const float eb = (lane + 32 < n_here && srow[lane + 32] >= 0)
+                              ? sycl::native::exp(b - m)
+                              : 0.0f;
++        if constexpr (VALUE_PIPELINE) {
++        reinterpret_cast<float*>(&sq[0][0])[lane * G + h] = ea;
++        reinterpret_cast<float*>(&sq[0][0])[(lane + 32) * G + h] = eb;
++        } else {
+         sp[h][lane] = ea;
+         sp[h][lane + 32] = eb;
++        }
+         const float l = warp_sum(ea + eb);
+         if (lane == 0) { part_m[slot * G + h] = m; part_l[slot * G + h] = l; }
+     }
+@@ -270,6 +276,61 @@
+     float acc[G];
+ #pragma unroll
+     for (int h = 0; h < G; ++h) acc[h] = 0.0f;
++    if constexpr (VALUE_PIPELINE) {
++    const auto load_value = [&](long long row) {
++        float v;
++        if constexpr (KV_MODE == 0) {
++            v = sycl::vec<sycl::half, 1>(
++                    sycl::bit_cast<sycl::half, unsigned short>(
++                        p.v_pool[row * HD + t]))
++                    .convert<float, sycl::rounding_mode::automatic>()[0];
++        } else if constexpr (KV_MODE == 1) {
++            const float sc =
++                sycl::vec<sycl::half, 1>(
++                    sycl::bit_cast<sycl::half, unsigned short>(
++                        p.v_scale[row * (HD / KV_Q8_GROUP) +
++                                  t / KV_Q8_GROUP]))
++                    .convert<float, sycl::rounding_mode::automatic>()[0];
++            v = (float) p.v_q[row * HD + t] * sc;
++        } else {   // modes 2 and 3: V is rotated Q4_0 (kv_q4.hpp); the caller rotates the output back
++            constexpr int bytes_per_head = (HD / QK4_0) * sizeof(block_q4_0);
++            const int b = t / QK4_0;
++            const int rem = t % QK4_0;
++            const block_q4_0* blk = reinterpret_cast<const block_q4_0*>(p.v_q4 + row * bytes_per_head) + b;
++            const float d =
++                sycl::vec<sycl::half, 1>(
++                    sycl::bit_cast<sycl::half, unsigned short>(blk->d))
++                    .convert<float, sycl::rounding_mode::automatic>()[0];
++            const int j = rem < 16 ? rem : (rem - 16);
++            const uint8_t byte = blk->qs[j];
++            const int nibble = (rem < 16) ? ((byte & 0x0F) - 8) : ((byte >> 4) - 8);
++            v = (float) nibble * d;
++        }
++        return v;
++    };
++    const auto fold = [&](int c, float v) {
++        const sycl::float4* w4 = reinterpret_cast<const sycl::float4*>(
++            reinterpret_cast<const float*>(&sq[0][0]) + c * G);
++        const sycl::float4 w0 = w4[0], w1 = w4[1], w2 = w4[2];
++        acc[0] = sycl::fma(w0.x(), v, acc[0]); acc[1] = sycl::fma(w0.y(), v, acc[1]);
++        acc[2] = sycl::fma(w0.z(), v, acc[2]); acc[3] = sycl::fma(w0.w(), v, acc[3]);
++        acc[4] = sycl::fma(w1.x(), v, acc[4]); acc[5] = sycl::fma(w1.y(), v, acc[5]);
++        acc[6] = sycl::fma(w1.z(), v, acc[6]); acc[7] = sycl::fma(w1.w(), v, acc[7]);
++        acc[8] = sycl::fma(w2.x(), v, acc[8]); acc[9] = sycl::fma(w2.y(), v, acc[9]);
++        acc[10] = sycl::fma(w2.z(), v, acc[10]); acc[11] = sycl::fma(w2.w(), v, acc[11]);
++    };
++    int c = 0;
++    for (; c + 4 <= n_here; c += 4) {
++        const long long r0 = srow[c], r1 = srow[c+1], r2 = srow[c+2], r3 = srow[c+3];
++        if ((r0 | r1 | r2 | r3) < 0) break;
++        const float v0 = load_value(r0), v1 = load_value(r1);
++        const float v2 = load_value(r2), v3 = load_value(r3);
++        fold(c, v0); fold(c+1, v1); fold(c+2, v2); fold(c+3, v3);
++    }
++    for (; c < n_here; ++c) {
++        if (srow[c] >= 0) fold(c, load_value(srow[c]));
++    }
++    } else {
+     for (int c = 0; c < n_here; ++c) {
+         if (srow[c] < 0) continue;   // masked above, weight 0
+         float v;
+@@ -302,6 +363,7 @@
+         }
+ #pragma unroll
+         for (int h = 0; h < G; ++h) acc[h] = sycl::fma(sp[h][c], v, acc[h]);
++    }
+     }
+ #pragma unroll
+     for (int h = 0; h < G; ++h) part_acc[((size_t) slot * G + h) * HD + t] = acc[h];
+@@ -731,6 +793,57 @@
+     const dpct::err0 e = 0;
+ }
+ 
++// S93: only the staged prefill caller opts in; decode/verify/MTP keep the original entrypoint.
++void qsa_prefill_attn_value_batch(const float* q, const QsaAttnPools& pools,
++                                const int32_t* ids, const int32_t* steps,
++                                int64_t cap, const QsaShapes& s, float* scratch,
++                                float* attn, int64_t n_q, void* stream) {
++    static const bool enabled = [] {
++        const char* v = std::getenv("STRATA_ATTN_VALUE_PIPELINE");
++        return v && v[0] == '1' && v[1] == '\0';
++    }();
++    const char* lc = std::getenv("STRATA_ATTN_LANECELL");
++    if (!enabled || (lc && lc[0] == '1') || n_q != 32 || cap != 2051 ||
++        s.n_head != 24 || s.n_head_kv != 2 || s.head_dim != 256 || s.page_size != 4 ||
++        !q || !ids || !steps || !scratch || !attn || !pools.page_table ||
++        !pools.k_q || !pools.v_q || !pools.k_scale || !pools.v_scale ||
++        pools.k_q4 || pools.v_q4) {
++        qsa_decode_attn_batch(q, pools, ids, steps, cap, s, scratch, attn, n_q, stream);
++        return;
++    }
++    // HOST selection only: no GPU dispatch or per-call counter is inferred.
++    static const bool logged = [] {
++        std::fprintf(stderr, "strata: prefill attention value pipeline selected (nq32 cap2051 INT8 page4)\n");
++        return true;
++    }();
++    (void) logged;
++    const int n_chunks = (int) ((cap + CHUNK - 1) / CHUNK);
++    const long long stride = (long long) qsa_decode_attn_scratch_floats(cap, s);
++    float* part_acc = scratch;
++    float* part_m = scratch + (size_t) n_chunks * s.n_head * HD;
++    float* part_l = part_m + (size_t) n_chunks * s.n_head;
++    const float scale = 1.0f / sqrtf((float) HD);
++    const dpct::dim3 grid((unsigned)n_chunks, (unsigned)s.n_head_kv, (unsigned)n_q);
++    dpct::queue_ptr st = strata::q_of(stream);
++    auto exp_props = sycl::ext::oneapi::experimental::properties{
++        sycl::ext::oneapi::experimental::use_root_sync};
++    dpct::has_capability_or_fail(st->get_device(), {sycl::aspect::fp16});
++    st->parallel_for<dpct_kernel_name<class attn_chunk_value_prefill_s93>>(
++        sycl::nd_range<3>(grid * sycl::range(1, 1, THREADS), sycl::range(1, 1, THREADS)),
++        exp_props,
++        [=](sycl::nd_item<3> item_ct1) [[sycl::reqd_sub_group_size(32)]] {
++            attn_chunk_kernel<1, false, true>(q, pools, ids, steps, (int)s.n_head_kv,
++                                            (int)s.page_size, scale, part_acc, part_m,
++                                            part_l, n_chunks, (int)cap, stride);
++        });
++    st->parallel_for<dpct_kernel_name<class attn_merge_value_prefill_s93>>(
++        sycl::nd_range<3>(sycl::range(1, (unsigned)n_q, (unsigned)s.n_head) *
++                             sycl::range(1, 1, HD), sycl::range(1, 1, HD)),
++        exp_props, [=](sycl::nd_item<3> item_ct1) {
++            attn_merge_kernel(part_acc, part_m, part_l, n_chunks, attn, stride);
++        });
++}
++
+ uint64_t qsa_decode_attn_scratch_floats(int64_t cap, const QsaShapes& s) {
+     const int64_t chunks = (cap + CHUNK - 1) / CHUNK;
+     return (uint64_t) chunks * (uint64_t) s.n_head * (HD + 2) + 64;
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -32,6 +32,7 @@
+ #include "strata/core/native_head.hpp"
+ #include "strata/kernels/verify_kernels.hpp"
+ #include "strata/kernels/qsa_decode_attn.hpp"
++#include "strata/kernels/qsa_prefill_attn.hpp"
+ #include "strata/kernels/qsa_prompt_attn.hpp"
+ #include "strata/kernels/qsa_select.hpp"
+ #include "strata/prefill/gemm.hpp"
+@@ -3329,6 +3330,16 @@
+                                                                             m.attn, T, m.cs))
+                         for (int64_t t0 = 0; t0 < T; t0 += m.attn_batch) {
+                             const int64_t nb = std::min(m.attn_batch, T - t0);
++                            // Widths are monotone across this fresh prefill chunk; once the first is
++                            // cap2051 all32 are full. Staged identity pages are published on m.cs.
++                            const bool value_domain = staged && st.kv_int8 && nb == 32 && m.cap == 2051 &&
++                                m.steps_host[(size_t) (t0 * strata::kernels::kStepCount +
++                                                     strata::kernels::kStepWidth)] == m.cap;
++                            if (value_domain)
++                                strata::kernels::qsa_prefill_attn_value_batch(m.q + t0 * ZV, pools, m.sel_ids + t0 * m.cap,
++                                                                           m.steps_dev + t0 * strata::kernels::kStepCount, m.cap,
++                                                                           s, m.attn_scratch, m.attn + t0 * ZV, nb, m.cs);
++                            else
+                             strata::kernels::qsa_decode_attn_batch(m.q + t0 * ZV, pools, m.sel_ids + t0 * m.cap,
+                                                                    m.steps_dev + t0 * strata::kernels::kStepCount, m.cap,
+                                                                    s, m.attn_scratch, m.attn + t0 * ZV, nb, m.cs);
+--- /dev/null
++++ b/include/strata/kernels/qsa_prefill_attn.hpp
+@@ -0,0 +1,16 @@
++#pragma once
++
++#include "strata/kernels/qsa_decode_attn.hpp"
++
++namespace strata::kernels {
++
++// SYCL staged-prefill-only entrypoint. Caller guarantees a full 32-query batch,
++// all selection widths2051, and complete identity-mapped staged KV publication.
++// Exact flag1/INT8/page4/cap2051/24x256 with2KV heads selects the value pipeline;
++// every other domain delegates to the original qsa_decode_attn_batch.
++void qsa_prefill_attn_value_batch(const float* q, const QsaAttnPools& pools,
++                                const int32_t* ids, const int32_t* steps,
++                                int64_t cap, const QsaShapes& s, float* scratch,
++                                float* attn, int64_t n_q, void* stream);
++
++}  // namespace strata::kernels
