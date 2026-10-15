@@ -1,0 +1,118 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "6af933cb-20fc-497d-906a-9b44262e8740"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 40.1308615229791,
+  "launch_exception": null,
+  "source_packet_sha256": "6844cfda175a924fe8097c67da5cdb34b155b23aafd1483299addb600b496e53",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 39066,
+      "stop_reason": "end_turn",
+      "session_id": "6af933cb-20fc-497d-906a-9b44262e8740",
+      "total_cost_usd": 0.2577258,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 23201,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 3599,
+        "output_tokens_details": {
+          "thinking_tokens": 1692
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 23201,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 3599,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 23201,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 23201
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 3599,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 23201,
+          "webSearchRequests": 0,
+          "costUSD": 0.2577258,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 1692,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# GO_BOUNDED_BUILD\n\nBuild only. GPU timing is accepted only after the root ISA/resource gate below passes.\n\n**Arithmetic identity (verified by hand)**\n- Each byte is `u = (ql nibble) | (qh 2 bits << 4)`, so `u` is in 0..63.\n- `u + 0x60` is at most 159, which is below 256. No byte carries into its neighbour, so the packed 32-bit add equals four independent byte adds.\n- XOR 0x80:\n  - For u \u2265 32, the byte is at least 128, and XOR subtracts 128, giving u\u221232.\n  - For u < 32, the byte is in 96..127, and XOR gives u+224, which is u\u221232 (mod 256).\n  - Read as int8, both cases equal the original `sub_sat(u, 0x20)`, which never saturates for u in 0..63.\n- The `vi1` path applies the same masks and shifts. The `bit_cast` from uint32 is well defined.\n- Integer `vi` values are identical, so the dp4a order, FP ledger and XOR reduction are unchanged by construction.\n\n**Unchanged structure**\n- The A2 loads, the Q8 int loads (offset 4, 4-byte aligned), NCOLS=6, RPW=1, SG=32 with `reqd_sub_group_size`, and the WARPS=4 launch are textually identical across `CAND`.\n- `load16_a2` reads `q[1]` only for unaligned addresses, so it cannot run past the end of the allocation.\n\n**Harness**\n- **Gate order:** public is checked against the saved S44 anchor first, then original against public, then candidate, for both the original and changed inputs. Repeat, restore, single and batch20 graphs follow. All shapes pass correctness before any timing starts.\n- **Per-snapshot checks:**\n  - guards on all four buffers;\n  - float input, weights and Q8 read back unchanged;\n  - output tail still 0xFF;\n  - all outputs finite.\n- **Saved fixtures:** the 8-column S44 Q8 fixture is truncated to its first 6 columns, and the inactive S44 output tail is checked to be 0xFF.\n- **Analysis cross-checks:**\n  - 73 phases per shape (26 + 9 + 6 + 32);\n  - OCCO/COOC slot order mirrors the leaf;\n  - DOT checks require exactly 1 or 20 kernel nodes, a linear chain, kernel-name binding, three nonzero pointers per node, and the same pointers across all arms;\n  - per-round paired means are recomputed.\n- **Prelink reuse:** `/common/mmvq-core.images.o` and the frozen libraries are linked unchanged. The container sha256 is checked before and after the build.\n- **Leased run:**\n  - one process, no retry;\n  - a timeout stops only the container ID recorded in the cidfile;\n  - post-health is held until removal is confirmed;\n  - post-identity runs only after analysis passes.\n\n**Build-gate conditions (resolve before any GPU work, not code changes)**\n1. **No ISA/resource audit in the script yet.** `build-container.sh` has no ISA or resource step. Before card0, the root gate must extract both `PrivateC6` kernels from `leaf.images.o` and show:\n   - candidate and original have the same GRF mode, spill (0 or equal) and SIMD32;\n   - the candidate's only diff is replacing the sub_sat sequence with add+xor, with nothing else changed;\n   - the public symbol resolves from the common8f prelink, with no duplicate device image in the leaf.\n2. **DOT kernel-name patterns are unverified.** The regex fragments `native_mmvq_q6k_wide_a2`/`ILi6EE` and `PrivateC6ILb0EE`/`ILb1EE` must match the real mangled names. A mismatch fails safely but wastes the lease, so confirm them against `symbols.txt` offline.\n3. **Compile flags must match common8f.** Confirm that `-DSTRATA_XMX_SG16`, `STRATA_Q6K_EXPERTS` and `-fp-model=precise` match the common8f build. Mismatched headers would make the native types and constexprs differ between leaf and library (an ODR/ABI risk).\n4. **Pinned scripts not in the packet.** `runtime_identity.py` and the pins file can only be audited through the pin hash. The root must confirm that hash before the lease.\n\nNo fitted tolerance is present: every comparison is byte-exact. All JSON outputs set `serving_qualified=false` and `speed_qualified=false`. Correct.\n\n# S84 post-result decision\n\n**Keep it private; do not integrate now; do not repeat.**\n\n- **Pre/post-removal wrapper identity:** the compiled wrappers are byte-identical to the pre-removal wrappers. That closes the rootprop removal at the build level only; runtime policy remains unresolved.\n- **Mixed timing, not a clean win:**\n  - roughly 7\u201318% better at near32k and near200k;\n  - +15% worse at near4k and slower at near0;\n  - ragged9 within noise.\n- **Scope:** one quiet window, 4 completed-wall pairs per case. That supports no significance, cause or full-engine claim, which matches your framing.\n- **If ever integrated:**\n  - default OFF;\n  - a lower bound that excludes \u22644k contexts and tails, set from production-domain data rather than this run;\n  - then matched serving only if an end-to-end hypothesis justifies it.\n\nS85 (packed center) is independent of this decision and can proceed on the bounded-build terms above.",
+      "ttft_ms": 19924,
+      "type": "result",
+      "duration_ms": 39137,
+      "uuid": "902580df-f9ea-419d-b292-64007c1a5653",
+      "ttft_stream_ms": 1234,
+      "time_to_request_ms": 65,
+      "first_content_frame_ms": 1235,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

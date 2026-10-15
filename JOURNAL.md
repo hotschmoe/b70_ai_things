@@ -24121,3 +24121,143 @@ Completed S80 manifest233files757155438B plus explicitbuildsymlink, SHA
 5f0f2262cef1699098066fb71f5e8bbabecf4842631bdcb800f9d211fa5f728f.
 Cross-agent E1-E4 source-audit followup qualifies E3fixedpoint replay control
 and E2/E4attributionlimits, preserving all original scripts/rawresults.
+
+
+## 2026-10-15 -- Flash-Next optimization S81: source audit selects tiled QSA scorer
+
+CONFIG -> Current positive-active prefill scorer, retained S30 phase/S10
+operation/S22 decode summaries, main296b59d2 unchanged after GitHub refresh.
+COMMAND -> Native ple_upstream source/data-path audit, root full-read; no
+raw trace reparse, payload, build, GPU or production edit in this stage.
+RESULT -> Prefill nq256 bypasses existing nq<=8/no-active multi scorer.
+An eight-query tile can reuse pooled-key loads with identical float4/XOR/
+head order, per-query dead-key/+1e9 and stride. S30 long select buckets grow
+but include queued intervals/top-k; S10 short4K scorer24.052ms is small.
+VERDICT -> One bounded private eager scorer preparation; no attention/top-k/
+decode change, speed forecast or full200K rerun. Findingsc2d5d5f8 retained
+under qsa-prefill-select-s81-prep. Source report documents scope/next gate.
+
+
+## 2026-10-15 -- Flash-Next optimization S82: shared-ordering lead parked
+
+CONFIG -> Existing native EP IPC/PUSH prefill and scalar expert arithmetic.
+COMMAND -> Native strata_ep_s27 source/lifetime/consumer audit with retained
+host/phase summaries, root full-read. No payload, build, GPU or main edit.
+RESULT -> Shared expert may enqueue after existing routing/IPC readiness
+drain, before CPU grouping/peer submission; buffers and final consumers are
+independent. No extra queue/thread/event is needed. Vendor enqueue blocking
+is unknown; router+shared261ms combined region is not movable-work budget.
+VERDICT -> Park low-priority scheduling lead while QSA and Q6 kernels are
+prepared. No serving comparison justified yet. Findings69fa0cb8 under
+prefill-criticalpath-s82-prep; historical measurements remain historical.
+
+
+## 2026-10-15 -- Flash-Next optimization S83: compiled Q6 saturation survives
+
+CONFIG -> Exact current native C6/RPW1/A2/SG32 Q6 path; historical S31
+71calls/3.8256372ms service. Root two-expression unsigned add/XOR proposal.
+COMMAND -> Native mtp_q4_share source proof/full-loop copy, root full-read;
+one CPU-only seek/decode of existing S55 selected image771 under cpu-run,
+imagee41/noDRI/network/threads4. No candidate compile/GPU/payload/main edit.
+RESULT -> Source bytes0..63 minus32 never saturate; packed
+(u+0x60606060u)^0x80808080u exact without byte carries. Actual16576B target
+ASM retains32 add-32/overflow-mask/compare/select sites before48DP4A sites,
+no target call/calla. Extra320B symbol-table kernel separately inventoried/
+decoded. First extractor setup fails before decode on exactly-one-text
+assumption; versioned target selector/unexecuted Docker typo fix PASS10s.
+51151bytes read, selected targetSHAce58ba51, no whole-fatbinary rescan.
+VERDICT -> GO private same-ledger source prep, not speed/occupancy/dynamic
+issue claim or automatic GPU GO. Actual candidate ISA/resources and full
+strict public/original/changed/graph/memory gates precede bounded timing.
+Completed ISA35files220023B manifest5c2b3e04. Source proof/findings/limitations
+are retained in the dated QSA/Q6 report; no repeated rejected GPU experiment.
+
+
+## 2026-10-15 -- Flash-Next optimization S84: tiled scorer strict PASS, long-only lead
+
+CONFIG -> Private eight-query tiled existing multi body, unchanged publictopk,
+256queries ending256/4096/32768/200000 plusragged9near200K. Syntheticfinite/
+signedzero inputs, scorestride50002/pooled50001inclspare, eageronly/no model.
+COMMAND -> Root+independent sourceaudit; actual Opus63.895s/Fable152.729s
+conditionalGO. Version1CPUbuild22s stops noncopyable device_ext byvalue;
+v2hostreference-only correction PASS29s. Bothreviewers request removing unused
+private root_sync property; v3doesonlythat+controllerpath/pins, buildPASS28s.
+RootSDKcheck/publiclargegridcounterexample meansreviewers' cooperative-runtime
+explanation is NOT asserted as observedfact. V2/v3devicewrappersbyteidentical.
+Actualmap/object/archive/compiler/targetIDs auditPASS/tworegistrationdescriptors,
+eightgenericmemcpy/fillIDsoverlap explicitlylimited/no blanketODRproof.
+OnequietCARD0window92s/leaf66s; all5correctnessgroups precedeanytiming.
+RESULT -> Everyvalidscorebit+ID/initial+changed+repeat+restored/poison/readonly/
+guards/knownscore1->0 PASS;40datafiles275523200B. Preposthealth0/fullCID+NAMEgone/
+wrappers0. Fourbalancedpaired scorer+topk completedmedians(us): near0
+59.3435->164.228,4k866.9225->997.8325,32k4722.318->4363.2685,200k
+21490.156->17130.8345,ragged9 495.059->482.254. Medianpairedchanges
++177.194/+15.045/-7.472/-17.677/-2.587pct. All4long200Kpairsnegative,
+range-23.015..-6.049pct; oneprocess/nested/descriptive, notscorer-only/serving.
+VERDICT -> RetainPRIVATE long/full256-query lead; originalshort/tailpath, no
+mainintegration/default/serveclaim/retry/fullcachecampaign. ExactFPledger and
+selectionqualification staysbounded; no traffic/occupancy/causeforecast.
+Finalexedd63db5a/rootbuildclosure0a998321; actualS84postdecision combinedwith
+nextS85freshsourceconsultation toavoidredundantmodelcalls. Qualifiedserving
+status unchanged, absolute targets remain unmet. Sharedlease/log coordinated.
+S84 actual post-review is now closed through the S85 source consults:
+Opus40.131s/Fable74.111s both accept retainPRIVATE/no integration/no repeat.
+Root rejects Fable's near0noise wording (+177pct observed), zero-codegen
+runtime-moot inference and name-based cleanup wording; runtime policy remains
+unresolved and cleanup targets only createdCID. Root postdecision binds actual
+comparisonSHA under q6-center-source-reviews-s85-20261015, not retroactively
+inside the already completed S84 stage manifest.
+
+
+## 2026-10-15 -- Flash-Next optimization S85: Q6 packed centering strict PASS/faster
+
+CONFIG -> PrivatecanonicalQ6 C6/RPW1/A2/SG32, onlytwointegercenteringexpressions.
+Realweightshapes6144->2560/2560->10240, savedS44syntheticcanonicalQ8+public
+anchors/first6of8cols; FP32bufferreadonlywitness, notactualkernelinput.
+COMMAND -> Rootfullread actual Opus40.131s/Fable74.111s sourceGO. CPUv1build
+stops16s missingstrata::dp4a defininginclude; v2addsONLYpinnedsycl_math.hpp,
+inverseexact/leafunchanged. CPUv2build24s compile10.211/prelink.587/host.359s;
+exactcommon8f/frozenarchives/sourcepinsPASS, no commonAOTregen/mainmutation.
+SelectedCPUISA11s/205907Bread/137120Badapterbundle, bothwholeimagesbound
+actualexea0a1756b. BothSIMD32/GRF128/48DP4A/absentspillfieldsNOTzero;candidate
+32byteoverflow/compareseq->8packedadd+8XOR; text16576->10880B/no targetcalls.
+OnequietCARD0window41s/leaf12s, allcorrectnessshapes beforetiming.
+RESULT ->146snapshots/savedS44public+orig+candidate fullbytes/changedrepeat
+restored/readonlyQ8+weights/guards/tails/finiteness PASS.10DOT86nodes76edges/
+same3pointers/actualkernelbindingsPASS;148binaries13343616B. Eightbalanced
+nested20-callroundmeans each: outmed63.172075->48.725638us(-22.7841pct
+medianpaired),qkv73.817238->57.480712us(-22.0951pct);all16roundsnegative.
+Preposthealth0/createdfullCID+NAMEabsent/analysisidentitywrappers0/noGPUretry.
+VERDICT -> GOsmall S86 guarded/defaultOFF mainSOURCEPREPonly/exacttested
+C6A2R1SG32/twodimensions; preserveotherfallbacks. No actualmainapply/build/
+serve/promotion/fullmodelgainclaim. Repeatedweightcache/canonicalQ8ready
+outsidegraphs differfromserving; no p95/populationsignificance/causeforecast.
+ISAmanifestf298be19/rootbuildclosure3891ec98; runtime decision retained.
+Actualcompactpostreviews running separately; no extra primitive/cachecampaign.
+S85 actualpostOpus15.159s/Fable27.485s bothACCEPT/rootfullread. Root66a5e7ee
+binds actualphase/publicDOTresource/fullbytecomparison, resolving immutable
+pre-runISA 'pending' language and reviewers' already-validated-DOT concern.
+Cache-residency/bandwidthbound cause unmeasured; fullmodelnext is BOTHcardEP,
+notonecardsubstitution. No extrastreamingmicrogate/primitive retry selected.
+
+
+## 2026-10-15 -- Flash-Next optimization S86: guarded Q6 main proposal source-only
+
+CONFIG -> S85 strict two-shape private result; current native source81558e95
+unchanged, generic03bb is staleS79 experimentalartifact notrestoredsource.
+COMMAND -> Native mtp_q4_share prepares48linepatch/currentoriginal/candidate/
+pins/shortcontract; rootfullread affectedfunction+launcher, inverse/pins and
+actualgitapply--checkPASS againstcurrentexternaltree, withoutapplying.
+RESULT -> DefaultOFF/processlatchedSTRATA_Q6_CENTER, compiletimeCENTERfalse
+retainsoriginalexpressions; one newuniqueC6/RPW1/A2/SG32instantiation only
+fortwotesteddimensions. Rootversion2explicitPF0guard correctsunsupported
+positivePFfallthroughscope; allnonzeroPF/otherdispatchesoriginal. V1retained.
+VERDICT -> SOURCE_READY_ONLY; no actualmainapply/build/GPU/modelcall here.
+Freshupstream/actualsourceconsults/auditedmainrebuild inclrestored3S79hostfiles
+thenmatchedsame-new-binary TWOcardEP OFF/ON remainpending. No servinggain or
+promotion. V2patchdeb6e0c4/candidatef781e9c7, sourceonlymanifest2c014314.
+
+S85 final323files86839920B completedmanifestdfb4b31b;50smallASCIIrecords
+retainedexactly, no arrays/binaries/fullASM checkedin. S84 final187files
+282165114B manifest33047e7c;40smallrecords. Sourceaudits18exactcopies and
+S86unappliedpatch/pins/contract retained; old170operationrows/rollups/meta EXACT.

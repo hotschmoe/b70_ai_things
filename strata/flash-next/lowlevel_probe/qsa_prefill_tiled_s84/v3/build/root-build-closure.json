@@ -1,0 +1,29 @@
+{
+  "status": "PASS_ROOT_BUILD_AUDIT",
+  "binary_sha256": "dd63db5a427f2670e59bd2e1f17d4ab6471076299d9667bef83aaf2bcd32832e",
+  "expected_source_sha256": "d13561205362423d59dec1d4477ff9d74627af5fee49421aeadd17c70fed3399",
+  "public_object_sha256": "4cac1286456dbcfbf3618e0f0734bd05aceff6d82624d88770bb5b5277da2c3d",
+  "kernel_bindings_audited": true,
+  "offline_only": true,
+  "host_link_AOT_actions": 0,
+  "evidence": "root pins/map/symbols/actual link verification; native ple actual v2 selected ID/section audit inherited by byte-identical v3 image wrappers",
+  "wrappers": {
+    "qsa.images.o": "6f39b7a6954ef3944293d2b23e6431c9026f4075582178804e46e0b43fb644ad",
+    "leaf.images.o": "001c83c6d6f37fad32f6a66e01706d25e403d796c2d83757a36355fe1fcd02b0"
+  },
+  "target_ids_unique": true,
+  "generic_helper_ids_overlap_count": 8,
+  "generic_helper_limit": "No blanket whole-program ODR equivalence claim; public scorer/topk and private target names distinct. Existing dpct memcpy/SYCL fill helpers duplicated across wrappers.",
+  "public_images": 22,
+  "leaf_images": 9,
+  "final_images": 31,
+  "private_target_static": {
+    "SIMD": 32,
+    "GRF": 128,
+    "SLM": 16512,
+    "barrier_count": 1
+  },
+  "source_review_resolution": "v2 host reference inverse exact; v3 removes unused private launch property only; compiled wrappers identical v2/v3",
+  "public_topk_bounds_source_confirmed": true,
+  "main_mutation": false
+}

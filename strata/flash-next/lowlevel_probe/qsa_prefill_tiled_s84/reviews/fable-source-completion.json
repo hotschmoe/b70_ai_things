@@ -1,0 +1,118 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "4a6053b4-83d5-4117-907e-7dc08dc9f9b9"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 152.7294996980345,
+  "launch_exception": null,
+  "source_packet_sha256": "de887d39c3b035f0f4ca23b607c8641e636103ee4391012a73be4b86ed8cdf65",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 151500,
+      "stop_reason": "end_turn",
+      "session_id": "4a6053b4-83d5-4117-907e-7dc08dc9f9b9",
+      "total_cost_usd": 0.95492225,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 22962,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 9910,
+        "output_tokens_details": {
+          "thinking_tokens": 8375
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 22962,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 9910,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 22962,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 22962
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 2,
+          "outputTokens": 9910,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 22962,
+          "webSearchRequests": 0,
+          "costUSD": 0.95492225,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "thinkingTokens": 8375,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Verdict: HOLD** \u2014 one concrete source blocker in the private header; everything else in the packet reviews clean or is runtime-gated. Fix the blocker, re-pin the two hashes, then GO_BOUNDED_BUILD.\n\n**Blocker (must fix before any GPU run)**\n\n`private_tiled_scores.hpp` launches with `sycl::ext::oneapi::experimental::use_root_sync`. That property requests root-group synchronization, which requires every work-group of the nd_range to be co-resident. The launch is Y=ceil(nq/8) \u00d7 X=256 work-groups of 256 work-items: 8192 work-groups for nq=256, 512 for ragged9. Neither is resident on a single BMG G31, and the extension specifies an exception when the group count exceeds `max_num_work_group_sync`. The kernel never uses a root group. Expected outcome is a deterministic runtime exception on the candidate arm (leaf exit 2) after burning a card0 lease. Remove the `props` object and pass the lambda directly to `parallel_for`. This changes the header SHA256 and `expected-source.sha256`, so the current CPU build is only useful as a toolchain dry run.\n\n**Reviewed and sound**\n\n- **FP tree:** tiled body is identical to the public kernel in arithmetic order: four products summed in one expression, xor 16/8/4/2/1 sub-group reduction, head0..3 ReLU accumulation, +1e9 only when b==n_bid and nkv%4!=0. Routing queries through local memory does not change values. Cross-TU contraction differences under `-fp-model=precise` are possible in principle but are caught by the strict all-score byte equality gate, which is the right anchor.\n- **Tile offsets:** query advance 512 = 4\u00d7128, steps advance kStepCount, scores advance stride, max_blocks=stride, out index qi\u00d7max_blocks+b. Ragged tail n=min(8, nq\u2212q0) bounds staging, step loads, and the per-query loop. Scores beyond n_bid are never written, matching the inactive-poison gate.\n- **Barriers/early exit:** step staging and first barrier are unconditional. `top` is computed by every thread from shared data, so the early return and second barrier are work-group uniform. Grid-stride wstride=256\u00d78 with `b<=top && b<max_blocks` covers 0..50000.\n- **Spare row:** `kp` is loaded unconditionally for every b up to top, so row n_bid must exist. Max n_bid is 50000 and POOL=50001 includes row 50000; the trailing guard remains untouched. Loads of that row are dead when b==n_bid. The +1 justification holds for this leaf only.\n- **Active domain:** active=last/4+1 equals max n_bid+1, asserted per step and below stride. The candidate ignores active and derives its bound from steps, which is consistent within the validated host domain.\n- **Anchors:** public arm sets expected; candidate must match full valid cells; repeat, sign-flipped, and restored states all compared; known block0 score of the last query distinguishes work from no-op (1 then 0). Poison before every call, readonly on query/steps/pooled/dead, guards on all buffers, all before any timing. Timing orders match analyze.py.\n- **Build/link:** frozen object compared byte-for-byte to the archive member before and after; separate `-fsycl-link` for both objects with identical AOT target, then a plain host link with `-lsycl` and the wrapped image objects. This is the supported separate-device-prelink flow; identity.py's host-link term scan is the correct check that no AOT occurs at link.\n- **Lease hygiene:** own-CID-only stop/kill, removal confirmed by enumeration before post-health, no retries, closure recorded.\n\n**Secondary concerns (not blockers)**\n\n- **ID-range gate exposure:** for nkv%4==0 queries, block n_bid is empty and the dead vector here is random, not production-like. If public topk can select that block, IDs \u2265 nkv will trigger a strict failure attributable to the harness, not the candidate. Confirm topk's handling before the run or accept this as a possible false HOLD.\n- **Loop efficiency:** `kd` is reloaded from global memory on every block iteration though it is loop-invariant; hoist above the loop. `#pragma unroll` on the runtime-bounded nq loops is inert.\n- **Alignment:** float4 reinterpret of group-local memory assumes 16-byte alignment, inherited from the public multi body; the leaf's strict gates would surface a fault.",
+      "ttft_ms": 129397,
+      "type": "result",
+      "duration_ms": 151634,
+      "uuid": "7f39372e-8797-4931-b987-4a68aea5d5c4",
+      "ttft_stream_ms": 1406,
+      "time_to_request_ms": 125,
+      "first_content_frame_ms": 1406,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

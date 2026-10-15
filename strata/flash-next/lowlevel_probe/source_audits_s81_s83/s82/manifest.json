@@ -1,0 +1,16 @@
+{
+  "stage": "S82",
+  "status": "SOURCE_ONLY_CONDITIONAL_CANDIDATE_NO_EXECUTION",
+  "files": [
+    {
+      "path": "findings.md",
+      "bytes": 8324,
+      "sha256": "69fa0cb8147372dc7371d863eb38de90dac847ce9dc2735bd2cd66f0e22493b6"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 3000,
+      "sha256": "ced8899440d03702bc6941a8c72deda2d30e1d07672a5d6e3baa1dc10084f572"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "status": "ROOT_ACCEPT_SMALL_DEFAULT_OFF_SOURCE_PREP_NO_LIVE_INTEGRATION",
+  "reviewers": {
+    "claude-opus-5-5": {
+      "elapsed_s": 15.159372152993456,
+      "answer_sha256": "b2d1161b7c31514c87d04e7640dd5553a933762cdbc49db5f94aeaae7dd74587",
+      "completion_sha256": "a54118c0e8b76e5c717dc9505627465cb7336a4fc4208177b0ab1d061f0945b7"
+    },
+    "claude-fable-5-1": {
+      "elapsed_s": 27.485495565983,
+      "answer_sha256": "65773cbed4132189918724705f580cf6b8a513d99d37e03f7590d96e2f545507",
+      "completion_sha256": "f5973a478e870a6ebeeb5a7d8a69645d11037828ba11c9f0c599afd4a7a84113"
+    }
+  },
+  "result_packet_sha256": "68a68eeb1d891d26e56ffe9b42c8ca5ad08dd51132a6c9addca0ece0642261e6",
+  "runtime_result_sha256": "4a0857a790275c9b42ea9d7d66eaea16250e6f13834ca2ec480d217b726dc0d8",
+  "actual_runtime_comparison_sha256": "7b46da536b34398deac804ebf6111c06c724cecf2096c5f185d239f9fd43a92e",
+  "actual_runtime_log_sha256": "b09eba392fb6426a771082cf2fee1dda00c5ed588a18ec7647f750c7b0e0d0f7",
+  "corrections": [
+    "Pre-run ISA report pending language is historical and unchanged. Subsequent run comparison explicitly itemizes all73phases/shape, fulloutput+Q8 equality/readonly/guards and public/single/batch20 DOT names/resources. Bothreviewers public-DOT-not-validated concern is resolved by actual recorded comparison, no rerun.",
+    "Repeatedweightregime observed, cache residency/bandwidth-bound cause UNMEASURED; rejectFable physicalcache-resident/bandwidth claims as facts.",
+    "Future full-model test uses BOTHcards nativeEP serving, not reviewers proposedonecard substitution. No additional streaming micro gate or knobsweep selected.",
+    "Preserve -22percent primitive/twoshape/nested/repeatedweight scope; quantizationoutsidegraphs, FP32bufferwitnessonly."
+  ],
+  "next": "Unapplied S86 sourceprep exactC6/RPW1/A2/SG32/PF0/two tested shapes/defaultOFF. Fresh upstream+actual source reviews and audited main rebuild then matched fullmodel OFF/ON remain pending. Generic S79artifact not a current restored-source baseline.",
+  "GPU_leases_released": true,
+  "serving_qualified": false
+}

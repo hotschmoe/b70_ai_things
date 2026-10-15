@@ -1,0 +1,88 @@
+{
+  "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+  "file_size": 47039860096,
+  "tensors": [
+    {
+      "shape": "out",
+      "tensor": "blk.3.attn_output.weight",
+      "N": 6144,
+      "M": 2560,
+      "absolute_offset": 3572274688,
+      "bytes": 12902400,
+      "fnv1a64": "bd9a7894fdf034f5"
+    },
+    {
+      "shape": "qkv",
+      "tensor": "blk.4.attn_qkv.weight",
+      "N": 2560,
+      "M": 10240,
+      "absolute_offset": 4312859136,
+      "bytes": 21504000,
+      "fnv1a64": "6ac0ad97c5cfb31b"
+    }
+  ],
+  "fixture_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots",
+  "saved_fixture_files": {
+    "f0-input-f32.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f0-input-f32.bin",
+      "bytes": 196608,
+      "sha256": "41f59cc618247a9be0dc8cd4ec1f55042b2f1a82e5edc5f9a31ef85990797ab6"
+    },
+    "f0-changed-input-f32.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f0-changed-input-f32.bin",
+      "bytes": 196608,
+      "sha256": "4d9f4638afe21359174d678e00090a07b92e69694ddcacc1fbe6f5d6b1c47083"
+    },
+    "f0-input-q8_1.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f0-input-q8_1.bin",
+      "bytes": 55296,
+      "sha256": "a6859e31f961c7ead7d0045ff2833e7be84a1bbbb56cb3843958d1c14ba1759f"
+    },
+    "f0-changed-input-q8_1.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f0-changed-input-q8_1.bin",
+      "bytes": 55296,
+      "sha256": "7b31c7e16d6a870f326f22e89126a6b7bd8507459900a24e6f1a5df3481c6ad1"
+    },
+    "f0-C6-original.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f0-C6-original.bin",
+      "bytes": 81920,
+      "sha256": "6fdec1e5d1f1433a2174ad01c8d9ff16b7bc44931f4028dd7c14d7154bac3502"
+    },
+    "f0-C6-original-direct-changed.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f0-C6-original-direct-changed.bin",
+      "bytes": 81920,
+      "sha256": "2a7fb8d829ff2a126f88e3b5aeb0239eecd153d15a153d7e27875a2daf3377d2"
+    },
+    "f1-input-f32.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f1-input-f32.bin",
+      "bytes": 81920,
+      "sha256": "fcf3bf052dbdcd8d1951656f640e568c687e485cc2318fee17c9e22959de5d94"
+    },
+    "f1-changed-input-f32.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f1-changed-input-f32.bin",
+      "bytes": 81920,
+      "sha256": "67eeb6d38cff30b482b94df5a1edae4ffe9697395691b0cc7dc3cf0a06b9852c"
+    },
+    "f1-input-q8_1.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f1-input-q8_1.bin",
+      "bytes": 23040,
+      "sha256": "1188c64125657554c2907aca00625b2b2129ecc05ff6a1d363922d709f6c0217"
+    },
+    "f1-changed-input-q8_1.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f1-changed-input-q8_1.bin",
+      "bytes": 23040,
+      "sha256": "aa048d69002e81e6d9668a15ad2b794a48d84d6407d9eda0cf5e7bd5a9b3254d"
+    },
+    "f1-C6-original.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f1-C6-original.bin",
+      "bytes": 327680,
+      "sha256": "2bf611fa7fccaf9824181c4590d4c7e61a39bb5f59120d58bf625b17b7a520a6"
+    },
+    "f1-C6-original-direct-changed.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f1-C6-original-direct-changed.bin",
+      "bytes": 327680,
+      "sha256": "d8d90f4b1042bf30dd1349a3ea504ca0aa86bf39c2bbdaaff1a21386d63bc81a"
+    }
+  },
+  "weight_slice_FNV_source": "S44 frozen run-clean/oracle.log fixture entries; no new payload read in source prep"
+}

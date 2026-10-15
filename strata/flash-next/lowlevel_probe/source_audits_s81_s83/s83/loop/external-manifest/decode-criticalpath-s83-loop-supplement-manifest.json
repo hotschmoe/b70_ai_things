@@ -1,0 +1,18 @@
+{
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/decode-criticalpath-s83-loop-supplement",
+  "status": "FROZEN_SOURCE_ONLY_UNAPPLIED_TWO_LINE_PROPOSAL_HOLD_BUILD_GPU",
+  "files": [
+    {
+      "path": "complete-candidate-function.txt",
+      "bytes": 4672,
+      "sha256": "ec1b2c6c33faf7902f1a707842257784b647891d96c7caf484a30ac9e47fbcbe"
+    },
+    {
+      "path": "proof-and-pins.md",
+      "bytes": 6084,
+      "sha256": "63af25cd716f55352bbd8edd12e27d5ee8bd79ca9f0d7626d092c047d9c1d79a"
+    }
+  ],
+  "file_count": 2,
+  "total_bytes": 10756
+}

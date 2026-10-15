@@ -1,0 +1,183 @@
+{
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-native-isa-s83-root",
+  "status": "FROZEN_BOUNDED_CPU_ONLY_EXISTING_ISA_AUDIT",
+  "file_count": 35,
+  "total_bytes": 220023,
+  "files": [
+    {
+      "path": "centering-excerpts.json",
+      "bytes": 12908,
+      "sha256": "30508d77a85426b9f2af390882350aa47b478b051daf3b5590da6b4f87bb7ed0"
+    },
+    {
+      "path": "decode-v2.sh",
+      "bytes": 1065,
+      "sha256": "7991a6b68b57b2f71aba6ff43f60bbc7409e1050735ee08487a8e4db2d35bc1c"
+    },
+    {
+      "path": "decode.sh",
+      "bytes": 1055,
+      "sha256": "97dca31e2588eaa59a683382ba8a16c5a39a6c519b380e55da0c0ae1cc026773"
+    },
+    {
+      "path": "decoder-input-after.sha256",
+      "bytes": 84,
+      "sha256": "da11a450b8bccfafccc36f3882ec639d0ccba34df9f00136bbc0c70e1e17faed"
+    },
+    {
+      "path": "decoder-input.sha256",
+      "bytes": 84,
+      "sha256": "da11a450b8bccfafccc36f3882ec639d0ccba34df9f00136bbc0c70e1e17faed"
+    },
+    {
+      "path": "disasm.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "disasm.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "disasm.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "extract-v2.py",
+      "bytes": 2994,
+      "sha256": "38d52a12aacf06080050f3f68bed00136aa1f84eb5cb322346a5c457489c6448"
+    },
+    {
+      "path": "extract-v2.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "extract-v2.stdout",
+      "bytes": 1853,
+      "sha256": "00cab3b55680dc165a3267f3cbbe86a5c8b3d840168c2d87bb1a1f189f730298"
+    },
+    {
+      "path": "extract.py",
+      "bytes": 2792,
+      "sha256": "0be4331e51419e5ad07326b8c6385d47961574bc1fdb538e39233d44cac91cfe"
+    },
+    {
+      "path": "extract.stderr",
+      "bytes": 445,
+      "sha256": "f3f7b0a9cf36f0a4a75a2246e53a589ca0838076c70f821e82f8da2f7ee8b8b8"
+    },
+    {
+      "path": "extract.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "findings.md",
+      "bytes": 4721,
+      "sha256": "f90013a2222d5b6a20ffc0b0a2c800c11299b795d702bc272ff5ce83bb09d58a"
+    },
+    {
+      "path": "host-docker-path.txt",
+      "bytes": 16,
+      "sha256": "ce536b639a11544da8f2741be433402954edb513f4ec4089084104b133a9a8ae"
+    },
+    {
+      "path": "host-python-path.txt",
+      "bytes": 17,
+      "sha256": "2c11783c714f41473d25adbd78da41235938197cf65d402337cbd994f21f3551"
+    },
+    {
+      "path": "image-id.txt",
+      "bytes": 72,
+      "sha256": "0716a759b38b99857a73ea5340c9861a23dd6cbe31f267bd8c0e878b3ac41055"
+    },
+    {
+      "path": "original-disasm/.bss.const",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "original-disasm/.misc.buildOptions",
+      "bytes": 38,
+      "sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f"
+    },
+    {
+      "path": "original-disasm/.note.intelgt.compat",
+      "bytes": 172,
+      "sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1"
+    },
+    {
+      "path": "original-disasm/.note.intelgt.metrics",
+      "bytes": 3,
+      "sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c"
+    },
+    {
+      "path": "original-disasm/.rel.text.Intel_Symbol_Table_Void_Program",
+      "bytes": 33,
+      "sha256": "762112bef961cc248718013eff6cfcaa04f0ee5bace3df9fef384654ed8ec0bb"
+    },
+    {
+      "path": "original-disasm/.rel.text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS5_PfiiPN4sycl3_V15queueEE23native_mmvq_q6k_wide_a218dpct_kernel_scalarILi6EEEE",
+      "bytes": 43,
+      "sha256": "7babf6edcd10f5038efb4a613e15c715ec7eaf32a59e890fb03f921bb6eee735"
+    },
+    {
+      "path": "original-disasm/.spv",
+      "bytes": 21172,
+      "sha256": "f33c506cb2f6c65522d38af925a0d5e6c17ad4b0dcf452cf3849dc7e6746073c"
+    },
+    {
+      "path": "original-disasm/.symtab",
+      "bytes": 865,
+      "sha256": "6456277238aaf00dc61568c583a2923c90a64245a9bfa445184d95c93498d472"
+    },
+    {
+      "path": "original-disasm/.text.Intel_Symbol_Table_Void_Program.asm",
+      "bytes": 1312,
+      "sha256": "b4f4578830b2552b394a9757338175dfb54db20d722d288384e97879a60432a9"
+    },
+    {
+      "path": "original-disasm/.text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS5_PfiiPN4sycl3_V15queueEE23native_mmvq_q6k_wide_a218dpct_kernel_scalarILi6EEEE.asm",
+      "bytes": 111252,
+      "sha256": "6e831a8d6ce16212b0bd9e55df3ace33a2622ad08aded6426241c3a883a57c5a"
+    },
+    {
+      "path": "original-disasm/.ze_info",
+      "bytes": 3181,
+      "sha256": "d73b7b9551c7b7a49512ea8e144d449cdc5de5a9fb57e1fa8bd3a6d27871cecb"
+    },
+    {
+      "path": "original-disasm/sections.txt",
+      "bytes": 616,
+      "sha256": "2db85ff3073dbe75390f071e6569992f652b330f3320f7570a60a39c08187a8d"
+    },
+    {
+      "path": "original.ze_info",
+      "bytes": 3181,
+      "sha256": "d73b7b9551c7b7a49512ea8e144d449cdc5de5a9fb57e1fa8bd3a6d27871cecb"
+    },
+    {
+      "path": "original.zebin",
+      "bytes": 43432,
+      "sha256": "f72e974271d2dac1e8704e45c3f6b6e33d021d5e98db0c5d51d653f71a15be27"
+    },
+    {
+      "path": "report.json",
+      "bytes": 4747,
+      "sha256": "72d5204cf9d7d26e810cfe7a9f723729cbd6f417196138f686a3c73ec7d82be4"
+    },
+    {
+      "path": "selection.json",
+      "bytes": 1853,
+      "sha256": "00cab3b55680dc165a3267f3cbbe86a5c8b3d840168c2d87bb1a1f189f730298"
+    },
+    {
+      "path": "tool-path.txt",
+      "bytes": 15,
+      "sha256": "52de7767fd8b2c8e722ecd3ab1d1a3441b9446821186349ef0deda6f519dfbe9"
+    }
+  ]
+}

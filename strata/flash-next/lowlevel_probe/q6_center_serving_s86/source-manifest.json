@@ -1,0 +1,33 @@
+{
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-serving-s86-prep-v2",
+  "status": "FROZEN_VERSIONED_UNAPPLIED_SOURCE_ONLY_PF0_GUARD",
+  "files": [
+    {
+      "path": "contract.md",
+      "bytes": 2531,
+      "sha256": "0984f0743c2591011656594c552a82f389aeaf26292146c455e87f78c9ba0f9d"
+    },
+    {
+      "path": "native_mmvq.candidate.cpp",
+      "bytes": 185500,
+      "sha256": "f781e9c742aa990367e4f829e0f0bb7801f12af68512ecbec74418e50b9933bb"
+    },
+    {
+      "path": "native_mmvq.original.cpp",
+      "bytes": 184184,
+      "sha256": "81558e95f721413a75c3d3ec6ed7cb5eee766e4f662080cf500c7985090f03e2"
+    },
+    {
+      "path": "q6-center-exact-shapes.patch",
+      "bytes": 2894,
+      "sha256": "deb6e0c4f58f59095aa8d8f186b64784a44646be2f0a4f7ad4640b655993d71c"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 1248,
+      "sha256": "c51c516ff24f2321fd0b9aade8e7f16d69014d6d021899bbc470994dd8b84b1d"
+    }
+  ],
+  "file_count": 5,
+  "total_bytes": 376357
+}

@@ -1,0 +1,140 @@
+--- v1/expected-source.sha256
++++ v2/expected-source.sha256
+@@ -1,8 +1,8 @@
+ f81352934556b764fd599febe22d80906fa3df21bf5393887c2a07b925548b4b  /src/private_tiled_scores.hpp
+-7b07a090f4ebce2ac3cf39bd20c738bc2f53ddf739eb0d31780d3e0ae0f7983a  /src/scorer_leaf.cpp
++0c8a62b3ea252cd8a367dfbc11a3a1de02f2e6d9cb1495c7472f83db57bab9b0  /src/scorer_leaf.cpp
+ 934b37052fc60b23bcf912e478419c42b90ad534a731b9ed71046df607848bf0  /src/build.sh
+ de5d57c7293c49e0eabc8ada83801b3f514302ad0f8a1d83806537c981eafc2d  /src/build-container.sh
+-0229cca311af71cc9b5780db619b3ee17d8c5193d36d017843196ca00becf968  /src/leased_run.sh
++c2a1936de994b9635acbfe551863eedbd8c9c6ffc9c6ce9868c7366a8ad65ec6  /src/leased_run.sh
+ 12c8019ae2f1e3ef6ea58a85a51bc5a4a06c6390d050a69d25d30423e3777f2f  /src/ROOT_RUN.sh
+ c5b264c93fad7a511e78ee339a3e05299312fb23a8b7702d6b165496c8b74816  /src/identity.py
+ e3874553a6d83e6b472a9a7be8867fde186696e30ecc3a15a49d2bec64d8f81f  /src/analyze.py
+
+--- v1/leased_run.sh
++++ v2/leased_run.sh
+@@ -1,8 +1,8 @@
+ #!/usr/bin/env bash
+ # Caller holds quiet CPU and physical card0. Exactly one process; no retries/reset.
+ set -uo pipefail
+-HERE=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-tiled-s84-prep
+-EXEC_DIR=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-tiled-s84-prep
++HERE=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-tiled-s84-prep-v2
++EXEC_DIR=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-tiled-s84-prep-v2
+ OUT=${1:?new existing run directory}
+ REPO=/mnt/vm_8tb/github/b70_ai_things
+ IMAGE=sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2
+
+--- v1/scorer_leaf.cpp
++++ v2/scorer_leaf.cpp
+@@ -119,7 +119,7 @@
+ static int run(const fs::path& out){
+  for(const char* v:{"STRATA_TOPK_OLD","STRATA_TOPK_ACTIVE_ANY","STRATA_TOPK_CAPACITY_GUARD","STRATA_QSA_CLUSTER","STRATA_QSA_WARP","STRATA_SCORES_MULTI","STRATA_QSA_EARLY_EXIT"})need(!std::getenv(v),std::string("require absent ")+v);
+  const auto geometry=K::qsa_real_shapes();need(geometry.idx_dim==128&&geometry.idx_n_head==4&&geometry.idx_block==4&&geometry.idx_top_k==2048,"exact geometry");
+- need(dpct::device_count()==1,"one visible device");const auto dev=dpct::dev_mgr::instance().get_device(0);
++ need(dpct::device_count()==1,"one visible device");const auto& dev=dpct::dev_mgr::instance().get_device(0);
+  need(dev.has(sycl::aspect::ext_intel_pci_address),"PCI unavailable");auto pci=dev.get_info<sycl::ext::intel::info::device::pci_address>();std::transform(pci.begin(),pci.end(),pci.begin(),[](unsigned char c){return char(std::tolower(c));});need(pci=="0000:0b:00.0","physical card0 required");
+  std::printf("{\"type\":\"identity\",\"pci\":\"%s\",\"visible_devices\":1,\"device\":\"%s\",\"driver\":\"%s\",\"execution\":\"eager_only_no_graph\"}\n",pci.c_str(),dev.get_info<sycl::info::device::name>().c_str(),dev.get_info<sycl::info::device::driver_version>().c_str());
+  sycl::queue q(dpct::dev_mgr::instance().get_device(0).get_context(),dev,sycl::property_list{sycl::property::queue::in_order()});
+
+--- v1/source-pins.json
++++ v2/source-pins.json
+@@ -1,11 +1,11 @@
+ {
+-  "status": "SOURCE_FROZEN_ROOT_FULL_READ",
++  "status": "SOURCE_FROZEN_ROOT_HOST_REF_FIX",
+   "files": {
+     "/src/private_tiled_scores.hpp": "f81352934556b764fd599febe22d80906fa3df21bf5393887c2a07b925548b4b",
+-    "/src/scorer_leaf.cpp": "7b07a090f4ebce2ac3cf39bd20c738bc2f53ddf739eb0d31780d3e0ae0f7983a",
++    "/src/scorer_leaf.cpp": "0c8a62b3ea252cd8a367dfbc11a3a1de02f2e6d9cb1495c7472f83db57bab9b0",
+     "/src/build.sh": "934b37052fc60b23bcf912e478419c42b90ad534a731b9ed71046df607848bf0",
+     "/src/build-container.sh": "de5d57c7293c49e0eabc8ada83801b3f514302ad0f8a1d83806537c981eafc2d",
+-    "/src/leased_run.sh": "0229cca311af71cc9b5780db619b3ee17d8c5193d36d017843196ca00becf968",
++    "/src/leased_run.sh": "c2a1936de994b9635acbfe551863eedbd8c9c6ffc9c6ce9868c7366a8ad65ec6",
+     "/src/ROOT_RUN.sh": "12c8019ae2f1e3ef6ea58a85a51bc5a4a06c6390d050a69d25d30423e3777f2f",
+     "/src/identity.py": "c5b264c93fad7a511e78ee339a3e05299312fb23a8b7702d6b165496c8b74816",
+     "/src/analyze.py": "e3874553a6d83e6b472a9a7be8867fde186696e30ecc3a15a49d2bec64d8f81f",
+@@ -19,7 +19,7 @@
+     "/work/src-ep/include/strata/kernels/qsa_select.hpp": "152dfce28a1f517169542590b32b7bb0b72442cf833446d1beb91cb104922250",
+     "/work/src-ep/sycl/include/dpct/dpct.hpp": "feb2098e7de5192263a90464f2876d3c0499fc6c88661592a5013145a2f68e1e"
+   },
+-  "no_main_mutation": true,
+-  "GPU": false,
+-  "build": false
++  "kernel_header_unchanged": true,
++  "leaf_inverse_host_ref_exact": true,
++  "original_compile_error_retained": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-tiled-s84-prep/build/adapter-compile.time"
+ }
+
+--- v2/expected-source.sha256
++++ v3/expected-source.sha256
+@@ -1,8 +1,8 @@
+-f81352934556b764fd599febe22d80906fa3df21bf5393887c2a07b925548b4b  /src/private_tiled_scores.hpp
++2c479fb44d1be02677b49eb190e0b39fda07e8b905b4ed5337950277a0b252d2  /src/private_tiled_scores.hpp
+ 0c8a62b3ea252cd8a367dfbc11a3a1de02f2e6d9cb1495c7472f83db57bab9b0  /src/scorer_leaf.cpp
+ 934b37052fc60b23bcf912e478419c42b90ad534a731b9ed71046df607848bf0  /src/build.sh
+ de5d57c7293c49e0eabc8ada83801b3f514302ad0f8a1d83806537c981eafc2d  /src/build-container.sh
+-c2a1936de994b9635acbfe551863eedbd8c9c6ffc9c6ce9868c7366a8ad65ec6  /src/leased_run.sh
++68d729e784f867f4956888c92d6faf2c6e06a44dfb3641caf982e107fef6db37  /src/leased_run.sh
+ 12c8019ae2f1e3ef6ea58a85a51bc5a4a06c6390d050a69d25d30423e3777f2f  /src/ROOT_RUN.sh
+ c5b264c93fad7a511e78ee339a3e05299312fb23a8b7702d6b165496c8b74816  /src/identity.py
+ e3874553a6d83e6b472a9a7be8867fde186696e30ecc3a15a49d2bec64d8f81f  /src/analyze.py
+
+--- v2/leased_run.sh
++++ v3/leased_run.sh
+@@ -1,8 +1,8 @@
+ #!/usr/bin/env bash
+ # Caller holds quiet CPU and physical card0. Exactly one process; no retries/reset.
+ set -uo pipefail
+-HERE=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-tiled-s84-prep-v2
+-EXEC_DIR=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-tiled-s84-prep-v2
++HERE=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-tiled-s84-prep-v3
++EXEC_DIR=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-tiled-s84-prep-v3
+ OUT=${1:?new existing run directory}
+ REPO=/mnt/vm_8tb/github/b70_ai_things
+ IMAGE=sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2
+
+--- v2/private_tiled_scores.hpp
++++ v3/private_tiled_scores.hpp
+@@ -93,11 +93,9 @@
+ inline void launch(const float* pooled,const float* dead,const float* query,
+                    const int32_t* steps,int nq,int64_t stride,float* scores,sycl::queue& q){
+     // Caller validates exact host step/active bounds. Grid's Y is independent query tiles.
+-    const auto props=sycl::ext::oneapi::experimental::properties{
+-        sycl::ext::oneapi::experimental::use_root_sync};
+     q.parallel_for<class TiledScores>(sycl::nd_range<3>(
+         sycl::range<3>(1,(nq+MQ-1)/MQ,256*SCORE_WARPS*32),
+-        sycl::range<3>(1,1,SCORE_WARPS*32)),props,
++        sycl::range<3>(1,1,SCORE_WARPS*32)),
+         [=](sycl::nd_item<3> it) [[sycl::reqd_sub_group_size(32)]] {
+             const int q0=int(it.get_group(1))*MQ;
+             const int n=(nq-q0<MQ?nq-q0:MQ);
+
+--- v2/source-pins.json
++++ v3/source-pins.json
+@@ -1,11 +1,11 @@
+ {
+-  "status": "SOURCE_FROZEN_ROOT_HOST_REF_FIX",
++  "status": "SOURCE_FROZEN_ROOT_UNUSED_PROPERTY_REMOVAL",
+   "files": {
+-    "/src/private_tiled_scores.hpp": "f81352934556b764fd599febe22d80906fa3df21bf5393887c2a07b925548b4b",
++    "/src/private_tiled_scores.hpp": "2c479fb44d1be02677b49eb190e0b39fda07e8b905b4ed5337950277a0b252d2",
+     "/src/scorer_leaf.cpp": "0c8a62b3ea252cd8a367dfbc11a3a1de02f2e6d9cb1495c7472f83db57bab9b0",
+     "/src/build.sh": "934b37052fc60b23bcf912e478419c42b90ad534a731b9ed71046df607848bf0",
+     "/src/build-container.sh": "de5d57c7293c49e0eabc8ada83801b3f514302ad0f8a1d83806537c981eafc2d",
+-    "/src/leased_run.sh": "c2a1936de994b9635acbfe551863eedbd8c9c6ffc9c6ce9868c7366a8ad65ec6",
++    "/src/leased_run.sh": "68d729e784f867f4956888c92d6faf2c6e06a44dfb3641caf982e107fef6db37",
+     "/src/ROOT_RUN.sh": "12c8019ae2f1e3ef6ea58a85a51bc5a4a06c6390d050a69d25d30423e3777f2f",
+     "/src/identity.py": "c5b264c93fad7a511e78ee339a3e05299312fb23a8b7702d6b165496c8b74816",
+     "/src/analyze.py": "e3874553a6d83e6b472a9a7be8867fde186696e30ecc3a15a49d2bec64d8f81f",
+@@ -19,7 +19,6 @@
+     "/work/src-ep/include/strata/kernels/qsa_select.hpp": "152dfce28a1f517169542590b32b7bb0b72442cf833446d1beb91cb104922250",
+     "/work/src-ep/sycl/include/dpct/dpct.hpp": "feb2098e7de5192263a90464f2876d3c0499fc6c88661592a5013145a2f68e1e"
+   },
+-  "kernel_header_unchanged": true,
+-  "leaf_inverse_host_ref_exact": true,
+-  "original_compile_error_retained": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-tiled-s84-prep/build/adapter-compile.time"
++  "existing_multi_body_unchanged": true,
++  "leaf_unchanged_v2": true
+ }

@@ -1,0 +1,23 @@
+{
+  "status": "ROOT_ACCEPT_BOUNDED_S84_LONG_PRIVATE_LEAD_NO_INTEGRATION_OR_REPEAT",
+  "models": {
+    "claude-opus-5-5": {
+      "elapsed_s": 40.1308615229791,
+      "completion_sha256": "3a52d747a6c4e68db94fa8ab833abd172a60431461071fd00e9f2034f195228f",
+      "answer_sha256": "2e48836bb15e4889c531feee97bdd61f8fd7b11b407dbc54c36c74aea5753fa7"
+    },
+    "claude-fable-5-1": {
+      "elapsed_s": 74.11149683099939,
+      "completion_sha256": "6e9f4858bf293121a96563418b078e64963136950087205003d0b1e0e56784ba",
+      "answer_sha256": "a0a90b552e185a384bfa27c668b519dfbbe0b3c77c6b586ac0d9bd1561b41b99"
+    }
+  },
+  "actual_result": "qsa-prefill-tiled-s84-prep-v3/run-clean/comparison.json",
+  "result_sha256": "3f16c460e653fa70c378a3ad2098ac0766da47a0fa8b504b72a501c759776ccf",
+  "reviewer_corrections": [
+    "Fable near0 noise-level wording rejected: actual all4pairs+176..189percent, clear descriptive regression; no fitted significance claim.",
+    "Fable runtime rootprop moot inference not adopted: wrappers same closes codegen only, runtime launch policy still unresolved.",
+    "Cleanup never kills by name; only created full CID. Name must also be absent before health."
+  ],
+  "root_decision": "Retainprivate long/full256 candidate; originalshort/tails; no fullengine gain, isolatedscorer, significance, physicaltraffic or causal claim. Future defaultOFF production-domain guard only with justified matchedserving."
+}

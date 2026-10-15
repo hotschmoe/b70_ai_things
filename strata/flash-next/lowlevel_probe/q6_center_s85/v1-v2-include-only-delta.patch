@@ -1,0 +1,149 @@
+--- v1/expected-container.sha256
++++ v2/expected-container.sha256
+@@ -10,6 +10,6 @@
+ 93b193a0ea4c6c53de6d44e95b60e244b211bf1508a6862c6f79e43ca691fc58  /work/src-ep/sycl/include/dpct/detail/math_detail.hpp
+ 9933c09306a7a91bb242fa913694541fc4166bcf6d5a1a2a81ee9dac91b05f31  /work/src-ep/sycl/include/dpct/graph.hpp
+ 4e5c05fbf9aa65906b1ef599d09bc75a708858a41b91949ecebdc1096b6f7452  /src/q6_center_leaf.cpp
+-787d63919557f94241e2f6722ed6f6df1f7e3f2a5cd2e280ec643de77aa6ff0e  /src/private_q6_center.hpp
++eb9524770ea90a66e3d3682e51593b4ead3fd347ca24aab7f30dc5503a1801b5  /src/private_q6_center.hpp
+ 791688408e91335ee42c25f4cafbeaeee709f7b7cc1a45e85dbd1d9d631a8408  /src/build-container.sh
+ 71356d477e7108337d243b162332067cb0e81d9f25813a4506e7fa72e0dca8ba  /src/fixture-pins.json
+
+--- v1/harness-pins.json
++++ v2/harness-pins.json
+@@ -2,12 +2,12 @@
+   "build.sh": "b04e006c350de6bdde631cb3e6b217145ecaa92b4f147dfe20b4eb81ebade444",
+   "build-container.sh": "791688408e91335ee42c25f4cafbeaeee709f7b7cc1a45e85dbd1d9d631a8408",
+   "ROOT_RUN.sh": "81428ff5a9b099f93e1fd522e4cf98afd1a8c462114cbd395f2eff20c6b702ab",
+-  "leased_run.sh": "590553245a4818bde1f01d5ca6c218d0a297b48b1a20b71e4fcc4f135d9190c0",
++  "leased_run.sh": "dc74f7b1a583d8f6230180333514e84a6574716393156ab22c30cb3c1f9da1c1",
+   "runtime_identity.py": "2d3981fefa7c66f8d376f78bc60679c7a25a458a0777f276ea685035219046b8",
+   "analyze.py": "8b9946365764071290d76894f028616fdc806d50b81e093844c2e632c26858fa",
+   "fixture-pins.json": "71356d477e7108337d243b162332067cb0e81d9f25813a4506e7fa72e0dca8ba",
+-  "source-extraction.json": "6bafcc859f83b35f1a5cef779c451db62f8a44c93326ce125c2ab81ae7dd9869",
+-  "source-link-bindings.json": "b7f18062844f4bd5660ed7b12a31104ab94fc530aa9edc8833b54b77c57fc8e7",
+-  "expected-container.sha256": "81b569dbdaea45c9e1aaf088baf1a5c6eb0f2cce4870d3510955cd36f251ce9f",
++  "source-extraction.json": "fe60e5fab399412c969aece3562e5b017561b71954fe6d4d0218a2206e52f16e",
++  "source-link-bindings.json": "2eed9d5ab2a3004c89a8ea89e504b5e922bf9d72875445151404442dca76db21",
++  "expected-container.sha256": "3ce7c918a0ffef619b3e867ac089203e88a4bc3388680079ca8949ef17420ebc",
+   "README.md": "602140b1c726c2d1b085cf9509c53e56651beb88170d0468ceb8e321542e4829"
+ }
+
+--- v1/leased_run.sh
++++ v2/leased_run.sh
+@@ -1,8 +1,8 @@
+ #!/usr/bin/env bash
+ # Caller holds quiet CPU and physical card0. Exactly one process; no retries/reset.
+ set -uo pipefail
+-HERE=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep
+-EXEC_DIR=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep
++HERE=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep-v2
++EXEC_DIR=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep-v2
+ OUT=${1:?new existing run directory}
+ REPO=/mnt/vm_8tb/github/b70_ai_things
+ IMAGE=sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2
+
+--- v1/private_q6_center.hpp
++++ v2/private_q6_center.hpp
+@@ -3,6 +3,7 @@
+ #include <sycl/sycl.hpp>
+ #include <dpct/dpct.hpp>
+ #include "strata/kernels/dp4a.hpp"
++#include "strata/sycl_math.hpp"
+ #include <cstdint>
+ #include <cstddef>
+ namespace s85 {
+
+--- v1/readiness.json
++++ v2/readiness.json
+@@ -1,5 +1,5 @@
+ {
+-  "status": "FROZEN_SOURCE_PREP_ONLY_ROOT_REVIEW_BUILD_ISA_GPU_PENDING",
++  "status": "ROOT_GO_CORRECTED_OFFLINE_BUILD_THEN_PRIVATE_ISA_GPU_PENDING",
+   "source_packet": {
+     "bytes": 39985,
+     "sha256": "6844cfda175a924fe8097c67da5cdb34b155b23aafd1483299addb600b496e53"
+@@ -10,5 +10,6 @@
+   "GPU": 0,
+   "model_calls": 0,
+   "payload_reads": 0,
+-  "runtime_claims": false
++  "runtime_claims": false,
++  "source_packet_scope": "Copied immutable v1 source review packet; root supplies versioned include-only v2 delta"
+ }
+
+--- v1/source-extraction.json
++++ v2/source-extraction.json
+@@ -3,12 +3,14 @@
+   "source_sha256": "81558e95f721413a75c3d3ec6ed7cb5eee766e4f662080cf500c7985090f03e2",
+   "original_function_sha256": "f7f88106ed042051b422f82a9bb326eb89d107e2b3f6a308a05cf5ffe1589e5d",
+   "load16_a2_sha256": "579bfb888ce43739aa3af73f681d8bea37dfb7445674ab3a017feea8e6643498",
+-  "private_header_sha256": "787d63919557f94241e2f6722ed6f6df1f7e3f2a5cd2e280ec643de77aa6ff0e",
++  "private_header_sha256": "eb9524770ea90a66e3d3682e51593b4ead3fd347ca24aab7f30dc5503a1801b5",
+   "source_change": "Only CAND true two uint32 add/XOR recenter expressions; control original source branch; compile-time C6/RPW1/A2/SG32 specialization and private namespace/launch identity",
+   "new_math_or_operand_format": false,
+   "S83_ISA_manifest_sha256": "5c2b3e04dcaaf9712695f4865668d90b0770491c7048a55697703a88357add84",
+   "original_control_inverse_reconstructs_exact_source": true,
+   "original_control_inverse_sha256": "f7f88106ed042051b422f82a9bb326eb89d107e2b3f6a308a05cf5ffe1589e5d",
+   "saved_S44_inputs": "Seeded FP32 initial/changed bytes and actual GPU canonical Q8_1 exports, first6 of saved8; not sampled production activations",
+-  "candidate_diff": "Only two integer centering expressions in CAND true; no FP/load/ledger/tree change"
++  "candidate_diff": "Only two integer centering expressions in CAND true; no FP/load/ledger/tree change",
++  "v2_only_source_delta": "Add missing original-TU include strata/sycl_math.hpp, which defines strata::dp4a; no math/protocol change",
++  "v2_include_removal_reconstructs_v1_header_exactly": true
+ }
+
+--- v1/source-link-bindings.json
++++ v2/source-link-bindings.json
+@@ -66,27 +66,27 @@
+     "preparation_hash_source": "current small imported header/source bytes"
+   },
+   "/src/q6_center_leaf.cpp": {
+-    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep/q6_center_leaf.cpp",
++    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep-v2/q6_center_leaf.cpp",
+     "bytes": 17446,
+     "sha256": "4e5c05fbf9aa65906b1ef599d09bc75a708858a41b91949ecebdc1096b6f7452",
+-    "preparation_hash_source": "Current S85 private source; no compile/run"
++    "preparation_hash_source": "Versioned S85v2 include-only repair and path repins; original immutable"
+   },
+   "/src/private_q6_center.hpp": {
+-    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep/private_q6_center.hpp",
+-    "bytes": 7393,
+-    "sha256": "787d63919557f94241e2f6722ed6f6df1f7e3f2a5cd2e280ec643de77aa6ff0e",
+-    "preparation_hash_source": "Current S85 private source; no compile/run"
++    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep-v2/private_q6_center.hpp",
++    "bytes": 7425,
++    "sha256": "eb9524770ea90a66e3d3682e51593b4ead3fd347ca24aab7f30dc5503a1801b5",
++    "preparation_hash_source": "Versioned S85v2 include-only repair and path repins; original immutable"
+   },
+   "/src/build-container.sh": {
+-    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep/build-container.sh",
++    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep-v2/build-container.sh",
+     "bytes": 1911,
+     "sha256": "791688408e91335ee42c25f4cafbeaeee709f7b7cc1a45e85dbd1d9d631a8408",
+-    "preparation_hash_source": "Current S85 private source; no compile/run"
++    "preparation_hash_source": "Versioned S85v2 include-only repair and path repins; original immutable"
+   },
+   "/src/fixture-pins.json": {
+-    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep/fixture-pins.json",
++    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep-v2/fixture-pins.json",
+     "bytes": 4688,
+     "sha256": "71356d477e7108337d243b162332067cb0e81d9f25813a4506e7fa72e0dca8ba",
+-    "preparation_hash_source": "Current S85 private source; no compile/run"
++    "preparation_hash_source": "Versioned S85v2 include-only repair and path repins; original immutable"
+   }
+ }
+
+--- v1/v2-delta.json
++++ v2/v2-delta.json
+@@ -0,0 +1,11 @@
++{
++  "status": "ROOT_AUTHORIZED_INCLUDE_ONLY_REPAIR_BUILD_THEN_OFFLINE_ISA_NO_GPU",
++  "original_header_sha256": "787d63919557f94241e2f6722ed6f6df1f7e3f2a5cd2e280ec643de77aa6ff0e",
++  "v2_header_sha256": "eb9524770ea90a66e3d3682e51593b4ead3fd347ca24aab7f30dc5503a1801b5",
++  "inverse_include_removal_exact": true,
++  "original_Cpp_unchanged": true,
++  "original_packet_in_v2_is_immutable_v1_review_packet_root_attaches_this_delta": true,
++  "v1_failure": "16s CPUbuild stopped missing strata::dp4a declaration; no GPU/AOT/runtime result",
++  "source_delta": "#include \"strata/sycl_math.hpp\"",
++  "absolute_paths_repinned_to_v2": true
++}

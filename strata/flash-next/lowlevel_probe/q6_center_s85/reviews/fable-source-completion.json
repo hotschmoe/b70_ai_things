@@ -1,0 +1,118 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "159d91b5-8a8f-44be-943a-4fec63b8929a"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 74.11149683099939,
+  "launch_exception": null,
+  "source_packet_sha256": "6844cfda175a924fe8097c67da5cdb34b155b23aafd1483299addb600b496e53",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 72823,
+      "stop_reason": "end_turn",
+      "session_id": "159d91b5-8a8f-44be-943a-4fec63b8929a",
+      "total_cost_usd": 0.75513225,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 25060,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 5075,
+        "output_tokens_details": {
+          "thinking_tokens": 3387
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 25060,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 5075,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 25060,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 25060
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 2,
+          "outputTokens": 5075,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 25060,
+          "webSearchRequests": 0,
+          "costUSD": 0.75513225,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "thinkingTokens": 3387,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**S85 review: GO_BOUNDED_BUILD.** No blockers found in the packet as written.\n\n**Arithmetic identity (candidate vs original).** Each packed byte after masking is `(vl & 0x0f) | ((vh<<4) & 0x30)`, so u in 0..63. Original: per-byte `sub_sat(u, 0x20)` with u\u221232 in \u221232..31, never saturates, yields signed u\u221232. Candidate: u+96 in 96..159, no byte carry, then XOR 0x80. For u<32 the byte is <128 and XOR adds 128, giving u+224 \u2261 u\u221232 mod 256. For u\u226532 the byte is \u2265128 and XOR subtracts 128, giving u\u221232. Both branches equal the two's-complement of u\u221232, so the dp4a operands are bit-identical. The second expression uses `(vl>>4)&0x0f` and `((vh>>4)<<4)&0x30` identically in both arms, so the sign-extension of `vh` from the arithmetic shift is masked identically and is not a divergence source. The C++20 shift semantics make this defined on both arms.\n\n**Unchanged surfaces.** `load16_a2`, Q8_1 four-int loads, dp4a chain, `acc += ds0*dsc0*s0 + ds1*dsc1*s1` FP ledger, XOR permute tree, SG32 / NCOLS=6 / RPW=1, and the launch geometry (`groups=ceil(M/4)`, four sub-groups per group, uniform `row0>=n_out` early return) are shared verbatim between `CAND=false` and `CAND=true`. Block layout static_asserts are correct (210 bytes, `d` at 208, Q8_1 qs at 4). Only the two `if constexpr(CAND)` expressions differ.\n\n**Harness.** Checked and consistent:\n- Saved S44 anchors loaded as first 6 of 8 columns for f32, Q8 and output, with tail 0xff asserted before resize. Public eager output is strictly byte-equal to the anchor before any private arm runs.\n- Every phase goes through `snapshot`: guards on all four buffers, input and weight readonly, Q8 byte-equal including tail, output tail 0xff, finite, then full-byte equality to the public expected. Strict exit 5 vs IO exit 2 distinguished.\n- Snapshot count per shape totals 73, matching the analyzer. Timing samples 32 and paired means 8, order alternating OCCO/COOC, means recomputed within 2e-6.\n- DOT checks: node count, single chain, name match (`PrivateC6ILb0EE`/`ILb1EE`, public wide_a2 `ILi6EE`), exactly three nonzero pointer bindings per node and identical across all graphs of a shape.\n- Correctness for both shapes completes before any timing. Timed regions exclude poison and quantization.\n- Build reuses `/common/mmvq-core.images.o` and frozen archives via prelink without rebuilding common, checks `expected-container.sha256` before and after, records symbols and SHAs. Pinned container digest, no network, card0 BDF asserted in-process, single device, single process, no retry.\n- Cleanup acts only on the own CID or exact name, holds health until enumeration confirms removal, writes closure with 'x' to prevent overwrite.\n\n**Non-blocking notes for the build gate.**\n- Equivalence of `load16_a2` and the Q8 loads to the native common8f path is asserted by the packet, not provable from it. The public byte anchor and DOT resource equality are the operative gate.\n- The float input buffer `x` is never read by any kernel. It is harmless as a readonly witness. Do not report it as kernel input coverage.\n- Public DOT must bind exactly three nonzero pointers. If the native wrapper binds an extra argument, the analyzer fails loudly rather than silently. Acceptable.\n- Confirm `expected-container.sha256` covers the frozen archives and common images, not only the two sources. The packet says it is bound by the pins file.\n\nActual ISA/resource and helper audit of the candidate image remains the root gate before any GPU timing.\n\n**S84 post-result decision: ACCEPT AS BOUNDED, NO INTEGRATION, NO REPEAT.**\nByte-identical wrappers after the unused-rootprop removal mean the removal had zero codegen effect, so the runtime policy question is moot for this evidence and should be recorded as unresolved, not as a finding. The quiet, fully gated single run supports only the stated observational pairs: a loss at near4k, gains at near32k and near200k, noise-level at near0 and ragged. The near200k pairs are consistent in sign but wide in spread. Root should retain the PRIVATE long or full 256-query candidate, keep short contexts and tails on original, and make no engine, significance, or traffic claim. Any future integration stays default OFF behind an explicit production-domain bound, with matched serving only if that bound is justified later.",
+      "ttft_ms": 48154,
+      "type": "result",
+      "duration_ms": 72896,
+      "uuid": "f31f7de9-4010-4411-a91c-483f0b7f9f50",
+      "ttft_stream_ms": 944,
+      "time_to_request_ms": 67,
+      "first_content_frame_ms": 945,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

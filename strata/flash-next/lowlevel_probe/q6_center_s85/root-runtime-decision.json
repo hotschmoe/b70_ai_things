@@ -1,0 +1,137 @@
+{
+  "status": "PASS_PRIVATE_Q6_C6_STRICT_PRIMITIVE_LONG_MAIN_PREP_ELIGIBLE",
+  "binary_sha256": "a0a1756b2670422caab13da80cc7e45a7beabd1fc694d684b0e34789b80112e8",
+  "quiet_window_s": 41,
+  "leaf_s": 12,
+  "correctness_snapshots": 146,
+  "binary_artifacts": 148,
+  "binary_artifact_bytes": 13343616,
+  "DOTs": 10,
+  "DOT_nodes": 86,
+  "closure": {
+    "status": "PASS_PRIMITIVE_ONLY",
+    "leaf_exit": 0,
+    "pre_health_exit": 0,
+    "post_health_exit": 0,
+    "analysis_exit": 0,
+    "container_removed": true,
+    "processes": 1,
+    "retries": 0,
+    "serving_qualified": false,
+    "speed_qualified": false
+  },
+  "shapes": {
+    "out": {
+      "original_median_us": 63.17207500000001,
+      "candidate_median_us": 48.725637500000005,
+      "median_paired_change_percent": -22.784097678355476,
+      "raw_pairs": [
+        {
+          "round": 0,
+          "original_us": 63.218775,
+          "candidate_us": 48.547825,
+          "change_percent": -23.206634421498983
+        },
+        {
+          "round": 1,
+          "original_us": 63.17320000000001,
+          "candidate_us": 48.65375,
+          "change_percent": -22.983559484085024
+        },
+        {
+          "round": 2,
+          "original_us": 63.209025,
+          "candidate_us": 48.642725,
+          "change_percent": -23.04465224704858
+        },
+        {
+          "round": 3,
+          "original_us": 63.089524999999995,
+          "candidate_us": 48.746175,
+          "change_percent": -22.734915185999572
+        },
+        {
+          "round": 4,
+          "original_us": 63.00687500000001,
+          "candidate_us": 48.843375,
+          "change_percent": -22.47929293430281
+        },
+        {
+          "round": 5,
+          "original_us": 63.178200000000004,
+          "candidate_us": 48.821075,
+          "change_percent": -22.724808557382136
+        },
+        {
+          "round": 6,
+          "original_us": 63.17095,
+          "candidate_us": 48.74695,
+          "change_percent": -22.83328017071138
+        },
+        {
+          "round": 7,
+          "original_us": 62.862100000000005,
+          "candidate_us": 48.7051,
+          "change_percent": -22.520723933817045
+        }
+      ]
+    },
+    "qkv": {
+      "original_median_us": 73.8172375,
+      "candidate_median_us": 57.480712499999996,
+      "median_paired_change_percent": -22.095094503541446,
+      "raw_pairs": [
+        {
+          "round": 0,
+          "original_us": 73.955275,
+          "candidate_us": 57.639375,
+          "change_percent": -22.061847515271893
+        },
+        {
+          "round": 1,
+          "original_us": 73.796425,
+          "candidate_us": 57.55822499999999,
+          "change_percent": -22.004046944008472
+        },
+        {
+          "round": 2,
+          "original_us": 73.781175,
+          "candidate_us": 57.48859999999999,
+          "change_percent": -22.08229267153853
+        },
+        {
+          "round": 3,
+          "original_us": 73.996825,
+          "candidate_us": 57.402924999999996,
+          "change_percent": -22.42515134939912
+        },
+        {
+          "round": 4,
+          "original_us": 73.84025,
+          "candidate_us": 57.458275,
+          "change_percent": -22.18569817951591
+        },
+        {
+          "round": 5,
+          "original_us": 73.83805000000001,
+          "candidate_us": 57.434974999999994,
+          "change_percent": -22.214935253571856
+        },
+        {
+          "round": 6,
+          "original_us": 73.731075,
+          "candidate_us": 57.500099999999996,
+          "change_percent": -22.01375064719998
+        },
+        {
+          "round": 7,
+          "original_us": 73.785175,
+          "candidate_us": 57.472825,
+          "change_percent": -22.107896335544364
+        }
+      ]
+    }
+  },
+  "scope": "Only realQ6weights +savedsynthetic-S44canonicalQ8 C6, two shapes, eight nested balanced20-callround means. FP32buffer readonly witness, not kernelinput; quantization outside graphs. Repeated-weight regime; no servinggain/populationsignificance/p95/physicalcause or fullKVqualification.",
+  "root_decision": "GO_SMALL_GUARDED_MAIN_SOURCE_PREPARATION_ONLY; defaultOFF exactC6/RPW1/A2/SG32/twotestedshapes, allfallbackunchanged; source reviews/build+matchedfullmodel later. No live integration or serve today from primitive alone."
+}

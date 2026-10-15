@@ -1,0 +1,24 @@
+**Verdict: ACCEPT_DECISION**
+
+The root decision claims only default-OFF main-source preparation for the exact tested configuration, with every fallback unchanged and no integration, build, serve, or promotion. The frozen packet supports that narrow claim and does not overreach it.
+
+**What the evidence establishes**
+
+- Static mechanism: the compiled candidate drops the three per-lane sign-handling families (word add, overflow mask, compare) and replaces them with eight packed add and eight packed xor sites, with DP4A count unchanged at 48, no calls, same SIMD32/GRF128. Target text matches the final executable bytes, so this is the shipped kernel, not loose compiler output. Spill fields are reported absent, not measured zero, which is stated honestly.
+- Nested primitive timing: eight paired rounds per shape, both around 22 to 23 percent faster, with spread under one point. Tight enough that the direction is not noise within this regime.
+- Gates: build, ISA audit, leaf, pre and post health, analysis, container teardown all exit zero with zero retries. Source and archive hashes held pre and post.
+
+**What it does not establish, and the decision correctly does not claim**
+
+- The gain is a repeated-weight regime where weights are cache-resident. Q6 decode in a full model is largely bandwidth bound, so ALU savings may shrink toward zero on the real critical path. No throughput or serving claim is made, and serving_qualified and speed_qualified are both false.
+- Canonical Q8 and quantization live outside the graphs. In-graph Q8 production is still the real input path and remains unvalidated for the candidate.
+- Public image not decoded and public DOT binding not validated. Acceptable for default-OFF prep, mandatory before any default-ON or integration step.
+- Source-ledger equivalence is qualified to shown scope only, with machine rescheduling allowed. The packet does not quote the correctness criterion applied to the 146 snapshots. Not a hold reason since it is recorded as passed elsewhere, but the later source review should cite it.
+
+**Next discriminator**
+
+The useful cheap question is whether the gain survives a non-repeated-weight regime. A single matched full-model decode on the two tested shapes with streamed weights, in the already pinned one-card strict harness, answers that before anyone spends review time on broader knobs. Dev-loop cost is low: the v2 build is a 24 second CPU lease and the ISA audit an 11 second lease, so the loop is dominated by GPU scheduling, not build. A cache rerun or sweeping RPW, A, or SG adds nothing until the regime question is settled.
+
+**Conditions carried forward**
+
+Default-OFF prep lands with the exact C6/RPW1/A2/SG32 pins and the two shapes only. No flag flip without public DOT binding, in-graph Q8 path, and the streamed-weight full-model result.

@@ -1,0 +1,27 @@
+{
+  "source_pins": {
+    "/src/private_tiled_scores.hpp": "2c479fb44d1be02677b49eb190e0b39fda07e8b905b4ed5337950277a0b252d2",
+    "/src/scorer_leaf.cpp": "0c8a62b3ea252cd8a367dfbc11a3a1de02f2e6d9cb1495c7472f83db57bab9b0",
+    "/src/build.sh": "934b37052fc60b23bcf912e478419c42b90ad534a731b9ed71046df607848bf0",
+    "/src/build-container.sh": "de5d57c7293c49e0eabc8ada83801b3f514302ad0f8a1d83806537c981eafc2d",
+    "/src/leased_run.sh": "68d729e784f867f4956888c92d6faf2c6e06a44dfb3641caf982e107fef6db37",
+    "/src/ROOT_RUN.sh": "12c8019ae2f1e3ef6ea58a85a51bc5a4a06c6390d050a69d25d30423e3777f2f",
+    "/src/identity.py": "c5b264c93fad7a511e78ee339a3e05299312fb23a8b7702d6b165496c8b74816",
+    "/src/analyze.py": "e3874553a6d83e6b472a9a7be8867fde186696e30ecc3a15a49d2bec64d8f81f",
+    "/src/body-copy.json": "14d7049946777ef1497de78edc81c4f09ee61c1226136a0ee98eb4f413b3cfae",
+    "/src/source-contract.txt": "9b70aa539ca963bb27b1bfcdc5187e0a4f755941cfaec1737755fe43ac717024",
+    "/src/README.md": "d1a4c016496523704e42f66d53d512a4d0520ff2683f4af27dce5f9ae9513c5c",
+    "/src/frozen/qsa_select.dp.cpp.o": "4cac1286456dbcfbf3618e0f0734bd05aceff6d82624d88770bb5b5277da2c3d",
+    "/work/src-ep/sycl/src/kernels/cuda/qsa_select.dp.cpp": "443c1c9d4e79b1eb13988507ab9a079c11651f15a610a317c4d0d3945e4f3978",
+    "/work/src-ep/include/strata/core/geometry.hpp": "e9869988fbdc9e18ef3d144dd91e9266c18a190e9ec1a7351ce5c7b858bbd838",
+    "/work/src-ep/include/strata/kernels/qsa.hpp": "87c02222284f842fcecb46a422b119af769c72c3914edc8da5b2ee782456dc74",
+    "/work/src-ep/include/strata/kernels/qsa_select.hpp": "152dfce28a1f517169542590b32b7bb0b72442cf833446d1beb91cb104922250",
+    "/work/src-ep/sycl/include/dpct/dpct.hpp": "feb2098e7de5192263a90464f2876d3c0499fc6c88661592a5013145a2f68e1e"
+  },
+  "binary_sha256": "dd63db5a427f2670e59bd2e1f17d4ab6471076299d9667bef83aaf2bcd32832e",
+  "root_build_closure_sha256": "0a9983212f5dbe0650a88f2c466e11dda2bda3c46d4d7afbddd1bd4ad15d31b2",
+  "execution": "one_process_eager_only",
+  "card": 0,
+  "pci": "0000:0b:00.0",
+  "retries": 0
+}

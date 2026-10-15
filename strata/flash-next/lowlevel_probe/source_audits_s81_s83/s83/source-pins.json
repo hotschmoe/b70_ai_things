@@ -1,0 +1,57 @@
+{
+  "status": "SOURCE_AND_COMPACT_RETAINED_SUMMARY_PINS_NO_BINARY_PAYLOAD_HASH",
+  "files": {
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp": {
+      "sha256": "81558e95f721413a75c3d3ec6ed7cb5eee766e4f662080cf500c7985090f03e2",
+      "bytes": 184184
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/dpct/math.hpp": {
+      "sha256": "7c1b7175dbe29a43bff30a94381131096437d88415881a8a8c0704de53394c58",
+      "bytes": 126988
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp": {
+      "sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2",
+      "bytes": 223107
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/shared_expert.dp.cpp": {
+      "sha256": "c0ed885fbfa1f89b0136d8a5c3f7b8dae7ebcff3c8d1fd2bf06e4df4f7e5430d",
+      "bytes": 35083
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp": {
+      "sha256": "fcd5d2e4b029985a6e7768707a5aa489e4b5724a78db50fc2313d9c64e67ec31",
+      "bytes": 114902
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/CMakeLists.txt": {
+      "sha256": "af2c33703f0fcb53b7f0f9b0aa823ce3fef7c9209ea24036e8b9f597fb07592f",
+      "bytes": 26336
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-pair-s31/analysis-prep/reviewed-summary/operations.csv": {
+      "sha256": "1d58cbb36c8b683b990fb5e30ae831cbae961a4159182aa9650e335b1e1bcd67",
+      "bytes": 65873
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-pair-s31/analysis-prep/result/final-analysis.json": {
+      "sha256": "fdc867c702b2030f955995372d050f2176abfa341afc1e59c953a7df0be4700f",
+      "bytes": 30863
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/primary-dense-next-s56-prep/s31-dense-quant-pool.json": {
+      "sha256": "f80d63fa851e7defc4450b2b1a78d082f5682601554fe1463189b9ce65513935",
+      "bytes": 40879
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/primary-dense-next-s56-prep/aot-resources/resource-summary.json": {
+      "sha256": "c812504cba8f6dbf14090fb6fd6fcb6cc5c1407fe5b04f36effb43391c6c5019",
+      "bytes": 3821
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/primary-dense-next-s56-prep/aot-resources/embedded-resource-index.json": {
+      "sha256": "07c68733973f1706c3c873e00dc74a88215024b66d4cd4642ef466d263c0662f",
+      "bytes": 3341
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/fusion-next-s61-prep/findings.md": {
+      "sha256": "3926991ea0c528c8ca0360db2ffd324d66742ff2967c65ef6b48175dfbcb4de6",
+      "bytes": 7676
+    },
+    "/mnt/vm_8tb/github/b70_ai_things/docs/20261014_flashnext_strata_optimization.md": {
+      "sha256": "957ca80a9b87c12f28cab254a54fbc3eeb566afe6abe1242530d095e2f2375e6",
+      "bytes": 132076
+    }
+  }
+}

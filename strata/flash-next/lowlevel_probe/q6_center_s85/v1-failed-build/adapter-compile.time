@@ -1,0 +1,162 @@
+In file included from /src/q6_center_leaf.cpp:4:
+In file included from /work/src-ep/sycl/include/dpct/dpct.hpp:53:
+In file included from /work/src-ep/sycl/include/dpct/image.hpp:14:
+In file included from /work/src-ep/sycl/include/dpct/memory.hpp:112:
+/work/src-ep/sycl/include/dpct/detail/memory_detail.hpp:343:30: warning: unused parameter 'direction' [-Wunused-parameter]
+  343 |             memcpy_direction direction,
+      |                              ^
+/work/src-ep/sycl/include/dpct/detail/memory_detail.hpp:901:29: warning: unused parameter 'cgh' [-Wunused-parameter]
+  901 |   get_access(sycl::handler &cgh) {
+      |                             ^
+In file included from /src/q6_center_leaf.cpp:4:
+In file included from /work/src-ep/sycl/include/dpct/dpct.hpp:53:
+In file included from /work/src-ep/sycl/include/dpct/image.hpp:14:
+/work/src-ep/sycl/include/dpct/memory.hpp:816:23: warning: comparison of integers of different signs: 'int' and 'unsigned int' [-Wsign-compare]
+  816 |     for (int i = 0; i < numAttributes; i++) {
+      |                     ~ ^ ~~~~~~~~~~~~~
+In file included from /src/q6_center_leaf.cpp:4:
+In file included from /work/src-ep/sycl/include/dpct/dpct.hpp:53:
+In file included from /work/src-ep/sycl/include/dpct/image.hpp:15:
+/work/src-ep/sycl/include/dpct/util.hpp:466:38: warning: unused parameter 'member_mask' [-Wunused-parameter]
+  466 | T select_from_sub_group(unsigned int member_mask,
+      |                                      ^
+/work/src-ep/sycl/include/dpct/util.hpp:507:37: warning: unused parameter 'member_mask' [-Wunused-parameter]
+  507 | T shift_sub_group_left(unsigned int member_mask,
+      |                                     ^
+/work/src-ep/sycl/include/dpct/util.hpp:551:38: warning: unused parameter 'member_mask' [-Wunused-parameter]
+  551 | T shift_sub_group_right(unsigned int member_mask,
+      |                                      ^
+/work/src-ep/sycl/include/dpct/util.hpp:671:41: warning: unused parameter 'member_mask' [-Wunused-parameter]
+  671 | T permute_sub_group_by_xor(unsigned int member_mask,
+      |                                         ^
+/work/src-ep/sycl/include/dpct/util.hpp:680:47: warning: comparison of integers of different signs: 'unsigned int' and 'int' [-Wsign-compare]
+  680 |   unsigned logical_remote_id = (target_offset < logical_sub_group_size) ? start_index + target_offset : id;
+      |                                 ~~~~~~~~~~~~~ ^ ~~~~~~~~~~~~~~~~~~~~~~
+/work/src-ep/sycl/include/dpct/util.hpp:959:15: warning: comparison of integers of different signs: 'int' and 'size_t' (aka 'unsigned long') [-Wsign-compare]
+  959 |   if (wg_size > max_wg_size) {
+      |       ~~~~~~~ ^ ~~~~~~~~~~~
+/work/src-ep/sycl/include/dpct/util.hpp:1021:35: warning: comparison of integers of different signs: 'int' and 'size_t' (aka 'unsigned long') [-Wsign-compare]
+ 1021 |       max_ws_size_for_device_code >= max_wg_size)
+      |       ~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~~~~~~~~
+/work/src-ep/sycl/include/dpct/util.hpp:1291:17: warning: '&' within '|' [-Wbitwise-op-parentheses]
+ 1291 |     result = (a & b | c) ^ a;
+      |               ~~^~~ ~
+/work/src-ep/sycl/include/dpct/util.hpp:1291:17: note: place parentheses around the '&' expression to silence this warning
+ 1291 |     result = (a & b | c) ^ a;
+      |                 ^
+      |               (    )
+/work/src-ep/sycl/include/dpct/util.hpp:1315:16: warning: '&' within '|' [-Wbitwise-op-parentheses]
+ 1315 |     result = a & (b | c) | (b & c);
+      |              ~~^~~~~~~~~ ~
+/work/src-ep/sycl/include/dpct/util.hpp:1315:16: note: place parentheses around the '&' expression to silence this warning
+ 1315 |     result = a & (b | c) | (b & c);
+      |                ^
+      |              (          )
+/work/src-ep/sycl/include/dpct/util.hpp:1318:16: warning: '&' within '|' [-Wbitwise-op-parentheses]
+ 1318 |     result = a & b | c;
+      |              ~~^~~ ~
+/work/src-ep/sycl/include/dpct/util.hpp:1318:16: note: place parentheses around the '&' expression to silence this warning
+ 1318 |     result = a & b | c;
+      |                ^
+      |              (    )
+In file included from /src/q6_center_leaf.cpp:4:
+In file included from /work/src-ep/sycl/include/dpct/dpct.hpp:54:
+/work/src-ep/sycl/include/dpct/kernel.hpp:50:57: warning: unused parameter 'function' [-Wunused-parameter]
+   50 |                                             const void *function) {
+      |                                                         ^
+/work/src-ep/sycl/include/dpct/kernel.hpp:57:38: warning: unused parameter 'function' [-Wunused-parameter]
+   57 | get_kernel_function_info(const void *function) {
+      |                                      ^
+In file included from /src/q6_center_leaf.cpp:4:
+In file included from /work/src-ep/sycl/include/dpct/dpct.hpp:59:
+/work/src-ep/sycl/include/dpct/bindless_images.hpp:629:35: warning: unused parameter 'q' [-Wunused-parameter]
+  629 |   void unmap_resource(sycl::queue q) {
+      |                                   ^
+/work/src-ep/sycl/include/dpct/bindless_images.hpp:656:9: warning: field '_res_external_mem' will be initialized after field '_res_reg_flags' [-Wreorder-ctor]
+  656 |       : _res_external_mem(external_mem), _res_reg_flags(reg_flags) {}
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  ~~~~~~~~~~~~~~~~~~~~~~~~~
+      |         _res_reg_flags(reg_flags)        _res_external_mem(external_mem)
+/work/src-ep/sycl/include/dpct/bindless_images.hpp:1163:24: warning: comparison of integers of different signs: 'size_t' (aka 'unsigned long') and 'int' [-Wsign-compare]
+ 1163 |   for (size_t i = 0; i < count; ++i) {
+      |                      ~ ^ ~~~~~
+/work/src-ep/sycl/include/dpct/bindless_images.hpp:1350:21: warning: comparison of integers of different signs: 'int' and 'unsigned int' [-Wsign-compare]
+ 1350 |   for (int i = 0; i < numExtSems; i++) {
+      |                   ~ ^ ~~~~~~~~~~
+/work/src-ep/sycl/include/dpct/bindless_images.hpp:1393:21: warning: comparison of integers of different signs: 'int' and 'unsigned int' [-Wsign-compare]
+ 1393 |   for (int i = 0; i < numExtSems; i++) {
+      |                   ~ ^ ~~~~~~~~~~
+/work/src-ep/sycl/include/dpct/bindless_images.hpp:1686:60: warning: unused parameter 'channel' [-Wunused-parameter]
+ 1686 |   void attach(image_mem_wrapper *mem, const image_channel &channel,
+      |                                                            ^
+In file included from /src/q6_center_leaf.cpp:6:
+/src/private_q6_center.hpp:103:22: error: no member named 'dp4a' in namespace 'strata'; did you mean 'dpct::dp4a'?
+  103 |                 s0 = strata::dp4a(vi0[0], u0[j].x(), s0); s0 = strata::dp4a(vi0[1], u0[j].y(), s0);
+      |                      ^~~~~~~~~~~~
+      |                      dpct::dp4a
+/work/src-ep/sycl/include/dpct/math.hpp:833:13: note: 'dpct::dp4a' declared here
+  833 | inline auto dp4a(T1 a, T2 b, T3 c) {
+      |             ^
+In file included from /src/q6_center_leaf.cpp:6:
+/src/private_q6_center.hpp:103:64: error: no member named 'dp4a' in namespace 'strata'; did you mean 'dpct::dp4a'?
+  103 |                 s0 = strata::dp4a(vi0[0], u0[j].x(), s0); s0 = strata::dp4a(vi0[1], u0[j].y(), s0);
+      |                                                                ^~~~~~~~~~~~
+      |                                                                dpct::dp4a
+/work/src-ep/sycl/include/dpct/math.hpp:833:13: note: 'dpct::dp4a' declared here
+  833 | inline auto dp4a(T1 a, T2 b, T3 c) {
+      |             ^
+In file included from /src/q6_center_leaf.cpp:6:
+/src/private_q6_center.hpp:104:22: error: no member named 'dp4a' in namespace 'strata'; did you mean 'dpct::dp4a'?
+  104 |                 s0 = strata::dp4a(vi0[2], u0[j].z(), s0); s0 = strata::dp4a(vi0[3], u0[j].w(), s0);
+      |                      ^~~~~~~~~~~~
+      |                      dpct::dp4a
+/work/src-ep/sycl/include/dpct/math.hpp:833:13: note: 'dpct::dp4a' declared here
+  833 | inline auto dp4a(T1 a, T2 b, T3 c) {
+      |             ^
+In file included from /src/q6_center_leaf.cpp:6:
+/src/private_q6_center.hpp:104:64: error: no member named 'dp4a' in namespace 'strata'; did you mean 'dpct::dp4a'?
+  104 |                 s0 = strata::dp4a(vi0[2], u0[j].z(), s0); s0 = strata::dp4a(vi0[3], u0[j].w(), s0);
+      |                                                                ^~~~~~~~~~~~
+      |                                                                dpct::dp4a
+/work/src-ep/sycl/include/dpct/math.hpp:833:13: note: 'dpct::dp4a' declared here
+  833 | inline auto dp4a(T1 a, T2 b, T3 c) {
+      |             ^
+In file included from /src/q6_center_leaf.cpp:6:
+/src/private_q6_center.hpp:105:22: error: no member named 'dp4a' in namespace 'strata'; did you mean 'dpct::dp4a'?
+  105 |                 s1 = strata::dp4a(vi1[0], u1[j].x(), s1); s1 = strata::dp4a(vi1[1], u1[j].y(), s1);
+      |                      ^~~~~~~~~~~~
+      |                      dpct::dp4a
+/work/src-ep/sycl/include/dpct/math.hpp:833:13: note: 'dpct::dp4a' declared here
+  833 | inline auto dp4a(T1 a, T2 b, T3 c) {
+      |             ^
+In file included from /src/q6_center_leaf.cpp:6:
+/src/private_q6_center.hpp:105:64: error: no member named 'dp4a' in namespace 'strata'; did you mean 'dpct::dp4a'?
+  105 |                 s1 = strata::dp4a(vi1[0], u1[j].x(), s1); s1 = strata::dp4a(vi1[1], u1[j].y(), s1);
+      |                                                                ^~~~~~~~~~~~
+      |                                                                dpct::dp4a
+/work/src-ep/sycl/include/dpct/math.hpp:833:13: note: 'dpct::dp4a' declared here
+  833 | inline auto dp4a(T1 a, T2 b, T3 c) {
+      |             ^
+In file included from /src/q6_center_leaf.cpp:6:
+/src/private_q6_center.hpp:106:22: error: no member named 'dp4a' in namespace 'strata'; did you mean 'dpct::dp4a'?
+  106 |                 s1 = strata::dp4a(vi1[2], u1[j].z(), s1); s1 = strata::dp4a(vi1[3], u1[j].w(), s1);
+      |                      ^~~~~~~~~~~~
+      |                      dpct::dp4a
+/work/src-ep/sycl/include/dpct/math.hpp:833:13: note: 'dpct::dp4a' declared here
+  833 | inline auto dp4a(T1 a, T2 b, T3 c) {
+      |             ^
+In file included from /src/q6_center_leaf.cpp:6:
+/src/private_q6_center.hpp:106:64: error: no member named 'dp4a' in namespace 'strata'; did you mean 'dpct::dp4a'?
+  106 |                 s1 = strata::dp4a(vi1[2], u1[j].z(), s1); s1 = strata::dp4a(vi1[3], u1[j].w(), s1);
+      |                                                                ^~~~~~~~~~~~
+      |                                                                dpct::dp4a
+/work/src-ep/sycl/include/dpct/math.hpp:833:13: note: 'dpct::dp4a' declared here
+  833 | inline auto dp4a(T1 a, T2 b, T3 c) {
+      |             ^
+/src/q6_center_leaf.cpp:226:112: warning: misleading indentation; statement is not part of the previous 'if' [-Wmisleading-indentation]
+  226 |         catch(const std::exception& io){std::fprintf(stderr,"S85 failure-result IO: %s\n",io.what());return 2;}return rc;}
+      |                                                                                                                ^
+/src/q6_center_leaf.cpp:225:9: note: previous statement is here
+  225 |         if(created)try{text(out/"result.json","{\"status\":\"FAIL\",\"exit\":"+std::to_string(rc)+",\"kind\":\""+(rc==5?std::string("strict"):std::string("runtime_or_io"))+"\"}\n");}
+      |         ^
+22 warnings and 8 errors generated.
+adapter_compile_seconds=4.279

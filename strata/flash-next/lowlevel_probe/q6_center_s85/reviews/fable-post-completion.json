@@ -1,0 +1,118 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "bd916944-546b-41a5-8a0e-8edb46c6943a"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 27.485495565983,
+  "launch_exception": null,
+  "source_packet_sha256": "68a68eeb1d891d26e56ffe9b42c8ca5ad08dd51132a6c9addca0ece0642261e6",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 26234,
+      "stop_reason": "end_turn",
+      "session_id": "bd916944-546b-41a5-8a0e-8edb46c6943a",
+      "total_cost_usd": 0.25371225000000003,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 8559,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 1647,
+        "output_tokens_details": {
+          "thinking_tokens": 685
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 8559,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1647,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 8559,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 8559
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 2,
+          "outputTokens": 1647,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 8559,
+          "webSearchRequests": 0,
+          "costUSD": 0.25371225000000003,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "thinkingTokens": 685,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Verdict: ACCEPT_DECISION**\n\nThe root decision claims only default-OFF main-source preparation for the exact tested configuration, with every fallback unchanged and no integration, build, serve, or promotion. The frozen packet supports that narrow claim and does not overreach it.\n\n**What the evidence establishes**\n\n- Static mechanism: the compiled candidate drops the three per-lane sign-handling families (word add, overflow mask, compare) and replaces them with eight packed add and eight packed xor sites, with DP4A count unchanged at 48, no calls, same SIMD32/GRF128. Target text matches the final executable bytes, so this is the shipped kernel, not loose compiler output. Spill fields are reported absent, not measured zero, which is stated honestly.\n- Nested primitive timing: eight paired rounds per shape, both around 22 to 23 percent faster, with spread under one point. Tight enough that the direction is not noise within this regime.\n- Gates: build, ISA audit, leaf, pre and post health, analysis, container teardown all exit zero with zero retries. Source and archive hashes held pre and post.\n\n**What it does not establish, and the decision correctly does not claim**\n\n- The gain is a repeated-weight regime where weights are cache-resident. Q6 decode in a full model is largely bandwidth bound, so ALU savings may shrink toward zero on the real critical path. No throughput or serving claim is made, and serving_qualified and speed_qualified are both false.\n- Canonical Q8 and quantization live outside the graphs. In-graph Q8 production is still the real input path and remains unvalidated for the candidate.\n- Public image not decoded and public DOT binding not validated. Acceptable for default-OFF prep, mandatory before any default-ON or integration step.\n- Source-ledger equivalence is qualified to shown scope only, with machine rescheduling allowed. The packet does not quote the correctness criterion applied to the 146 snapshots. Not a hold reason since it is recorded as passed elsewhere, but the later source review should cite it.\n\n**Next discriminator**\n\nThe useful cheap question is whether the gain survives a non-repeated-weight regime. A single matched full-model decode on the two tested shapes with streamed weights, in the already pinned one-card strict harness, answers that before anyone spends review time on broader knobs. Dev-loop cost is low: the v2 build is a 24 second CPU lease and the ISA audit an 11 second lease, so the loop is dominated by GPU scheduling, not build. A cache rerun or sweeping RPW, A, or SG adds nothing until the regime question is settled.\n\n**Conditions carried forward**\n\nDefault-OFF prep lands with the exact C6/RPW1/A2/SG32 pins and the two shapes only. No flag flip without public DOT binding, in-graph Q8 path, and the streamed-weight full-model result.",
+      "ttft_ms": 11529,
+      "type": "result",
+      "duration_ms": 26453,
+      "uuid": "7ea39583-b3e0-4396-b5e1-6878b8b2cf67",
+      "ttft_stream_ms": 2150,
+      "time_to_request_ms": 217,
+      "first_content_frame_ms": 2150,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

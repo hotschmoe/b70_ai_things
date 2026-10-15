@@ -1,0 +1,321 @@
+{
+  "status": "PASS_PRIMITIVE_ONLY",
+  "files": {
+    "near0/public-initial.scores.f32": {
+      "bytes": 33536,
+      "sha256": "78136ab70c02f9e78a458a75c89b5da0b350c5fe82064405d3dfdc01d60bbd7e"
+    },
+    "near0/candidate-initial.scores.f32": {
+      "bytes": 33536,
+      "sha256": "78136ab70c02f9e78a458a75c89b5da0b350c5fe82064405d3dfdc01d60bbd7e"
+    },
+    "near0/public-initial.ids.i32": {
+      "bytes": 131584,
+      "sha256": "6f8faf36469b66b87a41831c6af6db32fc294f3c1047f281fcfacb3f728d9d2c"
+    },
+    "near0/candidate-initial.ids.i32": {
+      "bytes": 131584,
+      "sha256": "6f8faf36469b66b87a41831c6af6db32fc294f3c1047f281fcfacb3f728d9d2c"
+    },
+    "near0/public-changed.scores.f32": {
+      "bytes": 33536,
+      "sha256": "c30f8aec2c4a16d2f6a99515ce477bc4d9f88e604d0b1e392df6dc70400422ba"
+    },
+    "near0/candidate-changed.scores.f32": {
+      "bytes": 33536,
+      "sha256": "c30f8aec2c4a16d2f6a99515ce477bc4d9f88e604d0b1e392df6dc70400422ba"
+    },
+    "near0/public-changed.ids.i32": {
+      "bytes": 131584,
+      "sha256": "6f8faf36469b66b87a41831c6af6db32fc294f3c1047f281fcfacb3f728d9d2c"
+    },
+    "near0/candidate-changed.ids.i32": {
+      "bytes": 131584,
+      "sha256": "6f8faf36469b66b87a41831c6af6db32fc294f3c1047f281fcfacb3f728d9d2c"
+    },
+    "near4k/public-initial.scores.f32": {
+      "bytes": 1016576,
+      "sha256": "fda049f5de0b27b11271291ff7b0802c97ae65f51957a536e69f0141bec89360"
+    },
+    "near4k/candidate-initial.scores.f32": {
+      "bytes": 1016576,
+      "sha256": "fda049f5de0b27b11271291ff7b0802c97ae65f51957a536e69f0141bec89360"
+    },
+    "near4k/public-initial.ids.i32": {
+      "bytes": 2100224,
+      "sha256": "79878bad932fbecc06f2dc7f30376e6f7b6c9d62c39558a3412593ef2b907012"
+    },
+    "near4k/candidate-initial.ids.i32": {
+      "bytes": 2100224,
+      "sha256": "79878bad932fbecc06f2dc7f30376e6f7b6c9d62c39558a3412593ef2b907012"
+    },
+    "near4k/public-changed.scores.f32": {
+      "bytes": 1016576,
+      "sha256": "e6ee824f8d3a958785311509a5e8760ccef65ab7ad351ee50ccac93378c82782"
+    },
+    "near4k/candidate-changed.scores.f32": {
+      "bytes": 1016576,
+      "sha256": "e6ee824f8d3a958785311509a5e8760ccef65ab7ad351ee50ccac93378c82782"
+    },
+    "near4k/public-changed.ids.i32": {
+      "bytes": 2100224,
+      "sha256": "cb17cddf2268560a658e7ccc2fb452081df5f9351ca4923928b8a7dc500ca9d4"
+    },
+    "near4k/candidate-changed.ids.i32": {
+      "bytes": 2100224,
+      "sha256": "cb17cddf2268560a658e7ccc2fb452081df5f9351ca4923928b8a7dc500ca9d4"
+    },
+    "near32k/public-initial.scores.f32": {
+      "bytes": 8356608,
+      "sha256": "634fa7ab026adc4bc4d469f499aa9ea98a8fc17c3d1c95835cd0e40b9bfb88fb"
+    },
+    "near32k/candidate-initial.scores.f32": {
+      "bytes": 8356608,
+      "sha256": "634fa7ab026adc4bc4d469f499aa9ea98a8fc17c3d1c95835cd0e40b9bfb88fb"
+    },
+    "near32k/public-initial.ids.i32": {
+      "bytes": 2100224,
+      "sha256": "033a20f021797e319b1418db97a5c9b6db875e73e2537a29da7b2df89c0eeaa2"
+    },
+    "near32k/candidate-initial.ids.i32": {
+      "bytes": 2100224,
+      "sha256": "033a20f021797e319b1418db97a5c9b6db875e73e2537a29da7b2df89c0eeaa2"
+    },
+    "near32k/public-changed.scores.f32": {
+      "bytes": 8356608,
+      "sha256": "637e288e2be20e5b0a3604922e48a18ed7975c49d7616381a54509449a5e6796"
+    },
+    "near32k/candidate-changed.scores.f32": {
+      "bytes": 8356608,
+      "sha256": "637e288e2be20e5b0a3604922e48a18ed7975c49d7616381a54509449a5e6796"
+    },
+    "near32k/public-changed.ids.i32": {
+      "bytes": 2100224,
+      "sha256": "fc3c83ae15b7a925f8773873394fa087ca379a2a0fd0547f59a8c789a483fa55"
+    },
+    "near32k/candidate-changed.ids.i32": {
+      "bytes": 2100224,
+      "sha256": "fc3c83ae15b7a925f8773873394fa087ca379a2a0fd0547f59a8c789a483fa55"
+    },
+    "near200k/public-initial.scores.f32": {
+      "bytes": 51168000,
+      "sha256": "42e397e508834f5f6a13628abfc9aaa0f15a538c3b9736b2028d2f5c534ed695"
+    },
+    "near200k/candidate-initial.scores.f32": {
+      "bytes": 51168000,
+      "sha256": "42e397e508834f5f6a13628abfc9aaa0f15a538c3b9736b2028d2f5c534ed695"
+    },
+    "near200k/public-initial.ids.i32": {
+      "bytes": 2100224,
+      "sha256": "5c868b2430668c1ee45b123384f00bc960696c1fbc539861f1811f4ab43bc315"
+    },
+    "near200k/candidate-initial.ids.i32": {
+      "bytes": 2100224,
+      "sha256": "5c868b2430668c1ee45b123384f00bc960696c1fbc539861f1811f4ab43bc315"
+    },
+    "near200k/public-changed.scores.f32": {
+      "bytes": 51168000,
+      "sha256": "3262a9c8fd82a6e05c75a1d475edcf9ecb737085e4a8bfa5685ad302dcc17115"
+    },
+    "near200k/candidate-changed.scores.f32": {
+      "bytes": 51168000,
+      "sha256": "3262a9c8fd82a6e05c75a1d475edcf9ecb737085e4a8bfa5685ad302dcc17115"
+    },
+    "near200k/public-changed.ids.i32": {
+      "bytes": 2100224,
+      "sha256": "daf3e0028366dc1bc0a29640ae9e321db94c7c10c52bb4cb0fbb8b79ab78d74f"
+    },
+    "near200k/candidate-changed.ids.i32": {
+      "bytes": 2100224,
+      "sha256": "daf3e0028366dc1bc0a29640ae9e321db94c7c10c52bb4cb0fbb8b79ab78d74f"
+    },
+    "ragged9/public-initial.scores.f32": {
+      "bytes": 1799988,
+      "sha256": "5925ee3f12d78e43b472460553a537180ad2417a33633e46adbcd86261be1d80"
+    },
+    "ragged9/candidate-initial.scores.f32": {
+      "bytes": 1799988,
+      "sha256": "5925ee3f12d78e43b472460553a537180ad2417a33633e46adbcd86261be1d80"
+    },
+    "ragged9/public-initial.ids.i32": {
+      "bytes": 73836,
+      "sha256": "a15d0460681125392a2ae301499892b6445c950a8fdf27ddbbb6ce421794ffa1"
+    },
+    "ragged9/candidate-initial.ids.i32": {
+      "bytes": 73836,
+      "sha256": "a15d0460681125392a2ae301499892b6445c950a8fdf27ddbbb6ce421794ffa1"
+    },
+    "ragged9/public-changed.scores.f32": {
+      "bytes": 1799988,
+      "sha256": "2fd06a881956c4e0f076681f1dae2246bb2e6a62d4c85c8f19934b349b57d32e"
+    },
+    "ragged9/candidate-changed.scores.f32": {
+      "bytes": 1799988,
+      "sha256": "2fd06a881956c4e0f076681f1dae2246bb2e6a62d4c85c8f19934b349b57d32e"
+    },
+    "ragged9/public-changed.ids.i32": {
+      "bytes": 73836,
+      "sha256": "cced007cf75673c95679e127fde9ac12a1a70af595ac55f3e1340e67c9559c0a"
+    },
+    "ragged9/candidate-changed.ids.i32": {
+      "bytes": 73836,
+      "sha256": "cced007cf75673c95679e127fde9ac12a1a70af595ac55f3e1340e67c9559c0a"
+    }
+  },
+  "data_bytes": 275523200,
+  "timing": {
+    "near0": {
+      "raw_pairs": [
+        {
+          "pair": 0,
+          "public": 53.472,
+          "candidate": 154.705,
+          "delta_percent": 189.31964392579297
+        },
+        {
+          "pair": 1,
+          "candidate": 161.859,
+          "public": 58.482,
+          "delta_percent": 176.76721042372012
+        },
+        {
+          "pair": 2,
+          "candidate": 166.597,
+          "public": 60.205,
+          "delta_percent": 176.71621958309115
+        },
+        {
+          "pair": 3,
+          "public": 62.77,
+          "candidate": 174.262,
+          "delta_percent": 177.61988210928786
+        }
+      ],
+      "median_paired_delta_percent": 177.19354626650397,
+      "scope": "one process, four descriptive paired scorer+unchanged-topk waves; no significance/serving or isolated-kernel claim"
+    },
+    "near4k": {
+      "raw_pairs": [
+        {
+          "pair": 0,
+          "public": 866.923,
+          "candidate": 996.509,
+          "delta_percent": 14.947809667063861
+        },
+        {
+          "pair": 1,
+          "candidate": 998.193,
+          "public": 866.922,
+          "delta_percent": 15.14219272322077
+        },
+        {
+          "pair": 2,
+          "candidate": 999.996,
+          "public": 865.179,
+          "delta_percent": 15.582555748579207
+        },
+        {
+          "pair": 3,
+          "public": 876.771,
+          "candidate": 997.472,
+          "delta_percent": 13.766536530063146
+        }
+      ],
+      "median_paired_delta_percent": 15.045001195142316,
+      "scope": "one process, four descriptive paired scorer+unchanged-topk waves; no significance/serving or isolated-kernel claim"
+    },
+    "near32k": {
+      "raw_pairs": [
+        {
+          "pair": 0,
+          "public": 4712.885,
+          "candidate": 4348.38,
+          "delta_percent": -7.7342222439121695
+        },
+        {
+          "pair": 1,
+          "candidate": 4302.051,
+          "public": 4731.751,
+          "delta_percent": -9.081204822485367
+        },
+        {
+          "pair": 2,
+          "candidate": 4378.157,
+          "public": 4698.708,
+          "delta_percent": -6.822109396881004
+        },
+        {
+          "pair": 3,
+          "public": 4749.866,
+          "candidate": 4407.392,
+          "delta_percent": -7.210182350407357
+        }
+      ],
+      "median_paired_delta_percent": -7.472202297159763,
+      "scope": "one process, four descriptive paired scorer+unchanged-topk waves; no significance/serving or isolated-kernel claim"
+    },
+    "near200k": {
+      "raw_pairs": [
+        {
+          "pair": 0,
+          "public": 21487.646,
+          "candidate": 17715.504,
+          "delta_percent": -17.554933658158735
+        },
+        {
+          "pair": 1,
+          "candidate": 19070.187,
+          "public": 23199.269,
+          "delta_percent": -17.798328042146494
+        },
+        {
+          "pair": 2,
+          "candidate": 16546.165,
+          "public": 21492.666,
+          "delta_percent": -23.014832129248187
+        },
+        {
+          "pair": 3,
+          "public": 17604.092,
+          "candidate": 16539.242,
+          "delta_percent": -6.04887772683761
+        }
+      ],
+      "median_paired_delta_percent": -17.676630850152613,
+      "scope": "one process, four descriptive paired scorer+unchanged-topk waves; no significance/serving or isolated-kernel claim"
+    },
+    "ragged9": {
+      "raw_pairs": [
+        {
+          "pair": 0,
+          "public": 491.076,
+          "candidate": 483.983,
+          "delta_percent": -1.4443792814146983
+        },
+        {
+          "pair": 1,
+          "candidate": 481.327,
+          "public": 494.784,
+          "delta_percent": -2.7197726684775603
+        },
+        {
+          "pair": 2,
+          "candidate": 483.181,
+          "public": 495.334,
+          "delta_percent": -2.4534960249044113
+        },
+        {
+          "pair": 3,
+          "public": 497.138,
+          "candidate": 479.354,
+          "delta_percent": -3.5772763297112653
+        }
+      ],
+      "median_paired_delta_percent": -2.586634346690986,
+      "scope": "one process, four descriptive paired scorer+unchanged-topk waves; no significance/serving or isolated-kernel claim"
+    }
+  },
+  "graph_required": false,
+  "serving_qualified": false,
+  "speed_qualified": false
+}

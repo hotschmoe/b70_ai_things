@@ -1,0 +1,32 @@
+In file included from /src/scorer_leaf.cpp:5:
+/src/private_tiled_scores.hpp:98:7: warning: 'parallel_for' is deprecated: To specify properties, use a launch configuration object of type launch_config or a kernel functor with a get(sycl::ext::oneapi::experimental::properties_tag) member function instead. [-Wdeprecated-declarations]
+   98 |     q.parallel_for<class TiledScores>(sycl::nd_range<3>(
+      |       ^
+/opt/intel/oneapi/compiler/2026.1/bin/compiler/../../include/sycl/queue.hpp:3232:14: note: 'parallel_for' has been explicitly marked deprecated here
+ 3232 |       event> parallel_for(nd_range<Dims> Range, PropertiesT Properties,
+      |              ^
+In file included from /src/scorer_leaf.cpp:5:
+/src/private_tiled_scores.hpp:98:7: warning: 'parallel_for<TiledScores, 3, sycl::ext::oneapi::experimental::properties<sycl::ext::oneapi::experimental::detail::properties_type_list<sycl::ext::oneapi::experimental::property_value<sycl::ext::oneapi::experimental::use_root_sync_key>>>, (lambda at /src/private_tiled_scores.hpp:101:9)>' is deprecated: To specify properties, use a launch configuration object of type launch_config or a kernel functor with a get(sycl::ext::oneapi::experimental::properties_tag) member function instead. [-Wdeprecated-declarations]
+   98 |     q.parallel_for<class TiledScores>(sycl::nd_range<3>(
+      |       ^
+/opt/intel/oneapi/compiler/2026.1/bin/compiler/../../include/sycl/queue.hpp:3225:3: note: 'parallel_for<TiledScores, 3, sycl::ext::oneapi::experimental::properties<sycl::ext::oneapi::experimental::detail::properties_type_list<sycl::ext::oneapi::experimental::property_value<sycl::ext::oneapi::experimental::use_root_sync_key>>>, (lambda at /src/private_tiled_scores.hpp:101:9)>' has been explicitly marked deprecated here
+ 3225 |   __SYCL_DEPRECATED("To specify properties, use a launch configuration object "
+      |   ^
+/opt/intel/oneapi/compiler/2026.1/bin/compiler/../../include/sycl/detail/defines_elementary.hpp:66:38: note: expanded from macro '__SYCL_DEPRECATED'
+   66 | #define __SYCL_DEPRECATED(message) [[deprecated(message)]]
+      |                                      ^
+/src/scorer_leaf.cpp:122:64: error: call to implicitly-deleted copy constructor of 'const device_ext'
+  122 |  need(dpct::device_count()==1,"one visible device");const auto dev=dpct::dev_mgr::instance().get_device(0);
+      |                                                                ^   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/work/src-ep/sycl/include/dpct/device.hpp:702:22: note: copy constructor of 'device_ext' is implicitly deleted because field 'm_mutex' has a deleted copy constructor
+  702 |   mutable mutex_type m_mutex;
+      |                      ^
+/usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/std_mutex.h:107:5: note: 'mutex' has been explicitly marked deleted here
+  107 |     mutex(const mutex&) = delete;
+      |     ^
+In file included from /src/scorer_leaf.cpp:5:
+/src/private_tiled_scores.hpp:101:36: warning: kernel has both attribute 'sycl::reqd_sub_group_size' and kernel properties; if the kernel properties contains the property "sycl::ext::oneapi::experimental::sub_group_size" it will be ignored [-Wignored-attributes]
+  101 |         [=](sycl::nd_item<3> it) [[sycl::reqd_sub_group_size(32)]] {
+      |                                    ^
+3 warnings and 1 error generated.
+adapter_compile_seconds=4.019

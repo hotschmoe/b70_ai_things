@@ -216,6 +216,33 @@
    "post_review_closure_sha256": "ba36f6b6ca21654c255d2dcb2e34ee093e60500f384bb1fb215e2e7945575d3d",
    "post_review_manifest_sha256": "9dbe7f8c10f83c6c3f1d5d4cda4c0a60d9121ce99603f5f3852807be77638685",
    "completed_manifest": "grouped-prefill-s80-completed-manifest.json SHA256 5f0f2262cef1699098066fb71f5e8bbabecf4842631bdcb800f9d211fa5f728f;233files757155438B plus explicit build symlink"
+  },
+  "qsa_q6_source_s81_s83": {
+   "report": "docs/20261015_strata_qsa_tiling_and_q6_centering.md",
+   "records": "strata/flash-next/lowlevel_probe/source_audits_s81_s83",
+   "raw": "qsa-prefill-select-s81-prep/;prefill-criticalpath-s82-prep/;decode-criticalpath-s83-loop-supplement/;q6-center-native-isa-s83-root/",
+   "scope": "Source and selected existing baseline ISA only. S82 low-priority ordering lead parked. S83 compiled32byte-overflow/select sites support private Q6 integer source preparation, not dynamic latency or serving benefit."
+  },
+  "qsa_prefill_tiled_s84": {
+   "report": "docs/20261015_strata_qsa_tiling_and_q6_centering.md",
+   "records": "strata/flash-next/lowlevel_probe/qsa_prefill_tiled_s84",
+   "raw": "qsa-prefill-tiled-s84-prep-v3/run-clean/{comparison,closure,identity}.json",
+   "binary_sha256": "dd63db5a427f2670e59bd2e1f17d4ab6471076299d9667bef83aaf2bcd32832e",
+   "accuracy": "All5cases/fullscorebits+IDs/changed/repeat/restored/poison/readonly/guards PASS;40binaryexports275523200B, knownscore1->0. Eager-only synthetic data; same public top-k.",
+   "timing": "Fourbalanced nested pairs: scorer+topk medianpaired near0+177.194%,4K+15.045%,32K-7.472%,200K-17.677%,ragged9near200K-2.587%. Includes submit/completion, no readback/reset inside.",
+   "closure": "Onequietcard0window92s/leaf66s; preposthealth0/fullCID+NAMEgone/wrappers0. No server/graph/collective/profiler/retry.",
+   "decision": "RetainPRIVATE long/full256-query lead only. Original short/tail path, no production integration or whole-model speed claim. Versioned hostreference fix and unusedprivateproperty removal; public wrappers unchanged and v2/v3 devicewrappers identical."
+  },
+  "q6_center_s85": {
+   "report": "docs/20261015_strata_qsa_tiling_and_q6_centering.md",
+   "records": "strata/flash-next/lowlevel_probe/q6_center_s85",
+   "raw": "q6-center-s85-prep-v2/run-clean/{comparison,closure,identity}.json;q6-center-s85-isa/{report,selection}.json;q6-center-postreviews-s85-20261015/root-postclosure.json",
+   "binary_sha256": "a0a1756b2670422caab13da80cc7e45a7beabd1fc694d684b0e34789b80112e8",
+   "accuracy": "146snapshots/148binaryfiles13343616B/10DOT86nodes76edges/publicS44originalcandidateinitialchangedrestored/readonlyQ8+weights/guards PASS. FP32 buffer readonly witness; kernels read actual Q6weights and saved synthetic canonicalQ8.",
+   "ISA": "Actual private original/candidate48DP4A,SG32/GRF128/absentspillfieldsNOTzero;32byteoverflow sequences removed,8packedadd+8XOR. Bothwholeimagesboundfinalexe. Only newadapterindexed, no common reparse.",
+   "timing": "8balanced nested20-callroundmeans per shape: out63.172075->48.725638us/medianpaired-22.7841%;qkv73.817238->57.480712us/-22.0951%;all16roundsnegative. Completedhostwall/repeatedweights/quantizationoutsidegraphs; no measuredcache-residency,physicalcause,p95 or servinggain.",
+   "closure": "Onequietcard0window41s/leaf12s,health0/CID+NAMEgone/wrappers0. ActualpostOpus15.159s/Fable27.485s ACCEPT/rootfullread and corrections.",
+   "decision": "GOsmall defaultOFF exacttestedshape mainSOURCEPREPonly; no mainapply/newserve/promotion/retry/fullcachecampaign. Matchedtwo-card EP fullmodel test remains pending."
   }
  },
  "geometry": {
@@ -1184,7 +1211,9 @@
     "iq3s-existing-isa-s66-prep/{s66-report.json,assembly-excerpts.json,alias-proof.json}",
     "int8-xmx-capability-s74-isa/{report.json,findings.md,selection.json}; int8-xmx-capability-s74-root/build-completion.json",
     "iq3s-int8-dpas-s75-root/root-runtime-decision.json; iq3s-int8-dpas-s75-prep-v2/run-clean/{comparison,closure}.json; iq3s-int8-dpas-s75-isa/report.json",
-    "iq3s-native-cost-s76-prep/{findings.md,source-cost-proof.json}; iq3s-native-cost-s76-manifest.json"
+    "iq3s-native-cost-s76-prep/{findings.md,source-cost-proof.json}; iq3s-native-cost-s76-manifest.json",
+    "q6-center-native-isa-s83-root/findings.md;{report,centering-excerpts}.json",
+    "q6-center-s85-prep-v2/run-clean/{comparison,closure}.json;q6-center-s85-isa/report.json"
    ],
    "quoted": [
     {
@@ -1270,6 +1299,18 @@
      "value": "Original native mapping retained; two temporary decoded planes add31.171875MiB while originals remain (2.41818x compressed storage per slice).",
      "basis": "Native16 SG32/512 work-items versus rejected S75 one SG16/16 per16 outputs; source decomposition only, no residency/traffic/latency attribution. Root parks implementation.",
      "status": "source-only"
+    },
+    {
+     "label": "S83 baseline Q6 C6 packed-byte centering ISA",
+     "value": "Existing16576B target retains32subtract/overflow/compare/select static sites before48DP4As. Unsigned packed add/XOR is source-bit exact for0..63bytes.",
+     "basis": "One10s CPU-only selected-image decode, no newcandidate compile/GPU/traffic/occupancy or speed claim. Preserve canonicalQ8/A2/SG32/RPW1/native FPledger.",
+     "status": "source-only"
+    },
+    {
+     "label": "S85 Q6 C6 exact packed centering primitive",
+     "value": "out63.172075->48.725638us(-22.7841%medianpaired),qkv73.817238->57.480712us(-22.0951%);all16nestedroundsfaster,fullbytes/graphs/memory/healthPASS.",
+     "basis": "Oneprocess/tworealweights/savedsyntheticcanonicalQ8/8balanced20-callrounds each. Quantizationoutsidegraphs/repeatedweights; no actual cache-residency or fullmodel gain. Static48DP4A unchanged,32overflowseq->8add+8XOR.",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -1289,7 +1330,8 @@
     "S65 strict IQ3_S C6 SWAR oracle PASS but mixed projection latency: gate -2.515percent, ssm_out +1.275percent across eight balanced nested pairs each. One process, real weights/seeded activations; no serving/global integration. S68 confirms smaller static code and removed byte predicates, not latency causality.",
     "S70 same-input Q8 already shared. Main sharedGU17same/31mixed-format pairs; GDN9same/27mixed. A union row-grid dispatch could preserve each branch/output stride but shifts consumer timing and compiler resources; implementation parked until HC screen. No quantizer or weight-decode reuse claim.",
     "S74 resolves acceptance/lowering of the exact signed INT8 joint_matrix expression on the BMG AOT compiler path only. Runtime dispatch/all128integer outputs, block layout/coordinates, canonical IQ3_S/Q8 scale handling and native FP32 partial/XOR order remain unmeasured; no replacement math or serving result.",
-    "S75 preserves canonical Q8 and native partial/stored-lane XOR order using a local ledger. Its exact runtime path is bounded-qualified for two shapes but 7.7-7.9x slower. No standalone S74 runtime run, serving arm, barrier-elision repeat or format sweep is justified by this result alone."
+    "S75 preserves canonical Q8 and native partial/stored-lane XOR order using a local ledger. Its exact runtime path is bounded-qualified for two shapes but 7.7-7.9x slower. No standalone S74 runtime run, serving arm, barrier-elision repeat or format sweep is justified by this result alone.",
+    "S85 strict and compiled-mechanism gates qualify only two private C6/RPW1/A2/SG32 projection shapes. Main guarded integration/defaultOFF source prep is next; a matched two-card EP serving comparison must establish whether the primitive gain survives production quantization, weights and critical path. No extra streaming micro or 200K rerun selected."
    ],
    "hypotheses": [
     {
@@ -2368,7 +2410,8 @@
    ],
    "evidence": [
     "docs S10 (PFRAW trace CSV)",
-    "draft-carry-s30/prefill-phase-diagnostic.json"
+    "draft-carry-s30/prefill-phase-diagnostic.json",
+    "qsa-prefill-tiled-s84-prep-v3/run-clean/{comparison,closure}.json"
    ],
    "quoted": [
     {
@@ -2400,6 +2443,12 @@
      "value": "21.117/7.718s Q0;25.639/11.255s Q4096",
      "basis": "Sequential walls explain batched28.835/36.897s; kept separate from primary event timeline/peer waits.",
      "status": "measured"
+    },
+    {
+     "label": "S84 eager indexer scorer+unchanged top-k, separate from attention kernel",
+     "value": "4K866.923->997.833us,32K4722.318->4363.269us,200K21490.156->17130.835us medians for256queries; fullbit+ID gates PASS.",
+     "basis": "Oneprocess/fourbalancedpairs and deterministic finite/signedzero inputs per case, exact existing multi body tiled8queries. Not scorer-only service, serving throughput or physical traffic.",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -2412,7 +2461,8 @@
    "gaps": [
     "No prefill trace on the S21/S22 binary; no 200k prefill trace.",
     "Goal 2000 tok/s unmet.",
-    "S30 native attention timer groups value gather/dequant/weighted sum; their individual costs remain unisolated. Timed records cover199494 of199501 prompt tokens, not exact context offsets."
+    "S30 native attention timer groups value gather/dequant/weighted sum; their individual costs remain unisolated. Timed records cover199494 of199501 prompt tokens, not exact context offsets.",
+    "S84 improves long/full256-query scoring+top-k while short4K regresses; retain private longshape lead only. Does not change sparse attention values, decode, RAM restore or qualify a production guard."
    ],
    "hypotheses": [
     {
@@ -2847,6 +2897,20 @@
    "value": "1.051034 ->4.404047ms completed-wave medians; median of4paired changes+314.594292%, all4slower.",
    "status": "rejected",
    "note": "Oneprocess/nested synthetic-routing wave,16realexperts/10formats/1748rows; metadata included. FullGU accuracy target and strict own pipeline/memory/health pass independently. No ideal H/down/model or serving result; keep scalar/no retry."
+  },
+  {
+   "stage": "S84",
+   "label": "Eight-query tiled eager scorer plus unchanged top-k",
+   "value": "Medianpaired4K+15.045%,32K-7.472%,200K-17.677%; strict allscore+ID gates PASS.",
+   "status": "measured",
+   "note": "Oneprocess/fourbalancedpairs per case, syntheticfiniteinputs. RetainPRIVATE long/full256-query lead; no mainintegration/servegain/thresholdsweep/physicalcauseclaim. Allhealth/cleanup PASS."
+  },
+  {
+   "stage": "S85",
+   "label": "Q6 C6 integer centering, two actual-weight projections",
+   "value": "Medianpairedout-22.7841%,qkv-22.0951%;146strictsnapshots/10DOT/healthPASS.",
+   "status": "measured",
+   "note": "8balanced nested20-callroundmeans each/oneprocess/savedcanonicalQ8/repeatedweights. Main-sourceprepdefaultOFF only; no servingthroughput,p95,physicalcache/causeclaim."
   }
  ],
  "rejected_parked": [
@@ -2961,7 +3025,9 @@
   "S47 CPUgenericmatching proof doesnot establishlivebatchprefetchactivation/keyreuse/latency. Missingprimarybatchmetadata sourcefinding; scopedpartialwiringproposal remainsunapplied. S32 gather0.829ms isnot removablesavings.",
   "S48 directwarmmeans do not isolatecandidateUPservice; enqueue/eventspanoverlap andpositiontrend unresolved. Candidatekernelbinding is source/API/build evidence, not independentlytraceddispatch; bit-identicaloutputs alonecannotidentifyvariant. No fullservingspeedclaim.",
   "S77 full-GU target and S78 commit-overlap lead are source contracts only. No new operand-byte/reference, grouped accuracy, ideal SiLU/down, hardware overlap or serving result is established; historical operation rows and rollups are unchanged.",
-  "S80 measures full GU operand identity/reference accuracy for one saved compact fixture and complete-wave coherence, closing that bounded premise beyond S62. It does not establish ideal SiLU/down error, actual serving activation/model quality, full4K/32K throughput, GPU kernel timing or the cause of grouped regression. S42 historical strict failure is unchanged."
+  "S80 measures full GU operand identity/reference accuracy for one saved compact fixture and complete-wave coherence, closing that bounded premise beyond S62. It does not establish ideal SiLU/down error, actual serving activation/model quality, full4K/32K throughput, GPU kernel timing or the cause of grouped regression. S42 historical strict failure is unchanged.",
+  "S81-S84 distinguish indexer scoring from attention and long select-region totals. Tiled scorer strict output/ID checks pass for5synthetic cases; short context regresses, long full256-query improves. Whole-model 4K/32K/200K speed, other shapes/capacities and production guarding remain unqualified. S83 only shows baseline byte-saturation lowering survives; candidate ISA/runtime is separate.",
+  "S85 resolves private Q6 C6 centering correctness and repeated-weight projection cost only; actual public DOT/buffer bindings ARE validated. Frozen pre-runtime ISA pending wording stays historical; later runtime comparison supplies exact gates. Full-model production Q8/dispatch/throughput remains a future two-card EP comparison."
  ],
  "operations": [
   {

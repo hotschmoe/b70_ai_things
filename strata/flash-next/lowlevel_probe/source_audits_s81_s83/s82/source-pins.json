@@ -1,0 +1,66 @@
+{
+  "stage": "S82",
+  "scope": "CPU-light source and compact retained-summary reuse only; no tensor payload, full raw trace parse, build, GPU or model calls",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/prefill/prefill.cpp",
+      "bytes": 302640,
+      "sha256": "d2861c5c8573fc5dd57742bde1c13f5fb6738ca5c975d273fa3ec189dd34f346"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/prefill/gemm.dp.cpp",
+      "bytes": 48807,
+      "sha256": "8e775d6a227e3af2ec755bcbed7eac30fef79618d86ba18890d0f52356d32a5e"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/prefill/kernels.dp.cpp",
+      "bytes": 153895,
+      "sha256": "007f7a4bb0ea5fab0d774e563a5faa0342777b6b008d6938a427d9392fa9109e"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/prefill/gemm.hpp",
+      "bytes": 5993,
+      "sha256": "0ce3d5741a988d29563cd75ceedab43c164915882417de0da7096ac3cd4806d1"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-gather-serving-s38/serving-comparison.json",
+      "bytes": 51029,
+      "sha256": "d885c020b726c74b1399611e8029834ba756b90ae90881fa8226c543b5582ee5"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-gather-serving-s38/host-spans.json",
+      "bytes": 3478,
+      "sha256": "df4e5af217cbe9d9274a4cc70a65c08546417ead572a86ddcf5575c1edbf9e66"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/prefill-quantum-s33/analysis/comparison-q0-q4096.json",
+      "bytes": 18807,
+      "sha256": "95926ad2cc5f6f9c229bc59378b26de10b2719ba57fc3fde6e0a53f93e4aa4c9"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/ep-prefill-dispatch-s34/s34-report.json",
+      "bytes": 4082,
+      "sha256": "576b2ef3ac9435e9e644428d581d7d387f04de9ec1dd907e324bc4a0c8a7c9e4"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/primary-widek-next-s57-prep/header-projections.json",
+      "bytes": 25751,
+      "sha256": "d5a09c1f2018a23e964102fca194720d28069ad3b5b47cb479cc619f50124593"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-post-reviews-s80-20261015/root-closed-result.json",
+      "bytes": 15847,
+      "sha256": "9563343e6d0dc49c5cd73231952be813b179c50b20d9a8ac6406166ba0b90e91"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/docs/20261015_strata_ep_prefill_dispatch.md",
+      "bytes": 8249,
+      "sha256": "3dd3c1ebc284d44b313fbe6e033c22d8269e742c45d03acefe1c92b106e633e7"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/docs/20261015_strata_peer_gather_serving.md",
+      "bytes": 6404,
+      "sha256": "4c0c6a167ff623d6c2b26cbf728b827b12bac538e07f379755afb963952bfa02"
+    }
+  ]
+}

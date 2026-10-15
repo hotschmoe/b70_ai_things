@@ -1,0 +1,78 @@
+{
+  "status": "PASS_ONLY_ADAPTER_IMAGES_INDEXED_TARGETS_BOUND_TO_FINAL_EXE",
+  "actual_build_records": {
+    "/src/q6_center_leaf.cpp": "4e5c05fbf9aa65906b1ef599d09bc75a708858a41b91949ecebdc1096b6f7452",
+    "/src/private_q6_center.hpp": "eb9524770ea90a66e3d3682e51593b4ead3fd347ca24aab7f30dc5503a1801b5",
+    "/common/mmvq-core.images.o": "8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21",
+    "/frozen/libstrata_kernels.a": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8",
+    "/frozen/libstrata_core.a": "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286",
+    "q6_center_leaf.o": "6b4fd0242b431c4ba7bc7d1a565143263f75c9de95d34f33eacbbd813708e28e",
+    "leaf.images.o": "f5ee87041c393158ebed7e997ea0af5d2744acccd86a9dc9b6029a01d475dd0e",
+    "q6_center_leaf_s85": "a0a1756b2670422caab13da80cc7e45a7beabd1fc694d684b0e34789b80112e8"
+  },
+  "adapter_images_indexed": 10,
+  "common_images_reparsed": 0,
+  "whole_archive_or_common_hash_repeated": false,
+  "bytes_read": 205907,
+  "adapter_bundle_bytes": 137120,
+  "final_bundle_address": 6982672,
+  "final_bundle_file_offset": 2788368,
+  "selected": {
+    "candidate": {
+      "adapter_image_index": 8,
+      "adapter_offset": 65280,
+      "final_executable_offset": 2846288,
+      "kernel": "_ZTSN3s859PrivateC6ILb1EEE",
+      "image_bytes": 36792,
+      "image_sha256": "3998be172c4f03e2a305017a147eccdbaeacbac37a0b02a83373fd192d46d6b5",
+      "text_bytes": 10880,
+      "text_sha256": "2c20513befff7ee104382f8c5d10c38be012e12e218f66107fa48f4e8ba3e618",
+      "ze_info_sha256": "d61e701747817cfa3fc6941c9eb80224b7a15465c62ef9bb933176bc4dba2800",
+      "final_image_byte_identical": true,
+      "extra_text_sections": [
+        ".text.Intel_Symbol_Table_Void_Program"
+      ]
+    },
+    "original": {
+      "adapter_image_index": 9,
+      "adapter_offset": 102080,
+      "final_executable_offset": 2883088,
+      "kernel": "_ZTSN3s859PrivateC6ILb0EEE",
+      "image_bytes": 42400,
+      "image_sha256": "6bc2acb286c7c00eea4678f404681b329d42e6dac05d268bd995b5e6feb2d6b8",
+      "text_bytes": 16576,
+      "text_sha256": "4a3dd695ef0dee53fed7ebaf9c9491d399564ae5ae3d2693c81f9f09e62d808d",
+      "ze_info_sha256": "077888b7c8d9ed2e20612c5d251e7e41ddde8ff37c52425234cabd8328203730",
+      "final_image_byte_identical": true,
+      "extra_text_sections": [
+        ".text.Intel_Symbol_Table_Void_Program"
+      ]
+    }
+  },
+  "adapter_all_kernel_names": [
+    "_ZTSZZN4dpct6detailL11dpct_memcpyERN4sycl3_V15queueEPvPKvNS2_5rangeILi3EEES9_NS2_2idILi3EEESB_S9_NS_16memcpy_directionERKSt6vectorINS2_5eventESaISE_EEENKUlRNS2_7handlerEE_clESK_E21dpct_memcpy_3d_detail",
+    "_ZTSZN4sycl3_V17handler4fillItEEvPvRKT_mEUlNS0_2idILi1EEEE_",
+    "_ZTSZN4sycl3_V17handler4fillIjEEvPvRKT_mEUlNS0_2idILi1EEEE_",
+    "_ZTSZN4sycl3_V17handler4fillIhEEvPvRKT_mEUlNS0_2idILi1EEEE_",
+    "_ZTSN4sycl3_V16detail19__pf_kernel_wrapperIZZN4dpct6detailL11dpct_memcpyERNS0_5queueEPvPKvNS0_5rangeILi3EEESB_NS0_2idILi3EEESD_SB_NS3_16memcpy_directionERKSt6vectorINS0_5eventESaISG_EEENKUlRNS0_7handlerEE_clESM_E21dpct_memcpy_3d_detailEE",
+    "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillItEEvPvRKT_mEUlNS0_2idILi1EEEE_EE",
+    "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillIjEEvPvRKT_mEUlNS0_2idILi1EEEE_EE",
+    "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillIhEEvPvRKT_mEUlNS0_2idILi1EEEE_EE",
+    "_ZTSN3s859PrivateC6ILb1EEE",
+    "Intel_Symbol_Table_Void_Program",
+    "_ZTSN3s859PrivateC6ILb0EEE",
+    "Intel_Symbol_Table_Void_Program"
+  ],
+  "adapter_duplicate_kernel_names": {
+    "Intel_Symbol_Table_Void_Program": 2
+  },
+  "host_link_one_ordinary_ld_no_AOT_or_crtfastmath": true,
+  "link_map_sha256": "c3b1a446462166032ea0604d93fd658a23bf804dbbafc69f7ab7709b1f63eaaf",
+  "host_link_log_sha256": "fe7a95f90695d200e1ff38d363d8a2daa564b7024abc80e7fd9a3689ca6592a4",
+  "stat_sizes": {
+    "binary": 64533976,
+    "leaf_images_object": 163608
+  },
+  "GPU": 0,
+  "builds_in_audit": 0
+}

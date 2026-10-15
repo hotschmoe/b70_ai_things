@@ -1,0 +1,15 @@
+8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21  /common/mmvq-core.images.o
+f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8  /frozen/libstrata_kernels.a
+34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286  /frozen/libstrata_core.a
+81558e95f721413a75c3d3ec6ed7cb5eee766e4f662080cf500c7985090f03e2  /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+ac45a7a9b7d3cdc4b1b8c1c413c416911fb4ca91373d69bb34947815dbb3eec6  /work/src-ep/sycl/include/strata/sycl_math.hpp
+dbbf686ebcc60d569ed1e0bf688d98666a1d46b7f85d8d7e073d28d6ab775eba  /work/src-ep/sycl/include/strata/kernels/dp4a.hpp
+83c233dd1f9de362cf646eb6f3d95dd97278ae43a30aeeed205b3067ef358a7e  /work/src-ep/sycl/include/strata/kernels/native_mmvq.hpp
+95c3ea0cb9802b93dc8eb23857349182d1bc1b6988ab875fc289812549042fb0  /work/src-ep/include/strata/kernels/native_mmvq.hpp
+7c1b7175dbe29a43bff30a94381131096437d88415881a8a8c0704de53394c58  /work/src-ep/sycl/include/dpct/math.hpp
+93b193a0ea4c6c53de6d44e95b60e244b211bf1508a6862c6f79e43ca691fc58  /work/src-ep/sycl/include/dpct/detail/math_detail.hpp
+9933c09306a7a91bb242fa913694541fc4166bcf6d5a1a2a81ee9dac91b05f31  /work/src-ep/sycl/include/dpct/graph.hpp
+4e5c05fbf9aa65906b1ef599d09bc75a708858a41b91949ecebdc1096b6f7452  /src/q6_center_leaf.cpp
+eb9524770ea90a66e3d3682e51593b4ead3fd347ca24aab7f30dc5503a1801b5  /src/private_q6_center.hpp
+791688408e91335ee42c25f4cafbeaeee709f7b7cc1a45e85dbd1d9d631a8408  /src/build-container.sh
+71356d477e7108337d243b162332067cb0e81d9f25813a4506e7fa72e0dca8ba  /src/fixture-pins.json

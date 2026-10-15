@@ -280,3 +280,10 @@ These are primitive diagnostics. Keep S41's strict failure and qualified
 152055a6/headpairON/depth2; absolute serving targets remain unmet.
 See [S42](20261015_strata_grouped_gemm_probe.md) and
 [S43](20261015_strata_q6_cpu_reference.md).
+
+S84/S85 add private primitive evidence, without changing serving status:
+long/full256-query scoring+top-k improves while short contexts regress;
+Q6 C6 centering passes strict gates and reduces two repeated-weight projection
+times by22.8/22.1percent. A defaultOFF main-source proposal is prepared, with
+matched full-model comparison pending. Absolute targets remain unmet.
+[Source, ISA and numerical/timing evidence](20261015_strata_qsa_tiling_and_q6_centering.md).

@@ -1,0 +1,118 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "ce2a7026-cb18-414e-b9be-ffd88f2f9d2e"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 63.89481041702675,
+  "launch_exception": null,
+  "source_packet_sha256": "de887d39c3b035f0f4ca23b607c8641e636103ee4391012a73be4b86ed8cdf65",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 62816,
+      "stop_reason": "end_turn",
+      "session_id": "ce2a7026-cb18-414e-b9be-ffd88f2f9d2e",
+      "total_cost_usd": 0.2709818,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 21103,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 5101,
+        "output_tokens_details": {
+          "thinking_tokens": 3073
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 21103,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 5101,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 21103,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 21103
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 5101,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 21103,
+          "webSearchRequests": 0,
+          "costUSD": 0.2709818,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 3073,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# Verdict: **HOLD** (one source blocker, a one-line fix)\n\n## Blocker\n\n**B1. `use_root_sync` on the candidate launch** (`private_tiled_scores.hpp`, `launch`)\n\n- The kernel never uses a root-group barrier. It only uses work-group barriers.\n- In DPC++ on Level Zero, `use_root_sync` turns the launch into a cooperative launch. A cooperative launch requires every work-group to be resident at the same time.\n- This grid is 256\u00b7\u2308nq/8\u2309 work-groups of 256 work-items. For nq=256 that is 8192 groups, and even ragged9 is 512. Both are far beyond what can be co-resident on bmg-g31.\n- The expected result is a `sycl::exception` when the candidate first launches in `near0`. That gives rc=2 and a FAIL before any anchor.\n- Even if the runtime tolerated it, the property changes the launch path compared with the public kernel and has no purpose here.\n- **Fix:** delete `props` and the property argument. Nothing else depends on it.\n\nRe-audit only `launch` after the fix. I found no other source blockers.\n\n## Verified as sound\n\n**FP arithmetic and reduction tree**\n- The candidate uses the same four-product expression order, the XOR 16/8/4/2/1 shuffle sequence, the ReLU-sum over heads 0..3, and the `+1e9f` tail rule when `nkv%4\u22600`.\n- Contraction or flag differences between the frozen object and the `-fp-model=precise` adapter cannot be proven equal from source. The strict byte anchors (public vs candidate, initial and changed, plus repeats) are the right gate for this.\n\n**Tile offsets and ragged counts**\n- `query+q0*512`, `steps+q0*kStepCount`, `scores+q0*stride`, and `n=min(nq-q0,8)` are all consistent with the tile-relative indexing `out[qi*max_blocks+b]`.\n- ragged9 splits into tiles of 8 and 1. All five cases have nq>8, so the public path is forced to the single-query scorer.\n\n**Barriers and early exit**\n- The first barrier is reached by all work-items.\n- `top` is read from local memory after that barrier, so it is uniform across the group. The early return is therefore uniform, and the second barrier is safe.\n- `b` is uniform within each warp, so `continue` and the sub-group shuffles stay converged. `reqd_sub_group_size(32)` matches `lane=lid&31`.\n\n**Dead key, bonus and stride**\n- Selecting `kd` vs `kp` per query, reading `s_nkv[qi]%R`, and using stride 50002 are all correct.\n- Loading `kp` unconditionally reaches at most row 50000 (top \u2264 50000 < POOL=50001), so the spare row is both needed and sufficient.\n\n**Active bound**\n- `active=last/4+1 \u2264 50001`, every query's `n_bid+1 \u2264 active`, and the mod-4 mask of 15 is enforced.\n- The harness is explicitly restricted to the verified host domain.\n\n**Anchors and observability**\n- Correct order: public exported first, then candidate compared byte-exact, then repeats, the changed input, and the restore check.\n- The last query's block 0 must score 1 \u2192 0 under the sign flip. I checked the math: head 0 gives `pooled[0]\u00b71=1`, and the \u00b10 heads give \u22640, which the ReLU clamps to 0. This rules out a silent no-op.\n- Inactive poison, guards, and read-only checks on query, steps, pooled and dead all run before warm-up and timing. All cases pass correctness before the first timed sample.\n\n**Build and link**\n- The separate `-fsycl-link` prelink of the frozen public object and of the adapter is followed by a non-`-fsycl` host link.\n- `identity.py` checks the log for no `ocloc`, `sycl-post-link`, `llvm-foreach`, `clang-offload-wrapper` or `crtfastmath.o`. This is the supported pattern.\n- The archive-member `cmp` runs before and after the build.\n\n**Run hygiene**\n- Docker cleanup targets only the container ID this run created.\n- Post-health runs only after removal is confirmed. A single process with no retry, and the `mkdir` guard on `run-clean`, are correct.\n\n## Non-blocking notes\n\n1. **Hardcoded path in `leased_run.sh`.** `HERE` is hardcoded to `\u2026/qsa-prefill-tiled-s84-prep`, while `ROOT_RUN.sh` uses its own directory. Assert that they are the same, or derive `HERE`. `EXEC_DIR` is unused.\n2. **Topk reads poisoned scores.** `qsa_block_topk` with `active` may read 0xff (NaN) poison in columns between a query's `n_bid+1` and `active`. Both arms see the same poison, so the anchors stay valid. However, if topk is not bounded per query, the poisoned IDs could differ from production, where those cells hold stale data. Confirm from the root source that topk masks per-query `n_bid`.\n3. **Unbounded cleanup loop.** The removal loop has no upper bound, so a wedged Docker daemon would hold the leases indefinitely. This is acceptable by design, but worth announcing.\n4. **Loop efficiency.** Correctness for near200k plus timing performs about 24 full 51 MB readbacks and byte scans per case. This should fit the 300 s timeout, but it dominates wall time. Keep it, since the full-byte timed checks are intentional.\n5. **No speed claims.** The timings cover submit plus completion of scorer and topk. They are descriptive only, as stated.\n\n**Path to GO_BOUNDED_BUILD:** remove `use_root_sync`, re-hash the header in `expected-source.sha256`, and resolve note 1. The CPU-only build can proceed afterwards, and the GPU work stays pending the build audit.",
+      "ttft_ms": 40324,
+      "type": "result",
+      "duration_ms": 62895,
+      "uuid": "7506c9b5-6d4e-40db-85e0-ba07d5eb2a1e",
+      "ttft_stream_ms": 1376,
+      "time_to_request_ms": 74,
+      "first_content_frame_ms": 1376,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

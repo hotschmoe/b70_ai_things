@@ -1,0 +1,27 @@
+{
+  "status": "ROOT_FULL_READ_SOURCE_GO_ACTUAL_ISA_REQUIRED_BEFORE_GPU",
+  "models": {
+    "claude-opus-5-5": {
+      "elapsed_s": 40.1308615229791,
+      "completion_sha256": "3a52d747a6c4e68db94fa8ab833abd172a60431461071fd00e9f2034f195228f",
+      "answer_sha256": "2e48836bb15e4889c531feee97bdd61f8fd7b11b407dbc54c36c74aea5753fa7"
+    },
+    "claude-fable-5-1": {
+      "elapsed_s": 74.11149683099939,
+      "completion_sha256": "6e9f4858bf293121a96563418b078e64963136950087205003d0b1e0e56784ba",
+      "answer_sha256": "a0a90b552e185a384bfa27c668b519dfbbe0b3c77c6b586ac0d9bd1561b41b99"
+    }
+  },
+  "review_packet_sha256": "6844cfda175a924fe8097c67da5cdb34b155b23aafd1483299addb600b496e53",
+  "v2_delta_sha256": "787e5aac033ae9055815e60921828aec360d34d801516b63c03da9a447921086",
+  "inverse_include_fix_exact": true,
+  "root_actual_pinned_math_header_read": true,
+  "response_conditions": {
+    "ISA": "Extract exact original/candidate; verify intended add/XOR/removed saturation, unchanged DP4A arithmetic structure, SIMD32 and no new reported spill liability. Compiler scheduling/register naming may change; not requiring whole-body machine-code identity. Absent spill fields are not measuredzero.",
+    "DOT": "Offline expected names/argument schema; actual graph count/bindings/bytes gate before timing acceptance.",
+    "flags": "Frozen source/header/archive/common pins must pass; same native type layout/source family, source defines remain pinned.",
+    "host_script_identity": "Root fully read omitted identity/entry scripts and analyzer; build/source/container/fixture pins enforced."
+  },
+  "coverage_limit": "Actual operands are Q6 weight and saved Q8_1. FP32 buffer is readonly witness only, never a kernel input or newly quantized.",
+  "GPU_authorized": false
+}

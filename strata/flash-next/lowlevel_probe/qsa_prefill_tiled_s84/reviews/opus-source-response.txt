@@ -1,0 +1,61 @@
+# Verdict: **HOLD** (one source blocker, a one-line fix)
+
+## Blocker
+
+**B1. `use_root_sync` on the candidate launch** (`private_tiled_scores.hpp`, `launch`)
+
+- The kernel never uses a root-group barrier. It only uses work-group barriers.
+- In DPC++ on Level Zero, `use_root_sync` turns the launch into a cooperative launch. A cooperative launch requires every work-group to be resident at the same time.
+- This grid is 256\xb7\u2308nq/8\u2309 work-groups of 256 work-items. For nq=256 that is 8192 groups, and even ragged9 is 512. Both are far beyond what can be co-resident on bmg-g31.
+- The expected result is a `sycl::exception` when the candidate first launches in `near0`. That gives rc=2 and a FAIL before any anchor.
+- Even if the runtime tolerated it, the property changes the launch path compared with the public kernel and has no purpose here.
+- **Fix:** delete `props` and the property argument. Nothing else depends on it.
+
+Re-audit only `launch` after the fix. I found no other source blockers.
+
+## Verified as sound
+
+**FP arithmetic and reduction tree**
+- The candidate uses the same four-product expression order, the XOR 16/8/4/2/1 shuffle sequence, the ReLU-sum over heads 0..3, and the `+1e9f` tail rule when `nkv%4\u22600`.
+- Contraction or flag differences between the frozen object and the `-fp-model=precise` adapter cannot be proven equal from source. The strict byte anchors (public vs candidate, initial and changed, plus repeats) are the right gate for this.
+
+**Tile offsets and ragged counts**
+- `query+q0*512`, `steps+q0*kStepCount`, `scores+q0*stride`, and `n=min(nq-q0,8)` are all consistent with the tile-relative indexing `out[qi*max_blocks+b]`.
+- ragged9 splits into tiles of 8 and 1. All five cases have nq>8, so the public path is forced to the single-query scorer.
+
+**Barriers and early exit**
+- The first barrier is reached by all work-items.
+- `top` is read from local memory after that barrier, so it is uniform across the group. The early return is therefore uniform, and the second barrier is safe.
+- `b` is uniform within each warp, so `continue` and the sub-group shuffles stay converged. `reqd_sub_group_size(32)` matches `lane=lid&31`.
+
+**Dead key, bonus and stride**
+- Selecting `kd` vs `kp` per query, reading `s_nkv[qi]%R`, and using stride 50002 are all correct.
+- Loading `kp` unconditionally reaches at most row 50000 (top \u2264 50000 < POOL=50001), so the spare row is both needed and sufficient.
+
+**Active bound**
+- `active=last/4+1 \u2264 50001`, every query's `n_bid+1 \u2264 active`, and the mod-4 mask of 15 is enforced.
+- The harness is explicitly restricted to the verified host domain.
+
+**Anchors and observability**
+- Correct order: public exported first, then candidate compared byte-exact, then repeats, the changed input, and the restore check.
+- The last query's block 0 must score 1 \u2192 0 under the sign flip. I checked the math: head 0 gives `pooled[0]\xb71=1`, and the \xb10 heads give \u22640, which the ReLU clamps to 0. This rules out a silent no-op.
+- Inactive poison, guards, and read-only checks on query, steps, pooled and dead all run before warm-up and timing. All cases pass correctness before the first timed sample.
+
+**Build and link**
+- The separate `-fsycl-link` prelink of the frozen public object and of the adapter is followed by a non-`-fsycl` host link.
+- `identity.py` checks the log for no `ocloc`, `sycl-post-link`, `llvm-foreach`, `clang-offload-wrapper` or `crtfastmath.o`. This is the supported pattern.
+- The archive-member `cmp` runs before and after the build.
+
+**Run hygiene**
+- Docker cleanup targets only the container ID this run created.
+- Post-health runs only after removal is confirmed. A single process with no retry, and the `mkdir` guard on `run-clean`, are correct.
+
+## Non-blocking notes
+
+1. **Hardcoded path in `leased_run.sh`.** `HERE` is hardcoded to `\u2026/qsa-prefill-tiled-s84-prep`, while `ROOT_RUN.sh` uses its own directory. Assert that they are the same, or derive `HERE`. `EXEC_DIR` is unused.
+2. **Topk reads poisoned scores.** `qsa_block_topk` with `active` may read 0xff (NaN) poison in columns between a query's `n_bid+1` and `active`. Both arms see the same poison, so the anchors stay valid. However, if topk is not bounded per query, the poisoned IDs could differ from production, where those cells hold stale data. Confirm from the root source that topk masks per-query `n_bid`.
+3. **Unbounded cleanup loop.** The removal loop has no upper bound, so a wedged Docker daemon would hold the leases indefinitely. This is acceptable by design, but worth announcing.
+4. **Loop efficiency.** Correctness for near200k plus timing performs about 24 full 51 MB readbacks and byte scans per case. This should fit the 300 s timeout, but it dominates wall time. Keep it, since the full-byte timed checks are intentional.
+5. **No speed claims.** The timings cover submit plus completion of scorer and topk. They are descriptive only, as stated.
+
+**Path to GO_BOUNDED_BUILD:** remove `use_root_sync`, re-hash the header in `expected-source.sha256`, and resolve note 1. The CPU-only build can proceed afterwards, and the GPU work stays pending the build audit.

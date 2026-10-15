@@ -1,0 +1,104 @@
+{
+  "scope": "Historical S31 mapped159 operations, reviewed5cycles; no raw trace reparse, current dispatch or removable wall budget claim",
+  "CSV_rows": 159,
+  "dense_pool_calls_per_cycle": 468.0,
+  "dense_pool_service_ms_per_cycle": 13.8990344,
+  "ranked_dense_pools": [
+    {
+      "family": "Q6_K",
+      "calls_per_cycle": 71.0,
+      "service_ms_per_cycle": 3.8256371999999996
+    },
+    {
+      "family": "Q4_K",
+      "calls_per_cycle": 45.0,
+      "service_ms_per_cycle": 2.3121056
+    },
+    {
+      "family": "IQ4_XS",
+      "calls_per_cycle": 67.0,
+      "service_ms_per_cycle": 2.0693470000000005
+    },
+    {
+      "family": "IQ3_S",
+      "calls_per_cycle": 55.0,
+      "service_ms_per_cycle": 1.9335817999999998
+    },
+    {
+      "family": "BF16",
+      "calls_per_cycle": 130.0,
+      "service_ms_per_cycle": 1.2114891999999997
+    },
+    {
+      "family": "Q5_K",
+      "calls_per_cycle": 14.0,
+      "service_ms_per_cycle": 1.0027652
+    },
+    {
+      "family": "Q8_0?",
+      "calls_per_cycle": 38.0,
+      "service_ms_per_cycle": 0.7442325999999999
+    },
+    {
+      "family": "IQ4_NL",
+      "calls_per_cycle": 40.0,
+      "service_ms_per_cycle": 0.5820251999999999
+    },
+    {
+      "family": "UNCLASSIFIED",
+      "calls_per_cycle": 8.0,
+      "service_ms_per_cycle": 0.2178506
+    }
+  ],
+  "Q6_pool_fraction_of_dense_service": 0.2752448184458051,
+  "Q6_rows": [
+    {
+      "grid": "{640; 1; 1}",
+      "calls_per_cycle": 29.0,
+      "service_ms_per_cycle": 1.750572
+    },
+    {
+      "grid": "{2560; 1; 1}",
+      "calls_per_cycle": 14.0,
+      "service_ms_per_cycle": 1.1578066
+    },
+    {
+      "grid": "{3072; 1; 1}",
+      "calls_per_cycle": 4.0,
+      "service_ms_per_cycle": 0.3894148
+    },
+    {
+      "grid": "{1536; 1; 1}",
+      "calls_per_cycle": 5.0,
+      "service_ms_per_cycle": 0.27218580000000003
+    },
+    {
+      "grid": "{128; 1; 1}",
+      "calls_per_cycle": 15.0,
+      "service_ms_per_cycle": 0.1892012
+    },
+    {
+      "grid": "{160; 1; 1}",
+      "calls_per_cycle": 4.0,
+      "service_ms_per_cycle": 0.0664568
+    }
+  ],
+  "raw_CSV_Q6_crosscheck": "Six existing compact CSV rows,355calls/5cycles,19.128186ms/5cycles; matches retained S56 summary",
+  "selected_static_metadata": {
+    "original_S55_image_binary_sha_from_retained_index": "bb0669002bff48f28340cd413b576fe905ffbc327a332bebd63ff12e3066272f",
+    "C6_RPW1": {
+      "GRF_count": 128,
+      "SIMD_size": 32,
+      "spill_field": null,
+      "scratch_field": null,
+      "metadata_absence_is_not_measured_zero": true
+    },
+    "C6_RPW2_prior_rejected": {
+      "spill_field": 7936,
+      "scratch_field": 8192
+    },
+    "actual_Q6_centering_ISA_in_retained_small_summaries": false
+  },
+  "new_candidate": "Q6_K default A2 C6 signed-byte recentering only; no geometry/RPW/prefetch/FP math/operand/storage change",
+  "status": "SOURCE_ALGEBRA_ELIGIBLE_HOLD_BUILD_GPU_PENDING_EXISTING_ISA_COST_PROOF"
+}

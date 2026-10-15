@@ -1,0 +1,1 @@
+{"status":"PASS","scope":"S85_TWO_SHAPE_PRIMITIVE_ONLY","shapes":2,"paired_rounds_per_shape":8,"samples_per_round":4,"calls_per_graph":20,"public_original_bit_anchor":true,"candidate_full_bytes":true,"serving_qualified":false,"speed_qualified":false}

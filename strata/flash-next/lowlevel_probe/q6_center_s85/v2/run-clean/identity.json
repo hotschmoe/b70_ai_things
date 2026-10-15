@@ -1,0 +1,61 @@
+{
+  "status": "PASS_HOST_SOURCE_BUILD_FIXTURE_PINS",
+  "binary_sha256": "a0a1756b2670422caab13da80cc7e45a7beabd1fc694d684b0e34789b80112e8",
+  "inputs": {
+    "/common/mmvq-core.images.o": "8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21",
+    "/frozen/libstrata_kernels.a": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8",
+    "/frozen/libstrata_core.a": "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286",
+    "/work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp": "81558e95f721413a75c3d3ec6ed7cb5eee766e4f662080cf500c7985090f03e2",
+    "/work/src-ep/sycl/include/strata/sycl_math.hpp": "ac45a7a9b7d3cdc4b1b8c1c413c416911fb4ca91373d69bb34947815dbb3eec6",
+    "/work/src-ep/sycl/include/strata/kernels/dp4a.hpp": "dbbf686ebcc60d569ed1e0bf688d98666a1d46b7f85d8d7e073d28d6ab775eba",
+    "/work/src-ep/sycl/include/strata/kernels/native_mmvq.hpp": "83c233dd1f9de362cf646eb6f3d95dd97278ae43a30aeeed205b3067ef358a7e",
+    "/work/src-ep/include/strata/kernels/native_mmvq.hpp": "95c3ea0cb9802b93dc8eb23857349182d1bc1b6988ab875fc289812549042fb0",
+    "/work/src-ep/sycl/include/dpct/math.hpp": "7c1b7175dbe29a43bff30a94381131096437d88415881a8a8c0704de53394c58",
+    "/work/src-ep/sycl/include/dpct/detail/math_detail.hpp": "93b193a0ea4c6c53de6d44e95b60e244b211bf1508a6862c6f79e43ca691fc58",
+    "/work/src-ep/sycl/include/dpct/graph.hpp": "9933c09306a7a91bb242fa913694541fc4166bcf6d5a1a2a81ee9dac91b05f31",
+    "/src/q6_center_leaf.cpp": "4e5c05fbf9aa65906b1ef599d09bc75a708858a41b91949ecebdc1096b6f7452",
+    "/src/private_q6_center.hpp": "eb9524770ea90a66e3d3682e51593b4ead3fd347ca24aab7f30dc5503a1801b5",
+    "/src/build-container.sh": "791688408e91335ee42c25f4cafbeaeee709f7b7cc1a45e85dbd1d9d631a8408",
+    "/src/fixture-pins.json": "71356d477e7108337d243b162332067cb0e81d9f25813a4506e7fa72e0dca8ba"
+  },
+  "saved_fixture_hashes": {
+    "f0-input-f32.bin": "41f59cc618247a9be0dc8cd4ec1f55042b2f1a82e5edc5f9a31ef85990797ab6",
+    "f0-changed-input-f32.bin": "4d9f4638afe21359174d678e00090a07b92e69694ddcacc1fbe6f5d6b1c47083",
+    "f0-input-q8_1.bin": "a6859e31f961c7ead7d0045ff2833e7be84a1bbbb56cb3843958d1c14ba1759f",
+    "f0-changed-input-q8_1.bin": "7b31c7e16d6a870f326f22e89126a6b7bd8507459900a24e6f1a5df3481c6ad1",
+    "f0-C6-original.bin": "6fdec1e5d1f1433a2174ad01c8d9ff16b7bc44931f4028dd7c14d7154bac3502",
+    "f0-C6-original-direct-changed.bin": "2a7fb8d829ff2a126f88e3b5aeb0239eecd153d15a153d7e27875a2daf3377d2",
+    "f1-input-f32.bin": "fcf3bf052dbdcd8d1951656f640e568c687e485cc2318fee17c9e22959de5d94",
+    "f1-changed-input-f32.bin": "67eeb6d38cff30b482b94df5a1edae4ffe9697395691b0cc7dc3cf0a06b9852c",
+    "f1-input-q8_1.bin": "1188c64125657554c2907aca00625b2b2129ecc05ff6a1d363922d709f6c0217",
+    "f1-changed-input-q8_1.bin": "aa048d69002e81e6d9668a15ad2b794a48d84d6407d9eda0cf5e7bd5a9b3254d",
+    "f1-C6-original.bin": "2bf611fa7fccaf9824181c4590d4c7e61a39bb5f59120d58bf625b17b7a520a6",
+    "f1-C6-original-direct-changed.bin": "d8d90f4b1042bf30dd1349a3ea504ca0aa86bf39c2bbdaaff1a21386d63bc81a"
+  },
+  "weight_slices": [
+    {
+      "shape": "out",
+      "tensor": "blk.3.attn_output.weight",
+      "N": 6144,
+      "M": 2560,
+      "absolute_offset": 3572274688,
+      "bytes": 12902400,
+      "fnv1a64": "bd9a7894fdf034f5",
+      "sha256": "ee1992e717cd69bf619e2ef96d8cd91643ce0e684d4b3006919fb0547d1a0b38"
+    },
+    {
+      "shape": "qkv",
+      "tensor": "blk.4.attn_qkv.weight",
+      "N": 2560,
+      "M": 10240,
+      "absolute_offset": 4312859136,
+      "bytes": 21504000,
+      "fnv1a64": "6ac0ad97c5cfb31b",
+      "sha256": "26cd1aa975e5394c6a647104dd227087a0a69dce8aa32816b82c123bb0fe374e"
+    }
+  ],
+  "physical_card": 0,
+  "pci": "0000:0b:00.0",
+  "projection_only": true,
+  "source_unchanged_common_AOT_reused": true
+}

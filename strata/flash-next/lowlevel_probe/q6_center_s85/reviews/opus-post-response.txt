@@ -1,0 +1,23 @@
+**ACCEPT_DECISION** (scoped; with two caveats)
+
+**What the evidence supports**
+- **Static mechanism.** The private ISA audit binds both target images bytewise into the final executable (a0a1756b\u2026). The audited delta is consistent with the source change:
+  - The original has 32 add/\u221232, 32 overflow-mask BFN, and 32 compare-ne-zero sites.
+  - The candidate has none of those and has exactly 8 packed add 0x60606060 plus 8 XOR 0x80808080.
+  - DP4A count (48), SIMD32/GRF128, and zero calls are unchanged.
+  - Machine rescheduling elsewhere is expected. Equivalence is source-ledger equivalence in the shown scope only, not an instruction-diff claim. Spill/scratch is absent, not measured zero; that is fine for prep but should not be restated as "no spill."
+- **Nested primitive timing.** There are 8 paired rounds per shape with tight dispersion: out \u221222.5\u2026\u221223.2%, qkv \u221222.0\u2026\u221222.4%. The candidate is faster in every pair and the effect is far above round-to-round noise. As recorded, this is a repeated-weight, warm-cache regime with canonical Q8 quantized outside graphs. It shows the primitive's cost in that regime, not its share of the decode critical path.
+- **Root decision.** Default-OFF, exact C6/RPW1/A2/SG32, the two tested dimensions, and unchanged fallbacks. This claims nothing beyond the evidence and promotes nothing.
+
+**Caveats (not blockers for the prep, but blockers for anything after it)**
+1. **Gate-state inconsistency in the packet.** The ISA report says the full strict public/S44/direct/graphs/changed/restore/read-only/guard runtime gates "remain pending." Your framing says all runtime strict gates passed as recorded. The S85 closure shows exit-0s, 146 snapshots and 10 DOTs, but it does not itemize public-DOT binding or the per-gate pass list. The main-source prep note should cite the S85 report location of those gate results, not just the closure exit codes. If they are not itemized there, that is the one evidence gap.
+2. **Overclaim risk in the wording.** "\u221222%" must not travel without "primitive, repeated-weight, two shapes." Any full-model statement needs the matched full-model build later.
+
+**Most useful next discriminator (cheapest dev loop)**
+1. After the default-OFF source prep lands, run a matched ON/OFF full-model decode on one card at the same binary family, comparing token throughput and per-token latency.
+   - This is the first test that answers whether a ~15 \xb5s/call saving on out/qkv survives on the critical path.
+   - Real weights stream through per layer instead of being reused, which is where the repeated-weight regime may flatter the candidate.
+   - It also exposes whether the canonical Q8 production that happened outside graphs in S85 shows up in-graph.
+2. If that run shows less than the expected per-layer sum, a single nested primitive run with a weight-streaming (non-repeated) buffer set is the targeted discriminator between "memory-bound in real decode" and "integration overhead." That is cheaper than broad knobs or a cache rerun.
+
+**Bottom line:** accept GO for small guarded default-OFF source prep. Resolve caveat 1 by citation in the prep record. No serve or promotion until the matched full-model comparison exists.

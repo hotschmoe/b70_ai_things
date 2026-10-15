@@ -1,0 +1,118 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "35acbe02-4346-4ffc-8e6b-2f92d7e4b7c6"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 15.159372152993456,
+  "launch_exception": null,
+  "source_packet_sha256": "68a68eeb1d891d26e56ffe9b42c8ca5ad08dd51132a6c9addca0ece0642261e6",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 13840,
+      "stop_reason": "end_turn",
+      "session_id": "35acbe02-4346-4ffc-8e6b-2f92d7e4b7c6",
+      "total_cost_usd": 0.07695779999999999,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 6700,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 1161,
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 6700,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1161,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 6700,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 6700
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 1161,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 6700,
+          "webSearchRequests": 0,
+          "costUSD": 0.07695779999999999,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 0,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**ACCEPT_DECISION** (scoped; with two caveats)\n\n**What the evidence supports**\n- **Static mechanism.** The private ISA audit binds both target images bytewise into the final executable (a0a1756b\u2026). The audited delta is consistent with the source change:\n  - The original has 32 add/\u221232, 32 overflow-mask BFN, and 32 compare-ne-zero sites.\n  - The candidate has none of those and has exactly 8 packed add 0x60606060 plus 8 XOR 0x80808080.\n  - DP4A count (48), SIMD32/GRF128, and zero calls are unchanged.\n  - Machine rescheduling elsewhere is expected. Equivalence is source-ledger equivalence in the shown scope only, not an instruction-diff claim. Spill/scratch is absent, not measured zero; that is fine for prep but should not be restated as \"no spill.\"\n- **Nested primitive timing.** There are 8 paired rounds per shape with tight dispersion: out \u221222.5\u2026\u221223.2%, qkv \u221222.0\u2026\u221222.4%. The candidate is faster in every pair and the effect is far above round-to-round noise. As recorded, this is a repeated-weight, warm-cache regime with canonical Q8 quantized outside graphs. It shows the primitive's cost in that regime, not its share of the decode critical path.\n- **Root decision.** Default-OFF, exact C6/RPW1/A2/SG32, the two tested dimensions, and unchanged fallbacks. This claims nothing beyond the evidence and promotes nothing.\n\n**Caveats (not blockers for the prep, but blockers for anything after it)**\n1. **Gate-state inconsistency in the packet.** The ISA report says the full strict public/S44/direct/graphs/changed/restore/read-only/guard runtime gates \"remain pending.\" Your framing says all runtime strict gates passed as recorded. The S85 closure shows exit-0s, 146 snapshots and 10 DOTs, but it does not itemize public-DOT binding or the per-gate pass list. The main-source prep note should cite the S85 report location of those gate results, not just the closure exit codes. If they are not itemized there, that is the one evidence gap.\n2. **Overclaim risk in the wording.** \"\u221222%\" must not travel without \"primitive, repeated-weight, two shapes.\" Any full-model statement needs the matched full-model build later.\n\n**Most useful next discriminator (cheapest dev loop)**\n1. After the default-OFF source prep lands, run a matched ON/OFF full-model decode on one card at the same binary family, comparing token throughput and per-token latency.\n   - This is the first test that answers whether a ~15 \u00b5s/call saving on out/qkv survives on the critical path.\n   - Real weights stream through per layer instead of being reused, which is where the repeated-weight regime may flatter the candidate.\n   - It also exposes whether the canonical Q8 production that happened outside graphs in S85 shows up in-graph.\n2. If that run shows less than the expected per-layer sum, a single nested primitive run with a weight-streaming (non-repeated) buffer set is the targeted discriminator between \"memory-bound in real decode\" and \"integration overhead.\" That is cheaper than broad knobs or a cache rerun.\n\n**Bottom line:** accept GO for small guarded default-OFF source prep. Resolve caveat 1 by citation in the prep record. No serve or promotion until the matched full-model comparison exists.",
+      "ttft_ms": 13887,
+      "type": "result",
+      "duration_ms": 13918,
+      "uuid": "a71bc3c8-c59c-4af3-8cb0-9662c2569a85",
+      "ttft_stream_ms": 1135,
+      "time_to_request_ms": 71,
+      "first_content_frame_ms": 1135,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

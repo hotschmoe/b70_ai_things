@@ -1,0 +1,112 @@
+{
+  "stage": "S81",
+  "date": "2026-10-15",
+  "author": "/root/ple_upstream",
+  "checkpoint_read": "8f680d88",
+  "scope": "Small retained summaries and source only; no full raw trace/payload/build/GPU/model execution or main edit. No external manifest framework.",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/AGENTS.md",
+      "bytes": 9967,
+      "sha256": "0ee3bf6a202535d854a3de6ca54465eb08feb7241e727ee7f9e62616d071d6e7"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/docs/20261013_flashnext_goals.md",
+      "bytes": 18675,
+      "sha256": "acd0ba6614bc99d575c066844ee20ff0f7aec9453cc7d147f344942ceaaeec6a"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/docs/20261014_flashnext_strata_optimization.md",
+      "bytes": 132076,
+      "sha256": "957ca80a9b87c12f28cab254a54fbc3eeb566afe6abe1242530d095e2f2375e6"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/docs/20261015_strata_grouped_prefill_accuracy.md",
+      "bytes": 5595,
+      "sha256": "036b6928da8c1473b36dc1865b0f8b75915e65da9127bf2ccb2bab08a12adb96"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/draft-carry-s30/prefill-phase-diagnostic.json",
+      "bytes": 117802,
+      "sha256": "e675f1e55deb77094f499b15fad9284ba73e3a7ba549a69cb95d5f0746777364"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_ep_prefill_20261014/epon3-prefill4k-ops/operations.csv",
+      "bytes": 884363,
+      "sha256": "267e5e64d4bb751719c649d46d2c7f369501885af289028b347e4ff7aa446ba3"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/draft-profile-s22/profile/steady-summary/operations.csv",
+      "bytes": 70189,
+      "sha256": "971033c139a7f8cd21822e4a7d163522101998769f3222be81424b5cc7a2fa28"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-gather-serving-s38/s38-report.json",
+      "bytes": 2307,
+      "sha256": "4d64c6fab53b6a031536606b1f15d792346b581c0906922beeff328a7a9d5212"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/prefill/prefill.cpp",
+      "bytes": 302640,
+      "sha256": "d2861c5c8573fc5dd57742bde1c13f5fb6738ca5c975d273fa3ec189dd34f346"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/qsa_select.dp.cpp",
+      "bytes": 98307,
+      "sha256": "443c1c9d4e79b1eb13988507ab9a079c11651f15a610a317c4d0d3945e4f3978"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/kernels/qsa.hpp",
+      "bytes": 25547,
+      "sha256": "87c02222284f842fcecb46a422b119af769c72c3914edc8da5b2ee782456dc74"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp",
+      "bytes": 43287,
+      "sha256": "00bf1c45f15b1899e0562006aa6a410da4baec164eff1b1690316a6f2a66dcdb"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/qsa_prompt_attn_xmx.dp.cpp",
+      "bytes": 22065,
+      "sha256": "793c2f10b2302a65601ec5da054064adf7bd64f0119fbe7dc562ae1b990bee66"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/qsa_prompt_attn.dp.cpp",
+      "bytes": 100645,
+      "sha256": "d57239375f2cbd8a2392516359f5f077c9c5d26af1c05af684f693c3e21f127a"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/aot-reuse-s60-execution/build-container-v2.sh",
+      "bytes": 3031,
+      "sha256": "820e741b698096bfc55fa95e6cfb49aaa21d89edc9bf310ebf4cea60cd1e1fee"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/aot-reuse-s60-execution/root-build-closure.json",
+      "bytes": 828,
+      "sha256": "dbe844768fafb6b98de69146696294f3b67387cd306b1eb141351e760aa96415"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/build/common-inputs.sha256",
+      "bytes": 1430,
+      "sha256": "3a0a4077c9c7a3031f02c3ab1e5848b0580d819c754f62827b9e8f3e5f4e9608"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/qsa_select.dp.cpp.o",
+      "bytes": 154712,
+      "sha256": "4cac1286456dbcfbf3618e0f0734bd05aceff6d82624d88770bb5b5277da2c3d"
+    }
+  ],
+  "selected_candidate": "Prefill-only eight-query tiling of existing multi scorer exact per-score arithmetic; no implementation yet.",
+  "new_GPU_touches": 0,
+  "new_builds": 0,
+  "new_model_calls": 0,
+  "full_raw_trace_parses": 0,
+  "source_mutations": 0,
+  "S60_common_scope": "Eight explicit native/IQ/core inputs, no QSA TU; no common-wrapper bytes/images parsed or rehashed.",
+  "source_object_binding_limit": "Current standalone QSA fat-object hash/symbols and archive-member-name availability checked; no actual compiler/source recreation or archive-member equality proved.",
+  "artifact_commands": [
+    "nm -C --defined-only CURRENT_QSA_OBJECT (public qsa_block scores/topk symbols observed)",
+    "ar t CURRENT_LIBSTRATA_KERNELS | exact qsa_select.dp.cpp.o (present)",
+    "rg public qsa_block_scores/topk in retained S59 symbols.txt (absent)"
+  ]
+}

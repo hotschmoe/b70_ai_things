@@ -293,3 +293,14 @@ unchanged, no serving/retry/sweep. Static DPAS and source barriers do not
 establish a physical bottleneck or reject all integer-matrix designs.
 [S75 report](../../../docs/20261015_strata_iq3s_int8_dpas_probe.md).
 The170 historical operation rows and rollups remain unchanged.
+
+
+S81-S85 separate indexer selection from attention and qualify two private
+primitive candidates. S84 tiled scorer+unchangedtopk improves long/full256-query
+cases but regresses short contexts; no main integration. S85 Q6 C6 packed
+centering preserves all strict outputs/graph bindings and reduces two
+repeated-weight projection times by22.8/22.1percent. These are nested primitive
+observations, not serving speed, p95, measured cache residency or physical
+latency causes. Small defaultOFF exact-path main-source preparation is next.
+Historical170operations/rollups/metadata remain exact.
+[Source, ISA and runtime report](../../../docs/20261015_strata_qsa_tiling_and_q6_centering.md).

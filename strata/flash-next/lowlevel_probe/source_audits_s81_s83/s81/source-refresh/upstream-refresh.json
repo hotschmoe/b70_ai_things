@@ -1,0 +1,44 @@
+{
+  "utc": "2026-10-15T16:08:37.000604+00:00",
+  "queries": [
+    {
+      "label": "head",
+      "url": "https://api.github.com/repos/Niko1221/Strata/commits/main",
+      "sha": "296b59d2f73c8f04a805df29c2fa97655adace78"
+    },
+    {
+      "label": "Niko1221/Strata#2511",
+      "url": "https://api.github.com/repos/Niko1221/Strata/pulls/2511",
+      "state": "open",
+      "draft": false,
+      "head": "1fce5591a0ede4d5451316f462ad8acd528a21e6",
+      "merged_at": null
+    },
+    {
+      "label": "recutita/Strata#1",
+      "url": "https://api.github.com/repos/recutita/Strata/pulls/1",
+      "state": "open",
+      "draft": false,
+      "head": "78cea7a1b57a525924a23545c3b07042dfa234b7",
+      "merged_at": null
+    },
+    {
+      "label": "recutita/Strata#2",
+      "url": "https://api.github.com/repos/recutita/Strata/pulls/2",
+      "state": "open",
+      "draft": false,
+      "head": "69dee3c30e881b6d5afb70c197e813811423be40",
+      "merged_at": null
+    },
+    {
+      "label": "Niko1221/Strata#2623",
+      "url": "https://api.github.com/repos/Niko1221/Strata/pulls/2623",
+      "state": "open",
+      "draft": true,
+      "head": "627db6223f9870a4f0d5598e8042b353dfaeafde",
+      "merged_at": null
+    }
+  ],
+  "current_frozen_base": "296b59d2f73c8f04a805df29c2fa97655adace78",
+  "main_source_mutation": false
+}

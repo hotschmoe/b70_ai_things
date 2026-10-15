@@ -1,0 +1,18 @@
+{
+  "status": "ROOT_RESOLVED_CONDITIONAL_SOURCE_GO_BEFORE_GPU",
+  "reviewed_packet_sha256": "de887d39c3b035f0f4ca23b607c8641e636103ee4391012a73be4b86ed8cdf65",
+  "responding_models": [
+    "claude-opus-5-5",
+    "claude-fable-5-1"
+  ],
+  "source_v3": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-tiled-s84-prep-v3",
+  "v1_to_v2_host_noncopyable_device_ref_fix": true,
+  "v2_to_v3": "remove unused private launch property object and props argument; controller absolute v3 paths/pins",
+  "complete_multi_function_body_unchanged": true,
+  "FP_data_oracle_protocol_unchanged": true,
+  "reviewer_co_residency_explanation": "not accepted as observed local runtime fact; original public large-grid property is counterexample requiring implementation qualification; unused private property removal avoids dependence",
+  "hardcoded_paths_resolved": "controller explicitly versioned v3; unused EXEC_DIR remains benign",
+  "topk_per_query_mask_confirmation": "root actual source read and independent s27 audit: b<nb, weight0 tail, no inactive poison reads",
+  "actual_build_binding": "0a9983212f5dbe0650a88f2c466e11dda2bda3c46d4d7afbddd1bd4ad15d31b2",
+  "GPU_authorized": true
+}

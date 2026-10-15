@@ -1,0 +1,29 @@
+{
+  "status": "UNAPPLIED_SOURCE_ONLY",
+  "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+  "original_sha256": "81558e95f721413a75c3d3ec6ed7cb5eee766e4f662080cf500c7985090f03e2",
+  "candidate_sha256": "f781e9c742aa990367e4f829e0f0bb7801f12af68512ecbec74418e50b9933bb",
+  "patch_sha256": "deb6e0c4f58f59095aa8d8f186b64784a44646be2f0a4f7ad4640b655993d71c",
+  "inverse_reconstruction_exact": true,
+  "env": "STRATA_Q6_CENTER",
+  "default_OFF": true,
+  "process_latched": true,
+  "new_kernel_ID": "native_mmvq_q6k_center6",
+  "new_instantiation": "native_mmvq_q6k_wide_kernel<6,1,32,210,true,true>",
+  "exact_dimensions": [
+    [
+      6144,
+      2560
+    ],
+    [
+      2560,
+      10240
+    ]
+  ],
+  "only_first_wide_recenter_block_modified_prefetch_body_unchanged": true,
+  "builds_GPU_model_calls_main_edits": 0,
+  "v2_only_new_condition_delta": "q6k_pf() == 0",
+  "v2_remove_guard_reconstructs_v1_candidate_exactly": true,
+  "source_unchanged_sha256": "81558e95f721413a75c3d3ec6ed7cb5eee766e4f662080cf500c7985090f03e2",
+  "prefetch_scope": "New center eligible ONLY PF0; supported positive2/3/4/6 original earlyreturns, unsupported positive/negative original fallthrough preserved and never centers"
+}

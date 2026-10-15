@@ -1,0 +1,57 @@
+{
+  "status": "PASS_ROOT_BUILD_ISA_GATE_BEFORE_GPU",
+  "binary_sha256": "a0a1756b2670422caab13da80cc7e45a7beabd1fc694d684b0e34789b80112e8",
+  "selection_sha256": "9a15de25d4d4ee7de10452053d164941fa68a03d7ffb0711b29e41ae8c8e3dc6",
+  "source_resolution_sha256": "c0be447170852174e0ef6928d305afb76b89f8107330ffd212fa576e04d44f1e",
+  "counts": {
+    "original": {
+      "counts": {
+        "dp4a": 48,
+        "packed_add_immediate": 0,
+        "packed_xor_immediate": 0,
+        "calls": 0
+      },
+      "ASM_sha256": "668ee30e1417c8c70c2aedd99660f8a94bb215653531281e4c5a492d02711a09",
+      "immediate_format": "Signed decimal in actual ASM; source masks are hexadecimal.",
+      "representative_lines": []
+    },
+    "candidate": {
+      "counts": {
+        "dp4a": 48,
+        "packed_add_immediate": 8,
+        "packed_xor_immediate": 8,
+        "calls": 0
+      },
+      "ASM_sha256": "8721f738d5d9c4786686f33ddcb84ab0710f6954addd5bca1becc5fc5ddb7be2",
+      "immediate_format": "Signed decimal in actual ASM; source masks are hexadecimal.",
+      "representative_lines": [
+        {
+          "line": 299,
+          "text": "        add (32|M0)              r14.0<1>:d    r14.0<1;1,0>:d    1616928864:d               {I@1}"
+        },
+        {
+          "line": 300,
+          "text": "        xor (32|M0)              r48.0<1>:d    r14.0<1;1,0>:d    -2139062144:d               {I@1}"
+        },
+        {
+          "line": 311,
+          "text": "        add (32|M0)              r4.0<1>:d     r4.0<1;1,0>:d     1616928864:d               {I@2}"
+        },
+        {
+          "line": 314,
+          "text": "        xor (32|M0)              r50.0<1>:d    r4.0<1;1,0>:d     -2139062144:d               {I@3}"
+        }
+      ]
+    }
+  },
+  "SIMD": 32,
+  "GRF": 128,
+  "spill_scratch": "Fields absent in both; not measuredzero",
+  "target_only_private_image_index": true,
+  "common_image_reparse": false,
+  "actual_private_arg_schema": "3 global pointers +2 ints; from both ze_info",
+  "public_arg_schema": "Existing native C6 anchor and prior S44 graph evidence; actual DOT validation required",
+  "source_family_pins": "actual source/common8f/archives expected records PASS build pre/post; runtime identity repeats exact hashes",
+  "GPU_scope": "Onefuturecard0 strict two-shape original/public/S44 anchor+candidate/read-only/guards/changed/restored/graphs before timing",
+  "no_serve": true
+}

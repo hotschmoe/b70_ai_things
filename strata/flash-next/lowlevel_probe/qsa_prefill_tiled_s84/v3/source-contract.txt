@@ -1,0 +1,96 @@
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/qsa_select.dp.cpp
+
+34: __dpct_inline__ void block_scores_kernel(const float *__restrict__ pooled,
+35:                                          const float *__restrict__ dead,
+36:                                          const float *__restrict__ q_idx,
+37:                                          const int32_t *__restrict__ steps,
+38:                                          int64_t max_blocks,
+39:                                          float *__restrict__ out) {
+40:     auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+41:     const int64_t qi = item_ct1.get_group(1);
+42:     const int32_t* st = steps + qi * kStepCount;
+43:     const int64_t n_kv = st[kStepNKv], n_bid = st[kStepNBid];
+44:     const int64_t b = (int64_t)item_ct1.get_group(2) * SCORE_WARPS +
+45:                       (item_ct1.get_local_id(2) >> 5);
+46:     if (b > n_bid || b >= max_blocks) return;
+47:     const int lane = item_ct1.get_local_id(2) & 31;
+48:     const float* key = (b == n_bid) ? dead : pooled + b * IDX_DIM;
+49:     const sycl::float4 k4 =
+50:         *reinterpret_cast<const sycl::float4 *>(key + lane * 4);
+51:     const float* q = q_idx + qi * IDX_HEADS * IDX_DIM + lane * 4;
+52:     float score = 0.0f;
+53: #pragma unroll
+54:     for (int h = 0; h < IDX_HEADS; ++h) {
+55:         const sycl::float4 q4 =
+56:             *reinterpret_cast<const sycl::float4 *>(q + h * IDX_DIM);
+57:         float d = k4.x() * q4.x() + k4.y() * q4.y() + k4.z() * q4.z() +
+58:                   k4.w() * q4.w();
+59: #pragma unroll
+60:         /*
+61:         DPCT1108: '__shfl_xor_sync' was migrated with the experimental
+62:         feature masked sub_group function which may not be supported by all
+63:         compilers or runtimes. You may need to adjust the code.
+64:         */
+65:         for (int o = 16; o > 0; o >>= 1) d +=
+66:             dpct::experimental::permute_sub_group_by_xor(
+67:                 0xffffffffu, sycl::ext::oneapi::this_work_item::get_sub_group(),
+68:                 d, o);
+69:         score += d > 0.0f ? d : 0.0f;
+70:     }
+71:     if (lane == 0) {
+72:         if (b == n_bid && n_kv % R != 0) score += 1e9f;
+73:         out[qi * max_blocks + b] = score;
+74:     }
+
+1574:         std::exit(1);
+1575:     }
+1576:     // a block past a query's n_bid returns at once: the grid need only reach the batch's largest n_bid (C-1)
+1577:     static const bool multi = [] { const char* v = std::getenv("STRATA_SCORES_MULTI"); return v == nullptr || std::atoi(v) != 0; }();
+1578:     if (multi && nq <= MQ && active_blocks <= 0) {   // no active count: decode (captured or not) and prefill's pooled16
+1579:         // STRATA_QSA_EARLY_EXIT=0 keeps the old staging (every CTA loads the queries first); the scores are the same bits
+1580:         static const bool early = [] { const char* v = std::getenv("STRATA_QSA_EARLY_EXIT"); return v == nullptr || std::atoi(v) != 0; }();
+1581:         {
+
+1616:         return;
+1617:     }
+1618:     const int64_t reach = active_blocks > 0 && active_blocks < max_blocks ? active_blocks : max_blocks;
+1619:     const dpct::dim3 grid((unsigned)((reach + SCORE_WARPS - 1) / SCORE_WARPS),
+1620:                           (unsigned)nq);
+1621:     {
+1622:         auto exp_props = sycl::ext::oneapi::experimental::properties{
+1623:             sycl::ext::oneapi::experimental::use_root_sync};
+
+1699:         (void) cc_major[dev];
+1700:         return false;   // SYCL: the tensor-core kernel is not ported yet; the caller takes the older kernel
+1701:     }
+
+1956: void qsa_block_topk(const float* scores, const int32_t* steps, int64_t nq, int64_t max_blocks, int64_t cap,
+1957:                     const QsaShapes& s, int32_t* ids, void* stream, int64_t active_blocks) {
+1958:     // keys in registers when every query's blocks fit (contexts up to ~135K cells), else (CUDA) the same threads
+1959:     // reading them from memory; the same ids. STRATA_TOPK_OLD=1: the original kernel
+1960:     static const bool old = std::getenv("STRATA_TOPK_OLD") != nullptr;
+1961:     if (nq <= 0) return;
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/kernels/qsa.hpp
+
+108: /// The real artifact's geometry, so no caller transcribes it by hand.
+109: inline QsaShapes qsa_real_shapes() {
+110:     QsaShapes s;
+111:     s.n_head = 24; s.n_head_kv = 2; s.head_dim = 256; s.n_rot = 64;
+112:     s.idx_n_head = 4; s.idx_dim = 128; s.idx_block = 4; s.idx_top_k = 2048;
+113:     // one page = one indexer block (4 cells): the granule KV streaming keeps resident (kv_stream.hpp). The readers
+
+133: inline int64_t qsa_selection_width(int64_t n_kv, const QsaShapes& s) {
+134:     const int64_t w = s.idx_top_k + s.idx_block - 1;
+135:     return n_kv < w ? n_kv : w;
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/kernels/qsa_select.hpp
+
+43:                                                    ///< the same contract as qsa_block_scores's). The register kernel is
+44:                                                    ///< chosen by this, not by the capacity max_blocks (a long
+45:                                                    ///< --max-context otherwise sends every short prompt to the slow one).
+46:                                                    ///< CUDA uses the bound only on sm_75; HIP keeps its existing policy.
+47:                                                    ///< Omit it for captured graphs whose context can grow after capture.
+48: /// The same ids on a thread-block cluster of 8 CTAs per query (sm_90+, CUDA; S19). qsa_block_topk takes it for calls
+49: /// of up to 16 queries unless STRATA_QSA_CLUSTER=0. False (nothing launched) where it cannot run: HIP, a card or a
+50: /// build below sm_90, or a capacity whose keys do not fit one cluster's shared memory. Capturable.

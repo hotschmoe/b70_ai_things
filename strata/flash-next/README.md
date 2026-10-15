@@ -336,3 +336,18 @@ for the retained prefill wave. The exact grouped mapping is slower in all
 four complete-wave pairs (medians1.051/4.404ms); retain scalar, no serve/retry.
 The reference is reusable, while S42's historical strict failure is unchanged.
 [Accuracy and performance result](../../docs/20261015_strata_grouped_prefill_accuracy.md).
+
+
+S81-S84 isolate indexer scoring from attention and retain a private eight-query
+prefill scorer. All score bits/IDs/memory/health gates pass; completed scoring
+plus unchanged top-k improves near32K/200K by7.47/17.68percent but regresses
+near4K by15.05percent (four nested pairs/case, oneprocess). No main integration
+or serving claim; keep short contexts/tails original. Existing Q6 C6 ISA also
+shows unnecessary byte-saturation lowering survives, supporting a separate
+same-ledger integer candidate. [Source/ISA and tiled scorer report](../../docs/20261015_strata_qsa_tiling_and_q6_centering.md).
+
+S85 Q6 C6 packed centering passes146full strict snapshots/10DOTs/memory/health.
+Two real-weight projections with saved synthetic canonical Q8 show22.8/22.1%
+less completed projection time (eight balanced nested20-callroundmeans each,
+oneprocess/repeatedweights). No serving gain yet; exact-path/defaultOFF main
+source preparation follows. [S85 result](../../docs/20261015_strata_qsa_tiling_and_q6_centering.md#s85-q6-centering-passes-strict-gates-and-reduces-projection-time).
