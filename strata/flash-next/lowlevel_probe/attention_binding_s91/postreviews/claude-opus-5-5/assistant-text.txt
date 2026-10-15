@@ -1,0 +1,66 @@
+# S91/S92 Review: ACCEPT_S91_HOLD_AND_GO_S92_CPU_BUILD
+
+**Basis:** This review is static only. Nothing was built, run or dispatched on a GPU. All runtime claims below are open questions.
+
+## S91 HOLD: accepted
+
+- The S91 private image shows `private_size` 3584 and `per_thread_scratch_buffer` 4096. Its scratch store/load counts are 28 each, with 3584 bytes per direction. These are static ISA metadata only, not dynamic traffic. The decision not to rebuild reduce12 under a new name is correct.
+- S91 shows a shared weak symbol `strata::kernels::attn_chunk_kernel_2ad0a4` / `CompileTimeKernelInfo`. The first name relocations differ between `candidate.o` (addend 4529, reduce12) and `public-current-member.o` (addend 4578, qsa_decode). One definition wins at link time. So matching device images alone cannot prove admission.
+- S13 audit, offline host ELF only:
+  - Both host paths pass `0x42d598` and store to `0x5d4810`.
+  - The registered name is `qsa_decode_attn_batch`.
+  - The executable hash `7411d17b\u2026` matches the S13 document.
+- **Correction to attribution:** the historical logs stay as they are. The S13 "neutral value candidate" conclusion is withdrawn. No runtime dispatch was observed, and no claim about speed or correctness follows.
+
+## S92 source: static review passes
+
+**SLM and barriers**
+- All `sq` reads (query load, score loop, and the LANE_CELL path) complete before the post-score `barrier()`.
+- Probability writes go to `sq` as 768 of 3072 floats, after that barrier and before the existing post-exp barrier. They are read only after that barrier.
+- Each (cell, head) has exactly one writer. `sp` scores are still read only by the exp loop. This holds statically.
+
+**FMA order**
+- `fold(c..c+3)` runs in ascending c for each head. This matches the original order.
+- The masked break happens before any loads. `(r0|r1|r2|r3)<0` on `long long` is correct.
+- After the break, the scalar tail is correct but never re-enters the 4-wide path. That is a performance note only.
+
+**float4 alignment**
+- The stride is 48 bytes, so it stays 16-byte aligned, and the base pointer is already used for float4 reads.
+
+**Fixture**
+- 12 cases \xd7 3 seeds = 36, all in one process, with seeds in the outer loop.
+- The cap 2112 / width 2051 surrogate is covered.
+- Ragged cases (widths 1, 11, 63, 65, 2051 mod 64 = 3) and masked groups (65, 1999) are covered.
+- Output and full scratch are compared bitwise. Guards and read-only witnesses are checked.
+- The sign-flip test confirms the query change is observable. Repeat and restore checks are included.
+- The oracle row/scale indexing matches the kernel for INT8.
+- No tolerance and no sweep. Accepted.
+
+## Root conditions
+
+**Before the CPU build**
+1. `expected-source.sha256` must cover the private source, fixture, `build-container.sh`, frozen `qsa_decode_attn.dp.cpp.o` (`bbae92dc\u2026`) and frozen `public.images.o` (`df7655d8\u2026`).
+2. Confirm that the S91 `public.images.o` was prelinked from the same public member hash. Also record which fixture or probe objects went into it.
+
+**After the CPU build, before any GPU GO**
+3. In `candidate.o`, `nm` must show no defined `CompileTimeKernelInfo`, guard or Info symbol named `attn_chunk_kernel_*` or `attn_merge_kernel_*` without the `s92_private_` prefix. All 11 renamed tags must be present.
+4. In the final executable, `value_batch` and `qsa_decode_attn_batch` must load distinct Info and CompileTimeKernelInfo addresses. Each name pointer must resolve to its own string: `value_batch\u2026s92_private_attn_chunk_kernel_2ad0a4` versus `qsa_decode_attn_batch\u2026attn_chunk_kernel_2ad0a4`.
+5. `private.images.o` must contain the s92_private 2ad0a4 image. The final link must register both images, with no duplicate kernel names. This includes any `fill` or `memset` kernels from `probe.o` that may also appear in the S91 public images. If there are duplicates or ambiguity, HOLD.
+6. Read the actual resources (private/spill/scratch, GRF, SLM) for the private 2ad0a4 INT8 image. Report any scratch as static only.
+7. `host-link.log` must show no duplicate-symbol warnings or weak overrides for kernel metadata.
+
+**At runtime, under a separate GO**
+8. No timing line counts unless `ALL 36 CASES PASS` appears and the exit code is 0. Per-case `PASS` timings printed before that point must be discarded.
+9. `STRATA_ATTN_LANECELL` must be absent.
+10. Results qualify INT8 only. They do not qualify production cap 2051, other KV modes, or the 2000-prefill/150-stream target.
+
+## Concrete blockers
+
+There are no source-level blockers. Conditions 3\u20135 are hard gates before GPU work.
+
+## Dev-loop cuts
+
+- Run one CPU build only. Reuse the frozen public object and the public AOT images, with no public rebuild.
+- Decode ISA only for the private 2ad0a4 INT8 image, not all 11.
+- Do not repeat reduce12. Do not rerun S13. Do not add a tolerance or a sweep.
+- Check host binding (`nm`/`objdump`/`.rodata` pointer) before spending any time on device ISA.

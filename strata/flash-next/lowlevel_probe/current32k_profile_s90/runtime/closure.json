@@ -1,0 +1,29 @@
+{
+  "status": "NORMAL_TEARDOWN_POSTHEALTH_PASS",
+  "collection_status": "REQUEST_USAGE_PREFIX_MARKER_AND_STOP_PASS_TRACE_UNPARSED",
+  "post_health": {
+    "card": {
+      "command": [
+        "bin/gpu-run",
+        "bin/xpu-health",
+        "--img",
+        "b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78",
+        "--timeout",
+        "400"
+      ],
+      "exit": 0
+    },
+    "collective": {
+      "command": [
+        "bin/gpu-run",
+        "bin/xpu-collective-health",
+        "--timeout",
+        "400"
+      ],
+      "exit": 0
+    }
+  },
+  "source_pins_rechecked": true,
+  "trace_JSON_validated": false,
+  "serving_or_speed_qualified": false
+}

@@ -307,3 +307,20 @@ causal/stability/default/shelf promotion. Keep defaultOFF opt-in; Q6 is OFF in
 both arms and S87 remains separate.2000prefill/150stream goals remain open;
 S30 RAM recovery is not rerun. Next: one current32K operation/readiness trace.
 [S88/S89 evidence](20261015_strata_qsa_tiling_and_q6_centering.md).
+
+
+S90 completes the separate current32K ON request profile: actual768 tiled
+scorer calls and12264 full32 attention chunk/merge calls reconcile current
+source. One cold instrumented32728/32 request includes capture/admission/
+prefill/decode; it is not clean speed or an S89 delta. Attention-family
+recorded service6.473s and host-copy14.404s spans are non-additive and do not
+prove removable idle/traffic. Targets remain open; retained S30 recovery is
+unchanged. [Current operation/readiness profile](20261015_strata_current32k_profile.md).
+
+
+S91 prevents an invalid private attention comparison before GPU execution:
+renamed host functions still share kernel-info state. The exact retained
+S13 probe has the same issue, so its distinct value-candidate correctness
+and neutrality attribution is unsupported. Old logs remain intact; no new
+speed result or target achievement. Corrected S92 binding is source-only,
+with strict checks retained. [Binding audit](20261015_strata_attention_binding_audit.md).

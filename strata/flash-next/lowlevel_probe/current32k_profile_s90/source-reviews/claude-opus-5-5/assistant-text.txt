@@ -1,0 +1,36 @@
+**GO_ONE_PROFILE_AND_ONE_CPU_ANALYSIS**, with one mandatory condition and two root checks.
+
+**Lease and lifecycle: OK**
+- The detached `gpu-run` owns the pair lease for the whole server lifetime.
+- `stop()` accepts only a 64-hex CID from `container-ready.json` or `attempt.cid`. It cross-checks Name, config Cmd and the ready Id. A bare foreign NAME is never trusted.
+- The profiler cleanup `--stop` is best-effort with a 30s timeout and catches all exceptions, so it cannot block TERM.
+- Order is TERM \u2192 QUIT \u2192 full CID and NAME absent \u2192 wrapper exit 0 \u2192 card health \u2192 collective health. Partial health is preserved. There is no force or retry.
+- Readiness assertions escape to the caller and leave the service for `stop()`. Expiry raises with no restart.
+
+**Capture and request: OK**
+- The profiler starts paused. Before collection it checks for no QSA marker and no logged known capture completion. This proves only known logged absence, not all graph work, and the code says so.
+- Resume happens before `send`. `pause`, then `stop`, run in nested finally blocks.
+- There is exactly one unprofiled flush generation. It is skipped if the request failed. There is no warm-up, repeat or retry.
+- Request equality, usage 32728/32/cache\u226464, `timings` sums, the S38 prefix, the native summary filtered by shape and a single QSA marker `('1','4097')` are all exact. The flush is too short for QSA eligibility, so it cannot add a marker.
+
+**Clock: OK if root's source reading holds**
+The calibration formula `raw + (BOOTTIME\u2212RAW)` matches the stated `unitimer.h` anchor and is in \xb5s, consistent with the trace. The probe confirms `StartPaused=1` and `SystemTime` unset.
+
+**Mandatory fix or condition:** `analyze.py --run` defaults to `.../current32k-profile-s90-prep/run`, the v1 directory. The v2 artifacts are in `...-v2-prep/run`. Root must pass `--run` explicitly. The minimum fix is `required=True`. Do not rely on the default.
+
+**Root checks before execution:**
+1. **Prehealth reuse:** revalidate it at root. Confirm there has been no GPU or stack change since the S89 post-health at 18:01. SHA pins are integrity checks, not cryptographic signatures.
+2. **Event category:** confirm `cat=='gpu_op'` is the device-event category this unitrace build uses. If it is wrong, the script asserts "No GPU events" and stops without rerunning. That fails safely, but it would waste the single trace parse.
+
+**Analysis bounds: acceptable**
+- Results are per device pid, with no cross-card join or summed budget.
+- Boundary crossers are kept separately, and exact names and timeline rows are retained.
+- Name hints are explicitly not semantic, traffic or causal proof.
+- The `limits` list correctly separates three things:
+  - an observed host marker from actual GPU dispatch, which stays unproved until `actual_s89_candidate_events` shows device rows;
+  - metadata and resource facts (EP 149/363, slots) from measured performance;
+  - the instrumented window from clean speed or delta claims.
+
+**Non-blocking notes:**
+- `collect` saves `collection.json` only after a 60s nonempty-file check. Real JSON validity is deferred to the analysis, as stated.
+- The analysis loads the whole trace into memory. That is fine given S30 RAM recovery already passed.

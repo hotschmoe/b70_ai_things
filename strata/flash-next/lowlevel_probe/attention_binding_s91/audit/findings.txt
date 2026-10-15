@@ -1,0 +1,46 @@
+S91 CPU-only actual linked AOT/host binding audit (2026-10-15)
+
+CONFIG -> Frozen attn_score_probe51e2fd7b58a41493893facd947c1c08c368eb3ddb80145eac1ab41e895d6b41a.
+Exact public fatobject bbae92dcf61427f35078d498a240b1c9f23862e8bf13f7b63d95252e3b06baf2:
+frozen/current-member/after byte-equal. Existing public/private wrappers,
+build source/artifacts preserved. No compiler/model/GPU call by this audit.
+
+COMMAND -> bin/cpu-run python3 build-audit/extract.py; bin/cpu-run bash
+build-audit/decode.sh; nm -C/objdump -drwC under cpu-run; bin/cpu-run python3
+build-audit/host_binding.py; bin/cpu-run python3 build-audit/summarize_resources.py.
+Decode uses pinned e41 image/ocloc bmg-g31, noDRI/networknone, CPU4/OMP4/MKL4,
+and ONLY two selected M1/NC1 images. Decoder10s; CPU lease released.
+
+RESULT -> Ordinary single host ld link, no AOT actions/crtfastmath. Actual
+DPC++2026.1 build uses precise compile/link and bmg-g31 correctly-rounded
+backend options. Both whole image bundles occur once in actual executable.
+Selected device IDs differ in qsa_decode_attn_batch versus reduce12_batch;
+selected image SHA80d9bfd4... versus217a725b..., each once. Fourteen overlapping
+device IDs are unmodified common helpers; attention target IDs are separate.
+
+DECISIVE HOST BINDING FAIL: both host objects define SAME weak88B
+CompileTimeKernelInfo<dpct_kernel_name<attn_chunk_kernel_2ad0a4,scalar1>>,
+plus SAME getDeviceKernelInfo Info/guard. Both function bodies relocate to
+these same symbols; final linked symbols contain one. Info offset0 relocation
+in candidate.o points at .rodata.str1.1+4529 = private reduce12_batch device
+name; public object points at +4578 = public qsa_decode_attn_batch name.
+Thus distinct embedded device images do NOT prove distinct public/private
+host dispatch. Full exact symbols/relocations and snippets in host-binding.json
+and *.host-target-excerpts.txt. No runtime branch/selected winner guessed.
+
+STATIC RESOURCES ONLY: both SIMD32/GRF128/SLM15872/barrier_count1/EUthreads8.
+Public private/scratch/spill fields absent; NOT proven runtime zero. Candidate
+private_size3584 with declared single_space scratch4096. Actual candidate ISA
+has28 static store and28 load SS/a32/d32 SIMD32 sites, public has none of this
+message pattern. Each site carries128B if all32lanes active; summing each
+static site once gives3584B stores +3584B loads, NOT loop execution count,
+physical memory traffic, bandwidth, occupancy or latency. Code19328B public,
+19264B private. Metadata/numbered message excerpts/hashes are retained.
+
+VERDICT -> HOST_BINDINGFAIL / GPU NO-GO, mapping parked. No same12 rename/
+rebuild/GPU justified given binding failure and private scratch. Any future
+DISTINCT private mapping must privatize ALL kernel-tag identifiers in host
+integration, not merely public function names. Current main source untouched.
+Initial parser trailing-alignment assumption failed before report; corrected
+lastimage exactend handling and original parser preserved. First resource
+summary attempt had syntax typo before execution; executed correction saved.

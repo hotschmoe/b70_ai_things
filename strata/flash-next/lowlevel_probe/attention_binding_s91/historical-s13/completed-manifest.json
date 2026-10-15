@@ -1,0 +1,52 @@
+{
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-score-reduce12-s91-historical-binding-audit",
+  "status": "FROZEN_OFFLINE_HOST_BINDING_AUDIT_PLUS_DOCUMENTED_BINARY_HASH",
+  "preserved_initial_manifest_sha256": "25385f3b9d065909862d6ed11236ff8ff799f065b3d295c8c4e7e150f259b1e1",
+  "files": [
+    {
+      "path": "documented-binary-binding.json",
+      "bytes": 1348,
+      "sha256": "2cc07953ab4c15c8e35040d213d5247bb773658318a10d66af27a510aae03876"
+    },
+    {
+      "path": "evidence.json",
+      "bytes": 17533,
+      "sha256": "4fd0416e70fd8bbfaf4aedcf2f948f29b6bd1443f7d94de98a89ff891501b81a"
+    },
+    {
+      "path": "final.nm.txt",
+      "bytes": 197976,
+      "sha256": "3d4a9ba59cefad973f59cc0db2caaa4499ad5003eb4ab6c1f6598f4a87a76a4d"
+    },
+    {
+      "path": "final.objdump.txt",
+      "bytes": 2189507,
+      "sha256": "ea63ba32fb4162012c4de62fbc523677ee46440723f67b6a9cac9c7262d875f0"
+    },
+    {
+      "path": "findings.md",
+      "bytes": 2463,
+      "sha256": "a7baf089f6272858c9027d4038d5011a464dbc0ce4b448742d7ac35e4d4a43e6"
+    },
+    {
+      "path": "public.nm.txt",
+      "bytes": 84370,
+      "sha256": "e64b7b76e9624d84ca7d75de03a33e50d7a408a094b11d916e6df7f4d55d93bf"
+    },
+    {
+      "path": "public.objdump.txt",
+      "bytes": 721104,
+      "sha256": "397ae0b0ae79b17565356884e60b228dc57f9135b1bbad705cf7902415b0bde7"
+    },
+    {
+      "path": "variant.nm.txt",
+      "bytes": 82373,
+      "sha256": "38c9b7c831166a7092bb2f7d91e085c77f8c4699392899c8c1d71f2a9c8b2141"
+    },
+    {
+      "path": "variant.objdump.txt",
+      "bytes": 714015,
+      "sha256": "374636106e75a9a9bd4598de47478318814b7cfb2b5268c52e31b292107333cf"
+    }
+  ]
+}

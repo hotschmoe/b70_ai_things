@@ -1,0 +1,118 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "67d1759e-8f39-4123-a755-94898d27f666"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 60.51817613502499,
+  "launch_exception": null,
+  "source_packet_sha256": "10acf7281e68227fc41a98e49931ef49e80d6301f7d541b9bbb4bff0ddbe7d46",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 59403,
+      "stop_reason": "end_turn",
+      "session_id": "67d1759e-8f39-4123-a755-94898d27f666",
+      "total_cost_usd": 0.62597225,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 21387,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 3961,
+        "output_tokens_details": {
+          "thinking_tokens": 2764
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 21387,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 3961,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 21387,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 21387
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 2,
+          "outputTokens": 3961,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 21387,
+          "webSearchRequests": 0,
+          "costUSD": 0.62597225,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "thinkingTokens": 2764,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**ACCEPT_S90_AND_GO_BOUNDED_S91_BUILD**\n\n**S90 completed-trace assessment.** The frozen facts are internally consistent and correctly scoped. The two-row aggregation for the full32 chunk and merge geometry is disclosed, and the unique 32-query count reconciles with the 12*(384+384+254) source derivation plus the 17-query tail. Clock handling is honest: a single host clock with stated drift, no cross-card GPU join, and no exact prefill epoch endpoints claimed. The cold-capture caveat is explicit, so the native-versus-S89 wall difference is not attributed to the profiler or called a regression. Host-copy spans are correctly separated from GPU service: the union-versus-uncovered split is reported as overlap, not assignment, dependency, PCIe bytes, or waiting proof. Per-device unions are labeled non-additive. No physical-idle, causal-critical-path, speed, or promotion claim appears. The peer-before-primary enqueue lead is held as a source audit hypothesis only, and S7 and S38 are not re-queued. Nothing to fix.\n\n**S91 source assessment.** I traced the reduce-scatter by hand. At XOR16, a lane with bit4 clear keeps head i and receives the partner's head i, while the partner keeps head i+8 and receives head i+8. Each later level halves the head set the same way. After XOR2 each lane holds the head given by bits 4..1 of its lane index, which matches the mapping helper, and XOR1 pairs lanes with the same head. Every one of the 32 lane partials for a head enters exactly once, and the pairing structure equals the original butterfly tree at every level with only operand order swapped. Lane 2h publishes head h for h<12, so each score cell has one writer and lanes 24..31 and padded heads never write. The reduce is reached only on the subgroup-uniform non-sentinel branch, so the full-mask shuffles are safe. Tail and negative-page handling are untouched.\n\nThe fixture is a faithful S13 adaptation: same seeds and twelve cases, readonly witnesses, 4096-byte guards with 64-byte data alignment, full output and scratch byte equality, sign-flip observability, changed repeat, restore, and guards rechecked after timing. The 2e-5 FP64 check is correctly kept as sanity only, not an acceptance tolerance. The cap2112 synthetic surrogate is disclosed as not production cap qualification. The scope is clearly distinct from S11 batch, S12 lane-cell ownership, and S13 value pipeline.\n\n**Residual items, none blocking the CPU build.**\n- Expression identity does not bound contraction under precise mode. The mandatory bit check already covers this.\n- Any non-inline external-linkage helper duplicated across the public object and private TU will fail loudly at ordinary host link. That is the correct outcome and needs no pre-emptive change.\n- The shuffle intrinsic signature must match the existing warp_sum usage in the file. The compile verifies this.\n\n**Build boundary accepted as stated.** Public-attention-only prelink from the frozen current member plus private TU and fixture, no public TU or library rebuild. Root must inspect the map, wrapper retention, selected symbols, and device images before any GPU step. GPU execution remains conditional on linked-image identity, runner identity, card0 quiet pin, revalidated pre- and post-health, and owned container removal, with no graph, cache-serve, or retest inflation. No predicted gain follows from fewer logical shuffles.",
+      "ttft_ms": 41516,
+      "type": "result",
+      "duration_ms": 59491,
+      "uuid": "3ab80522-aaed-46df-aaf4-ce343fb0769b",
+      "ttft_stream_ms": 2261,
+      "time_to_request_ms": 84,
+      "first_content_frame_ms": 2262,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

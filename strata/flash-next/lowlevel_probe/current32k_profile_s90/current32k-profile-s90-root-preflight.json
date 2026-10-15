@@ -1,0 +1,43 @@
+{
+  "status": "ROOT_SOURCE_PINS_CONFIG_MODEL_CONTINUITY_AND_RECENT_HEALTH_REUSE_PASS",
+  "epoch_ns": 1792088379593824386,
+  "v2_manifest_sha256": "d19a1c3f8f49e1836643041d81d907aaca78d6cd0a976ea5e3438aea53690109",
+  "v1_preserved_manifest_sha256": "781a381e2614c03403585bb47b89277ab8a05e5a865e79b1b7418b6d23094358",
+  "binary_sha256": "b2a610ea23856ad290cbca2a0dcdec4de676f3cdb519ddc0a01c5321942636be",
+  "root_fullread_controller_wrappers_config_clock_analysis": true,
+  "same_S89ON_config_except_wrapper_and_log": true,
+  "model_continuity": [
+    {
+      "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+      "resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+      "stat": {
+        "dev": 44,
+        "ino": 1156777,
+        "size": 47039860096,
+        "mtime_ns": 1792062519977528586
+      }
+    },
+    {
+      "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+      "resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+      "stat": {
+        "dev": 44,
+        "ino": 1068321,
+        "size": 28800138432,
+        "mtime_ns": 1791869062502802041
+      }
+    }
+  ],
+  "inherited_model_closure_sha256": "74fbecdb8f0c740ed902996950f91d7dbd6022e111006cbbfdefc4f3166f3d33",
+  "reuse_prehealth": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-serving-s89/mode1/post-health.json",
+    "sha256": "efd89290b6ebad91bf7792793c47540b017e4398d8fbbfc37cffaf7506fbc18c",
+    "card_log_sha256": "ed6c34391c1ee6df13126eb9601ccc35642743509907c8fad47a439744dce0ca",
+    "collective_log_sha256": "154d2bc9f418607f15df053f67c685f3a2fc04e14517d782d74db7dc5558bb35",
+    "both_exits0": true,
+    "current_boot_kernel_exact": true,
+    "rationale": "Root continuous work since18:01S89closure was source/CPU-only; allthreeagentsconfirmnoGPU; currentleasesfree/sharedlognointerveningGPU/stackchange/dockeronlyforeignmonitoringplusoldCREATEDhealthcontainer. No cryptographic signing or exhaustive unloggedforeignGPU proof claimed."
+  },
+  "actual_Opus_Fable_source_reviews_pending": true,
+  "GPU_GO": false
+}

@@ -1,0 +1,5 @@
+{
+  "start_us": 1792088476396260.2,
+  "end_us": 1792088506621676.0,
+  "scope": "One instrumented full request includes capture/prefill/32decode; no clean latency claim; no cross-card clock join"
+}

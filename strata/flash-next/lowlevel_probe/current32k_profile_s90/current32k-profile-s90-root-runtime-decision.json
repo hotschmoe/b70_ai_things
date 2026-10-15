@@ -1,0 +1,80 @@
+{
+  "main_full32_chunk": {
+    "rows_aggregated": 2,
+    "calls": 12264,
+    "contained_service_ms": 5689.599621
+  },
+  "main_full32_merge": {
+    "rows_aggregated": 2,
+    "calls": 12264,
+    "contained_service_ms": 697.009584
+  },
+  "status": "ROOT_RECONCILED_CURRENT_TRACE_ONLY",
+  "raw_trace_sha256": "6799ce895caff68c80197c68549be70ab1b7020ea0875bae3156bf4fd9120730",
+  "raw_event_count": 2732936,
+  "selected_events": 781466,
+  "boundary_crossers": 0,
+  "operations_rows": 8129,
+  "operations_csv_sha256": "2178af0595785aefc8a5c1ea70d36a7ad9feb23eae5460bd4046fac6b4a72d9f",
+  "request_window_ms": 30225.41575,
+  "attention_full32_source": "12*(384+384+254)=12264; main32721 tokens over12288/12288/8145, remainder17querytail/layer; group rows by name+device across engine threads.",
+  "scoring_source": {
+    "main_tokens": 32721,
+    "chunks": [
+      12288,
+      12288,
+      8145
+    ],
+    "QSA_layers": 12,
+    "GDN_layers": 36,
+    "MoE_layers": 48,
+    "selection_calls_per_layer": [
+      48,
+      48,
+      32
+    ],
+    "expected_prefill_scorer_calls": [
+      576,
+      576,
+      384
+    ],
+    "expected_tiled_calls": [
+      0,
+      396,
+      372
+    ],
+    "expected_original_prefill_calls": [
+      576,
+      180,
+      12
+    ],
+    "observed_tiled": 768,
+    "observed_original_all": 960,
+    "observed_topk_all": 1728,
+    "original_residual_beyond_mainprefill": 192,
+    "residual_scope": "Small final prompt handling/capture/decode not independently split; do not label all192 steadydecode without evidence."
+  },
+  "GPU_unions_ms": [
+    17239.233,
+    4883.8145
+  ],
+  "candidate": {
+    "count": 768,
+    "exact_names": [
+      "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_prefill_tiled_s89>[SIMD32 {256; 32; 1} {256; 1; 1}]"
+    ],
+    "contained_service_ms": 792.5028159999999,
+    "clipped_sum_ms": 792.5015,
+    "union_ms": 792.5015
+  },
+  "host_copy_calls": 681,
+  "host_copy_duration_sum_ms": 14404.145845000001,
+  "host_copy_union_ms": 14404.14475,
+  "host_copy_overlap_GPU0_uncovered_ms": 143.952,
+  "host_copy_overlap_GPU0_recorded_ms": 14260.19275,
+  "clock_shift_drift_us": 945.0360000003129,
+  "cold_profile_limit": "FIRSTunwarmed request after pausedload includes graphcapture/admission/prefill/decode. S89had priorC2warm+4Krequests andcap256; do NOTattribute wall/native differences solely toprofiler or call clean speed. Later500ms gaps precedeep_bump and cannot be called main-prefill intervals.",
+  "next_selected": "PrepareprivateSCOREONLY12-headreduce-scatter in originalSG32/CHUNK64/NC1 kernel. DistinctfromS11querybatch/S12lanecell/S13valuepipeline. No mainchange/build/GPU result yet.",
+  "enqueue_lead": "Current source enqueues entirepeerpath afterprimarygather beforeprimaryDQ;65ms traced gather->DQ motifs warrantsourceaudit only. S7async andS38alias are rejected/neutral and not queued again.",
+  "no_performance_or_promotion_claim": true
+}

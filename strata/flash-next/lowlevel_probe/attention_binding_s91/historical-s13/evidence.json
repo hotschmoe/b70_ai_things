@@ -1,0 +1,266 @@
+{
+  "status": "RETAINED_S13_SAME_HOST_BINDING_CONFIRMED",
+  "artifacts": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/qsa-value-baseline.o",
+      "bytes": 251784,
+      "sha256": "f97cacf1982f0ae5eb6a04e1a61736a4a6acc2e6199470a64eaa8f4fb9bffc38",
+      "mtime_ns": 1792016828905265447
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/qsa-value-gather.o",
+      "bytes": 263960,
+      "sha256": "9d476acbb445dde16c468c963ce98ba5aa2cca41c59beefa21937e666c82e3aa",
+      "mtime_ns": 1792016837241521074
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/attn-value-probe-s13",
+      "bytes": 2072080,
+      "sha256": "7411d17bc61b49dcb516605cab4f7cde1aaaeff34892c2396d4364fad45bc4b2",
+      "mtime_ns": 1792016856083098840
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/qsa-value-baseline.cpp",
+      "bytes": 43287,
+      "sha256": "00bf1c45f15b1899e0562006aa6a410da4baec164eff1b1690316a6f2a66dcdb",
+      "mtime_ns": 1792016767920356236
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/qsa-value-gather.cpp",
+      "bytes": 44464,
+      "sha256": "49ff3788b2537bd8f73e2630e9597d7fb9bffb393073c0ce4a10f59466ec6b44",
+      "mtime_ns": 1792016767920494470
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/attn_value_probe.cpp",
+      "bytes": 6911,
+      "sha256": "95caaac4028700a59e5812667e3f662603ea86200cbb421e3e24d05694f22235",
+      "mtime_ns": 1792016767920607455
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_value_20261014/qsa-value-baseline.cpp",
+      "bytes": 43287,
+      "sha256": "00bf1c45f15b1899e0562006aa6a410da4baec164eff1b1690316a6f2a66dcdb",
+      "mtime_ns": 1792016724053885620
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_value_20261014/qsa-value-gather.cpp",
+      "bytes": 44464,
+      "sha256": "49ff3788b2537bd8f73e2630e9597d7fb9bffb393073c0ce4a10f59466ec6b44",
+      "mtime_ns": 1792016724054029104
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_value_20261014/build-attn-value-s13.sh",
+      "bytes": 728,
+      "sha256": "8d4de9d8eb269f316e3ec72ca776032cd4dd24c5a65a7a79fcca2e80f7d75708",
+      "mtime_ns": 1792017135318948394
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_value_20261014/build-probe.log",
+      "bytes": 143396,
+      "sha256": "07102b0a07a182e4b7666e541382fbebc40aca5a6662ff87134f27bd9c91736b",
+      "mtime_ns": 1792016855853091787
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_value_20261014/probe-card0.log",
+      "bytes": 5059,
+      "sha256": "60aac7e7478bf7755108d11a7fa08e60b48064afd0cd2456e371e16214d74236",
+      "mtime_ns": 1792016966699490820
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_value_20261014/probe-summary.json",
+      "bytes": 2774,
+      "sha256": "7c8a9cd10d26223ded9336ae82ceb0d2583acdf16c7c5ea67f9afa311c2e0380",
+      "mtime_ns": 1792017011904481752
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_value_20261014/identity-before.json",
+      "bytes": 865,
+      "sha256": "ef481a0ff13806930520448c0bd2b2f6186506a30f892ba401eea70dbf1bb118",
+      "mtime_ns": 1792016724200171119
+    }
+  ],
+  "selected_namespace_global_tag": "dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4,dpct_kernel_scalar<1>>",
+  "object_and_final_evidence": {
+    "public": {
+      "symbols": [
+        {
+          "line": 34,
+          "text": "0000000000000000 V guard variable for sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info"
+        },
+        {
+          "line": 134,
+          "text": "0000000000000000 V sycl::_V1::detail::compile_time_kernel_info_v1::CompileTimeKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >"
+        },
+        {
+          "line": 343,
+          "text": "0000000000000000 V sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info"
+        }
+      ],
+      "relocations_or_final_refs": [
+        {
+          "line": 852,
+          "text": "    1542:\t0f b6 05 00 00 00 00 \tmovzbl 0x0(%rip),%eax        # 1549 <strata::kernels::qsa_decode_attn_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)+0x1549>\t1545: R_X86_64_PC32\tguard variable for sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info-0x4"
+        },
+        {
+          "line": 855,
+          "text": "    1551:\t4c 8b 3d 00 00 00 00 \tmov    0x0(%rip),%r15        # 1558 <strata::kernels::qsa_decode_attn_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)+0x1558>\t1554: R_X86_64_PC32\tsycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info-0x4"
+        },
+        {
+          "line": 1110,
+          "text": "    1ab5:\tbf 00 00 00 00       \tmov    $0x0,%edi\t1ab6: R_X86_64_32\tguard variable for sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info"
+        },
+        {
+          "line": 1114,
+          "text": "    1ac7:\tbf 00 00 00 00       \tmov    $0x0,%edi\t1ac8: R_X86_64_32\tsycl::_V1::detail::compile_time_kernel_info_v1::CompileTimeKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >"
+        },
+        {
+          "line": 1116,
+          "text": "    1ad1:\t48 89 05 00 00 00 00 \tmov    %rax,0x0(%rip)        # 1ad8 <strata::kernels::qsa_decode_attn_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)+0x1ad8>\t1ad4: R_X86_64_PC32\tsycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info-0x4"
+        },
+        {
+          "line": 1117,
+          "text": "    1ad8:\tbf 00 00 00 00       \tmov    $0x0,%edi\t1ad9: R_X86_64_32\tguard variable for sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info"
+        },
+        {
+          "line": 1121,
+          "text": "    1aea:\tbf 00 00 00 00       \tmov    $0x0,%edi\t1aeb: R_X86_64_32\tguard variable for sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info"
+        }
+      ]
+    },
+    "variant": {
+      "symbols": [
+        {
+          "line": 34,
+          "text": "0000000000000000 V guard variable for sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info"
+        },
+        {
+          "line": 134,
+          "text": "0000000000000000 V sycl::_V1::detail::compile_time_kernel_info_v1::CompileTimeKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >"
+        },
+        {
+          "line": 343,
+          "text": "0000000000000000 V sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info"
+        }
+      ],
+      "relocations_or_final_refs": [
+        {
+          "line": 852,
+          "text": "    1542:\t0f b6 05 00 00 00 00 \tmovzbl 0x0(%rip),%eax        # 1549 <strata::kernels::value_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)+0x1549>\t1545: R_X86_64_PC32\tguard variable for sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info-0x4"
+        },
+        {
+          "line": 855,
+          "text": "    1551:\t4c 8b 3d 00 00 00 00 \tmov    0x0(%rip),%r15        # 1558 <strata::kernels::value_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)+0x1558>\t1554: R_X86_64_PC32\tsycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info-0x4"
+        },
+        {
+          "line": 1110,
+          "text": "    1ab5:\tbf 00 00 00 00       \tmov    $0x0,%edi\t1ab6: R_X86_64_32\tguard variable for sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info"
+        },
+        {
+          "line": 1114,
+          "text": "    1ac7:\tbf 00 00 00 00       \tmov    $0x0,%edi\t1ac8: R_X86_64_32\tsycl::_V1::detail::compile_time_kernel_info_v1::CompileTimeKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >"
+        },
+        {
+          "line": 1116,
+          "text": "    1ad1:\t48 89 05 00 00 00 00 \tmov    %rax,0x0(%rip)        # 1ad8 <strata::kernels::value_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)+0x1ad8>\t1ad4: R_X86_64_PC32\tsycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info-0x4"
+        },
+        {
+          "line": 1117,
+          "text": "    1ad8:\tbf 00 00 00 00       \tmov    $0x0,%edi\t1ad9: R_X86_64_32\tguard variable for sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info"
+        },
+        {
+          "line": 1121,
+          "text": "    1aea:\tbf 00 00 00 00       \tmov    $0x0,%edi\t1aeb: R_X86_64_32\tguard variable for sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info"
+        }
+      ]
+    },
+    "final": {
+      "symbols": [
+        {
+          "line": 471,
+          "text": "00000000005d4818 V guard variable for sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info"
+        },
+        {
+          "line": 653,
+          "text": "000000000042d598 V sycl::_V1::detail::compile_time_kernel_info_v1::CompileTimeKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >"
+        },
+        {
+          "line": 979,
+          "text": "00000000005d4810 V sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info"
+        }
+      ],
+      "relocations_or_final_refs": [
+        {
+          "line": 7969,
+          "text": "  40cfe2:\t0f b6 05 2f 78 1c 00 \tmovzbl 0x1c782f(%rip),%eax        # 5d4818 <guard variable for sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info>"
+        },
+        {
+          "line": 7972,
+          "text": "  40cff1:\t4c 8b 3d 18 78 1c 00 \tmov    0x1c7818(%rip),%r15        # 5d4810 <sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info>"
+        },
+        {
+          "line": 8233,
+          "text": "  40d571:\t48 89 05 98 72 1c 00 \tmov    %rax,0x1c7298(%rip)        # 5d4810 <sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info>"
+        },
+        {
+          "line": 14683,
+          "text": "  414742:\t0f b6 05 cf 00 1c 00 \tmovzbl 0x1c00cf(%rip),%eax        # 5d4818 <guard variable for sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info>"
+        },
+        {
+          "line": 14686,
+          "text": "  414751:\t4c 8b 3d b8 00 1c 00 \tmov    0x1c00b8(%rip),%r15        # 5d4810 <sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info>"
+        },
+        {
+          "line": 14947,
+          "text": "  414cd1:\t48 89 05 38 fb 1b 00 \tmov    %rax,0x1bfb38(%rip)        # 5d4810 <sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info>"
+        }
+      ],
+      "initializer_excerpts": [
+        {
+          "first_line": 8227,
+          "lines": [
+            "  40d555:\tbf 18 48 5d 00       \tmov    $0x5d4818,%edi",
+            "  40d55a:\te8 f1 6c ff ff       \tcall   404250 <__cxa_guard_acquire@plt>",
+            "  40d55f:\t85 c0                \ttest   %eax,%eax",
+            "  40d561:\t0f 84 8a fa ff ff    \tje     40cff1 <strata::kernels::qsa_decode_attn_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)+0x1551>",
+            "  40d567:\tbf 98 d5 42 00       \tmov    $0x42d598,%edi",
+            "  40d56c:\te8 6f 6f ff ff       \tcall   4044e0 <sycl::_V1::detail::getDeviceKernelInfo(sycl::_V1::detail::compile_time_kernel_info_v1::CompileTimeKernelInfoTy const&)@plt>",
+            "  40d571:\t48 89 05 98 72 1c 00 \tmov    %rax,0x1c7298(%rip)        # 5d4810 <sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info>",
+            "  40d578:\tbf 18 48 5d 00       \tmov    $0x5d4818,%edi",
+            "  40d57d:\te8 5e 6e ff ff       \tcall   4043e0 <__cxa_guard_release@plt>",
+            "  40d582:\te9 6a fa ff ff       \tjmp    40cff1 <strata::kernels::qsa_decode_attn_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)+0x1551>",
+            "  40d587:\t48 89 c3             \tmov    %rax,%rbx"
+          ]
+        },
+        {
+          "first_line": 14941,
+          "lines": [
+            "  414cb5:\tbf 18 48 5d 00       \tmov    $0x5d4818,%edi",
+            "  414cba:\te8 91 f5 fe ff       \tcall   404250 <__cxa_guard_acquire@plt>",
+            "  414cbf:\t85 c0                \ttest   %eax,%eax",
+            "  414cc1:\t0f 84 8a fa ff ff    \tje     414751 <strata::kernels::value_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)+0x1551>",
+            "  414cc7:\tbf 98 d5 42 00       \tmov    $0x42d598,%edi",
+            "  414ccc:\te8 0f f8 fe ff       \tcall   4044e0 <sycl::_V1::detail::getDeviceKernelInfo(sycl::_V1::detail::compile_time_kernel_info_v1::CompileTimeKernelInfoTy const&)@plt>",
+            "  414cd1:\t48 89 05 38 fb 1b 00 \tmov    %rax,0x1bfb38(%rip)        # 5d4810 <sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info>",
+            "  414cd8:\tbf 18 48 5d 00       \tmov    $0x5d4818,%edi",
+            "  414cdd:\te8 fe f6 fe ff       \tcall   4043e0 <__cxa_guard_release@plt>",
+            "  414ce2:\te9 6a fa ff ff       \tjmp    414751 <strata::kernels::value_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)+0x1551>",
+            "  414ce7:\t48 89 c3             \tmov    %rax,%rbx"
+          ]
+        }
+      ]
+    }
+  },
+  "final_shared_state": {
+    "Info": "0x5d4810",
+    "guard": "0x5d4818",
+    "CompileTimeKernelInfo": "0x42d598",
+    "CompileTimeKernelInfo_bytes": 88,
+    "first_pointer": "0x4286ad",
+    "first_pointer_C_string": "_ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE",
+    "selected_name_is_public_batch": true
+  },
+  "command_evidence": "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1\nset -euo pipefail\ncd /work\nflags=(-O3 -DNDEBUG -std=c++20 -fsycl -fsycl-targets=spir64_gen -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -I/work/src-ep/sycl/include -I/work/src-ep/include -I/work/src-ep/third_party/ggml)\nicpx \"${flags[@]}\" -c qsa-value-baseline.cpp -o qsa-value-baseline.o\nicpx \"${flags[@]}\" -Dqsa_decode_attn_batch=value_batch -Dqsa_decode_attn_step=value_step -Dqsa_decode_attn_scratch_floats=value_scratch -c qsa-value-gather.cpp -o qsa-value-gather.o\nicpx \"${flags[@]}\" -Xsycl-target-backend=spir64_gen '-device bmg-g31' attn_value_probe.cpp qsa-value-baseline.o qsa-value-gather.o -o attn-value-probe-s13\n",
+  "no_GPU_rebuild_rawtrace_or_device_image_ISA_walk": true,
+  "historical_execution_limit": "No historical hash tying this retained standalone executable to probe-card0.log was found in the inspected identity/summary/recipe records. Artifacts/recipe/logs retained at original paths; do not fabricate stronger provenance. Actual retained binary conclusively shares host state; historical independent A/B claim is unsupported by these artifacts."
+}

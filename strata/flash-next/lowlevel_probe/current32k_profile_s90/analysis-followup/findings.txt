@@ -1,0 +1,58 @@
+S90 current32K CSV-only source/readiness followup (2026-10-15)
+
+CONFIG -> Same S89ON/Q6center0, native149/peer363 experts per layer, all
+resident. Full instrumented32728-prompt/32-output request30.225416s includes
+admission/capture/prefill/decode. Separate clocks remain unjoined. No GPU/model/
+build work by this agent. One CPU-leased CSV analysis27s; no rawJSON reread.
+
+COMMAND -> Read existing summary/operations/GPU timeline/host submit-wait CSVs
+and306KB timing.467.csv. Union GPU0 intervals and intersect recorded gaps with
+hostcopy API spans. Inspect current prefill.cpp and ep_kernels.dp.cpp only.
+Facts retain exact input stat identity and raw hash inherited from summary.
+
+RESULT -> Source geometry32721 main tokens implies chunks12288/12288/8145.
+36 GDN layers x3=108 observed recurrence calls;48 MoE layers x3=144 peer
+prefill reducers. Ordered36-call GDN envelopes occur0.188..9.708,
+10.175..19.038,19.573..26.655s on GPU0. These are partial same-device source
+motifs, not complete chunk timestamps. The peer's48-call groups stay separate.
+
+Selection batch256/12QSA layers predicts576/576/384 main scoring calls.
+Guard4097 produces0/396/372=768 tiled calls, matching actual GPU0 ID count
+and792.502816ms contained service. Original main scorer counts576/180/12=768;
+observed original960 leaves192 calls for small-final/capture/decode handling,
+not independently separated. Top-k total1728 matches1536main+192 residual.
+Candidate reuses the original4x128/R4 arithmetic; no performance cause follows
+from these source/count reconciliations.
+
+GPU0 recorded union17.239233s, uncovered12.986183s in153862events; GPU1 union
+4.883815s. These are per-device recorded timelines, not additive request
+budgets, physical occupancy or hardware idle. Largest GPU0 gaps start at
+27.072/28.688/29.236/27.642/28.186s and last510.274/473.050/465.885/
+460.304/444.891ms, ending before ep_bump. Their late placement prevents calling
+them main-prefill gaps; native prompt duration alone cannot establish endpoints.
+
+The largest earlier motif gap is147.976ms at0.232s; repeated65-68ms gaps at
+0.574,5.796,6.296,6.663,7.003s separate primary gather_rows16 from primary
+expert dequant. Their top examples have0..0.238ms hostcopy overlap.
+Concrete source fact: prefill.cpp3620 enqueues primary gather, then3624+
+enqueues the peer path; IPC loop3734..3750 issues the whole peer expert
+GATHER/DQ/GEMM/SwiGLU/GEMM sequence before own primary expert DQ at4315.
+That host enqueue order can delay primary readiness with independent operands.
+It supports ONE bounded source audit of enqueue interleaving/order, not a
+claim that those source statements caused measured gaps. S38 alias/gather
+changes are distinct; no implementation, framework or probe selected here.
+
+Host AppendMemoryCopy681calls sum14.404146s, versus GPU0copy95.0685ms.
+Hostcopy union14.404145s overlaps GPU0 gaps only143.952ms, so14.260193s
+coincides with recorded GPU0 activity. Long API calls therefore cannot be
+presented as14s of removable transfer/idle time. Extracted hostCSV lacks
+queue/device/correlation arguments: overlap is not assignment of a particular
+host call to GPU0, a dependency, P2P/PCIe bytes or causal waiting proof.
+
+VERDICT -> Prioritize source readiness at peer-before-primary enqueue and
+retain exact attention/GEMM/GDN rows for comparison: full-request GPU0 attention
+family6.473357s and GDN recurrence1.751303s are larger service pools than the
+new scorer. Family/service sums overlap and are not removable latency budgets.
+Trace overhead/capture are included. Fresh clock correction drift945.036us
+and absent exact native phase endpoints limit fine joins. No retime, threshold
+sweep, new GPU collection or causal critical-path savings claim.

@@ -2149,3 +2149,16 @@ no new GPU. S41 strict failure remains unchanged.
 VERDICT -> Diagnostic PASS only. Next S44 checks remaining columns/shapes/
 changed inputs. No serving, quality or speed promotion.
 [S43 report](20261015_strata_q6_cpu_reference.md).
+
+
+## S91 -- correction to S13 private attention attribution
+
+A new CPU-only host-binding audit of the exact documented S13 executable
+finds both public and value paths use one kernel-info object selecting the
+public kernel name. The earlier S13 exactness/neutral timings therefore do
+not establish independent candidate execution. Original evidence above is
+preserved; candidate correctness and speed remain unqualified. S91's new
+reduce12 build has the same binding failure plus declared private scratch,
+so it is parked without GPU execution. A corrected value-only preparation
+privatizes all11 kernel tags and retains the strict36-case fixture. It is
+not built or measured here. [Audit, evidence and scope](20261015_strata_attention_binding_audit.md).

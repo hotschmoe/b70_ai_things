@@ -1,0 +1,654 @@
+ROOT TASK: Review completed S91 HOLD and proposed S92 private source. User targets2000prefill/150stream; S30 bounded true RAM recovery passed. MainStrata untouched; no speed/target claim. S90 trace independently complete. New S91hostbindingfailure makes device-image-only admission insufficient. Historical exact S13 binary also shares public metadata; preserve historical logs, correct current candidate-neutrality attribution. Assess one future corrected value comparison, NOT repeat same scratch-heavy reduce12. Return ACCEPT_S91_HOLD_AND_GO_S92_CPU_BUILD or HOLD, concrete blockers, root conditions, and dev-loop cuts. No tool/build/GPU execution. Candidate math must retain old ascending-cell FMA, querySLM reuse only afterbarrier. Entire fixture 36cases before acceptinganytimings, oneprocess nestedseeds, CAP2112/width2051 surrogate. Do not invent dynamic scratch/traffic/causality frommetadata.
+
+COMPACT ROOT FACTS
+{
+  "S91": "CPU-only build32s, two ISA decodes10s, zeroGPU. Park mapping; no rename-only reduce12 rebuild.",
+  "S91_binary": "51e2fd7b58a41493893facd947c1c08c368eb3ddb80145eac1ab41e895d6b41a",
+  "resources": {
+    "public": {
+      "barrier_count": 1,
+      "grf_count": 128,
+      "simd_size": 32,
+      "slm_size": 15872,
+      "private_size": "absent",
+      "spill_size": "absent",
+      "scratch_size": "absent",
+      "eu_thread_count": 8,
+      "per_thread_scratch_buffer": "absent",
+      "text_bytes": 19328,
+      "image_sha256": "80d9bfd4a34120824bb24dcded7d9a6574a90d9632b5d9ad446a20af48161e11",
+      "static_ss_a32_d32_message_counts": {},
+      "static_ss_payload_bytes_sum_if_each_site_once_all_lanes": {},
+      "asm_sha256": "2f31a36a256f274f7d262253941e76e1076159eea0735e731689e3f3f5590cef"
+    },
+    "private": {
+      "barrier_count": 1,
+      "grf_count": 128,
+      "simd_size": 32,
+      "slm_size": 15872,
+      "private_size": 3584,
+      "spill_size": "absent",
+      "scratch_size": "absent",
+      "eu_thread_count": 8,
+      "per_thread_scratch_buffer": {
+        "usage": "single_space",
+        "size": 4096
+      },
+      "text_bytes": 19264,
+      "image_sha256": "217a725b2b3b3fa16c35a5b3e0e827e2ac67640449569c816f817a4434148ebb",
+      "static_ss_a32_d32_message_counts": {
+        "store": 28,
+        "load": 28
+      },
+      "static_ss_payload_bytes_sum_if_each_site_once_all_lanes": {
+        "store": 3584,
+        "load": 3584
+      },
+      "asm_sha256": "8e423a16e9029eeca82d60cd7f2f1943acfdaaba939579299cba0371554cf5d0"
+    }
+  },
+  "host_symbol_name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels24attn_chunk_kernel_2ad0a4E18dpct_kernel_scalarILi1EEEEEE",
+  "host_both_same_weak_symbol": true,
+  "host_first_name_relocations": {
+    "candidate.o": {
+      "offset_in_info": 0,
+      "reloc_type": 1,
+      "target_symbol": "",
+      "target_section": ".rodata.str1.1",
+      "addend": 4529,
+      "cstring_candidate": "_ZTS16dpct_kernel_nameIJZN6strata7kernels14reduce12_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE"
+    },
+    "public-current-member.o": {
+      "offset_in_info": 0,
+      "reloc_type": 1,
+      "target_symbol": "",
+      "target_section": ".rodata.str1.1",
+      "addend": 4578,
+      "cstring_candidate": "_ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE"
+    }
+  },
+  "next": "Corrected S13 value-pipeline question using private ALL11 class tags AND hostfnames; current public object+publicAOT reuse. No newmath/tolerance/sweep. CPUbuild only after root+actualClaude source review; actual finalhost metadata/pointers/deviceimages/resources before any separate GPU GO.",
+  "root_whole_candidate_reconstruction_exact": true
+}
+
+HISTORICAL S13 INDEPENDENT FINDINGS
+CONFIG -> One offline audit of retained S13 standalone artifacts, not inference solely from S91. Historical rawroot /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_value_20261014. Actual retained objects/exe under /mnt/vm_8tb/b70/build/strata-ab/{qsa-value-baseline.o,qsa-value-gather.o,attn-value-probe-s13}; complete exact hashes/mtimes/flags in evidence.json. Both source copies equal their raw historical counterparts.
+COMMAND -> Under cpu-run (0s/exit0), host nm-C and objdump-drwC on both objects+final executable, then bounded host-ELF .rodata pointer read. No compiler, GPU, device-image/ISA walk, raw trace parse, model read, historical doc/source modification or performance rerun.
+RESULT -> BOTH public qsa_decode_attn_batch and renamed value_batch objects have SAME namespace-global chunk2ad0a4/scalar1 weak Info/guard/CompileTimeKernelInfo symbols. Both host paths relocate to them: guard1545, Info1554, CompileTimeKernelInfo1ac8 (object offsets). Final contains ONE shared Info0x5d4810, guard0x5d4818, CompileTimeKernelInfo0x42d598 (88bytes). Public host initialization40d567 and variant414cc7 BOTH pass0x42d598 to getDeviceKernelInfo and store to SAME0x5d4810. First word at0x42d598 points0x4286ad to the actual registered-name C string containing qsa_decode_attn_batch/attn_chunk_kernel_2ad0a4/scalar1, NOT value_batch. Exact symbol/relocation/disassembly excerpts in evidence.json and full host text in public/variant/final outputs.
+RESULT -> Historical build recipe renames ONLY3 host function tokens, as retained. It uses-O3/stdc++20/fsycl/spir64_gen/SG32/per_kernel/precise and bmg-g31 final link. Historical numerical/timing logs remain unchanged. Their near-equality cannot establish independently selected variant device execution when both inspected host paths share this state.
+VERDICT -> RETAINED_S13_HOST_BINDING_FAIL for independent public-vs-value INT8 default-path comparison. Do NOT use this retained A/B as proof that the distinct value-pipeline candidate was correct or neutral; no new claim about its actual speed. This audit does not schedule a rerun or invalidate unchanged baseline/health observations. Runtime device dispatch was not observed now. Inspected historical identity/summary/recipe do not pin the executed standalone binary hash, so execution-log provenance beyond retained paths/recipe is explicitly limited; no fabricated stronger historical identity. No broad all-kernel or device-runtime theorem.
+
+
+HISTORICAL EXACT BINARY DOCUMENTARY SUPPLEMENT
+{
+  "status": "EXACT_RETAINED_EXECUTABLE_MATCHES_HISTORICAL_DOCUMENTED_S13_PROBE_HASH",
+  "historical_document": "/mnt/vm_8tb/github/b70_ai_things/docs/20261014_flashnext_strata_optimization.md",
+  "historical_document_sha256_now": "957ca80a9b87c12f28cab254a54fbc3eeb566afe6abe1242530d095e2f2375e6",
+  "section": "S13",
+  "quote": "Probe SHA2567411d17bc61b49dcb516605cab4f7cde1aaaeff34892c2396d4364fad45bc4b2.",
+  "retained_executable": "/mnt/vm_8tb/b70/build/strata-ab/attn-value-probe-s13",
+  "retained_executable_sha256": "7411d17bc61b49dcb516605cab4f7cde1aaaeff34892c2396d4364fad45bc4b2",
+  "same_as_documented": true,
+  "correction": "Initial evidence.json/findings.md conservatively limited binary-to-historical-run provenance to inspected identity/summary/recipe files. The additionally inspected dated S13 document explicitly records this exact executable hash. This strengthens the retained binary tie to documented S13. It does not turn this offline audit into a new runtime dispatch observation, nor alter the proven shared host-binding failure. Preserve initial outputs; read this supplement with them.",
+  "conclusion": "S13 independent public-versus-value INT8 default-path AB comparison is not supported; both host paths use same selected public kernel-info/name. No claim about true candidate correctness/speed; no rerun queued."
+}
+
+
+S92 SOURCE IDENTITY
+{
+  "stage": "S92",
+  "status": "SOURCE_ONLY_NOT_BUILT",
+  "old_S13_private_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_value_20261014/qsa-value-gather.cpp",
+  "private_source_byte_exact_old_S13": true,
+  "private_source_sha256": "49ff3788b2537bd8f73e2630e9597d7fb9bffb393073c0ce4a10f59466ec6b44",
+  "current_public_source_sha256": "00bf1c45f15b1899e0562006aa6a410da4baec164eff1b1690316a6f2a66dcdb",
+  "current_public_source_equals_S13_baseline": true,
+  "public_member_sha256": "bbae92dcf61427f35078d498a240b1c9f23862e8bf13f7b63d95252e3b06baf2",
+  "reused_S91_public_images_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-score-reduce12-s91-prep/build/public.images.o",
+  "reused_public_images_sha256": "df7655d8eacbd93b6c8ce116ab1b7a8e04c5a8ccf031d2180c959c31bbdb8b6b",
+  "candidate_kernel_class_renames": {
+    "attn_chunk_kernel_6e87d5": "s92_private_attn_chunk_kernel_6e87d5",
+    "attn_chunk_kernel_dfacfc": "s92_private_attn_chunk_kernel_dfacfc",
+    "attn_chunk_kernel_b0d448": "s92_private_attn_chunk_kernel_b0d448",
+    "attn_chunk_kernel_2ad0a4": "s92_private_attn_chunk_kernel_2ad0a4",
+    "attn_chunk_kernel_5c04f7": "s92_private_attn_chunk_kernel_5c04f7",
+    "attn_merge_kernel_338175": "s92_private_attn_merge_kernel_338175",
+    "attn_chunk_kernel_f262e6": "s92_private_attn_chunk_kernel_f262e6",
+    "attn_chunk_kernel_4fd923": "s92_private_attn_chunk_kernel_4fd923",
+    "attn_chunk_kernel_f6855e": "s92_private_attn_chunk_kernel_f6855e",
+    "attn_chunk_kernel_7c8e09": "s92_private_attn_chunk_kernel_7c8e09",
+    "attn_merge_kernel_c055e7": "s92_private_attn_merge_kernel_c055e7"
+  },
+  "rename_scope": "Compile defines only; retained private source bytes unchanged. Host exported functions additionally renamed value_batch/value_step/value_scratch.",
+  "fixture_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-score-reduce12-s91-prep/attn_score_probe.cpp",
+  "fixture_changes_only": [
+    "reduce12_* -> value_*",
+    "two diagnostic comments/messages S91/score -> S92/value"
+  ],
+  "fixture_runtime_case_RNG_math_guards_timing_unchanged": true,
+  "math_delta": "Only retained S13 probability-SLM transpose and four-value prefetch/sequential FMA value loop. No reduce12 score change.",
+  "proof_scope": "Source identity and tag inventory only. Actual future host-call DeviceKernelInfo/CompileTimeKernelInfo and selected device registration must be checked before GPU; distinct device IDs alone insufficient.",
+  "historical_S13": "Old logs unchanged; old neutral candidate attribution invalidated by shared weak host metadata. Not a corrected performance result."
+}
+
+
+S92 RETAINED VALUE-ONLY PATCH
+--- a/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp
++++ b/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp
+@@ -255,8 +255,8 @@
+         const float eb = (lane + 32 < n_here && srow[lane + 32] >= 0)
+                              ? sycl::native::exp(b - m)
+                              : 0.0f;
+-        sp[h][lane] = ea;
+-        sp[h][lane + 32] = eb;
++        reinterpret_cast<float*>(&sq[0][0])[lane * G + h] = ea;
++        reinterpret_cast<float*>(&sq[0][0])[(lane + 32) * G + h] = eb;
+         const float l = warp_sum(ea + eb);
+         if (lane == 0) { part_m[slot * G + h] = m; part_l[slot * G + h] = l; }
+     }
+@@ -270,27 +270,26 @@
+     float acc[G];
+ #pragma unroll
+     for (int h = 0; h < G; ++h) acc[h] = 0.0f;
+-    for (int c = 0; c < n_here; ++c) {
+-        if (srow[c] < 0) continue;   // masked above, weight 0
++    const auto load_value = [&](long long row) {
+         float v;
+         if constexpr (KV_MODE == 0) {
+             v = sycl::vec<sycl::half, 1>(
+                     sycl::bit_cast<sycl::half, unsigned short>(
+-                        p.v_pool[srow[c] * HD + t]))
++                        p.v_pool[row * HD + t]))
+                     .convert<float, sycl::rounding_mode::automatic>()[0];
+         } else if constexpr (KV_MODE == 1) {
+             const float sc =
+                 sycl::vec<sycl::half, 1>(
+                     sycl::bit_cast<sycl::half, unsigned short>(
+-                        p.v_scale[srow[c] * (HD / KV_Q8_GROUP) +
++                        p.v_scale[row * (HD / KV_Q8_GROUP) +
+                                   t / KV_Q8_GROUP]))
+                     .convert<float, sycl::rounding_mode::automatic>()[0];
+-            v = (float) p.v_q[srow[c] * HD + t] * sc;
++            v = (float) p.v_q[row * HD + t] * sc;
+         } else {   // modes 2 and 3: V is rotated Q4_0 (kv_q4.hpp); the caller rotates the output back
+             constexpr int bytes_per_head = (HD / QK4_0) * sizeof(block_q4_0);
+             const int b = t / QK4_0;
+             const int rem = t % QK4_0;
+-            const block_q4_0* blk = reinterpret_cast<const block_q4_0*>(p.v_q4 + srow[c] * bytes_per_head) + b;
++            const block_q4_0* blk = reinterpret_cast<const block_q4_0*>(p.v_q4 + row * bytes_per_head) + b;
+             const float d =
+                 sycl::vec<sycl::half, 1>(
+                     sycl::bit_cast<sycl::half, unsigned short>(blk->d))
+@@ -300,8 +299,29 @@
+             const int nibble = (rem < 16) ? ((byte & 0x0F) - 8) : ((byte >> 4) - 8);
+             v = (float) nibble * d;
+         }
+-#pragma unroll
+-        for (int h = 0; h < G; ++h) acc[h] = sycl::fma(sp[h][c], v, acc[h]);
++        return v;
++    };
++    const auto fold = [&](int c, float v) {
++        const sycl::float4* w4 = reinterpret_cast<const sycl::float4*>(
++            reinterpret_cast<const float*>(&sq[0][0]) + c * G);
++        const sycl::float4 w0 = w4[0], w1 = w4[1], w2 = w4[2];
++        acc[0] = sycl::fma(w0.x(), v, acc[0]); acc[1] = sycl::fma(w0.y(), v, acc[1]);
++        acc[2] = sycl::fma(w0.z(), v, acc[2]); acc[3] = sycl::fma(w0.w(), v, acc[3]);
++        acc[4] = sycl::fma(w1.x(), v, acc[4]); acc[5] = sycl::fma(w1.y(), v, acc[5]);
++        acc[6] = sycl::fma(w1.z(), v, acc[6]); acc[7] = sycl::fma(w1.w(), v, acc[7]);
++        acc[8] = sycl::fma(w2.x(), v, acc[8]); acc[9] = sycl::fma(w2.y(), v, acc[9]);
++        acc[10] = sycl::fma(w2.z(), v, acc[10]); acc[11] = sycl::fma(w2.w(), v, acc[11]);
++    };
++    int c = 0;
++    for (; c + 4 <= n_here; c += 4) {
++        const long long r0 = srow[c], r1 = srow[c+1], r2 = srow[c+2], r3 = srow[c+3];
++        if ((r0 | r1 | r2 | r3) < 0) break;
++        const float v0 = load_value(r0), v1 = load_value(r1);
++        const float v2 = load_value(r2), v3 = load_value(r3);
++        fold(c, v0); fold(c+1, v1); fold(c+2, v2); fold(c+3, v3);
++    }
++    for (; c < n_here; ++c) {
++        if (srow[c] >= 0) fold(c, load_value(srow[c]));
+     }
+ #pragma unroll
+     for (int h = 0; h < G; ++h) part_acc[((size_t) slot * G + h) * HD + t] = acc[h];
+
+
+S92 FULL STRICT FIXTURE
+// Compare two separately compiled qsa_decode_attn implementations on identical INT8 pools.
+// Compile the variant with qsa_decode_attn_{batch,step,scratch_floats} renamed to value_*.
+// Device selection belongs to the leased launch command. No model weights required.
+#include <sycl/sycl.hpp>
+#include "strata/kernels/qsa_decode_attn.hpp"
+#include <algorithm>
+#include <array>
+#include <bit>
+#include <cstdint>
+#include <cstdlib>
+#include <stdexcept>
+#include <chrono>
+#include <cmath>
+#include <cstdio>
+#include <cstring>
+#include <random>
+#include <vector>
+
+namespace k = strata::kernels;
+namespace strata::kernels {
+void value_batch(const float*, const QsaAttnPools&, const int32_t*, const int32_t*,
+                 int64_t, const QsaShapes&, float*, float*, int64_t, void*);
+}
+
+// Existing S13 allocation sites, with 4096-byte aligned-prefix guards and readonly witnesses.
+struct Allocation { uint8_t* raw; void* data; size_t bytes; std::vector<uint8_t> expected; };
+static std::vector<Allocation> allocations;
+constexpr size_t GUARD = 4096;
+template<class T> T* allocate(size_t n, sycl::queue& q) {
+    const size_t bytes=n*sizeof(T);
+    auto* raw=sycl::malloc_device<uint8_t>(bytes+2*GUARD,q);
+    if(!raw) throw std::bad_alloc();
+    q.memset(raw,0xd7,bytes+2*GUARD).wait_and_throw();
+    void* data=raw+GUARD;if(reinterpret_cast<uintptr_t>(data)%64)throw std::runtime_error("64-byte alignment");allocations.push_back({raw,data,bytes,{}});
+    return static_cast<T*>(data);
+}
+template<class T> void put_readonly(T* d,const std::vector<T>& h,sycl::queue& q) {
+    for(auto& a:allocations) if(a.data==d) {
+        if(a.bytes!=h.size()*sizeof(T))throw std::runtime_error("input size");
+        const auto* b=reinterpret_cast<const uint8_t*>(h.data());a.expected.assign(b,b+a.bytes);
+        q.memcpy(d,h.data(),a.bytes).wait_and_throw();return;
+    }
+    throw std::runtime_error("input allocation");
+}
+template<class T> T* upload(const std::vector<T>& h,sycl::queue& q) {
+    T* d=allocate<T>(h.size(),q);put_readonly(d,h,q);return d;
+}
+static void memory(sycl::queue& q) {
+    for(const auto& a:allocations) {
+        std::array<uint8_t,2*GUARD> g;
+        q.memcpy(g.data(),a.raw,GUARD);q.memcpy(g.data()+GUARD,a.raw+GUARD+a.bytes,GUARD).wait_and_throw();
+        if(!std::all_of(g.begin(),g.end(),[](uint8_t x){return x==0xd7;}))throw std::runtime_error("allocation guard");
+        if(!a.expected.empty()) {
+            std::vector<uint8_t> got(a.bytes);q.memcpy(got.data(),a.data,a.bytes).wait_and_throw();
+            if(got!=a.expected)throw std::runtime_error("readonly input");
+        }
+    }
+}
+static void release(sycl::queue& q) {
+    q.wait_and_throw();for(const auto& a:allocations)sycl::free(a.raw,q);allocations.clear();
+}
+int main() try {
+    if(std::getenv("STRATA_ATTN_LANECELL"))throw std::runtime_error("STRATA_ATTN_LANECELL must be absent: value-pipeline default path");
+    sycl::queue q(sycl::gpu_selector_v, {sycl::property::queue::in_order{},
+                                      sycl::property::queue::enable_profiling{}});
+    std::printf("device=%s\n", q.get_device().get_info<sycl::info::device::name>().c_str());
+    struct Case { int queries, width, cap, page, masked; };
+    const Case cases[] = {{1,1,64,4,0}, {1,63,64,4,0}, {1,64,64,4,0},
+        {1,65,128,4,0}, {1,65,128,4,1}, {1,2051,2112,4,0}, {4,2051,2112,4,0},
+        {32,2051,2112,4,0}, {32,2051,2112,512,0}, {32,1999,2112,4,1},
+        {12,11,64,4,0}, {32,0,128,4,0}};
+    for (unsigned seed : {7u, 31u, 109u}) for (const auto& c : cases) {
+        std::mt19937 rng(seed);
+        auto s = k::qsa_real_shapes(); s.page_size = c.page;
+        const int pages = (8192+c.page-1)/c.page, cells = pages*c.page;
+        std::vector<int32_t> table(pages), ids(c.queries*c.cap), steps(c.queries*k::kStepCount);
+        for (int p=0;p<pages;++p) table[p]=p;
+        std::shuffle(table.begin(),table.end(),rng);
+        if (c.masked) for (int p=0;p<pages;p+=7) table[p]=-1;
+        std::vector<float> hq(size_t(c.queries)*24*256);
+        std::vector<int8_t> hk(size_t(cells)*2*256), hv(hk.size());
+        std::vector<uint16_t> hs(size_t(cells)*2*4);
+        for (auto& x : hq) x=(int(rng()%1025)-512)/512.0f;
+        for (auto& x : hk) x=int(rng()%255)-127;
+        for (auto& x : hv) x=int(rng()%255)-127;
+        for (auto& x : hs) x=uint16_t(0x1800+(rng()%2048));
+        for (auto& x : ids) x=rng()%cells;
+        for (int i=0;i<c.queries;++i) steps[i*k::kStepCount+k::kStepWidth]=c.width;
+        auto* dq=upload(hq,q); auto* dk=upload(hk,q); auto* dv=upload(hv,q);
+        auto* ds=upload(hs,q); auto* dt=upload(table,q); auto* di=upload(ids,q); auto* dst=upload(steps,q);
+        k::QsaAttnPools pools; pools.k_q=dk; pools.v_q=dv; pools.k_scale=ds; pools.v_scale=ds; pools.page_table=dt;
+        const size_t nf=k::qsa_decode_attn_scratch_floats(c.cap,s)*c.queries, no=hq.size();
+        auto* a=allocate<float>(nf,q); auto* b=allocate<float>(nf,q);
+        auto* ya=allocate<float>(no,q); auto* yb=allocate<float>(no,q);
+        // Initialize padding and unused partials identically, making all scratch bytes comparable.
+        auto reset=[&]{q.fill(a,0.0f,nf);q.fill(b,0.0f,nf);q.memset(ya,0xff,no*4);q.memset(yb,0xff,no*4);q.wait_and_throw();};
+        reset();
+        auto run=[&](bool variant) {
+            if (variant) k::value_batch(dq,pools,di,dst,c.cap,s,b,yb,c.queries,&q);
+            else k::qsa_decode_attn_batch(dq,pools,di,dst,c.cap,s,a,ya,c.queries,&q);
+            q.wait_and_throw();
+        };
+        run(false); run(true);
+        std::vector<float> ha(no),hb(no),sa(nf),sb(nf);
+        q.memcpy(ha.data(),ya,no*4);q.memcpy(hb.data(),yb,no*4);
+        q.memcpy(sa.data(),a,nf*4);q.memcpy(sb.data(),b,nf*4);q.wait();
+        size_t mismatch=0; double maxerr=0;
+        for (size_t i=0;i<no;++i) {
+            if (!std::isfinite(ha[i]) || !std::isfinite(hb[i])) return 3;
+            mismatch += std::memcmp(&ha[i],&hb[i],4)!=0;
+            maxerr=std::max(maxerr,double(std::abs(ha[i]-hb[i])));
+        }
+        const bool scratch_equal=std::memcmp(sa.data(),sb.data(),nf*4)==0;
+        if (mismatch || !scratch_equal) {
+            std::printf("FAIL seed=%u nq=%d width=%d page=%d masked=%d outputs=%zu maxerr=%.9g scratch_equal=%d\n",
+                        seed,c.queries,c.width,c.page,c.masked,mismatch,maxerr,scratch_equal); return 4;
+        }
+        memory(q);
+        // Independent double-precision dense softmax for the small one-query boundary cases.
+        double oracle_error=0;
+        if (c.queries==1 && c.width<=65) {
+            for (int h=0;h<24;++h) {
+                std::vector<double> scores(c.width,-INFINITY); double mx=-INFINITY,denom=0;
+                for (int i=0;i<c.width;++i) {
+                    int cell=ids[i],page=table[cell/c.page]; if(page<0) continue;
+                    size_t row=(size_t(page)*2+h/12)*c.page+cell%c.page;
+                    double dot=0;
+                    for(int d=0;d<256;++d) {
+                        float sc=float(sycl::bit_cast<sycl::half>(hs[row*4+d/64]));
+                        dot+=double(hq[h*256+d])*(float(hk[row*256+d])*sc);
+                    }
+                    scores[i]=dot/16;mx=std::max(mx,scores[i]);
+                }
+                for(double z:scores) if(std::isfinite(z)) denom+=std::exp(z-mx);
+                for(int d=0;d<256;++d) {
+                    double expected=0;
+                    for(int i=0;i<c.width;++i) {
+                        int cell=ids[i],page=table[cell/c.page];if(page<0)continue;
+                        size_t row=(size_t(page)*2+h/12)*c.page+cell%c.page;
+                        float sc=float(sycl::bit_cast<sycl::half>(hs[row*4+d/64]));
+                        expected+=std::exp(scores[i]-mx)*double(float(hv[row*256+d])*sc);
+                    }
+                    if(denom) expected/=denom;
+                    oracle_error=std::max(oracle_error,std::abs(expected-ha[h*256+d]));
+                }
+            }
+            if(oracle_error>2e-5) {std::printf("FAIL oracle %.9g\n",oracle_error);return 5;}
+        }
+        const auto initial_out=ha,initial_scratch=sa;
+        auto snapshot=[&]{
+            q.memcpy(ha.data(),ya,no*4);q.memcpy(hb.data(),yb,no*4);
+            q.memcpy(sa.data(),a,nf*4);q.memcpy(sb.data(),b,nf*4);q.wait_and_throw();
+            if(std::memcmp(ha.data(),hb.data(),no*4)||std::memcmp(sa.data(),sb.data(),nf*4))throw std::runtime_error("strict full output/scratch");
+            for(float v:ha)if(!std::isfinite(v))throw std::runtime_error("nonfinite output");
+            for(float v:sa)if(!std::isfinite(v))throw std::runtime_error("nonfinite scratch");
+            memory(q);
+        };
+        snapshot();
+        reset();run(false);run(true);snapshot();
+        if(std::memcmp(ha.data(),initial_out.data(),no*4)||std::memcmp(sa.data(),initial_scratch.data(),nf*4))throw std::runtime_error("own repeat");
+        auto changed=hq;for(auto& v:changed)v=std::bit_cast<float>(std::bit_cast<uint32_t>(v)^0x80000000u);
+        put_readonly(dq,changed,q);reset();run(false);run(true);snapshot();
+        if(c.width>0&&!std::memcmp(ha.data(),initial_out.data(),no*4)&&!std::memcmp(sa.data(),initial_scratch.data(),nf*4))throw std::runtime_error("changed query unobservable");
+        const auto changed_out=ha,changed_scratch=sa;
+        reset();run(false);run(true);snapshot();
+        if(std::memcmp(ha.data(),changed_out.data(),no*4)||std::memcmp(sa.data(),changed_scratch.data(),nf*4))throw std::runtime_error("own changed repeat");
+        put_readonly(dq,hq,q);reset();run(false);run(true);snapshot();
+        if(std::memcmp(ha.data(),initial_out.data(),no*4)||std::memcmp(sa.data(),initial_scratch.data(),nf*4))throw std::runtime_error("restored initial");
+        std::vector<double> times[2];
+        for(int rep=0;rep<24;++rep) for(int arm=0;arm<2;++arm) {
+            int v=arm^(rep&1); auto start=std::chrono::steady_clock::now();run(v);
+            double us=std::chrono::duration<double,std::micro>(std::chrono::steady_clock::now()-start).count();
+            if(rep>=4) {times[v].push_back(us);std::printf("TIMING seed=%u nq=%d width=%d cap=%d page=%d masked=%d round=%d arm=%d host_completed_us=%.6f\n",seed,c.queries,c.width,c.cap,c.page,c.masked,rep-4,v,us);}
+        }
+        snapshot();
+        if(std::memcmp(ha.data(),initial_out.data(),no*4)||std::memcmp(sa.data(),initial_scratch.data(),nf*4))throw std::runtime_error("timed final initial");
+        for(auto& t:times)std::sort(t.begin(),t.end());
+        std::printf("PASS seed=%u nq=%d width=%d cap=%d page=%d masked=%d scratch=exact output=exact oracle_max=%.9g base_us=%.3f candidate_us=%.3f\n",
+            seed,c.queries,c.width,c.cap,c.page,c.masked,oracle_error,times[0][10],times[1][10]);std::fflush(stdout);
+        release(q);
+    }
+    std::puts("ALL 36 CASES PASS");
+}
+catch(const std::exception& e) { std::fprintf(stderr,"S92 FAIL: %s\n",e.what());return 6; }
+
+
+S92 EXACT CPU BUILD CONTAINER
+#!/usr/bin/env bash
+source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1
+set -euo pipefail
+cd /out
+sha256sum -c /src/expected-source.sha256
+icpx --version > compiler-version.txt
+SRC=/work/src-ep
+ar p "$SRC/build-sycl-ep/libstrata_kernels.a" qsa_decode_attn.dp.cpp.o > public-current-member.o
+cmp public-current-member.o /src/frozen/qsa_decode_attn.dp.cpp.o
+sha256sum public-current-member.o > public-current-member.sha256
+FLAGS=(-O3 -DNDEBUG -std=c++20 -fsycl -fsycl-targets=spir64_gen -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -I"$SRC/sycl/include" -I"$SRC/include" -I"$SRC/third_party/ggml")
+IMAGES=(-O3 -DNDEBUG -fp-model=precise -fsycl -fsycl-targets=spir64_gen -fsycl-device-code-split=per_kernel -fsycl-max-parallel-link-jobs=4 -Xsycl-target-backend=spir64_gen '-device bmg-g31 -options -cl-fp32-correctly-rounded-divide-sqrt')
+# Rename ALL 11 class tags, including inactive modes/step/merge and lane-cell.
+# Function renaming alone did not isolate weak host kernel metadata in S13/S91.
+RENAMES=(
+ -Dattn_chunk_kernel_6e87d5=s92_private_attn_chunk_kernel_6e87d5
+ -Dattn_chunk_kernel_dfacfc=s92_private_attn_chunk_kernel_dfacfc
+ -Dattn_chunk_kernel_b0d448=s92_private_attn_chunk_kernel_b0d448
+ -Dattn_chunk_kernel_2ad0a4=s92_private_attn_chunk_kernel_2ad0a4
+ -Dattn_chunk_kernel_5c04f7=s92_private_attn_chunk_kernel_5c04f7
+ -Dattn_merge_kernel_338175=s92_private_attn_merge_kernel_338175
+ -Dattn_chunk_kernel_f262e6=s92_private_attn_chunk_kernel_f262e6
+ -Dattn_chunk_kernel_4fd923=s92_private_attn_chunk_kernel_4fd923
+ -Dattn_chunk_kernel_f6855e=s92_private_attn_chunk_kernel_f6855e
+ -Dattn_chunk_kernel_7c8e09=s92_private_attn_chunk_kernel_7c8e09
+ -Dattn_merge_kernel_c055e7=s92_private_attn_merge_kernel_c055e7
+)
+TIMEFORMAT='private_compile_seconds=%R'
+{ time icpx "${FLAGS[@]}" "${RENAMES[@]}" -Dqsa_decode_attn_batch=value_batch -Dqsa_decode_attn_step=value_step -Dqsa_decode_attn_scratch_floats=value_scratch -c /src/qsa-value-gather.cpp -o candidate.o; } 2> private-compile.time
+TIMEFORMAT='fixture_compile_seconds=%R'
+{ time icpx "${FLAGS[@]}" -c /src/attn_value_probe.cpp -o probe.o; } 2> fixture-compile.time
+TIMEFORMAT='private_images_seconds=%R'
+{ time icpx -v "${IMAGES[@]}" -fsycl-link candidate.o probe.o -o private.images.o > private-prelink.log 2>&1; } 2> private-prelink.time
+TIMEFORMAT='ordinary_host_link_seconds=%R'
+{ time icpx -v -O3 -DNDEBUG -fp-model=precise probe.o candidate.o private.images.o /src/frozen/qsa_decode_attn.dp.cpp.o /src/frozen/public.images.o /usr/lib/x86_64-linux-gnu/libze_loader.so -lsycl -lsycl-devicelib-host -Wl,-Map=/out/link.map -o attn_value_probe > host-link.log 2>&1; } 2> host-link.time
+sha256sum -c /src/expected-source.sha256
+ar p "$SRC/build-sycl-ep/libstrata_kernels.a" qsa_decode_attn.dp.cpp.o > public-after.o
+cmp public-after.o public-current-member.o
+nm -C --defined-only candidate.o > candidate.symbols.txt
+nm -C --defined-only /src/frozen/qsa_decode_attn.dp.cpp.o > public.symbols.txt
+nm -C --defined-only attn_value_probe > symbols.txt
+objdump -drC candidate.o > candidate.host-assembly.txt
+objdump -drC /src/frozen/qsa_decode_attn.dp.cpp.o > public.host-assembly.txt
+sha256sum attn_value_probe probe.o candidate.o private.images.o /src/frozen/public.images.o /src/frozen/qsa_decode_attn.dp.cpp.o > sha256.txt
+
+
+S92 EXACT CPU BUILD WRAPPER
+#!/usr/bin/env bash
+# ROOT ONLY after exact source/model review; SOURCE PREPARATION DOES NOT EXECUTE.
+set -euo pipefail
+HERE=$(cd "$(dirname "$0")" && pwd)
+REPO=/mnt/vm_8tb/github/b70_ai_things
+IMAGE=sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2
+mkdir "$HERE/build"; mkdir "$HERE/build/tmp" "$HERE/build/cache"
+docker image inspect "$IMAGE" > "$HERE/build/image.json"
+set +e
+B70_CPU_LOCK_TIMEOUT=0 B70_AGENT=S92-value-binding-build "$REPO/bin/cpu-run" docker run --rm --network none --cpus 4 -u "$(id -u):$(id -g)" \
+ -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_PERSISTENT=0 -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 \
+ -v /mnt/vm_8tb/b70/build/strata-ab:/work:ro -v "$HERE":/src:ro -v "$HERE/build":/out \
+ --entrypoint bash "$IMAGE" /src/build-container.sh > "$HERE/build/build.log" 2>&1
+rc=$?;set -e
+printf '%s\n' "$rc" > "$HERE/build/build.exit"
+exit "$rc"
+
+
+BASELINE SOURCE LINES122..282 (SLM ownership and existing barriers)
+                  const int32_t *__restrict__ step, int n_kv_heads,
+                  int page_size, float scale, float *__restrict__ part_acc,
+                  float *__restrict__ part_m, float *__restrict__ part_l,
+                  int n_chunks, int cap = 0, long long scratch_stride = 0) {
+    // batched form: query blockIdx.z, with its own q row, selection, step and scratch
+    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+    q += (size_t)item_ct1.get_group(0) * (size_t)(n_kv_heads * G) * HD;
+    ids += (size_t)item_ct1.get_group(0) * (size_t)cap;
+    step += (size_t)item_ct1.get_group(0) * kStepCount;
+    part_acc += (size_t)item_ct1.get_group(0) * (size_t)scratch_stride;
+    part_m += (size_t)item_ct1.get_group(0) * (size_t)scratch_stride;
+    part_l += (size_t)item_ct1.get_group(0) * (size_t)scratch_stride;
+    auto &sq =
+        *sycl::ext::oneapi::group_local_memory_for_overwrite<float[G][HD]>(
+            sycl::ext::oneapi::this_work_item::get_work_group<
+                3>()); // 12 KB: this KV head's query heads
+    auto &sp =
+        *sycl::ext::oneapi::group_local_memory_for_overwrite<float[G][CHUNK]>(
+            sycl::ext::oneapi::this_work_item::get_work_group<
+                3>()); // scores, then probabilities
+    auto &srow =
+        *sycl::ext::oneapi::group_local_memory_for_overwrite<long long[CHUNK]>(
+            sycl::ext::oneapi::this_work_item::get_work_group<
+                3>()); // pool row of each cell (page, kv head, slot)
+    /*
+    DPCT1098: The '*' expression is used instead of the __ldg call. These
+    two expressions do not provide the exact same functionality. Check the
+    generated code for potential precision and/or performance issues.
+    */
+    const int n_ids = *(step + kStepWidth);
+    const int chunk = item_ct1.get_group(2), kvh = item_ct1.get_group(1);
+    const int t = item_ct1.get_local_id(2), lane = t & 31, warp = t >> 5;
+    const int c0 = chunk * CHUNK;
+    const int n_here = sycl::min(CHUNK, n_ids - c0);
+    const int slot = kvh * n_chunks + chunk;
+    if (n_here <= 0) {
+        if (t < G) { part_m[slot * G + t] = -FLT_MAX; part_l[slot * G + t] = 0.0f; }
+        return;
+    }
+#pragma unroll
+    for (int i = t; i < G * HD; i += THREADS)
+        sq[i / HD][i % HD] = q[(size_t)(kvh * G) * HD + i];
+    if (t < CHUNK) {
+        long long r = -1;
+        if (t < n_here) {
+            const int cell = ids[c0 + t];
+            const long long page = (long long) p.page_table[cell / page_size];
+            // a block the KV streaming could not make resident keeps page -1 (ctl[3]); its cells are masked
+            // (score -FLT_MAX, weight 0) instead of being read from before the pool.
+            if (page >= 0) r = (page * n_kv_heads + kvh) * page_size + (cell % page_size);
+        }
+        srow[t] = r;
+    }
+    /*
+    DPCT1065: Consider replacing sycl::nd_item::barrier() with
+    sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better
+    performance if there is no access to global memory.
+    */
+    item_ct1.barrier();
+    if constexpr (LANE_CELL) {
+        // S25 (STRATA_ATTN_LANECELL=1): thread t scores cell t % 64 for heads 3 (t / 64) .. +2 by itself - the same
+        // 8-dimension partial per former lane (the identical expression), then the former warp_sum's butterfly as
+        // lane 0 ran it (a[l] += a[l + o] for o = 16 .. 1), so every score is bit-identical without 12 shuffle
+        // reductions per cell
+        constexpr int HPT = G * CHUNK / THREADS;   // heads per thread (3)
+        const int c = t % CHUNK, h0 = (t / CHUNK) * HPT;
+        if (c >= n_here || srow[c] < 0) {
+#pragma unroll
+            for (int j = 0; j < HPT; ++j) sp[h0 + j][c] = -FLT_MAX;
+        } else {
+            float a[HPT][32];
+#pragma unroll
+            for (int l = 0; l < 32; ++l) {
+                float k8[8];
+                load8<KV_MODE>(p, false, srow[c], l * 8, k8);
+#pragma unroll
+                for (int j = 0; j < HPT; ++j) {
+                    const sycl::float4 qa =
+                        *reinterpret_cast<const sycl::float4 *>(
+                            &sq[h0 + j][l * 8]);
+                    const sycl::float4 qb =
+                        *reinterpret_cast<const sycl::float4 *>(
+                            &sq[h0 + j][l * 8 + 4]);
+                    float s = k8[0] * qa.x() + k8[1] * qa.y() + k8[2] * qa.z() +
+                              k8[3] * qa.w() + k8[4] * qb.x() + k8[5] * qb.y() +
+                              k8[6] * qb.z() + k8[7] * qb.w();
+                    a[j][l] = s;
+                }
+            }
+#pragma unroll
+            for (int j = 0; j < HPT; ++j) {
+#pragma unroll
+                for (int o = 16; o > 0; o >>= 1)
+#pragma unroll
+                    for (int l = 0; l < o; ++l) a[j][l] = a[j][l] + a[j][l + o];
+                sp[h0 + j][c] = a[j][0] * scale;
+            }
+        }
+    } else
+    // scores: each warp takes cells warp, warp+8, ...; each lane holds 8 of the 256 dimensions.
+    for (int c = warp; c < CHUNK; c += WARPS) {
+        if (c >= n_here || srow[c] < 0) {
+            if (lane < G) sp[lane][c] = -FLT_MAX;
+            continue;
+        }
+        float k8[8];
+        load8<KV_MODE>(p, false, srow[c], lane * 8, k8);
+#pragma unroll
+        for (int h = 0; h < G; ++h) {
+            const sycl::float4 qa =
+                *reinterpret_cast<const sycl::float4 *>(&sq[h][lane * 8]);
+            const sycl::float4 qb =
+                *reinterpret_cast<const sycl::float4 *>(&sq[h][lane * 8 + 4]);
+            float s = k8[0] * qa.x() + k8[1] * qa.y() + k8[2] * qa.z() +
+                      k8[3] * qa.w() + k8[4] * qb.x() + k8[5] * qb.y() +
+                      k8[6] * qb.z() + k8[7] * qb.w();
+            s = warp_sum(s);
+            if (lane == 0) sp[h][c] = s * scale;
+        }
+    }
+    /*
+    DPCT1065: Consider replacing sycl::nd_item::barrier() with
+    sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better
+    performance if there is no access to global memory.
+    */
+    item_ct1.barrier();
+    // per-head chunk max and exp-sum: warp w handles heads w and w+8.
+    for (int h = warp; h < G; h += WARPS) {
+        const float a = sp[h][lane], b = sp[h][lane + 32];
+        const float m = warp_max(sycl::fmax(a, b));
+        const float ea = (lane < n_here && srow[lane] >= 0)
+                             ? sycl::native::exp(a - m)
+                             : 0.0f;
+        const float eb = (lane + 32 < n_here && srow[lane + 32] >= 0)
+                             ? sycl::native::exp(b - m)
+                             : 0.0f;
+        sp[h][lane] = ea;
+        sp[h][lane + 32] = eb;
+        const float l = warp_sum(ea + eb);
+        if (lane == 0) { part_m[slot * G + h] = m; part_l[slot * G + h] = l; }
+    }
+    /*
+    DPCT1065: Consider replacing sycl::nd_item::barrier() with
+    sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better
+    performance if there is no access to global memory.
+    */
+    item_ct1.barrier();
+    // values: thread t owns dimension t for all 12 heads.
+    float acc[G];
+#pragma unroll
+    for (int h = 0; h < G; ++h) acc[h] = 0.0f;
+    for (int c = 0; c < n_here; ++c) {
+        if (srow[c] < 0) continue;   // masked above, weight 0
+        float v;
+        if constexpr (KV_MODE == 0) {
+            v = sycl::vec<sycl::half, 1>(
+                    sycl::bit_cast<sycl::half, unsigned short>(
+                        p.v_pool[srow[c] * HD + t]))
+                    .convert<float, sycl::rounding_mode::automatic>()[0];
+        } else if constexpr (KV_MODE == 1) {
+            const float sc =
+
+S92 MATH/SLM SOURCE AUDIT
+- The query sq[G][HD] array holds3072 floats. After ALL query reads, the
+  existing post-score workgroup barrier separates them from new probability
+  writes. Probabilities occupy64*12=768 floats in this retired query region.
+  They never alias still-live scores sp[G][CHUNK] read by the exp/max loop.
+- Each (cell,head) has one writer: warp w visits heads w,w+8 and lane
+  visits cell lane,lane+32. All heads0..11 are covered; no others are read.
+  Existing following workgroup barrier completes probability publication.
+- Cell-major probability stride12floats=48bytes; float4 groups start at
+  offsets0/4/8. The original sq base already supports float4 query reads.
+  The bounded768-float payload fits without new local allocation.
+- Score/Kload/exp/max/sum/part_m/part_l are source-identical. Only probability
+  destination/layout and the subsequent value loading/folding differ.
+- Four values are loaded ahead, but fold(c),fold(c+1),fold(c+2),fold(c+3)
+  update each head accumulator in EXACT original increasing-cell FMA order.
+  On any negative page in a four-cell group the loop breaks before loading;
+  scalar fallback resumes at that same c, skipping negative rows as before.
+  n_here0 returns as before; n_here1..64 and ragged groups keep old bounds.
+- The body retains generic KV modes, but this finite oracle only qualifies
+  INT8. Other modes and production cap2051 are not independently qualified
+  by synthetic cap2112. Compiler contraction/resource effects remain actual
+  build/runtime questions; source arithmetic alone is not strict proof.
+

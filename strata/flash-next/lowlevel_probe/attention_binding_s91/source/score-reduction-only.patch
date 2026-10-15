@@ -1,0 +1,67 @@
+--- a/qsa_decode_attn.dp.cpp
++++ b/qsa_decode_attn.dp.cpp
+@@ -107,6 +107,40 @@
+         if (value) load8_q4(p, value, row, d0, out);
+         else load8_q8(p, value, row, d0, out);
+     } else load8_q4(p, value, row, d0, out);
++}
++
++// S91 private score-only reduce-scatter: same XOR16/8/4/2/1 pair tree per head.
++__dpct_inline__ float score_reduce12(const float (&part)[16], int lane) {
++    const auto sg = sycl::ext::oneapi::this_work_item::get_sub_group();
++    float r8[8];
++#pragma unroll
++    for (int i = 0; i < 8; ++i) {
++        const bool hi = (lane & 16) != 0;
++        r8[i] = (hi ? part[i + 8] : part[i]) + dpct::experimental::permute_sub_group_by_xor(
++            0xffffffffu, sg, hi ? part[i] : part[i + 8], 16);
++    }
++    float r4[4];
++#pragma unroll
++    for (int i = 0; i < 4; ++i) {
++        const bool hi = (lane & 8) != 0;
++        r4[i] = (hi ? r8[i + 4] : r8[i]) + dpct::experimental::permute_sub_group_by_xor(
++            0xffffffffu, sg, hi ? r8[i] : r8[i + 4], 8);
++    }
++    float r2[2];
++#pragma unroll
++    for (int i = 0; i < 2; ++i) {
++        const bool hi = (lane & 4) != 0;
++        r2[i] = (hi ? r4[i + 2] : r4[i]) + dpct::experimental::permute_sub_group_by_xor(
++            0xffffffffu, sg, hi ? r4[i] : r4[i + 2], 4);
++    }
++    const bool hi2 = (lane & 2) != 0;
++    const float r1 = (hi2 ? r2[1] : r2[0]) + dpct::experimental::permute_sub_group_by_xor(
++        0xffffffffu, sg, hi2 ? r2[0] : r2[1], 2);
++    return r1 + dpct::experimental::permute_sub_group_by_xor(0xffffffffu, sg, r1, 1);
++}
++__dpct_inline__ int score_head_of_lane(int lane) {
++    return ((lane >> 4) & 1) * 8 + ((lane >> 3) & 1) * 4 +
++           ((lane >> 2) & 1) * 2 + ((lane >> 1) & 1);
+ }
+ 
+ template <int KV_MODE, bool LANE_CELL = false>
+@@ -226,6 +260,7 @@
+         }
+         float k8[8];
+         load8<KV_MODE>(p, false, srow[c], lane * 8, k8);
++        float part[16];
+ #pragma unroll
+         for (int h = 0; h < G; ++h) {
+             const sycl::float4 qa =
+@@ -235,9 +270,13 @@
+             float s = k8[0] * qa.x() + k8[1] * qa.y() + k8[2] * qa.z() +
+                       k8[3] * qa.w() + k8[4] * qb.x() + k8[5] * qb.y() +
+                       k8[6] * qb.z() + k8[7] * qb.w();
+-            s = warp_sum(s);
+-            if (lane == 0) sp[h][c] = s * scale;
++            part[h] = s;
+         }
++#pragma unroll
++        for (int h = G; h < 16; ++h) part[h] = 0.0f;
++        const float s = score_reduce12(part, lane);
++        const int h = score_head_of_lane(lane);
++        if ((lane & 1) == 0 && h < G) sp[h][c] = s * scale;
+     }
+     /*
+     DPCT1065: Consider replacing sycl::nd_item::barrier() with

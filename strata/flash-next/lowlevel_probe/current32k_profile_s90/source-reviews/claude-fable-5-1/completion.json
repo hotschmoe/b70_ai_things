@@ -1,0 +1,118 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "79cf369c-f3a0-4032-ab9b-81b42dfc7254"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 48.435570117027964,
+  "launch_exception": null,
+  "source_packet_sha256": "066b84d841711ac35b1bce270972f3aced1542d4cb8f5c10b9b8f54a89e4d3b4",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 47375,
+      "stop_reason": "end_turn",
+      "session_id": "79cf369c-f3a0-4032-ab9b-81b42dfc7254",
+      "total_cost_usd": 0.57688225,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 20860,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 3190,
+        "output_tokens_details": {
+          "thinking_tokens": 2291
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 20860,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 3190,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 20860,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 20860
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 2,
+          "outputTokens": 3190,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 20860,
+          "webSearchRequests": 0,
+          "costUSD": 0.57688225,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "thinkingTokens": 2291,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Verdict: GO_ONE_PROFILE_AND_ONE_CPU_ANALYSIS**, conditional on root's pre-health revalidation being done first, which the code only comments on and does not enforce.\n\n**Lifecycle and CID ownership (pass)**\n- `stop()` resolves the CID from `container-ready.json` or the owned `attempt.cid`, requires 64 hex, and cross-checks inspect Id, NAME, and the config path in Cmd. Foreign NAME alone is never used.\n- Best-effort profiler stop is wrapped with a timeout and a catch-all; failure is recorded and cannot block TERM. Teardown waits for both Id and NAME absence plus wrapper exit 0 before per-card and collective post-health.\n- No phase retries or relaunches. `save()` opens with `x`, and `collect()` refuses to run if `collection-start.json` exists, so a failed collect cannot issue a second profiled request.\n\n**Request, usage, prefix guards (pass)**\n- Exact request equality against the saved S38 body with the max_tokens override only. Usage, native-timing reconciliation, cached token bound, greedy-prefix check, and single native summary filtered by shape all present.\n- The flush is one unprofiled arithmetic request after pause and stop, matching the native_Exit rationale. Readiness asserts no QSA marker and no known logged capture completion before collection, and the comment correctly scopes that as logged absence, not graph proof.\n\n**Profiler controls (pass)**\n- Resume occurs after the before-calibration and before the first request. Pause then stop runs in finally even on send failure. Probe confirms StartPaused and default SystemTime, which the BOOTTIME-minus-RAW correction depends on.\n\n**Analysis (pass with one required argument)**\n- Per-device grouping by metadata pid, boundary crossers exposed separately, unions labelled as recorded intervals, hints labelled non-proof, causal and clean-speed claims explicitly disclaimed. No subprocess or rerun on missing GPU events.\n- The `--run` default points to the old `s90-prep` directory, not `s90-v2-prep`. Root must pass the explicit v2 path, as the packet already states.\n\n**Residual risks, not blockers**\n- If the saved S38 request body carries keys the reconstructed send does not emit, the request-equality assert fails after the request already ran. No retry follows, so the attempt is preserved for diagnosis.\n- The QSA marker assert runs after the flush. If the short flush prompt emits a differently-shaped marker, the regex would reject only by exact fields, not raise a second entry. Any failure there still leaves the stopped trace intact.",
+      "ttft_ms": 34398,
+      "type": "result",
+      "duration_ms": 47451,
+      "uuid": "a1fdbe13-8f2b-4f26-bb5d-68325ab4069e",
+      "ttft_stream_ms": 993,
+      "time_to_request_ms": 71,
+      "first_content_frame_ms": 994,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

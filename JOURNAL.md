@@ -24390,3 +24390,59 @@ Opus legacy wording: absent optional fields preserve known admission counts;
 verify-accepted does not necessarily mean emitted, with no invented bound.
 Evidence: strata/flash-next/patches/pr2511-followup-20261015/README.md;
 https://github.com/Niko1221/Strata/pull/2511#issuecomment-6199010242 .
+
+
+## 2026-10-15 - S90 current 32K request operation and readiness census
+
+CONFIG -> Frozen S89 b2a610ea/QSA1/Q6center0, native149/peer363 per layer,
+all24576 resident, INT8KV/two200000 slots/depth2/headpairON. One first-unwarmed
+32728-prompt/32-output request; unitrace starts paused with native process.
+COMMAND -> Revalidated S89 post-health continuity; CPU/GPU-leased start,
+resume/request/pause/stop, one unprofiled flush, normalQUIT/fullCID+NAMEgone/
+wrapper0/fullbothcard+compiled10 post-health0. One stable441678985B trace
+parse, later CSV-only followup; no source/build/repeated serve/raw reparse.
+RESULT -> Valid2732936events,781466selected/zero crossers/8129operationrows.
+Actual768tiledscorercalls792.502816ms reconcile0/396/372 across main chunks
+12288/12288/8145. Full32 attention chunk and merge each12264calls reconcile
+12*(384+384+254), contained5689.599621/697.009584ms; aggregate both engine rows.
+Primaryattentionfamily6.473357s, per-card recordedunions17.239233/4.883815s
+kept separate. Hostcopy681calls/14.404145s union overlaps primary gaps only
+143.952ms; no device/traffic/causal assignment. Request usage/prefix/native
+work passes; native prompt27599ms/32generated/19acceptedof33/2checkpoints.
+VERDICT -> Bounded diagnostic, no clean speed/default/target claim. Cold
+capture/admission/prefill/decode overlap; no exact nativephase endpoint or
+crosscard clockjoin; host correction drift945.036us. Actual source Opus44.645s/
+Fable48.436s and combinedpost39.007/60.518s accept/rootfullread, with explicit
+path/health/category/memory conditions resolved. Source peer-before-primary
+enqueue is an audit lead, not gap cause; rejected S7/S38 not repeated. Private
+S91 SCOREONLY reduce12 is separate preparation, no result claimed. Historical
+170mapoperations/rollups/meta unchanged; goals2000/150 remain open.
+Report: docs/20261015_strata_current32k_profile.md. Exactsmallrecords/rawinventory:
+strata/flash-next/lowlevel_probe/current32k_profile_s90/README.md.
+
+
+## 2026-10-15 - S91 CPU attention audit prevents invalid comparison
+
+CONFIG -> Private SCOREONLY reduce12 vs currentpublic00bf/bbae; frozen
+S89 serving source/archive/exe unchanged. Same precise e41/BMG-G31 build.
+COMMAND -> ONE CPU-only build32s, two selected offlineISA decodes10s,
+actualhost symbol/relocation/linkedmetadata audit; noGPU/runner/model load.
+RESULT -> Exe51e2fd7b retains both distinct deviceimages, but BOTH host
+paths share weak CompileTimeKernelInfo/DeviceKernelInfo/guard. Distinct
+imageIDs do not prove separate dispatch. Both SIMD32/GRF128/SLM15872/barrier1;
+private declares3584/private and4096scratch with28staticSSstores/28loads.
+Public fields absent, not runtimezero; static sites are not measuredtraffic.
+Independent retainedS13 exe7411d17b matches documentedhash; both final
+hostpaths share Info0x5d4810/guard0x5d4818/metadata0x42d598 selectingPUBLIC.
+VERDICT -> S91GPU NO-GO, parkmapping/no same12rename-rebuild. Correct current
+S13candidate correctness/neutrality attribution to UNSUPPORTED; preserve
+oldlogs/docs/JOURNAL. No newmath-invalidity/speed/target claim. Prepare
+correctedvalue S92 with ALL11privateclasstags plus hostfnames; reusepublic
+AOT, strict36fixture. Sourceonly/notbuilt/notrun. Actual finalhostmetadata
+and registerednamepointers required before separateGPUdecision. NoGPUhealth
+repeat or dailyrestore for CPU-only work. Fullgoals remain incomplete.
+Actual fresh Opus56.221s/Fable138.816s acceptHOLD/conditionalS92CPUbuild;
+rootfullread resolves commonhelper/guardregion/merge/resource/tolerance scopes.
+S92 remains unbuilt at this checkpoint; GPUdecision separatelypending.
+Report: docs/20261015_strata_attention_binding_audit.md; smallrecords:
+strata/flash-next/lowlevel_probe/attention_binding_s91/README.md.

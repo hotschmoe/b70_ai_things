@@ -1,0 +1,22 @@
+{
+  "status": "ROOT_S91_CPU_ONLY_HOLD_GPU_HOST_BINDING_FAIL",
+  "epoch_ns": 1792090599424655420,
+  "binary_sha256": "51e2fd7b58a41493893facd947c1c08c368eb3ddb80145eac1ab41e895d6b41a",
+  "resources_sha256": "f78737fbae56e320847d96134e75be40d4956672492d265f679cb86ad26e28dd",
+  "host_binding_sha256": "a3871159d9dad5de39ba70dc9516b96aebc813a90a4fa7885e28791415e12795",
+  "historical_documentary_supplement_sha256": "2cc07953ab4c15c8e35040d213d5247bb773658318a10d66af27a510aae03876",
+  "root_fullread_resources_hostrelocs_selectedimages_historical_supplement": true,
+  "CPU_build_exit": 0,
+  "CPU_build_wall_seconds": 32,
+  "offline_selected_ISA_decode_seconds": 10,
+  "device_image_IDs_distinct": true,
+  "host_weak_kernel_metadata_separate": false,
+  "GPU_GO": false,
+  "GPU_touches_this_stage": 0,
+  "prepared_runner_executed": false,
+  "mapping": "Park reduce12; no rename-only rebuild given added private scratch/static accesses.",
+  "historical_S13": "Retained exact documented binary shares public selected kernel-info. Distinct value candidate correctness/neutrality attribution unsupported; preserve old evidence.",
+  "next": "Prepare corrected S13 value-only candidate with ALL11 private kernel class tags plus hostfnames; actual host/device binding audit before runtime. No new runtime result.",
+  "serving_or_speed_qualified": false,
+  "main_source_or_archive_or_live_binary_changed": false
+}

@@ -1,0 +1,13 @@
+{
+  "command": [
+    "docker",
+    "exec",
+    "ced9b5bdbe46bdc3dd8194a46b3c32293a0ca567ab07d38f03e67da1c9aa01ed",
+    "/mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/build/unitrace",
+    "--resume",
+    "s90current32k"
+  ],
+  "exit": 0,
+  "stdout": "",
+  "stderr": "[INFO] Session s90current32k is resumed\n"
+}

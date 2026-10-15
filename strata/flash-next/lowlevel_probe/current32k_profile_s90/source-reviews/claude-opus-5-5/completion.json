@@ -1,0 +1,118 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "1e2304b8-e5a1-4d03-b6ea-a4e2534f1517"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 44.645382941002026,
+  "launch_exception": null,
+  "source_packet_sha256": "066b84d841711ac35b1bce270972f3aced1542d4cb8f5c10b9b8f54a89e4d3b4",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 43607,
+      "stop_reason": "end_turn",
+      "session_id": "1e2304b8-e5a1-4d03-b6ea-a4e2534f1517",
+      "total_cost_usd": 0.2098258,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 19001,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 2884,
+        "output_tokens_details": {
+          "thinking_tokens": 1660
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 19001,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 2884,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 19001,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 19001
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 2884,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 19001,
+          "webSearchRequests": 0,
+          "costUSD": 0.2098258,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 1660,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**GO_ONE_PROFILE_AND_ONE_CPU_ANALYSIS**, with one mandatory condition and two root checks.\n\n**Lease and lifecycle: OK**\n- The detached `gpu-run` owns the pair lease for the whole server lifetime.\n- `stop()` accepts only a 64-hex CID from `container-ready.json` or `attempt.cid`. It cross-checks Name, config Cmd and the ready Id. A bare foreign NAME is never trusted.\n- The profiler cleanup `--stop` is best-effort with a 30s timeout and catches all exceptions, so it cannot block TERM.\n- Order is TERM \u2192 QUIT \u2192 full CID and NAME absent \u2192 wrapper exit 0 \u2192 card health \u2192 collective health. Partial health is preserved. There is no force or retry.\n- Readiness assertions escape to the caller and leave the service for `stop()`. Expiry raises with no restart.\n\n**Capture and request: OK**\n- The profiler starts paused. Before collection it checks for no QSA marker and no logged known capture completion. This proves only known logged absence, not all graph work, and the code says so.\n- Resume happens before `send`. `pause`, then `stop`, run in nested finally blocks.\n- There is exactly one unprofiled flush generation. It is skipped if the request failed. There is no warm-up, repeat or retry.\n- Request equality, usage 32728/32/cache\u226464, `timings` sums, the S38 prefix, the native summary filtered by shape and a single QSA marker `('1','4097')` are all exact. The flush is too short for QSA eligibility, so it cannot add a marker.\n\n**Clock: OK if root's source reading holds**\nThe calibration formula `raw + (BOOTTIME\u2212RAW)` matches the stated `unitimer.h` anchor and is in \u00b5s, consistent with the trace. The probe confirms `StartPaused=1` and `SystemTime` unset.\n\n**Mandatory fix or condition:** `analyze.py --run` defaults to `.../current32k-profile-s90-prep/run`, the v1 directory. The v2 artifacts are in `...-v2-prep/run`. Root must pass `--run` explicitly. The minimum fix is `required=True`. Do not rely on the default.\n\n**Root checks before execution:**\n1. **Prehealth reuse:** revalidate it at root. Confirm there has been no GPU or stack change since the S89 post-health at 18:01. SHA pins are integrity checks, not cryptographic signatures.\n2. **Event category:** confirm `cat=='gpu_op'` is the device-event category this unitrace build uses. If it is wrong, the script asserts \"No GPU events\" and stops without rerunning. That fails safely, but it would waste the single trace parse.\n\n**Analysis bounds: acceptable**\n- Results are per device pid, with no cross-card join or summed budget.\n- Boundary crossers are kept separately, and exact names and timeline rows are retained.\n- Name hints are explicitly not semantic, traffic or causal proof.\n- The `limits` list correctly separates three things:\n  - an observed host marker from actual GPU dispatch, which stays unproved until `actual_s89_candidate_events` shows device rows;\n  - metadata and resource facts (EP 149/363, slots) from measured performance;\n  - the instrumented window from clean speed or delta claims.\n\n**Non-blocking notes:**\n- `collect` saves `collection.json` only after a 60s nonempty-file check. Real JSON validity is deferred to the analysis, as stated.\n- The analysis loads the whole trace into memory. That is fine given S30 RAM recovery already passed.",
+      "ttft_ms": 36671,
+      "type": "result",
+      "duration_ms": 43688,
+      "uuid": "e3308ce9-c60d-4673-bc32-ac71d2ae4771",
+      "ttft_stream_ms": 7641,
+      "time_to_request_ms": 73,
+      "first_content_frame_ms": 7642,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

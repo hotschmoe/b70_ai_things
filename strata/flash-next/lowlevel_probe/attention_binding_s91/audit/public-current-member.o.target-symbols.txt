@@ -1,0 +1,4 @@
+0000000000000000 V guard variable for sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info
+0000000000000000 W sycl::_V1::detail::kernel_param_desc_t sycl::_V1::detail::getKernelParamDesc<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >(int)
+0000000000000000 V sycl::_V1::detail::compile_time_kernel_info_v1::CompileTimeKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >
+0000000000000000 V sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> > >()::Info

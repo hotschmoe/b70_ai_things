@@ -1,0 +1,18 @@
+{
+  "status": "REQUEST_USAGE_PREFIX_MARKER_AND_STOP_PASS_TRACE_UNPARSED",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current32k-profile-s90-v2-prep/run/trace/strata-qsa-pref.467.json",
+      "bytes": 441678985
+    }
+  ],
+  "QSA_marker": [
+    [
+      "1",
+      "4097"
+    ]
+  ],
+  "GPU_dispatch_unproved_until_trace_analysis": true,
+  "no_raw_trace_parsed": true,
+  "instrumented_speed_qualified": false
+}

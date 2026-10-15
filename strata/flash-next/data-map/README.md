@@ -323,3 +323,22 @@ host marker and source-derived chunks do not measure GPU dispatch counts,
 critical-path share, traffic or readiness causes. One current32K trace using
 existing clock/capture/stop-flush tools is prepared, not executed. Actual
 Opus5.5/Fable5.1 postreviews accept; root corrects target units to2000tok/s.
+
+
+S90 supplies the separately retained current32K ON operation census:8129rows,
+768 actual tiled scorer calls,12264 full32 attention chunk/merge calls after
+combining engine rows by name+device. Primary attention-family6.473s and
+recorded union17.239s are diagnostic, not additive latency budgets; peer
+clocks remain unjoined. Host-copy API14.404s overlaps primary recorded gaps
+only143.952ms and cannot be assigned to device traffic or removable idle.
+First-unwarmed capture/admission/prefill/decode limits remain. The new bounded
+50-row current CSV is separate; historical170 operations/rollups/meta stay
+exact. [S90 report](../../../docs/20261015_strata_current32k_profile.md).
+
+
+S91 adds an evidence correction rather than new operation timings: distinct
+device images can still share weak host kernel-info state. Its runner is
+held without GPU execution, and the exact retained S13 probe cannot establish
+independent value-candidate correctness or neutral performance. Historical
+map operations remain unchanged. Corrected private tags are source-only.
+[Host/device binding audit](../../../docs/20261015_strata_attention_binding_audit.md).

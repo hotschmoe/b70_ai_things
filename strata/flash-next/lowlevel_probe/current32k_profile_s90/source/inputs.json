@@ -1,0 +1,46 @@
+{
+  "binary": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-prefill-serving-s89-build/build/strata-qsa-prefill-s89",
+  "binary_sha256": "b2a610ea23856ad290cbca2a0dcdec4de676f3cdb519ddc0a01c5321942636be",
+  "saved_request_file": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-gather-serving-s38/mode0/screen/p32768-0.json",
+  "saved_request_file_sha256": "f04a8e4f9f063416e0f13ab7b6f8094571e37d45af4585871496a4f38560f427",
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "container": "strata-current32k-profile-s90",
+  "session": "s90current32k",
+  "current_expert_counts": [
+    7152,
+    17424
+  ],
+  "request_override": {
+    "max_tokens": 32
+  },
+  "expected_usage": {
+    "prompt_tokens": 32728,
+    "completion_tokens": 32,
+    "cache_max": 64
+  },
+  "config_env": {
+    "STRATA_EP_PREFILL_REDUCE": "1",
+    "STRATA_OWNED_PRICE": "exact",
+    "STRATA_EP_PREFILL_PUSH": "1",
+    "STRATA_BATCH_MTP": "1",
+    "STRATA_BATCH_MTP_DEPTH": "2",
+    "STRATA_BATCH_MTP_PAIR_HEAD": "1",
+    "STRATA_BATCH_PREFILL_QUANTUM": "0",
+    "STRATA_PREFILL_FIRST": "0",
+    "STRATA_BATCH_MTP_PLE_PREFETCH_DIAG": "1",
+    "STRATA_BATCH_MTP_PLE_PREFETCH": "0",
+    "STRATA_TRACE": "1",
+    "STRATA_MMVQ_WIDE": "1",
+    "STRATA_MMVQ_WIDE_MIN": "0",
+    "STRATA_MMVQ_WIDE_MAXC": "8",
+    "STRATA_Q6_PACKED": "0",
+    "STRATA_MMVQ_WIDE_K": "1",
+    "STRATA_MMVQ_WIDE_K_RPW": "1",
+    "STRATA_HEAD_Q5K_RPW2": "0",
+    "STRATA_MMVQ_WIDE_RPW": "1",
+    "STRATA_MMVQ_A2": "1",
+    "STRATA_MMVQ_PF": "0",
+    "STRATA_Q6_CENTER": "0",
+    "STRATA_QSA_PREFILL_TILED": "1"
+  }
+}

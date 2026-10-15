@@ -1,0 +1,132 @@
+{
+  "status": "ACTUAL_WRAPPER_BINDING_SELECTED_TARGET_IDS_AUDITED",
+  "binary_sha256": "51e2fd7b58a41493893facd947c1c08c368eb3ddb80145eac1ab41e895d6b41a",
+  "public_fatobject_sha256": "bbae92dcf61427f35078d498a240b1c9f23862e8bf13f7b63d95252e3b06baf2",
+  "public_frozen_current_after_exact": true,
+  "bundles": {
+    "public": {
+      "wrapper_sha256": "df7655d8eacbd93b6c8ce116ab1b7a8e04c5a8ccf031d2180c959c31bbdb8b6b",
+      "bundle_bytes": 836472,
+      "bundle_sha256": "e3da4edeeed9622b45a2dbce626f804325856357c46c2fdcc82a126b52852155",
+      "exact_bundle_occurrences_in_final": 1
+    },
+    "private": {
+      "wrapper_sha256": "6ce67f5df01fe3cef25d90316e8d8fe56492f2513881c6e9ffdb0670d258fe43",
+      "bundle_bytes": 872216,
+      "bundle_sha256": "4c9de89d31f6b90719958e5ad3c22f8127b45ad37bdf9bcc1a16dcc337b1b5d4",
+      "exact_bundle_occurrences_in_final": 1
+    }
+  },
+  "selected": {
+    "public": {
+      "wrapper_image_index": 22,
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE",
+      "image_bytes": 44376,
+      "image_sha256": "80d9bfd4a34120824bb24dcded7d9a6574a90d9632b5d9ad446a20af48161e11",
+      "text_bytes": 19328,
+      "text_sha256": "627ed04d0550e0c77dae35cda8825fe9364bc749cf1bf609c87ac758fa4690ba",
+      "build_options": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "whole_image_occurrences_in_final": 1,
+      "disasm_section_filename_bytes": 186
+    },
+    "private": {
+      "wrapper_image_index": 24,
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels14reduce12_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE",
+      "image_bytes": 47432,
+      "image_sha256": "217a725b2b3b3fa16c35a5b3e0e827e2ac67640449569c816f817a4434148ebb",
+      "text_bytes": 19264,
+      "text_sha256": "f773093d701dc2ba5cdbe8e5f1ff600550fb3d199fd369efd64d2dc95a7c1e93",
+      "build_options": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "whole_image_occurrences_in_final": 1,
+      "disasm_section_filename_bytes": 179
+    }
+  },
+  "target_IDs_distinct": true,
+  "all_overlapping_kernel_IDs": [
+    "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZN6strata13big_fill_zeroERNS0_5queueEPvmmEUlNS0_2idILi1EEEE_EE",
+    "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZN6strata17arena_alias_checkERNS0_5queueEPvmPmEUlNS0_2idILi1EEEE0_EE",
+    "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZN6strata17arena_alias_checkERNS0_5queueEPvmPmEUlNS0_2idILi1EEEE_EE",
+    "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillIhEEvPvRKT_mEUlNS0_2idILi1EEEE_EE",
+    "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillIjEEvPvRKT_mEUlNS0_2idILi1EEEE_EE",
+    "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillItEEvPvRKT_mEUlNS0_2idILi1EEEE_EE",
+    "_ZTSN4sycl3_V16detail19__pf_kernel_wrapperIZZN4dpct6detailL11dpct_memcpyERNS0_5queueEPvPKvNS0_5rangeILi3EEESB_NS0_2idILi3EEESD_SB_NS3_16memcpy_directionERKSt6vectorINS0_5eventESaISG_EEENKUlRNS0_7handlerEE_clESM_E21dpct_memcpy_3d_detailEE",
+    "_ZTSZN4sycl3_V17handler4fillIhEEvPvRKT_mEUlNS0_2idILi1EEEE_",
+    "_ZTSZN4sycl3_V17handler4fillIjEEvPvRKT_mEUlNS0_2idILi1EEEE_",
+    "_ZTSZN4sycl3_V17handler4fillItEEvPvRKT_mEUlNS0_2idILi1EEEE_",
+    "_ZTSZN6strata13big_fill_zeroERN4sycl3_V15queueEPvmmEUlNS1_2idILi1EEEE_",
+    "_ZTSZN6strata17arena_alias_checkERN4sycl3_V15queueEPvmPmEUlNS1_2idILi1EEEE0_",
+    "_ZTSZN6strata17arena_alias_checkERN4sycl3_V15queueEPvmPmEUlNS1_2idILi1EEEE_",
+    "_ZTSZZN4dpct6detailL11dpct_memcpyERN4sycl3_V15queueEPvPKvNS2_5rangeILi3EEES9_NS2_2idILi3EEESB_S9_NS_16memcpy_directionERKSt6vectorINS2_5eventESaISE_EEENKUlRNS2_7handlerEE_clESK_E21dpct_memcpy_3d_detail"
+  ],
+  "tables": {
+    "public": {
+      "images": 28,
+      "kernel_IDs": {
+        "_ZTSZZN4dpct6detailL11dpct_memcpyERN4sycl3_V15queueEPvPKvNS2_5rangeILi3EEES9_NS2_2idILi3EEESB_S9_NS_16memcpy_directionERKSt6vectorINS2_5eventESaISE_EEENKUlRNS2_7handlerEE_clESK_E21dpct_memcpy_3d_detail": 1,
+        "_ZTSZN6strata17arena_alias_checkERN4sycl3_V15queueEPvmPmEUlNS1_2idILi1EEEE_": 1,
+        "_ZTSZN6strata17arena_alias_checkERN4sycl3_V15queueEPvmPmEUlNS1_2idILi1EEEE0_": 1,
+        "_ZTSZN6strata13big_fill_zeroERN4sycl3_V15queueEPvmmEUlNS1_2idILi1EEEE_": 1,
+        "_ZTSZN4sycl3_V17handler4fillItEEvPvRKT_mEUlNS0_2idILi1EEEE_": 1,
+        "_ZTSZN4sycl3_V17handler4fillIjEEvPvRKT_mEUlNS0_2idILi1EEEE_": 1,
+        "_ZTSZN4sycl3_V17handler4fillIhEEvPvRKT_mEUlNS0_2idILi1EEEE_": 1,
+        "_ZTSN4sycl3_V16detail19__pf_kernel_wrapperIZZN4dpct6detailL11dpct_memcpyERNS0_5queueEPvPKvNS0_5rangeILi3EEESB_NS0_2idILi3EEESD_SB_NS3_16memcpy_directionERKSt6vectorINS0_5eventESaISG_EEENKUlRNS0_7handlerEE_clESM_E21dpct_memcpy_3d_detailEE": 1,
+        "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillItEEvPvRKT_mEUlNS0_2idILi1EEEE_EE": 1,
+        "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillIjEEvPvRKT_mEUlNS0_2idILi1EEEE_EE": 1,
+        "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillIhEEvPvRKT_mEUlNS0_2idILi1EEEE_EE": 1,
+        "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZN6strata17arena_alias_checkERNS0_5queueEPvmPmEUlNS0_2idILi1EEEE_EE": 1,
+        "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZN6strata17arena_alias_checkERNS0_5queueEPvmPmEUlNS0_2idILi1EEEE0_EE": 1,
+        "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZN6strata13big_fill_zeroERNS0_5queueEPvmmEUlNS0_2idILi1EEEE_EE": 1,
+        "_ZTS16dpct_kernel_nameIJZZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvENKUlRN4sycl3_V17handlerEE_clESH_E24attn_chunk_kernel_6e87d518dpct_kernel_scalarILi3EESK_ILi1EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvENKUlRN4sycl3_V17handlerEE2_clESH_E24attn_chunk_kernel_6e87d518dpct_kernel_scalarILi0EESK_ILi1EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvENKUlRN4sycl3_V17handlerEE1_clESH_E24attn_chunk_kernel_6e87d518dpct_kernel_scalarILi1EESL_EE": 1,
+        "_ZTS16dpct_kernel_nameIJZZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvENKUlRN4sycl3_V17handlerEE0_clESH_E24attn_chunk_kernel_6e87d518dpct_kernel_scalarILi2EESK_ILi1EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_merge_kernel_338175EE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_dfacfc18dpct_kernel_scalarILi3EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_b0d44818dpct_kernel_scalarILi2EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_5c04f718dpct_kernel_scalarILi0EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels20qsa_decode_attn_stepEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_PvE24attn_merge_kernel_c055e7EE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels20qsa_decode_attn_stepEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_PvE24attn_chunk_kernel_f6855e18dpct_kernel_scalarILi1EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels20qsa_decode_attn_stepEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_PvE24attn_chunk_kernel_f262e618dpct_kernel_scalarILi3EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels20qsa_decode_attn_stepEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_PvE24attn_chunk_kernel_7c8e0918dpct_kernel_scalarILi0EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels20qsa_decode_attn_stepEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_PvE24attn_chunk_kernel_4fd92318dpct_kernel_scalarILi2EEEE": 1
+      }
+    },
+    "private": {
+      "images": 30,
+      "kernel_IDs": {
+        "_ZTSZZN4dpct6detailL11dpct_memcpyERN4sycl3_V15queueEPvPKvNS2_5rangeILi3EEES9_NS2_2idILi3EEESB_S9_NS_16memcpy_directionERKSt6vectorINS2_5eventESaISE_EEENKUlRNS2_7handlerEE_clESK_E21dpct_memcpy_3d_detail": 1,
+        "_ZTSZN6strata17arena_alias_checkERN4sycl3_V15queueEPvmPmEUlNS1_2idILi1EEEE_": 1,
+        "_ZTSZN6strata17arena_alias_checkERN4sycl3_V15queueEPvmPmEUlNS1_2idILi1EEEE0_": 1,
+        "_ZTSZN6strata13big_fill_zeroERN4sycl3_V15queueEPvmmEUlNS1_2idILi1EEEE_": 1,
+        "_ZTSZN4sycl3_V17handler4fillItEEvPvRKT_mEUlNS0_2idILi1EEEE_": 1,
+        "_ZTSZN4sycl3_V17handler4fillIjEEvPvRKT_mEUlNS0_2idILi1EEEE_": 1,
+        "_ZTSZN4sycl3_V17handler4fillIhEEvPvRKT_mEUlNS0_2idILi1EEEE_": 1,
+        "_ZTSZN4sycl3_V17handler4fillIfEEvPvRKT_mEUlNS0_2idILi1EEEE_": 1,
+        "_ZTSN4sycl3_V16detail19__pf_kernel_wrapperIZZN4dpct6detailL11dpct_memcpyERNS0_5queueEPvPKvNS0_5rangeILi3EEESB_NS0_2idILi3EEESD_SB_NS3_16memcpy_directionERKSt6vectorINS0_5eventESaISG_EEENKUlRNS0_7handlerEE_clESM_E21dpct_memcpy_3d_detailEE": 1,
+        "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillItEEvPvRKT_mEUlNS0_2idILi1EEEE_EE": 1,
+        "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillIjEEvPvRKT_mEUlNS0_2idILi1EEEE_EE": 1,
+        "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillIhEEvPvRKT_mEUlNS0_2idILi1EEEE_EE": 1,
+        "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillIfEEvPvRKT_mEUlNS0_2idILi1EEEE_EE": 1,
+        "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZN6strata17arena_alias_checkERNS0_5queueEPvmPmEUlNS0_2idILi1EEEE_EE": 1,
+        "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZN6strata17arena_alias_checkERNS0_5queueEPvmPmEUlNS0_2idILi1EEEE0_EE": 1,
+        "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZN6strata13big_fill_zeroERNS0_5queueEPvmmEUlNS0_2idILi1EEEE_EE": 1,
+        "_ZTS16dpct_kernel_nameIJZZN6strata7kernels14reduce12_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvENKUlRN4sycl3_V17handlerEE_clESH_E24attn_chunk_kernel_6e87d518dpct_kernel_scalarILi3EESK_ILi1EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZZN6strata7kernels14reduce12_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvENKUlRN4sycl3_V17handlerEE2_clESH_E24attn_chunk_kernel_6e87d518dpct_kernel_scalarILi0EESK_ILi1EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZZN6strata7kernels14reduce12_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvENKUlRN4sycl3_V17handlerEE1_clESH_E24attn_chunk_kernel_6e87d518dpct_kernel_scalarILi1EESL_EE": 1,
+        "_ZTS16dpct_kernel_nameIJZZN6strata7kernels14reduce12_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvENKUlRN4sycl3_V17handlerEE0_clESH_E24attn_chunk_kernel_6e87d518dpct_kernel_scalarILi2EESK_ILi1EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels14reduce12_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_merge_kernel_338175EE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels14reduce12_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_dfacfc18dpct_kernel_scalarILi3EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels14reduce12_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_b0d44818dpct_kernel_scalarILi2EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels14reduce12_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_5c04f718dpct_kernel_scalarILi0EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels14reduce12_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels13reduce12_stepEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_PvE24attn_merge_kernel_c055e7EE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels13reduce12_stepEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_PvE24attn_chunk_kernel_f6855e18dpct_kernel_scalarILi1EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels13reduce12_stepEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_PvE24attn_chunk_kernel_f262e618dpct_kernel_scalarILi3EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels13reduce12_stepEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_PvE24attn_chunk_kernel_7c8e0918dpct_kernel_scalarILi0EEEE": 1,
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels13reduce12_stepEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_PvE24attn_chunk_kernel_4fd92318dpct_kernel_scalarILi2EEEE": 1
+      }
+    }
+  },
+  "scope": "Actual linked bundles and static selected images only; no runtime GPU/latency/occupancy/zero-spill proof."
+}

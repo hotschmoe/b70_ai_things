@@ -1,0 +1,35 @@
+{
+  "status": "EXTERNAL_RAW_AND_FULL_CSVS_RETAINED_NO_REPARSE_OR_REHASH",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current32k-profile-s90-v2-prep/run/trace/strata-qsa-pref.467.json",
+      "bytes": 441678985,
+      "in_repository": false,
+      "sha256_from_existing_analysis": "6799ce895caff68c80197c68549be70ab1b7020ea0875bae3156bf4fd9120730"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current32k-profile-s90-analysis/gpu-timeline.csv",
+      "bytes": 77640324,
+      "in_repository": false
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current32k-profile-s90-analysis/host-submit-wait-timeline.csv",
+      "bytes": 31940384,
+      "in_repository": false
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current32k-profile-s90-analysis/operations.csv",
+      "bytes": 3254134,
+      "in_repository": false,
+      "sha256_from_root_decision": "2178af0595785aefc8a5c1ea70d36a7ad9feb23eae5460bd4046fac6b4a72d9f",
+      "data_rows": 8129
+    }
+  ],
+  "review_events_external": [
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current32k-profile-s90-source-reviews-20261015/claude-opus-5-5/events.jsonl",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current32k-profile-s90-source-reviews-20261015/claude-fable-5-1/events.jsonl",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-score-reduce12-source-reviews-s91-20261015/claude-opus-5-5/events.jsonl",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-score-reduce12-source-reviews-s91-20261015/claude-fable-5-1/events.jsonl"
+  ],
+  "scope": "Review postpacket also addresses S91 source. Only completed S90 disposition is curated here; no S91 runtime/build artifacts or results."
+}

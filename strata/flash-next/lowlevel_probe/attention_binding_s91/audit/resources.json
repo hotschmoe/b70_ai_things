@@ -1,0 +1,73 @@
+{
+  "status": "HOLD_GPU_HOST_WEAK_BINDING_CONFLATION_AND_PRIVATE_SCRATCH",
+  "binary_sha256": "51e2fd7b58a41493893facd947c1c08c368eb3ddb80145eac1ab41e895d6b41a",
+  "public_fatobject_sha256": "bbae92dcf61427f35078d498a240b1c9f23862e8bf13f7b63d95252e3b06baf2",
+  "frozen_current_after_fatobjects_byte_equal": true,
+  "actual_build_image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "compiler": "Intel(R) oneAPI DPC++/C++ Compiler 2026.1.0 (2026.1.0.20260617)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /opt/intel/oneapi/compiler/2026.1/bin/compiler\nConfiguration file: /opt/intel/oneapi/compiler/2026.1/bin/compiler/../icpx.cfg",
+  "flags_source_sha256": "eb246cd45b15adad5b22e840de069828a62fc302ea7c933fe461882e8e40609e",
+  "host_link": {
+    "ordinary_single_ld": true,
+    "AOT_actions": 0,
+    "crtfastmath_absent": true,
+    "script_compile_and_link_fp_model_precise": true
+  },
+  "resources": {
+    "public": {
+      "barrier_count": 1,
+      "grf_count": 128,
+      "simd_size": 32,
+      "slm_size": 15872,
+      "private_size": "absent",
+      "spill_size": "absent",
+      "scratch_size": "absent",
+      "eu_thread_count": 8,
+      "per_thread_scratch_buffer": "absent",
+      "text_bytes": 19328,
+      "image_sha256": "80d9bfd4a34120824bb24dcded7d9a6574a90d9632b5d9ad446a20af48161e11",
+      "static_ss_a32_d32_message_counts": {},
+      "static_ss_payload_bytes_sum_if_each_site_once_all_lanes": {},
+      "asm_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-score-reduce12-s91-prep/build-audit/public-disasm/.text._ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE.asm",
+      "asm_sha256": "2f31a36a256f274f7d262253941e76e1076159eea0735e731689e3f3f5590cef",
+      "ss_surface_scope": "SS-surface messages coincide with private scratch allocation and private temporaries; static payload sites only, not dynamic loop counts or measured physical traffic."
+    },
+    "private": {
+      "barrier_count": 1,
+      "grf_count": 128,
+      "simd_size": 32,
+      "slm_size": 15872,
+      "private_size": 3584,
+      "spill_size": "absent",
+      "scratch_size": "absent",
+      "eu_thread_count": 8,
+      "per_thread_scratch_buffer": {
+        "usage": "single_space",
+        "size": 4096
+      },
+      "text_bytes": 19264,
+      "image_sha256": "217a725b2b3b3fa16c35a5b3e0e827e2ac67640449569c816f817a4434148ebb",
+      "static_ss_a32_d32_message_counts": {
+        "store": 28,
+        "load": 28
+      },
+      "static_ss_payload_bytes_sum_if_each_site_once_all_lanes": {
+        "store": 3584,
+        "load": 3584
+      },
+      "asm_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-score-reduce12-s91-prep/build-audit/private-disasm/.text._ZTS16dpct_kernel_nameIJZN6strata7kernels14reduce12_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE.asm",
+      "asm_sha256": "8e423a16e9029eeca82d60cd7f2f1943acfdaaba939579299cba0371554cf5d0",
+      "ss_surface_scope": "SS-surface messages coincide with private scratch allocation and private temporaries; static payload sites only, not dynamic loop counts or measured physical traffic."
+    }
+  },
+  "host_binding": "host-binding.json proves same weak88B CompileTimeKernelInfo symbols point to different qsa_decode_attn_batch/reduce12_batch device names at offset0; both hostfunctions use sameInfo/guard, finalnm hasone. Distinct bundles/IDs do not establish public/private execution separation.",
+  "shared_device_IDs": {
+    "count": 14,
+    "classification": "Unmodified big_fill_zero/arena_alias_check/SYCLfill/dpctmemcpy helpers; no target attention chunk/merge ID overlap."
+  },
+  "selected_device_scope": "Two actual separate M1 NC1 targetimages decoded, STATIC ONLY; not valid public/private host-dispatch evidence. No dynamic traffic, latency, occupancy or absent=zero claims.",
+  "tools": "cpu-run python3 extract.py; cpu-run bash decode.sh (e41,ocloc,-device bmg-g31,networknone,noDRI,CPU4/OMP4/MKL4); nm-C/objdump-drwC; cpu-run python3 host_binding.py; cpu-run python3 summarize_resources.py. Decoder10s, no compile/GPU.",
+  "parser_note": "Initial generic extractor assumed finalbundle padding to16B; failed before report. Originalsource preserved as extract.v1-trailing-alignment.py. Corrected only lastimage exactend handling; build/source artifacts unchanged. First inline resource-summary attempt had syntax typo before execution; corrected archived script contains exact executed calculation.",
+  "GPU_touches": 0,
+  "new_builds": 0,
+  "disposition": "Park v1. Do not execute GPU or rebuild same12 mapping just to fix naming. Any next distinct private candidate must privatize ALL kernel tags in host integration as well as function names."
+}

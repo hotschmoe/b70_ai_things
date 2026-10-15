@@ -1,0 +1,10 @@
+{
+  "status": "ROOT_GO_ONE_CPU_PARSE_AFTER_NORMAL_STOP_AND_HEALTH",
+  "epoch_ns": 1792088645095512970,
+  "trace": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current32k-profile-s90-v2-prep/run/trace/strata-qsa-pref.467.json",
+  "bytes": 441678985,
+  "run_arg_required": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current32k-profile-s90-v2-prep/run",
+  "available_RAM_basis": "Priorcurrentavailable114GiB; raw441.7MB, modelserverremoved, no otherheavyCPUholders. Cachequalificationnotusedasparsermemoryproof.",
+  "all_runtime_collection_and_health_gates": true,
+  "no_clean_speed_claim": true
+}

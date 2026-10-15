@@ -1,0 +1,12 @@
+{
+  "status": "EXACT_RETAINED_EXECUTABLE_MATCHES_HISTORICAL_DOCUMENTED_S13_PROBE_HASH",
+  "historical_document": "/mnt/vm_8tb/github/b70_ai_things/docs/20261014_flashnext_strata_optimization.md",
+  "historical_document_sha256_now": "957ca80a9b87c12f28cab254a54fbc3eeb566afe6abe1242530d095e2f2375e6",
+  "section": "S13",
+  "quote": "Probe SHA2567411d17bc61b49dcb516605cab4f7cde1aaaeff34892c2396d4364fad45bc4b2.",
+  "retained_executable": "/mnt/vm_8tb/b70/build/strata-ab/attn-value-probe-s13",
+  "retained_executable_sha256": "7411d17bc61b49dcb516605cab4f7cde1aaaeff34892c2396d4364fad45bc4b2",
+  "same_as_documented": true,
+  "correction": "Initial evidence.json/findings.md conservatively limited binary-to-historical-run provenance to inspected identity/summary/recipe files. The additionally inspected dated S13 document explicitly records this exact executable hash. This strengthens the retained binary tie to documented S13. It does not turn this offline audit into a new runtime dispatch observation, nor alter the proven shared host-binding failure. Preserve initial outputs; read this supplement with them.",
+  "conclusion": "S13 independent public-versus-value INT8 default-path AB comparison is not supported; both host paths use same selected public kernel-info/name. No claim about true candidate correctness/speed; no rerun queued."
+}

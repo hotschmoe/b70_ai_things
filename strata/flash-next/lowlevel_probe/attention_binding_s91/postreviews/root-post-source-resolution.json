@@ -1,0 +1,40 @@
+{
+  "status": "ROOT_ACCEPT_S91_HOLD_AND_S92_SOURCE_CPU_BUILD_GO",
+  "epoch_ns": 1792090846806064103,
+  "models": {
+    "claude-opus-5-5": {
+      "session_ids": [
+        "737f6022-198e-4992-bcfc-7e5646641e06"
+      ],
+      "elapsed_s": 56.22084215702489,
+      "verdict": "ACCEPT_S91_HOLD_AND_GO_S92_CPU_BUILD",
+      "root_fullread": true
+    },
+    "claude-fable-5-1": {
+      "session_ids": [
+        "644a2f98-f7b1-4002-8c26-fb43f5abf751"
+      ],
+      "elapsed_s": 138.81637681100983,
+      "verdict": "ACCEPT_S91_HOLD_AND_GO_S92_CPU_BUILD",
+      "root_fullread": true
+    }
+  },
+  "packet_sha256": "9e05159fee89bae36ff96ce47527eab75e9aecdfa4eccc2bcf234d9075b4aa91",
+  "S91_GPU_GO": false,
+  "S92_CPU_BUILD_GO": true,
+  "S92_GPU_GO": false,
+  "S92_build_executed": false,
+  "root_whole_candidate_patch_reconstruction_exact": true,
+  "S92_source_manifest_sha256": "973e7659126760b73a200927d5e59f7b70db6ce0541efa3bc7eb452e38edb870",
+  "root_resolutions": [
+    "Actual same11 source tags covered by private compile-D; audit all MATERIALIZED attention hostmetadata and finalper-arm name pointers. Do not force compiler to emit unused tags solely to meet an inventory count.",
+    "S91 public.images.o prelink input is ONLY frozencurrentattentionfatobject bbae; NO fixture/probe. S92 privateprelink includes newlycompiledcandidate+fixture. Exactdf7655 wrapper reuse, no publicregeneration.",
+    "Unmodified common SYCLfill/dpctmemcpy/arena helpers may legitimately share IDs; classify relevant overlap. No blanket rejection of every commonhelper duplicate and no inference from absence of linker warnings. Actual attention metadata separation is decisive.",
+    "Fable guard pages means4096-byte sentinel guard regions, not mprotect guardpages. Private merge is executed as part of fullchunk+merge bytes checks; othermodes/step/lane-cell not separatelyqualified.",
+    "Source-localallocation equality does not require compiler SLMSIZE or resources match exactly. Read actual private resources; no absent=zero or runtime traffic/occupancy claim. Unfavorable resource cost can justify withholdingGPU without speedclaim.",
+    "No new grep-only frozen-source edit needed: existing actual hostmetadata audit occurs after CPU build before any GPU, preventing the same bindingfailure. Do not assume function signatures/link success implydevicebinding.",
+    "Opus do-not-rerunS13 interpreted as no historicalmisboundexecutable rerun. NewcorrectedS92 is justified by independent documented-binary binding evidence, not generic repetition.",
+    "Baseline FP64 sanity retains old2e-5 threshold; crosscandidate fulloutput/scratch remainsBITWISE. All36mustpassbeforeanytimingacceptance. CAP2112/width2051 surrogate is not productionCAP2051qualification."
+  ],
+  "serving_or_speed_qualified": false
+}

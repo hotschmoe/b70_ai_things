@@ -1,0 +1,155 @@
+{
+  "public": {
+    "first_SS_sites": [],
+    "last_SS_sites": [],
+    "all_SS_site_lines": []
+  },
+  "private": {
+    "first_SS_sites": [
+      {
+        "line": 537,
+        "direction": "store",
+        "simd_lanes": 32,
+        "payload_bytes_if_all_lanes_active": 128,
+        "instruction": "        send.ugm (32|M0)         null     r8  r6:2  a0.0        0x440E0504           {I@1,$4} // wr:2+2, rd:0; store.ugm.d32.a32.wb.wb.ss[a0.0]"
+      },
+      {
+        "line": 551,
+        "direction": "store",
+        "simd_lanes": 32,
+        "payload_bytes_if_all_lanes_active": 128,
+        "instruction": "        send.ugm (32|M0)         null     r8  r6:2  a0.0        0x440E0504           {I@1,$7} // wr:2+2, rd:0; store.ugm.d32.a32.wb.wb.ss[a0.0]"
+      },
+      {
+        "line": 564,
+        "direction": "store",
+        "simd_lanes": 32,
+        "payload_bytes_if_all_lanes_active": 128,
+        "instruction": "        send.ugm (32|M0)         null     r8  r6:2  a0.0        0x440E0504           {I@1,$10} // wr:2+2, rd:0; store.ugm.d32.a32.wb.wb.ss[a0.0]"
+      },
+      {
+        "line": 577,
+        "direction": "store",
+        "simd_lanes": 32,
+        "payload_bytes_if_all_lanes_active": 128,
+        "instruction": "        send.ugm (32|M0)         null     r8  r6:2  a0.0        0x440E0504           {I@1,$1} // wr:2+2, rd:0; store.ugm.d32.a32.wb.wb.ss[a0.0]"
+      },
+      {
+        "line": 590,
+        "direction": "store",
+        "simd_lanes": 32,
+        "payload_bytes_if_all_lanes_active": 128,
+        "instruction": "        send.ugm (32|M0)         null     r8  r6:2  a0.0        0x440E0504           {I@1,$11} // wr:2+2, rd:0; store.ugm.d32.a32.wb.wb.ss[a0.0]"
+      },
+      {
+        "line": 603,
+        "direction": "store",
+        "simd_lanes": 32,
+        "payload_bytes_if_all_lanes_active": 128,
+        "instruction": "        send.ugm (32|M0)         null     r8  r6:2  a0.0        0x440E0504           {I@1,$6} // wr:2+2, rd:0; store.ugm.d32.a32.wb.wb.ss[a0.0]"
+      }
+    ],
+    "last_SS_sites": [
+      {
+        "line": 960,
+        "direction": "load",
+        "simd_lanes": 32,
+        "payload_bytes_if_all_lanes_active": 128,
+        "instruction": "        send.ugm (32|M0)         r14      r16  null:0  a0.0        0x44280500           {$15} // wr:2+0, rd:2; load.ugm.d32.a32.ca.ca.ss[a0.0]"
+      },
+      {
+        "line": 970,
+        "direction": "store",
+        "simd_lanes": 32,
+        "payload_bytes_if_all_lanes_active": 128,
+        "instruction": "        send.ugm (32|M0)         null     r12  r8:2  a0.0        0x440E0504           {F@1,$12} // wr:2+2, rd:0; store.ugm.d32.a32.wb.wb.ss[a0.0]"
+      },
+      {
+        "line": 972,
+        "direction": "load",
+        "simd_lanes": 32,
+        "payload_bytes_if_all_lanes_active": 128,
+        "instruction": "        send.ugm (32|M0)         r8       r10  null:0  a0.0        0x44280500           {$0} // wr:2+0, rd:2; load.ugm.d32.a32.ca.ca.ss[a0.0]"
+      },
+      {
+        "line": 973,
+        "direction": "load",
+        "simd_lanes": 32,
+        "payload_bytes_if_all_lanes_active": 128,
+        "instruction": "        send.ugm (32|M0)         r10      r6  null:0  a0.0        0x44280500           {$1} // wr:2+0, rd:2; load.ugm.d32.a32.ca.ca.ss[a0.0]"
+      },
+      {
+        "line": 974,
+        "direction": "load",
+        "simd_lanes": 32,
+        "payload_bytes_if_all_lanes_active": 128,
+        "instruction": "        send.ugm (32|M0)         r6       r20  null:0  a0.0        0x44280500           {$2} // wr:2+0, rd:2; load.ugm.d32.a32.ca.ca.ss[a0.0]"
+      },
+      {
+        "line": 975,
+        "direction": "load",
+        "simd_lanes": 32,
+        "payload_bytes_if_all_lanes_active": 128,
+        "instruction": "        send.ugm (32|M0)         r12      r18  null:0  a0.0        0x44280500           {$3} // wr:2+0, rd:2; load.ugm.d32.a32.ca.ca.ss[a0.0]"
+      }
+    ],
+    "all_SS_site_lines": [
+      537,
+      551,
+      564,
+      577,
+      590,
+      603,
+      616,
+      629,
+      642,
+      655,
+      671,
+      680,
+      685,
+      687,
+      688,
+      689,
+      702,
+      703,
+      715,
+      728,
+      729,
+      741,
+      752,
+      753,
+      766,
+      777,
+      778,
+      791,
+      802,
+      803,
+      816,
+      827,
+      828,
+      841,
+      852,
+      853,
+      866,
+      876,
+      877,
+      889,
+      908,
+      909,
+      919,
+      922,
+      923,
+      931,
+      932,
+      933,
+      940,
+      959,
+      960,
+      970,
+      972,
+      973,
+      974,
+      975
+    ]
+  }
+}

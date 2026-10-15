@@ -360,3 +360,14 @@ completed graph-batch latency. Keep main unchanged/no serve/retry/sweep.
 No v1 compiled comparison, independent runtime ISA trace, total dynamic SLM,
 physical traffic/occupancy or full-model gain claim.
 [S75 report](../../../docs/20261015_strata_iq3s_int8_dpas_probe.md).
+
+
+## Attention host/device binding audit (S91)
+
+`attention_binding_s91/` retains the CPU-only build and binding/resource
+findings. Separate device images and renamed host entry functions do not
+prove separate execution when weak SYCL kernel-info state coalesces. Check
+the actual host call metadata, registered-name pointers and device images.
+S91 is held without GPU execution; the retained S13 probe also shares the
+public selected metadata, correcting its old candidate attribution. No new
+performance result. [Full audit](../../../docs/20261015_strata_attention_binding_audit.md).

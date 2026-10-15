@@ -1,0 +1,939 @@
+{
+  "status": "EXTRACTED_CSV_ONLY_SOURCE_INFORMED_READINESS_AUDIT",
+  "inputs": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current32k-profile-s90-analysis/summary.json": {
+      "bytes": 33709,
+      "inode": 23995178,
+      "mtime_ns": 1792088663543807876
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current32k-profile-s90-analysis/operations.csv": {
+      "bytes": 3254134,
+      "inode": 23995175,
+      "mtime_ns": 1792088659803799136
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current32k-profile-s90-analysis/gpu-timeline.csv": {
+      "bytes": 77640324,
+      "inode": 23995176,
+      "mtime_ns": 1792088662043868679
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current32k-profile-s90-analysis/host-submit-wait-timeline.csv": {
+      "bytes": 31940384,
+      "inode": 23995177,
+      "mtime_ns": 1792088663539915123
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current32k-profile-s90-v2-prep/run/trace/timing.467.csv": {
+      "bytes": 312921,
+      "inode": 23994951,
+      "mtime_ns": 1792088507327065518
+    }
+  },
+  "raw_trace_sha256_from_existing_summary": "6799ce895caff68c80197c68549be70ab1b7020ea0875bae3156bf4fd9120730",
+  "request_ms": 30225.41575,
+  "gpu0_events": 153862,
+  "gpu0_busy_union_ms": 17239.233,
+  "gpu0_uncovered_ms": 12986.18275,
+  "gpu0_uncovered_intervals": 143512,
+  "gpu1_busy_union_ms": 4883.8145,
+  "host_copy_calls_in_request": 681,
+  "host_copy_full_duration_sum_ms": 14404.145845000001,
+  "host_copy_union_ms": 14404.14475,
+  "gpu0_recorded_gap_overlap_with_hostcopy_union_ms": 143.952,
+  "top15_gpu0_recorded_gaps": [
+    {
+      "offset_ms": 27071.5925,
+      "gap_ms": 510.2735,
+      "window_edge": false,
+      "previous": {
+        "name": "zeCommandListAppendMemoryCopy(D2M)[4]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 27071.59125,
+        "duration_us": 1.197
+      },
+      "next": {
+        "name": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 27581.866,
+        "duration_us": 5.0
+      },
+      "host_copy_overlaps": [
+        {
+          "name": "zeCommandListAppendMemoryCopy",
+          "pid": 467,
+          "tid": 467,
+          "offset_ms": 27071.58525,
+          "duration_us": 11.201,
+          "overlap_ms": 0.004
+        }
+      ],
+      "overlapping_host_copy_union_ms": 0.004,
+      "recorded_GPU0_copy_events_temporally_inside_overlapping_host_calls": 1
+    },
+    {
+      "offset_ms": 28687.5605,
+      "gap_ms": 473.05025,
+      "window_edge": false,
+      "previous": {
+        "name": "zeCommandListAppendBarrier",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 28687.56,
+        "duration_us": 0.52
+      },
+      "next": {
+        "name": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 29160.61075,
+        "duration_us": 5.625
+      },
+      "host_copy_overlaps": [],
+      "overlapping_host_copy_union_ms": 0.0,
+      "recorded_GPU0_copy_events_temporally_inside_overlapping_host_calls": 0
+    },
+    {
+      "offset_ms": 29236.4695,
+      "gap_ms": 465.885,
+      "window_edge": false,
+      "previous": {
+        "name": "zeCommandListAppendBarrier",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 29236.46875,
+        "duration_us": 0.729
+      },
+      "next": {
+        "name": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 29702.3545,
+        "duration_us": 4.687
+      },
+      "host_copy_overlaps": [],
+      "overlapping_host_copy_union_ms": 0.0,
+      "recorded_GPU0_copy_events_temporally_inside_overlapping_host_calls": 0
+    },
+    {
+      "offset_ms": 27641.51025,
+      "gap_ms": 460.304,
+      "window_edge": false,
+      "previous": {
+        "name": "dpct_kernel_name<strata::kernels::kv_append_q8_steps(signed char*, signed char*, unsigned short*, unsigned short*, int const*, int const*, int, float const*, float const*, int, int, strata::kernels::QsaShapes const&, void*, strata::kernels::KvHostPools const*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::kv_append_q8_kernel_b60fdc, dpct_kernel_scalar<1> >[SIMD32 {2; 4; 12} {64; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 27641.507,
+        "duration_us": 3.333
+      },
+      "next": {
+        "name": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 28101.81425,
+        "duration_us": 4.895
+      },
+      "host_copy_overlaps": [
+        {
+          "name": "zeCommandListAppendMemoryCopy",
+          "pid": 467,
+          "tid": 467,
+          "offset_ms": 27669.76125,
+          "duration_us": 24.045,
+          "overlap_ms": 0.024
+        }
+      ],
+      "overlapping_host_copy_union_ms": 0.024,
+      "recorded_GPU0_copy_events_temporally_inside_overlapping_host_calls": 0
+    },
+    {
+      "offset_ms": 28185.51975,
+      "gap_ms": 444.8905,
+      "window_edge": false,
+      "previous": {
+        "name": "zeCommandListAppendBarrier",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 28185.519,
+        "duration_us": 0.729
+      },
+      "next": {
+        "name": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 28630.41025,
+        "duration_us": 3.958
+      },
+      "host_copy_overlaps": [],
+      "overlapping_host_copy_union_ms": 0.0,
+      "recorded_GPU0_copy_events_temporally_inside_overlapping_host_calls": 0
+    },
+    {
+      "offset_ms": 232.06425,
+      "gap_ms": 147.976,
+      "window_edge": false,
+      "previous": {
+        "name": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {75670; 1; 1} {256; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 230.935,
+        "duration_us": 1129.27
+      },
+      "next": {
+        "name": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 380.04025,
+        "duration_us": 30.104
+      },
+      "host_copy_overlaps": [
+        {
+          "name": "zeCommandListAppendMemoryCopy",
+          "pid": 467,
+          "tid": 467,
+          "offset_ms": 233.915,
+          "duration_us": 78.587,
+          "overlap_ms": 0.0785
+        },
+        {
+          "name": "zeCommandListAppendMemoryCopy",
+          "pid": 467,
+          "tid": 467,
+          "offset_ms": 233.6855,
+          "duration_us": 63.829,
+          "overlap_ms": 0.06375
+        },
+        {
+          "name": "zeCommandListAppendMemoryCopy",
+          "pid": 467,
+          "tid": 467,
+          "offset_ms": 233.83075,
+          "duration_us": 58.459,
+          "overlap_ms": 0.0585
+        }
+      ],
+      "overlapping_host_copy_union_ms": 0.238,
+      "recorded_GPU0_copy_events_temporally_inside_overlapping_host_calls": 0
+    },
+    {
+      "offset_ms": 6662.664,
+      "gap_ms": 68.1975,
+      "window_edge": false,
+      "previous": {
+        "name": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {43084; 1; 1} {256; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 6662.0575,
+        "duration_us": 606.458
+      },
+      "next": {
+        "name": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 6730.8615,
+        "duration_us": 40.104
+      },
+      "host_copy_overlaps": [],
+      "overlapping_host_copy_union_ms": 0.0,
+      "recorded_GPU0_copy_events_temporally_inside_overlapping_host_calls": 0
+    },
+    {
+      "offset_ms": 574.159,
+      "gap_ms": 67.51975,
+      "window_edge": false,
+      "previous": {
+        "name": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {60320; 1; 1} {256; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 573.269,
+        "duration_us": 890.104
+      },
+      "next": {
+        "name": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 641.67875,
+        "duration_us": 32.916
+      },
+      "host_copy_overlaps": [],
+      "overlapping_host_copy_union_ms": 0.0,
+      "recorded_GPU0_copy_events_temporally_inside_overlapping_host_calls": 0
+    },
+    {
+      "offset_ms": 7002.55625,
+      "gap_ms": 67.40075,
+      "window_edge": false,
+      "previous": {
+        "name": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {42363; 1; 1} {256; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 7001.9495,
+        "duration_us": 606.77
+      },
+      "next": {
+        "name": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 7069.957,
+        "duration_us": 16.77
+      },
+      "host_copy_overlaps": [],
+      "overlapping_host_copy_union_ms": 0.0,
+      "recorded_GPU0_copy_events_temporally_inside_overlapping_host_calls": 0
+    },
+    {
+      "offset_ms": 6295.7265,
+      "gap_ms": 67.034,
+      "window_edge": false,
+      "previous": {
+        "name": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {53923; 1; 1} {256; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 6294.95025,
+        "duration_us": 776.354
+      },
+      "next": {
+        "name": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 6362.7605,
+        "duration_us": 25.312
+      },
+      "host_copy_overlaps": [],
+      "overlapping_host_copy_union_ms": 0.0,
+      "recorded_GPU0_copy_events_temporally_inside_overlapping_host_calls": 0
+    },
+    {
+      "offset_ms": 6833.3445,
+      "gap_ms": 66.70225,
+      "window_edge": false,
+      "previous": {
+        "name": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {40407; 1; 1} {256; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 6832.763,
+        "duration_us": 581.562
+      },
+      "next": {
+        "name": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 6900.04675,
+        "duration_us": 25.833
+      },
+      "host_copy_overlaps": [],
+      "overlapping_host_copy_union_ms": 0.0,
+      "recorded_GPU0_copy_events_temporally_inside_overlapping_host_calls": 0
+    },
+    {
+      "offset_ms": 5795.7295,
+      "gap_ms": 66.4745,
+      "window_edge": false,
+      "previous": {
+        "name": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {45470; 1; 1} {256; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 5795.0785,
+        "duration_us": 650.937
+      },
+      "next": {
+        "name": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 5862.204,
+        "duration_us": 33.854
+      },
+      "host_copy_overlaps": [],
+      "overlapping_host_copy_union_ms": 0.0,
+      "recorded_GPU0_copy_events_temporally_inside_overlapping_host_calls": 0
+    },
+    {
+      "offset_ms": 7537.2295,
+      "gap_ms": 65.55925,
+      "window_edge": false,
+      "previous": {
+        "name": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {37535; 1; 1} {256; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 7536.697,
+        "duration_us": 532.395
+      },
+      "next": {
+        "name": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 7602.78875,
+        "duration_us": 33.02
+      },
+      "host_copy_overlaps": [
+        {
+          "name": "zeCommandListAppendMemoryCopy",
+          "pid": 467,
+          "tid": 467,
+          "offset_ms": 7537.2165,
+          "duration_us": 56.756,
+          "overlap_ms": 0.04375
+        }
+      ],
+      "overlapping_host_copy_union_ms": 0.04375,
+      "recorded_GPU0_copy_events_temporally_inside_overlapping_host_calls": 0
+    },
+    {
+      "offset_ms": 6127.49775,
+      "gap_ms": 65.51175,
+      "window_edge": false,
+      "previous": {
+        "name": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {42660; 1; 1} {256; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 6126.88925,
+        "duration_us": 608.437
+      },
+      "next": {
+        "name": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 6193.0095,
+        "duration_us": 25.937
+      },
+      "host_copy_overlaps": [],
+      "overlapping_host_copy_union_ms": 0.0,
+      "recorded_GPU0_copy_events_temporally_inside_overlapping_host_calls": 0
+    },
+    {
+      "offset_ms": 7172.6435,
+      "gap_ms": 65.49825,
+      "window_edge": false,
+      "previous": {
+        "name": "dpct_kernel_name<strata::prefill::gather_rows16(unsigned short const*, int const*, unsigned short*, long, long, void*)::gather_rows16_kernel_d9d697>[SIMD32 {43004; 1; 1} {256; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 7172.02275,
+        "duration_us": 620.729
+      },
+      "next": {
+        "name": "dpct_kernel_name<strata::kernels::iq_dequant_expert_f16(int, int, void const*, void const*, void const*, long, long, unsigned short*, unsigned short*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::dequant_expert_kernel_7d2c41>[SIMD32 {19200; 1; 1} {32; 1; 1}]",
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "offset_ms": 7238.14175,
+        "duration_us": 26.041
+      },
+      "host_copy_overlaps": [],
+      "overlapping_host_copy_union_ms": 0.0,
+      "recorded_GPU0_copy_events_temporally_inside_overlapping_host_calls": 0
+    }
+  ],
+  "source_wave_geometry": {
+    "main_tokens": 32721,
+    "chunks": [
+      12288,
+      12288,
+      8145
+    ],
+    "QSA_layers": 12,
+    "GDN_layers": 36,
+    "MoE_layers": 48,
+    "selection_calls_per_layer": [
+      48,
+      48,
+      32
+    ],
+    "expected_prefill_scorer_calls": [
+      576,
+      576,
+      384
+    ],
+    "expected_tiled_calls": [
+      0,
+      396,
+      372
+    ],
+    "expected_original_prefill_calls": [
+      576,
+      180,
+      12
+    ],
+    "observed_tiled": 768,
+    "observed_original_all": 960,
+    "observed_topk_all": 1728,
+    "original_residual_beyond_mainprefill": 192,
+    "residual_scope": "Small final prompt handling/capture/decode not independently split; do not label all192 steadydecode without evidence."
+  },
+  "gpu0_GDN_ordered_36call_envelopes": [
+    {
+      "source_wave": 1,
+      "count": 36,
+      "first_start_offset_ms": 188.39175,
+      "last_end_offset_ms": 9707.51675,
+      "service_ms": 646.307903
+    },
+    {
+      "source_wave": 2,
+      "count": 36,
+      "first_start_offset_ms": 10174.64625,
+      "last_end_offset_ms": 19037.65325,
+      "service_ms": 645.9992589999999
+    },
+    {
+      "source_wave": 3,
+      "count": 36,
+      "first_start_offset_ms": 19572.93275,
+      "last_end_offset_ms": 26655.44725,
+      "service_ms": 458.995506
+    }
+  ],
+  "gpu1_prefillreduce_ordered_48call_envelopes": [
+    {
+      "source_wave": 1,
+      "count": 48,
+      "first_start_offset_ms": 378.93825,
+      "last_end_offset_ms": 10113.251,
+      "service_ms": 604.473938
+    },
+    {
+      "source_wave": 2,
+      "count": 48,
+      "first_start_offset_ms": 10228.988,
+      "last_end_offset_ms": 19439.6645,
+      "service_ms": 605.080812
+    },
+    {
+      "source_wave": 3,
+      "count": 48,
+      "first_start_offset_ms": 19623.601,
+      "last_end_offset_ms": 26957.90225,
+      "service_ms": 405.978835
+    }
+  ],
+  "selected_exact_operations": [
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::prefill::gdn_recurrence_variant(int, float*, float const*, float const*, float const*, float const*, float const*, float, float*, unsigned short*, long, void*, long)::gdn_rec_cols_pipe_kernel_c6cea3>[SIMD32 {192; 1; 1} {32; 4; 1}]",
+      "overlapping_count": "108",
+      "contained_service_ms": "1751.302668"
+    },
+    {
+      "pid": "4294952350",
+      "operation": "strata::kernels::ep_prefill_reduce_kernel<true>[SIMD32 {64; 1; 1} {256; 1; 1}]",
+      "overlapping_count": "144",
+      "contained_service_ms": "1615.533585"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_prefill_tiled_s89>[SIMD32 {256; 32; 1} {256; 1; 1}]",
+      "overlapping_count": "768",
+      "contained_service_ms": "792.5028159999999"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {1023; 209; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "15.850411"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {425; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "9.71958"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {417; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "9.610620999999998"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {505; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "9.540725"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {497; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "9.404683"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {409; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "9.375099"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {489; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "9.255827000000002"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {401; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "9.199995"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {481; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "9.131454"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {393; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "9.057496"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {473; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "8.922702"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {465; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "8.781559"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {433; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "8.691557000000001"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {457; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "8.62062"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {449; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "8.51583"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {441; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "8.387598"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {385; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "7.321454"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {377; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "7.116141"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {369; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "6.983327"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {361; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "6.822077"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {353; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "6.71708"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {345; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "6.5074939999999994"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::block_scores_multi_kernel_dea7d4>[SIMD32 {256; 1; 1} {256; 1; 1}]",
+      "overlapping_count": "192",
+      "contained_service_ms": "6.444394"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {337; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "6.3692660000000005"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {329; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "6.2095780000000005"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {321; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "6.110515"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {313; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "5.908223"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {305; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "5.7779110000000005"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {297; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "5.628539"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {289; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "5.543224"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {281; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "5.3417650000000005"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {273; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "5.227495"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {265; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "5.140306"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {257; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "5.082183"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {249; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "4.719056999999999"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {241; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "4.559056"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {233; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "4.3869750000000005"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {225; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "4.286349"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {217; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "4.076661"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {209; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "3.941973"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {169; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "3.812598"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {201; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "3.784266"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {161; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "3.728015"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {193; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "3.6833270000000002"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {185; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "3.488953"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {153; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "3.484684"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {177; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "3.438224"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {145; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "3.323953"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {137; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "3.154996"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {129; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "3.025933"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {121; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "2.749162"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {113; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "2.5724940000000003"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {105; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "2.382495"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {97; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "2.264784"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {89; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "2.033952"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {81; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "1.8527040000000001"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {73; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "1.6680160000000002"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {65; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "1.547912"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {57; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "1.294891"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {49; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "1.1037439999999998"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {41; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "0.900308"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {33; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "0.793017"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {25; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "0.5200990000000001"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {17; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "0.342183"
+    },
+    {
+      "pid": "4294952351",
+      "operation": "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_kernel_925c9d>[SIMD32 {9; 256; 1} {256; 1; 1}]",
+      "overlapping_count": "12",
+      "contained_service_ms": "0.154682"
+    }
+  ],
+  "clock_drift_us": 945.0360000003129,
+  "limits": [
+    "No rawJSON reread. Request includes capture/admission/prefill/decode; source3wave envelopes are partial same-device motifs, not exactphase timestamps.",
+    "Hostcopy metadata lacks queue/device argument or correlation ID in extractedCSV; overlaps with GPU0 gaps do not assign hostcopy toGPU0 or causality.",
+    "Recorded busy/uncovered are not physicalidle/occupancy/removablewait. API duration is not transfer service or P2P traffic.",
+    "GPU0/GPU1 clocks never joined; times not summed across devices or nested APIs."
+  ],
+  "topk_count_from_exact_rows": 1728,
+  "topk_contained_service_ms": 187.579278,
+  "host_copy_union_coincident_with_GPU0_recorded_busy_ms": 14260.19275,
+  "source_readiness_lead": {
+    "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/prefill/prefill.cpp",
+    "primary_gather_line": 3620,
+    "peer_enqueue_branch_line": 3624,
+    "peer_expert_loop_lines": [
+      3734,
+      3750
+    ],
+    "primary_native_dequant_line": 4315,
+    "fact": "Primary gather enqueued before complete peer expert enqueue loop, then own primary expert DQ/compute; independent projection operands allow investigation of enqueue scheduling. Source serialization is not measured causal gap attribution.",
+    "not_alias_repeat": "S38 altered peer activation gather/alias, not this host queue issue order."
+  }
+}

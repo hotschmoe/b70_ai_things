@@ -371,3 +371,20 @@ sequence does not establish causal gain/stability/default/daily promotion.
 S87 Q6 is OFF in both S89 arms, so combined behavior is unqualified. Next
 prepared measurement is one current32K operation/readiness trace, not run here.
 [S89 report](../../docs/20261015_strata_qsa_tiling_and_q6_centering.md#s89-actual-main-guarded-qsa-serving-comparison-is-a-small-directional-result).
+
+
+S90 completes that current32K profile on unchanged S89 ON b2a610ea. Actual
+768 tiled calls and12264 full32 attention/merge calls reconcile source;
+attention-family6.473s is diagnostic service, not a removable wall budget.
+One first-unwarmed32728/32 request includes capture and differs from S89's
+warm protocol; no clean speed/causal comparison. Full normalteardown and
+both-card/compiled post-health pass. Private score-only reduction is the next
+separate lead, without a runtime claim. [S90 report](../../docs/20261015_strata_current32k_profile.md).
+
+
+S91 CPU audit holds the score-reduction runner: public/private host calls
+share weak kernel metadata despite distinct device images. The retained
+S13 executable has the same defect; its old independent candidate exactness
+and neutral timing attribution are unsupported. S92 prepares private tags
+for all11 chunk/merge classes plus host functions and reuses public AOT;
+not built or run. [Binding correction](../../docs/20261015_strata_attention_binding_audit.md).

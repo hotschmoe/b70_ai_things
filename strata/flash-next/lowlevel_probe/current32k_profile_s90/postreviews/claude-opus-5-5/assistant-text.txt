@@ -1,0 +1,42 @@
+**ACCEPT_S90_AND_GO_BOUNDED_S91_BUILD**
+
+**S90 trace evidence: accepted as reconciled, non-causal**
+- **Counts reconcile.** The 12264 calls match the chunk/merge source geometry (12\xb7(384+384+254)) and are aggregated by name+device across both engine rows. Tiled scorer calls 768 = 0+396+372, matching the guard-4097 source. The 192 original-scorer residual is left unlabeled, which is correct.
+- **Units and union semantics hold.** GPU0 union (17.239 s) and GPU1 union (4.884 s) are kept per-device and not added together. Host copy (14.404 s) is shown as an overlap intersection (143.952 ms in uncovered gaps, 14.260 s during recorded activity). It is explicitly not a device assignment, PCIe byte count or causal wait.
+- **Clock limits are stated.** Host-clock drift of 945.036 \xb5s is disclosed, there is no cross-card join, and exact prefill epoch endpoints are marked unqualified.
+- **Cold capture limits are stated.** The run is the first unwarmed request. It is not attributed solely to the profiler, not called a regression, and the late ~500 ms gaps are not called main-prefill gaps.
+- **No overclaims.** There are no physical-idle, critical-path, speed or promotion claims. The peer-before-primary enqueue order is kept as a source-audit lead only.
+
+**S91 source: the tree and lane-owner mapping are correct**
+- **Same-head pairing at every level.** At XOR16, lane l keeps `part[i+8\xb7b4]` and the partner (whose b4 is flipped) sends the same index. The same holds at XOR8, XOR4 and XOR2, so both operands always belong to the same head. The final head index is b1 + 2b2 + 4b3 + 8b4 = \u230al/2\u230b, which matches `score_head_of_lane`.
+- **Single writer per score.** Only even lanes with h<12 write (lanes 0\u201322), so each `sp[h][c]` has exactly one writer.
+- **Same addition tree as the old butterfly.** Each node sums the same two subtrees, so the only differences are commutative operand swaps.
+- **Masks, tails and barriers are unchanged.** The mask/tail branch stays subgroup-uniform before the shuffles, so all 32 lanes participate. Heads 12\u201315 are zero-filled and never published. There are no new barriers, submits or waits.
+- **Scope is distinct.** This is separate from S11 (query batch), S12 (lane-cell ownership) and S13 (value pipeline).
+
+**Fixture and gates are adequate for a bounded INT8 primitive**
+- **Strict acceptance.** Acceptance requires full output and full initialized-scratch bitwise equality, plus finiteness checks.
+- **State checks.** Each case covers an own repeat, a sign-flip with observability (except width 0), a changed repeat, and restore to the original bytes.
+- **Memory checks.** 4096-byte guards and read-only witnesses are checked after every snapshot and after timing, and 64-byte alignment is asserted.
+- **FP64 oracle is sanity only.** The 2e-5 threshold applies to the baseline output only. It is not the candidate tolerance.
+- **CAP2112 surrogate is disclosed.** Cap 2112 with width 2051 is a synthetic stand-in, not qualification at the production cap.
+- **Timing is raw and gated.** All samples are printed per arm and labeled host-completed, not device service.
+- **Signature mismatch is safe.** The hand-written `reduce12_batch` declaration would fail at link (mangling) on any mismatch, not silently miscall.
+
+**Build scope is appropriate**
+- The prelink uses only the current public fat object, already verified as the actual archive member (SHA bbae92dc\u2026). The S13 object is not substituted.
+- New AOT images are explicitly not treated as proof from an old binary.
+- There is no public, common or main TU rebuild, and the build checks that the archive member is unchanged afterwards.
+
+**Non-blocking items**
+1. **Add `static_assert(G <= 16)`.** It would guard `part[16]` if the generic modes ever instantiate a larger G. This is a one-line hardening, not a blocker.
+2. **Check kernel-name and ODR collisions after the build.** Namespace-scope kernel-name types or functors shared between the public and private images could collide. Already listed as a root check; it must be done from the actual map and images before any GPU run.
+3. **Treat per-case PASS lines as provisional.** They print before later cases run. Policy already says no timing counts until "ALL 36 CASES PASS".
+
+**GPU stays conditional.** It requires all of:
+- inspecting the actual linked public and private images and selected kernel resources (GRF/spill: extra live `part`/`r8`/`r4`/`r2` arrays may raise register pressure);
+- runner identity and a quiet-CPU card0 pin;
+- revalidated pre-health and post-health;
+- removal of the owned container.
+
+No graphs, cache serving, full-context runs or retest inflation. The 60\u219216 logical shuffle count is not an ISA, numerics or speed claim.

@@ -1,0 +1,529 @@
+{
+  "status": "FROZEN_S91_CPU_ONLY_HOLD_NO_GPU",
+  "roots": [
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-score-reduce12-s91-prep",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-score-reduce12-s91-runner-prep",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-score-reduce12-s91-historical-binding-audit"
+  ],
+  "additional_files": [
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-score-reduce12-s91-root-decision.json"
+  ],
+  "file_count": 101,
+  "total_bytes": 10585790,
+  "external_references": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep-manifest.json",
+      "bytes": 2614,
+      "sha256": "973e7659126760b73a200927d5e59f7b70db6ce0541efa3bc7eb452e38edb870",
+      "scope": "Frozen S92 source-preparation manifest external reference ONLY; no S92 source/future build/runtime inventoried."
+    }
+  ],
+  "scope": "S91 frozen source/build/offline audit, never-executed GPU runner, all9 historical binding audit records and documentary supplement, root CPU-only decision. Running combined S91post/S92source reviews excluded. Existing S90/source reviews curated elsewhere.",
+  "files": [
+    {
+      "path": "attn-score-reduce12-s91-historical-binding-audit/documented-binary-binding.json",
+      "bytes": 1348,
+      "sha256": "2cc07953ab4c15c8e35040d213d5247bb773658318a10d66af27a510aae03876"
+    },
+    {
+      "path": "attn-score-reduce12-s91-historical-binding-audit/evidence.json",
+      "bytes": 17533,
+      "sha256": "4fd0416e70fd8bbfaf4aedcf2f948f29b6bd1443f7d94de98a89ff891501b81a"
+    },
+    {
+      "path": "attn-score-reduce12-s91-historical-binding-audit/final.nm.txt",
+      "bytes": 197976,
+      "sha256": "3d4a9ba59cefad973f59cc0db2caaa4499ad5003eb4ab6c1f6598f4a87a76a4d"
+    },
+    {
+      "path": "attn-score-reduce12-s91-historical-binding-audit/final.objdump.txt",
+      "bytes": 2189507,
+      "sha256": "ea63ba32fb4162012c4de62fbc523677ee46440723f67b6a9cac9c7262d875f0"
+    },
+    {
+      "path": "attn-score-reduce12-s91-historical-binding-audit/findings.md",
+      "bytes": 2463,
+      "sha256": "a7baf089f6272858c9027d4038d5011a464dbc0ce4b448742d7ac35e4d4a43e6"
+    },
+    {
+      "path": "attn-score-reduce12-s91-historical-binding-audit/public.nm.txt",
+      "bytes": 84370,
+      "sha256": "e64b7b76e9624d84ca7d75de03a33e50d7a408a094b11d916e6df7f4d55d93bf"
+    },
+    {
+      "path": "attn-score-reduce12-s91-historical-binding-audit/public.objdump.txt",
+      "bytes": 721104,
+      "sha256": "397ae0b0ae79b17565356884e60b228dc57f9135b1bbad705cf7902415b0bde7"
+    },
+    {
+      "path": "attn-score-reduce12-s91-historical-binding-audit/variant.nm.txt",
+      "bytes": 82373,
+      "sha256": "38c9b7c831166a7092bb2f7d91e085c77f8c4699392899c8c1d71f2a9c8b2141"
+    },
+    {
+      "path": "attn-score-reduce12-s91-historical-binding-audit/variant.objdump.txt",
+      "bytes": 714015,
+      "sha256": "374636106e75a9a9bd4598de47478318814b7cfb2b5268c52e31b292107333cf"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/README.md",
+      "bytes": 7244,
+      "sha256": "cbdc31bf2eade0b8559e4104be23ae6b84a930133dfaddfd49840caf0d25c93d"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/S13-fixture-original.cpp",
+      "bytes": 6911,
+      "sha256": "95caaac4028700a59e5812667e3f662603ea86200cbb421e3e24d05694f22235"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/attn_score_probe.cpp",
+      "bytes": 10942,
+      "sha256": "3cc12a73b1b0eaa76853824aa33ef2d5444fe1dc8534f8855392696084a4a666"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/attn_score_probe",
+      "bytes": 2137768,
+      "sha256": "51e2fd7b58a41493893facd947c1c08c368eb3ddb80145eac1ab41e895d6b41a"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/build.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/build.log",
+      "bytes": 2002,
+      "sha256": "9f67e3eaedd89081dca75f4e896c981c4196cf13639ed26fd148eb92d5ddb011"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/candidate.o",
+      "bytes": 258864,
+      "sha256": "3cd7be02b4b0fb6e81f8123fba606cade263102d3b8956e032c14b91a4d90c18"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/compiler-version.txt",
+      "bytes": 257,
+      "sha256": "06b5b1015f3c581440fb4cf00258edc0db8d98696ca3252cf69045e1f8c283d4"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/fixture-compile.time",
+      "bytes": 30,
+      "sha256": "c9366c9c4652d587f4844daf77b696d4246eca047334586b7b04575d18e0de44"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/host-link.log",
+      "bytes": 2447,
+      "sha256": "e18d1d1d1b222b1d5460d223480485c35ea6542a1889103646178eadc9eccad8"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/host-link.time",
+      "bytes": 33,
+      "sha256": "bb68e7298b6f5266db0ac0922a477208eaba43af02f8c612eebdd0134eb265d1"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/image.json",
+      "bytes": 6858,
+      "sha256": "41e0211327fe8f37eddc76cbae832da821d74ee637e1e850ca422aa23f5e301d"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/link.map",
+      "bytes": 226367,
+      "sha256": "ef2b4e58d4151ba3322735fdf490a2e90a2d92e377ef0426c32d99ad71defabf"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/private-compile.time",
+      "bytes": 70766,
+      "sha256": "85e9a570c1c53f11e1611ba637c20b523269962117ea3d3edf46aa77bf6a8f2f"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/private-prelink.log",
+      "bytes": 11892,
+      "sha256": "e138fb6227c467531650e273f34e9c26c955ecc12500c6da2020074f4b4a25ee"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/private-prelink.time",
+      "bytes": 29,
+      "sha256": "2f8910eacc7e267b3e63a177ef89b31794de299635a1f424b063df142eaebe9c"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/private.images.o",
+      "bytes": 955744,
+      "sha256": "6ce67f5df01fe3cef25d90316e8d8fe56492f2513881c6e9ffdb0670d258fe43"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/probe.o",
+      "bytes": 104752,
+      "sha256": "8dc293c1d36478e37d124e4636c27b93398b263641371973aad9fb6d665bcfea"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/public-after.o",
+      "bytes": 251888,
+      "sha256": "bbae92dcf61427f35078d498a240b1c9f23862e8bf13f7b63d95252e3b06baf2"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/public-current-member.o",
+      "bytes": 251888,
+      "sha256": "bbae92dcf61427f35078d498a240b1c9f23862e8bf13f7b63d95252e3b06baf2"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/public-current-member.sha256",
+      "bytes": 90,
+      "sha256": "4324e107fa51127b0ed845a70dcc1186c29705d49952dc1b8cef1d4c24e92890"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/public-prelink.log",
+      "bytes": 10993,
+      "sha256": "b29e7b6bd7741b828f5eb3f7acfa04eda52dd09befb4a076d188499f4c788755"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/public-prelink.time",
+      "bytes": 34,
+      "sha256": "84ea3ce3915d37520c8295b7a62ebfc79a9ee110b6b11a75f053dfcda05838f3"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/public.images.o",
+      "bytes": 915504,
+      "sha256": "df7655d8eacbd93b6c8ce116ab1b7a8e04c5a8ccf031d2180c959c31bbdb8b6b"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/sha256.txt",
+      "bytes": 503,
+      "sha256": "db037c05bdb7744cf8741d2fda971d0ae5a2eb467f3d3f87ba47131dcd4549fd"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build/symbols.txt",
+      "bytes": 200330,
+      "sha256": "7f221e50c44b94e046de780a001bff1f9b0d176137532c97f05938b9247b4004"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/candidate.o.host-target-excerpts.txt",
+      "bytes": 264837,
+      "sha256": "84a4ba1f7a1bc67fe224deb8fa5989cb57fc27edfaa788ce5be82317185e13a6"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/candidate.o.target-symbols.txt",
+      "bytes": 685,
+      "sha256": "983cb8bea424cb904c9092935b2337bcbd46697d67c504a98a7ee24bbbaa3275"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/decode.sh",
+      "bytes": 970,
+      "sha256": "e3b00752541a1ea00d4c615f2794d0e8549f79358fbb73407f11adcc913540d1"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/decoder-image-id.txt",
+      "bytes": 72,
+      "sha256": "0716a759b38b99857a73ea5340c9861a23dd6cbe31f267bd8c0e878b3ac41055"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/decoder-input-after.sha256",
+      "bytes": 165,
+      "sha256": "774b08a84fe9b8beffb763ba3f9b7200abd692d76c7bcc292fada756fdf14f43"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/decoder-input-before.sha256",
+      "bytes": 165,
+      "sha256": "774b08a84fe9b8beffb763ba3f9b7200abd692d76c7bcc292fada756fdf14f43"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/decoder-tool-path.txt",
+      "bytes": 15,
+      "sha256": "52de7767fd8b2c8e722ecd3ab1d1a3441b9446821186349ef0deda6f519dfbe9"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/excerpts.json",
+      "bytes": 4573,
+      "sha256": "ed043d8b313e91e6aecf88c7b4fc94667bc5d2e4653b24034170f2f5396e96d3"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/extract.py",
+      "bytes": 3539,
+      "sha256": "8806c296615579bbef62d67c534802d55fa37df34d313f31425aa113c76c6600"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/extract.v1-trailing-alignment.py",
+      "bytes": 3493,
+      "sha256": "37171161e81c267e86a352cbf3f7a574d147057f96fce497344d2aff5283b8f3"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/final-facts-manifest.json",
+      "bytes": 1409,
+      "sha256": "f18fc6d262c6ecf53a4a22af142e246779d2e62d5becb916c29527551461fe8a"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/findings.txt",
+      "bytes": 3064,
+      "sha256": "93ebcbd02bc602801858e9c1c4a0d53509de769b6698f088480e5c6dce35ebc3"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/host-binding.json",
+      "bytes": 4760,
+      "sha256": "a3871159d9dad5de39ba70dc9516b96aebc813a90a4fa7885e28791415e12795"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/host_binding.py",
+      "bytes": 2187,
+      "sha256": "146b6a5aaec3f9fb94d4070bce4b51979a62dc1a32f036dcd38d995d39b639ed"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/private-disasm/.misc.buildOptions",
+      "bytes": 38,
+      "sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/private-disasm/.note.intelgt.compat",
+      "bytes": 172,
+      "sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/private-disasm/.note.intelgt.metrics",
+      "bytes": 3,
+      "sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/private-disasm/.rel.text._ZTS16dpct_kernel_nameIJZN6strata7kernels14reduce12_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE",
+      "bytes": 43,
+      "sha256": "ee7e374724b44a40fba5966333ccfc240d742254f34186ca217b4899add5c628"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/private-disasm/.spv",
+      "bytes": 19700,
+      "sha256": "a95477f715e7a210123d3b0f059f5fa18724c85e8ea8faa7ddbf5181d7b3eaff"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/private-disasm/.symtab",
+      "bytes": 706,
+      "sha256": "bfd93c26e2d398f2ad80ba24c66583bef7ba6c7ba798f516273afd316cad4d7d"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/private-disasm/.text._ZTS16dpct_kernel_nameIJZN6strata7kernels14reduce12_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE.asm",
+      "bytes": 138799,
+      "sha256": "8e423a16e9029eeca82d60cd7f2f1943acfdaaba939579299cba0371554cf5d0"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/private-disasm/.ze_info",
+      "bytes": 6665,
+      "sha256": "411507f652b1f2c0efdf23cf5e254c72c4930bfb4861e16b758fe4acd646d6e7"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/private-disasm/sections.txt",
+      "bytes": 530,
+      "sha256": "afdd1dc250f0c1ecc8f0b5fe4440bad67286921a803548510ec5b771e3d25808"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/private-disasm.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/private-disasm.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/private-disasm.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/private.ze_info",
+      "bytes": 6665,
+      "sha256": "411507f652b1f2c0efdf23cf5e254c72c4930bfb4861e16b758fe4acd646d6e7"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/private.zebin",
+      "bytes": 47432,
+      "sha256": "217a725b2b3b3fa16c35a5b3e0e827e2ac67640449569c816f817a4434148ebb"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/public-current-member.o.host-target-excerpts.txt",
+      "bytes": 9305,
+      "sha256": "41d97aef9d7358817650735bb4e931c00ae9019ca035bbf6253b29ca56c35a6f"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/public-current-member.o.target-symbols.txt",
+      "bytes": 685,
+      "sha256": "983cb8bea424cb904c9092935b2337bcbd46697d67c504a98a7ee24bbbaa3275"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/public-disasm/.misc.buildOptions",
+      "bytes": 38,
+      "sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/public-disasm/.note.intelgt.compat",
+      "bytes": 172,
+      "sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/public-disasm/.note.intelgt.metrics",
+      "bytes": 3,
+      "sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/public-disasm/.rel.text._ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE",
+      "bytes": 43,
+      "sha256": "ee7e374724b44a40fba5966333ccfc240d742254f34186ca217b4899add5c628"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/public-disasm/.spv",
+      "bytes": 16716,
+      "sha256": "88850e7dd108b82c8e9748038b91c2a2fdc944accebd3b9aeb5683c07a99e65c"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/public-disasm/.symtab",
+      "bytes": 727,
+      "sha256": "afdb847b98d6726438acaba920cec07618017e907da0df82dffec5dafe3531f4"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/public-disasm/.text._ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE.asm",
+      "bytes": 137771,
+      "sha256": "2f31a36a256f274f7d262253941e76e1076159eea0735e731689e3f3f5590cef"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/public-disasm/.ze_info",
+      "bytes": 6519,
+      "sha256": "537fc84438ca3b15b9a5ac48a734099a0dec020e97919d9cddbcb11c4d782c04"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/public-disasm/sections.txt",
+      "bytes": 544,
+      "sha256": "955512c5c61132e7188636b96cafdde370279457bfa84763773f0c1ffed5bf43"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/public-disasm.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/public-disasm.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/public-disasm.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/public.ze_info",
+      "bytes": 6519,
+      "sha256": "537fc84438ca3b15b9a5ac48a734099a0dec020e97919d9cddbcb11c4d782c04"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/public.zebin",
+      "bytes": 44376,
+      "sha256": "80d9bfd4a34120824bb24dcded7d9a6574a90d9632b5d9ad446a20af48161e11"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/resources.json",
+      "bytes": 4962,
+      "sha256": "f78737fbae56e320847d96134e75be40d4956672492d265f679cb86ad26e28dd"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/selection.json",
+      "bytes": 13472,
+      "sha256": "fefa80f428b252ccd5cf98c2e939db0474eedc94717ec2575b67f4e301c95f5d"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-audit/summarize_resources.py",
+      "bytes": 5034,
+      "sha256": "cff9be323cdf10658600c358b082076f14d38516fb13a0b668550c1154b9c512"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build-container.sh",
+      "bytes": 2342,
+      "sha256": "eb246cd45b15adad5b22e840de069828a62fc302ea7c933fe461882e8e40609e"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/build.sh",
+      "bytes": 913,
+      "sha256": "b326a4dc9a1e877eaa865e9ae478bc1e204a39ec1928fd74829cae9b78499b0d"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/current-baseline.cpp",
+      "bytes": 43287,
+      "sha256": "00bf1c45f15b1899e0562006aa6a410da4baec164eff1b1690316a6f2a66dcdb"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/expected-source.sha256",
+      "bytes": 1776,
+      "sha256": "ea31f7f73eb3bf8b4ec52840df6b4ce83451ffac8acf13a55f8ccfec424abc57"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/fixture-delta.patch",
+      "bytes": 8830,
+      "sha256": "99789033ea6e8a0d80889f3d6bd1a437bed7d8163f1bcadbe6866153c7b5c6ec"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/frozen/qsa_decode_attn.dp.cpp.o",
+      "bytes": 251888,
+      "sha256": "bbae92dcf61427f35078d498a240b1c9f23862e8bf13f7b63d95252e3b06baf2"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/pins.json",
+      "bytes": 3428,
+      "sha256": "30efc9f890aaa6ffac4cdca90db710fbf1ab1927fabe6626cbca6adfc9e38345"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/qsa-score-reduce12.cpp",
+      "bytes": 44934,
+      "sha256": "0615bbcfea0ef0b8bf7299d974f171b2c50c286001e5f12bd5647287e4767935"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/score-reduction-only.patch",
+      "bytes": 2644,
+      "sha256": "13de6afe7a12738bebf997cc9c6b96338c45b20521661d8c0d6b9779f96c2fbc"
+    },
+    {
+      "path": "attn-score-reduce12-s91-prep/source-change.json",
+      "bytes": 2049,
+      "sha256": "1c1a4fb3969588c05fcb57f64c6ea609326d54e6ef98e603af091016814ed9d1"
+    },
+    {
+      "path": "attn-score-reduce12-s91-root-decision.json",
+      "bytes": 1402,
+      "sha256": "4686e8a9fea8d90472b5b8afa8f3e4644929bb59416518af227d4bb3d07922fd"
+    },
+    {
+      "path": "attn-score-reduce12-s91-runner-prep/README.txt",
+      "bytes": 3093,
+      "sha256": "c2da7429f5e849d90701be6c043418af65988aaa54000d4e1d136ce51289647e"
+    },
+    {
+      "path": "attn-score-reduce12-s91-runner-prep/ROOT_RUN.sh",
+      "bytes": 861,
+      "sha256": "a90cc3a6670c9654e6e9b08c2be48a66c95f5756845db14b95691d2ec543c52a"
+    },
+    {
+      "path": "attn-score-reduce12-s91-runner-prep/analyze.py",
+      "bytes": 5897,
+      "sha256": "95a0c50d0f3e00e8ff41f46d4a463e5d57a6e778221d8f16b8c25162ce848964"
+    },
+    {
+      "path": "attn-score-reduce12-s91-runner-prep/expected-runner.sha256",
+      "bytes": 564,
+      "sha256": "cca2a23d5390afa05806b7ceb07d9a1d723a3d2f107990c0326deee0d31eb7b6"
+    },
+    {
+      "path": "attn-score-reduce12-s91-runner-prep/identity.py",
+      "bytes": 2463,
+      "sha256": "6ef35d8907c80fd86859289845f47ff073414a3cab13872e118a934473ce0649"
+    },
+    {
+      "path": "attn-score-reduce12-s91-runner-prep/leased_run.sh",
+      "bytes": 5304,
+      "sha256": "f62c1c03a127c23feda4eea8f3d4bd6f8d4f7c649e0176b3f6bcd1baf38db84d"
+    },
+    {
+      "path": "attn-score-reduce12-s91-runner-prep/prehealth-sources.json",
+      "bytes": 622,
+      "sha256": "ba063b5b92c31c075e21c8294fd7e15f7ad706396660ba709927eba8719c83bf"
+    },
+    {
+      "path": "attn-score-reduce12-s91-runner-prep/prehealth_reuse.py",
+      "bytes": 1089,
+      "sha256": "5c57c9645d59ffd05e2ff00345298652f066edc85b019a9078b83e88c2019327"
+    }
+  ]
+}

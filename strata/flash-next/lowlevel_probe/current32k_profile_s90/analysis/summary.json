@@ -1,0 +1,1170 @@
+{
+  "status": "DIAGNOSTIC_REQUEST_CENSUS_PHASE_BOUNDARIES_UNQUALIFIED",
+  "trace": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current32k-profile-s90-v2-prep/run/trace/strata-qsa-pref.467.json",
+  "raw_sha256": "6799ce895caff68c80197c68549be70ab1b7020ea0875bae3156bf4fd9120730",
+  "raw_bytes": 441678985,
+  "raw_event_count": 2732936,
+  "request_window_epoch_us": {
+    "start_us": 1792088476396260.2,
+    "end_us": 1792088506621676.0,
+    "scope": "One instrumented full request includes capture/prefill/32decode; no clean latency claim; no cross-card clock join"
+  },
+  "clock": {
+    "before_shift_us": 12090223.797,
+    "after_shift_us": 12091168.833,
+    "shift_change_us": 945.0360000003129,
+    "before_best_bracket_ns": 170,
+    "after_best_bracket_ns": 180,
+    "method": "Use fresh before shift for summaries; preserve after drift/brackets. Host correction only; no cross-card clock calibration."
+  },
+  "selected_overlap_events": 781466,
+  "boundary_crossers": 0,
+  "devices": [
+    {
+      "pid": 4294952351,
+      "metadata_process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "count": 153862,
+      "all_recorded_gpu_op_union_ms": 17239.233,
+      "named_kernel_union_ms": 17113.209,
+      "named_kernel_excluding_ep_wait_union_ms": 17093.46925,
+      "source_hint_groups": {
+        "attention_family": {
+          "count": 25048,
+          "clipped_sum_ms": 6473.35725,
+          "recorded_union_ms": 6472.51525
+        },
+        "dequant_unpack": {
+          "count": 15215,
+          "clipped_sum_ms": 522.4005,
+          "recorded_union_ms": 522.4005
+        },
+        "ep_wait": {
+          "count": 768,
+          "clipped_sum_ms": 47.72175,
+          "recorded_union_ms": 47.72175
+        },
+        "gdn_conv_family": {
+          "count": 3384,
+          "clipped_sum_ms": 2237.747,
+          "recorded_union_ms": 2237.747
+        },
+        "matmul_family": {
+          "count": 36173,
+          "clipped_sum_ms": 3379.89225,
+          "recorded_union_ms": 3379.664
+        },
+        "other_exact_name_retained": {
+          "count": 39148,
+          "clipped_sum_ms": 3157.31875,
+          "recorded_union_ms": 3157.20275
+        },
+        "qsa_other_scores": {
+          "count": 960,
+          "clipped_sum_ms": 345.3935,
+          "recorded_union_ms": 345.3935
+        },
+        "qsa_tiled_s89": {
+          "count": 768,
+          "clipped_sum_ms": 792.5015,
+          "recorded_union_ms": 792.5015
+        },
+        "recorded_copy": {
+          "count": 246,
+          "clipped_sum_ms": 95.0685,
+          "recorded_union_ms": 95.0685
+        },
+        "recorded_runtime_command": {
+          "count": 30424,
+          "clipped_sum_ms": 33.03,
+          "recorded_union_ms": 33.03
+        },
+        "topk": {
+          "count": 1728,
+          "clipped_sum_ms": 187.58025,
+          "recorded_union_ms": 187.58025
+        }
+      },
+      "actual_s89_candidate_events": {
+        "count": 768,
+        "exact_names": [
+          "dpct_kernel_name<strata::kernels::qsa_block_scores(float const*, float const*, float const*, int const*, long, long, strata::kernels::QsaShapes const&, float*, void*, long)::block_scores_prefill_tiled_s89>[SIMD32 {256; 32; 1} {256; 1; 1}]"
+        ],
+        "contained_service_ms": 792.5028159999999,
+        "clipped_sum_ms": 792.5015,
+        "union_ms": 792.5015
+      }
+    },
+    {
+      "pid": 4294952350,
+      "metadata_process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1",
+      "count": 169570,
+      "all_recorded_gpu_op_union_ms": 4883.8145,
+      "named_kernel_union_ms": 4868.8235,
+      "named_kernel_excluding_ep_wait_union_ms": 4517.556,
+      "source_hint_groups": {
+        "dequant_unpack": {
+          "count": 32691,
+          "clipped_sum_ms": 732.665,
+          "recorded_union_ms": 732.665
+        },
+        "ep_wait": {
+          "count": 768,
+          "clipped_sum_ms": 351.2675,
+          "recorded_union_ms": 351.2675
+        },
+        "matmul_family": {
+          "count": 65382,
+          "clipped_sum_ms": 1575.532,
+          "recorded_union_ms": 1575.21425
+        },
+        "other_exact_name_retained": {
+          "count": 70295,
+          "clipped_sum_ms": 2210.74375,
+          "recorded_union_ms": 2210.73675
+        },
+        "recorded_copy": {
+          "count": 434,
+          "clipped_sum_ms": 14.99775,
+          "recorded_union_ms": 14.9975
+        }
+      },
+      "actual_s89_candidate_events": {
+        "count": 0,
+        "exact_names": [],
+        "contained_service_ms": 0.0,
+        "clipped_sum_ms": 0.0,
+        "union_ms": 0.0
+      }
+    }
+  ],
+  "host_L0_UR_API_union_ms_by_process_thread": {
+    "(467, 467)": 16912.57675
+  },
+  "top100_host_submit_wait_spans_by_duration": [
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088476764218.8,
+      "epoch_ts_us": 1792088488854442.5,
+      "duration_us": 276035.334,
+      "clipped_us": 276035.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088477551813.8,
+      "epoch_ts_us": 1792088489642037.5,
+      "duration_us": 275020.781,
+      "clipped_us": 275020.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088479159430.8,
+      "epoch_ts_us": 1792088491249654.5,
+      "duration_us": 275017.204,
+      "clipped_us": 275017.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088483438078.5,
+      "epoch_ts_us": 1792088495528302.2,
+      "duration_us": 274912.949,
+      "clipped_us": 274913.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088480035224.5,
+      "epoch_ts_us": 1792088492125448.2,
+      "duration_us": 274828.6,
+      "clipped_us": 274828.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088480927971.0,
+      "epoch_ts_us": 1792088493018194.8,
+      "duration_us": 274513.599,
+      "clipped_us": 274513.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088474794601.8,
+      "epoch_ts_us": 1792088486884825.5,
+      "duration_us": 274387.052,
+      "clipped_us": 274387.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088478343405.2,
+      "epoch_ts_us": 1792088490433629.0,
+      "duration_us": 274278.88,
+      "clipped_us": 274279.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088475417624.2,
+      "epoch_ts_us": 1792088487507848.0,
+      "duration_us": 273409.849,
+      "clipped_us": 273409.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088482648703.5,
+      "epoch_ts_us": 1792088494738927.2,
+      "duration_us": 273038.223,
+      "clipped_us": 273038.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088481785481.0,
+      "epoch_ts_us": 1792088493875704.8,
+      "duration_us": 271604.162,
+      "clipped_us": 271604.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088476064544.2,
+      "epoch_ts_us": 1792088488154768.0,
+      "duration_us": 271573.615,
+      "clipped_us": 271573.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088474140654.2,
+      "epoch_ts_us": 1792088486230878.0,
+      "duration_us": 231041.732,
+      "clipped_us": 231041.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088465863374.5,
+      "epoch_ts_us": 1792088477953598.2,
+      "duration_us": 230541.754,
+      "clipped_us": 230541.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088468193559.0,
+      "epoch_ts_us": 1792088480283782.8,
+      "duration_us": 230040.985,
+      "clipped_us": 230041.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088469866697.8,
+      "epoch_ts_us": 1792088481956921.5,
+      "duration_us": 230025.275,
+      "clipped_us": 230025.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088470733630.8,
+      "epoch_ts_us": 1792088482823854.5,
+      "duration_us": 229996.371,
+      "clipped_us": 229996.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088467366961.5,
+      "epoch_ts_us": 1792088479457185.2,
+      "duration_us": 229914.988,
+      "clipped_us": 229915.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088469019484.5,
+      "epoch_ts_us": 1792088481109708.2,
+      "duration_us": 229759.948,
+      "clipped_us": 229760.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088471608458.8,
+      "epoch_ts_us": 1792088483698682.5,
+      "duration_us": 229626.818,
+      "clipped_us": 229626.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088466589663.8,
+      "epoch_ts_us": 1792088478679887.5,
+      "duration_us": 229537.07,
+      "clipped_us": 229537.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088472459723.2,
+      "epoch_ts_us": 1792088484549947.0,
+      "duration_us": 229076.155,
+      "clipped_us": 229076.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088473322578.0,
+      "epoch_ts_us": 1792088485412801.8,
+      "duration_us": 228652.22,
+      "clipped_us": 228652.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088465212103.0,
+      "epoch_ts_us": 1792088477302326.8,
+      "duration_us": 215710.867,
+      "clipped_us": 215710.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088485649086.0,
+      "epoch_ts_us": 1792088497739309.8,
+      "duration_us": 196176.207,
+      "clipped_us": 196176.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088486922079.2,
+      "epoch_ts_us": 1792088499012303.0,
+      "duration_us": 195848.512,
+      "clipped_us": 195848.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088489016469.0,
+      "epoch_ts_us": 1792088501106692.8,
+      "duration_us": 195766.157,
+      "clipped_us": 195766.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088491039416.8,
+      "epoch_ts_us": 1792088503129640.5,
+      "duration_us": 195744.757,
+      "clipped_us": 195744.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088487573153.2,
+      "epoch_ts_us": 1792088499663377.0,
+      "duration_us": 195465.954,
+      "clipped_us": 195466.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088488284393.8,
+      "epoch_ts_us": 1792088500374617.5,
+      "duration_us": 195441.508,
+      "clipped_us": 195441.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088486280476.0,
+      "epoch_ts_us": 1792088498370699.8,
+      "duration_us": 195226.194,
+      "clipped_us": 195226.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088490412985.5,
+      "epoch_ts_us": 1792088502503209.2,
+      "duration_us": 194918.076,
+      "clipped_us": 194918.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088489718496.8,
+      "epoch_ts_us": 1792088501808720.5,
+      "duration_us": 193355.556,
+      "clipped_us": 193355.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088484621729.0,
+      "epoch_ts_us": 1792088496711952.8,
+      "duration_us": 193269.545,
+      "clipped_us": 193269.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088485112521.2,
+      "epoch_ts_us": 1792088497202745.0,
+      "duration_us": 192781.589,
+      "clipped_us": 192781.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088484153462.5,
+      "epoch_ts_us": 1792088496243686.2,
+      "duration_us": 183891.264,
+      "clipped_us": 183891.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088474552398.8,
+      "epoch_ts_us": 1792088486642622.5,
+      "duration_us": 91953.522,
+      "clipped_us": 91953.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088464802087.8,
+      "epoch_ts_us": 1792088476892311.5,
+      "duration_us": 76591.929,
+      "clipped_us": 76592.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088478828384.5,
+      "epoch_ts_us": 1792088490918608.2,
+      "duration_us": 61850.079,
+      "clipped_us": 61850.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088475934493.0,
+      "epoch_ts_us": 1792088488024716.8,
+      "duration_us": 61832.345,
+      "clipped_us": 61832.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088466429906.8,
+      "epoch_ts_us": 1792088478520130.5,
+      "duration_us": 61822.256,
+      "clipped_us": 61822.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088469512327.0,
+      "epoch_ts_us": 1792088481602550.8,
+      "duration_us": 61810.625,
+      "clipped_us": 61810.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088483170185.8,
+      "epoch_ts_us": 1792088495260409.5,
+      "duration_us": 61757.014,
+      "clipped_us": 61757.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088475200675.2,
+      "epoch_ts_us": 1792088487290899.0,
+      "duration_us": 61747.647,
+      "clipped_us": 61747.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088473662063.5,
+      "epoch_ts_us": 1792088485752287.2,
+      "duration_us": 61678.297,
+      "clipped_us": 61678.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088483304595.2,
+      "epoch_ts_us": 1792088495394819.0,
+      "duration_us": 61659.662,
+      "clipped_us": 61659.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088471415916.8,
+      "epoch_ts_us": 1792088483506140.5,
+      "duration_us": 61586.074,
+      "clipped_us": 61586.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088475731493.8,
+      "epoch_ts_us": 1792088487821717.5,
+      "duration_us": 61578.148,
+      "clipped_us": 61578.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088470538852.8,
+      "epoch_ts_us": 1792088482629076.5,
+      "duration_us": 61575.925,
+      "clipped_us": 61576.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088483949161.8,
+      "epoch_ts_us": 1792088496039385.5,
+      "duration_us": 61562.65,
+      "clipped_us": 61562.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088473821443.5,
+      "epoch_ts_us": 1792088485911667.2,
+      "duration_us": 61555.376,
+      "clipped_us": 61555.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088479845599.2,
+      "epoch_ts_us": 1792088491935823.0,
+      "duration_us": 61552.1,
+      "clipped_us": 61552.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088475108209.2,
+      "epoch_ts_us": 1792088487198433.0,
+      "duration_us": 61533.915,
+      "clipped_us": 61534.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088482155408.2,
+      "epoch_ts_us": 1792088494245632.0,
+      "duration_us": 61529.106,
+      "clipped_us": 61529.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088465594954.8,
+      "epoch_ts_us": 1792088477685178.5,
+      "duration_us": 61527.424,
+      "clipped_us": 61527.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088483025749.2,
+      "epoch_ts_us": 1792088495115973.0,
+      "duration_us": 61499.281,
+      "clipped_us": 61499.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088465479617.0,
+      "epoch_ts_us": 1792088477569840.8,
+      "duration_us": 61489.753,
+      "clipped_us": 61489.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088482473193.2,
+      "epoch_ts_us": 1792088494563417.0,
+      "duration_us": 61488.34,
+      "clipped_us": 61488.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088477400140.2,
+      "epoch_ts_us": 1792088489490364.0,
+      "duration_us": 61473.542,
+      "clipped_us": 61473.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088480744809.2,
+      "epoch_ts_us": 1792088492835033.0,
+      "duration_us": 61455.719,
+      "clipped_us": 61455.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088473132494.0,
+      "epoch_ts_us": 1792088485222717.8,
+      "duration_us": 61446.571,
+      "clipped_us": 61446.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088476386598.0,
+      "epoch_ts_us": 1792088488476821.8,
+      "duration_us": 61421.164,
+      "clipped_us": 61421.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088475830353.0,
+      "epoch_ts_us": 1792088487920576.8,
+      "duration_us": 61418.529,
+      "clipped_us": 61418.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088478201717.8,
+      "epoch_ts_us": 1792088490291941.5,
+      "duration_us": 61409.683,
+      "clipped_us": 61409.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088472796015.2,
+      "epoch_ts_us": 1792088484886239.0,
+      "duration_us": 61390.828,
+      "clipped_us": 61390.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088481306563.5,
+      "epoch_ts_us": 1792088493396787.2,
+      "duration_us": 61388.162,
+      "clipped_us": 61388.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088473974562.0,
+      "epoch_ts_us": 1792088486064785.8,
+      "duration_us": 61376.541,
+      "clipped_us": 61376.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088467852305.5,
+      "epoch_ts_us": 1792088479942529.2,
+      "duration_us": 61348.428,
+      "clipped_us": 61348.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088470208126.0,
+      "epoch_ts_us": 1792088482298349.8,
+      "duration_us": 61346.635,
+      "clipped_us": 61346.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088476493213.8,
+      "epoch_ts_us": 1792088488583437.5,
+      "duration_us": 61337.347,
+      "clipped_us": 61337.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088466292760.5,
+      "epoch_ts_us": 1792088478382984.2,
+      "duration_us": 61324.773,
+      "clipped_us": 61324.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088468845350.2,
+      "epoch_ts_us": 1792088480935574.0,
+      "duration_us": 61315.556,
+      "clipped_us": 61315.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088469355419.5,
+      "epoch_ts_us": 1792088481445643.2,
+      "duration_us": 61303.243,
+      "clipped_us": 61303.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088478696591.0,
+      "epoch_ts_us": 1792088490786814.8,
+      "duration_us": 61265.252,
+      "clipped_us": 61265.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088477112585.5,
+      "epoch_ts_us": 1792088489202809.2,
+      "duration_us": 61237.269,
+      "clipped_us": 61237.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088479539365.5,
+      "epoch_ts_us": 1792088491629589.2,
+      "duration_us": 61209.457,
+      "clipped_us": 61209.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088478983482.2,
+      "epoch_ts_us": 1792088491073706.0,
+      "duration_us": 61190.772,
+      "clipped_us": 61190.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088474676262.5,
+      "epoch_ts_us": 1792088486766486.2,
+      "duration_us": 61172.407,
+      "clipped_us": 61172.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088475296679.8,
+      "epoch_ts_us": 1792088487386903.5,
+      "duration_us": 61155.576,
+      "clipped_us": 61155.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088477254920.0,
+      "epoch_ts_us": 1792088489345143.8,
+      "duration_us": 61155.536,
+      "clipped_us": 61155.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088468527115.5,
+      "epoch_ts_us": 1792088480617339.2,
+      "duration_us": 61150.777,
+      "clipped_us": 61150.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088466901067.5,
+      "epoch_ts_us": 1792088478991291.2,
+      "duration_us": 61148.192,
+      "clipped_us": 61148.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088472111326.8,
+      "epoch_ts_us": 1792088484201550.5,
+      "duration_us": 61135.018,
+      "clipped_us": 61135.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088472275101.2,
+      "epoch_ts_us": 1792088484365325.0,
+      "duration_us": 61128.124,
+      "clipped_us": 61128.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088468014865.0,
+      "epoch_ts_us": 1792088480105088.8,
+      "duration_us": 61125.039,
+      "clipped_us": 61125.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088480419087.2,
+      "epoch_ts_us": 1792088492509311.0,
+      "duration_us": 61121.662,
+      "clipped_us": 61121.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088472964199.8,
+      "epoch_ts_us": 1792088485054423.5,
+      "duration_us": 61118.998,
+      "clipped_us": 61119.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088465715605.0,
+      "epoch_ts_us": 1792088477805828.8,
+      "duration_us": 61118.246,
+      "clipped_us": 61118.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088471077123.2,
+      "epoch_ts_us": 1792088483167347.0,
+      "duration_us": 61101.505,
+      "clipped_us": 61101.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088481462218.8,
+      "epoch_ts_us": 1792088493552442.5,
+      "duration_us": 61069.234,
+      "clipped_us": 61069.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088481614990.0,
+      "epoch_ts_us": 1792088493705213.8,
+      "duration_us": 61069.124,
+      "clipped_us": 61069.0,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088466162329.0,
+      "epoch_ts_us": 1792088478252552.8,
+      "duration_us": 61061.219,
+      "clipped_us": 61061.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088480582362.5,
+      "epoch_ts_us": 1792088492672586.2,
+      "duration_us": 61056.84,
+      "clipped_us": 61056.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088479687259.0,
+      "epoch_ts_us": 1792088491777482.8,
+      "duration_us": 61054.717,
+      "clipped_us": 61054.75,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088467038962.0,
+      "epoch_ts_us": 1792088479129185.8,
+      "duration_us": 61049.467,
+      "clipped_us": 61049.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088469677753.2,
+      "epoch_ts_us": 1792088481767977.0,
+      "duration_us": 61046.352,
+      "clipped_us": 61046.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088477915245.0,
+      "epoch_ts_us": 1792088490005468.8,
+      "duration_us": 61028.218,
+      "clipped_us": 61028.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088471948891.5,
+      "epoch_ts_us": 1792088484039115.2,
+      "duration_us": 61016.274,
+      "clipped_us": 61016.25,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088467694066.2,
+      "epoch_ts_us": 1792088479784290.0,
+      "duration_us": 61006.607,
+      "clipped_us": 61006.5,
+      "boundary_crossing": false
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy",
+      "pid": 467,
+      "tid": 467,
+      "trace_ts_us": 1792088470371345.5,
+      "epoch_ts_us": 1792088482461569.2,
+      "duration_us": 61003.981,
+      "clipped_us": 61004.0,
+      "boundary_crossing": false
+    }
+  ],
+  "boundary_crosser_examples": [],
+  "request_native_timings": {
+    "cache_n": 0,
+    "prompt_n": 32728,
+    "prompt_ms": 27599.5,
+    "prompt_per_token_ms": 0.843,
+    "prompt_per_second": 1185.8,
+    "predicted_n": 32,
+    "predicted_ms": 2576.0,
+    "predicted_per_token_ms": 80.5,
+    "predicted_per_second": 12.4,
+    "draft_n": 33,
+    "draft_n_accepted": 19
+  },
+  "client_ttft_s": 28.134006590000354,
+  "limits": [
+    "Full-request bracket includes admission/capture/prefill/32decode. Exact native prefill start/end not recorded; no subtraction of native prompt_ms from epoch endpoints.",
+    "TTFT includes admission/prefill/possible firstdecode; perf_counter send() origin has no exact epoch sample. Do not label TTFT exact native prefill or derive precise phase endpoints from it.",
+    "Capture/finalize API rows are retained, not silently removed; grouping them does not isolate all capture GPU work.",
+    "Per-device metadata pid/engine rows kept separate, no cross-card joins or summed device service budget.",
+    "Service sums overlap; union covers recorded intervals only, not physical hardware occupancy/idle. Excluding named ep_wait does not prove productive work.",
+    "API durations/adjacency are temporal observations, not cause or ready-dependency proof. Copy names/byte labels do not prove physical PCIe/P2P traffic.",
+    "Name-based family hints are source-informed, not complete semantic attribution; exact rows/timeline remain authoritative.",
+    "One instrumented ON trace cannot establish delta, clean serving speed or causal critical-path savings."
+  ]
+}

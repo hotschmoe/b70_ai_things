@@ -1,0 +1,31 @@
+{
+  "argv": [
+    "/home/hotschmoe/.local/bin/claude",
+    "-p",
+    "--model",
+    "claude-fable-5-1",
+    "--effort",
+    "low",
+    "--tools",
+    "",
+    "--strict-mcp-config",
+    "--disable-slash-commands",
+    "--setting-sources",
+    "",
+    "--settings",
+    "{\"disableAllHooks\":true}",
+    "--permission-mode",
+    "dontAsk",
+    "--max-turns",
+    "1",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "cwd": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current32k-profile-s90-source-reviews-20261015/claude-fable-5-1",
+  "fresh_session_requested": true,
+  "source_packet": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current32k-profile-s90-source-reviews-20261015/root-frozen-source-packet.txt",
+  "source_packet_sha256": "066b84d841711ac35b1bce270972f3aced1542d4cb8f5c10b9b8f54a89e4d3b4",
+  "prompt_sha256": "e7512c32fe7f20c18ad63a73f4052e75b27be0f5b77eaf70f260f5817482b992",
+  "scope": "S90 single-current32K profiler protocol source review; no tool/build/GPU execution; no other model answer"
+}

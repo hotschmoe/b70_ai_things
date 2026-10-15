@@ -1,0 +1,26 @@
+{
+  "status": "ROOT_S90_COMPLETE_BOUNDED_DIAGNOSTIC",
+  "models": {
+    "claude-opus-5-5": {
+      "session_ids": [
+        "61a4615f-de31-48a4-bab7-e45402ef3f34"
+      ],
+      "elapsed_s": 39.00718518096255,
+      "root_fullread": true,
+      "verdict": "ACCEPT_S90_AND_GO_BOUNDED_S91_BUILD"
+    },
+    "claude-fable-5-1": {
+      "session_ids": [
+        "67d1759e-8f39-4123-a755-94898d27f666"
+      ],
+      "elapsed_s": 60.51817613502499,
+      "root_fullread": true,
+      "verdict": "ACCEPT_S90_AND_GO_BOUNDED_S91_BUILD"
+    }
+  },
+  "root_runtime_decision_sha256": "1e748c29f95b9c880029569f1d9c29154152a366ae8569d299b7945b73d7762c",
+  "GPU_pipeline_closed": true,
+  "one_actual_rawparse": true,
+  "next": "PrivateS91SCOREONLY reduce12 source build conditionalGPU later; enqueueorderfutureaudit, no rejectedrepeat",
+  "no_goal_complete_claim": true
+}

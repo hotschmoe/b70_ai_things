@@ -1,0 +1,42 @@
+{
+  "status": "FINAL_CPU_ONLY_HOST_BINDING_FAIL_NO_GPU",
+  "files": {
+    "selection.json": {
+      "bytes": 13472,
+      "sha256": "fefa80f428b252ccd5cf98c2e939db0474eedc94717ec2575b67f4e301c95f5d"
+    },
+    "host-binding.json": {
+      "bytes": 4760,
+      "sha256": "a3871159d9dad5de39ba70dc9516b96aebc813a90a4fa7885e28791415e12795"
+    },
+    "resources.json": {
+      "bytes": 4962,
+      "sha256": "f78737fbae56e320847d96134e75be40d4956672492d265f679cb86ad26e28dd"
+    },
+    "excerpts.json": {
+      "bytes": 4573,
+      "sha256": "ed043d8b313e91e6aecf88c7b4fc94667bc5d2e4653b24034170f2f5396e96d3"
+    },
+    "findings.txt": {
+      "bytes": 3064,
+      "sha256": "93ebcbd02bc602801858e9c1c4a0d53509de769b6698f088480e5c6dce35ebc3"
+    },
+    "extract.py": {
+      "bytes": 3539,
+      "sha256": "8806c296615579bbef62d67c534802d55fa37df34d313f31425aa113c76c6600"
+    },
+    "host_binding.py": {
+      "bytes": 2187,
+      "sha256": "146b6a5aaec3f9fb94d4070bce4b51979a62dc1a32f036dcd38d995d39b639ed"
+    },
+    "summarize_resources.py": {
+      "bytes": 5034,
+      "sha256": "cff9be323cdf10658600c358b082076f14d38516fb13a0b668550c1154b9c512"
+    },
+    "decode.sh": {
+      "bytes": 970,
+      "sha256": "e3b00752541a1ea00d4c615f2794d0e8549f79358fbb73407f11adcc913540d1"
+    }
+  },
+  "scope": "Final small audit facts/helpers only, not whole build/raw manifest. No files changed after this handoff."
+}

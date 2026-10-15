@@ -1,0 +1,15 @@
+{
+  "summary": "strata serve: prompt 32728 tokens = 0 reused + 32728 read in 27599 ms (1185.8 tok/s), 32 generated in 2576 ms (12.4 tok/s), drafts accepted 19 of 33, 2 checkpoints",
+  "groups": [
+    "32728",
+    "0",
+    "32728",
+    "27599",
+    "32",
+    "2576",
+    "19",
+    "33",
+    "2"
+  ],
+  "scope": "One32728prompt/32completion summary; flush request excluded by shape"
+}

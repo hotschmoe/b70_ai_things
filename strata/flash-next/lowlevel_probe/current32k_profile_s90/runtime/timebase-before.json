@@ -1,0 +1,464 @@
+{
+  "time_ns": 1792088476324749605,
+  "trace_to_client_shift_us": 12090223.797,
+  "selected": {
+    "raw_before_ns": 412952347274734,
+    "boottime_ns": 412964437498616,
+    "raw_after_ns": 412952347274904,
+    "bracket_ns": 170,
+    "shift_us": 12090223.797
+  },
+  "samples": [
+    {
+      "raw_before_ns": 412952347240530,
+      "boottime_ns": 412964437465102,
+      "raw_after_ns": 412952347241612,
+      "bracket_ns": 1082,
+      "shift_us": 12090224.031
+    },
+    {
+      "raw_before_ns": 412952347253514,
+      "boottime_ns": 412964437477616,
+      "raw_after_ns": 412952347254075,
+      "bracket_ns": 561,
+      "shift_us": 12090223.8215
+    },
+    {
+      "raw_before_ns": 412952347256219,
+      "boottime_ns": 412964437480161,
+      "raw_after_ns": 412952347256470,
+      "bracket_ns": 251,
+      "shift_us": 12090223.8165
+    },
+    {
+      "raw_before_ns": 412952347257381,
+      "boottime_ns": 412964437481293,
+      "raw_after_ns": 412952347257622,
+      "bracket_ns": 241,
+      "shift_us": 12090223.7915
+    },
+    {
+      "raw_before_ns": 412952347258363,
+      "boottime_ns": 412964437482275,
+      "raw_after_ns": 412952347258564,
+      "bracket_ns": 201,
+      "shift_us": 12090223.8115
+    },
+    {
+      "raw_before_ns": 412952347259385,
+      "boottime_ns": 412964437483287,
+      "raw_after_ns": 412952347259576,
+      "bracket_ns": 191,
+      "shift_us": 12090223.8065
+    },
+    {
+      "raw_before_ns": 412952347260147,
+      "boottime_ns": 412964437484048,
+      "raw_after_ns": 412952347260337,
+      "bracket_ns": 190,
+      "shift_us": 12090223.806
+    },
+    {
+      "raw_before_ns": 412952347260908,
+      "boottime_ns": 412964437484820,
+      "raw_after_ns": 412952347261128,
+      "bracket_ns": 220,
+      "shift_us": 12090223.802
+    },
+    {
+      "raw_before_ns": 412952347261669,
+      "boottime_ns": 412964437485561,
+      "raw_after_ns": 412952347261850,
+      "bracket_ns": 181,
+      "shift_us": 12090223.8015
+    },
+    {
+      "raw_before_ns": 412952347262431,
+      "boottime_ns": 412964437486333,
+      "raw_after_ns": 412952347262631,
+      "bracket_ns": 200,
+      "shift_us": 12090223.802
+    },
+    {
+      "raw_before_ns": 412952347266268,
+      "boottime_ns": 412964437490150,
+      "raw_after_ns": 412952347266448,
+      "bracket_ns": 180,
+      "shift_us": 12090223.792
+    },
+    {
+      "raw_before_ns": 412952347266999,
+      "boottime_ns": 412964437490891,
+      "raw_after_ns": 412952347267180,
+      "bracket_ns": 181,
+      "shift_us": 12090223.8015
+    },
+    {
+      "raw_before_ns": 412952347267771,
+      "boottime_ns": 412964437491663,
+      "raw_after_ns": 412952347267961,
+      "bracket_ns": 190,
+      "shift_us": 12090223.797
+    },
+    {
+      "raw_before_ns": 412952347268482,
+      "boottime_ns": 412964437492364,
+      "raw_after_ns": 412952347268653,
+      "bracket_ns": 171,
+      "shift_us": 12090223.7965
+    },
+    {
+      "raw_before_ns": 412952347269204,
+      "boottime_ns": 412964437493095,
+      "raw_after_ns": 412952347269384,
+      "bracket_ns": 180,
+      "shift_us": 12090223.801
+    },
+    {
+      "raw_before_ns": 412952347269905,
+      "boottime_ns": 412964437493797,
+      "raw_after_ns": 412952347270085,
+      "bracket_ns": 180,
+      "shift_us": 12090223.802
+    },
+    {
+      "raw_before_ns": 412952347270556,
+      "boottime_ns": 412964437494448,
+      "raw_after_ns": 412952347270736,
+      "bracket_ns": 180,
+      "shift_us": 12090223.802
+    },
+    {
+      "raw_before_ns": 412952347271298,
+      "boottime_ns": 412964437495189,
+      "raw_after_ns": 412952347271478,
+      "bracket_ns": 180,
+      "shift_us": 12090223.801
+    },
+    {
+      "raw_before_ns": 412952347271959,
+      "boottime_ns": 412964437495851,
+      "raw_after_ns": 412952347272139,
+      "bracket_ns": 180,
+      "shift_us": 12090223.802
+    },
+    {
+      "raw_before_ns": 412952347272670,
+      "boottime_ns": 412964437496562,
+      "raw_after_ns": 412952347272850,
+      "bracket_ns": 180,
+      "shift_us": 12090223.802
+    },
+    {
+      "raw_before_ns": 412952347273381,
+      "boottime_ns": 412964437497273,
+      "raw_after_ns": 412952347273562,
+      "bracket_ns": 181,
+      "shift_us": 12090223.8015
+    },
+    {
+      "raw_before_ns": 412952347274063,
+      "boottime_ns": 412964437497945,
+      "raw_after_ns": 412952347274243,
+      "bracket_ns": 180,
+      "shift_us": 12090223.792
+    },
+    {
+      "raw_before_ns": 412952347274734,
+      "boottime_ns": 412964437498616,
+      "raw_after_ns": 412952347274904,
+      "bracket_ns": 170,
+      "shift_us": 12090223.797
+    },
+    {
+      "raw_before_ns": 412952347275405,
+      "boottime_ns": 412964437499297,
+      "raw_after_ns": 412952347275586,
+      "bracket_ns": 181,
+      "shift_us": 12090223.8015
+    },
+    {
+      "raw_before_ns": 412952347276077,
+      "boottime_ns": 412964437499959,
+      "raw_after_ns": 412952347276247,
+      "bracket_ns": 170,
+      "shift_us": 12090223.797
+    },
+    {
+      "raw_before_ns": 412952347276848,
+      "boottime_ns": 412964437500740,
+      "raw_after_ns": 412952347277028,
+      "bracket_ns": 180,
+      "shift_us": 12090223.802
+    },
+    {
+      "raw_before_ns": 412952347277529,
+      "boottime_ns": 412964437501411,
+      "raw_after_ns": 412952347277700,
+      "bracket_ns": 171,
+      "shift_us": 12090223.7965
+    },
+    {
+      "raw_before_ns": 412952347278281,
+      "boottime_ns": 412964437502163,
+      "raw_after_ns": 412952347278451,
+      "bracket_ns": 170,
+      "shift_us": 12090223.797
+    },
+    {
+      "raw_before_ns": 412952347278952,
+      "boottime_ns": 412964437502844,
+      "raw_after_ns": 412952347279132,
+      "bracket_ns": 180,
+      "shift_us": 12090223.802
+    },
+    {
+      "raw_before_ns": 412952347279623,
+      "boottime_ns": 412964437503505,
+      "raw_after_ns": 412952347279803,
+      "bracket_ns": 180,
+      "shift_us": 12090223.792
+    },
+    {
+      "raw_before_ns": 412952347280284,
+      "boottime_ns": 412964437504177,
+      "raw_after_ns": 412952347280465,
+      "bracket_ns": 181,
+      "shift_us": 12090223.8025
+    },
+    {
+      "raw_before_ns": 412952347280956,
+      "boottime_ns": 412964437504848,
+      "raw_after_ns": 412952347281136,
+      "bracket_ns": 180,
+      "shift_us": 12090223.802
+    },
+    {
+      "raw_before_ns": 412952347281627,
+      "boottime_ns": 412964437505509,
+      "raw_after_ns": 412952347281797,
+      "bracket_ns": 170,
+      "shift_us": 12090223.797
+    },
+    {
+      "raw_before_ns": 412952347282388,
+      "boottime_ns": 412964437506281,
+      "raw_after_ns": 412952347282569,
+      "bracket_ns": 181,
+      "shift_us": 12090223.8025
+    },
+    {
+      "raw_before_ns": 412952347283060,
+      "boottime_ns": 412964437506952,
+      "raw_after_ns": 412952347283240,
+      "bracket_ns": 180,
+      "shift_us": 12090223.802
+    },
+    {
+      "raw_before_ns": 412952347283731,
+      "boottime_ns": 412964437507623,
+      "raw_after_ns": 412952347283911,
+      "bracket_ns": 180,
+      "shift_us": 12090223.802
+    },
+    {
+      "raw_before_ns": 412952347284402,
+      "boottime_ns": 412964437508294,
+      "raw_after_ns": 412952347284582,
+      "bracket_ns": 180,
+      "shift_us": 12090223.802
+    },
+    {
+      "raw_before_ns": 412952347285083,
+      "boottime_ns": 412964437508976,
+      "raw_after_ns": 412952347285264,
+      "bracket_ns": 181,
+      "shift_us": 12090223.8025
+    },
+    {
+      "raw_before_ns": 412952347285755,
+      "boottime_ns": 412964437509647,
+      "raw_after_ns": 412952347285935,
+      "bracket_ns": 180,
+      "shift_us": 12090223.802
+    },
+    {
+      "raw_before_ns": 412952347286426,
+      "boottime_ns": 412964437510308,
+      "raw_after_ns": 412952347286596,
+      "bracket_ns": 170,
+      "shift_us": 12090223.797
+    },
+    {
+      "raw_before_ns": 412952347289141,
+      "boottime_ns": 412964437513033,
+      "raw_after_ns": 412952347289311,
+      "bracket_ns": 170,
+      "shift_us": 12090223.807
+    },
+    {
+      "raw_before_ns": 412952347289973,
+      "boottime_ns": 412964437513865,
+      "raw_after_ns": 412952347290153,
+      "bracket_ns": 180,
+      "shift_us": 12090223.802
+    },
+    {
+      "raw_before_ns": 412952347292397,
+      "boottime_ns": 412964437516290,
+      "raw_after_ns": 412952347292577,
+      "bracket_ns": 180,
+      "shift_us": 12090223.803
+    },
+    {
+      "raw_before_ns": 412952347293118,
+      "boottime_ns": 412964437517011,
+      "raw_after_ns": 412952347293309,
+      "bracket_ns": 191,
+      "shift_us": 12090223.7975
+    },
+    {
+      "raw_before_ns": 412952347293810,
+      "boottime_ns": 412964437517702,
+      "raw_after_ns": 412952347293990,
+      "bracket_ns": 180,
+      "shift_us": 12090223.802
+    },
+    {
+      "raw_before_ns": 412952347294551,
+      "boottime_ns": 412964437518444,
+      "raw_after_ns": 412952347294742,
+      "bracket_ns": 191,
+      "shift_us": 12090223.7975
+    },
+    {
+      "raw_before_ns": 412952347295283,
+      "boottime_ns": 412964437519165,
+      "raw_after_ns": 412952347295453,
+      "bracket_ns": 170,
+      "shift_us": 12090223.797
+    },
+    {
+      "raw_before_ns": 412952347295984,
+      "boottime_ns": 412964437519866,
+      "raw_after_ns": 412952347296154,
+      "bracket_ns": 170,
+      "shift_us": 12090223.797
+    },
+    {
+      "raw_before_ns": 412952347296685,
+      "boottime_ns": 412964437520578,
+      "raw_after_ns": 412952347296865,
+      "bracket_ns": 180,
+      "shift_us": 12090223.803
+    },
+    {
+      "raw_before_ns": 412952347297376,
+      "boottime_ns": 412964437521259,
+      "raw_after_ns": 412952347297547,
+      "bracket_ns": 171,
+      "shift_us": 12090223.7975
+    },
+    {
+      "raw_before_ns": 412952347298058,
+      "boottime_ns": 412964437521950,
+      "raw_after_ns": 412952347298238,
+      "bracket_ns": 180,
+      "shift_us": 12090223.802
+    },
+    {
+      "raw_before_ns": 412952347298739,
+      "boottime_ns": 412964437522632,
+      "raw_after_ns": 412952347298919,
+      "bracket_ns": 180,
+      "shift_us": 12090223.803
+    },
+    {
+      "raw_before_ns": 412952347299420,
+      "boottime_ns": 412964437523313,
+      "raw_after_ns": 412952347299601,
+      "bracket_ns": 181,
+      "shift_us": 12090223.8025
+    },
+    {
+      "raw_before_ns": 412952347300202,
+      "boottime_ns": 412964437524105,
+      "raw_after_ns": 412952347300402,
+      "bracket_ns": 200,
+      "shift_us": 12090223.803
+    },
+    {
+      "raw_before_ns": 412952347300933,
+      "boottime_ns": 412964437524826,
+      "raw_after_ns": 412952347301113,
+      "bracket_ns": 180,
+      "shift_us": 12090223.803
+    },
+    {
+      "raw_before_ns": 412952347301624,
+      "boottime_ns": 412964437525517,
+      "raw_after_ns": 412952347301805,
+      "bracket_ns": 181,
+      "shift_us": 12090223.8025
+    },
+    {
+      "raw_before_ns": 412952347302316,
+      "boottime_ns": 412964437526199,
+      "raw_after_ns": 412952347302486,
+      "bracket_ns": 170,
+      "shift_us": 12090223.798
+    },
+    {
+      "raw_before_ns": 412952347302997,
+      "boottime_ns": 412964437526890,
+      "raw_after_ns": 412952347303177,
+      "bracket_ns": 180,
+      "shift_us": 12090223.803
+    },
+    {
+      "raw_before_ns": 412952347303758,
+      "boottime_ns": 412964437527651,
+      "raw_after_ns": 412952347303939,
+      "bracket_ns": 181,
+      "shift_us": 12090223.8025
+    },
+    {
+      "raw_before_ns": 412952347304440,
+      "boottime_ns": 412964437528323,
+      "raw_after_ns": 412952347304610,
+      "bracket_ns": 170,
+      "shift_us": 12090223.798
+    },
+    {
+      "raw_before_ns": 412952347305111,
+      "boottime_ns": 412964437529004,
+      "raw_after_ns": 412952347305291,
+      "bracket_ns": 180,
+      "shift_us": 12090223.803
+    },
+    {
+      "raw_before_ns": 412952347305792,
+      "boottime_ns": 412964437529685,
+      "raw_after_ns": 412952347305973,
+      "bracket_ns": 181,
+      "shift_us": 12090223.8025
+    },
+    {
+      "raw_before_ns": 412952347306474,
+      "boottime_ns": 412964437530356,
+      "raw_after_ns": 412952347306654,
+      "bracket_ns": 180,
+      "shift_us": 12090223.792
+    },
+    {
+      "raw_before_ns": 412952347307155,
+      "boottime_ns": 412964437531048,
+      "raw_after_ns": 412952347307335,
+      "bracket_ns": 180,
+      "shift_us": 12090223.803
+    }
+  ],
+  "formula": "epoch_client_us = raw_trace_ts_us + (BOOTTIME - MONOTONIC_RAW)/1000",
+  "source": "Installed pti-gpu/tools/unitrace/src/unitimer.h default anchor; do not use if UNITRACE_SystemTime or clock configuration differs.",
+  "scope": "Fresh host clock correction only; no inter-card GPU clock calibration."
+}

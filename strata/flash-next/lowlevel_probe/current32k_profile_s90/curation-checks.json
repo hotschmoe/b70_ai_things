@@ -1,0 +1,48 @@
+{
+  "status": "S90_CURATED_SMALL_RECORDS_AND_ANNOTATIONS_PASS",
+  "exact_copy_count": 55,
+  "exact_copy_bytes": 259416,
+  "historical_operation_count": 170,
+  "protected_data": {
+    "operations": {
+      "sha256_canonical": "b1de08b0eabadd90deba03f9ae800a1530b9ef9f0070de58bdf891d9c63488d0",
+      "equal_to_HEAD": true
+    },
+    "stage_rollups": {
+      "sha256_canonical": "dfe5bc899468517eeb6bc1843cce4a6fd6e188d93d2268de2bd46f23a0eec1cb",
+      "equal_to_HEAD": true
+    },
+    "operations_meta": {
+      "sha256_canonical": "b61e42c50a589db294ba4c2b903e2207c6e204f13d9671eb5d61476d2f66c6c1",
+      "equal_to_HEAD": true
+    },
+    "historical_tail_exact_bytes": {
+      "equal_to_HEAD": true,
+      "bytes": 126952,
+      "sha256": "724a374edd0bd6c0511525f35c1ae226ecde9b2c5e7d35f73a143d1e95d7098d"
+    }
+  },
+  "journal_prefix": {
+    "bytes": 1545280,
+    "sha256": "0ee084bfeea61cd5e8f0b29fb6707952fba36f124105c07d1227145b1b45e82c",
+    "preserved": true
+  },
+  "new_journal_entries": 1,
+  "new_files_and_appended_text_ASCII": true,
+  "historical_JOURNAL_nonASCII_preserved": true,
+  "map_build_check": "PASS: 40 stages,170 operations, synchronized ASCII embed; no --import-ops",
+  "raw_trace_reparsed": false,
+  "GPU_build_model_calls": false,
+  "changed_paths": [
+    "docs/20261015_strata_current32k_profile.md",
+    "JOURNAL.md",
+    "docs/20261013_flashnext_goals.md",
+    "strata/flash-next/README.md",
+    "strata/flash-next/data-map/README.md",
+    "strata/flash-next/data-map/operation-data.json",
+    "strata/flash-next/data-map/index.html",
+    "strata/flash-next/lowlevel_probe/current32k_profile_s90"
+  ],
+  "dated_report_sha256": "a52e7fe6122c9cfa94a75b92cb20e4d6aef0ad0b16a6c7dd3700ee0d70cb6f9e",
+  "record_copies_sha256": "621ea27f9137bf97500879babdf9485178e524d3a4edd667f887b2bd39077275"
+}

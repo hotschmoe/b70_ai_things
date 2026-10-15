@@ -1,0 +1,118 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "61a4615f-de31-48a4-bab7-e45402ef3f34"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 39.00718518096255,
+  "launch_exception": null,
+  "source_packet_sha256": "10acf7281e68227fc41a98e49931ef49e80d6301f7d541b9bbb4bff0ddbe7d46",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 37868,
+      "stop_reason": "end_turn",
+      "session_id": "61a4615f-de31-48a4-bab7-e45402ef3f34",
+      "total_cost_usd": 0.2272418,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 19528,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 3544,
+        "output_tokens_details": {
+          "thinking_tokens": 1768
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 19528,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 3544,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 19528,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 19528
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 3544,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 19528,
+          "webSearchRequests": 0,
+          "costUSD": 0.2272418,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 1768,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**ACCEPT_S90_AND_GO_BOUNDED_S91_BUILD**\n\n**S90 trace evidence: accepted as reconciled, non-causal**\n- **Counts reconcile.** The 12264 calls match the chunk/merge source geometry (12\u00b7(384+384+254)) and are aggregated by name+device across both engine rows. Tiled scorer calls 768 = 0+396+372, matching the guard-4097 source. The 192 original-scorer residual is left unlabeled, which is correct.\n- **Units and union semantics hold.** GPU0 union (17.239 s) and GPU1 union (4.884 s) are kept per-device and not added together. Host copy (14.404 s) is shown as an overlap intersection (143.952 ms in uncovered gaps, 14.260 s during recorded activity). It is explicitly not a device assignment, PCIe byte count or causal wait.\n- **Clock limits are stated.** Host-clock drift of 945.036 \u00b5s is disclosed, there is no cross-card join, and exact prefill epoch endpoints are marked unqualified.\n- **Cold capture limits are stated.** The run is the first unwarmed request. It is not attributed solely to the profiler, not called a regression, and the late ~500 ms gaps are not called main-prefill gaps.\n- **No overclaims.** There are no physical-idle, critical-path, speed or promotion claims. The peer-before-primary enqueue order is kept as a source-audit lead only.\n\n**S91 source: the tree and lane-owner mapping are correct**\n- **Same-head pairing at every level.** At XOR16, lane l keeps `part[i+8\u00b7b4]` and the partner (whose b4 is flipped) sends the same index. The same holds at XOR8, XOR4 and XOR2, so both operands always belong to the same head. The final head index is b1 + 2b2 + 4b3 + 8b4 = \u230al/2\u230b, which matches `score_head_of_lane`.\n- **Single writer per score.** Only even lanes with h<12 write (lanes 0\u201322), so each `sp[h][c]` has exactly one writer.\n- **Same addition tree as the old butterfly.** Each node sums the same two subtrees, so the only differences are commutative operand swaps.\n- **Masks, tails and barriers are unchanged.** The mask/tail branch stays subgroup-uniform before the shuffles, so all 32 lanes participate. Heads 12\u201315 are zero-filled and never published. There are no new barriers, submits or waits.\n- **Scope is distinct.** This is separate from S11 (query batch), S12 (lane-cell ownership) and S13 (value pipeline).\n\n**Fixture and gates are adequate for a bounded INT8 primitive**\n- **Strict acceptance.** Acceptance requires full output and full initialized-scratch bitwise equality, plus finiteness checks.\n- **State checks.** Each case covers an own repeat, a sign-flip with observability (except width 0), a changed repeat, and restore to the original bytes.\n- **Memory checks.** 4096-byte guards and read-only witnesses are checked after every snapshot and after timing, and 64-byte alignment is asserted.\n- **FP64 oracle is sanity only.** The 2e-5 threshold applies to the baseline output only. It is not the candidate tolerance.\n- **CAP2112 surrogate is disclosed.** Cap 2112 with width 2051 is a synthetic stand-in, not qualification at the production cap.\n- **Timing is raw and gated.** All samples are printed per arm and labeled host-completed, not device service.\n- **Signature mismatch is safe.** The hand-written `reduce12_batch` declaration would fail at link (mangling) on any mismatch, not silently miscall.\n\n**Build scope is appropriate**\n- The prelink uses only the current public fat object, already verified as the actual archive member (SHA bbae92dc\u2026). The S13 object is not substituted.\n- New AOT images are explicitly not treated as proof from an old binary.\n- There is no public, common or main TU rebuild, and the build checks that the archive member is unchanged afterwards.\n\n**Non-blocking items**\n1. **Add `static_assert(G <= 16)`.** It would guard `part[16]` if the generic modes ever instantiate a larger G. This is a one-line hardening, not a blocker.\n2. **Check kernel-name and ODR collisions after the build.** Namespace-scope kernel-name types or functors shared between the public and private images could collide. Already listed as a root check; it must be done from the actual map and images before any GPU run.\n3. **Treat per-case PASS lines as provisional.** They print before later cases run. Policy already says no timing counts until \"ALL 36 CASES PASS\".\n\n**GPU stays conditional.** It requires all of:\n- inspecting the actual linked public and private images and selected kernel resources (GRF/spill: extra live `part`/`r8`/`r4`/`r2` arrays may raise register pressure);\n- runner identity and a quiet-CPU card0 pin;\n- revalidated pre-health and post-health;\n- removal of the owned container.\n\nNo graphs, cache serving, full-context runs or retest inflation. The 60\u219216 logical shuffle count is not an ISA, numerics or speed claim.",
+      "ttft_ms": 21634,
+      "type": "result",
+      "duration_ms": 37940,
+      "uuid": "be17514e-f8d4-4f25-b6a2-f7e782f9c110",
+      "ttft_stream_ms": 1194,
+      "time_to_request_ms": 66,
+      "first_content_frame_ms": 1194,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

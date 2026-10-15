@@ -1,0 +1,118 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "644a2f98-f7b1-4002-8c26-fb43f5abf751"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 138.81637681100983,
+  "launch_exception": null,
+  "source_packet_sha256": "9e05159fee89bae36ff96ce47527eab75e9aecdfa4eccc2bcf234d9075b4aa91",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 137596,
+      "stop_reason": "end_turn",
+      "session_id": "644a2f98-f7b1-4002-8c26-fb43f5abf751",
+      "total_cost_usd": 0.9052722500000001,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 22787,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 8987,
+        "output_tokens_details": {
+          "thinking_tokens": 7537
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 22787,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 8987,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 22787,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 22787
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 2,
+          "outputTokens": 8987,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 22787,
+          "webSearchRequests": 0,
+          "costUSD": 0.9052722500000001,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "thinkingTokens": 7537,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Verdict: ACCEPT_S91_HOLD_AND_GO_S92_CPU_BUILD.** The CPU build may run. A separate GPU GO stays blocked until the post-build host-binding and resource checks below pass.\n\n**What is executed evidence versus static reading**\n\n- Executed (historical, offline): the S13 audit showed both host call paths relocate to one shared weak CompileTimeKernelInfo whose name string is the public qsa_decode_attn_batch tag. The retained probe hash matches the dated S13 document. The S91 CPU build showed the same weak symbol in candidate.o and the public member, with only the function-scope part of the name string differing.\n- Static only: everything about S92. No build, no symbol table, no ISA, no dispatch exists yet. Nothing below is a correctness or speed result.\n\n**S91 hold and historical correction**\n\n- The S91 hold is correct. Same-named weak host metadata means the link picks one copy, so distinct device images do not prove the variant was dispatched. The S91 private object is also the scratch-heavy reduce12 build and is parked, not re-evaluated here.\n- The S13 logs stay as written. The attribution changes: the S13 near-equal timings and exact-match results are consistent with the public kernel running on both arms. They are not evidence that the value pipeline was correct or neutral, and they are not evidence that it was wrong.\n\n**S92 source and patch audit (static)**\n\n- The class-tag renames are the right lever. The shared symbol is templated on the namespace-scope tag, so renaming all eleven tags via defines should yield disjoint weak symbols and disjoint registration strings. Function renames alone cannot do this, as S13 and S91 showed.\n- The patch preserves per-head ascending-cell FMA order. Probabilities land in the retired query region after the post-score barrier and are read only after the next barrier. Writers are disjoint per cell and head, all twelve heads are covered, and the payload fits in the existing allocation, which matches the unchanged slm_size.\n- Masked handling is equivalent: a negative row in a four-cell group exits the fast loop and the scalar tail skips negatives. The fast loop never resumes after the first masked group, which is benign for correctness but makes masked-case timings unrepresentative.\n- Existing risk, not new: float4 reads from the query SLM assume 16-byte base alignment, the same assumption the baseline already makes.\n- Only the INT8 default path is oracle-qualified. Modes 0, 2, 3, step, merge, and lane-cell are renamed but not qualified.\n\n**Fixture and build scripts**\n\n- The fixture meets the root constraints: one process, seeds outer and cases inner, 36 cases, cap 2112 with width 2051, strict output and scratch memcmp, guard pages, readonly witnesses, lane-cell env rejected. Timings print per case but carry no claim until the final pass line.\n- Both arms size scratch with the public scratch function. That is sound because the patch does not change the scratch layout.\n- The container script compiles the fixture against the unrenamed header and relies on a hand-written value_batch prototype. A signature mismatch would fail at link, which is acceptable.\n\n**Blockers for any GPU GO (post-build, CPU-only)**\n\n1. candidate.symbols.txt must define no tag symbol lacking the s92_private prefix, and public.symbols.txt must define none with it.\n2. In attn_value_probe, the two host call paths must pass distinct CompileTimeKernelInfo addresses, each whose first word points to a name string matching its own arm. Repeat the S13 objdump and bounded rodata read.\n3. ISA decode of the private scalar1 INT8 chunk kernel: barrier count 1, slm 15872, and private_size, spill, and scratch absent or explained. The S91 private numbers must not reappear.\n4. Build exit 0, both public member compares equal, source hashes verified before and after.\n\n**Dev-loop cuts**\n\n- Add two grep assertions for blocker 1 at the end of the container script before running it. This is zero cost and removes a review round trip.\n- Decode only the 2ad0a4 pair, not all eleven tags, until the binding check passes.\n- Reuse public.images.o as planned and do not relink the public arm.\n- Do not run or sweep anything else. No new tolerance, no new math.",
+      "ttft_ms": 114638,
+      "type": "result",
+      "duration_ms": 137676,
+      "uuid": "3059ce86-5293-46c6-9c07-6677034e19f1",
+      "ttft_stream_ms": 3747,
+      "time_to_request_ms": 72,
+      "first_content_frame_ms": 3748,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}
