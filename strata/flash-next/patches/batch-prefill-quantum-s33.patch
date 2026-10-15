@@ -1,0 +1,56 @@
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -10754,13 +10754,13 @@
+                                  (long long) want, std::chrono::duration<double, std::milli>(Clock::now() - t_ln).count());
+                     std::fflush(stderr);
+                 }
+                 return true;
+             };
+-            // --batch: a prompt read while slots are decoding goes one prompt chunk at a time (the same chunks as one
+-            // run: each run starts where the last ended, at a multiple of the chunk), and between two chunks the slots
+-            // decode for a share of the time the chunk took (STRATA_BATCH_DECODE_SHARE, default 0.5), so a long
++            // --batch: a prompt read while slots are decoding goes one allocated prompt chunk at a time by default.
++            // The opt-in scheduling quantum below bounds each contiguous run without changing the allocation.
++            // Between runs the slots decode for a share of the run's time (STRATA_BATCH_DECODE_SHARE, default 0.5), so a long
+             // prompt does not stop the others.  The slots' windows then see the cache without the slots this prompt
+             // borrowed (marked missing: those experts run on the CPU), never a prompt buffer.
+             static const double decode_share = [] {
+                 const char* v = std::getenv("STRATA_BATCH_DECODE_SHARE");
+                 return v != nullptr ? std::max(0.0, std::atof(v)) : 0.5;
+@@ -10775,13 +10775,34 @@
+             // the request ends with `YIELDED <slot> <tokens>` + DONE cancel, and the server sends it again later: it
+             // continues from the slot with the same chunks.  #656's cooperative preemption, with a slot as the park.
+             auto read_part = [&](int64_t a0, int64_t b0, std::string& e) -> bool {
+                 // (a layer split reads its stages as a pipeline over one run's chunks: in pieces only beside slots)
+                 if (o.batch <= 0 || piped || (!stages.empty() && !batch_on())) return sp.run(ids.data() + a0, b0 - a0, a0, e);
+-                const int64_t C = std::max<int64_t>(sp.chunk(), 1);
++                const int64_t C = std::max<int64_t>(sp.chunk(), 1);   // allocation and BYIELD geometry, unchanged
++                const char* const quantum_text = std::getenv("STRATA_BATCH_PREFILL_QUANTUM");
++                int64_t requested_quantum = 0;   // unset, empty or 0: the legacy scheduling width
++                if (quantum_text != nullptr && quantum_text[0] != '\0') {
++                    char* end = nullptr;
++                    errno = 0;
++                    const long long value = std::strtoll(quantum_text, &end, 10);
++                    if (errno == ERANGE || end == quantum_text || *end != '\0' || value < 0 || value > C ||
++                        (value > 0 && (value % 64 != 0 || C % value != 0))) {
++                        e = "STRATA_BATCH_PREFILL_QUANTUM needs 0 or a positive 64-aligned divisor of the allocated chunk";
++                        return false;
++                    }
++                    requested_quantum = (int64_t) value;
++                }
++                // Snapshot eligibility once per read_part; a slot finishing does not change this part's width.
++                const bool quantum_on = requested_quantum > 0 && o.batch > 0 && !piped && stages.empty() &&
++                                        req_imgs.empty() && batch_on();
++                const int64_t Q = quantum_on ? requested_quantum : C;
++                if (trace && quantum_text != nullptr)
++                    std::fprintf(stderr, "strata batch prefill quantum: allocated %lld requested %lld effective %lld "
++                                         "eligible %d from %lld to %lld\n", (long long) C, (long long) requested_quantum,
++                                 (long long) Q, quantum_on ? 1 : 0, (long long) a0, (long long) b0);
+                 for (int64_t q = a0; q < b0;) {
+-                    const int64_t r = std::min(b0, q + C);
++                    const int64_t r = std::min(b0, q + Q);
+                     const auto tq = Clock::now();
+                     if (!sp.run(ids.data() + q, r - q, q, e)) return false;
+                     q = r;
+                     if (q >= b0) continue;
+                     int ys = -1;

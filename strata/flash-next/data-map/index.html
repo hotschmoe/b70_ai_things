@@ -148,7 +148,7 @@ ul.plain{padding-left:1.1rem}
 {
  "schema": 1,
  "title": "Strata Flash-Next data map",
- "snapshot": "2026-10-15 S32: S22 reference operations, S30 full RAM recovery, S31 paired GPU replay, S32 CPU boundary diagnostic",
+ "snapshot": "2026-10-15 S33: S22 reference operations, S30 full RAM recovery, S31 paired GPU replay, S32 CPU boundaries, S33 quantum tradeoff",
  "scope": "Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two Arc Pro B70 cards, Strata SYCL engine, EP/PUSH, batch MTP depth2 (opt-in), two 200000-token slots, INT8 KV, 32 GiB / 4-entry RAM parking, all 24576 experts resident (7152 on GPU0 + 17424 on GPU1), greedy.",
  "warnings": [
   "Trace service times overlap: within a card (engines), across cards, and with CPU wall time. They are NOT additive and are not a latency budget.",
@@ -181,13 +181,15 @@ ul.plain{padding-left:1.1rem}
    "../../../docs/20261015_strata_ep_publication_scope.md (S28, explicit hidden-ISA correction)",
    "../../../docs/20261015_strata_batch_draft_carry.md (S30 counter correction)",
    "../../../docs/20261015_strata_paired_head_profile.md (S31 current replay timings, APIs and readiness gaps)",
-   "../../../docs/20261015_strata_host_boundary_profile.md (S32 CPU boundary diagnostic)"
+   "../../../docs/20261015_strata_host_boundary_profile.md (S32 CPU boundary diagnostic)",
+   "../../../docs/20261015_strata_prefill_quantum.md (S33 mixed state/latency tradeoff)"
   ],
   "results_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
   "prototype_binary": "S26 CPU-only strata-head-pair-s26 SHA256264f221e2c1b02d4bdd9b332c46f91e91bf4f6301afbdabe563df5ff2a16e44a; not GPU served; default pair option OFF.",
   "ep_scope_binary": "strata-ep-scope-s28 SHA256152055a6204a3911e96b59aab8d6788a1a434891e1e1ebd9098c9e21b8d11f13; S28OFFcanary, S29samebinary OFF/ONcoding, S30depth2/headpair fullcache/counter/functionals/normalteardown/percard+10compiledhealth PASS; no shelf promotion.",
   "current_profile": "S31 same frozen152055a6, pairedON/depth2, one32+32 pair; five reviewed replay cycles5..9 after capture construction, no OFF delta. Current159-row CSV is separate from S22 operations[]/stage_rollups.",
-  "cpu_boundary_profile": "S32 frozen595f2ff5; opt-in buffered steady_ns markers, no new GPU calls/events/waits;128+128 coding,40 replay windows/38 same-dump adjacent joins. Complete1684records/dropped0; no GPU clock join, OFF delta or speed claim."
+  "cpu_boundary_profile": "S32 frozen595f2ff5; opt-in buffered steady_ns markers, no new GPU calls/events/waits;128+128 coding,40 replay windows/38 same-dump adjacent joins. Complete1684records/dropped0; no GPU clock join, OFF delta or speed claim.",
+  "prefill_quantum": "S33 same32ff11a2/Q0vs4096 atfixedC12288; one32769input mixed state fixture/arm, logged phase timers not a per-kernel trace; defaultQ0 retained."
  },
  "geometry": {
   "source": "Confirmed against served GGUF metadata with CPU-only tools/gguf_reader.py: lowlevel-s24/model-geometry.json. Derived: 12 QSA/36 GDN layers, ssm_conv_channels=2*128*16+6144; defaults cross-checked against include/strata/core/geometry.hpp.",
@@ -2131,6 +2133,12 @@ ul.plain{padding-left:1.1rem}
      "value": "Equal12288-token blocks: select224/225->6278/6284ms; attention2291/2303->2630/2636ms",
      "basis": "Two ordinal199501-prompt sequences, blocks1->16; initial-AB phase, current152055a6; no additional GPU probe",
      "status": "measured"
+    },
+    {
+     "label": "S33 prefill call walls / measured interleaved decode walls",
+     "value": "21.117/7.718s Q0;25.639/11.255s Q4096",
+     "basis": "Sequential walls explain batched28.835/36.897s; kept separate from primary event timeline/peer waits.",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -2170,7 +2178,8 @@ ul.plain{padding-left:1.1rem}
     }
    ],
    "evidence": [
-    "docs S10"
+    "docs S10",
+    "prefill-quantum-s33/analysis/comparison-q0-q4096.json"
    ],
    "quoted": [
     {
@@ -2184,6 +2193,12 @@ ul.plain{padding-left:1.1rem}
      "value": "median 22.50 us, 5300 calls (about 117 ms total)",
      "basis": "trace",
      "status": "measured"
+    },
+    {
+     "label": "S33 primary event-region gather / dequant, Q0->4096",
+     "value": "2.348->5.174s /0.472->1.056s",
+     "basis": "Long32769-token mixed request; event regions, not kernel service. Gather includes activation gathering plus hostpeer enqueueing; MMQnotbuilt, nativeweightgather branchunreachable.",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -2193,7 +2208,8 @@ ul.plain{padding-left:1.1rem}
     "prefill_reduce"
    ],
    "gaps": [
-    "GEMM tile shapes not mapped."
+    "GEMM tile shapes not mapped.",
+    "S33 needs exact activation-gather vs peer host-enqueue vs primary device readiness breakdown; do not select an unreachable MMQ weight-gather probe."
    ],
    "hypotheses": []
   },
@@ -2423,6 +2439,13 @@ ul.plain{padding-left:1.1rem}
    "value": "18C2heads=2x9paired; reviewed2C2heads2.416ms/cycle, mainC6head2.262ms,9actualL0AppendExp/cycle",
    "status": "measured",
    "note": "32+32prefixes/residency/normalstop/finalpercard+10compiledhealthPASS. Fivecapture-freeinteriorcycles; source-informedtailmotif; timingsdiagnostic, noOFFdelta/speedclaim. Currentall-operationCSV159rows; oldS22operationsunchanged."
+  },
+  {
+   "stage": "S33",
+   "label": "Fixed-allocation scheduling quantum0 /4096, mixed32769 prefill during1500decode",
+   "value": "maxSSEgap7.824->4.059s; incomingTTFT29.526->37.581s; decodercompletion41.619->46.612s",
+   "status": "measured",
+   "note": "Bothfull1500refs/5anchors/shortcachedreturns/functionals/normalstop/finalhealthPASS. No new speed winner, daily or full200k qualification; keepQ0. n1/controlthenON/uncontrolledclocks; allcurrentreferenceoperationsunchanged."
   }
  ],
  "rejected_parked": [
@@ -2497,11 +2520,12 @@ ul.plain{padding-left:1.1rem}
   "S24 single-card readiness probe completed 680 samples/card with byte/guard/checksum checks and both-card post-health. Synthetic preparation and H2D/D2H stand-ins do not measure serving CPU preparation or EP P2P latency.",
   "S24 command_submit/start timestamp differences were inconsistent, including negative values. All queued-time values are excluded; device start/end service and cross-event gaps remain separate from host clocks.",
   "S28 native BMG ISA available: explicit barrier changes preflag UGM fence none.group to invalidate.gpu. Split boundary and explicit scope pass bounded probes; full failure mechanism and compiler legality unproven. Old standalone failure not proof of production output corruption.",
-  "S29 headpair serving is measured only as bounded C2 coding with native window stats. The S22 operation rollups remain unchanged; do not relabel four old C1 heads as measured new C2 kernels. Queued tiny ON trace requires a new instrumented start.",
+  "S29 headpair serving is measured only as bounded C2 coding with native window stats. The S22 operation rollups remain unchanged; do not relabel four old C1 heads as measured new C2 kernels. That queued trace was supplied separately by S31; historical S22 rows remain unchanged.",
   "S29 discovers carry_leg/add_carry omit prior draft totals on batch-to-solo transition: OFFrepeat3slot1 API28/21 is only final31token tail. Full-request acceptance comparisons invalid; measured wall/output parity remains valid. S30 fixes new requests, not historical raw rows; live long native344accepted/417offered matches finalserver/API.",
   "S30 full depth2/headpair RAM test reuses199839 held/read31new/replay0 on fourforcedreturns; native663.3-685.1ms and clientTTFT2.992-6.918s are correctness-run diagnostics with snapshot readback/counter observer, not a clean speed comparison. S22 per-op times are not relabeled.",
   "S31 current159-operation CSV covers reviewedONreplay only. No matchedOFF driver delta, physicalPCIebytes, EU/cache counters, or exact last-GPU-completion to CPU boundary join. S32 separately measures CPU ordering after existing waits; S31 recorded-activity gaps remain unjoined.",
-  "S32 CPU markers locate gather, staging, submit and post-wait ordering only. No device completion clock join, new clean throughput, full-cache requalification or CPU packing-only timing. Complete dump recovered after initial snapshot raced buffered output; original partial retained."
+  "S32 CPU markers locate gather, staging, submit and post-wait ordering only. No device completion clock join, new clean throughput, full-cache requalification or CPU packing-only timing. Complete dump recovered after initial snapshot raced buffered output; original partial retained.",
+  "S33 smallerquantum32K state and cachedcontinuation PASS, but full200k RAM/checkpointbranch/waiterBYIELD not requalified; no default change or new performance winner. Event-region gather label is not native MMQ weight gathering in this SYCL build."
  ],
  "operations": [
   {

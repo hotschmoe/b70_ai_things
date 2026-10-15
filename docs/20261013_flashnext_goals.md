@@ -66,6 +66,16 @@ adjacent joins: pairwaitreturn->nextverifiersubmit0.866ms/p951.112ms.
 GPUcompletion and CPUwaitreturn remain unjoined; no physicalidle/speedclaim
 or new fullcache qualification. See [S32 report](20261015_strata_host_boundary_profile.md).
 
+S33 tests a default-OFF4096-token scheduling quantum at fixed12288allocation.
+Both matched32769-token mixed state screens,1500-token decoder references,
+32-new-token cached returns and functionals/teardown/health pass. Largest
+content gap7.824->4.059s improves, but incomingTTFT29.526->37.581s and
+decodercompletion41.619->46.612s worsen. KeepQ0; no speed winner or new
+full200kqualification. The growing gather event-region includes activation
+gather and hostpeer enqueueing; MMQ nativeweightgather is not built here.
+See [S33 tradeoff](20261015_strata_prefill_quantum.md). Skipmidpoint sweep;
+isolate actual EP/gather/dequant and primarydense work next.
+
 Quality: on 2026-10-14 Flash-Next IQ3_XXS beat the 27B INT4 8-0 on paired
 langs + sysadmin tasks (41/43 vs 33/43); see the A/B brief, Outcome 2.
 

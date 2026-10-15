@@ -6,10 +6,11 @@ path, which operations are expensive or wait, and how strong the evidence
 is for each claim. `operation-data.json` is the source of truth;
 `index.html` embeds a copy of it.
 
-Snapshot: 2026-10-15, S32 (S22 reference operation trace plus readiness, real-head,
+Snapshot: 2026-10-15, S33 (S22 reference operation trace plus readiness, real-head,
 production PLE, EP publication fix/native ISA, paired-head serving,
 draft-counter carry correction, full winning-candidate RAM recovery and
-separate current paired-head replay measurements and CPU boundary markers).
+separate current paired-head replay measurements, CPU boundary markers
+and a fixed-allocation prefill quantum tradeoff).
 Runtime source:
 `/mnt/vm_8tb/b70/build/strata-ab/src-ep` (upstream Strata 296b59d2 base
 plus working-tree overlays for EP/PUSH/accounting/S19-S21 and the
@@ -160,3 +161,10 @@ Primary recorded-activity gaps after MTPselect3.300-3.941ms and before
 mapped-input copies1.555-1.648ms need source/uninstrumented verification;
 no physical idle or production saving is inferred. See
 [S31 report](../../../docs/20261015_strata_paired_head_profile.md).
+
+S33 keeps the12288-token allocation and compares scheduling quantum0/4096.
+The smaller quantum lowers maximum mixed decode content gap7.824->4.059s,
+but increases incomingTTFT29.526->37.581s and decodercompletion41.619->46.612s.
+KeepQ0; both state/prefix/functional/health screens pass, without new full200k
+qualification. The primary gather region includes host peer enqueueing;
+MMQ weight-gather stubs are unreachable in the actual SYCL build.

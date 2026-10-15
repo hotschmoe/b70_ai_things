@@ -1986,3 +1986,29 @@ promotion. ActualOpus/Fablecompletedpatchreviews; rootfixeswindowreset/
 emptyframebug, rejectsstrongerGPUgapcausality. OneincrementalTUrebuild;
 initialsnapshotracepartial rejected/recoveredfromstoppedlog, noGPUrepeat.
 DatedS32report anddata-mapCPUquotes; raw host-boundary-s32/s32-report.json.
+
+
+## S33: fixed-allocation prefill quantum tradeoff (2026-10-15)
+
+CONFIG -> Samefrozen32ff11a2 forQ0/4096; C12288, FIRST0, trace+prefilltimers,
+headpairON/depth2/two200k/32GiB/all7152+17424experts; S32markersOFF.
+COMMAND -> ActualOpus/FablepatchreviewsBEFOREsingle122.7sCPU-onlybuild;
+one32769-token5anchorarrivalduringretained1500codingdecodeperarm, cached
+followup, functionals/normalstop/leaseexit0/bothcard+10compiledhealth.
+RESULT -> Bothfull1500decoderrefsMATCH, anchorsinitial+followupPASS,
+59tokens, returnscache32827/read32. ActualQ4096eligible1,7x4096+4090 vs
+12288/12288/8186; contiguouspart0..32762,7tokensoutside. Maxcontentgap
+7.824->4.059s, incomingTTFT29.526->37.581s, decoderwall41.619->46.612s.
+Prefillcalls21.117->25.639s plus measureddecode7.718->11.255s explain
+batchedread28.835->36.897s; sequentialwalls, notsummedwithGPUtimelines.
+Primarygatherregion2.348->5.174s, dequant.472->1.056s; NOTisolatednative
+weightgather: MMQnotbuilt, regionincludesactivationgather/hostpeerenqueue.
+Functionals/normalstop/allfinalhealthPASS botharms,noreset; noRAMtest.
+VERDICT -> Fairnessoptiononly, retainQ0/nodaily/newfullcontextpromotion.
+ActualOpus/Fable bothstopmidpointsweep; rootrejectsunsupportedclaims6144
+mustinterpolateor1-2sdifferenceisnoise. No hardgaprequirement/selecting
+utility; actualcostsourceleadbetter. BYIELDcheckcadencechanges, 0taken/
+0declined, waitersunexercised. CPUfixtureoneunitestimate13vssteady12fixed
+with64unitamortization; failedcounttranscriptpreserved, final21calls0.29s,
+noGPUrepeat. Sourcecoldpathnoabsolutealignmentgate; purecheckpointbranch
+unknown. DatedS33doc/optionalpatch/data-map; rawprefill-quantum-s33/.

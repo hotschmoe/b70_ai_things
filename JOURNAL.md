@@ -22990,3 +22990,38 @@ made nogoalprogress; revalidatedterminalbuildandappliednextsafeaction.
 Patch/datedS32doc/goals/data-mapupdated; raw host-boundary-s32/{s32-report,
 source-equivalence,model-review-closure,pair-log-closure,post-health}.json,
 analysis/run2/. GoalACTIVE; targetprefill/decode/interference stillopen.
+
+
+## 2026-10-15 -- Flash-Next optimization S33: smaller prefill quantum tradeoff
+
+CONFIG: samefrozen32ff11a2, Q0/4096 at C12288/FIRST0/trace+prefilltimers,
+headpairON/depth2/two200k/32GiB, all24576experts7152/17424, samePython,
+S32CPUmarkersOFF. Quantumoptintext/nonpipe/nostages/batchactiveatentry;
+allocation/loans/ownership/actualcallbacks preserved. BYIELDguardstillC,
+checkcadencechanges; invalidenvlatebatched-readerror, notstartupvalidation.
+COMMAND: upstreamrefreshunchanged, actualOpus/FablereviewsbeforeONE122.7s
+CPU-onlynoDRIbuild. Twoleasedstarts, eachsame32769-token5anchorarrival
+afterretained107/1500decoderbegins; actualreply+newturnfollowup. Existing
+functionals/normalstop/leaseexit0/bothcard+10compiledhealth eacharm.
+RESULT: all5anchorsbothrequests/armsPASS59tokens; bothFULL1500S16decoder
+refsMATCH. Cache32827/read32both. Actual4096eligible1,7x4096+4090 vs
+12288/12288/8186, contiguous0..32762 plus7finaltokens. Maxcontentgap
+7.824->4.059s, incomingTTFT29.526->37.581s/completion30.990->39.062s,
+decodercompletion41.619->46.612s. Bothnormalstop/allhealthPASS,noreset.
+Prefillcalls21.117->25.639s and measureddecode7.718->11.255s account
+batchedread28.835->36.897s. Primarygatherregion2.348->5.174s/dequant.472
+->1.056s are eventregions, notpurekernelservice: MMQnotbuilt; gathercovers
+activationgather then hostpeerenqueue beforeprimarydequant. No native
+weightgatherprobejustfromlabel; exactsourcecriticalpathauditqueued.
+VERDICT: fairnessimprovesbutcompletionworsens, keepQ0; optionalexperimental
+patchonly/nodaily/newfull200kqualification. No6144sweep/fullcache repeats.
+ActualOpus/Fable bothstopmidpoint; rootrejectsinterpolation/noiseassertions
+andproductionpromotionwording. Modelsconsultedatpatchandtradeoffdecisions;
+reviewbeforebuildsavedS32incrementalrebuild. Known-answerstate+mixedscreen
+foldedoneworkloadperarm. Oneunitfixtureestimate13vssteady12failedCPUonly;
+64unitamortizationthen21countcalls0.29s, failedtranscriptpreserved,norestart.
+No exacttargetframework/mixed-roleTTFTpercentiles/arbitrarycrosschunkhash
+gate. Yieldmessages0/0, waiters/checkpointbranchunqualified. DatedS33doc,
+optionalpatch/goals/mapupdated; rawprefill-quantum-s33/{s33-report,
+api-comparison,tradeoff-review-closure,experiment-closure}.json,analysis/.
+GoalACTIVE: optimizeactualEP/primarydense/dequant paths;150/stream unmet.
