@@ -23761,3 +23761,26 @@ head-offload speed conclusion. Root read full findings; native author strata_ep_
 S63/S64 dated report and small data-map annotations preserve170 historical ops.
 Manifest peer-head-overlap-next-s64-prep/manifest.json SHA256
 4e008686c8e225e503fab672944e7284762efc4e1295bd9f28781830a12e8348.
+
+
+## 2026-10-15 -- Flash-Next optimization S66: existing IQ3_S C6 ISA pruning
+
+CONFIG -> Frozen S59 exe56e551af/common8f5a7efe, one public IQ3_S NC6/EXACT_N
+image84. COMMAND -> CPU-only ELF metadata extraction/ocloc disassembly, no DRI,
+network, new compilation, model payload or GPU. Index1086 images/read5.838MB;
+select49384B at offset8170112, canonical bad2ccded9f4136e6809825844815652eba954f059b807774c45d7916d92beb4.
+RESULT -> ocloc0 initially omits main ASM because264-byte section name exceeds
+filename limit. One COPY gets a section-name-only alias, never link/runtime;
+changed range[47479,47737) only.shstrtab, main16128B byte-identical SHA256
+84928699e5a62acaf245b7df75dbc40681492961a491da76599ff8a57099866f.
+Recovered101331B/1152line ASM: weight qs/signs already THREE d32 A64 messages
+(lines164/167/168), not six d16; address construction source-bound.32 static
+byte nonzero predicates and extract/select/repack/subtract sequences survive.
+VERDICT -> Narrow unfrozen S65 to SWAR ONLY; preserve original load expressions.
+No aligned-load variant/build/GPU needed; S63 frozen source proposal preserved
+and later evidence explains the change. No dynamic instruction count, dispatch,
+traffic, speed, occupancy or numerical proof from this static ISA. Root read
+actual ASM/address and byte-emulation excerpts/alias script/proof; native audit
+author strata_ep_s27. Dated report/exact offline scripts/small map update.
+Frozen36-file manifest excludes itself, SHA256
+d2dd8a6c3423d40afb3b47f4313813b8bbce89feb59468b8718dde59212724da.

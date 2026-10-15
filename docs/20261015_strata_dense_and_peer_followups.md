@@ -7,7 +7,10 @@ a new GPU implementation or changed the serving candidate.
 
 Native audit authors: `/root/ple_upstream` (S63) and `/root/strata_ep_s27`
 (S64). These are native Codex audits, not Claude model reviews. Root accepted
-GO for S65 source preparation and HOLD for S64.
+GO for S65 source preparation and HOLD for S64. Later
+[S66 machine-code evidence](20261015_strata_iq3s_existing_isa.md) narrows S65 to
+SWAR-only sign decoding; the aligned-load part of the original S63 proposal
+is dropped before build. Frozen S63 findings remain unchanged.
 
 ## S63: exact integer decode reuse, GO for preparation
 

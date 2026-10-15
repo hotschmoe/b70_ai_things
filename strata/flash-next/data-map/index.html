@@ -241,6 +241,11 @@ ul.plain{padding-left:1.1rem}
    "report": "docs/20261015_strata_dense_and_peer_followups.md",
    "raw": "peer-head-overlap-next-s64-prep/{findings.md,source-evidence.json}",
    "scope": "HOLD existing-EP head offload:whole input arrives after peer returns; useful overlap needs a new ownership/dependency design. Source-only/no new GPU."
+  },
+  "iq3s_existing_isa_s66": {
+   "report": "docs/20261015_strata_iq3s_existing_isa.md",
+   "raw": "iq3s-existing-isa-s66-prep/{s66-report.json,assembly-excerpts.json,alias-proof.json}",
+   "scope": "Existing S59 image84 only:original narrow loads already fold to3d32messages; byte sign/sub expansion remains. S65 now SWAR-only. No new compile/GPU/dynamic-dispatch/timing proof."
   }
  },
  "geometry": {
@@ -1196,7 +1201,8 @@ ul.plain{padding-left:1.1rem}
     "primary-dense-next-s56-prep/aot-resources/{embedded-resource-index,resource-summary}.json; C{1,6}-RPW{1,2}.ze_info.yaml",
     "primary-widek-next-s57-prep/findings.md; primary-widek-resources-s57-20261015/resource-summary.json",
     "iq4xs-rpw2-s59-prep/{s59-root-report.json,run-clean/{closure,comparison}.json}; iq4xs-rpw2-s59-dot-audit.json",
-    "iq3s-dense-next-s63-prep/{findings.md,integer-load-contract.json,host-check-execution.json}"
+    "iq3s-dense-next-s63-prep/{findings.md,integer-load-contract.json,host-check-execution.json}",
+    "iq3s-existing-isa-s66-prep/{s66-report.json,assembly-excerpts.json,alias-proof.json}"
    ],
    "quoted": [
     {
@@ -1257,6 +1263,12 @@ ul.plain{padding-left:1.1rem}
      "label": "S63 IQ3_S dense-only integer decode lead",
      "value": "55 header tensors/1.9335818ms historical service;8192grid/sign+512mask+32extent host checks PASS. Prepare existing aligned/SWAR helpers only for NC6 exact dense path.",
      "basis": "No payload/compile/GPU. Global Split21/expert paths and all FP/K/reductions stay unchanged; wider loads fetch collateral bytes within110B. Compiler folding/latency untested.",
+     "status": "source-only"
+    },
+    {
+     "label": "S66 baseline IQ3_S C6 ISA narrows next candidate",
+     "value": "Existing actual image84:qs/signs reconstruction3d32A64messages, not6d16;32static byte nonzero predicates plus extraction/select/repack/subtract remain.",
+     "basis": "Offline disasm of unchanged main.text84928699 fromcommon8f5a7e/S59exe56e551af. Section-name-only alias inCOPY fixesfilename limit, neverlink/runtime. StaticISA is notdynamiccounts/traffic/occupancy/latency. Dropaligned-loadportion beforeS65sourcefreeze; retainSWAR-only lead.",
      "status": "source-only"
     }
    ],
