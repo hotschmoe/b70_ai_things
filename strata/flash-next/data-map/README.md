@@ -235,3 +235,11 @@ three shapes take79-90percent longer as configured. No main-owner integration
 or serving run; S46 stays source-only. Repeated-weight cache regime differs
 from serving and remains unmeasured. Reference170operations/rollups unchanged.
 [S44 report](../../../docs/20261015_strata_q6_collection_and_warm_probe.md).
+
+
+S47 actual CPU reader passes88cases: key-based matching removes extra
+permutation/duplicate request tickets with identical decoded bytes. Source
+audit finds missing batch-slot prefetch metadata, so helper alone has no
+current C2 speed claim. Wiring remains source-only; no GPU window. Existing
+170operation rows/rollups unchanged.
+[S47 report](../../../docs/20261015_strata_ple_prefetch_readiness.md).

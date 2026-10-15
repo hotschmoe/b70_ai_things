@@ -285,3 +285,13 @@ FAILED. WarmC6 three16-call batchmeans reject integration asconfigured,
 no serving orall52/quality claim. Repeated-weight cache regime isunmeasured.
 [S44 report](../../../docs/20261015_strata_q6_collection_and_warm_probe.md)
 contains commands, hashes, configuration and limits.
+
+
+S47 `ple_prefetch_cpu.cpp` is exact executed8415719e, real PleTable/host
+reader/DirectFile with a finite synthetic IQ4_NL GGUF and Mmap oracle.
+Both44case arms pass bytes/guards/reader-request/logical-byte counts under
+cache0/256 and io_thread0/1. It includes the pinned external production
+`ple_reader_test.cpp` helper; use the retained raw bundle/container recipe.
+The key-match patch is source-only; batch prefetch wiring is separately
+unapplied and no serving benefit is measured. No broad inherited selftest
+is run. [S47 report](../../../docs/20261015_strata_ple_prefetch_readiness.md).

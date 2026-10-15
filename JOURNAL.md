@@ -23288,3 +23288,35 @@ redundant200K/knobsweep. Datedreport/exactsources/smallmapupdate retained;
 old170operations/rollups unchanged. Raw q6-dense-reference-s44-prep frozen:
 200files92,289,057bytes; externalmanifestSHA256
 ccb3ef69b9faaa19207de4cb6b33ec9725c275ad10a49dc178045d5453645e27.
+
+
+## 2026-10-15 -- Flash-Next optimization S47: CPU PLE readiness discriminator
+
+CONFIG: Existing actual PleTable/SYCLhostPleReader/DirectFile, tinyfinite
+IQ4_NLGGUF/Mmaporacle. Generickeymatch/drainall patch only in scratch;
+production source unchanged.11cases xcache0/256 xio_thread0/1 perarm.
+COMMAND: Actual claude-opus-5-5/claude-fable-5-1 independently review helper,
+correctedreachability and exactfixture; root settlesprovenance items. One
+22sCPU-onlycontainerbuild/run compiles matchedbaseline/candidate and checks
+44cases each. Firsthostlaunch127beforcompile (nog++); useexistingimage/noGPU.
+RESULT: All88cases bytePASS/guards/logicalbytes/requestcounts. Permuted
+six-token gatheradditionalrequestedrows96->0; duplicates48->0, subset32->0,
+extra16->0 inallfourconfigs. Missing/oversize/zero/overflow/pendingsemantics
+unchanged. Duplicateprefetchsuppression and untouchedpendingoutputPASS.
+Binariesc1bf9a3b/5ed248b7; fixture8415719e; helperpatch217550f5. Sources/
+inputpins unchangedafterrun, fixturefilebytesidentical. No timingclaim,
+I/Oerror/OORruntimecoverage, GPU/serve/modelqualityqualification.
+VERDICT: RetainCPU-testedhelper, not a liveC2speedfix alone. Sourceauditfinds
+freshbatchslots PleRun.table null, so MTPreadyguardcurrentlypreventsCPU
+prefetch. Partialtable/hashmetadata borrow +CPUopen-tablepredicate proposal
+staysunapplied; fiveconsumer/lifetime/serialization/slotidentity audits pass
+scopedSYCLno-layersplitbatchMTP. Prefillasyncfuturejoinsbeforemixedbatch;
+no globalsinglethreadclaim. C2/depth2<=6/C4depth2<=12 vectors vs16cap.
+Needactualprefetchactivation/keyreuse andmatchedtokens/speedbeforeclaiming
+benefit. S32gather0.829ms isnotremovablesavings. Winner152055a6 unchanged.
+Loopreusesactualtesthelpers/publiccounters, skipsbroadselftest/keepalivesleeps,
+usesCPUfirst andkeepsbothcardsfree. HCone-predicateprobe independently
+prepared/reviewing, notmeasured. Datedreport/exactoracle/patch/map retained;
+old170operations/rollups unchanged. Rawple-prefetch-permutation-s47 frozen:
+62files1,642,098bytes; manifestSHA256
+97a0dfbd20afa3cad7769f764c0bf36a936a5a4920af88471c0751da577d622b.
