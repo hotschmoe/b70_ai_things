@@ -23468,3 +23468,33 @@ scoped; no speed claim or redundant rerun. No ready/reviewer request made,
 no publication rejection. Dated report/source/issue/PR readbacks retained.
 Frozen prep+submission evidence manifest SHA256
 df4d7472956bf08a946807ef27cc9812c2b6dd0d73bde1423dff6be8267f3a59
+
+
+## 2026-10-15 -- Flash-Next optimization S52: existing Q5_K head RPW2
+
+CONFIG: Real output.weight437043200B, N2560/M248320/C2+C6, seeded finite
+initial/changed activations, existing public production APIs/kernel IR.
+COMMAND: Actual claude-opus-5-5/claude-fable-5-1 source reviews ACCEPT;
+preserve14s ADL compile failure, helper-only rename,101s offline adapter
+build/no native TU recompile/new AOT images. One89s quiet card0 window,
+61s leaves, A1/B1/B2/A2,3warm+3timed20-call batches/shape, no profiler.
+RESULT: All own/cross-process full bytes/guards/readonly/health/teardown
+PASS,96exports128675840B;72crossfiles96506880B. Independent16DOT inventory
+confirms original/RPW2 head and C2 two-quantizer/C6 one-quantizer chains,
+not dispatch trace. Primary barrier medians C21223.193->1025.068us
+(-16.197percent), C62525.102->1730.844us(-31.454percent); both predeclared
+screensPASS. Six means nested in two fresh processes/variant, downward
+warming retained; no same-process/p95/serving/physical-traffic/whole-model
+claim. Real weights plus seeded inputs, not captured serving activations.
+VERDICT: Actual resumed Opus5.5/Fable5.1 agree(8.839/9.244s): exact head-only
+default-OFF serving candidate after isolatedHC; no extra primitive rerun or
+globalRPW serve. Root READ full reviews, corrected Opus inputs claim; their
+production-activation/matched-serving recommendations guide next protocol,
+not a broad framework mandate. Qualified152055a6 unchanged, targets unmet.
+Loop retains failed compile, uses existing IR, resumes original contexts
+with11KB result packet while HC proceeds. Exact copies/dated report/small
+head-map update;40stages/170historicalops/rollups unchanged. Future repro
+binds frozen archive files readonly, never restores live build archives.
+Raw240files222195943B; externalmanifestSHA256
+f301c25c1121b7c14203ad8ed5ca7ab05752e63a97ec492ee8f8e3e3ea8a2f5f.
+See docs/20261015_strata_head_rpw_probe.md.

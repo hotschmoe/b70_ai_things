@@ -1700,12 +1700,18 @@ ul.plain{padding-left:1.1rem}
      "path": "sycl/src/kernels/cuda/native_mmvq.dp.cpp",
      "symbol": "launch_wide<WideQ5K, 6>",
      "origin": "base"
+    },
+    {
+     "path": "sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+     "symbol": "native_mmvq_wide_rpw_kernel<WideQ5K,6,2>",
+     "origin": "base"
     }
    ],
    "evidence": [
     "draft-profile-s22/profile/steady-summary",
     "head-profile-s25/s25-report.json",
-    "head-pair-s31/analysis-prep/reviewed-summary/summary.json"
+    "head-pair-s31/analysis-prep/reviewed-summary/summary.json",
+    "decode-next-s52-prep/v3/{s52-root-report,run-clean/comparison,run-clean/closure}.json; postresults-20261015/dot-inventory.json"
    ],
    "quoted": [
     {
@@ -1725,6 +1731,12 @@ ul.plain{padding-left:1.1rem}
      "value": "1call/cycle,2.262ms service; separate from pairedC2",
      "basis": "Same152055a6ONtrace, five reviewedcycles5..9; diagnostic, no OFFdelta",
      "status": "measured"
+    },
+    {
+     "label": "S52 real-weight C6 head RPW2 primitive graph",
+     "value": "2525.102 -> 1730.844 us/quantize+head call (-31.454%); full-byte and predeclared shape screens PASS. N2560/M248320; RPW2 grid31040.",
+     "basis": "Card0 real Q5_K weights + two seeded inputs, not serving activations. Six20-call batch means nested in two fresh processes/variant, A-B-B-A; warming trend remains. Actual DOT 2/40 kernel single/batch capture; not dispatch trace, p95, physical traffic or whole-model gain.",
+     "status": "measured"
     }
    ],
    "logical_bytes": {
@@ -1737,7 +1749,9 @@ ul.plain{padding-left:1.1rem}
    "downstream": [
     "verify_select"
    ],
-   "gaps": [],
+   "gaps": [
+    "S52 warrants default-OFF head-specific serving candidate after isolated HC, not a global RPW toggle or extra primitive rerun. Production activations and matched serving benefit remain unqualified; historical reference operations/rollups unchanged."
+   ],
    "hypotheses": []
   },
   {
@@ -1957,13 +1971,19 @@ ul.plain{padding-left:1.1rem}
      "path": "sycl/src/kernels/cuda/native_mmvq.dp.cpp",
      "symbol": "launch_wide<WideQ5K, 1>",
      "origin": "base"
+    },
+    {
+     "path": "sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+     "symbol": "native_mmvq_wide_rpw_kernel<WideQ5K,2,2>",
+     "origin": "base"
     }
    ],
    "evidence": [
     "draft-profile-s22/profile-comparison.json",
     "head-profile-s25/s25-report.json",
     "head-pair-s29/s29-report.json",
-    "head-pair-s31/analysis-prep/result/final-analysis.json"
+    "head-pair-s31/analysis-prep/result/final-analysis.json",
+    "decode-next-s52-prep/v3/{s52-root-report,run-clean/comparison,run-clean/closure}.json; postresults-20261015/dot-inventory.json"
    ],
    "quoted": [
     {
@@ -1989,6 +2009,12 @@ ul.plain{padding-left:1.1rem}
      "value": "2calls/cycle,2.416ms summed service; median1.208ms/head; fourprivateMTPselects",
      "basis": "Same152055a6ONtrace, five reviewedcycles5..9; diagnostic, no OFFdelta",
      "status": "measured"
+    },
+    {
+     "label": "S52 real-weight C2 head RPW2 primitive graph",
+     "value": "1223.193 -> 1025.068 us/quantize+head call (-16.197%); full-byte and predeclared shape screens PASS. N2560/M248320; RPW2 grid31040.",
+     "basis": "Card0 real Q5_K weights + two seeded inputs, not serving activations. Six20-call batch means nested in two fresh processes/variant, A-B-B-A; warming trend remains. Actual DOT 3/60 kernel single/batch capture; not dispatch trace, p95, physical traffic or whole-model gain.",
+     "status": "measured"
     }
    ],
    "logical_bytes": {
@@ -2005,7 +2031,8 @@ ul.plain{padding-left:1.1rem}
    "gaps": [
     "Paired head GPU service and actual L0 submission/wait delta are not measured in this serving comparison; source logical replay counts are not driver API counts.",
     "Full-request draft-counter comparison invalid when batch-to-solo carry loses prior totals; draft probability/KV-state identity is not exposed by final output hashes.",
-    "Depth2/headpair full-context RAM recovery, boundary/cancel and broader workloads remain unqualified."
+    "Depth2/headpair full-context RAM recovery, boundary/cancel and broader workloads remain unqualified.",
+    "S52 warrants default-OFF head-specific serving candidate after isolated HC, not a global RPW toggle or extra primitive rerun. Production activations and matched serving benefit remain unqualified; historical reference operations/rollups unchanged."
    ],
    "hypotheses": [
     {

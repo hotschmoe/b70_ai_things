@@ -314,3 +314,9 @@ Eightbalancedpaired32-read single-submission graph batchmeans improve
 traffic/per-readp95 claim. Exactanalyzer`analyze_hc_lo_once_graph_s50.py`
 requires retainedS48/rawdependencies; use retained bundle, inspectioncopies
 are not standalone. [S50 report](../../../docs/20261015_strata_hc_graph_probe.md).
+
+S52 existing Q5_K head RPW2 passes strict C2/C6 primitive screens, with
+16.197/31.454 percent lower quantize+head graph medians. These are seeded
+activation diagnostics, not serving gains. Exact inspection copies:
+head_rpw_leaf_s52.cpp and analyze_head_rpw_s52.py;
+[evidence and limits](../../../docs/20261015_strata_head_rpw_probe.md).
