@@ -177,3 +177,23 @@ Caveat: dummy weights and a 4-layer model; real-weight numerics untested.
 
 No daily-shelf change, no endpoint migration, and no AGENTS.md backend
 change follow from these experiments.
+
+## Upstream contribution: SGLang qwen4_exp XPU import (2026-10-15)
+
+CONFIG: upstream SGLang bba535e (2026-10-15) still imports
+layers/moe/qwen4_decode unconditionally; the chain is qwen4_decode ->
+custom_all_reduce_v2 -> kernels/ops/communication/all_reduce -> tvm_ffi
+(reproduced in the E4 venv with no GPU device: ModuleNotFoundError).
+Fix: gate the import and prepare_qwen4_decode_comm on is_cuda().
+
+COMMAND: scripts/e4-prcheck.sh eager under bin/gpu-run --card 0 (E4 eager
+arm with the PR file bind-mounted over the venv copy; upstream file is
+otherwise byte-identical to the E4 venv's 9ea5472833 copy).
+
+RESULT: server starts and serves C1 ~30.3, C2 ~28.9, C4 ~27.1 tok/s per
+stream (same as E4 eager; not a timing claim), no tvm_ffi error, card-0
+xpu-health HEALTHY. ruff check, ruff format and isort pass.
+
+VERDICT: submitted as https://github.com/sgl-project/sglang/pull/44561
+(branch hotschmoe/sglang:fix-qwen4-exp-xpu-import). The QSA top-k capture
+failure is not addressed by it.
