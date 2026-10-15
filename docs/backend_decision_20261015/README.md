@@ -197,3 +197,91 @@ xpu-health HEALTHY. ruff check, ruff format and isort pass.
 VERDICT: submitted as https://github.com/sgl-project/sglang/pull/44561
 (branch hotschmoe/sglang:fix-qwen4-exp-xpu-import). The QSA top-k capture
 failure is not addressed by it.
+
+## E5/E6 matched harness, llama.cpp SYCL correctness bug, decode census (2026-10-15 evening)
+
+Run between Strata S98-S100 windows; every window announced and released in
+/mnt/vm_8tb/b70/agent-coordination.log. Raw results:
+/mnt/vm_8tb/b70/build/backend-decision/e5e6-results/.
+
+### llama.cpp SYCL returns garbage on short prompts (reorder path)
+
+CONFIG: same llama.cpp e467e5b5 SYCL build, ISTA IQ3_XXS, -sm layer, -fa on,
+-np 2; prompt "Return only the integer: 17 * 19." (Strata's harness
+coherence gate) and padded variants.
+
+COMMAND: scripts/e5b-run.sh (MTP on/off, serial/concurrent),
+e5c-run.sh (pad sweep), e5d-run.sh (exact E2b server command, E2b and
+Strata request formats), e5e-cpu.sh (CPU build), e5f-run.sh (SYCL switches).
+
+RESULT:
+
+| Arm | arithmetic | E2b coding prompt |
+|---|---|---|
+| SYCL, MTP on or off, serial or concurrent | garbage ("333333 Mountfonoon...") | coherent |
+| SYCL, prompts 25-441 tokens | garbage at every length | - |
+| SYCL, E2b-identical command, either request format | garbage | coherent |
+| CPU build, same GGUF | "323" | coherent |
+| SYCL GGML_SYCL_ENABLE_GRAPH=0 / FUSION=0 / DNN=0 | garbage | coherent |
+| SYCL GGML_SYCL_ENABLE_OPT=0 | "323" (both formats) | coherent |
+
+The flash-attention-off arm OOMed at load (UR_RESULT_ERROR_OUT_OF_RESOURCES)
+and was stopped. All post xpu-health and collective health passed.
+
+VERDICT: a prompt-dependent correctness bug in the ggml-sycl reorder
+optimization (ENABLE_OPT; reordered IQ3/Q6_K mat-vec kernels are in the E6
+trace) on this model. E2's llama.cpp speed rows were measured with this
+path on and are superseded by the OPT=0 rows below. Not yet reported upstream.
+
+### E5 matched serving (Strata's own harness), llama.cpp OPT=0
+
+CONFIG: GGML_SYCL_ENABLE_OPT=0, -sm layer, -fa on, -np 2, draft-mtp n-max 3
+(Unsloth MTP sidecar). Harness scripts/e5_matched.py = bench_serving.py coding
+case (3 fresh repeats, 1500 tokens) + bench_concurrency.py logic (warm pair +
+3 fresh pairs), same prompts/caps/metrics; only the identity alias differs
+(hotschmoe-dd + ...-llamacpp-sycl). cpu-run --quiet around the window.
+
+COMMAND: scripts/e5-opt0-run.sh
+
+RESULT:
+
+| Metric | llama.cpp OPT=0 | Strata (same harness) | ratio |
+|---|---|---|---|
+| llama-bench pp4096 | 604.69 | ~1300 at 4K (goals doc) | ~0.47x |
+| llama-bench tg128, no MTP | 21.65 (was 26.24 with buggy OPT) | - | - |
+| C1 coding client decode, median of 3 | 32.37 (acceptance ~0.80) | 83.8 (goals doc) | 0.39x |
+| C2 aggregate output tok/s, median of 3 | 46.38 (23.7 per stream) | 103.0-104.3 (S87/S100 today) | 0.45x |
+
+Coherence gate (concurrent arithmetic) PASS; all C2 outputs are on-topic
+1500-token asyncio answers; cache_n 0 on fresh prompts; post health PASS.
+Strata rows are its own same-day/same-harness runs, not a back-to-back arm
+in this window.
+
+### E6 llama.cpp decode kernel census (unitrace)
+
+CONFIG: llama-bench -sm layer, no MTP, OPT on (before the bug was found);
+unitrace -d; per-token = (tg80 - tg16)/64 so load/warmup cancel.
+
+COMMAND: scripts/e5e6-run.sh (E6 part), scripts/e6_diff.py
+
+RESULT: 35.7 ms device time per token (both cards summed; layer split is
+serial) against ~38 ms wall at 26 tok/s, so decode is device-bound, not
+host-bound. Families: bf16 GEMV + f32->f16 convert 13.3 ms (37%, 484 GEMV
+calls/token), routed MoE mmvq + top-k 9.0 ms (25%), dense quant GEMV 6.6 ms
+(18%), elementwise/norm 4.2 ms (12%), flash attention 0.3 ms, GDN 0.3 ms.
+The bf16 tensors are the per-layer hyper-connection hc_attn/hc_ffn
+up/down (4 x 6.25 MiB per layer), ffn_gate_inp, ssm_alpha/beta, QSA indexer
+q/k and inject weights: ~1.4 GB/token read at ~110 GB/s effective.
+
+VERDICT: the llama.cpp gap is device kernels, led by an untuned bf16 GEMV for
+this model's hyper-connection tensors (a clear, portable upstream target),
+then routed-expert GEMV. Unitrace ran with the buggy OPT path; the family
+shares may shift slightly with OPT=0.
+
+### Updated decision
+
+Strata stays the Flash-Next backend. The matched harness puts correct
+llama.cpp SYCL at 0.39x C1 and 0.45x C2, and today's llama.cpp SYCL needs a
+non-default switch to be correct on this model. The hedge remains
+upstreamable work in ggml-sycl, now with two concrete items: the reorder
+correctness bug and a bf16 GEMV for hc tensors.
