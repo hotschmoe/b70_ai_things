@@ -23137,3 +23137,42 @@ prevents CPU-then-GPU waiters blocking API timing clients. Narrow harness
 fixes enforce exact work and safe capture-only resume, no extra GPU runs.
 Dated report, goals, optional patch and map updated; old170 operation rows/
 rollups unchanged. Full goal active; both absolute speed targets unmet.
+
+
+## 2026-10-15 -- Flash-Next optimization S39: HC register-resource gate
+
+CONFIG: Frozen7365c788 adapter/current unchanged production archives,
+N2560/HC4/LR320 synthetic BF16 fixture, GRF0/1 fresh physicalcard1/PCI44:00.0
+processes. Fixed slicedDOWN/cols16UP/NORMSPLIT1/MORE0/ILP0/V30. No kernel,
+production source, engine build, replacement math or newsetter.
+COMMAND: Actual Opus5.5/Fable5.1 source reviews and narrowv2 resumes before
+one29s offline/noDRI adapter build. Linkmap/symbol/hash verifies production
+fused_gr_read_multi. Two quietCPU->card1 windows39/47s, existing unitrace
+on the numerical processes, each with card1pre/posthealth and normalteardown.
+RESULT: Twelve T1/2/6 apply0/1 inject0/1 cases; activeFP32 finite/12buffer
+guards/inactive tails/untaken poison/readonly inputs PASS. Forty-eight full
+snapshot pairs35,893,248 bytes bit-identical incl R/lo/rs/inject/mixed/xn.
+T2/6 graph original+changed inputs match independent reset direct; T1direct
+only. Actual1260defaultDOWN/UP vs1260grf256DOWN/UP eachmode. Reported
+RegisterFileSizePerThread128/256, private/spill0 both, UP SLM12288/DOWN0.
+Instrumented whole-read3round medians slowerall12cases,4.62-17.62%; no
+clean/serving regression, dynamic occupancy or cause inferred. Both health/
+container removal/GPU+CPUwrapperexit0 PASS, no reset; leases released.
+VERDICT: Keepdefault, avoid two full server starts and another200k campaign.
+Do not retry this same knob without new mechanism. Review fixed xn export,
+activeRchange check and summaryiters before onlybuild; rejected missinghash/
+iterationmismatch/barriercompletion speculations using actualfiles/code.
+Bundled DPCT ownership/device_count/profilingqueue and exact productionAOT
+flags verified; runtime graph acceptance then measured. No mirror tests or
+new source math. One29s build/two boundedwindows replaces broad serving
+screen. Future paired oracle windows can share setup where root review and
+other agents' measured windows permit; current evidence retains all four
+percardhealth results and interleavedexternalE4CPU lease.
+MTPQ4 projection sharing omission independently found in generic/SYCL,
+minimal ownership-safe patch prepared and actual Opus/Fable accepted; NOT
+applied/built/GPU-tested. Slot wq receives no Q4buffer/map in currentcode,
+while optimized draftKV explicitly staysQ8. Existing Q8dense service pool
+0.744ms/cycle is not a removable budget or reason for a broad quant sweep.
+Larger Q6dense packing source audit next, no speculative serving option.
+Dated report, exact tested adapter, goals/map/lowlevelREADME updated; old170
+operation rows/rollups unchanged. Full goal active; speed targets unmet.

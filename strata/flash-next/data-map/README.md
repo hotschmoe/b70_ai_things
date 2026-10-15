@@ -199,3 +199,12 @@ Prefill1303.0->1326.2/1546.1->1556.1 tok/s, C2 aggregate104.516->104.017.
 Keep aliasOFF; no fullcontext/shelf promotion. Old170 operation rows and
 rollups remain unchanged; no new GPU-clock join. See
 [S38 report](../../../docs/20261015_strata_peer_gather_serving.md).
+
+
+S39 tests the existing HC GRF option without changing the kernels:48 full
+snapshot pairs/35,893,248 bytes and changed-input graphs PASS. Actual1260
+DOWN/UP calls eachmode and kernel properties show128->256 registers,
+private/spill0 both. All12 instrumented whole-read cases are slower; keep
+default/no model-server test or fullcache repeat. Resources are reported
+metadata, not dynamic occupancy or cause. No new serving speed result.
+See [S39 report](../../../docs/20261015_strata_grf_resource_probe.md).

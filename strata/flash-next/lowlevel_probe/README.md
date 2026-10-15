@@ -224,3 +224,19 @@ per-card pre/post health checks pass. This is ordinary device USM, not
 production IPC or serving qualification; cold/warm order prevents a speed
 claim. See the [S35 report](../../../docs/20261015_strata_peer_gather_alias.md)
 for identities, original build/run recipes and raw closure locations.
+
+
+S39: `grf_oracle.cpp` calls the actual fused_gr_read_multi from current
+libstrata_kernels.a + libstrata_core.a, no replacement math/setter. Frozen
+7365c788 compares fresh GRF0/1 processes with fixed slicedDOWN/cols16UP,
+T1/2/6 apply/inject,48 full snapshots of R/lo/rs/inject/mixed/xn and
+T2/6 changed-input graph replay. All35,893,248 compared bytes/guards/finites/
+tails PASS. Actual trace names/property table show128vs256 registers,
+private/spill0 both; GRF256 slowerall12 profiler-sensitive cases. Keepdefault,
+no serving test. Build29s; card1quiet windows39/47s include pre/posthealth;
+normalteardown PASS. Current production archive/member/flags and API ownership
+checks are recorded in raw grf-oracle-s39-prep/. Reuse that offline build
+recipe against its pinned archives; do not use the old no-op fast setter or
+S24 root-sync binary as a cross-GRF gate. Three raw timing rounds/case, not
+best-only. No clean timing, dynamic occupancy or production regression claim.
+See [S39 report](../../../docs/20261015_strata_grf_resource_probe.md).

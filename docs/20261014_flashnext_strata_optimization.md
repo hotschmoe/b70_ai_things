@@ -2082,3 +2082,25 @@ prefill gains/no decode benefit do not merit another full-context campaign.
 Existing GRF-resource numerical adapter is source preparation only. See
 [dated report](20261015_strata_peer_gather_serving.md), raw
 `peer-gather-serving-s38/{s38-report,serving-comparison,host-spans}.json`.
+
+
+## S39: unchanged-kernel HC register-allocation discriminator (2026-10-15)
+
+CONFIG -> One frozen7365c788 adapter, current production kernel archives,
+N2560/HC4/LR320 BF16 fixture, GRF0/1 fresh card1 processes, slicedDOWN/
+cols16UP/NORMSPLIT1, all unrelated modes fixed. No engine/kernel edit.
+COMMAND -> Actual Opus/Fable exact-source plus narrowv2 reviews before one
+29s offline build. Existing unitrace on the same two numerical processes;
+quietCPU outside card1lease, pre/posthealth, normalcontainer/wrappers0.
+RESULT -> All48 fullsnapshot pairs35,893,248 bytes match, activefinites/
+guards/untaken/inactive tails/readonly inputs and changed-input graph PASS.
+1260DOWN/UP executions eachmode prove default versus grf256; actual reported
+registers128/256, private/spill0 both. Whole-read instrumented medians are
+4.62-17.62% slower in all12cases, not a clean or serving result.
+VERDICT -> Keep default. No extra serving arm, main-engine build or fullcache
+repeat for this knob. Card1health/teardown PASS both; no reset. Tiny MTP
+Q4-sharing fix independently confirmed/reviewed but still source-only;
+current Q8dense pool0.744ms/cycle gives no reason for a broad quant sweep.
+Larger Q6dense packing source audit next; no new candidate measured. See
+[dated report](20261015_strata_grf_resource_probe.md), raw
+`grf-oracle-s39-prep/{s39-report,build-closure}.json` and `run-profiled/`.

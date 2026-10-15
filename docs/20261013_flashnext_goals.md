@@ -251,3 +251,14 @@ No full-context rerun or daily promotion for this small prefill-only change.
 Current CPU submission spans are now measured, without a GPU-clock join.
 Move to unchanged-kernel GRF numerical preparation; targets remain open.
 See docs/20261015_strata_peer_gather_serving.md and raw peer-gather-serving-s38.
+
+
+S39 existing HC GRF256 knob passes48 full snapshot pairs/35,893,248 bytes
+across T1/2/6 apply/inject cases and T2/6 changed-input graph replay. Actual
+selected DOWN/UP branches run1260 times each/mode; tool reports128vs256
+registers and private/spill0 in both. GRF256 is slowerall12 instrumented
+cases (4.62-17.62% whole-read), so keep default/no serving or200k repeat.
+One29s adapter-only build, two39/47s card1quiet windows, all pre/posthealth/
+normalteardown PASS. No clean or serving regression claim. Main serving
+winner remains152055a6/headpairON/depth2; absolute targets remain unmet.
+See docs/20261015_strata_grf_resource_probe.md.
