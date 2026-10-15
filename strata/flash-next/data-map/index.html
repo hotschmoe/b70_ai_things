@@ -211,7 +211,12 @@ ul.plain{padding-left:1.1rem}
   "q6_cpu_reference": "S43 executed7831f155 CPUchecker, existingfirstC6pair only, 15360outputs perpath withinpredeclaredsourceboundsL15/18, maxreferenceerror6.42e-7/7.53e-7, wrong-rowmutantsallfail.12.9MBpayload/1.9545s/54452KiBpeakRSS, noGPU/newmath/serve.",
   "q6_collection_warm_probe": "S44 frozen93f8bfc9/v3source40ba97c1, one101s build/42s card1window/96snapshots/normalhealth0. CPU11.43s/67580KiB checks72cases2,623,488outputs/73.1MBpayload; all pass declared source bounds. WarmC6 original->packed us/call batch medians63.609->63.466,74.907->142.584,90.790->162.209,47.342->87.863; no integration/serve. S46 source-only.",
   "ple_prefetch_readiness": "S47 realCPU22s/88cases: generic keylookup turnspermuted gather96->0additionalrequests andduplicate48->0, all4cache/threadconfigs/outputbytePASS. SourceauditfindsfreshbatchslotPleRun.table null so currentMTPreadyguardblocksCPUprefetch. Partialmetadata sourceproposalonly, no runtime/GPU/speed claim.",
-  "hc_lo_once_probe": "S48 privateTU26edf194/binary7e3f1345,44s offlinebuild/45s card1window.12cases/36strictsnapshotpairs26,919,936bytesPASS; ownchangedgraphs+36S39recordedSHAanchorsPASS;78snapshots/health0/removal. WarmT6whole-read med61.714->57.999us/call but3.715usdiff<7.316uscontrolspread; failedpredeclaredscreen, nointegration/servingwin."
+  "hc_lo_once_probe": "S48 privateTU26edf194/binary7e3f1345,44s offlinebuild/45s card1window.12cases/36strictsnapshotpairs26,919,936bytesPASS; ownchangedgraphs+36S39recordedSHAanchorsPASS;78snapshots/health0/removal. WarmT6whole-read med61.714->57.999us/call but3.715usdiff<7.316uscontrolspread; failedpredeclaredscreen, nointegration/servingwin.",
+  "fusion_triage_s61": {
+   "report": "docs/20261015_strata_fusion_triage.md",
+   "evidence": "fusion-next-s61-prep/source-trace-evidence.json",
+   "scope": "Source and retained S31 service pools only; no new GPU/build/timing. Dormant QFUSE has batched wiring and packet-contract blockers; leave OFF."
+  }
  },
  "geometry": {
   "source": "Confirmed against served GGUF metadata with CPU-only tools/gguf_reader.py: lowlevel-s24/model-geometry.json. Derived: 12 QSA/36 GDN layers, ssm_conv_channels=2*128*16+6144; defaults cross-checked against include/strata/core/geometry.hpp.",
@@ -1114,7 +1119,8 @@ ul.plain{padding-left:1.1rem}
     }
    ],
    "evidence": [
-    "draft-profile-s22/profile/steady-summary"
+    "draft-profile-s22/profile/steady-summary",
+    "fusion-next-s61-prep/source-trace-evidence.json; docs/20261015_strata_fusion_triage.md"
    ],
    "quoted": [],
    "upstream": [
@@ -1255,9 +1261,17 @@ ul.plain{padding-left:1.1rem}
     }
    ],
    "evidence": [
-    "draft-profile-s22/profile/steady-summary"
+    "draft-profile-s22/profile/steady-summary",
+    "fusion-next-s61-prep/{findings.md,source-trace-evidence.json}"
    ],
-   "quoted": [],
+   "quoted": [
+    {
+     "label": "S61 fusion triage, retained S31 pools",
+     "value": "All act_quant 281calls/0.7135206ms per cycle; C6 K6144 grid144 48calls/0.1155412ms shared by GDN and QSA.",
+     "basis": "Historical service sums, not additive wall or removable savings. Literal MTP RMS/Q8 pair exists but its exact cost is not separated. No new measurement.",
+     "status": "measured"
+    }
+   ],
    "upstream": [
     "dense_proj"
    ],
@@ -1265,7 +1279,9 @@ ul.plain{padding-left:1.1rem}
     "primary_push",
     "primary_experts"
    ],
-   "gaps": [],
+   "gaps": [
+    "Dormant global QFUSE is not a ready experiment: batch_rec_ GDN omits xq_out while quantizer is skipped; producer packet helper differs from current finite/clamp contract. Source-only audit, no observed runtime failure or flag change. HOLD broader fusion GPU campaign."
+   ],
    "hypotheses": []
   },
   {

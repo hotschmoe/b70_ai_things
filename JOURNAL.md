@@ -23631,3 +23631,23 @@ claim/newqualification.
 Datedcandidate-pruning report/smallmap update retained, historical170ops/
 rollups unchanged. Frozen4files/13478B; externalmanifestSHA256
 589d9e1f2dcc4b804deda9255a90d1884574a664eae9c1578d22315405af0eff.
+
+
+## 2026-10-15 -- Flash-Next optimization S61: fusion source triage HOLD
+
+CONFIG: Source/retained S31 only; grouped peer GU, RMS/Q8 and SYCL MMQ/XMX.
+COMMAND: Read pinned source and159mappedoperations/fivecycles; no newGPU,
+build, payload, reference, modelreview, timing or runtimeedit. RESULT: Whole
+act_quant281calls/0.713521ms percycle; C6K6144 grid144 48/0.115541ms includes
+GDN andQSA, not isolatedfusionsavings. LiteralMTP RMS/Q8pair exists but
+sharedpool small. GroupedoneMKL distinct PREFILL lead; S42strictFAIL stays
+FAIL/no candidateSiLU/down/timing. Saved-cellCPU reference prerequisite
+conditional on exactFP16operand/denorm provenance, no newepsilon. Dormant
+QFUSE batch_rec_ omitsxq_out whilequantizer skipped; producerhelper predates
+finite/clampcontract. Sourceblockers, not observedruntimefailure; currentOFF
+unaffected. MMQ unbuilt/stub, XMX changescanonicalQ8operands/smallCgeometry.
+VERDICT: HOLD largerfusionGPU/buildcampaign; no globalQFUSE/rejectedXMX/GRF/
+packedQ6repeat or wallforecast. SeparateIQ4XS primitive pending. Curateddoc/
+smallmapupdate, historical170ops/rollups unchanged. Frozen3files/33281B;
+externalfusion-triage-s61-manifestSHA256
+78ee0f4ae59a7f4173078fbd353ce353b69c40f367e8b21cf84ece98174169a7.
