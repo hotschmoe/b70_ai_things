@@ -22877,3 +22877,8 @@ nomicro-repeat/no200k/soak/dailyrestore. Review213-218s: narrowbriefs and
 hidereviewtimeinteardown/loadnext; ownworkersclosedbeforebench, other
 source-researchsessionnotisolated, ONthenOFF/no controlledclocks, n3only.
 Details stagedocS29; raw head-pair-s29/s29-report.json andanalysis/.
+Final S29 artifact closure: worker's final reported-counter-scope annotations
+postdated initial hashes. Preserve sha256-s29-before-final-annotations.txt;
+freeze final analysis/findings and refresh sha256-s29.txt, with explanation
+in manifest-finalization.json. All analysis input hashes, exact output
+comparisons and numeric results unchanged. Checkpointc4f5b73 pushed.
