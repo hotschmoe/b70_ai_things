@@ -23784,3 +23784,68 @@ actual ASM/address and byte-emulation excerpts/alias script/proof; native audit
 author strata_ep_s27. Dated report/exact offline scripts/small map update.
 Frozen36-file manifest excludes itself, SHA256
 d2dd8a6c3423d40afb3b47f4313813b8bbce89feb59468b8718dde59212724da.
+
+
+## 2026-10-15 -- Flash-Next optimization S65: dense IQ3_S SWAR mixed primitive result
+
+CONFIG -> Public IQ3_S C6 anchor/private original/private SWAR, two real
+6.7584MB tensors and seeded/changed inputs. Original loads/FP/K schedule/
+geometry unchanged. S66 pruned the aligned-load draft before reviews/build.
+COMMAND -> Actual fresh Opus63.760s/Fable202.552s source reviews, root full
+read; one23s CPU adapter build reuses exact common8f5a7e (compile10.025s,
+adapter AOT.511s/host.397s). No common AOT/kernel-TU rebuild; no matched
+build-speedup claim. Root versioned cleanup/final-artifact checks, native peer
+reviewed: own full CID+name absent BEFORE health; retain leases until closure.
+Only corrected controller executed. One41s quiet card0 window/12s leaf,
+two shapes/one process/no retries.
+RESULT ->118 checked snapshots,92 saved binaries/6155904 bytes, full public/
+original/candidate equality, changed graphs, readonly/guards/inactive tails/
+finites/DOT bindings/final bytes+host pins PASS. Both health0/container
+removed/wrappers0. Eight balanced nested projection pairs: gate median
+70.263->68.489575us (-2.515% paired); ssm_out84.16015->85.2135375us
+(+1.275% paired). All eight directions agree within each shape. Q8 outside
+graph; graph/barrier overhead included. No independent process/significance/p95.
+VERDICT -> Keep global/main unintegrated; no immediate serve/retry/cache run.
+Gate-only remains an isolated private lead, no exercised dispatch candidate.
+Actual post Opus13.511s/Fable29.486s ACCEPT; root read full responses and
+corrected causal-slot/extraction/magnitude overreach. No ISA cause, private/
+public timing equivalence, serving forecast or shelf promotion. Dated S65 doc
+and exact sources/controllers retained. Frozen185 files/79038276 bytes,
+manifest5aa9dcbdd3fec3d0693ad17fdf5414807d85e7c88f1effb3305db2710089bbc7.
+Post reviews17 files/73884 bytes, manifest
+6002d7329a71741d3aa7050491dab70f1a9ee2640e2561967adbd44958b5dae3.
+
+
+## 2026-10-15 -- Flash-Next optimization S67: cheaper future C2 protocol source audit
+
+CONFIG -> Current source and frozen S29/S51/S55 configs/clients.
+COMMAND -> Native agent strata_ep_s27 source audit; no GPU/build/HTTP/test.
+RESULT -> TRACE/HOST_BOUNDARY add CPU logging/timestamps, not GPU profiling.
+S55 lacked VERIFY_PROFILE/PREFILL_TIMING; S29 had PREFILL_TIMING. Sampled
+107-token requests match except128vs1500 cap; other history/admission/binary/
+length remain confounded. No causal2x explanation, prompt-difference claim or
+S55 retry. Future candidate keeps flushed TRACE prompt-start admission,
+omits CPU ring/GPU profilers, uses one warm+three fresh1500-token pairs and
+exact API/native aggregate work/output/paired totals/health gates.
+VERDICT -> Protocol preparation only for next meaningful candidate; explicit
+loss of exact per-window capture/layout visibility. No zero-instrumentation,
+stability or promotion claim. Root read full findings and curated doc.
+Frozen manifest ae7ecdb8aaf17bdc2192e76c4a555b247ce1b6888520bf4a016af8fee8818c86.
+
+
+## 2026-10-15 -- Flash-Next optimization S68: built SWAR instruction audit
+
+CONFIG -> Existing S65 exe4a81f24d/private C6 original+candidate/public IQ3_S.
+COMMAND -> Native agent ple_upstream bounded ELF seeks/two offline ocloc
+decodes,11s CPU lease/no DRI/network none/no GPU/compile/payload/main edits.
+Initial selector assertion before decoder preserved; exact kernel-name fix.
+RESULT -> Public canonical bad2ccde unchanged vs S66. Original/SWAR text
+16128/12352 bytes,32->0 static byte predicates,48 DP4A/three reconstruction
+d32 messages unchanged. Both128GRF/SIMD32/eu_thread_count8; absent spill/
+scratch fields do not prove runtime zero. Private/public ASM differs in two
+post-EOT null-move immediates; text hashes differ, not a public-byte anchor.
+VERDICT -> Intended compiled mechanism only; no dispatch/occupancy/traffic/
+latency cause proof or new GPU run. S65 runtime/timing separate. Root read
+full findings/curated doc. Exact helpers retained; historical170 operations/
+rollups unchanged. Frozen50 files/479829 bytes, manifest
+6f5f63136e6cdbbbe662af8fda74e04d9b29f38d6e0ca3a13f999d5c8ea97de7.

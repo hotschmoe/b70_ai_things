@@ -78,7 +78,7 @@
   "aot_prelink_s60": {
    "report": "docs/20261015_strata_aot_prelink_reuse.md",
    "raw": "aot-reuse-s60-execution/{root-build-closure,subagent-link-audit,root-runtime-canary}.json",
-   "scope": "Supported compiler-produced common+adapter wrappers and ordinary host link; first Q8/IQ4 canary only. Final host link0.394s/zeroAOT; second-adapter gain unmeasured."
+   "scope": "Supported compiler common+adapter wrappers and ordinary host link. S59 Q8/IQ4 plus S65 IQ3 bounded canaries only. S65 reuses exact common wrapper, adapter build23s without common AOT; no matched generic build-speedup claim."
   },
   "grouped_gu_cpu_s62": {
    "report": "docs/20261015_strata_grouped_gu_cpu_reference.md",
@@ -99,6 +99,21 @@
    "report": "docs/20261015_strata_iq3s_existing_isa.md",
    "raw": "iq3s-existing-isa-s66-prep/{s66-report.json,assembly-excerpts.json,alias-proof.json}",
    "scope": "Existing S59 image84 only:original narrow loads already fold to3d32messages; byte sign/sub expansion remains. S65 now SWAR-only. No new compile/GPU/dynamic-dispatch/timing proof."
+  },
+  "iq3s_dense_s65": {
+   "report": "docs/20261015_strata_iq3s_dense_swar_probe.md",
+   "raw": "iq3s-dense-oracle-s65-prep/run-clean/{closure,comparison,extra-host-post}.json; iq3s-dense-s65-execution/root-timing-summary.json",
+   "scope": "Strict primitive/health/cleanup PASS; gate eight nested pairs median-2.515percent, ssm_out all eight slower median+1.275percent. Projection-only oneprocess; keep global unintegrated, no immediate serve/retry."
+  },
+  "clean_c2_s67": {
+   "report": "docs/20261015_strata_clean_c2_protocol.md",
+   "raw": "clean-serving-loop-s67-prep/manifest.json",
+   "scope": "Source-only future protocol: existing flushed TRACE admission, omit CPU rings/GPU profilers; exact request/work/output/paired totals, weaker capture-layout observability. No S29/S55 causal explanation or new measurement."
+  },
+  "iq3s_swar_isa_s68": {
+   "report": "docs/20261015_strata_iq3s_swar_built_isa.md",
+   "raw": "iq3s-swar-built-isa-s68-prep/s68-report.json",
+   "scope": "Static code only:16128->12352B/32->0 byte predicates;48DP4A/three reconstruction d32 unchanged; public image unchanged. No occupancy/traffic/latency cause proof."
   }
  },
  "geometry": {
@@ -1138,7 +1153,8 @@
     "Activation inputs are Q8_1-quantized (act_quant) for most mmvq paths; exact pairing not mapped.",
     "S44 covers four shapes/six Cs/changed-input own graphs under source bounds; remaining main matrices/model quality/streaming cache regime unqualified. No warm C1/C2/C3/C4/C8 timing. Main-owner integration remains source-only/rejected for this work item.",
     "S56 supplies compiled Q6 resource metadata only; no new actual-weight RPW2 bitwise execution, per-image dispatch observation, measured occupancy or bandwidth. Main Q4/IQ4_XS/Q5 pools remain distinct future source leads.",
-    "S59 covers one IQ4_XS C6 shape with synthetic inputs and new prelinked AOT images. No productionactivation/logit, other-shape or serving gain; retain RPW1. Independent DOT metadata is not a GPU dispatch trace."
+    "S59 covers one IQ4_XS C6 shape with synthetic inputs and new prelinked AOT images. No productionactivation/logit, other-shape or serving gain; retain RPW1. Independent DOT metadata is not a GPU dispatch trace.",
+    "S65 strict IQ3_S C6 SWAR oracle PASS but mixed projection latency: gate -2.515percent, ssm_out +1.275percent across eight balanced nested pairs each. One process, real weights/seeded activations; no serving/global integration. S68 confirms smaller static code and removed byte predicates, not latency causality."
    ],
    "hypotheses": [
     {

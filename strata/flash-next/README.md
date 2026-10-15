@@ -267,8 +267,23 @@ S59 actual IQ4_XS C6 qkv passes full-byte/changed-graph/health gates in one
 [S59 report](../../docs/20261015_strata_iq4xs_rpw_probe.md).
 S60 preserves compiler-supported common-device prelink:79.553s common AOT,
 9.665s adapter compile,.363s adapterprelink,.394s finalhostlink withzeroAOT.
-Only invokedQ8/IQ4 paths have a runtime canary; second-adapter saving unmeasured.
+Only invokedQ8/IQ4 paths have an S59 runtime canary. Later S65 adds a bounded
+IQ3 canary and a23s adapter build reusing the exact common wrapper; no matched
+generic build-speedup claim.
 [Exact build recipe and scope](../../docs/20261015_strata_aot_prelink_reuse.md).
 S61 holds a broader fusion GPU campaign after source/trace triage; dormant
 QFUSE has batched wiring/packet-contract blockers. No flag change.
 [Fusion findings](../../docs/20261015_strata_fusion_triage.md).
+
+
+S65 private IQ3_S C6 SWAR passes strict public-anchor, changed-input graphs,
+memory/identity/health/cleanup checks in one41s card0 window. Eight balanced
+nested pairs favor gate(-2.515percent) and regress ssm_out(+1.275percent);
+projection-only seeded activations/real weights, oneprocess, no serving gain.
+Keep main/global unchanged; actual Opus/Fable postreviews agree no immediate
+serve/retry. [S65](../../docs/20261015_strata_iq3s_dense_swar_probe.md).
+S68 independently confirms smaller static code/removed byte predicates,
+not a timing cause. [S68](../../docs/20261015_strata_iq3s_swar_built_isa.md).
+S67 audits cheaper existing native admission for the next meaningful candidate,
+with explicit capture/layout observability limits and no new baseline run.
+[S67](../../docs/20261015_strata_clean_c2_protocol.md).

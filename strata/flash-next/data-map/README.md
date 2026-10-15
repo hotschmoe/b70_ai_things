@@ -259,3 +259,12 @@ S60 records the supported build boundary only, not an inference speed result.
 S61 annotates small shared activation-quant pools and dormantQFUSE source
 blockers. Historical170operation rows/rollups remain unchanged. See the dated
 S59/S60/S61 reports linked from provenance.
+
+
+S65/S68 add strict real-weight IQ3_S C6 SWAR evidence: gate primitive faster,
+ssm_out slower, no global integration or serving forecast. Static code shrinks
+and removes32 byte predicates without changing48 DP4A or three reconstruction
+loads; those counts do not explain latency causally. S67 records a cheaper
+future candidate measurement protocol and its weaker capture/layout visibility.
+Historical170 operation rows/rollups remain unchanged. See dated S65/S67/S68
+reports through provenance.
