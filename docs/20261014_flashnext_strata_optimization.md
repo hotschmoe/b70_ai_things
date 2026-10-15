@@ -1329,3 +1329,90 @@ and short decode windows replace another four expensive prefills.
 Raw: cachefix_20261014/slot-reuse/{small,full,s20-report.json,build.log,
 build-comparison.json}; tracked patch:
 strata/flash-next/patches/batch-slot-image-reuse.patch.
+
+
+## S21: bounded concurrent MTP depth screen (2026-10-15)
+
+CONFIG: S20 stack plus opt-in batch-depth host packing/acceptance and the
+context-end guards; frozen `strata-batch-depth-s21`, SHA256
+`db53efb23790f682478f8469eab5737cc0e9b569a0bdf6c7a98ea86c6272fba3`.
+Same all24576 experts, two200000 slots, spec4, INT8 KV,32GiB/four entries,
+EP/PUSH, draft cutoff0.5. STRATA_BATCH_MTP_DEPTH=1/2/3 changes proposals
+per active slot (seed is additional); default remains1. Target sampling
+is temperature0, not draft min-p sampling. No runtime/device-stack changes.
+
+COMMAND: actual Fable5.1 source implementation, Opus5.5 commit/drafter
+review; root adds proposed-row clamp to context acceptance bounds and ports
+CUDA drafter's max_cells step cap to SYCL. CPU packing/acceptance/EOS/cancel/
+length/context-end checks PASS in CPU-only build container (host g++ absent,
+use installed container compiler). Incremental AOT125.391s. First build
+cancelled121.834s after review found the boundary hazard; its logs retained.
+No GPU run used the unguarded candidate. Boundary tests replace proposed
+API probe: API/native admission's8-token margin cannot reach the bad cells.
+QsaState.max_cells is full context, independently of ring length; cap does
+not silence later drafts. Default1 now omits unacceptably late/unavailable
+draft rows; regular short request geometry/output is unchanged.
+
+One paired coding window per depth,107input/1500output per stream. Depth2
+wins screen; depth3 loses, so no extra depth3 windows. Confirm depth2 and
+control with two more fresh prompt indices (--start-repeat avoids cache
+reuse/redundant repeats), then one9707-token/256output pair each for
+indexer-selection parity. Same frozen binary and aliases in all arms;
+CPU agents/builds idle during timing. Normal stops between arms, no daily
+restore. Functional checks at depth2; final per-card/ten compiled collective
+post-health recorded in s21-report.json and journal.
+
+RESULT:
+
+| Batch proposal depth | Aggregate output tok/s, individual windows | Median | Median client decode tok/s per stream |
+|---|---|---|---|
+| 1 | 93.903,93.064,92.408 | 93.064 | 49.701 |
+| 2 | 99.351,98.886,98.901 | 98.901 | 52.737 |
+| 3 | 93.156 (screen only) | 93.156 | 49.566 |
+
+Depth2 median gains6.272% over matched depth1. Bounded one coding workload,
+three pairs each, not a broad throughput guarantee. All six response hashes
+PER depth1/depth2 match S16; depth3's two also match. Both9707-token output
+hashes match depth1/depth2. Offered/accepted counts now real: depth1 offers
+783-799/accepts699-715 per1500-token stream; depth2 offers1120-1132/accepts
+933-939. Identity, concurrent arithmetic, separate reasoning and tool
+roundtrip PASS. Long-context cached recovery remains the separately tested
+S20 depth1 result; no repeated4x200k or depth2 daily-shelf promotion.
+
+Native first-window summaries (averages over each two-request run):
+
+| Depth | Windows | Emitted rows/window | Run ms | Commit ms | Emit/draft ms | Total ms/window |
+|---|---|---|---|---|---|---|
+| 1 | 788 | 3.80 | 32.28 | 1.43 | 3.55 | 37.26 |
+| 2 | 561 | 5.34 | 40.67 | 1.56 | 7.03 | 49.27 |
+| 3 | 456 | 6.57 | 52.90 | 1.65 | 10.40 | 64.95 |
+
+Rows/window are emitted rows, not offered drafts. More accepted proposals
+reduce window count, but verifier work and serial per-slot drafting grow.
+Native window rate omits parts of admission; use client aggregate above
+for matched serving comparison. This is not yet150tok/s per stream.
+
+VERDICT: keep depth2 as an opt-in experimental candidate, default1 unchanged;
+reject depth3 for this workload. Next investigate main verifier work and
+serial drafter submission, guided by actual Fable/Opus source reviews.
+Do not repeat the full RAM qualification, prior losing knobs, solo test
+whose code is unchanged, CUDA/pipeline/penalty/coupled-sampling matrices,
+or synthetic unreachable API end tests. No cache-latency2s gate.
+
+Raw: cachefix_20261014/batch-depth-s21/{identity.json,s21-report.json,
+depth1*,depth2*,depth3,long-parity-verdict.json,build.log,aborted-build.log};
+agent sources/reviews/root resolutions in agents/fable-depth/. Tracked
+patch: strata/flash-next/patches/batch-mtp-depth.patch, after accounting;
+adds CPU header test plus matching CUDA/SYCL host path, only SYCL executed.
+
+
+S21 review resolution: internal STRATA_VERIFY_PROFILE explicitly disables
+shared-stream forks (verify.cpp guards require !prof_on_), so the proposed
+profile-only pair would observe an altered branch. Prefer hardware tracing
+with the env off, or label altered-path attribution and first use a short
+canary. Zero-doorbell logs' zero expert counters are omitted accounting,
+not evidence of zero routed traffic. More rows can read more distinct
+expert weights; do not infer non-bandwidth-bound execution from row scaling.
+Keep hash checks for traced requests. Opus found per-instance drafter
+queues; shared mutable scratch under borrowed loads is the remaining source
+gate before an asynchronous submit/finish prototype. No overlap gain measured.

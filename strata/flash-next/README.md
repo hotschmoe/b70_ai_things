@@ -4,7 +4,7 @@ Live: model-lock-ista-iq3.json (ISTA GSQ-RCO IQ3_S and IQ3_XXS artifact hashes).
 The serving build and configs are outside the repo under
 /mnt/vm_8tb/b70/build/strata-ab; launch notes are in JOURNAL.md (2026-10-13).
 
-Current measured config: serve-iq3xxs-200k.json, stock upstream
+Retained clean control config: serve-iq3xxs-200k.json, stock upstream
 296b59d2/v0.1.44.1. Split27, two200k, MTP4, int8 KV, all main experts in
 VRAM, parking16384 MiB/4 entries. Strata spec4 includes the seed and offers
 at most three MTP drafts. Bounded capacity, forced RAM restoration,
@@ -134,8 +134,8 @@ restore payload bytes, using buffer sizes and the actual restore API copy
 arguments. These are not physical PCIe traffic: host-authoritative pools
 and separate residency refills have different transfer behavior. Apply on
 main296b59d2; runtime validation uses the existing EP/PUSH overlay. Frozen
-PUSH-s9 still has the old native counters. Current full-context qualification
-status and limitations belong in S16 of the stage document.
+PUSH-s9 still has the old native counters. S16 records the failed full-cache
+control; S20 records successful full recovery after the cache fixes.
 
 
 Fast cache correctness oracle: use --target4096 --context-size8192 with a
@@ -153,3 +153,21 @@ health pass. Full200k is untested for this patch; no shelf promotion. Measured
 scope is text-only EP with batch-MTP on. CUDA/pipeline are unexecuted; image
 slots and MTP-without-batch-MTP skip slot parking. A covering continuation
 does not guarantee exact restoration of arbitrary shorter branch endpoints.
+
+
+S20 adds patches/batch-slot-image-reuse.patch (one image buffer per stage,
+not per layer) on top of S19. Full4x199501 qualification PASS: all four
+forced RAM returns reuse199839 held/read31 new/zero retained-tail replay;
+two-active proof, needles, functional/teardown health pass.32GiB/four-entry
+cache budget; peak native RSS16.19GiB,0swap/OOM. Return TTFT2.758-6.423s
+is diagnostic only. No routine daily restore; clean control remains retained.
+
+Experimental concurrent depth: patches/batch-mtp-depth.patch applies after
+batch-mtp-restore-accounting.patch. Set STRATA_BATCH_MTP_DEPTH=2 with
+spec4 to offer up to two proposals per slot; default1, cap3. S21 matched
+coding median93.064 ->98.901 aggregate tok/s (three pairs), all six hashes
+per arm match; two9707-token outputs also match. Depth3 screen93.156,
+no extra repeats. Context-end guards prevent invalid proposed rows. This
+is a bounded SYCL greedy test, not depth2 full-cache or shelf qualification.
+bench_concurrency.py --start-repeat N extends a promising screen with
+fresh prompt IDs. Next profile main verifier and serial drafting costs.

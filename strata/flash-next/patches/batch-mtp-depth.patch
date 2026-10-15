@@ -1,0 +1,661 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e28abd9b..b5b82448 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1204,6 +1204,11 @@ if(STRATA_BUILD_TESTS OR STRATA_BUILD_CONVERSATION_TESTS)
+   add_executable(batch_rows_test tests/core/batch_rows_test.cpp)
+   target_include_directories(batch_rows_test PRIVATE include)
+   add_test(NAME batch_rows_test COMMAND batch_rows_test)
++  # STRATA_BATCH_MTP_DEPTH: the clamp, the window packing of variable slot groups under the 8-row cap with the slot
++  # rotation, and the chained prefix acceptance (depth 1 = the two-row rule; header-only, CPU)
++  add_executable(batch_depth_test tests/core/batch_depth_test.cpp)
++  target_include_directories(batch_depth_test PRIVATE include)
++  add_test(NAME batch_depth_test COMMAND batch_depth_test)
+   # how many pipelined slot groups --batch runs with: the 0.1.41 default, and --batch-mtp keeping it serial (header-only, CPU)
+   add_executable(batch_groups_test src/program/batch_groups_test.cpp)
+   target_include_directories(batch_groups_test PRIVATE include)
+diff --git a/include/strata/core/batch_depth.hpp b/include/strata/core/batch_depth.hpp
+new file mode 100644
+index 00000000..34258f61
+--- /dev/null
++++ b/include/strata/core/batch_depth.hpp
+@@ -0,0 +1,82 @@
++#pragma once
++// STRATA_BATCH_MTP_DEPTH (experimental, opt-in): how many MTP proposals a --batch-mtp slot verifies per window.
++// 1 (the default) is exactly the two-row-per-slot packer of 0.1.44; 2 or 3 give a slot 3 or 4 contiguous rows (its
++// current token and up to that many chained drafts).  Pure host logic so a CPU test can pin it down: the clamp,
++// the window packing (rotation and the 8-row verifier cap), and the chained prefix acceptance.  Nothing here touches
++// the verifier, the commit, or the drafter: a slot's group is still a contiguous run of rows at consecutive
++// positions (batch_rows.hpp), committed by Verifier::commit_slot_prefixes with the kept prefix length.
++
++#include <cstdint>
++#include <cstdlib>
++
++namespace strata::core {
++
++/// The depth `env` asks for (null/empty/unparsable = 1), clamped to [1, min(spec - 1, max_t - 1)]: a slot's group of
++/// 1 + depth rows must fit the drafter's window (`spec` rows, so spec - 1 drafts) and the verifier's window (`max_t`).
++inline int batch_depth_resolve(const char* env, int spec, int max_t) {
++    int d = 1;
++    if (env != nullptr && env[0] != '\0') d = std::atoi(env);
++    int cap = spec - 1 < max_t - 1 ? spec - 1 : max_t - 1;
++    if (cap < 1) cap = 1;
++    if (d < 1) d = 1;
++    if (d > cap) d = cap;
++    return d;
++}
++
++// Never send rows that batch_keep cannot accept to the verifier. In particular,
++// a deeper window near the context end must not write K/V beyond its allocation.
++inline int batch_drafts_for_context(int drafts, int64_t p, int64_t max_context) {
++    const int64_t room = max_context - p - 2;
++    if (drafts <= 0 || room <= 0) return 0;
++    return room < drafts ? (int) room : drafts;
++}
++
++/// Packs one window.  `active[b]`: slot b has a live request; `ndraft[b]`: the drafts it holds ready (0..depth; 0 =
++/// its group is the one token row).  Slots are visited from `next_slot` in rotation order and the first one that does
++/// not fit `max_t` rows ends the window (the same rule as the fixed two-row packer: no slot is skipped for a smaller
++/// one behind it, so the rotation stays fair).  Out: `rows[t]` the slot of row t, and per packed slot a: `first[a]`
++/// its first row, `glen[a]` its rows (1 + the drafts it offers), `slot[a]` its index.  Returns the packed slots A;
++/// `*S_out` the rows.  Without `mtp` every group is one row.
++inline int batch_pack(const bool* active, const int* ndraft, int n_slots, size_t next_slot, bool mtp, int max_t,
++                      int* rows, int* first, int* glen, int* slot, int* S_out) {
++    int S = 0, A = 0;
++    for (int offset = 0; offset < n_slots; ++offset) {
++        const int b = (int) ((next_slot + (size_t) offset) % (size_t) n_slots);
++        if (!active[b]) continue;
++        int g = 1;
++        if (mtp) {
++            int nd = ndraft[b];
++            if (nd < 0) nd = 0;
++            g = 1 + nd;
++        }
++        if (S + g > max_t) break;
++        first[A] = S;
++        glen[A] = g;
++        slot[A] = b;
++        ++A;
++        for (int j = 0; j < g; ++j) rows[S + j] = b;
++        S += g;
++    }
++    *S_out = S;
++    return A;
++}
++
++/// The rows a slot keeps of its group: `outb[j]` is the target's pick after row j, `tok[j]` row j's token (tok[0] the
++/// current token, tok[1..glen) the drafts).  Row j (j >= 1) is kept when every row before it was, the pick after
++/// row j - 1 is its draft and not an end token, the request is not cancelled, and emitting j + 1 tokens stays within
++/// `max_new` and the context (`p` is row 0's position; a kept row j puts the slot at p + j + 1 and the next window
++/// needs one more cell).  Returns keep in [1, glen]; glen == 2 is exactly the 0.1.44 rule.
++template <class IsEos>
++inline int batch_keep(const int32_t* outb, const int32_t* tok, int glen, IsEos is_eos, bool stop, int64_t produced,
++                      int64_t max_new, int64_t p, int64_t max_context) {
++    int keep = 1;
++    for (int j = 1; j < glen; ++j) {
++        if (outb[j - 1] != tok[j] || is_eos(outb[j - 1]) || stop) break;
++        if (produced + (int64_t) j + 1 > max_new) break;
++        if (p + (int64_t) j + 2 > max_context) break;
++        keep = j + 1;
++    }
++    return keep;
++}
++
++}  // namespace strata::core
+diff --git a/src/program/generate.cpp b/src/program/generate.cpp
+index 25d6567c..d302dff1 100644
+--- a/src/program/generate.cpp
++++ b/src/program/generate.cpp
+@@ -61,6 +61,7 @@
+ #include "strata/core/native_head.hpp"
+ #include "strata/core/verify.hpp"
+ #include "strata/core/mtp.hpp"
++#include "strata/core/batch_depth.hpp"
+ #include "strata/prefill/prefill.hpp"
+ #if defined(STRATA_PREFILL_MMQ)
+ #include "strata/prefill/moe_mmq.hpp"
+@@ -4490,6 +4491,13 @@ int main(int argc, char** argv) {
+     };
+     const char* batch_mtp_env = std::getenv("STRATA_BATCH_MTP");
+     bool batch_mtp = o.batch_mtp || (batch_mtp_env != nullptr && batch_mtp_env[0] != '\0' && batch_mtp_env[0] != '0');
++    // STRATA_BATCH_MTP_DEPTH=N (experimental, opt-in): a slot verifies up to N chained proposals per window (1 = the
++    // two-row windows as before; clamped to --spec T - 1 and the verifier's window; batch_depth.hpp)
++    const int batch_depth = strata::core::batch_depth_resolve(std::getenv("STRATA_BATCH_MTP_DEPTH"), o.spec,
++                                                              strata::kernels::kVerifyMaxT);
++    if (batch_mtp && batch_depth > 1)
++        std::fprintf(stderr, "strata generate: --batch-mtp: up to %d proposals per slot per window "
++                             "(STRATA_BATCH_MTP_DEPTH, experimental)\n", batch_depth);
+     if (batch_mtp) {
+         // (--pipeline-windows is already off with --batch slots)
+         const char* why = o.batch < 2 ? "it needs --batch 2 or more" : o.mtp.empty() ? "it needs --mtp"
+@@ -4640,7 +4648,7 @@ int main(int argc, char** argv) {
+                                  vram_free_note().c_str());
+                     return 1;
+                 }
+-                d->set_max_drafts(1);   // the first candidate verifies one proposal per slot
++                d->set_max_drafts(batch_depth);   // 1: one proposal per slot (the first candidate); STRATA_BATCH_MTP_DEPTH
+                 d->set_ple_session(bslot_ss[0][(size_t) b].get());
+                 slot_mtp.push_back(std::move(d));
+             }
+@@ -9813,6 +9821,7 @@ int main(int argc, char** argv) {
+             int32_t x = 0;                 ///< the token the next window feeds (not yet in the slot's state)
+             std::array<int32_t, strata::kernels::kVerifyMaxT> draft{}; ///< the slot's next MTP proposal
+             bool draft_ready = false;
++            int n_draft = 0;               ///< the drafts `draft` holds (what the drafter returned, <= the depth)
+             int64_t p = 0;                 ///< its position
+             int64_t produced = 0, max_new = 0;
+             int64_t drafts_offered = 0, drafts_accepted = 0;
+@@ -9956,27 +9965,34 @@ int main(int argc, char** argv) {
+             int64_t pos[strata::kernels::kVerifyMaxT] = {};
+             int first[strata::kernels::kVerifyMaxT] = {}, active[strata::kernels::kVerifyMaxT] = {};
+             static size_t next_slot = 0;
+-            // Each MTP slot uses two rows; rotate slots when more than four are active.
++            // An MTP slot's group is its current token and the drafts it holds (1 + n_draft rows, n_draft <= the
++            // depth; two rows with the default depth 1); rotate slots when the window cannot take them all
++            // (batch_depth.hpp: the first slot that does not fit ends the window, none is skipped for a later one).
+             int A = 0;
+-            for (size_t offset = 0; offset < bs.size() && S + (batch_mtp ? 2 : 1) <= strata::kernels::kVerifyMaxT; ++offset) {
+-                const int b = (int) ((next_slot + offset) % bs.size());
+-                if (bs[(size_t) b].active) {
+-                    first[A] = S;
+-                    active[A++] = b;
+-                    rows[S] = b;
+-                    tok[S] = bs[(size_t) b].x;
+-                    pos[S] = bs[(size_t) b].p;
+-                    ++S;
+-                    if (batch_mtp) {
+-                        rows[S] = b;
+-                        if (!bs[(size_t) b].draft_ready) {
+-                            err = "batch MTP: a live slot has no draft";
+-                            return false;
+-                        }
+-                        tok[S] = bs[(size_t) b].draft[0];
+-                        pos[S] = bs[(size_t) b].p + 1;
+-                        ++S;
+-                    }
++            int glen[strata::kernels::kVerifyMaxT] = {};
++            {
++                const size_t nb = bs.size();
++                std::vector<int> nd(nb, 0);
++                std::unique_ptr<bool[]> act(new bool[nb]);
++                for (size_t b = 0; b < nb; ++b) {
++                    act[b] = bs[b].active;
++                    nd[b] = bs[b].draft_ready ? strata::core::batch_drafts_for_context(
++                        bs[b].n_draft, bs[b].p, (int64_t) o.max_context) : 0;
++                }
++                A = strata::core::batch_pack(act.get(), nd.data(), (int) nb, next_slot, batch_mtp,
++                                             strata::kernels::kVerifyMaxT, rows, first, glen, active, &S);
++            }
++            for (int a = 0; a < A; ++a) {
++                const BSlot& sl = bs[(size_t) active[a]];
++                if (batch_mtp && !sl.draft_ready) {
++                    err = "batch MTP: a live slot has no draft";
++                    return false;
++                }
++                tok[first[a]] = sl.x;
++                pos[first[a]] = sl.p;
++                for (int j = 1; j < glen[a]; ++j) {
++                    tok[first[a] + j] = sl.draft[(size_t) (j - 1)];
++                    pos[first[a] + j] = sl.p + j;
+                 }
+             }
+             if (batch_mtp && A > 0) next_slot = ((size_t) active[A - 1] + 1) % bs.size();
+@@ -10031,14 +10047,19 @@ int main(int argc, char** argv) {
+             } adapt_run;
+             if (!drive.d.usage.empty() && !ajob && !in_prompt_read && (++ba_window % o.adapt_every) == 0 && pending.empty())
+                 adapt_run.th = std::thread([&] { adapt_run.ok = adapt(); });
+-            // Accept the proposal only when the target picked it and there is room to emit both tokens.
++            // Accept a slot's proposals as the longest matching prefix: each kept row's draft was the target's pick
++            // after the row before it, not an end token, and there is room to emit every kept token (batch_keep: the
++            // 0.1.44 rule at depth 1).  Decided here, BEFORE the commit, so the state never holds a rejected row.
+             std::vector<int> keep(bs.size(), 0);
++            const auto is_eos = [&](int32_t t) {
++                return std::find(o.eos_ids.begin(), o.eos_ids.end(), (int64_t) t) != o.eos_ids.end();
++            };
+             for (int a = 0; a < A; ++a) {
+                 const int b = active[a], i = first[a];
+                 const BSlot& sl = bs[(size_t) b];
+-                const bool eos = std::find(o.eos_ids.begin(), o.eos_ids.end(), (int64_t) outb[i]) != o.eos_ids.end();
+-                keep[b] = batch_mtp && outb[i] == tok[i + 1] && !eos && !sl.stop &&
+-                          sl.produced + 2 <= sl.max_new && sl.p + 3 <= o.max_context ? 2 : 1;
++                keep[b] = batch_mtp ? strata::core::batch_keep(outb + i, tok + i, glen[a], is_eos, sl.stop, sl.produced,
++                                                               sl.max_new, sl.p, (int64_t) o.max_context)
++                                    : 1;
+             }
+             if (!(batch_mtp ? ver.commit_slot_prefixes(keep.data(), err) : ver.commit_slots(err))) {
+                 std::printf("ERR %s\n", err.c_str());
+@@ -10056,9 +10077,9 @@ int main(int argc, char** argv) {
+             for (int t = 0; t < A; ++t) {
+                 const int b = active[t];
+                 BSlot& sl = bs[(size_t) b];
+-                if (batch_mtp) ++sl.drafts_offered;
++                if (batch_mtp) sl.drafts_offered += glen[t] - 1;   // the drafts this window actually verified
+                 bool nf = false;   // #879: a row of this slot held non-finite logits: the slot ends, nothing emitted
+-                for (int r = first[t]; r < first[t] + (batch_mtp ? 2 : 1); ++r) nf = nf || ver.nonfinite_in(r);
++                for (int r = first[t]; r < first[t] + glen[t]; ++r) nf = nf || ver.nonfinite_in(r);
+                 if (nf) {
+                     std::fprintf(stderr, "strata batch: non-finite logits (#879) in slot %d at position %lld: it ends "
+                                          "(BDONE nonfinite) and the next request reads its prompt from token 0\n", b,
+@@ -10098,15 +10119,24 @@ int main(int argc, char** argv) {
+                     // queued on the drafter's own stream after the window's host sync, so the draft graph reads it.
+                     const strata::core::OnDevice on_slot_mtp(slot_mtp[(size_t) b]->device());
+                     const size_t stride = (size_t) g.hc * (size_t) g.n_embd;
++                    // the group's rows: glen <= 1 + depth <= --spec, the rows the slot's residual buffer holds and the
++                    // drafter's window; the drafter says how many drafts it made (fewer than the depth at the ring's end)
++                    const int G = glen[t];
++                    int nd = 0;
++                    if (G > o.spec) {
++                        std::printf("ERR batch MTP slot %d: a group of %d rows exceeds the drafter's window\n", b, G);
++                        return false;
++                    }
+                     if (cudaMemcpyAsync(slot_mtp_rows[(size_t) b].get(),
+                                         ver.final_R_all() + (size_t) first[t] * stride,
+-                                        2 * stride * sizeof(float), cudaMemcpyDeviceToDevice,
++                                        (size_t) G * stride * sizeof(float), cudaMemcpyDeviceToDevice,
+                                         slot_mtp[(size_t) b]->stream()) != cudaSuccess ||
+-                        !slot_mtp[(size_t) b]->draft(2, outb + first[t], pos[first[t]], keep[b] - 1,
+-                                                    sl.draft.data(), err)) {
++                        !slot_mtp[(size_t) b]->draft(G, outb + first[t], pos[first[t]], keep[b] - 1,
++                                                    sl.draft.data(), err, nullptr, 0.0f, &nd)) {
+                         std::printf("ERR batch MTP slot %d: %s\n", b, err.c_str());
+                         return false;
+                     }
++                    sl.n_draft = nd < 0 ? 0 : nd > batch_depth ? batch_depth : nd;
+                     sl.draft_ready = true;
+                 }
+             }
+@@ -12970,12 +13000,15 @@ int main(int argc, char** argv) {
+                     sl.t0 = Clock::now();
+                     sl.ids = live;
+                     if (batch_mtp) {
++                        int nd = 0;
+                         if (!slot_mtp[(size_t) admit_slot]->draft_first(1, ver.final_R_all(), sl.x,
+-                                                                        sl.p - 1, sl.draft.data(), err)) {
++                                                                        sl.p - 1, sl.draft.data(), err,
++                                                                        nullptr, 0.0f, &nd)) {
+                             std::fprintf(stderr, "strata batch: MTP admission for slot %d failed: %s\n",
+                                          admit_slot, err.c_str());
+                             return 1;
+                         }
++                        sl.n_draft = nd < 0 ? 0 : nd > batch_depth ? batch_depth : nd;
+                         sl.draft_ready = true;
+                     }
+                     sl.cvec = cvec_cached;
+diff --git a/sycl/src/core/mtp.cpp b/sycl/src/core/mtp.cpp
+index 773f54f5..e3dd98a6 100644
+--- a/sycl/src/core/mtp.cpp
++++ b/sycl/src/core/mtp.cpp
+@@ -1533,7 +1533,8 @@ bool MtpDrafter::draft(int T, const int32_t* tokens, int64_t p, int a, int32_t*
+     if (!mtp_catchup_all()) T = a + 1;
+     const bool cp = coupled_active_;   // coupled draft sampling for this request: its own graphs
+     if (!capture_round(T, cp, err)) return false;
+-    const int max_steps = std::min(max_t_ - 1, max_drafts_);
++    // Match the CUDA drafter: draft j writes at p + a + j, within the allocated K/V cells.
++    const int max_steps = (int) std::min<int64_t>(std::min(max_t_ - 1, max_drafts_), st_.max_cells - (p + a));
+     for (int j = 1; j < max_steps; ++j)
+         if (!capture_step(j, cp, err)) return false;
+     const Clock::time_point t0 = Clock::now();
+diff --git a/sycl/src/program/generate.cpp b/sycl/src/program/generate.cpp
+index 3e8dabd2..1ab30c2c 100644
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -70,6 +70,7 @@ namespace strata::prefill { void set_nonresident_share(double share); }   // SYC
+ #include "strata/core/native_head.hpp"
+ #include "strata/core/verify.hpp"
+ #include "strata/core/mtp.hpp"
++#include "strata/core/batch_depth.hpp"
+ #include "strata/prefill/prefill.hpp"
+ #include "strata/core/native_dense.hpp"
+ #include "strata/program/logits_selection.hpp"
+@@ -3984,6 +3985,13 @@ int main(int argc, char **argv) try {
+     // force: when it cannot run it is said and left off (plain batching still starts); default off = exactly 0.1.39.
+     const char* batch_mtp_env = std::getenv("STRATA_BATCH_MTP");
+     bool batch_mtp = o.batch_mtp || (batch_mtp_env != nullptr && batch_mtp_env[0] != '\0' && batch_mtp_env[0] != '0');
++    // STRATA_BATCH_MTP_DEPTH=N (experimental, opt-in): a slot verifies up to N chained proposals per window (1 = the
++    // two-row windows as before; clamped to --spec T - 1 and the verifier's window; batch_depth.hpp)
++    const int batch_depth = strata::core::batch_depth_resolve(std::getenv("STRATA_BATCH_MTP_DEPTH"), o.spec,
++                                                              strata::kernels::kVerifyMaxT);
++    if (batch_mtp && batch_depth > 1)
++        std::fprintf(stderr, "strata generate: --batch-mtp: up to %d proposals per slot per window "
++                             "(STRATA_BATCH_MTP_DEPTH, experimental)\n", batch_depth);
+     if (batch_mtp) {
+         const char* why = o.batch < 2 ? "it needs --batch 2 or more" : o.mtp.empty() ? "it needs --mtp"
+                         : o.spec < 2 ? "it needs --spec T (T >= 2)" : (multi_gpu || split_same || !stages.empty())
+@@ -4115,7 +4123,7 @@ int main(int argc, char **argv) try {
+                                  vram_free_note().c_str());
+                     return 1;
+                 }
+-                d->set_max_drafts(1);   // the first candidate verifies one proposal per slot
++                d->set_max_drafts(batch_depth);   // 1: one proposal per slot (the first candidate); STRATA_BATCH_MTP_DEPTH
+                 d->set_ple_session(bslot_ss[0][(size_t) b].get());
+                 slot_mtp.push_back(std::move(d));
+             }
+@@ -8837,6 +8845,7 @@ int main(int argc, char **argv) try {
+             int32_t x = 0;                 ///< the token the next window feeds (not yet in the slot's state)
+             std::array<int32_t, strata::kernels::kVerifyMaxT> draft{}; ///< the slot's next MTP proposal
+             bool draft_ready = false;
++            int n_draft = 0;               ///< the drafts `draft` holds (what the drafter returned, <= the depth)
+             int64_t p = 0;                 ///< its position
+             int64_t produced = 0, max_new = 0;
+             int64_t drafts_offered = 0, drafts_accepted = 0;
+@@ -9012,27 +9021,34 @@ int main(int argc, char **argv) try {
+             int64_t pos[strata::kernels::kVerifyMaxT] = {};
+             int first[strata::kernels::kVerifyMaxT] = {}, active[strata::kernels::kVerifyMaxT] = {};
+             static size_t next_slot = 0;
+-            // Each MTP slot uses two rows; rotate slots when more than four are active.
++            // An MTP slot's group is its current token and the drafts it holds (1 + n_draft rows, n_draft <= the
++            // depth; two rows with the default depth 1); rotate slots when the window cannot take them all
++            // (batch_depth.hpp: the first slot that does not fit ends the window, none is skipped for a later one).
+             int A = 0;
+-            for (size_t offset = 0; offset < bs.size() && S + (batch_mtp ? 2 : 1) <= strata::kernels::kVerifyMaxT; ++offset) {
+-                const int b = (int) ((next_slot + offset) % bs.size());
+-                if (bs[(size_t) b].active) {
+-                    first[A] = S;
+-                    active[A++] = b;
+-                    rows[S] = b;
+-                    tok[S] = bs[(size_t) b].x;
+-                    pos[S] = bs[(size_t) b].p;
+-                    ++S;
+-                    if (batch_mtp) {
+-                        rows[S] = b;
+-                        if (!bs[(size_t) b].draft_ready) {
+-                            err = "batch MTP: a live slot has no draft";
+-                            return false;
+-                        }
+-                        tok[S] = bs[(size_t) b].draft[0];
+-                        pos[S] = bs[(size_t) b].p + 1;
+-                        ++S;
+-                    }
++            int glen[strata::kernels::kVerifyMaxT] = {};
++            {
++                const size_t nb = bs.size();
++                std::vector<int> nd(nb, 0);
++                std::unique_ptr<bool[]> act(new bool[nb]);
++                for (size_t b = 0; b < nb; ++b) {
++                    act[b] = bs[b].active;
++                    nd[b] = bs[b].draft_ready ? strata::core::batch_drafts_for_context(
++                        bs[b].n_draft, bs[b].p, (int64_t) o.max_context) : 0;
++                }
++                A = strata::core::batch_pack(act.get(), nd.data(), (int) nb, next_slot, batch_mtp,
++                                             strata::kernels::kVerifyMaxT, rows, first, glen, active, &S);
++            }
++            for (int a = 0; a < A; ++a) {
++                const BSlot& sl = bs[(size_t) active[a]];
++                if (batch_mtp && !sl.draft_ready) {
++                    err = "batch MTP: a live slot has no draft";
++                    return false;
++                }
++                tok[first[a]] = sl.x;
++                pos[first[a]] = sl.p;
++                for (int j = 1; j < glen[a]; ++j) {
++                    tok[first[a] + j] = sl.draft[(size_t) (j - 1)];
++                    pos[first[a] + j] = sl.p + j;
+                 }
+             }
+             if (batch_mtp && A > 0) next_slot = ((size_t) active[A - 1] + 1) % bs.size();
+@@ -9054,14 +9070,19 @@ int main(int argc, char **argv) try {
+                 return false;
+             }
+             const Clock::time_point w1 = Clock::now();
+-            // Accept the proposal only when the target picked it and there is room to emit both tokens.
++            // Accept a slot's proposals as the longest matching prefix: each kept row's draft was the target's pick
++            // after the row before it, not an end token, and there is room to emit every kept token (batch_keep: the
++            // 0.1.44 rule at depth 1).  Decided here, BEFORE the commit, so the state never holds a rejected row.
+             std::vector<int> keep(bs.size(), 0);
++            const auto is_eos = [&](int32_t t) {
++                return std::find(o.eos_ids.begin(), o.eos_ids.end(), (int64_t) t) != o.eos_ids.end();
++            };
+             for (int a = 0; a < A; ++a) {
+                 const int b = active[a], i = first[a];
+                 const BSlot& sl = bs[(size_t) b];
+-                const bool eos = std::find(o.eos_ids.begin(), o.eos_ids.end(), (int64_t) outb[i]) != o.eos_ids.end();
+-                keep[b] = batch_mtp && outb[i] == tok[i + 1] && !eos && !sl.stop &&
+-                          sl.produced + 2 <= sl.max_new && sl.p + 3 <= o.max_context ? 2 : 1;
++                keep[b] = batch_mtp ? strata::core::batch_keep(outb + i, tok + i, glen[a], is_eos, sl.stop, sl.produced,
++                                                               sl.max_new, sl.p, (int64_t) o.max_context)
++                                    : 1;
+             }
+             if (!(batch_mtp ? ver.commit_slot_prefixes(keep.data(), err) : ver.commit_slots(err))) {
+                 std::printf("ERR %s\n", err.c_str());
+@@ -9076,7 +9097,7 @@ int main(int argc, char **argv) try {
+             for (int t = 0; t < A; ++t) {
+                 const int b = active[t];
+                 BSlot& sl = bs[(size_t) b];
+-                if (batch_mtp) ++sl.drafts_offered;
++                if (batch_mtp) sl.drafts_offered += glen[t] - 1;   // the drafts this window actually verified
+                 if (batch_mtp) sl.drafts_accepted += keep[b] - 1;
+                 for (int j = 0; j < keep[b]; ++j) {
+                     const int32_t y = outb[first[t] + j];
+@@ -9099,16 +9120,25 @@ int main(int argc, char **argv) try {
+                 }
+                 if (batch_mtp && sl.active) {
+                     const size_t stride = (size_t) g.hc * (size_t) g.n_embd;
++                    // the group's rows: glen <= 1 + depth <= --spec, the rows the slot's residual buffer holds and the
++                    // drafter's window; the drafter says how many drafts it made (fewer than the depth at the ring's end)
++                    const int G = glen[t];
++                    int nd = 0;
++                    if (G > o.spec) {
++                        std::printf("ERR batch MTP slot %d: a group of %d rows exceeds the drafter's window\n", b, G);
++                        return false;
++                    }
+                     if (DPCT_CHECK_ERROR(dpct::get_in_order_queue().memcpy(
+                             slot_mtp_rows[(size_t)b].get(),
+                             ver.final_R_all() + (size_t)first[t] * stride,
+-                            2 * stride * sizeof(float)).wait()) != 0 ||
+-                        !slot_mtp[(size_t)b]->draft(2, outb + first[t],
++                            (size_t) G * stride * sizeof(float)).wait()) != 0 ||
++                        !slot_mtp[(size_t)b]->draft(G, outb + first[t],
+                                                     pos[first[t]], keep[b] - 1,
+-                                                    sl.draft.data(), err)) {
++                                                    sl.draft.data(), err, nullptr, 0.0f, &nd)) {
+                         std::printf("ERR batch MTP slot %d: %s\n", b, err.c_str());
+                         return false;
+                     }
++                    sl.n_draft = nd < 0 ? 0 : nd > batch_depth ? batch_depth : nd;
+                     sl.draft_ready = true;
+                 }
+             }
+@@ -11700,12 +11730,15 @@ int main(int argc, char **argv) try {
+                     sl.t0 = Clock::now();
+                     sl.ids = live;
+                     if (batch_mtp) {
++                        int nd = 0;
+                         if (!slot_mtp[(size_t) admit_slot]->draft_first(1, ver.final_R_all(), sl.x,
+-                                                                        sl.p - 1, sl.draft.data(), err)) {
++                                                                        sl.p - 1, sl.draft.data(), err,
++                                                                        nullptr, 0.0f, &nd)) {
+                             std::fprintf(stderr, "strata batch: MTP admission for slot %d failed: %s\n",
+                                          admit_slot, err.c_str());
+                             return 1;
+                         }
++                        sl.n_draft = nd < 0 ? 0 : nd > batch_depth ? batch_depth : nd;
+                         sl.draft_ready = true;
+                     }
+                     sl.cvec = cvec_cached;
+diff --git a/tests/core/batch_depth_test.cpp b/tests/core/batch_depth_test.cpp
+new file mode 100644
+index 00000000..22118429
+--- /dev/null
++++ b/tests/core/batch_depth_test.cpp
+@@ -0,0 +1,181 @@
++// STRATA_BATCH_MTP_DEPTH's host logic (include/strata/core/batch_depth.hpp): the clamp, the window packing under the
++// 8-row verifier cap with variable group sizes and the slot rotation, and the chained prefix acceptance (mismatch,
++// end token, cancel, max_new, context).  Header-only, CPU.  Depth 1 must reproduce the 0.1.44 two-row rule exactly.
++#include "strata/core/batch_depth.hpp"
++#include "strata/core/batch_rows.hpp"
++
++#include <cstdio>
++#include <cstdlib>
++
++namespace {
++int failures = 0;
++void check(bool ok, const char* what) {
++    if (!ok) {
++        std::fprintf(stderr, "FAIL: %s\n", what);
++        ++failures;
++    }
++}
++constexpr int kMaxT = 8;
++const auto eos_7 = [](int32_t t) { return t == 7; };
++
++// the 0.1.44 rule, verbatim from batch_step, for the depth-1 equivalence check
++int keep_0144(const int32_t* outb, const int32_t* tok, bool eos0, bool stop, long long produced, long long max_new,
++              long long p, long long max_context) {
++    return outb[0] == tok[1] && !eos0 && !stop && produced + 2 <= max_new && p + 3 <= max_context ? 2 : 1;
++}
++}  // namespace
++
++int main() {
++    using namespace strata::core;
++    // ---- the clamp
++    check(batch_depth_resolve(nullptr, 4, kMaxT) == 1, "unset -> 1");
++    check(batch_depth_resolve("", 4, kMaxT) == 1, "empty -> 1");
++    check(batch_depth_resolve("x", 4, kMaxT) == 1, "unparsable -> 1");
++    check(batch_depth_resolve("0", 4, kMaxT) == 1, "0 -> 1");
++    check(batch_depth_resolve("-3", 4, kMaxT) == 1, "negative -> 1");
++    check(batch_depth_resolve("2", 4, kMaxT) == 2, "2 with spec 4");
++    check(batch_depth_resolve("3", 4, kMaxT) == 3, "3 with spec 4");
++    check(batch_depth_resolve("9", 4, kMaxT) == 3, "9 clamps to spec - 1 = 3");
++    check(batch_depth_resolve("3", 2, kMaxT) == 1, "spec 2 caps at 1");
++    check(batch_depth_resolve("3", 3, kMaxT) == 2, "spec 3 caps at 2");
++    check(batch_depth_resolve("7", 16, kMaxT) == 7, "verifier cap max_t - 1");
++    check(batch_depth_resolve("9", 16, kMaxT) == 7, "9 clamps to max_t - 1");
++
++    // Context-end windows: all proposed rows must fit before verifier writes,
++    // including drafts later rejected by token equality or length acceptance.
++    for (int64_t p = 0; p < 64; ++p) {
++        for (int d = 0; d <= 3; ++d) {
++            const int n = batch_drafts_for_context(d, p, 64);
++            check(n >= 0 && n <= d, "bounded draft count");
++            check(n == 0 || p + n + 2 <= 64, "proposed rows respect context acceptance bound");
++            check(n == d || p + n + 3 > 64, "maximal safe proposal prefix");
++        }
++    }
++    check(batch_drafts_for_context(3, 60, 64) == 2, "near end: two drafts");
++    check(batch_drafts_for_context(3, 61, 64) == 1, "near end: one draft");
++    check(batch_drafts_for_context(3, 62, 64) == 0, "near end: current row only");
++
++    // ---- packing
++    int rows[kMaxT], first[kMaxT], glen[kMaxT], slot[kMaxT], S = 0;
++    {
++        // plain --batch: one row each, every active slot
++        const bool act[4] = {true, false, true, true};
++        const int nd[4] = {3, 3, 3, 3};
++        const int A = batch_pack(act, nd, 4, 0, false, kMaxT, rows, first, glen, slot, &S);
++        check(A == 3 && S == 3 && glen[0] == 1 && glen[1] == 1 && glen[2] == 1, "plain: one row per slot");
++        check(slot[0] == 0 && slot[1] == 2 && slot[2] == 3, "plain: rotation order from 0");
++    }
++    {
++        // depth 1 (ndraft 1 everywhere): the two-row packer, four slots fill eight rows
++        const bool act[4] = {true, true, true, true};
++        const int nd[4] = {1, 1, 1, 1};
++        const int A = batch_pack(act, nd, 4, 0, true, kMaxT, rows, first, glen, slot, &S);
++        check(A == 4 && S == 8, "depth 1: four slots, eight rows");
++        for (int a = 0; a < A; ++a) check(glen[a] == 2 && first[a] == 2 * a, "depth 1: two rows per slot");
++        const int rows_want[8] = {0, 0, 1, 1, 2, 2, 3, 3};
++        for (int t = 0; t < 8; ++t) check(rows[t] == rows_want[t], "depth 1: rows layout");
++    }
++    {
++        // depth 1 with five active slots: the fifth does not fit; rotation then starts after the last packed
++        const bool act[5] = {true, true, true, true, true};
++        const int nd[5] = {1, 1, 1, 1, 1};
++        int A = batch_pack(act, nd, 5, 0, true, kMaxT, rows, first, glen, slot, &S);
++        check(A == 4 && S == 8 && slot[3] == 3, "depth 1: five slots -> four packed");
++        A = batch_pack(act, nd, 5, (size_t) slot[3] + 1, true, kMaxT, rows, first, glen, slot, &S);
++        check(A == 4 && slot[0] == 4 && slot[1] == 0 && slot[2] == 1 && slot[3] == 2, "depth 1: rotation resumes at 4");
++    }
++    {
++        // depth 3, two slots: 4 + 4 = 8 rows exactly
++        const bool act[2] = {true, true};
++        const int nd[2] = {3, 3};
++        const int A = batch_pack(act, nd, 2, 0, true, kMaxT, rows, first, glen, slot, &S);
++        check(A == 2 && S == 8 && glen[0] == 4 && glen[1] == 4 && first[1] == 4, "depth 3: two slots fill the window");
++        int64_t pos[8];
++        for (int t = 0; t < 8; ++t) pos[t] = (rows[t] == 0 ? 100 : 5000) + (t % 4);
++        check(batch_rows_error(rows, S, pos, 2, kMaxT, 0, false, kMaxT) == nullptr, "depth 3: a valid verifier layout");
++    }
++    {
++        // depth 3, three slots: the third does not fit (4 + 4 + 4 > 8) and is NOT skipped for; it leads next time
++        const bool act[3] = {true, true, true};
++        const int nd[3] = {3, 3, 3};
++        int A = batch_pack(act, nd, 3, 0, true, kMaxT, rows, first, glen, slot, &S);
++        check(A == 2 && S == 8 && slot[0] == 0 && slot[1] == 1, "depth 3: three slots -> two packed");
++        A = batch_pack(act, nd, 3, (size_t) slot[1] + 1, true, kMaxT, rows, first, glen, slot, &S);
++        check(A == 2 && slot[0] == 2 && slot[1] == 0, "depth 3: the third slot leads the next window");
++    }
++    {
++        // variable groups: a slot whose drafter returned fewer drafts (or none) takes a shorter group
++        const bool act[3] = {true, true, true};
++        const int nd[3] = {3, 0, 2};
++        const int A = batch_pack(act, nd, 3, 0, true, kMaxT, rows, first, glen, slot, &S);
++        check(A == 3 && S == 8 && glen[0] == 4 && glen[1] == 1 && glen[2] == 3, "variable groups: 4 + 1 + 3");
++        check(first[0] == 0 && first[1] == 4 && first[2] == 5, "variable groups: first rows");
++        const int rows_want[8] = {0, 0, 0, 0, 1, 2, 2, 2};
++        for (int t = 0; t < 8; ++t) check(rows[t] == rows_want[t], "variable groups: rows layout");
++    }
++    {
++        // depth 2, four slots: 3 + 3 = 6, the third (3 rows) does not fit in the 2 left
++        const bool act[4] = {true, true, true, true};
++        const int nd[4] = {2, 2, 2, 2};
++        const int A = batch_pack(act, nd, 4, 1, true, kMaxT, rows, first, glen, slot, &S);
++        check(A == 2 && S == 6 && slot[0] == 1 && slot[1] == 2, "depth 2: two of four slots from slot 1");
++    }
++    {
++        // nothing active
++        const bool act[2] = {false, false};
++        const int nd[2] = {1, 1};
++        const int A = batch_pack(act, nd, 2, 0, true, kMaxT, rows, first, glen, slot, &S);
++        check(A == 0 && S == 0, "no active slot: empty window");
++    }
++
++    // ---- acceptance: depth 1 (glen 2) equals the 0.1.44 rule over a grid of conditions
++    {
++        const int32_t toks[2][2] = {{10, 11}, {10, 12}};
++        for (int match = 0; match < 2; ++match)
++            for (int eos = 0; eos < 2; ++eos)
++                for (int stop = 0; stop < 2; ++stop)
++                    for (long long produced = 1; produced <= 3; ++produced)
++                        for (long long p = 1; p <= 4; ++p) {
++                            const int32_t outb[2] = {eos ? 7 : 11, 99};
++                            const int32_t* tok = toks[match ? 0 : 1];
++                            const int want = keep_0144(outb, tok, eos != 0, stop != 0, produced, 3, p, 5);
++                            const int got = batch_keep(outb, tok, 2, eos_7, stop != 0, produced, 3, p, 5);
++                            if (eos && match) check(want == 1 && got == 1, "depth 1: eos pick is not a kept draft");
++                            check(got == want, "depth 1: equals the 0.1.44 rule");
++                        }
++    }
++    // ---- acceptance: chains
++    {
++        const int32_t tok[4] = {10, 11, 12, 13};
++        const int32_t all[4] = {11, 12, 13, 14};
++        check(batch_keep(all, tok, 4, eos_7, false, 1, 100, 10, 1000) == 4, "chain: all three drafts kept");
++        check(batch_keep(all, tok, 3, eos_7, false, 1, 100, 10, 1000) == 3, "chain: a two-draft group");
++        check(batch_keep(all, tok, 1, eos_7, false, 1, 100, 10, 1000) == 1, "chain: a one-row group keeps one");
++        const int32_t miss1[4] = {11, 99, 13, 14};
++        check(batch_keep(miss1, tok, 4, eos_7, false, 1, 100, 10, 1000) == 2, "chain: mismatch at draft 2 keeps 2");
++        const int32_t miss0[4] = {99, 12, 13, 14};
++        check(batch_keep(miss0, tok, 4, eos_7, false, 1, 100, 10, 1000) == 1, "chain: mismatch at draft 1 keeps 1");
++        const int32_t late[4] = {11, 12, 99, 14};
++        check(batch_keep(late, tok, 4, eos_7, false, 1, 100, 10, 1000) == 3, "chain: mismatch at draft 3 keeps 3");
++        // an end token picked after row 1: row 1 kept (its draft matched), row 2 not (the eos is emitted, not fed)
++        const int32_t tok_e[4] = {10, 11, 7, 13};
++        const int32_t out_e[4] = {11, 7, 13, 14};
++        check(batch_keep(out_e, tok_e, 4, eos_7, false, 1, 100, 10, 1000) == 2, "chain: eos after row 1 keeps 2");
++        // cancel: nothing beyond row 0
++        check(batch_keep(all, tok, 4, eos_7, true, 1, 100, 10, 1000) == 1, "chain: cancel keeps 1");
++        // max_new: produced 1 of 3 -> at most 2 more tokens -> keep 2
++        check(batch_keep(all, tok, 4, eos_7, false, 1, 3, 10, 1000) == 2, "chain: max_new bounds the kept rows");
++        check(batch_keep(all, tok, 4, eos_7, false, 1, 2, 10, 1000) == 1, "chain: max_new reached keeps 1");
++        check(batch_keep(all, tok, 4, eos_7, false, 1, 4, 10, 1000) == 3, "chain: max_new 4 keeps 3");
++        // context: p + keep + 1 <= max_context
++        check(batch_keep(all, tok, 4, eos_7, false, 1, 100, 10, 15) == 4, "chain: context 15 at p 10 keeps 4");
++        check(batch_keep(all, tok, 4, eos_7, false, 1, 100, 10, 14) == 3, "chain: context 14 at p 10 keeps 3");
++        check(batch_keep(all, tok, 4, eos_7, false, 1, 100, 10, 13) == 2, "chain: context 13 at p 10 keeps 2");
++        check(batch_keep(all, tok, 4, eos_7, false, 1, 100, 10, 12) == 1, "chain: context 12 at p 10 keeps 1");
++        // the kept prefix never exceeds the group
++        check(batch_keep(all, tok, 2, eos_7, false, 1, 100, 10, 1000) == 2, "chain: keep <= glen");
++    }
++
++    if (failures == 0) std::printf("batch_depth_test: ok\n");
++    return failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
++}

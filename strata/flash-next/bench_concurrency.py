@@ -20,6 +20,8 @@ def main():
                         help="Saved bench_serving coding response JSON")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--repeats", type=int, default=3)
+    parser.add_argument("--start-repeat", type=int, default=0,
+                        help="Start at a fresh prompt index when extending a bounded screen")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
     base = args.base_url.rstrip("/")
@@ -34,7 +36,7 @@ def main():
     prompt = source["messages"][0]["content"].split("] ", 1)[1]
     cap = source["max_tokens"]
     windows = []
-    for repeat in range(args.repeats):
+    for repeat in range(args.start_repeat, args.start_repeat + args.repeats):
         barrier = threading.Barrier(2)
 
         def request(slot):

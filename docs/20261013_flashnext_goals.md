@@ -9,12 +9,19 @@ vLLM parked, ready to port. 27B INT4 AutoRound on vLLM is the fallback.
 | Decode | 150+ tok/s per stream | median 83.8 coding, 64.5-65.7 after 4k, 64.9-65.0 after 32k, spec4 (at most 3 drafts) | about 2x short |
 | Context | 200k per stream, 2 streams | IQ3_XXS: 2 x 200000 slots with spec4 (at most 3 MTP drafts); both retrieved three needles in 199501-token prompts | capacity screen passed; sustained load remains |
 | KV eviction to RAM | restore without recompute under load | both GPU slots overwritten, then concurrent returns reused 199555/199582 tokens; 54/27 new tokens read. RAM restore 430/422 ms, client TTFT 1.97/4.40 s (parking16384 MiB/4 entries) | bounded forced-eviction test passed; sustained use remains |
-| Cached prefix latency | Diagnostic reference: p95 2 s TTFT, including RAM restore; not a hard target or gate (user, 2026-10-15) | Record GPU-resident reuse and forced RAM returns separately; full S20 recovery run in progress | Once recovery avoids recompute, prioritize concurrency, decode and MTP |
+| Cached prefix latency | Diagnostic reference: p95 2 s TTFT, including RAM restore; not a hard target or gate (user, 2026-10-15) | S20: four forced RAM returns reuse199839 held tokens/read31 new/0replay; TTFT2.758-6.423s (four samples) | Once recovery avoids recompute, prioritize concurrency, decode and MTP |
+
+Latest candidate status (2026-10-15): S20 passes all four full-length RAM
+returns without retained-history replay. S21 depth2 concurrent coding is
+98.901 aggregate tok/s versus93.064 depth1 (three pairs;6.272%); median
+client decode52.737 tok/s per stream, still below150. Full-cache recovery
+and deeper-MTP throughput are separately bounded qualifications. No daily
+shelf promotion; clean serving control remains retained below.
 
 Quality: on 2026-10-14 Flash-Next IQ3_XXS beat the 27B INT4 8-0 on paired
 langs + sysadmin tasks (41/43 vs 33/43); see the A/B brief, Outcome 2.
 
-Current serving config: strata/flash-next/serve-iq3xxs-200k.json, clean
+Retained clean control config: strata/flash-next/serve-iq3xxs-200k.json, clean
 upstream 296b59d2/v0.1.44.1. Peak sampled resident VRAM 28.22/29.27 GiB;
 all 24576 main experts in VRAM. Health, concurrent coherence, reasoning,
 tool round trip and clean teardown passed. The soak observer is stopped at user request; multi-day stability is
@@ -145,3 +152,11 @@ stage journal/report. This qualifies bounded latest-text-chat RAM recovery;
 no daily shelf promotion, broader branch/image/CUDA coverage untested.
 Fresh full-length prefill1153.5-1174.4 tok/s and long-context decode remain
 below goals. Pivot to concurrency/decode/MTP; defer latency-only work.
+
+
+S21 opt-in STRATA_BATCH_MTP_DEPTH=2 improves matched two-stream coding
+median93.064 ->98.901 aggregate tok/s; all six outputs per arm match S16,
+plus both9707-token outputs match across depths. Depth3 screen93.156 is
+rejected. Functional/teardown evidence is in S21 report/journal; no full RAM
+repeat or daily-shelf promotion. Main verifier and serial drafting costs
+now guide the next stage, rather than a2s cached-latency target.

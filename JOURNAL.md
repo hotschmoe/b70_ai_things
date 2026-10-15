@@ -22618,3 +22618,37 @@ Skip duplicate hugeprefills; CPUacceptancechecks then shortpaireddecode.
 S19/S20 buildworkloads differ, so no isolated4xparallelflag gain claim.
 Details: stage doc S20; raw cachefix_20261014/slot-reuse/s20-report.json.
 Tracked patch: strata/flash-next/patches/batch-slot-image-reuse.patch.
+
+
+## 2026-10-15 -- Flash-Next optimization S21: bounded concurrent MTP depth
+
+CONFIG: frozen db53efb23790f682478f8469eab5737cc0e9b569a0bdf6c7a98ea86c6272fba3,
+S20+Fabledepthpatch+rootcontextguards; same24576experts/two200000slots/
+spec4/INT8/32GiB4/EP-PUSH,greedy. Envdepth1/2/3 means proposals per slot.
+COMMAND: actualFableimplementation/Opuscommitreview; CPUacceptance/packing/
+EOS/cancel/length/contextbound PASS. Abort firstCPUbuild121.834s on real
+contextendhazard; add rowclamp and port CUDAdrafterallocationcap toSYCL;
+rebuild125.391s. Fullcontextmax_cells independentofring verified. NoGPU
+usedunguardedbuild. Onepairedcoding screen/depth; extra2freshrepeats only
+control/depth2; one9707token/256outpair each1/2; functional2; normalstop,
+percardhealth+10compiledcollectives. No dailyrestore/fullRAMrepeat.
+RESULT: median aggregate1=93.06385,2=98.90103(+6.272%); individual1
+93.903/93.064/92.408,2=99.351/98.886/98.901. SixhashesPERarm matchS16;
+longpairbothhashesequal. Depth3one93.156/twohashesequal: noextra repeats.
+Medianperstreamclient49.701->52.737, stillbelow150. Native first summaries:
+1=3.80rows/37.26ms(run32.28,commit1.43,emit3.55),2=5.34/49.27(40.67,
+1.56,7.03),3=6.57/64.95(52.90,1.65,10.40). Functional and allteardown
+health PASS; no crash/reset; serversstopped. S20RAMqualificationretained
+separately, no depth2fullcache/shelf claim. Alluserdirtpreserved.
+VERDICT: keep depth2experimental/default1; reject depth3. Mainverifier
+and serialdrafting dominate next; cache2sdiagnostic only. ActualFable/Opus
+loopreviews: independentdrafterqueues found, sharedscratchborrow must be
+checked before asyncsplit. Rootrejects profile/hashwaiver and unsupported
+not-weight-bound claim. STRATA_VERIFY_PROFILE disables sharedstreamfork;
+use productionbranch-aware attribution/shortcanary, not2x1500blindprofile.
+Existingzero-doorbell0expertcounters are not a trafficmeasurement. Skip
+unreachableAPIcontextendprobe(8tokenslack), duplicatefullRAM, solo, broad
+rejectedknobs. --start-repeat extends screens withfreshpromptIDs.
+Details: stagedoc S21; raw cachefix_20261014/batch-depth-s21/s21-report.json,
+actualagentnotes/rootresolutions underagents/fable-depth/. Patch tracked
+strata/flash-next/patches/batch-mtp-depth.patch; onlySYCLexecuted.
