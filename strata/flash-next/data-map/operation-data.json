@@ -819,7 +819,8 @@
     "head-pair-s31/analysis-prep/result/final-analysis.json",
     "grf-oracle-s39-prep/{s39-report,build-closure}.json; run-profiled/window{0,1}/closure.json + comparison.json",
     "hc-lo-once-s48-prep/{s48-analysis,s48-report}.json; root-build-decision.json; run-clean/closure.json",
-    "hc-lo-once-graph-s50-prep/v2/{root-analysis,root-independent-DOT,build-closure}.json; run-clean/closure.json"
+    "hc-lo-once-graph-s50-prep/v2/{root-analysis,root-independent-DOT,build-closure}.json; run-clean/closure.json",
+    "hc-lo-once-serving-s51-prep/{comparison,s51-root-report}.json; hc-serving-postreviews-s51-20261015/review-closure.json"
    ],
    "quoted": [
     {
@@ -863,6 +864,12 @@
      "value": "26exactS48snapshotsPASS; 8balancedpairedmeans59.359->55.625us/read(-6.290percent); declaredscreenPASS",
      "basis": "Onephysicalcard1/noexternalprofiler; onegraphsubmit per32reads; actualDOT128nodes/control-vs-candidate32UP C16 provescapturedcontents, notGPUdispatchtrace. ReusedIR/newAOTlink; no servingbenefit or physicaltrafficclaim.",
      "status": "measured"
+    },
+    {
+     "label": "S51 production HC predicate traced serving discriminator",
+     "value": "All4 pair nativework/output/functionals/health PASS; three fresh wall medians4.832553->4.782742s(-1.031percent), control/candidate ranges14.877/35.238ms.",
+     "basis": "One server/arm fixed order, NVMe/TRACE/CPU markers common, S49OFF. Retain boundedHC candidate fixed for nexthead arms; not clean/stable/causal speed, isolatedHC service, rawtoken/logit identity or shelf promotion.",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -875,7 +882,8 @@
    ],
    "gaps": [
     "Which of the 109 calls/cycle belong to drafter versus target passes is not separated.",
-    "S50 resolvesboundedgraphsignal andcapturedbranchbinding; full-modelbenefit/othergeometry/physicaltraffic remainunmeasured. PLEservingexperiment separate; no fullcontextrepeat."
+    "S50 resolvesboundedgraphsignal andcapturedbranchbinding; full-modelbenefit/othergeometry/physicaltraffic remainunmeasured. PLEservingexperiment separate; no fullcontextrepeat.",
+    "S51 adds a bounded traced serving observation; clean benefit/stability and exact HC GPU attribution remain unqualified. No extra HC rerun for current retain decision."
    ],
    "hypotheses": [
     {

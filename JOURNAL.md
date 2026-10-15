@@ -23498,3 +23498,38 @@ binds frozen archive files readonly, never restores live build archives.
 Raw240files222195943B; externalmanifestSHA256
 f301c25c1121b7c14203ad8ed5ca7ab05752e63a97ec492ee8f8e3e3ea8a2f5f.
 See docs/20261015_strata_head_rpw_probe.md.
+
+
+## 2026-10-15 -- Flash-Next optimization S51: HC predicate serving screen
+
+CONFIG: One production defaultC16/nonGRF/nonILP LO_ONCE predicate; unchanged
+private SLM/math/geometry, other branches fixed. Fresh0c30 control/0143HC,
+new verified NVMe native+PLE paths, S49OFF/globalRPW1/batch2/depth2/headpairON/
+spec4/context200000/32GiB parking/TRACE+CPU markers common, localhost.
+COMMAND: Refresh source/status, exact patch, one168s CPU incremental HC TU/
+archive/AOT link, no configure/DRI/network. Other archives/sources/Python/
+cache pinned. Fullprehealth; each fresh server warm128x2+3fresh128x2, actual
+flushed native-prompt-start admission gate/client overlap, existing functions,
+normal QUIT/removedcontainer/wrapper0/fullpercard+compiled10posthealth0.
+RESULT: All4 pairs exact requests/text/SSE/usage/native draft+window+capture/
+copy/pair/solo work; allcomplete markers dropped0, functionsPASS.16coding
+responses/eight corresponding outputs match. Three timed wallseconds
+4.832553/4.830802/4.845678 ->4.782742/4.765393/4.800632; median-1.030736percent,
+49.811ms difference vs ranges14.877/35.238ms. Allcandidate observationsbelow
+allcontrols, nested3pairs in oneprocess/arm, fixedorder. Notclean/causal/
+stable speed or rawtoken/full-logit identity. Wholewindow CPU spans include
+otherwork; no HC GPU timer/traffic/occupancy or additive attribution.
+Process PLE requested46240->46288/demandreads15475->15491 cumulative, no
+physical IO equivalence/location claim. NVMe readiness84.130/54.115s, fixed
+order/cache observations, no causal startup improvement.
+VERDICT: Retain bounded HC candidate and holdfixed next head-only RPW2 arms;
+no daily/shelf promotion, extraHC/200k/profiler/rerun. Actual resumed
+claude-opus-5-5/claude-fable-5-1 agree(36.753/48.120s). Root READ both full
+responses/rejects invented2percent S51 gate, cumulative row location and
+additive CPU wall attribution/reversed-order stability inference. No more
+review needed for unchanged retain decision. Qualified152055a6recoverable,
+targets unmet. Loop uses existing harness/one parserpass persegment, no
+routine daily restore; prepared head source work during serves. Datedreport/
+exactpatch/smallHCmap update; historical170ops/rollups untouched. Frozen
+S51+postreviews187files/11306846B, externalmanifestSHA256
+13c15150968a5a7b3ea2359634e822a14d1c5ff7d5a3863ce67153c2664f3893.
