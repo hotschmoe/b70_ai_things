@@ -6,9 +6,10 @@ path, which operations are expensive or wait, and how strong the evidence
 is for each claim. `operation-data.json` is the source of truth;
 `index.html` embeds a copy of it.
 
-Snapshot: 2026-10-15, S30 (S22 operation trace plus readiness, real-head,
+Snapshot: 2026-10-15, S31 (S22 reference operation trace plus readiness, real-head,
 production PLE, EP publication fix/native ISA, paired-head serving,
-draft-counter carry correction and full winning-candidate RAM recovery).
+draft-counter carry correction, full winning-candidate RAM recovery and
+separate current paired-head replay measurements).
 Runtime source:
 `/mnt/vm_8tb/b70/build/strata-ab/src-ep` (upstream Strata 296b59d2 base
 plus working-tree overlays for EP/PUSH/accounting/S19-S21 and the
@@ -139,3 +140,21 @@ at the first12288-token block ->6278/6284ms at block16; attention grows
 2291/2303->2630/2636ms. These are two ordinal sequences without A/B
 attribution or exact context offsets, not a joined GPU budget. Value-only
 cost remains unisolated. All170 S22 operation rows remain unchanged.
+
+S31 adds [159 current replay operations](20261015_s31_replay_operations.csv)
+with counts, median/p95/range, quant/template labels and grid/work-group.
+Five reviewed capture-free cycles have twoC2draft heads (2.416ms summed
+service/cycle), oneC6target head (2.262ms), and nine actual L0
+ImmediateAppendCommandListsExp calls. The full trace's18C2heads reconcile
+nine native paired windows. Both32-token replies match retained prefixes;
+normal teardown and final per-card/compiled-collective health pass.
+
+S31 quotes supplement the old S22 table; CSV host counts use complete
+intervals, while the dated report also gives API-start counts and boundary
+crossers. Host wait durations overlap GPU work, and invocation counts do
+not establish logical barrier counts. The serving GR-down/reduce gap is
+only0.209us median; the old standalone9.5us gap is not reused as a saving.
+Primary recorded-activity gaps after MTPselect3.300-3.941ms and before
+mapped-input copies1.555-1.648ms need source/uninstrumented verification;
+no physical idle or production saving is inferred. See
+[S31 report](../../../docs/20261015_strata_paired_head_profile.md).

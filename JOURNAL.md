@@ -22923,3 +22923,40 @@ full, sources/timersduringnecessaryprefills; hostJinjaabsent,image reused.
 Raw draft-carry-s30/{s30-report.json,full-cache-verdict.json,post-health.json};
 datedcounterdoc, stagedocS30, goals/data-map/patchupdated. NexttinyONtrace
 andprimarydense/shared/readinesswork; fullthreadgoalACTIVE.
+
+
+## 2026-10-15 -- Flash-Next optimization S31: paired replay and readiness gaps
+
+CONFIG: frozen152055a6/headpairON/depth2, CLI spec4, two200k/32GiB4parking,
+all24576experts7152/17424. SameS30Python; ordinaryIntelentry, onlyunitrace
+wrapper/logdestinations. Noobserver/readback/newengine/source/build/stack.
+COMMAND: collectionONbeforecapture, ONE32+32pair,no warmup/extrageneration;
+explicitpause/stop, normalserverstop/leaseexit0, bothcard+10compiledhealth.
+FreshBOOTTIME-RAW bracketclock; reviewC6-completioncycles5..9 aftercapture
+construction0..4, excludingtail10. Reuseparsers/trimmedevents/smallCSV.
+RESULT: bothS16prefixes/exactcaps32PASS; native9paired/2solo,18C2heads
+reconcile2perpairedwindow,4privateMTPselect/48primaryEPwaitpercycle.
+Eachreviewedcycle9L0AppendExp/2Copy/11EventHostSync; HostSyncstartcounts
+319/324/334/324/349 areinvocations, NOTlogicalbarriers.1650calls,1625<=5us,
+15>1ms; timeout/handle/resultunavailable. HostwaitoverlapsGPUwork. Paired
+C2service2.416ms/cycle(2calls,1.208msmedian), mainC6head2.262; dense13.899,
+HC7.199, primaryexperts7.738msservice, NOTadditivelatencybudget.
+GRdown->reducemedian0.209us/p950.438across545adjacencies; oldstandalone
+9.5us NOTserving. PrimaryrecordedGPUactivityleaves53.377msuncoveredover
+287.335ms(18.58%). Largest5gapsfinalMTPselect->ep_bump3.300-3.941ms,
+next5barrier->mappedcopy1.555-1.648ms; hostoverlapsassociationNOTcause.
+Reset/barriers instrumentation-sensitive,noproductionidle/savingsclaim.
+Normalstop/leaseexit0,bothcards+10compiled4x5120BF16/P2P0healthPASS,noreset.
+VERDICT: currentC2path andONoperation/APIcosts measured, noOFFdelta or
+newspeed/stabilityclaim. SkipOFFserve solelyforwording; oldS29clean
+benchmark remainsperformanceevidence.159currentoperationCSVrows export
+quant/grid/workgroup/count/median/p95/range; old170S22rowsunchanged.
+ActualOpus5.5 completesprovided-factsreview18.6s; Fable5.1sourceprep
+52.8s hitscap butretains preliminaryquantumlead, noindependentbodyaudit.
+Rootread run_impl/PLEpersistence/callbacks/drains; rejectarbitrarybitwise
+crosschunkhashgate. NoGRdirectarm; pairedsampling<0.6msceilingnotpriority.
+Nextsource/untracedhost-boundaryaudit; separate runtimeprefillquantum
+keeps12288allocation/expertpartition butneedsstate/checkpointvalidation.
+Loop1start/64totaloutputs/nobuild/nofullcachetest/nodailyrestore; no
+redundantGPUprobe. DatedS31profiledoc, goals/data-map updated. Raw
+head-pair-s31/{s31-report.json,analysis-prep/,post-health.json}; fullgoalACTIVE.

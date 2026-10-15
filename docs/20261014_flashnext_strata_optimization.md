@@ -1928,3 +1928,39 @@ old GPU arm/no1500 rebenchmark/no daily restore; full200k run only after
 the cheap oracle passes. Useful source/timer work overlaps necessary
 prefills. Raw draft-carry-s30/{s30-report.json,full-cache-verdict.json,
 prefill-phase-diagnostic.json,model-review-closure.json,post-health.json}.
+
+## S31: paired-head replay operations and readiness gaps (2026-10-15)
+
+CONFIG -> Same frozen152055a6/headpairON/depth2, CLI spec4, two200k slots,
+32GiB/4 parking, all24576 experts7152/17424; S30 Python carry fix. Only
+unitrace wrapper/log paths change; ordinary Intel entry, no S30 observer
+or snapshot readback. S30 full-cache/functional evidence retained.
+COMMAND -> Collection ON before capture; one32+32 coding pair; named
+pause/stop, normalserverstop/leaseexit0, bothcard+10compiledhealth. Reuse
+S22 parsers with fresh bracketed BOOTTIME-RAW clock correction. Exclude
+capture cycles0..4 and conservative tail10; review5..9, selected by API
+construction evidence, not fastest durations. No build/cache rerun.
+RESULT -> Both output prefixes and exact32-token caps PASS,9paired/2solo.
+Valid270756565B trace;18C2heads=2x9nativepaired. Per reviewed cycle2C2/
+0C1,4privateMTPselect,48primaryEPwait,9AppendExp/2Copy/11EventHostSync.
+API-start HostSync319/324/334/324/349 are invocations, not logicalbarriers;
+arguments/CSV omit handles,timeouts,results. Most take<=5us; long waits
+overlapGPUwork. Pairedheadservice2.416ms/mainC6head2.262ms, dense13.899ms,
+HC7.199ms percycle; overlapping sums are not latencybudget. GRsliced->
+reduce gapmedian0.209us/p950.438us, not oldstandalone9.5us. Largest five
+primary recorded-activity gaps followMTPselect,3.300-3.941ms; nextfive
+barrier->mappedinputcopy1.555-1.648ms. Associations notcause/physicalidle
+or savings; resets/barriers instrumentation-sensitive. Normalstop and
+finalbothcard+10compiled4x5120BF16/P2P0health PASS, noreset.
+VERDICT -> Current C2 execution/ON API costs measured; no OFF delta or new
+speed claim. No direct-GR arm justified; source/untraced boundary audit
+next. Fable's preliminary runtime-prefill quantum lead needs state/callback
+validation; root read run_impl/PLE persistence/drains, rejects arbitrary
+bitwise cross-chunk hash gate. Opus completed review of supplied trace
+facts; use narrow observedC2 claim and skip OFFtrace solely for wording.
+One start/64totaloutputs/no build/no fullcache repeat/no dailyrestore.
+All159 current operations exported to data-map/20261015_s31_replay_operations.csv;
+old170 S22 operation rows preserved. Full analysis and limits in
+[dated S31 report](20261015_strata_paired_head_profile.md).
+Raw head-pair-s31/analysis-prep/{result/final-analysis.json,
+primary-quiet-gaps.json,reviewed-summary/}; s31-report.json/post-health.json.

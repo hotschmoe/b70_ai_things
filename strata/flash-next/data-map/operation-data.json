@@ -1,7 +1,7 @@
 {
  "schema": 1,
  "title": "Strata Flash-Next data map",
- "snapshot": "2026-10-15 S30: S22 operation rollups, S29 bounded head-pair gain, S30 carry fix and full winning-candidate RAM recovery (teardown health recorded in stage evidence)",
+ "snapshot": "2026-10-15 S31: S22 reference operation rollups, S30 full RAM recovery, separate current paired-head replay profile and159-row CSV",
  "scope": "Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two Arc Pro B70 cards, Strata SYCL engine, EP/PUSH, batch MTP depth2 (opt-in), two 200000-token slots, INT8 KV, 32 GiB / 4-entry RAM parking, all 24576 experts resident (7152 on GPU0 + 17424 on GPU1), greedy.",
  "warnings": [
   "Trace service times overlap: within a card (engines), across cards, and with CPU wall time. They are NOT additive and are not a latency budget.",
@@ -10,7 +10,8 @@
   "Logical byte figures are arithmetic from shapes and quant block sizes. Physical PCIe bytes, cache hit rates and bandwidth saturation were NOT measured.",
   "Current EP transport is Level Zero IPC-mapped device memory written/read by kernels with flag counters. It is not an all-reduce or any oneCCL collective. oneCCL post-health checks are health checks, not serving performance.",
   "S28 explicit-scope EP push passes bounded standalone/native-TU and concurrent serving canaries. Old default barrier first-read failures retained; no speed, general IPC or long-run claim.",
-  "S29 bounded paired-head speed gain is unchanged; its raw prior-leg draft counts remain incomplete. S30 fixes Python carry and proves native/API sums in one64/512handback. Full-request acceptance parity across engines/schedules is not inferred."
+  "S29 bounded paired-head speed gain is unchanged; its raw prior-leg draft counts remain incomplete. S30 fixes Python carry and proves native/API sums in one64/512handback. Full-request acceptance parity across engines/schedules is not inferred.",
+  "S31 now measures paired C2 execution:18heads reconcile9nativepaired windows. Five reviewed cycles eachhave2C2/0C1 and9ImmediateAppendCommandListsExp. APIinvocations are not logicalbarriers; profiler-sensitive reset/gaps are not production savings. S22reference rows remain separate."
  ],
  "status_legend": {
   "measured": "Directly observed in a retained trace summary, native log, or clean benchmark (evidence path given). Trace values are diagnostic.",
@@ -31,11 +32,13 @@
    "../../../docs/20261013_flashnext_goals.md",
    "../README.md",
    "../../../docs/20261015_strata_ep_publication_scope.md (S28, explicit hidden-ISA correction)",
-   "../../../docs/20261015_strata_batch_draft_carry.md (S30 counter correction)"
+   "../../../docs/20261015_strata_batch_draft_carry.md (S30 counter correction)",
+   "../../../docs/20261015_strata_paired_head_profile.md (S31 current replay timings, APIs and readiness gaps)"
   ],
   "results_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
   "prototype_binary": "S26 CPU-only strata-head-pair-s26 SHA256264f221e2c1b02d4bdd9b332c46f91e91bf4f6301afbdabe563df5ff2a16e44a; not GPU served; default pair option OFF.",
-  "ep_scope_binary": "strata-ep-scope-s28 SHA256152055a6204a3911e96b59aab8d6788a1a434891e1e1ebd9098c9e21b8d11f13; S28OFFcanary, S29samebinary OFF/ONcoding, S30depth2/headpair fullcache/counter/functionals/normalteardown/percard+10compiledhealth PASS; no shelf promotion."
+  "ep_scope_binary": "strata-ep-scope-s28 SHA256152055a6204a3911e96b59aab8d6788a1a434891e1e1ebd9098c9e21b8d11f13; S28OFFcanary, S29samebinary OFF/ONcoding, S30depth2/headpair fullcache/counter/functionals/normalteardown/percard+10compiledhealth PASS; no shelf promotion.",
+  "current_profile": "S31 same frozen152055a6, pairedON/depth2, one32+32 pair; five reviewed replay cycles5..9 after capture construction, no OFF delta. Current159-row CSV is separate from S22 operations[]/stage_rollups."
  },
  "geometry": {
   "source": "Confirmed against served GGUF metadata with CPU-only tools/gguf_reader.py: lowlevel-s24/model-geometry.json. Derived: 12 QSA/36 GDN layers, ssm_conv_channels=2*128*16+6144; defaults cross-checked against include/strata/core/geometry.hpp.",
@@ -757,7 +760,8 @@
     }
    ],
    "evidence": [
-    "draft-profile-s22/profile/steady-summary"
+    "draft-profile-s22/profile/steady-summary",
+    "head-pair-s31/analysis-prep/result/final-analysis.json"
    ],
    "quoted": [
     {
@@ -776,6 +780,12 @@
      "label": "S24 standalone launch-property screen",
      "value": "32 bitwise cases PASS, no material gain; rejected",
      "basis": "uninstrumented whole-read oracle/timing; tiny trace independently retained, not serving gain",
+     "status": "measured"
+    },
+    {
+     "label": "S31 serving GR boundary",
+     "value": "sliced->reduce median0.209us/p950.438us across545adjacencies; not oldstandalone9.5us",
+     "basis": "Same152055a6ONtrace, five reviewedcycles5..9; diagnostic, no OFFdelta",
      "status": "measured"
     }
    ],
@@ -914,9 +924,17 @@
     }
    ],
    "evidence": [
-    "draft-profile-s22/profile/steady-summary"
+    "draft-profile-s22/profile/steady-summary",
+    "head-pair-s31/analysis-prep/result/stage-rollups.json"
    ],
-   "quoted": [],
+   "quoted": [
+    {
+     "label": "S31 dense projections",
+     "value": "468calls/cycle,13.899ms summed service; not wall budget",
+     "basis": "Same152055a6ONtrace, five reviewedcycles5..9; diagnostic, no OFFdelta",
+     "status": "measured"
+    }
+   ],
    "upstream": [
     "qsa_attention",
     "gdn"
@@ -1440,7 +1458,8 @@
    ],
    "evidence": [
     "draft-profile-s22/profile/steady-summary",
-    "head-profile-s25/s25-report.json"
+    "head-profile-s25/s25-report.json",
+    "head-pair-s31/analysis-prep/reviewed-summary/summary.json"
    ],
    "quoted": [
     {
@@ -1453,6 +1472,12 @@
      "label": "S25 actual-weight standalone head curve",
      "value": "C1 1006us; C2 1308-1322us; C6 2621-2701us. Both cards all C1/2/3/4/6/8 bitwise/argmax/finite/guards PASS.",
      "basis": "minimum of three 30-launch mean spans, synthetic normal activations with served Q5_K tensor; not a serving gain",
+     "status": "measured"
+    },
+    {
+     "label": "S31 main C6 head",
+     "value": "1call/cycle,2.262ms service; separate from pairedC2",
+     "basis": "Same152055a6ONtrace, five reviewedcycles5..9; diagnostic, no OFFdelta",
      "status": "measured"
     }
    ],
@@ -1563,13 +1588,20 @@
     }
    ],
    "evidence": [
-    "draft-profile-s22/profile/steady-summary (host entries)"
+    "draft-profile-s22/profile/steady-summary (host entries)",
+    "head-pair-s31/analysis-prep/result/final-analysis.json"
    ],
    "quoted": [
     {
      "label": "Host sync calls",
      "value": "6283 per 8 cycles, median 2.1 us",
      "basis": "trace host API; waits overlap GPU work",
+     "status": "measured"
+    },
+    {
+     "label": "S31 API-start counts",
+     "value": "9AppendExp/2Copy/11EventSync eachcycle; HostSync319-349invocations, logicalwaitcountunknown",
+     "basis": "Same152055a6ONtrace, five reviewedcycles5..9; diagnostic, no OFFdelta",
      "status": "measured"
     }
    ],
@@ -1663,7 +1695,8 @@
    "evidence": [
     "draft-profile-s22/profile-comparison.json",
     "head-profile-s25/s25-report.json",
-    "head-pair-s29/s29-report.json"
+    "head-pair-s29/s29-report.json",
+    "head-pair-s31/analysis-prep/result/final-analysis.json"
    ],
    "quoted": [
     {
@@ -1682,6 +1715,12 @@
      "label": "S29 in-serve paired heads, bounded same-binary comparison",
      "value": "C2 aggregate median97.881OFF ->102.279ON (+4.493%,3pairs);6/6 exact outputs match. Native emit7.033->5.380ms/window weighted.",
      "basis": "ON1675paired/19solo; all24576experts, botharm functionals/teardown/health PASS. Run also varies; not all wallgain isolated to head math. No C2 per-kernel serving trace yet.",
+     "status": "measured"
+    },
+    {
+     "label": "S31 paired-tail C2",
+     "value": "2calls/cycle,2.416ms summed service; median1.208ms/head; fourprivateMTPselects",
+     "basis": "Same152055a6ONtrace, five reviewedcycles5..9; diagnostic, no OFFdelta",
      "status": "measured"
     }
    ],
@@ -1727,13 +1766,20 @@
     }
    ],
    "evidence": [
-    "draft-profile-s22/s22-report.json"
+    "draft-profile-s22/s22-report.json",
+    "head-pair-s31/analysis-prep/primary-quiet-gaps.json"
    ],
    "quoted": [
     {
      "label": "Client decode per stream (S21 depth2)",
      "value": "median 52.737 tok/s",
      "basis": "clean client",
+     "status": "measured"
+    },
+    {
+     "label": "S31 recorded-activity gap",
+     "value": "finalprivateMTPselect->nextEPbump3.300-3.941ms, once/cycle; profiler/CPUcause unresolved",
+     "basis": "Same152055a6ONtrace, five reviewedcycles5..9; diagnostic, no OFFdelta",
      "status": "measured"
     }
    ],
@@ -2178,6 +2224,13 @@
    "value": "4x199501 fresh histories, twoactive256-token replies, fourforcedRAMreturns reuse199839/read31/replay0",
    "status": "measured",
    "note": "Same152055a6, headpairON/depth2,32GiB/4parking; draftKV byte-readback, needles/isolation and strictermeanrows>3 overlap PASS. PeaknativeRSS16.255GiB/container16.244GiB,0swap/OOM; teardown health tracked by stage report. No daily or speed promotion."
+  },
+  {
+   "stage": "S31",
+   "label": "Current paired-head ON replay profile",
+   "value": "18C2heads=2x9paired; reviewed2C2heads2.416ms/cycle, mainC6head2.262ms,9actualL0AppendExp/cycle",
+   "status": "measured",
+   "note": "32+32prefixes/residency/normalstop/finalpercard+10compiledhealthPASS. Fivecapture-freeinteriorcycles; source-informedtailmotif; timingsdiagnostic, noOFFdelta/speedclaim. Currentall-operationCSV159rows; oldS22operationsunchanged."
   }
  ],
  "rejected_parked": [
@@ -2254,7 +2307,8 @@
   "S28 native BMG ISA available: explicit barrier changes preflag UGM fence none.group to invalidate.gpu. Split boundary and explicit scope pass bounded probes; full failure mechanism and compiler legality unproven. Old standalone failure not proof of production output corruption.",
   "S29 headpair serving is measured only as bounded C2 coding with native window stats. The S22 operation rollups remain unchanged; do not relabel four old C1 heads as measured new C2 kernels. Queued tiny ON trace requires a new instrumented start.",
   "S29 discovers carry_leg/add_carry omit prior draft totals on batch-to-solo transition: OFFrepeat3slot1 API28/21 is only final31token tail. Full-request acceptance comparisons invalid; measured wall/output parity remains valid. S30 fixes new requests, not historical raw rows; live long native344accepted/417offered matches finalserver/API.",
-  "S30 full depth2/headpair RAM test reuses199839 held/read31new/replay0 on fourforcedreturns; native663.3-685.1ms and clientTTFT2.992-6.918s are correctness-run diagnostics with snapshot readback/counter observer, not a clean speed comparison. S22 per-op times are not relabeled."
+  "S30 full depth2/headpair RAM test reuses199839 held/read31new/replay0 on fourforcedreturns; native663.3-685.1ms and clientTTFT2.992-6.918s are correctness-run diagnostics with snapshot readback/counter observer, not a clean speed comparison. S22 per-op times are not relabeled.",
+  "S31 current159-operation CSV covers reviewedONreplay only. No matchedOFF driver delta, physicalPCIebytes, EU/cache counters, or uninstrumented host-boundary latency. Largest repeated recorded-activity gaps3.300-3.941ms after MTPselect need source/untraced verification."
  ],
  "operations": [
   {

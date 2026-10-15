@@ -49,6 +49,15 @@ gap and29.564s TTFT. These correctness runs include a counter observer
 and snapshot verification; they do not replace clean S29 speed evidence.
 Final teardown/health closure is recorded with stageS30. No daily promotion.
 
+S31 supplies the previously missing current paired-head operation trace:
+18C2head calls reconcile9 native paired windows; five reviewed replay
+cycles each have twoC2heads (2.416ms service), oneC6head (2.262ms), and
+9 actual L0 AppendCommandListsExp calls. Both32-token replies and final
+health pass. These are diagnostic timings, not a new throughput result.
+Larger recorded gaps after draft selection and before mapped-input copies
+need uninstrumented boundary verification; the older standalone GR gap
+does not describe serving. See the dated paired-head profiling report.
+
 Quality: on 2026-10-14 Flash-Next IQ3_XXS beat the 27B INT4 8-0 on paired
 langs + sysadmin tasks (41/43 vs 33/43); see the A/B brief, Outcome 2.
 
