@@ -1,0 +1,25 @@
+Source: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/host-launch-gu17.asm
+Source SHA256: 7397c27093f59680f8fbb3c94d6d66bea16f05a9810cf1611979f24ab077f14e
+Original 1-based lines 1144..1165; exact line bytes follow.
+   158db:	bf 00 00 00 00       	mov    $0x0,%edi
+			158dc: R_X86_64_32	.bss+0x840
+   158e0:	e8 00 00 00 00       	call   158e5 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0x1125>
+			158e1: R_X86_64_PLT32	__cxa_guard_acquire-0x4
+   158e5:	85 c0                	test   %eax,%eax
+   158e7:	0f 84 00 fd ff ff    	je     155ed <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0xe2d>
+   158ed:	bf 00 00 00 00       	mov    $0x0,%edi
+			158ee: R_X86_64_32	.rodata+0x12538
+   158f2:	e8 00 00 00 00       	call   158f7 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0x1137>
+			158f3: R_X86_64_PLT32	_ZN4sycl3_V16detail19getDeviceKernelInfoERKNS1_27compile_time_kernel_info_v123CompileTimeKernelInfoTyE-0x4
+   158f7:	48 89 05 00 00 00 00 	mov    %rax,0x0(%rip)        # 158fe <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0x113e>
+			158fa: R_X86_64_PC32	.bss+0x834
+   158fe:	bf 00 00 00 00       	mov    $0x0,%edi
+			158ff: R_X86_64_32	.bss+0x840
+   15903:	e8 00 00 00 00       	call   15908 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0x1148>
+			15904: R_X86_64_PLT32	__cxa_guard_release-0x4
+   15908:	e9 e0 fc ff ff       	jmp    155ed <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0xe2d>
+   1590d:	48 89 c3             	mov    %rax,%rbx
+   15910:	bf 00 00 00 00       	mov    $0x0,%edi
+			15911: R_X86_64_32	.bss+0x840
+   15915:	e8 00 00 00 00       	call   1591a <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0x115a>
+			15916: R_X86_64_PLT32	__cxa_guard_abort-0x4

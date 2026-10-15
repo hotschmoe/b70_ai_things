@@ -1,0 +1,88 @@
+{
+  "status": "PASS_EXISTING_ROUTED_QT17_DECODE_REUSE_GAP_SURVIVES_COMPILATION",
+  "binary_sha256_actual": "d94e96ca399d8ecf1f15403db754b645697e82eaa72c052a2d18f4b29defc247",
+  "source_sha256": "acaa7da63733af9f3831b3a74b99e6176bf46a06e498e0a33c0591f7f4a29851",
+  "object_sha256": "a61c1dcae2783b7b63d23fffed7ccdfa0c79089fee148866cb5f1e111c6bb283",
+  "host_binding": "Exact final registered-name pointer; object STT_SECTION+addend refs from launch_gu<17>, actual host disassembly getDeviceKernelInfo argument at0x158ee/0x158f3; demangled _ZTS typeinfo prefix explicitly normalized to exact S95 runtime name. Not merely unused metadata.",
+  "selection": {
+    "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_114launch_gu_portILi17ELi8ELb1EEEvjPN4sycl3_V15queueEPKyPKiSB_SB_PK10block_q8_1RKNS1_18NativeExpertLayoutEPfSI_E14native_gu_port18dpct_kernel_scalarILi17EESK_ILi8EESK_ILi1EEEE",
+    "executable_offset": 76953104,
+    "image_bytes": 43272,
+    "image_sha256": "37cb80cd3034716da7cb4916cbe2379a35abc375169c171568f8525fe780cd78",
+    "text_bytes": 7488,
+    "text_sha256": "bfbb475964f034bba8063a2e746a44a1dbef26d97f68ce4c79a99d2a374db2e1",
+    "ze_info_sha256": "0356e7a01724b200d3684b7070e228c15266231e35a0e91cb5a90a4bb052a47d",
+    "build_options": "-cl-fp32-correctly-rounded-divide-sqrt",
+    "unique_selected_full_image": true,
+    "all_kernel_names_in_selected_image": [
+      "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_114launch_gu_portILi17ELi8ELb1EEEvjPN4sycl3_V15queueEPKyPKiSB_SB_PK10block_q8_1RKNS1_18NativeExpertLayoutEPfSI_E14native_gu_port18dpct_kernel_scalarILi17EESK_ILi8EESK_ILi1EEEE",
+      "Intel_Symbol_Table_Void_Program"
+    ],
+    "extra_text_sections": {
+      ".text.Intel_Symbol_Table_Void_Program": 320
+    }
+  },
+  "resources": {
+    "SIMD": 32,
+    "GRF": 128,
+    "eu_thread_count": 8,
+    "SLM_field": "absent",
+    "spill_size_field": "absent",
+    "scratch_buffer_field": "absent",
+    "source_and_S95_local_workgroup": 256,
+    "not_measured_runtime_resources": true
+  },
+  "static_counts": {
+    "dp4a": 8,
+    "dpas": 0,
+    "cbit": 4,
+    "d64_gather": 4,
+    "d16_weight_or_scale_load": 6,
+    "call": 0
+  },
+  "loop_evidence": {
+    "group_loop": "L1616..7200, grp counter r3.14, reads entry interval",
+    "entry_loop": "L1824..7152, e=r2.12; end adds1, compares r2.13, branches L1824",
+    "K_loop": "L2304..6632, k=r38; increment8, bound r3.4, branches L2304; reset lane k before loop atL2152",
+    "weight_code_load_lines": [
+      202,
+      205,
+      209,
+      214
+    ],
+    "codebook_gather_lines": [
+      221,
+      276,
+      277,
+      390
+    ],
+    "sign_decode": "four cbit plus SWAR operations inside K loop",
+    "scale_conversion_product": "lines457..468 inside K loop: two half loads/converts, scale multiply, product multiply, FP ledger add",
+    "implication": "Each entry repeats the nested weight/codebook/sign/scale decode; no compiler loop interchange/decoded-row hoist across E observed. No physical transaction/cache/read-frequency or latency inference."
+  },
+  "decoder": {
+    "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+    "cpu_limit": 4,
+    "no_DRI": true,
+    "network": "none",
+    "ocloc_exit": 0,
+    "wrapper_handle": 73450,
+    "CPU_lease_reported_s": 11,
+    "input_before_after_equal": true,
+    "selected_image_count": 1,
+    "target_text_alias_copy_only": true
+  },
+  "setup_stops": {
+    "count": 6,
+    "all_before_first_ocloc": true,
+    "preserved": "extract.py.attempt1..6, extract.stderr.attempt1..6 and corresponding logs",
+    "causes": [
+      "Host metadata uses namespace-global class+scalars rather than launch function scope",
+      "Inherited named-only reloc helper did not see STT_SECTION/addend refs; inspected actual host callsite before adding exact normalization",
+      "Selected image also contains Intel_Symbol_Table_Void_Program",
+      "Section-name table is e_shstrndx12/.strtab, not assumed .shstrtab",
+      "c++filt emits typeinfo name for prefix for _ZTS"
+    ]
+  },
+  "verdict": "Source eligibility for ONE QT17 E4/E2/tail reuse candidate; implementation/build/GPU not authorized here. Existing signed hardware DP4A lever closed; reuse lever remains. No speed/serving/occupancy/traffic/ISA-causality claim."
+}

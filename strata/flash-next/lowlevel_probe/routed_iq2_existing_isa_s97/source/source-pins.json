@@ -1,0 +1,46 @@
+{
+  "scope": "SOURCE_ONLY_NO_GPU_BUILD_MODEL_PAYLOAD_READ",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp",
+      "bytes": 291120,
+      "sha256": "acaa7da63733af9f3831b3a74b99e6176bf46a06e498e0a33c0591f7f4a29851"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/sycl_math.hpp",
+      "bytes": 1271,
+      "sha256": "ac45a7a9b7d3cdc4b1b8c1c413c416911fb4ca91373d69bb34947815dbb3eec6"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/third_party/ggml/ggml-common.h",
+      "bytes": 135161,
+      "sha256": "0061131b615c5721fc88a78feeb22c1f8c450f1c2646a317d80796a653bf595c"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/native_grouped_parity.cpp",
+      "bytes": 36075,
+      "sha256": "e8cf426be36d18f90807ba5323e99120e51581083ddca1c1e34a13b7c3ab11fe"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/iq_multi_parity.cpp",
+      "bytes": 34854,
+      "sha256": "21b7ca105acd2186ada431366185053f1ae91b7676113555ead77c04789e3994"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/native_expert_bench.cpp",
+      "bytes": 8587,
+      "sha256": "3ce62d9fa82db4082e1c903fa8ef672f46f2d0e5fe4da3320452f908cd7409f5"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/docs/INTEL.md",
+      "bytes": 77406,
+      "sha256": "e565244b0614ed45b27f732c1b4052815a69eef8cef03bd044c6d97b4a3abdde"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-grouped-gemm-s42-prep/run-clean/exports/fixtures.tsv",
+      "bytes": 943,
+      "sha256": "210555ee1dc0f56690bd770aee3673dafb4b10b2508ed91d81a3736a344307ee"
+    }
+  ],
+  "retained_weights_SHA_from_existing_S80_pin_not_rehashed": "a9549c6a3c9c44c1c0fd374e62d603d4a2c82bea131f07a765ff6b45d5e13dc6"
+}

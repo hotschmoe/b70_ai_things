@@ -24595,3 +24595,26 @@ this routed kernel; attention13tags/S66dense do not establish it. Close any
 already-optimal lever without another GPU test. Routed7.504ms and nonvocab
 MMVQ12.680ms are disjoint diagnostic groups, no additive/savings claim.
 Report/source pins: strata/flash-next/lowlevel_probe/routed_dot_lowering_s96/README.md.
+
+
+## 2026-10-15 - S97 routed IQ2_XS compiled reuse audit
+
+CONFIG -> Frozen d94e96ca, current S95-observed native_gu_port<17,8,true>,
+source acaa7da6, logical lanes8 / SIMD32 / local256. No candidate or GPU.
+COMMAND -> One selected existing-image ocloc disassembly under cpu-run,
+pinned e41/no DRI/network-none/CPU4; wrapper73450 exit0 in11s. Six small
+extractor preflights stopped before any decoder; actual metadata/section
+relocations resolved reused helper assumptions. No build or model read.
+RESULT -> Actual binary SHA, live host launch metadata/name pointer, exact
+S95 runtime name and unique image agree. Image37cb80cd/43272B contains
+target bfbb4759/7488B plus320B Intel symbol helper. Entry loop1824..7152
+contains K loop2304..6632: four codebook gathers, sign/scale decode and
+eight native signed DP4A repeat per entry. Missing reuse survives compilation;
+no missing hardware-dot intrinsic. GRF128/SIMD32/threadcount8 metadata;
+SLM/spill/scratch fields absent, not measured zero or occupancy evidence.
+VERDICT -> Prepare ONE private QT17 natural E4/E2/singleton reuse candidate
+with unchanged integer truncation, FP scale/K/XOR ledger and strict public
+GU anchor. No speed, traffic, actual route-reuse frequency or serving claim.
+S30 RAM recovery and absolute targets unchanged. Report:
+docs/20261015_strata_routed_iq2_reuse.md; exact small records under
+strata/flash-next/lowlevel_probe/routed_iq2_existing_isa_s97/.

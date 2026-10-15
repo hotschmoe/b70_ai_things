@@ -1,0 +1,2 @@
+cpu-run: [b70s4dayz] acquired (heavy) -> objdump -dr --disassemble=_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_ /mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/iq_kernels.dp.cpp.o
+cpu-run: [b70s4dayz] done in 0s (exit 0)

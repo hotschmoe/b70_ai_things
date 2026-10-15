@@ -1,0 +1,161 @@
+{
+  "status": "PASS_EXACT_SMALL_COPIES_ASCII",
+  "raw_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
+  "exact_copy_count": 22,
+  "exact_copy_bytes": 98792,
+  "files": [
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97-prep/extract.py",
+      "destination": "tools/extract.py",
+      "bytes": 10219,
+      "sha256": "acc63d87c181a3d5bbbbc91c434b673be482e33043927948c3723afb0f13308a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97-prep/decode.sh",
+      "destination": "tools/decode.sh",
+      "bytes": 1256,
+      "sha256": "1bfb1f6c63a4e480d86a54bc610370e2a886fee1b720501aedd27c14cb80ecc9"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97-prep/inspect-section-relocs.py",
+      "destination": "tools/inspect-section-relocs.py",
+      "bytes": 4362,
+      "sha256": "ab42d8c05ec3f2267c628e97511846c9480e1d4cc591b7bf2cfb6e8a793b90d0"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/findings.md",
+      "destination": "audit/findings.md",
+      "bytes": 3521,
+      "sha256": "74c2f9ff766fa1944dfe0ea6c0dd69cb44e2732adfb85825f418c78277587aa4"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/report.json",
+      "destination": "audit/report.json",
+      "bytes": 4300,
+      "sha256": "d31f44b59e9c6f2aa9a3ef93508b73535dd6207b14a719093190cc084921b54c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/selection.json",
+      "destination": "audit/selection.json",
+      "bytes": 10614,
+      "sha256": "d05574b674eefc898106fa1cf50ed2a54dbceca3385f96e3dff41b95f7237acb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/assembly-excerpts.txt",
+      "destination": "audit/assembly-excerpts.txt",
+      "bytes": 13488,
+      "sha256": "651e7021d50facb74fb23819fb406969ac36f3ef6e2231a7cc59f19f70d067f9"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/section-relocs.jsonl",
+      "destination": "audit/section-relocs.jsonl",
+      "bytes": 9676,
+      "sha256": "968ba47e1754e8483f9898aa407a9b2a6953f34aa2253222fd709073e4e9ea17"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/qt17.ze_info",
+      "destination": "audit/qt17.ze_info",
+      "bytes": 4754,
+      "sha256": "0356e7a01724b200d3684b7070e228c15266231e35a0e91cb5a90a4bb052a47d"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/disasm/sections.txt",
+      "destination": "audit/sections.txt",
+      "bytes": 531,
+      "sha256": "7ca8665457091fe007b40c12e9158d8c2d78fe1c03529f0e143f4df62101db9f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/disasm/.misc.buildOptions",
+      "destination": "audit/build-options.txt",
+      "bytes": 38,
+      "sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/decoder-input-before.sha256",
+      "destination": "audit/decoder-input-before.sha256",
+      "bytes": 90,
+      "sha256": "3efbf22f74dd0920dd51ac168af6e1dd0d74870a25d20df75a5c6e5064311bd3"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/decoder-input-after.sha256",
+      "destination": "audit/decoder-input-after.sha256",
+      "bytes": 90,
+      "sha256": "3efbf22f74dd0920dd51ac168af6e1dd0d74870a25d20df75a5c6e5064311bd3"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/image-id.txt",
+      "destination": "audit/image-id.txt",
+      "bytes": 72,
+      "sha256": "0716a759b38b99857a73ea5340c9861a23dd6cbe31f267bd8c0e878b3ac41055"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/tool-paths.txt",
+      "destination": "audit/tool-paths.txt",
+      "bytes": 34,
+      "sha256": "3007b0a0f1d5bdd76f03e09ae88a654dd735e88e88e36358c693b1a8fc4beca9"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/ocloc.exit",
+      "destination": "audit/ocloc.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/offline.log",
+      "destination": "audit/offline.log",
+      "bytes": 210,
+      "sha256": "c96724d4de8225f0329cb6379188a3997764a2ad4b669ba3fab00c54d5cc2b67"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/host-launch-gu17.log",
+      "destination": "audit/host-launch-gu17.log",
+      "bytes": 368,
+      "sha256": "85700b61c26183637ae80738e23a4ebb6c6a4c79f1952e46372ff175a98ff2cb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s97-source/findings.md",
+      "destination": "source/findings.md",
+      "bytes": 6676,
+      "sha256": "be7e38b426e4f70e9e04a28429201917fff8677c32420ffdf6c55293a9e5c846"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s97-source/source-pins.json",
+      "destination": "source/source-pins.json",
+      "bytes": 1935,
+      "sha256": "ed29d04b7d4ed0a2bb60f5006ecf39fc866f86e0400b3cb12fd7f559c26955d9"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s97-source/source-excerpts.txt",
+      "destination": "source/source-excerpts.txt",
+      "bytes": 14997,
+      "sha256": "401207e6ba954f7303d07425a33f9d2b49593445e6b30d8253cb6e398b722392"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97-manifest.json",
+      "destination": "completed-isa-manifest.json",
+      "bytes": 11559,
+      "sha256": "62ccb5119de28d5a90cdf88b111576f74c67db860200370ef2316ede29ebc675"
+    }
+  ],
+  "derived_excerpt": {
+    "path": "audit/host-metadata-excerpt.txt",
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/host-launch-gu17.asm",
+    "source_sha256": "7397c27093f59680f8fbb3c94d6d66bea16f05a9810cf1611979f24ab077f14e",
+    "lines_1based": [
+      1144,
+      1165
+    ],
+    "sha256": "d04a815b87279a556ddde774a12bab370fb4c91ff90b63b56d4f353ec36ed29d"
+  },
+  "external_dependencies": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/host_binding.py",
+      "sha256": "37ecf55c43300319f0a3baaf15bede814934bd3ee1b0a11b32a38dc6066d4aa6"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-dot-lowering-s96-source/source-pins.json",
+      "sha256": "384f05e0f6fd1b686d5c83d79dd15ce0b13c9e86a433e07a197b2098929bbefd"
+    }
+  ],
+  "omitted": "Selected zebins, complete ISA and host ASM, executable/object/archive and stopped setup attempts remain external under the completed ISA inventory."
+}

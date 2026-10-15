@@ -1,0 +1,156 @@
+TARGET ASM LINES 114..141
+114 L1616:
+115 (W)     mov (1|M0)               r2.2<1>:q     r3.14<0;1,0>:ud                 
+116 (W)     shl (1|M0)               r2.4<1>:q     r2.2<0;1,0>:q     2:w               {I@1}
+117 (W)     add (1|M0)               r4.0<1>:q     r2.4<0;1,0>:q     r2.1<0;1,0>:q    {I@1}
+118 (W)     send.ugm (1|M0)          r4       r4  null:0  0x0            0x02109580           {I@1,$4} // wr:1+0, rd:1; load.ugm.d32x2t.a64
+119 (W)     mov (2|M0)               r2.12<1>:d    r4.0<1;1,0>:d                    {$4.dst}
+120 (W)     cmp (32|M0)   (lt)f3.0   null<1>:d     r2.12<0;1,0>:d    r2.13<0;1,0>:d   {I@1}
+121 (W&~f3.0) jmpi                               L7200                                
+122 L1728:
+123 (W)     shl (1|M0)               r2.2<1>:q     r2.2<0;1,0>:q     3:w              
+124 (W)     add (1|M0)               r4.0<1>:q     r2.2<0;1,0>:q     r2.0<0;1,0>:q    {Compacted,I@1}
+125 (W)     send.ugm (1|M0)          r4       r4  null:0  0x0            0x02108780           {I@1,$5} // wr:1+0, rd:1; load.ugm.d64x1t.a64
+126         sync.nop                             null                             {Compacted,$3.src}
+127         add (16|M0)              r6.0<1>:q     r4.0<0;1,0>:q     r88.0<1;1,0>:q   {Compacted,$5.dst}
+128         add (16|M16)             r8.0<1>:q     r4.0<0;1,0>:q     r86.0<1;1,0>:q   {Compacted}
+129         add (16|M0)              r60.0<1>:q    r6.0<1;1,0>:q     r84.0<1;1,0>:q   {Compacted,I@2}
+130         add (16|M16)             r58.0<1>:q    r8.0<1;1,0>:q     r82.0<1;1,0>:q   {Compacted,I@2}
+131         add (16|M0)              r56.0<1>:q    r60.0<1;1,0>:q    r92.0<1;1,0>:q   {Compacted,I@2}
+132         add (16|M16)             r54.0<1>:q    r58.0<1;1,0>:q    r90.0<1;1,0>:q   {Compacted,I@2}
+133 L1824:
+134 (W)     shl (1|M0)               r2.2<1>:q     r2.12<0;1,0>:d    2:w              
+135 (W)     add (1|M0)               r4.0<1>:q     r2.2<0;1,0>:q     r2.3<0;1,0>:q    {I@1}
+136 (W)     send.ugm (1|M0)          r4       r4  null:0  0x0            0x02108580           {I@1,$6} // wr:1+0, rd:1; load.ugm.d32x1t.a64
+137 (W)     asr (1|M0)               r2.4<1>:d     r4.0<0;1,0>:d     31:w               {Compacted,$6.dst}
+138 (W)     mul (1|M0)               acc0.0<1>:ud  r3.2<0;1,0>:ud    r4.0<0;1,0>:uw  
+139 (W)     macl (1|M0)              r7.0<1>:ud    r3.2<0;1,0>:ud    r4.0<0;1,0>:ud   {Compacted,$3.src}
+140 (W)     mul (1|M0)               acc0.0<1>:ud  r3.2<0;1,0>:ud    r4.0<0;1,0>:uw  
+141 (W)     mach (1|M0)              r6.0<1>:d     r3.2<0;1,0>:ud    r4.0<0;1,0>:ud  
+
+TARGET ASM LINES 157..175
+157 L2136:
+158         join (32|M0)                         L6656                                
+159 L2152:
+160         mov (32|M0)              r40.0<1>:f    0.0:f                               {Compacted,I@3}
+161         mov (32|M0)              r38.0<1>:f    r72.0<1;1,0>:f                  
+162 (W)     mov (1|M0)               r2.4<1>:d     r2.5<0;1,0>:d                   
+163 (W)     mov (1|M0)               r2.5<1>:d     r2.8<0;1,0>:d                   
+164 (W)     mov (1|M0)               r2.10<1>:f    -5.888974e-39:f                              
+165 (W)     mov (1|M0)               r2.9<1>:d     134480385:d                              
+166 (W)     mov (1|M0)               r2.8<1>:d     -2139062144:d                              
+167 (W)     add (1|M0)               r2.7<1>:q     r2.2<0;1,0>:q     r3.0<0;1,0>:q    {I@3}
+168 (W)     mov (1|M0)               r2.5<1>:d     2139062143:d                              
+169 (W)     mov (1|M0)               r2.4<1>:d     16843009:d                              
+170 L2304:
+171         and (32|M0)              r8.0<1>:d     r38.0<1;1,0>:d    2147483640:d               {F@2}
+172         shr (32|M0)              r12.0<1>:ud   r38.0<1;1,0>:ud   3:w              
+173 (W)     mul (16|M0)              acc0.0<1>:ud  r8.0<1;1,0>:ud    0x24:uw              {I@2}
+174         mach (16|M0)             r10.0<1>:d    r8.0<1;1,0>:ud    0x24:ud             
+175 (W)     mul (16|M0)              acc0.0<1>:ud  r9.0<1;1,0>:ud    0x24:uw             
+
+TARGET ASM LINES 199..232
+199         add (16|M0)              r6.0<1>:q     r10.0<1;1,0>:q    8:w               {Compacted}
+200         add (16|M0)              r22.0<1>:q    r10.0<1;1,0>:q    6:w               {Compacted}
+201         add (16|M0)              r12.0<1>:q    r10.0<1;1,0>:q    4:w               {Compacted}
+202         send.ugm (32|M0)         r10      r26  null:0  0x0            0x08200B80           {I@1,$7} // wr:4+0, rd:2; load.ugm.d16u32.a64
+203         add (16|M16)             r50.0<1>:q    r58.0<1;1,0>:q    r14.0<1;1,0>:q   {Compacted}
+204         add (16|M16)             r14.0<1>:q    r16.0<1;1,0>:q    4:w               {Compacted}
+205         send.ugm (32|M0)         r48      r12  null:0  0x0            0x08200B80           {I@1,$8} // wr:4+0, rd:2; load.ugm.d16u32.a64
+206         add (16|M16)             r8.0<1>:q     r16.0<1;1,0>:q    8:w               {Compacted}
+207         add (16|M0)              r14.0<1>:q    r52.0<1;1,0>:q    66:w               {Compacted,$8.src}
+208         add (16|M16)             r12.0<1>:q    r50.0<1;1,0>:q    66:w               {Compacted}
+209         send.ugm (32|M0)         r36      r6  null:0  0x0            0x08200B80           {I@3,$9} // wr:4+0, rd:2; load.ugm.d16u32.a64
+210         add (16|M0)              r6.0<1>:q     r14.0<1;1,0>:q    r70.0<1;1,0>:q   {Compacted,@2,$9.src}
+211         add (16|M16)             r8.0<1>:q     r12.0<1;1,0>:q    r68.0<1;1,0>:q   {I@2}
+212         send.ugm (32|M0)         r34      r6  null:0  0x0            0x08200980           {I@1,$10} // wr:4+0, rd:2; load.ugm.d8u32.a64
+213         add (16|M16)             r24.0<1>:q    r16.0<1;1,0>:q    6:w              
+214         send.ugm (32|M0)         r46      r22  null:0  0x0            0x08200B80           {I@1,$11} // wr:4+0, rd:2; load.ugm.d16u32.a64
+215         shl (32|M0)              r1.0<1>:w     r10.0<2;1,0>:w    3:w               {$7.dst}
+216         and (32|M0)              r1.0<1>:w     r1.0<1;1,0>:w     4088:w               {I@1}
+217         mov (16|M0)              r14.0<4>:uw   r1.0<1;1,0>:uw                   {I@1}
+218         mov (16|M16)             r12.0<4>:uw   r1.16<1;1,0>:uw                 
+219         add (16|M0)              r6.0<1>:q     r4.4<0;1,0>:q     r14.0<4;1,0>:uw  {@2,$10.src}
+220         add (16|M16)             r8.0<1>:q     r4.4<0;1,0>:q     r12.0<4;1,0>:uw  {I@2}
+221         send.ugm (32|M0)         r26      r6  null:0  0x0            0x08400780           {I@1,$12} // wr:4+0, rd:4; load.ugm.d64.a64
+222         shr (32|M0)              r1.0<1>:uw    r10.0<2;1,0>:uw   9:w              
+223         send.ugm (32|M0)         r6       r18  null:0  0x4000            0x08803580           {I@1,$13} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x4]
+224         mov (32|M0)              r1.0<2>:b     r1.0<1;1,0>:w                   
+225         cbit (32|M0)             r14.0<1>:ud   r1.0<2;1,0>:ub                   {I@1}
+226         mov (32|M0)              r16.0<1>:w    r1.0<2;1,0>:b                   
+227         mov (32|M0)              r1.0<1>:ub    r14.0<4;1,0>:ub                  {I@2}
+228         mov (32|M0)              r1.0<1>:w     r1.0<1;1,0>:b                    {I@1}
+229         shl (32|M0)              r1.0<1>:w     r1.0<1;1,0>:w     7:w               {I@1}
+230         or (32|M0)               r1.0<1>:w     r1.0<1;1,0>:w     r16.0<1;1,0>:w   {I@1}
+231         mov (32|M0)              r1.0<2>:b     r1.0<1;1,0>:w                    {I@1}
+232         mov (32|M0)              r14.0<1>:d    r1.0<2;1,0>:ub                   {I@1}
+
+TARGET ASM LINES 449..476
+449         asr (32|M0)              r16.0<1>:d    r6.0<1;1,0>:d     1:w               {Compacted,I@5}
+450         add3 (32|M0)             r14.0<1>:d    r8.0<1;0>:d       r12.0<1;0>:d      r16.0<1>:d       {Compacted,I@1}
+451         cmp (32|M0)   (lt)f2.0   null<1>:d     r14.0<1;1,0>:d    0:w               {I@1}
+452         add (32|M0)              r10.0<1>:d    r8.0<1;1,0>:d     r12.0<1;1,0>:d   {Compacted}
+453 (f2.0)  add3 (32|M0)             r14.0<1>:d    r10.0<1;0>:d      r16.0<1;0>:d      3:w               {I@1}
+454         mov (16|M0)              r6.0<1>:uq    r52.0<1;1,0>:uq                  {Compacted}
+455         mov (16|M16)             r8.0<1>:uq    r50.0<1;1,0>:uq                  {Compacted}
+456         asr (32|M0)              r12.0<1>:d    r14.0<1;1,0>:d    2:w               {I@3}
+457         send.ugm (32|M0)         r10      r18  null:0  0x0            0x08200B80           {$2} // wr:4+0, rd:2; load.ugm.d16u32.a64
+458         send.ugm (32|M0)         r14      r6  null:0  0x0            0x08200B80           {I@1,$4} // wr:4+0, rd:2; load.ugm.d16u32.a64
+459         mov (32|M0)              r8.0<1>:f     r12.0<1;1,0>:d                   {$4.src}
+460         add (32|M0)              r6.0<1>:d     r38.0<1;1,0>:d    8:w              
+461         cmp (32|M0)   (lt)f3.0   null<1>:d     r6.0<1;1,0>:d     r3.4<0;1,0>:d    {I@1}
+462         mov (32|M0)              r1.0<1>:uw    r10.0<2;1,0>:uw                  {$2.dst}
+463         mov (32|M0)              r16.0<1>:uw   r14.0<2;1,0>:uw                  {$4.dst}
+464         mov (32|M0)              r10.0<1>:f    r1.0<1;1,0>:hf                   {I@2}
+465         mov (32|M0)              r12.0<1>:f    r16.0<1;1,0>:hf                  {I@1}
+466         mul (32|M0)              acc0.0<1>:f   r12.0<1;1,0>:f    r10.0<1;1,0>:f   {Compacted,F@1}
+467         mul (32|M0)              acc0.0<1>:f   acc0.0<1;1,0>:f   r8.0<1;1,0>:f    {Compacted}
+468         add (32|M0)              r40.0<1>:f    r40.0<1;1,0>:f    acc0.0<1;1,0>:f  {Compacted}
+469 (~f3.0) goto (32|M0)                         L6656                  L6656                
+470 L6632:
+471         mov (32|M0)              r38.0<1>:f    r6.0<1;1,0>:f                    {Compacted}
+472 (W)     jmpi                                 L2304                                
+473 L6656:
+474         join (32|M0)                         L7248                                
+475 L6672:
+476 (W)     mov (4|M0)               r8.0<1>:ud    r40.4<1;1,0>:ud                  {Compacted,F@2}
+
+TARGET ASM LINES 514..523
+514 L7136:
+515         join (32|M0)                         L7248                                
+516 L7152:
+517 (W)     add (1|M0)               r2.12<1>:d    r2.12<0;1,0>:d    1:w              
+518 (W)     cmp (32|M0)   (lt)f2.0   null<1>:d     r2.12<0;1,0>:d    r2.13<0;1,0>:d   {I@1}
+519 (W&f2.0) jmpi                                L1824                                
+520 L7200:
+521 (W)     add (1|M0)               r3.14<1>:d    r3.14<0;1,0>:d    r4.11<0;1,0>:d  
+522 (W)     cmp (32|M0)   (lt)f2.0   null<1>:d     r3.14<0;1,0>:d    r94.0<0;1,0>:d   {I@1}
+523 (W&f2.0) jmpi                                L1616                                
+
+ALL STATIC DP4A LINES
+260         dp4a (32|M0)             r42.0<1>:d    0:w                r22.0<1;0>:d      r6.0<1>:d        {@4,$13.dst}
+285         dp4a (32|M0)             r26.0<1>:d    r42.0<1;0>:d      r6.0<1;0>:d       r8.0<1>:d        {I@2}
+324         dp4a (32|M0)             r46.0<1>:d    r26.0<1;0>:d      r44.0<1;0>:d      r10.0<1>:d       {Compacted}
+335         dp4a (32|M0)             r26.0<1>:d    r46.0<1;0>:d      r8.0<1;0>:d       r12.0<1>:d       {I@1}
+378         dp4a (32|M0)             r16.0<1>:d    0:w                r14.0<1;0>:d      r6.0<1>:d        {@3,$0.dst}
+381         dp4a (32|M0)             r14.0<1>:d    r16.0<1;0>:d      r22.0<1;0>:d      r8.0<1>:d        {I@3}
+421         dp4a (32|M0)             r28.0<1>:d    r14.0<1;0>:d      r22.0<1;0>:d      r10.0<1>:d       {Compacted,I@2}
+437         dp4a (32|M0)             r16.0<1>:d    r28.0<1;0>:d      r14.0<1;0>:d      r12.0<1>:d       {I@2}
+
+HOST CALLSITE LINES 1144..1159
+1144    158db:	bf 00 00 00 00       	mov    $0x0,%edi
+1145 			158dc: R_X86_64_32	.bss+0x840
+1146    158e0:	e8 00 00 00 00       	call   158e5 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0x1125>
+1147 			158e1: R_X86_64_PLT32	__cxa_guard_acquire-0x4
+1148    158e5:	85 c0                	test   %eax,%eax
+1149    158e7:	0f 84 00 fd ff ff    	je     155ed <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0xe2d>
+1150    158ed:	bf 00 00 00 00       	mov    $0x0,%edi
+1151 			158ee: R_X86_64_32	.rodata+0x12538
+1152    158f2:	e8 00 00 00 00       	call   158f7 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0x1137>
+1153 			158f3: R_X86_64_PLT32	_ZN4sycl3_V16detail19getDeviceKernelInfoERKNS1_27compile_time_kernel_info_v123CompileTimeKernelInfoTyE-0x4
+1154    158f7:	48 89 05 00 00 00 00 	mov    %rax,0x0(%rip)        # 158fe <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0x113e>
+1155 			158fa: R_X86_64_PC32	.bss+0x834
+1156    158fe:	bf 00 00 00 00       	mov    $0x0,%edi
+1157 			158ff: R_X86_64_32	.bss+0x840
+1158    15903:	e8 00 00 00 00       	call   15908 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0x1148>
+1159 			15904: R_X86_64_PLT32	__cxa_guard_release-0x4

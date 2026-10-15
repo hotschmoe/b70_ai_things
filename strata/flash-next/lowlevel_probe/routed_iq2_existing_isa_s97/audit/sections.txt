@@ -1,0 +1,13 @@
+ElfType 64b
+Section name, Section type
+.text.s97_qt17, 1
+.text.Intel_Symbol_Table_Void_Program, 1
+.data.global, 1
+.symtab, 2
+.spv, 4278190089
+.misc.buildOptions, 4278190100
+.note.intelgt.metrics, 7
+.rel.text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_114launch_gu_portILi17ELi8ELb1EEEvjPN4sycl3_V15queueEPKyPKiSB_SB_PK10block_q8_1RKNS1_18NativeExpertLayoutEPfSI_E14native_gu_port18dpct_kernel_scalarILi17EESK_ILi8EESK_ILi1EEEE, 9
+.rel.text.Intel_Symbol_Table_Void_Program, 9
+.ze_info, 4278190097
+.note.intelgt.compat, 7

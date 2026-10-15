@@ -1,0 +1,258 @@
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp L49..63
+49: __dpct_inline__ int get_int_b2(const void *x, const int &i32) {
+50:     const uint16_t* x16 = (const uint16_t*) x;
+51:     int x32 = x16[2 * i32 + 0] << 0;
+52:     x32 |= x16[2 * i32 + 1] << 16;
+53:     return x32;
+54: }
+55: __dpct_inline__ int get_int_b4(const void *x, const int &i32) {
+56:     return ((const int *)x)[i32];
+57: }
+58: __dpct_inline__ uint32_t unpack_ksigns(const uint8_t v) {
+59:     const uint32_t p = sycl::popcount(v) & 1;
+60:     const uint32_t s = v ^ p << 7;
+61:     return s * 0x01010101;
+62: }
+63: __dpct_inline__ sycl::int2 get_int_from_table_16(const int &q4,
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp L174..211
+174: __dpct_inline__ float vec_dot_iq2_xs_q8_1(const void *__restrict__ vbq,
+175:                                           const block_q8_1 *__restrict__ bq8_1,
+176:                                           const int &kbx, const int &iqs) {
+177:     const block_iq2_xs* bq2 = (const block_iq2_xs*) vbq + kbx;
+178:     // SYCL port: the four 16-bit codes by shifts. ggml reads them through a uint16_t* to an int2, which is type
+179:     // punning the SYCL device compiler does not honour (non-char aliasing): IQ2_XS products came out garbage
+180:     // (iq_multi_parity, Swift 1.5 IQ2_XS) while the dequantizer, reading the codes directly, was exact.
+181:     const uint32_t q2_lo = (uint32_t) get_int_b2(bq2->qs, iqs + 0), q2_hi = (uint32_t) get_int_b2(bq2->qs, iqs + 1);
+182:     const uint16_t q2[4] = {(uint16_t) q2_lo, (uint16_t) (q2_lo >> 16), (uint16_t) q2_hi, (uint16_t) (q2_hi >> 16)};
+183:     const int ls0 = bq2->scales[iqs / 2] & 0x0F;
+184:     const int ls1 = bq2->scales[iqs / 2] >> 4;
+185:     int sumi0 = 0, sumi1 = 0;
+186: #pragma unroll
+187:     for (int l0 = 0; l0 < 8; l0 += 2) {
+188:         const sycl::uint2 grid_pos =
+189:             ((const sycl::uint2 *)iq2xs_grid)[q2[l0 / 2] & 0x1FF];
+190:         const uint32_t signs = unpack_ksigns(q2[l0 / 2] >> 9);
+191:         const int signs0 = swar_ne4(signs & 0x08040201);
+192:         const int grid_l = swar_sub4(grid_pos.x() ^ signs0, signs0);
+193:         const int u0 = get_int_b4(bq8_1[iqs / 2].qs, l0 + 0);
+194:         const int signs1 = swar_ne4(signs & 0x80402010);
+195:         const int grid_h = swar_sub4(grid_pos.y() ^ signs1, signs1);
+196:         const int u1 = get_int_b4(bq8_1[iqs / 2].qs, l0 + 1);
+197:         if (l0 < 4) {
+198:             sumi0 = ggml_cuda_dp4a(grid_l, u0, sumi0);
+199:             sumi0 = ggml_cuda_dp4a(grid_h, u1, sumi0);
+200:         } else {
+201:             sumi1 = ggml_cuda_dp4a(grid_l, u0, sumi1);
+202:             sumi1 = ggml_cuda_dp4a(grid_h, u1, sumi1);
+203:         }
+204:     }
+205:     const int sumi = (sumi0 * ls0 + sumi1 * ls1 + (sumi0 + sumi1) / 2) / 4;
+206:     const float d = sycl::vec<sycl::half, 1>(bq2->d)
+207:                         .convert<float, sycl::rounding_mode::automatic>()[0] *
+208:                     bq8_1[iqs / 2].ds[0];
+209:     return d * sumi;
+210: }
+211: 
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp L735..738
+735: template<> struct Fmt<16> { static constexpr int qk = 256, ipb = 8, step = 2;
+736:     static float dot(const void* v, const block_q8_1* y, int kbx, int iqs) { return vec_dot_iq2_xxs_q8_1(v, y, kbx, iqs); } };
+737: template<> struct Fmt<17> { static constexpr int qk = 256, ipb = 8, step = 2;
+738:     static float dot(const void* v, const block_q8_1* y, int kbx, int iqs) { return vec_dot_iq2_xs_q8_1(v, y, kbx, iqs); } };
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp L803..818
+803: __dpct_inline__ float lanes_sum(float v) {
+804: #pragma unroll
+805:     for (int o = LANES / 2; o > 0; o >>= 1)
+806:         v += dpct::experimental::permute_sub_group_by_xor(0xffffffffu, sycl::ext::oneapi::this_work_item::get_sub_group(), v, o);
+807:     return v;
+808: }
+809: template <int TY, int LANES>
+810: __dpct_inline__ float row_dot_lanes(const uint8_t *row, const block_q8_1 *x, int nb, int sub) {
+811:     using F = Fmt<TY>;
+812:     float s = 0.0f;
+813:     for (int k = sub; k < nb * F::ipb; k += LANES) {
+814:         const int kbx = k / F::ipb, iqs = F::step * (k % F::ipb);
+815:         s += F::dot(row, x + kbx * (F::qk / 32), kbx, iqs);
+816:     }
+817:     return lanes_sum<LANES>(s);
+818: }
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp L1585..1588
+1585: struct MultiW { int w[8]; int a = 0, b = 0; float d = 0.f; };
+1586: 
+1587: template <int TY> struct Multi { static constexpr bool has = false; static constexpr int NW = 0; };
+1588: 
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp L1648..1662
+1648:             m.w[l0 + 1] = swar_sub4(grid_pos[1] ^ signs1, signs1);
+1649:         }
+1650:         m.a = bq2->scales[iqs / 2] & 0x0F;
+1651:         m.b = bq2->scales[iqs / 2] >> 4;
+1652:         m.d = sycl::vec<sycl::half, 1>(bq2->d).convert<float, sycl::rounding_mode::automatic>()[0];
+1653:     }
+1654:     __dpct_inline__ static void acts(const block_q8_1* y, int iqs, int* u, float& ds) {
+1655: #pragma unroll
+1656:         for (int j = 0; j < 8; ++j) u[j] = get_int_b4(y[iqs / 2].qs, j);
+1657:         ds = y[iqs / 2].ds[0];
+1658:     }
+1659:     __dpct_inline__ static float finish(int s0, int s1, const MultiW& m, float ds) {
+1660:         return m.d * ds * (float) ((s0 * m.a + s1 * m.b + (s0 + s1) / 2) / 4);
+1661:     }
+1662: };
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp L1932..1998
+1932: // One row against E activations at once, LANES lanes per row: the IQ formats' Multi.
+1933: template <int TY, int LANES, int E>
+1934: __dpct_inline__ void row_dot_multi_iq(const uint8_t* row, const block_q8_1* const* xs, int nb, int sub, float* out,
+1935:                                       const void* grid = nullptr) {
+1936:     using F = Fmt<TY>;
+1937:     using M = Multi<TY>;
+1938:     float s[E];
+1939: #pragma unroll
+1940:     for (int e = 0; e < E; ++e) s[e] = 0.f;
+1941:     for (int k = sub; k < nb * F::ipb; k += LANES) {
+1942:         const int kbx = k / F::ipb, iqs = F::step * (k % F::ipb);
+1943:         MultiW m;
+1944:         M::prep(row, kbx, iqs, m, grid);
+1945: #pragma unroll
+1946:         for (int e = 0; e < E; ++e) {
+1947:             int u[8];
+1948:             float ds;
+1949:             M::acts(xs[e] + kbx * (F::qk / 32), iqs, u, ds);
+1950:             int s0 = 0, s1 = 0;
+1951: #pragma unroll
+1952:             for (int j = 0; j < M::NW / 2; ++j) s0 = ggml_cuda_dp4a(m.w[j], u[j], s0);
+1953: #pragma unroll
+1954:             for (int j = M::NW / 2; j < M::NW; ++j) s1 = ggml_cuda_dp4a(m.w[j], u[j], s1);
+1955:             s[e] += M::finish(s0, s1, m, ds);
+1956:         }
+1957:     }
+1958: #pragma unroll
+1959:     for (int e = 0; e < E; ++e) out[e] = lanes_sum<LANES>(s[e]);
+1960: }
+1961: 
+1962: template <int TY, int LANES, int E>
+1963: __dpct_inline__ void row_dot_multi(const uint8_t* row, const block_q8_1* const* xs, int nb, int sub, float* out,
+1964:                                    const void* grid = nullptr) {
+1965:     if constexpr (KqSplit<TY>::has) row_dot_ksplit<TY, LANES, E>(row, xs, nb, sub, out);
+1966:     else row_dot_multi_iq<TY, LANES, E>(row, xs, nb, sub, out, grid);
+1967: }
+1968: 
+1969: // The entries e0..e1 of one row: chunks of 4 through the multi-entry dot, the rest one at a time.
+1970: template <int TY, int LANES, bool KM = true>
+1971: __dpct_inline__ void row_entries(const uint8_t* wr, const block_q8_1* x, int x_stride, const int32_t* ent_idx,
+1972:                                  int e0, int e1, int nb, int sub, float* dst, size_t dst_stride,
+1973:                                  const void* grid = nullptr) {
+1974:     int e = e0;
+1975:     if constexpr (kEntryMulti<TY, KM>) {
+1976:         for (; e + 4 <= e1; e += 4) {
+1977:             const block_q8_1* xs[4] = {x + (size_t) ent_idx[e] * x_stride, x + (size_t) ent_idx[e + 1] * x_stride,
+1978:                                        x + (size_t) ent_idx[e + 2] * x_stride, x + (size_t) ent_idx[e + 3] * x_stride};
+1979:             float o[4];
+1980:             row_dot_multi<TY, LANES, 4>(wr, xs, nb, sub, o, grid);
+1981:             if (sub == 0)
+1982: #pragma unroll
+1983:                 for (int i = 0; i < 4; ++i) dst[(size_t) (e + i) * dst_stride] = o[i];
+1984:         }
+1985:         if (e + 2 <= e1) {
+1986:             const block_q8_1* xs[2] = {x + (size_t) ent_idx[e] * x_stride, x + (size_t) ent_idx[e + 1] * x_stride};
+1987:             float o[2];
+1988:             row_dot_multi<TY, LANES, 2>(wr, xs, nb, sub, o, grid);
+1989:             if (sub == 0) { dst[(size_t) e * dst_stride] = o[0]; dst[(size_t) (e + 1) * dst_stride] = o[1]; }
+1990:             e += 2;
+1991:         }
+1992:     }
+1993:     for (; e < e1; ++e) {
+1994:         const float v = row_dot_lanes<TY, LANES>(wr, x + (size_t) ent_idx[e] * x_stride, nb, sub);
+1995:         if (sub == 0) dst[(size_t) e * dst_stride] = v;
+1996:     }
+1997: }
+1998: 
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp L2001..2041
+2001: template <int TG, int LN = kExpertLanes, bool KM = true>
+2002: __dpct_inline__ void native_gu_kernel(
+2003:     const unsigned long long *__restrict__ grp_ptr,
+2004:     const int32_t *__restrict__ grp_start, const int32_t *__restrict__ n_groups,
+2005:     const int32_t *__restrict__ ent_tok, const block_q8_1 *__restrict__ xq,
+2006:     NativeExpertLayout L, float *__restrict__ gate, float *__restrict__ up) {
+2007:     auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+2008:     // #363: group g is computed by block row g % gridDim.y (a launch sized for fewer rows than possible groups strides);
+2009:     // a block row with no group returns before the barrier below (uniform over the work-group)
+2010:     const int ng = *n_groups;
+2011:     if ((int) item_ct1.get_group(1) >= ng) return;
+2012:     const void* grid = nullptr;
+2013: #if STRATA_GRID_SLM
+2014:     if constexpr (TG == 18 || TG == 21 || TG == 22) {
+2015:         using GT = std::conditional_t<TG == 22, uint64_t, uint32_t>;
+2016:         constexpr int GN = TG == 22 ? 1024 : TG == 21 ? 512 : 256;
+2017:         auto& sg = *sycl::ext::oneapi::group_local_memory_for_overwrite<GT[GN]>(item_ct1.get_group());
+2018:         for (int i = (int) item_ct1.get_local_id(2); i < GN; i += (int) item_ct1.get_local_range(2)) {
+2019:             if constexpr (TG == 22) sg[i] = iq2s_grid[i];
+2020:             else if constexpr (TG == 21) sg[i] = iq3s_grid[i];
+2021:             else sg[i] = iq3xxs_grid[i];
+2022:         }
+2023:         item_ct1.barrier(sycl::access::fence_space::local_space);
+2024:         grid = &sg[0];
+2025:     }
+2026: #endif
+2027:     const int rib = item_ct1.get_local_id(2) / LN,
+2028:               sub = item_ct1.get_local_id(2) % LN;
+2029:     const int row = item_ct1.get_group(2) * (256 / LN) + rib; // 0 .. 2*n_ff
+2030:     if (row >= 2 * L.n_ff) return;
+2031:     const bool is_up = row >= L.n_ff;
+2032:     const int r = is_up ? row - (int) L.n_ff : row;
+2033:     const size_t off = (is_up ? L.up_off : 0) + (size_t) r * L.gu_row;
+2034:     const int nb = (int) (L.n_embd / Fmt<TG>::qk), xb = (int) (L.n_embd / 32);
+2035:     for (int g = (int) item_ct1.get_group(1); g < ng; g += (int) item_ct1.get_group_range(1)) {
+2036:         const uint8_t* wr = (const uint8_t*) grp_ptr[g] + off;
+2037:         const int e0 = grp_start[g], e1 = grp_start[g + 1];
+2038:         row_entries<TG, LN, KM>(wr, xq, xb, ent_tok, e0, e1, nb, sub, (is_up ? up : gate) + r, (size_t) L.n_ff, grid);
+2039:     }
+2040: }
+2041: 
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp L4314..4330
+4314: inline int kq_gu_lanes() { static const int v = std::getenv("STRATA_KQ_GU_LANES") ? lanes_env("STRATA_KQ_GU_LANES") : gu_lanes(); return v; }
+4315: template <int TG, int LN, bool KM = true>
+4316: void launch_gu_port(unsigned groups, dpct::queue_ptr s, const unsigned long long *grp_ptr, const int32_t *grp_start,
+4317:                     const int32_t *n_groups, const int32_t *ent_tok, const block_q8_1 *X,
+4318:                     const NativeExpertLayout &L, float *gate, float *up) {
+4319:     constexpr int ROWS = 256 / LN;
+4320:     const unsigned gx = (unsigned) ((2 * L.n_ff + ROWS - 1) / ROWS);
+4321:     auto exp_props = sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
+4322:     s->parallel_for<dpct_kernel_name<class native_gu_port, dpct_kernel_scalar<TG>, dpct_kernel_scalar<LN>, dpct_kernel_scalar<KM>>>(
+4323:         sycl::nd_range<3>(sycl::range<3>(1, groups, (size_t) gx * 256), sycl::range<3>(1, 1, 256)), exp_props,
+4324:         [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {
+4325:             native_gu_kernel<TG, LN, KM>(grp_ptr, grp_start, n_groups, ent_tok, X, L, gate, up);
+4326:         });
+4327: }
+4328: // STRATA_KQ_SPLIT=0 (or native_expert_set_kq_split(false)): the K-quant / Q5_1 / Q8_0 lane kernels without the
+4329: // multi-entry split (one weight read per entry, as before); the outputs are the same bits either way
+4330: bool g_kq_split = [] { const char* v = std::getenv("STRATA_KQ_SPLIT"); return !(v && v[0] == '0'); }();
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp L5282..5295
+5282: void native_expert_grouped(const NativeExpertLayout& L, const unsigned long long* grp_ptr, const int32_t* grp_start,
+5283:                            const int32_t* n_groups, const int32_t* ent_dst, const int32_t* ent_tok, int64_t cap_groups,
+5284:                            int64_t cap_entries, const void* x_q8_1, void* scratch, float* out, void* stream,
+5285:                            int64_t grid_groups) {
+5286:     if (cap_groups <= 0 || cap_entries <= 0) return;
+5287:     if (L.n_ff % 32 != 0) { std::fprintf(stderr, "native_expert_grouped: n_ff %lld\n", (long long) L.n_ff); std::exit(1); }
+5288:     dpct::queue_ptr s = strata::q_of(stream);
+5289:     const size_t f = (size_t) cap_entries * (size_t) L.n_ff * sizeof(float), fa = (f + 255) & ~(size_t) 255;
+5290:     float* gate = (float*) scratch;
+5291:     float* up = (float*) ((uint8_t*) scratch + fa);
+5292:     float* h = (float*) ((uint8_t*) scratch + 2 * fa);
+5293:     block_q8_1* hq = (block_q8_1*) ((uint8_t*) scratch + 3 * fa);
+5294:     const auto* X = (const block_q8_1*) x_q8_1;
+5295:     // SYCL port: STRATA_EXPERT_V2 / STRATA_EXPERT_V2K (upstream's AMD-tuned S26 / S27 kernels) are not built here
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp L5428..5432
+5428:     }
+5429:     check("native_expert_grouped/swiglu");
+5430:     }
+5431:     if (g_exp_phase == 1) return;
+5432:     const int d_rows = (!g_old_kernels && !g_no_sub16_gu && L.n_ff == 640) ? (L.d_type == 20 ? 32 : (L.d_type == 42 ? 16 : 8)) : 8;
+

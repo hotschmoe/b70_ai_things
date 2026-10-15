@@ -1,0 +1,50 @@
+cpu-run: [b70s4dayz] acquired (heavy) -> python3 /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97-prep/inspect-section-relocs.py
+{
+  "info": {
+    "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES9_ILi8EES9_ILi1EEEEEE",
+    "bind": 0,
+    "type": 1,
+    "section": 20,
+    "offset": 75064,
+    "size": 88
+  },
+  "related": [
+    {
+      "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "bind": 0,
+      "type": 1,
+      "section": 241,
+      "offset": 2112,
+      "size": 8
+    },
+    {
+      "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "bind": 0,
+      "type": 1,
+      "section": 241,
+      "offset": 2104,
+      "size": 8
+    }
+  ],
+  "selected_sections": {
+    "20": ".rodata",
+    "241": ".bss"
+  }
+}
+{"destination": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info", "target_symbol": {"name": "", "bind": 0, "type": 3, "section": 241, "offset": 0, "size": 0}, "addend": 2116, "type": 2, "source_section": ".text", "containing_functions": ["_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"]}
+{"destination": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info", "target_symbol": {"name": "", "bind": 0, "type": 3, "section": 241, "offset": 0, "size": 0}, "addend": 2108, "type": 2, "source_section": ".text", "containing_functions": ["_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"]}
+{"destination": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info", "target_symbol": {"name": "", "bind": 0, "type": 3, "section": 241, "offset": 0, "size": 0}, "addend": 2108, "type": 2, "source_section": ".text", "containing_functions": ["_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"]}
+{"destination": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info", "target_symbol": {"name": "", "bind": 0, "type": 3, "section": 241, "offset": 0, "size": 0}, "addend": 2100, "type": 2, "source_section": ".text", "containing_functions": ["_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"]}
+{"destination": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info", "target_symbol": {"name": "", "bind": 0, "type": 3, "section": 241, "offset": 0, "size": 0}, "addend": 2116, "type": 2, "source_section": ".text", "containing_functions": ["_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"]}
+{"destination": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info", "target_symbol": {"name": "", "bind": 0, "type": 3, "section": 241, "offset": 0, "size": 0}, "addend": 2096, "type": 10, "source_section": ".text", "containing_functions": ["_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"]}
+{"destination": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info", "target_symbol": {"name": "", "bind": 0, "type": 3, "section": 241, "offset": 0, "size": 0}, "addend": 2096, "type": 10, "source_section": ".text", "containing_functions": ["_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"]}
+{"destination": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info", "target_symbol": {"name": "", "bind": 0, "type": 3, "section": 241, "offset": 0, "size": 0}, "addend": 2112, "type": 10, "source_section": ".text", "containing_functions": ["_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"]}
+{"destination": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info", "target_symbol": {"name": "", "bind": 0, "type": 3, "section": 241, "offset": 0, "size": 0}, "addend": 2112, "type": 10, "source_section": ".text", "containing_functions": ["_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"]}
+{"destination": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES9_ILi8EES9_ILi1EEEEEE", "target_symbol": {"name": "", "bind": 0, "type": 3, "section": 20, "offset": 0, "size": 0}, "addend": 75064, "type": 10, "source_section": ".text", "containing_functions": ["_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"]}
+{"destination": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info", "target_symbol": {"name": "", "bind": 0, "type": 3, "section": 241, "offset": 0, "size": 0}, "addend": 2100, "type": 2, "source_section": ".text", "containing_functions": ["_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"]}
+{"destination": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info", "target_symbol": {"name": "", "bind": 0, "type": 3, "section": 241, "offset": 0, "size": 0}, "addend": 2112, "type": 10, "source_section": ".text", "containing_functions": ["_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"]}
+{"destination": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info", "target_symbol": {"name": "", "bind": 0, "type": 3, "section": 241, "offset": 0, "size": 0}, "addend": 2112, "type": 10, "source_section": ".text", "containing_functions": ["_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"]}
+{"destination": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info", "target_symbol": {"name": "", "bind": 0, "type": 3, "section": 241, "offset": 0, "size": 0}, "addend": 2112, "type": 10, "source_section": ".text", "containing_functions": ["_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"]}
+{"destination": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info", "target_symbol": {"name": "", "bind": 0, "type": 3, "section": 241, "offset": 0, "size": 0}, "addend": 2112, "type": 10, "source_section": ".text", "containing_functions": ["_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"]}
+{"destination": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info", "target_symbol": {"name": "", "bind": 0, "type": 3, "section": 241, "offset": 0, "size": 0}, "addend": 2096, "type": 10, "source_section": ".text", "containing_functions": ["_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"]}
+cpu-run: [b70s4dayz] done in 0s (exit 0)
