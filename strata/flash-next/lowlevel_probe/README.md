@@ -272,3 +272,16 @@ in1.9545s, with rational and wrong-row checks. This does not replace S41's
 strict failure or qualify other cases, model quality or production.
 [S42 report](../../../docs/20261015_strata_grouped_gemm_probe.md),
 [S43 report](../../../docs/20261015_strata_q6_cpu_reference.md).
+
+
+S44 `q6_dense_collect.cpp` is exact compiled40ba97c1/frozen93f8bfc9.
+One101s offlinebuild/42s card1window saves96snapshots overfourrealQ6shapes,
+six Cs and initial/changed ownC6 direct/graphs; strict memory/ownreplay and
+health/teardown PASS. `q6_collection_reference/` copies the exact executed
+CPUchecker/helper/pins and timing analyzer. Run from the retained raw bundle
+with its required earlier sources/dependencies, not this inspection copy.
+Full72case/2,623,488output arithmetic diagnosisPASS11.43s; S41bitgate stays
+FAILED. WarmC6 three16-call batchmeans reject integration asconfigured,
+no serving orall52/quality claim. Repeated-weight cache regime isunmeasured.
+[S44 report](../../../docs/20261015_strata_q6_collection_and_warm_probe.md)
+contains commands, hashes, configuration and limits.

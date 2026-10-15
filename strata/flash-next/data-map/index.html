@@ -148,7 +148,7 @@ ul.plain{padding-left:1.1rem}
 {
  "schema": 1,
  "title": "Strata Flash-Next data map",
- "snapshot": "2026-10-15 S43: S22 reference ops, S30 RAM, S31 replay, S32 CPU boundaries, S33 quantum, S34 dispatch, S35 alias gate, S38 serving, S39 HC resource probe, S41 Q6 strict gate/selected CPU reference, S42 grouped GU strict gate, S43 full first-C6 CPU accuracy",
+ "snapshot": "2026-10-15 S43: S22 reference ops, S30 RAM, S31 replay, S32 CPU boundaries, S33 quantum, S34 dispatch, S35 alias gate, S38 serving, S39 HC resource probe, S41 Q6 strict gate/selected CPU reference, S42 grouped GU strict gate, S43 full first-C6 CPU accuracy, S44 four-shape CPU bounds/warm C6 rejection",
  "scope": "Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two Arc Pro B70 cards, Strata SYCL engine, EP/PUSH, batch MTP depth2 (opt-in), two 200000-token slots, INT8 KV, 32 GiB / 4-entry RAM parking, all 24576 experts resident (7152 on GPU0 + 17424 on GPU1), greedy.",
  "warnings": [
   "Trace service times overlap: within a card (engines), across cards, and with CPU wall time. They are NOT additive and are not a latency budget.",
@@ -159,7 +159,8 @@ ul.plain{padding-left:1.1rem}
   "S28 explicit-scope EP push passes bounded standalone/native-TU and concurrent serving canaries. Old default barrier first-read failures retained; no speed, general IPC or long-run claim.",
   "S29 bounded paired-head speed gain is unchanged; its raw prior-leg draft counts remain incomplete. S30 fixes Python carry and proves native/API sums in one64/512handback. Full-request acceptance parity across engines/schedules is not inferred.",
   "S31 now measures paired C2 execution:18heads reconcile9nativepaired windows. Five reviewed cycles eachhave2C2/0C1 and9ImmediateAppendCommandListsExp. APIinvocations are not logicalbarriers; profiler-sensitive reset/gaps are not production savings. S22reference rows remain separate.",
-  "S41/S42 cross-algorithm bit mismatches are retained strict failures, not proof of invalid arithmetic. S43 independent first-C6 source-bound compliance is diagnostic, not production qualification or speed. Different reduction trees need predeclared accuracy criteria; same-algorithm replay/memory checks stay strict."
+  "S41/S42 cross-algorithm bit mismatches are retained strict failures, not proof of invalid arithmetic. S43 independent first-C6 source-bound compliance is diagnostic, not production qualification or speed. Different reduction trees need predeclared accuracy criteria; same-algorithm replay/memory checks stay strict.",
+  "S44 warmed C6 batch means reject packing integration as configured; repeated-weight cache regime and fixed GRID640 differ from full serving. CPU bound compliance is not production/model-quality qualification."
  ],
  "status_legend": {
   "measured": "Directly observed in a retained trace summary, native log, or clean benchmark (evidence path given). Trace values are diagnostic.",
@@ -190,7 +191,8 @@ ul.plain{padding-left:1.1rem}
    "../../../docs/20261015_strata_grf_resource_probe.md (S39 unchanged-kernel numerical/graph/resource gate; GRF256 not selected)",
    "../../../docs/20261015_strata_q6_dense_packed_probe.md (S41 strict C6 mismatch, selected quantized-dot CPU accuracy follow-up, no promotion)",
    "../../../docs/20261015_strata_grouped_gemm_probe.md (S42 direct grouped GU strict failure; no candidate H/down or timing)",
-   "../../../docs/20261015_strata_q6_cpu_reference.md (S43 independent full first-C6 CPU reference; no GPU rerun or production qualification)"
+   "../../../docs/20261015_strata_q6_cpu_reference.md (S43 independent full first-C6 CPU reference; no GPU rerun or production qualification)",
+   "../../../docs/20261015_strata_q6_collection_and_warm_probe.md (S44 four-shape independent arithmetic coverage and warmed C6 rejection)"
   ],
   "results_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
   "prototype_binary": "S26 CPU-only strata-head-pair-s26 SHA256264f221e2c1b02d4bdd9b332c46f91e91bf4f6301afbdabe563df5ff2a16e44a; not GPU served; default pair option OFF.",
@@ -204,7 +206,8 @@ ul.plain{padding-left:1.1rem}
   "hc_grf_probe": "S39 frozen7365c788 standalone production fused_gr_read_multi, card1,12 syntheticBF16cases/48snapshotpairs35,893,248bytesPASS, changedinputgraphPASS. Actual kernelnames/resources128vs256/private0/spill0; instrumentedtimingsslowerall12. Keepdefault, no servingtest.",
   "q6_dense_probe": "S41 frozena09b4c32, onecard1/36s including health. First real6144->2560 C6 strict pair fails11754/15360values, maxabs9.54e-7. All guards/finites/tails/nativeQ8readonlyPASS at comparison.19selectedrows/114independentCPUrefs support rounding explanation only; no graphs/otherpackedcolumns/shapes/speed qualification.",
   "grouped_peer_probe": "S42 frozen64586e43, one44s card1 window after139s offlinebuild; direct oneMKLgroupedGU on16realexperts/10formats/1748rows. StrictGUFAIL902568/2237440, maxabs7.45e-8; all prior guards/metadata/readonly/tails and bothhealth/teardownPASS. No candidateH/down/timing/serving.",
-  "q6_cpu_reference": "S43 executed7831f155 CPUchecker, existingfirstC6pair only, 15360outputs perpath withinpredeclaredsourceboundsL15/18, maxreferenceerror6.42e-7/7.53e-7, wrong-rowmutantsallfail.12.9MBpayload/1.9545s/54452KiBpeakRSS, noGPU/newmath/serve."
+  "q6_cpu_reference": "S43 executed7831f155 CPUchecker, existingfirstC6pair only, 15360outputs perpath withinpredeclaredsourceboundsL15/18, maxreferenceerror6.42e-7/7.53e-7, wrong-rowmutantsallfail.12.9MBpayload/1.9545s/54452KiBpeakRSS, noGPU/newmath/serve.",
+  "q6_collection_warm_probe": "S44 frozen93f8bfc9/v3source40ba97c1, one101s build/42s card1window/96snapshots/normalhealth0. CPU11.43s/67580KiB checks72cases2,623,488outputs/73.1MBpayload; all pass declared source bounds. WarmC6 original->packed us/call batch medians63.609->63.466,74.907->142.584,90.790->162.209,47.342->87.863; no integration/serve. S46 source-only."
  },
  "geometry": {
   "source": "Confirmed against served GGUF metadata with CPU-only tools/gguf_reader.py: lowlevel-s24/model-geometry.json. Derived: 12 QSA/36 GDN layers, ssm_conv_channels=2*128*16+6144; defaults cross-checked against include/strata/core/geometry.hpp.",
@@ -1114,7 +1117,8 @@ ul.plain{padding-left:1.1rem}
     "draft-profile-s22/profile/steady-summary",
     "head-pair-s31/analysis-prep/result/stage-rollups.json",
     "q6-dense-packed-s41-prep/{s41-report,numerical-difference}.json; cpu-reference/reference.json",
-    "q6-dense-reference-s43-prep/{s43-report,bound-proof.md}; run-first-c6/gate.json"
+    "q6-dense-reference-s43-prep/{s43-report,bound-proof.md}; run-first-c6/gate.json",
+    "q6-dense-reference-s44-prep/{s44-report,warm-report}.json; cpu-full/gate.json; run-clean/closure.json"
    ],
    "quoted": [
     {
@@ -1134,6 +1138,12 @@ ul.plain{padding-left:1.1rem}
      "value": "15360outputs/path,0source-boundviolations; maxerror original6.42e-7/packed7.53e-7",
      "basis": "ExistingS41snapshots andactualsavedQ8, FP64storage-decoder/reference, sourceL15/18bounds, no GPUrerun. Wrongrowcontrol15360failboth; no modelquality/serving/speed qualification.",
      "status": "measured"
+    },
+    {
+     "label": "S44 four-shape arithmetic and warm C6 discriminator",
+     "value": "72cases2,623,488outputs satisfy declared bounds; warm three shapes take79-90percent longer, fourth no measurable difference",
+     "basis": "Onecard1process/96snapshots/owninitial+changedgraphsPASS. Three16-call batches/path after16warmups, fixedGRID640. Eventspans are not isolated service; no serving/cache-regime or all52 qualification. Rejectintegration.",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -1147,7 +1157,7 @@ ul.plain{padding-left:1.1rem}
    "gaps": [
     "Per-tensor mapping (which tensor uses which kernel/quant) not established; drafter and target calls are mixed in this stage.",
     "Activation inputs are Q8_1-quantized (act_quant) for most mmvq paths; exact pairing not mapped.",
-    "S41 fullmatrix independent accuracy, remaining packedcolumns/three shapes and graph replay untested. Existingflag does not register main dense Q6; added planes/owner/residency need explicit integration proof."
+    "S44 covers four shapes/six Cs/changed-input own graphs under source bounds; remaining main matrices/model quality/streaming cache regime unqualified. No warm C1/C2/C3/C4/C8 timing. Main-owner integration remains source-only/rejected for this work item."
    ],
    "hypotheses": [
     {
@@ -2561,6 +2571,13 @@ ul.plain{padding-left:1.1rem}
    "value": "15360outputs eachpath satisfy source-derivedbounds;wrongrowallfail;1.9545s CPU",
    "status": "measured",
    "note": "Source-derivedgammaL15/18 +referenceerror, no fittedtolerance. ExistingactualQ6/Q8 bytes,54,452KiBpeak; S41bitfailureunchanged. Other shapes/columns/graphs/modelquality/serving not qualified."
+  },
+  {
+   "stage": "S44",
+   "label": "Four-shape Q6 arithmetic and warmed C6",
+   "value": "CPU bounds PASS72cases2,623,488outputs; warmC6 no useful benefit; rejectintegration",
+   "status": "measured",
+   "note": "101s offlinebuild/42s quietcard1 including health,11.43s CPU. Three16-call batchmeans/path; packed median time+90.35/+78.66/+85.59percent on K2560 shapes, -0.225percent on K6144 withincontrolspread. No fullserve or throughput inference."
   }
  ],
  "rejected_parked": [
@@ -2618,6 +2635,11 @@ ul.plain{padding-left:1.1rem}
    "item": "S26 uncached EP payload stores only",
    "status": "rejected",
    "evidence": "rev4-native/root-producer.log sample9 still440 wrong inbox-poison words. Prototype kernel replacement only; runtime EP source unchanged."
+  },
+  {
+   "item": "S44 packed Q6 main-owner integration as configured",
+   "status": "rejected",
+   "evidence": "q6-dense-reference-s44-prep/warm-report.json: warmC6 neutralone/slowerthree,803.90625MiB additionalplanes ifintegrated. CPU bounds diagnosticPASS does not justify build/serving; S46 remainsunapplied."
   }
  ],
  "coverage_gaps": [
@@ -2645,7 +2667,8 @@ ul.plain{padding-left:1.1rem}
   "S38 supplements S35 with bounded actual IPC serving, not arbitrary concurrent-reader or full200k/RAM qualification. Timed samples include inactive compiled marker checks; only first request captures timestamps. No new physical-idle, bandwidth, spills or occupancy measurement.",
   "S39 confirms selected HC resource branches and tool-reported register/private/spill fields; does not measure dynamic occupancy, causal resource effects or whole-serving latency. Instrumented diagnostics reject next serving arm only.",
   "S41 changed bits do not establish an invalid operator. New numerical gate requires source-derived error bounds and independent full coverage; current strict gate remains failed. No serving/speed inference from selected CPU reference or one cold service sample.",
-  "S42 exact CPU-vs-device FP16 dequant operand equivalence is unproven. S43 first-matrix arithmetic bounds do not cover remaining Q6 shapes/columns/changed inputs or establish all indexing semantics/model quality. No immediate fullserve/cache campaign."
+  "S42 exact CPU-vs-device FP16 dequant operand equivalence is unproven. S44 four-shape/six-column and changed-input arithmetic coverage does not establish all52 matrices/indexing semantics/model quality. No immediate fullserve/cache campaign.",
+  "S44 repeated-weight C6 batchmeans do not establish streaming-serving/cache effects, physical bandwidth, kernel-only service or per-request tail latency. No additional measurement is needed to decline integration now."
  ],
  "operations": [
   {

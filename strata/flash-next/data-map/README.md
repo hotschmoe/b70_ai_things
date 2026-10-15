@@ -226,3 +226,12 @@ trees need independent accuracy checks; memory and same-path replay stay
 strict. Prior failures remain evidence. Reports:
 [S42](../../../docs/20261015_strata_grouped_gemm_probe.md),
 [S43](../../../docs/20261015_strata_q6_cpu_reference.md).
+
+
+S44 adds four-shape/six-column/changed-input Q6 arithmetic coverage:72cases,
+2,623,488outputs satisfy declared source bounds; same-path graph/memory and
+health/closure PASS. WarmC6 batch means show no useful packing benefit and
+three shapes take79-90percent longer as configured. No main-owner integration
+or serving run; S46 stays source-only. Repeated-weight cache regime differs
+from serving and remains unmeasured. Reference170operations/rollups unchanged.
+[S44 report](../../../docs/20261015_strata_q6_collection_and_warm_probe.md).

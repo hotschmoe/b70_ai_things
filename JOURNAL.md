@@ -23256,3 +23256,35 @@ shapes and changed inputs; own-algorithm graph equality stays strict,
 cross-algorithm differences are recorded, collection ends UNVALIDATED.
 No new full-engine/cache work. Dated S43 report, exact checker/pins and
 map retained; old170 operations unchanged. Raw: q6-dense-reference-s43-prep/.
+
+
+## 2026-10-15 -- Flash-Next optimization S44: four-shape Q6 and warm decision
+
+CONFIG: Existing production original/packed Q6 paths, four actual matrices
+6144->2560/2560->10240/12288/6144, columns6/1/2/3/4/8. Separate source-bound
+arithmetic diagnosis plus strict own initial/changed C6 direct/graph and
+memory gates. FixedGRID640/WIDE/A2/RPW1, no owner integration/runtime edit.
+COMMAND: Actual Opus5.5/Fable5.1 full-source and narrow v3 reviews before
+one101s offlineCPUbuild; frozen93f8bfc9/source40ba97c1. One42s card1quiet
+window combines96snapshots and warmC6 threepaired16-call batches/path after
+16warmups; no external profiler. Saved-output CPUreference via cpu-run.
+RESULT: Collector0/UNVALIDATED, allstrictmemory/ownreplayPASS, bothhealth0,
+containerremoved/noreset. Independentchecker9def6b1a PASS declaredbounds
+all72cases/2,623,488outputs,73,113,600payloadbytes read;11.42785s/67580KiB
+peakRSS. S41 strictbitfailure unchanged; no fittedtolerance or qualityclaim.
+Warmhostcomplete batchmedianus/call original->packed:63.609->63.466,
+74.907->142.584,90.790->162.209,47.342->87.863. Three shapes take79-90percent
+longer asconfigured; fourth no measurable benefit. Eventspanincludesgaps/
+barriercost, not isolatedservice; repeatedweights maycachedifferentlyfrom
+serving. S41coldprofiledobservation unexplained, not a matchedcomparison.
+VERDICT: Rejectmain-ownerintegration/nofullenginebuild/serve/cachecampaign;
+S46 remains source-only, winner152055a6/headpairON/depth2 unchanged. Actual
+postreview modelIDs claude-opus-5-5/claude-fable-5-1 bothagree(34.79/59.24s).
+Rootretains configuration/cache/batchmeanlimits and rejects their unsupported
+isolatedservice/physicalbandwidth/cache-capacity inferences. Next source/
+trace audit targets larger dense/HC/sync pools; noGPUqueued. Loopreusesone
+processfor numerical+warmphase, CPUanalysisafterGPUrelease, nodailyrestore/
+redundant200K/knobsweep. Datedreport/exactsources/smallmapupdate retained;
+old170operations/rollups unchanged. Raw q6-dense-reference-s44-prep frozen:
+200files92,289,057bytes; externalmanifestSHA256
+ccb3ef69b9faaa19207de4cb6b33ec9725c275ad10a49dc178045d5453645e27.

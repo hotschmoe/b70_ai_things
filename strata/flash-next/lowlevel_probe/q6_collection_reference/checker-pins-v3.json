@@ -1,0 +1,73 @@
+{
+  "status": "SOURCE_ONLY_UNEXECUTED",
+  "S41": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-packed-s41-prep",
+  "S43": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s43-prep",
+  "B": "/mnt/vm_8tb/b70/build/strata-ab/src-ep",
+  "frozen_dependencies": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s43-prep/v2/check_first_c6.py": "7831f155e9bf03a1326b8885920c0d9caf9877994c540c5749354dabb124783d",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s43-prep/v2/checker-pins.json": "e3ad41b292071606e98c809d98f0391893e521efa13117d15e17968d779cef29",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s43-prep/bound-proof.md": "d4a8e0d09a60fc4a71af9602da275b4144d5b38989ce18fe3fec0d50d824beeb",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s43-prep/run-first-c6/gate.json": "cad68a104fba5345e4d7cbb517d8e2eaf024ec728b8a439c3e8f7680e05227e2",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-packed-s41-prep/cpu-reference/reference.py": "afc406916eb21030801071cb2fff30b954775c45f547ea97091181e11b775841",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-packed-s41-prep/cpu-reference/reference.json": "9b30f44e3bbec381f1ae6e84d979b7e35bac7c1e331db0e7ac5a45af71f17a73",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-packed-s41-prep/cpu-reference/manifest.json": "e4941583b9570879f81dac01e61ce9b55bbc5ee797f08d11ee981c3789e8de96",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-packed-s41-prep/fixture-selection.json": "54e21a6fed0dcbb12156d0db31d47fddc55f0555c1b4d2f3693dface42e487fe"
+  },
+  "columns": [
+    6,
+    1,
+    2,
+    3,
+    4,
+    8
+  ],
+  "shapes": [
+    [
+      6144,
+      2560
+    ],
+    [
+      2560,
+      10240
+    ],
+    [
+      2560,
+      12288
+    ],
+    [
+      2560,
+      6144
+    ]
+  ],
+  "depths": {
+    "6144": {
+      "original": 15,
+      "packed": 18
+    },
+    "2560": {
+      "original": 12,
+      "packed": 15
+    }
+  },
+  "block_rows": 128,
+  "scalar_spot_rows": "0,1,last for each new shape; all19 known S41 rows for first shape",
+  "Fraction_spots": "Existing S41 three exact rationals unchanged; additionally exact scalar Fraction at(column0,row0) for initial and changed operands in each shape",
+  "negative_control": "Exactly one +1 row roll per algorithm/fixture/directC6 versus same correct initial reference and bound; no extra matrix multiply",
+  "reference_scope": "Unchanged C8 and changed C6 all rows, reused only after exact canonicalQ8/own-graph file checks. Original/packed allCs plus own initial/changed direct/graph.",
+  "local_sources": {
+    "q6_dense_collect.cpp": "fa76bfa3874b614303528c2d85063ba3bad0e4fbeaf4e17148de8cda208d7758",
+    "format_reference.py": "1291c87fbfa21fa8ddc27d81bbbdf5d9cd3fcb8bc1193c4c510f9383dad7004b",
+    "fixture-selection.json": "54e21a6fed0dcbb12156d0db31d47fddc55f0555c1b4d2f3693dface42e487fe",
+    "build.sh": "5bd7f62debac7bff1836e87b0a80eba2075af9eede3b47dea7c51a67192ff1d7",
+    "archive-expected-container.sha256": "d1e16b983e8d175bfa92eb028fc2f35eeeb87793b41570f1a31e105c3b0e5561",
+    "v2/q6_dense_collect.cpp": "3530a92f62fd72141934ef013f15b35972fdcc837ce57593aafa59b3b8097d86",
+    "v3/q6_dense_collect.cpp": "40ba97c13f1e4737543be73cf5605ae05bfb9b2691586f297bea6eb90bfa0b6f",
+    "build-v3.sh": "bbed600c94fe6c5c6b0daca5405b46a20d6333adf59177e18306298da2cd0857"
+  },
+  "production_archive_hashes": {
+    "libstrata_kernels.a": "36087f125f1c17fe3b405ec5b471d86a44673d9e91e8a0b5cdc720d0c0a3f27b",
+    "libstrata_core.a": "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286"
+  },
+  "collector_source": "v3/q6_dense_collect.cpp",
+  "optional_microtiming": "S44_Q6_MICROTIMING=1,4contexts/24C6batchrecords stderr; interpret only after this external CPU gate, not serving."
+}
