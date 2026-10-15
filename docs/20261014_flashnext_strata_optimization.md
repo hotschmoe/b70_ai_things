@@ -2012,3 +2012,29 @@ utility; actualcostsourceleadbetter. BYIELDcheckcadencechanges, 0taken/
 with64unitamortization; failedcounttranscriptpreserved, final21calls0.29s,
 noGPUrepeat. Sourcecoldpathnoabsolutealignmentgate; purecheckpointbranch
 unknown. DatedS33doc/optionalpatch/data-map; rawprefill-quantum-s33/.
+
+
+## S34: historical peer dispatch attribution (2026-10-15)
+
+CONFIG -> Retained S10 PUSH trace, S9 binary 932d2f34, 4044-token main
+chunk. Historical ownership 155/357 experts per layer differs from current
+149/363. This is a CPU-only evidence audit, with no new runtime change.
+COMMAND -> Parse the old trace once, reuse compressed selected events,
+and link GPU launch IDs through host H2D flows to append calls. Read the
+current actual SYCL route, S7 rejected async arm and GGUF metadata.
+RESULT -> Across all 48 layers, primary activation gather has median
+0.149 ms service; following primary intervals without recorded positive
+GPU operations have median 52.987 ms. Matching host dispatch spans have
+median 53.146 ms and 58,716 peer kernel appends. Host API union covers
+361.786 ms of 2395.300 ms elapsed. These are overlapping, historical,
+profiler-sensitive scopes, not physical idle or a removable latency budget.
+VERDICT -> Current gather phase labels include host peer submissions;
+MMQ weight gathering is not built. Do not rerun the already slower S7
+per-layer async mechanism. Opus/Fable source reviews suggest narrower
+dispatch and conditional dense fusion leads; actual header checks limit
+same-format K/V eligibility to 7/12 layers. Prepare a real-weight,
+bitwise one-gather/reverse-alias oracle before any serving patch. Current
+host markers can share the next planned serve. No new performance or
+health result; no build/GPU test of the new candidates yet. See the
+[S34 report](20261015_strata_ep_prefill_dispatch.md) and raw
+`ep-prefill-dispatch-s34/{s34-report,review-closure,historical-gaps}.json`.

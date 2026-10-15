@@ -23025,3 +23025,39 @@ gate. Yieldmessages0/0, waiters/checkpointbranchunqualified. DatedS33doc,
 optionalpatch/goals/mapupdated; rawprefill-quantum-s33/{s33-report,
 api-comparison,tradeoff-review-closure,experiment-closure}.json,analysis/.
 GoalACTIVE: optimizeactualEP/primarydense/dequant paths;150/stream unmet.
+
+
+## 2026-10-15 -- Flash-Next optimization S34: historical peer dispatch audit
+
+CONFIG: CPU-only reanalysis of the retained S10 PUSH trace, S9 binary
+932d2f34, 4051 input / 32 output tokens, main chunk 4044. Historical expert
+ownership was 155 primary / 357 peer per layer; current ownership is
+149 / 363. Source, publication fixes and serving batching also differ.
+COMMAND: Parse the 161712114-byte raw trace once, retain selected events,
+then analyze the smaller cache. Join each kernel launch through its GPU
+argument ID, host H2D flow and append timestamp. Read current source,
+rejected S7 async evidence, and actual GGUF headers; no GPU or build.
+RESULT: All 48 primary gather/first-dequant intervals are unambiguous.
+Gather service median 0.149 ms, total 7.863 ms. Following primary intervals
+without positive-duration recorded GPU operations have median 52.987 ms,
+total 2388.975 ms. Corresponding host dispatch spans have median 53.146 ms
+and contain 58,716 peer kernel appends. Recorded host L0 API union covers
+361.786 ms of 2395.300 ms elapsed. These overlapping scopes are not added;
+uncovered trace time is not proven physical idle or removable CPU time.
+Current gather phase markers include peer host submission; MMQ is absent
+from the actual SYCL build, so native weight-gather probes are irrelevant.
+VERDICT: Avoid another historical trace and an identical per-layer async
+retry: S7 already qualified that mechanism and measured slower prefill.
+Actual Opus 5.5 and Fable 5.1 source reviews identify guarded alternatives,
+not production wins. Both initial source reviews hit their tool-turn caps;
+narrow resumed verdicts completed. Limit future review scope to avoid
+repeated discovery. Header checks restrict same-format K/V fusion to 7 of
+12 QSA layers. Grouped expert paths require further format, memory and
+arithmetic qualification. Prepare the distinct one-gather/reverse-expert
+alias oracle first, then gather current bounded host spans during the next
+planned serve. Neither candidate is built, GPU-tested or promoted here.
+Shared agent-coordination.log now records E1 and our pending windows;
+external E1 holds the CPU lease, so Strata continues light review/docs.
+No locks, server restarts, health repeats, daily restore or full-cache rerun.
+Dated S34 report, goals and data map updated; original S22 operation rows
+and rollups unchanged. Full goal remains active; decode target unmet.

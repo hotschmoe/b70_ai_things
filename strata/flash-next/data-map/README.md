@@ -6,11 +6,12 @@ path, which operations are expensive or wait, and how strong the evidence
 is for each claim. `operation-data.json` is the source of truth;
 `index.html` embeds a copy of it.
 
-Snapshot: 2026-10-15, S33 (S22 reference operation trace plus readiness, real-head,
+Snapshot: 2026-10-15, S34 (S22 reference operation trace plus readiness, real-head,
 production PLE, EP publication fix/native ISA, paired-head serving,
 draft-counter carry correction, full winning-candidate RAM recovery and
 separate current paired-head replay measurements, CPU boundary markers
-and a fixed-allocation prefill quantum tradeoff).
+and a fixed-allocation prefill quantum tradeoff; historical prefill dispatch
+intervals are separately attributed).
 Runtime source:
 `/mnt/vm_8tb/b70/build/strata-ab/src-ep` (upstream Strata 296b59d2 base
 plus working-tree overlays for EP/PUSH/accounting/S19-S21 and the
@@ -168,3 +169,13 @@ but increases incomingTTFT29.526->37.581s and decodercompletion41.619->46.612s.
 KeepQ0; both state/prefix/functional/health screens pass, without new full200k
 qualification. The primary gather region includes host peer enqueueing;
 MMQ weight-gather stubs are unreachable in the actual SYCL build.
+
+S34 reuses the old S10 trace: across 48 layers, the primary activation
+gather takes median 0.149 ms, followed by median 52.987 ms without recorded
+primary GPU operations. Matching host spans contain 58,716 peer kernel
+appends. These overlapping scopes are not additive, not current S33
+latencies, and not proof of physical GPU idle. Current bounded host
+markers are still needed. The rejected S7 per-layer async arm is not
+repeated. A one-gather/reverse-expert alias oracle is prepared only; no
+build, GPU test, serving speedup or IPC qualification yet. See the
+[S34 audit](../../../docs/20261015_strata_ep_prefill_dispatch.md).

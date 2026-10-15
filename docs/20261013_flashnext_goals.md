@@ -76,6 +76,18 @@ gather and hostpeer enqueueing; MMQ nativeweightgather is not built here.
 See [S33 tradeoff](20261015_strata_prefill_quantum.md). Skipmidpoint sweep;
 isolate actual EP/gather/dequant and primarydense work next.
 
+S34 reuses the historical S10 trace instead of starting another profiler.
+Across 48 layers, activation gather service has median 0.149 ms, followed
+by a 52.987 ms median interval without recorded primary GPU operations.
+Corresponding host spans contain 58,716 peer kernel appends. This is old,
+instrumented evidence with different expert ownership, not current latency
+or proof of physical GPU idle. The existing per-layer async dispatch arm
+was already slower; do not repeat it. Next, test a distinct mechanism:
+one peer activation gather into existing scratch, followed by reverse-order
+expert processing with unchanged arithmetic. Its standalone correctness
+oracle is prepared, not yet built or run. See the
+[S34 dispatch audit](20261015_strata_ep_prefill_dispatch.md).
+
 Quality: on 2026-10-14 Flash-Next IQ3_XXS beat the 27B INT4 8-0 on paired
 langs + sysadmin tasks (41/43 vs 33/43); see the A/B brief, Outcome 2.
 
