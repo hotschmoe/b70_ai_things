@@ -1,0 +1,26 @@
+{
+  "status": "ROOT_GO_ONE_OFFLINE_LEAF_BUILD_ONLY",
+  "time_utc": "2026-10-15T21:21:25.151898+00:00",
+  "source_manifest_sha256": "8c1211066e78e5d607b16ee474c81fd5a70a0d76d9307d94ed1e4e1501fcf2a8",
+  "packet_sha256": "5f701a5a8d36f54730c03c9eac21372c2ab40faf2e65ef2efa44a08044d01990",
+  "actual_reviews": {
+    "claude-opus-5-5": 104.0240397489979,
+    "claude-fable-5-1": 146.15938939800253
+  },
+  "root_full_read": true,
+  "resolved_before_build": {
+    "public_signature": "include/strata/kernels/iq_kernels.hpp75-78 takes ent_dst then ent_tok, grid_groups last. Source GU writes entry-major gate/up, destination used only DOWN; phase1 skips DOWN.",
+    "compile_flags": "Actual build.ninja IQ object rule: -fp-model=precise, SG32/per_kernel, defines Q6K/XMX_SG16/version only. SWAR1/GRID_SLM0 are exact source defaults, no command override. Private flags match.",
+    "public_member": "Postbuild audit extracts actual frozen f2b archive member and requires full SHA a61c equal S97 current object, plus public selected full image/text equal S97.",
+    "tables": "Private original/candidate generated from same ggml header; clean link and actual selected table/image ownership still required after build.",
+    "root_sync": "Same source public/retained S65 capture property; actual eager/captured gates still required."
+  },
+  "root_corrections_to_reviewers": [
+    "Source arithmetic ledger is not executed bitwise proof; strict compiled public/original/candidate outputs remain required.",
+    "Candidate E loop unrolled: E4 body has four sets of eight DP4A; do not require whole-candidate static count8 or an actual runtime E inner loop. Inspect actual compiled shared weight decode placement.",
+    "No invented GRF128/no-spill percentage gate: resource differences are real costs to inspect, not automatic invalidity; root decides whether a bounded mechanism test remains useful.",
+    "300s GPU leaf timeout is a separate bound from S97 11s offline decoder; Fable conflated those jobs."
+  ],
+  "after_build_required": "Three actual distinct host metadata/cache/guard/name/image bindings, public body identity, resource/codebook review; candidate-only selected ISA if needed to prove prep shared. No GPU GO yet.",
+  "dev_loop": "Keep existing cheap repeats, no reopening frozen source just to trim microseconds. No fullengine/serve/cache or format/lane sweep. Future reviews can use own-session short deltas; do not resend full62KB unchanged."
+}

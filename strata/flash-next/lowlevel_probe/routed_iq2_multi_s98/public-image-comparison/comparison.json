@@ -1,0 +1,201 @@
+{
+  "status": "FULL_IMAGE_AND_RAW_TEXT_IDENTITY_FAILED_BUT_COMPUTATIONAL_PREFIX_THROUGH_EOT_BYTEEXACT",
+  "failed_audit_preserved": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-build-audit",
+  "s97": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/qt17.zebin",
+    "sha256": "37cb80cd3034716da7cb4916cbe2379a35abc375169c171568f8525fe780cd78"
+  },
+  "s98": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-build-audit/public.zebin",
+    "sha256": "c795652b2deb875649352bc0844d7211b65ae3ff239ef1ce5bc5e79fa55f30e5"
+  },
+  "source_sha256": "acaa7da63733af9f3831b3a74b99e6176bf46a06e498e0a33c0591f7f4a29851",
+  "public_object_sha256": "a61c1dcae2783b7b63d23fffed7ccdfa0c79089fee148866cb5f1e111c6bb283",
+  "source_archive_member_identity": "Original audit completed exact source/object/frozen archive member checks before image failure.",
+  "target_prefix_bytes_exact": 7296,
+  "target_EOT_instruction_offset": 7280,
+  "different_target_bytes": 8,
+  "same_ze_info_codebook_options_symbols_relocations_compat_strtab": true,
+  "sections": [
+    {
+      "name": "",
+      "s97_offset": 64,
+      "s98_offset": 64,
+      "s97_bytes": 0,
+      "s98_bytes": 0,
+      "s97_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "s98_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exact": true
+    },
+    {
+      "name": ".text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_114launch_gu_portILi17ELi8ELb1EEEvjPN4sycl3_V15queueEPKyPKiSB_SB_PK10block_q8_1RKNS1_18NativeExpertLayoutEPfSI_E14native_gu_port18dpct_kernel_scalarILi17EESK_ILi8EESK_ILi1EEEE",
+      "s97_offset": 64,
+      "s98_offset": 64,
+      "s97_bytes": 7488,
+      "s98_bytes": 7488,
+      "s97_sha256": "bfbb475964f034bba8063a2e746a44a1dbef26d97f68ce4c79a99d2a374db2e1",
+      "s98_sha256": "8d5d234f2b5e6f0bad86eabd0e5a15e4520361f88d19a32f1124dbd97e086c57",
+      "exact": false,
+      "all_changed_byte_offsets": [
+        7308,
+        7309,
+        7310,
+        7311,
+        7324,
+        7325,
+        7326,
+        7327
+      ],
+      "changed_u32": [
+        {
+          "offset": 7308,
+          "s97": "0xe307351b",
+          "s98": "0xde39f167"
+        },
+        {
+          "offset": 7324,
+          "s97": "0xf3758ade",
+          "s98": "0x976af49f"
+        }
+      ]
+    },
+    {
+      "name": ".text.Intel_Symbol_Table_Void_Program",
+      "s97_offset": 7552,
+      "s98_offset": 7552,
+      "s97_bytes": 320,
+      "s98_bytes": 320,
+      "s97_sha256": "957e4318c1055a1c670e6b33694302bb85dfb03db01eec84d437ef5b9b124473",
+      "s98_sha256": "231daeb4ac022d2d9945f65cb5aa3b380128c7de89490c39cbf4d16b42ebb0e2",
+      "exact": false,
+      "all_changed_byte_offsets": [
+        92,
+        93,
+        94,
+        95,
+        108,
+        109,
+        110,
+        111
+      ],
+      "changed_u32": [
+        {
+          "offset": 92,
+          "s97": "0xe307351b",
+          "s98": "0xde39f167"
+        },
+        {
+          "offset": 108,
+          "s97": "0xf3758ade",
+          "s98": "0x976af49f"
+        }
+      ]
+    },
+    {
+      "name": ".data.global",
+      "s97_offset": 7872,
+      "s98_offset": 7872,
+      "s97_bytes": 4096,
+      "s98_bytes": 4096,
+      "s97_sha256": "06e47aaca60b4dc1d9b5a3f34540437058a6b142b4d7a59d5ded769b4d1bf1de",
+      "s98_sha256": "06e47aaca60b4dc1d9b5a3f34540437058a6b142b4d7a59d5ded769b4d1bf1de",
+      "exact": true
+    },
+    {
+      "name": ".symtab",
+      "s97_offset": 11968,
+      "s98_offset": 11968,
+      "s97_bytes": 168,
+      "s98_bytes": 168,
+      "s97_sha256": "82c3fe8c4203f5106ecbb7aa02091a12309288063d48b283b648b7b3c3d82d26",
+      "s98_sha256": "82c3fe8c4203f5106ecbb7aa02091a12309288063d48b283b648b7b3c3d82d26",
+      "exact": true
+    },
+    {
+      "name": ".spv",
+      "s97_offset": 12136,
+      "s98_offset": 12136,
+      "s97_bytes": 24212,
+      "s98_bytes": 24180,
+      "s97_sha256": "bd04a66a25110d9f998fd0d8ef7fd9f0a0ef63c0d6a09eefb575f8f0c5782bb9",
+      "s98_sha256": "01ba743e8d88e588962dbb614220d09d66e29689121bcbb02047cb973453b0d7",
+      "exact": false
+    },
+    {
+      "name": ".misc.buildOptions",
+      "s97_offset": 36352,
+      "s98_offset": 36320,
+      "s97_bytes": 38,
+      "s98_bytes": 38,
+      "s97_sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f",
+      "s98_sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f",
+      "exact": true
+    },
+    {
+      "name": ".note.intelgt.metrics",
+      "s97_offset": 36392,
+      "s98_offset": 36360,
+      "s97_bytes": 3,
+      "s98_bytes": 3,
+      "s97_sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c",
+      "s98_sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c",
+      "exact": true
+    },
+    {
+      "name": ".rel.text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_114launch_gu_portILi17ELi8ELb1EEEvjPN4sycl3_V15queueEPKyPKiSB_SB_PK10block_q8_1RKNS1_18NativeExpertLayoutEPfSI_E14native_gu_port18dpct_kernel_scalarILi17EESK_ILi8EESK_ILi1EEEE",
+      "s97_offset": 36464,
+      "s98_offset": 36432,
+      "s97_bytes": 32,
+      "s98_bytes": 32,
+      "s97_sha256": "b0127d71458076bb4dd803903e616a4aaa3efd1782cb31dd87377568bbf1a471",
+      "s98_sha256": "b0127d71458076bb4dd803903e616a4aaa3efd1782cb31dd87377568bbf1a471",
+      "exact": true
+    },
+    {
+      "name": ".rel.text.Intel_Symbol_Table_Void_Program",
+      "s97_offset": 36496,
+      "s98_offset": 36464,
+      "s97_bytes": 16,
+      "s98_bytes": 16,
+      "s97_sha256": "bd1da0a8713733f5398e10fc71a222055d39a6af5a4056174b89747ee5c340a5",
+      "s98_sha256": "bd1da0a8713733f5398e10fc71a222055d39a6af5a4056174b89747ee5c340a5",
+      "exact": true
+    },
+    {
+      "name": ".ze_info",
+      "s97_offset": 36512,
+      "s98_offset": 36480,
+      "s97_bytes": 4754,
+      "s98_bytes": 4754,
+      "s97_sha256": "0356e7a01724b200d3684b7070e228c15266231e35a0e91cb5a90a4bb052a47d",
+      "s98_sha256": "0356e7a01724b200d3684b7070e228c15266231e35a0e91cb5a90a4bb052a47d",
+      "exact": true
+    },
+    {
+      "name": ".note.intelgt.compat",
+      "s97_offset": 41272,
+      "s98_offset": 41240,
+      "s97_bytes": 172,
+      "s98_bytes": 172,
+      "s97_sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1",
+      "s98_sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1",
+      "exact": true
+    },
+    {
+      "name": ".strtab",
+      "s97_offset": 41448,
+      "s98_offset": 41416,
+      "s97_bytes": 988,
+      "s98_bytes": 988,
+      "s97_sha256": "0376db31d2b90f8434e4b1200645eb8a7154456e2c9d5c0cb46ae541b77855a6",
+      "s98_sha256": "0376db31d2b90f8434e4b1200645eb8a7154456e2c9d5c0cb46ae541b77855a6",
+      "exact": true
+    }
+  ],
+  "limits": [
+    "Full-image and complete text identity remain FAIL; this supplement does not rewrite that result.",
+    "Original instruction prefix through EOT is byteexact; changed target trailer is two MOV-to-null immediate fields after EOT, as bound to retained S97 actual ASM.",
+    "SPIR-V differs in size, IDs and order; no claim of universal SPIR-V equivalence. Actual emitted instruction prefix and resource metadata are checked directly.",
+    "No runtime correctness, dispatch, traffic or performance conclusion. No new ocloc/public decoder/compiler/GPU invocation."
+  ]
+}

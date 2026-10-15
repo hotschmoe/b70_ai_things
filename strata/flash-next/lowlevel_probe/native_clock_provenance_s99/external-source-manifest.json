@@ -1,0 +1,69 @@
+{
+  "scope": "S99_BOUNDED_OFFLINE_CLOCK_AUDIT",
+  "files": {
+    "clock-id-header.txt": {
+      "bytes": 104,
+      "sha256": "05e6f7900acd4cf489ac8701ad616eae2e96a1a0e3210fd9b791515b78c41c47"
+    },
+    "clock-provenance.json": {
+      "bytes": 3372,
+      "sha256": "3666e56eecca30a7732f43ad8d5afd8466f4113787259381ba808537ada89961"
+    },
+    "findings.txt": {
+      "bytes": 2862,
+      "sha256": "dcb29ad92d0154cf76ebbc60981a41634d823094d0395862e7843887e3b9731f"
+    },
+    "inspect-loader-only.sh": {
+      "bytes": 1169,
+      "sha256": "337bf9a7f301d7510b96bc011bc54adeefc630bbcb9af4558daebe7e6c55d42c"
+    },
+    "inspect-offline.sh": {
+      "bytes": 1423,
+      "sha256": "008dd86097a0992308b6cd6600ada84a8c71eabf93a6d71f97b2b0a77642246d"
+    },
+    "libstdcxx-dynamic.txt": {
+      "bytes": 1712,
+      "sha256": "aca2dfd99702ef915ea596df9807774f4166d989ec7ca1760cd10d60029a9960"
+    },
+    "libstdcxx-realpath.txt": {
+      "bytes": 46,
+      "sha256": "ec315ae6ab52b6ed1be5d59da51f8bf1f45a9c6defa881733280a33ce524db50"
+    },
+    "libstdcxx.sha256": {
+      "bytes": 103,
+      "sha256": "683d4be4a02ff0e197639bf08283a783828fc2ebabd032668a6f4b252cf9defc"
+    },
+    "native-clock-imports.txt": {
+      "bytes": 177,
+      "sha256": "510a3d66f143bc0b3d663dc446c3d87ce385cc68725d5ce102d86bc5cd5a8ec1"
+    },
+    "native-dynamic.txt": {
+      "bytes": 2669,
+      "sha256": "38475e9ee88488dbcc2d7539cc9f549c0753e5a8b87b3569590de92366aa0662"
+    },
+    "profiler-clock-symbols.txt": {
+      "bytes": 89,
+      "sha256": "92b207524ff4a7944fb73bb2d5f447c3869ee1acb9e08b46deb5af254862cbe6"
+    },
+    "reconstructed-LD_LIBRARY_PATH.txt": {
+      "bytes": 1096,
+      "sha256": "4b49a22b5a6069198c4c563899f2a05a456696886e1b2897ca1b377f57842011"
+    },
+    "reconstructed-loader-direct.txt": {
+      "bytes": 2603,
+      "sha256": "b192a4ac10aac180d5208b6dc6f6019385ade76e27c4c2268baf82fa47f782da"
+    },
+    "reconstructed-loader.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "steady-clock-symbol.txt": {
+      "bytes": 101,
+      "sha256": "6c7fea4e1fd846ca31b320c09db4278d6f1ba0ad63adc5936f6566f05843a57c"
+    },
+    "steady-clock.asm": {
+      "bytes": 1322,
+      "sha256": "5685a6c515d000381edb2f0136e89e5d629224c978d106e5d9cfe745598b2deb"
+    }
+  }
+}

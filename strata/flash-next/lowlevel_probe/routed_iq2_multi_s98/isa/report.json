@@ -1,0 +1,313 @@
+{
+  "status": "GO_BOUNDED_STRICT_PRIMITIVE_GATE_COMPILED_ENTRY_REUSE_CONFIRMED_NO_PERFORMANCE_CLAIM",
+  "binary_sha256": "f749a06942ca078afdb69254ac6f035f03c5789602d8c92f8790907c0322ad94",
+  "facts_sha256": "65a5ed7a27520dfea47c6edd163f832d05fa18b32be8ee33c74861b856f521df",
+  "candidate_image_sha256": "94b7bfa94926bc987e7f86eb1d79b17158a48912db7d1f7d74a7d300cf960c8e",
+  "candidate_text_sha256": "608e8d56b27f813ca6807c20ab21ccae0895ac89d6944d5aef287f32cecdbd7d",
+  "candidate_asm_sha256": "17cc372c96e9fd8daae5e2dde3b87ae937c7383167ed717fb6f25deca8dd9e2d",
+  "source_header_sha256": "5257cb5c51ef4fa4797b1f665e5ee523236f61afa02471b7570ef66600a56abd",
+  "execution_fields": {
+    "public": {
+      "grf_count": [
+        "128"
+      ],
+      "simd_size": [
+        "32"
+      ],
+      "slm_size": [],
+      "barrier_count": [],
+      "spill_size": [],
+      "scratch_size": [],
+      "eu_thread_count": [
+        "8"
+      ]
+    },
+    "original": {
+      "grf_count": [
+        "128"
+      ],
+      "simd_size": [
+        "32"
+      ],
+      "slm_size": [],
+      "barrier_count": [],
+      "spill_size": [],
+      "scratch_size": [],
+      "eu_thread_count": [
+        "8"
+      ]
+    },
+    "candidate": {
+      "grf_count": [
+        "128"
+      ],
+      "simd_size": [
+        "32"
+      ],
+      "slm_size": [],
+      "barrier_count": [],
+      "spill_size": [],
+      "scratch_size": [],
+      "eu_thread_count": [
+        "8"
+      ]
+    }
+  },
+  "static_regions": {
+    "E4": {
+      "asm_start_line": 237,
+      "asm_end_line": 660,
+      "start_label": "L3232:",
+      "end_label_exclusive": "L8960:",
+      "static_dp4a": 32,
+      "static_cbit": 4,
+      "static_codebook_d64_loads": 4,
+      "all_static_sends": [
+        {
+          "line": 256,
+          "text": "send.ugm (32|M0)         r12      r20  null:0  0x0            0x08200B80           {I@1,$9} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 258,
+          "text": "send.ugm (32|M0)         r32      r16  null:0  0x0            0x08200B80           {I@1,$10} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 261,
+          "text": "send.ugm (32|M0)         r28      r8  null:0  0x0            0x08200B80           {I@1,$11} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 265,
+          "text": "send.ugm (32|M0)         r26      r6  null:0  0x0            0x08200B80           {I@3,$12} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 268,
+          "text": "send.ugm (32|M0)         r24      r6  null:0  0x0            0x08200980           {I@1,$13} // wr:4+0, rd:2; load.ugm.d8u32.a64"
+        },
+        {
+          "line": 285,
+          "text": "send.ugm (32|M0)         r6       r16  null:0  0x0            0x08400780           {I@1,$14} // wr:4+0, rd:4; load.ugm.d64.a64"
+        },
+        {
+          "line": 292,
+          "text": "send.ugm (32|M0)         r20      r10  null:0  0x0            0x08400780           {I@2,$15} // wr:4+0, rd:4; load.ugm.d64.a64"
+        },
+        {
+          "line": 361,
+          "text": "send.ugm (32|M0)         r10      r6  null:0  0x0            0x08400780           {I@1,$0} // wr:4+0, rd:4; load.ugm.d64.a64"
+        },
+        {
+          "line": 362,
+          "text": "send.ugm (32|M0)         r6       r16  null:0  0x0            0x08400780           {$1} // wr:4+0, rd:4; load.ugm.d64.a64"
+        },
+        {
+          "line": 442,
+          "text": "send.ugm (32|M0)         r20      r10  null:0  0x0            0x08200B80           {I@1,$2} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 499,
+          "text": "send.ugm (32|M0)         r14      r46  null:0  0x4000            0x08803580           {I@1,$6} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x4]"
+        },
+        {
+          "line": 500,
+          "text": "send.ugm (32|M0)         r6       r46  null:0  0x14000            0x08803580           {$7} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x14]"
+        },
+        {
+          "line": 501,
+          "text": "send.ugm (32|M0)         r50      r46  null:0  0x0            0x08200B80           {$8} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 540,
+          "text": "send.ugm (32|M0)         r14      r50  null:0  0x4000            0x08803580           {I@1,$9} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x4]"
+        },
+        {
+          "line": 542,
+          "text": "send.ugm (32|M0)         r6       r50  null:0  0x14000            0x08803580           {F@1,$10} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x14]"
+        },
+        {
+          "line": 543,
+          "text": "send.ugm (32|M0)         r66      r50  null:0  0x0            0x08200B80           {$11} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 579,
+          "text": "send.ugm (32|M0)         r14      r50  null:0  0x4000            0x08803580           {I@1,$12} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x4]"
+        },
+        {
+          "line": 581,
+          "text": "send.ugm (32|M0)         r6       r50  null:0  0x14000            0x08803580           {F@1,$13} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x14]"
+        },
+        {
+          "line": 582,
+          "text": "send.ugm (32|M0)         r66      r50  null:0  0x0            0x08200B80           {$14} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 616,
+          "text": "send.ugm (32|M0)         r14      r50  null:0  0x4000            0x08803580           {I@1,$15} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x4]"
+        },
+        {
+          "line": 619,
+          "text": "send.ugm (32|M0)         r6       r50  null:0  0x14000            0x08803580           {F@1,$0} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x14]"
+        },
+        {
+          "line": 620,
+          "text": "send.ugm (32|M0)         r54      r50  null:0  0x0            0x08200B80           {$1} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        }
+      ]
+    },
+    "E2": {
+      "asm_start_line": 876,
+      "asm_end_line": 1221,
+      "start_label": "L11584:",
+      "end_label_exclusive": "L16400:",
+      "static_dp4a": 16,
+      "static_cbit": 4,
+      "static_codebook_d64_loads": 4,
+      "all_static_sends": [
+        {
+          "line": 896,
+          "text": "send.ugm (32|M0)         r12      r20  null:0  0x0            0x08200B80           {I@1,$9} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 897,
+          "text": "send.ugm (32|M0)         r20      r16  null:0  0x0            0x08200B80           {$10} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 900,
+          "text": "send.ugm (32|M0)         r16      r8  null:0  0x0            0x08200B80           {I@1,$11} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 904,
+          "text": "send.ugm (32|M0)         r56      r6  null:0  0x0            0x08200B80           {I@3,$12} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 907,
+          "text": "send.ugm (32|M0)         r58      r6  null:0  0x0            0x08200980           {I@1,$13} // wr:4+0, rd:2; load.ugm.d8u32.a64"
+        },
+        {
+          "line": 934,
+          "text": "send.ugm (32|M0)         r10      r6  null:0  0x0            0x08400780           {I@1,$14} // wr:4+0, rd:4; load.ugm.d64.a64"
+        },
+        {
+          "line": 945,
+          "text": "send.ugm (32|M0)         r20      r6  null:0  0x0            0x08400780           {I@2,$15} // wr:4+0, rd:4; load.ugm.d64.a64"
+        },
+        {
+          "line": 993,
+          "text": "send.ugm (32|M0)         r10      r6  null:0  0x0            0x08400780           {I@1,$0} // wr:4+0, rd:4; load.ugm.d64.a64"
+        },
+        {
+          "line": 1007,
+          "text": "send.ugm (32|M0)         r6       r16  null:0  0x0            0x08400780           {I@2,$1} // wr:4+0, rd:4; load.ugm.d64.a64"
+        },
+        {
+          "line": 1061,
+          "text": "send.ugm (32|M0)         r80      r16  null:0  0x0            0x08200B80           {I@2,$2} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 1139,
+          "text": "send.ugm (32|M0)         r14      r22  null:0  0x4000            0x08803580           {I@2,$6} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x4]"
+        },
+        {
+          "line": 1140,
+          "text": "send.ugm (32|M0)         r6       r22  null:0  0x14000            0x08803580           {I@1,$7} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x14]"
+        },
+        {
+          "line": 1141,
+          "text": "send.ugm (32|M0)         r44      r22  null:0  0x0            0x08200B80           {$8} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 1173,
+          "text": "send.ugm (32|M0)         r14      r22  null:0  0x4000            0x08803580           {I@2,$9} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x4]"
+        },
+        {
+          "line": 1175,
+          "text": "send.ugm (32|M0)         r6       r22  null:0  0x14000            0x08803580           {F@1,$10} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x14]"
+        },
+        {
+          "line": 1178,
+          "text": "send.ugm (32|M0)         r46      r22  null:0  0x0            0x08200B80           {F@1,$11} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        }
+      ]
+    },
+    "singleton": {
+      "asm_start_line": 1340,
+      "asm_end_line": 1645,
+      "start_label": "L17840:",
+      "end_label_exclusive": "L22184:",
+      "static_dp4a": 8,
+      "static_cbit": 4,
+      "static_codebook_d64_loads": 4,
+      "all_static_sends": [
+        {
+          "line": 1373,
+          "text": "send.ugm (32|M0)         r42      r14  null:0  0x0            0x08200B80           {I@1,$14} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 1376,
+          "text": "send.ugm (32|M0)         r44      r14  null:0  0x0            0x08200B80           {I@1,$15} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 1381,
+          "text": "send.ugm (32|M0)         r26      r22  null:0  0x0            0x08200980           {I@2,$0} // wr:4+0, rd:2; load.ugm.d8u32.a64"
+        },
+        {
+          "line": 1382,
+          "text": "send.ugm (32|M0)         r36      r38  null:0  0x0            0x08200B80           {I@1,$1} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 1383,
+          "text": "send.ugm (32|M0)         r38      r32  null:0  0x0            0x08200B80           {$2} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 1387,
+          "text": "send.ugm (32|M0)         r6       r18  null:0  0x4000            0x08803580           {I@1,$6} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x4]"
+        },
+        {
+          "line": 1399,
+          "text": "send.ugm (32|M0)         r14      r22  null:0  0x0            0x08400780           {I@1,$7} // wr:4+0, rd:4; load.ugm.d64.a64"
+        },
+        {
+          "line": 1458,
+          "text": "send.ugm (32|M0)         r14      r6  null:0  0x0            0x08400780           {I@1,$8} // wr:4+0, rd:4; load.ugm.d64.a64"
+        },
+        {
+          "line": 1459,
+          "text": "send.ugm (32|M0)         r6       r22  null:0  0x0            0x08400780           {$9} // wr:4+0, rd:4; load.ugm.d64.a64"
+        },
+        {
+          "line": 1534,
+          "text": "send.ugm (32|M0)         r6       r18  null:0  0x14000            0x08803580           {I@1,$10} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x14]"
+        },
+        {
+          "line": 1544,
+          "text": "send.ugm (32|M0)         r36      r32  null:0  0x0            0x08400780           {I@1,$11} // wr:4+0, rd:4; load.ugm.d64.a64"
+        },
+        {
+          "line": 1629,
+          "text": "send.ugm (32|M0)         r10      r18  null:0  0x0            0x08200B80           {$12} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        },
+        {
+          "line": 1630,
+          "text": "send.ugm (32|M0)         r12      r6  null:0  0x0            0x08200B80           {I@1,$13} // wr:4+0, rd:2; load.ugm.d16u32.a64"
+        }
+      ]
+    }
+  },
+  "static_total_dp4a": 56,
+  "static_total_dpas": 0,
+  "static_scratch_identified_sends": [],
+  "scratch_scope": "No scratch/SLM-labelled sends in complete selected target ASM. Two initial a32 BTI255 payload sends; all later UGM messages are a64 global. Metadata has no spill/scratch fields: absence is NOT measured zero.",
+  "qualified_public_identity": {
+    "raw_image_exact": false,
+    "raw_text_exact": false,
+    "computational_prefix_through_EOT_and_alignment_exact": true
+  },
+  "limits": [
+    "Static instruction counts and source-linked register reuse, not dynamic work/traffic/cache/cycles.",
+    "Entry counts and actual routing determine exercised E4/E2/tail; no runtime binding/output/timing conclusion.",
+    "Public anchor actual AOT computational prefix identity is qualified, not raw full-image equality.",
+    "Full strict public/original/candidate output, readonly and guard gates still required before timing."
+  ],
+  "decoder_invocations": 1,
+  "public_decoder_invocations": 0,
+  "GPU_or_leaf_execution_by_this_audit": 0
+}

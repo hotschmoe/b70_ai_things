@@ -1,0 +1,322 @@
+{
+  "status": "PASS_PRIMITIVE_ONLY",
+  "binary_files": {
+    "active/eager-public-a.bin": {
+      "bytes": 163840,
+      "sha256": "25fc7137c467ba7a0cc37561c96acadc0b4bb0f4e7637af609d68830295807a0"
+    },
+    "active/eager-1-a.bin": {
+      "bytes": 163840,
+      "sha256": "25fc7137c467ba7a0cc37561c96acadc0b4bb0f4e7637af609d68830295807a0"
+    },
+    "active/eager-2-a.bin": {
+      "bytes": 163840,
+      "sha256": "25fc7137c467ba7a0cc37561c96acadc0b4bb0f4e7637af609d68830295807a0"
+    },
+    "active/eager-public-b.bin": {
+      "bytes": 163840,
+      "sha256": "91b7b0209ff7d8c9162576c5c44b0b3c203e295f23e1841e1e4fdc6c169c07fd"
+    },
+    "active/eager-1-b.bin": {
+      "bytes": 163840,
+      "sha256": "91b7b0209ff7d8c9162576c5c44b0b3c203e295f23e1841e1e4fdc6c169c07fd"
+    },
+    "active/eager-2-b.bin": {
+      "bytes": 163840,
+      "sha256": "91b7b0209ff7d8c9162576c5c44b0b3c203e295f23e1841e1e4fdc6c169c07fd"
+    },
+    "singleton/eager-public-a.bin": {
+      "bytes": 163840,
+      "sha256": "0146efd35b1fd3dd802c1345dcee1ecbc8f0a89cfee7fad0102b2c563d4518f3"
+    },
+    "singleton/eager-1-a.bin": {
+      "bytes": 163840,
+      "sha256": "0146efd35b1fd3dd802c1345dcee1ecbc8f0a89cfee7fad0102b2c563d4518f3"
+    },
+    "singleton/eager-2-a.bin": {
+      "bytes": 163840,
+      "sha256": "0146efd35b1fd3dd802c1345dcee1ecbc8f0a89cfee7fad0102b2c563d4518f3"
+    },
+    "singleton/eager-public-b.bin": {
+      "bytes": 163840,
+      "sha256": "3977049e76da9015bdd84f5a948f67843d31580fe75ff1ab67e6b98670850866"
+    },
+    "singleton/eager-1-b.bin": {
+      "bytes": 163840,
+      "sha256": "3977049e76da9015bdd84f5a948f67843d31580fe75ff1ab67e6b98670850866"
+    },
+    "singleton/eager-2-b.bin": {
+      "bytes": 163840,
+      "sha256": "3977049e76da9015bdd84f5a948f67843d31580fe75ff1ab67e6b98670850866"
+    },
+    "zero/eager-public-a.bin": {
+      "bytes": 163840,
+      "sha256": "a58e6c77ab1686bf8db2495f500503468c299175f8edd908826db0746d597434"
+    },
+    "zero/eager-1-a.bin": {
+      "bytes": 163840,
+      "sha256": "a58e6c77ab1686bf8db2495f500503468c299175f8edd908826db0746d597434"
+    },
+    "zero/eager-2-a.bin": {
+      "bytes": 163840,
+      "sha256": "a58e6c77ab1686bf8db2495f500503468c299175f8edd908826db0746d597434"
+    },
+    "zero/eager-public-b.bin": {
+      "bytes": 163840,
+      "sha256": "a58e6c77ab1686bf8db2495f500503468c299175f8edd908826db0746d597434"
+    },
+    "zero/eager-1-b.bin": {
+      "bytes": 163840,
+      "sha256": "a58e6c77ab1686bf8db2495f500503468c299175f8edd908826db0746d597434"
+    },
+    "zero/eager-2-b.bin": {
+      "bytes": 163840,
+      "sha256": "a58e6c77ab1686bf8db2495f500503468c299175f8edd908826db0746d597434"
+    },
+    "input-a.bin": {
+      "bytes": 61440,
+      "sha256": "e4253c3ad61518c84a293ea15148471cbd534a2f583feb301a964096c5f14763"
+    },
+    "canonical-a-q8.bin": {
+      "bytes": 17792,
+      "sha256": "0611ab0baae42a74c8aafa01242201e9b318ed862cb7a85f6038b2f10972bccf"
+    },
+    "input-b.bin": {
+      "bytes": 61440,
+      "sha256": "2c1b1922aaa573abf7532b5e8d104d2309716aa0e87b42b93db0c6dcce572cd2"
+    },
+    "canonical-b-q8.bin": {
+      "bytes": 17792,
+      "sha256": "eedd2e00233e94c69780b05dad1638e2aa38076992a14e1ebfbb68216a80b086"
+    }
+  },
+  "DOT_files": [
+    "active/batch20-multi.dot",
+    "active/batch20-original.dot",
+    "active/single-multi.dot",
+    "active/single-original.dot",
+    "singleton/batch20-multi.dot",
+    "singleton/batch20-original.dot",
+    "singleton/single-multi.dot",
+    "singleton/single-original.dot",
+    "zero/single-multi.dot",
+    "zero/single-original.dot"
+  ],
+  "timing_samples": [
+    {
+      "type": "timing_sample",
+      "layout": 0,
+      "round": 0,
+      "position": 0,
+      "arm": 1,
+      "calls": 20,
+      "enqueue_us": 25.249,
+      "completed_us": 1758.924,
+      "barrier_span_us": 1768.542,
+      "own_full_bytes": true,
+      "speed_qualified": false
+    },
+    {
+      "type": "timing_sample",
+      "layout": 0,
+      "round": 0,
+      "position": 1,
+      "arm": 2,
+      "calls": 20,
+      "enqueue_us": 24.697,
+      "completed_us": 1046.405,
+      "barrier_span_us": 1052.292,
+      "own_full_bytes": true,
+      "speed_qualified": false
+    },
+    {
+      "type": "timing_sample",
+      "layout": 0,
+      "round": 1,
+      "position": 0,
+      "arm": 2,
+      "calls": 20,
+      "enqueue_us": 19.246,
+      "completed_us": 1042.467,
+      "barrier_span_us": 1044.48,
+      "own_full_bytes": true,
+      "speed_qualified": false
+    },
+    {
+      "type": "timing_sample",
+      "layout": 0,
+      "round": 1,
+      "position": 1,
+      "arm": 1,
+      "calls": 20,
+      "enqueue_us": 20.589,
+      "completed_us": 1753.213,
+      "barrier_span_us": 1756.771,
+      "own_full_bytes": true,
+      "speed_qualified": false
+    },
+    {
+      "type": "timing_sample",
+      "layout": 0,
+      "round": 2,
+      "position": 0,
+      "arm": 1,
+      "calls": 20,
+      "enqueue_us": 24.556,
+      "completed_us": 1758.182,
+      "barrier_span_us": 1763.02,
+      "own_full_bytes": true,
+      "speed_qualified": false
+    },
+    {
+      "type": "timing_sample",
+      "layout": 0,
+      "round": 2,
+      "position": 1,
+      "arm": 2,
+      "calls": 20,
+      "enqueue_us": 20.52,
+      "completed_us": 1044.943,
+      "barrier_span_us": 1047.083,
+      "own_full_bytes": true,
+      "speed_qualified": false
+    },
+    {
+      "type": "timing_sample",
+      "layout": 0,
+      "round": 3,
+      "position": 0,
+      "arm": 2,
+      "calls": 20,
+      "enqueue_us": 20.419,
+      "completed_us": 1042.307,
+      "barrier_span_us": 1044.583,
+      "own_full_bytes": true,
+      "speed_qualified": false
+    },
+    {
+      "type": "timing_sample",
+      "layout": 0,
+      "round": 3,
+      "position": 1,
+      "arm": 1,
+      "calls": 20,
+      "enqueue_us": 20.439,
+      "completed_us": 1753.984,
+      "barrier_span_us": 1756.979,
+      "own_full_bytes": true,
+      "speed_qualified": false
+    },
+    {
+      "type": "timing_sample",
+      "layout": 2,
+      "round": 0,
+      "position": 0,
+      "arm": 1,
+      "calls": 20,
+      "enqueue_us": 19.347,
+      "completed_us": 546.081,
+      "barrier_span_us": 548.75,
+      "own_full_bytes": true,
+      "speed_qualified": false
+    },
+    {
+      "type": "timing_sample",
+      "layout": 2,
+      "round": 0,
+      "position": 1,
+      "arm": 2,
+      "calls": 20,
+      "enqueue_us": 19.226,
+      "completed_us": 538.296,
+      "barrier_span_us": 541.563,
+      "own_full_bytes": true,
+      "speed_qualified": false
+    },
+    {
+      "type": "timing_sample",
+      "layout": 2,
+      "round": 1,
+      "position": 0,
+      "arm": 2,
+      "calls": 20,
+      "enqueue_us": 28.213,
+      "completed_us": 546.091,
+      "barrier_span_us": 549.688,
+      "own_full_bytes": true,
+      "speed_qualified": false
+    },
+    {
+      "type": "timing_sample",
+      "layout": 2,
+      "round": 1,
+      "position": 1,
+      "arm": 1,
+      "calls": 20,
+      "enqueue_us": 18.715,
+      "completed_us": 544.137,
+      "barrier_span_us": 547.5,
+      "own_full_bytes": true,
+      "speed_qualified": false
+    },
+    {
+      "type": "timing_sample",
+      "layout": 2,
+      "round": 2,
+      "position": 0,
+      "arm": 1,
+      "calls": 20,
+      "enqueue_us": 20.76,
+      "completed_us": 545.751,
+      "barrier_span_us": 549.687,
+      "own_full_bytes": true,
+      "speed_qualified": false
+    },
+    {
+      "type": "timing_sample",
+      "layout": 2,
+      "round": 2,
+      "position": 1,
+      "arm": 2,
+      "calls": 20,
+      "enqueue_us": 20.058,
+      "completed_us": 538.426,
+      "barrier_span_us": 542.188,
+      "own_full_bytes": true,
+      "speed_qualified": false
+    },
+    {
+      "type": "timing_sample",
+      "layout": 2,
+      "round": 3,
+      "position": 0,
+      "arm": 2,
+      "calls": 20,
+      "enqueue_us": 19.758,
+      "completed_us": 538.927,
+      "barrier_span_us": 540.937,
+      "own_full_bytes": true,
+      "speed_qualified": false
+    },
+    {
+      "type": "timing_sample",
+      "layout": 2,
+      "round": 3,
+      "position": 1,
+      "arm": 1,
+      "calls": 20,
+      "enqueue_us": 20.239,
+      "completed_us": 545.019,
+      "barrier_span_us": 548.541,
+      "own_full_bytes": true,
+      "speed_qualified": false
+    }
+  ],
+  "speed_qualified": false,
+  "serving_qualified": false,
+  "limits": [
+    "Warm repeated two-expert GU microfixture, not full EP/serving or streaming-cache proof.",
+    "Barrier spans are interval observations, not isolated device service.",
+    "DOT captures kernel metadata; actual binding must pass the independent pre-run host/device audit."
+  ]
+}

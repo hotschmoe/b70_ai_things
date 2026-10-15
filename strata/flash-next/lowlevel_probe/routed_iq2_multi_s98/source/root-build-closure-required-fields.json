@@ -1,0 +1,23 @@
+{
+  "purpose": "ROOT writes actual root-build-closure.json after exact ordinary-link/member/hostmetadata/device audit; not an existing result.",
+  "required_equalities": {
+    "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+    "public_iq_source_sha256": "acaa7da63733af9f3831b3a74b99e6176bf46a06e498e0a33c0591f7f4a29851",
+    "public_iq_member_sha256": "a61c1dcae2783b7b63d23fffed7ccdfa0c79089fee148866cb5f1e111c6bb283",
+    "host_kernel_binding_distinct": true,
+    "device_kernel_names_distinct": true
+  },
+  "required_actual_hash_keys": [
+    "binary_sha256",
+    "adapter_source_sha256",
+    "private_header_sha256"
+  ],
+  "actual_build_records": [
+    "build/sha256.txt",
+    "build/immutable-input-stats.json",
+    "build/link.map",
+    "build/symbols.txt",
+    "build/host-link.log"
+  ],
+  "caution": "Distinct device names alone are insufficient; inspect final host DeviceKernelInfo/CompileTimeKernelInfo/name bindings for public original, private original, and private Multi. No performance interpretation before all strict gates."
+}

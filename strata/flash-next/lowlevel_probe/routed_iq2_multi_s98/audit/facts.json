@@ -1,0 +1,699 @@
+{
+  "status": "PASS_THREE_DISTINCT_HOST_BINDINGS_QUALIFIED_PUBLIC_COMPUTATIONAL_IDENTITY_ROOT_RESOURCE_REVIEW_PENDING",
+  "binary_sha256": "f749a06942ca078afdb69254ac6f035f03c5789602d8c92f8790907c0322ad94",
+  "public_object_sha256": "a61c1dcae2783b7b63d23fffed7ccdfa0c79089fee148866cb5f1e111c6bb283",
+  "private_object_sha256": "3385379f064a1ebf76682050bc7e166dc1e721c628d1493b8195ef435065b9b3",
+  "source_header_sha256": "5257cb5c51ef4fa4797b1f665e5ee523236f61afa02471b7570ef66600a56abd",
+  "source_leaf_sha256": "2e7e3a54491c9425589268d1e0f153aa65240285e04c5df2fb9445ac38e5767e",
+  "public_archive_member_match": true,
+  "public_full_image_exact_S97": false,
+  "public_raw_text_exact_S97": false,
+  "qualified_public_identity": {
+    "raw_full_image_exact_S97": false,
+    "raw_complete_text_exact_S97": false,
+    "computational_prefix_through_EOT_plus_alignment_exact": true,
+    "target_exact_prefix_bytes": 7296,
+    "helper_exact_prefix_bytes": 80,
+    "other_sections_exact_except_embedded_spirv": true,
+    "sections": [
+      {
+        "name": "",
+        "s97_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "s98_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "s97_bytes": 0,
+        "s98_bytes": 0,
+        "exact": true
+      },
+      {
+        "name": ".text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_114launch_gu_portILi17ELi8ELb1EEEvjPN4sycl3_V15queueEPKyPKiSB_SB_PK10block_q8_1RKNS1_18NativeExpertLayoutEPfSI_E14native_gu_port18dpct_kernel_scalarILi17EESK_ILi8EESK_ILi1EEEE",
+        "s97_sha256": "bfbb475964f034bba8063a2e746a44a1dbef26d97f68ce4c79a99d2a374db2e1",
+        "s98_sha256": "8d5d234f2b5e6f0bad86eabd0e5a15e4520361f88d19a32f1124dbd97e086c57",
+        "s97_bytes": 7488,
+        "s98_bytes": 7488,
+        "exact": false,
+        "exact_prefix_through_EOT_and_alignment_bytes": 7296,
+        "only_changed_byte_offsets": [
+          7308,
+          7309,
+          7310,
+          7311,
+          7324,
+          7325,
+          7326,
+          7327
+        ],
+        "classification": "two post-EOT MOV-to-null immediate fields; no broader trailer semantics asserted"
+      },
+      {
+        "name": ".text.Intel_Symbol_Table_Void_Program",
+        "s97_sha256": "957e4318c1055a1c670e6b33694302bb85dfb03db01eec84d437ef5b9b124473",
+        "s98_sha256": "231daeb4ac022d2d9945f65cb5aa3b380128c7de89490c39cbf4d16b42ebb0e2",
+        "s97_bytes": 320,
+        "s98_bytes": 320,
+        "exact": false,
+        "exact_prefix_through_EOT_and_alignment_bytes": 80,
+        "only_changed_byte_offsets": [
+          92,
+          93,
+          94,
+          95,
+          108,
+          109,
+          110,
+          111
+        ],
+        "classification": "two post-EOT MOV-to-null immediate fields; no broader trailer semantics asserted"
+      },
+      {
+        "name": ".data.global",
+        "s97_sha256": "06e47aaca60b4dc1d9b5a3f34540437058a6b142b4d7a59d5ded769b4d1bf1de",
+        "s98_sha256": "06e47aaca60b4dc1d9b5a3f34540437058a6b142b4d7a59d5ded769b4d1bf1de",
+        "s97_bytes": 4096,
+        "s98_bytes": 4096,
+        "exact": true
+      },
+      {
+        "name": ".symtab",
+        "s97_sha256": "82c3fe8c4203f5106ecbb7aa02091a12309288063d48b283b648b7b3c3d82d26",
+        "s98_sha256": "82c3fe8c4203f5106ecbb7aa02091a12309288063d48b283b648b7b3c3d82d26",
+        "s97_bytes": 168,
+        "s98_bytes": 168,
+        "exact": true
+      },
+      {
+        "name": ".spv",
+        "s97_sha256": "bd04a66a25110d9f998fd0d8ef7fd9f0a0ef63c0d6a09eefb575f8f0c5782bb9",
+        "s98_sha256": "01ba743e8d88e588962dbb614220d09d66e29689121bcbb02047cb973453b0d7",
+        "s97_bytes": 24212,
+        "s98_bytes": 24180,
+        "exact": false,
+        "classification": "embedded SPIR-V differs; not the emitted AOT instruction stream; no universal semantic-equivalence claim"
+      },
+      {
+        "name": ".misc.buildOptions",
+        "s97_sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f",
+        "s98_sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f",
+        "s97_bytes": 38,
+        "s98_bytes": 38,
+        "exact": true
+      },
+      {
+        "name": ".note.intelgt.metrics",
+        "s97_sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c",
+        "s98_sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c",
+        "s97_bytes": 3,
+        "s98_bytes": 3,
+        "exact": true
+      },
+      {
+        "name": ".rel.text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_114launch_gu_portILi17ELi8ELb1EEEvjPN4sycl3_V15queueEPKyPKiSB_SB_PK10block_q8_1RKNS1_18NativeExpertLayoutEPfSI_E14native_gu_port18dpct_kernel_scalarILi17EESK_ILi8EESK_ILi1EEEE",
+        "s97_sha256": "b0127d71458076bb4dd803903e616a4aaa3efd1782cb31dd87377568bbf1a471",
+        "s98_sha256": "b0127d71458076bb4dd803903e616a4aaa3efd1782cb31dd87377568bbf1a471",
+        "s97_bytes": 32,
+        "s98_bytes": 32,
+        "exact": true
+      },
+      {
+        "name": ".rel.text.Intel_Symbol_Table_Void_Program",
+        "s97_sha256": "bd1da0a8713733f5398e10fc71a222055d39a6af5a4056174b89747ee5c340a5",
+        "s98_sha256": "bd1da0a8713733f5398e10fc71a222055d39a6af5a4056174b89747ee5c340a5",
+        "s97_bytes": 16,
+        "s98_bytes": 16,
+        "exact": true
+      },
+      {
+        "name": ".ze_info",
+        "s97_sha256": "0356e7a01724b200d3684b7070e228c15266231e35a0e91cb5a90a4bb052a47d",
+        "s98_sha256": "0356e7a01724b200d3684b7070e228c15266231e35a0e91cb5a90a4bb052a47d",
+        "s97_bytes": 4754,
+        "s98_bytes": 4754,
+        "exact": true
+      },
+      {
+        "name": ".note.intelgt.compat",
+        "s97_sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1",
+        "s98_sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1",
+        "s97_bytes": 172,
+        "s98_bytes": 172,
+        "exact": true
+      },
+      {
+        "name": ".strtab",
+        "s97_sha256": "0376db31d2b90f8434e4b1200645eb8a7154456e2c9d5c0cb46ae541b77855a6",
+        "s98_sha256": "0376db31d2b90f8434e4b1200645eb8a7154456e2c9d5c0cb46ae541b77855a6",
+        "s97_bytes": 988,
+        "s98_bytes": 988,
+        "exact": true
+      }
+    ],
+    "preserved_v1_failure": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-build-audit",
+    "basis_actual_S97_ASM": [
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/disasm/.text.s97_qt17.asm",
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/disasm/.text.Intel_Symbol_Table_Void_Program.asm"
+    ]
+  },
+  "hosts": {
+    "public": {
+      "object_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES9_ILi8EES9_ILi1EEEEEE",
+        "bind": 0,
+        "type": 1,
+        "section": 20,
+        "offset": 75064,
+        "size": 88
+      },
+      "object_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 0,
+          "type": 1,
+          "section": 241,
+          "offset": 2112,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 0,
+          "type": 1,
+          "section": 241,
+          "offset": 2104,
+          "size": 8
+        }
+      ],
+      "actual_host_relocations": [
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 2,
+          "addend": 2108,
+          "normalized_destination": 2112,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 2,
+          "addend": 2100,
+          "normalized_destination": 2104,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 10,
+          "addend": 2112,
+          "normalized_destination": 2112,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"
+          ]
+        },
+        {
+          "target_metadata": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES9_ILi8EES9_ILi1EEEEEE",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 10,
+          "addend": 75064,
+          "normalized_destination": 75064,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 2,
+          "addend": 2100,
+          "normalized_destination": 2104,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 10,
+          "addend": 2112,
+          "normalized_destination": 2112,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 10,
+          "addend": 2112,
+          "normalized_destination": 2112,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"
+          ]
+        }
+      ],
+      "final_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES9_ILi8EES9_ILi1EEEEEE",
+        "bind": 0,
+        "type": 1,
+        "section": 16,
+        "offset": 6897608,
+        "size": 88
+      },
+      "final_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 0,
+          "type": 1,
+          "section": 30,
+          "offset": 64051624,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 0,
+          "type": 1,
+          "section": 30,
+          "offset": 64051616,
+          "size": 8
+        }
+      ],
+      "registered_name_pointer": {
+        "pointer": 5615247,
+        "name": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_114launch_gu_portILi17ELi8ELb1EEEvjPN4sycl3_V15queueEPKyPKiSB_SB_PK10block_q8_1RKNS1_18NativeExpertLayoutEPfSI_E14native_gu_port18dpct_kernel_scalarILi17EESK_ILi8EESK_ILi1EEEE"
+      }
+    },
+    "original": {
+      "object_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN3s9811PrivateGu17ILb0EEEEE",
+        "bind": 2,
+        "type": 1,
+        "section": 355,
+        "offset": 0,
+        "size": 88
+      },
+      "object_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb0EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 353,
+          "offset": 0,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb0EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 351,
+          "offset": 0,
+          "size": 8
+        }
+      ],
+      "actual_host_relocations": [
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb0EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb0EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb0EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb0EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb0EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb0EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN3s9811PrivateGu17ILb0EEEEE",
+          "target_symbol": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN3s9811PrivateGu17ILb0EEEEE",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb0EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb0EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb0EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb0EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb0EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb0EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        }
+      ],
+      "final_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN3s9811PrivateGu17ILb0EEEEE",
+        "bind": 2,
+        "type": 1,
+        "section": 16,
+        "offset": 5650344,
+        "size": 88
+      },
+      "final_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb0EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 30,
+          "offset": 64034888,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb0EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 30,
+          "offset": 64034880,
+          "size": 8
+        }
+      ],
+      "registered_name_pointer": {
+        "pointer": 5417934,
+        "name": "_ZTSN3s9811PrivateGu17ILb0EEE"
+      }
+    },
+    "candidate": {
+      "object_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN3s9811PrivateGu17ILb1EEEEE",
+        "bind": 2,
+        "type": 1,
+        "section": 390,
+        "offset": 0,
+        "size": 88
+      },
+      "object_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb1EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 388,
+          "offset": 0,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb1EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 386,
+          "offset": 0,
+          "size": 8
+        }
+      ],
+      "actual_host_relocations": [
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb1EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb1EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb1EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb1EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb1EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb1EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN3s9811PrivateGu17ILb1EEEEE",
+          "target_symbol": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN3s9811PrivateGu17ILb1EEEEE",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb1EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb1EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb1EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb1EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb1EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb1EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        }
+      ],
+      "final_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN3s9811PrivateGu17ILb1EEEEE",
+        "bind": 2,
+        "type": 1,
+        "section": 16,
+        "offset": 5651632,
+        "size": 88
+      },
+      "final_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb1EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 30,
+          "offset": 64034904,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN3s9811PrivateGu17ILb1EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 30,
+          "offset": 64034896,
+          "size": 8
+        }
+      ],
+      "registered_name_pointer": {
+        "pointer": 5417964,
+        "name": "_ZTSN3s9811PrivateGu17ILb1EEE"
+      }
+    }
+  },
+  "selected": {
+    "public": {
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_114launch_gu_portILi17ELi8ELb1EEEvjPN4sycl3_V15queueEPKyPKiSB_SB_PK10block_q8_1RKNS1_18NativeExpertLayoutEPfSI_E14native_gu_port18dpct_kernel_scalarILi17EESK_ILi8EESK_ILi1EEEE",
+      "offset": 54296944,
+      "image_bytes": 43240,
+      "image_sha256": "c795652b2deb875649352bc0844d7211b65ae3ff239ef1ce5bc5e79fa55f30e5",
+      "text_bytes": 7488,
+      "text_sha256": "8d5d234f2b5e6f0bad86eabd0e5a15e4520361f88d19a32f1124dbd97e086c57",
+      "all_kernel_names_in_this_selected_image": [
+        "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_114launch_gu_portILi17ELi8ELb1EEEvjPN4sycl3_V15queueEPKyPKiSB_SB_PK10block_q8_1RKNS1_18NativeExpertLayoutEPfSI_E14native_gu_port18dpct_kernel_scalarILi17EESK_ILi8EESK_ILi1EEEE",
+        "Intel_Symbol_Table_Void_Program"
+      ],
+      "extra_text_sections": {
+        ".text.Intel_Symbol_Table_Void_Program": 320
+      },
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ]
+      },
+      "full_kernel_metadata": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_114launch_gu_portILi17ELi8ELb1EEEvjPN4sycl3_V15queueEPKyPKiSB_SB_PK10block_q8_1RKNS1_18NativeExpertLayoutEPfSI_E14native_gu_port18dpct_kernel_scalarILi17EESK_ILi8EESK_ILi1EEEE\n    user_attributes:\n      intel_reqd_sub_group_size: 32\n      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]\n    execution_env:\n      grf_count:       128\n      has_4gb_buffers: true\n      has_no_stateless_write: true\n      indirect_stateless_count: 15\n      inline_data_payload_size: 32\n      offset_to_skip_per_thread_data_load: 128\n      simd_size:       32\n      subgroup_independent_forward_progress: true\n      eu_thread_count: 8\n    payload_arguments:\n      - arg_type:        arg_bypointer\n        offset:          0\n        size:            8\n        arg_index:       0\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          8\n        size:            8\n        arg_index:       1\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          16\n        size:            8\n        arg_index:       2\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          24\n        size:            8\n        arg_index:       3\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          32\n        size:            8\n        arg_index:       4\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          40\n        size:            8\n        arg_index:       6\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          48\n        size:            8\n        arg_index:       7\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_byvalue\n        offset:          56\n        size:            72\n        arg_index:       5\n        source_offset:   0\n      - arg_type:        global_base\n        offset:          128\n        size:            8\n        is_ptr:          true\n      - arg_type:        group_count\n        offset:          136\n        size:            12\n    per_thread_payload_arguments:\n      - arg_type:        local_id\n        offset:          0\n        size:            64\n",
+      "missing_resource_fields_mean": "absent, not measured0",
+      "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+    },
+    "original": {
+      "kernel": "_ZTSN3s9811PrivateGu17ILb0EEE",
+      "offset": 2973712,
+      "image_bytes": 41928,
+      "image_sha256": "e2c4bd7e53fd6e36fe2ef7039a657081c1e7221bfcba0ff928590fa605659bb8",
+      "text_bytes": 7424,
+      "text_sha256": "bd3baa2a4aa363494fda9024c645ecfbf2d786946a34b07c066b9b046aa3242c",
+      "all_kernel_names_in_this_selected_image": [
+        "_ZTSN3s9811PrivateGu17ILb0EEE",
+        "Intel_Symbol_Table_Void_Program"
+      ],
+      "extra_text_sections": {
+        ".text.Intel_Symbol_Table_Void_Program": 320
+      },
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ]
+      },
+      "full_kernel_metadata": "_ZTSN3s9811PrivateGu17ILb0EEE\n    user_attributes:\n      intel_reqd_sub_group_size: 32\n      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]\n    execution_env:\n      grf_count:       128\n      has_4gb_buffers: true\n      has_no_stateless_write: true\n      indirect_stateless_count: 15\n      inline_data_payload_size: 32\n      offset_to_skip_per_thread_data_load: 128\n      simd_size:       32\n      subgroup_independent_forward_progress: true\n      eu_thread_count: 8\n    payload_arguments:\n      - arg_type:        arg_bypointer\n        offset:          0\n        size:            8\n        arg_index:       0\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          8\n        size:            8\n        arg_index:       1\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          16\n        size:            8\n        arg_index:       2\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          24\n        size:            8\n        arg_index:       3\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          32\n        size:            8\n        arg_index:       4\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          40\n        size:            8\n        arg_index:       6\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          48\n        size:            8\n        arg_index:       7\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_byvalue\n        offset:          56\n        size:            72\n        arg_index:       5\n        source_offset:   0\n      - arg_type:        global_base\n        offset:          128\n        size:            8\n        is_ptr:          true\n      - arg_type:        group_count\n        offset:          136\n        size:            12\n    per_thread_payload_arguments:\n      - arg_type:        local_id\n        offset:          0\n        size:            64\n",
+      "missing_resource_fields_mean": "absent, not measured0",
+      "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+    },
+    "candidate": {
+      "kernel": "_ZTSN3s9811PrivateGu17ILb1EEE",
+      "offset": 2900832,
+      "image_bytes": 72880,
+      "image_sha256": "94b7bfa94926bc987e7f86eb1d79b17158a48912db7d1f7d74a7d300cf960c8e",
+      "text_bytes": 23040,
+      "text_sha256": "608e8d56b27f813ca6807c20ab21ccae0895ac89d6944d5aef287f32cecdbd7d",
+      "all_kernel_names_in_this_selected_image": [
+        "_ZTSN3s9811PrivateGu17ILb1EEE",
+        "Intel_Symbol_Table_Void_Program"
+      ],
+      "extra_text_sections": {
+        ".text.Intel_Symbol_Table_Void_Program": 320
+      },
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ]
+      },
+      "full_kernel_metadata": "_ZTSN3s9811PrivateGu17ILb1EEE\n    user_attributes:\n      intel_reqd_sub_group_size: 32\n      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]\n    execution_env:\n      grf_count:       128\n      has_4gb_buffers: true\n      has_no_stateless_write: true\n      indirect_stateless_count: 61\n      inline_data_payload_size: 32\n      offset_to_skip_per_thread_data_load: 128\n      simd_size:       32\n      subgroup_independent_forward_progress: true\n      eu_thread_count: 8\n    payload_arguments:\n      - arg_type:        arg_bypointer\n        offset:          0\n        size:            8\n        arg_index:       0\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          8\n        size:            8\n        arg_index:       1\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          16\n        size:            8\n        arg_index:       2\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          24\n        size:            8\n        arg_index:       3\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          32\n        size:            8\n        arg_index:       4\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          40\n        size:            8\n        arg_index:       6\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          48\n        size:            8\n        arg_index:       7\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_byvalue\n        offset:          56\n        size:            72\n        arg_index:       5\n        source_offset:   0\n      - arg_type:        global_base\n        offset:          128\n        size:            8\n        is_ptr:          true\n      - arg_type:        group_count\n        offset:          136\n        size:            12\n    per_thread_payload_arguments:\n      - arg_type:        local_id\n        offset:          0\n        size:            64\n",
+      "missing_resource_fields_mean": "absent, not measured0",
+      "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+    }
+  },
+  "all_image_walk": false,
+  "ocloc_or_compiler_invocations": 0,
+  "GPU_or_leaf_execution": 0,
+  "limits": [
+    "Actual host-reference/cache/guard/namepointer/image ownership, not runtime dispatch.",
+    "Resource fields/absence require root review; no physical occupancy/traffic/speed claim.",
+    "No private output correctness inferred from names or distinct images.",
+    "No decoder required for this binding audit; S97 computational prefix has actual ISA proof; full public image/text identity failed and is explicitly qualified."
+  ]
+}

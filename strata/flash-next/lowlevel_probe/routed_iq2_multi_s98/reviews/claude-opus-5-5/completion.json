@@ -1,0 +1,120 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 104.0240397489979,
+  "launch_exception": null,
+  "source_packet_sha256": "5f701a5a8d36f54730c03c9eac21372c2ab40faf2e65ef2efa44a08044d01990",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 281014,
+      "stop_reason": "end_turn",
+      "session_id": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "total_cost_usd": 1.1724804,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 35413,
+        "cache_read_input_tokens": 56976,
+        "output_tokens": 7708,
+        "output_tokens_details": {
+          "thinking_tokens": 5866
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 35413,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 7708,
+            "cache_read_input_tokens": 56976,
+            "cache_creation_input_tokens": 35413,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 35413
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 10,
+          "outputTokens": 20393,
+          "thinkingTokens": 11159,
+          "cacheReadInputTokens": 153302,
+          "cacheCreationInputTokens": 91740,
+          "webSearchRequests": 0,
+          "costUSD": 1.1724804,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# S98 source review: IQ2_XS routed multi-entry primitive\n\n## Disposition: ACCEPT, offline leaf build and metadata review only\n\nAcceptance covers only the offline leaf build and the metadata/ISA review that follows. GPU work stays with root.\n\nI found no defect in the arithmetic, aliasing or output ownership. I compared the candidate against the original line by line:\n\n- **Weight decode.** `Multi<17>::prep` repeats the original `q2` shift extraction, grid index `&0x1FF`, `unpack_ksigns`, both SWAR masks and the `w[l0]`/`w[l0+1]` placement byte-for-byte. Code *j* produces `w[2j]` and `w[2j+1]`, so the natural order is preserved.\n- **Activations.** `acts` reads `y[iqs/2].qs[0..7]` and `ds[0]` from the same `xs[e]+kbx*8` base the original uses. So `u[j]` is the original `u0`/`u1` at `l0+0`/`l0+1`.\n- **Dot order.** `s0` takes j=0..3 in order and `s1` takes j=4..7 in order, which equals the original l0={0,2} and l0={4,6} chains. `finish` keeps the signed nested truncating divisions, then the separate `d=m.d*ds; return d*sumi`. K order, the per-entry accumulator starting at `+0.f`, and the XOR 4/2/1 reduction are unchanged.\n- **Aliasing.** Repeated `ent_tok` values only alias read-only Q8 data. Reuse never crosses a row, a blob or a `grp_start` boundary.\n- **Ownership.** Only `sub==0` writes `dst[(e+i)*FF]` inside `[e0,e1)`. The sub-group is convergent: 1280 rows over gx=40 means no partial work-groups, the `ng` early return is uniform, and the 4 rows sharing a sub-group see the same `g` and the same entries.\n- **Routes.**\n  - Active sizes 1..6 hit E4, E2 and the scalar tail.\n  - Singleton isolates the resource cost of the multi-compiled code.\n  - Zero tests the sentinel.\n  - GRID=2 < ng=6 exercises the grid-stride loop.\n  - Snapshot counts reconcile with `analyze.py`: 60 correctness plus 28 timing gives 88, and there are 16 timing samples.\n\n## Conditions to close before or at build (source and metadata, no GPU)\n\n1. **Public anchor argument order.** The leaf calls `native_expert_grouped(L,p,s,n,dst,t,...)`. Confirm the frozen signature really takes destinations before tokens. If they are swapped, `hd` values up to 31 index past T=6 and the public anchor reads the 0xff tail. That fails closed, but it wastes the lease.\n2. **Compile-macro and FP parity with the public archive member.** The private TU relies on the defaults `STRATA_SWAR=1` and `STRATA_GRID_SLM=0`, plus `-fp-model=precise` and SG32. Check these against the actual compile command for `iq_kernels.dp.cpp.o`, not by inference. Strict equality between the public anchor and the private original would catch a mismatch, but only on the GPU.\n3. **ggml table definitions.** `GGML_COMMON_IMPL_SYCL` instantiates `iq2xs_grid` and the other tables in the leaf as well as in the frozen archive. Confirm the link is clean and that the private kernels read their own complete table.\n4. **Metadata/ISA gate, the one that matters.** The private multi image must show the `prep` weight-code loads, the 4 codebook gathers and the SWAR work **outside the entry loop**, with `DP4A\u00d78` inside it. It must also show no spill or scratch fields beyond what the original has, at GRF128. If the compiler rematerializes decode per entry or spills, the GPU run cannot discriminate the mechanism: **stop there**. Also confirm the singleton/original image is not resource-regressed relative to the public kernel.\n\n## Evidence limits\n\n- The fixture is two warm, repeated experts of about 1.9 MB each, very likely cache-resident, on synthetic routes. It says nothing about streaming-cache misses, EP behaviour or the real route-size distribution.\n- Byte equality on inputs A/B/A plus three layouts is strong confirmation of the exact source derivation. It is not an exhaustive proof.\n- Barrier spans are interval observations. Using them as a mechanism signal is valid; treating them as a serving gain or a percentage gate is not.\n- The host Info/cache/guard binding is still owed by `root-build-closure.json`. Distinct kernel names alone are not proof.\n\n## Dev-loop scope\n\n- **Keep:** all three layouts, the public anchor, both inputs, the batch20 graph timing (4 alternating rounds), and the per-snapshot guard/read-only checks.\n- **Trim if anything:** the eager `repeat-*` pass, since graph A/B/A already covers determinism and input restore. The cost is negligible either way, so do not reopen review over it.\n- **Don't add:** no lane, format or SLM sweeps, no engine/server/cache tests, no extra experts.\n- **Order:** the condition 4 ISA check after the build is the cheapest discriminator, so make it the hard go/no-go before any lease.",
+      "ttft_ms": 79105,
+      "type": "result",
+      "duration_ms": 102841,
+      "uuid": "4a31bfcd-d09a-4a8f-b659-c92ad4ba0486",
+      "ttft_stream_ms": 1779,
+      "time_to_request_ms": 72,
+      "first_content_frame_ms": 1780,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

@@ -1,0 +1,41 @@
+{
+  "status": "METADATA_ONLY_RUNTIME_PAYLOAD_VERIFICATION_REQUIRED",
+  "compact_file": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-grouped-gemm-s42-prep/run-clean/exports/weights.bin",
+  "compact_bytes": 28160000,
+  "compact_sha256": "a9549c6a3c9c44c1c0fd374e62d603d4a2c82bea131f07a765ff6b45d5e13dc6",
+  "metadata_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-grouped-gemm-s42-prep/run-clean/exports/fixtures.tsv",
+  "metadata_sha256": "210555ee1dc0f56690bd770aee3673dafb4b10b2508ed91d81a3736a344307ee",
+  "experts": [
+    {
+      "layer": 0,
+      "expert": 41,
+      "gu_type": 17,
+      "down_type": 20,
+      "N": 2560,
+      "FF": 640,
+      "compact_offset": 3072000,
+      "gate_bytes": 473600,
+      "up_offset": 473600,
+      "up_bytes": 473600,
+      "down_offset": 947200,
+      "blob_bytes": 1868800,
+      "read_bytes": 947200
+    },
+    {
+      "layer": 0,
+      "expert": 211,
+      "gu_type": 17,
+      "down_type": 20,
+      "N": 2560,
+      "FF": 640,
+      "compact_offset": 20992000,
+      "gate_bytes": 473600,
+      "up_offset": 473600,
+      "up_bytes": 473600,
+      "down_offset": 947200,
+      "blob_bytes": 1868800,
+      "read_bytes": 947200
+    }
+  ],
+  "payload_read_during_preparation": false
+}

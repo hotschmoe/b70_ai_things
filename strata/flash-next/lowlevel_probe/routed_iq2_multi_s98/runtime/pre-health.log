@@ -1,0 +1,3 @@
+=== probe card 0 (img=b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78 timeout=400s) ===
+  card 0: OK
+xpu-health: HEALTHY (cards 0)

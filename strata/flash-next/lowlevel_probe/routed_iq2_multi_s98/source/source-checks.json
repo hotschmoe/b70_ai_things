@@ -1,0 +1,36 @@
+{
+  "status": "PASS_SOURCE_SYNTAX_ONLY_NOT_COMPILED_OR_RUN",
+  "python_AST": [
+    "analyze.py",
+    "generate_private.py",
+    "runtime_identity.py"
+  ],
+  "bash_syntax": [
+    "ROOT_RUN.sh",
+    "build-container.sh",
+    "build.sh",
+    "leased_run.sh"
+  ],
+  "ASCII_files": [
+    "README.txt",
+    "ROOT_RUN.sh",
+    "analyze.py",
+    "build-container.sh",
+    "build.sh",
+    "expected-container.sha256",
+    "extraction.json",
+    "generate_private.py",
+    "immutable-input-pincheck.json",
+    "leased_run.sh",
+    "private_iq2_gu.hpp",
+    "root-build-closure-required-fields.json",
+    "routed_iq2_leaf.cpp",
+    "runtime_identity.py",
+    "source-checks.json",
+    "source-pins.json",
+    "weight-identity.json"
+  ],
+  "no_payload_read": true,
+  "no_GPU_or_build": true,
+  "large_input_pincheck": "immutable-input-pincheck.json"
+}

@@ -24618,3 +24618,51 @@ GU anchor. No speed, traffic, actual route-reuse frequency or serving claim.
 S30 RAM recovery and absolute targets unchanged. Report:
 docs/20261015_strata_routed_iq2_reuse.md; exact small records under
 strata/flash-next/lowlevel_probe/routed_iq2_existing_isa_s97/.
+
+
+## 2026-10-15 - S99 native clock implementation, historical provenance gap
+
+CONFIG -> Existing S95 d94e96ca and pinned e41; bounded CPU-only inspection.
+COMMAND -> Direct loader --list/--preload, native imports and one actual
+libstdc++ steady_clock function. No engine main, build, DRI or new trace.
+RESULT -> Reconstructed libstdc++.so.6.0.33 SHA1fd75fe7 calls clock_gettime
+with ID1/CLOCK_MONOTONIC and returns nanoseconds. Initial ldd-wrapper preload
+attempted profiler initialization and failed255 without DRI; preserved,
+corrected direct-loader inspection exits0. Historical S95 native maps/full
+LD paths were not retained: actual loaded-library identity remains unproved.
+VERDICT -> CONDITIONAL; retain separate CPU/trace clocks. Capture maps,
+resolved library hashes and loader controls during a future already planned
+run; no new trace or compile solely for provenance. Fifteen exact small
+copies under strata/flash-next/lowlevel_probe/native_clock_provenance_s99/.
+No speed, causal wait/idle, cross-card join or serving claim.
+
+
+## 2026-10-15 - S98 routed IQ2_XS shared preparation strict primitive
+
+CONFIG -> One private QT17/LN8/SG32/WG256 GU, N2560/FF640, two real S42
+expert slices, mixed1..6/singleton/zero routes and two inputs A/B. Same
+integer divisions, float scale/product, per-lane K and XOR4/2/1 ledger.
+COMMAND -> Actual source Opus104.024s/Fable146.159s/root full-read; one
+22s offline leaf build f749a069. Actual three distinct host bindings,
+public archive member a61c, selected resources and one10s candidate ISA
+review precede one quiet card0 process23876/41s, no server/main mutation.
+RESULT -> All88 strict full-byte/readonly/guards/finite/inactive and A/B/A
+graph checks PASS;18 exported public/original/candidate eager GU anchors,
+16 balanced timing samples. Mixed completed medians87.80415->52.18525us
+per call(-40.5663%); all four paired changes about-40.5%. Singleton
+27.26925->26.933825us(-1.2300%), one paired+0.359%: small/mixed.
+Compiled E4/E2 share4codebook gathers/4cbit across32/16DP4A; scalar8.
+All metadata SIMD32/GRF128, absent scratch/spill/SLM not measured zero.
+Public raw-image identity fails and remains FALSE: only two post-EOT
+immediate words differ per text, SPV32B smaller; computational prefixes
+through EOT7296B/80B, codebook/args/options/relocs exact. Original failed
+audit preserved; additive explanation accepted before runtime strict anchor.
+Leaf/analyzer/driver/tee exits0; owned CID+name gone; pre/postcard health0.
+VERDICT -> Qualified private mechanism only, not serving speed/route reuse/
+cold experts/physical traffic or targets. One process/four alternating
+pairs per active layout; no retry or full-cache campaign. Prepare guarded
+default-OFF main integration separately; all production defaults/S30 remain.
+Report: docs/20261015_strata_routed_iq2_reuse.md; exact small records under
+strata/flash-next/lowlevel_probe/routed_iq2_multi_s98/. Map historical170
+rows/rollups/meta remain byte-exact. No runtime model postreview claimed
+here; actual source answers and root corrections are retained.

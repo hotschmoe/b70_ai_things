@@ -1,0 +1,40 @@
+{
+  "facts_sha256": "65a5ed7a27520dfea47c6edd163f832d05fa18b32be8ee33c74861b856f521df",
+  "binary_sha256": "f749a06942ca078afdb69254ac6f035f03c5789602d8c92f8790907c0322ad94",
+  "selected": {
+    "kernel": "_ZTSN3s9811PrivateGu17ILb1EEE",
+    "offset": 2900832,
+    "image_bytes": 72880,
+    "image_sha256": "94b7bfa94926bc987e7f86eb1d79b17158a48912db7d1f7d74a7d300cf960c8e",
+    "text_bytes": 23040,
+    "text_sha256": "608e8d56b27f813ca6807c20ab21ccae0895ac89d6944d5aef287f32cecdbd7d",
+    "all_kernel_names_in_this_selected_image": [
+      "_ZTSN3s9811PrivateGu17ILb1EEE",
+      "Intel_Symbol_Table_Void_Program"
+    ],
+    "extra_text_sections": {
+      ".text.Intel_Symbol_Table_Void_Program": 320
+    },
+    "execution_fields": {
+      "grf_count": [
+        "128"
+      ],
+      "simd_size": [
+        "32"
+      ],
+      "slm_size": [],
+      "barrier_count": [],
+      "spill_size": [],
+      "scratch_size": [],
+      "eu_thread_count": [
+        "8"
+      ]
+    },
+    "full_kernel_metadata": "_ZTSN3s9811PrivateGu17ILb1EEE\n    user_attributes:\n      intel_reqd_sub_group_size: 32\n      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]\n    execution_env:\n      grf_count:       128\n      has_4gb_buffers: true\n      has_no_stateless_write: true\n      indirect_stateless_count: 61\n      inline_data_payload_size: 32\n      offset_to_skip_per_thread_data_load: 128\n      simd_size:       32\n      subgroup_independent_forward_progress: true\n      eu_thread_count: 8\n    payload_arguments:\n      - arg_type:        arg_bypointer\n        offset:          0\n        size:            8\n        arg_index:       0\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          8\n        size:            8\n        arg_index:       1\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          16\n        size:            8\n        arg_index:       2\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          24\n        size:            8\n        arg_index:       3\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          32\n        size:            8\n        arg_index:       4\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          40\n        size:            8\n        arg_index:       6\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          48\n        size:            8\n        arg_index:       7\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_byvalue\n        offset:          56\n        size:            72\n        arg_index:       5\n        source_offset:   0\n      - arg_type:        global_base\n        offset:          128\n        size:            8\n        is_ptr:          true\n      - arg_type:        group_count\n        offset:          136\n        size:            12\n    per_thread_payload_arguments:\n      - arg_type:        local_id\n        offset:          0\n        size:            64\n",
+    "missing_resource_fields_mean": "absent, not measured0",
+    "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+  },
+  "alias": "none needed: selected short name is below NAME_MAX; exact image COPY only",
+  "no_public_decode": true,
+  "no_all_image_walk": true
+}

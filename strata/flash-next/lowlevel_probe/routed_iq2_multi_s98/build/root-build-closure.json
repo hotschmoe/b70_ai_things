@@ -1,0 +1,33 @@
+{
+  "status": "ROOT_GO_ONE_CARD0_PRIMITIVE_CORRECTNESS_THEN_CONDITIONAL_TIMING",
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "public_iq_source_sha256": "acaa7da63733af9f3831b3a74b99e6176bf46a06e498e0a33c0591f7f4a29851",
+  "public_iq_member_sha256": "a61c1dcae2783b7b63d23fffed7ccdfa0c79089fee148866cb5f1e111c6bb283",
+  "host_kernel_binding_distinct": true,
+  "device_kernel_names_distinct": true,
+  "binary_sha256": "f749a06942ca078afdb69254ac6f035f03c5789602d8c92f8790907c0322ad94",
+  "adapter_source_sha256": "2e7e3a54491c9425589268d1e0f153aa65240285e04c5df2fb9445ac38e5767e",
+  "private_header_sha256": "5257cb5c51ef4fa4797b1f665e5ee523236f61afa02471b7570ef66600a56abd",
+  "source_manifest_sha256": "8c1211066e78e5d607b16ee474c81fd5a70a0d76d9307d94ed1e4e1501fcf2a8",
+  "source_review_resolution_sha256": "dff7ef8a393f512df412204d030dd3181a148b1062d89c870170a8ec48bfb586",
+  "build_audit_facts_sha256": "65a5ed7a27520dfea47c6edd163f832d05fa18b32be8ee33c74861b856f521df",
+  "public_full_image_exact_S97": false,
+  "public_raw_text_exact_S97": false,
+  "public_computational_identity": "Exact7296byte target prefix through EOT and80byte Intelhelper prefix. Only two post-EOT MOV-immediate ranges differ per text; embedded SPV differs. Codebook, all kernel metadata, options, symbols, relocations exact. Original failed rawidentity audit preserved. Root read actual EOT ASM and branches; no broader trailer meaning asserted.",
+  "compiled_candidate_ledger": {
+    "E4": {
+      "dp4a": 32,
+      "cbit": 4,
+      "codebook_d64_gathers": 4
+    },
+    "E2": {
+      "dp4a": 16,
+      "cbit": 4,
+      "codebook_d64_gathers": 4
+    }
+  },
+  "candidate_ASM_sha256": "17cc372c96e9fd8daae5e2dde3b87ae937c7383167ed717fb6f25deca8dd9e2d",
+  "resources": "All three SIMD32/GRF128/eu_thread_count8. Missing SLM/spill/scratch fields mean absent, not measured zero. No dynamic occupancy/traffic claim.",
+  "root_full_read": true,
+  "command_scope": "ONE physicalcard0 process, public anchor + strict original/candidate bytes/readonly/guards/changed-input captures for mixed/singleton/zero; timings only if all pass. Fresh pre/post percard health and owned CID/name disappearance. No server/main/cache change, no retry."
+}

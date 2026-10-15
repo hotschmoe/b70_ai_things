@@ -1,0 +1,5 @@
+cpu-run: [S98-IQ2XS-multi] acquired (quiet) -> /mnt/vm_8tb/github/b70_ai_things/bin/gpu-run --card 0 env ZE_AFFINITY_MASK=0 ONEAPI_DEVICE_SELECTOR=level_zero:* bash /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-prep/leased_run.sh /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-prep/run-clean
+gpu-run: [S98-IQ2XS-multi] acquired card(s) 0 -> env ZE_AFFINITY_MASK=0 ONEAPI_DEVICE_SELECTOR=level_zero:* bash /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-prep/leased_run.sh /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-prep/run-clean
+{"status": "PASS_PRIMITIVE_ONLY", "leaf_exit": 0, "pre_health_exit": 0, "post_health_exit": 0, "analysis_exit": 0, "container_removed": true, "processes": 1, "retries": 0, "serving_qualified": false, "speed_qualified": false}
+gpu-run: [S98-IQ2XS-multi] done in 41s (exit 0)
+cpu-run: [S98-IQ2XS-multi] done in 41s (exit 0)

@@ -62,3 +62,66 @@ transactions, bandwidth, occupancy or service causality. Parser preflights
 stopped before the single decoder run; reusable helpers needed real
 section/addend support, target-section enumeration and explicit demangler
 normalization. Those corrections are evidence limits, not extra GPU runs.
+
+
+## S98 strict primitive result, 2026-10-15
+
+The S97 section records the compiled audit and the decision to prepare a
+candidate. S98 now qualifies the private reuse mechanism on one warm two-expert fixture;
+production source, S30 serving baseline and serving targets are unchanged.
+Exact records: [S98 bundle](../strata/flash-next/lowlevel_probe/routed_iq2_multi_s98/README.md).
+
+CONFIG -> Same H2560/FF640 QT17, LN8/SG32/WG256 arithmetic and natural
+E4/E2/singleton candidate. Use two retained real expert GU slices with two
+activation inputs, repeated/permuted token routing, mixed group sizes1..6,
+singleton-only groups and zero groups. One physical card0 process; original
+and candidate captured 20-call graphs, four alternating pairs per timed
+layout. All correctness gates precede timing. No model/server mutation.
+
+COMMAND -> Root consulted actual claude-opus-5-5 (104.024s) and
+claude-fable-5-1 (146.159s), read both complete answers and resolved source
+conditions before the offline build. Their source approvals did not grant
+GPU or numerical qualification. Root then audited actual host/device
+bindings, selected candidate ISA and bounded public-image differences
+before one quiet leased run (23876, terminal0, 41s). Exact commands,
+compiler flags, binary/source pins and closures are copied in the bundle.
+
+RESULT -> All88 strict snapshots passed, including public/original/
+candidate full gate/up bytes, repeat/changed/restore graphs, finite/inactive
+outputs, guards and read-only data. All three layouts passed;16 timing
+samples completed. Pre/post card health, owned container/name removal and
+driver/leaf/analyzer exits passed. No retry occurred.
+
+| Warm layout | Original completed us/call | Candidate us/call | Ratio-of-medians change |
+| --- | ---: | ---: | ---: |
+| Mixed sizes1..6 | 87.80415 | 52.18525 | -40.5663% |
+| Singleton-only | 27.26925 | 26.933825 | -1.2300% |
+
+All four mixed paired changes were about -40.5%. Singleton pairs were
+-1.426%, +0.359%, -1.342%, -1.118%; this is a small mixed result, not a
+broad singleton speed claim. These are nested same-process warm graph
+intervals, not independent serving trials or isolated GPU service.
+
+The emitted candidate E4 region shares four codebook gathers/four cbit
+sign preparations across32 DP4A instructions; E2 shares them across16.
+The singleton retains eight DP4A. This confirms cross-entry prep reuse in
+the compiled regions, without measuring dynamic transactions or assigning
+the entire timing delta to one instruction family. All three metadata
+records report GRF128/SIMD32/eu_thread_count8; missing scratch/spill/SLM
+fields remain absent, not measured zero. Candidate text grows to23040B.
+
+Three actual host Info/cache/guard/name/image paths are distinct. The first
+raw public-image identity audit failed and is preserved. The reused public
+image is43240B versus S97's43272B: target computational bytes0..7295
+through EOT are exact, while two post-EOT four-byte immediate ranges and
+embedded SPIR-V differ. Codebook, metadata, options, symbols and relocations
+match. Root accepted this bounded computational identity; full-image/raw-
+text equality remains FALSE. Runtime public/original byte equality then
+passed on the declared fixture.
+
+VERDICT -> Retain the qualified private reuse mechanism for a small next
+source step. Actual serving routing/reuse frequency, cold experts, full EP
+behavior and end-to-end latency remain unmeasured. No default/shelf change,
+full-model gain, cache/bandwidth/occupancy cause or decode-target attainment
+is claimed. The strict fixture does not establish universal arithmetic
+correctness, and no format/lane/SLM sweep is implied.

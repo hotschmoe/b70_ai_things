@@ -1,0 +1,53 @@
+{
+  "status": "PASS_CPU_READONLY_HASH_CHECK_NO_BUILD_GPU_PAYLOAD",
+  "files": {
+    "/common/mmvq-core.images.o": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/build/mmvq-core.images.o",
+      "sha256": "8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21",
+      "bytes": 59875544,
+      "stat": {
+        "st_dev": 45,
+        "st_ino": 23943831,
+        "st_size": 59875544,
+        "st_mtime_ns": 1792068240522308855,
+        "st_ctime_ns": 1792068240522308855
+      }
+    },
+    "/frozen/libstrata_kernels.a": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/frozen-inputs/libstrata_kernels.a",
+      "sha256": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8",
+      "bytes": 19468072,
+      "stat": {
+        "st_dev": 45,
+        "st_ino": 23937825,
+        "st_size": 19468072,
+        "st_mtime_ns": 1792067232644493521,
+        "st_ctime_ns": 1792067232644493521
+      }
+    },
+    "/frozen/libstrata_core.a": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/frozen-inputs/libstrata_core.a",
+      "sha256": "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286",
+      "bytes": 585338,
+      "stat": {
+        "st_dev": 45,
+        "st_ino": 23937826,
+        "st_size": 585338,
+        "st_mtime_ns": 1792067232687158777,
+        "st_ctime_ns": 1792067232687158777
+      }
+    },
+    "/work/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/iq_kernels.dp.cpp.o": {
+      "host_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/iq_kernels.dp.cpp.o",
+      "sha256": "a61c1dcae2783b7b63d23fffed7ccdfa0c79089fee148866cb5f1e111c6bb283",
+      "bytes": 2863664,
+      "stat": {
+        "st_dev": 45,
+        "st_ino": 23295091,
+        "st_size": 2863664,
+        "st_mtime_ns": 1791995733331169581,
+        "st_ctime_ns": 1791995733332156782
+      }
+    }
+  }
+}

@@ -374,3 +374,12 @@ ONEsource-only routed-expert integerdot/load/decode-reuse audit. Routed
 GU/down7.504ms and MMVQ12.680ms are disjoint name predicates, not nested.
 Attention13tagbinding is not expertISA; no exhaustiveallmainISA coverage or
 integeralgebra-only bitguarantee. No newGPU/build or throughput claim.
+
+
+S97/S98 identify repeated routed IQ2_XS decoding in actual compiled code and
+qualify a private shared-preparation primitive:88 strict snapshots and health
+pass; warm mixed GU intervals87.80415->52.18525us/call(-40.5663%). Singleton
+results are small/mixed. This one-card two-expert fixture does not establish
+end-to-end decode/prefill gains, real route reuse, or a default/shelf change.
+S30 recovery and all serving targets remain unchanged.
+[Source, compiled mechanism and bounded result](20261015_strata_routed_iq2_reuse.md).

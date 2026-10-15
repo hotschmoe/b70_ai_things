@@ -1,0 +1,32 @@
+{
+  "status": "SOURCE_ONLY_NO_BUILD_GPU",
+  "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp",
+  "source_sha256": "acaa7da63733af9f3831b3a74b99e6176bf46a06e498e0a33c0591f7f4a29851",
+  "header_sha256": "5257cb5c51ef4fa4797b1f665e5ee523236f61afa02471b7570ef66600a56abd",
+  "Fmt17_dot_byte_exact_source": true,
+  "original_dot_sha256": "88108e76eb313ae46d3647d9168e53ac94a1be9f93875beeda245263df5b64e3",
+  "helpers_swar_lanes_and_row_dot_multi_iq_exact": true,
+  "row_entries_changes": [
+    "Only compile-time reuse predicate FALSE(current17) or TRUE(candidate17); exact E4/E2/singleton bodies"
+  ],
+  "kernel_changes": [
+    "Private name/compile-time USE_MULTI forwarded; same TG17/LN8/row/group/entry/output ownership"
+  ],
+  "candidate_prep": [
+    "Original q2 uint32 shifts, grid lookup/sign/SWAR expressions; activation reads moved to acts; only weight results cached"
+  ],
+  "finish": "Original nested signed integer divisions, then const float d=m.d*ds; return d*sumi;",
+  "launch": "Same public port SG32/WG256/root_sync/gx/groups; unique s98::PrivateGu17<false/true>",
+  "public_anchor": "native_expert_grouped phase1 scratch gate/up first, full strict bytes incl inactive",
+  "root_binding_required": "Actual final public/private Info/cache/guard/registered-name/device image before GPU; private symbol names alone insufficient",
+  "not_changed": [
+    "Main TU/object/archive",
+    "Q8",
+    "K/XOR order",
+    "integer truncations",
+    "FP conversion/scales",
+    "group grid/lanes",
+    "routing",
+    "metadata/output planes"
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "status": "FROZEN_SOURCE_PREPARATION_ONLY_NO_BUILD_GPU_OR_PAYLOAD",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-prep",
+  "files": {
+    "README.txt": {
+      "bytes": 4828,
+      "sha256": "1530076ee9d3ce1ec3b5466c27c4699a90ca39fae343f3b7e5ea500232aa9d46"
+    },
+    "ROOT_RUN.sh": {
+      "bytes": 731,
+      "sha256": "06dd483fd055bab120f0f1b562231dd0704e9bc18e4b5828abf5d88e348835b3"
+    },
+    "analyze.py": {
+      "bytes": 2638,
+      "sha256": "a610f561e76dba916729ec6e4cd3ca9119076cc094e120a999093c9ff5d1d676"
+    },
+    "build-container.sh": {
+      "bytes": 2802,
+      "sha256": "034a95bab2cf92bacfe5dfaae9f499f3051e95c9cc3f3955decfac2c0aabe87c"
+    },
+    "build.sh": {
+      "bytes": 1387,
+      "sha256": "b24b328f309ec3208705a7a42cc995ca43bbb730e2f3659a6f8c785ac5e152e5"
+    },
+    "expected-container.sha256": {
+      "bytes": 1854,
+      "sha256": "33d99d87d10a1aa74834d2764777884de1026f175f2e107bc1b29b9085f8faab"
+    },
+    "extraction.json": {
+      "bytes": 1588,
+      "sha256": "ea47d8b7f2e6baa1a7d3a0d57c7ad61d33b184582689237a486b1f34ed17e178"
+    },
+    "generate_private.py": {
+      "bytes": 8572,
+      "sha256": "55ca08e49f655b98fb9f599009e18191d0a24e08e5e2f597fb9a2ceafe5f1f1b"
+    },
+    "immutable-input-pincheck.json": {
+      "bytes": 2108,
+      "sha256": "f7fa946b99c0a78c860e15fb87e68ed6f04573ca4b6eb1edcdc48aa41c274662"
+    },
+    "leased_run.sh": {
+      "bytes": 5482,
+      "sha256": "9cd4cc73a7ac471d01a46a50651f898a0e9f8bdd9aabce434432f418095bd5a3"
+    },
+    "private_iq2_gu.hpp": {
+      "bytes": 13924,
+      "sha256": "5257cb5c51ef4fa4797b1f665e5ee523236f61afa02471b7570ef66600a56abd"
+    },
+    "root-build-closure-required-fields.json": {
+      "bytes": 1080,
+      "sha256": "dd947ccc5d52ea6b156c15c3658bcea57d1a5bec2657d79494d38eb2faa7ead7"
+    },
+    "routed_iq2_leaf.cpp": {
+      "bytes": 13625,
+      "sha256": "2e7e3a54491c9425589268d1e0f153aa65240285e04c5df2fb9445ac38e5767e"
+    },
+    "runtime_identity.py": {
+      "bytes": 2997,
+      "sha256": "a01bc6356961e0f7c8685885ecc75d15bb333ef8351f8aa05a9918e70d17e8fa"
+    },
+    "source-checks.json": {
+      "bytes": 840,
+      "sha256": "ee6242ecadeae4cbfbc41fad818a8a1a48af80fdd841629a4cf7545ea225accb"
+    },
+    "source-pins.json": {
+      "bytes": 3752,
+      "sha256": "36ebbc3cebe1ec54bc2ba17ad236360dc14284f9c110aa5729bda85e87c41059"
+    },
+    "weight-identity.json": {
+      "bytes": 1313,
+      "sha256": "1626b99a6ef1048d61c86784149e34daa4b8746120557b466878fa7461903000"
+    }
+  },
+  "expected_future_inventory": {
+    "layouts": 3,
+    "inputs": 2,
+    "checked_snapshots": 88,
+    "binary_files": 22,
+    "DOT_files": 10,
+    "timing_samples": 16
+  },
+  "source_owner": "strata_ep_s27 host/controller plus ple_upstream private header/extractor",
+  "future_build_and_run_require_root_GO": true
+}

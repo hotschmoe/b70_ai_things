@@ -1,0 +1,20 @@
+{
+  "packet_sha256": "5f701a5a8d36f54730c03c9eac21372c2ab40faf2e65ef2efa44a08044d01990",
+  "packet_bytes": 62875,
+  "source_file_sha256": {
+    "private_iq2_gu.hpp": "5257cb5c51ef4fa4797b1f665e5ee523236f61afa02471b7570ef66600a56abd",
+    "routed_iq2_leaf.cpp": "2e7e3a54491c9425589268d1e0f153aa65240285e04c5df2fb9445ac38e5767e",
+    "extraction.json": "ea47d8b7f2e6baa1a7d3a0d57c7ad61d33b184582689237a486b1f34ed17e178",
+    "build.sh": "b24b328f309ec3208705a7a42cc995ca43bbb730e2f3659a6f8c785ac5e152e5",
+    "build-container.sh": "034a95bab2cf92bacfe5dfaae9f499f3051e95c9cc3f3955decfac2c0aabe87c",
+    "ROOT_RUN.sh": "06dd483fd055bab120f0f1b562231dd0704e9bc18e4b5828abf5d88e348835b3",
+    "leased_run.sh": "9cd4cc73a7ac471d01a46a50651f898a0e9f8bdd9aabce434432f418095bd5a3",
+    "runtime_identity.py": "a01bc6356961e0f7c8685885ecc75d15bb333ef8351f8aa05a9918e70d17e8fa",
+    "analyze.py": "a610f561e76dba916729ec6e4cd3ca9119076cc094e120a999093c9ff5d1d676",
+    "weight-identity.json": "1626b99a6ef1048d61c86784149e34daa4b8746120557b466878fa7461903000",
+    "expected-container.sha256": "33d99d87d10a1aa74834d2764777884de1026f175f2e107bc1b29b9085f8faab"
+  },
+  "root_full_read": true,
+  "S97_actual_compiled_lever_read": true,
+  "scope": "Independent actual Claude source review; only offline leaf build after root conditions, not GPU approval"
+}

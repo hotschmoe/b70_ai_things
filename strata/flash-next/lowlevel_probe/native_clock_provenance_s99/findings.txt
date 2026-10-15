@@ -1,0 +1,45 @@
+S99 native steady clock provenance - conditional only
+
+CONFIG -> Existing S95 frozen d94e96ca native binary, pinned e41 CPU image,
+retained unitrace preload66ec9ee2. No native main, build, new trace, or GPU
+work was executed; both offline containers had no /dev/dri and no network.
+
+COMMAND -> Read S95 launch/config/runtime records, clock_bridge.py and actual
+host_boundary_profile.hpp. In cpu-run, inspect native ELF imports/dependencies
+and one libstdc++ function only. Direct glibc loader --list --preload selected
+/lib/x86_64-linux-gnu/libstdc++.so.6 -> /usr/lib/x86_64-linux-gnu/
+libstdc++.so.6.0.33, SHA256
+1fd75fe70354a416d75aef22bcae68c47bd25d20e2d0568c30b1a9838cf62f11.
+Native has no DT_RPATH/DT_RUNPATH; loader reconstruction uses image defaults
+plus setvars LD paths and retained profiler path. Raw small records are here.
+
+RESULT -> The native imports steady_clock::now@GLIBCXX_3.4.19. Selected actual
+library implementation at0xdf960 puts literal1 in EDI at0xdf965, calls
+clock_gettime@plt at0xdf982, then returns sec*1000000000+nanosec. Pinned Linux
+header defines CLOCK_MONOTONIC as1. Thus this exact library function uses
+CLOCK_MONOTONIC nanoseconds. host_boundary mark uses that std::chrono function
+and duration_cast<nanoseconds>. libunitrace's dynamic table imports
+clock_gettime; it has no definition/steady_clock replacement in that table.
+This is source/library proof, not measured historical symbol binding.
+
+A meaningful inspection error is preserved: putting LD_PRELOAD on the ldd
+shell wrapper invoked profiler initialization before loader trace mode and
+failed255 without /dev/dri. No native main/device was exposed. Corrected
+inspection directly invoked ld-linux --list/--preload, which returned0 without
+running constructors/main. Do not reuse the first script for future audits.
+
+VERDICT -> CONDITIONAL. Historical S95 native identity retained preload and
+config env but not native LD_LIBRARY_PATH/LD_AUDIT or /proc/467/maps/resolved
+library hashes. Container image/base env and deterministic controlled launch
+support this offline reconstruction, but do not supply the missing actual
+loaded-library evidence. Do not authorize a retrospective native/trace join
+from this audit alone. Keep current CPU spans/ordinal roles separate.
+
+Future cheapest provenance: retain native process maps/resolved library hash
+and actual LD_LIBRARY_PATH/LD_PRELOAD/LD_AUDIT alongside the existing fresh
+clock brackets, using read-only process inspection in an already planned run.
+No helper compile/new profiler or standalone trace is required for provenance.
+Even a proven native CLOCK_MONOTONIC bridge still requires bracket/drift
+uncertainty inspection; it does not join different GPUs or make CPU wait
+return a device completion/causal idle/savings measurement. Stop this audit;
+no further library walk or runtime reverse engineering is needed.

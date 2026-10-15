@@ -388,3 +388,19 @@ S95post Opus38.253s/Fable49.759s/rootfullread correct disjoint routedGU/down
 source-only routed-expert integerdot/load/decode-reuse audit must bind its
 own kernel/image and integer/FPledger, not reuse attention13tag proof or
 claim allmainISAcoverage. No newGPU/build or clean gain selected.
+
+
+S97/S98 now follow that source audit: the exact routed IQ2_XS kernel repeats
+weight decoding per entry, while the private E4/E2 candidate shares preparation.
+All88 strict checks pass; warm mixed GU intervals87.80415->52.18525us/call
+(-40.5663%). Singleton-only results are small/mixed. These are one-card,
+two-expert synthetic-route observations, with no new serving throughput or
+removable wall budget. [Source, ISA and result](../../../docs/20261015_strata_routed_iq2_reuse.md).
+Historical170 operation rows/rollups remain unchanged.
+
+[S99 clock records](../lowlevel_probe/native_clock_provenance_s99/README.md)
+identify CLOCK_MONOTONIC in the reconstructed C++ library. Historical S95
+actual loaded-library provenance remains missing; native/trace joins stay
+unproved. Capture maps/resolved libraries/loader controls during an already
+planned run, alongside existing clock brackets. No new trace is needed solely
+for this provenance.

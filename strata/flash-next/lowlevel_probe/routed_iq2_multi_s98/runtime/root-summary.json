@@ -1,0 +1,78 @@
+{
+  "status": "PASS_BOUNDED_GU_PRIMITIVE",
+  "processes": 1,
+  "strict_full_byte_snapshots": 88,
+  "public_original_candidate_eager_binary_files": 18,
+  "all_guards_readonly_finite_inactive_changed_graphs": true,
+  "closure": {
+    "status": "PASS_PRIMITIVE_ONLY",
+    "leaf_exit": 0,
+    "pre_health_exit": 0,
+    "post_health_exit": 0,
+    "analysis_exit": 0,
+    "container_removed": true,
+    "processes": 1,
+    "retries": 0,
+    "serving_qualified": false,
+    "speed_qualified": false
+  },
+  "timings": {
+    "mixed_1_to_6": {
+      "completed_us": {
+        "original_median_us_per_call": 87.80414999999999,
+        "candidate_median_us_per_call": 52.185249999999996,
+        "median_change_percent": -40.5663058067301,
+        "paired_changes_percent": [
+          -40.50879969799719,
+          -40.53962638880728,
+          -40.566846890708696,
+          -40.57488551776983
+        ],
+        "median_paired_change_percent": -40.55323663975798
+      },
+      "barrier_span_us": {
+        "original_median_us_per_call": 87.999975,
+        "candidate_median_us_per_call": 52.291650000000004,
+        "median_change_percent": -40.57765357319704,
+        "paired_changes_percent": [
+          -40.49946226891983,
+          -40.54546665444727,
+          -40.608558042449886,
+          -40.5466428454751
+        ],
+        "median_paired_change_percent": -40.546054749961186
+      }
+    },
+    "singleton_only": {
+      "completed_us": {
+        "original_median_us_per_call": 27.26925,
+        "candidate_median_us_per_call": 26.933825000000002,
+        "median_change_percent": -1.2300484978501336,
+        "paired_changes_percent": [
+          -1.425612683832611,
+          0.35910074117364577,
+          -1.3421871879300107,
+          -1.1177591973857814
+        ],
+        "median_paired_change_percent": -1.229973192657896
+      },
+      "barrier_span_us": {
+        "original_median_us_per_call": 27.432275,
+        "candidate_median_us_per_call": 27.093775,
+        "median_change_percent": -1.2339479682235588,
+        "paired_changes_percent": [
+          -1.3097038724373622,
+          0.39963470319634986,
+          -1.3642309168672373,
+          -1.3862227253751414
+        ],
+        "median_paired_change_percent": -1.3369673946522997
+      }
+    }
+  },
+  "limits": [
+    "Warm repeated two-expert synthetic route fixture, same process, four alternating pairs perlayout.",
+    "Intervals include graph/queue/barrier effects; not isolated GPU service or end-to-end serving.",
+    "Actual serving reuse frequency, latency and full-cache qualification unchanged."
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 146.15938939800253,
+  "launch_exception": null,
+  "source_packet_sha256": "5f701a5a8d36f54730c03c9eac21372c2ab40faf2e65ef2efa44a08044d01990",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 366164,
+      "stop_reason": "end_turn",
+      "session_id": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "total_cost_usd": 3.0868070000000003,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 35706,
+        "cache_read_input_tokens": 59325,
+        "output_tokens": 9704,
+        "output_tokens_details": {
+          "thinking_tokens": 8392
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 35706,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 9704,
+            "cache_read_input_tokens": 59325,
+            "cache_creation_input_tokens": 35706,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 35706
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 10,
+          "outputTokens": 23172,
+          "thinkingTokens": 16360,
+          "cacheReadInputTokens": 161868,
+          "cacheCreationInputTokens": 94382,
+          "webSearchRequests": 0,
+          "costUSD": 3.0868070000000003,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Disposition: ACCEPT the narrow experiment for the offline leaf build followed by metadata review. No GPU authorization is implied.**\n\n**Arithmetic review, source against source**\n\nThe candidate is exact by construction and I found no arithmetic defect:\n\n- Code extraction, codebook gather, sign unpack and both SWAR forms are the same expressions as the original dot. No uint16 to int2 punning is reintroduced.\n- The eight products feed two integer chains split at four, in the same order, through the same signed dp4a. The integer bound argument in the S97 ledger holds, so no overflow.\n- The finish keeps both truncating signed divisions and the explicit split of the half-to-float scale product before the final float multiply. Nothing is reassociated.\n- Per lane, the K loop visits the same ten blocks in ascending order, each entry accumulates from zero in that order, and the XOR 4, 2, 1 reduction is unchanged. Lanes stay inside their eight-lane group of the 32-wide sub-group.\n- Activation reads moved into the per-entry step read exactly the block and scale the original read. Repeated tokens alias read-only input, which is legal.\n\n**Alias and output ownership**\n\nOnly lane zero writes, each entry writes its own row in its own plane, and the group loop never crosses a group boundary. Natural E4, E2 and scalar tails cover sizes one to six, singleton and zero correctly. The fixture poisons inactive entries and the whole down output, checks all guards and read-only arrays after every snapshot, and refuses export overwrites. Snapshot and timing counts in the leaf match the analyzer exactly.\n\n**Host-binding and fixture defects to resolve in metadata review**\n\n1. **Public anchor identity is not proved by the build script.** It hashes the frozen kernels archive, but the runtime identity asserts a specific object member hash. The review must extract the IQ object from that archive and confirm it equals the member the S97 audit disassembled. Without that, the anchor may be an older kernel and the \"public equals original\" equality means less than claimed. This is the one real blocker for the metadata step.\n2. **Device image provenance.** The public phase 1 images come from the S59 prelinked images object, the candidate from the new one. The review must show both registered names, their distinct host info records and their image ownership, as the root packet already requires. Symbol names alone do not settle it.\n3. **Anchor indexing assumption.** The fixture assumes phase 1 gate and up are indexed by entry, not by destination. The S97 ledger supports that reading. If it is wrong, the strict comparison fails loudly, so this is a cost risk, not a silent one.\n4. **Root sync property inside graph recording.** The private launch copies the public property. If graph capture rejects it, the run exits before graph phases. Eager correctness already runs first, so that evidence is retained either way.\n5. **Public call signature.** The last argument passed to the public grouped entry is the grid group count. Confirm that parameter meaning once in the review, since a mismatch changes which groups the anchor computes.\n\n**Scope**\n\nKeep the three layouts, two inputs and the captured A, B, A replay. The singleton timing is worth keeping as the resource regression discriminator for the extra template body. Nothing else should be added, and the eager repeat pass is cheap enough to leave. The 300 second container timeout is adequate for the stated 11 second decoder class of work.\n\n**Evidence limits**\n\nA pass proves byte equality of the candidate against the public anchor on real weights for one expert pair, and gives interval timings on a warm two-expert aliasing fixture. It does not measure routing reuse, cache behaviour or serving. If the multi arm is strict and not faster, the hoisting mechanism is closed and should be recorded as such. If it is faster, the result still carries no serving prediction and no cache qualification.\n\nNothing here warrants a format or lane sweep, a full parity run, or a percentage cutoff.",
+      "ttft_ms": 123781,
+      "type": "result",
+      "duration_ms": 145032,
+      "uuid": "dce42bc2-5182-4355-ada0-31fc1dde828e",
+      "ttft_stream_ms": 1809,
+      "time_to_request_ms": 79,
+      "first_content_frame_ms": 1809,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

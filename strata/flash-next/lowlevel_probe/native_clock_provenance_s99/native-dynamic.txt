@@ -1,0 +1,44 @@
+
+Dynamic section at offset 0x50eaca0 contains 41 entries:
+  Tag        Type                         Name/Value
+ 0x0000000000000001 (NEEDED)             Shared library: [libze_loader.so.1]
+ 0x0000000000000001 (NEEDED)             Shared library: [libmkl_sycl_blas.so.6]
+ 0x0000000000000001 (NEEDED)             Shared library: [libmkl_sycl_lapack.so.6]
+ 0x0000000000000001 (NEEDED)             Shared library: [libmkl_sycl_dft.so.6]
+ 0x0000000000000001 (NEEDED)             Shared library: [libmkl_sycl_sparse.so.6]
+ 0x0000000000000001 (NEEDED)             Shared library: [libmkl_sycl_rng.so.6]
+ 0x0000000000000001 (NEEDED)             Shared library: [libmkl_sycl_stats.so.6]
+ 0x0000000000000001 (NEEDED)             Shared library: [libmkl_sycl_vm.so.6]
+ 0x0000000000000001 (NEEDED)             Shared library: [libmkl_sycl_data_fitting.so.6]
+ 0x0000000000000001 (NEEDED)             Shared library: [libmkl_intel_lp64.so.3]
+ 0x0000000000000001 (NEEDED)             Shared library: [libmkl_sequential.so.3]
+ 0x0000000000000001 (NEEDED)             Shared library: [libmkl_core.so.3]
+ 0x0000000000000001 (NEEDED)             Shared library: [libstdc++.so.6]
+ 0x0000000000000001 (NEEDED)             Shared library: [libm.so.6]
+ 0x0000000000000001 (NEEDED)             Shared library: [libgcc_s.so.1]
+ 0x0000000000000001 (NEEDED)             Shared library: [libsycl.so.9]
+ 0x0000000000000001 (NEEDED)             Shared library: [libOpenCL.so.1]
+ 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]
+ 0x000000000000000c (INIT)               0x40f000
+ 0x000000000000000d (FINI)               0xb57a4c
+ 0x0000000000000019 (INIT_ARRAY)         0x54e9bf0
+ 0x000000000000001b (INIT_ARRAYSZ)       128 (bytes)
+ 0x000000000000001a (FINI_ARRAY)         0x54e9c70
+ 0x000000000000001c (FINI_ARRAYSZ)       16 (bytes)
+ 0x000000006ffffef5 (GNU_HASH)           0x4003b0
+ 0x0000000000000005 (STRTAB)             0x404ef0
+ 0x0000000000000006 (SYMTAB)             0x400d98
+ 0x000000000000000a (STRSZ)              26056 (bytes)
+ 0x000000000000000b (SYMENT)             24 (bytes)
+ 0x0000000000000015 (DEBUG)              0x0
+ 0x0000000000000003 (PLTGOT)             0x54ebfe8
+ 0x0000000000000002 (PLTRELSZ)           9552 (bytes)
+ 0x0000000000000014 (PLTREL)             RELA
+ 0x0000000000000017 (JMPREL)             0x40c0a8
+ 0x0000000000000007 (RELA)               0x40bcd0
+ 0x0000000000000008 (RELASZ)             984 (bytes)
+ 0x0000000000000009 (RELAENT)            24 (bytes)
+ 0x000000006ffffffe (VERNEED)            0x40ba30
+ 0x000000006fffffff (VERNEEDNUM)         3
+ 0x000000006ffffff0 (VERSYM)             0x40b4b8
+ 0x0000000000000000 (NULL)               0x0

@@ -1,0 +1,45 @@
+{
+  "status": "CONDITIONAL_LIBRARY_CLOCK_PROOF_HISTORICAL_S95_JOIN_NOT_AUTHORIZED",
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "native_binary_sha256_retained": "d94e96ca399d8ecf1f15403db754b645697e82eaa72c052a2d18f4b29defc247",
+  "native_needed": "libstdc++.so.6",
+  "native_RPATH_RUNPATH": "NONE",
+  "native_steady_import": "_ZNSt6chrono3_V212steady_clock3nowEv@GLIBCXX_3.4.19",
+  "offline_selected_library": "/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33",
+  "library_sha256": "1fd75fe70354a416d75aef22bcae68c47bd25d20e2d0568c30b1a9838cf62f11",
+  "function_address": "0xdf960",
+  "clock_argument_evidence": {
+    "address": "0xdf965",
+    "instruction": "mov $0x1,%edi",
+    "call_address": "0xdf982",
+    "target": "clock_gettime@plt",
+    "linux_header": "CLOCK_MONOTONIC = 1",
+    "return_expression": "tv_sec * 1000000000 + tv_nsec (df987,df98f)"
+  },
+  "profiler_symbol_scope": "Retained libunitrace_tool.so dynamic table imports clock_gettime; no definition or steady_clock replacement in that table. Other loaded objects/interposition were not exhaustively audited.",
+  "historical_native_provenance_missing": [
+    "Native process LD_LIBRARY_PATH and LD_AUDIT were not retained.",
+    "Native /proc/467/maps (or equivalent resolved-library identity with hash) was not retained.",
+    "Offline --list reconstruction is not a capture of historical S95 symbol bindings."
+  ],
+  "historical_native_to_trace_join_allowed": false,
+  "first_inspection_failure": {
+    "exit": 255,
+    "cause": "LD_PRELOAD on ldd shell wrapper ran profiler initialization before loader tracing.",
+    "message": "Failed to initialize Level Zero runtime",
+    "no_DRI_exposed": true,
+    "native_main_executed": false,
+    "correction": "Direct glibc ld-linux --list --preload, with no preloaded shell, exit0; no constructors/main."
+  },
+  "offline_loader_inspection_exit": 0,
+  "no_build_new_trace_or_native_engine_execution": true,
+  "source_pins": {
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/core/host_boundary_profile.hpp": "02c5ec37755e831c8543b4d9815a11956d4988e2cd3c5020b561a649e6a0433c",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep/clock_bridge.py": "b3a2fa2d75e49fa878f20166a3e3596143f054e03640ad8b627c6e811fdd0ad9",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep/launch.sh": "b1fb047f503bff3fc0553250e877436d47672b69633ca3535b75f80648062b6f",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep/trace-engine.sh": "0d0ef861b68fd4db57f7c20eb7f164bc7601081ef81a894b5d945e126d08e226",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep/run/native-process-identity.json": "b8aa72c506d45b23aca341af8fe0bd7209d3352df43ea9f4ab4b7e51862a8ac3",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep/run/container-ready.json": "793bb16f7a72639b8ce5b984b5c3923dd35596f31b759d6b7fdc781703b04728",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep/run/profiler-identity.json": "be8f925fcbf047732e52301c84be299515ee0e30b0026050b5a39cf5c5713220"
+  }
+}

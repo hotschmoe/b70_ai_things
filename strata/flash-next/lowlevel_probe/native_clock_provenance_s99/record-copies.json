@@ -1,0 +1,104 @@
+{
+  "status": "PASS_EXACT_SMALL_COPIES_ASCII",
+  "raw_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
+  "exact_copy_count": 15,
+  "exact_copy_bytes": 19858,
+  "files": [
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-clock-provenance-s99-source/findings.txt",
+      "destination": "findings.txt",
+      "bytes": 2862,
+      "sha256": "dcb29ad92d0154cf76ebbc60981a41634d823094d0395862e7843887e3b9731f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-clock-provenance-s99-source/clock-provenance.json",
+      "destination": "clock-provenance.json",
+      "bytes": 3372,
+      "sha256": "3666e56eecca30a7732f43ad8d5afd8466f4113787259381ba808537ada89961"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-clock-provenance-s99-source/steady-clock.asm",
+      "destination": "steady-clock.asm",
+      "bytes": 1322,
+      "sha256": "5685a6c515d000381edb2f0136e89e5d629224c978d106e5d9cfe745598b2deb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-clock-provenance-s99-source/native-clock-imports.txt",
+      "destination": "native-clock-imports.txt",
+      "bytes": 177,
+      "sha256": "510a3d66f143bc0b3d663dc446c3d87ce385cc68725d5ce102d86bc5cd5a8ec1"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-clock-provenance-s99-source/profiler-clock-symbols.txt",
+      "destination": "profiler-clock-symbols.txt",
+      "bytes": 89,
+      "sha256": "92b207524ff4a7944fb73bb2d5f447c3869ee1acb9e08b46deb5af254862cbe6"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-clock-provenance-s99-source/clock-id-header.txt",
+      "destination": "clock-id-header.txt",
+      "bytes": 104,
+      "sha256": "05e6f7900acd4cf489ac8701ad616eae2e96a1a0e3210fd9b791515b78c41c47"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-clock-provenance-s99-source/reconstructed-loader-direct.txt",
+      "destination": "reconstructed-loader-direct.txt",
+      "bytes": 2603,
+      "sha256": "b192a4ac10aac180d5208b6dc6f6019385ade76e27c4c2268baf82fa47f782da"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-clock-provenance-s99-source/libstdcxx-realpath.txt",
+      "destination": "libstdcxx-realpath.txt",
+      "bytes": 46,
+      "sha256": "ec315ae6ab52b6ed1be5d59da51f8bf1f45a9c6defa881733280a33ce524db50"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-clock-provenance-s99-source/libstdcxx.sha256",
+      "destination": "libstdcxx.sha256",
+      "bytes": 103,
+      "sha256": "683d4be4a02ff0e197639bf08283a783828fc2ebabd032668a6f4b252cf9defc"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-clock-provenance-s99-source/steady-clock-symbol.txt",
+      "destination": "steady-clock-symbol.txt",
+      "bytes": 101,
+      "sha256": "6c7fea4e1fd846ca31b320c09db4278d6f1ba0ad63adc5936f6566f05843a57c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-clock-provenance-s99-source/native-dynamic.txt",
+      "destination": "native-dynamic.txt",
+      "bytes": 2669,
+      "sha256": "38475e9ee88488dbcc2d7539cc9f549c0753e5a8b87b3569590de92366aa0662"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-clock-provenance-s99-source/reconstructed-LD_LIBRARY_PATH.txt",
+      "destination": "reconstructed-LD_LIBRARY_PATH.txt",
+      "bytes": 1096,
+      "sha256": "4b49a22b5a6069198c4c563899f2a05a456696886e1b2897ca1b377f57842011"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-clock-provenance-s99-source/inspect-loader-only.sh",
+      "destination": "inspect-loader-only.sh",
+      "bytes": 1169,
+      "sha256": "337bf9a7f301d7510b96bc011bc54adeefc630bbcb9af4558daebe7e6c55d42c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-clock-provenance-s99-source/manifest.json",
+      "destination": "external-source-manifest.json",
+      "bytes": 2337,
+      "sha256": "0a765340b5e2e55fd1e7ced8940a6c1513bbc517f44b80e14773ef358cb3efb4"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/core/host_boundary_profile.hpp",
+      "destination": "host_boundary_profile.hpp",
+      "bytes": 1808,
+      "sha256": "02c5ec37755e831c8543b4d9815a11956d4988e2cd3c5020b561a649e6a0433c"
+    }
+  ],
+  "excluded_external_only": [
+    "inspect-offline.sh (failed preloaded-shell inspection; DO NOT REPLAY)",
+    "reconstructed-loader.txt (empty failed output)",
+    "libstdcxx-dynamic.txt (not needed for selected clock proof)"
+  ],
+  "historical_S95_clock_join_authorized": false
+}

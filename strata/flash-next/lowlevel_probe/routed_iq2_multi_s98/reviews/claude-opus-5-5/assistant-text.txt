@@ -1,0 +1,40 @@
+# S98 source review: IQ2_XS routed multi-entry primitive
+
+## Disposition: ACCEPT, offline leaf build and metadata review only
+
+Acceptance covers only the offline leaf build and the metadata/ISA review that follows. GPU work stays with root.
+
+I found no defect in the arithmetic, aliasing or output ownership. I compared the candidate against the original line by line:
+
+- **Weight decode.** `Multi<17>::prep` repeats the original `q2` shift extraction, grid index `&0x1FF`, `unpack_ksigns`, both SWAR masks and the `w[l0]`/`w[l0+1]` placement byte-for-byte. Code *j* produces `w[2j]` and `w[2j+1]`, so the natural order is preserved.
+- **Activations.** `acts` reads `y[iqs/2].qs[0..7]` and `ds[0]` from the same `xs[e]+kbx*8` base the original uses. So `u[j]` is the original `u0`/`u1` at `l0+0`/`l0+1`.
+- **Dot order.** `s0` takes j=0..3 in order and `s1` takes j=4..7 in order, which equals the original l0={0,2} and l0={4,6} chains. `finish` keeps the signed nested truncating divisions, then the separate `d=m.d*ds; return d*sumi`. K order, the per-entry accumulator starting at `+0.f`, and the XOR 4/2/1 reduction are unchanged.
+- **Aliasing.** Repeated `ent_tok` values only alias read-only Q8 data. Reuse never crosses a row, a blob or a `grp_start` boundary.
+- **Ownership.** Only `sub==0` writes `dst[(e+i)*FF]` inside `[e0,e1)`. The sub-group is convergent: 1280 rows over gx=40 means no partial work-groups, the `ng` early return is uniform, and the 4 rows sharing a sub-group see the same `g` and the same entries.
+- **Routes.**
+  - Active sizes 1..6 hit E4, E2 and the scalar tail.
+  - Singleton isolates the resource cost of the multi-compiled code.
+  - Zero tests the sentinel.
+  - GRID=2 < ng=6 exercises the grid-stride loop.
+  - Snapshot counts reconcile with `analyze.py`: 60 correctness plus 28 timing gives 88, and there are 16 timing samples.
+
+## Conditions to close before or at build (source and metadata, no GPU)
+
+1. **Public anchor argument order.** The leaf calls `native_expert_grouped(L,p,s,n,dst,t,...)`. Confirm the frozen signature really takes destinations before tokens. If they are swapped, `hd` values up to 31 index past T=6 and the public anchor reads the 0xff tail. That fails closed, but it wastes the lease.
+2. **Compile-macro and FP parity with the public archive member.** The private TU relies on the defaults `STRATA_SWAR=1` and `STRATA_GRID_SLM=0`, plus `-fp-model=precise` and SG32. Check these against the actual compile command for `iq_kernels.dp.cpp.o`, not by inference. Strict equality between the public anchor and the private original would catch a mismatch, but only on the GPU.
+3. **ggml table definitions.** `GGML_COMMON_IMPL_SYCL` instantiates `iq2xs_grid` and the other tables in the leaf as well as in the frozen archive. Confirm the link is clean and that the private kernels read their own complete table.
+4. **Metadata/ISA gate, the one that matters.** The private multi image must show the `prep` weight-code loads, the 4 codebook gathers and the SWAR work **outside the entry loop**, with `DP4A\xd78` inside it. It must also show no spill or scratch fields beyond what the original has, at GRF128. If the compiler rematerializes decode per entry or spills, the GPU run cannot discriminate the mechanism: **stop there**. Also confirm the singleton/original image is not resource-regressed relative to the public kernel.
+
+## Evidence limits
+
+- The fixture is two warm, repeated experts of about 1.9 MB each, very likely cache-resident, on synthetic routes. It says nothing about streaming-cache misses, EP behaviour or the real route-size distribution.
+- Byte equality on inputs A/B/A plus three layouts is strong confirmation of the exact source derivation. It is not an exhaustive proof.
+- Barrier spans are interval observations. Using them as a mechanism signal is valid; treating them as a serving gain or a percentage gate is not.
+- The host Info/cache/guard binding is still owed by `root-build-closure.json`. Distinct kernel names alone are not proof.
+
+## Dev-loop scope
+
+- **Keep:** all three layouts, the public anchor, both inputs, the batch20 graph timing (4 alternating rounds), and the per-snapshot guard/read-only checks.
+- **Trim if anything:** the eager `repeat-*` pass, since graph A/B/A already covers determinism and input restore. The cost is negligible either way, so do not reopen review over it.
+- **Don't add:** no lane, format or SLM sweeps, no engine/server/cache tests, no extra experts.
+- **Order:** the condition 4 ISA check after the build is the cheapest discriminator, so make it the hard go/no-go before any lease.

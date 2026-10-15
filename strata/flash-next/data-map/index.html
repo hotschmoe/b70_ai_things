@@ -88,6 +88,7 @@ ul.plain{padding-left:1.1rem}
 <div class="sub" id="scope"></div>
 <div class="sub small" id="snapshot"></div>
 <div class="sub small"><a href="../lowlevel_probe/current_c2_profile_s95/runtime/analysis/gpu/operations.csv">S95 current C2: canonical 859-row operation CSV</a> (separate diagnostic; historical S22 rows below stay unchanged).</div>
+<div class="sub small"><a href="../../../docs/20261015_strata_routed_iq2_reuse.md">S97/S98: routed IQ2_XS compiled reuse and strict warm primitive</a> (40.6% shorter mixed interval; serving gain unmeasured).</div>
 </header>
 <main>
 <ul class="warn" id="warnings"></ul>
@@ -149,7 +150,7 @@ ul.plain{padding-left:1.1rem}
 {
  "schema": 1,
  "title": "Strata Flash-Next data map",
- "snapshot": "2026-10-15: historical S22 operation rows; separate S95 current C2 diagnostic CSV/census plus S94 unmatched-work annotations. Historical operation service/rollups remain unchanged.",
+ "snapshot": "2026-10-15: historical S22 rows, separate S95 current C2 census, S97 routed IQ2_XS ISA and S98 strict warm primitive; S99 clock provenance remains conditional. Serving targets unchanged.",
  "scope": "Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two Arc Pro B70 cards, Strata SYCL engine, EP/PUSH, batch MTP depth2 (opt-in), two 200000-token slots, INT8 KV, 32 GiB / 4-entry RAM parking, all 24576 experts resident (7152 on GPU0 + 17424 on GPU1), greedy.",
  "warnings": [
   "Trace service times overlap: within a card (engines), across cards, and with CPU wall time. They are NOT additive and are not a latency budget.",
@@ -167,7 +168,8 @@ ul.plain{padding-left:1.1rem}
   "S93 FAILED_ACTIVATION: current fixed resident KvPlan mode0 excludes stagedmode1 caller guard. CAP/main binding PASS does not prove caller eligibility; no candidate speed/neutrality result, timed_summary null.",
   "S94 value candidate HOST activates after caller-only resident fix, but offered drafts207OFF/205ON fail native-work parity at first4K. No candidate speed/neutrality/regression or benignnondeterminism conclusion; defaultOFF, no retry.",
   "S95 currentC2 diagnostic is separate:859CSVrows,12reviewed GPUcycles5..16, no native/trace/peer-clockjoin or additivewallbudget. Whole24C6 vsCPU22S6+2S3 leaves2C6unattributed, not proven dummywarm/admission/capture.",
-  "S95post: routed nativeGU/down7.504495ms and allnonvocabMMVQ12.680488ms are DISJOINT name predicates, not subset/payoffpercent. Priorattention13tagbinding is notexpertISA; no allmainISAextraction or integeralgebra-only bitguarantee."
+  "S95post: routed nativeGU/down7.504495ms and allnonvocabMMVQ12.680488ms are DISJOINT name predicates, not subset/payoffpercent. Priorattention13tagbinding is notexpertISA; no allmainISAextraction or integeralgebra-only bitguarantee.",
+  "S98 IQ2_XS shared weight prep passes88strictchecks and mixed warmGUinterval87.80415->52.18525us/call; singleton small/mixed. Onecard/twoexperts/syntheticroutes, not currentC2 serving speed or removablewallbudget."
  ],
  "status_legend": {
   "measured": "Directly observed in a retained trace summary, native log, or clean benchmark (evidence path given). Trace values are diagnostic.",
@@ -451,6 +453,17 @@ ul.plain{padding-left:1.1rem}
    "scope": "ONE107/64each d94e VALUE0/QSA0/Q6OFF/HB1TRACE1.12GPUcycles/16CPUreplaywindows ordinallyseparate, extra2C6unresolved. ActualpostOpus38.253/Fable49.759/rootfullread acceptcensus/source-only routedexpert integerdot/load/decode audit. No newbuild/GPU or gain.",
    "post_manifest_sha256": "006af89f391223955693c17160600013fb7cac4d03c8f2c258879710240f954b",
    "post_resolution": "current-c2-profile-s95-post-reviews-20261015/root-post-resolution.json"
+  },
+  "routed_iq2_s97_s98": {
+   "report": "docs/20261015_strata_routed_iq2_reuse.md",
+   "S97_records": "strata/flash-next/lowlevel_probe/routed_iq2_existing_isa_s97/README.md",
+   "S98_records": "strata/flash-next/lowlevel_probe/routed_iq2_multi_s98/README.md",
+   "S98_binary_sha256": "f749a06942ca078afdb69254ac6f035f03c5789602d8c92f8790907c0322ad94",
+   "scope": "S97 exact current QT17 entry-loop repeated decoding; existing hardwareDP4A. S98 ONEprivate warm primitive/88strictchecks/normalhealth, no main/source/default/shelf change. Public rawimage/text identityFALSE; computationalprefix throughEOT/codebook/args exact, runtime publicanchor bytesPASS."
+  },
+  "native_clock_s99": {
+   "records": "strata/flash-next/lowlevel_probe/native_clock_provenance_s99/README.md",
+   "scope": "Exact reconstructed libstdc++ steady_clock usesCLOCK_MONOTONIC; historicalS95actualloadedpath missing, retrospectiveCPU/tracejoin remains unproved. Captureactualmaps/loadercontrols in futurealreadyplannedrun."
   }
  },
  "geometry": {
@@ -1894,13 +1907,20 @@ ul.plain{padding-left:1.1rem}
    "evidence": [
     "draft-profile-s22/profile/steady-summary",
     "draft-profile-s22/profile/engine.log:24-25,32-34 (7152 primary slots;17424 card1 experts)",
-    "current-c2-profile-s95-analysis-followup/facts.json; current-c2-profile-s95-post-reviews-20261015/root-post-resolution.json"
+    "current-c2-profile-s95-analysis-followup/facts.json; current-c2-profile-s95-post-reviews-20261015/root-post-resolution.json",
+    "docs/20261015_strata_routed_iq2_reuse.md; routed_iq2_multi_s98/runtime/root-summary.json"
    ],
    "quoted": [
     {
      "label": "S95 routed nativeGU/down namedfamily",
      "value": "Median7.504495ms/96calls per reviewedprimaryGPUcycle; DISJOINT from mmvq-name12.680488ms pool.",
-     "basis": "Instrumented service, no exactweight/fullmodelwallshare/physicaltraffic claim. Next source-only integerdot/load/decode audit requires own selectedkernel/image proof.",
+     "basis": "Instrumented service, not a full-model wall share or traffic measurement. S97 subsequently binds one exact QT17 image; S98 warm primitive is separately scoped.",
+     "status": "measured"
+    },
+    {
+     "label": "S98 IQ2_XS multi-entry GU primitive",
+     "value": "Mixed87.80415->52.18525us/call(-40.5663%); singleton27.26925->26.933825us(-1.2300%, onepair+0.359%).",
+     "basis": "ONEcard0 warmtwo-expertfixture, three routinglayouts/twoinputs/88strictsnapshots, fouralternatingpairs peractive layout. CompiledE4/E2shareprep. No servinggain or routefrequency claim.",
      "status": "measured"
     }
    ],
@@ -1913,7 +1933,8 @@ ul.plain{padding-left:1.1rem}
    ],
    "gaps": [
     "Type names for ids 16-22 follow the stable ggml enum; only 42 = Q2_0 was re-read in source this session.",
-    "Source-only routedexpert audit must prove integerdomain/overflow/signedness/signextension and unchangedFPledger; priorattention13tagbinding is notexpertISA, no exhaustiveallmainISA exists. No build/GPU selected."
+    "S97 binds the exact current QT17/LN8 image; S98 passes a private compiled-reuse primitive. Actual serving gain, route reuse frequency, cold-expert effects and other formats remain unmeasured.",
+    "S97 selects exact QT17/LN8 image and S98 proves private compiled E4/E2 reuse with strictbytes; production routing reuse, cold expert behavior and end-to-end gain remain unmeasured. No all-main ISA coverage."
    ],
    "hypotheses": []
   },
@@ -3258,6 +3279,13 @@ ul.plain{padding-left:1.1rem}
    "value": "12GPUcycles5..16 H2SS/H2SS/H6/48sameEPwait/9submits; allnonvocabMMVQ12.680488ms,HC6.718818/vocab4.664113/EPwait3.068313ms. CPUhandoff2.36us.",
    "status": "measured",
    "note": "One107/64each profile/normalhealthPASS. Diagnosticnonadditive service/no cleangain, extra2C6unresolved/no native-GPU-peerclockjoin. Actualpostrootacceptcensus/source-onlyroutedexpertintegeraudit; routed7.504ms is DISJOINT fromMMVQ12.680ms, no subset/payoffclaim or newGPU."
+  },
+  {
+   "stage": "S98",
+   "label": "IQ2_XS shared weight-preparation primitive",
+   "value": "Mixed completed87.80415->52.18525us/call; singleton27.26925->26.933825.88strictsnapshots/normalhealthPASS.",
+   "status": "measured",
+   "note": "One warmtwo-expert sameprocess fixture/fouralternatingpairs; no servingprediction/target/defaultpromotion. Exact compiled4codebookgathers feed32DP4AE4 or16DP4AE2; no measuredphysicaltraffic orcausal timing decomposition."
   }
  ],
  "rejected_parked": [
@@ -3386,7 +3414,8 @@ ul.plain{padding-left:1.1rem}
   "S94 actual activation observed but offered native draft count differs207OFF/205ON. Cause unresolved; output equality alone cannot prove internal numeric/state equivalence. No matched candidate speed evidence; candidatesOFF C2 profile separate.",
   "Existing S93inactive0/1 offered205/205 vsS94OFF207/ON205 allaccepted136/outputSHAexact; DIFFERENTbinary/processcontexts, not matchedOFF/OFF/control/benigncause or retroactive gate relaxation.",
   "S95 fullGPU24C6 vsCPU22S6+2S3 leaves2wholeC6heads unattributed; no dummywarm/admission/capture assertion or GPUcycleID==CPUwindowID. WholeCSV retainscold/solo/tail; kernelnames do not identify everyweight/sharedrole.",
-  "S95post corrections: routed nativeGU/down vsMMVQ namefamilies aredisjoint; attention13tag artifactproof doesnotbindexpertISA, and no exhaustiveallmainISA extraction exists. Integeralgebraalone cannotprove bitexactness withoutdomain/overflow/signedness and sameFPledger."
+  "S95post corrections: routed nativeGU/down vsMMVQ namefamilies aredisjoint; attention13tag artifactproof doesnotbindexpertISA, and no exhaustiveallmainISA extraction exists. Integeralgebraalone cannotprove bitexactness withoutdomain/overflow/signedness and sameFPledger.",
+  "S99 reconstructed native clock isCLOCK_MONOTONIC but historicalS95loaded-library provenance missing; no retrospectiveclockjoin. S98 warmprimitive cannotestablish coldexpert/cache/EP orconcurrentserving speed."
  ],
  "operations": [
   {
