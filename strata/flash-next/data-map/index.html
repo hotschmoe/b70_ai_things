@@ -1160,7 +1160,9 @@ ul.plain{padding-left:1.1rem}
     "head-pair-s31/analysis-prep/result/stage-rollups.json",
     "q6-dense-packed-s41-prep/{s41-report,numerical-difference}.json; cpu-reference/reference.json",
     "q6-dense-reference-s43-prep/{s43-report,bound-proof.md}; run-first-c6/gate.json",
-    "q6-dense-reference-s44-prep/{s44-report,warm-report}.json; cpu-full/gate.json; run-clean/closure.json"
+    "q6-dense-reference-s44-prep/{s44-report,warm-report}.json; cpu-full/gate.json; run-clean/closure.json",
+    "primary-dense-next-s56-prep/{source-audit,s31-dense-quant-pool,s15-q6-rpw2-rejection}.json",
+    "primary-dense-next-s56-prep/aot-resources/{embedded-resource-index,resource-summary}.json; C{1,6}-RPW{1,2}.ze_info.yaml"
    ],
    "quoted": [
     {
@@ -1186,6 +1188,24 @@ ul.plain{padding-left:1.1rem}
      "value": "72cases2,623,488outputs satisfy declared bounds; warm three shapes take79-90percent longer, fourth no measurable difference",
      "basis": "Onecard1process/96snapshots/owninitial+changedgraphsPASS. Three16-call batches/path after16warmups, fixedGRID640. Eventspans are not isolated service; no serving/cache-regime or all52 qualification. Rejectintegration.",
      "status": "measured"
+    },
+    {
+     "label": "S56 heterogeneous S31 dense pool",
+     "value": "13.8990344ms/468calls: Q6_K 3.8256372ms/71calls (27.52%); other formats 10.0733972ms. Q4_K 2.3121056, IQ4_XS 2.0693470, IQ3_S 1.9335818, BF16 1.2114892, Q5_K 1.0027652, Q8_0 0.7442326, IQ4_NL 0.5820252, Q2_0 0.2178506ms.",
+     "basis": "Existing five-cycle S31 CSV aggregation, non-head GPU0 dense_proj; target and drafter calls mixed. Device service is not additive wall budget. Source resolves Q8_0?/Q20Traits aliases without editing historical ops.",
+     "status": "measured"
+    },
+    {
+     "label": "S56 duplicate audit: global Q6 RPW2 remains rejected",
+     "value": "S15 exact Q6 RPW2 C1..4 median latency ratio1.1056915, matching output hashes; no global Q6 repeat.",
+     "basis": "Current Q6 kernel/launcher section byte-equal296b59d2/S15. Q6 knob STRATA_MMVQ_WIDE_RPW differs from head/general-K knob. Historical out-projection benefit does not justify a missing-C6 GPU run.",
+     "status": "measured"
+    },
+    {
+     "label": "S56 existing Q6 AOT resources, not runtime dispatch",
+     "value": "C6 RPW2 spill_size7936/per-thread scratch8192; corresponding C6 RPW1 and both C1 records omit those fields/buffers. All128GRF/SIMD32.",
+     "basis": "Four exact embedded .ze_info records from frozen S55 exebb066900, DPC++2026.1.0; existing root hash/source/object binding reused. Absent fields are not measured runtime zeros. Compiler metadata establishes neither actual dispatch, occupancy, scratch traffic, bandwidth nor latency. HOLD C6 RPW2/no GPU probe.",
+     "status": "source-only"
     }
    ],
    "upstream": [
@@ -1199,7 +1219,8 @@ ul.plain{padding-left:1.1rem}
    "gaps": [
     "Per-tensor mapping (which tensor uses which kernel/quant) not established; drafter and target calls are mixed in this stage.",
     "Activation inputs are Q8_1-quantized (act_quant) for most mmvq paths; exact pairing not mapped.",
-    "S44 covers four shapes/six Cs/changed-input own graphs under source bounds; remaining main matrices/model quality/streaming cache regime unqualified. No warm C1/C2/C3/C4/C8 timing. Main-owner integration remains source-only/rejected for this work item."
+    "S44 covers four shapes/six Cs/changed-input own graphs under source bounds; remaining main matrices/model quality/streaming cache regime unqualified. No warm C1/C2/C3/C4/C8 timing. Main-owner integration remains source-only/rejected for this work item.",
+    "S56 supplies compiled Q6 resource metadata only; no new actual-weight RPW2 bitwise execution, per-image dispatch observation, measured occupancy or bandwidth. Main Q4/IQ4_XS/Q5 pools remain distinct future source leads."
    ],
    "hypotheses": [
     {

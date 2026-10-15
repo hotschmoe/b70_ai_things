@@ -23533,3 +23533,30 @@ routine daily restore; prepared head source work during serves. Datedreport/
 exactpatch/smallHCmap update; historical170ops/rollups untouched. Frozen
 S51+postreviews187files/11306846B, externalmanifestSHA256
 13c15150968a5a7b3ea2359634e822a14d1c5ff7d5a3863ce67153c2664f3893.
+
+
+## 2026-10-15 -- Flash-Next optimization S56: dense format/resource audit
+
+CONFIG: Source, old S31 trace and existing frozen S55 AOT metadata only.
+COMMAND: Audit S15 history and exact Q6 source; join source/pack shape
+metadata without weight reads; sum retained CSV by quant; parse existing
+ELF target-image metadata, four selected .ze_info records. Initial selector
+missed emitted a2r_0 suffix; corrected metadata-only scan reads2.623MB in
+0.037s/1600images, no ISA/SPIRV payload, compile/GPU/model experiment.
+RESULT: Primary dense13.899034ms/468calls is heterogeneous: Q6 only
+3.825637ms/71calls(27.52percent), nonQ6 10.073397ms; Q4K/IQ4XS/nonheadQ5K
+5.384218ms. No additive client-wall budget or invented per-layer join.
+Global Q6RPW2 duplicates S15 rejected1.1056915 ratio on C1..4synthetic
+shapes; Q6 body/launcher unchanged. Existing exactC6RPW2 image declares
+spill_size7936/perthreadscratch8192; corresponding C6RPW1 and bothC1 fields
+absent. All128GRF/SIMD32/eu_thread_count8, source local128items. Absent
+metadata is not measured runtimezero; compilerresources not dispatch,
+occupancy, traffic, bandwidth, numericalpass or latency. Bound to frozen
+S55bb066900, actual DPC++2026.1/image/source/object/imageoffsets.
+VERDICT: KeepglobalQ6RPW2 rejected, HOLDremainingactualweightC6outproj;
+no GPU probe just to fill missing shape, no packed/GRF/RPW4 revival. Cheap
+existing resource check replaces duplicate build/GPU campaign while S55
+serves proceed. No new user performance target or shelf qualification.
+Dated report and narrowly dense_proj map updated; historical170ops and
+rollups unchanged. Frozen16files/96267B, externalmanifestSHA256
+8e5a894d4e5462473c4e74b7c015e85dcf7fbf74d30a34ebad99fd4f2a1b767f.
