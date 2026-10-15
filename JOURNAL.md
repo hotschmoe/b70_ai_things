@@ -22850,3 +22850,30 @@ base sycl-ep-prefill-main; API verifies onefile/+1/-1, independent PUSH1.
 https://github.com/recutita/Strata/pull/2 . Checkpoint276b099 pushed;
 raw root-pr-verified.json added to S28report/hashmanifest. NextS29 prep
 is CPU/source-only; no new GPU touch after final health.
+
+
+## 2026-10-15 -- Flash-Next optimization S29: paired draft heads, bounded gain
+
+CONFIG: samefrozen152055a6, onlypairheadOFF/ON, depth2/spec4, 2x200kslots,
+32GiBparking,all24576experts7152/17424; no source/build/stack/quantchanges.
+COMMAND: ONthenOFF,two starts; same64tokcanary+functionals, fresh107in/
+1500out codingpairs1/2/3; afterEACHnormalstop percard+10compiledhealth.
+RESULT: medianaggregate97.881OFF->102.279ON (+4.493%); paireddeltas
+3.759..5.334%. All6 exactrequest/outputhashesmatch; all4availableS16
+reference rowsmatchperarm. Clientmedians51.019/53.452->53.399/55.620.
+Weightednative run/commit/emit40.347/1.563/7.033->39.810/1.550/5.380ms;
+ON1675paired/19solo. SSEeventp95median49.715->47.530ms, NOTtokengaps.
+Identity/residency/math/reasoning/tool/normalstop/leaseexit0/allhealthPASS.
+ActualOpus5.5/Fable5.1 respondIDsverified, reviewartifactsretaineddespite
+turncapexit1. Opushandoff107vs108 verified; reject its55events=64tokens
+perwindowproof. Fablelogicalgraphs4->6/waits2->1 areNOTmeasuredL0calls.
+OFFrepeat3slot1 draft28/21 isONLY31tokensolotail: carry_leg/add_carry
+losebatchdraftcounts. FullacceptancecomparisonINVALID; rawretained,
+wall/hashcomparisonvalid. Counterfixpreparedseparately, runtimeunchanged.
+VERDICT: keepboundedC2candidate, not150/stream/fullcache/C4/dailyshelf.
+S20fullRAMproofstilldepth1. Noisolatedcausalheadmathclaim; mainrunalso
+varies. NoGPUtrace thisstage; tinyONrecipequeued. Loop2starts/nobuild/
+nomicro-repeat/no200k/soak/dailyrestore. Review213-218s: narrowbriefs and
+hidereviewtimeinteardown/loadnext; ownworkersclosedbeforebench, other
+source-researchsessionnotisolated, ONthenOFF/no controlledclocks, n3only.
+Details stagedocS29; raw head-pair-s29/s29-report.json andanalysis/.

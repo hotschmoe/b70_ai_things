@@ -211,3 +211,14 @@ Head-pair option remains OFF and unqualified. No speed/fullcache/shelf claim.
 Native BMG ISA was present in hidden files; S28 explicitly corrects S27's
 contrary statement. Minimal patch: patches/ep-push-system-barrier.patch;
 [evidence and limits](../../docs/20261015_strata_ep_publication_scope.md).
+
+S29 tests STRATA_BATCH_MTP_PAIR_HEAD=1 on that same frozen152055a6 engine:
+three fresh C2 coding pairs97.881OFF ->102.279ON aggregate tok/s (+4.493%),
+all six ON/OFF output hashes match. Client per-stream medians53.399/55.620;
+all24576 experts resident, functional/normalstop/both-card+collective health
+PASS. This is a bounded candidate, not full depth2/headpair cache or shelf
+qualification. Recoverable experimental config:
+/mnt/vm_8tb/b70/build/strata-ab/serve-head-pair-mode1-s29.json.
+An existing batch->solo accounting hole drops earlier draft totals; retain
+raw counters but do not compare full-request acceptance until fixed. Tiny
+in-serve C2 trace is queued, not measured. See stageS29 and data map.

@@ -6,8 +6,9 @@ path, which operations are expensive or wait, and how strong the evidence
 is for each claim. `operation-data.json` is the source of truth;
 `index.html` embeds a copy of it.
 
-Snapshot: 2026-10-15, S28 (S22 operation trace plus readiness, real-head,
-production PLE and bounded EP publication fix/native ISA). Runtime source:
+Snapshot: 2026-10-15, S29 (S22 operation trace plus readiness, real-head,
+production PLE, EP publication fix/native ISA and paired-head serving).
+Runtime source:
 `/mnt/vm_8tb/b70/build/strata-ab/src-ep` (upstream Strata 296b59d2 base
 plus working-tree overlays for EP/PUSH/accounting/S19-S21 and the
 default-OFF S26 head-pair prototype and S28 explicit EP barrier scope).
@@ -36,6 +37,10 @@ summaries under
    full-vocab head (N 2560, V 248320) -> verify/accept -> commit -> four
    serial one-row draft heads -> emit.
 5. Park: when a slot is overwritten, the completed slot is saved to RAM.
+
+That decode sequence describes the S22 trace. S29's opt-in variant pairs
+the two same-depth draft heads (source expects two C2 calls per full-depth2
+cycle); its kernel-by-kernel serving trace is still queued.
 
 The EP link is Level Zero IPC-mapped device memory with kernel-side flag
 counters (sycl/include/strata/core/ep_mem.hpp), not a collective.
@@ -106,3 +111,13 @@ invalidate.gpu; no compiler-bug/legality conclusion follows. Frozen engine
 normal teardown and final both-card/compiled-collective health. Headpair
 remains OFF and unqualified. No new speed/fullcache/shelf claim. See
 [S28 evidence](../../../docs/20261015_strata_ep_publication_scope.md).
+
+S29 tests that same frozen152055a6 engine with headpairOFF/ON: median C2
+coding97.881->102.279 aggregate tok/s (+4.493%,3pairs), all six exact
+request/output hashes match, both functionals/normalteardown/health PASS.
+Native emit weighted7.033->5.380ms/window, ON1675paired/19solo. New C2
+per-kernel times and driver-call deltas are not traced; S22's fourC1 heads
+remain the reference operation rollup. Full depth2/headpair cache and
+long-context performance are still unqualified. A pre-existing batch->solo
+counter carry bug loses prior draft totals, so acceptance comparisons are
+invalid; client wall-time and output comparisons remain valid. See stageS29.

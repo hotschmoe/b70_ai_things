@@ -203,3 +203,13 @@ adapted wrapper is syntax checked only, not redundantly rerun. Measured
 raw dispatch stopped after two failures; wrapper remains maxfail1.
 See [S28 evidence](../../../docs/20261015_strata_ep_publication_scope.md)
 and cachefix_20261014/ep-ordering-s28/s28-report.json.
+
+S29 finally serves the default-OFF head-pair prototype on frozen S28
+152055a6, toggling only the environment option. Three fresh C2 coding pairs
+measure97.881OFF ->102.279ON aggregate tok/s,6/6 matched output hashes.
+Functionals, both normal teardowns and both health closures PASS. Native
+emit7.033->5.380ms/window is measured; new paired C2 per-kernel service is
+not. S25's microprobe and S22's old four-C1 trace remain separate scopes.
+No repeated head microprobe or new engine build was needed. Full-cache
+depth2/headpair qualification remains pending, as does a small fix for
+draft counters lost when an API request returns from batch to solo.

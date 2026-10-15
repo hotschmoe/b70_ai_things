@@ -29,6 +29,13 @@ scoped mirror and actual native EP TU each65/65 PASS, and frozen engine
 health. No new speed or full-cache qualification. S26 head-pair remains
 OFF/unqualified. See [S28 evidence](20261015_strata_ep_publication_scope.md).
 
+S29 now tests that head-pair option: same-binary C2 coding median97.881
+OFF ->102.279 ON aggregate tok/s (+4.493%, three pairs), all six outputs
+match. Client per-stream medians53.399/55.620, still below150. Functionals
+and both teardown/health closures pass; full depth2/headpair RAM recovery
+is pending. A batch->solo draft-counter loss is identified, so complete
+acceptance comparisons are invalid until corrected. See stageS29.
+
 Quality: on 2026-10-14 Flash-Next IQ3_XXS beat the 27B INT4 8-0 on paired
 langs + sysadmin tasks (41/43 vs 33/43); see the A/B brief, Outcome 2.
 

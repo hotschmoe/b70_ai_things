@@ -1778,3 +1778,65 @@ Contribution submitted and API-verified:
 https://github.com/recutita/Strata/pull/2, head69dee3c3, onefile/+1/-1,
 target sycl-ep-prefill-main (upstream2205), independent of PUSH1.
 Current main296b59d2 lacks EPfile. Full checkpoint276b099 pushed.
+
+## S29: same-depth head pairing improves bounded C2 decode (2026-10-15)
+
+CONFIG: same frozen strata-ep-scope-s28 SHA152055a6, EP scoped barrier,
+all24576 experts7152/17424, two200k slots,32GiB/four-entry parking,
+spec4/batchdepth2. Toggle only STRATA_BATCH_MTP_PAIR_HEAD=0/1, separate
+log paths. No source/build/framework/quant change. Profile/PLE tracing OFF.
+
+COMMAND: corrected S26 pair source finally runs on GPUs after S28's EP
+oracle closure. ON then OFF, two fresh servers. Each gets the same S16
+repeat0 requests capped64 and math/reasoning/tool functional suite, then
+fresh107-input/1500-output coding pairs repeat1/2/3. Reuse bench_concurrency;
+no duplicate microprobe, full-context or daily restore. Both normal stops
+and both-card/ten compiled4x5120 BF16/P2P0 health close after EACH arm.
+
+| Bounded metric | OFF | ON |
+|---|---|---|
+| C2 aggregate tok/s, median of3 pairs | 97.881 [97.100,98.407] | 102.279 [101.560,102.714] |
+| Client decode tok/s, slot0 median | 51.019 | 53.399 |
+| Client decode tok/s, slot1 median | 53.452 | 55.620 |
+| Native run/commit/emit ms per window, weighted printed means | 40.347/1.563/7.033 | 39.810/1.550/5.380 |
+| Per-request SSE content-event gap p95, median across6 | 49.715ms | 47.530ms |
+
+RESULT: ratio of aggregate medians+4.493%; paired-repeat differences
+3.759-5.334% (three observations). All six exact ON/OFF request bodies
+and output hashes match. All four available S16 repeat1/2 references
+match in each arm; repeat3 has no retained S16 reference. ON1675 windows
+paired/19deferred-solo; ordinary short-canary fallback observed. Both
+stable/research identity+registry, expert residency, functionals, normal
+stop/leaseexit0 and health PASS. First-use graph capture/replay succeeds.
+
+Actual claude-opus-5-5 and claude-fable-5-1 consulted independently;
+responding IDs verified. Opus identifies actual107-vs108-token handoff
+behind a short-canary one-draft delta. Root does NOT adopt its per-window
+burst-alignment proof:55content events are not64tokens, and 5ms grouping
+cannot establish token keep counts. Fable correctly counts logical depth2
+graph replays4->6 and explicit drafter waits2->1; those are not measured
+L0-call counts. Native run also varies, so don't attribute all wall gain
+solely to head math or equate the standalone1.38ms ideal with a threshold.
+
+New pre-existing accounting defect: OFFrepeat3slot1 reports28offered/21
+accepted for1500tokens. Native log shows exactly those counts for its final
+31-token solo tail. serve/server.py carries decode/token totals through
+batch->solo but carry_leg/add_carry omit draft totals, losing the preceding
+batch leg. Full-request acceptance comparison is INVALID; raw counts stay
+in the report. This does not invalidate wall timing or exact text parity.
+No accounting source change applied in S29; small optional-field fix and
+CPU regression are prepared separately for the next stage.
+
+VERDICT: retain head pairing as the winning bounded C2 candidate; no daily
+promotion. Still far below150/stream. Depth2/headpair full RAM recovery,
+long-context performance, C4, mixed32K arrival and boundary/cancel coverage
+are not newly qualified. S20's full RAM proof remains depth1. Queued tiny
+ON trace requires a new instrumented start and is not executed here.
+Loop: two starts, no rebuild or sweep, extend the promising arm in place;
+review artifacts precede timing. Four-turn high-effort consultations took
+213-218s: overlap future review with teardown/control loading and use
+narrow source briefs. Own review workers stopped before benchmarks;
+other session's source research wasn't isolated, run order isn't reversed,
+and clocks aren't controlled. Three pairs are not stability evidence.
+Raw head-pair-s29/{s29-report.json,analysis/analysis.json,sha256-s29.txt};
+prepared tracing/candidate steps are under head-pair-s29-prep/.
