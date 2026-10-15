@@ -23207,3 +23207,52 @@ adopted. Next source-derivedbound review is separate, no GPUrerun merely
 toquantifythisfailure. Oneadapterbuild/onefinitewindow/no fullserve/cache
 repeat. DatedS41doc/compiledsource/data map; old170ops/rollups unchanged.
 Raw q6-dense-packed-s41-prep/s41-report.json + cpu-reference/. Fullgoalactive.
+
+
+## 2026-10-15 -- Flash-Next optimization S42: direct grouped peer GEMM
+
+CONFIG: Installed oneMKL grouped FP16/F32 API;16 real experts,10 formats,
+1748 synthetic rows, private dequant slots and compact GU/H buffers.
+Production gather/dequant/Gemm/SiLU; no engine edit.
+COMMAND: Actual Opus5.5/Fable5.1 exact v2 reviews and root queue/layout
+checks; one139s offline adapter build, frozen64586e43. One44s quiet card1
+window, no unitrace. Conditional timing follows all strict gates.
+RESULT: Scalar GU/H/down completes. Grouped GU fails strict equality at
+index0:902568/2237440 differ, maxabs7.45058e-8, relativeL2 1.417509e-7.
+Both arrays finite. All43 guards, metadata guards/bytes, tails and complete
+weights/source/IDs immutability pass BEFORE comparison. Fourteen export
+files hashed; no candidate SiLU/down/timing. Expected numeric exit5,
+both health checks0, container removed, no reset. Memory accounting adds
+Gemm's explicit32MiB workspace and2MiB scratch; peak VRAM unmeasured.
+VERDICT: Unpromoted; winner152055a6 unchanged. Both actual postrun models
+recommend exact FP16 operand reconstruction before a new accuracy gate.
+Tiny differences support a rounding hypothesis, not validity or speed.
+S45 is source-only; Q6 decode remains the next GPU priority. Different
+reduction trees need predeclared independent accuracy checks, alongside
+strict memory and same-algorithm replay checks. No blind repeat/serve/cache
+campaign. Dated S42 report, exact compiled source and data map retained;
+old170 operation rows/rollups unchanged. Raw: peer-grouped-gemm-s42-prep/.
+
+
+## 2026-10-15 -- Flash-Next optimization S43: full first-C6 CPU arithmetic
+
+CONFIG: Existing S41 Q6/nativeQ8 operands and C6 outputs,2560 rows/15360
+outputs per path. Independent FP64 storage decoder/reference; analytical
+L15/L18 gamma bounds plus reference error, with outward rounding.
+COMMAND: Actual Opus/Fable contract/checker reviews; root applies their
+requested seven guard/count lines in v2, preserving v1. One cpu-run,
+block128, one requested BLAS thread. Source/AOT/snapshots pinned; full
+12.9MB payload FNV,19 prior row SHAs and three exact rational checks.
+RESULT: Exit0 in1.9545s, peakRSS54452KiB; no new GPU/build/serve. Both
+paths pass all15360 source-bound comparisons. Max reference error
+6.42022e-7/7.52776e-7; RMS1.26268e-7/1.43039e-7; largest error/bound
+.009982/.009134. A predeclared wrong-row shift fails all15360 both paths,
+showing gross sensitivity only. CPU finite/tail checks pass; GPU guards
+and readonly checks are inherited from S41, not newly measured.
+VERDICT: Bounded CPU diagnosis PASS, no speed/indexing/model-quality or
+production qualification. S41 strict failure and winner152055a6 remain
+unchanged. Next S44 collector/full reference covers remaining columns,
+shapes and changed inputs; own-algorithm graph equality stays strict,
+cross-algorithm differences are recorded, collection ends UNVALIDATED.
+No new full-engine/cache work. Dated S43 report, exact checker/pins and
+map retained; old170 operations unchanged. Raw: q6-dense-reference-s43-prep/.

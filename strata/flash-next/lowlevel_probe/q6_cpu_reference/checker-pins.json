@@ -1,0 +1,60 @@
+{
+  "S41": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-packed-s41-prep",
+  "B": "/mnt/vm_8tb/b70/build/strata-ab/src-ep",
+  "S41_files": {
+    "s41-report.json": "bb8c202c3be294a73c2c12f4d7e50d74614ecf23c17c2eab3568853b9a41fb63",
+    "numerical-difference.json": "bae492214140e4012c8e40c6c88817f6e24d6acf3018f07d441103cdf710364c",
+    "fixture-selection.json": "54e21a6fed0dcbb12156d0db31d47fddc55f0555c1b4d2f3693dface42e487fe",
+    "q6-header-index.json": "76c709974879e5b77811c072824c84b7cc84bf5706ba31460d9e997f51af8dd5",
+    "build-closure.json": "9d0a71164806e1ce4bab062d760d79696e813d473c5d15f7355ab4dddb4b7eeb",
+    "v2/q6_dense_oracle.cpp": "0a76898275463f6b3ee3640e25869f24aa02f02cbc71fb8d6297711e16630ff3",
+    "cpu-reference/manifest.json": "e4941583b9570879f81dac01e61ce9b55bbc5ee797f08d11ee981c3789e8de96",
+    "cpu-reference/reference.py": "afc406916eb21030801071cb2fff30b954775c45f547ea97091181e11b775841",
+    "cpu-reference/reference.json": "9b30f44e3bbec381f1ae6e84d979b7e35bac7c1e331db0e7ac5a45af71f17a73",
+    "run-profiled/closure.json": "30c227a56c7a6942143614f057fac903c6d81f2f3c5bb64f4b6365466832e175",
+    "run-profiled/oracle.log": "10dc8d8bdcca514a3a935d98ed89d21a4f76ebd0e9a6d61a21cf43986a907265",
+    "run-profiled/oracle.stderr": "a38c1c7fe76cbe218981a8cdedd6fee3fdb7c5cefac7e1d75e41be245eb461c5",
+    "run-profiled/unitrace.1.txt": "102047824bb9b5cadbd5eb4f3e73f8598a931077c7cefb0f420606e772e778bd",
+    "run-profiled/snapshots/f0-C1-original.bin": "5eb20ba5619fdc2c373f591ec36ef10ac392b15a3b45863ed51378260440681d",
+    "run-profiled/snapshots/f0-C2-original.bin": "3fadf7ddbddc559c0855d2fdbc088868ad4c084cf006ae38e7d3d1fdb6e4130e",
+    "run-profiled/snapshots/f0-C3-original.bin": "8dd436f5d8198c82bd5de2036cce69462e0b152d68fb392ef3b0c71cbdded49c",
+    "run-profiled/snapshots/f0-C4-original.bin": "5abab7248f9561bdaf0061aecbe52b48cd2ccbb7446eb66128256f159b4302c0",
+    "run-profiled/snapshots/f0-C6-original.bin": "6fdec1e5d1f1433a2174ad01c8d9ff16b7bc44931f4028dd7c14d7154bac3502",
+    "run-profiled/snapshots/f0-C6-packed.bin": "c29c47b35d50619644730d66bee39e7938561a4d313adf9f76167ba8628e730b",
+    "run-profiled/snapshots/f0-C8-original.bin": "974e74bfcbf9776b4577f44e7ecbc0e2509ab3cd017d579c0090ed3d0870d2d8",
+    "run-profiled/snapshots/f0-input-f32.bin": "41f59cc618247a9be0dc8cd4ec1f55042b2f1a82e5edc5f9a31ef85990797ab6",
+    "run-profiled/snapshots/f0-input-q8_1.bin": "a6859e31f961c7ead7d0045ff2833e7be84a1bbbb56cb3843958d1c14ba1759f",
+    "build-v2.sh": "7491d11fdacf5a3d86aade6f2c01126deb79d4882fe9fd2ddd23a7363a81b07a"
+  },
+  "production_sources": {
+    "sycl/src/kernels/cuda/native_mmvq.dp.cpp": "84aa0332c30069b435f7a10fab439f1bf1315005226ad923602ce33a1bfa4167",
+    "include/strata/artifact/dequant.hpp": "084ee6d3cb5056cca5dce6a6c40b9047d01f2560b033afb35eb56c64985a69f1",
+    "build-sycl-ep/build.ninja": "89cb173d8c8699943e1f4cb84c7dee2ddc0aba3178eef713198b64748108340b"
+  },
+  "original_payload_fnv1a64": "bd9a7894fdf034f5",
+  "original_binary_sha256": "a09b4c321dd3b099fbcc696e4e007e40dc24834767e62524075ae965e2c96f74",
+  "L": {
+    "original": 15,
+    "packed": 18
+  },
+  "K": 6144,
+  "C": 6,
+  "rows": 2560,
+  "block_rows": 128,
+  "reference_spots": [
+    [
+      0,
+      1
+    ],
+    [
+      1,
+      782
+    ],
+    [
+      5,
+      2314
+    ]
+  ],
+  "policy": "Predeclared source-depth proposal; no execution or policy approval implied.",
+  "negative_control": "Exactly one +1 row output roll per path, same correct reference and per-output bound; gross sensitivity only."
+}

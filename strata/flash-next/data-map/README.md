@@ -217,3 +217,12 @@ serving/tolerance/speedpromotion. Coldsinglekernelservice retained in raw,
 not a speed forecast. Original170operationrows/rollups unchanged;52eligible
 C6calls/3.569979ms source-supportedpool is ranking, not a wallbudget. See
 [S41 report](../../../docs/20261015_strata_q6_dense_packed_probe.md).
+
+
+S42/S43 retain40 stages/170 reference operations and prior rollups. Peer
+prefill adds the grouped GU strict failure; dense adds the independent
+full first-C6 CPU diagnosis. No new serving/speed claim. Different reduction
+trees need independent accuracy checks; memory and same-path replay stay
+strict. Prior failures remain evidence. Reports:
+[S42](../../../docs/20261015_strata_grouped_gemm_probe.md),
+[S43](../../../docs/20261015_strata_q6_cpu_reference.md).

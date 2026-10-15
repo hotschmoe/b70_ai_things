@@ -245,3 +245,10 @@ independent CPU reference supports rounding differences on selected outputs.
 No main loader hook or serving change; qualified152055a6 remains recoverable.
 [S41 report](../../docs/20261015_strata_q6_dense_packed_probe.md) records exact
 coverage, unchanged serving status and no speed/tolerance promotion.
+
+
+S42 grouped peer GU stops at strict equality; no timing or serving change.
+S43's independent CPU check passes analytical bounds for the first Q6 C6
+pair, without a GPU rerun or production promotion. Reports:
+[S42](../../docs/20261015_strata_grouped_gemm_probe.md),
+[S43](../../docs/20261015_strata_q6_cpu_reference.md).

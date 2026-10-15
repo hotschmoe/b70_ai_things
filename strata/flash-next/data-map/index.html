@@ -148,7 +148,7 @@ ul.plain{padding-left:1.1rem}
 {
  "schema": 1,
  "title": "Strata Flash-Next data map",
- "snapshot": "2026-10-15 S41: S22 reference ops, S30 RAM, S31 replay, S32 CPU boundaries, S33 quantum, S34 dispatch, S35 alias gate, S38 serving, S39 HC resource probe, S41 Q6 strict gate/selected CPU reference",
+ "snapshot": "2026-10-15 S43: S22 reference ops, S30 RAM, S31 replay, S32 CPU boundaries, S33 quantum, S34 dispatch, S35 alias gate, S38 serving, S39 HC resource probe, S41 Q6 strict gate/selected CPU reference, S42 grouped GU strict gate, S43 full first-C6 CPU accuracy",
  "scope": "Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two Arc Pro B70 cards, Strata SYCL engine, EP/PUSH, batch MTP depth2 (opt-in), two 200000-token slots, INT8 KV, 32 GiB / 4-entry RAM parking, all 24576 experts resident (7152 on GPU0 + 17424 on GPU1), greedy.",
  "warnings": [
   "Trace service times overlap: within a card (engines), across cards, and with CPU wall time. They are NOT additive and are not a latency budget.",
@@ -158,7 +158,8 @@ ul.plain{padding-left:1.1rem}
   "Current EP transport is Level Zero IPC-mapped device memory written/read by kernels with flag counters. It is not an all-reduce or any oneCCL collective. oneCCL post-health checks are health checks, not serving performance.",
   "S28 explicit-scope EP push passes bounded standalone/native-TU and concurrent serving canaries. Old default barrier first-read failures retained; no speed, general IPC or long-run claim.",
   "S29 bounded paired-head speed gain is unchanged; its raw prior-leg draft counts remain incomplete. S30 fixes Python carry and proves native/API sums in one64/512handback. Full-request acceptance parity across engines/schedules is not inferred.",
-  "S31 now measures paired C2 execution:18heads reconcile9nativepaired windows. Five reviewed cycles eachhave2C2/0C1 and9ImmediateAppendCommandListsExp. APIinvocations are not logicalbarriers; profiler-sensitive reset/gaps are not production savings. S22reference rows remain separate."
+  "S31 now measures paired C2 execution:18heads reconcile9nativepaired windows. Five reviewed cycles eachhave2C2/0C1 and9ImmediateAppendCommandListsExp. APIinvocations are not logicalbarriers; profiler-sensitive reset/gaps are not production savings. S22reference rows remain separate.",
+  "S41/S42 cross-algorithm bit mismatches are retained strict failures, not proof of invalid arithmetic. S43 independent first-C6 source-bound compliance is diagnostic, not production qualification or speed. Different reduction trees need predeclared accuracy criteria; same-algorithm replay/memory checks stay strict."
  ],
  "status_legend": {
   "measured": "Directly observed in a retained trace summary, native log, or clean benchmark (evidence path given). Trace values are diagnostic.",
@@ -187,7 +188,9 @@ ul.plain{padding-left:1.1rem}
    "../../../docs/20261015_strata_peer_gather_alias.md (S35 standalone numerical gate, not IPC or speed qualification)",
    "../../../docs/20261015_strata_peer_gather_serving.md (S38 real IPC serving; small prefill differences, aliasOFF retained)",
    "../../../docs/20261015_strata_grf_resource_probe.md (S39 unchanged-kernel numerical/graph/resource gate; GRF256 not selected)",
-   "../../../docs/20261015_strata_q6_dense_packed_probe.md (S41 strict C6 mismatch, selected quantized-dot CPU accuracy follow-up, no promotion)"
+   "../../../docs/20261015_strata_q6_dense_packed_probe.md (S41 strict C6 mismatch, selected quantized-dot CPU accuracy follow-up, no promotion)",
+   "../../../docs/20261015_strata_grouped_gemm_probe.md (S42 direct grouped GU strict failure; no candidate H/down or timing)",
+   "../../../docs/20261015_strata_q6_cpu_reference.md (S43 independent full first-C6 CPU reference; no GPU rerun or production qualification)"
   ],
   "results_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
   "prototype_binary": "S26 CPU-only strata-head-pair-s26 SHA256264f221e2c1b02d4bdd9b332c46f91e91bf4f6301afbdabe563df5ff2a16e44a; not GPU served; default pair option OFF.",
@@ -199,7 +202,9 @@ ul.plain{padding-left:1.1rem}
   "peer_gather_alias": "S35 frozen4f2b42fb, card1 PCI44:00.0, device USM, exact production functions,363 real mixed-layer expert blobs/ten format pairs plus synthetic routes; T4096/12288 both pass. No production edit.",
   "peer_gather_serving": "S38 frozen9d30ad8b, same-binary aliasOFF/ON, current149/363 split, actual48-layer IPC activation,13 exact hashes/counts/functionals/normalstop/fullhealthPASS. Three timed samples eachshape/pair after first CPU-diagnostic; no further timestamp capture, compiled inactive checks remain. No fullcontext promotion; aliasOFF.",
   "hc_grf_probe": "S39 frozen7365c788 standalone production fused_gr_read_multi, card1,12 syntheticBF16cases/48snapshotpairs35,893,248bytesPASS, changedinputgraphPASS. Actual kernelnames/resources128vs256/private0/spill0; instrumentedtimingsslowerall12. Keepdefault, no servingtest.",
-  "q6_dense_probe": "S41 frozena09b4c32, onecard1/36s including health. First real6144->2560 C6 strict pair fails11754/15360values, maxabs9.54e-7. All guards/finites/tails/nativeQ8readonlyPASS at comparison.19selectedrows/114independentCPUrefs support rounding explanation only; no graphs/otherpackedcolumns/shapes/speed qualification."
+  "q6_dense_probe": "S41 frozena09b4c32, onecard1/36s including health. First real6144->2560 C6 strict pair fails11754/15360values, maxabs9.54e-7. All guards/finites/tails/nativeQ8readonlyPASS at comparison.19selectedrows/114independentCPUrefs support rounding explanation only; no graphs/otherpackedcolumns/shapes/speed qualification.",
+  "grouped_peer_probe": "S42 frozen64586e43, one44s card1 window after139s offlinebuild; direct oneMKLgroupedGU on16realexperts/10formats/1748rows. StrictGUFAIL902568/2237440, maxabs7.45e-8; all prior guards/metadata/readonly/tails and bothhealth/teardownPASS. No candidateH/down/timing/serving.",
+  "q6_cpu_reference": "S43 executed7831f155 CPUchecker, existingfirstC6pair only, 15360outputs perpath withinpredeclaredsourceboundsL15/18, maxreferenceerror6.42e-7/7.53e-7, wrong-rowmutantsallfail.12.9MBpayload/1.9545s/54452KiBpeakRSS, noGPU/newmath/serve."
  },
  "geometry": {
   "source": "Confirmed against served GGUF metadata with CPU-only tools/gguf_reader.py: lowlevel-s24/model-geometry.json. Derived: 12 QSA/36 GDN layers, ssm_conv_channels=2*128*16+6144; defaults cross-checked against include/strata/core/geometry.hpp.",
@@ -1108,7 +1113,8 @@ ul.plain{padding-left:1.1rem}
    "evidence": [
     "draft-profile-s22/profile/steady-summary",
     "head-pair-s31/analysis-prep/result/stage-rollups.json",
-    "q6-dense-packed-s41-prep/{s41-report,numerical-difference}.json; cpu-reference/reference.json"
+    "q6-dense-packed-s41-prep/{s41-report,numerical-difference}.json; cpu-reference/reference.json",
+    "q6-dense-reference-s43-prep/{s43-report,bound-proof.md}; run-first-c6/gate.json"
    ],
    "quoted": [
     {
@@ -1121,6 +1127,12 @@ ul.plain{padding-left:1.1rem}
      "label": "S41 existing packed Q6, first actual C6 fixture",
      "value": "StrictbitFAIL11754/15360; maxabs9.54e-7; selectedCPUreference maxerror original5.79e-7/packed6.57e-7",
      "basis": "One6144->2560 fixture;19selectedrows/114CPUreferences. Singlecoldprofiledcall per path is not a speed result; serving unchanged.",
+     "status": "measured"
+    },
+    {
+     "label": "S43 full first-C6 independent CPU diagnostic",
+     "value": "15360outputs/path,0source-boundviolations; maxerror original6.42e-7/packed7.53e-7",
+     "basis": "ExistingS41snapshots andactualsavedQ8, FP64storage-decoder/reference, sourceL15/18bounds, no GPUrerun. Wrongrowcontrol15360failboth; no modelquality/serving/speed qualification.",
      "status": "measured"
     }
    ],
@@ -2207,7 +2219,8 @@ ul.plain{padding-left:1.1rem}
     "prefill-quantum-s33/analysis/comparison-q0-q4096.json",
     "ep-prefill-dispatch-s34/{trace-provenance,historical-gaps}.json",
     "peer-gather-oracle-s35/{s35-report,build-closure}.json; quiet-mean{80,240}/closure.json",
-    "peer-gather-serving-s38/{s38-report,serving-comparison,host-spans,diagnostic-cross-arm-gate}.json"
+    "peer-gather-serving-s38/{s38-report,serving-comparison,host-spans,diagnostic-cross-arm-gate}.json",
+    "peer-grouped-gemm-s42-prep/{s42-report,numerical-difference}.json; run-clean/exports/export-sha256.json"
    ],
    "quoted": [
     {
@@ -2257,6 +2270,12 @@ ul.plain{padding-left:1.1rem}
      "value": "48layers/T4049: median15.826->14.830ms, total859.107->815.047ms; all48 IPC alias layers active",
      "basis": "First fresh diagnostic request, CPU steady_ns submission-call spans with cold initialization; not GPU service, physical idle or additive savings. Later timed4K/32K prefill+1.78/+0.65percent, C2aggregate-0.48percent; aliasOFF retained.",
      "status": "measured"
+    },
+    {
+     "label": "S42 compact peer grouped GU gate",
+     "value": "16experts/1748rows;902568/2237440strictdifferences/maxabs7.45e-8",
+     "basis": "Direct oneMKLgroupedF16/F32 API, no candidateSiLU/down/timing after GUfail. Guard/input/health closuresPASS. Independent exactF16operand CPUreference absent.",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -2267,7 +2286,8 @@ ul.plain{padding-left:1.1rem}
    ],
    "gaps": [
     "GEMM tile shapes not mapped.",
-    "S38 current CPU submission spans measured; no new GPU-clock readiness join, occupancy, physical bytes or per-kernel alias delta. MMQ weight gathering remains unreachable."
+    "S38 current CPU submission spans measured; no new GPU-clock readiness join, occupancy, physical bytes or per-kernel alias delta. MMQ weight gathering remains unreachable.",
+    "S42 grouped accuracy/latency unqualified: need exact dequantized FP16 operand contract before a new numerical criterion. No performance conclusion from tiny GU differences."
    ],
    "hypotheses": [
     "S35 local-USM numerical gate plus S38 actual48-layer IPC serving gate pass. Small prefill-only differences do not justify promotion or another full-context campaign; keep aliasOFF. No general future-reader visibility or physical-idle claim."
@@ -2527,6 +2547,20 @@ ul.plain{padding-left:1.1rem}
    "value": "FirstC6 strict mismatch;11754/15360different/maxabs9.54e-7;19selectedrows/114quantized-dot references",
    "status": "measured",
    "note": "One103s offlineadapterbuild/one36squietcard1window incl health; original6columns/packedC6only, no replay/latency/serving promotion. CPUref0.141s/95,760modelbytes/threeexactrationalchecks. No arbitrarynewtolerance."
+  },
+  {
+   "stage": "S42",
+   "label": "Direct grouped peer GU strict gate",
+   "value": "StrictFAIL; maxabs7.45e-8/relativeL2scalar1.42e-7; no timing",
+   "status": "measured",
+   "note": "One139s build/44s card1window;16realexperts/10formats; guards/readonly/health/normalteardownPASS. CandidateH/down unexecuted. Keepunpromoted."
+  },
+  {
+   "stage": "S43",
+   "label": "Independent full first-C6 CPU accuracy discriminator",
+   "value": "15360outputs eachpath satisfy source-derivedbounds;wrongrowallfail;1.9545s CPU",
+   "status": "measured",
+   "note": "Source-derivedgammaL15/18 +referenceerror, no fittedtolerance. ExistingactualQ6/Q8 bytes,54,452KiBpeak; S41bitfailureunchanged. Other shapes/columns/graphs/modelquality/serving not qualified."
   }
  ],
  "rejected_parked": [
@@ -2610,7 +2644,8 @@ ul.plain{padding-left:1.1rem}
   "S34 historical dispatch intervals cannot be applied to current ownership, source or uninstrumented latency. No physical-idle, removable-budget or speedup ceiling claim. S7 per-layer async was already slower; avoid identical retry.",
   "S38 supplements S35 with bounded actual IPC serving, not arbitrary concurrent-reader or full200k/RAM qualification. Timed samples include inactive compiled marker checks; only first request captures timestamps. No new physical-idle, bandwidth, spills or occupancy measurement.",
   "S39 confirms selected HC resource branches and tool-reported register/private/spill fields; does not measure dynamic occupancy, causal resource effects or whole-serving latency. Instrumented diagnostics reject next serving arm only.",
-  "S41 changed bits do not establish an invalid operator. New numerical gate requires source-derived error bounds and independent full coverage; current strict gate remains failed. No serving/speed inference from selected CPU reference or one cold service sample."
+  "S41 changed bits do not establish an invalid operator. New numerical gate requires source-derived error bounds and independent full coverage; current strict gate remains failed. No serving/speed inference from selected CPU reference or one cold service sample.",
+  "S42 exact CPU-vs-device FP16 dequant operand equivalence is unproven. S43 first-matrix arithmetic bounds do not cover remaining Q6 shapes/columns/changed inputs or establish all indexing semantics/model quality. No immediate fullserve/cache campaign."
  ],
  "operations": [
   {

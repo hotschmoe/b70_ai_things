@@ -255,3 +255,20 @@ and raw q6-dense-packed-s41-prep/{build-closure,s41-report}.json, build-v2.sh,
 run-prep/ROOT_RUN.sh, run-profiled/ and cpu-reference/. Exactbuild requires
 its pinned production archives; do not substitute qualified152055a6's
 unavailable old archive or assume current unfrozen engine is promoted.
+
+
+S42 `grouped_peer_oracle.cpp` is exact compiledf69603f2/frozen64586e43.
+One139s build/44s card1 window covers16 real experts/1748 rows. GU fails
+strict equality before candidate SiLU/down/timing; prior memory/readonly
+checks and both health checks pass. Later source paths are unqualified.
+Exact recipes: raw peer-grouped-gemm-s42-prep/v2/build-oracle.sh and
+root-level ROOT_RUN.sh -> leased_run.sh; closure in run-clean/.
+
+S43 `q6_cpu_reference/{check_first_c6.py,checker-pins.json}` is copied
+exactly from executed7831f155/e3ad41b2. CPU-only NumPy; run under bin/cpu-run
+with a NEW output directory. Pins require S41's retained evidence and
+source identity. Full first C6 diagnosis passes analytical L15/18 bounds
+in1.9545s, with rational and wrong-row checks. This does not replace S41's
+strict failure or qualify other cases, model quality or production.
+[S42 report](../../../docs/20261015_strata_grouped_gemm_probe.md),
+[S43 report](../../../docs/20261015_strata_q6_cpu_reference.md).

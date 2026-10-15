@@ -271,3 +271,12 @@ winner152055a6/headpairON/depth2/strictgateFAILED; no new tolerance or speed
 claim. One103s adapterbuild/one36s card1window incl healthyteardown; no
 fullengine/serve/cache repeat. Source-derived numericalpolicy next, targets
 remain unmet. See docs/20261015_strata_q6_dense_packed_probe.md.
+
+
+S42 grouped peer GU fails strict equality; independent operand accuracy and
+speed remain unqualified. S43's CPU reference confirms source-bound
+compliance for both first-matrix Q6 C6 outputs, without another GPU run.
+These are primitive diagnostics. Keep S41's strict failure and qualified
+152055a6/headpairON/depth2; absolute serving targets remain unmet.
+See [S42](20261015_strata_grouped_gemm_probe.md) and
+[S43](20261015_strata_q6_cpu_reference.md).

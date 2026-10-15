@@ -2123,3 +2123,29 @@ VERDICT -> PreserveFAILEDbitgate; noinvalidmathconclusion/arbitrarytolerance/
 speedclaim/servingpromotion. Keep152055a6/headpairON/depth2. Bothactualmodels
 recommendCPUreferencebeforegatepolicy. S42groupedGEMMpreparation proceeds
 withoutnewserve; S43bound preparation separate. See [S41 report](20261015_strata_q6_dense_packed_probe.md), raw q6-dense-packed-s41-prep/.
+
+
+## S42: direct grouped peer GU discriminator (2026-10-15)
+
+CONFIG -> Direct oneMKL FP16/F32 grouped API,16 real experts/10 formats,
+1748 rows, production dequant/Gemm/SiLU; no engine edit.
+COMMAND -> Actual Opus/Fable source reviews,139s offline adapter build;
+one44s quiet card1 window, timing conditional on strict success.
+RESULT -> GU fails strict equality, maxabs7.45e-8; prior guards/metadata/
+readonly/tails pass. Both health checks0, normal numeric exit5/removal.
+Candidate SiLU/down/timing never runs; no operator-validity or speed claim.
+VERDICT -> Keep unpromoted. Exact CPU FP16 operand audit first; decode
+priority, no immediate repeat. [S42 report](20261015_strata_grouped_gemm_probe.md).
+
+
+## S43: full first-matrix Q6 CPU reference (2026-10-15)
+
+CONFIG -> Saved6144->2560 C6 pair, independent FP64 reference and analytical
+L15/18 bounds plus reference error; no fitted tolerance.
+COMMAND -> Actual model reviews and requested checker guards; one cpu-run.
+RESULT -> All15360 outputs per path satisfy their bounds, max error
+6.42e-7/7.53e-7; wrong-row shift fails all.1.9545s/54,452KiB peakRSS;
+no new GPU. S41 strict failure remains unchanged.
+VERDICT -> Diagnostic PASS only. Next S44 checks remaining columns/shapes/
+changed inputs. No serving, quality or speed promotion.
+[S43 report](20261015_strata_q6_cpu_reference.md).
