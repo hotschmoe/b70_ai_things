@@ -1,0 +1,37 @@
+{
+  "utc": "2026-10-15T22:45:12.747735+00:00",
+  "status": "ROOT_ACCEPT_RETAINED_LOG_FORENSICS_KEEP_S94_FAILED",
+  "root_independent_excerpt_totals_and_width_differences_checked": true,
+  "windows_per_arm": 120,
+  "offered": [
+    207,
+    205
+  ],
+  "width_differences_zero_based": [
+    [
+      11,
+      [
+        4078,
+        4
+      ],
+      [
+        4078,
+        3
+      ]
+    ],
+    [
+      28,
+      [
+        4106,
+        4
+      ],
+      [
+        4106,
+        3
+      ]
+    ]
+  ],
+  "causality": "Unresolved. No exact suffix-window tags, dprob, lookup proposals or policy costs/tables retained. Current policy implementation is not separately S94-object-bound.",
+  "next_if_prefill_resumed": "Existing flags in BOTH arms: --suffix-draft 0 --lookup-chain 0 --spec 4 --mtp-max-t 4 --spec-min-p 0; also ensure live request spec_min_p override is zero. New fixed-work configuration only, retain strict gate.",
+  "new_GPU_or_build": false
+}

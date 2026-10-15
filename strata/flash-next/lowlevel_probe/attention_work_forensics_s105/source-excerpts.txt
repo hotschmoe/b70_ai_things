@@ -1,0 +1,297 @@
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp SHA256 6433d750e414aeb9c71135257ae40a8f9e38ea661537c251b50cabdbc2217d83
+650:     /// Plan v0.3 P6: every `adapt_every` rounds, swap up to `adapt_swaps` of the most-routed missing experts into
+651:     /// the VRAM tier in place of the least-routed resident ones (decayed counts).  0 = static residency.
+652:     int adapt_every = 4;
+653:     float adapt_decay = 0.7f;   ///< the usage counts are multiplied by this after each adaptation (--adapt-decay)
+654:     /// --adapt-async 1 (--serve with the resident RAM mode; opt-in): the adaptive tier's rounds advance between verify
+655:     /// windows on a helper thread instead of one window waiting for a whole round (see the tier in the --serve block).
+656:     /// Not bit-exact run to run.  0 = the blocking tier.
+657:     int adapt_async = 0;
+658:     /// Plan v0.3 P6: a draft enters the verify window only while every draft before it (and itself) has at least
+659:     /// this probability under the draft layer; 0 = always --spec-1 drafts.
+660:     double spec_min_p = 0.0;
+661:     /// Stop when the model emits an end-of-turn token (<|endoftext|> 248044, <|im_end|> 248046, or --eos-ids).
+662:     bool stop_eos = false;
+663:     std::vector<int64_t> eos_ids = {248044, 248046};
+664:     bool spec_split = false;   ///< opt-in split verify window (the overlap study: exact, ~7% slower)
+665:     /// --serve, multi-GPU layer split: "K" or "K1,K2,.." (the first layer of each later stage) or "auto" (placed
+710:     /// when K is not accepted as guessed).  0 = off (the stages take turns).
+711:     int pipeline_windows = 0;
+712:     /// The suffix drafter (prompt lookup): when the text being written repeats an earlier stretch of the context (code
+713:     /// edits, quoted input, tool-call JSON) by at least this many tokens, the window may be filled with what followed
+714:     /// it there instead of the MTP's drafts, where the MTP's own first guess agrees and the draft policy expects it to
+715:     /// pay (strata/spec/draft_policy.hpp).  On by default; 0 = MTP only.
+716:     int suffix_draft = 3;
+717:     /// The MTP's own window cap (0 = --spec): with --spec 6 --mtp-max-t 4 the long windows come from suffix matches.
+718:     int mtp_max_t = 0;
+719:     /// --lookup-chain K (opt-in, 0 = off): prompt lookup CHAINED after the MTP's proposal.  The suffix drafter matches
+720:     /// the context followed by the MTP's drafts and appends up to K of the tokens that followed that match to the same
+721:     /// verify window (the window grows to at most 8).  Greedy verification keeps the output; its own counts are kept.
+722:     int lookup_chain = 0;
+723:     int lookup_chain_min = 3;   ///< --lookup-chain-min M: the shortest match (in tokens, drafts included) it extends on
+724:     /// --mtp-hnorm stream (opt-in): the draft layer's pre_fc_norm_hidden normalizes each hyper-connection stream on
+725:     /// its own (llama.cpp's qwen4exp MTP graph) instead of one RMS over all four (the default, tools/mtp_probe.py).
+1875:         else if (a == "--pcie-frac") o.pcie_frac = std::atof(next("--pcie-frac"));
+1876:         else if (a == "--adapt-every") o.adapt_every = std::atoi(next("--adapt-every"));
+1877:         else if (a == "--adapt-decay") o.adapt_decay = (float) std::atof(next("--adapt-decay"));
+1878:         else if (a == "--adapt-async") o.adapt_async = std::atoi(next("--adapt-async")) != 0 ? 1 : 0;
+1879:         else if (a == "--spec-min-p") o.spec_min_p = std::atof(next("--spec-min-p"));
+1880:         else if (a == "--stop-eos") o.stop_eos = true;
+1881:         else if (a == "--spec-split") o.spec_split = true;
+1882:         else if (a == "--layer-split") o.layer_split = next("--layer-split");
+1883:         else if (a == "--split-device") o.split_device = next("--split-device");
+1908:         else if (a == "--tail-role-token") o.tail_role_token = std::atoll(next("--tail-role-token"));
+1909:         else if (a == "--short-read") o.short_read = std::max(0LL, std::atoll(next("--short-read")));
+1910:         else if (a == "--pipeline-windows") o.pipeline_windows = std::max(0, std::min(2, std::atoi(next("--pipeline-windows"))));
+1911:         else if (a == "--suffix-draft") o.suffix_draft = std::max(0, std::atoi(next("--suffix-draft")));
+1912:         else if (a == "--mtp-max-t") o.mtp_max_t = std::max(0, std::atoi(next("--mtp-max-t")));
+1913:         else if (a == "--lookup-chain") o.lookup_chain = std::clamp(std::atoi(next("--lookup-chain")), 0, 7);
+1914:         else if (a == "--lookup-chain-min") o.lookup_chain_min = std::max(3, std::atoi(next("--lookup-chain-min")));
+1915:         else if (a == "--mtp-hnorm") {
+1916:             const std::string v = next("--mtp-hnorm");
+2351:     strata::core::qsa_set_kv_resident(o.kv_resident);
+2352:     // Prompt lookup (the suffix drafter, on by default): the MTP keeps its --spec windows and a lookup window may be
+2353:     // up to 2 tokens longer; the draft policy (strata/spec/draft_policy.hpp) takes one only where it pays. Code
+2354:     // edits +6-11%, ordinary text unchanged (bench/results/2026-09-27-spec). --suffix-draft 0 turns it off.
+2355:     if (o.suffix_draft > 0 && o.spec >= 2 && o.mtp_max_t == 0) {
+2356:         o.mtp_max_t = o.spec;
+2357:         o.spec = std::min(o.spec + 2, 8);   // kVerifyMaxT
+2358:     }
+2359:     // --lookup-chain (opt-in): the MTP keeps its windows; a lookup chained after its drafts may lengthen one by up to K
+2360:     if (o.lookup_chain > 0 && o.spec >= 2) {
+2361:         if (o.mtp_max_t == 0) o.mtp_max_t = o.spec;
+2362:         o.spec = std::max(o.spec, std::min(o.mtp_max_t + o.lookup_chain, 8));   // kVerifyMaxT
+2363:     }
+2364:     strata::spin_drafts_need_long_bound(o.spec >= 2 && o.mtp.empty());   // spin_max: drafting without MTP waits long
+2365:     strata::core::layer_set_shared_early(!o.shared_late);
+2366:     if (!o.native_preset.empty()) {
+8934:         std::fflush(stdout);
+8935:         std::string line;
+8936:         int64_t rounds = 0;
+8937:         const int S = o.spec;
+8938:         const int S_mtp = o.mtp_max_t > 0 ? std::min(o.mtp_max_t, S) : S;   // the MTP's windows; suffixes go up to S
+8939:         if (use_mtp && S_mtp < S) mtp.set_max_drafts(S_mtp - 1);
+8940:         // --pipeline-windows 2 loads the drafter with 8 rows: the serial loop's chain keeps its own length
+8941:         else if (use_mtp && mtp.max_t() > S_mtp) mtp.set_max_drafts(S_mtp - 1);
+8942:         strata::spec::SuffixDrafter sfx(std::max(1, o.suffix_draft), 64, (size_t) o.max_context + 4096);
+8943:         strata::spec::DraftPolicy policy(S);   // MTP or lookup window, learned over the whole process
+8944:         // The vision path (--vision): GENI <max_new> <embeddings file> <id,id,...> carries images.  The file is one
+8945:         // or more strata-vision records (int32 'SVE1', n, nx, ny, n_embd, then n x n_embd floats) in prompt order;
+11048:             }
+11049:             bool first_window = true;
+11050:             int64_t produced_n = 0, sfx_windows = 0, sfx_drafts = 0, sfx_ok = 0;
+11051:             int64_t chain_windows = 0, chain_drafts = 0, chain_ok = 0;   // --lookup-chain's own counts
+11052:             int64_t t2_rej[8] = {}, t2_hit[8] = {};   // STRATA_MTP_TOP2: rejections inside the MTP drafts by depth, runner-up hits
+11053:             std::vector<int32_t> cbuf((size_t) S, 0), ctail;
+11054:             strata::spec::PromptLookupSource lookup_src(sfx);
+11055:             static const bool chain_fixed = std::getenv("STRATA_LOOKUP_CHAIN_FIXED") != nullptr;   // no policy gate
+11056:             int64_t draft_offered = 0, draft_accepted = 0;
+11057:             // what the session holds once this request is done: the prompt read so far, then every committed token
+11058:             std::vector<int32_t> consumed;
+11772:             while (!pl_ran && !cancelled && produced_n < max_new) {
+11773:                 int T = use_mtp ? S_mtp : 1;   // no --mtp: one token a round unless a lookup draft fires
+11774:                 if (use_mtp && req_spec_min_p > 0.0) {
+11775:                     T = 1;
+11776:                     while (T < S_mtp && dprob[(size_t) T - 1] >= (float) req_spec_min_p) ++T;
+11777:                 }
+11778:                 if (first_window) T = 1;
+11779:                 // a repeat of earlier context (prompt lookup) where the MTP's own first guess agrees: the policy takes it
+11780:                 // when its expected tokens per ms, from the measured acceptance and window costs, beat the MTP window's
+11781:                 bool from_sfx = false;
+11782:                 int sfx_match = 0;
+11783:                 if (o.suffix_draft > 0 && !first_window) {
+11784:                     const int k = sfx.propose(S - 1, sbuf.data());
+11785:                     sfx_match = sfx.last_match();
+11786:                     if (k > 0 && (!use_mtp || sbuf[0] == drafts[0])) {
+11787:                         const strata::spec::DraftPolicy::Pick pk = policy.choose(T, k, sfx_match);
+11788:                         if (pk.lookup) { T = pk.t; from_sfx = true; }
+11789:                     }
+11790:                 }
+11791:                 // --lookup-chain: what followed an earlier occurrence of the context + the MTP's drafts, after them
+11792:                 int chain_n = 0, cm = 0;
+11793:                 if (o.lookup_chain > 0 && !first_window && !from_sfx && T < S) {
+11794:                     int csrc = -1;
+11795:                     const int nt = chain_tail(sfx, drafts.data(), T - 1, ctail);
+11796:                     chain_n = strata::spec::propose_from_sources(lookup_src, ctail.data(), nt, T - 1,
+11797:                                                                  std::min(o.lookup_chain, S - T), o.lookup_chain_min,
+11798:                                                                  cbuf.data(), &cm, &csrc);
+11799:                     // the policy keeps the chained tokens that pay at this machine's measured window costs
+11800:                     if (chain_n > 0 && !chain_fixed) {
+11801:                         double p_mtp = 1.0;
+11802:                         for (int i = 0; i < T - 1; ++i) p_mtp *= dprob[(size_t) i];
+11803:                         chain_n = policy.chain(T, p_mtp, chain_n, cm);
+11804:                     }
+11805:                 }
+11806:                 const int T_mtp = T;
+11807:                 T += chain_n;
+11808:                 const bool timed_round = !first_window;
+11809:                 const Clock::time_point round0 = Clock::now();
+11810:                 if (p + T > o.max_context) break;
+11811:                 window[0] = x;
+11812:                 for (int i = 1; i < T_mtp; ++i) window[(size_t) i] = from_sfx ? sbuf[(size_t) i - 1] : drafts[(size_t) i - 1];
+11813:                 for (int i = 0; i < chain_n; ++i) window[(size_t) (T_mtp + i)] = cbuf[(size_t) i];
+11814:                 drive.d.layers = 0;
+11815:                 drive.d.experts = 0;
+11845:                     std::printf("ERR the K/V cannot grow: no VRAM is left\n");
+11846:                     return 1;
+11847:                 }
+11848:                 tr("window", p, T);
+11849:                 const Clock::time_point tw0 = Clock::now();
+11850:                 if (!ver.run(T, window.data(), p, win_pool_fn, win_pool_user, outv.data(), err) || drive.d.failed) {
+11851:                     std::printf("ERR %s\n", drive.d.failed && drive.d.fail ? drive.d.fail : err.c_str());
+11852:                     return 1;
+11853:                 }
+11854:                 int a = 0;
+11855:                 while (a < T - 1 && window[(size_t) a + 1] == outv[(size_t) a]) ++a;
+11856:                 if (from_sfx) { ++sfx_windows; sfx_drafts += T - 1; sfx_ok += a; }
+11857:                 if (chain_n > 0) { ++chain_windows; chain_drafts += chain_n; chain_ok += std::max(0, a - (T_mtp - 1)); }
+11858:                 if (strata::core::MtpDrafter::top2_env() && !from_sfx && !first_window && a < T_mtp - 1 && a < 8) {
+11859:                     ++t2_rej[a];
+11860:                     if (mtp.top2(a) == outv[(size_t) a]) ++t2_hit[a];
+11861:                 }
+11871:                     return 1;
+11872:                 }
+11873:                 // the window's first a + 1 tokens are in the session now (the last output is not: it is next x)
+11874:                 for (int i = 0; i <= a; ++i) consumed.push_back(window[(size_t) i]);
+11875:                 draft_offered += T - 1;
+11876:                 draft_accepted += a;
+11877:                 first_window = false;
+11878:                 bool eos = false;
+11879:                 for (int i = 0; i <= a && produced_n < max_new && !eos; ++i) {
+11930:                 }
+11931:                 if (!drafted) {
+11932:                     std::printf("ERR %s\n", err.c_str());
+11933:                     return 1;
+11934:                 }
+11935:                 if (timed_round && !eos && chain_n == 0)
+11936:                     policy.observe(from_sfx, T, a, sfx_match,
+11937:                                    std::chrono::duration<double, std::milli>(Clock::now() - round0).count());
+11938:                 else if (timed_round && !eos)   // a chained window: its MTP part, its chain, its cost
+11939:                     policy.observe_chain(T_mtp, chain_n, a, cm,
+11940:                                          std::chrono::duration<double, std::milli>(Clock::now() - round0).count());
+11941:                 if (eos) { finish = "stop"; break; }
+11942:                 if (stop_req.load()) { finish = "cancel"; break; }
+11943:                 x = outv[(size_t) a];
+11944:                 p += a + 1;
+11945:             }
+11946:             const double decode_ms = std::chrono::duration<double, std::milli>(Clock::now() - d0).count();
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/src/spec/draft_policy.cpp SHA256 04eba40c79c272043de4bf9d86823e9050ed72f5563f3ca1361faffd66d2992d
+10: // measured round times replace it). Between the RTX 5070's measured curves: +10 ms per token with every missed expert
+11: // on the CPU (bench/results/2026-09-27-spec/window-cost), flatter with the default CPU/DMA split.
+12: constexpr double kShape[DraftPolicy::kMaxT + 1] = {0.0, 1.0, 1.35, 1.7, 2.05, 2.45, 2.85, 3.25, 3.6};
+13: constexpr double kCostAlpha = 0.1;    // EMA weight of a new round time
+14: constexpr double kTokAlpha = 0.05;    // EMA weight of a new MTP window outcome
+15: constexpr double kDecay = 0.97;       // lookup counts: older windows fade
+16: // Before a bucket has data: the longer the match, the likelier its continuation (llama.cpp's lookup decoding gates
+17: // on the same thing); worth 4 observations, so a few real windows override it
+18: constexpr double kPriorQ[DraftPolicy::kBuckets] = {0.75, 0.88, 0.93, 0.96};
+19: constexpr double kPriorN = 4.0;
+20: constexpr int kProbes = 3;       // a lookup window size is tried this often before its guessed cost can veto it
+21: // A size not measured for this many rounds is tried again when a confident lookup could use it: its cost was set in
+22: // one stretch (a prompt's cache refill, say) and, priced high, it would never be measured again (#1252)
+23: constexpr double kStaleRounds = 300.0;
+24: 
+38: 
+39: double DraftPolicy::cost_ms(int t) const {
+40:     t = std::clamp(t, 1, kMaxT);
+41:     if (cost_n_[t] > 0) return cost_[t];
+42:     // scale from the measured sizes, weighting each by how often it was seen
+43:     double num = 0.0, den = 0.0;
+44:     for (int u = 1; u <= kMaxT; ++u)
+45:         if (cost_n_[u] > 0) {
+46:             const double w = std::min(cost_n_[u], 20.0);
+47:             num += w * cost_[u] * kShape[t] / kShape[u];
+48:             den += w;
+49:         }
+50:     return den > 0 ? num / den : kShape[t];
+51: }
+52: 
+53: bool DraftPolicy::stale(int t) const { return cost_n_[t] > 0 && rounds_ - last_[t] > kStaleRounds; }
+54: 
+55: double DraftPolicy::mtp_tokens(int t) const {
+56:     if (mtp_n_[t] > 0) return mtp_tok_[t];
+57:     return 1.0 + 0.7 * (t - 1);       // before any MTP window of this size: a typical acceptance
+58: }
+59: 
+60: DraftPolicy::Pick DraftPolicy::choose(int t_mtp, int lookup_k, int match) const {
+61:     Pick p;
+62:     p.t = std::clamp(t_mtp, 1, max_t_);
+63:     if (lookup_k <= 0) return p;
+64:     const double base = mtp_tokens(p.t) / cost_ms(p.t);
+65:     const double q = lookup_rate(match);
+66:     double e = 1.0, qi = 1.0, best = 0.0;
+67:     int best_t = 0;
+68:     for (int k = 1; k <= std::min(lookup_k, max_t_ - 1); ++k) {
+69:         qi *= q;
+70:         e += qi;
+71:         const double r = e / cost_ms(k + 1);
+72:         if (r > best) { best = r; best_t = k + 1; }
+73:     }
+74:     const int t_full = std::min(lookup_k, max_t_ - 1) + 1;
+75:     if (best_t > 0 && best > base * (1.0 + margin_)) {
+76:         p.lookup = true;
+77:         p.t = best_t;
+78:         // a wider size whose cost has gone stale is re-measured, so one slow stretch cannot price it out for good
+79:         if (best_t < t_full && q >= 0.85 && stale(t_full)) p.t = t_full;
+80:         return p;
+81:     }
+82:     // a guessed cost can keep the policy from ever measuring a size: the first few times a confident lookup would
+83:     // need a size not measured yet, it is tried (verification keeps the output; only the one round's speed is at stake)
+84:     if (t_full > p.t && (cost_n_[t_full] < kProbes || stale(t_full)) && q >= 0.85) {
+85:         p.lookup = true;
+86:         p.t = t_full;
+87:     }
+88:     return p;
+89: }
+90: 
+91: void DraftPolicy::observe(bool lookup, int t, int accepted, int match, double round_ms) {
+92:     t = std::clamp(t, 1, kMaxT);
+93:     if (round_ms > 0) {
+94:         cost_[t] = cost_n_[t] > 0 ? (1.0 - kCostAlpha) * cost_[t] + kCostAlpha * round_ms : round_ms;
+95:         cost_n_[t] += 1.0;
+96:         last_[t] = rounds_;
+97:     }
+98:     rounds_ += 1.0;
+99:     if (lookup) {
+100:         const int b = bucket(match);
+101:         ok_[b] = kDecay * ok_[b] + accepted;
+102:         bad_[b] = kDecay * bad_[b] + (accepted < t - 1 ? 1.0 : 0.0);
+103:     } else {
+104:         const double got = accepted + 1.0;
+105:         mtp_tok_[t] = mtp_n_[t] > 0 ? (1.0 - kTokAlpha) * mtp_tok_[t] + kTokAlpha * got : got;
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/spec/draft_policy.hpp SHA256 f6f1c972a9b80bc6c82c1b24c87335d40852bfd7555b10d8288030b24477ccb9
+1: // include/strata/spec/draft_policy.hpp - per verify round: the MTP's window, or a lookup (suffix) window?
+2: //
+3: // The suffix drafter (prompt lookup) proposes the tokens that followed an earlier repeat of the context. Taken
+4: // whenever it proposes more than the MTP, it lost 2-8% on ordinary text: a long lookup window costs much more to
+5: // verify than the MTP's usual 3-4 tokens, and it is only worth that when enough of it is accepted. llama.cpp's
+6: // lookup decoding answers the same problem with confidence thresholds on its n-gram statistics; here the policy
+7: // learns both sides online and compares expected committed tokens per millisecond:
+8: //
+9: //   MTP     E = the mean tokens a window of that size has committed (EMA), at the measured cost of that size
+10: //   lookup  E(k) = 1 + q + q^2 + ... + q^k for k <= the proposal, q = the acceptance rate of lookup drafts whose
+11: //           match was about as long (4 buckets of match length, decayed counts), at the measured cost of k + 1
+12: //
+13: // and takes the lookup window only when its best E/cost beats the MTP's by `margin`. Costs are the measured round
+14: // times per window size (EMA; sizes not seen yet are scaled from seen ones by a prior shape), so the policy adapts
+15: // to the machine and the context length. It only chooses which drafts to verify: the output is unchanged.
+16: #pragma once
+17: 
+22: class DraftPolicy {
+23: public:
+24:     static constexpr int kMaxT = 8;
+25:     static constexpr int kBuckets = 4;
+26: 
+27:     explicit DraftPolicy(int max_t, double margin = 0.03);
+28: 
+29:     struct Pick {
+30:         bool lookup = false;
+31:         int t = 1;                      // window size (1 + drafts)
+32:     };
+33:     /// `t_mtp`: the MTP's window; `lookup_k`: the lookup proposal's length (0 = none); `match`: its match length.
+34:     Pick choose(int t_mtp, int lookup_k, int match) const;
+35:     /// After the round: the window it used, the drafts accepted, and the round's time (verify + commit + draft).
+36:     void observe(bool lookup, int t, int accepted, int match, double round_ms);
+37: 
+38:     /// --lookup-chain: how many of `k_avail` lookup tokens to append after an MTP window of `t_mtp` tokens whose
+39:     /// drafts all hold with probability `p_mtp` (estimated from the draft layer's own probabilities): the k with the

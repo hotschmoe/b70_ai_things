@@ -1,0 +1,35 @@
+{
+  "status": "FROZEN",
+  "files": [
+    {
+      "path": "README.txt",
+      "bytes": 6107,
+      "sha256": "f7b91e709ec035950924b3804ffa3ec90eb45488c3bad41cbed997d9188f027c"
+    },
+    {
+      "path": "analyze.py",
+      "bytes": 4619,
+      "sha256": "40e5642983bbeaa7acc2b796976f7ae9c37a5baf32cf003206c5d592ef60aae4"
+    },
+    {
+      "path": "findings.json",
+      "bytes": 36118,
+      "sha256": "84a3635551b2ca7ee9cb0c895df129b05c33446d6576fd433986bff763beb397"
+    },
+    {
+      "path": "mode0-request-native-excerpt.txt",
+      "bytes": 4169,
+      "sha256": "a0d59f5062c5383d827ceefb19efd403f45a919a2513202290051310b30d8df1"
+    },
+    {
+      "path": "mode1-request-native-excerpt.txt",
+      "bytes": 4245,
+      "sha256": "52fe858e4d8a95e76e65bafd18ad8cac7d46182f7024a0ba2b9949b0a40a34c1"
+    },
+    {
+      "path": "source-excerpts.txt",
+      "bytes": 20700,
+      "sha256": "4fefefccaa04dbdada9869efb1ff1d18f82c347f92fcfd1a676543d4ee3f4866"
+    }
+  ]
+}

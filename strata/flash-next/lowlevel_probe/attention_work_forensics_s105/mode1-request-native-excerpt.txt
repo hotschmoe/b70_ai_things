@@ -1,0 +1,133 @@
+strata trace: request 4059 0
+strata trace: prompt start 4058 -1
+strata batch prefill quantum: allocated 12288 requested 0 effective 12288 eligible 0 from 0 to 4052
+strata trace: prompt chunk 0 of 4052
+strata: prefill attention value pipeline selected (nq32 cap2051 INT8 page4)
+strata trace: read 4052 tokens (batched) in 3074.4 ms
+strata trace: read 6 tokens (windows) in 39.8 ms
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 4058 1
+strata trace: window 4059 3
+strata verify: captured the 3-token window (upload no error, sync no error)
+strata trace: window 4062 2
+strata verify: captured the 2-token window (upload no error, sync no error)
+strata trace: window 4064 4
+strata verify: captured the 4-token window (upload no error, sync no error)
+strata trace: window 4065 4
+strata trace: window 4067 2
+strata trace: window 4069 2
+strata trace: window 4071 3
+strata trace: window 4072 1
+strata trace: window 4073 1
+strata trace: window 4074 4
+strata trace: window 4078 3
+strata trace: window 4079 1
+strata trace: window 4080 2
+strata trace: window 4082 1
+strata trace: window 4083 2
+strata trace: window 4084 1
+strata trace: window 4085 1
+strata trace: window 4086 4
+strata trace: window 4088 4
+strata trace: window 4092 3
+strata trace: window 4093 2
+strata trace: window 4094 2
+strata trace: window 4096 2
+strata trace: window 4098 3
+strata trace: window 4099 1
+strata trace: window 4100 2
+strata trace: window 4102 4
+strata trace: window 4106 3
+strata trace: window 4109 4
+strata trace: window 4113 4
+strata trace: window 4117 4
+strata trace: window 4121 1
+strata trace: window 4122 1
+strata trace: window 4123 4
+strata trace: window 4127 4
+strata trace: window 4130 1
+strata trace: window 4131 4
+strata trace: window 4134 2
+strata trace: window 4136 4
+strata trace: window 4140 3
+strata trace: window 4142 4
+strata trace: window 4144 4
+strata trace: window 4148 4
+strata trace: window 4151 1
+strata trace: window 4152 4
+strata trace: window 4156 3
+strata trace: window 4159 4
+strata trace: window 4163 4
+strata trace: window 4167 1
+strata trace: window 4168 4
+strata trace: window 4172 4
+strata trace: window 4174 4
+strata trace: window 4178 1
+strata trace: window 4179 3
+strata trace: window 4182 4
+strata trace: window 4183 4
+strata trace: window 4185 4
+strata trace: window 4186 2
+strata trace: window 4188 4
+strata trace: window 4192 4
+strata trace: window 4196 4
+strata trace: window 4199 4
+strata trace: window 4201 2
+strata trace: window 4202 4
+strata trace: window 4203 2
+strata trace: window 4204 4
+strata trace: window 4206 4
+strata trace: window 4209 4
+strata trace: window 4210 4
+strata trace: window 4214 4
+strata trace: window 4218 4
+strata trace: window 4222 4
+strata trace: window 4224 2
+strata trace: window 4226 2
+strata trace: window 4227 2
+strata trace: window 4229 4
+strata trace: window 4232 4
+strata trace: window 4234 1
+strata trace: window 4235 1
+strata trace: window 4236 1
+strata trace: window 4237 2
+strata trace: window 4239 3
+strata trace: window 4242 1
+strata trace: window 4243 3
+strata trace: window 4245 4
+strata trace: window 4247 4
+strata trace: window 4248 4
+strata trace: window 4251 1
+strata trace: window 4252 2
+strata trace: window 4254 1
+strata trace: window 4255 1
+strata trace: window 4256 2
+strata trace: window 4258 1
+strata trace: window 4259 2
+strata trace: window 4261 4
+strata trace: window 4265 3
+strata trace: window 4266 1
+strata trace: window 4267 3
+strata trace: window 4268 1
+strata trace: window 4269 4
+strata trace: window 4273 4
+strata trace: window 4277 3
+strata trace: window 4279 4
+strata trace: window 4283 2
+strata trace: window 4285 2
+strata trace: window 4286 1
+strata trace: window 4287 1
+strata trace: window 4288 1
+strata trace: window 4289 1
+strata trace: window 4290 1
+strata trace: window 4291 4
+strata trace: window 4295 3
+strata trace: window 4296 2
+strata trace: window 4298 1
+strata trace: window 4299 4
+strata trace: window 4303 2
+strata trace: window 4305 4
+strata trace: window 4309 3
+strata trace: window 4311 3
+strata serve: prompt 4059 tokens = 0 reused + 4059 read in 3366 ms (1205.8 tok/s), 256 generated in 3755 ms (68.2 tok/s), drafts accepted 136 of 205, 1 checkpoints
+strata serve: suffix drafts: 4 windows, 7 of 10 drafts accepted

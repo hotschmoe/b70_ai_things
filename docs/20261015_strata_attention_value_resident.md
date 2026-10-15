@@ -99,3 +99,26 @@ Final runtime:
 `attn-value-resident-s94-serving/{root-runtime-decision,comparison}.json`.
 Final postdisposition:
 `attn-value-resident-s94-post-reviews-20261015/root-post-resolution.json`.
+
+
+## S105: retained-log work forensics
+
+Both S94 first4K request logs contain120 verify windows. Their first width
+difference is position4078: OFF4 versusON3; the second is4106, again4
+versus3. Summing T-1 reproduces207/205 exactly. The position sequences
+rejoin at4121. Suffix offers12/10 account for the aggregate difference,
+but the logs do not identify individual suffix windows, MTP probabilities
+or policy decision inputs. Causality remains unresolved and S94 stays
+FAILED_NATIVE_WORK_MATCH/defaultOFF.
+
+The exact S94-pinned SYCL caller permits a timing-trained suffix policy
+after confidence gating. Current policy source illustrates that mechanism
+but is not independently bound to the retained S94 object. Existing flags
+can remove both selection paths for a NEW bounded comparison: BOTH arms
+--suffix-draft 0 --lookup-chain 0 --spec 4 --mtp-max-t 4 --spec-min-p 0,
+including any request-level spec_min_p override. This requests T4 except
+the initial T1. Preserve exact work/output/identity/teardown/health gates.
+A pass would qualify that fixed-work configuration, not explain or clear
+S94's adaptive run. No serving test was run by this forensic stage.
+
+[Exact excerpts, pinned sources and findings](../strata/flash-next/lowlevel_probe/attention_work_forensics_s105/README.txt).

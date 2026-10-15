@@ -1,0 +1,53 @@
+{
+  "status": "PASS_EXACT_COPIES",
+  "files": [
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s94-work-forensics-20261015/README.txt",
+      "destination": "README.txt",
+      "bytes": 6107,
+      "sha256": "f7b91e709ec035950924b3804ffa3ec90eb45488c3bad41cbed997d9188f027c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s94-work-forensics-20261015/analyze.py",
+      "destination": "analyze.py",
+      "bytes": 4619,
+      "sha256": "40e5642983bbeaa7acc2b796976f7ae9c37a5baf32cf003206c5d592ef60aae4"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s94-work-forensics-20261015/findings.json",
+      "destination": "findings.json",
+      "bytes": 36118,
+      "sha256": "84a3635551b2ca7ee9cb0c895df129b05c33446d6576fd433986bff763beb397"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s94-work-forensics-20261015/manifest.json",
+      "destination": "manifest.json",
+      "bytes": 970,
+      "sha256": "9e7bc345737e671844b04103c23688796be5441994b1edd057f26bfb7d359909"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s94-work-forensics-20261015/mode0-request-native-excerpt.txt",
+      "destination": "mode0-request-native-excerpt.txt",
+      "bytes": 4169,
+      "sha256": "a0d59f5062c5383d827ceefb19efd403f45a919a2513202290051310b30d8df1"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s94-work-forensics-20261015/mode1-request-native-excerpt.txt",
+      "destination": "mode1-request-native-excerpt.txt",
+      "bytes": 4245,
+      "sha256": "52fe858e4d8a95e76e65bafd18ad8cac7d46182f7024a0ba2b9949b0a40a34c1"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s94-work-forensics-20261015/root-decision.json",
+      "destination": "root-decision.json",
+      "bytes": 952,
+      "sha256": "4eb80753342cb5a05b8e09565acf36144dfb68fa0fbd4b49a9609b0ddf874aa7"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s94-work-forensics-20261015/source-excerpts.txt",
+      "destination": "source-excerpts.txt",
+      "bytes": 20700,
+      "sha256": "4fefefccaa04dbdada9869efb1ff1d18f82c347f92fcfd1a676543d4ee3f4866"
+    }
+  ]
+}

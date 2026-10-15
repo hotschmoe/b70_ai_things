@@ -24772,3 +24772,23 @@ No new serving/default/cache promotion; S30 retained. Clarify S95
 broadnonvocabMMVQ12.680488ms includes native10.745196ms+IQ3S path.
 Evidence: strata/flash-next/lowlevel_probe/paired_graph_api_s103/ and
 docs/20261015_strata_graph_capture_and_bottlenecks.md.
+
+
+## 2026-10-15 S105: S94 work mismatch narrowed with retained logs
+
+CONFIG -> Read-only first4K OFF/ON S94 native/API/config files and pinned
+SYCL caller, no GPU/build/model read/new trace. Native-work gate retained.
+COMMAND -> Small-file forensic parser plus root independent raw-excerpt
+window sum/difference checks. Exact source/input hashes retained. Initial
+parser slice assertion excluded later OFF requests before author freeze.
+RESULT ->120windows each; first width divergence4078 OFF4/ON3, second
+4106 OFF4/ON3, sum(T-1)207/205; positions rejoin4121. Suffix offers12/10
+account total delta, but exact suffix windows/probabilities/policy inputs
+are absent. Pinned caller invokes timing-trained suffix policy after
+confidence gating; current policy implementation not separately object-bound.
+VERDICT -> Cause unresolved; keep S94 failed/defaultOFF. Existing BOTH-arm
+flags suffix-draft0/lookup-chain0/spec4/mtp-max-t4/spec-min-p0 permit one
+NEW fixed-work4K discriminator if prefill resumed; request override must
+also be0. No gate relaxation or retrospective S94 clearance. Evidence:
+strata/flash-next/lowlevel_probe/attention_work_forensics_s105/ and
+docs/20261015_strata_attention_value_resident.md.
