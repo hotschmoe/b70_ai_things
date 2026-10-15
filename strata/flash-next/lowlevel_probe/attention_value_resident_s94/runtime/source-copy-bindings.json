@@ -1,0 +1,32 @@
+[
+  {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-serving/harness-prep/client.py",
+    "sha256": "dcda3099b888e44c903579fd8953c9ca801d7e61ecea78a81dc502890c81f603",
+    "copy": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/harness-prep/client.py"
+  },
+  {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-serving/harness-prep/compare.py",
+    "sha256": "fcc24214c3e3816ab55d37e70e2d48144ddf8a1032d13b33c4c18d4eb9f8bd33",
+    "copy": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/harness-prep/compare.py"
+  },
+  {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-serving/harness-prep/launch_stage.sh",
+    "sha256": "b2e23db0bd1bddb9ab35967410100759c36b5316c7e1deda2f6cc9e1fb2d2080",
+    "copy": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/harness-prep/launch_stage.sh"
+  },
+  {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-serving/harness-prep/make_configs.py",
+    "sha256": "c9999a6498ec8ea57eafe8b86b5fc2b647b3877fe7215001c0bfdefef83a54d9",
+    "copy": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/harness-prep/make_configs.py"
+  },
+  {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-serving/harness-prep/start_arm.py",
+    "sha256": "0fee5d95517826aaabfa6201fccb57e20dd5b13af5783f6346ddb7d6c642fb82",
+    "copy": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/harness-prep/start_arm.py"
+  },
+  {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-serving/harness-prep/stop_and_health.py",
+    "sha256": "2a9366d86899ba17818df2248ffeb27bf7d92944c6ff42d3b037fb7f830b77eb",
+    "copy": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/harness-prep/stop_and_health.py"
+  }
+]

@@ -1,0 +1,118 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 75.57064997800626,
+  "launch_exception": null,
+  "source_packet_sha256": "36807d614c7433dbcaf1baa6e98e7d95c62a86a9e2690da0e2c7b7c3a605faac",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 74476,
+      "stop_reason": "end_turn",
+      "session_id": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "total_cost_usd": 0.63733225,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 19705,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 4861,
+        "output_tokens_details": {
+          "thinking_tokens": 2961
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 19705,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 4861,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 19705,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 19705
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 2,
+          "outputTokens": 4861,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 19705,
+          "webSearchRequests": 0,
+          "costUSD": 0.63733225,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "thinkingTokens": 2961,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "Review done from the frozen packet only. No tools, builds or GPU use.\n\n## S93 disposition\n\n**Exact disposition: FAILED_ACTIVATION, candidate unreachable under the production caller.** The ON arm never executed the candidate kernel, so there is no candidate serving result of any kind. It is not neutral, not a numerical failure, not a regression, and not a hardware fault. The valid residue of S93 is:\n\n- The main binary (sha 551cca41) passes all OFF functionals and six prefills with normal teardown and full health. That is a baseline qualification of the build, not of the candidate.\n- The four ON responses matched OFF byte for byte with marker 0. That proves only that the untaken branch is inert, which the source already showed.\n\n**Root cause is source-proved, not inferred.** The engine argv has no --kv-resident, so the default of zero reaches qsa_set_kv_resident, kv_plan returns early at layer.cpp:727 with mode 0 and slots equal to pages, and qsa_state_init stores mode 0 at layer.cpp:793. The guard at prefill.cpp:3335 requires mode 1. The predicate is false for every production request.\n\n## S94 CPU source-apply and build: GO, with conditions\n\nThe patch is a caller predicate change only and the resident branch is sound against the pinned source:\n\n- In mode 0 kv_plan sets slots equal to pages, so the slots check holds. The elastic field starts at -1 and only changes when kv_grow is on, which generate.cpp:3936 disables under --batch 2 anyway. The hybrid K8V4 path clears kv_int8, so it stays excluded.\n- The identity page table is uploaded and waited at init, and mode 0 appends land on the same in-order prefill queue before attention. The ordering argument that held for the staged pool holds here.\n- The fallback loop is the default path: the XMX prompt kernel returns false unless STRATA_PROMPT_ATTN_XMX is set, so production does reach the batch loop.\n\nConditions for GO:\n\n1. Apply only to the pinned prefill.cpp (sha b6f7d1e5) and confirm the hunk lands at line 3335 with no fuzz.\n2. Build only the prefill TU, prefill archive and main link. Verify the attention object and kernel archive hashes are byte identical to the S93 values before linking.\n3. Re-run the static host metadata and image ownership check on the new binary. Reuse the S93 image hash resource if it matches. Any mismatch is a HOLD, not a reason to rebuild attention.\n4. Update the header comment to the resident identity pool contract in the same change. Do not rebuild the attention TU for a comment.\n\nOne residual item is source reasoning, not executed evidence. The candidate kernel was audited against the staging pool. The resident pools come from qsa_attn_pools with the same format and an identity table, so the published data contract is the same, but nobody has run it there. That is what the GPU gate is for.\n\n## Future GPU gate, separate\n\nFinite serving on the new binary, both arms, same flags, same warm pairs and same strict gates. The activation assertion must be placed correctly:\n\n- The coding warm pairs cannot activate. A 107-token prompt never reaches width 2051, so marker must be 0 in both arms. Treat a nonzero marker there as a predicate bug.\n- The first eligible request is the first 4K prefill on the ON arm. Its later 32-row batches start at full width. Assert marker greater than 0 after that request and stop the run immediately if it is 0.\n\nNo 200k or cache rerun is needed for a caller discriminator. Do not weaken tolerances, do not run a profiler in the clean measurement.\n\nExpectation setting: this is a prefill-only kernel. The user's stated priorities are decode, concurrency and MTP, and TTFT is diagnostic. Even a clean win here is bounded by the private 8 to 9 percent on the unmasked attention portion of 32K prefill and the masked rows were slower. A GO on S94 is justified because it is cheap, not because it moves the headline targets.\n\n## Wasted dev-loop critique\n\n- The 36 private cases, the CAP2051 seeds, the 174 second main build and two serving arms all ran before anyone traced argv to planner to state to guard. A ten minute static read of layer.cpp:722 and the engine argv would have ended S93 before the build.\n- The ON arm continued to the 32K request after the first 4K prefill showed marker 0. Recording absence instead of forcing the check wasted one 32K prefill and the teardown cycle. The activation assertion belongs on the first eligible request, as written above.\n- The S92 chunk and merge speedups were reported in a form that invites reading them as serving gains. They are single process, synthetic pool numbers and should stay labelled as such.\n\nWorkflow fix is a rule, not a framework: before serving any guarded candidate, write the guard predicate's truth table against the exact production argv and cite the source lines. That table becomes part of the frozen packet.\n\n## Decode profile audit\n\nThe proposed single current C2 trace is useful and does not repeat the rejected S7, S38, S79 or S80 arms. Its value is attribution, not speed: current dense, shared and HC kernels, submit and readiness, with CPU markers in the same collection. The guard rails in the packet are right, in particular keeping VERIFY_PROFILE absent, waiting for the full ring dump after both slots idle, and refusing a steady clock bridge without a fresh validated MONOTONIC calibration.\n\nSequence it after the S94 serving decision, not alongside it. It is a GPU slot and the user's GPU time is the scarce resource. No profile result or GPU approval is granted here.",
+      "ttft_ms": 45867,
+      "type": "result",
+      "duration_ms": 74587,
+      "uuid": "e8c0aa97-7e61-47db-8d85-941d2eb07c61",
+      "ttft_stream_ms": 1836,
+      "time_to_request_ms": 106,
+      "first_content_frame_ms": 1837,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

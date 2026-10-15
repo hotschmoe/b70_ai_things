@@ -1,0 +1,10 @@
+{
+  "status": "APPLIED_EXACT_REVIEWED_CALLER_ONLY_PATCH",
+  "patch_sha256": "67e608b6df9d10bf4384fd68876d5879cc220cadaae0caa97ba97debed229ecf",
+  "prefill_after_sha256": "2a1d8faa8bd58f112f4555a5ba7ab988b143fdb773106c8907903f0ecfafe16e",
+  "new_source_only_one_file": "sycl/src/prefill/prefill.cpp",
+  "HEAD": "296b59d2f73c8f04a805df29c2fa97655adace78",
+  "upstream_PR_refresh": "main296b59d2/PR2511open91b02a5c/recutita1open78cea7a1/recutita2open69dee3c3 unchanged atrootrefresh",
+  "build_executed": false,
+  "GPU_GO": false
+}

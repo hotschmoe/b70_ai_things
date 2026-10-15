@@ -1,0 +1,48 @@
+S94 RESIDENT ATTENTION VALUE: COMPACT POSTDECISION REVIEW
+Resume only your own actual S93-post/S94-source session. Root supplies the
+CLOSED runtime packet below; this prefix contains NO completed S94 result.
+No tools, hooks, builds, GPU, source changes, new experiments or other-model
+answers. Respond <=600 words. Start with disposition and material blockers,
+then evidence limits and dev-loop/pivot advice. Do not resend old source.
+
+Decide from exact CLOSED evidence whether the bounded S94 candidate should
+remain defaultOFF/unintegrated, merits a specific opt-in disposition, or is
+unqualified because activation/work/output/identity/health gates failed.
+No invented minimum-percent gate, causal hardware explanation, population
+significance, promotion, extra retest, normalized unmatched work or aggregate
+speed statistic when a required check fails. Distinguish no effect, failed
+activation, numerical mismatch, health failure and measured regression.
+
+ROOT FINAL PACKET DESIGN (<=15000 ASCII bytes, filled only after closure):
+- Exact build/binary/caller source and unchanged attention object/archive/
+  image/metadata binding hashes, final six-controller pins, matched config.
+- S93 was failed activation, not candidate serving speed evidence. S94 only
+  corrected resident-mode0 eligibility; unchanged numerical body/resources.
+- Fixed VALUE0/1; promptXMX0/KVROT0/QSA0/Q6center0, EP149/363/all24576,
+  C12288/Q0/FIRST0/DirectPLE, depth2/headpair/spec4 and two200k slots.
+- OFF+ON warm107/256 each, matched text/SSE/usage/native paired work/captures,
+  no candidate marker during warm. Six OFF/ON prefill observations:
+  p4096-0..2 actual4059 and p32768-0..2 actual32728,256outputs/cache<=64;
+  exact request/text/SSE/usage/native work/parts and per-request markers.
+  Include actual paired percent changes for each request, per-shape bounded
+  descriptive summaries ONLY if all checks pass; no missing/failed samples.
+- First4K ON exact marker once, all later prefills/final once; OFF never.
+  Host activation does not independently count GPU calls/every-layer use.
+- All comparison checks, functions, TERM->QUIT, prestop Running/OOM state,
+  fullCID+NAMEgone, wrapper exits, both-card+compiled posthealth, exact
+  failures/early stop if any, no automatic retries/remaining requests.
+- Fixed order OFF then ON, three fresh samples/shape/arm, ONE process/arm;
+  client metrics/native prompt spans not independent population/clean GPU
+  kernel attribution. SSE chunks may contain multiple tokens, not tokenITL.
+- Root disposition and setup/build/lease/closure costs; no daily restore,
+  no repeated primitive math proof. Valid numerical evidence was reusable;
+  the S93 waste was integration before full caller-reachability proof.
+- Proposed pivot ONE CURRENT C2 trace after this decision, not execution GO:
+  dense/shared/HC and readiness profiling, unitrace before first capture,
+  HOST_BOUNDARY1/TRACE1/VERIFY_PROFILE absent, no generation warmup,
+  complete8192 ring/dropped0/idle snapshot, retain cold/solo/tail; fresh
+  clocks remain unjoined unless native steady identity is proved.
+
+Prefer the useful next decision over another review/test matrix. Profiling
+can rank observed operations/associations, not establish physical idle,
+bandwidth, additive wait/service budgets or removable-gap causality.

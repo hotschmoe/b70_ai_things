@@ -1,0 +1,33 @@
+{
+  "status": "ROOT_FRESH_CONTINUITY_AUDIT_RECENT_S93_FULL_HEALTH_REUSE",
+  "utc": "2026-10-15T20:11:09.619285+00:00",
+  "model_continuity": [
+    {
+      "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+      "resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+      "stat": {
+        "dev": 44,
+        "ino": 1156777,
+        "size": 47039860096,
+        "mtime_ns": 1792062519977528586
+      }
+    },
+    {
+      "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+      "resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+      "stat": {
+        "dev": 44,
+        "ino": 1068321,
+        "size": 28800138432,
+        "mtime_ns": 1791869062502802041
+      }
+    }
+  ],
+  "health_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-serving/mode1/post-health.json",
+  "health_sha256": "94cfd68feb3a0c44e2074ab479d33f42446c923702e08323a272f1760e70465e",
+  "card_health_log_sha256": "cc47ac4c47111988118d8019ee4a97e99ef8f70e409a5ea5fb27728f37c1504a",
+  "collective_health_log_sha256": "6bf08f30da5c3b36d4e768cf95ef6b0d0282ff673abd6a36487ad4a035aca40b",
+  "root_boot_kernel_exact": true,
+  "revalidation": "Root sinceS93fullhealthyclosure performed source/CPU-only builds/audits; allthreeagents source/CPUonly, sharedlognointerveningGPU/stackchanges, currentCPU/GPUleasesfree/dockeronlyforeignmonitoring. No exhaustiveunloggedforeignGPUproof claimed.",
+  "GPU_GO": false
+}

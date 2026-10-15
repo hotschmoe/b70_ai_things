@@ -1,0 +1,50 @@
+# S94 post-decision review
+
+## Disposition
+
+**The candidate is unqualified because the native-work identity gate failed after activation was confirmed.** Keep it default OFF and unintegrated, and park the prefill value-domain branch. I agree with root's disposition. Here is how this result differs from the other possible outcomes:
+
+- **Not a no-effect result.** No paired comparison exists.
+- **Not a numerical mismatch.** No logit, KV or activation readback was done. Output, usage and accepted count were identical.
+- **Not a measured regression.** There is no timing evidence.
+- **Not a health failure.** Both arms quit normally, CID and name were gone, wrappers exited 0, and card plus collective post-health passed.
+- **It differs from S93.** S93 failed activation. S94 activated: the host marker fired once in ON, never in OFF, and the API and native draft counts agree.
+
+**Material blocker:** offered drafts were 207 (OFF) vs 205 (ON) on p4096-0. Under the strict gate this alone ends the comparison. It is correct that no other ON samples, percentages or summaries were produced. The prompt spans of 3379.1 ms vs 3366.2 ms are raw retained data only, not speed evidence.
+
+## Evidence limits
+
+- The host marker shows the candidate path was entered once. It does not count GPU dispatches or show which layers used it.
+- Identical output and identical accepted count (136) do not prove internal state equivalence.
+- The cause of the 207/205 split is unresolved. Do not record it as a numerical failure, as harmless nondeterminism, or as a regression.
+- **Context root should record, but not use to relax the gate:**
+  - The S93 baseline-path arms (ON was inactive) both offered 205 on this same p4096-0 request.
+  - The S94 OFF arm, a different binary on the same baseline path, offered 207.
+- So the offered draft count already varied across processes on the baseline kernel. That makes it a fragile strict discriminator. It does not clear the candidate: no OFF/OFF control in the same session exists.
+- The synthetic 36-case and CAP2051 numerical proofs remain valid kernel evidence. They do not certify actual production pools.
+
+## Dev-loop lessons
+
+1. **S94 itself was efficient.** It was a caller-only change, reused the attention object, archive and images byte-exact, rebuilt only one TU plus the link (175 s), skipped any numerical rerun, and aborted at the first gate in about 7 s of client time. The remaining cost was mostly lease, health and teardown overhead.
+2. **The real gap is gate design.** A strict equality gate on a quantity never shown to be repeatable baseline-vs-baseline turns noise into a hard stop. Two rules for any future identity gate:
+   - Before using a native counter like `draft_n` as a strict gate, establish whether it repeats across processes, from existing logs where possible.
+   - Otherwise gate on output, usage and accepted work, and treat offered drafts as diagnostic only.
+   - Do not apply either rule retroactively to S94.
+3. **The prefill payoff ceiling was low.** The upside is bounded to one attention sub-stage of prefill and does not touch decode or per-stream rate, which are the unmet goals (about 54\u201356 vs 150+ tokens/s per stream). Parking the branch is the right allocation, not just caution.
+4. **Do not reopen without a reason.** Reopen only if a future trace shows 32K prefill attention as a dominant bounded cost. Even then, start with the repeatability control above, not a rerun.
+
+## Pivot: current C2 trace
+
+**I endorse one source-reviewed current C2 trace as the next decision input.** It is not execution-approved from this packet. The setup:
+
+- **Binary and flags:** audited d94e96ca with all candidates OFF (VALUE0, QSA0, Q6center0), same fixed flags.
+- **Injection:** the profiler is injected before the first generation and before graph capture, with no generation warm-up.
+- **Workload:** one paired 107-token coding request with 64 output tokens per slot.
+- **Profiling flags:** `TRACE1` and `HOST_BOUNDARY1` on, `VERIFY_PROFILE` absent.
+- **CPU ring:** complete ring, `dropped0`, count \u2264 8192, and both slots idle before the snapshot. The source has no footer, so count and idle state are the completeness proof.
+- **Retained data:** cold, solo and tail data kept.
+- **Parsing:** one raw parse after stop.
+
+**Scope of claims:** use ordinal rankings only. Do not join CPU and GPU clocks while native steady-clock identity is unproved, do not join across cards, and make no physical-idle, additive-budget or removable-gap claims.
+
+**Decision output:** pick exactly one next mechanism. Choose dense/shared/HC/head work if it dominates. Choose EP/PLE readiness if the recurring readiness association dominates. If too few full S6/A2 cycles are captured, the result is insufficient and should not be retried. Then make the build/GPU go/no-go separately.

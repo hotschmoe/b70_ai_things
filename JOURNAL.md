@@ -24503,3 +24503,36 @@ Frozenstaticmanifestc0d90bee retained; separate closedruntime17754fe9.
 Historical170 operationtail exact; S30recovery/absolutegoals unchanged.
 Report: docs/20261015_strata_attention_value_serving.md; smallrecords:
 strata/flash-next/lowlevel_probe/attention_value_s93/README.md.
+
+
+## 2026-10-15 - S94 resident caller activates but native work differs
+
+CONFIG -> Caller-onlypatch67e608, complete nonelastic resident identity
+pages plus staged domain; existing INT8/full32/cap2051 guards/defaultOFF.
+SameNEWd94e96ca binary0/1, explicit XMX0/ROT0, other controls matched.
+COMMAND -> OneprefillTU/archive/mainlink175s; attention06eb/kernel5d465
+unchanged. Actual final13tag/fourInfo/name/image audit3s PASS; allfourfull
+images exactS93, existingISA/resources reused, no36/CAPrerun or newdecode.
+Source Opus56.118s/Fable75.571s/rootfullread conditions resolved.
+RESULT -> OFFsixprefills/functionalsPASS; bothwarm output/work/captureMATCH.
+FIRST ON4K HOSTmarker1, request/text/SSE/usage/outputSHA4cc1afba match;
+cache0/prompt4059/predicted256/accepted136 match. Offered draft_n207OFF vs
+205ON in BOTHAPI/native summaries. ONclientexit1/7s stopsnativeworkgate;
+no remainingONprefills/functionals/retry, timed_summaryNULL. Bothnormal
+QUIT/fullCID+NAMEgone/wrapper0/percard+compiledposthealth0; ONclosure59s.
+VERDICT -> FAILED_NATIVE_WORK_MATCH, keepdefaultOFF/unqualified/parkprefill.
+Not candidate numericalfailure, measuredregression or benignnondeterminism;
+equaloutput doesnot prove internalnumeric/stateequivalence. Cause unresolved.
+Pivot separatelyprepared currentC2operation/readiness trace candidatesOFF,
+not repeatnumerical/cache/200k campaigns. Actual post Opus34.340s/Fable20.127s
+accept keepOFF/park/pivot; root full-read/corrections closed. Targets/S30
+recovery unchanged; historical170arrays/rollups/meta byteexact.
+Staticmanifest31e3152f preserved; runtime1e0d880f/112files/2110297B.
+Onecurationmissingexcerpt fixed versionedcopyonly, no rawrehash/GPUretry.
+Report: docs/20261015_strata_attention_value_resident.md; smallrecords:
+strata/flash-next/lowlevel_probe/attention_value_resident_s94/README.md.
+Postconsultations resume each model's own source session; manifest4d7171f5.
+ExistingS93inactive0/1 draft205/205 vsS94OFF207/ON205 allaccepted136/outputSHA
+exact; DIFFERENTbinary/processcontexts, not matchedOFF/OFF/control orbenign
+causeproof. Currentgatenotrelaxed. Productionpooloperatororacle deferred;
+wouldtouchGPU and require applicableGPU+CPUleases/health, not CPUonly.

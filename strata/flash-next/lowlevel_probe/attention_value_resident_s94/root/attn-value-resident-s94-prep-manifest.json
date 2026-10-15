@@ -1,0 +1,56 @@
+{
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-prep",
+  "stage": "S94",
+  "status": "FROZEN_SOURCE_ONLY_UNAPPLIED",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3650,
+      "sha256": "92fd790a412e3c69bf7e7e027ea3a3dda072a3b97e5c8d80d117eef6eb3fa535"
+    },
+    {
+      "path": "experimental-attn-value-resident-s94.patch",
+      "bytes": 1442,
+      "sha256": "67e608b6df9d10bf4384fd68876d5879cc220cadaae0caa97ba97debed229ecf"
+    },
+    {
+      "path": "measured-S93-config.json",
+      "bytes": 2399,
+      "sha256": "a1862c96dd3f5b830ae4fc07f5935bdca1df90a1106d42b2dd260ae2a3dc8731"
+    },
+    {
+      "path": "measured-S93-native-identity.json",
+      "bytes": 1189,
+      "sha256": "9c14489e2a524c2e7f605a714776df34ded7b5530d33558c8a144dd8b7b9765f"
+    },
+    {
+      "path": "prefill.candidate.cpp",
+      "bytes": 303875,
+      "sha256": "2a1d8faa8bd58f112f4555a5ba7ab988b143fdb773106c8907903f0ecfafe16e"
+    },
+    {
+      "path": "prefill.original.cpp",
+      "bytes": 303635,
+      "sha256": "b6f7d1e50073ba1dbc7f9dacc2ab2000e1237fa2b33220beb7cff25908062162"
+    },
+    {
+      "path": "review-packet.txt",
+      "bytes": 13661,
+      "sha256": "82efd0d445e0511f75473dafc3693ef4f903794535d2183e5ab09d63e6920c57"
+    },
+    {
+      "path": "source-excerpts.txt",
+      "bytes": 19425,
+      "sha256": "19246e25e44d4863185a8da11f58f5b9bc00dd892b6220826647dd56b24f1b32"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 2951,
+      "sha256": "275f488f0441ad250f6cd6dbb45b4bf8a7460f660b2684626eb026eb6138ac45"
+    }
+  ],
+  "git_apply_check": "PASS",
+  "only_functional_file": "sycl/src/prefill/prefill.cpp",
+  "math_wrapper_header_attention_unchanged": true,
+  "no_build_GPU_models_source_apply": true
+}

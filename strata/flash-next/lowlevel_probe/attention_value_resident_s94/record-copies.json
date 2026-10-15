@@ -1,0 +1,201 @@
+{
+  "status": "EXACT_COMPLETED_STATIC_COPIES_SERVING_PENDING",
+  "copies": [
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-prep/README.md",
+      "destination": "source/README.md",
+      "bytes": 3650,
+      "sha256": "92fd790a412e3c69bf7e7e027ea3a3dda072a3b97e5c8d80d117eef6eb3fa535"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-prep/experimental-attn-value-resident-s94.patch",
+      "destination": "source/experimental-attn-value-resident-s94.patch",
+      "bytes": 1442,
+      "sha256": "67e608b6df9d10bf4384fd68876d5879cc220cadaae0caa97ba97debed229ecf"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-prep/source-pins.json",
+      "destination": "source/source-pins.json",
+      "bytes": 2951,
+      "sha256": "275f488f0441ad250f6cd6dbb45b4bf8a7460f660b2684626eb026eb6138ac45"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-prep/source-excerpts.txt",
+      "destination": "source/source-excerpts.txt",
+      "bytes": 19425,
+      "sha256": "19246e25e44d4863185a8da11f58f5b9bc00dd892b6220826647dd56b24f1b32"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-prep/measured-S93-config.json",
+      "destination": "source/measured-S93-config.json",
+      "bytes": 2399,
+      "sha256": "a1862c96dd3f5b830ae4fc07f5935bdca1df90a1106d42b2dd260ae2a3dc8731"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-prep/measured-S93-native-identity.json",
+      "destination": "source/measured-S93-native-identity.json",
+      "bytes": 1189,
+      "sha256": "9c14489e2a524c2e7f605a714776df34ded7b5530d33558c8a144dd8b7b9765f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build/README.md",
+      "destination": "build/README.md",
+      "bytes": 2005,
+      "sha256": "38e4feb3097cbaa8b8b9f4e90cec64676825a7c558bcc45bb0c53a0a72b587bb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build/build.sh",
+      "destination": "build/build.sh",
+      "bytes": 1373,
+      "sha256": "ce47db1ea4bc9e9e1c49eb37806e1c9b74d13a8dc08b2ea342057955e206a010"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build/build-container.sh",
+      "destination": "build/build-container.sh",
+      "bytes": 3673,
+      "sha256": "d39b8e4a59ece60837f40e46bfe41ea6d55a3c916549758c41900bf3e1b4e7ee"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build/expected-applied-source.sha256",
+      "destination": "build/expected-applied-source.sha256",
+      "bytes": 108,
+      "sha256": "f3ac305ff8e3c873890738dcf6233c6ed3f421f012be605fd346d31fb129d96c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build/expected-unchanged-source.sha256",
+      "destination": "build/expected-unchanged-source.sha256",
+      "bytes": 1478,
+      "sha256": "c950469216b95f3b55ccdebb0997d22d8d6d7ab3914ae12134359323eed62660"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build/expected-unchanged-build-inputs.sha256",
+      "destination": "build/expected-unchanged-build-inputs.sha256",
+      "bytes": 1533,
+      "sha256": "94629f1e689cabe314d1438566ca647920e672fd23fab2f01e2ba9aa644c5a0a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build/build/ninja-plan.txt",
+      "destination": "build/build/ninja-plan.txt",
+      "bytes": 1742,
+      "sha256": "66af0e9a5228207571f3beaea3e27064b96fad409c84dcebedf7ca7780c1fd89"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build/build/build-sha256.txt",
+      "destination": "build/build/build-sha256.txt",
+      "bytes": 700,
+      "sha256": "af85e2a5093dbb80239bffe242cdbcc0af8db2faf668c4bde13b4d5537d8f4f5"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build/build/root-build-closure.json",
+      "destination": "build/build/root-build-closure.json",
+      "bytes": 11918,
+      "sha256": "526c82060e95cb57620e3e7e30d34d992e631d283696ff4e165b390c2185239b"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build/build/compiler-version.txt",
+      "destination": "build/build/compiler-version.txt",
+      "bytes": 257,
+      "sha256": "06b5b1015f3c581440fb4cf00258edc0db8d98696ca3252cf69045e1f8c283d4"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-audit-prep/README.txt",
+      "destination": "audit/README.txt",
+      "bytes": 1272,
+      "sha256": "a369d8715981a3b5270d64be1f01a6ea53138773effa2b2c076a2929d8820211"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-audit-prep/audit.py",
+      "destination": "audit/audit.py",
+      "bytes": 11348,
+      "sha256": "fa8c4100bd4c3412f63c71d0c46f8c0ca950505b3e6f384f8b5528f6f9c95f30"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-audit-prep/run.sh",
+      "destination": "audit/run.sh",
+      "bytes": 272,
+      "sha256": "b355cb25efb5d4a0171d2b6067275f2db7b180e435fa4c960e787a47ad8e950f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-audit-prep/facts.json",
+      "destination": "audit/facts.json",
+      "bytes": 12089,
+      "sha256": "73a6047af0292301e20a32adc4bf194d5c574a10a329462c37dfb84db2616476"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-audit-prep/host-binding.json",
+      "destination": "audit/host-binding.json",
+      "bytes": 3923,
+      "sha256": "d2daf441e85f38d6a6ccbdb927168a0d766f70ce80d71d048b11d72b1ab053ab"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-audit-prep/selection.json",
+      "destination": "audit/selection.json",
+      "bytes": 2671,
+      "sha256": "41f3e4743bd2fef65b9fd732af9dd14e72c2200b4d14d9234e33a3a2c0c49803"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-audit-prep/final-facts-manifest.json",
+      "destination": "audit/final-facts-manifest.json",
+      "bytes": 1965,
+      "sha256": "886bb610ca039b92f79a2dfb2bc87c24be22719e4aa694faa8840f458bf06b06"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s93-post-s94-source-reviews-20261015/root-post-source-resolution.json",
+      "destination": "reviews/root-post-source-resolution.json",
+      "bytes": 4451,
+      "sha256": "00e6e44eaa473b551ce36481fb3d8230846c7d64e7655cd4c137291831147614"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s93-post-s94-source-reviews-20261015/claude-opus-5-5/assistant-text.txt",
+      "destination": "reviews/claude-opus-5-5/assistant-text.txt",
+      "bytes": 6871,
+      "sha256": "9789d5a23f459a298a7f85052237dc6c82c6f6a833fc4df0d7c014a91b7dbc26"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s93-post-s94-source-reviews-20261015/claude-opus-5-5/completion.json",
+      "destination": "reviews/claude-opus-5-5/completion.json",
+      "bytes": 10258,
+      "sha256": "a4c65d8ac02196946c390b99174a39ded600d0b70798ad1edcfbb24a1a24091a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s93-post-s94-source-reviews-20261015/claude-fable-5-1/assistant-text.txt",
+      "destination": "reviews/claude-fable-5-1/assistant-text.txt",
+      "bytes": 5505,
+      "sha256": "658888d6350bb88f08b3cc6a07a638d5851cf6704d5b39fd9b1828baa137c736"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s93-post-s94-source-reviews-20261015/claude-fable-5-1/completion.json",
+      "destination": "reviews/claude-fable-5-1/completion.json",
+      "bytes": 8839,
+      "sha256": "02d2730c4e4dd824a77efee0795bcad006e739ee05dd5fd94a11da063a8e0632"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-root-application.json",
+      "destination": "root/attn-value-resident-s94-root-application.json",
+      "bytes": 529,
+      "sha256": "67135ff0357b1aa638d61e46a3ed4f34bc332e1abe6b9df71726e38bad282856"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-prep-manifest.json",
+      "destination": "root/attn-value-resident-s94-prep-manifest.json",
+      "bytes": 1807,
+      "sha256": "0716ff216625e9697a6c79c0e9fe3bee7ff498b0ce09b99e4327be6d26fe5471"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build-recipe-manifest.json",
+      "destination": "root/attn-value-resident-s94-build-recipe-manifest.json",
+      "bytes": 2017,
+      "sha256": "c904569a944f7734d6f40b391852853f05fdce2e0a249e6a61b03b3af4607403"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attention-value-resident-s94-completed-static-manifest.json",
+      "destination": "completed-static-manifest.json",
+      "bytes": 19691,
+      "sha256": "31e3152f0d9d160a8b7ae20ed119f4f09f2669b0cd766b4597b3dadba4ca6a0e"
+    }
+  ],
+  "copy_count": 32,
+  "copy_bytes": 149351,
+  "external_manifest": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attention-value-resident-s94-completed-static-manifest.json",
+  "external_manifest_sha256": "31e3152f0d9d160a8b7ae20ed119f4f09f2669b0cd766b4597b3dadba4ca6a0e"
+}

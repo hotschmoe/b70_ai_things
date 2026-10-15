@@ -1,0 +1,89 @@
+{
+  "status": "ACCEPT_CLOSED_UNMATCHED_WORK_KEEP_DEFAULT_OFF_PIVOT_CURRENT_C2_PROFILE_SOURCE_REVIEW",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-post-reviews-20261015",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-post-reviews-20261015/claude-fable-5-1/assistant-text.txt",
+      "bytes": 3600,
+      "sha256": "2d543b1171f43d01b6bef8354d31adcd7219d2f3ad011855e93bf321475d19c3"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-post-reviews-20261015/claude-fable-5-1/command.json",
+      "bytes": 1227,
+      "sha256": "b87e6e591b0b2ff5361435f015525b28e8ca4809823c71dbce495b92a5f28856"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-post-reviews-20261015/claude-fable-5-1/completion.json",
+      "bytes": 7029,
+      "sha256": "17f64a3c2a2f938b88aa820d5ff5a367597a7b2f28b0fedb39ec4b2605566088"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-post-reviews-20261015/claude-fable-5-1/events.jsonl",
+      "bytes": 12170,
+      "sha256": "6356ed4adfe0e6135cce054b72e3c5ef0a8d7505172483e30824d81621fa0667"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-post-reviews-20261015/claude-fable-5-1/prompt.txt",
+      "bytes": 12100,
+      "sha256": "37ff4f69da21b816ed793d5918ebbc238803c0492b2f8e55fdf8854c3d7e2421"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-post-reviews-20261015/claude-fable-5-1/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-post-reviews-20261015/claude-opus-5-5/assistant-text.txt",
+      "bytes": 4837,
+      "sha256": "d6ffd30c5d22ec4a7171af08c8a993676f181455100c3ce35cc554917802ce41"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-post-reviews-20261015/claude-opus-5-5/command.json",
+      "bytes": 1225,
+      "sha256": "8d2c4025c36a37ef0286c1be20122605cfa3f0a1996604bff5b1ef286320da06"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-post-reviews-20261015/claude-opus-5-5/completion.json",
+      "bytes": 8268,
+      "sha256": "fd8cc2f7d2f6624725d37d4a742cda1822678554c6076f22c2418a50794648a6"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-post-reviews-20261015/claude-opus-5-5/events.jsonl",
+      "bytes": 20148,
+      "sha256": "9fbe1772200e982090c6336e03b9faaffb36308bf25e129291a29f69e475ca1a"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-post-reviews-20261015/claude-opus-5-5/prompt.txt",
+      "bytes": 12100,
+      "sha256": "37ff4f69da21b816ed793d5918ebbc238803c0492b2f8e55fdf8854c3d7e2421"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-post-reviews-20261015/claude-opus-5-5/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-post-reviews-20261015/review-prefix.txt",
+      "bytes": 3315,
+      "sha256": "4bbeb3e1405e5b7fd79323b7f365492d87c0319a805956602027acb4dcc43496"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-post-reviews-20261015/review.py",
+      "bytes": 4694,
+      "sha256": "11019d05ee347353bb226e6a22b2ec6a807d0179abbbeb05c021a4f245f26b97"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-post-reviews-20261015/root-frozen-post-packet.txt",
+      "bytes": 8764,
+      "sha256": "6383222836a334b21f708ae29d0f64cafba6976d773da1fbdce35d7cfdf1bdbe"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-post-reviews-20261015/root-post-resolution.json",
+      "bytes": 5291,
+      "sha256": "2164c6f628d756861916aa717c2e90abbc3c7ad347be41c6f6bf8f4f3052e588"
+    }
+  ],
+  "file_count": 16,
+  "total_bytes": 104768,
+  "scope": "Completed postconsultations ONLY; static/runtime manifests remain separate and unchanged."
+}

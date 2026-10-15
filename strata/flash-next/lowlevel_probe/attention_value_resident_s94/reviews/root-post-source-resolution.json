@@ -1,0 +1,48 @@
+{
+  "status": "ROOT_SOURCE_CONDITIONS_CLOSED_CPU_APPLY_BUILD_GO_GPU_SEPARATE",
+  "utc": "2026-10-15T20:05:20.979049+00:00",
+  "models": {
+    "claude-opus-5-5": {
+      "responding_models": [
+        "claude-opus-5-5"
+      ],
+      "session_ids": [
+        "c26cbc95-bbed-461b-b165-8adee1464b9e"
+      ],
+      "elapsed_s": 56.11799744301243,
+      "exit": 0
+    },
+    "claude-fable-5-1": {
+      "responding_models": [
+        "claude-fable-5-1"
+      ],
+      "session_ids": [
+        "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+      ],
+      "elapsed_s": 75.57064997800626,
+      "exit": 0
+    }
+  },
+  "root_fullread_both_answers": true,
+  "packet_sha256": "36807d614c7433dbcaf1baa6e98e7d95c62a86a9e2690da0e2c7b7c3a605faac",
+  "S93_disposition": "FAILED_ACTIVATION, no candidate servingeffect/numericalfailure/neutrality/regression; bothnormalfullhealthPASS.",
+  "root_source_conditions": {
+    "st_n_pages": "layer.cpp850 assigns pages=p.pages; slots794=p.slots; kv_elastic797=-1 unless grow enabled.",
+    "batch_slot_state": "generate4061..4100 allocates each batch SessionState via session_init; session.cpp117 calls same qsa_state_init for every allocated QSA layer. Main ss initialized3955, sp.init7141 binds main ss, read_part10822 calls sp.run; batch slot sessions also initialized via same identity table path.",
+    "guard_geometry": "PrefillImpl709 attn_batch32 with no assignment/override; cap1208/1211 qsa_selection_width(kTopkMaxCells32768,s)=2048+4-1=2051. Hoststepsfilled2536 for p0+t; qsa.dp.cpp1081..1095 n_kv=pos+1,width=min(n_kv,2051). Fresh4K chunk >2080 contains full32batch starting2080 withwidth2051. Warm107 never reacheswidthcap.",
+    "fallback": "SYCL qsa_prompt_attn_batch2011 tries XMX then2012 returnsfalse; xmx.cpp369..371 defaultmode0 returnsfalse. Source S90actualfull32census confirmsfallback reachable on sameflags. Future startup explicitly pins STRATA_PROMPT_ATTN_XMX0 and STRATA_KV_ROT0 inbotharms, first4KON must emit marker once.",
+    "resident_layout": "layer838..843 allocates k_q/v_q int8 rows*head_dim and k_scale/v_scale uint16 rows*(head_dim/KV_Q8_GROUP), same QsaAttnPools descriptor offsets as staging pools_of810..816 and original/candidate kernel load formula. layer1021..1027 sets only pureINT8 fields for --kvint8; geometry24/2/256/page4 unchanged. Synthetic S92genericpools are not a production stagingobject; exactnewresident integration remains unqualified.",
+    "ordering_and_mapping": "layer966..977 uploads table[i]=i andwaits; Prefill3127..3129 appends same m.cs beforeattention. main_stream=create_queue(true), dpct/device.hpp616 usescreate_in_order_queue withoutDPCT_USM_LEVEL_NONE (notin actualcompileflags). qsa_kv_resolve1033 mode0no-op, qsa_state_zero1015 resetsmaponlymode1; snapshotrestore217..234 transferspooldata then resetsmode1/ringmode2 only, no mode0table remap.",
+    "pool_extent": "At max_context200000/page4 pages50000, fixedslots=pages. kv_grow disabledby --batch2/expertparallel generate3936..3940, guardkv_elastic<0 excludespartialvirtualpools."
+  },
+  "root_resolutions": [
+    "Accept sourceapply/build conditionalGO after aboveSOURCEreads; GPU not approved until newactualfinalhost/imageownership+finitecontroller+healthGO. Reuse entireS93attentionobject/kernelarchive and source/math/wrapper/header exactly. No36/CAPrerun.",
+    "Fableheadercommentrequest deferred: current header staged wording is over-narrow; caller comment and sourceproof document identical completeidentitymapping/publication. Header is unchanged toavoidunnecessaryattentionTUcompile or source/artifactidentity mismatch solelyforcomment. Polish publiccomment with nextfunctionalattentionchange.",
+    "Fableclaimthat36/CAPproofwaswasted is too broad: valid reusable numerical/math-contract evidence remains. The wasted integration setup was mainbuild/servingbeforeproductioncallerreachabilityproof; correctedrootchecks coverallconjunctsnow.",
+    "First4KON is firsteligible undercurrentresidentflags; requireactivationtherebeforeanyremainingprefill. No recording-onlydelay to32K. Preserve strictwork/output/function/teardowngates andsameNEWbinarybotharms.",
+    "Ifselectedimage hashesmatchS93, reuseexactresources; mismatchHOLD forrootinspection, no reflexattentionrebuild.",
+    "Bothendorse onefuturecurrentC2trace; prepare only, noGPUGO, no physicalidle/causal/speedclaim. PrioritizeafterfiniteS94decision; targets unchanged."
+  ],
+  "S94_CPU_BUILD_GO": true,
+  "S94_GPU_GO": false
+}

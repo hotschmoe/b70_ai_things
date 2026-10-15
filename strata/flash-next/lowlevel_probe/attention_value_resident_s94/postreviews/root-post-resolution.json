@@ -1,0 +1,80 @@
+{
+  "status": "ACCEPT_CLOSED_UNMATCHED_WORK_KEEP_DEFAULT_OFF_PIVOT_CURRENT_C2_PROFILE_SOURCE_REVIEW",
+  "actual_models": [
+    {
+      "requested": "claude-opus-5-5",
+      "responding_models": [
+        "claude-opus-5-5"
+      ],
+      "elapsed_s": 34.33985049300827,
+      "resumed_own_source_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "assistant_text_sha256": "d6ffd30c5d22ec4a7171af08c8a993676f181455100c3ce35cc554917802ce41"
+    },
+    {
+      "requested": "claude-fable-5-1",
+      "responding_models": [
+        "claude-fable-5-1"
+      ],
+      "elapsed_s": 20.127293692959938,
+      "resumed_own_source_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "assistant_text_sha256": "2d543b1171f43d01b6bef8354d31adcd7219d2f3ad011855e93bf321475d19c3"
+    }
+  ],
+  "root_full_read_both_answers": true,
+  "root_decisions": [
+    "S94 HOST activation succeeds; native offered-work gate fails207vs205; output/SSE/request/usage/accepted136 match. No clean candidate speed summary, numerical-failure attribution or harmless-nondeterminism diagnosis.",
+    "Both normalQUIT/fullCIDNAME/wrapper0/percard+compiled10healthPASS. No remaining ON work/retry/generation.",
+    "Keep all new candidates OFF; park value-prefill branch. Select frozen audited d94e96ca VALUE0/QSA0/Q6center0 for possible next diagnostic ONLY; no shelf/daily promotion or combined/fullcache qualification.",
+    "Before a future benchmark gate uses draft_n strict equality, inspect existing same-path repeatability and measured-phase work. Do not retroactively relax S94 or reclassify it as a gain.",
+    "Prefer ONE current C2trace using existing instrumentation and source-reviewed S95 controller, no new instrumentation build. Need explicit immutable artifact/source pinning, full controller read, actual source consultation where material, fresh leases/continuity/prehealth review and separate GPU GO.",
+    "Reuse stopped trace one-parse results; preserve cold/solo/tail and insufficient-replay verdict. No CPU/GPU/crosscard timestamp joins until native steady identity and calibration are established."
+  ],
+  "model_statement_corrections": [
+    "Opus existing baseline count variation confirmed from rawS93/S94 records below. It is across DIFFERENT binaries/processes, not a matched same-binary OFF/OFF control, so does not identify cause or clear candidate.",
+    "Fable says a production-pool old/new comparison is a CPU-lease numerical run. It necessarily touches GPU and requires BOTH applicable CPU and GPU wrappers/pins/health if ever done. No new oracle authorized/executed by this postdecision.",
+    "Fable calls production-pool comparison the only discriminating test. It could test the operator against actual saved operands, but is not the only conceivable causal investigation and alone would not prove all model state or counter repeatability. No immediate test requested.",
+    "Both correctly limit HOST marker to caller selection, not independent GPU call/layer counts. Existing main binding/image audits establish registered image identity conditional on dispatch; no call census invented."
+  ],
+  "existing_counter_context": [
+    {
+      "stage": "attn-value-main-s93-serving",
+      "arm": 0,
+      "draft_n": 205,
+      "draft_n_accepted": 136,
+      "output_sha256": "4cc1afbabebee14a0f00b57b64d9ad10b331db0ad4c508fb39894cbfe3b1bca0",
+      "source_record": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-serving/mode0/prefill/p4096-0.json",
+      "sha256": "df24e7aa4ab75c759498b6a6f42db8127425b3a713a5b5c06647a7e2e122a698"
+    },
+    {
+      "stage": "attn-value-main-s93-serving",
+      "arm": 1,
+      "draft_n": 205,
+      "draft_n_accepted": 136,
+      "output_sha256": "4cc1afbabebee14a0f00b57b64d9ad10b331db0ad4c508fb39894cbfe3b1bca0",
+      "source_record": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-serving/mode1/prefill/p4096-0.json",
+      "sha256": "356c2caff66279f89d5ff1feee94d9d3352191ba70db9a355ec6604ab2d475a0"
+    },
+    {
+      "stage": "attn-value-resident-s94-serving",
+      "arm": 0,
+      "draft_n": 207,
+      "draft_n_accepted": 136,
+      "output_sha256": "4cc1afbabebee14a0f00b57b64d9ad10b331db0ad4c508fb39894cbfe3b1bca0",
+      "source_record": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/mode0/prefill/p4096-0.json",
+      "sha256": "a9792eae7afacaa442f8bb75313291a22877a2708e516ec65931a8a12b20b60c"
+    },
+    {
+      "stage": "attn-value-resident-s94-serving",
+      "arm": 1,
+      "draft_n": 205,
+      "draft_n_accepted": 136,
+      "output_sha256": "4cc1afbabebee14a0f00b57b64d9ad10b331db0ad4c508fb39894cbfe3b1bca0",
+      "source_record": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/mode1/prefill/p4096-0.json",
+      "sha256": "9c5cc285f04dd8fc9fd1e54039784769ac8c7823c9ac6e3c7e9e7e164bf334a0"
+    }
+  ],
+  "new_GPU_or_model_runs_for_context_check": false,
+  "closed_runtime_decision_sha256": "6302f4058a04df2a227f5ab059349e220e3f91ae74bcfa4094d4823f971a1ea1",
+  "postpacket_sha256": "6383222836a334b21f708ae29d0f64cafba6976d773da1fbdce35d7cfdf1bdbe",
+  "epoch_ns": 1792095913145415951
+}

@@ -1,0 +1,32 @@
+**Disposition: agree. Keep VALUE default OFF and unqualified. Park the prefill branch. Classification is failed native-work match after successful host activation.** It is not "no effect", not failed activation, not a proven numerical mismatch, not a health failure and not a measured regression.
+
+**Material blockers**
+
+- The strict work gate failed on the first eligible request. Text, SSE, usage and accepted drafts matched, but offered drafts were 207 OFF versus 205 ON. API and native counts agree, so the difference is inside the engine, not the HTTP layer.
+- Activation is one host marker on the first 4K prefill. It does not count GPU dispatches or confirm every-layer use, so even a clean work match would have been a weak activation proof.
+- Same output is not state equivalence. The candidate writes prefill attention that feeds the KV cache and the drafter's first state. A two-draft offer delta with identical acceptances is exactly the shape a small prefill numeric difference in the drafter's input would produce. It is also the shape cross-process nondeterminism would produce. Nothing in the packet separates these.
+
+**Why the strict gate should stay as it was**
+
+Relaxing the gate to "same text, same usage" would have let the run continue and produced six paired numbers with an unresolved internal difference underneath. That is the retest the packet rightly refuses. The S93 waste was integration before reachability proof. The S94 waste, which was small, was the inability to tell numeric drift from nondeterminism at the point of failure, and no further serving can fix that.
+
+**Evidence limits**
+
+- One OFF process, one ON process, one completed ON prefill. No population, no aggregate, no percentage.
+- The OFF and ON prompt spans are raw retained values and say nothing about the candidate.
+- The private 36 cases and CAP2051 seeds were reused without rerun. They prove the kernel against synthetic pools, not against the actual resident mode 0 pools the production caller handed it. That gap was named in my source review as the one unexecuted item and it is still open.
+
+**If the branch is ever reopened**
+
+Do not reopen it with another serving arm. The only discriminating test is a bounded single-process check with the production resident pools: run the same prefill chunk through the old batch kernel and the value kernel in the same process and compare the attention output bitwise or within the existing strict tolerance. That is a CPU-lease numerical run, not a GPU serving campaign, and it is the one thing that would resolve "drift" versus "nondeterminism". Until someone wants to spend that, the park is correct.
+
+**Pivot advice**
+
+The move to the current C2 trace is the right next decision. The candidate was prefill only and the user's targets are decode, concurrency and MTP. Points to hold:
+
+- Use the audited d94e96ca binary with VALUE0, QSA0 and Q6center0 for instrumentation only. It is not a production promotion and should not be described as one.
+- Inject before the first capture, keep VERIFY_PROFILE absent, no generation warmup, retain cold, solo and tail cycles, and require a complete ring with zero drops and both slots idle before snapshot.
+- Treat clocks as ordinal only. Native steady clock identity is unverified, so no CPU to GPU join, no cross-card join, no idle, bandwidth or additive wait claims.
+- The output is a ranking of observed dense, shared, HC and head work and their association with EP and PLE readiness. It picks the next mechanism. It does not prove a gain for that mechanism.
+
+No GPU execution GO is implied by this review.

@@ -1,0 +1,261 @@
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/layer.cpp SHA256 c89d9bb9a1c37616e9e415730e667b821e88ab73239a1dc5a27867aac7b04016
+718: struct KvPlan {
+719:     int mode = 0;
+720:     int64_t pages = 0, slots = 0, pooled_rows = 0;
+721: };
+722: KvPlan kv_plan(const QsaShapes& s, int64_t max_cells, int64_t ring_cells) {
+723:     KvPlan p;
+724:     p.pages = (max_cells + s.page_size - 1) / s.page_size;
+725:     p.slots = p.pages;
+726:     p.pooled_rows = max_cells / s.idx_block + 2;
+727:     if (g_kv_resident <= 0 || ring_cells < 0) return p;   // ring_cells < 0: always fully resident
+728:     // A/B only: STRATA_KV_RING_OFF keeps the drafter fully resident, STRATA_KV_MAIN_OFF the main layers
+729:     static const bool ring_off = std::getenv("STRATA_KV_RING_OFF") != nullptr;
+730:     static const bool main_off = std::getenv("STRATA_KV_MAIN_OFF") != nullptr;
+731:     if (ring_cells > 0 ? ring_off : main_off) return p;
+732:     if (ring_cells > 0) {
+733:         const int64_t r = (ring_cells + s.page_size - 1) / s.page_size;
+734:         if (r < p.pages) { p.mode = 2; p.slots = r; p.pooled_rows = 2; }   // the drafter has no indexer
+735:     } else {
+736:         const int64_t r = (std::max(g_kv_resident, qsa_kv_resident_min()) + s.page_size - 1) / s.page_size;
+737:         if (r < p.pages) { p.mode = 1; p.slots = r; }
+738:     }
+739:     return p;
+740: }
+741: uint64_t kv_pool_bytes(const QsaShapes& s, int64_t pages, bool hybrid, bool int8) {
+742:     if (hybrid) {   // K8V4: the INT8 K half (codes + scales) plus the Q4_0 V half (kv_q4.hpp's rotation)
+750: }
+751: }  // namespace
+752: 
+753: void qsa_set_kv_resident(int64_t cells) { g_kv_resident = cells > 0 ? cells : 0; }
+754: int64_t qsa_kv_resident() { return g_kv_resident; }
+755: int64_t qsa_kv_resident_min() { return 20480; }
+777: uint64_t qsa_state_init(const ModelGeometry& g, int64_t max_cells, void* base, QsaState& st,
+778:                         const QsaState* share_rope, int64_t ring_cells) {
+779:     const QsaShapes s = qsa_shapes(g);
+780:     const KvPlan p = kv_plan(s, max_cells, ring_cells);
+781:     const int64_t pages = p.pages;
+782:     Cursor c{(uint8_t*) base};
+783:     st.kv_int8 = g_kv_int8 && !g_kv_q4;
+784:     st.kv_q4 = g_kv_q4;
+785:     // Hybrid K8V4, main layers only (the drafter's state is created with the globals toggled to INT8 -
+786:     // mtp.cpp). A streamed one keeps its host copy in the same three runs (kv_stream.cu, kKvHybrid).
+787:     if (g_kv_hybrid && ring_cells <= 0) {
+788:         st.kv_hybrid = true;
+789:         st.kv_int8 = false;
+790:         st.kv_q4 = false;
+791:     }
+792:     st.kv_rot = st.kv_q4 || (st.kv_int8 && g_kv_int8_rot);   // K8V4 rotates only V (below)
+793:     st.kv_mode = p.mode;
+794:     st.n_slots = p.slots;
+795:     const uint64_t rows = (uint64_t) p.slots * s.n_head_kv * s.page_size;   // VRAM rows: the slots
+796:     const uint64_t q4_row = strata::kernels::kv_q4_bytes_per_head((int) s.head_dim);
+797:     st.kv_elastic = -1;
+798:     if (g_kv_elastic && p.mode == 0) {
+799:         // the elastic K/V: each array at a chunk boundary of the state's own range, the first cells mapped
+800:         const uint64_t slot_rows = (uint64_t) s.n_head_kv * s.page_size;
+962:             strata::kernels::rope_table_set(st.cos_tab, st.sin_tab, (int) max_cells, strata::kernels::rope_scaling());
+963:     }
+964:     // the page table starts as the IDENTITY, which is the simplest legal mapping and what a caller that does
+965:     // not page at all wants; a streamed state starts with nothing resident, a ring at `block % n_slots`.
+966:     if (p.mode == 0) {
+967:         std::vector<int32_t> tab((size_t) pages);
+968:         for (int64_t i = 0; i < pages; ++i) tab[(size_t) i] = (int32_t) i;
+969:         dpct::get_in_order_queue()
+970:             .memcpy(st.page_table, tab.data(), tab.size() * 4)
+971:             .wait();
+972:     } else if (p.mode == 1) {
+973:         strata::kernels::kv_stream_reset(st.map, nullptr);
+974:     } else {
+975:         strata::kernels::kv_ring_table(st.page_table, pages, p.slots, nullptr);
+976:     }
+977:     dpct::get_current_device().queues_wait_and_throw();
+978:     return c.used;
+979: }
+1027:     else { pools.k_pool = st.k_pool; pools.v_pool = st.v_pool; }
+1028:     return pools;
+1029: }
+1030: 
+1031: void qsa_kv_resolve(const QsaState& st, const ModelGeometry& g, const int32_t* ids, const int32_t* steps, int64_t n_q,
+1032:                     int64_t cap, void* stream) {
+1033:     if (st.kv_mode != 1) return;
+1034:     strata::kernels::kv_stream_resolve(st.map, qsa_attn_pools(st), st.host, qsa_kv_format(st), ids, steps, n_q, cap,
+1035:                                        qsa_shapes(g), stream);
+
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp SHA256 6433d750e414aeb9c71135257ae40a8f9e38ea661537c251b50cabdbc2217d83
+470:     bool ple_sync_submit = false;      ///< A/B arm: submit reads on the token thread, no I/O worker
+471:     std::string kv = "fp16";           ///< plan v0.3 P7: KV storage, fp16 (default) or int8 (half the VRAM)
+472:     int64_t kv_resident = 0;           ///< KV streaming: resident cells per QSA layer (0: all in VRAM)
+473:     bool kv_grow = false;              ///< the elastic K/V (--kv-grow, STRATA_KV_GROW=1; kvg_ensure)
+474:     std::string dump_residual;
+2346:     strata::core::qsa_set_kv_hybrid(o.kv == "k8v4");   // K8V4: INT8 K + rotated Q4_0 V, 816 B/cell
+2347:     if (o.kv_resident < 0) {
+2348:         std::fprintf(stderr, "strata generate: --kv-resident must be >= 0\n");
+2349:         return 2;
+2350:     }
+2351:     strata::core::qsa_set_kv_resident(o.kv_resident);
+2352:     // Prompt lookup (the suffix drafter, on by default): the MTP keeps its --spec windows and a lookup window may be
+2353:     // up to 2 tokens longer; the draft policy (strata/spec/draft_policy.hpp) takes one only where it pays. Code
+3930:         // that can give slots up, and every expert in RAM for the CPU to compute the ones it gives up
+3931:         {
+3932:             const char* ev = std::getenv("STRATA_KV_GROW");
+3933:             bool remote = false;
+3934:             for (const int r : o.expert_cache_remote) remote = remote || r > 0;
+3935:             const bool asked = ev != nullptr && ev[0] != '\0' ? ev[0] != '0' : o.kv_grow;
+3936:             const bool on = asked && !multi_gpu && o.kv_resident <= 0 &&
+3937:                             !o.expert_profile.empty() && !o.resident_cpu_experts && o.expert_cache != 0 && !remote &&
+3938:                             strata::core::vmm_available() &&
+3939:                             // the batch slots carve their own K/V and --vram-elastic's cache is not one VMM range
+3940:                             o.batch == 0 && !o.vram_elastic && o.peer_device < 0;
+3941:             if (asked && !on)
+3942:                 std::fprintf(stderr, "strata generate: --kv-grow is off (one GPU, a profile, the whole K/V in VRAM, "
+3943:                                      "every expert in RAM, no --batch, --vram-elastic or --peer-device)\n");
+
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/prefill/prefill.cpp SHA256 b6f7d1e50073ba1dbc7f9dacc2ab2000e1237fa2b33220beb7cff25908062162
+1124:         m.ple_rows[b].resize(T * strata::kernels::PLE_N_HEADS);
+1125:     }
+1126:     if (ss.qsa_states[ss.qsa_primary()].kv_mode == 1) {   // KV streaming: the staging pool's identity page table
+1127:         const int64_t pages = ss.qsa_states[ss.qsa_primary()].n_pages;
+1128:         std::vector<int32_t> ident((size_t) pages);
+1129:         for (int64_t i = 0; i < pages; ++i) ident[(size_t) i] = (int32_t) i;
+1130:         if (DPCT_CHECK_ERROR(
+1131:                 m.ident_table = (int32_t *)sycl::malloc_device(
+1132:                     ident.size() * 4, dpct::get_in_order_queue())) != 0 ||
+1133:             /*
+1134:             DPCT1114: cudaMemcpy is migrated to asynchronization memcpy,
+1135:             assuming in the original code the source host memory is pageable
+1136:             memory. If the memory is not pageable, call wait() on event return
+1137:             by memcpy API to ensure synchronization behavior.
+1138:             */
+1139:             DPCT_CHECK_ERROR(dpct::get_in_order_queue().memcpy(
+1140:                 m.ident_table, ident.data(), ident.size() * 4).wait()) != 0)
+1141:             ok = false;
+1142:         else
+3076:                     // chunk's cells go to the host copy, the staging pool, and the VRAM slots of resident blocks
+3077:                     const bool staged = st.kv_mode == 1;
+3078:                     if (staged) {
+3079:                         pt.mark(kPfKvStage, cs);
+3080:                         if (kv_pending == qsa_index) {
+3081:                             if (DPCT_CHECK_ERROR(cs->ext_oneapi_submit_barrier(
+3082:                                     {*m.kv_ready})) != 0) {
+3083:                                 err = "prefill: waiting for KV prefetch";
+3084:                                 return false;
+3085:                             }
+3086:                             kv_pending = -1;
+3087:                         } else strata::kernels::kv_stage_from_host(pools_of(m.stage, m.ident_table), st.host,
+3088:                                                             core::qsa_kv_format(st),
+3123:                         if (st.kv_q4)
+3124:                             strata::kernels::kv_append_q4(st.k_q4, st.v_q4, st.page_table, p0, T, m.Kc, m.Vc, s, m.cs,
+3125:                                                           host_w, staged ? &m.stage : nullptr);
+3126:                         else
+3127:                             kv_append(m.Kc, m.Vc, T, p0, st.page_table, s.page_size, st.kv_int8 ? nullptr : st.k_pool,
+3128:                                       st.kv_int8 ? nullptr : st.v_pool, st.k_q, st.v_q, st.k_scale, st.v_scale, m.cs,
+3129:                                       host_w, staged ? &m.stage : nullptr);
+3130:                         if (host_by_dma)
+3131:                             strata::kernels::kv_unstage_to_host(pools_of(m.stage, m.ident_table), st.host,
+3299:                             }
+3300:                         }
+3301:                     }
+3302:                     const strata::kernels::QsaAttnPools pools = staged ? pools_of(m.stage, m.ident_table)
+3303:                                                                        : core::qsa_attn_pools(st);
+3304:                     pt.mark(kPfQsaAttn, cs);
+3305:                     // perf-review D-1: the whole chunk on tensor cores, one block per (query, KV head), FP32-level
+3327:                         }
+3328:                     }
+3329:                     if (old_attn || !strata::kernels::qsa_prompt_attn_batch(m.q, pools, m.sel_ids, m.steps_dev, m.cap, s,
+3330:                                                                             m.attn, T, m.cs))
+3331:                         for (int64_t t0 = 0; t0 < T; t0 += m.attn_batch) {
+3332:                             const int64_t nb = std::min(m.attn_batch, T - t0);
+3333:                             // Widths are monotone across this fresh prefill chunk; once the first is
+3334:                             // cap2051 all32 are full. Staged identity pages are published on m.cs.
+3335:                             const bool value_domain = staged && st.kv_int8 && nb == 32 && m.cap == 2051 &&
+3336:                                 m.steps_host[(size_t) (t0 * strata::kernels::kStepCount +
+3337:                                                      strata::kernels::kStepWidth)] == m.cap;
+3338:                             if (value_domain)
+3339:                                 strata::kernels::qsa_prefill_attn_value_batch(m.q + t0 * ZV, pools, m.sel_ids + t0 * m.cap,
+3340:                                                                            m.steps_dev + t0 * strata::kernels::kStepCount, m.cap,
+3341:                                                                            s, m.attn_scratch, m.attn + t0 * ZV, nb, m.cs);
+3342:                             else
+3343:                             strata::kernels::qsa_decode_attn_batch(m.q + t0 * ZV, pools, m.sel_ids + t0 * m.cap,
+3344:                                                                    m.steps_dev + t0 * strata::kernels::kStepCount, m.cap,
+3345:                                                                    s, m.attn_scratch, m.attn + t0 * ZV, nb, m.cs);
+
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/qsa_prompt_attn.dp.cpp SHA256 d57239375f2cbd8a2392516359f5f077c9c5d26af1c05af684f693c3e21f127a
+2007:         }
+2008:         (void) cc[dev];
+2009:         // SYCL: the mma.sync kernel below is not ported (upstream's Turing/sm_80 split - `turing` - does not
+2010:         // apply); its XMX port takes the same arguments
+2011:         if (qsa_prompt_attn_xmx(q, pools, ids, steps, cap, s, attn, n_q, stream)) return true;
+2012:         return false;   // the caller takes the older kernel
+2013:     }
+2014: #if defined(__HIPCC__)
+2015:     // the tensor-core kernels are compiled out on AMD (its major version is not a CUDA sm); RDNA4 has its own int8-KV
+2016:     // matrix-core kernel, opt-in (STRATA_HIP_WMMA=1); everything else keeps the old kernel
+2017:     (void) turing; (void) volta;
+2018:     if (pools.k_q != nullptr && pools.v_q != nullptr && pools.k_scale != nullptr && pools.v_scale != nullptr &&
+
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/qsa_prompt_attn_xmx.dp.cpp SHA256 793c2f10b2302a65601ec5da054064adf7bd64f0119fbe7dc562ae1b990bee66
+367: bool qsa_prompt_attn_xmx(const float* q, const QsaAttnPools& pools, const int32_t* ids, const int32_t* steps, int64_t cap,
+368:                          const QsaShapes& s, float* attn, int64_t n_q, void* stream) {
+369:     // STRATA_PROMPT_ATTN_XMX=1 (64-cell chunks) or =32 (32-cell chunks); unset or 0: the caller's fallback
+370:     static const int mode = [] { const char* v = std::getenv("STRATA_PROMPT_ATTN_XMX"); return v ? std::atoi(v) : 0; }();
+371:     if (mode == 0 || n_q <= 0) return false;
+372:     if (pools.k_q4 != nullptr || s.head_dim != HD || s.n_head != (int64_t) G * s.n_head_kv || cap <= 0 || !ids || !steps ||
+373:         !pools.page_table)
+
+EXACT first engine line /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-serving/mode1/engine-final.log
+[strata] 2026-10-15 19:51:35 engine started: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-build/build/strata-attn-value-s93 --serve --pack /mnt/vm_8tb/b70/build/strata-ab/packs/ista-gsq-rco-iq3-xxs --native /mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf --ple-gguf /mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf --ple-io direct --expert-parallel-device 1 --stream-experts --expert-profile /mnt/vm_8tb/b70/build/strata-ab/src/data/expert-profile-sycl.bin --expert-cache auto --vram-reserve-mib 1024 --prefill 12288 --no-prefill-borrow --max-context 200000 --kv int8 --spec 4 --mtp /mnt/vm_8tb/b70/build/strata-ab/mtp-bf16/rt --spec-min-p 0.5 --conversation-cache-mib 32768 --conversation-cache-slots 4 --batch 2
+S93 marker occurrences in this frozen engine log: 0
+
+RESET/RESTORE MAPPING LIFETIME SUPPLEMENT
+Mode0 qsa_state_zero does not reset/remap table; conversation_kv_restore
+copies K/V/scales/pooled arrays and only resets mode1 or rebuilds mode2 ring.
+Mode0 identity table persists. This is source contract, not a new fullcache test.
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/layer.cpp SHA256 c89d9bb9a1c37616e9e415730e667b821e88ab73239a1dc5a27867aac7b04016
+1012:     // A streamed state starts over with nothing resident. Its host copy is not cleared (GBs over PCIe per new
+1013:     // conversation): no reader names a cell before this sequence has written it, and a block copied in whole
+1014:     // carries the unwritten cells past the end, which nothing reads.
+1015:     if (st.kv_mode == 1) strata::kernels::kv_stream_reset(st.map, stream);
+1016:     cs->memset(st.idx_tail, 0, (size_t)(s.idx_block - 1) * s.idx_dim * 4);
+1017:     cs->memset(st.idx_dead, 0, (size_t)s.idx_dim * 4);
+1018:     cs->memset(st.idx_pooled, 0, (size_t)st.idx_pooled_rows * s.idx_dim * 4);
+1021: strata::kernels::QsaAttnPools qsa_attn_pools(const QsaState& st) {
+1022:     strata::kernels::QsaAttnPools pools;
+1023:     pools.page_table = st.page_table;
+1024:     if (st.kv_hybrid) { pools.k_q = st.k_q; pools.k_scale = st.k_scale; pools.v_q4 = st.v_q4; }
+1025:     else if (st.kv_q4) { pools.k_q4 = st.k_q4; pools.v_q4 = st.v_q4; }
+1026:     else if (st.kv_int8) { pools.k_q = st.k_q; pools.v_q = st.v_q; pools.k_scale = st.k_scale; pools.v_scale = st.v_scale; }
+1027:     else { pools.k_pool = st.k_pool; pools.v_pool = st.v_pool; }
+1028:     return pools;
+1029: }
+1030: 
+1031: void qsa_kv_resolve(const QsaState& st, const ModelGeometry& g, const int32_t* ids, const int32_t* steps, int64_t n_q,
+1032:                     int64_t cap, void* stream) {
+1033:     if (st.kv_mode != 1) return;
+1034:     strata::kernels::kv_stream_resolve(st.map, qsa_attn_pools(st), st.host, qsa_kv_format(st), ids, steps, n_q, cap,
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/conversation_snapshot.cpp SHA256 8aad8aa2615b28b8f579ef725f99c79cf994ffd95dc7fd931dec300082d745a5
+89: bool valid(const QsaState& st, const Layout& l, int64_t upto, std::string& error) {
+90:     if (upto < 0 || upto > st.max_cells || st.n_pages < 0 || l.cells / l.page_size > st.n_pages ||
+91:         st.kv_mode < 0 || st.kv_mode > 2 || st.n_slots <= 0 ||
+92:         (st.kv_mode == 0 && st.n_slots < st.n_pages) ||
+93:         l.pooled_rows > st.idx_pooled_rows || (st.kv_mode != 0 && !st.host.present())) {
+94:         error = "conversation snapshot: invalid K/V extent or missing authoritative host pool";
+95:         return false;
+217: bool conversation_kv_restore(const ConversationKv& image, const QsaState& st, const ModelGeometry& g,
+218:                              int64_t upto, bool index, std::string& error) {
+219:     if (!conversation_kv_validate(image, st, g, upto, index, error)) return false;
+220:     const std::array<const ConversationBuffer*,5> src = {&image.k, &image.v, &image.k_scale, &image.v_scale, &image.pooled};
+221:     const auto dst = pools(st);
+222:     for (size_t i = 0; i < src.size(); ++i)
+223:         if (!src[i]->visit(0, src[i]->size(), [&](const uint8_t* p, size_t n, size_t at) {
+224:                 return transfer(static_cast<uint8_t*>(dst[i]) + at, p, n, error);
+225:             })) return false;
+226:     // VRAM slots still contain the outgoing conversation. Resolve must refill
+227:     // them from the restored authoritative pools before any attention reads.
+228:     if (st.kv_mode == 1) strata::kernels::kv_stream_reset(st.map, nullptr);
+229:     if (st.kv_mode == 2 && upto > 0) {
+230:         auto shapes = strata::kernels::qsa_real_shapes();
+231:         shapes.n_head_kv = g.n_head_kv; shapes.head_dim = g.head_dim;
+232:         const int64_t end = (upto + shapes.page_size - 1) / shapes.page_size;
+233:         strata::kernels::kv_ring_restore(qsa_attn_pools(st), st.host, qsa_kv_format(st),
+234:                                         std::max<int64_t>(0, end - st.n_slots), end, st.n_slots, shapes, nullptr);

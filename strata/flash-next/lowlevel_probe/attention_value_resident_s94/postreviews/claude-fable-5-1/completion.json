@@ -1,0 +1,120 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 20.127293692959938,
+  "launch_exception": null,
+  "source_packet_sha256": "6383222836a334b21f708ae29d0f64cafba6976d773da1fbdce35d7cfdf1bdbe",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 93451,
+      "stop_reason": "end_turn",
+      "session_id": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "total_cost_usd": 0.90281075,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 10086,
+        "cache_read_input_tokens": 20354,
+        "output_tokens": 1173,
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 10086,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1173,
+            "cache_read_input_tokens": 20354,
+            "cache_creation_input_tokens": 10086,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 10086
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 4,
+          "outputTokens": 6034,
+          "thinkingTokens": 2961,
+          "cacheReadInputTokens": 21003,
+          "cacheCreationInputTokens": 29791,
+          "webSearchRequests": 0,
+          "costUSD": 0.90281075,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Disposition: agree. Keep VALUE default OFF and unqualified. Park the prefill branch. Classification is failed native-work match after successful host activation.** It is not \"no effect\", not failed activation, not a proven numerical mismatch, not a health failure and not a measured regression.\n\n**Material blockers**\n\n- The strict work gate failed on the first eligible request. Text, SSE, usage and accepted drafts matched, but offered drafts were 207 OFF versus 205 ON. API and native counts agree, so the difference is inside the engine, not the HTTP layer.\n- Activation is one host marker on the first 4K prefill. It does not count GPU dispatches or confirm every-layer use, so even a clean work match would have been a weak activation proof.\n- Same output is not state equivalence. The candidate writes prefill attention that feeds the KV cache and the drafter's first state. A two-draft offer delta with identical acceptances is exactly the shape a small prefill numeric difference in the drafter's input would produce. It is also the shape cross-process nondeterminism would produce. Nothing in the packet separates these.\n\n**Why the strict gate should stay as it was**\n\nRelaxing the gate to \"same text, same usage\" would have let the run continue and produced six paired numbers with an unresolved internal difference underneath. That is the retest the packet rightly refuses. The S93 waste was integration before reachability proof. The S94 waste, which was small, was the inability to tell numeric drift from nondeterminism at the point of failure, and no further serving can fix that.\n\n**Evidence limits**\n\n- One OFF process, one ON process, one completed ON prefill. No population, no aggregate, no percentage.\n- The OFF and ON prompt spans are raw retained values and say nothing about the candidate.\n- The private 36 cases and CAP2051 seeds were reused without rerun. They prove the kernel against synthetic pools, not against the actual resident mode 0 pools the production caller handed it. That gap was named in my source review as the one unexecuted item and it is still open.\n\n**If the branch is ever reopened**\n\nDo not reopen it with another serving arm. The only discriminating test is a bounded single-process check with the production resident pools: run the same prefill chunk through the old batch kernel and the value kernel in the same process and compare the attention output bitwise or within the existing strict tolerance. That is a CPU-lease numerical run, not a GPU serving campaign, and it is the one thing that would resolve \"drift\" versus \"nondeterminism\". Until someone wants to spend that, the park is correct.\n\n**Pivot advice**\n\nThe move to the current C2 trace is the right next decision. The candidate was prefill only and the user's targets are decode, concurrency and MTP. Points to hold:\n\n- Use the audited d94e96ca binary with VALUE0, QSA0 and Q6center0 for instrumentation only. It is not a production promotion and should not be described as one.\n- Inject before the first capture, keep VERIFY_PROFILE absent, no generation warmup, retain cold, solo and tail cycles, and require a complete ring with zero drops and both slots idle before snapshot.\n- Treat clocks as ordinal only. Native steady clock identity is unverified, so no CPU to GPU join, no cross-card join, no idle, bandwidth or additive wait claims.\n- The output is a ranking of observed dense, shared, HC and head work and their association with EP and PLE readiness. It picks the next mechanism. It does not prove a gain for that mechanism.\n\nNo GPU execution GO is implied by this review.",
+      "ttft_ms": 19030,
+      "type": "result",
+      "duration_ms": 19062,
+      "uuid": "d4c8b98e-8624-4dc1-a7bd-304ded5ce090",
+      "ttft_stream_ms": 1176,
+      "time_to_request_ms": 83,
+      "first_content_frame_ms": 1176,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

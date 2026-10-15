@@ -1,0 +1,52 @@
+Review done from the frozen packet only. No tools, builds or GPU use.
+
+## S93 disposition
+
+**Exact disposition: FAILED_ACTIVATION, candidate unreachable under the production caller.** The ON arm never executed the candidate kernel, so there is no candidate serving result of any kind. It is not neutral, not a numerical failure, not a regression, and not a hardware fault. The valid residue of S93 is:
+
+- The main binary (sha 551cca41) passes all OFF functionals and six prefills with normal teardown and full health. That is a baseline qualification of the build, not of the candidate.
+- The four ON responses matched OFF byte for byte with marker 0. That proves only that the untaken branch is inert, which the source already showed.
+
+**Root cause is source-proved, not inferred.** The engine argv has no --kv-resident, so the default of zero reaches qsa_set_kv_resident, kv_plan returns early at layer.cpp:727 with mode 0 and slots equal to pages, and qsa_state_init stores mode 0 at layer.cpp:793. The guard at prefill.cpp:3335 requires mode 1. The predicate is false for every production request.
+
+## S94 CPU source-apply and build: GO, with conditions
+
+The patch is a caller predicate change only and the resident branch is sound against the pinned source:
+
+- In mode 0 kv_plan sets slots equal to pages, so the slots check holds. The elastic field starts at -1 and only changes when kv_grow is on, which generate.cpp:3936 disables under --batch 2 anyway. The hybrid K8V4 path clears kv_int8, so it stays excluded.
+- The identity page table is uploaded and waited at init, and mode 0 appends land on the same in-order prefill queue before attention. The ordering argument that held for the staged pool holds here.
+- The fallback loop is the default path: the XMX prompt kernel returns false unless STRATA_PROMPT_ATTN_XMX is set, so production does reach the batch loop.
+
+Conditions for GO:
+
+1. Apply only to the pinned prefill.cpp (sha b6f7d1e5) and confirm the hunk lands at line 3335 with no fuzz.
+2. Build only the prefill TU, prefill archive and main link. Verify the attention object and kernel archive hashes are byte identical to the S93 values before linking.
+3. Re-run the static host metadata and image ownership check on the new binary. Reuse the S93 image hash resource if it matches. Any mismatch is a HOLD, not a reason to rebuild attention.
+4. Update the header comment to the resident identity pool contract in the same change. Do not rebuild the attention TU for a comment.
+
+One residual item is source reasoning, not executed evidence. The candidate kernel was audited against the staging pool. The resident pools come from qsa_attn_pools with the same format and an identity table, so the published data contract is the same, but nobody has run it there. That is what the GPU gate is for.
+
+## Future GPU gate, separate
+
+Finite serving on the new binary, both arms, same flags, same warm pairs and same strict gates. The activation assertion must be placed correctly:
+
+- The coding warm pairs cannot activate. A 107-token prompt never reaches width 2051, so marker must be 0 in both arms. Treat a nonzero marker there as a predicate bug.
+- The first eligible request is the first 4K prefill on the ON arm. Its later 32-row batches start at full width. Assert marker greater than 0 after that request and stop the run immediately if it is 0.
+
+No 200k or cache rerun is needed for a caller discriminator. Do not weaken tolerances, do not run a profiler in the clean measurement.
+
+Expectation setting: this is a prefill-only kernel. The user's stated priorities are decode, concurrency and MTP, and TTFT is diagnostic. Even a clean win here is bounded by the private 8 to 9 percent on the unmasked attention portion of 32K prefill and the masked rows were slower. A GO on S94 is justified because it is cheap, not because it moves the headline targets.
+
+## Wasted dev-loop critique
+
+- The 36 private cases, the CAP2051 seeds, the 174 second main build and two serving arms all ran before anyone traced argv to planner to state to guard. A ten minute static read of layer.cpp:722 and the engine argv would have ended S93 before the build.
+- The ON arm continued to the 32K request after the first 4K prefill showed marker 0. Recording absence instead of forcing the check wasted one 32K prefill and the teardown cycle. The activation assertion belongs on the first eligible request, as written above.
+- The S92 chunk and merge speedups were reported in a form that invites reading them as serving gains. They are single process, synthetic pool numbers and should stay labelled as such.
+
+Workflow fix is a rule, not a framework: before serving any guarded candidate, write the guard predicate's truth table against the exact production argv and cite the source lines. That table becomes part of the frozen packet.
+
+## Decode profile audit
+
+The proposed single current C2 trace is useful and does not repeat the rejected S7, S38, S79 or S80 arms. Its value is attribution, not speed: current dense, shared and HC kernels, submit and readiness, with CPU markers in the same collection. The guard rails in the packet are right, in particular keeping VERIFY_PROFILE absent, waiting for the full ring dump after both slots idle, and refusing a steady clock bridge without a fresh validated MONOTONIC calibration.
+
+Sequence it after the S94 serving decision, not alongside it. It is a GPU slot and the user's GPU time is the scarce resource. No profile result or GPU approval is granted here.

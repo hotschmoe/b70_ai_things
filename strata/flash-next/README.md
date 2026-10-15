@@ -410,3 +410,16 @@ marker0 stops ON after three4K/first32K, without a speed summary or retry.
 Both arms normal QUIT/fullCID+NAMEabsence/percard+compiledhealth pass. Keep
 defaultOFF/private lead; S94 resident caller mapping proof is source-only,
 not applied/built. [S93 serving scope](../../docs/20261015_strata_attention_value_serving.md).
+
+
+S94's caller-only resident identity guard activates the value HOSTmarker,
+then stops at first ON4K native-work mismatch: offered drafts207OFF/205ON;
+request/text/SSE/usage/output and other counts match. OFFsixprefills and
+functionals pass; no remaining ON work/retry/speed summary. BothnormalQUIT/
+CID+NAMEabsence/wrapper0/percard+compiledhealth0. Keep defaultOFF/unqualified
+and park prefill; no numericalfailure/regression/benignnondeterminism claim.
+Next separate currentC2 profile uses candidatesOFF. [S94 evidence](../../docs/20261015_strata_attention_value_resident.md).
+Actual S94post Opus34.340s/Fable20.127s/rootfullread acceptkeepOFF/pivot.
+ExistingS93inactive0/1 offered205each versusS94OFF207/ON205 allaccepted136/
+sameoutputSHA; differentbinary/processcontexts, not matchedOFF/OFF or a
+cause. Currentgate stays, no benignnondeterminism/promotion claim.

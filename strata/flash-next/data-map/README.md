@@ -362,3 +362,15 @@ ON stops after three4K/first32K matched requests, timed_summaryNULL. Both
 normalteardown/percard+compiledhealth pass. No candidate numericalfailure,
 neutrality or speed claim. S94 caller support is source-only. Historical170
 operations/rollups/meta remain byte-exact. [S93 report](../../../docs/20261015_strata_attention_value_serving.md).
+
+
+S94 adds activation/work-gate evidence without new operation timings. A
+caller-only resident guard activates HOSTmarker1, but first ON4K has207OFF/
+205ON offered drafts with equal output/usage/otherwork. No qualified speed
+summary or remaining ON work; bothnormalteardown/fullhealth pass. DefaultOFF
+unqualified/parkprefill; cause unresolved, no numericalfailure/regression/
+benignnondeterminism claim. Historical170operations/rollups/meta exact.
+[S94 report](../../../docs/20261015_strata_attention_value_resident.md).
+Post Opus34.340s/Fable20.127s/rootfullread acceptpark/pivot. S93inactive
+offered205/205 vsS94OFF207/ON205 shareaccepted136/outputSHA; differentbinary/
+processcontexts are not matchedOFF/OFF/control/cause or gate-relaxation proof.

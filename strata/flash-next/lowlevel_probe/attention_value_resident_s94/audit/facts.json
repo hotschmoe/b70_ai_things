@@ -1,0 +1,225 @@
+{
+  "status": "STATIC_S94_MAIN_BINDING_EXACT_ISA_REUSE_PASS_ROOT_CLOSURE_PENDING",
+  "binary_sha256_from_root_build_record": "d94e96ca399d8ecf1f15403db754b645697e82eaa72c052a2d18f4b29defc247",
+  "prefill_source_sha256": "2a1d8faa8bd58f112f4555a5ba7ab988b143fdb773106c8907903f0ecfafe16e",
+  "attention_object_sha256": "06eb664c9a991790c01b413117f78475d9ff2836cde77534d69fef2b2c85014d",
+  "kernel_archive_sha256": "5d465c2d1b23b880e100121b6439721b93fe540a9b3adba8b2ffe9e54a482cbf",
+  "host": {
+    "selected": {
+      "original": {
+        "tag": "attn_chunk_kernel_2ad0a4",
+        "owner": "qsa_decode_attn_batch",
+        "info_address": 13487696,
+        "cache_guard_addresses": [
+          89407024,
+          89407016
+        ],
+        "registered_name_pointer": 12290683,
+        "registered_kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE",
+        "inherited_S93_object_host_relocations": 7
+      },
+      "candidate": {
+        "tag": "attn_chunk_value_prefill_s93",
+        "owner": "qsa_prefill_attn_value_batch",
+        "info_address": 13487960,
+        "cache_guard_addresses": [
+          89407064,
+          89407072
+        ],
+        "registered_name_pointer": 12291188,
+        "registered_kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels28qsa_prefill_attn_value_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE28attn_chunk_value_prefill_s93EE",
+        "inherited_S93_object_host_relocations": 7
+      },
+      "oldmerge": {
+        "tag": "attn_merge_kernel_338175",
+        "owner": "qsa_decode_attn_batch",
+        "info_address": 13487872,
+        "cache_guard_addresses": [
+          89407048,
+          89407056
+        ],
+        "registered_name_pointer": 12291037,
+        "registered_kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_merge_kernel_338175EE",
+        "inherited_S93_object_host_relocations": 7
+      },
+      "newmerge": {
+        "tag": "attn_merge_value_prefill_s93",
+        "owner": "qsa_prefill_attn_value_batch",
+        "info_address": 13488048,
+        "cache_guard_addresses": [
+          89407088,
+          89407080
+        ],
+        "registered_name_pointer": 12291350,
+        "registered_kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels28qsa_prefill_attn_value_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE28attn_merge_value_prefill_s93EE",
+        "inherited_S93_object_host_relocations": 7
+      }
+    },
+    "S93_proof_hashes": {
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-build/build/root-build-closure.json": "20533d56d6e522fa29dff01af080769256ab13cee8b3f4af99f497e436420f4b",
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-audit-prep/host-binding.json": "d2743c058e9ea99bbaa8367185a511eb439311c526a26be5ce1068eb24c287e2",
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-audit-prep/selection.json": "334f00fa8dbf17c561d88a47dfb064d3e3770d507ec9f04262b6765de64de144",
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-audit-prep/facts.json": "43b123177e346c31fef19f0e287c9e24a93c18113958f75794f9e7b8d1d14bbc",
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-audit-prep/audit-v3.py": "b258e2326cc1a0b6a93e376ee750278014e442106048a62e6ef8d3f4ebc575bc"
+    },
+    "attention_object_sha256": "06eb664c9a991790c01b413117f78475d9ff2836cde77534d69fef2b2c85014d",
+    "kernel_archive_sha256": "5d465c2d1b23b880e100121b6439721b93fe540a9b3adba8b2ffe9e54a482cbf",
+    "old11_new2_object_metadata_and_relocation_proof_inherited": true,
+    "all13_final_materialized_tag_metadata_counts": {
+      "attn_chunk_kernel_2ad0a4": 4,
+      "attn_chunk_kernel_4fd923": 4,
+      "attn_chunk_kernel_5c04f7": 4,
+      "attn_chunk_kernel_6e87d5": 16,
+      "attn_chunk_kernel_7c8e09": 4,
+      "attn_chunk_kernel_b0d448": 4,
+      "attn_chunk_kernel_dfacfc": 4,
+      "attn_chunk_kernel_f262e6": 4,
+      "attn_chunk_kernel_f6855e": 4,
+      "attn_chunk_value_prefill_s93": 4,
+      "attn_merge_kernel_338175": 4,
+      "attn_merge_kernel_c055e7": 4,
+      "attn_merge_value_prefill_s93": 4
+    },
+    "final_four_Info_cache_guard_name_pointers_distinct": true
+  },
+  "selected": {
+    "original": {
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE",
+      "executable_offset": 28666688,
+      "image_bytes": 44384,
+      "image_sha256": "4eb838c95067f582e2ae35de9432971b1e555440eb9112a20d9801553c5a8470",
+      "text_bytes": 19328,
+      "text_sha256": "911483d5a69aef0d77dd5b4ba309531d4ff87cf163cd340b9653cd71228913e2",
+      "ze_info_sha256": "537fc84438ca3b15b9a5ac48a734099a0dec020e97919d9cddbcb11c4d782c04",
+      "unique_validated_image": true,
+      "exact_S93_full_image": true
+    },
+    "candidate": {
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels28qsa_prefill_attn_value_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE28attn_chunk_value_prefill_s93EE",
+      "executable_offset": 27959936,
+      "image_bytes": 50504,
+      "image_sha256": "3d1324e41fb2bb86d690180079c575cb658a2985777f67247715246725578658",
+      "text_bytes": 21120,
+      "text_sha256": "fd424c4427f4c87fc175d609ca2f42c7559c23b3c8bc97642b778e4afb913858",
+      "ze_info_sha256": "1c8d7513acc1437845729f9de6cc0de9324d16307a6e31d66138e7e3ccb87209",
+      "unique_validated_image": true,
+      "exact_S93_full_image": true
+    },
+    "oldmerge": {
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_merge_kernel_338175EE",
+      "executable_offset": 28524416,
+      "image_bytes": 11304,
+      "image_sha256": "3b70d26c50dcebd8c4e78d8f17b3fff8a6783af84e14a22945b265d039562f28",
+      "text_bytes": 2880,
+      "text_sha256": "ab7357c214fd13b0c469bd9fc913f8ef43bc555ecfb534ebdf9d6cf6345cb967",
+      "ze_info_sha256": "4ed391a103cd561591cf978afd34ef2cf717fc24ab91cdefab0e80608dadb437",
+      "unique_validated_image": true,
+      "exact_S93_full_image": true
+    },
+    "newmerge": {
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels28qsa_prefill_attn_value_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE28attn_merge_value_prefill_s93EE",
+      "executable_offset": 27948560,
+      "image_bytes": 11368,
+      "image_sha256": "968e0a7691b26085b933716c6242f698a04b70aa4497b25451ec6ead7eaa99b6",
+      "text_bytes": 2880,
+      "text_sha256": "390d93c0119eb8fa8437b88ce7be55d058a0048a83bbf4b4eda76ee6d6d3c342",
+      "ze_info_sha256": "47b0f3a3ff77f42d993ea9231f24d2c198321cc17f5117fea588360aeda0f762",
+      "unique_validated_image": true,
+      "exact_S93_full_image": true
+    }
+  },
+  "resources": {
+    "original": {
+      "barrier_count": 1,
+      "grf_count": 128,
+      "simd_size": 32,
+      "slm_size": 15872,
+      "private_size": "absent",
+      "spill_size": "absent",
+      "scratch_size": "absent",
+      "eu_thread_count": 8,
+      "per_thread_scratch_buffer": "absent",
+      "image_sha256": "4eb838c95067f582e2ae35de9432971b1e555440eb9112a20d9801553c5a8470",
+      "text_bytes": 19328,
+      "asm_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-audit-prep/original-disasm/.text._ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_chunk_kernel_2ad0a418dpct_kernel_scalarILi1EEEE.asm",
+      "asm_sha256": "fbf69faa3c5293b1793f278af5da12e19477fe853eb400333ca54d7ae99333e7",
+      "ss_a32_pattern_sites": 0,
+      "ss_a32_pattern_lines": [],
+      "decode": "selected image newly decoded"
+    },
+    "candidate": {
+      "barrier_count": 1,
+      "grf_count": 128,
+      "simd_size": 32,
+      "slm_size": 15872,
+      "private_size": "absent",
+      "spill_size": "absent",
+      "scratch_size": "absent",
+      "eu_thread_count": 8,
+      "per_thread_scratch_buffer": "absent",
+      "image_sha256": "3d1324e41fb2bb86d690180079c575cb658a2985777f67247715246725578658",
+      "text_bytes": 21120,
+      "asm_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-audit-prep/candidate-disasm/.text._ZTS16dpct_kernel_nameIJZN6strata7kernels28qsa_prefill_attn_value_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE28attn_chunk_value_prefill_s93EE.asm",
+      "asm_sha256": "3e0cfdb5a69362fd10e901891f162b7e86aa1b6d15c329a48dcc0f3674af5974",
+      "ss_a32_pattern_sites": 0,
+      "ss_a32_pattern_lines": [],
+      "decode": "selected image newly decoded"
+    },
+    "oldmerge": {
+      "barrier_count": "absent",
+      "grf_count": 128,
+      "simd_size": 32,
+      "slm_size": "absent",
+      "private_size": "absent",
+      "spill_size": "absent",
+      "scratch_size": "absent",
+      "eu_thread_count": 8,
+      "per_thread_scratch_buffer": "absent",
+      "image_sha256": "3b70d26c50dcebd8c4e78d8f17b3fff8a6783af84e14a22945b265d039562f28",
+      "text_bytes": 2880,
+      "asm_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-audit-prep/oldmerge-disasm/.text._ZTS16dpct_kernel_nameIJZN6strata7kernels21qsa_decode_attn_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE24attn_merge_kernel_338175EE.asm",
+      "asm_sha256": "e2f610314a38d6e95cb099251944848812394f949a81c85fcce2ef182d6290d8",
+      "ss_a32_pattern_sites": 0,
+      "ss_a32_pattern_lines": [],
+      "decode": "selected image newly decoded"
+    },
+    "newmerge": {
+      "barrier_count": "absent",
+      "grf_count": 128,
+      "simd_size": 32,
+      "slm_size": "absent",
+      "private_size": "absent",
+      "spill_size": "absent",
+      "scratch_size": "absent",
+      "eu_thread_count": 8,
+      "per_thread_scratch_buffer": "absent",
+      "image_sha256": "968e0a7691b26085b933716c6242f698a04b70aa4497b25451ec6ead7eaa99b6",
+      "text_bytes": 2880,
+      "asm_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-audit-prep/newmerge-disasm/.text._ZTS16dpct_kernel_nameIJZN6strata7kernels28qsa_prefill_attn_value_batchEPKfRKNS1_12QsaAttnPoolsEPKiS8_lRKNS1_9QsaShapesEPfSC_lPvE28attn_merge_value_prefill_s93EE.asm",
+      "asm_sha256": "4f2279667dec7198569322877fb4a67a683b2479670a3b2d4c86b29f0ee2f9ac",
+      "ss_a32_pattern_sites": 0,
+      "ss_a32_pattern_lines": [],
+      "decode": "selected image newly decoded"
+    }
+  },
+  "ISA_reuse": "All four full images exact S93 and prior ASM byte-hashes rechecked; no ocloc.",
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "compiler": "Intel(R) oneAPI DPC++/C++ Compiler 2026.1.0 (2026.1.0.20260617)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /opt/intel/oneapi/compiler/2026.1/bin/compiler\nConfiguration file: /opt/intel/oneapi/compiler/2026.1/bin/compiler/../icpx.cfg",
+  "main_identity": {
+    "inode": 24029466,
+    "bytes": 92237984,
+    "mtime_ns": 1792094907580305997,
+    "stat_unchanged": true,
+    "no_redundant_full_main_hash": true
+  },
+  "limits": [
+    "Static selected host/image ownership, not caller activation or runtime dispatch/count/speed proof.",
+    "Old11+new2 object metadata/callsites inherited ONLY after exact whole object/archive and S93 proof hashes.",
+    "Resource field absence is not zero. No occupancy/traffic/cause claim; no fullimage walk.",
+    "Real main -fsycl build, not thin-host-link zero-AOT claim. Root owns final runtime closure."
+  ],
+  "root_closure_written_by_this_audit": false,
+  "new_builds": 0,
+  "GPU": 0,
+  "new_ISA_decodes": 0
+}

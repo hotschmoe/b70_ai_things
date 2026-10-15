@@ -1,0 +1,50 @@
+{
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build",
+  "status": "FROZEN_SOURCE_ONLY_BUILD_RECIPE_NOT_EXECUTED",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2005,
+      "sha256": "38e4feb3097cbaa8b8b9f4e90cec64676825a7c558bcc45bb0c53a0a72b587bb"
+    },
+    {
+      "path": "build-container.sh",
+      "bytes": 3673,
+      "sha256": "d39b8e4a59ece60837f40e46bfe41ea6d55a3c916549758c41900bf3e1b4e7ee"
+    },
+    {
+      "path": "build.sh",
+      "bytes": 1373,
+      "sha256": "ce47db1ea4bc9e9e1c49eb37806e1c9b74d13a8dc08b2ea342057955e206a010"
+    },
+    {
+      "path": "expected-applied-source.sha256",
+      "bytes": 108,
+      "sha256": "f3ac305ff8e3c873890738dcf6233c6ed3f421f012be605fd346d31fb129d96c"
+    },
+    {
+      "path": "expected-before-build.sha256",
+      "bytes": 281,
+      "sha256": "c6eac96172c15ea3fb8a503848bb1558b3a535507b6b6b0d4317fbdd9b8a4b29"
+    },
+    {
+      "path": "expected-unchanged-build-inputs.sha256",
+      "bytes": 1533,
+      "sha256": "94629f1e689cabe314d1438566ca647920e672fd23fab2f01e2ba9aa644c5a0a"
+    },
+    {
+      "path": "expected-unchanged-source.sha256",
+      "bytes": 1478,
+      "sha256": "c950469216b95f3b55ccdebb0997d22d8d6d7ab3914ae12134359323eed62660"
+    }
+  ],
+  "adapted_from": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-build",
+  "S93_build_closure_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-build/build/root-build-closure.json",
+  "source_manifest": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-prep-manifest.json",
+  "source_manifest_sha256": "0716ff216625e9697a6c79c0e9fe3bee7ff498b0ce09b99e4327be6d26fe5471",
+  "build_directory_absent": true,
+  "bash_syntax": "PASS",
+  "ASCII": true,
+  "one_TU_one_archive_one_link_expected": true,
+  "no_apply_build_GPU_ownership_mutation": true
+}

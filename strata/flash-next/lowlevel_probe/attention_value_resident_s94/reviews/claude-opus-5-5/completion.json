@@ -1,0 +1,118 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 56.11799744301243,
+  "launch_exception": null,
+  "source_packet_sha256": "36807d614c7433dbcaf1baa6e98e7d95c62a86a9e2690da0e2c7b7c3a605faac",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 54709,
+      "stop_reason": "end_turn",
+      "session_id": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "total_cost_usd": 0.22206579999999998,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 17846,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 3958,
+        "output_tokens_details": {
+          "thinking_tokens": 1318
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 17846,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 3958,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 17846,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 17846
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 3958,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 17846,
+          "webSearchRequests": 0,
+          "costUSD": 0.22206579999999998,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 1318,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# Independent review: S93 post-mortem, S94 caller-only patch, decode-trace proposal (2026-10-15)\n\nAll three dispositions below come from frozen packet evidence only. I ran no tools, builds or GPU work.\n\n## 1. S93 disposition\n\n**FAILED_ACTIVATION / CANDIDATE UNREACHABLE IN PRODUCTION CALLER.** It is not neutral, not a regression, not a numerical failure and not a hardware fault. The executed evidence establishes three things:\n\n- **What was measured:** OFF and ON matched on request, output, SSE, usage and native work for 6 responses: 2 coding at 107/256, 3 at 4K and the first at 32K. The ON arm always ran the baseline kernel, because the host marker count was 0 in both arms.\n- **What this does not show:** these matches say nothing about the candidate kernel's serving correctness, speed or effect.\n- **Why the guard was false (source-proved):**\n  - The argv has no `--kv-resident`, so `kv_resident` is 0 (`generate.cpp:472`, `:2351`).\n  - `kv_plan` therefore returns early with mode 0 and slots equal to pages (`layer.cpp:727`).\n  - That sets `st.kv_mode = 0` (`:793`), so `staged = st.kv_mode == 1` is false (`prefill.cpp:3077`).\n  - The `value_domain` guard is false for every chunk.\n\nS92's private 36-case numerical PASS and the S93 metadata/image audits remain valid as kernel evidence. They never covered caller reachability.\n\n## 2. S94 CPU source-apply/build: conditional GO\n\nThe source reasoning supports the new mode-0 term:\n\n- **Identity page table:** mode 0 builds `tab[i]=i`, uploads it, waits, then waits on the device queues (`layer.cpp:966-977`).\n- **Pools:** the non-staged path uses `qsa_attn_pools(st)` with `st.page_table` (`prefill.cpp:3302`). `qsa_kv_resolve` is a no-op unless mode is 1 (`layer.cpp:1033`), so no streaming resolve is skipped.\n- **Ordering:** `kv_append` into the resident pools is enqueued on `m.cs` before attention on the same in-order `m.cs`.\n- **Exclusions:**\n  - Ring/drafter pools are excluded because the drafter is mode 2.\n  - Elastic pools are excluded by `kv_elastic < 0`. Elastic is also impossible here, since `--batch 2` forces kv-grow off (`generate.cpp:3940`).\n  - Hybrid and Q4 KV are excluded because `st.kv_int8` is false for them.\n- **Unchanged parts:** the math, wrapper and attention TU are untouched. Reusing the attention object and archive byte-exact is appropriate. Not rerunning the 36 numerical cases and CAP2051 seeds is justified.\n\n**Conditions before apply.** These are source reads only. They close the actual S93 lesson: trace every conjunct of the guard, not just the one that failed.\n\n1. **`st.n_pages` assignment.** It is not shown in the excerpt. Confirm it is set to `p.pages` in `qsa_state_init` or a sibling. If it is unset or 0 for mode 0, the new term is dead.\n2. **Batch-slot states.** Confirm the `st` used at `prefill.cpp:3077` for `--batch 2` slots goes through the same `qsa_state_init` mode-0 identity path. `generate.cpp:3939` says batch slots \"carve their own K/V\". Prove their `page_table` is identity, their `kv_elastic` is -1, and their slots are at least their pages.\n3. **Remaining conjuncts under the actual argv:**\n   - `m.attn_batch == 32`.\n   - `m.cap == 2051` in production at 32K.\n   - The first width reaches cap within the 12288-token prefill chunks.\n   - `old_attn` is false and `qsa_prompt_attn_batch` returns false. XMX defaults off via env (`xmx.dp.cpp:370-371`), but the CUDA/HIP-neutral branch around `:2011` must also be confirmed to fall through on SYCL.\n4. **Pool layout equivalence.** The resident INT8 pool layout (strides, scale layout, `kv_rot`) must match what S92 validated through `pools_of(m.stage, ident_table)`. Slots equal pages, so this is expected, but S92 only exercised the staged pool object. Write this down explicitly.\n\nIf all four close, I recommend **GO** for:\n\n- applying the patch and building only the prefill TU, the prefill archive and the main AOT link;\n- then the final host-metadata and image-ownership recheck, with exact image-hash reuse.\n\nIf any one fails, **HOLD** and do not build.\n\nThe header comment fix is documentation only. Do not rebuild the attention TU for it.\n\n## 3. Future GPU gate (separate, not approved here)\n\nThe future gate stays as the packet describes it:\n\n- Same new binary for both arms, with the 107/256 C2 warm-up unchanged.\n- The same strict request, output, work, functional and health gates.\n- No changes to tolerances, no daily restore and no profiler during the clean measurement.\n\nAdd an **activation assertion on the first request that the source shows is eligible.** Use the conjunct trace from \u00a72 to name that request. If the 4K requests never reach width 2051, the first eligible request is the 32K one, and the 4K requests are not activation evidence. A missing marker should stop the arm immediately. A full 200k/cache rerun is not needed for this discriminator. Full cache qualification is still required later for any candidate selected as a winner.\n\n## 4. Wasted dev-loop work\n\n- **Main build plus serving launched before a caller-path proof.** The argv \u2192 planner \u2192 state \u2192 guard trace is about 10 lines of source. It should have been the first gate after S92. The 174 s link, the 14 s static binding, and both serving arms (about 4 minutes of GPU lease) bought only a reachability negative.\n- **ON 3\u00d74K run before activation was checked.** The 4K requests ran with the marker absent and were only \"recorded\". Either they are ineligible, which the source would show, or they were the cheapest possible early stop. Either way, gate on the first request that should fire.\n- **Not wasted:** stopping at the early 32K gate, no retry, normal teardown, and keeping the failed result.\n\n## 5. Decode C2 trace audit: usefulness\n\n- **Assessment:** sound and well-scoped. It uses existing tools, one fresh server, `VERIFY_PROFILE` absent, ring-drain and race handling, honest limits on the clock bridge, no additivity claims, and no repeats of the rejected S7/S38/S79/S80 runs.\n- **Priority:** for the stated goal (\u2265150 tok/s per stream against about 54\u201356 now, and concurrency), this decode trace is the higher-value next GPU step. S94 only touches prefill attention and cannot move decode or per-stream rate.\n- **Sequencing:** order it after the S94 serving decision as proposed, but do not let it wait on the S94 conditions if those stall.\n- **Caveat to keep:** the trace is an attribution census only. It does not qualify any gain or prove causality for the shared-expert fork.\n\n## Summary\n\n| Item | Disposition |\n|---|---|\n| S93 | FAILED_ACTIVATION, unreachable caller (not neutral) |\n| S94 CPU apply/build | Conditional GO, after the 4 source-read conditions; otherwise HOLD |\n| S94 GPU serving | Not approved. Future gate with first-eligible-request activation assertion |\n| Decode trace | Endorsed as a single future instrumentation run. Not approved here |",
+      "ttft_ms": 20939,
+      "type": "result",
+      "duration_ms": 55157,
+      "uuid": "e3cd7e4e-f200-4a0c-a06d-33131175ace6",
+      "ttft_stream_ms": 1894,
+      "time_to_request_ms": 443,
+      "first_content_frame_ms": 1895,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

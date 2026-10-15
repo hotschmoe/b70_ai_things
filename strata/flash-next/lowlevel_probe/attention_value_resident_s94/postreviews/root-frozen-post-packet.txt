@@ -1,0 +1,189 @@
+S94 CLOSED POSTDECISION. Actual one OFF-then-ON sequence, same audited main d94e96ca399d8ecf1f15403db754b645697e82eaa72c052a2d18f4b29defc247. Source caller2a1d8faa; attention object06eb664c/archive5d465c2d exactS93, all13 tags/four final bindings rechecked3s, allfourFULLimagesexactS93. S94 oneprefillTU/archive/mainlink175s; driverlink146.979s notisolatedocloc. Numerical36cases+CAP2051 proof reused without rerun. S93 previouslyFAILED_ACTIVATION because stagedguard excluded actual residentmode0. S94 ONLYcaller extends to complete nonelastic identitypage residentdomain. Static/source conditions from your originalsource review were rootclosed. No claim that synthetic fullbit oracle proves all actual production pools. Actual native mode0/INT8/page4, EP149/363/all24576resident, depth2/headpairON/spec4, two200k/32GiB4parking, C12288/Q0/FIRST0/DirectPLE; VALUE0/1 only, XMX0/ROT0/QSA0/Q6center0 botharms. Allprofilers absent.
+
+{
+  "status": "FAILED_NATIVE_WORK_MATCH_NO_CANDIDATE_SERVING_COMPARISON",
+  "same_binary": true,
+  "binary": {
+    "exe": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build/build/strata-attn-value-resident-s94",
+    "sha256": "d94e96ca399d8ecf1f15403db754b645697e82eaa72c052a2d18f4b29defc247"
+  },
+  "config_equal_except_flag_and_log": true,
+  "warm_checks": [
+    {
+      "request_equal": true,
+      "text_and_SSE_equal": true,
+      "usage_equal": true,
+      "native_work_equal": true
+    },
+    {
+      "request_equal": true,
+      "text_and_SSE_equal": true,
+      "usage_equal": true,
+      "native_work_equal": true
+    }
+  ],
+  "warm_native_work_and_capture_equal": true,
+  "OFF_six_prefills_and_functionals": "PASS",
+  "ON_completed_prefill_requests": [
+    "p4096-0"
+  ],
+  "first4K": {
+    "checks": {
+      "request_equal": true,
+      "text_and_SSE_equal": true,
+      "usage_equal": true,
+      "native_work_equal": false
+    },
+    "usage": {
+      "prompt_tokens": 4059,
+      "completion_tokens": 256,
+      "total_tokens": 4315,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "work": [
+      {
+        "cache_n": 0,
+        "prompt_n": 4059,
+        "predicted_n": 256,
+        "draft_n": 207,
+        "draft_n_accepted": 136
+      },
+      {
+        "cache_n": 0,
+        "prompt_n": 4059,
+        "predicted_n": 256,
+        "draft_n": 205,
+        "draft_n_accepted": 136
+      }
+    ],
+    "output_sha256": "4cc1afbabebee14a0f00b57b64d9ad10b331db0ad4c508fb39894cbfe3b1bca0",
+    "value_HOST_activation": true,
+    "native_draft_counts_confirm_API": true
+  },
+  "unattempted_ON": [
+    "p4096-1",
+    "p4096-2",
+    "p32768-0",
+    "p32768-1",
+    "p32768-2",
+    "functionals"
+  ],
+  "ON_client_exit": 1,
+  "ON_client_elapsed_s": 7,
+  "ON_stop_driver_exit": 0,
+  "ON_stop_elapsed_s": 59,
+  "closures": [
+    {
+      "arm": 0,
+      "normal_stop": {
+        "status": "PASS_NORMAL_TEARDOWN",
+        "signal": "TERM to server -> QUIT to native engine",
+        "container_removed": true,
+        "lease_wrapper_exit": 0,
+        "all_wrapper_terminal_exits": [
+          0
+        ],
+        "prestop_state": {
+          "Running": true,
+          "OOMKilled": false,
+          "inspect_succeeded": true
+        },
+        "container_missing_or_inspect_failed_before_stop": false,
+        "diagnostic_before_any_forced_container_stop": true,
+        "no_force_stop_used": true,
+        "functional_status": "PASS",
+        "epoch_ns": 1792095554179536789
+      },
+      "post_health": {
+        "card": {
+          "command": [
+            "bin/gpu-run",
+            "bin/xpu-health",
+            "--img",
+            "b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78",
+            "--timeout",
+            "400"
+          ],
+          "exit": 0,
+          "elapsed_s": 26.46592079795664
+        },
+        "collective": {
+          "command": [
+            "bin/gpu-run",
+            "bin/xpu-collective-health",
+            "--timeout",
+            "400"
+          ],
+          "exit": 0,
+          "elapsed_s": 26.473420487018302
+        }
+      },
+      "full_CID_NAME_absent": true,
+      "actual_native_identity": "d94e96ca399d8ecf1f15403db754b645697e82eaa72c052a2d18f4b29defc247",
+      "value_HOST_marker_count": 0,
+      "first4K_native_summary": "strata serve: prompt 4059 tokens = 0 reused + 4059 read in 3379 ms (1201.2 tok/s), 256 generated in 3763 ms (68.0 tok/s), drafts accepted 136 of 207, 1 checkpoints",
+      "engine_final_sha256": "365216bb4cb3e7288efd9395bb69869e2321c9e333f75e1c72f7d01a66952ec1"
+    },
+    {
+      "arm": 1,
+      "normal_stop": {
+        "status": "PASS_NORMAL_TEARDOWN",
+        "signal": "TERM to server -> QUIT to native engine",
+        "container_removed": true,
+        "lease_wrapper_exit": 0,
+        "all_wrapper_terminal_exits": [
+          0
+        ],
+        "prestop_state": {
+          "Running": true,
+          "OOMKilled": false,
+          "inspect_succeeded": true
+        },
+        "container_missing_or_inspect_failed_before_stop": false,
+        "diagnostic_before_any_forced_container_stop": true,
+        "no_force_stop_used": true,
+        "functional_status": "NOT_COMPLETED_FAILED_OR_INVALID",
+        "epoch_ns": 1792095700095740179
+      },
+      "post_health": {
+        "card": {
+          "command": [
+            "bin/gpu-run",
+            "bin/xpu-health",
+            "--img",
+            "b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78",
+            "--timeout",
+            "400"
+          ],
+          "exit": 0,
+          "elapsed_s": 24.855896805995144
+        },
+        "collective": {
+          "command": [
+            "bin/gpu-run",
+            "bin/xpu-collective-health",
+            "--timeout",
+            "400"
+          ],
+          "exit": 0,
+          "elapsed_s": 27.610206786019262
+        }
+      },
+      "full_CID_NAME_absent": true,
+      "actual_native_identity": "d94e96ca399d8ecf1f15403db754b645697e82eaa72c052a2d18f4b29defc247",
+      "value_HOST_marker_count": 1,
+      "first4K_native_summary": "strata serve: prompt 4059 tokens = 0 reused + 4059 read in 3366 ms (1205.8 tok/s), 256 generated in 3755 ms (68.2 tok/s), drafts accepted 136 of 205, 1 checkpoints",
+      "engine_final_sha256": "f05e6e4187c88e81643f59bf89a958203558063fdfd562761ba73d5930492780"
+    }
+  ],
+  "timed_summary": null,
+  "interpretation": "Unmatched observable native draft work after successful HOST activation. Same output is not a full internal numerical/state equivalence proof. Cause unresolved; neither harmless nondeterminism nor numerical failure nor regression established.",
+  "disposition": "Keep VALUE defaultOFF/unqualified; park prefill candidate. No retry/remaining requests/new numerical/cache/full200k campaign. Next separate source-reviewed current C2 operation/readiness profile with candidates OFF.",
+  "epoch_ns": 1792095805053654801
+}
+
+IMPORTANT: There are NOT six paired candidate observations. ON stopped immediately at first native-work mismatch; do not invent missing samples or calculate aggregate/percentage speed from unmatched work. The first completion native prompt spans were OFF3379.1ms/ON3366.2ms, retained raw only, NOT speed evidence. Sameoutput+usage/acceptedcount but offered207vs205 is unresolved. API and native counts agree, so not solely an HTTP counter loss. No actual logit/KV/activation readback or cross-process nondeterminism control. Candidate activation is HOSTmarker once during first4K, not independent GPU dispatch count. ON localverdict notwritten because earlier strict workgate aborted. OFFall6complete/functionalsPASS; ONremaining5/functionalsNOTATTEMPTED. BOTHnormalQUIT/fullCIDNAME/wrapper0/percard+compiled10healthPASS. No cache rerun/dailyrestore.
+
+Root disposition: keep candidate defaultOFF/unqualified; park prefill optimization branch rather than repeat with relaxed gate. Select audited d94e96ca VALUE0/QSA0/Q6center0 for possible S95 source-reviewed instrumentation only, no production promotion. Next ONEcurrent C2trace:107prompt/64outputsEACH, injection BEFOREfirstGEN/capture, TRACE1/HOST_BOUNDARY1, VERIFY_PROFILE absent, preservecold/solo/tail, completeboundedCPUring/dropped0/count<=8192 plus bothslotsidle; sourcehasNOfooter. One stoppedrawtraceparse reusedfullop+cyclecensus. Native steadyclockidentity unverified, so CPU/GPUjoinsDISALLOWED/defaultordinalonly; nocrosscardclockjoin/physicalidle/causal/removablebudget claim. Goal is choose actual dense/shared/HC/head dominant work vs recurring EP/PLE readiness association before ONE next mechanism. No GPU execution GO from this packet. Please give bounded postdecision advice; no extra review/testmatrix.

@@ -344,3 +344,17 @@ work; missing candidate marker stops ON before its remaining work. Both
 normal teardown/fullCID+NAMEabsence/percard+compiledhealth pass. DefaultOFF
 retained; S94 resident caller proof is source-only. Targets and S30 recovery
 remain unchanged. [S93 activation finding](20261015_strata_attention_value_serving.md).
+
+
+S94 corrects resident caller eligibility and observes candidate HOSTmarker1,
+but first ON4K fails native-work parity: offered drafts207OFF/205ON despite
+matching request/text/SSE/usage/output and all other work counts. No speed
+summary, remaining ON tests or retry. Bothnormalteardown/fullCID+NAMEabsence/
+percard+compiledhealth pass. KeepdefaultOFF/unqualified; cause unresolved,
+no numericalfailure/benignnondeterminism/regression claim. Pivot separate
+currentC2profile with candidatesOFF. Goals/S30 recovery remain unchanged.
+[S94 work gate](20261015_strata_attention_value_resident.md).
+Actual S94post Opus34.340s/Fable20.127s/rootfullread acceptpark/pivot. Raw
+S93inactive0/1 offered205/205 vsS94OFF207/ON205 shareaccepted136/outputSHA;
+differentbinary/processcontext, not matchedOFF/OFF/control or benigncause.
+No retroactivegate relaxation or target/speed claim.

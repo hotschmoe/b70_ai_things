@@ -1,0 +1,13 @@
+c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584  /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+9ecedbed463eeeb241a49995c0d8b078cb2ef5ac4d294a3954f075aeff0b97c2  /work/src-ep/sycl/include/strata/core/verify.hpp
+e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2  /work/src-ep/sycl/src/core/verify.cpp
+6433d750e414aeb9c71135257ae40a8f9e38ea661537c251b50cabdbc2217d83  /work/src-ep/sycl/src/program/generate.cpp
+d62bcb252eecdbcaae81095907c2241e39c4798b7854bb499fb5643fecb24e99  /work/src-ep/sycl/src/kernels/cuda/fused_gr.dp.cpp
+fcd5d2e4b029985a6e7768707a5aa489e4b5724a78db50fc2313d9c64e67ec31  /work/src-ep/sycl/src/core/mtp.cpp
+e9869988fbdc9e18ef3d144dd91e9266c18a190e9ec1a7351ce5c7b858bbd838  /work/src-ep/include/strata/core/geometry.hpp
+152dfce28a1f517169542590b32b7bb0b72442cf833446d1beb91cb104922250  /work/src-ep/include/strata/kernels/qsa_select.hpp
+28117295f242483d62c23e060adf0c3b49be9c1868d80669bff58b7fcdbfd5a1  /work/src-ep/sycl/src/kernels/cuda/qsa_select.dp.cpp
+6fa4b817f835c43783774d5946d14938f2867d7af16abb4db0f4b75d4622a915  /work/src-ep/include/strata/kernels/qsa_decode_attn.hpp
+a18cabeeecd151925c9835f53a8a296c16a8b8f31adb1b8372b75190532ecfc7  /work/src-ep/serve/server.py
+013e3b3df3cd4685af6330d9ab38223f41846e6a07aaeab2f7a534f66d1f36fe  /work/src-ep/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp
+87af3d42d17fe6f74343e90bbdea4b3aee8c7c5fb7095a19b22dc64d69d642c5  /work/src-ep/include/strata/kernels/qsa_prefill_attn.hpp

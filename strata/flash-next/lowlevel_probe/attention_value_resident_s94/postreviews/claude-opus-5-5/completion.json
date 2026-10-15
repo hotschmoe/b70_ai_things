@@ -1,0 +1,120 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 34.33985049300827,
+  "launch_exception": null,
+  "source_packet_sha256": "6383222836a334b21f708ae29d0f64cafba6976d773da1fbdce35d7cfdf1bdbe",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 87992,
+      "stop_reason": "end_turn",
+      "session_id": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "total_cost_usd": 0.3460168,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 9183,
+        "cache_read_input_tokens": 18495,
+        "output_tokens": 2339,
+        "output_tokens_details": {
+          "thinking_tokens": 623
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 9183,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 2339,
+            "cache_read_input_tokens": 18495,
+            "cache_creation_input_tokens": 9183,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 9183
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 4,
+          "outputTokens": 6297,
+          "thinkingTokens": 1941,
+          "cacheReadInputTokens": 19144,
+          "cacheCreationInputTokens": 27029,
+          "webSearchRequests": 0,
+          "costUSD": 0.3460168,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# S94 post-decision review\n\n## Disposition\n\n**The candidate is unqualified because the native-work identity gate failed after activation was confirmed.** Keep it default OFF and unintegrated, and park the prefill value-domain branch. I agree with root's disposition. Here is how this result differs from the other possible outcomes:\n\n- **Not a no-effect result.** No paired comparison exists.\n- **Not a numerical mismatch.** No logit, KV or activation readback was done. Output, usage and accepted count were identical.\n- **Not a measured regression.** There is no timing evidence.\n- **Not a health failure.** Both arms quit normally, CID and name were gone, wrappers exited 0, and card plus collective post-health passed.\n- **It differs from S93.** S93 failed activation. S94 activated: the host marker fired once in ON, never in OFF, and the API and native draft counts agree.\n\n**Material blocker:** offered drafts were 207 (OFF) vs 205 (ON) on p4096-0. Under the strict gate this alone ends the comparison. It is correct that no other ON samples, percentages or summaries were produced. The prompt spans of 3379.1 ms vs 3366.2 ms are raw retained data only, not speed evidence.\n\n## Evidence limits\n\n- The host marker shows the candidate path was entered once. It does not count GPU dispatches or show which layers used it.\n- Identical output and identical accepted count (136) do not prove internal state equivalence.\n- The cause of the 207/205 split is unresolved. Do not record it as a numerical failure, as harmless nondeterminism, or as a regression.\n- **Context root should record, but not use to relax the gate:**\n  - The S93 baseline-path arms (ON was inactive) both offered 205 on this same p4096-0 request.\n  - The S94 OFF arm, a different binary on the same baseline path, offered 207.\n- So the offered draft count already varied across processes on the baseline kernel. That makes it a fragile strict discriminator. It does not clear the candidate: no OFF/OFF control in the same session exists.\n- The synthetic 36-case and CAP2051 numerical proofs remain valid kernel evidence. They do not certify actual production pools.\n\n## Dev-loop lessons\n\n1. **S94 itself was efficient.** It was a caller-only change, reused the attention object, archive and images byte-exact, rebuilt only one TU plus the link (175 s), skipped any numerical rerun, and aborted at the first gate in about 7 s of client time. The remaining cost was mostly lease, health and teardown overhead.\n2. **The real gap is gate design.** A strict equality gate on a quantity never shown to be repeatable baseline-vs-baseline turns noise into a hard stop. Two rules for any future identity gate:\n   - Before using a native counter like `draft_n` as a strict gate, establish whether it repeats across processes, from existing logs where possible.\n   - Otherwise gate on output, usage and accepted work, and treat offered drafts as diagnostic only.\n   - Do not apply either rule retroactively to S94.\n3. **The prefill payoff ceiling was low.** The upside is bounded to one attention sub-stage of prefill and does not touch decode or per-stream rate, which are the unmet goals (about 54\u201356 vs 150+ tokens/s per stream). Parking the branch is the right allocation, not just caution.\n4. **Do not reopen without a reason.** Reopen only if a future trace shows 32K prefill attention as a dominant bounded cost. Even then, start with the repeatability control above, not a rerun.\n\n## Pivot: current C2 trace\n\n**I endorse one source-reviewed current C2 trace as the next decision input.** It is not execution-approved from this packet. The setup:\n\n- **Binary and flags:** audited d94e96ca with all candidates OFF (VALUE0, QSA0, Q6center0), same fixed flags.\n- **Injection:** the profiler is injected before the first generation and before graph capture, with no generation warm-up.\n- **Workload:** one paired 107-token coding request with 64 output tokens per slot.\n- **Profiling flags:** `TRACE1` and `HOST_BOUNDARY1` on, `VERIFY_PROFILE` absent.\n- **CPU ring:** complete ring, `dropped0`, count \u2264 8192, and both slots idle before the snapshot. The source has no footer, so count and idle state are the completeness proof.\n- **Retained data:** cold, solo and tail data kept.\n- **Parsing:** one raw parse after stop.\n\n**Scope of claims:** use ordinal rankings only. Do not join CPU and GPU clocks while native steady-clock identity is unproved, do not join across cards, and make no physical-idle, additive-budget or removable-gap claims.\n\n**Decision output:** pick exactly one next mechanism. Choose dense/shared/HC/head work if it dominates. Choose EP/PLE readiness if the recurring readiness association dominates. If too few full S6/A2 cycles are captured, the result is insufficient and should not be retried. Then make the build/GPU go/no-go separately.",
+      "ttft_ms": 11095,
+      "type": "result",
+      "duration_ms": 33354,
+      "uuid": "213a7e3f-7560-4517-9736-df32b0cef762",
+      "ttft_stream_ms": 1446,
+      "time_to_request_ms": 67,
+      "first_content_frame_ms": 1446,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}
