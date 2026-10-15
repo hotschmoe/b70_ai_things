@@ -185,3 +185,10 @@ Operation/data-path reference: [interactive offline map](data-map/index.html),
 [Markdown guide](data-map/README.md), [readiness probes](lowlevel_probe/README.md).
 S24 maps 40 stages and 170 S22 operation types; CPU-readiness and hardware
 counter gaps stay explicit. Single-card probes are diagnostics, not serving gains.
+
+S25 replays the actual Q5_K vocabulary head on both cards: allC1/2/3/4/6/8
+bitwise/argmax/finite/guard checks pass. C2 costs1.31-1.32ms versus
+twoC1 calls about2.01ms; same-depth slot-head batching is a source-only
+candidate, not a serving gain. Existing production PLE logging measures
+21 miss-ticket waits over24 batch windows (median667.9us,sum13.294ms).
+See lowlevel_probe/README.md and stageS25; per-card/collective health PASS.

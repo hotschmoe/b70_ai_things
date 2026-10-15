@@ -22720,3 +22720,27 @@ S24 review: distinguish host-mappedcopies as40thstage; fixembeddingpaths,
 causalclaims, headparityhypothesis, residencyevidence and logicalreturn
 upperbound. Verify secondGGUFNVMe symlink over reviewerSATAassumption.
 Correct metricenumtimerunits from installedheaders; originalraws retained.
+
+
+## 2026-10-15 -- Flash-Next optimization S25: real head and PLE wait profile
+
+CONFIG: upstream296/PRheadsunchanged, frozenS21db53efb2 PLETRACE1,
+VERIFYPROFILEunset, sameEP/PUSH/depth2/spec4/200k2/32GiB4/24576experts.
+Headprobe21e4beb3, actualQ5K2560x248320437043200Boffset11024256,
+weightsSHA93f1c7cb7a7cf8134ce9f8cf80c5416df968f7f1ddcc16f2159a9521080826a5.
+COMMAND: actualFablepreparedprobeCPU-AOTreuse; OpusPLEaudit/parser and
+independentC2sourceaudit. Rootpercardcurve C1/2/3/4/6/8, tinycard0trace;
+107in/64outPLEpair/canary/normalstop/bothhealth+10compiledcollectives.
+RESULT: bothcardsall6Cbitwise/argmax/finite/guardsPASS, realweightswith
+normalinputs. C1=1006.0/1006.6us,C2=1322.0/1307.9,C6=2700.5/2620.7;
+min3meansof30launchbarrierspans, quant4.2-4.6usseparate. Tracepurekernel
+C1med1016.666/C2 1309.010us,SIMD32,WG32x4x1,grid62080; alloraclePASS.
+PLEpairbothprefixS16match,46offered/40accepted each,canary323PASS.
+21batchmissgathers across24windows:waitmed667.9us,p90 817.4,sum13.2942ms,
+jobs8-64; native51.90ms/window. Allcachehitsomitted/noabsoluteGPUjoin.
+Bothposthealth+10collectivesPASS,nocrash/reset,serversstopped.
+VERDICT: idealC2head-onlysaving1.38-1.41ms/depth2window(~2.8%before
+newlaunchcost), notservinggain; prepareoneguardedsame-depthprototype.
+DoNOTbatchautoregressivedepths. PLEloggingdiagnosticonly; deferengine
+rebuildforthatgap. No unchangedCPUsuites/fullRAM/soak/dailyrestore.
+Rawhead-profile-s25/s25-report.json; stagedocS25, data-map refreshed.

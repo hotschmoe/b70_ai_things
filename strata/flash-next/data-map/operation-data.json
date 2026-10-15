@@ -1,7 +1,7 @@
 {
  "schema": 1,
  "title": "Strata Flash-Next data map",
- "snapshot": "2026-10-15, S24: S22 trace plus low-level readiness and GR experiments",
+ "snapshot": "2026-10-15, S25: S22 operation trace plus S24 readiness and S25 real-head/PLE diagnostics",
  "scope": "Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two Arc Pro B70 cards, Strata SYCL engine, EP/PUSH, batch MTP depth2 (opt-in), two 200000-token slots, INT8 KV, 32 GiB / 4-entry RAM parking, all 24576 experts resident (7152 on GPU0 + 17424 on GPU1), greedy.",
  "warnings": [
   "Trace service times overlap: within a card (engines), across cards, and with CPU wall time. They are NOT additive and are not a latency budget.",
@@ -358,7 +358,7 @@
     "prefill",
     "decode"
    ],
-   "status": "source-only",
+   "status": "measured",
    "summary": "Enabled in S22 (--ple-gguf, --ple-io direct). Table has 320001536 rows; the second GGUF symlink resolves to NVMe /mnt/cache. PleReader first checks its 8-way host row cache, deduplicates/aligned-pages/sorts misses, and queues DirectFile reads. The SYCL Linux path uses a bounded worker pool of blocking O_DIRECT pread calls (default 64 workers, env override), not io_uring.",
    "source": [
     {
@@ -385,9 +385,17 @@
    "evidence": [
     "draft-profile-s22/profile/engine.log: PLE on, --ple-io direct",
     "lowlevel-s24/model-geometry.json",
-    "lowlevel-s24/storage-identity.json"
+    "lowlevel-s24/storage-identity.json",
+    "head-profile-s25/ple/batch-trace-summary.json"
    ],
-   "quoted": [],
+   "quoted": [
+    {
+     "label": "S25 bounded production PLE miss-ticket trace",
+     "value": "21 traced gathers across24 batch windows: collect median667.9us, p90 817.4us, sum13.294ms; jobs8-64.",
+     "basis": "STRATA_PLE_TRACE on frozenS21, logging only; cache-hit tickets and large gathers omitted; no absolute GPU join",
+     "status": "measured"
+    }
+   ],
    "upstream": [
     "model_files"
    ],
@@ -396,7 +404,8 @@
     "host_staged_inputs"
    ],
    "gaps": [
-    "No joined per-request cache-hit/miss, ready/submit/pread-complete/host-consume/H2D timeline. Startup rows/s probe is not request latency."
+    "No absolute producer-ready/submit/complete anchors or exact GPU join. Per-ticket differences measured only when0<jobs<200; cache-hit gathers omitted.",
+    "submit->last includes worker/reap/scheduling, not NVMe device-only latency."
    ],
    "hypotheses": []
   },
@@ -1384,13 +1393,20 @@
     }
    ],
    "evidence": [
-    "draft-profile-s22/profile/steady-summary"
+    "draft-profile-s22/profile/steady-summary",
+    "head-profile-s25/s25-report.json"
    ],
    "quoted": [
     {
      "label": "Six-row head per cycle",
      "value": "2.259 ms (1 call, median 2258.5 us)",
      "basis": "trace",
+     "status": "measured"
+    },
+    {
+     "label": "S25 actual-weight standalone head curve",
+     "value": "C1 1006us; C2 1308-1322us; C6 2621-2701us. Both cards all C1/2/3/4/6/8 bitwise/argmax/finite/guards PASS.",
+     "basis": "minimum of three 30-launch mean spans, synthetic normal activations with served Q5_K tensor; not a serving gain",
      "status": "measured"
     }
    ],
@@ -1599,13 +1615,20 @@
     }
    ],
    "evidence": [
-    "draft-profile-s22/profile-comparison.json"
+    "draft-profile-s22/profile-comparison.json",
+    "head-profile-s25/s25-report.json"
    ],
    "quoted": [
     {
      "label": "Draft heads per cycle",
      "value": "4 calls, 3.981 ms sum, union 3.981 ms (median 995 us each)",
      "basis": "trace; no overlap in either mode",
+     "status": "measured"
+    },
+    {
+     "label": "S25 actual-weight standalone head curve",
+     "value": "C1 1006us; C2 1308-1322us; C6 2621-2701us. Both cards all C1/2/3/4/6/8 bitwise/argmax/finite/guards PASS.",
+     "basis": "minimum of three 30-launch mean spans, synthetic normal activations with served Q5_K tensor; not a serving gain",
      "status": "measured"
     }
    ],
@@ -1622,6 +1645,10 @@
    ],
    "gaps": [],
    "hypotheses": [
+    {
+     "text": "Same-depth C2 head pairing has about1.38-1.41ms/window ideal head saving at depth2, before extra graph/coordination overhead. A guarded opt-in source candidate is being prepared; no serving gain measured.",
+     "status": "hypothesis"
+    },
     {
      "text": "One-row head 995 us versus six-row head 2259 us: the head amortizes well across rows. Batching the two slots' same-depth drafts into one 2-row head could save GPU0 service time if the drafts are independent across slots. Needs dependency audit + clean A/B; bitwise parity between the different one-row/two-row kernel instantiations must be tested.",
      "status": "hypothesis"
@@ -2031,6 +2058,20 @@
    "value": "ERROR_DEPENDENCY_UNAVAILABLE; timestamps available",
    "status": "measured",
    "note": "host enumeration, no stack changes; EU/cache/stall counters remain unavailable in this evidence."
+  },
+  {
+   "stage": "S25",
+   "label": "Real Q5_K head replay, C1 versus C2 (two cards)",
+   "value": "C1 1006.0/1006.6us; C2 1322.0/1307.9us",
+   "status": "measured",
+   "note": "all six row counts bitwise/argmax/finite/guard PASS; standalone, not serving gain; same-depth pairing only"
+  },
+  {
+   "stage": "S25",
+   "label": "Production PLE diagnostic, two107-input/64-output requests",
+   "value": "both S16 prefixes match;46offered/40accepted drafts each;21 miss-ticket traces",
+   "status": "measured",
+   "note": "collect median667.9us, sum13.294ms across24windows; no clean throughput claim; health/canary pass"
   }
  ],
  "rejected_parked": [
@@ -2093,7 +2134,7 @@
   "Target-verifier versus drafter attribution is incomplete: dense, attention, GDN and HC kernels mix both.",
   "Per-tensor quant/kernel mapping for dense projections is not established; types come from kernel template names.",
   "RAM park/restore internals: native durations only; no trace; disk conversation file path unexercised in this evidence.",
-  "PLE is enabled; its row cache/O_DIRECT pread worker path is source-mapped, but joined per-operation request latency and cache-miss attribution are absent.",
+  "PLE miss-ticket differences measured in S25; all-cache-hit gathers omitted and exact CPU/GPU readiness joins remain absent.",
   "Vision (mmproj) path, CUDA path, pipeline/layer-split configs, sampling (non-greedy) are not covered.",
   "Async trace is compared on headline figures and per-op medians only.",
   "S24 both cards expose timestamps but zetMetricGroupGet returns ERROR_DEPENDENCY_UNAVAILABLE in host environment. No EU/cache/stall counter coverage is claimed.",

@@ -54,3 +54,58 @@ The retained metric enumerator fixes a display-only review finding: timer
 units depend on properties.stype, not the driver API version. The installed
 ze_api.h documents DEVICE_PROPERTIES as ns, DEVICE_PROPERTIES_1_2 as Hz.
 Raw original values are retained; no performance conclusion used that label.
+
+
+## Real vocabulary head replay (S25)
+
+    bash build_head.sh
+
+This separate CPU-only AOT build links the recorded runtime archives and
+prints source/archive/object/binary hashes. It writes under build/head-cols.
+Run inside the matching build container with bin/gpu-run --card N,
+ZE_AFFINITY_MASK=N and ONEAPI_DEVICE_SELECTOR=level_zero:*, and mount the
+GGUF read-only. Arguments:
+
+    head_cols_probe --iters 30 --expect-bdf 0000:0b:00.0 --weights FILE 11024256 --json OUT
+
+FILE is the first served IQ3_XXS GGUF; output.weight has Q5_K type13,
+shape2560x248320,437043200bytes, SHA256
+93f1c7cb7a7cf8134ce9f8cf80c5416df968f7f1ddcc16f2159a9521080826a5.
+The offset is specific to this model file. Re-derive it from GGUF metadata
+before using another artifact. C=1/2/3/4/6/8 use deterministic normal
+activations, every column compared bitwise with its independent C1 result,
+plus argmax, finiteness, inactive rows and tail guards. Actual read weight
+FNV-1a64 must be da8746c3dcc2469e for this tensor.
+
+Both cards passed all six cases. Card0/card1 minimum-of-three mean spans
+in us: C1 1006.0/1006.6; C2 1322.0/1307.9; C3 1721.7/1676.5;
+C4 2043.2/1978.0; C6 2700.5/2620.7; C8 3376.6/3302.6. Quantization is
+timed separately, about4.2-4.6us. These event-barrier spans include queue
+and launch gaps. Tiny unitrace per-kernel medians on card0: C1 1016.666us,
+C2 1309.010us, C6 2681.146us, grid62080x1x1, workgroup32x4x1, SIMD32.
+This is a standalone replay; cache/frequency/context differ from serving.
+
+Only two slots at the SAME draft depth may be paired. Four serial draft
+heads cannot become one C4 call because successive depths are autoregressive.
+Ideal head-only saving at depth2 is about1.38ms/window before extra graph
+launches and coordination; no serving gain is claimed.
+
+## Existing production PLE trace (S25)
+
+STRATA_PLE_TRACE=1 on the frozen S21 binary changes timer/logging only;
+keep STRATA_VERIFY_PROFILE unset (it changes shared-stream scheduling).
+
+    python3 -I parse_ple_trace.py ENGINE_LOG --window START:END --json SUMMARY
+
+The existing trace omits all-cache-hit tickets (jobs0) and tickets with
+200+ I/O jobs. It reports same-clock differences without absolute anchors:
+issue->submit, submit->last, last->return and collect wait. Large
+last->return can mean useful prefetch slack, not a stall. The collect wait
+includes caller locking/scheduling. It cannot be joined exactly to GPU
+events and submit->last is not device-only NVMe latency.
+S25 had21 miss-ticket records between batch capture and the24-window summary:
+collect median667.9us, p90 817.4us, sum13.2942ms; jobs8-64.
+Two107-input/64-output replies match S16 prefixes, active slots offer46
+and accept40 drafts each; arithmetic canary and both-card/10 compiled
+collective post-health pass. No clean throughput claim from this diagnostic.
+Raw commands, frozen hashes and trace summaries: cachefix_20261014/head-profile-s25/.

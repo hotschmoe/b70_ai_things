@@ -6,7 +6,8 @@ path, which operations are expensive or wait, and how strong the evidence
 is for each claim. `operation-data.json` is the source of truth;
 `index.html` embeds a copy of it.
 
-Snapshot: 2026-10-15, S24 (S22 operation trace plus readiness diagnostics). Runtime source: frozen
+Snapshot: 2026-10-15, S25 (S22 operation trace plus readiness, real-head
+and production PLE diagnostics). Runtime source: frozen
 `/mnt/vm_8tb/b70/build/strata-ab/src-ep` (upstream Strata 296b59d2 base
 plus working-tree overlays for EP/PUSH/accounting/S19-S21). Evidence:
 `docs/20261014_flashnext_strata_optimization.md` S10 and S20-S22, plus raw
@@ -75,3 +76,7 @@ Browser layout has not been visually inspected. PLE is enabled on NVMe through t
 row-cache/O_DIRECT pread worker path is mapped, while joined request costs
 remain unmeasured. The primary IQ3_XXS GGUF is on SATA. Source paths marked
 project-repository refer to this B70 repo; base/overlay paths refer to Strata.
+
+S25 adds the actual-weight C1/2/3/4/6/8 head curve and bounded production
+PLE miss-ticket waits. These are separate scopes from the S22 operation
+rollups; source-only C2 batching remains a hypothesis until serving tests.

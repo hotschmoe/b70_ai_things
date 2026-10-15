@@ -1566,3 +1566,74 @@ override a reviewer assumption that the second GGUF was SATA: realpath
 and findmnt prove its NVMe symlink. Metric-query timer-unit display was
 fixed against installed ze_api.h (properties stype, not driver API version);
 raw values retained, no conclusion depended on the original label.
+
+
+## S25: real vocabulary-head curve and production PLE waits (2026-10-15)
+
+CONFIG: upstream296b59d2 and accounting/cache PR heads unchanged at stage
+start. Frozen S21 db53efb2 for one PLE diagnostic, same EP/PUSH/spec4/
+depth2/two200k slots/32GiB4/all24576 experts. STRATA_PLE_TRACE=1 adds
+timestamps/logging only; STRATA_VERIFY_PROFILE stays unset. Actual Fable5.1
+prepares existing head replay; actual Opus5.5 audits trace and independently
+reviews same-depth head batching. Probe frozen SHA256
+21e4beb3fbe8dbedfc94362a1cf2b725410d7e85b949f7cce1be2d08348f9c03.
+COMMAND: reuse prepared standalone source and existing runtime archives;
+CPU-only AOT build, no engine rebuild. Derive head offset with GGUF header
+reader and cross-check existing reader. Root leases/pins each card for one
+C1/2/3/4/6/8 curve (three30-launch means/case); tiny card0 unitrace with
+20launches/round. One native pair107input/64output for PLE logging,
+arithmetic canary, normal stop, both-card and10compiled collective health.
+
+RESULT: actual output.weight is Q5_K,2560x248320,437043200bytes at offset
+11024256 in served first GGUF, SHA256
+93f1c7cb7a7cf8134ce9f8cf80c5416df968f7f1ddcc16f2159a9521080826a5,
+FNV1a64 da8746c3dcc2469e. Inputs are deterministic normal activations,
+not captured model hidden states. All six C values pass full bitwise
+columns versus independent C1 rows, argmax/finiteness and inactive-row/
+tail guards on both cards. All C1 reference1986560floats finite.
+
+| Head rows C | Card0 us/call | Card1 us/call |
+|---|---|---|
+| 1 | 1006.0 | 1006.6 |
+| 2 | 1322.0 | 1307.9 |
+| 3 | 1721.7 | 1676.5 |
+| 4 | 2043.2 | 1978.0 |
+| 6 | 2700.5 | 2620.7 |
+| 8 | 3376.6 | 3302.6 |
+
+These are minimum-of-three mean event-barrier spans over30 launches,
+including queue/kernel/inter-launch gaps; quantization measured separately
+at4.2-4.6us. Tiny unitrace confirms individual kernels, grid62080x1x1/
+workgroup32x4x1/SIMD32, C1 median1016.666us/C2 1309.010/C6 2681.146.
+All traced oracles also pass;1.27MB trace, not a full-model trace.
+Micro replay differs from serving cache/frequency/context; no physical
+weight traffic or bandwidth claim. C2 versus2xC1 suggests1.38-1.41ms
+ideal saving per depth2 window before additional graph/coordination cost.
+Only same-depth slots can pair; autoregressive depths cannot form oneC4.
+
+Production PLE: both64-token reply prefixes match S16, both offer46 and
+accept40 drafts; canary323 and teardown health PASS. Between first batch
+capture and24-window summary:21 miss tickets,776jobs total,8-64jobs/ticket.
+Collect wait median667.9us,p90 817.4us,max876.8us,sum13.2942ms; issue->submit
+median41us, submit->last631.2us. The24 native windows average51.90ms
+(run43.65,commit1.51,emit6.73). Trace omits jobs0/cache hits and jobs200+,
+contains no absolute anchors, and cannot exactly join GPU events. Worker
+reaping/scheduling are included, so submit->last is not pure NVMe latency.
+Do not rank startup/canary traces as steady decode;125total log records
+versus21 batch-phase records. Observed waits are about1.1% of this phase's
+24*51.9ms, not a global PLE bound. Client metrics retained separately:
+TTFT2.423/1.124s,completion3.785/3.724s; SSE gap p95 49.866/49.798ms,
+max277.571/1316.801ms (admission/capture included, multi-token events).
+Logging run is diagnostic, not clean throughput qualification.
+
+VERDICT: C2 same-depth head batching merits one small opt-in candidate,
+with per-slot state/graphs/context/EOS/cancel guards and in-serve parity.
+Independent Opus audit estimates200-300 source lines; extra launches can
+consume the ideal saving. Fable prepares source in an isolated S21-overlay
+worktree; runtime/defaults unchanged at S25 end. PLE waits are measured but
+lower priority here; skip new PLE engine rebuild or counter-package detour.
+Both-card health and10compiled collectives PASS, no crash/reset; servers
+stopped. No fullRAM repeat, soak or daily-server restoration. Fresh focused
+agent review reduces repeated large-context setup. No150/stream claim.
+Raw: cachefix_20261014/head-profile-s25/{s25-report.json,head-runs,ple,fable,opus-head-review}.
+Source replay/parser: strata/flash-next/lowlevel_probe/. Data map refreshed.
