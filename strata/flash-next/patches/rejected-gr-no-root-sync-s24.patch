@@ -1,0 +1,64 @@
+diff --git a/sycl/CMakeLists.txt b/sycl/CMakeLists.txt
+--- a/sycl/CMakeLists.txt
++++ b/sycl/CMakeLists.txt
+@@ -339,6 +339,15 @@
+     add_test(NAME ${p}_parity COMMAND ${p}_parity)
+   endforeach()
+   # not built here: qsa_topk_parity / qsa_topk_active_parity (the sm_90 thread-block-cluster QSA top-k has no SYCL
+-  # counterpart: the callers take the plain kernels), route_window_parity and fused_gr_bench (no migrated copy yet)
++  # counterpart: the callers take the plain kernels) and route_window_parity
++  # S23 probe: fused_gr_bench (its migrated copy, src/kernels/fused_gr_bench.cpp): leg 0 the default fused GR read,
++  # leg 1 the STRATA_GR_NO_ROOT_SYNC up kernel (fused_gr_set_fast), bit for bit and timed at T = 1..8:
++  #   build/fused_gr_bench [iters] [T min] [T max].  Opt-in, not a ctest (it times).
++  option(STRATA_SYCL_GR_BENCH "Build fused_gr_bench (the S23 root-sync probe)" OFF)
++  if(STRATA_SYCL_GR_BENCH)
++    strata_resolve(_src src/kernels/fused_gr_bench.cpp)
++    add_executable(fused_gr_bench ${_src})
++    target_link_libraries(fused_gr_bench PRIVATE strata_kernels)
++  endif()
+   # (upstream PR #413's gdn_rec_parity is an SM-holding NVIDIA bench - PTX timers, __nanosleep - not built here; the
+   # key-head kernel is checked through the engine: output hashes with STRATA_GDN_KEYHEAD=1 and without)
+diff --git a/sycl/src/kernels/cuda/fused_gr.dp.cpp b/sycl/src/kernels/cuda/fused_gr.dp.cpp
+--- a/sycl/src/kernels/cuda/fused_gr.dp.cpp
++++ b/sycl/src/kernels/cuda/fused_gr.dp.cpp
+@@ -845,9 +845,30 @@
+ inline bool gr_up_ilp() {
+     static const bool v = [] { const char* e = std::getenv("STRATA_GR_UP_ILP"); return e && e[0] == '1'; }();
+     return v;
+ }
++// S23 probe, opt-in: STRATA_GR_NO_ROOT_SYNC=1 launches the SAME up kernel (gr_up_multi_kernel<C>, the measured default
++// cols-16 path, and its large-GRF form) without the use_root_sync launch property.  No kernel of this port uses a
++// root-group barrier (no root_group / nd_range_barrier / get_root_group anywhere under sycl/src), so the property only
++// asks the runtime for a cooperative launch; this variant measures what that costs.  Every default launch is
++// unchanged.  fused_gr_set_fast(1) selects it as well: fused_gr_bench's "fast" leg, timed and compared bit for bit
++// against the "old" (default) leg.  Not combined with STRATA_GR_UP_ILP (S15 rejected ILP): that launch is as before.
++std::atomic<int> g_up_no_root_bench{0};
++inline bool gr_no_root_sync() {
++    static const bool v = [] { const char* e = std::getenv("STRATA_GR_NO_ROOT_SYNC"); return e && e[0] == '1'; }();
++    return v || g_up_no_root_bench.load(std::memory_order_relaxed) != 0;
++}
+ template <int C>
+ void launch_gr_up_cols(dpct::queue_ptr st, const GrMulti& m, bool grf) {
+     auto exp_props = sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
+     const sycl::nd_range<3> r(sycl::range(1, 1, N / C) * sycl::range(1, 1, THREADS), sycl::range(1, 1, THREADS));
++    if (gr_no_root_sync() && !gr_up_ilp()) {   // S23 probe: the same kernels, no cooperative-launch property
++        if (grf)
++            st->parallel_for<dpct_kernel_name<class gr_up_multi_cols_grf256_noroot, dpct_kernel_scalar<C>>>(r,
++                sycl::ext::oneapi::experimental::properties{sycl::ext::intel::experimental::grf_size<256>},
++                [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] { gr_up_multi_kernel<C>(m); });
++        else
++            st->parallel_for<dpct_kernel_name<class gr_up_multi_cols_noroot, dpct_kernel_scalar<C>>>(r,
++                [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] { gr_up_multi_kernel<C>(m); });
++        return;
++    }
+     if (grf) {   // Arc A-series: large-GRF mode (256 regs/thread); at 128 this kernel spills ~3.4 KB/thread on the A770
+@@ -2052,6 +2073,7 @@
+ }
+
+-// the bench only (AMD latency-hidden kernels): nothing to switch on the SYCL port
+-void fused_gr_set_fast(int) {}
++// the bench: leg 0 = the default launches, leg 1 = STRATA_GR_NO_ROOT_SYNC's up kernel (S23 probe); nothing else
++// switches on the SYCL port (upstream's AMD latency-hidden kernels are not here)
++void fused_gr_set_fast(int on) { g_up_no_root_bench.store(on != 0 ? 1 : 0, std::memory_order_relaxed); }
+
+ bool fused_gr_supported(int64_t n_embd, int64_t hc, int64_t hc_lr) {

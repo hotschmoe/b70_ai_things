@@ -22692,3 +22692,31 @@ PR explicitly discloses fullGPUevidence on matchingEP/PUSH/accounting
 overlay and CUDAuncompiled/unrun; no independentGPUrebuildclaim.
 VERDICT: usefulfixsubmitted, no runtime/shelfchange or redundant200k
 rebuild/requalification. Details: stagedocS23, rawcache-upstream-s23.
+
+
+## 2026-10-15 -- Flash-Next optimization S24: data map and readiness probes
+
+CONFIG: actualFable5.1/Opus5.5 isolatedCPU source/build/map workers; no
+modelservers or dailyrestore. S22tracebase, newstandaloneAOTreadiness
+a1dceb2c73359896f4be72f31d086e20b79de9badd58c88f1a7738ddbf6accf7.
+COMMAND: percardleased metricquery, GR32case oracle+tinyT6trace, one
+readiness680samples/card CPU2; source/GGUF/storage audit; bothcardhealth.
+RESULT: all1360freshbyte/guard/checksum samplesPASS, bothcardhealthPASS.
+614400B syntheticD2H producer/copygap pageable121.20/116.93us versus
+pinned1.41/1.41(cards0/1),11warm/arm. NotP2P/servinggain. Submit/start
+clocks inconsistent: excludeALLqueuedtimes. Producerremovablebusyloop
+caughtbeforeGPU, fixedobservablechecksum. Metricsbothcards dependency
+unavailable; timestamp/identitywork. GR32bitwisePASSneutral rejected,
+T6old54.9-56.7/fast54.8-56.6us, trace~112us chainperturbed. Noenginebuild.
+OfflineHTML+JSON+Markdownmap40stages170optypes, sixlanes; embedASCII
+andDOM40details/5filters/13sortcolsPASS, nobrowserlayoutpreview. Real
+GGUFgeometry and mixedSATAprimary/NVMePLEpathchecked; PLEworkerpool
+O_DIRECTpreadmapped. Serviceoverlap/cause/byteinference limits explicit.
+VERDICT: retainmap/probes, rejectGRproperty; nofullmodel/redundantsmoke/
+collectives/fullRAM/dailyrestore. No defaults/shelfchange, serversstopped,
+no crash/reset. NextCPUready/EPpublication join and actualheadrowreplay.
+Details: stagedocS24; rawlowlevel-s24/s24-report.json.
+S24 review: distinguish host-mappedcopies as40thstage; fixembeddingpaths,
+causalclaims, headparityhypothesis, residencyevidence and logicalreturn
+upperbound. Verify secondGGUFNVMe symlink over reviewerSATAassumption.
+Correct metricenumtimerunits from installedheaders; originalraws retained.

@@ -179,3 +179,9 @@ emit7.02/6.99/6.99ms. Two hardware traces show no draft-head overlap in
 8 interior cycles; this is not a hardware-wide concurrency claim. Only
 rejected patch evidence retained; runtime source returned exactly to S21.
 Do not repeat without a new mechanism. GPU teardown/collectives pass.
+
+
+Operation/data-path reference: [interactive offline map](data-map/index.html),
+[Markdown guide](data-map/README.md), [readiness probes](lowlevel_probe/README.md).
+S24 maps 40 stages and 170 S22 operation types; CPU-readiness and hardware
+counter gaps stay explicit. Single-card probes are diagnostics, not serving gains.

@@ -1504,3 +1504,65 @@ rebuild or CUDA compile/run is claimed. Draft PR discloses both limits.
 VERDICT: useful bounded fix submitted, no runtime/shelf change. Avoid a
 redundant full-model rebuild merely to repeat the already measured overlay.
 Raw: cachefix_20261014/cache-upstream-s23/{validation.json,pr-state.json}.
+
+
+## S24: operation map and bounded per-card readiness probes (2026-10-15)
+
+CONFIG: actual Claude Fable5.1 and Claude5.5 prepare isolated CPU-built
+probes; servers stopped, no daily-server restoration. Existing S22 traces
+remain the production-path operation evidence. Standalone AOT readiness
+binary a1dceb2c73359896f4be72f31d086e20b79de9badd58c88f1a7738ddbf6accf7.
+COMMAND: root leases/pins each card; query metric capabilities; one GR
+32-case oracle/timing screen plus tiny T6 unitrace; one integrated readiness
+run/card (680 samples each), CPU2 pin, no duplicated smoke/full matrix.
+Source and metadata audit, then both-card health. No new two-card workload;
+S22 collective-health evidence remains separate.
+RESULT: metric groups fail ERROR_DEPENDENCY_UNAVAILABLE on both host
+queries; device identity/timestamps work. GR default versus no-root-sync
+passes all32 bitwise cases but is neutral: T6 old54.9-56.7 us, candidate
+54.8-56.6 us; rejected before whole-model build. Tiny trace is perturbed
+(about112 us median chain versus about55 us clean), retained for geometry
+and gap attribution only. Readiness all1360 byte/guard/checksum samples
+PASS. At614400-byte synthetic D2H, warm median producer-end/copy-start
+gaps pageable fresh121.20/116.93 us (cards0/1), pinned prealloc1.41/1.41 us,
+11warm samples/arm. These are single-card stand-ins, not EP P2P or serving
+gains; synthetic pack/consumer costs are not model pack/dequant costs.
+command_submit/start differences are inconsistent (some negative): exclude
+ALL queued-time values, retain separate host clocks and device start/end
+service/gaps. Initial removable producer busy loop caught before GPU run,
+replaced by observable nonlinear checksum and host verification.
+
+Delivered [offline interactive data map](../strata/flash-next/data-map/index.html)
+and [Markdown companion](../strata/flash-next/data-map/README.md):40 stages,
+170 operation types, six lanes, phase/status filters, clickable sources/
+shapes/quant/tile/median/p95/call counts and sortable operation table.
+JSON is embedded for offline use; checked synchronization/ASCII and actual
+DOM execution across40 detail views,5phase filters,13sort columns and
+text filtering. Browser layout has not been visually inspected. Raw GPU
+service sums overlap and do not define a latency budget. Peer wait includes
+upstream compute/publication/transport; no causal split or recoverable
+27ms wall gain is claimed. Real GGUF geometry confirmed, includingK10,
+N2560,FF640 and Q5_K head. PLE enabled, second GGUF resolves to NVMe
+/mnt/cache, primary IQ3_XXS GGUF remains SATA. Actual SYCL PLE path is
+8-way host row cache -> page dedup/alignment/sort -> queued worker-pool
+O_DIRECT pread (default64), not io_uring. Joined PLE readiness unmeasured.
+
+VERDICT: retain map and reproducible probes; reject neutral GR variant.
+Both-card post-health PASS; no crash/reset, probe containers gone, all
+model servers stopped. No serving/default/shelf change. Skip full-engine
+rebuild, repeated huge prefills, unchanged collective suite and server
+restoration for these single-card diagnostics. Next useful work is joined
+CPU/input-ready/EP publication timing and actual-head C1/2/3/4/6/8 replay,
+with measured kernel shapes and a numerical oracle before serving tests.
+Every-op production CPU and hardware-counter coverage is incomplete.
+Raw: cachefix_20261014/lowlevel-s24/{s24-report,readiness-summary,model-geometry,storage-identity}.json.
+Sources: strata/flash-next/lowlevel_probe/. Rejected GR patch retained.
+
+S24 final review: actual Claude5.5 caught host-mapped PLE/HC/drafter input
+copies mixed into runtime glue; these now have a dedicated measured stage.
+Root verified embedding call sites, residency log counts, logical return
+upper bound and head-parity hypothesis scope. Source/storage audits
+override a reviewer assumption that the second GGUF was SATA: realpath
+and findmnt prove its NVMe symlink. Metric-query timer-unit display was
+fixed against installed ze_api.h (properties stype, not driver API version);
+raw values retained, no conclusion depended on the original label.
