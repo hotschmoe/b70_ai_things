@@ -6,12 +6,12 @@ path, which operations are expensive or wait, and how strong the evidence
 is for each claim. `operation-data.json` is the source of truth;
 `index.html` embeds a copy of it.
 
-Snapshot: 2026-10-15, S34 (S22 reference operation trace plus readiness, real-head,
+Snapshot: 2026-10-15, S35 (S22 reference operation trace plus readiness, real-head,
 production PLE, EP publication fix/native ISA, paired-head serving,
 draft-counter carry correction, full winning-candidate RAM recovery and
 separate current paired-head replay measurements, CPU boundary markers
 and a fixed-allocation prefill quantum tradeoff; historical prefill dispatch
-intervals are separately attributed).
+intervals are separately attributed, with a standalone peer-gather alias gate).
 Runtime source:
 `/mnt/vm_8tb/b70/build/strata-ab/src-ep` (upstream Strata 296b59d2 base
 plus working-tree overlays for EP/PUSH/accounting/S19-S21 and the
@@ -179,3 +179,10 @@ markers are still needed. The rejected S7 per-layer async arm is not
 repeated. A one-gather/reverse-expert alias oracle is prepared only; no
 build, GPU test, serving speedup or IPC qualification yet. See the
 [S34 audit](../../../docs/20261015_strata_ep_prefill_dispatch.md).
+
+S35 passes that standalone gate for T4096/12288: ten real format pairs,
+363 synthetic-routed experts, 297,369,600 FP32 values bit-identical,
+byte-gather/finite/guard/tail checks and per-card pre/post health PASS.
+Ordinary device USM does not qualify production IPC or concurrent readers.
+Reference-first/candidate-second timings have cold/warm order bias; no
+serving speedup claim. See [S35 report](../../../docs/20261015_strata_peer_gather_alias.md).

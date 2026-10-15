@@ -213,3 +213,14 @@ not. S25's microprobe and S22's old four-C1 trace remain separate scopes.
 No repeated head microprobe or new engine build was needed. Full-cache
 depth2/headpair qualification remains pending, as does a small fix for
 draft counters lost when an API request returns from batch to solo.
+
+S35 adds `peer_gather_oracle.cpp`, copied byte-for-byte from the compiled
+and tested source. It compares production per-expert activation gathering
+against one gather into FP16-aliased output storage followed by reverse
+expert processing. Two card-1 cases cover ten real quant format pairs,
+363 synthetic-routed experts and 297,369,600 bit-identical FP32 outputs.
+Gather bytes, finiteness, nine buffer guards, unused output tail and all
+per-card pre/post health checks pass. This is ordinary device USM, not
+production IPC or serving qualification; cold/warm order prevents a speed
+claim. See the [S35 report](../../../docs/20261015_strata_peer_gather_alias.md)
+for identities, original build/run recipes and raw closure locations.

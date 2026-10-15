@@ -88,6 +88,15 @@ expert processing with unchanged arithmetic. Its standalone correctness
 oracle is prepared, not yet built or run. See the
 [S34 dispatch audit](20261015_strata_ep_prefill_dispatch.md).
 
+S35 passes the standalone one-gather/reverse-expert alias oracle at actual
+T=4096 and 12288, with ten real expert format pairs and synthetic routing.
+All 297,369,600 FP32 values match bit for bit; gather bytes, finiteness,
+nine buffer guards and unused-capacity poison pass. Both card-1 health
+and teardown closures pass. Cold/warm order prevents a performance claim.
+The real IPC serving path still needs guarded integration and a matched
+comparison; no new full-cache qualification or promotion. See the
+[S35 numerical report](20261015_strata_peer_gather_alias.md).
+
 Quality: on 2026-10-14 Flash-Next IQ3_XXS beat the 27B INT4 8-0 on paired
 langs + sysadmin tasks (41/43 vs 33/43); see the A/B brief, Outcome 2.
 

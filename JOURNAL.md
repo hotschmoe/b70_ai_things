@@ -23061,3 +23061,40 @@ external E1 holds the CPU lease, so Strata continues light review/docs.
 No locks, server restarts, health repeats, daily restore or full-cache rerun.
 Dated S34 report, goals and data map updated; original S22 operation rows
 and rollups unchanged. Full goal remains active; decode target unmet.
+
+
+## 2026-10-15 -- Flash-Next optimization S35: peer gather alias numerical gate
+
+CONFIG: Frozen standalone 4f2b42fb, explicit physical card 1 / PCI44:00.0,
+in-order queue, 363 real expert blobs spanning ten GU/down format pairs.
+Mixed-layer weights plus synthetic routing are numerical coverage, not
+one production layer's performance. Exact production functions compare
+forward per-expert gathers with one gather into FP16-aliased existing FP32
+output storage and reverse-offset expert computation. No production edit.
+COMMAND: Actual Opus/Fable source reviews finish before one CPU-only AOT
+build,135s/no device mount/four link jobs. Quiet CPU lease outside card-1
+GPU lease; mean80 reviewed before mean240. Card-1 pre/post health eachcase,
+normal container removal/wrapper exit0. Shared-log windows fit between E1
+CPU arms; waiting held no GPU lease.
+RESULT: T4096/rows29040/maxne641 and T12288/rows87120/maxne1921 both PASS,
+with largest expert first and ne1 second. Every gathered byte correct;
+all 74,342,400 + 223,027,200 FP32 outputs finite and bit-identical. Nine
+buffer guards, distinct arm poisons and complete unused output tail PASS.
+Fixed output allocation1,258,291,200 bytes; weights650,060,800 bytes. Build
+identity and exact linked production symbols verified; source copied to
+tracked lowlevel_probe without changing bytes. All four card health checks
+PASS, no reset or model server. No card0 computation/collective was needed.
+VERDICT: Standalone alias/arithmetic gate passes, not real IPC, reduction,
+concurrent-reader, serving or throughput qualification. Reference first
+and candidate second have cold/warm order bias; do not claim speed from
+those diagnostics. Prepare conservative default-OFF production guards and
+combine bounded current host markers into one next native build. Both
+model reviews flagged optional profiling-query abort risk; root emits null
+on that optional query failure without losing the numerical verdict.
+Separate S36 marker reviews catch metadata attribution before any build;
+hoisted setter v2 remains unapplied. Defer new K/V fusion after C6 pool
+ranking0.282ms service/cycle, not an additive saving. Existing GRF knob
+source audit is a larger HC lead, not a measured win. One build/two finite
+GPU cases/no new trace/full-cache/daily reload. Dated report, goals and
+data map updated; old operation rows/rollups unchanged. Raw S35 report and
+quiet-mean80/240 closures retained. Full goal active; serving targets open.

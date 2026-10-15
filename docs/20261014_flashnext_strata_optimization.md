@@ -2038,3 +2038,26 @@ host markers can share the next planned serve. No new performance or
 health result; no build/GPU test of the new candidates yet. See the
 [S34 report](20261015_strata_ep_prefill_dispatch.md) and raw
 `ep-prefill-dispatch-s34/{s34-report,review-closure,historical-gaps}.json`.
+
+
+## S35: one-gather reverse-alias numerical gate (2026-10-15)
+
+CONFIG -> One-card standalone 4f2b42fb,363 real mixed-format experts and
+synthetic routing. Exact production gather/dequant/FP16 GEMM/SiLU calls;
+reference per-expert gathers versus one FP16 gather into existing FP32
+output allocation and reverse-offset expert processing. No production edit.
+COMMAND -> Actual Opus/Fable source reviews, one135s offline CPU-only AOT
+build; two quiet card-1 windows with pre/post health and normal teardown.
+RESULT -> T4096/12288, rows29040/87120, largest641/1921 plus ne1 cases PASS.
+All297,369,600 FP32 values match bitwise and are finite; gathered bytes,
+nine buffer guards and complete unused output tail PASS. Four health
+checks and both wrapper/container closures PASS, no reset.
+VERDICT -> Prepare guarded actual IPC serving integration. No speedup
+claim: reference-first/candidate-second timings have cold/warm order bias.
+No imported-memory/concurrent-reader/reduction or new full-cache proof.
+One build/two finite cases; no model-server reload or new trace. S36
+buffered marker attribution fixed before compilation; new K/V fusion
+deferred after measured small service-pool ranking. See the
+[S35 report](20261015_strata_peer_gather_alias.md), tracked
+`strata/flash-next/lowlevel_probe/peer_gather_oracle.cpp`, and raw
+`peer-gather-oracle-s35/{s35-report,build-closure}.json`.
