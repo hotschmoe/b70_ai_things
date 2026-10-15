@@ -1,0 +1,113 @@
+{
+  "status": "PASS_INPUT_BUILD_REFERENCE_PROVENANCE_GPU_PREMISE_PENDING",
+  "binary_sha256": "0e5c75c9acd15a07d1ede4df004a4fb870b34ad31ad39a8582e7ed269677670d",
+  "fixture_files": {
+    "weights.bin": {
+      "bytes": 28160000,
+      "sha256": "a9549c6a3c9c44c1c0fd374e62d603d4a2c82bea131f07a765ff6b45d5e13dc6"
+    },
+    "fixtures.tsv": {
+      "bytes": 943,
+      "sha256": "210555ee1dc0f56690bd770aee3673dafb4b10b2508ed91d81a3736a344307ee"
+    },
+    "source.fp16": {
+      "bytes": 20971520,
+      "sha256": "20f6e3953d74b9cdf5f683829175c6dd6fb43a01ffb9ed1969d19c216cb2d31e"
+    },
+    "source_ids.i32": {
+      "bytes": 6992,
+      "sha256": "02e4fb9c7d2c0bfe26527f5fd3d8f339a7cb4168e6ab43f0337ba4e0f1530266"
+    },
+    "actual_gathered.fp16": {
+      "bytes": 8949760,
+      "sha256": "17d13281c1fb88985139a3fb4c95f883b3e01ec21372fd10f8a55c5c666dcd5d"
+    },
+    "reference_GU.f32": {
+      "bytes": 8949760,
+      "sha256": "afb84d6d990ee7726315a8987789d072e7a997ff500d206f3f0c4d332a9df7bf"
+    },
+    "reference_H.fp16": {
+      "bytes": 2237440,
+      "sha256": "fd34829ebd3214d2f039d7f60df7c0317103fe64cd08d56cf80285ba3da00610"
+    },
+    "reference_down.f32": {
+      "bytes": 17899520,
+      "sha256": "126c9c39ed67c4fca39b756acf6350ed9b8e9be6df0940de62be5cf1f449cd57"
+    }
+  },
+  "reference_files": {
+    "gu-planes.fp16": {
+      "bytes": 104857600,
+      "sha256": "6d453fd387e4945b5cc1cf00fc60e69c788bc5b535b649ea444d540ad9ef2a0a"
+    },
+    "down-planes.fp16": {
+      "bytes": 52428800,
+      "sha256": "1d29516c6555c49e1e03be7d99005c10a8229e67b273e54b9c005cdb1438c044"
+    },
+    "gu-T64.f64": {
+      "bytes": 17899520,
+      "sha256": "888139ce6bc07660999b76f79d09eaf4b0fb9aae2af3fee2b9e5da200e88a32d"
+    },
+    "gu-Aupper.f64": {
+      "bytes": 17899520,
+      "sha256": "427848af3b90d0d281f7d33258e70c598cab66e7e5d03349cdcc3914d63e58ae"
+    },
+    "gu-B32.f64": {
+      "bytes": 17899520,
+      "sha256": "c1f57f6d7fe11551d8b6d8e9e59ed4a4d7383253a55055b1b782561ca0412ef5"
+    },
+    "gu-E64.f64": {
+      "bytes": 17899520,
+      "sha256": "909e1ffa799d2e248c7b6e8fb02ac0f0ded36858c1fc6d7229ee833b6234bd10"
+    },
+    "gu-bound.f64": {
+      "bytes": 17899520,
+      "sha256": "1c2f412574df35996958a74c297c31d5e993d26a5cac67d7cff537e8fe73522a"
+    },
+    "actual-gathered-changed.fp16": {
+      "bytes": 8949760,
+      "sha256": "608b8ace80ca537c9c9970b1741dc8b468b85956280f4b0d309c22ffd7fe6989"
+    },
+    "reference-core.json": {
+      "bytes": 1302,
+      "sha256": "ac0396595e8bf2b8ed85bb8305b497fdfcc818888c1dddeda6cae1b5ccaaec91"
+    },
+    "mkl-version.txt": {
+      "bytes": 116,
+      "sha256": "7602612fd5f1d916cad6fcc7a11842f1eef5764595cf66c968771d81c5f5e9d1"
+    }
+  },
+  "reference_json_sha256": "6b479ba36ab9c80d652e8742924970d8b161ee49b0e7612119122a62b4543789",
+  "root_build_closure_sha256": "b11befa9311956fb872aa8a684510727d14553a333a2a99ece4d75aa2cc61c07",
+  "archive_pins": {
+    "/frozen/libstrata_prefill.a": "d80598c206dc266ddac3e5545a117038589e84a42b4245800d8777e2e967da94",
+    "/frozen/libstrata_engine.a": "77a18ca2e4fd4cd35414a74e8386b760a904476022b24ecc7203339fd00180b7",
+    "/frozen/libstrata_spec.a": "9b8288852c37f1cd3ee61afa3ee8402a775b5a8c37eb1985575810cbc885621a",
+    "/frozen/libstrata_kernels.a": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8",
+    "/frozen/libstrata_core.a": "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286",
+    "/frozen/libstrata_kernels_cpu.a": "6b82f67b33d741310f43785a3a3c2b50ddd4a821b196f5094ef772a01df4e6fb",
+    "/frozen/libggml-cpu.a": "23ce520e356f71ccd946953a3546075d261b1d6153e7ff82c3151e01527e82e7",
+    "/frozen/libggml-base.a": "293516f3e8a101a7e6b732347094047ea905e40204fa5489c7202e0e5c2d0f8d"
+  },
+  "harness_pins": {
+    "grouped_prefill_leaf.cpp": "0e4c43cba3a57ec5105347b104f0e79ca145d2b611a9aa7c844aa954104235ed",
+    "reference_bound.hpp": "468471b8ed5c972de11318bf19e7449be23fe48df7b5fbd21bcf3916de5a6ab0",
+    "build.sh": "759cfb850df7f0d5ba2d85fe9b1861d4138028be24a79bb89d6fe0aad98bfb77",
+    "build-container.sh": "df738844d5b57d440d8430b54a94a22a905231faa5ed4b4ece6c05126a1bb52d",
+    "ROOT_RUN.sh": "01e98aa5558349c650bc4c50d0b9dd4f4106bc2e16ab30c9215c41689e78718c",
+    "leased_run.sh": "6ac213296cd729adcc87523a014891292fd2701026d1cc56efaf67319d2fdfef",
+    "runtime_identity.py": "f7621ad66609fbd009866b38bf8d275dbc9ff549a8efaf84a0fb7a0c14249e5e",
+    "analyze.py": "fde99a10502aae6aeb08d7dcb9ade0c96c17e4532bdb4961df75370d39abb5ec",
+    "expected-source-container.sha256": "7b508a3491ac1167a18b45c157dc1dd5ed1b17b619867cc5daa10670b5018f9a",
+    "fixture-pins.json": "7701d8c19542d0a15fdd75867efaa3087bb7474362ee672fe2ff29c6233a47f6",
+    "source-pins.json": "32c7151cfc98cceb81dcd41ed2d82ba1f0fed2980dcf3660ea573a6280ab9d38",
+    "frozen-inputs.json": "0f1569843bea0e7e93b584204996e40e334252f3a2a9ea55b75c731e2819fc57"
+  },
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "physical_card": 1,
+  "pci": "0000:44:00.0",
+  "timing_scope": "complete eager wave, canonical reset outside, DQ/GU/SiLU/down/dependency barriers and grouped metadata fill inside",
+  "old_S42_strict_status": "FAILED_UNCHANGED",
+  "ideal_H_down_accuracy": false,
+  "serving_qualified": false
+}

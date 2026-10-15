@@ -1,0 +1,61 @@
+# S79 post-result consultation: **ACCEPT** root's disposition (HOLD_UNMATCHED, park the patch, no speed claim, no promotion)
+
+## Do the gates support interpretation?
+
+Yes, for warm, repeat1 and repeat2. Repeat3 is outside the declared timing gate.
+
+- **Output and coherence (all 8 pairs):**
+  - Request, full text, SSE content and usage are equal across arms.
+  - Every stream has `completion_tokens=1500` and `cached_tokens=0`.
+  - Warm text matches the OFF control.
+  - No ON correctness concern is visible in the declared output gates.
+- **Native work:**
+  - Warm, repeat1 and repeat2 match exactly: per-request draft offered/accepted, windows, paired and solo.
+  - Repeat3 is unmatched:
+    - windows 556 vs 557;
+    - solo 2 vs 3, paired 553 each;
+    - slot 1 drafts offered 1138 vs 1140, accepted 933 each.
+  - The text is still identical, so this is a difference in window packing and draft scheduling, not in output.
+  - The evidence cannot attribute it to ON rather than run-to-run admission or timing variation. No per-window ring was used, so it stays unexplained. It should not be called a correctness failure or excused as noise.
+- **Activation and join:** ON `asked=deferred=joined=native windows` in all four ON pairs (561, 567, 562, 557). OFF shows `enabled=0` and all zero counters. This shows the host branch and join ran on every window, not that hardware overlap happened.
+- **Identity:**
+  - One binary (`03bb\u2026`) and one image.
+  - The two configs differ only in the arm variable and the log path.
+  - Model `hotschmoe-dd`.
+  - Payload identity rests on root's retained S53 evidence; nothing was newly rehashed.
+- **Functionals, normal QUIT and health:**
+  - Both arms pass functionals.
+  - Both stopped via TERM\u2192QUIT with no forced stop, the container was removed, and the lease wrapper exited 0.
+  - Card and collective health exited 0.
+  - The final diagnostic appeared exactly once.
+
+## Bounded client wall (pair wall, OFF \u2192 ON)
+
+| Pair | OFF (s) | ON (s) | \u0394 |
+|---|---|---|---|
+| warm (diagnostic) | 28.999 | 29.067 | +0.23% |
+| repeat1 | 28.972 | 29.096 | +0.43% |
+| repeat2 | 28.903 | 28.965 | +0.21% |
+| repeat3 (unmatched, not interpretable) | 29.512 | 29.574 | +0.21% |
+
+- Both matched timed pairs are slightly slower on ON. Per-stream decode tok/s is also marginally lower on ON in repeat1 and repeat2. SSE gap p95 is essentially unchanged; that is not token ITL.
+- What this does not show:
+  - There is no evidence of benefit. That is the supported conclusion.
+  - The small slowdown is a direction across two nested observations from one OFF process and one later ON process. Order and warm-state effects are confounded with the arm, so it is not an established regression magnitude.
+  - It cannot be attributed to the deliberate publication delay, the join placement, CPU spans, or the absence of hardware overlap. BDONE ms is pre-join and cannot settle this.
+
+## Material limits and issues to record
+
+1. **The restoration record is internally inconsistent as presented.**
+   - The status says the three files were restored to the pre-S79 base.
+   - The `files` map lists `before` = base hashes and `after` = candidate hashes. That reads as the apply transition, not proof of restoration.
+   - Root should confirm, from the existing record, that the current live hashes equal `9ecedbed\u2026`, `e97ce93a\u2026` and `6433d750\u2026`. This is a check of that record, not a new run.
+   - Until then, "restored to base" is asserted, not shown, in this packet.
+2. **The generic build tree is stale.** `build-sycl-ep/strata`, `libstrata_engine.a` and the `verify.cpp`/`generate.cpp` objects still contain the candidate while the source is base. Nothing may serve or qualify from the generic executable until a base rebuild has been audited. The retained `03bb\u2026` binary is candidate-only.
+3. **Repeat3 is excluded, not explained.** Exact equality of aggregate work in the other pairs still does not prove identical per-window rows or cache behavior.
+4. **Scope of what was observed:**
+   - OFF overhead from the wrappers and counters is unproven.
+   - Failure drains are not evidence of device recovery.
+   - Scalar-async handoff safety rests on the N2 source audit. The stale-pending fail-stop path was not exercised.
+
+**Verdict: ACCEPT** root's HOLD_UNMATCHED / park disposition, subject to item 1 being confirmed from existing records and the item 2 hazard being recorded. There is no speed claim, no promotion, and no basis here to re-propose this overlap for latency.

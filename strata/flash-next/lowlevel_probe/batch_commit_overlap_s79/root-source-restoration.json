@@ -1,0 +1,22 @@
+{
+  "status": "EXACT_THREE_EXPERIMENT_FILES_RESTORED_TO_PRE_S79_BASE",
+  "files": {
+    "sycl/include/strata/core/verify.hpp": {
+      "before": "9ecedbed463eeeb241a49995c0d8b078cb2ef5ac4d294a3954f075aeff0b97c2",
+      "after": "0984d9da5be621bb5294fab0c3b468e5f4c2892d1d1622ced912af6e128ea6bf"
+    },
+    "sycl/src/core/verify.cpp": {
+      "before": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2",
+      "after": "1383c9b4d3b077126885a97b6c74ae3598c025b51a8b823eca6f2af1c818ca5a"
+    },
+    "sycl/src/program/generate.cpp": {
+      "before": "6433d750e414aeb9c71135257ae40a8f9e38ea661537c251b50cabdbc2217d83",
+      "after": "fb62bcb4037edeb02ee29c15b6f2254d8a1aff7d55e6dbed9b4ae3eda4f4781f"
+    }
+  },
+  "rebuild_performed": false,
+  "frozen_candidate_binary_retained": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-execution/build/strata-batch-commit-s79",
+  "generic_build_executable_is_still_candidate_not_current_source": true,
+  "derived_zero_context_patch_applies_to_exact_candidate": true,
+  "derived_patch_sha256": "82db64a05da19d8bee0aeb6af51396917f5e16d0ffc248c4c3c3ddd00ba190ad"
+}

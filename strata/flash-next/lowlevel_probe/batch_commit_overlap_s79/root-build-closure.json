@@ -1,0 +1,29 @@
+{
+  "status": "PASS_BOUNDED_BUILD",
+  "wrapper_exit": 0,
+  "wrapper_seconds": 168,
+  "incremental_build_seconds": 158.876,
+  "executable": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-execution/build/strata-batch-commit-s79",
+  "sha256": "03bb07f9d87455a203d1ce334fa411524d93c534c95733ec42076f121ddb92ab",
+  "steps": [
+    "[1/4] Building CXX object CMakeFiles/strata_engine.dir/src/core/verify.cpp.o",
+    "[2/4] Building CXX object CMakeFiles/strata.dir/src/program/generate.cpp.o",
+    "[3/4] Linking CXX static library libstrata_engine.a",
+    "[4/4] Linking CXX executable strata"
+  ],
+  "unchanged_archives": [
+    "kernels",
+    "core",
+    "prefill",
+    "spec"
+  ],
+  "same_AOT_binary_claim": false,
+  "actual_reviews_root_full_read": [
+    "claude-opus-5-5",
+    "claude-fable-5-1"
+  ],
+  "H1": "Actual root recipe emitted harness-required filename and frozen SHA; resolved",
+  "N2": "Corrected exact source handoff drains accepted; no asyncOFF assumption; fail-stop retained",
+  "runtime_qualified": false,
+  "utc": "2026-10-15T15:29:07.136302+00:00"
+}

@@ -1,0 +1,15 @@
+{
+  "status": "FAIL_CLOSED_CPU_V1_DOWN_QUANT_GEOMETRY_NO_GPU",
+  "wrapper_exit": 1,
+  "docker_helper_exit": 2,
+  "helper_seconds": 0.523,
+  "expert0_complete_only": true,
+  "failure": "S80 CPU reference failure: CPU quant trait geometry",
+  "cause_source_verified": "Type42 GGML_TYPE_Q2_0 has QK2_0=64; v1 hardcoded all down blocks32 and FF/32 row stride",
+  "pinned_definition": "/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/ggml/src/ggml-common.h:187",
+  "GPU_touches": 0,
+  "partial_outputs_retained": true,
+  "numerical_reference_qualified": false,
+  "followup": "Versioned v2 correct block-specific geometry; same GU target/header/schema; no tolerance change",
+  "utc": "2026-10-15T15:50:05.871384+00:00"
+}

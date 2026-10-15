@@ -1,0 +1,217 @@
+{
+  "source-bindings.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-prep/source-bindings.json",
+    "bytes": 1098,
+    "sha256": "58d7492cb37c85e981b3ab38f2b7ea18c101159f8c2fe52115d82b35aa94b36e"
+  },
+  "source-readiness.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-prep/readiness.json",
+    "bytes": 1785,
+    "sha256": "705b1155dcbe4ffe0043d81628c87cb894a2f0817c8dec9aa84fc38761a6d010"
+  },
+  "root-applied-source.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-execution/root-applied-source.json",
+    "bytes": 1002,
+    "sha256": "0304e0ac3705caae70c47f3d4e84bb55c57c4b5febca0b581b8bf4d4c5296480"
+  },
+  "root-build-closure.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-execution/root-build-closure.json",
+    "bytes": 1124,
+    "sha256": "fcd0d5359ad7b6baabc309e73b0aad4dff6d8cc1439f4d03c5f0fd010d00811c"
+  },
+  "source-review-closure.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-source-reviews-s79-20261015/review-closure.json",
+    "bytes": 29995,
+    "sha256": "fe925515eb669fc718e75741b82cdc533fdc2f3ea2b48cf2adcaa40bab136348"
+  },
+  "scalar-batch-handoff-source-audit.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-source-reviews-s79-20261015/scalar-batch-handoff-source-audit.json",
+    "bytes": 15726,
+    "sha256": "26ff29d1f60353798b7fe12ed6df933e7b70bd607c2dd95a00948ce0dd489612"
+  },
+  "harness-source-manifest.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/harness-source-manifest.json",
+    "bytes": 1149,
+    "sha256": "69fe6fe62e73432856f660e18f7b19cf64cb011a739259f1806ccfcddceea5e9"
+  },
+  "serving-inputs.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/serving-inputs.json",
+    "bytes": 2320,
+    "sha256": "b43dbcd0defc183d2ca70ecb285c6d19187ec83028f1f87121697da0128face8"
+  },
+  "start_arm.py": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/harness-prep/start_arm.py",
+    "bytes": 5295,
+    "sha256": "4060ffabc2c61a14f54f1058341c5e91ec6101972182b53d9819120a46a2044a"
+  },
+  "stop_and_health.py": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/harness-prep/stop_and_health.py",
+    "bytes": 3984,
+    "sha256": "309a1125fd43682717f4640ba914523c3d6ab933c9631230a916aa34a12be327"
+  },
+  "launch_stage.sh": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/harness-prep/launch_stage.sh",
+    "bytes": 1851,
+    "sha256": "627d5e1f3f0357013f7a5db12f552c3a64650c7b39176694a7c79ca5cfa1819c"
+  },
+  "client.py": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/harness-prep/client.py",
+    "bytes": 9709,
+    "sha256": "b543faedc24836107b59a46a8bcc757c5cbe0b0772e469f5d813bc8ae1b682ec"
+  },
+  "make_configs.py": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/harness-prep/make_configs.py",
+    "bytes": 3476,
+    "sha256": "c66cc7be2e634aedb8a39a46f05c3e7864ffbeb414a855f9b1da09463d24a3d7"
+  },
+  "compare.py": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/harness-prep/compare.py",
+    "bytes": 4871,
+    "sha256": "cec1ae49cad40db1f56412ad306e16e528714db56093e0510bb8b86123bbf42b"
+  },
+  "comparison.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/comparison.json",
+    "bytes": 6448,
+    "sha256": "6180f1fca4f88d2d72fd55f1dafacec0c317c3c1acc5a487de2169e01344269f"
+  },
+  "root-final-runtime-decision.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/root-final-runtime-decision.json",
+    "bytes": 1482,
+    "sha256": "033534de223b437298cf70b9f0e7e62e955b50622b1cc46c2183e0e0ccb45183"
+  },
+  "root-source-restoration.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-execution/root-source-restoration.json",
+    "bytes": 1174,
+    "sha256": "de87f816dad20d6cbf6ea25d814ca6a24db3b17375cc08a2df359ba74626bf08"
+  },
+  "root-source-restoration-readback.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-execution/root-source-restoration-readback.json",
+    "bytes": 1634,
+    "sha256": "ad051e5ba6cfda984ff1946244a97ef56a1a4e1677f517db1ac37aa63b8df92a"
+  },
+  "post-review-closure.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-post-reviews-s79-20261015/review-closure.json",
+    "bytes": 5118,
+    "sha256": "902f9ae93e6627ae33aeea5f712f9ce6cae903a71d1b9b3376a2b4bda142239b"
+  },
+  "post-review-manifest.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-post-reviews-s79-manifest.json",
+    "bytes": 3613,
+    "sha256": "b750dfe0dd806e39ff050e0682d15b2230e44b4658a8f2f82d506bdde2331ade"
+  },
+  "opus-post-response.txt": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-post-reviews-s79-20261015/claude-opus-5-5/assistant-text.txt",
+    "bytes": 4527,
+    "sha256": "dd662ad253be25522bd7af0f509966f97ce3529f3d88d2ac26812cf0d5077144"
+  },
+  "opus-post-completion.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-post-reviews-s79-20261015/claude-opus-5-5/completion.json",
+    "bytes": 7974,
+    "sha256": "e6956782e1a71b75f6f196fda53b3a49e34bcc4c7706ffed2370aa77ccf5f62e"
+  },
+  "fable-post-response.txt": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-post-reviews-s79-20261015/claude-fable-5-1/assistant-text.txt",
+    "bytes": 3204,
+    "sha256": "971f9b636eadfe095391bfd9ff1ddefd762217d5128fdfc9b853369f3c349c7e"
+  },
+  "fable-post-completion.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-post-reviews-s79-20261015/claude-fable-5-1/completion.json",
+    "bytes": 6621,
+    "sha256": "7f39e1c012f15d67dd46eb7952408fed14f056f48f82543fba36c71a1106cbee"
+  },
+  "mode0-warm-pair.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/mode0/coding/warm/pair.json",
+    "bytes": 3657,
+    "sha256": "6846649de1b30ee7ce9a78de7873a57fc3f87bb31ebc8b65d7d216aa20c4ac87"
+  },
+  "mode0-repeat1-pair.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/mode0/coding/repeat1/pair.json",
+    "bytes": 3656,
+    "sha256": "9d87a1d58788660ca47b2e6735691baabff992ff7efe2393362b408b2035cdbc"
+  },
+  "mode0-repeat2-pair.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/mode0/coding/repeat2/pair.json",
+    "bytes": 3659,
+    "sha256": "35e4305393f0cb3a6e6c58985fd4ad473cb8e1007346f606216a48f1f7c251ec"
+  },
+  "mode0-repeat3-pair.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/mode0/coding/repeat3/pair.json",
+    "bytes": 3658,
+    "sha256": "bff2e2016f8283392dfd4c3231fa19ebbec8fb16c0c2cb52da0138c2271501b2"
+  },
+  "mode0-config.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/mode0/config.json",
+    "bytes": 2138,
+    "sha256": "82dfe4a1ecf446aff7c68216226d6985e22623ca66044a66baf552aeffade9b9"
+  },
+  "mode0-normal-stop.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/mode0/normal-stop.json",
+    "bytes": 265,
+    "sha256": "42e253e2224cbd8df23d860b90757cc3d5aba16d5d038dd0a0de0d5a6b3fab5e"
+  },
+  "mode0-post-health.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/mode0/post-health.json",
+    "bytes": 477,
+    "sha256": "148a0019c054a15275f30968a07144b1a6bd5ae4128f0c973d71d71ddaf362c5"
+  },
+  "mode0-aggregate-proof.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/mode0/aggregate-proof.json",
+    "bytes": 598,
+    "sha256": "4ee7ded4699a8b25b7a630b09b97a82b28fa3bffad967842ec3974bc864b7dc8"
+  },
+  "mode0-functional-verdict.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/mode0/functional/verdict.json",
+    "bytes": 91,
+    "sha256": "a903d5a1a01382b4c3af586ab82b48b25716a22e8bfbbc2d1bdcb7a2a972ff09"
+  },
+  "mode1-warm-pair.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/mode1/coding/warm/pair.json",
+    "bytes": 3662,
+    "sha256": "ca6cddc3682ee85fefb51a31ef236be9eceec759d26cf089c1717371de79974f"
+  },
+  "mode1-repeat1-pair.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/mode1/coding/repeat1/pair.json",
+    "bytes": 3661,
+    "sha256": "66616173868e83ced6eb8350d60f7cfaa8441081e13efbe21e9dca1b0166a7cb"
+  },
+  "mode1-repeat2-pair.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/mode1/coding/repeat2/pair.json",
+    "bytes": 3664,
+    "sha256": "1223eeaee341eaa468c081b30ce7fa81dbc06fa091a1610f6e74e8200131ab00"
+  },
+  "mode1-repeat3-pair.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/mode1/coding/repeat3/pair.json",
+    "bytes": 3665,
+    "sha256": "1ab57786d3ff4693487db38029907a4dd7a7b6809c7a9745198a1b552c413746"
+  },
+  "mode1-config.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/mode1/config.json",
+    "bytes": 2138,
+    "sha256": "cab4ba2facb00eaf041d3a2bdf5d2d7e2d1a6e507ec92755794c55cba55ef3ea"
+  },
+  "mode1-normal-stop.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/mode1/normal-stop.json",
+    "bytes": 265,
+    "sha256": "84242a4b0141587b68118561216828d2a135d26e1b7665995871707dbb5fe378"
+  },
+  "mode1-post-health.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/mode1/post-health.json",
+    "bytes": 480,
+    "sha256": "77dca0ec937c57ca80dd5206fb397d04f704b464057e8e8caed212622bdea066"
+  },
+  "mode1-aggregate-proof.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/mode1/aggregate-proof.json",
+    "bytes": 598,
+    "sha256": "83ee2d750d717d117919a5620aa62e7f7bf1891e52e7505ffc7c84b6744623f3"
+  },
+  "mode1-functional-verdict.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/mode1/functional/verdict.json",
+    "bytes": 91,
+    "sha256": "a903d5a1a01382b4c3af586ab82b48b25716a22e8bfbbc2d1bdcb7a2a972ff09"
+  },
+  "completed-manifest.json": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-completed-manifest.json",
+    "bytes": 43211,
+    "sha256": "292aee57cb7b1b9ab2a48cedfc461cbc0396ff5cb0708d6e61e68feec1211cd6"
+  }
+}

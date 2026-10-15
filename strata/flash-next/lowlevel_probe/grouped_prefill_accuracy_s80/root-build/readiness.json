@@ -1,0 +1,83 @@
+{
+  "status": "SOURCE_ONLY_ROOT_FINAL_LINK_PRECISE_RECIPE_READY",
+  "source_prep": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-accuracy-s80-prep",
+  "source_prep_manifest_sha256": "e1c108eb355b1b5cd4d6a0d26f239380c4f158e4a5980715f4ea68f53895b867",
+  "original_files_unchanged": {
+    "build.sh": "759cfb850df7f0d5ba2d85fe9b1861d4138028be24a79bb89d6fe0aad98bfb77",
+    "build-container.sh": "df738844d5b57d440d8430b54a94a22a905231faa5ed4b4ece6c05126a1bb52d",
+    "manifest.json": "e1c108eb355b1b5cd4d6a0d26f239380c4f158e4a5980715f4ea68f53895b867",
+    "harness-pins.json": "8b476c5cffc10d79b3ddef7f196060c4d24caddeb0a5247c09a93922e28bc32b",
+    "expected-source-container.sha256": "7b508a3491ac1167a18b45c157dc1dd5ed1b17b619867cc5daa10670b5018f9a",
+    "frozen-inputs.json": "0f1569843bea0e7e93b584204996e40e334252f3a2a9ea55b75c731e2819fc57",
+    "grouped_prefill_leaf.cpp": "0e4c43cba3a57ec5105347b104f0e79ca145d2b611a9aa7c844aa954104235ed",
+    "reference_bound.hpp": "468471b8ed5c972de11318bf19e7449be23fe48df7b5fbd21bcf3916de5a6ab0"
+  },
+  "compiler_argument_delta_only": "Add -fp-model=precise to final icpx AOT/host link invocation. Adapter compile already had it. No kernel/math/library/source change.",
+  "identity_guards_added": "Read-only original source manifest/harness/expected-file pins and exactly8 frozen archives checked before and after, along with original archive hash record/cmp. No mutable-main archive binding.",
+  "output_build_directory": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-accuracy-s80-root-build/build",
+  "frozen_archive_files": [
+    {
+      "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/libstrata_prefill.a",
+      "frozen": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-accuracy-s80-prep/frozen-inputs/libstrata_prefill.a",
+      "bytes": 1476254,
+      "sha256": "d80598c206dc266ddac3e5545a117038589e84a42b4245800d8777e2e967da94"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/libstrata_engine.a",
+      "frozen": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-accuracy-s80-prep/frozen-inputs/libstrata_engine.a",
+      "bytes": 3865956,
+      "sha256": "77a18ca2e4fd4cd35414a74e8386b760a904476022b24ecc7203339fd00180b7"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/libstrata_spec.a",
+      "frozen": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-accuracy-s80-prep/frozen-inputs/libstrata_spec.a",
+      "bytes": 48656,
+      "sha256": "9b8288852c37f1cd3ee61afa3ee8402a775b5a8c37eb1985575810cbc885621a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/libstrata_kernels.a",
+      "frozen": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-accuracy-s80-prep/frozen-inputs/libstrata_kernels.a",
+      "bytes": 19468072,
+      "sha256": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/libstrata_core.a",
+      "frozen": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-accuracy-s80-prep/frozen-inputs/libstrata_core.a",
+      "bytes": 585338,
+      "sha256": "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/libstrata_kernels_cpu.a",
+      "frozen": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-accuracy-s80-prep/frozen-inputs/libstrata_kernels_cpu.a",
+      "bytes": 2108228,
+      "sha256": "6b82f67b33d741310f43785a3a3c2b50ddd4a821b196f5094ef772a01df4e6fb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/ggml/src/libggml-cpu.a",
+      "frozen": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-accuracy-s80-prep/frozen-inputs/libggml-cpu.a",
+      "bytes": 2098926,
+      "sha256": "23ce520e356f71ccd946953a3546075d261b1d6153e7ff82c3151e01527e82e7"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/ggml/src/libggml-base.a",
+      "frozen": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-accuracy-s80-prep/frozen-inputs/libggml-base.a",
+      "bytes": 1920010,
+      "sha256": "293516f3e8a101a7e6b732347094047ea905e40204fa5489c7202e0e5c2d0f8d"
+    }
+  ],
+  "checks": [
+    {
+      "file": "build-container.sh",
+      "check": "bash -n",
+      "exit": 0
+    },
+    {
+      "file": "build.sh",
+      "check": "bash -n",
+      "exit": 0
+    }
+  ],
+  "build_executed": false,
+  "GPU_touches": 0,
+  "claims": "Conservative declared final-link FP policy; does NOT establish default FTZ behavior or any compiled/numeric result."
+}

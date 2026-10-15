@@ -314,3 +314,25 @@ two real IQ3_S C6 projections. One38s card0 window; the current mapping is
 about7.7-7.9x slower. Keep the production path unchanged, no serve/retry/
 format sweep. This qualifies one local-matrix path, not every INT8 design
 or full-engine performance. [S75](../../docs/20261015_strata_iq3s_int8_dpas_probe.md).
+
+
+S76/S77/S78 source audits park expanded IQ3 code planes, select bounded
+commit/draft fork-join preparation and declare an independent full-GU
+numerical target for eager grouped prefill. No new speed claim follows
+from source costs or old uncovered profile intervals.
+[Mechanisms and scope](../../docs/20261015_strata_decode_overlap_and_prefill_contract.md).
+
+
+S79 commit/draft overlap is parked: all output/functionals/health PASS, but
+one of three timed pairs has different native work and the other two are
+slightly slower. No aggregate median/speed/promotion claim or rerun. Three
+source files are restored without rebuilding; generic artifacts still contain
+the prototype and must not be called restored-source builds.
+[S79 result and source readback](../../docs/20261015_strata_decode_overlap_and_prefill_contract.md#s79-bounded-commitdraft-comparison-hold).
+
+
+S80 independently validates all GU outputs and full GPU/CPU operand planes
+for the retained prefill wave. The exact grouped mapping is slower in all
+four complete-wave pairs (medians1.051/4.404ms); retain scalar, no serve/retry.
+The reference is reusable, while S42's historical strict failure is unchanged.
+[Accuracy and performance result](../../docs/20261015_strata_grouped_prefill_accuracy.md).

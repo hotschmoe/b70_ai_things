@@ -1,0 +1,139 @@
+{
+  "stage": "S80_GROUPED_PREFILL_GPU_LEAF_SOURCE_PREP",
+  "status": "READY_FOR_ROOT_SOURCE_AND_MODEL_REVIEW_NOT_EXECUTED",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 7807,
+      "sha256": "a3ef3fc61961f239f7d1dd55bf6929bcd4c08a8634bc09b5f8be90620cfe1e0a"
+    },
+    {
+      "path": "ROOT_RUN.sh",
+      "bytes": 811,
+      "sha256": "01e98aa5558349c650bc4c50d0b9dd4f4106bc2e16ab30c9215c41689e78718c"
+    },
+    {
+      "path": "analyze.py",
+      "bytes": 3901,
+      "sha256": "fde99a10502aae6aeb08d7dcb9ade0c96c17e4532bdb4961df75370d39abb5ec"
+    },
+    {
+      "path": "build-container.sh",
+      "bytes": 1842,
+      "sha256": "df738844d5b57d440d8430b54a94a22a905231faa5ed4b4ece6c05126a1bb52d"
+    },
+    {
+      "path": "build.sh",
+      "bytes": 963,
+      "sha256": "759cfb850df7f0d5ba2d85fe9b1861d4138028be24a79bb89d6fe0aad98bfb77"
+    },
+    {
+      "path": "expected-source-container.sha256",
+      "bytes": 1331,
+      "sha256": "7b508a3491ac1167a18b45c157dc1dd5ed1b17b619867cc5daa10670b5018f9a"
+    },
+    {
+      "path": "fixture-pins.json",
+      "bytes": 1941,
+      "sha256": "7701d8c19542d0a15fdd75867efaa3087bb7474362ee672fe2ff29c6233a47f6"
+    },
+    {
+      "path": "frozen-inputs.json",
+      "bytes": 3125,
+      "sha256": "0f1569843bea0e7e93b584204996e40e334252f3a2a9ea55b75c731e2819fc57"
+    },
+    {
+      "path": "grouped_prefill_leaf.cpp",
+      "bytes": 20935,
+      "sha256": "0e4c43cba3a57ec5105347b104f0e79ca145d2b611a9aa7c844aa954104235ed"
+    },
+    {
+      "path": "harness-pins.json",
+      "bytes": 1096,
+      "sha256": "8b476c5cffc10d79b3ddef7f196060c4d24caddeb0a5247c09a93922e28bc32b"
+    },
+    {
+      "path": "leased_run.sh",
+      "bytes": 5496,
+      "sha256": "6ac213296cd729adcc87523a014891292fd2701026d1cc56efaf67319d2fdfef"
+    },
+    {
+      "path": "reference_bound.hpp",
+      "bytes": 2577,
+      "sha256": "468471b8ed5c972de11318bf19e7449be23fe48df7b5fbd21bcf3916de5a6ab0"
+    },
+    {
+      "path": "root-build-closure-required-fields.json",
+      "bytes": 774,
+      "sha256": "a4e1d8b238004c0e9bc630f37e63302f5d43d419004a5aae5d73b10c5f4cad23"
+    },
+    {
+      "path": "runtime_identity.py",
+      "bytes": 4113,
+      "sha256": "f7621ad66609fbd009866b38bf8d275dbc9ff549a8efaf84a0fb7a0c14249e5e"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 2883,
+      "sha256": "32c7151cfc98cceb81dcd41ed2d82ba1f0fed2980dcf3660ea573a6280ab9d38"
+    },
+    {
+      "path": "static-preflight.json",
+      "bytes": 1030,
+      "sha256": "71329d8b27cdcff3902a4ac794fe9d782726622da9786afefa34cc4369615fa3"
+    },
+    {
+      "path": "vs-S42-v2.diff",
+      "bytes": 42591,
+      "sha256": "6a59e83a2e9d81f04ee92fc0409da9c32c9557cd896d3edca57664f852fdf8ab"
+    },
+    {
+      "path": "frozen-inputs/libstrata_prefill.a",
+      "bytes": 1476254,
+      "sha256": "d80598c206dc266ddac3e5545a117038589e84a42b4245800d8777e2e967da94",
+      "hash_source": "root-requested cpu-run copy/identity operation; no redundant archive rehash during source freeze"
+    },
+    {
+      "path": "frozen-inputs/libstrata_engine.a",
+      "bytes": 3865956,
+      "sha256": "77a18ca2e4fd4cd35414a74e8386b760a904476022b24ecc7203339fd00180b7",
+      "hash_source": "root-requested cpu-run copy/identity operation; no redundant archive rehash during source freeze"
+    },
+    {
+      "path": "frozen-inputs/libstrata_spec.a",
+      "bytes": 48656,
+      "sha256": "9b8288852c37f1cd3ee61afa3ee8402a775b5a8c37eb1985575810cbc885621a",
+      "hash_source": "root-requested cpu-run copy/identity operation; no redundant archive rehash during source freeze"
+    },
+    {
+      "path": "frozen-inputs/libstrata_kernels.a",
+      "bytes": 19468072,
+      "sha256": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8",
+      "hash_source": "root-requested cpu-run copy/identity operation; no redundant archive rehash during source freeze"
+    },
+    {
+      "path": "frozen-inputs/libstrata_core.a",
+      "bytes": 585338,
+      "sha256": "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286",
+      "hash_source": "root-requested cpu-run copy/identity operation; no redundant archive rehash during source freeze"
+    },
+    {
+      "path": "frozen-inputs/libstrata_kernels_cpu.a",
+      "bytes": 2108228,
+      "sha256": "6b82f67b33d741310f43785a3a3c2b50ddd4a821b196f5094ef772a01df4e6fb",
+      "hash_source": "root-requested cpu-run copy/identity operation; no redundant archive rehash during source freeze"
+    },
+    {
+      "path": "frozen-inputs/libggml-cpu.a",
+      "bytes": 2098926,
+      "sha256": "23ce520e356f71ccd946953a3546075d261b1d6153e7ff82c3151e01527e82e7",
+      "hash_source": "root-requested cpu-run copy/identity operation; no redundant archive rehash during source freeze"
+    },
+    {
+      "path": "frozen-inputs/libggml-base.a",
+      "bytes": 1920010,
+      "sha256": "293516f3e8a101a7e6b732347094047ea905e40204fa5489c7202e0e5c2d0f8d",
+      "hash_source": "root-requested cpu-run copy/identity operation; no redundant archive rehash during source freeze"
+    }
+  ]
+}

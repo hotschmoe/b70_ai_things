@@ -1,0 +1,120 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "004147f4-9bcf-4e25-bf1d-fc16ac1ed087"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "004147f4-9bcf-4e25-bf1d-fc16ac1ed087",
+  "exit": 0,
+  "elapsed_s": 22.686537015950307,
+  "launch_exception": null,
+  "source_packet_sha256": "ec5928f5bde0c8489211cc10d7a564d0e19f71c1941f8a38f2b769f4639e0c92",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 458088,
+      "stop_reason": "end_turn",
+      "session_id": "004147f4-9bcf-4e25-bf1d-fc16ac1ed087",
+      "total_cost_usd": 3.6499965,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 38290,
+        "cache_read_input_tokens": 62537,
+        "output_tokens": 1406,
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 38290,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1406,
+            "cache_read_input_tokens": 62537,
+            "cache_creation_input_tokens": 38290,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 38290
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 4,
+          "outputTokens": 32612,
+          "thinkingTokens": 28281,
+          "cacheReadInputTokens": 63186,
+          "cacheCreationInputTokens": 100178,
+          "webSearchRequests": 0,
+          "costUSD": 3.6499965,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "ACCEPT the root disposition: reject the exact grouped mapping on performance, keep production scalar, no serve retry or promotion, with the full-GU numerical target recorded as PASS independently of timing.\n\n**Material blocker check: none open.**\n\n- **CPUv1 failure was a setup failure, not numerical.** Exit 2 after expert 0, before any DGEMM reference was consumed, on the diagnostic down trait check I had read as `dt->blck_size==32`. Type 42 is a block-64 format. The v2 diff touches only those three lines: it splits the GU and down trait checks and derives down row bytes from `dt->blck_size` with `FF%blck_size==0`. GU reconstruction, lattice, DGEMM, bounds, controls, and the shared header (unchanged SHA 468471b8) are untouched. The GU plane identity gate on the GPU side independently confirms no GU-side regression.\n- **CPU conformance and FENV.** 2,237,440 values, 36 exact dyadic cells with zero residual, zero DGEMM plus both negative controls PASS, FE_TONEAREST true, MXCSR 8098 means FTZ/DAZ clear, 4 threads, peak RSS 124,004 KiB. This closes the icpx FTZ concern I raised; the FTZ claim is explicitly false and crtfastmath is absent from map and link log.\n- **Provenance.** v2 source d9f8bee5, binary 9eb04ed9, reference.json 6b479ba3 are pinned. All eight frozen archives match their original hashes before and after the link; engine members are listed. GPU leaf source 0e4c43cb, header 468471b8, and harness pins 8b476c5c are the exact reviewed sources. Final link is precise-model.\n\n**GPU gates, all passed in order.** Full 100 MiB GPU GU plane equals the CPU RN plane. All four arm/input GU accuracy rows report zero failures; the worst bound ratio is about 0.0004, so observations sit far inside the predeclared enclosure, not at a fitted edge. Changed rows are exact mirrors of initial rows, consistent with sign-symmetric arithmetic. Own eager repeat/changed/restore, same-GU SiLU producer, S42 scalar anchor on GU/H/down, and 50 MiB cross-algorithm down plane identity all hold. Sixteen artifacts total 309,432,320 bytes with a pinned manifest. One process, zero retries, container removed, pre and post health exit 0, pre/post input and build pins PASS, physical card 0000:44:00.0 only.\n\n**Timing, interpreted only after the gates.** Metadata fill is inside the window, no stage copies, final down readback verified.\n\n| pair | scalar ms | grouped ms |\n|---|---|---|\n| 0 | 1.020 | 4.150 |\n| 1 | 1.049 | 5.420 |\n| 2 | 1.072 | 4.452 |\n| 3 | 1.053 | 4.356 |\n\nAll four paired deltas go against the grouped arm, and the median gap is about 65 times the control range, so the descriptive prescreen fails on direction, not noise. That is sufficient to decline this exact grouped mapping without further runs. Host submit time for grouped roughly equals completed wall time, which suggests submission dominates, but that is an observation, not a kernel-cause claim.\n\n**Tested limits.**\n\n- S42 historical strict cross-algorithm failure remains FAILED_UNCHANGED; this result does not rewrite it.\n- The numerical pass is the predeclared full-GU enclosure for this fixture wave. It is not a vendor IEEE/denormal theorem, not native-exp accuracy, and not an ideal H or down target.\n- Production prefill is eager; no graph gate was required or attempted.\n- Four paired waves nested in one process are descriptive. They do not establish a serving effect, a population effect, physical bandwidth, or a hardware cause.\n- Packet facts are root-supplied; this review had no tools and inspected no raw payload or runtime.\n- No model-quality, serving activation, or promotion claim follows, and no new GPU run or framework is requested.",
+      "ttft_ms": 21591,
+      "type": "result",
+      "duration_ms": 21626,
+      "uuid": "89809692-515b-4e73-bb0d-2d021b471328",
+      "ttft_stream_ms": 2181,
+      "time_to_request_ms": 88,
+      "first_content_frame_ms": 2181,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0,
+  "resume_session_matches_response": true
+}

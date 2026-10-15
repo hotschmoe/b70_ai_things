@@ -1,0 +1,1 @@
+icpx -O2 -std=c++20 -fp-model=precise -ffp-contract=off -frounding-math -I/out/frozen/include -I/opt/intel/oneapi/mkl/latest/include /prep/reference_s80.cpp /out/frozen/libggml-base.a -L/opt/intel/oneapi/mkl/latest/lib -Wl,-rpath,/opt/intel/oneapi/mkl/latest/lib -l:libmkl_rt.so.3 -pthread -ldl -lm -o /out/reference_s80

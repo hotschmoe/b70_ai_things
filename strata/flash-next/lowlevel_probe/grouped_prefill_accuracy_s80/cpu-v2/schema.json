@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "status": "SOURCE_SCHEMA_ONLY_NO_NUMERICAL_EXECUTION",
+  "endian": "little",
+  "float64": "IEEE754 binary64",
+  "fp16": "IEEE754 binary16 bit storage, pinned ggml RN conversion",
+  "experts": 16,
+  "rows": 1748,
+  "N": 2560,
+  "GU_columns": 1280,
+  "full_GU_values": 2237440,
+  "files": {
+    "gu-planes.fp16": {
+      "bytes": 104857600,
+      "layout": "expert-major[16][1280][2560], interleaved GU column2*ff+parity, each row contiguous K"
+    },
+    "down-planes.fp16": {
+      "bytes": 52428800,
+      "layout": "expert-major[16][2560][640], each row contiguous640; diagnostic only, no down target"
+    },
+    "gu-T64.f64": {
+      "bytes": 17899520,
+      "layout": "row-major[1748][1280]; flat=(fixture.row_offset+token)*1280+GU_column"
+    },
+    "gu-Aupper.f64": {
+      "bytes": 17899520,
+      "layout": "row-major[1748][1280]; flat=(fixture.row_offset+token)*1280+GU_column"
+    },
+    "gu-B32.f64": {
+      "bytes": 17899520,
+      "layout": "row-major[1748][1280]; flat=(fixture.row_offset+token)*1280+GU_column"
+    },
+    "gu-E64.f64": {
+      "bytes": 17899520,
+      "layout": "row-major[1748][1280]; flat=(fixture.row_offset+token)*1280+GU_column"
+    },
+    "gu-bound.f64": {
+      "bytes": 17899520,
+      "layout": "row-major[1748][1280]; flat=(fixture.row_offset+token)*1280+GU_column"
+    },
+    "actual-gathered-changed.fp16": {
+      "bytes": 8949760,
+      "layout": "row-major[1748][2560], sign-bit XOR0x8000 of every saved input half"
+    }
+  },
+  "changed_reference": "Exact sign reversal gives ideal -T64 with unchanged Aupper/B32/E64/bound; no changed H/down sign claim",
+  "bound": "B32_up+E64_up rounded upward; Aupper0 keeps all bounds exactly0; each scalar interval op enclosed outward; reference_bound.hpp is shared host gate",
+  "final_status": "PASS_CPU_FULL_GU_REFERENCE_GPU_IDENTITY_PENDING",
+  "GPU_operand_identity_measured": false,
+  "ideal_H_down_reference": false,
+  "down_CPU_plane_role": "optional diagnostic only; not prerequisite for GU arithmetic premise under updated root-directed eager protocol"
+}

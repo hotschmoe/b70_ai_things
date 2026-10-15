@@ -1,0 +1,368 @@
+{
+  "status": "PASS_ROOT_BUILD_AUDIT",
+  "binary_sha256": "0e5c75c9acd15a07d1ede4df004a4fb870b34ad31ad39a8582e7ed269677670d",
+  "source_sha256": "0e4c43cba3a57ec5105347b104f0e79ca145d2b611a9aa7c844aa954104235ed",
+  "reference_bound_sha256": "468471b8ed5c972de11318bf19e7449be23fe48df7b5fbd21bcf3916de5a6ab0",
+  "actual_build_output": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-accuracy-s80-root-build/build",
+  "original_runtime_build_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-accuracy-s80-prep/build",
+  "explicit_build_symlink_target": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-accuracy-s80-root-build/build",
+  "frozen_inputs_original_copy_build_prepost": [
+    {
+      "name": "libstrata_prefill.a",
+      "original_frozen_sha256": "d80598c206dc266ddac3e5545a117038589e84a42b4245800d8777e2e967da94",
+      "copy_build_before_after_equal": true
+    },
+    {
+      "name": "libstrata_engine.a",
+      "original_frozen_sha256": "77a18ca2e4fd4cd35414a74e8386b760a904476022b24ecc7203339fd00180b7",
+      "copy_build_before_after_equal": true
+    },
+    {
+      "name": "libstrata_spec.a",
+      "original_frozen_sha256": "9b8288852c37f1cd3ee61afa3ee8402a775b5a8c37eb1985575810cbc885621a",
+      "copy_build_before_after_equal": true
+    },
+    {
+      "name": "libstrata_kernels.a",
+      "original_frozen_sha256": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8",
+      "copy_build_before_after_equal": true
+    },
+    {
+      "name": "libstrata_core.a",
+      "original_frozen_sha256": "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286",
+      "copy_build_before_after_equal": true
+    },
+    {
+      "name": "libstrata_kernels_cpu.a",
+      "original_frozen_sha256": "6b82f67b33d741310f43785a3a3c2b50ddd4a821b196f5094ef772a01df4e6fb",
+      "copy_build_before_after_equal": true
+    },
+    {
+      "name": "libggml-cpu.a",
+      "original_frozen_sha256": "23ce520e356f71ccd946953a3546075d261b1d6153e7ff82c3151e01527e82e7",
+      "copy_build_before_after_equal": true
+    },
+    {
+      "name": "libggml-base.a",
+      "original_frozen_sha256": "293516f3e8a101a7e6b732347094047ea905e40204fa5489c7202e0e5c2d0f8d",
+      "copy_build_before_after_equal": true
+    }
+  ],
+  "selected_archive_members": [
+    [
+      "libggml-base.a",
+      "ggml-alloc.c.o"
+    ],
+    [
+      "libggml-base.a",
+      "ggml-backend-meta.cpp.o"
+    ],
+    [
+      "libggml-base.a",
+      "ggml-backend.cpp.o"
+    ],
+    [
+      "libggml-base.a",
+      "ggml-quants.c.o"
+    ],
+    [
+      "libggml-base.a",
+      "ggml-threading.cpp.o"
+    ],
+    [
+      "libggml-base.a",
+      "ggml.c.o"
+    ],
+    [
+      "libggml-cpu.a",
+      "binary-ops.cpp.o"
+    ],
+    [
+      "libggml-cpu.a",
+      "ggml-cpu.c.o"
+    ],
+    [
+      "libggml-cpu.a",
+      "ggml-cpu.cpp.o"
+    ],
+    [
+      "libggml-cpu.a",
+      "iqp.cpp.o"
+    ],
+    [
+      "libggml-cpu.a",
+      "ops.cpp.o"
+    ],
+    [
+      "libggml-cpu.a",
+      "quants.c.o"
+    ],
+    [
+      "libggml-cpu.a",
+      "repack.cpp.o"
+    ],
+    [
+      "libggml-cpu.a",
+      "traits.cpp.o"
+    ],
+    [
+      "libggml-cpu.a",
+      "unary-ops.cpp.o"
+    ],
+    [
+      "libggml-cpu.a",
+      "vec.cpp.o"
+    ],
+    [
+      "libstrata_core.a",
+      "layout.cpp.o"
+    ],
+    [
+      "libstrata_core.a",
+      "memory.cpp.o"
+    ],
+    [
+      "libstrata_core.a",
+      "weights.cpp.o"
+    ],
+    [
+      "libstrata_engine.a",
+      "layer.cpp.o"
+    ],
+    [
+      "libstrata_engine.a",
+      "native_head.cpp.o"
+    ],
+    [
+      "libstrata_engine.a",
+      "vmm.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "bf16_gemv.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "cvec.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "dequant_bf16.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "direct_file.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "elementwise.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "fused_gdn.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "fused_gr.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "gdn.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "gr.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "iq_kernels.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "kv_q4.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "kv_q8.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "kv_stream.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "native_bf16.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "native_flash_attn.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "native_gdn.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "native_gdn_preprocess.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "native_gr_norm.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "native_gr_postops.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "native_mmvq.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "native_moe.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "native_ple_postops.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "native_qsa.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "native_qsa_indexer.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "native_rope.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "native_router.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "ngram.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "ple.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "ple_reader.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "qsa.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "qsa_decode_attn.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "qsa_select.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "quantize_act.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "rope.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "router_top10.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "s2_gemv_q8.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "s_gemv.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "shared_expert.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels.a",
+      "verify_kernels.dp.cpp.o"
+    ],
+    [
+      "libstrata_kernels_cpu.a",
+      "expert.cpp.o"
+    ],
+    [
+      "libstrata_kernels_cpu.a",
+      "expert_layout.cpp.o"
+    ],
+    [
+      "libstrata_kernels_cpu.a",
+      "iq_avx1.cpp.o"
+    ],
+    [
+      "libstrata_kernels_cpu.a",
+      "iq_avx2.cpp.o"
+    ],
+    [
+      "libstrata_kernels_cpu.a",
+      "iq_avx512.cpp.o"
+    ],
+    [
+      "libstrata_kernels_cpu.a",
+      "kq_avx2.cpp.o"
+    ],
+    [
+      "libstrata_kernels_cpu.a",
+      "native_expert.cpp.o"
+    ],
+    [
+      "libstrata_kernels_cpu.a",
+      "nvfp4_avx2.cpp.o"
+    ],
+    [
+      "libstrata_kernels_cpu.a",
+      "nvfp4_avx512.cpp.o"
+    ],
+    [
+      "libstrata_kernels_cpu.a",
+      "q2_avx1.cpp.o"
+    ],
+    [
+      "libstrata_kernels_cpu.a",
+      "q2_avx2.cpp.o"
+    ],
+    [
+      "libstrata_prefill.a",
+      "gemm.dp.cpp.o"
+    ],
+    [
+      "libstrata_prefill.a",
+      "kernels.dp.cpp.o"
+    ]
+  ],
+  "engine_members_selected": [
+    "layer.cpp.o",
+    "native_head.cpp.o",
+    "vmm.cpp.o"
+  ],
+  "engine_selection_note": "layer.cpp.o satisfies weak std::string destructor from ggml-cpu; then native_head/vmm dependencies. Frozen pre-S79 engine exactly77a18ca2; no verify.cpp/spec object selected; current source restored base.",
+  "crtfastmath_object_absent_map_and_link_log": true,
+  "final_link_precise": true,
+  "default_FTZ_claim": false,
+  "runtime_host_FP_gate": "pending leaf; no binary execution here",
+  "actual_compile_seconds": 12.373,
+  "actual_AOT_link_seconds": 112.725,
+  "CPU_lease_seconds": 139,
+  "actual_root_recipe_sha256": "1182b13322bcd12c20708c63a95ec80df3bd4bc880a803a3f02ac1a70c4a139c",
+  "CPU_reference_json_sha256": "6b479ba36ab9c80d652e8742924970d8b161ee49b0e7612119122a62b4543789",
+  "CPU_reference_dir": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-cpu-reference-s80-v2-prep/run-cpu/reference",
+  "CPU_v2_geometry_correction": "type20 block32/type42 Q2_0 block64; same shared GU target/schema; v1 failure retained",
+  "no_GPU_touch": true,
+  "no_serving_or_speed_qualification": true
+}

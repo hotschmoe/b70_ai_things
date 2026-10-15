@@ -1,0 +1,217 @@
+{
+  "status": "PASS_CPU_FULL_GU_REFERENCE_GPU_IDENTITY_PENDING",
+  "files": {
+    "gu-planes.fp16": {
+      "bytes": 104857600,
+      "sha256": "6d453fd387e4945b5cc1cf00fc60e69c788bc5b535b649ea444d540ad9ef2a0a"
+    },
+    "down-planes.fp16": {
+      "bytes": 52428800,
+      "sha256": "1d29516c6555c49e1e03be7d99005c10a8229e67b273e54b9c005cdb1438c044"
+    },
+    "gu-T64.f64": {
+      "bytes": 17899520,
+      "sha256": "888139ce6bc07660999b76f79d09eaf4b0fb9aae2af3fee2b9e5da200e88a32d"
+    },
+    "gu-Aupper.f64": {
+      "bytes": 17899520,
+      "sha256": "427848af3b90d0d281f7d33258e70c598cab66e7e5d03349cdcc3914d63e58ae"
+    },
+    "gu-B32.f64": {
+      "bytes": 17899520,
+      "sha256": "c1f57f6d7fe11551d8b6d8e9e59ed4a4d7383253a55055b1b782561ca0412ef5"
+    },
+    "gu-E64.f64": {
+      "bytes": 17899520,
+      "sha256": "909e1ffa799d2e248c7b6e8fb02ac0f0ded36858c1fc6d7229ee833b6234bd10"
+    },
+    "gu-bound.f64": {
+      "bytes": 17899520,
+      "sha256": "1c2f412574df35996958a74c297c31d5e993d26a5cac67d7cff537e8fe73522a"
+    },
+    "actual-gathered-changed.fp16": {
+      "bytes": 8949760,
+      "sha256": "608b8ace80ca537c9c9970b1741dc8b468b85956280f4b0d309c22ffd7fe6989"
+    },
+    "reference-core.json": {
+      "bytes": 1302,
+      "sha256": "ac0396595e8bf2b8ed85bb8305b497fdfcc818888c1dddeda6cae1b5ccaaec91"
+    },
+    "mkl-version.txt": {
+      "bytes": 116,
+      "sha256": "7602612fd5f1d916cad6fcc7a11842f1eef5764595cf66c968771d81c5f5e9d1"
+    }
+  },
+  "frozen_CPU_imports": {
+    "/out/frozen/include/ggml.h": "12ee71f99db7db9b353bc02b1fbb57c344ee17c01ac5fb7952b41a637a747ea9",
+    "/out/frozen/provenance/ggml.c": "1a634ca1df25db2fbd526cba9bfe11fccd5aa9b31f819c3cac6b630be03f9f51",
+    "/out/frozen/provenance/ggml-quants.c": "07143d7068936ae46b3c528b2f3d4bbb666e74d88992165716174d243573965d",
+    "/out/frozen/provenance/ggml-impl.h": "43564db0238aebb7ed68501e346c194866b5dac218d1d37b26baff9f458c00d3",
+    "/out/frozen/provenance/ggml-common.h": "0061131b615c5721fc88a78feeb22c1f8c450f1c2646a317d80796a653bf595c",
+    "/out/frozen/libggml-base.a": "293516f3e8a101a7e6b732347094047ea905e40204fa5489c7202e0e5c2d0f8d"
+  },
+  "inputs": {
+    "weights.bin": {
+      "bytes": 28160000,
+      "sha256": "a9549c6a3c9c44c1c0fd374e62d603d4a2c82bea131f07a765ff6b45d5e13dc6"
+    },
+    "actual_gathered.fp16": {
+      "bytes": 8949760,
+      "sha256": "17d13281c1fb88985139a3fb4c95f883b3e01ec21372fd10f8a55c5c666dcd5d"
+    },
+    "fixtures.tsv": {
+      "bytes": 943,
+      "sha256": "210555ee1dc0f56690bd770aee3673dafb4b10b2508ed91d81a3736a344307ee"
+    }
+  },
+  "source_pins": {
+    "/prep/reference_s80.cpp": "d9f8bee56f3d948e88c7e9b2013c83419a6b2fe08d4f50ff6e1eff2fe06fd1d5",
+    "/prep/reference_bound.hpp": "468471b8ed5c972de11318bf19e7449be23fe48df7b5fbd21bcf3916de5a6ab0",
+    "/prep/selected36.tsv": "1c81d6b726e48a1f44956ccddfae6fd41ae3f696a0668b5d9060bfdefcdeffad",
+    "/prep/schema.json": "9ffefd242d6abb7ed6d6afbfb349e239203a45f29e872610c6682f1887390256",
+    "/prep/input-pins.json": "8087d5e96940dab94a4bbe96f9c0344bf0093cabe0eab8843fcfdb52b71cd93e",
+    "/prep/source-pins.json": "0a9ac4e1770bcae62c3a0f07591372b9a7045e024c182a2d947332439e02f668",
+    "/prep/expected-frozen.sha256": "207cd5918e3d019945a11829cda1bdb20d75aaf25e6852db560b66f6edbff06f",
+    "/prep/build.sh": "f9137904faed45433d267c79465023cb74130f7867d62f6916770301af085ae3",
+    "/prep/build-container.sh": "1f10a47c1f0ec6f140a45adaab92c10ee27033f38c29bde1d82378dc09a109c3",
+    "/prep/run.sh": "a6f1056847da23127954d3e37f3b228d917490f817b960b456e5064df6fa03ee",
+    "/prep/run-container.sh": "5dec92a43921d8c3568aae54526cde3c0431758b9d74614920c3fa9a97aaf8d7",
+    "/prep/finalize.py": "25f0b882a58d05682e4494d24676dc7abea4806b1835d9c45ee852fe3a5ad0da",
+    "/work/llama-pinned/ggml/include/ggml.h": "12ee71f99db7db9b353bc02b1fbb57c344ee17c01ac5fb7952b41a637a747ea9",
+    "/work/llama-pinned/ggml/src/ggml.c": "1a634ca1df25db2fbd526cba9bfe11fccd5aa9b31f819c3cac6b630be03f9f51",
+    "/work/llama-pinned/ggml/src/ggml-quants.c": "07143d7068936ae46b3c528b2f3d4bbb666e74d88992165716174d243573965d",
+    "/work/llama-pinned/ggml/src/ggml-impl.h": "43564db0238aebb7ed68501e346c194866b5dac218d1d37b26baff9f458c00d3",
+    "/work/llama-pinned/ggml/src/ggml-common.h": "0061131b615c5721fc88a78feeb22c1f8c450f1c2646a317d80796a653bf595c",
+    "/work/src-ep/build-sycl-ep/ggml/src/libggml-base.a": "293516f3e8a101a7e6b732347094047ea905e40204fa5489c7202e0e5c2d0f8d"
+  },
+  "binary_sha256": "9eb04ed999360cb7e3424348dd6ee4e5992ae23749243879556b2a99631d455c",
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "MKL_build_files": "12100f333cbca07387ca3e9e51092e17f3af05f3a8aa1d93cab1b1e8420f0ec5  /opt/intel/oneapi/mkl/latest/include/mkl_cblas.h\n02ff230034b626727576886decbdce2a01b76728e59b9d708e884d5bd153e2c7  /opt/intel/oneapi/mkl/latest/include/mkl_service.h\nb2ff0e31d7cd18c91813d8f6500f37665597d89de22649d90687aa6bf7bd2c0f  /opt/intel/oneapi/mkl/latest/lib/libmkl_rt.so.3\n",
+  "compiler": "Intel(R) oneAPI DPC++/C++ Compiler 2026.1.0 (2026.1.0.20260617)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /opt/intel/oneapi/compiler/2026.1/bin/compiler\nConfiguration file: /opt/intel/oneapi/compiler/2026.1/bin/compiler/../icpx.cfg\n",
+  "CPU_only": true,
+  "schema": {
+    "version": 1,
+    "status": "SOURCE_SCHEMA_ONLY_NO_NUMERICAL_EXECUTION",
+    "endian": "little",
+    "float64": "IEEE754 binary64",
+    "fp16": "IEEE754 binary16 bit storage, pinned ggml RN conversion",
+    "experts": 16,
+    "rows": 1748,
+    "N": 2560,
+    "GU_columns": 1280,
+    "full_GU_values": 2237440,
+    "files": {
+      "gu-planes.fp16": {
+        "bytes": 104857600,
+        "layout": "expert-major[16][1280][2560], interleaved GU column2*ff+parity, each row contiguous K"
+      },
+      "down-planes.fp16": {
+        "bytes": 52428800,
+        "layout": "expert-major[16][2560][640], each row contiguous640; diagnostic only, no down target"
+      },
+      "gu-T64.f64": {
+        "bytes": 17899520,
+        "layout": "row-major[1748][1280]; flat=(fixture.row_offset+token)*1280+GU_column"
+      },
+      "gu-Aupper.f64": {
+        "bytes": 17899520,
+        "layout": "row-major[1748][1280]; flat=(fixture.row_offset+token)*1280+GU_column"
+      },
+      "gu-B32.f64": {
+        "bytes": 17899520,
+        "layout": "row-major[1748][1280]; flat=(fixture.row_offset+token)*1280+GU_column"
+      },
+      "gu-E64.f64": {
+        "bytes": 17899520,
+        "layout": "row-major[1748][1280]; flat=(fixture.row_offset+token)*1280+GU_column"
+      },
+      "gu-bound.f64": {
+        "bytes": 17899520,
+        "layout": "row-major[1748][1280]; flat=(fixture.row_offset+token)*1280+GU_column"
+      },
+      "actual-gathered-changed.fp16": {
+        "bytes": 8949760,
+        "layout": "row-major[1748][2560], sign-bit XOR0x8000 of every saved input half"
+      }
+    },
+    "changed_reference": "Exact sign reversal gives ideal -T64 with unchanged Aupper/B32/E64/bound; no changed H/down sign claim",
+    "bound": "B32_up+E64_up rounded upward; Aupper0 keeps all bounds exactly0; each scalar interval op enclosed outward; reference_bound.hpp is shared host gate",
+    "final_status": "PASS_CPU_FULL_GU_REFERENCE_GPU_IDENTITY_PENDING",
+    "GPU_operand_identity_measured": false,
+    "ideal_H_down_reference": false,
+    "down_CPU_plane_role": "optional diagnostic only; not prerequisite for GU arithmetic premise under updated root-directed eager protocol"
+  },
+  "numeric": {
+    "status": "PASS_CPU_REFERENCE_ONLY_GPU_OPERANDS_UNMEASURED",
+    "experts": 16,
+    "rows": 1748,
+    "GU_columns": 1280,
+    "K": 2560,
+    "values": 2237440,
+    "threads": 4,
+    "max_rss_kib": 124004,
+    "FE_TONEAREST": true,
+    "MXCSR": 8098,
+    "FTZ_DAZ": false,
+    "gamma32": [
+      0.00015261117724262117,
+      0.00015261117724262133
+    ],
+    "gamma64": [
+      2.842170943041207e-13,
+      2.84217094304121e-13
+    ],
+    "exact_zero_A_values": 0,
+    "selected36_exact_numerators": true,
+    "selected36_E64_conformance": true,
+    "max_selected_reference_residual_upper": 0,
+    "zero_DGEMM_and_zero_negative_control": true,
+    "zero_DGEMM_cells": 1280,
+    "outside_bound_float_negative_control": true,
+    "negative_control_flat_index": 0,
+    "negative_control_y": 0.01712016575038433,
+    "negative_control_reference": 0.016924131428822875,
+    "negative_control_bound": 0.00019603384271319228,
+    "negative_control_endpoint_up": 0.01712016527153607,
+    "GPU_plane_identity_measured": false,
+    "ideal_H_down_reference": false,
+    "input_half_classes": {
+      "normal": 4474880,
+      "subnormal": 0,
+      "positive_zero": 0,
+      "negative_zero": 0,
+      "inf": 0,
+      "nan": 0
+    },
+    "GU_half_classes": {
+      "normal": 52428800,
+      "subnormal": 0,
+      "positive_zero": 0,
+      "negative_zero": 0,
+      "inf": 0,
+      "nan": 0
+    },
+    "down_half_classes": {
+      "normal": 20885450,
+      "subnormal": 0,
+      "positive_zero": 2740852,
+      "negative_zero": 2588098,
+      "inf": 0,
+      "nan": 0
+    },
+    "raw_GU_scale_classes": {
+      "normal": 204223,
+      "subnormal": 577,
+      "positive_zero": 0,
+      "negative_zero": 0,
+      "inf": 0,
+      "nan": 0
+    }
+  },
+  "MKL_runtime_version": "Intel(R) oneAPI Math Kernel Library Version 2026.1-Product Build 20260612 for Intel(R) 64 architecture applications",
+  "changed_input_full_sign_bit_identity": true,
+  "GPU_operand_identity_measured": false,
+  "ideal_H_down_reference": false,
+  "bounds_meaning": "Predeclared S77 empirical full-GU arithmetic target; ordinary FP32 envelope plus explicit conventional FP64 reference uncertainty, not a vendor-guaranteed arithmetic theorem.",
+  "down_CPU_plane_role": "diagnostic identity only; no down or H ideal reference"
+}

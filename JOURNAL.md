@@ -23999,3 +23999,125 @@ exact pins/versioned findings resolution remain beforeGPU. Dated S75 report,
 exactcopies/map retained;170historicaloperation rows/rollups unchanged.
 Completed manifest198files79269638B SHA
 ff730eec68f5f4bc74220c58c29e330f5f4aac0fa75ebbb08a22a5b8b4ab4287.
+
+
+## 2026-10-15 -- Flash-Next optimization S76: native IQ3_S cost audit
+
+CONFIG -> Retained S31 profile and rejected S75 SG16 matrix mapping; native
+mtp_q4_share source audit, root full read. No new payload/build/GPU execution.
+COMMAND -> Account native/source work distribution and alternative storage.
+RESULT -> Native sixteen SG32 groups versus S75 one SG16 group per16 outputs;
+K32 segments distributed versus serial. Logical references are not physical
+traffic or a causal slowdown decomposition. A decoded-code/odd-scale/raw-half
+plane preserving native SG32/DP4A order requires31.171875MiB extra across the
+two shapes,2.41818x compressed storage while originals remain. S31 IQ3_S C6
+service pool1.933582ms/cycle is not removable wall latency.
+VERDICT -> Park expanded-plane implementation/GPU work; retain source findings
+and prioritize commit overlap/grouped-prefill contract. Frozen manifest SHA
+ffa9599c6fc3dd9fa5cc84af6e647a29e381fdcb504a831c4e5838ca75ad2b2b.
+See docs/20261015_strata_decode_overlap_and_prefill_contract.md.
+
+
+## 2026-10-15 -- Flash-Next optimization S77: full-GU reference contract
+
+CONFIG -> Existing S42 sixteen-expert/ten-format1748-row saved wave; native
+strata_ep_s27 source proposal and root scope corrections. Prior strict failure
+and conditional S62 sample remain unchanged. No numerical execution/build/GPU.
+COMMAND -> Review installed API/production path and independent reference cost.
+RESULT -> Full2,237,440 GU outputs require5.7278464G MAC per product; existing
+CPU CBLAS double GEMM can supply reference and absolute-product sums. Predeclare
+outward FP32 gamma2560 plus conventional FP64 reference uncertainty, exactzero,
+finite/normal operand gates and full GPU/CPU RN-half plane equality. This is
+an empirical acceptance target, not a vendor arithmetic theorem. Native-exp
+SiLU has no ideal full-pipeline guarantee. Actual peer prefill is eager, so
+root removes irrelevant graph hardgate for S80; CPU down identity is optional
+diagnostic, no ideal H/down target. Full own repeat/changed pipeline and
+same-GU producer equivalence remain mandatory before complete-wave timing.
+VERDICT -> Prepare separate S80 helper/leaf, no fitted epsilon/model claim.
+Frozen original proposal manifest SHA
+5c0fbc6a0816508ed2eb72e56fbb82b2cea4e0131e98addc70a947cb6cde57ed;
+root eager-scope correction retained in dated mechanism report.
+
+
+## 2026-10-15 -- Flash-Next optimization S78: commit/draft overlap source lead
+
+CONFIG -> Retained S31/S32 summaries and actual verifier/drafter ownership;
+native ple_upstream audit, root full source read. No duplicate270MB trace parse.
+COMMAND -> Reconcile nine replay motifs and inspect batch/scalar commit paths.
+RESULT -> Pair-graph coalescing targets only old45us submission region; HOLD.
+Batch commit waits unconditionally although final residual/private draft state
+are distinct from committed GDN/indexer/PLE history. Existing scalar completion
+event suggests bounded fork/join on existing queues. Old1.5907ms CPU commit
+span is not a promised saving; workloads share the primary card. Publication,
+mutable mapped records, PLE order, layer-stage fallback and all exits require
+explicit ownership/drain proof. No source patch or GPU result in this stage.
+VERDICT -> Prepare default-OFF S79 overlap; no independent-slot dispatch or
+broad cache lifecycle rewrite. Frozen manifest SHA
+cc6eb10aca6c6ea54f84181a34e71fa8f21d2622af196c6a4e9259980b9dce4b.
+Upstream main296b59d2 unchanged at2026-10-15T15:02Z; tracked PRs remain open.
+
+
+## 2026-10-15 -- Flash-Next optimization S79: commit overlap parked, unmatched
+
+CONFIG -> Same03bb07f9 prototype binary in fresh OFF/ON EP2 servers, paired
+heads/depth2/HCcommon/RPW1, headRPW2/S49OFF; TRACE1prompt gate, CPU ring absent.
+One warm+three fresh107token paired prompts/1500outputtokens per stream/arm.
+COMMAND -> Root exactthreefile apply, CPU168s incrementalbuild158.876s;
+actual fresh Opus60.254/Fable158.009 sourceGO after filename/scalarhandoff
+conditions. Bothcard/compiledcollective prehealth, finite OFF/ON arms with
+normalQUIT/posthealth after each, retained arithmetic/reasoning/tool checks.
+RESULT -> All8pairs request/fulltext/SSEcontent/usage equal, functionals/
+identity/health/ownCID+NAMEremoval/finaldiagnostics PASS. ON everywindow
+asked=deferred=joined. Matched timedrepeat1 clientwall28.972413->29.095658s,
+repeat2 28.903272->28.964655s. Repeat3 wall29.511710/29.573993s UNMATCHED:
+556/557windows,553paired each,2/3solo; slot1offers1138/1140drafts,933accepted
+each. No aggregate timingmedian/normalization/speedclaim. Host counters do not
+prove hardwareoverlap; BDONEprejoin/commit/emit partitions are not comparable
+latency budgets, SSEcontentgaps not ITL, aggregatework not exactrowlayouts.
+VERDICT -> HOLD_UNMATCHED_NO_LATENCY_PROMOTION; park/no rerun/promotion. Restore
+exact3sourcebasefiles WITHOUT baseline rebuild/serverrestore; currentSHA
+readbacks9ecedbed/e97ce93a/6433d750 PASS. Genericexe/objects stillcandidate,
+NOT restoredsource/base; retained03bb experimentalonly. Actual resumed post
+Opus26.109/Fable29.027 both ACCEPT; rootfullread and ambiguity resolved via
+separate source-readback supplementad051e5b. Datedmechanism report/small exact
+records/map retained; historical170operations/rollups/meta unchanged.
+
+S79 completed whole-stage manifest214files196711034B SHA
+292aee57cb7b1b9ab2a48cedfc461cbc0396ff5cb0708d6e61e68feec1211cd6.
+
+
+## 2026-10-15 -- Flash-Next optimization S80: full-GU target PASS, grouped slower
+
+CONFIG -> Saved real S42 weights/deterministic synthetic half inputs,
+compact16expert/10format1748row wave, K2560/GU1280,
+physicalcard1, samee41image/source APIs. S77 predeclared full-GU target,
+independent CPU RN-half+FP64 T/A reference, outwardbound/sharedheader468471b8.
+COMMAND -> CPUv1build12s/fails0.523s afterexpert0: Q2_0downblock64 not32;
+v2three-linegeometryfix/source d9f8bee5 keepsGU/header/schema/target exact.
+CPUv2build11s exe9eb04ed9; CPUrun16s/helper3.051s/4threads/RSS124004KiB,
+all2237440values/36exact/zero+negative/FENV/class/pins PASS. Actual fresh
+Opus151.962/Fable437.759 sourceGO/rootfullread. Separate final-linkprecise
+recipe, no defaultFTZclaim; exact8frozeninputs/source/member/map audit;
+no crtfastmath.o inmap/linklog. GPUleafbuild139s (12.373/112.725), exe0e5c75c9.
+One49s quietcard1window/leaf21s, no modelserve/graph/profiler/retry.
+RESULT -> Full100MiBGPU/CPUGUplanes equal, full50MiBdownGPUcoherence,
+all4GUcomparisons2237440valueseach failures0; scalar/groupmaxabs5.06407e-8/
+8.24220e-8, worstboundratios.000253533/.000406271. Owncomplete eager/repeat/
+changed/restore/producer/S42scalaranchor/memory/metadata/pins PASS;16binary
+artifacts309432320B. CPUdown diagnostic only, no idealH/down target; S42strict
+FAILED_UNCHANGED. Fullwave4balancedpairs scalar1.019624/1.049130/1.071533/
+1.052938ms, grouped4.150444/5.420274/4.451648/4.356446ms. Medians1.051034/
+4.404047ms; medianpairedchange+314.594pct, all4slower. Gather/DQ/GU/SiLU/down/
+barriers/metadata inside, reset/readback outside; scalar timedGU/H finalexpert
+scratchonly/fullfinaldown, full intermediates checkeduntimed. CID+NAMEgone/
+preposthealth0/wrappers0. No cause/population/fullmodel speed claim.
+VERDICT -> Keep production scalar/rejectexactmapping/no serve/retry/promotion;
+retain reference for distinct futurecandidates. ActualpostOpus24.734/
+Fable22.687 bothACCEPT, rootfullread; causal/unit/signmirror/defaultFTZ
+wording corrected. Datedreport/smallrecords/map retain limits; old170ops/
+rollups/meta unchanged. Compact12467B postpacket avoids repeating rawlogs.
+
+Completed S80 manifest233files757155438B plus explicitbuildsymlink, SHA
+5f0f2262cef1699098066fb71f5e8bbabecf4842631bdcb800f9d211fa5f728f.
+Cross-agent E1-E4 source-audit followup qualifies E3fixedpoint replay control
+and E2/E4attributionlimits, preserving all original scripts/rawresults.

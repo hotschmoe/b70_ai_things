@@ -1,0 +1,8 @@
+	linux-vdso.so.1 (0x00007641cb46a000)
+	libmkl_rt.so.3 => /opt/intel/oneapi/mkl/2026.1/lib/libmkl_rt.so.3 (0x00007641ca9af000)
+	libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007641ca8c2000)
+	libstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007641ca644000)
+	libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007641ca614000)
+	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007641ca402000)
+	libdl.so.2 => /lib/x86_64-linux-gnu/libdl.so.2 (0x00007641ca3fd000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007641cb46c000)

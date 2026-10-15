@@ -1,0 +1,112 @@
+{
+  "scope": "S78 source-only current callgraph and reused historical trace evidence; no actual model call/build/GPU/payload/whole archive hash",
+  "utc": "2026-10-15T15:07:26.729727+00:00",
+  "source": {
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp": {
+      "sha256": "fcd5d2e4b029985a6e7768707a5aa489e4b5724a78db50fc2313d9c64e67ec31",
+      "bytes": 114902,
+      "relevant_lines": [
+        "365-414 private draft K/V allocation",
+        "1999-2050 equal steps and existing slot0 pair queue",
+        "2052-2073 eligibility",
+        "2076-2156 pre-round/pre-step/tail capture bodies",
+        "2163-2279 six ordered launches then mapped polling/PLE/final wait"
+      ]
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp": {
+      "sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2",
+      "bytes": 223107,
+      "relevant_lines": [
+        "656-695 separate dedicated verifier/copy/shared queues and commit event",
+        "2794-2916 existing scalar asynchronous commit and wait_commit",
+        "3069-3148 batch commit memory access set",
+        "3323-3389 peer/primary replay then result readiness",
+        "3487-3564 batch commit unconditional wait then CPU ple_prev advance"
+      ]
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp": {
+      "sha256": "6433d750e414aeb9c71135257ae40a8f9e38ea661537c251b50cabdbc2217d83",
+      "bytes": 867808,
+      "relevant_lines": [
+        "3309 scalar asynchronous commit enabled outside multi_gpu layer split",
+        "4165-4182 per-slot PLE parent/session ownership",
+        "7531-7567 separate residual buffers and pair binding",
+        "9383-9407 verify/read acceptance then commit",
+        "9443-9508 two residual copies then paired draft",
+        "9519-9530 batch flush/window_end outer boundary"
+      ]
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/layer.cpp": {
+      "sha256": "c89d9bb9a1c37616e9e415730e667b821e88ab73239a1dc5a27867aac7b04016",
+      "bytes": 120574,
+      "relevant_lines": [
+        "777-880 own K/V/indexer/page-table cursor; share_rope only cos/sin"
+      ]
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/core/mtp.hpp": {
+      "sha256": "349e8f7a92d71f8f96aae4f1fbe3b03a746640c06c8ea154c2610759f2178c48",
+      "bytes": 22887,
+      "relevant_lines": [
+        "155-165 existing per-drafter idle wait"
+      ]
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/core/verify.hpp": {
+      "sha256": "9ecedbed463eeeb241a49995c0d8b078cb2ef5ac4d294a3954f075aeff0b97c2",
+      "bytes": 37407,
+      "relevant_lines": [
+        "473-476 commit_done_/commit_pending_ state"
+      ]
+    }
+  },
+  "evidence": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-pair-s31/s31-report.json": {
+      "sha256": "04a64779360679b8c0003fc348bee1045856537345003bed31e02d6ab8becd81",
+      "bytes": 4362
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-pair-s31/analysis-prep/findings.md": {
+      "sha256": "d2f1290b67be1c2c26dc13614b5119184b3794c26e5aabdd341b8fdc608c626c",
+      "bytes": 6851
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-pair-s31/analysis-prep/primary-quiet-gaps-note.md": {
+      "sha256": "a2b82470dd4d151bd43a022c768a106ccded32bb3ff89f045a63546da92cb9c3",
+      "bytes": 6080
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-pair-s31/analysis-prep/reviewed-events.json": {
+      "sha256": "9b4f34a8524d51e0e18ca6d7e37081946d37c320f9b590725dda59fe31f9f28e",
+      "bytes": 8462174
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-pair-s31/analysis-prep/result/cycles.json": {
+      "sha256": "7f776b187cb9b174ddb7684beabfe1f77b33c9c2d00c79761358a4e51bd8b5f2",
+      "bytes": 1465546
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-pair-s31/analysis-prep/reviewed-host-start.json": {
+      "sha256": "cada1b8e21a282a3068865156cd64c8210c6c9946417349bc42c0ccdc81950b9",
+      "bytes": 252129
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/host-boundary-s32/analysis/findings.md": {
+      "sha256": "94f21b613f723896358ad94eaa5490279d82111db2b227a5d64f3d7933b76890",
+      "bytes": 4434
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/host-boundary-s32/analysis/summary.json": {
+      "sha256": "370de44dc99a618a9d2e8b7b046a4f53a79da31e8aceb3d89633963235f212aa",
+      "bytes": 15955
+    },
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/patches/rejected-batch-mtp-async-s22.patch": {
+      "sha256": "48929028b9bba4d1e42d6453cb391ebba8d5ec948ca5722128603a4c57e0148c",
+      "bytes": 13261
+    },
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/patches/experimental-batch-mtp-pair-head-s26.patch": {
+      "sha256": "86fc08806a7121487e26a0a618f310270a127c975722551ef275f9b6867e6981",
+      "bytes": 32960
+    }
+  },
+  "historical_raw_identity_not_rehashed": {
+    "S31_raw_trace": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-pair-s31/trace/strata-ep-scope.467.json",
+    "S31_raw_sha256": "eb7ac30d484ea7120198c4f61b89e93be08483016447779f2700462a6ae52985",
+    "S31_raw_bytes": 270756565,
+    "S31_raw_events": 1722051,
+    "S31_native_sha256": "152055a6204a3911e96b59aab8d6788a1a434891e1e1ebd9098c9e21b8d11f13",
+    "S32_source_log_sha256": "4f000c3c58454a8aab9a7be73f2dcccf41873015a06c5f4f58e169cb4c8e7349",
+    "S32_native_sha256": "595f2ff54e48882985b91972d64ab27d01241c009b385bf29d9f96721fdde826"
+  }
+}

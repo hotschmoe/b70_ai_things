@@ -1,0 +1,257 @@
+{
+  "status": "FAILED_OR_UNMATCHED",
+  "checks": {
+    "identity_and_image": true,
+    "warm": true,
+    "repeat1": true,
+    "repeat2": true,
+    "repeat3": false,
+    "functionals": true,
+    "health_teardown": true,
+    "final_diagnostics_complete": true
+  },
+  "same_binary": true,
+  "pairs": [
+    {
+      "label": "warm",
+      "matched": true,
+      "checks": {
+        "admission_overlap": true,
+        "request_equal": true,
+        "full_text_equal": true,
+        "SSE_content_equal": true,
+        "usage_equal": true,
+        "native_draft_work_equal": true,
+        "native_window_pair_solo_equal": true,
+        "activation_and_join": true
+      },
+      "pair_wall_s": [
+        28.998803858994506,
+        29.06670133699663
+      ],
+      "client_decode_tps": [
+        [
+          54.14400634447775,
+          56.50584033694117
+        ],
+        [
+          54.104709422633356,
+          56.490768955720945
+        ]
+      ],
+      "content_event_gap_ms": [
+        [
+          {
+            "count": 1321,
+            "p50": 0.23467798018828034,
+            "p95": 47.50244098249823,
+            "maximum": 1199.2569220019504
+          },
+          {
+            "count": 1333,
+            "p50": 0.23503799457103014,
+            "p95": 47.50783200142905,
+            "maximum": 276.06130903586745
+          }
+        ],
+        [
+          {
+            "count": 1321,
+            "p50": 0.25246100267395377,
+            "p95": 47.50153998611495,
+            "maximum": 1198.586484999396
+          },
+          {
+            "count": 1333,
+            "p50": 0.2551969955675304,
+            "p95": 47.52994360169396,
+            "maximum": 288.1436870084144
+          }
+        ]
+      ]
+    },
+    {
+      "label": "repeat1",
+      "matched": true,
+      "checks": {
+        "admission_overlap": true,
+        "request_equal": true,
+        "full_text_equal": true,
+        "SSE_content_equal": true,
+        "usage_equal": true,
+        "native_draft_work_equal": true,
+        "native_window_pair_solo_equal": true,
+        "activation_and_join": true
+      },
+      "pair_wall_s": [
+        28.97241277905414,
+        29.0956575970049
+      ],
+      "client_decode_tps": [
+        [
+          53.61478093567498,
+          56.12858110802313
+        ],
+        [
+          53.43155329294571,
+          55.94669679046209
+        ]
+      ],
+      "content_event_gap_ms": [
+        [
+          {
+            "count": 1330,
+            "p50": 0.24355450295843184,
+            "p95": 47.27552662079688,
+            "maximum": 1315.644385991618
+          },
+          {
+            "count": 1330,
+            "p50": 0.2244225179310888,
+            "p95": 47.377643099753186,
+            "maximum": 424.2198889842257
+          }
+        ],
+        [
+          {
+            "count": 1330,
+            "p50": 0.2185420016758144,
+            "p95": 47.35759235045407,
+            "maximum": 1367.3186720116064
+          },
+          {
+            "count": 1330,
+            "p50": 0.2224140043836087,
+            "p95": 47.4096255376935,
+            "maximum": 471.1367439595051
+          }
+        ]
+      ]
+    },
+    {
+      "label": "repeat2",
+      "matched": true,
+      "checks": {
+        "admission_overlap": true,
+        "request_equal": true,
+        "full_text_equal": true,
+        "SSE_content_equal": true,
+        "usage_equal": true,
+        "native_draft_work_equal": true,
+        "native_window_pair_solo_equal": true,
+        "activation_and_join": true
+      },
+      "pair_wall_s": [
+        28.903271960967686,
+        28.96465525496751
+      ],
+      "client_decode_tps": [
+        [
+          53.65054269365551,
+          56.34548606900192
+        ],
+        [
+          53.52488437989343,
+          56.2337069996332
+        ]
+      ],
+      "content_event_gap_ms": [
+        [
+          {
+            "count": 1332,
+            "p50": 0.21432898938655853,
+            "p95": 47.49479396850802,
+            "maximum": 1344.5683649624698
+          },
+          {
+            "count": 1335,
+            "p50": 0.23109099129214883,
+            "p95": 47.45199958560988,
+            "maximum": 417.26359602762386
+          }
+        ],
+        [
+          {
+            "count": 1332,
+            "p50": 0.22204348351806402,
+            "p95": 47.61053765832912,
+            "maximum": 1355.11178401066
+          },
+          {
+            "count": 1335,
+            "p50": 0.22218399681150913,
+            "p95": 47.53382190247066,
+            "maximum": 428.2622209866531
+          }
+        ]
+      ]
+    },
+    {
+      "label": "repeat3",
+      "matched": false,
+      "checks": {
+        "admission_overlap": true,
+        "request_equal": true,
+        "full_text_equal": true,
+        "SSE_content_equal": true,
+        "usage_equal": true,
+        "native_draft_work_equal": false,
+        "native_window_pair_solo_equal": false,
+        "activation_and_join": true
+      },
+      "pair_wall_s": [
+        29.51171009504469,
+        29.573992913996335
+      ],
+      "client_decode_tps": [
+        [
+          54.11767077085246,
+          55.10354876660976
+        ],
+        [
+          54.05159393712348,
+          55.03079704503414
+        ]
+      ],
+      "content_event_gap_ms": [
+        [
+          {
+            "count": 1332,
+            "p50": 0.21627199021168053,
+            "p95": 47.499402044923045,
+            "maximum": 1335.0656360271387
+          },
+          {
+            "count": 1332,
+            "p50": 0.22972800070419908,
+            "p95": 47.49230585002806,
+            "maximum": 421.8815009808168
+          }
+        ],
+        [
+          {
+            "count": 1332,
+            "p50": 0.21235999884083867,
+            "p95": 47.48518452397548,
+            "maximum": 1358.8047449593432
+          },
+          {
+            "count": 1332,
+            "p50": 0.21679801284335554,
+            "p95": 47.50978074152954,
+            "maximum": 436.1917999922298
+          }
+        ]
+      ]
+    }
+  ],
+  "timed_pair_wall_median_s": null,
+  "latency_scope": "client wall/SSE content-event gaps, not token ITL or device-only service; BDONE ms sampled before publication",
+  "capture_scope": "no exact per-window row-layout/cache-hit visibility without CPU ring; matched aggregate work only",
+  "configuration_normalization": [
+    "STRATA_BATCH_COMMIT_OVERLAP0/1",
+    "arm-local engine log only"
+  ],
+  "raw_native_token_ids_observed": false,
+  "no_promotion_claim": true
+}

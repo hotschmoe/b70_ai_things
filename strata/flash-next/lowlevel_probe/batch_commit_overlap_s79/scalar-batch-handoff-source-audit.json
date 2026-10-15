@@ -1,0 +1,99 @@
+{
+  "status": "BOUNDED_NORMAL_SERVING_HANDOFF_SOURCE_CONFIRMED",
+  "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp",
+  "source_sha256": "fb62bcb4037edeb02ee29c15b6f2254d8a1aff7d55e6dbed9b4ae3eda4f4781f",
+  "scope": "Exact reviewed no-layer-split serving/BGEN/mixed-prefill paths; static callgraph, not runtime observation or universal callback proof.",
+  "conclusion": "EP2 can enable scalar async. BGEN maps GEN1; request entry and scalar request completion drain wait_commit before slot activation. read_windows drains after its scalar commits; read_part only Prefill::run, so its inter-chunk batch calls do not introduce scalar pending. Every prior successful S79 batch joins before return. Stale-pending refusal and warm fail-stop remain defense, not bypassed.",
+  "corrected_prior_message": "Mixed-prefill batch_step is inside read_part after each successful sp.run chunk, not after read_part returns.",
+  "excerpts": [
+    {
+      "lines": [
+        3305,
+        3313
+      ],
+      "source": "3305:                              (double)fb / 1073741824.0,\n3306:                              (double)held_back / 1073741824.0);\n3307:             }\n3308:         }\n3309:     }\n3310:     strata::core::Verifier::set_commit_async(!multi_gpu);   // see Verifier::set_commit_async\n3311:     // --pipeline-windows (opt-in): one conversation's windows with the two stages of a layer split overlapped.  Decided\n3312:     // here, before any stage sizes its expert cache (the second verifier per stage and the snapshots are allocated\n3313:     // after the caches, so their room is kept out of them).  What it does not support turns it off, said once.\n"
+    },
+    {
+      "lines": [
+        9732,
+        9745
+      ],
+      "source": "9732:             while (pipe_inflight())\n9733:                 if (!pump(false)) return false;\n9734:             return true;\n9735:         };\n9736:         for (;;) {\n9737:             if (batch_on() || (piped && pipe_inflight())) {\n9738:                 if (!try_next_line(line)) {\n9739:                     if (!(piped ? pump(true) : batch_step())) return 1;\n9740:                     continue;\n9741:                 }\n9742:                 // a request reads its prompt through every stage: the groups in flight finish first\n9743:                 if (piped && line.rfind(\"BSTOP \", 0) != 0 && !pipe_drain()) return 1;\n9744:             } else if (!next_line(line)) {\n9745:                 break;\n"
+    },
+    {
+      "lines": [
+        9764,
+        9779
+      ],
+      "source": "9764:             if (line.rfind(\"BGEN \", 0) == 0 || line.rfind(\"BGENI \", 0) == 0) {\n9765:                 const bool bimg = line.rfind(\"BGENI \", 0) == 0;\n9766:                 char* e1 = nullptr;\n9767:                 const long b = std::strtol(line.c_str() + (bimg ? 6 : 5), &e1, 10);\n9768:                 char* e2 = nullptr;\n9769:                 const long long mn = std::strtoll(e1, &e2, 10);\n9770:                 if (bs.empty() || b < 0 || b >= (long) bs.size() || bs[(size_t) b].active || mn < 1 || e2 == e1) {\n9771:                     std::printf(\"ERR BGEN: no such free slot (--batch %d) or a bad max_new\\n\", o.batch);\n9772:                     std::fflush(stdout);\n9773:                     continue;\n9774:                 }\n9775:                 admit_slot = (int) b;\n9776:                 admit_max_new = mn;\n9777:                 line = std::string(bimg ? \"GENI 1\" : \"GEN 1\") + e2;\n9778:             }\n9779:             // #477: every --expert-profile-save-every minutes, before the next request (at QUIT: after the loop)\n"
+    },
+    {
+      "lines": [
+        10245,
+        10254
+      ],
+      "source": "10245:             const bool want_cvec = strata::kernels::cvec().loaded() ? req_cvec != 0 : true;\n10246:             // the last request's final commit may still be running on the verifier's stream (set_commit_async):\n10247:             // everything below reads, restores or zeroes the session from other streams and the host (the end of the\n10248:             // last request waited already; this covers a request that ended on an error path)\n10249:             if (!ver.wait_commit(err)) {\n10250:                 std::printf(\"ERR %s\\n\", err.c_str());\n10251:                 return 1;\n10252:             }\n10253:             auto kv_quiesce = [&] {\n10254:                                     try {\n"
+    },
+    {
+      "lines": [
+        10700,
+        10714
+      ],
+      "source": "10700:                         return p != nullptr ? (int32_t) std::atoi(p) : (int32_t) 248046;\n10701:                     }();\n10702:                     if (logpos != nullptr && !ver.window_logprobs(nxt.data(), T, q, logpos_extra, logpos, e))\n10703:                         return false;\n10704:                     if (!ver.commit(T, e) || (use_mtp && !mtp.prefill(ver.final_R_all(), nxt.data(), T, q, e))) return false;\n10705:                     q += T;\n10706:                     pp_reached = q;   // #471\n10707:                 }\n10708:                 // the batched prompt path (other streams), checkpoints and snapshots may follow: the last commit first\n10709:                 if (!ver.wait_commit(e)) return false;\n10710:                 const double ms = std::chrono::duration<double, std::milli>(Clock::now() - pp_t0).count();\n10711:                 std::printf(\"PP %lld %lld %.0f %.1f\\n\", (long long) b, (long long) pp_total, ms,\n10712:                             ms > 0.0 ? 1000.0 * (double) (b - pp_from) / ms : 0.0);\n10713:                 strata::core::progress_beat();\n10714:                 std::fflush(stdout);\n"
+    },
+    {
+      "lines": [
+        10852,
+        10856
+      ],
+      "source": "10852:             // the request ends with `YIELDED <slot> <tokens>` + DONE cancel, and the server sends it again later: it\n10853:             // continues from the slot with the same chunks.  #656's cooperative preemption, with a slot as the park.\n10854:             auto read_part = [&](int64_t a0, int64_t b0, std::string& e) -> bool {\n10855:                 // (a layer split reads its stages as a pipeline over one run's chunks: in pieces only beside slots)\n10856:                 if (o.batch <= 0 || piped || (!stages.empty() && !batch_on())) return sp.run(ids.data() + a0, b0 - a0, a0, e);\n"
+    },
+    {
+      "lines": [
+        10882,
+        10889
+      ],
+      "source": "10882:                     if (!sp.run(ids.data() + q, r - q, q, e)) return false;\n10883:                     q = r;\n10884:                     if (q >= b0) continue;\n10885:                     int ys = -1;\n10886:                     {   // a BSTOP that came meanwhile ends its slot at its next window; a BYIELD is for this read\n10887:                         std::lock_guard<std::mutex> lk(in_mu);\n10888:                         for (auto it = in_lines.begin(); it != in_lines.end();) {\n10889:                             if (it->rfind(\"BSTOP \", 0) == 0) {\n"
+    },
+    {
+      "lines": [
+        10936,
+        10950
+      ],
+      "source": "10936:                         std::fprintf(stderr, \"strata batch: BYIELD %d not taken at %lld of %lld%s%s\\n\", ys, (long long) q,\n10937:                                      (long long) n, ye.empty() ? \"\" : \": \", ye.c_str());\n10938:                     }\n10939:                     if (decode_share <= 0.0 || !batch_on()) continue;\n10940:                     const double budget = decode_share * std::chrono::duration<double, std::milli>(Clock::now() - tq).count();\n10941:                     const auto td = Clock::now();\n10942:                     do {\n10943:                         if (!batch_step()) { batch_fatal = true; e = \"a batch window failed\"; return false; }\n10944:                     } while (batch_on() && std::chrono::duration<double, std::milli>(Clock::now() - td).count() < budget);\n10945:                     ++il_parts;\n10946:                     il_ms += std::chrono::duration<double, std::milli>(Clock::now() - td).count();\n10947:                     if (trace) {\n10948:                         std::fprintf(stderr, \"strata trace: prompt chunk to %lld, then the slots decoded %.0f ms\\n\",\n10949:                                      (long long) q, std::chrono::duration<double, std::milli>(Clock::now() - td).count());\n10950:                         std::fflush(stderr);\n"
+    },
+    {
+      "lines": [
+        11048,
+        11071
+      ],
+      "source": "11048:                 if (!sp_ok) {\n11049:                     if (yielded_at < 0 && (batch_fatal || !stop_req.load())) {\n11050:                         std::fprintf(stderr, \"strata serve: %s\\n\", err.c_str());\n11051:                         std::printf(\"ERR %s\\n\", err.c_str());\n11052:                         // #224: a CUDA fault (an illegal address) poisons the context for the whole process, and\n11053:                         // unwinding the destructors on it could hang until the 60 s watchdog: leave at once\n11054:                         /*\n11055:                         DPCT1010: SYCL uses exceptions to report errors and\n11056:                         does not use the error codes. The cudaPeekAtLastError\n11057:                         function call was replaced with 0. You need to rewrite\n11058:                         this code.\n11059:                         */\n11060:                         if (0 != 0) {\n11061:                             std::fflush(stdout);\n11062:                             std::fflush(stderr);\n11063:                             std::_Exit(1);\n11064:                         }\n11065:                         return 1;\n11066:                     }\n11067:                     cancelled = true;   // stopped while reading the prompt: refill the lent slots below, then DONE cancel\n11068:                     break;\n11069:                 }\n11070:                 at = to;\n11071:                 if ((to == turn_at || to == root_at || to == message_at) &&\n"
+    },
+    {
+      "lines": [
+        11924,
+        11935
+      ],
+      "source": "11924:                 bool adapt_ok = true;\n11925:                 // (--adapt-async 1: the asynchronous tier above instead, ticked before the window)\n11926:                 if (!drive.d.usage.empty() && !ajob && ((rounds + 1) % o.adapt_every) == 0)\n11927:                     adapt_thr = std::thread([&] { adapt_ok = adapt(); });\n11928:                 if (!ver.commit(a + 1, err)) {\n11929:                     if (adapt_thr.joinable()) adapt_thr.join();\n11930:                     std::printf(\"ERR %s\\n\", err.c_str());\n11931:                     return 1;\n11932:                 }\n11933:                 // the window's first a + 1 tokens are in the session now (the last output is not: it is next x)\n11934:                 for (int i = 0; i <= a; ++i) consumed.push_back(window[(size_t) i]);\n11935:                 draft_offered += T - 1;\n"
+    },
+    {
+      "lines": [
+        12004,
+        12013
+      ],
+      "source": "12004:                 p += a + 1;\n12005:             }\n12006:             const double decode_ms = std::chrono::duration<double, std::milli>(Clock::now() - d0).count();\n12007:             // the last commit (set_commit_async): the session is complete before anything reads or copies it\n12008:             if (!ver.wait_commit(err)) {\n12009:                 std::printf(\"ERR %s\\n\", err.c_str());\n12010:                 return 1;\n12011:             }\n12012:             if (dec_timing && dec_windows > 0) {\n12013:                 const DecSnap d1 = dec_snap();\n"
+    },
+    {
+      "lines": [
+        12189,
+        12243
+      ],
+      "source": "12189:             if (admit_slot >= 0) {   // --batch: BADM <slot> <1 = continues in the batch windows | 0 = done>\n12190:                 bool cont = !cancelled && produced_n == 1 && admit_max_new > 1 && std::strcmp(finish, \"length\") == 0 &&\n12191:                             (int64_t) live.size() == p;\n12192:                 const auto tc0 = Clock::now();\n12193:                 if (cont && !park_slot(admit_slot)) {   // the conversation the slot holds, before this one overwrites it\n12194:                     std::printf(\"ERR %s\\n\", err.c_str());\n12195:                     return 1;\n12196:                 }\n12197:                 if (cont && !copy_to_slot(admit_slot, live, err)) {\n12198:                     std::fprintf(stderr, \"strata serve: batch admission failed: %s\\n\", err.c_str());\n12199:                     bs[(size_t) admit_slot].cached = false;   // its sessions may be half written\n12200:                     cont = false;\n12201:                 }\n12202:                 if (cont) {\n12203:                     ver.set_slot_sampling(admit_slot, req_sp);   // the request's own sampling, row by row\n12204:                     BSlot& sl = bs[(size_t) admit_slot];\n12205:                     sl = BSlot{};\n12206:                     sl.active = true;\n12207:                     sl.x = x;\n12208:                     sl.p = p;\n12209:                     sl.produced = 1;\n12210:                     sl.max_new = admit_max_new;\n12211:                     sl.t0 = Clock::now();\n12212:                     sl.ids = live;\n12213:                     if (batch_mtp) {\n12214:                         int nd = 0;\n12215:                         if (!slot_mtp[(size_t) admit_slot]->draft_first(1, ver.final_R_all(), sl.x,\n12216:                                                                         sl.p - 1, sl.draft.data(), err,\n12217:                                                                         nullptr, 0.0f, &nd)) {\n12218:                             std::fprintf(stderr, \"strata batch: MTP admission for slot %d failed: %s\\n\",\n12219:                                          admit_slot, err.c_str());\n12220:                             return 1;\n12221:                         }\n12222:                         sl.n_draft = nd < 0 ? 0 : nd > batch_depth ? batch_depth : nd;\n12223:                         sl.draft_ready = true;\n12224:                     }\n12225:                     sl.cvec = cvec_cached;\n12226:                     sl.img = !live_imgs.empty();   // pictures: not matched again by tokens alone, so not cached\n12227:                     const ConvCheckpoint* best = nullptr;\n12228:                     for (const ConvCheckpoint& c : checks)\n12229:                         if (c.ids.size() < live.size() && (best == nullptr || c.ids.size() > best->ids.size()) &&\n12230:                             std::equal(c.ids.begin(), c.ids.end(), live.begin()))\n12231:                             best = &c;\n12232:                     if (best != nullptr && !sl.img) sl.checks.push_back(*best);\n12233:                     std::fprintf(stderr, \"strata batch: slot %d takes %lld tokens (copied in %.1f ms)\\n\", admit_slot,\n12234:                                  (long long) live.size(), std::chrono::duration<double, std::milli>(Clock::now() - tc0).count());\n12235:                 }\n12236:                 std::printf(\"BADM %d %d\\n\", admit_slot, cont ? 1 : 0);\n12237:                 std::fflush(stdout);\n12238:                 admit_slot = -1;\n12239:             }\n12240:             if (drive.routing != nullptr) std::fflush(drive.routing);   // the routing trace survives a crash and is watchable mid-session\n12241:             // \"12288 of 98179\" when cancelled mid-read (#471), the rate from what was read\n12242:             char read_txt[64];\n12243:             if (cancelled)\n"
+    }
+  ],
+  "source_edits": 0,
+  "tests": 0,
+  "builds": 0,
+  "GPU_touches": 0,
+  "model_calls": 0
+}

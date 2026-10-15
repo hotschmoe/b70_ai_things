@@ -1,0 +1,14 @@
+--- v1/reference_s80.cpp
++++ v2/reference_s80.cpp
+@@ -71,8 +71,9 @@
+  for(const auto& e:fixture){
+   env_check();std::vector<uint8_t> blob(e.bytes);at(raw,e.off,blob.data(),blob.size());
+   const auto* gt=ggml_get_type_traits(static_cast<ggml_type>(e.gt));const auto* dt=ggml_get_type_traits(static_cast<ggml_type>(e.dt));
+-  need(gt&&gt->to_float&&gt->blck_size==256&&dt&&dt->to_float&&dt->blck_size==32,"CPU quant trait geometry");
+-  const size_t rb=size_t(K/256)*gt->type_size,drb=size_t(FF/32)*dt->type_size;need(e.up==640*rb&&e.down==2*e.up&&e.down+2560*drb==e.bytes,"quant layout");
++  need(gt&&gt->to_float&&gt->blck_size==256,"CPU GU quant trait geometry");
++  need(dt&&dt->to_float&&dt->blck_size==(e.dt==20?32:64)&&FF%dt->blck_size==0,"CPU down quant trait geometry");
++  const size_t rb=size_t(K/256)*gt->type_size,drb=size_t(FF/dt->blck_size)*dt->type_size;need(e.up==640*rb&&e.down==2*e.up&&e.down+2560*drb==e.bytes,"quant layout");
+   std::vector<ggml_fp16_t> wh(size_t(G)*K);std::vector<double> w(wh.size()),x(size_t(e.ne)*K),T(size_t(e.ne)*G),A(T.size()),B(T.size()),E(T.size()),bound(T.size());
+   for(int col=0;col<G;++col){const uint8_t* qrow=blob.data()+(col&1)*e.up+(col/2)*rb;
+    for(int z=0;z<K/256;++z){uint16_t h;std::memcpy(&h,qrow+z*gt->type_size,2);scale.add(h);}

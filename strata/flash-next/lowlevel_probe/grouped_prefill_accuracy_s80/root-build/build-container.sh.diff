@@ -1,0 +1,25 @@
+--- frozen-S80/build-container.sh
++++ S80-root-build/build-container.sh
+@@ -6,6 +6,8 @@
+ cd /out
+ SRC=/work/src-ep
+ BLD=$SRC/build-sycl-ep
++sha256sum -c /recipe/expected-recipe.sha256
++sha256sum -c /recipe/expected-frozen-container.sha256
+ sha256sum -c /src/expected-source-container.sha256
+ command -v icpx sha256sum nm >/dev/null
+ icpx --version > compiler-version.txt
+@@ -15,9 +17,12 @@
+ TIMEFORMAT='adapter_compile_seconds=%R'
+ { time icpx "${FLAGS[@]}" -c /src/grouped_prefill_leaf.cpp -o grouped_prefill_leaf.o; } 2> adapter-compile.time
+ TIMEFORMAT='adapter_AOT_link_seconds=%R'
+-{ time icpx -v -O3 -DNDEBUG -fsycl-max-parallel-link-jobs=4 -fsycl -fsycl-targets=spir64_gen -Xsycl-target-backend=spir64_gen '-device bmg-g31 -options -cl-fp32-correctly-rounded-divide-sqrt' -fsycl-device-code-split=per_kernel -qmkl=sequential grouped_prefill_leaf.o -Wl,--start-group "${INPUTS[@]}" -Wl,--end-group /usr/lib/x86_64-linux-gnu/libze_loader.so -Wl,-Map=/out/link.map -o grouped_prefill_leaf_s80 > AOT-link.log 2>&1; } 2> AOT-link.time
++{ time icpx -v -O3 -DNDEBUG -fp-model=precise -fsycl-max-parallel-link-jobs=4 -fsycl -fsycl-targets=spir64_gen -Xsycl-target-backend=spir64_gen '-device bmg-g31 -options -cl-fp32-correctly-rounded-divide-sqrt' -fsycl-device-code-split=per_kernel -qmkl=sequential grouped_prefill_leaf.o -Wl,--start-group "${INPUTS[@]}" -Wl,--end-group /usr/lib/x86_64-linux-gnu/libze_loader.so -Wl,-Map=/out/link.map -o grouped_prefill_leaf_s80 > AOT-link.log 2>&1; } 2> AOT-link.time
+ sha256sum "${INPUTS[@]}" > archives-after.sha256
+ cmp archives-before.sha256 archives-after.sha256
++sha256sum -c /recipe/expected-recipe.sha256
++sha256sum -c /recipe/expected-frozen-container.sha256
+ sha256sum -c /src/expected-source-container.sha256
+ sha256sum /src/grouped_prefill_leaf.cpp /src/reference_bound.hpp grouped_prefill_leaf.o grouped_prefill_leaf_s80 > sha256.txt
+ nm -C grouped_prefill_leaf_s80 > symbols.txt
++sha256sum /recipe/build.sh /recipe/build-container.sh /recipe/expected-frozen-container.sha256 /src/manifest.json /src/harness-pins.json /src/expected-source-container.sha256 /src/frozen-inputs.json > root-recipe.sha256

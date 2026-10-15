@@ -1,0 +1,79 @@
+{
+  "stage": "S77",
+  "status": "PROPOSED_CONTRACT_REQUIRES_ROOT_AND_MODEL_REVIEW_NOT_AUTHORIZATION",
+  "old_S42_strict_status": "FAILED_UNCHANGED",
+  "old_S62_status": "36 normal-scale conditional observations only; no GPU dequantized weight identity",
+  "one_candidate": "Full GU reference accuracy target plus unchanged-producer/strict-within-algorithm complete-wave coherence; not ideal SiLU/down accuracy",
+  "fixture": {
+    "source": "S42 frozen exact compact exports",
+    "experts": 16,
+    "GU_types": [
+      16,
+      17,
+      18,
+      21,
+      22
+    ],
+    "down_types": [
+      20,
+      42
+    ],
+    "rows": 1748,
+    "N": 2560,
+    "FF": 640,
+    "GU_columns": 1280,
+    "group_size_each": 1,
+    "rows_capacity": 4096,
+    "max_ne": 641,
+    "metadata": "distinct immutable USM-shared GU/down arrays until queue drain"
+  },
+  "CPU_precompute_before_GPU": {
+    "operands": "Pinned existing ggml to_float -> RN F16 -> exact widening; S42 saved actual_gathered.fp16, no FP32 requantization",
+    "all_GU_planes_bytes": 104857600,
+    "all_down_planes_bytes": 52428800,
+    "full_GU_values": 2237440,
+    "MAC_per_GU_reference": 5727846400,
+    "reference_and_abs_MAC": 11455692800,
+    "changed_input": "Flip FP16 sign bit of every stored activation; verify exact bytes. Ideal changed GU reference = -T64 with same outward A. No claim changed H/down = negative initial.",
+    "reference": "Small CPU-only C++ helper: pinned ggml RN-half reconstruction, CBLAS dgemm T64=X64*W64^T and abs-product dgemm Ahat; stream one expert. RNE, CPU FTZ/DAZ off, MKL_NUM_THREADS=4/OMP_NUM_THREADS=4 under cpu-run before GPU; no SYCL/LevelZero/GPU link. Reuse exact S62 selected36 as independent sanity.",
+    "gamma": "g(n,u)=n*u/(1-n*u)",
+    "A_upper": "Outward-rounded Ahat/(1-g(2560,2^-53)); implementation must enclose every scalar arithmetic operation, not only add a final nextafter",
+    "target": "For EVERY initial and changed GU output of BOTH algorithms: abs(float64(y)-T64) <= outward[(g(2560,2^-24)+g(2560,2^-53))*A_upper]; A_upper=0 requires y==0, either signed zero allowed. Outward enclose the residual computation too.",
+    "meaning": "Source-derived conventional FP32 error ENVELOPE chosen as empirical accuracy target, not claimed guarantee of opaque oneMKL internal operations. Reference uncertainty is included. No observed S42 delta is used to choose it.",
+    "reference_uncertainty": "E64=outward[g(2560,2^-53)*A_upper]; separate from B32=outward[g(2560,2^-24)*A_upper]. Acceptance distance to rounded reference includes B32+E64; it is not a vendor proof."
+  },
+  "GPU_operand_identity_before_reference_acceptance": {
+    "readback_bytes": 157286400,
+    "coverage": "ALL actual GPU-dequantized GU and down planes, each expert in the exact stored layout; ZERO byte mismatch vs precomputed CPU RN planes; not selected36 only",
+    "denorm": "Enumerate all raw scales and stored operands including all577 known GU subnormal-scale blocks; full-byte match closes dequant-conversion premise including affected rows. Reject nonfinite GU inputs/weights; reject stored nonzero half subnormals for this initial GU arithmetic model rather than assume library FTZ preservation. Old S62 reconstructed GU and actual X were all normal.",
+    "scope": "Comparing planes does not establish library hidden accumulation precision/rounding."
+  },
+  "strict_within_algorithm": {
+    "preserve_scalar_anchor": "Exact S42 scalar original computation and initial GU/H/down bytes retained; any source/library identity drift is declared before interpretation",
+    "checks": [
+      "gather exact bytes and route mapping",
+      "GU/H/down finiteness; all guards and inactive scratch/output poison tails",
+      "input, quant blobs, IDs, full dequant planes and metadata read-only at completed observations",
+      "own initial and changed eager repeats plus changed-input capture/replay must bitmatch own eager GU/H/down",
+      "production swiglu_interleaved on same saved GU segmented by expert versus packed full wave must yield identical H, separately for each algorithm; no new exp implementation",
+      "timed final GU/H/down match own canonical initial outputs after each sample"
+    ],
+    "graph_caveat": "Actual oneMKL grouped capture support is not established by S42; unsupported capture or nondeterminism is STOP, not permission to remove a gate or enable CNR silently."
+  },
+  "performance_after_all_declared_numeric_gates": {
+    "CPU_work": "Precomputed off-GPU; future window only full-plane/readback and bounded GU comparison, no heavy independent GEMM while GPU idle",
+    "path": "End-to-end one-wave gather + real DQ + GU + same SiLU/F16 + down + dependency barriers and actual per-wave metadata construction/fill; existing final queue wait. NOT model-request prefill throughput.",
+    "reset": "Restore canonical alias input, poison state, drain before each sample, reset/validation outside timing. Keep scratch/metadata alive until both arms drain.",
+    "schedule": "Three untimed complete-wave warm runs per algorithm, then four paired full-wave observations with AB/BA/BA/AB order; no profiler, cache flush or knob sweep. Three was S42; this balanced four-pair schedule is new and must be frozen before run.",
+    "report": "Each host-submit/completed-wall sample, metadata fill, full-path inclusive completion and own final bytes; all observations retained. Pure GU GEMM timing or metadata-excluded timing cannot establish the candidate benefit.",
+    "screen": "Candidate completed wall must be lower in every pair and median paired improvement must exceed control observed range; descriptive prescreen only, no significance/per-call p95. Root may reject inconclusive evidence without retry.",
+    "closure": "One-card leased and quiet with pre/post health, valid created CID+name absent before health/next process; stop first structural or accuracy failure, no automatic reset/retry. Root determines exact executable/archive binding and any capture-support blocker before execution."
+  },
+  "limits": [
+    "No ideal complete-pipeline accuracy proof: native exp is implementation-defined and H rounding is nonlinear.",
+    "No down independent-reference gate in this minimal contract; down repeats/common-producer checks verify coherence only. Adding down reference later requires preregistered new scope and own actual H operands.",
+    "No model-quality, serving qualification, all-context or 2000tok/s claim. A wave micro win is only a reason to consider a bounded production-shaped prefill screen.",
+    "No production/source edits, implementation, new adapter build, GPU or heavy CPU execution has been authorized by this prep."
+  ],
+  "tool_capability": "Root actual target preflight: host and e41 Python lack NumPy; installed mkl_cblas.h, libmkl_rt.so(.3), icpx available; no install needed. Unscoped tool-environment Python import is not an execution dependency."
+}

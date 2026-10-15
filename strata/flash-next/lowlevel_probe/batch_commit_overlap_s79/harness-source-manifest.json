@@ -1,0 +1,36 @@
+{
+  "status": "SOURCE_ONLY_FROZEN_NO_CONFIG_SERVER_REQUEST_GPU",
+  "files": [
+    {
+      "path": "client.py",
+      "bytes": 9709,
+      "sha256": "b543faedc24836107b59a46a8bcc757c5cbe0b0772e469f5d813bc8ae1b682ec"
+    },
+    {
+      "path": "compare.py",
+      "bytes": 4871,
+      "sha256": "cec1ae49cad40db1f56412ad306e16e528714db56093e0510bb8b86123bbf42b"
+    },
+    {
+      "path": "launch_stage.sh",
+      "bytes": 1851,
+      "sha256": "627d5e1f3f0357013f7a5db12f552c3a64650c7b39176694a7c79ca5cfa1819c"
+    },
+    {
+      "path": "make_configs.py",
+      "bytes": 3476,
+      "sha256": "c66cc7be2e634aedb8a39a46f05c3e7864ffbeb414a855f9b1da09463d24a3d7"
+    },
+    {
+      "path": "start_arm.py",
+      "bytes": 5295,
+      "sha256": "4060ffabc2c61a14f54f1058341c5e91ec6101972182b53d9819120a46a2044a"
+    },
+    {
+      "path": "stop_and_health.py",
+      "bytes": 3984,
+      "sha256": "309a1125fd43682717f4640ba914523c3d6ab933c9631230a916aa34a12be327"
+    }
+  ],
+  "scope": "S67 cap1500/TRACE prompt-start/CPU ring absent, same-binary overlap0/1, full aggregate work/output/activation/owned cleanup gates; no exact per-window layout gate"
+}

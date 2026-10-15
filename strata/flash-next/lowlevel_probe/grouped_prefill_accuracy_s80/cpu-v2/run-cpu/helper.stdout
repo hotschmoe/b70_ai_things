@@ -1,0 +1,17 @@
+expert 0 rows 641 complete
+expert 1 rows 1 complete
+expert 2 rows 137 complete
+expert 3 rows 60 complete
+expert 4 rows 118 complete
+expert 5 rows 40 complete
+expert 6 rows 98 complete
+expert 7 rows 21 complete
+expert 8 rows 79 complete
+expert 9 rows 137 complete
+expert 10 rows 60 complete
+expert 11 rows 118 complete
+expert 12 rows 40 complete
+expert 13 rows 98 complete
+expert 14 rows 21 complete
+expert 15 rows 79 complete
+PASS_CPU_REFERENCE_ONLY all2237440 GU cells; GPU operand identity UNMEASURED

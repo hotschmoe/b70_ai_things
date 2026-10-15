@@ -1,0 +1,513 @@
+{
+  "scope": "source/logical volume and index algebra only; no measured dynamic instructions, transactions, traffic, concurrency residency or latency attribution",
+  "native_path": "type21/C6 Split21 and row_dot_multi, SG32, four rows/WG128; p=lane+32*j; original apply reused across6 tokens",
+  "S75_path": "SG16 per16outputs, p0..P-1 sequential; original decode +K32 int8matrix, scaledtile/SLM32-partial ledger/finaltarget tree",
+  "per_16outputs_per_K32": {
+    "native_ControlLoad_calls": 16,
+    "S75_ControlLoad_calls": 16,
+    "native_weight_field_bytes": 256,
+    "S75_weight_field_bytes": 256,
+    "native_grid_value_bytes": 512,
+    "S75_grid_value_bytes": 512,
+    "native_Q8_field_read_bytes": 3264,
+    "S75_Q8_field_read_bytes": 204,
+    "native_logical_active_integer_MACs": 3072,
+    "S75_logical_integer_MACs_including_padding": 4096,
+    "S75_logical_SLM_bytes_by_phase": {
+      "stage_write_A_B_dw_ls_dx": 908,
+      "matrix_logical_A_B_read": 768,
+      "logical_coordinate_element_ls_reads": 512,
+      "matrix_tile_write": 512,
+      "WI_epilogue_tile_dw_dx_reads": 960,
+      "ledger_read_and_write": 768
+    },
+    "S75_logical_SLM_bytes_sum": 4428,
+    "SLM_limit": "logical element references; compiler vectorization/broadcast/hoisting/replication and cache effects can change actual traffic; not sum of counted ISA sends"
+  },
+  "S75_group_fixed_SLM_bytes": 13708,
+  "S75_ledger_init_and_final_read_bytes_per_group": 24576,
+  "S75_source_local_barriers_per_group": "1 initialization +3*P; actual static sites4 and barrier_count1 are not dynamic measurements",
+  "native_explicit_SLM_staging_or_WG_barriers_selected_path": 0,
+  "native_unused_grid_source_declaration": "uint32[4] helper, STAGE_GRID=false returns nullptr; does not establish16B runtime allocation",
+  "shapes": [
+    {
+      "N": 2560,
+      "M": 6144,
+      "C": 6,
+      "K32_P": 80,
+      "native_groups": 1536,
+      "native_SG": 6144,
+      "native_WI": 196608,
+      "native_p_sequence_per_lane": [
+        [
+          0,
+          32,
+          64
+        ],
+        [
+          1,
+          33,
+          65
+        ],
+        [
+          2,
+          34,
+          66
+        ],
+        [
+          3,
+          35,
+          67
+        ],
+        [
+          4,
+          36,
+          68
+        ],
+        [
+          5,
+          37,
+          69
+        ],
+        [
+          6,
+          38,
+          70
+        ],
+        [
+          7,
+          39,
+          71
+        ],
+        [
+          8,
+          40,
+          72
+        ],
+        [
+          9,
+          41,
+          73
+        ],
+        [
+          10,
+          42,
+          74
+        ],
+        [
+          11,
+          43,
+          75
+        ],
+        [
+          12,
+          44,
+          76
+        ],
+        [
+          13,
+          45,
+          77
+        ],
+        [
+          14,
+          46,
+          78
+        ],
+        [
+          15,
+          47,
+          79
+        ],
+        [
+          16,
+          48
+        ],
+        [
+          17,
+          49
+        ],
+        [
+          18,
+          50
+        ],
+        [
+          19,
+          51
+        ],
+        [
+          20,
+          52
+        ],
+        [
+          21,
+          53
+        ],
+        [
+          22,
+          54
+        ],
+        [
+          23,
+          55
+        ],
+        [
+          24,
+          56
+        ],
+        [
+          25,
+          57
+        ],
+        [
+          26,
+          58
+        ],
+        [
+          27,
+          59
+        ],
+        [
+          28,
+          60
+        ],
+        [
+          29,
+          61
+        ],
+        [
+          30,
+          62
+        ],
+        [
+          31,
+          63
+        ]
+      ],
+      "native_max_K32_segments_per_lane": 3,
+      "S75_groups": 384,
+      "S75_SG": 384,
+      "S75_WI": 6144,
+      "S75_serial_K32_steps_per_group": 80,
+      "native_logical_DP4A_lane_calls": 23592960,
+      "S75_logical_matrix_collective_calls": 30720,
+      "native_rawpacked_source_bytes_per_output_per_p": 16,
+      "native_grid_lookup_value_bytes_per_output_per_p": 32,
+      "native_Q8_field_bytes_per_output_per_p": 204,
+      "S75_global_Q8_field_bytes_per_16outputs_per_p": 204,
+      "raw_weight_unique_bytes": 6758400,
+      "native_packed_weight_field_reads_bytes": 7864320,
+      "native_grid_value_reads_bytes": 15728640,
+      "temp_plane_codes_bytes": 15728640,
+      "temp_plane_oddls_bytes": 491520,
+      "temp_plane_rawhalf_dw_bytes": 122880,
+      "temp_plane_additional_alloc_bytes_while_raw_retained": 16343040,
+      "temp_plane_to_raw_storage_ratio": 2.418181818181818,
+      "expanded_minus_raw_bytes_not_additional_allocation": 9584640,
+      "temp_plane_source_field_read_bytes_per_output_per_p": 35,
+      "raw_weight_row_stride": 1100,
+      "temp_code_row_stride": 2560,
+      "source_Fp_partial_updates_both": 2949120,
+      "native_logical_final_warp_adds_per_output": 960,
+      "S75_final_tree_adds_per_output": 186
+    },
+    {
+      "N": 6144,
+      "M": 2560,
+      "C": 6,
+      "K32_P": 192,
+      "native_groups": 640,
+      "native_SG": 2560,
+      "native_WI": 81920,
+      "native_p_sequence_per_lane": [
+        [
+          0,
+          32,
+          64,
+          96,
+          128,
+          160
+        ],
+        [
+          1,
+          33,
+          65,
+          97,
+          129,
+          161
+        ],
+        [
+          2,
+          34,
+          66,
+          98,
+          130,
+          162
+        ],
+        [
+          3,
+          35,
+          67,
+          99,
+          131,
+          163
+        ],
+        [
+          4,
+          36,
+          68,
+          100,
+          132,
+          164
+        ],
+        [
+          5,
+          37,
+          69,
+          101,
+          133,
+          165
+        ],
+        [
+          6,
+          38,
+          70,
+          102,
+          134,
+          166
+        ],
+        [
+          7,
+          39,
+          71,
+          103,
+          135,
+          167
+        ],
+        [
+          8,
+          40,
+          72,
+          104,
+          136,
+          168
+        ],
+        [
+          9,
+          41,
+          73,
+          105,
+          137,
+          169
+        ],
+        [
+          10,
+          42,
+          74,
+          106,
+          138,
+          170
+        ],
+        [
+          11,
+          43,
+          75,
+          107,
+          139,
+          171
+        ],
+        [
+          12,
+          44,
+          76,
+          108,
+          140,
+          172
+        ],
+        [
+          13,
+          45,
+          77,
+          109,
+          141,
+          173
+        ],
+        [
+          14,
+          46,
+          78,
+          110,
+          142,
+          174
+        ],
+        [
+          15,
+          47,
+          79,
+          111,
+          143,
+          175
+        ],
+        [
+          16,
+          48,
+          80,
+          112,
+          144,
+          176
+        ],
+        [
+          17,
+          49,
+          81,
+          113,
+          145,
+          177
+        ],
+        [
+          18,
+          50,
+          82,
+          114,
+          146,
+          178
+        ],
+        [
+          19,
+          51,
+          83,
+          115,
+          147,
+          179
+        ],
+        [
+          20,
+          52,
+          84,
+          116,
+          148,
+          180
+        ],
+        [
+          21,
+          53,
+          85,
+          117,
+          149,
+          181
+        ],
+        [
+          22,
+          54,
+          86,
+          118,
+          150,
+          182
+        ],
+        [
+          23,
+          55,
+          87,
+          119,
+          151,
+          183
+        ],
+        [
+          24,
+          56,
+          88,
+          120,
+          152,
+          184
+        ],
+        [
+          25,
+          57,
+          89,
+          121,
+          153,
+          185
+        ],
+        [
+          26,
+          58,
+          90,
+          122,
+          154,
+          186
+        ],
+        [
+          27,
+          59,
+          91,
+          123,
+          155,
+          187
+        ],
+        [
+          28,
+          60,
+          92,
+          124,
+          156,
+          188
+        ],
+        [
+          29,
+          61,
+          93,
+          125,
+          157,
+          189
+        ],
+        [
+          30,
+          62,
+          94,
+          126,
+          158,
+          190
+        ],
+        [
+          31,
+          63,
+          95,
+          127,
+          159,
+          191
+        ]
+      ],
+      "native_max_K32_segments_per_lane": 6,
+      "S75_groups": 160,
+      "S75_SG": 160,
+      "S75_WI": 2560,
+      "S75_serial_K32_steps_per_group": 192,
+      "native_logical_DP4A_lane_calls": 23592960,
+      "S75_logical_matrix_collective_calls": 30720,
+      "native_rawpacked_source_bytes_per_output_per_p": 16,
+      "native_grid_lookup_value_bytes_per_output_per_p": 32,
+      "native_Q8_field_bytes_per_output_per_p": 204,
+      "S75_global_Q8_field_bytes_per_16outputs_per_p": 204,
+      "raw_weight_unique_bytes": 6758400,
+      "native_packed_weight_field_reads_bytes": 7864320,
+      "native_grid_value_reads_bytes": 15728640,
+      "temp_plane_codes_bytes": 15728640,
+      "temp_plane_oddls_bytes": 491520,
+      "temp_plane_rawhalf_dw_bytes": 122880,
+      "temp_plane_additional_alloc_bytes_while_raw_retained": 16343040,
+      "temp_plane_to_raw_storage_ratio": 2.418181818181818,
+      "expanded_minus_raw_bytes_not_additional_allocation": 9584640,
+      "temp_plane_source_field_read_bytes_per_output_per_p": 35,
+      "raw_weight_row_stride": 2640,
+      "temp_code_row_stride": 6144,
+      "source_Fp_partial_updates_both": 2949120,
+      "native_logical_final_warp_adds_per_output": 960,
+      "S75_final_tree_adds_per_output": 186
+    }
+  ],
+  "two_shape_extra_temporary_plane_bytes": 32686080,
+  "source_lead": "one temporary signed-code/oddls/rawhalf-dw plane; original native SG32/DP4A/apply/partial/reduction retained; no new code prepared",
+  "retained_original_ISA_static_SLM_send_count": 0,
+  "retained_original_ISA_static_signal_barrier_count": 0,
+  "original_ISA_binding_limit": "S68 original private control from same retained source, not a newly decoded current public image. Public exact image identity established separately S75."
+}

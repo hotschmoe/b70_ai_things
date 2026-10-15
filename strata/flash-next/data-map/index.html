@@ -148,7 +148,7 @@ ul.plain{padding-left:1.1rem}
 {
  "schema": 1,
  "title": "Strata Flash-Next data map",
- "snapshot": "2026-10-15: historical S22 operation rows; strict primitive evidence through S75 and S74 compiled/static prerequisite. Later evidence does not rewrite historical service rollups.",
+ "snapshot": "2026-10-15: historical S22 operation rows; primitive evidence through S80 full-GU target, S76-S78 source audits and S79 HOLD_UNMATCHED serving screen. Later evidence does not rewrite historical service rollups.",
  "scope": "Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two Arc Pro B70 cards, Strata SYCL engine, EP/PUSH, batch MTP depth2 (opt-in), two 200000-token slots, INT8 KV, 32 GiB / 4-entry RAM parking, all 24576 experts resident (7152 on GPU0 + 17424 on GPU1), greedy.",
  "warnings": [
   "Trace service times overlap: within a card (engines), across cards, and with CPU wall time. They are NOT additive and are not a latency budget.",
@@ -207,7 +207,8 @@ ul.plain{padding-left:1.1rem}
    "../../../docs/20261015_strata_decode_mechanism_triage.md",
    "../../../docs/20261015_strata_hc_more_groups_probe.md",
    "../../../docs/20261015_strata_int8_xmx_capability.md",
-   "../../../docs/20261015_strata_iq3s_int8_dpas_probe.md"
+   "../../../docs/20261015_strata_iq3s_int8_dpas_probe.md",
+   "../../../docs/20261015_strata_decode_overlap_and_prefill_contract.md"
   ],
   "results_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
   "prototype_binary": "S26 CPU-only strata-head-pair-s26 SHA256264f221e2c1b02d4bdd9b332c46f91e91bf4f6301afbdabe563df5ff2a16e44a; not GPU served; default pair option OFF.",
@@ -315,6 +316,53 @@ ul.plain{padding-left:1.1rem}
    "scope": "One card0/process, two real IQ3_S C6 tensors with seeded/changed activations. Strict public/original/candidate bytes,118snapshots/92binaryfiles/10DOTs/guards/tails/readonly/health/removal PASS. Host-completed graph20 per-call medians70.840813->557.928425us gate,84.632000->655.795650us out; median of eight nested balanced pair changes+687.510385/+674.970007percent. Keep main unchanged/no serve/retry/sweep. Not all INT8 designs or physical bottleneck evidence.",
    "completed_manifest": "iq3s-int8-dpas-s75-completed-manifest.json SHA256 ff730eec68f5f4bc74220c58c29e330f5f4aac0fa75ebbb08a22a5b8b4ab4287",
    "post_reviews": "Actual claude-opus-5-5 47.575s and claude-fable-5-1 59.961s ACCEPT exact mapping rejection, no serving/retry/sweep/extraGPU; root read full responses. No physical cause or universally best next mechanism established."
+  },
+  "native_cost_s76": {
+   "report": "docs/20261015_strata_decode_overlap_and_prefill_contract.md",
+   "records": "strata/flash-next/lowlevel_probe/source_audits_s76_s78/s76",
+   "raw": "iq3s-native-cost-s76-prep/{findings.md,source-cost-proof.json,source-pins.json}",
+   "manifest": "iq3s-native-cost-s76-manifest.json SHA256 ffa9599c6fc3dd9fa5cc84af6e647a29e381fdcb504a831c4e5838ca75ad2b2b",
+   "scope": "Source/retained profile only. Preserve original SG32/FP order in a possible temporary decoded-plane loader; 31.171875MiB extra for both tested slices while compressed originals remain. Root parks implementation; no new build/GPU/traffic or latency cause."
+  },
+  "grouped_contract_s77": {
+   "report": "docs/20261015_strata_decode_overlap_and_prefill_contract.md",
+   "records": "strata/flash-next/lowlevel_probe/source_audits_s76_s78/s77",
+   "raw": "grouped-prefill-contract-s77-prep/{findings.md,candidate-gate.json,source-pins.json}",
+   "manifest": "grouped-prefill-contract-s77-prep/manifest.json SHA256 5c0fbc6a0816508ed2eb72e56fbb82b2cea4e0131e98addc70a947cb6cde57ed",
+   "scope": "Proposed full-GU empirical reference target, source-derived gamma2560 FP32 envelope plus explicit FP64 uncertainty, strict own pipeline/producer/memory coherence. Root later removes graph hardgate because actual prefill is eager; full GU CPU/GPU plane identity required, down CPU identity optional. Old S42 FAILED/S62 conditional unchanged; no ideal H/down/model qualification or runtime result."
+  },
+  "decode_boundaries_s78": {
+   "report": "docs/20261015_strata_decode_overlap_and_prefill_contract.md",
+   "records": "strata/flash-next/lowlevel_probe/source_audits_s76_s78/s78",
+   "raw": "decode-idle-criticalpath-s78-prep/{findings.md,source-pins.json}",
+   "manifest": "decode-idle-criticalpath-s78-prep-manifest.json SHA256 cc6eb10aca6c6ea54f84181a34e71fa8f21d2622af196c6a4e9259980b9dce4b",
+   "scope": "Retained S31/S32 plus current source ownership only. Nine source replays are a reconciliation, not trace-handle or hardware-idle proof. Root selects source preparation for batch-commit overlap with join before batch return; pair-graph coalescing parked. No new trace/GPU/overlap/savings measurement."
+  },
+  "batch_commit_overlap_s79": {
+   "raw": "batch-commit-overlap-s79-serving/{root-final-runtime-decision,comparison}.json; batch-commit-overlap-s79-execution/root-source-restoration.json",
+   "status": "HOLD_UNMATCHED_NO_LATENCY_PROMOTION",
+   "frozen_binary_sha256": "03bb07f9d87455a203d1ce334fa411524d93c534c95733ec42076f121ddb92ab",
+   "coherence": "All8 paired outputs fulltext/SSEcontent/usage equal; functionals, normal QUIT/removal and both-arm post-health PASS. All observed activation windows joined.",
+   "work_gate": "Warm/repeat1/repeat2 match aggregate native work. Repeat3 ON557vsOFF556windows, ON3vsOFF2solo, each553paired, slot1offered1140vs1138/accepted933each. Whole comparison FAILED_OR_UNMATCHED; aggregate timing median NULL.",
+   "matched_observations": "Repeat1 client wall28.972412779->29.095657597s; repeat2 28.903271961->28.964655255s. Both matched timed pairs slower; no pooled latency/speed claim, rerun or promotion.",
+   "restoration": "Exactly verify.hpp/verify.cpp/generate.cpp restored to pre-S79 source; NO rebuild. Frozen03bb07f9 and generic build executable still contain prototype and do NOT represent current restored source.",
+   "comparison_sha256": "6180f1fca4f88d2d72fd55f1dafacec0c317c3c1acc5a487de2169e01344269f",
+   "source_restoration_sha256": "de87f816dad20d6cbf6ea25d814ca6a24db3b17375cc08a2df359ba74626bf08",
+   "scope": "Same AOT binary OFF/ON flag plus arm-local log normalization. Aggregate-work gates do not expose exact per-window row layout/cache-hit state or establish hardware overlap. SSE content events are not tokens."
+  },
+  "grouped_prefill_accuracy_s80": {
+   "records": "strata/flash-next/lowlevel_probe/grouped_prefill_accuracy_s80",
+   "raw": "grouped-prefill-accuracy-s80-prep/run-clean/{closure,comparison,identity}.json; grouped-prefill-post-reviews-s80-20261015/root-closed-result.json; grouped-prefill-cpu-reference-s80-v2-prep/run-cpu/reference/{reference,reference-core}.json",
+   "binary_sha256": "0e5c75c9acd15a07d1ede4df004a4fb870b34ad31ad39a8582e7ed269677670d",
+   "CPU_reference": "CPUv1 stopped beforeGPU at type42 Q2_0 block64 versus assumed32; versionedv2 fixes only block-specific geometry. CPUv2 3.051s/124004KiB; full2,237,440GU references,36exactdyadicchecks/controls/FENV PASS, shared bound header468471b8 unchanged.",
+   "accuracy_scope": "Full104857600B GU GPU/CPU RN-half identity +52428800B scalar/grouped GPU down-DQ coherence; all4algorithm/input GU targets2,237,440values each PASS. Max reference error8.242204785e-8/worst bound ratio0.000406271. Own eager/repeat/changed/restore, same-GU production SiLU, S42scalaranchor/memory/metadata/16files309432320B PASS. No ideal H/down or model qualification; old S42 strictFAIL unchanged.",
+   "timing": "Completed eager-wave scalar median1.051034ms/grouped4.404047ms; median of4PAIREDchanges+314.594292percent, all4slower. Includes gather/DQ/GU/SiLU/down/barriers/metadata; no stage copies. Oneprocess/nestedpairs, not p95/kernelservice/fullprefill/physicalcause.",
+   "closure": "One quiet card1 window49s/leaf21s, pre/posthealth0, ownCID+NAMEabsent, no retries; reject exact mapping, keep production scalar/no serve or promotion.",
+   "build_binding": "Actual root-build final link precise,139s CPU lease/12.373s compile/112.725s AOTlink; 8pre-S79 archive copies unchanged. Runtime prep/build explicitly symlinks actual new root-build/build. No defaultFTZ, same-old-AOT or matched generic build-speedup claim.",
+   "post_reviews": "Actual claude-opus-5-5 24.734s and claude-fable-5-1 22.687s both ACCEPT; root read full responses. Exact-map rejection and bounded numerical result only.",
+   "post_review_closure_sha256": "ba36f6b6ca21654c255d2dcb2e34ee093e60500f384bb1fb215e2e7945575d3d",
+   "post_review_manifest_sha256": "9dbe7f8c10f83c6c3f1d5d4cda4c0a60d9121ce99603f5f3852807be77638685",
+   "completed_manifest": "grouped-prefill-s80-completed-manifest.json SHA256 5f0f2262cef1699098066fb71f5e8bbabecf4842631bdcb800f9d211fa5f728f;233files757155438B plus explicit build symlink"
   }
  },
  "geometry": {
@@ -1282,7 +1330,8 @@ ul.plain{padding-left:1.1rem}
     "iq3s-dense-next-s63-prep/{findings.md,integer-load-contract.json,host-check-execution.json}",
     "iq3s-existing-isa-s66-prep/{s66-report.json,assembly-excerpts.json,alias-proof.json}",
     "int8-xmx-capability-s74-isa/{report.json,findings.md,selection.json}; int8-xmx-capability-s74-root/build-completion.json",
-    "iq3s-int8-dpas-s75-root/root-runtime-decision.json; iq3s-int8-dpas-s75-prep-v2/run-clean/{comparison,closure}.json; iq3s-int8-dpas-s75-isa/report.json"
+    "iq3s-int8-dpas-s75-root/root-runtime-decision.json; iq3s-int8-dpas-s75-prep-v2/run-clean/{comparison,closure}.json; iq3s-int8-dpas-s75-isa/report.json",
+    "iq3s-native-cost-s76-prep/{findings.md,source-cost-proof.json}; iq3s-native-cost-s76-manifest.json"
    ],
    "quoted": [
     {
@@ -1362,6 +1411,12 @@ ul.plain{padding-left:1.1rem}
      "value": "118snapshots/92binaries6155904B/publicoriginalcandidate/changedgraphs/memory/health/removal PASS. Hostcompleted projection graph batches about7.7-7.9x slower for both tested shapes; no integration.",
      "basis": "One fresh card0 process; two real IQ3_S C6 weights/seeded+changed activations, eight balanced nested round means each. Static signed DPAS/unique class and unchanged public image complement actual byte/capture checks; no independent runtime ISA trace, dynamic SLM total, physical traffic, occupancy or latency cause. Reject this mapping, not all INT8/DPAS designs.",
      "status": "measured"
+    },
+    {
+     "label": "S76 parked decoded-weight source mechanism",
+     "value": "Original native mapping retained; two temporary decoded planes add31.171875MiB while originals remain (2.41818x compressed storage per slice).",
+     "basis": "Native16 SG32/512 work-items versus rejected S75 one SG16/16 per16 outputs; source decomposition only, no residency/traffic/latency attribution. Root parks implementation.",
+     "status": "source-only"
     }
    ],
    "upstream": [
@@ -2022,7 +2077,9 @@ ul.plain{padding-left:1.1rem}
    ],
    "evidence": [
     "draft-profile-s22/s22-report.json native_summary",
-    "host-boundary-s32/analysis/run2/analysis.json"
+    "host-boundary-s32/analysis/run2/analysis.json",
+    "decode-idle-criticalpath-s78-prep/{findings.md,source-pins.json}; decode-idle-criticalpath-s78-prep-manifest.json",
+    "batch-commit-overlap-s79-serving/{root-final-runtime-decision,comparison}.json; batch-commit-overlap-s79-execution/root-source-restoration.json"
    ],
    "quoted": [
     {
@@ -2041,6 +2098,18 @@ ul.plain{padding-left:1.1rem}
      "label": "S32 commit CPU span",
      "value": "median1.591ms/p951.617ms",
      "basis": "40 replaywindows; includes existing GPU submission/wait, not host-only work",
+     "status": "measured"
+    },
+    {
+     "label": "S78 batch-commit overlap source lead",
+     "value": "Submit existing batch commit, retain state/records, join before batch_tick returns on success and every error.",
+     "basis": "Source ownership comparison with existing scalar completion-event path. Both draft/commit use primary GPU; old CPU commit span is not removable savings and source independence does not establish safe measured overlap. No runtime result.",
+     "status": "source-only"
+    },
+    {
+     "label": "S79 batch-commit overlap serving screen: HOLD_UNMATCHED",
+     "value": "All8 fulltext/SSEcontent/usage+functionals/normalQUIT/health PASS; r1/r2 work-matched walls28.9724->29.0957s and28.9033->28.9647s. Repeat3 ON adds1solo/window and2offered drafts; NO aggregate median.",
+     "basis": "Same03bb07f9 OFF/ON. Activation/join diagnostics pass, but whole comparison FAILED_OR_UNMATCHED; no hardware-overlap/speed/safety generalization. Park/no rerun/promotion. Three source files restored exactly without rebuild; retained prototype executable is not current source.",
      "status": "measured"
     }
    ],
@@ -2074,7 +2143,8 @@ ul.plain{padding-left:1.1rem}
    "evidence": [
     "draft-profile-s22/profile/steady-summary (host entries)",
     "head-pair-s31/analysis-prep/result/final-analysis.json",
-    "host-boundary-s32/analysis/run2/analysis.json"
+    "host-boundary-s32/analysis/run2/analysis.json",
+    "decode-idle-criticalpath-s78-prep/findings.md"
    ],
    "quoted": [
     {
@@ -2094,6 +2164,12 @@ ul.plain{padding-left:1.1rem}
      "value": "verifier median55.0us; paired drafter45.0us",
      "basis": "40 replaywindows; entire existing SYCL launch sequence, not L0 API count or driver-only cost",
      "status": "measured"
+    },
+    {
+     "label": "S78 replay-boundary reconciliation",
+     "value": "Two verifier +one commit +six paired-draft source replays; pair coalescing stays parked.",
+     "basis": "Nine observed append calls agree with source structure, not one-to-one native handle binding or nine inherently necessary host decisions. Existing uncovered intervals are not productive-idle or causal waiting proof.",
+     "status": "source-only"
     }
    ],
    "upstream": [
@@ -2516,7 +2592,9 @@ ul.plain{padding-left:1.1rem}
     "peer-gather-oracle-s35/{s35-report,build-closure}.json; quiet-mean{80,240}/closure.json",
     "peer-gather-serving-s38/{s38-report,serving-comparison,host-spans,diagnostic-cross-arm-gate}.json",
     "peer-grouped-gemm-s42-prep/{s42-report,numerical-difference}.json; run-clean/exports/export-sha256.json",
-    "grouped-gu-reference-s62-prep/{s62-report.json,cells/reference-observations.json}"
+    "grouped-gu-reference-s62-prep/{s62-report.json,cells/reference-observations.json}",
+    "grouped-prefill-contract-s77-prep/{findings.md,candidate-gate.json,manifest.json}; docs/20261015_strata_decode_overlap_and_prefill_contract.md",
+    "grouped-prefill-accuracy-s80-prep/run-clean/{comparison,closure,identity}.json; grouped-prefill-post-reviews-s80-20261015/root-closed-result.json; grouped-prefill-s80-completed-manifest.json"
    ],
    "quoted": [
     {
@@ -2578,6 +2656,24 @@ ul.plain{padding-left:1.1rem}
      "value": "36 selected cells/all10formatpairs; scalar8/grouped9 closer/19ties.577subnormal rawscales; reconstructed52,428,800weights and4,474,880savedinputs normal.",
      "basis": "CPU-only pinned ggml/RN/exact dyadic dots; actual GPU weight bytes unmeasured. Selection not representative; no accuracy winner/bound/full-wave/GPU gate/serving speed. S42 strictFAIL unchanged.",
      "status": "source-only"
+    },
+    {
+     "label": "S77 proposed full-GU reference contract",
+     "value": "Full2,237,440 GU outputs per algorithm/input against predeclared conventional FP32 target plus explicit FP64 uncertainty; full100MiB GU GPU/CPU plane identity required.",
+     "basis": "Source proposal/root eager correction only: no grouped-graph hardgate for actual eager prefill. Down CPU identity optional; strict own eager/repeat/changed complete stages and same-GU production SiLU coherence remain. No ideal H/down accuracy, vendor IEEE promise or model qualification; S42 strictFAIL unchanged.",
+     "status": "source-only"
+    },
+    {
+     "label": "S80 full-GU target and actual operand identity",
+     "value": "Full100MiB GU CPU/GPU planes +50MiB down GPU coherence PASS; four2,237,440-value GU targets maxerror8.2422e-8/worstboundratio0.00040627. Own pipeline/producer/anchor/memory/lifecycle gates PASS.",
+     "basis": "New preregistered conventional FP32 target plus bounded CPU FP64 reference, exact saved compact weights/synthetic activation rows and sign-flipped change. CPUv1 type42 blockgeometry failure preserved/v2 corrected. No ideal SiLU/down accuracy or model qualification; S42 strictFAIL unchanged.",
+     "status": "measured"
+    },
+    {
+     "label": "S80 whole-wave grouped oneMKL mapping rejected",
+     "value": "Completed-wave medians scalar1.051034ms/grouped4.404047ms; median PAIREDchange+314.594292%, all4pairs slower. Keep scalar/no serving/retry/promotion.",
+     "basis": "One card1/process;4nested AB/BA/BA/AB pairs after3warm/arm. Gather/DQ/GU/SiLU/down/barriers/metadata included, no stage copies. Actual eager prefill needs no graph gate. Health/removal PASS. Not request-prefill throughput, device service, hardware cause or an all-grouped-method verdict.",
+     "status": "rejected"
     }
    ],
    "upstream": [
@@ -2884,6 +2980,20 @@ ul.plain{padding-left:1.1rem}
    "value": "Numerical36pairs/S39anchorPASS; performanceINCONCLUSIVE",
    "status": "measured",
    "note": "44s build/45s card1inclhealth. Warmwhole-read batchmedian61.714->57.999us/call, butdeclaredspreadtermFAIL3.715<7.316us. All3pairedsignsfavorcandidate; visibleenqueue/positiontrend precludeswinclaim. No mainintegration/serving."
+  },
+  {
+   "stage": "S79",
+   "label": "Batch-commit overlap same-binary serving screen, matched timed pairs and one unmatched pair",
+   "value": "NO aggregate median; matched r1 wall28.972413->29.095658s, r2 28.903272->28.964655s; r3 work mismatch.",
+   "status": "parked",
+   "note": "All8fulltext/SSEcontent/usage, functionals, normalQUIT/removal/posthealth PASS. ONr3 oneextra solo/window and2offered; no pooled gain/rerun/promotion. Exact source restored without rebuild; frozen03bb07f9 remains prototype."
+  },
+  {
+   "stage": "S80",
+   "label": "Complete-wave scalar versus grouped vendor GEMM, full-GU target passed",
+   "value": "1.051034 ->4.404047ms completed-wave medians; median of4paired changes+314.594292%, all4slower.",
+   "status": "rejected",
+   "note": "Oneprocess/nested synthetic-routing wave,16realexperts/10formats/1748rows; metadata included. FullGU accuracy target and strict own pipeline/memory/health pass independently. No ideal H/down/model or serving result; keep scalar/no retry."
   }
  ],
  "rejected_parked": [
@@ -2951,6 +3061,21 @@ ul.plain{padding-left:1.1rem}
    "item": "S48 HC LO_ONCE integration pending graph discriminator",
    "status": "parked",
    "evidence": "AllstrictgatesPASS, directwarmtimingfailsdeclaredspreadscreen. No winnerclaim/repeatdirectprobe. S50adapter-onlygraphprobe prepared separately; AOTlinkwillregeneratedeviceimages."
+  },
+  {
+   "item": "S76 temporary decoded IQ3_S planes preserving original native mapping",
+   "status": "parked",
+   "evidence": "iq3s-native-cost-s76-prep/findings.md: source-eligible but31.171875MiB extra for two slices, expanded-weight traffic/setup unmeasured; no implementation/build/GPU selected."
+  },
+  {
+   "item": "S79 batch-commit overlap prototype",
+   "status": "parked",
+   "evidence": "batch-commit-overlap-s79-serving/root-final-runtime-decision.json: HOLD_UNMATCHED, two matched timed pairs slower and third unmatched. All output/functional/lifecycle gates pass; no rerun/promotion. root-source-restoration.json records exact3file source restoration and NO rebuild."
+  },
+  {
+   "item": "S80 exact direct grouped oneMKL peer-wave mapping",
+   "status": "rejected",
+   "evidence": "grouped-prefill-post-reviews-s80-20261015/root-closed-result.json: all4completed-wave observations slower after fullGU target/operand/pipeline/coherence gates PASS. No serving/retry/promotion; actual post Opus/Fable ACCEPT/rootfullreads."
   }
  ],
  "coverage_gaps": [
@@ -2981,7 +3106,9 @@ ul.plain{padding-left:1.1rem}
   "S42 exact CPU-vs-device FP16 dequant operand equivalence is unproven. S44 four-shape/six-column and changed-input arithmetic coverage does not establish all52 matrices/indexing semantics/model quality. No immediate fullserve/cache campaign.",
   "S44 repeated-weight C6 batchmeans do not establish streaming-serving/cache effects, physical bandwidth, kernel-only service or per-request tail latency. No additional measurement is needed to decline integration now.",
   "S47 CPUgenericmatching proof doesnot establishlivebatchprefetchactivation/keyreuse/latency. Missingprimarybatchmetadata sourcefinding; scopedpartialwiringproposal remainsunapplied. S32 gather0.829ms isnot removablesavings.",
-  "S48 directwarmmeans do not isolatecandidateUPservice; enqueue/eventspanoverlap andpositiontrend unresolved. Candidatekernelbinding is source/API/build evidence, not independentlytraceddispatch; bit-identicaloutputs alonecannotidentifyvariant. No fullservingspeedclaim."
+  "S48 directwarmmeans do not isolatecandidateUPservice; enqueue/eventspanoverlap andpositiontrend unresolved. Candidatekernelbinding is source/API/build evidence, not independentlytraceddispatch; bit-identicaloutputs alonecannotidentifyvariant. No fullservingspeedclaim.",
+  "S77 full-GU target and S78 commit-overlap lead are source contracts only. No new operand-byte/reference, grouped accuracy, ideal SiLU/down, hardware overlap or serving result is established; historical operation rows and rollups are unchanged.",
+  "S80 measures full GU operand identity/reference accuracy for one saved compact fixture and complete-wave coherence, closing that bounded premise beyond S62. It does not establish ideal SiLU/down error, actual serving activation/model quality, full4K/32K throughput, GPU kernel timing or the cause of grouped regression. S42 historical strict failure is unchanged."
  ],
  "operations": [
   {

@@ -1,0 +1,373 @@
+{
+  "status": "ACTUAL_FRESH_SOURCE_REVIEWS_COMPLETE_ROOT_FULL_READ_ACCEPT_BOUNDED_SERVE_BUILD_PASS_RUNTIME_PENDING",
+  "utc": "2026-10-15T15:26:59.503998+00:00",
+  "packet": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-source-reviews-s79-20261015/source-packet.txt",
+  "packet_sha256": "b29e1eb95eff771e408dcd793939d2bf608b22d722c222a8bbb15ca5eafcd932",
+  "packet_prepost_unchanged": true,
+  "all22_packet_input_hashes_prepost_unchanged": true,
+  "post_review_input_pins": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-prep/batch-commit-overlap-s79.patch": "2e46889b71df957e161cfa47db3f93fa028aaedfe4891beec89f172cf0245dd0",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-prep/README.md": "657427b4098c62c912f25caefa29ed5ab1a2c50a60bd062082c8d420f08a2a0d",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-prep/readiness.json": "705b1155dcbe4ffe0043d81628c87cb894a2f0817c8dec9aa84fc38761a6d010",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-prep/source-bindings.json": "58d7492cb37c85e981b3ab38f2b7ea18c101159f8c2fe52115d82b35aa94b36e",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-prep/static-checks.json": "5ffb5672c091494e6a9710e37b813906cf0c66d8412e39586e1dad8e7e728eaa",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-prep/candidate-batch-step.cpp": "4e9d1f528d0c81e554975aa41c2a06032b36cd87ea8f9bf9dbdd64b2bd317f9f",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-prep/candidate-batch-commit.cpp": "87ba120cdf62b9a54894e9559a11d6ba89eb88504da38f6176b1f405d47ec8ff",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-prep/candidate-wait-commit.cpp": "520abf715da1ce526736c5a9edbff9cf3071bd6dcd896364fc69b09dc3c9b0f6",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-prep/expected-build-source.sha256": "d10c6bebc5e5bc5dc8d61e8f2113d8cfc0a6f7d9f5f76cc85b9ffcd1b22411cc",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-prep/build-option.sh": "36cf8ceb5fb0ca29e7dac2821461f6b2e547609a538a16eab900765b5f6ae804",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-prep/build-container-option.sh": "95ca65d656efe516369c6d97b088c627629bcfb204a3de0252f73ed35828fcd0",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-prep/base/sycl/src/core/verify.cpp": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2",
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp": "fcd5d2e4b029985a6e7768707a5aa489e4b5724a78db50fc2313d9c64e67ec31",
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/layer.cpp": "c89d9bb9a1c37616e9e415730e667b821e88ab73239a1dc5a27867aac7b04016",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-prep/base/sycl/include/strata/core/verify.hpp": "9ecedbed463eeeb241a49995c0d8b078cb2ef5ac4d294a3954f075aeff0b97c2",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-prep/base/sycl/src/program/generate.cpp": "6433d750e414aeb9c71135257ae40a8f9e38ea661537c251b50cabdbc2217d83",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/harness-prep/client.py": "b543faedc24836107b59a46a8bcc757c5cbe0b0772e469f5d813bc8ae1b682ec",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/harness-prep/compare.py": "cec1ae49cad40db1f56412ad306e16e528714db56093e0510bb8b86123bbf42b",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/harness-prep/launch_stage.sh": "627d5e1f3f0357013f7a5db12f552c3a64650c7b39176694a7c79ca5cfa1819c",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/harness-prep/make_configs.py": "c66cc7be2e634aedb8a39a46f05c3e7864ffbeb414a855f9b1da09463d24a3d7",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/harness-prep/start_arm.py": "4060ffabc2c61a14f54f1058341c5e91ec6101972182b53d9819120a46a2044a",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/harness-prep/stop_and_health.py": "309a1125fd43682717f4640ba914523c3d6ab933c9631230a916aa34a12be327"
+  },
+  "final_harness_binding": {
+    "status": "PASS_ALL_SIX_PACKET_HASHES_MATCH_ROOT_FINAL_FROZEN_HARNESS",
+    "final_harness_manifest": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-serving/harness-source-manifest.json",
+    "final_harness_manifest_sha256": "69fe6fe62e73432856f660e18f7b19cf64cb011a739259f1806ccfcddceea5e9",
+    "files": {
+      "client.py": {
+        "packet_sha256": "b543faedc24836107b59a46a8bcc757c5cbe0b0772e469f5d813bc8ae1b682ec",
+        "current_sha256": "b543faedc24836107b59a46a8bcc757c5cbe0b0772e469f5d813bc8ae1b682ec",
+        "match": true
+      },
+      "compare.py": {
+        "packet_sha256": "cec1ae49cad40db1f56412ad306e16e528714db56093e0510bb8b86123bbf42b",
+        "current_sha256": "cec1ae49cad40db1f56412ad306e16e528714db56093e0510bb8b86123bbf42b",
+        "match": true
+      },
+      "launch_stage.sh": {
+        "packet_sha256": "627d5e1f3f0357013f7a5db12f552c3a64650c7b39176694a7c79ca5cfa1819c",
+        "current_sha256": "627d5e1f3f0357013f7a5db12f552c3a64650c7b39176694a7c79ca5cfa1819c",
+        "match": true
+      },
+      "make_configs.py": {
+        "packet_sha256": "c66cc7be2e634aedb8a39a46f05c3e7864ffbeb414a855f9b1da09463d24a3d7",
+        "current_sha256": "c66cc7be2e634aedb8a39a46f05c3e7864ffbeb414a855f9b1da09463d24a3d7",
+        "match": true
+      },
+      "start_arm.py": {
+        "packet_sha256": "4060ffabc2c61a14f54f1058341c5e91ec6101972182b53d9819120a46a2044a",
+        "current_sha256": "4060ffabc2c61a14f54f1058341c5e91ec6101972182b53d9819120a46a2044a",
+        "match": true
+      },
+      "stop_and_health.py": {
+        "packet_sha256": "309a1125fd43682717f4640ba914523c3d6ab933c9631230a916aa34a12be327",
+        "current_sha256": "309a1125fd43682717f4640ba914523c3d6ab933c9631230a916aa34a12be327",
+        "match": true
+      }
+    },
+    "model_calls_restarted": false
+  },
+  "reviews": {
+    "claude-opus-5-5": {
+      "completion": {
+        "requested": "claude-opus-5-5",
+        "responding_models": [
+          "claude-opus-5-5"
+        ],
+        "session_ids": [
+          "e854dc3c-9cdc-4b79-86d5-0dc6543497b5"
+        ],
+        "fresh_session_requested": true,
+        "exit": 0,
+        "elapsed_s": 60.25417187000858,
+        "launch_exception": null,
+        "source_packet_sha256": "b29e1eb95eff771e408dcd793939d2bf608b22d722c222a8bbb15ca5eafcd932",
+        "source_packet_unchanged": true,
+        "result_events": [
+          {
+            "duration_api_ms": 58382,
+            "stop_reason": "end_turn",
+            "session_id": "e854dc3c-9cdc-4b79-86d5-0dc6543497b5",
+            "total_cost_usd": 0.5678978,
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 57155,
+              "cache_read_input_tokens": 649,
+              "output_tokens": 5526,
+              "output_tokens_details": {
+                "thinking_tokens": 3189
+              },
+              "server_tool_use": {
+                "web_search_requests": 0,
+                "web_fetch_requests": 0
+              },
+              "service_tier": "standard",
+              "cache_creation": {
+                "ephemeral_1h_input_tokens": 57155,
+                "ephemeral_5m_input_tokens": 0
+              },
+              "inference_geo": "global",
+              "iterations": [
+                {
+                  "input_tokens": 2,
+                  "output_tokens": 5526,
+                  "cache_read_input_tokens": 649,
+                  "cache_creation_input_tokens": 57155,
+                  "cache_creation": {
+                    "ephemeral_5m_input_tokens": 0,
+                    "ephemeral_1h_input_tokens": 57155
+                  },
+                  "type": "message"
+                }
+              ],
+              "speed": "standard",
+              "fallback_credit": null
+            },
+            "modelUsage": {
+              "claude-opus-5-5": {
+                "inputTokens": 2,
+                "outputTokens": 5526,
+                "cacheReadInputTokens": 649,
+                "cacheCreationInputTokens": 57155,
+                "webSearchRequests": 0,
+                "costUSD": 0.5678978,
+                "contextWindow": 1000000,
+                "maxOutputTokens": 128000,
+                "thinkingTokens": 3189,
+                "canonicalModel": "claude-opus-5-5",
+                "provider": "firstParty",
+                "costBasis": "list"
+              }
+            },
+            "permission_denials": [],
+            "terminal_reason": "completed",
+            "fast_mode_state": "off",
+            "fast_mode_disabled_reason": "sdk_opt_in_required",
+            "subagent_stats": {
+              "spawned": 0,
+              "requested": {
+                "background": 0,
+                "foreground": 0,
+                "unset": 0
+              },
+              "started_in_background": 0,
+              "max_depth": 0,
+              "spawned_by_subagents": 0,
+              "completed": 0,
+              "failed": 0,
+              "killed": {
+                "parent": 0,
+                "user": 0,
+                "system": 0
+              },
+              "refused": {
+                "depth_limit": 0,
+                "concurrency_limit": 0,
+                "budget": 0
+              },
+              "by_type": {}
+            },
+            "safety_stops": 0,
+            "is_error": false,
+            "num_turns": 1,
+            "subtype": "success",
+            "api_error_status": null,
+            "result": "# S79 independent audit: **GO_BOUNDED_SERVE**\n\nThis is conditional on the actual build, link, binary and source audit, the required health checks, and root resolving **H1** below before any GPU step. It is not a runtime correctness or performance endorsement.\n\n## Source findings (no blockers)\n\n**Queue and dependency order**\n- Overlap only arms when `next_ == nullptr`, so a layer split stays synchronous and recursion uses the default `false`.\n- The graph's own returned event goes into the existing `*commit_done_`. No new allocation, barrier or empty-query is added.\n- `cs_` is in-order. The next verify window queues behind the commit anyway, and the guard joins before `batch_step` returns.\n- Drafts only touch:\n  - private drafter queues and arenas;\n  - default-queue copies of `final_R`, which was already complete after the `run_slot_rows` wait;\n  - shared RoPE cos/sin, read-only (`layer.cpp:869-871`).\n- The commit graph writes GDN/conv, the indexer tail/dead/pooled/block_pos, and `ple_hist`. None of these are read by the drafter, per the owner evidence (`mtp.cpp:2231-2248` is host-side PLE metadata only).\n- `h_commitb_` is not rewritten before the join, because the next `commit_slot_prefixes` comes after the next window.\n- `ple_prev` CPU advancement after submit matches the pre-patch order relative to draft prefetch.\n\n**Event and pending failure handling**\n- **Launch failure:** pending flags are never set. There is a best-effort `wait_and_throw` drain wrapped in `DPCT_CHECK_ERROR`, then `false` is returned.\n- **Wait failure:** both flags are kept, there is a best-effort drain, and `false` is returned.\n- **Wait success:** both flags are cleared only after the wait succeeds. The scalar branch is unchanged.\n- The overlapping-commit refusal happens before the keep records are written.\n- `sycl::exception` \u2192 `std::exit(1)` is unchanged and does not unwind. The README discloses this correctly.\n\n**Scalar and OFF behavior**\n- With `defer_completion=false`, the code path is byte-equivalent to the old one: `le` comes from the same graph call, and `se = cs_->wait()`.\n- `publish` in OFF calls `printf` at the original positions.\n- The exact string `\"1\"` is required, gated by `batch_mtp`.\n- Scalar `commit()` and `capture_commit_batch` are untouched.\n\n**Local join on return and unwind**\n- `CommitJoin` is constructed before submission.\n- Every earlier `return false` (copy, draft, pair, group-size, too many pending) and every C++ throw (including the publish overflow `runtime_error` and `bad_alloc`) goes through the noexcept destructor. The destructor joins at most once and logs failures to stderr.\n- If the explicit `finish()` fails, `ERR` is printed, the buffer is discarded, `attempted` is set (so the destructor does nothing), and pending stays retained.\n- Both call sites fail-stop: `generate.cpp:9679` and `10883`.\n- `CommitJoin` is still an aggregate in C++20: it has default member initializers and a user-declared destructor but no constructors, so `{ver, joined, enabled}` compiles in principle. Confirm this at build time.\n\n**Deliberate ON publication delay**\n- At most 8 BT and 8 BDONE lines, each checked against a 256-byte buffer, with the same format and order, are written once after the join.\n- BDONE `ms` is sampled before the draft and the join, so it is pre-join and not publication latency. The compare/latency scope wording reflects this, and client wall remains primary.\n- `fwrite` failure after the join returns `false`. In OFF, `printf` was never checked.\n\n## Required root resolution before GPU\n\n**H1 (harness, fail-closed but blocking):**\n- `make_configs.py` asserts `exe.name == 'strata-batch-commit-s79'`.\n- `build-container-option.sh` produces `strata-batch-commit-overlap-s79`.\n- Fix one of the two so the audited binary passes with its hash unchanged. Do not just rename it ad hoc without recording the hash.\n\n## Build-time checks (non-blocking)\n\n**N1:** `publish` passes a non-literal format to `printf`/`snprintf`. Check the build log for `-Wformat-security` (a problem only if the build uses `-Werror`), and confirm that `*commit_done_ = cs_->ext_oneapi_graph(...)` compiles. The static checks already flag this as unmeasured.\n\n**N2 (runtime risk, fail-stop not silent):**\n- ON refuses to run if `commit_pending_` is still set from a prior scalar async `commit()`.\n- `set_commit_async` is documented as single-GPU. This config is a two-card expert split, so it is probably not set.\n- If it were set and an admission path left a scalar commit unjoined, ON would `ERR` where OFF would not.\n- Root should confirm from the startup log or config that async scalar commit is off, or accept that this would surface as a preserved-service failure, not a wrong result.\n\n**N3:** The ON activation gate (`asked == deferred == joined == native windows > 0`) would also catch any case where the effective verifier has `next_ != nullptr`, because `deferred` would be 0. That is good: the feature cannot silently fail to activate.\n\n## Six serving scripts\n\nThese are consistent with the frozen protocol apart from H1:\n- `make_configs.py`: same executable, environment differs only in OVERLAP=0/1, profilers stripped, base hash pinned.\n- `launch_stage.sh`: GPU lease is held by the live server.\n- `start_arm.py`:\n  - systemd-detached with fd 7 closed;\n  - refuses an existing container or a port already answering;\n  - asserts the single `enabled=` marker and the Direct PLE native command;\n  - never restarts.\n- `client.py`:\n  - real native prompt-start release;\n  - checks overlap;\n  - checks ON counters equal to the windows, and absence of the summary line in OFF;\n  - compares warm full text, SSE and usage against the OFF control;\n  - no retries.\n- `stop_and_health.py`:\n  - TERM \u2192 QUIT;\n  - checks container ID and name are gone and `gpu-run` exited 0;\n  - checks the final diagnostic appears once;\n  - runs card and collective health;\n  - never force-kills.\n- `compare.py`: exact gates on text, SSE, usage, work, windows, pair and solo, activation, functionals and teardown; no speed or promotion claim.\n\n**Verdict: GO_BOUNDED_SERVE**, conditional on H1 being fixed, a clean actual build/link/binary audit against `expected-build-source.sha256` and the recorded artifact hashes, and the required health checks.",
+            "ttft_ms": 36129,
+            "type": "result",
+            "duration_ms": 59386,
+            "uuid": "e08406da-a4f3-48ad-b14c-5872c3073bf2",
+            "ttft_stream_ms": 2208,
+            "time_to_request_ms": 1001,
+            "first_content_frame_ms": 2208,
+            "queued_turn_count": 0,
+            "result_index": 0
+          }
+        ],
+        "parse_errors": [],
+        "retries": 0
+      },
+      "fulltext_sha256": "c2e2032b65d2e0b19a4c5df0f87be1002576657bf3fa6f232baf9e2a2c4008c2",
+      "command_sha256": "426b6ba9617cae8c419e6b9ba2655a48d4ff63d75e3b8bc84390178880c78678",
+      "full_response_read_by_review_agent": true,
+      "verdict": "GO_BOUNDED_SERVE_CONDITIONAL_ACTUAL_BUILD_LINK_SOURCE_HEALTH_AND_H1_RESOLUTION"
+    },
+    "claude-fable-5-1": {
+      "completion": {
+        "requested": "claude-fable-5-1",
+        "responding_models": [
+          "claude-fable-5-1"
+        ],
+        "session_ids": [
+          "066194e5-5376-4e78-9b59-45e5b9636d8f"
+        ],
+        "fresh_session_requested": true,
+        "exit": 0,
+        "elapsed_s": 158.00894531497033,
+        "launch_exception": null,
+        "source_packet_sha256": "b29e1eb95eff771e408dcd793939d2bf608b22d722c222a8bbb15ca5eafcd932",
+        "source_packet_unchanged": true,
+        "result_events": [
+          {
+            "duration_api_ms": 156480,
+            "stop_reason": "end_turn",
+            "session_id": "066194e5-5376-4e78-9b59-45e5b9636d8f",
+            "total_cost_usd": 1.7046622500000002,
+            "usage": {
+              "input_tokens": 2,
+              "cache_creation_input_tokens": 59014,
+              "cache_read_input_tokens": 649,
+              "output_tokens": 10484,
+              "output_tokens_details": {
+                "thinking_tokens": 9170
+              },
+              "server_tool_use": {
+                "web_search_requests": 0,
+                "web_fetch_requests": 0
+              },
+              "service_tier": "standard",
+              "cache_creation": {
+                "ephemeral_1h_input_tokens": 59014,
+                "ephemeral_5m_input_tokens": 0
+              },
+              "inference_geo": "global",
+              "iterations": [
+                {
+                  "input_tokens": 2,
+                  "output_tokens": 10484,
+                  "cache_read_input_tokens": 649,
+                  "cache_creation_input_tokens": 59014,
+                  "cache_creation": {
+                    "ephemeral_5m_input_tokens": 0,
+                    "ephemeral_1h_input_tokens": 59014
+                  },
+                  "type": "message"
+                }
+              ],
+              "speed": "standard",
+              "fallback_credit": null
+            },
+            "modelUsage": {
+              "claude-fable-5-1": {
+                "inputTokens": 2,
+                "outputTokens": 10484,
+                "cacheReadInputTokens": 649,
+                "cacheCreationInputTokens": 59014,
+                "webSearchRequests": 0,
+                "costUSD": 1.7046622500000002,
+                "contextWindow": 1000000,
+                "maxOutputTokens": 64000,
+                "thinkingTokens": 9170,
+                "canonicalModel": "claude-fable-5-1",
+                "provider": "firstParty",
+                "costBasis": "list"
+              }
+            },
+            "permission_denials": [],
+            "terminal_reason": "completed",
+            "fast_mode_state": "off",
+            "fast_mode_disabled_reason": "sdk_opt_in_required",
+            "subagent_stats": {
+              "spawned": 0,
+              "requested": {
+                "background": 0,
+                "foreground": 0,
+                "unset": 0
+              },
+              "started_in_background": 0,
+              "max_depth": 0,
+              "spawned_by_subagents": 0,
+              "completed": 0,
+              "failed": 0,
+              "killed": {
+                "parent": 0,
+                "user": 0,
+                "system": 0
+              },
+              "refused": {
+                "depth_limit": 0,
+                "concurrency_limit": 0,
+                "budget": 0
+              },
+              "by_type": {}
+            },
+            "safety_stops": 0,
+            "is_error": false,
+            "num_turns": 1,
+            "subtype": "success",
+            "api_error_status": null,
+            "result": "**Verdict: GO_BOUNDED_SERVE**, conditional on the actual build/link/binary/source audit and the required functionals, normal QUIT, and post-health. No source blocker found. One harness inconsistency must be reconciled by root before the arms are created.\n\n**Source audit**\n\n- **Queue and ownership order holds.** The ON commit stays on the verifier's own in-order queue, so the next window's verify is ordered behind it even without the join, and the host join always lands inside the same batch step. The commit graph writes only GDN/conv state, indexer state, PLE history and verifier scratch. The slot row copy reads final_R on the default queue, which the commit never writes, and the verify queue was already waited before run_slot_rows returned. The drafter has its own K/V arena, queues and outputs, and shares only the RoPE tables read-only. Mapped keep records are not rewritten before the join. No cross-card commit work exists, so the peer queue is not involved.\n- **Pending and event state is sound.** The graph's own event is assigned to the existing event object, both flags are set only on successful launch, and a launch failure drains and returns with flags clear. The batch wait branch clears both flags only after a successful wait, drains on failure and keeps them set. A second overlapping commit is refused before keep records are written. A pending commit never escapes the batch step except through the existing process-terminating paths.\n- **All joins are covered.** The guard exists before submission. Normal windows, terminal windows, solo fallback, every early false return after launch, and C++ unwinds all reach the join exactly once. The destructor swallows non-SYCL exceptions; SYCL exceptions inside wait_commit still hit the pre-existing exit path. Both call sites of batch_step fail-stop on false.\n- **OFF and scalar are preserved.** With the flag unset the lambda prints at the original positions, the guard is a no-op, commit_slot_prefixes takes the byte-identical synchronous path, wait_commit skips to the unchanged scalar branch, and scalar commit is untouched. A layer split stays synchronous and the chained stage gets the default false.\n- **Publication semantics match the packet.** BT and BDONE are formatted into a 256-byte checked temporary at the old positions, so BDONE ms is prejoin, then written once after the join. Failed windows discard unpublished lines. Startup marker and the asked/deferred/joined summary line match what the harness greps.\n\n**Harness audit**\n\n- **Blocker to reconcile:** the container build script writes `strata-batch-commit-overlap-s79`, but make_configs.py asserts the executable is named `strata-batch-commit-s79`. Root must produce the expected name as a hash-verified copy, or the arm creation fails before any serving.\n- The six scripts are otherwise consistent with the packet: same binary and hash per arm, only the overlap flag and arm-local names differ, profiler and ring flags absent, TRACE1 real admission release, Direct PLE and prefetch0 asserted, candidate requires asked=deferred=joined=windows and control requires no ON summary, TERM to QUIT with container removal and aggregate proof before health, no retries or restarts.\n\n**Residuals, not blockers**\n\n- If a scalar async commit ever leaves commit_pending_ set at batch commit entry, ON refuses and fail-stops on its first window. That is safe and would show immediately in the warm pair. The excerpts do not prove it cannot happen under this two-card expert-parallel config.\n- Compile acceptance of the variadic generic lambda and the local aggregate guard is unverified until the build. A format-security warning on the pass-through format string is possible but should not be an error.\n- The container build runs ionice under set -e. If ionice is refused inside the container the build aborts early rather than silently proceeding.\n\nThis grants no runtime correctness or performance endorsement. Client wall remains the primary measure, and the native run/commit/emit partitions change meaning in ON.",
+            "ttft_ms": 137556,
+            "type": "result",
+            "duration_ms": 156991,
+            "uuid": "6dd97301-c795-45e9-acd5-200d8d0810d6",
+            "ttft_stream_ms": 2309,
+            "time_to_request_ms": 507,
+            "first_content_frame_ms": 2309,
+            "queued_turn_count": 0,
+            "result_index": 0
+          }
+        ],
+        "parse_errors": [],
+        "retries": 0
+      },
+      "fulltext_sha256": "134bdb8cde338a9d87f65d6c8e731808a5de7d206618bdfb8bc69047c83dbe42",
+      "command_sha256": "ffa4026f3293904350042794a97b564e8066e9b3db0142916bc2300d45749299",
+      "full_response_read_by_review_agent": true,
+      "verdict": "GO_BOUNDED_SERVE_CONDITIONAL_ACTUAL_BUILD_LINK_SOURCE_HEALTH_AND_H1_RESOLUTION"
+    }
+  },
+  "H1_recipe_name_reconciliation": {
+    "source_status": "RESOLVED_BY_ACTUAL_ROOT_RECIPE_NOT_OPTIONAL_PREP_RECIPE",
+    "actual_root_recipe": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-execution/root-build-container.sh",
+    "actual_root_recipe_sha256": "7a990a0f32b70865dfec2e8673c6cf4aab8750b6c7e3c2077f65dcd79a18e4c1",
+    "actual_output_name": "strata-batch-commit-s79",
+    "binding_lines": [
+      "cp --reflink=auto strata /out/strata-batch-commit-s79",
+      "sha256sum /out/strata-batch-commit-s79 libstrata_engine.a CMakeFiles/strata_engine.dir/src/core/verify.cpp.o CMakeFiles/strata.dir/src/program/generate.cpp.o > /out/build-sha256.txt",
+      "cat /out/build-sha256.txt"
+    ],
+    "actual_finished_binary_hash_audit": "Root reports actual build complete exit0 with exact expected artifact name and SHA recorded below; no ad hoc rename.",
+    "optional_recipe": "Frozen historical unexecuted option emits longer name; not changed, not used by root."
+  },
+  "N2_scalar_async_handoff": {
+    "record": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-source-reviews-s79-20261015/scalar-batch-handoff-source-audit.json",
+    "record_sha256": "26ff29d1f60353798b7fe12ed6df933e7b70bd607c2dd95a00948ce0dd489612",
+    "root_model_claim_correction": "EP2 may still enable scalar async because multi_gpu refers to layer split; do not assume OFF. Exact successful BGEN/request/read_windows/read_part/batch paths have source drains/joins. Stale-pending refusal and warm fail-stop remain."
+  },
+  "material_limits": [
+    "No runtime or speed endorsement; actual compile/link/source and health plus exact work/output/activation gates precede any timing claim.",
+    "OFF synchronous source operations remain the same; added host wrappers/counters have not been proved zero overhead.",
+    "ON publication timing differs deliberately. BDONE ms is prejoin; client wall primary.",
+    "Launch/wait failure drains are best effort, not proof of successful GPU cleanup after device failure. Fatal process exits do not unwind.",
+    "Source queue-disjointness is not measured hardware overlap or a generic EP2 lifecycle qualification.",
+    "Model consultations read packet text with tools disabled; no independent runtime/model-file inspection."
+  ],
+  "root_full_response_read": {
+    "claude-opus-5-5": true,
+    "claude-fable-5-1": true
+  },
+  "invocations": 2,
+  "retries": 0,
+  "main_edits_by_review_agent": 0,
+  "builds_by_review_agent": 0,
+  "GPU_touches_by_review_agent": 0,
+  "payload_reads_by_review_agent": 0,
+  "next_action": "Source review closed and frozen externally. Root owns finite serving comparison after prehealth/coordination. No further model call/build/GPU/source work by this review agent.",
+  "root_final_disposition": {
+    "utc": "2026-10-15T15:29:12.087163+00:00",
+    "both_full_actual_responses_read": true,
+    "source_recommendation": "ACCEPT_GO_BOUNDED_SERVE",
+    "N2": "ACCEPT_CORRECTED_EXACT_SOURCE_HANDOFF_AUDIT_NO_SOURCE_CHANGE",
+    "H1": "RESOLVED_ACTUAL_ROOT_BUILD_RECIPE_EXPECTED_OUTPUT_NAME_NO_RENAME",
+    "actual_root_CPU_build": {
+      "exit": 0,
+      "wrapper_seconds": 168,
+      "incremental_build_seconds": 158.876,
+      "retained_binary": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-execution/build/strata-batch-commit-s79",
+      "retained_binary_sha256": "03bb07f9d87455a203d1ce334fa411524d93c534c95733ec42076f121ddb92ab",
+      "scope": "Root-reported actual build and artifact audit, not a binary hash recomputed by this source-review agent."
+    },
+    "runtime": "PENDING; root preparing finite comparison after required prehealth and GPU coordination. No runtime correctness/speed/stability/serving result inferred."
+  }
+}

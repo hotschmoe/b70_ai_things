@@ -1,0 +1,46 @@
+{
+  "status": "PASS_HOST_SYNTAX_AND_SOURCE_METADATA_ONLY",
+  "checks": [
+    {
+      "file": "analyze.py",
+      "check": "Python AST only",
+      "status": "PASS"
+    },
+    {
+      "file": "runtime_identity.py",
+      "check": "Python AST only",
+      "status": "PASS"
+    },
+    {
+      "file": "build-container.sh",
+      "check": "bash -n only",
+      "status": "PASS"
+    },
+    {
+      "file": "build.sh",
+      "check": "bash -n only",
+      "status": "PASS"
+    },
+    {
+      "file": "ROOT_RUN.sh",
+      "check": "bash -n only",
+      "status": "PASS"
+    },
+    {
+      "file": "leased_run.sh",
+      "check": "bash -n only",
+      "status": "PASS"
+    }
+  ],
+  "shared_bound_header_exact": true,
+  "cpp_frontend_invocations": 0,
+  "builds": 0,
+  "GPU_touches": 0,
+  "reference_matmuls": 0,
+  "archive_copy": "cpu-run root-requested eight read-only copies verified separately in frozen-inputs.json",
+  "execution_outputs_exist": {
+    "build": false,
+    "run-clean": false,
+    "root-build-closure.json": false
+  }
+}

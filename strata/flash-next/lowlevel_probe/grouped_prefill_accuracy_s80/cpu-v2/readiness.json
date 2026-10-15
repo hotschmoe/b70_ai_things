@@ -1,0 +1,28 @@
+{
+  "status": "SOURCE_ONLY_V2_MINIMAL_GEOMETRY_FIX_READY_FOR_ROOT_DIFF_REVIEW_NO_BUILD_RUN",
+  "utc": "2026-10-15T15:46:26.671277+00:00",
+  "v1_actual_root_report": {
+    "CPU_build": "PASS",
+    "CPU_run_exit": 2,
+    "elapsed_s_approx": 0.523,
+    "progress": "expert0 complete; fixture expert1 type42 rejected by all-down-block32 check",
+    "failure": "CPU quant trait geometry",
+    "GPU_touches": 0,
+    "partial_outputs": "Retained in original v1 run directory; never copied or modified by v2 prep."
+  },
+  "definite_source_bug": "GGML_TYPE_Q2_0=42 has QK2_0=64 in pinned ggml, not32.",
+  "fix": "Exact down-type geometry assertion and row byte derivation; GU block256 and all math/guard/schema/data-size contracts unchanged.",
+  "copied_original_manifest": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-cpu-reference-s80-prep-manifest.json",
+  "original_source_files_copied": 15,
+  "build_run_directories_copied": false,
+  "source_inverse_delta_reconstructs_v1_exactly": true,
+  "shared_header_unchanged": true,
+  "schema_unchanged": true,
+  "build_run_finalizer_bodies_unchanged": true,
+  "actual_frontend_builds": 0,
+  "actual_helper_runs": 0,
+  "GPU_touches": 0,
+  "model_calls": 0,
+  "payload_reads": 0,
+  "root_next_action": "Root full-read narrow diff, then own authorized CPU rebuild/run. No new source-review consultation or GPU claim from this prep."
+}

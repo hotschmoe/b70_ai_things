@@ -1,0 +1,120 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "e854dc3c-9cdc-4b79-86d5-0dc6543497b5"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "e854dc3c-9cdc-4b79-86d5-0dc6543497b5",
+  "exit": 0,
+  "elapsed_s": 26.10902171698399,
+  "launch_exception": null,
+  "source_packet_sha256": "60715d6472964c0aaa5a9ab3be1efeccf82e4c4c311afd8f765806895c97bb3e",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 83184,
+      "stop_reason": "end_turn",
+      "session_id": "e854dc3c-9cdc-4b79-86d5-0dc6543497b5",
+      "total_cost_usd": 0.8108586,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 23054,
+        "cache_read_input_tokens": 57804,
+        "output_tokens": 2348,
+        "output_tokens_details": {
+          "thinking_tokens": 625
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 23054,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 2348,
+            "cache_read_input_tokens": 57804,
+            "cache_creation_input_tokens": 23054,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 23054
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 4,
+          "outputTokens": 7874,
+          "thinkingTokens": 3814,
+          "cacheReadInputTokens": 58453,
+          "cacheCreationInputTokens": 80209,
+          "webSearchRequests": 0,
+          "costUSD": 0.8108586,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# S79 post-result consultation: **ACCEPT** root's disposition (HOLD_UNMATCHED, park the patch, no speed claim, no promotion)\n\n## Do the gates support interpretation?\n\nYes, for warm, repeat1 and repeat2. Repeat3 is outside the declared timing gate.\n\n- **Output and coherence (all 8 pairs):**\n  - Request, full text, SSE content and usage are equal across arms.\n  - Every stream has `completion_tokens=1500` and `cached_tokens=0`.\n  - Warm text matches the OFF control.\n  - No ON correctness concern is visible in the declared output gates.\n- **Native work:**\n  - Warm, repeat1 and repeat2 match exactly: per-request draft offered/accepted, windows, paired and solo.\n  - Repeat3 is unmatched:\n    - windows 556 vs 557;\n    - solo 2 vs 3, paired 553 each;\n    - slot 1 drafts offered 1138 vs 1140, accepted 933 each.\n  - The text is still identical, so this is a difference in window packing and draft scheduling, not in output.\n  - The evidence cannot attribute it to ON rather than run-to-run admission or timing variation. No per-window ring was used, so it stays unexplained. It should not be called a correctness failure or excused as noise.\n- **Activation and join:** ON `asked=deferred=joined=native windows` in all four ON pairs (561, 567, 562, 557). OFF shows `enabled=0` and all zero counters. This shows the host branch and join ran on every window, not that hardware overlap happened.\n- **Identity:**\n  - One binary (`03bb\u2026`) and one image.\n  - The two configs differ only in the arm variable and the log path.\n  - Model `hotschmoe-dd`.\n  - Payload identity rests on root's retained S53 evidence; nothing was newly rehashed.\n- **Functionals, normal QUIT and health:**\n  - Both arms pass functionals.\n  - Both stopped via TERM\u2192QUIT with no forced stop, the container was removed, and the lease wrapper exited 0.\n  - Card and collective health exited 0.\n  - The final diagnostic appeared exactly once.\n\n## Bounded client wall (pair wall, OFF \u2192 ON)\n\n| Pair | OFF (s) | ON (s) | \u0394 |\n|---|---|---|---|\n| warm (diagnostic) | 28.999 | 29.067 | +0.23% |\n| repeat1 | 28.972 | 29.096 | +0.43% |\n| repeat2 | 28.903 | 28.965 | +0.21% |\n| repeat3 (unmatched, not interpretable) | 29.512 | 29.574 | +0.21% |\n\n- Both matched timed pairs are slightly slower on ON. Per-stream decode tok/s is also marginally lower on ON in repeat1 and repeat2. SSE gap p95 is essentially unchanged; that is not token ITL.\n- What this does not show:\n  - There is no evidence of benefit. That is the supported conclusion.\n  - The small slowdown is a direction across two nested observations from one OFF process and one later ON process. Order and warm-state effects are confounded with the arm, so it is not an established regression magnitude.\n  - It cannot be attributed to the deliberate publication delay, the join placement, CPU spans, or the absence of hardware overlap. BDONE ms is pre-join and cannot settle this.\n\n## Material limits and issues to record\n\n1. **The restoration record is internally inconsistent as presented.**\n   - The status says the three files were restored to the pre-S79 base.\n   - The `files` map lists `before` = base hashes and `after` = candidate hashes. That reads as the apply transition, not proof of restoration.\n   - Root should confirm, from the existing record, that the current live hashes equal `9ecedbed\u2026`, `e97ce93a\u2026` and `6433d750\u2026`. This is a check of that record, not a new run.\n   - Until then, \"restored to base\" is asserted, not shown, in this packet.\n2. **The generic build tree is stale.** `build-sycl-ep/strata`, `libstrata_engine.a` and the `verify.cpp`/`generate.cpp` objects still contain the candidate while the source is base. Nothing may serve or qualify from the generic executable until a base rebuild has been audited. The retained `03bb\u2026` binary is candidate-only.\n3. **Repeat3 is excluded, not explained.** Exact equality of aggregate work in the other pairs still does not prove identical per-window rows or cache behavior.\n4. **Scope of what was observed:**\n   - OFF overhead from the wrappers and counters is unproven.\n   - Failure drains are not evidence of device recovery.\n   - Scalar-async handoff safety rests on the N2 source audit. The stale-pending fail-stop path was not exercised.\n\n**Verdict: ACCEPT** root's HOLD_UNMATCHED / park disposition, subject to item 1 being confirmed from existing records and the item 2 hazard being recorded. There is no speed claim, no promotion, and no basis here to re-propose this overlap for latency.",
+      "ttft_ms": 8107,
+      "type": "result",
+      "duration_ms": 24881,
+      "uuid": "a24d13db-58a6-460d-8c25-7448054e2c70",
+      "ttft_stream_ms": 1390,
+      "time_to_request_ms": 78,
+      "first_content_frame_ms": 1390,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0,
+  "resume_session_matches_response": true
+}

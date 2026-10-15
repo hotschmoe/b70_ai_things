@@ -1,0 +1,95 @@
+{
+  "commit_overlap": {
+    "enabled": 1,
+    "asked": 557,
+    "deferred": 557,
+    "joined": 557
+  },
+  "status": "PASS_HTTP_TEXT_COUNTS_FINITE_AND_PAIRED",
+  "wall_s": 29.573992913996335,
+  "output_sha256": [
+    "642fe4fea6d7df904f1b9030f2928ffb5c9ada68bbebb26aef0e6ccc68d3abc0",
+    "87959243e14fc43ea30aa61145a647645bb8d49e348c4d1a6c653144e3da9ad2"
+  ],
+  "usage": [
+    {
+      "prompt_tokens": 107,
+      "completion_tokens": 1500,
+      "total_tokens": 1607,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    {
+      "prompt_tokens": 107,
+      "completion_tokens": 1500,
+      "total_tokens": 1607,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    }
+  ],
+  "work_timings": [
+    {
+      "cache_n": 0,
+      "prompt_n": 107,
+      "predicted_n": 1500,
+      "draft_n": 1110,
+      "draft_n_accepted": 943
+    },
+    {
+      "cache_n": 0,
+      "prompt_n": 107,
+      "predicted_n": 1500,
+      "draft_n": 1140,
+      "draft_n_accepted": 933
+    }
+  ],
+  "native_windows": 557,
+  "paired": 553,
+  "solo": 3,
+  "raw_native_token_ids_observed": false,
+  "admission_gate": {
+    "status": "PASS_NATIVE_PROMPT_START_ORDER_AND_CLIENT_OVERLAP",
+    "fresh_engine_byte_offset": 14092,
+    "only_request0_outstanding": true,
+    "native_prompt_start_line": "strata trace: prompt start 106 -1",
+    "native_prompt_count_minus1": 106,
+    "marker_byte_offset": 14265,
+    "marker_observed_monotonic_ns": 403205254592731,
+    "marker_observed_epoch_ns": 1792078717141804425,
+    "request1_submit_monotonic_ns": 403205254600877,
+    "client_overlap_ns": 28457523662,
+    "request0_lifetime": {
+      "client_call_start_monotonic_ns": 403205040161788,
+      "client_call_start_epoch_ns": 1792078716927373191,
+      "model": "hotschmoe-dd",
+      "messages": [
+        {
+          "role": "user",
+          "content": "[Flash-Next concurrent coding repeat 3 slot 0] Implement a Python asyncio bounded worker pool for processing file paths. Requirements: fixed worker count, bounded queue for backpressure, preserve input order in results, propagate the first worker exception, cancel and await all outstanding tasks on failure, and handle caller cancellation without leaked tasks. Explain the shutdown protocol, provide complete typed code using only the standard library, and include three meaningful tests for ordering, worker failure, and cancellation."
+        }
+      ],
+      "max_new_tokens": 1500,
+      "client_call_end_monotonic_ns": 403233719981569,
+      "client_call_end_epoch_ns": 1792078745607192892
+    },
+    "request1_lifetime": {
+      "client_call_start_monotonic_ns": 403205262457907,
+      "client_call_start_epoch_ns": 1792078717149669210,
+      "model": "hotschmoe-dd",
+      "messages": [
+        {
+          "role": "user",
+          "content": "[Flash-Next concurrent coding repeat 3 slot 1] Implement a Python asyncio bounded worker pool for processing file paths. Requirements: fixed worker count, bounded queue for backpressure, preserve input order in results, propagate the first worker exception, cancel and await all outstanding tasks on failure, and handle caller cancellation without leaked tasks. Explain the shutdown protocol, provide complete typed code using only the standard library, and include three meaningful tests for ordering, worker failure, and cancellation."
+        }
+      ],
+      "max_new_tokens": 1500,
+      "client_call_end_monotonic_ns": 403234594271893,
+      "client_call_end_epoch_ns": 1792078746481483066
+    }
+  },
+  "client_overlap_ns": 28457523662,
+  "repeat": 3,
+  "exact_gate": "full UTF8 text/SSE content plus usage/native work; not raw token IDs"
+}

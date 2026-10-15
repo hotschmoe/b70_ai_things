@@ -1,0 +1,65 @@
+{
+  "scope": "S80 v2 source-only minimal down-block geometry correction; no payload/build/run/GPU/model calls",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/ggml/include/ggml.h",
+      "container": "/work/llama-pinned/ggml/include/ggml.h",
+      "bytes": 116144,
+      "sha256": "12ee71f99db7db9b353bc02b1fbb57c344ee17c01ac5fb7952b41a637a747ea9"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/ggml/src/ggml.c",
+      "container": "/work/llama-pinned/ggml/src/ggml.c",
+      "bytes": 260689,
+      "sha256": "1a634ca1df25db2fbd526cba9bfe11fccd5aa9b31f819c3cac6b630be03f9f51"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/ggml/src/ggml-quants.c",
+      "container": "/work/llama-pinned/ggml/src/ggml-quants.c",
+      "bytes": 228250,
+      "sha256": "07143d7068936ae46b3c528b2f3d4bbb666e74d88992165716174d243573965d"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/ggml/src/ggml-impl.h",
+      "container": "/work/llama-pinned/ggml/src/ggml-impl.h",
+      "bytes": 25821,
+      "sha256": "43564db0238aebb7ed68501e346c194866b5dac218d1d37b26baff9f458c00d3"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/ggml/src/ggml-common.h",
+      "container": "/work/llama-pinned/ggml/src/ggml-common.h",
+      "bytes": 135161,
+      "sha256": "0061131b615c5721fc88a78feeb22c1f8c450f1c2646a317d80796a653bf595c"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/ggml/src/libggml-base.a",
+      "container": "/work/src-ep/build-sycl-ep/ggml/src/libggml-base.a",
+      "sha256": "293516f3e8a101a7e6b732347094047ea905e40204fa5489c7202e0e5c2d0f8d",
+      "hash_provenance": "Frozen S62 cells/preflight.json; no archive reread during source prep; actual build verifies before copying/linking and after."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-contract-s77-prep/candidate-gate.json",
+      "bytes": 6911,
+      "sha256": "f2949d0fde51c339632536c440f672b54d8dd5a04a248273c5af1d52d750479a"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-gu-reference-s62-prep/cells/reference-observations.json",
+      "bytes": 40625,
+      "sha256": "32f10615bd8115dbedd30946be359c0b8686f331f1bbe3548958553184b59fde"
+    }
+  ],
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "MKL_identity": "Pinned immutable image; root preflight confirms headers and libmkl_rt.so.3; actual build snapshots header/RT hashes and runtime rechecks.",
+  "v2_delta": {
+    "original_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-cpu-reference-s80-prep/reference_s80.cpp",
+    "original_source_sha256": "16fb121ed90d0e849906bd11d6414efb9a3cbb92ef1d1ae8538032367b907538",
+    "candidate_source_sha256": "d9f8bee56f3d948e88c7e9b2013c83419a6b2fe08d4f50ff6e1eff2fe06fd1d5",
+    "pinned_binding": [
+      "ggml.h:432 GGML_TYPE_Q2_0=42",
+      "ggml-common.h:187 QK2_0=64",
+      "ggml.c:685..688 Q2_0 traits use QK2_0 and sizeof(block_q2_0)"
+    ],
+    "strict_geometry": "GU block256 unchanged; down type20 requires block32, type42 requires block64; FF must divide trait block; drb derives from FF/block_size*type_size. Fixture parser still permits exactly types20/42.",
+    "unchanged": "All GU reconstruction/arithmetic/bound/header/schema/data sizes, down to_float math and diagnostic role, build/run/finalizer bodies."
+  }
+}

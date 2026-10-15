@@ -1,0 +1,120 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "066194e5-5376-4e78-9b59-45e5b9636d8f"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "066194e5-5376-4e78-9b59-45e5b9636d8f",
+  "exit": 0,
+  "elapsed_s": 29.0268420180073,
+  "launch_exception": null,
+  "source_packet_sha256": "60715d6472964c0aaa5a9ab3be1efeccf82e4c4c311afd8f765806895c97bb3e",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 184392,
+      "stop_reason": "end_turn",
+      "session_id": "066194e5-5376-4e78-9b59-45e5b9636d8f",
+      "total_cost_usd": 2.363888,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 28012,
+        "cache_read_input_tokens": 59663,
+        "output_tokens": 1681,
+        "output_tokens_details": {
+          "thinking_tokens": 566
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 28012,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1681,
+            "cache_read_input_tokens": 59663,
+            "cache_creation_input_tokens": 28012,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 28012
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 4,
+          "outputTokens": 12165,
+          "thinkingTokens": 9736,
+          "cacheReadInputTokens": 60312,
+          "cacheCreationInputTokens": 87026,
+          "webSearchRequests": 0,
+          "costUSD": 2.363888,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**ACCEPT root's disposition: HOLD_UNMATCHED_NO_LATENCY_PROMOTION, park the patch, no promotion.** The gates support interpreting two of the three timed pairs, and those two show no benefit from ON. One record inconsistency needs a root check before the restoration is called closed.\n\n**Gates that support interpretation**\n\n- **Output and coherence:** every pair in both arms has equal requests, full text, SSE content, and usage, with 1500 completion tokens and zero cached tokens each stream. The warm pair matched the S16 prefix.\n- **Activation and join:** ON reports asked, deferred and joined equal to native windows on all four pairs. OFF reports enabled 0 and no ON summary. The host branch and join were exercised on every window. This is accounting, not hardware overlap.\n- **Identity, functionals, teardown:** same binary hash both arms, same image, same model identity, functionals PASS, TERM to QUIT normal exit, container removed, single final PLE diagnostic, card and collective health exit 0 in both arms.\n- **Repeat3 is unmatchable by the declared work gate**, not by output. Slot 1 offered drafts differ by two, windows differ by one, and ON ran one extra solo window. Text, usage and accepted drafts are identical. This is a pairing or draft-count divergence with no evidence it is caused by the patch, but the harness cannot attribute its wall difference and correctly excludes it.\n\n**Bounded client-wall result**\n\n| Pair | OFF wall s | ON wall s | Delta |\n| --- | --- | --- | --- |\n| repeat1 | 28.97 | 29.10 | +0.12 |\n| repeat2 | 28.90 | 28.96 | +0.06 |\n| warm (diagnostic) | 29.00 | 29.07 | +0.07 |\n| repeat3 (unmatched) | 29.51 | 29.57 | +0.06 |\n\nEvery observation runs in the same direction, ON slightly slower, by well under half a percent. Two matched pairs from one nested process per arm cannot separate that from run order or warm state, but nothing supports a latency gain. The deferred join did not shorten client wall on this configuration. Decode rates and SSE content-event gap distributions are indistinguishable between arms. No speed claim either way is supportable, and none is made.\n\n**Material limits**\n\n- Two matched timed pairs, one OFF process then one ON process. No independent samples, no interval.\n- Matched aggregate work does not prove identical per-window row layouts or cache behavior. Repeat3 shows window counts can diverge with identical text.\n- OFF host wrappers and counters are not proved zero cost, so the OFF arm here is not byte-identical to the pre-S79 baseline binary.\n- Per-request cumulative PLE totals include admission and functionals and are not a coding-only measure.\n\n**Restoration record to verify**\n\nThe restoration record states the three files were restored to the pre-S79 base, but its before and after fields list base hashes as before and candidate hashes as after. That matches the apply record, not a restoration. Root should confirm the current live hashes are the three base values and correct the record. Separately, the build tree still holds candidate objects and a candidate generic executable, so any future generic build or run from that tree must not be read as baseline until a rebuild from the restored source occurs.",
+      "ttft_ms": 11543,
+      "type": "result",
+      "duration_ms": 27985,
+      "uuid": "57d220c4-85e1-4192-80d1-26ce3cf1e4ac",
+      "ttft_stream_ms": 2947,
+      "time_to_request_ms": 70,
+      "first_content_frame_ms": 2948,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0,
+  "resume_session_matches_response": true
+}

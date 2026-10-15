@@ -1,0 +1,377 @@
+{
+  "stage": "S80_POST_RESULT",
+  "closed": true,
+  "root_disposition": "REJECT_EXACT_GROUPED_MAPPING_KEEP_PRODUCTION_SCALAR_NO_SERVE_RETRY_OR_PROMOTION; numerical target PASS independently of performance",
+  "source_review": {
+    "packet_sha256": "f20175dd9b5efac0f0bb4080f2ca7aabe5445091e3853e08041b1054cb6880c7",
+    "source_sessions": {
+      "claude-opus-5-5": "40d085df-cbe2-4517-ba18-4da613580841",
+      "claude-fable-5-1": "004147f4-9bcf-4e25-bf1d-fc16ac1ed087"
+    },
+    "root_full_read_source_responses": true,
+    "prior_actual_go": "Conditional bounded CPU/GPU source GO; no runtime endorsement",
+    "source_review_closure_sha256": "dc2b37bfb9b4edd489571396b81ed662708f42c387f7351969bbb09df67af1dd"
+  },
+  "cpu_reference": {
+    "v1_failure": {
+      "exit": 2,
+      "helper_seconds_approx": 0.523,
+      "reason": "Definite down diagnostic type42 Q2_0 block64 versus assumed32 geometry check; after expert0, before GPU",
+      "original_source_sha256": "16fb121ed90d0e849906bd11d6414efb9a3cbb92ef1d1ae8538032367b907538"
+    },
+    "v2_change": "Only three replacement lines separate GU/down trait checks and derive down row bytes from dt->blck_size; no GU math/target/header change",
+    "bound_header_sha256": "468471b8ed5c972de11318bf19e7449be23fe48df7b5fbd21bcf3916de5a6ab0",
+    "root_reported_v2_binary_prefix": "9eb04ed9",
+    "root_reported_conformance": {
+      "GU_values": 2237440,
+      "selected_exact_dyadic_cells": 36,
+      "zero_and_positive_negative_controls": "PASS",
+      "max_rss_KiB": 124004,
+      "helper_seconds": 3.051,
+      "wrapper_seconds": 16
+    },
+    "final_exact_reference_source_binary_file_pins": {
+      "v2_source_sha256": "d9f8bee56f3d948e88c7e9b2013c83419a6b2fe08d4f50ff6e1eff2fe06fd1d5",
+      "binary_sha256": "9eb04ed999360cb7e3424348dd6ee4e5992ae23749243879556b2a99631d455c",
+      "reference_json_sha256": "6b479ba36ab9c80d652e8742924970d8b161ee49b0e7612119122a62b4543789",
+      "v2_change_diff": "--- v1/reference_s80.cpp\n+++ v2/reference_s80.cpp\n@@ -71,8 +71,9 @@\n  for(const auto& e:fixture){\n   env_check();std::vector<uint8_t> blob(e.bytes);at(raw,e.off,blob.data(),blob.size());\n   const auto* gt=ggml_get_type_traits(static_cast<ggml_type>(e.gt));const auto* dt=ggml_get_type_traits(static_cast<ggml_type>(e.dt));\n-  need(gt&&gt->to_float&&gt->blck_size==256&&dt&&dt->to_float&&dt->blck_size==32,\"CPU quant trait geometry\");\n-  const size_t rb=size_t(K/256)*gt->type_size,drb=size_t(FF/32)*dt->type_size;need(e.up==640*rb&&e.down==2*e.up&&e.down+2560*drb==e.bytes,\"quant layout\");\n+  need(gt&&gt->to_float&&gt->blck_size==256,\"CPU GU quant trait geometry\");\n+  need(dt&&dt->to_float&&dt->blck_size==(e.dt==20?32:64)&&FF%dt->blck_size==0,\"CPU down quant trait geometry\");\n+  const size_t rb=size_t(K/256)*gt->type_size,drb=size_t(FF/dt->blck_size)*dt->type_size;need(e.up==640*rb&&e.down==2*e.up&&e.down+2560*drb==e.bytes,\"quant layout\");\n   std::vector<ggml_fp16_t> wh(size_t(G)*K);std::vector<double> w(wh.size()),x(size_t(e.ne)*K),T(size_t(e.ne)*G),A(T.size()),B(T.size()),E(T.size()),bound(T.size());\n   for(int col=0;col<G;++col){const uint8_t* qrow=blob.data()+(col&1)*e.up+(col/2)*rb;\n    for(int z=0;z<K/256;++z){uint16_t h;std::memcpy(&h,qrow+z*gt->type_size,2);scale.add(h);}\n"
+    },
+    "actual_CPU_status_FENV_and_reference_closure": {
+      "status": "PASS_CPU_REFERENCE_ONLY_GPU_OPERANDS_UNMEASURED",
+      "values": 2237440,
+      "threads": 4,
+      "max_rss_kib": 124004,
+      "FE_TONEAREST": true,
+      "MXCSR": 8098,
+      "FTZ_DAZ": false,
+      "selected36_exact_numerators": true,
+      "selected36_E64_conformance": true,
+      "max_selected_reference_residual_upper": 0,
+      "zero_DGEMM_and_zero_negative_control": true,
+      "outside_bound_float_negative_control": true
+    }
+  },
+  "build_identity": {
+    "final_link_precise_flag_and_crtfastmath_audit": {
+      "final_link_precise": true,
+      "crtfastmath_object_absent_map_and_link_log": true,
+      "default_FTZ_claim": false,
+      "actual_compile_seconds": 12.373,
+      "actual_AOT_link_seconds": 112.725,
+      "CPU_lease_seconds": 139,
+      "actual_root_recipe_sha256": "1182b13322bcd12c20708c63a95ec80df3bd4bc880a803a3f02ac1a70c4a139c"
+    },
+    "original_eight_frozen_archives_and_actual_link_source_binding": {
+      "bindings": [
+        {
+          "name": "libstrata_prefill.a",
+          "original_frozen_sha256": "d80598c206dc266ddac3e5545a117038589e84a42b4245800d8777e2e967da94",
+          "copy_build_before_after_equal": true
+        },
+        {
+          "name": "libstrata_engine.a",
+          "original_frozen_sha256": "77a18ca2e4fd4cd35414a74e8386b760a904476022b24ecc7203339fd00180b7",
+          "copy_build_before_after_equal": true
+        },
+        {
+          "name": "libstrata_spec.a",
+          "original_frozen_sha256": "9b8288852c37f1cd3ee61afa3ee8402a775b5a8c37eb1985575810cbc885621a",
+          "copy_build_before_after_equal": true
+        },
+        {
+          "name": "libstrata_kernels.a",
+          "original_frozen_sha256": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8",
+          "copy_build_before_after_equal": true
+        },
+        {
+          "name": "libstrata_core.a",
+          "original_frozen_sha256": "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286",
+          "copy_build_before_after_equal": true
+        },
+        {
+          "name": "libstrata_kernels_cpu.a",
+          "original_frozen_sha256": "6b82f67b33d741310f43785a3a3c2b50ddd4a821b196f5094ef772a01df4e6fb",
+          "copy_build_before_after_equal": true
+        },
+        {
+          "name": "libggml-cpu.a",
+          "original_frozen_sha256": "23ce520e356f71ccd946953a3546075d261b1d6153e7ff82c3151e01527e82e7",
+          "copy_build_before_after_equal": true
+        },
+        {
+          "name": "libggml-base.a",
+          "original_frozen_sha256": "293516f3e8a101a7e6b732347094047ea905e40204fa5489c7202e0e5c2d0f8d",
+          "copy_build_before_after_equal": true
+        }
+      ],
+      "engine_members": [
+        "layer.cpp.o",
+        "native_head.cpp.o",
+        "vmm.cpp.o"
+      ],
+      "actual_build_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-accuracy-s80-root-build/build",
+      "runtime_build_symlink": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-accuracy-s80-root-build/build",
+      "root_build_closure_sha256": "b11befa9311956fb872aa8a684510727d14553a333a2a99ece4d75aa2cc61c07"
+    },
+    "GPU_leaf_exact_executable_source_header_harness_hashes": {
+      "binary_sha256": "0e5c75c9acd15a07d1ede4df004a4fb870b34ad31ad39a8582e7ed269677670d",
+      "source_sha256": "0e4c43cba3a57ec5105347b104f0e79ca145d2b611a9aa7c844aa954104235ed",
+      "reference_bound_sha256": "468471b8ed5c972de11318bf19e7449be23fe48df7b5fbd21bcf3916de5a6ab0",
+      "harness_pins_sha256": "8b476c5cffc10d79b3ddef7f196060c4d24caddeb0a5247c09a93922e28bc32b"
+    },
+    "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2"
+  },
+  "gpu_result": {
+    "status": "PASS_FULL_GU_TARGET_OWN_EAGER_PIPELINE_AND_HOST_ARTIFACTS",
+    "exact_failure_gate_exit_if_any": null,
+    "full_GU_accuracy_four_arms_inputs": [
+      {
+        "type": "GU_accuracy",
+        "arm": "scalar",
+        "changed": 0,
+        "values": 2237440,
+        "failures": 0,
+        "max_abs": 5.0640664994716644e-08,
+        "rms": 4.6187115962238905e-09,
+        "worst_bound_ratio": 0.000253532605416797
+      },
+      {
+        "type": "GU_accuracy",
+        "arm": "grouped",
+        "changed": 0,
+        "values": 2237440,
+        "failures": 0,
+        "max_abs": 8.242204785346985e-08,
+        "rms": 5.267658585343573e-09,
+        "worst_bound_ratio": 0.0004062708450106081
+      },
+      {
+        "type": "GU_accuracy",
+        "arm": "scalar",
+        "changed": 1,
+        "values": 2237440,
+        "failures": 0,
+        "max_abs": 5.0640664994716644e-08,
+        "rms": 4.6187115962238905e-09,
+        "worst_bound_ratio": 0.000253532605416797
+      },
+      {
+        "type": "GU_accuracy",
+        "arm": "grouped",
+        "changed": 1,
+        "values": 2237440,
+        "failures": 0,
+        "max_abs": 8.242204785346985e-08,
+        "rms": 5.267658585343573e-09,
+        "worst_bound_ratio": 0.0004062708450106081
+      }
+    ],
+    "GPU_CPU_GU_plane_full_identity": {
+      "bytes": 104857600,
+      "sha256": "6d453fd387e4945b5cc1cf00fc60e69c788bc5b535b649ea444d540ad9ef2a0a",
+      "equals_CPU_reference": true
+    },
+    "own_eager_repeat_changed_restore_and_same_GU_SiLU": {
+      "type": "correctness_complete",
+      "full_GU_targets": 4,
+      "GPU_CPU_GU_bytes": 104857600,
+      "GPU_down_crossalgorithm_bytes": 52428800,
+      "own_eager_repeat_changed_restore": true,
+      "same_GU_SiLU_producer": true,
+      "ideal_H_down_accuracy_claim": false,
+      "graph_scope": "not_required_by_actual_eager_prefill_no_attempt"
+    },
+    "S42_scalar_anchor_and_crossalgorithm_down_plane_identity": {
+      "original_scalar_anchor_all_GU_H_down": true,
+      "down_bytes": 52428800,
+      "CPU_down_accuracy_claim": false
+    },
+    "sixteen_artifact_sizes_hashes_summary_and_manifest_pin": {
+      "file_count": 16,
+      "bytes": 309432320,
+      "comparison_sha256": "78e6ac2047b06cec41fedd8511b96a32bc2e09f508b2cf32f91e7d03993fe86d"
+    },
+    "completed_wave_four_paired_rows_with_metadata_included": {
+      "pairs": [
+        {
+          "pair": 0,
+          "scalar_ms": 1.019624,
+          "grouped_ms": 4.150444,
+          "delta_ms": 3.13082,
+          "change_percent": 307.05632664590087
+        },
+        {
+          "pair": 1,
+          "scalar_ms": 1.04913,
+          "grouped_ms": 5.420274,
+          "delta_ms": 4.371144,
+          "change_percent": 416.6446484229791
+        },
+        {
+          "pair": 2,
+          "scalar_ms": 1.071533,
+          "grouped_ms": 4.451648,
+          "delta_ms": 3.3801149999999995,
+          "change_percent": 315.446654466078
+        },
+        {
+          "pair": 3,
+          "scalar_ms": 1.052938,
+          "grouped_ms": 4.356446,
+          "delta_ms": 3.303508,
+          "change_percent": 313.7419297242573
+        }
+      ],
+      "all8samples": [
+        {
+          "type": "timing",
+          "pair": 0,
+          "position": 0,
+          "arm": "scalar",
+          "host_submit_ms": 0.89701,
+          "completed_wall_ms": 1.019624,
+          "metadata_fill_ms": 0.0,
+          "metadata_included": true,
+          "timed_stage_copies": false,
+          "own_final_down_full_bytes": true,
+          "scalar_GU_H_timed_scope": "last_expert_scratch_only_no_stale_saved_buffers"
+        },
+        {
+          "type": "timing",
+          "pair": 0,
+          "position": 1,
+          "arm": "grouped",
+          "host_submit_ms": 4.146556,
+          "completed_wall_ms": 4.150444,
+          "metadata_fill_ms": 0.131871,
+          "metadata_included": true,
+          "timed_stage_copies": false,
+          "own_final_down_full_bytes": true,
+          "scalar_GU_H_timed_scope": "last_expert_scratch_only_no_stale_saved_buffers"
+        },
+        {
+          "type": "timing",
+          "pair": 1,
+          "position": 0,
+          "arm": "grouped",
+          "host_submit_ms": 5.411027,
+          "completed_wall_ms": 5.420274,
+          "metadata_fill_ms": 0.299962,
+          "metadata_included": true,
+          "timed_stage_copies": false,
+          "own_final_down_full_bytes": true,
+          "scalar_GU_H_timed_scope": "last_expert_scratch_only_no_stale_saved_buffers"
+        },
+        {
+          "type": "timing",
+          "pair": 1,
+          "position": 1,
+          "arm": "scalar",
+          "host_submit_ms": 0.962054,
+          "completed_wall_ms": 1.04913,
+          "metadata_fill_ms": 0.0,
+          "metadata_included": true,
+          "timed_stage_copies": false,
+          "own_final_down_full_bytes": true,
+          "scalar_GU_H_timed_scope": "last_expert_scratch_only_no_stale_saved_buffers"
+        },
+        {
+          "type": "timing",
+          "pair": 2,
+          "position": 0,
+          "arm": "grouped",
+          "host_submit_ms": 4.4477,
+          "completed_wall_ms": 4.451648,
+          "metadata_fill_ms": 0.195353,
+          "metadata_included": true,
+          "timed_stage_copies": false,
+          "own_final_down_full_bytes": true,
+          "scalar_GU_H_timed_scope": "last_expert_scratch_only_no_stale_saved_buffers"
+        },
+        {
+          "type": "timing",
+          "pair": 2,
+          "position": 1,
+          "arm": "scalar",
+          "host_submit_ms": 0.978115,
+          "completed_wall_ms": 1.071533,
+          "metadata_fill_ms": 0.0,
+          "metadata_included": true,
+          "timed_stage_copies": false,
+          "own_final_down_full_bytes": true,
+          "scalar_GU_H_timed_scope": "last_expert_scratch_only_no_stale_saved_buffers"
+        },
+        {
+          "type": "timing",
+          "pair": 3,
+          "position": 0,
+          "arm": "scalar",
+          "host_submit_ms": 0.963547,
+          "completed_wall_ms": 1.052938,
+          "metadata_fill_ms": 0.0,
+          "metadata_included": true,
+          "timed_stage_copies": false,
+          "own_final_down_full_bytes": true,
+          "scalar_GU_H_timed_scope": "last_expert_scratch_only_no_stale_saved_buffers"
+        },
+        {
+          "type": "timing",
+          "pair": 3,
+          "position": 1,
+          "arm": "grouped",
+          "host_submit_ms": 4.3531,
+          "completed_wall_ms": 4.356446,
+          "metadata_fill_ms": 0.100792,
+          "metadata_included": true,
+          "timed_stage_copies": false,
+          "own_final_down_full_bytes": true,
+          "scalar_GU_H_timed_scope": "last_expert_scratch_only_no_stale_saved_buffers"
+        }
+      ]
+    },
+    "timing_descriptive_summary": {
+      "scalar_median_ms": 1.051034,
+      "grouped_median_ms": 4.404047,
+      "median_paired_change_percent": 314.59429209516765,
+      "control_range_ms": 0.05190899999999998,
+      "median_paired_benefit_ms": -3.3418114999999995,
+      "descriptive_prescreen_pass": false
+    }
+  },
+  "lifecycle": {
+    "lease_quiet_device_and_input_identity": {
+      "CPU_quiet_outside_card1": true,
+      "physical_pci": "0000:44:00.0",
+      "no_card0_or_modelserve": true,
+      "wrapper_seconds": 49,
+      "leaf_wall_seconds": 21,
+      "pre_post_inputs_build_pins": "PASS"
+    },
+    "normal_or_failure_cleanup_container_removed_health_exits": {
+      "status": "PASS_FULL_GU_TARGET_EAGER_WAVE_ONLY",
+      "leaf_exit": 0,
+      "pre_health_exit": 0,
+      "post_health_exit": 0,
+      "analysis_exit": 0,
+      "container_removed": true,
+      "processes": 1,
+      "retries": 0,
+      "serving_qualified": false,
+      "speed_qualified": false
+    },
+    "actual_runtime_identity_comparison_closure_pins": {
+      "identity.json": "73d9d157c5ac99c9d66f7e9645867860fd8d7ed83268018f565e9e61bfba6f44",
+      "comparison.json": "78e6ac2047b06cec41fedd8511b96a32bc2e09f508b2cf32f91e7d03993fe86d",
+      "closure.json": "c66b350142baa23615b8433cf9e0c19e41c5f72f557906f84f538e3174f32654",
+      "post-input-pins.json": "179fb6fc13a77d0e09f395e6c0325d0fbc9417e05f5d37b2328af29c0040fcb2"
+    }
+  },
+  "limits": [
+    "S42 strict failure FAILED_UNCHANGED.",
+    "Full GU numerical target only; no ideal H/down accuracy.",
+    "Actual production prefill eager; no graph requirement.",
+    "Four paired completed-wave observations nested in one process; metadata included, no stage copies; no serving gain or population inference.",
+    "Source consultations used tools disabled; packet facts supplied by root, not independent payload/runtime inspection.",
+    "No serving activation, model-quality, hardware cause, physical traffic or promotion claim."
+  ]
+}

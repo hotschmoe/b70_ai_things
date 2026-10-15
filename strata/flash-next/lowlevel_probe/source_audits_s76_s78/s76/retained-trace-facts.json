@@ -1,0 +1,79 @@
+{
+  "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-pair-s31/analysis-prep/reviewed-summary/operations.csv",
+  "sha256": "1d58cbb36c8b683b990fb5e30ae831cbae961a4159182aa9650e335b1e1bcd67",
+  "rows": 159,
+  "cycles": 5,
+  "primary_IQ3S_C6_operation_rows": [
+    {
+      "kind": "gpu",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_mmvq_multi_nc<21, false>(dpct::dim3, dpct::dim3, sycl::_V1::queue*, unsigned char const*, unsigned long, block_q8_1 const*, float*, int, int, int)::{lambda(sycl::_V1::handler&)#6}::operator()(sycl::_V1::handler&) const::mmvq_multi_kernel_3404b2, dpct_kernel_scalar<21>, dpct_kernel_scalar<6>, dpct_kernel_scalar<0>, dpct_kernel_scalar<1> >[SIMD32 {1536; 1; 1} {32; 4; 1}]",
+      "count": "50",
+      "total_ms": "4.197168",
+      "mean_us": "83.94336",
+      "median_us": "83.958",
+      "p95_us": "84.895",
+      "min_us": "82.291",
+      "max_us": "85.208"
+    },
+    {
+      "kind": "gpu",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_mmvq_multi_nc<21, false>(dpct::dim3, dpct::dim3, sycl::_V1::queue*, unsigned char const*, unsigned long, block_q8_1 const*, float*, int, int, int)::{lambda(sycl::_V1::handler&)#6}::operator()(sycl::_V1::handler&) const::mmvq_multi_kernel_3404b2, dpct_kernel_scalar<21>, dpct_kernel_scalar<6>, dpct_kernel_scalar<0>, dpct_kernel_scalar<1> >[SIMD32 {160; 1; 1} {32; 4; 1}]",
+      "count": "200",
+      "total_ms": "2.9581489999999997",
+      "mean_us": "14.790745",
+      "median_us": "15.0",
+      "p95_us": "16.25",
+      "min_us": "11.666",
+      "max_us": "17.187"
+    },
+    {
+      "kind": "gpu",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_mmvq_multi_nc<21, false>(dpct::dim3, dpct::dim3, sycl::_V1::queue*, unsigned char const*, unsigned long, block_q8_1 const*, float*, int, int, int)::{lambda(sycl::_V1::handler&)#6}::operator()(sycl::_V1::handler&) const::mmvq_multi_kernel_3404b2, dpct_kernel_scalar<21>, dpct_kernel_scalar<6>, dpct_kernel_scalar<0>, dpct_kernel_scalar<1> >[SIMD32 {640; 1; 1} {32; 4; 1}]",
+      "count": "15",
+      "total_ms": "1.649681",
+      "mean_us": "109.97873333333334",
+      "median_us": "109.583",
+      "p95_us": "112.1766",
+      "min_us": "108.437",
+      "max_us": "112.395"
+    },
+    {
+      "kind": "gpu",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_mmvq_multi_nc<21, false>(dpct::dim3, dpct::dim3, sycl::_V1::queue*, unsigned char const*, unsigned long, block_q8_1 const*, float*, int, int, int)::{lambda(sycl::_V1::handler&)#6}::operator()(sycl::_V1::handler&) const::mmvq_multi_kernel_3404b2, dpct_kernel_scalar<21>, dpct_kernel_scalar<6>, dpct_kernel_scalar<0>, dpct_kernel_scalar<1> >[SIMD32 {3072; 1; 1} {32; 4; 1}]",
+      "count": "5",
+      "total_ms": "0.810831",
+      "mean_us": "162.1662",
+      "median_us": "161.666",
+      "p95_us": "164.5206",
+      "min_us": "160.416",
+      "max_us": "165.104"
+    },
+    {
+      "kind": "gpu",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_mmvq_multi_nc<21, false>(dpct::dim3, dpct::dim3, sycl::_V1::queue*, unsigned char const*, unsigned long, block_q8_1 const*, float*, int, int, int)::{lambda(sycl::_V1::handler&)#6}::operator()(sycl::_V1::handler&) const::mmvq_multi_kernel_3404b2, dpct_kernel_scalar<21>, dpct_kernel_scalar<6>, dpct_kernel_scalar<0>, dpct_kernel_scalar<1> >[SIMD32 {128; 1; 1} {32; 4; 1}]",
+      "count": "5",
+      "total_ms": "0.05208",
+      "mean_us": "10.416",
+      "median_us": "10.52",
+      "p95_us": "10.52",
+      "min_us": "10.104",
+      "max_us": "10.52"
+    }
+  ],
+  "calls_per_cycle": 55.0,
+  "service_ms_per_cycle": 1.9335818,
+  "selected_M_grid_rows_note": "S31 row has output workgroup count, not N or actual tensor identity; selected grid1536/640 matches tested M6144/M2560 under source row mapping. Do not equate all calls with the two exact fixture tensors.",
+  "selected_grid1536_640_calls_per_cycle": 13.0,
+  "selected_grid1536_640_service_ms_per_cycle": 1.1693698,
+  "limits": "retained instrumented per-op service sums only; not current wall time, additive recoverable saving, critical-path proof or trace-based cause of S75 slowdown"
+}

@@ -1,0 +1,84 @@
+{
+  "stage": "S80 CPU helper",
+  "status": "FROZEN_SOURCE_PREP_ONLY_NO_FRONTEND_BUILD_RUN_GPU_PAYLOAD",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-cpu-reference-s80-prep",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 7060,
+      "sha256": "6d3e6dfed7d7a26d7b50bee1ee30ee2c560def9c8450bc3ae251d62405114627"
+    },
+    {
+      "path": "build-container.sh",
+      "bytes": 2102,
+      "sha256": "1f10a47c1f0ec6f140a45adaab92c10ee27033f38c29bde1d82378dc09a109c3"
+    },
+    {
+      "path": "build.sh",
+      "bytes": 1096,
+      "sha256": "f9137904faed45433d267c79465023cb74130f7867d62f6916770301af085ae3"
+    },
+    {
+      "path": "expected-container.sha256",
+      "bytes": 1694,
+      "sha256": "adfb54e8448e0b4df9b3877c397565e4ebbf333e54947b0f468d451946a6ed26"
+    },
+    {
+      "path": "expected-frozen.sha256",
+      "bytes": 589,
+      "sha256": "207cd5918e3d019945a11829cda1bdb20d75aaf25e6852db560b66f6edbff06f"
+    },
+    {
+      "path": "finalize.py",
+      "bytes": 4760,
+      "sha256": "25f0b882a58d05682e4494d24676dc7abea4806b1835d9c45ee852fe3a5ad0da"
+    },
+    {
+      "path": "input-pins.json",
+      "bytes": 391,
+      "sha256": "8087d5e96940dab94a4bbe96f9c0344bf0093cabe0eab8843fcfdb52b71cd93e"
+    },
+    {
+      "path": "readiness.json",
+      "bytes": 1147,
+      "sha256": "73e582d93f1e608bdfc81583b6c2da876b64852aa24eab21c9ff0d32282a82ae"
+    },
+    {
+      "path": "reference_bound.hpp",
+      "bytes": 2577,
+      "sha256": "468471b8ed5c972de11318bf19e7449be23fe48df7b5fbd21bcf3916de5a6ab0"
+    },
+    {
+      "path": "reference_s80.cpp",
+      "bytes": 12941,
+      "sha256": "16fb121ed90d0e849906bd11d6414efb9a3cbb92ef1d1ae8538032367b907538"
+    },
+    {
+      "path": "run-container.sh",
+      "bytes": 558,
+      "sha256": "5dec92a43921d8c3568aae54526cde3c0431758b9d74614920c3fa9a97aaf8d7"
+    },
+    {
+      "path": "run.sh",
+      "bytes": 1207,
+      "sha256": "a6f1056847da23127954d3e37f3b228d917490f817b960b456e5064df6fa03ee"
+    },
+    {
+      "path": "schema.json",
+      "bytes": 2072,
+      "sha256": "9ffefd242d6abb7ed6d6afbfb349e239203a45f29e872610c6682f1887390256"
+    },
+    {
+      "path": "selected36.tsv",
+      "bytes": 2572,
+      "sha256": "1c81d6b726e48a1f44956ccddfae6fd41ae3f696a0668b5d9060bfdefcdeffad"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 2596,
+      "sha256": "ef07cde29f7fe4cef4496899416d6e72c9b2cd5e87191da698becc5e6e5587b1"
+    }
+  ],
+  "file_count": 15,
+  "bytes": 43362
+}

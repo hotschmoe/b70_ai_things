@@ -1,0 +1,9 @@
+{
+  "signal": "TERM to server -> QUIT to native engine",
+  "container_removed": true,
+  "lease_wrapper_exit": 0,
+  "diagnostic_before_any_forced_container_stop": true,
+  "no_force_stop_used": true,
+  "functional_status": "PASS",
+  "epoch_ns": 1792078804358152314
+}

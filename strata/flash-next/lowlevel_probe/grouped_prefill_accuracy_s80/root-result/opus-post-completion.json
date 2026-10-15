@@ -1,0 +1,120 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "40d085df-cbe2-4517-ba18-4da613580841"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "40d085df-cbe2-4517-ba18-4da613580841",
+  "exit": 0,
+  "elapsed_s": 24.734415358980186,
+  "launch_exception": null,
+  "source_packet_sha256": "ec5928f5bde0c8489211cc10d7a564d0e19f71c1941f8a38f2b769f4639e0c92",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 174386,
+      "stop_reason": "end_turn",
+      "session_id": "40d085df-cbe2-4517-ba18-4da613580841",
+      "total_cost_usd": 0.8776174000000001,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 17128,
+        "cache_read_input_tokens": 60678,
+        "output_tokens": 2360,
+        "output_tokens_details": {
+          "thinking_tokens": 476
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 17128,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 2360,
+            "cache_read_input_tokens": 60678,
+            "cache_creation_input_tokens": 17128,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 17128
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 4,
+          "outputTokens": 12404,
+          "thinkingTokens": 7916,
+          "cacheReadInputTokens": 61327,
+          "cacheCreationInputTokens": 77157,
+          "webSearchRequests": 0,
+          "costUSD": 0.8776174000000001,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**ACCEPT** the root disposition: reject the exact grouped mapping, keep production scalar, no serving, retry or promotion. The numerical target PASS is recorded separately from performance.\n\n**Material blockers**\n\nNone found in the packet as supplied. All checks below rest on root-reported facts and hashes; I did no independent payload or runtime inspection.\n\n**CPU v1 failure and v2 fix**\n\n- **v1 failure.** v1 stopped at the down trait-geometry check after expert 0, before any GPU step. My original review only marked type-42 `blck_size==32` as unmeasured and fail-closed. It was in fact wrong for Q2_0 (block 64), and it failed closed as intended. That was a setup/diagnostic geometry failure, not a numerical one.\n- **v2 diff scope.** The diff touches only the down trait/row-byte lines. Down row bytes are now derived from `dt->blck_size`, with an explicit `FF % blck` guard and a per-type expected block size (20\u219232, 42\u219264).\n  - The GU trait check, GU row bytes, interleave and lattice code are unchanged.\n  - The `quant layout` byte-total check still binds the down geometry to the fixture blob sizes.\n- **Header.** The bound header SHA is unchanged at 468471b8.\n- **Hardcoded block size.** The 64 for type 42 is hardcoded rather than derived. That is acceptable because the layout check is independent.\n- **Conformance.**\n  - All 2237440 values computed; selected-36 exact numerators and E64 conformance pass.\n  - Zero, positive and outside-bound controls pass.\n  - FE_TONEAREST holds. MXCSR 8098 (0x1FA2) has FTZ (0x8000) and DAZ (0x40) clear; the 0x20 sticky flag is benign.\n  - RSS is 124 MiB.\n- **Residual of 0.** A max selected residual of 0 means DGEMM was exact on those cells. That is plausible and not evidence of a defect.\n\n**Build and provenance**\n\n- The final link is `-fp-model=precise`, and `crtfastmath` is absent from both the map and the link log. This closes the condition from my earlier review.\n- All eight original frozen archive hashes are bound, and copy/build before==after holds.\n- The leaf source and header hashes match the reviewed sources.\n- The image is pinned.\n- The root build closure and runtime identity pins are recorded.\n\n**GPU gates (all passed; no failed gate)**\n\n- **Operand identity.** The full 104857600-byte GPU GU plane equals the CPU RN reference.\n- **GU target.** All four arm/input combinations (scalar and grouped, initial and changed) have 0 failures over 2237440 values.\n  - Worst bound ratios are 2.5e-4 (scalar) and 4.1e-4 (grouped), so the predeclared enclosure was not near binding.\n  - Changed-input statistics equal the initial ones, which is consistent with an exact sign flip.\n  - This is the predeclared target, not a fitted tolerance.\n- **S42 anchor.** The scalar anchor matches on all of GU, H and down.\n- **Cross-algorithm down planes.** All 52428800 bytes are identical across scalar and grouped.\n- **Own pipeline checks.** Own eager, repeat, changed and restore, plus same-GU SiLU producer checks, are all strict passes.\n- **Artifacts.** 16 files totalling 309432320 bytes, pinned.\n- **Lifecycle.** One process, 0 retries, container removed, pre/post health exit 0, analysis exit 0, pre/post input and build pins PASS.\n\n**Timing (interpreted only because all gates passed)**\n\n| Pair | Scalar (ms) | Grouped (ms) | Change |\n|---|---|---|---|\n| 0 | 1.02 | 4.15 | +307% |\n| 1 | 1.05 | 5.42 | +417% |\n| 2 | 1.07 | 4.45 | +315% |\n| 3 | 1.05 | 4.36 | +314% |\n\n- In all four pairs, in both AB and BA order, grouped is slower. The median paired change is +315%, and the median benefit is -3.34 ms against a 0.05 ms control range.\n- The descriptive prescreen fails. Metadata fill (0.10 to 0.30 ms) is included and does not account for the gap.\n- Descriptively, grouped completed-wall time is close to its host-submit time. I make no kernel, vendor or bandwidth cause claim from that.\n\nThe direction is unambiguous for this exact mapping and shape. It supports rejecting the mapping, and no further GPU run is needed to reach that disposition.\n\n**Tested limits**\n\n- **Scope.** One card (PCI 0000:44:00.0), one process, one synthetic 16-expert, 1748-row compact wave. Eager only, with no graph attempt or requirement.\n- **Numerics.** The full-GU enclosure is an empirical target. It does not prove opaque vendor internal precision, IEEE reduction or denormal behaviour, or `native::exp` accuracy. There is no ideal H/down accuracy claim, and the CPU down plane is diagnostic only.\n- **Timing.** Four paired observations nested in one process carry no population, significance or serving inference. There is no full-model prefill, no 2000 tok/s result and no model-quality claim.\n- **S42.** The historical strict cross-algorithm failure remains FAILED_UNCHANGED.\n- **Provenance.** This review relies on root-supplied packet facts with tools disabled.",
+      "ttft_ms": 6732,
+      "type": "result",
+      "duration_ms": 23693,
+      "uuid": "eeffe900-dca0-4110-8808-2713d082cb03",
+      "ttft_stream_ms": 1568,
+      "time_to_request_ms": 87,
+      "first_content_frame_ms": 1569,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0,
+  "resume_session_matches_response": true
+}

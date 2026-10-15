@@ -1,0 +1,267 @@
+{
+  "status": "PASS_FULL_GU_TARGET_OWN_EAGER_PIPELINE_AND_HOST_ARTIFACTS",
+  "GU_accuracy": [
+    {
+      "type": "GU_accuracy",
+      "arm": "scalar",
+      "changed": 0,
+      "values": 2237440,
+      "failures": 0,
+      "max_abs": 5.0640664994716644e-08,
+      "rms": 4.6187115962238905e-09,
+      "worst_bound_ratio": 0.000253532605416797
+    },
+    {
+      "type": "GU_accuracy",
+      "arm": "grouped",
+      "changed": 0,
+      "values": 2237440,
+      "failures": 0,
+      "max_abs": 8.242204785346985e-08,
+      "rms": 5.267658585343573e-09,
+      "worst_bound_ratio": 0.0004062708450106081
+    },
+    {
+      "type": "GU_accuracy",
+      "arm": "scalar",
+      "changed": 1,
+      "values": 2237440,
+      "failures": 0,
+      "max_abs": 5.0640664994716644e-08,
+      "rms": 4.6187115962238905e-09,
+      "worst_bound_ratio": 0.000253532605416797
+    },
+    {
+      "type": "GU_accuracy",
+      "arm": "grouped",
+      "changed": 1,
+      "values": 2237440,
+      "failures": 0,
+      "max_abs": 8.242204785346985e-08,
+      "rms": 5.267658585343573e-09,
+      "worst_bound_ratio": 0.0004062708450106081
+    }
+  ],
+  "correctness": {
+    "type": "correctness_complete",
+    "full_GU_targets": 4,
+    "GPU_CPU_GU_bytes": 104857600,
+    "GPU_down_crossalgorithm_bytes": 52428800,
+    "own_eager_repeat_changed_restore": true,
+    "same_GU_SiLU_producer": true,
+    "ideal_H_down_accuracy_claim": false,
+    "graph_scope": "not_required_by_actual_eager_prefill_no_attempt"
+  },
+  "pairs": [
+    {
+      "pair": 0,
+      "scalar_ms": 1.019624,
+      "grouped_ms": 4.150444,
+      "delta_ms": 3.13082,
+      "change_percent": 307.05632664590087
+    },
+    {
+      "pair": 1,
+      "scalar_ms": 1.04913,
+      "grouped_ms": 5.420274,
+      "delta_ms": 4.371144,
+      "change_percent": 416.6446484229791
+    },
+    {
+      "pair": 2,
+      "scalar_ms": 1.071533,
+      "grouped_ms": 4.451648,
+      "delta_ms": 3.3801149999999995,
+      "change_percent": 315.446654466078
+    },
+    {
+      "pair": 3,
+      "scalar_ms": 1.052938,
+      "grouped_ms": 4.356446,
+      "delta_ms": 3.303508,
+      "change_percent": 313.7419297242573
+    }
+  ],
+  "scalar_median_ms": 1.051034,
+  "grouped_median_ms": 4.404047,
+  "median_paired_change_percent": 314.59429209516765,
+  "control_range_ms": 0.05190899999999998,
+  "median_paired_benefit_ms": -3.3418114999999995,
+  "descriptive_prescreen_pass": false,
+  "raw_timing_samples": [
+    {
+      "type": "timing",
+      "pair": 0,
+      "position": 0,
+      "arm": "scalar",
+      "host_submit_ms": 0.89701,
+      "completed_wall_ms": 1.019624,
+      "metadata_fill_ms": 0.0,
+      "metadata_included": true,
+      "timed_stage_copies": false,
+      "own_final_down_full_bytes": true,
+      "scalar_GU_H_timed_scope": "last_expert_scratch_only_no_stale_saved_buffers"
+    },
+    {
+      "type": "timing",
+      "pair": 0,
+      "position": 1,
+      "arm": "grouped",
+      "host_submit_ms": 4.146556,
+      "completed_wall_ms": 4.150444,
+      "metadata_fill_ms": 0.131871,
+      "metadata_included": true,
+      "timed_stage_copies": false,
+      "own_final_down_full_bytes": true,
+      "scalar_GU_H_timed_scope": "last_expert_scratch_only_no_stale_saved_buffers"
+    },
+    {
+      "type": "timing",
+      "pair": 1,
+      "position": 0,
+      "arm": "grouped",
+      "host_submit_ms": 5.411027,
+      "completed_wall_ms": 5.420274,
+      "metadata_fill_ms": 0.299962,
+      "metadata_included": true,
+      "timed_stage_copies": false,
+      "own_final_down_full_bytes": true,
+      "scalar_GU_H_timed_scope": "last_expert_scratch_only_no_stale_saved_buffers"
+    },
+    {
+      "type": "timing",
+      "pair": 1,
+      "position": 1,
+      "arm": "scalar",
+      "host_submit_ms": 0.962054,
+      "completed_wall_ms": 1.04913,
+      "metadata_fill_ms": 0.0,
+      "metadata_included": true,
+      "timed_stage_copies": false,
+      "own_final_down_full_bytes": true,
+      "scalar_GU_H_timed_scope": "last_expert_scratch_only_no_stale_saved_buffers"
+    },
+    {
+      "type": "timing",
+      "pair": 2,
+      "position": 0,
+      "arm": "grouped",
+      "host_submit_ms": 4.4477,
+      "completed_wall_ms": 4.451648,
+      "metadata_fill_ms": 0.195353,
+      "metadata_included": true,
+      "timed_stage_copies": false,
+      "own_final_down_full_bytes": true,
+      "scalar_GU_H_timed_scope": "last_expert_scratch_only_no_stale_saved_buffers"
+    },
+    {
+      "type": "timing",
+      "pair": 2,
+      "position": 1,
+      "arm": "scalar",
+      "host_submit_ms": 0.978115,
+      "completed_wall_ms": 1.071533,
+      "metadata_fill_ms": 0.0,
+      "metadata_included": true,
+      "timed_stage_copies": false,
+      "own_final_down_full_bytes": true,
+      "scalar_GU_H_timed_scope": "last_expert_scratch_only_no_stale_saved_buffers"
+    },
+    {
+      "type": "timing",
+      "pair": 3,
+      "position": 0,
+      "arm": "scalar",
+      "host_submit_ms": 0.963547,
+      "completed_wall_ms": 1.052938,
+      "metadata_fill_ms": 0.0,
+      "metadata_included": true,
+      "timed_stage_copies": false,
+      "own_final_down_full_bytes": true,
+      "scalar_GU_H_timed_scope": "last_expert_scratch_only_no_stale_saved_buffers"
+    },
+    {
+      "type": "timing",
+      "pair": 3,
+      "position": 1,
+      "arm": "grouped",
+      "host_submit_ms": 4.3531,
+      "completed_wall_ms": 4.356446,
+      "metadata_fill_ms": 0.100792,
+      "metadata_included": true,
+      "timed_stage_copies": false,
+      "own_final_down_full_bytes": true,
+      "scalar_GU_H_timed_scope": "last_expert_scratch_only_no_stale_saved_buffers"
+    }
+  ],
+  "artifacts": {
+    "scalar-a-gu.f32": {
+      "bytes": 8949760,
+      "sha256": "afb84d6d990ee7726315a8987789d072e7a997ff500d206f3f0c4d332a9df7bf"
+    },
+    "scalar-a-h.fp16": {
+      "bytes": 2237440,
+      "sha256": "fd34829ebd3214d2f039d7f60df7c0317103fe64cd08d56cf80285ba3da00610"
+    },
+    "scalar-a-down.f32": {
+      "bytes": 17899520,
+      "sha256": "126c9c39ed67c4fca39b756acf6350ed9b8e9be6df0940de62be5cf1f449cd57"
+    },
+    "scalar-b-gu.f32": {
+      "bytes": 8949760,
+      "sha256": "d57797d138719f921eb234707343c1555bfd69cf32f25304347e25202d189daf"
+    },
+    "scalar-b-h.fp16": {
+      "bytes": 2237440,
+      "sha256": "1280f60501b14b5c303281211929637e0f6503f07f27da992234901d715dc9be"
+    },
+    "scalar-b-down.f32": {
+      "bytes": 17899520,
+      "sha256": "6691542cb66c377052408cb371f6cc0380e72c5c96f5efa3c026c8e16d2f0fbc"
+    },
+    "timed-final-scalar-down.f32": {
+      "bytes": 17899520,
+      "sha256": "126c9c39ed67c4fca39b756acf6350ed9b8e9be6df0940de62be5cf1f449cd57"
+    },
+    "grouped-a-gu.f32": {
+      "bytes": 8949760,
+      "sha256": "7e75f458f747b95d5dfe8788f5ee0ab6bf93e1e7355719a8ee76582f74f31f38"
+    },
+    "grouped-a-h.fp16": {
+      "bytes": 2237440,
+      "sha256": "4cfccbaaaf28681ff53a7d0946a62506de3612e99d7b6775a04214bd8d784120"
+    },
+    "grouped-a-down.f32": {
+      "bytes": 17899520,
+      "sha256": "77d2995720480d4b21d94ce6e6b7229e34d44ec578a81fc088030889ce149c05"
+    },
+    "grouped-b-gu.f32": {
+      "bytes": 8949760,
+      "sha256": "e481ba3886fd125e1b80c5fccef4943ef2c3aebd3bd300d570c946d309a88861"
+    },
+    "grouped-b-h.fp16": {
+      "bytes": 2237440,
+      "sha256": "bd16ad9e8493bafbb1ae80cbcc450c7bda0822955f57d8bf7bfa055a4c5f48c7"
+    },
+    "grouped-b-down.f32": {
+      "bytes": 17899520,
+      "sha256": "7ec0201efa85195e830b957c930562cc0d8b7e22d81744db301ad7a05446b848"
+    },
+    "timed-final-grouped-down.f32": {
+      "bytes": 17899520,
+      "sha256": "77d2995720480d4b21d94ce6e6b7229e34d44ec578a81fc088030889ce149c05"
+    },
+    "actual-gu-planes.fp16": {
+      "bytes": 104857600,
+      "sha256": "6d453fd387e4945b5cc1cf00fc60e69c788bc5b535b649ea444d540ad9ef2a0a"
+    },
+    "actual-down-planes.fp16": {
+      "bytes": 52428800,
+      "sha256": "1d29516c6555c49e1e03be7d99005c10a8229e67b273e54b9c005cdb1438c044"
+    }
+  },
+  "old_S42_strict_status": "FAILED_UNCHANGED",
+  "limits": "Four paired observations nested in one process; full-wave micro only, no ideal H/down accuracy or serving/model claim. No GPU graphs attempted because actual production path is eager.",
+  "serving_qualified": false,
+  "speed_qualified": false
+}

@@ -1,0 +1,14 @@
+{
+  "weights.bin": {
+    "bytes": 28160000,
+    "sha256": "a9549c6a3c9c44c1c0fd374e62d603d4a2c82bea131f07a765ff6b45d5e13dc6"
+  },
+  "actual_gathered.fp16": {
+    "bytes": 8949760,
+    "sha256": "17d13281c1fb88985139a3fb4c95f883b3e01ec21372fd10f8a55c5c666dcd5d"
+  },
+  "fixtures.tsv": {
+    "bytes": 943,
+    "sha256": "210555ee1dc0f56690bd770aee3673dafb4b10b2508ed91d81a3736a344307ee"
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-post-reviews-s79-20261015",
+  "status": "FROZEN_AFTER_ROOT_FULL_READ_AND_ACCEPTANCE",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3125,
+      "sha256": "59504762ef91d0a627104ae34d9e7600030bba515310fbbdfd07aeaf7cd9d4d8"
+    },
+    {
+      "path": "build_packet.py",
+      "bytes": 6310,
+      "sha256": "00e18cdab51a645fd5c0965f5991401e467126ee3bc02fbda4dfecd9916a61de"
+    },
+    {
+      "path": "claude-fable-5-1/assistant-text.txt",
+      "bytes": 3204,
+      "sha256": "971f9b636eadfe095391bfd9ff1ddefd762217d5128fdfc9b853369f3c349c7e"
+    },
+    {
+      "path": "claude-fable-5-1/command.json",
+      "bytes": 1230,
+      "sha256": "9ae875ffa46f5273405763ab206011e0e722743f6a230211c7749f1717430b65"
+    },
+    {
+      "path": "claude-fable-5-1/completion.json",
+      "bytes": 6621,
+      "sha256": "7f39e1c012f15d67dd46eb7952408fed14f056f48f82543fba36c71a1106cbee"
+    },
+    {
+      "path": "claude-fable-5-1/events.jsonl",
+      "bytes": 16412,
+      "sha256": "210950352ee3a0915da038294ba788c45d74d6bde3d3d5ef0537b95c5cbb6ce3"
+    },
+    {
+      "path": "claude-fable-5-1/prompt.txt",
+      "bytes": 34046,
+      "sha256": "288a6388a9c10624127810bfd7e408758bb03be56b613fa8a70400de4c450ef1"
+    },
+    {
+      "path": "claude-fable-5-1/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "claude-opus-5-5/assistant-text.txt",
+      "bytes": 4527,
+      "sha256": "dd662ad253be25522bd7af0f509966f97ce3529f3d88d2ac26812cf0d5077144"
+    },
+    {
+      "path": "claude-opus-5-5/command.json",
+      "bytes": 1228,
+      "sha256": "38168ce5196ce6a412fa8c85427c07c1efa529fbf841888f8795cc800aee3108"
+    },
+    {
+      "path": "claude-opus-5-5/completion.json",
+      "bytes": 7974,
+      "sha256": "e6956782e1a71b75f6f196fda53b3a49e34bcc4c7706ffed2370aa77ccf5f62e"
+    },
+    {
+      "path": "claude-opus-5-5/events.jsonl",
+      "bytes": 18814,
+      "sha256": "bfa20d11d17db59636b985eddbd80d7748ef9e6b2a366114b421806c80ac5412"
+    },
+    {
+      "path": "claude-opus-5-5/prompt.txt",
+      "bytes": 34046,
+      "sha256": "288a6388a9c10624127810bfd7e408758bb03be56b613fa8a70400de4c450ef1"
+    },
+    {
+      "path": "claude-opus-5-5/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "preparation.json",
+      "bytes": 2176,
+      "sha256": "c55efb8392a3a01c811656021c956500b4c955f2e4a2c54ae75ccc29902d9dc8"
+    },
+    {
+      "path": "review-closure.json",
+      "bytes": 5118,
+      "sha256": "902f9ae93e6627ae33aeea5f712f9ce6cae903a71d1b9b3376a2b4bda142239b"
+    },
+    {
+      "path": "review-prefix.txt",
+      "bytes": 1845,
+      "sha256": "63c725b5600e3a07a1f25999ef52c6a120f200178c695ac2208a6f265695b70a"
+    },
+    {
+      "path": "review.py",
+      "bytes": 4533,
+      "sha256": "f7d5f83317edaaa35c8030e5496956e9f2d62920fadfde4ab39c25592902429d"
+    },
+    {
+      "path": "root-post-packet-final.txt",
+      "bytes": 32180,
+      "sha256": "60715d6472964c0aaa5a9ab3be1efeccf82e4c4c311afd8f765806895c97bb3e"
+    },
+    {
+      "path": "root-post-packet.txt",
+      "bytes": 30546,
+      "sha256": "4e2bceb5e50388fcc8f460d040fde305f2cdf904f991433ea0cdab69fd152549"
+    },
+    {
+      "path": "root-post-packet.txt.inputs.json",
+      "bytes": 11427,
+      "sha256": "b7053fcd90d51414bf376a4e6910cb3bdd817ac3ca4dc724ad94c324fc0e06bb"
+    }
+  ],
+  "file_count": 21,
+  "total_bytes": 225362
+}

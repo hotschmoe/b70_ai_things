@@ -1,0 +1,45 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_BUILD_RECIPE",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1900,
+      "sha256": "b45f83c4b3247dd6dc49a740d272955b7ac6373ce07ae70a699cea53d19878d7"
+    },
+    {
+      "path": "build-container.sh",
+      "bytes": 2276,
+      "sha256": "1182b13322bcd12c20708c63a95ec80df3bd4bc880a803a3f02ac1a70c4a139c"
+    },
+    {
+      "path": "build-container.sh.diff",
+      "bytes": 2152,
+      "sha256": "19d8e62c96711c0a8e853ad110139012530face88d1839628b558bf52b5e0e45"
+    },
+    {
+      "path": "build.sh",
+      "bytes": 1106,
+      "sha256": "79f52b4eec0dbdaeb573cbb5170e57014bf99a1c09dce477f3a0ddc040a21ce6"
+    },
+    {
+      "path": "build.sh.diff",
+      "bytes": 1278,
+      "sha256": "0be2045061d48a0a47ff0a4ee9bedcf88e0276209f7036da0d0e8744b128d3c7"
+    },
+    {
+      "path": "expected-frozen-container.sha256",
+      "bytes": 738,
+      "sha256": "789ffb5a8dbb2cd2453e916d1f392915d465200c7fa8ed3526fc677a03b29989"
+    },
+    {
+      "path": "expected-recipe.sha256",
+      "bytes": 651,
+      "sha256": "9c26ced9d9ab5e28fa7d2cd3c8ea3eeec1f37a27a0991cf9da2d58813b440547"
+    },
+    {
+      "path": "readiness.json",
+      "bytes": 5056,
+      "sha256": "81e764c0a198dcf29367dd8c7e2f3e8fb1b0945baf0c7ee2ae3bc40bcd87d69a"
+    }
+  ]
+}

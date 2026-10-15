@@ -1,0 +1,89 @@
+{
+  "stage": "S80 CPU helper v2 narrow geometry fix",
+  "status": "FROZEN_SOURCE_ONLY_NO_BUILD_RUN_GPU_PAYLOAD_MODEL_CALL",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-cpu-reference-s80-v2-prep",
+  "file_count": 16,
+  "bytes": 47568,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 8624,
+      "sha256": "dbb4bd8a920fb90f5b7770f04735fcb5b8b280e27f0fe5f5c8233e1f8bc5753c"
+    },
+    {
+      "path": "build-container.sh",
+      "bytes": 2102,
+      "sha256": "1f10a47c1f0ec6f140a45adaab92c10ee27033f38c29bde1d82378dc09a109c3"
+    },
+    {
+      "path": "build.sh",
+      "bytes": 1096,
+      "sha256": "f9137904faed45433d267c79465023cb74130f7867d62f6916770301af085ae3"
+    },
+    {
+      "path": "expected-container.sha256",
+      "bytes": 1694,
+      "sha256": "a07e3c8caec8367d23eb28a8dd4630dc140aa1b9fdb4158c8e9a2304d9a8a601"
+    },
+    {
+      "path": "expected-frozen.sha256",
+      "bytes": 589,
+      "sha256": "207cd5918e3d019945a11829cda1bdb20d75aaf25e6852db560b66f6edbff06f"
+    },
+    {
+      "path": "finalize.py",
+      "bytes": 4760,
+      "sha256": "25f0b882a58d05682e4494d24676dc7abea4806b1835d9c45ee852fe3a5ad0da"
+    },
+    {
+      "path": "input-pins.json",
+      "bytes": 391,
+      "sha256": "8087d5e96940dab94a4bbe96f9c0344bf0093cabe0eab8843fcfdb52b71cd93e"
+    },
+    {
+      "path": "readiness.json",
+      "bytes": 1420,
+      "sha256": "bbd80d5055f93040b107c72b07388cb4ac5da6680e7aa492ca3768ff1b49b3f5"
+    },
+    {
+      "path": "reference_bound.hpp",
+      "bytes": 2577,
+      "sha256": "468471b8ed5c972de11318bf19e7449be23fe48df7b5fbd21bcf3916de5a6ab0"
+    },
+    {
+      "path": "reference_s80-v1-v2.diff",
+      "bytes": 1294,
+      "sha256": "6f3e5ac514669c3129674a82ff42aab8b5a6a692bf9beaaaf81729b541451417"
+    },
+    {
+      "path": "reference_s80.cpp",
+      "bytes": 13030,
+      "sha256": "d9f8bee56f3d948e88c7e9b2013c83419a6b2fe08d4f50ff6e1eff2fe06fd1d5"
+    },
+    {
+      "path": "run-container.sh",
+      "bytes": 558,
+      "sha256": "5dec92a43921d8c3568aae54526cde3c0431758b9d74614920c3fa9a97aaf8d7"
+    },
+    {
+      "path": "run.sh",
+      "bytes": 1207,
+      "sha256": "a6f1056847da23127954d3e37f3b228d917490f817b960b456e5064df6fa03ee"
+    },
+    {
+      "path": "schema.json",
+      "bytes": 2072,
+      "sha256": "9ffefd242d6abb7ed6d6afbfb349e239203a45f29e872610c6682f1887390256"
+    },
+    {
+      "path": "selected36.tsv",
+      "bytes": 2572,
+      "sha256": "1c81d6b726e48a1f44956ccddfae6fd41ae3f696a0668b5d9060bfdefcdeffad"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 3582,
+      "sha256": "0a9ac4e1770bcae62c3a0f07591372b9a7045e024c182a2d947332439e02f668"
+    }
+  ]
+}

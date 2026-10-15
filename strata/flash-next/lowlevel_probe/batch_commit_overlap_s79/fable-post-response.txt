@@ -1,0 +1,30 @@
+**ACCEPT root's disposition: HOLD_UNMATCHED_NO_LATENCY_PROMOTION, park the patch, no promotion.** The gates support interpreting two of the three timed pairs, and those two show no benefit from ON. One record inconsistency needs a root check before the restoration is called closed.
+
+**Gates that support interpretation**
+
+- **Output and coherence:** every pair in both arms has equal requests, full text, SSE content, and usage, with 1500 completion tokens and zero cached tokens each stream. The warm pair matched the S16 prefix.
+- **Activation and join:** ON reports asked, deferred and joined equal to native windows on all four pairs. OFF reports enabled 0 and no ON summary. The host branch and join were exercised on every window. This is accounting, not hardware overlap.
+- **Identity, functionals, teardown:** same binary hash both arms, same image, same model identity, functionals PASS, TERM to QUIT normal exit, container removed, single final PLE diagnostic, card and collective health exit 0 in both arms.
+- **Repeat3 is unmatchable by the declared work gate**, not by output. Slot 1 offered drafts differ by two, windows differ by one, and ON ran one extra solo window. Text, usage and accepted drafts are identical. This is a pairing or draft-count divergence with no evidence it is caused by the patch, but the harness cannot attribute its wall difference and correctly excludes it.
+
+**Bounded client-wall result**
+
+| Pair | OFF wall s | ON wall s | Delta |
+| --- | --- | --- | --- |
+| repeat1 | 28.97 | 29.10 | +0.12 |
+| repeat2 | 28.90 | 28.96 | +0.06 |
+| warm (diagnostic) | 29.00 | 29.07 | +0.07 |
+| repeat3 (unmatched) | 29.51 | 29.57 | +0.06 |
+
+Every observation runs in the same direction, ON slightly slower, by well under half a percent. Two matched pairs from one nested process per arm cannot separate that from run order or warm state, but nothing supports a latency gain. The deferred join did not shorten client wall on this configuration. Decode rates and SSE content-event gap distributions are indistinguishable between arms. No speed claim either way is supportable, and none is made.
+
+**Material limits**
+
+- Two matched timed pairs, one OFF process then one ON process. No independent samples, no interval.
+- Matched aggregate work does not prove identical per-window row layouts or cache behavior. Repeat3 shows window counts can diverge with identical text.
+- OFF host wrappers and counters are not proved zero cost, so the OFF arm here is not byte-identical to the pre-S79 baseline binary.
+- Per-request cumulative PLE totals include admission and functionals and are not a coding-only measure.
+
+**Restoration record to verify**
+
+The restoration record states the three files were restored to the pre-S79 base, but its before and after fields list base hashes as before and candidate hashes as after. That matches the apply record, not a restoration. Root should confirm the current live hashes are the three base values and correct the record. Separately, the build tree still holds candidate objects and a candidate generic executable, so any future generic build or run from that tree must not be read as baseline until a rebuild from the restored source occurs.

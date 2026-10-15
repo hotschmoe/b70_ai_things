@@ -1,0 +1,29 @@
+{
+  "base_source_root": "/mnt/vm_8tb/b70/build/strata-ab/src-ep",
+  "files": {
+    "sycl/include/strata/core/verify.hpp": {
+      "base_sha256": "9ecedbed463eeeb241a49995c0d8b078cb2ef5ac4d294a3954f075aeff0b97c2",
+      "candidate_sha256": "0984d9da5be621bb5294fab0c3b468e5f4c2892d1d1622ced912af6e128ea6bf",
+      "base_bytes": 37407,
+      "candidate_bytes": 37766
+    },
+    "sycl/src/core/verify.cpp": {
+      "base_sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2",
+      "candidate_sha256": "1383c9b4d3b077126885a97b6c74ae3598c025b51a8b823eca6f2af1c818ca5a",
+      "base_bytes": 223107,
+      "candidate_bytes": 224243
+    },
+    "sycl/src/program/generate.cpp": {
+      "base_sha256": "6433d750e414aeb9c71135257ae40a8f9e38ea661537c251b50cabdbc2217d83",
+      "candidate_sha256": "fb62bcb4037edeb02ee29c15b6f2254d8a1aff7d55e6dbed9b4ae3eda4f4781f",
+      "base_bytes": 867808,
+      "candidate_bytes": 871274
+    }
+  },
+  "transforms": 16,
+  "inverse_source_reconstruction": true,
+  "main_source_mutated": false,
+  "builds": 0,
+  "GPU_touches": 0,
+  "model_calls": 0
+}

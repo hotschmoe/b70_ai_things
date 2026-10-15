@@ -1,0 +1,95 @@
+{
+  "stage": "S80_POST_RESULT",
+  "status": "CLOSED_ROOT_FULL_READ_ACCEPT_REJECT_EXACT_GROUPED_MAPPING_KEEP_SCALAR_NUMERICAL_TARGET_PASS",
+  "packet": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-post-reviews-s80-20261015/root-packet.txt",
+    "sha256": "ec5928f5bde0c8489211cc10d7a564d0e19f71c1941f8a38f2b769f4639e0c92",
+    "bytes": 12467,
+    "unchanged_after_both_calls": true,
+    "full_read_by_root_before_calls": true
+  },
+  "consultations": {
+    "claude-opus-5-5": {
+      "actual_responding_models": [
+        "claude-opus-5-5"
+      ],
+      "exact_resumed_source_session": "40d085df-cbe2-4517-ba18-4da613580841",
+      "response_sessions": [
+        "40d085df-cbe2-4517-ba18-4da613580841"
+      ],
+      "elapsed_s": 24.734415358980186,
+      "exit": 0,
+      "turns": 1,
+      "retries": 0,
+      "requested_max_response_words": 600,
+      "actual_response_words": 777,
+      "word_limit_met": false,
+      "response_preserved_without_retry_or_truncation": true,
+      "full_text_read_by_agent_and_root": true,
+      "response_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-post-reviews-s80-20261015/claude-opus-5-5/assistant-text.txt",
+      "response_sha256": "c7090dd09b2d1229ece3b0dd964d8ac2fc2e68cac93607b6a3813d897bfd598e",
+      "completion_sha256": "9532f928e7e1b042a63dbb3176a19feeac1b79c06cdb7a8aaf46568942468d45",
+      "verdict": "ACCEPT_ROOT_REJECT_EXACT_GROUPED_MAPPING_KEEP_PRODUCTION_SCALAR_NUMERICAL_TARGET_PASS_NO_SERVE_RETRY_PROMOTION"
+    },
+    "claude-fable-5-1": {
+      "actual_responding_models": [
+        "claude-fable-5-1"
+      ],
+      "exact_resumed_source_session": "004147f4-9bcf-4e25-bf1d-fc16ac1ed087",
+      "response_sessions": [
+        "004147f4-9bcf-4e25-bf1d-fc16ac1ed087"
+      ],
+      "elapsed_s": 22.686537015950307,
+      "exit": 0,
+      "turns": 1,
+      "retries": 0,
+      "requested_max_response_words": 600,
+      "actual_response_words": 580,
+      "word_limit_met": true,
+      "response_preserved_without_retry_or_truncation": true,
+      "full_text_read_by_agent_and_root": true,
+      "response_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-post-reviews-s80-20261015/claude-fable-5-1/assistant-text.txt",
+      "response_sha256": "0749a2938d7e68857b7078458da6fd4d8b900c13564be35410d14d0acf3f8b0e",
+      "completion_sha256": "4f468f8f1d158d3d7ceadd6c6063e3718d19f7e72cc75172342ade493be2b866",
+      "verdict": "ACCEPT_ROOT_REJECT_EXACT_GROUPED_MAPPING_KEEP_PRODUCTION_SCALAR_NUMERICAL_TARGET_PASS_NO_SERVE_RETRY_PROMOTION"
+    }
+  },
+  "root_full_read_and_acceptance": true,
+  "root_accepted_corrections": [
+    "Equal initial/changed summary error statistics do not prove full GPU GU arrays are exact sign mirrors; that relation was not gated. Changed input is a deliberate sign-bit flip, not an independent random input sample.",
+    "Four paired observations nested in one process support the bounded observed all-four slower result, not a population/noise distinction, statistical significance or causal mechanism.",
+    "Host-submit approximately equal to completed wall does not identify submission as dominant work. Vendor APIs may wait internally; metadata/host-submit/wall are not an additive causal CPU/GPU budget.",
+    "default_FTZ_claim=false means no claim about compiler default behavior. Actual CPU FENV and leaf-entry checks plus precise final-link/map guards are the observed conditions here; they do not establish all vendor worker behavior.",
+    "CPUv1 expert0 DGEMM and partial outputs completed before the expert1 diagnostic down geometry failure. That setup failure was not a GU numerical failure.",
+    "RSS124004KiB is approximately121.10MiB, not124MiB. The compact routing fixture uses saved real weights and actual input, not random synthetic weights.",
+    "Opus exceeded the requested600 words with777. Full actual response retained unchanged with no retry; Fable580 words."
+  ],
+  "actual_bounded_results": {
+    "CPU_v1": "FAILED_EXIT2_DOWN_Q2_0_TYPE42_BLOCK64_VS_ASSUMED32_GEOMETRY_AFTER_EXPERT0; retained unchanged",
+    "CPU_v2": "PASS_FULL_GU_REFERENCE_2237440_VALUES_SELECTED36_AND_CONTROLS; only three-line geometry fix, shared bound header unchanged",
+    "GPU_GU_operand_identity_bytes": 104857600,
+    "GPU_down_crossalgorithm_plane_identity_bytes": 52428800,
+    "full_GU_accuracy_cases": 4,
+    "values_each": 2237440,
+    "failures_each": 0,
+    "own_eager_pipeline_repeat_changed_restore_same_GU_SiLU_S42_anchor": "PASS",
+    "artifacts": {
+      "count": 16,
+      "bytes": 309432320
+    },
+    "lifecycle": "One card1 quiet window49s/leaf21s; inputs/build pins, pre/post health, CID/name cleanup PASS; no serving",
+    "paired_completed_wave_count": 4,
+    "scalar_median_ms": 1.051034,
+    "grouped_median_ms": 4.404047,
+    "all_four_grouped_slower": true,
+    "production_disposition": "KEEP_SCALAR_REJECT_EXACT_GROUPED_MAPPING_NO_SERVE_RETRY_PROMOTION"
+  },
+  "limits": [
+    "S42 historical strict cross-algorithm failure remains FAILED_UNCHANGED. S80 does not rewrite that evidence.",
+    "Predeclared full-GU enclosure only; no fitted tolerance, ideal H/down accuracy, opaque-vendor arithmetic theorem, model-quality or serving inference.",
+    "Production prefill is eager; no irrelevant graph hardgate or graph claim.",
+    "Reviewers read compact root-supplied text with tools disabled, not independent payload/runtime inspection.",
+    "Exact frozen source sessions resumed once each in parallel; no new source review, GPU, build, heavy CPU or payload operation by this review agent."
+  ],
+  "future_work_authorized": false
+}

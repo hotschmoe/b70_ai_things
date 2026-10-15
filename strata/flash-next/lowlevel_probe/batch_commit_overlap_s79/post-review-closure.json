@@ -1,0 +1,99 @@
+{
+  "stage": "S79_POST_RESULT",
+  "status": "CLOSED_ROOT_FULL_READ_ACCEPT_HOLD_UNMATCHED_PARK_NO_SPEED_OR_PROMOTION",
+  "root_final_disposition": "HOLD_UNMATCHED_NO_LATENCY_PROMOTION",
+  "packet": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-post-reviews-s79-20261015/root-post-packet-final.txt",
+    "bytes": 32180,
+    "sha256": "60715d6472964c0aaa5a9ab3be1efeccf82e4c4c311afd8f765806895c97bb3e",
+    "unchanged_after_both_calls": true,
+    "full_read_by_root_before_calls": true
+  },
+  "consultations": {
+    "claude-opus-5-5": {
+      "actual_responding_models": [
+        "claude-opus-5-5"
+      ],
+      "exact_resumed_source_session": "e854dc3c-9cdc-4b79-86d5-0dc6543497b5",
+      "response_sessions": [
+        "e854dc3c-9cdc-4b79-86d5-0dc6543497b5"
+      ],
+      "elapsed_s": 26.10902171698399,
+      "exit": 0,
+      "turns": 1,
+      "retries": 0,
+      "tools_hooks_slash_commands_settings_disabled": true,
+      "full_assistant_response_read_by_agent": true,
+      "full_assistant_response_read_by_root": true,
+      "response_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-post-reviews-s79-20261015/claude-opus-5-5/assistant-text.txt",
+      "response_sha256": "dd662ad253be25522bd7af0f509966f97ce3529f3d88d2ac26812cf0d5077144",
+      "completion_sha256": "e6956782e1a71b75f6f196fda53b3a49e34bcc4c7706ffed2370aa77ccf5f62e",
+      "disposition": "ACCEPT_ROOT_HOLD_UNMATCHED_PARK_NO_SPEED_CLAIM_NO_PROMOTION"
+    },
+    "claude-fable-5-1": {
+      "actual_responding_models": [
+        "claude-fable-5-1"
+      ],
+      "exact_resumed_source_session": "066194e5-5376-4e78-9b59-45e5b9636d8f",
+      "response_sessions": [
+        "066194e5-5376-4e78-9b59-45e5b9636d8f"
+      ],
+      "elapsed_s": 29.0268420180073,
+      "exit": 0,
+      "turns": 1,
+      "retries": 0,
+      "tools_hooks_slash_commands_settings_disabled": true,
+      "full_assistant_response_read_by_agent": true,
+      "full_assistant_response_read_by_root": true,
+      "response_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-post-reviews-s79-20261015/claude-fable-5-1/assistant-text.txt",
+      "response_sha256": "971f9b636eadfe095391bfd9ff1ddefd762217d5128fdfc9b853369f3c349c7e",
+      "completion_sha256": "7f39e1c012f15d67dd46eb7952408fed14f056f48f82543fba36c71a1106cbee",
+      "disposition": "ACCEPT_ROOT_HOLD_UNMATCHED_PARK_NO_SPEED_CLAIM_NO_PROMOTION"
+    }
+  },
+  "root_accepted_corrections": [
+    "No statistical equivalence follows from the similar decode/SSE gap observations; retained values differ slightly.",
+    "The small matched wall differences are observed directions from one OFF process followed by one ON process, not causal regression estimates.",
+    "PLE totals are process-cumulative and include admission, prefill and functionals, not per-request or coding-only totals.",
+    "The S16 warm-prefix check is a separate harness fact, not independently established by this compact post packet.",
+    "The original restoration before/after keys describe historical BASE->CANDIDATE application, not restoration direction. The new readback supplement resolves the ambiguity without mutating the original record or reviewed packet."
+  ],
+  "restoration_supplement": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/batch-commit-overlap-s79-execution/root-source-restoration-readback.json",
+    "bytes": 1634,
+    "sha256": "ad051e5ba6cfda984ff1946244a97ef56a1a4e1677f517db1ac37aa63b8df92a",
+    "full_read_by_agent_and_root": true,
+    "status": "PASS_CURRENT_THREE_SOURCE_READBACKS_EQUAL_PRE_S79_BASE",
+    "three_current_source_hashes_equal_pre_S79_base": true,
+    "original_record_and_reviewed_packet_unchanged": true
+  },
+  "build_state_limit": "Frozen03bb candidate and generic executable/objects remain candidate artifacts, not current restored source/base. No serving from generic build until an appropriate audited build. No baseline rebuild or daily-server restoration.",
+  "runtime_interpretation": {
+    "all_eight_arm_pair_outputs_requests_SSE_content_usage_pass": true,
+    "functionals_normal_QUIT_health_teardown_pass": true,
+    "ON_all_windows_asked_equal_deferred_equal_joined": true,
+    "timed_repeat1_and_repeat2_native_work_matched": true,
+    "timed_repeat3_unmatched": {
+      "windows_OFF_ON": [
+        556,
+        557
+      ],
+      "paired_each": 553,
+      "solo_OFF_ON": [
+        2,
+        3
+      ],
+      "slot1_offered_drafts_OFF_ON": [
+        1138,
+        1140
+      ],
+      "slot1_accepted_drafts_each": 933
+    },
+    "aggregate_median": null,
+    "normalization": false,
+    "rerun": false,
+    "promotion": false,
+    "hardware_overlap_or_timing_cause_claim": false
+  },
+  "scope": "Two actual single-turn resumed remote text consultations with tools disabled. No build, GPU, source edit, payload read, new performance run or additional consultation. Root supplied and fully read all runtime evidence and both final responses."
+}

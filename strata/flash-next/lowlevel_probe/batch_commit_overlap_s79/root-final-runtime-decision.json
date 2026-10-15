@@ -1,0 +1,39 @@
+{
+  "status": "HOLD_UNMATCHED_NO_LATENCY_PROMOTION",
+  "comparison_exit": 2,
+  "comparison_status": "FAILED_OR_UNMATCHED",
+  "comparison_sha256": "6180f1fca4f88d2d72fd55f1dafacec0c317c3c1acc5a487de2169e01344269f",
+  "all_full_text_SSE_content_requests_usage_equal": true,
+  "all_functionals_health_normal_quit_pass": true,
+  "activation_all_windows_joined": true,
+  "third_timed_pair_mismatch": {
+    "control_windows": 556,
+    "candidate_windows": 557,
+    "paired_each": 553,
+    "control_solo": 2,
+    "candidate_solo": 3,
+    "slot1_offered_drafts": [
+      1138,
+      1140
+    ],
+    "slot1_accepted_drafts_each": 933
+  },
+  "matched_timed_pair_client_wall_s": {
+    "repeat1": [
+      28.97241277905414,
+      29.0956575970049
+    ],
+    "repeat2": [
+      28.903271960967686,
+      28.96465525496751
+    ]
+  },
+  "aggregate_timing_median": null,
+  "speed_claim": false,
+  "no_rerun": true,
+  "no_promotion": true,
+  "disposition": "Park exact patch; source restored without baseline rebuild/server restore. First two matched timed pairs slightly slower; third unmatchable; no general safety/stability or hardware-overlap claim.",
+  "source_restoration_sha256": "de87f816dad20d6cbf6ea25d814ca6a24db3b17375cc08a2df359ba74626bf08",
+  "payload_identity_scope": "S53 primary whole-file destination readback SHA; existing qualified model-lock PLE sibling SHA, not newly rehashed here; unchanged NVMe paths/stat/config in both arms",
+  "utc": "2026-10-15T15:42:10.464129+00:00"
+}

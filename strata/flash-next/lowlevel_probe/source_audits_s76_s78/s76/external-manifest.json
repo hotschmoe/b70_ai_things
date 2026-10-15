@@ -1,0 +1,29 @@
+{
+  "stage": "S76",
+  "status": "FROZEN_SOURCE_COST_AUDIT_ONLY",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-native-cost-s76-prep",
+  "files": [
+    {
+      "path": "findings.md",
+      "bytes": 6670,
+      "sha256": "f249c0913bf94179f4da9f9799af912d3c0eb96ac6f699f4e7eebdcf99341026"
+    },
+    {
+      "path": "retained-trace-facts.json",
+      "bytes": 5034,
+      "sha256": "a46c4bdd856f5548bd3e23980642fe2b8a3681c05455c4fa03318ab66693dbf4"
+    },
+    {
+      "path": "source-cost-proof.json",
+      "bytes": 10400,
+      "sha256": "50404b96cc6595856a3854ce0f0774bb3a654f5f3cbc5e8954fd5feb49d413ff"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 2922,
+      "sha256": "6baebbcd3f526c5625438e34db86e4333e763a78149908690c4b14040d570496"
+    }
+  ],
+  "file_count": 4,
+  "bytes": 25026
+}

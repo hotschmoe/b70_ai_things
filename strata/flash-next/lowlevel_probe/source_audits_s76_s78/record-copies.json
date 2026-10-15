@@ -1,0 +1,62 @@
+{
+  "s76/findings.md": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-native-cost-s76-prep/findings.md",
+    "bytes": 6670,
+    "sha256": "f249c0913bf94179f4da9f9799af912d3c0eb96ac6f699f4e7eebdcf99341026"
+  },
+  "s76/source-pins.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-native-cost-s76-prep/source-pins.json",
+    "bytes": 2922,
+    "sha256": "6baebbcd3f526c5625438e34db86e4333e763a78149908690c4b14040d570496"
+  },
+  "s76/source-cost-proof.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-native-cost-s76-prep/source-cost-proof.json",
+    "bytes": 10400,
+    "sha256": "50404b96cc6595856a3854ce0f0774bb3a654f5f3cbc5e8954fd5feb49d413ff"
+  },
+  "s76/retained-trace-facts.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-native-cost-s76-prep/retained-trace-facts.json",
+    "bytes": 5034,
+    "sha256": "a46c4bdd856f5548bd3e23980642fe2b8a3681c05455c4fa03318ab66693dbf4"
+  },
+  "s76/external-manifest.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-native-cost-s76-manifest.json",
+    "bytes": 853,
+    "sha256": "ffa9599c6fc3dd9fa5cc84af6e647a29e381fdcb504a831c4e5838ca75ad2b2b"
+  },
+  "s77/findings.md": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-contract-s77-prep/findings.md",
+    "bytes": 9343,
+    "sha256": "0f86d01f02c9c0b8aee163f4d78dbd1d8b5579ec10ed14c5d7025f5872bf6098"
+  },
+  "s77/source-pins.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-contract-s77-prep/source-pins.json",
+    "bytes": 6576,
+    "sha256": "aab508792a6fc266f9f0c01248f30eaa871d9d68514980aae7de016b504167a5"
+  },
+  "s77/candidate-gate.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-contract-s77-prep/candidate-gate.json",
+    "bytes": 6911,
+    "sha256": "f2949d0fde51c339632536c440f672b54d8dd5a04a248273c5af1d52d750479a"
+  },
+  "s77/external-manifest.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-contract-s77-prep/manifest.json",
+    "bytes": 534,
+    "sha256": "5c0fbc6a0816508ed2eb72e56fbb82b2cea4e0131e98addc70a947cb6cde57ed"
+  },
+  "s78/findings.md": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/decode-idle-criticalpath-s78-prep/findings.md",
+    "bytes": 7040,
+    "sha256": "3b4a91a4ca570f8e015c777e69a1ae65d6ffcc2f2be59a63348855ad67f1a9a8"
+  },
+  "s78/source-pins.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/decode-idle-criticalpath-s78-prep/source-pins.json",
+    "bytes": 5783,
+    "sha256": "1f74dd4e446ea4a73ab1dbd0e05b49d828291f71226990e28e58b5ebe0a2d9e6"
+  },
+  "s78/external-manifest.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/decode-idle-criticalpath-s78-prep-manifest.json",
+    "bytes": 753,
+    "sha256": "cc6eb10aca6c6ea54f84181a34e71fa8f21d2622af196c6a4e9259980b9dce4b"
+  }
+}

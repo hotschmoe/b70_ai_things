@@ -1,0 +1,49 @@
+{
+  "frozen_CPU_imports": {
+    "/out/frozen/include/ggml.h": "12ee71f99db7db9b353bc02b1fbb57c344ee17c01ac5fb7952b41a637a747ea9",
+    "/out/frozen/provenance/ggml.c": "1a634ca1df25db2fbd526cba9bfe11fccd5aa9b31f819c3cac6b630be03f9f51",
+    "/out/frozen/provenance/ggml-quants.c": "07143d7068936ae46b3c528b2f3d4bbb666e74d88992165716174d243573965d",
+    "/out/frozen/provenance/ggml-impl.h": "43564db0238aebb7ed68501e346c194866b5dac218d1d37b26baff9f458c00d3",
+    "/out/frozen/provenance/ggml-common.h": "0061131b615c5721fc88a78feeb22c1f8c450f1c2646a317d80796a653bf595c",
+    "/out/frozen/libggml-base.a": "293516f3e8a101a7e6b732347094047ea905e40204fa5489c7202e0e5c2d0f8d"
+  },
+  "inputs": {
+    "weights.bin": {
+      "bytes": 28160000,
+      "sha256": "a9549c6a3c9c44c1c0fd374e62d603d4a2c82bea131f07a765ff6b45d5e13dc6"
+    },
+    "actual_gathered.fp16": {
+      "bytes": 8949760,
+      "sha256": "17d13281c1fb88985139a3fb4c95f883b3e01ec21372fd10f8a55c5c666dcd5d"
+    },
+    "fixtures.tsv": {
+      "bytes": 943,
+      "sha256": "210555ee1dc0f56690bd770aee3673dafb4b10b2508ed91d81a3736a344307ee"
+    }
+  },
+  "source_pins": {
+    "/prep/reference_s80.cpp": "d9f8bee56f3d948e88c7e9b2013c83419a6b2fe08d4f50ff6e1eff2fe06fd1d5",
+    "/prep/reference_bound.hpp": "468471b8ed5c972de11318bf19e7449be23fe48df7b5fbd21bcf3916de5a6ab0",
+    "/prep/selected36.tsv": "1c81d6b726e48a1f44956ccddfae6fd41ae3f696a0668b5d9060bfdefcdeffad",
+    "/prep/schema.json": "9ffefd242d6abb7ed6d6afbfb349e239203a45f29e872610c6682f1887390256",
+    "/prep/input-pins.json": "8087d5e96940dab94a4bbe96f9c0344bf0093cabe0eab8843fcfdb52b71cd93e",
+    "/prep/source-pins.json": "0a9ac4e1770bcae62c3a0f07591372b9a7045e024c182a2d947332439e02f668",
+    "/prep/expected-frozen.sha256": "207cd5918e3d019945a11829cda1bdb20d75aaf25e6852db560b66f6edbff06f",
+    "/prep/build.sh": "f9137904faed45433d267c79465023cb74130f7867d62f6916770301af085ae3",
+    "/prep/build-container.sh": "1f10a47c1f0ec6f140a45adaab92c10ee27033f38c29bde1d82378dc09a109c3",
+    "/prep/run.sh": "a6f1056847da23127954d3e37f3b228d917490f817b960b456e5064df6fa03ee",
+    "/prep/run-container.sh": "5dec92a43921d8c3568aae54526cde3c0431758b9d74614920c3fa9a97aaf8d7",
+    "/prep/finalize.py": "25f0b882a58d05682e4494d24676dc7abea4806b1835d9c45ee852fe3a5ad0da",
+    "/work/llama-pinned/ggml/include/ggml.h": "12ee71f99db7db9b353bc02b1fbb57c344ee17c01ac5fb7952b41a637a747ea9",
+    "/work/llama-pinned/ggml/src/ggml.c": "1a634ca1df25db2fbd526cba9bfe11fccd5aa9b31f819c3cac6b630be03f9f51",
+    "/work/llama-pinned/ggml/src/ggml-quants.c": "07143d7068936ae46b3c528b2f3d4bbb666e74d88992165716174d243573965d",
+    "/work/llama-pinned/ggml/src/ggml-impl.h": "43564db0238aebb7ed68501e346c194866b5dac218d1d37b26baff9f458c00d3",
+    "/work/llama-pinned/ggml/src/ggml-common.h": "0061131b615c5721fc88a78feeb22c1f8c450f1c2646a317d80796a653bf595c",
+    "/work/src-ep/build-sycl-ep/ggml/src/libggml-base.a": "293516f3e8a101a7e6b732347094047ea905e40204fa5489c7202e0e5c2d0f8d"
+  },
+  "binary_sha256": "9eb04ed999360cb7e3424348dd6ee4e5992ae23749243879556b2a99631d455c",
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "MKL_build_files": "12100f333cbca07387ca3e9e51092e17f3af05f3a8aa1d93cab1b1e8420f0ec5  /opt/intel/oneapi/mkl/latest/include/mkl_cblas.h\n02ff230034b626727576886decbdce2a01b76728e59b9d708e884d5bd153e2c7  /opt/intel/oneapi/mkl/latest/include/mkl_service.h\nb2ff0e31d7cd18c91813d8f6500f37665597d89de22649d90687aa6bf7bd2c0f  /opt/intel/oneapi/mkl/latest/lib/libmkl_rt.so.3\n",
+  "compiler": "Intel(R) oneAPI DPC++/C++ Compiler 2026.1.0 (2026.1.0.20260617)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /opt/intel/oneapi/compiler/2026.1/bin/compiler\nConfiguration file: /opt/intel/oneapi/compiler/2026.1/bin/compiler/../icpx.cfg\n",
+  "CPU_only": true
+}

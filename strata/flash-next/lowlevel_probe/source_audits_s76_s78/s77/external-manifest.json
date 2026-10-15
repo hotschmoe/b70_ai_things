@@ -1,0 +1,21 @@
+{
+  "stage": "S77",
+  "status": "SOURCE_ONLY_CONTRACT_PROPOSAL",
+  "files": [
+    {
+      "path": "candidate-gate.json",
+      "bytes": 6911,
+      "sha256": "f2949d0fde51c339632536c440f672b54d8dd5a04a248273c5af1d52d750479a"
+    },
+    {
+      "path": "findings.md",
+      "bytes": 9343,
+      "sha256": "0f86d01f02c9c0b8aee163f4d78dbd1d8b5579ec10ed14c5d7025f5872bf6098"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 6576,
+      "sha256": "aab508792a6fc266f9f0c01248f30eaa871d9d68514980aae7de016b504167a5"
+    }
+  ]
+}

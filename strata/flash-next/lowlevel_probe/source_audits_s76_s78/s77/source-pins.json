@@ -1,0 +1,116 @@
+{
+  "scope": "Source and small existing metadata only; no model or saved operand array read",
+  "author": "native Codex /root/strata_ep_s27",
+  "pins": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-grouped-gemm-s42-prep/v2/grouped_peer_oracle.cpp": {
+      "bytes": 24975,
+      "sha256": "f69603f275067b6675745c6a1bd53c1203a091327c16c892415a6d5fa1d4e425"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-grouped-gemm-s42-prep/build-closure.json": {
+      "bytes": 7792,
+      "sha256": "dbfc9292f503a9759bf5c398150e6069ebe3055aab7ecd62e66f3646b205fef9"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-grouped-gemm-s42-prep/s42-report.json": {
+      "bytes": 18095,
+      "sha256": "c064128f59491c5d4b93e4146ad115e72fcffc9e094d273a9173036fdacb92fb"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-grouped-gemm-s42-prep/numerical-difference.json": {
+      "bytes": 6284,
+      "sha256": "e4b8ea71e320fbb92683f52bd99b1477c783307181a9cf12aebe84c2de117f58"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-grouped-gemm-s42-prep/run-clean/exports/export-sha256.json": {
+      "bytes": 1941,
+      "sha256": "7701d8c19542d0a15fdd75867efaa3087bb7474362ee672fe2ff29c6233a47f6"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-grouped-gemm-s42-prep/run-clean/exports/fixtures.tsv": {
+      "bytes": 943,
+      "sha256": "210555ee1dc0f56690bd770aee3673dafb4b10b2508ed91d81a3736a344307ee"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-grouped-gemm-reference-s45-prep/findings.md": {
+      "bytes": 6825,
+      "sha256": "1601e37247d9d3bfb17b2ae676e6527964ab906aad894233cc0bf668c9b1a829"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-grouped-gemm-reference-s45-prep/source-table-comparison.json": {
+      "bytes": 2496,
+      "sha256": "317117bfd4624558a391ba2fa5c0692ad319e1dea4b875a40c69826979097ae7"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-gu-reference-s62-prep/findings.md": {
+      "bytes": 6612,
+      "sha256": "3877048ed3ec0af0d128f2ce4bd97c35226493467798aec0633164f785c845cd"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-gu-reference-s62-prep/s62-report.json": {
+      "bytes": 3062,
+      "sha256": "f450a23141da48e31627fac32749ea384862913b0c8dc789a5ca4644e7bc7156"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-gu-reference-s62-prep/cells/reference-method.json": {
+      "bytes": 922,
+      "sha256": "0d3bb0f59d96122633daff58a24406709f815d7383b933108bc8e52cbf030706"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-gu-reference-s62-prep/cells/selection.json": {
+      "bytes": 16579,
+      "sha256": "6ae090e482c4aee9c35898cab6130e1e9fcc644b832cf4620c3fc1723e08cf19"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-gu-reference-s62-prep/cpu/audit-run1/preflight.json": {
+      "bytes": 2882,
+      "sha256": "ff09836ad13cc1eeea4895cf114ac26bfbeec9ad987fe98c5df786dac7677285"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-gu-reference-s62-prep/cpu/audit-run1/operand-audit.json": {
+      "bytes": 4607,
+      "sha256": "c79a931b337aa5a1cf882e049f8bf7db17b09256586106759b4f34aba0234ae8"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/prefill/gemm.dp.cpp": {
+      "bytes": 48807,
+      "sha256": "8e775d6a227e3af2ec755bcbed7eac30fef79618d86ba18890d0f52356d32a5e"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/prefill/kernels.dp.cpp": {
+      "bytes": 153895,
+      "sha256": "007f7a4bb0ea5fab0d774e563a5faa0342777b6b008d6938a427d9392fa9109e"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp": {
+      "bytes": 291120,
+      "sha256": "acaa7da63733af9f3831b3a74b99e6176bf46a06e498e0a33c0591f7f4a29851"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/dpct/blas_utils.hpp": {
+      "bytes": 119225,
+      "sha256": "66541bfa0442725401577cea576bcdb05c851f3f0bbb684f62dee842909c53b5"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/dpct/detail/blas_utils_detail.hpp": {
+      "bytes": 27096,
+      "sha256": "acfaebfcded1e593f3f230c718ec841113029ffa09eba232e0d2dd53542caed7"
+    }
+  },
+  "official_sources_accessed_20261015": [
+    {
+      "url": "https://www.intel.com/content/www/us/en/docs/onemkl/developer-reference-dpcpp/2025-0/gemm-batch.html",
+      "supports": "Grouped variable shapes, half/half/float/float signature, result event; not an internal rounding/FTZ theorem."
+    },
+    {
+      "url": "https://www.intel.com/content/www/us/en/docs/onemkl/developer-reference-dpcpp/2024-1/compute-modes.html",
+      "supports": "Default has no alternate compute modes; unset must not be described as an explicit standard-mode or internal IEEE guarantee."
+    },
+    {
+      "url": "https://www.intel.com/content/www/us/en/docs/onemkl/developer-reference-dpcpp/2025-2/numerical-reproducibility.html",
+      "supports": "Nonassociative reductions may differ even run-to-run; CNR is separate and not silently enabled."
+    },
+    {
+      "url": "https://github.khronos.org/SYCL_Reference/iface/native-prec-math-func.html",
+      "supports": "native exp domain and accuracy are implementation-defined."
+    },
+    {
+      "url": "https://eprints.maths.manchester.ac.uk/2841/1/paper_eprint.pdf",
+      "supports": "Higham/Mary sections3/4, standard arithmetic model and gamma_n |A||B| bound; model assumptions must hold, not automatically a oneMKL theorem."
+    }
+  ],
+  "tool_capability_only": {
+    "unscoped_tools_environment_import": {
+      "numpy": "2.5.0",
+      "BLAS": "scipy-openblas 0.3.33.112.0 ILP64; NOT validated target capability"
+    },
+    "root_actual_target_preflight": "2026-10-15 parent message: target host and e41 image Python lack NumPy; e41 has /opt/intel/oneapi/mkl/latest/include/mkl_cblas.h, lib/libmkl_rt.so(.3), icpx",
+    "chosen_execution_plan": "CPU-only C++ CBLAS dgemm+abs-product; MKL_NUM_THREADS4 under cpu-run before GPU; not implemented or built",
+    "matmul_trials": 0,
+    "model_reviews": 0,
+    "GPU_touches": 0,
+    "builds": 0
+  }
+}

@@ -1,5 +1,10 @@
 # Backend decision experiments E1-E4 (2026-10-15)
 
+2026-10-15 source-audit note: the [interpretation follow-up](source_audit_followup.md)
+qualifies strong original E2/E3/E4 claims, including E3's replay fixed-point
+control limitation. Original scripts, measured rows and verdict text below
+remain preserved as historical evidence.
+
 Follow-up to [the backend investment review](../20261015_backend_investment_review.md).
 Four small experiments chosen because each could change where backend-locked
 work (scheduler, cache/state ownership, speculative rollback) is invested.

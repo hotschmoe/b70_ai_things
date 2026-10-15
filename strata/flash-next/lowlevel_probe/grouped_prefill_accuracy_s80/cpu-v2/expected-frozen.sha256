@@ -1,0 +1,6 @@
+12ee71f99db7db9b353bc02b1fbb57c344ee17c01ac5fb7952b41a637a747ea9  /out/frozen/include/ggml.h
+1a634ca1df25db2fbd526cba9bfe11fccd5aa9b31f819c3cac6b630be03f9f51  /out/frozen/provenance/ggml.c
+07143d7068936ae46b3c528b2f3d4bbb666e74d88992165716174d243573965d  /out/frozen/provenance/ggml-quants.c
+43564db0238aebb7ed68501e346c194866b5dac218d1d37b26baff9f458c00d3  /out/frozen/provenance/ggml-impl.h
+0061131b615c5721fc88a78feeb22c1f8c450f1c2646a317d80796a653bf595c  /out/frozen/provenance/ggml-common.h
+293516f3e8a101a7e6b732347094047ea905e40204fa5489c7202e0e5c2d0f8d  /out/frozen/libggml-base.a

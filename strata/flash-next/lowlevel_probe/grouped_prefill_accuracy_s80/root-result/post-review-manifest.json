@@ -1,0 +1,113 @@
+{
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-post-reviews-s80-20261015",
+  "status": "FROZEN_AFTER_ROOT_FULL_READ_ACCEPTANCE",
+  "file_count": 21,
+  "total_bytes": 132942,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2077,
+      "sha256": "b1548f29b6d11d29a8221711c40692224408cf765ed52104ed2ca54d83ef6754"
+    },
+    {
+      "path": "build_packet.py",
+      "bytes": 1575,
+      "sha256": "0e57c60d5a131847bcd7114ac6e7e04ee3dac9591853a3ce9158199c377328ed"
+    },
+    {
+      "path": "claude-fable-5-1/assistant-text.txt",
+      "bytes": 3641,
+      "sha256": "0749a2938d7e68857b7078458da6fd4d8b900c13564be35410d14d0acf3f8b0e"
+    },
+    {
+      "path": "claude-fable-5-1/command.json",
+      "bytes": 1256,
+      "sha256": "ef757937481c16389bc26abf12d2d2a82866ee3b49b6f740b506f2497f4b0f15"
+    },
+    {
+      "path": "claude-fable-5-1/completion.json",
+      "bytes": 7061,
+      "sha256": "4f468f8f1d158d3d7ceadd6c6063e3718d19f7e72cc75172342ade493be2b866"
+    },
+    {
+      "path": "claude-fable-5-1/events.jsonl",
+      "bytes": 11998,
+      "sha256": "1380d644142a29c796956b11d79b8869fd7e9fadde267a3dc4577a054b27c61f"
+    },
+    {
+      "path": "claude-fable-5-1/prompt.txt",
+      "bytes": 14066,
+      "sha256": "2fec026f84dad856822433e47ec9aba179bbd7dd2f468e6f87fdf24321e41e66"
+    },
+    {
+      "path": "claude-fable-5-1/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "claude-opus-5-5/assistant-text.txt",
+      "bytes": 4822,
+      "sha256": "c7090dd09b2d1229ece3b0dd964d8ac2fc2e68cac93607b6a3813d897bfd598e"
+    },
+    {
+      "path": "claude-opus-5-5/command.json",
+      "bytes": 1254,
+      "sha256": "4d5955e42841f4d5dd1a7fcc23cbc326f276a677f1d4348979b8ae6fc512783e"
+    },
+    {
+      "path": "claude-opus-5-5/completion.json",
+      "bytes": 8291,
+      "sha256": "9532f928e7e1b042a63dbb3176a19feeac1b79c06cdb7a8aaf46568942468d45"
+    },
+    {
+      "path": "claude-opus-5-5/events.jsonl",
+      "bytes": 18567,
+      "sha256": "0d86a7a231ef402a28c3b19ff61a2bc56dbf222a35060f8d659ef9be3f1125f7"
+    },
+    {
+      "path": "claude-opus-5-5/prompt.txt",
+      "bytes": 14066,
+      "sha256": "2fec026f84dad856822433e47ec9aba179bbd7dd2f468e6f87fdf24321e41e66"
+    },
+    {
+      "path": "claude-opus-5-5/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "packet-template.json",
+      "bytes": 3403,
+      "sha256": "e516bffc9648e93912e5e491132a99ed47551511027b9b0a07aac3815723813d"
+    },
+    {
+      "path": "review-closure.json",
+      "bytes": 5732,
+      "sha256": "ba36f6b6ca21654c255d2dcb2e34ee093e60500f384bb1fb215e2e7945575d3d"
+    },
+    {
+      "path": "review-prefix.txt",
+      "bytes": 1578,
+      "sha256": "3a4ebbe978af22afaa28e8a2513a53eea37715648365bf862ccfb74230654ab1"
+    },
+    {
+      "path": "review.py",
+      "bytes": 4675,
+      "sha256": "c048c081c0915bb18bdbc7c00bd398a5c36653bddc2489bc250cfde8f68a413f"
+    },
+    {
+      "path": "root-closed-result.json",
+      "bytes": 15847,
+      "sha256": "9563343e6d0dc49c5cd73231952be813b179c50b20d9a8ac6406166ba0b90e91"
+    },
+    {
+      "path": "root-packet.txt",
+      "bytes": 12467,
+      "sha256": "ec5928f5bde0c8489211cc10d7a564d0e19f71c1941f8a38f2b769f4639e0c92"
+    },
+    {
+      "path": "root-packet.txt.inputs.json",
+      "bytes": 566,
+      "sha256": "25e28a1323c43026d7df03bcb257e6c03e2ef734ae9e9c3ba24d1a82765e2767"
+    }
+  ]
+}

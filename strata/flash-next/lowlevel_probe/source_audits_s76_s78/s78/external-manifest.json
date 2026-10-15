@@ -1,0 +1,25 @@
+{
+  "stage": "S78_EXISTING_TRACE_AND_NINE_APPEND_SOURCE_AUDIT",
+  "date": "2026-10-15",
+  "status": "FROZEN_SOURCE_GO_SKETCH_ONLY_NO_GPU_PROPOSAL",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/decode-idle-criticalpath-s78-prep",
+  "file_count": 2,
+  "total_bytes": 12823,
+  "files": [
+    {
+      "path": "findings.md",
+      "bytes": 7040,
+      "sha256": "3b4a91a4ca570f8e015c777e69a1ae65d6ffcc2f2be59a63348855ad67f1a9a8"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 5783,
+      "sha256": "1f74dd4e446ea4a73ab1dbd0e05b49d828291f71226990e28e58b5ebe0a2d9e6"
+    }
+  ],
+  "new_model_calls": 0,
+  "builds": 0,
+  "GPU_touches": 0,
+  "payload_reads": 0,
+  "raw_270MB_reparse_or_rehash": false
+}

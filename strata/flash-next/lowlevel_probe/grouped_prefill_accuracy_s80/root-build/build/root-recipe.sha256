@@ -1,0 +1,7 @@
+79f52b4eec0dbdaeb573cbb5170e57014bf99a1c09dce477f3a0ddc040a21ce6  /recipe/build.sh
+1182b13322bcd12c20708c63a95ec80df3bd4bc880a803a3f02ac1a70c4a139c  /recipe/build-container.sh
+789ffb5a8dbb2cd2453e916d1f392915d465200c7fa8ed3526fc677a03b29989  /recipe/expected-frozen-container.sha256
+e1c108eb355b1b5cd4d6a0d26f239380c4f158e4a5980715f4ea68f53895b867  /src/manifest.json
+8b476c5cffc10d79b3ddef7f196060c4d24caddeb0a5247c09a93922e28bc32b  /src/harness-pins.json
+7b508a3491ac1167a18b45c157dc1dd5ed1b17b619867cc5daa10670b5018f9a  /src/expected-source-container.sha256
+0f1569843bea0e7e93b584204996e40e334252f3a2a9ea55b75c731e2819fc57  /src/frozen-inputs.json

@@ -1,0 +1,66 @@
+{
+  "status": "SOURCE_ONLY_PINS",
+  "sources": {
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/prefill/gemm.dp.cpp": {
+      "bytes": 48807,
+      "sha256": "8e775d6a227e3af2ec755bcbed7eac30fef79618d86ba18890d0f52356d32a5e"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/prefill/kernels.dp.cpp": {
+      "bytes": 153895,
+      "sha256": "007f7a4bb0ea5fab0d774e563a5faa0342777b6b008d6938a427d9392fa9109e"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/prefill/prefill.cpp": {
+      "bytes": 302640,
+      "sha256": "d2861c5c8573fc5dd57742bde1c13f5fb6738ca5c975d273fa3ec189dd34f346"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp": {
+      "bytes": 291120,
+      "sha256": "acaa7da63733af9f3831b3a74b99e6176bf46a06e498e0a33c0591f7f4a29851"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/kernels/cpu/native_expert.hpp": {
+      "bytes": 3412,
+      "sha256": "45bbc4b98a830d37fcb5f8e20f82ac9f83a542d4cc2cdac702e07288c249eaf5"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/prefill/gemm.hpp": {
+      "bytes": 5993,
+      "sha256": "0ce3d5741a988d29563cd75ceedab43c164915882417de0da7096ac3cd4806d1"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/prefill/kernels.hpp": {
+      "bytes": 11938,
+      "sha256": "0bf475a79ffa41addf0ff3d8ad512d873be0a2435b0fe428a9e14b25f329deeb"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/kernels/iq_dequant_expert.hpp": {
+      "bytes": 854,
+      "sha256": "aebed7bb6f601c7a4140ef3f61324d1cc64f894191ef2e3313a2a7bd6195a7a9"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/dpct/blas_utils.hpp": {
+      "bytes": 119225,
+      "sha256": "66541bfa0442725401577cea576bcdb05c851f3f0bbb684f62dee842909c53b5"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/dpct/detail/blas_utils_detail.hpp": {
+      "bytes": 27096,
+      "sha256": "acfaebfcded1e593f3f230c718ec841113029ffa09eba232e0d2dd53542caed7"
+    }
+  },
+  "source_base": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-grouped-gemm-s42-prep/v2/grouped_peer_oracle.cpp",
+    "sha256": "f69603f275067b6675745c6a1bd53c1203a091327c16c892415a6d5fa1d4e425"
+  },
+  "eager_production_evidence": {
+    "file": "sycl/src/prefill/prefill.cpp",
+    "peer_enqueue_lines": [
+      3734,
+      3748
+    ],
+    "run_lines": [
+      4943,
+      4954
+    ],
+    "graph_record_replay_matches_in_TU": 0
+  },
+  "shared_header": {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grouped-prefill-cpu-reference-s80-prep/reference_bound.hpp",
+    "sha256": "468471b8ed5c972de11318bf19e7449be23fe48df7b5fbd21bcf3916de5a6ab0"
+  },
+  "archive_binding": "frozen-inputs.json, copied under cpu-run before S79 mutation; link only frozen copies"
+}

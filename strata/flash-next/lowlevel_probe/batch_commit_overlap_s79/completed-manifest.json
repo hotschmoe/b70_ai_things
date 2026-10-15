@@ -1,0 +1,1088 @@
+{
+  "stage": "S79",
+  "status": "HOLD_UNMATCHED_NO_LATENCY_PROMOTION_CLOSED",
+  "roots": [
+    "batch-commit-overlap-s79-prep",
+    "batch-commit-overlap-source-reviews-s79-20261015",
+    "batch-commit-overlap-s79-execution",
+    "batch-commit-overlap-s79-serving",
+    "batch-commit-overlap-post-reviews-s79-20261015"
+  ],
+  "files": [
+    {
+      "path": "batch-commit-overlap-s79-prep/README.md",
+      "bytes": 8180,
+      "sha256": "657427b4098c62c912f25caefa29ed5ab1a2c50a60bd062082c8d420f08a2a0d"
+    },
+    {
+      "path": "batch-commit-overlap-s79-prep/base/sycl/include/strata/core/verify.hpp",
+      "bytes": 37407,
+      "sha256": "9ecedbed463eeeb241a49995c0d8b078cb2ef5ac4d294a3954f075aeff0b97c2"
+    },
+    {
+      "path": "batch-commit-overlap-s79-prep/base/sycl/src/core/verify.cpp",
+      "bytes": 223107,
+      "sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2"
+    },
+    {
+      "path": "batch-commit-overlap-s79-prep/base/sycl/src/program/generate.cpp",
+      "bytes": 867808,
+      "sha256": "6433d750e414aeb9c71135257ae40a8f9e38ea661537c251b50cabdbc2217d83"
+    },
+    {
+      "path": "batch-commit-overlap-s79-prep/batch-commit-overlap-s79.patch",
+      "bytes": 11284,
+      "sha256": "2e46889b71df957e161cfa47db3f93fa028aaedfe4891beec89f172cf0245dd0"
+    },
+    {
+      "path": "batch-commit-overlap-s79-prep/build-container-option.sh",
+      "bytes": 972,
+      "sha256": "95ca65d656efe516369c6d97b088c627629bcfb204a3de0252f73ed35828fcd0"
+    },
+    {
+      "path": "batch-commit-overlap-s79-prep/build-option.sh",
+      "bytes": 1034,
+      "sha256": "36cf8ceb5fb0ca29e7dac2821461f6b2e547609a538a16eab900765b5f6ae804"
+    },
+    {
+      "path": "batch-commit-overlap-s79-prep/candidate/sycl/include/strata/core/verify.hpp",
+      "bytes": 37766,
+      "sha256": "0984d9da5be621bb5294fab0c3b468e5f4c2892d1d1622ced912af6e128ea6bf"
+    },
+    {
+      "path": "batch-commit-overlap-s79-prep/candidate/sycl/src/core/verify.cpp",
+      "bytes": 224243,
+      "sha256": "1383c9b4d3b077126885a97b6c74ae3598c025b51a8b823eca6f2af1c818ca5a"
+    },
+    {
+      "path": "batch-commit-overlap-s79-prep/candidate/sycl/src/program/generate.cpp",
+      "bytes": 871274,
+      "sha256": "fb62bcb4037edeb02ee29c15b6f2254d8a1aff7d55e6dbed9b4ae3eda4f4781f"
+    },
+    {
+      "path": "batch-commit-overlap-s79-prep/candidate-batch-commit.cpp",
+      "bytes": 3519,
+      "sha256": "87ba120cdf62b9a54894e9559a11d6ba89eb88504da38f6176b1f405d47ec8ff"
+    },
+    {
+      "path": "batch-commit-overlap-s79-prep/candidate-batch-step.cpp",
+      "bytes": 16977,
+      "sha256": "4e9d1f528d0c81e554975aa41c2a06032b36cd87ea8f9bf9dbdd64b2bd317f9f"
+    },
+    {
+      "path": "batch-commit-overlap-s79-prep/candidate-wait-commit.cpp",
+      "bytes": 1727,
+      "sha256": "520abf715da1ce526736c5a9edbff9cf3071bd6dcd896364fc69b09dc3c9b0f6"
+    },
+    {
+      "path": "batch-commit-overlap-s79-prep/expected-build-source.sha256",
+      "bytes": 328,
+      "sha256": "d10c6bebc5e5bc5dc8d61e8f2113d8cfc0a6f7d9f5f76cc85b9ffcd1b22411cc"
+    },
+    {
+      "path": "batch-commit-overlap-s79-prep/inverse.patch",
+      "bytes": 11284,
+      "sha256": "34f00677ab6a85aa1b79a784b2b8c22d6a945ebd8983e01d6598220d86ef8399"
+    },
+    {
+      "path": "batch-commit-overlap-s79-prep/readiness.json",
+      "bytes": 1785,
+      "sha256": "705b1155dcbe4ffe0043d81628c87cb894a2f0817c8dec9aa84fc38761a6d010"
+    },
+    {
+      "path": "batch-commit-overlap-s79-prep/source-bindings.json",
+      "bytes": 1098,
+      "sha256": "58d7492cb37c85e981b3ab38f2b7ea18c101159f8c2fe52115d82b35aa94b36e"
+    },
+    {
+      "path": "batch-commit-overlap-s79-prep/static-checks.json",
+      "bytes": 828,
+      "sha256": "5ffb5672c091494e6a9710e37b813906cf0c66d8412e39586e1dad8e7e728eaa"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/claude-fable-5-1/assistant-text.txt",
+      "bytes": 4049,
+      "sha256": "134bdb8cde338a9d87f65d6c8e731808a5de7d206618bdfb8bc69047c83dbe42"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/claude-fable-5-1/command.json",
+      "bytes": 1112,
+      "sha256": "ffa4026f3293904350042794a97b564e8066e9b3db0142916bc2300d45749299"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/claude-fable-5-1/completion.json",
+      "bytes": 7376,
+      "sha256": "cb801cdf15abd95a521a6edf0a264ae79c19fa67d0efa4abb272eb4cab02faf4"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/claude-fable-5-1/events.jsonl",
+      "bytes": 67808,
+      "sha256": "a4512edc39e7ca47a967044f9366ece12d466b8f6a4b263041c8968142f3d026"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/claude-fable-5-1/prompt.txt",
+      "bytes": 125958,
+      "sha256": "0c9947b0f1c97f190e79e86e5e585962bec25f8d20d4afee94e7dee947179fb7"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/claude-fable-5-1/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/claude-opus-5-5/assistant-text.txt",
+      "bytes": 6273,
+      "sha256": "c2e2032b65d2e0b19a4c5df0f87be1002576657bf3fa6f232baf9e2a2c4008c2"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/claude-opus-5-5/command.json",
+      "bytes": 1110,
+      "sha256": "426b6ba9617cae8c419e6b9ba2655a48d4ff63d75e3b8bc84390178880c78678"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/claude-opus-5-5/completion.json",
+      "bytes": 9640,
+      "sha256": "8c1550e09e75f48128ded3ccc408a8017e6f4776b108adad30e702e215ecd56e"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/claude-opus-5-5/events.jsonl",
+      "bytes": 35829,
+      "sha256": "578d60c130bc9710acce5711f4029e85bea1c8524aa345eb2da9383bf3d5bee5"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/claude-opus-5-5/prompt.txt",
+      "bytes": 125958,
+      "sha256": "0c9947b0f1c97f190e79e86e5e585962bec25f8d20d4afee94e7dee947179fb7"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/claude-opus-5-5/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/owner-excerpts.json",
+      "bytes": 45071,
+      "sha256": "15f6fca06c3719aaf5cd04a48f7ed830bafa608411dd2462c0e4bef5f5870ccd"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/packet-bindings.json",
+      "bytes": 6633,
+      "sha256": "85ad281ca2fee3725be6d80d5b9d1fa0c2dd5bc6b7a6b4d5cdd915106554932b"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/review-closure-v1-root-pending.json",
+      "bytes": 28907,
+      "sha256": "1317a955f0c2c6eed204e71d0f607113759ff0b0a0e37a07c96bac00b7e58465"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/review-closure.json",
+      "bytes": 29995,
+      "sha256": "fe925515eb669fc718e75741b82cdc533fdc2f3ea2b48cf2adcaa40bab136348"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/review-prefix.txt",
+      "bytes": 540,
+      "sha256": "25fe6ccc746344774ac0eabf0468100000c057719bd96c6d97de13c9e332d076"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/review.py",
+      "bytes": 4068,
+      "sha256": "f20271318dd750492a8894737cbf7dc0040baa162e032b68f4383f1a44517e40"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/root-final-harness-binding.json",
+      "bytes": 1802,
+      "sha256": "1cfd79973f7ca732a9d2df34abc0575d6777f5ca1f0d0448c251ea8bdc717bcd"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/scalar-batch-handoff-source-audit.json",
+      "bytes": 15726,
+      "sha256": "26ff29d1f60353798b7fe12ed6df933e7b70bd607c2dd95a00948ce0dd489612"
+    },
+    {
+      "path": "batch-commit-overlap-source-reviews-s79-20261015/source-packet.txt",
+      "bytes": 125397,
+      "sha256": "b29e1eb95eff771e408dcd793939d2bf608b22d722c222a8bbb15ca5eafcd932"
+    },
+    {
+      "path": "batch-commit-overlap-s79-execution/build/archives-after.sha256",
+      "bytes": 338,
+      "sha256": "f2af243acfcd87e855dc981ab50f0b22e5945c6f3c9829616158b129dd5d6552"
+    },
+    {
+      "path": "batch-commit-overlap-s79-execution/build/archives-before.sha256",
+      "bytes": 338,
+      "sha256": "f2af243acfcd87e855dc981ab50f0b22e5945c6f3c9829616158b129dd5d6552"
+    },
+    {
+      "path": "batch-commit-overlap-s79-execution/build/before-build.sha256",
+      "bytes": 91,
+      "sha256": "e775a0e4d204f045f50275afbe6bc6ae3409b31871704b86aa14a24d7e0ce631"
+    },
+    {
+      "path": "batch-commit-overlap-s79-execution/build/build-sha256.txt",
+      "bytes": 412,
+      "sha256": "ee65d121095ce2609542269d08abe92ed2d37946217708f03424ab67c5102430"
+    },
+    {
+      "path": "batch-commit-overlap-s79-execution/build/compiler-version.txt",
+      "bytes": 257,
+      "sha256": "06b5b1015f3c581440fb4cf00258edc0db8d98696ca3252cf69045e1f8c283d4"
+    },
+    {
+      "path": "batch-commit-overlap-s79-execution/build/ninja.log",
+      "bytes": 169930,
+      "sha256": "903a7ebcdc17e39bd816592fdac75ca45fa0e42f99df8638d23de5010716bef1"
+    },
+    {
+      "path": "batch-commit-overlap-s79-execution/build/ninja.stderr-time",
+      "bytes": 34,
+      "sha256": "385058fe029aa99ab561cd444ee700d2aef8892e4acc4313d96a1991a17987a8"
+    },
+    {
+      "path": "batch-commit-overlap-s79-execution/build/plan.txt",
+      "bytes": 240,
+      "sha256": "0476c71603cc5206618ac639ce0894117e85c1d0ff5b93a871bba5fda41a699a"
+    },
+    {
+      "path": "batch-commit-overlap-s79-execution/build/strata-batch-commit-s79",
+      "bytes": 92071936,
+      "sha256": "03bb07f9d87455a203d1ce334fa411524d93c534c95733ec42076f121ddb92ab"
+    },
+    {
+      "path": "batch-commit-overlap-s79-execution/build/strata-before-build",
+      "bytes": 92071496,
+      "sha256": "bb0669002bff48f28340cd413b576fe905ffbc327a332bebd63ff12e3066272f"
+    },
+    {
+      "path": "batch-commit-overlap-s79-execution/build/write-permissions.txt",
+      "bytes": 84,
+      "sha256": "b19257040ece7116bb1a66238bb38efc0e2d24f4d186c6a46fceba3b67fe87c8"
+    },
+    {
+      "path": "batch-commit-overlap-s79-execution/root-applied-source.json",
+      "bytes": 1002,
+      "sha256": "0304e0ac3705caae70c47f3d4e84bb55c57c4b5febca0b581b8bf4d4c5296480"
+    },
+    {
+      "path": "batch-commit-overlap-s79-execution/root-build-closure.json",
+      "bytes": 1124,
+      "sha256": "fcd0d5359ad7b6baabc309e73b0aad4dff6d8cc1439f4d03c5f0fd010d00811c"
+    },
+    {
+      "path": "batch-commit-overlap-s79-execution/root-build-container.sh",
+      "bytes": 1454,
+      "sha256": "7a990a0f32b70865dfec2e8673c6cf4aab8750b6c7e3c2077f65dcd79a18e4c1"
+    },
+    {
+      "path": "batch-commit-overlap-s79-execution/root-source-restoration-readback.json",
+      "bytes": 1634,
+      "sha256": "ad051e5ba6cfda984ff1946244a97ef56a1a4e1677f517db1ac37aa63b8df92a"
+    },
+    {
+      "path": "batch-commit-overlap-s79-execution/root-source-restoration.json",
+      "bytes": 1174,
+      "sha256": "de87f816dad20d6cbf6ea25d814ca6a24db3b17375cc08a2df359ba74626bf08"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/comparison.json",
+      "bytes": 6448,
+      "sha256": "6180f1fca4f88d2d72fd55f1dafacec0c317c3c1acc5a487de2169e01344269f"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/harness-prep/client.py",
+      "bytes": 9709,
+      "sha256": "b543faedc24836107b59a46a8bcc757c5cbe0b0772e469f5d813bc8ae1b682ec"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/harness-prep/compare.py",
+      "bytes": 4871,
+      "sha256": "cec1ae49cad40db1f56412ad306e16e528714db56093e0510bb8b86123bbf42b"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/harness-prep/launch_stage.sh",
+      "bytes": 1851,
+      "sha256": "627d5e1f3f0357013f7a5db12f552c3a64650c7b39176694a7c79ca5cfa1819c"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/harness-prep/make_configs.py",
+      "bytes": 3476,
+      "sha256": "c66cc7be2e634aedb8a39a46f05c3e7864ffbeb414a855f9b1da09463d24a3d7"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/harness-prep/start_arm.py",
+      "bytes": 5295,
+      "sha256": "4060ffabc2c61a14f54f1058341c5e91ec6101972182b53d9819120a46a2044a"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/harness-prep/stop_and_health.py",
+      "bytes": 3984,
+      "sha256": "309a1125fd43682717f4640ba914523c3d6ab933c9631230a916aa34a12be327"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/harness-source-manifest.json",
+      "bytes": 1149,
+      "sha256": "69fe6fe62e73432856f660e18f7b19cf64cb011a739259f1806ccfcddceea5e9"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/aggregate-proof.json",
+      "bytes": 598,
+      "sha256": "4ee7ded4699a8b25b7a630b09b97a82b28fa3bffad967842ec3974bc864b7dc8"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/card-health.log",
+      "bytes": 560,
+      "sha256": "a5ad677cfd0ea98c5941550d42eca87fbd38abdc1e64f9bee37add7715dfcdff"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat1/admission-gate.json",
+      "bytes": 2314,
+      "sha256": "663cec998c981df2f922aa4064463f7790b7cd30a6b1ced37bb0c15367fc58ba"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat1/coding-0-lifetime.json",
+      "bytes": 875,
+      "sha256": "1037342e6c2d1eac898fed0afb232756af74dfc190be028bdb40e818fb218380"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat1/coding-0.json",
+      "bytes": 552130,
+      "sha256": "0449f6f359822bc1af55a2a56aed40ec8ca89176518826b08e5e1c73495af513"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat1/coding-1-lifetime.json",
+      "bytes": 875,
+      "sha256": "dc312ed792e87abcecacdab9eaaf6b163d75ed6dabbc7bd925c25a2f749d1cfa"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat1/coding-1.json",
+      "bytes": 552109,
+      "sha256": "cc28c85f85a149c63bca40a0398a36fadb9d66c95c233b4d6c7b288562e00462"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat1/engine-segment.log",
+      "bytes": 2616,
+      "sha256": "c05153952b941951ef2fe9653c9397b56a6b26c9b6e32a98c1ee5cf6f932364d"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat1/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat1/pair.json",
+      "bytes": 3656,
+      "sha256": "9d87a1d58788660ca47b2e6735691baabff992ff7efe2393362b408b2035cdbc"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat1/window-start.json",
+      "bytes": 61,
+      "sha256": "893001dae6e8b5f340a45437295e5228647627d33c8c25fbae2099ebd283da4b"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat2/admission-gate.json",
+      "bytes": 2316,
+      "sha256": "1ad22a43b7c72ddd448305d6d06221b736bb2eb8c387c3af8d87eff05658d3c2"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat2/coding-0-lifetime.json",
+      "bytes": 875,
+      "sha256": "5f1c4d82692a9d07553b6712651993a4337b1a5c73458e5f5651c3d07a849b07"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat2/coding-0.json",
+      "bytes": 552954,
+      "sha256": "467c930c3f2a0436c8d4e188a09304479b55b5de60542452a5f07e29225e69d3"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat2/coding-1-lifetime.json",
+      "bytes": 875,
+      "sha256": "5871df2d53eeebc759d5688a14bada85e772063d684d436c606fff65ebc0fac5"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat2/coding-1.json",
+      "bytes": 554054,
+      "sha256": "1fd63b07d42295b5461021319aac1c15b0ff3612fcbb8b3e3f13297335ecd5c7"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat2/engine-segment.log",
+      "bytes": 2618,
+      "sha256": "25edaa227ba4321d71aa5bfd6546bb43c3d2af6667eb1b128d1acdf3f1b14f19"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat2/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat2/pair.json",
+      "bytes": 3659,
+      "sha256": "35e4305393f0cb3a6e6c58985fd4ad473cb8e1007346f606216a48f1f7c251ec"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat2/window-start.json",
+      "bytes": 62,
+      "sha256": "c0dcea4cdb11ca76d81127ffa055d3fa99b3ceabead033ac31d2d603bba5344e"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat3/admission-gate.json",
+      "bytes": 2316,
+      "sha256": "68485893868c9615c0110d09e5c0d6d5b27c4bc2fd550bd3526782af5bb6e405"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat3/coding-0-lifetime.json",
+      "bytes": 875,
+      "sha256": "c50493a04e4a63ef22ba0a1fcc2d42c90882e4140653c9d15315ed266d50e7ad"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat3/coding-0.json",
+      "bytes": 552772,
+      "sha256": "a1cf918558bc7f67f5dced9b023fbb428e7bcaeab4eee443996577f86ff88885"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat3/coding-1-lifetime.json",
+      "bytes": 875,
+      "sha256": "832c343211ad8feb24ecae2fd3f26121d49afa7ab52ce4b98a10455875a59dff"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat3/coding-1.json",
+      "bytes": 552970,
+      "sha256": "1ba03db5b556e8ebd83c518517d23c398e99ce58b601fd06cdc6a2e0c4a1b3a3"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat3/engine-segment.log",
+      "bytes": 3611,
+      "sha256": "94324d483b71004e8ace0d9e2b27f97bb6594709edee8f449f71b85ad0b9b419"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat3/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat3/pair.json",
+      "bytes": 3658,
+      "sha256": "bff2e2016f8283392dfd4c3231fa19ebbec8fb16c0c2cb52da0138c2271501b2"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/repeat3/window-start.json",
+      "bytes": 62,
+      "sha256": "bd331e6a8fcf43df8712f7a2dff3299379ccb5db1d1f2574a88c895ee4271c54"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/warm/admission-gate.json",
+      "bytes": 2314,
+      "sha256": "8dd49c1e2b46222766131d4a83242d299eeae0fc97e55adb18a23ec2ad2401ad"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/warm/coding-0-lifetime.json",
+      "bytes": 875,
+      "sha256": "614e76893818d9034e0a80944cd79575333c46e9a539295367fa43013c1d3216"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/warm/coding-0.json",
+      "bytes": 547670,
+      "sha256": "7252678b388542a2334393c81baaaa861240e510c8858012a11f5bbf72f4a6fc"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/warm/coding-1-lifetime.json",
+      "bytes": 875,
+      "sha256": "7ebdd226f5a541cc490063470a166f8c77430319e3f4799db09cec06ab8df6e2"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/warm/coding-1.json",
+      "bytes": 552804,
+      "sha256": "62e5162e0135a7bb90334f2240409e8b8ad379b5688cfaf5ab01fbd189ea01b3"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/warm/engine-segment.log",
+      "bytes": 2306,
+      "sha256": "56dd1b0c5d4802d8dd292a0c84c83f5e64b3452f2ff639e543a7c11f499d98c7"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/warm/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/warm/pair.json",
+      "bytes": 3657,
+      "sha256": "6846649de1b30ee7ce9a78de7873a57fc3f87bb31ebc8b65d7d216aa20c4ac87"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/coding/warm/window-start.json",
+      "bytes": 61,
+      "sha256": "65d0b214ca0fbf50ef0ba98b837ccebb25bf5f76c05cacfb515be8be8c1b0993"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/collective-health.log",
+      "bytes": 1696,
+      "sha256": "a3757a3b81915d537c4570e5c2847c72d81dde082cc7d586586106ede1d316b3"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/config.json",
+      "bytes": 2138,
+      "sha256": "82dfe4a1ecf446aff7c68216226d6985e22623ca66044a66baf552aeffade9b9"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/container-ready.json",
+      "bytes": 13620,
+      "sha256": "cef31fc7f266647db6a58feb6afb334f2ac383e03d855bb4808d2fb98ef79cbd"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/docker-prestop.json",
+      "bytes": 13620,
+      "sha256": "025f90439fd85e47dd5893884ab42e5253304935ac2f2c813a2f2f6154a16cc8"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/engine-final.log",
+      "bytes": 23111,
+      "sha256": "441c0c429ebf3d88d56c0aa8298a9dd21b729c7cc12e54d7162c3e9c18722578"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/engine.log",
+      "bytes": 23111,
+      "sha256": "441c0c429ebf3d88d56c0aa8298a9dd21b729c7cc12e54d7162c3e9c18722578"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/functional/concurrent-math.json",
+      "bytes": 7915,
+      "sha256": "f234a2ede0189bd2c6566d9d547478e9fcac29c5452d24ae2c573e2e4f74aba1"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/functional/health.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/functional/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/functional/thinking.json",
+      "bytes": 1430,
+      "sha256": "0a39e94b8da666708048e0f0ad86136c260dbf3855d12cbd54423db1a78044f7"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/functional/tool-final.json",
+      "bytes": 2458,
+      "sha256": "3aea1c00b57a3165f1cde326de8e1f685794e733657feab011e55f9bc226af61"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/functional/tool-first.json",
+      "bytes": 2203,
+      "sha256": "36edf9499e3bcdbfc9429ace9e5773f29222f5f273527d756467b7bb550b0f47"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/functional/verdict.json",
+      "bytes": 91,
+      "sha256": "a903d5a1a01382b4c3af586ab82b48b25716a22e8bfbbc2d1bdcb7a2a972ff09"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/functional-root.log",
+      "bytes": 238,
+      "sha256": "baee4395be0ebdb4c784d9521231d29cee0641903dfe8c4420e18fe119b4be87"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/health-prestop.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/health-ready.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/normal-stop.json",
+      "bytes": 265,
+      "sha256": "42e253e2224cbd8df23d860b90757cc3d5aba16d5d038dd0a0de0d5a6b3fab5e"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/post-health.json",
+      "bytes": 477,
+      "sha256": "148a0019c054a15275f30968a07144b1a6bd5ae4128f0c973d71d71ddaf362c5"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/quit-command.json",
+      "bytes": 252,
+      "sha256": "68fb548207f8e3c0a44364b74e9535088a7e2489e06aff52f0ca7dc99dcc9d55"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/server.log",
+      "bytes": 16833,
+      "sha256": "3e5a08358bd0d4703a374c13f712620e7718f5e8276e5dad26437e2a86ea3abf"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/start-result.json",
+      "bytes": 1206,
+      "sha256": "b01a2f23d6d84e647eebc8c440b3d857ee9434802ca62503f290b18f82f829b1"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/start-root.log",
+      "bytes": 332,
+      "sha256": "eb75ab5d19c7d9ce10998c8e0c49434af9a1c05326bcfb99ad901ed047b0e8b3"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/stop-root.log",
+      "bytes": 237,
+      "sha256": "c204983f832c3201fca548513d2acb0ddef39fc7d094847bf4ea14833abda798"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/timed-root.log",
+      "bytes": 447,
+      "sha256": "df00494110f7ffca0f68fe5ab704e067fb169e6f166e6da90f82d4a88643069a"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode0/warm-root.log",
+      "bytes": 304,
+      "sha256": "bb4b9e44b6a906c74a06efdb836bb0114f9d1c679f8a54d18f9dcdbcbbd15483"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/aggregate-proof.json",
+      "bytes": 598,
+      "sha256": "83ee2d750d717d117919a5620aa62e7f7bf1891e52e7505ffc7c84b6744623f3"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/card-health.log",
+      "bytes": 560,
+      "sha256": "a5ad677cfd0ea98c5941550d42eca87fbd38abdc1e64f9bee37add7715dfcdff"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat1/admission-gate.json",
+      "bytes": 2314,
+      "sha256": "11cefb668319e584109b36d1b85406a61e075e256435ef62bca5315b0dcdeddd"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat1/coding-0-lifetime.json",
+      "bytes": 875,
+      "sha256": "18b2be76ebce2a7ba65a834583a183bad61c57692a8f2eb3d923a3b0ba6b79d5"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat1/coding-0.json",
+      "bytes": 552159,
+      "sha256": "bf7f5487f8a6068d442e43cfb094d30543218e43af29fc1c7a407b6160288b3a"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat1/coding-1-lifetime.json",
+      "bytes": 875,
+      "sha256": "62807ff27db785c369d710b940f8390848f276073f0925da7b95852fb8c6c862"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat1/coding-1.json",
+      "bytes": 552115,
+      "sha256": "6e56fc24eac1b8a29487bdfc0ce83943975ee7491c922ba37c47c71a6db12eb2"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat1/engine-segment.log",
+      "bytes": 2679,
+      "sha256": "53b5d916f2d84f80721e75fda8cff55aed8d8a0396ef8b9bbced039a1a9c8b1d"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat1/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat1/pair.json",
+      "bytes": 3661,
+      "sha256": "66616173868e83ced6eb8350d60f7cfaa8441081e13efbe21e9dca1b0166a7cb"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat1/window-start.json",
+      "bytes": 61,
+      "sha256": "3e5be4058d3cf9ca11f4305527ba6c63f26aaa0c2279b95decca242d2a361dea"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat2/admission-gate.json",
+      "bytes": 2316,
+      "sha256": "e10b282cad98c973a9ef2df91ac7d89bc7c853860ae8ebb12b58e9c7c25a4c91"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat2/coding-0-lifetime.json",
+      "bytes": 875,
+      "sha256": "72454fffa6f9676273005c50b6deb7d155a563929c33df6dd54a1e8f05df9c61"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat2/coding-0.json",
+      "bytes": 552939,
+      "sha256": "b70ccc5d46e1e6074f57c758b0e7d976e3676b8e95ffe1b6105a2e4ac94d2bc1"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat2/coding-1-lifetime.json",
+      "bytes": 875,
+      "sha256": "0057a7c532d2696dad2b4e6f4525b02215c6deb88711fab940711397cf019086"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat2/coding-1.json",
+      "bytes": 554079,
+      "sha256": "c54b2ae3038e9cf0c668dbadf1119123899fa1533126b9a7508d5132592b3b9b"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat2/engine-segment.log",
+      "bytes": 2681,
+      "sha256": "065d4eab832ff716498ca0ee7d7647ce534da27bfea19100590817cf8f6ae4ba"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat2/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat2/pair.json",
+      "bytes": 3664,
+      "sha256": "1223eeaee341eaa468c081b30ce7fa81dbc06fa091a1610f6e74e8200131ab00"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat2/window-start.json",
+      "bytes": 62,
+      "sha256": "294f77f531708be7ca1742474eccd399517a39afae8e9930fc6d6605bba1d7e4"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat3/admission-gate.json",
+      "bytes": 2316,
+      "sha256": "46af0053e173b2d47f373843238858d4c00d9f67ab931cc31a196a23ae096f25"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat3/coding-0-lifetime.json",
+      "bytes": 875,
+      "sha256": "8131019aedc43427f626030605e6d5ac3fa686bf49dee65d3d685fc338c701c4"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat3/coding-0.json",
+      "bytes": 552792,
+      "sha256": "7353bb040b4ba13f461e91df08d8f07eb0d8901d903e43f1e971ff6464d95504"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat3/coding-1-lifetime.json",
+      "bytes": 875,
+      "sha256": "8b6d4f387fca73bcc606684da83e553c7a0e7e7b27cfeaa29ba738a26014268d"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat3/coding-1.json",
+      "bytes": 552956,
+      "sha256": "1bab91f0c042a038d2897de04b794ef3da6f1054434d9459e3ae7973a02d5d4d"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat3/engine-segment.log",
+      "bytes": 3646,
+      "sha256": "ec514a4b2e60e3cf4d74d4f8faa98e52b576744f4033a80a49b5d6804a309afe"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat3/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat3/pair.json",
+      "bytes": 3665,
+      "sha256": "1ab57786d3ff4693487db38029907a4dd7a7b6809c7a9745198a1b552c413746"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/repeat3/window-start.json",
+      "bytes": 62,
+      "sha256": "8e1bfa94441725a0ed1b59ea7032c210957c05615d1576323d8960923b4b93c9"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/warm/admission-gate.json",
+      "bytes": 2314,
+      "sha256": "6ac78403b2444981a25ca2c2e6800759c7f4093009fcb192b38b18cef759487c"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/warm/coding-0-lifetime.json",
+      "bytes": 875,
+      "sha256": "b4b1f3b3698c9cede7550bf36e85c2f7459ae738ea88c18734a231965e4d43c9"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/warm/coding-0.json",
+      "bytes": 547695,
+      "sha256": "20a0f948f727a7018aea285105dd8799fe68fe3e584c7ceb5379d8b480458349"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/warm/coding-1-lifetime.json",
+      "bytes": 875,
+      "sha256": "132ad9b3e7465ae250866ae238536a892bb7b6cbf106a6d02c7d669d30dab30b"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/warm/coding-1.json",
+      "bytes": 552839,
+      "sha256": "8691a38ad724d203162e313782539d90f1160736603cd649bde050161f6202c9"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/warm/control-parity.json",
+      "bytes": 128,
+      "sha256": "b955d42c4569a07337dd8bbf0b7dfb3a27b0455501c3f6c27aa4ac1a4c0d6e58"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/warm/engine-segment.log",
+      "bytes": 2368,
+      "sha256": "b8c8d8d89d279f9c437b85a0e69a97adc95f935e7396b0b73e188a5786171833"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/warm/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/warm/pair.json",
+      "bytes": 3662,
+      "sha256": "ca6cddc3682ee85fefb51a31ef236be9eceec759d26cf089c1717371de79974f"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/coding/warm/window-start.json",
+      "bytes": 61,
+      "sha256": "80f3a46a9907c63f801287eab529ea1690db061fbb38ae75041838a3294caf72"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/collective-health.log",
+      "bytes": 1696,
+      "sha256": "5442accec3e84bdd393db1bcc6372009d59a8f647ee92833e0ef4d046260e30c"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/config.json",
+      "bytes": 2138,
+      "sha256": "cab4ba2facb00eaf041d3a2bdf5d2d7e2d1a6e507ec92755794c55cba55ef3ea"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/container-ready.json",
+      "bytes": 13620,
+      "sha256": "163c20bf5344996888978b4cb986c428920acc528990374dd5dacf044642349a"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/docker-prestop.json",
+      "bytes": 13620,
+      "sha256": "d7f40e43cd95f1f5599ade72f634616c123a6931af9d797256386eca1e5949e9"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/engine-final.log",
+      "bytes": 23453,
+      "sha256": "5ad9dae66322f6818c369332b665e28252691b84f95d790bd0fc1c80893fd37a"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/engine.log",
+      "bytes": 23453,
+      "sha256": "5ad9dae66322f6818c369332b665e28252691b84f95d790bd0fc1c80893fd37a"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/functional/concurrent-math.json",
+      "bytes": 7911,
+      "sha256": "9449d2d76900666adaa4d8686fa940abad0f10c15f228ba818b7d004cc3026a9"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/functional/health.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/functional/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/functional/thinking.json",
+      "bytes": 1430,
+      "sha256": "0bd71a12ef550040144104132a9a46d099cd6b8d9a0ca90707fb7de02298c49b"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/functional/tool-final.json",
+      "bytes": 2458,
+      "sha256": "d334d271ae8f72f1aa81079abda3342dda64989a52e43b13f4e854a0c41b5a4d"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/functional/tool-first.json",
+      "bytes": 2203,
+      "sha256": "694629296822c10eb0774f1cba781edd648427eab67db4212892f9a6f9e63ff1"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/functional/verdict.json",
+      "bytes": 91,
+      "sha256": "a903d5a1a01382b4c3af586ab82b48b25716a22e8bfbbc2d1bdcb7a2a972ff09"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/functional-root.log",
+      "bytes": 238,
+      "sha256": "f69d17ce7506fde56778194c38a0eb5d1de4611c170618b989309617c40fab9e"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/health-prestop.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/health-ready.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/normal-stop.json",
+      "bytes": 265,
+      "sha256": "84242a4b0141587b68118561216828d2a135d26e1b7665995871707dbb5fe378"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/post-health.json",
+      "bytes": 480,
+      "sha256": "77dca0ec937c57ca80dd5206fb397d04f704b464057e8e8caed212622bdea066"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/quit-command.json",
+      "bytes": 252,
+      "sha256": "e65ce9cca20149b9433bdbcdd6ae068c6e6419c65c5cd81335e879527a77d3bf"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/server.log",
+      "bytes": 16898,
+      "sha256": "cda2dc304f4c54dbd87ba544cf9c47c86dbcd8b3a53b67822ebc84d289d2e77e"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/start-result.json",
+      "bytes": 1206,
+      "sha256": "0daa11cff1b58210edb8968c46d7d9c47b99d735116e46bdbe8379ce430a639f"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/start-root.log",
+      "bytes": 331,
+      "sha256": "df53eac829b0a9582d6a049e5cef0285d5a6a5a1f804b2aa1af49aa1a6085a97"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/stop-root.log",
+      "bytes": 237,
+      "sha256": "e24fc6b6d631520569b6949ea1fac1acff2de7893d324f0bce223500ff26129d"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/timed-root.log",
+      "bytes": 447,
+      "sha256": "af0013fb281004354bb0b69502de19c878cd17fea10bf5e48f11fbb42a0ae30f"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/mode1/warm-root.log",
+      "bytes": 304,
+      "sha256": "ad41c6abf2d9dd36c1b3898786f863eabce6e8e8b9067b7a113111dd78833152"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/pre-health.log",
+      "bytes": 2473,
+      "sha256": "af2c789648531d02e47bbd978e13226a9f6f6a6ada0551ec3b1437d5a936c0fb"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/root-final-runtime-decision.json",
+      "bytes": 1482,
+      "sha256": "033534de223b437298cf70b9f0e7e62e955b50622b1cc46c2183e0e0ccb45183"
+    },
+    {
+      "path": "batch-commit-overlap-s79-serving/serving-inputs.json",
+      "bytes": 2320,
+      "sha256": "b43dbcd0defc183d2ca70ecb285c6d19187ec83028f1f87121697da0128face8"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/README.md",
+      "bytes": 3125,
+      "sha256": "59504762ef91d0a627104ae34d9e7600030bba515310fbbdfd07aeaf7cd9d4d8"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/build_packet.py",
+      "bytes": 6310,
+      "sha256": "00e18cdab51a645fd5c0965f5991401e467126ee3bc02fbda4dfecd9916a61de"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/claude-fable-5-1/assistant-text.txt",
+      "bytes": 3204,
+      "sha256": "971f9b636eadfe095391bfd9ff1ddefd762217d5128fdfc9b853369f3c349c7e"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/claude-fable-5-1/command.json",
+      "bytes": 1230,
+      "sha256": "9ae875ffa46f5273405763ab206011e0e722743f6a230211c7749f1717430b65"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/claude-fable-5-1/completion.json",
+      "bytes": 6621,
+      "sha256": "7f39e1c012f15d67dd46eb7952408fed14f056f48f82543fba36c71a1106cbee"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/claude-fable-5-1/events.jsonl",
+      "bytes": 16412,
+      "sha256": "210950352ee3a0915da038294ba788c45d74d6bde3d3d5ef0537b95c5cbb6ce3"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/claude-fable-5-1/prompt.txt",
+      "bytes": 34046,
+      "sha256": "288a6388a9c10624127810bfd7e408758bb03be56b613fa8a70400de4c450ef1"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/claude-fable-5-1/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/claude-opus-5-5/assistant-text.txt",
+      "bytes": 4527,
+      "sha256": "dd662ad253be25522bd7af0f509966f97ce3529f3d88d2ac26812cf0d5077144"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/claude-opus-5-5/command.json",
+      "bytes": 1228,
+      "sha256": "38168ce5196ce6a412fa8c85427c07c1efa529fbf841888f8795cc800aee3108"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/claude-opus-5-5/completion.json",
+      "bytes": 7974,
+      "sha256": "e6956782e1a71b75f6f196fda53b3a49e34bcc4c7706ffed2370aa77ccf5f62e"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/claude-opus-5-5/events.jsonl",
+      "bytes": 18814,
+      "sha256": "bfa20d11d17db59636b985eddbd80d7748ef9e6b2a366114b421806c80ac5412"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/claude-opus-5-5/prompt.txt",
+      "bytes": 34046,
+      "sha256": "288a6388a9c10624127810bfd7e408758bb03be56b613fa8a70400de4c450ef1"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/claude-opus-5-5/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/preparation.json",
+      "bytes": 2176,
+      "sha256": "c55efb8392a3a01c811656021c956500b4c955f2e4a2c54ae75ccc29902d9dc8"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/review-closure.json",
+      "bytes": 5118,
+      "sha256": "902f9ae93e6627ae33aeea5f712f9ce6cae903a71d1b9b3376a2b4bda142239b"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/review-prefix.txt",
+      "bytes": 1845,
+      "sha256": "63c725b5600e3a07a1f25999ef52c6a120f200178c695ac2208a6f265695b70a"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/review.py",
+      "bytes": 4533,
+      "sha256": "f7d5f83317edaaa35c8030e5496956e9f2d62920fadfde4ab39c25592902429d"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/root-post-packet-final.txt",
+      "bytes": 32180,
+      "sha256": "60715d6472964c0aaa5a9ab3be1efeccf82e4c4c311afd8f765806895c97bb3e"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/root-post-packet.txt",
+      "bytes": 30546,
+      "sha256": "4e2bceb5e50388fcc8f460d040fde305f2cdf904f991433ea0cdab69fd152549"
+    },
+    {
+      "path": "batch-commit-overlap-post-reviews-s79-20261015/root-post-packet.txt.inputs.json",
+      "bytes": 11427,
+      "sha256": "b7053fcd90d51414bf376a4e6910cb3bdd817ac3ca4dc724ad94c324fc0e06bb"
+    }
+  ],
+  "file_count": 214,
+  "total_bytes": 196711034,
+  "source_restored_no_rebuild": true,
+  "generic_executable_candidate_only": true,
+  "no_speed_or_promotion_claim": true
+}

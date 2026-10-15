@@ -1,0 +1,128 @@
+--- a/sycl/include/strata/core/verify.hpp
++++ b/sycl/include/strata/core/verify.hpp
+@@ -176 +176,4 @@
+-    bool commit_slot_prefixes(const int* keep, std::string& err);
++    // defer_completion is opt-in batch MTP only; caller joins within its batch step.
++    // A layer split (next_ != nullptr) keeps the synchronous path.
++    bool commit_slot_prefixes(const int* keep, std::string& err, bool defer_completion = false);
++    bool batch_commit_pending() const { return batch_commit_pending_; }
+@@ -476,0 +480 @@
++    bool batch_commit_pending_ = false; // direct graph event; clear only after successful batch join
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -2893,0 +2894,12 @@
++    if (batch_commit_pending_) {
++        const OnDevice on_device(device_);
++        const dpct::err0 se = DPCT_CHECK_ERROR(commit_done_->wait_and_throw());
++        if (se != 0) {
++            // Best-effort drain on error; preserve both pending flags on failure.
++            (void) DPCT_CHECK_ERROR(cs_->wait_and_throw());
++            err = "verify: deferred batch commit failed";
++            return false;
++        }
++        batch_commit_pending_ = false;
++        commit_pending_ = false;
++    }
+@@ -3492 +3504 @@
+-bool Verifier::commit_slot_prefixes(const int *keep, std::string &err) try {
++bool Verifier::commit_slot_prefixes(const int *keep, std::string &err, bool defer_completion) try {
+@@ -3494,0 +3507,2 @@
++    const bool overlap = defer_completion && next_ == nullptr;
++    if (overlap && commit_pending_) { err = "verify: a prior commit is still pending"; return false; }
+@@ -3514,2 +3528,13 @@
+-    const dpct::err0 le = DPCT_CHECK_ERROR(
+-        (cs_)->ext_oneapi_graph(*commit_bm_[bkey(last_rows_, S, row_base_)]));
++    dpct::err0 le = 0;
++    if (overlap) {
++        // Use the graph's own completion event: no extra barrier or empty query.
++        le = DPCT_CHECK_ERROR(*commit_done_ =
++            cs_->ext_oneapi_graph(*commit_bm_[bkey(last_rows_, S, row_base_)]));
++        if (le == 0) {
++            commit_pending_ = true;
++            batch_commit_pending_ = true;
++        }
++    } else {
++        le = DPCT_CHECK_ERROR(
++            (cs_)->ext_oneapi_graph(*commit_bm_[bkey(last_rows_, S, row_base_)]));
++    }
+@@ -3527,0 +3553 @@
++      if (overlap) (void) DPCT_CHECK_ERROR(cs_->wait_and_throw());
+@@ -3532 +3558 @@
+-    const dpct::err0 se = DPCT_CHECK_ERROR(cs_->wait());
++    const dpct::err0 se = overlap ? 0 : DPCT_CHECK_ERROR(cs_->wait());
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -117,0 +118 @@
++#include <stdexcept>
+@@ -9135,0 +9137,6 @@
++        const char* batch_commit_env = std::getenv("STRATA_BATCH_COMMIT_OVERLAP");
++        const bool batch_commit_overlap = batch_mtp && batch_commit_env != nullptr &&
++                                          std::strcmp(batch_commit_env, "1") == 0;
++        int64_t bt_commit_asked = 0, bt_commit_deferred = 0, bt_commit_joined = 0;
++        std::fprintf(stderr, "strata batch commit overlap: enabled=%d batch_mtp=%d (default OFF)\n",
++                     batch_commit_overlap ? 1 : 0, batch_mtp ? 1 : 0);
+@@ -9403 +9410,38 @@
+-            if (!(batch_mtp ? ver.commit_slot_prefixes(keep.data(), err) : ver.commit_slots(err))) {
++            // ON holds only this window's bounded BT/BDONE lines until commit
++            // completion; OFF preserves the original immediate printf positions.
++            std::string commit_publication;
++            if (batch_commit_overlap) commit_publication.reserve(1024);
++            auto publish = [&](const char* fmt, auto... values) {
++                if (!batch_commit_overlap) { std::printf(fmt, values...); return; }
++                char line[256];
++                const int n = std::snprintf(line, sizeof(line), fmt, values...);
++                if (n < 0 || (size_t) n >= sizeof(line))
++                    throw std::runtime_error("batch commit publication line overflow");
++                commit_publication.append(line, (size_t) n);
++            };
++            struct CommitJoin {
++                strata::core::Verifier& v;
++                int64_t& joined;
++                bool enabled, attempted = false, result = true;
++                bool finish(std::string& e) {
++                    if (attempted) return result;
++                    attempted = true;
++                    if (enabled && v.batch_commit_pending()) {
++                        result = v.wait_commit(e);
++                        if (result) ++joined;
++                    }
++                    return result;
++                }
++                ~CommitJoin() noexcept {
++                    if (attempted) return;
++                    try {
++                        std::string e;
++                        if (!finish(e))
++                            std::fprintf(stderr, "strata batch commit unwind: %s\n", e.c_str());
++                    } catch (...) {
++                        std::fprintf(stderr, "strata batch commit unwind: join threw\n");
++                    }
++                }
++            } commit_join{ver, bt_commit_joined, batch_commit_overlap};
++            if (batch_commit_overlap) ++bt_commit_asked;
++            if (!(batch_mtp ? ver.commit_slot_prefixes(keep.data(), err, batch_commit_overlap) : ver.commit_slots(err))) {
+@@ -9406,0 +9451 @@
++            if (ver.batch_commit_pending()) ++bt_commit_deferred;
+@@ -9427 +9472 @@
+-                    std::printf("BT %d %d\n", b, (int) y);
++                    publish("BT %d %d\n", b, (int) y);
+@@ -9434 +9479 @@
+-                        std::printf("BDONE %d %lld %s %.1f %lld %lld\n", b, (long long) sl.produced, fin, ms,
++                        publish("BDONE %d %lld %s %.1f %lld %lld\n", b, (long long) sl.produced, fin, ms,
+@@ -9517,0 +9563,11 @@
++            // No batch result is published in ON until this commit has joined.
++            // The same guard joins on every earlier return or C++ unwind.
++            if (!commit_join.finish(err)) {
++                std::printf("ERR %s\n", err.c_str());
++                return false;
++            }
++            if (batch_commit_overlap && !commit_publication.empty() &&
++                std::fwrite(commit_publication.data(), 1, commit_publication.size(), stdout) != commit_publication.size()) {
++                std::fprintf(stderr, "strata batch commit publication failed\n");
++                return false;
++            }
+@@ -9543,0 +9600,4 @@
++                if (batch_commit_overlap)
++                    std::fprintf(stderr, "strata batch commit overlap: asked=%lld deferred=%lld joined=%lld\n",
++                                 (long long) bt_commit_asked, (long long) bt_commit_deferred, (long long) bt_commit_joined);
++                bt_commit_asked = bt_commit_deferred = bt_commit_joined = 0;
