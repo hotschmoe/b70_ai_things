@@ -321,3 +321,14 @@ correctness contract; B70 AOT here is BMG-G31.
 Raw source snapshots/hashes, consultation streams, original and updated
 reviews, and root dispositions live under
 /mnt/vm_8tb/b70/results/backend-investment-20261015/.
+
+## Follow-up experiments (2026-10-15)
+
+E1-E4 ran after this review; see
+[backend_decision_20261015/README.md](backend_decision_20261015/README.md).
+Summary: llama.cpp restores full qwen4exp hybrid state from RAM without
+replay but runs this model at about 0.44x Strata C1 decode on SYCL;
+captured xccl all-reduce costs about 12.6 us per sync, so TP is not ruled
+out by synchronization; SGLang head cannot capture Qwen4Exp decode on XPU
+and its eager step is about 33 ms for 4 layers. Strata keeps backend-locked
+Flash-Next work; portable kernel work should be upstreamable to ggml-sycl.
