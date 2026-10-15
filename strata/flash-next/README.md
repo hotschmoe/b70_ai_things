@@ -252,3 +252,10 @@ S43's independent CPU check passes analytical bounds for the first Q6 C6
 pair, without a GPU rerun or production promotion. Reports:
 [S42](../../docs/20261015_strata_grouped_gemm_probe.md),
 [S43](../../docs/20261015_strata_q6_cpu_reference.md).
+
+
+S49 experimental0c30e8aa enables CPU-only batch PLE metadata borrowing
+(defaultOFF). Eight exact OFF/ON coding outputs, usage/functionals/normalQUIT/
+health PASS; aggregate reused tokens372->1491. Warm/r3 native-work mismatch
+and no useful matchedr1/r2 wall signal: keepOFF, no promotion or retry.
+Qualified152055a6 unchanged. [S49 report](../../docs/20261015_strata_batch_ple_prefetch.md).

@@ -570,7 +570,8 @@ ul.plain{padding-left:1.1rem}
     "lowlevel-s24/storage-identity.json",
     "head-profile-s25/ple/batch-trace-summary.json",
     "host-boundary-s32/analysis/run2/analysis.json",
-    "ple-prefetch-permutation-s47/cpu-report.json; metadata-wiring-audit.md"
+    "ple-prefetch-permutation-s47/cpu-report.json; metadata-wiring-audit.md",
+    "batch-ple-prefetch-s49-prep/{s49-root-report,comparison}.json; mode{0,1}/{aggregate-proof,normal-stop,post-health}.json"
    ],
    "quoted": [
     {
@@ -590,6 +591,12 @@ ul.plain{padding-left:1.1rem}
      "value": "88cases bytePASS; permuted additionalrows96->0,duplicate48->0",
      "basis": "TinyfiniteIQ4_NLGGUF, actualPleTable/SYCLhostPleReader/DirectFile, Mmaporacle, cache0/256 xworker0/1. Sourceonlymissingbatchwiring preventsservinggainclaim; noGPU.",
      "status": "measured"
+    },
+    {
+     "label": "S49 live CPU batch PLE wiring discriminator",
+     "value": "8 OFF/ON full-output pairs/usage/functionals/health PASS; aggregate reusedtokens372->1491; full work gate UNMATCHED, keep OFF",
+     "basis": "Same0c30e8aa exe, defaultOFF metadata borrow, GPUslotready0, DirectNVMe. Repeat1/2 fullymatched/no usefulwallgain; warm/r3 unmatched. HotstagePLE~20us->13us diagnostic, no globalceiling/physicalIO/GPUidle inference.",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -602,7 +609,7 @@ ul.plain{padding-left:1.1rem}
    "gaps": [
     "No absolute producer-ready/submit/complete anchors or exact GPU join. Per-ticket differences measured only when0<jobs<200; cache-hit gathers omitted.",
     "submit->last includes worker/reap/scheduling, not NVMe device-only latency.",
-    "S47 keymatching has no demonstrated liveC2 effect alone: freshbatchslotslacktable/hashmetadata andreadyguardblocksprefetch. Partialmetadata/wiringproposal needsactualpathcounters+matchedtokens/speed, nofullPleRun copy. Currentprefillworkerjoinsbeforebatchdispatch onlyscopedsourceproof."
+    "S49 proves live aggregate reuse after minimal metadata wiring; individual batch/window attribution remains absent. Full work gate unmatched and no useful matched speed signal, default OFF. Host access serialization is scoped, not a general threaded guarantee."
    ],
    "hypotheses": []
   },

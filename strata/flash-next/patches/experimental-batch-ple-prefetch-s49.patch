@@ -1,0 +1,156 @@
+--- a/src/kernels/ngram.cpp
++++ b/src/kernels/ngram.cpp
+@@ -508,27 +508,31 @@
+     if (impl_->pending) { err = "PleTable::gather_batch while a token is in flight"; return false; }
+     const size_t n = n_tokens * (size_t) PLE_N_HEADS;
+     if (impl_->mode == PleIo::Direct) {
+-        // Fast path: if all requested tokens match our in-flight/completed prefetch slots, collect them directly
++        // Fast path: match each requested token to any in-flight/completed prefetch slot, then collect directly
+         // without issuing a second PleReader ticket or copying through RowCache.
+-        if (impl_->n_prefetch >= n_tokens && n_tokens <= Impl::kMaxPrefetch) {
++        if (n_tokens <= Impl::kMaxPrefetch) {
++            size_t matched[Impl::kMaxPrefetch];
+             bool exact_match = true;
+             for (size_t t = 0; t < n_tokens; ++t) {
+-                if (std::memcmp(impl_->prefetch_keys[t], rows + t * PLE_N_HEADS, sizeof(uint32_t) * PLE_N_HEADS) != 0) {
+-                    exact_match = false;
+-                    break;
+-                }
++                size_t i = 0;
++                while (i < impl_->n_prefetch &&
++                       std::memcmp(impl_->prefetch_keys[i], rows + t * PLE_N_HEADS,
++                                   sizeof(uint32_t) * PLE_N_HEADS) != 0) ++i;
++                if (i == impl_->n_prefetch) { exact_match = false; break; }
++                matched[t] = i;   // duplicate requests may share one immutable prefetch slot
+             }
+             if (exact_match) {
++                bool collect_ok = true;
+                 for (size_t i = 0; i < impl_->n_prefetch; ++i) {
+-                    if (!impl_->reader.collect(impl_->prefetch_tickets[i], err)) {
+-                        impl_->n_prefetch = 0;
+-                        return false;
+-                    }
++                    std::string ignored;
++                    if (!impl_->reader.collect(impl_->prefetch_tickets[i], collect_ok ? err : ignored))
++                        collect_ok = false;   // retain the first error, but drain every output buffer
+                 }
+                 impl_->n_prefetch = 0;
++                if (!collect_ok) return false;
+                 for (size_t t = 0; t < n_tokens; ++t) {
+                     for (int h = 0; h < PLE_N_HEADS; ++h) {
+-                        impl_->decode(impl_->prefetch_raw[t] + (size_t) h * impl_->rb,
++                        impl_->decode(impl_->prefetch_raw[matched[t]] + (size_t) h * impl_->rb,
+                                       out + (t * PLE_N_HEADS + (size_t) h) * PLE_HEAD_DIM);
+                     }
+                 }
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -4139,6 +4139,11 @@
+     std::unique_ptr<strata::core::MtpPair> mtp_pair;
+     const char* pair_head_env = std::getenv("STRATA_BATCH_MTP_PAIR_HEAD");
+     const bool pair_head_on = pair_head_env != nullptr && pair_head_env[0] != '\0' && pair_head_env[0] != '0';
++    // Experimental CPU PLE prefetch only; the slot's GPU PleRun remains unbound.
++    const char* batch_ple_env = std::getenv("STRATA_BATCH_MTP_PLE_PREFETCH");
++    const bool batch_ple_asked = batch_ple_env != nullptr && std::strcmp(batch_ple_env, "1") == 0;
++    const bool batch_ple_on = batch_ple_asked && batch_mtp && o.serve && ss.ple.ready();
++    int batch_ple_wired = 0, batch_ple_gpu_ready = 0;
+     if (!o.mtp.empty()) {
+         if (o.spec < 2) {
+             std::fprintf(stderr, "strata generate: --mtp is ignored without --spec T (T >= 2)\n");
+@@ -4167,11 +4172,22 @@
+                     return 1;
+                 }
+                 d->set_max_drafts(batch_depth);   // 1: one proposal per slot (the first candidate); STRATA_BATCH_MTP_DEPTH
++                if (batch_ple_on) {
++                    bslot_ss[0][(size_t) b]->ple.table = ss.ple.table;
++                    bslot_ss[0][(size_t) b]->ple.consts = ss.ple.consts;
++                    ++batch_ple_wired;
++                }
++                batch_ple_gpu_ready += bslot_ss[0][(size_t) b]->ple.ready() ? 1 : 0;
+                 d->set_ple_session(bslot_ss[0][(size_t) b].get());
+                 slot_mtp.push_back(std::move(d));
+             }
+         }
+     }
++    std::fprintf(stderr, "strata: STRATA_BATCH_MTP_PLE_PREFETCH requested=%d mode=%s slots=%zu wired=%d "
++                         "table_open=%d slot_ple_ready=%d depth=%d vector_budget=%zu cap=16 (experimental CPU prefetch)\n",
++                 batch_ple_asked ? 1 : 0, batch_ple_wired > 0 ? "ON" : "OFF", slot_mtp.size(), batch_ple_wired,
++                 ss.ple.table != nullptr && ss.ple.table->is_open() ? 1 : 0, batch_ple_gpu_ready, batch_depth,
++                 slot_mtp.size() * (size_t) (1 + batch_depth));
+     // THE HEAD BEFORE THE CACHE, AND BEFORE THE ARENA.  The expert cache takes what is free minus the reserve, so
+     // everything allocated after it comes out of the reserve.  The native head (~0.5 GB with IQ3_S) was loaded after
+     // it and ate most of the 700 MiB: 128K IQ3_S ended with 30 MiB free, the driver paged, and a request stalled for
+--- a/sycl/src/core/mtp.cpp
++++ b/sycl/src/core/mtp.cpp
+@@ -1577,7 +1577,7 @@
+     if (!stage_source_R(T, err)) return false;
+ 
+     SessionState* const pss = ple_ss_ ? ple_ss_ : ss_;
+-    const bool do_ple = pss != nullptr && pss->ple.ready() && pss->ple.table != nullptr;
++    const bool do_ple = pss != nullptr && pss->ple.table != nullptr && pss->ple.table->is_open();
+     int32_t ple_prev[2] = {do_ple ? pss->ple_prev[0] : 0, do_ple ? pss->ple_prev[1] : 0};
+     auto prefetch_ple = [&](int32_t tok) {
+         if (!do_ple || tok < 0) return;
+@@ -2233,7 +2233,7 @@
+     for (int c = 0; c < 2; ++c) {
+         MtpDrafter& d = *d_[c];
+         pss[c] = d.ple_ss_ ? d.ple_ss_ : d.ss_;
+-        do_ple[c] = pss[c] != nullptr && pss[c]->ple.ready() && pss[c]->ple.table != nullptr;
++        do_ple[c] = pss[c] != nullptr && pss[c]->ple.table != nullptr && pss[c]->ple.table->is_open();
+         ple_prev[c][0] = do_ple[c] ? pss[c]->ple_prev[0] : 0;
+         ple_prev[c][1] = do_ple[c] ? pss[c]->ple_prev[1] : 0;
+     }
+--- a/src/kernels/ngram.cpp
++++ b/src/kernels/ngram.cpp
+@@ -204,6 +204,7 @@
+     const uint8_t* data = nullptr;
+     uint64_t n_rows = 0;
+     const PleFormatInfo* fmt = &ple_format_info(PleFormat::IQ4_NL);   // the table's format (#296: Q5_0 is one of them)
++    uint64_t prefetch_gathers = 0, prefetch_tokens = 0;
+     mutable uint64_t bytes_read = 0;
+     // Direct mode (plan v0.3 P2): the mapping above is released after the header parse and every row comes
+     // from an unbuffered SSD read into `raw`.
+@@ -434,6 +435,7 @@
+     impl_->fmt = &ple_format_info(PleFormat::IQ4_NL);
+     impl_->scale = 1.0f;
+     impl_->bytes_read = 0;
++    impl_->prefetch_gathers = impl_->prefetch_tokens = 0;
+ }
+ 
+ bool PleTable::is_open() const { return impl_->data != nullptr || impl_->reader.is_open(); }
+@@ -537,6 +539,8 @@
+                     }
+                 }
+                 impl_->bytes_read += (uint64_t) n * impl_->rb;
++                ++impl_->prefetch_gathers;
++                impl_->prefetch_tokens += (uint64_t) n_tokens;
+                 return true;
+             }
+         }
+@@ -601,7 +605,12 @@
+     if (s.keepalive_reads > 0 && n > 0 && n < (int) sizeof buf)
+         std::snprintf(buf + n, sizeof buf - (size_t) n, ", SSD kept awake by %llu reads (slowest %.1f ms)",
+                       (unsigned long long) s.keepalive_reads, s.keepalive_us_max / 1000.0);
+-    return buf;
++    // Keep the existing 400-byte report/keep-alive append unchanged; these exact
++    // integers have a separately bounded buffer and cannot be truncated by it.
++    char prefetch[112];
++    std::snprintf(prefetch, sizeof prefetch, ", prefetch_gathers=%llu prefetch_tokens=%llu",
++                  (unsigned long long) impl_->prefetch_gathers, (unsigned long long) impl_->prefetch_tokens);
++    return std::string(buf) + prefetch;
+ }
+ 
+ void PleTable::gather(const uint32_t* rows16, float* out2560) const {
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -12284,6 +12284,10 @@
+             std::fflush(stderr);
+             std::_Exit(1);
+         }
++        if (const char* diag = std::getenv("STRATA_BATCH_MTP_PLE_PREFETCH_DIAG");
++            diag != nullptr && std::strcmp(diag, "1") == 0)
++            if (const std::string io = ple_table.io_report(); !io.empty())
++                std::fprintf(stderr, "strata serve final: %s\n", io.c_str());
+         std::fflush(stdout);
+         std::fflush(stderr);
+         std::_Exit(0);

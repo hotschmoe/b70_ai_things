@@ -23386,3 +23386,65 @@ Datedreport/exactadapter+analyzer/smallHCmapupdate retained;40stages/170
 referenceopsandrollupsunchanged, S31CSV159separate. RawS50frozen113files/
 27,015,685bytes; externalmanifestSHA256
 7cd3d4e4405ec75ed161ca2937e236bdf2263141a52d7415f1b712b6144d102d.
+
+
+## 2026-10-15 -- Flash-Next optimization S49: live batch PLE reuse screen
+
+CONFIG: Same 0c30e8aa OFF/ON, helper/guards/counters common; only metadata
+borrow enabled ON, GPU slot ready0, Direct PLE, EP149/363/all24576 resident,
+batch2/depth2/headpairON/spec4, maxctx200000/32GiB parking unchanged.
+Existing S32 CPU markers ON both, no external profiler.
+COMMAND: Actual Opus5.5/Fable5.1 source reviews0(69.37/65.84s), exact pins.
+Setup failures10s initialization and18s root-owned Ninja log preserved;
+initialization order/only four build-output owners repaired. Successful
+incremental build202s, three TUs/two archives/AOT, no configure/stack change.
+Full prehealth; each fresh arm warm128x2 + three fresh128x2 + functionals;
+CPU only startup/quiet HTTP/health, whole-server pair GPU lease, normal QUIT.
+RESULT: Eight OFF/ON output pairs(16responses) exact text/SSE-content/usage,
+S16 warm prefix/128 counts and functionals PASS. Complete dropped0 markers
+reconcile native counts. Both wrappers/normal stops0, containers removed,
+per-card/compiledTP10 health0, no reset. Aggregate reused tokens372->1491,
+gathers93->284, rows46240->46288; demand-read counter15475 both, keepalive
+1561->1868. Not physical IO equivalence or per-window/batch-only attribution.
+Work gate UNMATCHED: warm80/79 vs79/80 accepted + capture roles; repeat3
+windows/pair/solo49/45/3 vs48/46/1. Matched r1wall4.824458->4.831223s,
+r2 4.794172->4.815717s, no useful gain. Preserve all pairs; no sorting,
+relabeling, token normalization or subset pooled claim. Hot stagePLE
+19.85/22.31->13.18/13.12us; whole-window46.245/46.250->46.165/46.190ms,
+counts41/40 matched. No universal ceiling/GPU occupancy/idle causality.
+Raw IDs unobserved; text/SSE/usage/work limitation predeclared. Fresh128
+client intervals include prefill pauses; content gaps are not token ITL.
+VERDICT: Mechanism/output/functional/health PASS, full work UNMATCHED, keep
+OFF/no retry/promotion/full-context or daily-restore campaign. Actual post
+claude-opus-5-5/claude-fable-5-1 agree(32.83/34.39s); root rejects physical
+IO equivalence/GPU-bound/universal-ceiling and proved admission explanation.
+HC next fixed S49OFF with fresh trace-gated clients/new paths both arms;
+S49 timings cannot be reused under that protocol. RPW head separately queued.
+Qualified152055a6 unchanged; absolute targets open. Dated report/exact patch/
+small PLE map+README update. Raw224files14,290,280B, manifest SHA256
+cbfa6b190e2f587adebcdafde76d32cff3369b090a9d2903e3466dd9fd3ef616.
+
+
+## 2026-10-15 -- Flash-Next optimization S53: verified NVMe native placement
+
+CONFIG: Source audit finds native47.04GB shard1 SATA, PLE28.80GB already
+NVMe. Active per-layer fill serial read/assembly/H2D waits; no IO causality
+claim. Stage trim set but inapplicable here. SATA startups172.223/82.127s
+are variable observations, not promised per-start cost or copy payback.
+COMMAND: After both S49 terminal normal stops/post-health, one CPU-heavy
+copy into NEW NVMe IQ3_XXS namespace under cpu-run. Exclusive temporary
+file/source pins, source-stream SHA/fsync/independent destination SHA;
+no overwrite, GPU touch, model substitution or stack/daily-config change.
+RESULT:47,039,860,096B, copy97.329s+verify64.519s,total161.851s,
+RSS33584KiB. Both hashes match model-lock primary
+219ea929900dfa9ef091f3aa473fdba6874b65fcb36526d7d851ac9e95856d15.
+Original inode/size/mtime preserved. Required PLE sibling links existing
+identical NVMe payload, stat/path pinned, no redundant28GB hash/copy.
+Future --native AND --ple-gguf must use new sibling path strings to avoid
+appending duplicate split metadata. Both future compared paths identical.
+VERDICT: Content placement PASS, startup benefit UNMEASURED; observe as
+byproduct of next fresh controlled serve. No physical bandwidth/payback/
+offline AOT-cache reuse claim, new framework or separate GPU file-copy test.
+Source audit/exact copy recipe/identities/dated report retained. Frozen
+S53 evidence manifest SHA256
+b862fd1de7372c9de9b02080188ce71b5af92d12851549f34b7ffd639649eb49
