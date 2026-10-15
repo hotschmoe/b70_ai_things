@@ -231,7 +231,15 @@ and was stopped. All post xpu-health and collective health passed.
 VERDICT: a prompt-dependent correctness bug in the ggml-sycl reorder
 optimization (ENABLE_OPT; reordered IQ3/Q6_K mat-vec kernels are in the E6
 trace) on this model. E2's llama.cpp speed rows were measured with this
-path on and are superseded by the OPT=0 rows below. Not yet reported upstream.
+path on and are superseded by the OPT=0 rows below.
+
+Follow-up: the cause is upstream #29107 (IQ3_S/IQ3_XXS reorder, merged
+2026-10-14) meeting the plain fused-dequant GEMM; open PR #30604 fixes it.
+e467e5b5 + PR 30604 (scripts/pr30604-build.sh, 7 min incremental under
+cpu-run; scripts/pr30604-check.sh) with default OPT: arithmetic 14/14 correct
+at 25-441 tokens, coding coherent, post health PASS. Reported as a
+confirmation comment on the PR instead of a duplicate issue:
+https://github.com/ggml-org/llama.cpp/pull/30604#issuecomment-6203833524
 
 ### E5 matched serving (Strata's own harness), llama.cpp OPT=0
 
@@ -283,5 +291,6 @@ shares may shift slightly with OPT=0.
 Strata stays the Flash-Next backend. The matched harness puts correct
 llama.cpp SYCL at 0.39x C1 and 0.45x C2, and today's llama.cpp SYCL needs a
 non-default switch to be correct on this model. The hedge remains
-upstreamable work in ggml-sycl, now with two concrete items: the reorder
-correctness bug and a bf16 GEMV for hc tensors.
+upstreamable work in ggml-sycl: the reorder bug already has a fix
+(PR 30604, confirmed here); the open kernel item is a bf16 GEMV for hc
+tensors.
