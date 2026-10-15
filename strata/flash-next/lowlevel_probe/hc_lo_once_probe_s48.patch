@@ -1,0 +1,34 @@
+--- production/fused_gr.dp.cpp
++++ probe/fused_gr.s48.dp.cpp
+@@ -667,6 +667,7 @@
+     return v;
+ }
+ 
++bool g_s48_lo_once = false;  // probe only; host toggles after explicit queue drain
+ constexpr int UPM_COLS = 16;                      // columns per block (x 4 streams = 64 rows, 8 per warp)
+ constexpr int UPM_BLOCKS = N / UPM_COLS;          // 160
+ constexpr int UPM_COLS_MORE = 8;                  // gr_more_groups: 8 columns (32 rows, 4 per warp)
+@@ -856,6 +857,14 @@
+                                                         sycl::ext::intel::experimental::grf_size<256>},
+             [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] { gr_up_multi_kernel<C>(m); });
+         return;
++    }
++    // Probe ONLY: no production header/API edit; default OFF, C16/GRF0/ILP0 only.
++    if constexpr (C == UPM_COLS) {
++        if (g_s48_lo_once && !gr_up_ilp()) {
++            st->parallel_for<dpct_kernel_name<class gr_up_multi_cols_lo_once_s48, dpct_kernel_scalar<C>>>(r, exp_props,
++                [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] { gr_up_multi_kernel<C, false, true>(m); });
++            return;
++        }
+     }
+     if (gr_up_ilp())
+         st->parallel_for<dpct_kernel_name<class gr_up_multi_cols_ilp, dpct_kernel_scalar<C>>>(r, exp_props,
+@@ -2053,6 +2062,8 @@
+ 
+ // the bench only (AMD latency-hidden kernels): nothing to switch on the SYCL port
+ void fused_gr_set_fast(int) {}
++// Probe-only private TU: one host thread, caller drains queue before changes.
++bool s48_set_lo_once(bool on) { g_s48_lo_once = on; return g_s48_lo_once; }
+ 
+ bool fused_gr_supported(int64_t n_embd, int64_t hc, int64_t hc_lr) {
+     return n_embd == N && hc == HC && hc_lr == LR;

@@ -295,3 +295,12 @@ cache0/256 and io_thread0/1. It includes the pinned external production
 The key-match patch is source-only; batch prefetch wiring is separately
 unapplied and no serving benefit is measured. No broad inherited selftest
 is run. [S47 report](../../../docs/20261015_strata_ple_prefetch_readiness.md).
+
+
+S48 `lo_once_oracle.cpp` is exact executed67377dd9/binary7e3f1345. Private
+`hc_lo_once_probe_s48.patch` selects existingLO_ONCE atsamecols16, preserving
+production sources/archives. One44s offlinebuild/45s card1window,36 full
+strictpairs/S39hashanchors PASS; warmT6 failsdeclaredspreadscreen. Analyzer
+`analyze_hc_lo_once_s48.py` is exact executedsource; runitfromtheretainedraw
+bundlewithS39data, not this inspectioncopy. No serving/integration claim.
+[S48 report](../../../docs/20261015_strata_hc_lo_once_probe.md).

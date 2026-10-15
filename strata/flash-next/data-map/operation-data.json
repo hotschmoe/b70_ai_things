@@ -1,7 +1,7 @@
 {
  "schema": 1,
  "title": "Strata Flash-Next data map",
- "snapshot": "2026-10-15 S43: S22 reference ops, S30 RAM, S31 replay, S32 CPU boundaries, S33 quantum, S34 dispatch, S35 alias gate, S38 serving, S39 HC resource probe, S41 Q6 strict gate/selected CPU reference, S42 grouped GU strict gate, S43 full first-C6 CPU accuracy, S44 four-shape CPU bounds/warm C6 rejection, S47 CPU PLE matching/readiness",
+ "snapshot": "2026-10-15 S43: S22 reference ops, S30 RAM, S31 replay, S32 CPU boundaries, S33 quantum, S34 dispatch, S35 alias gate, S38 serving, S39 HC resource probe, S41 Q6 strict gate/selected CPU reference, S42 grouped GU strict gate, S43 full first-C6 CPU accuracy, S44 four-shape CPU bounds/warm C6 rejection, S47 CPU PLE matching/readiness, S48 HC predicate/inconclusive warm timing",
  "scope": "Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two Arc Pro B70 cards, Strata SYCL engine, EP/PUSH, batch MTP depth2 (opt-in), two 200000-token slots, INT8 KV, 32 GiB / 4-entry RAM parking, all 24576 experts resident (7152 on GPU0 + 17424 on GPU1), greedy.",
  "warnings": [
   "Trace service times overlap: within a card (engines), across cards, and with CPU wall time. They are NOT additive and are not a latency budget.",
@@ -46,7 +46,8 @@
    "../../../docs/20261015_strata_grouped_gemm_probe.md (S42 direct grouped GU strict failure; no candidate H/down or timing)",
    "../../../docs/20261015_strata_q6_cpu_reference.md (S43 independent full first-C6 CPU reference; no GPU rerun or production qualification)",
    "../../../docs/20261015_strata_q6_collection_and_warm_probe.md (S44 four-shape independent arithmetic coverage and warmed C6 rejection)",
-   "../../../docs/20261015_strata_ple_prefetch_readiness.md (S47 actual CPU reader path counts and source-only missing batch prefetch wiring)"
+   "../../../docs/20261015_strata_ple_prefetch_readiness.md (S47 actual CPU reader path counts and source-only missing batch prefetch wiring)",
+   "../../../docs/20261015_strata_hc_lo_once_probe.md (S48 duplicate-store predicate strict pass, declared timing screen fails)"
   ],
   "results_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
   "prototype_binary": "S26 CPU-only strata-head-pair-s26 SHA256264f221e2c1b02d4bdd9b332c46f91e91bf4f6301afbdabe563df5ff2a16e44a; not GPU served; default pair option OFF.",
@@ -62,7 +63,8 @@
   "grouped_peer_probe": "S42 frozen64586e43, one44s card1 window after139s offlinebuild; direct oneMKLgroupedGU on16realexperts/10formats/1748rows. StrictGUFAIL902568/2237440, maxabs7.45e-8; all prior guards/metadata/readonly/tails and bothhealth/teardownPASS. No candidateH/down/timing/serving.",
   "q6_cpu_reference": "S43 executed7831f155 CPUchecker, existingfirstC6pair only, 15360outputs perpath withinpredeclaredsourceboundsL15/18, maxreferenceerror6.42e-7/7.53e-7, wrong-rowmutantsallfail.12.9MBpayload/1.9545s/54452KiBpeakRSS, noGPU/newmath/serve.",
   "q6_collection_warm_probe": "S44 frozen93f8bfc9/v3source40ba97c1, one101s build/42s card1window/96snapshots/normalhealth0. CPU11.43s/67580KiB checks72cases2,623,488outputs/73.1MBpayload; all pass declared source bounds. WarmC6 original->packed us/call batch medians63.609->63.466,74.907->142.584,90.790->162.209,47.342->87.863; no integration/serve. S46 source-only.",
-  "ple_prefetch_readiness": "S47 realCPU22s/88cases: generic keylookup turnspermuted gather96->0additionalrequests andduplicate48->0, all4cache/threadconfigs/outputbytePASS. SourceauditfindsfreshbatchslotPleRun.table null so currentMTPreadyguardblocksCPUprefetch. Partialmetadata sourceproposalonly, no runtime/GPU/speed claim."
+  "ple_prefetch_readiness": "S47 realCPU22s/88cases: generic keylookup turnspermuted gather96->0additionalrequests andduplicate48->0, all4cache/threadconfigs/outputbytePASS. SourceauditfindsfreshbatchslotPleRun.table null so currentMTPreadyguardblocksCPUprefetch. Partialmetadata sourceproposalonly, no runtime/GPU/speed claim.",
+  "hc_lo_once_probe": "S48 privateTU26edf194/binary7e3f1345,44s offlinebuild/45s card1window.12cases/36strictsnapshotpairs26,919,936bytesPASS; ownchangedgraphs+36S39recordedSHAanchorsPASS;78snapshots/health0/removal. WarmT6whole-read med61.714->57.999us/call but3.715usdiff<7.316uscontrolspread; failedpredeclaredscreen, nointegration/servingwin."
  },
  "geometry": {
   "source": "Confirmed against served GGUF metadata with CPU-only tools/gguf_reader.py: lowlevel-s24/model-geometry.json. Derived: 12 QSA/36 GDN layers, ssm_conv_channels=2*128*16+6144; defaults cross-checked against include/strata/core/geometry.hpp.",
@@ -808,7 +810,8 @@
    "evidence": [
     "draft-profile-s22/profile/steady-summary",
     "head-pair-s31/analysis-prep/result/final-analysis.json",
-    "grf-oracle-s39-prep/{s39-report,build-closure}.json; run-profiled/window{0,1}/closure.json + comparison.json"
+    "grf-oracle-s39-prep/{s39-report,build-closure}.json; run-profiled/window{0,1}/closure.json + comparison.json",
+    "hc-lo-once-s48-prep/{s48-analysis,s48-report}.json; root-build-decision.json; run-clean/closure.json"
    ],
    "quoted": [
     {
@@ -840,6 +843,12 @@
      "value": "48fullsnapshotpairs35,893,248bytesPASS; actual1260DOWN/UP eachmode; reportedregisters128vs256/private0/spill0",
      "basis": "Synthetic BF16 T1/2/6 apply/inject, T2/6changedinputgraph. Unitrace-instrumented whole-read slowerall12cases4.62-17.62%; no clean/serving regression or dynamic occupancy claim. Default retained.",
      "status": "measured"
+    },
+    {
+     "label": "S48 same-geometry global lo store predicate",
+     "value": "36strictpairs+S39anchorsPASS; warmmedian-6.019percent failsdeclaredspreadscreen",
+     "basis": "OneprocessT1/2/6graphs/guards; cleanwarmT6A1I1only,3paired32-callbatchmeans. Controlrange7.316us > mediandiff3.715us; enqueuetimetrend/positionassociation unresolved. Graph-onlydiscriminator justified, no sourceintegration/serve.",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -851,7 +860,8 @@
     "gdn"
    ],
    "gaps": [
-    "Which of the 109 calls/cycle belong to drafter versus target passes is not separated."
+    "Which of the 109 calls/cycle belong to drafter versus target passes is not separated.",
+    "S48 source removesduplicateglobal lo stores withsameprivateSLMmath; no measuredphysicalstoretraffic or isolatedUPdelta. Directwarmresultinconclusive; graphreplaytiming andmodebindingevidence next, nofullserveyet."
    ],
    "hypotheses": [
     {
@@ -2448,6 +2458,13 @@
    "value": "44cases/arm; bitwisePASS; gatherrequests96->0 permutation/48->0 duplicates",
    "status": "measured",
    "note": "22s host-onlycontainerbuild/run; firsthostg++attempt127beforecompile. Unappliedhelper, missinglivebatchprefetchwiring sourceaudit. NoGPU/servingspeedclaim."
+  },
+  {
+   "stage": "S48",
+   "label": "HC one-predicate numerical and clean warm screen",
+   "value": "Numerical36pairs/S39anchorPASS; performanceINCONCLUSIVE",
+   "status": "measured",
+   "note": "44s build/45s card1inclhealth. Warmwhole-read batchmedian61.714->57.999us/call, butdeclaredspreadtermFAIL3.715<7.316us. All3pairedsignsfavorcandidate; visibleenqueue/positiontrend precludeswinclaim. No mainintegration/serving."
   }
  ],
  "rejected_parked": [
@@ -2510,6 +2527,11 @@
    "item": "S44 packed Q6 main-owner integration as configured",
    "status": "rejected",
    "evidence": "q6-dense-reference-s44-prep/warm-report.json: warmC6 neutralone/slowerthree,803.90625MiB additionalplanes ifintegrated. CPU bounds diagnosticPASS does not justify build/serving; S46 remainsunapplied."
+  },
+  {
+   "item": "S48 HC LO_ONCE integration pending graph discriminator",
+   "status": "parked",
+   "evidence": "AllstrictgatesPASS, directwarmtimingfailsdeclaredspreadscreen. No winnerclaim/repeatdirectprobe. S50adapter-onlygraphprobe prepared separately; AOTlinkwillregeneratedeviceimages."
   }
  ],
  "coverage_gaps": [
@@ -2539,7 +2561,8 @@
   "S41 changed bits do not establish an invalid operator. New numerical gate requires source-derived error bounds and independent full coverage; current strict gate remains failed. No serving/speed inference from selected CPU reference or one cold service sample.",
   "S42 exact CPU-vs-device FP16 dequant operand equivalence is unproven. S44 four-shape/six-column and changed-input arithmetic coverage does not establish all52 matrices/indexing semantics/model quality. No immediate fullserve/cache campaign.",
   "S44 repeated-weight C6 batchmeans do not establish streaming-serving/cache effects, physical bandwidth, kernel-only service or per-request tail latency. No additional measurement is needed to decline integration now.",
-  "S47 CPUgenericmatching proof doesnot establishlivebatchprefetchactivation/keyreuse/latency. Missingprimarybatchmetadata sourcefinding; scopedpartialwiringproposal remainsunapplied. S32 gather0.829ms isnot removablesavings."
+  "S47 CPUgenericmatching proof doesnot establishlivebatchprefetchactivation/keyreuse/latency. Missingprimarybatchmetadata sourcefinding; scopedpartialwiringproposal remainsunapplied. S32 gather0.829ms isnot removablesavings.",
+  "S48 directwarmmeans do not isolatecandidateUPservice; enqueue/eventspanoverlap andpositiontrend unresolved. Candidatekernelbinding is source/API/build evidence, not independentlytraceddispatch; bit-identicaloutputs alonecannotidentifyvariant. No fullservingspeedclaim."
  ],
  "operations": [
   {

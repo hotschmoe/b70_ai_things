@@ -243,3 +243,11 @@ audit finds missing batch-slot prefetch metadata, so helper alone has no
 current C2 speed claim. Wiring remains source-only; no GPU window. Existing
 170operation rows/rollups unchanged.
 [S47 report](../../../docs/20261015_strata_ple_prefetch_readiness.md).
+
+
+S48 same-geometry HC store predicate passes36 full numerical pairs and
+preserved S39 hashes/ownchangedgraphs, health/teardown. Clean directwarm
+T6 medians favorcandidate but failthepredeclaredspreadscreen; performance
+is inconclusive, no integration. Graph-onlydiscriminator is separately
+prepared. Reference170operation rows/rollups unchanged.
+[S48 report](../../../docs/20261015_strata_hc_lo_once_probe.md).

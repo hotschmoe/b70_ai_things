@@ -23320,3 +23320,33 @@ prepared/reviewing, notmeasured. Datedreport/exactoracle/patch/map retained;
 old170operations/rollups unchanged. Rawple-prefetch-permutation-s47 frozen:
 62files1,642,098bytes; manifestSHA256
 97a0dfbd20afa3cad7769f764c0bf36a936a5a4920af88471c0751da577d622b.
+
+
+## 2026-10-15 -- Flash-Next optimization S48: HC duplicate-store predicate
+
+CONFIG: ExistingLO_ONCE group0 global-lo store atsameC16/GRF0/ILP0, unchanged
+privateSLM math/geometry. PrivatecopiedTU only; productionpatchunapplied.
+COMMAND: ActualOpus5.5/Fable5.1 source/buildreviewsREADY; rootmatchesNinja
+flags/checksarchive/member/link. One44sCPU-onlyTU+adapterbuild, frozen7e3f1345;
+one45squietcard1window, strict12cases/ownchangedT2/T6graphs before warmT6.
+RESULT:36strictfullsnapshotpairs26,919,936bytesPASS;36mode0phasesalsoequal
+preservedS39recordedSHA snapshots. Memory/readonly/tails/finitesPASS;three
+warmfinalpairsmatch,78snapshotsretained. Oracle0/prehealth0/posthealth0/
+containerremoved, noreset. Warm32-callbatchmeansus/call base66.855/59.539/
+61.714 vsnew59.591/57.999/55.523, AB/BA/AB. Pairedchanges-10.866/-2.587/
+-10.031percent, medians61.714->57.999(-6.019percent). Declaredscreen FAILS:
+mediandiff3.715us<controlrange7.316us despiteallsigns/2percentconditions.
+Enqueue drifts53->37.5->28.1base/45->34.4->25.8new; nohostdominance/physical
+traffic/isolatedUP inference from overlappingenqueue/eventspans.
+VERDICT: NumericalPASS/performanceINCONCLUSIVE, nointegration/fullserve/
+mainbuild/cachecampaign. ActualpostreviewmodelIDsclaude-opus-5-5 and
+claude-fable-5-1 agree(52.80/59.19s). Source/API/buildbinding distinguished
+fromindependentGPUdispatchtrace; identicaloutputscannotidentifyvariant.
+Onegraph-onlydiscriminator justified; reuseIRarchive/member, finalAOTlink
+regeneratesdeviceimages, requiresboundedT6anchors. No repeateddirectprobe,
+knobsweep orall12casecampaign forunchangedIR. PLElivecandidate independently
+prepared/defaultOFF, notapplied. Winner152055a6/headpairON/depth2unchanged.
+Datedreport/exactadapter/probe-delta/candidate/analyzer/map retained;170
+referenceoperations/rollups unchanged. Rawhc-lo-once-s48-prep frozen:
+149files85,892,469bytes; externalmanifestSHA256
+ d76c95ee913b3d986a520b3ef37917a256b76fa6814eca60d301310d37b6170d.
