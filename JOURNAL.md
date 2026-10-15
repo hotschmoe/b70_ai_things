@@ -22504,3 +22504,31 @@ VERDICT: use this cheap oracle before another4x200k qualification. Fable
 source-fix and Opus topology/copy artifacts prepare independently; root
 queues leased GPU windows. No promotion. Details: stage doc S17; raw
 cachefix_20261014/small-baseline/result-summary.json and full request data.
+
+
+## 2026-10-15 -- Flash-Next optimization S18: useful GPU work between serves
+
+CONFIG: standalone SYCL transfer probe, kernel7.1.0-070100/imagee41d59c0;
+binary6d3ff9cd/source41a43db4. No model; default schedutil, quiet load<1.
+Threadripper1950X: one OS NUMA node/four LLC groups/separate Gen3x16 roots.
+COMMAND: per-card leases/pins/PCI gates;42 odd-byte/offset/guard cases, then
+64MiB10/256MiB8 fresh-pattern samples on card0CPU2/card1CPU10. One bounded
+card0CPU10 control. Enqueue/wait/service/alloc/free/faults recorded, normal
+exit/per-card and ten compiled collective health. No daily restore.
+RESULT: all byte/freshness checks pass; no crash/reset, health passes.
+256MiB medians card0/card1: fresh zero-vector alloc+save176.83/179.37ms,
+noinit142.66/145.29, persistent host-USM57.87/57.87; its restore19.24/19.23
+vs fresh-vector restore+free64.78/64.91. D2D1.03ms, pinned H2D18.9/D2H57.7;
+H2H~80ms is not PCIe. Alternate CPU transfer medians within2.7%; fresh
+allocation202.72ms with more faults. No NUMA attribution or model-gain claim.
+VERDICT: actual claude-opus-5-5 review points to fresh per-layer temporary
+images in slot copies. Prepare existing pageable reuse first, preserve full
+recopy/checkpoints/geometry/rings/MTP. Pinned allocator/direct-copy API needs
+separate justification. Fable correctness work ongoing; small no-recompute
+oracle still fails, no full-context rerun/promotion. Skip extra placement,
+P2P and noinit matrices; timed probe already includes oracle, so no separate
+oracle-only next time. Persistent streaming/narrower Claude tasks avoid
+initial35turn-cap/context loss. CPU16MiB warm-copy extrapolation rejected.
+Details: stage doc S18; raw cachefix_20261014/agents/opus/s18-report.json,
+all identities/commands/raw samples/reviews/health. Probe sources tracked in
+strata/flash-next/latency_probe/. User dirt preserved; all servers stopped.

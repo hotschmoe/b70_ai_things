@@ -1153,3 +1153,60 @@ real GPU work remains root-coordinated under leases, with CPU-quiet timing
 windows where required. No full-context promotion or source-fix claim.
 RAW: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/small-baseline
 (result-summary.json, config/residency, context request/phase data and health).
+
+
+## S18: snapshot copy paths across cards and CPU placements (2026-10-15)
+
+CONFIG: standalone SYCL component probe, no model/server. CPU-only AOT build
+in image e41d59c0; binary6d3ff9cd/source41a43db4; kernel7.1.0-070100.
+Threadripper1950X: one OS NUMA node, four8MiB LLC groups, separate PCI root
+complexes/Gen3x16 host links. No proven die-local CPU mapping. Default
+schedutil governor, no builds/serves/CPU-heavy agents during timing, load<1.
+COMMAND: leased and pinned card0/CPU2, card1/CPU10; 42 odd-size/offset/guard
+cases each, then64MiB10/256MiB8 samples with fresh patterns and poisoned
+destinations. One card0/CPU10 control,256MiB8 with relevant subset only.
+Record enqueue/wait, event service, allocation/free, faults and exact bytes.
+Normal process exit, per-card and ten compiled collective post-health.
+RESULT: all byte/guard checks and sample freshness pass; physical PCI IDs
+match pins. At256MiB (seven later samples), card0/card1 respectively:
+
+| Path | Card0 ms | Card1 ms |
+| --- | ---: | ---: |
+| Warm pageable H2D | 43.60 | 42.38 |
+| Persistent host-USM H2D | 18.90 | 18.93 |
+| Warm pageable D2H | 61.25 | 61.05 |
+| Persistent host-USM D2H | 57.74 | 57.73 |
+| Same-device D2D | 1.03 | 1.03 |
+| Fresh vector allocation + segmented save | 176.83 | 179.37 |
+| Uninitialized allocation + segmented save | 142.66 | 145.29 |
+| Persistent host-USM segmented save | 57.87 | 57.87 |
+
+Fresh vector allocation alone111.98/114.02ms; paired restore including
+free64.78/64.91ms. Persistent segmented restore19.24/19.23ms, pool creation
+excluded. Host-to-host queue copies~80ms are NOT PCIe traffic. Alternate
+CPU keeps transfer medians within2.7%; fresh-vector save+allocation rises
+to202.72ms with65505 vs53216 minor faults. Do not attribute this allocation
+difference to NUMA or generalize no placement effect beyond this window.
+No crash/reset; post-health passes. All servers remain stopped, no daily
+restore. These are hardware component results, not model gains.
+VERDICT: actual claude-opus-5-5 source review identifies fresh per-layer
+temporary ConversationKv in both slot-copy lambdas. Prepare the smaller
+pageable-image reuse candidate before introducing pinned storage. Default
+unchanged_tokens=0 must keep full recopy, even across layers/conversations.
+Retain geometry validation, stream/ring restore and MTP behavior. Correct
+slot preservation first; small no-recompute gate before full contexts.
+Direct same-device copy may remove the bounce later, with separate state
+and ring validation. API payload3164MB may mix host/device-authoritative
+pools; do not derive physical traffic or serving speed from this table.
+
+Development loop: CPU/source agents prepared work while root used the GPU
+gap. Skip more placement/P2P/NOINIT matrices and repeated small/full runs.
+Timed probe includes its own42case oracle, so standalone oracle-only runs
+were redundant here and are unnecessary next time. Source review rejected
+CPU warm-copy extrapolation: that arm repeats one16MiB pair, not a multi-GiB
+footprint. Prefer persistent streaming Claude sessions and narrow concrete
+deliverables; initial35turn Opus cap required a focused continuation.
+Fable correctness candidate still in progress; no cache-fix claim in S18.
+RAW: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/agents/opus
+(s18-report.json, root-summary/identity, topology, commands, samples, source
+reviews, build and health). Source: strata/flash-next/latency_probe/.
