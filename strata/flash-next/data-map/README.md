@@ -6,7 +6,7 @@ path, which operations are expensive or wait, and how strong the evidence
 is for each claim. `operation-data.json` is the source of truth;
 `index.html` embeds a copy of it.
 
-Snapshot: 2026-10-15, S26 (S22 operation trace plus readiness, real-head,
+Snapshot: 2026-10-15, S27 (S22 operation trace plus readiness, real-head,
 production PLE and EP correctness diagnostics). Runtime source:
 `/mnt/vm_8tb/b70/build/strata-ab/src-ep` (upstream Strata 296b59d2 base
 plus working-tree overlays for EP/PUSH/accounting/S19-S21 and the
@@ -89,3 +89,9 @@ the frozen S21 binary. The live src-ep source now has the optional S26
 prototype; reference source snapshots/provenance are recorded in the JSON.
 Both-card/compiled-collective post-health passes. Failed-arm timing data
 does not establish a serving gain or serving-output corruption.
+
+S27 observes the intended wait epoch in debug failures: first receiver
+copy consumes current poison while immediate second/third copies pass.
+Native/debug arms and post-health are recorded separately. This narrows
+the question without proving its cause; source/SPIR-V is not native BMG
+ISA. No new speed result or runtime fix is claimed.

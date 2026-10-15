@@ -22796,3 +22796,26 @@ no ungrounded timelines or crosskernel hash requirement. Keep reusable
 SYCLprobes/kernels and complete-state oracles; no sixway bakeoff. Strata
 S27 continues separately under coordinated worker ownership. Raw source,
 reviews and model-provenance audit: results/backend-investment-20261015.
+
+
+## 2026-10-15 -- Flash-Next optimization S27: intended epoch, transient stale read
+
+CONFIG: Fable5.1 boundedtripleread/debugwait, Opus5.5 static source/SPIRV;
+actualmodels verified. Probe49cfed4f/source26e26f96, nativeEPhash164ea229
+and archivesunchanged.17520Bpush/614400Breturn, freshpoison/guards/caps.
+COMMAND: coordinatedworker audits11manifesthashes/queue/mappinglifetime;
+leasednative+extra2,debug+extra2, producerpoison, reps64/maxfail2/outer120s;
+post-EACH-arm percard and ten compiled4x5120 BF16/P2P0 collectives.
+RESULT: nativefirstreadbad956/1428,debug1404/1406; second/thirdboth0,
+all currentINBOXpoison. Debugactualwanted3/4,flag2->3/3->4,spins198/203,
+err0/1=0. Alllateviews/guards/returnclean. Botharms drainedexit5, normal
+containerremoval,nocrash/timeout/reset. AllposthealthPASS,leasesFREE.
+VERDICT: wrongwantedepoch excludedforTHOSEdebugfailures, nativeinside
+unobserved. Transientfirstconsume remains; inboundcompletion vsreceiver
+visibility unresolved. Extra reads NOTfix, nolatency/productioncorruption
+claim. OpusonlySPIRV,NOTnativeBMGISA (turncap/incompletedisasm preserved).
+Reuseexistingbinary,no freshengine/fullmodel/cache/soak/dailyrestore;
+trackedprobe source exactlymeasured, adaptedwrapper bashsyntaxPASS only.
+NextCPUonlysplitpayload/flagkernel discriminator preparedseparately; no
+runtime/default/shelfchange. Raw ep-ordering-s27/dispatch/s27-report.json,
+stagedocS27, lowlevel_probe/README.md.

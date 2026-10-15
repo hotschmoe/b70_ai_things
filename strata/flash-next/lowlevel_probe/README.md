@@ -150,3 +150,33 @@ Prototype source: patches/experimental-batch-mtp-pair-head-s26.patch.
 It is CPU-built and unqualified on GPUs. Slot-order binding, allocation
 context and error propagation were corrected in review; its syntax and
 CPU argument-binding tests pass. The serving control remains frozen S21.
+
+S27 extends the same probe with `--extra-reads 2`: after the first receiver
+copy, read the same inbox twice into distinct poisoned private buffers on
+the same in-order queue, with no intervening host wait. `--wait debug`
+records wanted/first/last epochs and spins from the actual device wait.
+These are diagnostic arms; neither extra reads nor debug wait is a fix.
+The tracked source exactly matches measured S27 source26e26f96; binary
+49cfed4f is preserved in raw ep-ordering-s27/fable-dynamic/build/.
+
+`run_ep.sh flag producer 0 64 native 2` selects native wait plus extra
+reads; change argument5 to `debug` for the observed-epoch arm. The wrapper
+retains maxfail1; measured raw dispatch used maxfail2. Wrapper bash syntax
+is checked; measurements used the frozen raw dispatch launcher, not a
+redundant rerun of this adapted wrapper.
+
+S27 native first/second/third read bad-word counts956/0/0 and1428/0/0;
+debug1404/0/0 and1406/0/0. Only current inbox poison was consumed. Debug
+wanted3/4 and observed flags2->3/3->4 (198/203 spins) match intended epochs.
+This excludes a wrong wanted epoch for THOSE debug failures; native
+internal values remain unobserved. It does not settle incoming payload
+completion versus receiver visibility. Later views and return/guards are
+clean. All queues drained, no crash/timeout/reset, both-card and ten
+compiled two-rank collectives pass after EACH arm. All failed-arm latency
+claims remain excluded; no production output-corruption claim.
+
+Opus extracted source/SPIR-V evidence, but native BMG ISA extraction did
+not complete. Do not label that output hardware disassembly. Next prepared
+probe-only discriminator separates payload and flag into consecutive
+producer kernels; it is not a runtime patch. Raw report:
+cachefix_20261014/ep-ordering-s27/dispatch/s27-report.json.

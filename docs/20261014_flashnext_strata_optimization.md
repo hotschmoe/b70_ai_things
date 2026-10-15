@@ -1687,3 +1687,46 @@ model/cache/soak repeats and daily-server restoration. No speed or shelf
 promotion. Tracked probes and patches are under strata/flash-next; raw
 cachefix_20261014/head-pair-s26/s26-report.json includes hashes, commands,
 root review dispositions, failures and final health logs.
+
+## S27: intended epoch observed, first read stale (2026-10-15)
+
+CONFIG: actual Fable5.1 prepared a bounded dynamic probe; actual Opus5.5
+prepared static source/SPIR-V analysis. Frozen source26e26f96, binary
+49cfed4f7b018fa3af8a0e0681abe8af20e41a2eecc91169e765ee1529c2fa44;
+native EP source/archives unchanged. Producer poison,17520B push,614400B
+return; distinct stage poison, guards and finite spin/host/outer caps.
+
+COMMAND: coordinated worker audits all11 manifest entries and queue/mapping
+lifetimes, then pair-leased native and debug waits with two extra immediate
+same-queue receiver reads, maxfail2/reps64, outer120s. Both in-order queues
+fully drain before readback/free. Required per-card and ten compiled4x5120
+P2P0 collectives after EACH arm. No model serves or engine rebuilds.
+
+RESULT: native first use passes, two failures consume956/1428 current
+inbox poison words; second/third reads both zero bad. Debug failures consume
+1404/1406 first-read poison words, both later reads clean. Device side
+channel records wanted3/4, actual flag transitions2->3/3->4,198/203 spins,
+no spin error. The intended epoch really was observed in these debug
+samples. Post-drain source/inbox views clean; return and guards pass.
+Normal drained exit5, removed containers, no timeout/crash/reset. Both-card
+health and all ten compiled collectives pass after each arm.
+
+VERDICT: exclude wrong wanted epoch for THESE debug samples, not all native
+runs. First consumption after the current flag can still be stale while
+immediate later reads are clean, without a host wait. Incoming-write
+completion and receiver visibility remain unresolved. Extra reads are
+instrumentation, not a production remedy; failed-arm timings are invalid.
+No full-model corruption claim or runtime change. Opus output is source/
+SPIR-V only: native disasm folders contain sections.txt, not decoded BMG
+ISA; initial work hit turn cap, and static visibility is unproven.
+Next single discriminator: same native payload assignment in one producer
+kernel, flag publication in a separate same-queue kernel. CPU-only prep
+continues separately while backend strategy is discussed.
+
+Dev-loop: reused the audited binary, two bounded arms only; no duplicate
+prehealth after unchanged S26 final closure, full-model/cache/soak/daily
+restoration. Root independently read wait/triple-copy bodies. Tracked probe
+source/README/runner updated; adapted runner syntax checked without another
+GPU repetition. Raw ep-ordering-s27/dispatch/{s27-report.json,findings.md,
+provenance.json,sha256-dispatch.txt,native.log,debug.log} preserves commands,
+hashes, sample diagnostics and health. Servers stopped, both leases free.

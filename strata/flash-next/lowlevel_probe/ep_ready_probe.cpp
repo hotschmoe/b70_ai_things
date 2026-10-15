@@ -1,6 +1,6 @@
-// ep_ready_probe.cpp (S26 rev2: failure diagnostics + --poison) - bounded EP producer -> IPC message -> readiness ->
-// peer consume/return probe at the real decode shape (N2560, K10, 6 rows): push 17520 B (240 B ids + 17280 B q8_1),
-// return upper bound 614400 B (60 rows).  rev1 (frozen, original/) found a flag-mode push oracle failure.
+// ep_ready_probe.cpp (S27 fable-dynamic: rev3 + --extra-reads + --wait debug) - bounded EP producer -> IPC message ->
+// readiness -> peer consume/return probe at the real decode shape (N2560, K10, 6 rows): push 17520 B (240 B ids +
+// 17280 B q8_1), return upper bound 614400 B (60 rows).  rev1 (frozen, original/) found a flag-mode push oracle failure.
 // ROOT ONLY under the PAIR lease; agents never execute it.  Reuses ep_mem.hpp IPC mapping unchanged: every region is
 // allocated once, stays mapped across all samples, and is freed only after both queues drained (S5 lifetime rule).
 //   --mode copy : proven S5 mode-1 pull (consumer q.memcpy from the IPC pointer); readiness is host-mediated.
@@ -10,6 +10,16 @@
 //                     card0 parts0) before the PEER writes it remotely -> two GPU writers to the same lines.
 //   --poison producer : only the producing card writes poison+guard through the IPC pointer (card0 -> inbox1,
 //                     card1 -> parts0), as production's single-writer inbox/return ownership.  Stages stay owner-local.
+//   --extra-reads 0|2 (S27): flag mode only.  After the first ep_copy_uncached into stage1 and its end marker, TWO more
+//                     immediate same-queue ep_copy_uncached of the same inbox into PRIVATE card-1 buffers stage1b/stage1c
+//                     (PB bytes each, their own fresh poison per sample), no host interaction between the three copies;
+//                     ep_send_rows still uses the original stage1 ids.  All three are oracled on the host after both
+//                     chains drain.  A later read that is clean while the first was stale does NOT by itself distinguish
+//                     "writes still in flight" from "a read-side cache was invalidated in between"; it is labelled so.
+//   --wait native|debug (S27): card 1's readiness wait.  native = production ep_wait.  debug = a probe-local kernel with
+//                     the SAME loop, load, spin cap and error code as ep_wait, plus a device-local side channel written
+//                     AFTER the loop: wanted=*ctr as the kernel read it, first and last sys_load(flag), spin count.
+//                     Card 0's return wait stays native in both arms.  The side channel changes the kernel's timing.
 // On an oracle failure (flag mode): after both queues drain, bounded post-failure re-reads of the producer source,
 // the inbox via uncached GPU read, via runtime memcpy, and via the peer's IPC pointer, plus flag/epoch counters.
 // Every timed message: fresh salt, destination/stage poisoned, 4 KiB guard after payload, full host oracle.
@@ -25,6 +35,7 @@
 #include <vector>
 #include "strata/core/ep_mem.hpp"
 #include "strata/kernels/ep_kernels.hpp"
+#include "strata/sycl_doorbell.hpp"
 
 namespace {
 constexpr int ROWS = 6, K = 10, N = 2560, ENTRIES = ROWS * K;
@@ -32,6 +43,8 @@ constexpr size_t IDS_B = size_t(ENTRIES) * 4, XQ_B = size_t(ROWS) * (N / 32) * 3
 constexpr size_t RET_B = size_t(ENTRIES) * N * 4, GUARD_B = 4096, PB = PUSH_B + GUARD_B, RB = RET_B + GUARD_B;
 static_assert(PUSH_B == 17520 && RET_B == 614400, "root shapes");
 constexpr uint32_t PUSH = 0, ROWSK = 1, POISON = 2, GUARD = 3, N_TABLE = 256, SALT_STEP = 7919;
+// stage poison salts: distinct from the inbox poison (salt) and from each other; all inside the 20-bit poison mask
+constexpr uint32_t STAGE1_X = 0x80000u, STAGE1B_X = 0x40000u, STAGE1C_X = 0xC0000u;
 
 // ids < 256 (valid res0 index), q8_1 words nonzero, rows finite nonzero floats in [1,2); poison/guard never collide.
 inline uint32_t pattern(uint32_t kind, size_t i, uint32_t salt) {
@@ -45,6 +58,8 @@ inline uint32_t pattern(uint32_t kind, size_t i, uint32_t salt) {
 using clk = std::chrono::steady_clock;
 double g_timeout_ms = 5000, g_wait_us = 0;
 bool g_host_sync = false;
+int g_extra = 0;
+std::string g_wait_mode = "native";
 double us_since(clk::time_point t) { return std::chrono::duration<double, std::micro>(clk::now() - t).count(); }
 
 class MarkK;
@@ -80,7 +95,9 @@ size_t guard_bad(const std::vector<uint32_t>& h, size_t words, uint32_t salt) {
     return b;
 }
 const char* cls(uint32_t got, uint32_t kind, size_t i, uint32_t salt, uint32_t prev) {
-    if (got == pattern(POISON, i, salt ^ 0x80000u)) return "cur_stage_poison";
+    if (got == pattern(POISON, i, salt ^ STAGE1_X)) return "cur_stage_poison";
+    if (got == pattern(POISON, i, salt ^ STAGE1B_X)) return "cur_stage1b_poison";
+    if (got == pattern(POISON, i, salt ^ STAGE1C_X)) return "cur_stage1c_poison";
     if (got == pattern(POISON, i, salt)) return "cur_poison";
     if (got == pattern(POISON, i, prev)) return "prior_poison";
     if (got == pattern(kind, i, prev)) return "prior_pattern";
@@ -117,6 +134,33 @@ size_t diag(const char* view, const std::vector<uint32_t>& h, size_t words, uint
     return bad;
 }
 std::string lower(std::string s) { for (auto& c : s) c = char(std::tolower((unsigned char) c)); return s; }
+
+// --wait debug: probe-local copy of ep_wait (ep_kernels.dp.cpp:106-119) with a device-local side channel.  Same
+// `want = *ctr` plain load, same sys_load (uncached L1+L3 read + acquire fence, sycl_doorbell.hpp), same wrap-safe
+// compare, same spin cap and err code, same trailing acquire fence.  The load sequence is identical to the native
+// loop (one load per compare; the cap check happens before the next load).  The side channel is written only after
+// the loop and the fence; it is plain device memory on card 1, read by the host after both chains drain.
+//   side[0] = wanted epoch as the kernel read it   side[1] = first sys_load(flag)
+//   side[2] = last sys_load(flag) (the value that ended the loop, or the value at the cap)   side[3] = spin count
+class EpWaitProbeDebugK;
+void ep_wait_probe_debug(const uint32_t* flag, const uint32_t* ctr, uint32_t spin_max, uint32_t* err, uint32_t code,
+                         uint32_t* side, sycl::queue& q) {
+    q.single_task<EpWaitProbeDebugK>([=] {
+        const uint32_t want = *ctr;
+        uint32_t spin = 0;
+        uint32_t v = strata::sys_load(flag);
+        const uint32_t first = v;
+        while ((int32_t) (v - want) < 0) {
+            if (++spin >= spin_max) {
+                if (err != nullptr) strata::sys_store(err, code);
+                break;
+            }
+            v = strata::sys_load(flag);
+        }
+        sycl::atomic_fence(sycl::memory_order::acquire, sycl::memory_scope::system);
+        side[0] = want; side[1] = first; side[2] = v; side[3] = spin;
+    });
+}
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -128,6 +172,8 @@ int main(int argc, char** argv) {
         if (a == "--mode") mode = v;
         else if (a == "--poison") poison = v;
         else if (a == "--host-sync") g_host_sync = std::atoi(v.c_str()) != 0;
+        else if (a == "--extra-reads") g_extra = std::atoi(v.c_str());
+        else if (a == "--wait") g_wait_mode = v;
         else if (a == "--reps") reps = std::atoi(v.c_str());
         else if (a == "--max-fail") max_fail = std::atoi(v.c_str());
         else if (a == "--spin") spin = uint32_t(std::strtoul(v.c_str(), nullptr, 10));
@@ -135,10 +181,14 @@ int main(int argc, char** argv) {
         else { std::printf("FAIL unknown arg %s\n", a.c_str()); return 2; }
     }
     if ((mode != "copy" && mode != "flag") || (poison != "owner" && poison != "producer") || reps < 1 || reps > 64 ||
-        max_fail < 1 || max_fail > 8 || spin == 0 || g_timeout_ms <= 0) {
-        std::puts("FAIL usage: --mode copy|flag --poison owner|producer --reps 1..64 --max-fail 1..8 --spin N --timeout-ms MS");
+        max_fail < 1 || max_fail > 8 || spin == 0 || g_timeout_ms <= 0 || (g_extra != 0 && g_extra != 2) ||
+        (g_wait_mode != "native" && g_wait_mode != "debug")) {
+        std::puts("FAIL usage: --mode copy|flag --poison owner|producer --extra-reads 0|2 --wait native|debug "
+                  "--host-sync 0|1 --reps 1..64 --max-fail 1..8 --spin N --timeout-ms MS");
         return 2;
     }
+    const bool extra = mode == "flag" && g_extra == 2;
+    const bool wdebug = mode == "flag" && g_wait_mode == "debug";
     using namespace strata::core;
     namespace sk = strata::kernels;
     if (dpct::device_count() != 2) { std::puts("FAIL need exactly 2 devices"); return 2; }
@@ -165,27 +215,32 @@ int main(int argc, char** argv) {
     auto* push_src0 = sycl::malloc_device<uint32_t>(PUSH_B / 4, q0);   // flag: producer's ids+q8_1 (card 0)
     auto* rows1 = sycl::malloc_device<uint32_t>(RET_B / 4, q1);        // flag: peer's computed rows (card 1)
     auto* stage1 = sycl::malloc_device<uint32_t>(PB / 4, q1);
+    auto* stage1b = sycl::malloc_device<uint32_t>(PB / 4, q1);         // --extra-reads: second same-queue read
+    auto* stage1c = sycl::malloc_device<uint32_t>(PB / 4, q1);         // --extra-reads: third same-queue read
     auto* stage0 = sycl::malloc_device<uint32_t>(RB / 4, q0);
     auto* diag1 = sycl::malloc_device<uint32_t>(RB / 4, q1);           // post-failure re-read targets only
     auto* diag0 = sycl::malloc_device<uint32_t>(RB / 4, q0);
     auto* ctr0 = sycl::malloc_device<uint32_t>(1, q0);
     auto* ctr1 = sycl::malloc_device<uint32_t>(1, q1);
     auto* done1 = sycl::malloc_device<uint32_t>(1, q1);
+    auto* wside = sycl::malloc_device<uint32_t>(4, q1);                // --wait debug side channel (card 1 local)
     auto* res0_1 = sycl::malloc_device<int32_t>(N_TABLE, q1);         // all -1: every entry peer-owned (upper bound)
     auto* err0 = sycl::malloc_host<uint32_t>(1, q0);
     auto* err1 = sycl::malloc_host<uint32_t>(1, q1);
     q0.memset(ctr0, 0, 4);
     q1.memset(ctr1, 0, 4);
     q1.memset(done1, 0, 4);
+    q1.memset(wside, 0, 16);
     q1.fill(res0_1, int32_t(-1), N_TABLE);
     drain(q0, "init0");
     drain(q1, "init1");
     std::printf("CONFIG mode=%s poison=%s reps=%d+1first_use max_fail=%d push_B=%zu ret_upper_B=%zu guard_B=%zu spin=%u "
-                "timeout_ms=%.0f host_sync=%d intercard_clock_join=N/A\n", mode.c_str(), mode == "flag" ? poison.c_str() : "n/a", reps,
-                max_fail, PUSH_B, RET_B, GUARD_B, spin, g_timeout_ms, (int) g_host_sync);
+                "timeout_ms=%.0f host_sync=%d extra_reads=%d wait=%s intercard_clock_join=N/A\n", mode.c_str(),
+                mode == "flag" ? poison.c_str() : "n/a", reps, max_fail, PUSH_B, RET_B, GUARD_B, spin, g_timeout_ms,
+                (int) g_host_sync, extra ? 2 : 0, mode == "flag" ? g_wait_mode.c_str() : "n/a");
     std::fflush(stdout);
 
-    std::vector<uint32_t> hp(PB / 4), hr(RB / 4), hd(RB / 4);
+    std::vector<uint32_t> hp(PB / 4), hb(PB / 4), hc(PB / 4), hr(RB / 4), hd(RB / 4);
     std::map<std::string, std::vector<double>> agg;
     int fails = 0, timed = 0, timed_fail = 0;
     // bounded post-failure read of `bytes` from device pointer src on queue q, through device buffer tmp (or direct)
@@ -207,8 +262,13 @@ int main(int argc, char** argv) {
         sycl::queue& qpa = prod ? q1 : q0;
         *err0 = 0; *err1 = 0;
         // untimed prep: poison every destination/stage, set guards for this salt, produce flag-mode source data
-        fill(q0, stage0, RB / 4, POISON, saltR ^ 0x80000u);
-        fill(q1, stage1, PB / 4, POISON, saltP ^ 0x80000u);
+        fill(q0, stage0, RB / 4, POISON, saltR ^ STAGE1_X);
+        fill(q1, stage1, PB / 4, POISON, saltP ^ STAGE1_X);
+        if (extra) {
+            fill(q1, stage1b, PB / 4, POISON, saltP ^ STAGE1B_X);
+            fill(q1, stage1c, PB / 4, POISON, saltP ^ STAGE1C_X);
+        }
+        if (wdebug) q1.memset(wside, 0xEE, 16);   // 0xEEEEEEEE: "kernel never wrote the side channel"
         if (mode == "copy") {
             fill(q0, src0w, PUSH_B / 4, POISON, saltP); fill(q0, src0w + PUSH_B / 4, GUARD_B / 4, GUARD, saltP);
             fill(q1, ret1w, RET_B / 4, POISON, saltR); fill(q1, ret1w + RET_B / 4, GUARD_B / 4, GUARD, saltR);
@@ -244,10 +304,18 @@ int main(int argc, char** argv) {
             auto* pushb = reinterpret_cast<const uint8_t*>(push_src0);
             auto* inboxb = static_cast<uint8_t*>(inbox1.remote);
             sycl::event a1 = mark(q1);   // consumer first: card 1 waits for the epoch on its own flag
-            sk::ep_wait(static_cast<const uint32_t*>(flag1.local), ctr1, spin, err1, 11, &q1);
+            if (wdebug) ep_wait_probe_debug(static_cast<const uint32_t*>(flag1.local), ctr1, spin, err1, 11, wside, q1);
+            else sk::ep_wait(static_cast<const uint32_t*>(flag1.local), ctr1, spin, err1, 11, &q1);
             sycl::event b1 = mark(q1);
             sk::ep_copy_uncached(stage1, inbox1.local, PB, &q1);
             sycl::event c1 = mark(q1);
+            sycl::event c1b = c1, c1c = c1;
+            if (extra) {   // two more immediate same-queue reads of the same inbox, no host interaction in between
+                sk::ep_copy_uncached(stage1b, inbox1.local, PB, &q1);
+                c1b = mark(q1);
+                sk::ep_copy_uncached(stage1c, inbox1.local, PB, &q1);
+                c1c = mark(q1);
+            }
             sk::ep_send_rows(static_cast<float*>(parts0.remote), reinterpret_cast<const float*>(rows1),
                              reinterpret_cast<const int32_t*>(stage1), res0_1, ENTRIES, N, done1,
                              static_cast<uint32_t*>(flag0.remote), ctr1, &q1);
@@ -266,8 +334,13 @@ int main(int argc, char** argv) {
             // bracketed windows [mark end, next mark start]: include same-card dispatch gaps
             f = {{"c0_push_us", dev_us(a0, true, b0, false)}, {"c0_ret_wait_us", dev_us(b0, true, c0, false)},
                  {"c0_consume_ret_us", dev_us(c0, true, d0, false)}, {"c0_roundtrip_us", dev_us(a0, true, d0, false)},
-                 {"c1_flag_wait_us", dev_us(a1, true, b1, false)}, {"c1_consume_push_us", dev_us(b1, true, c1, false)},
-                 {"c1_send_rows_us", dev_us(c1, true, d1, false)}, {"c1_chain_us", dev_us(a1, true, d1, false)}};
+                 {"c1_flag_wait_us", dev_us(a1, true, b1, false)}, {"c1_consume_push_us", dev_us(b1, true, c1, false)}};
+            if (extra) {
+                f.push_back({"c1_consume_push2_us", dev_us(c1, true, c1b, false)});
+                f.push_back({"c1_consume_push3_us", dev_us(c1b, true, c1c, false)});
+            }
+            f.push_back({"c1_send_rows_us", dev_us(c1c, true, d1, false)});   // after the last consume marker
+            f.push_back({"c1_chain_us", dev_us(a1, true, d1, false)});
         }
         const double wall = us_since(t0);
         f.push_back({"host_wall_us", wall});
@@ -275,28 +348,55 @@ int main(int argc, char** argv) {
         f.push_back({"host_wait_us", g_wait_us});
 
         q1.memcpy(hp.data(), stage1, PB);
+        if (extra) { q1.memcpy(hb.data(), stage1b, PB); q1.memcpy(hc.data(), stage1c, PB); }
+        uint32_t ws[4] = {0, 0, 0, 0};
+        if (wdebug) q1.memcpy(ws, wside, 16);
         q0.memcpy(hr.data(), stage0, RB);
         drain(q1, "readback1");
         drain(q0, "readback0");
         size_t pb = 0, pg = guard_bad(hp, PUSH_B / 4, saltP), rb = 0, rg = guard_bad(hr, RET_B / 4, saltR);
+        size_t pb2 = 0, pg2 = 0, pb3 = 0, pg3 = 0;
         for (size_t i = 0; i < PUSH_B / 4; ++i) pb += hp[i] != pattern(PUSH, i, saltP);
         for (size_t i = 0; i < RET_B / 4; ++i) rb += hr[i] != pattern(ROWSK, i, saltR);
+        if (extra) {
+            pg2 = guard_bad(hb, PUSH_B / 4, saltP); pg3 = guard_bad(hc, PUSH_B / 4, saltP);
+            for (size_t i = 0; i < PUSH_B / 4; ++i) { pb2 += hb[i] != pattern(PUSH, i, saltP); pb3 += hc[i] != pattern(PUSH, i, saltP); }
+        }
         std::printf("SAMPLE mode=%s s=%d first_use=%d saltP=%#x push_bad=%zu push_guard_bad=%zu ret_bad=%zu "
                     "ret_guard_bad=%zu err0=%u err1=%u", mode.c_str(), s, s == 0, saltP, pb, pg, rb, rg, *err0, *err1);
+        if (extra) std::printf(" push2_bad=%zu push2_guard_bad=%zu push3_bad=%zu push3_guard_bad=%zu", pb2, pg2, pb3, pg3);
         for (auto& [k, v] : f) std::printf(" %s=%.3f", k.c_str(), v);
         std::printf(" intercard=N/A\n");
-        const bool bad = pb || pg || rb || rg || *err0 || *err1;
+        if (wdebug) {
+            // wanted is what the kernel itself read from ctr1; expect_want is the host's count of ep_bump calls (s+1)
+            std::printf("WAITDBG s=%d wanted=%u expect_want=%d first_flag=%u last_flag=%u spins=%u err1=%u want_ok=%d "
+                        "ready_at_first=%d\n", s, ws[0], s + 1, ws[1], ws[2], ws[3], *err1, ws[0] == uint32_t(s + 1),
+                        (int32_t) (ws[1] - ws[0]) >= 0);
+        }
+        const bool bad = pb || pg || rb || rg || *err0 || *err1 || pb2 || pg2 || pb3 || pg3;
         if (s > 0) { ++timed; timed_fail += bad; }
         if (bad && mode == "flag" && fails < 2) {
-            // Post-failure, both queues drained.  Order: consumer view, then producer source, then uncached re-read of
+            // Post-failure, both queues drained.  Order: consumer view(s), then producer source, then uncached re-read of
             // the inbox on its owner, runtime memcpy on the owner, and finally the producer's view through IPC.
             uint32_t fl[4];
             q1.memcpy(&fl[0], flag1.local, 4); q1.memcpy(&fl[1], ctr1, 4);
             q0.memcpy(&fl[2], flag0.local, 4); q0.memcpy(&fl[3], ctr0, 4);
             drain(q1, "diag flags1"); drain(q0, "diag flags0");
-            std::printf("DIAG s=%d flag1=%u ctr1=%u flag0=%u ctr0=%u\n", s, fl[0], fl[1], fl[2], fl[3]);
-            if (pb || pg) {
+            std::printf("DIAG s=%d flag1=%u ctr1=%u flag0=%u ctr0=%u (post-drain values; not the wait kernel's view)\n",
+                        s, fl[0], fl[1], fl[2], fl[3]);
+            if (pb || pg || pb2 || pg2 || pb3 || pg3) {
                 diag("push.stage1_consumed", hp, PUSH_B / 4, PUSH, saltP, s);
+                if (extra) {
+                    diag("push.stage1b_second_read", hb, PUSH_B / 4, PUSH, saltP, s);
+                    std::printf("DIAG s=%d view=push.stage1b_second_read guard_bad=%zu\n", s, pg2);
+                    diag("push.stage1c_third_read", hc, PUSH_B / 4, PUSH, saltP, s);
+                    std::printf("DIAG s=%d view=push.stage1c_third_read guard_bad=%zu\n", s, pg3);
+                    std::printf("DIAG s=%d extra_reads_note=%s\n", s,
+                                (pb && !pb2 && !pb3) ? "LATE_CLEAN_AMBIGUOUS(in-flight writes OR read-side invalidation; not separable here)"
+                                : (pb && pb2 && !pb3) ? "LATE_CLEAN_AMBIGUOUS_after_two(in-flight writes OR read-side invalidation)"
+                                : (pb && pb2 && pb3) ? "PERSISTENT_STALE_across_3_reads"
+                                : "NONMONOTONIC_or_first_clean(see counts)");
+                }
                 read(q0, nullptr, push_src0, PUSH_B, false, "diag src0");
                 diag("push.src0_producer_gpu0", hd, PUSH_B / 4, PUSH, saltP, s);
                 read(q1, diag1, inbox1.local, PB, true, "diag inbox uc");
@@ -330,9 +430,11 @@ int main(int argc, char** argv) {
         std::printf("SUMMARY mode=%s %s n=%zu min=%.3f median=%.3f p90=%.3f max=%.3f\n", mode.c_str(), k.c_str(), v.size(),
                     v.front(), v[v.size() / 2], v[size_t(0.9 * double(v.size() - 1))], v.back());
     }
-    std::printf("FAILRATE mode=%s poison=%s timed_fail=%d timed_run=%d any_fail_incl_first_use=%d stopped_early=%d\n",
-                mode.c_str(), mode == "flag" ? poison.c_str() : "n/a", timed_fail, timed, fails, fails >= max_fail);
+    std::printf("FAILRATE mode=%s poison=%s extra_reads=%d wait=%s timed_fail=%d timed_run=%d any_fail_incl_first_use=%d "
+                "stopped_early=%d\n", mode.c_str(), mode == "flag" ? poison.c_str() : "n/a", extra ? 2 : 0,
+                mode == "flag" ? g_wait_mode.c_str() : "n/a", timed_fail, timed, fails, fails >= max_fail);
     sycl::free(push_src0, q0); sycl::free(rows1, q1); sycl::free(stage1, q1); sycl::free(stage0, q0);
+    sycl::free(stage1b, q1); sycl::free(stage1c, q1); sycl::free(wside, q1);
     sycl::free(diag1, q1); sycl::free(diag0, q0);
     sycl::free(ctr0, q0); sycl::free(ctr1, q1); sycl::free(done1, q1); sycl::free(res0_1, q1);
     sycl::free(err0, q0); sycl::free(err1, q1);

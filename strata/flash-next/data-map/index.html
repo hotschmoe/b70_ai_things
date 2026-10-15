@@ -148,7 +148,7 @@ ul.plain{padding-left:1.1rem}
 {
  "schema": 1,
  "title": "Strata Flash-Next data map",
- "snapshot": "2026-10-15, S26: measured S22/S25 paths; head-pair prototype held for EP freshness investigation",
+ "snapshot": "2026-10-15 S27: S22 operation rollups, S24/S25 probes, S26/S27 EP correctness diagnostics",
  "scope": "Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two Arc Pro B70 cards, Strata SYCL engine, EP/PUSH, batch MTP depth2 (opt-in), two 200000-token slots, INT8 KV, 32 GiB / 4-entry RAM parking, all 24576 experts resident (7152 on GPU0 + 17424 on GPU1), greedy.",
  "warnings": [
   "Trace service times overlap: within a card (engines), across cards, and with CPU wall time. They are NOT additive and are not a latency budget.",
@@ -156,7 +156,7 @@ ul.plain{padding-left:1.1rem}
   "Profiled cycles are slower than clean runs: cold-capture average 129.97 ms/window is misleading; interior median 59.174 ms/cycle (traced) versus clean native 49.12-49.27 ms/window. Use clean benchmarks for any performance claim.",
   "Logical byte figures are arithmetic from shapes and quant block sizes. Physical PCIe bytes, cache hit rates and bandwidth saturation were NOT measured.",
   "Current EP transport is Level Zero IPC-mapped device memory written/read by kernels with flag counters. It is not an all-reduce or any oneCCL collective. oneCCL post-health checks are health checks, not serving performance.",
-  "S26 standalone native EP flag-mode freshness checks failed; owner/producermode, explicit host waits and uncached-payload-only variant did not close it. No serving-output corruption demonstrated; failed-arm timings are discarded."
+  "S27 native/debug EP first reads can consume current inbox poison while immediate second/third reads pass. Debug records intended wait epochs. Cause unresolved; no production corruption or speed claim."
  ],
  "status_legend": {
   "measured": "Directly observed in a retained trace summary, native log, or clean benchmark (evidence path given). Trace values are diagnostic.",
@@ -1157,7 +1157,8 @@ ul.plain{padding-left:1.1rem}
    "evidence": [
     "draft-profile-s22/profile/steady-summary",
     "head-pair-s26/s26-report.json",
-    "head-pair-s26/ep-readiness/root-analysis.json"
+    "head-pair-s26/ep-readiness/root-analysis.json",
+    "ep-ordering-s27/dispatch/s27-report.json"
    ],
    "logical_bytes": {
     "value": "17520 B = 6*(2560/32)*36 Q8_1 + 6*10*4 B ids per full six-row layer batch (excluding padding/flags)",
@@ -1168,6 +1169,12 @@ ul.plain{padding-left:1.1rem}
      "label": "S26 standalone EP freshness diagnostic",
      "value": "Flag path fails fresh-word oracle despite matching post-drain epochs/clean guards and return; current inbox poison appears in consumed activations.",
      "basis": "Native EP source164ea229, probe17520B push/614400B return upper bound. No serving corruption claim; all failed-arm speed data discarded.",
+     "status": "measured"
+    },
+    {
+     "label": "S27 actual epoch and three reads",
+     "value": "Native bad words956/0/0 and1428/0/0; debug1404/0/0 and1406/0/0. Debug wanted3/4, flags2->3/3->4, spins198/203.",
+     "basis": "First/second/third private receiver copies; no host wait between. Guards/return pass, full post-health after each arm PASS. Not a fix or performance result.",
      "status": "measured"
     }
    ],
@@ -1180,8 +1187,9 @@ ul.plain{padding-left:1.1rem}
    ],
    "gaps": [
     "Physical PCIe bytes/direction not measured.",
-    "What epoch the wait actually observed is not measured yet; later matching counters do not prove entry value.",
-    "Source/store/flag visibility and receiver cache/fence causes unresolved; two uncached payload stores alone failed."
+    "Debug observed intended wanted/seen epochs in two failing samples; native wait internal values remain unobserved. Extra reads/debug alter timing.",
+    "Source/store/flag visibility and receiver cache/fence causes unresolved; two uncached payload stores alone failed.",
+    "Incoming payload completion versus receiver visibility remains unresolved; Opus source/SPIR-V is not decoded native BMG ISA."
    ],
    "hypotheses": []
   },
@@ -2250,6 +2258,13 @@ ul.plain{padding-left:1.1rem}
    "value": "CPU syntax and slot-binding tests PASS; offline AOT141.101s; no GPU serving",
    "status": "source-only",
    "note": "UNQUALIFIED; default OFF; preserved S21 control. Held for EP integrity work."
+  },
+  {
+   "stage": "S27",
+   "label": "EP intended epoch, transient first consume",
+   "value": "First receiver read FAIL; immediate second/third clean; debug intended epoch observed",
+   "status": "measured",
+   "note": "Both arms normal drained exit5, no crash/reset/timeout. Both-card +10compiled4x5120 P2P0 health PASS after each. Source26e26f96/binary49cfed4f. No latency/serving corruption claim."
   }
  ],
  "rejected_parked": [
@@ -2323,7 +2338,7 @@ ul.plain{padding-left:1.1rem}
   "S24 both cards expose timestamps but zetMetricGroupGet returns ERROR_DEPENDENCY_UNAVAILABLE in host environment. No EU/cache/stall counter coverage is claimed.",
   "S24 single-card readiness probe completed 680 samples/card with byte/guard/checksum checks and both-card post-health. Synthetic preparation and H2D/D2H stand-ins do not measure serving CPU preparation or EP P2P latency.",
   "S24 command_submit/start timestamp differences were inconsistent, including negative values. All queued-time values are excluded; device start/end service and cross-event gaps remain separate from host clocks.",
-  "S26 EP flag-mode integrity is unresolved. S27 prepares observed-epoch/consecutive-read diagnostics and offline BMG ISA; original source/poison/store/host-wait variants are preserved."
+  "S27 narrows EP integrity to stale first consumption despite debug observed intended epoch, with immediate later reads clean. Native BMG ISA still unavailable. Next probe-only discriminator splits payload/publication kernels."
  ],
  "operations": [
   {
