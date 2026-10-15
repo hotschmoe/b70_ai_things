@@ -1,0 +1,112 @@
+{
+  "status": "PASS_ONE_MODE_GRAPH_API_ONLY",
+  "mode": 1,
+  "leaf": {
+    "status": "PASS_GRAPH_API_FRESHNESS_ONLY",
+    "mode": 1,
+    "graphs": 1,
+    "replays": 3,
+    "kernel_operations": 18,
+    "application_graph_submits": 3,
+    "application_setup_fills": 1,
+    "application_readbacks": 3,
+    "mapped_A_B_A": true,
+    "device_pci": "0000:0b:00.0",
+    "MTP_numeric_qualified": false,
+    "speed_qualified": false
+  },
+  "actual_graph_submissions": 3,
+  "selected_step_counts": {
+    "Step0": 3,
+    "Step1": 3,
+    "Step2": 3,
+    "Step3": 3,
+    "Step4": 3,
+    "Step5": 3
+  },
+  "common_device_commands": {
+    "zeCommandListAppendMemoryCopy(D2M)[7704]": 3,
+    "zeCommandListAppendMemoryFill(D)[7704]": 1
+  },
+  "all_host_API_counts": {
+    "zeCommandListCreateImmediate": 10,
+    "zeMemFreeExt": 8,
+    "zeCommandListAppendMemoryFill": 1,
+    "zeCommandListImmediateAppendCommandListsExp": 3,
+    "zeModuleCreate": 6,
+    "zeCommandListCreate": 1,
+    "zeMemAllocHost": 3,
+    "zeMemAllocShared": 4,
+    "zeCommandListAppendMemoryCopy": 3,
+    "zeContextMakeMemoryResident": 3,
+    "zexCounterBasedEventCreate2": 192,
+    "zeCommandListHostSynchronize": 19,
+    "zeMemFree": 1,
+    "zeMemAllocDevice": 3,
+    "zeCommandListAppendLaunchKernel": 6,
+    "zeEventHostSynchronize": 7,
+    "zeKernelCreate": 6,
+    "zeDriverGetExtensionFunctionAddress": 22,
+    "zeDeviceGetProperties": 12,
+    "zeDeviceSynchronize": 1,
+    "zeInitDrivers": 5,
+    "zeDeviceGetRootDevice": 9,
+    "zeDriverGet": 8,
+    "zeDeviceGet": 10,
+    "zeContextCreate": 1,
+    "zeDriverGetExtensionProperties": 2,
+    "zeKernelSetArgumentValue": 12,
+    "zeDeviceGetModuleProperties": 1,
+    "zeMemGetAllocProperties": 8,
+    "zeKernelGetName": 12,
+    "zeCommandListClose": 1,
+    "zeDeviceGetMemoryAccessProperties": 1,
+    "zeKernelSetGroupSize": 6,
+    "zeKernelSetIndirectAccess": 6,
+    "zeDeviceGetCommandQueueGroupProperties": 2,
+    "zeModuleGetProperties": 6,
+    "zeKernelGetProperties": 6,
+    "zeDevicePciGetPropertiesExt": 3,
+    "zeDriverGetProperties": 3,
+    "zeDeviceGetComputeProperties": 1,
+    "zeDeviceGetSubDevices": 3,
+    "zeDeviceGetImageProperties": 1,
+    "zeDriverGetApiVersion": 1
+  },
+  "all_device_command_counts": {
+    "s103::Step0[SIMD32 {2; 1; 1} {256; 1; 1}]": 3,
+    "s103::Step4[SIMD32 {2; 1; 1} {256; 1; 1}]": 3,
+    "s103::Step1[SIMD32 {2; 1; 1} {256; 1; 1}]": 3,
+    "s103::Step5[SIMD32 {2; 1; 1} {256; 1; 1}]": 3,
+    "s103::Step2[SIMD32 {2; 1; 1} {256; 1; 1}]": 3,
+    "s103::Step3[SIMD32 {2; 1; 1} {256; 1; 1}]": 3,
+    "zeCommandListAppendMemoryCopy(D2M)[7704]": 3,
+    "zeCommandListAppendMemoryFill(D)[7704]": 1
+  },
+  "summary_files": [
+    {
+      "path": "/out/mode1/unitrace.471.txt",
+      "bytes": 10194,
+      "sha256": "0bb0a4e16d51e4f683c03bd767b5d7460fef2b904c7996ad67aa61a5e6b2e8b4"
+    }
+  ],
+  "snapshots": [
+    {
+      "phase": 0,
+      "bytes": 7704,
+      "sha256": "e75fd03c941ff61c904c2448556d6ae51cd95ccd52d4f5b451aa3684c78e0c2f"
+    },
+    {
+      "phase": 1,
+      "bytes": 7704,
+      "sha256": "f0f3683aeb2dfb1d0dd72dd7210a3bf607f86537fc69641f8b632386cd1114a9"
+    },
+    {
+      "phase": 2,
+      "bytes": 7704,
+      "sha256": "e75fd03c941ff61c904c2448556d6ae51cd95ccd52d4f5b451aa3684c78e0c2f"
+    }
+  ],
+  "capture_calls_do_not_execute_selected_kernels": "Observed selected kernels total18 equals six operations times3 replays; no eager/warm/capture execution remains unattributed.",
+  "scope": "Synthetic graph API/ordering/freshness only; profiling-sensitive times are intentionally not interpreted as model gains."
+}

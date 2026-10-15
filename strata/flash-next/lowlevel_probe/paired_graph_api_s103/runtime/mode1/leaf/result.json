@@ -1,0 +1,1 @@
+{"status":"PASS_GRAPH_API_FRESHNESS_ONLY","mode":1,"graphs":1,"replays":3,"kernel_operations":18,"application_graph_submits":3,"application_setup_fills":1,"application_readbacks":3,"mapped_A_B_A":true,"device_pci":"0000:0b:00.0","MTP_numeric_qualified":false,"speed_qualified":false}

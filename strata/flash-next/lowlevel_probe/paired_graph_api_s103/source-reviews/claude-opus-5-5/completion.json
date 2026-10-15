@@ -1,0 +1,120 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 58.806330726947635,
+  "launch_exception": null,
+  "source_packet_sha256": "128f57ab16867a1ba624f3f8de08146f872286be5cd9d1e41d2c16158e62acd2",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 573458,
+      "stop_reason": "end_turn",
+      "session_id": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "total_cost_usd": 2.4465446,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 17973,
+        "cache_read_input_tokens": 162348,
+        "output_tokens": 4503,
+        "output_tokens_details": {
+          "thinking_tokens": 3037
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 17973,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 4503,
+            "cache_read_input_tokens": 162348,
+            "cache_creation_input_tokens": 17973,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 17973
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 20,
+          "outputTokens": 42578,
+          "thinkingTokens": 24870,
+          "cacheReadInputTokens": 787643,
+          "cacheCreationInputTokens": 179672,
+          "webSearchRequests": 0,
+          "costUSD": 2.4465446,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# S103 review: graph API and mapped-freshness probe\n\n**Verdict:**\n- **Offline build: ACCEPT.**\n- **Card-0 probe: ACCEPT, after one small analyzer fix.** That fix does not change the binary, so it needs no rebuild.\n\n## Correctness (source)\n\n- **Arithmetic.** The kernel and the host ledger compute the same `uint32` modulo-2\u00b3\u00b2 expression with an unsigned `S`, both starting from `previous = i`. All six planes are checked.\n- **Guards.**\n  - The device memset of 0xA5 bytes gives 0xA5A5A5A5, which is `GUARD`. The expected vector is initialised to `GUARD`, so both sides of each plane are covered.\n  - The `i \u2265 N` early return (N = 257 against 512 work-items) leaves the guard tail untouched, and there is no barrier after the return.\n- **Ordering.** Each step reads the previous step's plane, so any reordering, or replaying stale state, breaks the strict comparison. Mode 1 records the six operations on an in-order queue into one graph; mode 0 uses six graphs replayed back to back.\n- **Freshness.** The host mutates input only after `q.wait_and_throw()`, then a `seq_cst` fence, then submission. Kernels read the mapped input through `sys_load_mapped`. A/B/A must show A \u2260 B and A = A\u2032.\n- **Lifetime.** `graphs` is declared after `Storage`, so the graphs are destroyed first. `Graph::~Graph` waits before deleting.\n- **Fallback rejected.** The `uncached_set()` check refuses the ordinary-host fallback, and `STRATA_HOST_UNCACHED=1` is set in the container.\n\n## Build/API issues: none blocking\n\n- **Missing include.** `<mutex>` is not included but `std::lock_guard`/`std::mutex` are used. It probably comes in transitively; if not, the build fails closed. Add the include if you edit the file.\n- **Internal helpers.** `strata::detail::uncached_mu`/`uncached_set` must exist in the pinned `sycl_doorbell.hpp`. Again, a compile failure would be closed and safe.\n\n## Analyzer: one fix before running\n\n**Problem.** Rows whose CSV split does not match the header length are skipped silently. Kernel names containing commas, such as templated graph-internal or runtime kernels, would vanish from `commands`. That defeats the \"no unclassified device command\" gate.\n\n**Fix.** Inside a recognised table, fail with HOLD on any non-empty row whose length does not match the header or whose `Calls` field cannot be parsed, instead of dropping it.\n\n## Known risks that end in HOLD, not bugs\n\n- **Readback path.** `q.memcpy` to a pageable `std::vector` may be staged by the runtime, producing an extra copy or a differently named entry. The copy/fill assertion would then HOLD.\n- **Submission API.** Graph replay might go through a different submission API than `zeCommandListImmediateAppendCommandListsExp`, or the command buffer might add barrier or signal commands that show up as device commands. Either would HOLD.\n\nBoth outcomes are correctly treated as stop-and-inspect, with no rerun.\n\n## Scope gaps (unqualified later work, not blockers)\n\n- **Re-recording vs. nesting.** Mode 1 re-records the operations into one graph; it does not nest the existing child execs. A main-source integration would therefore need to record all six pair components in one capture on `cs_`.\n- **Freshness mechanism.** Freshness is tested for kernel loads from mapped memory. Production `copy_from_mapped_multi` must be confirmed to use the same mechanism (a kernel). If it uses a graph memcpy from host USM, that path is not covered here.\n- **Not tested here:** host polling of `h_out_` while the graph runs, PLE, partial-failure and no-redraft behaviour, and MTP numerics. As the README states, these remain gates for later work.\n\n## Execution safety\n\nThe runner keeps the established safety pattern:\n\n- one owned CID, a 180 s bound and no retries;\n- removal confirmed by full CID and name before post-health, holding the lease until then;\n- health checked before and after;\n- the mode 0 analysis must pass before mode 1 runs.\n\nThe result carries no speed claim.",
+      "ttft_ms": 40081,
+      "type": "result",
+      "duration_ms": 57786,
+      "uuid": "451c6199-96aa-429c-9b8a-ad0d01cd936e",
+      "ttft_stream_ms": 1768,
+      "time_to_request_ms": 87,
+      "first_content_frame_ms": 1769,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

@@ -1,0 +1,30 @@
+{
+  "utc": "2026-10-15T22:38:46.548396+00:00",
+  "status": "ROOT_ACCEPT_SYNTHETIC_API_PROBE_PREPARE_PRODUCTION_SOURCE_ONLY",
+  "actual_runtime_status": "PASS_GRAPH_API_ONLY",
+  "actual_submissions": [
+    18,
+    3
+  ],
+  "each_of_six_steps_per_mode": 3,
+  "replays_per_mode": 3,
+  "whole_graph_DOT_nodes": 6,
+  "whole_graph_DOT_edges": 5,
+  "root_independent_snapshot_guard_and_A_B_A_checks": true,
+  "fresh_processes": 2,
+  "common_commands_per_mode": {
+    "fill_7704B": 1,
+    "copy_7704B": 3
+  },
+  "build_binary_sha256": "2c7ac67aa919e30869b644164edcddae8e12ac661ec99fa2f7b3886196f6e9a9",
+  "GPU_wrapper_seconds": 43,
+  "GPU_wrapper_exit": 0,
+  "no_reset_retry_or_forced_cleanup": true,
+  "quiet_CPU_lease_omitted": "Untimed correctness/API count check during other session heavy CPU build. No measured time columns used to compare speed.",
+  "limitations": [
+    "Synthetic uint32 kernel reads, not MTP numerics/state isolation.",
+    "No host output polling/PLE/concurrent writes tested.",
+    "No main graph implementation or serving speed/default promotion yet."
+  ],
+  "next": "Review exact default-off depth2 production whole-pair patch with actual Opus/Fable before applying/building."
+}

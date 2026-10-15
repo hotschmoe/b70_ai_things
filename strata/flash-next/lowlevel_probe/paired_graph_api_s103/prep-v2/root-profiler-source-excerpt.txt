@@ -1,0 +1,81 @@
+  void PrintFunctionsTable(std::shared_ptr<Logger> logger) const {
+    global_host_time_stats_mutex_.lock();
+    std::set<std::pair<uint32_t, ZeFunctionTime>, utils::Comparator> sorted_list(
+      global_host_time_stats_->begin(), global_host_time_stats_->end());
+
+    uint64_t total_time = 0;
+    size_t max_name_size = 0;
+    for (auto& stat : sorted_list) {
+      total_time += stat.second.total_time_;
+      if (get_symbol(API_TRACING_ID(stat.first)).size() > max_name_size) {
+        max_name_size = get_symbol(API_TRACING_ID(stat.first)).size();
+      }
+    }
+
+    if (total_time != 0) {
+      std::string str(std::max(int(max_name_size - sizeof("Function") + 1), 0), ' ');
+      str += "Function, " + std::string(std::max(int(kCallsLength - sizeof("Calls") + 1), 0), ' ') +
+             "Calls, " + std::string(std::max(int(kTimeLength - sizeof("Time (ns)") + 1), 0), ' ') +
+             "Time (ns),      Time (%), " + std::string(std::max(int(kTimeLength - sizeof("Average (ns)") + 1), 0), ' ') +
+             "Average (ns), " + std::string(std::max(int(kTimeLength - sizeof("Min (ns)") + 1), 0), ' ') +
+             "Min (ns), " + std::string(std::max(int(kTimeLength - sizeof("Max (ns)") + 1), 0), ' ') +
+             "Max (ns)\n";
+      logger->Log(str);
+      for (auto& stat : sorted_list) {
+        const std::string function = get_symbol(API_TRACING_ID(stat.first));
+        uint64_t time = stat.second.total_time_;
+        uint64_t call_count = stat.second.call_count_;
+        uint64_t avg_time = time / call_count;
+        uint64_t min_time = stat.second.min_time_;
+        uint64_t max_time = stat.second.max_time_;
+        float percent_time = 100.0f * time / total_time;
+        str = std::string(std::max(int(max_name_size - function.length()), 0), ' ') + function + ", " +
+              std::string(std::max(int(kCallsLength - std::to_string(call_count).length()), 0), ' ') + std::to_string(call_count) + ", " +
+              std::string(std::max(int(kTimeLength - std::to_string(time).length()), 0), ' ') + std::to_string(time) + ", " +
+              std::string(std::max(int(sizeof("    Time (%)") - std::to_string(percent_time).length()), 0), ' ') +
+              std::to_string(percent_time) + ", " +
+              std::string(std::max(int(kTimeLength - std::to_string(avg_time).length()), 0), ' ') + std::to_string(avg_time) + ", " +
+              std::string(std::max(int(kTimeLength - std::to_string(min_time).length()), 0), ' ') + std::to_string(min_time) + ", " +
+              std::string(std::max(int(kTimeLength - std::to_string(max_time).length()), 0), ' ') + std::to_string(max_time) + "\n";
+        logger->Log(str);
+      }
+    }
+    global_host_time_stats_mutex_.unlock();
+  }
+
+  static void OnEnterCommandListImmediateAppendCommandListsExp(
+      ze_command_list_immediate_append_command_lists_exp_params_t* params,
+      void* global_data, void** /* instance_data */) {
+
+    ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
+
+    if (UniController::IsCollectionEnabled()) {
+      collector->command_lists_mutex_.lock_shared();
+
+      auto it = collector->command_lists_.find(*(params->phCommandListImmediate));
+      if (it != collector->command_lists_.end()) {
+        collector->PrepareToExecuteCommandListsLocked(*(params->pphCommandLists), *(params->pnumCommandLists),
+                                                it->second->device_, it->second->engine_ordinal_, it->second->engine_index_, nullptr);
+      }
+      collector->command_lists_mutex_.unlock_shared();
+    }
+  }
+
+  static void OnExitCommandListImmediateAppendCommandListsExp(
+    ze_command_list_immediate_append_command_lists_exp_params_t* /* params */,
+    ze_result_t result,
+    void* global_data,
+    void** /* instance_data */, std::vector<uint64_t> *kids) {
+    ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
+
+    if (UniController::IsCollectionEnabled()) {
+        if (result == ZE_RESULT_SUCCESS) {
+           local_device_submissions_.SubmitStagedKernelCommandAndMetricQueries(collector->event_cache_, kids);
+        }
+        else {
+           local_device_submissions_.RevertStagedKernelCommandAndMetricQueries();
+        }
+    }
+  }
+
+#if !defined(ZEX_STRUCTURE_KERNEL_REGISTER_FILE_SIZE_EXP)

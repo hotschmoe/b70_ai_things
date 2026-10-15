@@ -1,0 +1,28 @@
+**ACCEPT the offline build and the single card0 probe.** No blocking bug found in the probe, the build scripts, the runner or the analyzer.
+
+**Correctness of the probe**
+
+- The device formula and the CPU ledger are the same unsigned expression with the same per-step constant, so the six planes are checked exactly. Unsigned wraparound is defined.
+- Bounds are right. 512 work-items guard on 257 elements, each plane sits at its stride with 32-word guards on both sides, and the fill byte matches the guard word.
+- Graph lifetime is right. Graphs are destroyed before storage, storage before the queue, each after a drain.
+- The A, B, A sequence tests the hypothesis that matters: a replayed graph reads the current host-mapped input, not a capture-time value. Mutation happens only after a drained replay and readback, with a host fence before submit. The README states this bound honestly.
+- Both modes submit the same six kernels with the same arguments. In-order recording yields a linear chain, so mode 1 cannot reorder relative to mode 0.
+
+**Build and API**
+
+- Recording, end recording, finalize and executable submission are the same calls the main MTP pair already uses. No nested graph API is touched.
+- Flags, include roots, AOT target and the pre and post hash checks follow the S98 pattern. Linking the loader directly is correct for the host allocation helper.
+- One non-blocking nit: the probe uses std::mutex and std::lock_guard without including mutex. The SYCL headers almost certainly pull it in. If root prefers to add the include, the source hash must be re-frozen first.
+
+**Runner and gates**
+
+- Create then start with a timeout, exit code checks by full CID, image and name, removal confirmed before health, and no workload retry are all as retained from S98.
+- The per-mode and cross-mode analyzers enforce 18 versus 3 submissions, 3 runs per step, one fill and three readbacks of the exact byte count, no unclassified device commands, and byte-equal phase snapshots across modes. HOLD on any surprise is the right default.
+
+**Where a wasted probe is possible, and how to prevent it on CPU**
+
+The analyzer hard-codes three text-format assumptions: comma-separated tables with Function or Kernel, Calls and Time headers, device copy and fill rows carrying the byte count in square brackets, and the exact immediate-append API name. If any differs, the run ends in HOLD after a correct GPU pass. Before the lease, compare those three assumptions against any retained S39 or S95 unitrace text summary already on disk. That is a read, not a run.
+
+**What a pass does and does not establish**
+
+A pass shows that one recorded graph with six operations replays with fresh mapped reads and three submissions where six were used, on this runtime. It says nothing about MTP numerics, host output publication or polling, PLE prefetch ordering, pair state lifetimes, partial failure recovery or speed. Those stay as the later main-source and matched-serving gates, and the accepted-prefix commit stays out of any pair graph until after the host acceptance decision.

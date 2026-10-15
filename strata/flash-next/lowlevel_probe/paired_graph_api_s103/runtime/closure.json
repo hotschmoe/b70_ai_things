@@ -1,0 +1,14 @@
+{
+  "status": "PASS_GRAPH_API_ONLY",
+  "container_exit": 0,
+  "pre_health_exit": 0,
+  "post_health_exit": 0,
+  "normal_exit_no_OOM": true,
+  "owned_fullCID": "65af059a1516bab1fb56465ab7be6c14ead9ca7800f6e5385b7fae9fe4d88a4d",
+  "owned_name": "strata-paired-graph-s103",
+  "fullCID_and_NAME_gone": true,
+  "fresh_mode_processes": 2,
+  "retries": 0,
+  "MTP_numeric_qualified": false,
+  "speed_qualified": false
+}

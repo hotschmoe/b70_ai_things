@@ -1,0 +1,19 @@
+{
+  "status": "ROOT_GO_ONE_OFFLINE_BUILD_THEN_REVIEW_BEFORE_ONE_CARD0_PROBE",
+  "actual_models_seconds": {
+    "claude-opus-5-5": 58.806330726947635,
+    "claude-fable-5-1": 81.61123979999684
+  },
+  "root_FULLREAD_all_sources_and_answers": true,
+  "version2_manifest_sha256": "bac6da7731c8cd4cfeff6465f675c8622d520a8ee591fb6213e50128aa347a5b",
+  "v2_changes": "Analyzer malformed recognized rows HOLD; source/format preflight; README. Probe and all build/run shell scripts unchanged.",
+  "source_resolution": [
+    "Pinned sycl_queue.hpp explicitly includes mutex at56; no probe source/include edit needed.",
+    "sys_load_mapped uses uncached annotated kernel read; no concurrent host writes modeled.",
+    "Original frozen source unexecuted; v2 correction before build/GPU, no binary retry.",
+    "S39 summary format checked; it is device-only. Host header/API source inspected, runtime counts remain actual probe gate.",
+    "No host output polling/PLE/MTP numerical/state isolation/speed proof from this fixture."
+  ],
+  "GPU": 0,
+  "build": 0
+}

@@ -24743,3 +24743,32 @@ graph API probe before any production build. Graph benefit is unmeasured;
 commit stays after host acceptance. No speed/default/shelf claim. Evidence:
 strata/flash-next/lowlevel_probe/graph_and_q6_audit_s102/ and
 docs/20261015_strata_graph_capture_and_bottlenecks.md.
+
+
+## 2026-10-15 S103: one recorded graph preserves synthetic replay semantics
+
+CONFIG -> Six explicit uint32 operations on one in-order queue, six
+component graphs versus one re-recorded graph, mapped A/B/A and every
+intermediate plane/guards. No model/main patch or MTP arithmetic.
+
+COMMAND -> Actual Opus5.5 58.806s/Fable5.1 81.611s exact-source reviews,
+root full-read. Original source frozen/unexecuted; v2 analyzer rejects
+malformed recognized CSV rows before build. One offline pinned-e41
+noDRI/network CPU4 build, wrapper20s/compile-link9.948s, binary2c7ac67a.
+One untimed card0-only lease43s/two fresh mode processes, exact pin and
+pre/posthealth. No quietCPU lease: other agent CPU build may continue;
+no timing columns interpreted. Timing comparisons still need quiet CPU.
+
+RESULT -> Actual graph submissions18vs3 across three replays per mode;
+each Step0..5 runs3times, same1fill/3readbacks7704B, all intermediates/
+guards/readonly/A-B-A/crossmode bytes exact. DOT6nodes/5orderededges.
+Normalexit0/noOOM/fullCID+NAMEgone before posthealth; driver/tee and
+pre/posthealth0; no reset/retry/forced cleanup. Root independent DOT,
+savedguard/A-B-A and rawsummary/identity inspection PASS.
+
+VERDICT -> PASS_GRAPH_API_ONLY, prepare defaultOFF depth2 production
+source. Host output polling/PLE/MTP state/speed remain unqualified.
+No new serving/default/cache promotion; S30 retained. Clarify S95
+broadnonvocabMMVQ12.680488ms includes native10.745196ms+IQ3S path.
+Evidence: strata/flash-next/lowlevel_probe/paired_graph_api_s103/ and
+docs/20261015_strata_graph_capture_and_bottlenecks.md.

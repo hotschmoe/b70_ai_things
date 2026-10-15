@@ -1,0 +1,120 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 81.61123979999684,
+  "launch_exception": null,
+  "source_packet_sha256": "128f57ab16867a1ba624f3f8de08146f872286be5cd9d1e41d2c16158e62acd2",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 729477,
+      "stop_reason": "end_turn",
+      "session_id": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "total_cost_usd": 6.178371250000001,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 18759,
+        "cache_read_input_tokens": 165153,
+        "output_tokens": 5548,
+        "output_tokens_details": {
+          "thinking_tokens": 4527
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 18759,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 5548,
+            "cache_read_input_tokens": 165153,
+            "cache_creation_input_tokens": 18759,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 18759
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 20,
+          "outputTokens": 46186,
+          "thinkingTokens": 33698,
+          "cacheReadInputTokens": 814445,
+          "cacheCreationInputTokens": 183263,
+          "webSearchRequests": 0,
+          "costUSD": 6.178371250000001,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**ACCEPT the offline build and the single card0 probe.** No blocking bug found in the probe, the build scripts, the runner or the analyzer.\n\n**Correctness of the probe**\n\n- The device formula and the CPU ledger are the same unsigned expression with the same per-step constant, so the six planes are checked exactly. Unsigned wraparound is defined.\n- Bounds are right. 512 work-items guard on 257 elements, each plane sits at its stride with 32-word guards on both sides, and the fill byte matches the guard word.\n- Graph lifetime is right. Graphs are destroyed before storage, storage before the queue, each after a drain.\n- The A, B, A sequence tests the hypothesis that matters: a replayed graph reads the current host-mapped input, not a capture-time value. Mutation happens only after a drained replay and readback, with a host fence before submit. The README states this bound honestly.\n- Both modes submit the same six kernels with the same arguments. In-order recording yields a linear chain, so mode 1 cannot reorder relative to mode 0.\n\n**Build and API**\n\n- Recording, end recording, finalize and executable submission are the same calls the main MTP pair already uses. No nested graph API is touched.\n- Flags, include roots, AOT target and the pre and post hash checks follow the S98 pattern. Linking the loader directly is correct for the host allocation helper.\n- One non-blocking nit: the probe uses std::mutex and std::lock_guard without including mutex. The SYCL headers almost certainly pull it in. If root prefers to add the include, the source hash must be re-frozen first.\n\n**Runner and gates**\n\n- Create then start with a timeout, exit code checks by full CID, image and name, removal confirmed before health, and no workload retry are all as retained from S98.\n- The per-mode and cross-mode analyzers enforce 18 versus 3 submissions, 3 runs per step, one fill and three readbacks of the exact byte count, no unclassified device commands, and byte-equal phase snapshots across modes. HOLD on any surprise is the right default.\n\n**Where a wasted probe is possible, and how to prevent it on CPU**\n\nThe analyzer hard-codes three text-format assumptions: comma-separated tables with Function or Kernel, Calls and Time headers, device copy and fill rows carrying the byte count in square brackets, and the exact immediate-append API name. If any differs, the run ends in HOLD after a correct GPU pass. Before the lease, compare those three assumptions against any retained S39 or S95 unitrace text summary already on disk. That is a read, not a run.\n\n**What a pass does and does not establish**\n\nA pass shows that one recorded graph with six operations replays with fresh mapped reads and three submissions where six were used, on this runtime. It says nothing about MTP numerics, host output publication or polling, PLE prefetch ordering, pair state lifetimes, partial failure recovery or speed. Those stay as the later main-source and matched-serving gates, and the accepted-prefix commit stays out of any pair graph until after the host acceptance decision.",
+      "ttft_ms": 63770,
+      "type": "result",
+      "duration_ms": 80681,
+      "uuid": "cbbac08b-91bc-428f-81c5-f36f5357a734",
+      "ttft_stream_ms": 1485,
+      "time_to_request_ms": 90,
+      "first_content_frame_ms": 1486,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

@@ -1,0 +1,66 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NOT_BUILT_OR_EXECUTED",
+  "files": {
+    "README.txt": {
+      "bytes": 5744,
+      "sha256": "5ba081e03a1931a76078a3b6e29c01c00e912c2dba3978f7f1c2b902c3ea5457"
+    },
+    "ROOT_RUN.sh": {
+      "bytes": 711,
+      "sha256": "041463be7b5b3e34e9af90038b4e9a26229ef32766c8852806af88aef6c00e55"
+    },
+    "analyze.py": {
+      "bytes": 5161,
+      "sha256": "1b5a5c704566f6d5a47cad91a434e4c7ec765d482465b423f6f8dac234fa5429"
+    },
+    "build-container.sh": {
+      "bytes": 1272,
+      "sha256": "71286866168e2f72f4a87e1772b40f91baab58032af0c4c4370b5a764e82e828"
+    },
+    "build.sh": {
+      "bytes": 1096,
+      "sha256": "bacaa31705d3aed55d5fbd2cc22420a602e79b2863e23f4d3ec8ec2e25e220a0"
+    },
+    "expected-container.sha256": {
+      "bytes": 302,
+      "sha256": "30d3db53d070ab97e06953cb0a5b49bdc89c9d525651423ae73569dbe61882d9"
+    },
+    "leased-run.sh": {
+      "bytes": 5040,
+      "sha256": "014aa4f73d224c6a2b91ecb14b81a3aba56153907a5448063977114aa784db4a"
+    },
+    "probe.cpp": {
+      "bytes": 8373,
+      "sha256": "713e96c452eeb782f24c18cd93f7eb2cd726fe45f1b23e6d5b0bc85e85b6c20b"
+    },
+    "run-container.sh": {
+      "bytes": 804,
+      "sha256": "daa142a9d9151bc53a9bc1551d000891313b1face39404543360435769c52171"
+    }
+  },
+  "native_header_pins": {
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/sycl_doorbell.hpp": {
+      "bytes": 9796,
+      "sha256": "82b325b3a5ac199f96d73996cb51376851c7f8cd6fc85803b6960040442d5534"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/sycl_queue.hpp": {
+      "bytes": 14310,
+      "sha256": "2b9ada924e3023ab742e826f9c9850324ccc978cfc4ca8d0a36b3e7b6c79c51a"
+    }
+  },
+  "checks": [
+    "ASCII allfiles PASS",
+    "Python AST PASS",
+    "bash -n allscripts PASS",
+    "sixexplicitkernelclasses/onecommonfill/oneperreplayreadback/no-root-sync sourceconsistency PASS"
+  ],
+  "GPU": 0,
+  "build": 0,
+  "profiler_execution": 0,
+  "numeric_result": null,
+  "notes": [
+    "Root must read and authorize build, then actual leased probe separately.",
+    "Existing S102 audit/prep and repository remain untouched.",
+    "Runtime profiler library hash is captured only during the later CPU build; no14MBtool hash during other quiet window."
+  ]
+}

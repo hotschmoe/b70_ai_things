@@ -1,0 +1,51 @@
+# S103 review: graph API and mapped-freshness probe
+
+**Verdict:**
+- **Offline build: ACCEPT.**
+- **Card-0 probe: ACCEPT, after one small analyzer fix.** That fix does not change the binary, so it needs no rebuild.
+
+## Correctness (source)
+
+- **Arithmetic.** The kernel and the host ledger compute the same `uint32` modulo-2\xb3\xb2 expression with an unsigned `S`, both starting from `previous = i`. All six planes are checked.
+- **Guards.**
+  - The device memset of 0xA5 bytes gives 0xA5A5A5A5, which is `GUARD`. The expected vector is initialised to `GUARD`, so both sides of each plane are covered.
+  - The `i \u2265 N` early return (N = 257 against 512 work-items) leaves the guard tail untouched, and there is no barrier after the return.
+- **Ordering.** Each step reads the previous step's plane, so any reordering, or replaying stale state, breaks the strict comparison. Mode 1 records the six operations on an in-order queue into one graph; mode 0 uses six graphs replayed back to back.
+- **Freshness.** The host mutates input only after `q.wait_and_throw()`, then a `seq_cst` fence, then submission. Kernels read the mapped input through `sys_load_mapped`. A/B/A must show A \u2260 B and A = A\u2032.
+- **Lifetime.** `graphs` is declared after `Storage`, so the graphs are destroyed first. `Graph::~Graph` waits before deleting.
+- **Fallback rejected.** The `uncached_set()` check refuses the ordinary-host fallback, and `STRATA_HOST_UNCACHED=1` is set in the container.
+
+## Build/API issues: none blocking
+
+- **Missing include.** `<mutex>` is not included but `std::lock_guard`/`std::mutex` are used. It probably comes in transitively; if not, the build fails closed. Add the include if you edit the file.
+- **Internal helpers.** `strata::detail::uncached_mu`/`uncached_set` must exist in the pinned `sycl_doorbell.hpp`. Again, a compile failure would be closed and safe.
+
+## Analyzer: one fix before running
+
+**Problem.** Rows whose CSV split does not match the header length are skipped silently. Kernel names containing commas, such as templated graph-internal or runtime kernels, would vanish from `commands`. That defeats the "no unclassified device command" gate.
+
+**Fix.** Inside a recognised table, fail with HOLD on any non-empty row whose length does not match the header or whose `Calls` field cannot be parsed, instead of dropping it.
+
+## Known risks that end in HOLD, not bugs
+
+- **Readback path.** `q.memcpy` to a pageable `std::vector` may be staged by the runtime, producing an extra copy or a differently named entry. The copy/fill assertion would then HOLD.
+- **Submission API.** Graph replay might go through a different submission API than `zeCommandListImmediateAppendCommandListsExp`, or the command buffer might add barrier or signal commands that show up as device commands. Either would HOLD.
+
+Both outcomes are correctly treated as stop-and-inspect, with no rerun.
+
+## Scope gaps (unqualified later work, not blockers)
+
+- **Re-recording vs. nesting.** Mode 1 re-records the operations into one graph; it does not nest the existing child execs. A main-source integration would therefore need to record all six pair components in one capture on `cs_`.
+- **Freshness mechanism.** Freshness is tested for kernel loads from mapped memory. Production `copy_from_mapped_multi` must be confirmed to use the same mechanism (a kernel). If it uses a graph memcpy from host USM, that path is not covered here.
+- **Not tested here:** host polling of `h_out_` while the graph runs, PLE, partial-failure and no-redraft behaviour, and MTP numerics. As the README states, these remain gates for later work.
+
+## Execution safety
+
+The runner keeps the established safety pattern:
+
+- one owned CID, a 180 s bound and no retries;
+- removal confirmed by full CID and name before post-health, holding the lease until then;
+- health checked before and after;
+- the mode 0 analysis must pass before mode 1 runs.
+
+The result carries no speed claim.

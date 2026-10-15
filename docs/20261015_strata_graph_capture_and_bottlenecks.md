@@ -34,7 +34,7 @@ per-token latency, additive critical-path budgets or predicted speedups.
 
 | Operation family | Median service, ms |
 | --- | ---: |
-| Non-vocabulary quantized matrix-vector projections | 10.745 |
+| All non-vocabulary quantized matrix-vector projections | 12.680 |
 | Routed expert gate/up and down | 7.504 |
 | HC norm/down/reduce/up | 6.719 |
 | Vocabulary head | 4.664 |
@@ -42,7 +42,9 @@ per-token latency, additive critical-path budgets or predicted speedups.
 | Expert-parallel wait kernels | 3.068 |
 | GDN-related work | 2.835 |
 
-See the [S95 census](../strata/flash-next/lowlevel_probe/current_c2_profile_s95/analysis/facts.json)
+The native MMVQ subset is 10.745 ms; the broader row also includes the
+IQ3_S MMVQ path. See the [extended family census](../strata/flash-next/lowlevel_probe/current_c2_profile_s95/analysis/extended-mmvq-and-cold-limits.json)
+and the [S95 census](../strata/flash-next/lowlevel_probe/current_c2_profile_s95/analysis/facts.json)
 and [data map](../strata/flash-next/data-map/index.html).
 Unknowns include which graph boundaries expose GPU idle time, which waits
 are on the request critical path, and how much earlier polling could improve
@@ -68,11 +70,14 @@ executable-graph behavior. Root selects this simpler route for a small API
 probe. Same-card GPU gaps do not require a CPU/GPU clock join. A single graph
 can still partially execute before failure; drain and no-redraft rules remain.
 
-First prepare a tiny six-operation fixture comparing six graphs with one
-graph. Require fresh mapped A/B/A inputs, exact outputs and guards, preserved
-dependencies, and actual Level Zero submission counts. This proves API and
-memory behavior only. Production MTP parity and clean serving comparisons
-would still be required before claiming a model speed improvement.
+S103 now passes the tiny six-operation fixture: actual graph submissions
+18 versus 3 across three replays per mode, each of six kernels executing
+three times. Fresh mapped A/B/A inputs, all intermediate outputs and guards
+match exactly. The whole graph DOT has six nodes and five ordered edges.
+Owned teardown and card-0 health pass. This proves the bounded API mechanism;
+it does not test host output polling or MTP state. Production MTP parity
+and clean serving comparisons remain required before a model speed claim.
+See [S103 evidence](../strata/flash-next/lowlevel_probe/paired_graph_api_s103/README.md).
 
 In parallel, the Q6 C6 projection audit resolved the actual S100 executable's
 host metadata, registered kernel and selected device image. Its first 16,384
@@ -100,3 +105,8 @@ GPU, and reused existing instructions. Do not repeat cache recovery or the
 daily-server restoration for these source and API questions. True RAM restore
 without recomputation already has bounded S30 evidence; concurrency, decode
 and MTP remain the priority.
+
+S103 used a 20-second offline build and a 43-second card-0 window. Since
+only exactness and submission counts were assessed, it ran during another
+session's CPU build without taking the quiet-CPU lease. Instrumented timing
+columns are retained raw and do not support a speed comparison.

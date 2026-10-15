@@ -1,0 +1,25 @@
+{
+  "status": "PASS_FORMAT_PREFLIGHT_WITH_SOURCE_LIMIT",
+  "existing_device_summary": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grf-oracle-s39-prep/run-profiled/window0/unitrace.1.txt",
+    "sha256": "7d8fa90f1a8154d7fc78109813d2d29c1ae9a32d8076b64b42ec4cd31c885aca",
+    "CSV_Kernel_Calls_Time_headers": true,
+    "copy_and_fill_byte_notation": true,
+    "host_table_present": false
+  },
+  "profiler_source": {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/src/levelzero/ze_collector.h",
+    "sha256": "6ee0130e2b03918a5e4bb5d310dacb94e5ba06bf67c21a23d3134dc406aa9122",
+    "Function_Calls_Time_header_lines": [
+      1701,
+      1707
+    ],
+    "ImmediateAppend_extension_handler_lines": [
+      5827,
+      5860
+    ],
+    "source_only_not_runtime_submission_proof": true
+  },
+  "malformed_row_logic_fails_closed": true,
+  "original_manifest_sha256": "73a7e88f766b45f25ef29816e44514be4b127d00dd492644f31bc61831f71010"
+}
