@@ -1,0 +1,34 @@
+# S106 review: whole-pair depth-2 graph patch
+
+**Verdict: ACCEPT** one incremental SYCL main build, rebuilding all Ninja dependents of the `mtp.hpp` layout change. Then one finite same-binary C2 run with the flag at 0 and 1, plus functionals. I found no blocking bug.
+
+## Source checks
+
+| Area | Finding |
+|---|---|
+| Recorded sequence | Bodies are copied verbatim from the three component captures. Order on `cs_` is round 0 (T0), round 1 (T1), tail 0, step 0 (j=1), step 1 (j=1), tail 1. This matches the OFF launch order at `max_steps == 2`. S103 showed in-order recording keeps linear edges. |
+| Cache key | `pair_exec_[T0][T1]` uses the *effective* T, after the catch-up-all policy. Depth is fixed at 2 by the `max_steps == 2` gate. The component caches are keyed the same way (`[c][T]`, `[c][j]`, `[j]`), so no new aliasing is introduced. Index bounds are 1..8 within 9. |
+| Fresh mapped data | The same `copy_from_mapped_multi` copies are recorded and re-read on replay, exactly as in the component graphs. Staging and the `seq_cst` fence still come before the single launch. |
+| Shared scratch | `xq2_` and `logits2_` are used by tail 0 then tail 1 in the same serialized graph, as before. |
+| Lifetimes | `pair_exec_` is deleted after the `cs_` drain and before the component graphs and scratch. The pair is still destroyed before the drafters. The external `slot_mtp_rows` lifetime is a pre-existing point that is not made worse, because no graph runs during teardown. |
+| Polling/PLE | Unchanged. It runs after the submit, against the same `h_out_` records and in the same depth order. |
+| Failure | Capture or launch failure returns false. The existing caller prints `ERR` and returns, with no solo redraft and no component fallback. `finish_capture` closes the recording on the `!ok` path. |
+| Accepted prefix | No commit is recorded. The draft graph stays entirely before acceptance. |
+| Default OFF | The flag is latched; any value other than ON gives text-identical OFF statements. The `bool ok = [&]{\u2026}()` wrapper with a shadowing inner `ok` is valid C++, at most a `-Wshadow` warning. |
+
+## Still needed at runtime (tests, not bugs)
+
+1. **Main-binary submission count.** Under the existing unitrace in a separate instrumented run, show 1 vs 6 pair `ImmediateAppend` calls per paired window. The S103 probe does not cover the main binary. Until this is shown, assign no benefit.
+2. **Marker.** Exactly once with ON, after warm-up or capture; absent with OFF. It proves host selection only.
+3. **Key coverage.** Record which effective (T0, T1) pairs actually occur, including asymmetric ones. Do not sweep for more.
+4. **Draft-count parity.** S105 traced the earlier 207/205 offered-draft split to a timing-adaptive suffix and confidence choice. Changing the submission pattern could perturb that timing.
+   - Keep the strict gate.
+   - Consider pinning the existing fixed-work flags in **both** arms, so that a stop means a candidate defect rather than timing-policy noise.
+   - If they stay unpinned, a mismatch in offered drafts only, with identical text, usage and accepted work, should be recorded as unresolved timing policy, not as a candidate failure.
+5. **Standard gates:**
+   - text, SSE and usage;
+   - per-slot drafts, windows and captures;
+   - functionals and tool round-trip;
+   - normal QUIT, CID and name gone, wrapper exit 0, full health.
+
+Keep the Q6 A4 flags out of this run.

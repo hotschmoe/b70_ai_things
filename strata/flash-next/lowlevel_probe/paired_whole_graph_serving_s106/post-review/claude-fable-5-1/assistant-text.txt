@@ -1,0 +1,22 @@
+**Agree: KEEP_DEFAULT_OFF_NO_REPEAT.** The mechanism did what the source said and it did not move serving.
+
+**What is established**
+
+- Correctness under the strict gates: four matched pairs with exact text, usage, native work, drafts and captures, functionals, normal teardown and full health on both arms.
+- Mechanism at the host API level: the graph submission count fell by 105, which equals five fewer per paired call across 21 pairs, exactly the six-to-one branch. The matching drop in event host synchronizes is consistent with that.
+- Serving effect: a 0.06 percent ratio of medians from one sequence of three nested pairs. That is noise-level and carries no population or stability meaning either way.
+
+**Limits to keep explicit**
+
+- The host-synchronize delta of 354 is unattributed and must not be described as removed wait time.
+- Only one cache key was observed through the marker. Correctness of other T pairs rests on the shared record bodies, not on observation.
+- The API count run and the clean run are different processes. The count proves the branch ran, not that the clean run's submissions were reduced on every window.
+- No factual overclaim found in the packet. The one phrase to avoid is "mechanism works", which is true only at the submission-count level.
+
+**Reading**
+
+Six submissions were not on the critical path. The pair queue was already fed ahead of the GPU, so removing five host calls per draft changes nothing the GPU waits on. This is a useful negative: host submission overhead in the pair path is closed as a lever.
+
+**One next action**
+
+Prepare the narrow default-OFF Q6 A4 main patch already planned from S104, with the original kernel text untouched and the two-shape plus dword-alignment eligibility guard. It is the one candidate with measured primitive gains and a clear compiled mechanism. Run it through the same path S100 and S106 used: one incremental build, binding audit, ISA check in the main TU, one finite same-binary flag 0 and 1 run. Do not combine it with any other flag, and do not revisit the pair graph.

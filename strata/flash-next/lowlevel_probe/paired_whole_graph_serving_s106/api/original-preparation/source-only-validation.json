@@ -1,0 +1,42 @@
+{
+  "status": "PASS_SOURCE_ONLY_SYNTAX",
+  "checks": [
+    {
+      "path": "analyze.py",
+      "AST": "PASS"
+    },
+    {
+      "path": "controller.py",
+      "AST": "PASS"
+    },
+    {
+      "path": "harness-prep/client.py",
+      "AST": "PASS"
+    },
+    {
+      "path": "harness-prep/make_configs.py",
+      "AST": "PASS"
+    },
+    {
+      "path": "harness-prep/start_arm.py",
+      "AST": "PASS"
+    },
+    {
+      "embedded_native_probe_AST": "PASS"
+    },
+    {
+      "path": "harness-prep/stop_and_health.py",
+      "AST": "PASS"
+    },
+    {
+      "bash_n": "PASS"
+    },
+    {
+      "ASCII": "PASS",
+      "configs_wrappers_generated": false,
+      "controllers_or_parser_run": false,
+      "build_GPU_requests_CLI_models_executed": false,
+      "actual_count_or_speed_result": false
+    }
+  ]
+}

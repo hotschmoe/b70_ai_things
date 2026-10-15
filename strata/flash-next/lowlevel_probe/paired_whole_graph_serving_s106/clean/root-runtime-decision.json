@@ -1,0 +1,89 @@
+{
+  "utc": "2026-10-15T23:27:30.345176+00:00",
+  "status": "CLOSED_MATCHED_CLEAN_AND_MAIN_API_COUNTS_KEEP_DEFAULT_OFF",
+  "clean_comparison_status": "PASS_MATCHED_DISCRIMINATOR",
+  "same_new_binary": true,
+  "fixed_work_new_config_not_S100_comparable": true,
+  "aggregate_median_tok_s_OFF_ON": [
+    102.91465821692321,
+    102.97626486000641
+  ],
+  "aggregate_ratio_of_medians_change_percent": 0.0598618740523138,
+  "paired_changes_percent": [
+    0.0598618740523138,
+    0.08856280046356524,
+    0.18214133906970797
+  ],
+  "median_paired_change_percent": 0.08856280046356524,
+  "per_stream_medians": [
+    [
+      {
+        "ttft_s": 0.9113757419981994,
+        "completion_wall_s": 28.966987463005353,
+        "decode_tps": 53.42925393459134,
+        "whole_request_output_tps": 51.783085897893145
+      },
+      {
+        "ttft_s": 2.1121947490028106,
+        "completion_wall_s": 28.93493354599923,
+        "decode_tps": 55.807288589742626,
+        "whole_request_output_tps": 51.840450838270606
+      }
+    ],
+    [
+      {
+        "ttft_s": 0.9076889139832929,
+        "completion_wall_s": 28.942371926037595,
+        "decode_tps": 53.45633682791935,
+        "whole_request_output_tps": 51.82712750127249
+      },
+      {
+        "ttft_s": 2.0777007999713533,
+        "completion_wall_s": 28.922904794977512,
+        "decode_tps": 55.80904606107032,
+        "whole_request_output_tps": 51.862010770801845
+      }
+    ]
+  ],
+  "all_four_output_native_work_and_capture_pairs_exact": true,
+  "functionals_normal_teardown_full_CID_NAME_and_pinned_health_PASS": true,
+  "default": "OFF",
+  "promotion": false,
+  "repeat_same_clean_test": false,
+  "next": "Keep graph OFF/no repeat/no fullcache qualification. Prepare narrow defaultOFF Q6 A4 proposal separately; next alreadyplanned profile can inspect firstC2head-to-posthead/select-to-j1 readiness.",
+  "limits": [
+    "One fixed OFF then ON sequence, three nested timed pairs; no independent replication/population effect or stable speed gain.",
+    "SSE content-event gaps are not token ITL.",
+    "Printed average rows and aggregate counters do not expose every row/key/cache hit or raw native token IDs.",
+    "New API-count processes are independent diagnostics, not a clean throughput control."
+  ],
+  "API_status": "PASS_MATCHED_NATIVE_WORK_AND_OBSERVED_MAIN_API_COUNTS_ROOT_ATTRIBUTION_REQUIRED",
+  "main_submission_counts_OFF_ON": [
+    231,
+    126
+  ],
+  "main_submission_delta": -105,
+  "main_event_host_sync_counts_OFF_ON": [
+    1195,
+    1090
+  ],
+  "main_command_list_host_sync_counts_OFF_ON": [
+    19728,
+    19374
+  ],
+  "profile_native": {
+    "windows": 24,
+    "paired": 21,
+    "solo": 2,
+    "rounded_rows": [
+      [
+        "24",
+        "5.21"
+      ]
+    ],
+    "logged_new_captures": []
+  },
+  "source_conditioned_reconciliation": "-105 = -5 * 21 paired calls, consistent with six-to-one source branch under fixed depth2/200k and bounded107/64requests. No per-call/per-key event mirror; hostsync delta354 remains unattributed, not removable time.",
+  "API_speed_claim": false,
+  "post_model_consultation": "PENDING_SEPARATE_POST_DECISION_RECORD"
+}

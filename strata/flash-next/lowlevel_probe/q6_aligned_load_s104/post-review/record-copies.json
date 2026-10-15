@@ -1,0 +1,243 @@
+{
+  "status": "EXACT_POST_REVIEW_COPIES",
+  "entries": [
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/evidence-pins.json",
+      "target": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/evidence-pins.json",
+      "group": "separate already-measured S104 actual post-model decisions (same checkpoint)",
+      "policy": "EXACT_COPY",
+      "source_record": {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/evidence-pins.json",
+        "bytes": 1935,
+        "sha256": "9fea2376abf9d3a4d5de51f842d81aac2ae18832ab406a1dc5ce505a6b3ba09c"
+      },
+      "status": "EXACT_COPY_VERIFIED",
+      "target_record": {
+        "path": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/evidence-pins.json",
+        "bytes": 1935,
+        "sha256": "9fea2376abf9d3a4d5de51f842d81aac2ae18832ab406a1dc5ce505a6b3ba09c"
+      }
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/root-post-packet.txt",
+      "target": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/root-post-packet.txt",
+      "group": "separate already-measured S104 actual post-model decisions (same checkpoint)",
+      "policy": "EXACT_COPY",
+      "source_record": {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/root-post-packet.txt",
+        "bytes": 7268,
+        "sha256": "c8cddd99613a43aedbcf2d4d4b23f7b3fa3fe1bb4b3a2b3983c4a922b1104872"
+      },
+      "status": "EXACT_COPY_VERIFIED",
+      "target_record": {
+        "path": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/root-post-packet.txt",
+        "bytes": 7268,
+        "sha256": "c8cddd99613a43aedbcf2d4d4b23f7b3fa3fe1bb4b3a2b3983c4a922b1104872"
+      }
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/review-prefix.txt",
+      "target": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/review-prefix.txt",
+      "group": "separate already-measured S104 actual post-model decisions (same checkpoint)",
+      "policy": "EXACT_COPY",
+      "source_record": {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/review-prefix.txt",
+        "bytes": 412,
+        "sha256": "82fd467fcbad3ffa6b7408df77aaac117cc28c82dfbfc6f12f4a8ca0354fdcd9"
+      },
+      "status": "EXACT_COPY_VERIFIED",
+      "target_record": {
+        "path": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/review-prefix.txt",
+        "bytes": 412,
+        "sha256": "82fd467fcbad3ffa6b7408df77aaac117cc28c82dfbfc6f12f4a8ca0354fdcd9"
+      }
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/review.py",
+      "target": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/review.py",
+      "group": "separate already-measured S104 actual post-model decisions (same checkpoint)",
+      "policy": "EXACT_COPY",
+      "source_record": {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/review.py",
+        "bytes": 4713,
+        "sha256": "fb2f03510fb9911f649859bcb045b3203581101469c2baf46080de517f741f33"
+      },
+      "status": "EXACT_COPY_VERIFIED",
+      "target_record": {
+        "path": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/review.py",
+        "bytes": 4713,
+        "sha256": "fb2f03510fb9911f649859bcb045b3203581101469c2baf46080de517f741f33"
+      }
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/post-decision.json",
+      "target": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/post-decision.json",
+      "group": "separate already-measured S104 actual post-model decisions (same checkpoint)",
+      "policy": "EXACT_COPY",
+      "source_record": {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/post-decision.json",
+        "bytes": 3670,
+        "sha256": "57c1c1fd4a09e9f90e9ff8f326bfd2a89e53027908591bd3aa85b55ccb59ef10"
+      },
+      "status": "EXACT_COPY_VERIFIED",
+      "target_record": {
+        "path": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/post-decision.json",
+        "bytes": 3670,
+        "sha256": "57c1c1fd4a09e9f90e9ff8f326bfd2a89e53027908591bd3aa85b55ccb59ef10"
+      }
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/proposed-doc-append.txt",
+      "target": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/proposed-doc-append.txt",
+      "group": "separate already-measured S104 actual post-model decisions (same checkpoint)",
+      "policy": "EXACT_COPY",
+      "source_record": {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/proposed-doc-append.txt",
+        "bytes": 1201,
+        "sha256": "c8b4663ccd0b7890d1bf74fce3b52bf8d4861459308ed75e7b024ff343114643"
+      },
+      "status": "EXACT_COPY_VERIFIED",
+      "target_record": {
+        "path": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/proposed-doc-append.txt",
+        "bytes": 1201,
+        "sha256": "c8b4663ccd0b7890d1bf74fce3b52bf8d4861459308ed75e7b024ff343114643"
+      }
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/claude-opus-5-5/assistant-text.txt",
+      "target": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/claude-opus-5-5/assistant-text.txt",
+      "group": "separate already-measured S104 actual post-model decisions (same checkpoint)",
+      "policy": "EXACT_COPY",
+      "source_record": {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/claude-opus-5-5/assistant-text.txt",
+        "bytes": 3069,
+        "sha256": "263057fd3da5e3fbaa50bee24ae05d47bba8fa68e53870c20302aa2c92dcdd48"
+      },
+      "status": "EXACT_COPY_VERIFIED",
+      "target_record": {
+        "path": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/claude-opus-5-5/assistant-text.txt",
+        "bytes": 3069,
+        "sha256": "263057fd3da5e3fbaa50bee24ae05d47bba8fa68e53870c20302aa2c92dcdd48"
+      }
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/claude-opus-5-5/completion.json",
+      "target": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/claude-opus-5-5/completion.json",
+      "group": "separate already-measured S104 actual post-model decisions (same checkpoint)",
+      "policy": "EXACT_COPY",
+      "source_record": {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/claude-opus-5-5/completion.json",
+        "bytes": 6504,
+        "sha256": "53ace8ba487669728d0b702da29eab704faa76ca637510ec6fe791e38b8d513c"
+      },
+      "status": "EXACT_COPY_VERIFIED",
+      "target_record": {
+        "path": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/claude-opus-5-5/completion.json",
+        "bytes": 6504,
+        "sha256": "53ace8ba487669728d0b702da29eab704faa76ca637510ec6fe791e38b8d513c"
+      }
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/claude-opus-5-5/command.json",
+      "target": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/claude-opus-5-5/command.json",
+      "group": "separate already-measured S104 actual post-model decisions (same checkpoint)",
+      "policy": "EXACT_COPY",
+      "source_record": {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/claude-opus-5-5/command.json",
+        "bytes": 1216,
+        "sha256": "abd2e4f6f480ef5bdd4888f3fac56a55a029900b60bbefa65ff43b19b9728d0d"
+      },
+      "status": "EXACT_COPY_VERIFIED",
+      "target_record": {
+        "path": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/claude-opus-5-5/command.json",
+        "bytes": 1216,
+        "sha256": "abd2e4f6f480ef5bdd4888f3fac56a55a029900b60bbefa65ff43b19b9728d0d"
+      }
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/claude-opus-5-5/stderr.log",
+      "target": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/claude-opus-5-5/stderr.log",
+      "group": "separate already-measured S104 actual post-model decisions (same checkpoint)",
+      "policy": "EXACT_COPY",
+      "source_record": {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/claude-opus-5-5/stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "status": "EXACT_COPY_VERIFIED",
+      "target_record": {
+        "path": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/claude-opus-5-5/stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/claude-fable-5-1/assistant-text.txt",
+      "target": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/claude-fable-5-1/assistant-text.txt",
+      "group": "separate already-measured S104 actual post-model decisions (same checkpoint)",
+      "policy": "EXACT_COPY",
+      "source_record": {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/claude-fable-5-1/assistant-text.txt",
+        "bytes": 2825,
+        "sha256": "46a1551f5bdea2c3732bb5ebe45e3a86f42a18cf9580e223014ff2d00ca03663"
+      },
+      "status": "EXACT_COPY_VERIFIED",
+      "target_record": {
+        "path": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/claude-fable-5-1/assistant-text.txt",
+        "bytes": 2825,
+        "sha256": "46a1551f5bdea2c3732bb5ebe45e3a86f42a18cf9580e223014ff2d00ca03663"
+      }
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/claude-fable-5-1/completion.json",
+      "target": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/claude-fable-5-1/completion.json",
+      "group": "separate already-measured S104 actual post-model decisions (same checkpoint)",
+      "policy": "EXACT_COPY",
+      "source_record": {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/claude-fable-5-1/completion.json",
+        "bytes": 6253,
+        "sha256": "6d8c604f76acad88e0c65558cf243acd71966f21da377f576192a7817275c3e3"
+      },
+      "status": "EXACT_COPY_VERIFIED",
+      "target_record": {
+        "path": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/claude-fable-5-1/completion.json",
+        "bytes": 6253,
+        "sha256": "6d8c604f76acad88e0c65558cf243acd71966f21da377f576192a7817275c3e3"
+      }
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/claude-fable-5-1/command.json",
+      "target": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/claude-fable-5-1/command.json",
+      "group": "separate already-measured S104 actual post-model decisions (same checkpoint)",
+      "policy": "EXACT_COPY",
+      "source_record": {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/claude-fable-5-1/command.json",
+        "bytes": 1218,
+        "sha256": "8dba7860ff8fd89e4a07c273857e54ac10da8e9a8c2787c364e8475a7e6d1392"
+      },
+      "status": "EXACT_COPY_VERIFIED",
+      "target_record": {
+        "path": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/claude-fable-5-1/command.json",
+        "bytes": 1218,
+        "sha256": "8dba7860ff8fd89e4a07c273857e54ac10da8e9a8c2787c364e8475a7e6d1392"
+      }
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/claude-fable-5-1/stderr.log",
+      "target": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/claude-fable-5-1/stderr.log",
+      "group": "separate already-measured S104 actual post-model decisions (same checkpoint)",
+      "policy": "EXACT_COPY",
+      "source_record": {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-postreviews-20261015/claude-fable-5-1/stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "status": "EXACT_COPY_VERIFIED",
+      "target_record": {
+        "path": "strata/flash-next/lowlevel_probe/q6_aligned_load_s104/post-review/claude-fable-5-1/stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "utc": "2026-10-15T23:20:02.989349+00:00",
+  "status": "CLEAN_MATCHED_SERVING_CLOSED_KEEP_DEFAULT_OFF_API_COUNTS_PENDING",
+  "clean_comparison_status": "PASS_MATCHED_DISCRIMINATOR",
+  "same_new_binary": true,
+  "fixed_work_new_config_not_S100_comparable": true,
+  "aggregate_median_tok_s_OFF_ON": [
+    102.91465821692321,
+    102.97626486000641
+  ],
+  "aggregate_ratio_of_medians_change_percent": 0.0598618740523138,
+  "paired_changes_percent": [
+    0.0598618740523138,
+    0.08856280046356524,
+    0.18214133906970797
+  ],
+  "median_paired_change_percent": 0.08856280046356524,
+  "per_stream_medians": [
+    [
+      {
+        "ttft_s": 0.9113757419981994,
+        "completion_wall_s": 28.966987463005353,
+        "decode_tps": 53.42925393459134,
+        "whole_request_output_tps": 51.783085897893145
+      },
+      {
+        "ttft_s": 2.1121947490028106,
+        "completion_wall_s": 28.93493354599923,
+        "decode_tps": 55.807288589742626,
+        "whole_request_output_tps": 51.840450838270606
+      }
+    ],
+    [
+      {
+        "ttft_s": 0.9076889139832929,
+        "completion_wall_s": 28.942371926037595,
+        "decode_tps": 53.45633682791935,
+        "whole_request_output_tps": 51.82712750127249
+      },
+      {
+        "ttft_s": 2.0777007999713533,
+        "completion_wall_s": 28.922904794977512,
+        "decode_tps": 55.80904606107032,
+        "whole_request_output_tps": 51.862010770801845
+      }
+    ]
+  ],
+  "all_four_output_native_work_and_capture_pairs_exact": true,
+  "functionals_normal_teardown_full_CID_NAME_and_pinned_health_PASS": true,
+  "default": "OFF",
+  "promotion": false,
+  "repeat_same_clean_test": false,
+  "next": "ONE finite summary-only main API-count pair perarm to distinguish actual submission mechanism from first-key host marker; no instrumented speed inference",
+  "limits": [
+    "One fixed OFF then ON sequence, three nested timed pairs; no independent replication/population effect or stable speed gain.",
+    "SSE content-event gaps are not token ITL.",
+    "Printed average rows and aggregate counters do not expose every row/key/cache hit or raw native token IDs.",
+    "New API-count processes are independent diagnostics, not a clean throughput control."
+  ]
+}

@@ -24815,3 +24815,37 @@ Normalnative/driver/tee/identity/analysis/health0, exactCID+NAMEgone;
 newmainintegration/default/shelf/fullcacheclaim. Evidence:
 strata/flash-next/lowlevel_probe/q6_aligned_load_s104/ and
 docs/20261015_strata_q6_aligned_loads.md.
+
+
+## 2026-10-15 S106: whole-pair graph reduces main submissions, serving flat
+
+CONFIG -> Same new main e3ca8ac2 both arms; depth2/headpairON, graph0/1,
+all other candidatesOFF. Fixed suffix0/lookup0/spec4/mtpmax4/minp0 in both
+native argv and HTTP. New config, not S100 speed control. EP149/363 resident,
+DirectPLE/2x200k/32768MiB fourparking retained. Source defaultOFF exact-key
+rerecording of existing six operation bodies; poll/staging/commit unchanged.
+COMMAND -> Actual source Opus48.101s/Fable56.299s/rootfullread; one201s
+offline incremental3TU/twoarchive/main build, unchanged kernel+prefillarchives.
+Full prehealth; cleanwarm256+3fresh107/1500C2pairs/functionals/normalquit/
+fullhealth perarm. Separate unitrace-host-summary-only pausedwarm256 and
+onefresh107/64C2pair perarm, exactnativebyteoffset/counterclosure/normalquit/
+fullhealth before one bounded summary parse. AllGPUleased; quietonlywindows.
+RESULT -> All4cleanpairs exacttext/SSE/usage/nativework/drafts/windows/
+paired/solo/printedrows/captures; allfunctionals/identity/normalQUIT/fullCID+
+NAMEabsence/pinnedpercard+compiledhealthPASS. Aggregate102.914658->102.976265
+tok/s (+0.059862%); streams53.429/55.807->53.456/55.809. Onefixedsequence/
+three nested pairs, no resolved gain/population/stability claim. APIpair24
+windows/21paired/2solo each; actualsubmits231->126/eventhostsync1195->1090,
+both-105. CLhostsync19728->19374(-354unattributed); other7APIcounts identical.
+-105=5*21 is source-conditioned6->1 consistency, no percall/key/deviceidle
+mirror. Tables~2KBeach, noChrome/raw269MBparse/75GBhash/dailyrestore/retry.
+VERDICT -> KeepdefaultOFF/no repeat/fullcachecampaign/shelfpromotion or
+upstreamspeedclaim. Actualpost Opus17.572s/Fable17.268s/rootfullread agree;
+root rejects unproven queue-fed-ahead explanation. SteadyS95heads2C2+1C6;
+wholeprofile24C6/22batchC6 consistentwith2loggedpromptT6reads, eventownership
+unresolved. Review separateQ6A4proposal next; inspectexisting smallprofile
+coverage for firstC2head/posthead/select/j1 readiness. S104post actualOpus
+23.074s/Fable18.456s recommend conditional sourceprep, no new measuredgain.
+Evidence: strata/flash-next/lowlevel_probe/paired_whole_graph_serving_s106/,
+docs/20261015_strata_graph_capture_and_bottlenecks.md. Targets remain unmet;
+boundedS30RAMrestore retained, no new recovery or numerical equivalence claim.

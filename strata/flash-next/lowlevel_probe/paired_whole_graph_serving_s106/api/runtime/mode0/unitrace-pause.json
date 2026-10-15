@@ -1,0 +1,14 @@
+{
+  "command": [
+    "docker",
+    "exec",
+    "d9d6d852836584914c9e97e64f5dd43aafb61487e1177e7bf520157470f49a26",
+    "/mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/build/unitrace",
+    "--pause",
+    "s106api0"
+  ],
+  "exit": 0,
+  "stdout": "",
+  "stderr": "[INFO] Session s106api0 is paused\n",
+  "epoch_ns": 1792106480692907856
+}

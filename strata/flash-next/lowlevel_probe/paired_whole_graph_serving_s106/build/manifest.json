@@ -1,0 +1,29 @@
+{
+  "status": "ROOT_FROZEN_BUILD_PREP_BEFORE_EXECUTION",
+  "files": {
+    "build-container.sh": {
+      "bytes": 4642,
+      "sha256": "3b4b21f7b52d4e26d591d2d82b831c4d065d9b2b55231882f99bb8e5ed6375d2"
+    },
+    "build.sh": {
+      "bytes": 1375,
+      "sha256": "994b8f9de8ba7d73df3df7fa3ea5e187270ad021d1a74ee33fadb29a1b22820d"
+    },
+    "expected-applied-source.sha256": {
+      "bytes": 213,
+      "sha256": "f1642bf4b9c0f6f0b761b28bb1c22a19b19209e7b6593a1be501e8bb7290f839"
+    },
+    "expected-before-build.sha256": {
+      "bytes": 244,
+      "sha256": "cd8d917b9bd1159757c69aee8532ef9b5f4d95e287a4ac2eb5cf17159fa2fb13"
+    },
+    "expected-unchanged-build-inputs.sha256": {
+      "bytes": 1466,
+      "sha256": "f9e009d10724eb4e211a21d3e562e944b56605cb88080aeae36e7287ee19d68b"
+    },
+    "expected-unchanged-source.sha256": {
+      "bytes": 2174,
+      "sha256": "b4d53147550c7b23a42a6659c74625730fd90e2bc22390694da7c91baaedd85c"
+    }
+  }
+}

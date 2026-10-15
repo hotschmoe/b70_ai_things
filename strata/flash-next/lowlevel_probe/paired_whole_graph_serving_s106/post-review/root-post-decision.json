@@ -1,0 +1,38 @@
+{
+  "utc": "2026-10-15T23:29:29.819113+00:00",
+  "status": "ROOT_ACCEPT_KEEP_DEFAULT_OFF_NO_REPEAT_NO_PROMOTION",
+  "actual_models": {
+    "claude-opus-5-5": {
+      "elapsed_s": 17.572076604992617,
+      "session_ids": [
+        "c26cbc95-bbed-461b-b165-8adee1464b9e"
+      ],
+      "exit": 0,
+      "root_full_read": true,
+      "verdict": "KEEP_DEFAULT_OFF_NO_REPEAT"
+    },
+    "claude-fable-5-1": {
+      "elapsed_s": 17.268346934986766,
+      "session_ids": [
+        "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+      ],
+      "exit": 0,
+      "root_full_read": true,
+      "verdict": "KEEP_DEFAULT_OFF_NO_REPEAT"
+    }
+  },
+  "root_corrections": [
+    "Fable queue-fed-ahead/critical-path explanation is an unproven hypothesis: no device idle/dispatch bridge. Clean result shows no material gain resolved here; does not universally close submission optimization.",
+    "S95 whole-profile24C6=22batchC6+2promptT6 is source/log/count-consistent; distinct42C2 heads fit21paired*2steps. Steady motif2C2+1C6, not3C6. No exact event ownership.",
+    "Source-conditioned105=5*21 and collected counts support intended coarsening, without per-call/per-key trace or proof every clean-run replay was counted.",
+    "Only firstkey marker observed; strict outputs/work bound the exercised run, not universal all-key/numerical correctness.",
+    "CLhostsync delta354 remains unattributed, not a removed wait budget.",
+    "No new source/gate/qualification behavior is introduced by this post decision."
+  ],
+  "next": "Review narrow defaultOFF Q6 A4 sourceproposal, then compiled binding/ISA and one later finite single-flag serving comparison if accepted. In parallel inspect existing SMALL S95 derived data coverage for firstC2head->posthead/select->j1 readiness; no automatic bigrawparse/GPUprofile.",
+  "no_repeat_clean_graph": true,
+  "no_full_cache_campaign": true,
+  "S30_RAM_restore_retained": true,
+  "serving_targets_unmet": true,
+  "source_packet_sha256": "fcd4d3bf9353ff2136d22aafd5fd310faa816785b51a930cafa0abaff9837239"
+}

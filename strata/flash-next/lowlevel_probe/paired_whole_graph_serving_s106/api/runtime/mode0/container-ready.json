@@ -1,0 +1,322 @@
+{
+  "Id": "d9d6d852836584914c9e97e64f5dd43aafb61487e1177e7bf520157470f49a26",
+  "Created": "2026-10-15T23:19:50.543989691Z",
+  "Path": "bash",
+  "Args": [
+    "-lc",
+    "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; cd \"$3\"; exec \"$1/venv/bin/python\" sycl/serve/server_intel.py --engine strata --config \"$2\" --host 127.0.0.1 --port 18085",
+    "bash",
+    "/mnt/vm_8tb/b70/build/strata-ab",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode0/config.json",
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep"
+  ],
+  "State": {
+    "Status": "running",
+    "Running": true,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 4034925,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-10-15T23:19:56.646717588Z",
+    "FinishedAt": "0001-01-01T00:00:00Z"
+  },
+  "Image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "ResolvConfPath": "/mnt/vm_8tb/docker/containers/d9d6d852836584914c9e97e64f5dd43aafb61487e1177e7bf520157470f49a26/resolv.conf",
+  "HostnamePath": "/mnt/vm_8tb/docker/containers/d9d6d852836584914c9e97e64f5dd43aafb61487e1177e7bf520157470f49a26/hostname",
+  "HostsPath": "/mnt/vm_8tb/docker/containers/d9d6d852836584914c9e97e64f5dd43aafb61487e1177e7bf520157470f49a26/hosts",
+  "LogPath": "/mnt/vm_8tb/docker/containers/d9d6d852836584914c9e97e64f5dd43aafb61487e1177e7bf520157470f49a26/d9d6d852836584914c9e97e64f5dd43aafb61487e1177e7bf520157470f49a26-json.log",
+  "Name": "/strata-s106api-mode0",
+  "RestartCount": 0,
+  "Driver": "overlayfs",
+  "Platform": "linux",
+  "MountLabel": "",
+  "ProcessLabel": "",
+  "AppArmorProfile": "docker-default",
+  "ExecIDs": null,
+  "HostConfig": {
+    "Binds": [
+      "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-xxs:/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-xxs:ro",
+      "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco:/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco:ro",
+      "/mnt/vm_8tb/b70/build/strata-ab:/mnt/vm_8tb/b70/build/strata-ab",
+      "/mnt/vm_8tb/b70/results:/mnt/vm_8tb/b70/results",
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode0/config.json:/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode0/config.json:ro",
+      "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-s:/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-s:ro"
+    ],
+    "ContainerIDFile": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode0/attempt.cid",
+    "LogConfig": {
+      "Type": "json-file",
+      "Config": {}
+    },
+    "NetworkMode": "host",
+    "PortBindings": {},
+    "RestartPolicy": {
+      "Name": "no",
+      "MaximumRetryCount": 0
+    },
+    "AutoRemove": true,
+    "VolumeDriver": "",
+    "VolumesFrom": null,
+    "ConsoleSize": [
+      0,
+      0
+    ],
+    "CapAdd": [
+      "CAP_SYS_PTRACE"
+    ],
+    "CapDrop": null,
+    "CgroupnsMode": "private",
+    "Dns": null,
+    "DnsOptions": [],
+    "DnsSearch": [],
+    "ExtraHosts": null,
+    "GroupAdd": null,
+    "IpcMode": "private",
+    "Cgroup": "",
+    "Links": null,
+    "OomScoreAdj": 0,
+    "PidMode": "",
+    "Privileged": false,
+    "PublishAllPorts": false,
+    "ReadonlyRootfs": false,
+    "SecurityOpt": null,
+    "UTSMode": "",
+    "UsernsMode": "",
+    "ShmSize": 67108864,
+    "Runtime": "runc",
+    "Isolation": "",
+    "CpuShares": 0,
+    "Memory": 96636764160,
+    "NanoCpus": 0,
+    "CgroupParent": "",
+    "BlkioWeight": 0,
+    "BlkioWeightDevice": [],
+    "BlkioDeviceReadBps": [],
+    "BlkioDeviceWriteBps": [],
+    "BlkioDeviceReadIOps": [],
+    "BlkioDeviceWriteIOps": [],
+    "CpuPeriod": 0,
+    "CpuQuota": 0,
+    "CpuRealtimePeriod": 0,
+    "CpuRealtimeRuntime": 0,
+    "CpusetCpus": "",
+    "CpusetMems": "",
+    "Devices": [
+      {
+        "PathOnHost": "/dev/dri",
+        "PathInContainer": "/dev/dri",
+        "CgroupPermissions": "rwm"
+      }
+    ],
+    "DeviceCgroupRules": null,
+    "DeviceRequests": null,
+    "MemoryReservation": 0,
+    "MemorySwap": 193273528320,
+    "MemorySwappiness": null,
+    "OomKillDisable": null,
+    "PidsLimit": null,
+    "Ulimits": [
+      {
+        "Name": "memlock",
+        "Hard": -1,
+        "Soft": -1
+      }
+    ],
+    "CpuCount": 0,
+    "CpuPercent": 0,
+    "IOMaximumIOps": 0,
+    "IOMaximumBandwidth": 0,
+    "MaskedPaths": [
+      "/proc/acpi",
+      "/proc/asound",
+      "/proc/interrupts",
+      "/proc/kcore",
+      "/proc/keys",
+      "/proc/latency_stats",
+      "/proc/sched_debug",
+      "/proc/scsi",
+      "/proc/timer_list",
+      "/proc/timer_stats",
+      "/sys/devices/virtual/powercap",
+      "/sys/firmware"
+    ],
+    "ReadonlyPaths": [
+      "/proc/bus",
+      "/proc/fs",
+      "/proc/irq",
+      "/proc/sys",
+      "/proc/sysrq-trigger"
+    ]
+  },
+  "Storage": {
+    "RootFS": {
+      "Snapshot": {
+        "Name": "overlayfs"
+      }
+    }
+  },
+  "Mounts": [
+    {
+      "Type": "bind",
+      "Source": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-xxs",
+      "Destination": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-xxs",
+      "Mode": "ro",
+      "RW": false,
+      "Propagation": "rprivate"
+    },
+    {
+      "Type": "bind",
+      "Source": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco",
+      "Destination": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco",
+      "Mode": "ro",
+      "RW": false,
+      "Propagation": "rprivate"
+    },
+    {
+      "Type": "bind",
+      "Source": "/mnt/vm_8tb/b70/build/strata-ab",
+      "Destination": "/mnt/vm_8tb/b70/build/strata-ab",
+      "Mode": "",
+      "RW": true,
+      "Propagation": "rprivate"
+    },
+    {
+      "Type": "bind",
+      "Source": "/mnt/vm_8tb/b70/results",
+      "Destination": "/mnt/vm_8tb/b70/results",
+      "Mode": "",
+      "RW": true,
+      "Propagation": "rprivate"
+    },
+    {
+      "Type": "bind",
+      "Source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode0/config.json",
+      "Destination": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode0/config.json",
+      "Mode": "ro",
+      "RW": false,
+      "Propagation": "rprivate"
+    },
+    {
+      "Type": "bind",
+      "Source": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-s",
+      "Destination": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-s",
+      "Mode": "ro",
+      "RW": false,
+      "Propagation": "rprivate"
+    }
+  ],
+  "Config": {
+    "Hostname": "b70s4dayz",
+    "Domainname": "",
+    "User": "",
+    "AttachStdin": true,
+    "AttachStdout": true,
+    "AttachStderr": true,
+    "Tty": false,
+    "OpenStdin": true,
+    "StdinOnce": true,
+    "Env": [
+      "ZES_ENABLE_SYSMAN=1",
+      "STRATA_VERIFY_NO_HOST=1",
+      "STRATA_STAGE_TRIM=1",
+      "STRATA_STAGER_THREADS=12",
+      "ONEAPI_DEVICE_SELECTOR=level_zero:*",
+      "STRATA_VERIFY_DEVICE_PLAN=1",
+      "STRATA_MIRROR_MIB=0",
+      "STRATA_KV_WIDE_HOST=0",
+      "SYCL_CACHE_PERSISTENT=0",
+      "PATH=/opt/intel/oneapi/vtune/2026.2/bin64:/opt/intel/oneapi/mpi/2021.18/bin:/opt/intel/oneapi/mkl/2026.1/bin:/opt/intel/oneapi/dev-utilities/2026.0/bin:/opt/intel/oneapi/debugger/2026.1/opt/debugger/bin:/opt/intel/oneapi/compiler/2026.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "LANG=C.UTF-8",
+      "CCL_CONFIGURATION=cpu_gpu_dpcpp",
+      "CCL_CONFIGURATION_PATH=",
+      "CCL_ROOT=/opt/intel/oneapi/ccl/2022.1",
+      "CLASSPATH=/opt/intel/oneapi/mpi/2021.18/share/java/mpi.jar",
+      "CMAKE_PREFIX_PATH=/opt/intel/oneapi/tbb/2023.1/env/..:/opt/intel/oneapi/mkl/2026.1/lib/cmake:/opt/intel/oneapi/ipp/2026.0/lib/cmake/ipp:/opt/intel/oneapi/dpl/2022.13/lib/cmake/oneDPL:/opt/intel/oneapi/dnnl/2026.0/lib/cmake:/opt/intel/oneapi/compiler/2026.1:/opt/intel/oneapi/ccl/2022.1/lib/cmake/oneCCL",
+      "CMPLR_ROOT=/opt/intel/oneapi/compiler/2026.1",
+      "CPATH=/opt/intel/oneapi/umf/1.1/include:/opt/intel/oneapi/dev-utilities/2026.0/include:/opt/intel/oneapi/ccl/2022.1/include",
+      "CPLUS_INCLUDE_PATH=/opt/intel/oneapi/umf/1.1/include:/opt/intel/oneapi/tbb/2023.1/env/../include:/opt/intel/oneapi/mpi/2021.18/include:/opt/intel/oneapi/mkl/2026.1/include:/opt/intel/oneapi/ippcp/2026.0/include:/opt/intel/oneapi/ipp/2026.0/include:/opt/intel/oneapi/dpl/2022.13/include:/opt/intel/oneapi/dnnl/2026.0/include",
+      "C_INCLUDE_PATH=/opt/intel/oneapi/umf/1.1/include:/opt/intel/oneapi/tbb/2023.1/env/../include:/opt/intel/oneapi/mpi/2021.18/include:/opt/intel/oneapi/mkl/2026.1/include:/opt/intel/oneapi/ippcp/2026.0/include:/opt/intel/oneapi/ipp/2026.0/include:/opt/intel/oneapi/dnnl/2026.0/include",
+      "DIAGUTIL_PATH=/opt/intel/oneapi/compiler/2026.1/etc/compiler/sys_check/sys_check.sh",
+      "DNNLROOT=/opt/intel/oneapi/dnnl/2026.0",
+      "DPLROOT=/opt/intel/oneapi/dpl/2022.13",
+      "DPL_ROOT=/opt/intel/oneapi/dpl/2022.13",
+      "FI_PROVIDER_PATH=/opt/intel/oneapi/mpi/2021.18/opt/mpi/libfabric/lib/prov:/usr/lib/x86_64-linux-gnu/libfabric",
+      "GDB_INFO=/opt/intel/oneapi/debugger/2026.1/share/info/",
+      "INFOPATH=/opt/intel/oneapi/debugger/2026.1/share/info",
+      "INTEL_PYTHONHOME=/opt/intel/oneapi/debugger/2026.1/opt/debugger",
+      "IPPCP_TARGET_ARCH=intel64",
+      "IPPCRYPTOROOT=/opt/intel/oneapi/ippcp/2026.0",
+      "IPPROOT=/opt/intel/oneapi/ipp/2026.0",
+      "IPP_TARGET_ARCH=intel64",
+      "I_MPI_ROOT=/opt/intel/oneapi/mpi/2021.18",
+      "LD_LIBRARY_PATH=/opt/intel/oneapi/tcm/1.5/lib:/opt/intel/oneapi/umf/1.1/lib:/opt/intel/oneapi/tcm/1.5/env/../lib:/opt/intel/oneapi/tbb/2023.1/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.18/opt/mpi/libfabric/lib:/opt/intel/oneapi/mpi/2021.18/lib:/opt/intel/oneapi/mkl/2026.1/lib:/opt/intel/oneapi/ippcp/2026.0/lib/:/opt/intel/oneapi/ipp/2026.0/lib:/opt/intel/oneapi/dnnl/2026.0/lib:/opt/intel/oneapi/debugger/2026.1/opt/debugger/lib:/opt/intel/oneapi/compiler/2026.1/opt/compiler/lib:/opt/intel/oneapi/compiler/2026.1/lib:/opt/intel/oneapi/ccl/2022.1/lib/",
+      "LIBRARY_PATH=/opt/intel/oneapi/tcm/1.5/lib:/opt/intel/oneapi/umf/1.1/lib:/opt/intel/oneapi/tbb/2023.1/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.18/lib:/opt/intel/oneapi/mkl/2026.1/lib:/opt/intel/oneapi/ippcp/2026.0/lib/:/opt/intel/oneapi/ipp/2026.0/lib:/opt/intel/oneapi/dnnl/2026.0/lib:/opt/intel/oneapi/compiler/2026.1/lib:/opt/intel/oneapi/ccl/2022.1/lib/",
+      "MANPATH=/opt/intel/oneapi/mpi/2021.18/share/man:/opt/intel/oneapi/debugger/2026.1/share/man:/opt/intel/oneapi/compiler/2026.1/share/man:",
+      "MKLROOT=/opt/intel/oneapi/mkl/2026.1",
+      "NLSPATH=/opt/intel/oneapi/compiler/2026.1/lib/compiler/locale/%l_%t/%N",
+      "OCL_ICD_FILENAMES=/opt/intel/oneapi/compiler/2026.1/lib/libintelocl.so",
+      "ONEAPI_ROOT=/opt/intel/oneapi",
+      "PKG_CONFIG_PATH=/opt/intel/oneapi/vtune/2026.2/include/pkgconfig/lib64:/opt/intel/oneapi/tbb/2023.1/env/../lib/pkgconfig:/opt/intel/oneapi/mpi/2021.18/lib/pkgconfig:/opt/intel/oneapi/mkl/2026.1/lib/pkgconfig:/opt/intel/oneapi/ippcp/2026.0/lib/pkgconfig:/opt/intel/oneapi/dpl/2022.13/lib/pkgconfig:/opt/intel/oneapi/dnnl/2026.0/lib/pkgconfig:/opt/intel/oneapi/compiler/2026.1/lib/pkgconfig:/opt/intel/oneapi/ccl/2022.1/lib/pkgconfig/",
+      "SETVARS_COMPLETED=1",
+      "TBBROOT=/opt/intel/oneapi/tbb/2023.1/env/..",
+      "TCMROOT=/opt/intel/oneapi/tcm/1.5/env/..",
+      "TCM_ROOT=/opt/intel/oneapi/tcm/1.5",
+      "UMF_ROOT=/opt/intel/oneapi/umf/1.1",
+      "VTUNE_PROFILER_2026_DIR=/opt/intel/oneapi/vtune/2026.2",
+      "VTUNE_PROFILER_DIR=/opt/intel/oneapi/vtune/2026.2",
+      "LC_ALL=C"
+    ],
+    "Cmd": [
+      "-lc",
+      "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; cd \"$3\"; exec \"$1/venv/bin/python\" sycl/serve/server_intel.py --engine strata --config \"$2\" --host 127.0.0.1 --port 18085",
+      "bash",
+      "/mnt/vm_8tb/b70/build/strata-ab",
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode0/config.json",
+      "/mnt/vm_8tb/b70/build/strata-ab/src-ep"
+    ],
+    "Image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+    "Volumes": null,
+    "WorkingDir": "",
+    "Entrypoint": [
+      "bash"
+    ],
+    "Labels": {
+      "org.opencontainers.image.version": "24.04"
+    }
+  },
+  "NetworkSettings": {
+    "SandboxID": "da02970da214f9c19cb4c796f2ffd2ed12897a9324e4edb64d9d75fcf5547865",
+    "SandboxKey": "/var/run/docker/netns/default",
+    "Ports": {},
+    "Networks": {
+      "host": {
+        "IPAMConfig": null,
+        "Links": null,
+        "Aliases": null,
+        "DriverOpts": null,
+        "GwPriority": 0,
+        "NetworkID": "01db21046d047b3f73d1a3f77e9f02a75bbba86080781950b836beb30b7ae9fb",
+        "EndpointID": "1b8e3975819c679e1927f879eda73066621aef9c0d1d9f5fef1258ad497312b9",
+        "Gateway": "",
+        "IPAddress": "",
+        "MacAddress": "",
+        "IPPrefixLen": 0,
+        "IPv6Gateway": "",
+        "GlobalIPv6Address": "",
+        "GlobalIPv6PrefixLen": 0,
+        "DNSNames": null
+      }
+    }
+  },
+  "ImageManifestDescriptor": {
+    "mediaType": "application/vnd.oci.image.manifest.v1+json",
+    "digest": "sha256:5771551f77d72f994618715af01b7139e2d3cd953fa7c807c5e88b6a797aa6a0",
+    "size": 1833,
+    "platform": {
+      "architecture": "amd64",
+      "os": "linux"
+    }
+  }
+}

@@ -1,0 +1,69 @@
+// Only depth2: the exact effective (T0,T1) key fixes every recorded row/shape.
+// Ordinary recording of the existing kernel calls; no nested executable graphs.
+bool MtpPair::capture_pair_depth2(int T0, int T1, std::string& err) try {
+    auto& exec = pair_exec_[T0][T1];
+    if (exec) return true;
+    using namespace strata::kernels;
+    cs_->wait_and_throw();
+    if (DPCT_CHECK_ERROR(dpct::experimental::begin_recording(cs_)) != 0) {
+        err = "mtp pair: whole depth2 begin capture";
+        return false;
+    }
+    bool ok = true;
+    try {
+        auto record_round = [&](int c, int T) {
+            MtpDrafter& d = *d_[c];
+            const int64_t N = d.g_->n_embd, NH = d.g_->n_head, HCN = d.g_->hc * N;
+            const int ra = 2 * d.max_t_ - 1;
+            bool ok = true;
+        // capture_round's inputs and front, then the rest without its head (the pair's tail graph runs it)
+        const MappedCopy in[7] = {{d.tok_, d.m_tok_, T}, {d.step_, d.m_step_, (int64_t) 2 * T * 4}, {d.pos_, d.m_pos_, 2 * T * NH},
+                                  {d.row_, d.m_row_, 2}, {d.Rin_, d.window_R_, T * HCN}, {d.step_ + ra * 4, d.m_step_ + ra * 4, 4},
+                                  {d.pos_ + ra * NH, d.m_pos_ + ra * NH, NH}};
+        copy_from_mapped_multi(in, 7, cs_);
+        ok = d.record_front(T, 0, cs_, err);
+        if (ok && T > 1) {
+            copy_row_to_first(d.row_, d.R_, HCN, d.inj_, d.g_->hc, d.mixed_, N, cs_);
+            native_quantize_q8_1(d.mixed_, d.xq_, (int) N, 1, cs_);
+        }
+        if (ok) ok = d.record_rest(ra, cs_, err, false);
+            return ok;
+        };
+        auto record_step = [&](int c, int j) {
+            MtpDrafter& d = *d_[c];
+            const int64_t NH = d.g_->n_head;
+            const int row = d.max_t_ + j - 1;
+            bool ok = true;
+        const MappedCopy in[2] = {{d.step_ + row * 4, d.m_step_ + row * 4, 4}, {d.pos_ + row * NH, d.m_pos_ + row * NH, NH}};
+        copy_from_mapped_multi(in, 2, cs_);
+        ok = d.record_forward(1, row, cs_, err, false);
+            return ok;
+        };
+        auto record_tail = [&](int j) {
+            MtpDrafter& a = *d_[0];
+            MtpDrafter& b = *d_[1];
+            const int64_t N = a.g_->n_embd, HCN = a.g_->hc * N;
+            bool ok = true;
+        native_quantize_q8_1(a.sample_, xq2_, (int) N, 1, cs_);
+        native_quantize_q8_1(b.sample_, xq2_ + col_bytes_, (int) N, 1, cs_);
+        native_mmvq_head(a.head_->type(), a.head_->weights(), xq2_, logits2_, (int) N, (int) nv_, 2, cs_);
+        ok = a.record_post_head(logits2_, cs_, err) && b.record_post_head(logits2_ + nv_, cs_, err);
+        if (ok) {
+            mtp_select(a.R_, HCN, a.out_ids_, a.row_ + 1, a.Rin_, a.tok_, a.m_out_, j, cs_, a.probs_, a.m_prob_);
+            mtp_select(b.R_, HCN, b.out_ids_, b.row_ + 1, b.Rin_, b.tok_, b.m_out_, j, cs_, b.probs_, b.m_prob_);
+        }
+            return ok;
+        };
+        ok = record_round(0, T0) && record_round(1, T1) && record_tail(0) &&
+             record_step(0, 1) && record_step(1, 1) && record_tail(1);
+    } catch (const std::exception& e) {
+        err = std::string("mtp pair whole depth2 capture: ") + e.what();
+        ok = false;
+    }
+    return finish_capture(cs_, ok, exec, "whole pair depth2", err, true);
+} catch (const std::exception& e) {
+    err = std::string("mtp pair whole depth2 capture: ") + e.what();
+    try { if (cs_) cs_->wait(); } catch (...) {}
+    return false; // No component/solo fallback after an uncertain capture failure.
+}
+

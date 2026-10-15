@@ -1,0 +1,120 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 17.268346934986766,
+  "launch_exception": null,
+  "source_packet_sha256": "fcd4d3bf9353ff2136d22aafd5fd310faa816785b51a930cafa0abaff9837239",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 930822,
+      "stop_reason": "end_turn",
+      "session_id": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "total_cost_usd": 8.85449825,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 3382,
+        "cache_read_input_tokens": 268571,
+        "output_tokens": 678,
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 3382,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 678,
+            "cache_read_input_tokens": 268571,
+            "cache_creation_input_tokens": 3382,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 3382
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 30,
+          "outputTokens": 58623,
+          "thinkingTokens": 41360,
+          "cacheReadInputTokens": 1987873,
+          "cacheCreationInputTokens": 271304,
+          "webSearchRequests": 0,
+          "costUSD": 8.85449825,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Agree: KEEP_DEFAULT_OFF_NO_REPEAT.** The mechanism did what the source said and it did not move serving.\n\n**What is established**\n\n- Correctness under the strict gates: four matched pairs with exact text, usage, native work, drafts and captures, functionals, normal teardown and full health on both arms.\n- Mechanism at the host API level: the graph submission count fell by 105, which equals five fewer per paired call across 21 pairs, exactly the six-to-one branch. The matching drop in event host synchronizes is consistent with that.\n- Serving effect: a 0.06 percent ratio of medians from one sequence of three nested pairs. That is noise-level and carries no population or stability meaning either way.\n\n**Limits to keep explicit**\n\n- The host-synchronize delta of 354 is unattributed and must not be described as removed wait time.\n- Only one cache key was observed through the marker. Correctness of other T pairs rests on the shared record bodies, not on observation.\n- The API count run and the clean run are different processes. The count proves the branch ran, not that the clean run's submissions were reduced on every window.\n- No factual overclaim found in the packet. The one phrase to avoid is \"mechanism works\", which is true only at the submission-count level.\n\n**Reading**\n\nSix submissions were not on the critical path. The pair queue was already fed ahead of the GPU, so removing five host calls per draft changes nothing the GPU waits on. This is a useful negative: host submission overhead in the pair path is closed as a lever.\n\n**One next action**\n\nPrepare the narrow default-OFF Q6 A4 main patch already planned from S104, with the original kernel text untouched and the two-shape plus dword-alignment eligibility guard. It is the one candidate with measured primitive gains and a clear compiled mechanism. Run it through the same path S100 and S106 used: one incremental build, binding audit, ISA check in the main TU, one finite same-binary flag 0 and 1 run. Do not combine it with any other flag, and do not revisit the pair graph.",
+      "ttft_ms": 16331,
+      "type": "result",
+      "duration_ms": 16380,
+      "uuid": "4a325da7-3a4b-448a-8151-143b62f81ee1",
+      "ttft_stream_ms": 5588,
+      "time_to_request_ms": 1727,
+      "first_content_frame_ms": 5588,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

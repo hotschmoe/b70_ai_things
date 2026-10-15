@@ -1,0 +1,33 @@
+# S106 whole-pair graph: post-result decision
+
+**Verdict: agree with KEEP_DEFAULT_OFF_NO_REPEAT.**
+
+## What was measured
+
+- **Correctness:** all 4 pairs matched exactly on text, SSE, usage, native work, windows and captures. Functionals and health passed in both arms.
+- **Host API counts:** ImmediateAppend calls fell 231\u2192126 (\u2212105) and EventHostSync fell by the same 105. 105 = 5 \xd7 21 paired windows, which is consistent with the intended 6\u21921 submissions per pair.
+- **Serving:** the paired changes were +0.06%, +0.09% and +0.18%. That is negligible, and too small for one fixed OFF-then-ON sequence of 3 nested pairs to resolve.
+
+## Limits and overclaims to avoid
+
+- **Fixed draft policy.** Both arms pinned suffix-draft 0, lookup-chain 0 and min-p 0 to avoid timing-policy mismatches. The result therefore does not transfer to the default draft policy, and it is not an S100 speed control.
+- **Counts are consistent, not proven.** "\u2212105 = 5 \xd7 21" fits the design, but there is no per-call or per-key mirror and no device dispatch or idle proof.
+- **Key coverage.** The marker shows only the first key (T0=2, T1=3); other keys used were not observed.
+- **HostSynchronize \u2212354** is unattributed. Do not call it saved time or polling cost.
+- **The S95 head census.** Read the 24 C6 heads as the source-consistent motif (2 C2 MTP heads plus 1 C6 verifier head per cycle, plus 2 prompt T6 reads). Exact GPU event ownership is unresolved, so do not posit extra steady-state heads.
+- **What it shows:** submission count was not a material bottleneck in this configuration. Do not claim a speed effect, a default change or an upstream speed result from it.
+
+## One next development-loop action
+
+Answer the planned readiness question **offline from the existing S95 trace**: no new trace, build or GPU time. On card 0's compute engine, in cycles 5\u201316, measure:
+
+- the end of the first C2 head;
+- the two owners' post-head and select kernels;
+- the start of the dependent j=1 step.
+
+Report these per cycle and compare them with the head's own service time.
+
+- **Short gaps:** the remaining cost is in-graph service work (head, post-head, MMVQ), and that is where the next mechanism should come from.
+- **Long gaps:** the dependency chain itself is the target for a source-level proposal.
+
+Either result picks the next mechanism without another serving campaign.

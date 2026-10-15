@@ -1,0 +1,272 @@
+--- clean-s106/make_configs.py
++++ API-summary-s106/make_configs.py
+@@ -1,6 +1,6 @@
+ #!/usr/bin/env python3
+ """Create fresh S106 same-binary arms after root's actual build audit."""
+-import argparse, hashlib, json
++import argparse, hashlib, json, shlex
+ from pathlib import Path
+ D = Path(__file__).resolve().parents[1]
+ p = argparse.ArgumentParser()
+@@ -10,7 +10,11 @@
+ def sha(p):
+     with p.open('rb') as f: return hashlib.file_digest(f, 'sha256').hexdigest()
+ exe = a.exe.resolve()
+-assert exe.is_file() and len(a.sha256)==64 and sha(exe) == a.sha256
++assert a.sha256=='e3ca8ac25c1f1e6042792906be3e7faa55e14a1cddaeece176f15c52f6b071fd'
++assert exe.is_file() and sha(exe) == a.sha256
++for path,row in json.loads((D/'compiled-tool-pins.json').read_text()).items():
++    assert Path(path).stat().st_size==row['bytes'] and sha(Path(path))==row['sha256']
++
+ assert not (D/'serving-inputs.json').exists()
+ assert all(not (D/f'mode{arm}').exists() for arm in [0, 1])
+ source = D.parent/'hc-lo-once-serving-s51-prep'
+@@ -46,26 +50,38 @@
+ assert base['args'][base['args'].index('--prefill')+1] == '12288'
+ assert base['args'][base['args'].index('--conversation-cache-mib')+1] == '32768'
+ assert base['args'][base['args'].index('--conversation-cache-slots')+1] == '4'
+-arms = {}
++arms = {}; generated = {}
+ for arm in ['0', '1']:
+     out = D/f'mode{arm}'
+     out.mkdir(exist_ok=False)
+     c = json.loads(json.dumps(base))
+     c['log'] = str(out/'engine.log')
++    session='s106api'+arm
++    wrapper=out/'trace-engine.sh'
++    prof='/mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/build/unitrace'
++    argv=[prof,'-h','--start-paused','--session',session,'--follow-child-process','0','--output-dir-path',str(out/'trace'),'-o',str(out/'trace/timing.csv'),str(exe)]
++    wrapper.write_text('#!/usr/bin/env bash\nset -euo pipefail\nexec '+shlex.join(argv)+' \"$@\"\n',encoding='ascii')
++    wrapper.chmod(0o755)
++    c['exe']=str(wrapper)
++
+     c['env']['STRATA_BATCH_MTP_PAIR_GRAPH'] = arm
+     (out/'config.json').write_text(json.dumps(c, indent=2)+'\n', encoding='ascii')
+     arms[arm] = {'exe': str(exe), 'sha256': a.sha256}
+-inputs = {'arms': arms, 'image': prior['image'], 'same_binary': True,
++    generated[arm]={'config_sha256':sha(out/'config.json'),'wrapper_sha256':sha(wrapper)}
++inputs = {'arms': arms, 'generated':generated, 'image': prior['image'], 'same_binary': True,
+           'HC_state': 'COMMON_LO_ONCE_S51', 'S49_state': 'OFF_BOTH',
+           'native': prior['native'], 'base_config_sha256': sha(basefile),
+-          'containers': {'0': 'strata-s106-mode0', '1': 'strata-s106-mode1'},
+-          'warm_pairs': 1, 'timed_fresh_pairs': 3, 'warm_output_tokens_per_stream': 256, 'timed_output_tokens_per_stream': 1500,
+-          'common_trace': 'STRATA_TRACE1_PROMPT_START_ONLY_CPU_RING_ABSENT',
+-          'arm_difference': 'STRATA_BATCH_MTP_PAIR_GRAPH0/1 and arm-local log/container/service names only',
++          'containers': {'0': 'strata-s106api-mode0', '1': 'strata-s106api-mode1'},
++          'warm_pairs':1,'profiled_pairs':1,'warm_output_tokens_per_stream':256,'profiled_output_tokens_per_stream':64,'sessions':{'0':'s106api0','1':'s106api1'},'profiling':'HOST_API_SUMMARY_ONLY_START_PAUSED_NO_KERNEL_TRACING',
++          'common_trace':'STRATA_TRACE1_AND_UNITRACE_HOST_API_SUMMARY_CPU_RING_ABSENT',
++          'arm_difference': 'STRATA_BATCH_MTP_PAIR_GRAPH0/1 and arm-local profiler wrapper/session/output/log/container/service names only',
+           'capture_scope': 'source/build/config+first-eligible host marker+successful warm/use/no errors+exact logged new-capture layouts; all-window cache-hit/row-layout/independent GPU-dispatch visibility absent',
+-          'latency_scope': 'client wall/SSE content-event gaps; matched TRACE1 CPU logging, CPU ring/profile absent; not token ITL or device-only service',
++          'latency_scope':'Instrumented API count probe only; no speed qualification',
+           'candidate_scope': 'default-OFF depth2 exact-key whole-pair rerecord, host selection only until separate main submission probe; no daily promotion',
+-          'fixed_work_args': fixed_work, 'request_spec_min_p': 0, 'S100_speed_comparison_allowed': False,
++          'fixed_work_args': fixed_work, 'request_spec_min_p': 0,
++          'saved_request_files':[
++              {'path':str(D.parent.parent/'flashnext_ista_gsq_rco_iq3xxs_strata_accounting_20261014/concurrency/coding-0-0.json'),'sha256':'42549e8e028f55dbd504b330ff072892d2bf6a4df905aef1b7e008d023b73000'},
++              {'path':str(D.parent.parent/'flashnext_ista_gsq_rco_iq3xxs_strata_accounting_20261014/concurrency/coding-0-1.json'),'sha256':'08410b99f021c0d2d48fbdeb46577a11e798b67698800dd555b68c826395e1db'}], 'S100_speed_comparison_allowed': False,
+           'pair_key_visibility': 'marker observes only first successful eligible T0,T1 capture; all keys/replays are not logged'}
+ (D/'serving-inputs.json').write_text(json.dumps(inputs, indent=2)+'\n', encoding='ascii')
+ print(json.dumps(inputs))
+--- clean-s106/start_arm.py
++++ API-summary-s106/start_arm.py
+@@ -7,8 +7,8 @@
+ assert not (out/'start-result.json').exists(),'Do not restart a prior arm'
+ inputs=json.loads((D/'serving-inputs.json').read_text());config=out/'config.json';c=json.loads(config.read_text())
+ arm=inputs['arms'][a.arm]
+-assert c['exe']==arm['exe']
+-with Path(c['exe']).open('rb') as binary:assert hashlib.file_digest(binary,'sha256').hexdigest()==arm['sha256']
++assert c['exe']==str(out/'trace-engine.sh')
++with Path(arm['exe']).open('rb') as binary:assert hashlib.file_digest(binary,'sha256').hexdigest()==arm['sha256']
+ assert all(k not in c['env'] for k in ['STRATA_HOST_BOUNDARY','STRATA_VERIFY_PROFILE','STRATA_PREFILL_HOST_BOUNDARY','STRATA_PREFILL_TIMING','STRATA_PREFILL_SYNC','STRATA_VERIFY_TRACE','STRATA_VERIFY_EAGER'])
+ assert c['env']['STRATA_TRACE']=='1' and c['env']['STRATA_BATCH_MTP_PLE_PREFETCH']=='0'
+ assert 'STRATA_BATCH_COMMIT_OVERLAP' not in c['env']
+@@ -22,16 +22,19 @@
+ assert all(c['env'][k]==v for k,v in [('STRATA_Q6_CENTER','0'),('STRATA_QSA_PREFILL_TILED','0'),('STRATA_ATTN_VALUE_PIPELINE','0'),('STRATA_PROMPT_ATTN_XMX','0'),('STRATA_KV_ROT','0'),('STRATA_BATCH_PREFILL_QUANTUM','0'),('STRATA_PREFILL_FIRST','0'),('STRATA_EXPERT_SPLIT','0'),('STRATA_GU_LANES','8')])
+ for key,value in inputs['fixed_work_args'].items():
+  assert c['args'].count(key)==1 and c['args'][c['args'].index(key)+1]==value
++for path,row in json.loads((D/'compiled-tool-pins.json').read_text()).items():
++ with Path(path).open('rb')as f:assert hashlib.file_digest(f,'sha256').hexdigest()==row['sha256']
+ container=inputs['containers'][a.arm]
++(out/'trace').mkdir(exist_ok=False)
+ assert not subprocess.check_output(['docker','ps','-aq','--filter',f'name=^{container}$']).strip(),'Existing S106 container must be handled by owner'
+ try:
+  with urllib.request.urlopen('http://127.0.0.1:18085/health',timeout=2) as f:existing=json.load(f)
+ except OSError:pass
+ else:raise SystemExit('Port18085 already answers; preserve existing service, do not launch over it')
+-unit=f'strata-pair-graph-s106-mode{a.arm}'
++unit=f'strata-pair-graph-s106api-mode{a.arm}'
+ # systemd manager creates the service; no cpu-run fd is transferred through DBus.
+ # Explicitly close 7 again in the detached service before gpu-run acquires 8/9.
+-cmd=['systemd-run','--user',f'--unit={unit}','--collect',f'--setenv=B70_S106_CONTAINER={container}',f'--property=WorkingDirectory={REPO}',
++cmd=['systemd-run','--user',f'--unit={unit}','--collect',f'--setenv=B70_S106API_CONTAINER={container}',f'--property=WorkingDirectory={REPO}',
+      f'--property=StandardOutput=append:{out}/server.log',f'--property=StandardError=append:{out}/server.log',
+      '/bin/bash','-c','exec 7>&-; exec /bin/bash "$1" "$2"','bash',str(D/'harness-prep/launch_stage.sh'),str(config)]
+ t=time.monotonic();r=subprocess.run(cmd,capture_output=True,text=True,close_fds=True)
+@@ -45,7 +48,7 @@
+    assert str(config) in ci['Config']['Cmd'] and ci['State']['Running'] and not ci['State']['OOMKilled']
+    assert (out/'attempt.cid').read_text().strip()==ci['Id'],'Created CID differs from inspected owned container'
+    assert health['model']=='hotschmoe-dd' and health['max_context']==200000
+-   log=(out/'engine.log').read_text();assert arm['exe'] in log.splitlines()[0]
++   log=(out/'engine.log').read_text();assert c['exe'] in log.splitlines()[0]
+    assert inputs['native']['path'] in log.splitlines()[0] and inputs['native']['sibling_path'] in log.splitlines()[0]
+    assert re.search(r'--ple-io direct(?: |$)',log.splitlines()[0]),'Native command does not explicitly select Direct PLE'
+    m=re.search(r'STRATA_BATCH_MTP_PLE_PREFETCH requested=(\d+) mode=(ON|OFF) slots=(\d+) wired=(\d+) table_open=(\d+) slot_ple_ready=(\d+) depth=(\d+) vector_budget=(\d+) cap=(\d+)',log)
+@@ -67,12 +70,17 @@
+   assert h==expected
+   assert all(effective.get(k)==v for k,v in env.items())
+   assert all(k not in effective for k in ['STRATA_BATCH_COMMIT_OVERLAP','STRATA_HOST_BOUNDARY','STRATA_VERIFY_PROFILE','STRATA_PREFILL_HOST_BOUNDARY','STRATA_PREFILL_TIMING','STRATA_PREFILL_SYNC','STRATA_VERIFY_TRACE','STRATA_VERIFY_EAGER'])
+-  assert 'unitrace'not in effective.get('LD_PRELOAD','').lower()
++  assert 'unitrace'in effective.get('LD_PRELOAD','').lower()
++  assert effective.get('UNITRACE_StartPaused')=='1'
++  assert effective.get('UNITRACE_HostTiming')=='1'
++  assert effective.get('UNITRACE_Session')=='s106api'+env['STRATA_BATCH_MTP_PAIR_GRAPH']
++  assert effective.get('UNITRACE_FollowChildProcess')=='0'
++  assert all(effective.get(k,'')in['','0']for k in ['UNITRACE_ChromeCallLogging','UNITRACE_CallLogging','UNITRACE_DeviceTiming','UNITRACE_DeviceTimeline','UNITRACE_KernelSubmission','UNITRACE_ChromeKernelLogging','UNITRACE_ChromeDeviceLogging','UNITRACE_OpenCLTracing','UNITRACE_ChromeSyclRuntimeLogging','UNITRACE_ChromeUrLogging','UNITRACE_ChromeIttLogging','UNITRACE_ChromeMpiLogging','UNITRACE_ChromeOmpLogging','UNITRACE_MetricQuery','UNITRACE_KernelMetrics','UNITRACE_SystemTime'])
+   argv=open('/proc/'+pid+'/cmdline','rb').read().decode().rstrip('\0').split('\0')
+   for key,value in {'--suffix-draft':'0','--lookup-chain':'0','--spec':'4','--mtp-max-t':'4','--spec-min-p':'0'}.items():
+    assert argv.count(key)==1 and argv[argv.index(key)+1]==value,'Effective fixed-work argv differs'
+   maps=open('/proc/'+pid+'/maps').read()
+-  libraries={}
++  libraries={};unitrace_libs={}
+   for line in maps.splitlines():
+    fields=line.split(maxsplit=5)
+    if len(fields)==6 and '/libstdc++.so.' in fields[5]:
+@@ -80,15 +88,23 @@
+     if path not in libraries:
+      with open(path,'rb')as lib:lh=hashlib.file_digest(lib,'sha256').hexdigest()
+      libraries[path]={'realpath':os.path.realpath(path),'sha256':lh}
++   if len(fields)==6 and '/libunitrace_tool.so' in fields[5]:
++    path=fields[5];assert not path.endswith(' (deleted)')
++    if path not in unitrace_libs:
++     with open(path,'rb')as lib:lh=hashlib.file_digest(lib,'sha256').hexdigest()
++     assert os.path.realpath(path)=='/mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/build/libunitrace_tool.so'
++     assert lh=='66ec9ee2dfd14866162761ce45c62317e91b5e65b9686cb2954c6c21fda58bc6'
++     unitrace_libs[path]={'realpath':os.path.realpath(path),'sha256':lh}
+   assert len(libraries)==1,'Native libstdc++ provenance ambiguous'
++  assert len(unitrace_libs)==1,'Native unitrace library provenance ambiguous'
+   loader={k:effective.get(k)for k in ['LD_LIBRARY_PATH','LD_PRELOAD','LD_AUDIT']}
+   assert not loader['LD_AUDIT'],'Unexpected loader audit changes measurement'
+-  rows.append({'pid':int(pid),'argv':argv,'exe':actual,'sha256':h,'effective_config_env':{k:effective[k]for k in env},'profiling_keys_absent':True,'loader_environment':loader,'proc_maps':maps,'proc_maps_sha256':hashlib.sha256(maps.encode()).hexdigest(),'loaded_libstdcxx':libraries,'provenance_scope':'Actual native before warm/timing; does not establish historical S95 loaded-library identity or authorize a clockjoin.'})
++  rows.append({'pid':int(pid),'argv':argv,'exe':actual,'sha256':h,'effective_config_env':{k:effective[k]for k in env},'profiling_mode':'HOST_API_SUMMARY_ONLY_START_PAUSED_NO_KERNEL_TRACING','unitrace_environment':{k:v for k,v in effective.items()if k.startswith('UNITRACE_')},'loader_environment':loader,'proc_maps':maps,'proc_maps_sha256':hashlib.sha256(maps.encode()).hexdigest(),'loaded_libstdcxx':libraries,'loaded_unitrace':unitrace_libs,'provenance_scope':'Actual native before warm/timing; does not establish historical S95 loaded-library identity or authorize a clockjoin.'})
+  except FileNotFoundError:continue
+ assert len(rows)==1,rows
+ print(json.dumps(rows))
+ """
+-   observed=json.loads(subprocess.check_output(['docker','exec',ci['Id'],'/mnt/vm_8tb/b70/build/strata-ab/venv/bin/python','-c',probe,c['exe'],arm['sha256'],json.dumps(c['env'])],text=True))
++   observed=json.loads(subprocess.check_output(['docker','exec',ci['Id'],'/mnt/vm_8tb/b70/build/strata-ab/venv/bin/python','-c',probe,arm['exe'],arm['sha256'],json.dumps(c['env'])],text=True))
+    (out/'native-process-identity.json').write_text(json.dumps(observed,indent=2)+'\n',encoding='ascii')
+    for name,value in [('container-ready.json',ci),('health-ready.json',health)]:
+     (out/name).write_text(json.dumps(value,indent=2,ensure_ascii=True)+'\n',encoding='ascii')
+--- clean-s106/client.py
++++ API-summary-s106/client.py
+@@ -14,8 +14,8 @@
+  q=urllib.request.Request(BASE+'/v1/chat/completions',json.dumps(body).encode(),{'Content-Type':'application/json'})
+  with urllib.request.urlopen(q,timeout=1800) as f:return json.load(f)
+ def pair(out,repeat):
+- output_tokens=256 if repeat==0 else 1500
+- parent=out/'coding';parent.mkdir(exist_ok=True);dst=parent/('warm' if repeat==0 else f'repeat{repeat}');dst.mkdir(exist_ok=False);save(dst/'models.json',identity())
++ output_tokens=256 if repeat==0 else 64
++ parent=out/'coding';parent.mkdir(exist_ok=True);dst=parent/('warm' if repeat==0 else 'profile');dst.mkdir(exist_ok=False);save(dst/'models.json',identity())
+  initial=(out/'engine.log').read_bytes();save(dst/'window-start.json',{'byte_offset':len(initial),'epoch_ns':time.time_ns()})
+  def request(i):
+   ref=json.loads((R.parent/f'flashnext_ista_gsq_rco_iq3xxs_strata_accounting_20261014/concurrency/coding-0-{i}.json').read_text())
+@@ -94,11 +94,11 @@
+   'native_windows':sum(map(int,native_windows)),'paired':sum(int(x) for x,y in pairs),'solo':sum(int(y) for x,y in pairs),'raw_native_token_ids_observed':False,'aggregate_output_tps':sum(r['usage']['completion_tokens'] for r in rows)/elapsed,'stream_metrics':[{'ttft_s':r['ttft_s'],'completion_wall_s':r['wall_s'],'decode_tps':r['client_decode_tps'],'whole_request_output_tps':r['usage']['completion_tokens']/r['wall_s'],'content_event_gap_ms':r['content_event_gap_ms']} for r in rows],
+   'admission_gate':gate,'client_overlap_ns':overlap,'repeat':repeat,'output_tokens_per_stream':output_tokens,'exact_gate':'full UTF8 text/SSE content plus usage/native work; not raw token IDs'})
+  if out.name=='mode1':require_control_pair(out,repeat)
+- print('S106 pair complete; release quiet CPU lease before functional requests.',flush=True)
++ print('S106 API pair complete; no extra generation or speed claim.',flush=True)
+ def require_control_pair(out,repeat):
+  # Fail this ON pair before sending the next pair/functionals. Never normalize
+  # per-slot work, capture layouts or admission order after seeing a mismatch.
+- label='warm'if repeat==0 else f'repeat{repeat}'
++ label='warm'if repeat==0 else 'profile'
+  baseline=D/'mode0/coding'/label;candidate=out/'coding'/label
+  x=[json.loads((baseline/f'coding-{i}.json').read_text())for i in range(2)]
+  y=[json.loads((candidate/f'coding-{i}.json').read_text())for i in range(2)]
+@@ -115,22 +115,8 @@
+   checks['startup_logged_captures']=startup[0]==startup[1]
+  save(candidate/'control-parity.json',{'status':'PASS_EXACT_OBSERVABLE_PAIR'if all(checks.values())else'FAIL_OR_UNMATCHED_STOP_REMAINING_ARM_WORK','checks':checks,'normalization':None})
+  assert all(checks.values()),'ON/control mismatch; stop remaining requests and normal-stop/health this server'
+-def functional(out):
+- assert (out/'coding/repeat3/pair.json').exists();dst=out/'functional';dst.mkdir(exist_ok=False);save(dst/'models.json',identity())
+- with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+-  rows=list(pool.map(lambda ab:send(BASE,'hotschmoe-dd',[{'role':'user','content':f'Return only the integer: {ab[0]} * {ab[1]}.'}],32,spec_min_p=0),[(17,19),(23,29)]))
+- save(dst/'concurrent-math.json',rows);assert [r['text'].strip() for r in rows]==['323','667']
+- source=R/'prefill-quantum-s33/q0/functional'
+- thought=json.loads((source/'thinking.json').read_text())['request'];tr=post(thought);save(dst/'thinking.json',{'request':thought,'response':tr})
+- msg=tr['choices'][0]['message'];assert msg['content'].strip()=='391' and msg.get('reasoning_content')
+- first=json.loads((source/'tool-first.json').read_text())['request'];fr=post(first);save(dst/'tool-first.json',{'request':first,'response':fr})
+- msg=fr['choices'][0]['message'];calls=msg.get('tool_calls');assert len(calls or [])==1 and calls[0]['function']['name']=='lookup_build_status' and json.loads(calls[0]['function']['arguments'])=={'project':'b70-demo'}
+- final=json.loads((source/'tool-final.json').read_text())['request'];final['messages']=first['messages']+[msg,{'role':'tool','tool_call_id':calls[0]['id'],'content':json.dumps({'project':'b70-demo','status':'passed','tests_passed':17,'tests_failed':0})}]
+- tr=post(final);save(dst/'tool-final.json',{'request':final,'response':tr});txt=tr['choices'][0]['message']['content'].lower();assert all(x in txt for x in ['17','0','passed','failed'])
+- save(dst/'health.json',get(BASE,'/health'));save(dst/'verdict.json',{'status':'PASS','arithmetic':True,'thinking':True,'tool_roundtrip':True})
+-p=argparse.ArgumentParser();p.add_argument('arm',choices=['0','1']);p.add_argument('phase',choices=['warm','timed','functional']);a=p.parse_args();out=D/f'mode{a.arm}'
++p=argparse.ArgumentParser();p.add_argument('arm',choices=['0','1']);p.add_argument('phase',choices=['warm','profile']);a=p.parse_args();out=D/f'mode{a.arm}'
+ if a.phase=='warm':pair(out,0)
+-elif a.phase=='timed':
++else:
+  assert json.loads((out/'coding/warm/pair.json').read_text())['status']=='PASS_HTTP_TEXT_COUNTS_FINITE_AND_PAIRED'
+- for repeat in [1,2,3]:pair(out,repeat)
+-else:functional(out)
++ pair(out,1)
+--- clean-s106/launch_stage.sh
++++ API-summary-s106/launch_stage.sh
+@@ -6,7 +6,7 @@
+ results=/mnt/vm_8tb/b70/results
+ weights=$repo/models/files/qwen3.8-flash-next
+ nvme=/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco
+-container="${B70_S106_CONTAINER:?set unique S106 container name}"
++container="${B70_S106API_CONTAINER:?set unique S106 container name}"
+ config=$(realpath "${1:?S106 arm config path required}")
+ source_dir=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["cwd"])' "$config")
+ ipc_opts=()
+--- s95/stop.py
++++ API-summary-s106/stop_and_health.py
+@@ -2,15 +2,15 @@
+ """SIGTERM server -> existing engine.close QUIT; capture final report before health."""
+ import argparse,hashlib,json,re,subprocess,sys,time
+ from pathlib import Path
+-D=Path(__file__).resolve().parent;REPO=Path('/mnt/vm_8tb/github/b70_ai_things')
++D=Path(__file__).resolve().parents[1];REPO=Path('/mnt/vm_8tb/github/b70_ai_things')
+ sys.path.insert(0,str(REPO/'strata/flash-next'));from bench_serving import get
+-out=D/'run'
++p=argparse.ArgumentParser();p.add_argument('arm',choices=['0','1']);a=p.parse_args();out=D/f'mode{a.arm}'
+ def save(p,x):p.write_text(json.dumps(x,indent=2,ensure_ascii=True)+'\n',encoding='ascii')
+ functional_file=out/'functional/verdict.json'
+ try:functional_status=json.loads(functional_file.read_text()).get('status')
+ except (OSError,ValueError):functional_status='NOT_COMPLETED_FAILED_OR_INVALID'
+ # Cleanup remains available after a failed client/functional gate. Never issue new requests here.
+-profile=json.loads((D/'inputs.json').read_text());container=profile['container']
++profile=json.loads((D/'serving-inputs.json').read_text());container=profile['containers'][a.arm]
+ readyfile=out/'container-ready.json'
+ if readyfile.exists():ready=json.loads(readyfile.read_text());cid=ready['Id']
+ else:cid=(out/'attempt.cid').read_text().strip()
+@@ -20,7 +20,7 @@
+ save(out/'docker-prestop-inspect.json',{'command':inspect_cmd,'exit':inspected.returncode,'stdout':inspected.stdout,'stderr':inspected.stderr})
+ ci=json.loads(inspected.stdout)[0] if inspected.returncode==0 else None
+ if ci is not None:
+- assert ci['Id']==cid and ci['Name'].lstrip('/')==container and str(D/'config.json')in ci['Config']['Cmd']
++ assert ci['Id']==cid and ci['Name'].lstrip('/')==container and str(out/'config.json')in ci['Config']['Cmd']
+  if readyfile.exists():assert ci['Id']==ready['Id']
+  state=ci['State'];prestate={'Running':state['Running'],'OOMKilled':state['OOMKilled'],'inspect_succeeded':True}
+  save(out/'docker-prestop.json',ci)
+@@ -37,7 +37,7 @@
+ try:stopped=json.loads((out/'unitrace-stop.json').read_text()).get('exit')==0
+ except (OSError,ValueError):stopped=False
+ if not stopped and ci is not None and prestate['Running']is True and not(out/'unitrace-cleanup-stop.json').exists():
+- cmd=['docker','exec',cid,'/mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/build/unitrace','--stop',profile['session']]
++ cmd=['docker','exec',cid,'/mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/build/unitrace','--stop',profile['sessions'][a.arm]]
+  try:
+   r=subprocess.run(cmd,capture_output=True,text=True,timeout=30);rec={'command':cmd,'exit':r.returncode,'stdout':r.stdout,'stderr':r.stderr}
+  except Exception as e:
+@@ -77,7 +77,7 @@
+  raise SystemExit('Abnormal/unknown teardown recorded; root recovery ladder required before any further GPU/collective work')
+ raw=(out/'engine.log').read_bytes();(out/'engine-final.log').write_bytes(raw)
+ text=raw.decode('utf8');matches=re.findall(r'^strata serve final: (ple io: .*prefetch_gathers=(\d+) prefetch_tokens=(\d+))$',text,re.M)
+-diag={'present_once':len(matches)==1,'raw':matches,'log_sha256':hashlib.sha256(raw).hexdigest(),'scope':'process cumulative, includes admission/pair and optional unprofiled flush; not per-window'}
++diag={'present_once':len(matches)==1,'raw':matches,'log_sha256':hashlib.sha256(raw).hexdigest(),'scope':'process cumulative, includes paused warm and profiled admission/pair; no flush request; not per-window'}
+ if len(matches)==1:
+  diag.update(prefetch_gathers=int(matches[0][1]),prefetch_tokens=int(matches[0][2]),requests=int(re.search(r'^ple io: (\d+) rows',matches[0][0])[1]))
+ save(out/'aggregate-proof.json',diag)

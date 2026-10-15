@@ -1,0 +1,21 @@
+{
+  "status": "PASS_GIT_APPLY_CHECK_ONLY_NO_APPLY",
+  "returncode": 0,
+  "stdout": "",
+  "stderr": "",
+  "native_source_unchanged": true,
+  "independent_in_memory_application_matches_candidate_SHA256": true,
+  "numstat": "93\t0\tsycl/src/core/mtp.cpp\n4\t0\tsycl/include/strata/core/mtp.hpp\n",
+  "files": {
+    "sycl/src/core/mtp.cpp": {
+      "original_bytes": 114902,
+      "candidate_bytes": 119274,
+      "candidate_sha256": "13500a3af44f30793617d51aff6639344d2d943a50b53bdfe3c60ba81081967f"
+    },
+    "sycl/include/strata/core/mtp.hpp": {
+      "original_bytes": 22887,
+      "candidate_bytes": 23233,
+      "candidate_sha256": "1d418cc592056373f68b7343bd3d1ac958e5452cb812007497881234cad9fd9f"
+    }
+  }
+}

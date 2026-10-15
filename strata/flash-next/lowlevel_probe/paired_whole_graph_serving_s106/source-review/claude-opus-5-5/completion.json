@@ -1,0 +1,120 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 48.10140461102128,
+  "launch_exception": null,
+  "source_packet_sha256": "85a4a730778a9059540f2f40c26fed790460a46381939cc506d938bd2e1feedc",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 660862,
+      "stop_reason": "end_turn",
+      "session_id": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "total_cost_usd": 3.1147776,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 21733,
+        "cache_read_input_tokens": 214224,
+        "output_tokens": 3929,
+        "output_tokens_details": {
+          "thinking_tokens": 2592
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 21733,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 3929,
+            "cache_read_input_tokens": 214224,
+            "cache_creation_input_tokens": 21733,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 21733
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 24,
+          "outputTokens": 49789,
+          "thinkingTokens": 29374,
+          "cacheReadInputTokens": 1182188,
+          "cacheCreationInputTokens": 235308,
+          "webSearchRequests": 0,
+          "costUSD": 3.1147776,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# S106 review: whole-pair depth-2 graph patch\n\n**Verdict: ACCEPT** one incremental SYCL main build, rebuilding all Ninja dependents of the `mtp.hpp` layout change. Then one finite same-binary C2 run with the flag at 0 and 1, plus functionals. I found no blocking bug.\n\n## Source checks\n\n| Area | Finding |\n|---|---|\n| Recorded sequence | Bodies are copied verbatim from the three component captures. Order on `cs_` is round 0 (T0), round 1 (T1), tail 0, step 0 (j=1), step 1 (j=1), tail 1. This matches the OFF launch order at `max_steps == 2`. S103 showed in-order recording keeps linear edges. |\n| Cache key | `pair_exec_[T0][T1]` uses the *effective* T, after the catch-up-all policy. Depth is fixed at 2 by the `max_steps == 2` gate. The component caches are keyed the same way (`[c][T]`, `[c][j]`, `[j]`), so no new aliasing is introduced. Index bounds are 1..8 within 9. |\n| Fresh mapped data | The same `copy_from_mapped_multi` copies are recorded and re-read on replay, exactly as in the component graphs. Staging and the `seq_cst` fence still come before the single launch. |\n| Shared scratch | `xq2_` and `logits2_` are used by tail 0 then tail 1 in the same serialized graph, as before. |\n| Lifetimes | `pair_exec_` is deleted after the `cs_` drain and before the component graphs and scratch. The pair is still destroyed before the drafters. The external `slot_mtp_rows` lifetime is a pre-existing point that is not made worse, because no graph runs during teardown. |\n| Polling/PLE | Unchanged. It runs after the submit, against the same `h_out_` records and in the same depth order. |\n| Failure | Capture or launch failure returns false. The existing caller prints `ERR` and returns, with no solo redraft and no component fallback. `finish_capture` closes the recording on the `!ok` path. |\n| Accepted prefix | No commit is recorded. The draft graph stays entirely before acceptance. |\n| Default OFF | The flag is latched; any value other than ON gives text-identical OFF statements. The `bool ok = [&]{\u2026}()` wrapper with a shadowing inner `ok` is valid C++, at most a `-Wshadow` warning. |\n\n## Still needed at runtime (tests, not bugs)\n\n1. **Main-binary submission count.** Under the existing unitrace in a separate instrumented run, show 1 vs 6 pair `ImmediateAppend` calls per paired window. The S103 probe does not cover the main binary. Until this is shown, assign no benefit.\n2. **Marker.** Exactly once with ON, after warm-up or capture; absent with OFF. It proves host selection only.\n3. **Key coverage.** Record which effective (T0, T1) pairs actually occur, including asymmetric ones. Do not sweep for more.\n4. **Draft-count parity.** S105 traced the earlier 207/205 offered-draft split to a timing-adaptive suffix and confidence choice. Changing the submission pattern could perturb that timing.\n   - Keep the strict gate.\n   - Consider pinning the existing fixed-work flags in **both** arms, so that a stop means a candidate defect rather than timing-policy noise.\n   - If they stay unpinned, a mismatch in offered drafts only, with identical text, usage and accepted work, should be recorded as unresolved timing policy, not as a candidate failure.\n5. **Standard gates:**\n   - text, SSE and usage;\n   - per-slot drafts, windows and captures;\n   - functionals and tool round-trip;\n   - normal QUIT, CID and name gone, wrapper exit 0, full health.\n\nKeep the Q6 A4 flags out of this run.",
+      "ttft_ms": 34225,
+      "type": "result",
+      "duration_ms": 47082,
+      "uuid": "90740912-cfeb-4309-9b93-1e7874cc9a3d",
+      "ttft_stream_ms": 2007,
+      "time_to_request_ms": 80,
+      "first_content_frame_ms": 2007,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

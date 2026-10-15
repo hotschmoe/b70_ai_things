@@ -1,0 +1,7 @@
+{
+  "epoch_ns": 1792106476462429521,
+  "engine_byte_offset": 8816,
+  "engine_prefix_sha256": "26b35dd17d32fc06d42d1b14520bd7c4f40914765bcde75742749f2663b733d0",
+  "scope": "ONE fresh ordered107/64 C2 pair plus idle/native-counter closure; all admission/capture/solo/tail retained",
+  "speed_qualified": false
+}

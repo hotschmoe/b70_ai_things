@@ -1,0 +1,112 @@
+{
+  "status": "PASS_MATCHED_NATIVE_WORK_AND_OBSERVED_MAIN_API_COUNTS_ROOT_ATTRIBUTION_REQUIRED",
+  "all_API_deltas": {
+    "zeCommandListAppendBarrier": {
+      "OFF": 4,
+      "ON": 4,
+      "ON_minus_OFF": 0
+    },
+    "zeCommandListAppendGraphExp": {
+      "OFF": 0,
+      "ON": 0,
+      "ON_minus_OFF": 0
+    },
+    "zeCommandListAppendGraphExt": {
+      "OFF": 0,
+      "ON": 0,
+      "ON_minus_OFF": 0
+    },
+    "zeCommandListAppendLaunchKernelWithArguments": {
+      "OFF": 85001,
+      "ON": 85001,
+      "ON_minus_OFF": 0
+    },
+    "zeCommandListAppendMemoryCopy": {
+      "OFF": 1376,
+      "ON": 1376,
+      "ON_minus_OFF": 0
+    },
+    "zeCommandListAppendMemoryFill": {
+      "OFF": 78,
+      "ON": 78,
+      "ON_minus_OFF": 0
+    },
+    "zeCommandListHostSynchronize": {
+      "OFF": 19728,
+      "ON": 19374,
+      "ON_minus_OFF": -354
+    },
+    "zeCommandListImmediateAppendCommandListsExp": {
+      "OFF": 231,
+      "ON": 126,
+      "ON_minus_OFF": -105
+    },
+    "zeCommandQueueExecuteCommandLists": {
+      "OFF": 0,
+      "ON": 0,
+      "ON_minus_OFF": 0
+    },
+    "zeEventHostSynchronize": {
+      "OFF": 1195,
+      "ON": 1090,
+      "ON_minus_OFF": -105
+    },
+    "zeKernelSetGroupSize": {
+      "OFF": 85001,
+      "ON": 85001,
+      "ON_minus_OFF": 0
+    },
+    "zeKernelSuggestGroupSize": {
+      "OFF": 98,
+      "ON": 98,
+      "ON_minus_OFF": 0
+    },
+    "zeMemGetAllocProperties": {
+      "OFF": 182040,
+      "ON": 182040,
+      "ON_minus_OFF": 0
+    }
+  },
+  "submission_API_deltas": {
+    "zeCommandListAppendGraphExp": {
+      "OFF": 0,
+      "ON": 0,
+      "ON_minus_OFF": 0
+    },
+    "zeCommandListAppendGraphExt": {
+      "OFF": 0,
+      "ON": 0,
+      "ON_minus_OFF": 0
+    },
+    "zeCommandListImmediateAppendCommandListsExp": {
+      "OFF": 231,
+      "ON": 126,
+      "ON_minus_OFF": -105
+    },
+    "zeCommandQueueExecuteCommandLists": {
+      "OFF": 0,
+      "ON": 0,
+      "ON_minus_OFF": 0
+    }
+  },
+  "native": {
+    "windows": 24,
+    "paired": 21,
+    "solo": 2,
+    "rounded_rows": [
+      [
+        "24",
+        "5.21"
+      ]
+    ],
+    "logged_new_captures": []
+  },
+  "source_only_depth2_launch_calls": {
+    "OFF": 6,
+    "ON": 1
+  },
+  "eligible_depth2_population_observed": false,
+  "5_times_bt_pair_reconciliation_allowed": false,
+  "speed_qualified": false,
+  "attribution": "Observed main collected API totals; prefill/admission/capture/solo/tail and all max_steps/replay keys remain unresolved. Root decides any further counter/source check before code changes."
+}

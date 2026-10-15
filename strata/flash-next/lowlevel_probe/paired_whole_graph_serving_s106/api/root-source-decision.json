@@ -1,0 +1,25 @@
+{
+  "utc": "2026-10-15T23:15:25.262408+00:00",
+  "status": "ROOT_GO_BIND_AND_EXPLICIT_FINITE_PHASES_AFTER_CLEAN_S106_CLOSES",
+  "manifest_sha256": "2049348dbc16300111fda358a8e73704492c6de725497ef5368949793a997988",
+  "root_full_read": [
+    "README.md",
+    "reuse-diff.patch",
+    "controller.py",
+    "analyze.py",
+    "harness-prep/stop_and_health.py",
+    "source-audit.txt",
+    "depth2-source-audit.md",
+    "dependencies.json"
+  ],
+  "root_verified_all_manifest_payloads_and_small_source_dependencies": true,
+  "independent_agent_review": "mtp_q4_share GO; no concrete blocker; exact manifest/four controller hashes and closure/count limits inspected",
+  "reuse_current_posthealth_if_no_intervening_foreign_work": true,
+  "scope": "One fresh107/64 C2 pair perarm, paused256 warm, actual main API summary only. No clean speed claim, no Chrome/device trace, extra flush/functionals/retry/canary.",
+  "source_depth2_proof": "Conditionally supported for these bounded fresh requests by setter/direct maxdrafts2 and logical200k headroom. Root will retain total counts and compare other API deltas before attribution; no silent5*paired claim.",
+  "pending": [
+    "Clean S106 ON gates and normal teardown/health",
+    "Actual compiled tool/main hashes in binder/start/stop",
+    "Exact summary PID/table/native closure counts"
+  ]
+}

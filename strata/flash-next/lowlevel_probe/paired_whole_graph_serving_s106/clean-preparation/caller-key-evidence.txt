@@ -1,0 +1,226 @@
+S106 bounded current-source caller/key and request-override evidence.
+Source pins are in original-inputs.json; line numbers refer to those bytes.
+Depth2 caps held drafts at2; G=1+nd <=3; keep in[1,G]; a=keep-1.
+eligible enforces 0<=a<T=G; effective T is a+1 unless catchup-all.
+Thus each paired key coordinate is in1..3; actual exercised subset is unknown.
+steps_of can still reduce near allocation end; no all-pair depth2 observation.
+
+--- sycl/src/program/generate.cpp:4021-4034
+4021:     // --batch-mtp / STRATA_BATCH_MTP=1 (opt-in): a slot also verifies one MTP proposal per window.  Recommend, never
+4022:     // force: when it cannot run it is said and left off (plain batching still starts); default off = exactly 0.1.39.
+4023:     const char* batch_mtp_env = std::getenv("STRATA_BATCH_MTP");
+4024:     bool batch_mtp = o.batch_mtp || (batch_mtp_env != nullptr && batch_mtp_env[0] != '\0' && batch_mtp_env[0] != '0');
+4025:     // STRATA_BATCH_MTP_DEPTH=N (experimental, opt-in): a slot verifies up to N chained proposals per window (1 = the
+4026:     // two-row windows as before; clamped to --spec T - 1 and the verifier's window; batch_depth.hpp)
+4027:     const int batch_depth = strata::core::batch_depth_resolve(std::getenv("STRATA_BATCH_MTP_DEPTH"), o.spec,
+4028:                                                               strata::kernels::kVerifyMaxT);
+4029:     if (batch_mtp && batch_depth > 1)
+4030:         std::fprintf(stderr, "strata generate: --batch-mtp: up to %d proposals per slot per window "
+4031:                              "(STRATA_BATCH_MTP_DEPTH, experimental)\n", batch_depth);
+4032:     if (batch_mtp) {
+4033:         const char* why = o.batch < 2 ? "it needs --batch 2 or more" : o.mtp.empty() ? "it needs --mtp"
+4034:                         : o.spec < 2 ? "it needs --spec T (T >= 2)" : (multi_gpu || split_same || !stages.empty())
+--- sycl/src/program/generate.cpp:4167-4176
+4167:             for (int b = 0; b < o.batch; ++b) {
+4168:                 auto d = std::make_unique<strata::core::MtpDrafter>();
+4169:                 if (!d->load(o.mtp, draft_geometry, *bslot_ss[0][(size_t) b], o.spec, err, o.mtp_window, &mtp)) {
+4170:                     std::fprintf(stderr, "strata generate: batch MTP slot %d: %s%s\n", b, err.c_str(),
+4171:                                  vram_free_note().c_str());
+4172:                     return 1;
+4173:                 }
+4174:                 d->set_max_drafts(batch_depth);   // 1: one proposal per slot (the first candidate); STRATA_BATCH_MTP_DEPTH
+4175:                 if (batch_ple_on) {
+4176:                     bslot_ss[0][(size_t) b]->ple.table = ss.ple.table;
+--- sycl/src/program/generate.cpp:9334-9355
+9334:             int first[strata::kernels::kVerifyMaxT] = {}, active[strata::kernels::kVerifyMaxT] = {};
+9335:             static size_t next_slot = 0;
+9336:             // An MTP slot's group is its current token and the drafts it holds (1 + n_draft rows, n_draft <= the
+9337:             // depth; two rows with the default depth 1); rotate slots when the window cannot take them all
+9338:             // (batch_depth.hpp: the first slot that does not fit ends the window, none is skipped for a later one).
+9339:             int A = 0;
+9340:             int glen[strata::kernels::kVerifyMaxT] = {};
+9341:             {
+9342:                 const size_t nb = bs.size();
+9343:                 std::vector<int> nd(nb, 0);
+9344:                 std::unique_ptr<bool[]> act(new bool[nb]);
+9345:                 for (size_t b = 0; b < nb; ++b) {
+9346:                     act[b] = bs[b].active;
+9347:                     nd[b] = bs[b].draft_ready ? strata::core::batch_drafts_for_context(
+9348:                         bs[b].n_draft, bs[b].p, (int64_t) o.max_context) : 0;
+9349:                 }
+9350:                 A = strata::core::batch_pack(act.get(), nd.data(), (int) nb, next_slot, batch_mtp,
+9351:                                              strata::kernels::kVerifyMaxT, rows, first, glen, active, &S);
+9352:             }
+9353:             for (int a = 0; a < A; ++a) {
+9354:                 const BSlot& sl = bs[(size_t) active[a]];
+9355:                 if (batch_mtp && !sl.draft_ready) {
+--- sycl/src/program/generate.cpp:9468-9498
+9468:                         pend[n_pend].b = b; pend[n_pend].t = t; pend[n_pend].G = G;
+9469:                         ++n_pend;
+9470:                         continue;
+9471:                     }
+9472:                     sl.n_draft = nd < 0 ? 0 : nd > batch_depth ? batch_depth : nd;
+9473:                     sl.draft_ready = true;
+9474:                 }
+9475:             }
+9476:             if (n_pend > 0) {
+9477:                 // STRATA_BATCH_MTP_PAIR_HEAD: two deferred slots that pass every guard (checked before anything is
+9478:                 // touched) draft as a pair; otherwise each drafts on its own in slot order, the same call as above.
+9479:                 // A pair failure after its launches is reported like a slot failure: never drafted again.
+9480:                 // Active admission order can be 1,0; the coordinator binds slot 0,1.
+9481:                 if (n_pend == 2 && pend[0].b > pend[1].b) std::swap(pend[0], pend[1]);
+9482:                 strata::core::MtpPair::Args pa[2];
+9483:                 for (int i = 0; i < n_pend && i < 2; ++i) {
+9484:                     const PendDraft& q = pend[i];
+9485:                     pa[i].owner = slot_mtp[(size_t) q.b].get();
+9486:                     pa[i].T = q.G; pa[i].tokens = outb + first[q.t]; pa[i].p = pos[first[q.t]]; pa[i].a = keep[q.b] - 1;
+9487:                     pa[i].drafts = bs[(size_t) q.b].draft.data(); pa[i].n_drafts = &pend[i].nd;
+9488:                 }
+9489:                 std::string why = n_pend == 2 ? std::string() : "one active slot";
+9490:                 const bool paired = n_pend == 2 && mtp_pair->eligible(pa[0], pa[1], why);
+9491:                 if (paired) {
+9492:                     ++bt_pair;
+9493:                     strata::core::host_boundary::mark("pair_call");
+9494:                     if (!mtp_pair->draft(pa[0], pa[1], err)) {
+9495:                         std::printf("ERR batch MTP pair (slots %d, %d): %s\n", pend[0].b, pend[1].b, err.c_str());
+9496:                         return false;
+9497:                     }
+9498:                     strata::core::host_boundary::mark("pair_call_return");
+--- sycl/src/program/generate.cpp:9508-9518
+9508:                         }
+9509:                     }
+9510:                 }
+9511:                 for (int i = 0; i < n_pend; ++i) {
+9512:                     BSlot& sl = bs[(size_t) pend[i].b];
+9513:                     const int nd = pend[i].nd;
+9514:                     sl.n_draft = nd < 0 ? 0 : nd > batch_depth ? batch_depth : nd;
+9515:                     sl.draft_ready = true;
+9516:                 }
+9517:             }
+9518:             strata::core::host_boundary::mark("flush_begin");
+--- include/strata/core/batch_depth.hpp:36-63
+36: /// not fit `max_t` rows ends the window (the same rule as the fixed two-row packer: no slot is skipped for a smaller
+37: /// one behind it, so the rotation stays fair).  Out: `rows[t]` the slot of row t, and per packed slot a: `first[a]`
+38: /// its first row, `glen[a]` its rows (1 + the drafts it offers), `slot[a]` its index.  Returns the packed slots A;
+39: /// `*S_out` the rows.  Without `mtp` every group is one row.
+40: inline int batch_pack(const bool* active, const int* ndraft, int n_slots, size_t next_slot, bool mtp, int max_t,
+41:                       int* rows, int* first, int* glen, int* slot, int* S_out) {
+42:     int S = 0, A = 0;
+43:     for (int offset = 0; offset < n_slots; ++offset) {
+44:         const int b = (int) ((next_slot + (size_t) offset) % (size_t) n_slots);
+45:         if (!active[b]) continue;
+46:         int g = 1;
+47:         if (mtp) {
+48:             int nd = ndraft[b];
+49:             if (nd < 0) nd = 0;
+50:             g = 1 + nd;
+51:         }
+52:         if (S + g > max_t) break;
+53:         first[A] = S;
+54:         glen[A] = g;
+55:         slot[A] = b;
+56:         ++A;
+57:         for (int j = 0; j < g; ++j) rows[S + j] = b;
+58:         S += g;
+59:     }
+60:     *S_out = S;
+61:     return A;
+62: }
+63: 
+--- sycl/src/core/mtp.cpp:2010-2013
+2010: int MtpPair::steps_of(const MtpDrafter& d, int64_t p, int a) const {
+2011:     // exactly draft()'s max_steps: draft j writes at p + a + j, within the allocated K/V cells
+2012:     return (int) std::min<int64_t>(std::min(d.max_t_ - 1, d.max_drafts_), d.st_.max_cells - (p + a));
+2013: }
+--- sycl/src/core/mtp.cpp:2067-2084
+2067:     int steps[2] = {0, 0};
+2068:     for (int c = 0; c < 2; ++c) {
+2069:         const MtpDrafter& d = *d_[c];
+2070:         const Args& x = *args[c];
+2071:         if (x.owner != &d) { why = "arguments do not match the bound slot"; return false; }
+2072:         if (x.tokens == nullptr || x.drafts == nullptr) { why = "null arguments"; return false; }
+2073:         if (x.T < 1 || x.T > d.max_t_ || x.a < 0 || x.a >= x.T) { why = "draft arguments out of range"; return false; }
+2074:         if (d.chain_live_) { why = "a pipelined chain is in flight"; return false; }
+2075:         if (d.coupled_active_ || d.coupled_rec_) { why = "coupled draft sampling"; return false; }
+2076:         if (d.force_on_ || d.h_force_ != nullptr) { why = "the forcing graphs"; return false; }
+2077:         if (d.src_R_ != nullptr) { why = "a rebound residual source"; return false; }
+2078:         if (d.dhead_ != nullptr || d.head_ != d_[0]->head_) { why = "the head changed"; return false; }
+2079:         steps[c] = steps_of(d, x.p, x.a);
+2080:     }
+2081:     if (steps[0] < 1 || steps[1] < 1) { why = "a slot has no step left"; return false; }
+2082:     if (steps[0] != steps[1]) { why = "different step counts (" + std::to_string(steps[0]) + " vs " + std::to_string(steps[1]) + ")"; return false; }
+2083:     if (MtpDrafter::top2_env()) { why = "STRATA_MTP_TOP2"; return false; }
+2084:     return true;
+--- sycl/src/core/mtp.cpp:2242-2263
+2242: 
+2243: bool MtpPair::draft(const Args& A, const Args& B, std::string& err) try {
+2244:     host_boundary::mark("pair_enter", A.T, B.T);
+2245:     std::string why;
+2246:     if (!eligible(A, B, why)) { err = "mtp pair: " + why; return false; }
+2247:     const OnDevice on_device(d_[0]->device_);
+2248:     const Args* args[2] = {&A, &B};
+2249:     int T[2] = {A.T, B.T};
+2250:     // #783 PR-i as draft(): the round runs for the cells up to the accepted row (T = a + 1) unless catch-up-all
+2251:     if (!mtp_catchup_all()) { T[0] = A.a + 1; T[1] = B.a + 1; }
+2252:     const int max_steps = steps_of(*d_[0], A.p, A.a);   // eligible(): equal for both, >= 1
+2253:     // the graphs (cached; a capture syncs the pair queue), then both slots' own queues idle: the pair queue reads
+2254:     // what their last solo launches wrote
+2255:     const bool whole_pair = max_steps == 2 && pair_graph_depth2_on();
+2256:     if (whole_pair) {
+2257:         if (!capture_pair_depth2(T[0], T[1], err)) return false;
+2258:         if (!pair_graph_marked_) {
+2259:             std::fprintf(stderr, "strata MTP pair graph: enabled=1 depth=2 rerecorded=1 T0=%d T1=%d host-selection-only\n", T[0], T[1]);
+2260:             pair_graph_marked_ = true;
+2261:         }
+2262:     } else {
+2263:     for (int c = 0; c < 2; ++c)
+--- sycl/src/core/mtp.cpp:2308-2329
+2308:     };
+2309:     host_boundary::mark("pair_submit_begin", max_steps);
+2310:     bool ok = [&] {
+2311:         if (whole_pair) return launch(pair_exec_[T[0]][T[1]], "whole pair depth2");
+2312:     bool ok = launch(pre_round_[0][T[0]], "round A") && launch(pre_round_[1][T[1]], "round B") && launch(tail_[0], "head 0");
+2313:     for (int j = 1; ok && j < max_steps; ++j)
+2314:         ok = launch(pre_step_[0][j], "step A") && launch(pre_step_[1][j], "step B") && launch(tail_[j], "head");
+2315:         return ok;
+2316:     }();
+2317:     if (!ok) {   // the slots' K/V may already be written: drain and report, the caller must not draft again
+2318:         try { cs_->wait(); } catch (...) {}
+2319:         return false;
+2320:     }
+2321:     (void)DPCT_CHECK_ERROR(((cs_)->ext_oneapi_empty()));
+2322:     host_boundary::mark("pair_submit_end", max_steps);
+2323:     // ---- the outputs, per slot as draft(): its own mapped h_out_ polled in depth order, its own PLE prefetch
+2324:     SessionState* pss[2];
+2325:     bool do_ple[2];
+2326:     int32_t ple_prev[2][2];
+2327:     for (int c = 0; c < 2; ++c) {
+2328:         MtpDrafter& d = *d_[c];
+2329:         pss[c] = d.ple_ss_ ? d.ple_ss_ : d.ss_;
+--- serve/server.py:1168-1177
+1168:             keys += f" seed={seed}"
+1169:         # setup's calibration (tools/calibrate.py): engine settings for this request only, measured without a restart
+1170:         tune = sampling.get("strata_tune")
+1171:         if isinstance(tune, dict):
+1172:             for k in ("pcie_frac", "spec_min_p"):
+1173:                 v = tune.get(k)
+1174:                 if isinstance(v, (int, float)) and not isinstance(v, bool) and 0.0 <= float(v) <= 1.0:
+1175:                     keys += f" {k}={float(v)!r}"
+1176:             # --aux-cpus for this request: 1 puts the engine's threads that are neither pool workers nor the host on the
+1177:             # spare CPUs, 0 leaves them where they were created (true/false or 1/0; the engine started without a spare CPU
+--- sycl/src/program/generate.cpp:9983-9988
+9983:             // prompt order; the conversation cache matches a picture by it and its grid instead of its embedding floats
+9984:             std::vector<uint64_t> req_img_keys;
+9985:             double req_pcie_frac = o.pcie_frac, req_spec_min_p = o.spec_min_p;
+9986:             if (endp != nullptr) {   // GENI takes the same keys (#75: image requests were always greedy); its
+9987:                                      // embedding file path is the first token without an =
+9988:                 for (;;) {
+--- sycl/src/program/generate.cpp:10007-10014
+10007:                     else if (key == "penalty_present") req_penalty_present = fv;
+10008:                     else if (key == "seed") req_seed = std::strtoull(tok.c_str() + eq + 1, nullptr, 10);
+10009:                     else if (key == "logprobs") req_logprobs = std::clamp(std::atoi(tok.c_str() + eq + 1), -1, 20);
+10010:                     else if (key == "pcie_frac") req_pcie_frac = std::clamp((double) fv, 0.0, 1.0);
+10011:                     else if (key == "spec_min_p") req_spec_min_p = std::clamp((double) fv, 0.0, 1.0);
+10012:                     else if (key == "img_keys") {
+10013:                         req_img_keys.clear();
+10014:                         const char* q = tok.c_str() + eq + 1;

@@ -1,0 +1,44 @@
+{
+  "status": "PASS_SOURCE_ONLY",
+  "checks": [
+    {
+      "path": "harness-prep/client.py",
+      "AST": "PASS"
+    },
+    {
+      "path": "harness-prep/compare.py",
+      "AST": "PASS"
+    },
+    {
+      "path": "harness-prep/make_configs.py",
+      "AST": "PASS"
+    },
+    {
+      "path": "harness-prep/start_arm.py",
+      "AST": "PASS"
+    },
+    {
+      "embedded_native_probe_AST": "PASS"
+    },
+    {
+      "path": "harness-prep/stop_and_health.py",
+      "AST": "PASS"
+    },
+    {
+      "bash_n": "PASS",
+      "stderr": ""
+    },
+    {
+      "stop_and_health_exact_S100": "PASS"
+    },
+    {
+      "actual_current_two_SYCL_sources_match_frozen_S106_patch": "PASS"
+    },
+    {
+      "all_preparation_files_ASCII": "PASS",
+      "controller_imports_or_runs": false,
+      "configs_generated": false,
+      "GPU_or_build_or_CLI_models": false
+    }
+  ]
+}

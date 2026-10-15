@@ -1,0 +1,62 @@
+{
+  "status": "FROZEN_TWO_SYCL_FILE_SOURCE_PATCH_ONLY_NO_APPLY_BUILD_GPU",
+  "files": {
+    "README.txt": {
+      "bytes": 1619,
+      "sha256": "a7139d54da488f5c2fbaded50b092c3249495e1645b0b0a69a434ef2f1f58c2f"
+    },
+    "caller-lifetime-source.txt": {
+      "bytes": 16273,
+      "sha256": "153e5a04842f17fc6f215d197c63978ac4a2fb3c33a427309ab8339eee849802"
+    },
+    "contract.txt": {
+      "bytes": 6054,
+      "sha256": "373b97b584753db4648fe3ee11c77a5431eb2c9fabe8aebc95c6cc1b5fe160a0"
+    },
+    "expected-applied.sha256": {
+      "bytes": 265,
+      "sha256": "0c7d4138ff2f9886c0be618192c495753694fd87425ca28bd3d8d80a2bbdb813"
+    },
+    "expected-original.sha256": {
+      "bytes": 265,
+      "sha256": "a095c8349c4e763eb25c2c16ba54568db768bc382c530683057de830a5c34e7c"
+    },
+    "git-apply-check.json": {
+      "bytes": 714,
+      "sha256": "590afb0f590d101b34e47fa2d821bd10a9bcd63f16d32ee3dd517fb6062697e3"
+    },
+    "new-capture-method.cpp.txt": {
+      "bytes": 3519,
+      "sha256": "fd6807504fe4fdb3a14910f96dac9cfdc7e99deb941716a8f48e533a6ab7b585"
+    },
+    "source-ledger.json": {
+      "bytes": 1265,
+      "sha256": "aa931cbfb6203e88882295845b0a9a5fce84d08f2de68612dd01bc888e25493b"
+    },
+    "whole-pair-depth2.patch": {
+      "bytes": 7380,
+      "sha256": "17d83285f3a230ae254553eec3719dd8c08a21d579df7e2a3a5d0c30b2696851"
+    }
+  },
+  "evidence_references": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-graph-source-consults-20261015/root-graph-source-resolution.json": {
+      "bytes": 3095,
+      "sha256": "d98de45ddb185e39d2ed0e1ecf7c478ec26fafcaa2993654cf3434a37c45d009"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-graph-s103-prep-v2/run/comparison.json": {
+      "bytes": 447,
+      "sha256": "71d270661af62e08fae88d7b0e3e65f9d919a3fc13341204511012bd98b3f077"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-graph-s103-prep-v2/run/closure.json": {
+      "bytes": 411,
+      "sha256": "bf4a7372125a621886c6bdbb778a84bbb6fbe5525bfb2059d62c7a1de6da6632"
+    }
+  },
+  "checks": [
+    "git apply --check PASS (not applied)",
+    "independent in-memory patch application/candidate hashes PASS",
+    "remove only candidate additions recovers complete old files byte-exact",
+    "new artifact ASCII PASS"
+  ],
+  "note": "Actual old native files contain historical UTF8 outside changed regions; those bytes remain unchanged. No full native source copies or normalization."
+}

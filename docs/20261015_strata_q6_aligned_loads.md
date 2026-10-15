@@ -38,3 +38,22 @@ OOM field. This does not qualify production stability, a default change or
 a serving gain. Keep the candidate separate while testing whole-pair graphs.
 
 [Exact sources, actual model reviews, compiled evidence and runtime records](../strata/flash-next/lowlevel_probe/q6_aligned_load_s104/README.md).
+
+Post-result consultation: actual claude-opus-5-5 (23.074s) and
+claude-fable-5-1 (18.456s), resumed in their own sessions, both recommend
+preparing a narrow default-OFF main proposal after S106. Root keeps A4
+private while that proposal is reviewed. No main application, build or
+serving measurement follows automatically. Prefer one single-flag arm in
+the next planned matched serving window over another primitive campaign.
+
+Observed resource agreement covers SIMD32/GRF128/eight threads; absent
+spill/scratch fields remain unknown. Consistent nested timings do not exclude
+systematic measurement artifacts or establish a general non-slower result.
+The 25-second CPU adapter build excludes queue time; the immutable review
+packet's earlier including-wait wording is corrected by this additive record.
+Actual answers and root corrections are in the post-review/ record bundle.
+
+S106 subsequently closes with effectively flat serving throughput. A guarded
+Q6 main-source proposal is now prepared outside the live checkout, with the
+original kernel unchanged, exact shape/configuration and alignment guards,
+and original fallbacks. It remains unreviewed, unapplied and unmeasured.

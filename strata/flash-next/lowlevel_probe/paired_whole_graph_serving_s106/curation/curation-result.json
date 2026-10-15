@@ -1,0 +1,12 @@
+{
+  "status": "PASS_FINAL_COPIES_AND_DERIVED_RECORDS_VERIFIED",
+  "counts": {
+    "DERIVED_VERIFIED_NOT_EXACT_COPY": 28,
+    "EXACT_COPY_VERIFIED": 306,
+    "EXTERNAL_ONLY": 16
+  },
+  "target_payload_bytes": 1240313,
+  "s106_index_sha256": "5b92468d09894ed56f92ce6945c7e9c24c7f0cd4cfcfd681804203b0aa1e5a7a",
+  "s106_index_bytes": 349716,
+  "s104_index_entries": 14
+}

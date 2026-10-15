@@ -1,0 +1,127 @@
+S104 POST-RESULT DECISION - frozen bounded evidence, 2026-10-15
+
+You previously reviewed this exact A4 candidate source and compiled body. Decide KEEP_PRIVATE or PREPARE_MAIN_INTEGRATION_AFTER_S106. Respond in <=450 words with verdict, concrete blocker if any, and the best next development-loop action. This is a decision consultation, not authorization to run tools, compile, serve, repeat the primitive, sweep knobs, collect full caches or request another broad test matrix.
+
+CONFIG
+Strata private canonical-Q8 Q6 type14 C6/RPW1/A2/SG32, two real saved-S44 weight slices (6144->2560 out;2560->10240 qkv), frozen S104 source/header. Candidate changes only how exact16-byte ql/qh runs are reconstructed using dword-aligned first4 words plus fifthword and bit1 halfword funnel. Public native anchor from frozenS59 kernels+common8f; private original body and actual public computational prefixes16384 match S85 original. Raw image/text equality false remains explicit. Candidate has unique actual Info/cache/guard/name-pointer/image binding.
+
+Identity: EXE632f9f86ec2bea2b030286da62c75aa3581c01190a2ecb203f6b1f6f4c7e8e8c; leafobjectb3189f26698503340aa92461d5733271ed9a8a5b5665a5e0407c718b55dee55c; leaf.imagesf5cd80478f7b5174ad424a5c78fc355a618145edb06f0ece57df63a1857ba7e8. Headera5c69ed76b35530f600e278dba019660723c5c67789d69dde4c5b67dc55548e9. No main source integration or default change.
+
+COMMAND / LOOP COST
+One adapter-only CPU build25s including wait, supported shared common8f prelink reused; one candidate-only offline decoder10s; one CPUquiet/card0 window40s, one finite process, no retry/reset/serverrestore. Prior source actualOpus41.562/Fable53.569s and compiledOpus38.755/Fable62.821s accepted bounded tests with root corrections retained. No new experiment in this post consultation.
+
+RESULT - CORRECTNESS AND CLOSURE
+ALL114 snapshots and10DOTs PASS. Both shapes' correctness completed BEFORE any timing: actual public/S44/private-original/candidate full-output identity; original and changed canonicalQ8; eager repeats; own single and20-call graph captures/replays; ABA restoration; full readonly FP32witness/Q8/weights; guards/tails/finiteness. Physical card0/PCI0b, frozen source/build/common/fixture identity and model stat continuity before/after PASS. Model-wide hash/copy not performed; leaf reads only two pinned real slices totaling34.4MB.
+All leaf/analysis/identity/driver/tee exits0, fresh pre/postcard0 health0, exact owned fullCID and NAME gone. --rm does NOT provide an observed final Docker OOM field: no OOMstate claim. Primitive correctness is bounded to these inputs/shapes/mapping, not all models or production stability.
+
+RESULT - COMPLETE PAIRED TIMINGS
+Each shape:3warm per arm,4balanced rounds (ABBA,BAAB,ABBA,BAAB), each slot measures completed host wall for20 projection calls/graph; canonical Q8 ready outside timed graph. Each reported round mean averages its2slots per arm. Four nested paired means in ONE process, not independent replications. Barrier span includes boundaries.
+{
+  "out": {
+    "shape": [
+      6144,
+      2560,
+      6
+    ],
+    "snapshots": 57,
+    "DOTs": 5,
+    "paired_round_means_us_per_call": [
+      {
+        "round": 0,
+        "original_us": 63.2375,
+        "candidate_us": 60.35625,
+        "change_percent": -4.556236410357773
+      },
+      {
+        "round": 1,
+        "original_us": 63.07745,
+        "candidate_us": 60.23955000000001,
+        "change_percent": -4.4990721723848885
+      },
+      {
+        "round": 2,
+        "original_us": 63.11625,
+        "candidate_us": 59.866074999999995,
+        "change_percent": -5.14950587210109
+      },
+      {
+        "round": 3,
+        "original_us": 63.007324999999994,
+        "candidate_us": 59.739324999999994,
+        "change_percent": -5.186698530686707
+      }
+    ],
+    "median_original_us_per_call": 63.09685,
+    "median_candidate_us_per_call": 60.0528125,
+    "median_of_paired_percent_changes": -4.852871141229431
+  },
+  "qkv": {
+    "shape": [
+      2560,
+      10240,
+      6
+    ],
+    "snapshots": 57,
+    "DOTs": 5,
+    "paired_round_means_us_per_call": [
+      {
+        "round": 0,
+        "original_us": 73.842475,
+        "candidate_us": 72.226125,
+        "change_percent": -2.1889163384623767
+      },
+      {
+        "round": 1,
+        "original_us": 73.93687500000001,
+        "candidate_us": 72.18855,
+        "change_percent": -2.3646184667664216
+      },
+      {
+        "round": 2,
+        "original_us": 73.810125,
+        "candidate_us": 72.171275,
+        "change_percent": -2.2203593341699412
+      },
+      {
+        "round": 3,
+        "original_us": 73.812925,
+        "candidate_us": 72.2612,
+        "change_percent": -2.1022402241883897
+      }
+    ],
+    "median_original_us_per_call": 73.8277,
+    "median_candidate_us_per_call": 72.2073375,
+    "median_of_paired_percent_changes": -2.204637836316159
+  }
+}
+
+COMPILED MECHANISM AND LIMITS
+Actual candidate48signedDP4A, same20FP MUL/6FP MAD/36FP ADD count and inspected ordered ledger; six independent accumulators and XOR16/8/4/2/1/store ownership. Static SEL38->8/MOV471->439/CMP43->37, UGMsend41 unchanged. SIMD32/GRF128/eu8, absent scratch/spill/SLM fields are unknown, not measured0. No physical traffic/bandwidth/occupancy/cycle or causal latency interpretation from counts. Same counts are not a universal FP theorem; actual finite full-byte gates above supply tested evidence. No universal commutation/NaN proof.
+
+DECISION CONTEXT
+All8paired changes are negative here, but warm one-process private primitive evidence does not establish serving gain, population effect or target150/C2 progress. No whole-model Amdahl forecast from kernel names: S95 broad nonvocab MMVQ12.680ms includes native10.745ms plus IQ3S; measured-shape/critical-path attribution is not established by that aggregate. Do not combine these numbers additively with routed expert pools.
+S106 whole-pair graph serving comparison is active/next independently. Keep S104 private and all extra flags unchanged while S106 is judged. If preparing main integration is worthwhile AFTER S106 closes cleanly, the later source proposal should be narrow/defaultOFF and preserve untested fallbacks; that future proposal and its build/serving execution still need separate root review/GO. No immediate serve, build, repeat or promotion is authorized by this packet. If gains are too small for main integration cost, KEEP_PRIVATE with reasoning is acceptable. Ask for extra tests only for a concrete unresolved blocker; avoid a speculative validation campaign.
+
+Prior actual sessions (root owns any resumed followup; no calls performed by packet builder):
+{
+  "claude-opus-5-5": {
+    "actual_responding_models": [
+      "claude-opus-5-5"
+    ],
+    "session_ids": [
+      "c26cbc95-bbed-461b-b165-8adee1464b9e"
+    ],
+    "compiled_review_seconds": 38.75472249899758,
+    "source_review_context": "q6-a4-s104-source-reviews-20261015, continued by compiled review"
+  },
+  "claude-fable-5-1": {
+    "actual_responding_models": [
+      "claude-fable-5-1"
+    ],
+    "session_ids": [
+      "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+    ],
+    "compiled_review_seconds": 62.82120142300846,
+    "source_review_context": "q6-a4-s104-source-reviews-20261015, continued by compiled review"
+  }
+}

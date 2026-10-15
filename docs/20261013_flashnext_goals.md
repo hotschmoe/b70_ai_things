@@ -397,3 +397,15 @@ fusion leads; root accepts source audits only, with arithmetic/visibility
 and critical-path limits. Graph-boundary follow-up is tracked separately.
 [S101 recommendations](20261015_strata_next_kernel_candidates.md).
 Throughput targets remain unmet; S30 RAM recovery is retained without a new claim.
+
+S106 whole-pair graphs close with matched text/native work/functionals and
+normal teardown/full health. Clean aggregate102.914658 ->102.976265tok/s
+(+0.059862%, one OFFthenON sequence/three nested pairs) does not resolve a
+serving gain. Separate main host-API summaries show submissions231 ->126,
+consistent with six-to-one depth2 coarsening under bounded source conditions;
+no per-call/device-idle or causal-speed proof. Keep defaultOFF/no repeat or
+fullcache campaign. S104 Q6 aligned loads pass114 strict private snapshots
+with warm nested improvements4.85%/2.20%; main source proposal prepared only,
+no serving gain or target change. S30 recovery remains retained.
+[S106 graph result](20261015_strata_graph_capture_and_bottlenecks.md),
+[S104 private Q6 lead](20261015_strata_q6_aligned_loads.md).

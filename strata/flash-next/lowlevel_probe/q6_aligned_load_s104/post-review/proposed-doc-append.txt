@@ -1,0 +1,19 @@
+Post-result consultation: actual claude-opus-5-5 (23.074s) and
+claude-fable-5-1 (18.456s), resumed in their own S104 sessions, both recommend
+PREPARE_MAIN_INTEGRATION_AFTER_S106. Root keeps A4 private while S106 closes.
+Only a later narrow default-OFF source proposal is conditionally supported;
+no source integration, build, serve, primitive repeat or promotion is
+started by this decision. If that proposal is worth pursuing after the
+S106 comparison, prefer one single-flag arm in an already-planned matched
+serving window over a dedicated campaign.
+
+The observed resource agreement covers SIMD32, GRF128 and eight threads;
+absent spill/scratch fields remain unknown. Four balanced paired means per
+shape nested in one warm process do not exclude systematic measurement
+artifacts, establish a population effect or prove general non-slower
+behavior. Neither the broad S95 MMVQ census nor kernel names establish
+measured-shape critical-path coverage or a model-wide speed forecast.
+The reported 25-second CPU adapter-build cost excludes queue time. The
+immutable consultation packet's earlier "including wait" wording is
+corrected by this additive record; its bytes and actual replies are
+preserved.

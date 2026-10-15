@@ -1,0 +1,20 @@
+{
+  "status": "PASS_IDLE_AND_EXACT_NATIVE_SUMMARY_CLOSURE",
+  "start_byte_offset": 8901,
+  "end_byte_offset": 11511,
+  "segment_bytes": 2610,
+  "segment_sha256": "9816edd8549e591bdcb5a77657ae8cae186ea32daaf4f0d661d5b8397326f8fe",
+  "counts": {
+    "windows": 24,
+    "paired": 21,
+    "solo": 2,
+    "rounded_rows": [
+      [
+        "24",
+        "5.21"
+      ]
+    ],
+    "logged_new_captures": []
+  },
+  "unobserved": "per-call max_steps and all replay keys; physical hardware idle not independently observed"
+}

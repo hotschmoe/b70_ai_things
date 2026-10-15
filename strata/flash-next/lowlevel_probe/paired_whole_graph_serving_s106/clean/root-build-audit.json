@@ -1,0 +1,57 @@
+{
+  "utc": "2026-10-15T23:11:41.207100+00:00",
+  "status": "PASS_SOURCE_AND_SUCCESSFUL_INCREMENTAL_BUILD_RECORDS",
+  "source": {
+    "status": "PASS_EXACT_PATCH_APPLIED",
+    "patch_sha256": "17d83285f3a230ae254553eec3719dd8c08a21d579df7e2a3a5d0c30b2696851",
+    "paths": {
+      "sycl/src/core/mtp.cpp": {
+        "original_sha256": "fcd5d2e4b029985a6e7768707a5aa489e4b5724a78db50fc2313d9c64e67ec31",
+        "candidate_sha256": "13500a3af44f30793617d51aff6639344d2d943a50b53bdfe3c60ba81081967f",
+        "original_bytes": 114902,
+        "candidate_bytes": 119274
+      },
+      "sycl/include/strata/core/mtp.hpp": {
+        "original_sha256": "349e8f7a92d71f8f96aae4f1fbe3b03a746640c06c8ea154c2610759f2178c48",
+        "candidate_sha256": "1d418cc592056373f68b7343bd3d1ac958e5452cb812007497881234cad9fd9f",
+        "original_bytes": 22887,
+        "candidate_bytes": 23233
+      }
+    }
+  },
+  "build_sha256": {
+    "/out/strata-paired-whole-graph-s106": "e3ca8ac25c1f1e6042792906be3e7faa55e14a1cddaeece176f15c52f6b071fd",
+    "libstrata_kernels.a": "bdb6a9ae43ad16bf56f66f87f0893f5c0429a2af6d61478e6af82240260cee58",
+    "CMakeFiles/strata_kernels.dir/src/kernels/cuda/iq_kernels.dp.cpp.o": "09447b7e983dc8c0299172b6c1a84c09e68a9383f0680b13f658d030e69f73a9",
+    "libstrata_prefill.a": "9d1edec2d6b1efc05651133fd725470cbf9ed6c63c8e9ddcaf54ae2d0e1055fc",
+    "CMakeFiles/strata_kernels.dir/src/kernels/cuda/qsa_decode_attn.dp.cpp.o": "06eb664c9a991790c01b413117f78475d9ff2836cde77534d69fef2b2c85014d",
+    "CMakeFiles/strata_prefill.dir/src/prefill/prefill.cpp.o": "ae8493fd019782eeb0b8b1653d099b0bc0c709bb327251c57e32b93405f02f5b",
+    "libstrata_engine.a": "c908c6755e3c4b684f9a16beeebde53f272af72fb93673d6e62e958f10567b3c",
+    "CMakeCache.txt": "fee542911252057f97fac8113086ded01130c7888ac96a7490e28cdec814cc22"
+  },
+  "build_plan": {
+    "compiled": [
+      {
+        "source": "/work/src-ep/sycl/src/core/mtp.cpp",
+        "object": "CMakeFiles/strata_engine.dir/src/core/mtp.cpp.o"
+      },
+      {
+        "source": "/work/src-ep/sycl/src/prefill/prefill.cpp",
+        "object": "CMakeFiles/strata_prefill.dir/src/prefill/prefill.cpp.o"
+      },
+      {
+        "source": "/work/src-ep/sycl/src/program/generate.cpp",
+        "object": "CMakeFiles/strata.dir/src/program/generate.cpp.o"
+      }
+    ],
+    "archives": [
+      "libstrata_engine.a",
+      "libstrata_prefill.a"
+    ],
+    "links": 1
+  },
+  "native_binary_rehashed_by_make_configs": true,
+  "default_kernel_archive_and_prefill_archive_byte_exact_with_S100": true,
+  "separate_new_selected_kernel_ISA_decode_performed": false,
+  "scope": "Host graph-only patch. Frozen same executable in both clean arms; kernel archive exact. No new candidate kernel or production API-submission claim."
+}

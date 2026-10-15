@@ -1,0 +1,120 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 17.572076604992617,
+  "launch_exception": null,
+  "source_packet_sha256": "fcd4d3bf9353ff2136d22aafd5fd310faa816785b51a930cafa0abaff9837239",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 736529,
+      "stop_reason": "end_turn",
+      "session_id": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "total_cost_usd": 3.6354014,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 4044,
+        "cache_read_input_tokens": 263425,
+        "output_tokens": 1160,
+        "output_tokens_details": {
+          "thinking_tokens": 271
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 4044,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1160,
+            "cache_read_input_tokens": 263425,
+            "cache_creation_input_tokens": 4044,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 4044
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 30,
+          "outputTokens": 55649,
+          "thinkingTokens": 31568,
+          "cacheReadInputTokens": 1938707,
+          "cacheCreationInputTokens": 266820,
+          "webSearchRequests": 0,
+          "costUSD": 3.6354014,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# S106 whole-pair graph: post-result decision\n\n**Verdict: agree with KEEP_DEFAULT_OFF_NO_REPEAT.**\n\n## What was measured\n\n- **Correctness:** all 4 pairs matched exactly on text, SSE, usage, native work, windows and captures. Functionals and health passed in both arms.\n- **Host API counts:** ImmediateAppend calls fell 231\u2192126 (\u2212105) and EventHostSync fell by the same 105. 105 = 5 \u00d7 21 paired windows, which is consistent with the intended 6\u21921 submissions per pair.\n- **Serving:** the paired changes were +0.06%, +0.09% and +0.18%. That is negligible, and too small for one fixed OFF-then-ON sequence of 3 nested pairs to resolve.\n\n## Limits and overclaims to avoid\n\n- **Fixed draft policy.** Both arms pinned suffix-draft 0, lookup-chain 0 and min-p 0 to avoid timing-policy mismatches. The result therefore does not transfer to the default draft policy, and it is not an S100 speed control.\n- **Counts are consistent, not proven.** \"\u2212105 = 5 \u00d7 21\" fits the design, but there is no per-call or per-key mirror and no device dispatch or idle proof.\n- **Key coverage.** The marker shows only the first key (T0=2, T1=3); other keys used were not observed.\n- **HostSynchronize \u2212354** is unattributed. Do not call it saved time or polling cost.\n- **The S95 head census.** Read the 24 C6 heads as the source-consistent motif (2 C2 MTP heads plus 1 C6 verifier head per cycle, plus 2 prompt T6 reads). Exact GPU event ownership is unresolved, so do not posit extra steady-state heads.\n- **What it shows:** submission count was not a material bottleneck in this configuration. Do not claim a speed effect, a default change or an upstream speed result from it.\n\n## One next development-loop action\n\nAnswer the planned readiness question **offline from the existing S95 trace**: no new trace, build or GPU time. On card 0's compute engine, in cycles 5\u201316, measure:\n\n- the end of the first C2 head;\n- the two owners' post-head and select kernels;\n- the start of the dependent j=1 step.\n\nReport these per cycle and compare them with the head's own service time.\n\n- **Short gaps:** the remaining cost is in-graph service work (head, post-head, MMVQ), and that is where the next mechanism should come from.\n- **Long gaps:** the dependency chain itself is the target for a source-level proposal.\n\nEither result picks the next mechanism without another serving campaign.",
+      "ttft_ms": 6293,
+      "type": "result",
+      "duration_ms": 16599,
+      "uuid": "e0af0944-159f-4e5c-a299-b194bc527c1b",
+      "ttft_stream_ms": 2395,
+      "time_to_request_ms": 517,
+      "first_content_frame_ms": 2396,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

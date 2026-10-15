@@ -1,0 +1,7 @@
+{
+  "status": "PASS_PAIR_NATIVE_CLOSURE_AND_CONTROLS_SUMMARY_UNPARSED",
+  "control_errors": [],
+  "epoch_ns": 1792106480758074988,
+  "summary_closure": "Deferred until normal QUIT and owned process/container gone; NO canary/flush request",
+  "instrumented_speed_qualified": false
+}

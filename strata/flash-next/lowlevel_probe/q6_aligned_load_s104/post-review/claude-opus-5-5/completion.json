@@ -1,0 +1,120 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 23.0740278759622,
+  "launch_exception": null,
+  "source_packet_sha256": "c8cddd99613a43aedbcf2d4d4b23f7b3fa3fe1bb4b3a2b3983c4a922b1104872",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 720449,
+      "stop_reason": "end_turn",
+      "session_id": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "total_cost_usd": 3.5271564,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 6288,
+        "cache_read_input_tokens": 257137,
+        "output_tokens": 1589,
+        "output_tokens_details": {
+          "thinking_tokens": 476
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 6288,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1589,
+            "cache_read_input_tokens": 257137,
+            "cache_creation_input_tokens": 6288,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 6288
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 28,
+          "outputTokens": 54489,
+          "thinkingTokens": 31297,
+          "cacheReadInputTokens": 1675282,
+          "cacheCreationInputTokens": 262776,
+          "webSearchRequests": 0,
+          "costUSD": 3.5271564,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# S104 post-result decision\n\n**Verdict: PREPARE_MAIN_INTEGRATION_AFTER_S106.** This is low priority and conditional on S106 closing cleanly. Nothing is integrated or served now.\n\n## Evidence, kept separate\n\n**Measured, finite correctness.**\n- All 114 strict full-byte snapshots passed for public, S44, private original and candidate, across both real shapes.\n- Coverage: initial and changed Q8, repeats, own graphs (single and 20-call), A/B/A restore, read-only, guards, tails.\n- Health and teardown were clean.\n- This is bounded to these inputs, shapes and mapping.\n\n**Nested timings.**\n- Every paired round improved: out \u22124.5 to \u22125.2%, qkv \u22122.1 to \u22122.4%.\n- That is 4 nested paired means per shape, warm, in one process. They are consistent, but they are not independent replications and not serving evidence.\n- S100 is the calibration point: about \u221240% in the primitive became about +0.3% in serving.\n\n**Static mechanism.**\n- The select chain is gone (SEL 38\u21928).\n- DP4A, the FP ledger, the reduction and stores, and the resources are the same as the original.\n- This explains a modest primitive change. It predicts nothing about the model.\n\n**Production limits.**\n- Main weight pointers are not proven 4-byte aligned, so a host-side fallback is required.\n- No main binding, no serving run, and no attribution of these shapes to the critical path.\n\n## Why prepare rather than keep private\n\n- **Small and exact change.** Bit-exact on real weights, guarded by shape, default OFF.\n- **Small integration.** One load helper plus one guarded launch branch, beside the existing C6 A2 dispatch.\n- **Low risk.** Running is cheap to judge.\n\nDo not expect an end-to-end signal much above noise.\n\n## Blockers for that later proposal (source-only)\n\n1. **Fallback to the existing `a2` launch** whenever `weights % 4 != 0`, or for any shape other than 6144\u21922560 or 2560\u219210240, any column count other than 6, or RPW, PF or center settings outside the tested ones. The guard should be a fallback, not a throw.\n2. **Caller proof.** Show that production reaches `launch_q6k_wide<6>` with RPW 1, A2 and PF 0 under the current argv, and that the native weight base pointers are 4-byte aligned, checked by reading the loader or registry source.\n3. **Compiled identity after the main build.** The new kernel's ISA must match the reviewed S104 body (loads, FP ledger, resources), and the OFF kernel's prefix must be unchanged.\n\n## Best next development-loop step\n\n1. Finish S106 first, without adding any S104 flag to it.\n2. Then prepare the narrow default-OFF patch together with the caller and alignment proof, with no build yet.\n3. **Do not run a dedicated serving campaign for A4 alone.** The expected effect is likely below what three pairs can resolve.\n4. Instead, give it a single-flag arm in the next scheduled same-binary matched session, with strict output and native-work gates. Report it descriptively only.\n5. If root judges that slot not worth its cost, KEEP_PRIVATE is an acceptable fallback, and no further primitive repeats are needed.",
+      "ttft_ms": 8887,
+      "type": "result",
+      "duration_ms": 22060,
+      "uuid": "6d7ccb3f-576c-4495-a208-548b1fb70038",
+      "ttft_stream_ms": 1841,
+      "time_to_request_ms": 92,
+      "first_content_frame_ms": 1842,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

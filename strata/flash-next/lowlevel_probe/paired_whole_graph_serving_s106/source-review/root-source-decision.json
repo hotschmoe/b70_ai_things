@@ -1,0 +1,19 @@
+{
+  "utc": "2026-10-15T22:52:13.630193+00:00",
+  "status": "ROOT_GO_EXACT_TWO_FILE_APPLY_AND_ONE_SYCL_INCREMENTAL_BUILD",
+  "actual_models_seconds": {
+    "claude-opus-5-5": 48.10140461102128,
+    "claude-fable-5-1": 56.29943482205272
+  },
+  "root_FULLREAD_sources_lifetimes_answers": true,
+  "root_corrections": [
+    "Opus S105 causality wording is unsupported: timing suffix policy versus probability/state differences remain unresolved.",
+    "No offered-count mismatch is automatically benign; preserve strict gate and label unresolved.",
+    "Flag accepts nonempty first character other than0, consistent source convention; only0/1 selected here.",
+    "S103 mapped reads do not qualify production output polling/PLE/state; finite main gates remain.",
+    "One256-token warm C2 pair is sufficient if native capture logs establish readiness; no extra warm pair without evidence.",
+    "Rebuild all real Ninja header dependents; source OFF text equality is not compiled GPU identity."
+  ],
+  "next_runtime": "Same new binary0/1, fixed-work flags botharms, all other candidatesOFF, existing S100 strictgates. SeparateproductionL0count before attribution/speedclaim.",
+  "GPU": 0
+}

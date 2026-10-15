@@ -1,0 +1,75 @@
+{
+  "arms": {
+    "0": {
+      "exe": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-build/build/strata-paired-whole-graph-s106",
+      "sha256": "e3ca8ac25c1f1e6042792906be3e7faa55e14a1cddaeece176f15c52f6b071fd"
+    },
+    "1": {
+      "exe": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-build/build/strata-paired-whole-graph-s106",
+      "sha256": "e3ca8ac25c1f1e6042792906be3e7faa55e14a1cddaeece176f15c52f6b071fd"
+    }
+  },
+  "generated": {
+    "0": {
+      "config_sha256": "30e59da82803d10be1fd56c583e98ed90bafa51161c75a9ccd02e30aca303148",
+      "wrapper_sha256": "e2881a84f9e1f3e068bfee238ecea0bae8b880ed1db7f6ad75eacfd874f79ee1"
+    },
+    "1": {
+      "config_sha256": "67988482d983c2e82788301b2079039f752eb08d0d3c60f967a593daea9c8ab0",
+      "wrapper_sha256": "786483ea10666336ab2a61ccd86532b6536ae359283768ab0432ef7f85c17a97"
+    }
+  },
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "same_binary": true,
+  "HC_state": "COMMON_LO_ONCE_S51",
+  "S49_state": "OFF_BOTH",
+  "native": {
+    "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+    "sibling_path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+    "resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+    "expected_sha256": "219ea929900dfa9ef091f3aa473fdba6874b65fcb36526d7d851ac9e95856d15",
+    "size_bytes": 47039860096,
+    "sibling_resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+    "sibling_expected_sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+    "payload_SHA_verification": "ROOT_COPY_CLOSURE_REQUIRED_BEFORE_START;config_stat_is_not_hash_proof"
+  },
+  "base_config_sha256": "959df3d15f689fefd8525079d7be3287939000477a4e84ecc497542402a08321",
+  "containers": {
+    "0": "strata-s106api-mode0",
+    "1": "strata-s106api-mode1"
+  },
+  "warm_pairs": 1,
+  "profiled_pairs": 1,
+  "warm_output_tokens_per_stream": 256,
+  "profiled_output_tokens_per_stream": 64,
+  "sessions": {
+    "0": "s106api0",
+    "1": "s106api1"
+  },
+  "profiling": "HOST_API_SUMMARY_ONLY_START_PAUSED_NO_KERNEL_TRACING",
+  "common_trace": "STRATA_TRACE1_AND_UNITRACE_HOST_API_SUMMARY_CPU_RING_ABSENT",
+  "arm_difference": "STRATA_BATCH_MTP_PAIR_GRAPH0/1 and arm-local profiler wrapper/session/output/log/container/service names only",
+  "capture_scope": "source/build/config+first-eligible host marker+successful warm/use/no errors+exact logged new-capture layouts; all-window cache-hit/row-layout/independent GPU-dispatch visibility absent",
+  "latency_scope": "Instrumented API count probe only; no speed qualification",
+  "candidate_scope": "default-OFF depth2 exact-key whole-pair rerecord, host selection only until separate main submission probe; no daily promotion",
+  "fixed_work_args": {
+    "--suffix-draft": "0",
+    "--lookup-chain": "0",
+    "--spec": "4",
+    "--mtp-max-t": "4",
+    "--spec-min-p": "0"
+  },
+  "request_spec_min_p": 0,
+  "saved_request_files": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_accounting_20261014/concurrency/coding-0-0.json",
+      "sha256": "42549e8e028f55dbd504b330ff072892d2bf6a4df905aef1b7e008d023b73000"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_accounting_20261014/concurrency/coding-0-1.json",
+      "sha256": "08410b99f021c0d2d48fbdeb46577a11e798b67698800dd555b68c826395e1db"
+    }
+  ],
+  "S100_speed_comparison_allowed": false,
+  "pair_key_visibility": "marker observes only first successful eligible T0,T1 capture; all keys/replays are not logged"
+}

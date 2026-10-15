@@ -1,0 +1,97 @@
+SOURCE ONLY: default-OFF depth2 whole-pair graph, two SYCL files
+
+S103 actual synthetic API/freshness probe passes18vs3 Level Zero graph
+submissions, equal18 kernel operations, full intermediate A/B/A bytes,
+read-only/guards and normal health/teardown. That justifies preparing this
+production source candidate; it does NOT qualify MTP arithmetic/state,
+context/cache correctness, speed or the whole-model graph API count.
+
+Eligibility/selection:
+- Existing MtpPair init/eligible checks remain unchanged: two fixed slot
+  owners, same geometry/device/full Q5_K head/window/vocabulary, no forcing,
+  coupled sampling, TOP2, rebound residual source or subset head.
+- STRATA_BATCH_MTP_PAIR_GRAPH is default OFF, latched on first eligible
+  depth2 check, same nonempty/firstchar-not0 convention as existing flags.
+- The candidate runs ONLY when steps_of returns2 (equal for both owners).
+  Other step counts retain existing component capture/launch behavior.
+- Effective T0/T1 are calculated by the existing catchup-all policy before
+  selecting the exact pair_exec_[T0][T1] cache. Both lie1..max_t<=8 from
+  existing init/eligible checks. Depth2 is constant, so no varying-depth
+  key can alias. The9x9 pointer array is bounds storage, not a claim that
+  81 or25 keys are reachable or tested. No broad key sweep is selected.
+- Once per MtpPair object after successful capture, the marker names the
+  first effective T0/T1 and depth2. It proves host selection ONLY; it may
+  precede idle failure or a failed launch. It is not a GPU count/readiness
+  or exhaustive key-coverage marker.
+
+Recorded sequence on exactly cs_:
+  round owner0(T0), round owner1(T1), shared tail0,
+  step owner0(j1), step owner1(j1), shared tail1.
+No nested executable graph or accepted-prefix commit is recorded.
+
+New private capture method duplicates the three existing component record
+bodies verbatim. Same seven round mapped copies, front(T,0), selected-row
+copy/requant when T>1, rest(ra,head=false); same two step mapped copies and
+forward(1,max_t+j-1,head=false); same per-owner sample quantization into
+shared two-column Q8 scratch, native two-column head, per-owner post-head
+and mtp_select to each owner's own mapped outputs/probability/next inputs.
+No numeric kernel, type, shape, pointer expression, scratch layout or
+reduction is changed. Actual compiled/runtime strict gates remain required.
+
+OFF-path preservation:
+Original capture_pre_round/capture_pre_step/capture_tail methods remain
+unchanged. Existing OFF capture loops and launch statements are retained
+text-identically inside selector scopes. Removing candidate additions
+reconstructs BOTH complete original files byte-exact, including historical
+UTF8 outside patch context. All new patch/snippet/contract files are ASCII.
+No baseline source normalization, generic admission or rebind machinery.
+
+Ordering and host behavior:
+The new cold capture first drains cs_, records ordinary calls and uses the
+existing finish_capture(...,propagate_error=true). Cache hits skip capture.
+After capture the old two-owner idle checks still run. Per-slot token/cell/
+position/row/output staging and its host fence are unchanged. ON submits
+one cached executable; OFF submits the original six at depth2. The existing
+partial-launch failure branch drains cs_ and returnsfalse; caller at
+generate.cpp9494 reports failure and returns without solo redraft. Capture
+failure likewise returnsfalse directly, with no automatic component/solo
+fallback. A single graph is not an atomic all-or-nothing state update.
+
+Existing empty-query, mapped polling order, CPU PLE prefetch, final queue
+wait, per-owner draft results/n_drafts, ms_draft and rounds counters all
+remain unchanged. Reaching CPU poll/PLE earlier might matter, but this
+source makes no scheduling, gap-removal or speed claim.
+
+Cache/lifetime evidence (actual reachable serving caller):
+- generate.cpp4133..4143 declares pair after slot_mtp, deliberately deleting
+  pair graphs before drafters. At7553 each slot bind happens before the
+  sole pair construction/init at7565..7566. No later slot_mtp bind/load,
+  pair init or buffer replacement is present in this serving path.
+- Drafters' arena/state/queue/weight addresses are allocated at load/bind;
+  request/context exchanges and kv_restore change contents in place.
+  Existing eligible excludes rebound src_R_ and changed head. max_drafts
+  affects steps_of and is guarded by the exact depth2 selection.
+- New cached graphs are deleted after the existing pair-queue drain and
+  before original component graphs/shared xq2_/logits2_. Pair destructor
+  runs before drafter buffer/queue destruction. Shared scratch remains
+  pair-owned and serialized on cs_; each drafter retains its own buffers.
+- External slot_mtp_rows residual buffers belong to the inner serving
+  scope, so they may be freed before the outer pair object. Do NOT claim
+  every external input outlives graph objects: the existing execution
+  contract drains every successful/failed launched draft before return,
+  no graph executes during teardown, and graph destruction does not replay.
+  That unchanged caller lifetime remains a review point; no third-file
+  lifecycle refactor or generic epoch/invalidator is introduced here.
+
+Build/qualification gates:
+git apply --check passes, but nothing has been applied. Root must recheck
+both original hashes before applying the exact two-file patch, consult
+actual Opus/Fable and refresh upstream as appropriate. The header changes
+MtpPair size: rebuild all actual dependent TUs via Ninja dependencies, never
+mix old-layout objects. No build or GPU runner is included in this prep.
+Later same-binary flag0/1 tests must retain exact request/text/SSE/usage,
+native per-slot drafts/work/windows/captures, tools/state isolation,
+mapped-input A/B/A, normal teardown and full health. The production graph
+submission reduction must be observed separately before assigning any
+performance effect. Do not merge verifier accepted-prefix commit into
+the pre-acceptance draft graph or relax the no-redraft failure rule.

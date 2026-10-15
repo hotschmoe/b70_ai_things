@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+set -euo pipefail
+exec /mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/build/unitrace -h --start-paused --session s106api0 --follow-child-process 0 --output-dir-path /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode0/trace -o /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode0/trace/timing.csv /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-build/build/strata-paired-whole-graph-s106 "$@"

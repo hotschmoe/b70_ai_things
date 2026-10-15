@@ -1,0 +1,24 @@
+{
+  "command": [
+    "systemd-run",
+    "--user",
+    "--unit=strata-pair-graph-s106api-mode1",
+    "--collect",
+    "--setenv=B70_S106API_CONTAINER=strata-s106api-mode1",
+    "--property=WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things",
+    "--property=StandardOutput=append:/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode1/server.log",
+    "--property=StandardError=append:/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode1/server.log",
+    "/bin/bash",
+    "-c",
+    "exec 7>&-; exec /bin/bash \"$1\" \"$2\"",
+    "bash",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/harness-prep/launch_stage.sh",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode1/config.json"
+  ],
+  "exit": 0,
+  "stdout": "",
+  "stderr": "Running as unit: strata-pair-graph-s106api-mode1.service; invocation ID: c6ec29a3dcb94d4aaa0e6e8223b5cab2\n",
+  "unit": "strata-pair-graph-s106api-mode1",
+  "container": "strata-s106api-mode1",
+  "epoch_ns": 1792106605093273242
+}

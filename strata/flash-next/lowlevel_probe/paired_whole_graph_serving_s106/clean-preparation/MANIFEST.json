@@ -1,0 +1,71 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_UNEXECUTED",
+  "folder": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-prep",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3977,
+      "sha256": "58c2d0e120c3d447cc95c27ed4f56280968aaa0aa789d545ded50111b4e6ace8"
+    },
+    {
+      "path": "caller-key-evidence.txt",
+      "bytes": 14716,
+      "sha256": "d6a8694de7c7274cbd7915e2aea9bd7c03e3af3c112f36ff7faba8a20e88bf3c"
+    },
+    {
+      "path": "controller-diff.patch",
+      "bytes": 23622,
+      "sha256": "5505ee1850b93543c4b24d86f81e45dc44be8c89c3198bd6f73ee8bdb225ed55"
+    },
+    {
+      "path": "harness-prep/client.py",
+      "bytes": 12343,
+      "sha256": "f6ce37c4c81d3c3e046b82e85fdef63f86490d0d4a0c5dd32b0573797a6c3dfa"
+    },
+    {
+      "path": "harness-prep/compare.py",
+      "bytes": 8078,
+      "sha256": "3f59e15c84e7caa21740517052df0f24d6fa7ef9c7ff63a2b2fad835905c7199"
+    },
+    {
+      "path": "harness-prep/launch_stage.sh",
+      "bytes": 1881,
+      "sha256": "69ca4c25ed55f47cdfa1cdc5d083bbb5a858b006652fbc81337b1ad482537f6e"
+    },
+    {
+      "path": "harness-prep/make_configs.py",
+      "bytes": 5120,
+      "sha256": "36d8b2082d04d9ba4a91325e36048604dcb193a863aea4ebb8d8855dbcc1ed1b"
+    },
+    {
+      "path": "harness-prep/start_arm.py",
+      "bytes": 8683,
+      "sha256": "8967076c68dabaf0aef6cf8682e4787d023dbe6c2c63a530f6b4260cd95eddf7"
+    },
+    {
+      "path": "harness-prep/stop_and_health.py",
+      "bytes": 4346,
+      "sha256": "c88d392434bb358d2b9ca9293026c52fb47a3269a59d1f7f011444bdc3b8a74d"
+    },
+    {
+      "path": "main-submission-probe-proposal.md",
+      "bytes": 3920,
+      "sha256": "92387ab1c3e8acb239152b2332ec4f91ad1f5ea3fb1d1cc9e47181269bdc87fa"
+    },
+    {
+      "path": "original-inputs.json",
+      "bytes": 3926,
+      "sha256": "3d8248935342906b7f038322c5f82cfbd15ee7acea0b5969284f344b55c8236b"
+    },
+    {
+      "path": "source-only-validation.json",
+      "bytes": 866,
+      "sha256": "7b6bb079c52c24e7d158c6bc135728a1d2dc85ce737b5977d165302f19b60f68"
+    }
+  ],
+  "controller_count": 6,
+  "prepared_bytes": 91478,
+  "source_edits": false,
+  "configs_generated": false,
+  "build_or_GPU_or_serving_requests_or_CLI_models": false
+}

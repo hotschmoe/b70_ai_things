@@ -1,0 +1,18 @@
+{
+  "status": "PASS_EXACT_PATCH_APPLIED",
+  "patch_sha256": "17d83285f3a230ae254553eec3719dd8c08a21d579df7e2a3a5d0c30b2696851",
+  "paths": {
+    "sycl/src/core/mtp.cpp": {
+      "original_sha256": "fcd5d2e4b029985a6e7768707a5aa489e4b5724a78db50fc2313d9c64e67ec31",
+      "candidate_sha256": "13500a3af44f30793617d51aff6639344d2d943a50b53bdfe3c60ba81081967f",
+      "original_bytes": 114902,
+      "candidate_bytes": 119274
+    },
+    "sycl/include/strata/core/mtp.hpp": {
+      "original_sha256": "349e8f7a92d71f8f96aae4f1fbe3b03a746640c06c8ea154c2610759f2178c48",
+      "candidate_sha256": "1d418cc592056373f68b7343bd3d1ac958e5452cb812007497881234cad9fd9f",
+      "original_bytes": 22887,
+      "candidate_bytes": 23233
+    }
+  }
+}

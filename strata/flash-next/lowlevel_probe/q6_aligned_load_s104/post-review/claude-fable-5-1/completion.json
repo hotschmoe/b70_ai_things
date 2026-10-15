@@ -1,0 +1,120 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 18.45637039997382,
+  "launch_exception": null,
+  "source_packet_sha256": "c8cddd99613a43aedbcf2d4d4b23f7b3fa3fe1bb4b3a2b3983c4a922b1104872",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 916168,
+      "stop_reason": "end_turn",
+      "session_id": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "total_cost_usd": 8.685795500000001,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 7048,
+        "cache_read_input_tokens": 261523,
+        "output_tokens": 927,
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 7048,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 927,
+            "cache_read_input_tokens": 261523,
+            "cache_creation_input_tokens": 7048,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 7048
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 28,
+          "outputTokens": 57945,
+          "thinkingTokens": 41360,
+          "cacheReadInputTokens": 1719302,
+          "cacheCreationInputTokens": 267922,
+          "webSearchRequests": 0,
+          "costUSD": 8.685795500000001,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Verdict: PREPARE_MAIN_INTEGRATION_AFTER_S106.** No blocker is open. The integration is cheap, narrow, and the only way to learn whether the mechanism matters in serving.\n\n**Measured finite correctness**\n\nBoth shapes passed every strict gate before timing: public, S44, private original and candidate outputs byte-equal on initial, changed, repeat, restore, single and batch-20 graph replays, with read-only, guard, tail and finiteness checks intact. That closes the correctness question for these two shapes, this mapping and this compiler. It is not a universal FP proof, and the integration must carry the same strict anchors into its own test.\n\n**Nested timings**\n\nAll eight paired round means favour the candidate, about 5 percent on the output projection and about 2 percent on the QKV projection, within one warm process. They are consistent, which makes a measurement artefact unlikely, but they are nested and cannot be read as a population estimate or a serving effect. They say the load change is not slower and is plausibly faster on these shapes.\n\n**Static mechanism**\n\nThe compiled delta is the one intended: dword-aligned vector loads plus a fifth-dword funnel replace the chunk-selection chain, with 48 dp4a, identical FP opcode counts, the same contraction point as the original, six independent accumulators and the same XOR tree and store ownership. Send count unchanged. Resource fields that are absent remain unknown.\n\n**Production limitations**\n\n- Serving effect is unmeasured. The non-vocabulary MMVQ family is the largest in the S95 census, but which kernels and shapes sit on the critical path is not established, so no model-wide forecast follows from these numbers.\n- The candidate is proven only on two shapes at six columns. The base alignment guard and the even-blocks-per-row argument must become explicit eligibility conditions in main, with the original path as the untested fallback for everything else.\n- S106 must close first. Mixing a second flag into the pair-graph comparison would make neither result attributable.\n\n**Best next development-loop step, after S106 closes**\n\nPrepare one default-OFF main patch in the native MMVQ TU: a new registered kernel class for the A4 load variant, selected only when the type is Q6 at the canonical C6, A2, RPW1 configuration, the two pinned shapes match, and the base is dword aligned. Keep the original kernel text untouched. Then the same bounded path S100 used: one incremental build, actual host and image binding audit, candidate ISA check that the funnel and FP ledger survived the main TU, and a finite same-binary flag 0 and 1 C2 run with strict native work and health gates. Report the result as a serving observation only. If the serving delta is indistinguishable, KEEP_PRIVATE becomes the right final answer at that point, not before.",
+      "ttft_ms": 17344,
+      "type": "result",
+      "duration_ms": 17382,
+      "uuid": "d269872b-28cd-491d-9e85-e14ee1974c89",
+      "ttft_stream_ms": 1978,
+      "time_to_request_ms": 87,
+      "first_content_frame_ms": 1978,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

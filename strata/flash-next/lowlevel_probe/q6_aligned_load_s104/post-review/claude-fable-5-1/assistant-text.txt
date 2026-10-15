@@ -1,0 +1,23 @@
+**Verdict: PREPARE_MAIN_INTEGRATION_AFTER_S106.** No blocker is open. The integration is cheap, narrow, and the only way to learn whether the mechanism matters in serving.
+
+**Measured finite correctness**
+
+Both shapes passed every strict gate before timing: public, S44, private original and candidate outputs byte-equal on initial, changed, repeat, restore, single and batch-20 graph replays, with read-only, guard, tail and finiteness checks intact. That closes the correctness question for these two shapes, this mapping and this compiler. It is not a universal FP proof, and the integration must carry the same strict anchors into its own test.
+
+**Nested timings**
+
+All eight paired round means favour the candidate, about 5 percent on the output projection and about 2 percent on the QKV projection, within one warm process. They are consistent, which makes a measurement artefact unlikely, but they are nested and cannot be read as a population estimate or a serving effect. They say the load change is not slower and is plausibly faster on these shapes.
+
+**Static mechanism**
+
+The compiled delta is the one intended: dword-aligned vector loads plus a fifth-dword funnel replace the chunk-selection chain, with 48 dp4a, identical FP opcode counts, the same contraction point as the original, six independent accumulators and the same XOR tree and store ownership. Send count unchanged. Resource fields that are absent remain unknown.
+
+**Production limitations**
+
+- Serving effect is unmeasured. The non-vocabulary MMVQ family is the largest in the S95 census, but which kernels and shapes sit on the critical path is not established, so no model-wide forecast follows from these numbers.
+- The candidate is proven only on two shapes at six columns. The base alignment guard and the even-blocks-per-row argument must become explicit eligibility conditions in main, with the original path as the untested fallback for everything else.
+- S106 must close first. Mixing a second flag into the pair-graph comparison would make neither result attributable.
+
+**Best next development-loop step, after S106 closes**
+
+Prepare one default-OFF main patch in the native MMVQ TU: a new registered kernel class for the A4 load variant, selected only when the type is Q6 at the canonical C6, A2, RPW1 configuration, the two pinned shapes match, and the base is dword aligned. Keep the original kernel text untouched. Then the same bounded path S100 used: one incremental build, actual host and image binding audit, candidate ISA check that the funnel and FP ledger survived the main TU, and a finite same-binary flag 0 and 1 C2 run with strict native work and health gates. Report the result as a serving observation only. If the serving delta is indistinguishable, KEEP_PRIVATE becomes the right final answer at that point, not before.

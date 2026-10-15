@@ -1,0 +1,7 @@
+{
+  "status": "COPY_INDEX_PREPARATION_ASSERTION",
+  "exit_code": 1,
+  "cause": "ASCII assertion incorrectly applied to excluded external-only raw Opus events.jsonl",
+  "target_scope": "Planned exact copies and derived records already written passed ASCII; external raw stream was not copied",
+  "recovery": "Preserve and verify all existing owned targets byte-exact; permit non-ASCII external-only file hash/index, record ASCII property; no target or source rewrite"
+}

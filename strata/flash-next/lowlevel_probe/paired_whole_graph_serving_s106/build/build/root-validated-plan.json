@@ -1,0 +1,21 @@
+{
+  "compiled": [
+    {
+      "source": "/work/src-ep/sycl/src/core/mtp.cpp",
+      "object": "CMakeFiles/strata_engine.dir/src/core/mtp.cpp.o"
+    },
+    {
+      "source": "/work/src-ep/sycl/src/prefill/prefill.cpp",
+      "object": "CMakeFiles/strata_prefill.dir/src/prefill/prefill.cpp.o"
+    },
+    {
+      "source": "/work/src-ep/sycl/src/program/generate.cpp",
+      "object": "CMakeFiles/strata.dir/src/program/generate.cpp.o"
+    }
+  ],
+  "archives": [
+    "libstrata_engine.a",
+    "libstrata_prefill.a"
+  ],
+  "links": 1
+}

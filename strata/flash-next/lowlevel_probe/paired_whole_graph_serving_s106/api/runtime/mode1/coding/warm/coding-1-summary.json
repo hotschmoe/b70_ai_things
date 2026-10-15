@@ -1,0 +1,89 @@
+{
+  "record_type": "DERIVED_REQUEST_SUMMARY",
+  "source_record": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode1/coding/warm/coding-1.json",
+    "bytes": 95799,
+    "sha256": "b828a5d6da2c06142f7615be24fda08eb607a525d6b27d41acf4de9404bf5eff"
+  },
+  "omitted_fields": [
+    "chunks",
+    "text",
+    "content_events"
+  ],
+  "content_event_count": 224,
+  "chunk_count": 226,
+  "output_text_bytes": 1073,
+  "raw_source_on_disk": true,
+  "summary": {
+    "request": {
+      "model": "hotschmoe-dd",
+      "messages": [
+        {
+          "role": "user",
+          "content": "[Flash-Next concurrent coding repeat 0 slot 1] Implement a Python asyncio bounded worker pool for processing file paths. Requirements: fixed worker count, bounded queue for backpressure, preserve input order in results, propagate the first worker exception, cancel and await all outstanding tasks on failure, and handle caller cancellation without leaked tasks. Explain the shutdown protocol, provide complete typed code using only the standard library, and include three meaningful tests for ordering, worker failure, and cancellation."
+        }
+      ],
+      "max_tokens": 256,
+      "temperature": 0,
+      "stream": true,
+      "stream_options": {
+        "include_usage": true
+      },
+      "chat_template_kwargs": {
+        "enable_thinking": false
+      },
+      "strata_tune": {
+        "spec_min_p": 0
+      }
+    },
+    "ttft_s": 2.374712659046054,
+    "wall_s": 7.033085219038185,
+    "content_event_gap_ms": {
+      "count": 223,
+      "p50": 0.20842801313847303,
+      "p95": 49.31538331438784,
+      "maximum": 287.1264139539562
+    },
+    "client_decode_tps": 54.74014727590418,
+    "usage": {
+      "prompt_tokens": 107,
+      "completion_tokens": 256,
+      "total_tokens": 363,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 107,
+      "prompt_ms": 955.9,
+      "prompt_per_token_ms": 8.934,
+      "prompt_per_second": 111.9,
+      "predicted_n": 256,
+      "predicted_ms": 4544.8,
+      "predicted_per_token_ms": 17.753,
+      "predicted_per_second": 56.3,
+      "draft_n": 188,
+      "draft_n_accepted": 161
+    },
+    "output_sha256": "48d11e3fed8dcda66502ff1a86f0c83bbe8f460aff177c12ebb736bbdc53ceca",
+    "client_lifetime": {
+      "client_call_start_monotonic_ns": 431173724183835,
+      "client_call_start_epoch_ns": 1792106685611395789,
+      "model": "hotschmoe-dd",
+      "messages": [
+        {
+          "role": "user",
+          "content": "[Flash-Next concurrent coding repeat 0 slot 1] Implement a Python asyncio bounded worker pool for processing file paths. Requirements: fixed worker count, bounded queue for backpressure, preserve input order in results, propagate the first worker exception, cancel and await all outstanding tasks on failure, and handle caller cancellation without leaked tasks. Explain the shutdown protocol, provide complete typed code using only the standard library, and include three meaningful tests for ordering, worker failure, and cancellation."
+        }
+      ],
+      "max_new_tokens": 256,
+      "strata_tune": {
+        "spec_min_p": 0
+      },
+      "client_call_end_monotonic_ns": 431180758120958,
+      "client_call_end_epoch_ns": 1792106692645332061
+    },
+    "prefix_matches_s16": true
+  }
+}

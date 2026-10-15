@@ -1,0 +1,172 @@
+{
+  "status": "PASS_BOUNDED_MAIN_HOST_API_SUMMARY_COUNTS_ONLY",
+  "summary": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode0/trace/timing.467.csv",
+    "bytes": 1954,
+    "sha256": "20f4782cd19aa9de8c5d9021dac680e7587e87ef75bc90faacbc1f9bee818c26"
+  },
+  "all_host_API_statistics": {
+    "API_statistics": {
+      "zeCommandListHostSynchronize": {
+        "calls": 19728,
+        "time_ns": 1236736995,
+        "time_percent": 59.879269,
+        "average_ns": 62689,
+        "min_ns": 150,
+        "max_ns": 40311851
+      },
+      "zeCommandListAppendLaunchKernelWithArguments": {
+        "calls": 85001,
+        "time_ns": 406054773,
+        "time_percent": 19.660009,
+        "average_ns": 4777,
+        "min_ns": 2975,
+        "max_ns": 491221
+      },
+      "zeCommandListAppendMemoryCopy": {
+        "calls": 1376,
+        "time_ns": 394104444,
+        "time_percent": 19.081409,
+        "average_ns": 286413,
+        "min_ns": 2675,
+        "max_ns": 27002117
+      },
+      "zeMemGetAllocProperties": {
+        "calls": 182040,
+        "time_ns": 16322826,
+        "time_percent": 0.790304,
+        "average_ns": 89,
+        "min_ns": 40,
+        "max_ns": 8256
+      },
+      "zeKernelSetGroupSize": {
+        "calls": 85001,
+        "time_ns": 5030938,
+        "time_percent": 0.243584,
+        "average_ns": 59,
+        "min_ns": 20,
+        "max_ns": 9037
+      },
+      "zeEventHostSynchronize": {
+        "calls": 1195,
+        "time_ns": 3965406,
+        "time_percent": 0.191994,
+        "average_ns": 3318,
+        "min_ns": 271,
+        "max_ns": 143550
+      },
+      "zeCommandListImmediateAppendCommandListsExp": {
+        "calls": 231,
+        "time_ns": 2558854,
+        "time_percent": 0.123892,
+        "average_ns": 11077,
+        "min_ns": 3537,
+        "max_ns": 96081
+      },
+      "zeCommandListAppendMemoryFill": {
+        "calls": 78,
+        "time_ns": 577090,
+        "time_percent": 0.027941,
+        "average_ns": 7398,
+        "min_ns": 2334,
+        "max_ns": 92474
+      },
+      "zeCommandListAppendBarrier": {
+        "calls": 4,
+        "time_ns": 17734,
+        "time_percent": 0.000859,
+        "average_ns": 4433,
+        "min_ns": 3116,
+        "max_ns": 6142
+      },
+      "zeKernelSuggestGroupSize": {
+        "calls": 98,
+        "time_ns": 15356,
+        "time_percent": 0.000743,
+        "average_ns": 156,
+        "min_ns": 70,
+        "max_ns": 1363
+      }
+    },
+    "total_API_time_ns": 2065384416,
+    "total_execution_time_ns": 127191889626,
+    "scope": "Instrumented overlapping host API statistics, not GPU time/model speed; total_execution_time_ns includes whole process startup/paused warm/teardown"
+  },
+  "all_API_counts": {
+    "zeCommandListAppendBarrier": 4,
+    "zeCommandListAppendLaunchKernelWithArguments": 85001,
+    "zeCommandListAppendMemoryCopy": 1376,
+    "zeCommandListAppendMemoryFill": 78,
+    "zeCommandListHostSynchronize": 19728,
+    "zeCommandListImmediateAppendCommandListsExp": 231,
+    "zeEventHostSynchronize": 1195,
+    "zeKernelSetGroupSize": 85001,
+    "zeKernelSuggestGroupSize": 98,
+    "zeMemGetAllocProperties": 182040
+  },
+  "known_submission_API_counts": {
+    "zeCommandListImmediateAppendCommandListsExp": 231,
+    "zeCommandQueueExecuteCommandLists": 0,
+    "zeCommandListAppendGraphExp": 0,
+    "zeCommandListAppendGraphExt": 0
+  },
+  "API_families": {
+    "other_command_append": {
+      "zeCommandListAppendBarrier": 4
+    },
+    "kernel_append_immediate_or_recorded_unknown": {
+      "zeCommandListAppendLaunchKernelWithArguments": 85001
+    },
+    "memory_copy_fill_append": {
+      "zeCommandListAppendMemoryCopy": 1376,
+      "zeCommandListAppendMemoryFill": 78
+    },
+    "host_wait_or_status_poll": {
+      "zeCommandListHostSynchronize": 19728,
+      "zeEventHostSynchronize": 1195
+    },
+    "graph_or_command_list_submission": {
+      "zeCommandListImmediateAppendCommandListsExp": 231
+    },
+    "kernel_setup_query": {
+      "zeKernelSetGroupSize": 85001,
+      "zeKernelSuggestGroupSize": 98
+    },
+    "other_host_API_retained": {
+      "zeMemGetAllocProperties": 182040
+    }
+  },
+  "API_calls": 374752,
+  "native": {
+    "windows": 24,
+    "paired": 21,
+    "solo": 2,
+    "rounded_rows": [
+      [
+        "24",
+        "5.21"
+      ]
+    ],
+    "logged_new_captures": []
+  },
+  "first_host_selected_key": null,
+  "collection_scope": "Exactly one resumed107/64 pair plus idle/native-summary closure; paused256 warm excluded by actual retained callback gates; admission/capture/solo/tail retained",
+  "collection_complete_evidence": [
+    "All three session controls exit0.",
+    "Byte-offset native summaries exactly match completed requests and remain stable while HTTP slots idle.",
+    "Normal QUIT/fullCID+name gone/wrapper0 and pinned per-card/collective posthealth0.",
+    "One process-specific complete host summary; strict table/count/time/header-total closure; source/tool/binary identities rechecked."
+  ],
+  "independent_API_event_trace": false,
+  "instrumented_speed_qualified": false,
+  "all_depth2_calls_observed": false,
+  "all_replayed_keys_observed": false,
+  "reconciled_5_times_bt_pair_claim": false,
+  "limits": [
+    "Counts are the actual retained collector host-summary counts, without an independent per-event mirror.",
+    "Host API invocation counts, not GPU kernel dispatch/traffic/wait causality.",
+    "Kernel/memory append calls may record a graph or act on an immediate list; no argument handles are logged.",
+    "Structural summary closure and normal teardown do not establish uninstrumented scheduler equivalence.",
+    "bt_pair does not log max_steps for every call. Total delta cannot alone identify all depth2 graph savings."
+  ]
+}

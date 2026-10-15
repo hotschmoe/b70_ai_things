@@ -1,0 +1,14 @@
+{
+  "command": [
+    "docker",
+    "exec",
+    "c4ab4f3612c514ab8f96e003fc35db877c315019ed09e6eb5f8591c393b947f5",
+    "/mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/build/unitrace",
+    "--resume",
+    "s106api1"
+  ],
+  "exit": 0,
+  "stdout": "",
+  "stderr": "[INFO] Session s106api1 is resumed\n",
+  "epoch_ns": 1792106705501349728
+}

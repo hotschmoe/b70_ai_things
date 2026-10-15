@@ -1,0 +1,120 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 56.29943482205272,
+  "launch_exception": null,
+  "source_packet_sha256": "85a4a730778a9059540f2f40c26fed790460a46381939cc506d938bd2e1feedc",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 837179,
+      "stop_reason": "end_turn",
+      "session_id": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "total_cost_usd": 7.760154250000001,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 21702,
+        "cache_read_input_tokens": 218860,
+        "output_tokens": 3710,
+        "output_tokens_details": {
+          "thinking_tokens": 2676
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 21702,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 3710,
+            "cache_read_input_tokens": 218860,
+            "cache_creation_input_tokens": 21702,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 21702
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 24,
+          "outputTokens": 53147,
+          "thinkingTokens": 38478,
+          "cacheReadInputTokens": 1217217,
+          "cacheCreationInputTokens": 239913,
+          "webSearchRequests": 0,
+          "costUSD": 7.760154250000001,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**ACCEPT: apply the two-file patch, rebuild all Ninja dependents, then run the finite same-binary flag 0 and 1 C2 and functionals.** No blocking bug found.\n\n**Sequence duplication**\n\nThe three record lambdas are statement-for-statement the existing component try bodies: the seven round copies, front, the T greater than 1 row copy and requant, rest without head, the two step copies and forward, and the tail's two quantizes, two-column head, per-owner post-head and mtp_select with the depth index. Recording order is round A, round B, tail 0, step A, step B, tail 1 on the in-order pair queue, so the dependency chain equals today's six submissions.\n\n**Cache key and selection**\n\nKey is the effective T pair after the catch-up policy, both in 1 to 8, indexing a 9 by 9 array. Depth is pinned to 2 by the selector, so no other node count can share a key. The flag is latched on first evaluation, which happens only when max_steps is 2. Other step counts take the unchanged component path with its own caches.\n\n**Fresh mapped data, scratch, polling, PLE**\n\nMapped copies sit at the same relative positions inside the chain, so staged host records are read at the same points as today, which S103 showed replay freshly. The shared two-column scratch stays pair-owned and serialised on the pair queue. Polling, PLE prefetch, final wait, draft results, counters and the empty-queue break are untouched.\n\n**Failure and no-redraft**\n\nCapture failure returns false with no fallback. A failed single launch takes the existing drain-and-report branch. The caller prints the error and returns without a solo redraft. Nothing records an accepted-prefix commit.\n\n**Lifetimes and OFF path**\n\nWhole-pair graphs are deleted after the pair queue drain and before the component graphs and shared scratch. The pair object still dies before the drafters. Removing the additions recovers both originals, and the OFF loops and launch statements are text-identical inside their scopes.\n\n**Minor, non-blocking**\n\n- Two lambdas declare a local named ok that shadows the enclosing ok. Legal, and the build flags do not enable shadow warnings. Worth tidying only if the file is touched again.\n- The outer catch in the new method catches std::exception while the siblings catch sycl::exception. Harmless and slightly safer.\n\n**Tests still needed, in order**\n\n1. Same binary, flag 0 then 1, two warm pairs then three matched 107 prompt pairs, strict per-slot text, SSE, usage, drafts offered and accepted, windows, captures, pair and solo counts. Marker exactly once on ON after the first eligible pair, never on OFF.\n2. Existing functionals, tools and state isolation, normal quit, container gone, wrapper zero, full health.\n3. A separate production Level Zero submission count on the same binary before any benefit is discussed. Pair wall and submit spans in that run are descriptive only.\n\nNot covered and left out by design: step counts other than 2 near the context limit, and any scheduling or speed claim. Keep the Q6 A4 flag off in this run.",
+      "ttft_ms": 40385,
+      "type": "result",
+      "duration_ms": 55346,
+      "uuid": "a381e859-2513-4338-98a1-1c3d7b3dd7c9",
+      "ttft_stream_ms": 3095,
+      "time_to_request_ms": 78,
+      "first_content_frame_ms": 3095,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

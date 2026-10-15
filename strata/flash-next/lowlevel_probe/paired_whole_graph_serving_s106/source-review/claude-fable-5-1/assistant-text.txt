@@ -1,0 +1,34 @@
+**ACCEPT: apply the two-file patch, rebuild all Ninja dependents, then run the finite same-binary flag 0 and 1 C2 and functionals.** No blocking bug found.
+
+**Sequence duplication**
+
+The three record lambdas are statement-for-statement the existing component try bodies: the seven round copies, front, the T greater than 1 row copy and requant, rest without head, the two step copies and forward, and the tail's two quantizes, two-column head, per-owner post-head and mtp_select with the depth index. Recording order is round A, round B, tail 0, step A, step B, tail 1 on the in-order pair queue, so the dependency chain equals today's six submissions.
+
+**Cache key and selection**
+
+Key is the effective T pair after the catch-up policy, both in 1 to 8, indexing a 9 by 9 array. Depth is pinned to 2 by the selector, so no other node count can share a key. The flag is latched on first evaluation, which happens only when max_steps is 2. Other step counts take the unchanged component path with its own caches.
+
+**Fresh mapped data, scratch, polling, PLE**
+
+Mapped copies sit at the same relative positions inside the chain, so staged host records are read at the same points as today, which S103 showed replay freshly. The shared two-column scratch stays pair-owned and serialised on the pair queue. Polling, PLE prefetch, final wait, draft results, counters and the empty-queue break are untouched.
+
+**Failure and no-redraft**
+
+Capture failure returns false with no fallback. A failed single launch takes the existing drain-and-report branch. The caller prints the error and returns without a solo redraft. Nothing records an accepted-prefix commit.
+
+**Lifetimes and OFF path**
+
+Whole-pair graphs are deleted after the pair queue drain and before the component graphs and shared scratch. The pair object still dies before the drafters. Removing the additions recovers both originals, and the OFF loops and launch statements are text-identical inside their scopes.
+
+**Minor, non-blocking**
+
+- Two lambdas declare a local named ok that shadows the enclosing ok. Legal, and the build flags do not enable shadow warnings. Worth tidying only if the file is touched again.
+- The outer catch in the new method catches std::exception while the siblings catch sycl::exception. Harmless and slightly safer.
+
+**Tests still needed, in order**
+
+1. Same binary, flag 0 then 1, two warm pairs then three matched 107 prompt pairs, strict per-slot text, SSE, usage, drafts offered and accepted, windows, captures, pair and solo counts. Marker exactly once on ON after the first eligible pair, never on OFF.
+2. Existing functionals, tools and state isolation, normal quit, container gone, wrapper zero, full health.
+3. A separate production Level Zero submission count on the same binary before any benefit is discussed. Pair wall and submit spans in that run are descriptive only.
+
+Not covered and left out by design: step counts other than 2 near the context limit, and any scheduling or speed claim. Keep the Q6 A4 flag off in this run.

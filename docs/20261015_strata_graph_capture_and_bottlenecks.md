@@ -1,8 +1,9 @@
 # Strata graph capture and current bottlenecks, 2026-10-15
 
 Strata already captures SYCL command graphs for MTP, verification, peer work
-and accepted-prefix commit. The next graph opportunity is coarser paired MTP
-replay. It is a source-supported candidate, with no measured speed result yet.
+and accepted-prefix commit. S106 now tests coarser paired MTP replay: main
+submission counts fall, but the matched serving result is effectively flat.
+Keep the new option default OFF and move to the next measured kernel lead.
 
 ## Current capture boundaries
 
@@ -110,3 +111,51 @@ S103 used a 20-second offline build and a 43-second card-0 window. Since
 only exactness and submission counts were assessed, it ran during another
 session's CPU build without taking the quiet-CPU lease. Instrumented timing
 columns are retained raw and do not support a speed comparison.
+
+## S106: production graph comparison closed
+
+One incremental host build added a default-OFF exact-key graph for paired
+draft depth two. It records the same existing operations in order. The kernel
+archive and prefill archive remain byte-exact with S100. Both arms use the same
+new executable, fixed suffix/lookup/confidence settings, one C2 warm pair and
+three fresh 107-prompt/1500-output C2 pairs. This configuration differs from
+S100 and is not its speed control.
+
+All four pairs match full text, SSE content, usage, native work/drafts,
+windows, paired/solo counts, printed rows and logged captures. Functionals,
+normal QUIT, full container-ID/name removal and full pinned GPU/collective
+health pass. Aggregate medians are 102.914658 -> 102.976265 tok/s (+0.059862%).
+Stream medians are 53.429/55.807 -> 53.456/55.809 tok/s. This is one fixed
+OFF-then-ON sequence with three nested pairs, without a resolved serving gain,
+independent replication or stability claim.
+
+A separate host-API-only count experiment closes with the same strict
+observable work: 24 windows, 21 paired and two solo. Actual graph submissions
+fall 231 -> 126; event host synchronizes fall 1195 -> 1090. The reduction of
+105 is consistent with five fewer submissions across 21 depth-two paired
+calls under the pinned source/configuration bounds. There is no independent
+per-call/per-key event mirror or device-idle proof. Command-list host
+synchronizes fall 19728 -> 19374; that delta remains unattributed. All seven
+other actual API counts match, including 85001 kernel appends in each arm.
+These totals include admission, prefill and tail work; they are not a GPU
+dispatch census or removable-time budget.
+
+The source audit also corrects a possible census misreading: the steady motif
+is two C2 MTP heads plus one C6 verifier head. Whole-profile 24 C6 versus 22
+batch C6 calls is consistent with two explicitly logged ordinary prompt T6
+reads. Exact GPU-event ownership remains unresolved; there is no evidence of
+two extra steady C6 heads to eliminate.
+
+Actual claude-opus-5-5 (17.572s) and claude-fable-5-1 (17.268s) accept keeping
+default OFF with no repeat or full-cache campaign. Root does not adopt the
+unproved explanation that the pair queue was already fed ahead of the GPU.
+The next source review is the separate Q6 aligned-load proposal. An existing
+profile may also resolve first-C2-head -> post-head/select -> dependent j1
+readiness; check small retained records before another raw trace parse.
+
+The API summaries are about 2KB per arm, replacing a potential roughly 80MB
+Chrome API trace per arm. No new kernel decoder, 75GB model hash, daily-server
+restore, profiling functionals or flush request was needed. The bounded S30
+RAM-recovery result and unmet throughput targets remain unchanged.
+
+[S106 commands, exact records, derived summaries and actual model reviews](../strata/flash-next/lowlevel_probe/paired_whole_graph_serving_s106/README.md).

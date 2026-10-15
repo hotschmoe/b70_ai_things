@@ -1,0 +1,437 @@
+Bounded retained source inspection, no build/execution. Dependencies carry exact hashes.
+Current S106 source pins are compared to the frozen applied patch.
+
+--- /mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/src/unitrace.cc:283-296
+283: inline constexpr CliOption kCliOptions[] = {
+284: #if BUILD_WITH_L0 || BUILD_WITH_OPENCL
+285:   Opt::Bool("--call-logging", "-c", "core", "Trace host API calls", "UNITRACE_CallLogging"),
+286:   Opt::Bool("--host-timing", "-h", "core", "Report host API execution time", "UNITRACE_HostTiming"),
+287:   Opt::Bool("--device-timing", "-d", "core", "Report kernels execution time", "UNITRACE_DeviceTiming"),
+288: #endif /* BUILD_WITH_L0 || BUILD_WITH_OPENCL */
+289: #if BUILD_WITH_ITT
+290:   Opt::BoolH("--ccl-summary-report", "-r", "core", "Report CCL execution time summary", OnCclSummaryReport),
+291: #endif /* BUILD_WITH_ITT */
+292: #if BUILD_WITH_L0 || BUILD_WITH_OPENCL
+293:   Opt::Bool("--kernel-submission", "-s", "core",
+294:        "Report append (queued), submit and execute intervals for kernels", "UNITRACE_KernelSubmission"),
+295:   Opt::Bool("--device-timeline", "-t", "core", "Report device timeline", "UNITRACE_DeviceTimeline"),
+296: #endif /* BUILD_WITH_L0 || BUILD_WITH_OPENCL */
+--- /mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/src/unitrace.cc:400-425
+400:         "UNITRACE_OutputFormat", IsTraceFormat, "json", "json,protobuf"),
+401: #endif /* BUILD_WITH_PERFETTO */
+402: 
+403:   Opt::Bool("--start-paused", nullptr, "session",
+404:        "Start the tool with tracing and profiling paused", "UNITRACE_StartPaused"),
+405:   Opt::Value("--follow-child-process", nullptr, "enum", "session", "0/1",
+406:         "0: Do not follow or profile child processes on Linux; 1: Follow and profile child processes on Linux (default)",
+407:         "UNITRACE_FollowChildProcess", IsZeroOrOne, "1", "0,1"),
+408:   Opt::Value("--session", nullptr, "string", "session", "session",
+409:         "Name this session for dynamic control. The argument <session> is an alphanumeric string",
+410:         "UNITRACE_Session", IsAlphanumericString),
+411:   Opt::Value("--teardown-on-signal", nullptr, "int", "session", "signum",
+412:         "Try to gracefully shut down in case the application crashes or is terminated or <signum> is raised",
+413:         "UNITRACE_TeardownOnSignal", IsNumericString),
+414:   // pause/resume/stop stay in --help and dispatch, but are SchemaOmit()ted:
+415:   // the launcher UI drives session control with dedicated buttons, not the form.
+416:   Opt::Value("--pause", nullptr, "string", "session", "session",
+417:         "Pause session <session>. The argument <session> must be the same session named with --session option",
+418:         "UNITRACE_PauseSession", IsAlphanumericString).SchemaOmit(),
+419:   Opt::Value("--resume", nullptr, "string", "session", "session",
+420:         "Resume session <session>. The argument <session> must be the same session named with --session option",
+421:         "UNITRACE_ResumeSession", IsAlphanumericString).SchemaOmit(),
+422:   Opt::Value("--stop", nullptr, "string", "session", "session",
+423:         "Stop session <session>. The argument <session> must be the same session named with --session option",
+424:         "UNITRACE_StopSession", IsAlphanumericString).SchemaOmit(),
+425: 
+--- /mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/src/collector_options.h:52-70
+52: 
+53:   void DeriveFlags() {
+54:     // If no flags are set, default to host and device timing
+55:     if (flags_ == 0) {
+56:       host_timing = 1;
+57:       device_timing = 1;
+58:     }
+59: 
+60:     // Set kernel_tracing if any related features are enabled
+61:     if (device_timing || device_timeline || kernel_submission ||
+62:         chrome_device_logging || chrome_kernel_logging) {
+63:       kernel_tracing = 1;
+64:     }
+65: 
+66:     // Set api_tracing if any related features are enabled
+67:     if (call_logging || chrome_call_logging || host_timing) {
+68:       api_tracing = 1;
+69:     }
+70:   }
+--- /mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/scripts/gen_tracing_callbacks.py:382-390
+382: 
+383:   f.write("\n")
+384:   f.write("  if (!UniController::IsCollectionEnabled()) {\n")
+385:   f.write("    ze_instance_data.start_time_host = 0;\n")
+386:   f.write("    return;\n")
+387:   f.write("  }\n")
+388:   f.write("\n")
+389:   f.write("  if (collector->options_.call_logging) {\n")
+390:   f.write("    std::string str;\n")
+--- /mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/scripts/gen_tracing_callbacks.py:724-761
+724:       f.write("    " + cb + "(params, result, global_user_data, instance_user_data, &kids);\n")
+725:     else:
+726:       f.write("    " + cb + "(params, result, global_user_data, instance_user_data);\n")
+727:     f.write("  }\n")
+728: 
+729:   # Intercept extension API function pointers regardless of collection state,
+730:   # so that extension functions are always intercepted even if collection is
+731:   # enabled later.
+732:   if func == "zeDriverGetExtensionFunctionAddress":
+733:     f.write("\n")
+734:     f.write("  // Intercept extension API function pointers (graph APIs, etc.)\n")
+735:     f.write("  if (result == ZE_RESULT_SUCCESS && *(params->pname) != nullptr && *(params->pppFunctionAddress) != nullptr) {\n")
+736:     f.write("    collector->InterceptExtensionApiInternal(*(params->pname), *(params->pppFunctionAddress));\n")
+737:     f.write("  }\n")
+738: 
+739:   f.write("\n")
+740:   f.write("  if (!UniController::IsCollectionEnabled()) {\n")
+741:   f.write("      return;\n")
+742:   f.write("  }\n")
+743:   f.write("  uint64_t start_time_host = ze_instance_data.start_time_host;\n")
+744:   f.write("\n")
+745:   f.write("  if (start_time_host == 0) {\n")
+746:   f.write("    return;\n")
+747:   f.write("  }\n")
+748:   f.write("\n")
+749:   
+750:   f.write("  uint64_t time;\n")
+751:   f.write("  time = end_time_host - start_time_host;\n")
+752:   f.write("  if (collector->options_.host_timing) {\n")
+753:   f.write("    collector->CollectHostFunctionTimeStats(" + tracing_id + ", time);\n")
+754:   f.write("  }\n")
+755: 
+756:   f.write("  if (collector->options_.call_logging) {\n")
+757:   f.write("    std::string str;\n")
+758:   f.write("    str += \"<<<< [\" + std::to_string(end_time_host) + \"] \";\n")
+759:   f.write("    if (collector->options_.need_pid) {\n")
+760:   f.write("      str += \"<PID:\" + std::to_string(utils::GetPid()) + \"> \";\n")
+761:   f.write("    }\n")
+--- /mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/src/unicontrol.h:350-371
+350:             session_stopped_callback_();
+351:           }
+352:         }
+353:         return false;
+354:       }
+355: 
+356:       if (session_shm_.GetPtr() != nullptr) {
+357:         TemporalControlState state = ((TemporalControl*)session_shm_.GetPtr())->state_;
+358:         if (state == TEMPORAL_STOPPED) {
+359:           temporal_control_stopped_ = true;
+360:           if (session_stopped_callback_) {
+361:             if (!defer_callback && !session_stopped_notified_.exchange(true)) {
+362:               session_stopped_callback_();
+363:             }
+364:           }
+365:           return false;
+366:         }
+367:         return (state == TEMPORAL_RESUMED);
+368:       }
+369: 
+370:       if (conditional_collection_) {
+371:         if (itt_paused_) {
+--- /mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/src/tracer.h:334-345
+334:   void PrintFunctionTable(std::shared_ptr<Logger> logger,
+335:       const ZeCollector* collector, const char* device_type) {
+336:     PTI_ASSERT(collector != nullptr);
+337:     PTI_ASSERT(device_type != nullptr);
+338: 
+339:     uint64_t total_duration = CalculateTotalFunctionTime(collector);
+340:     if (total_duration > 0) {
+341:       std::string str("\n== ");
+342:       str += std::string(device_type) + " Backend ==\n\n";
+343:       logger->Log(str);
+344:       collector->PrintFunctionsTable(logger);
+345:     }
+--- /mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/src/tracer.h:441-466
+441:     size_t title_width = std::max(cl_cpu_title.size(), cl_gpu_title.size());
+442:     title_width = std::max(title_width, ze_title.size());
+443:     const size_t time_width = 20;
+444: 
+445:     std::string str("\n=== ");
+446:     str += stype + " Timing Summary ===\n\n" +
+447:            std::string(std::max(int(title_width - sizeof("Total Execution Time (ns): ") + 1), 0), ' ') +
+448:            "Total Execution Time (ns): " +
+449:            std::string(std::max(int(time_width - std::to_string(total_execution_time_).length()), 0), ' ') +
+450:            std::to_string(total_execution_time_) +
+451:            "\n";
+452: 
+453:     if (ze_collector != nullptr) {
+454:       uint64_t total_time{0};
+455:       if (stype == "API") {
+456:         total_time = CalculateTotalFunctionTime(ze_collector);
+457:       }
+458:       if (stype == "Device") {
+459:         total_time = CalculateTotalKernelTime(ze_collector);
+460:       }
+461:       if (total_time > 0) {
+462:         str += std::string(std::max(int(title_width - ze_title.length()), 0), ' ') + ze_title +
+463:                std::string(std::max(int(time_width - std::to_string(total_time).length()), 0), ' ') + std::to_string(total_time) +
+464:                "\n";
+465:       }
+466:     }
+--- /mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/src/tracer.h:528-533
+528: #endif /* BUILD_WITH_OPENCL */
+529:     timing_logger->Log("\n\n");
+530:   }
+531: 
+532:   void ReportKernelSubmission(
+533:       const ZeCollector* ze_collector,
+--- /mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/src/levelzero/ze_collector.h:1699-1725
+1699: 
+1700:     if (total_time != 0) {
+1701:       std::string str(std::max(int(max_name_size - sizeof("Function") + 1), 0), ' ');
+1702:       str += "Function, " + std::string(std::max(int(kCallsLength - sizeof("Calls") + 1), 0), ' ') +
+1703:              "Calls, " + std::string(std::max(int(kTimeLength - sizeof("Time (ns)") + 1), 0), ' ') +
+1704:              "Time (ns),      Time (%), " + std::string(std::max(int(kTimeLength - sizeof("Average (ns)") + 1), 0), ' ') +
+1705:              "Average (ns), " + std::string(std::max(int(kTimeLength - sizeof("Min (ns)") + 1), 0), ' ') +
+1706:              "Min (ns), " + std::string(std::max(int(kTimeLength - sizeof("Max (ns)") + 1), 0), ' ') +
+1707:              "Max (ns)\n";
+1708:       logger->Log(str);
+1709:       for (auto& stat : sorted_list) {
+1710:         const std::string function = get_symbol(API_TRACING_ID(stat.first));
+1711:         uint64_t time = stat.second.total_time_;
+1712:         uint64_t call_count = stat.second.call_count_;
+1713:         uint64_t avg_time = time / call_count;
+1714:         uint64_t min_time = stat.second.min_time_;
+1715:         uint64_t max_time = stat.second.max_time_;
+1716:         float percent_time = 100.0f * time / total_time;
+1717:         str = std::string(std::max(int(max_name_size - function.length()), 0), ' ') + function + ", " +
+1718:               std::string(std::max(int(kCallsLength - std::to_string(call_count).length()), 0), ' ') + std::to_string(call_count) + ", " +
+1719:               std::string(std::max(int(kTimeLength - std::to_string(time).length()), 0), ' ') + std::to_string(time) + ", " +
+1720:               std::string(std::max(int(sizeof("    Time (%)") - std::to_string(percent_time).length()), 0), ' ') +
+1721:               std::to_string(percent_time) + ", " +
+1722:               std::string(std::max(int(kTimeLength - std::to_string(avg_time).length()), 0), ' ') + std::to_string(avg_time) + ", " +
+1723:               std::string(std::max(int(kTimeLength - std::to_string(min_time).length()), 0), ' ') + std::to_string(min_time) + ", " +
+1724:               std::string(std::max(int(kTimeLength - std::to_string(max_time).length()), 0), ' ') + std::to_string(max_time) + "\n";
+1725:         logger->Log(str);
+--- /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/core/mtp.hpp:48-53
+48:     /// The prompt's length: prefill() skips the cells the attention window can never reach again.
+49:     void set_prompt_len(int64_t n) { prompt_len_ = n; }
+50:     /// At most this many drafts per round (below max_t - 1): a window longer than the MTP's comes from elsewhere.
+51:     void set_max_drafts(int k) { max_drafts_ = k; }
+52:     /// SYCL port: capture the round, step and prompt graphs at load rather than on first use (see Verifier::warm)
+53:     bool warm(std::string& err) {
+--- /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp:263-271
+263:     device_ =
+264:         dpct::get_current_device_id(); // a layer split's last stage on another
+265:                                        // GPU: the drafter lives there
+266:     g_ = &g;
+267:     ss_ = &ss;
+268:     if (ple_ss_ == nullptr) ple_ss_ = &ss;
+269:     max_t_ = max_t;
+270:     rt_dir_ = rt_dir;
+271:     if (max_t < 1 || max_t > strata::kernels::kVerifyMaxT) { err = "mtp: max_t out of range"; return false; }
+--- /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp:373-392
+373:     // ---- the layer's own K/V (dense attention: no indexer state is read)
+374:     const strata::kernels::QsaShapes s = shapes_of(g);
+375:     const int64_t max_cells = ss.qsa_states[ss.qsa_primary()].max_cells;
+376:     // KV streaming: the drafter only reads its last `window` cells, so with streaming on its K/V is a ring of the
+377:     // window (plus the cells a round writes ahead of its queries) over a host copy, refilled on a resume. The host copy
+378:     // is pinned after the expert arena has pinned what it could: if it does not fit, the K/V stays whole in VRAM.
+379:     int64_t ring = (window > 0 && window < max_cells) ? window + 4 * (int64_t) max_t + 64 : 0;
+380:     // K8V4 never applies to the drafter: its own attention paths (below, and verify.cpp) handle whole formats
+381:     // only, whatever ring shape it takes (0, a window, or the -1 fully-resident fallback).
+382:     const bool kv_hybrid_was = qsa_kv_hybrid();
+383:     const bool kv_int8_was = qsa_kv_int8();
+384:     qsa_set_kv_hybrid(false);
+385:     if (kv_hybrid_was) qsa_set_kv_int8(true);   // the drafter under --kv k8v4: plain INT8
+386:     uint64_t sb = qsa_state_bytes(g, max_cells, false, ring);
+387:     if (DPCT_CHECK_ERROR(state_arena_ = (void *)strata::malloc_device_guarded(
+388:                              sb, dpct::get_in_order_queue())) != 0) {
+389:         err = "mtp: the K/V state does not fit"; return false;
+390:     }
+391:     if (qsa_state_init(g, max_cells, state_arena_, st_, &ss.qsa_states[ss.qsa_primary()], ring) == 0) {
+392:         if (st_.kv_mode == 0) { err = "mtp: state init failed"; return false; }
+--- /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp:2010-2013
+2010: int MtpPair::steps_of(const MtpDrafter& d, int64_t p, int a) const {
+2011:     // exactly draft()'s max_steps: draft j writes at p + a + j, within the allocated K/V cells
+2012:     return (int) std::min<int64_t>(std::min(d.max_t_ - 1, d.max_drafts_), d.st_.max_cells - (p + a));
+2013: }
+--- /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp:2244-2263
+2244:     host_boundary::mark("pair_enter", A.T, B.T);
+2245:     std::string why;
+2246:     if (!eligible(A, B, why)) { err = "mtp pair: " + why; return false; }
+2247:     const OnDevice on_device(d_[0]->device_);
+2248:     const Args* args[2] = {&A, &B};
+2249:     int T[2] = {A.T, B.T};
+2250:     // #783 PR-i as draft(): the round runs for the cells up to the accepted row (T = a + 1) unless catch-up-all
+2251:     if (!mtp_catchup_all()) { T[0] = A.a + 1; T[1] = B.a + 1; }
+2252:     const int max_steps = steps_of(*d_[0], A.p, A.a);   // eligible(): equal for both, >= 1
+2253:     // the graphs (cached; a capture syncs the pair queue), then both slots' own queues idle: the pair queue reads
+2254:     // what their last solo launches wrote
+2255:     const bool whole_pair = max_steps == 2 && pair_graph_depth2_on();
+2256:     if (whole_pair) {
+2257:         if (!capture_pair_depth2(T[0], T[1], err)) return false;
+2258:         if (!pair_graph_marked_) {
+2259:             std::fprintf(stderr, "strata MTP pair graph: enabled=1 depth=2 rerecorded=1 T0=%d T1=%d host-selection-only\n", T[0], T[1]);
+2260:             pair_graph_marked_ = true;
+2261:         }
+2262:     } else {
+2263:     for (int c = 0; c < 2; ++c)
+--- /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/layer.cpp:847-853
+847:         st.v_pool = c.take<uint16_t>(rows * s.head_dim);
+848:     }
+849:     st.page_table = c.take<int32_t>((uint64_t) pages);
+850:     st.n_pages = pages;
+851:     st.max_cells = max_cells;
+852:     st.map = strata::kernels::KvStreamMap{};
+853:     st.map.page_table = st.page_table;
+--- /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/session.cpp:87-90
+87:     };
+88: 
+89:     s.max_cells = max_cells;
+90:     s.k = k;
+--- /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/session.cpp:113-120
+113:     uint8_t* qp = (uint8_t*) s.qsa_state_arena;
+114:     // a layer whose pinned RAM could not be had (KV streaming's host copy) is half-built: going on would have the
+115:     // attention read null host pointers at the first request ("illegal memory access"), so the session fails here
+116:     for (int64_t j = 0; j < s.qsa_alloc; ++j)
+117:         if (qsa_state_init(g, max_cells, qp + (j == 0 ? 0 : first + (uint64_t) (j - 1) * rest),
+118:                            s.qsa_states[s.qsa_ord0 + j], j == 0 ? nullptr : &s.qsa_states[s.qsa_ord0]) == 0)
+119:             return 0;
+120:     qsa_buffers_init(g, max_cells, s.qsa_buf_arena, s.qsa_bufs);
+--- /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp:4072-4081
+4072:                 auto u = std::make_unique<strata::core::SessionState>();
+4073:                 void* buf = nullptr;
+4074:                 if (DPCT_CHECK_ERROR(buf = (void *)sycl::malloc_device(
+4075:                                          bytes, dpct::get_in_order_queue())) !=
+4076:                         0 ||
+4077:                     strata::core::session_init(g, o.max_context, K, buf, *u, lo,
+4078:                                                hi) == 0) {
+4079:                     /*
+4080:                     DPCT1026: The call to cudaGetLastError was removed
+4081:                     because this functionality is redundant in SYCL.
+--- /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp:4167-4176
+4167:             for (int b = 0; b < o.batch; ++b) {
+4168:                 auto d = std::make_unique<strata::core::MtpDrafter>();
+4169:                 if (!d->load(o.mtp, draft_geometry, *bslot_ss[0][(size_t) b], o.spec, err, o.mtp_window, &mtp)) {
+4170:                     std::fprintf(stderr, "strata generate: batch MTP slot %d: %s%s\n", b, err.c_str(),
+4171:                                  vram_free_note().c_str());
+4172:                     return 1;
+4173:                 }
+4174:                 d->set_max_drafts(batch_depth);   // 1: one proposal per slot (the first candidate); STRATA_BATCH_MTP_DEPTH
+4175:                 if (batch_ple_on) {
+4176:                     bslot_ss[0][(size_t) b]->ple.table = ss.ple.table;
+--- /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp:8936-8942
+8936:         int64_t rounds = 0;
+8937:         const int S = o.spec;
+8938:         const int S_mtp = o.mtp_max_t > 0 ? std::min(o.mtp_max_t, S) : S;   // the MTP's windows; suffixes go up to S
+8939:         if (use_mtp && S_mtp < S) mtp.set_max_drafts(S_mtp - 1);
+8940:         // --pipeline-windows 2 loads the drafter with 8 rows: the serial loop's chain keeps its own length
+8941:         else if (use_mtp && mtp.max_t() > S_mtp) mtp.set_max_drafts(S_mtp - 1);
+8942:         strata::spec::SuffixDrafter sfx(std::max(1, o.suffix_draft), 64, (size_t) o.max_context + 4096);
+--- /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp:9335-9355
+9335:             static size_t next_slot = 0;
+9336:             // An MTP slot's group is its current token and the drafts it holds (1 + n_draft rows, n_draft <= the
+9337:             // depth; two rows with the default depth 1); rotate slots when the window cannot take them all
+9338:             // (batch_depth.hpp: the first slot that does not fit ends the window, none is skipped for a later one).
+9339:             int A = 0;
+9340:             int glen[strata::kernels::kVerifyMaxT] = {};
+9341:             {
+9342:                 const size_t nb = bs.size();
+9343:                 std::vector<int> nd(nb, 0);
+9344:                 std::unique_ptr<bool[]> act(new bool[nb]);
+9345:                 for (size_t b = 0; b < nb; ++b) {
+9346:                     act[b] = bs[b].active;
+9347:                     nd[b] = bs[b].draft_ready ? strata::core::batch_drafts_for_context(
+9348:                         bs[b].n_draft, bs[b].p, (int64_t) o.max_context) : 0;
+9349:                 }
+9350:                 A = strata::core::batch_pack(act.get(), nd.data(), (int) nb, next_slot, batch_mtp,
+9351:                                              strata::kernels::kVerifyMaxT, rows, first, glen, active, &S);
+9352:             }
+9353:             for (int a = 0; a < A; ++a) {
+9354:                 const BSlot& sl = bs[(size_t) active[a]];
+9355:                 if (batch_mtp && !sl.draft_ready) {
+--- /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp:9424-9443
+9424:                 for (int j = 0; j < keep[b]; ++j) {
+9425:                     const int32_t y = outb[first[t] + j];
+9426:                     sl.ids.push_back(tok[first[t] + j]);
+9427:                     std::printf("BT %d %d\n", b, (int) y);
+9428:                     ++sl.produced;
+9429:                     const bool eos = std::find(o.eos_ids.begin(), o.eos_ids.end(), (int64_t) y) != o.eos_ids.end();
+9430:                     const char* fin = eos ? "stop" : sl.stop ? "cancel" : sl.produced >= sl.max_new ? "length"
+9431:                                     : sl.p + 2 > o.max_context ? "length" : nullptr;
+9432:                     if (fin != nullptr) {
+9433:                         const double ms = std::chrono::duration<double, std::milli>(Clock::now() - sl.t0).count();
+9434:                         std::printf("BDONE %d %lld %s %.1f %lld %lld\n", b, (long long) sl.produced, fin, ms,
+9435:                                     (long long) sl.drafts_accepted, (long long) sl.drafts_offered);
+9436:                         sl.active = false;
+9437:                         sl.cached = o.prompt_cache > 0 && !sl.img;
+9438:                         break;
+9439:                     }
+9440:                     sl.x = y;
+9441:                     sl.p += 1;
+9442:                 }
+9443:                 if (batch_mtp && sl.active) {
+--- /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp:9482-9500
+9482:                 strata::core::MtpPair::Args pa[2];
+9483:                 for (int i = 0; i < n_pend && i < 2; ++i) {
+9484:                     const PendDraft& q = pend[i];
+9485:                     pa[i].owner = slot_mtp[(size_t) q.b].get();
+9486:                     pa[i].T = q.G; pa[i].tokens = outb + first[q.t]; pa[i].p = pos[first[q.t]]; pa[i].a = keep[q.b] - 1;
+9487:                     pa[i].drafts = bs[(size_t) q.b].draft.data(); pa[i].n_drafts = &pend[i].nd;
+9488:                 }
+9489:                 std::string why = n_pend == 2 ? std::string() : "one active slot";
+9490:                 const bool paired = n_pend == 2 && mtp_pair->eligible(pa[0], pa[1], why);
+9491:                 if (paired) {
+9492:                     ++bt_pair;
+9493:                     strata::core::host_boundary::mark("pair_call");
+9494:                     if (!mtp_pair->draft(pa[0], pa[1], err)) {
+9495:                         std::printf("ERR batch MTP pair (slots %d, %d): %s\n", pend[0].b, pend[1].b, err.c_str());
+9496:                         return false;
+9497:                     }
+9498:                     strata::core::host_boundary::mark("pair_call_return");
+9499:                 } else {
+9500:                     ++bt_pair_solo;
+--- /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp:10036-10041
+10036:                 std::printf("ERR bad request: %s\n", pe.empty() ? "max_new" : pe.c_str());
+10037:                 continue;
+10038:             }
+10039:             const int64_t n = (int64_t) ids.size();
+10040:             req_imgs.clear();
+10041:             if (geni && !o.vision) { std::printf("ERR this engine was started without --vision\n"); continue; }
+--- /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp:11031-11036
+11031:             std::fflush(stdout);
+11032:             // the verify windows: the first holds the last prompt token alone
+11033:             int64_t p = n - 1;
+11034:             int32_t x = (int32_t) ids[(size_t) (n - 1)];
+11035:             // (the drafter writes max_t - 1 drafts: 8 rows with --pipeline-windows 2)
+11036:             const size_t DS = (size_t) std::max(S, use_mtp ? mtp.max_t() : 0);
+--- /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp:11939-11946
+11939:                     policy.observe_chain(T_mtp, chain_n, a, cm,
+11940:                                          std::chrono::duration<double, std::milli>(Clock::now() - round0).count());
+11941:                 if (eos) { finish = "stop"; break; }
+11942:                 if (stop_req.load()) { finish = "cancel"; break; }
+11943:                 x = outv[(size_t) a];
+11944:                 p += a + 1;
+11945:             }
+11946:             const double decode_ms = std::chrono::duration<double, std::milli>(Clock::now() - d0).count();
+--- /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp:12141-12162
+12141:                 }
+12142:                 if (cont) {
+12143:                     ver.set_slot_sampling(admit_slot, req_sp);   // the request's own sampling, row by row
+12144:                     BSlot& sl = bs[(size_t) admit_slot];
+12145:                     sl = BSlot{};
+12146:                     sl.active = true;
+12147:                     sl.x = x;
+12148:                     sl.p = p;
+12149:                     sl.produced = 1;
+12150:                     sl.max_new = admit_max_new;
+12151:                     sl.t0 = Clock::now();
+12152:                     sl.ids = live;
+12153:                     if (batch_mtp) {
+12154:                         int nd = 0;
+12155:                         if (!slot_mtp[(size_t) admit_slot]->draft_first(1, ver.final_R_all(), sl.x,
+12156:                                                                         sl.p - 1, sl.draft.data(), err,
+12157:                                                                         nullptr, 0.0f, &nd)) {
+12158:                             std::fprintf(stderr, "strata batch: MTP admission for slot %d failed: %s\n",
+12159:                                          admit_slot, err.c_str());
+12160:                             return 1;
+12161:                         }
+12162:                         sl.n_draft = nd < 0 ? 0 : nd > batch_depth ? batch_depth : nd;

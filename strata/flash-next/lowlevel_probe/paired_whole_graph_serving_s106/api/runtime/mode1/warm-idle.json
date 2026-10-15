@@ -1,0 +1,18 @@
+{
+  "slots": [
+    {
+      "id": 0,
+      "n_ctx": 200000,
+      "is_processing": false,
+      "n_prompt_tokens": 362
+    },
+    {
+      "id": 1,
+      "n_ctx": 200000,
+      "is_processing": false,
+      "n_prompt_tokens": 362
+    }
+  ],
+  "epoch_ns": 1792106692696689988,
+  "scope": "HTTP slots quiescent; not standalone hardware completion proof"
+}

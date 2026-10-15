@@ -1,0 +1,23 @@
+{
+  "status": "SOURCE_ONLY_NO_NATIVE_APPLY_BUILD_GPU",
+  "paths": {
+    "sycl/src/core/mtp.cpp": {
+      "original_sha256": "fcd5d2e4b029985a6e7768707a5aa489e4b5724a78db50fc2313d9c64e67ec31",
+      "candidate_sha256": "13500a3af44f30793617d51aff6639344d2d943a50b53bdfe3c60ba81081967f",
+      "original_bytes": 114902,
+      "candidate_bytes": 119274
+    },
+    "sycl/include/strata/core/mtp.hpp": {
+      "original_sha256": "349e8f7a92d71f8f96aae4f1fbe3b03a746640c06c8ea154c2610759f2178c48",
+      "candidate_sha256": "1d418cc592056373f68b7343bd3d1ac958e5452cb812007497881234cad9fd9f",
+      "original_bytes": 22887,
+      "candidate_bytes": 23233
+    }
+  },
+  "complete_OFF_files_recovered_by_removing_candidate_blocks": true,
+  "duplicated_recording_statements_byte_exact_to_existing_COMPONENT_try_bodies": true,
+  "cache": "Exacteffective(T0,T1), feature eligible only max_steps2; allocated9x9 pointers is bounds storage, not81 reachable-key claim",
+  "no_generic_bind_epoch_or_reinit_machinery": true,
+  "preexisting_UTF8_outside_patch_preserved": true,
+  "preparation_ASCII_read_preflight": "Initial strictASCII full-source read stopped before any source write; existing historical UTF8 retained byte-exact in in-memory candidate. Patch/new snippets ASCII."
+}
