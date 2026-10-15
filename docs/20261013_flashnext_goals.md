@@ -324,3 +324,13 @@ S13 probe has the same issue, so its distinct value-candidate correctness
 and neutrality attribution is unsupported. Old logs remain intact; no new
 speed result or target achievement. Corrected S92 binding is source-only,
 with strict checks retained. [Binding audit](20261015_strata_attention_binding_audit.md).
+
+
+S92 resolves the private attention host-binding defect and passes all 36
+strict primitive cases. Full32 unmasked width2051/cap2112 paired chunk+merge
+times improve8.469% (page4) and9.182% (page512); masked32/width1999 regresses
+2.392%. One process/three nested seeds, no serving gain. Keep a private lead;
+Actual post Opus5.5/Fable5.1 accept/rootfullread. The separate exact-cap2051
+three-seed numeric-only gate passes strict bytes/memory/identity/health;
+explicit defaultOFF staged-prefill main integration/serving remain separate,
+without a serving result here. Targets and S30 recovery remain unchanged. [S92 evidence](20261015_strata_attention_value_pipeline.md).

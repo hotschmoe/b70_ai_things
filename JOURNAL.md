@@ -24446,3 +24446,32 @@ rootfullread resolves commonhelper/guardregion/merge/resource/tolerance scopes.
 S92 remains unbuilt at this checkpoint; GPUdecision separatelypending.
 Report: docs/20261015_strata_attention_binding_audit.md; smallrecords:
 strata/flash-next/lowlevel_probe/attention_binding_s91/README.md.
+
+
+## 2026-10-15 - S92 corrected attention value binding passes private gates
+
+CONFIG -> Retained S13 value pipeline, all11 private attention tags plus
+separate host functions; public bbae92/df7655 reused, current main unchanged.
+COMMAND -> One private CPU build30s/private ISA10s; actual host relocations/
+final Info/cache/guard/name pointers and device images audited. One quiet
+card0 window43s/leaf15s, strict36 cases/1440 parsed raw timings; normal full
+CID+NAME removal, identities/pre-posthealth/driver/tee exits allPASS.
+RESULT -> Full32 unmasked width2051/cap2112 paired medians -8.469% page4 and
+-9.182% page512, all60 rounds negative each; masked32/width1999 +2.392%,
+all60 positive. Unmasked1/2051 -13.803%. Median of3 seed-level paired medians
+in ONE process, host chunk+merge/repeated synthetic pools, not independent
+process replication or isolated GPU service. Strict output/scratch/finite/
+guards/readonly/changed/repeat/restore pass; no tolerance relaxation.
+VERDICT -> Retain PRIVATE prefill lead, no serving/default/shelf/fullcache
+promotion. Capacity2112 pitch differs production2051; S93 prepares ONE new
+exact-cap case and defaultOFF explicit staged INT8/full32/fullwidth prefill
+entry, caller-proven nonnegative identity table; short/decode stay original.
+Actual post/source claude-opus-5-5 40.775s/claude-fable-5-1 81.541s both
+ACCEPT/rootfullread, with root narrow-shape/first-query-of-batch corrections.
+Subsequent S93 productionCAP2051 numeric-only seeds7/31/109 all strictPASS,
+identity/cleanup/card0health0; no timing/idealaccuracy/maincodegen claim.
+Main integration/serving remain separately gated, not qualified here.
+Public AOT/ISA reuse avoids redundant work. Historical170 map arrays/rollups/meta unchanged;
+2000prefill/150stream targets remain open; S30 recovery not repeated.
+Report: docs/20261015_strata_attention_value_pipeline.md; exact small records:
+strata/flash-next/lowlevel_probe/attention_value_s92/README.md.

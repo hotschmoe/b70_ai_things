@@ -342,3 +342,14 @@ held without GPU execution, and the exact retained S13 probe cannot establish
 independent value-candidate correctness or neutral performance. Historical
 map operations remain unchanged. Corrected private tags are source-only.
 [Host/device binding audit](../../../docs/20261015_strata_attention_binding_audit.md).
+
+
+S92 supplies a validly separated host/device value-pipeline comparison:
+strict36 cases PASS, one process/three nested seeds. Full32 unmasked width2051/
+cap2112 paired chunk+merge medians -8.469% (page4), -9.182% (page512); masked32/
+width1999 +2.392% (slower). No serving or isolated-device-service claim. One
+exact-cap2051 three-seed numeric-only gate subsequently passes strict bytes/
+memory/identity/cleanup/health. Actual post Opus5.5/Fable5.1 accept/rootfullread;
+main codegen/binding/serving remain separate. No broad decode/short integration.
+Historical170 operations, rollups and metadata remain byte-exact; S92 only
+adds annotations. [S92 report](../../../docs/20261015_strata_attention_value_pipeline.md).

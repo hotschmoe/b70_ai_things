@@ -1,0 +1,78 @@
+--- a/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp
++++ b/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp
+@@ -255,8 +255,8 @@
+         const float eb = (lane + 32 < n_here && srow[lane + 32] >= 0)
+                              ? sycl::native::exp(b - m)
+                              : 0.0f;
+-        sp[h][lane] = ea;
+-        sp[h][lane + 32] = eb;
++        reinterpret_cast<float*>(&sq[0][0])[lane * G + h] = ea;
++        reinterpret_cast<float*>(&sq[0][0])[(lane + 32) * G + h] = eb;
+         const float l = warp_sum(ea + eb);
+         if (lane == 0) { part_m[slot * G + h] = m; part_l[slot * G + h] = l; }
+     }
+@@ -270,27 +270,26 @@
+     float acc[G];
+ #pragma unroll
+     for (int h = 0; h < G; ++h) acc[h] = 0.0f;
+-    for (int c = 0; c < n_here; ++c) {
+-        if (srow[c] < 0) continue;   // masked above, weight 0
++    const auto load_value = [&](long long row) {
+         float v;
+         if constexpr (KV_MODE == 0) {
+             v = sycl::vec<sycl::half, 1>(
+                     sycl::bit_cast<sycl::half, unsigned short>(
+-                        p.v_pool[srow[c] * HD + t]))
++                        p.v_pool[row * HD + t]))
+                     .convert<float, sycl::rounding_mode::automatic>()[0];
+         } else if constexpr (KV_MODE == 1) {
+             const float sc =
+                 sycl::vec<sycl::half, 1>(
+                     sycl::bit_cast<sycl::half, unsigned short>(
+-                        p.v_scale[srow[c] * (HD / KV_Q8_GROUP) +
++                        p.v_scale[row * (HD / KV_Q8_GROUP) +
+                                   t / KV_Q8_GROUP]))
+                     .convert<float, sycl::rounding_mode::automatic>()[0];
+-            v = (float) p.v_q[srow[c] * HD + t] * sc;
++            v = (float) p.v_q[row * HD + t] * sc;
+         } else {   // modes 2 and 3: V is rotated Q4_0 (kv_q4.hpp); the caller rotates the output back
+             constexpr int bytes_per_head = (HD / QK4_0) * sizeof(block_q4_0);
+             const int b = t / QK4_0;
+             const int rem = t % QK4_0;
+-            const block_q4_0* blk = reinterpret_cast<const block_q4_0*>(p.v_q4 + srow[c] * bytes_per_head) + b;
++            const block_q4_0* blk = reinterpret_cast<const block_q4_0*>(p.v_q4 + row * bytes_per_head) + b;
+             const float d =
+                 sycl::vec<sycl::half, 1>(
+                     sycl::bit_cast<sycl::half, unsigned short>(blk->d))
+@@ -300,8 +299,29 @@
+             const int nibble = (rem < 16) ? ((byte & 0x0F) - 8) : ((byte >> 4) - 8);
+             v = (float) nibble * d;
+         }
+-#pragma unroll
+-        for (int h = 0; h < G; ++h) acc[h] = sycl::fma(sp[h][c], v, acc[h]);
++        return v;
++    };
++    const auto fold = [&](int c, float v) {
++        const sycl::float4* w4 = reinterpret_cast<const sycl::float4*>(
++            reinterpret_cast<const float*>(&sq[0][0]) + c * G);
++        const sycl::float4 w0 = w4[0], w1 = w4[1], w2 = w4[2];
++        acc[0] = sycl::fma(w0.x(), v, acc[0]); acc[1] = sycl::fma(w0.y(), v, acc[1]);
++        acc[2] = sycl::fma(w0.z(), v, acc[2]); acc[3] = sycl::fma(w0.w(), v, acc[3]);
++        acc[4] = sycl::fma(w1.x(), v, acc[4]); acc[5] = sycl::fma(w1.y(), v, acc[5]);
++        acc[6] = sycl::fma(w1.z(), v, acc[6]); acc[7] = sycl::fma(w1.w(), v, acc[7]);
++        acc[8] = sycl::fma(w2.x(), v, acc[8]); acc[9] = sycl::fma(w2.y(), v, acc[9]);
++        acc[10] = sycl::fma(w2.z(), v, acc[10]); acc[11] = sycl::fma(w2.w(), v, acc[11]);
++    };
++    int c = 0;
++    for (; c + 4 <= n_here; c += 4) {
++        const long long r0 = srow[c], r1 = srow[c+1], r2 = srow[c+2], r3 = srow[c+3];
++        if ((r0 | r1 | r2 | r3) < 0) break;
++        const float v0 = load_value(r0), v1 = load_value(r1);
++        const float v2 = load_value(r2), v3 = load_value(r3);
++        fold(c, v0); fold(c+1, v1); fold(c+2, v2); fold(c+3, v3);
++    }
++    for (; c < n_here; ++c) {
++        if (srow[c] >= 0) fold(c, load_value(srow[c]));
+     }
+ #pragma unroll
+     for (int h = 0; h < G; ++h) part_acc[((size_t) slot * G + h) * HD + t] = acc[h];

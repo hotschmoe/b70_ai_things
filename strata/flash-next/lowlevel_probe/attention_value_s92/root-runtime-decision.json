@@ -1,0 +1,230 @@
+{
+  "status": "ROOT_S92_STRICT_PASS_PRIMITIVE_LEAD_ONLY",
+  "time": "2026-10-15T19:14:09.328015+00:00",
+  "binary_sha256": "dfee38a6386ba74b1342969e6ae1e9795b5670c309ca82353d9bee47273a4c72",
+  "build_wall_seconds": 30,
+  "new_private_ISA_decode_seconds": 10,
+  "quiet_card0_window_seconds": 43,
+  "leaf_wall_seconds": 15,
+  "cases": 36,
+  "raw_timing_records": 1440,
+  "all_runtime_health_identity_cleanup_exits_zero": true,
+  "source_build_closure_sha256": "6991c9a0d5de2b6e9e8d10922d521cb2c31462d2938b74ae92e31dfe22084c84",
+  "comparison_sha256": "4d2b644a737f2df072295770c0cb2c569be68736a32b0d20d126a7b2cc05394c",
+  "leaf_log_sha256": "014963cf71b353e17bc5351eea61cc0a54eae154368d0ed996354c9cc5b883e5",
+  "runtime_closure_sha256": "892b8210221c6e69d4d903fc37afd29c47af976f0cd4d46dbacb66b4778547bc",
+  "owned_fullCID_removed": "ee31dd927070a4c267dcf27e715dea3959f90cbb4d16ce4374996ab7f442ca8d",
+  "SYCL_device_name": "Intel(R) Arc(TM) Pro B70 Graphics",
+  "independent_leaf_PCI_read": false,
+  "nested_shape_summaries": [
+    {
+      "nq": 1,
+      "width": 1,
+      "cap": 64,
+      "page": 4,
+      "masked": 0,
+      "paired_delta_percent_median_of_3_seed_medians": 0.030037565330715,
+      "seed_paired_medians_percent": [
+        0.5315371824264448,
+        0.030037565330715,
+        -0.7161430995590745
+      ],
+      "twinned_delta_percent_median_of_3_seed_medians": -0.8397422879613037,
+      "base_us_median_of_3_seed_medians": 14.839,
+      "candidate_us_median_of_3_seed_medians": 15.0785,
+      "negative_rounds_out_of_60": 29
+    },
+    {
+      "nq": 1,
+      "width": 63,
+      "cap": 64,
+      "page": 4,
+      "masked": 0,
+      "paired_delta_percent_median_of_3_seed_medians": -15.590942763889515,
+      "seed_paired_medians_percent": [
+        -15.906339804337867,
+        -15.183174239729036,
+        -15.590942763889515
+      ],
+      "twinned_delta_percent_median_of_3_seed_medians": -15.095757303316564,
+      "base_us_median_of_3_seed_medians": 38.0225,
+      "candidate_us_median_of_3_seed_medians": 32.176500000000004,
+      "negative_rounds_out_of_60": 59
+    },
+    {
+      "nq": 1,
+      "width": 64,
+      "cap": 64,
+      "page": 4,
+      "masked": 0,
+      "paired_delta_percent_median_of_3_seed_medians": -16.43487790997259,
+      "seed_paired_medians_percent": [
+        -15.770269670101307,
+        -16.43487790997259,
+        -16.446818976917605
+      ],
+      "twinned_delta_percent_median_of_3_seed_medians": -15.961192255792934,
+      "base_us_median_of_3_seed_medians": 38.533,
+      "candidate_us_median_of_3_seed_medians": 32.302,
+      "negative_rounds_out_of_60": 60
+    },
+    {
+      "nq": 1,
+      "width": 65,
+      "cap": 128,
+      "page": 4,
+      "masked": 0,
+      "paired_delta_percent_median_of_3_seed_medians": -16.124650088277555,
+      "seed_paired_medians_percent": [
+        -16.33015407805241,
+        -15.388261295139822,
+        -16.124650088277555
+      ],
+      "twinned_delta_percent_median_of_3_seed_medians": -15.731800972787564,
+      "base_us_median_of_3_seed_medians": 38.358000000000004,
+      "candidate_us_median_of_3_seed_medians": 32.275999999999996,
+      "negative_rounds_out_of_60": 58
+    },
+    {
+      "nq": 1,
+      "width": 65,
+      "cap": 128,
+      "page": 4,
+      "masked": 1,
+      "paired_delta_percent_median_of_3_seed_medians": 2.921613938053391,
+      "seed_paired_medians_percent": [
+        -2.2523072391620214,
+        3.057422380895658,
+        2.921613938053391
+      ],
+      "twinned_delta_percent_median_of_3_seed_medians": 2.8174952425198407,
+      "base_us_median_of_3_seed_medians": 37.687,
+      "candidate_us_median_of_3_seed_medians": 36.865,
+      "negative_rounds_out_of_60": 20
+    },
+    {
+      "nq": 1,
+      "width": 2051,
+      "cap": 2112,
+      "page": 4,
+      "masked": 0,
+      "paired_delta_percent_median_of_3_seed_medians": -13.802836826173543,
+      "seed_paired_medians_percent": [
+        -14.092265650953006,
+        -13.219312523656846,
+        -13.802836826173543
+      ],
+      "twinned_delta_percent_median_of_3_seed_medians": -13.420266474776327,
+      "base_us_median_of_3_seed_medians": 46.724000000000004,
+      "candidate_us_median_of_3_seed_medians": 40.361999999999995,
+      "negative_rounds_out_of_60": 60
+    },
+    {
+      "nq": 4,
+      "width": 2051,
+      "cap": 2112,
+      "page": 4,
+      "masked": 0,
+      "paired_delta_percent_median_of_3_seed_medians": -7.0466799789923655,
+      "seed_paired_medians_percent": [
+        -7.163912482679858,
+        -7.0466799789923655,
+        -6.976196684357733
+      ],
+      "twinned_delta_percent_median_of_3_seed_medians": -7.049629632985955,
+      "base_us_median_of_3_seed_medians": 74.888,
+      "candidate_us_median_of_3_seed_medians": 69.688,
+      "negative_rounds_out_of_60": 60
+    },
+    {
+      "nq": 32,
+      "width": 2051,
+      "cap": 2112,
+      "page": 4,
+      "masked": 0,
+      "paired_delta_percent_median_of_3_seed_medians": -8.46924463735671,
+      "seed_paired_medians_percent": [
+        -8.46924463735671,
+        -8.360167620578963,
+        -8.586749235825135
+      ],
+      "twinned_delta_percent_median_of_3_seed_medians": -8.637329058757453,
+      "base_us_median_of_3_seed_medians": 526.283,
+      "candidate_us_median_of_3_seed_medians": 481.222,
+      "negative_rounds_out_of_60": 60
+    },
+    {
+      "nq": 32,
+      "width": 2051,
+      "cap": 2112,
+      "page": 512,
+      "masked": 0,
+      "paired_delta_percent_median_of_3_seed_medians": -9.181709238724233,
+      "seed_paired_medians_percent": [
+        -9.094182601143014,
+        -9.306361794421415,
+        -9.181709238724233
+      ],
+      "twinned_delta_percent_median_of_3_seed_medians": -9.228144728121562,
+      "base_us_median_of_3_seed_medians": 529.885,
+      "candidate_us_median_of_3_seed_medians": 481.327,
+      "negative_rounds_out_of_60": 60
+    },
+    {
+      "nq": 32,
+      "width": 1999,
+      "cap": 2112,
+      "page": 4,
+      "masked": 1,
+      "paired_delta_percent_median_of_3_seed_medians": 2.3923867403924604,
+      "seed_paired_medians_percent": [
+        2.62703504495313,
+        2.3365483402069454,
+        2.3923867403924604
+      ],
+      "twinned_delta_percent_median_of_3_seed_medians": 2.4830498803069867,
+      "base_us_median_of_3_seed_medians": 475.6725,
+      "candidate_us_median_of_3_seed_medians": 488.20550000000003,
+      "negative_rounds_out_of_60": 0
+    },
+    {
+      "nq": 12,
+      "width": 11,
+      "cap": 64,
+      "page": 4,
+      "masked": 0,
+      "paired_delta_percent_median_of_3_seed_medians": -3.5734641219677785,
+      "seed_paired_medians_percent": [
+        -3.19274775288495,
+        -3.6589197429685303,
+        -3.5734641219677785
+      ],
+      "twinned_delta_percent_median_of_3_seed_medians": -3.7628042373420323,
+      "base_us_median_of_3_seed_medians": 19.2715,
+      "candidate_us_median_of_3_seed_medians": 18.7205,
+      "negative_rounds_out_of_60": 55
+    },
+    {
+      "nq": 32,
+      "width": 0,
+      "cap": 128,
+      "page": 4,
+      "masked": 0,
+      "paired_delta_percent_median_of_3_seed_medians": 0.20752443432855427,
+      "seed_paired_medians_percent": [
+        0.20752443432855427,
+        0.4675387159372324,
+        -1.0348143964741652
+      ],
+      "twinned_delta_percent_median_of_3_seed_medians": 0.1836977857117228,
+      "base_us_median_of_3_seed_medians": 14.803,
+      "candidate_us_median_of_3_seed_medians": 14.949,
+      "negative_rounds_out_of_60": 29
+    }
+  ],
+  "scope": "ONEprocess/3nestedseeds/12cases/20pairedroundseach; host-completed chunk+merge inclenqueuewait/repeatedsyntheticpools. No servinggain, populationreplication, isolatedGPU, physicaltraffic or causeclaim. CAP2112/width2051 remains productionpitchgap.",
+  "decision": "Retain private valuelead; prepare correctedproductionCAP2051 newstrictcase and DEFAULT-OFF explicit PREFILLONLY stagedINT8/full32/fullwidth2051 callerguard. Maskedregression+2.392% retained; no unconditionalintegration. NewAPItoavoidclaimingqueryshapealoneexcludesdecode.",
+  "production_source_changed": false,
+  "serving_or_speed_qualified": false,
+  "goals_met": false
+}

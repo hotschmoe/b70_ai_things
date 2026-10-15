@@ -1,0 +1,31 @@
+{
+  "argv": [
+    "/home/hotschmoe/.local/bin/claude",
+    "-p",
+    "--model",
+    "claude-opus-5-5",
+    "--effort",
+    "low",
+    "--tools",
+    "",
+    "--strict-mcp-config",
+    "--disable-slash-commands",
+    "--setting-sources",
+    "",
+    "--settings",
+    "{\"disableAllHooks\":true}",
+    "--permission-mode",
+    "dontAsk",
+    "--max-turns",
+    "1",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "cwd": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s92-post-s93-source-reviews-20261015/claude-opus-5-5",
+  "fresh_session_requested": true,
+  "source_packet": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s92-post-s93-source-reviews-20261015/root-frozen-source-packet.txt",
+  "source_packet_sha256": "ced72e8ea8aa93d9175ff0f1e1500b0ead54e8ebbba3f25e2399665cdc55621b",
+  "prompt_sha256": "2c1f138c023731f2c56bc4122a38a98a928797370709776fcc507732e1e2dd7e",
+  "scope": "S92 completed numerical/timing postdecision and S93 production-pitch/main-source review; no tool/build/GPU execution; no other model answer"
+}

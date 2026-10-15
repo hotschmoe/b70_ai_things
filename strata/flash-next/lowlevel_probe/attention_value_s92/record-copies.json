@@ -1,0 +1,290 @@
+{
+  "source/qsa-value-gather.cpp": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/qsa-value-gather.cpp",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/qsa-value-gather.cpp",
+    "bytes": 44464,
+    "sha256": "49ff3788b2537bd8f73e2630e9597d7fb9bffb393073c0ce4a10f59466ec6b44"
+  },
+  "source/attn_value_probe.cpp": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/attn_value_probe.cpp",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/attn_value_probe.cpp",
+    "bytes": 10937,
+    "sha256": "2c25bc1625888a6bf05acfbc6c6ef4f062062fbd939814a367cd2930f78755ac"
+  },
+  "source/qsa-value-gather.patch": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/qsa-value-gather.patch",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/qsa-value-gather.patch",
+    "bytes": 4034,
+    "sha256": "348f291b020d324991c0e8d8b1788a659369bc2b06c7bc340001ad2e52d4fbea"
+  },
+  "source/build.sh": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/build.sh",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/build.sh",
+    "bytes": 905,
+    "sha256": "3ba9c65998a590326f93f1f21341acc0524cadf448fe13ba94edd5d3cb619004"
+  },
+  "source/build-container.sh": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/build-container.sh",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/build-container.sh",
+    "bytes": 3331,
+    "sha256": "45c0252b839d2511307b1256b77d7f96f563f0db81c62c46178c339921492102"
+  },
+  "source/pins.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/pins.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/pins.json",
+    "bytes": 5209,
+    "sha256": "b61896ec939180fe35a05c07b4f9688e5d7b1a4b7f6f806b3a8bdfb81c778246"
+  },
+  "source/expected-source.sha256": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/expected-source.sha256",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/expected-source.sha256",
+    "bytes": 1874,
+    "sha256": "e65600fd313f09a9f3dc9d08fd688ec6c3f3a049c8541324fed05ab6b7276fed"
+  },
+  "source/kernel-class-renames.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/kernel-class-renames.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/kernel-class-renames.json",
+    "bytes": 773,
+    "sha256": "f6816b145fd7df062e253c4720191f34ffa6f461199a1d429a8a74d89397a6c0"
+  },
+  "source/source-change.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/source-change.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/source-change.json",
+    "bytes": 2705,
+    "sha256": "3bbfe8fe1ecdbb52041a4538acb0df0f6b6e8cefafe49acef3762ab56250b0aa"
+  },
+  "source/README.md": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/README.md",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/README.md",
+    "bytes": 5219,
+    "sha256": "6cb5000379218468fb2d0a401a421367ae1857530b35a5d568f185656a682326"
+  },
+  "build/root-build-closure.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/build/root-build-closure.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/build/root-build-closure.json",
+    "bytes": 939,
+    "sha256": "6991c9a0d5de2b6e9e8d10922d521cb2c31462d2938b74ae92e31dfe22084c84"
+  },
+  "build/sha256.txt": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/build/sha256.txt",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/build/sha256.txt",
+    "bytes": 515,
+    "sha256": "ca5f6317a9c8777533e672ed12d0a3eb9f84413eb87312d7a272f93e19c9a422"
+  },
+  "build/compiler-version.txt": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/build/compiler-version.txt",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/build/compiler-version.txt",
+    "bytes": 257,
+    "sha256": "06b5b1015f3c581440fb4cf00258edc0db8d98696ca3252cf69045e1f8c283d4"
+  },
+  "build/host-link.log": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/build/host-link.log",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-prep/build/host-link.log",
+    "bytes": 2459,
+    "sha256": "9407199c326dd72caead4172d57a69ffffb0e116d0aa8dcd4e151a6aa4d9050e"
+  },
+  "audit/facts.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/facts.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/facts.json",
+    "bytes": 5665,
+    "sha256": "2f7b20679b636f431fb746d94258c19b942dc7f0e981006862e957b49cfafb04"
+  },
+  "audit/host-binding.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/host-binding.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/host-binding.json",
+    "bytes": 46791,
+    "sha256": "708d5e54894c8aa504217220479cc9349013369cc3ba3420fb87a4757bd6a31a"
+  },
+  "audit/selection.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/selection.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/selection.json",
+    "bytes": 13932,
+    "sha256": "fb39e603327f2b0e4519c90df47cf0cfa31388506dd8dab83b28642697a82be8"
+  },
+  "audit/private.ze_info": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/private.ze_info",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/private.ze_info",
+    "bytes": 6524,
+    "sha256": "d79336f7689ca1a882a88ba6744f85e22e93c43358ad43a69a59a39b93c514c0"
+  },
+  "audit/final-facts-manifest.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/final-facts-manifest.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/final-facts-manifest.json",
+    "bytes": 2072,
+    "sha256": "4683058ecf5659d820fec1962486a5b3ebd34e3769641eb5457319ca239eec43"
+  },
+  "runner/ROOT_RUN.sh": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/ROOT_RUN.sh",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/ROOT_RUN.sh",
+    "bytes": 734,
+    "sha256": "4f98b2e5d9e4e27d37d138e315642471a4ac2c091720f205b325fff165aac7ed"
+  },
+  "runner/leased_run.sh": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/leased_run.sh",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/leased_run.sh",
+    "bytes": 5326,
+    "sha256": "796fe81210cb5322b17af9d8a2a3d048fa5baa5e2bc994f98849af01dc68a27b"
+  },
+  "runner/identity.py": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/identity.py",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/identity.py",
+    "bytes": 2515,
+    "sha256": "827880f634a6cbefae1799ac073cb1537b33340dc198d8bee490b93986748f0b"
+  },
+  "runner/analyze.py": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/analyze.py",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/analyze.py",
+    "bytes": 5897,
+    "sha256": "d082becd9526eb23fe5f107ab9783a128fafd7ea8e3d65499f71910b06632e18"
+  },
+  "runner/expected-runner.sha256": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/expected-runner.sha256",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/expected-runner.sha256",
+    "bytes": 390,
+    "sha256": "426efe7eb0d2b7068e81e36059cd7c924df7a1f944f9fd30b156cfb6c50f4de2"
+  },
+  "runtime/leaf.log": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/leaf.log",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/leaf.log",
+    "bytes": 144617,
+    "sha256": "014963cf71b353e17bc5351eea61cc0a54eae154368d0ed996354c9cc5b883e5"
+  },
+  "runtime/comparison.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/comparison.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/comparison.json",
+    "bytes": 298232,
+    "sha256": "4d2b644a737f2df072295770c0cb2c569be68736a32b0d20d126a7b2cc05394c"
+  },
+  "runtime/identity.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/identity.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/identity.json",
+    "bytes": 2703,
+    "sha256": "f08a37c084b8319812c4928b38b0e12ea3a32f99406a28e37e01545180ef49d8"
+  },
+  "runtime/post-identity.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/post-identity.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/post-identity.json",
+    "bytes": 2703,
+    "sha256": "f08a37c084b8319812c4928b38b0e12ea3a32f99406a28e37e01545180ef49d8"
+  },
+  "runtime/closure.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/closure.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/closure.json",
+    "bytes": 248,
+    "sha256": "892b8210221c6e69d4d903fc37afd29c47af976f0cd4d46dbacb66b4778547bc"
+  },
+  "runtime/containers-after.txt": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/containers-after.txt",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/containers-after.txt",
+    "bytes": 335,
+    "sha256": "9b4769d67a97889ecfdbcfbb791c7d4da143cc03d846d459792b3398046b35da"
+  },
+  "runtime/attempt.cid": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/attempt.cid",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/attempt.cid",
+    "bytes": 64,
+    "sha256": "12533228b9151d089d73d57fdc934715743d8583d83570861a1a7e0e11bfd171"
+  },
+  "runtime/pre-health.log": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/pre-health.log",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/pre-health.log",
+    "bytes": 183,
+    "sha256": "35688b399e44f71de0d2f935a8e6b4e7530e565cb50e97f9b5771ccaee35e70f"
+  },
+  "runtime/pre-health.exit": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/pre-health.exit",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/pre-health.exit",
+    "bytes": 2,
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  "runtime/post-health.log": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/post-health.log",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/post-health.log",
+    "bytes": 183,
+    "sha256": "35688b399e44f71de0d2f935a8e6b4e7530e565cb50e97f9b5771ccaee35e70f"
+  },
+  "runtime/post-health.exit": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/post-health.exit",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/post-health.exit",
+    "bytes": 2,
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  "runtime/leaf.exit": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/leaf.exit",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/leaf.exit",
+    "bytes": 2,
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  "runtime/driver.exit": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/driver.exit",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/driver.exit",
+    "bytes": 2,
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  "runtime/tee.exit": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/tee.exit",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-runner-prep/run-clean/tee.exit",
+    "bytes": 2,
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  "root-runtime-decision.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-root-runtime-decision.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-root-runtime-decision.json",
+    "bytes": 8107,
+    "sha256": "09fe49ae28fd80dda29adaf7cd8bb8c6868e6ccb337c4b6a07e223717c99bb73"
+  },
+  "completed-raw-manifest.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attention-value-s92-completed-manifest.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attention-value-s92-completed-manifest.json",
+    "bytes": 22087,
+    "sha256": "e4e691e0559e2bf849a55021b5fcff57ca114c5d223be022cee05c1e9d2f215d"
+  },
+  "postreviews/claude-opus-5-5/assistant-text.txt": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s92-post-s93-source-reviews-20261015/claude-opus-5-5/assistant-text.txt",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s92-post-s93-source-reviews-20261015/claude-opus-5-5/assistant-text.txt",
+    "bytes": 5141,
+    "sha256": "660ed4e2da251866019ebb01bf50b53a1281317851d0ef678b0304e68efe355f"
+  },
+  "postreviews/claude-opus-5-5/command.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s92-post-s93-source-reviews-20261015/claude-opus-5-5/command.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s92-post-s93-source-reviews-20261015/claude-opus-5-5/command.json",
+    "bytes": 1133,
+    "sha256": "a727728ed380a2b01cf6e7708558147b755b12d383c7aca4aac671e2863b9135"
+  },
+  "postreviews/claude-opus-5-5/completion.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s92-post-s93-source-reviews-20261015/claude-opus-5-5/completion.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s92-post-s93-source-reviews-20261015/claude-opus-5-5/completion.json",
+    "bytes": 8515,
+    "sha256": "45c4d20fe84c9aaa40f5eb5f899f6f5880af10b42c2d0614ed7304f97f7b9b8c"
+  },
+  "postreviews/claude-fable-5-1/assistant-text.txt": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s92-post-s93-source-reviews-20261015/claude-fable-5-1/assistant-text.txt",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s92-post-s93-source-reviews-20261015/claude-fable-5-1/assistant-text.txt",
+    "bytes": 3768,
+    "sha256": "5812d6c28aa0216f82f5952cd620b7e3c34328fbe2cc0ca67c893eba0bbc8929"
+  },
+  "postreviews/claude-fable-5-1/command.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s92-post-s93-source-reviews-20261015/claude-fable-5-1/command.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s92-post-s93-source-reviews-20261015/claude-fable-5-1/command.json",
+    "bytes": 1135,
+    "sha256": "c0dd6b28a4ed26e9c1f83505401b6c0e601d0f535d4ebce8e6dc3329a7fa9bf2"
+  },
+  "postreviews/claude-fable-5-1/completion.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s92-post-s93-source-reviews-20261015/claude-fable-5-1/completion.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s92-post-s93-source-reviews-20261015/claude-fable-5-1/completion.json",
+    "bytes": 7097,
+    "sha256": "925352d7078899f66375032c22a0c856658ae8648cddf4eed9bbef3a60c33abb"
+  },
+  "postreviews/root-post-source-resolution.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s92-post-s93-source-reviews-20261015/root-post-source-resolution.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s92-post-s93-source-reviews-20261015/root-post-source-resolution.json",
+    "bytes": 2621,
+    "sha256": "439271aaab17b52f2c74c00933a322870cffe05d51a933236f7b76528565e116"
+  },
+  "cap2051/root-runtime-decision.json": {
+    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-cap2051-s93-root-runtime-decision.json",
+    "resolved_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-cap2051-s93-root-runtime-decision.json",
+    "bytes": 4725,
+    "sha256": "85b648dc7229934ff7244d6c42fd066bfd05fe3456576c1f4d9b1146b8c858df"
+  }
+}

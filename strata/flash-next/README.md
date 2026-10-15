@@ -388,3 +388,15 @@ S13 executable has the same defect; its old independent candidate exactness
 and neutral timing attribution are unsupported. S92 prepares private tags
 for all11 chunk/merge classes plus host functions and reuses public AOT;
 not built or run. [Binding correction](../../docs/20261015_strata_attention_binding_audit.md).
+
+
+S92's corrected host/device binding passes all36 strict attention value
+cases. Full32 unmasked width2051/cap2112 chunk+merge paired medians improve
+8.469/9.182% for page4/512; masked32 regresses2.392%. One process/three nested
+seeds and repeated synthetic pools, no clean serving claim. Retain private
+lead only; actual post Opus40.775s/Fable81.541s accept/rootfullread. Subsequent
+productionCAP2051 three-seed numeric-only strict/memory/identity/health gate
+passes. Explicit defaultOFF staged INT8/full32/fullwidth main integration
+and matched serving remain separate, with no serving qualification here.
+Short/decode paths stay original; query count alone is not a prefill guard.
+[S92 result and limits](../../docs/20261015_strata_attention_value_pipeline.md).

@@ -1,0 +1,35 @@
+{
+  "stage": "S92",
+  "status": "SOURCE_ONLY_NOT_BUILT",
+  "old_S13_private_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_value_20261014/qsa-value-gather.cpp",
+  "private_source_byte_exact_old_S13": true,
+  "private_source_sha256": "49ff3788b2537bd8f73e2630e9597d7fb9bffb393073c0ce4a10f59466ec6b44",
+  "current_public_source_sha256": "00bf1c45f15b1899e0562006aa6a410da4baec164eff1b1690316a6f2a66dcdb",
+  "current_public_source_equals_S13_baseline": true,
+  "public_member_sha256": "bbae92dcf61427f35078d498a240b1c9f23862e8bf13f7b63d95252e3b06baf2",
+  "reused_S91_public_images_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-score-reduce12-s91-prep/build/public.images.o",
+  "reused_public_images_sha256": "df7655d8eacbd93b6c8ce116ab1b7a8e04c5a8ccf031d2180c959c31bbdb8b6b",
+  "candidate_kernel_class_renames": {
+    "attn_chunk_kernel_6e87d5": "s92_private_attn_chunk_kernel_6e87d5",
+    "attn_chunk_kernel_dfacfc": "s92_private_attn_chunk_kernel_dfacfc",
+    "attn_chunk_kernel_b0d448": "s92_private_attn_chunk_kernel_b0d448",
+    "attn_chunk_kernel_2ad0a4": "s92_private_attn_chunk_kernel_2ad0a4",
+    "attn_chunk_kernel_5c04f7": "s92_private_attn_chunk_kernel_5c04f7",
+    "attn_merge_kernel_338175": "s92_private_attn_merge_kernel_338175",
+    "attn_chunk_kernel_f262e6": "s92_private_attn_chunk_kernel_f262e6",
+    "attn_chunk_kernel_4fd923": "s92_private_attn_chunk_kernel_4fd923",
+    "attn_chunk_kernel_f6855e": "s92_private_attn_chunk_kernel_f6855e",
+    "attn_chunk_kernel_7c8e09": "s92_private_attn_chunk_kernel_7c8e09",
+    "attn_merge_kernel_c055e7": "s92_private_attn_merge_kernel_c055e7"
+  },
+  "rename_scope": "Compile defines only; retained private source bytes unchanged. Host exported functions additionally renamed value_batch/value_step/value_scratch.",
+  "fixture_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-score-reduce12-s91-prep/attn_score_probe.cpp",
+  "fixture_changes_only": [
+    "reduce12_* -> value_*",
+    "two diagnostic comments/messages S91/score -> S92/value"
+  ],
+  "fixture_runtime_case_RNG_math_guards_timing_unchanged": true,
+  "math_delta": "Only retained S13 probability-SLM transpose and four-value prefetch/sequential FMA value loop. No reduce12 score change.",
+  "proof_scope": "Source identity and tag inventory only. Actual future host-call DeviceKernelInfo/CompileTimeKernelInfo and selected device registration must be checked before GPU; distinct device IDs alone insufficient.",
+  "historical_S13": "Old logs unchanged; old neutral candidate attribution invalidated by shared weak host metadata. Not a corrected performance result."
+}

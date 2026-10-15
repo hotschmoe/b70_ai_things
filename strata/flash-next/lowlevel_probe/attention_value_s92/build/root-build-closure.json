@@ -1,0 +1,16 @@
+{
+  "status": "PASS_ROOT_BUILD_AUDIT",
+  "binary_sha256": "dfee38a6386ba74b1342969e6ae1e9795b5670c309ca82353d9bee47273a4c72",
+  "expected_source_sha256": "e65600fd313f09a9f3dc9d08fd688ec6c3f3a049c8541324fed05ab6b7276fed",
+  "public_object_sha256": "bbae92dcf61427f35078d498a240b1c9f23862e8bf13f7b63d95252e3b06baf2",
+  "kernel_bindings_audited": true,
+  "host_metadata_bindings_audited": true,
+  "offline_only": true,
+  "host_link_AOT_actions": 0,
+  "root_fullread": true,
+  "facts_sha256": "2f7b20679b636f431fb746d94258c19b942dc7f0e981006862e957b49cfafb04",
+  "host_binding_sha256": "708d5e54894c8aa504217220479cc9349013369cc3ba3420fb87a4757bd6a31a",
+  "selection_sha256": "fb39e603327f2b0e4519c90df47cf0cfa31388506dd8dab83b28642697a82be8",
+  "audit_manifest_sha256": "4683058ecf5659d820fec1962486a5b3ebd34e3769641eb5457319ca239eec43",
+  "scope": "Actual static host/device bindings and resources only; numerical/runtime proof pending."
+}

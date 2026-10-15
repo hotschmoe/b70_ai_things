@@ -1,0 +1,58 @@
+{
+  "status": "FROZEN_STATIC_S92_AUDIT_ROOT_FULLREAD_COMPLETE_RUNTIME_PENDING",
+  "files": {
+    "host-binding.json": {
+      "bytes": 46791,
+      "sha256": "708d5e54894c8aa504217220479cc9349013369cc3ba3420fb87a4757bd6a31a"
+    },
+    "selection.json": {
+      "bytes": 13932,
+      "sha256": "fb39e603327f2b0e4519c90df47cf0cfa31388506dd8dab83b28642697a82be8"
+    },
+    "facts.json": {
+      "bytes": 5665,
+      "sha256": "2f7b20679b636f431fb746d94258c19b942dc7f0e981006862e957b49cfafb04"
+    },
+    "findings.txt": {
+      "bytes": 2959,
+      "sha256": "a0223f1da39115cce5436abdf9319cf021420c4ec1e7eddf57a1bdf84b89e29e"
+    },
+    "host_binding.py": {
+      "bytes": 6232,
+      "sha256": "37ecf55c43300319f0a3baaf15bede814934bd3ee1b0a11b32a38dc6066d4aa6"
+    },
+    "extract.py": {
+      "bytes": 4786,
+      "sha256": "44d09a05cee33ac326410e5dcf9a839c792e4ca433057b63e63b7efe39b98d9d"
+    },
+    "decode.sh": {
+      "bytes": 963,
+      "sha256": "6eecc6a7771b8498af64719e1b0839447530b54674e688565b59c26d9e296153"
+    },
+    "summarize_resources.py": {
+      "bytes": 5423,
+      "sha256": "ebf1578d430e99fca0f7565678b1d6b4b843d2db29cf10fb40a23ddbc1faa451"
+    },
+    "public.ze_info": {
+      "bytes": 6519,
+      "sha256": "537fc84438ca3b15b9a5ac48a734099a0dec020e97919d9cddbcb11c4d782c04"
+    },
+    "private.ze_info": {
+      "bytes": 6524,
+      "sha256": "d79336f7689ca1a882a88ba6744f85e22e93c43358ad43a69a59a39b93c514c0"
+    },
+    "decoder-input-before.sha256": {
+      "bytes": 83,
+      "sha256": "42330e4432161ab94d5c3e88d2b64dfbf44ce20269663d6508e09f772519346c"
+    },
+    "decoder-input-after.sha256": {
+      "bytes": 83,
+      "sha256": "42330e4432161ab94d5c3e88d2b64dfbf44ce20269663d6508e09f772519346c"
+    },
+    "private-disasm.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    }
+  },
+  "scope": "Small final audit facts/helpers/metadata, not whole build manifest; private ASM/image remain external; exact public S91 ISA reference in facts.json. No further writes by audit agent."
+}

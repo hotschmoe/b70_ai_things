@@ -148,7 +148,7 @@ ul.plain{padding-left:1.1rem}
 {
  "schema": 1,
  "title": "Strata Flash-Next data map",
- "snapshot": "2026-10-15: historical S22 operation rows; annotations through S89, separate S90 current32K diagnostic census, S91 CPU binding correction. Later results do not rewrite historical operation service or rollups.",
+ "snapshot": "2026-10-15: historical S22 operation rows; annotations through S92 private attention value proof, separate S90 current32K census/S91 binding correction. Historical operation service/rollups remain unchanged.",
  "scope": "Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two Arc Pro B70 cards, Strata SYCL engine, EP/PUSH, batch MTP depth2 (opt-in), two 200000-token slots, INT8 KV, 32 GiB / 4-entry RAM parking, all 24576 experts resident (7152 on GPU0 + 17424 on GPU1), greedy.",
  "warnings": [
   "Trace service times overlap: within a card (engines), across cards, and with CPU wall time. They are NOT additive and are not a latency budget.",
@@ -161,7 +161,8 @@ ul.plain{padding-left:1.1rem}
   "S31 now measures paired C2 execution:18heads reconcile9nativepaired windows. Five reviewed cycles eachhave2C2/0C1 and9ImmediateAppendCommandListsExp. APIinvocations are not logicalbarriers; profiler-sensitive reset/gaps are not production savings. S22reference rows remain separate.",
   "S41/S42 cross-algorithm bit mismatches are retained strict failures, not proof of invalid arithmetic. S43 independent first-C6 source-bound compliance is diagnostic, not production qualification or speed. Different reduction trees need predeclared accuracy criteria; same-algorithm replay/memory checks stay strict.",
   "S44 warmed C6 batch means reject packing integration as configured; repeated-weight cache regime and fixed GRID640 differ from full serving. CPU bound compliance is not production/model-quality qualification.",
-  "S91 actual host metadata coalesces despite distinct attention device images: GPU comparison held. The exact retained S13 probe also selects shared public metadata, so its distinct value-candidate correctness/neutrality attribution is unsupported; historical operation rows/logs remain unchanged."
+  "S91 actual host metadata coalesces despite distinct attention device images: GPU comparison held. The exact retained S13 probe also selects shared public metadata, so its distinct value-candidate correctness/neutrality attribution is unsupported; historical operation rows/logs remain unchanged.",
+  "S92 passes corrected-binding private36-case value pipeline: full32 unmasked improves, masked32 regresses. Subsequent productionCAP2051 numeric-only three-seed gate PASS; no serving/default promotion or new historical operation timing."
  ],
  "status_legend": {
   "measured": "Directly observed in a retained trace summary, native log, or clean benchmark (evidence path given). Trace values are diagnostic.",
@@ -210,7 +211,8 @@ ul.plain{padding-left:1.1rem}
    "../../../docs/20261015_strata_int8_xmx_capability.md",
    "../../../docs/20261015_strata_iq3s_int8_dpas_probe.md",
    "../../../docs/20261015_strata_decode_overlap_and_prefill_contract.md",
-   "../../../docs/20261015_strata_attention_binding_audit.md (S91 CPU-only host binding/resource audit and S13 candidate-attribution correction)"
+   "../../../docs/20261015_strata_attention_binding_audit.md (S91 CPU-only host binding/resource audit and S13 candidate-attribution correction)",
+   "../../../docs/20261015_strata_attention_value_pipeline.md (S92 corrected-binding value pipeline primitive, masked regression and CAP2112/2051 gap)"
   ],
   "results_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
   "prototype_binary": "S26 CPU-only strata-head-pair-s26 SHA256264f221e2c1b02d4bdd9b332c46f91e91bf4f6301afbdabe563df5ff2a16e44a; not GPU served; default pair option OFF.",
@@ -401,6 +403,14 @@ ul.plain{padding-left:1.1rem}
    "analysis": "current32k-profile-s90-analysis/{summary.json,operations.csv}; current32k-profile-s90-analysis-followup/{facts.json,findings.txt}",
    "raw_trace_sha256": "6799ce895caff68c80197c68549be70ab1b7020ea0875bae3156bf4fd9120730",
    "scope": "One first-unwarmed instrumented32728prompt/32completion request, currentb2a610ea/QSA1/Q6center0/EP149-363; actual dispatch census, not clean comparison. Raw441678985B/8129CSVrows external; bounded50-row current CSV separate from historical170rows."
+  },
+  "attention_value_s92": {
+   "root": "attn-value-binding-s92-prep, attn-value-binding-s92-build-audit, attn-value-binding-s92-runner-prep/run-clean",
+   "decision": "attn-value-binding-s92-root-runtime-decision.json",
+   "binary": "dfee38a6386ba74b1342969e6ae1e9795b5670c309ca82353d9bee47273a4c72",
+   "scope": "Corrected all11 private host/kernel tags plus actual linked metadata/registered-name/image proof; strict36 fixtures/1440timings in ONEprocess. Host completed chunk+merge/repeated pools; private lead only. Actual post Opus5.5/Fable5.1 ACCEPT/rootfullread; subsequent S93 productionCAP2051 three-seed numeric-only strict/memory/identity/cleanup/health PASS. Main integration/codegen/binding/serving remain separate.",
+   "postreview": "attn-value-s92-post-s93-source-reviews-20261015/root-post-source-resolution.json; actual claude-opus-5-5 40.775s/claude-fable-5-1 81.541s, both exit0/rootfullread",
+   "production_pitch": "attn-value-cap2051-s93-root-runtime-decision.json;32queries/width2051/cap2051/page4 seeds7/31/109 PASS, timing null; reuses S92 device object, not main-codegen/serving proof"
   }
  },
  "geometry": {
@@ -1280,11 +1290,12 @@ ul.plain{padding-left:1.1rem}
     "dense_proj"
    ],
    "gaps": [
-    "Profiled with 107-token prompts; 200k-context attention cost per cycle not traced."
+    "Profiled with 107-token prompts; 200k-context attention cost per cycle not traced.",
+    "S92 private value pipeline passes full32 prefill fixtures; no decoder integration or full-model result. Planned explicit prefill caller guard keeps short/decode original."
    ],
    "hypotheses": [
     {
-     "text": "Attention launch batching (S11) and value-gather (S13) were neutral at prefill; do not repeat for decode without new evidence.",
+     "text": "S11 attention batching32/128/256 was neutral. Historical S13 value-candidate attribution was invalidated by S91 shared-host-metadata proof; do not treat old neutral classification as independent candidate evidence.",
      "status": "rejected"
     }
    ]
@@ -2585,7 +2596,9 @@ ul.plain{padding-left:1.1rem}
     "draft-carry-s30/prefill-phase-diagnostic.json",
     "qsa-prefill-tiled-s84-prep-v3/run-clean/{comparison,closure}.json",
     "qsa-prefill-serving-s89/{comparison,root-runtime-decision}.json; qsa-prefill-serving-postreviews-s89-20261015/root-postclosure.json",
-    "current32k-profile-s90-root-runtime-decision.json; current32k-profile-s90-analysis-followup/facts.json"
+    "current32k-profile-s90-root-runtime-decision.json; current32k-profile-s90-analysis-followup/facts.json",
+    "attn-value-binding-s92-root-runtime-decision.json; lowlevel_probe/attention_value_s92/{runtime/comparison, audit/facts}.json",
+    "attn-value-s92-post-s93-source-reviews-20261015/root-post-source-resolution.json; attn-value-cap2051-s93-root-runtime-decision.json"
    ],
    "quoted": [
     {
@@ -2635,6 +2648,12 @@ ul.plain{padding-left:1.1rem}
      "value": "Actual tiled768calls/792.502816ms; full32 attention chunk+merge12264each/5689.599621+697.009584ms contained; attentionfamily6473.357ms clipped service.",
      "basis": "Currentb2a610ea/QSA1/firstunwarmed32728prompt32completion; source32721main/12288+12288+8145. Twoengine rows aggregated byname+device, no cross-card join/additive budget/clean speed or exactprefill phase.",
      "status": "measured"
+    },
+    {
+     "label": "S92 corrected-binding private value pipeline",
+     "value": "Full32/width2051/cap2112 paired median -8.469% page4/-9.182% page512, all60rounds faster each; masked32/1999 +2.392%, all60slower. Strict36casesPASS.",
+     "basis": "ONEprocess/3nestedseeds/20alternatingpairedrounds each, chunk+merge hostcompletion/repeatedsyntheticpools. No serving or isolatedGPU service/traffic/cause claim. Actual hostmetadata and selecteddevice images separated.",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -2648,7 +2667,8 @@ ul.plain{padding-left:1.1rem}
     "No prefill trace on the S21/S22 binary; no 200k prefill trace.",
     "Goal 2000 tok/s unmet.",
     "S30 native attention timer groups value gather/dequant/weighted sum; their individual costs remain unisolated. Timed records cover199494 of199501 prompt tokens, not exact context offsets.",
-    "S84 improves long/full256-query scoring+top-k while short4K regresses; retain private longshape lead only. Does not change sparse attention values, decode, RAM restore or qualify a production guard."
+    "S84 improves long/full256-query scoring+top-k while short4K regresses; retain private longshape lead only. Does not change sparse attention values, decode, RAM restore or qualify a production guard.",
+    "S92 initial capacity2112 differed production2051. Subsequent three-seed exact-cap2051 numeric-only gate passes; explicit staged INT8/full32/fullwidth main integration/binding/serving remain separate. Nonnegative identity table remains an existing caller contract. Masked regression retained; decode/short remain original."
    ],
    "hypotheses": [
     {
@@ -3124,6 +3144,13 @@ ul.plain{padding-left:1.1rem}
    "value": "32K median paired promptms -0.5474% (all3negative); native1547.5->1559.2tok/s, TTFT21.2129->21.0539s. Inactive4K mixed/null.",
    "status": "measured",
    "note": "All output/work/functionals/QUIT/CIDNAME/health gates PASS. One fixed OFFthenON sequence, no causal/stability/default/daily/fullcache or combinedQ6 promotion. Retain defaultOFF opt-in.2000tok/s prefill/150stream remain unmet."
+  },
+  {
+   "stage": "S92",
+   "label": "Corrected-binding private attention value pipeline",
+   "value": "Full32 unmasked/width2051/cap2112: -8.469% page4, -9.182% page512; masked32/1999 +2.392%; unmasked1/2051 -13.803%. Strict36PASS/1440rawtimings.",
+   "status": "measured",
+   "note": "Median of3seed paired medians,20rounds per seed nested in ONEprocess. Host chunk+merge/repeatedpools, no clean-serving/causal/physicaltraffic/default claim. Actual Opus5.5/Fable5.1 postreviews ACCEPT/rootfullread; subsequent S93 three-seed cap2051 strict numeric-only gate PASS, no timing. Actual main integration/binding/serving remain separate."
   }
  ],
  "rejected_parked": [
@@ -3210,7 +3237,7 @@ ul.plain{padding-left:1.1rem}
   {
    "item": "S91 private attention reduce12 mapping",
    "status": "parked",
-   "evidence": "CPU-only build/host audit: shared weak kernel-info state invalidates intended AB binding; private4096B scratch declared. No GPU execution or measured speed. Corrected S13 value preparation S92 not built/run."
+   "evidence": "CPU-only build/host audit: shared weak kernel-info state invalidates intended AB binding; private4096B scratch declared. No GPU execution or measured speed. Corrected S13 value preparation S92 not built/run. Later S92 corrects host binding and passes private value gates; this does not revive rejected score12 mapping or qualify production."
   }
  ],
  "coverage_gaps": [
@@ -3247,7 +3274,7 @@ ul.plain{padding-left:1.1rem}
   "S81-S84 distinguish indexer scoring from attention and long select-region totals. Tiled scorer strict output/ID checks pass for5synthetic cases; short context regresses, long full256-query improves. Whole-model 4K/32K/200K speed, other shapes/capacities and production guarding remain unqualified. S83 only shows baseline byte-saturation lowering survives; candidate ISA/runtime is separate.",
   "S85 resolves private Q6 C6 centering correctness and repeated-weight projection cost only; actual public DOT/buffer bindings ARE validated. Frozen pre-runtime ISA pending wording stays historical; later runtime comparison supplies exact gates. Full-model production Q8/dispatch/throughput remains a future two-card EP comparison.",
   "S90 provides actual current32K dispatch census but includes cold capture/admission/prefill/32decode; no exact native phase endpoints, matched OFF trace, cross-card join or physical idle/traffic/cause. Host clock shift drift945.036us; source readiness motifs are hypotheses, not removable budgets.",
-  "Private attention candidate attribution requires actual separate host DeviceKernelInfo/CompileTimeKernelInfo and registered-name pointers, plus actual device-image binding. Distinct image IDs/function exports alone did not suffice in S91 or retained S13. No new runtime proof follows from proposed private class-tag renames."
+  "Private attention candidate attribution requires actual separate host DeviceKernelInfo/CompileTimeKernelInfo and registered-name pointers, plus actual device-image binding. Distinct image IDs/function exports alone did not suffice in S91 or retained S13. S92 later proves separate actual host/device binding and strict36 private fixtures; Subsequent cap2051 three-seed numeric-only gate closes that ID pitch for the reused S92 object; masked/short/decode applicability and actual main codegen/serving remain bounded/unqualified."
  ],
  "operations": [
   {
