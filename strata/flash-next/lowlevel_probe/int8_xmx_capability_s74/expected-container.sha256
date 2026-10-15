@@ -1,0 +1,8 @@
+fcb7e5f8158b59795aa2c74907257435dcf28005b0d1c20b9040d241e4d68600  /src/int8_xmx_capability.cpp
+7a2e29a6cb0a154f0a0babc0a0c6a7859b6f6978b00537b9494e117a361e407b  /src/build-container.sh
+c298993bfc66b10f3204723c20afe960e07313b51add9ab28f549653dbde4da7  /opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/matrix/matrix.hpp
+fce8a8847f92568004c150e49d0125ff649288806a5e72f1bc32e9d5fed38dbc  /opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/matrix/matrix-unified.hpp
+a8836d2b8b2ba1c023aeec96fbadb82bee054af5a5b427887b90969509cd06de  /opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/matrix/matrix-intel.hpp
+c8e428024901d3529a45b6659b62e964c80a16c8fa54683487d137433a9e4832  /opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/matrix/matrix-unified-utils.hpp
+aeb1a24055343c7fd8df62470f945f8318306496e33fcc429c092a295931e219  /opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/matrix/query-types.hpp
+a48cd577e4938f67dfbee0046f2fd9034432f1528f7f6e685f54433ff980a8f1  /opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/matrix/static-query-use.hpp

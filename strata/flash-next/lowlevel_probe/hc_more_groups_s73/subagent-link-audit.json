@@ -1,0 +1,540 @@
+{
+  "status": "PASS_BOUNDED_OFFLINE_LINK_REGISTRATION_METADATA_AUDIT_RUNTIME_GATE_PENDING",
+  "author": "/root/strata_ep_s27 native Codex",
+  "binary_sha256_from_actual_build": "bd904cc03792988313a5e7ccfea1f4f175c34119de9bbdd538cab0f7d6e2e47a",
+  "build_records": {
+    "/src/hc_more_oracle.cpp": "08d15004117114a2e04ee549b28ea96c12c15bec2377d24ec8de6ad6f3f41375",
+    "hc_more_oracle.o": "7b793ca498b166bc1b98d05adfc2f92a627087bbc4e5f3bf97c0a6ed20124a25",
+    "hc_more_oracle": "bd904cc03792988313a5e7ccfea1f4f175c34119de9bbdd538cab0f7d6e2e47a",
+    "hc-fat.o": "27d0ab6aff30126bd317584b4b2cbacd0b4667764f9cf624738625c787c07d99",
+    "verify-support-fat.o": "584e694fc1ece4740fe4550e2c34fafd28a77921d81960039d01f3c27dbb6613",
+    "hc-support.images.o": "a9b0424cc7898890ab5b5f4f23186fc78cd9bcf2d113dbd10039a296693642ac",
+    "adapter.images.o": "80356965e911ac95f83599ff8049b9a364250f9cce75d0f18f6fd9be7ed5a117",
+    "/common/mmvq-core.images.o": "8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21",
+    "/frozen/libstrata_kernels.a": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8",
+    "/frozen/libstrata_core.a": "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286"
+  },
+  "source_pins_recomputed": {
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/fused_gr.dp.cpp": "d62bcb252eecdbcaae81095907c2241e39c4798b7854bb499fb5643fecb24e99",
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp": "5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e",
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/kernels/fused_gr.hpp": "199b44c105bebb8356498c2171943c236c9c0dfd4b899e400c62082f3966ebf4",
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/sycl_queue.hpp": "2b9ada924e3023ab742e826f9c9850324ccc978cfc4ca8d0a36b3e7b6c79c51a"
+  },
+  "archive_common_hashes_scope": "actual build sha256 records and two successful pre/post expected-container checks; not redundantly rehashed here",
+  "host_actions": {
+    "/usr/bin/ld": 1,
+    "ocloc": 0,
+    "llvm-link": 0,
+    "sycl-post-link": 0,
+    "clang-offload-wrapper": 0,
+    "llvm-foreach": 0
+  },
+  "selected_strata_host_archive_members": [
+    "/frozen/libstrata_kernels.a(fused_gr.dp.cpp.o)",
+    "/frozen/libstrata_kernels.a(verify_kernels.dp.cpp.o)"
+  ],
+  "registration_constructor_destructor_map": [
+    ".init_array.1  0x0000000003f161b0        0x8 adapter.images.o",
+    ".init_array.1  0x0000000003f161b8        0x8 hc-support.images.o",
+    ".init_array.1  0x0000000003f161c0        0x8 /common/mmvq-core.images.o",
+    ".fini_array.1  0x0000000003f161e0        0x8 adapter.images.o",
+    ".fini_array.1  0x0000000003f161e8        0x8 hc-support.images.o",
+    ".fini_array.1  0x0000000003f161f0        0x8 /common/mmvq-core.images.o"
+  ],
+  "metadata": {
+    "adapter": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/build/adapter.images.o",
+      "size": 79864,
+      "stat_unchanged_during_metadata_read": true,
+      "images": 8,
+      "unique_kernel_names": 8,
+      "target_HC": [],
+      "generic_text_sections": {},
+      "raw_name_mentions_in_ze_info": 16,
+      "raw_name_count_scope": "Regex top-level name mentions can include kernels_misc_info repetitions; unique kernel names and per-image target records are deduplicated. This does not count function instructions."
+    },
+    "HC_support": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/build/hc-support.images.o",
+      "size": 4464856,
+      "stat_unchanged_during_metadata_read": true,
+      "images": 101,
+      "unique_kernel_names": 102,
+      "target_HC": [
+        {
+          "image_index": 18,
+          "offset": 416592,
+          "image_bytes": 41424,
+          "kernel": "_ZTS16dpct_kernel_nameIJZZN6strata7kernels19fused_gr_read_multiEPKNS1_11FusedGrArgsEiPfPvPyiENKUlRN4sycl3_V17handlerEE1_clESB_E23gr_down_sliced_k_grf256EE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 19,
+          "offset": 458016,
+          "image_bytes": 41352,
+          "kernel": "_ZTS16dpct_kernel_nameIJZZN6strata7kernels19fused_gr_read_multiEPKNS1_11FusedGrArgsEiPfPvPyiENKUlRN4sycl3_V17handlerEE1_clESB_E16gr_down_sliced_kEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 21,
+          "offset": 600080,
+          "image_bytes": 42304,
+          "kernel": "_ZTS16dpct_kernel_nameIJZZN6strata7kernels12_GLOBAL__N_119launch_gr_down_moreILb1EEEvPN4sycl3_V15queueERKNS2_7GrMultiEENKUlRNS5_7handlerEE_clESC_E19gr_down_sliced_more18dpct_kernel_scalarILi1EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 22,
+          "offset": 642384,
+          "image_bytes": 42400,
+          "kernel": "_ZTS16dpct_kernel_nameIJZZN6strata7kernels12_GLOBAL__N_119launch_gr_down_moreILb0EEEvPN4sycl3_V15queueERKNS2_7GrMultiEENKUlRNS5_7handlerEE_clESC_E19gr_down_sliced_more18dpct_kernel_scalarILi0EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 50,
+          "offset": 1887392,
+          "image_bytes": 41808,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels19fused_gr_read_multiEPKNS1_11FusedGrArgsEiPfPvPyiE16gr_down_reduce_kEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 51,
+          "offset": 1929200,
+          "image_bytes": 56576,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels19fused_gr_read_multiEPKNS1_11FusedGrArgsEiPfPvPyiE15gr_norm_split_kEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 72,
+          "offset": 2457552,
+          "image_bytes": 33248,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_119launch_gr_down_moreILb1EEEvPN4sycl3_V15queueERKNS2_7GrMultiEE19gr_down_reduce_more18dpct_kernel_scalarILi1EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 73,
+          "offset": 2490800,
+          "image_bytes": 33248,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_119launch_gr_down_moreILb0EEEvPN4sycl3_V15queueERKNS2_7GrMultiEE19gr_down_reduce_more18dpct_kernel_scalarILi0EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 74,
+          "offset": 2524048,
+          "image_bytes": 99008,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_moreILb1EEEvPN4sycl3_V15queueERKNS2_7GrMultiEE16gr_up_multi_more18dpct_kernel_scalarILi1EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 75,
+          "offset": 2623056,
+          "image_bytes": 99232,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_moreILb0EEEvPN4sycl3_V15queueERKNS2_7GrMultiEE16gr_up_multi_more18dpct_kernel_scalarILi0EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 76,
+          "offset": 2722288,
+          "image_bytes": 98896,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi8EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE23gr_up_multi_cols_grf25618dpct_kernel_scalarILi8EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 77,
+          "offset": 2821184,
+          "image_bytes": 79448,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi8EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE20gr_up_multi_cols_ilp18dpct_kernel_scalarILi8EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 78,
+          "offset": 2900640,
+          "image_bytes": 99080,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi8EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi8EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 79,
+          "offset": 2999728,
+          "image_bytes": 71816,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi64EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE23gr_up_multi_cols_grf25618dpct_kernel_scalarILi64EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 80,
+          "offset": 3071552,
+          "image_bytes": 79704,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi64EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE20gr_up_multi_cols_ilp18dpct_kernel_scalarILi64EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 81,
+          "offset": 3151264,
+          "image_bytes": 71608,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi64EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi64EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 82,
+          "offset": 3222880,
+          "image_bytes": 80384,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi4EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE23gr_up_multi_cols_grf25618dpct_kernel_scalarILi4EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 83,
+          "offset": 3303264,
+          "image_bytes": 79448,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi4EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE20gr_up_multi_cols_ilp18dpct_kernel_scalarILi4EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 84,
+          "offset": 3382720,
+          "image_bytes": 80376,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi4EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi4EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 85,
+          "offset": 3463104,
+          "image_bytes": 71720,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi32EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE23gr_up_multi_cols_grf25618dpct_kernel_scalarILi32EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 86,
+          "offset": 3534832,
+          "image_bytes": 79472,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi32EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE20gr_up_multi_cols_ilp18dpct_kernel_scalarILi32EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 87,
+          "offset": 3614304,
+          "image_bytes": 71512,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi32EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi32EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 88,
+          "offset": 3685824,
+          "image_bytes": 135992,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi16EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE23gr_up_multi_cols_grf25618dpct_kernel_scalarILi16EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 89,
+          "offset": 3821824,
+          "image_bytes": 79680,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi16EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE20gr_up_multi_cols_ilp18dpct_kernel_scalarILi16EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 90,
+          "offset": 3901504,
+          "image_bytes": 137344,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi16EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi16EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 91,
+          "offset": 4038848,
+          "image_bytes": 48304,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_112launch_multiERKNS2_7GrMultiEiPN4sycl3_V15queueEPyiE27gr_norm_split_kernel_200589EE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        }
+      ],
+      "generic_text_sections": {
+        ".text.Intel_Symbol_Table_Void_Program": 10
+      },
+      "raw_name_mentions_in_ze_info": 212,
+      "raw_name_count_scope": "Regex top-level name mentions can include kernels_misc_info repetitions; unique kernel names and per-image target records are deduplicated. This does not count function instructions."
+    },
+    "common": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/build/mmvq-core.images.o",
+      "size": 59875544,
+      "stat_unchanged_during_metadata_read": true,
+      "images": 1078,
+      "unique_kernel_names": 1079,
+      "target_HC": [],
+      "generic_text_sections": {
+        ".text.Intel_Symbol_Table_Void_Program": 819
+      },
+      "raw_name_mentions_in_ze_info": 2974,
+      "raw_name_count_scope": "Regex top-level name mentions can include kernels_misc_info repetitions; unique kernel names and per-image target records are deduplicated. This does not count function instructions."
+    },
+    "final": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/build/hc_more_oracle",
+      "size": 63508256,
+      "stat_unchanged_during_metadata_read": true,
+      "images": 1187,
+      "unique_kernel_names": 1166,
+      "target_HC": [
+        {
+          "image_index": 26,
+          "offset": 1513120,
+          "image_bytes": 41424,
+          "kernel": "_ZTS16dpct_kernel_nameIJZZN6strata7kernels19fused_gr_read_multiEPKNS1_11FusedGrArgsEiPfPvPyiENKUlRN4sycl3_V17handlerEE1_clESB_E23gr_down_sliced_k_grf256EE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 27,
+          "offset": 1554544,
+          "image_bytes": 41352,
+          "kernel": "_ZTS16dpct_kernel_nameIJZZN6strata7kernels19fused_gr_read_multiEPKNS1_11FusedGrArgsEiPfPvPyiENKUlRN4sycl3_V17handlerEE1_clESB_E16gr_down_sliced_kEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 29,
+          "offset": 1696608,
+          "image_bytes": 42304,
+          "kernel": "_ZTS16dpct_kernel_nameIJZZN6strata7kernels12_GLOBAL__N_119launch_gr_down_moreILb1EEEvPN4sycl3_V15queueERKNS2_7GrMultiEENKUlRNS5_7handlerEE_clESC_E19gr_down_sliced_more18dpct_kernel_scalarILi1EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 30,
+          "offset": 1738912,
+          "image_bytes": 42400,
+          "kernel": "_ZTS16dpct_kernel_nameIJZZN6strata7kernels12_GLOBAL__N_119launch_gr_down_moreILb0EEEvPN4sycl3_V15queueERKNS2_7GrMultiEENKUlRNS5_7handlerEE_clESC_E19gr_down_sliced_more18dpct_kernel_scalarILi0EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 58,
+          "offset": 2983920,
+          "image_bytes": 41808,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels19fused_gr_read_multiEPKNS1_11FusedGrArgsEiPfPvPyiE16gr_down_reduce_kEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 59,
+          "offset": 3025728,
+          "image_bytes": 56576,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels19fused_gr_read_multiEPKNS1_11FusedGrArgsEiPfPvPyiE15gr_norm_split_kEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 80,
+          "offset": 3554080,
+          "image_bytes": 33248,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_119launch_gr_down_moreILb1EEEvPN4sycl3_V15queueERKNS2_7GrMultiEE19gr_down_reduce_more18dpct_kernel_scalarILi1EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 81,
+          "offset": 3587328,
+          "image_bytes": 33248,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_119launch_gr_down_moreILb0EEEvPN4sycl3_V15queueERKNS2_7GrMultiEE19gr_down_reduce_more18dpct_kernel_scalarILi0EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 82,
+          "offset": 3620576,
+          "image_bytes": 99008,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_moreILb1EEEvPN4sycl3_V15queueERKNS2_7GrMultiEE16gr_up_multi_more18dpct_kernel_scalarILi1EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 83,
+          "offset": 3719584,
+          "image_bytes": 99232,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_moreILb0EEEvPN4sycl3_V15queueERKNS2_7GrMultiEE16gr_up_multi_more18dpct_kernel_scalarILi0EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 84,
+          "offset": 3818816,
+          "image_bytes": 98896,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi8EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE23gr_up_multi_cols_grf25618dpct_kernel_scalarILi8EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 85,
+          "offset": 3917712,
+          "image_bytes": 79448,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi8EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE20gr_up_multi_cols_ilp18dpct_kernel_scalarILi8EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 86,
+          "offset": 3997168,
+          "image_bytes": 99080,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi8EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi8EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 87,
+          "offset": 4096256,
+          "image_bytes": 71816,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi64EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE23gr_up_multi_cols_grf25618dpct_kernel_scalarILi64EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 88,
+          "offset": 4168080,
+          "image_bytes": 79704,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi64EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE20gr_up_multi_cols_ilp18dpct_kernel_scalarILi64EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 89,
+          "offset": 4247792,
+          "image_bytes": 71608,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi64EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi64EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 90,
+          "offset": 4319408,
+          "image_bytes": 80384,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi4EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE23gr_up_multi_cols_grf25618dpct_kernel_scalarILi4EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 91,
+          "offset": 4399792,
+          "image_bytes": 79448,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi4EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE20gr_up_multi_cols_ilp18dpct_kernel_scalarILi4EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 92,
+          "offset": 4479248,
+          "image_bytes": 80376,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi4EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi4EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 93,
+          "offset": 4559632,
+          "image_bytes": 71720,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi32EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE23gr_up_multi_cols_grf25618dpct_kernel_scalarILi32EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 94,
+          "offset": 4631360,
+          "image_bytes": 79472,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi32EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE20gr_up_multi_cols_ilp18dpct_kernel_scalarILi32EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 95,
+          "offset": 4710832,
+          "image_bytes": 71512,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi32EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi32EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 96,
+          "offset": 4782352,
+          "image_bytes": 135992,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi16EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE23gr_up_multi_cols_grf25618dpct_kernel_scalarILi16EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 97,
+          "offset": 4918352,
+          "image_bytes": 79680,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi16EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE20gr_up_multi_cols_ilp18dpct_kernel_scalarILi16EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 98,
+          "offset": 4998032,
+          "image_bytes": 137344,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi16EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi16EEEE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        },
+        {
+          "image_index": 99,
+          "offset": 5135376,
+          "image_bytes": 48304,
+          "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_112launch_multiERKNS2_7GrMultiEiPN4sycl3_V15queueEPyiE27gr_norm_split_kernel_200589EE",
+          "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+        }
+      ],
+      "generic_text_sections": {
+        ".text.Intel_Symbol_Table_Void_Program": 829
+      },
+      "raw_name_mentions_in_ze_info": 3202,
+      "raw_name_count_scope": "Regex top-level name mentions can include kernels_misc_info repetitions; unique kernel names and per-image target records are deduplicated. This does not count function instructions."
+    }
+  },
+  "kernel_name_overlap_across_wrappers": {
+    "adapter__HC_support": [
+      "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillIhEEvPvRKT_mEUlNS0_2idILi1EEEE_EE",
+      "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillIjEEvPvRKT_mEUlNS0_2idILi1EEEE_EE",
+      "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillItEEvPvRKT_mEUlNS0_2idILi1EEEE_EE",
+      "_ZTSN4sycl3_V16detail19__pf_kernel_wrapperIZZN4dpct6detailL11dpct_memcpyERNS0_5queueEPvPKvNS0_5rangeILi3EEESB_NS0_2idILi3EEESD_SB_NS3_16memcpy_directionERKSt6vectorINS0_5eventESaISG_EEENKUlRNS0_7handlerEE_clESM_E21dpct_memcpy_3d_detailEE",
+      "_ZTSZN4sycl3_V17handler4fillIhEEvPvRKT_mEUlNS0_2idILi1EEEE_",
+      "_ZTSZN4sycl3_V17handler4fillIjEEvPvRKT_mEUlNS0_2idILi1EEEE_",
+      "_ZTSZN4sycl3_V17handler4fillItEEvPvRKT_mEUlNS0_2idILi1EEEE_",
+      "_ZTSZZN4dpct6detailL11dpct_memcpyERN4sycl3_V15queueEPvPKvNS2_5rangeILi3EEES9_NS2_2idILi3EEESB_S9_NS_16memcpy_directionERKSt6vectorINS2_5eventESaISE_EEENKUlRNS2_7handlerEE_clESK_E21dpct_memcpy_3d_detail"
+    ],
+    "adapter__common": [
+      "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillIhEEvPvRKT_mEUlNS0_2idILi1EEEE_EE",
+      "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillIjEEvPvRKT_mEUlNS0_2idILi1EEEE_EE",
+      "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillItEEvPvRKT_mEUlNS0_2idILi1EEEE_EE",
+      "_ZTSN4sycl3_V16detail19__pf_kernel_wrapperIZZN4dpct6detailL11dpct_memcpyERNS0_5queueEPvPKvNS0_5rangeILi3EEESB_NS0_2idILi3EEESD_SB_NS3_16memcpy_directionERKSt6vectorINS0_5eventESaISG_EEENKUlRNS0_7handlerEE_clESM_E21dpct_memcpy_3d_detailEE",
+      "_ZTSZN4sycl3_V17handler4fillIhEEvPvRKT_mEUlNS0_2idILi1EEEE_",
+      "_ZTSZN4sycl3_V17handler4fillIjEEvPvRKT_mEUlNS0_2idILi1EEEE_",
+      "_ZTSZN4sycl3_V17handler4fillItEEvPvRKT_mEUlNS0_2idILi1EEEE_",
+      "_ZTSZZN4dpct6detailL11dpct_memcpyERN4sycl3_V15queueEPvPKvNS2_5rangeILi3EEES9_NS2_2idILi3EEESB_S9_NS_16memcpy_directionERKSt6vectorINS2_5eventESaISE_EEENKUlRNS2_7handlerEE_clESK_E21dpct_memcpy_3d_detail"
+    ],
+    "HC_support__common": [
+      "Intel_Symbol_Table_Void_Program",
+      "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZN6strata13big_fill_zeroERNS0_5queueEPvmmEUlNS0_2idILi1EEEE_EE",
+      "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZN6strata17arena_alias_checkERNS0_5queueEPvmPmEUlNS0_2idILi1EEEE0_EE",
+      "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZN6strata17arena_alias_checkERNS0_5queueEPvmPmEUlNS0_2idILi1EEEE_EE",
+      "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillIhEEvPvRKT_mEUlNS0_2idILi1EEEE_EE",
+      "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillIjEEvPvRKT_mEUlNS0_2idILi1EEEE_EE",
+      "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillItEEvPvRKT_mEUlNS0_2idILi1EEEE_EE",
+      "_ZTSN4sycl3_V16detail19__pf_kernel_wrapperIZZN4dpct6detailL11dpct_memcpyERNS0_5queueEPvPKvNS0_5rangeILi3EEESB_NS0_2idILi3EEESD_SB_NS3_16memcpy_directionERKSt6vectorINS0_5eventESaISG_EEENKUlRNS0_7handlerEE_clESM_E21dpct_memcpy_3d_detailEE",
+      "_ZTSZN4sycl3_V17handler4fillIhEEvPvRKT_mEUlNS0_2idILi1EEEE_",
+      "_ZTSZN4sycl3_V17handler4fillIjEEvPvRKT_mEUlNS0_2idILi1EEEE_",
+      "_ZTSZN4sycl3_V17handler4fillItEEvPvRKT_mEUlNS0_2idILi1EEEE_",
+      "_ZTSZN6strata13big_fill_zeroERN4sycl3_V15queueEPvmmEUlNS1_2idILi1EEEE_",
+      "_ZTSZN6strata17arena_alias_checkERN4sycl3_V15queueEPvmPmEUlNS1_2idILi1EEEE0_",
+      "_ZTSZN6strata17arena_alias_checkERN4sycl3_V15queueEPvmPmEUlNS1_2idILi1EEEE_",
+      "_ZTSZZN4dpct6detailL11dpct_memcpyERN4sycl3_V15queueEPvPKvNS2_5rangeILi3EEES9_NS2_2idILi3EEESB_S9_NS_16memcpy_directionERKSt6vectorINS2_5eventESaISE_EEENKUlRNS2_7handlerEE_clESK_E21dpct_memcpy_3d_detail"
+    ]
+  },
+  "target_HC_in_common_or_adapter": false,
+  "final_kernel_name_union_matches_wrappers": true,
+  "metadata_bytes_read": 15323599,
+  "elapsed_seconds": 1.7180825850227848,
+  "source_archive_changes": false,
+  "GPU_compile_tool_container_used": false,
+  "evidence_pins": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/build/sha256.txt": "5c789dbb138803dd3e14328cf817b303d91dc9053fd73ff3bcfe12e4c2ccbe0a",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/build/link.map": "4ad7cece039c4fd7e5bf184f9b9c46383f35f04e67bb239784cfbf197d2cc667",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/build/host-link.log": "18945801a24245673ff520bcebf052e057c44ba3d60c9dac7c81ddd562d02c49",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/expected-container.sha256": "5c7d7aaece1e0520fa9f85f3577330d01da6dc849e02a19d1f35b3932a77c7a0",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/build-container.sh": "28b569c50c6d6f1bdfe28ff7940fb48726a39c1b836fa3be29c17eeced9ad1b9",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-root/build-completion.json": "70211313c977673393781262df7dcdbf400d9eabb46ed7bee7fa8f20081fb455"
+  },
+  "limits": [
+    "No GPU, compilation, payload, ISA or SPIRV extraction. Existing ELF metadata only.",
+    "Retained registration hooks and kernel-name set do not prove all runtime dispatch/numerical/graph behavior.",
+    "Generic Intel_Symbol_Table_Void_Program text names recur per image; this is not duplicate target HC registration.",
+    "Metadata does not enumerate/prove equivalence of all inlined/template helper bodies or exclude DPCT ODR risk. Successful S59/S65 pipeline is precedent, not a proof for new images.",
+    "New HC-support AOT images from unchanged fat objects, not same GPU binary as S39/S55; root owns build closure and planned strict runtime gate."
+  ],
+  "overlap_interpretation": {
+    "adapter_HC_and_adapter_common": "8 names each: SYCL handler fill unsignedchar/unsignedint/unsignedshort and rounded wrappers, DPCT memcpy3d and pf wrapper.",
+    "HC_common": "15 names: same8 plus strata big_fill_zero and arena_alias_check each normal/rounded forms, and Intel_Symbol_Table_Void_Program.",
+    "not_a_zero_ODR_risk_claim": true,
+    "target_normal_MORE_classes_duplicate_in_common": false
+  },
+  "normal_expected_class_binding": [
+    "gr_norm_split_k",
+    "gr_down_sliced_k (non-grf256)",
+    "gr_down_reduce_k",
+    "launch_gr_up_cols<16>::gr_up_multi_cols (non-ILP/non-grf256)"
+  ],
+  "MORE_expected_class_binding": [
+    "same gr_norm_split_k",
+    "gr_down_sliced_more<scalar0>",
+    "gr_down_reduce_more<scalar0>",
+    "gr_up_multi_more<scalar0>"
+  ]
+}

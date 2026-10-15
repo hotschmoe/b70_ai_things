@@ -1,0 +1,32 @@
+{
+  "archive": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/frozen-inputs/libstrata_kernels.a",
+  "archive_sha256_from_frozen_closure": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8",
+  "HC_member": {
+    "member": "fused_gr.dp.cpp.o",
+    "header_offset": 13960712,
+    "data_offset": 13960772,
+    "bytes": 607880,
+    "sha256": "27d0ab6aff30126bd317584b4b2cbacd0b4667764f9cf624738625c787c07d99"
+  },
+  "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/fused_gr.dp.cpp",
+  "source_sha256": "d62bcb252eecdbcaae81095907c2241e39c4798b7854bb499fb5643fecb24e99",
+  "S60_common": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/build/mmvq-core.images.o",
+  "S60_common_sha256_from_closure": "8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21",
+  "S60_common_excludes_HC": true,
+  "core_archive_sha256": "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286",
+  "additional_wrapper_members": [
+    {
+      "member": "fused_gr.dp.cpp.o",
+      "offset": 13960772,
+      "bytes": 607880,
+      "sha256": "27d0ab6aff30126bd317584b4b2cbacd0b4667764f9cf624738625c787c07d99"
+    },
+    {
+      "member": "verify_kernels.dp.cpp.o",
+      "offset": 15605808,
+      "bytes": 503792,
+      "sha256": "584e694fc1ece4740fe4550e2c34fafd28a77921d81960039d01f3c27dbb6613"
+    }
+  ],
+  "gpu_stamp_host_dependency": "S39 link.map lines3-6 selects verify_kernels member; no stamp buffer passed in S73."
+}

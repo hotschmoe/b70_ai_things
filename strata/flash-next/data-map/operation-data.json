@@ -1,7 +1,7 @@
 {
  "schema": 1,
  "title": "Strata Flash-Next data map",
- "snapshot": "2026-10-15: historical S22 operation rows; current trace/capture/CPU evidence and strict primitive results through S65; source mechanism triage through S72. Later evidence does not rewrite historical service rollups.",
+ "snapshot": "2026-10-15: historical S22 operation rows; current trace/capture/CPU evidence and strict primitive results through S73; S74 offline INT8 matrix compilation/static ISA only, no binary execution. Later evidence does not rewrite historical service rollups.",
  "scope": "Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two Arc Pro B70 cards, Strata SYCL engine, EP/PUSH, batch MTP depth2 (opt-in), two 200000-token slots, INT8 KV, 32 GiB / 4-entry RAM parking, all 24576 experts resident (7152 on GPU0 + 17424 on GPU1), greedy.",
  "warnings": [
   "Trace service times overlap: within a card (engines), across cards, and with CPU wall time. They are NOT additive and are not a latency budget.",
@@ -57,7 +57,9 @@
    "../../../docs/20261015_strata_iq3s_dense_swar_probe.md",
    "../../../docs/20261015_strata_clean_c2_protocol.md",
    "../../../docs/20261015_strata_iq3s_swar_built_isa.md",
-   "../../../docs/20261015_strata_decode_mechanism_triage.md"
+   "../../../docs/20261015_strata_decode_mechanism_triage.md",
+   "../../../docs/20261015_strata_hc_more_groups_probe.md",
+   "../../../docs/20261015_strata_int8_xmx_capability.md"
   ],
   "results_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
   "prototype_binary": "S26 CPU-only strata-head-pair-s26 SHA256264f221e2c1b02d4bdd9b332c46f91e91bf4f6301afbdabe563df5ff2a16e44a; not GPU served; default pair option OFF.",
@@ -134,6 +136,30 @@
    "report": "docs/20261015_strata_decode_mechanism_triage.md",
    "raw": "int8-xmx-dense-next-s71-prep/; int8-xmx-dense-next-s71-manifest.json",
    "scope": "IQ3_S per32 odd scales align canonicalQ8; signedINT8 K32 dot/INT32 scale feasible algebra. B70 compilation/runtime and full FP32 reduction contract unproved. Compile-only source preparation, no GPU or speed claim."
+  },
+  "hc_more_groups_s73": {
+   "report": "docs/20261015_strata_hc_more_groups_probe.md",
+   "raw": "hc-more-groups-s73-root/root-runtime-decision.json; hc-more-groups-s73-prep/run-clean/{comparison,closure,host-post}.json; hc-more-groups-postreviews-s73-20261015/review-closure.json",
+   "decision": "KEEP_MORE0_NO_SERVING_RETRY_OR_SWEEP",
+   "scope": "Four fresh ABBA card1 processes;276fullstates/206386176B,60DOT/312checkedshots and36S39anchors per process PASS; health/removal/wrappers0. Completed graph-batch time divided20: median of two process medians slower16.075730/19.100520/27.352164percent T1/2/6. Synthetic BF16/current frozen HC, not fullmodel regression or physical cause. Actual responding claude-opus-5-5/claude-fable-5-1 both ACCEPT; root full read.",
+   "completed_manifest": {
+    "path": "hc-more-groups-s73-manifest.json",
+    "sha256": "c87c62e4b9fe9f6d39bbae9ca8d9e116408e0d654f073822e3d03a4d40908310",
+    "files": 434,
+    "bytes": 278453985
+   }
+  },
+  "int8_xmx_static_s74": {
+   "report": "docs/20261015_strata_int8_xmx_capability.md",
+   "raw": "int8-xmx-capability-s74-prep/build-s74/; int8-xmx-capability-s74-root/; int8-xmx-capability-s74-isa/report.json",
+   "scope": "Offline compile plus static ISA only: existing82,648B executable37728fb9, main896B/SG16/SIMD16 contains one signed-byte DPAS-to-INT32. Zero binary executions/GPU touches;128integer outputs, coordinates/IQdecode/scales/native FP32 order/performance remain unmeasured. Source manifestaf5b5ea7 and offline ISA manifest a2a0d647 separate from runtime claims.",
+   "completed_manifest": {
+    "path": "int8-xmx-capability-s74-completed-manifest.json",
+    "sha256": "ae422e7bb0cb171c38dd1fb51b5e51715913f0572244e6e3442743f3a5da43a0",
+    "files": 13,
+    "bytes": 100341,
+    "note": "Separate immutable source-subset and offline ISA manifests remain retained; completed build/static stage is not a runtime result."
+   }
   }
  },
  "geometry": {
@@ -890,7 +916,8 @@
     "grf-oracle-s39-prep/{s39-report,build-closure}.json; run-profiled/window{0,1}/closure.json + comparison.json",
     "hc-lo-once-s48-prep/{s48-analysis,s48-report}.json; root-build-decision.json; run-clean/closure.json",
     "hc-lo-once-graph-s50-prep/v2/{root-analysis,root-independent-DOT,build-closure}.json; run-clean/closure.json",
-    "hc-lo-once-serving-s51-prep/{comparison,s51-root-report}.json; hc-serving-postreviews-s51-20261015/review-closure.json"
+    "hc-lo-once-serving-s51-prep/{comparison,s51-root-report}.json; hc-serving-postreviews-s51-20261015/review-closure.json",
+    "hc-more-groups-s73-root/{root-runtime-decision,subagent-link-audit}.json; hc-more-groups-s73-prep/run-clean/{comparison,closure}.json; hc-more-groups-postreviews-s73-20261015/review-closure.json"
    ],
    "quoted": [
     {
@@ -940,6 +967,12 @@
      "value": "All4 pair nativework/output/functionals/health PASS; three fresh wall medians4.832553->4.782742s(-1.031percent), control/candidate ranges14.877/35.238ms.",
      "basis": "One server/arm fixed order, NVMe/TRACE/CPU markers common, S49OFF. Retain boundedHC candidate fixed for nexthead arms; not clean/stable/causal speed, isolatedHC service, rawtoken/logit identity or shelf promotion.",
      "status": "measured"
+    },
+    {
+     "label": "S73 existing MORE grouping, current HC graph primitive",
+     "value": "All276fullstates/60DOTs/312checks PASS;36S39anchors eachprocess. MORE1 slower T1+16.075730%, T2+19.100520%, T6+27.352164%; keepMORE0.",
+     "basis": "Four fresh ABBA/card1 processes, synthetic seed7 BF16/T1,2,6 apply/inject gates, actual current frozen HC. One20-read graph/sample; median of two process medians, three nested samples/process. Not pooled6trials/percallp95/device service/fullmodel regression/cause. Normal cleanup and pre/posthealth0; actual Opus/Fable accept no serve/retry/sweep.",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -954,7 +987,8 @@
     "Which of the 109 calls/cycle belong to drafter versus target passes is not separated.",
     "S50 resolvesboundedgraphsignal andcapturedbranchbinding; full-modelbenefit/othergeometry/physicaltraffic remainunmeasured. PLEservingexperiment separate; no fullcontextrepeat.",
     "S51 adds a bounded traced serving observation; clean benefit/stability and exact HC GPU attribution remain unqualified. No extra HC rerun for current retain decision.",
-    "S69 global norm/down/reduce/UP dependencies block a simple fusion; exact reduce-in-UP duplicates substantial work. S72 distinguishes existing combined MORE_GROUPS from rejected UP8-only/GRF knobs and prepares one current-HC graph discriminator. Source only, not occupancy or speed evidence."
+    "S69 global norm/down/reduce/UP dependencies block a simple fusion; exact reduce-in-UP duplicates substantial work. S72 distinguishes existing combined MORE_GROUPS from rejected UP8-only/GRF knobs and prepares one current-HC graph discriminator. Source only, not occupancy or speed evidence.",
+    "S73 closes the combined MORE_GROUPS standalone gate: strict whole-state/capture metadata pass but all three token counts slower; no serving test or retry. This does not attribute the bundled480down/eight-loadreduce/320UP result to any component or establish physical occupancy/traffic. Hidden part/part2 scratch was not independently guarded."
    ],
    "hypotheses": [
     {
@@ -1091,7 +1125,8 @@
     "primary-widek-next-s57-prep/findings.md; primary-widek-resources-s57-20261015/resource-summary.json",
     "iq4xs-rpw2-s59-prep/{s59-root-report.json,run-clean/{closure,comparison}.json}; iq4xs-rpw2-s59-dot-audit.json",
     "iq3s-dense-next-s63-prep/{findings.md,integer-load-contract.json,host-check-execution.json}",
-    "iq3s-existing-isa-s66-prep/{s66-report.json,assembly-excerpts.json,alias-proof.json}"
+    "iq3s-existing-isa-s66-prep/{s66-report.json,assembly-excerpts.json,alias-proof.json}",
+    "int8-xmx-capability-s74-isa/{report.json,findings.md,selection.json}; int8-xmx-capability-s74-root/build-completion.json"
    ],
    "quoted": [
     {
@@ -1159,6 +1194,12 @@
      "value": "Existing actual image84:qs/signs reconstruction3d32A64messages, not6d16;32static byte nonzero predicates plus extraction/select/repack/subtract remain.",
      "basis": "Offline disasm of unchanged main.text84928699 fromcommon8f5a7e/S59exe56e551af. Section-name-only alias inCOPY fixesfilename limit, neverlink/runtime. StaticISA is notdynamiccounts/traffic/occupancy/latency. Dropaligned-loadportion beforeS65sourcefreeze; retainSWAR-only lead.",
      "status": "source-only"
+    },
+    {
+     "label": "S74 signed INT8 matrix AOT capability, never executed",
+     "value": "Compile0; single SG16/SIMD16 image main896B contains one dpas.8x8 with signed-byte operands and INT32 output.",
+     "basis": "Pinned Intel2026.1/e41 BMG-G31 AOT; source/header pins and offline ocloc audit. Sixactive/twopadded token rows,8x32 by32x16 integer canary only. Zero binary executions/GPU touches; static instruction/resource metadata is not runtime capability, integer output, IQ3_S projection accuracy, occupancy or speed proof.",
+     "status": "source-only"
     }
    ],
    "upstream": [
@@ -1176,7 +1217,8 @@
     "S56 supplies compiled Q6 resource metadata only; no new actual-weight RPW2 bitwise execution, per-image dispatch observation, measured occupancy or bandwidth. Main Q4/IQ4_XS/Q5 pools remain distinct future source leads.",
     "S59 covers one IQ4_XS C6 shape with synthetic inputs and new prelinked AOT images. No productionactivation/logit, other-shape or serving gain; retain RPW1. Independent DOT metadata is not a GPU dispatch trace.",
     "S65 strict IQ3_S C6 SWAR oracle PASS but mixed projection latency: gate -2.515percent, ssm_out +1.275percent across eight balanced nested pairs each. One process, real weights/seeded activations; no serving/global integration. S68 confirms smaller static code and removed byte predicates, not latency causality.",
-    "S70 same-input Q8 already shared. Main sharedGU17same/31mixed-format pairs; GDN9same/27mixed. A union row-grid dispatch could preserve each branch/output stride but shifts consumer timing and compiler resources; implementation parked until HC screen. No quantizer or weight-decode reuse claim."
+    "S70 same-input Q8 already shared. Main sharedGU17same/31mixed-format pairs; GDN9same/27mixed. A union row-grid dispatch could preserve each branch/output stride but shifts consumer timing and compiler resources; implementation parked until HC screen. No quantizer or weight-decode reuse claim.",
+    "S74 resolves acceptance/lowering of the exact signed INT8 joint_matrix expression on the BMG AOT compiler path only. Runtime dispatch/all128integer outputs, block layout/coordinates, canonical IQ3_S/Q8 scale handling and native FP32 partial/XOR order remain unmeasured; no replacement math or serving result."
    ],
    "hypotheses": [
     {

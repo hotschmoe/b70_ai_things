@@ -295,3 +295,14 @@ selects the existing combined HC MORE grouping path for one bounded graph
 preparation. Earlier UP8-only/GRF tests did not test that combined path.
 No new GPU result, main-source change or serving claim from these audits.
 [Reasoning and frozen evidence](../../docs/20261015_strata_decode_mechanism_triage.md).
+
+
+S73 closes the current-HC combined MORE grouping screen: strict gates PASS,
+but T1/2/6 whole-read graph medians are slower16.076/19.101/27.352percent.
+Keep MORE0; no serving/retry/sweep. One31s CPU adapter/support build and
+one80s quiet card1 window, health/cleanup PASS. Actual Opus/Fable agree.
+[S73 result](../../docs/20261015_strata_hc_more_groups_probe.md).
+S74's18s CPU build and10s offline ISA extraction confirm signed INT8 DPAS
+generation for BMG-G31. No binary execution or runtime/performance claim;
+source preparation for a canonical-Q8 projection proceeds separately.
+[S74 prerequisite](../../docs/20261015_strata_int8_xmx_capability.md).

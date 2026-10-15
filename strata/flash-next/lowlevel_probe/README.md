@@ -320,3 +320,29 @@ S52 existing Q5_K head RPW2 passes strict C2/C6 primitive screens, with
 activation diagnostics, not serving gains. Exact inspection copies:
 head_rpw_leaf_s52.cpp and analyze_head_rpw_s52.py;
 [evidence and limits](../../../docs/20261015_strata_head_rpw_probe.md).
+
+
+## HC MORE_GROUPS graph primitive (S73)
+
+`hc_more_groups_s73/` holds exact source/comparator/build/controller/host-closure
+and anchor record copies. Historical absolute paths are retained; do not run
+them in place or overwrite frozen external outputs. Current HC/shared objects,
+supported additional HC+verify prelink wrapper and ordinary hostlink bind
+newbinarybd904cc0; no kernel TU rebuild. All12 synthetic T1/2/6 apply/inject
+cases/ownchangedgraphs,276 full-state files/60DOTs/312checks and36S39anchors
+perprocess PASS. Four fresh ABBA processes, one pre/postcard1health pair and
+all ownCID+name removals/wrappers PASS. MORE1 graph-batch completed averages
+are slower16.08/19.10/27.35percent T1/2/6 (two process medians/mode, three
+nested samples each). Actual Opus/Fable accept keepMORE0/no serve/retry/sweep.
+No wholemodel regression, isolated-device service, helper-ODR or cause proof.
+[S73 report](../../../docs/20261015_strata_hc_more_groups_probe.md).
+
+## Signed INT8 matrix static capability (S74)
+
+`int8_xmx_capability_s74/` retains exact source/offline recipes and decode
+records. Sourcefcb7e5f8 compiles to82,648B executable37728fb9; selected896B
+main ISA contains one signed-byte DPAS-to-INT32 atSG16/SIMD16. Offline build
+and disassembly do not execute the binary; no runtime128-output, coordinate,
+IQdecode/scale/nativeFP32-order or latency gate is claimed. Do not run the
+optional --run path without a separately approved leased gate.
+[S74 report](../../../docs/20261015_strata_int8_xmx_capability.md).

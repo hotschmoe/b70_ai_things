@@ -1,0 +1,22 @@
+{
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/hc_more_oracle.cpp": "08d15004117114a2e04ee549b28ea96c12c15bec2377d24ec8de6ad6f3f41375",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/adapter-vs-S39.diff": "5857830a55a61ac5a967bb576057a836bc09b3a6bbb30c04ec4f097d3ea43713",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/compare.py": "1f9def30adc45555d75902a8e9019b504cfecdb2bffbb1208548468fa1130e3b",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/s39-anchors.json": "f37804b8627e78759c6cddb7821808c9830703482e8731c3e94abb83b6b1e5dd",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/frozen-inputs.json": "84501ef55e8405133c356dd160568f00eb7eea04c6e48724bd678f46e5a0ff6e",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/build-container.sh": "28b569c50c6d6f1bdfe28ff7940fb48726a39c1b836fa3be29c17eeced9ad1b9",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/build.sh": "3966a1726ebf8a1bf3000810872d7756041f271952f53b12a36a7420c72ce842",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/ROOT_RUN.sh": "672bad81157ecfeab5581ddcdfe562a00a16f1f7072857b35b7ba1cb9f920105",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/leased_run.sh": "de67a43b7e7709ac4f416f23b7eb10cfd4bebef175c98693767a51942892202d",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/host_closure.py": "48898d0e7723270fb4b49d22e5d35427c8c940c71065e39b30535480cec0f366",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/source-pins.json": "6f8a711e39917c93ddefe3bc7cfe13fe5f693f47eaa0875228d6e423b13903d7",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/expected-container.sha256": "5c7d7aaece1e0520fa9f85f3577330d01da6dc849e02a19d1f35b3932a77c7a0",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/readiness.md": "52770dc82e9ac62d1e3e24f22f2014e254fdeb9a065f1a64bc47500c8d283cff",
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/fused_gr.dp.cpp": "d62bcb252eecdbcaae81095907c2241e39c4798b7854bb499fb5643fecb24e99",
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp": "5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e",
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/kernels/fused_gr.hpp": "199b44c105bebb8356498c2171943c236c9c0dfd4b899e400c62082f3966ebf4",
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/sycl_queue.hpp": "2b9ada924e3023ab742e826f9c9850324ccc978cfc4ca8d0a36b3e7b6c79c51a",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/frozen-inputs/libstrata_kernels.a": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/frozen-inputs/libstrata_core.a": "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/build/mmvq-core.images.o": "8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21"
+}

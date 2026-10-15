@@ -1,0 +1,123 @@
+{
+  "status": "PASS_ROOT_CLOSURE_AND_RAW_TIMING_RECOMPUTATION",
+  "decision": "KEEP_MORE0_NO_SERVING_RETRY_OR_SWEEP",
+  "binary_files": 276,
+  "binary_bytes": 206386176,
+  "DOT_files": 60,
+  "DOT_nodes": 1152,
+  "DOT_edges": 1092,
+  "checked_snapshots": 312,
+  "timings": {
+    "1": {
+      "host_completed_us_per_read_rounds": {
+        "a1": [
+          27.92475,
+          27.474400000000003,
+          27.44335
+        ],
+        "b1": [
+          31.95245,
+          31.952949999999998,
+          31.86275
+        ],
+        "b2": [
+          31.843700000000002,
+          31.884300000000003,
+          31.770100000000003
+        ],
+        "a2": [
+          27.4538,
+          27.486399999999996,
+          27.532
+        ]
+      },
+      "process_medians_us": {
+        "a1": 27.474400000000003,
+        "b1": 31.95245,
+        "b2": 31.843700000000002,
+        "a2": 27.486399999999996
+      },
+      "pooled_nested_median_us": [
+        27.4804,
+        31.898075
+      ],
+      "candidate_change_percent": 16.075730338714145,
+      "limits": "Two fresh processes per mode, three nested graph-batch samples each; not six independent trials, per-call tail latency, device service or serving proof."
+    },
+    "2": {
+      "host_completed_us_per_read_rounds": {
+        "a1": [
+          33.2624,
+          33.2324,
+          33.24035
+        ],
+        "b1": [
+          39.74325,
+          39.6666,
+          39.61955
+        ],
+        "b2": [
+          39.62755,
+          39.5399,
+          39.60355
+        ],
+        "a2": [
+          33.317,
+          33.21535,
+          33.6877
+        ]
+      },
+      "process_medians_us": {
+        "a1": 33.24035,
+        "b1": 39.6666,
+        "b2": 39.60355,
+        "a2": 33.317
+      },
+      "pooled_nested_median_us": [
+        33.278675,
+        39.635075
+      ],
+      "candidate_change_percent": 19.10052007779757,
+      "limits": "Two fresh processes per mode, three nested graph-batch samples each; not six independent trials, per-call tail latency, device service or serving proof."
+    },
+    "6": {
+      "host_completed_us_per_read_rounds": {
+        "a1": [
+          56.0789,
+          56.7943,
+          56.20715
+        ],
+        "b1": [
+          71.5038,
+          71.5414,
+          71.26135000000001
+        ],
+        "b2": [
+          71.52085,
+          71.5875,
+          71.67465
+        ],
+        "a2": [
+          56.92105,
+          56.09695000000001,
+          56.151599999999995
+        ]
+      },
+      "process_medians_us": {
+        "a1": 56.20715,
+        "b1": 71.5038,
+        "b2": 71.5875,
+        "a2": 56.151599999999995
+      },
+      "pooled_nested_median_us": [
+        56.17937499999999,
+        71.54565
+      ],
+      "candidate_change_percent": 27.352164384171253,
+      "limits": "Two fresh processes per mode, three nested graph-batch samples each; not six independent trials, per-call tail latency, device service or serving proof."
+    }
+  },
+  "lifecycle": "All own valid64hexCID+NAME absent, perprocess0, full host binding/pre-posthealth/wrappers0.",
+  "speed_qualified": false,
+  "serving_qualified": false
+}

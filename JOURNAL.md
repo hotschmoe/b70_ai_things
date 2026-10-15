@@ -23921,3 +23921,50 @@ Prepare separately numbered tiny S74 compile-only capability source, no speed/
 roofline/serving claim. Root read all findings; dated triage doc retains pins.
 Frozen4 files/60268 bytes, external manifest
 47584226a77b04280712d0fa0131193be1beb6f7ccb58c1e26e02f36aa42a811.
+
+
+## 2026-10-15 -- Flash-Next optimization S73: current HC MORE grouping rejected
+
+CONFIG -> Existing MORE_GROUPS0/1, current HC LO_ONCE common, GRF0 and other
+controls fixed; exact synthetic S39 seed7 BF16/T1,2,6 apply/inject fixtures.
+COMMAND -> Root full source read and actual Opus/Fable source reviews;30.598s
+offline build from frozen HC+verify fatobjects plus supported compiler wrapper,
+no kernel TU rebuild. Ordinary final hostlink1ld/0AOT, binarybd904cc0. One80s
+quiet card1 leased ABBA window, one pre/posthealth pair, no unitrace/server.
+RESULT -> Across4processes276 full-state files206386176B/60DOTs1152nodes1092edges/312
+checkedshots PASS; EACH process matches36S39anchors; initial/changed direct/graphs,
+public guards/readonly/tails pass. All4 ownCID+name removals/oracle exits and
+health/wrappers0. Hostcompleted20-read graph averages, median of TWO process
+medians/mode: T1 27.480400->31.898075us(+16.075730%), T2 33.278675->39.635075
+(+19.100520%), T6 56.179375->71.545650(+27.352164%). Three nested samples
+per process, not six independent trials/percallp95/isolated GPU service.
+VERDICT -> KeepMORE0/no serve/retry/sweep. Actual respondingclaude-opus-5-5
+30.268s andclaude-fable-5-1 35.469s both ACCEPT, root read full responses.
+Bundled down480/eight-loadreduce/UP320 result does not isolate a component or
+prove physical cause/fullmodel regression/zero helper-ODR risk. Exact record
+copies and docs/20261015_strata_hc_more_groups_probe.md retained; root owns
+whole-stage manifest434files/278453985B SHA
+c87c62e4b9fe9f6d39bbae9ca8d9e116408e0d654f073822e3d03a4d40908310.
+Historical170operation rows/rollups unchanged.
+
+
+## 2026-10-15 -- Flash-Next optimization S74: signed INT8 BMG AOT capability
+
+CONFIG -> Pinned Intel2026.1/e41, one SG16 signedINT8 A8x32/B32x16 toINT32
+C8x16; six active/two zero rows, no IQdecode/scale/FP32 epilogue.
+COMMAND -> Root/source reviewers approve CPU-only noDRI/network build;18s
+CPU lease (47.786s wrapper including waiting). Native mtp_q4_share bounded
+10s offline ocloc audit of the single selected image, no execution/GPU.
+RESULT -> Compile0, sourcefcb7e5f8/exe37728fb9(82648B), main896B; one actual
+static dpas.8x8 with signedbyte inputs/INT32 output, SIMD16/GRF128/has_dpas.
+Two data block2d loads/one store plus payload load; postEOT excluded. ISA
+manifest23files28321B SHAa2a0d6479e96f78b710d11264a36b78923b1173bb469c3bf6e93f01431e69e97.
+VERDICT -> Exact compiled/static prerequisite PASS only. No binary executed;
+all128 integer outputs, runtime capability/layout/coordinates, canonical IQ3_S
+projection arithmetic and speed remain unmeasured. Actual Opus/Fable shared
+post-reviews accept this narrow scope; no runtime endorsement or performance
+forecast. docs/20261015_strata_int8_xmx_capability.md and exact record copies
+retain identities. Completed build/static manifest13files/100341B SHA
+ae422e7bb0cb171c38dd1fb51b5e51715913f0572244e6e3442743f3a5da43a0;
+old source-subset manifest remains immutable, no runtime result.
+Historical170operation rows/rollups unchanged.

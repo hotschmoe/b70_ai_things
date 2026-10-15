@@ -1,0 +1,10 @@
+f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8  /frozen/libstrata_kernels.a
+34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286  /frozen/libstrata_core.a
+8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21  /common/mmvq-core.images.o
+d62bcb252eecdbcaae81095907c2241e39c4798b7854bb499fb5643fecb24e99  /work/src-ep/sycl/src/kernels/cuda/fused_gr.dp.cpp
+5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e  /work/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+199b44c105bebb8356498c2171943c236c9c0dfd4b899e400c62082f3966ebf4  /work/src-ep/include/strata/kernels/fused_gr.hpp
+2b9ada924e3023ab742e826f9c9850324ccc978cfc4ca8d0a36b3e7b6c79c51a  /work/src-ep/sycl/include/strata/sycl_queue.hpp
+08d15004117114a2e04ee549b28ea96c12c15bec2377d24ec8de6ad6f3f41375  /src/hc_more_oracle.cpp
+3966a1726ebf8a1bf3000810872d7756041f271952f53b12a36a7420c72ce842  /src/build.sh
+28b569c50c6d6f1bdfe28ff7940fb48726a39c1b836fa3be29c17eeced9ad1b9  /src/build-container.sh

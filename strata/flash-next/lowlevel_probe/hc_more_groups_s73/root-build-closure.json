@@ -1,0 +1,24 @@
+{
+  "status": "PASS_ROOT_ACTUAL_BUILD_AND_SOURCE_REVIEW_BINDING_RUNTIME_UNTESTED",
+  "binary_sha256": "bd904cc03792988313a5e7ccfea1f4f175c34119de9bbdd538cab0f7d6e2e47a",
+  "adapter_source_sha256": "08d15004117114a2e04ee549b28ea96c12c15bec2377d24ec8de6ad6f3f41375",
+  "frozen_kernel_archive_sha256": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8",
+  "common_wrapper_sha256": "8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21",
+  "HC_member_sha256": "27d0ab6aff30126bd317584b4b2cbacd0b4667764f9cf624738625c787c07d99",
+  "verify_support_member_sha256": "584e694fc1ece4740fe4550e2c34fafd28a77921d81960039d01f3c27dbb6613",
+  "HC_support_wrapper_sha256": "a9b0424cc7898890ab5b5f4f23186fc78cd9bcf2d113dbd10039a296693642ac",
+  "adapter_wrapper_sha256": "80356965e911ac95f83599ff8049b9a364250f9cce75d0f18f6fd9be7ed5a117",
+  "root_full_source_read": true,
+  "actual_source_reviews": {
+    "claude-opus-5-5": "8e75a3cf-a7e7-4c11-b17a-edd80c51aec8",
+    "claude-fable-5-1": "0fa44131-0a41-43bb-bc94-9b9226d27f86"
+  },
+  "anchor_coverage_preflight_sha256": "c664d7d1a9579a4806b8358c5cc676bbfd513477b30f21c6c840085efa92e2ac",
+  "actual_link_audit_sha256": "d7cc29410982f3d4c09ccb2468f7ce93688f505a4dd8e76d42180dc064931b87",
+  "notes": [
+    "New HC/support AOT from current frozen fatobjects; no main/kernel-TU rebuild.",
+    "General helper names overlap across wrappers; target HC classes unique to HC wrapper. Runtime guards/strict outputs remain required.",
+    "q_of directly casts non-null sycl::queue pointer; xpu-health does not acquire a nested GPU lease.",
+    "No S74 binary execution or GPU run."
+  ]
+}

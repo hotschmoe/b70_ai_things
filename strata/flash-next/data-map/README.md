@@ -268,3 +268,18 @@ loads; those counts do not explain latency causally. S67 records a cheaper
 future candidate measurement protocol and its weaker capture/layout visibility.
 Historical170 operation rows/rollups remain unchanged. See dated S65/S67/S68
 reports through provenance.
+
+
+S73 closes the combined HC MORE_GROUPS primitive: all276 full-state files,
+60 DOTs,312 checks and36 S39 anchors per process pass, with complete card1
+health/removal. MORE1 is slower for T1/2/6 by16.08/19.10/27.35percent using
+the median of two process medians, three nested20-read graph samples each.
+KeepMORE0/no serve/retry/sweep; no production regression or physical cause
+claim. Actual Opus/Fable post-reviews accept that bounded decision.
+[S73 report](../../../docs/20261015_strata_hc_more_groups_probe.md).
+
+S74 is offline compile/static ISA only: the BMG image contains one signed
+INT8-to-INT32 DPAS, but no binary was executed and no128-output runtime or
+canonical-IQ projection gate passed. No performance/occupancy inference.
+[S74 report](../../../docs/20261015_strata_int8_xmx_capability.md).
+Historical170 operations, stage rollups and operation metadata remain unchanged.

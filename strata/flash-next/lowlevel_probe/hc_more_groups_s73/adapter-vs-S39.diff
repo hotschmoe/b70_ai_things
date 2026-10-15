@@ -1,0 +1,132 @@
+--- S39v2/grf_oracle.cpp
++++ S73/hc_more_oracle.cpp
+@@ -1,4 +1,4 @@
+-// Source-only adapter of current fused_gr_bench.cpp fixture. No GR kernel implementation.
++// S73: unchanged S39 fixture and production HC; MORE0/1 fresh processes. No kernel implementation.
+ #define DPCT_PROFILING_ENABLED
+ #include <sycl/sycl.hpp>
+ #include <dpct/dpct.hpp>
+@@ -11,7 +11,10 @@
+ #include <cstdlib>
+ #include <cstring>
+ #include <filesystem>
++#include <array>
++#include <memory>
+ #include <fstream>
++#include <iterator>
+ #include <random>
+ #include <stdexcept>
+ #include <string>
+@@ -41,6 +44,7 @@
+ };
+ struct Graph {
+     sycl::queue& q;
++    explicit Graph(sycl::queue& queue):q(queue){}
+     dpct::experimental::command_graph_ptr graph=nullptr;
+     dpct::experimental::command_graph_exec_ptr exec=nullptr;
+     ~Graph(){try{q.wait_and_throw();delete exec;delete graph;}catch(...){}}
+@@ -55,10 +59,10 @@
+ static void exact(const Buffer& b,const void* expected) {auto h=b.get();need(!std::memcmp(h.data(),expected,h.size()),std::string("input modified ")+b.name);}
+ static void env_is(const char* name,const char* wanted) {const char* v=std::getenv(name);need(v&&std::string(v)==wanted,std::string("require ")+name+"="+wanted);}
+ static int run(int argc,char** argv) {
+-    need(argc==2||argc==3,"usage: grf_oracle NEW_OUTPUT_DIR [iters<=64, default32]");
+-    const int iters=argc==3?std::atoi(argv[2]):32;need(iters>=1&&iters<=64,"bounded iters1..64");
+-    const char* mode=std::getenv("STRATA_GR_LARGE_GRF");need(mode&&(std::string(mode)=="0"||std::string(mode)=="1"),"explicit GRF0|1 required");
+-    env_is("STRATA_GR_MORE_GROUPS","0");env_is("STRATA_GR_DOWN_SLICED","1");env_is("STRATA_GR_UP_COLS","16");
++    need(argc==2,"usage: hc_more_oracle NEW_OUTPUT_DIR");
++    constexpr int iters=20;
++    const char* mode=std::getenv("STRATA_GR_MORE_GROUPS");need(mode&&(std::string(mode)=="0"||std::string(mode)=="1"),"explicit MORE0|1 required");
++    env_is("STRATA_GR_LARGE_GRF","0");env_is("STRATA_GR_DOWN_SLICED","1");env_is("STRATA_GR_UP_COLS","16");
+     env_is("STRATA_GR_UP_ILP","0");env_is("STRATA_GR_V3","0");env_is("STRATA_GR_NORM_SPLIT","1");
+     need(!std::getenv("STRATA_HC_Q8")&&!std::getenv("STRATA_QFUSE"),"Q8/QFUSE must be absent");
+     const fs::path output=argv[1];need(fs::create_directory(output),"output must be new, parent must exist");
+@@ -88,7 +92,9 @@
+         io(q,size_t(TM)*HC*4,"inject_out"),mix(q,size_t(TM)*N*4,"mixed");
+     std::vector<Buffer*> buffers{&r,&b,&ip,&norm,&down,&up,&iw,&xn,&lo,&rs,&io,&mix};
+     norm.put(wn);down.put(wd);up.put(wu);iw.put(wi);q.wait_and_throw();
+-    for(int T:{1,2,6})for(int apply:{0,1})for(int inject:{0,1}) {
++    std::array<std::unique_ptr<Graph>,3> batches;
++    auto case_run=[&](int T,int apply,int inject,bool timing) {
++        const int index=T==1?0:T==2?1:2;
+         const std::string stem="T"+std::to_string(T)+"-a"+std::to_string(apply)+"-i"+std::to_string(inject);
+         K::FusedGrArgs args[TM]{};
+         for(int t=0;t<T;++t){auto& a=args[t];a.R=r.ptr<float>()+size_t(t)*D;a.R_out=r.ptr<float>()+size_t(t)*D;a.apply=apply;
+@@ -110,32 +116,62 @@
+             poison_after(hl,size_t(T)*LR*4,"lo");poison_after(hs,size_t(T)*HC*4,"rs");
+             poison_after(hi,inject?size_t(T)*HC*4:0,"inject_out");poison_after(hm,size_t(T)*N*4,"mixed");poison_after(hx,size_t(T)*D*4,"xn");
+             exact(b,(changed?bo2:bo).data());exact(ip,(changed?inj2:inj).data());
++            exact(norm,wn.data());exact(down,wd.data());exact(up,wu.data());exact(iw,wi.data());
+             std::vector<uint8_t> joined;for(const auto* h:{&hr,&hl,&hs,&hi,&hm,&hx})joined.insert(joined.end(),h->begin(),h->end());
+-            std::ofstream file(output/(stem+"-"+phase+".bin"),std::ios::binary);file.write(reinterpret_cast<const char*>(joined.data()),joined.size());need(bool(file),"snapshot write failed");
+-            std::printf("{\"type\":\"snapshot\",\"T\":%d,\"apply\":%d,\"inject\":%d,\"phase\":\"%s\",\"bytes\":%zu,\"guards\":true,\"finites\":true,\"tails\":true}\n",T,apply,inject,phase.c_str(),joined.size());
++            if(phase.rfind("warm-",0)!=0){std::ofstream file(output/(stem+"-"+phase+".bin"),std::ios::binary);file.write(reinterpret_cast<const char*>(joined.data()),joined.size());need(bool(file),"snapshot write failed");}
++            std::printf("{\"type\":\"snapshot\",\"T\":%d,\"apply\":%d,\"inject\":%d,\"phase\":\"%s\",\"bytes\":%zu,\"guards\":true,\"finites\":true,\"tails\":true,\"inputs_readonly\":true,\"weights_readonly\":true}\n",T,apply,inject,phase.c_str(),joined.size());
+             return joined;};
+-        reset(false);call();const auto direct=snapshot("direct-a",false);
+-        if(T==2||T==6){
+-            Graph graph{q};dpct::experimental::begin_recording(&q);call();dpct::experimental::end_recording(&q,&graph.graph);need(graph.graph!=nullptr,"graph end returned null");
+-            graph.exec=new sycl::ext::oneapi::experimental::command_graph<sycl::ext::oneapi::experimental::graph_state::executable>(graph.graph->finalize());
+-            reset(false);q.ext_oneapi_graph(*graph.exec).wait_and_throw();auto ga=snapshot("graph-a",false);need(same(direct,ga),"direct/graph initial mismatch");
++        auto capture=[&](Graph& g,int count,const std::string& suffix){
++            reset(false);dpct::experimental::begin_recording(&q);
++            for(int i=0;i<count;++i)call();
++            dpct::experimental::end_recording(&q,&g.graph);need(g.graph!=nullptr,"graph end returned null");
++            g.graph->print_graph((output/(stem+"-"+suffix+".dot")).string(),true);
++            g.exec=new sycl::ext::oneapi::experimental::command_graph<sycl::ext::oneapi::experimental::graph_state::executable>(g.graph->finalize());
++        };
++        if(!timing){
++            reset(false);call();const auto direct=snapshot("direct-a",false);
++            Graph single{q};capture(single,1,"single");
++            reset(false);q.ext_oneapi_graph(*single.exec).wait_and_throw();auto ga=snapshot("graph-a",false);need(same(direct,ga),"direct/graph initial mismatch");
+             reset(true);call();const auto changed=snapshot("direct-b",true);
+-            reset(true);q.ext_oneapi_graph(*graph.exec).wait_and_throw();auto gb=snapshot("graph-b",true);need(same(changed,gb),"direct/graph changed mismatch");
++            reset(true);q.ext_oneapi_graph(*single.exec).wait_and_throw();auto gb=snapshot("graph-b",true);need(same(changed,gb),"direct/graph changed mismatch");
+             constexpr size_t mix_at=size_t(TM)*(D+LR+HC+HC)*4;
+             need(std::memcmp(direct.data()+mix_at,changed.data()+mix_at,size_t(T)*N*4)!=0,"changed fixture not observable in mixed");
++            if(apply&&inject){
++                batches[index]=std::make_unique<Graph>(q);capture(*batches[index],iters,"batch20");
++                for(bool changed_input:{false,true}){
++                    const std::string label=changed_input?"b":"a";
++                    reset(changed_input);for(int i=0;i<iters;++i)call();const auto reference=snapshot("batch20-direct-"+label,changed_input);
++                    reset(changed_input);q.ext_oneapi_graph(*batches[index]->exec).wait_and_throw();const auto actual=snapshot("batch20-graph-"+label,changed_input);
++                    need(same(reference,actual),"20-read own direct/graph mismatch");
++                }
++            }
++            return;
++        }
++        need(apply==1&&inject==1&&batches[index]&&batches[index]->exec,"timing graph ready");
++        std::ifstream ref(output/(stem+"-batch20-direct-a.bin"),std::ios::binary);
++        std::vector<uint8_t> expected{std::istreambuf_iterator<char>(ref),std::istreambuf_iterator<char>()};
++        need(expected.size()==size_t(TM)*(D+LR+HC+HC+N+D)*4,"timing reference full snapshot size");
++        // All12 single-read cases AND all3 own batch/changed cases passed before any timing.
++        for(int warm=0;warm<3;++warm){
++            reset(false);q.ext_oneapi_graph(*batches[index]->exec).wait_and_throw();
++            const auto actual=snapshot("warm-"+std::to_string(warm),false);need(same(expected,actual),"warm20 own bytes");
+         }
+         for(int round=0;round<3;++round){
+-            reset(false);call();call();q.wait_and_throw();reset(false);
+-            auto begin=q.ext_oneapi_submit_barrier();const auto t0=Clock::now();
+-            for(int i=0;i<iters;++i)call();const auto t1=Clock::now();auto end=q.ext_oneapi_submit_barrier();q.wait_and_throw();const auto t2=Clock::now();
++            reset(false);auto begin=q.ext_oneapi_submit_barrier();begin.wait_and_throw();
++            const auto t0=Clock::now();q.ext_oneapi_graph(*batches[index]->exec);const auto t1=Clock::now();
++            auto end=q.ext_oneapi_submit_barrier();end.wait_and_throw();const auto t2=Clock::now();
++            const auto actual=snapshot("timed-r"+std::to_string(round),false);need(same(expected,actual),"timed20 own bytes");
+             std::string device="null";
+             try{const auto a=begin.get_profiling_info<sycl::info::event_profiling::command_end>();const auto z=end.get_profiling_info<sycl::info::event_profiling::command_end>();
+                 if(z>=a)device=std::to_string(double(z-a)/1000.0);}catch(const sycl::exception&){}
+-            std::printf("{\"type\":\"timing\",\"T\":%d,\"apply\":%d,\"inject\":%d,\"round\":%d,\"calls\":%d,\"enqueue_us\":%.3f,\"after_enqueue_to_drained_us\":%.3f,\"complete_us\":%.3f,\"device_barrier_span_us\":%s}\n",T,apply,inject,round,iters,us(t0,t1),us(t1,t2),us(t0,t2),device.c_str());
++            std::printf("{\"type\":\"timing\",\"T\":%d,\"apply\":1,\"inject\":1,\"round\":%d,\"calls\":20,\"graph_submissions\":1,\"enqueue_us\":%.6f,\"complete_us\":%.6f,\"device_barrier_span_us\":%s}\n",T,round,us(t0,t1),us(t0,t2),device.c_str());
+         }
+-        snapshot("timed-final",false);
+-    }
++    };
++    for(int T:{1,2,6})for(int apply:{0,1})for(int inject:{0,1})case_run(T,apply,inject,false);
++    std::printf("{\"type\":\"correctness_complete\",\"cases\":12,\"own_batch20_cases\":3,\"timing_not_started\":true}\n");
++    for(int T:{1,2,6})case_run(T,1,1,true);
++    q.wait_and_throw();for(auto& g:batches)g.reset();q.wait_and_throw();
+     exact(norm,wn.data());exact(down,wd.data());exact(up,wu.data());exact(iw,wi.data());
+-    q.wait_and_throw();std::printf("{\"status\":\"PASS_ONE_MODE_CROSS_GRF_PENDING\",\"grf\":%s,\"iters\":%d,\"cases\":12,\"timing_rounds\":36,\"device_pci\":\"%s\"}\n",mode,iters,pci.c_str());return 0;
++    q.wait_and_throw();std::printf("{\"status\":\"PASS_ONE_PROCESS_CROSS_MORE_PENDING\",\"more\":%s,\"iters\":%d,\"cases\":12,\"timing_rounds\":9,\"device_pci\":\"%s\"}\n",mode,iters,pci.c_str());return 0;
+ }
+-int main(int argc,char** argv){setvbuf(stdout,nullptr,_IONBF,0);try{return run(argc,argv);}catch(const std::exception& e){std::fprintf(stderr,"grf_oracle FAIL: %s\n",e.what());return 5;}}
++int main(int argc,char** argv){setvbuf(stdout,nullptr,_IONBF,0);try{return run(argc,argv);}catch(const std::exception& e){std::fprintf(stderr,"hc_more_oracle FAIL: %s\n",e.what());return 5;}}
