@@ -22819,3 +22819,29 @@ trackedprobe source exactlymeasured, adaptedwrapper bashsyntaxPASS only.
 NextCPUonlysplitpayload/flagkernel discriminator preparedseparately; no
 runtime/default/shelfchange. Raw ep-ordering-s27/dispatch/s27-report.json,
 stagedocS27, lowlevel_probe/README.md.
+
+
+## 2026-10-15 -- Flash-Next optimization S28: explicit EP barrier scope
+
+CONFIG: actualFable5.1 mirror/scoped probe, actualOpus5.5 nativeISA review;
+fixedstack/real17520Bpush+614400Breturn, fresh producer/stagepoison/guards.
+COMMAND: leasednative/splitdebug/splitnative/mirrordebug/scopeddebug, then
+actualpatchedEP-TU/nativewait0extra usingoriginalS27object; CPUonlyengine
+build87.888s and boundedC2canary, normalstop/finalbothcard+10compiledhealth.
+RESULT: nativefirstusePASSthen1316/1374wrong; splitdebug/native65PASS;
+defaultmirror112/648wrong; scoped65PASS; actualEP-TU65PASS. Returns,
+guards/spincodesclean; alldrained/nocrash/timeout/reset. S27CORRECTION:
+BMGassembly WAS present inhidden.text.*.asm; Opus/rootreviewed. Preflag
+UGMfence none.group->invalidate.gpu;2postEOTnullmovesalsochange,10rawbytes.
+Noillegalcompilerfold/compilerbug/generalIPCproof. Frozen152055a6 passes
+2x64codingS16prefixes,46offered/40accepted each, stableID+alias/registry,
+all24576experts7152/17424, math323/667, reasoning391, toolroundtrip.
+Stop/leaseexit0; finalpercard+10compiled4x5120BF16/P2P0healthPASS.
+VERDICT: retainonefunctionalline ep_push system-scopebarrier, releasefence
+andreturnpathunchanged. SubmitindependentEPbranchfix; no speed/stability,
+productioncorruption/newfullcache/shelfclaim. Oldfrozencontrols retained;
+newarchive isfixed,notoldcontrol. HeadpairOFF/unqualified,nextOFF/ONtest.
+Loop: reuseobjects/hiddenISA, stoplosersearly, batchdrainedarmsforhealth,
+smallcanary; nofour200k/soak/dailyrestore/frameworksetup. TrackedS28source
+exacta73dc02e; wrappersyntaxonly. Dateddoc20261015_strata_ep_publication_scope,
+stagedocS28/data-map/probeupdated; raw ep-ordering-s28/s28-report.json.

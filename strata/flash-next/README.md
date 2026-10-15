@@ -201,3 +201,13 @@ uncached payload hints do not cure it. The latter patch is retained as
 rejected negative evidence. No production output corruption is established.
 Copy control and final per-card/compiled-collective health pass. See stage
 S26 and lowlevel_probe/README.md; use frozen binaries for prior measurements.
+
+S28 resolves the bounded standalone EP freshness oracle with one explicit
+system memory scope on ep_push's workgroup barrier. Default mirror fails;
+scoped mirror and actual patched EP TU each65/65 PASS. Frozen engine
+strata-ep-scope-s28 SHA152055a6 passes concurrent64-token S16 prefixes,
+draft counts, math/reasoning/tools, normal stop and final GPU health.
+Head-pair option remains OFF and unqualified. No speed/fullcache/shelf claim.
+Native BMG ISA was present in hidden files; S28 explicitly corrects S27's
+contrary statement. Minimal patch: patches/ep-push-system-barrier.patch;
+[evidence and limits](../../docs/20261015_strata_ep_publication_scope.md).

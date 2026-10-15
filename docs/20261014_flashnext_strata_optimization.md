@@ -1730,3 +1730,46 @@ source/README/runner updated; adapted runner syntax checked without another
 GPU repetition. Raw ep-ordering-s27/dispatch/{s27-report.json,findings.md,
 provenance.json,sha256-dispatch.txt,native.log,debug.log} preserves commands,
 hashes, sample diagnostics and health. Servers stopped, both leases free.
+
+## S28: scoped EP publication passes bounded oracle (2026-10-15)
+
+CONFIG: unchanged two-B70 stack, real EP17520B push/614400B return,
+producer inbox poison/distinct stage poison/guards, finite bounds. Actual
+Fable5.1 prepares mirror/scoped producer; actual Opus5.5 reviews native
+ISA. Runtime adds one functional line: explicit system memory scope on
+EP push's workgroup barrier, retaining release fence and one kernel.
+Head-pair option stays OFF; cache and return-path source unchanged.
+
+COMMAND: pair-leased native versus split payload/flag kernels, then
+same-binary default/scoped mirror, then patched actual native EP TU with
+original S27 probe object and native wait/no extra reads. CPU-only full
+engine build87.888s; frozen152055a6 C2 small serving canary. See the
+[dated evidence](20261015_strata_ep_publication_scope.md) for full identities,
+protocol, commands, source delta, all six arms and native ISA qualifications.
+
+RESULT: old native/debug first-use PASS then first reads fail1316/1374;
+split debug/native each65/65 PASS. Default mirror fails112/648 including
+first use; scoped65/65 PASS. Actual patched EP TU/native wait65/65 PASS.
+All guards/returns/spin codes pass; queues drain normally, no crash/reset
+or timeout. Native BMG ISA IS available: ocloc emitted hidden .text.*.asm
+files missed in S27. This explicitly corrects S27's no-native-ISA claim.
+Preflag UGM fence none.group becomes invalidate.gpu; two post-EOT null
+moves also differ,10 rawbytes total. No compiler-bug/legality proof.
+
+Frozen engine152055a6 serves stable/research identities, all24576 experts
+resident7152/17424. Both concurrent64-token coding replies match S16
+prefixes, each46 offered/40 accepted drafts. Concurrent math323/667,
+reasoning391 and tool roundtrip PASS. Normal stop/lease exit0 and final
+both-card/ten compiled4x5120 BF16/P2P0 collective health PASS.
+
+VERDICT: keep small EP-scope correctness fix and submit to author EP
+branch, independent of PUSH. Actual native-TU proof avoids trusting only
+a probe-local clone. No speed/stability/production-corruption/compiler-bug
+or new fullcache claim. Preserve old binaries/archives; don't relabel a
+fresh fixed native archive as the failing historical control. S26 headpair
+remains GPU-unqualified, now ready for its separate OFF/ON canary.
+Loop: recovered existing ISA, reused objects, stopped failures early,
+batched drained numerical arms before health, one small model canary.
+No repeated four200k test, soak, framework setup or daily restoration.
+Tracked probe exact S28sourcea73dc02e; adapted wrapper bashsyntax only.
+Raw ep-ordering-s28/s28-report.json and sha256-s28.txt preserve provenance.

@@ -111,7 +111,7 @@ collective post-health pass. No clean throughput claim from this diagnostic.
 Raw commands, frozen hashes and trace summaries: cachefix_20261014/head-profile-s25/.
 
 
-## EP publication diagnostics (S26, unresolved correctness failure)
+## EP publication diagnostics (S26-S28)
 
     bash build_ep.sh
     bash run_ep.sh copy producer 0 20
@@ -119,8 +119,8 @@ Raw commands, frozen hashes and trace summaries: cachefix_20261014/head-profile-
 
 The launcher takes the pair lease, pins both visible devices, gates their
 PCI BDFs, checks the binary hash and enables the same IPC capability as
-the serving launcher. It never runs outside the lease. Native EP source
-from the runtime is unchanged; the probe links its recorded kernel archive.
+the serving launcher. It never runs outside the lease. The probe links
+its recorded kernel archive; native means that archive's EP implementation.
 
 Messages contain17520-byte ids/activation pushes and614400-byte
 upper-bound returns, with fresh nonzero salts, poison and4096-byte guards
@@ -156,8 +156,8 @@ copy, read the same inbox twice into distinct poisoned private buffers on
 the same in-order queue, with no intervening host wait. `--wait debug`
 records wanted/first/last epochs and spins from the actual device wait.
 These are diagnostic arms; neither extra reads nor debug wait is a fix.
-The tracked source exactly matches measured S27 source26e26f96; binary
-49cfed4f is preserved in raw ep-ordering-s27/fable-dynamic/build/.
+The S27 source26e26f96 and binary49cfed4f are preserved in raw
+ep-ordering-s27/fable-dynamic/. Tracked source now matches S28 sourcea73dc02e.
 
 `run_ep.sh flag producer 0 64 native 2` selects native wait plus extra
 reads; change argument5 to `debug` for the observed-epoch arm. The wrapper
@@ -175,8 +175,31 @@ clean. All queues drained, no crash/timeout/reset, both-card and ten
 compiled two-rank collectives pass after EACH arm. All failed-arm latency
 claims remain excluded; no production output-corruption claim.
 
-Opus extracted source/SPIR-V evidence, but native BMG ISA extraction did
-not complete. Do not label that output hardware disassembly. Next prepared
-probe-only discriminator separates payload and flag into consecutive
-producer kernels; it is not a runtime patch. Raw report:
-cachefix_20261014/ep-ordering-s27/dispatch/s27-report.json.
+S28 corrects S27's no-native-ISA statement: ocloc emitted hidden
+`.text.*.asm` files, found by actual Opus5.5 and reviewed by root. The
+default kernel has a group-scope UGM fence before flag publication;
+explicit system scope on the workgroup barrier changes that to decoded
+`fence.ugm.invalidate.gpu`. Compiler causality/legality remains unproven.
+
+The source now includes native, split payload/flag, default mirror and
+explicit-scope mirror producer paths, prepared by actual Fable5.1:
+
+    bash run_ep.sh flag producer 0 64 debug 2 mirror
+    bash run_ep.sh flag producer 0 64 debug 2 scoped
+    bash run_ep.sh flag producer 0 64 native 0 split
+
+S28 same-binary mirror fails112/648 first-read poison words; scoped65/65
+passes. Split debug/native waits each65/65 pass. Actual patched EP TU with
+the original S27 probe object and native wait/no extra reads passes65/65.
+Frozen full engine152055a6 passes both concurrent64-token S16 prefixes,
+draft accounting, math/reasoning/tools, normal teardown and final health.
+No speed, long-run stability or full-cache requalification is implied.
+
+Patch only the ep_push barrier, retaining the existing release fence:
+`../patches/ep-push-system-barrier.patch`. Do not infer the old native
+failure is absent by linking a new fixed archive. Use retained frozen
+binaries for old controls. Tracked source is verbatim measured S28;
+adapted wrapper is syntax checked only, not redundantly rerun. Measured
+raw dispatch stopped after two failures; wrapper remains maxfail1.
+See [S28 evidence](../../../docs/20261015_strata_ep_publication_scope.md)
+and cachefix_20261014/ep-ordering-s28/s28-report.json.

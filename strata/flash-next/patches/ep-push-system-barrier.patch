@@ -1,0 +1,11 @@
+--- a/sycl/src/kernels/cuda/ep_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/ep_kernels.dp.cpp
+@@ -43,7 +43,7 @@
+         for (size_t i = lid; i < words; i += WG) d[i] = s[i];
+         // every work-item's stores into the peer before the flag
+         sycl::atomic_fence(sycl::memory_order::release, sycl::memory_scope::system);
+-        sycl::group_barrier(it.get_group());
++        sycl::group_barrier(it.get_group(), sycl::memory_scope::system);
+         if (lid == 0) sys_store(peer_flag, *ctr);
+     });
+ }

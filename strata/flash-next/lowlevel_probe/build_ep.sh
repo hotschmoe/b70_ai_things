@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# CPU-only AOT build of ep_ready_probe (S27) in strata-ab-build:ocloc: --network none, NO /dev/dri, no lease needed.
-# Links the FROZEN src-ep/build-sycl-ep archives (mounted read-only); flags copied from lowlevel_probe/build_head.sh.
+# CPU-only AOT build of ep_ready_probe (S28) in strata-ab-build:ocloc: --network none, NO /dev/dri, no lease needed.
+# Records current src-ep/build-sycl-ep archive hashes (mounted read-only); native reflects that archive's EP implementation.
 # All outputs (and compiler temp files) stay in ./build on disk. Run: bash build_ep.sh
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"

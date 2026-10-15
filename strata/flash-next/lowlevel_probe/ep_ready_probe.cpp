@@ -1,4 +1,4 @@
-// ep_ready_probe.cpp (S27 fable-dynamic: rev3 + --extra-reads + --wait debug) - bounded EP producer -> IPC message ->
+// ep_ready_probe.cpp (S28 fable-barrier: S28 split-publication + probe-local --push scoped|mirror) - bounded EP producer -> IPC message ->
 // readiness -> peer consume/return probe at the real decode shape (N2560, K10, 6 rows): push 17520 B (240 B ids +
 // 17280 B q8_1), return upper bound 614400 B (60 rows).  rev1 (frozen, original/) found a flag-mode push oracle failure.
 // ROOT ONLY under the PAIR lease; agents never execute it.  Reuses ep_mem.hpp IPC mapping unchanged: every region is
@@ -60,6 +60,7 @@ double g_timeout_ms = 5000, g_wait_us = 0;
 bool g_host_sync = false;
 int g_extra = 0;
 std::string g_wait_mode = "native";
+std::string g_push_mode = "native";
 double us_since(clk::time_point t) { return std::chrono::duration<double, std::micro>(clk::now() - t).count(); }
 
 class MarkK;
@@ -135,6 +136,61 @@ size_t diag(const char* view, const std::vector<uint32_t>& h, size_t words, uint
 }
 std::string lower(std::string s) { for (auto& c : s) c = char(std::tolower((unsigned char) c)); return s; }
 
+// --push split: probe-local copy of the native ep_push payload body, including its release/system
+// fence and workgroup barrier. Only publication moves into a second kernel on this SAME in_order
+// producer queue. No host wait or cross-queue event is introduced; q0 return-wait remains AFTER
+// these submissions. Payload assignments stay plain (no cache-hint substitution).
+// The native branch still calls the frozen archive. A kernel completion boundary is the intended
+// discriminator; source-level queue ordering does not prove peer-memory visibility or correctness.
+class EpPushProbePayloadK;
+class EpPushProbeFlagK;
+void ep_push_probe_split(const int32_t* ids, int n_ids, const uint8_t* xq, size_t xq_bytes,
+                         int32_t* peer_ids, uint8_t* peer_xq, uint32_t* peer_flag,
+                         const uint32_t* ctr, sycl::queue& q) {
+    constexpr size_t WG = 256;
+    const size_t words = xq_bytes / 4;
+    q.parallel_for<EpPushProbePayloadK>(sycl::nd_range<1>(WG, WG), [=](sycl::nd_item<1> it) {
+        const size_t lid = it.get_local_id(0);
+        for (size_t i = lid; i < (size_t) n_ids; i += WG) peer_ids[i] = ids[i];
+        const uint32_t* s = (const uint32_t*) xq;
+        uint32_t* d = (uint32_t*) peer_xq;
+        for (size_t i = lid; i < words; i += WG) d[i] = s[i];
+        sycl::atomic_fence(sycl::memory_order::release, sycl::memory_scope::system);
+        sycl::group_barrier(it.get_group());
+    });
+    // Same plain epoch load and same hinted sys_store helper as native lid0 publication.
+    q.single_task<EpPushProbeFlagK>([=] { strata::sys_store(peer_flag, *ctr); });
+}
+
+// --push mirror|scoped (S28 fable-barrier): ONE probe-local WG256 kernel, statement-for-statement the native ep_push
+// body (ep_kernels.dp.cpp:93-103): per-WI release/system fence, work-group barrier, then lid0 sys_store(peer_flag,*ctr)
+// in the SAME kernel.  The frozen S27 SPIR-V of native ep_push shows no CrossDevice OpMemoryBarrier before its
+// OpControlBarrier (mem=Workgroup); the fence next to the barrier was folded into the WG-scope barrier.
+//   mirror : group_barrier(it.get_group())                              default fence scope = work_group, as native.
+//   scoped : group_barrier(it.get_group(), sycl::memory_scope::system)  the barrier itself carries CrossDevice scope.
+// The two arms differ in exactly that one argument (if constexpr below).  mirror vs the archive native differ only by
+// TU/kernel name.  Payload stores stay plain; no atomics, cache hints, sleeps or extra work-groups.  Whether the
+// barrier's SPIR-V scope survives to the device binary is checked offline (spirv/); it does not prove visibility.
+template <bool Scoped> class EpPushProbeOneK;
+template <bool Scoped>
+void ep_push_probe_one(const int32_t* ids, int n_ids, const uint8_t* xq, size_t xq_bytes,
+                       int32_t* peer_ids, uint8_t* peer_xq, uint32_t* peer_flag,
+                       const uint32_t* ctr, sycl::queue& q) {
+    constexpr size_t WG = 256;
+    const size_t words = xq_bytes / 4;
+    q.parallel_for<EpPushProbeOneK<Scoped>>(sycl::nd_range<1>(WG, WG), [=](sycl::nd_item<1> it) {
+        const size_t lid = it.get_local_id(0);
+        for (size_t i = lid; i < (size_t) n_ids; i += WG) peer_ids[i] = ids[i];
+        const uint32_t* s = (const uint32_t*) xq;
+        uint32_t* d = (uint32_t*) peer_xq;
+        for (size_t i = lid; i < words; i += WG) d[i] = s[i];
+        sycl::atomic_fence(sycl::memory_order::release, sycl::memory_scope::system);
+        if constexpr (Scoped) sycl::group_barrier(it.get_group(), sycl::memory_scope::system);
+        else sycl::group_barrier(it.get_group());
+        if (lid == 0) strata::sys_store(peer_flag, *ctr);
+    });
+}
+
 // --wait debug: probe-local copy of ep_wait (ep_kernels.dp.cpp:106-119) with a device-local side channel.  Same
 // `want = *ctr` plain load, same sys_load (uncached L1+L3 read + acquire fence, sycl_doorbell.hpp), same wrap-safe
 // compare, same spin cap and err code, same trailing acquire fence.  The load sequence is identical to the native
@@ -174,6 +230,7 @@ int main(int argc, char** argv) {
         else if (a == "--host-sync") g_host_sync = std::atoi(v.c_str()) != 0;
         else if (a == "--extra-reads") g_extra = std::atoi(v.c_str());
         else if (a == "--wait") g_wait_mode = v;
+        else if (a == "--push") g_push_mode = v;
         else if (a == "--reps") reps = std::atoi(v.c_str());
         else if (a == "--max-fail") max_fail = std::atoi(v.c_str());
         else if (a == "--spin") spin = uint32_t(std::strtoul(v.c_str(), nullptr, 10));
@@ -182,8 +239,10 @@ int main(int argc, char** argv) {
     }
     if ((mode != "copy" && mode != "flag") || (poison != "owner" && poison != "producer") || reps < 1 || reps > 64 ||
         max_fail < 1 || max_fail > 8 || spin == 0 || g_timeout_ms <= 0 || (g_extra != 0 && g_extra != 2) ||
-        (g_wait_mode != "native" && g_wait_mode != "debug")) {
+        (g_wait_mode != "native" && g_wait_mode != "debug") ||
+        (g_push_mode != "native" && g_push_mode != "split" && g_push_mode != "scoped" && g_push_mode != "mirror")) {
         std::puts("FAIL usage: --mode copy|flag --poison owner|producer --extra-reads 0|2 --wait native|debug "
+                  "--push native|split|scoped|mirror "
                   "--host-sync 0|1 --reps 1..64 --max-fail 1..8 --spin N --timeout-ms MS");
         return 2;
     }
@@ -235,9 +294,10 @@ int main(int argc, char** argv) {
     drain(q0, "init0");
     drain(q1, "init1");
     std::printf("CONFIG mode=%s poison=%s reps=%d+1first_use max_fail=%d push_B=%zu ret_upper_B=%zu guard_B=%zu spin=%u "
-                "timeout_ms=%.0f host_sync=%d extra_reads=%d wait=%s intercard_clock_join=N/A\n", mode.c_str(),
+                "timeout_ms=%.0f host_sync=%d extra_reads=%d wait=%s push=%s intercard_clock_join=N/A\n", mode.c_str(),
                 mode == "flag" ? poison.c_str() : "n/a", reps, max_fail, PUSH_B, RET_B, GUARD_B, spin, g_timeout_ms,
-                (int) g_host_sync, extra ? 2 : 0, mode == "flag" ? g_wait_mode.c_str() : "n/a");
+                (int) g_host_sync, extra ? 2 : 0, mode == "flag" ? g_wait_mode.c_str() : "n/a",
+                mode == "flag" ? g_push_mode.c_str() : "n/a");
     std::fflush(stdout);
 
     std::vector<uint32_t> hp(PB / 4), hb(PB / 4), hc(PB / 4), hr(RB / 4), hd(RB / 4);
@@ -321,8 +381,22 @@ int main(int argc, char** argv) {
                              static_cast<uint32_t*>(flag0.remote), ctr1, &q1);
             sycl::event d1 = mark(q1);
             sycl::event a0 = mark(q0);
-            sk::ep_push(reinterpret_cast<const int32_t*>(pushb), ENTRIES, pushb + IDS_B, XQ_B,
-                        reinterpret_cast<int32_t*>(inboxb), inboxb + IDS_B, static_cast<uint32_t*>(flag1.remote), ctr0, &q0);
+            if (g_push_mode == "split")
+                ep_push_probe_split(reinterpret_cast<const int32_t*>(pushb), ENTRIES, pushb + IDS_B, XQ_B,
+                                    reinterpret_cast<int32_t*>(inboxb), inboxb + IDS_B,
+                                    static_cast<uint32_t*>(flag1.remote), ctr0, q0);
+            else if (g_push_mode == "scoped")
+                ep_push_probe_one<true>(reinterpret_cast<const int32_t*>(pushb), ENTRIES, pushb + IDS_B, XQ_B,
+                                        reinterpret_cast<int32_t*>(inboxb), inboxb + IDS_B,
+                                        static_cast<uint32_t*>(flag1.remote), ctr0, q0);
+            else if (g_push_mode == "mirror")
+                ep_push_probe_one<false>(reinterpret_cast<const int32_t*>(pushb), ENTRIES, pushb + IDS_B, XQ_B,
+                                         reinterpret_cast<int32_t*>(inboxb), inboxb + IDS_B,
+                                         static_cast<uint32_t*>(flag1.remote), ctr0, q0);
+            else
+                sk::ep_push(reinterpret_cast<const int32_t*>(pushb), ENTRIES, pushb + IDS_B, XQ_B,
+                            reinterpret_cast<int32_t*>(inboxb), inboxb + IDS_B,
+                            static_cast<uint32_t*>(flag1.remote), ctr0, &q0);
             sycl::event b0 = mark(q0);
             sk::ep_wait(static_cast<const uint32_t*>(flag0.local), ctr0, spin, err0, 12, &q0);
             sycl::event c0 = mark(q0);

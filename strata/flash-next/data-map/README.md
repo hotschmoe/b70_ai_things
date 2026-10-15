@@ -6,11 +6,12 @@ path, which operations are expensive or wait, and how strong the evidence
 is for each claim. `operation-data.json` is the source of truth;
 `index.html` embeds a copy of it.
 
-Snapshot: 2026-10-15, S27 (S22 operation trace plus readiness, real-head,
-production PLE and EP correctness diagnostics). Runtime source:
+Snapshot: 2026-10-15, S28 (S22 operation trace plus readiness, real-head,
+production PLE and bounded EP publication fix/native ISA). Runtime source:
 `/mnt/vm_8tb/b70/build/strata-ab/src-ep` (upstream Strata 296b59d2 base
 plus working-tree overlays for EP/PUSH/accounting/S19-S21 and the
-GPU-untested S26 prototype). Timings reference preserved binaries, not
+default-OFF S26 head-pair prototype and S28 explicit EP barrier scope).
+Timings reference preserved binaries, not
 the changing source directory. Evidence:
 `docs/20261014_flashnext_strata_optimization.md` S10 and S20-S22, plus raw
 summaries under
@@ -93,5 +94,15 @@ does not establish a serving gain or serving-output corruption.
 S27 observes the intended wait epoch in debug failures: first receiver
 copy consumes current poison while immediate second/third copies pass.
 Native/debug arms and post-health are recorded separately. This narrows
-the question without proving its cause; source/SPIR-V is not native BMG
-ISA. No new speed result or runtime fix is claimed.
+the question without proving its cause. S28 corrects the S27 claim that
+native BMG ISA was unavailable: hidden .text.*.asm files were present.
+
+S28's same-binary default mirror fails112/648 first-read poison words;
+explicit system scope on the producer workgroup barrier passes65/65.
+The actual patched EP translation unit with native wait/no extra reads
+also passes65/65. Decoded preflag UGM fence changes none.group to
+invalidate.gpu; no compiler-bug/legality conclusion follows. Frozen engine
+152055a6 passes small C2 output prefixes, drafting, math/reasoning/tools,
+normal teardown and final both-card/compiled-collective health. Headpair
+remains OFF and unqualified. No new speed/fullcache/shelf claim. See
+[S28 evidence](../../../docs/20261015_strata_ep_publication_scope.md).

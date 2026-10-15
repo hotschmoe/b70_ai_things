@@ -23,6 +23,12 @@ client decode52.737 tok/s per stream, still below150. Full-cache recovery
 and deeper-MTP throughput are separately bounded qualifications. No daily
 shelf promotion; clean serving control remains retained below.
 
+S28 fixes the bounded EP publication oracle with explicit barrier scope:
+scoped mirror and actual native EP TU each65/65 PASS, and frozen engine
+152055a6 passes concurrent output prefixes, drafting, functionals and final
+health. No new speed or full-cache qualification. S26 head-pair remains
+OFF/unqualified. See [S28 evidence](20261015_strata_ep_publication_scope.md).
+
 Quality: on 2026-10-14 Flash-Next IQ3_XXS beat the 27B INT4 8-0 on paired
 langs + sysadmin tasks (41/43 vs 33/43); see the A/B brief, Outcome 2.
 
