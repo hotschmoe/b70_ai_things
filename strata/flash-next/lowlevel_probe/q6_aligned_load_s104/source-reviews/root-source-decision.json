@@ -1,0 +1,31 @@
+{
+  "utc": "2026-10-15T22:42:58.530740+00:00",
+  "status": "ROOT_GO_ONE_PRIVATE_ADAPTER_BUILD_THEN_COMPILED_AUDIT_BEFORE_GPU",
+  "actual_models_seconds": {
+    "claude-opus-5-5": 41.562184531998355,
+    "claude-fable-5-1": 53.56857498601312
+  },
+  "root_FULLREAD_sources_diffs_recipes_answers": true,
+  "source_byte_checker": {
+    "cases": 512,
+    "elapsed_s": 0.031966060982085764,
+    "compiled_or_FP_proof": false
+  },
+  "prelink_recipe_resolution": {
+    "same_IM images": "IMAGES line exactly matches actual successful S85-v2 recipe; no prelink fp-model change required for parity. Compile and host link precise remain.",
+    "S85_build_exit": 0,
+    "S85_actual_prelink_log": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep-v2/build/adapter-prelink.log",
+    "actual_log_sha256": "ccf7185ea8fd3deb1381b4c19e8826623da399106e83798d1d81fa7535ffe2d6",
+    "S85_recipe_sha256": "791688408e91335ee42c25f4cafbeaeee709f7b7cc1a45e85dbd1d9d631a8408",
+    "matching_IM images_line": "IMAGES=(-O3 -DNDEBUG -fsycl -fsycl-targets=spir64_gen -fsycl-device-code-split=per_kernel -fsycl-max-parallel-link-jobs=4 -Xsycl-target-backend=spir64_gen \"-device bmg-g31 -options -cl-fp32-correctly-rounded-divide-sqrt\")"
+  },
+  "root_corrections": [
+    "Fable private-original compiled byte identity is not established by source. New actual host/name/image audit and runtime anchors remain required.",
+    "Fable previous block two bytes are d (half scale), not an int8 scale-array field.",
+    "Compiler may eliminate unused fifth word on aligned path or choose different aligned sends. Inspect actual cost and exact reconstruction; no mandatory specific send partition inferred from syntax.",
+    "Preserve actual FP conversion/contraction/order; precise alone is not no-contraction proof.",
+    "No model/fullbinary private binding substitution, no raw-image equality claim or dynamic speed forecast."
+  ],
+  "GPU": 0,
+  "build_not_yet_executed": true
+}

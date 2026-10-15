@@ -1,0 +1,50 @@
+# S104 review: Q6 A4 private adapter build
+
+**Verdict: ACCEPT** one private, CPU-only adapter build. I found no real blocking bug. One recipe parity item should be fixed or confirmed before compiling.
+
+## Byte reconstruction and bounds (source)
+
+- **Reconstruction.** `load16_a4` reads 5 dwords from `a & ~3` and applies the same `half` funnel with unsigned shifts as `load16_a2`. The 16 bytes it delivers are identical, which root's 512-case byte-flow check confirms at source level.
+- **Alignment.** The launch guard requires `base % 4 == 0`. Rows start at `row\xb7bpr\xb7210`, which is 5040 or 2100, both divisible by 4. So the alignment parity comes from `kbx` alone, and block 0 is always aligned.
+- **Lower bound.** The `a\u22122` read only happens for blocks at index 1 or above, where it lands in the previous block's `d` field.
+- **Upper bound.** The furthest reads end at 131 for `ql` and 195 for `qh`, both inside the 210-byte block.
+- **Fifth dword.** It is read unconditionally, which stays in bounds.
+- **Leaf allocation.** `raw + G` with G = 4096 bytes, so the base is 4-aligned.
+
+## Arithmetic ledger
+
+- **Only the load changed.** The S85 diff shows just two changes: the candidate's load path, and removal of the centering branch, restoring the original `sub_sat` for both arms.
+- **Unchanged:** the DP4A order, the half\u2192float scale and its sign, the `ds*dsc*s` expression, K order and XOR 16, 8, 4, 2, 1.
+- **Not proven yet:** contraction is not established from source. The compiled FP form must be checked after the build.
+
+## Anchors and fixtures
+
+- **Anchor order is correct:** the public result must equal S44, the private original must equal public, and only then is the candidate checked.
+- **Fixture handling.** The 8-column S44 exports are trimmed to C = 6, and the inactive tail must be 0xFF. Canonical Q8 is uploaded and read back exactly.
+- **Weights.** The two bounded GGUF slices are checked against the S44 FNV hashes.
+- **Failure handling.** Each check stops at the first strict mismatch, with mismatch dumps.
+
+## Fix or confirm before building (not a source bug)
+
+**The device-image prelink flags lack `-fp-model=precise`.** The `IMAGES` array omits it, while the S98 recipe included it in its prelink line. Two options:
+- add it, to match the S98 recipe; or
+- show that S85's actual prelink command matched this one, since S85 produced a public-equal original under those flags.
+
+Otherwise the device codegen's contraction policy could differ from the public archive. That would surface only as a private-original mismatch on the GPU, or in the post-build FP audit.
+
+## Non-blocking notes
+
+- `const int*` punning over `uint8_t` weight storage repeats the existing A2 activation idiom and is never written inside the kernel. Strict output bytes would catch any miscompile. Given the IQ2 aliasing history, still look at the candidate's loads in the ISA.
+- Reducing timing to 4 rounds is fine; the timing is descriptive only.
+
+## Gates after the build, before any GPU
+
+1. Bind the actual Info, cache, guard, name pointer and selected image for `PrivateC6A4<false>`, `PrivateC6A4<true>` and the public kernel.
+2. The candidate ISA must show:
+   - each weight run loaded with dword-aligned `d32x4` plus `d32` sends;
+   - no 16-byte split and no `k` select chain;
+   - 48 DP4As;
+   - the same FP mul/mad/add form as the original;
+   - SIMD32 at GRF128;
+   - no new spill or scratch fields. Absent fields are not evidence of zero.
+3. If the reassembly cost is still present or the arithmetic form changed: **HOLD**. No retry and no speed claim.

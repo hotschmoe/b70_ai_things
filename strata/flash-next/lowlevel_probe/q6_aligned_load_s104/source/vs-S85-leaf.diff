@@ -1,0 +1,61 @@
+--- S85/q6_center_leaf.cpp
++++ S104/q6_a4_leaf.cpp
+@@ -1,9 +1,9 @@
+-// S85: saved canonical-Q8 Q6_K C6, original/packed-center private kernels and public anchor.
++// SOURCE ONLY S104: saved canonical-Q8 Q6 C6, original/A4 private kernels and public anchor.
+ #define DPCT_PROFILING_ENABLED
+ #include <sycl/sycl.hpp>
+ #include <dpct/dpct.hpp>
+ #include "strata/kernels/native_mmvq.hpp"
+-#include "private_q6_center.hpp"
++#include "private_q6_a4.hpp"
+ #include <array>
+ #include <memory>
+ #include <cstddef>
+@@ -26,7 +26,7 @@
+ namespace fs=std::filesystem;
+ using Bytes=std::vector<uint8_t>;
+ using Clock=std::chrono::steady_clock;
+-constexpr int C=6,BATCH=20,WARM=3,ROUNDS=8;
++constexpr int C=6,BATCH=20,WARM=3,ROUNDS=4;
+ constexpr size_t G=4096,TAIL=512;
+ struct Strict:std::runtime_error {using std::runtime_error::runtime_error;};
+ static void need(bool x,const std::string& m){if(!x)throw std::runtime_error(m);}
+@@ -107,8 +107,8 @@
+     }
+     void call(int arm){
+         if(arm==0)K::native_mmvq(14,w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,C,&q);
+-        else if(arm==1)s85::launch<false>(w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,q);
+-        else if(arm==2)s85::launch<true>(w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,q);
++        else if(arm==1)s104::launch<false>(w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,q);
++        else if(arm==2)s104::launch<true>(w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,q);
+         else need(false,"bad projection arm");
+     }
+     Bytes snapshot(const std::string& phase,bool save){
+@@ -199,7 +199,7 @@
+ static int run(const fs::path& out,const char* shard,const fs::path& fixtures){
+     auto env=[](const char* k,const char* v){const char* e=std::getenv(k);need(e&&std::string(e)==v,std::string("require ")+k+"="+v);};
+     env("STRATA_MMVQ_WIDE","1");env("STRATA_MMVQ_A2","1");env("STRATA_MMVQ_WIDE_RPW","1");env("STRATA_MMVQ_PF","0");
+-    env("STRATA_MMVQ_WIDE_MIN","0");env("STRATA_MMVQ_WIDE_MAXC","8");env("STRATA_Q6_PACKED","0");
++    env("STRATA_MMVQ_WIDE_MIN","0");env("STRATA_MMVQ_WIDE_MAXC","8");env("STRATA_Q6_PACKED","0");env("STRATA_Q6_CENTER","0");
+     need(K::native_mmvq_multi_exact(),"public exact mode required");
+     need(dpct::device_count()==1,"require exactly one visible device");
+     const sycl::device dev=dpct::dev_mgr::instance().get_device(0);
+@@ -215,13 +215,13 @@
+     // All shapes' correctness gates pass before any timing begins.
+     for(auto& state:states){state->warm();state->timing();}
+     q.wait_and_throw();states.clear();q.wait_and_throw();
+-    text(out/"result.json","{\"status\":\"PASS\",\"scope\":\"S85_TWO_SHAPE_PRIMITIVE_ONLY\",\"shapes\":2,\"paired_rounds_per_shape\":8,\"samples_per_round\":4,\"calls_per_graph\":20,\"public_original_bit_anchor\":true,\"candidate_full_bytes\":true,\"serving_qualified\":false,\"speed_qualified\":false}\n");return 0;
++    text(out/"result.json","{\"status\":\"PASS\",\"scope\":\"S104_TWO_SHAPE_PRIMITIVE_ONLY\",\"shapes\":2,\"paired_rounds_per_shape\":4,\"samples_per_round\":4,\"calls_per_graph\":20,\"public_original_bit_anchor\":true,\"candidate_full_bytes\":true,\"serving_qualified\":false,\"speed_qualified\":false}\n");return 0;
+ }
+ int main(int argc,char** argv){
+     setvbuf(stdout,nullptr,_IONBF,0);fs::path out;bool created=false;
+-    try{need(argc==4,"usage: q6_center_leaf NEW_DIR REAL_SHARD S44_SNAPSHOTS");out=argv[1];need(fs::create_directory(out),"new output directory required");created=true;return run(out,argv[2],argv[3]);}
++    try{need(argc==4,"usage: q6_a4_leaf NEW_DIR REAL_SHARD S44_SNAPSHOTS");out=argv[1];need(fs::create_directory(out),"new output directory required");created=true;return run(out,argv[2],argv[3]);}
+     catch(const std::exception& e){const int rc=dynamic_cast<const Strict*>(&e)?5:2;
+-        std::fprintf(stderr,"S85 %s: %s\n",rc==5?"STRICT_FAILURE":"RUNTIME_OR_IO_FAILURE",e.what());
++        std::fprintf(stderr,"S104 %s: %s\n",rc==5?"STRICT_FAILURE":"RUNTIME_OR_IO_FAILURE",e.what());
+         if(created)try{text(out/"result.json","{\"status\":\"FAIL\",\"exit\":"+std::to_string(rc)+",\"kind\":\""+(rc==5?std::string("strict"):std::string("runtime_or_io"))+"\"}\n");}
+-        catch(const std::exception& io){std::fprintf(stderr,"S85 failure-result IO: %s\n",io.what());return 2;}return rc;}
++        catch(const std::exception& io){std::fprintf(stderr,"S104 failure-result IO: %s\n",io.what());return 2;}return rc;}
+ }

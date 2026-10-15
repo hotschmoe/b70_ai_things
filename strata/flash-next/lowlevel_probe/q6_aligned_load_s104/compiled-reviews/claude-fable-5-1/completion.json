@@ -1,0 +1,120 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 62.82120142300846,
+  "launch_exception": null,
+  "source_packet_sha256": "bcb22bbc5aeacd12f92c6b75b574aee23445bcfaff31597d9a12c4c92dbca451",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 898869,
+      "stop_reason": "end_turn",
+      "session_id": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "total_cost_usd": 8.43308475,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 20961,
+        "cache_read_input_tokens": 240562,
+        "output_tokens": 3871,
+        "output_tokens_details": {
+          "thinking_tokens": 2882
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 20961,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 3871,
+            "cache_read_input_tokens": 240562,
+            "cache_creation_input_tokens": 20961,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 20961
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 26,
+          "outputTokens": 57018,
+          "thinkingTokens": 41360,
+          "cacheReadInputTokens": 1457779,
+          "cacheCreationInputTokens": 260874,
+          "webSearchRequests": 0,
+          "costUSD": 8.43308475,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**ACCEPT the finite two-shape strict primitive, with balanced timing only after every correctness gate passes.** No compiled blocker found.\n\n**Reconstruction, from the dataflow excerpts**\n\n- Alignment masks only the low address dword with minus 4, which is correct for a 64-bit address. The 16-byte vector send then runs at a dword-aligned address, which is a per-lane four-dword load and needs only dword alignment. This is the intended replacement for the original 16-byte chunk selection.\n- The funnel is right. Word 0 is shift-right 16 of dword 0 ORed with shift-left 16 of dword 1, and the select predicate is address bit 1 equal to zero, choosing the raw dword when aligned and the funnel otherwise. The same predicate drives the fifth-dword path at the aligned address plus 16, feeding word 3. The ql and qh paths use separate predicates. Words 1 and 2 are not in the excerpt, but the runtime byte gate covers them.\n- Bounds match the source argument. The fifth dword reaches at most offset 195 of a block and the aligned-down read reaches at most two bytes into the preceding block, never below the allocation.\n\n**Integer and FP ledger**\n\n- Saturating byte centering is unchanged. Each column has two ordered dp4a chains. The chain at line 715 starts from an explicit zero. The chain at line 461 begins above the excerpt, so confirm in the retained ASM that its seed is zero before timing. Two lines to read, not a blocker.\n- FP form matches the original: weight scale times half-to-float activation scale, times the converted first dot, then the second product fused into one MAD with the first, then a separate ADD into the column accumulator. The original has the same six MADs, so the contraction point is the same as the proven baseline, not a new rounding. Identical counts are consistent with that, but equality is established only by the strict bytes.\n\n**Reduction and stores**\n\nXOR 16 by indirect gather, then 8, 4, 2, 1 by register permutes, each followed by an add, per independent column accumulator, store under lane zero and the row bound. The excerpt does not show how the column base advances between stores, so ownership is not statically proven here. A wrong column stride would fail the full-output comparison immediately, so the runtime gate is sufficient.\n\n**Resources**\n\nSIMD32, 128 GRF, eight threads, matching the original. Absent spill and scratch fields are unknown, not zero. The extra illegal opcode is post-EOT data.\n\n**Reported counts versus evidence**\n\nThe select, move and compare reductions are static instruction counts and say nothing about traffic or time. The evidence that matters is the funnel dataflow above and, after the run, the strict byte equality against the public, S44 and private original anchors on both shapes, for initial, changed, repeat, restore, single and batch-20 graphs, with guards and read-only checks. Only then do the four balanced rounds run, and their numbers remain descriptive within one process.",
+      "ttft_ms": 45857,
+      "type": "result",
+      "duration_ms": 61814,
+      "uuid": "e2e9d5e9-ebc6-49f6-9d4e-4888e8c8967d",
+      "ttft_stream_ms": 3540,
+      "time_to_request_ms": 124,
+      "first_content_frame_ms": 3541,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

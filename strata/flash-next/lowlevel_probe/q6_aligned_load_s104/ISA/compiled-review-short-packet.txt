@@ -1,0 +1,468 @@
+S104 COMPILED REVIEW DELTA - FROZEN SHORT PACKET
+
+CONFIG -> S104 private A4 weight loads only, built EXE632f9f86, objectb3189f26; selected candidate imagee39a2c22/text52a33a11 (15552B). Actual compiled-audit host bindings distinct public/original/candidate; private original prefix16384 byteexact S85, and ROOT separately verified public prefix. No candidate byteidentity claim.
+
+COMMAND -> Read ONE already-decoded candidate ASM104459B plus pinned S85 original ASM668ee30e. No decoder/compiler/GPU/model/trace invocation. Exact labels/line excerpts in compiled-excerpts.txt; full inventories and hashes in compiled-report.json.
+
+RESULT -> Candidate K loop L1632..L12112 increments r52 by4 (line387), keeping source lane>>3 initial block, lane&7 within block. Q6 block stride210 remains. Each ql/qh run aligns down to4 via AND -4. Actual ql/qh loads at165/194 are SIMD32 d32x4.a64; extra fifth dword loads377/394 are d32.a64 at aligned+16. Shift-right16/left16/OR + bit1-controlled SEL reconstruct each requested16B run. This replaces original aligned16-chunk index selection: whole static SEL38->8, MOV471->439, CMP43->37; both have41 UGM sends. These are static instruction counts, not traffic/cycle predictions or speed attribution. Candidate five-dword logical reads and safety remain subject to predeclared real-byte/guard gates.
+
+Original sat byte centering stays (32 bfn.0x40 sequences); no packed-center S85 candidate substitution. Signed48DP4A remain two ordered chains of4 per each6 columns. Weight d half -> float and signed scales remain, as do per-column Q8 half scales and signed int-to-float dot conversions. Each column emits the same FP arithmetic pattern as original: scale products, first integer product, second product combined by one MAD, then a separate ADD to that column's accumulator. Candidate MAD/ADD pairs are686/687,723/724,760/761,797/798,834/835,869/870. Original already has six FP MADs under precise; candidate does not newly demand all additions be unfused. Overall FP counts match original exactly (see JSON), but counts alone are not a numerical equivalence theorem.
+
+Column accumulators r78,r80,r82,r84,r88,r90 independently reduce. The first XOR16 is explicit lane-index xor16/register-indirect gathering; next MOV permutations implement XOR8,4,2,1 in order, each followed by FP ADD. Six final stores at922/963/1003/1046/1086/1130 map column j at j*n_out+row0, source lane0 and row bound. Register-indirect r[a0] accesses implement subgroup shuffles, not global scratch sends. SIMD32/GRF128/eu_thread_count8 are reported; SLM/barrier/spill/scratch fields absent, not measuredzero. No scratch-labelled sends found; no dynamic spill/occupancy claim.
+
+VERDICT -> Compiled A4 load simplification survives compilation, with no concrete arithmetic/reduction/ownership blocker identified for root's bounded strict primitive gate. Numerical identity and latency remain UNMEASURED for S104. Retain full public/S44/original/candidate initial/changed/repeat/restore, own-graph, readonly/guard checks before balanced timing. No serving gain, bandwidth, physical traffic or universal proof claimed.
+
+EXACT SOURCE HELPER/LAUNCH GUARD
+// A4 scalar reads are 4-byte aligned, never misaligned int4 dereferences.
+// Host launch guard requires base%4==0 and the two complete Q6 shapes.
+__dpct_inline__ sycl::int4 load16_a4(const void* p) {
+    const uintptr_t a = reinterpret_cast<uintptr_t>(p);
+    const int* q = reinterpret_cast<const int*>(a & ~uintptr_t(3));
+    const bool half = (a & 2) != 0;
+    const uint32_t d[5] = {uint32_t(q[0]), uint32_t(q[1]), uint32_t(q[2]), uint32_t(q[3]), uint32_t(q[4])};
+    uint32_t o[4];
+#pragma unroll
+    for (int i = 0; i < 4; ++i) o[i] = half ? (d[i] >> 16) | (d[i + 1] << 16) : d[i];
+    return sycl::int4((int) o[0], (int) o[1], (int) o[2], (int) o[3]);
+}
+template<bool CAND>class PrivateC6A4;
+template<bool CAND>void launch(const void* w,const void* x,float* y,int N,int M,sycl::queue& q){
+ if(!((N==6144 && M==2560)||(N==2560 && M==10240)) || (reinterpret_cast<uintptr_t>(w)&3u))
+     throw std::invalid_argument("S104 needs two pinned C6 shapes and base%4==0; no fallback/retry");
+ const unsigned groups=unsigned((size_t(M)+WARPS-1)/WARPS);
+ q.parallel_for<PrivateC6A4<CAND>>(sycl::nd_range<3>(sycl::range<3>(1,1,groups)*sycl::range<3>(1,WARPS,WARP),sycl::range<3>(1,WARPS,WARP)),
+ [=](sycl::nd_item<3>)[[sycl::reqd_sub_group_size(32)]]{kernel<CAND>(static_cast<const Q6KBlock*>(w),static_cast<const Q81Block*>(x),y,N,M);});
+}
+} // namespace s104
+
+SOURCE INVERSE LEDGER
+{
+  "status": "SOURCE_ONLY_INVERSE_KERNEL_LEDGER_PASS_NO_BUILD_GPU",
+  "S85_header_sha256": "eb9524770ea90a66e3d3682e51593b4ead3fd347ca24aab7f30dc5503a1801b5",
+  "current_native_source_sha256": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584",
+  "inverse_candidate_load_removal_equals_S85_original_center_false_kernel": true,
+  "full_S85_candidate_center_branch_removed": true,
+  "only_candidate_math_delta": "How exact16byte ql/qh runs are loaded; integer centering/DP4A/FP and XOR tree unchanged in SOURCE, actual compiled proof still required",
+  "S102_facts": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s102-audit/facts.json",
+  "S102_main_original_computational_prefix_equal": true,
+  "model_payload_read_in_preparation": false
+}
+
+ACTUAL WHOLE STATIC COUNTS (not dynamic cost)
+{
+  "opcode_counts_original": {
+    "mov": 471,
+    "and": 23,
+    "add": 202,
+    "mad": 7,
+    "send.ugm": 41,
+    "or": 10,
+    "shl": 34,
+    "cmp": 43,
+    "goto": 11,
+    "jmpi": 4,
+    "asr": 11,
+    "mul": 55,
+    "shr": 17,
+    "macl": 2,
+    "mach": 13,
+    "join": 10,
+    "sel": 38,
+    "xor": 65,
+    "bfn.0x40": 32,
+    "dp4a": 48,
+    "goto.b": 1,
+    "sync.nop": 3,
+    "send.gtwy": 1,
+    "illegal": 8
+  },
+  "opcode_counts_A4": {
+    "mov": 439,
+    "and": 19,
+    "add": 202,
+    "mad": 7,
+    "send.ugm": 41,
+    "or": 10,
+    "shl": 34,
+    "cmp": 37,
+    "goto": 9,
+    "jmpi": 4,
+    "asr": 11,
+    "mul": 55,
+    "shr": 15,
+    "macl": 2,
+    "mach": 13,
+    "join": 8,
+    "sel": 8,
+    "xor": 65,
+    "bfn.0x40": 32,
+    "dp4a": 48,
+    "goto.b": 1,
+    "sync.nop": 3,
+    "send.gtwy": 1,
+    "illegal": 9
+  },
+  "FP_opcode_counts_original": {
+    "mul": 20,
+    "mad": 6,
+    "add": 36
+  },
+  "FP_opcode_counts_A4": {
+    "mul": 20,
+    "mad": 6,
+    "add": 36
+  },
+  "static_opcode_deltas": {
+    "and": -4,
+    "cmp": -6,
+    "goto": -2,
+    "illegal": 1,
+    "join": -2,
+    "mov": -32,
+    "sel": -30,
+    "shr": -2
+  },
+  "resources": {
+    "grf_count": [
+      "128"
+    ],
+    "simd_size": [
+      "32"
+    ],
+    "slm_size": [],
+    "barrier_count": [],
+    "spill_size": [],
+    "scratch_size": [],
+    "eu_thread_count": [
+      "8"
+    ]
+  },
+  "FP_accumulators_by_column": [
+    "r78",
+    "r80",
+    "r82",
+    "r84",
+    "r88",
+    "r90"
+  ],
+  "FP_MAD_then_accumulator_ADD_lines": [
+    [
+      686,
+      687
+    ],
+    [
+      723,
+      724
+    ],
+    [
+      760,
+      761
+    ],
+    [
+      797,
+      798
+    ],
+    [
+      834,
+      835
+    ],
+    [
+      869,
+      870
+    ]
+  ],
+  "output_store_lines": [
+    922,
+    963,
+    1003,
+    1046,
+    1086,
+    1130
+  ]
+}
+TARGETED ACTUAL ASM
+A4 ql align/vector send/funnel (actual ASM 150..178)
+150:         mov (16|M16)             r4.0<2>:ud    r101.0<1;1,0>:ud                 {Compacted}
+151:         mov (16|M0)              r8.0<2>:ud    r100.0<1;1,0>:ud                 {Compacted}
+152:         add (16|M16)             r10.0<1>:q    r56.0<1;1,0>:q    r4.0<2;1,0>:ud   {I@2}
+153:         add (16|M0)              r6.0<1>:q     r54.0<1;1,0>:q    r8.0<2;1,0>:ud   {I@2}
+154:         mov (16|M16)             r5.0<1>:d     r10.1<2;1,0>:d                   {Compacted,I@2}
+155:         mov (16|M0)              r4.0<1>:d     r6.1<2;1,0>:d                    {Compacted,I@2}
+156:         mov (16|M0)              r8.0<1>:d     r6.0<2;1,0>:d                    {Compacted}
+157:         mov (16|M16)             r9.0<1>:d     r10.0<2;1,0>:d                   {Compacted}
+158:         and (32|M0)              r6.0<1>:d     r8.0<1;1,0>:d     -4:w               {I@1}
+159:         mov (16|M0)              r74.0<2>:d    r6.0<1;1,0>:d                    {I@1}
+160:         mov (16|M16)             r72.0<2>:d    r7.0<1;1,0>:d                   
+161:         mov (16|M0)              r74.1<2>:d    r4.0<1;1,0>:d                   
+162:         mov (16|M16)             r72.1<2>:d    r5.0<1;1,0>:d                   
+163:         mov (16|M16)             r6.0<1>:uq    r72.0<1;1,0>:uq                  {Compacted,I@1}
+164:         mov (16|M0)              r4.0<1>:uq    r74.0<1;1,0>:uq                  {Compacted}
+165:         send.ugm (32|M0)         r34      r4  null:0  0x0            0x08803580           {I@1,$4} // wr:4+0, rd:8; load.ugm.d32x4.a64
+166:         and (32|M0)   (eq)f1.0   null<1>:d     r8.0<1;1,0>:d     2:w              
+167:         add (16|M0)              r8.0<1>:q     r54.0<1;1,0>:q    128:w               {Compacted}
+168:         add (16|M16)             r10.0<1>:q    r56.0<1;1,0>:q    128:w               {Compacted}
+169: (W)     mov (1|M0)               r3.12<1>:hf   -qnan(0x180):hf                             
+170:         mov (16|M0)              r46.1<2>:d    r94.0<1;1,0>:d                  
+171:         mov (16|M0)              r46.0<2>:d    r96.0<1;1,0>:d                  
+172: (W)     mov (1|M0)               r3.13<1>:hf   -qnan(0x180):hf                             
+173: (W)     mov (1|M0)               r116.7<1>:d   r116.3<0;1,0>:d                 
+174: (W)     mov (1|M0)               r116.6<1>:d   r116.2<0;1,0>:d                 
+175:         shr (32|M0)              r4.0<1>:ud    r34.0<1;1,0>:ud   16:w               {$4.dst}
+176:         shl (32|M0)              r6.0<1>:d     r36.0<1;1,0>:d    16:w               {Compacted}
+177:         or (32|M0)               r4.0<1>:d     r6.0<1;1,0>:d     r4.0<1;1,0>:d    {Compacted,I@1}
+178: (f1.0)  sel (32|M0)              r70.0<1>:d    r34.0<1;1,0>:d    r4.0<1;1,0>:d    {I@1}
+
+A4 qh vector send/funnel (actual ASM 190..204)
+190:         mov (16|M0)              r64.1<2>:d    r4.0<1;1,0>:d                   
+191:         mov (16|M16)             r62.1<2>:d    r5.0<1;1,0>:d                   
+192:         mov (16|M0)              r12.0<1>:uq   r64.0<1;1,0>:uq                  {Compacted,I@2}
+193:         mov (16|M16)             r14.0<1>:uq   r62.0<1;1,0>:uq                  {Compacted,A@2}
+194:         send.ugm (32|M0)         r4       r12  null:0  0x0            0x08803580           {I@1,$5} // wr:4+0, rd:8; load.ugm.d32x4.a64
+195:         and (32|M0)   (eq)f0.0   null<1>:d     r16.0<1;1,0>:d    2:w              
+196:         mov (16|M16)             r33.1<2>:d    r95.0<1;1,0>:d                  
+197:         mov (16|M16)             r33.0<2>:d    r97.0<1;1,0>:d                  
+198:         shr (32|M0)              r12.0<1>:ud   r4.0<1;1,0>:ud    16:w               {$5.dst}
+199:         shl (32|M0)              r14.0<1>:d    r6.0<1;1,0>:d     16:w               {Compacted}
+200:         or (32|M0)               r12.0<1>:d    r14.0<1;1,0>:d    r12.0<1;1,0>:d   {Compacted,I@1}
+201: (f0.0)  sel (32|M0)              r4.0<1>:d     r4.0<1;1,0>:d     r12.0<1;1,0>:d   {I@1}
+202:         asr (32|M0)              r24.0<1>:d    r4.0<1;1,0>:d     r58.0<1;1,0>:d   {I@1}
+203:         shr (32|M0)              r12.0<1>:ud   r70.0<1;1,0>:ud   4:w              
+204:         and (32|M0)              r4.0<1>:d     r24.0<1;1,0>:d    808464432:d               {I@2}
+
+Fifthword ql/qh scalar sends/funnel and K+4 (actual ASM 369..400)
+369:         mov (32|M0)              r4.0<1>:w     r2.0<1;1,0>:b                    {I@1}
+370:         bfn.0xD8 (32|M0)         r16.0<1>:uw   r9.0<1;0>:uw      r3.13<0;0>:w      r8.0<1>:uw       // s0&s1|~s0&s2
+371:         add (32|M0)              r8.0<1>:w     r4.0<1;1,0>:w     -32:w               {I@2}
+372:         xor (32|M0)              r5.0<1>:w     r4.0<1;1,0>:w     -32:w              
+373:         xor (32|M0)              r2.0<1>:w     r8.0<1;1,0>:w     r4.0<1;1,0>:w    {I@2}
+374:         add (16|M16)             r14.0<1>:q    r72.0<1;1,0>:q    16:w               {Compacted}
+375:         add (16|M0)              r12.0<1>:q    r74.0<1;1,0>:q    16:w               {Compacted}
+376:         bfn.0x40 (32|M0)         r2.0<1>:uw    r5.0<1;0>:uw      r2.0<1;0>:uw      -128:w               {I@3} // ~s0&s1&s2
+377:         send.ugm (32|M0)         r4       r12  null:0  0x0            0x08200580           {I@1,$7} // wr:4+0, rd:2; load.ugm.d32.a64
+378:         mov (32|M0)              r2.0<2>:b     r2.0<1;1,0>:w                   
+379:         mov (32|M0)              r2.0<1>:w     r2.0<2;1,0>:ub                   {I@1}
+380:         cmp (32|M0)   (ne)f2.0   r9.0<1>:w     r2.0<1;1,0>:w     0:w               {I@1}
+381:         bfn.0xD8 (32|M0)         r2.0<1>:uw    r9.0<1;0>:uw      r3.13<0;0>:w      r8.0<1>:uw       {I@1} // s0&s1|~s0&s2
+382:         shr (32|M0)              r8.0<1>:ud    r40.0<1;1,0>:ud   16:w              
+383:         add (16|M0)              r35.0<1>:q    r64.0<1;1,0>:q    16:w               {Compacted}
+384:         add (16|M16)             r37.0<1>:q    r62.0<1;1,0>:q    16:w               {Compacted}
+385:         add (16|M0)              r64.0<1>:q    r54.0<1;1,0>:q    192:w               {Compacted}
+386:         add (16|M16)             r62.0<1>:q    r56.0<1;1,0>:q    192:w               {Compacted}
+387:         shl (32|M0)              r6.0<1>:d     r6.0<1;1,0>:d     4:w               {Compacted}
+388:         and (32|M0)              r6.0<1>:d     r6.0<1;1,0>:d     808464432:d               {I@1}
+389:         bfn.0xF8 (32|M0)         r6.0<1>:ud    r66.0<1;0>:ud     r3.8<0;0>:ud      r6.0<1>:ud       {I@1} // s0&s1|s2
+390:         add (32|M0)              r52.0<1>:d    r52.0<1;1,0>:d    4:w               {Compacted}
+391:         shl (32|M0)              r4.0<1>:d     r4.0<1;1,0>:d     16:w               {Compacted,$7.dst}
+392:         or (32|M0)               r4.0<1>:d     r4.0<1;1,0>:d     r8.0<1;1,0>:d    {Compacted,I@1}
+393: (f1.0)  sel (32|M0)              r14.0<1>:d    r40.0<1;1,0>:d    r4.0<1;1,0>:d    {I@1}
+394:         send.ugm (32|M0)         r4       r35  null:0  0x0            0x08200580           {I@1,$8} // wr:4+0, rd:2; load.ugm.d32.a64
+395:         shr (32|M0)              r8.0<1>:ud    r10.0<1;1,0>:ud   16:w              
+396:         shl (32|M0)              r4.0<1>:d     r4.0<1;1,0>:d     16:w               {Compacted,$8.dst}
+397:         or (32|M0)               r4.0<1>:d     r4.0<1;1,0>:d     r8.0<1;1,0>:d    {Compacted,I@1}
+398: (f0.0)  sel (32|M0)              r4.0<1>:d     r10.0<1;1,0>:d    r4.0<1;1,0>:d    {I@1}
+399:         asr (32|M0)              r10.0<1>:d    r4.0<1;1,0>:d     r58.0<1;1,0>:d   {I@1}
+400:         shr (32|M0)              r8.0<1>:ud    r14.0<1;1,0>:ud   4:w              
+
+Weight/activation half scale and first product (actual ASM 455..484)
+455:         send.ugm (32|M0)         r16      r35  null:0  0x0            0x08200980           {I@1,$9} // wr:4+0, rd:2; load.ugm.d8u32.a64
+456:         mov (32|M0)              r8.3<4>:b     r2.0<1;1,0>:w                   
+457:         mov (32|M0)              r12.0<4>:b    r109.0<1;1,0>:w                 
+458:         mov (32|M0)              r12.1<4>:b    r108.0<1;1,0>:w                  {I@1}
+459:         mov (32|M0)              r12.2<4>:b    r93.0<1;1,0>:w                   {I@1}
+460:         mov (32|M0)              r12.3<4>:b    r92.0<1;1,0>:w                   {I@1}
+461:         dp4a (32|M0)             r18.0<1>:d    r86.0<1;0>:d      r12.0<1;0>:d      r18.0<1>:d       {Compacted,I@1}
+462:         dp4a (32|M0)             r18.0<1>:d    r18.0<1;0>:d      r8.0<1;0>:d       r20.0<1>:d       {Compacted,I@1}
+463:         dp4a (32|M0)             r18.0<1>:d    r18.0<1;0>:d      r4.0<1;0>:d       r22.0<1>:d       {I@1}
+464:         mov (32|M0)              r18.0<1>:f    r18.0<1;1,0>:d                   {I@1}
+465:         mov (32|M0)              r36.0<1>:b    r16.0<4;1,0>:b                   {$9.dst}
+466:         send.ugm (32|M0)         r16      r54  null:0  0xD0000            0x08200B80           {I@1,$10} // wr:4+0, rd:2; load.ugm.d16u32.a64.flat[A+0xD0]
+467:         mov (32|M0)              r57.0<1>:b    r6.3<4;1,0>:b                    {$10.src}
+468:         mov (32|M0)              r2.0<1>:uw    r16.0<2;1,0>:uw                  {$10.dst}
+469:         send.ugm (32|M0)         r16      r42  null:0  0x48000            0x08200B80           {I@1,$11} // wr:4+0, rd:2; load.ugm.d16u32.a64.flat[A+0x48]
+470:         mov (32|M0)              r54.0<1>:f    r2.0<1;1,0>:hf                  
+471:         mov (32|M0)              r35.0<1>:uw   r16.0<2;1,0>:uw                  {$11.dst}
+472:         mov (32|M0)              r16.0<2>:w    r36.0<1;1,0>:b                  
+473:         mov (32|M0)              r22.0<1>:f    r16.0<2;1,0>:w                   {I@1}
+474:         shl (32|M0)              r16.0<1>:d    r24.0<1;1,0>:d    4:w               {F@1}
+475:         and (32|M0)              r16.0<1>:d    r16.0<1;1,0>:d    808464432:d               {I@1}
+476:         mul (32|M0)              r36.0<1>:f    r54.0<1;1,0>:f    r22.0<1;1,0>:f  
+477:         bfn.0xF8 (32|M0)         r16.0<1>:ud   r70.0<1;0>:ud     r3.8<0;0>:ud      r16.0<1>:ud      {I@1} // s0&s1|s2
+478:         mov (32|M0)              r20.0<1>:f    r35.0<1;1,0>:hf                 
+479:         mov (32|M0)              r2.0<1>:b     r16.0<4;1,0>:b                   {I@1}
+480:         mul (32|M0)              acc2.0<1>:f   r36.0<1;1,0>:f    r20.0<1;1,0>:f   {Compacted,F@1}
+481:         mov (32|M0)              r2.0<1>:w     r2.0<1;1,0>:b                    {I@1}
+482:         mul (32|M0)              r72.0<1>:f    acc2.0<1;1,0>:f   r18.0<1;1,0>:f   {Compacted}
+483:         add (32|M0)              r18.0<1>:w    r2.0<1;1,0>:w     -32:w               {A@1}
+484:         xor (32|M0)              r19.0<1>:w    r2.0<1;1,0>:w     -32:w              
+
+First column second product/MAD/ADD (actual ASM 674..689)
+674:         mov (32|M0)              r6.3<4>:b     r67.0<1;1,0>:w                   {I@1}
+675:         dp4a (32|M0)             r18.0<1>:d    r18.0<1;0>:d      r6.0<1;0>:d       r24.0<1>:d       {Compacted,I@1}
+676:         mov (32|M0)              r18.0<1>:f    r18.0<1;1,0>:d                   {I@1}
+677:         cmp (32|M0)   (lt)f3.0   null<1>:d     r52.0<1;1,0>:d    r3.15<0;1,0>:d  
+678:         mov (32|M0)              r2.0<1>:b     r56.0<4;1,0>:b                   {$13.dst}
+679:         mov (32|M0)              r38.0<2>:w    r2.0<1;1,0>:b                    {I@1}
+680:         mov (32|M0)              r40.0<1>:f    r38.0<2;1,0>:w                   {I@1}
+681:         send.ugm (32|M0)         r38      r42  null:0  0x0            0x08200B80           {F@1,$14} // wr:4+0, rd:2; load.ugm.d16u32.a64
+682:         mul (32|M0)              acc2.0<1>:f   r54.0<1;1,0>:f    r40.0<1;1,0>:f  
+683:         mov (32|M0)              r2.0<1>:uw    r38.0<2;1,0>:uw                  {$14.dst}
+684:         mov (32|M0)              r20.0<1>:f    r2.0<1;1,0>:hf                   {I@1}
+685:         mul (32|M0)              r20.0<1>:f    acc2.0<1;1,0>:f   r20.0<1;1,0>:f   {Compacted,F@1}
+686:         mad (32|M0)              r18.0<1>:f    r72.0<1;0>:f      r20.0<1;0>:f      r18.0<1>:f       {Compacted,F@1}
+687:         add (32|M0)              r78.0<1>:f    r78.0<1;1,0>:f    r18.0<1;1,0>:f   {Compacted,F@1}
+688:         add (16|M0)              r18.0<1>:q    r50.0<1;1,0>:q    r116.3<0;1,0>:q  {Compacted,F@1}
+689:         add (16|M0)              r38.0<1>:q    r18.0<1;1,0>:q    r46.0<1;1,0>:q   {Compacted,I@1}
+
+Column1 own product/MAD/ADD (actual ASM 703..724)
+703:         mov (32|M0)              r2.0<1>:uw    r42.0<2;1,0>:uw                  {$0.dst}
+704:         dp4a (32|M0)             r18.0<1>:d    r18.0<1;0>:d      r4.0<1;0>:d       r24.0<1>:d       {Compacted,I@2}
+705:         mov (32|M0)              r20.0<1>:f    r2.0<1;1,0>:hf                   {I@2}
+706:         mul (32|M0)              r20.0<1>:f    r36.0<1;1,0>:f    r20.0<1;1,0>:f   {Compacted,F@1}
+707:         mov (32|M0)              r18.0<1>:f    r18.0<1;1,0>:d                   {I@1}
+708:         mul (32|M0)              r54.0<1>:f    r20.0<1;1,0>:f    r18.0<1;1,0>:f   {Compacted,F@1}
+709:         add (16|M0)              r18.0<1>:q    r38.0<1;1,0>:q    4:w               {Compacted,F@1}
+710:         add (16|M0)              r42.0<1>:q    r18.0<1;1,0>:q    r28.0<1;1,0>:q   {Compacted,I@1}
+711:         add (16|M16)             r18.0<1>:q    r40.0<1;1,0>:q    4:w               {Compacted}
+712:         add (16|M16)             r44.0<1>:q    r18.0<1;1,0>:q    r26.0<1;1,0>:q   {I@1}
+713:         send.ugm (32|M0)         r18      r42  null:0  0x0            0x08803580           {I@1,$1} // wr:4+0, rd:8; load.ugm.d32x4.a64
+714:         send.ugm (32|M0)         r42      r38  null:0  0x0            0x08200B80           {$4} // wr:4+0, rd:2; load.ugm.d16u32.a64
+715:         dp4a (32|M0)             r18.0<1>:d    0:w                r16.0<1;0>:d      r18.0<1>:d       {$1.dst}
+716:         dp4a (32|M0)             r18.0<1>:d    r18.0<1;0>:d      r14.0<1;0>:d      r20.0<1>:d       {Compacted,I@1}
+717:         dp4a (32|M0)             r18.0<1>:d    r18.0<1;0>:d      r10.0<1;0>:d      r22.0<1>:d       {Compacted,I@1}
+718:         mov (32|M0)              r2.0<1>:uw    r42.0<2;1,0>:uw                  {$4.dst}
+719:         dp4a (32|M0)             r18.0<1>:d    r18.0<1;0>:d      r6.0<1;0>:d       r24.0<1>:d       {Compacted,I@2}
+720:         mov (32|M0)              r20.0<1>:f    r2.0<1;1,0>:hf                   {I@2}
+721:         mul (32|M0)              r20.0<1>:f    acc2.0<1;1,0>:f   r20.0<1;1,0>:f   {Compacted,F@1}
+722:         mov (32|M0)              r18.0<1>:f    r18.0<1;1,0>:d                   {I@1}
+723:         mad (32|M0)              r18.0<1>:f    r54.0<1;0>:f      r20.0<1;0>:f      r18.0<1>:f       {Compacted,F@1}
+724:         add (32|M0)              r80.0<1>:f    r80.0<1;1,0>:f    r18.0<1;1,0>:f   {Compacted,F@1}
+
+Column2 MAD/ADD (actual ASM 758..761)
+758:         mul (32|M0)              r20.0<1>:f    acc2.0<1;1,0>:f   r20.0<1;1,0>:f   {Compacted,F@1}
+759:         mov (32|M0)              r18.0<1>:f    r18.0<1;1,0>:d                   {I@1}
+760:         mad (32|M0)              r18.0<1>:f    r54.0<1;0>:f      r20.0<1;0>:f      r18.0<1>:f       {Compacted,F@1}
+761:         add (32|M0)              r82.0<1>:f    r82.0<1;1,0>:f    r18.0<1;1,0>:f   {Compacted,F@1}
+
+Column3 MAD/ADD (actual ASM 795..798)
+795:         mul (32|M0)              r20.0<1>:f    acc2.0<1;1,0>:f   r20.0<1;1,0>:f   {Compacted,F@1}
+796:         mov (32|M0)              r18.0<1>:f    r18.0<1;1,0>:d                   {I@1}
+797:         mad (32|M0)              r18.0<1>:f    r54.0<1;0>:f      r20.0<1;0>:f      r18.0<1>:f       {Compacted,F@1}
+798:         add (32|M0)              r84.0<1>:f    r84.0<1;1,0>:f    r18.0<1;1,0>:f   {Compacted,F@1}
+
+Column4 MAD/ADD (actual ASM 832..835)
+832:         mul (32|M0)              r20.0<1>:f    acc2.0<1;1,0>:f   r20.0<1;1,0>:f   {Compacted,F@1}
+833:         mov (32|M0)              r18.0<1>:f    r18.0<1;1,0>:d                   {I@1}
+834:         mad (32|M0)              r18.0<1>:f    r54.0<1;0>:f      r20.0<1;0>:f      r18.0<1>:f       {Compacted,F@1}
+835:         add (32|M0)              r88.0<1>:f    r88.0<1;1,0>:f    r18.0<1;1,0>:f   {Compacted,F@1}
+
+Column5 last products/MAD/ADD/Kbackedge (actual ASM 858..875)
+858:         send.ugm (32|M0)         r4       r38  null:0  0x48000            0x08200B80           {I@1,$5} // wr:4+0, rd:2; load.ugm.d16u32.a64.flat[A+0x48]
+859:         mov (32|M0)              r2.0<1>:uw    r4.0<2;1,0>:uw                   {$5.dst}
+860:         mov (32|M0)              r4.0<1>:f     r2.0<1;1,0>:hf                   {I@1}
+861:         mul (32|M0)              r8.0<1>:f     r36.0<1;1,0>:f    r4.0<1;1,0>:f    {Compacted,F@1}
+862:         mov (32|M0)              r4.0<1>:f     r10.0<1;1,0>:d                  
+863:         mul (32|M0)              r8.0<1>:f     r8.0<1;1,0>:f     r4.0<1;1,0>:f    {Compacted,F@1}
+864:         send.ugm (32|M0)         r4       r38  null:0  0x0            0x08200B80           {F@1,$6} // wr:4+0, rd:2; load.ugm.d16u32.a64
+865:         mov (32|M0)              r2.0<1>:uw    r4.0<2;1,0>:uw                   {$6.dst}
+866:         mov (32|M0)              r4.0<1>:f     r2.0<1;1,0>:hf                   {I@1}
+867:         mul (32|M0)              acc2.0<1>:f   acc2.0<1;1,0>:f   r4.0<1;1,0>:f    {Compacted,F@1}
+868:         mov (32|M0)              r4.0<1>:f     r6.0<1;1,0>:d                   
+869:         mad (32|M0)              acc2.0<1>:f   r8.0<1;0>:f       acc2.0<1;0>:f     r4.0<1>:f        {Compacted,F@1}
+870:         add (32|M0)              r90.0<1>:f    r90.0<1;1,0>:f    acc2.0<1;1,0>:f 
+871: (f3.0)  goto.b (32|M0)                       L12112                  L1632                
+872: L12112:
+873:         join (32|M0)                         L15296                                
+874: L12128:
+875: (W)     mov (8|M0)               r2.0<1>:w     0x76543210:v                               {$3.src}
+
+First full XOR16/8/4/2/1/store (actual ASM 876..925)
+876:         mov (16|M0)              r4.0<2>:ud    r76.0<1;1,0>:ud                  {F@2}
+877: (W)     add (8|M0)               r2.8<1>:w     r2.0<1;1,0>:w     8:w               {I@2}
+878:         shl (16|M0)              r10.0<1>:q    r4.0<2;1,0>:ud    2:w               {I@2}
+879: (W)     add (16|M0)              r2.16<1>:w    r2.0<1;1,0>:w     16:w               {I@2}
+880:         mov (16|M16)             r4.0<2>:ud    r77.0<1;1,0>:ud                 
+881:         xor (32|M0)              r2.0<1>:w     r2.0<1;1,0>:w     16:w               {I@2}
+882:         shl (16|M16)             r8.0<1>:q     r4.0<2;1,0>:ud    2:w               {I@2}
+883:         add (16|M16)             r6.0<1>:q     r8.0<1;1,0>:q     r3.2<0;1,0>:q    {I@1}
+884:         mov (32|M0)              r8.0<1>:d     r2.0<1;1,0>:uw                  
+885:         shl (32|M0)              r2.0<1>:uw    r8.0<2;1,0>:uw    0x2:uw              {I@1}
+886: (W)     mov (16|M0)              a0.0<1>:uw    0x0:uw                             
+887:         add (16|M0)              a0.0<1>:uw    r2.0<1;1,0>:uw    0x1380:uw              {I@2}
+888:         add (16|M0)              r4.0<1>:q     r10.0<1;1,0>:q    r3.2<0;1,0>:q   
+889:         mov (16|M0)              r10.0<1>:ud   r[a0.0]<1,0>:ud                 
+890: (W)     mov (16|M0)              a0.0<1>:uw    0x0:uw                             
+891:         add (16|M16)             a0.0<1>:uw    r2.16<1;1,0>:uw   0x1380:uw             
+892:         cmp (32|M0)   (eq)f0.0   null<2>:w     r1.0<1;1,0>:w     0:w              
+893:         mov (16|M16)             r11.0<1>:ud   r[a0.0]<1,0>:ud                 
+894:         add (32|M0)              r10.0<1>:f    r78.0<1;1,0>:f    r10.0<1;1,0>:f   {Compacted,I@1}
+895: (W)     mov (8|M0)               r12.0<1>:ud   r10.8<1;1,0>:ud                  {Compacted,F@1}
+896: (W)     mov (8|M0)               r12.8<1>:ud   r10.0<1;1,0>:ud                 
+897: (W)     mov (8|M0)               r13.0<1>:ud   r11.8<1;1,0>:ud                 
+898: (W)     mov (8|M0)               r13.8<1>:ud   r11.0<1;1,0>:ud                 
+899:         add (32|M0)              r10.0<1>:f    r10.0<1;1,0>:f    r12.0<1;1,0>:f   {Compacted,I@1}
+900: (W)     mov (4|M0)               r12.0<1>:ud   r10.4<1;1,0>:ud                  {Compacted,F@1}
+901: (W)     mov (4|M0)               r12.4<1>:ud   r10.0<1;1,0>:ud                 
+902: (W)     mov (4|M0)               r12.8<1>:ud   r10.12<1;1,0>:ud                
+903: (W)     mov (4|M0)               r12.12<1>:ud  r10.8<1;1,0>:ud                 
+904: (W)     mov (4|M0)               r13.0<1>:ud   r11.4<1;1,0>:ud                  {Compacted}
+905: (W)     mov (4|M0)               r13.4<1>:ud   r11.0<1;1,0>:ud                  {Compacted}
+906: (W)     mov (4|M0)               r13.8<1>:ud   r11.12<1;1,0>:ud                
+907: (W)     mov (4|M0)               r13.12<1>:ud  r11.8<1;1,0>:ud                 
+908:         add (32|M0)              r10.0<1>:f    r10.0<1;1,0>:f    r12.0<1;1,0>:f   {I@1}
+909: (W)     mov (8|M0)               r12.0<4>:ud   r10.2<4;1,0>:ud                  {F@1}
+910: (W)     mov (8|M0)               r12.2<4>:ud   r10.0<4;1,0>:ud                 
+911: (W)     mov (8|M0)               r12.1<4>:ud   r10.3<4;1,0>:ud                 
+912: (W)     mov (8|M0)               r12.3<4>:ud   r10.1<4;1,0>:ud                 
+913:         add (32|M0)              r10.0<1>:f    r10.0<1;1,0>:f    r12.0<1;1,0>:f   {Compacted,I@1}
+914: (W)     mov (16|M0)              r12.0<2>:ud   r10.1<2;1,0>:ud                  {Compacted,F@1}
+915: (W)     mov (16|M0)              r12.1<2>:ud   r10.0<2;1,0>:ud                  {Compacted}
+916:         sync.nop                             null                             {Compacted,I@1}
+917:         sync.nop                             null                             {Compacted,$3.dst}
+918:         mov (32|M0)              r14.0<1>:f    r12.0<1;1,0>:f                   {Compacted,$2.dst}
+919: (~f0.0) goto (32|M0)                         L12784                  L12784                
+920: L12752:
+921:         add (32|M0)              r10.0<1>:f    r10.0<1;1,0>:f    r14.0<1;1,0>:f   {F@1}
+922:         send.ugm (32|M0)         null     r4  r10:2  0x0            0x08000584           {F@1,$7} // wr:4+2, rd:0; store.ugm.d32.a64
+923: L12784:
+924:         join (32|M0)                         L15296                                
+925: L12800:
+
+Column1 output store (actual ASM 960..963)
+960:         add (32|M0)              r14.0<1>:f    r10.0<1;1,0>:f    r12.0<1;1,0>:f   {Compacted,F@1}
+961:         add (16|M0)              r10.0<1>:q    r4.0<1;1,0>:q     r3.0<0;1,0>:q    {Compacted,A@1}
+962:         add (16|M16)             r12.0<1>:q    r6.0<1;1,0>:q     r3.0<0;1,0>:q    {Compacted}
+963:         send.ugm (32|M0)         null     r10  r14:2  0x0            0x08000584           {I@1,$8} // wr:4+2, rd:0; store.ugm.d32.a64
+
+Column2 output store (actual ASM 1000..1003)
+1000:         add (32|M0)              r14.0<1>:f    r10.0<1;1,0>:f    r12.0<1;1,0>:f   {Compacted,F@1}
+1001:         add (16|M0)              r10.0<1>:q    r4.0<1;1,0>:q     r3.0<0;1,0>:q    {Compacted,A@1}
+1002:         add (16|M16)             r12.0<1>:q    r6.0<1;1,0>:q     r3.0<0;1,0>:q    {Compacted}
+1003:         send.ugm (32|M0)         null     r10  r14:2  0x0            0x08000584           {I@1,$9} // wr:4+2, rd:0; store.ugm.d32.a64
+
+Column3 output store (actual ASM 1043..1046)
+1043:         add (32|M0)              r14.0<1>:f    r10.0<1;1,0>:f    r12.0<1;1,0>:f   {Compacted,F@1}
+1044:         add (16|M0)              r10.0<1>:q    r4.0<1;1,0>:q     r3.1<0;1,0>:q    {Compacted,A@1}
+1045:         add (16|M16)             r12.0<1>:q    r6.0<1;1,0>:q     r3.1<0;1,0>:q   
+1046:         send.ugm (32|M0)         null     r10  r14:2  0x0            0x08000584           {I@1,$10} // wr:4+2, rd:0; store.ugm.d32.a64
+
+Column4 output store (actual ASM 1083..1086)
+1083:         add (32|M0)              r14.0<1>:f    r10.0<1;1,0>:f    r12.0<1;1,0>:f   {Compacted,F@1}
+1084:         add (16|M0)              r10.0<1>:q    r4.0<1;1,0>:q     r3.0<0;1,0>:q    {Compacted,A@1}
+1085:         add (16|M16)             r12.0<1>:q    r6.0<1;1,0>:q     r3.0<0;1,0>:q    {Compacted}
+1086:         send.ugm (32|M0)         null     r10  r14:2  0x0            0x08000584           {I@1,$11} // wr:4+2, rd:0; store.ugm.d32.a64
+
+Column5 final XOR/store/EOT (actual ASM 1125..1136)
+1125: (W)     mul (1|M0)               r1.2<1>:ud    r3.7<0;1,0>:ud    0x14:uw             
+1126: (W)     mov (1|M0)               r1.3<1>:d     r1.0<0;1,0>:d                    {I@2}
+1127:         add (32|M0)              r12.0<1>:f    r8.0<1;1,0>:f     r10.0<1;1,0>:f   {Compacted}
+1128:         add (16|M0)              r8.0<1>:q     r4.0<1;1,0>:q     r1.1<0;1,0>:q    {Compacted,A@1}
+1129:         add (16|M16)             r10.0<1>:q    r6.0<1;1,0>:q     r1.1<0;1,0>:q   
+1130:         send.ugm (32|M0)         null     r8  r12:2  0x0            0x08000584           {I@1,$12} // wr:4+2, rd:0; store.ugm.d32.a64
+1131: L15296:
+1132:         join (32|M0)                         L15312                                
+1133: L15312:
+1134: (W)     mov (16|M0)              r112.0<1>:f   r32.0<1;1,0>:f                  
+1135: (W)     send.gtwy (1|M0)         null     r112  null:0  0x0            0x02000010           {EOT,F@1,$13} // wr:1+0, rd:0; end of thread
+1136: L15344:
+LIMITS
+Root verified actual public and private-original prefixes16384 against S85. Candidate is not byteidentical or numerically proven by source/static analysis. Full runtime output/readonly/guard/graph gates precede any planned timing. No serving or dynamic traffic/latency claim. Full48 DP4A and unabridged target dataflow are in the retained ASM and compiled-report.json.

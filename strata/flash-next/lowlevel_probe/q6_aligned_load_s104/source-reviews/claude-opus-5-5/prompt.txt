@@ -1,0 +1,937 @@
+Review exact Q6 A4 source independently. ACCEPT or HOLD ONE private CPU-only adapter build, pending later actual compiled image/FP/resource checks beforeGPU. Audit byte reconstruction/bounds/baseguard, original arithmetic signedness/contraction ledger, actualS44/public/original/candidate anchors, fixtures, reusebuild identity and minimal devloop. Identify real blocking bugs; no broadshape/knobsweeps or unsupported speed/bitproof. Preserve strict firstmismatchstop. Do not conflate existingQ6CENTER or IQ2reuse with this distinct load change.
+
+ROOT FROZEN PACKET:
+ROOT FULLREAD Q6 A4 header, complete leaf, vs-S85 diffs, build scripts, contract and source pins. No build/GPU/model payload read yet. Independent source byte/bounds checker ran512cases in0.032s PASS; not compiled proof. Existing main C6 is S85-original16384B computational-prefix exact. Assess ONE offline private adapter build; then actualhost/name/image binding and candidate ISA before anyGPU. Other agent CPU build currentlyholdslease; no run queuedyet. Current broadnonvocabMMVQ12.680488ms includesnative10.745196ms+IQ3S~1.935ms. No speedforecast.
+
+FILE README.txt
+Q6 A4 private leaf SOURCE PREPARATION ONLY, proposed S104
+
+No compilation, CPU byte-flow execution, GPU, model read or private decoder
+has occurred here. This folder is separate from S103 graph API work and
+does not edit main or either frozen S102 preparation. Root full-read and
+actual model consultation precede any build or leased GPU selection.
+
+Read contract.txt, source-ledger.json and the two vs-S85 diffs. The private
+header preserves S85 original downstream arithmetic, removes S85 packed
+centering entirely, and changes only candidate ql/qh load reconstruction.
+The leaf retains two C6 shapes, actual public/canonical Q8/output anchors,
+strict full bytes/guards/read-only and A/B/A single+batch20 replay gates.
+Four balanced timing rounds replace eight to shorten a justified run.
+Timing remains disabled in practice until root selects actual build/ISA/GPU
+gates; source preparation does not produce performance evidence.
+
+The prospective CPU byte-flow check (root executes after reading):
+  python3 R/q6-a4-private-prep/prove_a4_bytes.py
+This checks finite alignment/bounds and symbolic output-byte provenance,
+not compiled C++/GPU behavior or FP preservation. No model bytes needed.
+
+Prospective CPU-only build, after source review/model decisions:
+  bash R/q6-a4-private-prep/build.sh
+Reuse S85 pinned e41/noDRI/networknone/UID1000/fourCPU/OMP/MKL/diskTMP and
+bin/cpu-run recipe. It hashes only required common archives, source and
+new outputs during the authorized build; preparation preserves prior
+measured large-input pins without rereading them. No all-main AOT link.
+Root must inspect build.exit/tee.exit, actual compile/prelink/hostlink and
+new executable/host metadata/device image before any GPU runner is bound.
+
+No GPU script is prepared yet: root will bind the reviewed new binary and
+actual compiled audit to the existing finite S85/S98 leased lifecycle,
+with quiet CPU outside card0 lease, physical pin, health and full owned-CID
+teardown. Do not run old S85 scripts with implicit path substitutions.
+Future leaf args remain NEW_DIR REAL_SHARD S44_SNAPSHOTS. The two bounded
+GGUF reads are documented in contract.txt; no75GB rehash/copy is required.
+
+Useful source evidence is S101 actual Opus A4 design plus root corrections,
+and S102 actual-main existing-image identity. Source/ASM evidence does not
+forecast latency or replace candidate compiled and strict runtime checks.
+
+FILE build-container.sh
+#!/usr/bin/env bash
+source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1
+set -euo pipefail
+renice 19 -p $$ >/dev/null
+ionice -c 3 -p $$
+command -v icpx sha256sum nm renice ionice >/dev/null
+[[ -w /out ]]
+cd /out
+SRC=/work/src-ep
+sha256sum -c /src/expected-container.sha256
+icpx --version > compiler-version.txt
+FLAGS=(-O3 -DNDEBUG -std=c++20 -fsycl -fsycl-targets=spir64_gen -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wall -Wextra -DSTRATA_Q6K_EXPERTS=1 '-DSTRATA_VERSION="0.1.44.1"' -DSTRATA_XMX_SG16=1 -I"$SRC/third_party/ggml" -I"$SRC/sycl/include" -I"$SRC/include")
+TIMEFORMAT='adapter_compile_seconds=%R'
+{ time icpx "${FLAGS[@]}" -c /src/q6_a4_leaf.cpp -o q6_a4_leaf.o; } 2> adapter-compile.time
+IMAGES=(-O3 -DNDEBUG -fsycl -fsycl-targets=spir64_gen -fsycl-device-code-split=per_kernel -fsycl-max-parallel-link-jobs=4 -Xsycl-target-backend=spir64_gen "-device bmg-g31 -options -cl-fp32-correctly-rounded-divide-sqrt")
+TIMEFORMAT='adapter_prelink_seconds=%R'
+{ time icpx -v "${IMAGES[@]}" -fsycl-link q6_a4_leaf.o -o leaf.images.o > adapter-prelink.log 2>&1; } 2> adapter-prelink.time
+TIMEFORMAT='host_link_seconds=%R'
+{ time icpx -v -O3 -DNDEBUG -fp-model=precise q6_a4_leaf.o leaf.images.o /common/mmvq-core.images.o -Wl,--start-group /frozen/libstrata_kernels.a /frozen/libstrata_core.a -Wl,--end-group /usr/lib/x86_64-linux-gnu/libze_loader.so -lsycl -lsycl-devicelib-host -Wl,-Map=/out/link.map -o q6_a4_leaf_s104 > host-link.log 2>&1; } 2> host-link.time
+sha256sum -c /src/expected-container.sha256
+nm -C q6_a4_leaf_s104 > symbols.txt
+sha256sum /src/q6_a4_leaf.cpp /src/private_q6_a4.hpp /common/mmvq-core.images.o /frozen/libstrata_kernels.a /frozen/libstrata_core.a q6_a4_leaf.o leaf.images.o q6_a4_leaf_s104 > sha256.txt
+cat sha256.txt
+
+FILE build.sh
+#!/usr/bin/env bash
+# ROOT ONLY after exact source and actual model review. Offline CPU build.
+set -euo pipefail
+HERE=$(cd "$(dirname "$0")" && pwd)
+REPO=/mnt/vm_8tb/github/b70_ai_things
+R=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014
+IMAGE=sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2
+command -v docker python3 id mkdir tee >/dev/null
+[[ -w "$HERE" && -x "$REPO/bin/cpu-run" ]]
+mkdir "$HERE/build"
+mkdir "$HERE/build/tmp" "$HERE/build/cache"
+docker image inspect "$IMAGE" > "$HERE/build/image.json"
+python3 - "$HERE/build/image.json" "$IMAGE" <<'PY'
+import json,sys
+assert json.load(open(sys.argv[1]))[0]['Id']==sys.argv[2]
+PY
+set +e
+B70_CPU_LOCK_TIMEOUT=0 B70_AGENT=S104-A4-adapter-only-build "$REPO/bin/cpu-run" \
+  env MAX_JOBS=4 docker run --rm --network none --cpus 4 -u "$(id -u):$(id -g)" \
+  -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_DIR=/out/cache \
+  -e SYCL_CACHE_PERSISTENT=0 -e MAX_JOBS=4 -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 \
+  -v /mnt/vm_8tb/b70/build/strata-ab:/work:ro -v "$HERE":/src:ro -v "$HERE/build":/out \
+  -v "$R/iq4xs-rpw2-s59-prep/build":/common:ro \
+  -v "$R/iq4xs-rpw2-s59-prep/frozen-inputs":/frozen:ro \
+  --entrypoint bash "$IMAGE" /src/build-container.sh 2>&1 | tee "$HERE/build/build.log"
+rc=("${PIPESTATUS[@]}")
+set -e
+printf '%s\n' "${rc[0]}" > "$HERE/build/build.exit"
+printf '%s\n' "${rc[1]}" > "$HERE/build/tee.exit"
+[ "${rc[0]}" = 0 ] && [ "${rc[1]}" = 0 ]
+
+FILE contract.txt
+S104 SOURCE ONLY: Q6 A4 private load-reconstruction candidate
+
+Actual S102 main image audit establishes Q6 C6/A2/RPW1 computational
+prefix16384B byte-exact to S85 ORIGINAL. Eight text differences are after
+EOT; relevant execution/payload metadata, options, data and relocations
+match. S102 root accepts reuse of existing ASM, no new decoder. This is
+the original baseline; it does not establish any candidate property.
+
+Only two shapes:6144->2560 and2560->10240, six canonical Q8_1 columns.
+Host guard requires exact shape and base%4==0. Invalid inputs throw before
+kernel launch; there is no fallback/retry in the private leaf. Main source
+is unchanged. Any future main integration would remain default-OFF with
+separate guarded fallback and matched serving gates.
+
+Candidate change: ql/qh16-byte runs use five4-byte-aligned scalar int
+reads from a&~3, then the same optional16-bit funnel. No misaligned int4
+dereference, persistent repacking, prefetch schedule or centering change.
+Original private path retains load16_a2. Both public and private originals
+remain byte anchors; unique s104::PrivateC6A4<false/true> host/device tags
+must be audited after an actual build, not assumed from distinct names.
+
+Allocation/bounds: base is4-byte aligned. For any absolute block index,
+block starts alternate modulo4 because stride210. The only possible a-2
+lower read occurs after the first block; first block's ql starts are4-byte
+aligned. For ql max start112, reads end <=131 relative to block; qh max
+start176 ends <=195. Both are within210-byte blocks. A preceding-block
+two-byte read stays within the complete weight allocation and is discarded.
+Host guard+complete-shape allocations and the prepared finite symbolic
+byte-flow check are required before build; no payload is needed for that
+check. Integer loads preserve bit patterns through uint32 reconstruction.
+
+Arithmetic ledger unchanged downstream of exact ql4/qh4 words:
+- Same shift/mask and signed byte subtract32, no packed centering.
+- Q6 signed bytes[-32,31], Q8 signed bytes; each s0/s1 four DP4As in
+  original order. Sixteen products fit int32 with wide margin.
+- Same half->float, signed scale, dsc construction, int->float, ds*dsc*s
+  expression/addition and ascending per-lane K sequence.
+- Same SG32, four blocks per K iteration and XOR16/8/4/2/1 reduction.
+- No contraction claim from source alone. S102/S85 actual original has
+  MUL/MAD/ADD scheduling; inspect candidate actual FP instruction form,
+  conversion points and per-output ordering before runtime.
+
+Postbuild gate BEFORE GPU: bind actual private/public Info/cache/guard/name
+and selected image. Candidate must remove the targeted offset-selection
+chain, use actual dword-aligned vector/scalar sends without introducing a
+new split/misaligned path, retain SIMD32/GRF128 and inspect any resource
+change. Missing spill fields are not zero. Confirm48DP4A and the actual
+FP ledger; source unchanged FP is not a compiled proof. If compiler keeps
+reassembly cost or changes arithmetic, HOLD; no automatic serving/build
+retry. No bandwidth, dynamic latency or improvement forecast is made.
+
+Future bounded primitive: reuse S85 guard/read-only/finite/tail and actual
+S44 initial/changed Q8/full-output anchors. Public original, private
+original, candidate; eager repeats and single/batch20 A/B/A graphs.
+Both shapes' correctness gates precede any timing. Four balanced OCCO/
+COOC rounds per shape replace S85's eight, with same20-call graphs and
+three warm batches per arm. Same-process nested intervals are descriptive.
+Stop at first strict mismatch; no tolerance relaxation or auto retry.
+
+The retained S85 fixture contains input/Q8/output exports but no original
+standalone weight files. Future leaf reads ONLY two known real GGUF slices
+(12,902,400+21,504,000bytes), checking existing S44 FNVs. Source preparation
+does not read any model payload or rehash/copy the75GB model. Model stat,
+bounded slice SHA/FNV and existing fixture SHA checks are future-run gates.
+No existing S85 runtime identity script is copied silently: root must bind
+this new executable/header/leaf and unchanged common inputs explicitly.
+
+Build source reuses old8f common prelinked images plus pinned frozen kernel/
+core archives. One private adapter compile+AOT prelink then one ordinary
+host link; no full main build, no compiler/GPU execution in preparation.
+Existing main/S30/defaults and graph source experiment are unchanged.
+
+FILE expected-container.sha256
+8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21  /common/mmvq-core.images.o
+f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8  /frozen/libstrata_kernels.a
+34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286  /frozen/libstrata_core.a
+c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584  /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+ac45a7a9b7d3cdc4b1b8c1c413c416911fb4ca91373d69bb34947815dbb3eec6  /work/src-ep/sycl/include/strata/sycl_math.hpp
+dbbf686ebcc60d569ed1e0bf688d98666a1d46b7f85d8d7e073d28d6ab775eba  /work/src-ep/sycl/include/strata/kernels/dp4a.hpp
+83c233dd1f9de362cf646eb6f3d95dd97278ae43a30aeeed205b3067ef358a7e  /work/src-ep/sycl/include/strata/kernels/native_mmvq.hpp
+95c3ea0cb9802b93dc8eb23857349182d1bc1b6988ab875fc289812549042fb0  /work/src-ep/include/strata/kernels/native_mmvq.hpp
+7c1b7175dbe29a43bff30a94381131096437d88415881a8a8c0704de53394c58  /work/src-ep/sycl/include/dpct/math.hpp
+eb6b595aea3a6ab35f3e7e51f6995628319ec3a06119dab925554a060a94eb82  /src/q6_a4_leaf.cpp
+a5c69ed76b35530f600e278dba019660723c5c67789d69dde4c5b67dc55548e9  /src/private_q6_a4.hpp
+
+FILE fixture-pins.json
+{
+  "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+  "file_size": 47039860096,
+  "tensors": [
+    {
+      "shape": "out",
+      "tensor": "blk.3.attn_output.weight",
+      "N": 6144,
+      "M": 2560,
+      "absolute_offset": 3572274688,
+      "bytes": 12902400,
+      "fnv1a64": "bd9a7894fdf034f5"
+    },
+    {
+      "shape": "qkv",
+      "tensor": "blk.4.attn_qkv.weight",
+      "N": 2560,
+      "M": 10240,
+      "absolute_offset": 4312859136,
+      "bytes": 21504000,
+      "fnv1a64": "6ac0ad97c5cfb31b"
+    }
+  ],
+  "fixture_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots",
+  "saved_fixture_files": {
+    "f0-input-f32.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f0-input-f32.bin",
+      "bytes": 196608,
+      "sha256": "41f59cc618247a9be0dc8cd4ec1f55042b2f1a82e5edc5f9a31ef85990797ab6"
+    },
+    "f0-changed-input-f32.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f0-changed-input-f32.bin",
+      "bytes": 196608,
+      "sha256": "4d9f4638afe21359174d678e00090a07b92e69694ddcacc1fbe6f5d6b1c47083"
+    },
+    "f0-input-q8_1.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f0-input-q8_1.bin",
+      "bytes": 55296,
+      "sha256": "a6859e31f961c7ead7d0045ff2833e7be84a1bbbb56cb3843958d1c14ba1759f"
+    },
+    "f0-changed-input-q8_1.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f0-changed-input-q8_1.bin",
+      "bytes": 55296,
+      "sha256": "7b31c7e16d6a870f326f22e89126a6b7bd8507459900a24e6f1a5df3481c6ad1"
+    },
+    "f0-C6-original.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f0-C6-original.bin",
+      "bytes": 81920,
+      "sha256": "6fdec1e5d1f1433a2174ad01c8d9ff16b7bc44931f4028dd7c14d7154bac3502"
+    },
+    "f0-C6-original-direct-changed.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f0-C6-original-direct-changed.bin",
+      "bytes": 81920,
+      "sha256": "2a7fb8d829ff2a126f88e3b5aeb0239eecd153d15a153d7e27875a2daf3377d2"
+    },
+    "f1-input-f32.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f1-input-f32.bin",
+      "bytes": 81920,
+      "sha256": "fcf3bf052dbdcd8d1951656f640e568c687e485cc2318fee17c9e22959de5d94"
+    },
+    "f1-changed-input-f32.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f1-changed-input-f32.bin",
+      "bytes": 81920,
+      "sha256": "67eeb6d38cff30b482b94df5a1edae4ffe9697395691b0cc7dc3cf0a06b9852c"
+    },
+    "f1-input-q8_1.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f1-input-q8_1.bin",
+      "bytes": 23040,
+      "sha256": "1188c64125657554c2907aca00625b2b2129ecc05ff6a1d363922d709f6c0217"
+    },
+    "f1-changed-input-q8_1.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f1-changed-input-q8_1.bin",
+      "bytes": 23040,
+      "sha256": "aa048d69002e81e6d9668a15ad2b794a48d84d6407d9eda0cf5e7bd5a9b3254d"
+    },
+    "f1-C6-original.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f1-C6-original.bin",
+      "bytes": 327680,
+      "sha256": "2bf611fa7fccaf9824181c4590d4c7e61a39bb5f59120d58bf625b17b7a520a6"
+    },
+    "f1-C6-original-direct-changed.bin": {
+      "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/run-clean/snapshots/f1-C6-original-direct-changed.bin",
+      "bytes": 327680,
+      "sha256": "d8d90f4b1042bf30dd1349a3ea504ca0aa86bf39c2bbdaaff1a21386d63bc81a"
+    }
+  },
+  "weight_slice_FNV_source": "S44 frozen run-clean/oracle.log fixture entries; no new payload read in source prep"
+}
+
+FILE private_q6_a4.hpp
+#pragma once
+// SOURCE ONLY S104: canonical Q6 C6/A2/RPW1, weight load reconstruction only.
+#include <sycl/sycl.hpp>
+#include <dpct/dpct.hpp>
+#include "strata/kernels/dp4a.hpp"
+#include "strata/sycl_math.hpp"
+#include <cstdint>
+#include <cstddef>
+#include <stdexcept>
+namespace s104 {
+static_assert(sizeof(int)==4);
+constexpr int QK=256,Q8K=32,WARP=32,WARPS=4;
+struct Q6KBlock {uint8_t ql[128];uint8_t qh[64];int8_t scales[16];sycl::half d;};
+struct Q81Block {sycl::half2 ds;int8_t qs[32];};
+static_assert(sizeof(Q6KBlock)==210 && alignof(Q6KBlock)==2 && offsetof(Q6KBlock,d)==208);
+static_assert(sizeof(Q81Block)==36 && offsetof(Q81Block,qs)==4);
+__dpct_inline__ sycl::int4 load16_a2(const void* p) {
+    const uintptr_t a = reinterpret_cast<uintptr_t>(p);
+    const sycl::int4* q = reinterpret_cast<const sycl::int4*>(a & ~uintptr_t(15));
+    const int k = int(a >> 2) & 3;          // dword offset within the first aligned chunk
+    const bool half = (a & 2) != 0;          // and a 2-byte shift (the address is always 2-byte aligned)
+    // the second chunk only when the address is unaligned: then it holds needed bytes, so (16-byte chunks never
+    // straddle a page) it cannot fault even at the very end of an allocation
+    const sycl::int4 lo = q[0], hi = (a & 15) ? q[1] : lo;
+    const uint32_t d[8] = {(uint32_t) lo.x(), (uint32_t) lo.y(), (uint32_t) lo.z(), (uint32_t) lo.w(),
+                           (uint32_t) hi.x(), (uint32_t) hi.y(), (uint32_t) hi.z(), (uint32_t) hi.w()};
+    uint32_t w[5];
+#pragma unroll
+    for (int i = 0; i < 5; ++i)              // w = d[k .. k+4] by selects (no indexed register access)
+        w[i] = k == 0 ? d[i] : k == 1 ? d[i + 1] : k == 2 ? d[i + 2] : d[(i + 3) & 7];
+    uint32_t o[4];
+#pragma unroll
+    for (int i = 0; i < 4; ++i) o[i] = half ? (w[i] >> 16) | (w[i + 1] << 16) : w[i];
+    return sycl::int4((int) o[0], (int) o[1], (int) o[2], (int) o[3]);
+}
+// A4 scalar reads are 4-byte aligned, never misaligned int4 dereferences.
+// Host launch guard requires base%4==0 and the two complete Q6 shapes.
+__dpct_inline__ sycl::int4 load16_a4(const void* p) {
+    const uintptr_t a = reinterpret_cast<uintptr_t>(p);
+    const int* q = reinterpret_cast<const int*>(a & ~uintptr_t(3));
+    const bool half = (a & 2) != 0;
+    const uint32_t d[5] = {uint32_t(q[0]), uint32_t(q[1]), uint32_t(q[2]), uint32_t(q[3]), uint32_t(q[4])};
+    uint32_t o[4];
+#pragma unroll
+    for (int i = 0; i < 4; ++i) o[i] = half ? (d[i] >> 16) | (d[i + 1] << 16) : d[i];
+    return sycl::int4((int) o[0], (int) o[1], (int) o[2], (int) o[3]);
+}
+template<bool CAND>
+void kernel(const Q6KBlock* __restrict__ w, const Q81Block* __restrict__ x,
+                                 float* __restrict__ y, int n_in, int n_out) {
+    constexpr int NCOLS=6,RPW=1,SG=32,BS=sizeof(Q6KBlock); constexpr bool A2=true;
+    auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+    const int lane = int(item.get_local_id(2)), warp = int(item.get_local_id(1));
+    constexpr int NWG = WARPS * WARP / SG;              // sub-groups per work-group
+    const int row0 = (int(item.get_group(2)) * NWG + warp) * RPW;
+    if (row0 >= n_out) return;
+    const int blocks_per_row = n_in / QK, x_stride = n_in / Q8K;
+    const int g = lane & 7, sub = lane >> 3;            // position group within the block, block within the iteration
+    const int vh_shift = 2 * ((g & 3) >> 1);
+    const int qh4_idx = 2 * (g >> 2) + (g & 1);
+    const int scale_offset = 8 * (g >> 2) + (g & 3);
+    const int bq8_offset = 4 * (g >> 2) + ((g & 3) >> 1);
+    const int u_int4 = g & 1;                           // ints 4(g%2)..+3 of the q8 block = one int4
+    float acc[RPW][NCOLS] = {};
+    for (int kbx = sub; kbx < blocks_per_row; kbx += SG / 8) {
+        const int kby = kbx * (QK / Q8K);
+        sycl::int4 ql4[RPW], qh4[RPW]; float dsc0[RPW], dsc1[RPW];
+#pragma unroll
+        for (int r = 0; r < RPW; ++r) {
+            const Q6KBlock* b = reinterpret_cast<const Q6KBlock*>(reinterpret_cast<const uint8_t*>(w) +
+                (std::size_t(row0 + (row0 + r < n_out ? r : 0)) * blocks_per_row + kbx) * BS);
+            if constexpr (A2) {
+                if constexpr(CAND) {
+                    ql4[r] = load16_a4(b->ql + 16 * g);
+                    qh4[r] = load16_a4(b->qh + 16 * qh4_idx);
+                } else {
+                ql4[r] = load16_a2(b->ql + 16 * g);
+                qh4[r] = load16_a2(b->qh + 16 * qh4_idx);
+                }
+            } else {
+                ql4[r] = reinterpret_cast<const sycl::int4*>(b->ql)[g];
+                qh4[r] = reinterpret_cast<const sycl::int4*>(b->qh)[qh4_idx];
+            }
+            const float d = b->d;
+            dsc0[r] = d * (float) b->scales[scale_offset]; dsc1[r] = d * (float) b->scales[scale_offset + 4];
+        }
+        // the activations once per column, shared by the RPW rows
+        sycl::int4 u0[NCOLS], u1[NCOLS];
+        float ds0[NCOLS], ds1[NCOLS];
+#pragma unroll
+        for (int j = 0; j < NCOLS; ++j) {
+            const Q81Block* xb = x + std::size_t(j) * x_stride + kby + bq8_offset;
+            if constexpr (A2) {   // Q8_1 qs sits at offset 4 of a 36-byte block: 4-byte aligned, so four int loads
+                const int* p0 = reinterpret_cast<const int*>(xb[0].qs) + 4 * u_int4;
+                const int* p1 = reinterpret_cast<const int*>(xb[2].qs) + 4 * u_int4;
+                u0[j] = sycl::int4(p0[0], p0[1], p0[2], p0[3]);
+                u1[j] = sycl::int4(p1[0], p1[1], p1[2], p1[3]);
+            } else {
+                u0[j] = reinterpret_cast<const sycl::int4*>(xb[0].qs)[u_int4];
+                u1[j] = reinterpret_cast<const sycl::int4*>(xb[2].qs)[u_int4];
+            }
+            ds0[j] = xb[0].ds[0]; ds1[j] = xb[2].ds[0];
+        }
+#pragma unroll
+        for (int r = 0; r < RPW; ++r) {
+            const int vl[4] = {ql4[r].x(), ql4[r].y(), ql4[r].z(), ql4[r].w()};
+            const int vh[4] = {qh4[r].x() >> vh_shift, qh4[r].y() >> vh_shift, qh4[r].z() >> vh_shift, qh4[r].w() >> vh_shift};
+            int vi0[4], vi1[4];
+#pragma unroll
+            for (int p = 0; p < 4; ++p) {
+                vi0[p] = dpct::vectorized_binary<sycl::char4>((vl[p] & 0x0f0f0f0f) | ((vh[p] << 4) & 0x30303030), 0x20202020, dpct::sub_sat());
+                vi1[p] = dpct::vectorized_binary<sycl::char4>(((vl[p] >> 4) & 0x0f0f0f0f) | (((vh[p] >> 4) << 4) & 0x30303030), 0x20202020, dpct::sub_sat());
+            }
+#pragma unroll
+            for (int j = 0; j < NCOLS; ++j) {
+                int s0 = 0, s1 = 0;
+                s0 = strata::dp4a(vi0[0], u0[j].x(), s0); s0 = strata::dp4a(vi0[1], u0[j].y(), s0);
+                s0 = strata::dp4a(vi0[2], u0[j].z(), s0); s0 = strata::dp4a(vi0[3], u0[j].w(), s0);
+                s1 = strata::dp4a(vi1[0], u1[j].x(), s1); s1 = strata::dp4a(vi1[1], u1[j].y(), s1);
+                s1 = strata::dp4a(vi1[2], u1[j].z(), s1); s1 = strata::dp4a(vi1[3], u1[j].w(), s1);
+                acc[r][j] += ds0[j] * dsc0[r] * (float) s0 + ds1[j] * dsc1[r] * (float) s1;
+            }
+        }
+    }
+    auto sg = item.get_sub_group();
+#pragma unroll
+    for (int r = 0; r < RPW; ++r)
+#pragma unroll
+        for (int j = 0; j < NCOLS; ++j) {
+            float v = acc[r][j];
+#pragma unroll
+            for (int o = SG / 2; o > 0; o >>= 1) v += sycl::permute_group_by_xor(sg, v, o);
+            if (lane == 0 && row0 + r < n_out) y[std::size_t(j) * n_out + row0 + r] = v;
+        }
+}
+
+template<bool CAND>class PrivateC6A4;
+template<bool CAND>void launch(const void* w,const void* x,float* y,int N,int M,sycl::queue& q){
+ if(!((N==6144 && M==2560)||(N==2560 && M==10240)) || (reinterpret_cast<uintptr_t>(w)&3u))
+     throw std::invalid_argument("S104 needs two pinned C6 shapes and base%4==0; no fallback/retry");
+ const unsigned groups=unsigned((size_t(M)+WARPS-1)/WARPS);
+ q.parallel_for<PrivateC6A4<CAND>>(sycl::nd_range<3>(sycl::range<3>(1,1,groups)*sycl::range<3>(1,WARPS,WARP),sycl::range<3>(1,WARPS,WARP)),
+ [=](sycl::nd_item<3>)[[sycl::reqd_sub_group_size(32)]]{kernel<CAND>(static_cast<const Q6KBlock*>(w),static_cast<const Q81Block*>(x),y,N,M);});
+}
+} // namespace s104
+
+FILE prove_a4_bytes.py
+#!/usr/bin/env python3
+"""SOURCE ONLY finite alignment/byte-flow check; not compiled GPU proof."""
+import json, struct
+
+cases = 0
+for base_mod16 in (0, 4, 8, 12):
+    base = 64 + base_mod16
+    # Eight complete consecutive blocks cover every even start residue mod16.
+    buf = bytes(((i * 109) ^ ((i >> 3) * 37)) & 255 for i in range(base + 8 * 210 + 64))
+    for block in range(8):
+        origin = base + block * 210
+        for g in range(8):
+            for offset in (16 * g, 128 + 16 * (2 * (g >> 2) + (g & 1))):
+                a = origin + offset
+                start = a & ~3
+                end = start + 20
+                assert start % 4 == 0 and a % 2 == 0
+                assert start >= base and end <= origin + 210
+                # A preceding-block d field is allowed; never before the allocation.
+                assert start >= origin - 2
+                d = struct.unpack_from('<5I', buf, start)
+                actual = [((d[i] >> 16) | ((d[i + 1] << 16) & 0xffffffff)) if a & 2 else d[i] for i in range(4)]
+                expected = list(struct.unpack_from('<4I', buf, a))
+                assert actual == expected
+                # Symbolic byte provenance: check source byte index of every output byte.
+                window = list(range(start, end))
+                chosen = window[2:18] if a & 2 else window[:16]
+                assert chosen == list(range(a, a + 16))
+                cases += 1
+print(json.dumps({'status': 'PASS_FINITE_SOURCE_BYTE_FLOW_AND_BOUNDS_ONLY', 'cases': cases, 'base_mod16': [0, 4, 8, 12], 'complete_blocks': 8, 'all_even_address_residues': True, 'scalar_reads_are_dword_aligned': True, 'selected_16bytes_exact': True, 'compiled_instruction_or_FP_equivalence': False, 'GPU': 0}))
+
+FILE q6_a4_leaf.cpp
+// SOURCE ONLY S104: saved canonical-Q8 Q6 C6, original/A4 private kernels and public anchor.
+#define DPCT_PROFILING_ENABLED
+#include <sycl/sycl.hpp>
+#include <dpct/dpct.hpp>
+#include "strata/kernels/native_mmvq.hpp"
+#include "private_q6_a4.hpp"
+#include <array>
+#include <memory>
+#include <cstddef>
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <cctype>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <random>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+namespace K=strata::kernels;
+namespace fs=std::filesystem;
+using Bytes=std::vector<uint8_t>;
+using Clock=std::chrono::steady_clock;
+constexpr int C=6,BATCH=20,WARM=3,ROUNDS=4;
+constexpr size_t G=4096,TAIL=512;
+struct Strict:std::runtime_error {using std::runtime_error::runtime_error;};
+static void need(bool x,const std::string& m){if(!x)throw std::runtime_error(m);}
+static void strict(bool x,const std::string& m){if(!x)throw Strict(m);}
+static double us(Clock::time_point a,Clock::time_point b){return std::chrono::duration<double,std::micro>(b-a).count();}
+static void write(const fs::path& p,const void* v,size_t n){std::ofstream f(p,std::ios::binary|std::ios::trunc);need(bool(f),"open export "+p.string());f.write(static_cast<const char*>(v),n);need(bool(f),"write export "+p.string());f.close();need(bool(f),"close export "+p.string());}
+static void text(const fs::path& p,const std::string& s){write(p,s.data(),s.size());}
+static Bytes read(const fs::path& p,size_t n){std::ifstream f(p,std::ios::binary);need(bool(f),"open reference "+p.string());Bytes v(n);f.read(reinterpret_cast<char*>(v.data()),n);need(size_t(f.gcount())==n,"short reference "+p.string());need(f.peek()==std::char_traits<char>::eof(),"long reference "+p.string());f.clear();f.close();need(bool(f),"close reference "+p.string());return v;}
+static uint64_t fnv(const Bytes& b){uint64_t h=0xcbf29ce484222325ull;for(auto v:b){h^=v;h*=0x100000001b3ull;}return h;}
+static void finite(const Bytes& b){need(b.size()%4==0,"float byte count");for(size_t i=0;i<b.size();i+=4){float x;std::memcpy(&x,b.data()+i,4);strict(std::isfinite(x),"nonfinite output");}}
+static void strict_equal(const Bytes& a,const Bytes& b,const std::string& label){strict(a==b,"STRICT "+label);}
+struct Buffer {
+    sycl::queue& q;size_t bytes;uint8_t* raw=nullptr;const char* name;
+    Buffer(sycl::queue& s,size_t n,const char* label):q(s),bytes(n),name(label){raw=sycl::malloc_device<uint8_t>(bytes+2*G,q);need(raw!=nullptr,std::string("allocate ")+name);q.memset(raw,0xd7,bytes+2*G);poison();}
+    template<class T=uint8_t>T* ptr()const{return reinterpret_cast<T*>(raw+G);}
+    void poison(){q.memset(raw+G,0xff,bytes);}
+    void put(const void* p,size_t n){need(n==bytes,std::string("upload size ")+name);q.memcpy(raw+G,p,n);}
+    Bytes get()const{Bytes b(bytes);q.memcpy(b.data(),raw+G,bytes).wait_and_throw();return b;}
+    void guards()const{uint8_t h[2*G];q.memcpy(h,raw,G);q.memcpy(h+G,raw+G+bytes,G).wait_and_throw();for(auto v:h)strict(v==0xd7,std::string("guard ")+name);}
+    void readonly(const void* h)const{
+        constexpr size_t CHUNK=8*1024*1024;Bytes b(std::min(bytes,CHUNK));
+        for(size_t off=0;off<bytes;off+=CHUNK){size_t n=std::min(bytes-off,CHUNK);q.memcpy(b.data(),raw+G+off,n).wait_and_throw();strict(!std::memcmp(b.data(),static_cast<const uint8_t*>(h)+off,n),std::string("readonly ")+name);}
+    }
+    ~Buffer(){if(raw){try{q.wait_and_throw();sycl::free(raw,q);}catch(...){}}}
+};
+struct Graph {
+    sycl::queue& q;dpct::experimental::command_graph_ptr graph=nullptr;
+    dpct::experimental::command_graph_exec_ptr exec=nullptr;
+    ~Graph(){try{q.wait_and_throw();delete exec;delete graph;}catch(...){}}
+    template<class F>void capture(F call,const fs::path& dot){q.wait_and_throw();dpct::experimental::begin_recording(&q);call();dpct::experimental::end_recording(&q,&graph);need(graph!=nullptr,"null graph");graph->print_graph(dot.string(),true);need(fs::is_regular_file(dot)&&fs::file_size(dot)>0,"missing graph DOT");exec=new sycl::ext::oneapi::experimental::command_graph<sycl::ext::oneapi::experimental::graph_state::executable>(graph->finalize());}
+    void run(){q.ext_oneapi_graph(*exec).wait_and_throw();}
+};
+struct Shape {const char* tag;const char* tensor;int N,M;size_t offset,bytes;uint64_t weight_fnv;};
+constexpr Shape SHAPES[]={
+ {"out","blk.3.attn_output.weight",6144,2560,3572274688,12902400,0xbd9a7894fdf034f5ull},
+ {"qkv","blk.4.attn_qkv.weight",2560,10240,4312859136,21504000,0x6ac0ad97c5cfb31bull}
+};
+static const char* armname(int arm){need(arm>=0&&arm<=2,"bad arm");return arm==0?"public":arm==1?"original":"candidate";}
+struct State {
+    sycl::queue& q;Shape d;fs::path dir;Bytes weights;std::vector<float> a,b;Bytes savedq[2],anchor[2];
+    size_t active,qbytes;Buffer w,x,xq,y;
+    Graph pub,orig,cand,orig20,cand20;
+    Bytes expected[2],expectedq[2];int current=-1;
+    State(sycl::queue& queue,Shape shape,const fs::path& output,const char* shard,const fs::path& fixtures):
+      q(queue),d(shape),dir(output/d.tag),weights(d.bytes),a(size_t(C)*d.N),b(a.size()),
+      active(size_t(C)*d.M*4),qbytes(K::native_q8_1_bytes(d.N,C)),
+      w(q,d.bytes,"weights"),x(q,a.size()*4,"float input"),xq(q,qbytes+TAIL,"Q8"),y(q,active+TAIL,"output"),
+      pub{q},orig{q},cand{q},orig20{q},cand20{q} {
+        need(fs::create_directory(dir),"new shape directory required");
+        need(K::native_mmvq_weight_bytes(14,d.N,d.M)==d.bytes,"type14 weight geometry");
+        need(qbytes==size_t(C)*(d.N/32)*36,"canonical Q8 geometry");
+        std::ifstream f(shard,std::ios::binary);need(bool(f),"open actual model");
+        f.seekg(d.offset);need(bool(f),"seek actual tensor");f.read(reinterpret_cast<char*>(weights.data()),weights.size());
+        need(size_t(f.gcount())==weights.size(),"short actual tensor");f.close();need(bool(f),"close actual model");
+        need(fnv(weights)==d.weight_fnv,"actual tensor FNV mismatch");
+        const std::string fi=d.N==6144?"f0":"f1";
+        for(int changed:{0,1}){
+            auto input=read(fixtures/(fi+(changed?"-changed-input-f32.bin":"-input-f32.bin")),size_t(8)*d.N*4);
+            auto& dst=changed?b:a;std::memcpy(dst.data(),input.data(),dst.size()*4);finite(input);
+            auto qinput=read(fixtures/(fi+(changed?"-changed-input-q8_1.bin":"-input-q8_1.bin")),size_t(8)*(d.N/32)*36);
+            savedq[changed]=Bytes(qbytes+TAIL,0xff);std::copy_n(qinput.begin(),qbytes,savedq[changed].begin());
+            anchor[changed]=read(fixtures/(fi+(changed?"-C6-original-direct-changed.bin":"-C6-original.bin")),size_t(8)*d.M*4);
+            for(size_t i=active;i<anchor[changed].size();++i)strict(anchor[changed][i]==0xff,"saved S44 inactive tail");
+            anchor[changed].resize(active);finite(anchor[changed]);
+        }
+        w.put(weights.data(),weights.size());q.wait_and_throw();
+        std::printf("{\"type\":\"shape_identity\",\"shape\":\"%s\",\"tensor\":\"%s\",\"N\":%d,\"M\":%d,\"C\":6,\"weight_bytes\":%zu,\"offset\":%zu,\"fnv\":\"%016llx\"}\n",d.tag,d.tensor,d.N,d.M,d.bytes,d.offset,(unsigned long long)d.weight_fnv);
+    }
+    void guards(){for(Buffer* p:{&w,&x,&xq,&y})p->guards();}
+    void output_reset(){q.wait_and_throw();guards();y.poison();q.wait_and_throw();}
+    void input(int changed){
+        need(changed==0||changed==1,"input selector");q.wait_and_throw();guards();
+        const auto& v=changed?b:a;x.put(v.data(),x.bytes);xq.poison();y.poison();
+        xq.put(savedq[changed].data(),xq.bytes);q.wait_and_throw();
+        auto pristine=xq.get();strict_equal(pristine,savedq[changed],"saved canonical Q8 upload/tail");
+        expectedq[changed]=savedq[changed];
+        current=changed;
+    }
+    void call(int arm){
+        if(arm==0)K::native_mmvq(14,w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,C,&q);
+        else if(arm==1)s104::launch<false>(w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,q);
+        else if(arm==2)s104::launch<true>(w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,q);
+        else need(false,"bad projection arm");
+    }
+    Bytes snapshot(const std::string& phase,bool save){
+        q.wait_and_throw();auto out=y.get();auto quant=xq.get();
+        if(save){write(dir/(phase+".bin"),out.data(),active);write(dir/(phase+"-q8.bin"),quant.data(),qbytes);}
+        try {
+            guards();x.readonly((current?b:a).data());w.readonly(weights.data());
+            strict_equal(quant,expectedq[current],phase+" Q8/read-only/tail");
+            for(size_t i=active;i<out.size();++i)strict(out[i]==0xff,phase+" output tail");
+            out.resize(active);finite(out);
+        }catch(...){if(!save){write(dir/(phase+"-failure.bin"),out.data(),out.size());write(dir/(phase+"-failure-q8.bin"),quant.data(),quant.size());}throw;}
+        std::printf("{\"type\":\"checked_snapshot\",\"shape\":\"%s\",\"phase\":\"%s\",\"changed\":%d,\"guards\":true,\"tail\":true,\"finite\":true,\"input_readonly\":true,\"weight_readonly\":true,\"Q8_readonly\":true}\n",d.tag,phase.c_str(),current);
+        return out;
+    }
+    void equal_snapshot(const std::string& phase,bool save){
+        auto out=snapshot(phase,save);
+        if(out!=expected[current])write(dir/(phase+"-mismatch.bin"),out.data(),out.size());
+        strict_equal(out,expected[current],std::string(d.tag)+" "+phase+" full output bytes");
+    }
+    void correctness(){
+        for(int changed:{0,1}){
+            input(changed);const std::string label=changed?"b":"a";
+            write(dir/("input-"+label+".bin"),(changed?b:a).data(),x.bytes);
+            write(dir/("canonical-"+label+"-q8.bin"),expectedq[changed].data(),qbytes);
+            output_reset();call(0);expected[changed]=snapshot("eager-public-"+label,true);
+            strict_equal(expected[changed],anchor[changed],"saved S44 public byte anchor");
+            // The private-original/public byte anchor precedes every candidate gate.
+            output_reset();call(1);equal_snapshot("eager-original-"+label,true);
+            output_reset();call(2);equal_snapshot("eager-candidate-"+label,true);
+            for(int arm:{1,2}){output_reset();call(arm);equal_snapshot(std::string("repeat-")+armname(arm)+"-"+label,true);}
+        }
+        strict(expected[0]!=expected[1],"changed input not observable in output");
+        strict(expectedq[0]!=expectedq[1],"changed canonical Q8 not observable");
+        input(0);
+        for(int arm:{0,1,2}){output_reset();call(arm);equal_snapshot(std::string("restore-eager-")+armname(arm),true);}
+        pub.capture([&]{call(0);},dir/"single-public.dot");
+        orig.capture([&]{call(1);},dir/"single-original.dot");
+        cand.capture([&]{call(2);},dir/"single-candidate.dot");
+        orig20.capture([&]{for(int i=0;i<BATCH;++i)call(1);},dir/"batch20-original.dot");
+        cand20.capture([&]{for(int i=0;i<BATCH;++i)call(2);},dir/"batch20-candidate.dot");
+        for(int changed:{0,1}){
+            input(changed);const std::string label=changed?"b":"a";
+            for(auto item:{std::make_pair(&pub,"public"),std::make_pair(&orig,"original"),std::make_pair(&cand,"candidate")}){
+                output_reset();item.first->run();equal_snapshot(std::string("graph-")+item.second+"-"+label,true);
+                output_reset();item.first->run();equal_snapshot(std::string("graph-repeat-")+item.second+"-"+label,true);
+            }
+            for(auto item:{std::make_pair(&orig20,"original"),std::make_pair(&cand20,"candidate")}){
+                output_reset();item.first->run();equal_snapshot(std::string("batch20-")+item.second+"-"+label,true);
+            }
+        }
+        input(0);
+        for(auto item:{std::make_pair(&pub,"public"),std::make_pair(&orig,"original"),std::make_pair(&cand,"candidate")}){
+            output_reset();item.first->run();equal_snapshot(std::string("restore-graph-")+item.second,true);
+        }
+        for(auto item:{std::make_pair(&orig20,"original"),std::make_pair(&cand20,"candidate")}){
+            output_reset();item.first->run();equal_snapshot(std::string("restore-batch20-")+item.second,true);
+        }
+        std::printf("{\"type\":\"correctness_pass\",\"shape\":\"%s\",\"public_original_bit_anchor\":true,\"candidate_full_bytes\":true,\"initial_changed\":true,\"single_batch20_graphs\":true}\n",d.tag);
+    }
+    void warm(){
+        input(0);
+        for(int i=0;i<WARM;++i)for(int arm:{1,2}){
+            output_reset();(arm==1?orig20:cand20).run();equal_snapshot("warm-"+std::to_string(i)+"-"+armname(arm),false);
+        }
+    }
+    void timing(){
+        need(current==0,"timing initial input");
+        for(int round=0;round<ROUNDS;++round){
+            const std::array<int,4> order=round%2?std::array<int,4>{2,1,1,2}:std::array<int,4>{1,2,2,1};
+            double complete[3]{},span[3]{};
+            for(int slot=0;slot<4;++slot){
+                const int arm=order[slot];output_reset();
+                auto begin=q.ext_oneapi_submit_barrier();begin.wait_and_throw();
+                const auto t0=Clock::now();q.ext_oneapi_graph(*(arm==1?orig20.exec:cand20.exec));const auto t1=Clock::now();
+                auto end=q.ext_oneapi_submit_barrier();end.wait_and_throw();const auto t2=Clock::now();
+                const auto tb=begin.get_profiling_info<sycl::info::event_profiling::command_end>();
+                const auto te=end.get_profiling_info<sycl::info::event_profiling::command_end>();need(te>=tb,"timestamp order");
+                equal_snapshot("timed-r"+std::to_string(round)+"-s"+std::to_string(slot)+"-"+armname(arm),false);
+                const double cu=us(t0,t2),sp=double(te-tb)/1000.0;
+                complete[arm]+=cu/2;span[arm]+=sp/2;
+                std::printf("{\"type\":\"timing_sample\",\"shape\":\"%s\",\"round\":%d,\"slot\":%d,\"arm\":\"%s\",\"order\":\"%s\",\"captured_projection_calls\":20,\"quantization_in_timed_graph\":false,\"enqueue_us\":%.6f,\"complete_us\":%.6f,\"barrier_span_us\":%.6f,\"checked_full_bytes\":true}\n",d.tag,round,slot,armname(arm),round%2?"COOC":"OCCO",us(t0,t1),cu,sp);
+            }
+            std::printf("{\"type\":\"paired_mean\",\"shape\":\"%s\",\"round\":%d,\"original_complete_us_per_call\":%.6f,\"candidate_complete_us_per_call\":%.6f,\"original_span_us_per_call\":%.6f,\"candidate_span_us_per_call\":%.6f,\"observational_only\":true}\n",d.tag,round,complete[1]/BATCH,complete[2]/BATCH,span[1]/BATCH,span[2]/BATCH);
+        }
+        equal_snapshot("final",true);
+    }
+};
+static int run(const fs::path& out,const char* shard,const fs::path& fixtures){
+    auto env=[](const char* k,const char* v){const char* e=std::getenv(k);need(e&&std::string(e)==v,std::string("require ")+k+"="+v);};
+    env("STRATA_MMVQ_WIDE","1");env("STRATA_MMVQ_A2","1");env("STRATA_MMVQ_WIDE_RPW","1");env("STRATA_MMVQ_PF","0");
+    env("STRATA_MMVQ_WIDE_MIN","0");env("STRATA_MMVQ_WIDE_MAXC","8");env("STRATA_Q6_PACKED","0");env("STRATA_Q6_CENTER","0");
+    need(K::native_mmvq_multi_exact(),"public exact mode required");
+    need(dpct::device_count()==1,"require exactly one visible device");
+    const sycl::device dev=dpct::dev_mgr::instance().get_device(0);
+    need(dev.has(sycl::aspect::ext_intel_pci_address),"PCI identity unavailable");
+    std::string pci=dev.get_info<sycl::ext::intel::info::device::pci_address>();
+    std::transform(pci.begin(),pci.end(),pci.begin(),[](unsigned char c){return char(std::tolower(c));});
+    need(pci=="0000:0b:00.0","require physical card0 BDF0000:0b:00.0");
+    std::printf("{\"type\":\"identity\",\"pci\":\"%s\",\"visible_devices\":1,\"driver\":\"%s\",\"device\":\"%s\",\"public_type\":14,\"C\":6,\"timing_scope\":\"projection only; canonical Q8 outside graphs\"}\n",pci.c_str(),dev.get_info<sycl::info::device::driver_version>().c_str(),dev.get_info<sycl::info::device::name>().c_str());
+    sycl::queue q(dpct::dev_mgr::instance().get_device(0).get_context(),dev,
+        sycl::property_list{sycl::property::queue::in_order(),sycl::property::queue::enable_profiling()});
+    std::vector<std::unique_ptr<State>> states;
+    for(const auto& shape:SHAPES){states.emplace_back(std::make_unique<State>(q,shape,out,shard,fixtures));states.back()->correctness();}
+    // All shapes' correctness gates pass before any timing begins.
+    for(auto& state:states){state->warm();state->timing();}
+    q.wait_and_throw();states.clear();q.wait_and_throw();
+    text(out/"result.json","{\"status\":\"PASS\",\"scope\":\"S104_TWO_SHAPE_PRIMITIVE_ONLY\",\"shapes\":2,\"paired_rounds_per_shape\":4,\"samples_per_round\":4,\"calls_per_graph\":20,\"public_original_bit_anchor\":true,\"candidate_full_bytes\":true,\"serving_qualified\":false,\"speed_qualified\":false}\n");return 0;
+}
+int main(int argc,char** argv){
+    setvbuf(stdout,nullptr,_IONBF,0);fs::path out;bool created=false;
+    try{need(argc==4,"usage: q6_a4_leaf NEW_DIR REAL_SHARD S44_SNAPSHOTS");out=argv[1];need(fs::create_directory(out),"new output directory required");created=true;return run(out,argv[2],argv[3]);}
+    catch(const std::exception& e){const int rc=dynamic_cast<const Strict*>(&e)?5:2;
+        std::fprintf(stderr,"S104 %s: %s\n",rc==5?"STRICT_FAILURE":"RUNTIME_OR_IO_FAILURE",e.what());
+        if(created)try{text(out/"result.json","{\"status\":\"FAIL\",\"exit\":"+std::to_string(rc)+",\"kind\":\""+(rc==5?std::string("strict"):std::string("runtime_or_io"))+"\"}\n");}
+        catch(const std::exception& io){std::fprintf(stderr,"S104 failure-result IO: %s\n",io.what());return 2;}return rc;}
+}
+
+FILE source-ledger.json
+{
+  "status": "SOURCE_ONLY_INVERSE_KERNEL_LEDGER_PASS_NO_BUILD_GPU",
+  "S85_header_sha256": "eb9524770ea90a66e3d3682e51593b4ead3fd347ca24aab7f30dc5503a1801b5",
+  "current_native_source_sha256": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584",
+  "inverse_candidate_load_removal_equals_S85_original_center_false_kernel": true,
+  "full_S85_candidate_center_branch_removed": true,
+  "only_candidate_math_delta": "How exact16byte ql/qh runs are loaded; integer centering/DP4A/FP and XOR tree unchanged in SOURCE, actual compiled proof still required",
+  "S102_facts": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s102-audit/facts.json",
+  "S102_main_original_computational_prefix_equal": true,
+  "model_payload_read_in_preparation": false
+}
+
+FILE source-link-bindings.json
+{
+  "/common/mmvq-core.images.o": {
+    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/build/mmvq-core.images.o",
+    "sha256": "8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21",
+    "bytes": 59875544,
+    "preparation_hash_source": "retained frozen S65 binding; no large input reread in source prep; actual build/runtime pre/post recheck"
+  },
+  "/frozen/libstrata_kernels.a": {
+    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/frozen-inputs/libstrata_kernels.a",
+    "sha256": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8",
+    "bytes": 19468072,
+    "preparation_hash_source": "retained frozen S65 binding; no large input reread in source prep; actual build/runtime pre/post recheck"
+  },
+  "/frozen/libstrata_core.a": {
+    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/frozen-inputs/libstrata_core.a",
+    "sha256": "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286",
+    "bytes": 585338,
+    "preparation_hash_source": "retained frozen S65 binding; no large input reread in source prep; actual build/runtime pre/post recheck"
+  },
+  "/work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp": {
+    "host_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+    "bytes": 185685,
+    "sha256": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584",
+    "preparation_hash_source": "Current small source/header only; no model read"
+  },
+  "/work/src-ep/sycl/include/strata/sycl_math.hpp": {
+    "host_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/sycl_math.hpp",
+    "bytes": 1271,
+    "sha256": "ac45a7a9b7d3cdc4b1b8c1c413c416911fb4ca91373d69bb34947815dbb3eec6",
+    "preparation_hash_source": "Current small source/header only; no model read"
+  },
+  "/work/src-ep/sycl/include/strata/kernels/dp4a.hpp": {
+    "host_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/kernels/dp4a.hpp",
+    "bytes": 2827,
+    "sha256": "dbbf686ebcc60d569ed1e0bf688d98666a1d46b7f85d8d7e073d28d6ab775eba",
+    "preparation_hash_source": "Current small source/header only; no model read"
+  },
+  "/work/src-ep/sycl/include/strata/kernels/native_mmvq.hpp": {
+    "host_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/kernels/native_mmvq.hpp",
+    "bytes": 8175,
+    "sha256": "83c233dd1f9de362cf646eb6f3d95dd97278ae43a30aeeed205b3067ef358a7e",
+    "preparation_hash_source": "Current small source/header only; no model read"
+  },
+  "/work/src-ep/include/strata/kernels/native_mmvq.hpp": {
+    "host_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/kernels/native_mmvq.hpp",
+    "bytes": 9639,
+    "sha256": "95c3ea0cb9802b93dc8eb23857349182d1bc1b6988ab875fc289812549042fb0",
+    "preparation_hash_source": "Current small source/header only; no model read"
+  },
+  "/work/src-ep/sycl/include/dpct/math.hpp": {
+    "host_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/dpct/math.hpp",
+    "bytes": 126988,
+    "sha256": "7c1b7175dbe29a43bff30a94381131096437d88415881a8a8c0704de53394c58",
+    "preparation_hash_source": "Current small source/header only; no model read"
+  },
+  "/src/q6_a4_leaf.cpp": {
+    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-private-prep/q6_a4_leaf.cpp",
+    "bytes": 17471,
+    "sha256": "eb6b595aea3a6ab35f3e7e51f6995628319ec3a06119dab925554a060a94eb82",
+    "preparation_hash_source": "New private source"
+  },
+  "/src/private_q6_a4.hpp": {
+    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-private-prep/private_q6_a4.hpp",
+    "bytes": 8117,
+    "sha256": "a5c69ed76b35530f600e278dba019660723c5c67789d69dde4c5b67dc55548e9",
+    "preparation_hash_source": "New private source"
+  }
+}
+
+FILE vs-S85-header.diff
+--- S85/private_q6_center.hpp
++++ S104/private_q6_a4.hpp
+@@ -1,12 +1,13 @@
+ #pragma once
+-// Private S85: original canonical Q6_K C6/A2/RPW1, only two integer expressions differ.
++// SOURCE ONLY S104: canonical Q6 C6/A2/RPW1, weight load reconstruction only.
+ #include <sycl/sycl.hpp>
+ #include <dpct/dpct.hpp>
+ #include "strata/kernels/dp4a.hpp"
+ #include "strata/sycl_math.hpp"
+ #include <cstdint>
+ #include <cstddef>
+-namespace s85 {
++#include <stdexcept>
++namespace s104 {
+ static_assert(sizeof(int)==4);
+ constexpr int QK=256,Q8K=32,WARP=32,WARPS=4;
+ struct Q6KBlock {uint8_t ql[128];uint8_t qh[64];int8_t scales[16];sycl::half d;};
+@@ -30,6 +31,18 @@
+     uint32_t o[4];
+ #pragma unroll
+     for (int i = 0; i < 4; ++i) o[i] = half ? (w[i] >> 16) | (w[i + 1] << 16) : w[i];
++    return sycl::int4((int) o[0], (int) o[1], (int) o[2], (int) o[3]);
++}
++// A4 scalar reads are 4-byte aligned, never misaligned int4 dereferences.
++// Host launch guard requires base%4==0 and the two complete Q6 shapes.
++__dpct_inline__ sycl::int4 load16_a4(const void* p) {
++    const uintptr_t a = reinterpret_cast<uintptr_t>(p);
++    const int* q = reinterpret_cast<const int*>(a & ~uintptr_t(3));
++    const bool half = (a & 2) != 0;
++    const uint32_t d[5] = {uint32_t(q[0]), uint32_t(q[1]), uint32_t(q[2]), uint32_t(q[3]), uint32_t(q[4])};
++    uint32_t o[4];
++#pragma unroll
++    for (int i = 0; i < 4; ++i) o[i] = half ? (d[i] >> 16) | (d[i + 1] << 16) : d[i];
+     return sycl::int4((int) o[0], (int) o[1], (int) o[2], (int) o[3]);
+ }
+ template<bool CAND>
+@@ -57,8 +70,13 @@
+             const Q6KBlock* b = reinterpret_cast<const Q6KBlock*>(reinterpret_cast<const uint8_t*>(w) +
+                 (std::size_t(row0 + (row0 + r < n_out ? r : 0)) * blocks_per_row + kbx) * BS);
+             if constexpr (A2) {
++                if constexpr(CAND) {
++                    ql4[r] = load16_a4(b->ql + 16 * g);
++                    qh4[r] = load16_a4(b->qh + 16 * qh4_idx);
++                } else {
+                 ql4[r] = load16_a2(b->ql + 16 * g);
+                 qh4[r] = load16_a2(b->qh + 16 * qh4_idx);
++                }
+             } else {
+                 ql4[r] = reinterpret_cast<const sycl::int4*>(b->ql)[g];
+                 qh4[r] = reinterpret_cast<const sycl::int4*>(b->qh)[qh4_idx];
+@@ -90,13 +108,8 @@
+             int vi0[4], vi1[4];
+ #pragma unroll
+             for (int p = 0; p < 4; ++p) {
+-                if constexpr(CAND) {
+-                    vi0[p] = sycl::bit_cast<int>((uint32_t((vl[p] & 0x0f0f0f0f) | ((vh[p] << 4) & 0x30303030)) + 0x60606060u) ^ 0x80808080u);
+-                    vi1[p] = sycl::bit_cast<int>((uint32_t(((vl[p] >> 4) & 0x0f0f0f0f) | (((vh[p] >> 4) << 4) & 0x30303030)) + 0x60606060u) ^ 0x80808080u);
+-                } else {
+                 vi0[p] = dpct::vectorized_binary<sycl::char4>((vl[p] & 0x0f0f0f0f) | ((vh[p] << 4) & 0x30303030), 0x20202020, dpct::sub_sat());
+                 vi1[p] = dpct::vectorized_binary<sycl::char4>(((vl[p] >> 4) & 0x0f0f0f0f) | (((vh[p] >> 4) << 4) & 0x30303030), 0x20202020, dpct::sub_sat());
+-                }
+             }
+ #pragma unroll
+             for (int j = 0; j < NCOLS; ++j) {
+@@ -121,10 +134,12 @@
+         }
+ }
+ 
+-template<bool CAND>class PrivateC6;
++template<bool CAND>class PrivateC6A4;
+ template<bool CAND>void launch(const void* w,const void* x,float* y,int N,int M,sycl::queue& q){
++ if(!((N==6144 && M==2560)||(N==2560 && M==10240)) || (reinterpret_cast<uintptr_t>(w)&3u))
++     throw std::invalid_argument("S104 needs two pinned C6 shapes and base%4==0; no fallback/retry");
+  const unsigned groups=unsigned((size_t(M)+WARPS-1)/WARPS);
+- q.parallel_for<PrivateC6<CAND>>(sycl::nd_range<3>(sycl::range<3>(1,1,groups)*sycl::range<3>(1,WARPS,WARP),sycl::range<3>(1,WARPS,WARP)),
++ q.parallel_for<PrivateC6A4<CAND>>(sycl::nd_range<3>(sycl::range<3>(1,1,groups)*sycl::range<3>(1,WARPS,WARP),sycl::range<3>(1,WARPS,WARP)),
+  [=](sycl::nd_item<3>)[[sycl::reqd_sub_group_size(32)]]{kernel<CAND>(static_cast<const Q6KBlock*>(w),static_cast<const Q81Block*>(x),y,N,M);});
+ }
+-} // namespace s85
++} // namespace s104
+
+FILE vs-S85-leaf.diff
+--- S85/q6_center_leaf.cpp
++++ S104/q6_a4_leaf.cpp
+@@ -1,9 +1,9 @@
+-// S85: saved canonical-Q8 Q6_K C6, original/packed-center private kernels and public anchor.
++// SOURCE ONLY S104: saved canonical-Q8 Q6 C6, original/A4 private kernels and public anchor.
+ #define DPCT_PROFILING_ENABLED
+ #include <sycl/sycl.hpp>
+ #include <dpct/dpct.hpp>
+ #include "strata/kernels/native_mmvq.hpp"
+-#include "private_q6_center.hpp"
++#include "private_q6_a4.hpp"
+ #include <array>
+ #include <memory>
+ #include <cstddef>
+@@ -26,7 +26,7 @@
+ namespace fs=std::filesystem;
+ using Bytes=std::vector<uint8_t>;
+ using Clock=std::chrono::steady_clock;
+-constexpr int C=6,BATCH=20,WARM=3,ROUNDS=8;
++constexpr int C=6,BATCH=20,WARM=3,ROUNDS=4;
+ constexpr size_t G=4096,TAIL=512;
+ struct Strict:std::runtime_error {using std::runtime_error::runtime_error;};
+ static void need(bool x,const std::string& m){if(!x)throw std::runtime_error(m);}
+@@ -107,8 +107,8 @@
+     }
+     void call(int arm){
+         if(arm==0)K::native_mmvq(14,w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,C,&q);
+-        else if(arm==1)s85::launch<false>(w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,q);
+-        else if(arm==2)s85::launch<true>(w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,q);
++        else if(arm==1)s104::launch<false>(w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,q);
++        else if(arm==2)s104::launch<true>(w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,q);
+         else need(false,"bad projection arm");
+     }
+     Bytes snapshot(const std::string& phase,bool save){
+@@ -199,7 +199,7 @@
+ static int run(const fs::path& out,const char* shard,const fs::path& fixtures){
+     auto env=[](const char* k,const char* v){const char* e=std::getenv(k);need(e&&std::string(e)==v,std::string("require ")+k+"="+v);};
+     env("STRATA_MMVQ_WIDE","1");env("STRATA_MMVQ_A2","1");env("STRATA_MMVQ_WIDE_RPW","1");env("STRATA_MMVQ_PF","0");
+-    env("STRATA_MMVQ_WIDE_MIN","0");env("STRATA_MMVQ_WIDE_MAXC","8");env("STRATA_Q6_PACKED","0");
++    env("STRATA_MMVQ_WIDE_MIN","0");env("STRATA_MMVQ_WIDE_MAXC","8");env("STRATA_Q6_PACKED","0");env("STRATA_Q6_CENTER","0");
+     need(K::native_mmvq_multi_exact(),"public exact mode required");
+     need(dpct::device_count()==1,"require exactly one visible device");
+     const sycl::device dev=dpct::dev_mgr::instance().get_device(0);
+@@ -215,13 +215,13 @@
+     // All shapes' correctness gates pass before any timing begins.
+     for(auto& state:states){state->warm();state->timing();}
+     q.wait_and_throw();states.clear();q.wait_and_throw();
+-    text(out/"result.json","{\"status\":\"PASS\",\"scope\":\"S85_TWO_SHAPE_PRIMITIVE_ONLY\",\"shapes\":2,\"paired_rounds_per_shape\":8,\"samples_per_round\":4,\"calls_per_graph\":20,\"public_original_bit_anchor\":true,\"candidate_full_bytes\":true,\"serving_qualified\":false,\"speed_qualified\":false}\n");return 0;
++    text(out/"result.json","{\"status\":\"PASS\",\"scope\":\"S104_TWO_SHAPE_PRIMITIVE_ONLY\",\"shapes\":2,\"paired_rounds_per_shape\":4,\"samples_per_round\":4,\"calls_per_graph\":20,\"public_original_bit_anchor\":true,\"candidate_full_bytes\":true,\"serving_qualified\":false,\"speed_qualified\":false}\n");return 0;
+ }
+ int main(int argc,char** argv){
+     setvbuf(stdout,nullptr,_IONBF,0);fs::path out;bool created=false;
+-    try{need(argc==4,"usage: q6_center_leaf NEW_DIR REAL_SHARD S44_SNAPSHOTS");out=argv[1];need(fs::create_directory(out),"new output directory required");created=true;return run(out,argv[2],argv[3]);}
++    try{need(argc==4,"usage: q6_a4_leaf NEW_DIR REAL_SHARD S44_SNAPSHOTS");out=argv[1];need(fs::create_directory(out),"new output directory required");created=true;return run(out,argv[2],argv[3]);}
+     catch(const std::exception& e){const int rc=dynamic_cast<const Strict*>(&e)?5:2;
+-        std::fprintf(stderr,"S85 %s: %s\n",rc==5?"STRICT_FAILURE":"RUNTIME_OR_IO_FAILURE",e.what());
++        std::fprintf(stderr,"S104 %s: %s\n",rc==5?"STRICT_FAILURE":"RUNTIME_OR_IO_FAILURE",e.what());
+         if(created)try{text(out/"result.json","{\"status\":\"FAIL\",\"exit\":"+std::to_string(rc)+",\"kind\":\""+(rc==5?std::string("strict"):std::string("runtime_or_io"))+"\"}\n");}
+-        catch(const std::exception& io){std::fprintf(stderr,"S85 failure-result IO: %s\n",io.what());return 2;}return rc;}
++        catch(const std::exception& io){std::fprintf(stderr,"S104 failure-result IO: %s\n",io.what());return 2;}return rc;}
+ }
+
+ACTUAL_ROOT_BYTE_CHECK
+{
+  "status": "PASS_FINITE_SOURCE_BYTE_FLOW_AND_BOUNDS_ONLY",
+  "cases": 512,
+  "base_mod16": [
+    0,
+    4,
+    8,
+    12
+  ],
+  "complete_blocks": 8,
+  "all_even_address_residues": true,
+  "scalar_reads_are_dword_aligned": true,
+  "selected_16bytes_exact": true,
+  "compiled_instruction_or_FP_equivalence": false,
+  "GPU": 0,
+  "elapsed_seconds": 0.031966060982085764,
+  "script_sha256": "96088a631f49de6538f4bef9a3ad8ce36d7a35a0050efc295df4f751ef826403",
+  "no_heavy_CPU_or_model_read": true
+}

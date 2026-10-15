@@ -1,0 +1,40 @@
+{
+  "status": "ROOT_ACCEPT_BOUNDED_Q6_A4_PRIMITIVE_KEEP_SEPARATE_FROM_GRAPH_SERVING",
+  "wrapper_seconds": 40,
+  "root_independent_114snapshot_count_and_raw_teardown_exits_checked": true,
+  "owned_fullCID": "0b762b65ee8bb73a06c50c78946b01ef30cf9d943ce87fdd84b65411765e2a42",
+  "normal_run_exit": 0,
+  "fullCID_and_NAME_gone": true,
+  "health_pre_post_exit": [
+    0,
+    0
+  ],
+  "actual_Docker_OOM_field_observed": false,
+  "results": {
+    "out": {
+      "original_median_paired_mean_us_per_call": 63.09685,
+      "candidate_median_paired_mean_us_per_call": 60.0528125,
+      "median_paired_change_percent": -4.852871141229431,
+      "paired_changes_percent": [
+        -4.556236410357773,
+        -4.4990721723848885,
+        -5.14950587210109,
+        -5.186698530686707
+      ]
+    },
+    "qkv": {
+      "original_median_paired_mean_us_per_call": 73.8277,
+      "candidate_median_paired_mean_us_per_call": 72.2073375,
+      "median_paired_change_percent": -2.204637836316159,
+      "paired_changes_percent": [
+        -2.1889163384623767,
+        -2.3646184667664216,
+        -2.2203593341699412,
+        -2.1022402241883897
+      ]
+    }
+  },
+  "one_process_nested_four_balanced_rounds": true,
+  "serving_speed_or_main_integration_qualified": false,
+  "next": "Consult actual Opus/Fable on whether these small bounded gains merit main integration after S106 graph comparison; no automatic combined flags."
+}

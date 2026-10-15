@@ -1,0 +1,170 @@
+{
+  "raw_full_image_exact": false,
+  "raw_complete_text_exact": false,
+  "computational_prefix_bytes": 16384,
+  "computational_prefix_exact": true,
+  "normalized_execution_payload_metadata_equal": true,
+  "options_equal": true,
+  "constant_data_equal": true,
+  "raw_relocation_sections_equal": true,
+  "all_text_changed_byte_offsets_common_length": [
+    16396,
+    16397,
+    16398,
+    16399,
+    16412,
+    16413,
+    16414,
+    16415
+  ],
+  "text_length_delta": 0,
+  "reference_inventory": {
+    "": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    ".text._ZTSN3s859PrivateC6ILb0EEE": {
+      "bytes": 16576,
+      "sha256": "4a3dd695ef0dee53fed7ebaf9c9491d399564ae5ae3d2693c81f9f09e62d808d"
+    },
+    ".text.Intel_Symbol_Table_Void_Program": {
+      "bytes": 320,
+      "sha256": "6f9e7e4080db0b8f6d52dc3a52394f5526b393a3b6521619465ffe575de5bf6e"
+    },
+    ".bss.const": {
+      "bytes": 24,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    ".symtab": {
+      "bytes": 168,
+      "sha256": "70a9debf79e1105a5de4ae72abe2e2994dc3a0a9d0e8025147d484e4da674ab2"
+    },
+    ".spv": {
+      "bytes": 20856,
+      "sha256": "d26ffefc44672efc6d746b94dd5495fbeda3cd81b2f874858fbf5519730246b1"
+    },
+    ".misc.buildOptions": {
+      "bytes": 38,
+      "sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f"
+    },
+    ".note.intelgt.metrics": {
+      "bytes": 3,
+      "sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c"
+    },
+    ".rel.text._ZTSN3s859PrivateC6ILb0EEE": {
+      "bytes": 32,
+      "sha256": "b0127d71458076bb4dd803903e616a4aaa3efd1782cb31dd87377568bbf1a471"
+    },
+    ".rel.text.Intel_Symbol_Table_Void_Program": {
+      "bytes": 16,
+      "sha256": "bd1da0a8713733f5398e10fc71a222055d39a6af5a4056174b89747ee5c340a5"
+    },
+    ".ze_info": {
+      "bytes": 2874,
+      "sha256": "077888b7c8d9ed2e20612c5d251e7e41ddde8ff37c52425234cabd8328203730"
+    },
+    ".note.intelgt.compat": {
+      "bytes": 172,
+      "sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1"
+    },
+    ".strtab": {
+      "bytes": 366,
+      "sha256": "72278becbb2ac1611f3d96b8c3cd0b6ec509674a1bab09972ea149037fe9a17d"
+    }
+  },
+  "current_inventory": {
+    "": {
+      "type": 0,
+      "flags": 0,
+      "offset": 64,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    ".text._ZTSN4s10411PrivateC6A4ILb0EEE": {
+      "type": 1,
+      "flags": 6,
+      "offset": 64,
+      "bytes": 16576,
+      "sha256": "e1734f51a0a0d552fac9e698226f4468188e268f9da8e8e3a84905fe7b962a6e"
+    },
+    ".text.Intel_Symbol_Table_Void_Program": {
+      "type": 1,
+      "flags": 6,
+      "offset": 16640,
+      "bytes": 320,
+      "sha256": "127731e1612f9bf8323c315f70bdceaa7b62ed69bb86763473bea3d18660cd58"
+    },
+    ".bss.const": {
+      "type": 8,
+      "flags": 3,
+      "offset": 16960,
+      "bytes": 24,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    ".symtab": {
+      "type": 2,
+      "flags": 0,
+      "offset": 16960,
+      "bytes": 168,
+      "sha256": "d0ad3c76f3fcfd87efbc094d642d4c40b99b8dbcc02d2aea26b4f1bce6f5b0d6"
+    },
+    ".spv": {
+      "type": 4278190089,
+      "flags": 0,
+      "offset": 17128,
+      "bytes": 20860,
+      "sha256": "858ee019dea5fc8dbf00dbf6e21db09287699dd4a45415683be330334fde0be6"
+    },
+    ".misc.buildOptions": {
+      "type": 4278190100,
+      "flags": 0,
+      "offset": 37992,
+      "bytes": 38,
+      "sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f"
+    },
+    ".note.intelgt.metrics": {
+      "type": 7,
+      "flags": 0,
+      "offset": 38032,
+      "bytes": 3,
+      "sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c"
+    },
+    ".rel.text._ZTSN4s10411PrivateC6A4ILb0EEE": {
+      "type": 9,
+      "flags": 0,
+      "offset": 38104,
+      "bytes": 32,
+      "sha256": "b0127d71458076bb4dd803903e616a4aaa3efd1782cb31dd87377568bbf1a471"
+    },
+    ".rel.text.Intel_Symbol_Table_Void_Program": {
+      "type": 9,
+      "flags": 0,
+      "offset": 38136,
+      "bytes": 16,
+      "sha256": "bd1da0a8713733f5398e10fc71a222055d39a6af5a4056174b89747ee5c340a5"
+    },
+    ".ze_info": {
+      "type": 4278190097,
+      "flags": 0,
+      "offset": 38152,
+      "bytes": 2883,
+      "sha256": "1195a0a51bd5ad5954a5f7b70d2ea3e28732007028d348e4de1384864e8c7b67"
+    },
+    ".note.intelgt.compat": {
+      "type": 7,
+      "flags": 0,
+      "offset": 41040,
+      "bytes": 172,
+      "sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1"
+    },
+    ".strtab": {
+      "type": 3,
+      "flags": 0,
+      "offset": 41216,
+      "bytes": 378,
+      "sha256": "406ac814292bc2c9b3ba2dafd4ed6d9a94d389f0d76b78aa8dd2ed6f67e09a16"
+    }
+  },
+  "reference_ASM": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-isa/original-disasm/.text._ZTSN3s859PrivateC6ILb0EEE.asm",
+  "reference_ASM_sha256": "668ee30e1417c8c70c2aedd99660f8a94bb215653531281e4c5a492d02711a09"
+}

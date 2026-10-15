@@ -1,0 +1,30 @@
+**ACCEPT the private CPU-only adapter build.** No blocking bug. The GPU step stays gated on the compiled image, FP and resource checks the contract already lists.
+
+**Byte reconstruction and bounds**
+
+- The candidate reads five dwords from the address rounded down to four, then applies the same 16-bit funnel as the original helper. Little-endian provenance is exact: the unaligned case selects bytes 2 to 17 of the 20-byte window, the aligned case bytes 0 to 15. The root byte check agrees with my reading.
+- Block stride is 210, so block starts alternate between 0 and 2 modulo 4. Rows start aligned for both pinned shapes because 24 and 10 blocks per row give row strides that are multiples of 4. The only below-start read is the two-byte scale field of the preceding block, which never happens on the first block of the allocation. The highest read ends at offset 195 of a block, inside the 210-byte block, so the last block of the tensor never reads past the allocation.
+- The host guard enforces base alignment and the two shapes. That guard is what makes the row-start argument hold, so any future shape must re-prove it before the guard widens.
+- The aligned case still loads a fifth dword it does not use. Harmless, but it is a visible ISA artefact: expect five dword loads, not four, in that path.
+
+**Arithmetic ledger**
+
+Downstream of the two reconstructed words nothing changes: same shift and mask, saturating byte subtract of 32, same four plus four dp4a per column in the same order, same half to float, signed scale product, int to float, scale product and accumulate, and the same XOR tree. The S85 packed centering branch is gone from both arms. The original arm is byte-identical to the S85 original, which is the S102-proven main image computational prefix, so the private original and the public kernel are both valid anchors.
+
+**Fixtures and anchors**
+
+The leaf reads the two real tensor slices with FNV checks, uploads the saved canonical Q8 with poisoned tail, and compares the public output to the saved S44 files before any private arm runs. Candidate gates then run eager, repeat, single graph, batch 20 and A, B, A on both shapes before any timing. Strict stop on first mismatch with a mismatch dump is preserved.
+
+**Build identity**
+
+Common images and frozen archives are the pinned S59 inputs with pre and post hash checks, the native source and headers are pinned at current hashes, and the two new files are hashed. Kernel class names are unique to this leaf. Actual host info, cache, guard, name and image binding must still be read from the built binary, not inferred from the names.
+
+**Post-build gates before any GPU lease**
+
+1. Candidate ISA: the offset-selection chain from the original must be absent, replaced by dword-aligned sends. If the compiler reintroduces a byte gather or splits the loads, HOLD.
+2. Same 48 dp4a, same multiply, multiply-add and add pattern as the original for the FP tail, same conversion points. A different contraction pattern is a HOLD, since precise mode still permits contraction.
+3. SIMD32 and GRF128 retained; any resource change inspected. Missing spill fields are not zero.
+
+**Dev loop**
+
+Four rounds instead of eight is right. Nothing else should be added. The leaf's existing checks already cover the only new mechanism, which is the load path, and any timing it emits is descriptive within one process and makes no claim about the measured MMVQ family.

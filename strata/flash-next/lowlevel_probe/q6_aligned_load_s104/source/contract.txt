@@ -1,0 +1,71 @@
+S104 SOURCE ONLY: Q6 A4 private load-reconstruction candidate
+
+Actual S102 main image audit establishes Q6 C6/A2/RPW1 computational
+prefix16384B byte-exact to S85 ORIGINAL. Eight text differences are after
+EOT; relevant execution/payload metadata, options, data and relocations
+match. S102 root accepts reuse of existing ASM, no new decoder. This is
+the original baseline; it does not establish any candidate property.
+
+Only two shapes:6144->2560 and2560->10240, six canonical Q8_1 columns.
+Host guard requires exact shape and base%4==0. Invalid inputs throw before
+kernel launch; there is no fallback/retry in the private leaf. Main source
+is unchanged. Any future main integration would remain default-OFF with
+separate guarded fallback and matched serving gates.
+
+Candidate change: ql/qh16-byte runs use five4-byte-aligned scalar int
+reads from a&~3, then the same optional16-bit funnel. No misaligned int4
+dereference, persistent repacking, prefetch schedule or centering change.
+Original private path retains load16_a2. Both public and private originals
+remain byte anchors; unique s104::PrivateC6A4<false/true> host/device tags
+must be audited after an actual build, not assumed from distinct names.
+
+Allocation/bounds: base is4-byte aligned. For any absolute block index,
+block starts alternate modulo4 because stride210. The only possible a-2
+lower read occurs after the first block; first block's ql starts are4-byte
+aligned. For ql max start112, reads end <=131 relative to block; qh max
+start176 ends <=195. Both are within210-byte blocks. A preceding-block
+two-byte read stays within the complete weight allocation and is discarded.
+Host guard+complete-shape allocations and the prepared finite symbolic
+byte-flow check are required before build; no payload is needed for that
+check. Integer loads preserve bit patterns through uint32 reconstruction.
+
+Arithmetic ledger unchanged downstream of exact ql4/qh4 words:
+- Same shift/mask and signed byte subtract32, no packed centering.
+- Q6 signed bytes[-32,31], Q8 signed bytes; each s0/s1 four DP4As in
+  original order. Sixteen products fit int32 with wide margin.
+- Same half->float, signed scale, dsc construction, int->float, ds*dsc*s
+  expression/addition and ascending per-lane K sequence.
+- Same SG32, four blocks per K iteration and XOR16/8/4/2/1 reduction.
+- No contraction claim from source alone. S102/S85 actual original has
+  MUL/MAD/ADD scheduling; inspect candidate actual FP instruction form,
+  conversion points and per-output ordering before runtime.
+
+Postbuild gate BEFORE GPU: bind actual private/public Info/cache/guard/name
+and selected image. Candidate must remove the targeted offset-selection
+chain, use actual dword-aligned vector/scalar sends without introducing a
+new split/misaligned path, retain SIMD32/GRF128 and inspect any resource
+change. Missing spill fields are not zero. Confirm48DP4A and the actual
+FP ledger; source unchanged FP is not a compiled proof. If compiler keeps
+reassembly cost or changes arithmetic, HOLD; no automatic serving/build
+retry. No bandwidth, dynamic latency or improvement forecast is made.
+
+Future bounded primitive: reuse S85 guard/read-only/finite/tail and actual
+S44 initial/changed Q8/full-output anchors. Public original, private
+original, candidate; eager repeats and single/batch20 A/B/A graphs.
+Both shapes' correctness gates precede any timing. Four balanced OCCO/
+COOC rounds per shape replace S85's eight, with same20-call graphs and
+three warm batches per arm. Same-process nested intervals are descriptive.
+Stop at first strict mismatch; no tolerance relaxation or auto retry.
+
+The retained S85 fixture contains input/Q8/output exports but no original
+standalone weight files. Future leaf reads ONLY two known real GGUF slices
+(12,902,400+21,504,000bytes), checking existing S44 FNVs. Source preparation
+does not read any model payload or rehash/copy the75GB model. Model stat,
+bounded slice SHA/FNV and existing fixture SHA checks are future-run gates.
+No existing S85 runtime identity script is copied silently: root must bind
+this new executable/header/leaf and unchanged common inputs explicitly.
+
+Build source reuses old8f common prelinked images plus pinned frozen kernel/
+core archives. One private adapter compile+AOT prelink then one ordinary
+host link; no full main build, no compiler/GPU execution in preparation.
+Existing main/S30/defaults and graph source experiment are unchanged.

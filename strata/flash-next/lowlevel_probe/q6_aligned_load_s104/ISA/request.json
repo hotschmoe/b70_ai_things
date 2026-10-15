@@ -1,0 +1,22 @@
+{
+  "status": "ROOT_ACCEPT_PUBLIC_AND_PRIVATE_ORIGINAL_COMPUTATIONAL_REUSE_GO_ONE_CANDIDATE_DECODER",
+  "public_computational_prefix_equal_S85_original": true,
+  "private_original_computational_prefix_equal_S85_original": true,
+  "computational_bytes": 16384,
+  "raw_public_text_equal": false,
+  "public_text_differing_offsets": [
+    16396,
+    16397,
+    16398,
+    16399,
+    16412,
+    16413,
+    16414,
+    16415
+  ],
+  "root_FULLREAD_audit_source_and_summary": true,
+  "candidate_image_sha256": "e39a2c221a5c342bfc3f2d13cc8d752a084ef571ae7856363cc673e155d6701c",
+  "candidate_text_sha256": "52a33a11077a5e5c4564eb64e8d8c6a29515f6a9b03912fb733fa9babd0b73c2",
+  "candidate_alias_sha256": "415fe2e79c9947ba813ea474cc57b600b45ebb609b85447ca35cc925c094df35",
+  "GPU": 0
+}

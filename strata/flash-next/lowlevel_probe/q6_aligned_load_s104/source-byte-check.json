@@ -1,0 +1,19 @@
+{
+  "status": "PASS_FINITE_SOURCE_BYTE_FLOW_AND_BOUNDS_ONLY",
+  "cases": 512,
+  "base_mod16": [
+    0,
+    4,
+    8,
+    12
+  ],
+  "complete_blocks": 8,
+  "all_even_address_residues": true,
+  "scalar_reads_are_dword_aligned": true,
+  "selected_16bytes_exact": true,
+  "compiled_instruction_or_FP_equivalence": false,
+  "GPU": 0,
+  "elapsed_seconds": 0.031966060982085764,
+  "script_sha256": "96088a631f49de6538f4bef9a3ad8ce36d7a35a0050efc295df4f751ef826403",
+  "no_heavy_CPU_or_model_read": true
+}

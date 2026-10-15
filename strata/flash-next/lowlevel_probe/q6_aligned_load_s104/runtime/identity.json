@@ -1,0 +1,63 @@
+{
+  "status": "PASS_HOST_SOURCE_BUILD_FIXTURE_PINS",
+  "binary_sha256": "632f9f86ec2bea2b030286da62c75aa3581c01190a2ecb203f6b1f6f4c7e8e8c",
+  "inputs": {
+    "/common/mmvq-core.images.o": "8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21",
+    "/frozen/libstrata_kernels.a": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8",
+    "/frozen/libstrata_core.a": "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286",
+    "/work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584",
+    "/work/src-ep/sycl/include/strata/sycl_math.hpp": "ac45a7a9b7d3cdc4b1b8c1c413c416911fb4ca91373d69bb34947815dbb3eec6",
+    "/work/src-ep/sycl/include/strata/kernels/dp4a.hpp": "dbbf686ebcc60d569ed1e0bf688d98666a1d46b7f85d8d7e073d28d6ab775eba",
+    "/work/src-ep/sycl/include/strata/kernels/native_mmvq.hpp": "83c233dd1f9de362cf646eb6f3d95dd97278ae43a30aeeed205b3067ef358a7e",
+    "/work/src-ep/include/strata/kernels/native_mmvq.hpp": "95c3ea0cb9802b93dc8eb23857349182d1bc1b6988ab875fc289812549042fb0",
+    "/work/src-ep/sycl/include/dpct/math.hpp": "7c1b7175dbe29a43bff30a94381131096437d88415881a8a8c0704de53394c58",
+    "/src/q6_a4_leaf.cpp": "eb6b595aea3a6ab35f3e7e51f6995628319ec3a06119dab925554a060a94eb82",
+    "/src/private_q6_a4.hpp": "a5c69ed76b35530f600e278dba019660723c5c67789d69dde4c5b67dc55548e9"
+  },
+  "saved_fixture_hashes": {
+    "f0-input-f32.bin": "41f59cc618247a9be0dc8cd4ec1f55042b2f1a82e5edc5f9a31ef85990797ab6",
+    "f0-changed-input-f32.bin": "4d9f4638afe21359174d678e00090a07b92e69694ddcacc1fbe6f5d6b1c47083",
+    "f0-input-q8_1.bin": "a6859e31f961c7ead7d0045ff2833e7be84a1bbbb56cb3843958d1c14ba1759f",
+    "f0-changed-input-q8_1.bin": "7b31c7e16d6a870f326f22e89126a6b7bd8507459900a24e6f1a5df3481c6ad1",
+    "f0-C6-original.bin": "6fdec1e5d1f1433a2174ad01c8d9ff16b7bc44931f4028dd7c14d7154bac3502",
+    "f0-C6-original-direct-changed.bin": "2a7fb8d829ff2a126f88e3b5aeb0239eecd153d15a153d7e27875a2daf3377d2",
+    "f1-input-f32.bin": "fcf3bf052dbdcd8d1951656f640e568c687e485cc2318fee17c9e22959de5d94",
+    "f1-changed-input-f32.bin": "67eeb6d38cff30b482b94df5a1edae4ffe9697395691b0cc7dc3cf0a06b9852c",
+    "f1-input-q8_1.bin": "1188c64125657554c2907aca00625b2b2129ecc05ff6a1d363922d709f6c0217",
+    "f1-changed-input-q8_1.bin": "aa048d69002e81e6d9668a15ad2b794a48d84d6407d9eda0cf5e7bd5a9b3254d",
+    "f1-C6-original.bin": "2bf611fa7fccaf9824181c4590d4c7e61a39bb5f59120d58bf625b17b7a520a6",
+    "f1-C6-original-direct-changed.bin": "d8d90f4b1042bf30dd1349a3ea504ca0aa86bf39c2bbdaaff1a21386d63bc81a"
+  },
+  "weight_slices": {
+    "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+    "device": 44,
+    "inode": 1156777,
+    "bytes": 47039860096,
+    "mtime_ns": 1792062519977528586,
+    "two_slice_identities": [
+      {
+        "shape": "out",
+        "tensor": "blk.3.attn_output.weight",
+        "N": 6144,
+        "M": 2560,
+        "absolute_offset": 3572274688,
+        "bytes": 12902400,
+        "fnv1a64": "bd9a7894fdf034f5"
+      },
+      {
+        "shape": "qkv",
+        "tensor": "blk.4.attn_qkv.weight",
+        "N": 2560,
+        "M": 10240,
+        "absolute_offset": 4312859136,
+        "bytes": 21504000,
+        "fnv1a64": "6ac0ad97c5cfb31b"
+      }
+    ]
+  },
+  "physical_card": 0,
+  "pci": "0000:0b:00.0",
+  "projection_only": true,
+  "source_unchanged_common_AOT_reused": true,
+  "compiled_audit_sha256": "719063b4c735a5c9fa32443b07c04e61d8d4451242748c75a00b10657ad2365a"
+}

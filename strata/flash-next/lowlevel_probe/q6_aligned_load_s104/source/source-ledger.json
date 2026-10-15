@@ -1,0 +1,11 @@
+{
+  "status": "SOURCE_ONLY_INVERSE_KERNEL_LEDGER_PASS_NO_BUILD_GPU",
+  "S85_header_sha256": "eb9524770ea90a66e3d3682e51593b4ead3fd347ca24aab7f30dc5503a1801b5",
+  "current_native_source_sha256": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584",
+  "inverse_candidate_load_removal_equals_S85_original_center_false_kernel": true,
+  "full_S85_candidate_center_branch_removed": true,
+  "only_candidate_math_delta": "How exact16byte ql/qh runs are loaded; integer centering/DP4A/FP and XOR tree unchanged in SOURCE, actual compiled proof still required",
+  "S102_facts": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s102-audit/facts.json",
+  "S102_main_original_computational_prefix_equal": true,
+  "model_payload_read_in_preparation": false
+}

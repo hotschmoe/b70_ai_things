@@ -1,0 +1,19 @@
+{
+  "utc": "2026-10-15T22:57:54.257006+00:00",
+  "status": "ROOT_GO_ONE_FINITE_QUIET_CARD0_TWO_SHAPE_PRIMITIVE",
+  "actual_models_seconds": {
+    "claude-opus-5-5": 38.75472249899758,
+    "claude-fable-5-1": 62.82120142300846
+  },
+  "root_FULLREAD_source_compiled_shortpacket_answers_and_runner": true,
+  "root_additional_read": "ActualASMline357 firstdot explicit0 seed r86, carriedintoline461; K+4line390. Controlsactualprefix16384checkedbothpublic/private.",
+  "limitations": [
+    "Opus exact commuted product is not universal NaN proof. Finite strict runtime anchors retained.",
+    "Static opcounts and matching FPcounts are not universal bitproof/dynamiclatency/traffic.",
+    "Runner uses existingS85 --rm lifecycle; exactrunexit/createdCID/removal+health evidence, no unobservedDockerOOMstate claim."
+  ],
+  "all_shape_correctness_before_timing": true,
+  "main_build_16398_terminal_exit": 0,
+  "runtime_prep_manifest_sha256": "2a46a34e1f83f466fa9e2b8d2ff631ecf587d773df1b2f9ff7343885cd94d193",
+  "no_retry_reset_new_shapes_or_serving": true
+}

@@ -24792,3 +24792,26 @@ NEW fixed-work4K discriminator if prefill resumed; request override must
 also be0. No gate relaxation or retrospective S94 clearance. Evidence:
 strata/flash-next/lowlevel_probe/attention_work_forensics_s105/ and
 docs/20261015_strata_attention_value_resident.md.
+
+
+## 2026-10-15 S104: Q6 aligned-load private primitive passes
+
+CONFIG -> Two real C6 shapes6144->2560/2560->10240, canonicalQ8 and
+original signed centering/DP4A/FP/XOR. Only weight-load reconstruction.
+COMMAND -> Actual source Opus41.562s/Fable53.569s/root512bytecases; one
+25s offline adapterbuild632f9f86, exact3host/imagebindings and actual
+public/privateoriginal16384B computationalprefixreuse. One10s candidate
+decoder; compiled Opus38.755s/Fable62.821s/rootread; one40s quietcard0.
+RESULT ->114strictsnapshots/10DOTs/twoshapes/initial-changed-restored
+public-S44-original-candidate/fullbytes/read-only/guards/tails/finite PASS.
+Fourbalancedrounds medianpairedwarmchanges -4.852871%/-2.204638%;
+medianpairedmean63.096850->60.052813us and73.827700->72.207338us.
+Allfourpairsfavorcandidate per shape; nested oneprocess, notservingspeed.
+ISA SEL38->8/MOV-32/CMP-6,48DP4A/FPledger/SIMD32/GRF128 retained.
+Missingfieldsnotzero; rawimage/textidentityFALSE, differencespreserved.
+VERDICT -> Boundedprivatelead only; graphservingseparate/noauto combine.
+Normalnative/driver/tee/identity/analysis/health0, exactCID+NAMEgone;
+--rm leavesfinalDockerOOMfieldunobserved, no suchclaim. Noretry/reset/
+newmainintegration/default/shelf/fullcacheclaim. Evidence:
+strata/flash-next/lowlevel_probe/q6_aligned_load_s104/ and
+docs/20261015_strata_q6_aligned_loads.md.

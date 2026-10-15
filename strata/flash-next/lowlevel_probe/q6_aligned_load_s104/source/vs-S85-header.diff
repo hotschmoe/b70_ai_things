@@ -1,0 +1,81 @@
+--- S85/private_q6_center.hpp
++++ S104/private_q6_a4.hpp
+@@ -1,12 +1,13 @@
+ #pragma once
+-// Private S85: original canonical Q6_K C6/A2/RPW1, only two integer expressions differ.
++// SOURCE ONLY S104: canonical Q6 C6/A2/RPW1, weight load reconstruction only.
+ #include <sycl/sycl.hpp>
+ #include <dpct/dpct.hpp>
+ #include "strata/kernels/dp4a.hpp"
+ #include "strata/sycl_math.hpp"
+ #include <cstdint>
+ #include <cstddef>
+-namespace s85 {
++#include <stdexcept>
++namespace s104 {
+ static_assert(sizeof(int)==4);
+ constexpr int QK=256,Q8K=32,WARP=32,WARPS=4;
+ struct Q6KBlock {uint8_t ql[128];uint8_t qh[64];int8_t scales[16];sycl::half d;};
+@@ -30,6 +31,18 @@
+     uint32_t o[4];
+ #pragma unroll
+     for (int i = 0; i < 4; ++i) o[i] = half ? (w[i] >> 16) | (w[i + 1] << 16) : w[i];
++    return sycl::int4((int) o[0], (int) o[1], (int) o[2], (int) o[3]);
++}
++// A4 scalar reads are 4-byte aligned, never misaligned int4 dereferences.
++// Host launch guard requires base%4==0 and the two complete Q6 shapes.
++__dpct_inline__ sycl::int4 load16_a4(const void* p) {
++    const uintptr_t a = reinterpret_cast<uintptr_t>(p);
++    const int* q = reinterpret_cast<const int*>(a & ~uintptr_t(3));
++    const bool half = (a & 2) != 0;
++    const uint32_t d[5] = {uint32_t(q[0]), uint32_t(q[1]), uint32_t(q[2]), uint32_t(q[3]), uint32_t(q[4])};
++    uint32_t o[4];
++#pragma unroll
++    for (int i = 0; i < 4; ++i) o[i] = half ? (d[i] >> 16) | (d[i + 1] << 16) : d[i];
+     return sycl::int4((int) o[0], (int) o[1], (int) o[2], (int) o[3]);
+ }
+ template<bool CAND>
+@@ -57,8 +70,13 @@
+             const Q6KBlock* b = reinterpret_cast<const Q6KBlock*>(reinterpret_cast<const uint8_t*>(w) +
+                 (std::size_t(row0 + (row0 + r < n_out ? r : 0)) * blocks_per_row + kbx) * BS);
+             if constexpr (A2) {
++                if constexpr(CAND) {
++                    ql4[r] = load16_a4(b->ql + 16 * g);
++                    qh4[r] = load16_a4(b->qh + 16 * qh4_idx);
++                } else {
+                 ql4[r] = load16_a2(b->ql + 16 * g);
+                 qh4[r] = load16_a2(b->qh + 16 * qh4_idx);
++                }
+             } else {
+                 ql4[r] = reinterpret_cast<const sycl::int4*>(b->ql)[g];
+                 qh4[r] = reinterpret_cast<const sycl::int4*>(b->qh)[qh4_idx];
+@@ -90,13 +108,8 @@
+             int vi0[4], vi1[4];
+ #pragma unroll
+             for (int p = 0; p < 4; ++p) {
+-                if constexpr(CAND) {
+-                    vi0[p] = sycl::bit_cast<int>((uint32_t((vl[p] & 0x0f0f0f0f) | ((vh[p] << 4) & 0x30303030)) + 0x60606060u) ^ 0x80808080u);
+-                    vi1[p] = sycl::bit_cast<int>((uint32_t(((vl[p] >> 4) & 0x0f0f0f0f) | (((vh[p] >> 4) << 4) & 0x30303030)) + 0x60606060u) ^ 0x80808080u);
+-                } else {
+                 vi0[p] = dpct::vectorized_binary<sycl::char4>((vl[p] & 0x0f0f0f0f) | ((vh[p] << 4) & 0x30303030), 0x20202020, dpct::sub_sat());
+                 vi1[p] = dpct::vectorized_binary<sycl::char4>(((vl[p] >> 4) & 0x0f0f0f0f) | (((vh[p] >> 4) << 4) & 0x30303030), 0x20202020, dpct::sub_sat());
+-                }
+             }
+ #pragma unroll
+             for (int j = 0; j < NCOLS; ++j) {
+@@ -121,10 +134,12 @@
+         }
+ }
+ 
+-template<bool CAND>class PrivateC6;
++template<bool CAND>class PrivateC6A4;
+ template<bool CAND>void launch(const void* w,const void* x,float* y,int N,int M,sycl::queue& q){
++ if(!((N==6144 && M==2560)||(N==2560 && M==10240)) || (reinterpret_cast<uintptr_t>(w)&3u))
++     throw std::invalid_argument("S104 needs two pinned C6 shapes and base%4==0; no fallback/retry");
+  const unsigned groups=unsigned((size_t(M)+WARPS-1)/WARPS);
+- q.parallel_for<PrivateC6<CAND>>(sycl::nd_range<3>(sycl::range<3>(1,1,groups)*sycl::range<3>(1,WARPS,WARP),sycl::range<3>(1,WARPS,WARP)),
++ q.parallel_for<PrivateC6A4<CAND>>(sycl::nd_range<3>(sycl::range<3>(1,1,groups)*sycl::range<3>(1,WARPS,WARP),sycl::range<3>(1,WARPS,WARP)),
+  [=](sycl::nd_item<3>)[[sycl::reqd_sub_group_size(32)]]{kernel<CAND>(static_cast<const Q6KBlock*>(w),static_cast<const Q81Block*>(x),y,N,M);});
+ }
+-} // namespace s85
++} // namespace s104

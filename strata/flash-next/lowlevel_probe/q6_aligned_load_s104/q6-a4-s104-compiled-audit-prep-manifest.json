@@ -1,0 +1,15 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_UNEXECUTED",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-compiled-audit-prep/README.txt",
+      "bytes": 3291,
+      "sha256": "cb5376f8cfadcc0ec705b76865de9ad2a4e21beaa7d11166660c5767d999a2aa"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-compiled-audit-prep/audit.py",
+      "bytes": 15639,
+      "sha256": "818512bef0adbd8bce053e7b43c2f6794da83527236fcded5f36d11fad162312"
+    }
+  ]
+}

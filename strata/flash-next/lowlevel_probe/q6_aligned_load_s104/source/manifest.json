@@ -1,0 +1,76 @@
+{
+  "status": "FROZEN_PRIVATE_SOURCE_ONLY_NO_BUILD_GPU_OR_PAYLOAD_READ",
+  "files": {
+    "README.txt": {
+      "bytes": 2403,
+      "sha256": "d8ac41353a945fc8595a5c682e56a9d655eef8e67db3bad07f895ab9cba3af67"
+    },
+    "build-container.sh": {
+      "bytes": 1874,
+      "sha256": "8e5baf5e54dece0609ac3ec8d455368753f8147cd84044637a4b532e34bb44c3"
+    },
+    "build.sh": {
+      "bytes": 1484,
+      "sha256": "eb88eaa50385648169d59915092ee6508c919d8b26068f1bca4d15d6519a87b5"
+    },
+    "contract.txt": {
+      "bytes": 4431,
+      "sha256": "00c497c9a0ee233de1cb6d48b44272f69fb81af6e73e71c443db567b78d75987"
+    },
+    "expected-container.sha256": {
+      "bytes": 1149,
+      "sha256": "5b33698ab07461c12e34dabcc5cf134d3738a5f576fefb52da6b621691a6218b"
+    },
+    "fixture-pins.json": {
+      "bytes": 4688,
+      "sha256": "71356d477e7108337d243b162332067cb0e81d9f25813a4506e7fa72e0dca8ba"
+    },
+    "private_q6_a4.hpp": {
+      "bytes": 8117,
+      "sha256": "a5c69ed76b35530f600e278dba019660723c5c67789d69dde4c5b67dc55548e9"
+    },
+    "prove_a4_bytes.py": {
+      "bytes": 1739,
+      "sha256": "96088a631f49de6538f4bef9a3ad8ce36d7a35a0050efc295df4f751ef826403"
+    },
+    "q6_a4_leaf.cpp": {
+      "bytes": 17471,
+      "sha256": "eb6b595aea3a6ab35f3e7e51f6995628319ec3a06119dab925554a060a94eb82"
+    },
+    "source-ledger.json": {
+      "bytes": 796,
+      "sha256": "f7f05a0d3cc4a7a42aaa824ba9544d65a3cec5ad5eaf4ee3297936c891f778e5"
+    },
+    "source-link-bindings.json": {
+      "bytes": 3980,
+      "sha256": "d8eae77800452a8293cc32fa1b7cf1f33fb67496b292613acc6c3e373212f2a1"
+    },
+    "vs-S85-header.diff": {
+      "bytes": 4106,
+      "sha256": "87d831cb3e9132f4e0d4231a05422beb13bd56779bbc350ffd34376063461437"
+    },
+    "vs-S85-leaf.diff": {
+      "bytes": 4389,
+      "sha256": "a9d63c3ebf133bb901cedf0f9168ab22c2d682a242f98ef8bd6c32237811dbe9"
+    }
+  },
+  "checks": [
+    "ASCII allfiles PASS",
+    "Python AST/Bash-n PASS",
+    "originalFP/sourceledger inversecheck PASS",
+    "CENTERcandidate removed; onlytwoA4loadcalls; fourtimingrounds sourceconsistency PASS"
+  ],
+  "byte_flow_script_executed": false,
+  "builds": 0,
+  "GPU": 0,
+  "source_references": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s102-audit/facts.json": {
+      "bytes": 14060,
+      "sha256": "152da7785b0d9e4de620b0ed1b3aa224344ad45ec23a2949384e55ab2f95d2ba"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/next-kernel-s101-reviews-20261015/root-source-decision.json": {
+      "bytes": 3341,
+      "sha256": "681ad233867e674d9fc34bdba2a7d137b7981bb3d53b8f6a66e32f621c8d6c07"
+    }
+  }
+}

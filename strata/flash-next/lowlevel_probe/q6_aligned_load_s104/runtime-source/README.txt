@@ -1,0 +1,9 @@
+FROZEN SOURCE ONLY: no scripts executed, no GPU/build/model call.
+
+Future ROOT_RUN.sh owns CPUquiet OUTSIDE gpu-run--card0, pin ZE_AFFINITY_MASK0/level_zero:*, one e41 process, no retries/reset/serverrestore. Physical card0/PCI0b is verified by existing leaf SYCLidentity. Fresh card0 prehealth immediately before leaf and mandatory posthealth after fullownedCID+NAME removal. Existing finite S85 safe lifecycle is retained; failed/timeout cleanup only ownCID, holdleases if removal unconfirmed. No TP or wholecollectives in this one-card primitive. Root must announce window and read final source/artifact/model closures first.
+
+Executable from frozen q6-a4-private-prep/build/q6_a4_leaf_s104 SHA632f9f86, original/candidate unique PrivateC6A4 false/true, public type14 C6A2. Source/header/current helper/common/frozen archive hashes pre/post + fixturehashes; model large shard only size/dev/inode/mtime continuity, NO75GB/full47GB read. Leaf itself reads only two pinned real12.9/21.5MBslices and requires frozen S44 FNVs. InputQ8/S44snapshots are exact.
+
+Both6144->2560 and2560->10240 C6, initial/changed/repeat/restore public/original/candidate fullbytes+own graph/single+batch20/canonicalQ8/FP32witnessreadonly/weightsreadonly/guards/tails. Allbothshape correctness beforeanytiming. Three warm/arm then4balancedABBA/BAAB rounds each20calls/graph. Analyzer requires114total checked snapshots (57/shape),10exactDOT graphs and allfullfiles before timing summary. Four paired means nested one process, no independentreplication/population/serving/cause claim. No extra shapes/sweep/profile/caches. Strictfailureexit5, unexpected2; failures preserve outputs and no retiming.
+
+Root full-read/actual model compiled review and explicit future GPU GO are external launch prerequisites, as in the retained S85 flow; no new approval/receipt file or automatic launcher is added. ROOT_RUN refuses old run-clean; no automatic repeat measurements.
