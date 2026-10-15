@@ -22767,3 +22767,32 @@ negative patch, probes/map and raw hashes/reviews. Fable triple-read/observed
 epoch and Opus offlineBMGISA prepared as next discriminators. Reuse objects,
 stop first-failure arms, no fullmodel/cache/soak/daily restoration or shelf.
 Details: stagedocS26; cachefix_20261014/head-pair-s26/s26-report.json.
+
+
+## 2026-10-15 -- Backend investment review: C1-C4 dual-B70 platform
+
+CONFIG: user expands options to Strata/vLLM/SGLang/llama.cpp/ZML/ownRustZig,
+welcomes XPU and quant contributions; usuallyC1, maxC4 ACTIVE, fullstateRAM
+recovery, prefix cache, speculation and data-movement profiling. Existing
+2x200k/2000prefill/150decode goals retained; no implicitC4x200k target.
+COMMAND: independent actualclaude-opus-5-5 andclaude-fable-5-1 reviews and
+updated-contract followups; response-model metadata verified. Read-only
+primary-source snapshots/hashes at Strata296b59d2, SGLang0cf683ea,
+llama.cppa0e6dc73, vLLMf46021a7, ZMLcddc9cf6; PRs37213/32503/61607,
+issue28194 and NVIDIA Bolt announcement inspected. No strategy GPU test.
+RESULT: finalOpus favorsSGLang contribution spike, Fable favorsllama.cpp
+SYCL, both retainStrata control. Root favors conditionalSGLang state/lowbit
+scope proof withllama challenger, while continuing usefulStrata work.
+llama qwen4expTP sourceallowed anddualcardSYCL allreduce exists; NOTB70
+qualification. SGLangXPUQSA genericpath exists, exactGGUFXPUimports absent;
+openHiCache32503 explicitlyrefusesMambaXPUhostpools. vLLMmain rejectsXPU,
+butopen61607 addsW4A16/eagerTP4 withoutQSAindexer. ZMLoneAPI oneGPU/no
+sharding. Bolt74BA9B24GB/2bitQAT announcedOct15; exactfiles/packing and
+B70support unverified. Correct oldUDQcampaign lineage: Strata, notvLLM.
+VERDICT: dateddoc preserves eachagent reasoning, dissent, root corrections,
+all6options, pinned evidence and bounded layer/state/TP-C1C4 gates. No
+migration/default/driver/shelf change; no blanket rejection of addingXPU,
+no ungrounded timelines or crosskernel hash requirement. Keep reusable
+SYCLprobes/kernels and complete-state oracles; no sixway bakeoff. Strata
+S27 continues separately under coordinated worker ownership. Raw source,
+reviews and model-provenance audit: results/backend-investment-20261015.

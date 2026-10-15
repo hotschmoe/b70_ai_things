@@ -3,6 +3,11 @@
 Set by the user on 2026-10-13. One or two users. Backend focus: Strata.
 vLLM parked, ready to port. 27B INT4 AutoRound on vLLM is the fallback.
 
+The [2026-10-15 backend investment review](20261015_backend_investment_review.md)
+records the expanded C1-C4 platform contract, independent Opus/Fable
+recommendations and source-checked contribution options. It does not
+change the active backend or qualify a replacement.
+
 | Goal | Target | Measured (2026-10-14, bounded screens) | Gap |
 |---|---|---|---|
 | Prefill | 2000+ tok/s | median 1952-2004 tok/s at 32k, 1260-1337 at 4k across same-behavior screens (IQ3_XXS, v0.1.44.1, split27, spec4; 3 prompts each) | 32k near target, not a stable 2000+ floor; short prompts below |
