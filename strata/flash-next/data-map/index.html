@@ -1740,7 +1740,8 @@ ul.plain{padding-left:1.1rem}
     "draft-profile-s22/profile/steady-summary",
     "head-profile-s25/s25-report.json",
     "head-pair-s31/analysis-prep/reviewed-summary/summary.json",
-    "decode-next-s52-prep/v3/{s52-root-report,run-clean/comparison,run-clean/closure}.json; postresults-20261015/dot-inventory.json"
+    "decode-next-s52-prep/v3/{s52-root-report,run-clean/comparison,run-clean/closure}.json; postresults-20261015/dot-inventory.json",
+    "decode-head-serving-s55/{s55-root-report,comparison,root-build-closure,root-postreview-decision}.json; head-serving-s55-manifest.json"
    ],
    "quoted": [
     {
@@ -1766,6 +1767,12 @@ ul.plain{padding-left:1.1rem}
      "value": "2525.102 -> 1730.844 us/quantize+head call (-31.454%); full-byte and predeclared shape screens PASS. N2560/M248320; RPW2 grid31040.",
      "basis": "Card0 real Q5_K weights + two seeded inputs, not serving activations. Six20-call batch means nested in two fresh processes/variant, A-B-B-A; warming trend remains. Actual DOT 2/40 kernel single/batch capture; not dispatch trace, p95, physical traffic or whole-model gain.",
      "status": "measured"
+    },
+    {
+     "label": "S55 head-only serving flag, whole-pair observation",
+     "value": "Median4.787963 ->4.756363s (-0.660%);31.600ms delta <32.818ms control range. All4pair native-work/text/SSE/usage gates+functionals/teardown/health PASS. Keep head flagOFF.",
+     "basis": "Three128x2 fresh pairs nested in one server/arm, fixedOFFthenON; SAMEbb066900, HCcommon/S49OFF/globalRPW1/NVMe/TRACE. Source/API/build+actualC2/C6work, no independent dispatch or production full-logit capture. CPU waits are not head GPU timing.",
+     "status": "measured"
     }
    ],
    "logical_bytes": {
@@ -1779,7 +1786,7 @@ ul.plain{padding-left:1.1rem}
     "verify_select"
    ],
    "gaps": [
-    "S52 warrants default-OFF head-specific serving candidate after isolated HC, not a global RPW toggle or extra primitive rerun. Production activations and matched serving benefit remain unqualified; historical reference operations/rollups unchanged."
+    "S55 matched bounded serving is unresolved against control range; head flag staysOFF, no retry/promotion/free rider. S52 uses real weights plus seeded inputs, not production activations. Actual full logits/independent serving dispatch remain unqualified; historical operations/rollups unchanged."
    ],
    "hypotheses": []
   },
@@ -2012,7 +2019,8 @@ ul.plain{padding-left:1.1rem}
     "head-profile-s25/s25-report.json",
     "head-pair-s29/s29-report.json",
     "head-pair-s31/analysis-prep/result/final-analysis.json",
-    "decode-next-s52-prep/v3/{s52-root-report,run-clean/comparison,run-clean/closure}.json; postresults-20261015/dot-inventory.json"
+    "decode-next-s52-prep/v3/{s52-root-report,run-clean/comparison,run-clean/closure}.json; postresults-20261015/dot-inventory.json",
+    "decode-head-serving-s55/{s55-root-report,comparison,root-build-closure,root-postreview-decision}.json; head-serving-s55-manifest.json"
    ],
    "quoted": [
     {
@@ -2044,6 +2052,12 @@ ul.plain{padding-left:1.1rem}
      "value": "1223.193 -> 1025.068 us/quantize+head call (-16.197%); full-byte and predeclared shape screens PASS. N2560/M248320; RPW2 grid31040.",
      "basis": "Card0 real Q5_K weights + two seeded inputs, not serving activations. Six20-call batch means nested in two fresh processes/variant, A-B-B-A; warming trend remains. Actual DOT 3/60 kernel single/batch capture; not dispatch trace, p95, physical traffic or whole-model gain.",
      "status": "measured"
+    },
+    {
+     "label": "S55 head-only serving flag, whole-pair observation",
+     "value": "Median4.787963 ->4.756363s (-0.660%);31.600ms delta <32.818ms control range. All4pair native-work/text/SSE/usage gates+functionals/teardown/health PASS. Keep head flagOFF.",
+     "basis": "Three128x2 fresh pairs nested in one server/arm, fixedOFFthenON; SAMEbb066900, HCcommon/S49OFF/globalRPW1/NVMe/TRACE. Source/API/build+actualC2/C6work, no independent dispatch or production full-logit capture. CPU waits are not head GPU timing.",
+     "status": "measured"
     }
    ],
    "logical_bytes": {
@@ -2061,7 +2075,7 @@ ul.plain{padding-left:1.1rem}
     "Paired head GPU service and actual L0 submission/wait delta are not measured in this serving comparison; source logical replay counts are not driver API counts.",
     "Full-request draft-counter comparison invalid when batch-to-solo carry loses prior totals; draft probability/KV-state identity is not exposed by final output hashes.",
     "Depth2/headpair full-context RAM recovery, boundary/cancel and broader workloads remain unqualified.",
-    "S52 warrants default-OFF head-specific serving candidate after isolated HC, not a global RPW toggle or extra primitive rerun. Production activations and matched serving benefit remain unqualified; historical reference operations/rollups unchanged."
+    "S55 matched bounded serving is unresolved against control range; head flag staysOFF, no retry/promotion/free rider. S52 uses real weights plus seeded inputs, not production activations. Actual full logits/independent serving dispatch remain unqualified; historical operations/rollups unchanged."
    ],
    "hypotheses": [
     {

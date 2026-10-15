@@ -23560,3 +23560,38 @@ serves proceed. No new user performance target or shelf qualification.
 Dated report and narrowly dense_proj map updated; historical170ops and
 rollups unchanged. Frozen16files/96267B, externalmanifestSHA256
 8e5a894d4e5462473c4e74b7c015e85dcf7fbf74d30a34ebad99fd4f2a1b767f.
+
+
+## 2026-10-15 -- Flash-Next optimization S55: head-only RPW2 serving
+
+CONFIG: Exact head-only defaultOFF wrapper, Q5K/type13/N2560/M248320/C2or6;
+other callers/global RPW unchanged. SAME frozen bb066900 flag0/1, common
+HC/S49OFF/WIDE1/globalRPW1/NVMe/TRACE+hostmarkers/depth2/headpairON/spec4,
+all24576 resident149/363, localhost, configured200k/32GiB parking.
+COMMAND: Actual Opus5.5/Fable5.1 source GO(19.723/24.325s), root full read,
+refresh upstream296b59d2 unchanged, exact patch. CPU build fails71s on old
+root-owned verify.o; preserve successful native+mtp compiles. One-object
+UID/GID repair content unchanged; remaining-only verify/2archives/AOT177s.
+No numerical/source fix, clean/reconfigure/DRI/network. Exact S51 posthealth
+reference reused/no interveningGPU; both fresh arms warm128x2+3fresh128x2,
+functions, normal QUIT/removedcontainers/wrappers/percard+compiled10health0.
+RESULT: All4pairgroups fulltext/SSE/usage/nativework/window/capture/copy/
+markers match, dropped0. Functionals PASS. Timedwall4.791661/4.758843/4.787963
+->4.756363/4.754691/4.766247s; median4.787963->4.756363(-0.659994percent),
+31.600msdifference<control32.818msrange, candidate11.556msrange. Allsame-sign
+but small fixed-order oneprocess/arm observation, unresolved speed. CPUwhole
+window45.780/45.702/45.477->45.267/45.269/45.088ms, not isolatedheadservice/
+physicalwork attribution. Source/API/build withactualC2/C6nativework, no
+independentservingdispatch/ISA or productionactivationfulllogit proof.
+VERDICT: KeepheaddefaultOFF/retainoptinsource, no shortretry/globaltoggle/
+profiler/200k/default/shelf promotion. HoldheadOFFinboth future unrelated
+arms; HCcommon retainedboundedcandidate. Actual resumed postOpus13.247s/
+Fable12.528s agree. Root READfull texts, corrects each-delta<spread claim
+(r135.298ms>32.818), rejects CPU cause/fraction inference/free-rider
+confounding. No repeatedreview for unchangeddecision. S52micro16/31percent
+not serving forecast; absolute targets unmet/qualified152055a6recoverable.
+Loop reuses successful compiles/health references/actual review contexts,
+preflights concrete output write access after recurrence. Datedreport/exact
+patch/smallheadmap only;170historicalops/rollups unchanged. Frozen216files/
+13729315B; externalhead-serving-s55-manifestSHA256
+42d67d6dd37ab4cf391f845b6eb05fe0c1b5180deddb7d65d52d9e06cd3aafbb.

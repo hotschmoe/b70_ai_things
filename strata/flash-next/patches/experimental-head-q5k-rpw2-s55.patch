@@ -1,0 +1,113 @@
+--- a/sycl/src/kernels/cuda/native_mmvq.dp.cpp
++++ b/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+@@ -29,6 +29,7 @@
+ #include "strata/sycl_math.hpp"
+ #include "strata/sycl_queue.hpp"
+ #include "strata/kernels/native_mmvq.hpp"
++#include "strata/kernels/native_head_mmvq.hpp"
+ #include "strata/kernels/dp4a.hpp"
+ #include "strata/kernels/q8_1_finite.hpp"
+ #include "strata/kernels/iq_kernels.hpp"
+@@ -1947,10 +1948,11 @@
+     }
+ }
+ template <typename F, int NCOLS>
+-void launch_wide(const void* weights, const void* x_q8_1, float* y, int n_in, int n_out, dpct::queue_ptr s) {
++void launch_wide(const void* weights, const void* x_q8_1, float* y, int n_in, int n_out, dpct::queue_ptr s,
++                 int rpw = wide_k_rpw()) {
+     const auto* w = static_cast<const typename F::Block*>(weights);
+     const auto* x = static_cast<const Q81Block*>(x_q8_1);
+-#define STRATA_WKR(RP) if (wide_k_rpw() == RP) { \
++#define STRATA_WKR(RP) if (rpw == RP) { \
+         const unsigned b = unsigned((std::size_t(n_out) + WARPS * RP - 1) / (WARPS * RP)); \
+         s->parallel_for<dpct_kernel_name<class native_mmvq_wide_rpw, F, dpct_kernel_scalar<NCOLS>, dpct_kernel_scalar<RP>>>( \
+             sycl::nd_range<3>(sycl::range(1, 1, b) * sycl::range(1, WARPS, WARP), sycl::range(1, WARPS, WARP)), \
+@@ -3778,6 +3780,29 @@
+     return row_bytes * std::size_t(n_out);
+ }
+ 
++// Explicit head callers only: never infer ownership from a dense matrix's shape.
++void native_mmvq_head(int ggml_type, const void* weights, const void* x_q8_1, float* y,
++                      int n_in, int n_out, int ncols, void* stream) {
++    static const bool head_rpw2 = [] {
++        const char* e = std::getenv("STRATA_HEAD_Q5K_RPW2");
++        return e != nullptr && std::strcmp(e, "1") == 0;
++    }();
++    if (head_rpw2 && ggml_type == 13 && n_in == 2560 && n_out == 248320 &&
++        (ncols == 2 || ncols == 6) && wide_k()) {
++        validate_shape(n_in, ncols, QK);
++        validate_pointer(weights);
++        validate_pointer(x_q8_1);
++        validate_pointer(y);
++        validate_stream(stream);
++        const auto s = strata::q_of(stream);
++        if (ncols == 2) launch_wide<WideQ5K, 2>(weights, x_q8_1, y, n_in, n_out, s, 2);
++        else launch_wide<WideQ5K, 6>(weights, x_q8_1, y, n_in, n_out, s, 2);
++        launch_check();
++        return;
++    }
++    native_mmvq(ggml_type, weights, x_q8_1, y, n_in, n_out, ncols, stream);
++}
++
+ void native_mmvq(int ggml_type, const void* weights, const void* x_q8_1, float* y,
+                  int n_in, int n_out, int ncols, void* stream) {
+     switch (ggml_type) {
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -29,6 +29,7 @@
+ #include "strata/kernels/kv_q4.hpp"
+ #include "strata/kernels/kv_q8.hpp"
+ #include "strata/kernels/native_mmvq.hpp"
++#include "strata/kernels/native_head_mmvq.hpp"
+ #include "strata/kernels/native_qsa.hpp"
+ #include "strata/kernels/native_qsa_indexer.hpp"
+ #include "strata/kernels/native_rope.hpp"
+@@ -1661,7 +1662,7 @@
+         if (head_ != nullptr && head_->loaded()) {
+             try {
+                 native_quantize_q8_1(head_mixed_, xq_, (int) N, T, cs);
+-                native_mmvq(head_->type(), head_->weights(), xq_, head_logits_, (int) N, (int) n_vocab_, T, cs);
++                native_mmvq_head(head_->type(), head_->weights(), xq_, head_logits_, (int) N, (int) n_vocab_, T, cs);
+             } catch (const std::exception& e) {
+                 err = std::string("verify head: ") + e.what();
+                 return false;
+--- a/sycl/src/core/mtp.cpp
++++ b/sycl/src/core/mtp.cpp
+@@ -20,6 +20,7 @@
+ #include "strata/kernels/kv_q8.hpp"
+ #include "strata/kernels/native_moe.hpp"
+ #include "strata/kernels/native_mmvq.hpp"
++#include "strata/kernels/native_head_mmvq.hpp"
+ #include "strata/kernels/native_qsa.hpp"
+ #include "strata/kernels/native_rope.hpp"
+ #include "strata/kernels/native_router.hpp"
+@@ -1118,8 +1119,8 @@
+         native_quantize_q8_1(sample_, xq_, (int) N, T, cs);
+         const bool sub = dhead_ != nullptr;
+         const int64_t nv = sub ? n_dvocab_ : n_vocab_;
+-        native_mmvq(sub ? dhead_type_ : head_->type(), sub ? dhead_ : head_->weights(), xq_, head_logits_, (int) N,
+-                    (int) nv, T, cs);
++        if (sub) native_mmvq(dhead_type_, dhead_, xq_, head_logits_, (int) N, (int) nv, T, cs);
++        else native_mmvq_head(head_->type(), head_->weights(), xq_, head_logits_, (int) N, (int) nv, T, cs);
+         if (coupled_rec_) {
+             // coupled draft sampling: the target's chain and Philox draw for the row that will verify this draft
+             // (counter = this cell + 1, from its step record), penalties over the ring; T == 1 (full layer)
+@@ -2142,7 +2143,7 @@
+     try {
+         native_quantize_q8_1(a.sample_, xq2_, (int) N, 1, cs_);
+         native_quantize_q8_1(b.sample_, xq2_ + col_bytes_, (int) N, 1, cs_);
+-        native_mmvq(a.head_->type(), a.head_->weights(), xq2_, logits2_, (int) N, (int) nv_, 2, cs_);
++        native_mmvq_head(a.head_->type(), a.head_->weights(), xq2_, logits2_, (int) N, (int) nv_, 2, cs_);
+         ok = a.record_post_head(logits2_, cs_, err) && b.record_post_head(logits2_ + nv_, cs_, err);
+         if (ok) {
+             mtp_select(a.R_, HCN, a.out_ids_, a.row_ + 1, a.Rin_, a.tok_, a.m_out_, j, cs_, a.probs_, a.m_prob_);
+--- /dev/null
++++ b/include/strata/kernels/native_head_mmvq.hpp
+@@ -0,0 +1,7 @@
++#pragma once
++
++namespace strata::kernels {
++// SYCL head-only experiment. Default OFF; other dispatch remains native_mmvq.
++void native_mmvq_head(int ggml_type, const void* weights, const void* x_q8_1, float* y,
++                      int n_in, int n_out, int ncols, void* stream);
++} // namespace strata::kernels
