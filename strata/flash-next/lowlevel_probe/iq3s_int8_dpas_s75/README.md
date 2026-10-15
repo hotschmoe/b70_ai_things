@@ -31,3 +31,8 @@ post-result responses and both accept the bounded rejection/no GPU followup.
 Completed external manifest: iq3s-int8-dpas-s75-completed-manifest.json, SHA256
 ff730eec68f5f4bc74220c58c29e330f5f4aac0fa75ebbb08a22a5b8b4ab4287.
 The dated report binds source/post review and ISA manifests separately.
+
+The redundant v2 path/repinning diff stays in the frozen external source
+preparation; its unified-diff blank context lines trigger generic whitespace
+checks when copied as new text. The curated set retains the exact kernel-only
+diff, complete pinned source/controller and origin bindings (44 copies).

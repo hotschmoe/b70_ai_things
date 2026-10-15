@@ -94,11 +94,6 @@
     "sha256": "104493a356917ad3295011d3b270d03a3cd0c3c5b7d834883a7672c1f3cc444b",
     "bytes": 639
   },
-  "v2-path-repin-readiness.diff": {
-    "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/v2-path-repin-readiness.diff",
-    "sha256": "84874ad87048ca876c2f7aab58f12bd97f9f2b0a88d7d59b87eb3cd0f43f81c8",
-    "bytes": 19909
-  },
   "vs-s65-source.diff": {
     "historical_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/vs-s65-source.diff",
     "sha256": "37e43ad67da664144aa9f14f12efaa02e58810cd9b47d3294928659570a98dec",
