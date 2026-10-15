@@ -22590,3 +22590,31 @@ bounded S20 full recovery run, then pivot to the prepared MTP work. Direct
 copy/main-park latency candidates stay queued. Running harness records
 latency booleans but does not reject correctness for missing2s; interpret
 those fields as diagnostic references. AGENTS/goals/README updated.
+
+
+## 2026-10-15 -- Flash-Next optimization S20: full RAM recovery passes
+
+CONFIG: upstream296b59d2+EP/PUSH/accounting/S19+8line slot-image reuse;
+frozen97bad88a5f059e5f077c6429d8b166d68208b50d8b64ee193e3827d0ad425dd6.
+Spec4/batchMTPdepth1,two200000slots,32GiB/four-entry parking,all24576
+experts(7152+17424). Full native path has no snapshot-readback tracing.
+COMMAND: CPU-only AOT linkjobs8,122.177s; small4x3997 oracle/readbacks,
+12/12 matched S19 hashes; one full4x199501 run with256-token concurrent
+replies then AB/CD forcedRAMreturns; ID/math/reasoning/tools; normalstop,
+bothcardhealth and ten compiledcollectives. No dailyrestore/extra fullbase.
+RESULT: fullcorrectness PASS; allfourforcedRAMreturns reuse199839held,
+read31new,0retainedtailreplay. Needles/two-activeproof pass. Native full
+RAMrestore419.4-430.3ms; snapshot APIpayload3168427056bytes each, not
+physicalPCIe. ForcedreturnTTFT2.758-6.423s,p95 6.398/foursamples;2s is
+diagnostic only by user priority. PeaknativeRSS17387425792/container
+17376952320bytes,0swap/OOM,hostavailable>=102299648000. Allfunctional and
+teardownhealth PASS, no crash/reset; serversstopped. Fresh fullprefill
+1153.5-1174.4tok/s, longcontextdecode farbelow150/stream; goals remain.
+VERDICT: bounded latest-text-chat eviction/RAMrecovery is qualified; no
+broad branch/image/CUDA/pipeline claim or shelfpromotion. Concurrency,
+decode andMTP next; directcopy/mainpark latencyideas deferred. Actual
+Fable5.1depthsource and Opus5.5review run while bounded test finishes.
+Skip duplicate hugeprefills; CPUacceptancechecks then shortpaireddecode.
+S19/S20 buildworkloads differ, so no isolated4xparallelflag gain claim.
+Details: stage doc S20; raw cachefix_20261014/slot-reuse/s20-report.json.
+Tracked patch: strata/flash-next/patches/batch-slot-image-reuse.patch.

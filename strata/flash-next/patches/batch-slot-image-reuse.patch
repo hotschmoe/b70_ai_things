@@ -1,0 +1,48 @@
+diff --git a/src/program/generate.cpp b/src/program/generate.cpp
+index ba00f94d..4a8cb61a 100644
+--- a/src/program/generate.cpp
++++ b/src/program/generate.cpp
+@@ -9874,8 +9874,8 @@ int main(int argc, char** argv) {
+                 if (!strata::core::conversation_checkpoint_save(ck, from, g, e) ||
+                     !strata::core::conversation_checkpoint_restore(ck, to, g, e))
+                     return false;
++                strata::core::ConversationKv img;
+                 for (int64_t j = 0; j < from.qsa_alloc; ++j) {
+-                    strata::core::ConversationKv img;
+                     if (!strata::core::conversation_kv_save(img, from.qsa_states[from.qsa_ord0 + j], g, upto, true, e))
+                         return false;
+                     if (cudaDeviceSynchronize() != cudaSuccess) { e = "batch admission: device sync failed"; return false; }
+@@ -9921,8 +9921,8 @@ int main(int argc, char** argv) {
+                         !strata::core::conversation_checkpoint_restore(ck, to, g, e))
+                         return false;
+                 }
++                strata::core::ConversationKv img;
+                 for (int64_t j = 0; j < from.qsa_alloc; ++j) {
+-                    strata::core::ConversationKv img;
+                     if (!strata::core::conversation_kv_save(img, from.qsa_states[from.qsa_ord0 + j], g, upto, true, e))
+                         return false;
+                     if (cudaDeviceSynchronize() != cudaSuccess) { e = "batch slot restore: device sync failed"; return false; }
+diff --git a/sycl/src/program/generate.cpp b/sycl/src/program/generate.cpp
+index 8f29ed18..ec419739 100644
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -8891,8 +8891,8 @@ int main(int argc, char **argv) try {
+                 if (!strata::core::conversation_checkpoint_save(ck, from, g, e) ||
+                     !strata::core::conversation_checkpoint_restore(ck, to, g, e))
+                     return false;
++                strata::core::ConversationKv img;
+                 for (int64_t j = 0; j < from.qsa_alloc; ++j) {
+-                    strata::core::ConversationKv img;
+                     if (!strata::core::conversation_kv_save(img, from.qsa_states[from.qsa_ord0 + j], g, upto, true, e))
+                         return false;
+                     if (DPCT_CHECK_ERROR(dpct::get_current_device()
+@@ -8960,8 +8960,8 @@ int main(int argc, char **argv) try {
+                         !strata::core::conversation_checkpoint_restore(ck, to, g, e))
+                         return false;
+                 }
++                strata::core::ConversationKv img;
+                 for (int64_t j = 0; j < from.qsa_alloc; ++j) {
+-                    strata::core::ConversationKv img;
+                     if (!strata::core::conversation_kv_save(img, from.qsa_states[from.qsa_ord0 + j], g, upto, true, e))
+                         return false;
+                     if (DPCT_CHECK_ERROR(dpct::get_current_device()

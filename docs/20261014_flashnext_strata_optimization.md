@@ -1269,3 +1269,63 @@ installed icpx; current build was serial, no flag change in S19.
 RAW: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014
 (cache-candidate/s19-report.json, small-first requests/bytes/health, agent
 findings/reviews, frozen patch/identities, next-stage-review-decisions.json).
+
+
+## S20: four long conversations recover from RAM (2026-10-15)
+
+CONFIG: frozen `strata-slot-reuse-s20`, SHA256
+`97bad88a5f059e5f077c6429d8b166d68208b50d8b64ee193e3827d0ad425dd6`.
+Upstream296b59d2 + EP/PUSH/accounting/S19 cache preservation, plus Opus's
+8line image-buffer reuse: one ConversationKv per stage rather than per QSA
+layer in both slot copy directions. Full save still overwrites all bytes
+and metadata. Same spec4, batch-MTP depth1, two200000 slots, INT8 KV,
+32768MiB parking/four entries. All24576 experts resident (7152+17424).
+Stable served ID and research alias unchanged. Full run omits snapshot
+readback instrumentation; small oracle keeps four draft-KV readbacks.
+
+COMMAND: CPU-only incremental offline AOT with installed experimental
+`-fsycl-max-parallel-link-jobs=8`; no GPU devices in build container.
+Existing4x3997 small oracle first: four forced returns,12/12 S19 output
+hashes equal, draft readbacks and functional/teardown health pass. Then
+ONE4x199501 full-context run using bench_context_four.py, two overlapping
+256-token replies per pair, followed by forced AB and CD RAM exchanges.
+Run identity/concurrent arithmetic/separate reasoning/tool roundtrip,
+normal stop and per-card/compiled collective post-health. No daily restore.
+
+RESULT: full correctness PASS. All four forced returns retrieve each
+chat's needles, reuse199839 held tokens, read31 new tokens, replayZERO
+retained reply tokens. Native records prove two actual full RAM restores
+per forced pair,419.4-430.3ms each; payload3168427056 bytes each is snapshot
+API payload (host+device pools), not physical PCIe bytes. Two-active proof
+passes for both resident reply pairs and both exchanges. Four chats end
+at199899 tokens each. Full-run peak sampled native RSS17387425792 bytes
+(16.19GiB), container17376952320, zero cgroup swap/OOM, host available at
+least102299648000. Configured32GiB is a cache budget, not measured usage.
+
+Forced-return TTFT2.758-6.423s, median4.592/p95 6.398 (four samples);
+resident-only diagnostic p95 6.250 (two); the first mixed resident/RAM
+pair remains unattributed. User explicitly demotes2s to diagnostic only.
+Native copy components at200k are about1.60-1.65s; no matched relative
+serving speed claim. Fresh199501-token prefills1153.5-1174.4 tok/s, below
+2000 goal. Long-context reply streams remain far below150 tok/s.
+Identity, concurrent arithmetic, reasoning and tool roundtrip PASS.
+Final post-health status is recorded in s20-report.json and stage journal.
+
+VERDICT: true eviction-to-system-RAM recovery without retained-history
+recompute is demonstrated for these four latest text conversations with
+two active slots. This is a bounded correctness qualification, not broad
+sampling/image/CUDA/pipeline coverage or a daily shelf promotion. General
+shorter-branch restoration retains S19 limitations. Prioritize concurrent
+MTP/decode next; direct-copy/main-park latency ideas stay queued. Skip a
+second full-context baseline and further latency-only matrices.
+
+Dev-loop: S20 build122.177s versus S19 approximately489.39s, both1600 AOT
+success lines. Recompiled target counts differ (2 versus6), so this is not
+an isolated4x claim for the parallel-link flag. Actual Fable5.1 prepared
+the depth candidate source during the full run; actual Opus5.5 reviews its
+state/acceptance integration before bounded GPU screens. Cheap CPU checks
+and short decode windows replace another four expensive prefills.
+
+Raw: cachefix_20261014/slot-reuse/{small,full,s20-report.json,build.log,
+build-comparison.json}; tracked patch:
+strata/flash-next/patches/batch-slot-image-reuse.patch.

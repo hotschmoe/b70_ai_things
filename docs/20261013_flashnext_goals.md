@@ -133,3 +133,15 @@ Servers stopped between experiments; no routine daily restoration. Next:
 separate8line snapshot-buffer reuse, cheap oracle, then one final full4x200k
 qualification against absolute goals. No unmatched relative speed claim.
 Details: stage doc S19, raw cachefix_20261014/cache-candidate/s19-report.json.
+
+
+S20 full recovery PASS: four199501-token conversations, two active
+200000-token slots,32GiB/four-entry parking. All four forced RAM returns
+reuse199839 held tokens/read31 new/zero retained-tail replay; needles and
+two-active proof pass. Native full restores419.4-430.3ms, end-to-end TTFT
+2.758-6.423s (four samples), diagnostic only. Peak native RSS16.19GiB,
+zero swap/OOM. Identity/math/reasoning/tools pass; teardown evidence in S20
+stage journal/report. This qualifies bounded latest-text-chat RAM recovery;
+no daily shelf promotion, broader branch/image/CUDA coverage untested.
+Fresh full-length prefill1153.5-1174.4 tok/s and long-context decode remain
+below goals. Pivot to concurrency/decode/MTP; defer latency-only work.
