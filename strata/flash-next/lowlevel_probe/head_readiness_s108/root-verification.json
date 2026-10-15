@@ -1,0 +1,16 @@
+{
+  "status": "ROOT_INDEPENDENT_SMALL_OUTPUT_HASH_ARITHMETIC_AND_MEDIANS_PASS",
+  "utc": "2026-10-15T23:41:05.360982+00:00",
+  "root_full_read": [
+    "extract.py",
+    "note.md",
+    "metadata.json",
+    "execution.json",
+    "index.json"
+  ],
+  "payloads_verified": 17,
+  "intervals": 12,
+  "events": 132,
+  "new_raw_trace_reads": 0,
+  "scope": "Historical instrumented primaryGPU/source-ordinal only; floats inherit trace timestamp precision, no independent owner/buffer argument binding or physicalidle/CPUcausality/S106timing proof."
+}

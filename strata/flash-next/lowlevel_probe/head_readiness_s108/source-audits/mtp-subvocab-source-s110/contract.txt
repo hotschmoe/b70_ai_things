@@ -1,0 +1,84 @@
+S110 full/subset vocabulary head source audit, 2026-10-15
+
+CONFIG -> SOURCE ONLY. Current source plus retained S106 process identity,
+container config/native logs; current RT and source data filenames/stat only.
+No binary payload, GPU, build, restore, consultation, implementation or
+new trace. Exact inputs in pins.json.
+
+COMMAND -> Read source and retained argv/env/logs; stat RT/data.
+
+RESULT -> Both GLOBAL and SLOT solo heads use the FULL vocabulary in the
+observed S106 serving configuration. They are not a subset/full comparison.
+mtp.cpp714..775 first binds the global drafter to native_head; slot bind
+with shared=&mtp at generate.cpp7553 copies global dhead_, dhead_type_,
+dvocab_, n_dvocab_ (mtp.cpp732..742), sharing those weights/IDs, retaining
+private state/logits/output. Pair init2027 rejects either slot dhead_!=null
+BEFORE allocating pair scratch or enabling pairing. Both S106 native logs
+show successful pair setup and positive paired counters (warm92; timed
+562/559/553). With the pinned binding/guard source, those observations
+establish full head at the shared bind and in the measured slot solo
+fallbacks. There is no evidence of a narrower global draft head here.
+
+full_head_env()544..549 defaults false and enables only if the first env
+character is1. This permits subset loading; it does NOT force a subset if
+no file exists. vocab_file()mtp.hpp218 uses explicit --mtp-draft-vocab path,
+else rt_dir/draft_vocab.bin. S106 actual argv has no explicit override.
+Recorded effective_config_env has no STRATA_MTP_FULL_HEAD key, but the
+start_arm.py86 recorder retained only selected config keys, NOT the full
+native environment. Do not call this proof that the native flag was absent.
+Docker env also lacks it; startup has no subset load line.
+The observed pair success supplies the stronger bound-head discriminator.
+
+RT directory has ONLY dense.bin116099072B, dense.txt1851B,
+experts.bin707788800B; default draft_vocab.bin does not exist. This is a
+CURRENT metadata observation, not historical S106 directory attestation.
+Source data contains draft_vocab.bin425196B, _en162100B, _fr184844B,
+_cyrillic235852B. These are available candidate FILES, not current loaded
+or model/tokenizer-validated subset artifacts. No contents/hashes read. Possible ID counts106299/40525/46211/58963
+do not establish valid IDs, uniqueness, order, coverage or quality.
+
+Source-conditioned shape/encoded sizes:
+pack index output.weight is [2560,248320]; S106 native log identifies Q5_K
+head437043200B. Native Q5_K type13 block256 weights/176B (native_mmvq.cpp
+119,3922), so N=2560 ->10blocks ->1760B per vocabulary ROW, and
+248320*1760=437043200B total encoded weights. Head input feature width
+stays N2560. Q8_1 activations use80 blocks*36B=2880B per COLUMN, 5760B
+for two sequences. Full FP32 logits are248320*4=993280B per column.
+A native-format subset of V rows needs1760*V encoded weight bytes,
+4*V ID-map bytes and4*V output bytes per column; the feature width and
+activation column bytes remain unchanged. For example the default-data
+FILE SIZE could describe106299 rows ->187086240B of Q5_K rows, if valid.
+Encoded extents are NOT measured physical traffic, cache misses,
+bandwidth, latency or linear savings.
+
+Concrete blocker/opportunity:
+Existing subset bind gathers whole native head rows with gather_rows;
+dhead_type_=head->type(). For current no-mtp-q4 config this preserves
+Q5_K row bytes, not dequantize/requantize. Solo record_rest1120..1123
+already calls native_mmvq(dhead_type_,dhead_,...,N,n_dvocab_,T). The generic
+Q5_K wide kernel supports NCOLS2 and independently writes each column,
+with load/decode hoisted across columns (native_mmvq.cpp2082..2123).
+Subset record_post_head1141..1154 chooses within subset then map_ids
+converts subset index through dvocab_ to canonical target token ID.
+
+A shared TWO-COLUMN SUBSET head is therefore a concrete source extension,
+blocked by explicit pair full-head-only guards, pair nv_/scratch sizing,
+full-head weight binding and subset-map identity validation. It would need
+both slots' identical ordered subset/type/weights/map, correct n_dvocab_
+strides, native Q5_K rows, original per-column sampling + map_ids, existing
+queue/state/ownership/error contracts, and a full target verifier. Merely
+removing dhead guards would use the wrong weights/extent. Subset list order
+matters for ties: compare against two independent SAME-SUBSET solo calls,
+not full-vocabulary greedy picks. Byte-exact native-format arithmetic/ID
+mapping gates remain mandatory; source NCOLS support is not a compiled
+numerical proof. Other variants are separate.
+
+VERDICT -> No loaded subset artifact presently exists at the configured
+default location; paired and solo S106 heads are full. A shared native
+subset head could preserve target verification while changing proposals,
+acceptance, work and possibly output under supported sampling policies.
+Its quality/serving-policy comparison against full vocabulary intentionally
+changes the draft configuration. Never loosen arithmetic/work matching
+inside the fixed SAME-SUBSET paired-versus-solo correctness comparison,
+or reinterpret S94/S106 gates. No benefit measured; choose/validate a compatible ordered subset before
+implementation. No test matrix or GPU probe prepared.

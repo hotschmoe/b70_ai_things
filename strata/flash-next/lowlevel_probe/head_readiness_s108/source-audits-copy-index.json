@@ -1,0 +1,41 @@
+{
+  "status": "VERIFIED_EXACT_ASCII_COPIES",
+  "files": [
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-posthead-source-s109/contract.txt",
+      "destination": "source-audits/mtp-posthead-source-s109/contract.txt",
+      "bytes": 6150,
+      "sha256": "edfc511199b94c6111e3f864f5640ccd09495a3bd1aeda9c43873789c681cd19"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-posthead-source-s109/pins.json",
+      "destination": "source-audits/mtp-posthead-source-s109/pins.json",
+      "bytes": 1595,
+      "sha256": "3be107136635579357ae25074f25bcb10df90854ead8ec9a3c06becba490ed6a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-posthead-source-s109/manifest.json",
+      "destination": "source-audits/mtp-posthead-source-s109/manifest.json",
+      "bytes": 326,
+      "sha256": "734ddcd3fb58f525b5599c5eeda1103587bad8dc4cb707ee628041916ba6fc8c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-subvocab-source-s110/contract.txt",
+      "destination": "source-audits/mtp-subvocab-source-s110/contract.txt",
+      "bytes": 5266,
+      "sha256": "c0ed9a168a8f4305e6c3c9893fd5ea108654d8f848fe1695507085ae8211790f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-subvocab-source-s110/pins.json",
+      "destination": "source-audits/mtp-subvocab-source-s110/pins.json",
+      "bytes": 2459,
+      "sha256": "d0203c3daca3900325b1d1e2cf703b372d3ec600e446d56e8a3b9429e0c45f4f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-subvocab-source-s110/manifest.json",
+      "destination": "source-audits/mtp-subvocab-source-s110/manifest.json",
+      "bytes": 251,
+      "sha256": "40914c22f0d9ab2f72d1a778c26949c591ff960ca5be0f50ec1148ce474bab25"
+    }
+  ]
+}

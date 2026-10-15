@@ -24849,3 +24849,28 @@ coverage for firstC2head/posthead/select/j1 readiness. S104post actualOpus
 Evidence: strata/flash-next/lowlevel_probe/paired_whole_graph_serving_s106/,
 docs/20261015_strata_graph_capture_and_bottlenecks.md. Targets remain unmet;
 boundedS30RAMrestore retained, no new recovery or numerical equivalence claim.
+
+
+## 2026-10-15 S108: retained MTP head-readiness chain recovered offline
+
+CONFIG -> Historical S95 primaryGPU same-clock cycles5..16; source-ordinal
+roles only, trace float precision retained, no independent owner/buffer binding.
+COMMAND -> One cpu-run raw read/hash/parse, terminal0 in6.76s; root fullread
+source/metadata/execution and independently verified17 hashes/12 calculations.
+Exact ASCII payload/index/verification/coverage copies curated, no second raw
+read/hash, GPU/build/model call or new trace during curation.
+RESULT ->132events/11perinterval: C2head -> sampler/probability twice ->
+two selects -> mappedstep/position -> embedding/RMS/Q8. Medianhead1202.2395us;
+fourpostheadservice243.175us includes samplers179.1135 and probability64.009.
+Head-end-to-firstselect254.625us EXCLUDES selectors33.6975; secondselect-to-copy
+coveragegap21.875us. No additive median budget/physicalidle/cause/saving claim.
+Only64.009us probabilityservice is the pool for a separate paired-only omission
+question, not all243us. Current-source S110: global/slot/paired ALLFULLvocab;
+no current subset asymmetry. N2560/V248320 encodedQ5K437043200B notphysicaltraffic.
+VERDICT -> Coverage resolved without newGPU profile; historical nested12cycles,
+no S106 timing/queue-readiness/servinggain or omissionqualification. Preserve
+bounded evidence to avoid repeated269MB reparsing. Actual claude-opus-5-5(24.523s)/claude-fable-5-1(16.287s) accept bounded
+coverage/sourceaudit; root corrects selector-span/probability-pool/row-column
+claims, no model-endorsed speed gain. Both terminal0 with matching ownresumes.
+Evidence: strata/flash-next/lowlevel_probe/head_readiness_s108/ and
+ docs/20261015_strata_mtp_head_readiness.md.

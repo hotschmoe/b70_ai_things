@@ -1,0 +1,10 @@
+{
+  "command": [
+    "bin/cpu-run",
+    "bash",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/run.sh"
+  ],
+  "cwd": "/mnt/vm_8tb/github/b70_ai_things",
+  "planned_cost": "ONE CPU/RAM-heavy retained269MB read/hash/parse+bounded extraction, about1minute; no GPU",
+  "raw_read_parse_budget": 1
+}

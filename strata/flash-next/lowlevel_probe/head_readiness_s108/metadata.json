@@ -1,0 +1,65 @@
+{
+  "primary_pid": 4294952351,
+  "primary_device": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+  "retained_process_binding_exact": true,
+  "metadata": [
+    {
+      "ph": "M",
+      "name": "process_name",
+      "pid": 467,
+      "ts": 1792096623064734.0,
+      "args": {
+        "name": "HOST<b70s4dayz>"
+      }
+    },
+    {
+      "ph": "M",
+      "name": "process_name",
+      "pid": 4294952351,
+      "ts": 1792096678612064.5,
+      "args": {
+        "name": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0"
+      }
+    },
+    {
+      "ph": "M",
+      "name": "thread_name",
+      "pid": 4294952351,
+      "tid": 4294952351,
+      "ts": 1792096678612086.0,
+      "args": {
+        "name": "Thread 467 L0 Compute Engine<0,0>"
+      }
+    },
+    {
+      "ph": "M",
+      "name": "process_name",
+      "pid": 4294952350,
+      "ts": 1792096678613076.2,
+      "args": {
+        "name": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1"
+      }
+    },
+    {
+      "ph": "M",
+      "name": "thread_name",
+      "pid": 4294952350,
+      "tid": 4294952350,
+      "ts": 1792096678613092.5,
+      "args": {
+        "name": "Thread 467 L0 Compute Engine<0,0>"
+      }
+    },
+    {
+      "ph": "M",
+      "name": "thread_name",
+      "pid": 4294952351,
+      "tid": 4294952349,
+      "ts": 1792096678898160.8,
+      "args": {
+        "name": "Thread 467 L0 Compute Engine<0,0>"
+      }
+    }
+  ],
+  "scope": "Original raw metadata; selected primary device bound uniquely, no peer clock interpretation"
+}

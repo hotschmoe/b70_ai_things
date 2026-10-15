@@ -1,0 +1,47 @@
+{
+  "status": "ACCEPT_BOUNDED_S108_SOURCE_AUDITS_NEXT",
+  "models": [
+    {
+      "requested": "claude-opus-5-5",
+      "responding_models": [
+        "claude-opus-5-5"
+      ],
+      "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "exit": 0,
+      "elapsed_s": 24.52254858397646,
+      "source_packet_sha256": "9cc1d31575483c8b3d702b4724e63b334cfbbc07257546f1e152ccc900b0f9ed",
+      "source_packet_unchanged": true,
+      "resume_session_matches_response": true
+    },
+    {
+      "requested": "claude-fable-5-1",
+      "responding_models": [
+        "claude-fable-5-1"
+      ],
+      "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "exit": 0,
+      "elapsed_s": 16.286643585946877,
+      "source_packet_sha256": "9cc1d31575483c8b3d702b4724e63b334cfbbc07257546f1e152ccc900b0f9ed",
+      "source_packet_unchanged": true,
+      "resume_session_matches_response": true
+    }
+  ],
+  "interpretation": "Historical instrumented S95 primary-GPU service and uncovered intervals only; 12 motif-selected windows, no physical-idle, causal-host or production speed claim.",
+  "corrections": [
+    "First-select span254.625us excludes later selector service33.6975us.",
+    "243.175us is median summed TWO sampler+TWO probability kernels; only median64.009us probability service is eligible for S109 omission.",
+    "Medians of spans and component sums are not additive.",
+    "Owner and buffer labels are source ordinal; argument bindings unlogged.",
+    "Subset means vocabulary rows, with two owner columns retained; feature width stays2560.",
+    "437043200B full Q5_K encoded weights is a static extent, not physical traffic.",
+    "S110 source audit refutes current solo-subset/pair-full asymmetry: all observed S106 paths use full vocabulary.",
+    "A narrower draft vocabulary changes proposal policy; exact arithmetic/work gates still apply within SAME-SUBSET paired-versus-solo comparison.",
+    "Any candidate must preserve observable outputs, greedy choices, publication/state/ownership and error behavior; unused private probability scratch may be unproduced only after complete consumer proof."
+  ],
+  "next": [
+    "Finish independent S107 Q6 OFF/ON serving without policy changes.",
+    "S109 source-only paired probability consumer audit and S110 full/subset binding audit completed, unimplemented.",
+    "Prioritize measured end-to-end critical path; no new trace campaign or broad post-head FP rewrite."
+  ],
+  "scope": "No new GPU work, no speed promotion, no inference from S106/S107 throughput to S95 instrumented service."
+}

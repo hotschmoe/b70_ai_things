@@ -1,0 +1,436 @@
+{
+  "status": "PASS_SOURCE_CONSISTENT_ORDINAL_CHAIN_ALL12",
+  "cycles": [
+    {
+      "cycle": 5,
+      "event_count": 11,
+      "source_role_sequence": [
+        "C2_head",
+        "sampler",
+        "top_probability",
+        "sampler",
+        "top_probability",
+        "select",
+        "select",
+        "step_position_copy",
+        "token_embedding",
+        "embedding_RMS",
+        "embedding_Q8"
+      ],
+      "role_status": "SOURCE_CONSISTENT_ORDINAL_CHAIN",
+      "owner_buffer_bindings_independently_observed": false,
+      "diagnostic_us": {
+        "C2_head_service": 1201.875,
+        "head_end_to_first_select_start": 254.5,
+        "sampler_probability_service_sum": 242.393,
+        "last_probability_end_to_first_select_start": 2.0,
+        "both_select_service_sum": 33.75,
+        "second_select_end_to_position_copy_start": 21.5,
+        "second_select_end_to_embedding_start": 25.0,
+        "head_end_to_first_Q8_end": 325.0,
+        "position_copy_embed_RMS_Q8_service_sum": 12.499,
+        "smallest_signed_adjacent_coverage_gap": 0.0
+      }
+    },
+    {
+      "cycle": 6,
+      "event_count": 11,
+      "source_role_sequence": [
+        "C2_head",
+        "sampler",
+        "top_probability",
+        "sampler",
+        "top_probability",
+        "select",
+        "select",
+        "step_position_copy",
+        "token_embedding",
+        "embedding_RMS",
+        "embedding_Q8"
+      ],
+      "role_status": "SOURCE_CONSISTENT_ORDINAL_CHAIN",
+      "owner_buffer_bindings_independently_observed": false,
+      "diagnostic_us": {
+        "C2_head_service": 1200.416,
+        "head_end_to_first_select_start": 254.5,
+        "sampler_probability_service_sum": 243.331,
+        "last_probability_end_to_first_select_start": 2.25,
+        "both_select_service_sum": 33.644999999999996,
+        "second_select_end_to_position_copy_start": 21.75,
+        "second_select_end_to_embedding_start": 25.0,
+        "head_end_to_first_Q8_end": 325.25,
+        "position_copy_embed_RMS_Q8_service_sum": 12.602,
+        "smallest_signed_adjacent_coverage_gap": 0.25
+      }
+    },
+    {
+      "cycle": 7,
+      "event_count": 11,
+      "source_role_sequence": [
+        "C2_head",
+        "sampler",
+        "top_probability",
+        "sampler",
+        "top_probability",
+        "select",
+        "select",
+        "step_position_copy",
+        "token_embedding",
+        "embedding_RMS",
+        "embedding_Q8"
+      ],
+      "role_status": "SOURCE_CONSISTENT_ORDINAL_CHAIN",
+      "owner_buffer_bindings_independently_observed": false,
+      "diagnostic_us": {
+        "C2_head_service": 1197.916,
+        "head_end_to_first_select_start": 255.5,
+        "sampler_probability_service_sum": 243.12199999999999,
+        "last_probability_end_to_first_select_start": 2.0,
+        "both_select_service_sum": 33.852999999999994,
+        "second_select_end_to_position_copy_start": 21.5,
+        "second_select_end_to_embedding_start": 25.0,
+        "head_end_to_first_Q8_end": 326.75,
+        "position_copy_embed_RMS_Q8_service_sum": 12.603,
+        "smallest_signed_adjacent_coverage_gap": 0.25
+      }
+    },
+    {
+      "cycle": 8,
+      "event_count": 11,
+      "source_role_sequence": [
+        "C2_head",
+        "sampler",
+        "top_probability",
+        "sampler",
+        "top_probability",
+        "select",
+        "select",
+        "step_position_copy",
+        "token_embedding",
+        "embedding_RMS",
+        "embedding_Q8"
+      ],
+      "role_status": "SOURCE_CONSISTENT_ORDINAL_CHAIN",
+      "owner_buffer_bindings_independently_observed": false,
+      "diagnostic_us": {
+        "C2_head_service": 1201.875,
+        "head_end_to_first_select_start": 255.75,
+        "sampler_probability_service_sum": 243.435,
+        "last_probability_end_to_first_select_start": 2.0,
+        "both_select_service_sum": 33.541,
+        "second_select_end_to_position_copy_start": 22.25,
+        "second_select_end_to_embedding_start": 25.5,
+        "head_end_to_first_Q8_end": 326.0,
+        "position_copy_embed_RMS_Q8_service_sum": 12.29,
+        "smallest_signed_adjacent_coverage_gap": 0.0
+      }
+    },
+    {
+      "cycle": 9,
+      "event_count": 11,
+      "source_role_sequence": [
+        "C2_head",
+        "sampler",
+        "top_probability",
+        "sampler",
+        "top_probability",
+        "select",
+        "select",
+        "step_position_copy",
+        "token_embedding",
+        "embedding_RMS",
+        "embedding_Q8"
+      ],
+      "role_status": "SOURCE_CONSISTENT_ORDINAL_CHAIN",
+      "owner_buffer_bindings_independently_observed": false,
+      "diagnostic_us": {
+        "C2_head_service": 1204.062,
+        "head_end_to_first_select_start": 254.25,
+        "sampler_probability_service_sum": 242.915,
+        "last_probability_end_to_first_select_start": 2.25,
+        "both_select_service_sum": 33.75,
+        "second_select_end_to_position_copy_start": 22.5,
+        "second_select_end_to_embedding_start": 25.75,
+        "head_end_to_first_Q8_end": 325.5,
+        "position_copy_embed_RMS_Q8_service_sum": 12.498,
+        "smallest_signed_adjacent_coverage_gap": 0.0
+      }
+    },
+    {
+      "cycle": 10,
+      "event_count": 11,
+      "source_role_sequence": [
+        "C2_head",
+        "sampler",
+        "top_probability",
+        "sampler",
+        "top_probability",
+        "select",
+        "select",
+        "step_position_copy",
+        "token_embedding",
+        "embedding_RMS",
+        "embedding_Q8"
+      ],
+      "role_status": "SOURCE_CONSISTENT_ORDINAL_CHAIN",
+      "owner_buffer_bindings_independently_observed": false,
+      "diagnostic_us": {
+        "C2_head_service": 1201.145,
+        "head_end_to_first_select_start": 254.75,
+        "sampler_probability_service_sum": 243.435,
+        "last_probability_end_to_first_select_start": 2.0,
+        "both_select_service_sum": 33.644999999999996,
+        "second_select_end_to_position_copy_start": 22.5,
+        "second_select_end_to_embedding_start": 25.75,
+        "head_end_to_first_Q8_end": 325.75,
+        "position_copy_embed_RMS_Q8_service_sum": 12.394,
+        "smallest_signed_adjacent_coverage_gap": 0.25
+      }
+    },
+    {
+      "cycle": 11,
+      "event_count": 11,
+      "source_role_sequence": [
+        "C2_head",
+        "sampler",
+        "top_probability",
+        "sampler",
+        "top_probability",
+        "select",
+        "select",
+        "step_position_copy",
+        "token_embedding",
+        "embedding_RMS",
+        "embedding_Q8"
+      ],
+      "role_status": "SOURCE_CONSISTENT_ORDINAL_CHAIN",
+      "owner_buffer_bindings_independently_observed": false,
+      "diagnostic_us": {
+        "C2_head_service": 1204.479,
+        "head_end_to_first_select_start": 253.25,
+        "sampler_probability_service_sum": 243.01999999999998,
+        "last_probability_end_to_first_select_start": 1.75,
+        "both_select_service_sum": 33.644999999999996,
+        "second_select_end_to_position_copy_start": 21.5,
+        "second_select_end_to_embedding_start": 24.5,
+        "head_end_to_first_Q8_end": 324.0,
+        "position_copy_embed_RMS_Q8_service_sum": 13.227,
+        "smallest_signed_adjacent_coverage_gap": 0.0
+      }
+    },
+    {
+      "cycle": 12,
+      "event_count": 11,
+      "source_role_sequence": [
+        "C2_head",
+        "sampler",
+        "top_probability",
+        "sampler",
+        "top_probability",
+        "select",
+        "select",
+        "step_position_copy",
+        "token_embedding",
+        "embedding_RMS",
+        "embedding_Q8"
+      ],
+      "role_status": "SOURCE_CONSISTENT_ORDINAL_CHAIN",
+      "owner_buffer_bindings_independently_observed": false,
+      "diagnostic_us": {
+        "C2_head_service": 1203.541,
+        "head_end_to_first_select_start": 254.75,
+        "sampler_probability_service_sum": 243.54,
+        "last_probability_end_to_first_select_start": 2.0,
+        "both_select_service_sum": 33.541,
+        "second_select_end_to_position_copy_start": 21.75,
+        "second_select_end_to_embedding_start": 25.0,
+        "head_end_to_first_Q8_end": 325.25,
+        "position_copy_embed_RMS_Q8_service_sum": 13.123000000000001,
+        "smallest_signed_adjacent_coverage_gap": 0.0
+      }
+    },
+    {
+      "cycle": 13,
+      "event_count": 11,
+      "source_role_sequence": [
+        "C2_head",
+        "sampler",
+        "top_probability",
+        "sampler",
+        "top_probability",
+        "select",
+        "select",
+        "step_position_copy",
+        "token_embedding",
+        "embedding_RMS",
+        "embedding_Q8"
+      ],
+      "role_status": "SOURCE_CONSISTENT_ORDINAL_CHAIN",
+      "owner_buffer_bindings_independently_observed": false,
+      "diagnostic_us": {
+        "C2_head_service": 1206.458,
+        "head_end_to_first_select_start": 255.25,
+        "sampler_probability_service_sum": 243.228,
+        "last_probability_end_to_first_select_start": 2.5,
+        "both_select_service_sum": 34.166,
+        "second_select_end_to_position_copy_start": 21.75,
+        "second_select_end_to_embedding_start": 24.75,
+        "head_end_to_first_Q8_end": 326.75,
+        "position_copy_embed_RMS_Q8_service_sum": 13.019,
+        "smallest_signed_adjacent_coverage_gap": 0.0
+      }
+    },
+    {
+      "cycle": 14,
+      "event_count": 11,
+      "source_role_sequence": [
+        "C2_head",
+        "sampler",
+        "top_probability",
+        "sampler",
+        "top_probability",
+        "select",
+        "select",
+        "step_position_copy",
+        "token_embedding",
+        "embedding_RMS",
+        "embedding_Q8"
+      ],
+      "role_status": "SOURCE_CONSISTENT_ORDINAL_CHAIN",
+      "owner_buffer_bindings_independently_observed": false,
+      "diagnostic_us": {
+        "C2_head_service": 1203.541,
+        "head_end_to_first_select_start": 254.5,
+        "sampler_probability_service_sum": 242.289,
+        "last_probability_end_to_first_select_start": 2.25,
+        "both_select_service_sum": 33.644999999999996,
+        "second_select_end_to_position_copy_start": 22.25,
+        "second_select_end_to_embedding_start": 25.5,
+        "head_end_to_first_Q8_end": 326.0,
+        "position_copy_embed_RMS_Q8_service_sum": 12.915,
+        "smallest_signed_adjacent_coverage_gap": 0.0
+      }
+    },
+    {
+      "cycle": 15,
+      "event_count": 11,
+      "source_role_sequence": [
+        "C2_head",
+        "sampler",
+        "top_probability",
+        "sampler",
+        "top_probability",
+        "select",
+        "select",
+        "step_position_copy",
+        "token_embedding",
+        "embedding_RMS",
+        "embedding_Q8"
+      ],
+      "role_status": "SOURCE_CONSISTENT_ORDINAL_CHAIN",
+      "owner_buffer_bindings_independently_observed": false,
+      "diagnostic_us": {
+        "C2_head_service": 1202.604,
+        "head_end_to_first_select_start": 255.5,
+        "sampler_probability_service_sum": 243.644,
+        "last_probability_end_to_first_select_start": 2.25,
+        "both_select_service_sum": 33.958,
+        "second_select_end_to_position_copy_start": 22.0,
+        "second_select_end_to_embedding_start": 25.25,
+        "head_end_to_first_Q8_end": 326.0,
+        "position_copy_embed_RMS_Q8_service_sum": 12.29,
+        "smallest_signed_adjacent_coverage_gap": 0.0
+      }
+    },
+    {
+      "cycle": 16,
+      "event_count": 11,
+      "source_role_sequence": [
+        "C2_head",
+        "sampler",
+        "top_probability",
+        "sampler",
+        "top_probability",
+        "select",
+        "select",
+        "step_position_copy",
+        "token_embedding",
+        "embedding_RMS",
+        "embedding_Q8"
+      ],
+      "role_status": "SOURCE_CONSISTENT_ORDINAL_CHAIN",
+      "owner_buffer_bindings_independently_observed": false,
+      "diagnostic_us": {
+        "C2_head_service": 1201.77,
+        "head_end_to_first_select_start": 253.25,
+        "sampler_probability_service_sum": 242.393,
+        "last_probability_end_to_first_select_start": 2.5,
+        "both_select_service_sum": 33.853,
+        "second_select_end_to_position_copy_start": 22.25,
+        "second_select_end_to_embedding_start": 25.5,
+        "head_end_to_first_Q8_end": 324.75,
+        "position_copy_embed_RMS_Q8_service_sum": 12.915,
+        "smallest_signed_adjacent_coverage_gap": 0.25
+      }
+    }
+  ],
+  "descriptive_same_trace_nested12_statistics_us": {
+    "C2_head_service": {
+      "median": 1202.2395000000001,
+      "min": 1197.916,
+      "max": 1206.458
+    },
+    "head_end_to_first_select_start": {
+      "median": 254.625,
+      "min": 253.25,
+      "max": 255.75
+    },
+    "sampler_probability_service_sum": {
+      "median": 243.175,
+      "min": 242.289,
+      "max": 243.644
+    },
+    "last_probability_end_to_first_select_start": {
+      "median": 2.125,
+      "min": 1.75,
+      "max": 2.5
+    },
+    "both_select_service_sum": {
+      "median": 33.6975,
+      "min": 33.541,
+      "max": 34.166
+    },
+    "second_select_end_to_position_copy_start": {
+      "median": 21.875,
+      "min": 21.5,
+      "max": 22.5
+    },
+    "second_select_end_to_embedding_start": {
+      "median": 25.125,
+      "min": 24.5,
+      "max": 25.75
+    },
+    "head_end_to_first_Q8_end": {
+      "median": 325.625,
+      "min": 324.0,
+      "max": 326.75
+    },
+    "position_copy_embed_RMS_Q8_service_sum": {
+      "median": 12.6025,
+      "min": 12.29,
+      "max": 13.227
+    },
+    "smallest_signed_adjacent_coverage_gap": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.25
+    }
+  },
+  "scope": "Historical instrumented S95 sameGPU sequence only; role labels are source-consistent ordinal, not independently bound buffers/slot owners. No raw ID-gap inference.",
+  "no_claims": [
+    "No physical idle/traffic/bandwidth or removable-time forecast.",
+    "No CPU-steady/GPU or cross-card clock join.",
+    "No S106 timing, queue-fed-ahead, clean serving speed or stability result.",
+    "Service sums and coverage spans are not interchangeable wall budgets."
+  ]
+}

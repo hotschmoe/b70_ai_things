@@ -1,0 +1,98 @@
+{
+  "status": "FROZEN_ACTUAL_CPU_ONLY_EXTRACTION_TERMINAL0",
+  "files": [
+    {
+      "path": "anchors.json",
+      "bytes": 29177,
+      "sha256": "c4038d60e120d8647b43b4f91d4d7c2d4ce0c55d5ed0e8f4bb7a17ea082bfc27"
+    },
+    {
+      "path": "bounded-intervals.json",
+      "bytes": 115001,
+      "sha256": "277630b70d44a24bcf3ef7ab166f0a9fe19e6ec7f8ccbe339c8fc220849071e3"
+    },
+    {
+      "path": "command.json",
+      "bytes": 351,
+      "sha256": "d1249b04b5b8e34691d55209f141704a552bf988fe62622deb89c455de609c22"
+    },
+    {
+      "path": "end.txt",
+      "bytes": 21,
+      "sha256": "9d90ff9a5b4f025dc3cf09cd70e8013d273a385fdfb9134224aea19d5f33ba4f"
+    },
+    {
+      "path": "execution.json",
+      "bytes": 633,
+      "sha256": "ae23839b87dcf9c3cc3c1430246a7353fa786a131c53dfc7a49fab4caea8fd7b"
+    },
+    {
+      "path": "exit.txt",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "extract.py",
+      "bytes": 9208,
+      "sha256": "ef22338c0f0ca30a7a76b939149cdaa17c03c330ef16b7843bb2fe6839e879e8"
+    },
+    {
+      "path": "findings.json",
+      "bytes": 13937,
+      "sha256": "8a101370dc8a2ba650f82ceb4670b9d97c9594c8c75c446ad2936447f64e2990"
+    },
+    {
+      "path": "metadata.json",
+      "bytes": 1553,
+      "sha256": "18daa002dd2b7c56629f3881c15d93d798f8f70fe2ec4d06dd82df787effedc6"
+    },
+    {
+      "path": "note.md",
+      "bytes": 3152,
+      "sha256": "e3e0f8a2a8cc943f9c35cc868bf570a57dc57a450837be79c46dc3faf9b93018"
+    },
+    {
+      "path": "ordered-timeline.csv",
+      "bytes": 43690,
+      "sha256": "39b06447b1a753415ca5e59d1ec94fc80f95ff21c87bbd3eeeefc76e609043d0"
+    },
+    {
+      "path": "run.sh",
+      "bytes": 542,
+      "sha256": "68863e7c94cd7ff105166861ad24637aa1589e0fd85543a7661a528d87ab2164"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 3134,
+      "sha256": "53e2075f497d0e31dd3f1a5c31988d65f454f172be52a69157afa292b8ece524"
+    },
+    {
+      "path": "start.txt",
+      "bytes": 21,
+      "sha256": "cc0a4ad23d0457aa11fa8e81669f237ec954471531cb13b267e05b94ccda50e4"
+    },
+    {
+      "path": "stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "stdout.log",
+      "bytes": 169,
+      "sha256": "d37c6c46700d9ef63d61f34dd15646d7be28cd099ff5fc98d87282bfa8fff179"
+    },
+    {
+      "path": "time.txt",
+      "bytes": 61,
+      "sha256": "0d46f75c5e55c6a30d8940e70a96864e03dab7e2b589f9bb660f0ae55e3faa6c"
+    }
+  ],
+  "total_payload_bytes": 220652,
+  "raw_trace_external_only": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep/run/trace/strata-attn-val.467.json",
+    "bytes": 269853744,
+    "sha256": "1139c4c8cc9a4b0737a6c57e67a8b717151ec4276714fa355fb48e3cd9ab3583",
+    "identity_provenance": "Actual one-pass read/hash in execution.json; no second raw hash for this index."
+  },
+  "scope": "Historical S95 primaryGPU sameclock operation coverage only; no GPU/newtrace/model/build/counter/curated edit."
+}

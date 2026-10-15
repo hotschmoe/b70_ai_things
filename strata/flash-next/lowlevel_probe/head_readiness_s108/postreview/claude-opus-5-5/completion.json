@@ -1,0 +1,120 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 24.52254858397646,
+  "launch_exception": null,
+  "source_packet_sha256": "9cc1d31575483c8b3d702b4724e63b334cfbbc07257546f1e152ccc900b0f9ed",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 788082,
+      "stop_reason": "end_turn",
+      "session_id": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "total_cost_usd": 4.0089816,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 3566,
+        "cache_read_input_tokens": 287692,
+        "output_tokens": 1534,
+        "output_tokens_details": {
+          "thinking_tokens": 687
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 3566,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1534,
+            "cache_read_input_tokens": 287692,
+            "cache_creation_input_tokens": 3566,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 3566
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 34,
+          "outputTokens": 59260,
+          "thinkingTokens": 33194,
+          "cacheReadInputTokens": 2493868,
+          "cacheCreationInputTokens": 290609,
+          "webSearchRequests": 0,
+          "costUSD": 4.0089816,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# S108 post-head readiness extraction\n\n**Verdict: accept the bounded interpretation.** The roughly 255 \u00b5s from head end to first select is mostly occupied by measured post-head kernels: four sampler/probability operations with a 243 \u00b5s service sum, then a 2 \u00b5s gap before the first select. It is not mostly empty time.\n\n## Overclaims to correct\n\n- **Arithmetic.** \"243 of 255 \u00b5s\" compares a median of sums with a median of spans. They are not additive, so \"mostly service\" is a qualitative reading, not a decomposition.\n- **Owner labels.** \"Owner A, owner B\" are source-ordinal labels; argument bindings were not logged.\n- **Generality.** The 12 motif-selected cycles from one instrumented process are not trials, and they say nothing about arbitrary windows or about the profiler-free runtime.\n- **Unreconciled C6 heads.** The two extra C6 heads remain a source/count reconciliation. Do not resolve them into steady-state heads.\n\n## The source question the evidence selects\n\n**Is the shared C2 head the dominant chain cost, and is the full-vocabulary requirement self-imposed?**\n\nThe head service is about 1.2 ms per depth, about five times the post-head chain. As a static calculation, not a traffic measurement: Q5_K 248,320 rows \u00d7 2,560 inputs is about 437 MB of weights per call.\n\n`MtpPair::init` rejects pairing unless `dhead_ == nullptr`: \"the first probe shares the full head only (STRATA_MTP_FULL_HEAD=1 or no draft_vocab.bin)\". Audit, from source only:\n\n1. Does the default solo `draft()` path use the `draft_vocab.bin` subset head (`dhead_`) when it is present?\n2. Does the current production configuration load it? If so, the paired path may run the full 248k-row head where solo would use the subset.\n3. Is there any exactness or state reason a two-column *subset* head cannot be shared?\n   - The verifier stays exact either way.\n   - Draft proposals and native work would change, so this is a policy change requiring matched acceptance and work gates, not byte parity.\n\n**Recommended order:**\n\n- **Now:** run the head-subset audit above, source only.\n- **Next:** if the audit shows the full head is required, then audit whether the probability work can be skipped under greedy decoding with min-p 0. The ceiling on that saving is the 0.24 ms post-head service.\n\n**Constraint:** keep the S107 Q6 A4 serving test separate and unchanged.",
+      "ttft_ms": 11910,
+      "type": "result",
+      "duration_ms": 23463,
+      "uuid": "443efc9f-6927-4678-a16c-41a9e6a38efd",
+      "ttft_stream_ms": 2349,
+      "time_to_request_ms": 107,
+      "first_content_frame_ms": 2349,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

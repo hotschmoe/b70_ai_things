@@ -1,0 +1,2843 @@
+{
+  "status": "PASS_ONE_RAW_READ_HASH_PARSE_ALL_OVERLAPPING_PRIMARY_GPU_EVENTS",
+  "trace": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-c2-profile-s95-prep/run/trace/strata-attn-val.467.json",
+  "trace_bytes": 269853744,
+  "trace_sha256": "1139c4c8cc9a4b0737a6c57e67a8b717151ec4276714fa355fb48e3cd9ab3583",
+  "primary_pid": 4294952351,
+  "primary_device": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+  "intervals": [
+    {
+      "cycle": 5,
+      "start_us": 1792096674544763.8,
+      "end_us": 1792096674546290.5,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674544763.8,
+          "duration_us": 1201.875,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "133131"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674547571.8,
+          "duration_us": 1201.562,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "133342"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674546220.0,
+          "duration_us": 16.875,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "133136"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674546239.0,
+          "duration_us": 16.875,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "133137"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674546288.0,
+          "duration_us": 2.604,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "133141"
+        }
+      },
+      "events": [
+        {
+          "raw_event_ordinal": 399387,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674544763.8,
+            "dur": 1201.875,
+            "args": {
+              "id": "133131"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 399390,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674545968.5,
+            "dur": 89.27,
+            "args": {
+              "id": "133132"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 399393,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674546060.0,
+            "dur": 32.187,
+            "args": {
+              "id": "133133"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 399396,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674546094.8,
+            "dur": 89.166,
+            "args": {
+              "id": "133134"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 399399,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674546186.2,
+            "dur": 31.77,
+            "args": {
+              "id": "133135"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 399402,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674546220.0,
+            "dur": 16.875,
+            "args": {
+              "id": "133136"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 399405,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674546239.0,
+            "dur": 16.875,
+            "args": {
+              "id": "133137"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 399408,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {1; 2; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674546277.5,
+            "dur": 3.125,
+            "args": {
+              "id": "133138"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 399411,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::iq_embed_rows(int, void const*, unsigned long, int const*, long, long, float*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::embed_rows_kernel_284a43>[SIMD32 {10; 1; 1} {32; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674546281.0,
+            "dur": 3.333,
+            "args": {
+              "id": "133139"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 399414,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_qsa_rms_norm_weighted(float const*, float const*, float*, int, int, float, void*)::norm_127936, dpct_kernel_scalar<1024> >[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674546284.5,
+            "dur": 3.437,
+            "args": {
+              "id": "133140"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 399417,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674546288.0,
+            "dur": 2.604,
+            "args": {
+              "id": "133141"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "cycle": 6,
+      "start_us": 1792096674601391.2,
+      "end_us": 1792096674602917.0,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674601391.2,
+          "duration_us": 1200.416,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "138619"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674604189.8,
+          "duration_us": 1199.062,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "138830"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674602846.2,
+          "duration_us": 16.875,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "138624"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674602865.2,
+          "duration_us": 16.77,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "138625"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674602914.5,
+          "duration_us": 2.604,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "138629"
+        }
+      },
+      "events": [
+        {
+          "raw_event_ordinal": 415851,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674601391.2,
+            "dur": 1200.416,
+            "args": {
+              "id": "138619"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 415854,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674602593.8,
+            "dur": 89.791,
+            "args": {
+              "id": "138620"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 415857,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674602686.2,
+            "dur": 32.291,
+            "args": {
+              "id": "138621"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 415860,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674602720.5,
+            "dur": 89.583,
+            "args": {
+              "id": "138622"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 415863,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674602812.2,
+            "dur": 31.666,
+            "args": {
+              "id": "138623"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 415866,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674602846.2,
+            "dur": 16.875,
+            "args": {
+              "id": "138624"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 415869,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674602865.2,
+            "dur": 16.77,
+            "args": {
+              "id": "138625"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 415872,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {1; 2; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674602903.8,
+            "dur": 3.02,
+            "args": {
+              "id": "138626"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 415875,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::iq_embed_rows(int, void const*, unsigned long, int const*, long, long, float*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::embed_rows_kernel_284a43>[SIMD32 {10; 1; 1} {32; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674602907.0,
+            "dur": 3.437,
+            "args": {
+              "id": "138627"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 415878,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_qsa_rms_norm_weighted(float const*, float const*, float*, int, int, float, void*)::norm_127936, dpct_kernel_scalar<1024> >[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674602910.8,
+            "dur": 3.541,
+            "args": {
+              "id": "138628"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 415881,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674602914.5,
+            "dur": 2.604,
+            "args": {
+              "id": "138629"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "cycle": 7,
+      "start_us": 1792096674658463.0,
+      "end_us": 1792096674659987.8,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674658463.0,
+          "duration_us": 1197.916,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "144107"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674661262.2,
+          "duration_us": 1199.687,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "144318"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674659916.5,
+          "duration_us": 17.083,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "144112"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674659936.2,
+          "duration_us": 16.77,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "144113"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674659985.2,
+          "duration_us": 2.604,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "144117"
+        }
+      },
+      "events": [
+        {
+          "raw_event_ordinal": 432315,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674658463.0,
+            "dur": 1197.916,
+            "args": {
+              "id": "144107"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 432318,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674659663.8,
+            "dur": 89.895,
+            "args": {
+              "id": "144108"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 432321,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674659756.0,
+            "dur": 32.291,
+            "args": {
+              "id": "144109"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 432324,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674659790.8,
+            "dur": 89.27,
+            "args": {
+              "id": "144110"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 432327,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674659882.8,
+            "dur": 31.666,
+            "args": {
+              "id": "144111"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 432330,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674659916.5,
+            "dur": 17.083,
+            "args": {
+              "id": "144112"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 432333,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674659936.2,
+            "dur": 16.77,
+            "args": {
+              "id": "144113"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 432336,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {1; 2; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674659974.5,
+            "dur": 3.125,
+            "args": {
+              "id": "144114"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 432339,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::iq_embed_rows(int, void const*, unsigned long, int const*, long, long, float*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::embed_rows_kernel_284a43>[SIMD32 {10; 1; 1} {32; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674659978.0,
+            "dur": 3.333,
+            "args": {
+              "id": "144115"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 432342,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_qsa_rms_norm_weighted(float const*, float const*, float*, int, int, float, void*)::norm_127936, dpct_kernel_scalar<1024> >[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674659981.5,
+            "dur": 3.541,
+            "args": {
+              "id": "144116"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 432345,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674659985.2,
+            "dur": 2.604,
+            "args": {
+              "id": "144117"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "cycle": 8,
+      "start_us": 1792096674715755.2,
+      "end_us": 1792096674717283.0,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674715755.2,
+          "duration_us": 1201.875,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "149595"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674718560.2,
+          "duration_us": 1200.729,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "149806"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674717212.8,
+          "duration_us": 17.083,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "149600"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674717231.5,
+          "duration_us": 16.458,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "149601"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674717280.5,
+          "duration_us": 2.604,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "149605"
+        }
+      },
+      "events": [
+        {
+          "raw_event_ordinal": 448779,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674715755.2,
+            "dur": 1201.875,
+            "args": {
+              "id": "149595"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 448782,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674716959.2,
+            "dur": 90.208,
+            "args": {
+              "id": "149596"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 448785,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674717052.2,
+            "dur": 32.291,
+            "args": {
+              "id": "149597"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 448788,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674717087.2,
+            "dur": 89.166,
+            "args": {
+              "id": "149598"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 448791,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674717179.0,
+            "dur": 31.77,
+            "args": {
+              "id": "149599"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 448794,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674717212.8,
+            "dur": 17.083,
+            "args": {
+              "id": "149600"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 448797,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674717231.5,
+            "dur": 16.458,
+            "args": {
+              "id": "149601"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 448800,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {1; 2; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674717270.2,
+            "dur": 2.916,
+            "args": {
+              "id": "149602"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 448803,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::iq_embed_rows(int, void const*, unsigned long, int const*, long, long, float*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::embed_rows_kernel_284a43>[SIMD32 {10; 1; 1} {32; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674717273.5,
+            "dur": 3.333,
+            "args": {
+              "id": "149603"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 448806,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_qsa_rms_norm_weighted(float const*, float const*, float*, int, int, float, void*)::norm_127936, dpct_kernel_scalar<1024> >[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674717277.0,
+            "dur": 3.437,
+            "args": {
+              "id": "149604"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 448809,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674717280.5,
+            "dur": 2.604,
+            "args": {
+              "id": "149605"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "cycle": 9,
+      "start_us": 1792096674772753.2,
+      "end_us": 1792096674774282.8,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674772753.2,
+          "duration_us": 1204.062,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "155083"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674775564.0,
+          "duration_us": 1200.937,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "155294"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674774211.5,
+          "duration_us": 16.875,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "155088"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674774230.2,
+          "duration_us": 16.875,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "155089"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674774280.0,
+          "duration_us": 2.708,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "155093"
+        }
+      },
+      "events": [
+        {
+          "raw_event_ordinal": 465243,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674772753.2,
+            "dur": 1204.062,
+            "args": {
+              "id": "155083"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 465246,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674773959.2,
+            "dur": 89.479,
+            "args": {
+              "id": "155084"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 465249,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674774051.5,
+            "dur": 32.187,
+            "args": {
+              "id": "155085"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 465252,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674774085.5,
+            "dur": 89.479,
+            "args": {
+              "id": "155086"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 465255,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674774177.5,
+            "dur": 31.77,
+            "args": {
+              "id": "155087"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 465258,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674774211.5,
+            "dur": 16.875,
+            "args": {
+              "id": "155088"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 465261,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674774230.2,
+            "dur": 16.875,
+            "args": {
+              "id": "155089"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 465264,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {1; 2; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674774269.5,
+            "dur": 2.812,
+            "args": {
+              "id": "155090"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 465267,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::iq_embed_rows(int, void const*, unsigned long, int const*, long, long, float*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::embed_rows_kernel_284a43>[SIMD32 {10; 1; 1} {32; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674774272.8,
+            "dur": 3.541,
+            "args": {
+              "id": "155091"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 465270,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_qsa_rms_norm_weighted(float const*, float const*, float*, int, int, float, void*)::norm_127936, dpct_kernel_scalar<1024> >[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674774276.5,
+            "dur": 3.437,
+            "args": {
+              "id": "155092"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 465273,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674774280.0,
+            "dur": 2.708,
+            "args": {
+              "id": "155093"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "cycle": 10,
+      "start_us": 1792096674829505.8,
+      "end_us": 1792096674831032.8,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674829505.8,
+          "duration_us": 1201.145,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "160571"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674832317.0,
+          "duration_us": 1203.02,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "160782"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674830961.8,
+          "duration_us": 17.083,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "160576"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674830980.5,
+          "duration_us": 16.562,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "160577"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674831030.0,
+          "duration_us": 2.708,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "160581"
+        }
+      },
+      "events": [
+        {
+          "raw_event_ordinal": 481707,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674829505.8,
+            "dur": 1201.145,
+            "args": {
+              "id": "160571"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 481710,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674830709.5,
+            "dur": 89.895,
+            "args": {
+              "id": "160572"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 481713,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674830801.8,
+            "dur": 32.291,
+            "args": {
+              "id": "160573"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 481716,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674830836.5,
+            "dur": 89.479,
+            "args": {
+              "id": "160574"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 481719,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674830928.0,
+            "dur": 31.77,
+            "args": {
+              "id": "160575"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 481722,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674830961.8,
+            "dur": 17.083,
+            "args": {
+              "id": "160576"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 481725,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674830980.5,
+            "dur": 16.562,
+            "args": {
+              "id": "160577"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 481728,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {1; 2; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674831019.5,
+            "dur": 2.916,
+            "args": {
+              "id": "160578"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 481731,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::iq_embed_rows(int, void const*, unsigned long, int const*, long, long, float*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::embed_rows_kernel_284a43>[SIMD32 {10; 1; 1} {32; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674831022.8,
+            "dur": 3.333,
+            "args": {
+              "id": "160579"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 481734,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_qsa_rms_norm_weighted(float const*, float const*, float*, int, int, float, void*)::norm_127936, dpct_kernel_scalar<1024> >[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674831026.2,
+            "dur": 3.437,
+            "args": {
+              "id": "160580"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 481737,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674831030.0,
+            "dur": 2.708,
+            "args": {
+              "id": "160581"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "cycle": 11,
+      "start_us": 1792096674886161.5,
+      "end_us": 1792096674887690.0,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674886161.5,
+          "duration_us": 1204.479,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "166059"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674888969.8,
+          "duration_us": 1200.937,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "166270"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674887619.2,
+          "duration_us": 16.979,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "166064"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674887638.0,
+          "duration_us": 16.666,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "166065"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674887687.5,
+          "duration_us": 2.604,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "166069"
+        }
+      },
+      "events": [
+        {
+          "raw_event_ordinal": 498171,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674886161.5,
+            "dur": 1204.479,
+            "args": {
+              "id": "166059"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 498174,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674887368.0,
+            "dur": 89.375,
+            "args": {
+              "id": "166060"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 498177,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674887459.2,
+            "dur": 32.291,
+            "args": {
+              "id": "166061"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 498180,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674887494.0,
+            "dur": 89.479,
+            "args": {
+              "id": "166062"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 498183,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674887585.5,
+            "dur": 31.875,
+            "args": {
+              "id": "166063"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 498186,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674887619.2,
+            "dur": 16.979,
+            "args": {
+              "id": "166064"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 498189,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674887638.0,
+            "dur": 16.666,
+            "args": {
+              "id": "166065"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 498192,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {1; 2; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674887676.2,
+            "dur": 2.916,
+            "args": {
+              "id": "166066"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 498195,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::iq_embed_rows(int, void const*, unsigned long, int const*, long, long, float*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::embed_rows_kernel_284a43>[SIMD32 {10; 1; 1} {32; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674887679.2,
+            "dur": 4.27,
+            "args": {
+              "id": "166067"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 498198,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_qsa_rms_norm_weighted(float const*, float const*, float*, int, int, float, void*)::norm_127936, dpct_kernel_scalar<1024> >[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674887683.8,
+            "dur": 3.437,
+            "args": {
+              "id": "166068"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 498201,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674887687.5,
+            "dur": 2.604,
+            "args": {
+              "id": "166069"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "cycle": 12,
+      "start_us": 1792096674943453.0,
+      "end_us": 1792096674944981.8,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674943453.0,
+          "duration_us": 1203.541,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "171541"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674946263.5,
+          "duration_us": 1200.0,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "171752"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674944911.2,
+          "duration_us": 16.979,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "171546"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674944930.0,
+          "duration_us": 16.562,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "171547"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674944979.2,
+          "duration_us": 2.604,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "171551"
+        }
+      },
+      "events": [
+        {
+          "raw_event_ordinal": 514617,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674943453.0,
+            "dur": 1203.541,
+            "args": {
+              "id": "171541"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 514620,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674944658.8,
+            "dur": 90.0,
+            "args": {
+              "id": "171542"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 514623,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674944751.2,
+            "dur": 32.291,
+            "args": {
+              "id": "171543"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 514626,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674944785.5,
+            "dur": 89.479,
+            "args": {
+              "id": "171544"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 514629,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674944877.5,
+            "dur": 31.77,
+            "args": {
+              "id": "171545"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 514632,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674944911.2,
+            "dur": 16.979,
+            "args": {
+              "id": "171546"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 514635,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674944930.0,
+            "dur": 16.562,
+            "args": {
+              "id": "171547"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 514638,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {1; 2; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674944968.2,
+            "dur": 3.02,
+            "args": {
+              "id": "171548"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 514641,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::iq_embed_rows(int, void const*, unsigned long, int const*, long, long, float*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::embed_rows_kernel_284a43>[SIMD32 {10; 1; 1} {32; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674944971.5,
+            "dur": 4.062,
+            "args": {
+              "id": "171549"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 514644,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_qsa_rms_norm_weighted(float const*, float const*, float*, int, int, float, void*)::norm_127936, dpct_kernel_scalar<1024> >[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674944975.8,
+            "dur": 3.437,
+            "args": {
+              "id": "171550"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 514647,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096674944979.2,
+            "dur": 2.604,
+            "args": {
+              "id": "171551"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "cycle": 13,
+      "start_us": 1792096675000666.2,
+      "end_us": 1792096675002199.5,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096675000666.2,
+          "duration_us": 1206.458,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "177023"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096675003477.8,
+          "duration_us": 1201.354,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "177234"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675002128.0,
+          "duration_us": 16.875,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "177028"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675002146.8,
+          "duration_us": 17.291,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "177029"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675002196.8,
+          "duration_us": 2.708,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "177033"
+        }
+      },
+      "events": [
+        {
+          "raw_event_ordinal": 531063,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675000666.2,
+            "dur": 1206.458,
+            "args": {
+              "id": "177023"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 531066,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675001875.0,
+            "dur": 89.375,
+            "args": {
+              "id": "177024"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 531069,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675001967.0,
+            "dur": 32.291,
+            "args": {
+              "id": "177025"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 531072,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675002001.5,
+            "dur": 89.687,
+            "args": {
+              "id": "177026"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 531075,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675002093.8,
+            "dur": 31.875,
+            "args": {
+              "id": "177027"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 531078,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675002128.0,
+            "dur": 16.875,
+            "args": {
+              "id": "177028"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 531081,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675002146.8,
+            "dur": 17.291,
+            "args": {
+              "id": "177029"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 531084,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {1; 2; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675002185.8,
+            "dur": 2.916,
+            "args": {
+              "id": "177030"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 531087,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::iq_embed_rows(int, void const*, unsigned long, int const*, long, long, float*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::embed_rows_kernel_284a43>[SIMD32 {10; 1; 1} {32; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675002188.8,
+            "dur": 3.958,
+            "args": {
+              "id": "177031"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 531090,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_qsa_rms_norm_weighted(float const*, float const*, float*, int, int, float, void*)::norm_127936, dpct_kernel_scalar<1024> >[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675002193.0,
+            "dur": 3.437,
+            "args": {
+              "id": "177032"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 531093,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675002196.8,
+            "dur": 2.708,
+            "args": {
+              "id": "177033"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "cycle": 14,
+      "start_us": 1792096675057386.0,
+      "end_us": 1792096675058915.5,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096675057386.0,
+          "duration_us": 1203.541,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "182511"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096675060196.5,
+          "duration_us": 1201.25,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "182722"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675058844.0,
+          "duration_us": 16.875,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "182516"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675058862.8,
+          "duration_us": 16.77,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "182517"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675058912.8,
+          "duration_us": 2.708,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "182521"
+        }
+      },
+      "events": [
+        {
+          "raw_event_ordinal": 547527,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675057386.0,
+            "dur": 1203.541,
+            "args": {
+              "id": "182511"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 547530,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675058592.2,
+            "dur": 89.166,
+            "args": {
+              "id": "182512"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 547533,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675058683.5,
+            "dur": 32.187,
+            "args": {
+              "id": "182513"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 547536,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675058718.5,
+            "dur": 89.166,
+            "args": {
+              "id": "182514"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 547539,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675058810.0,
+            "dur": 31.77,
+            "args": {
+              "id": "182515"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 547542,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675058844.0,
+            "dur": 16.875,
+            "args": {
+              "id": "182516"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 547545,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675058862.8,
+            "dur": 16.77,
+            "args": {
+              "id": "182517"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 547548,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {1; 2; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675058901.8,
+            "dur": 2.812,
+            "args": {
+              "id": "182518"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 547551,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::iq_embed_rows(int, void const*, unsigned long, int const*, long, long, float*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::embed_rows_kernel_284a43>[SIMD32 {10; 1; 1} {32; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675058905.0,
+            "dur": 3.958,
+            "args": {
+              "id": "182519"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 547554,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_qsa_rms_norm_weighted(float const*, float const*, float*, int, int, float, void*)::norm_127936, dpct_kernel_scalar<1024> >[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675058909.0,
+            "dur": 3.437,
+            "args": {
+              "id": "182520"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 547557,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675058912.8,
+            "dur": 2.708,
+            "args": {
+              "id": "182521"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "cycle": 15,
+      "start_us": 1792096675114633.0,
+      "end_us": 1792096675116161.5,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096675114633.0,
+          "duration_us": 1202.604,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "187999"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096675117442.2,
+          "duration_us": 1198.645,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "188210"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675116091.0,
+          "duration_us": 16.979,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "188004"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675116109.8,
+          "duration_us": 16.979,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "188005"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675116159.0,
+          "duration_us": 2.604,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "188009"
+        }
+      },
+      "events": [
+        {
+          "raw_event_ordinal": 563991,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675114633.0,
+            "dur": 1202.604,
+            "args": {
+              "id": "187999"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 563994,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675115837.8,
+            "dur": 90.0,
+            "args": {
+              "id": "188000"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 563997,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675115930.2,
+            "dur": 32.187,
+            "args": {
+              "id": "188001"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 564000,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675115964.5,
+            "dur": 89.791,
+            "args": {
+              "id": "188002"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 564003,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675116057.0,
+            "dur": 31.666,
+            "args": {
+              "id": "188003"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 564006,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675116091.0,
+            "dur": 16.979,
+            "args": {
+              "id": "188004"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 564009,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675116109.8,
+            "dur": 16.979,
+            "args": {
+              "id": "188005"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 564012,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {1; 2; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675116148.8,
+            "dur": 2.916,
+            "args": {
+              "id": "188006"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 564015,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::iq_embed_rows(int, void const*, unsigned long, int const*, long, long, float*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::embed_rows_kernel_284a43>[SIMD32 {10; 1; 1} {32; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675116152.0,
+            "dur": 3.333,
+            "args": {
+              "id": "188007"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 564018,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_qsa_rms_norm_weighted(float const*, float const*, float*, int, int, float, void*)::norm_127936, dpct_kernel_scalar<1024> >[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675116155.5,
+            "dur": 3.437,
+            "args": {
+              "id": "188008"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 564021,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675116159.0,
+            "dur": 2.604,
+            "args": {
+              "id": "188009"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "cycle": 16,
+      "start_us": 1792096675171795.5,
+      "end_us": 1792096675173322.0,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096675171795.5,
+          "duration_us": 1201.77,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "193481"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096675174607.5,
+          "duration_us": 1201.041,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "193692"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675173250.5,
+          "duration_us": 17.291,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "193486"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675173269.8,
+          "duration_us": 16.562,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "193487"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675173319.5,
+          "duration_us": 2.604,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "193491"
+        }
+      },
+      "events": [
+        {
+          "raw_event_ordinal": 580437,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675171795.5,
+            "dur": 1201.77,
+            "args": {
+              "id": "193481"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 580440,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675172999.8,
+            "dur": 89.27,
+            "args": {
+              "id": "193482"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 580443,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675173091.2,
+            "dur": 32.291,
+            "args": {
+              "id": "193483"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 580446,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675173125.2,
+            "dur": 89.062,
+            "args": {
+              "id": "193484"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 580449,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675173216.2,
+            "dur": 31.77,
+            "args": {
+              "id": "193485"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 580452,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675173250.5,
+            "dur": 17.291,
+            "args": {
+              "id": "193486"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 580455,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675173269.8,
+            "dur": 16.562,
+            "args": {
+              "id": "193487"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 580458,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {1; 2; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675173308.5,
+            "dur": 3.02,
+            "args": {
+              "id": "193488"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 580461,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::iq_embed_rows(int, void const*, unsigned long, int const*, long, long, float*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::embed_rows_kernel_284a43>[SIMD32 {10; 1; 1} {32; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675173311.8,
+            "dur": 3.75,
+            "args": {
+              "id": "193489"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 580464,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_qsa_rms_norm_weighted(float const*, float const*, float*, int, int, float, void*)::norm_127936, dpct_kernel_scalar<1024> >[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675173315.8,
+            "dur": 3.541,
+            "args": {
+              "id": "193490"
+            }
+          }
+        },
+        {
+          "raw_event_ordinal": 580467,
+          "crosses_left": false,
+          "crosses_right": false,
+          "event": {
+            "ph": "X",
+            "tid": 4294952351,
+            "pid": 4294952351,
+            "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+            "cat": "gpu_op",
+            "ts": 1792096675173319.5,
+            "dur": 2.604,
+            "args": {
+              "id": "193491"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "filter": "ALL complete primaryGPU events overlapping exact firstC2start->firstfollowingQ8end, including boundary crossers and unexpected names; no name filter"
+}

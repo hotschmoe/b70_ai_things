@@ -1,0 +1,89 @@
+{
+  "status": "EXACT_ASCII_COPIES",
+  "files": [
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108-postreviews-20261015/root-post-packet.txt",
+      "destination": "postreview/root-post-packet.txt",
+      "bytes": 2938,
+      "sha256": "9cc1d31575483c8b3d702b4724e63b334cfbbc07257546f1e152ccc900b0f9ed"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108-postreviews-20261015/review-prefix.txt",
+      "destination": "postreview/review-prefix.txt",
+      "bytes": 129,
+      "sha256": "f293bac973bb34e1d740987a4e57749969033ba830facdd6321693fbd5134057"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108-postreviews-20261015/review.py",
+      "destination": "postreview/review.py",
+      "bytes": 4724,
+      "sha256": "585c7022c39ae7729bfa41175fd559e4de7554586343c950f4344ce99bff4d26"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108-postreviews-20261015/root-post-decision.json",
+      "destination": "postreview/root-post-decision.json",
+      "bytes": 2569,
+      "sha256": "52827da563a03c536063ec8d4e45372a49116889a5746ea7952dd8681cfd1486"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108-postreviews-20261015/claude-opus-5-5/command.json",
+      "destination": "postreview/claude-opus-5-5/command.json",
+      "bytes": 1234,
+      "sha256": "c6789e2b874ad83791c2c4aa0dd014aee39cb35815c4c87c8d9268406521b82b"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108-postreviews-20261015/claude-opus-5-5/completion.json",
+      "destination": "postreview/claude-opus-5-5/completion.json",
+      "bytes": 5803,
+      "sha256": "f1ced6332a252a231ef50930f8b89c1e27664365bd33864d6cfef58397fd520d"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108-postreviews-20261015/claude-opus-5-5/assistant-text.txt",
+      "destination": "postreview/claude-opus-5-5/assistant-text.txt",
+      "bytes": 2363,
+      "sha256": "51e53fa177a05af57fce2c0537ee2a0eb234c47f1aadf932cebd6c4d55221b0f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108-postreviews-20261015/claude-opus-5-5/prompt.txt",
+      "destination": "postreview/claude-opus-5-5/prompt.txt",
+      "bytes": 3088,
+      "sha256": "02300dcb7d933c6ed6c12083ed7fa1f07de9b97fba3aeab53a79406eca482a1c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108-postreviews-20261015/claude-opus-5-5/stderr.log",
+      "destination": "postreview/claude-opus-5-5/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108-postreviews-20261015/claude-fable-5-1/command.json",
+      "destination": "postreview/claude-fable-5-1/command.json",
+      "bytes": 1236,
+      "sha256": "b805c9faada753a23204c27fdcbe3c86c5f19c9f7d8a36ee16d10a6b37b715d6"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108-postreviews-20261015/claude-fable-5-1/completion.json",
+      "destination": "postreview/claude-fable-5-1/completion.json",
+      "bytes": 5780,
+      "sha256": "cc5741cc4c8ec1717070f3b6e270b9cb5ecd29a96f9076a5678f8f01dae7abb9"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108-postreviews-20261015/claude-fable-5-1/assistant-text.txt",
+      "destination": "postreview/claude-fable-5-1/assistant-text.txt",
+      "bytes": 2373,
+      "sha256": "451b203fa9c0b828cf99b634dbc5c07fec8a5fa264a73c60067703e4a697cf68"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108-postreviews-20261015/claude-fable-5-1/prompt.txt",
+      "destination": "postreview/claude-fable-5-1/prompt.txt",
+      "bytes": 3088,
+      "sha256": "02300dcb7d933c6ed6c12083ed7fa1f07de9b97fba3aeab53a79406eca482a1c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108-postreviews-20261015/claude-fable-5-1/stderr.log",
+      "destination": "postreview/claude-fable-5-1/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

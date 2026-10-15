@@ -1,0 +1,40 @@
+{
+  "status": "SOURCE_ONLY_NO_EXECUTION",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp",
+      "bytes": 119274,
+      "sha256": "13500a3af44f30793617d51aff6639344d2d943a50b53bdfe3c60ba81081967f"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/core/mtp.hpp",
+      "bytes": 23233,
+      "sha256": "1d418cc592056373f68b7343bd3d1ac958e5452cb812007497881234cad9fd9f"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp",
+      "bytes": 867808,
+      "sha256": "6433d750e414aeb9c71135257ae40a8f9e38ea661537c251b50cabdbc2217d83"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp",
+      "bytes": 119038,
+      "sha256": "5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/sampler.dp.cpp",
+      "bytes": 90476,
+      "sha256": "b227dbe8ded71292b6373c886204174c6b04d3212e1872ca00bff646053feb1a"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/ordered-timeline.csv",
+      "bytes": 43690,
+      "sha256": "39b06447b1a753415ca5e59d1ec94fc80f95ff21c87bbd3eeeefc76e609043d0"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/note.md",
+      "bytes": 3152,
+      "sha256": "e3e0f8a2a8cc943f9c35cc868bf570a57dc57a450837be79c46dc3faf9b93018"
+    }
+  ]
+}

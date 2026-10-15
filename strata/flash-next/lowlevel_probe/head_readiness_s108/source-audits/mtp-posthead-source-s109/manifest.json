@@ -1,0 +1,13 @@
+{
+  "status": "FROZEN_SOURCE_CONTRACT_ONLY",
+  "files": {
+    "contract.txt": {
+      "bytes": 6150,
+      "sha256": "edfc511199b94c6111e3f864f5640ccd09495a3bd1aeda9c43873789c681cd19"
+    },
+    "pins.json": {
+      "bytes": 1595,
+      "sha256": "3be107136635579357ae25074f25bcb10df90854ead8ec9a3c06becba490ed6a"
+    }
+  }
+}

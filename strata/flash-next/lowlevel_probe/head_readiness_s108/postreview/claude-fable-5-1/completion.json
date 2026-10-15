@@ -1,0 +1,120 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 16.286643585946877,
+  "launch_exception": null,
+  "source_packet_sha256": "9cc1d31575483c8b3d702b4724e63b334cfbbc07257546f1e152ccc900b0f9ed",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 990361,
+      "stop_reason": "end_turn",
+      "session_id": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "total_cost_usd": 9.65974,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 4371,
+        "cache_read_input_tokens": 291694,
+        "output_tokens": 759,
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 4371,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 759,
+            "cache_read_input_tokens": 291694,
+            "cache_creation_input_tokens": 4371,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 4371
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 34,
+          "outputTokens": 62264,
+          "thinkingTokens": 43318,
+          "cacheReadInputTokens": 2551520,
+          "cacheCreationInputTokens": 295416,
+          "webSearchRequests": 0,
+          "costUSD": 9.65974,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Accept the bounded interpretation.** The extraction is complete over its own window, the ordinal chain matches the source, and the earlier \"255 us gap\" is now shown to be mostly measured post-head service plus the two selectors. That corrects S95's coverage omission and removes a phantom idle.\n\n**Overclaim corrections to keep**\n\n- The 12 intervals are one structural motif from one process, not independent trials. Medians of sums and spans are not additive and should not be summed into a post-head budget.\n- Owner and buffer bindings are source ordinal, not logged. The chain is consistent with the source, not proven per event.\n- The head service of about 1.2 ms is the dominant item in this window. The post-head work at about 0.24 ms plus 0.03 ms is an order of magnitude smaller. Even a complete elimination would not move a 54 to 56 per stream rate toward 150.\n\n**Source decision**\n\nAgree with a source audit rather than another trace, but narrow it to the question the evidence actually selects. The sampler and row-top-probability pairs are the only post-head operations with meaningful service. The audit should answer one thing: under the fixed serving policy, greedy with min-p zero and confidence choice as configured, does any consumer read the probability outputs? Enumerate every reader of the probability buffers, the mapped probability records, the draft policy, acceptance accounting and any logging or diagnostic path. If any reader exists in the fixed configuration, the answer is \"no skip\" and the audit closes. If none exists, the candidate is a default-OFF gate that leaves the probability kernels unlaunched, with the greedy pick unchanged, and it must preserve the mapped output layout and the selector's inputs byte for byte.\n\nDo not pursue an FP-order-preserving post-head rewrite in the same step. It is a second mechanism with its own proof burden and the measured service does not justify it.\n\n**Higher-value question**\n\nThe head itself. The two-column Q5_K vocabulary head is 1.2 ms per depth, twice per pair. A source audit of whether both depths need the full 248320-row head under greedy draft selection, or whether the registered head is reachable with a narrower column set, would address a budget five times larger. That is a source question, not a profile question, and it stays separate from the Q6 A4 serving test now in flight.",
+      "ttft_ms": 15087,
+      "type": "result",
+      "duration_ms": 15133,
+      "uuid": "287fd4fc-2c7b-47e3-943a-ef5c13ef8330",
+      "ttft_stream_ms": 2152,
+      "time_to_request_ms": 92,
+      "first_content_frame_ms": 2152,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

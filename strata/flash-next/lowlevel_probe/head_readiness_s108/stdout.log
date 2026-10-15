@@ -1,0 +1,2 @@
+S108 one raw read/hash/parse begins
+{"status": "PASS_SOURCE_CONSISTENT_ORDINAL_CHAIN_ALL12", "bounded_events": 132, "elapsed_s": 5.211254903988447, "raw_read_count": 1}

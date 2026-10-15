@@ -1,0 +1,31 @@
+# S108 post-head readiness extraction
+
+**Verdict: accept the bounded interpretation.** The roughly 255 \xb5s from head end to first select is mostly occupied by measured post-head kernels: four sampler/probability operations with a 243 \xb5s service sum, then a 2 \xb5s gap before the first select. It is not mostly empty time.
+
+## Overclaims to correct
+
+- **Arithmetic.** "243 of 255 \xb5s" compares a median of sums with a median of spans. They are not additive, so "mostly service" is a qualitative reading, not a decomposition.
+- **Owner labels.** "Owner A, owner B" are source-ordinal labels; argument bindings were not logged.
+- **Generality.** The 12 motif-selected cycles from one instrumented process are not trials, and they say nothing about arbitrary windows or about the profiler-free runtime.
+- **Unreconciled C6 heads.** The two extra C6 heads remain a source/count reconciliation. Do not resolve them into steady-state heads.
+
+## The source question the evidence selects
+
+**Is the shared C2 head the dominant chain cost, and is the full-vocabulary requirement self-imposed?**
+
+The head service is about 1.2 ms per depth, about five times the post-head chain. As a static calculation, not a traffic measurement: Q5_K 248,320 rows \xd7 2,560 inputs is about 437 MB of weights per call.
+
+`MtpPair::init` rejects pairing unless `dhead_ == nullptr`: "the first probe shares the full head only (STRATA_MTP_FULL_HEAD=1 or no draft_vocab.bin)". Audit, from source only:
+
+1. Does the default solo `draft()` path use the `draft_vocab.bin` subset head (`dhead_`) when it is present?
+2. Does the current production configuration load it? If so, the paired path may run the full 248k-row head where solo would use the subset.
+3. Is there any exactness or state reason a two-column *subset* head cannot be shared?
+   - The verifier stays exact either way.
+   - Draft proposals and native work would change, so this is a policy change requiring matched acceptance and work gates, not byte parity.
+
+**Recommended order:**
+
+- **Now:** run the head-subset audit above, source only.
+- **Next:** if the audit shows the full head is required, then audit whether the probability work can be skipped under greedy decoding with min-p 0. The ceiling on that saving is the 0.24 ms post-head service.
+
+**Constraint:** keep the S107 Q6 A4 serving test separate and unchanged.

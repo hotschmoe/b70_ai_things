@@ -1,0 +1,571 @@
+{
+  "status": "TWELVE_EXACT_RETAINED_ANCHOR_INTERVALS",
+  "primary_pid": 4294952351,
+  "intervals": [
+    {
+      "cycle": 5,
+      "start_us": 1792096674544763.8,
+      "end_us": 1792096674546290.5,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674544763.8,
+          "duration_us": 1201.875,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "133131"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674547571.8,
+          "duration_us": 1201.562,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "133342"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674546220.0,
+          "duration_us": 16.875,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "133136"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674546239.0,
+          "duration_us": 16.875,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "133137"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674546288.0,
+          "duration_us": 2.604,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "133141"
+        }
+      }
+    },
+    {
+      "cycle": 6,
+      "start_us": 1792096674601391.2,
+      "end_us": 1792096674602917.0,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674601391.2,
+          "duration_us": 1200.416,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "138619"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674604189.8,
+          "duration_us": 1199.062,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "138830"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674602846.2,
+          "duration_us": 16.875,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "138624"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674602865.2,
+          "duration_us": 16.77,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "138625"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674602914.5,
+          "duration_us": 2.604,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "138629"
+        }
+      }
+    },
+    {
+      "cycle": 7,
+      "start_us": 1792096674658463.0,
+      "end_us": 1792096674659987.8,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674658463.0,
+          "duration_us": 1197.916,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "144107"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674661262.2,
+          "duration_us": 1199.687,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "144318"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674659916.5,
+          "duration_us": 17.083,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "144112"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674659936.2,
+          "duration_us": 16.77,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "144113"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674659985.2,
+          "duration_us": 2.604,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "144117"
+        }
+      }
+    },
+    {
+      "cycle": 8,
+      "start_us": 1792096674715755.2,
+      "end_us": 1792096674717283.0,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674715755.2,
+          "duration_us": 1201.875,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "149595"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674718560.2,
+          "duration_us": 1200.729,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "149806"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674717212.8,
+          "duration_us": 17.083,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "149600"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674717231.5,
+          "duration_us": 16.458,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "149601"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674717280.5,
+          "duration_us": 2.604,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "149605"
+        }
+      }
+    },
+    {
+      "cycle": 9,
+      "start_us": 1792096674772753.2,
+      "end_us": 1792096674774282.8,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674772753.2,
+          "duration_us": 1204.062,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "155083"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674775564.0,
+          "duration_us": 1200.937,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "155294"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674774211.5,
+          "duration_us": 16.875,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "155088"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674774230.2,
+          "duration_us": 16.875,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "155089"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674774280.0,
+          "duration_us": 2.708,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "155093"
+        }
+      }
+    },
+    {
+      "cycle": 10,
+      "start_us": 1792096674829505.8,
+      "end_us": 1792096674831032.8,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674829505.8,
+          "duration_us": 1201.145,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "160571"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674832317.0,
+          "duration_us": 1203.02,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "160782"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674830961.8,
+          "duration_us": 17.083,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "160576"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674830980.5,
+          "duration_us": 16.562,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "160577"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674831030.0,
+          "duration_us": 2.708,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "160581"
+        }
+      }
+    },
+    {
+      "cycle": 11,
+      "start_us": 1792096674886161.5,
+      "end_us": 1792096674887690.0,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674886161.5,
+          "duration_us": 1204.479,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "166059"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674888969.8,
+          "duration_us": 1200.937,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "166270"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674887619.2,
+          "duration_us": 16.979,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "166064"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674887638.0,
+          "duration_us": 16.666,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "166065"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674887687.5,
+          "duration_us": 2.604,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "166069"
+        }
+      }
+    },
+    {
+      "cycle": 12,
+      "start_us": 1792096674943453.0,
+      "end_us": 1792096674944981.8,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674943453.0,
+          "duration_us": 1203.541,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "171541"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096674946263.5,
+          "duration_us": 1200.0,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "171752"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674944911.2,
+          "duration_us": 16.979,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "171546"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674944930.0,
+          "duration_us": 16.562,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "171547"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096674944979.2,
+          "duration_us": 2.604,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "171551"
+        }
+      }
+    },
+    {
+      "cycle": 13,
+      "start_us": 1792096675000666.2,
+      "end_us": 1792096675002199.5,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096675000666.2,
+          "duration_us": 1206.458,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "177023"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096675003477.8,
+          "duration_us": 1201.354,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "177234"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675002128.0,
+          "duration_us": 16.875,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "177028"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675002146.8,
+          "duration_us": 17.291,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "177029"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675002196.8,
+          "duration_us": 2.708,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "177033"
+        }
+      }
+    },
+    {
+      "cycle": 14,
+      "start_us": 1792096675057386.0,
+      "end_us": 1792096675058915.5,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096675057386.0,
+          "duration_us": 1203.541,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "182511"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096675060196.5,
+          "duration_us": 1201.25,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "182722"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675058844.0,
+          "duration_us": 16.875,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "182516"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675058862.8,
+          "duration_us": 16.77,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "182517"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675058912.8,
+          "duration_us": 2.708,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "182521"
+        }
+      }
+    },
+    {
+      "cycle": 15,
+      "start_us": 1792096675114633.0,
+      "end_us": 1792096675116161.5,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096675114633.0,
+          "duration_us": 1202.604,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "187999"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096675117442.2,
+          "duration_us": 1198.645,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "188210"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675116091.0,
+          "duration_us": 16.979,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "188004"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675116109.8,
+          "duration_us": 16.979,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "188005"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675116159.0,
+          "duration_us": 2.604,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "188009"
+        }
+      }
+    },
+    {
+      "cycle": 16,
+      "start_us": 1792096675171795.5,
+      "end_us": 1792096675173322.0,
+      "anchors": {
+        "first_C2": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096675171795.5,
+          "duration_us": 1201.77,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "193481"
+        },
+        "second_C2_context": {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "trace_ts_us": 1792096675174607.5,
+          "duration_us": 1201.041,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "193692"
+        },
+        "select0": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675173250.5,
+          "duration_us": 17.291,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "193486"
+        },
+        "select1": {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675173269.8,
+          "duration_us": 16.562,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "193487"
+        },
+        "first_following_Q8": {
+          "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+          "trace_ts_us": 1792096675173319.5,
+          "duration_us": 2.604,
+          "pid": 4294952351,
+          "tid": 4294952351,
+          "id": "193491"
+        }
+      }
+    }
+  ],
+  "clock_scope": "Same primary GPU raw trace timestamps only; no shifts/native/peer join"
+}

@@ -1,0 +1,21 @@
+Review frozen S108 historical operation-coverage result. <=300words verdict/limits/one source decision, no tools/tests/newtrace.
+
+ROOT FROZEN PACKET:
+S108 bounded historical readiness extraction, actual terminal0. Respond<=300words: accept/hold boundedinterpretation, one next SOURCE audit, concrete overclaim corrections. No tools/GPU/build/newtrace/repeat/campaign requested. S107 narrowQ6A4 source reviewedGO byyou, rootappliedoneTUandactualincrementalbuildlive; do notcombineflags orreorderitsservingtest.
+
+One CPUleased pass reread/hash/parsed exact retainedS95 trace269853744B SHA1139c4c8cc9a4b0737a6c57e67a8b717151ec4276714fa355fb48e3cd9ab3583, same S95primaryGPU0:b0:0 processmetadata. Actual6.76swall/maxRSS1502896KiB, ONErawread/hash/parse, noGPU/newtrace. Previouslyretainedsmallcycles/head/select/Q8anchors omitted posthead+embedding work. Reviewedcycles5..16 selectedstructural2C2+1C6motif, NOT12independent trials. NewextractkeepsALLcompleteprimaryGPUevents overlapping each firstC2start->firstfollowingQ8end (includingcrossers/unknowns), anchors exactid/name/pid/tid/ts/dur. All12intervals exactly11events/132total, nounknown/crosser. Tracehash+allsmallpayloads+allpercyclearith/medians independentlyrootcheckedwithoutnewrawread.
+
+Source-consistent ordinal chain: sharedC2vocabhead ->ownerAsampler_greedy ->row_top_prob_split ->ownerBsampler_greedy ->row_top_prob_split ->two mtp_select ->mappedstep/poscopy ->tokenembedding ->weightedRMS ->Q8. Owner/bufferargumentbindingsnotindependentlylogged, labels sourceordinal; cannotgeneralize arbitrarywindows. RegisteredC2head WideQ5K has248320outputrows, exactinputN notencodedinlaunchgrid. WholeprofileextraC6source/countreconciliationretained, no phantomextrasteadyheads.
+
+Historical instrumented medians(us), SAMEprimaryGPU clockonly:
+headservice1202.2395;
+headend->firstselectstart254.625;
+4sampler/probopsserviceSUM243.175;
+lastprobend->firstselectstart2.125;
+2selectorsserviceSUM33.6975;
+secondselectend->mappedcopystart21.875 / embeddingstart25.125;
+headend->firstQ8end325.625;
+copy/embed/RMS/Q8serviceSUM12.6025.
+Mediansofsum/spans notalgebraicallyadditive; timestampfloatprecision inherited. Coverage gaps are NOT physicalidle/data-starvation/removabletime/CPUcausality. No crosscard/nativeclockjoin, no S106timing/speed orqueue-fed-aheadclaim. Profiler changesruntime; no wholemodel savings/Amdahl estimate.
+
+Rootinterpretation: apparent~255usgap mostlymeasuredpostheadservice, notempty. KeepQ6maintrialseparate; sourceauditpostheadratherthananotherGPUprofile/repeatedgraphserve. Independentagentnowauditsallprob/dprob/selection/policy/stateconsumers: undergreedy ANDconfidence/minp0, isprobworkactuallyunnecessary? Ifanyconsumerneedsit, no skip. AlternativelyseekONEFP-order-preserving postheadkernelopportunity; no online-softmax reassociation/universalbitproof. No patchauthorizedbythispacket. CurrentC2~54-56/stream versus150target;0.243mslocalservice isnot a breakthroughbudget. Agreewithsourceaudit, orwhatconcretehigher-value SOURCEquestiondoesevidenceselect? Avoidgenericbroaderprofiling/mandatorynewcanaries.

@@ -1,0 +1,158 @@
+{
+  "status": "SOURCE_COPIES_EXACT_ASCII_VERIFIED",
+  "files": [
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/anchors.json",
+      "destination": "anchors.json",
+      "bytes": 29177,
+      "sha256": "c4038d60e120d8647b43b4f91d4d7c2d4ce0c55d5ed0e8f4bb7a17ea082bfc27",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/bounded-intervals.json",
+      "destination": "bounded-intervals.json",
+      "bytes": 115001,
+      "sha256": "277630b70d44a24bcf3ef7ab166f0a9fe19e6ec7f8ccbe339c8fc220849071e3",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/command.json",
+      "destination": "command.json",
+      "bytes": 351,
+      "sha256": "d1249b04b5b8e34691d55209f141704a552bf988fe62622deb89c455de609c22",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/end.txt",
+      "destination": "end.txt",
+      "bytes": 21,
+      "sha256": "9d90ff9a5b4f025dc3cf09cd70e8013d273a385fdfb9134224aea19d5f33ba4f",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/execution.json",
+      "destination": "execution.json",
+      "bytes": 633,
+      "sha256": "ae23839b87dcf9c3cc3c1430246a7353fa786a131c53dfc7a49fab4caea8fd7b",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/exit.txt",
+      "destination": "exit.txt",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/extract.py",
+      "destination": "extract.py",
+      "bytes": 9208,
+      "sha256": "ef22338c0f0ca30a7a76b939149cdaa17c03c330ef16b7843bb2fe6839e879e8",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/findings.json",
+      "destination": "findings.json",
+      "bytes": 13937,
+      "sha256": "8a101370dc8a2ba650f82ceb4670b9d97c9594c8c75c446ad2936447f64e2990",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/metadata.json",
+      "destination": "metadata.json",
+      "bytes": 1553,
+      "sha256": "18daa002dd2b7c56629f3881c15d93d798f8f70fe2ec4d06dd82df787effedc6",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/note.md",
+      "destination": "note.md",
+      "bytes": 3152,
+      "sha256": "e3e0f8a2a8cc943f9c35cc868bf570a57dc57a450837be79c46dc3faf9b93018",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/ordered-timeline.csv",
+      "destination": "ordered-timeline.csv",
+      "bytes": 43690,
+      "sha256": "39b06447b1a753415ca5e59d1ec94fc80f95ff21c87bbd3eeeefc76e609043d0",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/run.sh",
+      "destination": "run.sh",
+      "bytes": 542,
+      "sha256": "68863e7c94cd7ff105166861ad24637aa1589e0fd85543a7661a528d87ab2164",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/source-pins.json",
+      "destination": "source-pins.json",
+      "bytes": 3134,
+      "sha256": "53e2075f497d0e31dd3f1a5c31988d65f454f172be52a69157afa292b8ece524",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/start.txt",
+      "destination": "start.txt",
+      "bytes": 21,
+      "sha256": "cc0a4ad23d0457aa11fa8e81669f237ec954471531cb13b267e05b94ccda50e4",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/stderr.log",
+      "destination": "stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/stdout.log",
+      "destination": "stdout.log",
+      "bytes": 169,
+      "sha256": "d37c6c46700d9ef63d61f34dd15646d7be28cd099ff5fc98d87282bfa8fff179",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/time.txt",
+      "destination": "time.txt",
+      "bytes": 61,
+      "sha256": "0d46f75c5e55c6a30d8940e70a96864e03dab7e2b589f9bb660f0ae55e3faa6c",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/index.json",
+      "destination": "index.json",
+      "bytes": 3126,
+      "sha256": "a864d53c5372fd4b1080357cc545cb590d3e41d596cfc38c0cdca7ebd92b65f0",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/head-readiness-s108/root-verification.json",
+      "destination": "root-verification.json",
+      "bytes": 541,
+      "sha256": "907094107f1b1992d21549c0df67404d21f110f0f9d71af5916b89490fa1a8a0",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s106-next-vocab-coverage-audit/note.md",
+      "destination": "coverage/note.md",
+      "bytes": 3663,
+      "sha256": "8cadd49b9652fad1451f34742f9dc447b425107261d67c3cc4a23cfb16e5c82a",
+      "exact_ascii": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s106-next-vocab-coverage-audit/pins.json",
+      "destination": "coverage/pins.json",
+      "bytes": 1962,
+      "sha256": "60341490c5b892a771caacee7ee52daa5ce0790b4fb834e1f2243ea96bd8213e",
+      "exact_ascii": true
+    }
+  ],
+  "copied_files": 21,
+  "copied_payload_bytes": 229944,
+  "raw_trace_copied_read_or_hashed": false,
+  "models_invoked": false,
+  "GPU_build_or_execution": false,
+  "scope": "Historical S95 primaryGPU sameclock/source ordinal coverage. Trace timestamp float precision retained. No owner/buffer, idle, causality, S106 speed, or attainable saving proof."
+}

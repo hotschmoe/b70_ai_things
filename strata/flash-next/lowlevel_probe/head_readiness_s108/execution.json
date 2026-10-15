@@ -1,0 +1,18 @@
+{
+  "status": "TERMINAL_EXTRACTION_COMPLETE",
+  "raw_read_count": 1,
+  "raw_JSON_parse_count": 1,
+  "raw_sha256_count_same_in_memory_bytes": 1,
+  "raw_trace_bytes": 269853744,
+  "raw_trace_sha256": "1139c4c8cc9a4b0737a6c57e67a8b717151ec4276714fa355fb48e3cd9ab3583",
+  "read_s": 0.48225946800084785,
+  "hash_s": 0.13471520197344944,
+  "JSON_parse_s": 3.435082710988354,
+  "bounded_scan_s": 0.998578813043423,
+  "script_total_s": 5.211145915964153,
+  "raw_events": 1663171,
+  "primary_complete_gpu_events": 173582,
+  "bounded_events": 132,
+  "role_status": "PASS_SOURCE_CONSISTENT_ORDINAL_CHAIN_ALL12",
+  "no_GPU_or_new_trace": true
+}

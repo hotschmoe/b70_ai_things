@@ -1,0 +1,17 @@
+**Accept the bounded interpretation.** The extraction is complete over its own window, the ordinal chain matches the source, and the earlier "255 us gap" is now shown to be mostly measured post-head service plus the two selectors. That corrects S95's coverage omission and removes a phantom idle.
+
+**Overclaim corrections to keep**
+
+- The 12 intervals are one structural motif from one process, not independent trials. Medians of sums and spans are not additive and should not be summed into a post-head budget.
+- Owner and buffer bindings are source ordinal, not logged. The chain is consistent with the source, not proven per event.
+- The head service of about 1.2 ms is the dominant item in this window. The post-head work at about 0.24 ms plus 0.03 ms is an order of magnitude smaller. Even a complete elimination would not move a 54 to 56 per stream rate toward 150.
+
+**Source decision**
+
+Agree with a source audit rather than another trace, but narrow it to the question the evidence actually selects. The sampler and row-top-probability pairs are the only post-head operations with meaningful service. The audit should answer one thing: under the fixed serving policy, greedy with min-p zero and confidence choice as configured, does any consumer read the probability outputs? Enumerate every reader of the probability buffers, the mapped probability records, the draft policy, acceptance accounting and any logging or diagnostic path. If any reader exists in the fixed configuration, the answer is "no skip" and the audit closes. If none exists, the candidate is a default-OFF gate that leaves the probability kernels unlaunched, with the greedy pick unchanged, and it must preserve the mapped output layout and the selector's inputs byte for byte.
+
+Do not pursue an FP-order-preserving post-head rewrite in the same step. It is a second mechanism with its own proof burden and the measured service does not justify it.
+
+**Higher-value question**
+
+The head itself. The two-column Q5_K vocabulary head is 1.2 ms per depth, twice per pair. A source audit of whether both depths need the full 248320-row head under greedy draft selection, or whether the registered head is reachable with a narrower column set, would address a budget five times larger. That is a source question, not a profile question, and it stays separate from the Q6 A4 serving test now in flight.

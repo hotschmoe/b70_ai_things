@@ -1,0 +1,94 @@
+S109 paired MTP post-head probability source contract, 2026-10-15
+
+CONFIG -> Source-only inspection during the unrelated S107 build. No patch,
+GPU, model consultation, build, trace parse or serving run. Inputs and full
+source hashes are in pins.json; S108 bounded CSV only, never raw trace.
+
+COMMAND -> Read record_post_head, MtpPair init/eligible/capture/draft, all
+h_prob_/m_prob_ reads/writes, chain_prob callers, solo dprob callers, batch
+acceptance/counters, and the actual sampler/top-probability/select kernels.
+
+RESULT -> A narrow pair-only omission is source-justified as a candidate.
+record_post_head (mtp.cpp1138..1154) chooses a GREEDY argmax (SamplerParams
+sp.greedy=true; sp.temperature=0) and then UNCONDITIONALLY computes the
+chosen-token probability via row_top_prob_split/row_top_prob. Pair tail at
+2144..2161 calls this once per slot; whole-pair tail at2214..2226 duplicates
+the same sequence. Both selectors currently publish probs_ to m_prob_.
+
+Actual S108 first-C2-head shapes (same 12 reviewed historical intervals):
+head SIMD32 grid{62080;1;1} WG{32;4;1}; each sampler SIMD32
+grid{1;1;1} WG{1024;1;1}; each top-probability SIMD32 grid{8;1;1}
+WG{128;1;1}; each select SIMD32 grid{1;1;1} WG{256;1;1}.
+These are recorded kernel-name dimensions; argument n_vocab/buffer owners
+were not independently logged. Head then sampler/prob/sampler/prob/select/
+select is source-consistent, not an arbitrary-window classifier.
+
+Why probability has no consumer for the current paired BATCH call:
+- mtp.hpp Args (313..325) promises drafts + n_drafts only; its comment says
+  min_p always0, no returned probabilities. There is no probability pointer.
+- generate.cpp9400..9525 emits target picks, uses exact prefix batch_keep,
+  increments drafts_offered by glen-1 and drafts_accepted by keep-1, calls
+  pair->draft or solo draft(...,nullptr,0.0f,&nd), then clamps nd to depth.
+  No dprob, suffix policy, confidence cutoff or probabilistic acceptance is
+  read in this batch path. Source slot admission/coherence guards remain due.
+- Pair::draft (2246..2380) polls h_out_ for PLE token prefetch and reads
+  draft IDs/counts after queue completion. It NEVER reads h_prob_. It
+  increments rounds and elapsed ms, neither dependent on probability value.
+- mtp_select_kernel966..998 copies residual rows, writes next token, then
+  optionally probability, system fence, and publishes mapped token:
+  if (probs != nullptr && out_p != nullptr) out_p[j] = probs[row];
+  Passing BOTH optional probability arguments null avoids stale probs_
+  reads while retaining residual/token writes, barrier, fence and ready ID.
+
+Eligibility for a proposed defaultOFF PAIR-ONLY fast path:
+Retain every existing MtpPair::init/eligible guard (2015..2085): same device,
+geometry/head/window/vocab, full Q5_K head type13, multi-exact MMVQ layout,
+valid Args ownership/T/a/token/output, equal positive step counts, no subset
+head, forcing, live pipeline chain, rebound source residual, TOP2 diagnostic,
+or coupled_active_/coupled_rec_. Only the known batch Args contract with no
+probability consumer qualifies. Start with current depth2; near-context-end
+and unequal-step fallback keep original behavior. Greedy here is guaranteed
+by the paired recorder/eligibility, not merely a client temperature claim.
+
+The omission must apply consistently to BOTH capture_tail and whole-pair
+capture, with mode immutable for the object's captured graph lifetime or
+explicitly included in the graph-cache key. Do NOT toggle an unkeyed cached
+record per request. Keep ordinary solo/chain/coupled captures unchanged.
+A later solo fallback must record/replay its original probability-producing
+graph before any probability use; pair mode cannot globally disable a shared
+record_post_head. Private probs_/h_prob_ scratch values may differ/remain
+stale in the omitted mode; they are not bitwise-state-equivalence targets.
+No reader is exposed by pair Args, and normal future probability-producing
+captures overwrite their needed rows. Never fabricate probability=1 or
+reuse stale probability in any consumer. Keep counters and PLE order exact.
+
+All identified probability consumers/blockers outside this scope:
+1. Solo draft1543..1746: positive min_p reads pj and loops while pj>=min_p;
+   even min_p<=0 copies h_prob_ whenever caller probs pointer is nonnull.
+2. generate.cpp11773..11804 and12989..13017: positive spec_min_p compares
+   dprob>=threshold; optional lookup-chain multiplies dprob even if min_p0
+   to price a chain. Disabling only confidence is insufficient generically.
+3. chain_outputs_ready/chain_poll1912/1954 unconditionally copy h_prob_ into
+   public chain_prob(). Pipeline caller11500..11540 thresholds/confidence
+   t_rule and stores per-step probabilities, with spec_min_p checks.
+4. Coupled sampling record_rest1123..1129 computes token/prob together via
+   coupled_draft_sample; this path is excluded by pair eligibility. TOP2,
+   forcing, subset mapping and arbitrary stochastic requests stay original.
+No other SYCL h_prob_/m_prob_ consumers were found; allocation/free are not
+semantic readers. Cache KV serialization does not expose these private
+probability buffers. This is source reasoning, not a numerical/ABI proof.
+
+VERDICT -> Prepare one narrowly gated pair-only skip of the TWO probability
+kernels per head depth; retain BOTH greedy argmax kernels and selectors.
+This omits dead semantic work without reassociating any required FP math.
+Argmax comparisons/ties/NaN handling remain the original sampler; no new
+online softmax, exponent approximation or reduction order is proposed.
+Keeping the default route source/math intact remains an implementation
+requirement. No patch or executable was produced by this audit.
+
+S108 reports four sampler/prob ops sum243.175us, NOT four removable ops.
+The two probability ops alone sum a descriptive median64.009000us
+across12 nested historical intervals. Their omission is not demonstrated
+wall gain, a critical-path budget, or an S106/S107 timing result. Preserve
+matched output/native-work/capture/health gates in any later bounded test;
+source consultation and actual executable audit must precede GPU work.
