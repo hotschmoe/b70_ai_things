@@ -1,0 +1,34 @@
+gpu-run: [b70s4dayz] acquired card(s) 0 1 -> docker run --rm -i --name strata-s106api-mode0 --cidfile /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode0/attempt.cid --network host --cap-add SYS_PTRACE --memory 90g --device /dev/dri --ulimit memlock=-1 -v /mnt/vm_8tb/b70/build/strata-ab:/mnt/vm_8tb/b70/build/strata-ab -v /mnt/vm_8tb/b70/results:/mnt/vm_8tb/b70/results -v /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode0/config.json:/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode0/config.json:ro -v /mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-s:/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-s:ro -v /mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-xxs:/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-xxs:ro -v /mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco:/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco:ro -e ONEAPI_DEVICE_SELECTOR=level_zero:* -e SYCL_CACHE_PERSISTENT=0 -e ZES_ENABLE_SYSMAN=1 -e STRATA_VERIFY_DEVICE_PLAN=1 -e STRATA_VERIFY_NO_HOST=1 -e STRATA_MIRROR_MIB=0 -e STRATA_STAGE_TRIM=1 -e STRATA_KV_WIDE_HOST=0 -e STRATA_STAGER_THREADS=12 --entrypoint bash sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2 -lc source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; cd "$3"; exec "$1/venv/bin/python" sycl/serve/server_intel.py --engine strata --config "$2" --host 127.0.0.1 --port 18085 bash /mnt/vm_8tb/b70/build/strata-ab /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode0/config.json /mnt/vm_8tb/b70/build/strata-ab/src-ep
+loading the model (the first start takes a minute or two) ...
+[strata] GPUs [0, 1]: the cards compute each layer's experts together (--expert-parallel-device)
+[strata] starting the engine: reading the model's weights ...
+[strata] streaming the experts from the model files into the GPU's memory (and a pinned RAM mirror for what does not fit); the first start takes a few minutes ...
+[strata] filling the GPU's expert cache (7152 experts, 11.63 GiB of VRAM) ...
+[strata] still starting (29 s) - please wait ...
+[strata] almost ready ...
+[strata] model aliases: qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata
+ready: http://127.0.0.1:18085/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/messages, context 200000 tokens)
+       open http://127.0.0.1:18085/ in a browser to chat; close this window to stop the model
+[strata] reading the prompt: 106 of 107 tokens, 1 s so far
+[strata] reading the prompt: 100 of 107 tokens, 2 s so far
+[strata] answering: 5 of max 256 tokens, 3.2 tok/s, 3 s
+[strata] answering: 35 of max 256 tokens, 40.9 tok/s, 3 s
+[strata] answering: 65 of max 256 tokens, 24.8 tok/s, 4 s
+[strata] answering: 93 of max 256 tokens, 49.5 tok/s, 4 s
+[strata] answering: 126 of max 256 tokens, 34.5 tok/s, 5 s
+[strata] answering: 151 of max 256 tokens, 51.9 tok/s, 5 s
+[strata] answering: 179 of max 256 tokens, 38.3 tok/s, 6 s
+[strata] answering: 209 of max 256 tokens, 53.2 tok/s, 6 s
+[strata] answering: 243 of max 256 tokens, 42.8 tok/s, 7 s
+[strata] done: 256 tokens in 7 s (43.7 tok/s) (length, cancel=False)
+[strata] done: 256 tokens in 7 s (55.2 tok/s) (length, cancel=False)
+[strata] answering: 2 of max 64 tokens, 74.2 tok/s, 1 s
+[strata] reading the prompt: 100 of 107 tokens, 2 s so far
+[strata] answering: 5 of max 64 tokens, 2.7 tok/s, 3 s
+[strata] answering: 30 of max 64 tokens, 34.2 tok/s, 3 s
+[strata] done: 64 tokens in 4 s (22.7 tok/s) (length, cancel=False)
+[strata] done: 64 tokens in 4 s (45.3 tok/s) (length, cancel=False)
+
+[strata] stopping (Ctrl+C again to end the engine at once) ...
+[strata] stopped
+gpu-run: [b70s4dayz] done in 140s (exit 0)
