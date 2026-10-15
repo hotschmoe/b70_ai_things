@@ -1416,3 +1416,74 @@ expert weights; do not infer non-bandwidth-bound execution from row scaling.
 Keep hash checks for traced requests. Opus found per-instance drafter
 queues; shared mutable scratch under borrowed loads is the remaining source
 gate before an asynchronous submit/finish prototype. No overlap gain measured.
+
+
+## S22: production-path trace and rejected async drafting (2026-10-15)
+
+CONFIG: S21 frozen db53efb2 for production-path control tracing. New frozen
+strata-async-s22 SHA256
+487eb67ac661a921fa0212b330c392222aa72bfa61f86e42e6eb3a0bbaf4c8b0
+adds opt-in STRATA_BATCH_MTP_ASYNC: unset0 unchanged,2 own-queue residual
+copy only,1 submit all slot drafts then finish all. Same spec4/depth2,
+two200000 slots,32GiB4,all24576 experts, EP/PUSH,greedy. CUDA untouched.
+Private per-drafter scratch/host buffers/queues checked; only immutable
+weights/head shared. SYCL create_queue's bool enables exception handling;
+in-order comes from its implementation, not that bool (USM_LEVEL_NONE
+absent). Own-queue copies follow completed verifier/commit and all drafters
+finish before the next overwrite. Partial-submit errors drain without
+reading incomplete outputs; finalization fixes early pending-state issue.
+
+COMMAND: actual Opus5.5 source candidate, actual Fable5.1 independent
+review; one CPU-only incremental AOT136.132s. No duplicate build tree or
+unchanged CPU acceptance tests. Frozen same-binary0/2/1 one paired coding
+window each (107in/1500out). All source agents/builds idle during clean
+benchmarks. Hardware unitrace control/async each one107in/64out pair,
+collection enabled before batch capture, explicit stop/flush and arithmetic
+canary before normal shutdown. Internal STRATA_VERIFY_PROFILE stays OFF:
+it would disable shared-stream forks. CPU source preparation allowed only
+during diagnostic traces, not clean timings. Per-card/ten compiled
+collective post-health PASS; no crashes/resets; all servers stopped.
+
+RESULT: all two response hashes per mode match the same S16 repeat0 pair
+(six comparisons total; not six distinct prompts). Mode0/2/1 aggregate
+99.462/99.422/99.357 tok/s. Native561windows/5.34rows each; total49.12/
+49.16/49.16ms, run40.54/40.60/40.61,commit1.56each,emit7.02/6.99/6.99.
+Neutral screens; no repeat triples or long/cancel/functional/full-cache
+qualification for this rejected candidate. Four traced output prefixes
+match the reference; post-stop canaries pass.
+
+Both valid traces contain24 batch windows, about303-305MB each. Cold
+capture inflates the control average to129.97ms/window, so exclude it.
+Eight interior cycles (full-vocabulary six-row target-head completion to
+next completion) give control/async medians59.174/58.988ms. Source-calibrated
+trace-to-client shift uses BOOTTIME minus MONOTONIC_RAW; raw clocks retained.
+Each8-cycle census has384 EP waits on EACH card (48/cycle),32 one-row draft
+heads (4/cycle),8 six-row target heads. Draft heads total/union both about
+3.981ms/cycle in both modes; no overlap above0.001ms timestamp tolerance.
+That is a finding about these profiled executions, not a hardware-wide
+claim that concurrency is impossible. Clean benchmark remains authoritative.
+
+Control per-cycle service examples: full draft heads3.981ms, target head
+2.259; hyper-connection GR up3.561/down2.397; QSA attention2.501; primary
+EP wait3.043/peer wait27.207, peer send1.399ms. Eight-cycle device busy unions
+are386.331ms primary/295.405peer over473.075ms wall; divide by8 for a cycle.
+Do not sum overlapping device times or interpret the peer's waits as
+transfer bytes. Entry counts validate replay coverage; whole-request trace
+prefill/dequant/snapshot copies are excluded from these interior cycles.
+Full operation median/p95/counts, raw SSE/TTFT/gaps/completion/reuse timings,
+and payload names are retained. Physical PCIe bytes are not inferred from
+launch grids or cache ownership fractions.
+
+VERDICT: reject the async/copy modes; no observable serving benefit. Remove
+ONLY S22 source delta; exact pre-S22 diff hash restored (frozen binaries and
+patch retained). No qualified daily-server restoration. Keep S21 depth2
+experimental and S20 RAM recovery evidence. Skip more async-depth knobs or
+repeat matrices without a new mechanism. Fable prepares a bounded GR
+root-sync-property candidate; Opus prepares the successful cache fix for
+upstream review. No2s latency work. Agent first15turn cap left usefulcode;
+focused4turn finalize and8turn independent review completed.
+
+Raw: cachefix_20261014/draft-profile-s22/{s22-report.json,profile*,mode*,
+build,source-restored.json,async-*,root-review-decisions.json}.
+Rejected source evidence: strata/flash-next/patches/
+rejected-batch-mtp-async-s22.patch. Do not activate without new evidence.

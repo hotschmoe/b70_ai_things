@@ -171,3 +171,11 @@ no extra repeats. Context-end guards prevent invalid proposed rows. This
 is a bounded SYCL greedy test, not depth2 full-cache or shelf qualification.
 bench_concurrency.py --start-repeat N extends a promising screen with
 fresh prompt IDs. Next profile main verifier and serial drafting costs.
+
+
+S22 rejects STRATA_BATCH_MTP_ASYNC copy-only/submit-finish prototypes:
+same-binary99.462/99.422/99.357 aggregate tok/s, both hashes each match,
+emit7.02/6.99/6.99ms. Two hardware traces show no draft-head overlap in
+8 interior cycles; this is not a hardware-wide concurrency claim. Only
+rejected patch evidence retained; runtime source returned exactly to S21.
+Do not repeat without a new mechanism. GPU teardown/collectives pass.

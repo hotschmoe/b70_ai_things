@@ -1,0 +1,243 @@
+--- a/sycl/include/strata/core/mtp.hpp
++++ b/sycl/include/strata/core/mtp.hpp
+@@ -25,6 +25,7 @@
+ #include "strata/core/session.hpp"
+ #include "strata/kernels/sampler.hpp"
+ 
++#include <chrono>
+ #include <cstdint>
+ #include <algorithm>
+ #include <string>
+@@ -104,6 +105,14 @@
+     /// The first round: one cell (`cell`) from `R_row` (device) and `token` -> T-1 drafts.
+     bool draft_first(int T, const float* R_row, int32_t token, int64_t cell, int32_t* drafts, std::string& err,
+                      float* probs = nullptr, float min_p = 0.0f, int* n_drafts = nullptr);
++    /// --batch-mtp STRATA_BATCH_MTP_ASYNC=1 (experimental, SYCL): draft() in two halves, so several slot drafters'
++    /// rounds run on their own queues at once.  draft_submit stages and launches the round and its steps exactly as
++    /// draft()'s greedy branch (min_p 0; refused with coupled draft sampling) and returns; draft_finish waits for
++    /// them, reads the drafts and does what draft() does after its launch (PLE prefetch, zero fill, n_drafts).
++    /// Between the two nothing else may use this drafter.  draft() itself is unchanged.
++    bool draft_submit(int T, const int32_t* tokens, int64_t p, int a, std::string& err);
++    bool draft_finish(int32_t* drafts, std::string& err, int* n_drafts = nullptr);
++    bool draft_pending() const { return pending_; }
+ 
+     /// COUPLED DRAFT SAMPLING (core/coupled_draft.hpp; STRATA_SPEC_COUPLED=1, set up by bind()): the request's
+     /// sampling.  A sampled request (temperature > 0, not greedy) then drafts by SAMPLING with the target's chain and
+@@ -221,6 +230,12 @@
+     // --pipeline-windows 2 (chain_launch)
+     bool stage_source_R(int T, std::string& err);   ///< set_source_R's rows into the bound buffer
+     bool force_on_ = false, chain_live_ = false;
++    // draft_submit / draft_finish: a launched round not yet read back, its step count and the token its PLE prefetch
++    // starts from, and when it was staged (ms_draft)
++    bool pending_ = false;
++    int pend_steps_ = 0;
++    int32_t pend_tok_ = 0;
++    std::chrono::steady_clock::time_point pend_t0_{};
+     const float* src_R_ = nullptr;
+     int32_t *h_force_ = nullptr, *m_force_ = nullptr;   ///< the forced tokens (mapped), -1 = the step's own pick
+     dpct::event_ptr ev_chain_ = nullptr;
+--- a/sycl/src/core/mtp.cpp
++++ b/sycl/src/core/mtp.cpp
+@@ -1729,6 +1729,116 @@
+     return true;
+ }
+ 
++// STRATA_BATCH_MTP_ASYNC=1: draft()'s greedy branch (min_p <= 0, not coupled) split at its launch, so the caller can
++// launch every slot drafter's round on its own queue before it reads any back.  Same T, graphs, max_cells bound,
++// staging and launches as draft(); draft_finish then does the spin, the queue wait, the PLE prefetch order, the zero
++// fill and n_drafts of that branch.
++bool MtpDrafter::draft_submit(int T, const int32_t* tokens, int64_t p, int a, std::string& err) {
++    const OnDevice on_device(device_);
++    if (pending_) { err = "mtp: a submitted draft is still pending"; return false; }
++    if (T < 1 || T > max_t_ || a < 0 || a >= T) { err = "mtp: draft arguments out of range"; return false; }
++    if (chain_live_) { err = "mtp: a pipelined chain is still in flight"; return false; }
++    if (coupled_active_) { err = "mtp: draft_submit is greedy only (coupled draft sampling is on)"; return false; }
++    if (!mtp_catchup_all()) T = a + 1;
++    if (!capture_round(T, false, err)) return false;
++    const int max_steps = (int) std::min<int64_t>(std::min(max_t_ - 1, max_drafts_), st_.max_cells - (p + a));
++    for (int j = 1; j < max_steps; ++j)
++        if (!capture_step(j, false, err)) return false;
++    pend_t0_ = Clock::now();
++    const int64_t NH = g_->n_head;
++    auto put = [&](int row, int64_t cell) {
++        h_step_[row * 4 + 0] = (int32_t) cell;
++        h_step_[row * 4 + 1] = (int32_t) (cell + 1);
++        h_step_[row * 4 + 2] = (int32_t) ((cell + 1) / 4);
++        h_step_[row * 4 + 3] = (int32_t) (cell + 1);
++        for (int64_t h = 0; h < NH; ++h) h_pos_[row * NH + h] = (int32_t) cell;
++    };
++    for (int t = 0; t < T; ++t) {
++        h_tok_[t] = tokens[t];
++        put(t, p + t);
++    }
++    put(2 * max_t_ - 1, coupled_draft_cell(p, a, 0));
++    for (int j = 1; j < max_steps; ++j)
++        put(max_t_ + j - 1, coupled_draft_cell(p, a, j));
++    for (int j = 0; j < max_steps; ++j) ((volatile int32_t*) h_out_)[j] = -1;
++    h_row_[0] = a;
++    h_row_[1] = 0;
++    if (h_force_ != nullptr) for (int j = 0; j < 16; ++j) h_force_[j] = -1;
++    std::atomic_thread_fence(std::memory_order_seq_cst);
++    pending_ = false;   // published only once every launch is queued
++    pend_steps_ = 0;
++    pend_tok_ = tokens[a];
++    if (!stage_source_R(T, err)) return false;
++    if (max_steps > 0) {
++        // a failed launch never leaves a half-submitted round pending: drain what was queued and report the error,
++        // so no caller reads results of a round that was not fully launched
++        bool ok = DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*round_exec_[T])) == 0;
++        if (!ok) err = "mtp draft (submit): round launch failed";
++        for (int j = 1; ok && j < max_steps; ++j)
++            if (DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*step_exec_[j])) != 0) {
++                err = "mtp draft (submit): step launch failed";
++                ok = false;
++            }
++        if (!ok) {
++            (void)DPCT_CHECK_ERROR(cs_->wait());
++            return false;
++        }
++        (void)DPCT_CHECK_ERROR(((cs_)->ext_oneapi_empty()));
++    }
++    pend_steps_ = max_steps;
++    pending_ = true;
++    return true;
++}
++
++bool MtpDrafter::draft_finish(int32_t* drafts, std::string& err, int* n_drafts) {
++    const OnDevice on_device(device_);
++    if (!pending_) { err = "mtp: no submitted draft to finish"; return false; }
++    pending_ = false;
++    const int max_steps = pend_steps_;
++    SessionState* const pss = ple_ss_ ? ple_ss_ : ss_;
++    const bool do_ple = pss != nullptr && pss->ple.ready() && pss->ple.table != nullptr;
++    int32_t ple_prev[2] = {do_ple ? pss->ple_prev[0] : 0, do_ple ? pss->ple_prev[1] : 0};
++    auto prefetch_ple = [&](int32_t tok) {
++        if (!do_ple || tok < 0) return;
++        uint32_t rows16[strata::kernels::PLE_N_HEADS];
++        strata::kernels::ngram_rows(&tok, ple_prev, 1, pss->ple.consts, rows16);
++        ple_prev[0] = ple_prev[1];
++        ple_prev[1] = tok;
++        pss->ple.table->prefetch_rows(rows16);
++    };
++    int n = 0;
++    if (max_steps > 0) {
++        prefetch_ple(pend_tok_);
++        for (int j = 0; j + 1 < max_steps; ++j) {
++            uint32_t spins = 0;
++            while (((volatile int32_t*) h_out_)[j] < 0) {
++#if defined(_WIN32) || defined(__x86_64__)
++                _mm_pause();
++#endif
++                if ((++spins & 1023u) == 0 && ((cs_)->ext_oneapi_empty() ? 0 : 1) != 1) break;
++            }
++            drafts[j] = ((volatile int32_t*) h_out_)[j];
++            prefetch_ple(drafts[j]);
++        }
++        if (DPCT_CHECK_ERROR(cs_->wait()) != 0) {
++            err = "mtp draft (finish): the drafter's queue failed";
++            return false;
++        }
++        const int last = max_steps - 1;
++        drafts[last] = ((volatile int32_t*) h_out_)[last];
++        prefetch_ple(drafts[last]);
++        n = max_steps;
++    } else if (DPCT_CHECK_ERROR(cs_->wait()) != 0) {   // no round (the ring's end): still drain a queued residual copy
++        err = "mtp draft (finish): the drafter's queue failed";
++        return false;
++    }
++    for (int j = n; j < max_t_ - 1; ++j) drafts[j] = 0;
++    if (n_drafts) *n_drafts = n;
++    ms_draft += ms_since(pend_t0_);
++    ++rounds;
++    return true;
++}
++
+ bool MtpDrafter::stage_source_R(int T, std::string &err) try {
+     if (src_R_ == nullptr || src_R_ == window_R_) return true;
+     /*
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -3992,6 +3992,18 @@
+     if (batch_mtp && batch_depth > 1)
+         std::fprintf(stderr, "strata generate: --batch-mtp: up to %d proposals per slot per window "
+                              "(STRATA_BATCH_MTP_DEPTH, experimental)\n", batch_depth);
++    // STRATA_BATCH_MTP_ASYNC (experimental, opt-in, --batch-mtp only): 1 = each slot's residual copy goes on its
++    // drafter's own queue, every slot's draft round is launched before any is read back (draft_submit), and all are
++    // read back (draft_finish) before the window ends; 2 = only the own-queue copy, drafts as before.  Unset/0: as before.
++    const int batch_mtp_async = [] {
++        const char* e = std::getenv("STRATA_BATCH_MTP_ASYNC");
++        const int v = e != nullptr ? std::atoi(e) : 0;
++        return v == 1 || v == 2 ? v : 0;
++    }();
++    if (batch_mtp && batch_mtp_async != 0)
++        std::fprintf(stderr, "strata generate: --batch-mtp: %s (STRATA_BATCH_MTP_ASYNC=%d, experimental)\n",
++                     batch_mtp_async == 1 ? "slot drafts launched together, read back together"
++                                          : "slot residual copies on the drafters' own queues", batch_mtp_async);
+     if (batch_mtp) {
+         const char* why = o.batch < 2 ? "it needs --batch 2 or more" : o.mtp.empty() ? "it needs --mtp"
+                         : o.spec < 2 ? "it needs --spec T (T >= 2)" : (multi_gpu || split_same || !stages.empty())
+@@ -9128,6 +9140,37 @@
+                         std::printf("ERR batch MTP slot %d: a group of %d rows exceeds the drafter's window\n", b, G);
+                         return false;
+                     }
++                    if (batch_mtp_async != 0) {
++                        // STRATA_BATCH_MTP_ASYNC: the copy on the drafter's own in-order queue, no host wait (its round
++                        // runs after it on that queue); mode 1 only launches the round here, read back below
++                        auto& d = *slot_mtp[(size_t) b];
++                        bool ok = DPCT_CHECK_ERROR(d.stream()->memcpy(slot_mtp_rows[(size_t) b].get(),
++                                                                      ver.final_R_all() + (size_t) first[t] * stride,
++                                                                      (size_t) G * stride * sizeof(float))) == 0;
++                        if (ok && batch_mtp_async == 1) {
++                            ok = d.draft_submit(G, outb + first[t], pos[first[t]], keep[b] - 1, err);
++                        } else if (ok) {
++                            ok = d.draft(G, outb + first[t], pos[first[t]], keep[b] - 1, sl.draft.data(), err, nullptr,
++                                         0.0f, &nd) &&
++                                 (nd > 0 || DPCT_CHECK_ERROR(d.stream()->wait()) == 0);   // no round: drain the copy
++                        } else {
++                            err = "the residual copy failed";
++                        }
++                        if (!ok) {
++                            std::printf("ERR batch MTP slot %d: %s\n", b, err.c_str());
++                            for (auto& o2 : slot_mtp) {   // nothing of a launched round may outlive this window
++                                std::string ignore;
++                                int32_t sink[strata::kernels::kVerifyMaxT] = {};
++                                if (o2->draft_pending()) (void) o2->draft_finish(sink, ignore);
++                                else (void) o2->stream()->wait();
++                            }
++                            return false;
++                        }
++                        if (batch_mtp_async == 1) {   // draft_ready again once it is read back, below
++                            sl.draft_ready = false;
++                            continue;
++                        }
++                    } else
+                     if (DPCT_CHECK_ERROR(dpct::get_in_order_queue().memcpy(
+                             slot_mtp_rows[(size_t)b].get(),
+                             ver.final_R_all() + (size_t)first[t] * stride,
+@@ -9142,6 +9185,26 @@
+                     sl.draft_ready = true;
+                 }
+             }
++            if (batch_mtp_async == 1) {
++                // every slot launched above is read back before the window ends: the next window packs their drafts,
++                // and its verify overwrites the residual rows they were copied from.  A failure still drains the rest.
++                bool failed = false;
++                for (int t = 0; t < A; ++t) {
++                    const int b = active[t];
++                    BSlot& sl = bs[(size_t) b];
++                    if (!slot_mtp[(size_t) b]->draft_pending()) continue;
++                    int nd = 0;
++                    std::string e2;
++                    if (!slot_mtp[(size_t) b]->draft_finish(sl.draft.data(), e2, &nd)) {
++                        if (!failed) std::printf("ERR batch MTP slot %d: %s\n", b, e2.c_str());
++                        failed = true;
++                        continue;
++                    }
++                    sl.n_draft = nd < 0 ? 0 : nd > batch_depth ? batch_depth : nd;
++                    sl.draft_ready = true;
++                }
++                if (failed) return false;
++            }
+             std::fflush(stdout);
+             bt_emit += msd(w2, Clock::now());
+             strata::core::progress().busy.store(was_busy);

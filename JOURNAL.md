@@ -22652,3 +22652,29 @@ rejectedknobs. --start-repeat extends screens withfreshpromptIDs.
 Details: stagedoc S21; raw cachefix_20261014/batch-depth-s21/s21-report.json,
 actualagentnotes/rootresolutions underagents/fable-depth/. Patch tracked
 strata/flash-next/patches/batch-mtp-depth.patch; onlySYCLexecuted.
+
+
+## 2026-10-15 -- Flash-Next optimization S22: profile and reject async drafting
+
+CONFIG: S21db53efb2 traced, frozennew487eb67ac661a921fa0212b330c392222aa72bfa61f86e42e6eb3a0bbaf4c8b0
+same200k2/spec4/depth2/32GiB4/24576experts/EP-PUSH/greedy. ASYNC0default,
+2ownqueuecopy,1submitall/finishall; SYCLonly. ActualOpusimplementation,
+Fablereview, rootpartialfailurefixfollowup; CPU-onlyAOT136.132s.
+COMMAND: onepairedcoding107/1500 per0/2/1, no CPUagents/builds in timings;
+control/async unitrace107/64 pairs, internalprofileOFF, capturecollectionON,
+explicitstopflush/canary, normalstops; percard+10compiledcollectivehealth.
+RESULT: tworeferencehashesPERmode matchS16repeat0,aggregate99.462/99.422/
+99.357. Emit7.02/6.99/6.99ms,total49.12/49.16/49.16ms: neutral. Eachtrace
+24windows/prefixparitypass; coldcaptureinflates129.97ms average. Eight
+interior6rowcycles median59.174/58.988ms,48EPwaits/card/cycle,4draftheads/
+cycle,3.981ms headservice/nooverlapabove0.001msrounding. No hardware-wide
+serialization claim. Operationmedians/p95/census retained; physicalPCIe
+bytes not inferred. AllposthealthPASS, nocrash/reset, serversstopped.
+VERDICT: rejectS22source, exactpre-S22diffrestored; retainnegativepatch,
+frozenbinary/raws. Skiptriples/long/cancel/functional/fullRAM for loser,
+no dailyrestore. S21depth2/S20RAM remainboundedwinningevidence. No2s gate.
+FableGRroot-sync candidate and Opuscacheupstreamprep run in isolatedtrees
+whilediagnostictracing/analysis, not during cleanbenchmarks. Source reviews
+corrected stale pendingcleanup and create_queue boolinterpretation. No
+unchangedCPUsuite/freshAOTtree duplication. Upstream296/PRs unchanged at
+stage start. Details: stagedocS22/rawdraft-profile-s22/s22-report.json.
