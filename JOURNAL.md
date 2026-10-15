@@ -23849,3 +23849,75 @@ latency cause proof or new GPU run. S65 runtime/timing separate. Root read
 full findings/curated doc. Exact helpers retained; historical170 operations/
 rollups unchanged. Frozen50 files/479829 bytes, manifest
 6f5f63136e6cdbbbe662af8fda74e04d9b29f38d6e0ca3a13f999d5c8ea97de7.
+
+
+## 2026-10-15 -- Flash-Next optimization S69: HC fusion dependencies
+
+CONFIG -> Current N2560/HC4/LR320 and HC common, T1/2/6; historical S31 pools.
+COMMAND -> Native agent strata_ep_s27 source/dependency/ownership audit,
+root full read and actual down/reduce/launch checks. No GPU/build/model data.
+RESULT -> Norm/down/reduce/UP have whole-stream/all-slice dependencies;
+a local barrier cannot replace them. Exact reduce-in-UP is possible but
+current160-group geometry repeats320*80*T main-row sums160-fold. These
+are source counts, not traffic or speed. Existing final-residual fold covers
+a small separate pool, with unproven strict FMA/signed-zero equivalence.
+VERDICT -> HOLD bulk fusion and tiny final-residual-only GPU arm. Different
+summation is not invalid math but needs independent accuracy policy; don't
+repeat V3/GRF/LO_ONCE/QFUSE. Dated triage doc/source evidence retained.
+Frozen manifest eee30bc9b83fe00aea7ce174956e2b0525fb9d5aff69ea3ef53c512af5333e12.
+
+
+## 2026-10-15 -- Flash-Next optimization S70: independent projection source sketch
+
+CONFIG -> Current main48-layer weights, S31 C6 shape/format census.
+COMMAND -> Native agent ple_upstream source plus GGUF-directory metadata-only
+join; no tensor payload/GPU/build/test. Root read full findings and checked
+GDN/shared-expert actual call sites and Q8 lifetime.
+RESULT -> Shared GU48pairs:17same/31mixed formats; GDN36pairs:9same/27mixed.
+Q8 already shared and current pair hook supports onlyQ8_0, not actual main
+pairs. Separate row-grid dispatch can preserve format-specific arithmetic/
+strides without allocation/new queue/requant; no shared weight decode.
+GDN early combined launch delays conv consumer; occupancy/benefit unmeasured.
+VERDICT -> Park implementation until HC screen. Concrete source eligibility,
+not performance prediction; preserve MTP Q4/async/QFUSE/XMX prior boundaries.
+Dated triage doc. Frozen manifest
+9bc50b979d5c457ed847911e60920e4af519327f3f50d3df243622a3f05259f5.
+
+
+## 2026-10-15 -- Flash-Next optimization S72: distinct existing HC grouping path
+
+CONFIG -> Current HC common/defaultGRF0, existing MORE_GROUPS switch.
+COMMAND -> Native agent strata_ep_s27 inspect actual S15 matrix/reports,
+S24/S39 controls and six embedded S39 MORE AOT metadata records. Root read
+full findings and actual current launch/templates. No compile/GPU/payload.
+RESULT -> S15 UP8-only slowed1.1393877 median ratio; combined MORE not tested
+in inspected B70 evidence. S39 explicitlyMORE0. Combined path changes down
+80->480groups, eight-load ascending reduce, UP160->320groups/cols8; current
+LO_ONCE in both. Same per-row FP order is source hypothesis, not runtime proof.
+More staging/local work and compiler resources need measurement. Old S39
+binary assertsMORE0 and predates HC common, so cannot serve as current probe.
+VERDICT -> GO one bounded current-code graph preparation S73, not a broad
+knob sweep/server toggle. Supported additional HC/support object prelink is
+needed beyond S60 common. Exact-source/root/actual-model review before build.
+Dated triage doc/map preserves170 historical rows/rollups. Frozen manifest
+898eb5d5bc6e21b85fad9217c5f7ec9378ea1c85b93dee524143f9bc9f6272ff.
+
+
+## 2026-10-15 -- Flash-Next optimization S71: canonical-Q8 INT8 matrix source feasibility
+
+CONFIG -> IQ3_S C6/current Split21, two S65 shapes; pinned local compiler headers.
+COMMAND -> Native agent mtp_q4_share source/algebra/header audit only. Root read
+full findings and actual Split21. No compile/GPU/weight payload/model review.
+RESULT -> Signed grid codes fitINT8; odd scales apply per32, align canonicalQ8.
+Keep scale inINT32: folded code up to465 does not fitINT8. Scaled canonical
+integer sum <=1889760; noINT32 overflow/exactFP32 integer conversion. Proposed
+8-token/16-output/K32 tile pads twoC6 rows (25% cells). Generic matrix headers
+are not B70 compiled/runtime capability proof. Naive sequential FP32 epilogue
+changes native32-lane partial/XOR order; choose preservation/storage or an
+independent predeclared accuracy contract. Old bench skipsC6 stores and is
+not a ready oracle. Q6/per16 and FP16-XMX prior paths remain separate.
+VERDICT -> Source feasibility GO; implementation/GPU held pending HC work.
+Prepare separately numbered tiny S74 compile-only capability source, no speed/
+roofline/serving claim. Root read all findings; dated triage doc retains pins.
+Frozen4 files/60268 bytes, external manifest
+47584226a77b04280712d0fa0131193be1beb6f7ccb58c1e26e02f36aa42a811.

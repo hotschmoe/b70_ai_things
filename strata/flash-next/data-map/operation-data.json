@@ -1,7 +1,7 @@
 {
  "schema": 1,
  "title": "Strata Flash-Next data map",
- "snapshot": "2026-10-15 S43: S22 reference ops, S30 RAM, S31 replay, S32 CPU boundaries, S33 quantum, S34 dispatch, S35 alias gate, S38 serving, S39 HC resource probe, S41 Q6 strict gate/selected CPU reference, S42 grouped GU strict gate, S43 full first-C6 CPU accuracy, S44 four-shape CPU bounds/warm C6 rejection, S47 CPU PLE matching/readiness, S48 HC predicate/inconclusive warm timing",
+ "snapshot": "2026-10-15: historical S22 operation rows; current trace/capture/CPU evidence and strict primitive results through S65; source mechanism triage through S72. Later evidence does not rewrite historical service rollups.",
  "scope": "Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two Arc Pro B70 cards, Strata SYCL engine, EP/PUSH, batch MTP depth2 (opt-in), two 200000-token slots, INT8 KV, 32 GiB / 4-entry RAM parking, all 24576 experts resident (7152 on GPU0 + 17424 on GPU1), greedy.",
  "warnings": [
   "Trace service times overlap: within a card (engines), across cards, and with CPU wall time. They are NOT additive and are not a latency budget.",
@@ -47,7 +47,17 @@
    "../../../docs/20261015_strata_q6_cpu_reference.md (S43 independent full first-C6 CPU reference; no GPU rerun or production qualification)",
    "../../../docs/20261015_strata_q6_collection_and_warm_probe.md (S44 four-shape independent arithmetic coverage and warmed C6 rejection)",
    "../../../docs/20261015_strata_ple_prefetch_readiness.md (S47 actual CPU reader path counts and source-only missing batch prefetch wiring)",
-   "../../../docs/20261015_strata_hc_lo_once_probe.md (S48 duplicate-store predicate strict pass, declared timing screen fails)"
+   "../../../docs/20261015_strata_hc_lo_once_probe.md (S48 duplicate-store predicate strict pass, declared timing screen fails)",
+   "../../../docs/20261015_strata_iq4xs_rpw_probe.md",
+   "../../../docs/20261015_strata_aot_prelink_reuse.md",
+   "../../../docs/20261015_strata_fusion_triage.md",
+   "../../../docs/20261015_strata_grouped_gu_cpu_reference.md",
+   "../../../docs/20261015_strata_dense_and_peer_followups.md",
+   "../../../docs/20261015_strata_iq3s_existing_isa.md",
+   "../../../docs/20261015_strata_iq3s_dense_swar_probe.md",
+   "../../../docs/20261015_strata_clean_c2_protocol.md",
+   "../../../docs/20261015_strata_iq3s_swar_built_isa.md",
+   "../../../docs/20261015_strata_decode_mechanism_triage.md"
   ],
   "results_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
   "prototype_binary": "S26 CPU-only strata-head-pair-s26 SHA256264f221e2c1b02d4bdd9b332c46f91e91bf4f6301afbdabe563df5ff2a16e44a; not GPU served; default pair option OFF.",
@@ -114,6 +124,16 @@
    "report": "docs/20261015_strata_iq3s_swar_built_isa.md",
    "raw": "iq3s-swar-built-isa-s68-prep/s68-report.json",
    "scope": "Static code only:16128->12352B/32->0 byte predicates;48DP4A/three reconstruction d32 unchanged; public image unchanged. No occupancy/traffic/latency cause proof."
+  },
+  "decode_triage_s69_s70_s72": {
+   "report": "docs/20261015_strata_decode_mechanism_triage.md",
+   "raw": "hc-launch-fusion-next-s69-prep/; dense-independent-projections-s70-prep/; hc-more-groups-next-s72-prep/",
+   "scope": "Source-only: HOLD bulk HC fusion; concrete independent projection row-grid sketch parked; untested combined HC MORE grouping merits one bounded current-code graph preparation. No new GPU latency or serving claim."
+  },
+  "int8_xmx_source_s71": {
+   "report": "docs/20261015_strata_decode_mechanism_triage.md",
+   "raw": "int8-xmx-dense-next-s71-prep/; int8-xmx-dense-next-s71-manifest.json",
+   "scope": "IQ3_S per32 odd scales align canonicalQ8; signedINT8 K32 dot/INT32 scale feasible algebra. B70 compilation/runtime and full FP32 reduction contract unproved. Compile-only source preparation, no GPU or speed claim."
   }
  },
  "geometry": {
@@ -933,7 +953,8 @@
    "gaps": [
     "Which of the 109 calls/cycle belong to drafter versus target passes is not separated.",
     "S50 resolvesboundedgraphsignal andcapturedbranchbinding; full-modelbenefit/othergeometry/physicaltraffic remainunmeasured. PLEservingexperiment separate; no fullcontextrepeat.",
-    "S51 adds a bounded traced serving observation; clean benefit/stability and exact HC GPU attribution remain unqualified. No extra HC rerun for current retain decision."
+    "S51 adds a bounded traced serving observation; clean benefit/stability and exact HC GPU attribution remain unqualified. No extra HC rerun for current retain decision.",
+    "S69 global norm/down/reduce/UP dependencies block a simple fusion; exact reduce-in-UP duplicates substantial work. S72 distinguishes existing combined MORE_GROUPS from rejected UP8-only/GRF knobs and prepares one current-HC graph discriminator. Source only, not occupancy or speed evidence."
    ],
    "hypotheses": [
     {
@@ -1154,7 +1175,8 @@
     "S44 covers four shapes/six Cs/changed-input own graphs under source bounds; remaining main matrices/model quality/streaming cache regime unqualified. No warm C1/C2/C3/C4/C8 timing. Main-owner integration remains source-only/rejected for this work item.",
     "S56 supplies compiled Q6 resource metadata only; no new actual-weight RPW2 bitwise execution, per-image dispatch observation, measured occupancy or bandwidth. Main Q4/IQ4_XS/Q5 pools remain distinct future source leads.",
     "S59 covers one IQ4_XS C6 shape with synthetic inputs and new prelinked AOT images. No productionactivation/logit, other-shape or serving gain; retain RPW1. Independent DOT metadata is not a GPU dispatch trace.",
-    "S65 strict IQ3_S C6 SWAR oracle PASS but mixed projection latency: gate -2.515percent, ssm_out +1.275percent across eight balanced nested pairs each. One process, real weights/seeded activations; no serving/global integration. S68 confirms smaller static code and removed byte predicates, not latency causality."
+    "S65 strict IQ3_S C6 SWAR oracle PASS but mixed projection latency: gate -2.515percent, ssm_out +1.275percent across eight balanced nested pairs each. One process, real weights/seeded activations; no serving/global integration. S68 confirms smaller static code and removed byte predicates, not latency causality.",
+    "S70 same-input Q8 already shared. Main sharedGU17same/31mixed-format pairs; GDN9same/27mixed. A union row-grid dispatch could preserve each branch/output stride but shifts consumer timing and compiler resources; implementation parked until HC screen. No quantizer or weight-decode reuse claim."
    ],
    "hypotheses": [
     {

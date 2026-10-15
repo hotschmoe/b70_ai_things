@@ -287,3 +287,11 @@ not a timing cause. [S68](../../docs/20261015_strata_iq3s_swar_built_isa.md).
 S67 audits cheaper existing native admission for the next meaningful candidate,
 with explicit capture/layout observability limits and no new baseline run.
 [S67](../../docs/20261015_strata_clean_c2_protocol.md).
+
+
+S69/S70/S71/S72 source triage holds broad HC fusion, records independent
+projection row-grid eligibility and canonical-Q8 INT8 matrix algebra, and
+selects the existing combined HC MORE grouping path for one bounded graph
+preparation. Earlier UP8-only/GRF tests did not test that combined path.
+No new GPU result, main-source change or serving claim from these audits.
+[Reasoning and frozen evidence](../../docs/20261015_strata_decode_mechanism_triage.md).
