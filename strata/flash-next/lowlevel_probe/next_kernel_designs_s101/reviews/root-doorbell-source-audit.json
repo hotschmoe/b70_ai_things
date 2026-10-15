@@ -1,0 +1,22 @@
+{
+  "status": "PARTIAL_SOURCE_VISIBILITY_AUDIT_NOT_FUSION_QUALIFICATION",
+  "helper_sha256": "82b325b3a5ac199f96d73996cb51376851c7f8cd6fc85803b6960040442d5534",
+  "build_ninja_sha256": "89cb173d8c8699943e1f4cb84c7dee2ddc0aba3178eef713198b64748108340b",
+  "compile_overrides_present": {
+    "STRATA_DOORBELL_ATOMIC_LOAD": false,
+    "STRATA_DOORBELL_ATOMIC_STORE": false,
+    "STRATA_SYCL_SPIN_MAX": false
+  },
+  "facts": [
+    "Default sys_load performs system acquire fence then annotated L1/L3 uncached uint32 read; not system atomic default.",
+    "Default sys_store uses annotated L1/L3 uncached write followed by system release fence.",
+    "ep_wait has its own post-loop system acquire fence; preserve both helper and caller semantics when fusing.",
+    "Default B70 xe spin bound20000 unless runtimeoverride; bounded signed epoch comparison and error behavior unchanged."
+  ],
+  "remaining": [
+    "Inspect actual compile/source include macro scope and actual compiled cache descriptors if selecting fusion.",
+    "Full WG128 acquire->allthreaduncachedcopy->global/localbarrier->plan ownership proof.",
+    "Actual crosscard IPC freshness test before serving; no causal readiness proof from wholeCSV medians."
+  ],
+  "no_build_GPU_or_patch": true
+}

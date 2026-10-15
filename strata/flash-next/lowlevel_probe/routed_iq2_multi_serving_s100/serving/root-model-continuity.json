@@ -1,0 +1,33 @@
+{
+  "utc": "2026-10-15T21:51:18.336806+00:00",
+  "status": "PASS_MODEL_STAT_AND_BOOT_CONTINUITY_NOT_NEW_PAYLOAD_HASH",
+  "retained_closure": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-nvme-placement-s53/closure.json",
+  "retained_closure_sha256": "74fbecdb8f0c740ed902996950f91d7dbd6022e111006cbbfdefc4f3166f3d33",
+  "checks": {
+    "primary": {
+      "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+      "resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+      "stat": {
+        "dev": 44,
+        "ino": 1156777,
+        "size": 47039860096,
+        "mtime_ns": 1792062519977528586
+      },
+      "continuity_with_retained_hash_closure": true
+    },
+    "sibling": {
+      "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+      "resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+      "stat": {
+        "dev": 44,
+        "ino": 1068321,
+        "size": 28800138432,
+        "mtime_ns": 1791869062502802041
+      },
+      "continuity_with_retained_hash_closure": true
+    }
+  },
+  "boot_id": "b785982c-4954-4d23-808c-48a7534ce3bd",
+  "GPU_GO": false,
+  "pending": "Actual ON compiled ISA follow-up after prefix mismatch; owner release and actual latest pair posthealth."
+}

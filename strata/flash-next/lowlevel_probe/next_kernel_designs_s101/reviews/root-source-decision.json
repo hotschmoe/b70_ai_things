@@ -1,0 +1,39 @@
+{
+  "utc": "2026-10-15T22:06:09.071139+00:00",
+  "status": "ROOT_ACCEPT_INDEPENDENT_SOURCE_AUDITS_ONLY_NO_KERNEL_BUILD_OR_GPU_SELECTED",
+  "actual_models_seconds": {
+    "claude-opus-5-5": 104.73731195897562,
+    "claude-fable-5-1": 111.67595259100199
+  },
+  "root_full_read_answers_and_final_frozen_packets": true,
+  "Opus": {
+    "lead": "Q6 C6 A2 dword-aligned five-word load reconstruction, defaultOFF proposed A4 guard.",
+    "next": "Bind actual existing Q6 C6 main image; compare existing S85 original computational body/metadata first to avoid duplicate ISA. If new decode needed, root reviews one targeted recipe before execution. Audit actual weight sends/reassembly before candidate.",
+    "corrections": [
+      "load16_a2 selects four possible dword offsets for each of five words; not a five-way selection.",
+      "4-byte aligned scalar int loads only; never misaligned int4 dereference.",
+      "Base%4 guard plus bounds/byte identity CPU proof required, compiler FP contraction and runtime exactness remain separate.",
+      "Static sends/ALU do not establish traffic/dynamic latency or justify arbitrary no-go magnitude thresholds.",
+      "S98 is routed IQ2 fixture, not Q6 fixture; reuse actual S44/S85/S87 Q6 exports/tools deliberately.",
+      "No universal bitwise-by-construction claim until downstream compiled ledger and bounded strict checks."
+    ]
+  },
+  "Fable": {
+    "lead": "Peer wait + uncached inbox copy + resident plan in one WG128, only after source visibility/ownership and critical dependency audit.",
+    "next": "Read exact doorbell helper/defines and existing per-card wait records; treat direction as hypothesis, not causal proof from whole CSV medians. No patch/GPU yet.",
+    "corrections": [
+      "Whole CSV per-card wait medians cannot prove which peer branch controls current end-to-end readiness; no cross-card clock join exists. Use per-device structure and source logic, retain uncertainty.",
+      "Do not label 1392vs1152 count difference cold/capture without attribution; current reviewed same-structure cycles are available instead of full collection.",
+      "Prologue ~8us estimate is not established including actual wait; copy+plan service sums non-additive.",
+      "Preserve finite spin timeout+continue semantics, signed epoch difference, system acquire and global visibility barrier before plan reads.",
+      "Exact helper/cache defines required. Use one copy-destination capture and pass same ids pointer; do not drop restrict broadly without actual alias/lifetime proof.",
+      "If a fusion is justified, a bounded two-card IPC freshness primitive should precede expensive full-model serving; CPU/one-card tests cannot qualify cross-card visibility.",
+      "Keep one-card/local arithmetic tests only when they add distinct coverage; prefer reusing existing IPC fixture and health window rather than serial duplicate setups."
+    ]
+  },
+  "dev_loop": [
+    "Two SHA-only preflights stopped before any model call while author packets were still being shortened. Final source frozen explicitly and exact copies used for actual invocations.",
+    "No rawtrace/model reparse, new build/GPU run or timing claim from these consultations.",
+    "Choose primary Q6 existing-image audit first; Fable EP fusion stays separate source lead pending dependency/visibility proof."
+  ]
+}

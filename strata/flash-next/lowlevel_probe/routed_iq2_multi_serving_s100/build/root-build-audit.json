@@ -1,0 +1,37 @@
+{
+  "utc": "2026-10-15T21:50:13.364458+00:00",
+  "status": "ONE_MAIN_INCREMENTAL_BUILD_PASS_PENDING_SELECTED_IMAGE_AUDIT",
+  "handle": 86116,
+  "wrapper_exit": 0,
+  "tee_exit": 0,
+  "wrapper_elapsed_s": 191,
+  "incremental_build_s": 176.121,
+  "actual_commands": [
+    "[1/3] /opt/intel/oneapi/compiler/2026.1/bin/icpx -DSTRATA_Q6K_EXPERTS=1 -DSTRATA_VERSION=\\\"0.1.44.1\\\" -DSTRATA_XMX_SG16=1 -I/work/src-ep/sycl/../third_party/ggml -I/work/src-ep/sycl/include -I/work/src-ep/sycl/../include -O3 -DNDEBUG -std=c++20 -fsycl -fsycl-targets=spir64_gen -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wall -Wextra -MD -MT CMakeFiles/strata_kernels.dir/src/kernels/cuda/iq_kernels.dp.cpp.o -MF CMakeFiles/strata_kernels.dir/src/kernels/cuda/iq_kernels.dp.cpp.o.d -o CMakeFiles/strata_kernels.dir/src/kernels/cuda/iq_kernels.dp.cpp.o -c /work/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp",
+    "[2/3] : && /usr/bin/cmake -E rm -f libstrata_kernels.a && /usr/bin/ar qc libstrata_kernels.a  CMakeFiles/strata_kernels.dir/src/kernels/cuda/dequant_s2.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/s2_gemv.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/s_gemv.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/s2_gemv_quads.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/s2_gemv_fast.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/router_top10.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/quantize_act.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/rope.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/sampler.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/s2_gemv_q8.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/s2_expert_grouped.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/shared_expert.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/gr.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/gdn.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/qsa.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/elementwise.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/bf16_gemv.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_bf16.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_gr_norm.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_moe.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_gdn.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_gr_postops.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_router.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_gdn_preprocess.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_qsa.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_rope.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_ple_postops.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_flash_attn.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_qsa_indexer.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_qsa_score.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/ple.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/kv_q8.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/kv_stream.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/kv_q4.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/fused_gr.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/cvec.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/qsa_decode_attn.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/qsa_prompt_attn.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/fused_gdn.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/dequant_bf16.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/qsa_select.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/verify_kernels.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/iq_kernels.dp.cpp.o CMakeFiles/strata_kernels.dir/work/src-ep/src/kernels/ngram.cpp.o CMakeFiles/strata_kernels.dir/src/ngram/ple_reader.cpp.o CMakeFiles/strata_kernels.dir/src/platform/direct_file.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/qsa_prompt_attn_xmx.dp.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/ep_kernels.dp.cpp.o && /usr/bin/ranlib libstrata_kernels.a && :",
+    "[3/3] : && /opt/intel/oneapi/compiler/2026.1/bin/icpx -O3 -DNDEBUG -fsycl-max-parallel-link-jobs=4    -fsycl -fsycl-targets=spir64_gen -Xsycl-target-backend=spir64_gen \"-device bmg-g31 -options -cl-fp32-correctly-rounded-divide-sqrt\" -fsycl-device-code-split=per_kernel -qmkl=sequential CMakeFiles/strata.dir/src/program/generate.cpp.o -o strata  libstrata_engine.a  libstrata_prefill.a  libstrata_spec.a  libstrata_engine.a  libstrata_kernels.a  libstrata_core.a  /usr/lib/x86_64-linux-gnu/libze_loader.so  libstrata_kernels_cpu.a  ggml/src/libggml-cpu.a  ggml/src/libggml-base.a && :"
+  ],
+  "hashes": {
+    "/out/strata-routed-iq2-multi-s100": "7ee675fff8c342772e4f6eae402d40c655a29cf7dcc119d504cdd8d1386b7bbc",
+    "libstrata_kernels.a": "bdb6a9ae43ad16bf56f66f87f0893f5c0429a2af6d61478e6af82240260cee58",
+    "CMakeFiles/strata_kernels.dir/src/kernels/cuda/iq_kernels.dp.cpp.o": "09447b7e983dc8c0299172b6c1a84c09e68a9383f0680b13f658d030e69f73a9",
+    "libstrata_prefill.a": "9d1edec2d6b1efc05651133fd725470cbf9ed6c63c8e9ddcaf54ae2d0e1055fc",
+    "CMakeFiles/strata_kernels.dir/src/kernels/cuda/qsa_decode_attn.dp.cpp.o": "06eb664c9a991790c01b413117f78475d9ff2836cde77534d69fef2b2c85014d",
+    "CMakeFiles/strata_prefill.dir/src/prefill/prefill.cpp.o": "ae8493fd019782eeb0b8b1653d099b0bc0c709bb327251c57e32b93405f02f5b",
+    "libstrata_engine.a": "77a18ca2e4fd4cd35414a74e8386b760a904476022b24ecc7203339fd00180b7",
+    "CMakeCache.txt": "fee542911252057f97fac8113086ded01130c7888ac96a7490e28cdec814cc22"
+  },
+  "IQ_source_sha256": "8bf1489cb53a2de442c051a8a64f577d330eadedbe200fd36ee967f33a29bb6d",
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "no_DRI": true,
+  "network": "none",
+  "cpu_jobs": 4,
+  "AOT_cache_option_change": false,
+  "unchanged_inputs_after_checked": true,
+  "CMakeCache_and_build_ninja_byte_exact": true,
+  "notes": [
+    "Actual successful Ninja compile/archive/link commands and before/after pin checks bind final main to changed IQ object and kernels archive.",
+    "Frozen main copied and cmp-verified against actual target; full hashes emitted by successful build recipe.",
+    "No GPU, serving or new numerical qualification here."
+  ]
+}

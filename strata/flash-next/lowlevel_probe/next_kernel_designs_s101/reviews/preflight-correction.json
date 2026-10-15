@@ -1,0 +1,7 @@
+{
+  "initial_attempts": 2,
+  "actual_model_invocations_before_correction": 0,
+  "reason": "Root read shared preparation before author declared frozen; author shortened packets during root preflight. Both model runners stopped at SHA check before launching CLI.",
+  "correction": "Author explicitly stopped writes/froze final files. Root copies exact final bytes into private review folder and uses supplied final SHA, then fullreads final packets before invoking.",
+  "dev_loop_lesson": "Wait for author-ready/frozen signal before binding review packet; do not treat existence as readiness."
+}

@@ -1,0 +1,822 @@
+{
+  "status": "BYTE_EXACT_SMALL_COPIES",
+  "raw_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
+  "copies": [
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-source/iq2xs-multi.patch",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/source/iq2xs-multi.patch",
+      "bytes": 7112,
+      "sha256": "435ceaf051e457ea520ffb385cdf5c8922a8dc793b36ea715c3e89bb42b5324a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-source/iq2xs-multi.inverse.patch",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/source/iq2xs-multi.inverse.patch",
+      "bytes": 7112,
+      "sha256": "1010ebb219444f8299a723850428dcd5468cbe423d2cfae629ff495f98382b70"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-source/pins.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/source/pins.json",
+      "bytes": 1377,
+      "sha256": "6636d4dece592146c887fe3610c02f470d03b67d28d0f9a457482d14fe86c60e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-source/contract.txt",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/source/contract.txt",
+      "bytes": 3896,
+      "sha256": "d0abe0c5b21e7cc928b9c76a62b598331a2cf2e828b705f1e70b099afc4d461f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-source-manifest.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/source/source-preparation-manifest.json",
+      "bytes": 1916,
+      "sha256": "7bbd8f559caaa8dd67ad6679a3ac1f53875618acb2ebc47101601b7d8aa2a582"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-caller-proof.txt",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/source/caller-proof.txt",
+      "bytes": 2517,
+      "sha256": "21d2bc4cf300ee7868eff5acdfed893d5b3a65d8c3d2de8db72950005061743c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-reviews-20261015/claude-opus-5-5/assistant-text.txt",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/source-reviews/claude-opus-5-5/assistant-text.txt",
+      "bytes": 3805,
+      "sha256": "aa3742c7a53b9337a6f815de2ff9441fc4315c2b04cae8bcbea0f43735567285"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-reviews-20261015/claude-opus-5-5/completion.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/source-reviews/claude-opus-5-5/completion.json",
+      "bytes": 7244,
+      "sha256": "bb3721665b7dc33bdf7fee2538d89ad595502aeeed14963baea3996028051221"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-reviews-20261015/claude-opus-5-5/command.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/source-reviews/claude-opus-5-5/command.json",
+      "bytes": 1243,
+      "sha256": "226bf6515efba6a7bce22a66b7be6594987eb58e3ede3ef916a021a7faf3206a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-reviews-20261015/claude-fable-5-1/assistant-text.txt",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/source-reviews/claude-fable-5-1/assistant-text.txt",
+      "bytes": 2979,
+      "sha256": "1a73d66eb6464719e9770ba1c7d0f964ae3491dc473e6ff529051f51427c046e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-reviews-20261015/claude-fable-5-1/completion.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/source-reviews/claude-fable-5-1/completion.json",
+      "bytes": 6417,
+      "sha256": "d0bffa28f95281bcaae9e52afcd667778543ab14e468baf48006a0a24d92b306"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-reviews-20261015/claude-fable-5-1/command.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/source-reviews/claude-fable-5-1/command.json",
+      "bytes": 1245,
+      "sha256": "2b9427d8a052b7dc67ce338794882db0b227fddda9ef626aa2f0f7e2a5258fe0"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-reviews-20261015/review.py",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/source-reviews/review.py",
+      "bytes": 4728,
+      "sha256": "5923e5caf6fc67fc872bfd051b6897fb19a3abb89f8edc5c04d5013da34e1b87"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-reviews-20261015/review-prefix.txt",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/source-reviews/review-prefix.txt",
+      "bytes": 723,
+      "sha256": "f010e7ae6569bde5b1a1f7da884d0e9076a4e3e65dc45effe6cc560d40a44237"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-reviews-20261015/root-packet.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/source-reviews/root-packet.json",
+      "bytes": 126,
+      "sha256": "2d00c12afffaabaf23a64ef4caabbcbd05650e618fe59cbf3842e05923a58c5e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-reviews-20261015/root-source-resolution.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/source-reviews/root-source-resolution.json",
+      "bytes": 2843,
+      "sha256": "a69a4554f9053844940a981cb8193cc9cb77ceb838ce6a5becef4d7620fabbf3"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-reviews-20261015/root-frozen-source-packet.txt",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/source-reviews/root-frozen-source-packet.txt",
+      "bytes": 18994,
+      "sha256": "5bb5a2af5547deed1cdb45ba79319691ec3931b0143ac02047990e507b446764"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-reviews-20261015/claude-opus-5-5/assistant-text.txt",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/compiled-reviews/claude-opus-5-5/assistant-text.txt",
+      "bytes": 3223,
+      "sha256": "8dc4104a0a44d8a5219ff64bc27f40bc166222caa730e65d7596fd8934b62caf"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-reviews-20261015/claude-opus-5-5/completion.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/compiled-reviews/claude-opus-5-5/completion.json",
+      "bytes": 6695,
+      "sha256": "1da1b95bdaa0e47c2e06acee1e6b4c3442b80ef2ff501fbd59b82db07f5149f0"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-reviews-20261015/claude-opus-5-5/command.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/compiled-reviews/claude-opus-5-5/command.json",
+      "bytes": 1247,
+      "sha256": "e6c1ead12f10259964320e2a7ad76556c4b50136fd98db0dd8fcf2174839f963"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-reviews-20261015/claude-fable-5-1/assistant-text.txt",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/compiled-reviews/claude-fable-5-1/assistant-text.txt",
+      "bytes": 2687,
+      "sha256": "f86ec5ee46a8e1d8f623dcc81420de1b5a90061e8079d4f620d8bdf2d08f4cd1"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-reviews-20261015/claude-fable-5-1/completion.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/compiled-reviews/claude-fable-5-1/completion.json",
+      "bytes": 6125,
+      "sha256": "6f08e2b21ddf72f96e3f82c07506f93eb0a553cf4dc76b44e20df62eb1c5b0a1"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-reviews-20261015/claude-fable-5-1/command.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/compiled-reviews/claude-fable-5-1/command.json",
+      "bytes": 1249,
+      "sha256": "f9cf040732e9a502cfe179660e13a9bdfa5ee268bc84c4f61bb52f577409428d"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-reviews-20261015/review.py",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/compiled-reviews/review.py",
+      "bytes": 4731,
+      "sha256": "1b58a426eb777c97736b5a92a8bcd24d2fb78f59ffa188d5798dea9eeedf854c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-reviews-20261015/review-prefix.txt",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/compiled-reviews/review-prefix.txt",
+      "bytes": 695,
+      "sha256": "74629e6843b09ac75e5c10efa25394c1575251de8a6c2dca3bc2f6b9fd3b973c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-reviews-20261015/root-packet.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/compiled-reviews/root-packet.json",
+      "bytes": 380,
+      "sha256": "5d835daf989f6e60f08034cbecccc13e94cfe93d916cb4f393c22d961603fa9c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-reviews-20261015/root-compiled-resolution.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/compiled-reviews/root-compiled-resolution.json",
+      "bytes": 2460,
+      "sha256": "3deb8dd16fe368e5fd5303a537ebde75d4d01cd9326bf8de906f679d0fc0c7c2"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-reviews-20261015/root-frozen-compiled-packet.txt",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/compiled-reviews/root-frozen-compiled-packet.txt",
+      "bytes": 28215,
+      "sha256": "038700c2a3fe0c11a05394e6c48d650546ec88ac77373e9effa56a2bf0779c24"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-build/build.sh",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/build-source/build.sh",
+      "bytes": 1373,
+      "sha256": "dbcc733f61cc86e5518fd4ffd9a439ada3d11e94d058f5595898642d386d263a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-build/build-container.sh",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/build-source/build-container.sh",
+      "bytes": 4219,
+      "sha256": "6e4eb8f03482db29e306b19b7b2a7d823cdfbd14bf506fb120442415f4f04ba2"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-build/manifest.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/build-source/manifest.json",
+      "bytes": 1961,
+      "sha256": "0f1e2bff166e91ced41a8b3f84b69ad6274090f5053d13f449731806fd5b0f56"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-build/expected-applied-source.sha256",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/build-source/expected-applied-source.sha256",
+      "bytes": 119,
+      "sha256": "dea7b39fd95cee39d86f0f1c8e472fcf2c6a90bf02c3c63acaac2ec2442568e7"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-build/expected-unchanged-build-inputs.sha256",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/build-source/expected-unchanged-build-inputs.sha256",
+      "bytes": 1655,
+      "sha256": "c4a7df55a0d62629771b4a29335647d86305758deed2c7d9f744ca61d1e2cc40"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-build/expected-unchanged-source.sha256",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/build-source/expected-unchanged-source.sha256",
+      "bytes": 2156,
+      "sha256": "d5dd76dee1961dc252b9b133b83dc687a6127f34640a7b02a9b142b4b2339b96"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-build/build/root-build-audit.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/build/root-build-audit.json",
+      "bytes": 6666,
+      "sha256": "7d4408092a49d401a6f2549755ba6a001eca9e2d0db5c1d8e9732e77baef26bc"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-build/build/build-sha256.txt",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/build/build-sha256.txt",
+      "bytes": 831,
+      "sha256": "ec1ba705e261c661b4aa81402297435334fda2e1458b493650cf7433e4c50a60"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-build/build/ninja-plan.txt",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/build/ninja-plan.txt",
+      "bytes": 4751,
+      "sha256": "0cdebe60f298cff68ee89a673252982fa3788efb5aee73511df16708c43b400d"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-build/build/compiler-version.txt",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/build/compiler-version.txt",
+      "bytes": 257,
+      "sha256": "06b5b1015f3c581440fb4cf00258edc0db8d98696ca3252cf69045e1f8c283d4"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-build/build/build.exit",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/build/build.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-build/build/tee.exit",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/build/tee.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-audit-prep/audit.py",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/audit-source/audit.py",
+      "bytes": 11402,
+      "sha256": "f6033366052f0967ef6fc04619a551ca66ceee1a4856a932d70fc2e3ef3b984a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-audit-prep/compare.py",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/audit-source/compare.py",
+      "bytes": 5197,
+      "sha256": "5d51aabd5cfd29bc5f864c1b1107bd2083427b3bbb8d73e10dde644f0c85570f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-audit-prep-manifest.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/audit-source/manifest.json",
+      "bytes": 835,
+      "sha256": "8c6e7efd74cea7eb0c0b3ffb78ca5c9a61c782eb6dd77109f9ced69ef1dd7661"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-audit/selection.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/main-audit/selection.json",
+      "bytes": 22672,
+      "sha256": "95c0a50aaee965ccc2a50541f3fb3d1243c1593f757cb0d2f70b0f8191f33f3a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-audit/comparison-HOLD.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/main-audit/comparison-HOLD.json",
+      "bytes": 14813,
+      "sha256": "edf9211d5697508e4885bee0428c78f3f2946908343ccba7241aca5c1d940f83"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-audit/OFF.ze_info",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/main-audit/OFF.ze_info",
+      "bytes": 4754,
+      "sha256": "0356e7a01724b200d3684b7070e228c15266231e35a0e91cb5a90a4bb052a47d"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-audit/ON.ze_info",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/main-audit/ON.ze_info",
+      "bytes": 4670,
+      "sha256": "5fbc74b9228d6d18475dc81f9fe178760b4cfa79425021610d7a28565b9d1534"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-audit/root-host-branch-excerpts.txt",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/main-audit/root-host-branch-excerpts.txt",
+      "bytes": 8069,
+      "sha256": "d4668390984c78bf46eb5b24fafb27011f606b0c9a24cb35ebeffa0ec071f40d"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-candidate-isa-prep/decode.sh",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/selected-decoder-source/decode.sh",
+      "bytes": 1183,
+      "sha256": "e2be5fd7d788c86efc60951b1f64e40806b4f998a43ed6af3c462c1afdb2a23c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-candidate-isa-prep/predecode-comparison.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/selected-decoder-source/predecode-comparison.json",
+      "bytes": 10563,
+      "sha256": "1b0e404b5c3dea670ab34e71f78021c9a5b916fe7b10eec63c2f85461892af01"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-candidate-isa/input.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/selected-ISA/input.json",
+      "bytes": 5172,
+      "sha256": "fd271f8b826c9a35610f60eca68beec6685bb4eaf10898416a159c007230b9eb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-candidate-isa/decoder-input-before.sha256",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/selected-ISA/decoder-input-before.sha256",
+      "bytes": 91,
+      "sha256": "5706c6c37d3db59515a6e4f31a4eab934089cd11b33d73f0d8ef6d55ac6e2655"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-candidate-isa/decoder-input-after.sha256",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/selected-ISA/decoder-input-after.sha256",
+      "bytes": 91,
+      "sha256": "5706c6c37d3db59515a6e4f31a4eab934089cd11b33d73f0d8ef6d55ac6e2655"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-candidate-isa/ocloc.exit",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/selected-ISA/ocloc.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-candidate-isa/image-id.txt",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/selected-ISA/image-id.txt",
+      "bytes": 72,
+      "sha256": "0716a759b38b99857a73ea5340c9861a23dd6cbe31f267bd8c0e878b3ac41055"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-candidate-isa/tool-paths.txt",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/selected-ISA/tool-paths.txt",
+      "bytes": 34,
+      "sha256": "3007b0a0f1d5bdd76f03e09ae88a654dd735e88e88e36358c693b1a8fc4beca9"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-candidate-isa/root-first-arithmetic-excerpts.txt",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/selected-ISA/root-first-arithmetic-excerpts.txt",
+      "bytes": 11476,
+      "sha256": "dc260b90cd3addd271a471418365bae074075c95761b7951e30bf0b164bb3116"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/README.txt",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/serving/README.txt",
+      "bytes": 5776,
+      "sha256": "4e3dac3fd15585ba0eb42c6306fec7ef2d0ca3cc97beeff4990ebf431dc37f79"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/manifest.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/serving/manifest.json",
+      "bytes": 1923,
+      "sha256": "fe80cefea7bd2c9f2d47b23814f9e0bc6c71f13e2299d542e5dd284cb6f12d58"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/harness-source-pins.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/serving/harness-source-pins.json",
+      "bytes": 3442,
+      "sha256": "d409acd4786ffcd738a7312759434be12c05b2e73cbba43a6262f90e6140ee26"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/warm-only-v2.diff",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/serving/warm-only-v2.diff",
+      "bytes": 7409,
+      "sha256": "60e61a6f856f6d8fbf3ad96437edf2b6fed2a5a711cdf1d6de29892ea6344d1b"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/serving-inputs.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/serving/serving-inputs.json",
+      "bytes": 2484,
+      "sha256": "8bf5bd01411f204bb7421d2e5aae19d20dec58e1a4ba4a0595365f2e86f102b9"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/source-checks.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/serving/source-checks.json",
+      "bytes": 824,
+      "sha256": "27ef01f91aa41be400f4f9029353d1e7e5f7de6252821e3831a07b0cc60219f7"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/root-controller-resolution.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/serving/root-controller-resolution.json",
+      "bytes": 1848,
+      "sha256": "74a11bc6e13c4365b40e3fdc3495cf159e4433b72949488a24cab1b61cf526f0"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/root-model-continuity.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/serving/root-model-continuity.json",
+      "bytes": 1509,
+      "sha256": "45acdaa067782f91249c68c0d4079cd44972db2e1e2d81eea00dfa945ee02efe"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/root-gpu-go.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/serving/root-gpu-go.json",
+      "bytes": 597,
+      "sha256": "042c982ffb0907cf48a76e01f6ac997ab5701bb795e2f8cdfd265d7423375054"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/root-runtime-decision.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/serving/root-runtime-decision.json",
+      "bytes": 7870,
+      "sha256": "900dd82f980c9d8399400163bb3afc71a0ac6e1a215c7aaf443a0dc74898262c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/comparison.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/serving/comparison.json",
+      "bytes": 18839,
+      "sha256": "6b1486ad77d1056b601f1734c958de83caa1d321365ead6b42c594d6213ec964"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/pre-card-health.exit",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/serving/pre-card-health.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/pre-collective-health.exit",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/serving/pre-collective-health.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/harness-prep/client.py",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/controller/client.py",
+      "bytes": 11841,
+      "sha256": "9ca1134cf054e77b9a47e16789d037360b3416b6b8035f958426ecd8cf1574fa"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/harness-prep/compare.py",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/controller/compare.py",
+      "bytes": 7458,
+      "sha256": "e86636bb974346112844706f2f259c836977cdedd7f2c48f59f2308a7eec0ac7"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/harness-prep/launch_stage.sh",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/controller/launch_stage.sh",
+      "bytes": 1881,
+      "sha256": "7ed01002d06f774c14e15e62a7c52307bb017e69fd789fe24e90025b1294055b"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/harness-prep/make_configs.py",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/controller/make_configs.py",
+      "bytes": 4399,
+      "sha256": "fe686ad794d1cadeb8b9463c56385a6043455f00aedd73f9d77c5cc47fa1d934"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/harness-prep/start_arm.py",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/controller/start_arm.py",
+      "bytes": 8194,
+      "sha256": "46992f1dc44055b90826948f88390306b0eace3e432d11f7159df77069235432"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/harness-prep/stop_and_health.py",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/controller/stop_and_health.py",
+      "bytes": 4346,
+      "sha256": "c88d392434bb358d2b9ca9293026c52fb47a3269a59d1f7f011444bdc3b8a74d"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/config.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/config.json",
+      "bytes": 2562,
+      "sha256": "de93f5e830b68aa294e5790488f188e191ff3ad88981dfb67a2eaaed4c053ac0"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/aggregate-proof.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/aggregate-proof.json",
+      "bytes": 598,
+      "sha256": "dd1a92be326a784bc09a07411bb4a93820be256fc0ed3decce0a6198ec436c39"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/start-result.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/start-result.json",
+      "bytes": 1212,
+      "sha256": "9c910badf733eb6b2c8d45b8169b97c25d113000e60581e21bb89108bb31ddac"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/container-ready.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/container-ready.json",
+      "bytes": 13728,
+      "sha256": "d6bcb7133702ffd0263f0dfbe751ec190092016ac35e664516769792626a8089"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/docker-prestop.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/docker-prestop.json",
+      "bytes": 13728,
+      "sha256": "307903f1f0dcd8293d6de520d8af939b149a4f7ec23b2d691268e43004d5bfad"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/native-process-identity.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/native-process-identity.json",
+      "bytes": 84981,
+      "sha256": "a535e2cf163b000a2efbc7455f014bfa5c9f3ae7158fc520fc5c0db28d19935b"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/normal-stop.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/normal-stop.json",
+      "bytes": 265,
+      "sha256": "b9587840d30ff5fc62533e28c24b9b2026cff768dcfe2bea416607ead92b0627"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/container-removal.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/container-removal.json",
+      "bytes": 710,
+      "sha256": "d2f3b162e43af838bcec4d625011da6335bf628ba19bb616faf2341534c9a99a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/post-health.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/post-health.json",
+      "bytes": 478,
+      "sha256": "2acd48d1f9ffa1b3a68328767faf722633fb9b3961b79ceeacbb564a2f291c3e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/quit-command.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/quit-command.json",
+      "bytes": 252,
+      "sha256": "92e04102bdeb23da26009caa608d702e534f71dabab739e8555a27899076c737"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/health-prestop.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/health-prestop.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/functional/verdict.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/functional/verdict.json",
+      "bytes": 91,
+      "sha256": "a903d5a1a01382b4c3af586ab82b48b25716a22e8bfbbc2d1bdcb7a2a972ff09"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/coding/warm/pair.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/warm/pair.json",
+      "bytes": 4873,
+      "sha256": "e38a1fab83acf7e103d427be84b1624d24a232da55437319df238eb3425f07d8"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/coding/warm/admission-gate.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/warm/admission-gate.json",
+      "bytes": 2311,
+      "sha256": "7dcf73005918f20d28cf9fed5502771e789888953847dd2b51ce8bd5e7397204"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/coding/warm/models.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/warm/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/coding/warm/engine-segment.log",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/warm/engine-segment.log",
+      "bytes": 2377,
+      "sha256": "0f55a8fe9927734a10ce4fe6b824813c6ab2e006bc068d2d029748d3325771ee"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/coding/repeat1/pair.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/repeat1/pair.json",
+      "bytes": 4523,
+      "sha256": "9bbcaba0c8188a6da8e64f4e172d68916cc5084315eefc8ca61e01e65082e464"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/coding/repeat1/admission-gate.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/repeat1/admission-gate.json",
+      "bytes": 2314,
+      "sha256": "d6690b17c442fef7c8f6bd673c87837a23f31863f0d0a7902ffcfb47f6191d4c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/coding/repeat1/models.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/repeat1/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/coding/repeat1/engine-segment.log",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/repeat1/engine-segment.log",
+      "bytes": 2614,
+      "sha256": "914a7b74c1753deaa0ea3b6933b6d3d2b0925e6470a6d99acab87ac54aa3a3d7"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/coding/repeat2/pair.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/repeat2/pair.json",
+      "bytes": 4527,
+      "sha256": "080e06487344c21c1c50cab1062fc632f2f3d075edb164c17ed08f3d774173ca"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/coding/repeat2/admission-gate.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/repeat2/admission-gate.json",
+      "bytes": 2316,
+      "sha256": "faaa78187c946a8b343a513d538b8e3129a7b8da7252a697ad99e6cc8742e5ea"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/coding/repeat2/models.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/repeat2/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/coding/repeat2/engine-segment.log",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/repeat2/engine-segment.log",
+      "bytes": 2617,
+      "sha256": "f9792545af1a0de24f79c7cdc1d9b68804f8ed6b5d60577d24e9d4dbc168a1af"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/coding/repeat3/pair.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/repeat3/pair.json",
+      "bytes": 4694,
+      "sha256": "8ae5f483da78c09871e32ee577939b31dabc7a0a4414570340250b6029bf36f0"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/coding/repeat3/admission-gate.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/repeat3/admission-gate.json",
+      "bytes": 2316,
+      "sha256": "8ccc92d35d9701d6b54c611786429f37bf8ca1ea78502c2f1bb52becdae3bbe9"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/coding/repeat3/models.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/repeat3/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode0/coding/repeat3/engine-segment.log",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode0/repeat3/engine-segment.log",
+      "bytes": 3611,
+      "sha256": "bb5c6efb4e472e1e3cbdd12d1f5f12d5944553e7657807133b4ec4d7441e1c2f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/config.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/config.json",
+      "bytes": 2562,
+      "sha256": "abf62030c8d4ee2d19d43d640271f6f9578a9a1244bca6490d718806f86cd618"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/aggregate-proof.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/aggregate-proof.json",
+      "bytes": 598,
+      "sha256": "2c1c43c29971da0d0bc1733de6e6ffefa3d41954e4fa87229f223c21d88cd59d"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/start-result.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/start-result.json",
+      "bytes": 1212,
+      "sha256": "4b5b5286cbe86d8f0b564664acd2465a32449a528c4a3c96357117d419a8f89e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/container-ready.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/container-ready.json",
+      "bytes": 13729,
+      "sha256": "73ebcb5d769aa9ac4ddf5969d37d76f2a6e7148b7cdfe836998032d95099f124"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/docker-prestop.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/docker-prestop.json",
+      "bytes": 13729,
+      "sha256": "d7bde3b3a2113386a7a51c147091e1e4e7d451b064a70e16c076aeb1ac5f17bb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/native-process-identity.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/native-process-identity.json",
+      "bytes": 85595,
+      "sha256": "4930a7d3585e50efe751210cefd7a12724ccb204ca27df4c04c82769c3736dca"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/normal-stop.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/normal-stop.json",
+      "bytes": 265,
+      "sha256": "569704751df2514cbca5233fc68d52d75002dd1cff89b168b7787b134c0eb564"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/container-removal.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/container-removal.json",
+      "bytes": 710,
+      "sha256": "57bbdad9510d58c96497b6a39f8daa5e2e79b6c2fdb494bd55458dc9cde0a4a5"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/post-health.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/post-health.json",
+      "bytes": 479,
+      "sha256": "619e2e00e1a1907ecbf167c1d57243bb62cf7b847ed2acde99175bbb114dbd60"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/quit-command.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/quit-command.json",
+      "bytes": 252,
+      "sha256": "cc18bb886b82cffcffa2125e4b84dbae2b684023ea48ea6bfa9644cdc29dc2b1"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/health-prestop.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/health-prestop.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/functional/verdict.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/functional/verdict.json",
+      "bytes": 91,
+      "sha256": "a903d5a1a01382b4c3af586ab82b48b25716a22e8bfbbc2d1bdcb7a2a972ff09"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/warm/pair.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/warm/pair.json",
+      "bytes": 4940,
+      "sha256": "0388e4a58f72c19a23888621e7d6e5716bce5564095f6f840636fe360f95a87b"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/warm/admission-gate.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/warm/admission-gate.json",
+      "bytes": 2311,
+      "sha256": "de61f8b7d3220aa38f58d8e08c682594cfb58363c1986511779957d0a3696a28"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/warm/models.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/warm/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/warm/engine-segment.log",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/warm/engine-segment.log",
+      "bytes": 2447,
+      "sha256": "4cdced57591bbb2ac817d1eb562591a5fc5a621682e58b693c9ba54dce60c20a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/warm/control-parity.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/warm/control-parity.json",
+      "bytes": 250,
+      "sha256": "fca4039e3790b1521caee0f23f243de192cb7bb2300e88e6952f7db39ee33eef"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/repeat1/pair.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/repeat1/pair.json",
+      "bytes": 4596,
+      "sha256": "3e0c12d4fbb02225455a972314940415886e533d3e0224a9514b6239e3171bc3"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/repeat1/admission-gate.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/repeat1/admission-gate.json",
+      "bytes": 2314,
+      "sha256": "b1d88069975aad2afa9673670ee60aebe5c0ed7de9d8489b9c53a5fd1835eba1"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/repeat1/models.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/repeat1/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/repeat1/engine-segment.log",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/repeat1/engine-segment.log",
+      "bytes": 2614,
+      "sha256": "f24ba9133abaab9a6f52d4915aaf4a9fd360337736fca177366eafebff8c483b"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/repeat1/control-parity.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/repeat1/control-parity.json",
+      "bytes": 213,
+      "sha256": "7c7cb812524dc00d16d74683bb18851a2e1ce41bf70f72044a6e50bd942bd014"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/repeat2/pair.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/repeat2/pair.json",
+      "bytes": 4594,
+      "sha256": "35fb6fd0fc2f806d4317a5b689fec12215fb1a7275b5bb9bb054e9c13ccab1da"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/repeat2/admission-gate.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/repeat2/admission-gate.json",
+      "bytes": 2316,
+      "sha256": "9841b82767bd946c64a11e57c161108e8e4dc4ad7ac0f4416b1d92e400386cbb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/repeat2/models.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/repeat2/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/repeat2/engine-segment.log",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/repeat2/engine-segment.log",
+      "bytes": 2617,
+      "sha256": "eec47a4370566c3c16319da3d29a285e62ab8c94e88087f525f0c2c88a508d1a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/repeat2/control-parity.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/repeat2/control-parity.json",
+      "bytes": 213,
+      "sha256": "7c7cb812524dc00d16d74683bb18851a2e1ce41bf70f72044a6e50bd942bd014"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/repeat3/pair.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/repeat3/pair.json",
+      "bytes": 4762,
+      "sha256": "80681889cc9c5a14e51077905667a2880a0a662e4abee5c70835f8bf11cd742f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/repeat3/admission-gate.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/repeat3/admission-gate.json",
+      "bytes": 2316,
+      "sha256": "3daaa5f2919d051962e4d355526cc0589c797be71d27b0f6a9b088e29d4c9e1b"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/repeat3/models.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/repeat3/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/repeat3/engine-segment.log",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/repeat3/engine-segment.log",
+      "bytes": 3611,
+      "sha256": "3ea74a3b74ebfca9592309552c90d0b52434a610ce29d41f5002a35fcb1745e6"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/coding/repeat3/control-parity.json",
+      "destination": "strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/runtime/mode1/repeat3/control-parity.json",
+      "bytes": 213,
+      "sha256": "7c7cb812524dc00d16d74683bb18851a2e1ce41bf70f72044a6e50bd942bd014"
+    }
+  ]
+}

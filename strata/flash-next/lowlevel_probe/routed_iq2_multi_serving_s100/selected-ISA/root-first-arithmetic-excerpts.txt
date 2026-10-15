@@ -1,0 +1,121 @@
+E4signedfinish lines 493..543
+        add (16|M16)             r6.0<1>:q     r3.5<0;1,0>:q     r54.0<1;1,0>:q   {Compacted,I@2}
+        add (16|M0)              r46.0<1>:q    r8.0<1;1,0>:q     r62.0<1;1,0>:q   {Compacted,I@2}
+        add (16|M16)             r48.0<1>:q    r6.0<1;1,0>:q     r60.0<1;1,0>:q   {Compacted,I@2}
+        mov (32|M0)              r1.0<1>:uw    r20.0<2;1,0>:uw                  {$2.dst}
+        bfn.0x6A (32|M0)         r26.0<1>:ud   r16.0<1;0>:ud     r10.0<1;0>:ud     r2.12<0>:ud      // s0^s1&s2
+        send.ugm (32|M0)         r14      r46  null:0  0x4000            0x08803580           {I@1,$6} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x4]
+        send.ugm (32|M0)         r6       r46  null:0  0x14000            0x08803580           {$7} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x14]
+        send.ugm (32|M0)         r50      r46  null:0  0x0            0x08200B80           {$8} // wr:4+0, rd:2; load.ugm.d16u32.a64
+        mov (32|M0)              r67.0<2>:b    r52.0<1;1,0>:w                  
+        dp4a (32|M0)             r52.0<1>:d    0:w                r38.0<1;0>:d      r14.0<1>:d       {$6.dst}
+        sync.nop                             null                             {$8.src}
+        dp4a (32|M0)             r46.0<1>:d    0:w                r30.0<1;0>:d      r6.0<1>:d        {$7.dst}
+        dp4a (32|M0)             r48.0<1>:d    r52.0<1;0>:d      r36.0<1;0>:d      r16.0<1>:d       {Compacted,I@2}
+        dp4a (32|M0)             r14.0<1>:d    r46.0<1;0>:d      r28.0<1;0>:d      r8.0<1>:d        {Compacted,I@2}
+        dp4a (32|M0)             r6.0<1>:d     r48.0<1;0>:d      r34.0<1;0>:d      r18.0<1>:d       {Compacted,I@2}
+        dp4a (32|M0)             r16.0<1>:d    r14.0<1;0>:d      r26.0<1;0>:d      r10.0<1>:d       {Compacted,I@2}
+        dp4a (32|M0)             r8.0<1>:d     r6.0<1;0>:d       r32.0<1;0>:d      r20.0<1>:d       {Compacted,I@2}
+        dp4a (32|M0)             r14.0<1>:d    r16.0<1;0>:d      r24.0<1;0>:d      r12.0<1>:d       {Compacted,I@2}
+        add (32|M0)   (lt)f2.0   r16.0<1>:d    r8.0<1;1,0>:d     r14.0<1;1,0>:d   {I@1}
+        mov (32|M0)              r48.0<1>:d    r67.0<2;1,0>:ub                 
+(W)     mul (16|M0)              acc0.0<1>:d   r8.0<1;1,0>:d     r48.0<2;1,0>:uw  {I@1}
+(f2.0)  add3 (32|M0)             r16.0<1>:d    r8.0<1;0>:d       r14.0<1;0>:d      1:w              
+        macl (16|M0)             r12.0<1>:d    r8.0<1;1,0>:d     r48.0<1;1,0>:d   {Compacted}
+(W)     mul (16|M16)             acc0.0<1>:d   r9.0<1;1,0>:d     r49.0<2;1,0>:uw 
+        macl (16|M16)            r13.0<1>:d    r9.0<1;1,0>:d     r49.0<1;1,0>:d   {Compacted}
+(W)     mul (16|M0)              acc0.0<1>:d   r14.0<1;1,0>:d    r22.0<2;1,0>:uw 
+        macl (16|M0)             r10.0<1>:d    r14.0<1;1,0>:d    r22.0<1;1,0>:d  
+(W)     mul (16|M16)             acc0.0<1>:d   r15.0<1;1,0>:d    r23.0<2;1,0>:uw 
+        macl (16|M16)            r11.0<1>:d    r15.0<1;1,0>:d    r23.0<1;1,0>:d   {Compacted}
+        asr (32|M0)              r14.0<1>:d    r16.0<1;1,0>:d    1:w               {Compacted,I@7}
+        add3 (32|M0)             r8.0<1>:d     r12.0<1;0>:d      r10.0<1;0>:d      r14.0<1>:d       {Compacted,I@1}
+        cmp (32|M0)   (lt)f3.0   null<1>:d     r8.0<1;1,0>:d     0:w               {I@1}
+        add (32|M0)              r6.0<1>:d     r12.0<1;1,0>:d    r10.0<1;1,0>:d   {Compacted}
+(f3.0)  add3 (32|M0)             r8.0<1>:d     r6.0<1;0>:d       r14.0<1;0>:d      3:w               {I@1}
+        mov (32|M0)              r66.0<1>:uw   r50.0<2;1,0>:uw                  {$8.dst}
+        asr (32|M0)              r6.0<1>:d     r8.0<1;1,0>:d     2:w               {I@2}
+        mov (16|M0)              r46.0<1>:f    r1.0<1;1,0>:hf                  
+        mov (16|M16)             r47.0<1>:f    r1.16<1;1,0>:hf                 
+        add (16|M16)             r12.0<1>:q    r3.4<0;1,0>:q     r54.0<1;1,0>:q   {Compacted}
+        add (16|M0)              r14.0<1>:q    r3.4<0;1,0>:q     r56.0<1;1,0>:q   {Compacted}
+        mov (16|M0)              r10.0<1>:f    r66.0<1;1,0>:hf                  {I@4}
+        mov (16|M16)             r11.0<1>:f    r66.16<1;1,0>:hf                
+        mov (32|M0)              r8.0<1>:f     r6.0<1;1,0>:d                    {I@3}
+        add (16|M16)             r52.0<1>:q    r12.0<1;1,0>:q    r60.0<1;1,0>:q   {Compacted,I@2}
+        add (16|M0)              r50.0<1>:q    r14.0<1;1,0>:q    r62.0<1;1,0>:q   {Compacted,I@2}
+        mul (32|M0)              acc0.0<1>:f   r46.0<1;1,0>:f    r10.0<1;1,0>:f   {Compacted,F@2}
+        send.ugm (32|M0)         r14      r50  null:0  0x4000            0x08803580           {I@1,$9} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x4]
+        mul (32|M0)              acc0.0<1>:f   acc0.0<1;1,0>:f   r8.0<1;1,0>:f    {Compacted,F@2}
+        send.ugm (32|M0)         r6       r50  null:0  0x14000            0x08803580           {F@1,$10} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x14]
+        send.ugm (32|M0)         r66      r50  null:0  0x0            0x08200B80           {$11} // wr:4+0, rd:2; load.ugm.d16u32.a64
+E2signedfinish lines 1155..1188
+(W)     mul (16|M16)             acc0.0<1>:d   r7.0<1;1,0>:d     r27.0<2;1,0>:uw 
+        macl (16|M16)            r13.0<1>:d    r7.0<1;1,0>:d     r27.0<1;1,0>:d   {Compacted}
+(W)     mul (16|M0)              acc0.0<1>:d   r14.0<1;1,0>:d    r28.0<2;1,0>:uw 
+        asr (32|M0)              r6.0<1>:d     r8.0<1;1,0>:d     1:w               {Compacted,I@5}
+        macl (16|M0)             r10.0<1>:d    r14.0<1;1,0>:d    r28.0<1;1,0>:d   {Compacted}
+(W)     mul (16|M16)             acc0.0<1>:d   r15.0<1;1,0>:d    r29.0<2;1,0>:uw 
+        macl (16|M16)            r11.0<1>:d    r15.0<1;1,0>:d    r29.0<1;1,0>:d   {Compacted}
+        add3 (32|M0)             r8.0<1>:d     r12.0<1;0>:d      r10.0<1;0>:d      r6.0<1>:d        {Compacted,I@1}
+        cmp (32|M0)   (lt)f3.0   null<1>:d     r8.0<1;1,0>:d     0:w               {I@1}
+        add (32|M0)              r16.0<1>:d    r12.0<1;1,0>:d    r10.0<1;1,0>:d  
+(f3.0)  add3 (32|M0)             r8.0<1>:d     r16.0<1;0>:d      r6.0<1;0>:d       3:w               {I@1}
+        add (16|M0)              r10.0<1>:q    r3.1<0;1,0>:q     r36.0<1;1,0>:q   {Compacted}
+        add (16|M16)             r12.0<1>:q    r3.1<0;1,0>:q     r34.0<1;1,0>:q   {Compacted}
+        asr (32|M0)              r6.0<1>:d     r8.0<1;1,0>:d     2:w               {Compacted,I@3}
+        add (16|M0)              r22.0<1>:q    r10.0<1;1,0>:q    r62.0<1;1,0>:q   {Compacted,I@3}
+        add (16|M16)             r24.0<1>:q    r12.0<1;1,0>:q    r60.0<1;1,0>:q   {I@3}
+        mov (32|M0)              r46.0<1>:uw   r44.0<2;1,0>:uw                  {$8.dst}
+        send.ugm (32|M0)         r14      r22  null:0  0x4000            0x08803580           {I@2,$9} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x4]
+        mov (32|M0)              r44.0<1>:f    r6.0<1;1,0>:d                    {I@1}
+        send.ugm (32|M0)         r6       r22  null:0  0x14000            0x08803580           {F@1,$10} // wr:4+0, rd:8; load.ugm.d32x4.a64.flat[A+0x14]
+        mov (16|M0)              r34.0<1>:f    r46.0<1;1,0>:hf                 
+        mov (16|M16)             r35.0<1>:f    r46.16<1;1,0>:hf                
+        send.ugm (32|M0)         r46      r22  null:0  0x0            0x08200B80           {F@1,$11} // wr:4+0, rd:2; load.ugm.d16u32.a64
+        mov (16|M0)              r36.0<1>:f    r1.0<1;1,0>:hf                  
+        mov (16|M16)             r37.0<1>:f    r1.16<1;1,0>:hf                 
+        mul (32|M0)              acc0.0<1>:f   r36.0<1;1,0>:f    r34.0<1;1,0>:f   {Compacted,F@1}
+        mul (32|M0)              acc0.0<1>:f   acc0.0<1;1,0>:f   r44.0<1;1,0>:f   {Compacted}
+        add (32|M0)              r32.0<1>:f    r32.0<1;1,0>:f    acc0.0<1;1,0>:f  {Compacted}
+        sync.nop                             null                             {Compacted,$11.src}
+        dp4a (32|M0)             r22.0<1>:d    0:w                r64.0<1;0>:d      r14.0<1>:d       {$9.dst}
+        dp4a (32|M0)             r24.0<1>:d    r22.0<1;0>:d      r66.0<1;0>:d      r16.0<1>:d       {Compacted,I@1}
+        dp4a (32|M0)             r14.0<1>:d    0:w                r50.0<1;0>:d      r6.0<1>:d        {$10.dst}
+        dp4a (32|M0)             r16.0<1>:d    r14.0<1;0>:d      r48.0<1;0>:d      r8.0<1>:d        {Compacted,I@1}
+scalarfinish lines 1618..1653
+        macl (16|M0)             r12.0<1>:d    r22.0<1;1,0>:d    r6.0<1;1,0>:d    {Compacted}
+(W)     mul (16|M16)             acc0.0<1>:d   r23.0<1;1,0>:d    r7.0<2;1,0>:uw  
+        macl (16|M16)            r13.0<1>:d    r23.0<1;1,0>:d    r7.0<1;1,0>:d    {Compacted}
+        add3 (32|M0)             r10.0<1>:d    r8.0<1;0>:d       r12.0<1;0>:d      r14.0<1>:d       {Compacted,I@1}
+        cmp (32|M0)   (lt)f2.0   null<1>:d     r10.0<1;1,0>:d    0:w               {I@1}
+        add (32|M0)              r6.0<1>:d     r8.0<1;1,0>:d     r12.0<1;1,0>:d   {Compacted}
+(f2.0)  add3 (32|M0)             r10.0<1>:d    r6.0<1;0>:d       r14.0<1;0>:d      3:w               {I@1}
+        mov (16|M16)             r8.0<1>:uq    r58.0<1;1,0>:uq                  {Compacted}
+        mov (16|M0)              r6.0<1>:uq    r64.0<1;1,0>:uq                  {Compacted}
+        asr (32|M0)              r14.0<1>:d    r10.0<1;1,0>:d    2:w               {Compacted,I@3}
+        send.ugm (32|M0)         r12      r18  null:0  0x0            0x08200B80           {$12} // wr:4+0, rd:2; load.ugm.d16u32.a64
+        send.ugm (32|M0)         r10      r6  null:0  0x0            0x08200B80           {I@1,$13} // wr:4+0, rd:2; load.ugm.d16u32.a64
+        mov (32|M0)              r8.0<1>:f     r14.0<1;1,0>:d                   {$13.src}
+        add (32|M0)              r6.0<1>:d     r34.0<1;1,0>:d    8:w              
+        cmp (32|M0)   (lt)f3.0   null<1>:d     r6.0<1;1,0>:d     r3.12<0;1,0>:d   {I@1}
+        mov (32|M0)              r1.0<1>:uw    r12.0<2;1,0>:uw                  {$12.dst}
+        sync.nop                             null                             {F@1}
+        mov (32|M0)              r14.0<1>:uw   r10.0<2;1,0>:uw                  {$13.dst}
+        mov (32|M0)              r10.0<1>:f    r1.0<1;1,0>:hf                   {I@1}
+        mov (32|M0)              r12.0<1>:f    r14.0<1;1,0>:hf                 
+        mul (32|M0)              acc0.0<1>:f   r12.0<1;1,0>:f    r10.0<1;1,0>:f   {Compacted,F@1}
+        mul (32|M0)              acc0.0<1>:f   acc0.0<1;1,0>:f   r8.0<1;1,0>:f    {Compacted}
+        add (32|M0)              r36.0<1>:f    r36.0<1;1,0>:f    acc0.0<1;1,0>:f  {Compacted}
+(~f3.0) goto (32|M0)                         L22224                  L22224                
+L22200:
+        mov (32|M0)              r34.0<1>:f    r6.0<1;1,0>:f                    {Compacted}
+(W)     jmpi                                 L17904                                
+L22224:
+        join (32|M0)                         L22784                                
+L22240:
+(W)     mov (4|M0)               r8.0<1>:ud    r36.4<1;1,0>:ud                  {Compacted,F@2}
+(W)     mov (4|M0)               r8.4<1>:ud    r36.0<1;1,0>:ud                  {Compacted}
+(W)     mov (4|M0)               r8.8<1>:ud    r36.12<1;1,0>:ud                
+(W)     mov (4|M0)               r8.12<1>:ud   r36.8<1;1,0>:ud                 
+(W)     mov (4|M0)               r9.0<1>:ud    r37.4<1;1,0>:ud                  {Compacted}

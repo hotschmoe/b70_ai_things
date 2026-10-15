@@ -1,0 +1,120 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 36.472519558039494,
+  "launch_exception": null,
+  "source_packet_sha256": "038700c2a3fe0c11a05394e6c48d650546ec88ac77373e9effa56a2bf0779c24",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 360305,
+      "stop_reason": "end_turn",
+      "session_id": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "total_cost_usd": 1.6100122000000001,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 18446,
+        "cache_read_input_tokens": 109110,
+        "output_tokens": 2631,
+        "output_tokens_details": {
+          "thinking_tokens": 1380
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 18446,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 2631,
+            "cache_read_input_tokens": 109110,
+            "cache_creation_input_tokens": 18446,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 18446
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 14,
+          "outputTokens": 26187,
+          "thinkingTokens": 14213,
+          "cacheReadInputTokens": 354801,
+          "cacheCreationInputTokens": 126907,
+          "webSearchRequests": 0,
+          "costUSD": 1.6100122000000001,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# S100 compiled-body delta: ACCEPT\n\n**Decision: ACCEPT** the finite same-binary matched C2 serving comparison exactly as root designed it. I found no concrete arithmetic or ownership mismatch, and no primitive repeat is needed.\n\n## 1. Raw byte identity: FALSE, and not claimed\n\n- The ON text is the same size as S98's 23,040 bytes, but 9,611 bytes differ. The embedded SPIR-V differs too.\n- The first failed identity audit stays on record as it is.\n- OFF matches S97 exactly on its computational prefix, codebook, options, relocations and resources. Only the known immediate words after end-of-text differ.\n\n## 2. Arithmetic ledger: supported by the excerpts\n\n- **Dot chains.**\n  - E4 has two zero-seeded `dp4a` chains of four each.\n  - The weight registers are shared across entries.\n  - The activation loads are per entry: the 32-byte `qs` at offset +0x4/+0x14 and the `ds` half at +0x0.\n  - Integer reassociation inside a chain cannot change results, given the overflow bound (\u22648.1M, well under INT32_MAX). The emitted order is consistent with the source order anyway.\n- **Signed truncation.**\n  - `(s0+s1)/2` is emitted as add, then +1 when negative, then `asr 1`.\n  - The numerator `/4` is `add3`, then +3 when negative, then `asr 2`.\n  - Both truncate toward zero, matching C semantics in the E4, E2 and scalar paths.\n- **FP.**\n  - Weight scale (half\u2192float) \u00d7 activation scale (half\u2192float), then \u00d7 `float(sumi)`, then a separate FP add into each entry's own accumulator.\n  - There is no FP MAD or FMA, so the contraction-parity condition from my source review is closed.\n  - Per-lane K order is unchanged.\n- **Reduction and ownership.**\n  - Each of r44, r42, r40 and r58 gets its own XOR 4 \u2192 2 \u2192 1 swap-and-add, computed as v + permute(v); FP add is commutative bitwise.\n  - The results go to r10, r12, r14 and r16 and are stored at entry offsets +0, +1, +2, +3 times `dst_stride`, under the store predicate.\n  - There is no cross-entry summation.\n\nThe main-build codegen differences (scheduling, register allocation, load overlap) do not touch any rounding step. So S98's strict byte equality carries over as an arithmetic argument, not as binary identity.\n\n## 3. Host dispatch: closed\n\n- The eligibility compares (type 17, 2560, 640) and the latched flag gate the new launch; anything ineligible or OFF goes to the old port.\n- The ON and OFF Info, cache, guard and name pointers are distinct.\n- Production EXPERT_SPLIT 0 with LANES 8 does reach the port. I accept root's correction to my earlier \"skip\" wording.\n\n## 4. Runtime qualification: bounded, not yet earned\n\nThe serving run tests:\n\n- outputs and native work;\n- captures and functionals;\n- the marker: absent with OFF, exactly once with ON;\n- normal teardown and full health.\n\nKeep the S94 caveat in force:\n\n- **Draft-only mismatch:** a `draft_n` mismatch with identical text, usage and accepted work is unresolved, not a candidate defect.\n- **Text, usage or accepted-work mismatch:** this is a failure and stops the comparison.\n\nReport the three pairs descriptively only. S98's \u221240.6% is a warm fixture figure, not a forecast, and the route-size distribution is unmeasured. The 150 tok/s per-stream target remains unmet.",
+      "ttft_ms": 19852,
+      "type": "result",
+      "duration_ms": 35507,
+      "uuid": "9013da30-f561-4996-97d4-df31d7fe3bab",
+      "ttft_stream_ms": 1665,
+      "time_to_request_ms": 79,
+      "first_content_frame_ms": 1666,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

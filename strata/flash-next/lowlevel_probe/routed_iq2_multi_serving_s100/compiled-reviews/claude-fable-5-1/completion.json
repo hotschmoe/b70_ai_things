@@ -1,0 +1,120 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 46.547694452048745,
+  "launch_exception": null,
+  "source_packet_sha256": "038700c2a3fe0c11a05394e6c48d650546ec88ac77373e9effa56a2bf0779c24",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 458148,
+      "stop_reason": "end_turn",
+      "session_id": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "total_cost_usd": 4.164981750000001,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 18190,
+        "cache_read_input_tokens": 113748,
+        "output_tokens": 2849,
+        "output_tokens_details": {
+          "thinking_tokens": 1962
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 18190,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 2849,
+            "cache_read_input_tokens": 113748,
+            "cache_creation_input_tokens": 18190,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 18190
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 14,
+          "outputTokens": 28928,
+          "thinkingTokens": 20256,
+          "cacheReadInputTokens": 370647,
+          "cacheCreationInputTokens": 131289,
+          "webSearchRequests": 0,
+          "costUSD": 4.164981750000001,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**ACCEPT the finite same-binary matched C2 serving comparison.** No concrete arithmetic or ownership mismatch is open.\n\n**Raw byte identity**\n\nThe ON text differs from the S98 image in 9611 bytes at equal size, and the OFF text differs from S97 only in the known post-EOT immediates. Both are expected: a new registered name, a different translation unit and different scheduling. Raw identity is FALSE and stays recorded that way. It is not evidence either direction.\n\n**Arithmetic ledger, checked against the excerpts**\n\nThe three finish bodies implement the source expression exactly:\n\n- The half sum takes the signed add with a predicate, adds 1 only when negative, then arithmetic shift by 1. That is truncation toward zero of the signed division by 2.\n- Both scale products are 32-bit integer multiply and low accumulate, then a three-way add with the half term, a sign compare, plus 3 only when negative, then shift by 2. That is truncation toward zero of the division by 4.\n- The integer result converts to float once, the weight half and the activation half each convert to float, the two scales multiply first, then that product multiplies the converted sum, then a separate add into the per-entry accumulator. No fused multiply-add appears anywhere in the three bodies.\n- The E4 reduction shuffles each accumulator by 4, then 2, then 1 within its eight-lane group, adding value plus partner each step, with the four accumulators kept apart and stored to entry offsets 0, 1, 2 and 3 under the lane-zero predicate. The E2 and scalar bodies follow the same pattern.\n\nThis confirms the source ledger carried into the compiled main body for the three entry shapes. It is bounded reading of selected labels, not whole-kernel equivalence, and the S98 88-snapshot pass remains a two-expert fixture result.\n\n**No primitive repeat is warranted**\n\nThe one mechanism a repeat could add would be exercising negative odd integer sums through the truncation fixups. The compiled fixups are visible above and the S98 real-weight inputs with signed activations already drive both signs. There is no uncovered numerical mechanism to name, so a repeat would be generic.\n\n**Bounded runtime qualification still to earn**\n\nThe serving run must show, in order: the marker absent on OFF and exactly once on ON after warm, matched text, SSE, usage, native work including offered and accepted drafts, matched captures, functionals, normal quit with container gone and wrapper zero, and full health. The S94 draft-count discriminator stays as the first-pair fail gate. Any timings from this run describe one process per arm and do not speak to route frequency or the serving targets, which remain unmet.",
+      "ttft_ms": 30725,
+      "type": "result",
+      "duration_ms": 45561,
+      "uuid": "523b1f9b-e909-49fb-9ecb-e573d880417d",
+      "ttft_stream_ms": 1741,
+      "time_to_request_ms": 78,
+      "first_content_frame_ms": 1741,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

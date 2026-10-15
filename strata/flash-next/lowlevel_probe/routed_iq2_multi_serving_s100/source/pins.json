@@ -1,0 +1,26 @@
+{
+  "status": "SOURCE_PREP_ONLY_NO_APPLY_BUILD_GPU",
+  "original_sha256": "acaa7da63733af9f3831b3a74b99e6176bf46a06e498e0a33c0591f7f4a29851",
+  "candidate_sha256": "8bf1489cb53a2de442c051a8a64f577d330eadedbe200fd36ee967f33a29bb6d",
+  "patch_sha256": "435ceaf051e457ea520ffb385cdf5c8922a8dc793b36ea715c3e89bb42b5324a",
+  "source_inverse_reconstructs_original": true,
+  "Multi17_body_exact_S98_except_disabled_has": true,
+  "pins": {
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp": {
+      "bytes": 291120,
+      "sha256": "acaa7da63733af9f3831b3a74b99e6176bf46a06e498e0a33c0591f7f4a29851"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-prep/private_iq2_gu.hpp": {
+      "bytes": 13924,
+      "sha256": "5257cb5c51ef4fa4797b1f665e5ee523236f61afa02471b7570ef66600a56abd"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-build-audit-v2/facts.json": {
+      "bytes": 37207,
+      "sha256": "65a5ed7a27520dfea47c6edd163f832d05fa18b32be8ee33c74861b856f521df"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-candidate-isa/report.json": {
+      "bytes": 13347,
+      "sha256": "770998a46750de70ecc653d81cda4627caa35919212aa31f8137901a52d7c6a5"
+    }
+  }
+}

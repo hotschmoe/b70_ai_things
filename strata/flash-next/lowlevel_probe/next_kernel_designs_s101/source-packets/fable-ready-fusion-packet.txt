@@ -1,0 +1,395 @@
+Prepare ONE independent low-level experiment, or SOURCE_AUDIT_NEEDED/NO_GO, for upstream Strata on two Intel B70s / PCIe3.0x16 / Threadripper1950X. Source preparation only: no tools, build, GPU, model read or framework. Deliver exact sites/mechanism, ownership/barrier/FP ledger, smallest falsifying offline check and one bounded primitive only if justified. Root executes later. Default-off; stop first strict mismatch. Current SYCL source pins below; source is not compiled-image proof. S100 IQ2_XS reuse tested separately.
+S95 main d94e96ca399d8ecf1f15403db754b645697e82eaa72c052a2d18f4b29defc247; EP149/363/all24576 resident, depth2/headpairON/spec4, TRACE1/HOST_BOUNDARY1, VERIFY_PROFILE absent. Twelve structural GPU cycles median57.06675ms,48 EP waits each; EP recorded service median3.0683125ms. Non-additive diagnostics, no removable budget. No native CPU/GPU or cross-card clock join (305.324us calibration drift); gaps are not physical idle/traffic/readiness proof. CPU handoff2.36us gives no host-gap lead. Generic names do not identify individual weights. Two extra GPU C6heads unattributed.
+Reject blind wait removal, shared-streamOFF(S15), headRPW2(S55), HC global fusion(S69), commit overlap(S79), already-rejected GRF256/SWAR/MORE/SG16DPAS/packedQ6 mechanisms. Preserve strict bits/FP order; no speed forecast, tolerance workaround or serving claim. S94 draft-offer mismatch remains unresolved.
+
+YOUR LANE (actual Claude Fable5.1): independent adjacent-operation/data-readiness/fusion opportunity. Prepare ONE concrete small test or rule it out with source proof. Primary/peer EP path is provided in full relevant caller sequence; shared gate/up/SwiGLU-Q8 and router gate folding already exist, so do not rediscover them as new. Potential direction is keeping transport/plan/scratch bytes ready with fewer launches/copies, but no direction is presumed profitable. Peer wait+uncached-copy+plan are distinct correctness steps; preserve system release/acquire, freshness, epoch rollover, first-occurrence group/entry order, finite spin/error semantics, persistent scratch and graph replay. A fuse may change work-group participation and needs a complete barrier/ownership proof. Do not remove uncached reads because flags arrived. Do not fold remote weighted reductions unless every original FP operation and ordering is preserved; grouping remote contributions generally changes rounding.
+
+C6 data shapes from exact caller: n6, N2560,K10 =>60ids (240B), Q8 data6*(2560/32)*36=17280B; copied inbox includes ep_xq_off_ padding (value not supplied). Each returned row2560floats=10240B; cap60 gives614400B allocated output plane, actual transmitted rows depend on expert ownership/residency and are UNKNOWN here. No PCIe measured-byte/critical-path claim. Peer copy grid18*256 corresponds4608 words launch capacity, not measured transfer bytes. Shared stream may overlap local/peer work; no timestamp join to infer overlap. Source pins equal S95 for verify.cpp/native_mmvq; dependencies lacking historical pins are current-source-only.
+
+Whole-collection CSV, include device identity; not cycles or primary/peer time join:
+{"process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1", "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>", "operation": "strata::kernels::ep_send_rows(float*, float const*, int const*, int const*, int, long, unsigned int*, unsigned int*, unsigned int const*, void*)::ep_send_rows_kernel[SIMD32 {60; 1; 1} {256; 1; 1}]", "count": "1152", "total_ms": "34.136928", "median_us": "29.687"}
+{"process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0", "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>", "operation": "dpct_kernel_name<strata::kernels::resident_plan_ep(int const*, int, int, int const*, int const*, int, int, unsigned char const*, unsigned long long const*, long long, int*, long long, void*, unsigned int*)::resident_plan_ep_kernel>[SIMD32 {1; 1; 1} {128; 1; 1}]", "count": "1392", "total_ms": "8.741423000000001", "median_us": "6.354"}
+{"process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0", "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>", "operation": "strata::kernels::ep_push(int const*, int, unsigned char const*, unsigned long, int*, unsigned char*, unsigned int*, unsigned int const*, void*)::ep_push_kernel[SIMD32 {1; 1; 1} {256; 1; 1}]", "count": "1392", "total_ms": "5.288287", "median_us": "3.75"}
+{"process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1", "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>", "operation": "strata::kernels::ep_copy_uncached(void*, void const*, unsigned long, void*)::ep_copy_uncached_kernel[SIMD32 {18; 1; 1} {256; 1; 1}]", "count": "1152", "total_ms": "1.893924", "median_us": "1.562"}
+
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp
+SHA256 e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2
+EXACT LINES 1485..1497
+```cpp
+        if (ar_on()) {
+            stamp(l, 19, grp);
+            grouped(p_ptr, p_start, p_counts, 0, parts_out);
+            static const bool ep_self = [] { const char* v = std::getenv("STRATA_EP_SELF"); return v && v[0] == '1'; }();
+            if (ep_on() && ep_verify_) {   // the check: this card computed every row; compare the peer's with them
+                ep_wait(ep_ret0_ + (size_t) ring * 16, ep_ctr0_, ep_spin_, ep_err0_, ring, cs);
+                ep_compare(parts_out, ep_rows0_ + (size_t) tb * K * N, ids_ + tb * K, hits_.d_res + l * g.n_expert,
+                           (int) cap, N, ep_err0_ + 8, cs);
+            } else if (ep_on() && !ep_self) {   // the peer's rows are in parts_ once its flag is up
+                ep_wait(ep_ret0_ + (size_t) ring * 16, ep_ctr0_, ep_spin_, ep_err0_, ring, cs);
+            }
+            stamp(l, 20, grp);
+        } else {
+```
+
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp
+SHA256 e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2
+EXACT LINES 1540..1560
+```cpp
+        // Same condition as `sh_fork` above, which is per group and out of scope here: wait only when the fork
+        // actually ran (a wait on an event never recorded is a no-op, but saying it outright reads better).
+        if (sh_stream_on() && !prof_on_ &&
+            sh_cs_ != &dpct::get_in_order_queue() && ev_fork_ != nullptr &&
+            ev_join_ != nullptr) {
+            cs->ext_oneapi_submit_barrier({*ev_join_});
+        }
+        if (sg_gated_[grp]) {   // STRATA_LFUSE: the shared expert's gate was not applied: the combine applies it (all rows are hits)
+            try {
+                native_moe_combine_multi_hits_gated(parts_out, w_ + tb * K, shared_ + tb * N, sh_g_ + tb, bo_ + tb * N, N, K, n, cs);
+            } catch (const std::exception& e) { err = "verify combine: " + std::string(e.what()); return false; }
+        } else
+        if (dec_batch && n > 1 && native_moe_combine_enabled()) {   // one launch for the window's rows
+            try {
+                native_moe_combine_multi(parts_ + (size_t) tb * K * N, w_ + tb * K, shared_ + tb * N, bo_ + tb * N, N, K, n, cs);
+            } catch (const std::exception& e) { err = "verify combine: " + std::string(e.what()); return false; }
+        } else
+        for (int t = tb; t < te; ++t) {
+            MoEBuffers mb = ss.moe;
+            mb.weights = w_ + t * K; mb.shared = shared_ + t * N;
+            if (!moe_combine_parts(g, l, K, mb, parts_ + (size_t) t * K * N, bo_ + t * N, cs, err)) return false;
+```
+
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/ep_kernels.dp.cpp
+SHA256 ed8e4fcf083c2789698863c081b867a91715127fb88054488b06a93830a93ebe
+EXACT LINES 8..27
+```cpp
+namespace strata::kernels {
+namespace {
+// the doorbell's uncached L1+L3 read (sycl_doorbell.hpp), for whole buffers
+inline uint32_t load_uncached(const uint32_t* p) {
+    sycl::ext::oneapi::experimental::annotated_ptr<uint32_t, doorbell_uncached_read> u(const_cast<uint32_t*>(p));
+    return u[0];
+}
+}  // namespace
+
+void ep_copy_uncached(void* dst, const void* src, size_t bytes, void* stream) {
+    if (bytes == 0) return;
+    constexpr size_t WG = 256;
+    const size_t words = bytes / 4;
+    const size_t groups = std::min<size_t>((words + WG - 1) / WG, 64);
+    uint32_t* d = (uint32_t*) dst;
+    const uint32_t* s = (const uint32_t*) src;
+    q_of(stream)->parallel_for<class ep_copy_uncached_kernel>(sycl::nd_range<1>(groups * WG, WG), [=](sycl::nd_item<1> it) {
+        for (size_t i = it.get_global_id(0); i < words; i += groups * WG) d[i] = load_uncached(s + i);
+    });
+}
+```
+
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/ep_kernels.dp.cpp
+SHA256 ed8e4fcf083c2789698863c081b867a91715127fb88054488b06a93830a93ebe
+EXACT LINES 88..143
+```cpp
+void ep_push(const int32_t* ids, int n_ids, const uint8_t* xq, size_t xq_bytes, int32_t* peer_ids, uint8_t* peer_xq,
+             uint32_t* peer_flag, const uint32_t* ctr, void* stream) {
+    constexpr size_t WG = 256;
+    // q8_1 rows are 36-byte blocks: copied as 4-byte words (both buffers are 4-byte aligned, xq_bytes a multiple of 4)
+    const size_t words = xq_bytes / 4;
+    q_of(stream)->parallel_for<class ep_push_kernel>(sycl::nd_range<1>(WG, WG), [=](sycl::nd_item<1> it) {
+        const size_t lid = it.get_local_id(0);
+        for (size_t i = lid; i < (size_t) n_ids; i += WG) peer_ids[i] = ids[i];
+        const uint32_t* s = (const uint32_t*) xq;
+        uint32_t* d = (uint32_t*) peer_xq;
+        for (size_t i = lid; i < words; i += WG) d[i] = s[i];
+        // Keep cross-device ordering on the barrier itself: a default-scope
+        // barrier can absorb the adjacent fence with only work-group scope.
+        sycl::atomic_fence(sycl::memory_order::release, sycl::memory_scope::system);
+        sycl::group_barrier(it.get_group(), sycl::memory_scope::system);
+        if (lid == 0) sys_store(peer_flag, *ctr);
+    });
+}
+
+void ep_wait(const uint32_t* flag, const uint32_t* ctr, uint32_t spin_max, uint32_t* err, uint32_t code, void* stream) {
+    q_of(stream)->single_task<class ep_wait_kernel>([=] {
+        const uint32_t want = *ctr;
+        uint32_t spin = 0;
+        // the epoch counters only grow and wrap: compare the difference, not the values
+        while ((int32_t) (sys_load(flag) - want) < 0) {
+            if (++spin >= spin_max) {
+                if (err != nullptr) sys_store(err, code);
+                break;
+            }
+        }
+        sycl::atomic_fence(sycl::memory_order::acquire, sycl::memory_scope::system);
+    });
+}
+
+void ep_send_rows(float* peer_rows, const float* rows, const int32_t* ids, const int32_t* res0, int n, int64_t row,
+                  uint32_t* done, uint32_t* peer_flag, const uint32_t* ctr, void* stream) {
+    if (n <= 0) return;
+    constexpr size_t WG = 256;
+    using sys_rmw = sycl::atomic_ref<uint32_t, sycl::memory_order::acq_rel, sycl::memory_scope::system>;
+    q_of(stream)->parallel_for<class ep_send_rows_kernel>(sycl::nd_range<1>((size_t) n * WG, WG), [=](sycl::nd_item<1> it) {
+        const int r = (int) it.get_group(0);
+        const int32_t e = ids[r];
+        if (!(e >= 0 && res0[e] >= 0)) {   // the peer's entry: its row goes to card 0
+            const sycl::float4* s = (const sycl::float4*) (rows + (size_t) r * row);
+            sycl::float4* d = (sycl::float4*) (peer_rows + (size_t) r * row);
+            for (int64_t i = it.get_local_id(0); i < row / 4; i += WG) d[i] = s[i];
+        }
+        sycl::atomic_fence(sycl::memory_order::release, sycl::memory_scope::system);
+        sycl::group_barrier(it.get_group());
+        if (it.get_local_id(0) == 0 && sys_rmw(*done).fetch_add(1u) == (uint32_t) n - 1) {
+            *done = 0;   // every group has counted itself: the next call starts from zero
+            sycl::atomic_fence(sycl::memory_order::acq_rel, sycl::memory_scope::system);
+            sys_store(peer_flag, *ctr);
+        }
+    });
+}
+```
+
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+SHA256 5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e
+EXACT LINES 2072..2244
+```cpp
+constexpr int kResidentPlanMax = 128;
+static_assert(kVerifyMaxT * 10 <= kResidentPlanMax, "resident_plan: one thread per entry");
+// the parallel scan keeps one partial sum per warp in s_wsum[4] and packs (entries << 16 | groups) in an int
+static_assert(kResidentPlanMax <= 128 && kResidentPlanMax % 32 == 0, "resident_plan: at most 4 warps");
+static_assert(kResidentPlanMax < 32768, "resident_plan: the packed entry count must stay below 2^15");
+/*
+DPCT1110: The total declared local variable size in device function
+resident_plan_kernel exceeds 128 bytes and may cause high register pressure.
+Consult with your hardware vendor to find the total register size available and
+adjust the code, or use smaller sub-group size to avoid high register pressure.
+*/
+__dpct_inline__ void
+resident_plan_kernel(const int32_t *__restrict__ ids, int n, int k,
+                     const int32_t *__restrict__ res, int n_expert,
+                     const uint8_t *cache_base,
+                     const unsigned long long *slot_off, long long blob,
+                     int32_t *__restrict__ pl, long long capx, uint32_t *skip,
+                     uint32_t ring, const unsigned long long *__restrict__ mir,
+                     volatile uint32_t *plan_err, int32_t *usage,
+                     const int32_t *__restrict__ res_other = nullptr, int ep_role = 0) {
+    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+auto &s_ids = *sycl::ext::oneapi::group_local_memory_for_overwrite<
+    int32_t[kResidentPlanMax]>(
+    sycl::ext::oneapi::this_work_item::get_work_group<3>());
+    auto &s_excl = *sycl::ext::oneapi::group_local_memory_for_overwrite<
+        int32_t[kResidentPlanMax]>(
+        sycl::ext::oneapi::this_work_item::get_work_group<3>());
+    auto &s_wsum =
+        *sycl::ext::oneapi::group_local_memory_for_overwrite<int32_t[4]>(
+            sycl::ext::oneapi::this_work_item::get_work_group<3>());
+    auto &s_bad = *sycl::ext::oneapi::group_local_memory_for_overwrite<int>(
+        sycl::ext::oneapi::this_work_item::get_work_group<3>());
+    const int tid = item_ct1.get_local_id(2);
+    if (tid == 0) s_bad = 0;
+    item_ct1.barrier(sycl::access::fence_space::local_space);
+
+    int32_t eid = -1;
+    int32_t slot = -1;
+    unsigned long long maddr = 0;   // SYCL port: a host-mirrored expert (not in VRAM): its pinned mirror, read over PCIe
+    bool foreign = false;           // expert parallelism (ep_kernels.hpp): the other card computes this entry
+    if (tid < n) {
+        eid = ids[tid];
+        s_ids[tid] = eid;
+        const bool in_range = eid >= 0 && eid < n_expert;
+        slot = in_range ? res[eid] : -1;
+        if (usage != nullptr && in_range)   // the adaptive tier's routing counts (device side)
+            sycl::atomic_ref<int32_t, sycl::memory_order::relaxed, sycl::memory_scope::device,
+                             sycl::access::address_space::global_space>(usage[eid]).fetch_add(1);
+        // card 0 owns what it holds; card 1 owns what card 0 does not hold (`res` is the planning card's own table)
+        if (ep_role == 1 && slot < 0 && in_range) foreign = res_other[eid] >= 0;
+        if (ep_role == 2 && in_range && res_other[eid] >= 0) { foreign = true; slot = -1; }
+        if (slot < 0 && in_range && mir != nullptr && !foreign) maddr = mir[eid];
+        if (slot < 0 && maddr == 0 && !foreign)
+            dpct::atomic_fetch_or<sycl::access::address_space::generic_space>(
+                &s_bad, 1);
+    }
+    item_ct1.barrier(sycl::access::fence_space::local_space);
+    if (s_bad) {
+        if (tid == 0 && skip != nullptr) *skip = 0;
+        if (tid == 0 && skip == nullptr) {   // #871: the all-resident graph has no host plan to fall back on
+            pl[0] = 0; pl[1] = 0; pl[2] = 0;   // an empty plan: no expert runs on a stale pointer
+            /*
+            DPCT1078: Consider replacing memory_order::acq_rel with
+            memory_order::seq_cst for correctness if strong memory order
+            restrictions are needed.
+            */
+            if (plan_err != nullptr) {
+                    *plan_err = 1;
+                    sycl::atomic_fence(sycl::memory_order::acq_rel,
+                                       sycl::memory_scope::system);
+            }
+        }
+        return;
+    }
+
+    int first_j = tid;
+    int rank_in_group = 0;
+    int count_same = 0;
+    if (tid < n) {
+#pragma unroll
+        for (int j = 0; j < n; ++j) {
+            if (s_ids[j] == eid) {
+                if (j < first_j) first_j = j;
+                if (j < tid) ++rank_in_group;
+                ++count_same;
+            }
+        }
+    }
+    const bool is_first = (tid < n && first_j == tid && (slot >= 0 || maddr != 0));
+    const int my_cnt = is_first ? count_same : 0;
+    const int my_pack = (my_cnt << 16) | (is_first ? 1 : 0);
+    const int lane = tid & 31;
+    const int warp = tid >> 5;
+    int pref = my_pack;
+#pragma unroll
+    for (int d = 1; d < 32; d <<= 1) {
+        /*
+        DPCT1108: '__shfl_up_sync' was migrated with the experimental
+        feature masked sub_group function which may not be supported by all
+        compilers or runtimes. You may need to adjust the code.
+        */
+        const int up = dpct::experimental::shift_sub_group_right(
+            0xffffffffu, sycl::ext::oneapi::this_work_item::get_sub_group(),
+            pref, d);
+        if (lane >= d) pref += up;
+    }
+    s_excl[tid] = pref - my_pack;
+    if (lane == 31) {
+        s_wsum[warp] = pref;
+    }
+    /*
+    DPCT1065: Consider replacing sycl::nd_item::barrier() with
+    sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better
+    performance if there is no access to global memory.
+    */
+    item_ct1.barrier();
+
+    int32_t* counts = pl;
+    int32_t* start = pl + 4;
+    int32_t* dst = start + capx + 1;
+    int32_t* tok = dst + capx;
+    const long long ptr_off = ((4 + (capx + 1) + 2 * capx) + 1) & ~1ll;
+    unsigned long long* ptr = (unsigned long long*) (pl + ptr_off);
+    int32_t* start2 = pl + ptr_off + 4 * capx;
+
+    if (is_first) {
+        int tot = s_excl[tid];
+#pragma unroll
+        for (int w = 0; w < 4; ++w) {
+            if (w < warp) tot += s_wsum[w];
+        }
+        const int grp_idx = tot & 0xffff;
+        const int ent_start = tot >> 16;
+        ptr[grp_idx] = slot >= 0 ? (unsigned long long) (cache_base + (slot_off ? (size_t) slot_off[slot] : (size_t) slot * (size_t) blob))
+                                 : maddr;
+        start[grp_idx] = ent_start;
+    }
+    if (tid < n && !foreign) {
+        const int fj_warp = first_j >> 5;
+        int fj_tot = s_excl[first_j];
+#pragma unroll
+        for (int w = 0; w < 4; ++w) {
+            if (w < fj_warp) fj_tot += s_wsum[w];
+        }
+        const int out_idx = (fj_tot >> 16) + rank_in_group;
+        dst[out_idx] = tid;
+        tok[out_idx] = tid / k;
+    }
+    if (tid == 0) {
+        const int packed = s_wsum[0] + s_wsum[1] + s_wsum[2] + s_wsum[3];
+        const int groups = packed & 0xffff;
+        const int ents = ep_role != 0 ? (packed >> 16) : n;   // without a peer every entry is in a group
+        start[groups] = ents;
+        start2[0] = ents;
+        counts[0] = groups;
+        counts[1] = ents;
+        counts[2] = 0;
+        if (skip != nullptr) {
+            /*
+            DPCT1078: Consider replacing memory_order::acq_rel with
+            memory_order::seq_cst for correctness if strong memory order
+            restrictions are needed.
+            */
+            sycl::atomic_fence(sycl::memory_order::acq_rel,
+                               sycl::memory_scope::device);
+            strata::sys_store(skip, ring);
+        }
+    }
+}
+// The same plan in one block of 128 threads (n <= 128): thread i owns entry i. Groups are the distinct experts in
+// order of first occurrence; group g's entries are its occurrences in increasing i - exactly the loop above
+// (S26: the one-thread loop took ~44 us per call on gfx1151, 48 per window).
+void resident_plan_par_kernel(const int32_t* __restrict__ ids, int n, int k, const int32_t* __restrict__ res,
+```
+
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+SHA256 5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e
+EXACT LINES 2416..2438
+```cpp
+void resident_plan_ep(const int32_t* ids, int n_entries, int k, const int32_t* res0, const int32_t* res1, int role,
+                      int n_expert, const uint8_t* cache_base, const unsigned long long* slot_off, long long blob,
+                      int32_t* plan, long long capx, void* stream, uint32_t* plan_err) {
+    const int32_t* own = role == 1 ? res0 : res1;
+    const int32_t* other = role == 1 ? res1 : res0;
+    {
+        auto exp_props = sycl::ext::oneapi::experimental::properties{
+            sycl::ext::oneapi::experimental::use_root_sync};
+
+        strata::q_of(stream)
+            ->parallel_for<dpct_kernel_name<class resident_plan_ep_kernel>>(
+                sycl::nd_range<3>(sycl::range(1, 1, kResidentPlanMax),
+                                  sycl::range(1, 1, kResidentPlanMax)),
+                exp_props,
+                [=](sycl::nd_item<3> item_ct1)
+                    [[sycl::reqd_sub_group_size(32)]] {
+                        resident_plan_kernel(
+                            ids, n_entries, k, own, n_expert, cache_base,
+                            slot_off, blob, plan, capx, nullptr, 0, nullptr, plan_err, nullptr, other, role);
+                    });
+    }
+    check("resident_plan_ep");
+}
+```
+
+REQUIRED DECISION: identify which one dependency could actually change end-to-end readiness under this source schedule; if missing ownership/image/shape attribution prevents that, specify a source-only lookup or one existing-image audit that can falsify it before any build. A possible later primitive must check full old/new plan fields, token/group permutation, stale flag/counter cycles, A-B-A graph replay and canaries, including zero local/zero remote groups, before timing; do not benchmark only a copy whose consumer is absent. Keep any accepted test finite and one-card if no genuine cross-card property is involved; actual cross-card memory freshness requires both leased cards and cannot be proven on CPU.
+
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp
+SHA256 e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2
+EXACT LINES 1417..1444
+```cpp
+        if (ar_on() && ep_on()) {
+            // expert parallelism: the ids and q8_1 rows go to the peer's inbox; the peer's graph waits for them, plans
+            // and computes its own entries and sends their rows with this ring's return flag (ep_send_rows), which
+            // post() waits for.  STRATA_EP_SELF=1 (a check, needs STRATA_EP_MIRROR=1): this card computes every entry.
+            const uint32_t ring = (uint32_t) ((l - lb_) * G + grp + 1);
+            const size_t xq_bytes = (size_t) n * (N / 32) * 36;
+            uint8_t* slot0 = ep_inbox_on0_ + (size_t) grp * ep_slot_bytes_;
+            uint8_t* slot1 = ep_in1_ + (size_t) grp * ep_slot_bytes_;   // the inbox slot, copied past the caches
+            ep_push(ids_ + tb * K, n * (int) K, nat_xq_ + (size_t) tb * (N / 32) * 36, xq_bytes, (int32_t*) slot0,
+                    slot0 + ep_xq_off_, ep_inflag_on0_ + (size_t) ring * 16, ep_ctr0_, cs);
+            ep_wait(ep_inflag1_ + (size_t) ring * 16, ep_ctr1_, ep_spin_, ep_err1_, ring, ep_q_);
+            ep_copy_uncached(slot1, ep_inbox1_ + (size_t) grp * ep_slot_bytes_, ep_xq_off_ + xq_bytes, ep_q_);
+            const int64_t capx = (int64_t) max_t_ * K, cap = (int64_t) n * K;
+            int32_t* pl1 = ep_plan1_ + (size_t) grp * (size_t) (plan_i32_ + 16);
+            resident_plan_ep((const int32_t*) slot1, (int) cap, (int) K, ep_cfg_.res0_on1 + l * g.n_expert,
+                             ep_cfg_.res1 + l * g.n_expert, 2, (int) g.n_expert, ep_cfg_.cache_base1, ep_cfg_.slot_off1,
+                             (long long) ep_cfg_.blob1, pl1, (long long) capx, ep_q_, ep_plan_err1_);
+            const int64_t ptr_off = ((4 + (capx + 1) + 2 * capx) + 1) & ~1ll;
+            const auto& f = strata::kernels::cpu::expert_layout().fmt[(size_t) l];
+            const NativeExpertLayout L = native_expert_layout(f.gu_type, f.d_type, f.n_embd, f.n_ff);
+            native_expert_grouped(L, (const unsigned long long*) (pl1 + ptr_off), pl1 + 4, pl1, pl1 + 4 + capx + 1,
+                                  pl1 + 4 + capx + 1 + capx, cap, cap, slot1 + ep_xq_off_, ep_scratch1_,
+                                  ep_rows1_ + (size_t) tb * K * N, ep_q_, 0);
+            ep_send_rows(ep_parts_on1_ + (size_t) tb * K * N, ep_rows1_ + (size_t) tb * K * N, (const int32_t*) slot1,
+                         ep_cfg_.res0_on1 + l * g.n_expert, (int) cap, N, ep_done1_, ep_ret_on1_ + (size_t) ring * 16,
+                         ep_ctr1_, ep_q_);
+        }
+        stamp(l, 18, grp);
+```
+
+Current exact-source audit (other excerpt omitted to keep packet bounded): verify.cpp1290-1415 forks shared stream after gr_read_group, router folds shared gate when LFUSE eligible, shared_expert_multi writes sh_cs_ output and records ev_join_. nat_xq_ is written before ep_push; shared and routed Q8 images are separate under sh_fork. Do not conflate nw.q8_1 temporary (overwritten by SwiGLU) with nat_xq_ peer input. Complete verify source SHA is pinned above. Shared-expert gate/up and SwiGLU+Q8 fusions already exist; this packet asks independent EP transport/plan readiness feasibility.
+
+Required helper audit before any fusion patch: /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/sycl_doorbell.hpp SHA256 82b325b3a5ac199f96d73996cb51376851c7f8cd6fc85803b6960040442d5534. sys_load/sys_store/cache-hint macro bodies are not reproduced in this bounded packet; caller release/acquire is not the complete visibility proof. Check those exact bodies and actual build defines first.

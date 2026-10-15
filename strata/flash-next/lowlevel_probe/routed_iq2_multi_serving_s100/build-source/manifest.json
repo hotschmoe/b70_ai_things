@@ -1,0 +1,52 @@
+{
+  "status": "FROZEN_BUILD_RECIPE_ONLY_NOT_EXECUTED",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-build",
+  "files": {
+    "README.txt": {
+      "bytes": 2798,
+      "sha256": "d4fc8a0818783442a3a7427f8a908cba75eea3f26e412357c8f9f91749b76677"
+    },
+    "build-container.sh": {
+      "bytes": 4219,
+      "sha256": "6e4eb8f03482db29e306b19b7b2a7d823cdfbd14bf506fb120442415f4f04ba2"
+    },
+    "build.sh": {
+      "bytes": 1373,
+      "sha256": "dbcc733f61cc86e5518fd4ffd9a439ada3d11e94d058f5595898642d386d263a"
+    },
+    "expected-applied-source.sha256": {
+      "bytes": 119,
+      "sha256": "dea7b39fd95cee39d86f0f1c8e472fcf2c6a90bf02c3c63acaac2ec2442568e7"
+    },
+    "expected-before-build.sha256": {
+      "bytes": 292,
+      "sha256": "8bc71e9bae4a40dd3b041b23a6e34c1d56d24951a6c99686b1feb31c7cceec9a"
+    },
+    "expected-before-source.sha256": {
+      "bytes": 119,
+      "sha256": "2e03a5ea630506242997f667ea1cc2792f629a6501c363b083d167fbef1ca809"
+    },
+    "expected-unchanged-build-inputs.sha256": {
+      "bytes": 1655,
+      "sha256": "c4a7df55a0d62629771b4a29335647d86305758deed2c7d9f744ca61d1e2cc40"
+    },
+    "expected-unchanged-source.sha256": {
+      "bytes": 2156,
+      "sha256": "d5dd76dee1961dc252b9b133b83dc687a6127f34640a7b02a9b142b4b2339b96"
+    },
+    "preparation-ownership.json": {
+      "bytes": 1007,
+      "sha256": "65e479cd97f4abbc4731981ed6ad5a1deecedf45357e269196d2995fab250d5c"
+    },
+    "source-checks.json": {
+      "bytes": 419,
+      "sha256": "206fb284c22afc2ca761eb9faa1985307c9366b5971022caa54e1a8155c8b781"
+    },
+    "vs-S94-scripts.diff": {
+      "bytes": 5918,
+      "sha256": "0967c99861ec20447f176e2d626100f50ccb14d07f0271a7968f60d6802532f1"
+    }
+  },
+  "original_recipe": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build",
+  "no_apply_build_GPU_or_ownership_mutation": true
+}

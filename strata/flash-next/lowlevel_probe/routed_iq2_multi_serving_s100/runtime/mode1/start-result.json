@@ -1,0 +1,24 @@
+{
+  "command": [
+    "systemd-run",
+    "--user",
+    "--unit=strata-routed-iq2-multi-s100-mode1",
+    "--collect",
+    "--setenv=B70_S100_CONTAINER=strata-s100-mode1",
+    "--property=WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things",
+    "--property=StandardOutput=append:/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/server.log",
+    "--property=StandardError=append:/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/server.log",
+    "/bin/bash",
+    "-c",
+    "exec 7>&-; exec /bin/bash \"$1\" \"$2\"",
+    "bash",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/harness-prep/launch_stage.sh",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/mode1/config.json"
+  ],
+  "exit": 0,
+  "stdout": "",
+  "stderr": "Running as unit: strata-routed-iq2-multi-s100-mode1.service; invocation ID: cc7bcf71e5e84a38840e4f18d4a5496e\n",
+  "unit": "strata-routed-iq2-multi-s100-mode1",
+  "container": "strata-s100-mode1",
+  "epoch_ns": 1792101802658087847
+}

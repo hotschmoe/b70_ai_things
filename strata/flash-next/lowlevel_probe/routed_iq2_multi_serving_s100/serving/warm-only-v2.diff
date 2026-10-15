@@ -1,0 +1,69 @@
+--- /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep/harness-prep/client.py
++++ /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/harness-prep/client.py
+@@ -13,6 +13,7 @@
+  q=urllib.request.Request(BASE+'/v1/chat/completions',json.dumps(body).encode(),{'Content-Type':'application/json'})
+  with urllib.request.urlopen(q,timeout=1800) as f:return json.load(f)
+ def pair(out,repeat):
++ output_tokens=256 if repeat==0 else 1500
+  parent=out/'coding';parent.mkdir(exist_ok=True);dst=parent/('warm' if repeat==0 else f'repeat{repeat}');dst.mkdir(exist_ok=False);save(dst/'models.json',identity())
+  initial=(out/'engine.log').read_bytes();save(dst/'window-start.json',{'byte_offset':len(initial),'epoch_ns':time.time_ns()})
+  def request(i):
+@@ -22,9 +23,9 @@
+    prompt=messages[0]['content'].split('] ',1)[1]
+    messages=[{'role':'user','content':f'[Flash-Next concurrent coding repeat {repeat} slot {i}] '+prompt}]
+   call_start=time.monotonic_ns();epoch_start=time.time_ns()
+-  life={'client_call_start_monotonic_ns':call_start,'client_call_start_epoch_ns':epoch_start,'model':'hotschmoe-dd','messages':messages,'max_new_tokens':1500}
++  life={'client_call_start_monotonic_ns':call_start,'client_call_start_epoch_ns':epoch_start,'model':'hotschmoe-dd','messages':messages,'max_new_tokens':output_tokens}
+   save(dst/f'coding-{i}-lifetime.json',life)
+-  try:row=send(BASE,'hotschmoe-dd',messages,1500)
++  try:row=send(BASE,'hotschmoe-dd',messages,output_tokens)
+   except Exception as e:
+    life.update(client_call_end_monotonic_ns=time.monotonic_ns(),client_call_end_epoch_ns=time.time_ns(),error_type=type(e).__name__);save(dst/f'coding-{i}-lifetime.json',life);raise
+   life.update(client_call_end_monotonic_ns=time.monotonic_ns(),client_call_end_epoch_ns=time.time_ns());save(dst/f'coding-{i}-lifetime.json',life)
+@@ -32,7 +33,7 @@
+   required=['cache_n','prompt_n','predicted_n','draft_n','draft_n_accepted']
+   assert all(k in row['timings'] and isinstance(row['timings'][k],(int,float)) and not isinstance(row['timings'][k],bool) and math.isfinite(row['timings'][k]) and row['timings'][k]>=0 for k in required),'Missing/nonfinite/negative native work field'
+   row['prefix_matches_s16']=ref['text'].startswith(row['text']) if repeat==0 else None;save(dst/f'coding-{i}.json',row)
+-  assert row['usage']['completion_tokens']==1500 and row['usage']['prompt_tokens']==107
++  assert row['usage']['completion_tokens']==output_tokens and row['usage']['prompt_tokens']==107
+   if repeat==0:assert row['prefix_matches_s16']
+   else:assert row['timings']['cache_n']<=64,'Timed prompt not fresh'
+   assert all(math.isfinite(row[k]) for k in ['ttft_s','wall_s','client_decode_tps'])
+@@ -84,7 +85,7 @@
+  save(dst/'pair.json',{'iq2xs_host_selection_marker':markers[0]if markers else None,'logged_capture_layouts':captures,'native_window_rows':native_rows,'status':'PASS_HTTP_TEXT_COUNTS_FINITE_AND_PAIRED','wall_s':elapsed,'output_sha256':[r['output_sha256'] for r in rows],
+   'usage':[r['usage'] for r in rows],'work_timings':[{k:r['timings'][k] for k in ['cache_n','prompt_n','predicted_n','draft_n','draft_n_accepted']} for r in rows],
+   'native_windows':sum(map(int,native_windows)),'paired':sum(int(x) for x,y in pairs),'solo':sum(int(y) for x,y in pairs),'raw_native_token_ids_observed':False,'aggregate_output_tps':sum(r['usage']['completion_tokens'] for r in rows)/elapsed,'stream_metrics':[{'ttft_s':r['ttft_s'],'completion_wall_s':r['wall_s'],'decode_tps':r['client_decode_tps'],'whole_request_output_tps':r['usage']['completion_tokens']/r['wall_s'],'content_event_gap_ms':r['content_event_gap_ms']} for r in rows],
+-  'admission_gate':gate,'client_overlap_ns':overlap,'repeat':repeat,'exact_gate':'full UTF8 text/SSE content plus usage/native work; not raw token IDs'})
++  'admission_gate':gate,'client_overlap_ns':overlap,'repeat':repeat,'output_tokens_per_stream':output_tokens,'exact_gate':'full UTF8 text/SSE content plus usage/native work; not raw token IDs'})
+  if out.name=='mode1':require_control_pair(out,repeat)
+  print('S100 pair complete; release quiet CPU lease before functional requests.',flush=True)
+ def require_control_pair(out,repeat):
+--- /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep/harness-prep/compare.py
++++ /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/harness-prep/compare.py
+@@ -20,12 +20,14 @@
+ checks={'identity_image_and_effective_native_env':all(read(D/f'mode{a}/health-ready.json')['model']=='hotschmoe-dd'and read(D/f'mode{a}/container-ready.json')['Image']==inputs['image']and len(read(D/f'mode{a}/native-process-identity.json'))==1 for a in range(2))}
+ results=[]
+ for label in ['warm','repeat1','repeat2','repeat3']:
++ output_tokens=256 if label=='warm'else 1500
+  rows=[[read(D/f'mode{a}/coding/{label}/coding-{i}.json')for i in range(2)]for a in range(2)];pairs=[read(D/f'mode{a}/coding/{label}/pair.json')for a in range(2)]
+  c={'admission_overlap':all(p['admission_gate']['status']=='PASS_NATIVE_PROMPT_START_ORDER_AND_CLIENT_OVERLAP'and p['client_overlap_ns']>0 for p in pairs),
+  'request_equal':all(rows[0][i]['request']==rows[1][i]['request']for i in range(2)),
+  'full_text_equal':all(rows[0][i]['text']==rows[1][i]['text']for i in range(2)),
+  'SSE_content_equal':all(content(rows[0][i])==content(rows[1][i])==rows[0][i]['text']for i in range(2)),
+- 'usage_equal':all(rows[0][i]['usage']==rows[1][i]['usage']and rows[0][i]['usage']['completion_tokens']==1500 and rows[0][i]['usage']['prompt_tokens']==107 for i in range(2)),
++ 'output_cap_equal':all(p['output_tokens_per_stream']==output_tokens for p in pairs),
++ 'usage_equal':all(rows[0][i]['usage']==rows[1][i]['usage']and rows[0][i]['usage']['completion_tokens']==output_tokens and rows[0][i]['usage']['prompt_tokens']==107 for i in range(2)),
+  'native_draft_work_equal':pairs[0]['work_timings']==pairs[1]['work_timings'],
+  'native_window_pair_solo_equal':all(pairs[0][k]==pairs[1][k]for k in ['native_windows','paired','solo']),
+  'native_reported_rows_equal':pairs[0]['native_window_rows']==pairs[1]['native_window_rows'],
+--- /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep/harness-prep/make_configs.py
++++ /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2/harness-prep/make_configs.py
+@@ -52,7 +52,7 @@
+           'HC_state': 'COMMON_LO_ONCE_S51', 'S49_state': 'OFF_BOTH',
+           'native': prior['native'], 'base_config_sha256': sha(basefile),
+           'containers': {'0': 'strata-s100-mode0', '1': 'strata-s100-mode1'},
+-          'warm_pairs': 1, 'timed_fresh_pairs': 3, 'output_tokens_per_stream': 1500,
++          'warm_pairs': 1, 'timed_fresh_pairs': 3, 'warm_output_tokens_per_stream': 256, 'timed_output_tokens_per_stream': 1500,
+           'common_trace': 'STRATA_TRACE1_PROMPT_START_ONLY_CPU_RING_ABSENT',
+           'arm_difference': 'STRATA_IQ2XS_MULTI0/1 and arm-local log/container/service names only',
+           'capture_scope': 'source/build/config+first-eligible host marker+successful warm/use/no errors+exact logged new-capture layouts; all-window cache-hit/row-layout/independent GPU-dispatch visibility absent',

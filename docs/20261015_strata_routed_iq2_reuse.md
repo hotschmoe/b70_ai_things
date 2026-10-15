@@ -125,3 +125,84 @@ behavior and end-to-end latency remain unmeasured. No default/shelf change,
 full-model gain, cache/bandwidth/occupancy cause or decode-target attainment
 is claimed. The strict fixture does not establish universal arithmetic
 correctness, and no format/lane/SLM sweep is implied.
+
+
+## S100 matched concurrent serving, 2026-10-15
+
+The guarded main integration passes the bounded serving comparison, with
+only a small observed throughput difference. Keep `STRATA_IQ2XS_MULTI=0`
+(default OFF). [Exact small records](../strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/README.md)
+retain the first compiled-identity failure and subsequent checks.
+
+CONFIG -> Same frozen main `7ee675fff8c342772e4f6eae402d40c655a29cf7dcc119d504cdd8d1386b7bbc`,
+flag0/1 only; QT17/N2560/FF640/LN8/SG32/WG256 selected under the new guard.
+All24576 experts resident, EP149/363, two200k INT8 slots,32GiB/four parking
+entries, depth2/headpairON/spec4. VALUE/QSA/Q6center/XMX/ROT stay OFF.
+One256-token warm pair followed by three fresh107-prompt/1500-completion
+pairs per arm, plus concurrent math, reasoning and tool roundtrip. No new
+prefill, operation trace, mixed-arrival or full-context/cache campaign.
+
+COMMAND -> Actual source claude-opus-5-5 44.980s and claude-fable-5-1
+47.611s/root full-read precede one191s CPU-wrapper incremental build
+(176.121s Ninja; exactly one IQ TU compile/archive/main AOT link).
+The first actual-main audit stops at a genuine ON-body mismatch versus
+S98:9611 changed bytes. OFF computational prefix matches S97. One11s
+selected ON decoder and actual integer/FP/reduction ledger are reviewed
+by actual Opus36.473s/Fable46.548s; root resolves their overbroad claims
+before the finite serving run. No rebuild or redundant primitive follows.
+
+RESULT -> Same-binary comparisons pass all four pairs: request/full text,
+SSE content, usage, cache/new-token counters, offered/accepted drafts,
+windows/paired/solo/reported rows and observed capture layouts. Timed pair1
+has per-slot offered1128/1132 and accepted934/933 in BOTH arms, with567
+windows/562paired/4solo. Positive concurrent drafting is observed here;
+no raw token-ID visibility is claimed. All three functional gates pass.
+
+| Measure, median of three timed pairs | OFF | ON |
+| --- | ---: | ---: |
+| Aggregate output tok/s | 103.016058 | 103.333098 |
+| Pair wall seconds | 29.121673 | 29.032324 |
+| Stream0 decode tok/s | 53.481486 | 53.730021 |
+| Stream1 decode tok/s | 55.845360 | 56.023137 |
+| Stream0 completion wall seconds | 28.935501 | 28.815862 |
+| Stream1 completion wall seconds | 28.911716 | 28.817915 |
+
+Ratio of aggregate medians is+0.307757%; paired wall changes are-0.306813%,
+-0.414096% and-0.120303%. These are three nested pairs in one OFF-then-ON
+process sequence, not independent trials or a general speed/stability claim.
+S98's40.5663% synthetic-route kernel interval reduction is not an end-to-end
+prediction. Real routed group-size frequency remains unmeasured.
+
+| TTFT seconds, p50 / interpolated p95 of n=3 | OFF | ON |
+| --- | ---: | ---: |
+| Stream0 | 0.907110 / 0.915407 | 0.917120 / 0.933112 |
+| Stream1 | 2.070079 / 2.095988 | 2.113469 / 2.114278 |
+
+These tiny-sample percentiles are descriptive. Per-pair SSE content-event
+gaps remain in comparison.json; they are not per-token latency. Both native
+process maps, loader environment and actual mapped libstdc++ identity were
+captured before timing. Selected loaded libraries/environment match; ASLR
+map bytes differ as expected. This does not repair historical S95 provenance.
+
+Both created fullCIDs/names are gone, server TERM leads to native QUIT,
+lease wrappers exit0 and pre-stop Runningtrue/OOMfalse. Pinned per-card and
+compiled10 collective health pass after each arm. No reset/retry/force-kill
+or routine daily-server restoration occurred.
+
+Actual main ON metadata/codebook/options/relocations match S98 after narrow
+name normalization; E4/E2/scalar share preparation across32/16/8 DP4As,
+with signed truncation, explicit FP conversions/products/accumulation and
+XOR4/2/1 preserved in the inspected regions. SIMD32/GRF128/eu8 is retained;
+absent spill/scratch fields are not measured zero. Raw computational-body
+identity remains FALSE: source ledger, selected emitted instructions and
+bounded matched serving checks support this result, not universal equality.
+
+VERDICT -> Retain the experimental default-OFF patch and result. No repeat,
+default/shelf/combined-flag promotion or new cache qualification is selected.
+Per-stream throughput remains far below150tok/s. S30 RAM recovery and all
+absolute targets remain unchanged. Next leads are the separate existing-main
+Q6 load audit and source-gated EP readiness/fusion investigation in the
+[S101 recommendations](20261015_strata_next_kernel_candidates.md).
+The loop saved roughly45s by reducing only warm-up1500->256, preserved all
+three timed pairs and stopped speculative duplicate decode/primitive work
+unless actual compiled differences justified it.

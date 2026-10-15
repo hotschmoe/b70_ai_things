@@ -1,0 +1,7 @@
+{
+  "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-reviews-20261015/root-frozen-compiled-packet.txt",
+  "bytes": 28215,
+  "sha256": "038700c2a3fe0c11a05394e6c48d650546ec88ac77373e9effa56a2bf0779c24",
+  "root_FULL_READ": true,
+  "scope": "actual compiled delta + retained source session, no other model answer"
+}

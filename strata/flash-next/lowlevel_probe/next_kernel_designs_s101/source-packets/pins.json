@@ -1,0 +1,76 @@
+{
+  "status": "SOURCE_PACKETS_ONLY_NO_BUILD_NO_GPU_NO_MODEL_PAYLOAD_READ",
+  "source_files": {
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp": {
+      "sha256": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584",
+      "bytes": 185685,
+      "s95_expected_sha256": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584",
+      "matches_s95_pin": true
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp": {
+      "sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2",
+      "bytes": 223107,
+      "s95_expected_sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2",
+      "matches_s95_pin": true
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/shared_expert.dp.cpp": {
+      "sha256": "c0ed885fbfa1f89b0136d8a5c3f7b8dae7ebcff3c8d1fd2bf06e4df4f7e5430d",
+      "bytes": 35083,
+      "s95_expected_sha256": null,
+      "matches_s95_pin": null
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/ep_kernels.dp.cpp": {
+      "sha256": "ed8e4fcf083c2789698863c081b867a91715127fb88054488b06a93830a93ebe",
+      "bytes": 8559,
+      "s95_expected_sha256": null,
+      "matches_s95_pin": null
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp": {
+      "sha256": "5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e",
+      "bytes": 119038,
+      "s95_expected_sha256": null,
+      "matches_s95_pin": null
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/sycl_math.hpp": {
+      "sha256": "ac45a7a9b7d3cdc4b1b8c1c413c416911fb4ca91373d69bb34947815dbb3eec6",
+      "bytes": 1271,
+      "s95_expected_sha256": null,
+      "matches_s95_pin": null
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/sycl_doorbell.hpp": {
+      "sha256": "82b325b3a5ac199f96d73996cb51376851c7f8cd6fc85803b6960040442d5534",
+      "bytes": 9796,
+      "s95_expected_sha256": null,
+      "matches_s95_pin": null
+    }
+  },
+  "derived_inputs": {
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/lowlevel_probe/current_c2_profile_s95/analysis/facts.json": {
+      "sha256": "058c1692a64627f99b747b8591a27edbcb787bd446542add4bf342b9d7ce77bf",
+      "bytes": 17508
+    },
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/lowlevel_probe/current_c2_profile_s95/analysis/extended-mmvq-and-cold-limits.json": {
+      "sha256": "775687afa0399daa5d8d2d16764154b0fc9f9e686eaefc5fdae9fc3692f04c1b",
+      "bytes": 3573
+    },
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/lowlevel_probe/current_c2_profile_s95/runtime/analysis/gpu/operations.csv": {
+      "sha256": "6e7b53de561f54252c5e170ed0e9f45818be3a46e0aea4fdf44b388ac7bdf584",
+      "bytes": 301220
+    },
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/lowlevel_probe/current_c2_profile_s95/source/config.json": {
+      "sha256": "9dfb790bcd90624886ac8e5a1ddf36af6c24cfe5c5bac35ed8a64fb1a26f3e75",
+      "bytes": 2481
+    }
+  },
+  "packet_files": {
+    "opus-dense-source-packet.txt": {
+      "bytes": 25004,
+      "sha256": "b01991aabc0d19f8afad7d8a7ad58a26e833366cba2761e6288639dd874e9907"
+    },
+    "fable-ready-fusion-packet.txt": {
+      "bytes": 25983,
+      "sha256": "6980b0adf073d9aad9e7edd7174b8fd0433abba59a510f1779bf85dc7de685de"
+    }
+  },
+  "scope": "Current source evidence only; actual model invocation is root responsibility. Source offsets and complete non-ASCII-free snippets retained; no omitted code reconstructed."
+}

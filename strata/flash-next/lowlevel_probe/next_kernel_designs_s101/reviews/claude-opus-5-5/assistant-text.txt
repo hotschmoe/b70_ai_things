@@ -1,0 +1,85 @@
+# Next experiment, primary dense Q6_K C6 lane: SOURCE_AUDIT_NEEDED, with one concrete candidate prepared
+
+## Candidate: a dword-aligned weight load for the Q6_K A2 C6 path
+
+**Target.** `native_mmvq_q6k_wide_kernel<6,1,32,210,A2=true,CENTER=false>`, reached through `launch_q6k_wide<6>` at `native_mmvq.dp.cpp:1744-1762` (RPW 1, `q6k_a2()`, PF 0, center 0).
+
+**Mechanism, from source reasoning only.**
+
+- `load16_a2` (`:1516-1531`) recovers a 16-byte run that is only 2-byte aligned. Per call it does:
+  - two 16B-aligned `int4` loads;
+  - a 5-way word select keyed on `k = (a>>2)&3`, written as nested ternaries, which is up to 3 selects per word;
+  - a conditional 16-bit funnel.
+- It is called twice per row per K step, once for `ql` and once for `qh`.
+- Every address handled is 2-byte aligned, so the dword-aligned base `a & ~3` is always within 2 bytes below `a`.
+- The proposed `load16_a4` instead loads 5 dwords starting at `a4 = a & ~3`:
+  - one `int4` read at `a4`, which is dword-aligned but not 16-aligned;
+  - one `int` read at `a4+16`, unconditional;
+  - then `o[i] = half ? (w[i]>>16)|(w[i+1]<<16) : w[i]`, keeping the original funnel and unsigned shifts.
+- This removes the `k` select chain entirely and replaces the 2\xd716B loads with 16B+4B.
+- **Precedent, compiled evidence but from a different kernel:** the same kernel's Q8 activation path already uses dword-aligned 4\xd7`int` reads of `qs` at offset 4 (`:1580-1584`). In the S100 IQ2 image, the same pattern compiled to a single `load.ugm.d32x4.a64 [A+0x4]`. It must still be re-verified in this kernel's image.
+
+**Undefined-behaviour constraint.** Do not express this as a misaligned `sycl::int4*` dereference. Use the existing 4\xd7`const int*` idiom, which is defined because the address is 4-byte aligned, and let IGC merge it.
+
+## Byte-range proof (source)
+
+- When `a` is 4-aligned: reads cover `a .. a+19`.
+- When `a \u2261 2 (mod 4)`: reads cover `a-2 .. a+17`.
+- **Upper bound:**
+  - Highest `ql` start is 112 (`g=7`), giving 112+19 = 131.
+  - Highest `qh` start is 128+16\xd73 = 176, giving 195.
+  - Both stay at or below 209, so the reads stay inside the 210-byte block.
+- **Lower bound:**
+  - The `a-2` case only arises when `a \u2261 2 (mod 4)`. With `a = base + 210\xb7idx`, that needs an odd `idx` if `base \u2261 0 (mod 4)`.
+  - An odd `idx` means `a-2` lies in the previous block's `d` field. That is inside the allocation, and the extra bytes are discarded by the funnel.
+- **Required host guard:** `(uintptr_t)weights % 4 == 0`; otherwise fall back to the existing `a2` launch. Tensor base alignment is not proven in this packet, which is why the guard is needed.
+
+## Arithmetic ledger: bit-identical by construction
+
+- **The only change:** how the identical 16 bytes reach `ql4` and `qh4`. The `o[i]` values are the same little-endian dwords.
+- **Unchanged after that:**
+  - `vh_shift`, the `vl`/`vh` masks and `sub_sat` with `0x20`;
+  - the 4 DP4As per `s0`/`s1` in source order, with int32 exact;
+  - `dsc` and the half\u2192float conversion;
+  - `ds0*dsc0*s0 + ds1*dsc1*s1` accumulation;
+  - K stride 4;
+  - XOR 16, 8, 4, 2, 1.
+- **No numerical change:** no rounding, signedness or overflow surface is touched.
+- **Contraction:** must be checked in the compiled image, not assumed. The FP expression is unchanged, but the new code must not perturb the existing FMA or non-FMA form.
+
+## Guarding
+
+- Default OFF, latched env `STRATA_Q6_A4`.
+- Applies only when NCOLS = 6, RPW 1, SG 32, A2, CENTER off, PF 0, and shape is 6144\u21922560 or 2560\u219210240, plus the base%4 host guard.
+- New unique kernel class. OFF code is untouched.
+
+## The missing check that would falsify it (offline, existing tools, no GPU)
+
+Bind the actual host-selected `native_mmvq_q6k_wide_a2, dpct_kernel_scalar<6>` from frozen d94e96ca to its image, via Info, cache, guard and name pointer, using the S97 section+addend method. Then disassemble only the K-loop basic block and count:
+
+- weight `send`s and their widths;
+- the select, `cmp` and mov operations attributable to `load16_a2`;
+- the 48 DP4As;
+- the FP ops.
+
+**NO_GO if:**
+- IGC already lowered the `k` select into cheap regioned or indirect moves, or elided the `hi` load; or
+- the reassembly ALU and sends are clearly small compared with the DP4A and FP work.
+
+**Then compile the candidate in a private leaf** (the S98-style header plus adapter) and require:
+- 1\xd7`d32x4` + 1\xd7`d32` per `ql`/`qh`, with no 16-byte split and no select chain;
+- GRF 128, SIMD32, no new spill or scratch;
+- the same FP instruction form.
+
+If any one of these fails, stop.
+
+## Bounded GPU primitive (only after both checks pass; root executes)
+
+Reuse the existing Q6 C6 fixture machinery from S87/S98 (buffers, guards, A/B/A, graph):
+
+- **Shapes:** both 6144\u21922560 and 2560\u219210240, 6 columns, frozen canonical Q8.
+- **Arms:** public original vs private original vs candidate.
+- **Pass criteria:** strict full-byte `y`, guard and read-only checks; single graph plus batch graph; stop at the first discrepancy.
+- **Timing:** 4 alternating pairs, descriptive only. No speed forecast and no serving claim.
+
+Weights come from frozen fixture exports only, with no model payload read. The kbx and row parity mixes inherently cover both `half` cases.

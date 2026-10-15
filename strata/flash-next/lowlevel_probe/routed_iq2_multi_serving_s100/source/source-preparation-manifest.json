@@ -1,0 +1,40 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NOT_APPLIED_OR_BUILT",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-source/contract.txt",
+      "bytes": 3896,
+      "sha256": "d0abe0c5b21e7cc928b9c76a62b598331a2cf2e828b705f1e70b099afc4d461f"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-source/iq2xs-multi.inverse.patch",
+      "bytes": 7112,
+      "sha256": "1010ebb219444f8299a723850428dcd5468cbe423d2cfae629ff495f98382b70"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-source/iq2xs-multi.patch",
+      "bytes": 7112,
+      "sha256": "435ceaf051e457ea520ffb385cdf5c8922a8dc793b36ea715c3e89bb42b5324a"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-source/iq_kernels.candidate.dp.cpp",
+      "bytes": 295028,
+      "sha256": "8bf1489cb53a2de442c051a8a64f577d330eadedbe200fd36ee967f33a29bb6d"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-source/iq_kernels.original.dp.cpp",
+      "bytes": 291120,
+      "sha256": "acaa7da63733af9f3831b3a74b99e6176bf46a06e498e0a33c0591f7f4a29851"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-source/pins.json",
+      "bytes": 1377,
+      "sha256": "6636d4dece592146c887fe3610c02f470d03b67d28d0f9a457482d14fe86c60e"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-source/source-excerpts.txt",
+      "bytes": 23189,
+      "sha256": "2bf8e16db657fc9be547d53cf4cabf93fb9c249559edba4ee43fb4361c0470ab"
+    }
+  ]
+}

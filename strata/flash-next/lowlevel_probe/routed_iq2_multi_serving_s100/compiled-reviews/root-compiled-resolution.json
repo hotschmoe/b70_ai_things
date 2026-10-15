@@ -1,0 +1,43 @@
+{
+  "utc": "2026-10-15T21:58:11.447301+00:00",
+  "status": "ROOT_ACCEPT_FINITE_MATCHED_C2_SERVING_ONLY",
+  "actual_reviews": {
+    "claude-opus-5-5": 36.472519558039494,
+    "claude-fable-5-1": 46.547694452048745
+  },
+  "root_full_read_answers": true,
+  "first_audit_preserved": {
+    "handle": 31950,
+    "exit": 1,
+    "ON_raw_text_identity": false,
+    "ON_changed_bytes": 9611,
+    "OFF_prior_computational_prefix_exact": true
+  },
+  "narrow_actual_decode": {
+    "handle": 4912,
+    "exit": 0,
+    "seconds": 11,
+    "only_ON": true,
+    "no_rebuild": true
+  },
+  "compiled_evidence": [
+    "MainON selected codebook/options/relocs/fullargsmetadata and SIMD32/GRF128/eu8 match S98 after registeredname normalization.",
+    "Actual E4/E2/scalar preserve32/16/8 DP4A with4cbit and shared4gathers per Kloop; same signed truncation, int->float, separate scale/product/accumulation and peroutput XOR4/2/1.",
+    "Actual host type17/2560/640/enabled checks, distinct Info/cache/guard/name pointers and oldport fallback read by root.",
+    "Main raw computational identity remains FALSE; source ledger + narrow ISA reading supports serving experiment, not universal equivalence."
+  ],
+  "root_corrections": [
+    "Opus universal FP add commutativity wording is broader than supported; selected finite arithmetic/source ledger only, no arbitrary NaN-payload equivalence.",
+    "Opus end-of-text wording corrected to end-of-thread/EOT.",
+    "Fable expected byte differences are an interpretation supported by selected scheduling/register changes, not raw hash proof.",
+    "Do not infer exhaustive negative-odd branch coverage from fixture description without explicit measured coverage. Signed fixups are directly visible.",
+    "S94 mismatch cause remains unresolved and the exact native-work gate stays unchanged."
+  ],
+  "runtime_required": [
+    "Same binary flag0/1 only, warm256each then3x1500completion C2pairs with fresh107prompts.",
+    "Exact full text/SSE/usage/per-slot nativework/drafts/windows/pair/solo/rows/newcaptures and hostmarker. Fail first mismatch.",
+    "Concurrentmath/reasoning/toolroundtrip, actual model/process/library/env identity.",
+    "NormalQUIT/fullownedCID+NAMEgone/exactwrapper0/fullpercard+compiled10 health eacharm."
+  ],
+  "no_primitive_repeat_reason": "No concrete new arithmetic/ownership mismatch in actual compiled ledger. Generic repetition adds no selected mechanism coverage; actual serving strict gates remain."
+}

@@ -1,0 +1,90 @@
+{
+  "status": "BYTE_EXACT_SMALL_COPIES_SOURCE_DESIGNS_ONLY",
+  "raw_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
+  "copies": [
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/next-kernel-s101-packets/opus-dense-source-packet.txt",
+      "destination": "strata/flash-next/lowlevel_probe/next_kernel_designs_s101/source-packets/opus-dense-source-packet.txt",
+      "bytes": 25004,
+      "sha256": "b01991aabc0d19f8afad7d8a7ad58a26e833366cba2761e6288639dd874e9907"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/next-kernel-s101-packets/fable-ready-fusion-packet.txt",
+      "destination": "strata/flash-next/lowlevel_probe/next_kernel_designs_s101/source-packets/fable-ready-fusion-packet.txt",
+      "bytes": 25983,
+      "sha256": "6980b0adf073d9aad9e7edd7174b8fd0433abba59a510f1779bf85dc7de685de"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/next-kernel-s101-packets/pins.json",
+      "destination": "strata/flash-next/lowlevel_probe/next_kernel_designs_s101/source-packets/pins.json",
+      "bytes": 3565,
+      "sha256": "3f0abc592641f19ba2786fe611d6804041edef954c9ad13021a1030d05f08212"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/next-kernel-s101-reviews-20261015/claude-opus-5-5/assistant-text.txt",
+      "destination": "strata/flash-next/lowlevel_probe/next_kernel_designs_s101/reviews/claude-opus-5-5/assistant-text.txt",
+      "bytes": 5264,
+      "sha256": "27d1465e178dc0b73e3b4a25f2b7725878b3c353dda8c1850d805ad678cae7d0"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/next-kernel-s101-reviews-20261015/claude-opus-5-5/completion.json",
+      "destination": "strata/flash-next/lowlevel_probe/next_kernel_designs_s101/reviews/claude-opus-5-5/completion.json",
+      "bytes": 8777,
+      "sha256": "bb235da0a048760fc56726a24b910d04d1f5a45d3da83f7b44e7d5f8781a8e9d"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/next-kernel-s101-reviews-20261015/claude-opus-5-5/command.json",
+      "destination": "strata/flash-next/lowlevel_probe/next_kernel_designs_s101/reviews/claude-opus-5-5/command.json",
+      "bytes": 1259,
+      "sha256": "8d3a96f4c3a6e64c85dfb596951f7894fb4135f7bb1fb649c4f37083e75d2db4"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/next-kernel-s101-reviews-20261015/claude-fable-5-1/assistant-text.txt",
+      "destination": "strata/flash-next/lowlevel_probe/next_kernel_designs_s101/reviews/claude-fable-5-1/assistant-text.txt",
+      "bytes": 4248,
+      "sha256": "f9427a2d5c4bfd6218522c082659d35e8bbfbf6e6502963a510fe6397b71e2a3"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/next-kernel-s101-reviews-20261015/claude-fable-5-1/completion.json",
+      "destination": "strata/flash-next/lowlevel_probe/next_kernel_designs_s101/reviews/claude-fable-5-1/completion.json",
+      "bytes": 7695,
+      "sha256": "273977b51317b5d95ee5d3238652ea64260f58d8ccee00da4f749a19bb5e9a3b"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/next-kernel-s101-reviews-20261015/claude-fable-5-1/command.json",
+      "destination": "strata/flash-next/lowlevel_probe/next_kernel_designs_s101/reviews/claude-fable-5-1/command.json",
+      "bytes": 1262,
+      "sha256": "5cc05bed9dd5aa67daacc140cd9fb415a1b997d735923dd636dd348326be79a0"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/next-kernel-s101-reviews-20261015/root-source-decision.json",
+      "destination": "strata/flash-next/lowlevel_probe/next_kernel_designs_s101/reviews/root-source-decision.json",
+      "bytes": 3341,
+      "sha256": "681ad233867e674d9fc34bdba2a7d137b7981bb3d53b8f6a66e32f621c8d6c07"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/next-kernel-s101-reviews-20261015/root-doorbell-source-audit.json",
+      "destination": "strata/flash-next/lowlevel_probe/next_kernel_designs_s101/reviews/root-doorbell-source-audit.json",
+      "bytes": 1256,
+      "sha256": "0218f78b127dc8892a4cca2b27ef46bb63f177229c6c618719ebdaae265190a5"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/next-kernel-s101-reviews-20261015/preflight-correction.json",
+      "destination": "strata/flash-next/lowlevel_probe/next_kernel_designs_s101/reviews/preflight-correction.json",
+      "bytes": 594,
+      "sha256": "a8b086f86b13f4e82915d950cae27104badf9738351d3bcea124a69ff2389958"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/next-kernel-s101-reviews-20261015/review.py",
+      "destination": "strata/flash-next/lowlevel_probe/next_kernel_designs_s101/reviews/review.py",
+      "bytes": 4760,
+      "sha256": "67d9546a1e6ed46fc71fcac610fe90a9d5e58d7f61e1d0f1c5f1c606b9a41f3e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/next-kernel-s101-reviews-20261015/review-prefix.txt",
+      "destination": "strata/flash-next/lowlevel_probe/next_kernel_designs_s101/reviews/review-prefix.txt",
+      "bytes": 576,
+      "sha256": "57d895bff0355e07595dacf36c305cf6cf40e34be3843fb34a9b8ed1e3f20663"
+    }
+  ]
+}

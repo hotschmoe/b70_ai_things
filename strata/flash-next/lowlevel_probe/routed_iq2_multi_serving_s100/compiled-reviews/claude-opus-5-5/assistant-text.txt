@@ -1,0 +1,53 @@
+# S100 compiled-body delta: ACCEPT
+
+**Decision: ACCEPT** the finite same-binary matched C2 serving comparison exactly as root designed it. I found no concrete arithmetic or ownership mismatch, and no primitive repeat is needed.
+
+## 1. Raw byte identity: FALSE, and not claimed
+
+- The ON text is the same size as S98's 23,040 bytes, but 9,611 bytes differ. The embedded SPIR-V differs too.
+- The first failed identity audit stays on record as it is.
+- OFF matches S97 exactly on its computational prefix, codebook, options, relocations and resources. Only the known immediate words after end-of-text differ.
+
+## 2. Arithmetic ledger: supported by the excerpts
+
+- **Dot chains.**
+  - E4 has two zero-seeded `dp4a` chains of four each.
+  - The weight registers are shared across entries.
+  - The activation loads are per entry: the 32-byte `qs` at offset +0x4/+0x14 and the `ds` half at +0x0.
+  - Integer reassociation inside a chain cannot change results, given the overflow bound (\u22648.1M, well under INT32_MAX). The emitted order is consistent with the source order anyway.
+- **Signed truncation.**
+  - `(s0+s1)/2` is emitted as add, then +1 when negative, then `asr 1`.
+  - The numerator `/4` is `add3`, then +3 when negative, then `asr 2`.
+  - Both truncate toward zero, matching C semantics in the E4, E2 and scalar paths.
+- **FP.**
+  - Weight scale (half\u2192float) \xd7 activation scale (half\u2192float), then \xd7 `float(sumi)`, then a separate FP add into each entry's own accumulator.
+  - There is no FP MAD or FMA, so the contraction-parity condition from my source review is closed.
+  - Per-lane K order is unchanged.
+- **Reduction and ownership.**
+  - Each of r44, r42, r40 and r58 gets its own XOR 4 \u2192 2 \u2192 1 swap-and-add, computed as v + permute(v); FP add is commutative bitwise.
+  - The results go to r10, r12, r14 and r16 and are stored at entry offsets +0, +1, +2, +3 times `dst_stride`, under the store predicate.
+  - There is no cross-entry summation.
+
+The main-build codegen differences (scheduling, register allocation, load overlap) do not touch any rounding step. So S98's strict byte equality carries over as an arithmetic argument, not as binary identity.
+
+## 3. Host dispatch: closed
+
+- The eligibility compares (type 17, 2560, 640) and the latched flag gate the new launch; anything ineligible or OFF goes to the old port.
+- The ON and OFF Info, cache, guard and name pointers are distinct.
+- Production EXPERT_SPLIT 0 with LANES 8 does reach the port. I accept root's correction to my earlier "skip" wording.
+
+## 4. Runtime qualification: bounded, not yet earned
+
+The serving run tests:
+
+- outputs and native work;
+- captures and functionals;
+- the marker: absent with OFF, exactly once with ON;
+- normal teardown and full health.
+
+Keep the S94 caveat in force:
+
+- **Draft-only mismatch:** a `draft_n` mismatch with identical text, usage and accepted work is unresolved, not a candidate defect.
+- **Text, usage or accepted-work mismatch:** this is a failure and stops the comparison.
+
+Report the three pairs descriptively only. S98's \u221240.6% is a warm fixture figure, not a forecast, and the route-size distribution is unmeasured. The 150 tok/s per-stream target remains unmet.

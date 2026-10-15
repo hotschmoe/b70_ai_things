@@ -383,3 +383,17 @@ results are small/mixed. This one-card two-expert fixture does not establish
 end-to-end decode/prefill gains, real route reuse, or a default/shelf change.
 S30 recovery and all serving targets remain unchanged.
 [Source, compiled mechanism and bounded result](20261015_strata_routed_iq2_reuse.md).
+
+
+S100 closes the default-OFF IQ2_XS serving comparison: all four pairs match
+text/SSE/usage/native work/drafts/captures; functionals, normal teardown and
+full pinned health pass. Aggregate median103.016058->103.333098tok/s
+(+0.307757%); per-stream53.481/55.845->53.730/56.023. One OFF-then-ON
+sequence/three nested pairs, not a general gain. Retain defaultOFF/no rerun
+or shelf/cache promotion. S98's40.6% warm kernel reduction does not predict
+serving throughput. [S100 evidence](20261015_strata_routed_iq2_reuse.md).
+S101 actual Opus5.5/Fable5.1 prepare independent Q6-load and EP-readiness
+fusion leads; root accepts source audits only, with arithmetic/visibility
+and critical-path limits. Graph-boundary follow-up is tracked separately.
+[S101 recommendations](20261015_strata_next_kernel_candidates.md).
+Throughput targets remain unmet; S30 RAM recovery is retained without a new claim.

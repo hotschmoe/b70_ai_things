@@ -1,0 +1,12 @@
+CONFIG -> Additive caller proof for frozen S100 patch435ceaf0 and manifest7bbd8f55. Original acaa7da6. No frozen prep files changed; indentation retained by root instruction.
+
+COMMAND -> Bounded textual lookup of EVERY Multi<TY>, M::NW/prep/acts/finish, row_dot_multi_iq, kEntryMulti, and overloaded row_dot_multi caller in actual original and frozen candidate TU. No compiler/frontend/GPU/build.
+
+RESULT -> Direct Multi consumers in original:
+1) kEntryMulti at1912 reads Multi<TY>::has only (OR KM&&KqSplit<TY>::has). New Multi17.has=false preserves original false. KqSplit17 remains unspecializedfalse.
+2) row_dot_multi_iq1934..1960 aliases M=Multi<TY> at1937; prep1944/acts1949/NW1952,1954/finish1955. It is called ONLY by pointer-array row_dot_multi1963..1967, which chooses KqSplit or Multi by format. No caller reads NW as an opt-in predicate; NW8 does not enable a path by itself.
+3) Pointer-array row_dot_multi calls exist ONLY in row_entries1980/1988 and native_down_kernel2193/2201. The former now opts in only with explicit booltrue from new launcher; default boolfalse uses unchanged kEntryMulti. The latter remains wholly unchanged and under kEntryMulti<TD,KM>; even if TD17 were dispatched, Multi17.has=false/KqSplit17false keeps it scalar. Current down format table does not add17.
+4) Alternate same-name row_dot_multi1219..1254 is a DIFFERENT overload: contiguous block_q8_1* + reference-to-offset-array, not pointer-to-activation-pointers. It aliases Split<TY>, NOT Multi<TY>. This is used by dense MMVQ1557/1569, native_gu_multi_kernel2132/2138/2144/2150 and native_down_multi_kernel2427/2433/2442/2457. The overload's template3/4 bools and argument types distinguish it. New Multi17.has/NW/prep/finish cannot change those alternate EXPERT_SPLIT/dense functions. Split17 and all their callers are byteunchanged.
+5) No other Multi alias or direct row_dot_multi_iq caller in the full TU. New specialization supplies methods but keeps hasfalse; no global trait enables LN4/16/32, old alternate paths or DOWN. The only explicit IQ2XS_MULTI=true call is new native_gu_kernel<17,8,true,true> in launch_gu_iq2xs_multi. Staticassert in row_entries restricts force to17/8/KMtrue.
+
+VERDICT -> NW8/hasfalse is an implementation supply, not an enable condition. Full direct/overload caller audit finds no unintended old-path activation. This is source reachability proof only; root still requires actual rebuilt host binding/device registration and serving correctness evidence. Frozen files retain exact pins.

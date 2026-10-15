@@ -1,0 +1,149 @@
+{
+  "utc": "2026-10-15T22:10:41.797750+00:00",
+  "status": "PASS_BOUNDED_MATCHED_SERVING_KEEP_DEFAULT_OFF",
+  "main_sha256": "7ee675fff8c342772e4f6eae402d40c655a29cf7dcc119d504cdd8d1386b7bbc",
+  "comparison_sha256": "6b1486ad77d1056b601f1734c958de83caa1d321365ead6b42c594d6213ec964",
+  "timed_summary": {
+    "pair_wall_median_s": [
+      29.121673401037697,
+      29.032324321975466
+    ],
+    "aggregate_output_tps_median": [
+      103.01605813260376,
+      103.3330975063959
+    ],
+    "per_stream_medians": [
+      [
+        {
+          "ttft_s": 0.9071099950233474,
+          "completion_wall_s": 28.935501095023938,
+          "decode_tps": 53.48148577818184,
+          "whole_request_output_tps": 51.839434025144854
+        },
+        {
+          "ttft_s": 2.070078506018035,
+          "completion_wall_s": 28.91171619197121,
+          "decode_tps": 55.8453603007331,
+          "whole_request_output_tps": 51.88208095431396
+        }
+      ],
+      [
+        {
+          "ttft_s": 0.917119906982407,
+          "completion_wall_s": 28.815862110990565,
+          "decode_tps": 53.73002083888361,
+          "whole_request_output_tps": 52.054663303926965
+        },
+        {
+          "ttft_s": 2.113469186995644,
+          "completion_wall_s": 28.817914875980932,
+          "decode_tps": 56.02313681432191,
+          "whole_request_output_tps": 52.050955333004175
+        }
+      ]
+    ]
+  },
+  "ratio_of_aggregate_medians_percent": 0.3077572366281478,
+  "paired_wall_percent": [
+    -0.30681299742564283,
+    -0.4140955004487079,
+    -0.12030332897581264
+  ],
+  "TTFT": [
+    [
+      {
+        "p50_s": 0.9071099950233474,
+        "p95_s_linear_interpolation_n3": 0.9154069465061184
+      },
+      {
+        "p50_s": 2.070078506018035,
+        "p95_s_linear_interpolation_n3": 2.095988059678348
+      }
+    ],
+    [
+      {
+        "p50_s": 0.917119906982407,
+        "p95_s_linear_interpolation_n3": 0.9331123552750796
+      },
+      {
+        "p50_s": 2.113469186995644,
+        "p95_s_linear_interpolation_n3": 2.114277848706115
+      }
+    ]
+  ],
+  "TTFT_scope": "p50 and interpolated p95 of only3 request pairs per arm/slot, descriptive, not tail stability. Per-pair SSE content-event gap summaries retained in comparison; not raw-token ITL.",
+  "actual_loader_provenance": [
+    {
+      "exe": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-build/build/strata-routed-iq2-multi-s100",
+      "sha256": "7ee675fff8c342772e4f6eae402d40c655a29cf7dcc119d504cdd8d1386b7bbc",
+      "loader_environment": {
+        "LD_LIBRARY_PATH": "/opt/intel/oneapi/tcm/1.5/lib:/opt/intel/oneapi/umf/1.1/lib:/opt/intel/oneapi/tcm/1.5/env/../lib:/opt/intel/oneapi/tbb/2023.1/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.18/opt/mpi/libfabric/lib:/opt/intel/oneapi/mpi/2021.18/lib:/opt/intel/oneapi/mkl/2026.1/lib:/opt/intel/oneapi/ippcp/2026.0/lib/:/opt/intel/oneapi/ipp/2026.0/lib:/opt/intel/oneapi/dnnl/2026.0/lib:/opt/intel/oneapi/debugger/2026.1/opt/debugger/lib:/opt/intel/oneapi/compiler/2026.1/opt/compiler/lib:/opt/intel/oneapi/compiler/2026.1/lib:/opt/intel/oneapi/ccl/2022.1/lib/:/opt/intel/oneapi/tcm/1.5/lib:/opt/intel/oneapi/umf/1.1/lib:/opt/intel/oneapi/tcm/1.5/env/../lib:/opt/intel/oneapi/tbb/2023.1/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.18/opt/mpi/libfabric/lib:/opt/intel/oneapi/mpi/2021.18/lib:/opt/intel/oneapi/mkl/2026.1/lib:/opt/intel/oneapi/ippcp/2026.0/lib/:/opt/intel/oneapi/ipp/2026.0/lib:/opt/intel/oneapi/dnnl/2026.0/lib:/opt/intel/oneapi/debugger/2026.1/opt/debugger/lib:/opt/intel/oneapi/compiler/2026.1/opt/compiler/lib:/opt/intel/oneapi/compiler/2026.1/lib:/opt/intel/oneapi/ccl/2022.1/lib/",
+        "LD_PRELOAD": null,
+        "LD_AUDIT": null
+      },
+      "loaded_libstdcxx": {
+        "/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33": {
+          "realpath": "/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33",
+          "sha256": "1fd75fe70354a416d75aef22bcae68c47bd25d20e2d0568c30b1a9838cf62f11"
+        }
+      },
+      "proc_maps_sha256": "a880f7b27e6e3c3ed1cf0cc622f45a5e51389d759921fef78dd5085a86ee5191"
+    },
+    {
+      "exe": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-build/build/strata-routed-iq2-multi-s100",
+      "sha256": "7ee675fff8c342772e4f6eae402d40c655a29cf7dcc119d504cdd8d1386b7bbc",
+      "loader_environment": {
+        "LD_LIBRARY_PATH": "/opt/intel/oneapi/tcm/1.5/lib:/opt/intel/oneapi/umf/1.1/lib:/opt/intel/oneapi/tcm/1.5/env/../lib:/opt/intel/oneapi/tbb/2023.1/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.18/opt/mpi/libfabric/lib:/opt/intel/oneapi/mpi/2021.18/lib:/opt/intel/oneapi/mkl/2026.1/lib:/opt/intel/oneapi/ippcp/2026.0/lib/:/opt/intel/oneapi/ipp/2026.0/lib:/opt/intel/oneapi/dnnl/2026.0/lib:/opt/intel/oneapi/debugger/2026.1/opt/debugger/lib:/opt/intel/oneapi/compiler/2026.1/opt/compiler/lib:/opt/intel/oneapi/compiler/2026.1/lib:/opt/intel/oneapi/ccl/2022.1/lib/:/opt/intel/oneapi/tcm/1.5/lib:/opt/intel/oneapi/umf/1.1/lib:/opt/intel/oneapi/tcm/1.5/env/../lib:/opt/intel/oneapi/tbb/2023.1/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.18/opt/mpi/libfabric/lib:/opt/intel/oneapi/mpi/2021.18/lib:/opt/intel/oneapi/mkl/2026.1/lib:/opt/intel/oneapi/ippcp/2026.0/lib/:/opt/intel/oneapi/ipp/2026.0/lib:/opt/intel/oneapi/dnnl/2026.0/lib:/opt/intel/oneapi/debugger/2026.1/opt/debugger/lib:/opt/intel/oneapi/compiler/2026.1/opt/compiler/lib:/opt/intel/oneapi/compiler/2026.1/lib:/opt/intel/oneapi/ccl/2022.1/lib/",
+        "LD_PRELOAD": null,
+        "LD_AUDIT": null
+      },
+      "loaded_libstdcxx": {
+        "/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33": {
+          "realpath": "/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33",
+          "sha256": "1fd75fe70354a416d75aef22bcae68c47bd25d20e2d0568c30b1a9838cf62f11"
+        }
+      },
+      "proc_maps_sha256": "3953611581e15bdcb80f467214728a635d62a83d680c141f50258baac0b931d9"
+    }
+  ],
+  "handles": {
+    "offline_build": 86116,
+    "first_artifact_audit": 31950,
+    "selected_ON_decoder": 4912,
+    "prehealth": 26196,
+    "OFF_start": 70326,
+    "OFF_warm": 92974,
+    "OFF_timed": 24799,
+    "OFF_functionals": 53408,
+    "OFF_stop_health": 34125,
+    "ON_start": 81581,
+    "ON_warm": 69196,
+    "ON_timed": 99622,
+    "ON_functionals": 1364,
+    "ON_stop_health": 74562
+  },
+  "checks": {
+    "identity_image_and_effective_native_env": true,
+    "warm": true,
+    "repeat1": true,
+    "repeat2": true,
+    "repeat3": true,
+    "functionals": true,
+    "health_teardown": true,
+    "full_CID_and_NAME_absence": true,
+    "final_diagnostics_complete": true,
+    "final_host_marker_0": true,
+    "final_host_marker_1": true,
+    "logged_startup_capture_equal": true,
+    "native_loader_provenance": true
+  },
+  "native_work": "all4pairs exact slot-for-slot, positivepaired MTP, full observed capture layouts equal, no raw token-ID visibility",
+  "cleanup": "Both created fullCIDs/names gone; server normalTERM->nativeQUIT/wrappers0; pre-stop Runningtrue/OOMfalse; pinnedpercard+compiled10health eacharmPASS. No reset/retry/forcekill.",
+  "decision": "Retain experimental defaultOFF patch and bounded result. No default/shelf/fullcache/combinedflag promotion, no rerun. Prioritize actual existing Q6 C6 image audit for Opus A4 load hypothesis; Fable EPfusion remains source/dependency/visibility gated.",
+  "limits": [
+    "One OFFthenON process sequence, three nested pairs; no causal/stability/general speed claim.",
+    "40.5663percent S98 warm synthetic route kernel interval is not end-to-end predictor. Real route group-size frequency remains unmeasured.",
+    "No new profile/prefill/full200k/RAM qualification; S30 recovery retained, absolute targets unmet.",
+    "First main ON rawbodyidentity HOLD preserved; selected arithmetic review accepted, raw body still not byteidentical to S98."
+  ]
+}

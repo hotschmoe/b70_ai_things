@@ -1,0 +1,252 @@
+S100 root frozen exact-source packet, 2026-10-15. Root read entire71line patch plus current source callers and additive exhaustive caller proof. NO mainapply/build/GPU yet. Current IQ TU remainsacaa. Proposed ON onlyGU17/LN8/N2560FF640; others/default preserved; newuniqueONkernelclass. Multi17 arithmetic matches S98 except has=false/comment; genericE4/E2/tail reused with a defaultfalse bool, no global format enable.
+S98 actual ONEcard0process wrapper23876 terminal0/41s: 88strict fullGU/guards/readonly/finite/inactive/A-B-A graphs pass, all3layouts/public/original/candidate eagerbytes18files, nativecanonicalQ8unchanged, teardown+preposthealth/driver/tee0. Warmfixturetwoactualexperts41/211, aliasinggroups synthetic, cache andrealrouting frequencies not measured. Sameprocess4alternatingpairs/layout20calls/graph. Mainmodel speed unmeasured, target150/stream remains unmet. Source half/integer/K/XOR ledger preserved, executed test is bounded not universalproof.
+Root first rawpublicimage-equality auditfailedpreserved. AdditiveEOTcomparison actual exacttargetprefix7296B/helper80B through termination, .ze_info/codebook4096B/relocs/options/symbols exact. Only2postEOTMOV immediate words differpertext, embeddedSPV32Bsmaller. Rawfullimage/text remainFALSE, no forcedreplacement/newbuild; actualGPUpublic/original strictbytesnowPASS. Candidatecodegen4codebookgathers+4cbit shared by32DP4AE4/16DP4AE2, scalar8, allSIMD32GRF128/missingfieldsnotzero.
+Proposed next: one necessary mainIQ-TU/archive/AOTbuild thenactualOFF/ONhostmetadata/selectedimage/resourcesreview; ONLYfiniteC2samebinaryflag0/1, fixedVALUE/QSA/Q6CENTER/XMX/ROT0, depth2/headpairON, two200kslots32GiBparking/allexpertsresident/C12288Q0. Onewarm+3matchedcodingpairs/arm, identity/coherence/functionals, normalQUIT/CIDNAME/wrapper0/fullhealth; failfirsttext/SSE/usage/nativework/draft/capture mismatch. No6prefills/fullcache/newtrace/dailyrestore. Controllerpreparationseparate/rootfullreadbeforeGPU. Native maps/whitelistedloaderenvcapturedbeforetimings ascheapfutureprovenance; historicalS95joinstillunproved.
+
+
+FILE /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-source/iq2xs-multi.patch SHA 435ceaf051e457ea520ffb385cdf5c8922a8dc793b36ea715c3e89bb42b5324a
+--- a/sycl/src/kernels/cuda/iq_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/iq_kernels.dp.cpp
+@@ -1586,6 +1586,48 @@
+ 
+ template <int TY> struct Multi { static constexpr bool has = false; static constexpr int NW = 0; };
+ 
++template <> struct Multi<17> {
++    // Kept false: only the explicitly guarded GU17/LN8 launcher enables this path.
++    static constexpr bool has = false;
++    static constexpr int NW = 8;
++    __dpct_inline__ static void prep(const void* vbq, int kbx, int iqs, MultiW& m, const void* = nullptr) {
++    const block_iq2_xs* bq2 = (const block_iq2_xs*) vbq + kbx;
++    // SYCL port: the four 16-bit codes by shifts. ggml reads them through a uint16_t* to an int2, which is type
++    // punning the SYCL device compiler does not honour (non-char aliasing): IQ2_XS products came out garbage
++    // (iq_multi_parity, Swift 1.5 IQ2_XS) while the dequantizer, reading the codes directly, was exact.
++    const uint32_t q2_lo = (uint32_t) get_int_b2(bq2->qs, iqs + 0), q2_hi = (uint32_t) get_int_b2(bq2->qs, iqs + 1);
++    const uint16_t q2[4] = {(uint16_t) q2_lo, (uint16_t) (q2_lo >> 16), (uint16_t) q2_hi, (uint16_t) (q2_hi >> 16)};
++    const int ls0 = bq2->scales[iqs / 2] & 0x0F;
++    const int ls1 = bq2->scales[iqs / 2] >> 4;
++#pragma unroll
++    for (int l0 = 0; l0 < 8; l0 += 2) {
++        const sycl::uint2 grid_pos =
++            ((const sycl::uint2 *)iq2xs_grid)[q2[l0 / 2] & 0x1FF];
++        const uint32_t signs = unpack_ksigns(q2[l0 / 2] >> 9);
++        const int signs0 = swar_ne4(signs & 0x08040201);
++        const int grid_l = swar_sub4(grid_pos.x() ^ signs0, signs0);
++        const int signs1 = swar_ne4(signs & 0x80402010);
++        const int grid_h = swar_sub4(grid_pos.y() ^ signs1, signs1);
++        m.w[l0 + 0] = grid_l;
++        m.w[l0 + 1] = grid_h;
++    }
++        m.a = ls0;
++        m.b = ls1;
++        m.d = sycl::vec<sycl::half, 1>(bq2->d)
++                  .convert<float, sycl::rounding_mode::automatic>()[0];
++    }
++    __dpct_inline__ static void acts(const block_q8_1* y, int iqs, int* u, float& ds) {
++#pragma unroll
++        for (int j = 0; j < 8; ++j) u[j] = get_int_b4(y[iqs / 2].qs, j);
++        ds = y[iqs / 2].ds[0];
++    }
++    __dpct_inline__ static float finish(int s0, int s1, const MultiW& m, float ds) {
++        const int sumi = (s0 * m.a + s1 * m.b + (s0 + s1) / 2) / 4;
++        const float d = m.d * ds;
++        return d * sumi;
++    }
++};
++
+ template <> struct Multi<18> {   // iq3_xxs
+     static constexpr bool has = true; static constexpr int NW = 8;
+     __dpct_inline__ static void prep(const void* vbq, int kbx, int iqs, MultiW& m, const void* grid = nullptr) {
+@@ -1967,12 +2009,13 @@
+ }
+ 
+ // The entries e0..e1 of one row: chunks of 4 through the multi-entry dot, the rest one at a time.
+-template <int TY, int LANES, bool KM = true>
++template <int TY, int LANES, bool KM = true, bool IQ2XS_MULTI = false>
+ __dpct_inline__ void row_entries(const uint8_t* wr, const block_q8_1* x, int x_stride, const int32_t* ent_idx,
+                                  int e0, int e1, int nb, int sub, float* dst, size_t dst_stride,
+                                  const void* grid = nullptr) {
++    static_assert(!IQ2XS_MULTI || (TY == 17 && LANES == 8 && KM));
+     int e = e0;
+-    if constexpr (kEntryMulti<TY, KM>) {
++    if constexpr (kEntryMulti<TY, KM> || IQ2XS_MULTI) {
+         for (; e + 4 <= e1; e += 4) {
+             const block_q8_1* xs[4] = {x + (size_t) ent_idx[e] * x_stride, x + (size_t) ent_idx[e + 1] * x_stride,
+                                        x + (size_t) ent_idx[e + 2] * x_stride, x + (size_t) ent_idx[e + 3] * x_stride};
+@@ -1998,7 +2041,7 @@
+ 
+ constexpr int GU_ROWS = 8;     // rows per block (one warp each)
+ 
+-template <int TG, int LN = kExpertLanes, bool KM = true>
++template <int TG, int LN = kExpertLanes, bool KM = true, bool IQ2XS_MULTI = false>
+ __dpct_inline__ void native_gu_kernel(
+     const unsigned long long *__restrict__ grp_ptr,
+     const int32_t *__restrict__ grp_start, const int32_t *__restrict__ n_groups,
+@@ -2035,7 +2078,7 @@
+     for (int g = (int) item_ct1.get_group(1); g < ng; g += (int) item_ct1.get_group_range(1)) {
+         const uint8_t* wr = (const uint8_t*) grp_ptr[g] + off;
+         const int e0 = grp_start[g], e1 = grp_start[g + 1];
+-        row_entries<TG, LN, KM>(wr, xq, xb, ent_tok, e0, e1, nb, sub, (is_up ? up : gate) + r, (size_t) L.n_ff, grid);
++        row_entries<TG, LN, KM, IQ2XS_MULTI>(wr, xq, xb, ent_tok, e0, e1, nb, sub, (is_up ? up : gate) + r, (size_t) L.n_ff, grid);
+     }
+ }
+ 
+@@ -4325,6 +4368,28 @@
+             native_gu_kernel<TG, LN, KM>(grp_ptr, grp_start, n_groups, ent_tok, X, L, gate, up);
+         });
+ }
++// Default OFF. Consulted only by the tested GU17/LN8/N2560/FF640 port branch.
++// Latched per process, including graph capture; marker proves host selection only.
++bool iq2xs_multi_enabled() {
++    static const bool enabled = [] {
++        const bool on = env_on("STRATA_IQ2XS_MULTI");
++        if (on) std::fprintf(stderr, "strata IQ2_XS multi: enabled=1 GU17 LN8 SG32 WG256 N2560 FF640 E4E2tail\n");
++        return on;
++    }();
++    return enabled;
++}
++void launch_gu_iq2xs_multi(unsigned groups, dpct::queue_ptr s, const unsigned long long *grp_ptr,
++                           const int32_t *grp_start, const int32_t *n_groups, const int32_t *ent_tok,
++                           const block_q8_1 *X, const NativeExpertLayout &L, float *gate, float *up) {
++    constexpr int ROWS = 256 / 8;
++    const unsigned gx = (unsigned) ((2 * L.n_ff + ROWS - 1) / ROWS);
++    auto exp_props = sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
++    s->parallel_for<dpct_kernel_name<class native_gu_iq2xs_multi_s100>>(
++        sycl::nd_range<3>(sycl::range<3>(1, groups, (size_t) gx * 256), sycl::range<3>(1, 1, 256)), exp_props,
++        [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {
++            native_gu_kernel<17, 8, true, true>(grp_ptr, grp_start, n_groups, ent_tok, X, L, gate, up);
++        });
++}
+ // STRATA_KQ_SPLIT=0 (or native_expert_set_kq_split(false)): the K-quant / Q5_1 / Q8_0 lane kernels without the
+ // multi-entry split (one weight read per entry, as before); the outputs are the same bits either way
+ bool g_kq_split = [] { const char* v = std::getenv("STRATA_KQ_SPLIT"); return !(v && v[0] == '0'); }();
+@@ -4332,6 +4397,12 @@
+ void gu_port_km(unsigned groups, dpct::queue_ptr s, const unsigned long long *grp_ptr, const int32_t *grp_start,
+                 const int32_t *n_groups, const int32_t *ent_tok, const block_q8_1 *X, const NativeExpertLayout &L,
+                 float *gate, float *up) {
++    if constexpr (TG == 17 && LN == 8) {
++        if (L.gu_type == 17 && L.n_embd == 2560 && L.n_ff == 640 && iq2xs_multi_enabled()) {
++            launch_gu_iq2xs_multi(groups, s, grp_ptr, grp_start, n_groups, ent_tok, X, L, gate, up);
++            return;
++        }
++    }
+     if constexpr (KqSplit<TG>::has) {
+         if (!g_kq_split) { launch_gu_port<TG, LN, false>(groups, s, grp_ptr, grp_start, n_groups, ent_tok, X, L, gate, up); return; }
+     }
+
+
+FILE /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-source/contract.txt SHA d0abe0c5b21e7cc928b9c76a62b598331a2cf2e828b705f1e70b099afc4d461f
+CONFIG -> Source-only proposal against exact current SYCL IQ TU acaa7da63733af9f3831b3a74b99e6176bf46a06e498e0a33c0591f7f4a29851. S98 actual strict primitive PASS is root-owned: mixed fixture 87.80415 ->52.18525 us/call; singleton27.26925 ->26.933825, warm two-expert fixture only. These do not establish serving gain. No other source/main/runtime/object/archive modified.
+
+COMMAND -> Read actual current TU, frozen S98 private header and actual host/image/ISA audit. Prepare additive71-line candidate and unified forward/inverse patches. Text inverse reconstructs original full SHA exactly. Multi17 prep/acts/finish body is byteexact frozen S98 after removing only new false has/comment. No compiler/frontend, GPU, model payload, profiler, serving or actual model consultation invoked.
+
+RESULT -> Default-off STRATA_IQ2XS_MULTI uses existing env_on convention (nonempty first character other than0 enables). static initialization latches the result per process; no in-process toggle or graph update is claimed. Multi17.has=false intentionally leaves kEntryMulti<17,KM> false. A new default-false IQ2XS_MULTI template argument is propagated only from new unique launcher through native_gu_kernel into existing row_entries. The static_assert forbids forced reuse outside TY17/LANES8/KMtrue.
+
+Caller/default proof:
+- Existing launch_gu_port template and its dpct_kernel_name native_gu_port/TG/LN/KM are unchanged. Its native_gu_kernel call omits the new bool, therefore false. Default kernel registered names remain identical; exact rebuilt image bytes are NOT promised.
+- gu_port_km adds one branch ONLY under if constexpr TG17 && LN8, then requires L.gu_type17/N2560/FF640 and enabled flag. OFF and every ineligible format/lane/shape continue to the original KqSplit/launch_gu_port statements unchanged.
+- Only new launch_gu_iq2xs_multi calls native_gu_kernel<17,8,true,true>; one unique registered class native_gu_iq2xs_multi_s100. WG256/SG32/gx/groups/root-sync property/queue/capture/buffers/output row and entry ownership match the old port.
+- Original launch_gu_lanes lane switch is unchanged. launch_gu's g_old_kernels/g_split_multi choice is unchanged; STRATA_EXPERT_SPLIT's alternate multi launchers do not consult this flag or gain a global Multi17 opt-in. DOWN launchers/row math are unchanged. Existing other-format Multi.has values and kEntryMulti definition are unchanged.
+- The only forced entry logic is the existing E4/E2/singleton sequence. Original per-lane K stride8 and XOR4,2,1 remain. Original q2 direct uint16 reconstruction, sign/grid/SWAR, integer truncations and expression `const float d = m.d * ds; return d * sumi;` match S98. No tolerance, quant format, routing, repack, permanent allocation, group/grid, FP policy or other math change.
+- No public header/class layout/API/ABI change; new templates/helper are inside the existing TU anonymous namespace. Future build must recompile this IQ TU and relink its archive/main.
+
+Host activation marker exact literal (ON only, once process, no per-op print):
+strata IQ2_XS multi: enabled=1 GU17 LN8 SG32 WG256 N2560 FF640 E4E2tail\n
+The first eligible host invocation may be graph capture or warm work; it is not necessarily startup/readiness. Require onceON after qualifying warm/capture and absentOFF. It proves host selection, not an independent GPU kernel count/dispatch proof.
+
+VERDICT -> Prepared for root full source read + actual Claude source review and fresh upstream check BEFORE any apply/build. Main remains unmodified. Future actual selected ON/OFF metadata/name/image binding and candidate resources/compiled reuse must be inspected after build; no new expected whole-kernel count8 (E4/E2/singleton static32/16/8). Actual matched two-card serving is needed for output/work/identity/health/teardown and useful end-to-end evidence. S98 alone is not a serving qualification or general format/lane/shape result.
+
+
+FILE /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-caller-proof.txt SHA 21d2bc4cf300ee7868eff5acdfed893d5b3a65d8c3d2de8db72950005061743c
+CONFIG -> Additive caller proof for frozen S100 patch435ceaf0 and manifest7bbd8f55. Original acaa7da6. No frozen prep files changed; indentation retained by root instruction.
+
+COMMAND -> Bounded textual lookup of EVERY Multi<TY>, M::NW/prep/acts/finish, row_dot_multi_iq, kEntryMulti, and overloaded row_dot_multi caller in actual original and frozen candidate TU. No compiler/frontend/GPU/build.
+
+RESULT -> Direct Multi consumers in original:
+1) kEntryMulti at1912 reads Multi<TY>::has only (OR KM&&KqSplit<TY>::has). New Multi17.has=false preserves original false. KqSplit17 remains unspecializedfalse.
+2) row_dot_multi_iq1934..1960 aliases M=Multi<TY> at1937; prep1944/acts1949/NW1952,1954/finish1955. It is called ONLY by pointer-array row_dot_multi1963..1967, which chooses KqSplit or Multi by format. No caller reads NW as an opt-in predicate; NW8 does not enable a path by itself.
+3) Pointer-array row_dot_multi calls exist ONLY in row_entries1980/1988 and native_down_kernel2193/2201. The former now opts in only with explicit booltrue from new launcher; default boolfalse uses unchanged kEntryMulti. The latter remains wholly unchanged and under kEntryMulti<TD,KM>; even if TD17 were dispatched, Multi17.has=false/KqSplit17false keeps it scalar. Current down format table does not add17.
+4) Alternate same-name row_dot_multi1219..1254 is a DIFFERENT overload: contiguous block_q8_1* + reference-to-offset-array, not pointer-to-activation-pointers. It aliases Split<TY>, NOT Multi<TY>. This is used by dense MMVQ1557/1569, native_gu_multi_kernel2132/2138/2144/2150 and native_down_multi_kernel2427/2433/2442/2457. The overload's template3/4 bools and argument types distinguish it. New Multi17.has/NW/prep/finish cannot change those alternate EXPERT_SPLIT/dense functions. Split17 and all their callers are byteunchanged.
+5) No other Multi alias or direct row_dot_multi_iq caller in the full TU. New specialization supplies methods but keeps hasfalse; no global trait enables LN4/16/32, old alternate paths or DOWN. The only explicit IQ2XS_MULTI=true call is new native_gu_kernel<17,8,true,true> in launch_gu_iq2xs_multi. Staticassert in row_entries restricts force to17/8/KMtrue.
+
+VERDICT -> NW8/hasfalse is an implementation supply, not an enable condition. Full direct/overload caller audit finds no unintended old-path activation. This is source reachability proof only; root still requires actual rebuilt host binding/device registration and serving correctness evidence. Frozen files retain exact pins.
+
+
+FILE /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-prep/run-clean/root-summary.json SHA 8a25422af55331b5a9f2bcdfefc812dac57ea0ab130dba10edc7922c16615a00
+{
+  "status": "PASS_BOUNDED_GU_PRIMITIVE",
+  "processes": 1,
+  "strict_full_byte_snapshots": 88,
+  "public_original_candidate_eager_binary_files": 18,
+  "all_guards_readonly_finite_inactive_changed_graphs": true,
+  "closure": {
+    "status": "PASS_PRIMITIVE_ONLY",
+    "leaf_exit": 0,
+    "pre_health_exit": 0,
+    "post_health_exit": 0,
+    "analysis_exit": 0,
+    "container_removed": true,
+    "processes": 1,
+    "retries": 0,
+    "serving_qualified": false,
+    "speed_qualified": false
+  },
+  "timings": {
+    "mixed_1_to_6": {
+      "completed_us": {
+        "original_median_us_per_call": 87.80414999999999,
+        "candidate_median_us_per_call": 52.185249999999996,
+        "median_change_percent": -40.5663058067301,
+        "paired_changes_percent": [
+          -40.50879969799719,
+          -40.53962638880728,
+          -40.566846890708696,
+          -40.57488551776983
+        ],
+        "median_paired_change_percent": -40.55323663975798
+      },
+      "barrier_span_us": {
+        "original_median_us_per_call": 87.999975,
+        "candidate_median_us_per_call": 52.291650000000004,
+        "median_change_percent": -40.57765357319704,
+        "paired_changes_percent": [
+          -40.49946226891983,
+          -40.54546665444727,
+          -40.608558042449886,
+          -40.5466428454751
+        ],
+        "median_paired_change_percent": -40.546054749961186
+      }
+    },
+    "singleton_only": {
+      "completed_us": {
+        "original_median_us_per_call": 27.26925,
+        "candidate_median_us_per_call": 26.933825000000002,
+        "median_change_percent": -1.2300484978501336,
+        "paired_changes_percent": [
+          -1.425612683832611,
+          0.35910074117364577,
+          -1.3421871879300107,
+          -1.1177591973857814
+        ],
+        "median_paired_change_percent": -1.229973192657896
+      },
+      "barrier_span_us": {
+        "original_median_us_per_call": 27.432275,
+        "candidate_median_us_per_call": 27.093775,
+        "median_change_percent": -1.2339479682235588,
+        "paired_changes_percent": [
+          -1.3097038724373622,
+          0.39963470319634986,
+          -1.3642309168672373,
+          -1.3862227253751414
+        ],
+        "median_paired_change_percent": -1.3369673946522997
+      }
+    }
+  },
+  "limits": [
+    "Warm repeated two-expert synthetic route fixture, same process, four alternating pairs perlayout.",
+    "Intervals include graph/queue/barrier effects; not isolated GPU service or end-to-end serving.",
+    "Actual serving reuse frequency, latency and full-cache qualification unchanged."
+  ]
+}

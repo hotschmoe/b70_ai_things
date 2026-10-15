@@ -1,0 +1,120 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 47.61133724398678,
+  "launch_exception": null,
+  "source_packet_sha256": "5bb5a2af5547deed1cdb45ba79319691ec3931b0143ac02047990e507b446764",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 412667,
+      "stop_reason": "end_turn",
+      "session_id": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "total_cost_usd": 3.6302747500000003,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 18717,
+        "cache_read_input_tokens": 95031,
+        "output_tokens": 2907,
+        "output_tokens_details": {
+          "thinking_tokens": 1934
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 18717,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 2907,
+            "cache_read_input_tokens": 95031,
+            "cache_creation_input_tokens": 18717,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 18717
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 12,
+          "outputTokens": 26079,
+          "thinkingTokens": 18294,
+          "cacheReadInputTokens": 256899,
+          "cacheCreationInputTokens": 113099,
+          "webSearchRequests": 0,
+          "costUSD": 3.6302747500000003,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Disposition: ACCEPT the default-OFF integration for main apply, offline IQ TU rebuild and metadata review, with one textual confirmation before apply. GPU stays root controlled.**\n\n**The one item to confirm before apply**\n\nThe patch body depends on the main TU's existing MultiW struct, which the patch does not show. S98 used its own copy with integer a and b and float d. If the main struct declares a or b as float, the finish expression silently becomes float arithmetic and the truncating divisions are lost, which is a bit change the S98 result does not cover. Confirm by reading the struct that w has at least eight ints, a and b are int, and d is float. This is a grep, not a build.\n\n**Source, default and caller safety**\n\n- The has flag stays false, so the existing entry trait is unchanged for type 17 and every old launcher, including the EXPERT_SPLIT and down paths, keeps its previous dispatch. The caller proof covers both row_dot_multi overloads and is sound.\n- The new bool reaches row_entries only from the new launcher, and the static assert blocks any other instantiation. Default instantiations omit it and compile as before.\n- The gate is compile-time on type 17 and lane 8, then runtime on geometry and the latched env flag. OFF takes the original statements untouched.\n- The new kernel has its own registered class, the same geometry, properties, queue and output ownership. Graph capture records it like any other kernel. The marker fires once per process on the first eligible call, which may be inside warm or capture. The serving gate must expect it after warm, not at readiness, and must require it absent on OFF.\n- One compile risk remains: the pointer-array row_dot_multi must not static-assert on has for the Multi branch. If it does, the build fails loudly. No action needed beyond the build.\n\n**Numerical ledger**\n\nThe arithmetic is the S98 body, which passed 88 strict byte comparisons against the public anchor on real weights. The ledger carries over only if the MultiW types match, as above. The post-EOT image inequality remains explained but not equal, so the serving comparison must use one binary with the flag off and on, never two builds.\n\n**Inference to correct**\n\nThe 40 percent fixture change is a warm two-expert synthetic number. Serving effect depends on what share of routed work is IQ2_XS gate and up at this geometry, which no census so far measures. Keep the expectation unstated.\n\n**Smallest useful matched comparison**\n\nThe proposed design is already minimal. Same binary, both cards, fixed flags, one warm then three matched coding pairs per arm. Fail on the first text, SSE, usage, native work, draft or capture mismatch. Marker exactly once on ON after warm, zero on OFF. Normal quit, container gone, wrapper zero, full health. No prefills, no cache run, no trace. Capture loader maps before timings as provenance only. Any timing from this run is descriptive and does not touch the serving targets, which remain unmet.",
+      "ttft_ms": 31141,
+      "type": "result",
+      "duration_ms": 46586,
+      "uuid": "6a31f0be-3266-43f4-bd5a-7c29f6172cc4",
+      "ttft_stream_ms": 1796,
+      "time_to_request_ms": 80,
+      "first_content_frame_ms": 1796,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

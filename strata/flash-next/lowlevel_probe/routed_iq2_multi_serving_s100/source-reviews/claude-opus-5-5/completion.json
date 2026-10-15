@@ -1,0 +1,120 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 44.980376824969426,
+  "launch_exception": null,
+  "source_packet_sha256": "5bb5a2af5547deed1cdb45ba79319691ec3931b0143ac02047990e507b446764",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 324879,
+      "stop_reason": "end_turn",
+      "session_id": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "total_cost_usd": 1.3879942,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 16721,
+        "cache_read_input_tokens": 92389,
+        "output_tokens": 3163,
+        "output_tokens_details": {
+          "thinking_tokens": 1674
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 16721,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 3163,
+            "cache_read_input_tokens": 92389,
+            "cache_creation_input_tokens": 16721,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 16721
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 12,
+          "outputTokens": 23556,
+          "thinkingTokens": 12833,
+          "cacheReadInputTokens": 245691,
+          "cacheCreationInputTokens": 108461,
+          "webSearchRequests": 0,
+          "costUSD": 1.3879942,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# S100 review: STRATA_IQ2XS_MULTI integration patch\n\n## Disposition: ACCEPT\n\nThis accepts the patch for main apply, then one IQ TU, archive and AOT rebuild, then the actual OFF/ON metadata, image and resource review. GPU stays with root.\n\n## What the source review supports\n\n- **Arithmetic.** The `Multi<17>` body matches S98 byte for byte: the q2 shifts, grid/sign/SWAR, NW8 split at 4, the signed truncating `finish`, and the separate `d` statement. K stride 8 and XOR 4/2/1 come from the unchanged `row_entries` and `lanes_sum`.\n- **Default safety.**\n  - `has=false` keeps `kEntryMulti<17,*>` false, so the DOWN path and the alternate `row_dot_multi` overload, which uses `Split` rather than `Multi`, cannot activate.\n  - The new bool defaults to false, so the registered name of the existing `native_gu_port` is unchanged.\n  - The `static_assert` confines forcing to 17/8/KM.\n- **OFF path.** It falls through to the unchanged KqSplit and `launch_gu_port` code.\n- **Capture.** The process-latched static is thread-safe, and the `fprintf` is host-side, so it is safe during graph capture. WG/SG/gx/root-sync and output ownership all match.\n\n## Conditions\n\n1. **Prove reachability, the S93 lesson.** The S97 runtime name was `launch_gu_port<17,8,true>`. Trace the actual argv to `launch_gu` to `launch_gu_lanes` to `gu_port_km<17,8>` with the current flags. In particular, show that the `g_old_kernels` and `g_split_multi` branches skip `gu_port_km` under production settings. The caller proof covers the consumers of `Multi`, not this dispatch path.\n2. **FP contraction parity.** S98 used `-fp-model=precise`. After inlining, `s[e] += d*sumi` is a candidate for FMA in both the original and the candidate. Confirm the main IQ TU flags. In the rebuilt OFF and ON images, check that the accumulate uses the same instruction form (mad vs mul+add) in both. If they differ, HOLD: the bytewise equality S98 established would no longer carry over.\n3. **Resources.** The rebuilt ON image must show the 4 gathers hoisted, 32/16/8 DP4A, SIMD32 at GRF128, and no added spill or scratch fields. In the OFF image, the original port's name and resources must be unchanged. Root has already said exact image bytes are not promised.\n4. **Marker scope.** The marker must appear once with ON and be absent with OFF. It proves host selection only.\n\n## Corrections to unsupported inference\n\n- **The \u221240.6% is not a serving estimate.** It comes from a warm, cache-resident two-expert fixture with synthetic group sizes 1\u20136. Singletons gave only about \u22121.2%.\n- **Real C2 decode** has about 2 slots \u00d7 3 rows. Routed GU17 groups are probably dominated by 1\u20132 entries, so the E4 path may rarely fire. The actual route-size distribution is unmeasured, so expect a small end-to-end effect. A null result would be plausible and should not be called a regression.\n- S98 does not qualify other lanes, formats, shapes or streaming-cache behaviour.\n\n## Smallest matched C2 comparison\n\nRoot's design is right:\n\n- Same binary, flag 0/1, all other candidates OFF, fixed config.\n- One warm-up plus 3 matched coding pairs per arm.\n- Strict text/SSE/usage/native-work/draft/capture gates.\n- Normal QUIT, CID and name gone, wrapper exit 0, full health.\n\nTwo refinements:\n\n- **Interpreting a draft-count mismatch.** S94 showed `draft_n` varying across processes on the baseline path (207 vs S93's 205). Keep the stop on mismatch. But record any mismatch as \"unresolved cross-process\", not as a candidate defect, unless the text or accepted work also diverge. The candidate is bitwise-exact by source plus S98.\n- **Report scope.** Report the per-pair per-stream decode figures descriptively only. With three pairs, make no gate or percentage claim. The 150 tok/s per stream target remains unmet regardless of the outcome.",
+      "ttft_ms": 25310,
+      "type": "result",
+      "duration_ms": 43962,
+      "uuid": "97fcf7b4-1af6-4db3-8111-8dd2239f934c",
+      "ttft_stream_ms": 1689,
+      "time_to_request_ms": 97,
+      "first_content_frame_ms": 1690,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

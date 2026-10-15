@@ -1,0 +1,14 @@
+{
+  "utc": "2026-10-15T21:58:11.447712+00:00",
+  "status": "ROOT_GO_0_THEN_NORMAL_STOP_HEALTH_THEN_1_FINITE_STRICT_SCREEN",
+  "prehealth_handle": 26196,
+  "prehealth_wrapper_exit": 0,
+  "prehealth_seconds": 54,
+  "pinned_per_card": "PASS both",
+  "compiled_two_rank": "PASS 10 p2p0",
+  "boot_unchanged": true,
+  "model_stat_closure": "root-model-continuity.json",
+  "compiled_resolution": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-reviews-20261015/root-compiled-resolution.json",
+  "default_OFF": true,
+  "no_daily_restore": true
+}

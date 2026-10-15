@@ -24666,3 +24666,53 @@ Report: docs/20261015_strata_routed_iq2_reuse.md; exact small records under
 strata/flash-next/lowlevel_probe/routed_iq2_multi_s98/. Map historical170
 rows/rollups/meta remain byte-exact. No runtime model postreview claimed
 here; actual source answers and root corrections are retained.
+
+
+## 2026-10-15 - S100 guarded IQ2_XS reuse matched concurrent serving
+
+CONFIG -> Same main7ee675ff flag0/1 only, QT17/LN8/N2560/FF640, EP149/363,
+all24576resident/two200kINT8/32GiB4parking, depth2/headpairON/spec4.
+Other candidatesOFF; warm256each then3fresh107/1500each C2pairs/functionals.
+COMMAND -> Actual source Opus44.980s/Fable47.611s/rootfullread; one191s
+CPUwrapperbuild176.121sNinja. First main ONidentityHOLD9611changedbytes
+preserved. One11sselectedONdecoder/actualledger and actual compiled
+Opus36.473s/Fable46.548s/rootresolution support finite serving. No rebuild,
+privateprimitive repeat/newtrace/fullcache campaign or dailyserver restore.
+RESULT -> All4pairs exact fulltext/SSE/usage/per-slot nativework/drafts/
+windows/pair/solo/rows/captures; positivepairedMTP, math/reasoning/toolsPASS.
+Aggregate103.016058->103.333098tok/s(+0.307757%); pairwall29.121673->
+29.032324s; pairedwall-0.306813/-0.414096/-0.120303%. Perstream53.481486/
+55.845360->53.730021/56.023137. TTFTtiny-n3percentiles/content-eventgaps
+retained, not tailstability/tokenITL. Actual native maps/loader/libraryhashes
+captured botharms. NormalQUIT/fullCID+NAMEgone/wrappers0/RunningtrueOOMfalse
+and pinnedpercard+compiled10healthPASS; no reset/retry/forcekill. Main ON
+rawcomputationalidentityFALSE; selectedledger/strictservingnotuniversalproof.
+VERDICT -> Retain defaultOFF experimentalpatch/result, no rerun/promotion.
+One OFFthenONprocesssequence/three nestedpairs is notgeneral speed/stability.
+S98syntheticroute40.6%kernel gain notservingprediction. Warmup1500->256
+saves~45s withtimedpairs/gatesintact. Targets/S30recoveryunchanged. Report:
+docs/20261015_strata_routed_iq2_reuse.md; exact smallrecords under
+strata/flash-next/lowlevel_probe/routed_iq2_multi_serving_s100/.
+
+
+## 2026-10-15 - S101 independent Q6 load and EP fusion source designs
+
+CONFIG -> CurrentS95census/exactSYCLsource; independent final25.0/26.0KB
+Opus/Fablepackets, no rawtrace/modelread/build/GPU. S100resultseparate.
+COMMAND -> Actual claude-opus-5-5 104.737s / claude-fable-5-1 111.676s,
+ownsessions/toolsdisabled/rootfullread. TwoSHApreflightsbeforemodelcall
+caught packetwrites; explicitauthorfreeze/finalhashesresolve coordination.
+RESULT -> Opus proposes guarded Q6C6A4five-dwordload reconstruction audit;
+sourceweightdecodealreadyhoisted, actualmain binding/S85originalcomparison
+required before newdecoder/candidate. Fable proposes peerwait+uncachedcopy+
+planWG128 fusion lead; causality/~8us/countcoldattribution rejected. Root
+helperaudit finds defaultuncachedsysload+systemacquire/sysstore+release,
+no checkedcompileoverrides; fullinclude/emittedcache/WGvisibility/IPC proof
+pending. Preservebounds/signedness/FPcontraction/strictbits; onecardcannot
+qualifycrosscardfreshness. No kernel/fusion/performancequalification here.
+VERDICT -> Sourceauditsonly: Q6existingimagefirst; EPfusionseparatepending.
+PreparedS102sourceisnotexecutedresult. Graph-boundaryfollowup tracked
+outsidecheckpoint; no graphimplementation/speedclaim. Avoid rejectedknobs,
+newframeworks/sweeps/duplicatefixturework. Report:
+docs/20261015_strata_next_kernel_candidates.md; exactpackets/answers/root
+corrections under strata/flash-next/lowlevel_probe/next_kernel_designs_s101/.

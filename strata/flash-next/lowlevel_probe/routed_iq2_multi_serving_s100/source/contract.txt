@@ -1,0 +1,19 @@
+CONFIG -> Source-only proposal against exact current SYCL IQ TU acaa7da63733af9f3831b3a74b99e6176bf46a06e498e0a33c0591f7f4a29851. S98 actual strict primitive PASS is root-owned: mixed fixture 87.80415 ->52.18525 us/call; singleton27.26925 ->26.933825, warm two-expert fixture only. These do not establish serving gain. No other source/main/runtime/object/archive modified.
+
+COMMAND -> Read actual current TU, frozen S98 private header and actual host/image/ISA audit. Prepare additive71-line candidate and unified forward/inverse patches. Text inverse reconstructs original full SHA exactly. Multi17 prep/acts/finish body is byteexact frozen S98 after removing only new false has/comment. No compiler/frontend, GPU, model payload, profiler, serving or actual model consultation invoked.
+
+RESULT -> Default-off STRATA_IQ2XS_MULTI uses existing env_on convention (nonempty first character other than0 enables). static initialization latches the result per process; no in-process toggle or graph update is claimed. Multi17.has=false intentionally leaves kEntryMulti<17,KM> false. A new default-false IQ2XS_MULTI template argument is propagated only from new unique launcher through native_gu_kernel into existing row_entries. The static_assert forbids forced reuse outside TY17/LANES8/KMtrue.
+
+Caller/default proof:
+- Existing launch_gu_port template and its dpct_kernel_name native_gu_port/TG/LN/KM are unchanged. Its native_gu_kernel call omits the new bool, therefore false. Default kernel registered names remain identical; exact rebuilt image bytes are NOT promised.
+- gu_port_km adds one branch ONLY under if constexpr TG17 && LN8, then requires L.gu_type17/N2560/FF640 and enabled flag. OFF and every ineligible format/lane/shape continue to the original KqSplit/launch_gu_port statements unchanged.
+- Only new launch_gu_iq2xs_multi calls native_gu_kernel<17,8,true,true>; one unique registered class native_gu_iq2xs_multi_s100. WG256/SG32/gx/groups/root-sync property/queue/capture/buffers/output row and entry ownership match the old port.
+- Original launch_gu_lanes lane switch is unchanged. launch_gu's g_old_kernels/g_split_multi choice is unchanged; STRATA_EXPERT_SPLIT's alternate multi launchers do not consult this flag or gain a global Multi17 opt-in. DOWN launchers/row math are unchanged. Existing other-format Multi.has values and kEntryMulti definition are unchanged.
+- The only forced entry logic is the existing E4/E2/singleton sequence. Original per-lane K stride8 and XOR4,2,1 remain. Original q2 direct uint16 reconstruction, sign/grid/SWAR, integer truncations and expression `const float d = m.d * ds; return d * sumi;` match S98. No tolerance, quant format, routing, repack, permanent allocation, group/grid, FP policy or other math change.
+- No public header/class layout/API/ABI change; new templates/helper are inside the existing TU anonymous namespace. Future build must recompile this IQ TU and relink its archive/main.
+
+Host activation marker exact literal (ON only, once process, no per-op print):
+strata IQ2_XS multi: enabled=1 GU17 LN8 SG32 WG256 N2560 FF640 E4E2tail\n
+The first eligible host invocation may be graph capture or warm work; it is not necessarily startup/readiness. Require onceON after qualifying warm/capture and absentOFF. It proves host selection, not an independent GPU kernel count/dispatch proof.
+
+VERDICT -> Prepared for root full source read + actual Claude source review and fresh upstream check BEFORE any apply/build. Main remains unmodified. Future actual selected ON/OFF metadata/name/image binding and candidate resources/compiled reuse must be inspected after build; no new expected whole-kernel count8 (E4/E2/singleton static32/16/8). Actual matched two-card serving is needed for output/work/identity/health/teardown and useful end-to-end evidence. S98 alone is not a serving qualification or general format/lane/shape result.

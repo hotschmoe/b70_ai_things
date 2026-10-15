@@ -1,0 +1,69 @@
+   15469:	41 83 7d 00 11       	cmpl   $0x11,0x0(%r13)
+   1546e:	0f 85 a4 02 00 00    	jne    15718 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0xf58>
+   15474:	49 81 7d 08 00 0a 00 00 	cmpq   $0xa00,0x8(%r13)
+   1547c:	0f 85 96 02 00 00    	jne    15718 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0xf58>
+   15482:	49 81 7d 10 80 02 00 00 	cmpq   $0x280,0x10(%r13)
+   1548a:	0f 85 88 02 00 00    	jne    15718 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0xf58>
+   15490:	0f b6 05 00 00 00 00 	movzbl 0x0(%rip),%eax        # 15497 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0xcd7>	15493: R_X86_64_PC32	.bss+0x83c
+   15497:	84 c0                	test   %al,%al
+   15499:	0f 84 1d 07 00 00    	je     15bbc <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0x13fc>
+   1549f:	80 3d 00 00 00 00 00 	cmpb   $0x0,0x0(%rip)        # 154a6 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0xce6>	154a1: R_X86_64_PC32	.bss+0x833
+   154a6:	0f 84 6c 02 00 00    	je     15718 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0xf58>
+   154ac:	49 8b 5d 10          	mov    0x10(%r13),%rbx
+   1558e:	48 c7 44 24 70 01 00 00 00 	movq   $0x1,0x70(%rsp)
+   15597:	4c 89 74 24 78       	mov    %r14,0x78(%rsp)
+   1559c:	48 89 84 24 80 00 00 00 	mov    %rax,0x80(%rsp)
+   155a4:	48 c7 84 24 88 00 00 00 01 00 00 00 	movq   $0x1,0x88(%rsp)
+   155b0:	48 c7 84 24 90 00 00 00 01 00 00 00 	movq   $0x1,0x90(%rsp)
+   155bc:	48 c7 84 24 98 00 00 00 00 01 00 00 	movq   $0x100,0x98(%rsp)
+   155c8:	0f 57 c0             	xorps  %xmm0,%xmm0
+   155cb:	0f 11 84 24 a0 00 00 00 	movups %xmm0,0xa0(%rsp)
+   155d3:	48 c7 84 24 b0 00 00 00 00 00 00 00 	movq   $0x0,0xb0(%rsp)
+   155df:	4c 8d 74 24 70       	lea    0x70(%rsp),%r14
+   155e4:	4c 89 f7             	mov    %r14,%rdi
+   155e7:	e8 00 00 00 00       	call   155ec <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0xe2c>	155e8: R_X86_64_PLT32	_ZN4sycl3_V16detail15checkValueRangeILi3EEEvRKNS0_8nd_rangeIXT_EEE-0x4
+   155ec:	48 8d 84 24 88 00 00 00 	lea    0x88(%rsp),%rax
+   155f4:	48 8d 8c 24 a0 00 00 00 	lea    0xa0(%rsp),%rcx
+   155fc:	4c 89 74 24 50       	mov    %r14,0x50(%rsp)
+   15601:	48 89 44 24 58       	mov    %rax,0x58(%rsp)
+   15606:	48 89 4c 24 60       	mov    %rcx,0x60(%rsp)
+   1560b:	48 c7 44 24 68 03 00 00 00 	movq   $0x3,0x68(%rsp)
+   15614:	48 8d 7c 24 20       	lea    0x20(%rsp),%rdi
+   15619:	4c 89 fe             	mov    %r15,%rsi
+   1561c:	e8 00 00 00 00       	call   15621 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0xe61>	1561d: R_X86_64_PLT32	_ZN4sycl3_V16detail14tls_code_loc_tC1ERKNS1_13code_locationE-0x4
+   15621:	0f b6 05 00 00 00 00 	movzbl 0x0(%rip),%eax        # 15628 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0xe68>	15624: R_X86_64_PC32	.bss+0x84c
+   15628:	84 c0                	test   %al,%al
+   1562a:	0f 84 09 06 00 00    	je     15c39 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0x1479>
+   15630:	4c 8b 35 00 00 00 00 	mov    0x0(%rip),%r14        # 15637 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0xe77>	15633: R_X86_64_PC32	.bss+0x844
+   15637:	c6 84 24 a8 01 00 00 00 	movb   $0x0,0x1a8(%rsp)
+   15bbc:	bf 00 00 00 00       	mov    $0x0,%edi	15bbd: R_X86_64_32	.bss+0x840
+   15bc1:	4c 89 8c 24 18 01 00 00 	mov    %r9,0x118(%rsp)
+   15bc9:	4c 89 84 24 10 01 00 00 	mov    %r8,0x110(%rsp)
+   15bd1:	48 89 8c 24 08 01 00 00 	mov    %rcx,0x108(%rsp)
+   15bd9:	48 89 d3             	mov    %rdx,%rbx
+   15bdc:	e8 00 00 00 00       	call   15be1 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0x1421>	15bdd: R_X86_64_PLT32	__cxa_guard_acquire-0x4
+   15be1:	48 89 da             	mov    %rbx,%rdx
+   15be4:	48 8b 8c 24 08 01 00 00 	mov    0x108(%rsp),%rcx
+   15bec:	4c 8b 84 24 10 01 00 00 	mov    0x110(%rsp),%r8
+   15bf4:	4c 8b 8c 24 18 01 00 00 	mov    0x118(%rsp),%r9
+   15bfc:	85 c0                	test   %eax,%eax
+   15bfe:	0f 84 9b f8 ff ff    	je     1549f <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0xcdf>
+   15c04:	e8 97 9f 02 00       	call   3fba0 <_ZZN6strata7kernels12_GLOBAL__N_119iq2xs_multi_enabledEvENK7enabledMUlvE_clEv>
+   15c09:	88 05 00 00 00 00    	mov    %al,0x0(%rip)        # 15c0f <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0x144f>	15c0b: R_X86_64_PC32	.bss+0x834
+   15c0f:	bf 00 00 00 00       	mov    $0x0,%edi	15c10: R_X86_64_32	.bss+0x840
+   15c14:	e8 00 00 00 00       	call   15c19 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0x1459>	15c15: R_X86_64_PLT32	__cxa_guard_release-0x4
+   15c19:	48 89 da             	mov    %rbx,%rdx
+   15c1c:	48 8b 8c 24 08 01 00 00 	mov    0x108(%rsp),%rcx
+   15c24:	4c 8b 84 24 10 01 00 00 	mov    0x110(%rsp),%r8
+   15c2c:	4c 8b 8c 24 18 01 00 00 	mov    0x118(%rsp),%r9
+   15c34:	e9 66 f8 ff ff       	jmp    1549f <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0xcdf>
+   15c39:	bf 00 00 00 00       	mov    $0x0,%edi	15c3a: R_X86_64_32	.bss+0x850
+   15c3e:	e8 00 00 00 00       	call   15c43 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0x1483>	15c3f: R_X86_64_PLT32	__cxa_guard_acquire-0x4
+   15c43:	85 c0                	test   %eax,%eax
+   15c45:	0f 84 e5 f9 ff ff    	je     15630 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0xe70>
+   15c4b:	bf 00 00 00 00       	mov    $0x0,%edi	15c4c: R_X86_64_32	.rodata+0x12598
+   15c50:	e8 00 00 00 00       	call   15c55 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0x1495>	15c51: R_X86_64_PLT32	_ZN4sycl3_V16detail19getDeviceKernelInfoERKNS1_27compile_time_kernel_info_v123CompileTimeKernelInfoTyE-0x4
+   15c55:	48 89 05 00 00 00 00 	mov    %rax,0x0(%rip)        # 15c5c <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0x149c>	15c58: R_X86_64_PC32	.bss+0x844
+   15c5c:	bf 00 00 00 00       	mov    $0x0,%edi	15c5d: R_X86_64_32	.bss+0x850
+   15c61:	e8 00 00 00 00       	call   15c66 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0x14a6>	15c62: R_X86_64_PLT32	__cxa_guard_release-0x4
+   15c66:	e9 c5 f9 ff ff       	jmp    15630 <_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_+0xe70>

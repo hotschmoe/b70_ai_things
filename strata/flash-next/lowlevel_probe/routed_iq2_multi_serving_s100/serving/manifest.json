@@ -1,0 +1,52 @@
+{
+  "status": "FROZEN_SOURCE_PREPARATION_ONLY_WARM256_TIMED1500",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-prep-v2",
+  "frozen_v1_manifest_sha256": "adea671501b0df4ad2869854c570f6f636204dea26bf47cce3270f8a6e04e579",
+  "files": {
+    "README.txt": {
+      "bytes": 5776,
+      "sha256": "4e3dac3fd15585ba0eb42c6306fec7ef2d0ca3cc97beeff4990ebf431dc37f79"
+    },
+    "harness-prep/client.py": {
+      "bytes": 11841,
+      "sha256": "9ca1134cf054e77b9a47e16789d037360b3416b6b8035f958426ecd8cf1574fa"
+    },
+    "harness-prep/compare.py": {
+      "bytes": 7458,
+      "sha256": "e86636bb974346112844706f2f259c836977cdedd7f2c48f59f2308a7eec0ac7"
+    },
+    "harness-prep/launch_stage.sh": {
+      "bytes": 1881,
+      "sha256": "7ed01002d06f774c14e15e62a7c52307bb017e69fd789fe24e90025b1294055b"
+    },
+    "harness-prep/make_configs.py": {
+      "bytes": 4399,
+      "sha256": "fe686ad794d1cadeb8b9463c56385a6043455f00aedd73f9d77c5cc47fa1d934"
+    },
+    "harness-prep/start_arm.py": {
+      "bytes": 8194,
+      "sha256": "46992f1dc44055b90826948f88390306b0eace3e432d11f7159df77069235432"
+    },
+    "harness-prep/stop_and_health.py": {
+      "bytes": 4346,
+      "sha256": "c88d392434bb358d2b9ca9293026c52fb47a3269a59d1f7f011444bdc3b8a74d"
+    },
+    "harness-source-pins.json": {
+      "bytes": 3442,
+      "sha256": "d409acd4786ffcd738a7312759434be12c05b2e73cbba43a6262f90e6140ee26"
+    },
+    "source-checks.json": {
+      "bytes": 824,
+      "sha256": "27ef01f91aa41be400f4f9029353d1e7e5f7de6252821e3831a07b0cc60219f7"
+    },
+    "vs-S87.diff": {
+      "bytes": 28608,
+      "sha256": "4d3e72aab15b89fd57c6be701fb37b02a6696a78c0e4858ba5c819169afa04dc"
+    },
+    "warm-only-v2.diff": {
+      "bytes": 7409,
+      "sha256": "60e61a6f856f6d8fbf3ad96437edf2b6fed2a5a711cdf1d6de29892ea6344d1b"
+    }
+  },
+  "no_configs_build_GPU_HTTP_model_calls": true
+}

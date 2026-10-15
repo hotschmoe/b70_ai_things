@@ -1,0 +1,31 @@
+**Decision: one candidate, gated. Fuse the peer-side prologue on card 1, the epoch wait, the uncached inbox copy and the plan, into a single 128-thread kernel. It is justified only if an existing-trace lookup shows card 0 is the card that waits. If card 1 waits, the lever is on the other side and this design is NO_GO.**
+
+**The one dependency**
+
+Per group, card 1 runs five serial launches on its queue: wait, copy, plan, grouped, send. Card 0 runs its own grouped, then waits at verify.cpp:1495 for the return flag before the combine. The combine therefore starts at max(local grouped end, peer chain end plus flag visibility). Only the peer chain's length is a dependency this lane can shorten without touching math. The prologue is three launches whose combined service is about 8 us, with two kernel boundaries between them. Everything downstream, grouped and send, is unchanged.
+
+**Falsifier before any source change, CPU only**
+
+Attribute the ep_wait kernel instances in the S95 whole-collection CSV by device. The packet omits them. If card 0's wait median is large and card 1's is small, the peer is late and the prologue is on the path. If the reverse, the peer is early and this is NO_GO; the only remaining lever would be card 0's push latency, which is a different and riskier change. Also reconcile the counts: push and plan show 1392 on card 0, copy and send 1152 on card 1. The 240 difference must be explained, probably cold or capture cycles, before any per-group claim.
+
+**Second gate, source only**
+
+Read the exact sys_load, sys_store and cache-hint bodies in sycl_doorbell.hpp and the build defines. The fused kernel relies on thread zero's system-scope acquire followed by a work-group barrier to order the other threads' uncached loads. Today the kernel boundary does that job. If sys_load is not an atomic load at system scope, the fusion needs an explicit system acquire fence after the spin, which the existing wait already has and must keep.
+
+**Fused kernel design, ep_kernels.dp.cpp, new default-OFF entry**
+
+- One work-group of 128, sub-group 32, same root-sync property as the plan launch, launched on the peer queue in place of the three calls at verify.cpp:1428 to 1433 under one env gate latched per process.
+- Thread zero spins exactly as ep_wait: epoch difference compare, finite spin_max, error code store on timeout, then continue rather than abort, so the stale-data path matches today. System acquire fence after the loop.
+- Work-group barrier. All 128 threads copy words with the existing load_uncached helper, same byte count, same destination. No change to the uncached read.
+- A full barrier with global and local fence space. This is mandatory: the plan reads ids from the copy destination before its own first barrier, and that first barrier is local only.
+- Then the existing resident_plan_kernel body with identical arguments. Pass one pointer for the copy destination and the plan ids and drop restrict on that parameter, since they alias.
+- No floating point exists in the prologue, so the FP ledger is trivially preserved. Plan fields, group order by first occurrence, entry order, counts, start2 and plan_err semantics are the unchanged body.
+- Graph replay: the three captured nodes become one with the same pointer arguments and ring arithmetic. Scratch persistence is untouched.
+
+**Bounded primitive, one card, before any serving**
+
+Correctness only, then timing: a local inbox buffer, a flag set by a preceding kernel, both arms run on identical inputs. Compare full old and new plan buffers byte for byte, the copied bytes, and canaries around every buffer. Cases: random repeated experts, zero local groups, zero remote groups, all remote, flag already ahead by several epochs, flag behind so the timeout path fires with the error code and stale copy identical to the old arm, counter wraparound, and A-B-A replay through a captured graph. Freshness across cards is not provable here. It is tested only by the later finite two-card serving with the usual strict gates.
+
+**Not proposed**
+
+Folding push into the quantizer, folding send into grouped, or reading the inbox without the uncached copy. Each changes work-group participation or freshness and none is needed for the dependency above.

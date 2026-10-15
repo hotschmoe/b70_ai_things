@@ -1,0 +1,37 @@
+{
+  "status": "PASS_SOURCE_AST_BASH_ASCII_ONLY_NOT_RUN",
+  "binary_binding": "PENDING_ROOT_ACTUAL_BUILD_NO_CONFIGS_CREATED",
+  "checks": [
+    {
+      "file": "client.py",
+      "Python_AST": "PASS"
+    },
+    {
+      "file": "compare.py",
+      "Python_AST": "PASS"
+    },
+    {
+      "file": "launch_stage.sh",
+      "bash_syntax": "PASS"
+    },
+    {
+      "file": "make_configs.py",
+      "Python_AST": "PASS"
+    },
+    {
+      "file": "start_arm.py",
+      "Python_AST": "PASS"
+    },
+    {
+      "file": "start_arm.py",
+      "embedded_native_probe_AST": "PASS"
+    },
+    {
+      "file": "stop_and_health.py",
+      "Python_AST": "PASS"
+    }
+  ],
+  "warm_tokens_per_stream": 256,
+  "timed_tokens_per_stream": 1500,
+  "frozen_v1_manifest_sha256": "adea671501b0df4ad2869854c570f6f636204dea26bf47cce3270f8a6e04e579"
+}

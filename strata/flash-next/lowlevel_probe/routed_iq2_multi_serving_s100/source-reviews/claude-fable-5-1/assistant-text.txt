@@ -1,0 +1,25 @@
+**Disposition: ACCEPT the default-OFF integration for main apply, offline IQ TU rebuild and metadata review, with one textual confirmation before apply. GPU stays root controlled.**
+
+**The one item to confirm before apply**
+
+The patch body depends on the main TU's existing MultiW struct, which the patch does not show. S98 used its own copy with integer a and b and float d. If the main struct declares a or b as float, the finish expression silently becomes float arithmetic and the truncating divisions are lost, which is a bit change the S98 result does not cover. Confirm by reading the struct that w has at least eight ints, a and b are int, and d is float. This is a grep, not a build.
+
+**Source, default and caller safety**
+
+- The has flag stays false, so the existing entry trait is unchanged for type 17 and every old launcher, including the EXPERT_SPLIT and down paths, keeps its previous dispatch. The caller proof covers both row_dot_multi overloads and is sound.
+- The new bool reaches row_entries only from the new launcher, and the static assert blocks any other instantiation. Default instantiations omit it and compile as before.
+- The gate is compile-time on type 17 and lane 8, then runtime on geometry and the latched env flag. OFF takes the original statements untouched.
+- The new kernel has its own registered class, the same geometry, properties, queue and output ownership. Graph capture records it like any other kernel. The marker fires once per process on the first eligible call, which may be inside warm or capture. The serving gate must expect it after warm, not at readiness, and must require it absent on OFF.
+- One compile risk remains: the pointer-array row_dot_multi must not static-assert on has for the Multi branch. If it does, the build fails loudly. No action needed beyond the build.
+
+**Numerical ledger**
+
+The arithmetic is the S98 body, which passed 88 strict byte comparisons against the public anchor on real weights. The ledger carries over only if the MultiW types match, as above. The post-EOT image inequality remains explained but not equal, so the serving comparison must use one binary with the flag off and on, never two builds.
+
+**Inference to correct**
+
+The 40 percent fixture change is a warm two-expert synthetic number. Serving effect depends on what share of routed work is IQ2_XS gate and up at this geometry, which no census so far measures. Keep the expectation unstated.
+
+**Smallest useful matched comparison**
+
+The proposed design is already minimal. Same binary, both cards, fixed flags, one warm then three matched coding pairs per arm. Fail on the first text, SSE, usage, native work, draft or capture mismatch. Marker exactly once on ON after warm, zero on OFF. Normal quit, container gone, wrapper zero, full health. No prefills, no cache run, no trace. Capture loader maps before timings as provenance only. Any timing from this run is descriptive and does not touch the serving targets, which remain unmet.

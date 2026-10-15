@@ -1,0 +1,24 @@
+{
+  "card": {
+    "command": [
+      "bin/gpu-run",
+      "bin/xpu-health",
+      "--img",
+      "b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78",
+      "--timeout",
+      "400"
+    ],
+    "exit": 0,
+    "elapsed_s": 28.06583175197011
+  },
+  "collective": {
+    "command": [
+      "bin/gpu-run",
+      "bin/xpu-collective-health",
+      "--timeout",
+      "400"
+    ],
+    "exit": 0,
+    "elapsed_s": 27.69097088999115
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "utc": "2026-10-15T21:49:18.360271+00:00",
+  "status": "ROOT_FULL_READ_SIX_V2_CONTROLLERS_AND_WARM_ONLY_DIFF_PASS_PENDING_ACTUAL_BINARY_BINDING",
+  "verified": [
+    "Manifest11files exact, six Python/shell controllers full-read, Python AST parsed without executing.",
+    "Same binary flag0/1; common candidate flags OFF; LN8/EXPERT_SPLIT0, native geometry/residency/runtime marker gates.",
+    "Warm256 output checked as actual prefix of full retained S16 text plus native256 completion count; timed1500 x3 unchanged.",
+    "Fresh native prompt-start while request0 outstanding gates request1; actual overlap retained.",
+    "ON everypair exact text/SSE/usage/per-slot nativework/windows/pair/solo/rows/capture vs OFF, stop first mismatch.",
+    "ON host-only marker exactly once after warm, OFF absent.",
+    "Detached server retains GPU leases; inherited fd7 closed. CPU quiet windows held only timed clients and teardown/health.",
+    "Owned createdCID==readyCID==prestopCID, Runningtrue/OOMfalse, normal serverTERM/nativeQUIT; exact fullCID+NAMEabsence and wrapper0 BEFORE new health leases.",
+    "Actual native /proc maps plus resolved libstdc++ identity/loader env captured before warm, crossarm selected library/env comparison, ASLR maps not byte-gated.",
+    "No routine daily restore, fullcache, prefill screen or new profile."
+  ],
+  "remaining": [
+    "Actual rebuilt binary/hash and selected compiled-body audit.",
+    "Fresh full model stat closure, boot continuity, current GPU owner posthealth and release or fresh prehealth.",
+    "Actual serving work/output/marker/functionals/normal teardown/fullhealth."
+  ],
+  "notes": [
+    "No full token-ID visibility or independent runtime GPU dispatch count claimed. SSE content-event gaps are not token ITL.",
+    "No source/controller changes from frozen prep made by root."
+  ]
+}

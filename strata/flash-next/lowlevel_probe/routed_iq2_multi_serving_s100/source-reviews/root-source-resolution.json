@@ -1,0 +1,51 @@
+{
+  "utc": "2026-10-15T21:46:39.809433+00:00",
+  "status": "ROOT_GO_EXACT_PATCH_APPLY_AND_ONE_OFFLINE_INCREMENTAL_BUILD_ONLY",
+  "actual_reviews": {
+    "claude-opus-5-5": {
+      "seconds": 44.980376824969426,
+      "disposition": "ACCEPT"
+    },
+    "claude-fable-5-1": {
+      "seconds": 47.61133724398678,
+      "disposition": "ACCEPT"
+    }
+  },
+  "fresh_upstream": {
+    "main": "296b59d2f73c8f04a805df29c2fa97655adace78",
+    "PR2511": {
+      "state": "open",
+      "head": "91b02a5c0fc45e782c02bd13e05204fdc5b0e698"
+    },
+    "recutita_PR1": {
+      "state": "open",
+      "head": "78cea7a1b57a525924a23545c3b07042dfa234b7"
+    },
+    "recutita_PR2": {
+      "state": "open",
+      "head": "69dee3c30e881b6d5afb70c197e813811423be40"
+    }
+  },
+  "confirmed_before_apply": [
+    "Main MultiW: int w[8]; int a=0,b=0; float d=0.f. Signed truncation preserved.",
+    "Pointer-array row_dot_multi has no has static_assert; alternate contiguous overload uses Split, not Multi.",
+    "Multi17 has=false preserves all existing kEntryMulti branches including DOWN. Only new bool true launcher opts in.",
+    "Current EXPERT_SPLIT=0 and GU_LANES=8 select gu_port_km17/8. Opus skip wording is wrong: production TAKES the port. Current S95 observed kernel already proves this route.",
+    "Main IQ flags -fp-model=precise, SG32/per_kernel; unchanged SWAR1/GRID_SLM0.",
+    "S100 frozen source acaa -> 8bf; source and planned existing outputs uid1000/writable. No ownership repair.",
+    "Frozen patch retained without cosmetic indentation churn. Native AGENTS read."
+  ],
+  "postbuild_required": [
+    "Actual new main and IQ object hashes, OFF and ON distinct live bindings and selected images.",
+    "Compare OFF computation/resource/codebook/args with S97; ON with S98, preserving raw image/SPV mismatches.",
+    "If computational prefixes and required metadata match, reuse prior ISA interpretation; no duplicate decoder or primitive run. Substantial changes require narrow inspection.",
+    "Actual OFF/ON serving marker zero/one after warm, strict full output/native-work/capture/functionals and normal teardown/full health. No GPU GO yet."
+  ],
+  "root_corrections": [
+    "S98 bounded real-weight fixture does not establish universal bitwise equivalence or serving gain.",
+    "Real route group distribution and critical-path IQ2 share remain unmeasured; no forecast from reviewer guesses. S95 does have QT17 GU count/service census, contrary to blanket no-census wording.",
+    "S94 remains FAILED_NATIVE_WORK_MATCH with unresolved cause; neither benign variation nor candidate defect established.",
+    "GRF128/no additional spill fields are comparison evidence, not invented occupancy or zero-dynamic-spill proof.",
+    "One binary flag0/1 only; other candidates OFF. Warm256, timed1500 x3 each. No new trace/full-cache sweep."
+  ]
+}

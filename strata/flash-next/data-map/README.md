@@ -404,3 +404,22 @@ actual loaded-library provenance remains missing; native/trace joins stay
 unproved. Capture maps/resolved libraries/loader controls during an already
 planned run, alongside existing clock brackets. No new trace is needed solely
 for this provenance.
+
+
+S100 adds a bounded same-binary serving comparison for guarded IQ2_XS reuse:
+aggregate103.016058->103.333098tok/s(+0.307757%), perstream53.481/55.845->
+53.730/56.023. Four pairs match text/SSE/usage/nativework/drafts/captures;
+functionals/normalQUIT/fullCID+NAMEgone/wrappers0/fullhealthPASS. One
+OFFthenONsequence/three nestedtimedpairs does not establish general speed
+or stability. DefaultOFF/no rerun/promotion. First mainON rawbody HOLD9611
+changedbytes is preserved; selected arithmetic review and strict serving
+support the result, not raw computational identity or universal proof.
+[S100 report](../../../docs/20261015_strata_routed_iq2_reuse.md).
+
+S101 actual Opus5.5/Fable5.1 independently propose Q6 A4 load reconstruction
+and peer wait/copy/plan fusion source leads. Root accepts existing-image
+and source visibility/dependency audits only. No new kernel/fusion/GPU
+qualification; graph-boundary consultations separately pending.
+[S101 recommendations](../../../docs/20261015_strata_next_kernel_candidates.md).
+Historical170 operation rows, rollups and metadata remain byte-exact;
+these are annotations and clean serving measurements, not new operation rows.

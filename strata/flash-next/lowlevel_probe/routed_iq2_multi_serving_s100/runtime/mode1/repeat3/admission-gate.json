@@ -1,0 +1,40 @@
+{
+  "status": "PASS_NATIVE_PROMPT_START_ORDER_AND_CLIENT_OVERLAP",
+  "fresh_engine_byte_offset": 13970,
+  "only_request0_outstanding": true,
+  "native_prompt_start_line": "strata trace: prompt start 106 -1",
+  "native_prompt_count_minus1": 106,
+  "marker_byte_offset": 14143,
+  "marker_observed_monotonic_ns": 426521928684166,
+  "marker_observed_epoch_ns": 1792102033815895228,
+  "request1_submit_monotonic_ns": 426521928691520,
+  "client_overlap_ns": 28379609385,
+  "request0_lifetime": {
+    "client_call_start_monotonic_ns": 426521721945222,
+    "client_call_start_epoch_ns": 1792102033609156655,
+    "model": "hotschmoe-dd",
+    "messages": [
+      {
+        "role": "user",
+        "content": "[Flash-Next concurrent coding repeat 3 slot 0] Implement a Python asyncio bounded worker pool for processing file paths. Requirements: fixed worker count, bounded queue for backpressure, preserve input order in results, propagate the first worker exception, cancel and await all outstanding tasks on failure, and handle caller cancellation without leaked tasks. Explain the shutdown protocol, provide complete typed code using only the standard library, and include three meaningful tests for ordering, worker failure, and cancellation."
+      }
+    ],
+    "max_new_tokens": 1500,
+    "client_call_end_monotonic_ns": 426550319349038,
+    "client_call_end_epoch_ns": 1792102062206560210
+  },
+  "request1_lifetime": {
+    "client_call_start_monotonic_ns": 426521939739653,
+    "client_call_start_epoch_ns": 1792102033826951266,
+    "model": "hotschmoe-dd",
+    "messages": [
+      {
+        "role": "user",
+        "content": "[Flash-Next concurrent coding repeat 3 slot 1] Implement a Python asyncio bounded worker pool for processing file paths. Requirements: fixed worker count, bounded queue for backpressure, preserve input order in results, propagate the first worker exception, cancel and await all outstanding tasks on failure, and handle caller cancellation without leaked tasks. Explain the shutdown protocol, provide complete typed code using only the standard library, and include three meaningful tests for ordering, worker failure, and cancellation."
+      }
+    ],
+    "max_new_tokens": 1500,
+    "client_call_end_monotonic_ns": 426551203252160,
+    "client_call_end_epoch_ns": 1792102063090463653
+  }
+}

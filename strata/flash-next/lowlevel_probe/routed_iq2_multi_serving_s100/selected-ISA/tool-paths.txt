@@ -1,0 +1,2 @@
+/usr/bin/ocloc
+/usr/bin/sha256sum
