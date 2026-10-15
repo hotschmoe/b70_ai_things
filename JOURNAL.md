@@ -23350,3 +23350,39 @@ Datedreport/exactadapter/probe-delta/candidate/analyzer/map retained;170
 referenceoperations/rollups unchanged. Rawhc-lo-once-s48-prep frozen:
 149files85,892,469bytes; externalmanifestSHA256
  d76c95ee913b3d986a520b3ef37917a256b76fa6814eca60d301310d37b6170d.
+
+
+## 2026-10-15 -- Flash-Next optimization S50: captured HC graph discriminator
+
+CONFIG: SameS48 privatekernelIR/member/archive, defaultC16/GRF0/ILP0,
+T6A1I1seed7/BF16/2560/hc4/rank320. One32-read graphsubmission replaces32
+hostdispatchespertimedarm. Exactsource2e45e683, newAOTbinaryc92233f7.
+COMMAND: ActualOpus5.5/Fable5.1 exactv2reviewsREADY; one33sofflineCPUadapter
+build/noDRI/network/kernelTUrecompile. One45squietcard1window/pre+posthealth,
+4graphs alive/sameallocations,8paired32-readmeans AB/BA/BA/AB/AB/BA/BA/AB,
+4batchwarmups/mode. Noexternalprofiler/model/server/card0/collective/reset.
+RESULT: Oracle/driver/tee/prehealth/posthealth0/containerremoved;26full
+snapshots19,442,176bytesexactS48anchorsPASS (10distinctoldfiles). Guards/
+finites/tails/changedownreplay/readonlyinputsPASS. ActualDOTsingle4nodes/
+3edges,batch128/127: norm->down_sliced->down_reduce->UP, exactly1/32baseline
+UPincontrolandLO_ONCEUPincandidate, bothC16. Capturedcontentbinding, not
+independentGPUdispatchtrace; identicaloutputsalonecannotidentifymode.
+Primaryhostcompleteus/read median59.358797->55.625281(-6.289743percent),
+all8pairedchanges-5.681..-6.451percent,3.733516usmediandifference greater
+thanmaxwithinmoderange0.470906us; all3predeclaredscreenconditionsPASS.
+First4/last4base59.308/59.403,new55.641/55.622; allpositions/trendsretained.
+Enqueue/32amortizedonesubmitcost0.644/0.635us, notindividualHClaunch;
+barrierspan59.364->55.640overlappingview/notisolatedservice. Optionalgraph
+spanNULLbecausegraphprofilingpropertynotenabled, noruntimefailureclaim.
+VERDICT: BoundedgraphsignalPASS, notfullmodelgain/p95/stability/promotion.
+Actualpostreviewclaude-opus-5-5/claude-fable-5-1 bothGOisolatedHCserving
+candidateAFTERS49decision(30.96/42.86s),S49stateidenticalbothHCarms.
+Rootdoesnotadoptphysicalcache/hostcausality/forecastorinventedmandatory
+ISA/profilingcampaigns. Productionpredicate/AOTrequiresowncanary/functions;
+no200Krepeat/directsubmitrerun/broadknobsweep/dailyrestore. S49separately
+built0c30e8aa, firsthealth/servingpending; HCnotbundled. Winner152055a6
+unchanged. LoopreusesIRandoldnumericalanchorswithoutrepeating12cases.
+Datedreport/exactadapter+analyzer/smallHCmapupdate retained;40stages/170
+referenceopsandrollupsunchanged, S31CSV159separate. RawS50frozen113files/
+27,015,685bytes; externalmanifestSHA256
+7cd3d4e4405ec75ed161ca2937e236bdf2263141a52d7415f1b712b6144d102d.

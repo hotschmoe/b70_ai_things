@@ -304,3 +304,13 @@ strictpairs/S39hashanchors PASS; warmT6 failsdeclaredspreadscreen. Analyzer
 `analyze_hc_lo_once_s48.py` is exact executedsource; runitfromtheretainedraw
 bundlewithS39data, not this inspectioncopy. No serving/integration claim.
 [S48 report](../../../docs/20261015_strata_hc_lo_once_probe.md).
+
+
+S50 `lo_once_graph_oracle_s50.cpp` is exact executed2e45e683/newbinaryc92233f7.
+SameS48 IR archive/member, finalAOTimages regenerated. All26fullS48anchors
+PASS; actualDOTsingle4/batch128kernel nodes identify capturedC16UPbranches.
+Eightbalancedpaired32-read single-submission graph batchmeans improve
+59.359->55.625us/read(-6.290percent), declaredscreenPASS. No serving/physical
+traffic/per-readp95 claim. Exactanalyzer`analyze_hc_lo_once_graph_s50.py`
+requires retainedS48/rawdependencies; use retained bundle, inspectioncopies
+are not standalone. [S50 report](../../../docs/20261015_strata_hc_graph_probe.md).
