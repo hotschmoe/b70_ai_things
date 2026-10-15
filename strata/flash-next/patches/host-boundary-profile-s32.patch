@@ -1,0 +1,317 @@
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -25,6 +25,7 @@
+ #include <sycl/sycl.hpp>
+ #include <dpct/dpct.hpp>
+ #include "strata/sycl_queue.hpp"
++#include "strata/core/host_boundary_profile.hpp"
+ #include "strata/sycl_doorbell.hpp"
+ #include "strata/core/arch_defaults.hpp"
+ #include "strata/core/dma_batch.hpp"
+@@ -9347,6 +9348,8 @@
+             }
+             if (batch_mtp && A > 0) next_slot = ((size_t) active[A - 1] + 1) % bs.size();
+             if (S == 0) return true;
++            strata::core::host_boundary::begin();
++            strata::core::host_boundary::mark("packed", S, A);
+             const bool was_busy = strata::core::progress().busy.load();
+             strata::core::progress().busy.store(true);
+             drive.d.layers = 0;
+@@ -9358,11 +9361,13 @@
+                 bt_wait0 = ver.ms_wait; bt_pool0 = ver.ms_pool;
+                 bt_miss0 = drive.d.multi_misses; bt_hits0 = drive.d.cache_hits; bt_pcie0 = drive.d.pcie_experts;
+             }
++            strata::core::host_boundary::mark("run_call", S, A);
+             const Clock::time_point w0 = Clock::now();
+             if (!ver.run_slot_rows(rows, S, tok, pos, win_pool_fn, win_pool_user, outb, err) || drive.d.failed) {
+                 std::printf("ERR %s\n", drive.d.failed && drive.d.fail ? drive.d.fail : err.c_str());
+                 return false;
+             }
++            strata::core::host_boundary::mark("run_return", S, A);
+             const Clock::time_point w1 = Clock::now();
+             // Accept a slot's proposals as the longest matching prefix: each kept row's draft was the target's pick
+             // after the row before it, not an end token, and there is room to emit every kept token (batch_keep: the
+@@ -9382,6 +9387,7 @@
+                 std::printf("ERR %s\n", err.c_str());
+                 return false;
+             }
++            strata::core::host_boundary::mark("commit_return", S, A);
+             const Clock::time_point w2 = Clock::now();
+             auto msd = [](Clock::time_point a0, Clock::time_point b0) { return std::chrono::duration<double, std::milli>(b0 - a0).count(); };
+             bt_run += msd(w0, w1);
+@@ -9427,6 +9433,7 @@
+                         std::printf("ERR batch MTP slot %d: a group of %d rows exceeds the drafter's window\n", b, G);
+                         return false;
+                     }
++                    strata::core::host_boundary::mark("slot_copy_begin", b, G);
+                     if (DPCT_CHECK_ERROR(dpct::get_in_order_queue().memcpy(
+                             slot_mtp_rows[(size_t)b].get(),
+                             ver.final_R_all() + (size_t)first[t] * stride,
+@@ -9438,6 +9445,7 @@
+                         std::printf("ERR batch MTP slot %d: %s\n", b, err.c_str());
+                         return false;
+                     }
++                    strata::core::host_boundary::mark("slot_copy_end", b, G);
+                     if (mtp_pair != nullptr) {   // drafted below, both at once
+                         if (n_pend >= 2) { std::printf("ERR batch MTP pair: more than two pending slots\n"); return false; }
+                         pend[n_pend].b = b; pend[n_pend].t = t; pend[n_pend].G = G;
+@@ -9465,10 +9473,12 @@
+                 const bool paired = n_pend == 2 && mtp_pair->eligible(pa[0], pa[1], why);
+                 if (paired) {
+                     ++bt_pair;
++                    strata::core::host_boundary::mark("pair_call");
+                     if (!mtp_pair->draft(pa[0], pa[1], err)) {
+                         std::printf("ERR batch MTP pair (slots %d, %d): %s\n", pend[0].b, pend[1].b, err.c_str());
+                         return false;
+                     }
++                    strata::core::host_boundary::mark("pair_call_return");
+                 } else {
+                     ++bt_pair_solo;
+                     bt_pair_why = why;
+@@ -9488,9 +9498,13 @@
+                     sl.draft_ready = true;
+                 }
+             }
++            strata::core::host_boundary::mark("flush_begin");
+             std::fflush(stdout);
++            strata::core::host_boundary::mark("flush_end");
+             bt_emit += msd(w2, Clock::now());
+             strata::core::progress().busy.store(was_busy);
++            strata::core::host_boundary::mark("window_end");
++            if (strata::core::host_boundary::enabled()) strata::core::host_boundary::state().window = 0;
+             if (!batch_on() && bt_windows > 0) {
+                 const double w = (double) bt_windows, wall = msd(bt_start, Clock::now());
+                 const double L = (double) g.n_layers;
+@@ -9514,6 +9528,7 @@
+                 bt_pair_why.clear();
+                 bt_run = bt_commit = bt_emit = 0;
+                 bt_windows = bt_rows = bt_tokens = 0;
++                strata::core::host_boundary::flush();
+             }
+             return true;
+         };
+--- a/sycl/src/core/mtp.cpp
++++ b/sycl/src/core/mtp.cpp
+@@ -3,6 +3,7 @@
+ #include <sycl/sycl.hpp>
+ #include <dpct/dpct.hpp>
+ #include "strata/sycl_queue.hpp"
++#include "strata/core/host_boundary_profile.hpp"
+ #include "strata/core/mtp.hpp"
+ #include "strata/core/coupled_draft.hpp"
+ #include "strata/core/on_device.hpp"
+@@ -2159,6 +2160,7 @@
+ }
+ 
+ bool MtpPair::draft(const Args& A, const Args& B, std::string& err) try {
++    host_boundary::mark("pair_enter", A.T, B.T);
+     std::string why;
+     if (!eligible(A, B, why)) { err = "mtp pair: " + why; return false; }
+     const OnDevice on_device(d_[0]->device_);
+@@ -2176,8 +2178,10 @@
+             if (!capture_pre_step(c, j, err)) return false;
+     for (int j = 0; j < max_steps; ++j)
+         if (!capture_tail(j, err)) return false;
++    host_boundary::mark("pair_capture_ready", T[0], T[1]);
+     for (int c = 0; c < 2; ++c)
+         if (!d_[c]->idle(err)) return false;
++    host_boundary::mark("pair_idle_done", T[0], T[1]);
+     const Clock::time_point t0 = Clock::now();
+     // ---- the staging, per slot exactly as draft(): its own mapped records and outputs
+     for (int c = 0; c < 2; ++c) {
+@@ -2203,6 +2207,7 @@
+         d.h_row_[1] = 0;
+     }
+     std::atomic_thread_fence(std::memory_order_seq_cst);
++    host_boundary::mark("pair_inputs_ready", max_steps);
+     // ---- the launches, all on the pair queue: both rounds, their shared tail, then per depth both steps and their tail
+     auto launch = [&](dpct::experimental::command_graph_exec_ptr g, const char* what) {
+         if (g == nullptr || DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*g)) != 0) {
+@@ -2211,6 +2216,7 @@
+         }
+         return true;
+     };
++    host_boundary::mark("pair_submit_begin", max_steps);
+     bool ok = launch(pre_round_[0][T[0]], "round A") && launch(pre_round_[1][T[1]], "round B") && launch(tail_[0], "head 0");
+     for (int j = 1; ok && j < max_steps; ++j)
+         ok = launch(pre_step_[0][j], "step A") && launch(pre_step_[1][j], "step B") && launch(tail_[j], "head");
+@@ -2219,6 +2225,7 @@
+         return false;
+     }
+     (void)DPCT_CHECK_ERROR(((cs_)->ext_oneapi_empty()));
++    host_boundary::mark("pair_submit_end", max_steps);
+     // ---- the outputs, per slot as draft(): its own mapped h_out_ polled in depth order, its own PLE prefetch
+     SessionState* pss[2];
+     bool do_ple[2];
+@@ -2247,6 +2254,7 @@
+             if ((++spins & 1023u) == 0 && ((cs_)->ext_oneapi_empty() ? 0 : 1) != 1) break;
+         }
+     };
++    host_boundary::mark("pair_poll_begin", max_steps);
+     for (int c = 0; c < 2; ++c) prefetch_ple(c, args[c]->tokens[args[c]->a]);
+     for (int j = 0; j + 1 < max_steps; ++j)
+         for (int c = 0; c < 2; ++c) {
+@@ -2254,7 +2262,9 @@
+             args[c]->drafts[j] = ((volatile int32_t*) d_[c]->h_out_)[j];
+             prefetch_ple(c, args[c]->drafts[j]);
+         }
++    host_boundary::mark("pair_wait_begin", max_steps);
+     if (DPCT_CHECK_ERROR(cs_->wait()) != 0) { err = "mtp pair: the draft queue failed"; return false; }
++    host_boundary::mark("pair_wait_done", max_steps);
+     const int last = max_steps - 1;
+     for (int c = 0; c < 2; ++c) {
+         MtpDrafter& d = *d_[c];
+@@ -2266,6 +2276,7 @@
+         d.ms_draft += ms_since(t0);
+         ++d.rounds;
+     }
++    host_boundary::mark("pair_return", max_steps);
+     return true;
+ } catch (sycl::exception const& e) {
+     err = std::string("mtp pair: ") + e.what();
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -3,6 +3,7 @@
+ #include <sycl/sycl.hpp>
+ #include <dpct/dpct.hpp>
+ #include "strata/sycl_queue.hpp"
++#include "strata/core/host_boundary_profile.hpp"
+ #include "strata/core/verify.hpp"
+ #include "strata/core/remote_expert_opt.hpp"
+ #include "strata/core/dma_batch.hpp"
+@@ -3177,6 +3178,7 @@
+                            const int32_t *tokens, const int64_t *pos,
+                            std::string &err) try {
+     using namespace strata::kernels;
++    host_boundary::mark("stage_enter", S, hbase);
+     if (S < 1 || S > max_t_ || hbase < 0 ||
+         (next_ != nullptr && hbase + S > (int) slots_.size())) {
+         err = "verify: batch rows out of range (init_slots)";
+@@ -3243,7 +3245,9 @@
+         }
+         bm_used_[key] = ++bm_tick_;
+     }
++    host_boundary::mark("stage_capture_begin", S, hbase);
+     if (!capture_batch(rows, S, hbase, err) || !capture_commit_batch(rows, S, hbase, err)) return false;
++    host_boundary::mark("stage_capture_ready", S, hbase);
+     const Clock::time_point t0 = Clock::now();
+     const QsaShapes s = shapes_of(g);
+     for (int t = 0; t < S; ++t) {
+@@ -3266,7 +3270,9 @@
+             }
+             ngram_rows(&tokens[t], prev, 1, ss_->ple.consts, ple_rows + t * PLE_N_HEADS);
+         }
++        host_boundary::mark("stage_ple_begin", S);
+         if (!ss_->ple.table->gather_batch(ple_rows, (size_t) S, h_ple_, err)) return false;
++        host_boundary::mark("stage_ple_end", S);
+     }
+     // Each slot owns a contiguous group. The default commit keeps all its rows; speculative
+     // decoding may change the prefix length after comparing the draft with these picks.
+@@ -3291,6 +3297,7 @@
+     row_base_ = hbase;   // the graphs' key (and nothing else) reads it until the next stage_batch
+     last_batch_ = true;
+     for (int t = 0; t < S; ++t) { last_tokens_[t] = tokens[t]; last_pos_b_[t] = pos[t]; }
++    host_boundary::mark("stage_inputs_ready", S, hbase);
+     ms_host += ms_since(t0);
+     return true;
+ }
+@@ -3311,9 +3318,11 @@
+                              const int64_t *pos, PoolMultiFn pool, void *user,
+                              int32_t *out, std::string &err) try {
+     using namespace strata::kernels;
++    host_boundary::mark("verify_enter", S);
+     const OnDevice on_device(device_);
+     const ModelGeometry& g = *g_;
+     if (!stage_batch(rows, S, 0, tokens, pos, err)) return false;
++    host_boundary::mark("verify_submit_begin", S);
+     if (ep_on()) ep_q_->ext_oneapi_graph(*ep_exec_bm_[bkey(rows, S, 0)]);   // the peer's half first, as run()
+     const dpct::err0 le =
+         DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*exec_bm_[bkey(rows, S, 0)]));
+@@ -3334,6 +3343,7 @@
+       return false;
+     }
+     (void)DPCT_CHECK_ERROR(((cs_)->ext_oneapi_empty()));
++    host_boundary::mark("verify_submit_end", S);
+     volatile uint32_t* const seq = h_seq_;
+     volatile uint32_t* const flag = h_flag_;
+     const int64_t steps = le_ - lb_;
+@@ -3348,7 +3358,9 @@
+             _mm_sfence();
+             *flag = 1;
+         }
++        host_boundary::mark("verify_wait_begin", S);
+         const dpct::err0 se = DPCT_CHECK_ERROR(cs_->wait());
++        host_boundary::mark("verify_wait_end", S);
+         /*
+         DPCT1009: SYCL reports errors using exceptions and does not use error
+         codes. Please replace the "get_error_string_dummy(...)" with a real
+@@ -3375,6 +3387,7 @@
+         for (int t = 0; t < S; ++t) out[t] = ((volatile int32_t*) h_out_)[t];
+         progress_at("decode");
+         progress_beat();
++        host_boundary::mark("verify_return", S);
+         return true;
+     }
+     for (int64_t k = 0; k < steps; ++k) {
+@@ -3434,7 +3447,9 @@
+         ms_wait += std::chrono::duration<double, std::milli>(b - a).count();
+         ms_pool += ms_since(b);
+     }
++    host_boundary::mark("verify_wait_begin", S);
+     const dpct::err0 se = DPCT_CHECK_ERROR(cs_->wait());
++    host_boundary::mark("verify_wait_end", S);
+     /*
+     DPCT1009: SYCL reports errors using exceptions and does not use error
+     codes. Please replace the "get_error_string_dummy(...)" with a real
+@@ -3458,6 +3473,7 @@
+     for (int t = 0; t < S; ++t) out[t] = ((volatile int32_t*) h_out_)[t];
+     progress_at("decode");
+     progress_beat();
++    host_boundary::mark("verify_return", S);
+     return true;
+ }
+ catch (sycl::exception const &exc) {
+--- /dev/null
++++ b/sycl/include/strata/core/host_boundary_profile.hpp
+@@ -0,0 +1,41 @@
++#pragma once
++// Opt-in CPU timestamps only. No GPU events, waits, submissions or per-window output.
++#include <chrono>
++#include <cstdio>
++#include <cstdlib>
++#include <cstdint>
++#include <vector>
++
++namespace strata::core::host_boundary {
++inline bool enabled() {
++    static const bool on = [] { const char* p = std::getenv("STRATA_HOST_BOUNDARY"); return p && p[0] == '1'; }();
++    return on;
++}
++struct Record { int64_t ns; uint64_t window; const char* tag; int a, b; };
++struct State { std::vector<Record> records; uint64_t next = 0, window = 0; size_t dropped = 0; bool failed = false; };
++inline State& state() { thread_local State s; return s; }
++inline void mark(const char* tag, int a = 0, int b = 0) noexcept {
++    if (!enabled()) return;
++    State& s = state();
++    if (s.failed || s.records.size() >= 8192) { ++s.dropped; return; }
++    try {
++        if (s.records.capacity() == 0) s.records.reserve(8192);
++        const auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
++            std::chrono::steady_clock::now().time_since_epoch()).count();
++        s.records.push_back({ns, s.window, tag, a, b});
++    } catch (...) { s.failed = true; ++s.dropped; }
++}
++inline void begin() noexcept {
++    if (!enabled()) return;
++    State& s = state(); s.window = ++s.next; mark("window_enter");
++}
++inline void flush() noexcept {
++    if (!enabled()) return;
++    State& s = state();
++    std::fprintf(stderr, "strata host boundary: records=%zu dropped=%zu clock=steady_ns\n", s.records.size(), s.dropped);
++    for (const auto& r : s.records)
++        std::fprintf(stderr, "strata host boundary: w=%llu t=%lld tag=%s a=%d b=%d\n",
++                     (unsigned long long) r.window, (long long) r.ns, r.tag, r.a, r.b);
++    s.records.clear(); s.window = 0; s.dropped = 0;
++}
++} // namespace strata::core::host_boundary

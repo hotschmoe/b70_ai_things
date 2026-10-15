@@ -148,7 +148,7 @@ ul.plain{padding-left:1.1rem}
 {
  "schema": 1,
  "title": "Strata Flash-Next data map",
- "snapshot": "2026-10-15 S31: S22 reference operation rollups, S30 full RAM recovery, separate current paired-head replay profile and159-row CSV",
+ "snapshot": "2026-10-15 S32: S22 reference operations, S30 full RAM recovery, S31 paired GPU replay, S32 CPU boundary diagnostic",
  "scope": "Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two Arc Pro B70 cards, Strata SYCL engine, EP/PUSH, batch MTP depth2 (opt-in), two 200000-token slots, INT8 KV, 32 GiB / 4-entry RAM parking, all 24576 experts resident (7152 on GPU0 + 17424 on GPU1), greedy.",
  "warnings": [
   "Trace service times overlap: within a card (engines), across cards, and with CPU wall time. They are NOT additive and are not a latency budget.",
@@ -173,19 +173,21 @@ ul.plain{padding-left:1.1rem}
   "upstream_base": "github.com/Niko1221/Strata @ 296b59d2f73c8f04a805df29c2fa97655adace78 (path names below are relative to the repo root)",
   "traced_binary": "strata-batch-depth-s21 SHA256 db53efb23790f682478f8469eab5737cc0e9b569a0bdf6c7a98ea86c6272fba3 (control trace); strata-async-s22 487eb67a... for the same-binary mode0/2/1 screen",
   "overlay_files": "sycl/src/core/verify.cpp, sycl/src/core/mtp.cpp, sycl/src/program/generate.cpp, sycl/include/strata/core/ep_mem.hpp (new), sycl/include/strata/kernels/ep_kernels.hpp (new), sycl/src/kernels/cuda/ep_kernels.dp.cpp (new), sycl/src/kernels/cuda/verify_kernels.dp.cpp, include/strata/core/conversation_cache.hpp, include/strata/core/batch_depth.hpp (new), serve/server.py, sycl/src/prefill/prefill.cpp",
-  "tracked_patches": "strata/flash-next/patches/{ep-prefill-reduce, batch-mtp-restore-accounting, batch-slot-cache-preserve, batch-slot-image-reuse, batch-mtp-depth}.patch; rejected: rejected-batch-mtp-async-s22.patch; correctness: ep-push-system-barrier.patch (S28); Python telemetry follow-up: batch-leg-draft-carry.patch (S30)",
+  "tracked_patches": "strata/flash-next/patches/{ep-prefill-reduce, batch-mtp-restore-accounting, batch-slot-cache-preserve, batch-slot-image-reuse, batch-mtp-depth}.patch; rejected: rejected-batch-mtp-async-s22.patch; correctness: ep-push-system-barrier.patch (S28); Python telemetry follow-up: batch-leg-draft-carry.patch (S30); optional CPU diagnosis: host-boundary-profile-s32.patch",
   "docs": [
    "../../../docs/20261014_flashnext_strata_optimization.md (S10 prefill/decode census, S20-S22)",
    "../../../docs/20261013_flashnext_goals.md",
    "../README.md",
    "../../../docs/20261015_strata_ep_publication_scope.md (S28, explicit hidden-ISA correction)",
    "../../../docs/20261015_strata_batch_draft_carry.md (S30 counter correction)",
-   "../../../docs/20261015_strata_paired_head_profile.md (S31 current replay timings, APIs and readiness gaps)"
+   "../../../docs/20261015_strata_paired_head_profile.md (S31 current replay timings, APIs and readiness gaps)",
+   "../../../docs/20261015_strata_host_boundary_profile.md (S32 CPU boundary diagnostic)"
   ],
   "results_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
   "prototype_binary": "S26 CPU-only strata-head-pair-s26 SHA256264f221e2c1b02d4bdd9b332c46f91e91bf4f6301afbdabe563df5ff2a16e44a; not GPU served; default pair option OFF.",
   "ep_scope_binary": "strata-ep-scope-s28 SHA256152055a6204a3911e96b59aab8d6788a1a434891e1e1ebd9098c9e21b8d11f13; S28OFFcanary, S29samebinary OFF/ONcoding, S30depth2/headpair fullcache/counter/functionals/normalteardown/percard+10compiledhealth PASS; no shelf promotion.",
-  "current_profile": "S31 same frozen152055a6, pairedON/depth2, one32+32 pair; five reviewed replay cycles5..9 after capture construction, no OFF delta. Current159-row CSV is separate from S22 operations[]/stage_rollups."
+  "current_profile": "S31 same frozen152055a6, pairedON/depth2, one32+32 pair; five reviewed replay cycles5..9 after capture construction, no OFF delta. Current159-row CSV is separate from S22 operations[]/stage_rollups.",
+  "cpu_boundary_profile": "S32 frozen595f2ff5; opt-in buffered steady_ns markers, no new GPU calls/events/waits;128+128 coding,40 replay windows/38 same-dump adjacent joins. Complete1684records/dropped0; no GPU clock join, OFF delta or speed claim."
  },
  "geometry": {
   "source": "Confirmed against served GGUF metadata with CPU-only tools/gguf_reader.py: lowlevel-s24/model-geometry.json. Derived: 12 QSA/36 GDN layers, ssm_conv_channels=2*128*16+6144; defaults cross-checked against include/strata/core/geometry.hpp.",
@@ -542,13 +544,20 @@ ul.plain{padding-left:1.1rem}
     "draft-profile-s22/profile/engine.log: PLE on, --ple-io direct",
     "lowlevel-s24/model-geometry.json",
     "lowlevel-s24/storage-identity.json",
-    "head-profile-s25/ple/batch-trace-summary.json"
+    "head-profile-s25/ple/batch-trace-summary.json",
+    "host-boundary-s32/analysis/run2/analysis.json"
    ],
    "quoted": [
     {
      "label": "S25 bounded production PLE miss-ticket trace",
      "value": "21 traced gathers across24 batch windows: collect median667.9us, p90 817.4us, sum13.294ms; jobs8-64.",
      "basis": "STRATA_PLE_TRACE on frozenS21, logging only; cache-hit tickets and large gathers omitted; no absolute GPU join",
+     "status": "measured"
+    },
+    {
+     "label": "S32 batched gather CPU span",
+     "value": "median0.829ms/p951.085ms",
+     "basis": "40 replaywindows; blocking gather_batch includes reader waits/decode; no GPU clock join",
      "status": "measured"
     }
    ],
@@ -808,7 +817,8 @@ ul.plain{padding-left:1.1rem}
    ],
    "evidence": [
     "batch-depth-s21/s21-report.json",
-    "draft-profile-s22/s22-report.json native_summary"
+    "draft-profile-s22/s22-report.json native_summary",
+    "host-boundary-s32/analysis/run2/analysis.json"
    ],
    "quoted": [
     {
@@ -821,6 +831,12 @@ ul.plain{padding-left:1.1rem}
      "label": "Rows per window",
      "value": "5.34 emitted, 561 windows per 1500-token pair",
      "basis": "native",
+     "status": "measured"
+    },
+    {
+     "label": "S32 pair-return to next window-enter",
+     "value": "median1.07us/p956.68us",
+     "basis": "38 adjacent replay joins; includes packing before enter and intervening host work, not packing-only cost",
      "status": "measured"
     }
    ],
@@ -1691,7 +1707,8 @@ ul.plain{padding-left:1.1rem}
     }
    ],
    "evidence": [
-    "draft-profile-s22/s22-report.json native_summary"
+    "draft-profile-s22/s22-report.json native_summary",
+    "host-boundary-s32/analysis/run2/analysis.json"
    ],
    "quoted": [
     {
@@ -1704,6 +1721,12 @@ ul.plain{padding-left:1.1rem}
      "label": "S21 offered/accepted, depth2",
      "value": "offers 1120-1132, accepts 933-939 per 1500-token stream",
      "basis": "native counts",
+     "status": "measured"
+    },
+    {
+     "label": "S32 commit CPU span",
+     "value": "median1.591ms/p951.617ms",
+     "basis": "40 replaywindows; includes existing GPU submission/wait, not host-only work",
      "status": "measured"
     }
    ],
@@ -1736,7 +1759,8 @@ ul.plain{padding-left:1.1rem}
    ],
    "evidence": [
     "draft-profile-s22/profile/steady-summary (host entries)",
-    "head-pair-s31/analysis-prep/result/final-analysis.json"
+    "head-pair-s31/analysis-prep/result/final-analysis.json",
+    "host-boundary-s32/analysis/run2/analysis.json"
    ],
    "quoted": [
     {
@@ -1749,6 +1773,12 @@ ul.plain{padding-left:1.1rem}
      "label": "S31 API-start counts",
      "value": "9AppendExp/2Copy/11EventSync eachcycle; HostSync319-349invocations, logicalwaitcountunknown",
      "basis": "Same152055a6ONtrace, five reviewedcycles5..9; diagnostic, no OFFdelta",
+     "status": "measured"
+    },
+    {
+     "label": "S32 CPU graph-submit spans",
+     "value": "verifier median55.0us; paired drafter45.0us",
+     "basis": "40 replaywindows; entire existing SYCL launch sequence, not L0 API count or driver-only cost",
      "status": "measured"
     }
    ],
@@ -1788,13 +1818,20 @@ ul.plain{padding-left:1.1rem}
    ],
    "evidence": [
     "draft-profile-s22/profile/steady-summary",
-    "docs S21/S22"
+    "docs S21/S22",
+    "host-boundary-s32/analysis/run2/analysis.json"
    ],
    "quoted": [
     {
      "label": "Emit/draft per window",
      "value": "7.02 ms (depth2), 3.55 (depth1), 10.40 (depth3)",
      "basis": "native accounting, clean",
+     "status": "measured"
+    },
+    {
+     "label": "S32 pair-wait-return to next verifier-submit",
+     "value": "median0.866ms/p951.112ms",
+     "basis": "38 adjacent replay joins; PLE gather dominates observed span; no last-GPU-completion timestamp or physical idle claim",
      "status": "measured"
     }
    ],
@@ -2233,9 +2270,17 @@ ul.plain{padding-left:1.1rem}
     }
    ],
    "evidence": [
-    "draft-profile-s22/profile/steady-summary/summary.json"
+    "draft-profile-s22/profile/steady-summary/summary.json",
+    "host-boundary-s32/analysis/run2/analysis.json"
    ],
-   "quoted": [],
+   "quoted": [
+    {
+     "label": "S32 paired mapped-input staging CPU span",
+     "value": "median0.316us/p950.566us",
+     "basis": "40 replaywindows after existing idle() calls; mapped stores/fence only, not device copy latency",
+     "status": "measured"
+    }
+   ],
    "upstream": [
     "cpu_plan_pack",
     "ple_path"
@@ -2455,7 +2500,8 @@ ul.plain{padding-left:1.1rem}
   "S29 headpair serving is measured only as bounded C2 coding with native window stats. The S22 operation rollups remain unchanged; do not relabel four old C1 heads as measured new C2 kernels. Queued tiny ON trace requires a new instrumented start.",
   "S29 discovers carry_leg/add_carry omit prior draft totals on batch-to-solo transition: OFFrepeat3slot1 API28/21 is only final31token tail. Full-request acceptance comparisons invalid; measured wall/output parity remains valid. S30 fixes new requests, not historical raw rows; live long native344accepted/417offered matches finalserver/API.",
   "S30 full depth2/headpair RAM test reuses199839 held/read31new/replay0 on fourforcedreturns; native663.3-685.1ms and clientTTFT2.992-6.918s are correctness-run diagnostics with snapshot readback/counter observer, not a clean speed comparison. S22 per-op times are not relabeled.",
-  "S31 current159-operation CSV covers reviewedONreplay only. No matchedOFF driver delta, physicalPCIebytes, EU/cache counters, or uninstrumented host-boundary latency. Largest repeated recorded-activity gaps3.300-3.941ms after MTPselect need source/untraced verification."
+  "S31 current159-operation CSV covers reviewedONreplay only. No matchedOFF driver delta, physicalPCIebytes, EU/cache counters, or exact last-GPU-completion to CPU boundary join. S32 separately measures CPU ordering after existing waits; S31 recorded-activity gaps remain unjoined.",
+  "S32 CPU markers locate gather, staging, submit and post-wait ordering only. No device completion clock join, new clean throughput, full-cache requalification or CPU packing-only timing. Complete dump recovered after initial snapshot raced buffered output; original partial retained."
  ],
  "operations": [
   {

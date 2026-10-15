@@ -58,6 +58,14 @@ Larger recorded gaps after draft selection and before mapped-input copies
 need uninstrumented boundary verification; the older standalone GR gap
 does not describe serving. See the dated paired-head profiling report.
 
+S32 adds buffered CPU boundary timestamps without unitrace, frozen595f2ff5.
+Both128-token prefixes and functionals/normalstop/finalhealth pass; exact
+1684records/dropped0. Forty reviewed replaywindows: PLEgather median0.829ms,
+verifiersubmit55us, pairedsubmit45us, pairedmappedstores0.316us. Thirty-eight
+adjacent joins: pairwaitreturn->nextverifiersubmit0.866ms/p951.112ms.
+GPUcompletion and CPUwaitreturn remain unjoined; no physicalidle/speedclaim
+or new fullcache qualification. See [S32 report](20261015_strata_host_boundary_profile.md).
+
 Quality: on 2026-10-14 Flash-Next IQ3_XXS beat the 27B INT4 8-0 on paired
 langs + sysadmin tasks (41/43 vs 33/43); see the A/B brief, Outcome 2.
 

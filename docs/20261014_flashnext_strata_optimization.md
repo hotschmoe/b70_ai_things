@@ -1964,3 +1964,25 @@ old170 S22 operation rows preserved. Full analysis and limits in
 [dated S31 report](20261015_strata_paired_head_profile.md).
 Raw head-pair-s31/analysis-prep/{result/final-analysis.json,
 primary-quiet-gaps.json,reviewed-summary/}; s31-report.json/post-health.json.
+
+
+## S32: CPU boundary diagnostic without unitrace (2026-10-15)
+
+CONFIG -> Frozen595f2ff5, S31headpairON/depth2/two200k/32GiB, samePython;
+opt-in bufferedCPUsteady_ns marks, no newGPUcalls/events/waits or perwindow
+prints. Removingdiagnosticlines recovers all3oldTUs byte-for-byte.
+COMMAND -> OfflineCPU-onlySYCLbuild/noDRI, one128+128pair, functionals,
+normalstop/leaseexit0/bothcard+10compiledhealth. No fullcache rerun.
+RESULT -> Bothprefixes/caps/residency/functionals PASS;45paired/2solo.
+Exact1684records/dropped0,48windows;40replay/38adjacentjoins aftercoldroles.
+PLEgathermedian0.829ms/p951.085; verifier/pairsubmit55/45us; pairedmapped
+stores0.316us. Pairwaitreturn->nextsubmit0.866ms/p951.112. Existingwaits
+andcommit includeGPUprogress, not CPUoverheadbudget. S31devicecompletion
+andS32CPUwaitreturn unjoined; no physicalidle/traceroverhead/savingclaim.
+VERDICT -> No multi-ms postwaitpacking/stagingdelayobserved; skiptuning
+thosefromoldertrace. Prepare smaller runtimeprefillquantum retaining12288
+allocationfor7.753smixedgap, subjectstatecontinuityproof. No daily/speed
+promotion. ActualOpus/Fablecompletedpatchreviews; rootfixeswindowreset/
+emptyframebug, rejectsstrongerGPUgapcausality. OneincrementalTUrebuild;
+initialsnapshotracepartial rejected/recoveredfromstoppedlog, noGPUrepeat.
+DatedS32report anddata-mapCPUquotes; raw host-boundary-s32/s32-report.json.

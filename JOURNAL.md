@@ -22960,3 +22960,33 @@ keeps12288allocation/expertpartition butneedsstate/checkpointvalidation.
 Loop1start/64totaloutputs/nobuild/nofullcachetest/nodailyrestore; no
 redundantGPUprobe. DatedS31profiledoc, goals/data-map updated. Raw
 head-pair-s31/{s31-report.json,analysis-prep/,post-health.json}; fullgoalACTIVE.
+
+
+## 2026-10-15 -- Flash-Next optimization S32: CPU host boundaries
+
+CONFIG: frozen595f2ff5/headpairON/depth2, CLI spec4/two200k/32GiB4parking,
+all24576experts7152/17424, sameS30Python. Opt-in bufferedsteady_ns marks
+across3TUs, no newGPUevents/calls/waits/perwindowoutput. Exactoldsource
+recoveredbyremovingdiagnosticlines; singleELFTLSlinkconfirmed.
+COMMAND: CPU-onlynoDRISYCLbuild135.5s, reviewfixgenerate-onlybuild121.5s;
+oneleased128+128pair, functionals, normalstop/leaseexit0/bothcard+10compiled.
+RESULT: prefixes/exactcaps/residency/math323/667/reason391/tools PASS;
+45paired/2solo, exact1684records/dropped0,48windows/40replay/38adjacentjoins.
+PLEgathermedian0.829ms/p951.085, verifier/pairsubmit55/45us, pairmapped
+stores0.316us. Pairwaitreturn->nextsubmit0.866ms/p951.112; return->nextenter
+1.07us/p956.68. Existingwaits/commit includeGPUexecution, not CPUbudget.
+FinalGPUcompletion/CPUwaitreturnunjoined; no physicalidle/tracerpenalty/
+savingsclaim. Normalstop/finalhealthPASS, noreset. Initialsnapshotpartial
+1214/1684records rejectedrun1; stoppedlogcomplete, extractexactfirstdump
+run2PASS, preservepartial+sourceoffset/hash. NoGPUrerunneeded.
+VERDICT: postwaitpacking/mappedstores notmulti-mshere; skiptuningthosefrom
+olderS31gaps. Nextboundedruntimeprefillquantumfor7.753smixedgap, fixed12288
+allocation/stateproofneeded. No throughput/fullcache/dailypromotionclaim.
+ActualOpus5.5/Fable5.1 completed39.6/47.9s; rootfixesOpuswindowreset/empty
+frameissue, rejectsstrongergapcausality. Resolvebriefscopereviewbeforebuild
+whenavoidsincrementalrecompile. OneGPUstart/256measuredoutputs/nooldarm/
+nofullcache/no dailyrestore; reuseS31prehealth. Prompt-onlypriorgoalturn
+made nogoalprogress; revalidatedterminalbuildandappliednextsafeaction.
+Patch/datedS32doc/goals/data-mapupdated; raw host-boundary-s32/{s32-report,
+source-equivalence,model-review-closure,pair-log-closure,post-health}.json,
+analysis/run2/. GoalACTIVE; targetprefill/decode/interference stillopen.

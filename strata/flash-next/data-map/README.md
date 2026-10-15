@@ -6,10 +6,10 @@ path, which operations are expensive or wait, and how strong the evidence
 is for each claim. `operation-data.json` is the source of truth;
 `index.html` embeds a copy of it.
 
-Snapshot: 2026-10-15, S31 (S22 reference operation trace plus readiness, real-head,
+Snapshot: 2026-10-15, S32 (S22 reference operation trace plus readiness, real-head,
 production PLE, EP publication fix/native ISA, paired-head serving,
 draft-counter carry correction, full winning-candidate RAM recovery and
-separate current paired-head replay measurements).
+separate current paired-head replay measurements and CPU boundary markers).
 Runtime source:
 `/mnt/vm_8tb/b70/build/strata-ab/src-ep` (upstream Strata 296b59d2 base
 plus working-tree overlays for EP/PUSH/accounting/S19-S21 and the
@@ -42,8 +42,10 @@ summaries under
 5. Park: when a slot is overwritten, the completed slot is saved to RAM.
 
 That decode sequence describes the S22 trace. S29's opt-in variant pairs
-the two same-depth draft heads (source expects two C2 calls per full-depth2
-cycle); its kernel-by-kernel serving trace is still queued.
+the two same-depth draft heads. S31 measures two C2 calls per paired
+cycle and exports159 current operations separately from S22. S32 adds
+CPU ordering spans: PLE gather0.829ms median, pair-wait-return to next
+verifier submission0.866ms; no GPU completion clock join or new speed claim.
 
 The EP link is Level Zero IPC-mapped device memory with kernel-side flag
 counters (sycl/include/strata/core/ep_mem.hpp), not a collective.
