@@ -41,6 +41,9 @@ recompute works, prioritize concurrency, decode and MTP. Cached-prefix
 - Have Claude Fable 5.1 and Claude 5.5 prepare independent fixes/profiling
   candidates in parallel. Keep GPU execution leased and coordinated, with
   quiet CPU conditions when needed for meaningful latency comparisons.
+- Profile individual GPU/software operations, shapes, tiles, quant/dequant and
+  data-readiness/transfer gaps. Queue Fable/Opus low-level probes between serves;
+  rank end-to-end critical-path latency, not isolated bandwidth (2026-10-15).
 - Keep large scratch clones/build outputs on disk; host /tmp is tmpfs.
 
 ## Current scope

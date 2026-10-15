@@ -22678,3 +22678,17 @@ whilediagnostictracing/analysis, not during cleanbenchmarks. Source reviews
 corrected stale pendingcleanup and create_queue boolinterpretation. No
 unchangedCPUsuite/freshAOTtree duplication. Upstream296/PRs unchanged at
 stage start. Details: stagedocS22/rawdraft-profile-s22/s22-report.json.
+
+
+## 2026-10-15 -- Flash-Next optimization S23: upstream cache preservation
+
+CONFIG: main296b59d2 + S19preservation/checkpoint + S20imagebufferreuse,
+fourfiles+349/-48, independent of accounting#2511.
+COMMAND: actualOpusdependency/source review; CPU-onlyC++20cache checks
+and SYCLgenerate syntax; commitab2c9fc7, pushfork, create draftPR2526.
+RESULT: 4271checksPASS, SYCLsyntaxPASS. https://github.com/Niko1221/Strata/pull/2526
+OPEN/DRAFT, headab2c9fc705f5ec5f38c3b78fe7fb69373671801f, basemain.
+PR explicitly discloses fullGPUevidence on matchingEP/PUSH/accounting
+overlay and CUDAuncompiled/unrun; no independentGPUrebuildclaim.
+VERDICT: usefulfixsubmitted, no runtime/shelfchange or redundant200k
+rebuild/requalification. Details: stagedocS23, rawcache-upstream-s23.

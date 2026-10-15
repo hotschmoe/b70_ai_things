@@ -1487,3 +1487,20 @@ Raw: cachefix_20261014/draft-profile-s22/{s22-report.json,profile*,mode*,
 build,source-restored.json,async-*,root-review-decisions.json}.
 Rejected source evidence: strata/flash-next/patches/
 rejected-batch-mtp-async-s22.patch. Do not activate without new evidence.
+
+
+## S23: submit independent slot-cache preservation fix upstream (2026-10-15)
+
+CONFIG: upstream main 296b59d2 plus S19 slot preservation/checkpoint fixes
+and S20 snapshot-buffer reuse, independent of accounting PR #2511.
+Branch batch-slot-cache-preservation-main, commit ab2c9fc705f5ec5f38c3b78fe7fb69373671801f.
+COMMAND: apply independent four-file patch; CPU-only C++20 cache test and
+SYCL generate syntax check; source/dependency review by actual Claude5.5;
+push fork branch and create draft [Strata PR #2526](https://github.com/Niko1221/Strata/pull/2526).
+RESULT: 4,271 CPU checks and SYCL syntax PASS. Independent branch changes
+349 insertions/48 deletions in four files. Full GPU evidence remains S20
+on the matching EP/PUSH/accounting overlay; no independent-branch GPU
+rebuild or CUDA compile/run is claimed. Draft PR discloses both limits.
+VERDICT: useful bounded fix submitted, no runtime/shelf change. Avoid a
+redundant full-model rebuild merely to repeat the already measured overlay.
+Raw: cachefix_20261014/cache-upstream-s23/{validation.json,pr-state.json}.
