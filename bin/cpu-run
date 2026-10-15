@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# cpu-run -- serialize heavy host-CPU/RAM work against timed measurements across parallel agents.
+#
+# Why: gpu-run keeps GPU runs apart, but a parallel kernel build, CPU model run or large file copy
+# still disturbs host-launch latency, NUMA placement and page cache under another agent's timed
+# GPU measurement. One host-wide flock keeps the two apart; light editing and reading stay parallel.
+#
+# Two kinds of holder take the SAME exclusive lock:
+#   heavy  (default): builds, CPU inference, quantization, large copies. Runs under
+#                     nice -n 19 + ionice -c3. Keep MAX_JOBS<=4 (see AGENTS.md / cap-kernel-build RAM).
+#   --quiet         : a timed measurement window that needs a quiet CPU. Runs at normal priority.
+#                     Hold it only for the timed window, not for a whole long-lived serve.
+#
+# Usage:
+#   cpu-run <cmd> [args...]            # heavy job, niced
+#   cpu-run --quiet <cmd> [args...]    # timed window; e.g. cpu-run --quiet bin/gpu-run --card 0 bench.sh
+#   cpu-run --status                   # current holder (or "free")
+# Nest order for timed GPU work: cpu-run --quiet outside, gpu-run inside.
+#
+# Env (override as needed):
+#   B70_CPU_LOCK          lock path         (default /mnt/vm_8tb/b70/cpu-heavy.lock)
+#   B70_CPU_LOCK_TIMEOUT  max wait seconds  (default 600; 0 = wait forever)
+#   B70_AGENT             label for logs    (default: $HOSTNAME)
+set -uo pipefail
+
+LOCK="${B70_CPU_LOCK:-/mnt/vm_8tb/b70/cpu-heavy.lock}"
+TIMEOUT="${B70_CPU_LOCK_TIMEOUT:-600}"
+AGENT="${B70_AGENT:-$(hostname)}"
+OWNER="$LOCK.owner"
+
+MODE=heavy
+case "${1:-}" in
+  --status|--who)
+    if [ -s "$OWNER" ]; then echo "CPU lease: HELD  $(cat "$OWNER")"; else echo "CPU lease: free"; fi
+    exit 0 ;;
+  --quiet) MODE=quiet; shift ;;
+  -h|--help|"") awk 'NR>1 && /^#/ {sub(/^# ?/,""); print; next} NR>1 {exit}' "$0"; exit 0 ;;
+esac
+[ $# -gt 0 ] || { echo "cpu-run: no command given" >&2; exit 2; }
+
+command -v flock >/dev/null 2>&1 || { echo "cpu-run: flock not found (install util-linux)" >&2; exit 127; }
+lockdir="$(dirname "$LOCK")"
+[ -d "$lockdir" ] || { echo "cpu-run: lock dir '$lockdir' does not exist (set B70_CPU_LOCK to a host path)." >&2; exit 1; }
+
+CMDLINE="$*"
+exec 7>"$LOCK" || { echo "cpu-run: cannot open lock $LOCK" >&2; exit 1; }
+if ! flock -n 7; then
+  echo "cpu-run: busy (held by: $(cat "$OWNER" 2>/dev/null || echo unknown)); waiting up to ${TIMEOUT}s ..." >&2
+  if [ "$TIMEOUT" = 0 ]; then flock 7; else flock -w "$TIMEOUT" 7 || { echo "cpu-run: timed out after ${TIMEOUT}s" >&2; exit 124; }; fi
+fi
+printf '%s pid=%s mode=%s since=%s cmd: %s\n' "$AGENT" "$$" "$MODE" "$(date '+%F %T')" "$CMDLINE" > "$OWNER" 2>/dev/null || true
+trap ': > "$OWNER" 2>/dev/null || true' EXIT INT TERM
+
+echo "cpu-run: [$AGENT] acquired ($MODE) -> $*" >&2
+start=$(date +%s)
+if [ "$MODE" = heavy ]; then
+  if command -v ionice >/dev/null 2>&1; then nice -n 19 ionice -c3 "$@"; else nice -n 19 "$@"; fi
+else
+  "$@"
+fi
+rc=$?
+echo "cpu-run: [$AGENT] done in $(( $(date +%s) - start ))s (exit $rc)" >&2
+exit $rc

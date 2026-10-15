@@ -117,6 +117,10 @@ When updating drivers, PyTorch, sglang, or vLLM:
   workload's device pin.
 - Never bypass the lease for serving, benchmarking, profiling, compilation
   that touches XPU, or quantization.
+- Wrap heavy CPU/RAM work (builds, CPU model runs, large copies) in
+  bin/cpu-run, and timed measurement windows in bin/cpu-run --quiet
+  (outside gpu-run). Before a GPU run, state the cards and expected
+  duration to any other active agent.
 - Kernel 7.1.0-070100 is the fixed host baseline. Do not downgrade it to
   imitate an older result.
 
