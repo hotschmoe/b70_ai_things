@@ -251,3 +251,11 @@ T6 medians favorcandidate but failthepredeclaredspreadscreen; performance
 is inconclusive, no integration. Graph-onlydiscriminator is separately
 prepared. Reference170operation rows/rollups unchanged.
 [S48 report](../../../docs/20261015_strata_hc_lo_once_probe.md).
+
+
+S59 adds actual IQ4_XS C6 primitive evidence to dense_proj: strict/graph/health
+PASS, tiny-.646percent quantize+projection observation, keepRPW1/no serve/retry.
+S60 records the supported build boundary only, not an inference speed result.
+S61 annotates small shared activation-quant pools and dormantQFUSE source
+blockers. Historical170operation rows/rollups remain unchanged. See the dated
+S59/S60/S61 reports linked from provenance.

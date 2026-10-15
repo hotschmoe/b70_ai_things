@@ -259,3 +259,16 @@ S49 experimental0c30e8aa enables CPU-only batch PLE metadata borrowing
 health PASS; aggregate reused tokens372->1491. Warm/r3 native-work mismatch
 and no useful matchedr1/r2 wall signal: keepOFF, no promotion or retry.
 Qualified152055a6 unchanged. [S49 report](../../docs/20261015_strata_batch_ple_prefetch.md).
+
+
+S59 actual IQ4_XS C6 qkv passes full-byte/changed-graph/health gates in one
+72-second card0 window. Nested quantize+projection medians68.559875->68.117175us
+(-0.646percent) are too small to justify serving; keepRPW1/no retry.
+[S59 report](../../docs/20261015_strata_iq4xs_rpw_probe.md).
+S60 preserves compiler-supported common-device prelink:79.553s common AOT,
+9.665s adapter compile,.363s adapterprelink,.394s finalhostlink withzeroAOT.
+Only invokedQ8/IQ4 paths have a runtime canary; second-adapter saving unmeasured.
+[Exact build recipe and scope](../../docs/20261015_strata_aot_prelink_reuse.md).
+S61 holds a broader fusion GPU campaign after source/trace triage; dormant
+QFUSE has batched wiring/packet-contract blockers. No flag change.
+[Fusion findings](../../docs/20261015_strata_fusion_triage.md).

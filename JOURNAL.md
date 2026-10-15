@@ -23651,3 +23651,50 @@ packedQ6repeat or wallforecast. SeparateIQ4XS primitive pending. Curateddoc/
 smallmapupdate, historical170ops/rollups unchanged. Frozen3files/33281B;
 externalfusion-triage-s61-manifestSHA256
 78ee0f4ae59a7f4173078fbd353ce353b69c40f367e8b21cf84ece98174169a7.
+
+
+## 2026-10-15 -- Flash-Next optimization S59: real IQ4_XS C6 RPW screen
+
+CONFIG: Publictype23 qkv N2560/M10240/C6, actual13,926,400Bweights/seeded
+inputs, exactleaf97554454/binary56e551af/frozenarchivesf2b53eb4+34e91c40.
+COMMAND: ActualsourceOpus30.668/Fable40.818sGO/rootread, S60CPUprelinkbuild;
+one72squietcard0window freshABBAprocesses/prehealth/alwaysposthealth.
+RESULT: All48snapshotfiles4,838,400B/fullcross36files3,628,800B/Q8/owninitial
+changedgraphs/finites/guards/inputweightsPASS. C6inactivetailsvacuous, external
+4096Bguardsreal. Allleaves/comparator/health/removal/wrappers0, leaves46s.
+Independent8DOTexactchains168nodes160edges/Q->projectionorder/perprocess
+pointerbindingsPASS; capturemetadataonly/notindependentdispatchorISA. Three
+nested20callmeans/process,2processes/variant: med68.559875->68.117175us
+(-.645713pct), delta.4427us<baseline.5417us range/candidate.32295us, ranges
+overlap/bothcandidateprocessmedslower. Not isolatedkernel/p95/6independenttrials.
+VERDICT: KEEP_RPW1/no serving/no retry, evidencejudgmentnotnewstatgate.
+ActualpostOpus23.972/Fable49.426sagree/rootREADfulltexts/completions; root
+rejectsunmeasuredallocator/driftexplanation/servingresolution/modelgain/
+buildsavingforecasts. OriginalpendingCPUaudit retained/newruntimecanary
+supersedes. No modelactivation/logit/allshape/cache/shelfqualification.
+Datedreport/exactleaf/analyzers/smallmap/README; historical170opsunchanged.
+Frozen173files/157830430B external iq4xs-rpw-s59-manifestSHA256
+a2f52861937b1956f1c3e9eda15cf28086d6416bd5950758af1735f9b75192c5.
+
+
+## 2026-10-15 -- Flash-Next optimization S60: supported common AOT prelink
+
+CONFIG: Existing8fatobjects/commonwrapper plusseparateadapterwrapper, pinned
+DPC++2026.1/e41image/bmg-g31/perkernel/jobs4/readonly/noDRI/networknone.
+COMMAND: Primarydocs/driver-onlyaudit then oneCPUcommonprelink/adapter/normal
+hostlink. Initial11ssetup stopsBEFOREicpx missing/usr/bin/time, preserved;
+v2Bashbuiltintimer only. RESULT: Actual101stotal, common79.553s/adapter9.665s/
+adapterprelink.363s/hostlink.394s. Hostverbose1ld/0AOT, bothwrappersregistered
+inmap/common1078+leaf8images; native+iqhostmembersfromfrozenkernelarchive,
+corearchivesupplied/nohostmembersselected. InputshashesbeforeafterPASS, no
+mainkernelTUcompile/livearchivewrite. Wrappers8f5a7efe/80356965, exe56e551af.
+S59firstboundedQ8/IQ4C6RPW1/2 numerical/graph/healthcanaryPASS; othercommon
+images/oldAOTequality/model-serving unqualified. VERDICT: Retain exactversioned
+commonwrapper forlateradapters; no generalcacheframework/ELFsurgery/source
+recompile or matchedinference/secondadapterbuildsavingclaim. Bare-fsycl-link
+supported; removed=image/archive-o recipefailsdriver-only, notused. Actual
+postreviewsagreeboundedcanary; exactscriptcopies/dateddoc preservefullscope.
+Frozen37files/284825B external aot-prelink-s60-manifestSHA256
+4ba3d0b0d0d76eace5dbfcd48e382d5b1c24918e45b4dc7ec3af9df7bc71f0e2,
+references S59wholemanifest forsharedbuild/runtimeoutputs. Absolutegoalsopen;
+no serving/default/shelfchange or extraGPUtest.

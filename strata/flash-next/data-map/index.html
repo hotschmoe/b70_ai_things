@@ -216,6 +216,16 @@ ul.plain{padding-left:1.1rem}
    "report": "docs/20261015_strata_fusion_triage.md",
    "evidence": "fusion-next-s61-prep/source-trace-evidence.json",
    "scope": "Source and retained S31 service pools only; no new GPU/build/timing. Dormant QFUSE has batched wiring and packet-contract blockers; leave OFF."
+  },
+  "iq4xs_rpw_s59": {
+   "report": "docs/20261015_strata_iq4xs_rpw_probe.md",
+   "raw": "iq4xs-rpw2-s59-prep/{s59-root-report.json,run-clean/{closure,comparison}.json}; iq4xs-rpw2-s59-dot-audit.json",
+   "decision": "KEEP_RPW1_NO_SERVING_OR_RETRY; strict primitive/health PASS, tiny timing difference; no new model qualification"
+  },
+  "aot_prelink_s60": {
+   "report": "docs/20261015_strata_aot_prelink_reuse.md",
+   "raw": "aot-reuse-s60-execution/{root-build-closure,subagent-link-audit,root-runtime-canary}.json",
+   "scope": "Supported compiler-produced common+adapter wrappers and ordinary host link; first Q8/IQ4 canary only. Final host link0.394s/zeroAOT; second-adapter gain unmeasured."
   }
  },
  "geometry": {
@@ -1169,7 +1179,8 @@ ul.plain{padding-left:1.1rem}
     "q6-dense-reference-s44-prep/{s44-report,warm-report}.json; cpu-full/gate.json; run-clean/closure.json",
     "primary-dense-next-s56-prep/{source-audit,s31-dense-quant-pool,s15-q6-rpw2-rejection}.json",
     "primary-dense-next-s56-prep/aot-resources/{embedded-resource-index,resource-summary}.json; C{1,6}-RPW{1,2}.ze_info.yaml",
-    "primary-widek-next-s57-prep/findings.md; primary-widek-resources-s57-20261015/resource-summary.json"
+    "primary-widek-next-s57-prep/findings.md; primary-widek-resources-s57-20261015/resource-summary.json",
+    "iq4xs-rpw2-s59-prep/{s59-root-report.json,run-clean/{closure,comparison}.json}; iq4xs-rpw2-s59-dot-audit.json"
    ],
    "quoted": [
     {
@@ -1219,6 +1230,12 @@ ul.plain{padding-left:1.1rem}
      "value": "RPW2 Q4K spill2112/scratch4096; Q5K1728/2048; IQ4XS declarations absent. All RPW1 fields absent. All128GRF/SIMD32.",
      "basis": "Existing frozenS55 AOTmetadata only,0.03957s/2.631MB; no dispatch/occupancy/runtimezero/traffic/speed inference. PriorQ5onlyC1..4 mixed, not Q4/IQ coverage. Prepare ONLYIQ4XS C6 strictrealweightoracle; no globaltoggle/threeformatGPU sweep.",
      "status": "measured"
+    },
+    {
+     "label": "S59 actual IQ4_XS qkv C6 primitive",
+     "value": "All48snapshotfiles4,838,400bytes/Q8/ownchangedgraphs/health PASS; nested graph medians68.559875->68.117175us(-.645713percent). KeepRPW1.",
+     "basis": "Real type23 N2560/M10240 weights, seededinputs; four freshABBAprocesses/3nested20-callmeans each. Delta.4427us<baseline.5417us range; bothcandidateprocessmedslower but no usefulmodelgain established. Includesquantizer, no p95/causality/dispatch/ISA claim. No serving/retry.",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -1233,7 +1250,8 @@ ul.plain{padding-left:1.1rem}
     "Per-tensor mapping (which tensor uses which kernel/quant) not established; drafter and target calls are mixed in this stage.",
     "Activation inputs are Q8_1-quantized (act_quant) for most mmvq paths; exact pairing not mapped.",
     "S44 covers four shapes/six Cs/changed-input own graphs under source bounds; remaining main matrices/model quality/streaming cache regime unqualified. No warm C1/C2/C3/C4/C8 timing. Main-owner integration remains source-only/rejected for this work item.",
-    "S56 supplies compiled Q6 resource metadata only; no new actual-weight RPW2 bitwise execution, per-image dispatch observation, measured occupancy or bandwidth. Main Q4/IQ4_XS/Q5 pools remain distinct future source leads."
+    "S56 supplies compiled Q6 resource metadata only; no new actual-weight RPW2 bitwise execution, per-image dispatch observation, measured occupancy or bandwidth. Main Q4/IQ4_XS/Q5 pools remain distinct future source leads.",
+    "S59 covers one IQ4_XS C6 shape with synthetic inputs and new prelinked AOT images. No productionactivation/logit, other-shape or serving gain; retain RPW1. Independent DOT metadata is not a GPU dispatch trace."
    ],
    "hypotheses": [
     {
