@@ -1,0 +1,78 @@
+# Whole-pair MTP graph: what the evidence supports, and the one next action
+
+**Next action:** run one offline re-parse of the existing S95 trace, measuring same-card GPU gaps at the pair's 5 graph boundaries. No GPU, no build, no new capture. Only if that shows material gaps should the whole-pair graph be built, behind the gates below. S100 stays default OFF and closed.
+
+## 1. What current evidence can and cannot rank
+
+**What it can say:**
+- The S95 GPU family service times rank the observed kernel work. MMVQ, routed experts, HC and the heads dominate the named service.
+- The host-side handoff between windows is about 2.4 \xb5s, so there is no host-handoff lead.
+
+**What it cannot say:**
+- `pair_submit` (2.04 ms) is an instrumented host span. The GPU is very likely already running round A while the host enqueues the later graphs. That span is not a GPU-idle measurement and not a removable cost.
+- Nine ImmediateAppends per cycle is consistent with the source, but it does not show that any append stalled the GPU.
+
+**Implication:** a whole-pair graph only helps if the GPU sits empty *between* the six pair graphs, or if the six host enqueues delay the first GPU work. Neither has been measured.
+
+**Why the re-parse is valid without a clock join:** the timestamps from one engine on one card form a single clock domain. That card-0 compute engine (`Engine<0,0>`) already ran all six pair graphs in order, so the gaps can be read directly.
+
+## 2. The re-parse: specification
+
+- **Scope:**
+  - The 12 retained replay cycles, 5\u201316.
+  - Only the pair segment on the card-0 compute engine, using the H2-select-select pattern already used to delimit cycles.
+- **Measurement:** for each of the 5 boundaries (round A\u2192B, B\u2192head 0, head 0\u2192step A, A\u2192B, B\u2192head 1), take the end of the last kernel in one graph and the start of the first kernel in the next. Also record the verify\u2192commit boundary for context.
+- **How graph boundaries are identified:**
+  - Use the motif record already in the S95 analysis to place each graph's first and last kernel.
+  - Where a boundary is ambiguous, mark it unresolved. Do not guess.
+- **Output:** per-boundary medians and ranges, plus each cycle's sum of the 5 pair gaps. Report these as descriptive values only, with no budget claims.
+
+**Decision:**
+- **NO_GO for the whole-pair graph** if the 5 gaps are a few microseconds each, i.e. comparable to normal kernel-to-kernel gaps inside a graph. Record that graph-launch submission is not the bottleneck.
+- **Otherwise:** proceed to the source-level check in section 3.
+- Either way, the result also tells you whether the remaining work is inside the graphs (kernel fusion and dependency work) rather than at their boundaries.
+
+## 3. If gaps are material: minimal default-OFF design
+
+**Parent graph per key.**
+- The key is `(T0, T1)` with `max_steps == 2` exactly. With max_t \u2264 9 there are at most 81 entries, and in practice only a few are used. Any other `max_steps` uses the existing six launches.
+- Record the parent on `cs_` with `begin_recording`. Then submit the six existing child execs in the current order, through the same `launch` call sites. Close it with `finish_capture`.
+- Capture only after all six children exist. That is still before the `idle()` check, as today, and recording does not execute any work.
+
+**Replay.**
+- One `ext_oneapi_graph(parent)` replaces the six launches.
+- The staging, the `seq_cst` fence before submit, `ext_oneapi_empty`, polling, the PLE prefetch and `cs_->wait()` are all unchanged.
+
+**What stays unchanged inside the children.**
+- The mapped-input copies (`copy_from_mapped_multi`) are inside the children, so each replay still reads the freshly staged host records.
+- `h_out_` and the probability writes come from `mtp_select` inside the children, so depth-order polling still works.
+
+**Guards and lifetime.**
+- Latched environment flag, default OFF.
+- In the destructor, delete parents before children.
+- A capture failure falls back to the six launches.
+- A failure of the parent launch takes the existing drain path with no retry, because K/V may already have been written.
+
+## 4. Missing SDK proof, before any patch
+
+These must be read from the pinned DPC++ headers/spec and the L0 command-buffer adapter, not inferred from CUDA:
+
+1. **Sub-graph nodes.** Does `queue::ext_oneapi_graph(exec)` on a queue that is *recording* create a sub-graph node, with in-order edges between consecutive sub-graphs?
+2. **Single append.** Does `finalize()` flatten the sub-graph nodes so that the parent replays as **one** command-list append? If the parent still issues six appends, the design has no point.
+3. **Host-memory semantics.** Are memcpy operations from host-mapped memory inside a sub-graph re-read on every parent replay, rather than captured by value?
+
+## 5. Finite primitive test (only after 2 shows material gaps and 4 passes)
+
+A private leaf with six trivial graphs on one in-order queue, mirroring the real pattern:
+
+- a mapped-host input copy;
+- kernels that depend on each other in order;
+- one kernel writing mapped output that the host polls.
+
+Run the six-launch path and the parent path for three replays, changing the host inputs before each replay. Pass criteria:
+
+- exact output bytes;
+- the polled values reflect the fresh inputs every time;
+- under the existing unitrace, ImmediateAppend counts per replay are **1** for the parent and **6** for the original.
+
+Stop at the first discrepancy. No main build happens until this passes.

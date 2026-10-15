@@ -1,0 +1,14 @@
+{
+  "status": "PASS_SOURCE_PREDICATE_PREFLIGHT_ONLY",
+  "exact_host_symbols": [
+    "0000000000001f58 b _ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_123native_mmvq_q6k_wide_a2E18dpct_kernel_scalarILi6EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+    "00000000000483e0 r _ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_123native_mmvq_q6k_wide_a2E18dpct_kernel_scalarILi6EEEEEE",
+    "0000000000001f50 b _ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_123native_mmvq_q6k_wide_a2E18dpct_kernel_scalarILi6EEEEEERNS1_16DeviceKernelInfoEvE4Info"
+  ],
+  "registered_positive_fixture": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS5_PfiiPN4sycl3_V15queueEE23native_mmvq_q6k_wide_a218dpct_kernel_scalarILi6EEEE",
+  "distinct_a2r_negative_fixture": true,
+  "artifact_audit_executed": false,
+  "GPU": 0,
+  "build": 0,
+  "decoder": 0
+}

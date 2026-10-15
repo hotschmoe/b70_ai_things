@@ -1,0 +1,21 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_V2",
+  "files": {
+    "README.txt": {
+      "bytes": 5542,
+      "sha256": "1d1b2276ec53d1be55b16f55c8288d9784d7c897c7fd039dc97896b888e3f2bb"
+    },
+    "audit.py": {
+      "bytes": 13230,
+      "sha256": "33936a71aa314afc51905563b7072a73f74c5ceb632218a1d2fb9d0194e06618"
+    },
+    "decode-selected.sh": {
+      "bytes": 1206,
+      "sha256": "78e6d0a72dffc8353f45642ad391c7eea0bc82d7967c5b18bbd87aace7f6ed53"
+    },
+    "root-predicate-preflight.json": {
+      "bytes": 1022,
+      "sha256": "abcce8b59517dd1a23f542fda58598d122a5d3977a6e201b4db81163dd480e79"
+    }
+  }
+}

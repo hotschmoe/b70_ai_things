@@ -1,0 +1,120 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 81.61613072501495,
+  "launch_exception": null,
+  "source_packet_sha256": "2682fd24440605c5cf07c3c43670e4bebd828945b2990e1a2c5d7926a33b2460",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 648884,
+      "stop_reason": "end_turn",
+      "session_id": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "total_cost_usd": 5.484483000000001,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 18446,
+        "cache_read_input_tokens": 146707,
+        "output_tokens": 4732,
+        "output_tokens_details": {
+          "thinking_tokens": 3358
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 18446,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 4732,
+            "cache_read_input_tokens": 146707,
+            "cache_creation_input_tokens": 18446,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 18446
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 18,
+          "outputTokens": 40638,
+          "thinkingTokens": 29171,
+          "cacheReadInputTokens": 649292,
+          "cacheCreationInputTokens": 164504,
+          "webSearchRequests": 0,
+          "costUSD": 5.484483000000001,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Assessment: the cached whole-pair graph is a legitimate, narrow target, and the current evidence cannot rank it as a bottleneck. Proceed to a default-OFF implementation that re-records the existing kernel sequence rather than composing executable graphs, with a CPU and fixture test before any main build.**\n\n**What the evidence can and cannot say**\n\nThe pair submit span of about 2 ms per window is an instrumented host interval around six graph submissions while the GPU is already running the first. It is not removable cost and there is no clock join to show device-side gaps between the six graphs. The only honest reading is that six submissions exist where one could, and that the host reaches its output polling and PLE prefetch only after the sixth returns. Whether that moves anything is exactly what the test must measure as pair wall from enter to return, same fixture, both arms.\n\n**Why re-record, not compose**\n\nComposing six executable graphs needs the SDK to accept an executable graph submitted to a queue in recording state as a sub-graph node, and the Level Zero backend to replay it. That is the one missing SDK proof: read the pinned graph extension header and the dpct begin_recording wrapper for that exact behaviour before considering it. Re-recording avoids the question entirely. The pair already records its components through record_front, record_rest, record_forward, record_post_head, the mapped copies and mtp_select on the pair queue. One capture_pair function that calls the same sequence in the same order between one begin_recording and one finish_capture uses nothing the code does not already use.\n\n**Ordering and semantics ledger for the re-recorded pair**\n\n- Key is the exact triple of both T values and max_steps. All three change kernel arguments or node counts, so no sharing across keys. At depth 2 with spec 4 that is at most 25 live keys, each captured on first use with the same queue wait the components already pay.\n- The recorded sequence is the launch sequence at mtp.cpp:2200 to 2203, expanded in place: round A inputs and body, round B, tail 0, then for each depth step A, step B, tail j. Recording an in-order queue yields a linear chain, so no node reorders relative to today.\n- Mapped input copies stay at their current positions in the chain, so staged host records are read at the same relative points. The host fence before submit is unchanged.\n- Mapped outputs written by mtp_select keep their positions, so the polling loop and the depth-ordered PLE prefetch see them in the same order. The empty-queue break in the poll is unchanged in meaning: empty means the whole pair finished in both arms.\n- Partial launch failure becomes simpler. One submission either enters or does not, and the drain plus no-redraft rule still applies.\n- Idle check on both slot queues before submit, the shared logits and quantize scratch ownership, counters and K/V cell writes are unchanged because the kernels and arguments are the same.\n- Lifetime: a third cache array deleted in the destructor after the queue wait, alongside the components, which stay allocated for the OFF path.\n- No floating point or work changes. Same kernels, same arguments, same order.\n\n**Test sequence before any main build**\n\n1. **CPU read.** Confirm the pinned graph extension permits a recording of this length with memcpy nodes from host-mapped USM, which the components already do, so this should be a one-line confirmation rather than a question.\n2. **Existing pair parity fixture.** The pair header promises the same outputs as two solo drafts. Extend that existing check, not a new harness, to run OFF then ON on identical staged inputs and compare drafts, probabilities, out ids, counters and the K/V cells written, for every reachable key, including max_steps 1, plus first-use capture under both arms, A-B-A alternation, and a forced null graph to prove the drain path. Zero tolerance.\n3. **Host spans in the same fixture.** Record pair enter to return and submit begin to end for both arms. These rank nothing on their own but are the only direct observation available.\n4. Only then the finite same-binary flag 0 and 1 serving with the S100 gate set.\n\nKeep S100 at default OFF and unpromoted. Its 0.3 percent is one sequence and not a result.",
+      "ttft_ms": 56776,
+      "type": "result",
+      "duration_ms": 80583,
+      "uuid": "21438e3f-a751-4923-926c-092f639fb5be",
+      "ttft_stream_ms": 2338,
+      "time_to_request_ms": 72,
+      "first_content_frame_ms": 2338,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

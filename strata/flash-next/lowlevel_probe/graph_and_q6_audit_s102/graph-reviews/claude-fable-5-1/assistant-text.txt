@@ -1,0 +1,29 @@
+**Assessment: the cached whole-pair graph is a legitimate, narrow target, and the current evidence cannot rank it as a bottleneck. Proceed to a default-OFF implementation that re-records the existing kernel sequence rather than composing executable graphs, with a CPU and fixture test before any main build.**
+
+**What the evidence can and cannot say**
+
+The pair submit span of about 2 ms per window is an instrumented host interval around six graph submissions while the GPU is already running the first. It is not removable cost and there is no clock join to show device-side gaps between the six graphs. The only honest reading is that six submissions exist where one could, and that the host reaches its output polling and PLE prefetch only after the sixth returns. Whether that moves anything is exactly what the test must measure as pair wall from enter to return, same fixture, both arms.
+
+**Why re-record, not compose**
+
+Composing six executable graphs needs the SDK to accept an executable graph submitted to a queue in recording state as a sub-graph node, and the Level Zero backend to replay it. That is the one missing SDK proof: read the pinned graph extension header and the dpct begin_recording wrapper for that exact behaviour before considering it. Re-recording avoids the question entirely. The pair already records its components through record_front, record_rest, record_forward, record_post_head, the mapped copies and mtp_select on the pair queue. One capture_pair function that calls the same sequence in the same order between one begin_recording and one finish_capture uses nothing the code does not already use.
+
+**Ordering and semantics ledger for the re-recorded pair**
+
+- Key is the exact triple of both T values and max_steps. All three change kernel arguments or node counts, so no sharing across keys. At depth 2 with spec 4 that is at most 25 live keys, each captured on first use with the same queue wait the components already pay.
+- The recorded sequence is the launch sequence at mtp.cpp:2200 to 2203, expanded in place: round A inputs and body, round B, tail 0, then for each depth step A, step B, tail j. Recording an in-order queue yields a linear chain, so no node reorders relative to today.
+- Mapped input copies stay at their current positions in the chain, so staged host records are read at the same relative points. The host fence before submit is unchanged.
+- Mapped outputs written by mtp_select keep their positions, so the polling loop and the depth-ordered PLE prefetch see them in the same order. The empty-queue break in the poll is unchanged in meaning: empty means the whole pair finished in both arms.
+- Partial launch failure becomes simpler. One submission either enters or does not, and the drain plus no-redraft rule still applies.
+- Idle check on both slot queues before submit, the shared logits and quantize scratch ownership, counters and K/V cell writes are unchanged because the kernels and arguments are the same.
+- Lifetime: a third cache array deleted in the destructor after the queue wait, alongside the components, which stay allocated for the OFF path.
+- No floating point or work changes. Same kernels, same arguments, same order.
+
+**Test sequence before any main build**
+
+1. **CPU read.** Confirm the pinned graph extension permits a recording of this length with memcpy nodes from host-mapped USM, which the components already do, so this should be a one-line confirmation rather than a question.
+2. **Existing pair parity fixture.** The pair header promises the same outputs as two solo drafts. Extend that existing check, not a new harness, to run OFF then ON on identical staged inputs and compare drafts, probabilities, out ids, counters and the K/V cells written, for every reachable key, including max_steps 1, plus first-use capture under both arms, A-B-A alternation, and a forced null graph to prove the drain path. Zero tolerance.
+3. **Host spans in the same fixture.** Record pair enter to return and submit begin to end for both arms. These rank nothing on their own but are the only direct observation available.
+4. Only then the finite same-binary flag 0 and 1 serving with the S100 gate set.
+
+Keep S100 at default OFF and unpromoted. Its 0.3 percent is one sequence and not a result.

@@ -1,0 +1,449 @@
+User explicitly asks about graphcapture and current bottlenecks. Assess the supplied actual source and current measured status independently; your own session only. Provide concrete efficient nextengineeringaction, no tools/build/GPU, no generic graphON advice or extrapolated savings. Rootwillreview SDK before implementation. KeepS100smallboundedresultdefaultOFF.
+
+ROOT FROZEN PACKET:
+USER asks whether graph capture like dense vLLM can help and what bottlenecks remain. We already use actual SYCL executable command_graph replay: token graph, verifier primary/peer, commit, paired MTP components. Current native logs report token graph hit path,100percentVRAMzero-doorbellgraph and successfully captured batchslot layouts. Do NOT suggest simply turning graphcapture ON.
+S100 samebinary IQ2XS flag0/1 all4pairs fulltext/SSE/usage/nativework/drafts/observedcaptures/functionals/normalQUIT/CIDNAMEgone/wrappers0/fullhealthPASS. Aggregate medians103.016058->103.333098tok/s(+0.307757percent), pairedwalls-0.3068/-0.4141/-0.1203percent; perstream53.48/55.85->53.73/56.02. One fixedOFFthenONsequence; keepdefaultOFF/no causal/stability/promotion/targetclaim. This is not40percent fullmodel. No more samecandidateGPUtests.
+NEW concrete graph direction, source ONLY: depth2 MtpPair::draft submits6 existinggraphs in order roundA,roundB,sharedhead0,stepA,stepB,sharedhead1 on SAME in-order pairqueue, with NO intervening host decision between launches. Input mapped records are fully staged/fenced before all6; host output polling+PLEprefetch happens afterward while GPUruns. A cached parent graph containing same6 orderedchildgraphs or a wholepaircapture may reduce submissions. Must preserve cross-slotidle, mappedfreshinputs/depthPLEvisibility, output/probability/counter/KV/rowownership, partiallaunch failure no retry, sourceFPledgerandwork. This is not S79commitoverlap or blindlyremovingwaits. DefaultOFF, fixedcurrentdepth2/headpairON first. No literal API assumptions: actual pinned SDK graph API support mustbe read before patch/build; CUDA analogies are not proof.
+S95 instrumented12GPUcycles5..16 median57.06675ms. Primary namedfamilyservicems: nonvocabMMVQ12.680488, routedGU/down7.504495 DISJOINT, HC6.718818,3vocabheads4.664113,EPwait3.068313. NONADDITIVE/no wallbudget/physicaltraffic/cause. CPUring820records/drop0;16replaywindows yieldpair_submit median2.0431405ms,verify_submit3.2353685ms,commit2.9128585ms,pairedqueueslotidle0.0266355ms; nextwindowhandoff0.00236ms. These are INSTRUMENTED hostspans withGPUwork overlap/runtime instrumentation; NOT removableCPUcost. No nativeGPU/peerclockjoin; drift305us.9L0ImmediateAppend perreviewedcycle is sourceconsistent with6draft+peer+verify+commit, not an independently provenone-to-onejoin. L0HostSynchronize294..332 andEventHostSync11 may beprofiler/runtime glue; do notlabel them all uncaptured appbarriers. Graphcapture canreduce submissionoverhead; fusiontargetsoperations/dependencies INSIDEgraphs. Nextsourcekernel leadQ6 A4 + FableEPprologuefusion remainprepared/sourceonly.
+YOUR JOB: independently assess cached whole-pair graph opportunity, precise ownership/order/lifetime/cachekey/firstuse/failure guards, smallest falsifiable CPU/API and finite existing-fixture graph test BEFORE fullmainbuild/modelstartup, and what current evidence can/cannotrankas bottleneck. Opus: concrete minimal implementation design. Fable: independently audit graphboundaries/readiness/semantic risks and efficient test sequence. Return one concrete nextaction or specificHOLD; no genericextra tests/no newframework/no speedforecast. No tools/build/GPU available in this actualconsult. Use suppliedsource, identify exactmissingSDK method proof. Rootexecutes later.
+
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp SHA256 fcd5d2e4b029985a6e7768707a5aa489e4b5724a78db50fc2313d9c64e67ec31
+EXACT LINES 1163..1198
+bool finish_capture(dpct::queue_ptr cs, bool ok,
+                    dpct::experimental::command_graph_exec_ptr &exec,
+                    const char *what, std::string &err, bool propagate_error = false) try {
+    dpct::experimental::command_graph_ptr graph = nullptr;
+    const dpct::err0 ce =
+        DPCT_CHECK_ERROR(dpct::experimental::end_recording(cs, &graph));
+    if (!ok) {
+        if (graph) delete (graph);
+        return false;
+    }
+    if (ce != 0 ||
+        DPCT_CHECK_ERROR(
+            exec = new sycl::ext::oneapi::experimental::command_graph<
+                sycl::ext::oneapi::experimental::graph_state::executable>(
+                graph->finalize())) != 0) {
+        if (graph) delete (graph);
+        /*
+        DPCT1009: SYCL reports errors using exceptions and does not use
+        error codes. Please replace the "get_error_string_dummy(...)" with a
+        real error-handling function.
+        */
+        err = std::string("mtp: ") + what +
+              " capture: " + dpct::get_error_string_dummy(ce);
+        return false;
+    }
+    delete (graph);
+    // an explicit upload: the first launch's implicit one blocked behind a device-side spin (verify.cpp)
+    /*
+    DPCT1007: Migration of cudaGraphUpload is not supported.
+    */
+    // no cudaGraphUpload on SYCL: a finalized command_graph is already resident
+    cs->wait();
+    return true;
+}
+catch (sycl::exception const &exc) {
+  if (propagate_error) { err = std::string("mtp pair capture: ") + exc.what(); return false; }
+EXACT LINES 1989..2007
+MtpPair::~MtpPair() {
+    if (cs_) { try { cs_->wait(); } catch (...) {} }
+    for (auto& per_slot : pre_round_) for (auto& e : per_slot) if (e) delete e;
+    for (auto& per_slot : pre_step_) for (auto& e : per_slot) if (e) delete e;
+    for (auto& e : tail_) if (e) delete e;
+    if (alloc_queue_) { try { alloc_queue_->wait(); } catch (...) {} }
+    if (xq2_) sycl::free(xq2_, *alloc_queue_);
+    if (logits2_) sycl::free(logits2_, *alloc_queue_);
+}
+
+int MtpPair::steps_of(const MtpDrafter& d, int64_t p, int a) const {
+    // exactly draft()'s max_steps: draft j writes at p + a + j, within the allocated K/V cells
+    return (int) std::min<int64_t>(std::min(d.max_t_ - 1, d.max_drafts_), d.st_.max_cells - (p + a));
+}
+
+bool MtpPair::init(MtpDrafter* a, MtpDrafter* b, std::string& err) try {
+    ok_ = false;
+    if (a == nullptr || b == nullptr || a == b) { err = "mtp pair: needs two slot drafters"; return false; }
+    if (a->head_ == nullptr || b->head_ == nullptr || a->cs_ == nullptr || b->cs_ == nullptr || a->g_ == nullptr) {
+EXACT LINES 2076..2310
+bool MtpPair::capture_pre_round(int c, int T, std::string& err) try {
+    dpct::experimental::command_graph_exec_ptr& exec = pre_round_[c][T];
+    if (exec) return true;
+    using namespace strata::kernels;
+    MtpDrafter& d = *d_[c];
+    const int64_t N = d.g_->n_embd, NH = d.g_->n_head, HCN = d.g_->hc * N;
+    const int ra = 2 * d.max_t_ - 1;
+    if (DPCT_CHECK_ERROR(dpct::experimental::begin_recording(cs_)) != 0) { err = "mtp pair: begin capture"; return false; }
+    bool ok = true;
+    try {
+        // capture_round's inputs and front, then the rest without its head (the pair's tail graph runs it)
+        const MappedCopy in[7] = {{d.tok_, d.m_tok_, T}, {d.step_, d.m_step_, (int64_t) 2 * T * 4}, {d.pos_, d.m_pos_, 2 * T * NH},
+                                  {d.row_, d.m_row_, 2}, {d.Rin_, d.window_R_, T * HCN}, {d.step_ + ra * 4, d.m_step_ + ra * 4, 4},
+                                  {d.pos_ + ra * NH, d.m_pos_ + ra * NH, NH}};
+        copy_from_mapped_multi(in, 7, cs_);
+        ok = d.record_front(T, 0, cs_, err);
+        if (ok && T > 1) {
+            copy_row_to_first(d.row_, d.R_, HCN, d.inj_, d.g_->hc, d.mixed_, N, cs_);
+            native_quantize_q8_1(d.mixed_, d.xq_, (int) N, 1, cs_);
+        }
+        if (ok) ok = d.record_rest(ra, cs_, err, false);
+    } catch (const std::exception& e) {
+        err = std::string("mtp pair: ") + e.what();
+        ok = false;
+    }
+    return finish_capture(cs_, ok, exec, "pair round", err, true);
+}
+catch (sycl::exception const &exc) {
+    err = std::string("mtp pair capture: ") + exc.what();
+    return false;
+}
+
+bool MtpPair::capture_pre_step(int c, int j, std::string& err) try {
+    dpct::experimental::command_graph_exec_ptr& exec = pre_step_[c][j];
+    if (exec) return true;
+    using namespace strata::kernels;
+    MtpDrafter& d = *d_[c];
+    const int64_t NH = d.g_->n_head;
+    const int row = d.max_t_ + j - 1;
+    if (DPCT_CHECK_ERROR(dpct::experimental::begin_recording(cs_)) != 0) { err = "mtp pair: begin capture"; return false; }
+    bool ok = true;
+    try {
+        const MappedCopy in[2] = {{d.step_ + row * 4, d.m_step_ + row * 4, 4}, {d.pos_ + row * NH, d.m_pos_ + row * NH, NH}};
+        copy_from_mapped_multi(in, 2, cs_);
+        ok = d.record_forward(1, row, cs_, err, false);
+    } catch (const std::exception& e) {
+        err = std::string("mtp pair: ") + e.what();
+        ok = false;
+    }
+    return finish_capture(cs_, ok, exec, "pair step", err, true);
+}
+catch (sycl::exception const &exc) {
+    err = std::string("mtp pair capture: ") + exc.what();
+    return false;
+}
+
+// Depth j's tail for both slots: their two mixed rows quantized into the two columns, ONE two-column head call,
+// each slot's pick and probability from its own logits row, each slot's next input (mtp_select) to its own buffers.
+bool MtpPair::capture_tail(int j, std::string& err) try {
+    dpct::experimental::command_graph_exec_ptr& exec = tail_[j];
+    if (exec) return true;
+    using namespace strata::kernels;
+    MtpDrafter& a = *d_[0];
+    MtpDrafter& b = *d_[1];
+    const int64_t N = a.g_->n_embd, HCN = a.g_->hc * N;
+    if (DPCT_CHECK_ERROR(dpct::experimental::begin_recording(cs_)) != 0) { err = "mtp pair: begin capture"; return false; }
+    bool ok = true;
+    try {
+        native_quantize_q8_1(a.sample_, xq2_, (int) N, 1, cs_);
+        native_quantize_q8_1(b.sample_, xq2_ + col_bytes_, (int) N, 1, cs_);
+        native_mmvq_head(a.head_->type(), a.head_->weights(), xq2_, logits2_, (int) N, (int) nv_, 2, cs_);
+        ok = a.record_post_head(logits2_, cs_, err) && b.record_post_head(logits2_ + nv_, cs_, err);
+        if (ok) {
+            mtp_select(a.R_, HCN, a.out_ids_, a.row_ + 1, a.Rin_, a.tok_, a.m_out_, j, cs_, a.probs_, a.m_prob_);
+            mtp_select(b.R_, HCN, b.out_ids_, b.row_ + 1, b.Rin_, b.tok_, b.m_out_, j, cs_, b.probs_, b.m_prob_);
+        }
+    } catch (const std::exception& e) {
+        err = std::string("mtp pair: ") + e.what();
+        ok = false;
+    }
+    return finish_capture(cs_, ok, exec, "pair head", err, true);
+}
+catch (sycl::exception const &exc) {
+    err = std::string("mtp pair capture: ") + exc.what();
+    return false;
+}
+
+bool MtpPair::draft(const Args& A, const Args& B, std::string& err) try {
+    host_boundary::mark("pair_enter", A.T, B.T);
+    std::string why;
+    if (!eligible(A, B, why)) { err = "mtp pair: " + why; return false; }
+    const OnDevice on_device(d_[0]->device_);
+    const Args* args[2] = {&A, &B};
+    int T[2] = {A.T, B.T};
+    // #783 PR-i as draft(): the round runs for the cells up to the accepted row (T = a + 1) unless catch-up-all
+    if (!mtp_catchup_all()) { T[0] = A.a + 1; T[1] = B.a + 1; }
+    const int max_steps = steps_of(*d_[0], A.p, A.a);   // eligible(): equal for both, >= 1
+    // the graphs (cached; a capture syncs the pair queue), then both slots' own queues idle: the pair queue reads
+    // what their last solo launches wrote
+    for (int c = 0; c < 2; ++c)
+        if (!capture_pre_round(c, T[c], err)) return false;
+    for (int j = 1; j < max_steps; ++j)
+        for (int c = 0; c < 2; ++c)
+            if (!capture_pre_step(c, j, err)) return false;
+    for (int j = 0; j < max_steps; ++j)
+        if (!capture_tail(j, err)) return false;
+    host_boundary::mark("pair_capture_ready", T[0], T[1]);
+    for (int c = 0; c < 2; ++c)
+        if (!d_[c]->idle(err)) return false;
+    host_boundary::mark("pair_idle_done", T[0], T[1]);
+    const Clock::time_point t0 = Clock::now();
+    // ---- the staging, per slot exactly as draft(): its own mapped records and outputs
+    for (int c = 0; c < 2; ++c) {
+        MtpDrafter& d = *d_[c];
+        const Args& x = *args[c];
+        const int64_t NH = d.g_->n_head;
+        auto put = [&](int row, int64_t cell) {
+            d.h_step_[row * 4 + 0] = (int32_t) cell;
+            d.h_step_[row * 4 + 1] = (int32_t) (cell + 1);
+            d.h_step_[row * 4 + 2] = (int32_t) ((cell + 1) / 4);
+            d.h_step_[row * 4 + 3] = (int32_t) (cell + 1);
+            for (int64_t h = 0; h < NH; ++h) d.h_pos_[row * NH + h] = (int32_t) cell;
+        };
+        for (int t = 0; t < T[c]; ++t) {
+            d.h_tok_[t] = x.tokens[t];
+            put(t, x.p + t);
+        }
+        put(2 * d.max_t_ - 1, coupled_draft_cell(x.p, x.a, 0));   // p + a: draft 0's cell
+        for (int j = 1; j < max_steps; ++j)
+            put(d.max_t_ + j - 1, coupled_draft_cell(x.p, x.a, j));
+        for (int j = 0; j < max_steps; ++j) ((volatile int32_t*) d.h_out_)[j] = -1;
+        d.h_row_[0] = x.a;
+        d.h_row_[1] = 0;
+    }
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+    host_boundary::mark("pair_inputs_ready", max_steps);
+    // ---- the launches, all on the pair queue: both rounds, their shared tail, then per depth both steps and their tail
+    auto launch = [&](dpct::experimental::command_graph_exec_ptr g, const char* what) {
+        if (g == nullptr || DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*g)) != 0) {
+            err = std::string("mtp pair: ") + what + " launch failed";
+            return false;
+        }
+        return true;
+    };
+    host_boundary::mark("pair_submit_begin", max_steps);
+    bool ok = launch(pre_round_[0][T[0]], "round A") && launch(pre_round_[1][T[1]], "round B") && launch(tail_[0], "head 0");
+    for (int j = 1; ok && j < max_steps; ++j)
+        ok = launch(pre_step_[0][j], "step A") && launch(pre_step_[1][j], "step B") && launch(tail_[j], "head");
+    if (!ok) {   // the slots' K/V may already be written: drain and report, the caller must not draft again
+        try { cs_->wait(); } catch (...) {}
+        return false;
+    }
+    (void)DPCT_CHECK_ERROR(((cs_)->ext_oneapi_empty()));
+    host_boundary::mark("pair_submit_end", max_steps);
+    // ---- the outputs, per slot as draft(): its own mapped h_out_ polled in depth order, its own PLE prefetch
+    SessionState* pss[2];
+    bool do_ple[2];
+    int32_t ple_prev[2][2];
+    for (int c = 0; c < 2; ++c) {
+        MtpDrafter& d = *d_[c];
+        pss[c] = d.ple_ss_ ? d.ple_ss_ : d.ss_;
+        do_ple[c] = pss[c] != nullptr && pss[c]->ple.table != nullptr && pss[c]->ple.table->is_open();
+        ple_prev[c][0] = do_ple[c] ? pss[c]->ple_prev[0] : 0;
+        ple_prev[c][1] = do_ple[c] ? pss[c]->ple_prev[1] : 0;
+    }
+    auto prefetch_ple = [&](int c, int32_t tok) {
+        if (!do_ple[c] || tok < 0) return;
+        uint32_t rows16[strata::kernels::PLE_N_HEADS];
+        strata::kernels::ngram_rows(&tok, ple_prev[c], 1, pss[c]->ple.consts, rows16);
+        ple_prev[c][0] = ple_prev[c][1];
+        ple_prev[c][1] = tok;
+        pss[c]->ple.table->prefetch_rows(rows16);
+    };
+    auto wait_out = [&](int c, int j) {
+        uint32_t spins = 0;
+        while (((volatile int32_t*) d_[c]->h_out_)[j] < 0) {
+#if defined(_WIN32) || defined(__x86_64__)
+            _mm_pause();
+#endif
+            if ((++spins & 1023u) == 0 && ((cs_)->ext_oneapi_empty() ? 0 : 1) != 1) break;
+        }
+    };
+    host_boundary::mark("pair_poll_begin", max_steps);
+    for (int c = 0; c < 2; ++c) prefetch_ple(c, args[c]->tokens[args[c]->a]);
+    for (int j = 0; j + 1 < max_steps; ++j)
+        for (int c = 0; c < 2; ++c) {
+            wait_out(c, j);
+            args[c]->drafts[j] = ((volatile int32_t*) d_[c]->h_out_)[j];
+            prefetch_ple(c, args[c]->drafts[j]);
+        }
+    host_boundary::mark("pair_wait_begin", max_steps);
+    if (DPCT_CHECK_ERROR(cs_->wait()) != 0) { err = "mtp pair: the draft queue failed"; return false; }
+    host_boundary::mark("pair_wait_done", max_steps);
+    const int last = max_steps - 1;
+    for (int c = 0; c < 2; ++c) {
+        MtpDrafter& d = *d_[c];
+        const Args& x = *args[c];
+        x.drafts[last] = ((volatile int32_t*) d.h_out_)[last];
+        prefetch_ple(c, x.drafts[last]);
+        for (int j = max_steps; j < d.max_t_ - 1; ++j) x.drafts[j] = 0;
+        if (x.n_drafts) *x.n_drafts = max_steps;
+        d.ms_draft += ms_since(t0);
+        ++d.rounds;
+    }
+    host_boundary::mark("pair_return", max_steps);
+    return true;
+} catch (sycl::exception const& e) {
+    err = std::string("mtp pair: ") + e.what();
+    try { if (cs_) cs_->wait(); } catch (...) {}
+    return false;
+}
+
+}  // namespace strata::core
+
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/core/mtp.hpp SHA256 349e8f7a92d71f8f96aae4f1fbe3b03a746640c06c8ea154c2610759f2178c48
+EXACT LINES 308..356
+class MtpPair {
+public:
+    MtpPair() = default;
+    ~MtpPair();
+    MtpPair(const MtpPair&) = delete;
+    MtpPair& operator=(const MtpPair&) = delete;
+    /// After both slots' bind(): the static checks (one device, one head, the FULL Q5_K head, one vocabulary, one
+    /// window) and the shared scratch.  False with `err` set: the caller keeps the solo path for good.
+    bool init(MtpDrafter* a, MtpDrafter* b, std::string& err);
+    bool ready() const { return ok_; }
+    /// One slot's draft() arguments (min_p is always 0 and no probabilities are returned: the batch path's call).
+    struct Args {
+        const MtpDrafter* owner = nullptr; ///< must match the pair binding before any state changes
+        int T = 0;                        ///< the group's rows
+        const int32_t* tokens = nullptr;  ///< the window's picks for those rows
+        int64_t p = 0;                    ///< the group's first position
+        int a = 0;                        ///< the last accepted row
+        int32_t* drafts = nullptr;        ///< T - 1 drafts out (kVerifyMaxT entries)
+        int* n_drafts = nullptr;          ///< how many were made
+    };
+    /// Pure host, nothing touched: every per-call guard, `why` names the first that fails.  Both slots must take the
+    /// same number of steps (min(max_t - 1, max_drafts, max_cells - (p + a)) each, never truncated to match).
+    bool eligible(const Args& a, const Args& b, std::string& why) const;
+    /// Both slots' round and steps with the head shared: the same outputs as the two draft() calls.  After a failed
+    /// launch the pair queue is drained and false returned with `err`: the slots' K/V has been written, so the caller
+    /// must report the failure, not draft again.
+    bool draft(const Args& a, const Args& b, std::string& err);
+
+private:
+    bool capture_pre_round(int c, int T, std::string& err);
+    bool capture_pre_step(int c, int j, std::string& err);
+    bool capture_tail(int j, std::string& err);
+    int steps_of(const MtpDrafter& d, int64_t p, int a) const;
+    MtpDrafter* d_[2] = {nullptr, nullptr};
+    bool ok_ = false;
+    dpct::queue_ptr cs_ = nullptr;   ///< slot A's queue (not owned): every pair graph is recorded on and replayed from it
+    dpct::queue_ptr alloc_queue_ = nullptr; ///< allocation context, retained even if init fails
+    uint8_t* xq2_ = nullptr;         ///< native_q8_1_bytes(N, 2): slot c's column at c * col_bytes_
+    float* logits2_ = nullptr;       ///< 2 * n_vocab floats: slot c's row at c * nv_
+    size_t col_bytes_ = 0;
+    int64_t nv_ = 0;
+    // per slot: the round without its head, for T rows; the step j without its head.  Per depth j: both heads in
+    // one call, both picks.
+    dpct::experimental::command_graph_exec_ptr pre_round_[2][9] = {};
+    dpct::experimental::command_graph_exec_ptr pre_step_[2][9] = {};
+    dpct::experimental::command_graph_exec_ptr tail_[9] = {};
+};
+
+}  // namespace strata::core
+
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp SHA256 e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2
+EXACT LINES 3317..3365
+
+bool Verifier::run_slot_rows(const int *rows, int S, const int32_t *tokens,
+                             const int64_t *pos, PoolMultiFn pool, void *user,
+                             int32_t *out, std::string &err) try {
+    using namespace strata::kernels;
+    host_boundary::mark("verify_enter", S);
+    const OnDevice on_device(device_);
+    const ModelGeometry& g = *g_;
+    if (!stage_batch(rows, S, 0, tokens, pos, err)) return false;
+    host_boundary::mark("verify_submit_begin", S);
+    if (ep_on()) ep_q_->ext_oneapi_graph(*ep_exec_bm_[bkey(rows, S, 0)]);   // the peer's half first, as run()
+    const dpct::err0 le =
+        DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*exec_bm_[bkey(rows, S, 0)]));
+    /*
+    DPCT1009: SYCL reports errors using exceptions and does not use error
+    codes. Please replace the "get_error_string_dummy(...)" with a real
+    error-handling function.
+    */
+    /*
+    DPCT1001: The statement could not be removed.
+    */
+    /*
+    DPCT1000: Error handling if-stmt was detected but could not be rewritten.
+    */
+    if (le != 0) {
+      err = std::string("verify: batch launch: ") +
+            dpct::get_error_string_dummy(le);
+      return false;
+    }
+    (void)DPCT_CHECK_ERROR(((cs_)->ext_oneapi_empty()));
+    host_boundary::mark("verify_submit_end", S);
+    volatile uint32_t* const seq = h_seq_;
+    volatile uint32_t* const flag = h_flag_;
+    const int64_t steps = le_ - lb_;
+    // #646: a stage whose every expert is resident plans on the device and raises no host doorbells, so the
+    // per-layer spin below has nothing to wait for: without the PLE flag the graph finishes with the ring silent
+    // ("verify batch: layer K never rang (graph finished)" - K is that stage's first layer), and with it the graph
+    // sits on the PLE wait until the 20 s timeout.  As run() does: raise the PLE flag the graph's first wait reads,
+    // let the graph run to the end, and skip the host's per-layer service (there is nothing to serve).
+    if (all_resident_) {
+        if (ss_->ple.ready() && ple_stage()) {
+            std::atomic_thread_fence(std::memory_order_seq_cst);
+            _mm_sfence();
+            *flag = 1;
+        }
+        host_boundary::mark("verify_wait_begin", S);
+        const dpct::err0 se = DPCT_CHECK_ERROR(cs_->wait());
+        host_boundary::mark("verify_wait_end", S);
+        /*
+EXACT LINES 3492..3535
+bool Verifier::commit_slot_prefixes(const int *keep, std::string &err) try {
+    const OnDevice on_device(device_);
+    if (!last_batch_ || last_t_ < 1) { err = "verify: commit_slots without a batch window"; return false; }
+    const int S = last_t_;
+    const Clock::time_point t0 = Clock::now();
+    const int64_t CB = 2 + max_t_;
+    // One prefix per slot: rejected draft rows must not enter recurrent state.
+    for (int t = 0; t < S;) {
+        const int first = t;
+        while (t < S && last_rows_[t] == last_rows_[first]) ++t;
+        const int n = keep[last_rows_[first]];
+        if (n < 1 || n > t - first) {
+            err = "verify: accepted prefix is outside its slot group";
+            return false;
+        }
+        int32_t* c = h_commitb_ + (size_t) last_rows_[first] * CB;
+        c[0] = n;
+        c[1] = n - 1;
+        for (int j = 0; j < max_t_; ++j)
+            c[2 + j] = j < n ? (int32_t) last_pos_b_[first + j] : -1;
+    }
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+    const dpct::err0 le = DPCT_CHECK_ERROR(
+        (cs_)->ext_oneapi_graph(*commit_bm_[bkey(last_rows_, S, row_base_)]));
+    /*
+    DPCT1009: SYCL reports errors using exceptions and does not use error
+    codes. Please replace the "get_error_string_dummy(...)" with a real
+    error-handling function.
+    */
+    /*
+    DPCT1001: The statement could not be removed.
+    */
+    /*
+    DPCT1000: Error handling if-stmt was detected but could not be rewritten.
+    */
+    if (le != 0) {
+      err = std::string("verify: batch commit launch: ") +
+            dpct::get_error_string_dummy(le);
+      return false;
+    }
+    const dpct::err0 se = DPCT_CHECK_ERROR(cs_->wait());
+    /*
+    DPCT1009: SYCL reports errors using exceptions and does not use error
+    codes. Please replace the "get_error_string_dummy(...)" with a real
+EXACT LINES 3590..3607
+bool Verifier::batch_launch(int base, int S, const int32_t *tokens,
+                            const int64_t *pos, std::string &err) try {
+    const OnDevice on_device(device_);
+    if (b_running_) { err = "verify: batch_launch while this stage is busy"; return false; }
+    int rows[8] = {};
+    for (int t = 0; t < S && t < 8; ++t) rows[t] = base + t;
+    if (!stage_batch(rows, S, base, tokens, pos, err)) return false;
+    if (ep_on()) ep_q_->ext_oneapi_graph(*ep_exec_bm_[bkey(rows, S, base)]);   // the peer's half first, as run()
+    dpct::err0 le = DPCT_CHECK_ERROR(
+        (cs_)->ext_oneapi_graph(*exec_bm_[bkey(rows, S, base)]));
+    if (le == 0) le = DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*commit_bm_[bkey(
+        rows, S, base)])); // right behind it: every row is kept
+    /*
+    DPCT1009: SYCL reports errors using exceptions and does not use error
+    codes. Please replace the "get_error_string_dummy(...)" with a real
+    error-handling function.
+    */
+    /*

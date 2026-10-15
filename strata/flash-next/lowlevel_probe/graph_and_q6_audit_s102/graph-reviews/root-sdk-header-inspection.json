@@ -1,0 +1,381 @@
+{
+  "status": "PINNED_SDK_HEADER_READ_ONLY_NO_API_COMPILE_OR_RUNTIME_PROOF",
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "no_DRI": true,
+  "files": [
+    {
+      "path": "/opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/experimental/detail/properties/graph_properties.hpp",
+      "bytes": 3726,
+      "sha256": "8f26053c224a4b5e4b265014d106a5fe08b3b49621262d1f4f774a2c8726ad00",
+      "excerpts": [
+        {
+          "line": 34,
+          "text": "#include <sycl/ext/oneapi/experimental/detail/properties/node_properties.def>"
+        },
+        {
+          "line": 35,
+          "text": ""
+        },
+        {
+          "line": 36,
+          "text": "class node;"
+        },
+        {
+          "line": 37,
+          "text": "namespace property::node {"
+        },
+        {
+          "line": 38,
+          "text": "class depends_on;"
+        },
+        {
+          "line": 39,
+          "text": "} // namespace property::node"
+        },
+        {
+          "line": 40,
+          "text": ""
+        },
+        {
+          "line": 41,
+          "text": "enum class graph_state;"
+        },
+        {
+          "line": 42,
+          "text": "template <graph_state State> class command_graph;"
+        },
+        {
+          "line": 43,
+          "text": ""
+        },
+        {
+          "line": 44,
+          "text": "namespace detail {"
+        },
+        {
+          "line": 45,
+          "text": "inline void checkGraphPropertiesAndThrow(const property_list &Properties) {"
+        },
+        {
+          "line": 46,
+          "text": "  auto CheckDataLessProperties = [](int PropertyKind) {"
+        }
+      ]
+    },
+    {
+      "path": "/opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/experimental/graph/command_graph.hpp",
+      "bytes": 5528,
+      "sha256": "c7406f99f309f237bac7bf7a5577b71ebd378a06a739ed6cc21cc6c743e76fd7",
+      "excerpts": [
+        {
+          "line": 130,
+          "text": "      : modifiable_command_graph(Impl) {}"
+        },
+        {
+          "line": 131,
+          "text": "};"
+        },
+        {
+          "line": 132,
+          "text": ""
+        },
+        {
+          "line": 133,
+          "text": "template <>"
+        },
+        {
+          "line": 134,
+          "text": "class command_graph<graph_state::executable>"
+        },
+        {
+          "line": 135,
+          "text": "    : public detail::executable_command_graph {"
+        },
+        {
+          "line": 136,
+          "text": "protected:"
+        },
+        {
+          "line": 137,
+          "text": "  friend command_graph<graph_state::executable>"
+        },
+        {
+          "line": 138,
+          "text": "  detail::modifiable_command_graph::finalize(const sycl::property_list &) const;"
+        },
+        {
+          "line": 139,
+          "text": "  using detail::executable_command_graph::executable_command_graph;"
+        },
+        {
+          "line": 140,
+          "text": "};"
+        },
+        {
+          "line": 141,
+          "text": ""
+        },
+        {
+          "line": 142,
+          "text": "/// Additional CTAD deduction guides."
+        },
+        {
+          "line": 143,
+          "text": "template <graph_state State = graph_state::modifiable>"
+        },
+        {
+          "line": 144,
+          "text": "command_graph(const context &SyclContext, const device &SyclDevice,"
+        },
+        {
+          "line": 145,
+          "text": "              const property_list &PropList) -> command_graph<State>;"
+        }
+      ]
+    },
+    {
+      "path": "/opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/experimental/graph/executable_graph.hpp",
+      "bytes": 3140,
+      "sha256": "34fd24537768454444734a5e6a05e21028815f69cc193e78aa997772c3c20653",
+      "excerpts": []
+    },
+    {
+      "path": "/opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/experimental/graph/modifiable_graph.hpp",
+      "bytes": 8528,
+      "sha256": "c0f007d6092b5ab174480819fd2d4aaafc8f161d3ae4f75af1c104655d8d6c65",
+      "excerpts": [
+        {
+          "line": 67,
+          "text": "  /// @param PropList Property list used to pass [0..n] predecessor nodes."
+        },
+        {
+          "line": 68,
+          "text": "  /// @return Constructed empty node which has been added to the graph."
+        },
+        {
+          "line": 69,
+          "text": "  node add(const property_list &PropList = {}) {"
+        },
+        {
+          "line": 70,
+          "text": "    checkNodePropertiesAndThrow(PropList);"
+        },
+        {
+          "line": 71,
+          "text": "    if (PropList.has_property<property::node::depends_on>()) {"
+        },
+        {
+          "line": 72,
+          "text": "      auto Deps = PropList.get_property<property::node::depends_on>();"
+        },
+        {
+          "line": 73,
+          "text": "      node Node = addImpl(Deps.get_dependencies());"
+        },
+        {
+          "line": 74,
+          "text": "      if (PropList.has_property<property::node::depends_on_all_leaves>()) {"
+        },
+        {
+          "line": 75,
+          "text": "        addGraphLeafDependencies(Node);"
+        },
+        {
+          "line": 76,
+          "text": "      }"
+        },
+        {
+          "line": 77,
+          "text": "      return Node;"
+        },
+        {
+          "line": 78,
+          "text": "    }"
+        },
+        {
+          "line": 79,
+          "text": "    node Node = addImpl({});"
+        },
+        {
+          "line": 80,
+          "text": "    if (PropList.has_property<property::node::depends_on_all_leaves>()) {"
+        },
+        {
+          "line": 81,
+          "text": "      addGraphLeafDependencies(Node);"
+        },
+        {
+          "line": 82,
+          "text": "    }"
+        },
+        {
+          "line": 83,
+          "text": "    return Node;"
+        },
+        {
+          "line": 84,
+          "text": "  }"
+        },
+        {
+          "line": 85,
+          "text": ""
+        },
+        {
+          "line": 86,
+          "text": "  /// Add a command-group node to the graph."
+        },
+        {
+          "line": 87,
+          "text": "  /// @param CGF Command-group function to create node with."
+        },
+        {
+          "line": 88,
+          "text": "  /// @param PropList Property list used to pass [0..n] predecessor nodes."
+        },
+        {
+          "line": 89,
+          "text": "  /// @return Constructed node which has been added to the graph."
+        },
+        {
+          "line": 90,
+          "text": "  template <typename T> node add(T CGF, const property_list &PropList = {}) {"
+        },
+        {
+          "line": 91,
+          "text": "    checkNodePropertiesAndThrow(PropList);"
+        },
+        {
+          "line": 92,
+          "text": "    if (PropList.has_property<property::node::depends_on>()) {"
+        },
+        {
+          "line": 93,
+          "text": "      auto Deps = PropList.get_property<property::node::depends_on>();"
+        },
+        {
+          "line": 94,
+          "text": "      node Node = addImpl(CGF, Deps.get_dependencies());"
+        },
+        {
+          "line": 95,
+          "text": "      if (PropList.has_property<property::node::depends_on_all_leaves>()) {"
+        },
+        {
+          "line": 96,
+          "text": "        addGraphLeafDependencies(Node);"
+        },
+        {
+          "line": 97,
+          "text": "      }"
+        },
+        {
+          "line": 98,
+          "text": "      return Node;"
+        },
+        {
+          "line": 99,
+          "text": "    }"
+        },
+        {
+          "line": 100,
+          "text": "    node Node = addImpl(CGF, {});"
+        },
+        {
+          "line": 101,
+          "text": "    if (PropList.has_property<property::node::depends_on_all_leaves>()) {"
+        },
+        {
+          "line": 102,
+          "text": "      addGraphLeafDependencies(Node);"
+        },
+        {
+          "line": 103,
+          "text": "    }"
+        },
+        {
+          "line": 104,
+          "text": "    return Node;"
+        },
+        {
+          "line": 105,
+          "text": "  }"
+        },
+        {
+          "line": 106,
+          "text": ""
+        },
+        {
+          "line": 107,
+          "text": "  /// Add a dependency between two nodes."
+        },
+        {
+          "line": 108,
+          "text": "  /// @param Src Node which will be a dependency of \\p Dest."
+        },
+        {
+          "line": 109,
+          "text": "  /// @param Dest Node which will be dependent on \\p Src."
+        },
+        {
+          "line": 111,
+          "text": ""
+        },
+        {
+          "line": 112,
+          "text": "  /// Finalize modifiable graph into an executable graph."
+        },
+        {
+          "line": 113,
+          "text": "  /// @param PropList Property list used to pass properties for finalization."
+        },
+        {
+          "line": 114,
+          "text": "  /// @return Executable graph object."
+        },
+        {
+          "line": 115,
+          "text": "  command_graph<graph_state::executable>"
+        },
+        {
+          "line": 116,
+          "text": "  finalize(const property_list &PropList = {}) const;"
+        },
+        {
+          "line": 117,
+          "text": ""
+        },
+        {
+          "line": 118,
+          "text": "  /// Change the state of a queue to be recording and associate this graph with"
+        },
+        {
+          "line": 119,
+          "text": "  /// it."
+        },
+        {
+          "line": 120,
+          "text": "  /// @param RecordingQueue The queue to change state on and associate this"
+        },
+        {
+          "line": 121,
+          "text": "  /// graph with."
+        },
+        {
+          "line": 122,
+          "text": "  /// @param PropList Property list used to pass properties for recording."
+        },
+        {
+          "line": 123,
+          "text": "  void begin_recording(queue &RecordingQueue,"
+        }
+      ]
+    },
+    {
+      "path": "/opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/experimental/graph.hpp",
+      "bytes": 578,
+      "sha256": "f7a91295612dab140b9b30a87875deaed39667ecda72562fa20070b6e54774e0",
+      "excerpts": []
+    }
+  ],
+  "total_bytes_read": 21500
+}

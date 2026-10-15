@@ -1,0 +1,1 @@
+User explicitly asks about graphcapture and current bottlenecks. Assess the supplied actual source and current measured status independently; your own session only. Provide concrete efficient nextengineeringaction, no tools/build/GPU, no generic graphON advice or extrapolated savings. Rootwillreview SDK before implementation. KeepS100smallboundedresultdefaultOFF.

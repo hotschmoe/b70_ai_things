@@ -1,0 +1,54 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "checks": [
+    "Python AST parse PASS",
+    "bash -n PASS",
+    "new files ASCII PASS"
+  ],
+  "files": {
+    "README.txt": {
+      "bytes": 4777,
+      "sha256": "2014aa3eb14e1b864e0023aa2afd28cc0256fd2799af5e0416811a78369732ff"
+    },
+    "audit.py": {
+      "bytes": 13099,
+      "sha256": "345571de60a8f80bcad82f3ee34e59c46bacc8f1677c88b4c8457ac8a107cb03"
+    },
+    "decode-selected.sh": {
+      "bytes": 1206,
+      "sha256": "78e6d0a72dffc8353f45642ad391c7eea0bc82d7967c5b18bbd87aace7f6ed53"
+    }
+  },
+  "dependency_small_file_pins": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/host_binding.py": {
+      "bytes": 6232,
+      "sha256": "37ecf55c43300319f0a3baaf15bede814934bd3ee1b0a11b32a38dc6066d4aa6"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-build/build/root-build-audit.json": {
+      "bytes": 6666,
+      "sha256": "7d4408092a49d401a6f2549755ba6a001eca9e2d0db5c1d8e9732e77baef26bc"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-build/expected-unchanged-build-inputs.sha256": {
+      "bytes": 1655,
+      "sha256": "c4a7df55a0d62629771b4a29335647d86305758deed2c7d9f744ca61d1e2cc40"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-isa/selection.json": {
+      "bytes": 4074,
+      "sha256": "9a15de25d4d4ee7de10452053d164941fa68a03d7ffb0711b29e41ae8c8e3dc6"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-isa/report.json": {
+      "bytes": 7220,
+      "sha256": "d63030b4a19d5423e23f32491ab8ac72e020bad79a454bc0e7cf1d44e021f951"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-isa/original.zebin": {
+      "bytes": 42400,
+      "sha256": "6bc2acb286c7c00eea4678f404681b329d42e6dac05d268bd995b5e6feb2d6b8"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-isa/original-disasm/.text._ZTSN3s859PrivateC6ILb0EEE.asm": {
+      "bytes": 111252,
+      "sha256": "668ee30e1417c8c70c2aedd99660f8a94bb215653531281e4c5a492d02711a09"
+    }
+  },
+  "no_main_object_archive_hash_at_preparation": true,
+  "no_source_edits_build_decoder_GPU_model_payload": true
+}

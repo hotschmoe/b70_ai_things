@@ -24716,3 +24716,30 @@ outsidecheckpoint; no graphimplementation/speedclaim. Avoid rejectedknobs,
 newframeworks/sweeps/duplicatefixturework. Report:
 docs/20261015_strata_next_kernel_candidates.md; exactpackets/answers/root
 corrections under strata/flash-next/lowlevel_probe/next_kernel_designs_s101/.
+
+
+## 2026-10-15 S102: graph boundary source review and main Q6 instruction reuse
+
+CONFIG -> S100 frozen main, all candidate flags default OFF. Actual graph
+consultations: claude-opus-5-5 53.064s, claude-fable-5-1 81.616s. Preserve
+other session's quiet lease; no GPU, model load, build or decoder here.
+
+COMMAND -> Root inspected existing SYCL graph source, pinned SDK headers
+and S95 derived record coverage. After lease release, ran bin/cpu-run
+python3 R/q6-a4-s102-audit-prep-v2/audit.py once (exit0, 0.813s observed).
+Original frozen preparation stayed unexecuted; source preflight corrected
+metadata versus registered manglings and excluded distinct a2r classes.
+
+RESULT -> Paired depth2 draft uses six graphs with no intervening host
+decision. Existing derived motifs cannot identify every graph boundary;
+instrumented host spans are not removable budgets. Q6 actual main host
+Info/cache/guard/name resolves one selected image; first16384 target bytes
+exact S85 original, eight differences after EOT, normalized metadata,
+options, data and relocations exact. Whole image/text remain unequal.
+
+VERDICT -> Reuse existing Q6 target instructions; avoid another decoder.
+Prepare one Q6 aligned-load candidate and a tiny re-recorded whole-pair
+graph API probe before any production build. Graph benefit is unmeasured;
+commit stays after host acceptance. No speed/default/shelf claim. Evidence:
+strata/flash-next/lowlevel_probe/graph_and_q6_audit_s102/ and
+docs/20261015_strata_graph_capture_and_bottlenecks.md.

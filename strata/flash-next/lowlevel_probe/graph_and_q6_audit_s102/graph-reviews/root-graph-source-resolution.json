@@ -1,0 +1,33 @@
+{
+  "utc": "2026-10-15T22:17:55.435953+00:00",
+  "status": "ROOT_ACCEPT_PAIRED_GRAPH_SOURCE_AUDIT_AND_EXISTING_DERIVED_TIMING_LOOKUP_NO_IMPLEMENTATION_OR_GPU_YET",
+  "actual_models_seconds": {
+    "claude-opus-5-5": 53.06387565197656,
+    "claude-fable-5-1": 81.61613072501495
+  },
+  "root_FULL_READ_answers": true,
+  "existing_graphs_confirmed": [
+    "Actual S100 logs token graph hit path, allresident zero-doorbell verifier, captured6row andbatchslots.",
+    "Current MtpPair::draft atdepth2 submits6 child executable graphs in fixedorder ononepairqueue, thenhostpoll/PLE andwait.",
+    "Verifier submitspeer+primarygraphs and a separateaccepted-prefixcommit. Sourceconsistentwith9L0submissions inS95, no definitivepercallGPUjoin."
+  ],
+  "next": [
+    "Inspect existing S95 derived per-card cycles.json eventrecords before any rawtrace reparse. Samecard timestamps canbound recordedgaps onlywhere actual graphboundaries canbe identified; unresolved boundaries stayunresolved.",
+    "Check pinned SDK subgraph recording/flattening behavior before composing; re-recording same kernel sequence is an alternative requiring same mappedfreshness/order/lifetime/partialfailure proof.",
+    "Any selected primitive must test mutable mapped A/B/A inputs, ownoutputs and graphsubmissioncounts before expensive mainbuild/modelstartup. No mainpatch/GPU selected here."
+  ],
+  "root_corrections": [
+    "Opus rawreparse is unnecessarily expensive if derivedrecords alreadyretain neededkernel timestamps/names; no second270MBparse beforechecking existingsmallrecords.",
+    "Fable missingCPU/GPUclockjoin doesnotprevent SAMEGPU timestamp gaps. But names/motifs alone maynot uniquelyresolve all5graphboundaries.",
+    "Fable25keys/Opus81keys not established currentreachablecounts; exact(T0,T1,maxsteps)key and sourcebound needed; depth2guardfirst, no broadallkeyGPU sweep.",
+    "Fable onegraph eitherrunsordoesnot isnot safe partialfailuremodel; drain and no-redraft rulesremain becauseKV mayhavechanged.",
+    "S100+0.307757percentISaboundeddescriptiveresult, notcausal/stablegain; keepdefaultOFF.",
+    "Opus onlyemptyGPUgaps proposition istoo narrow: earlierhostpoll/PLEprefetch readiness and driverCPUresourcecost mayalso matter; these areunmeasured, notautomaticpayoff.",
+    "No automaticfallback/retry after partialgraphcapture/launch without documented errorcleanup and no-execution proof.",
+    "Do not merge accepted-prefixcommit beforehostacceptancedecision; rejected rows mustnotenterrecurrentstate.",
+    "Instrumented pairsubmit2.043/verify3.235/commit2.913ms overlapdevicework/runtimeinstrumentation, notadditive/removablebudget. L0HostSync294..332 cannotbeassumedappbarriers."
+  ],
+  "S100_postdisposition": "Both actual models keepclosedS100defaultOFF/unpromoted; no extraretest/fullcache requested.",
+  "SDK_scope": "21.5KB exactpinnedheaderreads/noDRI; headerinspectionnotcompile/runtime/subgraphflatteningproof. Umbrellafirstread578B didnotresolveAPI; detailreadcorrectlyfollowed includes.",
+  "absolute_goals": "2000prefill/150stream remainunmet; S30correctRAMrecovery retained."
+}

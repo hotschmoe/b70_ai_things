@@ -1,0 +1,31 @@
+{
+  "utc": "2026-10-15T22:29:50.746582+00:00",
+  "status": "ROOT_ACCEPT_EXISTING_TARGET_INSTRUCTIONS_REUSE_SOURCE_DESIGN_ONLY",
+  "facts_sha256": "152da7785b0d9e4de620b0ed1b3aa224344ad45ec23a2949384e55ab2f95d2ba",
+  "actual_main_image_sha256": "344c53e3394d2cacd289a6b931eb425461e93a8281a35e1e14123a0f9885321a",
+  "computational_bytes_equal": 16384,
+  "raw_text_differences_after_thread_end": [
+    16396,
+    16397,
+    16398,
+    16399,
+    16412,
+    16413,
+    16414,
+    16415
+  ],
+  "host_binding": "Exact C6/A2 Info plus distinct cache/guard resolved through launch_q6k_wide<6>; registered name matches observed S95 operation. Distinct a2r classes excluded.",
+  "root_read": [
+    "Actual host launch metadata relocations",
+    "Existing original target load/select/funnel sequence",
+    "Existing original MUL/MAD/ADD accumulation and XOR reduction"
+  ],
+  "decision": "Existing main really contains the compare/select reconstruction surface. Prepare one private default-off dword-aligned A4 load candidate for two C6 shapes; no automatic build/GPU authorization.",
+  "limitations": [
+    "Whole image and whole text are not identical; raw differences retained.",
+    "S85 target has no call/calla sites; helper equivalence is not claimed.",
+    "Static selector removal is a hypothesis; scalar loads may cost more. Preserve FP contraction/order, signed quants, K stride and reduction.",
+    "No decoder, build, GPU, timing or speed claim."
+  ],
+  "decoder_avoided": true
+}
