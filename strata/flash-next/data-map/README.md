@@ -283,3 +283,13 @@ INT8-to-INT32 DPAS, but no binary was executed and no128-output runtime or
 canonical-IQ projection gate passed. No performance/occupancy inference.
 [S74 report](../../../docs/20261015_strata_int8_xmx_capability.md).
 Historical170 operations, stage rollups and operation metadata remain unchanged.
+
+
+S75 adds a runtime-qualified canonical-Q8 IQ3_S C6 INT8 matrix path for two
+real-weight, seeded/changed-input projections. All118 snapshots/92 binaries,
+10 DOTs, memory/public-byte/health/cleanup gates pass in one38s card0 lease.
+The current conservative local-ledger mapping is7.7-7.9x slower: keep main
+unchanged, no serving/retry/sweep. Static DPAS and source barriers do not
+establish a physical bottleneck or reject all integer-matrix designs.
+[S75 report](../../../docs/20261015_strata_iq3s_int8_dpas_probe.md).
+The170 historical operation rows and rollups remain unchanged.

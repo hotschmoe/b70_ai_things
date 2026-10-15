@@ -148,7 +148,7 @@ ul.plain{padding-left:1.1rem}
 {
  "schema": 1,
  "title": "Strata Flash-Next data map",
- "snapshot": "2026-10-15: historical S22 operation rows; current trace/capture/CPU evidence and strict primitive results through S73; S74 offline INT8 matrix compilation/static ISA only, no binary execution. Later evidence does not rewrite historical service rollups.",
+ "snapshot": "2026-10-15: historical S22 operation rows; strict primitive evidence through S75 and S74 compiled/static prerequisite. Later evidence does not rewrite historical service rollups.",
  "scope": "Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two Arc Pro B70 cards, Strata SYCL engine, EP/PUSH, batch MTP depth2 (opt-in), two 200000-token slots, INT8 KV, 32 GiB / 4-entry RAM parking, all 24576 experts resident (7152 on GPU0 + 17424 on GPU1), greedy.",
  "warnings": [
   "Trace service times overlap: within a card (engines), across cards, and with CPU wall time. They are NOT additive and are not a latency budget.",
@@ -206,7 +206,8 @@ ul.plain{padding-left:1.1rem}
    "../../../docs/20261015_strata_iq3s_swar_built_isa.md",
    "../../../docs/20261015_strata_decode_mechanism_triage.md",
    "../../../docs/20261015_strata_hc_more_groups_probe.md",
-   "../../../docs/20261015_strata_int8_xmx_capability.md"
+   "../../../docs/20261015_strata_int8_xmx_capability.md",
+   "../../../docs/20261015_strata_iq3s_int8_dpas_probe.md"
   ],
   "results_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
   "prototype_binary": "S26 CPU-only strata-head-pair-s26 SHA256264f221e2c1b02d4bdd9b332c46f91e91bf4f6301afbdabe563df5ff2a16e44a; not GPU served; default pair option OFF.",
@@ -307,6 +308,13 @@ ul.plain{padding-left:1.1rem}
     "bytes": 100341,
     "note": "Separate immutable source-subset and offline ISA manifests remain retained; completed build/static stage is not a runtime result."
    }
+  },
+  "iq3s_int8_dpas_s75": {
+   "report": "docs/20261015_strata_iq3s_int8_dpas_probe.md",
+   "raw": "iq3s-int8-dpas-s75-prep-v2/run-clean/{comparison,closure}.json; iq3s-int8-dpas-s75-root/root-runtime-decision.json; iq3s-int8-dpas-s75-isa/{findings.md,report.json}",
+   "scope": "One card0/process, two real IQ3_S C6 tensors with seeded/changed activations. Strict public/original/candidate bytes,118snapshots/92binaryfiles/10DOTs/guards/tails/readonly/health/removal PASS. Host-completed graph20 per-call medians70.840813->557.928425us gate,84.632000->655.795650us out; median of eight nested balanced pair changes+687.510385/+674.970007percent. Keep main unchanged/no serve/retry/sweep. Not all INT8 designs or physical bottleneck evidence.",
+   "completed_manifest": "iq3s-int8-dpas-s75-completed-manifest.json SHA256 ff730eec68f5f4bc74220c58c29e330f5f4aac0fa75ebbb08a22a5b8b4ab4287",
+   "post_reviews": "Actual claude-opus-5-5 47.575s and claude-fable-5-1 59.961s ACCEPT exact mapping rejection, no serving/retry/sweep/extraGPU; root read full responses. No physical cause or universally best next mechanism established."
   }
  },
  "geometry": {
@@ -1273,7 +1281,8 @@ ul.plain{padding-left:1.1rem}
     "iq4xs-rpw2-s59-prep/{s59-root-report.json,run-clean/{closure,comparison}.json}; iq4xs-rpw2-s59-dot-audit.json",
     "iq3s-dense-next-s63-prep/{findings.md,integer-load-contract.json,host-check-execution.json}",
     "iq3s-existing-isa-s66-prep/{s66-report.json,assembly-excerpts.json,alias-proof.json}",
-    "int8-xmx-capability-s74-isa/{report.json,findings.md,selection.json}; int8-xmx-capability-s74-root/build-completion.json"
+    "int8-xmx-capability-s74-isa/{report.json,findings.md,selection.json}; int8-xmx-capability-s74-root/build-completion.json",
+    "iq3s-int8-dpas-s75-root/root-runtime-decision.json; iq3s-int8-dpas-s75-prep-v2/run-clean/{comparison,closure}.json; iq3s-int8-dpas-s75-isa/report.json"
    ],
    "quoted": [
     {
@@ -1347,6 +1356,12 @@ ul.plain{padding-left:1.1rem}
      "value": "Compile0; single SG16/SIMD16 image main896B contains one dpas.8x8 with signed-byte operands and INT32 output.",
      "basis": "Pinned Intel2026.1/e41 BMG-G31 AOT; source/header pins and offline ocloc audit. Sixactive/twopadded token rows,8x32 by32x16 integer canary only. Zero binary executions/GPU touches; static instruction/resource metadata is not runtime capability, integer output, IQ3_S projection accuracy, occupancy or speed proof.",
      "status": "source-only"
+    },
+    {
+     "label": "S75 exact-order canonical-Q8 INT8 matrix prototype",
+     "value": "118snapshots/92binaries6155904B/publicoriginalcandidate/changedgraphs/memory/health/removal PASS. Hostcompleted projection graph batches about7.7-7.9x slower for both tested shapes; no integration.",
+     "basis": "One fresh card0 process; two real IQ3_S C6 weights/seeded+changed activations, eight balanced nested round means each. Static signed DPAS/unique class and unchanged public image complement actual byte/capture checks; no independent runtime ISA trace, dynamic SLM total, physical traffic, occupancy or latency cause. Reject this mapping, not all INT8/DPAS designs.",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -1365,7 +1380,8 @@ ul.plain{padding-left:1.1rem}
     "S59 covers one IQ4_XS C6 shape with synthetic inputs and new prelinked AOT images. No productionactivation/logit, other-shape or serving gain; retain RPW1. Independent DOT metadata is not a GPU dispatch trace.",
     "S65 strict IQ3_S C6 SWAR oracle PASS but mixed projection latency: gate -2.515percent, ssm_out +1.275percent across eight balanced nested pairs each. One process, real weights/seeded activations; no serving/global integration. S68 confirms smaller static code and removed byte predicates, not latency causality.",
     "S70 same-input Q8 already shared. Main sharedGU17same/31mixed-format pairs; GDN9same/27mixed. A union row-grid dispatch could preserve each branch/output stride but shifts consumer timing and compiler resources; implementation parked until HC screen. No quantizer or weight-decode reuse claim.",
-    "S74 resolves acceptance/lowering of the exact signed INT8 joint_matrix expression on the BMG AOT compiler path only. Runtime dispatch/all128integer outputs, block layout/coordinates, canonical IQ3_S/Q8 scale handling and native FP32 partial/XOR order remain unmeasured; no replacement math or serving result."
+    "S74 resolves acceptance/lowering of the exact signed INT8 joint_matrix expression on the BMG AOT compiler path only. Runtime dispatch/all128integer outputs, block layout/coordinates, canonical IQ3_S/Q8 scale handling and native FP32 partial/XOR order remain unmeasured; no replacement math or serving result.",
+    "S75 preserves canonical Q8 and native partial/stored-lane XOR order using a local ledger. Its exact runtime path is bounded-qualified for two shapes but 7.7-7.9x slower. No standalone S74 runtime run, serving arm, barrier-elision repeat or format sweep is justified by this result alone."
    ],
    "hypotheses": [
     {

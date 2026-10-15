@@ -1,0 +1,10 @@
+{
+  "status": "GO_ONE_BOUNDED_CARD0_PRIMITIVE",
+  "source_reviews_full_read": true,
+  "v2_delta_inverse_verified": true,
+  "host_link_audit": "PASS",
+  "static_audit": "PASS_BOUNDED_OFFLINE_STATIC_AUDIT_RUNTIME_GATES_PENDING",
+  "binary_sha256": "18045cced6ce5539851a8e9db1e52a40bff6660a5e3aa9af4f0d019dcdae032f",
+  "claim_scope": "One private two-shape strict oracle, timing conditional on all numeric/graph gates. No production edit or serving qualification.",
+  "helper_overlap": "Eight existing helper families plus Intel symbol helper; body equivalence/zero ODR risk not claimed."
+}

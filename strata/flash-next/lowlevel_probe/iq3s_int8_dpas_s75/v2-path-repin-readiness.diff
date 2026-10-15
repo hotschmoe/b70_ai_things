@@ -1,0 +1,315 @@
+--- S75-v1/README.md
++++ S75-v2/README.md
+@@ -2,7 +2,7 @@
+ 
+ CONFIG
+ 
+-- SOURCE PREP ONLY: no build/frontend, GPU, model consultation, payload read,
++- V2 SOURCE PREP ONLY: no build/frontend, GPU, model consultation, payload read,
+   production edit or timing. Parent owns exact reviews and any later execution.
+ - Fixed type21/C6 shapes and actual slices are unchanged from S65: gate
+   N2560/M6144, blk.0.attn_gate.weight at734367616,6758400B; out
+@@ -48,7 +48,7 @@
+   output column and performs exactly six FP32 ledger updates. Different WIs
+   never update the same ledger cell. Scaled integer bounds are unchanged:
+   <=1889760 for canonical [-127,127], so INT32 and integer->FP32 are exact.
+-  FP source expression remains d=dw*dx; partial+=d*sumi.
++  FP source statements are d=dw*dx; v=d*sumi; partial+=v.
+ - Shared payload: A256+B512+INT32tile512+ledger12288+dw64+ls64+dx12=13708B
+   before allocator alignment/compiler overhead. Private tree[16] is reused
+   per token per WI; no resource/occupancy claim before actual compilation.
+@@ -107,3 +107,14 @@
+   canonical-Q8 prototype, no changed numerical policy or permanent integration.
+   Compile/strict mismatch is preserved as evidence; no fallback flavor or
+   relaxed acceptance is silently selected. No speed/cycle/roofline prediction.
++
++V2 SOURCE REVIEW CORRECTION
++
++- Parent read actual Opus source HOLD on possible contraction differences. V2
++  names the product before the ledger addition, matching native apply-return
++  then caller-add statement separation. This is a source-level precaution, not
++  proof that either version contracts differently or that v2 forbids contraction.
++- Only that statement split changes the kernel. Decoder/tree/barriers/scales,
++  API, payload, cleanup and timing remain unchanged. No contract(off), compiler
++  policy, tolerance, build, GPU or new model call. Future paths point to v2;
++  v1 and its manifest are preserved. readiness-v2.json records exact identities.
+--- S75-v1/expected-container.sha256
++++ S75-v2/expected-container.sha256
+@@ -12,7 +12,7 @@
+ 93b193a0ea4c6c53de6d44e95b60e244b211bf1508a6862c6f79e43ca691fc58  /work/src-ep/sycl/include/dpct/detail/math_detail.hpp
+ 9933c09306a7a91bb242fa913694541fc4166bcf6d5a1a2a81ee9dac91b05f31  /work/src-ep/sycl/include/dpct/graph.hpp
+ e26056959edc34e95928efd11157d0a53585bdc115c2992b6df9bc8eee470d94  /src/iq3s_dpas_leaf.cpp
+-13c6258600daba5e0a015b72c44899c961968f9593b3c80d7749b7daa9b30131  /src/private_iq3s_dpas_c6.hpp
++8a490cc2b46b19e5d0a6bd37141f615e267852067126364e374d4bd89e8ab863  /src/private_iq3s_dpas_c6.hpp
+ c38712206eeccfa9f8833c506ebaf056139d068b82c94d6d0c5aa25145bc95cb  /src/weight-identity.json
+ b26399d629ae33d3b14619e6824eee01b8751b73b0685aa42f7f966b0aced6c8  /src/build-container.sh
+ c298993bfc66b10f3204723c20afe960e07313b51add9ab28f549653dbde4da7  /opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/matrix/matrix.hpp
+--- S75-v1/extra_host_closure.py
++++ S75-v2/extra_host_closure.py
+@@ -1,7 +1,7 @@
+ from pathlib import Path
+ import hashlib,json,sys
+ E=Path(__file__).resolve().parent
+-P=Path('/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep')
++P=Path('/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2')
+ mode,out=sys.argv[1],Path(sys.argv[2])
+ def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+ pins=json.loads((E/'harness-pins.json').read_text())
+--- S75-v1/harness-pins.json
++++ S75-v2/harness-pins.json
+@@ -1,14 +1,14 @@
+ {
+-  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/iq3s_dpas_leaf.cpp": "e26056959edc34e95928efd11157d0a53585bdc115c2992b6df9bc8eee470d94",
+-  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/private_iq3s_dpas_c6.hpp": "13c6258600daba5e0a015b72c44899c961968f9593b3c80d7749b7daa9b30131",
+-  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/build.sh": "a9313569331b910145ee41e50a35b5bf4f4286645f1881924ae499586d2b77d9",
+-  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/build-container.sh": "b26399d629ae33d3b14619e6824eee01b8751b73b0685aa42f7f966b0aced6c8",
+-  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/runtime_identity.py": "96ba8f51211c174f22b6f0223d9b030d93f9180814c30d472776d8065d74c5cb",
+-  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/ROOT_RUN.sh": "dcde2e0c80be4dfc5ee19588ac4d38364e33f633c5b1e39e231330ddc9f0f7a3",
+-  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/leased_run.sh": "3001b3f01393283b062e6612843aca91695c80d0f3b3024abc8290f7ec716cf0",
+-  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/analyze.py": "4b75dff345238b5d5eb80e8900278c455a7b619931c0699a3291f425fa6ec80e",
+-  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/extra_host_closure.py": "674d70153e0615406161dee60e0f140a82ceaa8a8abc03f93e3bca446802d755",
+-  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/source-link-bindings.json": "eddb99c0a3876ab765986f5d565963f88e5f44da78087e61d093c94e1195d420",
+-  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/expected-container.sha256": "198b029fc0fc49c2570086c579b32820c6d3d26509e103b31a79471fd9986deb",
+-  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/weight-identity.json": "c38712206eeccfa9f8833c506ebaf056139d068b82c94d6d0c5aa25145bc95cb"
++  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/iq3s_dpas_leaf.cpp": "e26056959edc34e95928efd11157d0a53585bdc115c2992b6df9bc8eee470d94",
++  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/private_iq3s_dpas_c6.hpp": "8a490cc2b46b19e5d0a6bd37141f615e267852067126364e374d4bd89e8ab863",
++  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/build.sh": "a9313569331b910145ee41e50a35b5bf4f4286645f1881924ae499586d2b77d9",
++  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/build-container.sh": "b26399d629ae33d3b14619e6824eee01b8751b73b0685aa42f7f966b0aced6c8",
++  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/runtime_identity.py": "96ba8f51211c174f22b6f0223d9b030d93f9180814c30d472776d8065d74c5cb",
++  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/ROOT_RUN.sh": "dcde2e0c80be4dfc5ee19588ac4d38364e33f633c5b1e39e231330ddc9f0f7a3",
++  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/leased_run.sh": "42dadf4743b5937d2ec44921c1fee78f4746dd2cf77e4915f7393a1a1a4fc1ba",
++  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/analyze.py": "4b75dff345238b5d5eb80e8900278c455a7b619931c0699a3291f425fa6ec80e",
++  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/extra_host_closure.py": "f229e121d140e64de50cf69bbd659cd7d87e3e2de0f04d06bf96a4b107157bd4",
++  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/source-link-bindings.json": "552ab8105c78e45fedbe691d6ab331b713067708778afc897d4368f2c3ce0558",
++  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/expected-container.sha256": "f9bf2b3338be1cdc92e53fdba9a4f7686280f64ab2bef229cdb0e4a9fc0391aa",
++  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/weight-identity.json": "c38712206eeccfa9f8833c506ebaf056139d068b82c94d6d0c5aa25145bc95cb"
+ }
+--- S75-v1/leased_run.sh
++++ S75-v2/leased_run.sh
+@@ -1,8 +1,8 @@
+ #!/usr/bin/env bash
+ # Caller holds quiet CPU and physical card0. Exactly one process; no retries/reset.
+ set -uo pipefail
+-HERE=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep
+-EXEC_DIR=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep
++HERE=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2
++EXEC_DIR=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2
+ OUT=${1:?new existing run directory}
+ REPO=/mnt/vm_8tb/github/b70_ai_things
+ IMAGE=sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2
+--- S75-v1/source-link-bindings.json
++++ S75-v2/source-link-bindings.json
+@@ -78,28 +78,28 @@
+     "preparation_hash_source": "current small imported header/source bytes"
+   },
+   "/src/iq3s_dpas_leaf.cpp": {
+-    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/iq3s_dpas_leaf.cpp",
++    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/iq3s_dpas_leaf.cpp",
+     "bytes": 16053,
+     "sha256": "e26056959edc34e95928efd11157d0a53585bdc115c2992b6df9bc8eee470d94",
+-    "preparation_hash_source": "new S75 source bytes"
++    "preparation_hash_source": "S75 v2 source bytes; v1 retained unchanged"
+   },
+   "/src/private_iq3s_dpas_c6.hpp": {
+-    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/private_iq3s_dpas_c6.hpp",
+-    "bytes": 16328,
+-    "sha256": "13c6258600daba5e0a015b72c44899c961968f9593b3c80d7749b7daa9b30131",
+-    "preparation_hash_source": "new S75 source bytes"
++    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/private_iq3s_dpas_c6.hpp",
++    "bytes": 16371,
++    "sha256": "8a490cc2b46b19e5d0a6bd37141f615e267852067126364e374d4bd89e8ab863",
++    "preparation_hash_source": "S75 v2 source bytes; v1 retained unchanged"
+   },
+   "/src/weight-identity.json": {
+-    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/weight-identity.json",
++    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/weight-identity.json",
+     "bytes": 1106,
+     "sha256": "c38712206eeccfa9f8833c506ebaf056139d068b82c94d6d0c5aa25145bc95cb",
+-    "preparation_hash_source": "new S75 source bytes"
++    "preparation_hash_source": "S75 v2 source bytes; v1 retained unchanged"
+   },
+   "/src/build-container.sh": {
+-    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/build-container.sh",
++    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/build-container.sh",
+     "bytes": 1896,
+     "sha256": "b26399d629ae33d3b14619e6824eee01b8751b73b0685aa42f7f966b0aced6c8",
+-    "preparation_hash_source": "new S75 source bytes"
++    "preparation_hash_source": "S75 v2 source bytes; v1 retained unchanged"
+   },
+   "/opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/matrix/matrix.hpp": {
+     "host_path": null,
+--- S75-v1/static-preflight.json
++++ S75-v2/static-preflight.json
+@@ -11,8 +11,8 @@
+     "timeout": "/usr/bin/timeout"
+   },
+   "fresh_output_paths": {
+-    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/build": false,
+-    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/run-clean": false
++    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/build": false,
++    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/run-clean": false
+   },
+   "parent_writable": true,
+   "shell_checks": [
+@@ -21,7 +21,7 @@
+       "command": [
+         "bash",
+         "-n",
+-        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/build.sh"
++        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/build.sh"
+       ],
+       "exit": 0,
+       "stderr": ""
+@@ -31,7 +31,7 @@
+       "command": [
+         "bash",
+         "-n",
+-        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/build-container.sh"
++        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/build-container.sh"
+       ],
+       "exit": 0,
+       "stderr": ""
+@@ -41,7 +41,7 @@
+       "command": [
+         "bash",
+         "-n",
+-        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/ROOT_RUN.sh"
++        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/ROOT_RUN.sh"
+       ],
+       "exit": 0,
+       "stderr": ""
+@@ -51,7 +51,7 @@
+       "command": [
+         "bash",
+         "-n",
+-        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep/leased_run.sh"
++        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/leased_run.sh"
+       ],
+       "exit": 0,
+       "stderr": ""
+--- S75-v1/vs-s65-harness.diff
++++ S75-v2/vs-s65-harness.diff
+@@ -1,5 +1,5 @@
+ --- S65-prep/build.sh
+-+++ S75/build.sh
+++++ S75-v2/build.sh
+ @@ -5,6 +5,8 @@
+  REPO=/mnt/vm_8tb/github/b70_ai_things
+  R=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014
+@@ -19,7 +19,7 @@
+    -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_DIR=/out/cache \
+    -e SYCL_CACHE_PERSISTENT=0 -e MAX_JOBS=4 \
+ --- S65-prep/build-container.sh
+-+++ S75/build-container.sh
+++++ S75-v2/build-container.sh
+ @@ -3,19 +3,21 @@
+  set -euo pipefail
+  renice 19 -p $$ >/dev/null
+@@ -48,7 +48,7 @@
+ +sha256sum /src/iq3s_dpas_leaf.cpp /src/private_iq3s_dpas_c6.hpp /common/mmvq-core.images.o /frozen/libstrata_kernels.a /frozen/libstrata_core.a iq3s_dpas_leaf.o leaf.images.o iq3s_dpas_leaf_s75 > sha256.txt
+  cat sha256.txt
+ --- S65-prep/runtime_identity.py
+-+++ S75/runtime_identity.py
+++++ S75-v2/runtime_identity.py
+ @@ -15,14 +15,15 @@
+   elif n.startswith('/work/'):f=Path('/mnt/vm_8tb/b70/build/strata-ab')/n.removeprefix('/work/')
+   elif n.startswith('/common/'):f=r/'iq4xs-rpw2-s59-prep/build'/n.removeprefix('/common/')
+@@ -77,7 +77,7 @@
+   image='sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2',physical_card=0,pci='0000:0b:00.0',external_profiler='none')
+  with(o/'identity.json').open('x',encoding='ascii')as f:json.dump(identity,f,indent=2);f.write('\n')
+ --- S65-prep/ROOT_RUN.sh
+-+++ S75/ROOT_RUN.sh
+++++ S75-v2/ROOT_RUN.sh
+ @@ -5,7 +5,7 @@
+  REPO=/mnt/vm_8tb/github/b70_ai_things
+  OUT="$HERE/run-clean"
+@@ -88,7 +88,7 @@
+    env ZE_AFFINITY_MASK=0 ONEAPI_DEVICE_SELECTOR='level_zero:*' \
+    bash "$HERE/leased_run.sh" "$OUT" 2>&1 | tee "$OUT/driver.log"
+ --- S65-prep/analyze.py
+-+++ S75/analyze.py
+++++ S75-v2/analyze.py
+ @@ -1,5 +1,5 @@
+  #!/usr/bin/env python3
+ -"""Full-byte/DOT closure before reporting S65 descriptive paired timings."""
+@@ -141,15 +141,15 @@
+ - print('S65 analysis failure: '+str(e),file=sys.stderr);sys.exit(5 if isinstance(e,ValueError) else 2)
+ + print('S75 analysis failure: '+str(e),file=sys.stderr);sys.exit(5 if isinstance(e,ValueError) else 2)
+ --- S65-root-execution/leased_run.sh
+-+++ S75/leased_run.sh
+++++ S75-v2/leased_run.sh
+ @@ -1,16 +1,16 @@
+  #!/usr/bin/env bash
+  # Caller holds quiet CPU and physical card0. Exactly one process; no retries/reset.
+  set -uo pipefail
+ -HERE=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-dense-oracle-s65-prep
+ -EXEC_DIR=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-dense-s65-execution
+-+HERE=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep
+-+EXEC_DIR=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep
+++HERE=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2
+++EXEC_DIR=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2
+  OUT=${1:?new existing run directory}
+  REPO=/mnt/vm_8tb/github/b70_ai_things
+  IMAGE=sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2
+@@ -182,13 +182,13 @@
+      docker kill "$OWN_CID" >> "$OUT/cleanup.stdout" 2>> "$OUT/cleanup.stderr" || true
+      docker wait "$OWN_CID" >> "$OUT/cleanup.stdout" 2>> "$OUT/cleanup.stderr" || true
+ --- S65-root-execution/extra_host_closure.py
+-+++ S75/extra_host_closure.py
+++++ S75-v2/extra_host_closure.py
+ @@ -1,7 +1,7 @@
+  from pathlib import Path
+  import hashlib,json,sys
+  E=Path(__file__).resolve().parent
+ -P=Path('/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-dense-oracle-s65-prep')
+-+P=Path('/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep')
+++P=Path('/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2')
+  mode,out=sys.argv[1],Path(sys.argv[2])
+  def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+  pins=json.loads((E/'harness-pins.json').read_text())
+--- S75-v1/vs-s65-source.diff
++++ S75-v2/vs-s65-source.diff
+@@ -1,5 +1,5 @@
+ --- S65/private_iq3s_c6.hpp
+-+++ S75/private_iq3s_dpas_c6.hpp
+++++ S75-v2/private_iq3s_dpas_c6.hpp
+ @@ -1,4 +1,4 @@
+ -// S65 private fixed IQ3_S C6 oracle; source pin and transformations in extraction.json.
+ +// S75 private canonical-Q8 IQ3_S C6 DPAS oracle; ControlSplit is S65 original.
+@@ -88,7 +88,7 @@
+      static_assert(TY == 21 && NC == 6 && EXACT_N && !STAGE_GRID);
+  #pragma unroll
+      for (int c = 0; c < NC; ++c) s[c] = 0.0f;
+-@@ -256,8 +214,110 @@
++@@ -256,8 +214,111 @@
+          }
+      }
+  }
+@@ -169,7 +169,8 @@
+ +                    for (int c = 0; c < C; ++c) {
+ +                        const int sumi = tile[c * RT + lid];
+ +                        const float d = dw[lid] * dx[c];
+-+                        partial[(c * RT + lid) * 32 + (p % 32)] += d * sumi;
+++                        const float v = d * sumi;
+++                        partial[(c * RT + lid) * 32 + (p % 32)] += v;
+ +                    }
+ +                    // Finish all tile/scales reads before next iteration
+ +                    // overwrites A/B/scales. Also orders ledger p and p+32.
+@@ -199,7 +200,7 @@
+      const dpct::dim3 grid((unsigned)((M + 3) / 4)), block(32, 4);
+      const size_t rb = size_t(K / 256) * 110;
+      auto exp_props = sycl::ext::oneapi::experimental::properties{
+-@@ -271,6 +331,7 @@
++@@ -271,6 +332,7 @@
+                      static_cast<const block_q8_1*>(X), Y, K, M, 6);
+              });
+      });
+@@ -209,7 +210,7 @@
+ -} // namespace s65
+ +} // namespace s75
+ --- S65/iq3s_dense_leaf.cpp
+-+++ S75/iq3s_dpas_leaf.cpp
+++++ S75-v2/iq3s_dpas_leaf.cpp
+ @@ -1,9 +1,9 @@
+ -// S65: fixed IQ3_S C6 private original/candidate, public production bit anchor.
+ +// S75: canonical-Q8 IQ3_S C6 original/DPAS, public production bit anchor.

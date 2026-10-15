@@ -1,0 +1,12 @@
+{
+  "scope": "existing pinned header source contract; new local-pointer AOT/runtime not executed",
+  "matrix_intel_path": "/opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/matrix/matrix-intel.hpp",
+  "matrix_intel_sha256": "a8836d2b8b2ba1c023aeec96fbadb82bee054af5a5b427887b90969509cd06de",
+  "namespace_line544": "namespace intel::experimental::matrix { (inside sycl::_V1::ext)",
+  "coordinate_apply_lines640_672": "get_wi_data(sg,jm); each element obtains get_coord(); lambda(element,row,col); writes element back to the fragment",
+  "coordinate_builtin_lines130_137": "__spirv_JointMatrixGetElementCoordINTEL(M.spvm,idx)",
+  "matrix_unified_sha256": "fce8a8847f92568004c150e49d0125ff649288806a5e72f1bc32e9d5fed38dbc",
+  "load_lines236_278": "multi_ptr<T,Space,IsDecorated>; static_assert excludes private_space, accepts local_space in source template; lowers to CooperativeMatrixLoadKHR",
+  "new_AOT_capability": "unmeasured; S74 compiled signed INT8 global-pointer mad/store, not this local staging/coordinate epilogue",
+  "callback_ownership": "no callback shared side effects; pure fragment value*=ls[logical_col]; matrix store defines full logical tile, explicit WI owner updates ledger"
+}

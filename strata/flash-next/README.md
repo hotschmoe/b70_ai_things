@@ -306,3 +306,11 @@ S74's18s CPU build and10s offline ISA extraction confirm signed INT8 DPAS
 generation for BMG-G31. No binary execution or runtime/performance claim;
 source preparation for a canonical-Q8 projection proceeds separately.
 [S74 prerequisite](../../docs/20261015_strata_int8_xmx_capability.md).
+
+
+S75's canonical-Q8 INT8 matrix prototype passes strict public/original/
+candidate output bytes, changed graphs and memory/health/cleanup gates for
+two real IQ3_S C6 projections. One38s card0 window; the current mapping is
+about7.7-7.9x slower. Keep the production path unchanged, no serve/retry/
+format sweep. This qualifies one local-matrix path, not every INT8 design
+or full-engine performance. [S75](../../docs/20261015_strata_iq3s_int8_dpas_probe.md).

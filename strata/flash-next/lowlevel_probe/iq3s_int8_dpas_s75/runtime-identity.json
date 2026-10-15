@@ -1,0 +1,64 @@
+{
+  "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+  "locked_full_model_sha256_not_rehashed": "219ea929900dfa9ef091f3aa473fdba6874b65fcb36526d7d851ac9e95856d15",
+  "file_size": 47039860096,
+  "inode": 1156777,
+  "mtime_ns": 1792062519977528586,
+  "C": 6,
+  "tensors": [
+    {
+      "tensor": "blk.0.attn_gate.weight",
+      "ggml_type": 21,
+      "N": 2560,
+      "M": 6144,
+      "bytes": 6758400,
+      "absolute_offset": 734367616,
+      "sha256": "048665be9c034951e788e4aba896a61f8e9ccc28fc74a56d08443eac915ab49b",
+      "fnv1a64": "787df9007b88d0b7"
+    },
+    {
+      "tensor": "blk.1.ssm_out.weight",
+      "ggml_type": 21,
+      "N": 6144,
+      "M": 2560,
+      "bytes": 6758400,
+      "absolute_offset": 2545748608,
+      "sha256": "67e870992211b4bc47316575710b56ea855acb9cb65adcfd63372eddd0e830bf",
+      "fnv1a64": "64c6ff5efe6c1e8b"
+    }
+  ],
+  "payload_bytes_read": 13516800,
+  "payload_bytes_copied": 0,
+  "seconds": 2.118250219966285,
+  "scope": "two finite tensor reads under cpu-run, no GPU or full-shard hash",
+  "binary_sha256": "18045cced6ce5539851a8e9db1e52a40bff6660a5e3aa9af4f0d019dcdae032f",
+  "immutable_link_inputs": {
+    "/common/mmvq-core.images.o": "8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21",
+    "/frozen/libstrata_kernels.a": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8",
+    "/frozen/libstrata_core.a": "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286"
+  },
+  "source_pins": {
+    "/common/mmvq-core.images.o": "8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21",
+    "/frozen/libstrata_kernels.a": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8",
+    "/frozen/libstrata_core.a": "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286",
+    "/work/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp": "acaa7da63733af9f3831b3a74b99e6176bf46a06e498e0a33c0591f7f4a29851",
+    "/work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp": "81558e95f721413a75c3d3ec6ed7cb5eee766e4f662080cf500c7985090f03e2",
+    "/work/src-ep/sycl/include/strata/sycl_math.hpp": "ac45a7a9b7d3cdc4b1b8c1c413c416911fb4ca91373d69bb34947815dbb3eec6",
+    "/work/src-ep/sycl/include/strata/kernels/dp4a.hpp": "dbbf686ebcc60d569ed1e0bf688d98666a1d46b7f85d8d7e073d28d6ab775eba",
+    "/work/src-ep/sycl/include/strata/kernels/native_mmvq.hpp": "83c233dd1f9de362cf646eb6f3d95dd97278ae43a30aeeed205b3067ef358a7e",
+    "/work/src-ep/include/strata/kernels/native_mmvq.hpp": "95c3ea0cb9802b93dc8eb23857349182d1bc1b6988ab875fc289812549042fb0",
+    "/work/src-ep/third_party/ggml/ggml-common.h": "0061131b615c5721fc88a78feeb22c1f8c450f1c2646a317d80796a653bf595c",
+    "/work/src-ep/sycl/include/dpct/math.hpp": "7c1b7175dbe29a43bff30a94381131096437d88415881a8a8c0704de53394c58",
+    "/work/src-ep/sycl/include/dpct/detail/math_detail.hpp": "93b193a0ea4c6c53de6d44e95b60e244b211bf1508a6862c6f79e43ca691fc58",
+    "/work/src-ep/sycl/include/dpct/graph.hpp": "9933c09306a7a91bb242fa913694541fc4166bcf6d5a1a2a81ee9dac91b05f31",
+    "/src/iq3s_dpas_leaf.cpp": "e26056959edc34e95928efd11157d0a53585bdc115c2992b6df9bc8eee470d94",
+    "/src/private_iq3s_dpas_c6.hpp": "8a490cc2b46b19e5d0a6bd37141f615e267852067126364e374d4bd89e8ab863",
+    "/src/weight-identity.json": "c38712206eeccfa9f8833c506ebaf056139d068b82c94d6d0c5aa25145bc95cb",
+    "/src/build-container.sh": "b26399d629ae33d3b14619e6824eee01b8751b73b0685aa42f7f966b0aced6c8"
+  },
+  "timing_scope": "same-process projection-only graph20; canonical Q8 outside graphs; 8 OCCO/COOC rounds per shape; no significance or serving claim",
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "physical_card": 0,
+  "pci": "0000:0b:00.0",
+  "external_profiler": "none"
+}

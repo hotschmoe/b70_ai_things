@@ -1,0 +1,253 @@
+--- S65/private_iq3s_c6.hpp
++++ S75-v2/private_iq3s_dpas_c6.hpp
+@@ -1,4 +1,4 @@
+-// S65 private fixed IQ3_S C6 oracle; source pin and transformations in extraction.json.
++// S75 private canonical-Q8 IQ3_S C6 DPAS oracle; ControlSplit is S65 original.
+ // Main source and global Split21/expert dispatch remain untouched.
+ #pragma once
+ #include "strata/sycl_math.hpp"
+@@ -7,7 +7,10 @@
+ #define GGML_COMMON_IMPL_SYCL
+ #include "ggml-common.h"
+ #include <type_traits>
+-namespace s65 {
++#include <cstdint>
++#include <sycl/ext/oneapi/matrix/matrix.hpp>
++#include <stdexcept>
++namespace s75 {
+ #define ggml_cuda_dp4a(a, b, c) strata::dp4a((a), (b), (c))
+ __dpct_inline__ int get_int_b2(const void *x, const int &i32) {
+     const uint16_t* x16 = (const uint16_t*) x;
+@@ -18,23 +21,6 @@
+ __dpct_inline__ int get_int_b4(const void *x, const int &i32) {
+     return ((const int *)x)[i32];
+ }
+-#ifndef STRATA_SWAR
+-#define STRATA_SWAR 1   // 1: the SWAR forms; 0: dpct's per-byte loops (A/B 2026-09-30: both correct)
+-#endif
+-#if STRATA_SWAR
+-__dpct_inline__ int swar_ne4(unsigned x) {
+-    x = (x | (x >> 4)) & 0x0F0F0F0Fu;
+-    x = (x | (x >> 2)) & 0x03030303u;
+-    x = (x | (x >> 1)) & 0x01010101u;
+-    return (int) (x * 0xFFu);
+-}
+-__dpct_inline__ int swar_sub4(unsigned a, unsigned s) {
+-    return (int) (((a & 0x7F7F7F7Fu) + (s & 0x01010101u)) ^ (a & 0x80808080u));
+-}
+-#else
+-__dpct_inline__ int swar_ne4(unsigned x) { return dpct::vectorized_binary<sycl::uchar4>(x, 0, std::not_equal_to<>()); }
+-__dpct_inline__ int swar_sub4(unsigned a, unsigned s) { return dpct::vectorized_binary<sycl::uchar4>(a, s, std::minus<>()); }
+-#endif
+ struct ControlSplit {   // IQ3_S
+     struct W { int g[8]; int ls; float dw; };
+     template<bool STAGE_GRID = false>
+@@ -79,35 +65,6 @@
+         return d * sumi;
+     }
+ };
+-struct CandidateSplit : ControlSplit {
+-    template<bool STAGE_GRID = false>
+-    static W load(const void* __restrict__ vbq, int kbx, int iqs, const uint32_t* __restrict__ = nullptr) {
+-        const block_iq3_s* bq3 = (const block_iq3_s*) vbq + kbx;
+-        const sycl::int2 qs_packed = sycl::int2(get_int_b2(bq3->qs, iqs + 0),
+-                                                get_int_b2(bq3->qs, iqs + 1));
+-        const uint8_t* qs = (const uint8_t*) &qs_packed;
+-        const int qh = bq3->qh[iqs / 2];
+-        const int signs_packed_32 = get_int_b2(bq3->signs, iqs / 2);
+-        const uint8_t* signs_packed_8 = (const uint8_t*) &signs_packed_32;
+-        W r;
+-#pragma unroll
+-        for (int l0 = 0; l0 < 8; l0 += 2) {
+-            const sycl::int2 grid_pos =
+-                sycl::int2(iq3s_grid[qs[l0 + 0] | ((qh << (8 - l0)) & 0x100)],
+-                           iq3s_grid[qs[l0 + 1] | ((qh << (7 - l0)) & 0x100)]);
+-            const int signs0 = swar_ne4(((signs_packed_8[l0 / 2] & 0x03) << 7) |
+-                    ((signs_packed_8[l0 / 2] & 0x0C) << 21));
+-            const int signs1 = swar_ne4(((signs_packed_8[l0 / 2] & 0x30) << 3) |
+-                    ((signs_packed_8[l0 / 2] & 0xC0) << 17));
+-            r.g[l0 + 0] = swar_sub4(grid_pos.x() ^ signs0, signs0);
+-            r.g[l0 + 1] = swar_sub4(grid_pos.y() ^ signs1, signs1);
+-        }
+-        r.ls = 1 + 2 * ((bq3->scales[iqs / 4] >> ((iqs << 1) & 0x04)) & 0x0F);
+-        r.dw = sycl::vec<sycl::half, 1>(bq3->d)
+-                   .convert<float, sycl::rounding_mode::automatic>()[0];
+-        return r;
+-    }
+-};
+ __dpct_inline__ float warp_sum(float v) {
+ #pragma unroll
+     /*
+@@ -130,7 +87,8 @@
+               int n, int nb, int lane, float (&s)[NC],
+               const uint32_t *__restrict__ s_grid = nullptr) {
+     using F = Fmt<TY>;
+-    using S = std::conditional_t<FAST, CandidateSplit, ControlSplit>;
++    using S = ControlSplit;
++    static_assert(!FAST);
+     static_assert(TY == 21 && NC == 6 && EXACT_N && !STAGE_GRID);
+ #pragma unroll
+     for (int c = 0; c < NC; ++c) s[c] = 0.0f;
+@@ -256,8 +214,111 @@
+         }
+     }
+ }
++
++// C6 DPAS: one SG16/workgroup, 16 output columns, padded token tile8.
++// Matrix logical coordinates are (token c, output-within-tile r).
++class DpasC6;
++inline void launch_dpas(const void* W, const void* X, float* Y,
++                        int K, int M, sycl::queue& q) {
++    if (!((K == 2560 && M == 6144) || (K == 6144 && M == 2560)))
++        throw std::invalid_argument("S75 fixed two-shape C6 geometry required");
++    constexpr int CT = 8, C = 6, RT = 16, KT = 32;
++    const int xb = K / KT;
++    const size_t rb = size_t(K / 256) * 110;
++    const auto* weights = static_cast<const uint8_t*>(W);
++    const auto* x = static_cast<const block_q8_1*>(X);
++    q.submit([&](sycl::handler& h) {
++        sycl::local_accessor<std::int8_t, 1> a(CT * KT, h), b(RT * KT, h);
++        sycl::local_accessor<float, 1> dw(RT, h), partial(C * RT * 32, h);
++        sycl::local_accessor<int, 1> ls(RT, h);
++        sycl::local_accessor<std::int32_t, 1> tile(CT * RT, h);
++        sycl::local_accessor<sycl::half, 1> dx(C, h);
++        h.parallel_for<DpasC6>(
++            sycl::nd_range<1>(sycl::range<1>(size_t(M)), sycl::range<1>(RT)),
++            [=](sycl::nd_item<1> it) [[sycl::reqd_sub_group_size(16)]] {
++                namespace jm = sycl::ext::oneapi::experimental::matrix;
++                namespace im = sycl::ext::intel::experimental::matrix;
++                const auto sg = it.get_sub_group();
++                const int lid = int(it.get_local_linear_id());
++                const int r0 = int(it.get_group_linear_id()) * RT;
++                // Each shared ledger cell has exactly one initializer.
++                for (int i = lid; i < C * RT * 32; i += RT) partial[i] = 0.0f;
++                it.barrier(sycl::access::fence_space::local_space);
++                // Uniform p loop: every subgroup member executes every matrix
++                // load/fill/mad/apply and every workgroup barrier.
++                for (int p = 0; p < xb; ++p) {
++                    const auto decoded = ControlSplit::load<false>(
++                        weights + size_t(r0 + lid) * rb, p / 8, 2 * (p % 8));
++                    dw[lid] = decoded.dw;
++                    ls[lid] = decoded.ls;
++                    // B is column-major KT x RT: contiguous K for each output.
++                    // Only unpack existing signed bytes; IQ math is ControlSplit.
++                    for (int k = 0; k < KT; ++k) {
++                        const unsigned u = (unsigned(decoded.g[k / 4]) >> (8 * (k % 4))) & 255u;
++                        b[lid * KT + k] = std::int8_t(u < 128u ? int(u) : int(u) - 256);
++                    }
++                    for (int i = lid; i < CT * KT; i += RT) {
++                        const int c = i / KT, k = i % KT;
++                        a[i] = c < C ? x[c * xb + p].qs[k] : std::int8_t(0);
++                    }
++                    if (lid < C) dx[lid] = x[lid * xb + p].ds[0];
++                    // Publish A/B/scales before collective local matrix loads.
++                    it.barrier(sycl::access::fence_space::local_space);
++                    jm::joint_matrix<sycl::sub_group, std::int8_t, jm::use::a,
++                                     CT, KT, jm::layout::row_major> ma;
++                    jm::joint_matrix<sycl::sub_group, std::int8_t, jm::use::b,
++                                     KT, RT, jm::layout::col_major> mb;
++                    jm::joint_matrix<sycl::sub_group, std::int32_t,
++                                     jm::use::accumulator, CT, RT> mc;
++                    jm::joint_matrix_load(sg, ma,
++                        a.template get_multi_ptr<sycl::access::decorated::no>(), KT);
++                    jm::joint_matrix_load(sg, mb,
++                        b.template get_multi_ptr<sycl::access::decorated::no>(), KT);
++                    jm::joint_matrix_fill(sg, mc, 0);
++                    jm::joint_matrix_mad(sg, mc, ma, mb, mc);
++                    // Pure coordinate transform on fragment elements only. No
++                    // shared ledger writes or inferred per-WI matrix ownership.
++                    im::joint_matrix_apply(sg, mc,
++                        [&](std::int32_t& value, size_t, size_t r) {
++                            value *= ls[r];
++                        });
++                    jm::joint_matrix_store(sg, mc,
++                        tile.template get_multi_ptr<sycl::access::decorated::no>(),
++                        RT, jm::layout::row_major);
++                    // Publish the scaled INT32 tile before explicit WI owners
++                    // read it. Each WI owns exactly one output-column ledger.
++                    it.barrier(sycl::access::fence_space::local_space);
++                    for (int c = 0; c < C; ++c) {
++                        const int sumi = tile[c * RT + lid];
++                        const float d = dw[lid] * dx[c];
++                        const float v = d * sumi;
++                        partial[(c * RT + lid) * 32 + (p % 32)] += v;
++                    }
++                    // Finish all tile/scales reads before next iteration
++                    // overwrites A/B/scales. Also orders ledger p and p+32.
++                    it.barrier(sycl::access::fence_space::local_space);
++                }
++                // Last iteration's bottom barrier publishes the complete ledger.
++                // WI lid owns output column r0+lid, and writes only six tokens.
++                for (int c = 0; c < C; ++c) {
++                    const int base = (c * RT + lid) * 32;
++                    float tree[16];
++                    // Native mmvq stores lane=c. This permutation preserves its
++                    // operand order, not just lane0's unordered reduction tree.
++                    for (int i = 0; i < 16; ++i)
++                        tree[i] = partial[base + (i ^ c)] + partial[base + ((i + 16) ^ c)];
++                    for (int offset = 8; offset > 0; offset >>= 1)
++                        for (int i = 0; i < offset; ++i) tree[i] += tree[i + offset];
++                    Y[size_t(c) * M + r0 + lid] = tree[0];
++                }
++            });
++    });
++}
+ template<bool FAST> class PrivateC6;
+ template<bool FAST> void launch(const void* W, const void* X, float* Y, int K, int M, sycl::queue& q) {
++    if constexpr (FAST) {
++        launch_dpas(W, X, Y, K, M, q);
++    } else {
+     const dpct::dim3 grid((unsigned)((M + 3) / 4)), block(32, 4);
+     const size_t rb = size_t(K / 256) * 110;
+     auto exp_props = sycl::ext::oneapi::experimental::properties{
+@@ -271,6 +332,7 @@
+                     static_cast<const block_q8_1*>(X), Y, K, M, 6);
+             });
+     });
++    }
+ }
+ #undef ggml_cuda_dp4a
+-} // namespace s65
++} // namespace s75
+--- S65/iq3s_dense_leaf.cpp
++++ S75-v2/iq3s_dpas_leaf.cpp
+@@ -1,9 +1,9 @@
+-// S65: fixed IQ3_S C6 private original/candidate, public production bit anchor.
++// S75: canonical-Q8 IQ3_S C6 original/DPAS, public production bit anchor.
+ #define DPCT_PROFILING_ENABLED
+ #include <sycl/sycl.hpp>
+ #include <dpct/dpct.hpp>
+ #include "strata/kernels/native_mmvq.hpp"
+-#include "private_iq3s_c6.hpp"
++#include "private_iq3s_dpas_c6.hpp"
+ #include <array>
+ #include <memory>
+ #include <cstddef>
+@@ -105,8 +105,8 @@
+     }
+     void call(int arm){
+         if(arm==0)K::native_mmvq(21,w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,C,&q);
+-        else if(arm==1)s65::launch<false>(w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,q);
+-        else if(arm==2)s65::launch<true>(w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,q);
++        else if(arm==1)s75::launch<false>(w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,q);
++        else if(arm==2)s75::launch<true>(w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,q);
+         else need(false,"bad projection arm");
+     }
+     Bytes snapshot(const std::string& phase,bool save){
+@@ -200,13 +200,13 @@
+     // All shapes' correctness gates pass before any timing begins.
+     for(auto& state:states){state->warm();state->timing();}
+     q.wait_and_throw();states.clear();q.wait_and_throw();
+-    text(out/"result.json","{\"status\":\"PASS\",\"scope\":\"S65_TWO_SHAPE_PRIMITIVE_ONLY\",\"shapes\":2,\"paired_rounds_per_shape\":8,\"samples_per_round\":4,\"calls_per_graph\":20,\"public_original_bit_anchor\":true,\"candidate_full_bytes\":true,\"serving_qualified\":false,\"speed_qualified\":false}\n");return 0;
++    text(out/"result.json","{\"status\":\"PASS\",\"scope\":\"S75_TWO_SHAPE_PRIMITIVE_ONLY\",\"shapes\":2,\"paired_rounds_per_shape\":8,\"samples_per_round\":4,\"calls_per_graph\":20,\"public_original_bit_anchor\":true,\"candidate_full_bytes\":true,\"serving_qualified\":false,\"speed_qualified\":false}\n");return 0;
+ }
+ int main(int argc,char** argv){
+     setvbuf(stdout,nullptr,_IONBF,0);fs::path out;bool created=false;
+     try{need(argc==3,"usage: iq3s_dense_leaf NEW_DIR REAL_SHARD");out=argv[1];need(fs::create_directory(out),"new output directory required");created=true;return run(out,argv[2]);}
+     catch(const std::exception& e){const int rc=dynamic_cast<const Strict*>(&e)?5:2;
+-        std::fprintf(stderr,"S65 %s: %s\n",rc==5?"STRICT_FAILURE":"RUNTIME_OR_IO_FAILURE",e.what());
++        std::fprintf(stderr,"S75 %s: %s\n",rc==5?"STRICT_FAILURE":"RUNTIME_OR_IO_FAILURE",e.what());
+         if(created)try{text(out/"result.json","{\"status\":\"FAIL\",\"exit\":"+std::to_string(rc)+",\"kind\":\""+(rc==5?std::string("strict"):std::string("runtime_or_io"))+"\"}\n");}
+-        catch(const std::exception& io){std::fprintf(stderr,"S65 failure-result IO: %s\n",io.what());return 2;}return rc;}
++        catch(const std::exception& io){std::fprintf(stderr,"S75 failure-result IO: %s\n",io.what());return 2;}return rc;}
+ }

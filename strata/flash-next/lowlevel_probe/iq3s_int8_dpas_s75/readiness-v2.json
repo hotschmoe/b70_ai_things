@@ -1,0 +1,21 @@
+{
+  "status": "V2_SOURCE_READY_FOR_ROOT_DELTA_REVIEW_NO_BUILD_GPU",
+  "actual_model_review_context": "Parent read actual Opus HOLD: possible expression-contraction mismatch; root authorized source statement split, no definite/runtime assertion",
+  "kernel_delta": "const float v = d * sumi; partial[...] += v; replaces partial[...] += d * sumi; only",
+  "kernel_header_sha256": "8a490cc2b46b19e5d0a6bd37141f615e267852067126364e374d4bd89e8ab863",
+  "leaf_sha256": "e26056959edc34e95928efd11157d0a53585bdc115c2992b6df9bc8eee470d94",
+  "leaf_unchanged_vs_v1": true,
+  "reduction_source_proof_unchanged": true,
+  "decoder_and_other_kernel_text_identical_after_inverse_statement_split": true,
+  "source_v1_manifest": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-manifest.json",
+  "source_v1_manifest_sha256": "dc0b859faff12f94ad251e58084a3cf7585da9bc5dbf9ea852a2e2af52ca28e4",
+  "v1_files_preserved": true,
+  "build_output": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/build",
+  "runtime_output": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/run-clean",
+  "main_source_modified": false,
+  "compile_invocations": 0,
+  "GPU_touches": 0,
+  "model_calls": 0,
+  "payload_reads": 0,
+  "scope_limits": "Source precaution only, not proof about compiler contraction or bit identity; no numerical/compiler policy change."
+}

@@ -1,0 +1,61 @@
+{
+  "scope": "source-only; AST/bash syntax and symbolic index/parenthesization checks, no C++ frontend/build/GPU/payload",
+  "tools": {
+    "bash": "/usr/bin/bash",
+    "docker": "/usr/bin/docker",
+    "python3": "/usr/bin/python3",
+    "sha256sum": "/usr/bin/sha256sum",
+    "id": "/usr/bin/id",
+    "mkdir": "/usr/bin/mkdir",
+    "tee": "/usr/bin/tee",
+    "timeout": "/usr/bin/timeout"
+  },
+  "fresh_output_paths": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/build": false,
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/run-clean": false
+  },
+  "parent_writable": true,
+  "shell_checks": [
+    {
+      "path": "build.sh",
+      "command": [
+        "bash",
+        "-n",
+        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/build.sh"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "path": "build-container.sh",
+      "command": [
+        "bash",
+        "-n",
+        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/build-container.sh"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "path": "ROOT_RUN.sh",
+      "command": [
+        "bash",
+        "-n",
+        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/ROOT_RUN.sh"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "path": "leased_run.sh",
+      "command": [
+        "bash",
+        "-n",
+        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/leased_run.sh"
+      ],
+      "exit": 0,
+      "stderr": ""
+    }
+  ],
+  "CXX_API_AOT_RUNTIME_UNMEASURED": true
+}

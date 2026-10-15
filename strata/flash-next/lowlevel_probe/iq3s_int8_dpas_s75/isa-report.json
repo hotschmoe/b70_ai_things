@@ -1,0 +1,221 @@
+{
+  "status": "PASS_BOUNDED_OFFLINE_STATIC_AUDIT_RUNTIME_GATES_PENDING",
+  "exe_sha256_from_actual_build_record": "18045cced6ce5539851a8e9db1e52a40bff6660a5e3aa9af4f0d019dcdae032f",
+  "exe_bytes": 64577976,
+  "images_indexed": 1088,
+  "selected": {
+    "original": {
+      "index": 8,
+      "kernel": "_ZTSN3s759PrivateC6ILb0EEE",
+      "zebin_bytes": 44616,
+      "zebin_sha256": "c3087b2f8d300a85beb396215987e7dddae567f648630a1a680335bdfb5c8699",
+      "text_bytes": 16128,
+      "text_sha256": "d848068cd4d8b380d5224968ce16d58c75dc606f4835868e43eccd2936ee4040",
+      "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+    },
+    "candidate": {
+      "index": 9,
+      "kernel": "_ZTSN3s756DpasC6E",
+      "zebin_bytes": 50720,
+      "zebin_sha256": "1430d19657c44d1e3199642c31710e91e26fae5a9109d928ff1366162ad60a70",
+      "text_bytes": 17664,
+      "text_sha256": "27762e5547737e703aef21f63023f686f568a655263b913165d2efe9655fa13b",
+      "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+    },
+    "public": {
+      "index": 86,
+      "kernel": "_ZTS16dpct_kernel_nameIJZZN6strata7kernels12_GLOBAL__N_120launch_mmvq_multi_ncILi21ELb0EEEvN4dpct4dim3ES5_PN4sycl3_V15queueEPKhmPK10block_q8_1PfiiiENKUlRNS7_7handlerEE4_clESH_E24mmvq_multi_kernel_3404b218dpct_kernel_scalarILi21EESK_ILi6EESK_ILi0EESK_ILi1EEEE",
+      "zebin_bytes": 49384,
+      "zebin_sha256": "bad2ccded9f4136e6809825844815652eba954f059b807774c45d7916d92beb4",
+      "text_bytes": 16128,
+      "text_sha256": "84928699e5a62acaf245b7df75dbc40681492961a491da76599ff8a57099866f",
+      "build_options": "-cl-fp32-correctly-rounded-divide-sqrt"
+    }
+  },
+  "public_exact_S65_image_match": true,
+  "target_full_ids_unique": true,
+  "candidate_resources": {
+    "intel_reqd_sub_group_size": "16",
+    "simd_size": "16",
+    "grf_count": "128",
+    "barrier_count": "1",
+    "has_dpas": "true",
+    "eu_thread_count": "8"
+  },
+  "candidate_local_pointer_arguments": [
+    {
+      "arg_index": 0,
+      "alignment": 4
+    },
+    {
+      "arg_index": 4,
+      "alignment": 4
+    },
+    {
+      "arg_index": 5,
+      "alignment": 4
+    },
+    {
+      "arg_index": 6,
+      "alignment": 1
+    },
+    {
+      "arg_index": 7,
+      "alignment": 1
+    },
+    {
+      "arg_index": 9,
+      "alignment": 2
+    },
+    {
+      "arg_index": 10,
+      "alignment": 4
+    }
+  ],
+  "candidate_global_pointer_arguments": [
+    2,
+    8,
+    11
+  ],
+  "source_shared_payload_bytes_before_runtime_alignment": 13708,
+  "actual_total_local_allocation_unmeasured": true,
+  "scratch_private_metadata_note": "No scratch/private/per_thread_memory_buffers field emitted for selected candidate; no runtime zero-spill or occupancy conclusion.",
+  "dpas": [
+    {
+      "line": 852,
+      "text": "dpas.8x8 (16|M0)         r13:d         null:d            r5:b              r105.0:b         {$10}"
+    }
+  ],
+  "static_signal_barrier_sites": [
+    {
+      "line": 40,
+      "text": "(W)     send.gtwy (1|M0)         null     r6  null:0  0x0            0x02000004           {I@2,$5} // wr:1+0, rd:0; signal barrier"
+    },
+    {
+      "line": 712,
+      "text": "(W)     send.gtwy (1|M0)         null     r6  null:0  0x0            0x02000004           {I@2,$15} // wr:1+0, rd:0; signal barrier"
+    },
+    {
+      "line": 877,
+      "text": "(W)     send.gtwy (1|M0)         null     r6  null:0  0x0            0x02000004           {I@2,$14} // wr:1+0, rd:0; signal barrier"
+    },
+    {
+      "line": 958,
+      "text": "(W)     send.gtwy (1|M0)         null     r9  null:0  0x0            0x02000004           {I@2,$8} // wr:1+0, rd:0; signal barrier"
+    }
+  ],
+  "static_slm_fence_sites": [
+    {
+      "line": 36,
+      "text": "(W)     send.slm (1|M0)          r5       r60  null:0  0x0            0x0210001F           {$4} // wr:1+0, rd:1; fence.slm.none.group"
+    },
+    {
+      "line": 708,
+      "text": "(W)     send.slm (1|M0)          r5       r60  null:0  0x0            0x0210001F           {$13} // wr:1+0, rd:1; fence.slm.none.group"
+    },
+    {
+      "line": 873,
+      "text": "(W)     send.slm (1|M0)          r5       r60  null:0  0x0            0x0210001F           {$13} // wr:1+0, rd:1; fence.slm.none.group"
+    },
+    {
+      "line": 954,
+      "text": "(W)     send.slm (1|M0)          r5       r60  null:0  0x0            0x0210001F           {$2} // wr:1+0, rd:1; fence.slm.none.group"
+    }
+  ],
+  "static_sync_bar_sites": [
+    {
+      "line": 41,
+      "text": "(W)     sync.bar                             0x0"
+    },
+    {
+      "line": 713,
+      "text": "(W)     sync.bar                             0x0"
+    },
+    {
+      "line": 878,
+      "text": "(W)     sync.bar                             0x0"
+    },
+    {
+      "line": 959,
+      "text": "(W)     sync.bar                             0x0"
+    }
+  ],
+  "static_slm_send_sites": 130,
+  "static_ugm_send_sites": 25,
+  "FP_source_statement_split_observation": {
+    "lines": [
+      889,
+      890,
+      891
+    ],
+    "code": [
+      "mul (16|M0)              acc0.0<1>:f   r8.0<1;1,0>:f     r1.9<0;1,0>:f    {Compacted,@2,$1.dst}",
+      "mul (16|M0)              acc0.0<1>:f   acc0.0<1;1,0>:f   r5.0<1;1,0>:f    {Compacted,F@2}",
+      "add (16|M0)              r6.0<1>:f     r6.0<1;1,0>:f     acc0.0<1;1,0>:f  {Compacted,$3.dst}"
+    ],
+    "meaning": "Observed first token ledger path uses two FP32 mul instructions then separate add. No v1 compiled comparison and no FP output proof."
+  },
+  "shared_helper_duplicate_families": [
+    {
+      "name": "_ZTSZZN4dpct6detailL11dpct_memcpyERN4sycl3_V15queueEPvPKvNS2_5rangeILi3EEES9_NS2_2idILi3EEESB_S9_NS_16memcpy_directionERKSt6vectorINS2_5eventESaISE_EEENKUlRNS2_7handlerEE_clESK_E21dpct_memcpy_3d_detail",
+      "occurrences": 2,
+      "classification": "shared DPCT memcpy or SYCL fill helper; not S75 math route; exact body equivalence not re-audited"
+    },
+    {
+      "name": "_ZTSZN4sycl3_V17handler4fillItEEvPvRKT_mEUlNS0_2idILi1EEEE_",
+      "occurrences": 2,
+      "classification": "shared DPCT memcpy or SYCL fill helper; not S75 math route; exact body equivalence not re-audited"
+    },
+    {
+      "name": "_ZTSZN4sycl3_V17handler4fillIjEEvPvRKT_mEUlNS0_2idILi1EEEE_",
+      "occurrences": 2,
+      "classification": "shared DPCT memcpy or SYCL fill helper; not S75 math route; exact body equivalence not re-audited"
+    },
+    {
+      "name": "_ZTSZN4sycl3_V17handler4fillIhEEvPvRKT_mEUlNS0_2idILi1EEEE_",
+      "occurrences": 2,
+      "classification": "shared DPCT memcpy or SYCL fill helper; not S75 math route; exact body equivalence not re-audited"
+    },
+    {
+      "name": "_ZTSN4sycl3_V16detail19__pf_kernel_wrapperIZZN4dpct6detailL11dpct_memcpyERNS0_5queueEPvPKvNS0_5rangeILi3EEESB_NS0_2idILi3EEESD_SB_NS3_16memcpy_directionERKSt6vectorINS0_5eventESaISG_EEENKUlRNS0_7handlerEE_clESM_E21dpct_memcpy_3d_detailEE",
+      "occurrences": 2,
+      "classification": "shared DPCT memcpy or SYCL fill helper; not S75 math route; exact body equivalence not re-audited"
+    },
+    {
+      "name": "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillItEEvPvRKT_mEUlNS0_2idILi1EEEE_EE",
+      "occurrences": 2,
+      "classification": "shared DPCT memcpy or SYCL fill helper; not S75 math route; exact body equivalence not re-audited"
+    },
+    {
+      "name": "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillIjEEvPvRKT_mEUlNS0_2idILi1EEEE_EE",
+      "occurrences": 2,
+      "classification": "shared DPCT memcpy or SYCL fill helper; not S75 math route; exact body equivalence not re-audited"
+    },
+    {
+      "name": "_ZTSN4sycl3_V16detail18RoundedRangeKernelINS0_4itemILi1ELb1EEELi1EZNS0_7handler4fillIhEEvPvRKT_mEUlNS0_2idILi1EEEE_EE",
+      "occurrences": 2,
+      "classification": "shared DPCT memcpy or SYCL fill helper; not S75 math route; exact body equivalence not re-audited"
+    }
+  ],
+  "intel_symbol_helper_occurrences": 821,
+  "helper_limits": "Classified full names only, consistent with prior S65 shared helper registration risk. Did not audit all helper bodies or assert identity; parent separately audited ordinary two wrapper registration/unregistration pairs. Target math IDs unique and public image exact; runtime strict gates remain required.",
+  "source_pins": {
+    "/src/iq3s_dpas_leaf.cpp": "e26056959edc34e95928efd11157d0a53585bdc115c2992b6df9bc8eee470d94",
+    "/src/private_iq3s_dpas_c6.hpp": "8a490cc2b46b19e5d0a6bd37141f615e267852067126364e374d4bd89e8ab863"
+  },
+  "prep_v2_manifest_sha256": "3a89e80869a67b488aa932f2d5aad1eec9e0b303370d2da59c4619b9fb544eaa",
+  "decoder_exit": 0,
+  "decoder_stderr_empty": true,
+  "cpu_run_reported_seconds": 9,
+  "new_compiles": 0,
+  "binary_executions": 0,
+  "GPU_touches": 0,
+  "model_calls": 0,
+  "common_archive_hashes_repeated": 0,
+  "main_asm_counted_through_EOT_line": 1337,
+  "claim_limits": [
+    "Static emitted candidate image only; no runtime ISA selection, numerical equivalence or serving claim.",
+    "barrier_count1 is resource metadata; four static signal/fence sites are not dynamic counts.",
+    "No measured timing, occupancy, bandwidth or causal performance inference."
+  ]
+}

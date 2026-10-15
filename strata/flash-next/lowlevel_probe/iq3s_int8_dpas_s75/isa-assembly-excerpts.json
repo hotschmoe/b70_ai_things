@@ -1,0 +1,212 @@
+{
+  "dpas_and_integer_scale": [
+    {
+      "line": 850,
+      "text": "        add (16|M0)              r22.0<1>:d    r65.1<0;1,0>:d    r21.0<1;1,0>:uw  {I@1}"
+    },
+    {
+      "line": 851,
+      "text": "        sync.nop                             null                             {Compacted,F@1}"
+    },
+    {
+      "line": 852,
+      "text": "        dpas.8x8 (16|M0)         r13:d         null:d            r5:b              r105.0:b         {$10}"
+    },
+    {
+      "line": 853,
+      "text": "        send.slm (16|M0)         r23      r22  null:0  0x0            0x02100500           {I@1,$11} // wr:1+0, rd:1; load.slm.d32.a32"
+    },
+    {
+      "line": 854,
+      "text": "(W)     mov (1|M0)               r2.0<1>:ud    r126.3<0;1,0>:ud                 {Compacted}"
+    },
+    {
+      "line": 855,
+      "text": "        sync.nop                             null                             {Compacted,$11.dst}"
+    },
+    {
+      "line": 856,
+      "text": "(W)     mul (16|M0)              acc0.0<1>:d   r13.0<1;1,0>:d    r23.0<2;1,0>:uw  {$10.dst}"
+    },
+    {
+      "line": 857,
+      "text": "        macl (16|M0)             r24.0<1>:d    r13.0<1;1,0>:d    r23.0<1;1,0>:d  "
+    },
+    {
+      "line": 858,
+      "text": "(W)     mul (16|M0)              acc0.0<1>:d   r14.0<1;1,0>:d    r23.0<2;1,0>:uw "
+    },
+    {
+      "line": 859,
+      "text": "        macl (16|M0)             r25.0<1>:d    r14.0<1;1,0>:d    r23.0<1;1,0>:d   {Compacted}"
+    },
+    {
+      "line": 860,
+      "text": "(W)     mul (16|M0)              acc0.0<1>:d   r15.0<1;1,0>:d    r23.0<2;1,0>:uw "
+    },
+    {
+      "line": 861,
+      "text": "        macl (16|M0)             r26.0<1>:d    r15.0<1;1,0>:d    r23.0<1;1,0>:d   {Compacted}"
+    },
+    {
+      "line": 862,
+      "text": "(W)     mul (16|M0)              acc0.0<1>:d   r16.0<1;1,0>:d    r23.0<2;1,0>:uw "
+    },
+    {
+      "line": 863,
+      "text": "        macl (16|M0)             r27.0<1>:d    r16.0<1;1,0>:d    r23.0<1;1,0>:d   {Compacted}"
+    },
+    {
+      "line": 864,
+      "text": "(W)     mul (16|M0)              acc0.0<1>:d   r17.0<1;1,0>:d    r23.0<2;1,0>:uw "
+    },
+    {
+      "line": 865,
+      "text": "        macl (16|M0)             r28.0<1>:d    r17.0<1;1,0>:d    r23.0<1;1,0>:d   {Compacted}"
+    },
+    {
+      "line": 866,
+      "text": "(W)     mul (16|M0)              acc0.0<1>:d   r18.0<1;1,0>:d    r23.0<2;1,0>:uw "
+    },
+    {
+      "line": 867,
+      "text": "        macl (16|M0)             r29.0<1>:d    r18.0<1;1,0>:d    r23.0<1;1,0>:d  "
+    },
+    {
+      "line": 868,
+      "text": "(W)     mul (16|M0)              acc0.0<1>:d   r19.0<1;1,0>:d    r23.0<2;1,0>:uw "
+    },
+    {
+      "line": 869,
+      "text": "        macl (16|M0)             r30.0<1>:d    r19.0<1;1,0>:d    r23.0<1;1,0>:d   {Compacted}"
+    },
+    {
+      "line": 870,
+      "text": "(W)     mul (16|M0)              acc0.0<1>:d   r20.0<1;1,0>:d    r23.0<2;1,0>:uw "
+    },
+    {
+      "line": 871,
+      "text": "        macl (16|M0)             r31.0<1>:d    r20.0<1;1,0>:d    r23.0<1;1,0>:d   {Compacted}"
+    },
+    {
+      "line": 872,
+      "text": "(W)     send.slm (1|M0)          null     r2  r24:8  0x0            0x0200F704           {I@1,$12} // wr:1+8, rd:0; store.slm.d64x64t.a32"
+    },
+    {
+      "line": 873,
+      "text": "(W)     send.slm (1|M0)          r5       r60  null:0  0x0            0x0210001F           {$13} // wr:1+0, rd:1; fence.slm.none.group"
+    },
+    {
+      "line": 874,
+      "text": "(W)     mov (1|M0)               r6.2<1>:f     3.58732e-43:f                              "
+    },
+    {
+      "line": 875,
+      "text": "(W)     mov (2|M0)               r6.10<1>:ub   r60.11<0;1,0>:ub                 {F@1}"
+    },
+    {
+      "line": 876,
+      "text": "(W)     mov (8|M0)               null<1>:ud    r5.0<1;1,0>:ud                   {$13.dst}"
+    },
+    {
+      "line": 877,
+      "text": "(W)     send.gtwy (1|M0)         null     r6  null:0  0x0            0x02000004           {I@2,$14} // wr:1+0, rd:0; signal barrier"
+    },
+    {
+      "line": 878,
+      "text": "(W)     sync.bar                             0x0                                "
+    }
+  ],
+  "first_ledger_FP": [
+    {
+      "line": 881,
+      "text": "(W)     send.slm (1|M0)          r10      r9  null:0  0x0            0x02100B00           {I@2,$15} // wr:1+0, rd:1; load.slm.d16u32.a32"
+    },
+    {
+      "line": 882,
+      "text": "        send.slm (16|M0)         r7       r69  null:0  0x0            0x02100500           {$0} // wr:1+0, rd:1; load.slm.d32.a32"
+    },
+    {
+      "line": 883,
+      "text": "        send.slm (16|M0)         r8       r124  null:0  0x0            0x02100500           {$1} // wr:1+0, rd:1; load.slm.d32.a32"
+    },
+    {
+      "line": 884,
+      "text": "        shl (16|M0)              r11.0<1>:d    r11.0<1;1,0>:d    2:w               {Compacted,I@1}"
+    },
+    {
+      "line": 885,
+      "text": "        sync.nop                             null                             {Compacted,$14.src}"
+    },
+    {
+      "line": 886,
+      "text": "        send.slm (16|M0)         r6       r11  null:0  0x0            0x02100500           {I@1,$3} // wr:1+0, rd:1; load.slm.d32.a32"
+    },
+    {
+      "line": 887,
+      "text": "(W)     mov (1|M0)               r1.9<1>:f     r10.0<0;1,0>:hf                  {$15.dst}"
+    },
+    {
+      "line": 888,
+      "text": "        mov (16|M0)              r5.0<1>:f     r7.0<1;1,0>:d                    {$0.dst}"
+    },
+    {
+      "line": 889,
+      "text": "        mul (16|M0)              acc0.0<1>:f   r8.0<1;1,0>:f     r1.9<0;1,0>:f    {Compacted,@2,$1.dst}"
+    },
+    {
+      "line": 890,
+      "text": "        mul (16|M0)              acc0.0<1>:f   acc0.0<1;1,0>:f   r5.0<1;1,0>:f    {Compacted,F@2}"
+    },
+    {
+      "line": 891,
+      "text": "        add (16|M0)              r6.0<1>:f     r6.0<1;1,0>:f     acc0.0<1;1,0>:f  {Compacted,$3.dst}"
+    },
+    {
+      "line": 892,
+      "text": "        send.slm (16|M0)         null     r11  r6:1  0x0            0x02000504           {F@1,$4} // wr:1+1, rd:0; store.slm.d32.a32"
+    }
+  ],
+  "bottom_reuse_barrier_loopback": [
+    {
+      "line": 954,
+      "text": "(W)     send.slm (1|M0)          r5       r60  null:0  0x0            0x0210001F           {$2} // wr:1+0, rd:1; fence.slm.none.group"
+    },
+    {
+      "line": 955,
+      "text": "(W)     mov (1|M0)               r9.2<1>:f     3.58732e-43:f                              "
+    },
+    {
+      "line": 956,
+      "text": "(W)     mov (2|M0)               r9.10<1>:ub   r60.11<0;1,0>:ub                 {F@1}"
+    },
+    {
+      "line": 957,
+      "text": "(W)     mov (8|M0)               null<1>:ud    r5.0<1;1,0>:ud                   {$2.dst}"
+    },
+    {
+      "line": 958,
+      "text": "(W)     send.gtwy (1|M0)         null     r9  null:0  0x0            0x02000004           {I@2,$8} // wr:1+0, rd:0; signal barrier"
+    },
+    {
+      "line": 959,
+      "text": "(W)     sync.bar                             0x0                                "
+    },
+    {
+      "line": 960,
+      "text": "(W)     add (1|M0)               r65.4<1>:d    r65.4<0;1,0>:d    1:w              "
+    },
+    {
+      "line": 961,
+      "text": "(W)     cmp (16|M0)   (lt)f3.1   null<1>:d     r65.4<0;1,0>:d    r3.12<0;1,0>:d   {I@1}"
+    },
+    {
+      "line": 962,
+      "text": "(W&f3.1) jmpi                                L1456                                "
+    },
+    {
+      "line": 963,
+      "text": "L13552:"
+    }
+  ]
+}

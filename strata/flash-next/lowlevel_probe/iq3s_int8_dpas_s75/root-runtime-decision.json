@@ -1,0 +1,246 @@
+{
+  "status": "STRICT_PASS_REJECT_THIS_MAPPING_LATENCY",
+  "exec_session": 27536,
+  "quiet_card0_lease_seconds": 38,
+  "leaf_seconds": 10,
+  "snapshots": 118,
+  "saved_binary_files": 92,
+  "saved_binary_bytes": 6155904,
+  "DOTs": 10,
+  "nodes": 86,
+  "edges": 76,
+  "root_own_CID_and_name_absent": true,
+  "health": "pre/post0",
+  "binary_sha256": "18045cced6ce5539851a8e9db1e52a40bff6660a5e3aa9af4f0d019dcdae032f",
+  "timings": {
+    "gate": {
+      "complete_us": {
+        "original_median_us": 70.8408125,
+        "candidate_median_us": 557.9284250000001,
+        "median_pair_change_percent": 687.510384928099,
+        "all_pairs_slower": true,
+        "pairs": [
+          {
+            "round": 0,
+            "original_us": 70.746625,
+            "candidate_us": 558.0853500000001,
+            "ratio": 7.88850846241782
+          },
+          {
+            "round": 1,
+            "original_us": 70.91569999999999,
+            "candidate_us": 558.4162249999999,
+            "ratio": 7.874366677618638
+          },
+          {
+            "round": 2,
+            "original_us": 70.967075,
+            "candidate_us": 558.3386,
+            "ratio": 7.867572391845092
+          },
+          {
+            "round": 3,
+            "original_us": 70.74937500000001,
+            "candidate_us": 558.33305,
+            "ratio": 7.891702930237898
+          },
+          {
+            "round": 4,
+            "original_us": 70.98785000000001,
+            "candidate_us": 557.383,
+            "ratio": 7.851808443275856
+          },
+          {
+            "round": 5,
+            "original_us": 70.76592500000001,
+            "candidate_us": 557.341175,
+            "ratio": 7.875841020943342
+          },
+          {
+            "round": 6,
+            "original_us": 71.04545,
+            "candidate_us": 557.7715000000001,
+            "ratio": 7.850910930960393
+          },
+          {
+            "round": 7,
+            "original_us": 70.60185,
+            "candidate_us": 556.633075,
+            "ratio": 7.88411458056694
+          }
+        ]
+      },
+      "barrier_span_us": {
+        "original_median_us": 70.97135,
+        "candidate_median_us": 557.989575,
+        "median_pair_change_percent": 686.5836904039741,
+        "all_pairs_slower": true,
+        "pairs": [
+          {
+            "round": 0,
+            "original_us": 70.921875,
+            "candidate_us": 558.15625,
+            "ratio": 7.8700154218990965
+          },
+          {
+            "round": 1,
+            "original_us": 71.02865,
+            "candidate_us": 558.4635499999999,
+            "ratio": 7.862511113473224
+          },
+          {
+            "round": 2,
+            "original_us": 71.041675,
+            "candidate_us": 558.39065,
+            "ratio": 7.860043418176726
+          },
+          {
+            "round": 3,
+            "original_us": 70.87242499999999,
+            "candidate_us": 558.4166500000001,
+            "ratio": 7.8791807956338475
+          },
+          {
+            "round": 4,
+            "original_us": 71.078125,
+            "candidate_us": 557.440075,
+            "ratio": 7.8426389975818855
+          },
+          {
+            "round": 5,
+            "original_us": 70.83855,
+            "candidate_us": 557.440075,
+            "ratio": 7.869162694606256
+          },
+          {
+            "round": 6,
+            "original_us": 71.020825,
+            "candidate_us": 557.8228999999999,
+            "ratio": 7.854356803092612
+          },
+          {
+            "round": 7,
+            "original_us": 70.6875,
+            "candidate_us": 556.6927000000001,
+            "ratio": 7.875405128205129
+          }
+        ]
+      }
+    },
+    "out": {
+      "complete_us": {
+        "original_median_us": 84.632,
+        "candidate_median_us": 655.79565,
+        "median_pair_change_percent": 674.9700073561971,
+        "all_pairs_slower": true,
+        "pairs": [
+          {
+            "round": 0,
+            "original_us": 84.364375,
+            "candidate_us": 655.82395,
+            "ratio": 7.7737072075742875
+          },
+          {
+            "round": 1,
+            "original_us": 84.22710000000001,
+            "candidate_us": 655.8172,
+            "ratio": 7.786296809459187
+          },
+          {
+            "round": 2,
+            "original_us": 84.69819999999999,
+            "candidate_us": 655.58725,
+            "ratio": 7.74027370121207
+          },
+          {
+            "round": 3,
+            "original_us": 84.51339999999999,
+            "candidate_us": 655.3219750000001,
+            "ratio": 7.7540600070521375
+          },
+          {
+            "round": 4,
+            "original_us": 84.595575,
+            "candidate_us": 655.7741,
+            "ratio": 7.751872364482422
+          },
+          {
+            "round": 5,
+            "original_us": 84.899875,
+            "candidate_us": 655.6478500000001,
+            "ratio": 7.722600887221566
+          },
+          {
+            "round": 6,
+            "original_us": 84.66842500000001,
+            "candidate_us": 655.970975,
+            "ratio": 7.74752778264152
+          },
+          {
+            "round": 7,
+            "original_us": 84.7844,
+            "candidate_us": 656.1358,
+            "ratio": 7.738874132505508
+          }
+        ]
+      },
+      "barrier_span_us": {
+        "original_median_us": 84.7474,
+        "candidate_median_us": 655.8398500000001,
+        "median_pair_change_percent": 673.9838086285409,
+        "all_pairs_slower": true,
+        "pairs": [
+          {
+            "round": 0,
+            "original_us": 84.47135,
+            "candidate_us": 655.893225,
+            "ratio": 7.764682640919081
+          },
+          {
+            "round": 1,
+            "original_us": 84.320325,
+            "candidate_us": 655.8463750000001,
+            "ratio": 7.778034240261765
+          },
+          {
+            "round": 2,
+            "original_us": 84.799475,
+            "candidate_us": 655.632825,
+            "ratio": 7.731567029159084
+          },
+          {
+            "round": 3,
+            "original_us": 84.614575,
+            "candidate_us": 655.41665,
+            "ratio": 7.745907250612557
+          },
+          {
+            "round": 4,
+            "original_us": 84.6979,
+            "candidate_us": 655.8333250000001,
+            "ratio": 7.743206443134954
+          },
+          {
+            "round": 5,
+            "original_us": 85.044275,
+            "candidate_us": 655.690125,
+            "ratio": 7.709985475212764
+          },
+          {
+            "round": 6,
+            "original_us": 84.7969,
+            "candidate_us": 656.02865,
+            "ratio": 7.736469729435864
+          },
+          {
+            "round": 7,
+            "original_us": 84.9323,
+            "candidate_us": 656.1353999999999,
+            "ratio": 7.7253930483455635
+          }
+        ]
+      }
+    }
+  },
+  "verdict": "Keep production unchanged; no serve/retry/sweep. Runtime support of this exact local INT8 matrix/scale/FP order is bounded-qualified for two real-weight seeded-input shapes only. No physical cause, all-DPAS verdict, production activation/logit or full-engine speed claim."
+}

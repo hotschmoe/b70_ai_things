@@ -23968,3 +23968,34 @@ retain identities. Completed build/static manifest13files/100341B SHA
 ae422e7bb0cb171c38dd1fb51b5e51715913f0572244e6e3442743f3a5da43a0;
 old source-subset manifest remains immutable, no runtime result.
 Historical170operation rows/rollups unchanged.
+
+
+## 2026-10-15 -- Flash-Next optimization S75: canonical-Q8 INT8 DPAS mapping rejected
+
+CONFIG -> Two real IQ3_S C6 projections, unchanged native Q8/decoder, one
+SG16 outputtile16/K32 matrix mapping, INT32 scale and source-order FP32
+ledger/stored-lane XOR tree. Seed7 and changed finite synthetic activations.
+COMMAND -> Root full source read; actual Opus116.901s conditionalGO after
+FP statement split/Fable255.334s GO. Versioned v2 changes only product/add
+statement separation plus paths/pins; v1 uncompiled/preserved. One23s CPU
+adapter build (10.319/.589/.385s phases, common8f reused/no commonAOT);
+9s offline selected-image audit; one38s quiet card0 window/leaf10s.
+RESULT -> Binary18045cce; one static signed INT8 DPAS, unique targetIDs and
+public image exactS65. SG16/SIMD16/GRF128; dynamic local total/scratch absent
+in metadata, not measuredzero. All118checkedshots/92binaries6155904B/10DOTs
+86nodes76edges/public-original-candidate bytes/changedgraphs/guards/tails/
+readonly/pins PASS; ownfullCID+NAMEabsent/preposthealth0/wrappers0. Hostcompleted
+graph20 medians of8nestedroundpairedmeans gate70.8408125->557.928425us,
+out84.632->655.79565us; medianpairchanges+687.510385/+674.970007percent.
+Optional queue-barrier spans separate; not isolated GPU service/p95/process
+replication/causality or serving latency.
+VERDICT -> Keep main unchanged; reject exactmapping/no serve/retry/sweep or
+barrier-elision GPU followup. Actual postOpus47.575s/Fable59.961s both ACCEPT,
+root fullread; model causal hypotheses not adopted as facts. Source/runtime
+qualification bounded to two real-weight seeded-input shapes, not allDPAS or
+production logits. Next source cost/parallelism audit only. Parallel reversible
+offline builds/reviews and compact result packets remove self-imposed waiting;
+exact pins/versioned findings resolution remain beforeGPU. Dated S75 report,
+exactcopies/map retained;170historicaloperation rows/rollups unchanged.
+Completed manifest198files79269638B SHA
+ff730eec68f5f4bc74220c58c29e330f5f4aac0fa75ebbb08a22a5b8b4ab4287.

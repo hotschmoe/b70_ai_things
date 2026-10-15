@@ -346,3 +346,17 @@ and disassembly do not execute the binary; no runtime128-output, coordinate,
 IQdecode/scale/nativeFP32-order or latency gate is claimed. Do not run the
 optional --run path without a separately approved leased gate.
 [S74 report](../../../docs/20261015_strata_int8_xmx_capability.md).
+
+
+## Canonical-Q8 IQ3_S C6 INT8 matrix prototype (S75)
+
+`iq3s_int8_dpas_s75/` records the exact v2 private source/controller and offline
+ISA recipes, with historical external paths preserved. Native canonical Q8,
+INT32 per32 scaling and the stored-lane FP32 partial/XOR tree are retained.
+One23s adapter build/9s static audit and38s card0 window; public/original/
+candidate full bytes,118 snapshots/92 binaries/10 DOTs/memory/health/removal
+PASS. Eight nested balanced paired-round means per shape show7.7-7.9x slower
+completed graph-batch latency. Keep main unchanged/no serve/retry/sweep.
+No v1 compiled comparison, independent runtime ISA trace, total dynamic SLM,
+physical traffic/occupancy or full-model gain claim.
+[S75 report](../../../docs/20261015_strata_iq3s_int8_dpas_probe.md).

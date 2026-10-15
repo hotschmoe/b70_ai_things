@@ -1,0 +1,12 @@
+--- S75-v1/private_iq3s_dpas_c6.hpp
++++ S75-v2/private_iq3s_dpas_c6.hpp
+@@ -291,7 +291,8 @@
+                     for (int c = 0; c < C; ++c) {
+                         const int sumi = tile[c * RT + lid];
+                         const float d = dw[lid] * dx[c];
+-                        partial[(c * RT + lid) * 32 + (p % 32)] += d * sumi;
++                        const float v = d * sumi;
++                        partial[(c * RT + lid) * 32 + (p % 32)] += v;
+                     }
+                     // Finish all tile/scales reads before next iteration
+                     // overwrites A/B/scales. Also orders ledger p and p+32.

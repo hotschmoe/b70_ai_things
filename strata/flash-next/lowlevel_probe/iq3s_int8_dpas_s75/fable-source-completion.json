@@ -1,0 +1,118 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "3d339367-d3da-4437-ac8b-3f7704756eeb"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 255.33427197497804,
+  "launch_exception": null,
+  "source_packet_sha256": "1837156dbbe95fc42b851ec9a9266936d3e38dc59769785f07bd2dd29ec01f54",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 254145,
+      "stop_reason": "end_turn",
+      "session_id": "3d339367-d3da-4437-ac8b-3f7704756eeb",
+      "total_cost_usd": 2.44328225,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 78005,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 17660,
+        "output_tokens_details": {
+          "thinking_tokens": 16115
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 78005,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 17660,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 78005,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 78005
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 2,
+          "outputTokens": 17660,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 78005,
+          "webSearchRequests": 0,
+          "costUSD": 2.44328225,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "thinkingTokens": 16115,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Verdict: GO_BOUNDED_BUILD.** I found no definite source bug or build blocker in the 20 frozen files. Everything below is either a confirmed contract, an unmeasured capability that the bounded build or the strict gates settle, or an efficiency note with no numbers attached.\n\n**Confirmed by reading the source**\n\n- **Decode addressing matches native.** Segment p maps to block p/8 and iqs 2*(p%8), the same (kbx, iqs) pair the native k loop produces. Scale nibble, qh byte, sign bytes and d are read per segment exactly as ControlSplit does.\n- **Signed byte pairing is correct.** B byte k is byte k%4 of g[k/4] in little-endian order, which is the byte dp4a pairs with qs[4*(k/4)+k%4]. The unsigned-to-signed conversion is proper two's complement. Both operands are std::int8_t, so CalculateMatrixOperand sets both signed flags.\n- **Strides and layouts are consistent.** A is 8x32 row-major stride 32, B is 32x16 col-major stride 32 with column r contiguous, the store is 8x16 row-major stride 16, and the reader uses tile[c*16+lid]. Row 6 and 7 of A are zero and never read.\n- **Integer path is exact.** The INT32 accumulator is refilled every segment. The scaled magnitude bound stays below 2^24, so the int-to-float conversion is exact and matches native sumi*ls.\n- **Coordinate apply is pure.** The pinned header passes (element, row, col) and writes the element back. The lambda scales by ls[col], and col is the output-within-tile dimension. No shared writes occur in the callback.\n- **Ownership and barriers hold.** Each ledger cell has one initializer and one updating work-item. The three barriers per segment publish staging before the collective loads, the tile before the owner reads, and finish reads before the next overwrite. All 16 work-items stay active because both M values divide by 16. No collective sits inside a divergent branch.\n- **Reduction order is native.** I re-derived the XOR tree induction. tree[i] after each fold equals the native partial at lane i^c with the same association, so tree[0] is the native stored lane c. Accumulation starts from 0.0f in increasing segment order per slot, as native does per lane.\n- **Harness gates.** Public precedes original precedes candidate for each input. Strict mismatch exits 5 with evidence, runtime exits 2, no retries. Snapshot count 59, DOT inventory 10/86/76, binary count 92 and timing counts all reconcile with the leaf code. Kernel name substrings DpasC6E and PrivateC6ILb0EE match the s75 namespace mangling.\n- **Build and cleanup.** Link inputs, image ID and header hashes are pinned pre and post. Cleanup targets only the CID from this run's cidfile and holds the lease until enumeration confirms removal.\n\n**Unmeasured, settled by build or strict gates, not blockers**\n\n- **FP contraction asymmetry.** The candidate writes the product and add in one expression into local memory. Native adds a value returned from an inlined function kept in registers. The backend may fuse one and not the other. The full-byte gate catches this. It cannot be settled statically.\n- **Local-space cooperative loads and the coordinate builtin** have no AOT evidence for bmg-g31. The bounded build settles the compile question. The runtime question stays open.\n- **Graph DOT pointer counting.** If local accessor arguments print as non-null Pointer entries, the analyzer fails with \"three non-null global resources\" even on correct output. That is a harness false negative risk, visible in the saved DOTs, not a source error.\n\n**Worthwhile efficiency and protocol notes, no thresholds**\n\n- The joint_matrix_apply call is unnecessary. Multiplying tile[c*16+lid] by ls[lid] after the store gives the identical integer and removes the only coordinate-intrinsic dependency. Changing it would require a refreeze. It is the root's call.\n- Thread-level parallelism for the decode drops substantially versus native, since one work-item decodes one full row serially while DPAS replaces only the dp4a part. This is structural to this design, as the README already states. No speed claim either way.\n- The leased run has a 300s timeout covering correctness plus warm and timing. A slow candidate could time out after correctness has already logged. Evidence would be preserved, but result.json would not be PASS. Consider that a known protocol limit rather than a defect.\n\nNo GPU authorization follows from this review.",
+      "ttft_ms": 231845,
+      "type": "result",
+      "duration_ms": 254229,
+      "uuid": "3a7a5e6f-c1c3-4cf9-aa3b-71747e3fe2a1",
+      "ttft_stream_ms": 1924,
+      "time_to_request_ms": 76,
+      "first_content_frame_ms": 1924,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

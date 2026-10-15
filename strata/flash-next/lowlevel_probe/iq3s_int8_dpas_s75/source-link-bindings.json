@@ -1,0 +1,140 @@
+{
+  "/common/mmvq-core.images.o": {
+    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/build/mmvq-core.images.o",
+    "sha256": "8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21",
+    "bytes": 59875544,
+    "preparation_hash_source": "retained frozen S65 binding; no large input reread in source prep; actual build/runtime pre/post recheck"
+  },
+  "/frozen/libstrata_kernels.a": {
+    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/frozen-inputs/libstrata_kernels.a",
+    "sha256": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8",
+    "bytes": 19468072,
+    "preparation_hash_source": "retained frozen S65 binding; no large input reread in source prep; actual build/runtime pre/post recheck"
+  },
+  "/frozen/libstrata_core.a": {
+    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/frozen-inputs/libstrata_core.a",
+    "sha256": "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286",
+    "bytes": 585338,
+    "preparation_hash_source": "retained frozen S65 binding; no large input reread in source prep; actual build/runtime pre/post recheck"
+  },
+  "/work/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp": {
+    "host_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp",
+    "bytes": 291120,
+    "sha256": "acaa7da63733af9f3831b3a74b99e6176bf46a06e498e0a33c0591f7f4a29851",
+    "preparation_hash_source": "current small imported header/source bytes"
+  },
+  "/work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp": {
+    "host_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+    "bytes": 184184,
+    "sha256": "81558e95f721413a75c3d3ec6ed7cb5eee766e4f662080cf500c7985090f03e2",
+    "preparation_hash_source": "current small imported header/source bytes"
+  },
+  "/work/src-ep/sycl/include/strata/sycl_math.hpp": {
+    "host_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/sycl_math.hpp",
+    "bytes": 1271,
+    "sha256": "ac45a7a9b7d3cdc4b1b8c1c413c416911fb4ca91373d69bb34947815dbb3eec6",
+    "preparation_hash_source": "current small imported header/source bytes"
+  },
+  "/work/src-ep/sycl/include/strata/kernels/dp4a.hpp": {
+    "host_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/kernels/dp4a.hpp",
+    "bytes": 2827,
+    "sha256": "dbbf686ebcc60d569ed1e0bf688d98666a1d46b7f85d8d7e073d28d6ab775eba",
+    "preparation_hash_source": "current small imported header/source bytes"
+  },
+  "/work/src-ep/sycl/include/strata/kernels/native_mmvq.hpp": {
+    "host_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/kernels/native_mmvq.hpp",
+    "bytes": 8175,
+    "sha256": "83c233dd1f9de362cf646eb6f3d95dd97278ae43a30aeeed205b3067ef358a7e",
+    "preparation_hash_source": "current small imported header/source bytes"
+  },
+  "/work/src-ep/include/strata/kernels/native_mmvq.hpp": {
+    "host_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/kernels/native_mmvq.hpp",
+    "bytes": 9639,
+    "sha256": "95c3ea0cb9802b93dc8eb23857349182d1bc1b6988ab875fc289812549042fb0",
+    "preparation_hash_source": "current small imported header/source bytes"
+  },
+  "/work/src-ep/third_party/ggml/ggml-common.h": {
+    "host_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/third_party/ggml/ggml-common.h",
+    "bytes": 135161,
+    "sha256": "0061131b615c5721fc88a78feeb22c1f8c450f1c2646a317d80796a653bf595c",
+    "preparation_hash_source": "current small imported header/source bytes"
+  },
+  "/work/src-ep/sycl/include/dpct/math.hpp": {
+    "host_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/dpct/math.hpp",
+    "bytes": 126988,
+    "sha256": "7c1b7175dbe29a43bff30a94381131096437d88415881a8a8c0704de53394c58",
+    "preparation_hash_source": "current small imported header/source bytes"
+  },
+  "/work/src-ep/sycl/include/dpct/detail/math_detail.hpp": {
+    "host_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/dpct/detail/math_detail.hpp",
+    "bytes": 9435,
+    "sha256": "93b193a0ea4c6c53de6d44e95b60e244b211bf1508a6862c6f79e43ca691fc58",
+    "preparation_hash_source": "current small imported header/source bytes"
+  },
+  "/work/src-ep/sycl/include/dpct/graph.hpp": {
+    "host_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/dpct/graph.hpp",
+    "bytes": 7275,
+    "sha256": "9933c09306a7a91bb242fa913694541fc4166bcf6d5a1a2a81ee9dac91b05f31",
+    "preparation_hash_source": "current small imported header/source bytes"
+  },
+  "/src/iq3s_dpas_leaf.cpp": {
+    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/iq3s_dpas_leaf.cpp",
+    "bytes": 16053,
+    "sha256": "e26056959edc34e95928efd11157d0a53585bdc115c2992b6df9bc8eee470d94",
+    "preparation_hash_source": "S75 v2 source bytes; v1 retained unchanged"
+  },
+  "/src/private_iq3s_dpas_c6.hpp": {
+    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/private_iq3s_dpas_c6.hpp",
+    "bytes": 16371,
+    "sha256": "8a490cc2b46b19e5d0a6bd37141f615e267852067126364e374d4bd89e8ab863",
+    "preparation_hash_source": "S75 v2 source bytes; v1 retained unchanged"
+  },
+  "/src/weight-identity.json": {
+    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/weight-identity.json",
+    "bytes": 1106,
+    "sha256": "c38712206eeccfa9f8833c506ebaf056139d068b82c94d6d0c5aa25145bc95cb",
+    "preparation_hash_source": "S75 v2 source bytes; v1 retained unchanged"
+  },
+  "/src/build-container.sh": {
+    "host_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/build-container.sh",
+    "bytes": 1896,
+    "sha256": "b26399d629ae33d3b14619e6824eee01b8751b73b0685aa42f7f966b0aced6c8",
+    "preparation_hash_source": "S75 v2 source bytes; v1 retained unchanged"
+  },
+  "/opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/matrix/matrix.hpp": {
+    "host_path": null,
+    "bytes": 821,
+    "sha256": "c298993bfc66b10f3204723c20afe960e07313b51add9ab28f549653dbde4da7",
+    "preparation_hash_source": "retained exact S71 image-header read; build pre/post recheck"
+  },
+  "/opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/matrix/matrix-unified.hpp": {
+    "host_path": null,
+    "bytes": 23601,
+    "sha256": "fce8a8847f92568004c150e49d0125ff649288806a5e72f1bc32e9d5fed38dbc",
+    "preparation_hash_source": "retained exact S71 image-header read; build pre/post recheck"
+  },
+  "/opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/matrix/matrix-intel.hpp": {
+    "host_path": null,
+    "bytes": 40744,
+    "sha256": "a8836d2b8b2ba1c023aeec96fbadb82bee054af5a5b427887b90969509cd06de",
+    "preparation_hash_source": "retained exact S71 image-header read; build pre/post recheck"
+  },
+  "/opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/matrix/matrix-unified-utils.hpp": {
+    "host_path": null,
+    "bytes": 4458,
+    "sha256": "c8e428024901d3529a45b6659b62e964c80a16c8fa54683487d137433a9e4832",
+    "preparation_hash_source": "retained exact S71 image-header read; build pre/post recheck"
+  },
+  "/opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/matrix/query-types.hpp": {
+    "host_path": null,
+    "bytes": 3396,
+    "sha256": "aeb1a24055343c7fd8df62470f945f8318306496e33fcc429c092a295931e219",
+    "preparation_hash_source": "retained exact S71 image-header read; build pre/post recheck"
+  },
+  "/opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/matrix/static-query-use.hpp": {
+    "host_path": null,
+    "bytes": 36220,
+    "sha256": "a48cd577e4938f67dfbee0046f2fd9034432f1528f7f6e685f54433ff980a8f1",
+    "preparation_hash_source": "retained exact S71 image-header read; build pre/post recheck"
+  }
+}

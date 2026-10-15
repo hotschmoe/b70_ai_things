@@ -1,0 +1,34 @@
+{
+  "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+  "locked_full_model_sha256_not_rehashed": "219ea929900dfa9ef091f3aa473fdba6874b65fcb36526d7d851ac9e95856d15",
+  "file_size": 47039860096,
+  "inode": 1156777,
+  "mtime_ns": 1792062519977528586,
+  "C": 6,
+  "tensors": [
+    {
+      "tensor": "blk.0.attn_gate.weight",
+      "ggml_type": 21,
+      "N": 2560,
+      "M": 6144,
+      "bytes": 6758400,
+      "absolute_offset": 734367616,
+      "sha256": "048665be9c034951e788e4aba896a61f8e9ccc28fc74a56d08443eac915ab49b",
+      "fnv1a64": "787df9007b88d0b7"
+    },
+    {
+      "tensor": "blk.1.ssm_out.weight",
+      "ggml_type": 21,
+      "N": 6144,
+      "M": 2560,
+      "bytes": 6758400,
+      "absolute_offset": 2545748608,
+      "sha256": "67e870992211b4bc47316575710b56ea855acb9cb65adcfd63372eddd0e830bf",
+      "fnv1a64": "64c6ff5efe6c1e8b"
+    }
+  ],
+  "payload_bytes_read": 13516800,
+  "payload_bytes_copied": 0,
+  "seconds": 2.118250219966285,
+  "scope": "two finite tensor reads under cpu-run, no GPU or full-shard hash"
+}

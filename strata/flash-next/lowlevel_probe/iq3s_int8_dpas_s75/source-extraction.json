@@ -1,0 +1,10 @@
+{
+  "control_body_sha256": "d2c4a0fe110d08fa90ca549a1020123dfaae6888e56045527a7a00039f847aee",
+  "control_body_exact_S65": true,
+  "source_S65_header_sha256": "cb729c6ec4eccca931ed7eeb8f907686fc23f886713697bec1a71cf190e4684a",
+  "source_S65_leaf_sha256": "457f3dbc306b8f5484eb5cd5a4e408802e677831154b456203bfdc770c5c1931",
+  "removed": "S65 SWAR CandidateSplit/helpers; no candidate decoder substitution",
+  "original_row_kernel": "S65 original retained with namespace s75 and ControlSplit-only selection/static_assert(!FAST)",
+  "candidate": "one SG16 DPAS workgroup/outputtile16; K32 canonical bytes; 32-slot partial ledger",
+  "optional_S74_runtime_gate": "not included; no standalone S74 GPU run queued"
+}

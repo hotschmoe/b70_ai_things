@@ -1,0 +1,118 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "3be4cc81-16c4-4492-8151-fe48210fa00e"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 116.90100691502448,
+  "launch_exception": null,
+  "source_packet_sha256": "1837156dbbe95fc42b851ec9a9266936d3e38dc59769785f07bd2dd29ec01f54",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 115566,
+      "stop_reason": "end_turn",
+      "session_id": "3be4cc81-16c4-4492-8151-fe48210fa00e",
+      "total_cost_usd": 0.8312458,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 76146,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 11097,
+        "output_tokens_details": {
+          "thinking_tokens": 8459
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 76146,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 11097,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 76146,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 76146
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 11097,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 76146,
+          "webSearchRequests": 0,
+          "costUSD": 0.8312458,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 8459,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# S75 Source Audit: HOLD\n\n**Verdict: HOLD.** There is one definite source-level defect, and the fix is one line. Once it is corrected and the hashes are re-pinned, I would grant GO_BOUNDED_BUILD with no other changes. Everything else I checked is either correct at source level or is a capability question that a bounded build legitimately settles.\n\n## Blocker: FP contraction in the ledger update\n\n**Location:** `private_iq3s_dpas_c6.hpp`, ledger loop in `launch_dpas`:\n\n```cpp\nconst float d = dw[lid] * dx[c];\npartial[(c * RT + lid) * 32 + (p % 32)] += d * sumi;\n```\n\nClang/icpx contracts multiply-adds that appear within a single source expression. This is clang's default for C++, and `-fp-model=precise` keeps it on. So this statement becomes `llvm.fmuladd(d, (float)sumi, partial)`, which compiles to a single-rounding FMA.\n\nThe native/original path splits the same arithmetic across statements, so it cannot be fused:\n\n- `ControlSplit::apply` does `return d * sumi;`, which rounds the product.\n- `row_dot_multi` then does `s[c] += S::apply(...)`, which rounds the sum.\n\nThe consequences:\n\n- **First accumulation per slot:** `0 + d*sumi` is bit-identical either way.\n- **Every later accumulation:** this covers slots 0\u201315 for N=2560 (three terms each) and all slots for N=6144 (six terms each). Here the candidate is `fma(d, s, acc)` while native is `round(round(d*s) + acc)`. A strict byte mismatch on both shapes is the expected outcome, not merely a possibility.\n- **The proof:** `reduction-source-proof.json` checks only index sequences and add parenthesization. It never models the multiply-add, which is why it missed this.\n\n**Fix:** mirror the native statement split, then regenerate the source hashes, `expected-container.sha256`, `harness-pins.json`, the manifest, and the diff:\n\n```cpp\nconst float v = d * sumi;                       // rounded product, as ControlSplit::apply\npartial[(c * RT + lid) * 32 + (p % 32)] += v;   // separate rounded add, as s[c] += ...\n```\n\n`#pragma clang fp contract(off)` scoped to the kernel would also work. The statement split is the better choice because it is structurally identical to the anchor. The FP gate would still catch the current version and exit 5, so there is no false-pass risk. But building and leasing a binary with a predictable strict failure wastes the one authorized lease.\n\n## Verified correct at source level\n\n**Decode and bytes**\n- Decode indexing matches native exactly: `kbx = p/8` and `iqs = 2*(p%8)`.\n- The Q8 block index `c*xb + p` equals native `off[c] + kbx*8 + iqs/2`.\n- Byte `k%4` of `g[k/4]` pairs with `qs[k]`, matching dp4a's little-endian lanes.\n- The signed reinterpretation is exact.\n\n**Integer bounds**\n- The worst case is 32\u00b715\u00b7127\u00b731 = 1,889,760, which is below 2\u00b2\u2074. INT32 accumulation and the int\u2192FP32 conversion are both exact.\n- DPAS integer results equal dp4a results exactly.\n\n**Matrix layouts**\n- A is 8\u00d732 row-major with stride 32: `a[c*32+k]`. Correct.\n- B is 32\u00d716 col-major with stride 32: `b[n*32+k]`. Correct.\n- The INT32 store is row-major with stride 16, and it is read back as `tile[c*16+lid]`. Correct.\n- Rows 6 and 7 are zero-padded and never stored to Y.\n\n**Coordinate apply**\n- `get_coord()` returns `(row, col)`. The lambda ignores the row and uses `col` as `r`.\n- `ls[col]` is the output column scale, applied as an INT32 multiply before float conversion, the same as native `sumi *= ls`.\n- The callback has no shared side effects.\n\n**API binding**\n- The `get_multi_ptr<decorated::no>()` element types match (`int8_t` for A/B, `int32_t` for the tile).\n- The accumulator defaults to `layout::dynamic`.\n- Qualified `im::joint_matrix_apply` lookup is unambiguous because the declaration exists in that namespace.\n\n**Barriers and ownership**\n- M is divisible by 16, so all work-items stay active.\n- The workgroup is a single SG16, so the barriers are uniform.\n- Initialization uses strided unique writers followed by a barrier.\n- Each K-iteration has three barriers: stage\u2192load, store\u2192read, and read\u2192overwrite. These cover the A/B/dw/ls/dx/tile hazards.\n- Each ledger cell is touched only by its owning work-item, and accumulation within one work-item needs no barrier.\n\n**Accumulation and reduction order**\n- Slot `p%32` receives p, p+32, \u2026 in increasing order, which is the native lane order.\n- The XOR-permuted tree reproduces lane `c`'s `v + shuffle_xor(v,o)` parenthesization for o = 16, 8, 4, 2, 1.\n- The `float \u00d7 half` scale expression has the same operand types in both paths.\n\n**Harness**\n- Artifact counts check out: 59 snapshots per shape (118 total), 92 binaries, 10 DOTs, 86 nodes, 76 edges.\n- Initial and changed inputs, and graph replays under changed input, are all compared against the public anchor captured per input.\n- The public\u2192original anchor precedes the candidate check.\n- Output poisoning and tails are checked.\n- Member destruction order (graphs before buffers) is safe.\n- `DpasC6E` and `PrivateC6ILb0EE` are valid mangled substrings.\n- Pair recomputation tolerance is consistent with `%.6f` output.\n\n**Run and cleanup**\n- Cleanup is CID-only.\n- The lease is held until removal is confirmed, and post-health runs only after that.\n- There are no retries.\n- Strict failures exit 5 and IO/runtime failures exit 2, with evidence preserved.\n\n**Build identity**\n- Headers, sources, frozen archives, and the build script are hash-checked inside the container both before and after the build.\n- Runtime re-verifies the build outputs against those records.\n\n## Settled by build or runtime, not by source review\n\n- **AOT acceptance for this combination is unproven.** That includes local-pointer `CooperativeMatrixLoad`, a **col-major int8 B** load (S74 does not establish this layout), the INT32 accumulator store to SLM, and `JointMatrixGetElementCoordINTEL` on bmg-g31. A bounded build settles acceptance. Fragment-coordinate correctness at runtime is then settled by the existing strict gates.\n- **IGC backend mul/add fusion** is a residual risk shared with the anchor path. The strict gates cover it.\n- **DOT argument rendering for local accessors** is unverified. The analyzer tolerates null or non-pointer extras, which is adequate.\n\n## Efficiency notes\n\nThese are concerns only. I make no performance claims.\n\n- Each K32 step costs three workgroup barriers for a single SG16, with no staging overlap.\n- B is written as 32 scalar byte SLM stores per work-item, and A as 16 scalar global byte loads per work-item.\n- Two of the eight DPAS rows are padding.\n- About 13.7 KB of SLM per 16-lane workgroup may limit resident workgroups.\n\nAll of this is consistent with the stated intent of a single conservative design. A poor timing result would reject only this mapping. None of it is a correctness issue, and no change is required for this prototype.",
+      "ttft_ms": 90343,
+      "type": "result",
+      "duration_ms": 115662,
+      "uuid": "854fb8ff-c92d-4468-94e6-a6dd558e1add",
+      "ttft_stream_ms": 1562,
+      "time_to_request_ms": 88,
+      "first_content_frame_ms": 1563,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

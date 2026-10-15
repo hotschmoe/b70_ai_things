@@ -1,0 +1,194 @@
+--- S65-prep/build.sh
++++ S75-v2/build.sh
+@@ -5,6 +5,8 @@
+ REPO=/mnt/vm_8tb/github/b70_ai_things
+ R=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014
+ IMAGE=sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2
++command -v docker python3 id mkdir tee >/dev/null
++[[ -w "$HERE" && -x "$REPO/bin/cpu-run" ]]
+ mkdir "$HERE/build"
+ mkdir "$HERE/build/tmp" "$HERE/build/cache"
+ docker image inspect "$IMAGE" > "$HERE/build/image.json"
+@@ -13,7 +15,7 @@
+ assert json.load(open(sys.argv[1]))[0]['Id']==sys.argv[2]
+ PY
+ set +e
+-B70_CPU_LOCK_TIMEOUT=0 B70_AGENT=S65-adapter-only-build "$REPO/bin/cpu-run" \
++B70_CPU_LOCK_TIMEOUT=0 B70_AGENT=S75-adapter-only-build "$REPO/bin/cpu-run" \
+   env MAX_JOBS=4 docker run --rm --network none -u "$(id -u):$(id -g)" \
+   -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_DIR=/out/cache \
+   -e SYCL_CACHE_PERSISTENT=0 -e MAX_JOBS=4 \
+--- S65-prep/build-container.sh
++++ S75-v2/build-container.sh
+@@ -3,19 +3,21 @@
+ set -euo pipefail
+ renice 19 -p $$ >/dev/null
+ ionice -c 3 -p $$
++command -v icpx sha256sum nm renice ionice >/dev/null
++[[ -w /out ]]
+ cd /out
+ SRC=/work/src-ep
+ sha256sum -c /src/expected-container.sha256
+ icpx --version > compiler-version.txt
+ FLAGS=(-O3 -DNDEBUG -std=c++20 -fsycl -fsycl-targets=spir64_gen -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wall -Wextra -DSTRATA_Q6K_EXPERTS=1 '-DSTRATA_VERSION="0.1.44.1"' -DSTRATA_XMX_SG16=1 -I"$SRC/third_party/ggml" -I"$SRC/sycl/include" -I"$SRC/include")
+ TIMEFORMAT='adapter_compile_seconds=%R'
+-{ time icpx "${FLAGS[@]}" -c /src/iq3s_dense_leaf.cpp -o iq3s_dense_leaf.o; } 2> adapter-compile.time
++{ time icpx "${FLAGS[@]}" -c /src/iq3s_dpas_leaf.cpp -o iq3s_dpas_leaf.o; } 2> adapter-compile.time
+ IMAGES=(-O3 -DNDEBUG -fsycl -fsycl-targets=spir64_gen -fsycl-device-code-split=per_kernel -fsycl-max-parallel-link-jobs=4 -Xsycl-target-backend=spir64_gen "-device bmg-g31 -options -cl-fp32-correctly-rounded-divide-sqrt")
+ TIMEFORMAT='adapter_prelink_seconds=%R'
+-{ time icpx -v "${IMAGES[@]}" -fsycl-link iq3s_dense_leaf.o -o leaf.images.o > adapter-prelink.log 2>&1; } 2> adapter-prelink.time
++{ time icpx -v "${IMAGES[@]}" -fsycl-link iq3s_dpas_leaf.o -o leaf.images.o > adapter-prelink.log 2>&1; } 2> adapter-prelink.time
+ TIMEFORMAT='host_link_seconds=%R'
+-{ time icpx -v -O3 -DNDEBUG iq3s_dense_leaf.o leaf.images.o /common/mmvq-core.images.o -Wl,--start-group /frozen/libstrata_kernels.a /frozen/libstrata_core.a -Wl,--end-group /usr/lib/x86_64-linux-gnu/libze_loader.so -lsycl -lsycl-devicelib-host -Wl,-Map=/out/link.map -o iq3s_dense_leaf_s65 > host-link.log 2>&1; } 2> host-link.time
++{ time icpx -v -O3 -DNDEBUG iq3s_dpas_leaf.o leaf.images.o /common/mmvq-core.images.o -Wl,--start-group /frozen/libstrata_kernels.a /frozen/libstrata_core.a -Wl,--end-group /usr/lib/x86_64-linux-gnu/libze_loader.so -lsycl -lsycl-devicelib-host -Wl,-Map=/out/link.map -o iq3s_dpas_leaf_s75 > host-link.log 2>&1; } 2> host-link.time
+ sha256sum -c /src/expected-container.sha256
+-nm -C iq3s_dense_leaf_s65 > symbols.txt
+-sha256sum /src/iq3s_dense_leaf.cpp /src/private_iq3s_c6.hpp /common/mmvq-core.images.o /frozen/libstrata_kernels.a /frozen/libstrata_core.a iq3s_dense_leaf.o leaf.images.o iq3s_dense_leaf_s65 > sha256.txt
++nm -C iq3s_dpas_leaf_s75 > symbols.txt
++sha256sum /src/iq3s_dpas_leaf.cpp /src/private_iq3s_dpas_c6.hpp /common/mmvq-core.images.o /frozen/libstrata_kernels.a /frozen/libstrata_core.a iq3s_dpas_leaf.o leaf.images.o iq3s_dpas_leaf_s75 > sha256.txt
+ cat sha256.txt
+--- S65-prep/runtime_identity.py
++++ S75-v2/runtime_identity.py
+@@ -15,14 +15,15 @@
+  elif n.startswith('/work/'):f=Path('/mnt/vm_8tb/b70/build/strata-ab')/n.removeprefix('/work/')
+  elif n.startswith('/common/'):f=r/'iq4xs-rpw2-s59-prep/build'/n.removeprefix('/common/')
+  elif n.startswith('/frozen/'):f=r/'iq4xs-rpw2-s59-prep/frozen-inputs'/n.removeprefix('/frozen/')
++ elif n.startswith('/opt/intel/'):continue
+  else:raise ValueError(n)
+  assert sha(f)==h,str(f)
+  pins[n]=h
+ records={}
+ for line in(p/'build/sha256.txt').read_text().splitlines():
+  h,n=line.split(maxsplit=1);records[n]=h
+-assert records['iq3s_dense_leaf_s65']==sha(p/'build/iq3s_dense_leaf_s65')
+-for n in ['/src/iq3s_dense_leaf.cpp','/src/private_iq3s_c6.hpp','/common/mmvq-core.images.o','/frozen/libstrata_kernels.a','/frozen/libstrata_core.a']:assert records[n]==pins[n]
++assert records['iq3s_dpas_leaf_s75']==sha(p/'build/iq3s_dpas_leaf_s75')
++for n in ['/src/iq3s_dpas_leaf.cpp','/src/private_iq3s_dpas_c6.hpp','/common/mmvq-core.images.o','/frozen/libstrata_kernels.a','/frozen/libstrata_core.a']:assert records[n]==pins[n]
+ assert json.loads((p/'build/image.json').read_text())[0]['Id']=='sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2'
+ hostlog=(p/'build/host-link.log').read_text()
+ assert hostlog.count('/usr/bin/ld')==1
+@@ -33,7 +34,7 @@
+  for t in identity['tensors']:
+   f.seek(t['absolute_offset']);b=f.read(t['bytes']);assert len(b)==t['bytes']
+   assert hashlib.sha256(b).hexdigest()==t['sha256'],t['tensor']
+-identity.update(binary_sha256=records['iq3s_dense_leaf_s65'],immutable_link_inputs={k:records[k] for k in records if k.startswith(('/frozen/','/common/'))},source_pins=pins,
++identity.update(binary_sha256=records['iq3s_dpas_leaf_s75'],immutable_link_inputs={k:records[k] for k in records if k.startswith(('/frozen/','/common/'))},source_pins=pins,
+  timing_scope='same-process projection-only graph20; canonical Q8 outside graphs; 8 OCCO/COOC rounds per shape; no significance or serving claim',
+  image='sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2',physical_card=0,pci='0000:0b:00.0',external_profiler='none')
+ with(o/'identity.json').open('x',encoding='ascii')as f:json.dump(identity,f,indent=2);f.write('\n')
+--- S65-prep/ROOT_RUN.sh
++++ S75-v2/ROOT_RUN.sh
+@@ -5,7 +5,7 @@
+ REPO=/mnt/vm_8tb/github/b70_ai_things
+ OUT="$HERE/run-clean"
+ mkdir "$OUT" || { echo 'FAIL preserve prior attempt; no implicit retry';exit 2; }
+-B70_CPU_LOCK_TIMEOUT=0 B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=S65-IQ3S-SWAR \
++B70_CPU_LOCK_TIMEOUT=0 B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=S75-IQ3S-DPAS \
+   "$REPO/bin/cpu-run" --quiet "$REPO/bin/gpu-run" --card 0 \
+   env ZE_AFFINITY_MASK=0 ONEAPI_DEVICE_SELECTOR='level_zero:*' \
+   bash "$HERE/leased_run.sh" "$OUT" 2>&1 | tee "$OUT/driver.log"
+--- S65-prep/analyze.py
++++ S75-v2/analyze.py
+@@ -1,5 +1,5 @@
+ #!/usr/bin/env python3
+-"""Full-byte/DOT closure before reporting S65 descriptive paired timings."""
++"""Full-byte/DOT closure before reporting S75 descriptive paired timings."""
+ from pathlib import Path
+ import hashlib,json,math,re,statistics,sys
+ out=Path(sys.argv[1]);leaf=out/'leaf'
+@@ -27,14 +27,20 @@
+  for _,name in nodes:
+   need('native_quantize_q8_1' not in name,f'{f} unexpected quantization')
+   if arm=='public':need('mmvq_multi_kernel_3404b2' in name and 'ILi21EE' in name and 'ILi6EE' in name,f'{f} public IQ3S/C6 binding')
+-  else:need(('PrivateC6ILb0EE' if arm=='original' else 'PrivateC6ILb1EE') in name,f'{f} private arm binding')
+- # Compiler capture order can vary, but these graphs must reference the same
+- # three actual USM resources (weights, canonical Q8, output) for this shape.
+- pointers=re.findall(r'Type: Pointer Ptr: [^()\\\n]+\((0x[0-9a-fA-F]+)\)',s)
+- need(len(pointers)==count*3,f'{f} pointer count')
+- resource=set(pointers[:3]);need(len(resource)==3,f'{f} distinct resources')
+- for i in range(count):need(set(pointers[3*i:3*i+3])==resource,f'{f} per-node resources')
+- return {'sha256':sha(f),'nodes':count,'edges':len(edges),'whole_chain':True,'kernel_names':sorted({k for n,k in nodes}),'resources':sorted(resource)}
++  else:need(('PrivateC6ILb0EE' if arm=='original' else 'DpasC6E') in name,f'{f} private arm binding')
++ # Check pointer resources per actual node; local-accessor metadata may add
++ # arguments, but must not add an unrecognized non-null global pointer.
++ blocks=re.findall(r'^"([^"\n]+)" \[(.*?)\];$',s,re.M)
++ byid=dict(blocks);resource=None;all_pointer_arguments=[]
++ for nodeid,_ in nodes:
++  need(nodeid in byid,f'{f} complete node block')
++  ptrs=re.findall(r'Type: Pointer Ptr: [^()\\\n]+\((0x[0-9a-fA-F]+)\)',byid[nodeid])
++  nonnull={x for x in ptrs if int(x,16)!=0}
++  need(len(nonnull)==3,f'{f} three non-null global resources')
++  if resource is None:resource=nonnull
++  need(nonnull==resource,f'{f} per-node resources')
++  all_pointer_arguments.append(ptrs)
++ return {'sha256':sha(f),'nodes':count,'edges':len(edges),'whole_chain':True,'kernel_names':sorted({k for n,k in nodes}),'resources':sorted(resource),'pointer_arguments_by_node':all_pointer_arguments}
+ try:
+  r=json.loads((leaf/'result.json').read_text());need(r['status']=='PASS' and r['shapes']==2 and r['public_original_bit_anchor'] is True and r['candidate_full_bytes'] is True,'leaf result')
+  rows=[json.loads(l) for l in(out/'leaf.log').read_text().splitlines() if l.startswith('{')]
+@@ -56,6 +62,8 @@
+     f=d/(stem+'.bin');need(f.read_bytes()==base,f'{tag}/{stem} full bytes');need((d/(stem+'-q8.bin')).read_bytes()==qbase,f'{tag}/{stem} Q8')
+     hashes[stem]=sha(f)
+    need((d/f'input-{changed}.bin').stat().st_size==6*N*4,tag+' input size')
++  need((d/'final.bin').read_bytes()==(d/'eager-public-a.bin').read_bytes(),tag+' final saved bytes')
++  need((d/'final-q8.bin').read_bytes()==(d/'canonical-a-q8.bin').read_bytes(),tag+' final saved Q8')
+   need((d/'eager-public-a.bin').read_bytes()!=(d/'eager-public-b.bin').read_bytes(),tag+' changed output')
+   need((d/'canonical-a-q8.bin').read_bytes()!=(d/'canonical-b-q8.bin').read_bytes(),tag+' changed Q8')
+   graphs={}
+@@ -90,4 +98,4 @@
+  with(out/'comparison.json').open('x',encoding='ascii') as f:json.dump(v,f,indent=2);f.write('\n')
+  print(json.dumps({'status':v['status'],'timings':summaries}));sys.exit(0)
+ except Exception as e:
+- print('S65 analysis failure: '+str(e),file=sys.stderr);sys.exit(5 if isinstance(e,ValueError) else 2)
++ print('S75 analysis failure: '+str(e),file=sys.stderr);sys.exit(5 if isinstance(e,ValueError) else 2)
+--- S65-root-execution/leased_run.sh
++++ S75-v2/leased_run.sh
+@@ -1,16 +1,16 @@
+ #!/usr/bin/env bash
+ # Caller holds quiet CPU and physical card0. Exactly one process; no retries/reset.
+ set -uo pipefail
+-HERE=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-dense-oracle-s65-prep
+-EXEC_DIR=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-dense-s65-execution
++HERE=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2
++EXEC_DIR=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2
+ OUT=${1:?new existing run directory}
+ REPO=/mnt/vm_8tb/github/b70_ai_things
+ IMAGE=sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2
+ HEALTH_IMG=b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78
+ WEIGHTS=/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf
+-NAME=strata-iq3s-swar-s65
++NAME=strata-iq3s-dpas-s75
+ python3 "$EXEC_DIR/extra_host_closure.py" pre "$OUT" || exit 2
+-[ -x "$HERE/build/iq3s_dense_leaf_s65" ] || exit 2
++[ -x "$HERE/build/iq3s_dpas_leaf_s75" ] || exit 2
+ python3 "$HERE/runtime_identity.py" "$HERE" "$OUT" > "$OUT/identity.stdout" 2> "$OUT/identity.stderr"
+ identity_rc=$?;printf '%s\n' "$identity_rc" > "$OUT/identity.exit"
+ [ "$identity_rc" = 0 ] || exit "$identity_rc"
+@@ -30,7 +30,7 @@
+   --entrypoint bash "$IMAGE" -c '
+ source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1
+ set -euo pipefail
+-exec /probe/iq3s_dense_leaf_s65 /out/leaf /weights.gguf
++exec /probe/iq3s_dpas_leaf_s75 /out/leaf /weights.gguf
+ ' > "$OUT/leaf.log" 2> "$OUT/leaf.stderr"
+ run=$?;printf '%s\n' "$run" > "$OUT/leaf.exit"
+ printf '%s\n' "$((SECONDS-started))" > "$OUT/leaf.wall-seconds"
+@@ -61,7 +61,7 @@
+ # the existing GPU lease until successful Docker enumeration confirms removal.
+ # Cleanup addresses only the ID created by THIS docker run, never a shared name.
+ while [ "$removed" != 1 ];do
+-  echo 'S65: holding CPU/card0 leases; container removal unconfirmed; no health yet'
++  echo 'S75: holding CPU/card0 leases; container removal unconfirmed; no health yet'
+   if [ -n "$OWN_CID" ];then
+     docker kill "$OWN_CID" >> "$OUT/cleanup.stdout" 2>> "$OUT/cleanup.stderr" || true
+     docker wait "$OWN_CID" >> "$OUT/cleanup.stdout" 2>> "$OUT/cleanup.stderr" || true
+--- S65-root-execution/extra_host_closure.py
++++ S75-v2/extra_host_closure.py
+@@ -1,7 +1,7 @@
+ from pathlib import Path
+ import hashlib,json,sys
+ E=Path(__file__).resolve().parent
+-P=Path('/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-dense-oracle-s65-prep')
++P=Path('/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2')
+ mode,out=sys.argv[1],Path(sys.argv[2])
+ def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+ pins=json.loads((E/'harness-pins.json').read_text())

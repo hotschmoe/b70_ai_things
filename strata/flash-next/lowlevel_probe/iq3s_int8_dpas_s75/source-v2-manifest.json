@@ -1,0 +1,124 @@
+{
+  "stage": "S75-v2",
+  "status": "FROZEN_SOURCE_ONLY_STATEMENT_SPLIT_PLUS_NECESSARY_PATH_REPINS",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 7783,
+      "sha256": "dac5841afe0ef690a40329270464e5456c0328b159e7b7e2c139321480e3c663"
+    },
+    {
+      "path": "ROOT_RUN.sh",
+      "bytes": 729,
+      "sha256": "dcde2e0c80be4dfc5ee19588ac4d38364e33f633c5b1e39e231330ddc9f0f7a3"
+    },
+    {
+      "path": "analyze.py",
+      "bytes": 8213,
+      "sha256": "4b75dff345238b5d5eb80e8900278c455a7b619931c0699a3291f425fa6ec80e"
+    },
+    {
+      "path": "build-container.sh",
+      "bytes": 1896,
+      "sha256": "b26399d629ae33d3b14619e6824eee01b8751b73b0685aa42f7f966b0aced6c8"
+    },
+    {
+      "path": "build.sh",
+      "bytes": 1429,
+      "sha256": "a9313569331b910145ee41e50a35b5bf4f4286645f1881924ae499586d2b77d9"
+    },
+    {
+      "path": "expected-container.sha256",
+      "bytes": 2693,
+      "sha256": "f9bf2b3338be1cdc92e53fdba9a4f7686280f64ab2bef229cdb0e4a9fc0391aa"
+    },
+    {
+      "path": "extra_host_closure.py",
+      "bytes": 1670,
+      "sha256": "f229e121d140e64de50cf69bbd659cd7d87e3e2de0f04d06bf96a4b107157bd4"
+    },
+    {
+      "path": "harness-pins.json",
+      "bytes": 2375,
+      "sha256": "6126364dee7e0afc9a55d19d53b01248a16cd906aff8a5a01437c15dcd5d8ccf"
+    },
+    {
+      "path": "iq3s_dpas_leaf.cpp",
+      "bytes": 16053,
+      "sha256": "e26056959edc34e95928efd11157d0a53585bdc115c2992b6df9bc8eee470d94"
+    },
+    {
+      "path": "leased_run.sh",
+      "bytes": 5513,
+      "sha256": "42dadf4743b5937d2ec44921c1fee78f4746dd2cf77e4915f7393a1a1a4fc1ba"
+    },
+    {
+      "path": "matrix-api-contract.json",
+      "bytes": 1206,
+      "sha256": "e4438b9c648b17a603c63a9dc7c6d7878a35b635f60dec52ac8283305253f616"
+    },
+    {
+      "path": "private_iq3s_dpas_c6.hpp",
+      "bytes": 16371,
+      "sha256": "8a490cc2b46b19e5d0a6bd37141f615e267852067126364e374d4bd89e8ab863"
+    },
+    {
+      "path": "readiness-v2.json",
+      "bytes": 1493,
+      "sha256": "260938f8012ef73f7456869879e11e6d0143cee6f8504b399fe170fff60cf3cb"
+    },
+    {
+      "path": "reduction-source-proof.json",
+      "bytes": 9098,
+      "sha256": "f1c1eca547f118641dd132bd7c15552f13fcfc6af55b2450016f5f5fe742d1a6"
+    },
+    {
+      "path": "runtime_identity.py",
+      "bytes": 2484,
+      "sha256": "96ba8f51211c174f22b6f0223d9b030d93f9180814c30d472776d8065d74c5cb"
+    },
+    {
+      "path": "source-extraction.json",
+      "bytes": 710,
+      "sha256": "04aceef69dea57990c79e725fe4fcb21cfe422f04639cf0a1080b0fe269e4abe"
+    },
+    {
+      "path": "source-link-bindings.json",
+      "bytes": 7966,
+      "sha256": "552ab8105c78e45fedbe691d6ab331b713067708778afc897d4368f2c3ce0558"
+    },
+    {
+      "path": "static-preflight.json",
+      "bytes": 1842,
+      "sha256": "e51c49d4d033a5a0c47a23b1122d459c90f18cd3560354daf28364776592fd5b"
+    },
+    {
+      "path": "v2-kernel-only.diff",
+      "bytes": 639,
+      "sha256": "104493a356917ad3295011d3b270d03a3cd0c3c5b7d834883a7672c1f3cc444b"
+    },
+    {
+      "path": "v2-path-repin-readiness.diff",
+      "bytes": 19909,
+      "sha256": "84874ad87048ca876c2f7aab58f12bd97f9f2b0a88d7d59b87eb3cd0f43f81c8"
+    },
+    {
+      "path": "vs-s65-harness.diff",
+      "bytes": 13217,
+      "sha256": "8fc95cc99f71f507043e2a22da3adaa2e7672537a6e848bec6c9518fb23eb63b"
+    },
+    {
+      "path": "vs-s65-source.diff",
+      "bytes": 13606,
+      "sha256": "37e43ad67da664144aa9f14f12efaa02e58810cd9b47d3294928659570a98dec"
+    },
+    {
+      "path": "weight-identity.json",
+      "bytes": 1106,
+      "sha256": "c38712206eeccfa9f8833c506ebaf056139d068b82c94d6d0c5aa25145bc95cb"
+    }
+  ],
+  "file_count": 23,
+  "bytes": 138001
+}
