@@ -1,0 +1,39 @@
+{
+  "arms": {
+    "0": {
+      "exe": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-serving-s87-build/build/strata-q6-center-s87",
+      "sha256": "a1e35c4ddecff6cfcca8cd61945d0243274f4867e8eff4d134c4ad535b920900"
+    },
+    "1": {
+      "exe": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-serving-s87-build/build/strata-q6-center-s87",
+      "sha256": "a1e35c4ddecff6cfcca8cd61945d0243274f4867e8eff4d134c4ad535b920900"
+    }
+  },
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "same_binary": true,
+  "HC_state": "COMMON_LO_ONCE_S51",
+  "S49_state": "OFF_BOTH",
+  "native": {
+    "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+    "sibling_path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+    "resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+    "expected_sha256": "219ea929900dfa9ef091f3aa473fdba6874b65fcb36526d7d851ac9e95856d15",
+    "size_bytes": 47039860096,
+    "sibling_resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+    "sibling_expected_sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+    "payload_SHA_verification": "ROOT_COPY_CLOSURE_REQUIRED_BEFORE_START;config_stat_is_not_hash_proof"
+  },
+  "base_config_sha256": "959df3d15f689fefd8525079d7be3287939000477a4e84ecc497542402a08321",
+  "containers": {
+    "0": "strata-s87-mode0",
+    "1": "strata-s87-mode1"
+  },
+  "warm_pairs": 1,
+  "timed_fresh_pairs": 3,
+  "output_tokens_per_stream": 1500,
+  "common_trace": "STRATA_TRACE1_PROMPT_START_ONLY_CPU_RING_ABSENT",
+  "arm_difference": "STRATA_Q6_CENTER0/1 and arm-local log/container/service names only",
+  "capture_scope": "source/build/config+first-eligible host marker+successful warm/use/no errors+exact logged new-capture layouts; all-window cache-hit/row-layout/independent GPU-dispatch visibility absent",
+  "latency_scope": "client wall/SSE content-event gaps; matched TRACE1 CPU logging, CPU ring/profile absent; not token ITL or device-only service",
+  "candidate_scope": "default-OFF exact-shape Q6 C6 byte centering, no daily promotion"
+}

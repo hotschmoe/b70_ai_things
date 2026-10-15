@@ -1,0 +1,58 @@
+{
+  "status": "ACTUAL_MAIN_TWO_TARGETS_SELECTED_UNIQUE",
+  "binary_sha256_from_root_actual_build": "a1e35c4ddecff6cfcca8cd61945d0243274f4867e8eff4d134c4ad535b920900",
+  "binary_stat_size": 92117000,
+  "binary_stat_mtime_ns": 1792083713443207426,
+  "binary_stat_unchanged": true,
+  "whole_binary_archive_rehash_not_repeated": true,
+  "root_build_audit_sha256": "b98da6da1806834d59141eba06e5e4d657f724b5a4719da9aef6a050c4850b96",
+  "build_records": {
+    "/out/strata-q6-center-s87": "a1e35c4ddecff6cfcca8cd61945d0243274f4867e8eff4d134c4ad535b920900",
+    "libstrata_kernels.a": "923c525edcb1c07b1be34728171cf55a706feedb9ff3fbc346b1bd793a70375a",
+    "libstrata_engine.a": "77a18ca2e4fd4cd35414a74e8386b760a904476022b24ecc7203339fd00180b7",
+    "CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o": "b9f931cb65927a2869a1b26bce8cfa834b112bccdfe08d26e9364634473294dd",
+    "CMakeFiles/strata_engine.dir/src/core/verify.cpp.o": "4d6777b12eb79490b5cb06e523a6b4e777df2e322a26e24cbf95d00e5b768309",
+    "CMakeFiles/strata.dir/src/program/generate.cpp.o": "ade001b0f6ba26045e3bd682d89d7c7c4fd18a55114886d839707618a5f1fbe7",
+    "CMakeCache.txt": "fee542911252057f97fac8113086ded01130c7888ac96a7490e28cdec814cc22"
+  },
+  "source_sha256_actual": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584",
+  "selected": {
+    "original": {
+      "main_image_index": 771,
+      "main_executable_offset": 39555328,
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS5_PfiiPN4sycl3_V15queueEE23native_mmvq_q6k_wide_a218dpct_kernel_scalarILi6EEEE",
+      "image_bytes": 43432,
+      "image_sha256": "344c53e3394d2cacd289a6b931eb425461e93a8281a35e1e14123a0f9885321a",
+      "text_bytes": 16576,
+      "text_sha256": "747c18a795c666653e71d2b9b6c588cb93c04f88b2a13c745f2a7c1299e919e9",
+      "ze_info_sha256": "d73b7b9551c7b7a49512ea8e144d449cdc5de5a9fb57e1fa8bd3a6d27871cecb",
+      "filename_bytes": 172,
+      "section_alias_on_copy": false,
+      "extra_text_sections": [
+        ".text.Intel_Symbol_Table_Void_Program"
+      ]
+    },
+    "candidate": {
+      "main_image_index": 772,
+      "main_executable_offset": 39598768,
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS5_PfiiPN4sycl3_V15queueEE23native_mmvq_q6k_center6EE",
+      "image_bytes": 37480,
+      "image_sha256": "87f4e963357fabcb56c12129ae6a26fb99ccbbf8fd7bc3e08bbecd07fb62f3ab",
+      "text_bytes": 10880,
+      "text_sha256": "278cab50a932568fc336dbf21e73f7fe027fdbeb13122974c9782841129cb87a",
+      "ze_info_sha256": "2c28fa34f4ce8ee10195985a7b8f43d3eb0d0de20d85cb62169aab3aae265392",
+      "filename_bytes": 146,
+      "section_alias_on_copy": false,
+      "extra_text_sections": [
+        ".text.Intel_Symbol_Table_Void_Program"
+      ]
+    }
+  },
+  "metadata_only_images_indexed": 1601,
+  "selected_ISA_image_count": 2,
+  "bytes_read": 9521846,
+  "separate_common_archive_or_image_object_reparsed": false,
+  "source_object_archive_binding": "Root actual3compile/2archive/1AOT closure and exact buildrecord/source pins; nativeobject/kernelarchive/engine listed. No build or archive mutation in audit.",
+  "GPU": 0,
+  "build": 0
+}

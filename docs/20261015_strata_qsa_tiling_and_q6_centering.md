@@ -264,3 +264,96 @@ GPU execution. Eager prefill needs no graph/DOT campaign. Announce short GPU
 windows in the shared coordination log, use the CPU quiet lock outside the GPU
 lease, and verify own-container removal before post-health. Do not restore
 the daily server or repeat full context qualification between primitives.
+
+
+## S87: guarded Q6 serving comparison passes with a small bounded gain
+
+CONFIG -> Same fresh executable, `STRATA_Q6_CENTER=0/1`, native two-card EP,
+C2/depth2/paired heads, common HC LO_ONCE, PUSH and NVMe Direct PLE. All24576
+experts remain resident. Explicit WIDE1/MIN0/MAXC8/A2/RPW1/PF0/packedOFF;
+head RPW2/S49 OFF. Only the Q6 flag and arm-local paths/names differ.
+`STRATA_TRACE=1` CPU logging is matched; CPU rings/device profiling absent.
+
+COMMAND -> Fresh upstream check remains296b59d2. Actual Opus27.688s and
+Fable46.809s source reviews accept the bounded build. Root applies the small
+S87 patch, including the once-per-process first-eligible host marker. The
+219-second CPU-only incremental build performs three compiles, two archive
+updates and one main AOT link. It recompiles the restored S79 verifier and
+generator alongside the native kernel; generic build output now matches the
+fresh frozen executable, rather than the old S79 experiment. Other archives,
+HC object, CMake/ABI cache and build rules remain unchanged.
+
+Executable SHA256:
+`a1e35c4ddecff6cfcca8cd61945d0243274f4867e8eff4d134c4ad535b920900`.
+Native source SHA256:
+`c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584`.
+
+The12-second selected AOT audit finds unique original/candidate targets771/772
+in the actual main binary. Both use SIMD32/GRF128 and48 static DP4A sites.
+Original32 byte-saturation sequences disappear, replaced by8 packed adds and
+8 XORs; target text16576->10880 bytes. Scratch/spill metadata is absent, not
+measured zero. Only two ISA payloads are decoded; indexing1601 metadata headers
+reads9.52MB. No whole-program ISA walk or common-archive rebuild is repeated.
+
+Each arm starts once, warms one paired request, then completes three fresh
+107-token/1500-output paired coding requests. Request1 is admitted only after
+request0's flushed native prompt-start marker. Full requests, emitted text,
+SSE content, usage, five required native work fields, windows, paired/solo
+counts, rounded row summaries and logged new captures match for all four pairs.
+Functionals cover concurrent math, reasoning and a tool round trip. Both normal
+QUITs, own full CID/name removal, lease exits and per-card plus compiled
+collective post-health pass. Arm1 reuses arm0's immediate full post-health;
+there is no intervening GPU workload or stack change.
+
+RESULT -> Timed pair wall29.1013->28.7691 seconds median; aggregate output
+103.0883->104.2786 tok/s (+1.1546%). All three matched pair walls improve:
+-1.1414/-1.2352/-1.2669%. These are three paired prompt samples within one
+OFF-then-ON process sequence, without independent process-order replication.
+
+| Arm / stream | Median decode tok/s | TTFT p50 / p95, s | Completion p50 / p95, s |
+|---|---:|---:|---:|
+| OFF / 0 | 53.516 | 0.931 / 0.935 | 28.945 / 28.976 |
+| OFF / 1 | 55.867 | 2.081 / 2.083 | 28.893 / 29.273 |
+| ON / 0 | 54.119 | 0.891 / 0.896 | 28.589 / 28.642 |
+| ON / 1 | 56.475 | 2.026 / 2.041 | 28.560 / 28.907 |
+
+TTFT/completion percentiles use linear interpolation over only three requests
+per stream/arm, so they are descriptive samples, not population tail guarantees.
+Per-request SSE event-gap p50/p95/max are retained in the root decision; events
+may contain multiple tokens and are not token ITL. Successful warm execution,
+source/AOT binding and exact host markers establish the selected host path;
+there is no independent GPU-dispatch trace or complete per-window/cache-hit
+layout observation. Rounded average rows are not an exact row sequence.
+
+VERDICT -> Retain the guarded default-OFF opt-in source and frozen executable.
+This is a small bounded serving gain, not the S85 projection-only22% result,
+a default/daily-shelf promotion, or new full-context qualification. Decode is
+still54-56 tok/s per stream, below150; prefill targets remain open. Keep the
+S30 RAM-recovery evidence and avoid another full-cache campaign here. Existing
+model hashes plus unchanged NVMe paths/device/inode/size/mtime avoid another
+75GB read; this is continuity evidence, not a fresh full payload hash.
+
+Source parsing enables only when the first character is1; this comparison uses
+literal0/1. The flag latches on the first eligible host call, possibly during
+capture. The old comment's before-capture wording is accepted as an overstatement,
+without a comment-only rebuild. `aggregate-proof.json`'s legacy `requests`
+field counts PLE rows; the raw final diagnostic is authoritative. Nonzero
+common prefetch counters do not establish that S49 was enabled.
+
+Raw root: `/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/`
+`q6-center-serving-s87`, with sibling build, main-AOT and actual review directories.
+[Small frozen records](../strata/flash-next/lowlevel_probe/q6_center_serving_s87/README.md)
+bind the retained large external evidence. Next candidate is guarded long/full256
+prefill QSA tiling from S84; short/decode paths stay original. No additional
+primitive run, full cache run, daily restore or timing retry was added.
+
+Actual postreviews: Opus16.922s/Fable33.389s both ACCEPT_DECISION. Root
+read both completions and retains defaultOFF opt-in. Specific admission-gap
+cause and verify critical-path share remain unmeasured; a reversed-order
+repeat is an optional future discriminator, not a new run scheduled here.
+Ratio of arm medians is+1.155%; median of paired gains is+1.251%.
+
+Completed external evidence:260files/231808577bytes, manifest SHA256
+`40d31d4466bb47f78fdfabb72542057fc6bd2a5b8de6d90e3e05cb94e0b11f9d`.
+Repository curation retains83 exact small records plus index/README (85files,
+332868bytes); large responses, images and binaries remain external.

@@ -1,0 +1,29 @@
+{
+  "status": "ROOT_GO_FINITE_SAME_NEW_BINARY_TWO_CARD_EP",
+  "epoch_ns": 1792084256813800058,
+  "build_audit": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-serving-s87-build/build/root-build-audit.json",
+  "AOT_selection": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-main-s87-isa/selection.json",
+  "AOT_selection_sha256": "ae11a1df237b43ee45f0a78abe17d26380c4203e20950275c1ec7e4a4947f3d6",
+  "root_actual_ISA_counts": {
+    "original": {
+      "dp4a": 48,
+      "packed_add": 0,
+      "packed_xor": 0,
+      "calls": 0,
+      "asm_sha256": "2a4977c4a180c38102ab52aa09c187ac3aef8acb8c9ee94d8e2ae162010b8f0f"
+    },
+    "candidate": {
+      "dp4a": 48,
+      "packed_add": 8,
+      "packed_xor": 8,
+      "calls": 0,
+      "asm_sha256": "7dc9a9e2cc63cb45ac5a4fa54bf5f7ce362d32e4647d5d3cffe5ce7d4b0272a6"
+    }
+  },
+  "resources": "BothactualMAINtargetsSIMD32/GRF128; absent spill/scratch fields not measuredzero; text16576->10880B",
+  "source_review_resolution": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-serving-source-reviews-s87-20261015/root-source-resolution.json",
+  "preflight": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-serving-s87/root-preflight.json",
+  "prehealth": "Bothpercard+compiled2rankPASS fresh; nointerveningGPU/stackchange since17:08:50UTC",
+  "limits": "Hostselectionmarker+successfulwarm, not independenthardwaredispatch; requireexactobservableoutput/nativework beforeaggregation; nofullcache/dailyrestore/retry/promotion",
+  "GPU_SERVE_GO": true
+}

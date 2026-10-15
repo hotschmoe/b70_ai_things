@@ -1,0 +1,118 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "3f2293a5-c4e4-425d-9b8e-5daf701ca8dd"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 46.80938255699584,
+  "launch_exception": null,
+  "source_packet_sha256": "9b7f6500825ddedd9f2038e4fc50974a1500d10bb9e9c610f30b5aaa266181b5",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 45575,
+      "stop_reason": "end_turn",
+      "session_id": "3f2293a5-c4e4-425d-9b8e-5daf701ca8dd",
+      "total_cost_usd": 0.48355225,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 16166,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 3201,
+        "output_tokens_details": {
+          "thinking_tokens": 1972
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 16166,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 3201,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 16166,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 16166
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 2,
+          "outputTokens": 3201,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 16166,
+          "webSearchRequests": 0,
+          "costUSD": 0.48355225,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "thinkingTokens": 1972,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Verdict: GO_BOUNDED_BUILD** (CPU-only main build may proceed in parallel; no serving GO from this review).\n\n**Integer bit audit: passes.** Per byte, u = (ql nibble) | (qh pair << 4) lies in 0..63. Original: sat_sub(u, 32) as signed char gives -32..31 with no saturation ever reached. Candidate: u + 0x60 is 96..159, below 256, so no inter-byte carry; XOR 0x80 maps 96..127 to 224..255 (signed -32..-1) and 128..159 to 0..31. Endpoints check: 0 to -32, 32 to 0, 63 to 31. The 32-bit lane fed to dp4a is bit-identical. Both vi0 and vi1 nibble/shift/mask expressions are copied verbatim from the original, including the arithmetic right shift on vh, which the mask neutralizes the same way.\n\n**Unchanged native FP ledger: confirmed.** Loads (load16_a2, Q8_1 int loads), ds/dsc scaling, dp4a order, acc accumulation, butterfly reduction and store are untouched. Only the vi0/vi1 construction differs under CENTER.\n\n**Defaults and fallbacks: confirmed.** CENTER defaults false and no existing instantiation passes a sixth argument, so wide_a2, wide_a2r, wide16, wide, wide1, PF, rowwarp, multi, and the legacy kernels are unchanged. The ON branch is nested inside rpw==1 and q6k_a2(), guarded by constexpr NCOLS==6, pf==0, and exactly the two shapes. PF=1 or 5 falls through the PF block as before, and the pf==0 check correctly excludes center there. Kernel ID native_mmvq_q6k_center6 is unique with no scalar template tag. Queue, nd_range, block count, and buffers match the sibling wide_a2 launch.\n\n**Env latch and marker: acceptable.** q6k_center() is a function-local static; its lambda prints once. Because of short-circuit order it runs only on the first call that already satisfies NCOLS==6, A2, RPW1, PF0 and shape, which can be during warm or capture. The fprintf is host stderr only, not a readiness prerequisite, and there is no per-op log. Agreed: marker plus successful warm replay proves host selection only, not GPU dispatch of the new image.\n\n**Findings to resolve before serving, none blocking the build:**\n\n- The comment \"latched before graph capture\" overstates. The latch happens at first eligible call, which the packet itself says may be inside capture. Reword or accept.\n- Parsing uses first character equals '1' rather than the atoi convention of the sibling flags. \"10\" or \"1x\" enable; \"01\" does not. Harmless for the fixed OFF/ON protocol, but document it.\n- The two shape literals hardcode the 6144x2560 and 2560x10240 pair. Any other Q6 shape at ncols 6 silently uses the original path. This is intended but means ON-server coverage is partial by design.\n- Build must confirm exactly one new kernel image appears in the AOT target and that the generic03bb stale candidate is not what gets linked.\n\n**Preconditions I endorse unchanged:** fresh same-binary OFF/ON servers, one warm plus three fresh C2 pairs, full request/text/SSE usage/native window/pair/solo/draft equality before any latency aggregation, identity and QUIT and per-card health checks, no CPU ring or device profiling, TRACE1 presence flag only. S85 primitive deltas remain a non-prediction for serving.",
+      "ttft_ms": 27891,
+      "type": "result",
+      "duration_ms": 45821,
+      "uuid": "fba1c292-1456-4537-83eb-99571c76bee6",
+      "ttft_stream_ms": 1298,
+      "time_to_request_ms": 245,
+      "first_content_frame_ms": 1298,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

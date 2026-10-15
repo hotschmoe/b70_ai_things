@@ -351,3 +351,12 @@ Two real-weight projections with saved synthetic canonical Q8 show22.8/22.1%
 less completed projection time (eight balanced nested20-callroundmeans each,
 oneprocess/repeatedweights). No serving gain yet; exact-path/defaultOFF main
 source preparation follows. [S85 result](../../docs/20261015_strata_qsa_tiling_and_q6_centering.md#s85-q6-centering-passes-strict-gates-and-reduces-projection-time).
+
+
+S87 guarded Q6 centering passes same-new-binary TWOcardEP comparison:
+all8 OFF/ON response comparisons/observable work/captures match, functionals/QUIT/full
+post-health PASS. Three fresh C2 pairs103.088->104.279 aggregate tok/s
+(+1.155%); per-stream54.119/56.475 on candidate, below150. Keep defaultOFF
+opt-in; no daily/shelf/full-cache promotion. Fresh a1e35c4 main executable
+rebuilds restored S79 host dependencies; generic build is no longer stale03bb.
+[S87 build, AOT and serving evidence](../../docs/20261015_strata_qsa_tiling_and_q6_centering.md#s87-guarded-q6-serving-comparison-passes-with-a-small-bounded-gain).

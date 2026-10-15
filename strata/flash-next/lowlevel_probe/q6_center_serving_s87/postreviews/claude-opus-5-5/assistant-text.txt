@@ -1,0 +1,40 @@
+**ACCEPT_DECISION** (RETAIN_DEFAULT_OFF_OPTIN, bounded), with the overclaim cautions below.
+
+**Mechanism (source/ISA/primitive), separate from serving**
+- The AOT audit is exact at the primitive level. Both kernels use SIMD32, GRF128 and 48 DP4A. In the candidate, 32 saturating sequences become 8 packed adds plus 8 XOR, and kernel text shrinks from 16576 to 10880 B.
+- Spill fields are *absent*, not zero. That is not proof of no spill.
+- None of this shows the candidate kernel was dispatched on the GPU per window. The activation scope correctly limits itself to host marker, AOT binding, and no errors.
+
+**Observable equivalence before timing: satisfied**
+- All four pairs (warm plus repeat 1\u20133) pass every check: request, full text, SSE content, usage, native cache/prompt/predicted (0/107/1500), draft and accepted, windows/paired/solo, reported rows, and logged new captures.
+- Draft work differs between repeats (1120/1128/1122/1110\u20131138) but is identical within each pair. That is why within-pair comparison is valid and cross-repeat pooling is weaker.
+- Logged captures are equal in text only, and only in the warm pair and repeat3. They do not prove per-window layout identity or capture-cache hits.
+- SSE event counts (1330\u20131335 for 1500 tokens) confirm that events carry multiple tokens. Gap statistics are therefore per event, not per token, and are not usable as token latency.
+
+**Timing evidence**
+- All three timed pairs agree in direction: wall time \u22121.14, \u22121.24 and \u22121.27%; aggregate throughput +1.15, +1.25 and +1.28%.
+- Per-stream TTFT (about \u22120.04 s) and decode (+0.6 tok/s) move the same way. The consistency is real but small.
+- Weaknesses:
+  - The single process order (OFF then ON) confounds the result with thermal state, page cache and drift.
+  - The warm pair is included in the all-four list but correctly excluded from the median.
+  - n=3 means the p95 values are just interpolations of three points.
+  - TRACE1 CPU logging was on in both arms. It is matched, not zero-overhead, and not a device profile.
+- An effect of about 1.2% is within what an order effect could plausibly produce. "Bounded matched gain" is the strongest defensible label; "speedup" is not.
+- The S85 projection of about 22% must not be cited. The roughly 20\xd7 gap between projection and observation itself suggests the verify kernel is a minor share of wall time.
+
+**Overclaim check**
+- None found in the packet. The aggregate-proof `requests` miscount and the common-prefetch counter caveats are self-corrected.
+- Nothing supports full-context qualification, daily-shelf promotion or default-on, and none is asserted.
+- The goal status (about 54\u201356 tok/s per stream, versus a 150 target) is reported honestly.
+
+**Retain opt-in vs park**
+- Retaining as default-off opt-in is justified: exact equivalence, consistent sign, a smaller kernel, and no health regressions.
+- Parking would discard a clean, cheap primitive win.
+- Promotion is not justified until order is controlled.
+
+**Most useful next discriminator**
+- If anyone wants to firm up this candidate, the cheapest step is one reversed-order process pair (ON then OFF), reusing the existing binary and configs. That costs about 2\xd738 s of startup plus about 4\xd729 s of pairs, with no build.
+  - If the sign holds, the order confound is retired.
+  - If it flips, park the candidate.
+- The packet's prefill QSA tiling candidate (from S84) targets the larger bottleneck: short prefill is below 2000 and TTFT is about 2 s on stream 1. It deserves the next source stage, but needs separate authorization and a new build of about 219 s. It should not be gated on further timing of S87.
+- No cache campaign or repeat inflation is warranted.

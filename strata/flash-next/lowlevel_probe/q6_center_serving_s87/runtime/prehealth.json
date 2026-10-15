@@ -1,0 +1,24 @@
+{
+  "card": {
+    "command": [
+      "bin/xpu-health",
+      "--img",
+      "b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78",
+      "--timeout",
+      "400"
+    ],
+    "exit": 0,
+    "elapsed_s": 29.337373227986973,
+    "epoch_ns": 1792084103626608436
+  },
+  "collective": {
+    "command": [
+      "bin/xpu-collective-health",
+      "--timeout",
+      "400"
+    ],
+    "exit": 0,
+    "elapsed_s": 27.054317021975294,
+    "epoch_ns": 1792084130681299581
+  }
+}

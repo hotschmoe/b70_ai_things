@@ -1,0 +1,118 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "73a83125-d4f4-4983-baef-3ec5cfd854b2"
+  ],
+  "fresh_session_requested": true,
+  "exit": 0,
+  "elapsed_s": 16.921517849026714,
+  "launch_exception": null,
+  "source_packet_sha256": "812d5d8f67b2b1eba66fe99801a81b2689cadd2c711fba1625284079d909fb54",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 15861,
+      "stop_reason": "end_turn",
+      "session_id": "73a83125-d4f4-4983-baef-3ec5cfd854b2",
+      "total_cost_usd": 0.0917338,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 8022,
+        "cache_read_input_tokens": 649,
+        "output_tokens": 1371,
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 8022,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1371,
+            "cache_read_input_tokens": 649,
+            "cache_creation_input_tokens": 8022,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 8022
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 1371,
+          "cacheReadInputTokens": 649,
+          "cacheCreationInputTokens": 8022,
+          "webSearchRequests": 0,
+          "costUSD": 0.0917338,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 0,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**ACCEPT_DECISION** (RETAIN_DEFAULT_OFF_OPTIN, bounded), with the overclaim cautions below.\n\n**Mechanism (source/ISA/primitive), separate from serving**\n- The AOT audit is exact at the primitive level. Both kernels use SIMD32, GRF128 and 48 DP4A. In the candidate, 32 saturating sequences become 8 packed adds plus 8 XOR, and kernel text shrinks from 16576 to 10880 B.\n- Spill fields are *absent*, not zero. That is not proof of no spill.\n- None of this shows the candidate kernel was dispatched on the GPU per window. The activation scope correctly limits itself to host marker, AOT binding, and no errors.\n\n**Observable equivalence before timing: satisfied**\n- All four pairs (warm plus repeat 1\u20133) pass every check: request, full text, SSE content, usage, native cache/prompt/predicted (0/107/1500), draft and accepted, windows/paired/solo, reported rows, and logged new captures.\n- Draft work differs between repeats (1120/1128/1122/1110\u20131138) but is identical within each pair. That is why within-pair comparison is valid and cross-repeat pooling is weaker.\n- Logged captures are equal in text only, and only in the warm pair and repeat3. They do not prove per-window layout identity or capture-cache hits.\n- SSE event counts (1330\u20131335 for 1500 tokens) confirm that events carry multiple tokens. Gap statistics are therefore per event, not per token, and are not usable as token latency.\n\n**Timing evidence**\n- All three timed pairs agree in direction: wall time \u22121.14, \u22121.24 and \u22121.27%; aggregate throughput +1.15, +1.25 and +1.28%.\n- Per-stream TTFT (about \u22120.04 s) and decode (+0.6 tok/s) move the same way. The consistency is real but small.\n- Weaknesses:\n  - The single process order (OFF then ON) confounds the result with thermal state, page cache and drift.\n  - The warm pair is included in the all-four list but correctly excluded from the median.\n  - n=3 means the p95 values are just interpolations of three points.\n  - TRACE1 CPU logging was on in both arms. It is matched, not zero-overhead, and not a device profile.\n- An effect of about 1.2% is within what an order effect could plausibly produce. \"Bounded matched gain\" is the strongest defensible label; \"speedup\" is not.\n- The S85 projection of about 22% must not be cited. The roughly 20\u00d7 gap between projection and observation itself suggests the verify kernel is a minor share of wall time.\n\n**Overclaim check**\n- None found in the packet. The aggregate-proof `requests` miscount and the common-prefetch counter caveats are self-corrected.\n- Nothing supports full-context qualification, daily-shelf promotion or default-on, and none is asserted.\n- The goal status (about 54\u201356 tok/s per stream, versus a 150 target) is reported honestly.\n\n**Retain opt-in vs park**\n- Retaining as default-off opt-in is justified: exact equivalence, consistent sign, a smaller kernel, and no health regressions.\n- Parking would discard a clean, cheap primitive win.\n- Promotion is not justified until order is controlled.\n\n**Most useful next discriminator**\n- If anyone wants to firm up this candidate, the cheapest step is one reversed-order process pair (ON then OFF), reusing the existing binary and configs. That costs about 2\u00d738 s of startup plus about 4\u00d729 s of pairs, with no build.\n  - If the sign holds, the order confound is retired.\n  - If it flips, park the candidate.\n- The packet's prefill QSA tiling candidate (from S84) targets the larger bottleneck: short prefill is below 2000 and TTFT is about 2 s on stream 1. It deserves the next source stage, but needs separate authorization and a new build of about 219 s. It should not be gated on further timing of S87.\n- No cache campaign or repeat inflation is warranted.",
+      "ttft_ms": 15911,
+      "type": "result",
+      "duration_ms": 15942,
+      "uuid": "69732585-0f0f-4cdb-b9fd-d94a26dc06ec",
+      "ttft_stream_ms": 1079,
+      "time_to_request_ms": 76,
+      "first_content_frame_ms": 1079,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

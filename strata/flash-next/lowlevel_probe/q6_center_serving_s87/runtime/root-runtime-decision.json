@@ -1,0 +1,196 @@
+{
+  "status": "RETAIN_DEFAULT_OFF_OPTIN_BOUNDED_MATCHED_GAIN",
+  "epoch_ns": 1792084780720005264,
+  "comparison_sha256": "f349c6bdcfbcb7b3d1e30ed44d8922363acce136368bc40609df1d65ef9fb40c",
+  "binary_sha256": "a1e35c4ddecff6cfcca8cd61945d0243274f4867e8eff4d134c4ad535b920900",
+  "source_sha256": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584",
+  "all_frozen_observable_gates_passed": true,
+  "matched_timed_pairs": 3,
+  "matched_warm_pairs": 1,
+  "median_aggregate_output_tps": [
+    103.088293262601,
+    104.27856446035865
+  ],
+  "median_aggregate_gain_percent": 1.1546133514167556,
+  "paired_wall_change_percent": [
+    -1.1414341997488253,
+    -1.2351664562944231,
+    -1.2669016412868106
+  ],
+  "paired_aggregate_gain_percent": [
+    1.1546133514167556,
+    1.2506136161793302,
+    1.2831579909342583
+  ],
+  "per_stream": [
+    [
+      {
+        "stream": 0,
+        "n_requests": 3,
+        "ttft_s": {
+          "raw": [
+            0.898356101999525,
+            0.9349673239630647,
+            0.9312746439827606
+          ],
+          "p50": 0.9312746439827606,
+          "p95": 0.9345980559650343
+        },
+        "completion_wall_s": {
+          "p50": 28.94539172697114,
+          "p95": 28.97646077731624
+        },
+        "median_decode_tps": 53.51579035121726,
+        "SSE_content_event_gap_ms_per_request": [
+          {
+            "count": 1330,
+            "p50": 0.22361151059158146,
+            "p95": 47.48091624642257,
+            "maximum": 1333.9556750142947
+          },
+          {
+            "count": 1332,
+            "p50": 0.24007802130654454,
+            "p95": 47.53566469298676,
+            "maximum": 1337.3077060095966
+          },
+          {
+            "count": 1332,
+            "p50": 0.22408750373870134,
+            "p95": 47.49190912116319,
+            "maximum": 1352.7316529653035
+          }
+        ]
+      },
+      {
+        "stream": 1,
+        "n_requests": 3,
+        "ttft_s": {
+          "raw": [
+            2.061150686000474,
+            2.080610437958967,
+            2.0830963969929144
+          ],
+          "p50": 2.080610437958967,
+          "p95": 2.0828478010895197
+        },
+        "completion_wall_s": {
+          "p50": 28.892548687988892,
+          "p95": 29.273193467600503
+        },
+        "median_decode_tps": 55.86738342478138,
+        "SSE_content_event_gap_ms_per_request": [
+          {
+            "count": 1330,
+            "p50": 0.21935300901532173,
+            "p95": 47.52685076673515,
+            "maximum": 432.48728901380673
+          },
+          {
+            "count": 1335,
+            "p50": 0.2313510049134493,
+            "p95": 47.50460420618765,
+            "maximum": 423.8225890439935
+          },
+          {
+            "count": 1332,
+            "p50": 0.23161148419603705,
+            "p95": 47.523683711187914,
+            "maximum": 425.01600401010364
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "stream": 0,
+        "n_requests": 3,
+        "ttft_s": {
+          "raw": [
+            0.8798569519422017,
+            0.8905318739707582,
+            0.896262920985464
+          ],
+          "p50": 0.8905318739707582,
+          "p95": 0.8956898162839935
+        },
+        "completion_wall_s": {
+          "p50": 28.58859078900423,
+          "p95": 28.64222736445372
+        },
+        "median_decode_tps": 54.119315891352905,
+        "SSE_content_event_gap_ms_per_request": [
+          {
+            "count": 1330,
+            "p50": 0.21362749976105988,
+            "p95": 46.97776293614879,
+            "maximum": 1317.760156991426
+          },
+          {
+            "count": 1332,
+            "p50": 0.20292747649364173,
+            "p95": 47.02710057608783,
+            "maximum": 1329.0613539866172
+          },
+          {
+            "count": 1332,
+            "p50": 0.23522399715147913,
+            "p95": 46.93126024212688,
+            "maximum": 1324.2919809999876
+          }
+        ]
+      },
+      {
+        "stream": 1,
+        "n_requests": 3,
+        "ttft_s": {
+          "raw": [
+            2.0167680379818194,
+            2.042314393038396,
+            2.0262923059635796
+          ],
+          "p50": 2.0262923059635796,
+          "p95": 2.040712184330914
+        },
+        "completion_wall_s": {
+          "p50": 28.559681131970137,
+          "p95": 28.90731765916571
+        },
+        "median_decode_tps": 56.4745849369302,
+        "SSE_content_event_gap_ms_per_request": [
+          {
+            "count": 1330,
+            "p50": 0.21237999317236245,
+            "p95": 47.036732896231115,
+            "maximum": 441.8840039870702
+          },
+          {
+            "count": 1335,
+            "p50": 0.20166498143225908,
+            "p95": 47.05218482995406,
+            "maximum": 429.6811689855531
+          },
+          {
+            "count": 1332,
+            "p50": 0.24334402405656874,
+            "p95": 46.97834270191379,
+            "maximum": 425.0619920203462
+          }
+        ]
+      }
+    ]
+  ],
+  "percentile_method": "Linear interpolation at(n-1)*p; only3requests/stream/arm, descriptive not population/tail guarantee",
+  "serving_scope": "Two fresh same-binary processes in orderOFFthenON; fixedTRACE1CPUlogging, noCPUring/deviceprofile, eachonewarm+3fresh107prompt/1500outputC2pairs; no alternated independent process replication",
+  "activation_scope": "Exactonceeligiblehostmarker + actualmainAOT/sourcebinding + successfulwarm/use/noerrors; not independentGPUdispatch/capturecache-hit/perwindow-layoutproof",
+  "retention": "Main guarded defaultOFF source retained; frozen executable/configs recoverable. Optincandidate only, no dailyconfig/default/shelfpromotion and no fullcontextqualification repeated",
+  "dev_loop": "One219sCPUmainincrementalbuild +12sselectedAOTaudit; two38sstartups; onequietwarm+3pairs/arm; freshprehealth, eachfullposthealth; arm1reusesimmediatelypriorposthealth. No extra tests/repeats/cachecampaign/dailyrestore",
+  "corrections": [
+    "aggregate-proof.json requests field counts PLE rows, not HTTP requests; use raw finalPLEtext. Nonzero commonprefetch counters do not mean S49enabled.",
+    "No independent process-order/coldcache/thermal uncertainty resolved; threepairs are bounded diagnostic evidence.",
+    "S85~22percent projection result does not forecast full-model throughput; servingobserved~1percent."
+  ],
+  "goal_status": "Incomplete: decode~54-56/stream below150, shortprefillbelow2000; S30fullRAMcorrectness retainedseparately",
+  "next_candidate": "Guardedprefill-onlylong/full256queryQSAtiling basedonS84; keepdecode/short/unsupportedpathsoriginal; no new source/build/GPU stage authorized by this postdecision",
+  "actual_postreviews_pending": true
+}

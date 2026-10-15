@@ -1,0 +1,36 @@
+{
+  "stage": "S87_SOURCE_ONLY_FROZEN",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-serving-s87/harness-prep/client.py",
+      "bytes": 10588,
+      "sha256": "6f831a16ae722366ea4347bdd6d52517c609bef8b061ae9ab37c7fba33c2e40c"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-serving-s87/harness-prep/compare.py",
+      "bytes": 6550,
+      "sha256": "ee9f39f57691ed36f5e0a792a49e0035f22c80f3359b37caf6a698c13055c5ad"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-serving-s87/harness-prep/make_configs.py",
+      "bytes": 3881,
+      "sha256": "a73e4c1d7068c4e8d9668c77981be08f865b39cc0f84ee88b69ccb763d6f6053"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-serving-s87/harness-prep/launch_stage.sh",
+      "bytes": 1851,
+      "sha256": "a49440c963887ba93cd0efdaf6f7431cee48b47e4939e5949c240fa475d2f814"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-serving-s87/harness-prep/start_arm.py",
+      "bytes": 6847,
+      "sha256": "d356f869a83324a9cc3f381767a4c3667705bb325593bdf11f3bf0a3bc750f79"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-serving-s87/harness-prep/stop_and_health.py",
+      "bytes": 4239,
+      "sha256": "787ab6d9314a602b6d05adea599a4d450b17248050f9ca8c910d147f069ff323"
+    }
+  ],
+  "scope": "six controllers only; actual new binary identity supplied by root after build/AOT audit; no runtime claim"
+}

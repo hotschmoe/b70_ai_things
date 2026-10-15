@@ -287,3 +287,11 @@ Q6 C6 centering passes strict gates and reduces two repeated-weight projection
 times by22.8/22.1percent. A defaultOFF main-source proposal is prepared, with
 matched full-model comparison pending. Absolute targets remain unmet.
 [Source, ISA and numerical/timing evidence](20261015_strata_qsa_tiling_and_q6_centering.md).
+
+
+S87 same-new-binary two-card Q6 centering OFF/ON passes all four paired
+output/native-work/capture gates, functionals, normal QUIT and post-health.
+Three timed C2 pairs median103.088->104.279 aggregate tok/s (+1.155%);
+per-stream decode53.516/55.867->54.119/56.475. Retain default-OFF opt-in,
+no daily promotion or new full-cache qualification. One OFF-then-ON process
+sequence, not independent process replication. [S87 result](20261015_strata_qsa_tiling_and_q6_centering.md#s87-guarded-q6-serving-comparison-passes-with-a-small-bounded-gain).

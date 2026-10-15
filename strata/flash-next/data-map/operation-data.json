@@ -1,7 +1,7 @@
 {
  "schema": 1,
  "title": "Strata Flash-Next data map",
- "snapshot": "2026-10-15: historical S22 operation rows; primitive evidence through S80 full-GU target, S76-S78 source audits and S79 HOLD_UNMATCHED serving screen. Later evidence does not rewrite historical service rollups.",
+ "snapshot": "2026-10-15: historical S22 operation rows; source/primitive evidence through S86 and actual-main matched Q6 C2 serving comparison S87. Later results do not rewrite historical operation service or rollups.",
  "scope": "Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two Arc Pro B70 cards, Strata SYCL engine, EP/PUSH, batch MTP depth2 (opt-in), two 200000-token slots, INT8 KV, 32 GiB / 4-entry RAM parking, all 24576 experts resident (7152 on GPU0 + 17424 on GPU1), greedy.",
  "warnings": [
   "Trace service times overlap: within a card (engines), across cards, and with CPU wall time. They are NOT additive and are not a latency budget.",
@@ -243,7 +243,8 @@
    "timing": "8balanced nested20-callroundmeans per shape: out63.172075->48.725638us/medianpaired-22.7841%;qkv73.817238->57.480712us/-22.0951%;all16roundsnegative. Completedhostwall/repeatedweights/quantizationoutsidegraphs; no measuredcache-residency,physicalcause,p95 or servinggain.",
    "closure": "Onequietcard0window41s/leaf12s,health0/CID+NAMEgone/wrappers0. ActualpostOpus15.159s/Fable27.485s ACCEPT/rootfullread and corrections.",
    "decision": "GOsmall defaultOFF exacttestedshape mainSOURCEPREPonly; no mainapply/newserve/promotion/retry/fullcachecampaign. Matchedtwo-card EP fullmodel test remains pending."
-  }
+  },
+  "q6_center_serving_s87": "q6-center-serving-s87/{comparison,root-runtime-decision,root-serving-go}.json; q6-center-serving-s87-build/build/root-build-audit.json; q6-center-main-s87-isa/{selection,report}.json; actual source/post Opus/Fable reviews and rootpostclosure. Same-new-binarya1e35c4, defaultOFF exact C6/A2/RPW1/SG32/PF0/twoshapes; no shelf promotion."
  },
  "geometry": {
   "source": "Confirmed against served GGUF metadata with CPU-only tools/gguf_reader.py: lowlevel-s24/model-geometry.json. Derived: 12 QSA/36 GDN layers, ssm_conv_channels=2*128*16+6144; defaults cross-checked against include/strata/core/geometry.hpp.",
@@ -1213,7 +1214,8 @@
     "iq3s-int8-dpas-s75-root/root-runtime-decision.json; iq3s-int8-dpas-s75-prep-v2/run-clean/{comparison,closure}.json; iq3s-int8-dpas-s75-isa/report.json",
     "iq3s-native-cost-s76-prep/{findings.md,source-cost-proof.json}; iq3s-native-cost-s76-manifest.json",
     "q6-center-native-isa-s83-root/findings.md;{report,centering-excerpts}.json",
-    "q6-center-s85-prep-v2/run-clean/{comparison,closure}.json;q6-center-s85-isa/report.json"
+    "q6-center-s85-prep-v2/run-clean/{comparison,closure}.json;q6-center-s85-isa/report.json",
+    "q6-center-serving-s87/{comparison,root-runtime-decision}.json; q6-center-main-s87-isa/{selection,report}.json; q6-center-serving-postreviews-s87-20261015/root-postclosure.json"
    ],
    "quoted": [
     {
@@ -1311,6 +1313,12 @@
      "value": "out63.172075->48.725638us(-22.7841%medianpaired),qkv73.817238->57.480712us(-22.0951%);all16nestedroundsfaster,fullbytes/graphs/memory/healthPASS.",
      "basis": "Oneprocess/tworealweights/savedsyntheticcanonicalQ8/8balanced20-callrounds each. Quantizationoutsidegraphs/repeatedweights; no actual cache-residency or fullmodel gain. Static48DP4A unchanged,32overflowseq->8add+8XOR.",
      "status": "measured"
+    },
+    {
+     "label": "S87 actual-main Q6 C2 serving comparison",
+     "value": "Medianaggregate103.088->104.279tok/s(+1.155%,ratioofmedians);all3matchedtimedpairwalls-1.141/-1.235/-1.267%. Perstream54.119/56.475ON,stillbelow150.",
+     "basis": "Same-new-binarya1e35c4 OFFthenON freshprocesses, one warm+3fresh107/1500C2pairs. Fullrequests/text/SSEusage/native5workfields/windows/pairsolo/roundedrows/loggednewcaptures/functionals/QUIT/CIDNAME/posthealthPASS. Actualmain3compiles/2archives/1AOT219s, selectedISA12s confirms48DP4A/32sat->8add8XOR/SIMD32GRF128. No independentdispatch/perwindowlayout/processorderreplication/causeproof. KeepguardeddefaultOFFoptin.",
+     "status": "measured"
     }
    ],
    "upstream": [
@@ -1331,7 +1339,8 @@
     "S70 same-input Q8 already shared. Main sharedGU17same/31mixed-format pairs; GDN9same/27mixed. A union row-grid dispatch could preserve each branch/output stride but shifts consumer timing and compiler resources; implementation parked until HC screen. No quantizer or weight-decode reuse claim.",
     "S74 resolves acceptance/lowering of the exact signed INT8 joint_matrix expression on the BMG AOT compiler path only. Runtime dispatch/all128integer outputs, block layout/coordinates, canonical IQ3_S/Q8 scale handling and native FP32 partial/XOR order remain unmeasured; no replacement math or serving result.",
     "S75 preserves canonical Q8 and native partial/stored-lane XOR order using a local ledger. Its exact runtime path is bounded-qualified for two shapes but 7.7-7.9x slower. No standalone S74 runtime run, serving arm, barrier-elision repeat or format sweep is justified by this result alone.",
-    "S85 strict and compiled-mechanism gates qualify only two private C6/RPW1/A2/SG32 projection shapes. Main guarded integration/defaultOFF source prep is next; a matched two-card EP serving comparison must establish whether the primitive gain survives production quantization, weights and critical path. No extra streaming micro or 200K rerun selected."
+    "S85 strict and compiled-mechanism gates qualify only two private C6/RPW1/A2/SG32 projection shapes. Main guarded integration/defaultOFF source prep is next; a matched two-card EP serving comparison must establish whether the primitive gain survives production quantization, weights and critical path. No extra streaming micro or 200K rerun selected.",
+    "S87 closes the bounded actual-main serving discriminator for the two guardedQ6C6shapes. One OFFthenON processsequence and3promptpairs leave order/thermal/cache effects unresolved at~1% magnitude. Hostmarker+successfulwarm is not independentGPUdispatch; no default/daily/shelf/fullcachepromotion or 150tok/s achievement."
    ],
    "hypotheses": [
     {
@@ -2911,6 +2920,13 @@
    "value": "Medianpairedout-22.7841%,qkv-22.0951%;146strictsnapshots/10DOT/healthPASS.",
    "status": "measured",
    "note": "8balanced nested20-callroundmeans each/oneprocess/savedcanonicalQ8/repeatedweights. Main-sourceprepdefaultOFF only; no servingthroughput,p95,physicalcache/causeclaim."
+  },
+  {
+   "stage": "S87",
+   "label": "Guarded Q6 centering, matched two-card EP C2 serving",
+   "value": "Medianaggregate103.088->104.279tok/s(+1.155%,ratioofmedians), threepairedwallsall~1.1-1.3%lower; alloutput/work/healthgatesPASS.",
+   "status": "measured",
+   "note": "OneOFFthenON freshprocesssequence; one warm+3fresh107/1500pairs each, TRACE1CPUloggingmatched/notdeviceprofile. KeepdefaultOFFoptin, no broadspeed/default/shelf/fullcacheclaim; perstream~54-56below150."
   }
  ],
  "rejected_parked": [

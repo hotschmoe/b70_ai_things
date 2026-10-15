@@ -1,0 +1,47 @@
+{
+  "status": "PASS_ROOT_HARNESS_FULLREAD_PINS_AND_CONFIG_MODEL_CONTINUITY",
+  "epoch_ns": 1792084157304046104,
+  "harness_manifest_sha256": "30151bdf281c4538c6319a5b693db98efcfda19148719d213ceed796c26896fb",
+  "same_config_except_Q6_flag_and_arm_log": true,
+  "inherited_model_closure": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-nvme-placement-s53/closure.json",
+  "model_closure_sha256": "74fbecdb8f0c740ed902996950f91d7dbd6022e111006cbbfdefc4f3166f3d33",
+  "primary_identity": {
+    "dev": 44,
+    "ino": 1156777,
+    "size": 47039860096,
+    "mtime_ns": 1792062519977528586
+  },
+  "PLE_identity": {
+    "dev": 44,
+    "ino": 1068321,
+    "size": 28800138432,
+    "mtime_ns": 1791869062502802041
+  },
+  "scope": "Existing primary source-stream plus independent destination SHA, inherited qualified PLE SHA, unchanged current paths/resolution/dev/inode/size/mtime; no fresh payload rehash",
+  "fresh_prehealth": {
+    "card": {
+      "command": [
+        "bin/xpu-health",
+        "--img",
+        "b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78",
+        "--timeout",
+        "400"
+      ],
+      "exit": 0,
+      "elapsed_s": 29.337373227986973,
+      "epoch_ns": 1792084103626608436
+    },
+    "collective": {
+      "command": [
+        "bin/xpu-collective-health",
+        "--timeout",
+        "400"
+      ],
+      "exit": 0,
+      "elapsed_s": 27.054317021975294,
+      "epoch_ns": 1792084130681299581
+    }
+  },
+  "actual_main_AOT_pending": true,
+  "GPU_SERVE_GO": false
+}

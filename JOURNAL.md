@@ -24261,3 +24261,54 @@ S85 final323files86839920B completedmanifestdfb4b31b;50smallASCIIrecords
 retainedexactly, no arrays/binaries/fullASM checkedin. S84 final187files
 282165114B manifest33047e7c;40smallrecords. Sourceaudits18exactcopies and
 S86unappliedpatch/pins/contract retained; old170operationrows/rollups/meta EXACT.
+
+
+## 2026-10-15 -- Flash-Next optimization S87: guarded Q6 matched serving gain
+
+CONFIG -> Freshsamea1e35c4 binary/TWOcardEP, STRATA_Q6_CENTER0/1; defaultOFF,
+exact C6/A2/RPW1/SG32/PF0 and6144x2560/2560x10240. CommonHCLO_ONCE/PUSH/
+NVMeDirectPLE/depth2/headpairON, all24576expertsresident, S49/headRPW2OFF;
+matchedTRACE1CPUlogging/noCPUring/deviceprofiler. One warm+3fresh107-token/
+1500-output pairedcoding requests perarm; nativeprompt-start admission.
+COMMAND -> Upstreamfresh296b59d2 unchanged. ActualsourceOpus27.688s/Fable46.809s
+GO/rootfullread resolveslazyfirsteligiblelatch/comment/literal0/1/hostmarker
+scope. RootappliesonlynativeTU c1cdeabe; CPUbuild219s/3compiles/2archives/1main
+AOT includesrestored3S79hostsources, exactotherarchives/HC/cache/ABIunchanged.
+Frozenexe a1e35c4ddecff6cfcca8cd61945d0243274f4867e8eff4d134c4ad535b920900;
+genericbuild nowbyteequalfreshsourcebuild, old03bb snapshotretainedhistorical.
+SelectedactualMAIN AOT12s/twoISA/1601metadataheaders/9.52MBread: original771,
+candidate772unique; bothSIMD32/GRF128/48DP4A,32satseq->8packedadd+8XOR,
+text16576->10880B; spill/scratchabsentNOTmeasuredzero. Main/source/object/
+archivebindingPASS; no fullISA/commonreparse/extraGPUprobe.
+Rootexecutes cpu-run make_configs.py; cpu-run start_arm.py N; cpu-run --quiet
+client.py N warm/timed/functional; cpu-run --quiet stop_and_health.py N,
+N0then1; detachedserverpairGPUleaseonlylifetime. Freshfullprehealth56s;
+38sstartups,29swarm+88/86stimed+5/6sfunctionals,58/60snormalstop/fullposthealth.
+Arm1reuseimmediatearm0fullposthealth, nointerveningGPU/stackchange. Existing
+S53payloadhashclosure+currentexactpath/dev/inode/size/mtime continuity avoids
+75GBrehash; nofreshwholepayloadhashclaim. Sharedleases/loghonored.
+RESULT -> compare.py PASS_MATCHED_DISCRIMINATOR: allfourpairfullrequests/text/
+SSEusage/fivepresentnativeworkfields/windows/pairsolo/roundedrows/newcaptures
+EXACT. WarmS16prefixes/pairedlifetimes, model/exe/env/image/residency, math/
+reasoning/toolroundtrip/normalQUIT/createdfullCID+NAMEabsence/gpurun0/bothcard+
+compiledcollectiveposthealthPASS. Pairwallmedian29.101268->28.769096s,
+aggregate103.088293->104.278564tok/s (+1.154613%ratioofmedians); threepaired
+walls-1.1414/-1.2352/-1.2669%. Decodeperstream53.516/55.867->54.119/56.475.
+TTFTp50/p95 OFFs0 .931/.935,s1 2.081/2.083; ONs0 .891/.896,s1 2.026/2.041s;
+linearinterpolation/3requestsperstream only, notpopulationtailguarantees.
+PerrequestSSEeventgapp50/p95/maxretained; eventsnotexacttokenITL.
+VERDICT -> RETAIN_DEFAULT_OFF_OPTIN boundedmatchedgain; sourceapplied/frozen
+exe/configs recoverable, no daily/default/shelf/fullcontextpromotion. OneOFFthenON
+processsequence/noindependentorderreplication; S85~22%primitive doesnotpredict
+servinggain/causalshare. Hostmarker+warm/AOT isnotindependentGPUdispatch or
+completeperwindow/cache-hitlayoutproof. ActualpostOpus16.922s/Fable33.389s both
+ACCEPT/rootfullread; rootrejects specificSSEgapcause and verifyshare inference,
+oneoptionalreversalwouldnotresolveallorderconfounding. Noextrareversal/
+primitive/cache/dailyrestore run; nextsourceleadguardedlong/full256prefillQSA,
+short/decodeoriginal. Legacyaggregateproof.requests meansPLErows, notHTTPcalls;
+nonzerocommonprefetchcounts donotmeanS49ON. Goalsstillincomplete/decode~54-56
+below150/prefillbelow2000; S30trueRAMrecoveryqualificationretained. BothGPUsCPU
+free/ownedserversgone/no rootwaiter; datedreport and data-mapannotatedwithout
+changing170historicaloperations/rollups/meta.
+
+S87 completed260files231808577B manifest40d31d4466bb47f78fdfabb72542057fc6bd2a5b8de6d90e3e05cb94e0b11f9d;83exactsmallcopies/85repofiles332868B retained. Rootallcopyhash/bytes/ASCII and unchangedhistoricalprefix/170ops checksPASS.

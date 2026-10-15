@@ -304,3 +304,11 @@ observations, not serving speed, p95, measured cache residency or physical
 latency causes. Small defaultOFF exact-path main-source preparation is next.
 Historical170operations/rollups/metadata remain exact.
 [Source, ISA and runtime report](../../../docs/20261015_strata_qsa_tiling_and_q6_centering.md).
+
+
+S87 adds actual-main Q6 AOT and matched C2 serving evidence to dense_proj:
+103.088->104.279 aggregate tok/s (+1.155%, three pairs in one OFF/ON sequence).
+Full outputs/observable work/functionals/teardown/health match; keep guarded
+defaultOFF opt-in. Source/AOT and one-time host marker are not independent
+GPU dispatch or complete per-window layout proof. Historical170 operations,
+rollups and metadata stay unchanged. See the dated QSA/Q6 report.

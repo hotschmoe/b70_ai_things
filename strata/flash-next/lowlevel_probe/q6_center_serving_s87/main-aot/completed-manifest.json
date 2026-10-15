@@ -1,0 +1,238 @@
+{
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-main-s87-isa",
+  "status": "FROZEN_SELECTED_ACTUAL_MAIN_AOT_AUDIT_NO_GPU",
+  "file_count": 46,
+  "total_bytes": 358387,
+  "files": [
+    {
+      "path": "candidate-disasm/.bss.const",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "candidate-disasm/.misc.buildOptions",
+      "bytes": 38,
+      "sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f"
+    },
+    {
+      "path": "candidate-disasm/.note.intelgt.compat",
+      "bytes": 172,
+      "sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1"
+    },
+    {
+      "path": "candidate-disasm/.note.intelgt.metrics",
+      "bytes": 3,
+      "sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c"
+    },
+    {
+      "path": "candidate-disasm/.rel.text.Intel_Symbol_Table_Void_Program",
+      "bytes": 33,
+      "sha256": "762112bef961cc248718013eff6cfcaa04f0ee5bace3df9fef384654ed8ec0bb"
+    },
+    {
+      "path": "candidate-disasm/.rel.text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS5_PfiiPN4sycl3_V15queueEE23native_mmvq_q6k_center6EE",
+      "bytes": 43,
+      "sha256": "7babf6edcd10f5038efb4a613e15c715ec7eaf32a59e890fb03f921bb6eee735"
+    },
+    {
+      "path": "candidate-disasm/.spv",
+      "bytes": 21048,
+      "sha256": "460aaa0c9911a7a68c0fbd6ba67a791ef672a3e27a9b633e668fb7f65a356d6f"
+    },
+    {
+      "path": "candidate-disasm/.symtab",
+      "bytes": 787,
+      "sha256": "e43b01d808c0d812023f52178c614412e2382d900c826c14f79fdfbbc263ad87"
+    },
+    {
+      "path": "candidate-disasm/.text.Intel_Symbol_Table_Void_Program.asm",
+      "bytes": 1312,
+      "sha256": "6b8f297166b9443d1ac9f410cb945cdbc0833ab830d5bd1af7a33a09d617c034"
+    },
+    {
+      "path": "candidate-disasm/.text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS5_PfiiPN4sycl3_V15queueEE23native_mmvq_q6k_center6EE.asm",
+      "bytes": 78310,
+      "sha256": "7dc9a9e2cc63cb45ac5a4fa54bf5f7ce362d32e4647d5d3cffe5ce7d4b0272a6"
+    },
+    {
+      "path": "candidate-disasm/.ze_info",
+      "bytes": 3129,
+      "sha256": "2c28fa34f4ce8ee10195985a7b8f43d3eb0d0de20d85cb62169aab3aae265392"
+    },
+    {
+      "path": "candidate-disasm/sections.txt",
+      "bytes": 564,
+      "sha256": "15be9e7b5425b7bbb6ee1deb2c711c8d4cb6019a1d1f3c62a17a3edb35bc8c0c"
+    },
+    {
+      "path": "candidate-disasm.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "candidate-disasm.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "candidate-disasm.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "candidate.ze_info",
+      "bytes": 3129,
+      "sha256": "2c28fa34f4ce8ee10195985a7b8f43d3eb0d0de20d85cb62169aab3aae265392"
+    },
+    {
+      "path": "candidate.zebin",
+      "bytes": 37480,
+      "sha256": "87f4e963357fabcb56c12129ae6a26fb99ccbbf8fd7bc3e08bbecd07fb62f3ab"
+    },
+    {
+      "path": "decode.sh",
+      "bytes": 956,
+      "sha256": "6e6637342fefe604e572473baadd40e44923e766343070b2b80f2fdbd289f5e2"
+    },
+    {
+      "path": "decoder-input-after.sha256",
+      "bytes": 169,
+      "sha256": "cf98dd7d6ef2d532dc99d178bf3556c04cba1def77d2308e25ac95045d2c25bb"
+    },
+    {
+      "path": "decoder-input-before.sha256",
+      "bytes": 169,
+      "sha256": "cf98dd7d6ef2d532dc99d178bf3556c04cba1def77d2308e25ac95045d2c25bb"
+    },
+    {
+      "path": "excerpts.json",
+      "bytes": 5466,
+      "sha256": "25c86e4de650baa1fe582c41398d14d4f9bfe0546513d97686214f293380f44f"
+    },
+    {
+      "path": "extract.py",
+      "bytes": 4276,
+      "sha256": "724b9c5352f27742d2a1a905f9c2027053a167d7357c27e223a69edb76118a4b"
+    },
+    {
+      "path": "extract.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "extract.stdout",
+      "bytes": 3217,
+      "sha256": "ae11a1df237b43ee45f0a78abe17d26380c4203e20950275c1ec7e4a4947f3d6"
+    },
+    {
+      "path": "findings.md",
+      "bytes": 1733,
+      "sha256": "7d21d4f7d45ffb731ab349fe8827f9999d24609ea35feb2ad3b80d8af70c9683"
+    },
+    {
+      "path": "image-id.txt",
+      "bytes": 72,
+      "sha256": "0716a759b38b99857a73ea5340c9861a23dd6cbe31f267bd8c0e878b3ac41055"
+    },
+    {
+      "path": "original-disasm/.bss.const",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "original-disasm/.misc.buildOptions",
+      "bytes": 38,
+      "sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f"
+    },
+    {
+      "path": "original-disasm/.note.intelgt.compat",
+      "bytes": 172,
+      "sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1"
+    },
+    {
+      "path": "original-disasm/.note.intelgt.metrics",
+      "bytes": 3,
+      "sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c"
+    },
+    {
+      "path": "original-disasm/.rel.text.Intel_Symbol_Table_Void_Program",
+      "bytes": 33,
+      "sha256": "762112bef961cc248718013eff6cfcaa04f0ee5bace3df9fef384654ed8ec0bb"
+    },
+    {
+      "path": "original-disasm/.rel.text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS5_PfiiPN4sycl3_V15queueEE23native_mmvq_q6k_wide_a218dpct_kernel_scalarILi6EEEE",
+      "bytes": 43,
+      "sha256": "7babf6edcd10f5038efb4a613e15c715ec7eaf32a59e890fb03f921bb6eee735"
+    },
+    {
+      "path": "original-disasm/.spv",
+      "bytes": 21176,
+      "sha256": "cfb3eef2e2dd88f174d39e92128f3bb23cd02777f15c7a8ca25184e5da7a8463"
+    },
+    {
+      "path": "original-disasm/.symtab",
+      "bytes": 865,
+      "sha256": "6456277238aaf00dc61568c583a2923c90a64245a9bfa445184d95c93498d472"
+    },
+    {
+      "path": "original-disasm/.text.Intel_Symbol_Table_Void_Program.asm",
+      "bytes": 1312,
+      "sha256": "5dd44c5b372326b918b2fe82589258e5688356637d8b04d5e8ef1bdeb58ae06b"
+    },
+    {
+      "path": "original-disasm/.text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS5_PfiiPN4sycl3_V15queueEE23native_mmvq_q6k_wide_a218dpct_kernel_scalarILi6EEEE.asm",
+      "bytes": 111252,
+      "sha256": "2a4977c4a180c38102ab52aa09c187ac3aef8acb8c9ee94d8e2ae162010b8f0f"
+    },
+    {
+      "path": "original-disasm/.ze_info",
+      "bytes": 3181,
+      "sha256": "d73b7b9551c7b7a49512ea8e144d449cdc5de5a9fb57e1fa8bd3a6d27871cecb"
+    },
+    {
+      "path": "original-disasm/sections.txt",
+      "bytes": 616,
+      "sha256": "2db85ff3073dbe75390f071e6569992f652b330f3320f7570a60a39c08187a8d"
+    },
+    {
+      "path": "original-disasm.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "original-disasm.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "original-disasm.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "original.ze_info",
+      "bytes": 3181,
+      "sha256": "d73b7b9551c7b7a49512ea8e144d449cdc5de5a9fb57e1fa8bd3a6d27871cecb"
+    },
+    {
+      "path": "original.zebin",
+      "bytes": 43432,
+      "sha256": "344c53e3394d2cacd289a6b931eb425461e93a8281a35e1e14123a0f9885321a"
+    },
+    {
+      "path": "report.json",
+      "bytes": 7741,
+      "sha256": "9e91784ccb0361f93534d8b47f5251789af9f9571f31c59adadb11a2106d7f12"
+    },
+    {
+      "path": "selection.json",
+      "bytes": 3217,
+      "sha256": "ae11a1df237b43ee45f0a78abe17d26380c4203e20950275c1ec7e4a4947f3d6"
+    },
+    {
+      "path": "tool-path.txt",
+      "bytes": 15,
+      "sha256": "52de7767fd8b2c8e722ecd3ab1d1a3441b9446821186349ef0deda6f519dfbe9"
+    }
+  ]
+}

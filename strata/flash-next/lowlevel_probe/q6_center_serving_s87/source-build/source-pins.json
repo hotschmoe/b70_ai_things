@@ -1,0 +1,25 @@
+{
+  "status": "SOURCE_PREP_UNAPPLIED",
+  "original_sha256": "81558e95f721413a75c3d3ec6ed7cb5eee766e4f662080cf500c7985090f03e2",
+  "candidate_sha256": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584",
+  "patch_sha256": "1c2a80efccc140fbeed3d2b9818f7472ed088207d31161b0c9de5ef35369e1e0",
+  "S86v2_candidate_sha256": "f781e9c742aa990367e4f829e0f0bb7801f12af68512ecbec74418e50b9933bb",
+  "S87_only_delta_from_v2": "One std::fprintf inside q6k_center function-local static initializer; source math/dispatch guard identical",
+  "inverse_marker_removal_reconstructs_v2": true,
+  "original_snapshot": "source-before/sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+  "flag": "STRATA_Q6_CENTER",
+  "default": "OFF",
+  "marker": "strata Q6 center: enabled=%d C6 A2 R1 SG32 PF0 shapes=6144x2560,2560x10240\\n",
+  "marker_scope": "Exactly once/process on first eligible PF0/C6/A2/RPW1/SG32/exactshape host selection; could be capture or first warm, not loaded startup. Check after warm. Host selection plus successful warm replay only, not independent GPU dispatch.",
+  "build_source_pins": {
+    "sycl/src/kernels/cuda/native_mmvq.dp.cpp": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584",
+    "sycl/include/strata/core/verify.hpp": "9ecedbed463eeeb241a49995c0d8b078cb2ef5ac4d294a3954f075aeff0b97c2",
+    "sycl/src/core/verify.cpp": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2",
+    "sycl/src/program/generate.cpp": "6433d750e414aeb9c71135257ae40a8f9e38ea661537c251b50cabdbc2217d83",
+    "sycl/src/kernels/cuda/fused_gr.dp.cpp": "d62bcb252eecdbcaae81095907c2241e39c4798b7854bb499fb5643fecb24e99",
+    "sycl/src/core/mtp.cpp": "fcd5d2e4b029985a6e7768707a5aa489e4b5724a78db50fc2313d9c64e67ec31",
+    "sycl/include/strata/kernels/native_mmvq.hpp": "83c233dd1f9de362cf646eb6f3d95dd97278ae43a30aeeed205b3067ef358a7e",
+    "sycl/include/strata/sycl_math.hpp": "ac45a7a9b7d3cdc4b1b8c1c413c416911fb4ca91373d69bb34947815dbb3eec6",
+    "sycl/include/strata/kernels/dp4a.hpp": "dbbf686ebcc60d569ed1e0bf688d98666a1d46b7f85d8d7e073d28d6ab775eba"
+  }
+}

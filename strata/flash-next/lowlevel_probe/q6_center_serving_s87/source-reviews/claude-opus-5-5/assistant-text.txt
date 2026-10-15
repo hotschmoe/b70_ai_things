@@ -1,0 +1,40 @@
+**Verdict: GO_BOUNDED_BUILD.** This covers a reversible, CPU-only main build. It is not a serving GO.
+
+**Integer bits: equivalent.**
+- Each byte is b = (lo4 | hi2<<4), so b is in 0..63. The original `sub_sat(b,0x20)` never saturates, so it gives exactly b\u221232.
+- The candidate computes b+96, which is at most 159 and below 256, so no carry crosses into the next byte. Then `^0x80` gives b\u221232 mod 256. For b\u226532 that is b+96\u2212128; for b<32 it is b+224, which as int8 is b\u221232.
+- The inputs `vl`/`vh` are untouched. The existing `(vh>>4)<<4` signed-shift expression is unchanged from the original, so it adds no new risk.
+- `bit_cast<int>` from `uint32_t` has matching sizes.
+- The loads (`load16_a2`, the Q8 int loads), DP4A order, FP ledger (`ds*dsc*s`), accumulation order and xor-butterfly are textually identical.
+
+**Defaults and fallbacks: intact.**
+- `CENTER=false` is the template default. Every existing instantiation omits it, so the original `else` branch is kept verbatim.
+- The new branch sits inside `if constexpr (NCOLS==6)` within `rpw==1 && q6k_a2()`.
+- It requires `q6k_pf()==0` and one of the two exact shapes, and `q6k_center()` is evaluated last.
+- A negative PF fails both `pf>0` and `==0`, so it falls through to the unchanged `wide_a2`. That is the conservative outcome.
+- SG32, the C6/A2/RPW1 template arguments, and the nd_range, blocks, queue `s` and buffers `w/x/y` all match `wide_a2`.
+- The kernel name `native_mmvq_q6k_center6` is unique and has no scalar parameters. It is instantiated only for NCOLS==6, so there is one instance and no collision.
+
+**Latch and marker: consistent with the claims.**
+- The function-local static is thread-safe and latched once.
+- Because of short-circuit ordering, the marker prints only on the first eligible call, on both OFF (`enabled=0`) and ON (`enabled=1`). Nothing logs per operation.
+- If the first eligible call happens inside graph capture, only host-side getenv/fprintf run. The captured graph then embeds whichever kernel was chosen, which stays consistent because the value is latched.
+- The packet correctly scopes the evidence: the marker plus a successful warm replay proves host selection only, not GPU dispatch.
+- Caveat: the "before graph capture" wording in the comment is aspirational. Latching is lazy and may happen during the first capture. That is acceptable, but the comment overstates it, so either reword it or accept it as noted.
+
+**Non-blocking notes:**
+1. If the target model never hits an eligible call, neither server prints a marker. Treat a missing marker as "not eligible", not as a pass.
+2. The marker string must be grepped exactly as written in the code.
+3. `dpct::sub_sat` and its includes are still used by the else path, so there is no include drift.
+4. Spelling: the shape tag `R1` in the marker versus "RPW1" in the docs is cosmetic.
+
+**Required before any 2-GPU serving (HOLD until all are done):**
+- Resolve the comment-wording finding.
+- Build the actual binary: regenerate the native TU plus the restored S79 verify/generated dependencies, and do not use the stale generic 03bb.
+- Confirm exactly 3 compiles, 2 archives and 1 link, with ABI, cache, other archives and HC unchanged.
+- Inspect the actual AOT target image to confirm `center6` is present: SIMD32, GRF128, DP4A count, spill status reported as measured rather than inferred, and resource usage.
+- Run both servers from the same new binary, OFF and ON, under the fixed protocol you specified.
+- Gate any latency aggregation on these being equal: full requests, text, SSE usage, native window, pair, solo and draft work. Also require identity, functionals, a normal QUIT, per-card and compiled health, and confirmed CID/NAME absence.
+- S85's \u221222% primitive deltas do not predict any serving gain.
+
+No tools were run; this review is based solely on the packet text.

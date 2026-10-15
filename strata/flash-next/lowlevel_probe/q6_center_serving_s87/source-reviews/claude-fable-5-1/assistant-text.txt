@@ -1,0 +1,18 @@
+**Verdict: GO_BOUNDED_BUILD** (CPU-only main build may proceed in parallel; no serving GO from this review).
+
+**Integer bit audit: passes.** Per byte, u = (ql nibble) | (qh pair << 4) lies in 0..63. Original: sat_sub(u, 32) as signed char gives -32..31 with no saturation ever reached. Candidate: u + 0x60 is 96..159, below 256, so no inter-byte carry; XOR 0x80 maps 96..127 to 224..255 (signed -32..-1) and 128..159 to 0..31. Endpoints check: 0 to -32, 32 to 0, 63 to 31. The 32-bit lane fed to dp4a is bit-identical. Both vi0 and vi1 nibble/shift/mask expressions are copied verbatim from the original, including the arithmetic right shift on vh, which the mask neutralizes the same way.
+
+**Unchanged native FP ledger: confirmed.** Loads (load16_a2, Q8_1 int loads), ds/dsc scaling, dp4a order, acc accumulation, butterfly reduction and store are untouched. Only the vi0/vi1 construction differs under CENTER.
+
+**Defaults and fallbacks: confirmed.** CENTER defaults false and no existing instantiation passes a sixth argument, so wide_a2, wide_a2r, wide16, wide, wide1, PF, rowwarp, multi, and the legacy kernels are unchanged. The ON branch is nested inside rpw==1 and q6k_a2(), guarded by constexpr NCOLS==6, pf==0, and exactly the two shapes. PF=1 or 5 falls through the PF block as before, and the pf==0 check correctly excludes center there. Kernel ID native_mmvq_q6k_center6 is unique with no scalar template tag. Queue, nd_range, block count, and buffers match the sibling wide_a2 launch.
+
+**Env latch and marker: acceptable.** q6k_center() is a function-local static; its lambda prints once. Because of short-circuit order it runs only on the first call that already satisfies NCOLS==6, A2, RPW1, PF0 and shape, which can be during warm or capture. The fprintf is host stderr only, not a readiness prerequisite, and there is no per-op log. Agreed: marker plus successful warm replay proves host selection only, not GPU dispatch of the new image.
+
+**Findings to resolve before serving, none blocking the build:**
+
+- The comment "latched before graph capture" overstates. The latch happens at first eligible call, which the packet itself says may be inside capture. Reword or accept.
+- Parsing uses first character equals '1' rather than the atoi convention of the sibling flags. "10" or "1x" enable; "01" does not. Harmless for the fixed OFF/ON protocol, but document it.
+- The two shape literals hardcode the 6144x2560 and 2560x10240 pair. Any other Q6 shape at ncols 6 silently uses the original path. This is intended but means ON-server coverage is partial by design.
+- Build must confirm exactly one new kernel image appears in the AOT target and that the generic03bb stale candidate is not what gets linked.
+
+**Preconditions I endorse unchanged:** fresh same-binary OFF/ON servers, one warm plus three fresh C2 pairs, full request/text/SSE usage/native window/pair/solo/draft equality before any latency aggregation, identity and QUIT and per-card health checks, no CPU ring or device profiling, TRACE1 presence flag only. S85 primitive deltas remain a non-prediction for serving.

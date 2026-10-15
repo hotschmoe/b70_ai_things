@@ -1,0 +1,23 @@
+{
+  "status": "ROOT_FULL_READ_SOURCE_GO_ACTUAL_BUILD_AND_HARNESS_PENDING",
+  "models": {
+    "claude-opus-5-5": {
+      "elapsed_s": 27.687601262005046,
+      "completion_sha256": "f1899ec4b2b823601e9069f4a811434258ef0ecab503c8b4cc29884d26c5180b",
+      "answer_sha256": "233b07b7aa05cebf51bdf326e590c5c5bf248cb5858581bcaf1e7ffff3d72aae"
+    },
+    "claude-fable-5-1": {
+      "elapsed_s": 46.80938255699584,
+      "completion_sha256": "491dcd90b9a5ca9e89cfee6a48b4f4e2dbd65d96da5e6352ae8cd5386d136ebb",
+      "answer_sha256": "c08846b25588738ffc42b23e460548ca00562ff396d5434686e981fd2bcbf914"
+    }
+  },
+  "packet_sha256": "9b7f6500825ddedd9f2038e4fc50974a1500d10bb9e9c610f30b5aaa266181b5",
+  "source_sha256": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584",
+  "accepted_comment_correction": "Lazy latch at first eligible host call, possibly during graph construction; not necessarily before capture begins. No code/comment-only rebuild. Both fixed fresh processes latch before first measured warm-completed workload.",
+  "parsing_contract": "enabled iff env exists and firstchar1; actualprotocol onlyliteral0/1, no broader atoi convention claimed.",
+  "marker_scope": "Firsteligible hostdecision/selectedcapturedpath only. Successfulwarm/noerrors/sourcebinding complements marker, not independent hardwaredispatch.",
+  "AOT_scope": "Actualnewcenter6ID/resources/packedsequence required. Metadataabsent spill/scratch NOT measuredzero or occupancy.",
+  "protocol": "NativeadmissionTRACE1 presenceflag; noCPUring/deviceprofile. Fullrequest/text/SSEusage/nativework/window/pair/solo/draft gate before aggregate. Same-new-binary BOTHcardEP fixedflag0/1, functionals/identity/residency/QUIT/removal/health.",
+  "GPU_GO": false
+}

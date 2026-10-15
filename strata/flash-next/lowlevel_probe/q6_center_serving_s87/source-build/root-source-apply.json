@@ -1,0 +1,11 @@
+{
+  "status": "ROOT_EXACT_ONE_SOURCE_APPLIED_READY_CPU_ONLY",
+  "native_before": "81558e95f721413a75c3d3ec6ed7cb5eee766e4f662080cf500c7985090f03e2",
+  "native_after": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584",
+  "patch_sha256": "1c2a80efccc140fbeed3d2b9818f7472ed088207d31161b0c9de5ef35369e1e0",
+  "reverse_check": "PASS",
+  "upstream_refresh": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-serving-s87-refresh/upstream-refresh.json",
+  "restored_host_sources_unchanged": true,
+  "no_GPU": true,
+  "models_pending": true
+}

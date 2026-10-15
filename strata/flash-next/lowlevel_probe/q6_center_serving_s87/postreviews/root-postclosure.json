@@ -1,0 +1,43 @@
+{
+  "status": "ROOT_POSTCLOSURE_RETAIN_DEFAULT_OFF_OPTIN",
+  "epoch_ns": 1792084895132680502,
+  "models": {
+    "claude-opus-5-5": {
+      "elapsed_s": 16.921517849026714,
+      "session_ids": [
+        "73a83125-d4f4-4983-baef-3ec5cfd854b2"
+      ],
+      "completion_sha256": "e970b1d2e8cfd401fe9e9097162e498bfee49897782e42322902ef400d1c3bbe",
+      "answer_sha256": "bb1e127d94784980230c8e13130a802821fd4ded792d9591d031c573798caf1b",
+      "root_fullread": true,
+      "decision": "ACCEPT_DEFAULT_OFF_OPTIN_BOUNDED_MATCHED_GAIN"
+    },
+    "claude-fable-5-1": {
+      "elapsed_s": 33.388947336003184,
+      "session_ids": [
+        "d7a30f00-ccdc-4aaf-8fcd-cdb3a5d9dd35"
+      ],
+      "completion_sha256": "73e17efcbea6ec079c5cf04f0ca15a5271696e33bcfe4a360964684b896df5a2",
+      "answer_sha256": "0be5357dbe8bc5f8f45f9460bb07d8c77ff52ee2975daf30df295acd2ee77502",
+      "root_fullread": true,
+      "decision": "ACCEPT_DEFAULT_OFF_OPTIN_BOUNDED_MATCHED_GAIN"
+    }
+  },
+  "packet_sha256": "812d5d8f67b2b1eba66fe99801a81b2689cadd2c711fba1625284079d909fb54",
+  "runtime_decision_sha256": "b3007ea7d4dfbe4e41383fe0e0019db287404d88b7d931a0a17e0d7e7aada857",
+  "comparison_sha256": "f349c6bdcfbcb7b3d1e30ed44d8922363acce136368bc40609df1d65ef9fb40c",
+  "source_retained_default_OFF": true,
+  "fresh_frozen_executable": "a1e35c4ddecff6cfcca8cd61945d0243274f4867e8eff4d134c4ad535b920900",
+  "median_ratio_gain_percent": 1.1546133514167556,
+  "median_paired_gain_percent": 1.2506136161793302,
+  "root_corrections": [
+    "Fable calls stream0 maxSSEgap an admission/pairing artifact; commonpresence observed, specificcause unmeasured.",
+    "Opus infers kernelcriticalpath share from22pct vs1pct; staticmechanism/actualeligiblecoverage and overlap differ, no causalshare inferred.",
+    "One optional reversed-order processpair would probe orderconfounding, not retire all thermal/cache/order uncertainty. No extraGPUstage/testscheduledhere.",
+    "S84guardedlongprefillQSAcandidate doesnot establish short4Kbenefit; current107-tokenTTFT doesnot attribute longprefillbottleneck.",
+    "Actualrespondingmodels recommendations do not impose new userpermissionrequirements; existingauthorizedgoal remainsactive."
+  ],
+  "scope": "Allfourpairedgatesmatched, timed3pairsaggregated; oneOFFthenONsequence/noindependentreplication; no default/daily/shelf/fullcachepromotion/no targetachievement",
+  "GPU_state": "BothGPUsCPUfree, ownedcontainersabsent, no rootserver/waiter",
+  "next": "Guardedlong/full256prefillQSA sourcework; no redundantS87reversal/cache/testinflation now"
+}
