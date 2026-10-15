@@ -114,9 +114,24 @@ those zeros to infer that this opt-in path is not drafting. S14 has evidence.
 bench_mixed.py starts a fresh32K prefill after a second stream begins decode;
 bench_serving.py retains SSE content-event arrival times and p50/p95 gaps.
 These are client-visible event gaps, potentially several tokens per event.
-bench_context_four.py is PREPARED ONLY (syntax/help checks): it requires
-32768MiB parking and samples process/cgroup RAM at50ms while four distinct
-near-full conversations exchange two GPU slots. It has not qualified the
-candidate. The provisional cached-return working gate is p95 TTFT <=2s,
-including RAM restore; the user preference is pending. Restore bytes still
-need separate transfer evidence. See the stage document before using it.
+bench_context_four.py requires32768MiB parking, samples native RSS and
+container anonymous/file/swap RAM at50ms, and preflights token budgets for
+four distinct near-full conversations. Long resident replies prove two
+active decode slots before RAM exchange pairs. It saves completed phases;
+use --resume with the SAME --output, --config, live engine PID and container
+to continue after a harness failure. Keep a healthy server/cache running
+while inspecting failures. A restart destroys RAM snapshots and requires
+fresh prefills. Classify actual native restores: a return intended to remain
+resident can move through RAM during its partner's slot handoff. Unknown
+mixed attribution stays unknown. The provisional cached-return working
+gate is p95 TTFT <=2s including RAM restore, pending user preference.
+
+patches/batch-mtp-restore-accounting.patch (upstream Strata PR2511) adds
+optional slot accepted/offered counts to BDONE and merges them with admission
+counts. Legacy five-field lines remain supported. It also logs snapshot
+restore payload bytes, using buffer sizes and the actual restore API copy
+arguments. These are not physical PCIe traffic: host-authoritative pools
+and separate residency refills have different transfer behavior. Apply on
+main296b59d2; runtime validation uses the existing EP/PUSH overlay. Frozen
+PUSH-s9 still has the old native counters. Current full-context qualification
+status and limitations belong in S16 of the stage document.

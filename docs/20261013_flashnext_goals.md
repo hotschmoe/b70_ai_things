@@ -108,3 +108,15 @@ shared-expert stream gives93.61 ->92.81 total concurrent tok/s; all six
 response hashes and functional/teardown health pass. Keep default execution,
 no promotion. Claude Fable5.1/Opus5.5 consultation and loop-cost decisions
 are recorded with the stage evidence. Candidate cache qualification is next.
+
+S16 adds correct batch draft accounting (upstream Strata PR2511), with6/6
+matched response hashes and93.77 total tok/s. Two full200k slots actively
+decode256-token replies and four distinct199501 prompts retrieve needles.
+However, stricter RAM exchange FAILS: A replays255 retained reply tokens,
+B loses its full prefix and is cancelled during re-prefill. Full four-chat
+RAM/no-recompute qualification is incomplete. Partial failed-exchange peak
+RSS18.70GiB, zero swap/OOM; this is not a full-exchange peak. Cached return
+TTFT1.44-13.10s fails the provisional2s working target. Earlier short-reply
+screens did not exercise preservation of a256-token batched reply. Fix
+cache lifecycle with small contexts before another full run. Daily clean
+layer remains recoverable; no routine restoration between future tests.

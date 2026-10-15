@@ -32,6 +32,11 @@ against these targets lives in docs/20261013_flashnext_goals.md.
   record the actual responding model IDs and evidence-based decisions.
 - Reflect on setup and testing cost each stage. Remove redundant tests and
   repeated setup while preserving required correctness and GPU health checks.
+- Do not restore the qualified daily server routinely between experiments.
+  Use the fastest safe loop; queue prepared GPU probes between server runs.
+- Have Claude Fable 5.1 and Claude 5.5 prepare independent fixes/profiling
+  candidates in parallel. Keep GPU execution leased and coordinated, with
+  quiet CPU conditions when needed for meaningful latency comparisons.
 
 ## Current scope
 

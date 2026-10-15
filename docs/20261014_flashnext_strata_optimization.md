@@ -1017,3 +1017,108 @@ control. Do not repeat loser matrices or infer speed from reviewer advice.
 RAW: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_dense_20261014
 (micro-configs/report, run scripts, actual serving configs, s15-report,
 review-round1/2, review-decisions, functional and health records).
+
+
+## S16: upstream accounting fix; full-context cache qualification fails
+
+CONFIG: upstream296b59d2 plus existing EP2205/PUSH and accounting source
+commit ecb1430a. Frozen control932d2f34 retained; new native binary5aaca2f5
+(full identities in RAW). Same EP/spec4/.5/int8/exact12288/two200000,
+all24576 experts (7152+17424). Parking32768MiB/4 entries, versus16GiB in
+S15's timing control; GPU geometry/placement unchanged. No kernel/driver
+change, no tuning knob. CPU-only build, no GPU device attached.
+
+COMMAND:34 Python parallel/parser tests and4222 CPU C++ cache checks;
+one native AOT link, three solo and three paired coding windows, identity/
+residency/arithmetic/reasoning/tools. Four distinct199501-token prompts,
+each followed by256-token cached replies to prove two active full contexts,
+then forced RAM returns. Native RSS and container anon/file/swap sampled
+at50ms. Normal stops/per-card/ten compiled collective health both attempts.
+
+RESULT: all6 paired response hashes match S15 control; median aggregate
+93.607 ->93.766 tok/s (no meaningful speed gain). Slot counts now reach
+HTTP/metrics:783-799 offered and699-715 accepted per1500-output request.
+Source adds optional accepted/offered BDONE fields, preserving legacy
+five-field lines and adding admission counts. A pure host helper logs
+snapshot-restore API payload by captured sizes, excluding metadata,
+retained checkpoints and allocation capacity; distinct spare-row write is
+counted. Both CUDA/SYCL emitters updated, CUDA inspected only on this Intel
+host. Useful source fix published: https://github.com/Niko1221/Strata/pull/2511.
+Native successful payloads3163725744/3164525616 bytes take355.5/357.9ms.
+These are API copy payloads, NOT measured physical PCIe traffic.
+
+First full attempt recovered all4 contexts and both two-active reply pairs.
+The harness wrongly required zero RAM restores for an intended-resident
+C/D pair; actual1 restore during slot handoff was valid. It aborted, and
+automatic cleanup lost healthy cache state. This was a harness mistake.
+Corrected classification uses observed native evidence, preserves unknown
+mixed attribution, and saves phase manifests for same-PID/container resume.
+Future harness failures keep the server alive for inspection. Repeated
+ONLY context qualification, reusing all completed native/functional checks;
+no extra source build or performance matrix. Original evidence is retained.
+
+Retry: four distinct199501-token prompts again retrieve their three needles.
+A/B cached replies overlap9.917s with155 windows/3.28 emitted rows; C/D
+also passes two-active overlap. The A/B return had1 actual RAM restore;
+C/D had0. Cache placement cannot be inferred from intended-resident labels.
+All these returns reuse199529/199531 tokens and read53/55 new tokens, with
+zero prior-tail replay. Per-request cached results before forced eviction:
+
+| Conversation | Actual RAM restore | TTFT s | Completion s | Client decode tok/s | Content-event gap p95 ms |
+|---|---|---|---|---|---|
+| A | yes | 13.103 | 23.212 | 25.23 | 47.53 |
+| B | no | 6.697 | 23.018 | 15.62 | 47.53 |
+| C | no | 1.438 | 19.070 | 14.46 | 47.46 |
+| D | no | 9.172 | 19.128 | 25.61 | 47.38 |
+
+Empirical resident p95 over3 requests is8.925s. The two measured RAM returns
+(including the failed A exchange below) give p95 about12.706s. Samples are
+bounded, not an SLA qualification; working p95<=2s remains PROVISIONAL and
+unmet. Per-conversation/request TTFT, completion, all content gaps and
+reuse/new-token counts are in RAW/s16-report.json and original responses.
+
+Forced exchange FAILS no-recompute: A's last prompt199584 +256 reply means
+199839 tokens should already be held. Actual live RAM restore/reuse199584,
+286 tokens read for new prompt199870:255 retained reply tokens replayed.
+Needles are correct, TTFT5.163s, completion16.150s, but retained-history
+reuse fails. B then reusesZERO and starts full199870-token prefill. Stop
+redundant work after98304 tokens read via client disconnect; native reports
+normal cancelled request, no crash. C/D forced returns are NOT RUN. Thus
+four-chat RAM qualification, full-exchange latency and peak remain incomplete.
+
+Measured peak during this PARTIAL FAILED exchange: native RSS18.7008GiB,
+container18.7005GiB; zero swap/OOM kills. Peak container anon20027224064,
+file1007616 bytes; full memory rows and lifetime/phase values retained.
+Do not present the configured32GiB limit as measured usage or this partial
+peak as a completed four-return peak.
+
+Critical-path finding: native resident handoffs take~2.9-3.6s per slot
+copy, and main-state RAM parking~2.35s. Source serializes slot movement
+through host snapshots. These are measured phase terms from TWO requests,
+not an additive decomposition of one TTFT. Correctness now precedes copy
+or draft-depth tuning. Source audit finds RAM put only in park_current(main)
+while slot decoding extends its own state; latest-slot parking before
+reuse needs a small-context oracle. Entry-count pressure/old versions may
+explain B's loss despite free byte budget, but victim attribution is not
+proved. Audit re-tokenization/checkpoint matching as well as snapshot age.
+
+VERDICT: accounting fix useful and upstream; candidate cache behavior FAILS,
+no promotion. First run health and retry cancellation/teardown health pass,
+no reset. Clean-layer daily16f592e7 restored and final ID/arithmetic/reasoning/
+tools pass; observer off,27B prerequisites pass (no fallback switch). User's
+later steering removes routine daily restore BETWEEN tests: subsequent GPU
+windows queue prepared probes instead. Do not repeat four huge prefills
+until a four-small-context/256-reply retained-history oracle passes.
+
+Development loop: actual claude-fable-5-1 and claude-opus-5-5 consulted at
+four more decision points (rounds3-6), with accepted/rejected advice in RAW/
+review-decisions.txt. Rejected wrong token/byte units, speculative floors,
+extra matrices, and unsupported nondeterminism claims. Independent tool-
+enabled Fable cache-fix and Opus topology/copy-probe agents now prepare
+concrete artifacts; root schedules leased GPU execution. No source fix or
+new hardware speed claim from their untested candidates in this stage.
+
+RAW: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_accounting_20261014
+(s16-report.json, source/build/test identities, original context-four failure,
+context-retry partial-summary/cancel/health evidence, review-round3..6,
+final-state). Future candidates are under cachefix_20261014/agents.

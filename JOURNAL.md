@@ -22450,3 +22450,38 @@ cache harness and accounting separately before full candidate qualification.
 Details: stage doc S15; raw dense_20261014 root includes s15-report.json,
 review-decisions.txt, configurations, outputs and health evidence. Preserve
 unrelated dirty work; commit/push measured negative stage checkpoint.
+
+
+## 2026-10-14/15 -- Flash-Next optimization S16: accounting fix, RAM gate fails
+
+CONFIG: main296b59d2 +EP/PUSH +accountingecb1430a; new binary5aaca2f5,
+frozen932d2f34 preserved. Same exact12288/spec4/int8/two200k/all24576,
+parking32GiB4. Control S15 parking16GiB, GPU geometry/placement unchanged.
+COMMAND:34 Python/4222 C++ CPU checks, one AOT link, three solo/three paired
+coding windows, identity/residency/math/reasoning/tools. Four distinct
+199501 prompts, cached256 replies/two-active proof, then RAM returns;
+50ms native/cgroup anon/file/swap sampling. Normal stop/per-card/ten compiled
+collectives. No long soak, driver/kernel change or source tuning knob.
+RESULT:6/6 text parity; aggregate93.607 ->93.766tok/s, no meaningful speed
+gain. Real batch counts783-799 offered/699-715 accepted now reach HTTP.
+Legacy BDONE compatible. Payload3163725744/3164525616 bytes restored in
+355.5/357.9ms; API payload, not physical bus bytes. Source PR2511 published.
+First attempt wrongly aborted on a valid mixed resident/RAM placement;
+cleanup lost healthy cache. Corrected observed classification, phase saves
+and same-engine resume; repeated ONLY context stage. Retry all4 needles
+and two-active pairs pass; cached TTFT1.438-13.103s, provisional2s p95 fails.
+Forced A reuses199584 vs199839 held, reads286 including255 retained reply
+tokens. B0reuse starts199870 prefill; normally cancelled after98304 read.
+No-recompute FAILS. C/D forced returns not run. Partial-exchange peak
+RSS18.7008/container18.7005GiB,0swap/OOM; not a full-exchange peak claim.
+Both normal teardowns/per-card/collective health pass; no crash/reset.
+VERDICT: useful telemetry upstream https://github.com/Niko1221/Strata/pull/2511;
+no candidate promotion or four-chat RAM qualification. Preserve failures.
+Fix slot/RAM lifecycle using a4x4K/256-reply oracle before another4x200k.
+Slot snapshot copies~2.9-3.6s and main parking~2.35s are next latency terms,
+after correctness. Claude Fable5.1/Opus5.5 rounds3-6 decisions recorded;
+tool-enabled source/profiling agents prepare independent next artifacts.
+Clean-layer16f592e7 daily restored with final functional gates, observeroff,
+27B checkpasses. Later user instruction: no routine restore BETWEEN tests;
+queue ready leased GPU probes while other candidates are prepared. Details:
+stage doc S16 and raw accounting_20261014/s16-report.json; user dirt preserved.
