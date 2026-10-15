@@ -79,6 +79,21 @@
    "report": "docs/20261015_strata_aot_prelink_reuse.md",
    "raw": "aot-reuse-s60-execution/{root-build-closure,subagent-link-audit,root-runtime-canary}.json",
    "scope": "Supported compiler-produced common+adapter wrappers and ordinary host link; first Q8/IQ4 canary only. Final host link0.394s/zeroAOT; second-adapter gain unmeasured."
+  },
+  "grouped_gu_cpu_s62": {
+   "report": "docs/20261015_strata_grouped_gu_cpu_reference.md",
+   "raw": "grouped-gu-reference-s62-prep/{s62-report.json,cells/reference-observations.json}",
+   "scope": "CPU-only saved-fixture diagnostic:36 selected normal-scale cells, actual GPU weight operand bytes UNMEASURED; S42 strict failure unchanged. No GPU accuracy gate or speed result."
+  },
+  "dense_decode_s63": {
+   "report": "docs/20261015_strata_dense_and_peer_followups.md",
+   "raw": "iq3s-dense-next-s63-prep/{findings.md,integer-load-contract.json,host-check-execution.json}",
+   "scope": "55 metadata tensors join historical IQ3_S C6 pool;8192 sign/grid+512 mask+32 load-bound host checks PASS. GO private dense-only source preparation; no compiled GPU proof."
+  },
+  "peer_head_s64": {
+   "report": "docs/20261015_strata_dense_and_peer_followups.md",
+   "raw": "peer-head-overlap-next-s64-prep/{findings.md,source-evidence.json}",
+   "scope": "HOLD existing-EP head offload:whole input arrives after peer returns; useful overlap needs a new ownership/dependency design. Source-only/no new GPU."
   }
  },
  "geometry": {
@@ -1033,7 +1048,8 @@
     "primary-dense-next-s56-prep/{source-audit,s31-dense-quant-pool,s15-q6-rpw2-rejection}.json",
     "primary-dense-next-s56-prep/aot-resources/{embedded-resource-index,resource-summary}.json; C{1,6}-RPW{1,2}.ze_info.yaml",
     "primary-widek-next-s57-prep/findings.md; primary-widek-resources-s57-20261015/resource-summary.json",
-    "iq4xs-rpw2-s59-prep/{s59-root-report.json,run-clean/{closure,comparison}.json}; iq4xs-rpw2-s59-dot-audit.json"
+    "iq4xs-rpw2-s59-prep/{s59-root-report.json,run-clean/{closure,comparison}.json}; iq4xs-rpw2-s59-dot-audit.json",
+    "iq3s-dense-next-s63-prep/{findings.md,integer-load-contract.json,host-check-execution.json}"
    ],
    "quoted": [
     {
@@ -1089,6 +1105,12 @@
      "value": "All48snapshotfiles4,838,400bytes/Q8/ownchangedgraphs/health PASS; nested graph medians68.559875->68.117175us(-.645713percent). KeepRPW1.",
      "basis": "Real type23 N2560/M10240 weights, seededinputs; four freshABBAprocesses/3nested20-callmeans each. Delta.4427us<baseline.5417us range; bothcandidateprocessmedslower but no usefulmodelgain established. Includesquantizer, no p95/causality/dispatch/ISA claim. No serving/retry.",
      "status": "measured"
+    },
+    {
+     "label": "S63 IQ3_S dense-only integer decode lead",
+     "value": "55 header tensors/1.9335818ms historical service;8192grid/sign+512mask+32extent host checks PASS. Prepare existing aligned/SWAR helpers only for NC6 exact dense path.",
+     "basis": "No payload/compile/GPU. Global Split21/expert paths and all FP/K/reductions stay unchanged; wider loads fetch collateral bytes within110B. Compiler folding/latency untested.",
+     "status": "source-only"
     }
    ],
    "upstream": [
@@ -1643,7 +1665,8 @@
     "head-profile-s25/s25-report.json",
     "head-pair-s31/analysis-prep/reviewed-summary/summary.json",
     "decode-next-s52-prep/v3/{s52-root-report,run-clean/comparison,run-clean/closure}.json; postresults-20261015/dot-inventory.json",
-    "decode-head-serving-s55/{s55-root-report,comparison,root-build-closure,root-postreview-decision}.json; head-serving-s55-manifest.json"
+    "decode-head-serving-s55/{s55-root-report,comparison,root-build-closure,root-postreview-decision}.json; head-serving-s55-manifest.json",
+    "peer-head-overlap-next-s64-prep/{findings.md,source-evidence.json}"
    ],
    "quoted": [
     {
@@ -1688,7 +1711,8 @@
     "verify_select"
    ],
    "gaps": [
-    "S55 matched bounded serving is unresolved against control range; head flag staysOFF, no retry/promotion/free rider. S52 uses real weights plus seeded inputs, not production activations. Actual full logits/independent serving dispatch remain unqualified; historical operations/rollups unchanged."
+    "S55 matched bounded serving is unresolved against control range; head flag staysOFF, no retry/promotion/free rider. S52 uses real weights plus seeded inputs, not production activations. Actual full logits/independent serving dispatch remain unqualified; historical operations/rollups unchanged.",
+    "S64 source-only HOLD: whole C6 input follows final EP return/combine/HC. Existing placement is EP-incompatible layer split; relocation alone supplies no independent work. Useful sharding/slot-tail overlap needs new IPC/queue/sampling ownership and joins; no spare-capacity or speed proof."
    ],
    "hypotheses": []
   },
@@ -2236,7 +2260,8 @@
     "ep-prefill-dispatch-s34/{trace-provenance,historical-gaps}.json",
     "peer-gather-oracle-s35/{s35-report,build-closure}.json; quiet-mean{80,240}/closure.json",
     "peer-gather-serving-s38/{s38-report,serving-comparison,host-spans,diagnostic-cross-arm-gate}.json",
-    "peer-grouped-gemm-s42-prep/{s42-report,numerical-difference}.json; run-clean/exports/export-sha256.json"
+    "peer-grouped-gemm-s42-prep/{s42-report,numerical-difference}.json; run-clean/exports/export-sha256.json",
+    "grouped-gu-reference-s62-prep/{s62-report.json,cells/reference-observations.json}"
    ],
    "quoted": [
     {
@@ -2292,6 +2317,12 @@
      "value": "16experts/1748rows;902568/2237440strictdifferences/maxabs7.45e-8",
      "basis": "Direct oneMKLgroupedF16/F32 API, no candidateSiLU/down/timing after GUfail. Guard/input/health closuresPASS. Independent exactF16operand CPUreference absent.",
      "status": "measured"
+    },
+    {
+     "label": "S62 selected CPU-operand reference",
+     "value": "36 selected cells/all10formatpairs; scalar8/grouped9 closer/19ties.577subnormal rawscales; reconstructed52,428,800weights and4,474,880savedinputs normal.",
+     "basis": "CPU-only pinned ggml/RN/exact dyadic dots; actual GPU weight bytes unmeasured. Selection not representative; no accuracy winner/bound/full-wave/GPU gate/serving speed. S42 strictFAIL unchanged.",
+     "status": "source-only"
     }
    ],
    "upstream": [

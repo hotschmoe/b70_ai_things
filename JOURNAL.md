@@ -23698,3 +23698,66 @@ Frozen37files/284825B external aot-prelink-s60-manifestSHA256
 4ba3d0b0d0d76eace5dbfcd48e382d5b1c24918e45b4dc7ec3af9df7bc71f0e2,
 references S59wholemanifest forsharedbuild/runtimeoutputs. Absolutegoalsopen;
 no serving/default/shelfchange or extraGPUtest.
+
+
+## 2026-10-15 -- Flash-Next optimization S62: selected grouped-GU CPU reference
+
+CONFIG -> Saved S42 compact fixtures only; keep its strict GU failure unchanged.
+COMMAND -> CPU-leased pinned ggml dequant/RN-half/widen helpers enumerate operand
+classes, then compute 36 selected exact dyadic dots across all ten format pairs.
+No GPU, model-file read, new accuracy gate, cloud review or serving change.
+RESULT -> Raw scales: 204223 normal/577 subnormal. All 52428800 reconstructed
+weights and 4474880 saved activation halves are normal. Selected normal-scale
+rows include first mismatch/global worst/cancellation candidates. Scalar/grouped
+sample max errors 4.2084e-8/7.4971e-8, RMS 1.1113e-8/1.3935e-8; closer counts
+8/9 with19 ties. All36 exact dots fit binary64. Actual GPU weight bytes remain
+UNMEASURED; CPU/GPU conversion identity is source-conditional. Exports921600B.
+Host g++ absence and container /usr/bin/time absence caused preserved setup
+stops; reuse the successfully compiled binary, no rebuild for wrapper failure.
+Operand audit11.8227s, selected build/reference13.3762s, no GPU health cycle.
+VERDICT -> Diagnostic only: no accuracy winner/full-wave/speed qualification.
+If prefill is later selected, 36 selected GPU rows180KiB would address the next
+operand gap; include subnormal-scale cases before wider scope. No GPU queued.
+Dated report and exact CPU sources retained; root read helpers/reference and
+verified first mismatch, exact-rounding and selected-count observations.
+Frozen43files/3731339B; external grouped-gu-cpu-reference-s62-manifest SHA256
+e30dbe633599574d04008490116c2a2e173ac1bdd0d697f18148aa5859445570.
+
+
+## 2026-10-15 -- Flash-Next optimization S63: dense IQ3_S integer decode lead
+
+CONFIG -> Native primary IQ3_S C6, separate from routed expert Multi21.
+COMMAND -> Header-only descriptor/source audit and actual host finite-domain
+checks via audit.py, exit0/0.024733s. No payload, compile, GPU or live edit.
+RESULT -> All55 tensors join five historical S31 shapes/55calls/1.9335818ms
+service per cycle, not additive wall savings. Dense Split21 retains old narrow
+loads/DPCT byte operations; expert helpers already have aligned loads/SWAR.
+8192grid/sign,512mask and32load-extent cases pass. Aligned reads stay within
+110-byte blocks, but fetch12 or20B versus old12B; no traffic/speed claim.
+VERDICT -> GO prepare ONE private dense NC6/EXACT_N/!STAGE oracle, with public
+bit anchor and actual Claude review before build/GPU. Keep global Split21/
+optional experts, FP expressions, K order and reduction unchanged. Do not copy
+Multi21 finish. Two same-probe loop shapes are justified; no knob/format sweep.
+Root read full source/finite-domain script and findings; native author ple_upstream.
+Frozen seven evidence files plus manifest; iq3s-dense-next-s63-prep/manifest.json
+SHA256 2a4c13115c83153a202f7d11ada7fb45e0465ce5b11f3884f2ee1f8bc35f43b4.
+
+
+## 2026-10-15 -- Flash-Next optimization S64: peer-head overlap source HOLD
+
+CONFIG -> Existing all-resident EP and C2/depth2 head ownership, same context/cache.
+COMMAND -> Source/dependency/IPC audit plus retained S25/S31/S55/S58 evidence;
+no allocation, payload, build, GPU, review or configuration change.
+RESULT -> Whole target-head input follows final peer return/combine/HC; paired
+draft next depth needs token/probability result. Existing layer/head placement
+is EP-incompatible. Same in-order peer queue can cycle behind an input wait;
+a second queue is not proved impossible but needs new readiness/IPC/scratch/
+capture joins. Vocabulary splitting also needs full sampler/probability semantics.
+Saved final2010MiB minus416.797MiB replica is logical arithmetic, not current
+headroom/residency proof. Peer wait service is not an additive idle-time budget.
+VERDICT -> HOLD empty-peer head/or queue knob oracle. Revisit only concrete
+ownership/dependency or independent-work evidence. No blanket multi-queue or
+head-offload speed conclusion. Root read full findings; native author strata_ep_s27.
+S63/S64 dated report and small data-map annotations preserve170 historical ops.
+Manifest peer-head-overlap-next-s64-prep/manifest.json SHA256
+4e008686c8e225e503fab672944e7284762efc4e1295bd9f28781830a12e8348.
