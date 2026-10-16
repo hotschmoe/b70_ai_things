@@ -1,0 +1,64 @@
+{
+  "scope": "Exact source excerpts only. Current selected ELF metadata and host payload proof pending execution; no universal ABI/FP proof.",
+  "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep",
+  "excerpts": {
+    "sycl/src/kernels/cuda/native_mmvq.dp.cpp": [
+      {
+        "first": 65,
+        "last": 74,
+        "text": "struct Q5KBlock {\n    sycl::half2 dm;\n    uint8_t scales[12];\n    uint8_t qh[32];\n    uint8_t qs[128];\n};\nstruct Q81Block {\n    sycl::half2 ds;\n    int8_t qs[32];\n};"
+      },
+      {
+        "first": 1928,
+        "last": 1934,
+        "text": "// nibbles) at positions 16(g%2)..+15; IQ4_XS takes sub-block g (16 bytes, low nibbles = positions 0-15).\n__dpct_inline__ sycl::int4 ld_q8_16(const Q81Block* b, int half) {   // Q8_1 qs is 4-byte aligned: four int loads\n    const int* q = reinterpret_cast<const int*>(b->qs) + 4 * half;\n    return sycl::int4(q[0], q[1], q[2], q[3]);\n}\n__dpct_inline__ int dp4a4(const sycl::int4 a, const sycl::int4 b, int acc) {\n    acc = strata::dp4a(a.x(), b.x(), acc); acc = strata::dp4a(a.y(), b.y(), acc);"
+      },
+      {
+        "first": 1954,
+        "last": 1960,
+        "text": "    static float apply(const W& r, const Q81Block* xb) {   // xb = this column's Q8_1 blocks of the 256-block\n        const Q81Block* a = xb + r.sb; const Q81Block* c = xb + r.sb + 1;\n        const sycl::int4 ua = ld_q8_16(a, r.half), uc = ld_q8_16(c, r.half);\n        const sycl::int4 ones(0x01010101, 0x01010101, 0x01010101, 0x01010101);\n        const float da = (float) a->ds[0], dc = (float) c->ds[0];\n        return da * (r.dl * (float) dp4a4(r.lo, ua, 0) - r.ml * (float) dp4a4(ones, ua, 0)) +\n               dc * (r.dh * (float) dp4a4(r.hi, uc, 0) - r.mh * (float) dp4a4(ones, uc, 0));"
+      },
+      {
+        "first": 1976,
+        "last": 1998,
+        "text": "struct WideQ5K {\n    using Block = Q5KBlock;\n    using W = WideQ4K::W;\n    static W load(const Block* b, int g) {\n        W r; r.sb = 2 * (g >> 1); r.half = g & 1;\n        const sycl::int4 q = reinterpret_cast<const sycl::int4*>(b->qs)[g];          // qs at 48, 176 = 11 x 16\n        const sycl::int4 h = reinterpret_cast<const sycl::int4*>(b->qh)[r.half];     // qh bytes of positions 16h..+15\n        const int sl = r.sb, sh = r.sb + 1;\n        auto hb = [](int v, int bit) { return ((v >> bit) & 0x01010101) << 4; };\n        r.lo = sycl::int4((q.x() & 0x0f0f0f0f) | hb(h.x(), sl), (q.y() & 0x0f0f0f0f) | hb(h.y(), sl),\n                          (q.z() & 0x0f0f0f0f) | hb(h.z(), sl), (q.w() & 0x0f0f0f0f) | hb(h.w(), sl));\n        r.hi = sycl::int4(((q.x() >> 4) & 0x0f0f0f0f) | hb(h.x(), sh), ((q.y() >> 4) & 0x0f0f0f0f) | hb(h.y(), sh),\n                          ((q.z() >> 4) & 0x0f0f0f0f) | hb(h.z(), sh), ((q.w() >> 4) & 0x0f0f0f0f) | hb(h.w(), sh));\n        const sycl::float2 dm = b->dm.convert<float, sycl::rounding_mode::automatic>();\n        float s0, m0, s1, m1; k4_scale_min(b->scales, r.sb, s0, m0); k4_scale_min(b->scales, r.sb + 1, s1, m1);\n        r.dl = dm.x() * s0; r.ml = dm.y() * m0; r.dh = dm.x() * s1; r.mh = dm.y() * m1;\n        return r;\n    }\n    static float apply(const W& r, const Q81Block* xb) { return WideQ4K::apply(r, xb); }\n    using A = WideQ4K::A;\n    static A act(const Q81Block* xb, int g) { return WideQ4K::act(xb, g); }\n    static float dot(const W& r, const A& v) { return WideQ4K::dot(r, v); }\n};"
+      },
+      {
+        "first": 2081,
+        "last": 2142,
+        "text": "template <typename F, int NCOLS>\nvoid native_mmvq_wide_kernel(const typename F::Block* __restrict__ w, const Q81Block* __restrict__ x,\n                             float* __restrict__ y, int n_in, int n_out) {\n    auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();\n    const int lane = int(item.get_local_id(2)), warp = int(item.get_local_id(1));\n    const int row = int(item.get_group(2)) * WARPS + warp;\n    if (row >= n_out) return;\n    const int blocks_per_row = n_in / QK, x_stride = n_in / Q8K;\n    const int g = lane & 7, sub = lane >> 3;\n    const typename F::Block* wr = w + std::size_t(row) * blocks_per_row;\n    float acc[NCOLS] = {};\n    for (int kbx = sub; kbx < blocks_per_row; kbx += 4) {\n        const typename F::W wv = F::load(wr + kbx, g);\n#pragma unroll\n        for (int j = 0; j < NCOLS; ++j) acc[j] += F::apply(wv, x + std::size_t(j) * x_stride + kbx * (QK / Q8K));\n    }\n    auto sg = item.get_sub_group();\n#pragma unroll\n    for (int j = 0; j < NCOLS; ++j) {\n        float v = acc[j];\n#pragma unroll\n        for (int o = WARP / 2; o > 0; o >>= 1) v += sycl::permute_group_by_xor(sg, v, o);\n        if (lane == 0) y[std::size_t(j) * n_out + row] = v;\n    }\n}\ntemplate <typename F, int NCOLS>\nvoid launch_wide(const void* weights, const void* x_q8_1, float* y, int n_in, int n_out, dpct::queue_ptr s,\n                 int rpw = wide_k_rpw()) {\n    const auto* w = static_cast<const typename F::Block*>(weights);\n    const auto* x = static_cast<const Q81Block*>(x_q8_1);\n#define STRATA_WKR(RP) if (rpw == RP) { \\\n        const unsigned b = unsigned((std::size_t(n_out) + WARPS * RP - 1) / (WARPS * RP)); \\\n        s->parallel_for<dpct_kernel_name<class native_mmvq_wide_rpw, F, dpct_kernel_scalar<NCOLS>, dpct_kernel_scalar<RP>>>( \\\n            sycl::nd_range<3>(sycl::range(1, 1, b) * sycl::range(1, WARPS, WARP), sycl::range(1, WARPS, WARP)), \\\n            [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] { native_mmvq_wide_rpw_kernel<F, NCOLS, RP>(w, x, y, n_in, n_out); }); \\\n        return; }\n    STRATA_WKR(2) STRATA_WKR(4)\n#undef STRATA_WKR\n    const unsigned blocks = unsigned((std::size_t(n_out) + WARPS - 1) / WARPS);\n    s->parallel_for<dpct_kernel_name<class native_mmvq_wide, F, dpct_kernel_scalar<NCOLS>>>(\n        sycl::nd_range<3>(sycl::range(1, 1, blocks) * sycl::range(1, WARPS, WARP), sycl::range(1, WARPS, WARP)),\n        [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] { native_mmvq_wide_kernel<F, NCOLS>(w, x, y, n_in, n_out); });\n}\ninline bool wide_k() {   // STRATA_MMVQ_WIDE_K=0: Q4_K/Q5_K/IQ4_XS through the multi kernel (the old path)\n    static const bool v = std::getenv(\"STRATA_MMVQ_WIDE_K\") == nullptr || std::atoi(std::getenv(\"STRATA_MMVQ_WIDE_K\")) != 0;\n    return v;\n}\ntemplate <typename F>\nbool try_wide(const void* weights, const void* x_q8_1, float* y, int n_in, int n_out, int ncols, void* stream) {\n    if (!wide_k() || ncols < 1 || ncols > 8 || n_in % QK != 0) return false;\n    const auto s = strata::q_of(stream);\n    switch (ncols) {\n        case 1: launch_wide<F, 1>(weights, x_q8_1, y, n_in, n_out, s); return true;\n        case 2: launch_wide<F, 2>(weights, x_q8_1, y, n_in, n_out, s); return true;\n        case 3: launch_wide<F, 3>(weights, x_q8_1, y, n_in, n_out, s); return true;\n        case 4: launch_wide<F, 4>(weights, x_q8_1, y, n_in, n_out, s); return true;\n        case 5: launch_wide<F, 5>(weights, x_q8_1, y, n_in, n_out, s); return true;\n        case 6: launch_wide<F, 6>(weights, x_q8_1, y, n_in, n_out, s); return true;\n        case 7: launch_wide<F, 7>(weights, x_q8_1, y, n_in, n_out, s); return true;\n        default: launch_wide<F, 8>(weights, x_q8_1, y, n_in, n_out, s); return true;\n    }\n}"
+      },
+      {
+        "first": 3290,
+        "last": 3300,
+        "text": "void native_q5_k_mmvq(const void* weights, const void* x_q8_1, float* y,\n                      int n_in, int n_out, int ncols, void* stream) {\n    validate_shape(n_in, ncols, QK);\n    if (n_out <= 0) throw std::invalid_argument(\"native MMVQ requires n_out > 0\");\n    validate_pointer(weights);\n    validate_pointer(x_q8_1);\n    validate_pointer(y);\n    validate_stream(stream);\n    if (try_wide<WideQ5K>(weights, x_q8_1, y, n_in, n_out, ncols, stream)) { launch_check(); return; }\n    STRATA_WAVE_MMVQ(Q5KTraits)\n    if (ncols > 1) {"
+      },
+      {
+        "first": 3940,
+        "last": 3980,
+        "text": "void native_mmvq_head(int ggml_type, const void* weights, const void* x_q8_1, float* y,\n                      int n_in, int n_out, int ncols, void* stream) {\n    static const bool head_rpw2 = [] {\n        const char* e = std::getenv(\"STRATA_HEAD_Q5K_RPW2\");\n        return e != nullptr && std::strcmp(e, \"1\") == 0;\n    }();\n    if (head_rpw2 && ggml_type == 13 && n_in == 2560 && n_out == 248320 &&\n        (ncols == 2 || ncols == 6) && wide_k()) {\n        validate_shape(n_in, ncols, QK);\n        validate_pointer(weights);\n        validate_pointer(x_q8_1);\n        validate_pointer(y);\n        validate_stream(stream);\n        const auto s = strata::q_of(stream);\n        if (ncols == 2) launch_wide<WideQ5K, 2>(weights, x_q8_1, y, n_in, n_out, s, 2);\n        else launch_wide<WideQ5K, 6>(weights, x_q8_1, y, n_in, n_out, s, 2);\n        launch_check();\n        return;\n    }\n    native_mmvq(ggml_type, weights, x_q8_1, y, n_in, n_out, ncols, stream);\n}\n\nvoid native_mmvq(int ggml_type, const void* weights, const void* x_q8_1, float* y,\n                 int n_in, int n_out, int ncols, void* stream) {\n    switch (ggml_type) {\n    case 2: native_q4_0_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 6: native_q5_0_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 7: iq_mmvq(ggml_type, weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 8: native_q8_0_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 20: native_iq4_nl_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 11: native_q3_k_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 12: native_q4_k_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 13: native_q5_k_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 14: native_q6_k_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 23: native_iq4_xs_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 42: native_q2_0_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 16: case 17: case 18: case 21: case 22: case 29:\n        iq_mmvq(ggml_type, weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    default: throw std::invalid_argument(\"unsupported native MMVQ GGML type\");\n    }\n}"
+      }
+    ],
+    "sycl/src/core/mtp.cpp": [
+      {
+        "first": 2190,
+        "last": 2204,
+        "text": "    if (exec) return true;\n    using namespace strata::kernels;\n    MtpDrafter& a = *d_[0];\n    MtpDrafter& b = *d_[1];\n    const int64_t N = a.g_->n_embd, HCN = a.g_->hc * N;\n    if (DPCT_CHECK_ERROR(dpct::experimental::begin_recording(cs_)) != 0) { err = \"mtp pair: begin capture\"; return false; }\n    bool ok = true;\n    try {\n        native_quantize_q8_1(a.sample_, xq2_, (int) N, 1, cs_);\n        native_quantize_q8_1(b.sample_, xq2_ + col_bytes_, (int) N, 1, cs_);\n        native_mmvq_head(a.head_->type(), a.head_->weights(), xq2_, logits2_, (int) N, (int) nv_, 2, cs_);\n        ok = a.record_post_head(logits2_, cs_, err) && b.record_post_head(logits2_ + nv_, cs_, err);\n        if (ok) {\n            mtp_select(a.R_, HCN, a.out_ids_, a.row_ + 1, a.Rin_, a.tok_, a.m_out_, j, cs_, a.probs_, a.m_prob_);\n            mtp_select(b.R_, HCN, b.out_ids_, b.row_ + 1, b.Rin_, b.tok_, b.m_out_, j, cs_, b.probs_, b.m_prob_);"
+      }
+    ],
+    "sycl/include/strata/sycl_math.hpp": [
+      {
+        "first": 8,
+        "last": 14,
+        "text": "// CUDA's __dp4a(int, int, int): four signed byte products summed into c. One place to change it: the byte\n// unpack + multiply-add form is what IGC pattern-matches into the DP4A instruction (sycl::ext::oneapi::dot_acc is\n// the same emulation and its header defines non-inline functions, which breaks the link across TUs).\ntemplate <typename A, typename B, typename C>\ninline int32_t dp4a(A a, B b, C c) {\n    return dpct::dp4a((int32_t) a, (int32_t) b, (int32_t) c);\n}"
+      }
+    ],
+    "sycl/include/strata/kernels/q8_1_finite.hpp": [
+      {
+        "first": 24,
+        "last": 43,
+        "text": "\n/// The block's quantized value of `xi` for the (finite) scale `d`; `amax` = 0 is an all-zero block.\n__dpct_inline__ int8_t q8_1_quant(const float xi, const float d,\n                                  const float amax) {\n    if (amax == 0.0f) return 0;\n    const float q = sycl::round(xi / d);\n    return (int8_t) (q > 127.0f ? 127.0f : q < -127.0f ? -127.0f : q);\n}\n\n__dpct_inline__ sycl::half2 q8_1_ds(const float d, const float sum) {\n    return sycl::half2(\n        sycl::vec<float, 1>(q8_1_finite(d))\n            .convert<sycl::half, sycl::rounding_mode::automatic>()[0],\n        sycl::vec<float, 1>(q8_1_finite(sum))\n            .convert<sycl::half, sycl::rounding_mode::automatic>()[0]);\n}\n\n}  // namespace strata::kernels"
+      }
+    ]
+  }
+}

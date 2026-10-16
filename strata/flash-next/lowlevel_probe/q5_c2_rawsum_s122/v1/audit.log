@@ -1,0 +1,9 @@
+cpu-run: [S122-Q5-C2] acquired (heavy) -> python3 /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-prep/audit.py /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-audit
+Traceback (most recent call last):
+  File "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-prep/audit.py", line 53, in <module>
+    host=bind(obj,target);name=host['registered_name_pointer']['name']
+  File "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-audit-prep/audit.py:three-functions-only", line 80, in bind
+    alias=bytearray(image);t=ss['.text.'+name];so=struct.unpack_from('<Q',image,40)[0];se,sn,si=struct.unpack_from('<HHH',image,58);st=struct.unpack_from('<IIQQQQIIQQ',image,so+si*se);at=st[4]+t[0];oldname=cstr(alias,at);new=b'.text.s122_q5_c2'
+                                                                                                                         ^^^^^^^^^^^^^
+AssertionError: []
+cpu-run: [S122-Q5-C2] done in 0s (exit 1)

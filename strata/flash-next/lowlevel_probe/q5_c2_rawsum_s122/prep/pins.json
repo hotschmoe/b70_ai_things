@@ -1,0 +1,102 @@
+{
+  "status": "SOURCE_PREP_NO_BINARY_PAYLOAD_READ",
+  "small_inputs": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/host_binding.py",
+      "bytes": 6232,
+      "sha256": "37ecf55c43300319f0a3baaf15bede814934bd3ee1b0a11b32a38dc6066d4aa6"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-audit-prep/audit.py",
+      "bytes": 15160,
+      "sha256": "334261ec9b66ab3726f29016b5c6638ea2391f74df2bc49ae613590887acb2fb"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-compiled-audit-prep/audit.py",
+      "bytes": 16748,
+      "sha256": "93539b99e5af2c840a41056bd950cb968dc253df8112bf9203e740ecdfab1e95"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/facts.json",
+      "bytes": 85442,
+      "sha256": "9c26e7ebe88c609bdb4978e6ea46f9e04efd9887d8e7b31cfeddf04fd32a6642"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/root-build-audit.json",
+      "bytes": 2810,
+      "sha256": "e6e7c14897a8d3f123e7e160306f1d27c98595c30ba49e4d60fd6778fb86c538"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/build-sha256.txt",
+      "bytes": 954,
+      "sha256": "df200c97e86b03a1f7e005a24902d79391bc6f22f986c3a9db66d676f4a85038"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/mode0/config.json",
+      "bytes": 2689,
+      "sha256": "5883bf0beb661eb2e6603d49aee2fc910b87c9f3d82d8a97b1c07073a01d6901"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+      "bytes": 192865,
+      "sha256": "ae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp",
+      "bytes": 121495,
+      "sha256": "2d26e686c2aa6065d33461464efa39975db8e0cc5196f8962a216b4c5fa2a589"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/primary-dense-mmvq-source-s121/manifest.json",
+      "bytes": 1297,
+      "sha256": "bad4f4f97ff1a301b872bdc3372f7849b34b147a053de4c24f737d28edd4c686"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/primary-widek-resources-s57-20261015/Q5_K-C6-RPW1.ze_info.yaml",
+      "bytes": 3244,
+      "sha256": "96d7bfe38dd7a7ed76dadce43ff2d9f6b15c3827a5a06096bbad238bddb0474f"
+    }
+  ],
+  "artifacts": {
+    "main": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/strata-q6-a4-s107",
+      "sha256": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca",
+      "stat": {
+        "device": 45,
+        "inode": 24075744,
+        "size": 92372200,
+        "mtime_ns": 1792107755228308854,
+        "ctime_ns": 1792107755228308854
+      },
+      "identity_method": "Reuse S107 completed full hash plus unchanged closed S115 and current stat; no fresh main hash."
+    },
+    "object": {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o",
+      "sha256": "e4dafa843014ad3aeb4e2c15e2bfa26c834f8e6fa0d8873032e5235ce06a9667",
+      "stat": {
+        "device": 45,
+        "inode": 24067333,
+        "size": 8126368,
+        "mtime_ns": 1792107606687705529,
+        "ctime_ns": 1792107606688735292
+      },
+      "identity_method": "Reuse S107 identity now; future CPU audit verifies only this 8.1MB selected object hash once."
+    },
+    "archive": {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/libstrata_kernels.a",
+      "sha256": "cf710683aec404599d1cc6173bf8364e6d30731bda82b315df286bf58aed9b38",
+      "stat": {
+        "device": 45,
+        "inode": 24067334,
+        "size": 19547694,
+        "mtime_ns": 1792107607065717259,
+        "ctime_ns": 1792107607065717259
+      },
+      "identity_method": "Reuse S107 hash/member equality plus unchanged closed S115/current stat; archive payload not read or rehashed."
+    }
+  },
+  "native_source_sha256": "ae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252",
+  "selected_target": "WideQ5K C2 native_mmvq_wide RPW1",
+  "mangled_selector_anchor": "E16native_mmvq_wide (followed by F substitution, NOT native_mmvq_wideE); validated against retained C6 metadata, C2 still must bind actual Info uniquely.",
+  "binary_payload_read_or_model_or_GPU_or_build": 0
+}

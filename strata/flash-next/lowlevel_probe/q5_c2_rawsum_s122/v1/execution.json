@@ -1,0 +1,15 @@
+{
+  "command": [
+    "env",
+    "B70_AGENT=S122-Q5-C2",
+    "bin/cpu-run",
+    "python3",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-prep/audit.py",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-audit"
+  ],
+  "exit": 1,
+  "elapsed_s": 0.3418722050264478,
+  "log": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-audit.log",
+  "automatic_retry": false,
+  "decoder_build_GPU": false
+}

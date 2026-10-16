@@ -25230,3 +25230,31 @@ change invalidates ongoing source audits. Scope is these four PRs/main at
 querytime, not all open work. Evidence:
 strata/flash-next/lowlevel_probe/upstream_refresh_s124/ and
  docs/20261016_strata_upstream_refresh.md.
+
+
+## 2026-10-16 S122: selected Q5 C2 input-sum lowering
+
+CONFIG -> S107 main064b63ce/native objecte4dafa84, Q5 C2/RPW1 full head
+N2560/M248320 under retained flags. No new kernel/build/GPU/model.
+COMMAND -> First selected audit exit1/.341872s: wrong host metadata spelling,
+no image selected. V2 exact three-symbol selector-only correction passes
+unchanged gates, exit0/1.083052s. Actual Info/cache/guard/name/image and four
+host functions bind one30168B imageaa4d0202/text8320B7e4b99f3. Missing
+compiled try_wide/jump-table edges remain source-only. Root reads actual key
+host windows. One offline ocloc BMG-G31 decode9.858s/exit0 under cpu-run,
+e41/noDRI/UID1000/fourCPU/diskTMP. Original HOLD preserved.
+RESULT -> Independent complete632-line ISA read plus root rawsum/FP/tree
+windows: all16 native DP4As are weighted; FOUR distinct raw16 signed-q sums
+each lower to16 byte-pack MOV+16 signed-extend MOV+ADD+7ADD3,40 static vector
+instructions. Actual FP has MAD contractions, separate column accumulation
+and original XOR16/8/4/2/1 tree. CR0 raw400004C0 uninterpreted; SG32/GRF128/
+eu8, absent resources UNKNOWN. Counts are not cycles, traffic or wall savings.
+VERDICT -> Root selects S126 private SOURCE preparation for runtime-uniform
+4B captured ones_word01010101, aiming for packed DP4A correction without new
+sidecar/producer/scratch. No prototype build/GPU yet: actual payload/lowering/
+FP ledger and strict oracle required before timing. Integer exactness is not
+universal FP proof. Prior actual Opus46.035/Fable66.380 CPU audit GO does not
+authorize a prototype; structural consultations now running. Root verifies
+32 exact copies/one derived line record/all36 payloads. No serving/default/
+target change. Evidence: strata/flash-next/lowlevel_probe/q5_c2_rawsum_s122/
+and docs/20261016_strata_q5_c2_rawsum.md.

@@ -1,0 +1,7 @@
+{
+  "facts_sha256": "f74b7ac235fac101194e344eab8f7ff265c717f874d259d4b38f47bd07bd21ad",
+  "selected": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_111launch_wideINS2_7WideQ5KELi2EEEvPKvS6_PfiiPN4sycl3_V15queueEiE16native_mmvq_wideS4_18dpct_kernel_scalarILi2EEEE",
+  "original_image_sha256": "aa4d0202dd32cca82dad2cce6497c74125c640a0006f3f8dbe30ae04fc6bd859",
+  "alias_sha256": "a4e0c303e102df4a7f9b1e0157b7619f59d62a8ea42a4c85f129cdb95842c132",
+  "images": 1
+}

@@ -1,0 +1,2 @@
+cpu-run: [S122-Q5-C2-ISA] acquired (heavy) -> bash /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-prep-v2/decode-one.sh /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-audit-v2
+cpu-run: [S122-Q5-C2-ISA] done in 10s (exit 0)

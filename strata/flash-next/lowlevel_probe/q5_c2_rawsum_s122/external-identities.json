@@ -1,0 +1,68 @@
+{
+  "reason": "Keep main/object/archive/images/full ASM external; no large-artifact rehash during curation.",
+  "artifacts": {
+    "main": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca",
+    "object": "e4dafa843014ad3aeb4e2c15e2bfa26c834f8e6fa0d8873032e5235ce06a9667",
+    "archive": "cf710683aec404599d1cc6173bf8364e6d30731bda82b315df286bf58aed9b38"
+  },
+  "artifact_paths_and_stats": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/strata-q6-a4-s107": {
+      "device": 45,
+      "inode": 24075744,
+      "size": 92372200,
+      "mtime_ns": 1792107755228308854,
+      "ctime_ns": 1792107755228308854
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o": {
+      "device": 45,
+      "inode": 24067333,
+      "size": 8126368,
+      "mtime_ns": 1792107606687705529,
+      "ctime_ns": 1792107606688735292
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/libstrata_kernels.a": {
+      "device": 45,
+      "inode": 24067334,
+      "size": 19547694,
+      "mtime_ns": 1792107607065717259,
+      "ctime_ns": 1792107607065717259
+    }
+  },
+  "selected_image": "aa4d0202dd32cca82dad2cce6497c74125c640a0006f3f8dbe30ae04fc6bd859",
+  "selected_text": "7e4b99f349256a49c64719845ae90e8a051b68c7d832907116c88bf348a67bff",
+  "alias": "a4e0c303e102df4a7f9b1e0157b7619f59d62a8ea42a4c85f129cdb95842c132",
+  "full_host_asm": {
+    "_ZN6strata7kernels11native_mmvqEiPKvS2_PfiiiPv": {
+      "path": "host-0.asm",
+      "bytes": 19434,
+      "sha256": "26cc0518e31cec90b8cbccbab40f25fd107a3e4c51ffcd74af91b1ec2a34ff45"
+    },
+    "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi": {
+      "path": "host-1.asm",
+      "bytes": 43688,
+      "sha256": "cb7756cff1a32bbb625cf66b0b4d21ddb4dd533780ce89de5306a9967f48cbfd"
+    },
+    "_ZN6strata7kernels16native_mmvq_headEiPKvS2_PfiiiPv": {
+      "path": "host-2.asm",
+      "bytes": 24595,
+      "sha256": "463db39d9600bece9f6799ad25ee78f2342c4a6045816eac591cdcb5cd8a2d3c"
+    },
+    "_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv": {
+      "path": "host-3.asm",
+      "bytes": 42663,
+      "sha256": "d7deeb4e62793efa2a6925fb3607b6e82686b76dbad5514312800610f5b9ea7d"
+    }
+  },
+  "full_selected_isa": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-audit-v2/isa/disasm/.text.s122_q5_c2.asm",
+    "sha256_receipt": "5aae8c1219d768710ea836d873a68d8919a0c83aa740f7b1189749c29ea739fe  /out/disasm/.text.s122_q5_c2.asm"
+  },
+  "original_v1_manifest": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-prep/manifest.json",
+    "sha256": "c4503dc45509ddeff44f19096e9f94732411720debbd03ebf7b85bb00540dbbb"
+  },
+  "v2_manifest": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-prep-v2/manifest.json",
+    "sha256": "8f8c10e91ea4c500935558424011b78893439e56e8529c062cee2e82f28627e1"
+  }
+}

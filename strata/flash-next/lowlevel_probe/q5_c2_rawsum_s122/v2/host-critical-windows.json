@@ -1,0 +1,84 @@
+[
+  {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-audit-v2/host-0.asm",
+    "source_bytes": 19434,
+    "source_sha256": "26cc0518e31cec90b8cbccbab40f25fd107a3e4c51ffcd74af91b1ec2a34ff45",
+    "selection": "1-based inclusive exact saved ASM lines",
+    "windows": [
+      {
+        "first_line": 137,
+        "last_line": 148,
+        "text": "   693e7:\t4c 89 14 24          \tmov    %r10,(%rsp)\n   693eb:\t48 89 f7             \tmov    %rsi,%rdi\n   693ee:\t48 89 d6             \tmov    %rdx,%rsi\n   693f1:\t48 89 ca             \tmov    %rcx,%rdx\n   693f4:\t44 89 c1             \tmov    %r8d,%ecx\n   693f7:\t45 89 c8             \tmov    %r9d,%r8d\n   693fa:\t41 89 c1             \tmov    %eax,%r9d\n   693fd:\te8 00 00 00 00       \tcall   69402 <_ZN6strata7kernels11native_mmvqEiPKvS2_PfiiiPv+0x1a2>\t693fe: R_X86_64_PLT32\t_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv-0x4\n   69402:\t48 83 c4 18          \tadd    $0x18,%rsp\n   69406:\t5b                   \tpop    %rbx\n   69407:\t41 5e                \tpop    %r14\n   69409:\tc3                   \tret\n"
+      }
+    ]
+  },
+  {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-audit-v2/host-1.asm",
+    "source_bytes": 43688,
+    "source_sha256": "cb7756cff1a32bbb625cf66b0b4d21ddb4dd533780ce89de5306a9967f48cbfd",
+    "selection": "1-based inclusive exact saved ASM lines",
+    "windows": [
+      {
+        "first_line": 12,
+        "last_line": 18,
+        "text": "   6828c:\t4c 89 cb             \tmov    %r9,%rbx\n   6828f:\t45 89 c6             \tmov    %r8d,%r14d\n   68292:\t8b 84 24 00 02 00 00 \tmov    0x200(%rsp),%eax\n   68299:\t83 f8 02             \tcmp    $0x2,%eax\n   6829c:\t0f 84 28 02 00 00    \tje     684ca <_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi+0x24a>\n   682a2:\t83 f8 04             \tcmp    $0x4,%eax\n   682a5:\t0f 85 3e 04 00 00    \tjne    686e9 <_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi+0x469>\n"
+      },
+      {
+        "first_line": 191,
+        "last_line": 210,
+        "text": "   686e9:\t48 89 7c 24 38       \tmov    %rdi,0x38(%rsp)\n   686ee:\t48 89 74 24 40       \tmov    %rsi,0x40(%rsp)\n   686f3:\t48 89 54 24 48       \tmov    %rdx,0x48(%rsp)\n   686f8:\t89 4c 24 50          \tmov    %ecx,0x50(%rsp)\n   686fc:\t44 89 74 24 54       \tmov    %r14d,0x54(%rsp)\n   68701:\t48 8b 05 00 00 00 00 \tmov    0x0(%rip),%rax        # 68708 <_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi+0x488>\t68704: R_X86_64_PC32\t.rodata+0x786ac\n   68708:\t48 89 84 24 f0 00 00 00 \tmov    %rax,0xf0(%rsp)\n   68710:\t0f 10 05 00 00 00 00 \tmovups 0x0(%rip),%xmm0        # 68717 <_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi+0x497>\t68713: R_X86_64_PC32\t.rodata+0x7869c\n   68717:\t0f 29 84 24 e0 00 00 00 \tmovaps %xmm0,0xe0(%rsp)\n   6871f:\t4c 8d 7c 24 58       \tlea    0x58(%rsp),%r15\n   68724:\t48 8d b4 24 e0 00 00 00 \tlea    0xe0(%rsp),%rsi\n   6872c:\t4c 89 ff             \tmov    %r15,%rdi\n   6872f:\te8 00 00 00 00       \tcall   68734 <_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi+0x4b4>\t68730: R_X86_64_PLT32\t_ZN4sycl3_V16detail14tls_code_loc_tC1ERKNS1_13code_locationE-0x4\n   68734:\t4c 89 ff             \tmov    %r15,%rdi\n   68737:\te8 00 00 00 00       \tcall   6873c <_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi+0x4bc>\t68738: R_X86_64_PLT32\t_ZN4sycl3_V16detail14tls_code_loc_t5queryEv-0x4\n   6873c:\t49 89 c7             \tmov    %rax,%r15\n   6873f:\t41 83 c6 03          \tadd    $0x3,%r14d\n   68743:\t41 c1 ee 02          \tshr    $0x2,%r14d\n   68747:\t49 c1 e6 05          \tshl    $0x5,%r14\n   6874b:\t48 c7 84 24 98 00 00 00 01 00 00 00 \tmovq   $0x1,0x98(%rsp)\n"
+      },
+      {
+        "first_line": 231,
+        "last_line": 234,
+        "text": "   687f4:\t0f b6 05 00 00 00 00 \tmovzbl 0x0(%rip),%eax        # 687fb <_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi+0x57b>\t687f7: R_X86_64_PC32\t.bss+0x36f4\n   687fb:\t84 c0                \ttest   %al,%al\n   687fd:\t0f 84 c9 01 00 00    \tje     689cc <_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi+0x74c>\n   68803:\t4c 8b 35 00 00 00 00 \tmov    0x0(%rip),%r14        # 6880a <_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi+0x58a>\t68806: R_X86_64_PC32\t.bss+0x36ec\n"
+      },
+      {
+        "first_line": 263,
+        "last_line": 268,
+        "text": "   688c1:\t48 8d 54 24 78       \tlea    0x78(%rsp),%rdx\n   688c6:\t48 8d 4c 24 68       \tlea    0x68(%rsp),%rcx\n   688cb:\t4c 8d 8c 24 18 01 00 00 \tlea    0x118(%rsp),%r9\n   688d3:\t48 89 de             \tmov    %rbx,%rsi\n   688d6:\t4d 89 f0             \tmov    %r14,%r8\n   688d9:\te8 00 00 00 00       \tcall   688de <_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi+0x65e>\t688da: R_X86_64_PLT32\t_ZN4sycl3_V136submit_kernel_direct_with_event_implERKNS0_5queueERKNS0_6detail16nd_range_view_v113nd_range_viewERNS4_17HostKernelRefBaseEPNS4_16DeviceKernelInfoENS0_4spanIKNS0_5eventELm18446744073709551615EEERKNS4_27kernel_launch_properties_v111PropsHolderIJNS0_3ext6oneapi12experimental23work_group_scratch_sizeENSJ_5intel12experimental12cache_configENSL_17use_root_sync_keyENSL_23work_group_progress_keyENSL_22sub_group_progress_keyENSL_22work_item_progress_keyENSL_4cuda12cluster_sizeILi1EEENSV_ILi2EEENSV_ILi3EEEEEERKNS4_13code_locationEb-0x4\n"
+      },
+      {
+        "first_line": 326,
+        "last_line": 335,
+        "text": "   689cc:\tbf 00 00 00 00       \tmov    $0x0,%edi\t689cd: R_X86_64_32\t.bss+0x36f8\n   689d1:\te8 00 00 00 00       \tcall   689d6 <_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi+0x756>\t689d2: R_X86_64_PLT32\t__cxa_guard_acquire-0x4\n   689d6:\t85 c0                \ttest   %eax,%eax\n   689d8:\t0f 84 25 fe ff ff    \tje     68803 <_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi+0x583>\n   689de:\tbf 00 00 00 00       \tmov    $0x0,%edi\t689df: R_X86_64_32\t.rodata+0x78048\n   689e3:\te8 00 00 00 00       \tcall   689e8 <_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi+0x768>\t689e4: R_X86_64_PLT32\t_ZN4sycl3_V16detail19getDeviceKernelInfoERKNS1_27compile_time_kernel_info_v123CompileTimeKernelInfoTyE-0x4\n   689e8:\t48 89 05 00 00 00 00 \tmov    %rax,0x0(%rip)        # 689ef <_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi+0x76f>\t689eb: R_X86_64_PC32\t.bss+0x36ec\n   689ef:\tbf 00 00 00 00       \tmov    $0x0,%edi\t689f0: R_X86_64_32\t.bss+0x36f8\n   689f4:\te8 00 00 00 00       \tcall   689f9 <_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi+0x779>\t689f5: R_X86_64_PLT32\t__cxa_guard_release-0x4\n   689f9:\te9 05 fe ff ff       \tjmp    68803 <_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi+0x583>\n"
+      }
+    ]
+  },
+  {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-audit-v2/host-2.asm",
+    "source_bytes": 24595,
+    "source_sha256": "463db39d9600bece9f6799ad25ee78f2342c4a6045816eac591cdcb5cd8a2d3c",
+    "selection": "1-based inclusive exact saved ASM lines",
+    "windows": [
+      {
+        "first_line": 15,
+        "last_line": 24,
+        "text": "   67f9e:\t45 89 ca             \tmov    %r9d,%r10d\n   67fa1:\t4c 8b 4c 24 58       \tmov    0x58(%rsp),%r9\n   67fa6:\t8b 5c 24 50          \tmov    0x50(%rsp),%ebx\n   67faa:\t0f b6 05 00 00 00 00 \tmovzbl 0x0(%rip),%eax        # 67fb1 <_ZN6strata7kernels16native_mmvq_headEiPKvS2_PfiiiPv+0x21>\t67fad: R_X86_64_PC32\t.bss+0x54\n   67fb1:\t84 c0                \ttest   %al,%al\n   67fb3:\t0f 84 fe 00 00 00    \tje     680b7 <_ZN6strata7kernels16native_mmvq_headEiPKvS2_PfiiiPv+0x127>\n   67fb9:\t80 3d 00 00 00 00 00 \tcmpb   $0x0,0x0(%rip)        # 67fc0 <_ZN6strata7kernels16native_mmvq_headEiPKvS2_PfiiiPv+0x30>\t67fbb: R_X86_64_PC32\t.bss+0x4b\n   67fc0:\t0f 84 ac 00 00 00    \tje     68072 <_ZN6strata7kernels16native_mmvq_headEiPKvS2_PfiiiPv+0xe2>\n   67fc6:\t83 ff 0d             \tcmp    $0xd,%edi\n   67fc9:\t0f 85 a3 00 00 00    \tjne    68072 <_ZN6strata7kernels16native_mmvq_headEiPKvS2_PfiiiPv+0xe2>\n"
+      },
+      {
+        "first_line": 62,
+        "last_line": 70,
+        "text": "   68072:\t45 89 d1             \tmov    %r10d,%r9d\n   68075:\t48 83 c4 18          \tadd    $0x18,%rsp\n   68079:\t5b                   \tpop    %rbx\n   6807a:\t41 5c                \tpop    %r12\n   6807c:\t41 5d                \tpop    %r13\n   6807e:\t41 5e                \tpop    %r14\n   68080:\t41 5f                \tpop    %r15\n   68082:\t5d                   \tpop    %rbp\n   68083:\te9 00 00 00 00       \tjmp    68088 <_ZN6strata7kernels16native_mmvq_headEiPKvS2_PfiiiPv+0xf8>\t68084: R_X86_64_PLT32\t_ZN6strata7kernels11native_mmvqEiPKvS2_PfiiiPv-0x4\n"
+      },
+      {
+        "first_line": 104,
+        "last_line": 116,
+        "text": "   680f9:\tbf 00 00 00 00       \tmov    $0x0,%edi\t680fa: R_X86_64_32\t.rodata.str1.1+0x29ac\n   680fe:\te8 00 00 00 00       \tcall   68103 <_ZN6strata7kernels16native_mmvq_headEiPKvS2_PfiiiPv+0x173>\t680ff: R_X86_64_PLT32\tgetenv-0x4\n   68103:\t48 85 c0             \ttest   %rax,%rax\n   68106:\t74 0e                \tje     68116 <_ZN6strata7kernels16native_mmvq_headEiPKvS2_PfiiiPv+0x186>\n   68108:\t80 38 31             \tcmpb   $0x31,(%rax)\n   6810b:\t75 09                \tjne    68116 <_ZN6strata7kernels16native_mmvq_headEiPKvS2_PfiiiPv+0x186>\n   6810d:\t80 78 01 00          \tcmpb   $0x0,0x1(%rax)\n   68111:\t0f 94 c0             \tsete   %al\n   68114:\teb 02                \tjmp    68118 <_ZN6strata7kernels16native_mmvq_headEiPKvS2_PfiiiPv+0x188>\n   68116:\t31 c0                \txor    %eax,%eax\n   68118:\t88 05 00 00 00 00    \tmov    %al,0x0(%rip)        # 6811e <_ZN6strata7kernels16native_mmvq_headEiPKvS2_PfiiiPv+0x18e>\t6811a: R_X86_64_PC32\t.bss+0x4c\n   6811e:\tbf 00 00 00 00       \tmov    $0x0,%edi\t6811f: R_X86_64_32\t.bss+0x58\n   68123:\te8 00 00 00 00       \tcall   68128 <_ZN6strata7kernels16native_mmvq_headEiPKvS2_PfiiiPv+0x198>\t68124: R_X86_64_PLT32\t__cxa_guard_release-0x4\n"
+      }
+    ]
+  },
+  {
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-audit-v2/host-3.asm",
+    "source_bytes": 42663,
+    "source_sha256": "d7deeb4e62793efa2a6925fb3607b6e82686b76dbad5514312800610f5b9ea7d",
+    "selection": "1-based inclusive exact saved ASM lines",
+    "windows": [
+      {
+        "first_line": 15,
+        "last_line": 53,
+        "text": "    6971:\t44 89 cb             \tmov    %r9d,%ebx\n    6974:\t45 89 c6             \tmov    %r8d,%r14d\n    6977:\t89 cd                \tmov    %ecx,%ebp\n    6979:\t49 89 d7             \tmov    %rdx,%r15\n    697c:\t49 89 f4             \tmov    %rsi,%r12\n    697f:\t49 89 fd             \tmov    %rdi,%r13\n    6982:\t48 8b 84 24 00 02 00 00 \tmov    0x200(%rsp),%rax\n    698a:\t48 89 44 24 20       \tmov    %rax,0x20(%rsp)\n    698f:\t89 cf                \tmov    %ecx,%edi\n    6991:\t44 89 ce             \tmov    %r9d,%esi\n    6994:\tba 00 01 00 00       \tmov    $0x100,%edx\n    6999:\te8 12 f7 ff ff       \tcall   60b0 <_ZN6strata7kernels12_GLOBAL__N_114validate_shapeEiii>\n    699e:\t45 85 f6             \ttest   %r14d,%r14d\n    69a1:\t0f 8e 28 06 00 00    \tjle    6fcf <_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv+0x66f>\n    69a7:\t4d 85 ed             \ttest   %r13,%r13\n    69aa:\t0f 84 cb 05 00 00    \tje     6f7b <_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv+0x61b>\n    69b0:\t41 f6 c5 03          \ttest   $0x3,%r13b\n    69b4:\t0f 85 c1 05 00 00    \tjne    6f7b <_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv+0x61b>\n    69ba:\t4d 85 e4             \ttest   %r12,%r12\n    69bd:\t48 8b 44 24 20       \tmov    0x20(%rsp),%rax\n    69c2:\t0f 84 cf 05 00 00    \tje     6f97 <_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv+0x637>\n    69c8:\t41 f6 c4 03          \ttest   $0x3,%r12b\n    69cc:\t0f 85 c5 05 00 00    \tjne    6f97 <_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv+0x637>\n    69d2:\t4d 85 ff             \ttest   %r15,%r15\n    69d5:\t0f 84 d8 05 00 00    \tje     6fb3 <_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv+0x653>\n    69db:\t41 f6 c7 03          \ttest   $0x3,%r15b\n    69df:\t0f 85 ce 05 00 00    \tjne    6fb3 <_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv+0x653>\n    69e5:\t48 85 c0             \ttest   %rax,%rax\n    69e8:\t0f 84 fd 05 00 00    \tje     6feb <_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv+0x68b>\n    69ee:\t48 89 04 24          \tmov    %rax,(%rsp)\n    69f2:\t4c 89 ef             \tmov    %r13,%rdi\n    69f5:\t4c 89 e6             \tmov    %r12,%rsi\n    69f8:\t4c 89 fa             \tmov    %r15,%rdx\n    69fb:\t89 e9                \tmov    %ebp,%ecx\n    69fd:\t45 89 f0             \tmov    %r14d,%r8d\n    6a00:\t41 89 d9             \tmov    %ebx,%r9d\n    6a03:\te8 e8 06 00 00       \tcall   70f0 <_ZN6strata7kernels12_GLOBAL__N_18try_wideINS1_7WideQ5KEEEbPKvS5_PfiiiPv>\n    6a08:\t84 c0                \ttest   %al,%al\n    6a0a:\t74 12                \tje     6a1e <_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv+0xbe>\n"
+      }
+    ]
+  }
+]

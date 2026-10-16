@@ -1,0 +1,127 @@
+{
+  "status": "ACTUAL_OBJECT_BOUNDED_METADATA_DIAGNOSIS",
+  "object": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o",
+  "Info": {
+    "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS7_7WideQ5KE18dpct_kernel_scalarILi2EEEEEE",
+    "bind": 0,
+    "type": 1,
+    "section": 33,
+    "offset": 491592,
+    "size": 88
+  },
+  "cache_guard": [
+    {
+      "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "bind": 0,
+      "type": 1,
+      "section": 286,
+      "offset": 14072,
+      "size": 8
+    },
+    {
+      "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "bind": 0,
+      "type": 1,
+      "section": 286,
+      "offset": 14064,
+      "size": 8
+    }
+  ],
+  "registered_name": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_111launch_wideINS2_7WideQ5KELi2EEEvPKvS6_PfiiPN4sycl3_V15queueEiE16native_mmvq_wideS4_18dpct_kernel_scalarILi2EEEE",
+  "host_relocations": [
+    {
+      "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "target_symbol": "",
+      "STT_SECTION": true,
+      "relocation_type": 2,
+      "addend": 14068,
+      "normalized_destination": 14072,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi"
+      ]
+    },
+    {
+      "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "target_symbol": "",
+      "STT_SECTION": true,
+      "relocation_type": 2,
+      "addend": 14060,
+      "normalized_destination": 14064,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi"
+      ]
+    },
+    {
+      "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "target_symbol": "",
+      "STT_SECTION": true,
+      "relocation_type": 10,
+      "addend": 14072,
+      "normalized_destination": 14072,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi"
+      ]
+    },
+    {
+      "target_metadata": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS7_7WideQ5KE18dpct_kernel_scalarILi2EEEEEE",
+      "target_symbol": "",
+      "STT_SECTION": true,
+      "relocation_type": 10,
+      "addend": 491592,
+      "normalized_destination": 491592,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi"
+      ]
+    },
+    {
+      "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "target_symbol": "",
+      "STT_SECTION": true,
+      "relocation_type": 2,
+      "addend": 14060,
+      "normalized_destination": 14064,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi"
+      ]
+    },
+    {
+      "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "target_symbol": "",
+      "STT_SECTION": true,
+      "relocation_type": 10,
+      "addend": 14072,
+      "normalized_destination": 14072,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi"
+      ]
+    },
+    {
+      "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "target_symbol": "",
+      "STT_SECTION": true,
+      "relocation_type": 10,
+      "addend": 14072,
+      "normalized_destination": 14072,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi"
+      ]
+    }
+  ],
+  "cause": "Actual object Info/cache/guard symbols use namespace tag form; their relocation names the launch_wide-local registered kernel. V1 incorrectly required the registered-name form in the distinct host metadata symbols. No cause for the compiler naming distinction is inferred.",
+  "new_predicate": "16native_mmvq_wideE + WideQ5K + dpct_kernel_scalarILi2EE + not rpw",
+  "unique_actual_counts": {
+    "Info": 1,
+    "cache_guard": 2,
+    "registered_name": 1
+  },
+  "main_archive_model_payload_read": false,
+  "object_hash_repeated": false,
+  "decoder_GPU": 0
+}

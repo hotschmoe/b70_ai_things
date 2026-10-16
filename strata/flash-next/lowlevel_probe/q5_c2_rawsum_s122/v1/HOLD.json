@@ -1,0 +1,7 @@
+{
+  "status": "HOLD_FIRST_AUDIT_FAILURE_NO_RETRY",
+  "type": "AssertionError",
+  "error": "[]",
+  "GPU": 0,
+  "decoder_invocations": 0
+}

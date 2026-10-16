@@ -1,0 +1,11 @@
+{
+  "command": [
+    "bin/cpu-run",
+    "python3",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-prep-v2/audit.py",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-audit-v2"
+  ],
+  "cwd": "/mnt/vm_8tb/github/b70_ai_things",
+  "audit_sha256": "4e9451f553b08c3b5d1406d93db617a10014e3405412e97a174441dcd144e2ca",
+  "authorization": "root one corrected CPU continuation; no retries or decoder"
+}

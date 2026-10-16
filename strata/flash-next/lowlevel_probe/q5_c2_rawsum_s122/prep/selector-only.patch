@@ -1,0 +1,11 @@
+--- immutable-v1/audit.py
++++ v2/audit.py
+@@ -49,7 +49,7 @@
+  nodes=[n for n in ast.parse(prior.read_text()).body if isinstance(n,ast.FunctionDef)and n.name in {'refs_to','bind','sections'}];require(len(nodes)==3,'three existing S107 functions')
+  exec(compile(ast.Module(body=nodes,type_ignores=[]),str(prior)+':three-functions-only','exec'),globals())
+  final=ELF(EXE);obj=ELF(OBJ)
+- def target(n):return 'launch_wideI'in n and 'WideQ5K'in n and 'E16native_mmvq_wide'in n and 'dpct_kernel_scalarILi2EE'in n and 'rpw'not in n
++ def target(n):return n in ('_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS7_7WideQ5KE18dpct_kernel_scalarILi2EEEEEE', '_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info', '_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info')
+  host=bind(obj,target);name=host['registered_name_pointer']['name']
+  require('WideQ5K'in name and 'E16native_mmvq_wide'in name and 'scalarILi2EE'in name and 'rpw'not in name,'one Q5 C2 original registered name')
+  owners={fn for row in host['actual_host_relocations']if row['target_metadata']==host['object_info']['name']for fn in row['containing_functions']};require(bool(owners),'selected actual host owner')
