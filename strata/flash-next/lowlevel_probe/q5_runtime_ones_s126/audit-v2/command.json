@@ -1,0 +1,16 @@
+{
+  "command": [
+    "bin/cpu-run",
+    "python3",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-compiled-audit-prep-v2/audit.py",
+    "--prep",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3",
+    "--expected-manifest-sha256",
+    "cbc8aedaa29c2852cff60f1eb51c6f4da638fd7fd2076816dd0d774bf6fb3d86",
+    "--out",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-built-audit-v2"
+  ],
+  "cwd": "/mnt/vm_8tb/github/b70_ai_things",
+  "audit_sha256": "0502fdef1ceaea65aede448b60a58788bf7ab0a22ea5b2a5df794b7e1b93a5e2",
+  "authorization": "root one explicit corrected CPU continuation; no retries/decoder/GPU"
+}

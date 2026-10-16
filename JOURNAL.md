@@ -25298,3 +25298,29 @@ S75 serial on-the-fly IQ3 DPAS and is not categorically closed by S75 or A4.
 No implementation, numerical tolerance, build/GPU/default or speed forecast.
 Root verified19 exact copies/two filtered metadata records in shared bundle.
 Evidence: same structural_decode_s123_s125 bundle and dated report.
+
+
+## 2026-10-16 S126: packed correction candidate, private control HOLD
+
+CONFIG -> Q5_K head N2560/M248320/C2/RPW1. Host-captured runtime
+0x01010101 replaces only the rawsum ones operand. No production source edit.
+Actual claude-opus-5-5 (53.480798s) and claude-fable-5-1 (58.192092s)
+approved CPU build only. V2 removed 47 redundant weight readbacks
+(20541030400B); V3 retained balanced capture/drain and raw-tail-first checks.
+
+COMMAND -> One pinned e41/noDRI adapter build under cpu-run; two explicit
+CPU audits (initial wrapper ABI assumption then narrow correction), one
+selected candidate decode and independent full ISA operand review.
+
+RESULT -> Build0/23.125537s. Initial audit HOLD/2.275797s; corrected audit
+HOLD/2.670346s. Actual public production control passes 8128B computation,
+metadata/options/data/raw+decoded relocations. Private clone differs at
+byte167 (text8704 vs8320); cause unproven. Candidate decode0/10.153557s;
+6272B computation uses 16 weighted plus16 correction DP4As, eliminates
+four40-instruction byte-sum chains, preserves tracked FP/conversion/K/XOR
+ledger. Missing resource fields UNKNOWN. No dynamic correctness/timing ran.
+
+VERDICT -> CLOSED CPU-only overall HOLD, candidate mechanism PASS only.
+Separate S128 will use the verified public production control directly;
+failed clone gate remains historical HOLD. See
+docs/20261016_strata_q5_runtime_ones_compiled.md and curated evidence.

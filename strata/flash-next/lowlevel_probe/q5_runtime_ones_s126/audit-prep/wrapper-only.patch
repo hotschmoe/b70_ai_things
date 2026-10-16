@@ -1,0 +1,25 @@
+--- immutable-v1/audit.py
++++ v2/audit.py
+@@ -116,9 +116,9 @@
+   require('    payload_arguments:\n'in block,'actual payload metadata');part=block.split('    payload_arguments:\n',1)[1].split('\n    per_thread_payload_arguments:',1)[0];out=[]
+   for piece in re.split(r'(?m)^      - arg_type:\s*',part)[1:]:
+    row={'arg_type':piece.splitlines()[0].strip()}
+-   for k in ['arg_index','offset','size','addrmode','addrspace','access_type']:
++   for k in ['arg_index','offset','size','addrmode','addrspace','access_type','source_offset','is_ptr']:
+     m=re.search(r'(?m)^\s*'+k+r':\s*(\S+)',piece)
+-    if m:row[k]=int(m[1])if k in['arg_index','offset','size']else m[1]
++    if m:row[k]=int(m[1])if k in['arg_index','offset','size','source_offset']else m[1]
+    if'arg_index'in row:out.append(row)
+   return sorted(out,key=lambda x:x['arg_index'])
+  selected={};images={}
+@@ -133,7 +133,9 @@
+    count=6 if arm=='candidate'else 5;require(len(u)==count and[x['arg_index']for x in u]==list(range(count)),'actual projection argument count/index '+arm)
+    require([(x['arg_type'],x['offset'],x['size'])for x in u]==[('arg_bypointer',0,8),('arg_bypointer',8,8),('arg_bypointer',16,8),('arg_byvalue',24,4),('arg_byvalue',28,4)]+([('arg_byvalue',32,4)]if arm=='candidate'else[]),'projection capture ABI '+arm)
+   elif arm=='raw16':require(len(u)==3 and sorted((x['arg_type'],x['size'])for x in u)==[('arg_bypointer',8),('arg_bypointer',8),('arg_byvalue',4)],'direct raw16 captures two pointers/ones only; range outside lambda')
+-  else:require(sum(x['arg_type']=='arg_bypointer'and x['size']==8 for x in u)==2 and sum(x['arg_type']=='arg_byvalue'and x['size']==4 for x in u)==1,'actual SDK raw16 wrapper retains two pointers/one4B scalar; extra range/extent fields need manual inspection')
++  else:
++   # Actual SDK wrapper: range8B +closure24B; closure ones/padding is split.
++   require([(x['arg_type'],x['offset'],x['size'],x['arg_index'],x.get('source_offset'),x.get('is_ptr'))for x in u]==[('arg_byvalue',24,8,0,0,None),('arg_byvalue',32,5,1,0,None),('arg_byvalue',40,1,1,5,None),('arg_byvalue',44,1,1,6,None),('arg_byvalue',48,1,1,7,None),('arg_byvalue',56,8,1,8,'true'),('arg_byvalue',64,8,1,16,'true')],'exact actual SDK raw16 wrapper aggregate ABI')
+   opt=get(image,ss,'.misc.buildOptions');require(opt.rstrip(b'\0')==b'-cl-fp32-correctly-rounded-divide-sqrt','actual precise options '+arm);text=get(image,ss,'.text.'+name)
+   (O/(arm+'.zebin')).write_bytes(image);(O/(arm+'.ze_info')).write_text(ze,encoding='ascii')
+   selected[arm]={'kernel':name,'executable_offset':base,'image_bytes':len(image),'image_sha256':sha(image),'text_bytes':len(text),'text_sha256':sha(text),'execution_fields':fields,'missing_metadata':'UNKNOWN, not zero; barrier_count is not an instruction count','payload_user_arguments':u,'full_metadata':block,'options_ascii':opt.rstrip(b'\0').decode(),'data_and_relocations':extra_inventory(image,ss)}

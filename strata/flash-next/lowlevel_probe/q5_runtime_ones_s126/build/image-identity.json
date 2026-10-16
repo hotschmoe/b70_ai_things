@@ -1,0 +1,11 @@
+[
+  {
+    "Id": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+    "RepoDigests": [
+      "strata-ab-build@sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2"
+    ],
+    "Created": "2026-10-13T05:12:00.425790505Z",
+    "Architecture": "amd64",
+    "Os": "linux"
+  }
+]

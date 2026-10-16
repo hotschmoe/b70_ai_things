@@ -1,0 +1,81 @@
+---
+version:         '1.71'
+kernels:
+  - name:            _ZTSN4sycl3_V16detail19__pf_kernel_wrapperIN4s1269Raw16SumsEEE
+    user_attributes:
+      intel_reqd_sub_group_size: 32
+      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]
+    execution_env:
+      grf_count:       128
+      has_4gb_buffers: true
+      has_no_stateless_write: true
+      inline_data_payload_size: 32
+      offset_to_skip_per_thread_data_load: 128
+      simd_size:       32
+      subgroup_independent_forward_progress: true
+      eu_thread_count: 8
+    payload_arguments:
+      - arg_type:        global_id_offset
+        offset:          0
+        size:            12
+      - arg_type:        enqueued_local_size
+        offset:          12
+        size:            12
+      - arg_type:        arg_byvalue
+        offset:          24
+        size:            8
+        arg_index:       0
+        source_offset:   0
+      - arg_type:        arg_byvalue
+        offset:          32
+        size:            5
+        arg_index:       1
+        source_offset:   0
+      - arg_type:        arg_byvalue
+        offset:          40
+        size:            1
+        arg_index:       1
+        source_offset:   5
+      - arg_type:        arg_byvalue
+        offset:          44
+        size:            1
+        arg_index:       1
+        source_offset:   6
+      - arg_type:        arg_byvalue
+        offset:          48
+        size:            1
+        arg_index:       1
+        source_offset:   7
+      - arg_type:        arg_byvalue
+        offset:          56
+        size:            8
+        arg_index:       1
+        source_offset:   8
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          64
+        size:            8
+        arg_index:       1
+        source_offset:   16
+        is_ptr:          true
+      - arg_type:        global_size
+        offset:          72
+        size:            12
+    per_thread_payload_arguments:
+      - arg_type:        local_id
+        offset:          0
+        size:            64
+kernels_misc_info:
+  - name:            _ZTSN4sycl3_V16detail19__pf_kernel_wrapperIN4s1269Raw16SumsEEE
+    args_info:
+      - index:           0
+        address_qualifier: __private
+        access_qualifier: NONE
+        type_name:       'class.sycl::_V1::range.0;8'
+        type_qualifiers: NONE
+      - index:           1
+        address_qualifier: __private
+        access_qualifier: NONE
+        type_name:       'class.__generated_.203;24'
+        type_qualifiers: NONE
+...

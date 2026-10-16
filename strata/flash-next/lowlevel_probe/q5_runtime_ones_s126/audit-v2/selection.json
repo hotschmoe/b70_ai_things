@@ -1,0 +1,1915 @@
+{
+  "status": "FIVE_ACTUAL_BINDINGS_CONTROL_COMPARISON_PENDING",
+  "hosts": {
+    "original": {
+      "object_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN4s12612OriginalQ5C2EEE",
+        "bind": 2,
+        "type": 1,
+        "section": 449,
+        "offset": 0,
+        "size": 88
+      },
+      "object_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12612OriginalQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 447,
+          "offset": 0,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN4s12612OriginalQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 445,
+          "offset": 0,
+          "size": 8
+        }
+      ],
+      "actual_host_relocations": [
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12612OriginalQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12612OriginalQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN4s12612OriginalQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN4s12612OriginalQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12612OriginalQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12612OriginalQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN4s12612OriginalQ5C2EEE",
+          "target_symbol": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN4s12612OriginalQ5C2EEE",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN4s12612OriginalQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN4s12612OriginalQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12612OriginalQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12612OriginalQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12612OriginalQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12612OriginalQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        }
+      ],
+      "final_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN4s12612OriginalQ5C2EEE",
+        "bind": 2,
+        "type": 1,
+        "section": 16,
+        "offset": 5668168,
+        "size": 88
+      },
+      "final_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12612OriginalQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 30,
+          "offset": 63961264,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN4s12612OriginalQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 30,
+          "offset": 63961256,
+          "size": 8
+        }
+      ],
+      "registered_name_pointer": {
+        "pointer": 5434658,
+        "name": "_ZTSN4s12612OriginalQ5C2E"
+      }
+    },
+    "candidate": {
+      "object_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN4s12615RuntimeOnesQ5C2EEE",
+        "bind": 2,
+        "type": 1,
+        "section": 472,
+        "offset": 0,
+        "size": 88
+      },
+      "object_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12615RuntimeOnesQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 470,
+          "offset": 0,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN4s12615RuntimeOnesQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 468,
+          "offset": 0,
+          "size": 8
+        }
+      ],
+      "actual_host_relocations": [
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12615RuntimeOnesQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12615RuntimeOnesQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN4s12615RuntimeOnesQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN4s12615RuntimeOnesQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12615RuntimeOnesQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12615RuntimeOnesQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN4s12615RuntimeOnesQ5C2EEE",
+          "target_symbol": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN4s12615RuntimeOnesQ5C2EEE",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN4s12615RuntimeOnesQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN4s12615RuntimeOnesQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12615RuntimeOnesQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12615RuntimeOnesQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12615RuntimeOnesQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12615RuntimeOnesQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text._ZN5State4callEi",
+          "containing_functions": [
+            "_ZN5State4callEi"
+          ]
+        }
+      ],
+      "final_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN4s12615RuntimeOnesQ5C2EEE",
+        "bind": 2,
+        "type": 1,
+        "section": 16,
+        "offset": 5668624,
+        "size": 88
+      },
+      "final_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s12615RuntimeOnesQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 30,
+          "offset": 63961280,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN4s12615RuntimeOnesQ5C2EEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 30,
+          "offset": 63961272,
+          "size": 8
+        }
+      ],
+      "registered_name_pointer": {
+        "pointer": 5434684,
+        "name": "_ZTSN4s12615RuntimeOnesQ5C2E"
+      }
+    },
+    "raw16": {
+      "object_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN4s1269Raw16SumsEEE",
+        "bind": 2,
+        "type": 1,
+        "section": 423,
+        "offset": 0,
+        "size": 88
+      },
+      "object_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s1269Raw16SumsEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 421,
+          "offset": 0,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN4s1269Raw16SumsEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 419,
+          "offset": 0,
+          "size": 8
+        }
+      ],
+      "actual_host_relocations": [
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s1269Raw16SumsEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s1269Raw16SumsEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN4s1269Raw16SumsEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN4s1269Raw16SumsEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s1269Raw16SumsEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s1269Raw16SumsEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+          ]
+        },
+        {
+          "target_metadata": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN4s1269Raw16SumsEEE",
+          "target_symbol": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN4s1269Raw16SumsEEE",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN4s1269Raw16SumsEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN4s1269Raw16SumsEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s1269Raw16SumsEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s1269Raw16SumsEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s1269Raw16SumsEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s1269Raw16SumsEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+          ]
+        }
+      ],
+      "final_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoIN4s1269Raw16SumsEEE",
+        "bind": 2,
+        "type": 1,
+        "section": 16,
+        "offset": 5667656,
+        "size": 88
+      },
+      "final_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoIN4s1269Raw16SumsEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 30,
+          "offset": 63961248,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoIN4s1269Raw16SumsEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 30,
+          "offset": 63961240,
+          "size": 8
+        }
+      ],
+      "registered_name_pointer": {
+        "pointer": 5433476,
+        "name": "_ZTSN4s1269Raw16SumsE"
+      }
+    },
+    "raw16_wrapper": {
+      "object_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEE",
+        "bind": 2,
+        "type": 1,
+        "section": 390,
+        "offset": 0,
+        "size": 88
+      },
+      "object_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 388,
+          "offset": 0,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 386,
+          "offset": 0,
+          "size": 8
+        }
+      ],
+      "actual_host_relocations": [
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZZN4sycl3_V16detail19getDeviceKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+          ]
+        },
+        {
+          "target_metadata": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEE",
+          "target_symbol": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEE",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZZN4sycl3_V16detail19getDeviceKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+          ]
+        }
+      ],
+      "final_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEE",
+        "bind": 2,
+        "type": 1,
+        "section": 16,
+        "offset": 5667000,
+        "size": 88
+      },
+      "final_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 30,
+          "offset": 63961232,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 30,
+          "offset": 63961224,
+          "size": 8
+        }
+      ],
+      "registered_name_pointer": {
+        "pointer": 5433413,
+        "name": "_ZTSN4sycl3_V16detail19__pf_kernel_wrapperIN4s1269Raw16SumsEEE"
+      }
+    },
+    "public": {
+      "object_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS7_7WideQ5KE18dpct_kernel_scalarILi2EEEEEE",
+        "bind": 0,
+        "type": 1,
+        "section": 33,
+        "offset": 490432,
+        "size": 88
+      },
+      "object_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 0,
+          "type": 1,
+          "section": 286,
+          "offset": 14008,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 0,
+          "type": 1,
+          "section": 286,
+          "offset": 14000,
+          "size": 8
+        }
+      ],
+      "actual_host_relocations": [
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 2,
+          "addend": 14004,
+          "normalized_destination": 14008,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 2,
+          "addend": 13996,
+          "normalized_destination": 14000,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 10,
+          "addend": 14008,
+          "normalized_destination": 14008,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS7_7WideQ5KE18dpct_kernel_scalarILi2EEEEEE",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 10,
+          "addend": 490432,
+          "normalized_destination": 490432,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 2,
+          "addend": 13996,
+          "normalized_destination": 14000,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 10,
+          "addend": 14008,
+          "normalized_destination": 14008,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 10,
+          "addend": 14008,
+          "normalized_destination": 14008,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi"
+          ]
+        }
+      ],
+      "final_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS7_7WideQ5KE18dpct_kernel_scalarILi2EEEEEE",
+        "bind": 0,
+        "type": 1,
+        "section": 16,
+        "offset": 6833856,
+        "size": 88
+      },
+      "final_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 0,
+          "type": 1,
+          "section": 30,
+          "offset": 63975472,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116native_mmvq_wideENS6_7WideQ5KE18dpct_kernel_scalarILi2EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 0,
+          "type": 1,
+          "section": 30,
+          "offset": 63975464,
+          "size": 8
+        }
+      ],
+      "registered_name_pointer": {
+        "pointer": 5598122,
+        "name": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_111launch_wideINS2_7WideQ5KELi2EEEvPKvS6_PfiiPN4sycl3_V15queueEiE16native_mmvq_wideS4_18dpct_kernel_scalarILi2EEEE"
+      }
+    }
+  },
+  "selected": {
+    "original": {
+      "kernel": "_ZTSN4s12612OriginalQ5C2E",
+      "executable_offset": 2906720,
+      "image_bytes": 29776,
+      "image_sha256": "6bae4acd1b9f00859ae87c6808f23cfccd46cfd0eabfd042aa5f2a8ef9e6ff02",
+      "text_bytes": 8704,
+      "text_sha256": "4f0f6e4d9fb57def1de97d82d678968c32ac853db377d113015ea6df1db7fb9b",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "missing_metadata": "UNKNOWN, not zero; barrier_count is not an instruction count",
+      "payload_user_arguments": [
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 0,
+          "offset": 0,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        },
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 1,
+          "offset": 8,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        },
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 2,
+          "offset": 16,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 3,
+          "offset": 24,
+          "size": 4
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 4,
+          "offset": 28,
+          "size": 4
+        }
+      ],
+      "full_metadata": "_ZTSN4s12612OriginalQ5C2E\n    user_attributes:\n      intel_reqd_sub_group_size: 32\n      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]\n    execution_env:\n      grf_count:       128\n      has_4gb_buffers: true\n      has_no_stateless_write: true\n      inline_data_payload_size: 32\n      offset_to_skip_per_thread_data_load: 128\n      simd_size:       32\n      subgroup_independent_forward_progress: true\n      eu_thread_count: 8\n    payload_arguments:\n      - arg_type:        arg_bypointer\n        offset:          0\n        size:            8\n        arg_index:       0\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          8\n        size:            8\n        arg_index:       1\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          16\n        size:            8\n        arg_index:       2\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_byvalue\n        offset:          24\n        size:            4\n        arg_index:       3\n      - arg_type:        arg_byvalue\n        offset:          28\n        size:            4\n        arg_index:       4\n    per_thread_payload_arguments:\n      - arg_type:        local_id\n        offset:          0\n        size:            128\n",
+      "options_ascii": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "data_and_relocations": {
+        "data_sections": {},
+        "relocations": [
+          {
+            "section": ".rel.text._ZTSN4s12612OriginalQ5C2E",
+            "destination_section": ".text._ZTSN4s12612OriginalQ5C2E",
+            "offset": 76,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          },
+          {
+            "section": ".rel.text._ZTSN4s12612OriginalQ5C2E",
+            "destination_section": ".text._ZTSN4s12612OriginalQ5C2E",
+            "offset": 156,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          }
+        ],
+        "relocation_type_scope": "Raw numeric type and actual symbol/offset only, no unverified type-name semantics."
+      }
+    },
+    "candidate": {
+      "kernel": "_ZTSN4s12615RuntimeOnesQ5C2E",
+      "executable_offset": 2878896,
+      "image_bytes": 27816,
+      "image_sha256": "6069468cf1b16aa42e7a868b0e928b8c512784485f3b7c553bf4df78dd6612a7",
+      "text_bytes": 6464,
+      "text_sha256": "cbf570964fe19c15b61ebeeb714efb22145882748f5f7378b60721d2f3005fdb",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "missing_metadata": "UNKNOWN, not zero; barrier_count is not an instruction count",
+      "payload_user_arguments": [
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 0,
+          "offset": 0,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        },
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 1,
+          "offset": 8,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        },
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 2,
+          "offset": 16,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 3,
+          "offset": 24,
+          "size": 4
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 4,
+          "offset": 28,
+          "size": 4
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 5,
+          "offset": 32,
+          "size": 4
+        }
+      ],
+      "full_metadata": "_ZTSN4s12615RuntimeOnesQ5C2E\n    user_attributes:\n      intel_reqd_sub_group_size: 32\n      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]\n    execution_env:\n      grf_count:       128\n      has_4gb_buffers: true\n      has_no_stateless_write: true\n      inline_data_payload_size: 32\n      offset_to_skip_per_thread_data_load: 128\n      simd_size:       32\n      subgroup_independent_forward_progress: true\n      eu_thread_count: 8\n    payload_arguments:\n      - arg_type:        arg_bypointer\n        offset:          0\n        size:            8\n        arg_index:       0\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          8\n        size:            8\n        arg_index:       1\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          16\n        size:            8\n        arg_index:       2\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_byvalue\n        offset:          24\n        size:            4\n        arg_index:       3\n      - arg_type:        arg_byvalue\n        offset:          28\n        size:            4\n        arg_index:       4\n      - arg_type:        arg_byvalue\n        offset:          32\n        size:            4\n        arg_index:       5\n    per_thread_payload_arguments:\n      - arg_type:        local_id\n        offset:          0\n        size:            128\n",
+      "options_ascii": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "data_and_relocations": {
+        "data_sections": {},
+        "relocations": [
+          {
+            "section": ".rel.text._ZTSN4s12615RuntimeOnesQ5C2E",
+            "destination_section": ".text._ZTSN4s12615RuntimeOnesQ5C2E",
+            "offset": 76,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          },
+          {
+            "section": ".rel.text._ZTSN4s12615RuntimeOnesQ5C2E",
+            "destination_section": ".text._ZTSN4s12615RuntimeOnesQ5C2E",
+            "offset": 156,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          }
+        ],
+        "relocation_type_scope": "Raw numeric type and actual symbol/offset only, no unverified type-name semantics."
+      }
+    },
+    "raw16": {
+      "kernel": "_ZTSN4s1269Raw16SumsE",
+      "executable_offset": 2871120,
+      "image_bytes": 7776,
+      "image_sha256": "5d09a7c263099a0a3f714270428f97cbd954297d0681bcbf1beece741b7d203f",
+      "text_bytes": 1024,
+      "text_sha256": "f0c838e946faca36cee3d76e7c71a771197d89e54d1c56ecd5c1b13cb86bd196",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "missing_metadata": "UNKNOWN, not zero; barrier_count is not an instruction count",
+      "payload_user_arguments": [
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 0,
+          "offset": 40,
+          "size": 4
+        },
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 1,
+          "offset": 24,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        },
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 2,
+          "offset": 32,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        }
+      ],
+      "full_metadata": "_ZTSN4s1269Raw16SumsE\n    user_attributes:\n      intel_reqd_sub_group_size: 32\n      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]\n    execution_env:\n      disable_mid_thread_preemption: true\n      grf_count:       128\n      has_4gb_buffers: true\n      has_no_stateless_write: true\n      inline_data_payload_size: 32\n      offset_to_skip_per_thread_data_load: 128\n      simd_size:       32\n      subgroup_independent_forward_progress: true\n      eu_thread_count: 8\n    payload_arguments:\n      - arg_type:        global_id_offset\n        offset:          0\n        size:            12\n      - arg_type:        enqueued_local_size\n        offset:          12\n        size:            12\n      - arg_type:        arg_bypointer\n        offset:          24\n        size:            8\n        arg_index:       1\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          32\n        size:            8\n        arg_index:       2\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_byvalue\n        offset:          40\n        size:            4\n        arg_index:       0\n    per_thread_payload_arguments:\n      - arg_type:        local_id\n        offset:          0\n        size:            64\n",
+      "options_ascii": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "data_and_relocations": {
+        "data_sections": {},
+        "relocations": [
+          {
+            "section": ".rel.text._ZTSN4s1269Raw16SumsE",
+            "destination_section": ".text._ZTSN4s1269Raw16SumsE",
+            "offset": 76,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          },
+          {
+            "section": ".rel.text._ZTSN4s1269Raw16SumsE",
+            "destination_section": ".text._ZTSN4s1269Raw16SumsE",
+            "offset": 156,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          }
+        ],
+        "relocation_type_scope": "Raw numeric type and actual symbol/offset only, no unverified type-name semantics."
+      }
+    },
+    "raw16_wrapper": {
+      "kernel": "_ZTSN4sycl3_V16detail19__pf_kernel_wrapperIN4s1269Raw16SumsEEE",
+      "executable_offset": 2839360,
+      "image_bytes": 9920,
+      "image_sha256": "865b400c49df01b6387a62df0548ed5473fd10ed430405099b3f83b6acd89157",
+      "text_bytes": 1472,
+      "text_sha256": "5969e4cf4758b911ba0d6947a930ad23fec23bbc8cd87156a9cefd65a8af7d0e",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "missing_metadata": "UNKNOWN, not zero; barrier_count is not an instruction count",
+      "payload_user_arguments": [
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 0,
+          "offset": 24,
+          "size": 8,
+          "source_offset": 0
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 1,
+          "offset": 32,
+          "size": 5,
+          "source_offset": 0
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 1,
+          "offset": 40,
+          "size": 1,
+          "source_offset": 5
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 1,
+          "offset": 44,
+          "size": 1,
+          "source_offset": 6
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 1,
+          "offset": 48,
+          "size": 1,
+          "source_offset": 7
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 1,
+          "offset": 56,
+          "size": 8,
+          "source_offset": 8,
+          "is_ptr": "true"
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 1,
+          "offset": 64,
+          "size": 8,
+          "source_offset": 16,
+          "is_ptr": "true"
+        }
+      ],
+      "full_metadata": "_ZTSN4sycl3_V16detail19__pf_kernel_wrapperIN4s1269Raw16SumsEEE\n    user_attributes:\n      intel_reqd_sub_group_size: 32\n      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]\n    execution_env:\n      grf_count:       128\n      has_4gb_buffers: true\n      has_no_stateless_write: true\n      inline_data_payload_size: 32\n      offset_to_skip_per_thread_data_load: 128\n      simd_size:       32\n      subgroup_independent_forward_progress: true\n      eu_thread_count: 8\n    payload_arguments:\n      - arg_type:        global_id_offset\n        offset:          0\n        size:            12\n      - arg_type:        enqueued_local_size\n        offset:          12\n        size:            12\n      - arg_type:        arg_byvalue\n        offset:          24\n        size:            8\n        arg_index:       0\n        source_offset:   0\n      - arg_type:        arg_byvalue\n        offset:          32\n        size:            5\n        arg_index:       1\n        source_offset:   0\n      - arg_type:        arg_byvalue\n        offset:          40\n        size:            1\n        arg_index:       1\n        source_offset:   5\n      - arg_type:        arg_byvalue\n        offset:          44\n        size:            1\n        arg_index:       1\n        source_offset:   6\n      - arg_type:        arg_byvalue\n        offset:          48\n        size:            1\n        arg_index:       1\n        source_offset:   7\n      - arg_type:        arg_byvalue\n        offset:          56\n        size:            8\n        arg_index:       1\n        source_offset:   8\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          64\n        size:            8\n        arg_index:       1\n        source_offset:   16\n        is_ptr:          true\n      - arg_type:        global_size\n        offset:          72\n        size:            12\n    per_thread_payload_arguments:\n      - arg_type:        local_id\n        offset:          0\n        size:            64\n",
+      "options_ascii": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "data_and_relocations": {
+        "data_sections": {},
+        "relocations": [
+          {
+            "section": ".rel.text._ZTSN4sycl3_V16detail19__pf_kernel_wrapperIN4s1269Raw16SumsEEE",
+            "destination_section": ".text._ZTSN4sycl3_V16detail19__pf_kernel_wrapperIN4s1269Raw16SumsEEE",
+            "offset": 76,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          },
+          {
+            "section": ".rel.text._ZTSN4sycl3_V16detail19__pf_kernel_wrapperIN4s1269Raw16SumsEEE",
+            "destination_section": ".text._ZTSN4sycl3_V16detail19__pf_kernel_wrapperIN4s1269Raw16SumsEEE",
+            "offset": 156,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          }
+        ],
+        "relocation_type_scope": "Raw numeric type and actual symbol/offset only, no unverified type-name semantics."
+      }
+    },
+    "public": {
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_111launch_wideINS2_7WideQ5KELi2EEEvPKvS6_PfiiPN4sycl3_V15queueEiE16native_mmvq_wideS4_18dpct_kernel_scalarILi2EEEE",
+      "executable_offset": 58162176,
+      "image_bytes": 30160,
+      "image_sha256": "9a22abe7791348fa975aad5e1e771afebc4294e2828a74ac75e3d0b506c0fa55",
+      "text_bytes": 8320,
+      "text_sha256": "8f37f1e37867d12383888b7385be7f7d2c8ce47b28fd7d25c877901fb3f9b60a",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "missing_metadata": "UNKNOWN, not zero; barrier_count is not an instruction count",
+      "payload_user_arguments": [
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 0,
+          "offset": 0,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        },
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 1,
+          "offset": 8,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        },
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 2,
+          "offset": 16,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 3,
+          "offset": 24,
+          "size": 4
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 4,
+          "offset": 28,
+          "size": 4
+        }
+      ],
+      "full_metadata": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_111launch_wideINS2_7WideQ5KELi2EEEvPKvS6_PfiiPN4sycl3_V15queueEiE16native_mmvq_wideS4_18dpct_kernel_scalarILi2EEEE\n    user_attributes:\n      intel_reqd_sub_group_size: 32\n      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]\n    execution_env:\n      grf_count:       128\n      has_4gb_buffers: true\n      has_no_stateless_write: true\n      inline_data_payload_size: 32\n      offset_to_skip_per_thread_data_load: 128\n      simd_size:       32\n      subgroup_independent_forward_progress: true\n      eu_thread_count: 8\n    payload_arguments:\n      - arg_type:        arg_bypointer\n        offset:          0\n        size:            8\n        arg_index:       0\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          8\n        size:            8\n        arg_index:       1\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_bypointer\n        offset:          16\n        size:            8\n        arg_index:       2\n        addrmode:        stateless\n        addrspace:       global\n        access_type:     readwrite\n      - arg_type:        arg_byvalue\n        offset:          24\n        size:            4\n        arg_index:       3\n      - arg_type:        arg_byvalue\n        offset:          28\n        size:            4\n        arg_index:       4\n    per_thread_payload_arguments:\n      - arg_type:        local_id\n        offset:          0\n        size:            128\n",
+      "options_ascii": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "data_and_relocations": {
+        "data_sections": {},
+        "relocations": [
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_111launch_wideINS2_7WideQ5KELi2EEEvPKvS6_PfiiPN4sycl3_V15queueEiE16native_mmvq_wideS4_18dpct_kernel_scalarILi2EEEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_111launch_wideINS2_7WideQ5KELi2EEEvPKvS6_PfiiPN4sycl3_V15queueEiE16native_mmvq_wideS4_18dpct_kernel_scalarILi2EEEE",
+            "offset": 76,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          },
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_111launch_wideINS2_7WideQ5KELi2EEEvPKvS6_PfiiPN4sycl3_V15queueEiE16native_mmvq_wideS4_18dpct_kernel_scalarILi2EEEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_111launch_wideINS2_7WideQ5KELi2EEEvPKvS6_PfiiPN4sycl3_V15queueEiE16native_mmvq_wideS4_18dpct_kernel_scalarILi2EEEE",
+            "offset": 156,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          }
+        ],
+        "relocation_type_scope": "Raw numeric type and actual symbol/offset only, no unverified type-name semantics."
+      }
+    }
+  },
+  "host_function_files": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3/build/q5_runtime_ones_leaf.o::_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE": {
+      "path": "host-0.asm",
+      "bytes": 87775,
+      "sha256": "ed5587ea503a406b3bf0c7f794942e5b16689ed4e02a29aa824db3a631cdfecc",
+      "symbol": {
+        "name": "_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE",
+        "bind": 0,
+        "type": 2,
+        "section": 2,
+        "offset": 25728,
+        "size": 4096
+      },
+      "linked_symbol": {
+        "name": "_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE",
+        "bind": 0,
+        "type": 2,
+        "section": 14,
+        "offset": 4250432,
+        "size": 4096
+      }
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3/build/q5_runtime_ones_leaf.o::_ZN5State4callEi": {
+      "path": "host-1.asm",
+      "bytes": 33395,
+      "sha256": "cca7bd36a2efecf183c233304e3b928039ef30ba9e1b74f16acfc313ca34cb16",
+      "symbol": {
+        "name": "_ZN5State4callEi",
+        "bind": 2,
+        "type": 2,
+        "section": 254,
+        "offset": 0,
+        "size": 1700
+      },
+      "linked_symbol": {
+        "name": "_ZN5State4callEi",
+        "bind": 2,
+        "type": 2,
+        "section": 14,
+        "offset": 4303920,
+        "size": 1700
+      }
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3/build/q5_runtime_ones_leaf.o::main": {
+      "path": "host-2.asm",
+      "bytes": 44751,
+      "sha256": "35190ee4145bc64c9fea44f1ebed70b04534f0d6545898a86e09cdcc57df179d",
+      "symbol": {
+        "name": "main",
+        "bind": 1,
+        "type": 2,
+        "section": 2,
+        "offset": 0,
+        "size": 2462
+      },
+      "linked_symbol": {
+        "name": "main",
+        "bind": 1,
+        "type": 2,
+        "section": 14,
+        "offset": 4224704,
+        "size": 2462
+      }
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-built-audit-v2/public-native_mmvq.dp.cpp.o::_ZN6strata7kernels11native_mmvqEiPKvS2_PfiiiPv": {
+      "path": "host-3.asm",
+      "bytes": 19459,
+      "sha256": "043b247d9c14e7dcb0752507eb016b41a57a79fa9ab35dfc59b895c8d0d3cb7d",
+      "symbol": {
+        "name": "_ZN6strata7kernels11native_mmvqEiPKvS2_PfiiiPv",
+        "bind": 1,
+        "type": 2,
+        "section": 2,
+        "offset": 429664,
+        "size": 489
+      },
+      "linked_symbol": {
+        "name": "_ZN6strata7kernels11native_mmvqEiPKvS2_PfiiiPv",
+        "bind": 1,
+        "type": 2,
+        "section": 14,
+        "offset": 4743088,
+        "size": 489
+      }
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-built-audit-v2/public-native_mmvq.dp.cpp.o::_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi": {
+      "path": "host-4.asm",
+      "bytes": 43713,
+      "sha256": "c7f991ee07dfaa082ed223f416d0b4528cefa194110aea0b339ca4ba5d0ad232",
+      "symbol": {
+        "name": "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi",
+        "bind": 0,
+        "type": 2,
+        "section": 2,
+        "offset": 425600,
+        "size": 2023
+      },
+      "linked_symbol": {
+        "name": "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi",
+        "bind": 0,
+        "type": 2,
+        "section": 14,
+        "offset": 4739024,
+        "size": 2023
+      }
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-built-audit-v2/public-native_mmvq.dp.cpp.o::_ZN6strata7kernels12_GLOBAL__N_18try_wideINS1_7WideQ5KEEEbPKvS5_PfiiiPv": {
+      "path": "host-5.asm",
+      "bytes": 205986,
+      "sha256": "b415f4b2eb7a6990bf35b59b7d96548d14a7fd5412bf3d8d987c8bacb4e1937e",
+      "symbol": {
+        "name": "_ZN6strata7kernels12_GLOBAL__N_18try_wideINS1_7WideQ5KEEEbPKvS5_PfiiiPv",
+        "bind": 0,
+        "type": 2,
+        "section": 2,
+        "offset": 28912,
+        "size": 12489
+      },
+      "linked_symbol": {
+        "name": "_ZN6strata7kernels12_GLOBAL__N_18try_wideINS1_7WideQ5KEEEbPKvS5_PfiiiPv",
+        "bind": 0,
+        "type": 2,
+        "section": 14,
+        "offset": 4342336,
+        "size": 12489
+      }
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-built-audit-v2/public-native_mmvq.dp.cpp.o::_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv": {
+      "path": "host-6.asm",
+      "bytes": 42688,
+      "sha256": "fdf5ac5e086380660fa0143cccc422e9728badcd8aa8d922d0df5786bb981c54",
+      "symbol": {
+        "name": "_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv",
+        "bind": 1,
+        "type": 2,
+        "section": 2,
+        "offset": 26976,
+        "size": 1932
+      },
+      "linked_symbol": {
+        "name": "_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv",
+        "bind": 1,
+        "type": 2,
+        "section": 14,
+        "offset": 4340400,
+        "size": 1932
+      }
+    }
+  },
+  "host_edges": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3/build/q5_runtime_ones_leaf.o": [
+      {
+        "target_symbol": "__isoc23_strtoul",
+        "offset": 221,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text",
+        "containing_functions": [
+          "main"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 2062,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 2161,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 2291,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 4358,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 6387,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 7577,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 8779,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 8792,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 8805,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 8818,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 8831,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 8844,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 8857,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 8870,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 8883,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 8896,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 8909,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 8922,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 8935,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 8948,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 8961,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 8974,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 8987,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 9000,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 9013,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 9026,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10283,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10296,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10309,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10322,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10335,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10348,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10361,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10374,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10387,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10400,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10413,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10426,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10439,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10452,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10465,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10478,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10491,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10504,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10517,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN5State4callEi",
+        "offset": 10530,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text._ZN5State11correctnessEv",
+        "containing_functions": [
+          "_ZN5State11correctnessEv"
+        ]
+      }
+    ],
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-built-audit-v2/public-native_mmvq.dp.cpp.o": [
+      {
+        "target_symbol": "_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv",
+        "offset": 75175,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text",
+        "containing_functions": [
+          "_ZN6strata7kernels15native_q5_k_f32EPKvPKfPvPfiiiS5_"
+        ]
+      },
+      {
+        "target_symbol": "_ZN6strata7kernels11native_mmvqEiPKvS2_PfiiiPv",
+        "offset": 425092,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text",
+        "containing_functions": [
+          "_ZN6strata7kernels16native_mmvq_headEiPKvS2_PfiiiPv"
+        ]
+      },
+      {
+        "target_symbol": "_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv",
+        "offset": 430078,
+        "addend": -4,
+        "relocation_type": 4,
+        "source_section": ".text",
+        "containing_functions": [
+          "_ZN6strata7kernels11native_mmvqEiPKvS2_PfiiiPv"
+        ]
+      }
+    ]
+  }
+}

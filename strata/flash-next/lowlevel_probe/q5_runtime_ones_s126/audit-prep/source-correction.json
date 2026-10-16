@@ -1,0 +1,16 @@
+{
+  "status": "NARROW_SOURCE_CORRECTION_ONLY",
+  "original_audit_sha256": "12979138ba6fec70c8f9085d2919f6b8b52f7a2d17ab4a9a1317e7d25ebc81a6",
+  "new_audit_sha256": "0502fdef1ceaea65aede448b60a58788bf7ab0a22ea5b2a5df794b7e1b93a5e2",
+  "inverse_exact_outside_three_explicit_replacements": true,
+  "replacements": [
+    "report source_offset/is_ptr fields",
+    "parse source_offset integer",
+    "exact observed wrapper aggregate ABI predicate"
+  ],
+  "projection_identity_control_gates_changed": false,
+  "V1_HOLD": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-built-audit/HOLD.json",
+    "sha256": "62e8c01c1459c000b0bb6864fc9eec4cfd562100c660c0de21bf39b977d22b93"
+  }
+}

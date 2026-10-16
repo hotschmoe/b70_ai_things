@@ -1,0 +1,5 @@
+{
+  "status": "PRESERVED_DIAGNOSTIC_ASSERTION",
+  "error": "Diagnostic initially counted matching name occurrences rather than deduplicating selected ELF base as original audited helper does. No audit continuation was invoked.",
+  "scope": "metadata diagnosis only; not candidate/runtime failure"
+}

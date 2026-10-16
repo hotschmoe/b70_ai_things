@@ -1,0 +1,95 @@
+{
+  "status": "SOURCE_PREP_NO_AUDIT_OR_DECODER_EXECUTION",
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "header_sha256": "a8045fa37108f99ad448e48e6994319845a72327c092989245afcd95094a94c1",
+  "build_scripts": {
+    "build.sh": "5e2621040667689e0f15c7c45de59a601650b1dccad94cd43272d19fcbf26fdc",
+    "build-container.sh": "c4cb4c96bb00319796b6c24296f846f13987257da961d2cbe8db3f922ffae5f8"
+  },
+  "small_files": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/host_binding.py",
+      "bytes": 6232,
+      "sha256": "37ecf55c43300319f0a3baaf15bede814934bd3ee1b0a11b32a38dc6066d4aa6"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-audit-prep/audit.py",
+      "bytes": 15160,
+      "sha256": "334261ec9b66ab3726f29016b5c6638ea2391f74df2bc49ae613590887acb2fb"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-compiled-audit-prep/audit.py",
+      "bytes": 16748,
+      "sha256": "93539b99e5af2c840a41056bd950cb968dc253df8112bf9203e740ecdfab1e95"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-audit-v2/facts.json",
+      "bytes": 18280,
+      "sha256": "f74b7ac235fac101194e344eab8f7ff265c717f874d259d4b38f47bd07bd21ad"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-audit-v2/q5-c2.zebin",
+      "bytes": 30168,
+      "sha256": "aa4d0202dd32cca82dad2cce6497c74125c640a0006f3f8dbe30ae04fc6bd859"
+    }
+  ],
+  "elf_helper": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/host_binding.py",
+  "binding_helper": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-audit-prep/audit.py",
+  "inventory_helper": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-compiled-audit-prep/audit.py",
+  "baseline_facts": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-audit-v2/facts.json",
+  "baseline_image": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-audit-v2/q5-c2.zebin",
+  "baseline_ASM_sha256": "5aae8c1219d768710ea836d873a68d8919a0c83aa740f7b1189749c29ea739fe",
+  "frozen_link_inputs": {
+    "/common/mmvq-core.images.o": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/build/mmvq-core.images.o",
+      "bytes": 59875544,
+      "sha256": "8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21",
+      "stat": {
+        "device": 45,
+        "inode": 23943831,
+        "size": 59875544,
+        "mtime_ns": 1792068240522308855,
+        "ctime_ns": 1792068240522308855
+      }
+    },
+    "/frozen/libstrata_kernels.a": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/frozen-inputs/libstrata_kernels.a",
+      "bytes": 19468072,
+      "sha256": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8",
+      "stat": {
+        "device": 45,
+        "inode": 23937825,
+        "size": 19468072,
+        "mtime_ns": 1792067232644493521,
+        "ctime_ns": 1792067232644493521
+      }
+    },
+    "/frozen/libstrata_core.a": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/frozen-inputs/libstrata_core.a",
+      "bytes": 585338,
+      "sha256": "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286",
+      "stat": {
+        "device": 45,
+        "inode": 23937826,
+        "size": 585338,
+        "mtime_ns": 1792067232687158777,
+        "ctime_ns": 1792067232687158777
+      }
+    }
+  },
+  "expected_built_artifacts": {
+    "q5_runtime_ones_s126": "66fae0f1087f04f5443d8276edf1722588ed155eeac728251c1933817122ab2b",
+    "q5_runtime_ones_leaf.o": "8e75c111fe10c0ce7b85c9b41a37e7fbcbe52b8da6caf17642d4fd0b2efd4152",
+    "leaf.images.o": "e5968f2fbeb9e0b4e1d0287ab1ca8b16208dd51e063bb286c19a6ca667fd69ca"
+  },
+  "expected_build_hash_source": "Root actual completed V3 build81990, not rehashed during preparation. Audit checks three private files once; library/main/model hashes never refreshed.",
+  "actual_source_v3_manifest": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3-manifest.json",
+    "sha256": "cbc8aedaa29c2852cff60f1eb51c6f4da638fd7fd2076816dd0d774bf6fb3d86"
+  },
+  "actual_bounded_metadata_reads": [
+    "private-symbol-metadata.json",
+    "linked-symbol-metadata.json"
+  ],
+  "archive_extraction_limit": "ar t metadata and exactly one ar p native_mmvq.dp.cpp.o member from f2b; no substitute current/S107 object."
+}

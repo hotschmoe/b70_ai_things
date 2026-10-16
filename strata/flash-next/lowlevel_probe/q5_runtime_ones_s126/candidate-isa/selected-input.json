@@ -1,0 +1,6 @@
+{
+  "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-built-audit/candidate.zebin",
+  "bytes": 27816,
+  "sha256": "6069468cf1b16aa42e7a868b0e928b8c512784485f3b7c553bf4df78dd6612a7",
+  "context": "Root one selected actual candidate decode in parallel with auxiliary Raw16 SDK ABI parser correction. Candidate original6arg ABI/options/name/hostbinding already passed; control comparisons/full auxiliary closure still pending. No alias needed: short private class name."
+}

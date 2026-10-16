@@ -1,0 +1,11 @@
+{
+  "command": [
+    "bash",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3/build.sh"
+  ],
+  "exit": 0,
+  "elapsed_s": 23.125537404965144,
+  "log": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-runtime-ones-s126-build-wrapper.log",
+  "automatic_retry": false,
+  "GPU": false
+}

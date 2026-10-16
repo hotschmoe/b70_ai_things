@@ -1,0 +1,594 @@
+Independent critical source review. Actual frozen code included. Return explicit CPU_BUILD_GO or HOLD. No tools available; no GPU or serving approval.
+ROOT FROZEN PACKET:
+ROOT S126 SOURCE REVIEW: Full concrete private oracle/build below. Root already full-read original header/leaf/build and is reading exact V2 readonly-cost delta. Request explicit CPU_BUILD_GO or HOLD ONLY, no GPU until actualmetadata/native candidate lowering/unchangedFP/controlbinding and later strictoraclegate. Runtimeonesparsedhostandcaptured4B; SDKhelperisDPCTemulationIGCpatternmatch, notimmediateintrinsic. S122 actualoriginal4raw16sumchains*40vectorinstructions,16weightedDP4As, actualFPmul/MADcontractions andXORtree; sourceexpressionalone insufficient. SamehelperQ4notinspected; no multiformatsweep.
+
+Review concrete memory/capture ownership, unique kernelclassbinding, exactcontrolsource, fixtureidentity, numericalgate order, compile/linkidentity, sourcebuild-only noDRI/lease. V2 trims47redundant437MB readonlyweight transfers(~20.54GB): retainsperstepguards+wholeoutput/Q8/input checks, fullweightpayload onceaftercorrectness BEFOREtiming andoncefinal. Compiledstoresaudit stillrequired. No testwaiver/numericaltolerance. Do not add speculativeformattest/rejectedknobrerun or impose universalFPproof; require bounded source+actualISA+strictfixturechecks and honestlimits. If minorharmlessreadiness omissions rootcanfixbeforeexecution; give decisive buildverdict. Approx600words.
+
+S126 V2 ROOT SOURCE REVIEW PACKET - UNEXECUTED
+
+# S126 v2 private Q5 C2 runtime-ones candidate - SOURCE ONLY
+
+CONFIG -> Fixed Q5_K13 full head N2560/M248320/C2/RPW1/SG32, original
+production geometry62080 groups x128 WIs, two runtime n_in/n_out scalars.
+Original unchanged; candidate changes ONLY the rawsum ones operand from the
+compile-time vector literal to one kernel-captured signed int parsed from CLI.
+No sidecar, changed Q8 producer, persistent scratch, altered FP policy, main
+source mutation, compilation, GPU execution or model consultation occurred.
+
+COMMAND -> After ROOT source/model GO ONLY: bash build.sh. Pinned e41/noDRI/
+networknone/UID1000/fourCPU/OMP4/MKL4/diskTMP. One adapter compile/prelink then
+ordinary host-only link reusing exact frozenS59 common8f/kernelsf2b/core34e9;
+no common/native/main AOT rebuild. Scripts NEVER execute the leaf or a decoder.
+The executable would be build/q5_runtime_ones_s126. Later GPU requires separate
+root-selected compiled audit and leased runner, not invocation by build.sh.
+
+RESULT -> Source/API mechanism, not a compiled performance claim:
+
+- strata::dp4a casts signed int32 operands and forwards to dpct::dp4a. Actual
+  pinned sycl/include/dpct/math.hpp:833-846 expands arbitrary runtime operands;
+  no immediate restriction exists. IGC may pattern-match runtime DP4A; only
+  candidate payload metadata/host forwarding and actual ISA can establish it.
+- CLI parses01010101 before launch. Host validation is outside device code;
+  candidate lambda captures one int. No device equality guard, constexpr ones,
+  global helper change, noinline/volatile/asm or changed arithmetic policy.
+- Exact original helper/load/FP expression/kernel loop/tree are copied from
+  current native sourceae47a632; source-ledger.json verifies inverse textual
+  projections. Candidate adds the scalar only to apply/kernel arguments and
+  replaces the literal int4. Same ds/dm conversions, FP parenthesization, kbx
+  lane/sub order and XOR16/8/4/2/1 lane0 store; source alone is NOT compiled FMA
+  or full-logit proof. New unique OriginalQ5C2 and RuntimeOnesQ5C2 classes.
+- S122 actual original is8320B text, computational prefix8128 (EOT atL8104;
+  post-EOT MOV-null startsL8128). Four distinct raw16 sums each lower to40
+  instructions;16 weighted DP4As survive. No dynamic latency inference.
+- Candidate target must actually expose/fetch a new4B signed payload and keep
+  packed rawsum dots (expected16 extra DP4As/32 total in the two-column loop,
+  subject to actual CSE/lowering). If still strength-reduced or payload missing,
+  HOLD before GPU. Do not replace the compiler result with source expectations.
+
+Pre-GPU compiled audit obligations (root-owned after a separate build GO):
+
+1. Bind three distinct LIVE host Info/cache/guard/name pointers and selected
+   images: public anchor, private original and runtime candidate. Verify actual
+   argument schema3pointers+N/M (+ones for candidate), argv-to-launch forwarding
+   and unique full IDs. No weak-symbol-name-only shortcut or all-image walk.
+2. Compare private-original prefix throughEOT8128 against actual S122 original,
+   metadata/options/constants/relocs too. Compare public selected body to the
+   same anchor. Keep raw fullimage/text identities explicit; only proved
+   post-EOT trailer differences may be accepted additively by root. Meaningful
+   control drift is HOLD, not automatic decode/rebuild/retry.
+3. One candidate-only ISA if needed: scalar payload origin, raw/weighted signed
+   dots, truncations, original FP conversions/mul/mad/add/accumulation/XOR/store
+   mapping, resources/actual reported scratch. Missing fields are UNKNOWN.
+
+Future finite oracle (unexecuted):
+
+  q5_runtime_ones_s126 NEW_DIR NVME_SHARD S52_A1_FIXTURES 01010101
+
+- fixture-pins binds existing S52A1 input/Q8/full logits and S52 real head SHA
+  93f1c7cb.../FNVda8746c3dcc2469e, offset11024256,437043200B. Same IQ3_XXS lock
+  revision/model/shard name+size and current NVMe path/config stat confirmed.
+  No shard payload was read during prep. Future window hashes ONLY this slice,
+  verifies current stat/lock and leaf FNV, never rereads/hashes75GB model.
+- FP32 x is a readonly witness; projections actually consume only weights and
+  saved canonical Q8. Saved C2-input files contain6 rows; leaf uses first2, matching
+  actual saved C2 Q8 (5760B) and logits (1986560B). Inputs/weights are real
+  retained model plus seeded bounded activations, not random synthetic weights.
+- Validation-only Raw16Sums kernel compares all320 actual half-sums for A/B to
+  independent CPU INT64 loops. Four extreme packets additionally test -128,
+  +127, alternating extremes and a sparse payload sentinel. Same tiny validation
+  kernel uses01010102 once to prove nonconstant payload handling; it is NOT a
+  second projection arm, producer, captured dependency or timed node.
+- Then public/privateoriginal/candidate strict full logits, own eager repeats,
+  A/B/A single+20-call graphs, full Q8/input readonly/guards and512B poisoned
+  tails. First strict failure5; runtime/IO2. No tolerance/retry/reset/fallback.
+- Expected successful trace:4 raw gates (8,8,320,320 cells),49 checked snapshots,
+  5 DOTs/43 kernel nodes/38 edges,74 saved binary artifacts, correctness before
+  any warm/timing. Graph arithmetic excludes quantization and raw validation.
+- Three warm20-call graphs per arm, then exactly2 balanced OCCO/COOC rounds:
+  eight completed20-call samples/four per arm, no cold sample exclusion.
+  Every snapshot checks full output/Q8/input bytes, weight redzones and tails.
+  Whole437043200B weight payload is checked only TWICE: after all correctness
+  before warming/timing, and final after timing. Snapshot logs explicitly state
+  weight_payload_verified=false; two distinct check records state true. This
+  removes47 redundant wholeweight readbacks (20541030400B), preserving all49
+  snapshots/strict value gates. Compiled store-scope audit remains pre-GPU.
+  All outputs remain gated.
+  Nested one-process descriptive comparison, not serving/population speed.
+
+VERDICT -> READY_FOR_ROOT_REVIEW; BUILD/GPU HOLD. A compiled failure or missing
+runtime-dot lever closes this candidate without a GPU rerun. No giant review
+packet, sidecar framework, new benchmark matrix or whole-serving build.
+
+V2 lineage -> V1 remains immutable. Only leaf readonly placement/log truth,
+analyzer obligations and these explanatory/pin/packet files change. Kernel
+header, build scripts, fixtures and source/FP projection are byte-identical.
+
+FILE private_q5_runtime_ones.hpp SHA256 a8045fa37108f99ad448e48e6994319845a72327c092989245afcd95094a94c1
+#pragma once
+// S126 private Q5 C2 only: original exact source, candidate runtime ones operand.
+#include <sycl/sycl.hpp>
+#include <dpct/dpct.hpp>
+#include "strata/sycl_math.hpp"
+#include <cstddef>
+#include <cstdint>
+#include <stdexcept>
+namespace s126 {
+constexpr int QK=256,Q8K=32,WARP=32,WARPS=4;
+struct Q5KBlock {sycl::half2 dm;uint8_t scales[12];uint8_t qh[32];uint8_t qs[128];};
+struct Q4KBlock {sycl::half2 dm;uint8_t scales[12];uint8_t qs[128];};
+struct Q81Block {sycl::half2 ds;int8_t qs[32];};
+static_assert(sizeof(Q5KBlock)==176 && offsetof(Q5KBlock,qs)==48);
+static_assert(sizeof(Q81Block)==36 && offsetof(Q81Block,qs)==4);
+__dpct_inline__ sycl::int4 ld_q8_16(const Q81Block* b, int half) {   // Q8_1 qs is 4-byte aligned: four int loads
+    const int* q = reinterpret_cast<const int*>(b->qs) + 4 * half;
+    return sycl::int4(q[0], q[1], q[2], q[3]);
+}
+__dpct_inline__ int dp4a4(const sycl::int4 a, const sycl::int4 b, int acc) {
+    acc = strata::dp4a(a.x(), b.x(), acc); acc = strata::dp4a(a.y(), b.y(), acc);
+    acc = strata::dp4a(a.z(), b.z(), acc); return strata::dp4a(a.w(), b.w(), acc);
+}
+__dpct_inline__ void k4_scale_min(const uint8_t* sc, int j, float& s, float& m) {   // ggml get_scale_min_k4
+    if (j < 4) { s = (float) (sc[j] & 63); m = (float) (sc[j + 4] & 63); }
+    else { s = (float) ((sc[j + 4] & 0xF) | ((sc[j - 4] >> 6) << 4)); m = (float) ((sc[j + 4] >> 4) | ((sc[j] >> 6) << 4)); }
+}
+struct WideQ4K {
+    using Block = Q4KBlock;
+    struct W { sycl::int4 lo, hi; float dl, dh, ml, mh; int sb, half; };
+    static W load(const Block* b, int g) {
+        W r; r.sb = 2 * (g >> 1); r.half = g & 1;
+        const sycl::int4 q = reinterpret_cast<const sycl::int4*>(b->qs)[g];          // 16-byte aligned (144 = 9 x 16)
+        r.lo = sycl::int4(q.x() & 0x0f0f0f0f, q.y() & 0x0f0f0f0f, q.z() & 0x0f0f0f0f, q.w() & 0x0f0f0f0f);
+        r.hi = sycl::int4((q.x() >> 4) & 0x0f0f0f0f, (q.y() >> 4) & 0x0f0f0f0f, (q.z() >> 4) & 0x0f0f0f0f, (q.w() >> 4) & 0x0f0f0f0f);
+        const sycl::float2 dm = b->dm.convert<float, sycl::rounding_mode::automatic>();
+        float s0, m0, s1, m1; k4_scale_min(b->scales, r.sb, s0, m0); k4_scale_min(b->scales, r.sb + 1, s1, m1);
+        r.dl = dm.x() * s0; r.ml = dm.y() * m0; r.dh = dm.x() * s1; r.mh = dm.y() * m1;
+        return r;
+    }
+    static float apply(const W& r, const Q81Block* xb) {   // xb = this column's Q8_1 blocks of the 256-block
+        const Q81Block* a = xb + r.sb; const Q81Block* c = xb + r.sb + 1;
+        const sycl::int4 ua = ld_q8_16(a, r.half), uc = ld_q8_16(c, r.half);
+        const sycl::int4 ones(0x01010101, 0x01010101, 0x01010101, 0x01010101);
+        const float da = (float) a->ds[0], dc = (float) c->ds[0];
+        return da * (r.dl * (float) dp4a4(r.lo, ua, 0) - r.ml * (float) dp4a4(ones, ua, 0)) +
+               dc * (r.dh * (float) dp4a4(r.hi, uc, 0) - r.mh * (float) dp4a4(ones, uc, 0));
+    }
+    // apply() in two parts for several rows of one sub-group: the activations depend on the lane alone (sb, half from g)
+    struct A { sycl::int4 ua, uc; float da, dc; };
+    static A act(const Q81Block* xb, int g) {
+        const int sb = 2 * (g >> 1), half = g & 1;
+        const Q81Block* a = xb + sb; const Q81Block* c = xb + sb + 1;
+        A v; v.ua = ld_q8_16(a, half); v.uc = ld_q8_16(c, half); v.da = (float) a->ds[0]; v.dc = (float) c->ds[0];
+        return v;
+    }
+    static float dot(const W& r, const A& v) {   // apply's expression, the same operations in the same order
+        const sycl::int4 ones(0x01010101, 0x01010101, 0x01010101, 0x01010101);
+        return v.da * (r.dl * (float) dp4a4(r.lo, v.ua, 0) - r.ml * (float) dp4a4(ones, v.ua, 0)) +
+               v.dc * (r.dh * (float) dp4a4(r.hi, v.uc, 0) - r.mh * (float) dp4a4(ones, v.uc, 0));
+    }
+};
+struct WideQ5K {
+    using Block = Q5KBlock;
+    using W = WideQ4K::W;
+    static W load(const Block* b, int g) {
+        W r; r.sb = 2 * (g >> 1); r.half = g & 1;
+        const sycl::int4 q = reinterpret_cast<const sycl::int4*>(b->qs)[g];          // qs at 48, 176 = 11 x 16
+        const sycl::int4 h = reinterpret_cast<const sycl::int4*>(b->qh)[r.half];     // qh bytes of positions 16h..+15
+        const int sl = r.sb, sh = r.sb + 1;
+        auto hb = [](int v, int bit) { return ((v >> bit) & 0x01010101) << 4; };
+        r.lo = sycl::int4((q.x() & 0x0f0f0f0f) | hb(h.x(), sl), (q.y() & 0x0f0f0f0f) | hb(h.y(), sl),
+                          (q.z() & 0x0f0f0f0f) | hb(h.z(), sl), (q.w() & 0x0f0f0f0f) | hb(h.w(), sl));
+        r.hi = sycl::int4(((q.x() >> 4) & 0x0f0f0f0f) | hb(h.x(), sh), ((q.y() >> 4) & 0x0f0f0f0f) | hb(h.y(), sh),
+                          ((q.z() >> 4) & 0x0f0f0f0f) | hb(h.z(), sh), ((q.w() >> 4) & 0x0f0f0f0f) | hb(h.w(), sh));
+        const sycl::float2 dm = b->dm.convert<float, sycl::rounding_mode::automatic>();
+        float s0, m0, s1, m1; k4_scale_min(b->scales, r.sb, s0, m0); k4_scale_min(b->scales, r.sb + 1, s1, m1);
+        r.dl = dm.x() * s0; r.ml = dm.y() * m0; r.dh = dm.x() * s1; r.mh = dm.y() * m1;
+        return r;
+    }
+    static float apply(const W& r, const Q81Block* xb) { return WideQ4K::apply(r, xb); }
+    using A = WideQ4K::A;
+    static A act(const Q81Block* xb, int g) { return WideQ4K::act(xb, g); }
+    static float dot(const W& r, const A& v) { return WideQ4K::dot(r, v); }
+};
+inline float apply_runtime(const WideQ5K::W& r, const Q81Block* xb, int ones_word) {   // xb = this column's Q8_1 blocks of the 256-block
+        const Q81Block* a = xb + r.sb; const Q81Block* c = xb + r.sb + 1;
+        const sycl::int4 ua = ld_q8_16(a, r.half), uc = ld_q8_16(c, r.half);
+        const sycl::int4 ones(ones_word, ones_word, ones_word, ones_word);
+        const float da = (float) a->ds[0], dc = (float) c->ds[0];
+        return da * (r.dl * (float) dp4a4(r.lo, ua, 0) - r.ml * (float) dp4a4(ones, ua, 0)) +
+               dc * (r.dh * (float) dp4a4(r.hi, uc, 0) - r.mh * (float) dp4a4(ones, uc, 0));
+    }
+template <typename F, int NCOLS>
+void original_kernel(const typename F::Block* __restrict__ w, const Q81Block* __restrict__ x,
+                             float* __restrict__ y, int n_in, int n_out) {
+    auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+    const int lane = int(item.get_local_id(2)), warp = int(item.get_local_id(1));
+    const int row = int(item.get_group(2)) * WARPS + warp;
+    if (row >= n_out) return;
+    const int blocks_per_row = n_in / QK, x_stride = n_in / Q8K;
+    const int g = lane & 7, sub = lane >> 3;
+    const typename F::Block* wr = w + std::size_t(row) * blocks_per_row;
+    float acc[NCOLS] = {};
+    for (int kbx = sub; kbx < blocks_per_row; kbx += 4) {
+        const typename F::W wv = F::load(wr + kbx, g);
+#pragma unroll
+        for (int j = 0; j < NCOLS; ++j) acc[j] += F::apply(wv, x + std::size_t(j) * x_stride + kbx * (QK / Q8K));
+    }
+    auto sg = item.get_sub_group();
+#pragma unroll
+    for (int j = 0; j < NCOLS; ++j) {
+        float v = acc[j];
+#pragma unroll
+        for (int o = WARP / 2; o > 0; o >>= 1) v += sycl::permute_group_by_xor(sg, v, o);
+        if (lane == 0) y[std::size_t(j) * n_out + row] = v;
+    }
+}
+template <typename F, int NCOLS>
+void candidate_kernel(const typename F::Block* __restrict__ w, const Q81Block* __restrict__ x,
+                             float* __restrict__ y, int n_in, int n_out, int ones_word) {
+    auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+    const int lane = int(item.get_local_id(2)), warp = int(item.get_local_id(1));
+    const int row = int(item.get_group(2)) * WARPS + warp;
+    if (row >= n_out) return;
+    const int blocks_per_row = n_in / QK, x_stride = n_in / Q8K;
+    const int g = lane & 7, sub = lane >> 3;
+    const typename F::Block* wr = w + std::size_t(row) * blocks_per_row;
+    float acc[NCOLS] = {};
+    for (int kbx = sub; kbx < blocks_per_row; kbx += 4) {
+        const typename F::W wv = F::load(wr + kbx, g);
+#pragma unroll
+        for (int j = 0; j < NCOLS; ++j) acc[j] += apply_runtime(wv, x + std::size_t(j) * x_stride + kbx * (QK / Q8K), ones_word);
+    }
+    auto sg = item.get_sub_group();
+#pragma unroll
+    for (int j = 0; j < NCOLS; ++j) {
+        float v = acc[j];
+#pragma unroll
+        for (int o = WARP / 2; o > 0; o >>= 1) v += sycl::permute_group_by_xor(sg, v, o);
+        if (lane == 0) y[std::size_t(j) * n_out + row] = v;
+    }
+}
+
+class OriginalQ5C2;
+class RuntimeOnesQ5C2;
+class Raw16Sums;
+inline void launch_original(const void* weights,const void* xq,float* y,int n_in,int n_out,sycl::queue& q) {
+    const auto* w=static_cast<const Q5KBlock*>(weights);
+    const auto* x=static_cast<const Q81Block*>(xq);
+    const unsigned blocks=unsigned((std::size_t(n_out)+WARPS-1)/WARPS);
+    q.parallel_for<OriginalQ5C2>(
+        sycl::nd_range<3>(sycl::range(1,1,blocks)*sycl::range(1,WARPS,WARP),sycl::range(1,WARPS,WARP)),
+        [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {original_kernel<WideQ5K,2>(w,x,y,n_in,n_out);});
+}
+// ones_word is parsed by the executable; no device-side equality guard or literal.
+inline void launch_candidate(const void* weights,const void* xq,float* y,int n_in,int n_out,int ones_word,sycl::queue& q) {
+    const auto* w=static_cast<const Q5KBlock*>(weights);
+    const auto* x=static_cast<const Q81Block*>(xq);
+    const unsigned blocks=unsigned((std::size_t(n_out)+WARPS-1)/WARPS);
+    q.parallel_for<RuntimeOnesQ5C2>(
+        sycl::nd_range<3>(sycl::range(1,1,blocks)*sycl::range(1,WARPS,WARP),sycl::range(1,WARPS,WARP)),
+        [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {candidate_kernel<WideQ5K,2>(w,x,y,n_in,n_out,ones_word);});
+}
+// Validation only, never a projection producer/sidecar or captured timed node.
+inline void raw16_sums(const void* xq,int* out,int n_q8_blocks,int ones_word,sycl::queue& q) {
+    const auto* x=static_cast<const Q81Block*>(xq);
+    q.parallel_for<Raw16Sums>(sycl::range<1>(size_t(n_q8_blocks)*2),[=](sycl::id<1> id) {
+        const int k=int(id[0]);const sycl::int4 ones(ones_word,ones_word,ones_word,ones_word);
+        out[k]=dp4a4(ones,ld_q8_16(x+k/2,k%2),0);
+    });
+}
+} // namespace s126
+
+FILE q5_runtime_ones_leaf.cpp SHA256 083f82890dbf81141f6191e9f9d4bc18ecc01d1222bdde33d2a86b43e1f735c1
+// SOURCE ONLY S126: Q5 C2 full head, runtime packed ones operand only.
+#define DPCT_PROFILING_ENABLED
+#include <sycl/sycl.hpp>
+#include <dpct/dpct.hpp>
+#include "strata/kernels/native_mmvq.hpp"
+#include "private_q5_runtime_ones.hpp"
+#include <array>
+#include <memory>
+#include <cstddef>
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <cctype>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <random>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+namespace K=strata::kernels;
+namespace fs=std::filesystem;
+using Bytes=std::vector<uint8_t>;
+using Clock=std::chrono::steady_clock;
+constexpr int C=2,BATCH=20,WARM=3,ROUNDS=2;
+static int runtime_ones=0;
+constexpr size_t G=4096,TAIL=512;
+struct Strict:std::runtime_error {using std::runtime_error::runtime_error;};
+static void need(bool x,const std::string& m){if(!x)throw std::runtime_error(m);}
+static void strict(bool x,const std::string& m){if(!x)throw Strict(m);}
+static double us(Clock::time_point a,Clock::time_point b){return std::chrono::duration<double,std::micro>(b-a).count();}
+static void write(const fs::path& p,const void* v,size_t n){std::ofstream f(p,std::ios::binary|std::ios::trunc);need(bool(f),"open export "+p.string());f.write(static_cast<const char*>(v),n);need(bool(f),"write export "+p.string());f.close();need(bool(f),"close export "+p.string());}
+static void text(const fs::path& p,const std::string& s){write(p,s.data(),s.size());}
+static Bytes read(const fs::path& p,size_t n){std::ifstream f(p,std::ios::binary);need(bool(f),"open reference "+p.string());Bytes v(n);f.read(reinterpret_cast<char*>(v.data()),n);need(size_t(f.gcount())==n,"short reference "+p.string());need(f.peek()==std::char_traits<char>::eof(),"long reference "+p.string());f.clear();f.close();need(bool(f),"close reference "+p.string());return v;}
+static uint64_t fnv(const Bytes& b){uint64_t h=0xcbf29ce484222325ull;for(auto v:b){h^=v;h*=0x100000001b3ull;}return h;}
+static void finite(const Bytes& b){need(b.size()%4==0,"float byte count");for(size_t i=0;i<b.size();i+=4){float x;std::memcpy(&x,b.data()+i,4);strict(std::isfinite(x),"nonfinite output");}}
+static void strict_equal(const Bytes& a,const Bytes& b,const std::string& label){strict(a==b,"STRICT "+label);}
+struct Buffer {
+    sycl::queue& q;size_t bytes;uint8_t* raw=nullptr;const char* name;
+    Buffer(sycl::queue& s,size_t n,const char* label):q(s),bytes(n),name(label){raw=sycl::malloc_device<uint8_t>(bytes+2*G,q);need(raw!=nullptr,std::string("allocate ")+name);q.memset(raw,0xd7,bytes+2*G);poison();}
+    template<class T=uint8_t>T* ptr()const{return reinterpret_cast<T*>(raw+G);}
+    void poison(){q.memset(raw+G,0xff,bytes);}
+    void put(const void* p,size_t n){need(n==bytes,std::string("upload size ")+name);q.memcpy(raw+G,p,n);}
+    Bytes get()const{Bytes b(bytes);q.memcpy(b.data(),raw+G,bytes).wait_and_throw();return b;}
+    void guards()const{uint8_t h[2*G];q.memcpy(h,raw,G);q.memcpy(h+G,raw+G+bytes,G).wait_and_throw();for(auto v:h)strict(v==0xd7,std::string("guard ")+name);}
+    void readonly(const void* h)const{
+        constexpr size_t CHUNK=8*1024*1024;Bytes b(std::min(bytes,CHUNK));
+        for(size_t off=0;off<bytes;off+=CHUNK){size_t n=std::min(bytes-off,CHUNK);q.memcpy(b.data(),raw+G+off,n).wait_and_throw();strict(!std::memcmp(b.data(),static_cast<const uint8_t*>(h)+off,n),std::string("readonly ")+name);}
+    }
+    ~Buffer(){if(raw){try{q.wait_and_throw();sycl::free(raw,q);}catch(...){}}}
+};
+struct Graph {
+    sycl::queue& q;dpct::experimental::command_graph_ptr graph=nullptr;
+    dpct::experimental::command_graph_exec_ptr exec=nullptr;
+    ~Graph(){try{q.wait_and_throw();delete exec;delete graph;}catch(...){}}
+    template<class F>void capture(F call,const fs::path& dot){q.wait_and_throw();dpct::experimental::begin_recording(&q);call();dpct::experimental::end_recording(&q,&graph);need(graph!=nullptr,"null graph");graph->print_graph(dot.string(),true);need(fs::is_regular_file(dot)&&fs::file_size(dot)>0,"missing graph DOT");exec=new sycl::ext::oneapi::experimental::command_graph<sycl::ext::oneapi::experimental::graph_state::executable>(graph->finalize());}
+    void run(){q.ext_oneapi_graph(*exec).wait_and_throw();}
+};
+// Validation-only output; never a producer or a captured projection dependency.
+static void raw_gate(sycl::queue& q,Buffer& xq,const Bytes& expected,size_t qbytes,int word,const std::string& label){
+    need(qbytes%36==0,"rawsum packet geometry");const size_t count=(qbytes/36)*2;
+    Buffer sums(q,count*sizeof(int)+TAIL,"validation raw16 sums");
+    s126::raw16_sums(xq.ptr(),sums.ptr<int>(),int(qbytes/36),word,q);q.wait_and_throw();
+    sums.guards();xq.guards();auto actual=sums.get();strict_equal(xq.get(),expected,label+" rawgate Q8 readonly");
+    for(size_t k=0;k<count;++k){int64_t total=0;for(int j=0;j<16;++j){
+        const uint8_t byte=expected[(k/2)*36+4+(k%2)*16+j];
+        const int qv=byte<128?int(byte):int(byte)-256;
+        const unsigned ob=(uint32_t(word)>>(8*(j%4)))&255u;const int ov=ob<128?int(ob):int(ob)-256;
+        total+=int64_t(qv)*ov;
+    }int value;std::memcpy(&value,actual.data()+4*k,4);strict(value==total,label+" exact INT64 raw16 gate");}
+    for(size_t k=count*4;k<actual.size();++k)strict(actual[k]==0xff,"rawgate tail");
+    std::printf("{\"type\":\"raw16_gate\",\"label\":\"%s\",\"word\":%u,\"cells\":%zu,\"INT64_exact\":true,\"readonly_guards\":true}\n",label.c_str(),uint32_t(word),count);
+}
+static void raw_extremes(sycl::queue& q){
+    Bytes input(4*36+TAIL,0xff);for(size_t i=0;i<4*36;++i)input[i]=0;
+    for(int packet=0;packet<4;++packet)for(int j=0;j<32;++j){const int v=packet==0?-128:packet==1?127:packet==2?(j%2?-128:127):(j%4==0?1:0);input[packet*36+4+j]=uint8_t(v);}
+    Buffer qx(q,input.size(),"raw validation packets");qx.put(input.data(),input.size());q.wait_and_throw();
+    raw_gate(q,qx,input,4*36,runtime_ones,"extremes-ones");
+    // Same validation kernel with a different payload, not an alternative projection arm.
+    raw_gate(q,qx,input,4*36,runtime_ones^3,"payload-negative-control");
+}
+struct Shape {const char* tag;const char* tensor;int N,M;size_t offset,bytes;uint64_t weight_fnv;};
+constexpr Shape SHAPES[]={
+ {"head","output.weight",2560,248320,11024256,437043200,0xda8746c3dcc2469eull}
+};
+static const char* armname(int arm){need(arm>=0&&arm<=2,"bad arm");return arm==0?"public":arm==1?"original":"candidate";}
+struct State {
+    sycl::queue& q;Shape d;fs::path dir;Bytes weights;std::vector<float> a,b;Bytes savedq[2],anchor[2];
+    size_t active,qbytes;Buffer w,x,xq,y;
+    Graph pub,orig,cand,orig20,cand20;
+    Bytes expected[2],expectedq[2];int current=-1;
+    State(sycl::queue& queue,Shape shape,const fs::path& output,const char* shard,const fs::path& fixtures):
+      q(queue),d(shape),dir(output/d.tag),weights(d.bytes),a(size_t(C)*d.N),b(a.size()),
+      active(size_t(C)*d.M*4),qbytes(K::native_q8_1_bytes(d.N,C)),
+      w(q,d.bytes,"weights"),x(q,a.size()*4,"float input"),xq(q,qbytes+TAIL,"Q8"),y(q,active+TAIL,"output"),
+      pub{q},orig{q},cand{q},orig20{q},cand20{q} {
+        need(fs::create_directory(dir),"new shape directory required");
+        need(K::native_mmvq_weight_bytes(13,d.N,d.M)==d.bytes,"type13 weight geometry");
+        need(qbytes==size_t(C)*(d.N/32)*36,"canonical Q8 geometry");
+        std::ifstream f(shard,std::ios::binary);need(bool(f),"open actual model");
+        f.seekg(d.offset);need(bool(f),"seek actual tensor");f.read(reinterpret_cast<char*>(weights.data()),weights.size());
+        need(size_t(f.gcount())==weights.size(),"short actual tensor");f.close();need(bool(f),"close actual model");
+        need(fnv(weights)==d.weight_fnv,"actual tensor FNV mismatch");
+        for(int changed:{0,1}){
+            const std::string label=changed?"b":"a";
+            auto input=read(fixtures/("C2-input-"+label+".bin"),size_t(6)*d.N*4);
+            auto& dst=changed?b:a;std::memcpy(dst.data(),input.data(),dst.size()*4);finite(input);
+            auto qinput=read(fixtures/("C2-eager-"+label+"-q8.bin"),qbytes);
+            savedq[changed]=Bytes(qbytes+TAIL,0xff);std::copy(qinput.begin(),qinput.end(),savedq[changed].begin());
+            anchor[changed]=read(fixtures/("C2-eager-"+label+".bin"),active);finite(anchor[changed]);
+        }
+        w.put(weights.data(),weights.size());q.wait_and_throw();
+        std::printf("{\"type\":\"shape_identity\",\"shape\":\"%s\",\"tensor\":\"%s\",\"N\":%d,\"M\":%d,\"C\":2,\"weight_bytes\":%zu,\"offset\":%zu,\"fnv\":\"%016llx\"}\n",d.tag,d.tensor,d.N,d.M,d.bytes,d.offset,(unsigned long long)d.weight_fnv);
+    }
+    void guards(){for(Buffer* p:{&w,&x,&xq,&y})p->guards();}
+    void output_reset(){q.wait_and_throw();guards();y.poison();q.wait_and_throw();}
+    void input(int changed){
+        need(changed==0||changed==1,"input selector");q.wait_and_throw();guards();
+        const auto& v=changed?b:a;x.put(v.data(),x.bytes);xq.poison();y.poison();
+        xq.put(savedq[changed].data(),xq.bytes);q.wait_and_throw();
+        auto pristine=xq.get();strict_equal(pristine,savedq[changed],"saved canonical Q8 upload/tail");
+        expectedq[changed]=savedq[changed];
+        current=changed;
+    }
+    void call(int arm){
+        if(arm==0)K::native_mmvq(13,w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,C,&q);
+        else if(arm==1)s126::launch_original(w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,q);
+        else if(arm==2)s126::launch_candidate(w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,runtime_ones,q);
+        else need(false,"bad projection arm");
+    }
+    Bytes snapshot(const std::string& phase,bool save){
+        q.wait_and_throw();auto out=y.get();auto quant=xq.get();
+        if(save){write(dir/(phase+".bin"),out.data(),active);write(dir/(phase+"-q8.bin"),quant.data(),qbytes);}
+        try {
+            guards();x.readonly((current?b:a).data());
+            strict_equal(quant,expectedq[current],phase+" Q8/read-only/tail");
+            for(size_t i=active;i<out.size();++i)strict(out[i]==0xff,phase+" output tail");
+            out.resize(active);finite(out);
+        }catch(...){if(!save){write(dir/(phase+"-failure.bin"),out.data(),out.size());write(dir/(phase+"-failure-q8.bin"),quant.data(),quant.size());}throw;}
+        std::printf("{\"type\":\"checked_snapshot\",\"shape\":\"%s\",\"phase\":\"%s\",\"changed\":%d,\"guards\":true,\"tail\":true,\"finite\":true,\"input_readonly\":true,\"weight_guards_checked\":true,\"weight_payload_verified\":false,\"Q8_readonly\":true}\n",d.tag,phase.c_str(),current);
+        return out;
+    }
+    void weight_payload_check(const char* boundary){
+        q.wait_and_throw();w.guards();w.readonly(weights.data());
+        std::printf("{\"type\":\"weight_payload_check\",\"shape\":\"%s\",\"boundary\":\"%s\",\"bytes\":%zu,\"weight_guards_checked\":true,\"weight_payload_verified\":true}\n",d.tag,boundary,weights.size());
+    }
+    void equal_snapshot(const std::string& phase,bool save){
+        auto out=snapshot(phase,save);
+        if(out!=expected[current])write(dir/(phase+"-mismatch.bin"),out.data(),out.size());
+        strict_equal(out,expected[current],std::string(d.tag)+" "+phase+" full output bytes");
+    }
+    void correctness(){
+        for(int changed:{0,1}){
+            input(changed);const std::string label=changed?"b":"a";
+            write(dir/("input-"+label+".bin"),(changed?b:a).data(),x.bytes);
+            write(dir/("canonical-"+label+"-q8.bin"),expectedq[changed].data(),qbytes);
+            raw_gate(q,xq,expectedq[changed],qbytes,runtime_ones,"canonical-"+label);
+            output_reset();call(0);expected[changed]=snapshot("eager-public-"+label,true);
+            strict_equal(expected[changed],anchor[changed],"saved S52 RPW1 public byte anchor");
+            // The private-original/public byte anchor precedes every candidate gate.
+            output_reset();call(1);equal_snapshot("eager-original-"+label,true);
+            output_reset();call(2);equal_snapshot("eager-candidate-"+label,true);
+            for(int arm:{1,2}){output_reset();call(arm);equal_snapshot(std::string("repeat-")+armname(arm)+"-"+label,true);}
+        }
+        strict(expected[0]!=expected[1],"changed input not observable in output");
+        strict(expectedq[0]!=expectedq[1],"changed canonical Q8 not observable");
+        input(0);
+        for(int arm:{0,1,2}){output_reset();call(arm);equal_snapshot(std::string("restore-eager-")+armname(arm),true);}
+        pub.capture([&]{call(0);},dir/"single-public.dot");
+        orig.capture([&]{call(1);},dir/"single-original.dot");
+        cand.capture([&]{call(2);},dir/"single-candidate.dot");
+        orig20.capture([&]{for(int i=0;i<BATCH;++i)call(1);},dir/"batch20-original.dot");
+        cand20.capture([&]{for(int i=0;i<BATCH;++i)call(2);},dir/"batch20-candidate.dot");
+        for(int changed:{0,1}){
+            input(changed);const std::string label=changed?"b":"a";
+            for(auto item:{std::make_pair(&pub,"public"),std::make_pair(&orig,"original"),std::make_pair(&cand,"candidate")}){
+                output_reset();item.first->run();equal_snapshot(std::string("graph-")+item.second+"-"+label,true);
+                output_reset();item.first->run();equal_snapshot(std::string("graph-repeat-")+item.second+"-"+label,true);
+            }
+            for(auto item:{std::make_pair(&orig20,"original"),std::make_pair(&cand20,"candidate")}){
+                output_reset();item.first->run();equal_snapshot(std::string("batch20-")+item.second+"-"+label,true);
+            }
+        }
+        input(0);
+        for(auto item:{std::make_pair(&pub,"public"),std::make_pair(&orig,"original"),std::make_pair(&cand,"candidate")}){
+            output_reset();item.first->run();equal_snapshot(std::string("restore-graph-")+item.second,true);
+        }
+        for(auto item:{std::make_pair(&orig20,"original"),std::make_pair(&cand20,"candidate")}){
+            output_reset();item.first->run();equal_snapshot(std::string("restore-batch20-")+item.second,true);
+        }
+        std::printf("{\"type\":\"correctness_pass\",\"shape\":\"%s\",\"public_original_bit_anchor\":true,\"candidate_full_bytes\":true,\"initial_changed\":true,\"single_batch20_graphs\":true}\n",d.tag);
+    }
+    void warm(){
+        input(0);
+        for(int i=0;i<WARM;++i)for(int arm:{1,2}){
+            output_reset();(arm==1?orig20:cand20).run();equal_snapshot("warm-"+std::to_string(i)+"-"+armname(arm),false);
+        }
+    }
+    void timing(){
+        need(current==0,"timing initial input");
+        for(int round=0;round<ROUNDS;++round){
+            const std::array<int,4> order=round%2?std::array<int,4>{2,1,1,2}:std::array<int,4>{1,2,2,1};
+            double complete[3]{},span[3]{};
+            for(int slot=0;slot<4;++slot){
+                const int arm=order[slot];output_reset();
+                auto begin=q.ext_oneapi_submit_barrier();begin.wait_and_throw();
+                const auto t0=Clock::now();q.ext_oneapi_graph(*(arm==1?orig20.exec:cand20.exec));const auto t1=Clock::now();
+                auto end=q.ext_oneapi_submit_barrier();end.wait_and_throw();const auto t2=Clock::now();
+                const auto tb=begin.get_profiling_info<sycl::info::event_profiling::command_end>();
+                const auto te=end.get_profiling_info<sycl::info::event_profiling::command_end>();need(te>=tb,"timestamp order");
+                equal_snapshot("timed-r"+std::to_string(round)+"-s"+std::to_string(slot)+"-"+armname(arm),false);
+                const double cu=us(t0,t2),sp=double(te-tb)/1000.0;
+                complete[arm]+=cu/2;span[arm]+=sp/2;
+                std::printf("{\"type\":\"timing_sample\",\"shape\":\"%s\",\"round\":%d,\"slot\":%d,\"arm\":\"%s\",\"order\":\"%s\",\"captured_projection_calls\":20,\"quantization_in_timed_graph\":false,\"enqueue_us\":%.6f,\"complete_us\":%.6f,\"barrier_span_us\":%.6f,\"checked_full_bytes\":true}\n",d.tag,round,slot,armname(arm),round%2?"COOC":"OCCO",us(t0,t1),cu,sp);
+            }
+            std::printf("{\"type\":\"paired_mean\",\"shape\":\"%s\",\"round\":%d,\"original_complete_us_per_call\":%.6f,\"candidate_complete_us_per_call\":%.6f,\"original_span_us_per_call\":%.6f,\"candidate_span_us_per_call\":%.6f,\"observational_only\":true}\n",d.tag,round,complete[1]/BATCH,complete[2]/BATCH,span[1]/BATCH,span[2]/BATCH);
+        }
+        equal_snapshot("final",true);
+    }
+};
+static int run(const fs::path& out,const char* shard,const fs::path& fixtures){
+    auto env=[](const char* k,const char* v){const char* e=std::getenv(k);need(e&&std::string(e)==v,std::string("require ")+k+"="+v);};
+    env("STRATA_MMVQ_WIDE_K","1");env("STRATA_MMVQ_WIDE_K_RPW","1");env("STRATA_HEAD_Q5K_RPW2","0");
+    need(K::native_mmvq_multi_exact(),"public exact mode required");
+    need(dpct::device_count()==1,"require exactly one visible device");
+    const sycl::device dev=dpct::dev_mgr::instance().get_device(0);
+    need(dev.has(sycl::aspect::ext_intel_pci_address),"PCI identity unavailable");
+    std::string pci=dev.get_info<sycl::ext::intel::info::device::pci_address>();
+    std::transform(pci.begin(),pci.end(),pci.begin(),[](unsigned char c){return char(std::tolower(c));});
+    need(pci=="0000:0b:00.0","require physical card0 BDF0000:0b:00.0");
+    std::printf("{\"type\":\"identity\",\"pci\":\"%s\",\"visible_devices\":1,\"driver\":\"%s\",\"device\":\"%s\",\"public_type\":13,\"C\":2,\"runtime_ones\":%d,\"timing_scope\":\"projection only; canonical Q8 outside graphs\"}\n",pci.c_str(),dev.get_info<sycl::info::device::driver_version>().c_str(),dev.get_info<sycl::info::device::name>().c_str(),runtime_ones);
+    sycl::queue q(dpct::dev_mgr::instance().get_device(0).get_context(),dev,
+        sycl::property_list{sycl::property::queue::in_order(),sycl::property::queue::enable_profiling()});
+    raw_extremes(q);
+    std::vector<std::unique_ptr<State>> states;
+    for(const auto& shape:SHAPES){states.emplace_back(std::make_unique<State>(q,shape,out,shard,fixtures));states.back()->correctness();}
+    // All shapes' correctness gates and one full weight check pass before warming/timing.
+    for(auto& state:states)state->weight_payload_check("after-correctness-before-timing");
+    for(auto& state:states){state->warm();state->timing();}
+    for(auto& state:states)state->weight_payload_check("after-timing-final");
+    q.wait_and_throw();states.clear();q.wait_and_throw();
+    text(out/"result.json","{\"status\":\"PASS\",\"scope\":\"S126_ONE_HEAD_RUNTIME_ONES_ONLY\",\"shapes\":1,\"paired_rounds_per_shape\":2,\"samples_per_round\":4,\"calls_per_graph\":20,\"public_original_bit_anchor\":true,\"candidate_full_bytes\":true,\"serving_qualified\":false,\"speed_qualified\":false}\n");return 0;
+}
+int main(int argc,char** argv){
+    setvbuf(stdout,nullptr,_IONBF,0);fs::path out;bool created=false;
+    try{need(argc==5,"usage: q5_runtime_ones NEW_DIR REAL_SHARD S52_A1_SNAPSHOTS ONES_HEX");
+        char* end=nullptr;const unsigned long word=std::strtoul(argv[4],&end,16);need(end&&*end==0&&word==0x01010101ul,"ones operand must be01010101");runtime_ones=int(word);out=argv[1];need(fs::create_directory(out),"new output directory required");created=true;return run(out,argv[2],argv[3]);}
+    catch(const std::exception& e){const int rc=dynamic_cast<const Strict*>(&e)?5:2;
+        std::fprintf(stderr,"S126 %s: %s\n",rc==5?"STRICT_FAILURE":"RUNTIME_OR_IO_FAILURE",e.what());
+        if(created)try{text(out/"result.json","{\"status\":\"FAIL\",\"exit\":"+std::to_string(rc)+",\"kind\":\""+(rc==5?std::string("strict"):std::string("runtime_or_io"))+"\"}\n");}
+        catch(const std::exception& io){std::fprintf(stderr,"S126 failure-result IO: %s\n",io.what());return 2;}return rc;}
+}
+
+FILE build-container.sh SHA256 c4cb4c96bb00319796b6c24296f846f13987257da961d2cbe8db3f922ffae5f8
+#!/usr/bin/env bash
+source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1
+set -euo pipefail
+renice 19 -p $$ >/dev/null
+ionice -c 3 -p $$
+command -v icpx sha256sum nm renice ionice >/dev/null
+[[ -w /out ]]
+cd /out
+SRC=/work/src-ep
+sha256sum -c /src/expected-container.sha256
+icpx --version > compiler-version.txt
+FLAGS=(-O3 -DNDEBUG -std=c++20 -fsycl -fsycl-targets=spir64_gen -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wall -Wextra -DSTRATA_Q6K_EXPERTS=1 '-DSTRATA_VERSION="0.1.44.1"' -DSTRATA_XMX_SG16=1 -I"$SRC/third_party/ggml" -I"$SRC/sycl/include" -I"$SRC/include")
+TIMEFORMAT='adapter_compile_seconds=%R'
+{ time icpx "${FLAGS[@]}" -c /src/q5_runtime_ones_leaf.cpp -o q5_runtime_ones_leaf.o; } 2> adapter-compile.time
+IMAGES=(-O3 -DNDEBUG -fsycl -fsycl-targets=spir64_gen -fsycl-device-code-split=per_kernel -fsycl-max-parallel-link-jobs=4 -Xsycl-target-backend=spir64_gen "-device bmg-g31 -options -cl-fp32-correctly-rounded-divide-sqrt")
+TIMEFORMAT='adapter_prelink_seconds=%R'
+{ time icpx -v "${IMAGES[@]}" -fsycl-link q5_runtime_ones_leaf.o -o leaf.images.o > adapter-prelink.log 2>&1; } 2> adapter-prelink.time
+TIMEFORMAT='host_link_seconds=%R'
+{ time icpx -v -O3 -DNDEBUG -fp-model=precise q5_runtime_ones_leaf.o leaf.images.o /common/mmvq-core.images.o -Wl,--start-group /frozen/libstrata_kernels.a /frozen/libstrata_core.a -Wl,--end-group /usr/lib/x86_64-linux-gnu/libze_loader.so -lsycl -lsycl-devicelib-host -Wl,-Map=/out/link.map -o q5_runtime_ones_s126 > host-link.log 2>&1; } 2> host-link.time
+sha256sum -c /src/expected-container.sha256
+nm -C q5_runtime_ones_s126 > symbols.txt
+sha256sum /src/q5_runtime_ones_leaf.cpp /src/private_q5_runtime_ones.hpp /common/mmvq-core.images.o /frozen/libstrata_kernels.a /frozen/libstrata_core.a q5_runtime_ones_leaf.o leaf.images.o q5_runtime_ones_s126 > sha256.txt
+cat sha256.txt
+
+FILE build.sh SHA256 5e2621040667689e0f15c7c45de59a601650b1dccad94cd43272d19fcbf26fdc
+#!/usr/bin/env bash
+# ROOT ONLY after exact source and actual model review. Offline CPU build.
+set -euo pipefail
+HERE=$(cd "$(dirname "$0")" && pwd)
+REPO=/mnt/vm_8tb/github/b70_ai_things
+R=/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014
+IMAGE=sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2
+command -v docker python3 id mkdir tee >/dev/null
+[[ -w "$HERE" && -x "$REPO/bin/cpu-run" ]]
+mkdir "$HERE/build"
+mkdir "$HERE/build/tmp" "$HERE/build/cache"
+docker image inspect "$IMAGE" > "$HERE/build/image.json"
+python3 - "$HERE/build/image.json" "$IMAGE" <<'PY'
+import json,sys
+assert json.load(open(sys.argv[1]))[0]['Id']==sys.argv[2]
+PY
+set +e
+B70_CPU_LOCK_TIMEOUT=0 B70_AGENT=S126-runtime-ones-adapter-only-build "$REPO/bin/cpu-run" \
+  env MAX_JOBS=4 docker run --rm --network none --cpus 4 -u "$(id -u):$(id -g)" \
+  -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_DIR=/out/cache \
+  -e SYCL_CACHE_PERSISTENT=0 -e MAX_JOBS=4 -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 \
+  -v /mnt/vm_8tb/b70/build/strata-ab:/work:ro -v "$HERE":/src:ro -v "$HERE/build":/out \
+  -v "$R/iq4xs-rpw2-s59-prep/build":/common:ro \
+  -v "$R/iq4xs-rpw2-s59-prep/frozen-inputs":/frozen:ro \
+  --entrypoint bash "$IMAGE" /src/build-container.sh 2>&1 | tee "$HERE/build/build.log"
+rc=("${PIPESTATUS[@]}")
+set -e
+printf '%s\n' "${rc[0]}" > "$HERE/build/build.exit"
+printf '%s\n' "${rc[1]}" > "$HERE/build/tee.exit"
+[ "${rc[0]}" = 0 ] && [ "${rc[1]}" = 0 ]

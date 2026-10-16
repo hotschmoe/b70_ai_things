@@ -1,0 +1,30 @@
+{
+  "scope": "source-pattern adaptation only, no historical result reuse or GPU execution",
+  "sources": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-run-prep/ROOT_RUN.sh",
+      "bytes": 794,
+      "sha256": "bfdad98068d28ff13fc49186391b10e22913be354e3a56297200b0bc4e19d994"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-run-prep/leased_run.py",
+      "bytes": 13253,
+      "sha256": "11ba72fed15d06202f101dfe9bdd3d35b545e2a7488aa677cbdde2e973ddffb3"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-runner-prep/analyze.py",
+      "bytes": 6726,
+      "sha256": "7e3402de2a8fd164ab60ac5f055cac4e7290c312ae6aef62aa6ade8d93df3c79"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3-manifest.json",
+      "bytes": 2858,
+      "sha256": "cbc8aedaa29c2852cff60f1eb51c6f4da638fd7fd2076816dd0d774bf6fb3d86"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3/q5_runtime_ones_leaf.cpp",
+      "bytes": 20542,
+      "sha256": "bd63b7864cdbf0ef701f5403b0e3dcf1c6ac008f5f752efbf21e128b1c944226"
+    }
+  ]
+}

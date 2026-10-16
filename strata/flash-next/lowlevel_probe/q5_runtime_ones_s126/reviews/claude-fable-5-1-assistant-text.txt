@@ -1,0 +1,36 @@
+**CPU_BUILD_GO.** No blocking defect in the header, leaf or build recipe. GPU remains gated on the compiled audit and the strict oracle.
+
+**Memory and capture ownership**
+
+Each State owns its weights, FP32 witness, Q8 and output buffers with 4 KiB redzones, and the five graphs are members destroyed before the buffers after a queue drain. The validation sums buffer is a local in the raw gate with its own guards and poisoned tail, never captured and never read by a projection. The runtime ones word is captured by value into the candidate lambda, so a recorded graph carries a fixed operand. Nothing writes the weight buffer by design; the per-snapshot redzone check plus the two full payload comparisons and the compiled no-store audit together cover the trimmed readonly scans. The trim is sound.
+
+**Kernel class binding**
+
+Three distinct registered classes at namespace scope: original, runtime candidate, and the validation sums kernel. The public arm is the production entry with the three environment pins that select the generic wide RPW1 route, which is the S122 image's route. If the environment variable name for the RPW selector differs from the source, the leaf exits 2 before any projection, which is the right failure. Root should confirm the name once against the pinned source.
+
+**Control source identity**
+
+The private original is a textual copy of the production helper, loads, scale and minimum unpacking, FP expression, lane and sub mapping, kbx stride and XOR tree. The candidate differs only in building the ones vector from a captured int inside a parallel function with the same body. Neither helper copy carries a forced-inline attribute, which matches the original source, so no attribute asymmetry is introduced. Whether the backend inlines the runtime version and emits packed dp4a is exactly what the ISA audit must show; the source cannot promise it.
+
+**Fixture identity**
+
+The head slice is read from the shard at the pinned offset and length and checked by FNV before use. Inputs are the saved six-row C2 fixtures, with the first two rows used, matching the saved 5760-byte Q8 and the 1986560-byte logits anchors. The public arm must match the S52 anchor before any private arm is compared, so a wrong fixture or wrong public route fails first.
+
+**Numerical gate order**
+
+The raw sums gate runs on the canonical Q8 before any projection, comparing all 320 half-sums to an INT64 host loop, and the extremes gate covers -128, +127, alternating and sparse packets plus a negative control payload that proves the kernel is not constant-folding the word. Then public, anchor, original, candidate, repeats, captured single and batch-20 graphs, A, B, A, and restores. One full weight payload check sits after correctness and before warming, another after timing. Snapshot count reconciles to 49 and raw gates to 4. First strict failure exits 5 with a mismatch dump, no tolerance, no retry.
+
+**Compile and link identity**
+
+Same pinned image and flags as the S98 and S104 adapters, no DRI, no network, read-only build tree, one adapter compile, one AOT prelink, one host link against the frozen common images and archives with hashes checked before and after. The build never runs the leaf or a decoder.
+
+**Pre-GPU gates, not waived**
+
+1. Candidate metadata shows a new 4-byte by-value argument and the host forwards the parsed word into it.
+2. Candidate ISA shows the raw sums as packed dp4a on that operand with the four 40-instruction chains gone, the sixteen weighted dp4a, the integer-to-float conversions, the multiply and MAD contraction points and the tree unchanged, and no stores to the weight pointer. Any other change in the FP ledger is a HOLD.
+3. Private original computational prefix through EOT equals the S122 image with equal metadata, options, constants and relocations; public selected body likewise.
+4. Resources read, absent fields recorded as unknown.
+
+**Limits**
+
+A pass proves bit equality on one shape and these inputs, and gives nested one-process timings. It does not prove the head is ALU limited or predict serving. The same helper serves the Q4_K C6 shapes, which this build does not test.

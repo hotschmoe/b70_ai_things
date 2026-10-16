@@ -1,0 +1,12 @@
+{
+  "status": "OLD_REFERENCE_ONLY_CANDIDATE_PENDING",
+  "reference": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-audit-v2/isa/disasm/.text.s122_q5_c2.asm",
+    "bytes": 55529,
+    "sha256": "5aae8c1219d768710ea836d873a68d8919a0c83aa740f7b1189749c29ea739fe",
+    "computation_prefix_bytes": 8128,
+    "full_text_bytes": 8320
+  },
+  "prior_findings": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-audit-v2/isa-findings.md",
+  "no_candidate_binary_read_or_new_decoder_build_gpu": true
+}

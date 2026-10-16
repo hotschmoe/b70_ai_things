@@ -1,0 +1,21 @@
+{
+  "status": "CPU_BUILD_GO_ONLY",
+  "actual_models": [
+    {
+      "id": "claude-opus-5-5",
+      "elapsed_s": 53.48079765000148,
+      "exit": 0
+    },
+    {
+      "id": "claude-fable-5-1",
+      "elapsed_s": 58.19209226500243,
+      "exit": 0
+    }
+  ],
+  "root_full_read_both": true,
+  "reviewed_packet_sha256": "00c82cfec425636fd88d09400fa1d562b1e0d0df26f0b4c7e2b1e160c54a4ad6",
+  "V3_minor_host_delta_full_read": true,
+  "V3_manifest_sha256": "cbc8aedaa29c2852cff60f1eb51c6f4da638fd7fd2076816dd0d774bf6fb3d86",
+  "kernel_header_build_flags_fixtures_unchanged_vs_reviewed_V2": true,
+  "GPU": false
+}

@@ -1,0 +1,7 @@
+{
+  "exit_code": 1,
+  "elapsed_seconds": 2.670345922000706,
+  "log_sha256": "3ae0a56e17fb6802575810220fb929be4dc796256e22298fab819c7241615c98",
+  "automatic_retry": false,
+  "decoder_build_GPU": 0
+}

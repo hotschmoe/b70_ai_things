@@ -1,0 +1,10 @@
+ae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252  /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+ac45a7a9b7d3cdc4b1b8c1c413c416911fb4ca91373d69bb34947815dbb3eec6  /work/src-ep/sycl/include/strata/sycl_math.hpp
+7c1b7175dbe29a43bff30a94381131096437d88415881a8a8c0704de53394c58  /work/src-ep/sycl/include/dpct/math.hpp
+83c233dd1f9de362cf646eb6f3d95dd97278ae43a30aeeed205b3067ef358a7e  /work/src-ep/sycl/include/strata/kernels/native_mmvq.hpp
+95c3ea0cb9802b93dc8eb23857349182d1bc1b6988ab875fc289812549042fb0  /work/src-ep/include/strata/kernels/native_mmvq.hpp
+bd63b7864cdbf0ef701f5403b0e3dcf1c6ac008f5f752efbf21e128b1c944226  /src/q5_runtime_ones_leaf.cpp
+a8045fa37108f99ad448e48e6994319845a72327c092989245afcd95094a94c1  /src/private_q5_runtime_ones.hpp
+8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21  /common/mmvq-core.images.o
+f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8  /frozen/libstrata_kernels.a
+34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286  /frozen/libstrata_core.a

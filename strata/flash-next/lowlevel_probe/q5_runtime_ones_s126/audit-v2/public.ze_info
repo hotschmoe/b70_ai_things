@@ -1,0 +1,79 @@
+---
+version:         '1.71'
+kernels:
+  - name:            _ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_111launch_wideINS2_7WideQ5KELi2EEEvPKvS6_PfiiPN4sycl3_V15queueEiE16native_mmvq_wideS4_18dpct_kernel_scalarILi2EEEE
+    user_attributes:
+      intel_reqd_sub_group_size: 32
+      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]
+    execution_env:
+      grf_count:       128
+      has_4gb_buffers: true
+      has_no_stateless_write: true
+      inline_data_payload_size: 32
+      offset_to_skip_per_thread_data_load: 128
+      simd_size:       32
+      subgroup_independent_forward_progress: true
+      eu_thread_count: 8
+    payload_arguments:
+      - arg_type:        arg_bypointer
+        offset:          0
+        size:            8
+        arg_index:       0
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_bypointer
+        offset:          8
+        size:            8
+        arg_index:       1
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_bypointer
+        offset:          16
+        size:            8
+        arg_index:       2
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_byvalue
+        offset:          24
+        size:            4
+        arg_index:       3
+      - arg_type:        arg_byvalue
+        offset:          28
+        size:            4
+        arg_index:       4
+    per_thread_payload_arguments:
+      - arg_type:        local_id
+        offset:          0
+        size:            128
+kernels_misc_info:
+  - name:            _ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_111launch_wideINS2_7WideQ5KELi2EEEvPKvS6_PfiiPN4sycl3_V15queueEiE16native_mmvq_wideS4_18dpct_kernel_scalarILi2EEEE
+    args_info:
+      - index:           0
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'struct strata::kernels::(anonymous namespace)::Q5KBlock*;8'
+        type_qualifiers: NONE
+      - index:           1
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'struct strata::kernels::(anonymous namespace)::Q81Block*;8'
+        type_qualifiers: NONE
+      - index:           2
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'float*;8'
+        type_qualifiers: NONE
+      - index:           3
+        address_qualifier: __private
+        access_qualifier: NONE
+        type_name:       'int;4'
+        type_qualifiers: NONE
+      - index:           4
+        address_qualifier: __private
+        access_qualifier: NONE
+        type_name:       'int;4'
+        type_qualifiers: NONE
+...

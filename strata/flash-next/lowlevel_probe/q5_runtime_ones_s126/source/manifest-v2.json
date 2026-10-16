@@ -1,0 +1,70 @@
+{
+  "stage": "S126",
+  "version": "v2",
+  "status": "FROZEN_SOURCE_ONLY_ROOT_REVIEW_PENDING_NO_BUILD_GPU",
+  "parent_manifest": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-manifest.json",
+  "parent_manifest_sha256": "818965979a2712d7d8f99c09a8b70f7883232ffcca7dadaf7f8a4cc457c731b9",
+  "source_packet_sha256": "9e7ddca2d3beeb94f35c462772423e02366468ce5a668a8f3d91e4305ee4dec1",
+  "files": {
+    "README.md": {
+      "bytes": 6456,
+      "sha256": "a69e3e79104af0706fe8b0750d934efdcc9378b2de16fa4acc6ae0f9bfc5a207"
+    },
+    "analyze.py": {
+      "bytes": 3276,
+      "sha256": "1da9710d3a2f107c4aa7eda75b14fab2b00db4890d6132408a4f0e4a595985b6"
+    },
+    "build-container.sh": {
+      "bytes": 1959,
+      "sha256": "c4cb4c96bb00319796b6c24296f846f13987257da961d2cbe8db3f922ffae5f8"
+    },
+    "build.sh": {
+      "bytes": 1494,
+      "sha256": "5e2621040667689e0f15c7c45de59a601650b1dccad94cd43272d19fcbf26fdc"
+    },
+    "expected-container.sha256": {
+      "bytes": 1053,
+      "sha256": "5f7506efa5bd8fd38776a126998c08e63d68c9356656ac944bdede008d815e60"
+    },
+    "fixture-pins.json": {
+      "bytes": 4004,
+      "sha256": "ee6c759741e099689c146df3ab700ee04a43fb37d1a8d31e50a8a22808554ddf"
+    },
+    "preparation-checks.json": {
+      "bytes": 1143,
+      "sha256": "a9309141cbe52122e14fb574d58a557d37cdb720a61e016acca62d2f3018a2f8"
+    },
+    "private_q5_runtime_ones.hpp": {
+      "bytes": 10105,
+      "sha256": "a8045fa37108f99ad448e48e6994319845a72327c092989245afcd95094a94c1"
+    },
+    "q5_runtime_ones_leaf.cpp": {
+      "bytes": 19721,
+      "sha256": "083f82890dbf81141f6191e9f9d4bc18ecc01d1222bdde33d2a86b43e1f735c1"
+    },
+    "sdk-dp4a.txt": {
+      "bytes": 1149,
+      "sha256": "53ccd4d7d4d3c60856a8fc9a02d37f220ed9762aa5b373ca8aa03dd486ee3895"
+    },
+    "source-ledger.json": {
+      "bytes": 674,
+      "sha256": "6ccbb795e9c200dc034879a5523093d6658737c06a5496bf7393134bb49b8f74"
+    },
+    "source-link-bindings.json": {
+      "bytes": 1293,
+      "sha256": "e17c1eaf6822b4d71fc0024409c53d7b7d24d03b4491b888aa0b24132a4a2bad"
+    },
+    "source-pins.json": {
+      "bytes": 2357,
+      "sha256": "be6784009e787bd33b75466be458a32561fdea340d586f8a4a0293765aaa4d00"
+    },
+    "source-review-packet.txt": {
+      "bytes": 40176,
+      "sha256": "9e7ddca2d3beeb94f35c462772423e02366468ce5a668a8f3d91e4305ee4dec1"
+    },
+    "v2-delta.patch": {
+      "bytes": 9744,
+      "sha256": "6729e00370a67a3ee032b3acadf5c9d1c13de581a849a1ab02af1b00c31261ff"
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "stage": "S126",
+  "status": "FROZEN_SOURCE_ONLY_RUNNER_NEVER_EXECUTED",
+  "files": {
+    "FROZEN": {
+      "bytes": 63,
+      "sha256": "cff1dea72f106697397b101f60b1ef39d5e1f10b3b2ecec7974d7317a99d2ebb"
+    },
+    "README.md": {
+      "bytes": 3691,
+      "sha256": "5157f1f64b80cf6b0349b774848ab6bf37051f38647f9f592adaaa25feac5a4b"
+    },
+    "ROOT_RUN.sh": {
+      "bytes": 798,
+      "sha256": "91a0cb5d8b95029058830d12c72a566235705243ffbfaa8976ab5f51ab4b5f79"
+    },
+    "analyze.py": {
+      "bytes": 7965,
+      "sha256": "b3ab4e1ec8f8de5a9bdf0657a23acbe270bd44e7c12cbbe468f65caff142eb39"
+    },
+    "harness-pins.json": {
+      "bytes": 623,
+      "sha256": "b814d4e682f34d95b44d82a518f492379c1196877c83eaea17350aea4cf01e9a"
+    },
+    "leased_run.py": {
+      "bytes": 13920,
+      "sha256": "d474e41d410076bcd503cab20eb0b693fabac8dbfcbecd4b289e8b28e3778f3d"
+    },
+    "original-pattern-pins.json": {
+      "bytes": 1393,
+      "sha256": "fbfe1524abcd81bd15fc9d181732ec822acab8629fb6334eb516bccd10686247"
+    },
+    "source-only-validation.json": {
+      "bytes": 619,
+      "sha256": "6856d2a8273a6dff597c2ab2c94b63a1b366a265b1ee71d3661fd26d96b14d13"
+    }
+  }
+}

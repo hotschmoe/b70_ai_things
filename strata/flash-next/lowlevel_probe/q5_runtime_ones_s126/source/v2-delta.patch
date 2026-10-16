@@ -1,0 +1,109 @@
+--- v1/q5_runtime_ones_leaf.cpp
++++ v2/q5_runtime_ones_leaf.cpp
+@@ -136,13 +136,17 @@
+         q.wait_and_throw();auto out=y.get();auto quant=xq.get();
+         if(save){write(dir/(phase+".bin"),out.data(),active);write(dir/(phase+"-q8.bin"),quant.data(),qbytes);}
+         try {
+-            guards();x.readonly((current?b:a).data());w.readonly(weights.data());
++            guards();x.readonly((current?b:a).data());
+             strict_equal(quant,expectedq[current],phase+" Q8/read-only/tail");
+             for(size_t i=active;i<out.size();++i)strict(out[i]==0xff,phase+" output tail");
+             out.resize(active);finite(out);
+         }catch(...){if(!save){write(dir/(phase+"-failure.bin"),out.data(),out.size());write(dir/(phase+"-failure-q8.bin"),quant.data(),quant.size());}throw;}
+-        std::printf("{\"type\":\"checked_snapshot\",\"shape\":\"%s\",\"phase\":\"%s\",\"changed\":%d,\"guards\":true,\"tail\":true,\"finite\":true,\"input_readonly\":true,\"weight_readonly\":true,\"Q8_readonly\":true}\n",d.tag,phase.c_str(),current);
++        std::printf("{\"type\":\"checked_snapshot\",\"shape\":\"%s\",\"phase\":\"%s\",\"changed\":%d,\"guards\":true,\"tail\":true,\"finite\":true,\"input_readonly\":true,\"weight_guards_checked\":true,\"weight_payload_verified\":false,\"Q8_readonly\":true}\n",d.tag,phase.c_str(),current);
+         return out;
++    }
++    void weight_payload_check(const char* boundary){
++        q.wait_and_throw();w.guards();w.readonly(weights.data());
++        std::printf("{\"type\":\"weight_payload_check\",\"shape\":\"%s\",\"boundary\":\"%s\",\"bytes\":%zu,\"weight_guards_checked\":true,\"weight_payload_verified\":true}\n",d.tag,boundary,weights.size());
+     }
+     void equal_snapshot(const std::string& phase,bool save){
+         auto out=snapshot(phase,save);
+@@ -234,8 +238,10 @@
+     raw_extremes(q);
+     std::vector<std::unique_ptr<State>> states;
+     for(const auto& shape:SHAPES){states.emplace_back(std::make_unique<State>(q,shape,out,shard,fixtures));states.back()->correctness();}
+-    // All shapes' correctness gates pass before any timing begins.
++    // All shapes' correctness gates and one full weight check pass before warming/timing.
++    for(auto& state:states)state->weight_payload_check("after-correctness-before-timing");
+     for(auto& state:states){state->warm();state->timing();}
++    for(auto& state:states)state->weight_payload_check("after-timing-final");
+     q.wait_and_throw();states.clear();q.wait_and_throw();
+     text(out/"result.json","{\"status\":\"PASS\",\"scope\":\"S126_ONE_HEAD_RUNTIME_ONES_ONLY\",\"shapes\":1,\"paired_rounds_per_shape\":2,\"samples_per_round\":4,\"calls_per_graph\":20,\"public_original_bit_anchor\":true,\"candidate_full_bytes\":true,\"serving_qualified\":false,\"speed_qualified\":false}\n");return 0;
+ }
+--- v1/analyze.py
++++ v2/analyze.py
+@@ -7,17 +7,22 @@
+  raw=[x for x in rows if x.get('type')=='raw16_gate'];assert [(x['label'],x['word'],x['cells']) for x in raw]==[('extremes-ones',16843009,8),('payload-negative-control',16843010,8),('canonical-a',16843009,320),('canonical-b',16843009,320)]
+  assert all(x['INT64_exact'] and x['readonly_guards'] for x in raw)
+  snaps=[x for x in rows if x.get('type')=='checked_snapshot'];assert len(snaps)==49
+- assert all(x['guards'] and x['tail'] and x['finite'] and x['input_readonly'] and x['weight_readonly'] and x['Q8_readonly'] for x in snaps)
++ assert all(x['guards'] and x['tail'] and x['finite'] and x['input_readonly'] and x['weight_guards_checked'] and x['weight_payload_verified'] is False and x['Q8_readonly'] for x in snaps)
+  corr=[x for x in rows if x.get('type')=='correctness_pass'];assert len(corr)==1 and corr[0]['shape']=='head'
+  timing=[x for x in rows if x.get('type')=='timing_sample'];assert len(timing)==8
+  assert rows.index(corr[0])<min(rows.index(x) for x in timing)
++ weights=[x for x in rows if x.get('type')=='weight_payload_check'];assert len(weights)==2
++ assert [(x['boundary'],x['bytes']) for x in weights]==[('after-correctness-before-timing',437043200),('after-timing-final',437043200)]
++ assert all(x['weight_guards_checked'] and x['weight_payload_verified'] and x['shape']=='head' for x in weights)
++ assert rows.index(corr[0])<rows.index(weights[0])<min(rows.index(x) for x in snaps if x['phase'].startswith('warm-'))
++ assert max(rows.index(x) for x in timing)<rows.index(next(x for x in snaps if x['phase']=='final'))<rows.index(weights[1])
+  assert [(x['round'],x['slot'],x['arm']) for x in timing]==[(r,s,a) for r,order in enumerate([['original','candidate','candidate','original'],['candidate','original','original','candidate']]) for s,a in enumerate(order)]
+  assert all(x['captured_projection_calls']==20 and not x['quantization_in_timed_graph'] and x['checked_full_bytes'] for x in timing)
+  pairs=[x for x in rows if x.get('type')=='paired_mean'];assert len(pairs)==2 and [x['round'] for x in pairs]==[0,1]
+  result=json.loads((out/'result.json').read_text());assert result['status']=='PASS' and result['shapes']==1 and result['paired_rounds_per_shape']==2 and not result['serving_qualified']
+  assert len(list(out.glob('head/*.bin')))==74 and len(list(out.glob('head/*.dot')))==5
+  original=[x['original_complete_us_per_call'] for x in pairs];candidate=[x['candidate_complete_us_per_call'] for x in pairs]
+- summary={'status':'PASS_INTERNAL_ORACLE_COUNTS_ONLY','raw16_cells':sum(x['cells'] for x in raw),'snapshots':49,'paired_rounds':2,'samples':8,'timing':{'original_process_nested_median_us':statistics.median(original),'candidate_process_nested_median_us':statistics.median(candidate),'per_round_percent':[100*(b/a-1) for a,b in zip(original,candidate)]},'DOT_binding_required_separately':True,'serving_qualified':False,'population_inference':False}
++ summary={'status':'PASS_INTERNAL_ORACLE_COUNTS_ONLY','raw16_cells':sum(x['cells'] for x in raw),'snapshots':49,'whole_weight_payload_checks':2,'whole_weight_bytes_verified':874086400,'paired_rounds':2,'samples':8,'timing':{'original_process_nested_median_us':statistics.median(original),'candidate_process_nested_median_us':statistics.median(candidate),'per_round_percent':[100*(b/a-1) for a,b in zip(original,candidate)]},'DOT_binding_required_separately':True,'serving_qualified':False,'population_inference':False}
+ except Exception as e:
+  summary['error']=str(e);(out/'analysis.json').write_text(json.dumps(summary,indent=2)+'\n');raise
+ (out/'analysis.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps(summary))
+--- v1/README.md
++++ v2/README.md
+@@ -1,4 +1,4 @@
+-# S126 private Q5 C2 runtime-ones candidate - SOURCE ONLY
++# S126 v2 private Q5 C2 runtime-ones candidate - SOURCE ONLY
+ 
+ CONFIG -> Fixed Q5_K13 full head N2560/M248320/C2/RPW1/SG32, original
+ production geometry62080 groups x128 WIs, two runtime n_in/n_out scalars.
+@@ -71,16 +71,26 @@
+   kernel uses01010102 once to prove nonconstant payload handling; it is NOT a
+   second projection arm, producer, captured dependency or timed node.
+ - Then public/privateoriginal/candidate strict full logits, own eager repeats,
+-  A/B/A single+20-call graphs, full readonly operands/guards and512B poisoned
++  A/B/A single+20-call graphs, full Q8/input readonly/guards and512B poisoned
+   tails. First strict failure5; runtime/IO2. No tolerance/retry/reset/fallback.
+ - Expected successful trace:4 raw gates (8,8,320,320 cells),49 checked snapshots,
+   5 DOTs/43 kernel nodes/38 edges,74 saved binary artifacts, correctness before
+   any warm/timing. Graph arithmetic excludes quantization and raw validation.
+ - Three warm20-call graphs per arm, then exactly2 balanced OCCO/COOC rounds:
+   eight completed20-call samples/four per arm, no cold sample exclusion.
+-  Every sample checks full bytes/memory after timing; all outputs remain gated.
++  Every snapshot checks full output/Q8/input bytes, weight redzones and tails.
++  Whole437043200B weight payload is checked only TWICE: after all correctness
++  before warming/timing, and final after timing. Snapshot logs explicitly state
++  weight_payload_verified=false; two distinct check records state true. This
++  removes47 redundant wholeweight readbacks (20541030400B), preserving all49
++  snapshots/strict value gates. Compiled store-scope audit remains pre-GPU.
++  All outputs remain gated.
+   Nested one-process descriptive comparison, not serving/population speed.
+ 
+ VERDICT -> READY_FOR_ROOT_REVIEW; BUILD/GPU HOLD. A compiled failure or missing
+ runtime-dot lever closes this candidate without a GPU rerun. No giant review
+ packet, sidecar framework, new benchmark matrix or whole-serving build.
++
++V2 lineage -> V1 remains immutable. Only leaf readonly placement/log truth,
++analyzer obligations and these explanatory/pin/packet files change. Kernel
++header, build scripts, fixtures and source/FP projection are byte-identical.
+--- v1/expected-container.sha256
++++ v2/expected-container.sha256
+@@ -3,7 +3,7 @@
+ 7c1b7175dbe29a43bff30a94381131096437d88415881a8a8c0704de53394c58  /work/src-ep/sycl/include/dpct/math.hpp
+ 83c233dd1f9de362cf646eb6f3d95dd97278ae43a30aeeed205b3067ef358a7e  /work/src-ep/sycl/include/strata/kernels/native_mmvq.hpp
+ 95c3ea0cb9802b93dc8eb23857349182d1bc1b6988ab875fc289812549042fb0  /work/src-ep/include/strata/kernels/native_mmvq.hpp
+-963113d5a6c77ff6e91dd3cab8a24b238fd31cfcbe76ae143eefc98a702569f7  /src/q5_runtime_ones_leaf.cpp
++083f82890dbf81141f6191e9f9d4bc18ecc01d1222bdde33d2a86b43e1f735c1  /src/q5_runtime_ones_leaf.cpp
+ a8045fa37108f99ad448e48e6994319845a72327c092989245afcd95094a94c1  /src/private_q5_runtime_ones.hpp
+ 8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21  /common/mmvq-core.images.o
+ f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8  /frozen/libstrata_kernels.a

@@ -1,0 +1,65 @@
+{
+  "status": "FROZEN_WRAPPER_METADATA_CORRECTION_NO_CONTINUATION_EXECUTED",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 4607,
+      "sha256": "1aa21ff8e284baca25138b2fb99fa3e8b3377345641e8464647774e727b6cfe6"
+    },
+    {
+      "path": "audit.py",
+      "bytes": 20924,
+      "sha256": "0502fdef1ceaea65aede448b60a58788bf7ab0a22ea5b2a5df794b7e1b93a5e2"
+    },
+    {
+      "path": "decode-one.sh",
+      "bytes": 2479,
+      "sha256": "7436bf80c75226a96649b3448687b9259ab2aec63a64a8e88dfe352394d06c84"
+    },
+    {
+      "path": "diagnosis-first-read.json",
+      "bytes": 299,
+      "sha256": "2bb01695521d379e07b89b4e09fb6e8c414e61d785728ed7397087c1270e9022"
+    },
+    {
+      "path": "linked-symbol-metadata.json",
+      "bytes": 2480,
+      "sha256": "143ba6604272f7552a5ad8ef3664c57ec5f04f4e1eecbe78818123f075ef46b5"
+    },
+    {
+      "path": "pins.json",
+      "bytes": 5034,
+      "sha256": "bfc9858480ec917731212359f328a6fee31e252c9f0cf1aa73f63c92f5b5953e"
+    },
+    {
+      "path": "private-symbol-metadata.json",
+      "bytes": 1724,
+      "sha256": "08eaaa238500accd446697f04a6945a6f7154787b72c2ccc18963143266f7ff9"
+    },
+    {
+      "path": "raw16-wrapper-actual.ze_info",
+      "bytes": 2520,
+      "sha256": "95ecf5db1006ae004025726232aa1eedc563ebb17229d1d52c3419cce6b2f54b"
+    },
+    {
+      "path": "source-correction.json",
+      "bytes": 744,
+      "sha256": "8b213ebe55ab1e2c1a46d502fe3f7b5665806edb175ce04932a06f3add2eaf3f"
+    },
+    {
+      "path": "wrapper-ABI.md",
+      "bytes": 2468,
+      "sha256": "1c908982d96ff1f81d7f79a751d4e1ce03b9bcff49fd2d7685928aaa598e6ec4"
+    },
+    {
+      "path": "wrapper-diagnosis.json",
+      "bytes": 1021,
+      "sha256": "3071f81950b48670d4a4bba8822f678b411dd2519582dddc54b5122360d057ad"
+    },
+    {
+      "path": "wrapper-only.patch",
+      "bytes": 2925,
+      "sha256": "66cb0fdb26e072f64a49c2f5b747e1156b922de230b5c8850686c8eb2aa8fca0"
+    }
+  ]
+}

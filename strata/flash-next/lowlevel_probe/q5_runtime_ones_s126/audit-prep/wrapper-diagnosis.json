@@ -1,0 +1,22 @@
+{
+  "status": "BOUNDED_ACTUAL_WRAPPER_METADATA_DIAGNOSIS_NO_AUDIT_RERUN",
+  "Info": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoINS1_19__pf_kernel_wrapperIN4s1269Raw16SumsEEEEE",
+  "registered_name_pointer": {
+    "pointer": 5433413,
+    "name": "_ZTSN4sycl3_V16detail19__pf_kernel_wrapperIN4s1269Raw16SumsEEE"
+  },
+  "selected_executable_offset": 2839360,
+  "selected_image_bytes": 9920,
+  "name_occurrences_in_same_metadata": 2,
+  "distinct_images": 1,
+  "ze_info_bytes": 2520,
+  "ze_info_sha256": "95ecf5db1006ae004025726232aa1eedc563ebb17229d1d52c3419cce6b2f54b",
+  "exe_sha256_reused": "66fae0f1087f04f5443d8276edf1722588ed155eeac728251c1933817122ab2b",
+  "exe_stat": {
+    "size": 64558040,
+    "inode": 24093250,
+    "mtime_ns": 1792119443355428754,
+    "ctime_ns": 1792119443356735803
+  },
+  "method": "Pinned S92 bounded mmap ELF class +S107 selected sections helper; exact actual linked Info/name seek only. No binary hash, all-image walk, archive read, compiler, decoder or GPU."
+}

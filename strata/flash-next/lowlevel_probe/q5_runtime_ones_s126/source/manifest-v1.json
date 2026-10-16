@@ -1,0 +1,63 @@
+{
+  "stage": "S126",
+  "status": "FROZEN_SOURCE_ONLY_ROOT_REVIEW_PENDING_NO_BUILD_GPU",
+  "source_packet_sha256": "929147a783dd18e0808bb9ae7761fead82b39c7e59e18a21188b326ce519d3c6",
+  "files": {
+    "README.md": {
+      "bytes": 5809,
+      "sha256": "a68cb2f672f8cd156a71c4a08e560a89f03a318bdb9a519d9d0c863786d99660"
+    },
+    "analyze.py": {
+      "bytes": 2573,
+      "sha256": "4afc0e2af6a3ba1d373aa5416b6f6730daecdc581395e97dd08f7599bf3db27e"
+    },
+    "build-container.sh": {
+      "bytes": 1959,
+      "sha256": "c4cb4c96bb00319796b6c24296f846f13987257da961d2cbe8db3f922ffae5f8"
+    },
+    "build.sh": {
+      "bytes": 1494,
+      "sha256": "5e2621040667689e0f15c7c45de59a601650b1dccad94cd43272d19fcbf26fdc"
+    },
+    "expected-container.sha256": {
+      "bytes": 1053,
+      "sha256": "5393f2c53cfcc6ffa4743acf1074ac3321f143fba30c4bfb1888ccff7848d8f9"
+    },
+    "fixture-pins.json": {
+      "bytes": 4004,
+      "sha256": "ee6c759741e099689c146df3ab700ee04a43fb37d1a8d31e50a8a22808554ddf"
+    },
+    "preparation-checks.json": {
+      "bytes": 962,
+      "sha256": "2ed0ad17512cc5012d30f45ca3006b0c18097368f13b3f12b91d63417bdd5e9c"
+    },
+    "private_q5_runtime_ones.hpp": {
+      "bytes": 10105,
+      "sha256": "a8045fa37108f99ad448e48e6994319845a72327c092989245afcd95094a94c1"
+    },
+    "q5_runtime_ones_leaf.cpp": {
+      "bytes": 19184,
+      "sha256": "963113d5a6c77ff6e91dd3cab8a24b238fd31cfcbe76ae143eefc98a702569f7"
+    },
+    "sdk-dp4a.txt": {
+      "bytes": 1149,
+      "sha256": "53ccd4d7d4d3c60856a8fc9a02d37f220ed9762aa5b373ca8aa03dd486ee3895"
+    },
+    "source-ledger.json": {
+      "bytes": 674,
+      "sha256": "6ccbb795e9c200dc034879a5523093d6658737c06a5496bf7393134bb49b8f74"
+    },
+    "source-link-bindings.json": {
+      "bytes": 1293,
+      "sha256": "e17c1eaf6822b4d71fc0024409c53d7b7d24d03b4491b888aa0b24132a4a2bad"
+    },
+    "source-pins.json": {
+      "bytes": 2357,
+      "sha256": "be6784009e787bd33b75466be458a32561fdea340d586f8a4a0293765aaa4d00"
+    },
+    "source-review-packet.txt": {
+      "bytes": 38989,
+      "sha256": "929147a783dd18e0808bb9ae7761fead82b39c7e59e18a21188b326ce519d3c6"
+    }
+  }
+}

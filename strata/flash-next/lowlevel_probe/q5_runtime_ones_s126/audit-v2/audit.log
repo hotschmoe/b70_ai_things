@@ -1,0 +1,10 @@
+cpu-run: [S126-WRAPPER-ABI-CONTINUATION] acquired (heavy) -> python3 /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-compiled-audit-prep-v2/audit.py --prep /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3 --expected-manifest-sha256 cbc8aedaa29c2852cff60f1eb51c6f4da638fd7fd2076816dd0d774bf6fb3d86 --out /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-built-audit-v2
+Traceback (most recent call last):
+  File "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-compiled-audit-prep-v2/audit.py", line 151, in <module>
+    save('control-comparison.json',comparisons);require(all(x['PASS']for x in comparisons.values()),'public/private original drift; inspect facts and STOP, no automatic decoder/retry')
+                                                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-compiled-audit-prep-v2/audit.py", line 8, in require
+    if not ok:raise RuntimeError('HOLD: '+msg)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: HOLD: public/private original drift; inspect facts and STOP, no automatic decoder/retry
+cpu-run: [S126-WRAPPER-ABI-CONTINUATION] done in 2s (exit 1)

@@ -1,0 +1,86 @@
+{
+  "status": "VERIFIED_SOURCE_MANIFEST_LINEAGE",
+  "versions": {
+    "-v1": {
+      "source_directory": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep",
+      "manifest_sha256": "818965979a2712d7d8f99c09a8b70f7883232ffcca7dadaf7f8a4cc457c731b9",
+      "leaf": {
+        "bytes": 19184,
+        "sha256": "963113d5a6c77ff6e91dd3cab8a24b238fd31cfcbe76ae143eefc98a702569f7"
+      },
+      "header": {
+        "bytes": 10105,
+        "sha256": "a8045fa37108f99ad448e48e6994319845a72327c092989245afcd95094a94c1"
+      },
+      "build_sh": {
+        "bytes": 1494,
+        "sha256": "5e2621040667689e0f15c7c45de59a601650b1dccad94cd43272d19fcbf26fdc"
+      },
+      "build_container": {
+        "bytes": 1959,
+        "sha256": "c4cb4c96bb00319796b6c24296f846f13987257da961d2cbe8db3f922ffae5f8"
+      },
+      "fixtures": {
+        "bytes": 4004,
+        "sha256": "ee6c759741e099689c146df3ab700ee04a43fb37d1a8d31e50a8a22808554ddf"
+      }
+    },
+    "-v2": {
+      "source_directory": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v2",
+      "manifest_sha256": "55cae3ffd4f0196061ffe8dc21c0ed5870deb55f6250ab399a6ea970eb3ba4a3",
+      "leaf": {
+        "bytes": 19721,
+        "sha256": "083f82890dbf81141f6191e9f9d4bc18ecc01d1222bdde33d2a86b43e1f735c1"
+      },
+      "header": {
+        "bytes": 10105,
+        "sha256": "a8045fa37108f99ad448e48e6994319845a72327c092989245afcd95094a94c1"
+      },
+      "build_sh": {
+        "bytes": 1494,
+        "sha256": "5e2621040667689e0f15c7c45de59a601650b1dccad94cd43272d19fcbf26fdc"
+      },
+      "build_container": {
+        "bytes": 1959,
+        "sha256": "c4cb4c96bb00319796b6c24296f846f13987257da961d2cbe8db3f922ffae5f8"
+      },
+      "fixtures": {
+        "bytes": 4004,
+        "sha256": "ee6c759741e099689c146df3ab700ee04a43fb37d1a8d31e50a8a22808554ddf"
+      }
+    },
+    "-v3": {
+      "source_directory": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3",
+      "manifest_sha256": "cbc8aedaa29c2852cff60f1eb51c6f4da638fd7fd2076816dd0d774bf6fb3d86",
+      "leaf": {
+        "bytes": 20542,
+        "sha256": "bd63b7864cdbf0ef701f5403b0e3dcf1c6ac008f5f752efbf21e128b1c944226"
+      },
+      "header": {
+        "bytes": 10105,
+        "sha256": "a8045fa37108f99ad448e48e6994319845a72327c092989245afcd95094a94c1"
+      },
+      "build_sh": {
+        "bytes": 1494,
+        "sha256": "5e2621040667689e0f15c7c45de59a601650b1dccad94cd43272d19fcbf26fdc"
+      },
+      "build_container": {
+        "bytes": 1959,
+        "sha256": "c4cb4c96bb00319796b6c24296f846f13987257da961d2cbe8db3f922ffae5f8"
+      },
+      "fixtures": {
+        "bytes": 4004,
+        "sha256": "ee6c759741e099689c146df3ab700ee04a43fb37d1a8d31e50a8a22808554ddf"
+      }
+    }
+  },
+  "unchanged_across_all_three": [
+    "private kernel header",
+    "build.sh",
+    "build-container.sh",
+    "fixture-pins.json"
+  ],
+  "v2_delta": "Trim47 redundant full437043200B weight scans, preserving49 checked snapshots and2 fullpayload boundaries;20541030400B planned readbacks removed, not measured runtime saving.",
+  "v3_delta": "Port balanced capture/exception drain; validate raw16 poisoned tail before hostINT64 compare; projection header/math/build unchanged.",
+  "runtime_scope": "No S126 GPU oracle/timing executed; compiled private-original control mismatch retained."
+}

@@ -1,0 +1,40 @@
+{
+  "public": {
+    "PASS": true,
+    "checks": {
+      "computational_prefix_8128_exact": true,
+      "normalized_metadata_exact": true,
+      "options_exact": true,
+      "constants_exact": true,
+      "raw_normalized_relocations_exact": true,
+      "decoded_normalized_relocations_exact": true
+    },
+    "raw_full_image_exact": false,
+    "raw_complete_text_exact": false,
+    "first_changed_text_byte": 8140,
+    "new_text_bytes": 8320,
+    "old_text_bytes": 8320,
+    "computational_EOT_end": 8128,
+    "reference_ASM_sha256": "5aae8c1219d768710ea836d873a68d8919a0c83aa740f7b1189749c29ea739fe",
+    "limits": "Prefix equality includes through EOT; full image/text equality reported separately, no trailer relaxation of prefix/metadata/data/relocation gates."
+  },
+  "original": {
+    "PASS": false,
+    "checks": {
+      "computational_prefix_8128_exact": false,
+      "normalized_metadata_exact": true,
+      "options_exact": true,
+      "constants_exact": true,
+      "raw_normalized_relocations_exact": true,
+      "decoded_normalized_relocations_exact": true
+    },
+    "raw_full_image_exact": false,
+    "raw_complete_text_exact": false,
+    "first_changed_text_byte": 167,
+    "new_text_bytes": 8704,
+    "old_text_bytes": 8320,
+    "computational_EOT_end": 8128,
+    "reference_ASM_sha256": "5aae8c1219d768710ea836d873a68d8919a0c83aa740f7b1189749c29ea739fe",
+    "limits": "Prefix equality includes through EOT; full image/text equality reported separately, no trailer relaxation of prefix/metadata/data/relocation gates."
+  }
+}

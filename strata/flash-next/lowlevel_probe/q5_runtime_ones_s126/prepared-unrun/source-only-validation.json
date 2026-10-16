@@ -1,0 +1,17 @@
+{
+  "scope": "Python AST, embedded/root bash -n and direct frozen V3 source-order assertions ONLY; no runner/controller/build/GPU execution",
+  "python_AST": [
+    "leased_run.py",
+    "analyze.py"
+  ],
+  "bash_n": [
+    "ROOT_RUN.sh",
+    "leased_run.py entry string"
+  ],
+  "V3_manifest_sha256": "cbc8aedaa29c2852cff60f1eb51c6f4da638fd7fd2076816dd0d774bf6fb3d86",
+  "V3_leaf_sha256": "bd63b7864cdbf0ef701f5403b0e3dcf1c6ac008f5f752efbf21e128b1c944226",
+  "raw_tail_before_INT64": true,
+  "whole_weight_readonly_two_boundaries": true,
+  "candidate_oracle_kernel_header_unchanged_by_runner": true,
+  "executed": false
+}

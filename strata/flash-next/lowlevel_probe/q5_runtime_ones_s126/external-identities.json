@@ -1,0 +1,219 @@
+{
+  "status": "RETAIN_EXTERNAL_NO_LARGE_REHASH",
+  "private_build_sha256_receipt": [
+    "bd63b7864cdbf0ef701f5403b0e3dcf1c6ac008f5f752efbf21e128b1c944226  /src/q5_runtime_ones_leaf.cpp",
+    "a8045fa37108f99ad448e48e6994319845a72327c092989245afcd95094a94c1  /src/private_q5_runtime_ones.hpp",
+    "8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21  /common/mmvq-core.images.o",
+    "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8  /frozen/libstrata_kernels.a",
+    "34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286  /frozen/libstrata_core.a",
+    "8e75c111fe10c0ce7b85c9b41a37e7fbcbe52b8da6caf17642d4fd0b2efd4152  q5_runtime_ones_leaf.o",
+    "e5968f2fbeb9e0b4e1d0287ab1ca8b16208dd51e063bb286c19a6ca667fd69ca  leaf.images.o",
+    "66fae0f1087f04f5443d8276edf1722588ed155eeac728251c1933817122ab2b  q5_runtime_ones_s126"
+  ],
+  "selected_image_identities": {
+    "original": {
+      "kernel": "_ZTSN4s12612OriginalQ5C2E",
+      "image_bytes": 29776,
+      "image_sha256": "6bae4acd1b9f00859ae87c6808f23cfccd46cfd0eabfd042aa5f2a8ef9e6ff02",
+      "text_bytes": 8704,
+      "text_sha256": "4f0f6e4d9fb57def1de97d82d678968c32ac853db377d113015ea6df1db7fb9b"
+    },
+    "candidate": {
+      "kernel": "_ZTSN4s12615RuntimeOnesQ5C2E",
+      "image_bytes": 27816,
+      "image_sha256": "6069468cf1b16aa42e7a868b0e928b8c512784485f3b7c553bf4df78dd6612a7",
+      "text_bytes": 6464,
+      "text_sha256": "cbf570964fe19c15b61ebeeb714efb22145882748f5f7378b60721d2f3005fdb"
+    },
+    "raw16": {
+      "kernel": "_ZTSN4s1269Raw16SumsE",
+      "image_bytes": 7776,
+      "image_sha256": "5d09a7c263099a0a3f714270428f97cbd954297d0681bcbf1beece741b7d203f",
+      "text_bytes": 1024,
+      "text_sha256": "f0c838e946faca36cee3d76e7c71a771197d89e54d1c56ecd5c1b13cb86bd196"
+    },
+    "raw16_wrapper": {
+      "kernel": "_ZTSN4sycl3_V16detail19__pf_kernel_wrapperIN4s1269Raw16SumsEEE",
+      "image_bytes": 9920,
+      "image_sha256": "865b400c49df01b6387a62df0548ed5473fd10ed430405099b3f83b6acd89157",
+      "text_bytes": 1472,
+      "text_sha256": "5969e4cf4758b911ba0d6947a930ad23fec23bbc8cd87156a9cefd65a8af7d0e"
+    },
+    "public": {
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_111launch_wideINS2_7WideQ5KELi2EEEvPKvS6_PfiiPN4sycl3_V15queueEiE16native_mmvq_wideS4_18dpct_kernel_scalarILi2EEEE",
+      "image_bytes": 30160,
+      "image_sha256": "9a22abe7791348fa975aad5e1e771afebc4294e2828a74ac75e3d0b506c0fa55",
+      "text_bytes": 8320,
+      "text_sha256": "8f37f1e37867d12383888b7385be7f7d2c8ce47b28fd7d25c877901fb3f9b60a"
+    }
+  },
+  "host_function_files": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3/build/q5_runtime_ones_leaf.o::_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE": {
+      "path": "host-0.asm",
+      "bytes": 87775,
+      "sha256": "ed5587ea503a406b3bf0c7f794942e5b16689ed4e02a29aa824db3a631cdfecc",
+      "symbol": {
+        "name": "_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE",
+        "bind": 0,
+        "type": 2,
+        "section": 2,
+        "offset": 25728,
+        "size": 4096
+      },
+      "linked_symbol": {
+        "name": "_ZL8raw_gateRN4sycl3_V15queueER6BufferRKSt6vectorIhSaIhEEmiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE",
+        "bind": 0,
+        "type": 2,
+        "section": 14,
+        "offset": 4250432,
+        "size": 4096
+      }
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3/build/q5_runtime_ones_leaf.o::_ZN5State4callEi": {
+      "path": "host-1.asm",
+      "bytes": 33395,
+      "sha256": "cca7bd36a2efecf183c233304e3b928039ef30ba9e1b74f16acfc313ca34cb16",
+      "symbol": {
+        "name": "_ZN5State4callEi",
+        "bind": 2,
+        "type": 2,
+        "section": 254,
+        "offset": 0,
+        "size": 1700
+      },
+      "linked_symbol": {
+        "name": "_ZN5State4callEi",
+        "bind": 2,
+        "type": 2,
+        "section": 14,
+        "offset": 4303920,
+        "size": 1700
+      }
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3/build/q5_runtime_ones_leaf.o::main": {
+      "path": "host-2.asm",
+      "bytes": 44751,
+      "sha256": "35190ee4145bc64c9fea44f1ebed70b04534f0d6545898a86e09cdcc57df179d",
+      "symbol": {
+        "name": "main",
+        "bind": 1,
+        "type": 2,
+        "section": 2,
+        "offset": 0,
+        "size": 2462
+      },
+      "linked_symbol": {
+        "name": "main",
+        "bind": 1,
+        "type": 2,
+        "section": 14,
+        "offset": 4224704,
+        "size": 2462
+      }
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-built-audit-v2/public-native_mmvq.dp.cpp.o::_ZN6strata7kernels11native_mmvqEiPKvS2_PfiiiPv": {
+      "path": "host-3.asm",
+      "bytes": 19459,
+      "sha256": "043b247d9c14e7dcb0752507eb016b41a57a79fa9ab35dfc59b895c8d0d3cb7d",
+      "symbol": {
+        "name": "_ZN6strata7kernels11native_mmvqEiPKvS2_PfiiiPv",
+        "bind": 1,
+        "type": 2,
+        "section": 2,
+        "offset": 429664,
+        "size": 489
+      },
+      "linked_symbol": {
+        "name": "_ZN6strata7kernels11native_mmvqEiPKvS2_PfiiiPv",
+        "bind": 1,
+        "type": 2,
+        "section": 14,
+        "offset": 4743088,
+        "size": 489
+      }
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-built-audit-v2/public-native_mmvq.dp.cpp.o::_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi": {
+      "path": "host-4.asm",
+      "bytes": 43713,
+      "sha256": "c7f991ee07dfaa082ed223f416d0b4528cefa194110aea0b339ca4ba5d0ad232",
+      "symbol": {
+        "name": "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi",
+        "bind": 0,
+        "type": 2,
+        "section": 2,
+        "offset": 425600,
+        "size": 2023
+      },
+      "linked_symbol": {
+        "name": "_ZN6strata7kernels12_GLOBAL__N_111launch_wideINS1_7WideQ5KELi2EEEvPKvS5_PfiiPN4sycl3_V15queueEi",
+        "bind": 0,
+        "type": 2,
+        "section": 14,
+        "offset": 4739024,
+        "size": 2023
+      }
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-built-audit-v2/public-native_mmvq.dp.cpp.o::_ZN6strata7kernels12_GLOBAL__N_18try_wideINS1_7WideQ5KEEEbPKvS5_PfiiiPv": {
+      "path": "host-5.asm",
+      "bytes": 205986,
+      "sha256": "b415f4b2eb7a6990bf35b59b7d96548d14a7fd5412bf3d8d987c8bacb4e1937e",
+      "symbol": {
+        "name": "_ZN6strata7kernels12_GLOBAL__N_18try_wideINS1_7WideQ5KEEEbPKvS5_PfiiiPv",
+        "bind": 0,
+        "type": 2,
+        "section": 2,
+        "offset": 28912,
+        "size": 12489
+      },
+      "linked_symbol": {
+        "name": "_ZN6strata7kernels12_GLOBAL__N_18try_wideINS1_7WideQ5KEEEbPKvS5_PfiiiPv",
+        "bind": 0,
+        "type": 2,
+        "section": 14,
+        "offset": 4342336,
+        "size": 12489
+      }
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-built-audit-v2/public-native_mmvq.dp.cpp.o::_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv": {
+      "path": "host-6.asm",
+      "bytes": 42688,
+      "sha256": "fdf5ac5e086380660fa0143cccc422e9728badcd8aa8d922d0df5786bb981c54",
+      "symbol": {
+        "name": "_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv",
+        "bind": 1,
+        "type": 2,
+        "section": 2,
+        "offset": 26976,
+        "size": 1932
+      },
+      "linked_symbol": {
+        "name": "_ZN6strata7kernels16native_q5_k_mmvqEPKvS2_PfiiiPv",
+        "bind": 1,
+        "type": 2,
+        "section": 14,
+        "offset": 4340400,
+        "size": 1932
+      }
+    }
+  },
+  "full_candidate_ASM": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-runtime-ones-s126-candidate-isa/disasm/.text._ZTSN4s12615RuntimeOnesQ5C2E.asm",
+    "bytes": 44892,
+    "sha256": "71fb22a2b7e64c6c5535a93555e39dc6332ca0d2c2b26f99a811b21a260dfb05"
+  },
+  "source_model_payloads": "Not read/copied; fixture pins retained.",
+  "excluded": "Executables/objects/archives/images/fullASM/noisy compilewarnings/events/cumulativeusage/redundant source packets. Exact frozen production comparison already in audit-v2/control-comparison.json.",
+  "prepared_unrun_runner_external_only": [
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-runtime-ones-s126-run-prep/leased_run.py",
+      "bytes": 13920,
+      "source_sha256": "d474e41d410076bcd503cab20eb0b693fabac8dbfcbecd4b289e8b28e3778f3d"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-runtime-ones-s126-run-prep/analyze.py",
+      "bytes": 7965,
+      "source_sha256": "b3ab4e1ec8f8de5a9bdf0657a23acbe270bd44e7c12cbbe468f65caff142eb39"
+    }
+  ],
+  "prepared_unrun_runner_scope": "Source reviewed, never executed. Full runner retained externally under its copied original manifest; S126 overall compiled HOLD prevents GPU run. Separate S128 harness pending."
+}

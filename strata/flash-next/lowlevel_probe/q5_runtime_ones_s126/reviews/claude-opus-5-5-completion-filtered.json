@@ -1,0 +1,31 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 53.48079765000148,
+  "launch_exception": null,
+  "source_packet_sha256": "00c82cfec425636fd88d09400fa1d562b1e0d0df26f0b4c7e2b1e160c54a4ad6",
+  "source_packet_unchanged": true,
+  "parse_errors": [],
+  "retries": 0,
+  "result_events": [
+    {
+      "stop_reason": "end_turn",
+      "session_id": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "terminal_reason": "completed",
+      "is_error": false,
+      "subtype": "success",
+      "api_error_status": null,
+      "type": "result"
+    }
+  ],
+  "omissions": "Session cumulative usage/cost/API durations/modelUsage, duplicate result prose and stream timings excluded; elapsed_s belongs to current wrapper invocation."
+}

@@ -1,0 +1,1 @@
+Independent critical source review. Actual frozen code included. Return explicit CPU_BUILD_GO or HOLD. No tools available; no GPU or serving approval.

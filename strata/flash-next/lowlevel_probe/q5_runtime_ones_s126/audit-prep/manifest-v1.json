@@ -1,0 +1,36 @@
+{
+  "status": "FROZEN_SOURCE_PREP_WITH_BOUNDED_ACTUAL_HOST_SYMBOL_METADATA_NO_AUDIT_RUN",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 4006,
+      "sha256": "ddd06ea1e742e888a61447fc3ec904a3fac9226584d6a858d19f9fc899c3cc1d"
+    },
+    {
+      "path": "audit.py",
+      "bytes": 20678,
+      "sha256": "12979138ba6fec70c8f9085d2919f6b8b52f7a2d17ab4a9a1317e7d25ebc81a6"
+    },
+    {
+      "path": "decode-one.sh",
+      "bytes": 2479,
+      "sha256": "7436bf80c75226a96649b3448687b9259ab2aec63a64a8e88dfe352394d06c84"
+    },
+    {
+      "path": "linked-symbol-metadata.json",
+      "bytes": 2480,
+      "sha256": "143ba6604272f7552a5ad8ef3664c57ec5f04f4e1eecbe78818123f075ef46b5"
+    },
+    {
+      "path": "pins.json",
+      "bytes": 5034,
+      "sha256": "bfc9858480ec917731212359f328a6fee31e252c9f0cf1aa73f63c92f5b5953e"
+    },
+    {
+      "path": "private-symbol-metadata.json",
+      "bytes": 1724,
+      "sha256": "08eaaa238500accd446697f04a6945a6f7154787b72c2ccc18963143266f7ff9"
+    }
+  ],
+  "validation": "AST parse and bash -n only; small helpers/references exact; zero audit/build/decoder/GPU executions. Actual nm metadata reads are preparation only."
+}

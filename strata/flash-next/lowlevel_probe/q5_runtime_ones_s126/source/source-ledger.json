@@ -1,0 +1,10 @@
+{
+  "native_source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+  "native_sha256": "ae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252",
+  "control_kernel_inverse_name_equals_native": true,
+  "control_kernel_text_sha256": "5a337ea0fb8cb8aebde79de0390d8b1f0889e3754608fb2483502f64d99bf191",
+  "copied_helpers_sha256": "e71506506255df1737c17847a06e203b485d7a4b9c40ab6c9916608450edac29",
+  "candidate_inverse_runtime_apply_then_kernel_equals_native": true,
+  "runtime_apply_inverse_equals_native": true,
+  "runtime_apply_annotation": "ordinary inline, matching implicit member-inline; no forced-inlining directive added"
+}

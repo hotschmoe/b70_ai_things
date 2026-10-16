@@ -1,0 +1,6 @@
+{
+  "status": "HOLD_FIRST_AUDIT_FAILURE_STOP_NO_RETRY",
+  "type": "RuntimeError",
+  "error": "HOLD: public/private original drift; inspect facts and STOP, no automatic decoder/retry",
+  "GPU_build_decoder_invocations": 0
+}

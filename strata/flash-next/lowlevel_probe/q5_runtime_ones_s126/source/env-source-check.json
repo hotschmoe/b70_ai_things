@@ -1,0 +1,15 @@
+{
+  "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+  "sha256": "ae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252",
+  "wide_k_rpw": {
+    "first_line": 2077,
+    "last_line": 2080,
+    "text": "inline int wide_k_rpw() {   // STRATA_MMVQ_WIDE_K_RPW: rows per sub-group of the Q4_K / Q5_K / IQ4_XS wide kernel (1, 2, 4)\n    static const int v = std::getenv(\"STRATA_MMVQ_WIDE_K_RPW\") ? std::atoi(std::getenv(\"STRATA_MMVQ_WIDE_K_RPW\")) : 1;\n    return v;\n}\n"
+  },
+  "head_flag": {
+    "first_line": 3940,
+    "last_line": 3948,
+    "text": "void native_mmvq_head(int ggml_type, const void* weights, const void* x_q8_1, float* y,\n                      int n_in, int n_out, int ncols, void* stream) {\n    static const bool head_rpw2 = [] {\n        const char* e = std::getenv(\"STRATA_HEAD_Q5K_RPW2\");\n        return e != nullptr && std::strcmp(e, \"1\") == 0;\n    }();\n    if (head_rpw2 && ggml_type == 13 && n_in == 2560 && n_out == 248320 &&\n        (ncols == 2 || ncols == 6) && wide_k()) {\n        validate_shape(n_in, ncols, QK);\n"
+  },
+  "direct_public_route": "Leaf calls native_mmvq directly; HEAD_Q5K_RPW2 only selects native_mmvq_head special route. Existing harness spelling STRATA_MMVQ_WIDE_K_RPW is exact. No library bytes rehashed."
+}

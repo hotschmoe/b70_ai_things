@@ -1,0 +1,47 @@
+S126 V2 SOURCE REVIEW: Q5_K C2 runtime-ones candidate
+
+VERDICT: CPU_BUILD_GO, for the offline adapter build only. No GPU until the compiled audit closes. I found no blocking defect. There are three readiness items root can fix or confirm before the build, and one audit-scope clarification.
+
+WHAT THE SOURCE DOES CORRECTLY
+
+- The candidate is minimal. `apply_runtime` is the original `WideQ4K::apply` expression, operation for operation. The only change is that the four-lane `ones` int4 is built from a captured `int ones_word` instead of a literal. Weight decode, `ld_q8_16`, the ds[0] half\u2192float conversions, parenthesization, the kbx/sub lane order, the XOR 16\u21921 reduction and the lane-0 store are textually the original. `candidate_kernel` differs from `original_kernel` only in calling `apply_runtime`.
+- Folding resistance is real at the source level. The word is parsed from the CLI, validated on the host (`strtoul`, exactly 0x01010101), stored in a non-const global, and captured by value into the lambda. That makes it a kernel argument, not a compile-time constant. There is no device-side equality guard that could re-constify it.
+- Kernel identity: there are three unique private classes (OriginalQ5C2, RuntimeOnesQ5C2, Raw16Sums) plus the public `native_mmvq` type-13 arm. The launch geometry (62,080 groups of 4\xd732 work-items, SG32) matches production.
+- Gate order is right:
+  1. raw-sum extremes and the payload negative control (0x01010102, validation kernel only);
+  2. the canonical raw gate against independent CPU INT64 loops;
+  3. public equal to the saved S52 anchor;
+  4. private original equal to public;
+  5. the candidate;
+  6. repeats, A/B/A eager and graph (single and 20-call), restore;
+  7. a full weight payload check;
+  8. only then warm-up and timing, followed by a final payload check.
+
+  Each run stops at the first strict mismatch, with no tolerance or retry.
+- Fixture geometry is consistent: 2 of the 6 saved rows are used, Q8 is 5,760 bytes, logits are 1,986,560 bytes, and the 0xFF tails are poisoned and checked. The weight slice is FNV-checked from a bounded read at a fixed offset.
+- The V2 read-only change is acceptable. Weight guards are still checked at every snapshot. The full 437 MB payload is compared after all correctness checks and before timing, then again at the end. Any corruption introduced during correctness is still caught before timing, and any during timing at the final check. Every output, Q8 and input byte is still checked at every snapshot.
+
+READINESS ITEMS FOR ROOT (minor, fix or confirm before execution)
+
+1. Environment variable names. The leaf requires `STRATA_MMVQ_WIDE_K_RPW=1` and `STRATA_HEAD_Q5K_RPW2=0`. Confirm the first spelling against `wide_k_rpw()` in the pinned archive's source. A mismatched name would make the `need()` check meaningless. RPW2 is irrelevant because the public arm calls `native_mmvq`, not `native_mmvq_head`; that is harmless but should be noted.
+2. Capture balancing. `Graph::capture` has no begin/end balancing and no drain on exception, unlike S116's harness. A throw during capture exits 2 or 5 with recording unbalanced. Either port S116's balanced capture or accept the S104 precedent and record it. Not blocking.
+3. Raw16Sums validates the helper in a different kernel. It establishes that the runtime-word integer sum is exact. It does not show that the candidate projection kernel computes its in-loop raw sums correctly. That proof comes only from candidate full-logit byte equality, which the plan already requires. State this in the result.
+
+AUDIT-SCOPE CLARIFICATION (pre-GPU)
+
+- The public arm comes from the frozen S59 kernels archive (f2b), not from the S107 object that S122 decoded. Treat the private original as the primary control: its prefix through EOT at 8,128 bytes must match S122 exactly. Compare the public Q5 C2 body as well. If it differs from S122 in its computational prefix, root decides explicitly whether the S52 byte anchor is still the right public reference. Do not assume equality.
+- **Candidate lowering gate:**
+  - the 4-byte payload argument must be present and traced into the correction DP4As;
+  - the four 40-instruction expansion chains must be gone, with about 32 DP4As (16 weighted plus 16 correction, whatever CSE actually produces);
+  - the weighted operands must be unchanged;
+  - the FP conversions and the MUL/MAD contraction pattern must be unchanged, including which product feeds each MAD;
+  - the XOR tree and stores must be unchanged;
+  - resources must not regress. Absent spill or scratch fields mean UNKNOWN.
+
+  If the backend still strength-reduces the sum or drops the payload, HOLD and close this spelling, with no GPU run.
+
+LIMITS TO CARRY FORWARD
+
+- A pass is a bounded result: one real head slice, two seeded canonical Q8 inputs and synthetic extremes. It is not a universal FP or all-input proof.
+- Timing is two nested OCCO/COOC rounds in one process. It is descriptive only, not serving impact.
+- If the mechanism survives, the next step is the same compiled check on the Q4_K C6 QKV image before any generalization, not a format sweep.

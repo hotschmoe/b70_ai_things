@@ -1,0 +1,11 @@
+{
+  "status": "EXACT_SMALL_CANDIDATE_LINKAGE_PASS",
+  "partial_audit_image": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-built-audit/candidate.zebin",
+  "corrected_audit_image": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-built-audit-v2/candidate.zebin",
+  "bytes_each": 27816,
+  "sha256_each": "6069468cf1b16aa42e7a868b0e928b8c512784485f3b7c553bf4df78dd6612a7",
+  "exact_bytes_equal": true,
+  "decoder_selected_input_same_hash": true,
+  "decoder_before_after_same_hash": true,
+  "scope": "Only two small selected images rehashed during curation; no new decode or large artifact hash."
+}
