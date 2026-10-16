@@ -25921,3 +25921,15 @@ localmaxxing: MTP 122.2 (Verified) / 117.9, no speculation 66.2 / 65.9 (both Ver
 VERDICT -> submitted; DD back with images. Open: C2 text-vs-vision A/B (84.5 vs ~92/stream, noisy), prompt-union
 in-engine probe (optional), b70-launcher Strata engine PR (in preparation). Details:
 docs/20261016_upstream_prs_images_localmaxxing.md.
+
+## 2026-10-16 b70-launcher Strata engine PR; thinking defaults
+
+CONFIG -> SergiioB/b70-launcher feat/strata-engine (Strata engine kind, Flash-Next recipe), live test through the
+launcher on both B70s; daily driver reasoning defaults.
+COMMAND -> launcher live_test.sh twice (DD down 20:22-20:25 and 20:33:52-20:36:53 UTC); POST /settings on the DD.
+RESULT -> launcher race fixed (created-not-started container read as exited); live launch ready 32 s, 135 tok/s on one
+512-token reply, clean stop; PR SergiioB/b70-launcher#4. DD: an xhigh reply ran 32,768 tokens of thinking (not a loop)
+and hit open-webui's cap; now reasoning_effort medium + 16,384-token thinking budget by default (config + live), an
+open-webui "think harder" preset (high/xhigh, 32,768 budget, 49,152 max), Pi default medium; open-webui's stale
+sampling defaults removed (max_tokens 49,152 kept).
+VERDICT -> submitted / deployed. Details: docs/20261016_upstream_prs_images_localmaxxing.md.

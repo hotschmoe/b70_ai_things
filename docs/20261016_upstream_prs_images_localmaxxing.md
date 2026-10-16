@@ -80,3 +80,18 @@ per-request timings (draft_n / draft_n_accepted) for the Verified badge.
 No-speculation runs: the native IQ pack needs `--spec >= 2`, so `--spec 2` with no drafter (no MTP, suffix/lookup
 off): 0 drafts proposed. The engine source is public: hotschmoe/Strata branch b70-night-20261016 (1c360526 = the
 deployed binary).
+
+## b70-launcher: Strata engine (SergiioB/b70-launcher#4)
+
+At the maintainer's request (he asked for our recipe in the launcher), a `strata` engine kind + builder + the
+`qwen38-flashnext-strata` recipe (our exact flags and STRATA_* env), weights repo ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF
+added to the download allow-list, docs and 25 new tests (340 pass on Python 3.9/3.12/3.14). Prepared by a Claude Opus 5.5
+subagent. The engine source it points at is the public branch hotschmoe/Strata b70-night-20261016 (1c360526).
+CONFIG -> launcher branch feat/strata-engine on the maintainer's 0.6.14 (06bf7af), a fresh clone of the Strata branch,
+our release binary, pack and MTP layer, isolated launcher state; both B70s, hotschmoe-dd stopped 20:33:52-20:36:53 UTC.
+RESULT -> first live attempt (20:22) reported "exited" after 5 s: a launcher race (a container created but not yet
+started reads as Running false / ExitCode 0 for 1-3 s with a 14.6 GB image), fixed in shared runtime code with a test;
+the same rendered command run by hand loaded fine. Second attempt on 7381fb3: ready in 32 s, /v1/models ok, b70 test
+ok, 512-token reply 135 tok/s incl. prompt (one request), metrics read, clean stop in 4 s, health before/after ok.
+VERDICT -> PR #4 opened with nine open questions for the maintainer (entry layout, fork branch until #1798/#2205 land,
+stop timeout, images not in the recipe).
