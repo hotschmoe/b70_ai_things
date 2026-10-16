@@ -1,0 +1,17 @@
+[
+  {
+    "first_line": 2142,
+    "last_line": 2155,
+    "text": "// Word-valued opt-in, latched on first eligible Q5 head call. The host-parsed\n// scalar is captured as an argument; the device never sees a literal ones vector.\nint q5_head_runtime_ones_word() {\n    static int word = [] {\n        const char* e = std::getenv(\"STRATA_Q5_HEAD_RUNTIME_ONES\");\n        if (e == nullptr || std::strcmp(e, \"0\") == 0) return 0;\n        char* end = nullptr;\n        const unsigned long parsed = std::strtoul(e, &end, 16);\n        if (end == nullptr || *end != '\\0' || parsed != 0x01010101ul)\n            throw std::invalid_argument(\"STRATA_Q5_HEAD_RUNTIME_ONES requires 01010101 (or unset/0)\");\n        return static_cast<int>(parsed);\n    }();\n    return word;\n}\n"
+  },
+  {
+    "first_line": 2169,
+    "last_line": 2181,
+    "text": "// Separate C6 opt-in; parsing is deferred until an eligible C6 head call.\nint q5_head_runtime_ones_c6_word() {\n    static int word = [] {\n        const char* e = std::getenv(\"STRATA_Q5_HEAD_RUNTIME_ONES_C6\");\n        if (e == nullptr || std::strcmp(e, \"0\") == 0) return 0;\n        char* end = nullptr;\n        const unsigned long parsed = std::strtoul(e, &end, 16);\n        if (end == nullptr || *end != '\\0' || parsed != 0x01010101ul)\n            throw std::invalid_argument(\"STRATA_Q5_HEAD_RUNTIME_ONES_C6 requires 01010101 (or unset/0)\");\n        return static_cast<int>(parsed);\n    }();\n    return word;\n}\n"
+  },
+  {
+    "first_line": 4048,
+    "last_line": 4084,
+    "text": "    if (ggml_type == 13 && n_in == 2560 && n_out == 248320 && ncols == 2 && wide_k() && wide_k_rpw() == 1) {\n        const int ones_word = q5_head_runtime_ones_word();\n        if (ones_word != 0) {\n            validate_shape(n_in, ncols, QK);\n            validate_pointer(weights);\n            validate_pointer(x_q8_1);\n            validate_pointer(y);\n            validate_stream(stream);\n            static const bool logged = [] {\n                std::fprintf(stderr, \"strata Q5 head runtime ones: enabled=1 word=01010101 N=2560 M=248320 C=2 RPW=1 host-selection-only\\n\");\n                return true;\n            }();\n            (void) logged;\n            launch_q5_head_runtime_ones(weights, x_q8_1, y, n_in, n_out, ones_word, strata::q_of(stream));\n            launch_check();\n            return;\n        }\n    }\n    if (ggml_type == 13 && n_in == 2560 && n_out == 248320 && ncols == 6 && wide_k() && wide_k_rpw() == 1) {\n        const int ones_word = q5_head_runtime_ones_c6_word();\n        if (ones_word != 0) {\n            validate_shape(n_in, ncols, QK);\n            validate_pointer(weights);\n            validate_pointer(x_q8_1);\n            validate_pointer(y);\n            validate_stream(stream);\n            static const bool logged = [] {\n                std::fprintf(stderr, \"strata Q5 head runtime ones C6: enabled=1 word=01010101 N=2560 M=248320 C=6 RPW=1 host-selection-only\\n\");\n                return true;\n            }();\n            (void) logged;\n            launch_q5_head_runtime_ones_c6(weights, x_q8_1, y, n_in, n_out, ones_word, strata::q_of(stream));\n            launch_check();\n            return;\n        }\n    }\n    native_mmvq(ggml_type, weights, x_q8_1, y, n_in, n_out, ncols, stream);\n"
+  }
+]

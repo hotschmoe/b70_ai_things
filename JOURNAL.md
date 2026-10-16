@@ -25569,3 +25569,27 @@ error drains. Actual subsequent Opus45.326265s/Fable30.869940s source
 reviews retain this lower-priority option behind profile/marker fix;
 S131 cause remains unmeasured. See
 docs/20261016_strata_cross_queue_graph_events.md.
+
+
+## 2026-10-16 S137: tiny CPU reproduction explains wrong host marker
+
+CONFIG -> S134 failed marker under actual fe57222e/C2=0/C6wordON.
+Read only actual native head/parsers/selected symbols/string offsets.
+
+COMMAND -> Narrow host disassembly shows both log blocks bind C2 text
+while parser words/guards/getenv strings/C6 metadata remain distinct.
+One e41/noDRI CPU command compiles/runs two tiny source spellings with
+icpx2026.1 -O3 precise C++20 -fsycl; no device/AOT/model/main build.
+
+RESULT -> Original sibling local statics named logged print C2,C2;
+changing only C6 identifier to logged_c6 prints C2,C6. Both native runs0,
+wrapper0/12.733256s. Exact compiler pass, behavior without -fsycl and
+actual S134 GPU dispatch remain UNKNOWN. S134 is not requalified.
+
+VERDICT -> Two-token C6-name source fix retained separately with exact
+inverse: e25708bf->dd08daf5, math/parsers/launch/policy unchanged.
+Actual Opus5.5 45.326265s/Fable5.1 30.869940s both source/build GO,
+requiring only demonstrated-defect HOST references/guards/Info check
+before new GPU reload, no broad ISA/image certification or CPU repeat.
+Then fresh same-NEW-binary strict arms; no retroactive HOLD waiver. See
+docs/20261016_strata_sycl_sibling_static_marker.md.

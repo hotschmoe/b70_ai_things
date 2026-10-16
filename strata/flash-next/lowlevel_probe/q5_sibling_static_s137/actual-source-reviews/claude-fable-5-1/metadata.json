@@ -1,0 +1,26 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 30.869940494012553,
+  "launch_exception": null,
+  "source_packet_sha256": "cb0d3adf85a32a53ce6a2520121d233ea6c8d614108b6d2d56023793769da4f7",
+  "source_packet_unchanged": true,
+  "parse_errors": [],
+  "retries": 0,
+  "completion_source": {
+    "absolute_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s134-s138-host-fix-reviews-20261016/claude-fable-5-1/completion.json",
+    "bytes": 7495,
+    "sha256": "8c6244f178826005d5f70ff882974230dca4189ffce3dec8a5ee3b3771a295dc"
+  },
+  "prompt_sha256": "bebe2b59611329aaccf3c5630ff033fb661179bfd9bc792ac18975eda34b5598",
+  "filter_scope": "Result/model/session/status identities only; no cumulative usage/events or duplicate result body."
+}

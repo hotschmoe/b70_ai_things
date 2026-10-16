@@ -1,0 +1,2 @@
+strata Q5 head runtime ones: enabled=1 word=01010101 N=2560 M=248320 C=2 RPW=1 host-selection-only
+strata Q5 head runtime ones C6: enabled=1 word=01010101 N=2560 M=248320 C=6 RPW=1 host-selection-only

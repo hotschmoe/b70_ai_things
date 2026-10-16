@@ -1,0 +1,21 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_ROOT_AUTHORIZED_TINY_CPU_EXECUTION_NEXT",
+  "files": {
+    "README.txt": {
+      "bytes": 694,
+      "sha256": "5de9459f01af756fa63e5e43c2d238647b35fb515fe8c6fe94e45aec4922f431"
+    },
+    "command.json": {
+      "bytes": 627,
+      "sha256": "714401cfeb20f110e5b4d7c6257d5ddc122ba53055bada6f2b55dc74ee8fd5f8"
+    },
+    "commands.sh": {
+      "bytes": 613,
+      "sha256": "33201876961330ed3da9cd33c44bc59ff3a2f474d1a8aada73d9617499401283"
+    },
+    "repro.cpp": {
+      "bytes": 2110,
+      "sha256": "e32627d55664f346716059d41fe5ba61b36cb9fa56bdd2eea63306eecd42c841"
+    }
+  }
+}

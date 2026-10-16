@@ -1,0 +1,65 @@
+Model ID: claude-opus-5-5
+
+(1) S134/S137 INTERPRETATION AND S138
+
+Facts:
+- **The failure.** The S134 ON arm stopped at the warm-up marker gate before any pair record, parity comparison or timed request. That was the correct behaviour, and the failure stays recorded as a HOLD.
+- **The process.** The same executable fe57 ran with C2=0 and C6=01010101. Normal QUIT, CID/name removal, final diagnostics and full post-health on both cards all passed.
+- **The host binary (S137).** The two parser word/guard pairs and the two getenv strings are distinct. The C6 kernel has its own CompileTimeKernelInfo. But both logging blocks fwrite the old C2 text at .rodata.str1.1+2a42, and the C6 marker string is absent from the binary.
+- **The CPU reproduction.** The tiny icpx 2026.1 -O3 -fsycl reproduction prints C2,C2. Renaming only the C6 static to logged_c6 prints C2,C6.
+
+Unknowns:
+- the exact compiler cause. One hypothesis: lambda-initializer identity collides for two block-scope statics with the same name in one function. It is unproven.
+- whether the C6 GPU kernel actually ran in S134, and its numerics in main;
+- whether any non-marker code is affected the same way.
+
+One limited inference: with C2's word parsed as 0, the C2 logging block should be unreachable. So the observed text is consistent with the C6 host branch having been selected. It does not prove C2 was enabled or that anything was dispatched on the GPU.
+
+S138 decision: SOURCE/MAIN BUILD GO.
+- **The change:** two lexical edits inside the C6 branch only. No device code, parser, launch, CMake or header changes.
+- **Build:**
+  - reuse the existing S133 configuration and the persistent offline cache, with no configure step;
+  - the real dry plan must show exactly 3 actions: the native TU, the kernels archive and the strata link;
+  - any other action: stop for root.
+
+(2) SMALLEST HOST CHECK, THEN THE GPU EXPERIMENT
+
+Host check (only this, before any GPU reload): disassemble `native_mmvq_head` in the new object or executable, using the same narrow method as S137.
+- The C2 logging block references the C2 string, and the C6 logging block references a distinct string whose bytes are the C6 marker literal. The C6 text must now exist in the string section.
+- The C6 block's guard, word and Info references remain distinct from C2's.
+- If C6 still points at C2 text: HOLD with no GPU run. Report it, and do not try alternate spellings automatically.
+
+This is not ISA or all-image certification. It directly targets the demonstrated defect.
+
+GPU experiment: GO, conditional on the host check passing.
+- **Binary and arms:** the same new binary, one window, two fresh processes. A new control (C2=0, C6=0) and ON (C2=0, C6=01010101). RPW2=0, every other candidate OFF, and the pinned policy (min-p 0, spec 4, MTP max T 4, depth 2, pair head ON, suffix 0, lookup 0).
+- **Gates:**
+  - ON prints the C6 marker exactly once and never the C2 marker; control prints neither;
+  - exact request, text, SSE, usage and native work (offered and accepted drafts, windows, pair/solo counts, captures) at every pair before the next;
+  - startup captures equal;
+  - functionals, normal QUIT, CID and name gone, fresh health on both cards and compiled health.
+  - The first failure stops the run, with no retry.
+- **Claims:** none about S134, and none that this resolves the S129 body HOLD or that the main C6 image matches the private one. Served exactness is the correctness evidence. Report timing descriptively only.
+
+(3) S135 IMPLICATIONS AND NEXT PRIORITIES
+
+S135 established only that, on this stack, same-context two-queue graph submission with vector-event barriers produced exact, fresh, ordered results across 8 depths with A/B/A, in both modes and both processes.
+
+It did not establish:
+- overlap;
+- Level Zero submission counts;
+- speed;
+- MTP numerics;
+- why S131 measured slightly slower. Its three pair-wall changes were all positive, but the cause is unmeasured.
+
+An S127 variant that replaces only the pre-forward host joins with an A-queue barrier is now API-feasible. It is not prioritized, because S131 gave no evidence of a gain, and the per-depth tail wait and h_out/PLE order must stay.
+
+Priorities:
+1. S138 build, host check and C6 control/ON pair, as above.
+2. In parallel on CPU after S136's closed health: the one planned raw parse. Rank head-free interval services within the one bounded cycle (6000 events or fewer, otherwise INCONCLUSIVE). Leave owner/tensor roles unknown where they are ambiguous, and do not compute critical-path budgets.
+3. Choose the next MTP mechanism from that ranking:
+   - **If HC reads are prominent** in the head-free interval: prepare the private paired-HC oracle (two serial T1 calls vs one n_tok=2 call, separate owner buffers, borrowed A.xn_, A/B/A eager and graph, exact consumed outputs). The paired source design is already reviewed as feasible.
+   - **If Q8 projections dominate instead:** the paired projection design needs gather/scatter costing first.
+   - **Owner-queue/event join work** ranks last.
+
+Avoid: repeating the S134 configuration on the old binary, further CPU reproductions, long soaks, and noise or causal claims about S131.

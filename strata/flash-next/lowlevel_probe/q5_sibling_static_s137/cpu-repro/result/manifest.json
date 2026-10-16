@@ -1,0 +1,73 @@
+{
+  "status": "FROZEN_ONE_ACTUAL_TINY_CPU_REPRO",
+  "files": {
+    "command.stderr": {
+      "bytes": 569,
+      "sha256": "6c676c3775d471a4aaaff93fb8402cf18b453e53b35123df5d6b8a83ec8a19a9"
+    },
+    "command.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "comparison.json": {
+      "bytes": 1966,
+      "sha256": "e20cd56d66fc8f80f6be83269ee44d9780c708f1f33420fccb6e834d05d981a7"
+    },
+    "compile0.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "compile0.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "compile1.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "compile1.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "compiler.txt": {
+      "bytes": 257,
+      "sha256": "06b5b1015f3c581440fb4cf00258edc0db8d98696ca3252cf69045e1f8c283d4"
+    },
+    "execution.json": {
+      "bytes": 154,
+      "sha256": "43ce99af8be17fcbaaade2959c4b1d8a19b73035efee4cd8cf664ffc03f60ecc"
+    },
+    "repro0": {
+      "bytes": 19352,
+      "sha256": "61ed6edf9af27426c588426f449025bc9a11b8072fd0673fe490f98053dfcd76"
+    },
+    "repro1": {
+      "bytes": 19352,
+      "sha256": "e5f5465f010090004f5515a9ba5f83ace6e124d73b443a44d09d7fa9c8201881"
+    },
+    "run0.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "run0.stderr": {
+      "bytes": 198,
+      "sha256": "3ea2652583e5307d5e0a2764f09cd6b2cc6b6190d18be53f644b317fd410c053"
+    },
+    "run0.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "run1.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "run1.stderr": {
+      "bytes": 201,
+      "sha256": "f5c3408705db5a3271170e69189639a90c8b7dbbfb9961aa297dca97d0456914"
+    },
+    "run1.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  }
+}

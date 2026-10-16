@@ -1,0 +1,24 @@
+{
+  "native_source": {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+    "bytes": 199284,
+    "sha256": "e25708bf5fcd6c4be0e189db415ac6031ba51d443f51723a39c5d9304ceb82ed"
+  },
+  "actual_artifact_SHA_scope": "Root actual build receipt, not a new main/object/archive hash",
+  "build_receipt": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-main-s133-build/build/build-sha256.txt",
+    "sha256": "0b00793353f8706103ddbec00bc1c4c8f5e88e7a06643ce8d3e3f738955249ab"
+  },
+  "EXE_sha256": "fe57222eea163dd7396f2bdabb95d2c18326a729c4d7919d400a9614f42d47ee",
+  "native_object_sha256": "9dc9cccc29eb293188e2d893705c9ee87475727b7fa43a9ccb66f58020533017",
+  "repro_source_manifest": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-sibling-marker-host-repro-prep/manifest.json",
+    "sha256": "c0cbdc223d161b78f3ecc433219f43d1ecdfedeea270c3a71e4df6ba2d642a28"
+  },
+  "repro_actual_comparison": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-sibling-marker-host-repro-run/comparison.json",
+    "sha256": "e20cd56d66fc8f80f6be83269ee44d9780c708f1f33420fccb6e834d05d981a7"
+  },
+  "object_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o",
+  "scope": "Three narrow actual host function objdumps + selected mangled symbols and small rodata read. No all-image extraction/device ISA/build/GPU/mainhash."
+}

@@ -1,0 +1,41 @@
+{
+  "status": "FROZEN_ACTUAL_HOST_DIAGNOSIS",
+  "files": {
+    "C2_parser.asm": {
+      "bytes": 3823,
+      "sha256": "edd4de14558229be7e2f2eb31d3343f123327fc0ebb1dde0d92edd63946fbeb3"
+    },
+    "C6_parser.asm": {
+      "bytes": 3865,
+      "sha256": "3a8c28ecb6aa859a0f8bc7b457bd015a035b85e1a811150fbed3ab2d2a22ce2b"
+    },
+    "critical-host-windows.asm": {
+      "bytes": 11368,
+      "sha256": "62d83658215c49232ad13562c2659cfde95427a51022ebf24e2d3d9ebeabf4f2"
+    },
+    "findings.md": {
+      "bytes": 3251,
+      "sha256": "c11887cf1ab1aabbd3f2d93a0cf0c0b30b00be6bfef8e2413fd9cde6087b0ac6"
+    },
+    "head.asm": {
+      "bytes": 59335,
+      "sha256": "de99009d2f4573cf08251b25628ff74d1442ca51bc199b7efb0e2161d2d17483"
+    },
+    "host-rodata-targets.json": {
+      "bytes": 813,
+      "sha256": "0c6e3e507460609b35769ac864ced920a1bc1ebd19dc57f1b061112e4354d627"
+    },
+    "pins.json": {
+      "bytes": 1571,
+      "sha256": "92f79c4e82bda83cf7935be896cf84d53e9f78cad6a564894624f010fbf1af54"
+    },
+    "selected-host-symbols.txt": {
+      "bytes": 1457,
+      "sha256": "eb8e8c3ee3b0e6134bb5de9da73f1c4ae5da81f6da6c28db1aa6023876b754f4"
+    },
+    "source-excerpts.json": {
+      "bytes": 3327,
+      "sha256": "5e81d7a331fbaf610d07199ba0daa78bdb6ae393af01ce430a91b0e1d731fbde"
+    }
+  }
+}

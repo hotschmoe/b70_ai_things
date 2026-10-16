@@ -1,0 +1,31 @@
+{
+  "status": "REPRODUCED_ORIGINAL_MARKER_ERROR_UNIQUE_C6_IDENTIFIER_FIXES_TINY_FIXTURE",
+  "original_stderr_lines": [
+    "strata Q5 head runtime ones: enabled=1 word=01010101 N=2560 M=248320 C=2 RPW=1 host-selection-only",
+    "strata Q5 head runtime ones: enabled=1 word=01010101 N=2560 M=248320 C=2 RPW=1 host-selection-only"
+  ],
+  "unique_identifier_stderr_lines": [
+    "strata Q5 head runtime ones: enabled=1 word=01010101 N=2560 M=248320 C=2 RPW=1 host-selection-only",
+    "strata Q5 head runtime ones C6: enabled=1 word=01010101 N=2560 M=248320 C=6 RPW=1 host-selection-only"
+  ],
+  "expected_lines": [
+    "strata Q5 head runtime ones: enabled=1 word=01010101 N=2560 M=248320 C=2 RPW=1 host-selection-only",
+    "strata Q5 head runtime ones C6: enabled=1 word=01010101 N=2560 M=248320 C=6 RPW=1 host-selection-only"
+  ],
+  "native_exits": [
+    0,
+    0
+  ],
+  "source_manifest": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-sibling-marker-host-repro-prep/manifest.json",
+  "source_manifest_sha256": "c0cbdc223d161b78f3ecc433219f43d1ecdfedeea270c3a71e4df6ba2d642a28",
+  "commands": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-sibling-marker-host-repro-prep/command.json",
+  "compiler": "Intel(R) oneAPI DPC++/C++ Compiler 2026.1.0 (2026.1.0.20260617)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /opt/intel/oneapi/compiler/2026.1/bin/compiler\nConfiguration file: /opt/intel/oneapi/compiler/2026.1/bin/compiler/../icpx.cfg\n",
+  "execution": {
+    "exit": 0,
+    "elapsed_s": 12.733256427978631,
+    "one_frozen_command": true,
+    "GPU_mainbuild": false,
+    "automatic_alternate_flags_or_retry": false
+  },
+  "scope": "Fresh standalone icpx -O3 precise C++20 -fsycl host fixture, no project CMake/offline AOT cache/device kernel/queue/GPU. Compiler pass/root cause and non-fsycl behavior untested. No main/live fix, no runtime dispatch assertion."
+}

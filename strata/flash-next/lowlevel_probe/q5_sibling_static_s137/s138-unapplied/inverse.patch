@@ -1,0 +1,16 @@
+--- a/sycl/src/kernels/cuda/native_mmvq.dp.cpp
++++ b/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+@@ -4071,11 +4071,11 @@
+             validate_pointer(x_q8_1);
+             validate_pointer(y);
+             validate_stream(stream);
+-            static const bool logged_c6 = [] {
++            static const bool logged = [] {
+                 std::fprintf(stderr, "strata Q5 head runtime ones C6: enabled=1 word=01010101 N=2560 M=248320 C=6 RPW=1 host-selection-only\n");
+                 return true;
+             }();
+-            (void) logged_c6;
++            (void) logged;
+             launch_q5_head_runtime_ones_c6(weights, x_q8_1, y, n_in, n_out, ones_word, strata::q_of(stream));
+             launch_check();
+             return;

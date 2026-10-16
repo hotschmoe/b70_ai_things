@@ -1,0 +1,27 @@
+Model: claude-fable-5-1.
+
+**1. S134/S137 interpretation and S138 decision**
+
+S134 facts: the ON process had C2=0 and C6=01010101 in its environment, yet printed the old C2 marker once and no C6 marker, and the client stopped before any timed request. S137 facts: in the built object both logging blocks write the same C2 string, while the two parsers, guards, words and kernel-info pointers are distinct. The tiny fresh reproduction shows the same symptom with the identical sibling static names and the correct output when only the C6 identifier differs.
+
+What this establishes: the marker text is wrong in the compiled host code, so the printed C2 marker is not evidence of which kernel ran. What it does not establish: whether the C6 kernel launched in S134, which compiler pass merged the two initialisers, or whether the full main build behaves like the reduction. S134 stays a failed, unqualified run.
+
+S138: GO for the two-identifier source change and the existing three-action incremental build with no configure. The change touches only the C6 block-local static name; parsers, launches, validation, literals and the OFF path are byte-exact, and the inverse is whole-TU exact. Blocker: none. The one condition is that the dry plan shows native TU, kernels archive and main link only; anything else stops for inspection rather than forcing dependencies.
+
+**2. Smallest host check and the serving experiment**
+
+The demonstrated failure is a host-code mislink of a string to a logging block, so the check is a host read, not device certification. On the new binary, disassemble only native_mmvq_head and confirm: the C6 logging block's fwrite references the C6 literal, the C2 block still references the C2 literal, and the C6 block still loads its own parser word and its own kernel-info symbol. That is one objdump of one function plus the string section, the same bounded read S137 already performed. If the C6 block still references the C2 text, HOLD, because the reduction would then not describe the main build.
+
+With that passing: GO for a fresh control and ON pair on the same new binary, C2 word zero in both arms, all other candidates off. Existing gates unchanged: identity and effective environment, warm plus three matched pairs with exact text, SSE, usage, offered and accepted drafts, windows, captures before the next pair, functionals, normal quit, container absence, fresh both-card and compiled health. The C6 marker must appear exactly once on ON and never on control, and the C2 marker must not appear on either arm. The private 42 percent result remains private evidence; the serving effect is unknown until this run reports.
+
+**3. S135 implication and MTP priorities**
+
+S135 proves only that this runtime honours event dependencies between executable graph submissions on two in-order queues of one context, with exact outputs under A, B, A. It measured no overlap and no submission counts. It makes an event-chained replacement of the pre-forward host joins a legitimate source option, nothing more. S131's negative result stays an unexplained observation; it does not say the joins caused it.
+
+Order after the C6 run:
+
+1. Close S136: one raw parse under the CPU lease after health, retain one complete head-free cycle or record INCONCLUSIVE. Use it to see which kernels dominate the head-free interval. Do not derive budgets from pooled historical service.
+2. Paired HC batching: the source note is right that a literal T=2 forward is wrong and that the three HC reads are the only clean shared-weight island today. Prepare the private oracle it describes only if S136 shows the HC reads matter inside that interval; otherwise park it.
+3. Event-chained pre-forward joins as a narrow S127 variant, only if S136 shows the pair's head-free forwards are a meaningful part of the interval and only as a same-binary flag against control.
+
+Avoid: repeating the CPU reproduction, any soak, treating the S131 or S130 deltas as measured mechanisms, and broad audit frameworks. Keep every result finite, same binary, strict, and separately flagged.

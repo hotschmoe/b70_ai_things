@@ -1,0 +1,29 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_UNAPPLIED",
+  "files": {
+    "README.md": {
+      "bytes": 1846,
+      "sha256": "4de3ca56e81b98c6e2504444b32610ec0cbed7fdbf2e1bdc76647087aa89a3a7"
+    },
+    "candidate.patch": {
+      "bytes": 736,
+      "sha256": "7ec63db37235dca07f8a0858791b1cd54a756fc610f3357ab50b6df0ab2c953f"
+    },
+    "inverse.patch": {
+      "bytes": 736,
+      "sha256": "e5ec906b158812ab97ed3bfa013166628d1cbd66ad668827de451c4dc85ca9ff"
+    },
+    "reference-pins.json": {
+      "bytes": 751,
+      "sha256": "7a6ae0a34325107afb68a4bf42bd26d233579b13563e3f481c37657dbb14ad3e"
+    },
+    "source-projection.json": {
+      "bytes": 1079,
+      "sha256": "f46e37ff8f78fb90feb95ded849285a558ba772a7e4d11c9761c194d028efb3d"
+    },
+    "source-review-packet.txt": {
+      "bytes": 3712,
+      "sha256": "b528a9fb2d623cf6721abb1fc4be9948bb3f8604cb9edec5132305f9e0a4de56"
+    }
+  }
+}

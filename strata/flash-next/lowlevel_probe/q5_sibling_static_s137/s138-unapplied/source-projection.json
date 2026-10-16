@@ -1,0 +1,22 @@
+{
+  "status": "SOURCE_ONLY_UNAPPLIED_C6_MARKER_IDENTIFIER_FIX",
+  "base_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+  "base_sha256": "e25708bf5fcd6c4be0e189db415ac6031ba51d443f51723a39c5d9304ceb82ed",
+  "post_sha256": "dd08daf548eab9ab69375ed1702dfa85214bd1431e9957126d12eea51ed569d1",
+  "base_bytes": 199284,
+  "post_bytes": 199290,
+  "exact_changes": [
+    "C6 block local static bool identifier logged -> logged_c6",
+    "C6 corresponding (void) use logged -> logged_c6"
+  ],
+  "inverse_entire_TU_exact": true,
+  "prefix_before_C6_branch_exact": true,
+  "suffix_after_C6_branch_exact": true,
+  "C6_branch_inverse_exact": true,
+  "device_math_helpers_parsers_launchers_marker_literals_unchanged": true,
+  "C2_branch_and_identifier_unchanged": true,
+  "CMake_headers_unchanged": true,
+  "tiny_repro_reference": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-sibling-marker-host-repro-run/comparison.json",
+  "actual_main_or_GPU_result": "PENDING_ROOT",
+  "build_apply_GPU_model_invocations": 0
+}

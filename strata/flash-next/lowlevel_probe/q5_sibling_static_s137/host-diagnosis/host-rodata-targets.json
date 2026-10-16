@@ -1,0 +1,29 @@
+{
+  "section": ".rodata.str1.1",
+  "ELF_file_offset": 1314968,
+  "section_bytes": 164513,
+  "selected": [
+    {
+      "section_offset_hex": "0x29eb",
+      "string": "STRATA_Q5_HEAD_RUNTIME_ONES"
+    },
+    {
+      "section_offset_hex": "0x2a07",
+      "string": "STRATA_Q5_HEAD_RUNTIME_ONES requires 01010101 (or unset/0)"
+    },
+    {
+      "section_offset_hex": "0x2a42",
+      "string": "strata Q5 head runtime ones: enabled=1 word=01010101 N=2560 M=248320 C=2 RPW=1 host-selection-only\n"
+    },
+    {
+      "section_offset_hex": "0x2b3d",
+      "string": "STRATA_Q5_HEAD_RUNTIME_ONES_C6"
+    },
+    {
+      "section_offset_hex": "0x2b5c",
+      "string": "STRATA_Q5_HEAD_RUNTIME_ONES_C6 requires 01010101 (or unset/0)"
+    }
+  ],
+  "C6_marker_present_in_object_rodata": false,
+  "C2_marker_present": true
+}
