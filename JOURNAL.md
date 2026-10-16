@@ -25045,3 +25045,29 @@ reset/retry/privateoracle rerun/candidate decoderrepeat/dailyrestore. Targets
 stillunmet/S30RAMrecoveryretained. Evidence:
 strata/flash-next/lowlevel_probe/mtp_parallel_argmax_serving_s114/ and
  docs/20261016_strata_mtp_parallel_argmax.md.
+
+
+## 2026-10-16 S117: offline AOT cache discriminator stops at setup
+
+CONFIG -> Existing selected samplerSPIRV S10712064B/S11412060B only;
+no main relink/sourcecompile/GPU/modelread. Target S114AOTlink146.468s
+dev-loop cost, not modelthroughput. Pinned e41/ocloc26.22.38646.4/UID1000/
+4CPU/noDRI/networknone/diskTMP/runtimecacheOFF, real hit/miss and native
+prefix/meta/options/constant/relocation gates before next plannedcall.
+COMMAND -> Actualhelp/-### supportsallow_caching/cache_dir and forwards
+flagsunchanged; sourceprep28checksums verified bywrapper, rootlater all28
+dictionarymanifest identities independentlyverified. ONEcpu-run run.sh
+handle48558 terminal1/9s/tee0. No rerun.
+RESULT -> Firstcold ocloc exit225/.003115452s: Failed to create directory
+'ocloc_cache'. No compilerbinary/comparison/statistics/warm/changedcall.
+Intendedabsolutedirs UID1000/writable; actualcwd/errnoUNOBSERVED. Matching
+26.22.38646.4 source parsesbothflags first then defaultdir canoverride CLI
+cache_dir; flagorder notsupportedcause. Cache-stat subcommand override
+differs, so its help/query didn'tqualifycompileinitialization.
+VERDICT -> PreserveHOLD/setupfailure, no cachehit/miss/buildgain claim.
+Later explicitversionedsetup mayalignprecreated NEO_CACHE_DIR/CLI/stats
+andownedcwd; noautomaticretry/full146slink warranted. Heavywork remains
+leased; rootspendsnextGPUwindow on S116HC ifcompiledgatespass. All19small
+curatedsourcecopies match; no binary/SPIRVcopy. Evidence:
+strata/flash-next/lowlevel_probe/offline_aot_cache_s117/ and
+ docs/20261016_strata_offline_aot_cache.md.

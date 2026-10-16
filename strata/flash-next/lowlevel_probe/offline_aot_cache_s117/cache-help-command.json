@@ -1,0 +1,24 @@
+{
+  "argv": [
+    "docker",
+    "run",
+    "--rm",
+    "--network",
+    "none",
+    "--cpus",
+    "1",
+    "-u",
+    "1000:1000",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges",
+    "--entrypoint",
+    "bash",
+    "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+    "-c",
+    "[[ ! -e /dev/dri ]] && /usr/bin/ocloc cache -help"
+  ],
+  "exit": 0,
+  "scope": "correct cache-specific -help instructed by actual pinned error; no compilation"
+}

@@ -1,0 +1,5 @@
+{
+  "ocloc_sha256": "7a418c1e7dfc62b6fb3895bea111647fa3e1ff600bb69f6be2a3114b90c41eac",
+  "version": "26.22.38646.4\n",
+  "ldd": "\tlinux-vdso.so.1 (0x00007c72f08ce000)\n\tlibocloc.so => /lib/x86_64-linux-gnu/libocloc.so (0x00007c72f06fd000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007c72f04eb000)\n\tlibstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007c72f026d000)\n\tlibm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007c72f0184000)\n\tlibgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007c72f0154000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007c72f08d0000)\n"
+}

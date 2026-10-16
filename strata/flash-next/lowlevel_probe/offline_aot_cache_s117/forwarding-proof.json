@@ -1,0 +1,22 @@
+{
+  "status": "PASS_DRIVER_NO_EXECUTE_FORWARDING",
+  "actual_ocloc_argv": [
+    "/usr/bin/ocloc",
+    "-output",
+    "/out/tmp/icpx-17bee21b42/mtp-72194b.txt",
+    "-file",
+    "/out/tmp/icpx-17bee21b42/mtp-7a1dd9.txt",
+    "-output_no_suffix",
+    "-spirv_input",
+    "-device",
+    "bmg-g31",
+    "-options",
+    "-cl-fp32-correctly-rounded-divide-sqrt",
+    "-allow_caching",
+    "-cache_dir",
+    "/out/cache"
+  ],
+  "actual_internal_options": null,
+  "no_output_created": true,
+  "compiler_or_device_execution": false
+}

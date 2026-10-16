@@ -1,0 +1,2 @@
+Error: Failed to create directory 'ocloc_cache'.
+Command was: /usr/bin/ocloc -output sampler -file /prep/inputs/S107-sampler.spv -output_no_suffix -spirv_input -device bmg-g31 -options "-cl-fp32-correctly-rounded-divide-sqrt" -allow_caching -cache_dir /out/offline-cache -out_dir /out/cold

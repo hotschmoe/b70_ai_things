@@ -1,0 +1,39 @@
+{
+  "status": "EXTERNAL_REFERENCES_NO_BINARY_INPUTS_COPIED",
+  "raw_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
+  "original_prep_manifest": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/aot-cache-discriminator-prep-manifest.json",
+    "sha256": "7ad0fbee0f0c327b95bed2baa74716b89ce1bcfc7642ad5e05defdfbda2f86c8"
+  },
+  "source_clarification_manifest": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/aot-cache-first-attempt-source-audit-manifest.json",
+    "sha256": "2912e9396eb0578576e74bf48e4f0cfd2118c5a589a672a9ae3e354ea3143822"
+  },
+  "source_clarification": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/aot-cache-first-attempt-source-audit/findings.md",
+    "sha256": "14f7521b6680a8f913960ef9e13f449f01011c4dea59d96fe1e77e86968c3238"
+  },
+  "full_compile_help": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/aot-devloop-source-audit/ocloc-compile-help.stdout",
+    "sha256": "f0346c44b0cb404d7cb4e21c776bdd2c484450ae7f1a5253abf01bd1c185f37b",
+    "curated_excerpt": "compile-cache-help-excerpt.txt"
+  },
+  "full_driver_no_execute_plan": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/aot-cache-discriminator-prep/preflight/driver.stderr",
+    "sha256": "66e6cbd97e3ba986ca21a2ef8d148ce47418d5dea2aa3e0d353e82482c4c33df",
+    "exact_derived_forwarding_record": "forwarding-proof.json"
+  },
+  "root_manifest_verification": "Root reports later independent dictionary-manifest verification; original run.sh checksum check verified all28 prep files before CPU invocation. Root verification remains external.",
+  "primary_version_matched_sources": [
+    {
+      "url": "https://github.com/intel/compute-runtime/blob/26.22.38646.4/shared/offline_compiler/source/offline_compiler.cpp",
+      "lines": "initialize982..1083; cacheCommand535..542; CLI parsing",
+      "claim": "CLI parsed before cache initialization; compile honors CLI cache_dir only when default config directory is empty; cache statistics command uses its explicit directory differently."
+    },
+    {
+      "url": "https://github.com/intel/compute-runtime/blob/26.22.38646.4/shared/source/compiler_interface/default_cache_config.cpp",
+      "lines": "26..55",
+      "claim": "NEO_CACHE_DIR takes priority in enabled default configuration; provided directory must already exist; NEO_CACHE_STATS active only for enabled valid config."
+    }
+  ]
+}

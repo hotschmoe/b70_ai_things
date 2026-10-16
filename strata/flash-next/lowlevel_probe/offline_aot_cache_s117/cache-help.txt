@@ -1,0 +1,12 @@
+Usage: ocloc cache [action] [options]
+
+Actions:
+  -show-stats         Show cache statistics. With -verbose, it shows stats from all subdirectories.
+  -zero-stats         Reset cache statistics.
+  -clear              Clear all cached files from the cache directory.
+  -version            Show the current compiler cache version.
+  -help               Print this help message.
+
+Options:
+  -dir <path>         Set the compiler cache directory.
+  -verbose            Show verbose messages.

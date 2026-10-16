@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "docker",
+    "run",
+    "--rm",
+    "--network",
+    "none",
+    "--cpus",
+    "1",
+    "-u",
+    "1000:1000",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges",
+    "-e",
+    "NEO_CACHE_STATS=1",
+    "-v",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/aot-cache-discriminator-prep/preflight:/out",
+    "--entrypoint",
+    "bash",
+    "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+    "-c",
+    "[[ ! -e /dev/dri ]] && /usr/bin/ocloc cache -show-stats -dir /out/NO_COMPILE_CACHE -verbose"
+  ],
+  "exit": 0,
+  "scope": "read-only statistics on absent isolated cache; no compilation"
+}

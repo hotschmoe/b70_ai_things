@@ -1,0 +1,5 @@
+  -allow_caching                            Allows caching binaries from compilation (like spirv,
+                                            gen or debug data) and loading them by ocloc
+                                            when the same program is compiled again.
+  -cache_dir <output_dir>                   Optional caching directory.
+                                            Default directory is "ocloc_cache".

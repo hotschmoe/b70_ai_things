@@ -1,0 +1,5 @@
+Ocloc cache directory changed to: /out/NO_COMPILE_CACHE
+Reading cache statistics from path: /out/NO_COMPILE_CACHE
+Compiler cache stats:
+
+No stats found in cache directories.
