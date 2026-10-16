@@ -1,0 +1,19 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 50.086503084981814,
+  "launch_exception": null,
+  "source_packet_sha256": "b115c80eaabe63fc05793ad73cc52b0a4083412b3c60519fa329ebaf756cb9d3",
+  "source_packet_unchanged": true,
+  "parse_errors": [],
+  "retries": 0
+}

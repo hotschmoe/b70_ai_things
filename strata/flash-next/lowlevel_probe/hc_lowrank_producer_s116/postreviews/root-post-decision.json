@@ -1,0 +1,35 @@
+{
+  "status": "S116_RETAIN_BOUNDED_PRIVATE_PROOF_DEFER_MAIN_BUILD_S119_ACCEPT_CACHE_MECHANISM_NEXT_REQUIRED_BUILD_ONLY",
+  "actual_models": [
+    {
+      "responding_models": [
+        "claude-opus-5-5"
+      ],
+      "exit": 0,
+      "elapsed_s": 52.55109219800215,
+      "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e"
+    },
+    {
+      "responding_models": [
+        "claude-fable-5-1"
+      ],
+      "exit": 0,
+      "elapsed_s": 48.83498633198906,
+      "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+    }
+  ],
+  "packet_sha256": "7f9794a12bb8b6fec6f40d806415462eeef2168ac30997aace3351574689665b",
+  "root_full_read_both_actual_answers": true,
+  "S116": "All strict/anchor/intermediate/graph/special/lifecycle/healthPASS; same28swindow; oneprocess8whole-readHOSTtimes; medians73.766->72.593us. Retainprivatecorrectnesssource andresult; no immediateprivate-repeat or dedicatedmainintegration/serving/cachecampaign/defaultpromotion. Futuremainintegrationstillneedsownsource/compiled/strictservingchecks, not freeapproval.",
+  "S119": "Genuineexact-inputcachehit/changedIRmiss;ALL3fullimagesandtextsbyteexact respectiveoriginals; acceptboundedmechanism. Pinpersistentofflinecache on NEXT OTHERWISE REQUIRED build withsource/SDK/flags/artifactbindings andactualcache+linkreceipts. No standalone146slinktest or wholemainforecast.",
+  "root_corrections": [
+    "Both models infer firstcontrol91.264us cause/coldness or state it is not an effect. Cause UNPROVEN; keep all8, flag first samplehigher, noselectiveexclusion/significance/noisebandclaim.",
+    "Fable orderedregister-erasedsignatures do not prove GRFoperand/dependencyidentity, fixturebytes prove onlyobservedcases notuniversalSSA.",
+    "No universaldenorm/nonfinite/signedzero/storeforwardguarantee; actual raw-minuszero enteringnewactivation NOTexercised; negativezero DOESappear lo from negative-minsubnormal.",
+    "Historicalinstrumentedfamilymedians are ranking, NOT a rigorouscleanwall upperbound or calibratedservingnoiseband.",
+    "Opus config-onlydepth3retry NOT selected: S21alreadyrejecteddepth3; no repeatedarmwithoutactualnewmechanism.64totaloutput/24windows is aggregate acrossTWOstreams, notperstream3tokwindowceiling, and windowsmixneedsnativeboundaries. Existinglog/sourceaudit mayinvestigate postS21pairedhead mechanism and actualperstepacceptanceavailability but noautomaticdepth3GPUtest."
+  ],
+  "next_selected": "Primarydense nonvocabularyMMVQ source/shape/quant/operator ranking from EXISTING SMALL S95census and currentpinnednames/callers, sourceonly. ExistingGU17CPUcalibration canclosecheaply withretainedS97ISA, but isnot dominantwholeGU/no newkernel yet. PreserveTG17IQ2_XScorrection andTG21E4/E2reuse whenconsideringlargerfusion.",
+  "GPU_tests_queued": false,
+  "goal": "ACTIVE targetsunmet/S30trueRAMrestore retained; no dailyrestore/soak/rejectedknobrerun."
+}

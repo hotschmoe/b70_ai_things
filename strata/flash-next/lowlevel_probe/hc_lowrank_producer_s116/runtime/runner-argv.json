@@ -1,0 +1,15 @@
+[
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-run-prep/leased_run.py",
+  "--out",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-private-run",
+  "--audit",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s116-compiled-reviews-20261016/root-gpu-go.json",
+  "--audit-sha256",
+  "f09a2ea4434c834dd10ace098755e752c73f86d962c76542245b90cdec7c92f9",
+  "--manifest-sha256",
+  "3a92134aeae6ceb56a12912a6aa4c6c113cfcca7bc4c31d51ecea0c500306d55",
+  "--reuse-prehealth-proof",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s116-compiled-reviews-20261016/root-prehealth-reuse.json",
+  "--reuse-prehealth-sha256",
+  "6e413b6841638fbc3fc21588ee80760b0e90411e5105f15fe7b391bf4c4e385d"
+]

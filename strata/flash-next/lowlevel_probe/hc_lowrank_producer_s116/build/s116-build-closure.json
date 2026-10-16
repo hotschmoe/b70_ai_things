@@ -1,0 +1,17 @@
+{
+  "status": "PASS_ONE_OFFLINE_PRIVATE_BUILD_COMPILED_AUDIT_PENDING_NO_GPU",
+  "handle": 78345,
+  "wrapper_exit": 0,
+  "wrapper_seconds": 23,
+  "compile_seconds": 10.83,
+  "six_image_AOT_seconds": 1.749,
+  "host_link_seconds": 0.199,
+  "exe_sha256": "33e390536480f83f169a63e1f9d2f2e06d8e341279a956c84a29a255951c46d3",
+  "exe_bytes": 822704,
+  "frozen14inputs_unchanged": true,
+  "ownership1000": true,
+  "build_prepost_expected_hashes": "ALL5x2 OK actual build.log",
+  "GPU": 0,
+  "production_edits": 0,
+  "actual_selected_image_count": "PENDING AUDIT; six source class definitions not yet counted compiled"
+}

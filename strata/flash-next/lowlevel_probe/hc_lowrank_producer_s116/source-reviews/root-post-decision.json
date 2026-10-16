@@ -1,0 +1,36 @@
+{
+  "status": "S114_RETAIN_DEFAULT_OFF_CLOSE_NO_REPEAT_S116_ONE_CPU_PRIVATE_BUILD_GO",
+  "actual_reviews": [
+    {
+      "responding_models": [
+        "claude-opus-5-5"
+      ],
+      "exit": 0,
+      "elapsed_s": 68.06181614997331,
+      "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e"
+    },
+    {
+      "responding_models": [
+        "claude-fable-5-1"
+      ],
+      "exit": 0,
+      "elapsed_s": 86.53539112798171,
+      "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+    }
+  ],
+  "packet_bytes": 61186,
+  "packet_sha256": "b3ee4b8220969209a348e5b06f7f47fe7b2795e98e28ef476e0251d0f8817fc7",
+  "root_read": "FULL actual Opus and Fable answers; complete S116header/oracle/buildscripts/README/anchorpreflight/projection/pins + full packet contract. Independent all6source chunks projectedexact,14frozen files verified.",
+  "S114": "PASS all comparison checks;103.0737164651->103.6737783239 +.5821676751%;fixedOFFthenON3nested; all correctfunctionals/normalstop/fullhealth. No repeat/cachecampaign/default/shelf or generalizedgain.",
+  "S116_GO": "ONE offline private6class build then selected compiledaudit only; NO GPU or productionedit. Keep frozen source.",
+  "anchor_obligation_closed": "36mode1 hashes actual preflight0;36newmode0 hashes equal savedhash+S39comparison; actual S39v2 source ae2fb80d/buildclosure,747776fieldorderinclxn and0xffpoison verified. Original provenance/addendum retained.",
+  "root_corrections": [
+    "Fable claim any FP32 stored-forwarded load can never differ across context is NOT universal proof: actual materialized operand/order/CR0/lowering must be read.",
+    "Fable division/mul0.25 universal finite/subnormal equivalence is NOT accepted without actual instruction/control-mode evidence. Different form HOLD for explicit root decision, no automatic tolerance.",
+    "Fable closing probability path or selector/submission changes as a class is overbroad: S111probskip onlySOURCEPREP and notexecuted. These individual small serving comparisons close, not every mechanism.",
+    "Static source counts/historical HCservice/privateS112percent do not predict current throughput.",
+    "Resource/scheduling differences explicit; absent spill/scratch UNKNOWN, metadata barrier_count not staticinstructioncount."
+  ],
+  "next_stop": "Control compiled mismatch, candidate FP/operand/order/resources unsupported, any strict/anchor/capture/guard failure HOLD; no automatic retry/reset/tolerance. GPU lifecycle+healthrunner+separatecompiled actualmodels/rootGO still needed.",
+  "cache_probe_separate": "OneCPUsetupcold attempt exited225 before compilation due defaultocloc_cache directory; no warm/changed/hit/speed/GPUclaim. Source explanation/curation only now, no retry."
+}

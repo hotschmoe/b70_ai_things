@@ -1,0 +1,620 @@
+{
+  "CONFIG": "S116 independent offline host/ISA review; no decode/build/GPU/model/run",
+  "inputs": {
+    "new_reduce": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep-built-audit/candidate-isa/candidate_reduce/disasm/.text.s116_candidate_reduce.asm",
+      "bytes": 118767,
+      "sha256": "9870fb2a23b28a3e4edf3f94dca5b8f788e551a8301c03ee092e631441373776"
+    },
+    "new_up": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep-built-audit/candidate-isa/candidate_up/disasm/.text.s116_candidate_up.asm",
+      "bytes": 621660,
+      "sha256": "86fd2cd952e845790de1fe1b1531eb121133cc481397bef007a62e15387d023f"
+    },
+    "old_reduce": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/reduce-isa/disasm/.text.hc_reduce.asm",
+      "bytes": 110420,
+      "sha256": "50dd08418b95a26a4f56e9acb6cccebeaece48a6b0687b292edeadba65f8fdb6"
+    },
+    "old_up": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/up-isa/disasm/.text.hc_up.asm",
+      "bytes": 626376,
+      "sha256": "21d6b5f3546f2817004265222a7f65b39bee9b885a01f2bd94d65111b9839457"
+    }
+  },
+  "facts": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep-built-audit/facts.json",
+    "bytes": 225761,
+    "sha256": "4ea58731caaa8ceb2ee7d308ee8fb4c24e400d54b1d6a9582d6ded9229ab9948"
+  },
+  "control_comparison": {
+    "control_up": {
+      "checks": {
+        "computational_prefix_exact": true,
+        "normalized_execution_argument_metadata_exact": true,
+        "options_exact": true,
+        "constant_data_exact": true,
+        "raw_normalized_relocation_sections_exact": true,
+        "decoded_normalized_relocations_exact": true
+      },
+      "PASS": true,
+      "computational_prefix_bytes": 82848,
+      "raw_full_image_exact": false,
+      "raw_complete_text_exact": false,
+      "new_text_bytes": 83072,
+      "original_text_bytes": 83072,
+      "first_changed_offset_common_length": 82860,
+      "reference_ASM": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/up-isa/disasm/.text.hc_up.asm",
+      "reference_ASM_sha256_reused": "21d6b5f3546f2817004265222a7f65b39bee9b885a01f2bd94d65111b9839457",
+      "reference_scope": "Exact S115 selected computational body/resources/options/constants/relocations; raw trailing image/text equality is separately reported. Norm/down retained exact source, no new original-object/archive audit."
+    },
+    "control_reduce": {
+      "checks": {
+        "computational_prefix_exact": true,
+        "normalized_execution_argument_metadata_exact": true,
+        "options_exact": true,
+        "constant_data_exact": true,
+        "raw_normalized_relocation_sections_exact": true,
+        "decoded_normalized_relocations_exact": true
+      },
+      "PASS": true,
+      "computational_prefix_bytes": 16272,
+      "raw_full_image_exact": false,
+      "raw_complete_text_exact": false,
+      "new_text_bytes": 16512,
+      "original_text_bytes": 16512,
+      "first_changed_offset_common_length": 16284,
+      "reference_ASM": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/reduce-isa/disasm/.text.hc_reduce.asm",
+      "reference_ASM_sha256_reused": "50dd08418b95a26a4f56e9acb6cccebeaece48a6b0687b292edeadba65f8fdb6",
+      "reference_scope": "Exact S115 selected computational body/resources/options/constants/relocations; raw trailing image/text equality is separately reported. Norm/down retained exact source, no new original-object/archive audit."
+    }
+  },
+  "host_files": {
+    "host-0.asm": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep-built-audit/host-0.asm",
+      "bytes": 35431,
+      "sha256": "9877c6940d07fe791890b990282d383ebb662590323bbcd05500d7918bd9ec21"
+    },
+    "host-1.asm": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep-built-audit/host-1.asm",
+      "bytes": 34400,
+      "sha256": "23bed54ce42fe54c3f5cf7cea5ab924ae2ca1e32ca90a837b0a83d8bc6b5aa4d"
+    },
+    "host-2.asm": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep-built-audit/host-2.asm",
+      "bytes": 30843,
+      "sha256": "77212b9071e8432ac336177d217b81f6ec7b011475366c99c71f1185423360d4"
+    },
+    "host-3.asm": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep-built-audit/host-3.asm",
+      "bytes": 43144,
+      "sha256": "ba9b520305116a8614af4e76f6e10a11ff836e1eb93c06f5cf75abdaa0138d0f"
+    }
+  },
+  "bindings": {
+    "norm": {
+      "Info": "0x42ef90",
+      "guard_cache": [
+        [
+          "_ZGV",
+          "0x4b9830"
+        ],
+        [
+          "_ZZN",
+          "0x4b9828"
+        ]
+      ],
+      "name_pointer": "0x42ccfd",
+      "kernel_name": "_ZTS16dpct_kernel_nameIJN12s116_private10HCNormS116EEE"
+    },
+    "down": {
+      "Info": "0x42f2b8",
+      "guard_cache": [
+        [
+          "_ZGV",
+          "0x4b9840"
+        ],
+        [
+          "_ZZN",
+          "0x4b9838"
+        ]
+      ],
+      "name_pointer": "0x42cd3f",
+      "kernel_name": "_ZTS16dpct_kernel_nameIJN12s116_private10HCDownS116EEE"
+    },
+    "control_reduce": {
+      "Info": "0x42f4f8",
+      "guard_cache": [
+        [
+          "_ZGV",
+          "0x4b9860"
+        ],
+        [
+          "_ZZN",
+          "0x4b9858"
+        ]
+      ],
+      "name_pointer": "0x42ce3b",
+      "kernel_name": "_ZTS16dpct_kernel_nameIJN12s116_private19HCControlReduceS116EEE"
+    },
+    "control_up": {
+      "Info": "0x42f8b8",
+      "guard_cache": [
+        [
+          "_ZGV",
+          "0x4b9880"
+        ],
+        [
+          "_ZZN",
+          "0x4b9878"
+        ]
+      ],
+      "name_pointer": "0x42ceb9",
+      "kernel_name": "_ZTS16dpct_kernel_nameIJN12s116_private15HCControlUpS116EEE"
+    },
+    "candidate_reduce": {
+      "Info": "0x42f310",
+      "guard_cache": [
+        [
+          "_ZGV",
+          "0x4b9850"
+        ],
+        [
+          "_ZZN",
+          "0x4b9848"
+        ]
+      ],
+      "name_pointer": "0x42cdf9",
+      "kernel_name": "_ZTS16dpct_kernel_nameIJN12s116_private21HCCandidateReduceS116EEE"
+    },
+    "candidate_up": {
+      "Info": "0x42f6e0",
+      "guard_cache": [
+        [
+          "_ZGV",
+          "0x4b9870"
+        ],
+        [
+          "_ZZN",
+          "0x4b9868"
+        ]
+      ],
+      "name_pointer": "0x42ce7b",
+      "kernel_name": "_ZTS16dpct_kernel_nameIJN12s116_private17HCCandidateUpS116EEE"
+    }
+  },
+  "resources": {
+    "norm": {
+      "image_sha256": "25ccad63352ac30486b58ae61fb7c6fc07454056cd9f839793427d1fa05a0638",
+      "text_sha256": "280124b062d9efce58a4ef2210713425ef2c221eacfe6be7f5e457f3b33a3dc5",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [
+          "64"
+        ],
+        "barrier_count": [
+          "1"
+        ],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "options": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "data_and_relocations": {
+        "data_sections": {},
+        "relocations": [
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private10HCNormS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private10HCNormS116EEE",
+            "offset": 76,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          },
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private10HCNormS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private10HCNormS116EEE",
+            "offset": 156,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          }
+        ],
+        "relocation_type_scope": "Raw numeric type and actual symbol/offset only, no unverified type-name semantics."
+      }
+    },
+    "down": {
+      "image_sha256": "b796ec2f4a297fe6c82491334434944bbfd81fc791084719088f6e4656fd77df",
+      "text_sha256": "f025754e6f0777af960d66ad2ee70be2f19fd9c6f58a1307b2f296f1a7456628",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [
+          "1"
+        ],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "options": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "data_and_relocations": {
+        "data_sections": {},
+        "relocations": [
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private10HCDownS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private10HCDownS116EEE",
+            "offset": 76,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          },
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private10HCDownS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private10HCDownS116EEE",
+            "offset": 156,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          }
+        ],
+        "relocation_type_scope": "Raw numeric type and actual symbol/offset only, no unverified type-name semantics."
+      }
+    },
+    "control_reduce": {
+      "image_sha256": "2db969553ab9c12c8366152adbd6dd1a434090308afd982c570151d0c5dd209a",
+      "text_sha256": "ef64cbed3aee5699000045817cfababa5e003133aad0e379bee3caafe309996b",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "options": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "data_and_relocations": {
+        "data_sections": {},
+        "relocations": [
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private19HCControlReduceS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private19HCControlReduceS116EEE",
+            "offset": 76,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          },
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private19HCControlReduceS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private19HCControlReduceS116EEE",
+            "offset": 156,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          }
+        ],
+        "relocation_type_scope": "Raw numeric type and actual symbol/offset only, no unverified type-name semantics."
+      }
+    },
+    "control_up": {
+      "image_sha256": "6af5d6ef377e15fdb74928270e756f667ec286612f75510959170b2f59bd93b6",
+      "text_sha256": "07c34a64ae4a52ba15577f970f7ece3affbdc6cc5829cade810b18d08062268f",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [
+          "12288"
+        ],
+        "barrier_count": [
+          "1"
+        ],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "options": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "data_and_relocations": {
+        "data_sections": {},
+        "relocations": [
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private15HCControlUpS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private15HCControlUpS116EEE",
+            "offset": 76,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          },
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private15HCControlUpS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private15HCControlUpS116EEE",
+            "offset": 156,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          }
+        ],
+        "relocation_type_scope": "Raw numeric type and actual symbol/offset only, no unverified type-name semantics."
+      }
+    },
+    "candidate_reduce": {
+      "image_sha256": "9dfd4e663a35239fa78c24b2efe84e4c44729e7db38315e0bf96c64a481e8411",
+      "text_sha256": "071ca2661d3681599b34a68fc18f160005b633df57772a4e1bcd17b1d885b366",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "options": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "data_and_relocations": {
+        "data_sections": {},
+        "relocations": [
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private21HCCandidateReduceS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private21HCCandidateReduceS116EEE",
+            "offset": 76,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          },
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private21HCCandidateReduceS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private21HCCandidateReduceS116EEE",
+            "offset": 156,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          }
+        ],
+        "relocation_type_scope": "Raw numeric type and actual symbol/offset only, no unverified type-name semantics."
+      }
+    },
+    "candidate_up": {
+      "image_sha256": "f20cfe310b68f7966dd585799ec8c281c7febaa71bf52e8fef410fd87fea5542",
+      "text_sha256": "472b1fe9aac3bfa79bf64a1bd7e9322b7db90f45ac7cad1adfbd0c1a57b846fb",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [
+          "12288"
+        ],
+        "barrier_count": [
+          "1"
+        ],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "options": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "data_and_relocations": {
+        "data_sections": {},
+        "relocations": [
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private17HCCandidateUpS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private17HCCandidateUpS116EEE",
+            "offset": 76,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          },
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private17HCCandidateUpS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private17HCCandidateUpS116EEE",
+            "offset": 156,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          }
+        ],
+        "relocation_type_scope": "Raw numeric type and actual symbol/offset only, no unverified type-name semantics."
+      }
+    }
+  },
+  "UP_downstream_signature_check": {
+    "definition": "Only add/mul/mad/madm/math.exp/math.invm with :f after first barrier; strip brace scheduling annotations, replace GRF number by rX and flag number by fX, collapse whitespace; keep acc names, operand positions, region/type/subregister/modifiers, literals, execution width and mask. No cross-instruction register mapping proof.",
+    "old_count": 1765,
+    "new_count": 1765,
+    "same_ordered_register_erased_signatures": true,
+    "signature_sha256": "df6b5549e85a8f35700b1e29e44d21bb73d5c0e7dbaa5a36c64e07561d0e9fb0",
+    "FP_opcode_counts": {
+      "mad": 1032,
+      "add": 404,
+      "mul": 57,
+      "math.exp": 16,
+      "math.invm": 32,
+      "madm": 224
+    },
+    "limits": "Not full instruction/byte equality, SSA/operand provenance proof, universal numerical equivalence, or runtime result."
+  },
+  "reduce_first80add_signature_check": {
+    "count": [
+      80,
+      80
+    ],
+    "same_ordered_register_erased_signatures": true,
+    "old_first_last": [
+      {
+        "byte": 1760,
+        "text": "        add (32|M0)              acc2.0<1>:f   r52.0<1;1,0>:f    0.0:f               {Compacted,$8.dst}"
+      },
+      {
+        "byte": 15152,
+        "text": "        add (32|M0)              r108.0<1>:f   acc2.0<1;1,0>:f   r40.0<1;1,0>:f   {$10.dst}"
+      }
+    ],
+    "new_first_last": [
+      {
+        "byte": 1952,
+        "text": "        add (32|M0)              acc2.0<1>:f   r96.0<1;1,0>:f    0.0:f               {$8.dst}"
+      },
+      {
+        "byte": 15224,
+        "text": "        add (32|M0)              r30.0<1>:f    acc2.0<1;1,0>:f   r40.0<1;1,0>:f   {Compacted,$15.dst}"
+      }
+    ],
+    "limit": "Accumulator acc2:f chain and terminal GRF:f retained; addresses/load-to-row provenance remain source-conditioned and are checked by strict raw-part fixtures at runtime."
+  },
+  "exp_scale_instruction_raw_words": {
+    "old_up": {
+      "instruction_byte": 1728,
+      "words_le32": [
+        "0x141141",
+        "0x1c058aa0",
+        "0xa102a04",
+        "0xbfb8aa3b"
+      ]
+    },
+    "new_reduce": {
+      "instruction_byte": 16296,
+      "words_le32": [
+        "0x140941",
+        "0x14058aa0",
+        "0xa102404",
+        "0xbfb8aa3b"
+      ]
+    }
+  }
+}

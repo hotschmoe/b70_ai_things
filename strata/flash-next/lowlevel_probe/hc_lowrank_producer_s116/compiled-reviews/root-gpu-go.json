@@ -1,0 +1,38 @@
+{
+  "status": "ROOT_GPU_GO_ONE_PRIVATE_CARD1_S116_STRICT_THEN_CONDITIONAL8_TIMINGS",
+  "GPU_GO": true,
+  "binary_sha256": "33e390536480f83f169a63e1f9d2f2e06d8e341279a956c84a29a255951c46d3",
+  "binary_bytes": 822704,
+  "actual_reviews": [
+    {
+      "responding_models": [
+        "claude-opus-5-5"
+      ],
+      "exit": 0,
+      "elapsed_s": 50.086503084981814,
+      "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e"
+    },
+    {
+      "responding_models": [
+        "claude-fable-5-1"
+      ],
+      "exit": 0,
+      "elapsed_s": 68.10785180900712,
+      "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+    }
+  ],
+  "packet_sha256": "b115c80eaabe63fc05793ad73cc52b0a4083412b3c60519fa329ebaf756cb9d3",
+  "facts_sha256": "4ea58731caaa8ceb2ee7d308ee8fb4c24e400d54b1d6a9582d6ded9229ab9948",
+  "source_manifest_sha256": "3a92134aeae6ceb56a12912a6aa4c6c113cfcca7bc4c31d51ecea0c500306d55",
+  "root_fullread": "Source+fullrunner/analyzer+independentcompiledpacket; candidatecriticalreduce/UP and oldUP actualASM; boundedhostbranches, not rootfull4ASM. Eight frozenrunner identities and7independentledgeridentitiesverified.",
+  "root_corrections": [
+    "Fable fixture-byte equality proves observed case outputs, NOT full registerdependency or universal SSA equivalence. Register-erased signatures do not prove GRFoperand identities.",
+    "ActualcandidateCR0offset304/oldcontrol280, same rawmask0x400004C0; no denorm interpretation.",
+    "Same materialized raw r30:f operands despite scheduled rawstoreafter earlyepilog; acc0:f versusoldGRF remains runtime strict obligation.",
+    "No SFUcycle/throughput/generic alias or GPUdispatch-count claim from static counts."
+  ],
+  "prehealth_proof_sha256": "6e413b6841638fbc3fc21588ee80760b0e90411e5105f15fe7b391bf4c4e385d",
+  "health_policy": "Freshcard1post ONLY afternormalstopped/notOOM/startwaitnativeconsistent/fullCIDNAMEabsence;numeric5whitelist only; unknownruntimeROOTRECOVERY/no blindGPUhealth.",
+  "no_reset_retry_tolerance_or_production_edit": true,
+  "previous_goal_turn_class": "PROGRESS_S114closed_committed_and_S116privatebuild23s;currentgoalprogressactualcompiledauditandcachev2hitprobe+S117S118commits"
+}

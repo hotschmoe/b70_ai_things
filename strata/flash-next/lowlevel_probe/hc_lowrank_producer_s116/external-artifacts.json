@@ -1,0 +1,338 @@
+{
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014",
+  "artifacts": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep/review-packet.md",
+      "bytes": 53205,
+      "sha256": "2bbf6811add0c6a1c526bf35f896c5c680e92dc2bb88a8add2924198748a6a60",
+      "policy": "external_only",
+      "reason": "Large/redundant review detail or full selected inventory retained externally; bounded useful projection copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep/build/link.map",
+      "bytes": 208100,
+      "sha256": "bd29c658fff9c2a00fe86c8a43a18a0145d79ec505ad5165333fc893b81c9aae",
+      "policy": "external_only",
+      "reason": "Large/redundant review detail or full selected inventory retained externally; bounded useful projection copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep-built-audit/facts.json",
+      "bytes": 225761,
+      "sha256": "4ea58731caaa8ceb2ee7d308ee8fb4c24e400d54b1d6a9582d6ded9229ab9948",
+      "policy": "external_only",
+      "reason": "Large/redundant review detail or full selected inventory retained externally; bounded useful projection copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep-built-audit/selection.json",
+      "bytes": 222330,
+      "sha256": "bd666bb231ea2c3e0ccf593cfdb7708150b9cb9ffc94771560bbc9218e683cea",
+      "policy": "external_only",
+      "reason": "Large/redundant review detail or full selected inventory retained externally; bounded useful projection copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep-built-audit/candidate-isa-summary.json",
+      "bytes": 471188,
+      "sha256": "713c274d7334d37c40ffd9fcd2e5c1a7532cf59200b82ce6e0e15182038a8166",
+      "policy": "external_only",
+      "reason": "Large/redundant review detail or full selected inventory retained externally; bounded useful projection copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-independent-isa-review/review-packet.md",
+      "bytes": 19605,
+      "sha256": "5268197175ef587d5a83b30836df95299dcdbcd3feb20a66624b7c4013c91418",
+      "policy": "external_only",
+      "reason": "Large/redundant review detail or full selected inventory retained externally; bounded useful projection copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-independent-isa-review/isa-excerpts.md",
+      "bytes": 49867,
+      "sha256": "06b31758127d0c68daf533bee71e01f0b22855f6ca20789864238d634e1d9596",
+      "policy": "external_only",
+      "reason": "Large/redundant review detail or full selected inventory retained externally; bounded useful projection copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-independent-isa-review/host-excerpts.md",
+      "bytes": 25872,
+      "sha256": "b879cc7ad1cb66a4759a2d5ff7736fe30c0d34f01669e9da8d0edcfa578a18b3",
+      "policy": "external_only",
+      "reason": "Large/redundant review detail or full selected inventory retained externally; bounded useful projection copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s114-post-reviews-20261016/root-frozen-packet.txt",
+      "bytes": 61186,
+      "sha256": "b3ee4b8220969209a348e5b06f7f47fe7b2795e98e28ef476e0251d0f8817fc7",
+      "policy": "external_only",
+      "reason": "Large/redundant review detail or full selected inventory retained externally; bounded useful projection copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s114-post-reviews-20261016/claude-opus-5-5/completion.json",
+      "bytes": 7981,
+      "sha256": "7184c3cf445d789146e58ff2fb5cbcc9cedbb6f201b815989197a9278bef510c",
+      "policy": "external_only",
+      "reason": "Cumulative result/raw event/prompt retained externally; assistant text and filtered completion metadata copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s114-post-reviews-20261016/claude-opus-5-5/events.jsonl",
+      "bytes": 32855,
+      "sha256": "cf262a71c9f625300437b45d5b158e3f90d16fba58ba749dd39b1e328e244ab8",
+      "policy": "external_only",
+      "reason": "Cumulative result/raw event/prompt retained externally; assistant text and filtered completion metadata copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s114-post-reviews-20261016/claude-opus-5-5/prompt.txt",
+      "bytes": 62132,
+      "sha256": "1452d287c710e5c1a063b593f87f1f29db239bc7891fdce8e302951616d0f86e",
+      "policy": "external_only",
+      "reason": "Cumulative result/raw event/prompt retained externally; assistant text and filtered completion metadata copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s114-post-reviews-20261016/claude-fable-5-1/completion.json",
+      "bytes": 8000,
+      "sha256": "4202278119fb02dbdb139093803ec9019d6a52ed2980d819dd4724bea7e34e73",
+      "policy": "external_only",
+      "reason": "Cumulative result/raw event/prompt retained externally; assistant text and filtered completion metadata copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s114-post-reviews-20261016/claude-fable-5-1/events.jsonl",
+      "bytes": 37230,
+      "sha256": "30ca1bf0cf50202aefb2d0b3ef2733974b243a8364c9b3785d6ef43eb17a11c4",
+      "policy": "external_only",
+      "reason": "Cumulative result/raw event/prompt retained externally; assistant text and filtered completion metadata copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s114-post-reviews-20261016/claude-fable-5-1/prompt.txt",
+      "bytes": 62132,
+      "sha256": "1452d287c710e5c1a063b593f87f1f29db239bc7891fdce8e302951616d0f86e",
+      "policy": "external_only",
+      "reason": "Cumulative result/raw event/prompt retained externally; assistant text and filtered completion metadata copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep-built-audit/norm.zebin",
+      "bytes": 56184,
+      "sha256": "25ccad63352ac30486b58ae61fb7c6fc07454056cd9f839793427d1fa05a0638",
+      "policy": "external_only",
+      "reason": "ELF image excluded",
+      "identity_method": "reuse actual selected facts.json identity; payload not rehashed"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep-built-audit/down.zebin",
+      "bytes": 40752,
+      "sha256": "b796ec2f4a297fe6c82491334434944bbfd81fc791084719088f6e4656fd77df",
+      "policy": "external_only",
+      "reason": "ELF image excluded",
+      "identity_method": "reuse actual selected facts.json identity; payload not rehashed"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep-built-audit/control_reduce.zebin",
+      "bytes": 41472,
+      "sha256": "2db969553ab9c12c8366152adbd6dd1a434090308afd982c570151d0c5dd209a",
+      "policy": "external_only",
+      "reason": "ELF image excluded",
+      "identity_method": "reuse actual selected facts.json identity; payload not rehashed"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep-built-audit/control_up.zebin",
+      "bytes": 136680,
+      "sha256": "6af5d6ef377e15fdb74928270e756f667ec286612f75510959170b2f59bd93b6",
+      "policy": "external_only",
+      "reason": "ELF image excluded",
+      "identity_method": "reuse actual selected facts.json identity; payload not rehashed"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep-built-audit/candidate_reduce.zebin",
+      "bytes": 45552,
+      "sha256": "9dfd4e663a35239fa78c24b2efe84e4c44729e7db38315e0bf96c64a481e8411",
+      "policy": "external_only",
+      "reason": "ELF image excluded",
+      "identity_method": "reuse actual selected facts.json identity; payload not rehashed"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep-built-audit/candidate_up.zebin",
+      "bytes": 134856,
+      "sha256": "f20cfe310b68f7966dd585799ec8c281c7febaa71bf52e8fef410fd87fea5542",
+      "policy": "external_only",
+      "reason": "ELF image excluded",
+      "identity_method": "reuse actual selected facts.json identity; payload not rehashed"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep-built-audit/candidate-isa/candidate_reduce/disasm/.text.s116_candidate_reduce.asm",
+      "bytes": 118767,
+      "sha256": "9870fb2a23b28a3e4edf3f94dca5b8f788e551a8301c03ee092e631441373776",
+      "policy": "external_only",
+      "reason": "Full device ISA excluded; bounded exact excerpts copied",
+      "identity_method": "reuse actual completed inspect-isa.py receipt; payload not rehashed"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep-built-audit/candidate-isa/candidate_up/disasm/.text.s116_candidate_up.asm",
+      "bytes": 621660,
+      "sha256": "86fd2cd952e845790de1fe1b1531eb121133cc481397bef007a62e15387d023f",
+      "policy": "external_only",
+      "reason": "Full device ISA excluded; bounded exact excerpts copied",
+      "identity_method": "reuse actual completed inspect-isa.py receipt; payload not rehashed"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep/build/oracle.o",
+      "sha256": "82ab8f17718b5fc336620b4322469175157d457c290c4bb33878ef8d06f5bfaa",
+      "policy": "external_only",
+      "reason": "Executable/object excluded",
+      "identity_method": "reuse actual completed build-sha256.txt identity; payload not rehashed"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep/build/private.images.o",
+      "sha256": "bb526113208d267f403e12f36996fc0593e8c261dbe2ba3d009ed418c623386c",
+      "policy": "external_only",
+      "reason": "Executable/object excluded",
+      "identity_method": "reuse actual completed build-sha256.txt identity; payload not rehashed"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep/build/hc_producer_s116",
+      "sha256": "33e390536480f83f169a63e1f9d2f2e06d8e341279a956c84a29a255951c46d3",
+      "policy": "external_only",
+      "reason": "Executable/object excluded",
+      "identity_method": "reuse actual completed build-sha256.txt identity; payload not rehashed"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grf-oracle-s39-prep/run-profiled/mode1",
+      "policy": "external_only",
+      "reason": "27 MB historical anchors excluded; exact36 per-payload hashes and actual provenance copied in source/s39-anchors.json and source-reviews; runtime verifies once.",
+      "identity_method": "reference copied per-file hashes; no anchor payload read"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s116-compiled-reviews-20261016/claude-opus-5-5/completion.json",
+      "bytes": 7616,
+      "sha256": "93215766caadb781a2191f0b87ae69233a8227f18f983ab64311ae592f8ded71",
+      "policy": "external_only",
+      "reason": "Raw cumulative completion/events/prompt excluded; assistant and filtered metadata copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s116-compiled-reviews-20261016/claude-opus-5-5/events.jsonl",
+      "bytes": 27259,
+      "sha256": "5f01c50f9550c257893ef8109f1131122db9485b6a8decd305ba38554dfaa307",
+      "policy": "external_only",
+      "reason": "Raw cumulative completion/events/prompt excluded; assistant and filtered metadata copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s116-compiled-reviews-20261016/claude-opus-5-5/prompt.txt",
+      "bytes": 42660,
+      "sha256": "18664ec0c1cdd652c8d8acaaf6a2d935130322dea34545f49918120ca92abe89",
+      "policy": "external_only",
+      "reason": "Raw cumulative completion/events/prompt excluded; assistant and filtered metadata copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s116-compiled-reviews-20261016/claude-fable-5-1/completion.json",
+      "bytes": 7540,
+      "sha256": "6a02464ab450ca960956b37f4847d5061fdd827896666d910641c7c7e2af3b18",
+      "policy": "external_only",
+      "reason": "Raw cumulative completion/events/prompt excluded; assistant and filtered metadata copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s116-compiled-reviews-20261016/claude-fable-5-1/events.jsonl",
+      "bytes": 31359,
+      "sha256": "a34d4f9542eb0055371cba18c380687c5c2955792d8d44b61c1e08292c5569bb",
+      "policy": "external_only",
+      "reason": "Raw cumulative completion/events/prompt excluded; assistant and filtered metadata copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s116-compiled-reviews-20261016/claude-fable-5-1/prompt.txt",
+      "bytes": 42660,
+      "sha256": "18664ec0c1cdd652c8d8acaaf6a2d935130322dea34545f49918120ca92abe89",
+      "policy": "external_only",
+      "reason": "Raw cumulative completion/events/prompt excluded; assistant and filtered metadata copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s116-compiled-reviews-20261016/root-frozen-packet.txt",
+      "bytes": 41955,
+      "sha256": "b115c80eaabe63fc05793ad73cc52b0a4083412b3c60519fa329ebaf756cb9d3",
+      "policy": "external_only",
+      "reason": "Combined reviewed packet includes copied source/ledger/runner; retained externally.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-private-run/latest-inspect-command.json",
+      "bytes": 18354,
+      "sha256": "52afeb7120b0e577d1ab89c0e066f3bd9a3cea95afa89e4e95797eab856cd3a3",
+      "policy": "external_only",
+      "reason": "Full inspect command duplication; actual created/final state copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s116-post-reviews-20261016/claude-opus-5-5/completion.json",
+      "bytes": 8092,
+      "sha256": "d377feded2c8a7568a567c1d92a36554f00e7e9983a78cbcbc8ca706d2d258da",
+      "policy": "external_only",
+      "reason": "Raw cumulative completion/events/prompt excluded; assistant and filtered metadata copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s116-post-reviews-20261016/claude-opus-5-5/events.jsonl",
+      "bytes": 28258,
+      "sha256": "80eae898d8d1d3dccf230a53524263cf79251cf5bebfb0d31ee5bd9402374ffb",
+      "policy": "external_only",
+      "reason": "Raw cumulative completion/events/prompt excluded; assistant and filtered metadata copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s116-post-reviews-20261016/claude-opus-5-5/prompt.txt",
+      "bytes": 28951,
+      "sha256": "6207dc02b3d38712085844881952ff78fa979188f4ed6a8fb31b1d5b7879cd38",
+      "policy": "external_only",
+      "reason": "Raw cumulative completion/events/prompt excluded; assistant and filtered metadata copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s116-post-reviews-20261016/claude-fable-5-1/completion.json",
+      "bytes": 7072,
+      "sha256": "1e19ac4532f7d5aa8982552f618ca002ead2a898aa628403293b8bc63a4318fe",
+      "policy": "external_only",
+      "reason": "Raw cumulative completion/events/prompt excluded; assistant and filtered metadata copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s116-post-reviews-20261016/claude-fable-5-1/events.jsonl",
+      "bytes": 23061,
+      "sha256": "50bdf1d6c01ed10e3c6d0ef2d37f3e77fea6c8e530b91fdc6849441859f5f8bb",
+      "policy": "external_only",
+      "reason": "Raw cumulative completion/events/prompt excluded; assistant and filtered metadata copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s116-post-reviews-20261016/claude-fable-5-1/prompt.txt",
+      "bytes": 28951,
+      "sha256": "6207dc02b3d38712085844881952ff78fa979188f4ed6a8fb31b1d5b7879cd38",
+      "policy": "external_only",
+      "reason": "Raw cumulative completion/events/prompt excluded; assistant and filtered metadata copied.",
+      "identity_method": "small text source hashed during curation"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s116-post-reviews-20261016/root-frozen-packet.txt",
+      "bytes": 28110,
+      "sha256": "7f9794a12bb8b6fec6f40d806415462eeef2168ac30997aace3351574689665b",
+      "policy": "external_only",
+      "reason": "Combined postreview packet includes copied results plus S119; exact actual binding retained externally.",
+      "identity_method": "small text source hashed during curation"
+    }
+  ],
+  "old_control_evidence": "../hc_lowrank_producer_s115/README.md",
+  "large_payloads_rehashed": false
+}

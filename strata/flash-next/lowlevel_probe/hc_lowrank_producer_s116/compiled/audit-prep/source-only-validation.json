@@ -1,0 +1,20 @@
+{
+  "status": "PASS_SOURCE_ONLY_STATIC_PREPARATION",
+  "checks": {
+    "two_Python_AST_only": true,
+    "bash_n_only": true,
+    "small_metadata_helper_receipt_pins": true,
+    "six_distinct_Info_names_images_twelve_cells_gated": true,
+    "strict_control_gate_precedes_candidate_alias_creation": true,
+    "all_control_reuse_gates_explicit": true,
+    "no_main_or_archive_variable_access": true,
+    "two_candidate_decode_targets_only": true,
+    "decoder_noDRI_network_UID_diskTMP": true,
+    "manual_candidate_review_not_automatic_FP_PASS": true,
+    "no_frozen_proposal_mutation_or_build_newaudit_output": true,
+    "all_source_files_ASCII": true
+  },
+  "artifact_audit_decoder_build_GPU_model_or_network_executed": false,
+  "actual_artifact_hashes_scope": "Only small build receipts read, binaries/objects/images not read or hashed in this preparation.",
+  "limits": "AST/bash-n/source checks are not a successful artifact audit, decoder run or numerical/FP equivalence verdict."
+}

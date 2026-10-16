@@ -1,0 +1,347 @@
+{
+  "manifest_sha256": "3a92134aeae6ceb56a12912a6aa4c6c113cfcca7bc4c31d51ecea0c500306d55",
+  "binary_sha256": "33e390536480f83f169a63e1f9d2f2e06d8e341279a956c84a29a255951c46d3",
+  "binary_stat": [
+    45,
+    24090781,
+    822704,
+    1792114427176975581
+  ],
+  "build_compiler_version": "Intel(R) oneAPI DPC++/C++ Compiler 2026.1.0 (2026.1.0.20260617)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /opt/intel/oneapi/compiler/2026.1/bin/compiler\nConfiguration file: /opt/intel/oneapi/compiler/2026.1/bin/compiler/../icpx.cfg\n",
+  "root_GPU_GO": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s116-compiled-reviews-20261016/root-gpu-go.json",
+  "root_GPU_GO_sha256": "f09a2ea4434c834dd10ace098755e752c73f86d962c76542245b90cdec7c92f9",
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "requested_card": 1,
+  "required_actual_native_PCI": "0000:44:00.0",
+  "selectors": {
+    "ZE_AFFINITY_MASK": "1",
+    "ONEAPI_DEVICE_SELECTOR": "level_zero:*"
+  },
+  "anchors": {
+    "T1-a0-i0-direct-a.bin": {
+      "expected_sha256": "83a7a78b6e4039bad7f8358674d9b2350d669559270cd7aaae7a446aff1ea12b",
+      "stat": [
+        45,
+        23869470,
+        747776,
+        1792051370466583567
+      ]
+    },
+    "T1-a0-i1-direct-a.bin": {
+      "expected_sha256": "29cdcfa411d48935314809b986584721102a3f22ca6e36e95afe6572ecbb8e7e",
+      "stat": [
+        45,
+        23869472,
+        747776,
+        1792051370536585593
+      ]
+    },
+    "T1-a1-i0-direct-a.bin": {
+      "expected_sha256": "4f7417c944384d5edf30f46d2f76c6d094ef74bcec626c6189934d7142f83615",
+      "stat": [
+        45,
+        23869474,
+        747776,
+        1792051370605587591
+      ]
+    },
+    "T1-a1-i1-direct-a.bin": {
+      "expected_sha256": "e1f2ddf3567e16596ec8e6d2e5f7a67d414cf079e3b4371619c72277e47a327c",
+      "stat": [
+        45,
+        23869476,
+        747776,
+        1792051370673589560
+      ]
+    },
+    "T2-a0-i0-direct-a.bin": {
+      "expected_sha256": "48147b82350cac638e64bb2e40b43b7a95996d789fe38cce0c63e478497e723d",
+      "stat": [
+        45,
+        23869478,
+        747776,
+        1792051370738591442
+      ]
+    },
+    "T2-a0-i0-direct-b.bin": {
+      "expected_sha256": "2f037e3184b7696283fa7f9b8920e4c3769d7dceae142efff320ddabe8d736f5",
+      "stat": [
+        45,
+        23869480,
+        747776,
+        1792051370786592831
+      ]
+    },
+    "T2-a0-i0-graph-a.bin": {
+      "expected_sha256": "48147b82350cac638e64bb2e40b43b7a95996d789fe38cce0c63e478497e723d",
+      "stat": [
+        45,
+        23869479,
+        747776,
+        1792051370766592252
+      ]
+    },
+    "T2-a0-i0-graph-b.bin": {
+      "expected_sha256": "2f037e3184b7696283fa7f9b8920e4c3769d7dceae142efff320ddabe8d736f5",
+      "stat": [
+        45,
+        23869481,
+        747776,
+        1792051370806593410
+      ]
+    },
+    "T2-a0-i1-direct-a.bin": {
+      "expected_sha256": "8577edbac247c7564bcd1d1e83aad4b10c5638913f9eae5a9b5e6aaff7e8cbcc",
+      "stat": [
+        45,
+        23869483,
+        747776,
+        1792051370871595292
+      ]
+    },
+    "T2-a0-i1-direct-b.bin": {
+      "expected_sha256": "f8f51729bd717fd2a56d1b3b45a92e82f53d1cc79e9c7fd8a798d5e47c605af4",
+      "stat": [
+        45,
+        23869485,
+        747776,
+        1792051370911596450
+      ]
+    },
+    "T2-a0-i1-graph-a.bin": {
+      "expected_sha256": "8577edbac247c7564bcd1d1e83aad4b10c5638913f9eae5a9b5e6aaff7e8cbcc",
+      "stat": [
+        45,
+        23869484,
+        747776,
+        1792051370891595871
+      ]
+    },
+    "T2-a0-i1-graph-b.bin": {
+      "expected_sha256": "f8f51729bd717fd2a56d1b3b45a92e82f53d1cc79e9c7fd8a798d5e47c605af4",
+      "stat": [
+        45,
+        23869486,
+        747776,
+        1792051370931597029
+      ]
+    },
+    "T2-a1-i0-direct-a.bin": {
+      "expected_sha256": "f385e9706bcd6ab928b83755a55c98af122021596c369b098f54a17b31f81f31",
+      "stat": [
+        45,
+        23869488,
+        747776,
+        1792051370998598968
+      ]
+    },
+    "T2-a1-i0-direct-b.bin": {
+      "expected_sha256": "654b26e69d590062191a67d1007b69059396dc0c166c4265dfea4df25e9ad476",
+      "stat": [
+        45,
+        23869490,
+        747776,
+        1792051371038600126
+      ]
+    },
+    "T2-a1-i0-graph-a.bin": {
+      "expected_sha256": "f385e9706bcd6ab928b83755a55c98af122021596c369b098f54a17b31f81f31",
+      "stat": [
+        45,
+        23869489,
+        747776,
+        1792051371018599547
+      ]
+    },
+    "T2-a1-i0-graph-b.bin": {
+      "expected_sha256": "654b26e69d590062191a67d1007b69059396dc0c166c4265dfea4df25e9ad476",
+      "stat": [
+        45,
+        23869491,
+        747776,
+        1792051371058600705
+      ]
+    },
+    "T2-a1-i1-direct-a.bin": {
+      "expected_sha256": "fa7ad8ba64e477c5d5eb101a85ec310d9261bf4b21d63f6e8861294528a7eba1",
+      "stat": [
+        45,
+        23869493,
+        747776,
+        1792051371123602587
+      ]
+    },
+    "T2-a1-i1-direct-b.bin": {
+      "expected_sha256": "03d5b841705d9cfb006a450bcceede2f0cb6d52f6b4d214908bd760c22b15699",
+      "stat": [
+        45,
+        23869495,
+        747776,
+        1792051371163603745
+      ]
+    },
+    "T2-a1-i1-graph-a.bin": {
+      "expected_sha256": "fa7ad8ba64e477c5d5eb101a85ec310d9261bf4b21d63f6e8861294528a7eba1",
+      "stat": [
+        45,
+        23869494,
+        747776,
+        1792051371143603166
+      ]
+    },
+    "T2-a1-i1-graph-b.bin": {
+      "expected_sha256": "03d5b841705d9cfb006a450bcceede2f0cb6d52f6b4d214908bd760c22b15699",
+      "stat": [
+        45,
+        23869496,
+        747776,
+        1792051371183604324
+      ]
+    },
+    "T6-a0-i0-direct-a.bin": {
+      "expected_sha256": "1e0868063d15062373ecf851e59f86fd4dd9315b2364a5f96fb59597004da44f",
+      "stat": [
+        45,
+        23869498,
+        747776,
+        1792051371239605945
+      ]
+    },
+    "T6-a0-i0-direct-b.bin": {
+      "expected_sha256": "e0cbe96635a59f72ce3a65cb6bc8f4c06462a460c758a722ca135ae89a3acd24",
+      "stat": [
+        45,
+        23869500,
+        747776,
+        1792051371263606640
+      ]
+    },
+    "T6-a0-i0-graph-a.bin": {
+      "expected_sha256": "1e0868063d15062373ecf851e59f86fd4dd9315b2364a5f96fb59597004da44f",
+      "stat": [
+        45,
+        23869499,
+        747776,
+        1792051371251606292
+      ]
+    },
+    "T6-a0-i0-graph-b.bin": {
+      "expected_sha256": "e0cbe96635a59f72ce3a65cb6bc8f4c06462a460c758a722ca135ae89a3acd24",
+      "stat": [
+        45,
+        23869501,
+        747776,
+        1792051371274606958
+      ]
+    },
+    "T6-a0-i1-direct-a.bin": {
+      "expected_sha256": "b3d1a00b8fb6e09c57aaa09a9c94d012b8685f554fd657a501fc3a8bc44ebd87",
+      "stat": [
+        45,
+        23869503,
+        747776,
+        1792051371322608348
+      ]
+    },
+    "T6-a0-i1-direct-b.bin": {
+      "expected_sha256": "d01f90ab43ffdddb99b8da158b1d405774f67863cebdaa1699a6f426e93f654a",
+      "stat": [
+        45,
+        23869505,
+        747776,
+        1792051371345609014
+      ]
+    },
+    "T6-a0-i1-graph-a.bin": {
+      "expected_sha256": "b3d1a00b8fb6e09c57aaa09a9c94d012b8685f554fd657a501fc3a8bc44ebd87",
+      "stat": [
+        45,
+        23869504,
+        747776,
+        1792051371334608695
+      ]
+    },
+    "T6-a0-i1-graph-b.bin": {
+      "expected_sha256": "d01f90ab43ffdddb99b8da158b1d405774f67863cebdaa1699a6f426e93f654a",
+      "stat": [
+        45,
+        23869506,
+        747776,
+        1792051371356609332
+      ]
+    },
+    "T6-a1-i0-direct-a.bin": {
+      "expected_sha256": "9ad1da384b7efe96449d4d847a1a9e219e4d24722f9e33c111944e295d1dc27b",
+      "stat": [
+        45,
+        23869508,
+        747776,
+        1792051371404610722
+      ]
+    },
+    "T6-a1-i0-direct-b.bin": {
+      "expected_sha256": "78a4667f13f1881b4a76256bea74053057813332d62eec53eb387bfbfc8d5aa5",
+      "stat": [
+        45,
+        23869510,
+        747776,
+        1792051371428611417
+      ]
+    },
+    "T6-a1-i0-graph-a.bin": {
+      "expected_sha256": "9ad1da384b7efe96449d4d847a1a9e219e4d24722f9e33c111944e295d1dc27b",
+      "stat": [
+        45,
+        23869509,
+        747776,
+        1792051371417611098
+      ]
+    },
+    "T6-a1-i0-graph-b.bin": {
+      "expected_sha256": "78a4667f13f1881b4a76256bea74053057813332d62eec53eb387bfbfc8d5aa5",
+      "stat": [
+        45,
+        23869511,
+        747776,
+        1792051371439611735
+      ]
+    },
+    "T6-a1-i1-direct-a.bin": {
+      "expected_sha256": "81ae09ff012d2dd98440e61bfa20ae363e10bdda96b1520be3787e58ef8cce0a",
+      "stat": [
+        45,
+        23869513,
+        747776,
+        1792051371487613125
+      ]
+    },
+    "T6-a1-i1-direct-b.bin": {
+      "expected_sha256": "84bc99c90c940fe1f4a7e35cfb4244d8e3f71a5f8507d1f1c6f2ddbf98a17166",
+      "stat": [
+        45,
+        23869515,
+        747776,
+        1792051371515613935
+      ]
+    },
+    "T6-a1-i1-graph-a.bin": {
+      "expected_sha256": "81ae09ff012d2dd98440e61bfa20ae363e10bdda96b1520be3787e58ef8cce0a",
+      "stat": [
+        45,
+        23869514,
+        747776,
+        1792051371499613472
+      ]
+    },
+    "T6-a1-i1-graph-b.bin": {
+      "expected_sha256": "84bc99c90c940fe1f4a7e35cfb4244d8e3f71a5f8507d1f1c6f2ddbf98a17166",
+      "stat": [
+        45,
+        23869516,
+        747776,
+        1792051371531614398
+      ]
+    }
+  },
+  "anchor_policy": "Hash once before GPU; exact source/native anchor-byte checks before timing; post host stat continuity only, no repeated27MB hash."
+}

@@ -1,0 +1,58 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_ROOT_READ_AND_SEPARATE_CPU_AUDIT_DECODER_GO_REQUIRED",
+  "directory": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-compiled-audit-prep",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3979,
+      "sha256": "af14c72bfdb87f4c6a31b71379d8dc7d99b0c369e261e5ee44cfaad0201417bc",
+      "ASCII": true
+    },
+    {
+      "path": "ROOT_AUDIT.sh",
+      "bytes": 681,
+      "sha256": "ae795b6d33b421ba2608d0ba59432829721a1ec50c01af7670a1840981d9f56f",
+      "ASCII": true
+    },
+    {
+      "path": "audit.py",
+      "bytes": 16748,
+      "sha256": "93539b99e5af2c840a41056bd950cb968dc253df8112bf9203e740ecdfab1e95",
+      "ASCII": true
+    },
+    {
+      "path": "decode-candidates.sh",
+      "bytes": 2732,
+      "sha256": "0a2a832b3ff3682864e14d99de39ad19e67fa40dca91fe64db2d266f74fa6aed",
+      "ASCII": true
+    },
+    {
+      "path": "inspect-isa.py",
+      "bytes": 3920,
+      "sha256": "1486a4d8db6282339724a33d63f43698e1d06d777d960345ee88a6340f5103e2",
+      "ASCII": true
+    },
+    {
+      "path": "manual-ledger.md",
+      "bytes": 3329,
+      "sha256": "f494bef4e71a4bb3f05a67bda2c267fcc1686cf45e0dcd9c42ff25423d4a3e69",
+      "ASCII": true
+    },
+    {
+      "path": "pins.json",
+      "bytes": 4236,
+      "sha256": "e796d645831a9d8788d3d9b46d2f6c5d35aa45c13299fda42ecce7ad9795f8b9",
+      "ASCII": true
+    },
+    {
+      "path": "source-only-validation.json",
+      "bytes": 987,
+      "sha256": "81ed84d72f23f4a8886cbd1eff6f8313046cfdd2de7845eb7116f5b1a46d11be",
+      "ASCII": true
+    }
+  ],
+  "indexed_file_count": 8,
+  "indexed_bytes": 36612,
+  "original_source_prep_manifest_unchanged": "3a92134aeae6ceb56a12912a6aa4c6c113cfcca7bc4c31d51ecea0c500306d55",
+  "scope": "Six actual host/image binding audit, strict S115 control reuse gates and separate TWO-candidate decoder/static summary source only. No artifact content read, compiler/decoder/GPU/model/network execution or production edit. Manifest excludes itself."
+}

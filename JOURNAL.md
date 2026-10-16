@@ -25095,3 +25095,41 @@ Rootverified12exactsmallsourcecopies. Furthercleanupneedsspecificsafe
 candidate, not deletingretained evidence to manufacture a saving. Evidence:
 strata/flash-next/lowlevel_probe/cleanup_s118/ and
  docs/20261016_strata_scoped_cleanup.md.
+
+
+## 2026-10-16 S116: strict HC producer oracle passes, modest private latency
+
+CONFIG -> Source-extracted normalHC2560/4/320/sliced80/C16/SG32/defaultGRF,
+nsplit1. Six unique privateclasses retainnorm/down/fourboundaries; candidate
+moveslowrankactivation UP->reduce, rawpart/inject preserved. No productionedit.
+COMMAND -> Actualsourcepost Opus68.062/Fable86.535 CPU_GO;23s offline
+build33e39053(compile10.830/AOT1.749/hostlink.199s). Sixactualhost/name/Info/
+images+12cells; controlUP82848/reduce16272prefix+meta/options/data/relocs
+EXACTS115, rawimage/textFALSEpostEOT. TwoCPUdecodes12s; all1765downstream
+FPsignaturesorderedmatch withGRFnumberserased, NOTfull dependencyproof.
+Actualrawstore16384 scheduledAFTERearlyepilog, same materializedr30:f;
+newextra+0acc0:f vsoldGRF, CR0candidate304/old280same rawmask/uninterpreted.
+Rootfullsource/runner/criticalISAread; actualcompiledOpus50.087/Fable68.108
+GPU_GO. One28squietcard1window PCI44:00.0, contextualS114fullprehealthreuse
+sameboot/currentruntime/nointerveningcoordinatedGPU, freshcard1posthealth.
+RESULT -> ALL12base/72eager+72capturedA-B-A whole routes/36OLDanchors/
+12syntheticactualreduce-UP/1controlonlyPASS. Prefixrawparts/inject/xn/rs/R,
+candidatepreUPlo vscontrolpostUPlo andallfinalbytes/readonly/tails/guards.
+Native/start/wait/rm/identity/analysis/driver/tee/health0, finalOOMfalse/
+fullCID+NAMEgone, noretryreset. All8HOSTwhole4kernelABBAus retained: ref
+91.264,73.771,73.761,73.079; candidate77.828,72.558,72.628,71.165. Nestedmeans
+82.5175->75.193(-8.8763%),73.420->71.8965(-2.07505%); medians73.766->72.593
+(-1.59016%). Firstcontrolhigher/causeUNPROVEN, noselectiveexclusion or
+significance/device/servinggain. Raw-minuszero inputtoNEWactivation not
+exercised: bothinitialzero signsreduced+0, directcontrolonly isn'tproof;
+lo DOEScontainminuszero fromnegative-minsubnormal. No universalFPclaim.
+VERDICT -> Actualpost claude-opus-5-5 52.551s/claude-fable-5-1 48.835s/
+rootfullread retainprivateproof/deferdedicatedmainbuild/serve/defaultchange.
+No immediateprivate-repeat/cachecampaign. NextprimarydenseMMVQ attribution
+fromexistingSMALLS95census; GU17IQ2_XS sourcecorrection/calibration separate.
+Rootrejectscoldoutliercausality/historicalservice-as-wallbound andOpus
+config-onlydepth3rerun: S21alreadyrejected;64TOTAL/24windows notperstream
+3tokceiling. S119cachemechanismacceptednextOTHERWISErequiredbuildonly.
+Targetsremainunmet/S30RAMrestore retained. Evidence:
+strata/flash-next/lowlevel_probe/hc_lowrank_producer_s116/ and
+ docs/20261016_strata_hc_lowrank_producer_oracle.md.

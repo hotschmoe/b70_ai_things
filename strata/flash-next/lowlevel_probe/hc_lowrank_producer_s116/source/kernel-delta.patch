@@ -1,0 +1,51 @@
+--- control_reduce
++++ candidate_reduce
+@@ -1,5 +1,5 @@
+ template <bool MORE = false>
+-__dpct_inline__ void s116_control_reduce(HCMultiS116 m) {
++__dpct_inline__ void s116_candidate_reduce(HCMultiS116 m) {
+     auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+     const int i = (int) item.get_global_id(2);
+     if (i >= m.T * GRS_ROWS) return;
+@@ -21,6 +21,15 @@
+     } else {
+         for (int sl = 0; sl < GRS_SLICES; ++sl) x += m.part2[((size_t) sl * kFusedGrMaxT + k) * GRS_ROWS + r];
+     }
+-    if (r < LR) m.part[(size_t) k * LR + r] = x;   // split 0
+-    else S116_GR_PICK(m, k, inject_out)[r - LR] = x;
++    if (r < LR) {
++        m.part[(size_t) k * LR + r] = x;   // preserve raw split 0 exactly
++        // Keep the UP expression's NEW +0 and source division. No volatile.
++        // A compiler may forward this FP32 load; later ISA must prove that the
++        // epilogue sees the exact 32-bit operand of the preserved raw store.
++        float y = 0.0f;
++        y += m.part[(size_t) k * LR + r];
++        y /= (float) HC;
++        const float v = y / (1.0f + sycl::native::exp(-y));
++        S116_GR_PICK(m, k, lo)[r] = v;
++    } else S116_GR_PICK(m, k, inject_out)[r - LR] = x;
+ }
+--- control_up
++++ candidate_up
+@@ -1,5 +1,5 @@
+ template <int COLS = UPM_COLS, bool ILP = false, bool LO_ONCE = false>   // columns per block: 16 (the original), 8 or 4 - each row's dot, butterfly and the per-column
+-__dpct_inline__ void s116_control_up(HCMultiS116 m) {   // stream sum unchanged, so the same bits; more blocks, fewer serial rows per warp
++__dpct_inline__ void s116_candidate_up(HCMultiS116 m) {   // stream sum unchanged, so the same bits; more blocks, fewer serial rows per warp
+     auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+ auto &lo = *sycl::ext::oneapi::group_local_memory_for_overwrite<
+     float[kFusedGrMaxT][LR]>(
+@@ -13,13 +13,7 @@
+ #pragma unroll
+     for (int i = t; i < T * LR; i += THREADS) {   // the down kernel's partial sums, in split order, then silu
+         const int k = i / LR, r = i % LR;
+-        float x = 0.0f;
+-#pragma unroll
+-        for (int sp = 0; sp < DOWN_SPLIT; ++sp) if (sp < m.nsplit) x += m.part[((size_t) sp * kFusedGrMaxT + k) * LR + r];
+-        x /= (float) HC;
+-        const float v = x / (1.0f + sycl::native::exp(-x));
+-        lo[k][r] = v;
+-        if (!LO_ONCE || item_ct1.get_group(2) == 0) S116_GR_PICK(m, k, lo)[r] = v;   // the same values in every block
++        lo[k][r] = S116_GR_PICK(m, k, lo)[r];   // completed producer result, same SLM/barrier
+     }
+     /*
+     DPCT1065: Consider replacing sycl::nd_item::barrier() with

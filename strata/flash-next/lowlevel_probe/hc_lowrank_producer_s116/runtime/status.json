@@ -1,0 +1,11 @@
+{
+  "status": "CLOSED_PASS_PRIVATE_STRICT_FIXTURES_ONLY",
+  "closure": "closure.json",
+  "analysis": "analysis.json",
+  "normal_cleanup_fullCID_NAME_postcard1_health": "PASS",
+  "actual_postreviews_root_disposition": "CLOSED_RETAIN_PRIVATE_PROOF_DEFER_DEDICATED_MAIN_BUILD_SERVE_REPEAT",
+  "production_unchanged": true,
+  "speed_qualified": false,
+  "serving_qualified": false,
+  "runtime_result": "CLOSED_PASS_PRIVATE_STRICT_FIXTURES_ONLY"
+}

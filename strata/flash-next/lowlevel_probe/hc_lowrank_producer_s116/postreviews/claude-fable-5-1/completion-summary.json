@@ -1,0 +1,19 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 48.83498633198906,
+  "launch_exception": null,
+  "source_packet_sha256": "7f9794a12bb8b6fec6f40d806415462eeef2168ac30997aace3351574689665b",
+  "source_packet_unchanged": true,
+  "parse_errors": [],
+  "retries": 0
+}

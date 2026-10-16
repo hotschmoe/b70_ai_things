@@ -1,0 +1,42 @@
+{
+  "control_up": {
+    "checks": {
+      "computational_prefix_exact": true,
+      "normalized_execution_argument_metadata_exact": true,
+      "options_exact": true,
+      "constant_data_exact": true,
+      "raw_normalized_relocation_sections_exact": true,
+      "decoded_normalized_relocations_exact": true
+    },
+    "PASS": true,
+    "computational_prefix_bytes": 82848,
+    "raw_full_image_exact": false,
+    "raw_complete_text_exact": false,
+    "new_text_bytes": 83072,
+    "original_text_bytes": 83072,
+    "first_changed_offset_common_length": 82860,
+    "reference_ASM": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/up-isa/disasm/.text.hc_up.asm",
+    "reference_ASM_sha256_reused": "21d6b5f3546f2817004265222a7f65b39bee9b885a01f2bd94d65111b9839457",
+    "reference_scope": "Exact S115 selected computational body/resources/options/constants/relocations; raw trailing image/text equality is separately reported. Norm/down retained exact source, no new original-object/archive audit."
+  },
+  "control_reduce": {
+    "checks": {
+      "computational_prefix_exact": true,
+      "normalized_execution_argument_metadata_exact": true,
+      "options_exact": true,
+      "constant_data_exact": true,
+      "raw_normalized_relocation_sections_exact": true,
+      "decoded_normalized_relocations_exact": true
+    },
+    "PASS": true,
+    "computational_prefix_bytes": 16272,
+    "raw_full_image_exact": false,
+    "raw_complete_text_exact": false,
+    "new_text_bytes": 16512,
+    "original_text_bytes": 16512,
+    "first_changed_offset_common_length": 16284,
+    "reference_ASM": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/reduce-isa/disasm/.text.hc_reduce.asm",
+    "reference_ASM_sha256_reused": "50dd08418b95a26a4f56e9acb6cccebeaece48a6b0687b292edeadba65f8fdb6",
+    "reference_scope": "Exact S115 selected computational body/resources/options/constants/relocations; raw trailing image/text equality is separately reported. Norm/down retained exact source, no new original-object/archive audit."
+  }
+}

@@ -1,0 +1,39 @@
+**S114 verdict: retain as default-OFF evidence, park the candidate, no promotion.**
+
+- Matched gates all passed on both arms: identity, warm and three pairs exact on text, SSE content, usage, the five work fields, windows, pair and solo counts, captures, functionals, normal teardown, full health. The marker fired once on ON and never on OFF. That is host selection only, not a dispatch count.
+- The aggregate change is 0.58 percent from one fixed OFF then ON sequence of three nested pairs. All three pairs lean the same way, which is consistent, not significant. No stability, p95 or population statement follows.
+- The client SSE event gap p95 of about 47 ms is a content-event interval and must not be reported as token inter-arrival or device latency.
+- The PLE gather and token counters differ by one across the whole process, which includes admission, prefill and functionals. The coding-only counters match, so this is not a correctness signal.
+- The private two-owner chain saving of about 49 us did not translate. Decode-side selector and submission changes are now a closed class: argmax, pair graph, probability path and Q6 loads all landed under one percent. No repeat, no cache campaign.
+
+**S116 source review**
+
+I read the full header, oracle, anchors, build scripts and checksums. No blocking defect.
+
+Arithmetic:
+
+- The candidate epilogue is the UP prologue statement for statement: raw store of x, a fresh zero plus one load of part, division by the float constant, unary minus, native exp, add one, final division, with nsplit fixed at 1. Whether the compiler forwards the stored value or reloads it makes no bit difference for a 32-bit float, but the ISA gate should still record which it did.
+- Division by four may lower to a multiply by 0.25 in one kernel and a divide in the other. Those agree for every finite and subnormal value under the same control register, so it is not a blocker, but note it in the audit so it is not misread as drift.
+- Signed zero: the fixture correctly treats reduced zeros as observed bits, not assumed. The direct UP-only probe is correctly labelled as not candidate proof.
+
+Ownership and capture:
+
+- Reduce writes each token's lo row from exactly one thread; UP groups only read. Same in-order queue, existing reduce-to-UP edge. Raw part2, raw part and inject are unchanged. Per-owner buffers are checked disjoint from each other and from shared inputs, including the intentional in-place R update.
+- Graphs are captured once per route before staging, replayed after fresh uploads, and destroyed before buffers. Capture exceptions balance recording before drain and preserve the original error.
+- No counters or reset logic exist in these six kernels.
+
+Fixture:
+
+- Twelve base cases, 72 eager and 72 captured whole reads, A, B, A, and the 36 historical S39 anchors compared bytewise before any timing. Snapshot concatenation size matches the anchor size. Pre-UP comparisons exclude lo by design and the candidate's pre-UP lo is checked against the control's post-UP lo.
+- The synthetic diagnostic reuses the same reduce and UP classes with special bit patterns through eager and captured runs and records actual raw-part bits. Finite checks are correctly disabled there.
+- Optional timing runs only after all strict and anchor checks and compares every point's bytes to the stored reference. It is a whole-read host span in one process, not a device or serving number.
+
+Build recipe matches the pinned flags and links no archive or main. Control classes are duplicated bodies, so the compiled audit must prove they equal the S115 originals rather than assume it.
+
+**One recommended next action**
+
+CPU_BUILD_GO for the six-image private build, followed immediately by the selected compiled audit before any lease: control reduce and UP computational prefixes through EOT equal to the S115 originals with normalised resources, options, data and relocations; candidate reduce epilogue read for the exp lowering, division form and operand order against the old UP prologue; candidate UP body identical to the control UP after the prologue, first barrier retained; no spill or SIMD change in any of the six.
+
+**What would stop it**
+
+A control prefix that does not match S115, which would mean the duplicated bodies are not the originals. A candidate epilogue that contracts or reorders the exp and division sequence relative to the old prologue. Any new spill or resource change. Any failure of the 36 anchor hashes in the CPU preflight. Each is a HOLD for root inspection, not a reason to relax the fixture.

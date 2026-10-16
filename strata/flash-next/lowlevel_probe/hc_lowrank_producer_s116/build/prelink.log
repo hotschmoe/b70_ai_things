@@ -1,0 +1,53 @@
+Intel(R) oneAPI DPC++/C++ Compiler 2026.1.0 (2026.1.0.20260617)
+Target: x86_64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /opt/intel/oneapi/compiler/2026.1/bin/compiler
+Configuration file: /opt/intel/oneapi/compiler/2026.1/bin/compiler/../icpx.cfg
+Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/13
+Selected GCC installation: /usr/lib/gcc/x86_64-linux-gnu/13
+Candidate multilib: .;@m64
+Selected multilib: .;@m64
+/opt/intel/oneapi/compiler/2026.1/bin/compiler/clang-offload-bundler -type=o -targets=sycl-spir64-unknown-unknown -input=oracle.o -check-section -base-temp-dir=/out/tmp/icpx-144f1af058 
+/opt/intel/oneapi/compiler/2026.1/bin/compiler/clang-offload-bundler -type=o -input=oracle.o -list 
+/opt/intel/oneapi/compiler/2026.1/bin/compiler/clang-offload-bundler -type=o -input=oracle.o -list 
+ "/opt/intel/oneapi/compiler/2026.1/bin/compiler/clang-offload-bundler" -type=o -targets=host-x86_64-unknown-linux-gnu,sycl-spir64_gen-unknown-unknown -input=oracle.o -output=/out/tmp/icpx-144f1af058/oracle-29d1ff.o -output=/out/tmp/icpx-144f1af058/oracle-be2c26.o -unbundle -allow-missing-bundles -base-temp-dir=/out/tmp/icpx-144f1af058 -verbose
+Uncompressed bundle.
+ "/opt/intel/oneapi/compiler/2026.1/bin/compiler/spirv-to-ir-wrapper" /out/tmp/icpx-144f1af058/oracle-be2c26.o -o /out/tmp/icpx-144f1af058/oracle-b30b46.bc -llvm-spirv-opts "--spirv-preserve-auxdata --spirv-target-env=SPV-IR --spirv-builtin-format=global"
+ "/opt/intel/oneapi/compiler/2026.1/bin/compiler/llvm-link" /out/tmp/icpx-144f1af058/oracle-b30b46.bc -o /out/tmp/icpx-144f1af058/oracle-3e7f92.bc --suppress-warnings
+ "/opt/intel/oneapi/compiler/2026.1/bin/compiler/llvm-link" -only-needed /out/tmp/icpx-144f1af058/oracle-3e7f92.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-crt.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-complex.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-complex-fp64.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-cmath.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-cmath-fp64.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-imf.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-imf-fp64.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-imf-bf16.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-fallback-cstring.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-fallback-complex.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-fallback-complex-fp64.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-fallback-cmath.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-fallback-cmath-fp64.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-fallback-imf.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-fallback-imf-fp64.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-fallback-imf-bf16.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-itt-user-wrappers.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-itt-compiler-wrappers.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-itt-stubs.bc /opt/intel/oneapi/compiler/2026.1/bin/compiler/../../lib/libsycl-native-bfloat16.bc -o /out/tmp/icpx-144f1af058/oracle-778cf7.bc --suppress-warnings
+ "/opt/intel/oneapi/compiler/2026.1/bin/compiler/sycl-post-link" -split=kernel -O3 -device-globals -properties -spec-const=emulation -emit-only-kernels-as-entry-points -emit-param-info -symbols -emit-exported-symbols -emit-imported-symbols -split-esimd -lower-esimd -o /out/tmp/icpx-144f1af058/oracle-411220.table /out/tmp/icpx-144f1af058/oracle-778cf7.bc
+ "/opt/intel/oneapi/compiler/2026.1/bin/compiler/file-table-tform" -extract=Code -drop_titles -o /out/tmp/icpx-144f1af058/oracle-1ee3a1.txt /out/tmp/icpx-144f1af058/oracle-411220.table
+ "/opt/intel/oneapi/compiler/2026.1/bin/compiler/llvm-foreach" --in-file-list=/out/tmp/icpx-144f1af058/oracle-1ee3a1.txt --in-replace=/out/tmp/icpx-144f1af058/oracle-1ee3a1.txt --out-ext=spv --out-file-list=/out/tmp/icpx-144f1af058/oracle-964918.txt --out-replace=/out/tmp/icpx-144f1af058/oracle-964918.txt --out-dir=/out/tmp/icpx-144f1af058 --jobs=4 -- /opt/intel/oneapi/compiler/2026.1/bin/compiler/llvm-spirv -o /out/tmp/icpx-144f1af058/oracle-964918.txt -spirv-max-version=1.5 -spirv-debug-info-version=nonsemantic-shader-200 -spirv-allow-unknown-intrinsics=llvm.genx. -spirv-allow-unknown-intrinsics=llvm.genx. -spirv-ext=-all,+SPV_EXT_shader_atomic_float_add,+SPV_EXT_shader_atomic_float_min_max,+SPV_KHR_no_integer_wrap_decoration,+SPV_KHR_float_controls,+SPV_KHR_bit_instructions,+SPV_KHR_expect_assume,+SPV_KHR_linkonce_odr,+SPV_INTEL_subgroups,+SPV_INTEL_media_block_io,+SPV_INTEL_device_side_avc_motion_estimation,+SPV_INTEL_fpga_loop_controls,+SPV_INTEL_unstructured_loop_controls,+SPV_INTEL_fpga_reg,+SPV_INTEL_blocking_pipes,+SPV_INTEL_function_pointers,+SPV_INTEL_kernel_attributes,+SPV_INTEL_io_pipes,+SPV_INTEL_inline_assembly,+SPV_INTEL_arbitrary_precision_integers,+SPV_INTEL_float_controls2,+SPV_INTEL_vector_compute,+SPV_INTEL_fast_composite,+SPV_INTEL_arbitrary_precision_fixed_point,+SPV_INTEL_arbitrary_precision_floating_point,+SPV_INTEL_variable_length_array,+SPV_INTEL_fp_fast_math_mode,+SPV_INTEL_long_composites,+SPV_INTEL_arithmetic_fence,+SPV_INTEL_global_variable_decorations,+SPV_INTEL_cache_controls,+SPV_INTEL_fpga_buffer_location,+SPV_INTEL_fpga_argument_interfaces,+SPV_INTEL_fpga_invocation_pipelining_attributes,+SPV_INTEL_fpga_latency_control,+SPV_KHR_shader_clock,+SPV_INTEL_bindless_images,+SPV_INTEL_task_sequence,+SPV_INTEL_int4,+SPV_EXT_float8,+SPV_INTEL_optnone,+SPV_INTEL_bfloat16_conversion,+SPV_INTEL_joint_matrix,+SPV_INTEL_hw_thread_queries,+SPV_KHR_uniform_group_instructions,+SPV_INTEL_masked_gather_scatter,+SPV_INTEL_tensor_float32_conversion,+SPV_INTEL_optnone,+SPV_KHR_non_semantic_info,+SPV_KHR_cooperative_matrix,+SPV_EXT_shader_atomic_float16_add,+SPV_INTEL_memory_access_aliasing /out/tmp/icpx-144f1af058/oracle-1ee3a1.txt
+ "/opt/intel/oneapi/compiler/2026.1/bin/compiler/llvm-foreach" --out-ext=out --in-file-list=/out/tmp/icpx-144f1af058/oracle-964918.txt --in-replace=/out/tmp/icpx-144f1af058/oracle-964918.txt --out-file-list=/out/tmp/icpx-144f1af058/oracle-f4673f.txt --out-replace=/out/tmp/icpx-144f1af058/oracle-f4673f.txt --jobs=4 -- /usr/bin/ocloc -output /out/tmp/icpx-144f1af058/oracle-f4673f.txt -file /out/tmp/icpx-144f1af058/oracle-964918.txt -output_no_suffix -spirv_input -device bmg-g31 -options -cl-fp32-correctly-rounded-divide-sqrt
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+ "/opt/intel/oneapi/compiler/2026.1/bin/compiler/file-table-tform" -replace=Code,Code -o /out/tmp/icpx-144f1af058/oracle-9a7176.table /out/tmp/icpx-144f1af058/oracle-411220.table /out/tmp/icpx-144f1af058/oracle-f4673f.txt
+ "/opt/intel/oneapi/compiler/2026.1/bin/compiler/clang-offload-wrapper" -host x86_64-unknown-linux-gnu -o /out/tmp/icpx-144f1af058/private-9b7ada.bc -kind=sycl -target=spir64_gen -batch /out/tmp/icpx-144f1af058/oracle-9a7176.table
+ "/opt/intel/oneapi/compiler/2026.1/bin/compiler/clang" -cc1 -triple x86_64-unknown-linux-gnu -fsycl-is-host -sycl-std=2020 -D__SYCL_ANY_DEVICE_HAS_ANY_ASPECT__=1 -emit-obj -dumpdir private.images.o- -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name private.images.o-wrapper -mrelocation-model static -fveclib=SVML -faltmathlib=SVMLAltMathLibrary -mframe-pointer=none -fapprox-func -funsafe-math-optimizations -fno-signed-zeros -mreassociate -freciprocal-math -fdenormal-fp-math=preserve-sign,preserve-sign -ffp-contract=fast-honor-pragmas -fno-rounding-math -complex-range=promoted -mconstructor-aliases -funwind-tables=2 -target-cpu x86-64 -mllvm -x86-enable-unaligned-vector-move=true -tune-cpu generic --dependent-lib=sycl-devicelib-host -debugger-tuning=gdb -fdebug-compilation-dir=/out -v -fcoverage-compilation-dir=/out -fclang-abi-compat=22 -resource-dir /opt/intel/oneapi/compiler/2026.1/lib/clang/22 -ferror-limit 19 -fgpu-rdc -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -vectorize-loops -vectorize-slp -mllvm -disable-hir-generate-mkl-call -mllvm -sycl-host -mllvm -loopopt=1 -floopopt-pipeline=light -mllvm -intel-abi-compatible=true -fdwarf2-cfi-asm -fintel-compatibility -fintel-libirc-allowed -fintel-libimf-allowed -o private.images.o -x ir /out/tmp/icpx-144f1af058/private-9b7ada.bc
+clang -cc1 version 22.1.0 based upon LLVM 22.1.0 default target x86_64-unknown-linux-gnu

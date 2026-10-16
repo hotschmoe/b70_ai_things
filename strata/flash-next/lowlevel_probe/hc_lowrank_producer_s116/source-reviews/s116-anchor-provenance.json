@@ -1,0 +1,11 @@
+{
+  "status": "PASS36_DEFAULTMODE0_SHA_EQUAL_ALREADY_VERIFIED_MODE1_AND_S39_CROSSMODE_RECORD",
+  "anchors": 36,
+  "mode1_preflight": "root preceding verify_anchors.py terminal0;36 retained mode1 hashes exact",
+  "mode0_fresh_hashes": true,
+  "original_comparison": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grf-oracle-s39-prep/run-profiled/comparison.json",
+  "comparison_sha256": "66d576114f595c3a5b698697aae85b7654725d2b07628ac7b73e8b06c51339b4",
+  "comparison_all48_equal_and_bytes": true,
+  "actual_fixture_poison": "original source q.memset(raw+G,0xff,bytes); snapshot fieldorder R/lo/rs/inject/mixed/xn",
+  "limits": "Historical compare_snapshots.py source retains420096 assertion while actual comparison records747776; no rewrite. New independent mode0 hashes close current anchor equivalence, no historical script execution claim."
+}

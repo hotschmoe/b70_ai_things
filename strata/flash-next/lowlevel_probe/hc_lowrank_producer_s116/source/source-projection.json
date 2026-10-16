@@ -1,0 +1,71 @@
+{
+  "status": "PASS_SOURCE_PROJECTION_ONLY_COMPILED_IDENTITY_REQUIRED",
+  "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/fused_gr.dp.cpp",
+  "source_bytes": 118531,
+  "source_sha256": "d62bcb252eecdbcaae81095907c2241e39c4798b7854bb499fb5643fecb24e99",
+  "spans": {
+    "helpers": {
+      "first_byte": 2165,
+      "end_byte_exclusive": 3230,
+      "bytes": 1065,
+      "sha256": "c2cb8835713d778de12db90508fb76e0b09bee732a9e3bec0a0ec6af25471142"
+    },
+    "multi_and_pick": {
+      "first_byte": 10763,
+      "end_byte_exclusive": 11990,
+      "bytes": 1227,
+      "sha256": "c0750402b75f06196843843e2afc125015fdf773bbc8eabab2161e45c2620483"
+    },
+    "norm_split": {
+      "first_byte": 15629,
+      "end_byte_exclusive": 18230,
+      "bytes": 2601,
+      "sha256": "9c179f47c21dba6776871fac266468582b1ee84c00ea5524111494b19f9216ac"
+    },
+    "sliced_down": {
+      "first_byte": 26608,
+      "end_byte_exclusive": 28878,
+      "bytes": 2270,
+      "sha256": "d7ff555b292e058d2195e690419ff0b9b7cef23ab488182fe1a3cbccdf0cc798"
+    },
+    "reduce": {
+      "first_byte": 28971,
+      "end_byte_exclusive": 30226,
+      "bytes": 1255,
+      "sha256": "030bf0fac8091fa4d7845dee006b2837a605be811545e2781cdaecbeb78c2bab"
+    },
+    "up": {
+      "first_byte": 33798,
+      "end_byte_exclusive": 39312,
+      "bytes": 5514,
+      "sha256": "ed98a758d131661c79694ad0639a7c4b53d6f42d52a7d59b7d4bdd8e4e3d7845"
+    }
+  },
+  "identifier_map": {
+    "warp_sum": "s116_warp_sum",
+    "sigmoidf_": "s116_sigmoid",
+    "dot8": "s116_dot8",
+    "GrMulti": "HCMultiS116",
+    "gr_pick_impl": "s116_pick_impl",
+    "GR_PICK": "S116_GR_PICK",
+    "gr_norm_split_port_kernel": "s116_norm_split",
+    "gr_down_sliced_kernel": "s116_down_sliced",
+    "gr_down_reduce_kernel": "s116_control_reduce",
+    "gr_up_multi_kernel": "s116_control_up"
+  },
+  "all_six_source_chunks_inverse_exact": true,
+  "candidate_reduce_inverse_exact": true,
+  "candidate_up_inverse_exact": true,
+  "candidate_changes": [
+    "Preserved raw part store; additional +0/load/divide/native exp/denominator/final-div producer lo publication",
+    "UP nonlinear prologue/global lo store replaced by existing lo load to same SLM; remaining body and barriers unchanged"
+  ],
+  "not_claimed": [
+    "Compiled control identity",
+    "Universal store/load rounding equivalence",
+    "Candidate numerical correctness",
+    "Runtime performance"
+  ],
+  "no_volatile": true,
+  "future_compiled_gate": "Original selected UP/reduce raw computational bytes/resources/options/relocs compared to S115; unexpected differences HOLD for explicit root review of ordered FP ledger, never automatic normalization."
+}

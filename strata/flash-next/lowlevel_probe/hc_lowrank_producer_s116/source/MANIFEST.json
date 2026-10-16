@@ -1,0 +1,99 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ACTUAL_MODEL_REVIEW_CPU_BUILD_GO_COMPILED_AUDIT_AND_GPU_GO",
+  "directory": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep",
+  "file_count": 14,
+  "bytes": 125425,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 9148,
+      "sha256": "9b598e5e04c7336e251079149d3ddb326af2ca2bad2e434a2792a6c430a87cdd",
+      "ASCII": true
+    },
+    {
+      "path": "anchor_names.hpp",
+      "bytes": 1291,
+      "sha256": "8bf2326a018e8c87d3db68c25ac2216e093a8ceee3d70100594582b46fd7639e",
+      "ASCII": true
+    },
+    {
+      "path": "build-container.sh",
+      "bytes": 1586,
+      "sha256": "fda3d623a49e990776eb3b82552cdfba481a3ed22540738b306d6eab2a305723",
+      "ASCII": true
+    },
+    {
+      "path": "build.sh",
+      "bytes": 1070,
+      "sha256": "4a98eee8cfc5bdc12a58cbc72af1f1bea0dfb48687eb8b74ca41fd295fded49a",
+      "ASCII": true
+    },
+    {
+      "path": "expected-container.sha256",
+      "bytes": 461,
+      "sha256": "2016bfdf001eb666a8920785963873d0aa8876326fa2ffd9dc2381ae06c9caf5",
+      "ASCII": true
+    },
+    {
+      "path": "kernel-delta.patch",
+      "bytes": 2648,
+      "sha256": "808b9f93f5ba2ea7f65e3871932b4e6aab8c315382a1daebeff7a522c994ac7e",
+      "ASCII": true
+    },
+    {
+      "path": "oracle.cpp",
+      "bytes": 19082,
+      "sha256": "c34c8df859637c406e6599350634f3ee1fc9db23f3b13897d858568bba882cad",
+      "ASCII": true
+    },
+    {
+      "path": "pins.json",
+      "bytes": 2932,
+      "sha256": "b2ebbbc508613113be637762644d8ad7b4f548473abc44caaf49a0968039c869",
+      "ASCII": true
+    },
+    {
+      "path": "private_hc.hpp",
+      "bytes": 24011,
+      "sha256": "452f17c508b984b926ba934ca1da5edcf405aa13c43a7ad202e9791a5ebaeda1",
+      "ASCII": true
+    },
+    {
+      "path": "review-packet.md",
+      "bytes": 53205,
+      "sha256": "2bbf6811add0c6a1c526bf35f896c5c680e92dc2bb88a8add2924198748a6a60",
+      "ASCII": true
+    },
+    {
+      "path": "s39-anchors.json",
+      "bytes": 4270,
+      "sha256": "c556bf1715b3f2508e443100204741740b358c2c08ee3859990e31c153ff68d8",
+      "ASCII": true
+    },
+    {
+      "path": "source-only-validation.json",
+      "bytes": 2484,
+      "sha256": "f4c717de088a0c28b53c54d0cd540c322c83e3fba981e8ed829e8c65e0e6d1e0",
+      "ASCII": true
+    },
+    {
+      "path": "source-projection.json",
+      "bytes": 2676,
+      "sha256": "f114d792bce6d97c66ce1a86d3696592e36ccc12e7157bcb2b2a86b77c34532e",
+      "ASCII": true
+    },
+    {
+      "path": "verify_anchors.py",
+      "bytes": 561,
+      "sha256": "cb8567b44b02fdda8b915ed4d48c5791b2dbc412b9b3148c96c98d63163f261c",
+      "ASCII": true
+    }
+  ],
+  "review_packet": {
+    "path": "review-packet.md",
+    "bytes": 53205,
+    "sha256": "2bbf6811add0c6a1c526bf35f896c5c680e92dc2bb88a8add2924198748a6a60",
+    "ASCII": true
+  },
+  "scope": "Four exact selected control source bodies plus required helpers, two candidate bodies/six unique materialized classes, strict12-case/S39/graph/special-bit fixture and minimal six-image build recipe. No actual C++ compilation, anchor-payload validation, private execution, GPU/model/network/production edits. Excludes manifest self-hash."
+}

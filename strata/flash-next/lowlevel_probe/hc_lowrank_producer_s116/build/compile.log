@@ -1,0 +1,77 @@
+In file included from /src/oracle.cpp:3:
+/src/private_hc.hpp:483:20: warning: 'parallel_for' is deprecated: To specify properties, use a launch configuration object of type launch_config or a kernel functor with a get(sycl::ext::oneapi::experimental::properties_tag) member function instead. [-Wdeprecated-declarations]
+  483 |     if(candidate)q.parallel_for<dpct_kernel_name<HCCandidateUpS116>>(nr,props,
+      |                    ^
+/opt/intel/oneapi/compiler/2026.1/bin/compiler/../../include/sycl/queue.hpp:3232:14: note: 'parallel_for' has been explicitly marked deprecated here
+ 3232 |       event> parallel_for(nd_range<Dims> Range, PropertiesT Properties,
+      |              ^
+In file included from /src/oracle.cpp:3:
+/src/private_hc.hpp:483:20: warning: 'parallel_for<dpct_kernel_name<s116_private::HCCandidateUpS116>, 3, sycl::ext::oneapi::experimental::properties<sycl::ext::oneapi::experimental::detail::properties_type_list<sycl::ext::oneapi::experimental::property_value<sycl::ext::oneapi::experimental::use_root_sync_key>>>, (lambda at /src/private_hc.hpp:484:9)>' is deprecated: To specify properties, use a launch configuration object of type launch_config or a kernel functor with a get(sycl::ext::oneapi::experimental::properties_tag) member function instead. [-Wdeprecated-declarations]
+  483 |     if(candidate)q.parallel_for<dpct_kernel_name<HCCandidateUpS116>>(nr,props,
+      |                    ^
+/opt/intel/oneapi/compiler/2026.1/bin/compiler/../../include/sycl/queue.hpp:3225:3: note: 'parallel_for<dpct_kernel_name<s116_private::HCCandidateUpS116>, 3, sycl::ext::oneapi::experimental::properties<sycl::ext::oneapi::experimental::detail::properties_type_list<sycl::ext::oneapi::experimental::property_value<sycl::ext::oneapi::experimental::use_root_sync_key>>>, (lambda at /src/private_hc.hpp:484:9)>' has been explicitly marked deprecated here
+ 3225 |   __SYCL_DEPRECATED("To specify properties, use a launch configuration object "
+      |   ^
+/opt/intel/oneapi/compiler/2026.1/bin/compiler/../../include/sycl/detail/defines_elementary.hpp:66:38: note: expanded from macro '__SYCL_DEPRECATED'
+   66 | #define __SYCL_DEPRECATED(message) [[deprecated(message)]]
+      |                                      ^
+In file included from /src/oracle.cpp:3:
+/src/private_hc.hpp:485:12: warning: 'parallel_for' is deprecated: To specify properties, use a launch configuration object of type launch_config or a kernel functor with a get(sycl::ext::oneapi::experimental::properties_tag) member function instead. [-Wdeprecated-declarations]
+  485 |     else q.parallel_for<dpct_kernel_name<HCControlUpS116>>(nr,props,
+      |            ^
+/opt/intel/oneapi/compiler/2026.1/bin/compiler/../../include/sycl/queue.hpp:3232:14: note: 'parallel_for' has been explicitly marked deprecated here
+ 3232 |       event> parallel_for(nd_range<Dims> Range, PropertiesT Properties,
+      |              ^
+In file included from /src/oracle.cpp:3:
+/src/private_hc.hpp:485:12: warning: 'parallel_for<dpct_kernel_name<s116_private::HCControlUpS116>, 3, sycl::ext::oneapi::experimental::properties<sycl::ext::oneapi::experimental::detail::properties_type_list<sycl::ext::oneapi::experimental::property_value<sycl::ext::oneapi::experimental::use_root_sync_key>>>, (lambda at /src/private_hc.hpp:486:9)>' is deprecated: To specify properties, use a launch configuration object of type launch_config or a kernel functor with a get(sycl::ext::oneapi::experimental::properties_tag) member function instead. [-Wdeprecated-declarations]
+  485 |     else q.parallel_for<dpct_kernel_name<HCControlUpS116>>(nr,props,
+      |            ^
+/opt/intel/oneapi/compiler/2026.1/bin/compiler/../../include/sycl/queue.hpp:3225:3: note: 'parallel_for<dpct_kernel_name<s116_private::HCControlUpS116>, 3, sycl::ext::oneapi::experimental::properties<sycl::ext::oneapi::experimental::detail::properties_type_list<sycl::ext::oneapi::experimental::property_value<sycl::ext::oneapi::experimental::use_root_sync_key>>>, (lambda at /src/private_hc.hpp:486:9)>' has been explicitly marked deprecated here
+ 3225 |   __SYCL_DEPRECATED("To specify properties, use a launch configuration object "
+      |   ^
+/opt/intel/oneapi/compiler/2026.1/bin/compiler/../../include/sycl/detail/defines_elementary.hpp:66:38: note: expanded from macro '__SYCL_DEPRECATED'
+   66 | #define __SYCL_DEPRECATED(message) [[deprecated(message)]]
+      |                                      ^
+In file included from /src/oracle.cpp:3:
+/src/private_hc.hpp:484:33: warning: kernel has both attribute 'sycl::reqd_sub_group_size' and kernel properties; if the kernel properties contains the property "sycl::ext::oneapi::experimental::sub_group_size" it will be ignored [-Wignored-attributes]
+  484 |         [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {s116_candidate_up<16,false,true>(m);});
+      |                                 ^
+/src/private_hc.hpp:486:33: warning: kernel has both attribute 'sycl::reqd_sub_group_size' and kernel properties; if the kernel properties contains the property "sycl::ext::oneapi::experimental::sub_group_size" it will be ignored [-Wignored-attributes]
+  486 |         [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {s116_control_up<16,false,true>(m);});
+      |                                 ^
+6 warnings generated.
+In file included from /src/oracle.cpp:3:
+/src/private_hc.hpp:483:20: warning: 'parallel_for' is deprecated: To specify properties, use a launch configuration object of type launch_config or a kernel functor with a get(sycl::ext::oneapi::experimental::properties_tag) member function instead. [-Wdeprecated-declarations]
+  483 |     if(candidate)q.parallel_for<dpct_kernel_name<HCCandidateUpS116>>(nr,props,
+      |                    ^
+/opt/intel/oneapi/compiler/2026.1/bin/compiler/../../include/sycl/queue.hpp:3232:14: note: 'parallel_for' has been explicitly marked deprecated here
+ 3232 |       event> parallel_for(nd_range<Dims> Range, PropertiesT Properties,
+      |              ^
+In file included from /src/oracle.cpp:3:
+/src/private_hc.hpp:483:20: warning: 'parallel_for<dpct_kernel_name<s116_private::HCCandidateUpS116>, 3, sycl::ext::oneapi::experimental::properties<sycl::ext::oneapi::experimental::detail::properties_type_list<sycl::ext::oneapi::experimental::property_value<sycl::ext::oneapi::experimental::use_root_sync_key>>>, (lambda at /src/private_hc.hpp:484:9)>' is deprecated: To specify properties, use a launch configuration object of type launch_config or a kernel functor with a get(sycl::ext::oneapi::experimental::properties_tag) member function instead. [-Wdeprecated-declarations]
+  483 |     if(candidate)q.parallel_for<dpct_kernel_name<HCCandidateUpS116>>(nr,props,
+      |                    ^
+/opt/intel/oneapi/compiler/2026.1/bin/compiler/../../include/sycl/queue.hpp:3225:3: note: 'parallel_for<dpct_kernel_name<s116_private::HCCandidateUpS116>, 3, sycl::ext::oneapi::experimental::properties<sycl::ext::oneapi::experimental::detail::properties_type_list<sycl::ext::oneapi::experimental::property_value<sycl::ext::oneapi::experimental::use_root_sync_key>>>, (lambda at /src/private_hc.hpp:484:9)>' has been explicitly marked deprecated here
+ 3225 |   __SYCL_DEPRECATED("To specify properties, use a launch configuration object "
+      |   ^
+/opt/intel/oneapi/compiler/2026.1/bin/compiler/../../include/sycl/detail/defines_elementary.hpp:66:38: note: expanded from macro '__SYCL_DEPRECATED'
+   66 | #define __SYCL_DEPRECATED(message) [[deprecated(message)]]
+      |                                      ^
+In file included from /src/oracle.cpp:3:
+/src/private_hc.hpp:485:12: warning: 'parallel_for' is deprecated: To specify properties, use a launch configuration object of type launch_config or a kernel functor with a get(sycl::ext::oneapi::experimental::properties_tag) member function instead. [-Wdeprecated-declarations]
+  485 |     else q.parallel_for<dpct_kernel_name<HCControlUpS116>>(nr,props,
+      |            ^
+/opt/intel/oneapi/compiler/2026.1/bin/compiler/../../include/sycl/queue.hpp:3232:14: note: 'parallel_for' has been explicitly marked deprecated here
+ 3232 |       event> parallel_for(nd_range<Dims> Range, PropertiesT Properties,
+      |              ^
+In file included from /src/oracle.cpp:3:
+/src/private_hc.hpp:485:12: warning: 'parallel_for<dpct_kernel_name<s116_private::HCControlUpS116>, 3, sycl::ext::oneapi::experimental::properties<sycl::ext::oneapi::experimental::detail::properties_type_list<sycl::ext::oneapi::experimental::property_value<sycl::ext::oneapi::experimental::use_root_sync_key>>>, (lambda at /src/private_hc.hpp:486:9)>' is deprecated: To specify properties, use a launch configuration object of type launch_config or a kernel functor with a get(sycl::ext::oneapi::experimental::properties_tag) member function instead. [-Wdeprecated-declarations]
+  485 |     else q.parallel_for<dpct_kernel_name<HCControlUpS116>>(nr,props,
+      |            ^
+/opt/intel/oneapi/compiler/2026.1/bin/compiler/../../include/sycl/queue.hpp:3225:3: note: 'parallel_for<dpct_kernel_name<s116_private::HCControlUpS116>, 3, sycl::ext::oneapi::experimental::properties<sycl::ext::oneapi::experimental::detail::properties_type_list<sycl::ext::oneapi::experimental::property_value<sycl::ext::oneapi::experimental::use_root_sync_key>>>, (lambda at /src/private_hc.hpp:486:9)>' has been explicitly marked deprecated here
+ 3225 |   __SYCL_DEPRECATED("To specify properties, use a launch configuration object "
+      |   ^
+/opt/intel/oneapi/compiler/2026.1/bin/compiler/../../include/sycl/detail/defines_elementary.hpp:66:38: note: expanded from macro '__SYCL_DEPRECATED'
+   66 | #define __SYCL_DEPRECATED(message) [[deprecated(message)]]
+      |                                      ^
+4 warnings generated.

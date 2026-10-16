@@ -1,0 +1,23 @@
+{
+  "status": "ROOT_REUSE_S114_FULL_POSTHEALTH_FOR_S116_CARD1",
+  "boot_id": "b785982c-4954-4d23-808c-48a7534ce3bd",
+  "no_intervening_GPU_or_stack_change": true,
+  "source_all_exit0": true,
+  "required_probe_card": 1,
+  "post_health_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/mode1/post-health.json",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/mode1/post-health.json",
+      "sha256": "24133db5da60cda532b269a31602d6eb214ad38df8d8950e33f19c80f66d5042"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/mode1/normal-stop.json",
+      "sha256": "ed3ade66731c836321205b8c6c77444bc15398f660834de34d55d532924a7194"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/mode1/root-phases.json",
+      "sha256": "036233d4cf9fd3e7ab43b961dfa94dbf8444e52062e153d86dfd381d511f44a7"
+    }
+  ],
+  "scope": "Same boot/current fixed kernel/e41, no intervening coordinated GPU/sharedlog activity; only noDRI offline build/decode/cache and stale neverstarted container removal. Cannot attest uncoordinated activity. Root current both GPU leases and CPUfree inspected."
+}

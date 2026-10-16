@@ -1,0 +1,45 @@
+{
+  "scope": "actual S112 non-rm lifecycle and S73 card1 mask/PCI; old force/timeout cleanup not reused",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/greedy-top1-s112-runner-prep/leased_run.py",
+      "bytes": 9434,
+      "sha256": "0c56b37bf336f4208d5c3d2789644acf9272ead3b25f84332b6fdd47f3960fcb"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/greedy-top1-s112-runner-prep/ROOT_RUN.sh",
+      "bytes": 795,
+      "sha256": "f41075030373df04444deca02c67c6c433727c3ea84f6969aed264f3bf38c2df"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/leased_run.sh",
+      "bytes": 4748,
+      "sha256": "de67a43b7e7709ac4f416f23b7eb10cfd4bebef175c98693767a51942892202d"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-more-groups-s73-prep/ROOT_RUN.sh",
+      "bytes": 718,
+      "sha256": "672bad81157ecfeab5581ddcdfe562a00a16f1f7072857b35b7ba1cb9f920105"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep/oracle.cpp",
+      "bytes": 19082,
+      "sha256": "c34c8df859637c406e6599350634f3ee1fc9db23f3b13897d858568bba882cad"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep/MANIFEST.json",
+      "bytes": 3225,
+      "sha256": "3a92134aeae6ceb56a12912a6aa4c6c113cfcca7bc4c31d51ecea0c500306d55"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep/anchor_names.hpp",
+      "bytes": 1291,
+      "sha256": "8bf2326a018e8c87d3db68c25ac2216e093a8ceee3d70100594582b46fd7639e"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep/s39-anchors.json",
+      "bytes": 4270,
+      "sha256": "c556bf1715b3f2508e443100204741740b358c2c08ee3859990e31c153ff68d8"
+    }
+  ]
+}

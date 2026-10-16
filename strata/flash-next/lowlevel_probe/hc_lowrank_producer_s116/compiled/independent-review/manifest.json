@@ -1,0 +1,43 @@
+{
+  "status": "FROZEN_OFFLINE_INDEPENDENT_COMPILED_REVIEW_NO_GPU_AUTHORIZATION",
+  "files": [
+    {
+      "path": "compact-excerpts.md",
+      "bytes": 9025,
+      "sha256": "b112f235436f03cc1d6b90d826b9caf3498a5268a6749203c0b9f0fba5ec1546"
+    },
+    {
+      "path": "derive.py",
+      "bytes": 6677,
+      "sha256": "4dbcea8b821a6171ddaa315273a343ab14aa0d544c69b99b945921d2509ea0ed"
+    },
+    {
+      "path": "evidence.json",
+      "bytes": 21133,
+      "sha256": "6c655689c52e67918243c4f16cb4e64cd6b4ea9f23c55adb7e854d9533cac607"
+    },
+    {
+      "path": "findings.md",
+      "bytes": 10579,
+      "sha256": "df4f586ed98505798eed1e2ed2b17bc83167aca897f014e8069b52708e68df22"
+    },
+    {
+      "path": "host-excerpts.md",
+      "bytes": 25872,
+      "sha256": "b879cc7ad1cb66a4759a2d5ff7736fe30c0d34f01669e9da8d0edcfa578a18b3"
+    },
+    {
+      "path": "isa-excerpts.md",
+      "bytes": 49867,
+      "sha256": "06b31758127d0c68daf533bee71e01f0b22855f6ca20789864238d634e1d9596"
+    },
+    {
+      "path": "review-packet.md",
+      "bytes": 19605,
+      "sha256": "5268197175ef587d5a83b30836df95299dcdbcd3feb20a66624b7c4013c91418"
+    }
+  ],
+  "total_payload_bytes": 142758,
+  "full_raw_ASM_external": true,
+  "production_unchanged": true
+}

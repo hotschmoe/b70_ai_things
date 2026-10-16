@@ -447,3 +447,12 @@ no immediate repeat/cachecampaign/shelf promotion. Probability omission is
 still unexecuted source prep, a separate mechanism. Next small private HC
 producer oracle build/compiled audit; no forecast gain. Targets still unmet
 and S30 RAM recovery retained. [S114 evidence](20261016_strata_mtp_parallel_argmax.md).
+
+
+S116 private HC producer relocation passes12base/72eager+72capturedroutes,
+36historicalanchors/intermediate-finalbytes/specials, normalteardown and
+freshcard1health. CompletedHOSTfour-kernel medians73.766->72.593us; two
+nestedABBArounds inoneprocess/all8samples retained, notservinggain. Keep
+privateproof, deferdedicatedmainbuild/serve; no newdefault/context/cache
+qualification. Targetsremainunmet/S30RAMrestore retained.
+[S116 result and limits](20261016_strata_hc_lowrank_producer_oracle.md).

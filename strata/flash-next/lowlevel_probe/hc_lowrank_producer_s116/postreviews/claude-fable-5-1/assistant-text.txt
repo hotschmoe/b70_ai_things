@@ -1,0 +1,24 @@
+**S116 decision: retain the private proof, do not set up a main integration now.**
+
+The strict result is complete and clean: 12 cases, 144 whole reads, 36 anchors, raw parts and owner lo exact, guards and read-only intact, normal teardown and fresh card1 health. The candidate is correct on this fixture.
+
+The timing does not justify a main build. The honest number is the median of four, about 1.6 percent on a whole four-kernel read in one process. The round 0 figure of 8.9 percent is driven by the first control sample at 91 us, kept as it should be, but it is a cold-first artefact, not a candidate effect. HC is one family among several in the cycle. Even if the whole 1.6 percent carried through, it would sit in the same band as S106, S107 and S114, which a three-pair serving comparison cannot resolve. S112's 29.7 percent became 0.58 percent in serving; S116 starts an order of magnitude smaller. Spending a 160 second main link and a two-arm serving window on it is not a good trade. If a main build is required later for another reason, the S116 producer can ride along as a default-OFF branch at no extra cost, and then a single-flag run can be scheduled only if the attached change is itself worth measuring.
+
+**Overclaim corrections**
+
+- Signed zero: the synthetic run shows a negative-zero slice-0 partial reduced to positive zero in both routes. That is the observed behaviour of a positive-zero start plus ordered adds. It does not show negative zero is impossible elsewhere.
+- Subnormals: the lo bits for the subnormal rows are non-zero and equal across routes, so this path does not flush. Again an observation on these inputs.
+- The direct control-UP probe equals the candidate pre-UP lo on the special rows, which is reassuring, but the packet is right that it is not cross-context proof.
+- S119 proves cache hit on an identical SPIR-V input and a miss on a changed one, with byte-exact outputs. It proves nothing about the 146 second main link. The relevant lesson is that the sampler SPIR-V changed by four bytes between S107 and S114 while the native prefix stayed equal, so any TU-level source edit will miss for every kernel whose embedded IR changes, even cosmetically. Expect partial hits only, and only measure on an otherwise required build.
+
+**One next step**
+
+A CPU-only attribution of the dense non-vocabulary MMVQ family, which is the largest reviewed service and disjoint from the routed experts. Using the existing S95 whole-collection CSV plus the pinned registered names and the source type table, map each dense kernel name and grid to its projection role, quant type and shape, and rank by recorded service. Then read the existing image for the top one or two shapes, as was done for Q6 A4. No build, no GPU.
+
+Stop conditions: if name and grid cannot separate roles without a new trace, stop and record that rather than instrument. If the top dense shape is already the Q6 A4 pair, stop, because that lever has been measured.
+
+**Dev loop improvements**
+
+- Adopt a screening rule before any serving comparison: the family's recorded share of the cycle is an upper bound on what a candidate can move. If that bound is below the serving noise band seen across S106 to S114, skip the serving run and keep the private proof. This is a bound, not a forecast.
+- Turn on the persistent offline cache only on the next required main build, pinned to the image and compiler, with hit and miss counters recorded as evidence. Do not run a link just to test it.
+- Keep the S116 fixture and the TG17 correction as reusable assets. The GU paired-row candidate should start from the existing S97 ISA before any new source.

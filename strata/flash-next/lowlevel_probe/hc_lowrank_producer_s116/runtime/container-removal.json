@@ -1,0 +1,13 @@
+{
+  "full_cid": "f03fb947e01be0a098ba87e9a71559b2ca6a4defd54585f6b58122109ebd871b",
+  "name": "strata-hc-producer-s116-private",
+  "full_cid_absent": true,
+  "name_absent": true,
+  "docker_start_terminal": true,
+  "normal_wait_exit": 0,
+  "wait_native_exit": 0,
+  "normal_rm_exit": 0,
+  "final_native_exit": 0,
+  "final_OOMKilled": false,
+  "no_force_stop": true
+}

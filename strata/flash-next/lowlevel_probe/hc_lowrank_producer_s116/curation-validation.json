@@ -1,0 +1,25 @@
+{
+  "status": "PASS_CURATION_SHA_SIZE_ASCII_LINKS_CLOSED_RUNTIME_POSTDECISION",
+  "copy_records": 150,
+  "copy_payload_bytes": 407979,
+  "kinds": {
+    "exact": 143,
+    "derived": 7
+  },
+  "all_exact_sources_equal_targets": true,
+  "all_derived_source_and_target_hashes_verified": true,
+  "derived_is_not_exact": true,
+  "all_copied_original_text_source_bytes_checked": 652517,
+  "binary_model_ASM_anchor_payloads_rehashed": false,
+  "all8timings_retained": true,
+  "runtime_closure": "PASS_PRIVATE_S116_STRICT_TIMING_DIAGNOSTIC_ONLY",
+  "postdecision": "S116_RETAIN_BOUNDED_PRIVATE_PROOF_DEFER_MAIN_BUILD_S119_ACCEPT_CACHE_MECHANISM_NEXT_REQUIRED_BUILD_ONLY",
+  "source_code_production_edits": 0,
+  "GPU_build_decode_model_calls_by_curation": 0,
+  "JOURNAL_goals_gitstage_changes": 0,
+  "document": {
+    "path": "docs/20261016_strata_hc_lowrank_producer_oracle.md",
+    "bytes": 7096,
+    "sha256": "f2c6fd855af196ff8402dafb35a84202d8b08dedb5d7a822f27c4191dd1b91c8"
+  }
+}

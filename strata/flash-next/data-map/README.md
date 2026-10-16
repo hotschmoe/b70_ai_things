@@ -423,3 +423,19 @@ qualification; graph-boundary consultations separately pending.
 [S101 recommendations](../../../docs/20261015_strata_next_kernel_candidates.md).
 Historical170 operation rows, rollups and metadata remain byte-exact;
 these are annotations and clean serving measurements, not new operation rows.
+
+
+S106/S114/S116 followups (2026-10-16) leave the historical operation rows,
+rollups and embedded HTML data unchanged. Whole-pair graph coarsening cuts
+recorded submissions231->126 but matched aggregate throughput changes only
++.059862%; [graph evidence](../../../docs/20261015_strata_graph_capture_and_bottlenecks.md).
+Parallel MTP argmax passes matched serving gates with+.582168% descriptive
+aggregate change, defaultOFF; [selection evidence](../../../docs/20261016_strata_mtp_parallel_argmax.md).
+
+[HC producer oracle S116](../../../docs/20261016_strata_hc_lowrank_producer_oracle.md)
+moves repeated low-rank activation into reduce before owner-lo->UP SLM.
+All strict/intermediate/anchor/graph/special checks pass; whole-four-kernel
+HOST medians73.766->72.593us in oneprocess/eightnestedABBA samples. This is
+a private readiness/arithmetic finding, not new operation-row/device timing
+or serving qualification. Keep the source/ISA schedule and raw-minuszero
+coverage limits in the linked report; no dedicated main integration selected.

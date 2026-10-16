@@ -1,0 +1,10 @@
+{
+  "status": "CLOSED_ACTUAL_COMPILED_MODELS_GPU_GO_ROOT_ONE_FINITE_RUN",
+  "responding_models": [
+    "claude-opus-5-5",
+    "claude-fable-5-1"
+  ],
+  "root_decision": "root-gpu-go.json",
+  "runtime_result": "CLOSED_PASS_PRIVATE_STRICT_FIXTURES_ONLY",
+  "actual_postreviews_root_disposition": "CLOSED_RETAIN_PRIVATE_PROOF_DEFER_DEDICATED_MAIN_BUILD_SERVE_REPEAT"
+}

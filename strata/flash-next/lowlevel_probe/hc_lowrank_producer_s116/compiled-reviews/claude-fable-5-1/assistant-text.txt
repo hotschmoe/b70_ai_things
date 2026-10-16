@@ -1,0 +1,25 @@
+**GPU_GO for the one seeded card1 strict oracle, with the eight whole-read timings conditional on every strict gate passing inside the same process.** No concrete blocker found in the compiled evidence, the runner or the analyzer.
+
+**Compiled evidence, what it does and does not prove**
+
+- Control reduce and UP computational prefixes through EOT equal the S115 originals, with normalised metadata, options, constants and relocations. Raw image and text differ only after EOT. That makes the control arm a faithful baseline. It is not full-image identity and the duplicated norm and down bodies are source-projected, not newly bound to old binaries.
+- Candidate reduce epilogue reproduces the old UP prologue instruction for instruction in role: extra zero add, multiply by 0.25, exp-scale with the same literal word, math.exp, add one, invm plus fourteen madm refinements with the same numerator and denominator roles. The zero add lands in an accumulator rather than a GRF. Both are 32-bit float encodings. Accumulator width or forwarding equivalence is not inferred, which is exactly why the bounded bytes test exists.
+- Actual schedule places the raw part store after the activation arithmetic, but the store and the epilogue consume the same materialised register, and nothing reloads part. Under disjoint private buffers with no observer until kernel completion, that ordering cannot change results. It is a bounded argument, not an alias-generic one, and it must not be described as store-then-compute.
+- Candidate UP prologue is loads and local stores only, with the staging fence and barrier retained, then 1765 ordered FP signatures matching the old UP after the first barrier. Signature matching erases GRF numbers, so it proves operation order and operands, not a register dependency graph. Byte equality in the fixture is the dependency proof.
+- Resources: same SIMD, GRF mode, options and local memory on the UP pair. Absent spill, scratch and barrier fields are unknown, not zero. The exp site counts are static and carry no timing meaning.
+
+**Runner and analyzer**
+
+- Identity binds manifest, executable size and hash, build exit, image, the root receipt with the exact executable, and 36 anchor hashes before GPU. Post-identity compares stat continuity only.
+- Pre-health is either fresh or a root-revalidated reuse on the same boot. Post-health on card1 is always run when the process ends normally. Hang or unknown state holds both leases without force, reset or health.
+- Exit 5 is whitelisted only when stderr carries exactly one known comparison message and no cleanup HOLD. Every other failure, including guard, tail, read-only and capture balance failures, routes to root recovery before any health. That is the right split between a numeric mismatch and a runtime fault.
+- The analyzer enforces the exact event order: twelve cases in the fixed order, the 36 anchors interleaved per case with the T1 subset, three synthetic diagnostics with restored and changed bits, one direct probe with the literal special list, the completion record, then eight timing rows in ABBA order as the last events. Verdict file contents are checked literally.
+- Timing rows are two nested rounds in one process of a complete four-kernel graph read including host submit and wait. They rank nothing beyond this fixture and must not be read as device service or model gain.
+
+**Residual, not blocking**
+
+Signed zero and subnormal behaviour of the reduced raw part is observed, not proven, through the synthetic diagnostic. The direct control-UP probe shows the old expression on raw special bits and is correctly labelled as not candidate proof. If the diagnostic shows reduced bits that differ from what the direct probe fed, that is information to record, not a failure, because both routes compute from the same reduced bits.
+
+**Stop conditions**
+
+Any strict mismatch, anchor mismatch, guard or tail violation, cleanup HOLD, abnormal container state, or a post-health failure ends the attempt with no retry, no reset and no second process. A pass authorises only a descriptive timing note for this fixture.

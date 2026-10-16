@@ -1,0 +1,42 @@
+# S116 compiled evidence and runner review
+
+**Verdict: GPU_GO** for one seeded card-1 strict oracle, followed by the conditional 8 whole-read host timings. I found no concrete blocker.
+
+## Compiled evidence: accepted, bounded
+
+**Control images.** The UP prefix (82,848 bytes) and reduce prefix (16,272 bytes) through EOT, together with normalized metadata, options, constants and relocations, match S115. Raw image and text differ only after EOT. This is native-prefix reuse, not full-image or SPIR-V identity.
+
+**Candidate reduce.**
+- **Ordered FP signatures, not full identity.** The 80 ordered `:f` additions match in register-erased signature. This is an ordered-FP-signature match, not proof of every GRF dependency or address.
+- **Materialized operand vs. store scheduling.** The same materialized `r30:f` feeds both the extra `+0` and the raw `part` store. The physical store is scheduled after the `+0`, scale, exp and `+1`. That is a scheduling fact; the stored operand is still the materialized raw value. `invm` reuses `r30` only after `$1.src`.
+- **Activation sequence.** It matches the old UP: `mul 0.25`, the scale word `0xbfb8aa3b`, `math.exp`, `+1`, and `invm` with 14 `madm` sites.
+- **One difference:** the `+0` lands in `acc0:f` instead of a GRF. I infer no equivalence of accumulator width or denormal behaviour from that; the runtime bytes decide.
+
+**Candidate UP.**
+- Before the barrier: a `d32` load and SLM store only, with no FP arithmetic.
+- After the first barrier, all 1,765 ordered FP signatures match. The opcode counts and the BF16 order are retained. This is still not cross-instruction SSA proof.
+
+**Resources and modes.**
+- GRF 128, SIMD32, eu 8 across the board, and the same CR0 OR mask, which I do not interpret.
+- The spill, scratch, and some SLM and barrier fields are absent, which means **UNKNOWN**, not zero.
+
+## Runner and analyzer: checked against the oracle
+
+- **Anchor order.** The analyzer's per-case anchor order (direct-a, graph-a, direct-b, graph-b; T1 direct-a only) matches the oracle's emission order, since non-listed names return early.
+- **Diagnostics.** The six alternating synthetic diagnostic lines, then the two direct lines, then `strict_complete` all match the oracle. The fixed direct raw-input bit list matches `special` for k = 0. The restored-equal and changed-differ checks on printed bits are consistent with the source.
+- **Counts:** 12 cases, 72 eager, 72 captured, 36 anchors, 12 synthetic calls. Timing comes strictly after, with exactly 8 rows in ABBA order and the final event being a timing row.
+- **Lifetimes.** The moved `unique_ptr` routes keep the graph capture references valid. Host vectors outlive their `wait_and_throw` calls.
+- **Card and lifecycle:**
+  - The card is pinned (`ZE_AFFINITY_MASK=1`, PCI `0000:44:00.0` checked in the leaf), the executable and anchors are hashed before the GPU run, and a root GO receipt bound to the executable is required.
+  - Container identity is verified and live or unknown state holds the leases.
+  - Removal is confirmed by full CID and name before any health check. Post-health is fresh, and post-identity continuity is checked.
+
+**Known-numeric vs. runtime failure.**
+- The whitelist covers only source-known byte and finite-value messages. Every other exit-5 message (guard, tail, read-only, PCI, async SYCL exceptions, cleanup) goes to root recovery with no blind health check.
+- **Note:** this is conservative. A pure guard or tail data failure will skip the automatic post-health and require root recovery. Accept that rather than widening the whitelist.
+
+## Limits for the result
+
+- **Pass scope.** A pass is bounded numerical evidence on a seeded fixture (12 cases, A/B/A eager and captured, 36 historical anchors, 14-pattern synthetic reduce). It is not a universal all-input or cross-context guarantee. The direct control-only probe is not candidate proof.
+- **Timing scope.** The 8 timings are two nested ABBA rounds in one process of completed host whole-read spans: no isolated UP or device timing, no replication, no serving or default claim, no forecast.
+- **Failure policy.** Stop at the first failure, with no tolerance, reset or retry.

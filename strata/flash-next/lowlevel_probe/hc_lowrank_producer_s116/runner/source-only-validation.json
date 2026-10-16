@@ -1,0 +1,19 @@
+{
+  "status": "PASS_SOURCE_ONLY_RUNNER_PREPARATION",
+  "Python_AST": [
+    "leased_run.py",
+    "analyze.py"
+  ],
+  "ROOT_RUN_bash_n": true,
+  "container_entry_bash_n": true,
+  "embedded_prospective_libraries_python_AST": true,
+  "no_LD_DEBUG": true,
+  "source_native_format_and_order_read": true,
+  "actual_S112_and_S73_wrappers_read": true,
+  "no_controller_import_execution_GPU_build_CLI_or_anchor_payload_read": true,
+  "runtime_manifest_list_shape_matches_actual_S116": true,
+  "exact_binary_hash_and_size_root_supplied": true,
+  "future_probe_and_health_require_root_receipt": true,
+  "root_prehealth_revalidation_never_autofilled": true,
+  "runtime_test_claim": false
+}

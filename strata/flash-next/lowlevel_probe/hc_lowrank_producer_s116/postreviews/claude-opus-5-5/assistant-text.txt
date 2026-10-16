@@ -1,0 +1,54 @@
+# S116 and S119 post-result decision
+
+## S116: retain as private proof; no main integration now
+
+**What it established:**
+- A strict pass with exact bytes across 12 base cases (72 eager and 72 captured A/B/A routes), 36 historical anchors, 12 synthetic reduce+UP calls, all raw and intermediate fields, guards and tails, with clean teardown and health.
+
+**What it did not establish:**
+- **Timing.**
+  - The round-0 figure of \u22128.9% is driven by the first control point (91.264 \xb5s, roughly 18 \xb5s above every other point). That point is kept, but it is not evidence of an effect.
+  - The fair descriptive figures are round 1 at \u22122.1% and the arm medians at \u22121.6% (73.77 \u2192 72.59 \xb5s).
+  - This is a single process with nested ABBA and the whole four-kernel read; it is not significance.
+  - HC is one family among several, and S112 went from a \u221229.7% private chain to +0.58% in serving. A main integration plus a serving comparison would likely land below what three pairs can resolve.
+- **Correction on signed zero.** The run does not show that \u22120 cannot occur.
+  - The candidate's `lo` output *does* contain \u22120 (raw `0x80000001` maps to `lo = 0x80000000`).
+  - The raw \u22120 partial became +0 after reduce in this fixture.
+  - The direct control-only probe mapped a raw \u22120 input to +0, but it is not candidate proof.
+  - So a \u22120 *raw part* entering the candidate's activation path was not exercised.
+- **Not covered:** universal all-input, all-alias or spill-zero properties.
+
+**Decision:** park it with its source and evidence. Integrate only behind a default-OFF flag, and only if a main build is otherwise required. Do not set up a dedicated build and serving comparison for it.
+
+## S119: accept the bounded cache result
+
+The counter deltas (exact input gives a hit, changed input gives a miss) and the byte-exact images are genuine.
+
+**Corrections to avoid overclaiming:**
+1. **No link-time gain is shown.** One module with one cold/warm/changed sequence says nothing about the 146 s main link.
+2. **Native-prefix equality does not predict cache hits.** The "changed" S114 sampler SPIR-V (4 bytes smaller, same native prefix through EOT) **missed**. A cache helps only modules whose exact IR bytes recur across builds; per-kernel split modules from edited TUs, or ones with shifted IDs, will miss.
+
+**Decision:** enable the pinned persistent offline cache on the next build that is required anyway. Record hits and misses per module plus the link time. Do not run an extra link just to test it.
+
+## One recommended next step: a draft-depth headroom audit
+
+**The evidence that selects it:**
+- In the S95 instrumented pair, about 64 tokens took about 24 windows, roughly 2.7 tokens per window, against a depth-2 ceiling of 3 (one verified token plus two drafts).
+- Decode per stream is therefore close to the depth-2 ceiling.
+- Every kernel micro-optimization measured so far (+0.4% to +0.6%) leaves that ceiling unchanged. Reaching 150 tok/s per stream requires more tokens per window as well as faster windows.
+
+**The step: source and log analysis only, no build or GPU.**
+1. Read why batch depth is 2: `STRATA_BATCH_MTP_DEPTH`, `steps_of`, `max_t_`/`max_drafts_`, the depth-2-only whole-pair and probability-skip caches, the paired-tail captures for j \u2264 2, and the scratch and cell capacity.
+2. List exactly what changes, if anything, for depth 3 under C2: graph keys, captures and memory.
+3. From existing retained logs, extract per-depth acceptance, accepted divided by offered at each draft step. If the step-2 acceptance rate is high, depth 3 has expected headroom.
+
+**Stop conditions:**
+- Depth 3 needs new source beyond configuration, or breaks the pairing or graph invariants: stop and write a design note rather than starting experiments.
+- Existing logs cannot give per-step acceptance: record that, and do not run a trace campaign to obtain it.
+- If the audit supports it, the later test is a same-binary depth 2 vs depth 3 comparison. Under greedy verification, text and usage must match exactly. Native work legitimately differs, so report it rather than gating on it.
+
+## Dev-loop improvements
+
+1. **Batch builds.** Keep private-proven, default-OFF candidates (S116, Q6 A4) queued and fold them into the next build that is otherwise required. Each still gets its own single-flag arm, never combined.
+2. **Persistent offline cache** on that build, with per-module hit/miss counters.
+3. **Retire private-only timing for candidates with small ceilings.** Strict correctness oracles remain mandatory, but stop using private chain timing to justify serving work.

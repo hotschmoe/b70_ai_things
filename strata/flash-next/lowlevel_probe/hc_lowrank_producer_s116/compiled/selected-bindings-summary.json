@@ -1,0 +1,686 @@
+{
+  "status": "PASS_SIX_STATIC_BINDINGS_STRICT_ORIGINAL_CONTROL_REUSE_CANDIDATE_MANUAL_ISA_PENDING",
+  "source_manifest_sha256": "3a92134aeae6ceb56a12912a6aa4c6c113cfcca7bc4c31d51ecea0c500306d55",
+  "exe_sha256": "33e390536480f83f169a63e1f9d2f2e06d8e341279a956c84a29a255951c46d3",
+  "object_sha256": "82ab8f17718b5fc336620b4322469175157d457c290c4bb33878ef8d06f5bfaa",
+  "private_images_sha256": "bb526113208d267f403e12f36996fc0593e8c261dbe2ba3d009ed418c623386c",
+  "candidate_aliases": {
+    "candidate_reduce": {
+      "sha256": "9887c75a5d0ccaeb98bdc7ad696e3f30b6b6a8340447d475b2675dbfd434ad7e",
+      "section_name": ".text.s116_candidate_reduce",
+      "text_byte_exact": true,
+      "only_section_name_changed": true,
+      "changed_bytes": 65
+    },
+    "candidate_up": {
+      "sha256": "2f619bfd1f6fd0d25f337d2ae4439ee3bda45396850566152383fb321bc36898",
+      "section_name": ".text.s116_candidate_up",
+      "text_byte_exact": true,
+      "only_section_name_changed": true,
+      "changed_bytes": 61
+    }
+  },
+  "artifact_stat_before": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep/build/hc_producer_s116": {
+      "inode": 24090781,
+      "size": 822704,
+      "mtime_ns": 1792114427176975581,
+      "ctime_ns": 1792114427177678229
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep/build/oracle.o": {
+      "inode": 24090678,
+      "size": 304032,
+      "mtime_ns": 1792114425225919550,
+      "ctime_ns": 1792114425226475526
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep/build/private.images.o": {
+      "inode": 24090771,
+      "size": 550544,
+      "mtime_ns": 1792114426961969406,
+      "ctime_ns": 1792114426961969406
+    }
+  },
+  "artifact_stat_after": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep/build/hc_producer_s116": {
+      "inode": 24090781,
+      "size": 822704,
+      "mtime_ns": 1792114427176975581,
+      "ctime_ns": 1792114427177678229
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep/build/oracle.o": {
+      "inode": 24090678,
+      "size": 304032,
+      "mtime_ns": 1792114425225919550,
+      "ctime_ns": 1792114425226475526
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-producer-s116-oracle-prep/build/private.images.o": {
+      "inode": 24090771,
+      "size": 550544,
+      "mtime_ns": 1792114426961969406,
+      "ctime_ns": 1792114426961969406
+    }
+  },
+  "limits": [
+    "Static host/image binding is not GPU dispatch or numerical proof.",
+    "Norm/down are exact source projections only; no redundant original-object/archive sweep.",
+    "Candidate raw-store operand/extra+0/div/nativeexp/finaldiv/CR0 and unchanged UP downstream order require actual selected ISA and root review before GPU.",
+    "Missing fields UNKNOWN; static barrier instructions must not be inferred from barrier_count.",
+    "Unexpected original-control mismatch HOLD; no automatic weakened equivalence or decode retry."
+  ],
+  "host_bindings": {
+    "norm": {
+      "final_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN12s116_private10HCNormS116EEEEE",
+        "bind": 2,
+        "type": 1,
+        "section": 16,
+        "offset": 4386704,
+        "size": 88
+      },
+      "final_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN12s116_private10HCNormS116EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 29,
+          "offset": 4954160,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN12s116_private10HCNormS116EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 29,
+          "offset": 4954152,
+          "size": 8
+        }
+      ],
+      "registered_name_pointer": {
+        "pointer": 4377853,
+        "name": "_ZTS16dpct_kernel_nameIJN12s116_private10HCNormS116EEE"
+      }
+    },
+    "down": {
+      "final_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN12s116_private10HCDownS116EEEEE",
+        "bind": 2,
+        "type": 1,
+        "section": 16,
+        "offset": 4387512,
+        "size": 88
+      },
+      "final_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN12s116_private10HCDownS116EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 29,
+          "offset": 4954176,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN12s116_private10HCDownS116EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 29,
+          "offset": 4954168,
+          "size": 8
+        }
+      ],
+      "registered_name_pointer": {
+        "pointer": 4377919,
+        "name": "_ZTS16dpct_kernel_nameIJN12s116_private10HCDownS116EEE"
+      }
+    },
+    "control_reduce": {
+      "final_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN12s116_private19HCControlReduceS116EEEEE",
+        "bind": 2,
+        "type": 1,
+        "section": 16,
+        "offset": 4388088,
+        "size": 88
+      },
+      "final_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN12s116_private19HCControlReduceS116EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 29,
+          "offset": 4954208,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN12s116_private19HCControlReduceS116EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 29,
+          "offset": 4954200,
+          "size": 8
+        }
+      ],
+      "registered_name_pointer": {
+        "pointer": 4378171,
+        "name": "_ZTS16dpct_kernel_nameIJN12s116_private19HCControlReduceS116EEE"
+      }
+    },
+    "control_up": {
+      "final_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN12s116_private15HCControlUpS116EEEEE",
+        "bind": 2,
+        "type": 1,
+        "section": 16,
+        "offset": 4389048,
+        "size": 88
+      },
+      "final_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN12s116_private15HCControlUpS116EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 29,
+          "offset": 4954240,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN12s116_private15HCControlUpS116EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 29,
+          "offset": 4954232,
+          "size": 8
+        }
+      ],
+      "registered_name_pointer": {
+        "pointer": 4378297,
+        "name": "_ZTS16dpct_kernel_nameIJN12s116_private15HCControlUpS116EEE"
+      }
+    },
+    "candidate_reduce": {
+      "final_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN12s116_private21HCCandidateReduceS116EEEEE",
+        "bind": 2,
+        "type": 1,
+        "section": 16,
+        "offset": 4387600,
+        "size": 88
+      },
+      "final_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN12s116_private21HCCandidateReduceS116EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 29,
+          "offset": 4954192,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN12s116_private21HCCandidateReduceS116EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 29,
+          "offset": 4954184,
+          "size": 8
+        }
+      ],
+      "registered_name_pointer": {
+        "pointer": 4378105,
+        "name": "_ZTS16dpct_kernel_nameIJN12s116_private21HCCandidateReduceS116EEE"
+      }
+    },
+    "candidate_up": {
+      "final_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN12s116_private17HCCandidateUpS116EEEEE",
+        "bind": 2,
+        "type": 1,
+        "section": 16,
+        "offset": 4388576,
+        "size": 88
+      },
+      "final_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN12s116_private17HCCandidateUpS116EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 29,
+          "offset": 4954224,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN12s116_private17HCCandidateUpS116EEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 29,
+          "offset": 4954216,
+          "size": 8
+        }
+      ],
+      "registered_name_pointer": {
+        "pointer": 4378235,
+        "name": "_ZTS16dpct_kernel_nameIJN12s116_private17HCCandidateUpS116EEE"
+      }
+    }
+  },
+  "selected": {
+    "norm": {
+      "kernel": "_ZTS16dpct_kernel_nameIJN12s116_private10HCNormS116EEE",
+      "executable_offset": 640240,
+      "image_bytes": 56184,
+      "image_sha256": "25ccad63352ac30486b58ae61fb7c6fc07454056cd9f839793427d1fa05a0638",
+      "text_bytes": 11584,
+      "text_sha256": "280124b062d9efce58a4ef2210713425ef2c221eacfe6be7f5e457f3b33a3dc5",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [
+          "64"
+        ],
+        "barrier_count": [
+          "1"
+        ],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "missing_fields": "absent/UNKNOWN, not measuredzero; barrier_count is not static instruction count",
+      "options_ascii": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "data_and_relocations": {
+        "data_sections": {},
+        "relocations": [
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private10HCNormS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private10HCNormS116EEE",
+            "offset": 76,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          },
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private10HCNormS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private10HCNormS116EEE",
+            "offset": 156,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          }
+        ],
+        "relocation_type_scope": "Raw numeric type and actual symbol/offset only, no unverified type-name semantics."
+      }
+    },
+    "down": {
+      "kernel": "_ZTS16dpct_kernel_nameIJN12s116_private10HCDownS116EEE",
+      "executable_offset": 696432,
+      "image_bytes": 40752,
+      "image_sha256": "b796ec2f4a297fe6c82491334434944bbfd81fc791084719088f6e4656fd77df",
+      "text_bytes": 13632,
+      "text_sha256": "f025754e6f0777af960d66ad2ee70be2f19fd9c6f58a1307b2f296f1a7456628",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [
+          "1"
+        ],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "missing_fields": "absent/UNKNOWN, not measuredzero; barrier_count is not static instruction count",
+      "options_ascii": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "data_and_relocations": {
+        "data_sections": {},
+        "relocations": [
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private10HCDownS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private10HCDownS116EEE",
+            "offset": 76,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          },
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private10HCDownS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private10HCDownS116EEE",
+            "offset": 156,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          }
+        ],
+        "relocation_type_scope": "Raw numeric type and actual symbol/offset only, no unverified type-name semantics."
+      }
+    },
+    "control_reduce": {
+      "kernel": "_ZTS16dpct_kernel_nameIJN12s116_private19HCControlReduceS116EEE",
+      "executable_offset": 327216,
+      "image_bytes": 41472,
+      "image_sha256": "2db969553ab9c12c8366152adbd6dd1a434090308afd982c570151d0c5dd209a",
+      "text_bytes": 16512,
+      "text_sha256": "ef64cbed3aee5699000045817cfababa5e003133aad0e379bee3caafe309996b",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "missing_fields": "absent/UNKNOWN, not measuredzero; barrier_count is not static instruction count",
+      "options_ascii": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "data_and_relocations": {
+        "data_sections": {},
+        "relocations": [
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private19HCControlReduceS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private19HCControlReduceS116EEE",
+            "offset": 76,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          },
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private19HCControlReduceS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private19HCControlReduceS116EEE",
+            "offset": 156,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          }
+        ],
+        "relocation_type_scope": "Raw numeric type and actual symbol/offset only, no unverified type-name semantics."
+      }
+    },
+    "control_up": {
+      "kernel": "_ZTS16dpct_kernel_nameIJN12s116_private15HCControlUpS116EEE",
+      "executable_offset": 503552,
+      "image_bytes": 136680,
+      "image_sha256": "6af5d6ef377e15fdb74928270e756f667ec286612f75510959170b2f59bd93b6",
+      "text_bytes": 83072,
+      "text_sha256": "07c34a64ae4a52ba15577f970f7ece3affbdc6cc5829cade810b18d08062268f",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [
+          "12288"
+        ],
+        "barrier_count": [
+          "1"
+        ],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "missing_fields": "absent/UNKNOWN, not measuredzero; barrier_count is not static instruction count",
+      "options_ascii": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "data_and_relocations": {
+        "data_sections": {},
+        "relocations": [
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private15HCControlUpS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private15HCControlUpS116EEE",
+            "offset": 76,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          },
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private15HCControlUpS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private15HCControlUpS116EEE",
+            "offset": 156,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          }
+        ],
+        "relocation_type_scope": "Raw numeric type and actual symbol/offset only, no unverified type-name semantics."
+      }
+    },
+    "candidate_reduce": {
+      "kernel": "_ZTS16dpct_kernel_nameIJN12s116_private21HCCandidateReduceS116EEE",
+      "executable_offset": 281664,
+      "image_bytes": 45552,
+      "image_sha256": "9dfd4e663a35239fa78c24b2efe84e4c44729e7db38315e0bf96c64a481e8411",
+      "text_bytes": 17920,
+      "text_sha256": "071ca2661d3681599b34a68fc18f160005b633df57772a4e1bcd17b1d885b366",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "missing_fields": "absent/UNKNOWN, not measuredzero; barrier_count is not static instruction count",
+      "options_ascii": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "data_and_relocations": {
+        "data_sections": {},
+        "relocations": [
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private21HCCandidateReduceS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private21HCCandidateReduceS116EEE",
+            "offset": 76,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          },
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private21HCCandidateReduceS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private21HCCandidateReduceS116EEE",
+            "offset": 156,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          }
+        ],
+        "relocation_type_scope": "Raw numeric type and actual symbol/offset only, no unverified type-name semantics."
+      }
+    },
+    "candidate_up": {
+      "kernel": "_ZTS16dpct_kernel_nameIJN12s116_private17HCCandidateUpS116EEE",
+      "executable_offset": 368688,
+      "image_bytes": 134856,
+      "image_sha256": "f20cfe310b68f7966dd585799ec8c281c7febaa71bf52e8fef410fd87fea5542",
+      "text_bytes": 82368,
+      "text_sha256": "472b1fe9aac3bfa79bf64a1bd7e9322b7db90f45ac7cad1adfbd0c1a57b846fb",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [
+          "12288"
+        ],
+        "barrier_count": [
+          "1"
+        ],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "missing_fields": "absent/UNKNOWN, not measuredzero; barrier_count is not static instruction count",
+      "options_ascii": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "data_and_relocations": {
+        "data_sections": {},
+        "relocations": [
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private17HCCandidateUpS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private17HCCandidateUpS116EEE",
+            "offset": 76,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          },
+          {
+            "section": ".rel.text._ZTS16dpct_kernel_nameIJN12s116_private17HCCandidateUpS116EEE",
+            "destination_section": ".text._ZTS16dpct_kernel_nameIJN12s116_private17HCCandidateUpS116EEE",
+            "offset": 156,
+            "type": 2,
+            "symbol": {
+              "name": "__INTEL_PATCH_CROSS_THREAD_OFFSET_OFF_R0",
+              "type": 0,
+              "bind": 1,
+              "section": 0,
+              "value": 0,
+              "size": 0
+            },
+            "explicit_addend": null
+          }
+        ],
+        "relocation_type_scope": "Raw numeric type and actual symbol/offset only, no unverified type-name semantics."
+      }
+    }
+  },
+  "host_function_files": {
+    "_ZN12s116_private11reduce_onlyERN4sycl3_V15queueENS_11HCMultiS116Eb": {
+      "path": "host-0.asm",
+      "bytes": 35431,
+      "sha256": "9877c6940d07fe791890b990282d383ebb662590323bbcd05500d7918bd9ec21"
+    },
+    "_ZN12s116_private2upERN4sycl3_V15queueENS_11HCMultiS116Eb": {
+      "path": "host-1.asm",
+      "bytes": 34400,
+      "sha256": "23bed54ce42fe54c3f5cf7cea5ab924ae2ca1e32ca90a837b0a83d8bc6b5aa4d"
+    },
+    "_ZN12s116_private6prefixERN4sycl3_V15queueENS_11HCMultiS116Eb": {
+      "path": "host-2.asm",
+      "bytes": 30843,
+      "sha256": "77212b9071e8432ac336177d217b81f6ec7b011475366c99c71f1185423360d4"
+    },
+    "_ZN4sycl3_V16detail19type_erased_cgfo_ty7invokerIZN12s116_private6prefixERNS0_5queueENS4_11HCMultiS116EbEUlRNS0_7handlerEE_E4callEPKvS9_": {
+      "path": "host-3.asm",
+      "bytes": 43144,
+      "sha256": "ba9b520305116a8614af4e76f6e10a11ff836e1eb93c06f5cf75abdaa0138d0f"
+    }
+  }
+}

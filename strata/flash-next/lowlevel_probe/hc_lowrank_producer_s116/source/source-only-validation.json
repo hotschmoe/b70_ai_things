@@ -1,0 +1,74 @@
+{
+  "status": "PASS_SOURCE_ONLY_STATIC_REVIEW_NOT_CPP_COMPILED",
+  "checks": {
+    "six_control_source_chunks_exact_projection": true,
+    "exact_six_unique_classes_one_launch_site_each": true,
+    "no_whole_TU_or_archive_native_function_dependency": true,
+    "candidate_source_extra_add_division_native_exp_preserved": true,
+    "no_volatile_or_new_counter_reset": true,
+    "preUP_lo_and_full_parts_finals_checked": true,
+    "ordinary_runtime_counts_honest": true,
+    "direct_probe_labeled_not_candidate_proof": true,
+    "timing_after_all_strict_and_special": true,
+    "ready_owner_disjointness_explicit": true,
+    "capture_balance_before_drain_original_preserved": true,
+    "success_verdict_after_cleanup": true,
+    "anchor_names_exact_36": true,
+    "anchor_metadata_only_now": true,
+    "preflight_Python_AST_only": true,
+    "build_shell_parse_only": true,
+    "CXX_lexical_delimiters_only": true,
+    "no_build_or_runtime_directories": true,
+    "all_prepared_files_ASCII": true
+  },
+  "control_projection_chunks": {
+    "helpers": {
+      "bytes": 1078,
+      "sha256": "1a16990b64620830826292d17e04abb03e121787c44c13eba4260b430a277157",
+      "private_exact_occurrences": 1
+    },
+    "multi_and_pick": {
+      "bytes": 1253,
+      "sha256": "df6704da1b593fedba0556a3252994b71a1c6edaaf1b7ff27f72246e91b8204a",
+      "private_exact_occurrences": 1
+    },
+    "norm_split": {
+      "bytes": 2638,
+      "sha256": "08af788f99c72222a4bdd5b66fa0389db42e5e2a441c3ed90ed2a74908aa3bef",
+      "private_exact_occurrences": 1
+    },
+    "sliced_down": {
+      "bytes": 2274,
+      "sha256": "61794050a4fb8f5685b0035ace64d12daf835bf4ff22d3f0e2401a365b916b89",
+      "private_exact_occurrences": 1
+    },
+    "reduce": {
+      "bytes": 1262,
+      "sha256": "8c1ec98e62bc70d60bb8af81901330059fef1626c5fde991c884a77d30f2c882",
+      "private_exact_occurrences": 1
+    },
+    "up": {
+      "bytes": 5601,
+      "sha256": "bbc576aa77dab02321ad9b3008e571d730fd774b89821c5465395ba5f435a0db",
+      "private_exact_occurrences": 1
+    }
+  },
+  "kernel_classes": [
+    "HCNormS116",
+    "HCDownS116",
+    "HCCandidateReduceS116",
+    "HCControlReduceS116",
+    "HCCandidateUpS116",
+    "HCControlUpS116"
+  ],
+  "not_executed": [
+    "C++ compiler",
+    "AOT",
+    "host link",
+    "anchor verifier",
+    "oracle",
+    "GPU",
+    "model CLI"
+  ],
+  "limits": "Python AST/bash-n/C++ lexical delimiter/source-contract checks are not C++ syntax/type/compiled identity or numerical proof."
+}
