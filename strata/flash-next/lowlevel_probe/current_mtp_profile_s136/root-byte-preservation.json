@@ -1,0 +1,8 @@
+{
+  "prior_commit": "ac773fec",
+  "issue": "repository text=auto normalized CRLF in one exact-evidence CSV during add; detected by indexed-byte comparison after commit",
+  "fix": "scoped -text attribute preserves original frozen CSV bytes; original payload and manifests unchanged",
+  "path": "bounded-attribution/headfree-events.csv",
+  "frozen_sha256": "348919be56d0a4092ed2a75a3b715fbd0e7bcd33f0645c31475e5e3779ef8f1c",
+  "other_committed_payloads_verified_equal": true
+}
