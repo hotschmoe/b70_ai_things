@@ -1,0 +1,517 @@
+diff --git a/sycl/CMakeLists.txt b/sycl/CMakeLists.txt
+index e5e4b36a..6f12090a 100644
+--- a/sycl/CMakeLists.txt
++++ b/sycl/CMakeLists.txt
+@@ -371,6 +371,8 @@ if(STRATA_SYCL_PARITY)
+   target_link_libraries(mmvq_bench PRIVATE strata_kernels)
+   add_executable(dense_bench ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/dense_bench.cpp)   # the decode window's dense GEMVs, graph, hash
+   target_link_libraries(dense_bench PRIVATE strata_kernels)
++  add_executable(night_mmvq_bench ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/night_mmvq_bench.cpp)   # STRATA_NIGHT_MMVQ A/B
++  target_link_libraries(night_mmvq_bench PRIVATE strata_kernels)
+   add_executable(mmvq_sg_bench ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/mmvq_sg_bench.cpp)   # SIMD16 vs 32 decode mmvq
+   target_link_libraries(mmvq_sg_bench PRIVATE strata_kernels)
+   add_executable(q6k_align_bench ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/q6k_align_bench.cpp)   # Q6_K block alignment
+diff --git a/sycl/src/kernels/cuda/native_mmvq.dp.cpp b/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+index 96913121..d7a216a9 100644
+--- a/sycl/src/kernels/cuda/native_mmvq.dp.cpp
++++ b/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+@@ -25,6 +25,7 @@
+ 
+ #define DPCT_PROFILING_ENABLED
+ #include <sycl/sycl.hpp>
++#include <sycl/ext/intel/experimental/grf_size_properties.hpp>
+ #include <dpct/dpct.hpp>
+ #include "strata/sycl_math.hpp"
+ #include "strata/sycl_queue.hpp"
+@@ -2230,6 +2231,307 @@ bool try_wide(const void* weights, const void* x_q8_1, float* y, int n_in, int n
+     }
+ }
+ 
++// ---------------------------------------------------------------- night: STRATA_NIGHT_MMVQ=1 (KREG), default OFF
++//
++// K split across the work-group, activations in registers. Lane l of a group owns 32 weights of every row (8 lanes per
++// 256-block, block l / 8, position group g = l % 8: the wide kernels' per-lane split) and loads its NCOLS activation
++// pieces ONCE (plus, for Q4_K/Q5_K, the min term's activation sums). The group then streams tiles of R rows: R
++// independent weight loads per lane, R x NCOLS dots, a transposed sub-group butterfly (each SIMD16 lane ends with
++// R*NCOLS/16 finished sums) and a double-buffered SLM sum across the sub-groups (one SLM-only barrier per tile).
++// The wide kernels re-read every column's activations per row (6 columns: ~10x the weight bytes in L1 loads, issued
++// one at a time through one register block) and are issue-bound at 4-6 columns. Summation order differs from the
++// wide kernels (FP32 rounding-level differences, not bitwise). Q4_K/Q5_K need a 16-byte aligned matrix (as WideQ4K).
++constexpr int NIGHT_SG = 16;
++inline bool night_mmvq() {
++    static const bool v = [] {
++        const char* e = std::getenv("STRATA_NIGHT_MMVQ");
++        const bool on = e && e[0] == '1';
++        if (on) std::fprintf(stderr, "strata night mmvq: enabled=1 KREG Q4_K/Q5_K/Q6_K/IQ4_XS ncols 1-8 (head included)\n");
++        return on;
++    }();
++    return v;
++}
++int g_night_mmvq_override = -1;   // bench toggle (native_mmvq_set_night): -1 = the env latch
++inline bool night_mmvq_on() { return g_night_mmvq_override >= 0 ? g_night_mmvq_override != 0 : night_mmvq(); }
++
++template <int O, int N, int P>
++__dpct_inline__ void night_tsum(float (&v)[P], const sycl::sub_group& sg, int lane) {
++    if constexpr (O > 0) {
++        constexpr int H = N / 2;
++        const bool up = (lane & O) != 0;
++#pragma unroll
++        for (int i = 0; i < H; ++i) {
++            const float lo = v[i], hi = v[i + H];   // values: a ?: of two array lvalues selects ADDRESSES and
++            const float send = up ? lo : hi;        // sends v[] to private (global) memory
++            const float keep = up ? hi : lo;
++            v[i] = keep + sycl::permute_group_by_xor(sg, send, O);
++        }
++        night_tsum<O / 2, H, P>(v, sg, lane);
++    }
++}
++struct NightActK { sycl::int4 ua, uc; float da, dc, sa, sc; };
++__dpct_inline__ NightActK night_act_k(const Q81Block* xb, int g) {
++    const int sb = 2 * (g >> 1), half = g & 1;
++    const sycl::int4 ones(0x01010101, 0x01010101, 0x01010101, 0x01010101);
++    NightActK v;
++    v.ua = ld_q8_16(xb + sb, half); v.uc = ld_q8_16(xb + sb + 1, half);
++    v.da = (float) xb[sb].ds[0]; v.dc = (float) xb[sb + 1].ds[0];
++    v.sa = v.da * (float) dp4a4(ones, v.ua, 0);
++    v.sc = v.dc * (float) dp4a4(ones, v.uc, 0);
++    return v;
++}
++struct NightWK { sycl::int4 lo, hi; float dl, dh, ml, mh; };
++// dm + the 12 scale bytes = the block's first 16 bytes; ggml get_scale_min_k4 for j = sb, sb + 1, branchless
++__dpct_inline__ void night_scales_k(const sycl::int4 hdr, int g, NightWK& r) {
++    const int sb = 2 * (g >> 1), sh = 8 * (sb & 3);
++    const uint32_t A = ((uint32_t) hdr.y() >> sh) & 0xFFFF, B = ((uint32_t) hdr.z() >> sh) & 0xFFFF,
++                   C = ((uint32_t) hdr.w() >> sh) & 0xFFFF;
++    const uint32_t ls0 = A & 63, ls1 = (A >> 8) & 63, lm0 = B & 63, lm1 = (B >> 8) & 63;
++    const uint32_t hs0 = (C & 0xF) | (((A >> 6) & 3) << 4), hs1 = ((C >> 8) & 0xF) | (((A >> 14) & 3) << 4);
++    const uint32_t hm0 = ((C >> 4) & 0xF) | (((B >> 6) & 3) << 4), hm1 = ((C >> 12) & 0xF) | (((B >> 14) & 3) << 4);
++    const bool lo4 = sb < 4;
++    const uint32_t s0 = lo4 ? ls0 : hs0, s1 = lo4 ? ls1 : hs1, m0 = lo4 ? lm0 : hm0, m1 = lo4 ? lm1 : hm1;
++    const sycl::half2 dmh = sycl::bit_cast<sycl::half2>(hdr.x());
++    const float d = (float) dmh.x(), dmin = (float) dmh.y();
++    r.dl = d * (float) s0; r.ml = dmin * (float) m0; r.dh = d * (float) s1; r.mh = dmin * (float) m1;
++}
++__dpct_inline__ float night_dot_k(const NightWK& r, const NightActK& v) {
++    return r.dl * (v.da * (float) dp4a4(r.lo, v.ua, 0)) - r.ml * v.sa +
++           r.dh * (v.dc * (float) dp4a4(r.hi, v.uc, 0)) - r.mh * v.sc;
++}
++struct NightQ4K {
++    static constexpr int kTableWords = 0;
++    static uint32_t table_entry(int) { return 0; }
++    using Block = Q4KBlock; using A = NightActK; using W = NightWK;
++    static A act(const Q81Block* xb, int g) { return night_act_k(xb, g); }
++    static W load(const Block* b, int g) {
++        W r;
++        const sycl::int4 hdr = *reinterpret_cast<const sycl::int4*>(b);
++        const sycl::int4 q = reinterpret_cast<const sycl::int4*>(b->qs)[g];
++        r.lo = sycl::int4(q.x() & 0x0f0f0f0f, q.y() & 0x0f0f0f0f, q.z() & 0x0f0f0f0f, q.w() & 0x0f0f0f0f);
++        r.hi = sycl::int4((q.x() >> 4) & 0x0f0f0f0f, (q.y() >> 4) & 0x0f0f0f0f, (q.z() >> 4) & 0x0f0f0f0f, (q.w() >> 4) & 0x0f0f0f0f);
++        night_scales_k(hdr, g, r);
++        return r;
++    }
++    static float dot(const W& r, const A& v) { return night_dot_k(r, v); }
++};
++struct NightQ5K {
++    static constexpr int kTableWords = 0;
++    static uint32_t table_entry(int) { return 0; }
++    using Block = Q5KBlock; using A = NightActK; using W = NightWK;
++    static A act(const Q81Block* xb, int g) { return night_act_k(xb, g); }
++    static W load(const Block* b, int g) {
++        W r;
++        const int sb = 2 * (g >> 1), half = g & 1;
++        const sycl::int4 hdr = *reinterpret_cast<const sycl::int4*>(b);
++        const sycl::int4 q = reinterpret_cast<const sycl::int4*>(b->qs)[g];
++        const sycl::int4 h = reinterpret_cast<const sycl::int4*>(b->qh)[half];
++        auto hb = [](int v, int bit) { return ((v >> bit) & 0x01010101) << 4; };
++        r.lo = sycl::int4((q.x() & 0x0f0f0f0f) | hb(h.x(), sb), (q.y() & 0x0f0f0f0f) | hb(h.y(), sb),
++                          (q.z() & 0x0f0f0f0f) | hb(h.z(), sb), (q.w() & 0x0f0f0f0f) | hb(h.w(), sb));
++        r.hi = sycl::int4(((q.x() >> 4) & 0x0f0f0f0f) | hb(h.x(), sb + 1), ((q.y() >> 4) & 0x0f0f0f0f) | hb(h.y(), sb + 1),
++                          ((q.z() >> 4) & 0x0f0f0f0f) | hb(h.z(), sb + 1), ((q.w() >> 4) & 0x0f0f0f0f) | hb(h.w(), sb + 1));
++        night_scales_k(hdr, g, r);
++        return r;
++    }
++    static float dot(const W& r, const A& v) { return night_dot_k(r, v); }
++};
++struct NightQ6K {   // the wide Q6_K kernel's lane mapping and dot expression; (q - 32) per byte by the CENTER identity
++    static constexpr int kTableWords = 0;
++    static uint32_t table_entry(int) { return 0; }
++    using Block = Q6KBlock;
++    struct A { sycl::int4 u0, u1; float ds0, ds1; };
++    struct W { int vi0[4], vi1[4]; float dsc0, dsc1; };
++    static A act(const Q81Block* xb, int g) {
++        const int bq8_offset = 4 * (g >> 2) + ((g & 3) >> 1);
++        A a;
++        a.u0 = ld_q8_16(xb + bq8_offset, g & 1); a.u1 = ld_q8_16(xb + bq8_offset + 2, g & 1);
++        a.ds0 = (float) xb[bq8_offset].ds[0]; a.ds1 = (float) xb[bq8_offset + 2].ds[0];
++        return a;
++    }
++    static W load(const Block* b, int g) {
++        W r;
++        const int vh_shift = 2 * ((g & 3) >> 1);
++        const int qh4_idx = 2 * (g >> 2) + (g & 1);
++        const int scale_offset = 8 * (g >> 2) + (g & 3);
++        const sycl::int4 ql4 = load16_a2(b->ql + 16 * g), qh4 = load16_a2(b->qh + 16 * qh4_idx);
++        const float d = b->d;
++        r.dsc0 = d * (float) b->scales[scale_offset]; r.dsc1 = d * (float) b->scales[scale_offset + 4];
++        const int vl[4] = {ql4.x(), ql4.y(), ql4.z(), ql4.w()};
++        const int vh[4] = {qh4.x() >> vh_shift, qh4.y() >> vh_shift, qh4.z() >> vh_shift, qh4.w() >> vh_shift};
++#pragma unroll
++        for (int p = 0; p < 4; ++p) {
++            r.vi0[p] = (int) ((uint32_t((vl[p] & 0x0f0f0f0f) | ((vh[p] << 4) & 0x30303030)) + 0x60606060u) ^ 0x80808080u);
++            r.vi1[p] = (int) ((uint32_t(((vl[p] >> 4) & 0x0f0f0f0f) | (((vh[p] >> 4) << 4) & 0x30303030)) + 0x60606060u) ^ 0x80808080u);
++        }
++        return r;
++    }
++    static float dot(const W& r, const A& a) {
++        int s0 = 0, s1 = 0;
++        s0 = strata::dp4a(r.vi0[0], a.u0.x(), s0); s0 = strata::dp4a(r.vi0[1], a.u0.y(), s0);
++        s0 = strata::dp4a(r.vi0[2], a.u0.z(), s0); s0 = strata::dp4a(r.vi0[3], a.u0.w(), s0);
++        s1 = strata::dp4a(r.vi1[0], a.u1.x(), s1); s1 = strata::dp4a(r.vi1[1], a.u1.y(), s1);
++        s1 = strata::dp4a(r.vi1[2], a.u1.z(), s1); s1 = strata::dp4a(r.vi1[3], a.u1.w(), s1);
++        return a.ds0 * r.dsc0 * (float) s0 + a.ds1 * r.dsc1 * (float) s1;
++    }
++};
++// IQ4_XS (lane g = sub-block g, as WideIQ4XS): the codebook through a 256-entry SLM table indexed by a qs byte,
++// TL[b] = code(b & 15) | code(b >> 4) << 16, so two lookups and two shifts give four low and four high codes.
++// The select-chain lookup (iq4_lut4) costs ~10 instructions per nibble and made a K-split kernel slower than WideIQ4XS.
++struct NightIQ4XS {
++    using Block = IQ4XSBlock;
++    static constexpr int kTableWords = 256;
++    static uint32_t table_entry(int i) {
++        return (uint32_t) (uint8_t) kIq4nlTable[i & 15] | ((uint32_t) (uint8_t) kIq4nlTable[i >> 4] << 16);
++    }
++    struct A { sycl::int4 u0, u1; float ds; };
++    struct W { sycl::int4 lo, hi; float d; };
++    static A act(const Q81Block* xb, int g) {
++        A a; a.u0 = ld_q8_16(xb + g, 0); a.u1 = ld_q8_16(xb + g, 1); a.ds = (float) xb[g].ds[0]; return a;
++    }
++    static W load(const Block* b, int g, const uint32_t* tl) {
++        W r;
++        const sycl::int2 hdr = *reinterpret_cast<const sycl::int2*>(b);              // 136 = 17 x 8: 8-byte aligned
++        const sycl::int2* q2 = reinterpret_cast<const sycl::int2*>(b->qs + 16 * g);
++        const sycl::int2 qa = q2[0], qb = q2[1];
++        const uint32_t v[4] = {(uint32_t) qa.x(), (uint32_t) qa.y(), (uint32_t) qb.x(), (uint32_t) qb.y()};
++        int lo[4], hi[4];
++#pragma unroll
++        for (int i = 0; i < 4; ++i) {
++            const uint32_t P = tl[v[i] & 0xFF] | (tl[(v[i] >> 8) & 0xFF] << 8);
++            const uint32_t Q = tl[(v[i] >> 16) & 0xFF] | (tl[v[i] >> 24] << 8);
++            lo[i] = (int) ((P & 0xFFFFu) | (Q << 16));
++            hi[i] = (int) ((P >> 16) | (Q & 0xFFFF0000u));
++        }
++        r.lo = sycl::int4(lo[0], lo[1], lo[2], lo[3]); r.hi = sycl::int4(hi[0], hi[1], hi[2], hi[3]);
++        const uint32_t h0 = (uint32_t) hdr.x(), sl = (uint32_t) hdr.y();
++        const int ls = (int) (((sl >> (8 * (g >> 1) + 4 * (g & 1))) & 0x0f) | (((h0 >> (16 + 2 * g)) & 0x03) << 4));
++        r.d = (float) sycl::bit_cast<sycl::half>((uint16_t) (h0 & 0xFFFF)) * (float) (ls - 32);
++        return r;
++    }
++    static float dot(const W& r, const A& v) { return r.d * v.ds * (float) dp4a4(r.hi, v.u1, dp4a4(r.lo, v.u0, 0)); }
++};
++template <int R, int NCOLS> constexpr int night_p() { return (R * NCOLS + NIGHT_SG - 1) / NIGHT_SG * NIGHT_SG; }
++template <typename F, int NCOLS, int R>
++void night_kreg_kernel(const typename F::Block* __restrict__ w, const Q81Block* __restrict__ x, float* __restrict__ y,
++                       int n_in, int n_out, float* __restrict__ slm) {
++    auto it = sycl::ext::oneapi::this_work_item::get_nd_item<1>();
++    const sycl::sub_group sg = it.get_sub_group();
++    constexpr int P0 = R * NCOLS, P = night_p<R, NCOLS>(), PL = P / NIGHT_SG;
++    const int lid = int(it.get_local_id(0)), lane = int(sg.get_local_linear_id()), sgi = lid / NIGHT_SG;
++    const int nsg = int(it.get_local_range(0)) / NIGHT_SG;
++    const int bpr = n_in / QK, x_stride = n_in / Q8K;
++    const bool live = (lid >> 3) < bpr;
++    const int kb = live ? (lid >> 3) : 0, g = lid & 7;
++    typename F::A a[NCOLS];
++#pragma unroll
++    for (int j = 0; j < NCOLS; ++j) {
++        a[j] = F::act(x + std::size_t(j) * x_stride + kb * (QK / Q8K), g);
++        if (!live) a[j] = typename F::A{};
++    }
++    const uint32_t* tbl = nullptr;
++    if constexpr (F::kTableWords > 0) {   // per-group codebook table after the two reduction buffers
++        uint32_t* tw = reinterpret_cast<uint32_t*>(slm + 2 * nsg * P);
++        for (int i = lid; i < F::kTableWords; i += int(it.get_local_range(0))) tw[i] = F::table_entry(i);
++        it.barrier(sycl::access::fence_space::local_space);
++        tbl = tw;
++    }
++    const int ntiles = (n_out + R - 1) / R;
++    int buf = 0;
++    for (int t = int(it.get_group(0)); t < ntiles; t += int(it.get_group_range(0))) {
++        const int row0 = t * R;
++        const typename F::Block* wt = w + std::size_t(row0) * bpr + kb;
++        const int rlast = n_out - 1 - row0;
++        typename F::W wv[R];
++#pragma unroll
++        for (int r = 0; r < R; ++r) {
++            if constexpr (F::kTableWords > 0) wv[r] = F::load(wt + (r < rlast ? r : rlast) * bpr, g, tbl);
++            else wv[r] = F::load(wt + (r < rlast ? r : rlast) * bpr, g);
++        }
++        float v[P];
++#pragma unroll
++        for (int r = 0; r < R; ++r)
++#pragma unroll
++            for (int j = 0; j < NCOLS; ++j) v[r * NCOLS + j] = F::dot(wv[r], a[j]);
++#pragma unroll
++        for (int k = P0; k < P; ++k) v[k] = 0.0f;
++        night_tsum<NIGHT_SG / 2, P, P>(v, sg, lane);
++        float* b = slm + buf * nsg * P;
++#pragma unroll
++        for (int i = 0; i < PL; ++i) b[sgi * P + lane * PL + i] = v[i];
++        it.barrier(sycl::access::fence_space::local_space);   // SLM-only fence (group_barrier also fences global)
++        for (int k = lid; k < P0; k += int(it.get_local_range(0))) {
++            float s = 0.0f;
++            for (int q = 0; q < nsg; ++q) s += b[q * P + k];
++            const int r = k / NCOLS, j = k % NCOLS;
++            if (row0 + r < n_out) y[std::size_t(j) * n_out + row0 + r] = s;
++        }
++        buf ^= 1;   // the next tile writes the other buffer; this one is rewritten only after the next barrier
++    }
++}
++template <typename F, int NCOLS, int R, int GRF>
++void launch_night_kreg(const void* weights, const void* x_q8_1, float* y, int n_in, int n_out, dpct::queue_ptr s) {
++    const auto* w = static_cast<const typename F::Block*>(weights);
++    const auto* x = static_cast<const Q81Block*>(x_q8_1);
++    const int L = ((n_in / QK) * 8 + NIGHT_SG - 1) / NIGHT_SG * NIGHT_SG;
++    const int nsg = L / NIGHT_SG;
++    constexpr int P = night_p<R, NCOLS>();
++    const int tiles = (n_out + R - 1) / R;
++    s->submit([&](sycl::handler& h) {
++        sycl::local_accessor<float, 1> slm(sycl::range<1>(2 * nsg * P + F::kTableWords), h);
++        auto k = [=](sycl::nd_item<1>) [[sycl::reqd_sub_group_size(16)]] {
++            night_kreg_kernel<F, NCOLS, R>(w, x, y, n_in, n_out, slm.get_multi_ptr<sycl::access::decorated::no>().get());
++        };
++        const sycl::nd_range<1> nr(std::size_t(tiles) * L, L);
++        if constexpr (GRF == 256)
++            h.parallel_for<dpct_kernel_name<class night_mmvq_kreg_g, F, dpct_kernel_scalar<NCOLS>, dpct_kernel_scalar<R>>>(
++                nr, sycl::ext::oneapi::experimental::properties{sycl::ext::intel::experimental::grf_size<256>}, k);
++        else
++            h.parallel_for<dpct_kernel_name<class night_mmvq_kreg, F, dpct_kernel_scalar<NCOLS>, dpct_kernel_scalar<R>>>(nr, k);
++    });
++}
++// Per-(format, columns) tile shape from the probe sweep (mmvq_probe, card 1, 2026-10-16): R rows per tile, GRF mode.
++template <typename F, int NCOLS>
++void night_dispatch(const void* w, const void* x, float* y, int n_in, int n_out, dpct::queue_ptr s) {
++    constexpr bool Q6 = std::is_same_v<F, NightQ6K>;
++    if constexpr (std::is_same_v<F, NightIQ4XS>) {
++        if constexpr (NCOLS == 1) launch_night_kreg<F, 1, 8, 128>(w, x, y, n_in, n_out, s);
++        else launch_night_kreg<F, NCOLS, 4, 128>(w, x, y, n_in, n_out, s);
++    } else if constexpr (Q6) {
++        if constexpr (NCOLS <= 3) launch_night_kreg<F, NCOLS, 4, 128>(w, x, y, n_in, n_out, s);
++        else launch_night_kreg<F, NCOLS, 2, 128>(w, x, y, n_in, n_out, s);
++    } else {
++        if constexpr (NCOLS == 1) launch_night_kreg<F, 1, 4, 128>(w, x, y, n_in, n_out, s);
++        else if constexpr (NCOLS == 2) {
++            if (n_in <= 4096) launch_night_kreg<F, 2, 8, 256>(w, x, y, n_in, n_out, s);
++            else launch_night_kreg<F, 2, 4, 128>(w, x, y, n_in, n_out, s);
++        } else if constexpr (NCOLS <= 4) launch_night_kreg<F, NCOLS, 4, 128>(w, x, y, n_in, n_out, s);
++        else if constexpr (std::is_same_v<F, NightQ5K>) {
++            if (n_in <= 4096) launch_night_kreg<F, NCOLS, 8, 256>(w, x, y, n_in, n_out, s);
++            else launch_night_kreg<F, NCOLS, 2, 128>(w, x, y, n_in, n_out, s);
++        } else launch_night_kreg<F, NCOLS, 8, 256>(w, x, y, n_in, n_out, s);
++    }
++}
++template <typename F>
++bool try_night(const void* weights, const void* x_q8_1, float* y, int n_in, int n_out, int ncols, void* stream) {
++    if (!night_mmvq_on() || ncols < 1 || ncols > 8 || n_out <= 0 || n_in <= 0 || n_in % QK != 0 || n_in > 32768) return false;
++    if ((std::is_same_v<F, NightQ4K> || std::is_same_v<F, NightQ5K>) && (reinterpret_cast<uintptr_t>(weights) & 15u) != 0) return false;
++    if (std::is_same_v<F, NightIQ4XS> && (reinterpret_cast<uintptr_t>(weights) & 7u) != 0) return false;
++    if (std::is_same_v<F, NightIQ4XS> && ncols == 1 && n_out < 2048) return false;   // measured 0.91-0.97x there
++    if ((reinterpret_cast<uintptr_t>(weights) & 1u) != 0 || (reinterpret_cast<uintptr_t>(x_q8_1) & 3u) != 0) return false;
++    const auto s = strata::q_of(stream);
++    switch (ncols) {
++        case 1: night_dispatch<F, 1>(weights, x_q8_1, y, n_in, n_out, s); return true;
++        case 2: night_dispatch<F, 2>(weights, x_q8_1, y, n_in, n_out, s); return true;
++        case 3: night_dispatch<F, 3>(weights, x_q8_1, y, n_in, n_out, s); return true;
++        case 4: night_dispatch<F, 4>(weights, x_q8_1, y, n_in, n_out, s); return true;
++        case 5: night_dispatch<F, 5>(weights, x_q8_1, y, n_in, n_out, s); return true;
++        case 6: night_dispatch<F, 6>(weights, x_q8_1, y, n_in, n_out, s); return true;
++        case 7: night_dispatch<F, 7>(weights, x_q8_1, y, n_in, n_out, s); return true;
++        default: night_dispatch<F, 8>(weights, x_q8_1, y, n_in, n_out, s); return true;
++    }
++}
++
+ // SYCL port: wide kernels for the 32-element formats Q8_0 (34-byte blocks) and IQ4_NL (18). Both are only 2-byte
+ // aligned, so the weights come through load16_a2 (page-safe). Q8_0: 2 lanes per block (16 quants each), 16 blocks
+ // per sub-group step; IQ4_NL: 1 lane per block (its 16 bytes = 32 nibbles), 32 blocks per step. One row per
+@@ -3296,6 +3598,7 @@ void native_q6_k_unpack(const void* weights) {
+ 
+ void native_mmvq_set_multi_exact(bool exact) { g_multi_exact = exact; }
+ void native_mmvq_set_q6k_wide(bool on) { g_q6k_wide = on; }
++void native_mmvq_set_night(int on) { g_night_mmvq_override = on; }   // bench toggle: -1 = STRATA_NIGHT_MMVQ
+ void native_q6_k_mmvq_stride224(const void* weights, const void* x_q8_1, float* y, int n_in, int n_out, int ncols,
+                                 void* stream) {
+     const auto s = strata::q_of(stream);
+@@ -3384,6 +3687,7 @@ void native_q5_k_mmvq(const void* weights, const void* x_q8_1, float* y,
+     validate_pointer(x_q8_1);
+     validate_pointer(y);
+     validate_stream(stream);
++    if (try_night<NightQ5K>(weights, x_q8_1, y, n_in, n_out, ncols, stream)) { launch_check(); return; }   // STRATA_NIGHT_MMVQ=1
+     if (try_wide<WideQ5K>(weights, x_q8_1, y, n_in, n_out, ncols, stream)) { launch_check(); return; }
+     STRATA_WAVE_MMVQ(Q5KTraits)
+     if (ncols > 1) {
+@@ -3607,6 +3911,7 @@ void native_iq4_xs_mmvq(const void* weights, const void* x_q8_1, float* y,
+     validate_pointer(x_q8_1);
+     validate_pointer(y);
+     validate_stream(stream);
++    if (try_night<NightIQ4XS>(weights, x_q8_1, y, n_in, n_out, ncols, stream)) { launch_check(); return; }   // STRATA_NIGHT_MMVQ=1
+     if (try_wide<WideIQ4XS>(weights, x_q8_1, y, n_in, n_out, ncols, stream)) { launch_check(); return; }
+     STRATA_WAVE_MMVQ(IQ4XSTraits)
+     if (ncols > 1) {
+@@ -3698,6 +4003,7 @@ void native_q4_k_mmvq(const void* weights, const void* x_q8_1, float* y,
+     validate_pointer(x_q8_1);
+     validate_pointer(y);
+     validate_stream(stream);
++    if (try_night<NightQ4K>(weights, x_q8_1, y, n_in, n_out, ncols, stream)) { launch_check(); return; }   // STRATA_NIGHT_MMVQ=1
+     if (try_wide<WideQ4K>(weights, x_q8_1, y, n_in, n_out, ncols, stream)) { launch_check(); return; }
+     STRATA_WAVE_MMVQ(Q4KTraits)
+     if (ncols > 1) {
+@@ -3769,6 +4075,7 @@ void native_q4_k_f32(const void* weights, const float* x, void* scratch_q8_1,
+ void native_q6_k_mmvq(const void* weights, const void* x_q8_1, float* y,
+                       int n_in, int n_out, int ncols, void* stream) {
+     if (q6_packed_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream)) return;   // STRATA_Q6_PACKED=1 heads
++    if (try_night<NightQ6K>(weights, x_q8_1, y, n_in, n_out, ncols, stream)) { launch_check(); return; }   // STRATA_NIGHT_MMVQ=1
+     // SYCL port: 16-byte-load kernel for the decode shapes (ncols <= 4)
+     // With the aligned loads (load16_a2) the wide kernel wins on every Q6_K shape and window width: 2.6-3.4x the
+     // misaligned-load kernels in q6k_align_bench, decode 44.9 -> 54 tok/s on the Coder, output tokens identical.
+diff --git a/sycl/src/kernels/night_mmvq_bench.cpp b/sycl/src/kernels/night_mmvq_bench.cpp
+new file mode 100644
+index 00000000..4724ae93
+--- /dev/null
++++ b/sycl/src/kernels/night_mmvq_bench.cpp
+@@ -0,0 +1,138 @@
++// sycl/src/kernels/night_mmvq_bench.cpp - STRATA_NIGHT_MMVQ A/B through the public native_mmvq / native_mmvq_head API:
++// the original dispatch (night off) against the night KREG kernels (night on) at the decode shapes and window widths,
++// random valid weights, native_quantize_q8_1 activations, NMAT distinct weight copies per graph (>= ~600 MB streamed
++// per replay, so L2 never holds a matrix), in-order queue graph replay. Prints us/call, GB/s of weights, the speedup
++// and the max abs / max rel error of night against the original on matrix 0.
++//     night_mmvq_bench [types=14,13,12] [ncols=1,2,3,4,6] [shape=all|name]
++#define DPCT_PROFILING_ENABLED
++#include <sycl/sycl.hpp>
++#include <dpct/dpct.hpp>
++#include "strata/kernels/native_mmvq.hpp"
++#include "strata/kernels/native_head_mmvq.hpp"
++#include <algorithm>
++#include <cmath>
++#include <cstdint>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <functional>
++#include <string>
++#include <vector>
++
++namespace strata::kernels { void native_mmvq_set_night(int on); }
++namespace k = strata::kernels;
++namespace sx = sycl::ext::oneapi::experimental;
++
++namespace {
++uint64_t rs = 0x9E3779B97F4A7C15ull;
++inline uint64_t xr() { rs ^= rs << 13; rs ^= rs >> 7; rs ^= rs << 17; return rs; }
++int block_bytes(int t) { return t == 12 ? 144 : t == 13 ? 176 : t == 14 ? 210 : t == 23 ? 136 : t == 20 ? 18 : 34; }
++const char* fname(int t) { return t == 12 ? "Q4_K" : t == 13 ? "Q5_K" : t == 14 ? "Q6_K" : t == 23 ? "IQ4_XS" : t == 20 ? "IQ4_NL" : "Q8_0"; }
++void fill_pool(int t, std::vector<uint8_t>& h) {   // random bytes, finite small fp16 scales (~2^-10) at the format's offsets
++    uint64_t* p = (uint64_t*) h.data();
++    for (size_t i = 0; i < h.size() / 8; ++i) p[i] = xr();
++    const size_t bs = block_bytes(t), nb = h.size() / bs;
++    for (size_t b = 0; b < nb; ++b) {
++        uint8_t* o = &h[b * bs];
++        const uint16_t d = (uint16_t) (0x1400 | (xr() & 0x3ff)), m = (uint16_t) (0x1400 | (xr() & 0x3ff));
++        std::memcpy(o + (t == 14 ? 208 : 0), &d, 2);
++        if (t == 12 || t == 13) std::memcpy(o + 2, &m, 2);
++    }
++}
++std::vector<int> parse_list(const char* s) {
++    std::vector<int> v; std::string t(s); size_t p = 0;
++    while (p < t.size()) { size_t e = t.find(',', p); if (e == std::string::npos) e = t.size(); v.push_back(std::atoi(t.substr(p, e - p).c_str())); p = e + 1; }
++    return v;
++}
++double time_graph(sycl::queue& q, int nmat, const std::function<void(int)>& launch, int reps) {
++    sx::command_graph g(q.get_context(), q.get_device());
++    g.begin_recording(q);
++    for (int m = 0; m < nmat; ++m) launch(m);
++    g.end_recording(q);
++    auto ge = g.finalize();
++    for (int i = 0; i < 2; ++i) q.ext_oneapi_graph(ge);
++    q.wait();
++    std::vector<double> us;
++    for (int i = 0; i < reps; ++i) {
++        sycl::event e0 = q.ext_oneapi_submit_barrier();
++        q.ext_oneapi_graph(ge);
++        sycl::event e1 = q.ext_oneapi_submit_barrier();
++        e1.wait();
++        us.push_back(double(e1.get_profiling_info<sycl::info::event_profiling::command_end>() -
++                            e0.get_profiling_info<sycl::info::event_profiling::command_start>()) / 1e3 / nmat);
++    }
++    std::sort(us.begin(), us.end());
++    return us[us.size() / 2];
++}
++}  // namespace
++
++int main(int argc, char** argv) {
++    const std::vector<int> types = parse_list(argc > 1 ? argv[1] : "14,13,12");
++    const std::vector<int> ncl = parse_list(argc > 2 ? argv[2] : "1,2,3,4,6");
++    const std::string ssel = argc > 3 ? argv[3] : "all";
++    const size_t POOL = (size_t) 640 << 20;
++    sycl::queue q(sycl::gpu_selector_v, {sycl::property::queue::in_order(), sycl::property::queue::enable_profiling()});
++    struct Shape { int n_in, n_out; const char* name; };
++    const Shape shapes[] = {{2560, 10240, "qkv"}, {2560, 6144, "gate"}, {6144, 2560, "out"}, {2560, 12288, "attn_q"},
++                            {2560, 512, "kv"}, {2560, 640, "sh_gu"}, {2560, 248320, "head"}};
++    uint8_t* dpool = (uint8_t*) sycl::malloc_device(POOL + 4096, q);
++    std::vector<uint8_t> hpool(POOL);
++    const int maxc = 8, maxout = 248320;
++    float* y = sycl::malloc_device<float>((size_t) maxc * maxout, q);
++    float* y2 = sycl::malloc_device<float>((size_t) maxc * maxout, q);
++    std::vector<float> hx((size_t) maxc * 6144);
++    for (auto& v : hx) {
++        const double u1 = (xr() >> 11) * (1.0 / 9007199254740992.0) + 1e-12, u2 = (xr() >> 11) * (1.0 / 9007199254740992.0);
++        v = (float) (std::sqrt(-2 * std::log(u1)) * std::cos(6.283185307179586 * u2));
++    }
++    float* dx = sycl::malloc_device<float>(hx.size(), q);
++    q.memcpy(dx, hx.data(), hx.size() * 4).wait();
++    void* xq = sycl::malloc_device(k::native_q8_1_bytes(6144, maxc) + 256, q);
++    std::printf("night_mmvq_bench: original dispatch vs STRATA_NIGHT_MMVQ (KREG); us/call median, GB/s of weights\n");
++    for (const int t : types) {
++        fill_pool(t, hpool);
++        q.memcpy(dpool, hpool.data(), POOL).wait();
++        for (const Shape& sh : shapes) {
++            if (ssel != "all" && ssel != sh.name) continue;
++            const bool head = std::string(sh.name) == "head";
++            if (head && t != 13) continue;
++            const size_t wb = k::native_mmvq_weight_bytes(t, sh.n_in, sh.n_out);
++            const size_t slot = (wb + 255) & ~(size_t) 255;
++            const int ndist = (int) std::min<size_t>(128, POOL / slot), nmat = std::max(ndist, 16);
++            for (const int nc : ncl) {
++                k::native_quantize_q8_1(dx, xq, sh.n_in, nc, &q);
++                q.wait();
++                auto call = [&](const uint8_t* w, float* out) {
++                    if (head) k::native_mmvq_head(t, w, xq, out, sh.n_in, sh.n_out, nc, &q);
++                    else k::native_mmvq(t, w, xq, out, sh.n_in, sh.n_out, nc, &q);
++                };
++                const size_t ny = (size_t) nc * sh.n_out;
++                std::vector<float> ref(ny), got(ny);
++                double us[2];
++                for (int night = 0; night < 2; ++night) {
++                    k::native_mmvq_set_night(night);
++                    q.memset(y2, 0, ny * 4).wait();
++                    call(dpool, y2); q.wait();
++                    q.memcpy(night ? got.data() : ref.data(), y2, ny * 4).wait();
++                    us[night] = time_graph(q, nmat, [&](int m) { call(dpool + (size_t) (m % ndist) * slot, y); }, wb > (100u << 20) ? 7 : 11);
++                }
++                k::native_mmvq_set_night(-1);
++                double rmax = 0, mabs = 0, mrel = 0; size_t bad = 0;
++                for (size_t i = 0; i < ny; ++i) rmax = std::max(rmax, (double) std::fabs(ref[i]));
++                for (size_t i = 0; i < ny; ++i) {
++                    const double e = std::fabs((double) got[i] - ref[i]);
++                    if (!(e <= 1e30)) ++bad;
++                    mabs = std::max(mabs, e);
++                    if (std::fabs(ref[i]) > 1e-3 * rmax) mrel = std::max(mrel, e / std::fabs(ref[i]));
++                }
++                std::printf("%-6s %-6s %5d x %6d nc %d  orig %8.2f us %5.1f GB/s  night %8.2f us %5.1f GB/s (%4.1f%%)  x%.2f  "
++                            "maxabs %.2e (of max %.2e) maxrel %.2e%s\n",
++                            fname(t), sh.name, sh.n_in, sh.n_out, nc, us[0], wb / us[0] / 1e3, us[1], wb / us[1] / 1e3,
++                            wb / us[1] / 1e3 / 6.08, us[0] / us[1], mabs, rmax, mrel, bad ? " NONFINITE" : "");
++                std::fflush(stdout);
++            }
++        }
++    }
++    sycl::free(dpool, q); sycl::free(y, q); sycl::free(y2, q); sycl::free(dx, q); sycl::free(xq, q);
++    return 0;
++}

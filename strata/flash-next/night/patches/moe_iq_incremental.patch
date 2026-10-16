@@ -1,0 +1,1191 @@
+diff --git a/include/strata/kernels/iq_kernels.hpp b/include/strata/kernels/iq_kernels.hpp
+index e6294cd..e4591f9 100644
+--- a/include/strata/kernels/iq_kernels.hpp
++++ b/include/strata/kernels/iq_kernels.hpp
+@@ -89,6 +89,10 @@ void native_expert_set_mode(int mode, int phase);
+ void iq_set_old_kernels(bool old);
+ /// night lab bench: the STRATA_NIGHT_EP_ROWS kernels with rpl rows per lane (2; 0 off; -1 the environment's)
+ void native_expert_set_night_rows(int rpl);
++/// night lab bench: the STRATA_NIGHT_IQ decodes (1 on, 0 off, -1 the environment's; set before capture)
++void native_expert_set_night_iq(int on);
++void native_expert_set_night_iq_alu(int on);      ///< night lab bench: STRATA_NIGHT_IQ_ALU (1/0/-1 env)
++void native_expert_set_night_iq4nl_tab(int on);   ///< night lab bench: STRATA_NIGHT_IQ4NL_TAB (1/0/-1 env)
+ bool iq_old_kernels();
+ 
+ }  // namespace strata::kernels
+diff --git a/sycl/src/kernels/cuda/iq_kernels.dp.cpp b/sycl/src/kernels/cuda/iq_kernels.dp.cpp
+index 83e3000..56f6681 100644
+--- a/sycl/src/kernels/cuda/iq_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/iq_kernels.dp.cpp
+@@ -26,6 +26,7 @@
+ #include <cstdio>
+ #include <utility>
+ #include <cstdlib>
++#include <string>
+ #include <type_traits>
+ 
+ namespace strata::kernels {
+@@ -2404,6 +2405,443 @@ __dpct_inline__ void native_down_kernel_rows(
+     }
+ }
+ 
++// ---- night lab STRATA_NIGHT_IQ=1 (default off): cheaper decodes for the grouped expert kernels (the ISA of the
++// current ones: 280-480 instructions per 32-weight part for 8 DP4As, ALU-bound).  Same integers out of every part,
++// the same finish (float order) as Multi<TY> / Fmt<TY>::dot, so the outputs are bitwise the current kernels'.
++//  - sign masks: one 16-byte load from a 2/4 KB table (kNightKs: ksigns + parity; kNightSb: a sign byte) instead of
++//    unpack_ksigns (popcount, 32-bit multiply) + 2 x swar_ne4 per 8 weights;
++//  - signed grid bytes as (g ^ m) + (m & 0x01010101): exact because every IQ grid byte is in 1..62 (checked), where
++//    swar_sub4 is the general form;
++//  - Q2_0: the 2-bit fields spread by shifts/masks and biased by (t + 0x7F7F7F7F) ^ 0x80808080 (= the
++//    byte_level_permute lookup {-1, 0, 1, 2}, whose dpct emulation was ~300 instructions per part);
++//  - IQ4_NL: the 16-entry codebook by a 4-level bit-slice select (15 BFNs per 4 weights) instead of 3 cmp + 3 sel
++//    per nibble;
++//  - the loop walks block pointers (LANES % ipb == 0: a lane's iqs is fixed) instead of 64-bit kbx * sizeof products;
++//  - IQ2_XXS gets a multi-entry form (it re-decoded every entry: no Multi<16>).
++#include "night_tables.inc"
++namespace night {
++__dpct_inline__ sycl::uint4 ks_mask(uint32_t code7) { return reinterpret_cast<const sycl::uint4*>(kNightKs)[code7 & 0x7F]; }
++__dpct_inline__ sycl::uint4 sb_mask(uint32_t byte) { return reinterpret_cast<const sycl::uint4*>(kNightSb)[byte & 0xFF]; }
++__dpct_inline__ int sgn(uint32_t g, uint32_t m, uint32_t m1) { return (int) ((g ^ m) + m1); }
++__dpct_inline__ float h2f(const sycl::half& h) {
++    return sycl::vec<sycl::half, 1>(h).convert<float, sycl::rounding_mode::automatic>()[0];
++}
++// Q2_0: 8 two-bit fields of b (bits 0-7) -> 4 bytes, field i in byte i
++__dpct_inline__ uint32_t q2_spread4(uint32_t b) {
++    uint32_t t = (b | (b << 12)) & 0x000F000Fu;
++    t = (t | (t << 6)) & 0x03030303u;
++    return (t + 0x7F7F7F7Fu) ^ 0x80808080u;   // c -> c - 1 per byte, c in 0..3 (no carry: c + 0x7F <= 0x82)
++}
++// IQ4_NL: four nibbles (one per byte, 0..15) -> four kvalues_iq4nl bytes, bit-slice select
++__dpct_inline__ uint32_t iq4nl_mux4(uint32_t q) {
++    constexpr int8_t K[16] = {-127, -104, -83, -65, -49, -35, -22, -10, 1, 13, 25, 38, 53, 69, 89, 113};
++    const uint32_t b0 = (q & 0x01010101u) * 0xFFu, b1 = ((q >> 1) & 0x01010101u) * 0xFFu;
++    const uint32_t b2 = ((q >> 2) & 0x01010101u) * 0xFFu, b3 = ((q >> 3) & 0x01010101u) * 0xFFu;
++    auto C = [&](int j) { return (uint32_t) (uint8_t) K[j] * 0x01010101u; };
++    auto sel = [](uint32_t a, uint32_t b, uint32_t m) { return (a & ~m) | (b & m); };
++    uint32_t r1[8];
++#pragma unroll
++    for (int i = 0; i < 8; ++i) r1[i] = sel(C(2 * i), C(2 * i + 1), b0);
++    uint32_t r2[4];
++#pragma unroll
++    for (int i = 0; i < 4; ++i) r2[i] = sel(r1[2 * i], r1[2 * i + 1], b1);
++    return sel(sel(r2[0], r2[1], b2), sel(r2[2], r2[3], b2), b3);
++}
++}  // namespace night
++
++template <int TY> struct NQ { static constexpr bool has = false; };
++template <> struct NQ<16> {   // iq2_xxs: as vec_dot_iq2_xxs_q8_1
++    static constexpr bool has = true; static constexpr int NW = 8, BS = sizeof(block_iq2_xxs), FT = 16;
++    __dpct_inline__ static void prep(const uint8_t* blk, int iqs, MultiW& m) {
++        const block_iq2_xxs* bq2 = (const block_iq2_xxs*) blk;
++        const sycl::int2 qq = load8_a2((const uint8_t*) bq2->qs + 4 * iqs);   // q2 | aux32
++        const uint32_t q2 = (uint32_t) qq.x(), aux32 = (uint32_t) qq.y();
++#pragma unroll
++        for (int k = 0; k < 4; ++k) {
++            const sycl::uint2 g = ((const sycl::uint2*) iq2xxs_grid)[(q2 >> (8 * k)) & 0xFF];
++            const sycl::uint4 s = night::ks_mask(aux32 >> (7 * k));
++            m.w[2 * k + 0] = night::sgn(g.x(), s.x(), s.z());
++            m.w[2 * k + 1] = night::sgn(g.y(), s.y(), s.w());
++        }
++        m.a = (int) (aux32 >> 27 | 1);
++        m.d = night::h2f(bq2->d);
++    }
++    __dpct_inline__ static void acts(const block_q8_1* y, int iqs, int* u, float& ds) { Multi<18>::acts(y, iqs, u, ds); }
++    __dpct_inline__ static float finish(int s0, int s1, const MultiW& m, float ds) {
++        const int sumi = (s0 + s1) * m.a / 8;
++        const float d = m.d * ds;
++        return d * sumi;
++    }
++};
++template <> struct NQ<17> {   // iq2_xs: as Multi<17>
++    static constexpr bool has = true; static constexpr int NW = 8, BS = sizeof(block_iq2_xs), FT = 17;
++    __dpct_inline__ static void prep(const uint8_t* blk, int iqs, MultiW& m) {
++        const block_iq2_xs* bq2 = (const block_iq2_xs*) blk;
++        const sycl::int2 qq = load8_a2((const uint8_t*) bq2->qs + 4 * iqs);
++        const uint32_t lo = (uint32_t) qq.x(), hi = (uint32_t) qq.y();
++#pragma unroll
++        for (int k = 0; k < 4; ++k) {
++            const uint32_t q = ((k < 2 ? lo : hi) >> (16 * (k & 1))) & 0xFFFF;
++            const sycl::uint2 g = ((const sycl::uint2*) iq2xs_grid)[q & 0x1FF];
++            const sycl::uint4 s = night::ks_mask(q >> 9);
++            m.w[2 * k + 0] = night::sgn(g.x(), s.x(), s.z());
++            m.w[2 * k + 1] = night::sgn(g.y(), s.y(), s.w());
++        }
++        m.a = bq2->scales[iqs / 2] & 0x0F;
++        m.b = bq2->scales[iqs / 2] >> 4;
++        m.d = night::h2f(bq2->d);
++    }
++    __dpct_inline__ static void acts(const block_q8_1* y, int iqs, int* u, float& ds) { Multi<17>::acts(y, iqs, u, ds); }
++    __dpct_inline__ static float finish(int s0, int s1, const MultiW& m, float ds) { return Multi<17>::finish(s0, s1, m, ds); }
++};
++template <> struct NQ<18> {   // iq3_xxs: as Multi<18>
++    static constexpr bool has = true; static constexpr int NW = 8, BS = sizeof(block_iq3_xxs), FT = 18;
++    __dpct_inline__ static void prep(const uint8_t* blk, int iqs, MultiW& m) {
++        const block_iq3_xxs* bq3 = (const block_iq3_xxs*) blk;
++        const sycl::int2 qq = load8_a2(bq3->qs + 4 * iqs);
++        const uint32_t aux32 = (uint32_t) load4_a2(bq3->qs + 4 * (QK_K / 16 + iqs / 2));
++#pragma unroll
++        for (int k = 0; k < 4; ++k) {
++            const uint32_t w = (uint32_t) (k < 2 ? qq.x() : qq.y());
++            const uint32_t i0 = (w >> (16 * (k & 1))) & 0xFF, i1 = (w >> (16 * (k & 1) + 8)) & 0xFF;
++            const sycl::uint4 s = night::ks_mask(aux32 >> (7 * k));
++            m.w[2 * k + 0] = night::sgn(iq3xxs_grid[i0], s.x(), s.z());
++            m.w[2 * k + 1] = night::sgn(iq3xxs_grid[i1], s.y(), s.w());
++        }
++        m.a = (int) (aux32 >> 28);
++        m.d = night::h2f(bq3->d);
++    }
++    __dpct_inline__ static void acts(const block_q8_1* y, int iqs, int* u, float& ds) { Multi<18>::acts(y, iqs, u, ds); }
++    __dpct_inline__ static float finish(int s0, int s1, const MultiW& m, float ds) { return Multi<18>::finish(s0, s1, m, ds); }
++};
++template <> struct NQ<22> {   // iq2_s: as Multi<22>
++    static constexpr bool has = true; static constexpr int NW = 8, BS = sizeof(block_iq2_s), FT = 22;
++    __dpct_inline__ static void prep(const uint8_t* blk, int iqs, MultiW& m) {
++        const block_iq2_s* bq2 = (const block_iq2_s*) blk;
++        const uint32_t qs = (uint32_t) load4_a2(bq2->qs + 4 * (iqs / 2));
++        const uint32_t sp = (uint32_t) load4_a2(bq2->qs + 4 * (QK_K / 32 + iqs / 2));
++        const int qh = bq2->qh[iqs / 2];
++#pragma unroll
++        for (int k = 0; k < 4; ++k) {
++            const int gi = (int) ((qs >> (8 * k)) & 0xFF) | ((qh << (8 - 2 * k)) & 0x300);
++            const sycl::uint2 g = ((const sycl::uint2*) iq2s_grid)[gi];
++            const sycl::uint4 s = night::sb_mask(sp >> (8 * k));
++            m.w[2 * k + 0] = night::sgn(g.x(), s.x(), s.z());
++            m.w[2 * k + 1] = night::sgn(g.y(), s.y(), s.w());
++        }
++        m.a = bq2->scales[iqs / 2] & 0x0F;
++        m.b = bq2->scales[iqs / 2] >> 4;
++        m.d = night::h2f(bq2->d);
++    }
++    __dpct_inline__ static void acts(const block_q8_1* y, int iqs, int* u, float& ds) { Multi<22>::acts(y, iqs, u, ds); }
++    __dpct_inline__ static float finish(int s0, int s1, const MultiW& m, float ds) { return Multi<22>::finish(s0, s1, m, ds); }
++};
++template <> struct NQ<21> {   // iq3_s: as Multi<21>
++    static constexpr bool has = true; static constexpr int NW = 8, BS = sizeof(block_iq3_s), FT = 21;
++    __dpct_inline__ static void prep(const uint8_t* blk, int iqs, MultiW& m) {
++        const block_iq3_s* bq3 = (const block_iq3_s*) blk;
++        const sycl::int2 qq = load8_a2(bq3->qs + 4 * iqs);
++        const uint32_t sp = (uint32_t) load4_a2(bq3->signs + 4 * (iqs / 2));
++        const int qh = bq3->qh[iqs / 2];
++#pragma unroll
++        for (int k = 0; k < 4; ++k) {
++            const uint32_t w = (uint32_t) (k < 2 ? qq.x() : qq.y());
++            const int l0 = 2 * k;
++            const int i0 = (int) ((w >> (16 * (k & 1))) & 0xFF) | ((qh << (8 - l0)) & 0x100);
++            const int i1 = (int) ((w >> (16 * (k & 1) + 8)) & 0xFF) | ((qh << (7 - l0)) & 0x100);
++            const sycl::uint4 s = night::sb_mask(sp >> (8 * k));
++            m.w[2 * k + 0] = night::sgn(iq3s_grid[i0], s.x(), s.z());
++            m.w[2 * k + 1] = night::sgn(iq3s_grid[i1], s.y(), s.w());
++        }
++        m.a = 1 + 2 * ((bq3->scales[iqs / 4] >> ((iqs << 1) & 0x04)) & 0x0F);
++        m.d = night::h2f(bq3->d);
++    }
++    __dpct_inline__ static void acts(const block_q8_1* y, int iqs, int* u, float& ds) { Multi<21>::acts(y, iqs, u, ds); }
++    __dpct_inline__ static float finish(int s0, int s1, const MultiW& m, float ds) { return Multi<21>::finish(s0, s1, m, ds); }
++};
++template <> struct NQ<42> {   // q2_0 (down): as Multi<42>
++    static constexpr bool has = true; static constexpr int NW = 8, BS = sizeof(block_q2_0), FT = 42;
++    __dpct_inline__ static void prep(const uint8_t* blk, int iqs, MultiW& m) {
++        const block_q2_0* bq = (const block_q2_0*) blk;
++        const sycl::int2 qq = load8_a2(bq->qs + 8 * iqs);   // the part's four int16 fields
++#pragma unroll
++        for (int j = 0; j < 4; ++j) {
++            const uint32_t q = ((uint32_t) (j < 2 ? qq.x() : qq.y()) >> (16 * (j & 1))) & 0xFFFF;
++            m.w[2 * j + 0] = (int) night::q2_spread4(q & 0xFF);
++            m.w[2 * j + 1] = (int) night::q2_spread4(q >> 8);
++        }
++        m.d = bq->d;
++    }
++    __dpct_inline__ static void acts(const block_q8_1* y, int iqs, int* u, float& ds) { Multi<42>::acts(y, iqs, u, ds); }
++    __dpct_inline__ static float finish(int s0, int s1, const MultiW& m, float ds) { return Multi<42>::finish(s0, s1, m, ds); }
++};
++template <> struct NQ<20> {   // iq4_nl (down): as Multi<20>
++    static constexpr bool has = true; static constexpr int NW = 4, BS = sizeof(block_iq4_nl), FT = 20;
++    __dpct_inline__ static void prep(const uint8_t* blk, int iqs, MultiW& m) {
++        const block_iq4_nl* bq4 = (const block_iq4_nl*) blk;
++        const sycl::int2 qq = load8_a2(bq4->qs + 4 * iqs);
++#pragma unroll
++        for (int l = 0; l < 2; ++l) {
++            const uint32_t aux = (uint32_t) (l ? qq.y() : qq.x());
++            m.w[2 * l + 0] = (int) night::iq4nl_mux4(aux & 0x0f0f0f0fu);
++            m.w[2 * l + 1] = (int) night::iq4nl_mux4((aux >> 4) & 0x0f0f0f0fu);
++        }
++        m.d = night::h2f(bq4->d);
++    }
++    __dpct_inline__ static void acts(const block_q8_1* y, int iqs, int* u, float& ds) { Multi<20>::acts(y, iqs, u, ds); }
++    __dpct_inline__ static float finish(int s0, int s1, const MultiW& m, float ds) { return Multi<20>::finish(s0, s1, m, ds); }
++};
++
++template <> struct NQ<120> {   // iq4_nl (down), default (STRATA_NIGHT_IQ4NL_TAB=0: NQ<20>): 4 x 8-byte table loads per 8 weights
++    static constexpr bool has = true; static constexpr int NW = 4, BS = sizeof(block_iq4_nl), FT = 20;
++    __dpct_inline__ static void prep(const uint8_t* blk, int iqs, MultiW& m) {
++        const block_iq4_nl* bq4 = (const block_iq4_nl*) blk;
++        const sycl::int2 qq = load8_a2(bq4->qs + 4 * iqs);
++        const sycl::uint2* T = reinterpret_cast<const sycl::uint2*>(kNightNl);
++#pragma unroll
++        for (int l = 0; l < 2; ++l) {
++            const uint32_t aux = (uint32_t) (l ? qq.y() : qq.x());
++            const sycl::uint2 t0 = T[0 * 256 + (aux & 0xFF)], t1 = T[1 * 256 + ((aux >> 8) & 0xFF)];
++            const sycl::uint2 t2 = T[2 * 256 + ((aux >> 16) & 0xFF)], t3 = T[3 * 256 + (aux >> 24)];
++            m.w[2 * l + 0] = (int) (t0.x() | t1.x() | t2.x() | t3.x());
++            m.w[2 * l + 1] = (int) (t0.y() | t1.y() | t2.y() | t3.y());
++        }
++        m.d = night::h2f(bq4->d);
++    }
++    __dpct_inline__ static void acts(const block_q8_1* y, int iqs, int* u, float& ds) { Multi<20>::acts(y, iqs, u, ds); }
++    __dpct_inline__ static float finish(int s0, int s1, const MultiW& m, float ds) { return Multi<20>::finish(s0, s1, m, ds); }
++};
++
++// IQ3_XXS / IQ3_S / IQ2_S with the block-pointer loop and aligned loads but the sign masks by ALU as ggml (no table
++// loads; the default, STRATA_NIGHT_IQ_ALU=0 takes NQ<18/21/22>): NQ<118/121/122>
++template <> struct NQ<118> {
++    static constexpr bool has = true; static constexpr int NW = 8, BS = sizeof(block_iq3_xxs), FT = 18;
++    __dpct_inline__ static void prep(const uint8_t* blk, int iqs, MultiW& m) {
++        const block_iq3_xxs* bq3 = (const block_iq3_xxs*) blk;
++        const sycl::int2 qq = load8_a2(bq3->qs + 4 * iqs);
++        const uint32_t aux32 = (uint32_t) load4_a2(bq3->qs + 4 * (QK_K / 16 + iqs / 2));
++#pragma unroll
++        for (int k = 0; k < 4; ++k) {
++            const uint32_t w = (uint32_t) (k < 2 ? qq.x() : qq.y());
++            const uint32_t i0 = (w >> (16 * (k & 1))) & 0xFF, i1 = (w >> (16 * (k & 1) + 8)) & 0xFF;
++            const uint32_t signs = unpack_ksigns(aux32 >> (7 * k));
++            const uint32_t s0 = (uint32_t) swar_ne4(signs & 0x08040201), s1 = (uint32_t) swar_ne4(signs & 0x80402010);
++            m.w[2 * k + 0] = night::sgn(iq3xxs_grid[i0], s0, s0 & 0x01010101u);
++            m.w[2 * k + 1] = night::sgn(iq3xxs_grid[i1], s1, s1 & 0x01010101u);
++        }
++        m.a = (int) (aux32 >> 28);
++        m.d = night::h2f(bq3->d);
++    }
++    __dpct_inline__ static void acts(const block_q8_1* y, int iqs, int* u, float& ds) { Multi<18>::acts(y, iqs, u, ds); }
++    __dpct_inline__ static float finish(int s0, int s1, const MultiW& m, float ds) { return Multi<18>::finish(s0, s1, m, ds); }
++};
++template <> struct NQ<122> {
++    static constexpr bool has = true; static constexpr int NW = 8, BS = sizeof(block_iq2_s), FT = 22;
++    __dpct_inline__ static void prep(const uint8_t* blk, int iqs, MultiW& m) {
++        const block_iq2_s* bq2 = (const block_iq2_s*) blk;
++        const uint32_t qs = (uint32_t) load4_a2(bq2->qs + 4 * (iqs / 2));
++        const uint32_t sp = (uint32_t) load4_a2(bq2->qs + 4 * (QK_K / 32 + iqs / 2));
++        const int qh = bq2->qh[iqs / 2];
++#pragma unroll
++        for (int k = 0; k < 4; ++k) {
++            const int gi = (int) ((qs >> (8 * k)) & 0xFF) | ((qh << (8 - 2 * k)) & 0x300);
++            const sycl::uint2 g = ((const sycl::uint2*) iq2s_grid)[gi];
++            const uint32_t b = (sp >> (8 * k)) & 0xFF;
++            const uint32_t s0 = (uint32_t) swar_ne4(((b & 0x03) << 7) | ((b & 0x0C) << 21));
++            const uint32_t s1 = (uint32_t) swar_ne4(((b & 0x30) << 3) | ((b & 0xC0) << 17));
++            m.w[2 * k + 0] = night::sgn(g.x(), s0, s0 & 0x01010101u);
++            m.w[2 * k + 1] = night::sgn(g.y(), s1, s1 & 0x01010101u);
++        }
++        m.a = bq2->scales[iqs / 2] & 0x0F;
++        m.b = bq2->scales[iqs / 2] >> 4;
++        m.d = night::h2f(bq2->d);
++    }
++    __dpct_inline__ static void acts(const block_q8_1* y, int iqs, int* u, float& ds) { Multi<22>::acts(y, iqs, u, ds); }
++    __dpct_inline__ static float finish(int s0, int s1, const MultiW& m, float ds) { return Multi<22>::finish(s0, s1, m, ds); }
++};
++template <> struct NQ<121> {
++    static constexpr bool has = true; static constexpr int NW = 8, BS = sizeof(block_iq3_s), FT = 21;
++    __dpct_inline__ static void prep(const uint8_t* blk, int iqs, MultiW& m) {
++        const block_iq3_s* bq3 = (const block_iq3_s*) blk;
++        const sycl::int2 qq = load8_a2(bq3->qs + 4 * iqs);
++        const uint32_t sp = (uint32_t) load4_a2(bq3->signs + 4 * (iqs / 2));
++        const int qh = bq3->qh[iqs / 2];
++#pragma unroll
++        for (int k = 0; k < 4; ++k) {
++            const uint32_t w = (uint32_t) (k < 2 ? qq.x() : qq.y());
++            const int l0 = 2 * k;
++            const int i0 = (int) ((w >> (16 * (k & 1))) & 0xFF) | ((qh << (8 - l0)) & 0x100);
++            const int i1 = (int) ((w >> (16 * (k & 1) + 8)) & 0xFF) | ((qh << (7 - l0)) & 0x100);
++            const uint32_t b = (sp >> (8 * k)) & 0xFF;
++            const uint32_t s0 = (uint32_t) swar_ne4(((b & 0x03) << 7) | ((b & 0x0C) << 21));
++            const uint32_t s1 = (uint32_t) swar_ne4(((b & 0x30) << 3) | ((b & 0xC0) << 17));
++            m.w[2 * k + 0] = night::sgn(iq3s_grid[i0], s0, s0 & 0x01010101u);
++            m.w[2 * k + 1] = night::sgn(iq3s_grid[i1], s1, s1 & 0x01010101u);
++        }
++        m.a = 1 + 2 * ((bq3->scales[iqs / 4] >> ((iqs << 1) & 0x04)) & 0x0F);
++        m.d = night::h2f(bq3->d);
++    }
++    __dpct_inline__ static void acts(const block_q8_1* y, int iqs, int* u, float& ds) { Multi<21>::acts(y, iqs, u, ds); }
++    __dpct_inline__ static float finish(int s0, int s1, const MultiW& m, float ds) { return Multi<21>::finish(s0, s1, m, ds); }
++};
++
++// R rows x E entries per lane; the loop walks block pointers: for LANES % ipb == 0 lane `sub` always takes part
++// iqs = step * (sub % ipb) of blocks sub / ipb, + LANES / ipb, ... - the k order of row_dot_lanes / row_dot_multi_iq.
++template <int TY, int LANES, int R, int E>
++__dpct_inline__ void nrows_dot(const uint8_t* const* rows, const block_q8_1* const* xs, int nb, int sub,
++                               float (&out)[R][E]) {
++    using M = NQ<TY>;
++    using F = Fmt<M::FT>;
++    static_assert(LANES % F::ipb == 0, "night: a lane's part index must be fixed");
++    constexpr int KSTEP = LANES / F::ipb, XB = F::qk / 32;
++    const int iqs = F::step * (sub % F::ipb);
++    const int kb0 = sub / F::ipb;
++    float s[R][E];
++#pragma unroll
++    for (int r = 0; r < R; ++r)
++#pragma unroll
++        for (int e = 0; e < E; ++e) s[r][e] = 0.f;
++    const uint8_t* wp[R];
++#pragma unroll
++    for (int r = 0; r < R; ++r) wp[r] = rows[r] + (size_t) kb0 * M::BS;
++    const block_q8_1* xp[E];
++#pragma unroll
++    for (int e = 0; e < E; ++e) xp[e] = xs[e] + (size_t) kb0 * XB;
++    for (int kbx = kb0; kbx < nb; kbx += KSTEP) {
++        int u[E][8];
++        float ds[E];
++#pragma unroll
++        for (int e = 0; e < E; ++e) { M::acts(xp[e], iqs, u[e], ds[e]); xp[e] += KSTEP * XB; }
++#pragma unroll
++        for (int r = 0; r < R; ++r) {
++            MultiW m;
++            M::prep(wp[r], iqs, m);
++            wp[r] += KSTEP * M::BS;
++#pragma unroll
++            for (int e = 0; e < E; ++e) {
++                int s0 = 0, s1 = 0;
++#pragma unroll
++                for (int j = 0; j < M::NW / 2; ++j) s0 = ggml_cuda_dp4a(m.w[j], u[e][j], s0);
++#pragma unroll
++                for (int j = M::NW / 2; j < M::NW; ++j) s1 = ggml_cuda_dp4a(m.w[j], u[e][j], s1);
++                s[r][e] += M::finish(s0, s1, m, ds[e]);
++            }
++        }
++    }
++#pragma unroll
++    for (int r = 0; r < R; ++r)
++#pragma unroll
++        for (int e = 0; e < E; ++e) out[r][e] = lanes_sum<LANES>(s[r][e]);
++}
++
++template <int TG, int LN, int RPL>
++__dpct_inline__ void native_gu_kernel_n(
++    const unsigned long long *__restrict__ grp_ptr,
++    const int32_t *__restrict__ grp_start, const int32_t *__restrict__ n_groups,
++    const int32_t *__restrict__ ent_tok, const block_q8_1 *__restrict__ xq,
++    NativeExpertLayout L, float *__restrict__ gate, float *__restrict__ up) {
++    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
++    const int ng = *n_groups;
++    if ((int) item_ct1.get_group(1) >= ng) return;
++    constexpr int RB = 256 / LN;
++    const int lid = (int) item_ct1.get_local_id(2);
++    const int rib = lid / LN, sub = lid % LN;
++    const int row0 = (int) item_ct1.get_group(2) * RB * RPL + rib;
++    const int nrows = (int) (2 * L.n_ff);
++    if (row0 >= nrows) return;
++    const int nb = (int) (L.n_embd / Fmt<NQ<TG>::FT>::qk), xb = (int) (L.n_embd / 32);
++    size_t off[RPL];
++    float* dst[RPL];
++    bool live[RPL];
++#pragma unroll
++    for (int i = 0; i < RPL; ++i) {
++        const int v = row0 + i * RB;
++        live[i] = v < nrows;
++        const int vv = live[i] ? v : row0;
++        const bool is_up = vv >= L.n_ff;
++        const int r = is_up ? vv - (int) L.n_ff : vv;
++        off[i] = (is_up ? L.up_off : 0) + (size_t) r * L.gu_row;
++        dst[i] = (is_up ? up : gate) + r;
++    }
++    for (int g = (int) item_ct1.get_group(1); g < ng; g += (int) item_ct1.get_group_range(1)) {
++        const uint8_t* base = (const uint8_t*) grp_ptr[g];
++        const uint8_t* rows[RPL];
++#pragma unroll
++        for (int i = 0; i < RPL; ++i) rows[i] = base + off[i];
++        const int e0 = grp_start[g], e1 = grp_start[g + 1];
++        int e = e0;
++        auto pass = [&](auto ec) {
++            constexpr int EC = decltype(ec)::value;
++            const block_q8_1* xs[EC];
++#pragma unroll
++            for (int j = 0; j < EC; ++j) xs[j] = xq + (size_t) ent_tok[e + j] * xb;
++            float o[RPL][EC];
++            nrows_dot<TG, LN, RPL, EC>(rows, xs, nb, sub, o);
++            if (sub == 0)
++#pragma unroll
++                for (int i = 0; i < RPL; ++i)
++                    if (live[i])
++#pragma unroll
++                        for (int j = 0; j < EC; ++j) dst[i][(size_t) (e + j) * L.n_ff] = o[i][j];
++            e += EC;
++        };
++        for (; e + 4 <= e1;) pass(std::integral_constant<int, 4>{});
++        if (e + 2 <= e1) pass(std::integral_constant<int, 2>{});
++        if (e < e1) pass(std::integral_constant<int, 1>{});
++    }
++}
++
++template <int TD, int LN, int RPL>
++__dpct_inline__ void native_down_kernel_n(
++    const unsigned long long *__restrict__ grp_ptr,
++    const int32_t *__restrict__ grp_start, const int32_t *__restrict__ n_groups,
++    const int32_t *__restrict__ ent_dst, const block_q8_1 *__restrict__ hq,
++    NativeExpertLayout L, float *__restrict__ out) {
++    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
++    const int ng = *n_groups;
++    if ((int) item_ct1.get_group(1) >= ng) return;
++    constexpr int RB = 256 / LN;
++    const int lid = (int) item_ct1.get_local_id(2);
++    const int rib = lid / LN, sub = lid % LN;
++    const int r0 = (int) item_ct1.get_group(2) * RB * RPL + rib;
++    if (r0 >= L.n_embd) return;
++    const int nb = (int) (L.n_ff / Fmt<NQ<TD>::FT>::qk), hb = (int) (L.n_ff / 32);
++    int rr[RPL];
++    bool live[RPL];
++#pragma unroll
++    for (int i = 0; i < RPL; ++i) {
++        const int r = r0 + i * RB;
++        live[i] = r < L.n_embd;
++        rr[i] = live[i] ? r : r0;
++    }
++    for (int g = (int) item_ct1.get_group(1); g < ng; g += (int) item_ct1.get_group_range(1)) {
++        const uint8_t* base = (const uint8_t*) grp_ptr[g] + L.down_off;
++        const uint8_t* rows[RPL];
++#pragma unroll
++        for (int i = 0; i < RPL; ++i) rows[i] = base + (size_t) rr[i] * L.d_row;
++        const int e0 = grp_start[g], e1 = grp_start[g + 1];
++        int e = e0;
++        auto pass = [&](auto ec) {
++            constexpr int EC = decltype(ec)::value;
++            const block_q8_1* xs[EC];
++#pragma unroll
++            for (int j = 0; j < EC; ++j) xs[j] = hq + (size_t) (e + j) * hb;
++            float o[RPL][EC];
++            nrows_dot<TD, LN, RPL, EC>(rows, xs, nb, sub, o);
++            if (sub == 0)
++#pragma unroll
++                for (int i = 0; i < RPL; ++i)
++                    if (live[i])
++#pragma unroll
++                        for (int j = 0; j < EC; ++j) out[(size_t) ent_dst[e + j] * L.n_embd + rr[i]] = o[i][j];
++            e += EC;
++        };
++        for (; e + 4 <= e1;) pass(std::integral_constant<int, 4>{});
++        if (e + 2 <= e1) pass(std::integral_constant<int, 2>{});
++        if (e < e1) pass(std::integral_constant<int, 1>{});
++    }
++}
++
+ // native_down_kernel with the entries taken GRP_NC at a time
+ template <int TD, bool SUB_DOWN = true>
+ /*
+@@ -4569,10 +5007,119 @@ bool launch_down_rows(unsigned groups, dpct::queue_ptr s, const unsigned long lo
+         return true;
+     }
+ }
++// night lab STRATA_NIGHT_IQ=1: the NQ<TY> decodes (native_gu_kernel_n / native_down_kernel_n) for the formats in
++// STRATA_NIGHT_IQ_FMTS (a comma list of ggml type ids; default all: 16,17,18,21,22 gate/up, 20,42 down); with
++// STRATA_NIGHT_EP_ROWS=2 the lanes take 2 rows each (SIMD16), else 1 (SIMD32).  Measured (ep_night_bench): IQ2_XS,
++// IQ3_XXS, IQ3_S, IQ2_S gate/up are only faster with 2 rows, so with 1 row they keep the current kernels; IQ3_XXS /
++// IQ3_S / IQ2_S use the ALU sign masks (NQ<118/121/122>; STRATA_NIGHT_IQ_ALU=0: the table ones, slower) and IQ4_NL
++// the position tables (NQ<120>; STRATA_NIGHT_IQ4NL_TAB=0: the bit-slice select, ~4% slower).
++int g_night_iq_force = -1;   // the bench: >= 0 overrides the environment (set before capture)
++bool night_iq_on(int ty) {
++    static const bool env = [] {
++        const bool b = env_on("STRATA_NIGHT_IQ");
++        if (b) std::fprintf(stderr, "strata night: STRATA_NIGHT_IQ=1 (table sign masks / SWAR decodes in the expert kernels)\n");
++        return b;
++    }();
++    static const std::string fmts = [] { const char* v = std::getenv("STRATA_NIGHT_IQ_FMTS"); return std::string(v ? v : "16,17,18,20,21,22,42"); }();
++    const bool on = g_night_iq_force >= 0 ? g_night_iq_force != 0 : env;
++    if (!on) return false;
++    if (fmts.empty()) return true;
++    const std::string t = std::to_string(ty);
++    size_t p = 0;
++    while (p <= fmts.size()) {
++        const size_t q = fmts.find(',', p);
++        if (fmts.substr(p, q == std::string::npos ? std::string::npos : q - p) == t) return true;
++        if (q == std::string::npos) break;
++        p = q + 1;
++    }
++    return false;
++}
++int g_night_iq_alu_force = -1;   // the bench: >= 0 overrides the environment
++bool night_iq_alu() {
++    static const bool env = [] {
++        const char* v = std::getenv("STRATA_NIGHT_IQ_ALU");
++        return !(v != nullptr && v[0] == '0');   // default on
++    }();
++    return g_night_iq_alu_force >= 0 ? g_night_iq_alu_force != 0 : env;
++}
++template <int TG, int LN, int RPL, int SG>
++void launch_gu_n_k(unsigned groups, dpct::queue_ptr s, const unsigned long long *grp_ptr, const int32_t *grp_start,
++                   const int32_t *n_groups, const int32_t *ent_tok, const block_q8_1 *X,
++                   const NativeExpertLayout &L, float *gate, float *up) {
++    constexpr int ROWS = (256 / LN) * RPL;
++    const unsigned gx = (unsigned) ((2 * L.n_ff + ROWS - 1) / ROWS);
++    auto exp_props = sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
++    s->parallel_for<dpct_kernel_name<class native_gu_night, dpct_kernel_scalar<TG>, dpct_kernel_scalar<LN>, dpct_kernel_scalar<RPL>>>(
++        sycl::nd_range<3>(sycl::range<3>(1, groups, (size_t) gx * 256), sycl::range<3>(1, 1, 256)), exp_props,
++        [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(SG)]] {
++            native_gu_kernel_n<TG, LN, RPL>(grp_ptr, grp_start, n_groups, ent_tok, X, L, gate, up);
++        });
++}
++template <int TG, int LN>
++bool launch_gu_n(unsigned groups, dpct::queue_ptr s, const unsigned long long *grp_ptr, const int32_t *grp_start,
++                 const int32_t *n_groups, const int32_t *ent_tok, const block_q8_1 *X,
++                 const NativeExpertLayout &L, float *gate, float *up) {
++    if constexpr (!NQ<TG>::has || LN != 8) { return false; }
++    else {
++        if (!night_iq_on(TG)) return false;
++        if (TG != 16 && night_rows_now() != 2) return false;   // 1 row: slower than the current kernels (all but IQ2_XXS)
++        if constexpr (TG == 18 || TG == 21 || TG == 22) {
++            if (night_iq_alu()) {
++                if (night_rows_now() == 2) launch_gu_n_k<TG + 100, LN, 2, 16>(groups, s, grp_ptr, grp_start, n_groups, ent_tok, X, L, gate, up);
++                else launch_gu_n_k<TG + 100, LN, 1, 32>(groups, s, grp_ptr, grp_start, n_groups, ent_tok, X, L, gate, up);
++                return true;
++            }
++        }
++        if (night_rows_now() == 2) launch_gu_n_k<TG, LN, 2, 16>(groups, s, grp_ptr, grp_start, n_groups, ent_tok, X, L, gate, up);
++        else launch_gu_n_k<TG, LN, 1, 32>(groups, s, grp_ptr, grp_start, n_groups, ent_tok, X, L, gate, up);
++        return true;
++    }
++}
++int g_night_iq4nl_tab_force = -1;   // the bench: >= 0 overrides the environment
++bool night_iq4nl_tab() {
++    static const bool env = [] {
++        const char* v = std::getenv("STRATA_NIGHT_IQ4NL_TAB");
++        return !(v != nullptr && v[0] == '0');   // default on
++    }();
++    return g_night_iq4nl_tab_force >= 0 ? g_night_iq4nl_tab_force != 0 : env;
++}
++template <int TD, int LN, int RPL, int SG>
++void launch_down_n_k(unsigned groups, dpct::queue_ptr s, const unsigned long long *grp_ptr, const int32_t *grp_start,
++                     const int32_t *n_groups, const int32_t *ent_dst, const block_q8_1 *hq,
++                     const NativeExpertLayout &L, float *out) {
++    constexpr int ROWS = (256 / LN) * RPL;
++    const unsigned gx = (unsigned) ((L.n_embd + ROWS - 1) / ROWS);
++    auto exp_props = sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
++    s->parallel_for<dpct_kernel_name<class native_down_night, dpct_kernel_scalar<TD>, dpct_kernel_scalar<LN>, dpct_kernel_scalar<RPL>>>(
++        sycl::nd_range<3>(sycl::range<3>(1, groups, (size_t) gx * 256), sycl::range<3>(1, 1, 256)), exp_props,
++        [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(SG)]] {
++            native_down_kernel_n<TD, LN, RPL>(grp_ptr, grp_start, n_groups, ent_dst, hq, L, out);
++        });
++}
++template <int TD, int LN>
++bool launch_down_n(unsigned groups, dpct::queue_ptr s, const unsigned long long *grp_ptr, const int32_t *grp_start,
++                   const int32_t *n_groups, const int32_t *ent_dst, const block_q8_1 *hq,
++                   const NativeExpertLayout &L, float *out) {
++    if constexpr (!NQ<TD>::has || LN != 8) { return false; }
++    else {
++        if (!night_iq_on(TD)) return false;
++        if constexpr (TD == 20) {
++            if (night_iq4nl_tab()) {
++                if (night_rows_now() == 2) launch_down_n_k<120, LN, 2, 16>(groups, s, grp_ptr, grp_start, n_groups, ent_dst, hq, L, out);
++                else launch_down_n_k<120, LN, 1, 32>(groups, s, grp_ptr, grp_start, n_groups, ent_dst, hq, L, out);
++                return true;
++            }
++        }
++        if (night_rows_now() == 2) launch_down_n_k<TD, LN, 2, 16>(groups, s, grp_ptr, grp_start, n_groups, ent_dst, hq, L, out);
++        else launch_down_n_k<TD, LN, 1, 32>(groups, s, grp_ptr, grp_start, n_groups, ent_dst, hq, L, out);
++        return true;
++    }
++}
+ template <int TG, int LN, bool KM = true>
+ void launch_gu_port(unsigned groups, dpct::queue_ptr s, const unsigned long long *grp_ptr, const int32_t *grp_start,
+                     const int32_t *n_groups, const int32_t *ent_tok, const block_q8_1 *X,
+                     const NativeExpertLayout &L, float *gate, float *up) {
++    if (launch_gu_n<TG, LN>(groups, s, grp_ptr, grp_start, n_groups, ent_tok, X, L, gate, up)) return;
+     if (launch_gu_rows<TG, LN, Multi<TG>::has>(groups, s, grp_ptr, grp_start, n_groups, ent_tok, X, L, gate, up)) return;
+     constexpr int ROWS = 256 / LN;
+     const unsigned gx = (unsigned) ((2 * L.n_ff + ROWS - 1) / ROWS);
+@@ -4596,6 +5143,7 @@ bool iq2xs_multi_enabled() {
+ void launch_gu_iq2xs_multi(unsigned groups, dpct::queue_ptr s, const unsigned long long *grp_ptr,
+                            const int32_t *grp_start, const int32_t *n_groups, const int32_t *ent_tok,
+                            const block_q8_1 *X, const NativeExpertLayout &L, float *gate, float *up) {
++    if (launch_gu_n<17, 8>(groups, s, grp_ptr, grp_start, n_groups, ent_tok, X, L, gate, up)) return;
+     constexpr int ROWS = 256 / 8;
+     const unsigned gx = (unsigned) ((2 * L.n_ff + ROWS - 1) / ROWS);
+     auto exp_props = sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
+@@ -4638,6 +5186,7 @@ template <int TD, int LN, bool KM = true>
+ void launch_down_port(unsigned groups, dpct::queue_ptr s, const unsigned long long *grp_ptr, const int32_t *grp_start,
+                       const int32_t *n_groups, const int32_t *ent_dst, const block_q8_1 *hq,
+                       const NativeExpertLayout &L, float *out) {
++    if (launch_down_n<TD, LN>(groups, s, grp_ptr, grp_start, n_groups, ent_dst, hq, L, out)) return;
+     if (launch_down_rows<TD, LN>(groups, s, grp_ptr, grp_start, n_groups, ent_dst, hq, L, out)) return;
+     constexpr int ROWS = 256 / LN;
+     const unsigned gx = (unsigned) ((L.n_embd + ROWS - 1) / ROWS);
+@@ -4739,6 +5288,9 @@ void launch_down(dpct::dim3 grid, dpct::queue_ptr s,
+ 
+ void iq_set_old_kernels(bool old) { g_old_kernels = old; }
+ void native_expert_set_night_rows(int rpl) { g_night_rows_force = rpl; }
++void native_expert_set_night_iq(int on) { g_night_iq_force = on; }
++void native_expert_set_night_iq4nl_tab(int on) { g_night_iq4nl_tab_force = on; }
++void native_expert_set_night_iq_alu(int on) { g_night_iq_alu_force = on; }
+ void native_expert_set_kq_split(bool on) { g_kq_split = on; }
+ bool iq_old_kernels() { return g_old_kernels; }
+ 
+diff --git a/sycl/src/kernels/cuda/night_tables.inc b/sycl/src/kernels/cuda/night_tables.inc
+new file mode 100644
+index 0000000..91435ff
+--- /dev/null
++++ b/sycl/src/kernels/cuda/night_tables.inc
+@@ -0,0 +1,459 @@
++// night lab STRATA_NIGHT_IQ: sign masks per sign byte, {m_lo, m_hi, m_lo & 0x01010101, m_hi & 0x01010101}: bytes
++// 0-3 of m_lo are 0xFF where bits 0-3 of the byte are set, m_hi likewise for bits 4-7 (= swar_ne4 of the ggml
++// expressions).  kNightKs: the 7-bit ksigns code with its parity bit (= unpack_ksigns); kNightSb: the byte itself.
++// Generated by agents/moe_work (python), checked bitwise by ep_night_bench.
++alignas(16) static const uint32_t kNightKs[512] = {
++    0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x000000FFu, 0xFF000000u, 0x00000001u, 0x01000000u,
++    0x0000FF00u, 0xFF000000u, 0x00000100u, 0x01000000u, 0x0000FFFFu, 0x00000000u, 0x00000101u, 0x00000000u,
++    0x00FF0000u, 0xFF000000u, 0x00010000u, 0x01000000u, 0x00FF00FFu, 0x00000000u, 0x00010001u, 0x00000000u,
++    0x00FFFF00u, 0x00000000u, 0x00010100u, 0x00000000u, 0x00FFFFFFu, 0xFF000000u, 0x00010101u, 0x01000000u,
++    0xFF000000u, 0xFF000000u, 0x01000000u, 0x01000000u, 0xFF0000FFu, 0x00000000u, 0x01000001u, 0x00000000u,
++    0xFF00FF00u, 0x00000000u, 0x01000100u, 0x00000000u, 0xFF00FFFFu, 0xFF000000u, 0x01000101u, 0x01000000u,
++    0xFFFF0000u, 0x00000000u, 0x01010000u, 0x00000000u, 0xFFFF00FFu, 0xFF000000u, 0x01010001u, 0x01000000u,
++    0xFFFFFF00u, 0xFF000000u, 0x01010100u, 0x01000000u, 0xFFFFFFFFu, 0x00000000u, 0x01010101u, 0x00000000u,
++    0x00000000u, 0xFF0000FFu, 0x00000000u, 0x01000001u, 0x000000FFu, 0x000000FFu, 0x00000001u, 0x00000001u,
++    0x0000FF00u, 0x000000FFu, 0x00000100u, 0x00000001u, 0x0000FFFFu, 0xFF0000FFu, 0x00000101u, 0x01000001u,
++    0x00FF0000u, 0x000000FFu, 0x00010000u, 0x00000001u, 0x00FF00FFu, 0xFF0000FFu, 0x00010001u, 0x01000001u,
++    0x00FFFF00u, 0xFF0000FFu, 0x00010100u, 0x01000001u, 0x00FFFFFFu, 0x000000FFu, 0x00010101u, 0x00000001u,
++    0xFF000000u, 0x000000FFu, 0x01000000u, 0x00000001u, 0xFF0000FFu, 0xFF0000FFu, 0x01000001u, 0x01000001u,
++    0xFF00FF00u, 0xFF0000FFu, 0x01000100u, 0x01000001u, 0xFF00FFFFu, 0x000000FFu, 0x01000101u, 0x00000001u,
++    0xFFFF0000u, 0xFF0000FFu, 0x01010000u, 0x01000001u, 0xFFFF00FFu, 0x000000FFu, 0x01010001u, 0x00000001u,
++    0xFFFFFF00u, 0x000000FFu, 0x01010100u, 0x00000001u, 0xFFFFFFFFu, 0xFF0000FFu, 0x01010101u, 0x01000001u,
++    0x00000000u, 0xFF00FF00u, 0x00000000u, 0x01000100u, 0x000000FFu, 0x0000FF00u, 0x00000001u, 0x00000100u,
++    0x0000FF00u, 0x0000FF00u, 0x00000100u, 0x00000100u, 0x0000FFFFu, 0xFF00FF00u, 0x00000101u, 0x01000100u,
++    0x00FF0000u, 0x0000FF00u, 0x00010000u, 0x00000100u, 0x00FF00FFu, 0xFF00FF00u, 0x00010001u, 0x01000100u,
++    0x00FFFF00u, 0xFF00FF00u, 0x00010100u, 0x01000100u, 0x00FFFFFFu, 0x0000FF00u, 0x00010101u, 0x00000100u,
++    0xFF000000u, 0x0000FF00u, 0x01000000u, 0x00000100u, 0xFF0000FFu, 0xFF00FF00u, 0x01000001u, 0x01000100u,
++    0xFF00FF00u, 0xFF00FF00u, 0x01000100u, 0x01000100u, 0xFF00FFFFu, 0x0000FF00u, 0x01000101u, 0x00000100u,
++    0xFFFF0000u, 0xFF00FF00u, 0x01010000u, 0x01000100u, 0xFFFF00FFu, 0x0000FF00u, 0x01010001u, 0x00000100u,
++    0xFFFFFF00u, 0x0000FF00u, 0x01010100u, 0x00000100u, 0xFFFFFFFFu, 0xFF00FF00u, 0x01010101u, 0x01000100u,
++    0x00000000u, 0x0000FFFFu, 0x00000000u, 0x00000101u, 0x000000FFu, 0xFF00FFFFu, 0x00000001u, 0x01000101u,
++    0x0000FF00u, 0xFF00FFFFu, 0x00000100u, 0x01000101u, 0x0000FFFFu, 0x0000FFFFu, 0x00000101u, 0x00000101u,
++    0x00FF0000u, 0xFF00FFFFu, 0x00010000u, 0x01000101u, 0x00FF00FFu, 0x0000FFFFu, 0x00010001u, 0x00000101u,
++    0x00FFFF00u, 0x0000FFFFu, 0x00010100u, 0x00000101u, 0x00FFFFFFu, 0xFF00FFFFu, 0x00010101u, 0x01000101u,
++    0xFF000000u, 0xFF00FFFFu, 0x01000000u, 0x01000101u, 0xFF0000FFu, 0x0000FFFFu, 0x01000001u, 0x00000101u,
++    0xFF00FF00u, 0x0000FFFFu, 0x01000100u, 0x00000101u, 0xFF00FFFFu, 0xFF00FFFFu, 0x01000101u, 0x01000101u,
++    0xFFFF0000u, 0x0000FFFFu, 0x01010000u, 0x00000101u, 0xFFFF00FFu, 0xFF00FFFFu, 0x01010001u, 0x01000101u,
++    0xFFFFFF00u, 0xFF00FFFFu, 0x01010100u, 0x01000101u, 0xFFFFFFFFu, 0x0000FFFFu, 0x01010101u, 0x00000101u,
++    0x00000000u, 0xFFFF0000u, 0x00000000u, 0x01010000u, 0x000000FFu, 0x00FF0000u, 0x00000001u, 0x00010000u,
++    0x0000FF00u, 0x00FF0000u, 0x00000100u, 0x00010000u, 0x0000FFFFu, 0xFFFF0000u, 0x00000101u, 0x01010000u,
++    0x00FF0000u, 0x00FF0000u, 0x00010000u, 0x00010000u, 0x00FF00FFu, 0xFFFF0000u, 0x00010001u, 0x01010000u,
++    0x00FFFF00u, 0xFFFF0000u, 0x00010100u, 0x01010000u, 0x00FFFFFFu, 0x00FF0000u, 0x00010101u, 0x00010000u,
++    0xFF000000u, 0x00FF0000u, 0x01000000u, 0x00010000u, 0xFF0000FFu, 0xFFFF0000u, 0x01000001u, 0x01010000u,
++    0xFF00FF00u, 0xFFFF0000u, 0x01000100u, 0x01010000u, 0xFF00FFFFu, 0x00FF0000u, 0x01000101u, 0x00010000u,
++    0xFFFF0000u, 0xFFFF0000u, 0x01010000u, 0x01010000u, 0xFFFF00FFu, 0x00FF0000u, 0x01010001u, 0x00010000u,
++    0xFFFFFF00u, 0x00FF0000u, 0x01010100u, 0x00010000u, 0xFFFFFFFFu, 0xFFFF0000u, 0x01010101u, 0x01010000u,
++    0x00000000u, 0x00FF00FFu, 0x00000000u, 0x00010001u, 0x000000FFu, 0xFFFF00FFu, 0x00000001u, 0x01010001u,
++    0x0000FF00u, 0xFFFF00FFu, 0x00000100u, 0x01010001u, 0x0000FFFFu, 0x00FF00FFu, 0x00000101u, 0x00010001u,
++    0x00FF0000u, 0xFFFF00FFu, 0x00010000u, 0x01010001u, 0x00FF00FFu, 0x00FF00FFu, 0x00010001u, 0x00010001u,
++    0x00FFFF00u, 0x00FF00FFu, 0x00010100u, 0x00010001u, 0x00FFFFFFu, 0xFFFF00FFu, 0x00010101u, 0x01010001u,
++    0xFF000000u, 0xFFFF00FFu, 0x01000000u, 0x01010001u, 0xFF0000FFu, 0x00FF00FFu, 0x01000001u, 0x00010001u,
++    0xFF00FF00u, 0x00FF00FFu, 0x01000100u, 0x00010001u, 0xFF00FFFFu, 0xFFFF00FFu, 0x01000101u, 0x01010001u,
++    0xFFFF0000u, 0x00FF00FFu, 0x01010000u, 0x00010001u, 0xFFFF00FFu, 0xFFFF00FFu, 0x01010001u, 0x01010001u,
++    0xFFFFFF00u, 0xFFFF00FFu, 0x01010100u, 0x01010001u, 0xFFFFFFFFu, 0x00FF00FFu, 0x01010101u, 0x00010001u,
++    0x00000000u, 0x00FFFF00u, 0x00000000u, 0x00010100u, 0x000000FFu, 0xFFFFFF00u, 0x00000001u, 0x01010100u,
++    0x0000FF00u, 0xFFFFFF00u, 0x00000100u, 0x01010100u, 0x0000FFFFu, 0x00FFFF00u, 0x00000101u, 0x00010100u,
++    0x00FF0000u, 0xFFFFFF00u, 0x00010000u, 0x01010100u, 0x00FF00FFu, 0x00FFFF00u, 0x00010001u, 0x00010100u,
++    0x00FFFF00u, 0x00FFFF00u, 0x00010100u, 0x00010100u, 0x00FFFFFFu, 0xFFFFFF00u, 0x00010101u, 0x01010100u,
++    0xFF000000u, 0xFFFFFF00u, 0x01000000u, 0x01010100u, 0xFF0000FFu, 0x00FFFF00u, 0x01000001u, 0x00010100u,
++    0xFF00FF00u, 0x00FFFF00u, 0x01000100u, 0x00010100u, 0xFF00FFFFu, 0xFFFFFF00u, 0x01000101u, 0x01010100u,
++    0xFFFF0000u, 0x00FFFF00u, 0x01010000u, 0x00010100u, 0xFFFF00FFu, 0xFFFFFF00u, 0x01010001u, 0x01010100u,
++    0xFFFFFF00u, 0xFFFFFF00u, 0x01010100u, 0x01010100u, 0xFFFFFFFFu, 0x00FFFF00u, 0x01010101u, 0x00010100u,
++    0x00000000u, 0xFFFFFFFFu, 0x00000000u, 0x01010101u, 0x000000FFu, 0x00FFFFFFu, 0x00000001u, 0x00010101u,
++    0x0000FF00u, 0x00FFFFFFu, 0x00000100u, 0x00010101u, 0x0000FFFFu, 0xFFFFFFFFu, 0x00000101u, 0x01010101u,
++    0x00FF0000u, 0x00FFFFFFu, 0x00010000u, 0x00010101u, 0x00FF00FFu, 0xFFFFFFFFu, 0x00010001u, 0x01010101u,
++    0x00FFFF00u, 0xFFFFFFFFu, 0x00010100u, 0x01010101u, 0x00FFFFFFu, 0x00FFFFFFu, 0x00010101u, 0x00010101u,
++    0xFF000000u, 0x00FFFFFFu, 0x01000000u, 0x00010101u, 0xFF0000FFu, 0xFFFFFFFFu, 0x01000001u, 0x01010101u,
++    0xFF00FF00u, 0xFFFFFFFFu, 0x01000100u, 0x01010101u, 0xFF00FFFFu, 0x00FFFFFFu, 0x01000101u, 0x00010101u,
++    0xFFFF0000u, 0xFFFFFFFFu, 0x01010000u, 0x01010101u, 0xFFFF00FFu, 0x00FFFFFFu, 0x01010001u, 0x00010101u,
++    0xFFFFFF00u, 0x00FFFFFFu, 0x01010100u, 0x00010101u, 0xFFFFFFFFu, 0xFFFFFFFFu, 0x01010101u, 0x01010101u,
++};
++alignas(16) static const uint32_t kNightSb[1024] = {
++    0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x000000FFu, 0x00000000u, 0x00000001u, 0x00000000u,
++    0x0000FF00u, 0x00000000u, 0x00000100u, 0x00000000u, 0x0000FFFFu, 0x00000000u, 0x00000101u, 0x00000000u,
++    0x00FF0000u, 0x00000000u, 0x00010000u, 0x00000000u, 0x00FF00FFu, 0x00000000u, 0x00010001u, 0x00000000u,
++    0x00FFFF00u, 0x00000000u, 0x00010100u, 0x00000000u, 0x00FFFFFFu, 0x00000000u, 0x00010101u, 0x00000000u,
++    0xFF000000u, 0x00000000u, 0x01000000u, 0x00000000u, 0xFF0000FFu, 0x00000000u, 0x01000001u, 0x00000000u,
++    0xFF00FF00u, 0x00000000u, 0x01000100u, 0x00000000u, 0xFF00FFFFu, 0x00000000u, 0x01000101u, 0x00000000u,
++    0xFFFF0000u, 0x00000000u, 0x01010000u, 0x00000000u, 0xFFFF00FFu, 0x00000000u, 0x01010001u, 0x00000000u,
++    0xFFFFFF00u, 0x00000000u, 0x01010100u, 0x00000000u, 0xFFFFFFFFu, 0x00000000u, 0x01010101u, 0x00000000u,
++    0x00000000u, 0x000000FFu, 0x00000000u, 0x00000001u, 0x000000FFu, 0x000000FFu, 0x00000001u, 0x00000001u,
++    0x0000FF00u, 0x000000FFu, 0x00000100u, 0x00000001u, 0x0000FFFFu, 0x000000FFu, 0x00000101u, 0x00000001u,
++    0x00FF0000u, 0x000000FFu, 0x00010000u, 0x00000001u, 0x00FF00FFu, 0x000000FFu, 0x00010001u, 0x00000001u,
++    0x00FFFF00u, 0x000000FFu, 0x00010100u, 0x00000001u, 0x00FFFFFFu, 0x000000FFu, 0x00010101u, 0x00000001u,
++    0xFF000000u, 0x000000FFu, 0x01000000u, 0x00000001u, 0xFF0000FFu, 0x000000FFu, 0x01000001u, 0x00000001u,
++    0xFF00FF00u, 0x000000FFu, 0x01000100u, 0x00000001u, 0xFF00FFFFu, 0x000000FFu, 0x01000101u, 0x00000001u,
++    0xFFFF0000u, 0x000000FFu, 0x01010000u, 0x00000001u, 0xFFFF00FFu, 0x000000FFu, 0x01010001u, 0x00000001u,
++    0xFFFFFF00u, 0x000000FFu, 0x01010100u, 0x00000001u, 0xFFFFFFFFu, 0x000000FFu, 0x01010101u, 0x00000001u,
++    0x00000000u, 0x0000FF00u, 0x00000000u, 0x00000100u, 0x000000FFu, 0x0000FF00u, 0x00000001u, 0x00000100u,
++    0x0000FF00u, 0x0000FF00u, 0x00000100u, 0x00000100u, 0x0000FFFFu, 0x0000FF00u, 0x00000101u, 0x00000100u,
++    0x00FF0000u, 0x0000FF00u, 0x00010000u, 0x00000100u, 0x00FF00FFu, 0x0000FF00u, 0x00010001u, 0x00000100u,
++    0x00FFFF00u, 0x0000FF00u, 0x00010100u, 0x00000100u, 0x00FFFFFFu, 0x0000FF00u, 0x00010101u, 0x00000100u,
++    0xFF000000u, 0x0000FF00u, 0x01000000u, 0x00000100u, 0xFF0000FFu, 0x0000FF00u, 0x01000001u, 0x00000100u,
++    0xFF00FF00u, 0x0000FF00u, 0x01000100u, 0x00000100u, 0xFF00FFFFu, 0x0000FF00u, 0x01000101u, 0x00000100u,
++    0xFFFF0000u, 0x0000FF00u, 0x01010000u, 0x00000100u, 0xFFFF00FFu, 0x0000FF00u, 0x01010001u, 0x00000100u,
++    0xFFFFFF00u, 0x0000FF00u, 0x01010100u, 0x00000100u, 0xFFFFFFFFu, 0x0000FF00u, 0x01010101u, 0x00000100u,
++    0x00000000u, 0x0000FFFFu, 0x00000000u, 0x00000101u, 0x000000FFu, 0x0000FFFFu, 0x00000001u, 0x00000101u,
++    0x0000FF00u, 0x0000FFFFu, 0x00000100u, 0x00000101u, 0x0000FFFFu, 0x0000FFFFu, 0x00000101u, 0x00000101u,
++    0x00FF0000u, 0x0000FFFFu, 0x00010000u, 0x00000101u, 0x00FF00FFu, 0x0000FFFFu, 0x00010001u, 0x00000101u,
++    0x00FFFF00u, 0x0000FFFFu, 0x00010100u, 0x00000101u, 0x00FFFFFFu, 0x0000FFFFu, 0x00010101u, 0x00000101u,
++    0xFF000000u, 0x0000FFFFu, 0x01000000u, 0x00000101u, 0xFF0000FFu, 0x0000FFFFu, 0x01000001u, 0x00000101u,
++    0xFF00FF00u, 0x0000FFFFu, 0x01000100u, 0x00000101u, 0xFF00FFFFu, 0x0000FFFFu, 0x01000101u, 0x00000101u,
++    0xFFFF0000u, 0x0000FFFFu, 0x01010000u, 0x00000101u, 0xFFFF00FFu, 0x0000FFFFu, 0x01010001u, 0x00000101u,
++    0xFFFFFF00u, 0x0000FFFFu, 0x01010100u, 0x00000101u, 0xFFFFFFFFu, 0x0000FFFFu, 0x01010101u, 0x00000101u,
++    0x00000000u, 0x00FF0000u, 0x00000000u, 0x00010000u, 0x000000FFu, 0x00FF0000u, 0x00000001u, 0x00010000u,
++    0x0000FF00u, 0x00FF0000u, 0x00000100u, 0x00010000u, 0x0000FFFFu, 0x00FF0000u, 0x00000101u, 0x00010000u,
++    0x00FF0000u, 0x00FF0000u, 0x00010000u, 0x00010000u, 0x00FF00FFu, 0x00FF0000u, 0x00010001u, 0x00010000u,
++    0x00FFFF00u, 0x00FF0000u, 0x00010100u, 0x00010000u, 0x00FFFFFFu, 0x00FF0000u, 0x00010101u, 0x00010000u,
++    0xFF000000u, 0x00FF0000u, 0x01000000u, 0x00010000u, 0xFF0000FFu, 0x00FF0000u, 0x01000001u, 0x00010000u,
++    0xFF00FF00u, 0x00FF0000u, 0x01000100u, 0x00010000u, 0xFF00FFFFu, 0x00FF0000u, 0x01000101u, 0x00010000u,
++    0xFFFF0000u, 0x00FF0000u, 0x01010000u, 0x00010000u, 0xFFFF00FFu, 0x00FF0000u, 0x01010001u, 0x00010000u,
++    0xFFFFFF00u, 0x00FF0000u, 0x01010100u, 0x00010000u, 0xFFFFFFFFu, 0x00FF0000u, 0x01010101u, 0x00010000u,
++    0x00000000u, 0x00FF00FFu, 0x00000000u, 0x00010001u, 0x000000FFu, 0x00FF00FFu, 0x00000001u, 0x00010001u,
++    0x0000FF00u, 0x00FF00FFu, 0x00000100u, 0x00010001u, 0x0000FFFFu, 0x00FF00FFu, 0x00000101u, 0x00010001u,
++    0x00FF0000u, 0x00FF00FFu, 0x00010000u, 0x00010001u, 0x00FF00FFu, 0x00FF00FFu, 0x00010001u, 0x00010001u,
++    0x00FFFF00u, 0x00FF00FFu, 0x00010100u, 0x00010001u, 0x00FFFFFFu, 0x00FF00FFu, 0x00010101u, 0x00010001u,
++    0xFF000000u, 0x00FF00FFu, 0x01000000u, 0x00010001u, 0xFF0000FFu, 0x00FF00FFu, 0x01000001u, 0x00010001u,
++    0xFF00FF00u, 0x00FF00FFu, 0x01000100u, 0x00010001u, 0xFF00FFFFu, 0x00FF00FFu, 0x01000101u, 0x00010001u,
++    0xFFFF0000u, 0x00FF00FFu, 0x01010000u, 0x00010001u, 0xFFFF00FFu, 0x00FF00FFu, 0x01010001u, 0x00010001u,
++    0xFFFFFF00u, 0x00FF00FFu, 0x01010100u, 0x00010001u, 0xFFFFFFFFu, 0x00FF00FFu, 0x01010101u, 0x00010001u,
++    0x00000000u, 0x00FFFF00u, 0x00000000u, 0x00010100u, 0x000000FFu, 0x00FFFF00u, 0x00000001u, 0x00010100u,
++    0x0000FF00u, 0x00FFFF00u, 0x00000100u, 0x00010100u, 0x0000FFFFu, 0x00FFFF00u, 0x00000101u, 0x00010100u,
++    0x00FF0000u, 0x00FFFF00u, 0x00010000u, 0x00010100u, 0x00FF00FFu, 0x00FFFF00u, 0x00010001u, 0x00010100u,
++    0x00FFFF00u, 0x00FFFF00u, 0x00010100u, 0x00010100u, 0x00FFFFFFu, 0x00FFFF00u, 0x00010101u, 0x00010100u,
++    0xFF000000u, 0x00FFFF00u, 0x01000000u, 0x00010100u, 0xFF0000FFu, 0x00FFFF00u, 0x01000001u, 0x00010100u,
++    0xFF00FF00u, 0x00FFFF00u, 0x01000100u, 0x00010100u, 0xFF00FFFFu, 0x00FFFF00u, 0x01000101u, 0x00010100u,
++    0xFFFF0000u, 0x00FFFF00u, 0x01010000u, 0x00010100u, 0xFFFF00FFu, 0x00FFFF00u, 0x01010001u, 0x00010100u,
++    0xFFFFFF00u, 0x00FFFF00u, 0x01010100u, 0x00010100u, 0xFFFFFFFFu, 0x00FFFF00u, 0x01010101u, 0x00010100u,
++    0x00000000u, 0x00FFFFFFu, 0x00000000u, 0x00010101u, 0x000000FFu, 0x00FFFFFFu, 0x00000001u, 0x00010101u,
++    0x0000FF00u, 0x00FFFFFFu, 0x00000100u, 0x00010101u, 0x0000FFFFu, 0x00FFFFFFu, 0x00000101u, 0x00010101u,
++    0x00FF0000u, 0x00FFFFFFu, 0x00010000u, 0x00010101u, 0x00FF00FFu, 0x00FFFFFFu, 0x00010001u, 0x00010101u,
++    0x00FFFF00u, 0x00FFFFFFu, 0x00010100u, 0x00010101u, 0x00FFFFFFu, 0x00FFFFFFu, 0x00010101u, 0x00010101u,
++    0xFF000000u, 0x00FFFFFFu, 0x01000000u, 0x00010101u, 0xFF0000FFu, 0x00FFFFFFu, 0x01000001u, 0x00010101u,
++    0xFF00FF00u, 0x00FFFFFFu, 0x01000100u, 0x00010101u, 0xFF00FFFFu, 0x00FFFFFFu, 0x01000101u, 0x00010101u,
++    0xFFFF0000u, 0x00FFFFFFu, 0x01010000u, 0x00010101u, 0xFFFF00FFu, 0x00FFFFFFu, 0x01010001u, 0x00010101u,
++    0xFFFFFF00u, 0x00FFFFFFu, 0x01010100u, 0x00010101u, 0xFFFFFFFFu, 0x00FFFFFFu, 0x01010101u, 0x00010101u,
++    0x00000000u, 0xFF000000u, 0x00000000u, 0x01000000u, 0x000000FFu, 0xFF000000u, 0x00000001u, 0x01000000u,
++    0x0000FF00u, 0xFF000000u, 0x00000100u, 0x01000000u, 0x0000FFFFu, 0xFF000000u, 0x00000101u, 0x01000000u,
++    0x00FF0000u, 0xFF000000u, 0x00010000u, 0x01000000u, 0x00FF00FFu, 0xFF000000u, 0x00010001u, 0x01000000u,
++    0x00FFFF00u, 0xFF000000u, 0x00010100u, 0x01000000u, 0x00FFFFFFu, 0xFF000000u, 0x00010101u, 0x01000000u,
++    0xFF000000u, 0xFF000000u, 0x01000000u, 0x01000000u, 0xFF0000FFu, 0xFF000000u, 0x01000001u, 0x01000000u,
++    0xFF00FF00u, 0xFF000000u, 0x01000100u, 0x01000000u, 0xFF00FFFFu, 0xFF000000u, 0x01000101u, 0x01000000u,
++    0xFFFF0000u, 0xFF000000u, 0x01010000u, 0x01000000u, 0xFFFF00FFu, 0xFF000000u, 0x01010001u, 0x01000000u,
++    0xFFFFFF00u, 0xFF000000u, 0x01010100u, 0x01000000u, 0xFFFFFFFFu, 0xFF000000u, 0x01010101u, 0x01000000u,
++    0x00000000u, 0xFF0000FFu, 0x00000000u, 0x01000001u, 0x000000FFu, 0xFF0000FFu, 0x00000001u, 0x01000001u,
++    0x0000FF00u, 0xFF0000FFu, 0x00000100u, 0x01000001u, 0x0000FFFFu, 0xFF0000FFu, 0x00000101u, 0x01000001u,
++    0x00FF0000u, 0xFF0000FFu, 0x00010000u, 0x01000001u, 0x00FF00FFu, 0xFF0000FFu, 0x00010001u, 0x01000001u,
++    0x00FFFF00u, 0xFF0000FFu, 0x00010100u, 0x01000001u, 0x00FFFFFFu, 0xFF0000FFu, 0x00010101u, 0x01000001u,
++    0xFF000000u, 0xFF0000FFu, 0x01000000u, 0x01000001u, 0xFF0000FFu, 0xFF0000FFu, 0x01000001u, 0x01000001u,
++    0xFF00FF00u, 0xFF0000FFu, 0x01000100u, 0x01000001u, 0xFF00FFFFu, 0xFF0000FFu, 0x01000101u, 0x01000001u,
++    0xFFFF0000u, 0xFF0000FFu, 0x01010000u, 0x01000001u, 0xFFFF00FFu, 0xFF0000FFu, 0x01010001u, 0x01000001u,
++    0xFFFFFF00u, 0xFF0000FFu, 0x01010100u, 0x01000001u, 0xFFFFFFFFu, 0xFF0000FFu, 0x01010101u, 0x01000001u,
++    0x00000000u, 0xFF00FF00u, 0x00000000u, 0x01000100u, 0x000000FFu, 0xFF00FF00u, 0x00000001u, 0x01000100u,
++    0x0000FF00u, 0xFF00FF00u, 0x00000100u, 0x01000100u, 0x0000FFFFu, 0xFF00FF00u, 0x00000101u, 0x01000100u,
++    0x00FF0000u, 0xFF00FF00u, 0x00010000u, 0x01000100u, 0x00FF00FFu, 0xFF00FF00u, 0x00010001u, 0x01000100u,
++    0x00FFFF00u, 0xFF00FF00u, 0x00010100u, 0x01000100u, 0x00FFFFFFu, 0xFF00FF00u, 0x00010101u, 0x01000100u,
++    0xFF000000u, 0xFF00FF00u, 0x01000000u, 0x01000100u, 0xFF0000FFu, 0xFF00FF00u, 0x01000001u, 0x01000100u,
++    0xFF00FF00u, 0xFF00FF00u, 0x01000100u, 0x01000100u, 0xFF00FFFFu, 0xFF00FF00u, 0x01000101u, 0x01000100u,
++    0xFFFF0000u, 0xFF00FF00u, 0x01010000u, 0x01000100u, 0xFFFF00FFu, 0xFF00FF00u, 0x01010001u, 0x01000100u,
++    0xFFFFFF00u, 0xFF00FF00u, 0x01010100u, 0x01000100u, 0xFFFFFFFFu, 0xFF00FF00u, 0x01010101u, 0x01000100u,
++    0x00000000u, 0xFF00FFFFu, 0x00000000u, 0x01000101u, 0x000000FFu, 0xFF00FFFFu, 0x00000001u, 0x01000101u,
++    0x0000FF00u, 0xFF00FFFFu, 0x00000100u, 0x01000101u, 0x0000FFFFu, 0xFF00FFFFu, 0x00000101u, 0x01000101u,
++    0x00FF0000u, 0xFF00FFFFu, 0x00010000u, 0x01000101u, 0x00FF00FFu, 0xFF00FFFFu, 0x00010001u, 0x01000101u,
++    0x00FFFF00u, 0xFF00FFFFu, 0x00010100u, 0x01000101u, 0x00FFFFFFu, 0xFF00FFFFu, 0x00010101u, 0x01000101u,
++    0xFF000000u, 0xFF00FFFFu, 0x01000000u, 0x01000101u, 0xFF0000FFu, 0xFF00FFFFu, 0x01000001u, 0x01000101u,
++    0xFF00FF00u, 0xFF00FFFFu, 0x01000100u, 0x01000101u, 0xFF00FFFFu, 0xFF00FFFFu, 0x01000101u, 0x01000101u,
++    0xFFFF0000u, 0xFF00FFFFu, 0x01010000u, 0x01000101u, 0xFFFF00FFu, 0xFF00FFFFu, 0x01010001u, 0x01000101u,
++    0xFFFFFF00u, 0xFF00FFFFu, 0x01010100u, 0x01000101u, 0xFFFFFFFFu, 0xFF00FFFFu, 0x01010101u, 0x01000101u,
++    0x00000000u, 0xFFFF0000u, 0x00000000u, 0x01010000u, 0x000000FFu, 0xFFFF0000u, 0x00000001u, 0x01010000u,
++    0x0000FF00u, 0xFFFF0000u, 0x00000100u, 0x01010000u, 0x0000FFFFu, 0xFFFF0000u, 0x00000101u, 0x01010000u,
++    0x00FF0000u, 0xFFFF0000u, 0x00010000u, 0x01010000u, 0x00FF00FFu, 0xFFFF0000u, 0x00010001u, 0x01010000u,
++    0x00FFFF00u, 0xFFFF0000u, 0x00010100u, 0x01010000u, 0x00FFFFFFu, 0xFFFF0000u, 0x00010101u, 0x01010000u,
++    0xFF000000u, 0xFFFF0000u, 0x01000000u, 0x01010000u, 0xFF0000FFu, 0xFFFF0000u, 0x01000001u, 0x01010000u,
++    0xFF00FF00u, 0xFFFF0000u, 0x01000100u, 0x01010000u, 0xFF00FFFFu, 0xFFFF0000u, 0x01000101u, 0x01010000u,
++    0xFFFF0000u, 0xFFFF0000u, 0x01010000u, 0x01010000u, 0xFFFF00FFu, 0xFFFF0000u, 0x01010001u, 0x01010000u,
++    0xFFFFFF00u, 0xFFFF0000u, 0x01010100u, 0x01010000u, 0xFFFFFFFFu, 0xFFFF0000u, 0x01010101u, 0x01010000u,
++    0x00000000u, 0xFFFF00FFu, 0x00000000u, 0x01010001u, 0x000000FFu, 0xFFFF00FFu, 0x00000001u, 0x01010001u,
++    0x0000FF00u, 0xFFFF00FFu, 0x00000100u, 0x01010001u, 0x0000FFFFu, 0xFFFF00FFu, 0x00000101u, 0x01010001u,
++    0x00FF0000u, 0xFFFF00FFu, 0x00010000u, 0x01010001u, 0x00FF00FFu, 0xFFFF00FFu, 0x00010001u, 0x01010001u,
++    0x00FFFF00u, 0xFFFF00FFu, 0x00010100u, 0x01010001u, 0x00FFFFFFu, 0xFFFF00FFu, 0x00010101u, 0x01010001u,
++    0xFF000000u, 0xFFFF00FFu, 0x01000000u, 0x01010001u, 0xFF0000FFu, 0xFFFF00FFu, 0x01000001u, 0x01010001u,
++    0xFF00FF00u, 0xFFFF00FFu, 0x01000100u, 0x01010001u, 0xFF00FFFFu, 0xFFFF00FFu, 0x01000101u, 0x01010001u,
++    0xFFFF0000u, 0xFFFF00FFu, 0x01010000u, 0x01010001u, 0xFFFF00FFu, 0xFFFF00FFu, 0x01010001u, 0x01010001u,
++    0xFFFFFF00u, 0xFFFF00FFu, 0x01010100u, 0x01010001u, 0xFFFFFFFFu, 0xFFFF00FFu, 0x01010101u, 0x01010001u,
++    0x00000000u, 0xFFFFFF00u, 0x00000000u, 0x01010100u, 0x000000FFu, 0xFFFFFF00u, 0x00000001u, 0x01010100u,
++    0x0000FF00u, 0xFFFFFF00u, 0x00000100u, 0x01010100u, 0x0000FFFFu, 0xFFFFFF00u, 0x00000101u, 0x01010100u,
++    0x00FF0000u, 0xFFFFFF00u, 0x00010000u, 0x01010100u, 0x00FF00FFu, 0xFFFFFF00u, 0x00010001u, 0x01010100u,
++    0x00FFFF00u, 0xFFFFFF00u, 0x00010100u, 0x01010100u, 0x00FFFFFFu, 0xFFFFFF00u, 0x00010101u, 0x01010100u,
++    0xFF000000u, 0xFFFFFF00u, 0x01000000u, 0x01010100u, 0xFF0000FFu, 0xFFFFFF00u, 0x01000001u, 0x01010100u,
++    0xFF00FF00u, 0xFFFFFF00u, 0x01000100u, 0x01010100u, 0xFF00FFFFu, 0xFFFFFF00u, 0x01000101u, 0x01010100u,
++    0xFFFF0000u, 0xFFFFFF00u, 0x01010000u, 0x01010100u, 0xFFFF00FFu, 0xFFFFFF00u, 0x01010001u, 0x01010100u,
++    0xFFFFFF00u, 0xFFFFFF00u, 0x01010100u, 0x01010100u, 0xFFFFFFFFu, 0xFFFFFF00u, 0x01010101u, 0x01010100u,
++    0x00000000u, 0xFFFFFFFFu, 0x00000000u, 0x01010101u, 0x000000FFu, 0xFFFFFFFFu, 0x00000001u, 0x01010101u,
++    0x0000FF00u, 0xFFFFFFFFu, 0x00000100u, 0x01010101u, 0x0000FFFFu, 0xFFFFFFFFu, 0x00000101u, 0x01010101u,
++    0x00FF0000u, 0xFFFFFFFFu, 0x00010000u, 0x01010101u, 0x00FF00FFu, 0xFFFFFFFFu, 0x00010001u, 0x01010101u,
++    0x00FFFF00u, 0xFFFFFFFFu, 0x00010100u, 0x01010101u, 0x00FFFFFFu, 0xFFFFFFFFu, 0x00010101u, 0x01010101u,
++    0xFF000000u, 0xFFFFFFFFu, 0x01000000u, 0x01010101u, 0xFF0000FFu, 0xFFFFFFFFu, 0x01000001u, 0x01010101u,
++    0xFF00FF00u, 0xFFFFFFFFu, 0x01000100u, 0x01010101u, 0xFF00FFFFu, 0xFFFFFFFFu, 0x01000101u, 0x01010101u,
++    0xFFFF0000u, 0xFFFFFFFFu, 0x01010000u, 0x01010101u, 0xFFFF00FFu, 0xFFFFFFFFu, 0x01010001u, 0x01010101u,
++    0xFFFFFF00u, 0xFFFFFFFFu, 0x01010100u, 0x01010101u, 0xFFFFFFFFu, 0xFFFFFFFFu, 0x01010101u, 0x01010101u,
++};
++// night lab STRATA_NIGHT_IQ4NL_TAB: kNightNl[i][b] = {kvalues[b & 15] << 8i, kvalues[b >> 4] << 8i} (bytes)
++alignas(16) static const uint32_t kNightNl[2048] = {
++    0x00000081u, 0x00000081u, 0x00000098u, 0x00000081u, 0x000000ADu, 0x00000081u, 0x000000BFu, 0x00000081u,
++    0x000000CFu, 0x00000081u, 0x000000DDu, 0x00000081u, 0x000000EAu, 0x00000081u, 0x000000F6u, 0x00000081u,
++    0x00000001u, 0x00000081u, 0x0000000Du, 0x00000081u, 0x00000019u, 0x00000081u, 0x00000026u, 0x00000081u,
++    0x00000035u, 0x00000081u, 0x00000045u, 0x00000081u, 0x00000059u, 0x00000081u, 0x00000071u, 0x00000081u,
++    0x00000081u, 0x00000098u, 0x00000098u, 0x00000098u, 0x000000ADu, 0x00000098u, 0x000000BFu, 0x00000098u,
++    0x000000CFu, 0x00000098u, 0x000000DDu, 0x00000098u, 0x000000EAu, 0x00000098u, 0x000000F6u, 0x00000098u,
++    0x00000001u, 0x00000098u, 0x0000000Du, 0x00000098u, 0x00000019u, 0x00000098u, 0x00000026u, 0x00000098u,
++    0x00000035u, 0x00000098u, 0x00000045u, 0x00000098u, 0x00000059u, 0x00000098u, 0x00000071u, 0x00000098u,
++    0x00000081u, 0x000000ADu, 0x00000098u, 0x000000ADu, 0x000000ADu, 0x000000ADu, 0x000000BFu, 0x000000ADu,
++    0x000000CFu, 0x000000ADu, 0x000000DDu, 0x000000ADu, 0x000000EAu, 0x000000ADu, 0x000000F6u, 0x000000ADu,
++    0x00000001u, 0x000000ADu, 0x0000000Du, 0x000000ADu, 0x00000019u, 0x000000ADu, 0x00000026u, 0x000000ADu,
++    0x00000035u, 0x000000ADu, 0x00000045u, 0x000000ADu, 0x00000059u, 0x000000ADu, 0x00000071u, 0x000000ADu,
++    0x00000081u, 0x000000BFu, 0x00000098u, 0x000000BFu, 0x000000ADu, 0x000000BFu, 0x000000BFu, 0x000000BFu,
++    0x000000CFu, 0x000000BFu, 0x000000DDu, 0x000000BFu, 0x000000EAu, 0x000000BFu, 0x000000F6u, 0x000000BFu,
++    0x00000001u, 0x000000BFu, 0x0000000Du, 0x000000BFu, 0x00000019u, 0x000000BFu, 0x00000026u, 0x000000BFu,
++    0x00000035u, 0x000000BFu, 0x00000045u, 0x000000BFu, 0x00000059u, 0x000000BFu, 0x00000071u, 0x000000BFu,
++    0x00000081u, 0x000000CFu, 0x00000098u, 0x000000CFu, 0x000000ADu, 0x000000CFu, 0x000000BFu, 0x000000CFu,
++    0x000000CFu, 0x000000CFu, 0x000000DDu, 0x000000CFu, 0x000000EAu, 0x000000CFu, 0x000000F6u, 0x000000CFu,
++    0x00000001u, 0x000000CFu, 0x0000000Du, 0x000000CFu, 0x00000019u, 0x000000CFu, 0x00000026u, 0x000000CFu,
++    0x00000035u, 0x000000CFu, 0x00000045u, 0x000000CFu, 0x00000059u, 0x000000CFu, 0x00000071u, 0x000000CFu,
++    0x00000081u, 0x000000DDu, 0x00000098u, 0x000000DDu, 0x000000ADu, 0x000000DDu, 0x000000BFu, 0x000000DDu,
++    0x000000CFu, 0x000000DDu, 0x000000DDu, 0x000000DDu, 0x000000EAu, 0x000000DDu, 0x000000F6u, 0x000000DDu,
++    0x00000001u, 0x000000DDu, 0x0000000Du, 0x000000DDu, 0x00000019u, 0x000000DDu, 0x00000026u, 0x000000DDu,
++    0x00000035u, 0x000000DDu, 0x00000045u, 0x000000DDu, 0x00000059u, 0x000000DDu, 0x00000071u, 0x000000DDu,
++    0x00000081u, 0x000000EAu, 0x00000098u, 0x000000EAu, 0x000000ADu, 0x000000EAu, 0x000000BFu, 0x000000EAu,
++    0x000000CFu, 0x000000EAu, 0x000000DDu, 0x000000EAu, 0x000000EAu, 0x000000EAu, 0x000000F6u, 0x000000EAu,
++    0x00000001u, 0x000000EAu, 0x0000000Du, 0x000000EAu, 0x00000019u, 0x000000EAu, 0x00000026u, 0x000000EAu,
++    0x00000035u, 0x000000EAu, 0x00000045u, 0x000000EAu, 0x00000059u, 0x000000EAu, 0x00000071u, 0x000000EAu,
++    0x00000081u, 0x000000F6u, 0x00000098u, 0x000000F6u, 0x000000ADu, 0x000000F6u, 0x000000BFu, 0x000000F6u,
++    0x000000CFu, 0x000000F6u, 0x000000DDu, 0x000000F6u, 0x000000EAu, 0x000000F6u, 0x000000F6u, 0x000000F6u,
++    0x00000001u, 0x000000F6u, 0x0000000Du, 0x000000F6u, 0x00000019u, 0x000000F6u, 0x00000026u, 0x000000F6u,
++    0x00000035u, 0x000000F6u, 0x00000045u, 0x000000F6u, 0x00000059u, 0x000000F6u, 0x00000071u, 0x000000F6u,
++    0x00000081u, 0x00000001u, 0x00000098u, 0x00000001u, 0x000000ADu, 0x00000001u, 0x000000BFu, 0x00000001u,
++    0x000000CFu, 0x00000001u, 0x000000DDu, 0x00000001u, 0x000000EAu, 0x00000001u, 0x000000F6u, 0x00000001u,
++    0x00000001u, 0x00000001u, 0x0000000Du, 0x00000001u, 0x00000019u, 0x00000001u, 0x00000026u, 0x00000001u,
++    0x00000035u, 0x00000001u, 0x00000045u, 0x00000001u, 0x00000059u, 0x00000001u, 0x00000071u, 0x00000001u,
++    0x00000081u, 0x0000000Du, 0x00000098u, 0x0000000Du, 0x000000ADu, 0x0000000Du, 0x000000BFu, 0x0000000Du,
++    0x000000CFu, 0x0000000Du, 0x000000DDu, 0x0000000Du, 0x000000EAu, 0x0000000Du, 0x000000F6u, 0x0000000Du,
++    0x00000001u, 0x0000000Du, 0x0000000Du, 0x0000000Du, 0x00000019u, 0x0000000Du, 0x00000026u, 0x0000000Du,
++    0x00000035u, 0x0000000Du, 0x00000045u, 0x0000000Du, 0x00000059u, 0x0000000Du, 0x00000071u, 0x0000000Du,
++    0x00000081u, 0x00000019u, 0x00000098u, 0x00000019u, 0x000000ADu, 0x00000019u, 0x000000BFu, 0x00000019u,
++    0x000000CFu, 0x00000019u, 0x000000DDu, 0x00000019u, 0x000000EAu, 0x00000019u, 0x000000F6u, 0x00000019u,
++    0x00000001u, 0x00000019u, 0x0000000Du, 0x00000019u, 0x00000019u, 0x00000019u, 0x00000026u, 0x00000019u,
++    0x00000035u, 0x00000019u, 0x00000045u, 0x00000019u, 0x00000059u, 0x00000019u, 0x00000071u, 0x00000019u,
++    0x00000081u, 0x00000026u, 0x00000098u, 0x00000026u, 0x000000ADu, 0x00000026u, 0x000000BFu, 0x00000026u,
++    0x000000CFu, 0x00000026u, 0x000000DDu, 0x00000026u, 0x000000EAu, 0x00000026u, 0x000000F6u, 0x00000026u,
++    0x00000001u, 0x00000026u, 0x0000000Du, 0x00000026u, 0x00000019u, 0x00000026u, 0x00000026u, 0x00000026u,
++    0x00000035u, 0x00000026u, 0x00000045u, 0x00000026u, 0x00000059u, 0x00000026u, 0x00000071u, 0x00000026u,
++    0x00000081u, 0x00000035u, 0x00000098u, 0x00000035u, 0x000000ADu, 0x00000035u, 0x000000BFu, 0x00000035u,
++    0x000000CFu, 0x00000035u, 0x000000DDu, 0x00000035u, 0x000000EAu, 0x00000035u, 0x000000F6u, 0x00000035u,
++    0x00000001u, 0x00000035u, 0x0000000Du, 0x00000035u, 0x00000019u, 0x00000035u, 0x00000026u, 0x00000035u,
++    0x00000035u, 0x00000035u, 0x00000045u, 0x00000035u, 0x00000059u, 0x00000035u, 0x00000071u, 0x00000035u,
++    0x00000081u, 0x00000045u, 0x00000098u, 0x00000045u, 0x000000ADu, 0x00000045u, 0x000000BFu, 0x00000045u,
++    0x000000CFu, 0x00000045u, 0x000000DDu, 0x00000045u, 0x000000EAu, 0x00000045u, 0x000000F6u, 0x00000045u,
++    0x00000001u, 0x00000045u, 0x0000000Du, 0x00000045u, 0x00000019u, 0x00000045u, 0x00000026u, 0x00000045u,
++    0x00000035u, 0x00000045u, 0x00000045u, 0x00000045u, 0x00000059u, 0x00000045u, 0x00000071u, 0x00000045u,
++    0x00000081u, 0x00000059u, 0x00000098u, 0x00000059u, 0x000000ADu, 0x00000059u, 0x000000BFu, 0x00000059u,
++    0x000000CFu, 0x00000059u, 0x000000DDu, 0x00000059u, 0x000000EAu, 0x00000059u, 0x000000F6u, 0x00000059u,
++    0x00000001u, 0x00000059u, 0x0000000Du, 0x00000059u, 0x00000019u, 0x00000059u, 0x00000026u, 0x00000059u,
++    0x00000035u, 0x00000059u, 0x00000045u, 0x00000059u, 0x00000059u, 0x00000059u, 0x00000071u, 0x00000059u,
++    0x00000081u, 0x00000071u, 0x00000098u, 0x00000071u, 0x000000ADu, 0x00000071u, 0x000000BFu, 0x00000071u,
++    0x000000CFu, 0x00000071u, 0x000000DDu, 0x00000071u, 0x000000EAu, 0x00000071u, 0x000000F6u, 0x00000071u,
++    0x00000001u, 0x00000071u, 0x0000000Du, 0x00000071u, 0x00000019u, 0x00000071u, 0x00000026u, 0x00000071u,
++    0x00000035u, 0x00000071u, 0x00000045u, 0x00000071u, 0x00000059u, 0x00000071u, 0x00000071u, 0x00000071u,
++    0x00008100u, 0x00008100u, 0x00009800u, 0x00008100u, 0x0000AD00u, 0x00008100u, 0x0000BF00u, 0x00008100u,
++    0x0000CF00u, 0x00008100u, 0x0000DD00u, 0x00008100u, 0x0000EA00u, 0x00008100u, 0x0000F600u, 0x00008100u,
++    0x00000100u, 0x00008100u, 0x00000D00u, 0x00008100u, 0x00001900u, 0x00008100u, 0x00002600u, 0x00008100u,
++    0x00003500u, 0x00008100u, 0x00004500u, 0x00008100u, 0x00005900u, 0x00008100u, 0x00007100u, 0x00008100u,
++    0x00008100u, 0x00009800u, 0x00009800u, 0x00009800u, 0x0000AD00u, 0x00009800u, 0x0000BF00u, 0x00009800u,
++    0x0000CF00u, 0x00009800u, 0x0000DD00u, 0x00009800u, 0x0000EA00u, 0x00009800u, 0x0000F600u, 0x00009800u,
++    0x00000100u, 0x00009800u, 0x00000D00u, 0x00009800u, 0x00001900u, 0x00009800u, 0x00002600u, 0x00009800u,
++    0x00003500u, 0x00009800u, 0x00004500u, 0x00009800u, 0x00005900u, 0x00009800u, 0x00007100u, 0x00009800u,
++    0x00008100u, 0x0000AD00u, 0x00009800u, 0x0000AD00u, 0x0000AD00u, 0x0000AD00u, 0x0000BF00u, 0x0000AD00u,
++    0x0000CF00u, 0x0000AD00u, 0x0000DD00u, 0x0000AD00u, 0x0000EA00u, 0x0000AD00u, 0x0000F600u, 0x0000AD00u,
++    0x00000100u, 0x0000AD00u, 0x00000D00u, 0x0000AD00u, 0x00001900u, 0x0000AD00u, 0x00002600u, 0x0000AD00u,
++    0x00003500u, 0x0000AD00u, 0x00004500u, 0x0000AD00u, 0x00005900u, 0x0000AD00u, 0x00007100u, 0x0000AD00u,
++    0x00008100u, 0x0000BF00u, 0x00009800u, 0x0000BF00u, 0x0000AD00u, 0x0000BF00u, 0x0000BF00u, 0x0000BF00u,
++    0x0000CF00u, 0x0000BF00u, 0x0000DD00u, 0x0000BF00u, 0x0000EA00u, 0x0000BF00u, 0x0000F600u, 0x0000BF00u,
++    0x00000100u, 0x0000BF00u, 0x00000D00u, 0x0000BF00u, 0x00001900u, 0x0000BF00u, 0x00002600u, 0x0000BF00u,
++    0x00003500u, 0x0000BF00u, 0x00004500u, 0x0000BF00u, 0x00005900u, 0x0000BF00u, 0x00007100u, 0x0000BF00u,
++    0x00008100u, 0x0000CF00u, 0x00009800u, 0x0000CF00u, 0x0000AD00u, 0x0000CF00u, 0x0000BF00u, 0x0000CF00u,
++    0x0000CF00u, 0x0000CF00u, 0x0000DD00u, 0x0000CF00u, 0x0000EA00u, 0x0000CF00u, 0x0000F600u, 0x0000CF00u,
++    0x00000100u, 0x0000CF00u, 0x00000D00u, 0x0000CF00u, 0x00001900u, 0x0000CF00u, 0x00002600u, 0x0000CF00u,
++    0x00003500u, 0x0000CF00u, 0x00004500u, 0x0000CF00u, 0x00005900u, 0x0000CF00u, 0x00007100u, 0x0000CF00u,
++    0x00008100u, 0x0000DD00u, 0x00009800u, 0x0000DD00u, 0x0000AD00u, 0x0000DD00u, 0x0000BF00u, 0x0000DD00u,
++    0x0000CF00u, 0x0000DD00u, 0x0000DD00u, 0x0000DD00u, 0x0000EA00u, 0x0000DD00u, 0x0000F600u, 0x0000DD00u,
++    0x00000100u, 0x0000DD00u, 0x00000D00u, 0x0000DD00u, 0x00001900u, 0x0000DD00u, 0x00002600u, 0x0000DD00u,
++    0x00003500u, 0x0000DD00u, 0x00004500u, 0x0000DD00u, 0x00005900u, 0x0000DD00u, 0x00007100u, 0x0000DD00u,
++    0x00008100u, 0x0000EA00u, 0x00009800u, 0x0000EA00u, 0x0000AD00u, 0x0000EA00u, 0x0000BF00u, 0x0000EA00u,
++    0x0000CF00u, 0x0000EA00u, 0x0000DD00u, 0x0000EA00u, 0x0000EA00u, 0x0000EA00u, 0x0000F600u, 0x0000EA00u,
++    0x00000100u, 0x0000EA00u, 0x00000D00u, 0x0000EA00u, 0x00001900u, 0x0000EA00u, 0x00002600u, 0x0000EA00u,
++    0x00003500u, 0x0000EA00u, 0x00004500u, 0x0000EA00u, 0x00005900u, 0x0000EA00u, 0x00007100u, 0x0000EA00u,
++    0x00008100u, 0x0000F600u, 0x00009800u, 0x0000F600u, 0x0000AD00u, 0x0000F600u, 0x0000BF00u, 0x0000F600u,
++    0x0000CF00u, 0x0000F600u, 0x0000DD00u, 0x0000F600u, 0x0000EA00u, 0x0000F600u, 0x0000F600u, 0x0000F600u,
++    0x00000100u, 0x0000F600u, 0x00000D00u, 0x0000F600u, 0x00001900u, 0x0000F600u, 0x00002600u, 0x0000F600u,
++    0x00003500u, 0x0000F600u, 0x00004500u, 0x0000F600u, 0x00005900u, 0x0000F600u, 0x00007100u, 0x0000F600u,
++    0x00008100u, 0x00000100u, 0x00009800u, 0x00000100u, 0x0000AD00u, 0x00000100u, 0x0000BF00u, 0x00000100u,
++    0x0000CF00u, 0x00000100u, 0x0000DD00u, 0x00000100u, 0x0000EA00u, 0x00000100u, 0x0000F600u, 0x00000100u,
++    0x00000100u, 0x00000100u, 0x00000D00u, 0x00000100u, 0x00001900u, 0x00000100u, 0x00002600u, 0x00000100u,
++    0x00003500u, 0x00000100u, 0x00004500u, 0x00000100u, 0x00005900u, 0x00000100u, 0x00007100u, 0x00000100u,
++    0x00008100u, 0x00000D00u, 0x00009800u, 0x00000D00u, 0x0000AD00u, 0x00000D00u, 0x0000BF00u, 0x00000D00u,
++    0x0000CF00u, 0x00000D00u, 0x0000DD00u, 0x00000D00u, 0x0000EA00u, 0x00000D00u, 0x0000F600u, 0x00000D00u,
++    0x00000100u, 0x00000D00u, 0x00000D00u, 0x00000D00u, 0x00001900u, 0x00000D00u, 0x00002600u, 0x00000D00u,
++    0x00003500u, 0x00000D00u, 0x00004500u, 0x00000D00u, 0x00005900u, 0x00000D00u, 0x00007100u, 0x00000D00u,
++    0x00008100u, 0x00001900u, 0x00009800u, 0x00001900u, 0x0000AD00u, 0x00001900u, 0x0000BF00u, 0x00001900u,
++    0x0000CF00u, 0x00001900u, 0x0000DD00u, 0x00001900u, 0x0000EA00u, 0x00001900u, 0x0000F600u, 0x00001900u,
++    0x00000100u, 0x00001900u, 0x00000D00u, 0x00001900u, 0x00001900u, 0x00001900u, 0x00002600u, 0x00001900u,
++    0x00003500u, 0x00001900u, 0x00004500u, 0x00001900u, 0x00005900u, 0x00001900u, 0x00007100u, 0x00001900u,
++    0x00008100u, 0x00002600u, 0x00009800u, 0x00002600u, 0x0000AD00u, 0x00002600u, 0x0000BF00u, 0x00002600u,
++    0x0000CF00u, 0x00002600u, 0x0000DD00u, 0x00002600u, 0x0000EA00u, 0x00002600u, 0x0000F600u, 0x00002600u,
++    0x00000100u, 0x00002600u, 0x00000D00u, 0x00002600u, 0x00001900u, 0x00002600u, 0x00002600u, 0x00002600u,
++    0x00003500u, 0x00002600u, 0x00004500u, 0x00002600u, 0x00005900u, 0x00002600u, 0x00007100u, 0x00002600u,
++    0x00008100u, 0x00003500u, 0x00009800u, 0x00003500u, 0x0000AD00u, 0x00003500u, 0x0000BF00u, 0x00003500u,
++    0x0000CF00u, 0x00003500u, 0x0000DD00u, 0x00003500u, 0x0000EA00u, 0x00003500u, 0x0000F600u, 0x00003500u,
++    0x00000100u, 0x00003500u, 0x00000D00u, 0x00003500u, 0x00001900u, 0x00003500u, 0x00002600u, 0x00003500u,
++    0x00003500u, 0x00003500u, 0x00004500u, 0x00003500u, 0x00005900u, 0x00003500u, 0x00007100u, 0x00003500u,
++    0x00008100u, 0x00004500u, 0x00009800u, 0x00004500u, 0x0000AD00u, 0x00004500u, 0x0000BF00u, 0x00004500u,
++    0x0000CF00u, 0x00004500u, 0x0000DD00u, 0x00004500u, 0x0000EA00u, 0x00004500u, 0x0000F600u, 0x00004500u,
++    0x00000100u, 0x00004500u, 0x00000D00u, 0x00004500u, 0x00001900u, 0x00004500u, 0x00002600u, 0x00004500u,
++    0x00003500u, 0x00004500u, 0x00004500u, 0x00004500u, 0x00005900u, 0x00004500u, 0x00007100u, 0x00004500u,
++    0x00008100u, 0x00005900u, 0x00009800u, 0x00005900u, 0x0000AD00u, 0x00005900u, 0x0000BF00u, 0x00005900u,
++    0x0000CF00u, 0x00005900u, 0x0000DD00u, 0x00005900u, 0x0000EA00u, 0x00005900u, 0x0000F600u, 0x00005900u,
++    0x00000100u, 0x00005900u, 0x00000D00u, 0x00005900u, 0x00001900u, 0x00005900u, 0x00002600u, 0x00005900u,
++    0x00003500u, 0x00005900u, 0x00004500u, 0x00005900u, 0x00005900u, 0x00005900u, 0x00007100u, 0x00005900u,
++    0x00008100u, 0x00007100u, 0x00009800u, 0x00007100u, 0x0000AD00u, 0x00007100u, 0x0000BF00u, 0x00007100u,
++    0x0000CF00u, 0x00007100u, 0x0000DD00u, 0x00007100u, 0x0000EA00u, 0x00007100u, 0x0000F600u, 0x00007100u,
++    0x00000100u, 0x00007100u, 0x00000D00u, 0x00007100u, 0x00001900u, 0x00007100u, 0x00002600u, 0x00007100u,
++    0x00003500u, 0x00007100u, 0x00004500u, 0x00007100u, 0x00005900u, 0x00007100u, 0x00007100u, 0x00007100u,
++    0x00810000u, 0x00810000u, 0x00980000u, 0x00810000u, 0x00AD0000u, 0x00810000u, 0x00BF0000u, 0x00810000u,
++    0x00CF0000u, 0x00810000u, 0x00DD0000u, 0x00810000u, 0x00EA0000u, 0x00810000u, 0x00F60000u, 0x00810000u,
++    0x00010000u, 0x00810000u, 0x000D0000u, 0x00810000u, 0x00190000u, 0x00810000u, 0x00260000u, 0x00810000u,
++    0x00350000u, 0x00810000u, 0x00450000u, 0x00810000u, 0x00590000u, 0x00810000u, 0x00710000u, 0x00810000u,
++    0x00810000u, 0x00980000u, 0x00980000u, 0x00980000u, 0x00AD0000u, 0x00980000u, 0x00BF0000u, 0x00980000u,
++    0x00CF0000u, 0x00980000u, 0x00DD0000u, 0x00980000u, 0x00EA0000u, 0x00980000u, 0x00F60000u, 0x00980000u,
++    0x00010000u, 0x00980000u, 0x000D0000u, 0x00980000u, 0x00190000u, 0x00980000u, 0x00260000u, 0x00980000u,
++    0x00350000u, 0x00980000u, 0x00450000u, 0x00980000u, 0x00590000u, 0x00980000u, 0x00710000u, 0x00980000u,
++    0x00810000u, 0x00AD0000u, 0x00980000u, 0x00AD0000u, 0x00AD0000u, 0x00AD0000u, 0x00BF0000u, 0x00AD0000u,
++    0x00CF0000u, 0x00AD0000u, 0x00DD0000u, 0x00AD0000u, 0x00EA0000u, 0x00AD0000u, 0x00F60000u, 0x00AD0000u,
++    0x00010000u, 0x00AD0000u, 0x000D0000u, 0x00AD0000u, 0x00190000u, 0x00AD0000u, 0x00260000u, 0x00AD0000u,
++    0x00350000u, 0x00AD0000u, 0x00450000u, 0x00AD0000u, 0x00590000u, 0x00AD0000u, 0x00710000u, 0x00AD0000u,
++    0x00810000u, 0x00BF0000u, 0x00980000u, 0x00BF0000u, 0x00AD0000u, 0x00BF0000u, 0x00BF0000u, 0x00BF0000u,
++    0x00CF0000u, 0x00BF0000u, 0x00DD0000u, 0x00BF0000u, 0x00EA0000u, 0x00BF0000u, 0x00F60000u, 0x00BF0000u,
++    0x00010000u, 0x00BF0000u, 0x000D0000u, 0x00BF0000u, 0x00190000u, 0x00BF0000u, 0x00260000u, 0x00BF0000u,
++    0x00350000u, 0x00BF0000u, 0x00450000u, 0x00BF0000u, 0x00590000u, 0x00BF0000u, 0x00710000u, 0x00BF0000u,
++    0x00810000u, 0x00CF0000u, 0x00980000u, 0x00CF0000u, 0x00AD0000u, 0x00CF0000u, 0x00BF0000u, 0x00CF0000u,
++    0x00CF0000u, 0x00CF0000u, 0x00DD0000u, 0x00CF0000u, 0x00EA0000u, 0x00CF0000u, 0x00F60000u, 0x00CF0000u,
++    0x00010000u, 0x00CF0000u, 0x000D0000u, 0x00CF0000u, 0x00190000u, 0x00CF0000u, 0x00260000u, 0x00CF0000u,
++    0x00350000u, 0x00CF0000u, 0x00450000u, 0x00CF0000u, 0x00590000u, 0x00CF0000u, 0x00710000u, 0x00CF0000u,
++    0x00810000u, 0x00DD0000u, 0x00980000u, 0x00DD0000u, 0x00AD0000u, 0x00DD0000u, 0x00BF0000u, 0x00DD0000u,
++    0x00CF0000u, 0x00DD0000u, 0x00DD0000u, 0x00DD0000u, 0x00EA0000u, 0x00DD0000u, 0x00F60000u, 0x00DD0000u,
++    0x00010000u, 0x00DD0000u, 0x000D0000u, 0x00DD0000u, 0x00190000u, 0x00DD0000u, 0x00260000u, 0x00DD0000u,
++    0x00350000u, 0x00DD0000u, 0x00450000u, 0x00DD0000u, 0x00590000u, 0x00DD0000u, 0x00710000u, 0x00DD0000u,
++    0x00810000u, 0x00EA0000u, 0x00980000u, 0x00EA0000u, 0x00AD0000u, 0x00EA0000u, 0x00BF0000u, 0x00EA0000u,
++    0x00CF0000u, 0x00EA0000u, 0x00DD0000u, 0x00EA0000u, 0x00EA0000u, 0x00EA0000u, 0x00F60000u, 0x00EA0000u,
++    0x00010000u, 0x00EA0000u, 0x000D0000u, 0x00EA0000u, 0x00190000u, 0x00EA0000u, 0x00260000u, 0x00EA0000u,
++    0x00350000u, 0x00EA0000u, 0x00450000u, 0x00EA0000u, 0x00590000u, 0x00EA0000u, 0x00710000u, 0x00EA0000u,
++    0x00810000u, 0x00F60000u, 0x00980000u, 0x00F60000u, 0x00AD0000u, 0x00F60000u, 0x00BF0000u, 0x00F60000u,
++    0x00CF0000u, 0x00F60000u, 0x00DD0000u, 0x00F60000u, 0x00EA0000u, 0x00F60000u, 0x00F60000u, 0x00F60000u,
++    0x00010000u, 0x00F60000u, 0x000D0000u, 0x00F60000u, 0x00190000u, 0x00F60000u, 0x00260000u, 0x00F60000u,
++    0x00350000u, 0x00F60000u, 0x00450000u, 0x00F60000u, 0x00590000u, 0x00F60000u, 0x00710000u, 0x00F60000u,
++    0x00810000u, 0x00010000u, 0x00980000u, 0x00010000u, 0x00AD0000u, 0x00010000u, 0x00BF0000u, 0x00010000u,
++    0x00CF0000u, 0x00010000u, 0x00DD0000u, 0x00010000u, 0x00EA0000u, 0x00010000u, 0x00F60000u, 0x00010000u,
++    0x00010000u, 0x00010000u, 0x000D0000u, 0x00010000u, 0x00190000u, 0x00010000u, 0x00260000u, 0x00010000u,
++    0x00350000u, 0x00010000u, 0x00450000u, 0x00010000u, 0x00590000u, 0x00010000u, 0x00710000u, 0x00010000u,
++    0x00810000u, 0x000D0000u, 0x00980000u, 0x000D0000u, 0x00AD0000u, 0x000D0000u, 0x00BF0000u, 0x000D0000u,
++    0x00CF0000u, 0x000D0000u, 0x00DD0000u, 0x000D0000u, 0x00EA0000u, 0x000D0000u, 0x00F60000u, 0x000D0000u,
++    0x00010000u, 0x000D0000u, 0x000D0000u, 0x000D0000u, 0x00190000u, 0x000D0000u, 0x00260000u, 0x000D0000u,
++    0x00350000u, 0x000D0000u, 0x00450000u, 0x000D0000u, 0x00590000u, 0x000D0000u, 0x00710000u, 0x000D0000u,
++    0x00810000u, 0x00190000u, 0x00980000u, 0x00190000u, 0x00AD0000u, 0x00190000u, 0x00BF0000u, 0x00190000u,
++    0x00CF0000u, 0x00190000u, 0x00DD0000u, 0x00190000u, 0x00EA0000u, 0x00190000u, 0x00F60000u, 0x00190000u,
++    0x00010000u, 0x00190000u, 0x000D0000u, 0x00190000u, 0x00190000u, 0x00190000u, 0x00260000u, 0x00190000u,
++    0x00350000u, 0x00190000u, 0x00450000u, 0x00190000u, 0x00590000u, 0x00190000u, 0x00710000u, 0x00190000u,
++    0x00810000u, 0x00260000u, 0x00980000u, 0x00260000u, 0x00AD0000u, 0x00260000u, 0x00BF0000u, 0x00260000u,
++    0x00CF0000u, 0x00260000u, 0x00DD0000u, 0x00260000u, 0x00EA0000u, 0x00260000u, 0x00F60000u, 0x00260000u,
++    0x00010000u, 0x00260000u, 0x000D0000u, 0x00260000u, 0x00190000u, 0x00260000u, 0x00260000u, 0x00260000u,
++    0x00350000u, 0x00260000u, 0x00450000u, 0x00260000u, 0x00590000u, 0x00260000u, 0x00710000u, 0x00260000u,
++    0x00810000u, 0x00350000u, 0x00980000u, 0x00350000u, 0x00AD0000u, 0x00350000u, 0x00BF0000u, 0x00350000u,
++    0x00CF0000u, 0x00350000u, 0x00DD0000u, 0x00350000u, 0x00EA0000u, 0x00350000u, 0x00F60000u, 0x00350000u,
++    0x00010000u, 0x00350000u, 0x000D0000u, 0x00350000u, 0x00190000u, 0x00350000u, 0x00260000u, 0x00350000u,
++    0x00350000u, 0x00350000u, 0x00450000u, 0x00350000u, 0x00590000u, 0x00350000u, 0x00710000u, 0x00350000u,
++    0x00810000u, 0x00450000u, 0x00980000u, 0x00450000u, 0x00AD0000u, 0x00450000u, 0x00BF0000u, 0x00450000u,
++    0x00CF0000u, 0x00450000u, 0x00DD0000u, 0x00450000u, 0x00EA0000u, 0x00450000u, 0x00F60000u, 0x00450000u,
++    0x00010000u, 0x00450000u, 0x000D0000u, 0x00450000u, 0x00190000u, 0x00450000u, 0x00260000u, 0x00450000u,
++    0x00350000u, 0x00450000u, 0x00450000u, 0x00450000u, 0x00590000u, 0x00450000u, 0x00710000u, 0x00450000u,
++    0x00810000u, 0x00590000u, 0x00980000u, 0x00590000u, 0x00AD0000u, 0x00590000u, 0x00BF0000u, 0x00590000u,
++    0x00CF0000u, 0x00590000u, 0x00DD0000u, 0x00590000u, 0x00EA0000u, 0x00590000u, 0x00F60000u, 0x00590000u,
++    0x00010000u, 0x00590000u, 0x000D0000u, 0x00590000u, 0x00190000u, 0x00590000u, 0x00260000u, 0x00590000u,
++    0x00350000u, 0x00590000u, 0x00450000u, 0x00590000u, 0x00590000u, 0x00590000u, 0x00710000u, 0x00590000u,
++    0x00810000u, 0x00710000u, 0x00980000u, 0x00710000u, 0x00AD0000u, 0x00710000u, 0x00BF0000u, 0x00710000u,
++    0x00CF0000u, 0x00710000u, 0x00DD0000u, 0x00710000u, 0x00EA0000u, 0x00710000u, 0x00F60000u, 0x00710000u,
++    0x00010000u, 0x00710000u, 0x000D0000u, 0x00710000u, 0x00190000u, 0x00710000u, 0x00260000u, 0x00710000u,
++    0x00350000u, 0x00710000u, 0x00450000u, 0x00710000u, 0x00590000u, 0x00710000u, 0x00710000u, 0x00710000u,
++    0x81000000u, 0x81000000u, 0x98000000u, 0x81000000u, 0xAD000000u, 0x81000000u, 0xBF000000u, 0x81000000u,
++    0xCF000000u, 0x81000000u, 0xDD000000u, 0x81000000u, 0xEA000000u, 0x81000000u, 0xF6000000u, 0x81000000u,
++    0x01000000u, 0x81000000u, 0x0D000000u, 0x81000000u, 0x19000000u, 0x81000000u, 0x26000000u, 0x81000000u,
++    0x35000000u, 0x81000000u, 0x45000000u, 0x81000000u, 0x59000000u, 0x81000000u, 0x71000000u, 0x81000000u,
++    0x81000000u, 0x98000000u, 0x98000000u, 0x98000000u, 0xAD000000u, 0x98000000u, 0xBF000000u, 0x98000000u,
++    0xCF000000u, 0x98000000u, 0xDD000000u, 0x98000000u, 0xEA000000u, 0x98000000u, 0xF6000000u, 0x98000000u,
++    0x01000000u, 0x98000000u, 0x0D000000u, 0x98000000u, 0x19000000u, 0x98000000u, 0x26000000u, 0x98000000u,
++    0x35000000u, 0x98000000u, 0x45000000u, 0x98000000u, 0x59000000u, 0x98000000u, 0x71000000u, 0x98000000u,
++    0x81000000u, 0xAD000000u, 0x98000000u, 0xAD000000u, 0xAD000000u, 0xAD000000u, 0xBF000000u, 0xAD000000u,
++    0xCF000000u, 0xAD000000u, 0xDD000000u, 0xAD000000u, 0xEA000000u, 0xAD000000u, 0xF6000000u, 0xAD000000u,
++    0x01000000u, 0xAD000000u, 0x0D000000u, 0xAD000000u, 0x19000000u, 0xAD000000u, 0x26000000u, 0xAD000000u,
++    0x35000000u, 0xAD000000u, 0x45000000u, 0xAD000000u, 0x59000000u, 0xAD000000u, 0x71000000u, 0xAD000000u,
++    0x81000000u, 0xBF000000u, 0x98000000u, 0xBF000000u, 0xAD000000u, 0xBF000000u, 0xBF000000u, 0xBF000000u,
++    0xCF000000u, 0xBF000000u, 0xDD000000u, 0xBF000000u, 0xEA000000u, 0xBF000000u, 0xF6000000u, 0xBF000000u,
++    0x01000000u, 0xBF000000u, 0x0D000000u, 0xBF000000u, 0x19000000u, 0xBF000000u, 0x26000000u, 0xBF000000u,
++    0x35000000u, 0xBF000000u, 0x45000000u, 0xBF000000u, 0x59000000u, 0xBF000000u, 0x71000000u, 0xBF000000u,
++    0x81000000u, 0xCF000000u, 0x98000000u, 0xCF000000u, 0xAD000000u, 0xCF000000u, 0xBF000000u, 0xCF000000u,
++    0xCF000000u, 0xCF000000u, 0xDD000000u, 0xCF000000u, 0xEA000000u, 0xCF000000u, 0xF6000000u, 0xCF000000u,
++    0x01000000u, 0xCF000000u, 0x0D000000u, 0xCF000000u, 0x19000000u, 0xCF000000u, 0x26000000u, 0xCF000000u,
++    0x35000000u, 0xCF000000u, 0x45000000u, 0xCF000000u, 0x59000000u, 0xCF000000u, 0x71000000u, 0xCF000000u,
++    0x81000000u, 0xDD000000u, 0x98000000u, 0xDD000000u, 0xAD000000u, 0xDD000000u, 0xBF000000u, 0xDD000000u,
++    0xCF000000u, 0xDD000000u, 0xDD000000u, 0xDD000000u, 0xEA000000u, 0xDD000000u, 0xF6000000u, 0xDD000000u,
++    0x01000000u, 0xDD000000u, 0x0D000000u, 0xDD000000u, 0x19000000u, 0xDD000000u, 0x26000000u, 0xDD000000u,
++    0x35000000u, 0xDD000000u, 0x45000000u, 0xDD000000u, 0x59000000u, 0xDD000000u, 0x71000000u, 0xDD000000u,
++    0x81000000u, 0xEA000000u, 0x98000000u, 0xEA000000u, 0xAD000000u, 0xEA000000u, 0xBF000000u, 0xEA000000u,
++    0xCF000000u, 0xEA000000u, 0xDD000000u, 0xEA000000u, 0xEA000000u, 0xEA000000u, 0xF6000000u, 0xEA000000u,
++    0x01000000u, 0xEA000000u, 0x0D000000u, 0xEA000000u, 0x19000000u, 0xEA000000u, 0x26000000u, 0xEA000000u,
++    0x35000000u, 0xEA000000u, 0x45000000u, 0xEA000000u, 0x59000000u, 0xEA000000u, 0x71000000u, 0xEA000000u,
++    0x81000000u, 0xF6000000u, 0x98000000u, 0xF6000000u, 0xAD000000u, 0xF6000000u, 0xBF000000u, 0xF6000000u,
++    0xCF000000u, 0xF6000000u, 0xDD000000u, 0xF6000000u, 0xEA000000u, 0xF6000000u, 0xF6000000u, 0xF6000000u,
++    0x01000000u, 0xF6000000u, 0x0D000000u, 0xF6000000u, 0x19000000u, 0xF6000000u, 0x26000000u, 0xF6000000u,
++    0x35000000u, 0xF6000000u, 0x45000000u, 0xF6000000u, 0x59000000u, 0xF6000000u, 0x71000000u, 0xF6000000u,
++    0x81000000u, 0x01000000u, 0x98000000u, 0x01000000u, 0xAD000000u, 0x01000000u, 0xBF000000u, 0x01000000u,
++    0xCF000000u, 0x01000000u, 0xDD000000u, 0x01000000u, 0xEA000000u, 0x01000000u, 0xF6000000u, 0x01000000u,
++    0x01000000u, 0x01000000u, 0x0D000000u, 0x01000000u, 0x19000000u, 0x01000000u, 0x26000000u, 0x01000000u,
++    0x35000000u, 0x01000000u, 0x45000000u, 0x01000000u, 0x59000000u, 0x01000000u, 0x71000000u, 0x01000000u,
++    0x81000000u, 0x0D000000u, 0x98000000u, 0x0D000000u, 0xAD000000u, 0x0D000000u, 0xBF000000u, 0x0D000000u,
++    0xCF000000u, 0x0D000000u, 0xDD000000u, 0x0D000000u, 0xEA000000u, 0x0D000000u, 0xF6000000u, 0x0D000000u,
++    0x01000000u, 0x0D000000u, 0x0D000000u, 0x0D000000u, 0x19000000u, 0x0D000000u, 0x26000000u, 0x0D000000u,
++    0x35000000u, 0x0D000000u, 0x45000000u, 0x0D000000u, 0x59000000u, 0x0D000000u, 0x71000000u, 0x0D000000u,
++    0x81000000u, 0x19000000u, 0x98000000u, 0x19000000u, 0xAD000000u, 0x19000000u, 0xBF000000u, 0x19000000u,
++    0xCF000000u, 0x19000000u, 0xDD000000u, 0x19000000u, 0xEA000000u, 0x19000000u, 0xF6000000u, 0x19000000u,
++    0x01000000u, 0x19000000u, 0x0D000000u, 0x19000000u, 0x19000000u, 0x19000000u, 0x26000000u, 0x19000000u,
++    0x35000000u, 0x19000000u, 0x45000000u, 0x19000000u, 0x59000000u, 0x19000000u, 0x71000000u, 0x19000000u,
++    0x81000000u, 0x26000000u, 0x98000000u, 0x26000000u, 0xAD000000u, 0x26000000u, 0xBF000000u, 0x26000000u,
++    0xCF000000u, 0x26000000u, 0xDD000000u, 0x26000000u, 0xEA000000u, 0x26000000u, 0xF6000000u, 0x26000000u,
++    0x01000000u, 0x26000000u, 0x0D000000u, 0x26000000u, 0x19000000u, 0x26000000u, 0x26000000u, 0x26000000u,
++    0x35000000u, 0x26000000u, 0x45000000u, 0x26000000u, 0x59000000u, 0x26000000u, 0x71000000u, 0x26000000u,
++    0x81000000u, 0x35000000u, 0x98000000u, 0x35000000u, 0xAD000000u, 0x35000000u, 0xBF000000u, 0x35000000u,
++    0xCF000000u, 0x35000000u, 0xDD000000u, 0x35000000u, 0xEA000000u, 0x35000000u, 0xF6000000u, 0x35000000u,
++    0x01000000u, 0x35000000u, 0x0D000000u, 0x35000000u, 0x19000000u, 0x35000000u, 0x26000000u, 0x35000000u,
++    0x35000000u, 0x35000000u, 0x45000000u, 0x35000000u, 0x59000000u, 0x35000000u, 0x71000000u, 0x35000000u,
++    0x81000000u, 0x45000000u, 0x98000000u, 0x45000000u, 0xAD000000u, 0x45000000u, 0xBF000000u, 0x45000000u,
++    0xCF000000u, 0x45000000u, 0xDD000000u, 0x45000000u, 0xEA000000u, 0x45000000u, 0xF6000000u, 0x45000000u,
++    0x01000000u, 0x45000000u, 0x0D000000u, 0x45000000u, 0x19000000u, 0x45000000u, 0x26000000u, 0x45000000u,
++    0x35000000u, 0x45000000u, 0x45000000u, 0x45000000u, 0x59000000u, 0x45000000u, 0x71000000u, 0x45000000u,
++    0x81000000u, 0x59000000u, 0x98000000u, 0x59000000u, 0xAD000000u, 0x59000000u, 0xBF000000u, 0x59000000u,
++    0xCF000000u, 0x59000000u, 0xDD000000u, 0x59000000u, 0xEA000000u, 0x59000000u, 0xF6000000u, 0x59000000u,
++    0x01000000u, 0x59000000u, 0x0D000000u, 0x59000000u, 0x19000000u, 0x59000000u, 0x26000000u, 0x59000000u,
++    0x35000000u, 0x59000000u, 0x45000000u, 0x59000000u, 0x59000000u, 0x59000000u, 0x71000000u, 0x59000000u,
++    0x81000000u, 0x71000000u, 0x98000000u, 0x71000000u, 0xAD000000u, 0x71000000u, 0xBF000000u, 0x71000000u,
++    0xCF000000u, 0x71000000u, 0xDD000000u, 0x71000000u, 0xEA000000u, 0x71000000u, 0xF6000000u, 0x71000000u,
++    0x01000000u, 0x71000000u, 0x0D000000u, 0x71000000u, 0x19000000u, 0x71000000u, 0x26000000u, 0x71000000u,
++    0x35000000u, 0x71000000u, 0x45000000u, 0x71000000u, 0x59000000u, 0x71000000u, 0x71000000u, 0x71000000u,
++};
+diff --git a/sycl/src/kernels/ep_night_bench.cpp b/sycl/src/kernels/ep_night_bench.cpp
+index aa332ec..b609cf2 100644
+--- a/sycl/src/kernels/ep_night_bench.cpp
++++ b/sycl/src/kernels/ep_night_bench.cpp
+@@ -154,19 +154,22 @@ struct Grouped {
+             sycl::free(p, q);
+     }
+     // the whole call once from a NaN-filled output; the output bits
+-    std::vector<uint32_t> result(sycl::queue& q, int rows) {
++    std::vector<uint32_t> result(sycl::queue& q, int rows, int iq = 0, int layer = 0) {
+         q.memset(out, 0xFF, (size_t) cap * 2560 * 4).wait();
+         q.memset(scr, 0x3C, k::native_expert_scratch_bytes(cap, 640)).wait();
+         k::native_expert_set_night_rows(rows);
+-        k::native_expert_grouped(L, lptr[0], start, n, dst, tok, cap, cap, xq, scr, out, &q, 0);
++        k::native_expert_set_night_iq(iq);
++        k::native_expert_grouped(L, lptr[(size_t) layer], start, n, dst, tok, cap, cap, xq, scr, out, &q, 0);
+         k::native_expert_set_night_rows(0);
++        k::native_expert_set_night_iq(0);
+         q.wait();
+         std::vector<uint32_t> o((size_t) cap * 2560);
+         q.memcpy(o.data(), out, o.size() * 4).wait();
+         return o;
+     }
+-    double run(sycl::queue& q, int phase, int64_t gy, int reps, int rows = 0) {
++    double run(sycl::queue& q, int phase, int64_t gy, int reps, int rows = 0, int iq = 0) {
+         k::native_expert_set_night_rows(rows);
++        k::native_expert_set_night_iq(iq);
+         k::native_expert_set_mode(-1, phase);
+         const double us = time_graph_us(q, [&] {
+             for (int l = 0; l < NL; ++l)
+@@ -174,6 +177,7 @@ struct Grouped {
+         }, NL, reps);
+         k::native_expert_set_mode(-1, 0);
+         k::native_expert_set_night_rows(0);
++        k::native_expert_set_night_iq(0);
+         return us;
+     }
+ };
+@@ -187,37 +191,55 @@ std::vector<int> sizes_of(std::initializer_list<std::pair<int, int>> v) {   // {
+ int g_bad = 0;
+ int grouped_bench(int reps) {
+     sycl::queue& q = Q();
++    if (const char* t = std::getenv("EPB_NLTAB")) k::native_expert_set_night_iq4nl_tab(std::atoi(t));
++    if (const char* t = std::getenv("EPB_ALU")) k::native_expert_set_night_iq_alu(std::atoi(t));
+     std::mt19937 rng(1016);
+     const Scenario scs[] = {
+-        {"C2 card0 14g/30e", 6, sizes_of({{1, 4}, {3, 3}, {7, 2}, {3, 1}})},
+-        {"C2 card1 26g/30e", 6, sizes_of({{4, 2}, {22, 1}})},
++        {"E1 30g x1 (T8)", 8, sizes_of({{30, 1}})},
++        {"E2 15g x2 (T8)", 8, sizes_of({{15, 2}})},
++        {"E3 10g x3 (T8)", 8, sizes_of({{10, 3}})},
+         {"C1 card0 10g/20e", 4, sizes_of({{2, 3}, {6, 2}, {2, 1}})},
+         {"C1 card1 18g/20e", 4, sizes_of({{2, 2}, {16, 1}})},
++        {"C2 card0 14g/30e", 6, sizes_of({{1, 4}, {3, 3}, {7, 2}, {3, 1}})},
++        {"C2 card1 26g/30e", 6, sizes_of({{4, 2}, {22, 1}})},
++        {"C4 card0 19g/40e", 8, sizes_of({{2, 4}, {4, 3}, {7, 2}, {6, 1}})},
++        {"C4 card1 32g/40e", 8, sizes_of({{8, 2}, {24, 1}})},
+     };
+     const int pairs[][2] = {{16, 42}, {17, 20}, {21, 42}, {22, 42}, {18, 20}};
+-    std::printf("grouped: us per call (48 layers per graph, median of 5 x %d replays); GB/s = groups x blob bytes / call\n", reps);
+-    std::printf("%-8s/%-7s %-18s %8s %8s %8s | %8s %8s %8s | %6s %6s | %s\n", "gate/up", "down", "scenario",
+-                "gu+sw", "down", "all", "R2:gu+sw", "R2:down", "R2:all", "GB/s", "R2GB/s", "rows vs base");
+-    // EPB_PAIRS="16:42,21:42" / EPB_SCEN="01" restrict the table (default: all)
++    // EPB_PAIRS="16:42,21:42" / EPB_SCEN="0123" restrict the table (default: all)
+     const char* fp = std::getenv("EPB_PAIRS");
+     const char* fs = std::getenv("EPB_SCEN");
+-    int si = -1;
++    std::printf("grouped: us per call (48 layers per graph, median of 5 x %d replays); base = current kernels, R2 =\n"
++                "STRATA_NIGHT_EP_ROWS=2, IQ = STRATA_NIGHT_IQ=1 (1 row), IQR2 = both; gu = gate/up + swiglu phase, dn = all - gu;\n"
++                "GB/s = groups x blob bytes / all; every variant compared bitwise with base\n", reps);
++    std::printf("%-8s/%-7s %-17s | %7s %7s %7s | %7s %7s | %7s %7s %7s | %7s %7s %7s | %6s %6s | %s\n", "gate/up", "down",
++                "scenario", "gu", "dn", "all", "R2:gu", "R2:all", "IQ:gu", "IQ:dn", "IQ:all", "IQR2:gu", "IQR2:dn", "IQR2:all",
++                "GB/s", "IQGB/s", "bitwise");
+     for (const auto& pr : pairs)
+         for (const auto& sc : scs) {
+-            si = (int) (&sc - scs);
++            const int si = (int) (&sc - scs);
+             if (fp && !std::strstr(fp, (std::to_string(pr[0]) + ":" + std::to_string(pr[1])).c_str())) continue;
+             if (fs && !std::strchr(fs, '0' + si)) continue;
+             Grouped G(pr[0], pr[1], sc, 48, rng, q);
+-            const double gu = G.run(q, 1, 0, reps), dn = G.run(q, 2, 0, reps), all = G.run(q, 0, 0, reps);
+-            const double g2 = G.run(q, 1, 0, reps, 2), d2 = G.run(q, 2, 0, reps, 2), a2 = G.run(q, 0, 0, reps, 2);
+-            const auto a = G.result(q, 0), b = G.result(q, 2);
++            const double gu = G.run(q, 1, 0, reps), all = G.run(q, 0, 0, reps);
++            const double g2 = G.run(q, 1, 0, reps, 2), a2 = G.run(q, 0, 0, reps, 2);
++            const double gi = G.run(q, 1, 0, reps, 0, 1), ai = G.run(q, 0, 0, reps, 0, 1);
++            const double gj = G.run(q, 1, 0, reps, 2, 1), aj = G.run(q, 0, 0, reps, 2, 1);
+             size_t diff = 0, written = 0;
+-            for (size_t i = 0; i < a.size(); ++i) { diff += a[i] != b[i]; written += a[i] != 0xFFFFFFFFu; }
++            for (int layer : {0, 17, 47}) {   // three layers' blobs
++                const auto a = G.result(q, 0, 0, layer), b = G.result(q, 2, 0, layer), c = G.result(q, 0, 1, layer),
++                           d = G.result(q, 2, 1, layer);
++                for (size_t i = 0; i < a.size(); ++i) {
++                    diff += (a[i] != b[i]) + (a[i] != c[i]) + (a[i] != d[i]);
++                    written += a[i] != 0xFFFFFFFFu;
++                }
++            }
+             g_bad += diff != 0 || written == 0;
+             const double mb = (double) G.ng * (double) G.L.bytes / 1e6;
+-            std::printf("%-8s/%-7s %-18s %8.2f %8.2f %8.2f | %8.2f %8.2f %8.2f | %6.1f %6.1f | %s (%zu written, %zu differ)\n",
+-                        name_of(pr[0]), name_of(pr[1]), sc.what, gu, dn, all, g2, d2, a2, mb * 1e3 / all,
+-                        mb * 1e3 / a2, diff == 0 && written ? "bitwise" : "FAIL", written, diff);
++            std::printf("%-8s/%-7s %-17s | %7.2f %7.2f %7.2f | %7.2f %7.2f | %7.2f %7.2f %7.2f | %7.2f %7.2f %7.2f | %6.1f %6.1f | %s (%zu, %zu)\n",
++                        name_of(pr[0]), name_of(pr[1]), sc.what, gu, all - gu, all, g2, a2, gi, ai - gi, ai, gj, aj - gj, aj,
++                        mb * 1e3 / all, mb * 1e3 / std::min(ai, aj), diff == 0 && written ? "yes" : "FAIL", written, diff);
++            std::fflush(stdout);
+         }
+     std::printf("grouped: %d failures\n", g_bad);
+     return g_bad ? 1 : 0;

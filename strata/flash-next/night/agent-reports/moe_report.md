@@ -191,10 +191,13 @@ changes). Second lever: a Multi<16> (IQ2_XXS, 9 layers) and a decode-once expert
 
 ## 8. IQ decode, instruction level (STRATA_NIGHT_IQ=1), second mission
 
-Engine: /mnt/vm_8tb/b70/results/night-20261016/builds/strata-moe-iq1 (base e1b7ee8a + moe_iq.patch = the EP patch +
-this). Incremental patch on top of the committed EP patch (7fae90ec): agents/moe_iq_incremental.patch.
-Flags: STRATA_NIGHT_IQ=1 (default formats 16,17,20,42; STRATA_NIGHT_IQ_FMTS=<ids> overrides), best with
-STRATA_NIGHT_EP_ROWS=2 (IQ2_XS uses the new decode only with 2 rows).
+FINAL engine: /mnt/vm_8tb/b70/results/night-20261016/builds/strata-moe-iq2 (base e1b7ee8a + agents/moe_iq.patch =
+the EP patch + this). Incremental patch on top of the committed EP patch (7fae90ec): agents/moe_iq_incremental.patch
+(iq_kernels.dp.cpp, iq_kernels.hpp, new night_tables.inc, ep_night_bench.cpp).
+Flags: STRATA_NIGHT_IQ=1 together with STRATA_NIGHT_EP_ROWS=2 (all 7 expert formats; without ROWS=2 only IQ2_XXS
+gate/up and the two down formats switch, the others measured slower at 1 row). Sub-switches for A/B only:
+STRATA_NIGHT_IQ_FMTS=<ggml ids>, STRATA_NIGHT_IQ_ALU=0 (table sign masks for IQ3_XXS/IQ3_S/IQ2_S: slower),
+STRATA_NIGHT_IQ4NL_TAB=0 (bit-slice IQ4_NL: ~4% slower).
 
 ### 8.1 ISA method and where the time goes
 
@@ -250,7 +253,9 @@ NQ<TY> decode traits + native_gu_kernel_n / native_down_kernel_n (1 or 2 rows pe
 | IQ2_S GU | 224-318 / 241-323 | 300 / 366 |
 | Q2_0 down | 142-203 / 152-228 / 212-278 | 476 / 501 / 546 |
 | IQ4_NL down | 236 / 254 / 297 | 279 / 302 / 338 |
-(two values = the two SIMD32 compiles IGC emitted; the new 1-row SIMD32 kernels spill 7-30 registers.)
+(two values = the two SIMD32 compiles IGC emitted; the new 1-row SIMD32 kernels spill 7-30 registers; the 2-row
+SIMD16 kernels used by default do not spill. IQ4_NL with tables (default) and the ALU-sign IQ3 forms were not
+re-dumped.)
 
 ### 8.3 Timings (card 1, ep_night_bench grouped, 48 layers/graph, us per call; bitwise equal in every case)
 
@@ -271,13 +276,29 @@ IQR2 = new decode 2 rows. gu = gate/up+swiglu, dn = down.
 | IQ4_NL down alone | C2 card0 / card1 | 64.9 / 95.9 | 55.8 / 80.3 | -14% / -16% |
 | IQ3_S/Q2_0 (GU new is slower; dn only) | C2 card1 | 216.4 | 158.7 (GU old R2 ~114 + dn 34 -> ~148) | -27..-32% |
 
-IQ3_S, IQ3_XXS, IQ2_S gate/up with the new decode are 5-20% SLOWER than the current kernels despite 10-25% fewer
-instructions: they gain little ALU (cheap sign bytes or many grid lookups) and add 4 table loads per part plus
-SIMD32 spills, so they stay on the current kernels (+ ROWS=2) by default. DRAM GB/s with IQR2 rises from 115-275 to
-215-330.
+First pass: IQ3_S, IQ3_XXS, IQ2_S gate/up with TABLE sign masks were 5-20% SLOWER than the current kernels despite
+10-25% fewer instructions (4 more gathers per part, cheap ALU signs replaced; SIMD32 spills at 1 row). Second pass
+(NQ<118/121/122>): block-pointer loop + aligned loads but ggml's ALU sign masks: 1-6% faster than ROWS=2 alone
+(iq2.txt) -> default. IQ4_NL through 4 x 256 x 8-byte position tables (NQ<120>, 4 gathers per 8 weights): ~4% faster
+than the bit-slice select -> default (cheap gathers win when they replace ~40 ALU; lose when they replace ~6).
 
-VERDICT -> STRATA_NIGHT_IQ=1 (+ ROWS=2) is bitwise and takes the down projection (all 48 layers: 30 Q2_0, 18 IQ4_NL)
-and 18 of 48 gate/up layers to the new decode. Estimated per C2 cycle vs ROWS=2 alone: card 1 chain -1.9 ms
-(Q2_0 dn -48 us x 30 layers, IQ4_NL -13 x 18, IQ2_XXS GU -20 x 9, IQ2_XS GU -10 x 9), card 0 own experts -1.3 ms;
-since card 0 (own experts + serialized shared expert) and card 1 are now close, expect ~-1.3 to -1.9 ms per C2
-cycle (3-4%); C4 scales better (multi-entry IQ2_XXS -48%, Q2_0 4-entry passes). Serving check needed.
+### 8.4 Final default configuration (STRATA_NIGHT_IQ=1 + STRATA_NIGHT_EP_ROWS=2), bitwise in all 30 cases
+
+agents/moe_work/iq3a.txt, iq3b.txt (us per call; columns run base, R2, IQ, IQR2 in that order; unchanged kernels
+read 5-8% slower in later columns - clock drift - so the IQR2 gains are conservative):
+| GU / down | C1 card0 | C1 card1 | C2 card0 | C2 card1 | C4 card0 | C4 card1 |
+| --- | --- | --- | --- | --- | --- | --- |
+| IQ2_XXS/Q2_0 base -> IQR2 | 114.8 -> 59.8 | 135.1 -> 83.8 | 158.7 -> 85.8 | 192.3 -> 121.5 | 213.1 -> 112.3 | 248.7 -> 147.3 |
+| IQ3_S/Q2_0 | 105.1 -> 70.3 | 147.9 -> 100.1 | 147.4 -> 99.3 | 215.2 -> 147.2 | 194.8 -> 130.8 | 256.9 -> 175.1 |
+| IQ2_S/Q2_0 | 97.0 -> 67.2 | 135.5 -> 91.5 | 136.4 -> 94.5 | 195.5 -> 133.1 | 181.1 -> 123.1 | 237.3 -> 161.9 |
+| IQ2_XS/IQ4_NL | 99.2 -> 82.8 | 135.6 -> 119.6 | 138.1 -> 117.7 | 196.7 -> 169.9 | 181.4 -> 151.6 | 242.6 -> 205.4 |
+| IQ3_XXS/IQ4_NL | 102.9 -> 88.9 | 146.6 -> 127.9 | 142.7 -> 126.0 | 208.2 -> 183.9 | 189.7 -> 162.9 | 253.4 -> 221.3 |
+Q2_0 layers -31..-48%, IQ4_NL layers -12..-17% per call; decode GB/s 115-275 -> 220-340.
+
+VERDICT -> keep: bitwise, every format faster. Layer-weighted vs ROWS=2 alone (30 Q2_0 + 18 IQ4_NL down; GU 9 IQ2_XXS,
+9 IQ2_XS, 6 IQ3_XXS, 13 IQ3_S, 10 IQ2_S): C2 card 1 chain ~-2.3 ms per cycle (Q2_0 down alone -52 us x 30), card 0
+own experts ~-1.7 ms per cycle. With card 0 (own experts + the serialized ~53 us shared expert) the limiter after the
+EP patch, expect ~-1.5 to -1.8 ms per C2 cycle (~3.5% of 46.5 ms) and more at C4 (IQ2_XXS multi-entry -47%, 4-entry
+Q2_0 passes). The remaining expert time is now IQ4_NL down (~78 us/call card 1 C2) and the IQ3/IQ2_S gate/up
+(~100-110 us card 1 C2, ~2-4% better than ROWS=2): next levers are fewer grid gathers (8 per IQ3 part) and the
+IQ4_NL down at 16 weights per part. Serving check (coherence, identity, C2/C4 throughput) needed.
