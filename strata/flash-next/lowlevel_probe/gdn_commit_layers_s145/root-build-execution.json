@@ -1,0 +1,12 @@
+{
+  "stage": "S145",
+  "command": [
+    "bash",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s145-private-prep-v2/build.sh"
+  ],
+  "exit": 0,
+  "elapsed_s": 23.552887909987476,
+  "root_full_read_V1_critical_packet_and_exact_V2_delta": true,
+  "source_projection_body_hashes_unchanged": true,
+  "no_retry": true
+}

@@ -25797,3 +25797,20 @@ or promotion/no quantifiednoise/population/regressionclaim. S141private
 42%chainchange didnotforecastserving. Fullcontext/RAMqualification
 separate. NextlargerGDNprivateprobealreadybuilt/nogainclaimhere. See
 docs/20261016_strata_qsa_commit_group_serving.md.
+
+
+## 2026-10-16 S145 private GDN commit layer bundle
+CONFIG -> Existing public per-layer control versus private layer-batched commit,
+36GDN layers/two owners/three proposed rows, state-only modes. V2 removes only
+unused private root-sync launch property; body/work-group barriers unchanged.
+COMMAND -> One e41/noDRI CPU build23.552888s; one quiet card0 run68.240021s,
+fresh health, no retry/reset. Existing public object, no main rebuild/ISA round.
+RESULT -> All9A/B/A strict phases, complete235339776B state, eager/captured,
+restored-state continuation, finite/guards/readonly/outputsentinel PASS;
+18FNV receipts descriptive only. Native/analyzer/normalremoval/CID+NAMEabsence
+and pre/posthealth0. Eight balanced samples retained; medians1191.211->881.0445us
+(-26.037914%) completed private GDN-only chain.
+VERDICT -> Finite private bundle PASS, no isolated cause or serving forecast;
+main integration/owner layout/completion gates remain separate. See
+[dated evidence](docs/20261016_strata_gdn_commit_layer_oracle.md) and
+[exact receipts](strata/flash-next/lowlevel_probe/gdn_commit_layers_s145/).

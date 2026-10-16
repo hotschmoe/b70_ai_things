@@ -1,0 +1,72 @@
+--- V1/private_gdn.hpp
++++ V2/private_gdn.hpp
+@@ -105,15 +105,13 @@
+                           const float*gate,const float*beta,const int32_t*keep) {
+  constexpr int C=10240,HV=48,HK=16,L=36,MT=8;
+  constexpr int64_t STRIDE=int64_t(S)*HV*S+int64_t(C)*3,CONV=int64_t(S)*HV*S;
+- const auto props=sycl::ext::oneapi::experimental::properties{
+-  sycl::ext::oneapi::experimental::use_root_sync};
+  q.parallel_for<class s145_conv_layers>(
+-  sycl::nd_range<3>(sycl::range<3>(1,L,(C+255)/256)*sycl::range<3>(1,1,256),sycl::range<3>(1,1,256)),props,
++  sycl::nd_range<3>(sycl::range<3>(1,L,(C+255)/256)*sycl::range<3>(1,1,256),sycl::range<3>(1,1,256)),
+   [=](sycl::nd_item<3>item){const int64_t l=item.get_group(1);
+    s145_conv_body(state+l*STRIDE+CONV,qkv+l*MT*C,C,keep);
+   });
+  q.parallel_for<class s145_state_layers>(
+-  sycl::nd_range<3>(sycl::range<3>(L,4,HV)*sycl::range<3>(1,RG,32),sycl::range<3>(1,RG,32)),props,
++  sycl::nd_range<3>(sycl::range<3>(L,4,HV)*sycl::range<3>(1,RG,32),sycl::range<3>(1,RG,32)),
+   [=](sycl::nd_item<3>item){const int64_t l=item.get_group(0);
+    s145_state_body(state+l*STRIDE,h+l*MT*C,C,gate+l*MT*HV,beta+l*MT*HV,HK,HV,keep);
+   });
+--- V1/derive-header.py
++++ V2/derive-header.py
+@@ -31,15 +31,13 @@
+                           const float*gate,const float*beta,const int32_t*keep) {
+  constexpr int C=10240,HV=48,HK=16,L=36,MT=8;
+  constexpr int64_t STRIDE=int64_t(S)*HV*S+int64_t(C)*3,CONV=int64_t(S)*HV*S;
+- const auto props=sycl::ext::oneapi::experimental::properties{
+-  sycl::ext::oneapi::experimental::use_root_sync};
+  q.parallel_for<class s145_conv_layers>(
+-  sycl::nd_range<3>(sycl::range<3>(1,L,(C+255)/256)*sycl::range<3>(1,1,256),sycl::range<3>(1,1,256)),props,
++  sycl::nd_range<3>(sycl::range<3>(1,L,(C+255)/256)*sycl::range<3>(1,1,256),sycl::range<3>(1,1,256)),
+   [=](sycl::nd_item<3>item){const int64_t l=item.get_group(1);
+    s145_conv_body(state+l*STRIDE+CONV,qkv+l*MT*C,C,keep);
+   });
+  q.parallel_for<class s145_state_layers>(
+-  sycl::nd_range<3>(sycl::range<3>(L,4,HV)*sycl::range<3>(1,RG,32),sycl::range<3>(1,RG,32)),props,
++  sycl::nd_range<3>(sycl::range<3>(L,4,HV)*sycl::range<3>(1,RG,32),sycl::range<3>(1,RG,32)),
+   [=](sycl::nd_item<3>item){const int64_t l=item.get_group(0);
+    s145_state_body(state+l*STRIDE,h+l*MT*C,C,gate+l*MT*HV,beta+l*MT*HV,HK,HV,keep);
+   });
+--- V1/source-projection.json
++++ V2/source-projection.json
+@@ -17,5 +17,5 @@
+       "inverse_name_substitution_exact": true
+     }
+   },
+-  "private_header_sha256": "43760aa24b4dc38f74e619e00500b24b474df70698de7b61ab3ecdaf720f8f35"
++  "private_header_sha256": "07514009f0df79d4452c8112ebe067ff51e644fb4f54e29bd1b8aacf55c2786d"
+ }
+--- V1/README.md
++++ V2/README.md
+@@ -1,4 +1,4 @@
+-# S145 private GDN layer batching (SOURCE ONLY)
++# S145 private GDN layer batching V2 (SOURCE ONLY)
+ 
+ CONFIG -> One private candidate, no main flag/production edit. Real36GDN layers,2owners,MT8,three proposed rows/owner at rowfirst0/3, state128/keyheads16/valueheads48/C10240. Existing PUBLIC perlayer control from current503792B verify_kernels.dp.cpp.o; no private clone control. Candidate uses TWO kernels/owner (conv then recurrence), four total vs72+72public calls. Source-only audit gdn-commit-layer-batching-source and actual S141/S142 model decisions support this narrow next test, not a serving gain.
+ 
+@@ -10,7 +10,7 @@
+ 
+ This starts one quiet-CPU/card0 finite window, physical PCI0000:0b:00.0. Full finite-state checks/copies use the same cpu-run --quiet OUTSIDE gpu-run lease; no background CPU/RAM generation. Build must wait until S144 quiet serving finishes. Fresh pinned card0 pre/posthealth retained. create/start/inspect/wait/rm/fullCID+NAME absence use completed S141V2 same-lease hold_root pattern; unknown/live/cleanup failure holds SAME lease for root, never force/reset/retry/automatic health. Native nonzero stops after confirmed normal removal with root review required. No models/CLI/ISA/GPU executed in preparation.
+ 
+-Source projection -> derive-header.py selects exact brace-balanced current SYCL gdn_conv_commit_kernel and gdn_step_commit_kernel function spans. Only names change to s145_conv_body/state_body; inverse substitution reproduces exact source byte SHA in source-projection.json. No clean-CUDA floating-point syntax substitution. Wrapper shifts pointers by layer offsets, retaining existing body local/WG indexing, barriers and expression order. Conv layer extent is group1/local(1,1,256), state layer extentgroup0/local(1,4,32), head remains group2 and column tilegroup1. Declared state SLM256floats/1024B,32statefloats/thread. Preserve existing use_root_sync and SG32 compiler policy. Actual GRF/spill/scheduling/resource and all-input FP equivalence UNKNOWN; source identity is not compiled numerical proof.
++Source projection -> derive-header.py selects exact brace-balanced current SYCL gdn_conv_commit_kernel and gdn_step_commit_kernel function spans. Only names change to s145_conv_body/state_body; inverse substitution reproduces exact source byte SHA in source-projection.json. No clean-CUDA floating-point syntax substitution. Wrapper shifts pointers by layer offsets, retaining existing body local/WG indexing, barriers and expression order. Conv layer extent is group1/local(1,1,256), state layer extentgroup0/local(1,4,32), head remains group2 and column tilegroup1. Declared state SLM256floats/1024B,32statefloats/thread. Candidate wrappers use ordinary launches (no unused use_root_sync); PUBLIC controls retain their existing property. SG32 compiler policy unchanged. Actual GRF/spill/scheduling/resource and all-input FP equivalence UNKNOWN; source identity is not compiled numerical proof.
+ 
+ FP ledger -> state loads32values/thread ONCE; each accepted step barrier/load key/barrier/native_exp(gate),32ordered FMAs to kv, red[rg]store/barrier, red0+red1+red2+red3 in order, delta=(v-g*kv)*beta,32ordered FMA(g,state,key*delta), final one store/cell. Conv reads all3 selected values before any hist store. All conv layers may run before all state layers because states/conv/h/qkv/gate/beta are explicitly disjoint and inputs already materialized. No global/interWG dependency introduced. Perowner accepted-count devicepointer remains dynamic; candidate does not capture its host value.
+ 
+@@ -25,3 +25,5 @@
+ Only after all9strictphases/18state receipts pass: one timing reference +one untimed replay/arm, then eight ABBA/BAAB completed-HOST captured GDN-only whole-chain samples,144vs4kernels. Every final full state/guards/finite/read-only/sentinel checked outside timed interval, all8samples retained. Setup/restore/readback/digests excluded from timing. This is not an isolatedstatekernel or serving speed result; instrumented S136 service and unprofiled S142 wholecommit are different clocks/scopes and not additive removable budgets.
+ 
+ VERDICT -> SOURCE REVIEW PENDING, no build/GPU/main flag. Failure drains/reports/stops, no numerical tolerance or failed-state reset/continuation. PrivatePASS would justify root deciding a later defaultOFF EXACT3-row-group integration with explicit perowner spans/strides, original norm-weight presence checks and completion-before-PLE/cache/eviction readers. GroupLen2/4..8 or alternate split/debug paths need separate evidence and remain old.
++
++V2 preexecution launch correction -> V1 remains unused/immutable. Official Intel root_group specification Kernel launch property states use_root_sync ITSELF requires compatibility with the max-work-group sync query and an incompatible ND-range must throw nd_range; this is not conditional on actual root-barrier use. No B70 runtime bound was queried or assumed. Private bodies use ONLY nd_item WG barriers (no root_group/root barrier/builtin), so V2 removes ONLY the unused private props declaration and its two launch arguments; public control retains its original property. Source body spans/arithmetic, local/WG sizes, indexing and every oracle/lifecycle/buildfile remain unchanged. The compared candidate bundle is layer batching PLUS ordinary launch property; any result cannot isolate launch count as its cause. No GPU max query or optional ISA certification required before ordinary finite launch. Primary spec: https://raw.githubusercontent.com/intel/llvm/sycl/sycl/doc/extensions/experimental/sycl_ext_oneapi_root_group.asciidoc (Kernel launch property; Implementation notes).

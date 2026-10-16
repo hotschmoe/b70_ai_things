@@ -371,3 +371,10 @@ the actual host call metadata, registered-name pointers and device images.
 S91 is held without GPU execution; the retained S13 probe also shares the
 public selected metadata, correcting its old candidate attribution. No new
 performance result. [Full audit](../../../docs/20261015_strata_attention_binding_audit.md).
+
+
+## GDN layer commit private oracle (S145)
+
+`gdn_commit_layers_s145/` retains the full-state and continuation receipts,
+source and finite controller. The private whole bundle passed; isolated chain
+latency does not forecast serving. [Dated evidence](../../../docs/20261016_strata_gdn_commit_layer_oracle.md).

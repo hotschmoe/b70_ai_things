@@ -1,0 +1,9 @@
+{
+  "exe": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s145-private-prep-v2/build/gdn_layers_s145",
+  "sha256": "0c8e52871906ac3cad7bde8f5ddaa9e9c8157aa24a7c142ff9391a4723308a55",
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "manifest_sha256": "3ca7490282dda98460aafcf38a730497d6d72a3a1ff3767e280cdbdd13f05f41",
+  "PCI": "0000:0b:00.0",
+  "card": 0,
+  "boot_id": "b785982c-4954-4d23-808c-48a7534ce3bd"
+}

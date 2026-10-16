@@ -1,0 +1,5 @@
+5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e  /work/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+c59529e560fbea77ca4a268fac1e65ca24a8f3826b0589e961813978f4903fb9  /work/src-ep/include/strata/kernels/verify_kernels.hpp
+e9869988fbdc9e18ef3d144dd91e9266c18a190e9ec1a7351ce5c7b858bbd838  /work/src-ep/include/strata/core/geometry.hpp
+2b9ada924e3023ab742e826f9c9850324ccc978cfc4ca8d0a36b3e7b6c79c51a  /work/src-ep/sycl/include/strata/sycl_queue.hpp
+584e694fc1ece4740fe4550e2c34fafd28a77921d81960039d01f3c27dbb6613  /work/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/verify_kernels.dp.cpp.o

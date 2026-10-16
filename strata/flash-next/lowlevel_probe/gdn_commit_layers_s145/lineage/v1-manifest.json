@@ -1,0 +1,54 @@
+{
+  "stage": "S145",
+  "status": "FROZEN_SOURCE_ONLY_NO_BUILD_GPU_MAIN_EDIT",
+  "files": {
+    "README.md": {
+      "bytes": 6715,
+      "sha256": "e95af47484a962ea59c9e25c2f139cc14e7d62321f8a8529a781c2d8723b602d"
+    },
+    "analyze.py": {
+      "bytes": 2133,
+      "sha256": "a7cd2f16d8e2a0144be9f4170966cd25ff4567d933e0fbb50bde5bcfe1736e38"
+    },
+    "build-container.sh": {
+      "bytes": 1869,
+      "sha256": "ec4fa30cad3713b69af469d259d01fd8f8d6402036952f4dd6eeee0293c07381"
+    },
+    "build.sh": {
+      "bytes": 1097,
+      "sha256": "28f58918764900da1ab15d83fcd500137c3ee718d41730f96288700a4ab7dc65"
+    },
+    "derive-header.py": {
+      "bytes": 3013,
+      "sha256": "031d94cccdb3ed495465b36ef1eb8a820327be2c725ed5e39000799eba6c2cb2"
+    },
+    "expected-input.sha256": {
+      "bytes": 634,
+      "sha256": "06d32cb9531344e01d73dc038f5767348858cfd5217144c25162434e03f55f2c"
+    },
+    "input-pins.json": {
+      "bytes": 1188,
+      "sha256": "d4b7f5116c42d88db78353ab95dd0e48773966b15e4967abb9073806dcd5b0dc"
+    },
+    "leased_run.py": {
+      "bytes": 6522,
+      "sha256": "4e3359ef14c907f0e3129699bd6835bf84006db6da8421a5ec73a9adeab44b45"
+    },
+    "oracle.cpp": {
+      "bytes": 11289,
+      "sha256": "9b529f0e28dba97896f6ffd843e74f45a1366d04d7a511e64119140d71d6d4cd"
+    },
+    "private_gdn.hpp": {
+      "bytes": 5341,
+      "sha256": "43760aa24b4dc38f74e619e00500b24b474df70698de7b61ab3ecdaf720f8f35"
+    },
+    "run.sh": {
+      "bytes": 331,
+      "sha256": "4f5dc6cf2d8fa32551fe6c0f669840e477a08d399bb8e5bbc857461f692b75b3"
+    },
+    "source-projection.json": {
+      "bytes": 971,
+      "sha256": "7e645a5d6e1b11a44f4b771510fbdc761e44c305edc4033dcf36e14ea5ab8c5e"
+    }
+  }
+}

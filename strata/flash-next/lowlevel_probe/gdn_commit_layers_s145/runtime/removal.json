@@ -1,0 +1,11 @@
+{
+  "CID": "e535434c0a5d932aa7acbdf894b1835226759bf4d45419a87ae1682311e2adaa",
+  "name": "strata-gdn-layers-s145-private",
+  "CID_absent": true,
+  "name_absent": true,
+  "normal_wait": true,
+  "normal_rm": true,
+  "native_exit": 0,
+  "OOMKilled": false,
+  "no_force_reset_retry": true
+}

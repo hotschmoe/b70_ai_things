@@ -1,0 +1,27 @@
+{
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp": {
+    "sha256": "5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e",
+    "bytes": 119038,
+    "mtime_ns": 1791995528147261877
+  },
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/kernels/verify_kernels.hpp": {
+    "sha256": "c59529e560fbea77ca4a268fac1e65ca24a8f3826b0589e961813978f4903fb9",
+    "bytes": 13591,
+    "mtime_ns": 1791995527885253872
+  },
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/core/geometry.hpp": {
+    "sha256": "e9869988fbdc9e18ef3d144dd91e9266c18a190e9ec1a7351ce5c7b858bbd838",
+    "bytes": 4805,
+    "mtime_ns": 1791995527876298210
+  },
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/sycl_queue.hpp": {
+    "sha256": "2b9ada924e3023ab742e826f9c9850324ccc978cfc4ca8d0a36b3e7b6c79c51a",
+    "bytes": 14310,
+    "mtime_ns": 1791995527963604614
+  },
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/verify_kernels.dp.cpp.o": {
+    "sha256": "584e694fc1ece4740fe4550e2c34fafd28a77921d81960039d01f3c27dbb6613",
+    "bytes": 503792,
+    "mtime_ns": 1792009179144814262
+  }
+}

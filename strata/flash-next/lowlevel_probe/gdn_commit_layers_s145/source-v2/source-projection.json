@@ -1,0 +1,21 @@
+{
+  "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp",
+  "source_sha256": "5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e",
+  "exact_function_spans": {
+    "gdn_conv_commit_kernel": {
+      "original_bytes": 759,
+      "original_sha256": "5ca5481c038762083e4274cc87af1f9367b6d1f85a164c2fa50247b45ea2cdbe",
+      "renamed_bytes": 751,
+      "renamed_sha256": "c513aed9cd137e91b3abd5d00eaf543d7397b26cd6e64cca44befba44a31b8c9",
+      "inverse_name_substitution_exact": true
+    },
+    "gdn_step_commit_kernel": {
+      "original_bytes": 3260,
+      "original_sha256": "3ec1643904e63d8fada73a554d64a6c91110273776699c15547c76c13c0fef4c",
+      "renamed_bytes": 3253,
+      "renamed_sha256": "bb95bf7380dd4775dc95d682d1cdc9b84beaa540689e0352b5cd5d814bef30dd",
+      "inverse_name_substitution_exact": true
+    }
+  },
+  "private_header_sha256": "07514009f0df79d4452c8112ebe067ff51e644fb4f54e29bd1b8aacf55c2786d"
+}

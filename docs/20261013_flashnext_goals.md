@@ -487,5 +487,14 @@ S144QSAgroup3 same-new-binary serving passes exact output/work,
 functionals/normalteardown/fullhealth but aggregate103.088499->102.983199
 tok/s(-.102145%, fixedorder/nestedn3) supplies no observedgain. DefaultOFF
 andpark/no retest/promotion. Private42%chain change didnotforecastwhole
-serving. Alltargetsremainunmet/retainedS30RAMscopeunchanged.
+serving. Throughputtargetsremainunmet; retainedS30context/RAMscopeunchanged.
 [S144 measured result](20261016_strata_qsa_commit_group_serving.md).
+
+
+S145 passes a finite private GDN state/continuation contract over36layers and
+two owners: all235339776B recurrent+conv state compared,9A/B/A phases,
+eager/captured,finite/guards/readonly/outputsentinel and health. Completed
+private-bundle medians1191.211->881.0445us are not a serving gain or isolated
+launch-count effect: layer batching, ordinary launch property and private
+compilation changed together. No new150tok/s/context/RAM-restore qualification.
+[Private GDN evidence](20261016_strata_gdn_commit_layer_oracle.md).

@@ -1,0 +1,70 @@
+{
+  "status": "SAVED_SMALL_RESULTS_READBACK_ONLY",
+  "phase_records": 9,
+  "state_receipts": 18,
+  "all_strict_flags_true": true,
+  "all_actual_run_exit_records": {
+    "pre-health.exit": "0",
+    "create.exit": "0",
+    "leaf.exit": "0",
+    "normal-wait.exit": "0",
+    "normal-rm.exit": "0",
+    "analysis.exit": "0",
+    "post-health.exit": "0"
+  },
+  "median_us": [
+    1191.211,
+    881.0445
+  ],
+  "change_of_medians_pct": -26.037914357741833,
+  "saved_FNV_freshness": [
+    {
+      "pair": 1,
+      "kind": "eager",
+      "A0_equals_A2": true,
+      "A0_differs_B1": true
+    },
+    {
+      "pair": 1,
+      "kind": "continuation-eager",
+      "A0_equals_A2": true,
+      "A0_differs_B1": true
+    },
+    {
+      "pair": 2,
+      "kind": "eager",
+      "A0_equals_A2": true,
+      "A0_differs_B1": true
+    },
+    {
+      "pair": 2,
+      "kind": "continuation-eager",
+      "A0_equals_A2": true,
+      "A0_differs_B1": true
+    },
+    {
+      "pair": 3,
+      "kind": "eager",
+      "A0_equals_A2": true,
+      "A0_differs_B1": true
+    },
+    {
+      "pair": 3,
+      "kind": "continuation-eager",
+      "A0_equals_A2": true,
+      "A0_differs_B1": true
+    }
+  ],
+  "FNV_not_numeric_comparator": true,
+  "no_fullsnapshots_created_or_read": true,
+  "public_control_object_bytes": 503792,
+  "candidate_bundle": [
+    "layerbatching",
+    "ordinarylaunchproperty",
+    "privatecompilation"
+  ],
+  "no_serving_or_isolated_cause_claim": true,
+  "primary_launch_property_spec": "https://raw.githubusercontent.com/intel/llvm/sycl/sycl/doc/extensions/experimental/sycl_ext_oneapi_root_group.asciidoc",
+  "SDK_runtime_B70_maxWG_and_cooperative_path": "UNKNOWN_NOT_QUERIED",
+  "no_actual_DOT_count_proof": true
+}
