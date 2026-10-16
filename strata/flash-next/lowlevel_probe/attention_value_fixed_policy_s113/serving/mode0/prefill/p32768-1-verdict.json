@@ -1,0 +1,74 @@
+{
+  "name": "p32768-1",
+  "status": "PASS_LOCAL_GATES",
+  "unmeasured_warm": false,
+  "VALUE_marker": {
+    "selected": false,
+    "count": 0,
+    "raw": [],
+    "scope": "HOST selection only, not independent GPU dispatch/call count",
+    "first_emission_request": null
+  },
+  "usage": {
+    "prompt_tokens": 32728,
+    "completion_tokens": 256,
+    "total_tokens": 32984,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "work": {
+    "cache_n": 0,
+    "prompt_n": 32728,
+    "predicted_n": 256,
+    "draft_n": 303,
+    "draft_n_accepted": 154
+  },
+  "capture_stats": {
+    "logged_capture_layouts": [],
+    "native_window_rows": [],
+    "paired_solo": []
+  },
+  "native_summary_raw": "strata serve: prompt 32728 tokens = 0 reused + 32728 read in 21129 ms (1548.9 tok/s), 256 generated in 3866 ms (66.2 tok/s), drafts accepted 154 of 303, 2 checkpoints",
+  "native_part_intervals": [
+    {
+      "raw": "strata batch prefill quantum: allocated 12288 requested 0 effective 12288 eligible 0 from 0 to 32721",
+      "allocated_C": 12288,
+      "effective_Q": 12288,
+      "from": 0,
+      "to": 32721,
+      "source_derived_chunks": [
+        {
+          "from": 0,
+          "to": 12288
+        },
+        {
+          "from": 12288,
+          "to": 24576
+        },
+        {
+          "from": 24576,
+          "to": 32721
+        }
+      ],
+      "interval_scope": "Observed native read_part bounds; subdivisions source-derived, not callback timestamps."
+    }
+  ],
+  "QSA_marker": {
+    "enabled": 0,
+    "first_active": 4097,
+    "domain": "nq256/stride50002/active4097..50001",
+    "scope": "host selection only, not independent GPU dispatch"
+  },
+  "native_prompt_tps": 1548.9,
+  "native_prompt_ms": 21129.3,
+  "ttft_s": 21.191715833963826,
+  "wall_s": 25.036836149985902,
+  "content_event_gap_ms": {
+    "count": 241,
+    "p50": 0.08832901949062943,
+    "p95": 38.367367000319064,
+    "maximum": 39.63889100123197
+  },
+  "output_sha256": "39231d75efb901b80c7f9232b8ff5b726dca0eb48a21663e9aab4020e6a80c0c"
+}

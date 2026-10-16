@@ -1,0 +1,2 @@
+cpu-run: [b70s4dayz] acquired (heavy) -> python3 /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/harness-prep/stop_and_health.py 1
+cpu-run: [b70s4dayz] done in 58s (exit 0)

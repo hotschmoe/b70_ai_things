@@ -1,0 +1,15 @@
+{
+  "status": "FROZEN_INDEPENDENT_SOURCE_REVIEW_NOT_RUNTIME_GO",
+  "files": [
+    {
+      "file": "note.md",
+      "bytes": 6377,
+      "sha256": "02ff540f52f5f1951584ad6593d2f6b22556c5c21961c7e2187894a1e26cc403"
+    },
+    {
+      "file": "source-checks.json",
+      "bytes": 10520,
+      "sha256": "76d41ba1d4ac886c54140b6b7da499a65c947a068a6e1157d1cc702a574133c8"
+    }
+  ]
+}

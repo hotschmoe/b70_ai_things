@@ -1,0 +1,485 @@
+--- S94/harness-prep/client.py
++++ S113/harness-prep/client.py
+@@ -1,5 +1,5 @@
+ #!/usr/bin/env python3
+-"""S94 ordered native-prompt-start pair + existing functionals; no native-token-ID claim."""
++"""S113 ordered native-prompt-start pair + existing functionals; no native-token-ID claim."""
+ import argparse,concurrent.futures,hashlib,json,math,re,sys,threading,time,urllib.request
+ from pathlib import Path
+ D=Path(__file__).resolve().parents[1];R=D.parent;REPO=Path('/mnt/vm_8tb/github/b70_ai_things')
+@@ -10,82 +10,13 @@
+  x=get(BASE,'/v1/models');ids=[i['id'] for i in x['data']]
+  assert ids[0]=='hotschmoe-dd' and ALIAS in ids and ALIAS in (REPO/'evals/configs/models.yaml').read_text();return x
+ def post(body):
++ body.setdefault('strata_tune',{})['spec_min_p']=0
+  q=urllib.request.Request(BASE+'/v1/chat/completions',json.dumps(body).encode(),{'Content-Type':'application/json'})
+  with urllib.request.urlopen(q,timeout=1800) as f:return json.load(f)
+-def pair(out,repeat):
+- parent=out/'coding';parent.mkdir(exist_ok=True);dst=parent/('warm' if repeat==0 else f'repeat{repeat}');dst.mkdir(exist_ok=False);save(dst/'models.json',identity())
+- initial=(out/'engine.log').read_bytes();save(dst/'window-start.json',{'byte_offset':len(initial),'epoch_ns':time.time_ns()})
+- def request(i):
+-  ref=json.loads((R.parent/f'flashnext_ista_gsq_rco_iq3xxs_strata_accounting_20261014/concurrency/coding-0-{i}.json').read_text())
+-  messages=ref['request']['messages']
+-  call_start=time.monotonic_ns();epoch_start=time.time_ns()
+-  life={'client_call_start_monotonic_ns':call_start,'client_call_start_epoch_ns':epoch_start,'model':'hotschmoe-dd','messages':messages,'max_new_tokens':256}
+-  save(dst/f'coding-{i}-lifetime.json',life)
+-  try:row=send(BASE,'hotschmoe-dd',messages,256)
+-  except Exception as e:
+-   life.update(client_call_end_monotonic_ns=time.monotonic_ns(),client_call_end_epoch_ns=time.time_ns(),error_type=type(e).__name__);save(dst/f'coding-{i}-lifetime.json',life);raise
+-  life.update(client_call_end_monotonic_ns=time.monotonic_ns(),client_call_end_epoch_ns=time.time_ns());save(dst/f'coding-{i}-lifetime.json',life)
+-  row['client_lifetime']=life
+-  required=['cache_n','prompt_n','predicted_n','draft_n','draft_n_accepted']
+-  assert all(k in row['timings'] and isinstance(row['timings'][k],(int,float)) and not isinstance(row['timings'][k],bool) and math.isfinite(row['timings'][k]) and row['timings'][k]>=0 for k in required),'Missing/nonfinite/negative native work field'
+-  row['prefix_matches_s16']=ref['text'].startswith(row['text']) if repeat==0 else None;save(dst/f'coding-{i}.json',row)
+-  assert row['usage']['completion_tokens']==256 and row['usage']['prompt_tokens']==107
+-  if repeat==0:assert row['prefix_matches_s16']
+-  assert all(math.isfinite(row[k]) for k in ['ttft_s','wall_s','client_decode_tps'])
+-  assert all(math.isfinite(v) for v in row['timings'].values() if isinstance(v,(int,float)))
+-  return row
+- start=time.monotonic()
+- gate={'status':'WAITING_NATIVE_PROMPT_START','fresh_engine_byte_offset':len(initial),'only_request0_outstanding':True}
+- save(dst/'admission-gate.json',gate)
+- with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+-  first=pool.submit(request,0);deadline=time.monotonic()+60
+-  while True:
+-   with (out/'engine.log').open('rb') as engine:
+-    engine.seek(len(initial));suffix=engine.read()
+-   m=re.search(rb'^strata trace: prompt start (\d+) -1\n',suffix,re.M)
+-   if m:
+-    gate.update(native_prompt_start_line=m.group(0).decode('ascii').rstrip(),native_prompt_count_minus1=int(m[1]),marker_byte_offset=len(initial)+m.start(),marker_observed_monotonic_ns=time.monotonic_ns(),marker_observed_epoch_ns=time.time_ns())
+-    if first.done():
+-     gate['status']='FAIL_FIRST_COMPLETED_BEFORE_RELEASE';save(dst/'admission-gate.json',gate);first.result();raise RuntimeError(gate['status'])
+-    gate.update(status='NATIVE_PROMPT_START_OBSERVED',request1_submit_monotonic_ns=time.monotonic_ns());save(dst/'admission-gate.json',gate)
+-    second=pool.submit(request,1);break
+-   if first.done():
+-    gate['status']='FAIL_NO_NATIVE_PROMPT_START_BEFORE_FIRST_COMPLETION';save(dst/'admission-gate.json',gate);first.result();raise RuntimeError(gate['status'])
+-   if time.monotonic()>=deadline:
+-    gate['status']='OBSERVATION_DEADLINE_PRESERVE_SERVER_NO_RETRY';save(dst/'admission-gate.json',gate);raise RuntimeError(gate['status'])
+-   time.sleep(.005) # Poll actual flushed marker; elapsed delay is NOT the admission proof.
+-  rows=[first.result(),second.result()]
+- life=[r['client_lifetime'] for r in rows]
+- overlap=min(x['client_call_end_monotonic_ns'] for x in life)-max(x['client_call_start_monotonic_ns'] for x in life)
+- assert life[0]['client_call_start_monotonic_ns']<=gate['marker_observed_monotonic_ns']<=life[1]['client_call_start_monotonic_ns']<life[0]['client_call_end_monotonic_ns']
+- assert overlap>0,'Client lifetimes did not overlap; do not reinterpret as paired workload'
+- gate.update(status='PASS_NATIVE_PROMPT_START_ORDER_AND_CLIENT_OVERLAP',client_overlap_ns=overlap,request0_lifetime=life[0],request1_lifetime=life[1]);save(dst/'admission-gate.json',gate)
+- elapsed=time.monotonic()-start
+- for _ in range(100):
+-  log=(out/'engine.log').read_bytes()[len(initial):].decode('utf8');pairs=re.findall(r'strata batch pair head: (\d+) windows drafted as a pair, (\d+) deferred but solo',log)
+-  native_windows=re.findall(r'^strata batch: (\d+) windows, avg ',log,re.M)
+-  if pairs and native_windows:break
+-  time.sleep(.1)
+- else:raise RuntimeError('Native summary incomplete: preserve server; do not regenerate requests')
+- (dst/'engine-segment.log').write_text(log,encoding='utf8')
+- assert sum(int(x) for x,y in pairs)>0 and 'ERR batch MTP' not in log
+- marker=f'strata Q6 center: enabled=0 C6 A2 R1 SG32 PF0 shapes=6144x2560,2560x10240'
+- full=(out/'engine.log').read_text()
+- markers=re.findall(r'^strata Q6 center: .*$',full,re.M)
+- assert markers==[marker],'First-eligible host selection marker missing/duplicated/wrong mode'
+- assert not re.search(r'ERR batch MTP|DEVICE_LOST|capture.*(?:failed|produced no graph)',full,re.I)
+- captures=re.findall(r'^strata verify: captured (?:the \d+-token window \(upload no error, sync no error\)|the batch window over slots [0-9,]+)$',log,re.M)
+- native_rows=re.findall(r'^strata batch: (\d+) windows, avg ([0-9.]+) rows,',log,re.M)
+- assert len(native_rows)==len(native_windows)
+- save(dst/'pair.json',{'unmeasured_warm_coherence_only':True,'q6_host_selection_marker':marker,'logged_capture_layouts':captures,'native_window_rows':native_rows,'status':'PASS_HTTP_TEXT_COUNTS_FINITE_AND_PAIRED','wall_s':elapsed,'output_sha256':[r['output_sha256'] for r in rows],
+-  'usage':[r['usage'] for r in rows],'work_timings':[{k:r['timings'][k] for k in ['cache_n','prompt_n','predicted_n','draft_n','draft_n_accepted']} for r in rows],
+-  'native_windows':sum(map(int,native_windows)),'paired':sum(int(x) for x,y in pairs),'solo':sum(int(y) for x,y in pairs),'raw_native_token_ids_observed':False,'aggregate_output_tps':sum(r['usage']['completion_tokens'] for r in rows)/elapsed,'stream_metrics':[{'ttft_s':r['ttft_s'],'completion_wall_s':r['wall_s'],'decode_tps':r['client_decode_tps'],'whole_request_output_tps':r['usage']['completion_tokens']/r['wall_s'],'content_event_gap_ms':r['content_event_gap_ms']} for r in rows],
+-  'admission_gate':gate,'client_overlap_ns':overlap,'repeat':repeat,'exact_gate':'full UTF8 text/SSE content plus usage/native work; not raw token IDs'})
+- print('S94 pair complete; release quiet CPU lease before functional requests.',flush=True)
+ def functional(out):
+  assert (out/'prefill/complete.json').exists();dst=out/'functional';dst.mkdir(exist_ok=False);save(dst/'models.json',identity())
+  with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+-  rows=list(pool.map(lambda ab:send(BASE,'hotschmoe-dd',[{'role':'user','content':f'Return only the integer: {ab[0]} * {ab[1]}.'}],32),[(17,19),(23,29)]))
++  rows=list(pool.map(lambda ab:send(BASE,'hotschmoe-dd',[{'role':'user','content':f'Return only the integer: {ab[0]} * {ab[1]}.'}],32,spec_min_p=0),[(17,19),(23,29)]))
+  save(dst/'concurrent-math.json',rows);assert [r['text'].strip() for r in rows]==['323','667']
+  source=R/'prefill-quantum-s33/q0/functional'
+  thought=json.loads((source/'thinking.json').read_text())['request'];tr=post(thought);save(dst/'thinking.json',{'request':thought,'response':tr})
+@@ -117,63 +48,71 @@
+  found=QSA_RE.findall((out/'engine.log').read_text())
+  assert len(found)==1 and found[0][0]==str(expected) and int(found[0][1])==4097,'Missing/duplicate/wrong QSA first-eligible host marker'
+  return {'enabled':int(found[0][0]),'first_active':int(found[0][1]),'domain':'nq256/stride50002/active4097..50001','scope':'host selection only, not independent GPU dispatch'}
+-def prefill(out):
+- assert (out/'coding/warm/pair.json').exists()
+- dst=out/'prefill';dst.mkdir(exist_ok=False);save(dst/'models.json',identity())
+- reference=R/'peer-gather-serving-s38/mode0/screen';entries=[];first_value_emission_request=None
+- assert not QSA_RE.findall((out/'engine.log').read_text()),'Short warm must not consume eligible QSA marker'
+- for case in ['p4096','p32768']:
+-  for repeat in range(3):
+-   name=f'{case}-{repeat}';ref=json.loads((reference/(name+'.json')).read_text());body=ref['request']
+-   assert body['max_tokens']==256 and len(body['messages'])==1
+-   before=(out/'engine.log').stat().st_size;save(dst/(name+'-start.json'),{'byte_offset':before,'epoch_ns':time.time_ns(),'retained_S38_request_sha256':hashlib.sha256(json.dumps(body,sort_keys=True).encode()).hexdigest()})
+-   row=send(BASE,body['model'],body['messages'],body['max_tokens']);save(dst/(name+'.json'),row)
+-   assert row['request']==body,'Reconstructed request differs from exact retained S38 body'
+-   ww=work(row);expected_prompt=4059 if case=='p4096' else 32728
+-   assert row['text']==emitted(row) and row['text'] and row['usage']['prompt_tokens']==expected_prompt and row['usage']['completion_tokens']==256
+-   assert ww['cache_n']<=64 and row['usage']['prompt_tokens_details']['cached_tokens']==ww['cache_n']
+-   assert ww['prompt_n']+ww['cache_n']==expected_prompt and ww['predicted_n']==256
+-   assert all(math.isfinite(row[k]) for k in ['ttft_s','wall_s','client_decode_tps'])
+-   if out.name=='mode1':row_coherence(json.loads((D/'mode0/prefill'/(name+'.json')).read_text()),row)
+-   deadline=time.monotonic()+30
+-   while True:
+-    raw=(out/'engine.log').read_bytes()[before:];log=raw.decode('ascii');native=SERVE_RE.findall(log)
+-    if len(native)==1 and int(native[0][0])==expected_prompt and int(native[0][4])==256:break
+-    if time.monotonic()>=deadline:
+-     (dst/(name+'-partial-engine.log')).write_bytes(raw)
+-     raise RuntimeError('Native completion observation incomplete; preserve same server, no retry/generation')
+-    time.sleep(.1)
+-   (dst/(name+'-engine.log')).write_bytes(raw)
+-   n=native[0];assert tuple(map(int,[n[1],n[2],n[4],n[6],n[7]]))==(ww['cache_n'],ww['prompt_n'],ww['predicted_n'],ww['draft_n_accepted'],ww['draft_n'])
+-   parts=[]
+-   for m in re.finditer(r'^strata batch prefill quantum: allocated (\d+) requested (\d+) effective (\d+) eligible (\d+) from (\d+) to (\d+)$',log,re.M):
+-    C,requested,Q,eligible,start,end=map(int,m.groups());assert C==Q==12288 and requested==0 and eligible==0 and 0<=start<end<=expected_prompt
+-    chunks=[{'from':x,'to':min(x+Q,end)} for x in range(start,end,Q)]
+-    parts.append({'raw':m.group(0),'allocated_C':C,'effective_Q':Q,'from':start,'to':end,'source_derived_chunks':chunks,'interval_scope':'observed native read_part bounds; subdivisions derived from current Q0/C loop, not measured callback timestamps'})
+-   assert parts,'Native part bounds missing'
+-   assert not re.search(r'ERR batch MTP|DEVICE_LOST|capture.*(?:failed|produced no graph)',log,re.I)
+-   marker=None
+-   if case=='p4096':assert not QSA_RE.findall((out/'engine.log').read_text()),'4K must preserve old scorer path'
+-   else:
+-    marker=qsa_marker(out,0)
+-    assert any(part['to']>=16384 and any(c['to']-c['from']>=256 for c in part['source_derived_chunks']) for part in parts)
+-   value=value_marker(out,int(out.name=='mode1'))
+-   if value['count']==1 and first_value_emission_request is None:first_value_emission_request=name
+-   value['first_emission_request']=first_value_emission_request
+-   if out.name=='mode1':assert value['count']==1,'Missing ON selection at first4K or later prefill; STOP this arm without more requests'
+-   if out.name=='mode1':assert first_value_emission_request=='p4096-0','ON first emission must be FIRST4K'
+-   entry={'VALUE_marker':value,'name':name,'status':'PASS_LOCAL_GATES','usage':row['usage'],'work':ww,'native_summary_raw':SERVE_RE.search(log).group(0),'native_part_intervals':parts,'QSA_marker':marker,'matches_retained_S38_text_descriptive_only':row['text']==ref['text'],'native_prompt_tps':row['timings']['prompt_per_second'],'native_prompt_ms':row['timings']['prompt_ms'],'ttft_s':row['ttft_s'],'wall_s':row['wall_s'],'content_event_gap_ms':row['content_event_gap_ms'],'output_sha256':row['output_sha256']}
+-   entries.append(entry);save(dst/(name+'-verdict.json'),entry)
+- save(dst/'complete.json',{'status':'PASS_SIX_REQUESTS_LOCAL_AND_AVAILABLE_CROSS_ARM_GATES','entries':entries,'fresh_actual_prompt_counts':[4059,32728],'cap':256,'QSA_marker':qsa_marker(out,0),'VALUE_marker':value_marker(out,int(out.name=='mode1')),'first_value_emission_request':first_value_emission_request,'not_independent_GPU_dispatch':True})
+- print('S94 prefill phase complete; no additional warm generation.',flush=True)
++def capture_stats(log):
++ return {'logged_capture_layouts':re.findall(r'^strata verify: captured (?:the \d+-token window \(upload no error, sync no error\)|the batch window over slots [0-9,]+)$',log,re.M),
++ 'native_window_rows':re.findall(r'^strata batch: (\d+) windows, avg ([0-9.]+) rows,',log,re.M),
++ 'paired_solo':re.findall(r'^strata batch pair head: (\d+) windows drafted as a pair, (\d+) deferred but solo$',log,re.M)}
++def off_candidates(out):
++ full=(out/'engine.log').read_text()
++ assert not re.search(r'^strata (?:Q6 A4:|IQ2_XS multi:|MTP pair graph:)',full,re.M),'Unrelated candidate HOST marker'
++ center=re.findall(r'^strata Q6 center: .*$',full,re.M)
++ assert center in [[],['strata Q6 center: enabled=0 C6 A2 R1 SG32 PF0 shapes=6144x2560,2560x10240']]
++def prefill(out,warm=False):
++ if not warm:assert json.loads((out/'warm4k/complete.json').read_text())['status']=='PASS_LOCAL_AND_AVAILABLE_CROSS_ARM_GATES'
++ if warm:
++  assert value_marker(out,int(out.name=='mode1'))['count']==0,'Value marker already present before first warm request'
++  assert not QSA_RE.findall((out/'engine.log').read_text())
++  off_candidates(out)
++ dst=out/('warm4k'if warm else'prefill');dst.mkdir(exist_ok=False);save(dst/'models.json',identity())
++ reference=R/'peer-gather-serving-s38/mode0/screen';entries=[]
++ schedule=[('p4096','warm')]if warm else[(case,repeat)for case in ['p4096','p32768']for repeat in range(3)]
++ for case,repeat in schedule:
++  name='warm4k'if warm else f'{case}-{repeat}'
++  body=json.loads((D/'warm-request.json').read_text())if warm else json.loads((reference/(name+'.json')).read_text())['request']
++  body.setdefault('strata_tune',{})['spec_min_p']=0
++  assert body['max_tokens']==256 and len(body['messages'])==1
++  before=(out/'engine.log').stat().st_size;save(dst/(name+'-start.json'),{'byte_offset':before,'epoch_ns':time.time_ns(),'request_sha256':hashlib.sha256(json.dumps(body,sort_keys=True).encode()).hexdigest(),'unmeasured_warm':warm})
++  row=send(BASE,body['model'],body['messages'],256,spec_min_p=0);save(dst/(name+'.json'),row)
++  assert row['request']==body,'Reconstructed common fixed-policy request differs'
++  ww=work(row);expected_prompt=row['usage']['prompt_tokens']if warm else(4059 if case=='p4096'else 32728)
++  assert row['text']==emitted(row)and row['text']and row['usage']['prompt_tokens']==expected_prompt and row['usage']['completion_tokens']==256
++  assert ww['cache_n']<=64 and row['usage']['prompt_tokens_details']['cached_tokens']==ww['cache_n']
++  assert ww['prompt_n']+ww['cache_n']==expected_prompt and ww['predicted_n']==256
++  assert all(math.isfinite(row[k])for k in ['ttft_s','wall_s','client_decode_tps'])
++  if out.name=='mode1':row_coherence(json.loads((D/'mode0'/dst.name/(name+'.json')).read_text()),row)
++  deadline=time.monotonic()+30
++  while True:
++   raw=(out/'engine.log').read_bytes()[before:];log=raw.decode('ascii');native=SERVE_RE.findall(log)
++   if len(native)==1 and int(native[0][0])==expected_prompt and int(native[0][4])==256:break
++   if time.monotonic()>=deadline:
++    (dst/(name+'-partial-engine.log')).write_bytes(raw);raise RuntimeError('Native summary incomplete; preserve server, no retry/generation')
++   time.sleep(.1)
++  (dst/(name+'-engine.log')).write_bytes(raw)
++  n=native[0];assert tuple(map(int,[n[1],n[2],n[4],n[6],n[7]]))==(ww['cache_n'],ww['prompt_n'],ww['predicted_n'],ww['draft_n_accepted'],ww['draft_n'])
++  parts=[]
++  for m in re.finditer(r'^strata batch prefill quantum: allocated (\d+) requested (\d+) effective (\d+) eligible (\d+) from (\d+) to (\d+)$',log,re.M):
++   C,requested,Q,eligible,start,end=map(int,m.groups());assert C==Q==12288 and requested==0 and eligible==0 and 0<=start<end<=expected_prompt
++   parts.append({'raw':m.group(0),'allocated_C':C,'effective_Q':Q,'from':start,'to':end,'source_derived_chunks':[{'from':x,'to':min(x+Q,end)}for x in range(start,end,Q)],'interval_scope':'Observed native read_part bounds; subdivisions source-derived, not callback timestamps.'})
++  assert parts and not re.search(r'ERR batch MTP|DEVICE_LOST|capture.*(?:failed|produced no graph)',log,re.I)
++  marker=None
++  if case=='p4096':assert not QSA_RE.findall((out/'engine.log').read_text()),'4K must preserve old scorer path'
++  else:
++   marker=qsa_marker(out,0)
++   assert any(part['to']>=16384 and any(c['to']-c['from']>=256 for c in part['source_derived_chunks'])for part in parts)
++  value=value_marker(out,int(out.name=='mode1'))
++  if out.name=='mode1':assert value['count']==1,'First4K warm did not activate value HOST marker; stop remaining requests'
++  value['first_emission_request']='warm4k'if value['selected']else None
++  off_candidates(out)
++  entry={'name':name,'status':'PASS_LOCAL_GATES','unmeasured_warm':warm,'VALUE_marker':value,'usage':row['usage'],'work':ww,'capture_stats':capture_stats(log),'native_summary_raw':SERVE_RE.search(log).group(0),'native_part_intervals':parts,'QSA_marker':marker,'native_prompt_tps':row['timings']['prompt_per_second'],'native_prompt_ms':row['timings']['prompt_ms'],'ttft_s':row['ttft_s'],'wall_s':row['wall_s'],'content_event_gap_ms':row['content_event_gap_ms'],'output_sha256':row['output_sha256']}
++  if out.name=='mode1':
++   control=json.loads((D/'mode0'/dst.name/(name+'-verdict.json')).read_text())
++   checks={k:control[k]==entry[k]for k in ['work','usage','native_part_intervals','capture_stats']}
++   save(dst/(name+'-control-parity.json'),{'status':'PASS'if all(checks.values())else'FAIL_STOP_REMAINING_REQUESTS','checks':checks,'request_text_SSE_work_checked':True,'normalization':None})
++   assert all(checks.values()),'Native/capture mismatch; stop remaining requests and normal-stop/health'
++  entries.append(entry);save(dst/(name+'-verdict.json'),entry)
++ save(dst/'complete.json',{'status':'PASS_LOCAL_AND_AVAILABLE_CROSS_ARM_GATES','entries':entries,'cap':256,'warm_tokenization':'observed/matched, no old4059 assumption'if warm else None,'VALUE_marker':value_marker(out,int(out.name=='mode1')),'first_value_emission_request':'warm4k'if out.name=='mode1'else None,'not_independent_GPU_dispatch':True})
++ print('S113 phase complete; no extra warmups, requests or retries.',flush=True)
+ p=argparse.ArgumentParser();p.add_argument('arm',choices=['0','1']);p.add_argument('phase',choices=['warm','prefill','functional']);a=p.parse_args();out=D/f'mode{a.arm}'
+-if a.phase=='warm':
+- pair(out,0);assert not QSA_RE.findall((out/'engine.log').read_text());assert not any('prefill attention value pipeline selected' in l for l in (out/'engine.log').read_text().splitlines())
+- if a.arm=='1':
+-  baseline=D/'mode0/coding/warm';candidate=out/'coding/warm'
+-  for i in range(2):row_coherence(json.loads((baseline/f'coding-{i}.json').read_text()),json.loads((candidate/f'coding-{i}.json').read_text()))
+-  x=json.loads((baseline/'pair.json').read_text());y=json.loads((candidate/'pair.json').read_text())
+-  assert all(x[k]==y[k] for k in ['work_timings','native_windows','paired','solo','native_window_rows','logged_capture_layouts'])
+-  save(candidate/'control-parity.json',{'status':'PASS_WARM_TEXT_SSE_USAGE_OBSERVABLE_NATIVE_WORK'})
+-elif a.phase=='prefill':prefill(out)
++if a.phase=='warm':prefill(out,True)
++elif a.phase=='prefill':prefill(out,False)
+ else:functional(out)
+--- S94/harness-prep/compare.py
++++ S113/harness-prep/compare.py
+@@ -1,58 +1,62 @@
+ #!/usr/bin/env python3
+-"""S94 same-binary prefill-only comparison; no summary for unmatched arms."""
++"""S113 NEW fixed-policy discriminator; partial/mismatched evidence means NULL summary."""
+ import hashlib,json,math,re,statistics
+ from pathlib import Path
+ D=Path(__file__).resolve().parents[1]
+ def read(p):return json.loads(p.read_text())
+-def content(r):return ''.join(c.get('choices',[{}])[0].get('delta',{}).get('content')or'' for c in r['chunks']if c.get('choices'))
++def content(r):return ''.join(c.get('choices',[{}])[0].get('delta',{}).get('content')or''for c in r['chunks']if c.get('choices'))
+ WORK=['cache_n','prompt_n','predicted_n','draft_n','draft_n_accepted']
+ def work(r):
+- assert all(k in r['timings'] and isinstance(r['timings'][k],(int,float)) and not isinstance(r['timings'][k],bool) and math.isfinite(r['timings'][k]) and r['timings'][k]>=0 for k in WORK)
+- return {k:r['timings'][k] for k in WORK}
++ assert all(k in r['timings']and isinstance(r['timings'][k],(int,float))and not isinstance(r['timings'][k],bool)and math.isfinite(r['timings'][k])and r['timings'][k]>=0 for k in WORK)
++ return{k:r['timings'][k]for k in WORK}
+ def row_checks(x,y):
+- return {'request_equal':x['request']==y['request'],'full_text_and_SSE_equal':x['text']==y['text']==content(x)==content(y),'usage_equal':x['usage']==y['usage'],'native_work_equal':work(x)==work(y)}
+-inputs=read(D/'serving-inputs.json');assert inputs['same_binary'] and inputs['arms']['0']==inputs['arms']['1']
++ return {'request_equal':x['request']==y['request'],'full_text_SSE_equal':x['text']==y['text']==content(x)==content(y),'usage_equal':x['usage']==y['usage'],'native_work_equal':work(x)==work(y),'HTTP_fixed_minp':x['request']['strata_tune']['spec_min_p']==y['request']['strata_tune']['spec_min_p']==0}
++def save(x):(D/'comparison.json').write_text(json.dumps(x,indent=2)+'\n',encoding='ascii')
++required=[D/'serving-inputs.json']
++for arm in [0,1]:
++ folder=D/f'mode{arm}';required += [folder/n for n in ['config.json','health-ready.json','container-ready.json','native-process-identity.json','warm4k/warm4k.json','warm4k/warm4k-verdict.json','warm4k/complete.json','prefill/complete.json','functional/verdict.json','normal-stop.json','container-removal.json','post-health.json','aggregate-proof.json','engine-final.log']]
++ for case in ['p4096','p32768']:
++  for repeat in range(3):required += [folder/'prefill'/f'{case}-{repeat}{suffix}.json'for suffix in ['', '-verdict']]
++missing=[str(f)for f in required if not f.is_file()]
++if missing:
++ save({'status':'FAILED_OR_UNMATCHED','missing':missing,'timed_summary':None,'normalization':None,'scope':'No requests/retry/continuation authorized by this comparator.'});raise SystemExit(2)
++inputs=read(D/'serving-inputs.json');assert inputs['same_binary']and inputs['arms']['0']==inputs['arms']['1']
+ configs=[read(D/f'mode{a}/config.json')for a in range(2)];normalized=[]
+-fixed={'STRATA_PROMPT_ATTN_XMX':'0','STRATA_KV_ROT':'0','STRATA_QSA_PREFILL_TILED':'0','STRATA_Q6_CENTER':'0','STRATA_MMVQ_WIDE':'1','STRATA_MMVQ_WIDE_MIN':'0','STRATA_MMVQ_WIDE_MAXC':'8','STRATA_Q6_PACKED':'0','STRATA_HEAD_Q5K_RPW2':'0','STRATA_BATCH_MTP_PLE_PREFETCH':'0','STRATA_TRACE':'1','STRATA_MMVQ_WIDE_K':'1','STRATA_MMVQ_WIDE_K_RPW':'1','STRATA_MMVQ_WIDE_RPW':'1','STRATA_MMVQ_A2':'1','STRATA_MMVQ_PF':'0','STRATA_BATCH_PREFILL_QUANTUM':'0','STRATA_PREFILL_FIRST':'0'}
++fixed={'STRATA_PROMPT_ATTN_XMX':'0','STRATA_KV_ROT':'0','STRATA_QSA_PREFILL_TILED':'0','STRATA_Q6_CENTER':'0','STRATA_Q6_A4':'0','STRATA_IQ2XS_MULTI':'0','STRATA_BATCH_MTP_PAIR_GRAPH':'0','STRATA_EXPERT_SPLIT':'0','STRATA_GU_LANES':'8','STRATA_MMVQ_WIDE':'1','STRATA_MMVQ_WIDE_MIN':'0','STRATA_MMVQ_WIDE_MAXC':'8','STRATA_Q6_PACKED':'0','STRATA_HEAD_Q5K_RPW2':'0','STRATA_BATCH_MTP_PLE_PREFETCH':'0','STRATA_TRACE':'1','STRATA_MMVQ_WIDE_K':'1','STRATA_MMVQ_WIDE_K_RPW':'1','STRATA_MMVQ_WIDE_RPW':'1','STRATA_MMVQ_A2':'1','STRATA_MMVQ_PF':'0','STRATA_BATCH_PREFILL_QUANTUM':'0','STRATA_PREFILL_FIRST':'0'}
+ for a,c in enumerate(configs):
+- assert c['exe']==inputs['arms'][str(a)]['exe'] and c['log']==str(D/f'mode{a}/engine.log') and c['env']['STRATA_ATTN_VALUE_PIPELINE']==str(a)
++ assert c['exe']==inputs['arms'][str(a)]['exe']and c['log']==str(D/f'mode{a}/engine.log')and c['env']['STRATA_ATTN_VALUE_PIPELINE']==str(a)
+  with Path(c['exe']).open('rb')as f:assert hashlib.file_digest(f,'sha256').hexdigest()==inputs['arms'][str(a)]['sha256']
+- assert all(c['env'][k]==v for k,v in fixed.items()) and 'STRATA_BATCH_COMMIT_OVERLAP' not in c['env']
++ assert all(c['env'][k]==v for k,v in fixed.items())and'STRATA_BATCH_COMMIT_OVERLAP'not in c['env']
+  assert all(k not in c['env']for k in ['STRATA_HOST_BOUNDARY','STRATA_VERIFY_PROFILE','STRATA_PREFILL_HOST_BOUNDARY','STRATA_PREFILL_TIMING','STRATA_PREFILL_SYNC','STRATA_VERIFY_TRACE','STRATA_VERIFY_EAGER','STRATA_ATTN_LANECELL'])
++ for key,value in inputs['fixed_work_args'].items():assert c['args'].count(key)==1 and c['args'][c['args'].index(key)+1]==value
+  n=json.loads(json.dumps(c));del n['log'];del n['env']['STRATA_ATTN_VALUE_PIPELINE'];normalized.append(n)
+ assert normalized[0]==normalized[1]
+-checks={'identity_image_and_native_process':all(read(D/f'mode{a}/health-ready.json')['model']=='hotschmoe-dd' and read(D/f'mode{a}/container-ready.json')['Image']==inputs['image'] and len(read(D/f'mode{a}/native-process-identity.json'))==1 for a in range(2))}
+-warm=[]
+-for i in range(2):
+- x,y=[read(D/f'mode{a}/coding/warm/coding-{i}.json')for a in range(2)];c=row_checks(x,y);c['counts']=x['usage']['prompt_tokens']==y['usage']['prompt_tokens']==107 and x['usage']['completion_tokens']==y['usage']['completion_tokens']==256;c['retained_S16']=x['prefix_matches_s16']and y['prefix_matches_s16'];checks[f'warm_slot{i}']=all(c.values());warm.append(c)
+-pairs=[read(D/f'mode{a}/coding/warm/pair.json')for a in range(2)]
+-checks['warm_native_work_capture']=all(pairs[0][k]==pairs[1][k]for k in ['work_timings','native_windows','paired','solo','native_window_rows','logged_capture_layouts'])
+-checks['warm_value_marker_absent']=all('prefill attention value pipeline selected'not in(D/f'mode{a}/coding/warm/engine-segment.log').read_text()for a in range(2))
+-checks['warm_admission_overlap']=all(p['admission_gate']['status']=='PASS_NATIVE_PROMPT_START_ORDER_AND_CLIENT_OVERLAP' and p['client_overlap_ns']>0 and p['paired']>0 for p in pairs)
++checks={'identity_image_native':all(read(D/f'mode{a}/health-ready.json')['model']=='hotschmoe-dd'and read(D/f'mode{a}/container-ready.json')['Image']==inputs['image']and len(read(D/f'mode{a}/native-process-identity.json'))==1 for a in range(2))}
+ results=[]
+-for case in ['p4096','p32768']:
+- for repeat in range(3):
+-  name=f'{case}-{repeat}';rows=[read(D/f'mode{a}/prefill/{name}.json')for a in range(2)];verdicts=[read(D/f'mode{a}/prefill/{name}-verdict.json')for a in range(2)];c=row_checks(*rows)
+-  c['local_gates']=all(v['status']=='PASS_LOCAL_GATES'for v in verdicts)
+-  c['fresh_counts']=all(r['usage']['prompt_tokens']==(4059 if case=='p4096'else 32728) and r['usage']['completion_tokens']==256 and work(r)['cache_n']<=64 for r in rows)
+-  c['native_part_intervals_equal']=verdicts[0]['native_part_intervals']==verdicts[1]['native_part_intervals']
+-  c['marker_domain']=all((v['QSA_marker'] is None if case=='p4096' else v['QSA_marker']['enabled']==0 and v['QSA_marker']['first_active']==4097)for a,v in enumerate(verdicts))
+-  c['value_HOST_selection']=all((v['VALUE_marker']['count']==0 and not v['VALUE_marker']['selected'])if a==0 else(v['VALUE_marker']['count']==1 and v['VALUE_marker']['selected']and v['VALUE_marker']['first_emission_request']=='p4096-0')for a,v in enumerate(verdicts))
+-  checks[name]=all(c.values());results.append({'name':name,'matched':checks[name],'checks':c,'work':[work(r)for r in rows],'usage':[r['usage']for r in rows],'value_HOST_observations':[v['VALUE_marker']for v in verdicts],'metrics':[{k:r[k]for k in ['ttft_s','wall_s','client_decode_tps','content_event_gap_ms']}|{'native_prompt_tps':r['timings']['prompt_per_second'],'native_prompt_ms':r['timings']['prompt_ms'],'output_sha256':r['output_sha256']}for r in rows]})
+-checks['ON_first4K_selection']=read(D/'mode1/prefill/complete.json')['first_value_emission_request']=='p4096-0'
++for name,relative,iswarm in [('warm4k','warm4k',True)]+[(f'{case}-{i}','prefill',False)for case in ['p4096','p32768']for i in range(3)]:
++ rows=[read(D/f'mode{a}'/relative/(name+'.json'))for a in range(2)];v=[read(D/f'mode{a}'/relative/(name+'-verdict.json'))for a in range(2)];c=row_checks(*rows)
++ c['local_gates']=all(z['status']=='PASS_LOCAL_GATES'for z in v)
++ c['fresh_and_output']=all(work(r)['cache_n']<=64 and r['usage']['completion_tokens']==256 for r in rows)
++ if not iswarm:c['timed_prompt_count']=all(r['usage']['prompt_tokens']==(4059 if name.startswith('p4096')else 32728)for r in rows)
++ c['parts_and_captures']=all(v[0][k]==v[1][k]for k in ['native_part_intervals','capture_stats'])
++ c['value_host_marker']=v[0]['VALUE_marker']['count']==0 and v[1]['VALUE_marker']['count']==1 and v[1]['VALUE_marker']['first_emission_request']=='warm4k'
++ checks[name]=all(c.values());results.append({'name':name,'unmeasured_warm':iswarm,'matched':checks[name],'checks':c,'work':[work(r)for r in rows],'usage':[r['usage']for r in rows],'observed_capture_stats':[z['capture_stats']for z in v],'VALUE_HOST_observations':[z['VALUE_marker']for z in v],'metrics':[{k:r[k]for k in ['ttft_s','wall_s','client_decode_tps','content_event_gap_ms']}|{'native_prompt_tps':r['timings']['prompt_per_second'],'native_prompt_ms':r['timings']['prompt_ms'],'output_sha256':r['output_sha256']}for r in rows]})
+ checks['functionals']=all(read(D/f'mode{a}/functional/verdict.json')['status']=='PASS'for a in range(2))
+-checks['prestop_running_not_OOM']=all(read(D/f'mode{a}/normal-stop.json')['status']=='PASS_NORMAL_TEARDOWN'and read(D/f'mode{a}/normal-stop.json')['prestop_state']['Running']is True and read(D/f'mode{a}/normal-stop.json')['prestop_state']['OOMKilled']is False for a in range(2))
+-checks['health_teardown']=all(read(D/f'mode{a}/normal-stop.json')['lease_wrapper_exit']==0 and read(D/f'mode{a}/normal-stop.json')['container_removed']and all(v['exit']==0 for v in read(D/f'mode{a}/post-health.json').values())for a in range(2))
+-checks['full_CID_and_NAME_absent']=all(read(D/f'mode{a}/container-removal.json')['docker_ps_exit']==0 and read(D/f'mode{a}/container-removal.json')['full_cid_absent']and read(D/f'mode{a}/container-removal.json')['name_absent']and read(D/f'mode{a}/container-removal.json')['created_cid']==read(D/f'mode{a}/container-ready.json')['Id']for a in range(2))
+-checks['final_diagnostics_complete']=all(read(D/f'mode{a}/aggregate-proof.json')['present_once']for a in range(2))
+-for a in range(2):
+- log=(D/f'mode{a}/engine-final.log').read_text();markers=re.findall(r'^strata QSA prefill tiled: enabled=(0|1) nq=256 idx=4x128 R4 stride=50002 active=4097\.\.50001 first_active=(\d+) tile=8 key_wg=256 SG32$',log,re.M)
+- checks[f'final_QSA_marker_{a}']=markers==[('0','4097')]
+- value_marker='strata: prefill attention value pipeline selected (nq32 cap2051 INT8 page4)'
+- checks[f'final_value_HOST_marker_{a}']=[x for x in log.splitlines()if 'prefill attention value pipeline selected'in x]==([value_marker]if a else[])
+- checks[f'common_Q6_off_{a}']=re.findall(r'^strata Q6 center: .*$',log,re.M)==['strata Q6 center: enabled=0 C6 A2 R1 SG32 PF0 shapes=6144x2560,2560x10240']
++checks['normal_and_health']=all(read(D/f'mode{a}/normal-stop.json')['status']=='PASS_NORMAL_TEARDOWN'and read(D/f'mode{a}/normal-stop.json')['lease_wrapper_exit']==0 and read(D/f'mode{a}/normal-stop.json')['prestop_state']['Running']is True and read(D/f'mode{a}/normal-stop.json')['prestop_state']['OOMKilled']is False and all(v['exit']==0 for v in read(D/f'mode{a}/post-health.json').values())for a in range(2))
++checks['fullCID_NAME_absence']=all(read(D/f'mode{a}/container-removal.json')['docker_ps_exit']==0 and read(D/f'mode{a}/container-removal.json')['full_cid_absent']and read(D/f'mode{a}/container-removal.json')['name_absent']and read(D/f'mode{a}/container-removal.json')['created_cid']==read(D/f'mode{a}/container-ready.json')['Id']for a in range(2))
++checks['normalQUIT_diag']=all(read(D/f'mode{a}/aggregate-proof.json')['present_once']for a in range(2))
++startup=[]
++for arm in [0,1]:
++ log=(D/f'mode{arm}/engine-final.log').read_text();value=[x for x in log.splitlines()if'prefill attention value pipeline selected'in x]
++ checks[f'final_value_HOST_{arm}']=value==(['strata: prefill attention value pipeline selected (nq32 cap2051 INT8 page4)']if arm else[])
++ checks[f'QSA_OFF_{arm}']=re.findall(r'^strata QSA prefill tiled: enabled=(0|1).*first_active=(\d+) tile=8 key_wg=256 SG32$',log,re.M)==[('0','4097')]
++ checks[f'unrelated_HOST_absent_{arm}']=not re.search(r'^strata (?:Q6 A4:|IQ2_XS multi:|MTP pair graph:)',log,re.M)
++ center=re.findall(r'^strata Q6 center: .*$',log,re.M);checks[f'CENTER_OFF_if_reached_{arm}']=center in [[],['strata Q6 center: enabled=0 C6 A2 R1 SG32 PF0 shapes=6144x2560,2560x10240']]
++ offset=read(D/f'mode{arm}/warm4k/warm4k-start.json')['byte_offset'];startup.append(re.findall(r'^strata verify: captured .*$',(D/f'mode{arm}/engine-final.log').read_bytes()[:offset].decode(),re.M))
++checks['startup_captures_equal']=startup[0]==startup[1]
++provenance=[read(D/f'mode{a}/native-process-identity.json')[0]for a in range(2)]
++checks['loader_provenance']=all(x['proc_maps']and x['proc_maps_sha256']==hashlib.sha256(x['proc_maps'].encode()).hexdigest()and len(x['loaded_libstdcxx'])==1 for x in provenance)and all(provenance[0][k]==provenance[1][k]for k in ['loader_environment','loaded_libstdcxx'])
+ matched=all(checks.values());summary=None
+ if matched:
+- summary={case:{k:[{'median':statistics.median(x['metrics'][a][k]for x in results if x['name'].startswith(case+'-')),'range':[min(x['metrics'][a][k]for x in results if x['name'].startswith(case+'-')),max(x['metrics'][a][k]for x in results if x['name'].startswith(case+'-'))]}for a in range(2)]for k in ['native_prompt_tps','native_prompt_ms','ttft_s','wall_s']}for case in ['p4096','p32768']}
+-report={'status':'PASS_MATCHED_DISCRIMINATOR'if matched else'FAILED_OR_UNMATCHED','checks':checks,'same_binary':True,'warm_coherence_only':warm,'value_first_emission_requests':[read(D/f'mode{a}/prefill/complete.json')['first_value_emission_request']for a in range(2)],'prefill_requests':results,'timed_summary':summary,'primary_metric':'native prompt ms/tok-s with client TTFT; three fixed-order samples per shape, not independent significance/p95','normalization':['STRATA_ATTN_VALUE_PIPELINE0/1','arm-local log/container/service names'],'activation_scope':'per-request observed value HOST marker; first emission required at FIRST4K, ON once throughout all prefills; actual resident-mode0/full-width source domain, plus fixed QSA0 marker + actual native part bounds; C12288 subdivisions source-derived, no independent GPU dispatch/call counts','SSE_scope':'content events may contain multiple tokens; not token ITL','no_promotion_claim':True}
+-(D/'comparison.json').write_text(json.dumps(report,indent=2)+'\n',encoding='ascii');print(json.dumps({'status':report['status'],'checks':checks}));raise SystemExit(0 if matched else 2)
++ summary={case:{k:[{'median':statistics.median(x['metrics'][a][k]for x in results if x['name'].startswith(case+'-')),'range':[min(x['metrics'][a][k]for x in results if x['name'].startswith(case+'-')),max(x['metrics'][a][k]for x in results if x['name'].startswith(case+'-'))]}for a in [0,1]]for k in ['native_prompt_tps','native_prompt_ms','ttft_s','wall_s']}for case in ['p4096','p32768']}
++report={'status':'PASS_MATCHED_DISCRIMINATOR'if matched else'FAILED_OR_UNMATCHED','checks':checks,'same_binary':True,'requests':results,'timed_summary':summary,'normalization':['attention-value flag0/1','arm-local names/logs'],'scope':'NEW fixed-policy/4K-warm protocol; no S94 retrospective clearance or proof of its probability cause. Three fixed-order timed samples per shape, not independent replication.','activation_scope':'Once eligible value HOST marker by unmeasured4K warm, not GPU dispatch or all call counts.','SSE_scope':'Content events may contain multiple tokens, not token ITL.','no_cache_campaign_or_promotion':True};save(report);print(json.dumps({'status':report['status'],'checks':checks}));raise SystemExit(0 if matched else 2)
+--- S94/harness-prep/launch_stage.sh
++++ S113/harness-prep/launch_stage.sh
+@@ -6,8 +6,8 @@
+ results=/mnt/vm_8tb/b70/results
+ weights=$repo/models/files/qwen3.8-flash-next
+ nvme=/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco
+-container="${B70_S94_CONTAINER:?set unique S94 container name}"
+-config=$(realpath "${1:-$repo/strata/flash-next/serve-iq3xxs-200k.json}")
++container="${B70_S113_CONTAINER:?set unique S113 container name}"
++config=$(realpath "${1:?S113 arm config path required}")
+ source_dir=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["cwd"])' "$config")
+ ipc_opts=()
+ # Level Zero's IPC handle import needs syscalls Docker permits with SYS_PTRACE.
+--- S94/harness-prep/make_configs.py
++++ S113/harness-prep/make_configs.py
+@@ -1,5 +1,5 @@
+ #!/usr/bin/env python3
+-"""Create fresh S94 same-binary prefill arms after root's actual build audit."""
++"""Create fresh S113 same-binary prefill arms after root's actual build audit."""
+ import argparse, hashlib, json
+ from pathlib import Path
+ D = Path(__file__).resolve().parents[1]
+@@ -10,13 +10,13 @@
+ def sha(p):
+     with p.open('rb') as f: return hashlib.file_digest(f, 'sha256').hexdigest()
+ exe = a.exe.resolve()
+-assert exe == D.parent/'attn-value-resident-s94-build/build/strata-attn-value-resident-s94', 'Use only the new frozen S94 binary'
+-assert exe.is_file() and len(a.sha256)==64 and sha(exe) == a.sha256
++assert exe == D.parent/'q6-a4-main-s107-build/build/strata-q6-a4-s107', 'Use only audited frozen S107 binary'
++assert exe.is_file() and a.sha256=='064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca' and sha(exe)==a.sha256
+ assert not (D/'serving-inputs.json').exists()
+ assert all(not (D/f'mode{arm}').exists() for arm in [0, 1])
+-source = D.parent/'attn-value-main-s93-serving'
++source = D.parent/'q6-a4-main-s107-prep'
+ basefile = source/'mode0/config.json'
+-assert sha(basefile) == '0b1b32509cf341f9cdbeb08e4c7a223d48f6299291e0a97f0cac7aa3d5e2fc06'
++assert sha(basefile) == '5883bf0beb661eb2e6603d49aee2fc910b87c9f3d82d8a97b1c07073a01d6901'
+ base = json.loads(basefile.read_text())
+ prior = json.loads((source/'serving-inputs.json').read_text())
+ assert base['env']['STRATA_Q6_CENTER']=='0'
+@@ -24,13 +24,18 @@
+ assert Path(prior['native']['path']).stat().st_size == 47039860096
+ assert str(Path(prior['native']['sibling_path']).resolve()) == prior['native']['sibling_resolved']
+ assert Path(prior['native']['sibling_path']).stat().st_size == 28800138432
++assert json.loads((source/'comparison.json').read_text())['status']=='PASS_MATCHED_DISCRIMINATOR'
+ base['exe'] = str(exe)
++fixed_work={'--suffix-draft':'0','--lookup-chain':'0','--spec':'4','--mtp-max-t':'4','--spec-min-p':'0'}
++for key,value in fixed_work.items():
++ assert base['args'].count(key)==1 and base['args'][base['args'].index(key)+1]==value
++
+ base['env'].pop('STRATA_BATCH_COMMIT_OVERLAP', None)
+ for key in ['STRATA_HOST_BOUNDARY', 'STRATA_VERIFY_PROFILE', 'STRATA_PREFILL_HOST_BOUNDARY', 'STRATA_PREFILL_TIMING', 'STRATA_PREFILL_SYNC', 'STRATA_VERIFY_TRACE', 'STRATA_VERIFY_EAGER', 'STRATA_ATTN_LANECELL']:
+     base['env'].pop(key, None)
+ base['env'].update(STRATA_MMVQ_WIDE='1', STRATA_MMVQ_WIDE_MIN='0', STRATA_MMVQ_WIDE_MAXC='8', STRATA_Q6_PACKED='0',
+                    STRATA_MMVQ_WIDE_K='1', STRATA_MMVQ_WIDE_K_RPW='1',
+-                   STRATA_HEAD_Q5K_RPW2='0', STRATA_MMVQ_WIDE_RPW='1', STRATA_MMVQ_A2='1', STRATA_MMVQ_PF='0', STRATA_BATCH_MTP_PLE_PREFETCH='0', STRATA_TRACE='1', STRATA_Q6_CENTER='0', STRATA_PROMPT_ATTN_XMX='0', STRATA_KV_ROT='0')
++                   STRATA_HEAD_Q5K_RPW2='0', STRATA_MMVQ_WIDE_RPW='1', STRATA_MMVQ_A2='1', STRATA_MMVQ_PF='0', STRATA_BATCH_MTP_PLE_PREFETCH='0', STRATA_TRACE='1', STRATA_Q6_CENTER='0', STRATA_PROMPT_ATTN_XMX='0', STRATA_KV_ROT='0', STRATA_Q6_A4='0', STRATA_IQ2XS_MULTI='0', STRATA_BATCH_MTP_PAIR_GRAPH='0')
+ assert base['parallel'] == 2 and base['env']['STRATA_BATCH_MTP_PAIR_HEAD'] == '1'
+ assert base['env']['STRATA_BATCH_MTP_DEPTH'] == '2'
+ assert base['args'][base['args'].index('--max-context')+1] == '200000'
+@@ -48,12 +53,12 @@
+ inputs = {'arms': arms, 'image': prior['image'], 'same_binary': True,
+           'HC_state': 'COMMON_LO_ONCE_S51', 'S49_state': 'OFF_BOTH',
+           'native': prior['native'], 'base_config_sha256': sha(basefile),
+-          'root_binary_audit_required': True, 'ambient_attention_routes': {'STRATA_PROMPT_ATTN_XMX':'0','STRATA_KV_ROT':'0'}, 'containers': {'0': 'strata-s94-mode0', '1': 'strata-s94-mode1'},
+-          'warm_pairs': 1, 'timed_fresh_pairs': 0, 'warm_output_tokens_per_stream': 256, 'prefill_cases':['p4096','p32768'], 'prefill_repeats':3, 'prefill_completion_tokens':256,
++          'root_binary_audit_required': True, 'ambient_attention_routes': {'STRATA_PROMPT_ATTN_XMX':'0','STRATA_KV_ROT':'0'}, 'containers': {'0': 'strata-s113-mode0', '1': 'strata-s113-mode1'},
++          'warm4K_requests':1,'warm_output_tokens':256,'warm_tokenization':'OBSERVE_AND_MATCH_NEW_TAG_NO_OLD_COUNT_ASSUMPTION','fixed_work_args':fixed_work,'request_spec_min_p':0, 'prefill_cases':['p4096','p32768'], 'prefill_repeats':3, 'prefill_completion_tokens':256,
+           'common_trace': 'STRATA_TRACE1_PROMPT_START_ONLY_CPU_RING_ABSENT',
+           'arm_difference': 'STRATA_ATTN_VALUE_PIPELINE0/1 and arm-local log/container/service names only',
+-          'capture_scope': 'source/build/config+observed first-emission request; ON-only value HOST marker once from FIRST4K through all prefills+raw native part headers+successful use/no errors; no independent GPU-dispatch/call-count visibility',
++          'capture_scope': 'source/build/config+observed first-emission request; ON-only value HOST marker once from NEW unmeasured4K warm through all prefills+raw native part headers+successful use/no errors; no independent GPU-dispatch/call-count visibility',
+           'latency_scope': 'client wall/SSE content-event gaps; matched TRACE1 CPU logging, CPU ring/profile absent; not token ITL or device-only service',
+-          'candidate_scope': 'default-OFF explicit resident-mode0/full-width prefill-only nq32/cap2051/INT8/page4 value pipeline; QSA0/Q6center0 fixed; no daily promotion'}
++          'candidate_scope':'NEW fixed-policy discriminator, not S94 clearance or proven cause fix; defaultOFF resident-mode0/fullwidth nq32/cap2051/INT8/page4; QSA/Q6A4/CENTER/IQ2/wholepairgraph0; no promotion'}
+ (D/'serving-inputs.json').write_text(json.dumps(inputs, indent=2)+'\n', encoding='ascii')
+ print(json.dumps(inputs))
+--- S94/harness-prep/start_arm.py
++++ S113/harness-prep/start_arm.py
+@@ -5,32 +5,34 @@
+ D=Path(__file__).resolve().parents[1];REPO=Path('/mnt/vm_8tb/github/b70_ai_things')
+ p=argparse.ArgumentParser();p.add_argument('arm',choices=['0','1']);a=p.parse_args();out=D/f'mode{a.arm}'
+ assert not (out/'start-result.json').exists(),'Do not restart a prior arm'
+-assert not (out/'attempt.cid').exists(),'Owned cidfile must not pre-exist before launch'
++assert not (out/'attempt.cid').exists(),'Owned cidfile must not pre-exist'
+ inputs=json.loads((D/'serving-inputs.json').read_text());config=out/'config.json';c=json.loads(config.read_text())
+ arm=inputs['arms'][a.arm]
+ assert c['exe']==arm['exe']
+ with Path(c['exe']).open('rb') as binary:assert hashlib.file_digest(binary,'sha256').hexdigest()==arm['sha256']
+ assert all(k not in c['env'] for k in ['STRATA_HOST_BOUNDARY','STRATA_VERIFY_PROFILE','STRATA_PREFILL_HOST_BOUNDARY','STRATA_PREFILL_TIMING','STRATA_PREFILL_SYNC','STRATA_VERIFY_TRACE','STRATA_VERIFY_EAGER','STRATA_ATTN_LANECELL'])
+-assert c['env']['STRATA_PROMPT_ATTN_XMX']=='0' and c['env']['STRATA_KV_ROT']=='0'
+ assert c['env']['STRATA_TRACE']=='1' and c['env']['STRATA_BATCH_MTP_PLE_PREFETCH']=='0'
+ assert 'STRATA_BATCH_COMMIT_OVERLAP' not in c['env']
+-assert c['env']['STRATA_Q6_CENTER']=='0' and c['env']['STRATA_QSA_PREFILL_TILED']=='0' and c['env']['STRATA_ATTN_VALUE_PIPELINE']==a.arm and c['env']['STRATA_HEAD_Q5K_RPW2']=='0' and c['env']['STRATA_MMVQ_WIDE_K_RPW']=='1' and c['env']['STRATA_MMVQ_WIDE_K']=='1'
++assert c['env']['STRATA_BATCH_MTP_PAIR_GRAPH']=='0' and c['env']['STRATA_Q6_A4']=='0' and c['env']['STRATA_ATTN_VALUE_PIPELINE']==a.arm and c['env']['STRATA_IQ2XS_MULTI']=='0' and c['env']['STRATA_HEAD_Q5K_RPW2']=='0' and c['env']['STRATA_MMVQ_WIDE_K_RPW']=='1' and c['env']['STRATA_MMVQ_WIDE_K']=='1'
+ assert all(c['env'][k]==v for k,v in [('STRATA_MMVQ_WIDE','1'),('STRATA_MMVQ_WIDE_MIN','0'),('STRATA_MMVQ_WIDE_MAXC','8'),('STRATA_Q6_PACKED','0')])
+ assert c['env']['STRATA_MMVQ_A2']=='1' and c['env']['STRATA_MMVQ_WIDE_RPW']=='1' and c['env']['STRATA_MMVQ_PF']=='0'
+ assert inputs['same_binary'] and inputs['arms']['0']==inputs['arms']['1'] and inputs['HC_state']=='COMMON_LO_ONCE_S51'
+ assert c['args'][c['args'].index('--native')+1]==inputs['native']['path']
+ assert c['args'][c['args'].index('--ple-gguf')+1]==inputs['native']['sibling_path']
+-assert c['args'][c['args'].index('--ple-io')+1]=='direct','S94 requires explicit Direct PLE'
++assert c['args'][c['args'].index('--ple-io')+1]=='direct','S113 requires explicit Direct PLE'
++assert all(c['env'][k]==v for k,v in [('STRATA_Q6_CENTER','0'),('STRATA_QSA_PREFILL_TILED','0'),('STRATA_PROMPT_ATTN_XMX','0'),('STRATA_KV_ROT','0'),('STRATA_BATCH_PREFILL_QUANTUM','0'),('STRATA_PREFILL_FIRST','0'),('STRATA_EXPERT_SPLIT','0'),('STRATA_GU_LANES','8')])
++for key,value in inputs['fixed_work_args'].items():
++ assert c['args'].count(key)==1 and c['args'][c['args'].index(key)+1]==value
+ container=inputs['containers'][a.arm]
+-assert not subprocess.check_output(['docker','ps','-aq','--filter',f'name=^{container}$']).strip(),'Existing S94 container must be handled by owner'
++assert not subprocess.check_output(['docker','ps','-aq','--filter',f'name=^{container}$']).strip(),'Existing S113 container must be handled by owner'
+ try:
+  with urllib.request.urlopen('http://127.0.0.1:18085/health',timeout=2) as f:existing=json.load(f)
+ except OSError:pass
+ else:raise SystemExit('Port18085 already answers; preserve existing service, do not launch over it')
+-unit=f'strata-attn-value-s94-mode{a.arm}'
++unit=f'strata-attn-value-fixed-s113-mode{a.arm}'
+ # systemd manager creates the service; no cpu-run fd is transferred through DBus.
+ # Explicitly close 7 again in the detached service before gpu-run acquires 8/9.
+-cmd=['systemd-run','--user',f'--unit={unit}','--collect',f'--setenv=B70_S94_CONTAINER={container}',f'--property=WorkingDirectory={REPO}',
++cmd=['systemd-run','--user',f'--unit={unit}','--collect',f'--setenv=B70_S113_CONTAINER={container}',f'--property=WorkingDirectory={REPO}',
+      f'--property=StandardOutput=append:{out}/server.log',f'--property=StandardError=append:{out}/server.log',
+      '/bin/bash','-c','exec 7>&-; exec /bin/bash "$1" "$2"','bash',str(D/'harness-prep/launch_stage.sh'),str(config)]
+ t=time.monotonic();r=subprocess.run(cmd,capture_output=True,text=True,close_fds=True)
+@@ -42,6 +44,7 @@
+   if health.get('loaded') is True:
+    ci=json.loads(subprocess.check_output(['docker','inspect',container]))[0]
+    assert str(config) in ci['Config']['Cmd'] and ci['State']['Running'] and not ci['State']['OOMKilled']
++   assert (out/'attempt.cid').read_text().strip()==ci['Id'],'Created CID differs from inspected owned container'
+    assert health['model']=='hotschmoe-dd' and health['max_context']==200000
+    log=(out/'engine.log').read_text();assert arm['exe'] in log.splitlines()[0]
+    assert inputs['native']['path'] in log.splitlines()[0] and inputs['native']['sibling_path'] in log.splitlines()[0]
+@@ -65,10 +68,24 @@
+   effective=dict(x.split('=',1)for x in open('/proc/'+pid+'/environ','rb').read().decode().split('\0')if'='in x)
+   assert h==expected
+   assert all(effective.get(k)==v for k,v in env.items())
+-  assert effective.get('STRATA_PROMPT_ATTN_XMX')=='0' and effective.get('STRATA_KV_ROT')=='0'
+   assert all(k not in effective for k in ['STRATA_BATCH_COMMIT_OVERLAP','STRATA_HOST_BOUNDARY','STRATA_VERIFY_PROFILE','STRATA_PREFILL_HOST_BOUNDARY','STRATA_PREFILL_TIMING','STRATA_PREFILL_SYNC','STRATA_VERIFY_TRACE','STRATA_VERIFY_EAGER','STRATA_ATTN_LANECELL'])
+   assert 'unitrace'not in effective.get('LD_PRELOAD','').lower()
+-  rows.append({'pid':int(pid),'exe':actual,'sha256':h,'effective_config_env':{k:effective[k]for k in env},'profiling_keys_absent':True})
++  argv=open('/proc/'+pid+'/cmdline','rb').read().decode().rstrip('\0').split('\0')
++  for key,value in {'--suffix-draft':'0','--lookup-chain':'0','--spec':'4','--mtp-max-t':'4','--spec-min-p':'0'}.items():
++   assert argv.count(key)==1 and argv[argv.index(key)+1]==value,'Effective fixed-work argv differs'
++  maps=open('/proc/'+pid+'/maps').read()
++  libraries={}
++  for line in maps.splitlines():
++   fields=line.split(maxsplit=5)
++   if len(fields)==6 and '/libstdc++.so.' in fields[5]:
++    path=fields[5];assert not path.endswith(' (deleted)')
++    if path not in libraries:
++     with open(path,'rb')as lib:lh=hashlib.file_digest(lib,'sha256').hexdigest()
++     libraries[path]={'realpath':os.path.realpath(path),'sha256':lh}
++  assert len(libraries)==1,'Native libstdc++ provenance ambiguous'
++  loader={k:effective.get(k)for k in ['LD_LIBRARY_PATH','LD_PRELOAD','LD_AUDIT']}
++  assert not loader['LD_AUDIT'],'Unexpected loader audit changes measurement'
++  rows.append({'pid':int(pid),'argv':argv,'exe':actual,'sha256':h,'effective_config_env':{k:effective[k]for k in env},'profiling_keys_absent':True,'loader_environment':loader,'proc_maps':maps,'proc_maps_sha256':hashlib.sha256(maps.encode()).hexdigest(),'loaded_libstdcxx':libraries,'provenance_scope':'Actual native before warm/timing; does not establish historical S95 loaded-library identity or authorize a clockjoin.'})
+  except FileNotFoundError:continue
+ assert len(rows)==1,rows
+ print(json.dumps(rows))

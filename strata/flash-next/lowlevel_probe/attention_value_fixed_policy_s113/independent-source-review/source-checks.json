@@ -1,0 +1,322 @@
+{
+  "status": "PASS_BOUNDED_READ_ONLY_SOURCE_PIN_AND_FIXTURE_AUDIT",
+  "prep_manifest": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep-manifest.json",
+    "sha256": "7fd952de01b73868232d3358d7a332b60f95b4a0aff4a2d4908e074b4e122ca4"
+  },
+  "frozen_payloads_verified": [
+    {
+      "path": "FROZEN.txt",
+      "bytes": 142,
+      "sha256": "d13ea604f68c856b82a74d95ae92b37c05109a5a0ce438194b726eadef3c2b19"
+    },
+    {
+      "path": "README.txt",
+      "bytes": 5558,
+      "sha256": "c8f86e3ecccf4f9049b4bc85d90cbe55dbbdc594f88296294fee8bd6a4e918b9"
+    },
+    {
+      "path": "artifact-continuity.json",
+      "bytes": 1389,
+      "sha256": "9d9c4ba6eba4b76d23e1c053e8405b8c1874a1270dc1e813c66d3b28e4d75e84"
+    },
+    {
+      "path": "controller-diff.patch",
+      "bytes": 51194,
+      "sha256": "f446f6cf71b34b95dc38d20f2a5e3f450905ae71e5472e62008d5a5bbd3a90ed"
+    },
+    {
+      "path": "expected-source.sha256",
+      "bytes": 2841,
+      "sha256": "8e7f9a34221e14cdcb10a5b51d686d72f4c9b6d97b65ee997a11da87917d0582"
+    },
+    {
+      "path": "harness-prep/client.py",
+      "bytes": 11103,
+      "sha256": "2799e59dd01111a48fbd2ee08b6171f4b04ea600f40ff28a63807e41645ed869"
+    },
+    {
+      "path": "harness-prep/compare.py",
+      "bytes": 8796,
+      "sha256": "f55132df9ecf8ff6a36c62aaee7971129315f372b802a3ca6a655878dec848af"
+    },
+    {
+      "path": "harness-prep/launch_stage.sh",
+      "bytes": 1881,
+      "sha256": "ecdee79b6e8eeef984c3121e9967f7c59e67fd7bd824c1c3df28791ef94d5a23"
+    },
+    {
+      "path": "harness-prep/make_configs.py",
+      "bytes": 4849,
+      "sha256": "f5d1c98f9235b2c088a439c3df2b81a69c6c8523947842520bffcd29702575d9"
+    },
+    {
+      "path": "harness-prep/start_arm.py",
+      "bytes": 8906,
+      "sha256": "6d77f00a6becf1d3fb7b3163245ef5a30cf85843445bc3c63448ea7823317f4e"
+    },
+    {
+      "path": "harness-prep/stop_and_health.py",
+      "bytes": 6382,
+      "sha256": "2a9366d86899ba17818df2248ffeb27bf7d92944c6ff42d3b037fb7f830b77eb"
+    },
+    {
+      "path": "source-only-validation.json",
+      "bytes": 467,
+      "sha256": "a20d9c86aaeadc4c7561db64cca8abae916e292d70681f58936f4dcef28cd568"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 3735,
+      "sha256": "db05328a213c9e23cfb5fcca7f0ce6ec4ecac3d56435bf4508139450d469785b"
+    },
+    {
+      "path": "timed-input-pins.json",
+      "bytes": 3138,
+      "sha256": "03520e5630c769b45033502951d89af26a4dfb73b8d68d6355c8322d3d797601"
+    },
+    {
+      "path": "warm-fixture-provenance.json",
+      "bytes": 714,
+      "sha256": "e88b654cbbbbf210c60942f12b9a78ef8f77faee22556f83a9658f455ff5b899"
+    },
+    {
+      "path": "warm-request.json",
+      "bytes": 21531,
+      "sha256": "6f1bcd5c7cd71d087dfde404d1b7777b8cd0b053c4654b1ac7b6835395036d9a"
+    }
+  ],
+  "source_and_prior_controller_pins_verified": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/prefill/prefill.cpp",
+      "bytes": 303875,
+      "sha256": "2a1d8faa8bd58f112f4555a5ba7ab988b143fdb773106c8907903f0ecfafe16e"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp",
+      "bytes": 49375,
+      "sha256": "013e3b3df3cd4685af6330d9ab38223f41846e6a07aaeab2f7a534f66d1f36fe"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp",
+      "bytes": 119274,
+      "sha256": "13500a3af44f30793617d51aff6639344d2d943a50b53bdfe3c60ba81081967f"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/serve/server.py",
+      "bytes": 418896,
+      "sha256": "a18cabeeecd151925c9835f53a8a296c16a8b8f31adb1b8372b75190532ecfc7"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/bench_serving.py",
+      "bytes": 8227,
+      "sha256": "6f7751440113a6b6d092dd1bf9a0c734309d28ecffe5ac535412c22201852101"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/mode0/config.json",
+      "bytes": 2689,
+      "sha256": "5883bf0beb661eb2e6603d49aee2fc910b87c9f3d82d8a97b1c07073a01d6901"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/comparison.json",
+      "bytes": 19062,
+      "sha256": "8c327ef447e2c20d00ab596beff5a1bc54fc33413129d27e703c9b6bd8c3e5ef"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/root-build-audit.json",
+      "bytes": 2810,
+      "sha256": "e6e7c14897a8d3f123e7e160306f1d27c98595c30ba49e4d60fd6778fb86c538"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/harness-prep/client.py",
+      "bytes": 16994,
+      "sha256": "868cdbb02e338bdc10b002c0afb4027e1a0515852bc975e7f335e9fa686dd7ac"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/harness-prep/compare.py",
+      "bytes": 8563,
+      "sha256": "6a72efa79918737f7bbf02639178ebe0aed39efa3e33656d945c76796d68a05f"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/harness-prep/launch_stage.sh",
+      "bytes": 1896,
+      "sha256": "6985eb6ab8975b0bacd76d934311834c18627092a172e849621538b0836bbaea"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/harness-prep/make_configs.py",
+      "bytes": 4269,
+      "sha256": "755e63de2eea834c001d4d44b6c34b975414878e09f5d5fcc9f7da30a75ffaac"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/harness-prep/start_arm.py",
+      "bytes": 7302,
+      "sha256": "c5e0aad3ee023a377c1f7e5ca0d90d1ffd668dbc582e08b138a0b6b56663d6a8"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/harness-prep/stop_and_health.py",
+      "bytes": 6382,
+      "sha256": "2a9366d86899ba17818df2248ffeb27bf7d92944c6ff42d3b037fb7f830b77eb"
+    }
+  ],
+  "timed_exact_inputs_verified": [
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-gather-serving-s38/mode0/screen/p4096-0.json",
+      "bytes": 124712,
+      "sha256": "9a7ec83b131709e9ad1af73a842322c91931ab20487c97b170bd526359b017b7",
+      "request_verified": true,
+      "text_verified": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-gather-serving-s38/mode0/screen/p4096-1.json",
+      "bytes": 124025,
+      "sha256": "0a031d9575b8b5ac8bc1b317927eac8e333d0e2eeed810a0f6ff5c510f1c2abf",
+      "request_verified": true,
+      "text_verified": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-gather-serving-s38/mode0/screen/p4096-2.json",
+      "bytes": 122923,
+      "sha256": "1cba8af8d4bdfbb6e97e803168ab897ec851a698f431e60053675ecb85e1556a",
+      "request_verified": true,
+      "text_verified": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-gather-serving-s38/mode0/screen/p32768-0.json",
+      "bytes": 273182,
+      "sha256": "f04a8e4f9f063416e0f13ab7b6f8094571e37d45af4585871496a4f38560f427",
+      "request_verified": true,
+      "text_verified": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-gather-serving-s38/mode0/screen/p32768-1.json",
+      "bytes": 273151,
+      "sha256": "dd82cd497cfe2243462691be1c8030faa4a45700313be52e69e265bd61674bac",
+      "request_verified": true,
+      "text_verified": true
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-gather-serving-s38/mode0/screen/p32768-2.json",
+      "bytes": 274983,
+      "sha256": "5aa754e4f85781dfa0bcff6474fd6fb724dc3ea6471a9171143d6401c5611ee2",
+      "request_verified": true,
+      "text_verified": true
+    }
+  ],
+  "warm_source_transform_verified": true,
+  "warm_character_length_equal": true,
+  "warm_token_count": "unknown until actual run, no tokenizer/model executed",
+  "S94_stop_byte_exact": true,
+  "function_line_anchors": {
+    "client.py": [
+      {
+        "name": "save",
+        "line": 8,
+        "end_line": 8
+      },
+      {
+        "name": "identity",
+        "line": 9,
+        "end_line": 11
+      },
+      {
+        "name": "post",
+        "line": 12,
+        "end_line": 15
+      },
+      {
+        "name": "functional",
+        "line": 16,
+        "end_line": 28
+      },
+      {
+        "name": "value_marker",
+        "line": 31,
+        "end_line": 34
+      },
+      {
+        "name": "work",
+        "line": 39,
+        "end_line": 41
+      },
+      {
+        "name": "emitted",
+        "line": 42,
+        "end_line": 43
+      },
+      {
+        "name": "row_coherence",
+        "line": 44,
+        "end_line": 46
+      },
+      {
+        "name": "qsa_marker",
+        "line": 47,
+        "end_line": 50
+      },
+      {
+        "name": "capture_stats",
+        "line": 51,
+        "end_line": 54
+      },
+      {
+        "name": "off_candidates",
+        "line": 55,
+        "end_line": 59
+      },
+      {
+        "name": "prefill",
+        "line": 60,
+        "end_line": 114
+      }
+    ],
+    "compare.py": [
+      {
+        "name": "read",
+        "line": 6,
+        "end_line": 6
+      },
+      {
+        "name": "content",
+        "line": 7,
+        "end_line": 7
+      },
+      {
+        "name": "work",
+        "line": 9,
+        "end_line": 11
+      },
+      {
+        "name": "row_checks",
+        "line": 12,
+        "end_line": 13
+      },
+      {
+        "name": "save",
+        "line": 14,
+        "end_line": 14
+      }
+    ],
+    "start_arm.py": [],
+    "make_configs.py": [
+      {
+        "name": "sha",
+        "line": 10,
+        "end_line": 11
+      }
+    ],
+    "stop_and_health.py": [
+      {
+        "name": "save",
+        "line": 8,
+        "end_line": 8
+      }
+    ]
+  },
+  "execution": {
+    "controller_import_or_run": false,
+    "GPU": false,
+    "build": false,
+    "CLI_model": false,
+    "binary_or_archive_hash": false
+  }
+}

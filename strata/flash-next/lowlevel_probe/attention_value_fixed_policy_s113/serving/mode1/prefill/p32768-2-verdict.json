@@ -1,0 +1,76 @@
+{
+  "name": "p32768-2",
+  "status": "PASS_LOCAL_GATES",
+  "unmeasured_warm": false,
+  "VALUE_marker": {
+    "selected": true,
+    "count": 1,
+    "raw": [
+      "strata: prefill attention value pipeline selected (nq32 cap2051 INT8 page4)"
+    ],
+    "scope": "HOST selection only, not independent GPU dispatch/call count",
+    "first_emission_request": "warm4k"
+  },
+  "usage": {
+    "prompt_tokens": 32728,
+    "completion_tokens": 256,
+    "total_tokens": 32984,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "work": {
+    "cache_n": 0,
+    "prompt_n": 32728,
+    "predicted_n": 256,
+    "draft_n": 321,
+    "draft_n_accepted": 150
+  },
+  "capture_stats": {
+    "logged_capture_layouts": [],
+    "native_window_rows": [],
+    "paired_solo": []
+  },
+  "native_summary_raw": "strata serve: prompt 32728 tokens = 0 reused + 32728 read in 20595 ms (1589.1 tok/s), 256 generated in 4095 ms (62.5 tok/s), drafts accepted 150 of 321, 2 checkpoints",
+  "native_part_intervals": [
+    {
+      "raw": "strata batch prefill quantum: allocated 12288 requested 0 effective 12288 eligible 0 from 0 to 32721",
+      "allocated_C": 12288,
+      "effective_Q": 12288,
+      "from": 0,
+      "to": 32721,
+      "source_derived_chunks": [
+        {
+          "from": 0,
+          "to": 12288
+        },
+        {
+          "from": 12288,
+          "to": 24576
+        },
+        {
+          "from": 24576,
+          "to": 32721
+        }
+      ],
+      "interval_scope": "Observed native read_part bounds; subdivisions source-derived, not callback timestamps."
+    }
+  ],
+  "QSA_marker": {
+    "enabled": 0,
+    "first_active": 4097,
+    "domain": "nq256/stride50002/active4097..50001",
+    "scope": "host selection only, not independent GPU dispatch"
+  },
+  "native_prompt_tps": 1589.1,
+  "native_prompt_ms": 20594.7,
+  "ttft_s": 20.660431512980722,
+  "wall_s": 24.73457591596525,
+  "content_event_gap_ms": {
+    "count": 245,
+    "p50": 0.08471199544146657,
+    "p95": 38.3217827999033,
+    "maximum": 38.48064399790019
+  },
+  "output_sha256": "a60024231063f96828d9765dfbd9af45708891034df5038de6cd3adf7ba36f43"
+}

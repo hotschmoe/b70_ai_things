@@ -1,0 +1,21 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 64.73715449502924,
+  "launch_exception": null,
+  "source_packet_sha256": "1026d515c2ca59897dc91290a2318f0ced9c44f224389f0a59d5df108cf115d1",
+  "source_packet_unchanged": true,
+  "filtered_from": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s113-post-hc-source-reviews-20261016/claude-fable-5-1/completion.json",
+  "source_bytes": 9036,
+  "source_sha256": "e9a5f3f69735fd07d51125276b26981a3383b876438ccd6ac42fe669d5c7d908",
+  "omitted": "Cumulative result duration, cost, token usage, modelUsage and full event stream; local elapsed/exit and responding IDs retained."
+}

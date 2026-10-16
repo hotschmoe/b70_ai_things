@@ -1,0 +1,17 @@
+{
+  "status": "SOURCE_AND_RETAINED_BUILD_RECEIPT_ONLY_NO_NEW_OBJECT_OR_EXE_HASH",
+  "frozen_exe": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/strata-q6-a4-s107",
+  "exe_sha256": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca",
+  "root_build_receipt": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/root-build-audit.json",
+  "root_build_receipt_sha256": "e6e7c14897a8d3f123e7e160306f1d27c98595c30ba49e4d60fd6778fb86c538",
+  "compiled_attention_object": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/qsa_decode_attn.dp.cpp.o",
+  "attention_object_sha256_from_actual_S107_record": "06eb664c9a991790c01b413117f78475d9ff2836cde77534d69fef2b2c85014d",
+  "object_stat_observed_only": {
+    "device": 45,
+    "inode": 24011069,
+    "bytes": 277944,
+    "mtime_ns": 1792092825169782643
+  },
+  "prefill_object_sha256_from_same_record": "ae8493fd019782eeb0b8b1653d099b0bc0c709bb327251c57e32b93405f02f5b",
+  "scope": "Main064b contains resident S94 caller and unchanged attention06eb object. Current object stat is not a new content hash; immutable executable/build receipts, caller/source pins and future actual executable identity are the binding. No new compiled ISA, runtime or numerical proof."
+}

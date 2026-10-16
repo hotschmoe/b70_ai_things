@@ -1,0 +1,121 @@
+{
+  "status": "DERIVED_FROM_EXACT_COPIED_PASS_COMPARISON",
+  "source": "serving/comparison.json",
+  "source_sha256": "963ebbba0ed811782eb22cf5784d7ecffbe78577f3ea3d7dca7ff037e7e4bc4e",
+  "metrics": {
+    "p4096": {
+      "native_prompt_tps": {
+        "OFF_median": 1294.9,
+        "ON_median": 1299.2,
+        "change_percent": 0.3320719746698453,
+        "OFF_range": [
+          1287.5,
+          1300.6
+        ],
+        "ON_range": [
+          1296.7,
+          1299.7
+        ]
+      },
+      "native_prompt_ms": {
+        "OFF_median": 3134.5,
+        "ON_median": 3124.3,
+        "change_percent": -0.32541075131599095,
+        "OFF_range": [
+          3120.8,
+          3152.7
+        ],
+        "ON_range": [
+          3123.1,
+          3130.3
+        ]
+      },
+      "ttft_s": {
+        "OFF_median": 3.1645262250094675,
+        "ON_median": 3.154280752991326,
+        "change_percent": -0.3237600604213853,
+        "OFF_range": [
+          3.150887324998621,
+          3.1835404310259037
+        ],
+        "ON_range": [
+          3.1532427750062197,
+          3.160772879025899
+        ]
+      },
+      "wall_s": {
+        "OFF_median": 6.735226578020956,
+        "ON_median": 6.724597516003996,
+        "change_percent": -0.15781298362917973,
+        "OFF_range": [
+          6.509625065024011,
+          6.968698694021441
+        ],
+        "ON_range": [
+          6.521173669025302,
+          6.941191908030305
+        ]
+      }
+    },
+    "p32768": {
+      "native_prompt_tps": {
+        "OFF_median": 1548.9,
+        "ON_median": 1590.6,
+        "change_percent": 2.6922331977532243,
+        "OFF_range": [
+          1546.1,
+          1579.0
+        ],
+        "ON_range": [
+          1589.1,
+          1625.5
+        ]
+      },
+      "native_prompt_ms": {
+        "OFF_median": 21129.3,
+        "ON_median": 20576.2,
+        "change_percent": -2.617692020085849,
+        "OFF_range": [
+          20727.3,
+          21167.8
+        ],
+        "ON_range": [
+          20133.5,
+          20594.7
+        ]
+      },
+      "ttft_s": {
+        "OFF_median": 21.191715833963826,
+        "ON_median": 20.63773289398523,
+        "change_percent": -2.6141485867356318,
+        "OFF_range": [
+          20.79202727699885,
+          21.22955794999143
+        ],
+        "ON_range": [
+          20.196708762960043,
+          20.660431512980722
+        ]
+      },
+      "wall_s": {
+        "OFF_median": 25.036836149985902,
+        "ON_median": 24.483494321990293,
+        "change_percent": -2.2101108330172203,
+        "OFF_range": [
+          24.441808547999244,
+          25.302878934016917
+        ],
+        "ON_range": [
+          23.848060998949222,
+          24.73457591596525
+        ]
+      }
+    }
+  },
+  "limits": [
+    "Three fixed-order nested requests per shape in one fresh process per arm; no independent process replication or stability claim.",
+    "Explicit HTTP override is spec_min_p=0; suffix-draft/lookup-chain/spec/mtp-max-t/spec-min-p are fixed native argv.",
+    "SSE content equality only; no raw token-ID/event-chunk-boundary equality.",
+    "S94 failed native-work match remains failed and cause unresolved."
+  ]
+}

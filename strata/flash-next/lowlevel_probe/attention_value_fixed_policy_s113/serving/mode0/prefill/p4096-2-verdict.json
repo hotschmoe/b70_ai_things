@@ -1,0 +1,61 @@
+{
+  "name": "p4096-2",
+  "status": "PASS_LOCAL_GATES",
+  "unmeasured_warm": false,
+  "VALUE_marker": {
+    "selected": false,
+    "count": 0,
+    "raw": [],
+    "scope": "HOST selection only, not independent GPU dispatch/call count",
+    "first_emission_request": null
+  },
+  "usage": {
+    "prompt_tokens": 4059,
+    "completion_tokens": 256,
+    "total_tokens": 4315,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "work": {
+    "cache_n": 0,
+    "prompt_n": 4059,
+    "predicted_n": 256,
+    "draft_n": 279,
+    "draft_n_accepted": 162
+  },
+  "capture_stats": {
+    "logged_capture_layouts": [],
+    "native_window_rows": [],
+    "paired_solo": []
+  },
+  "native_summary_raw": "strata serve: prompt 4059 tokens = 0 reused + 4059 read in 3121 ms (1300.6 tok/s), 256 generated in 3379 ms (75.8 tok/s), drafts accepted 162 of 279, 1 checkpoints",
+  "native_part_intervals": [
+    {
+      "raw": "strata batch prefill quantum: allocated 12288 requested 0 effective 12288 eligible 0 from 0 to 4052",
+      "allocated_C": 12288,
+      "effective_Q": 12288,
+      "from": 0,
+      "to": 4052,
+      "source_derived_chunks": [
+        {
+          "from": 0,
+          "to": 4052
+        }
+      ],
+      "interval_scope": "Observed native read_part bounds; subdivisions source-derived, not callback timestamps."
+    }
+  ],
+  "QSA_marker": null,
+  "native_prompt_tps": 1300.6,
+  "native_prompt_ms": 3120.8,
+  "ttft_s": 3.150887324998621,
+  "wall_s": 6.509625065024011,
+  "content_event_gap_ms": {
+    "count": 242,
+    "p50": 0.07351048407144845,
+    "p95": 36.473630167893134,
+    "maximum": 71.78574101999402
+  },
+  "output_sha256": "bf5c4f729df88fc5ae55e99761c99ba5d1c932abf1b3be063a2ea5bca5ec2312"
+}

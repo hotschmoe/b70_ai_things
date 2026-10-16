@@ -1,0 +1,32 @@
+{
+  "status": "RETAINED_EXTERNAL_IDENTITIES_NOT_REHASHED_LARGE_ARTIFACTS",
+  "records": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s113-post-hc-source-reviews-20261016/claude-opus-5-5/completion.json",
+      "bytes": 9368,
+      "sha256": "2ed58800b2c9704aa1d6752b70ee5a4b5ef2710ed611660bec3aaf19113f62be",
+      "reason": "Raw completion retained external; filtered metadata copied without cumulative usage."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s113-post-hc-source-reviews-20261016/claude-fable-5-1/completion.json",
+      "bytes": 9036,
+      "sha256": "e9a5f3f69735fd07d51125276b26981a3383b876438ccd6ac42fe669d5c7d908",
+      "reason": "Raw completion retained external; filtered metadata copied without cumulative usage."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/strata-q6-a4-s107",
+      "sha256": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca",
+      "identity_source": "serving/artifact-continuity.json and actual per-arm native-process-identity.json",
+      "new_hash_or_binary_read": false,
+      "reason": "Executable remains external."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/qsa_decode_attn.dp.cpp.o",
+      "sha256": "06eb664c9a991790c01b413117f78475d9ff2836cde77534d69fef2b2c85014d",
+      "bytes": 277944,
+      "identity_source": "prior-build/S107-root-build-audit.json; recorded historical stat is not a new object hash",
+      "new_hash_or_binary_read": false,
+      "reason": "Original unchanged attention object remains external."
+    }
+  ]
+}

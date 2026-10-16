@@ -1,0 +1,40 @@
+**S113 closure**
+
+The run is clean: identity, marker once on ON, exact text, SSE, usage, native work including offered and accepted drafts, captures, functionals, normal teardown and full health on both arms. That is the first time the attention-value candidate has passed a matched-work gate in serving. It does not explain S94. The draft settings differ, so S94's 205 versus 207 stays unresolved and unchanged.
+
+Timing is one OFF then ON sequence with three nested observations per shape. The 32K prefill shows about 2.7 percent and 4K about 0.3 percent, both descriptive. Both shapes remain far below the 2000 tokens per second target. Keep the flag default OFF, record the result, and do not retest or start a cache campaign. If a future prefill-focused change needs a baseline, this run is the reference to compare against, not a reason to promote.
+
+**HC mechanism review**
+
+The candidate moves one scalar expression from the UP prologue, where every one of 160 groups evaluates it for every active row, into the reduce epilogue, where each row is already owned by exactly one thread. UP then loads the published value into its local array and continues unchanged. No launch is removed, no global synchronisation is added, and the four kernel boundaries stay.
+
+Arithmetic ledger, checked against the excerpts:
+
+- Reduce produces x by the existing 80-slice sum. UP today computes y equal to 0 plus the stored x, divides by 4, and applies x over 1 plus exp of minus x. The leading zero-plus is an identity on x except for negative zero, and x cannot be negative zero because the sum starts from positive zero and an exact cancellation rounds to positive zero. The store and load of x through the part buffer is exact. So the candidate epilogue, written with the identical statement sequence including the zero-plus, division by the float HC constant, unary minus, native exp, add one and division, is bit-equal in source terms.
+- The remaining risk is lowering, not algebra. Native exp may be mapped differently in two kernels, and the compiler may contract or reorder differently. That is a compiled gate, not a source argument.
+- Nonfinite and extreme inputs behave identically in both places if the ops are the same: large negative x yields negative zero, NaN propagates, subnormal x survives the division under the same control register. Signed zero of v is the one place where producer placement could matter and it must be in the fixture.
+
+Ownership and alias:
+
+- lo is a caller span of 320 floats per token, disjoint per token in both the drafter and verifier arenas. Today UP group 0 writes it after UP's own computation. The candidate has reduce write it before UP reads it, on the same in-order queue with the existing reduce-to-UP edge. No reader sits between them in the sliced multi path.
+- part keeps its raw write. UP stops reading it but the fixture must still compare it.
+- The candidate must be selected only when nsplit is 1, which is the sliced path. The direct multi-split path, MORE, GRF256, ILP and the single-kernel pair keep their original producers.
+- The fixture must allocate lo, part, part2, inputs and outputs as disjoint guarded spans. Production alias safety is a separate callsite proof.
+
+**Verdict: HC_SOURCE_PREP_GO for one private strict oracle preparation, after the ISA read below.**
+
+**Cheapest next step, in order**
+
+1. **Offline ISA read first, no build.** Select the existing UP C16 LO_ONCE image and the reduce image from the audited S107 main. Record the exact exp lowering sequence, the division form under the correctly-rounded flag, the store predicate on group zero, and the prologue instruction count per group. This is a decoder run on retained images, minutes of CPU, and it fixes what the candidate reduce epilogue must match instruction for instruction. It also tells you whether the prologue is already cheaper than the source suggests, which would lower the expected effect before any source is written.
+2. **Then prepare the oracle source**, reusing the S73 and S39 fixture idiom: unique private reduce and UP classes, original and candidate, current norm and sliced kernels unchanged. Strict comparisons before any timing: raw part2, raw part and inject in both routes before UP; candidate lo before UP against control lo after UP; final R, lo, rs, inject, mixed and xn after UP; inactive rows and tails, guards and read-only inputs. Keep the twelve existing cases at T1, T2 and T6 across apply and inject, A, B, A with persistent scratch, eager and captured. Add one bounded epilogue input list covering positive and negative zero, the smallest subnormal, a large negative value that saturates exp, and NaN, compared against the old expression with no tolerance.
+
+**Compiled gates before any GPU**
+
+- Candidate reduce epilogue: same exp lowering, same division form, same operand order as the current UP prologue, no contraction into the sum loop.
+- Candidate UP: prologue reduced to loads plus local stores, first barrier retained, dot and butterfly and residual sections byte-identical to the original UP text after the prologue.
+- Resources: SIMD32, same GRF mode, no spill introduced in either kernel.
+- Unique registered classes with distinct host info and images; original images untouched.
+
+**Limits**
+
+A fixture pass proves equality on these shapes and inputs. The only question that matters afterward is whether the combined reduce plus UP pair is shorter on a whole read in one balanced same-lease comparison. Adding the 160-fold source count to historical service numbers is not evidence and should not appear in any packet.

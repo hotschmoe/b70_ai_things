@@ -1,0 +1,11 @@
+{
+  "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/peer-gather-serving-s38/mode0/screen/p4096-0.json",
+  "source_bytes": 124712,
+  "source_sha256": "9a7ec83b131709e9ad1af73a842322c91931ab20487c97b170bd526359b017b7",
+  "old_label": "[Flash-Next serving benchmark p4096 repeat 0]",
+  "new_label": "[Flash-Next serving benchmark p4096 warmup 0]",
+  "same_character_length": true,
+  "prompt_text_suffix_unchanged": true,
+  "tokenization_counts": "UNPROVED. Observe native/usage and match across arms; do not assert old4059 for this new warm tag.",
+  "timed_prompt_texts": "All six original S38 messages unchanged. HTTP strata_tune.spec_min_p=0 added as NEW common policy."
+}

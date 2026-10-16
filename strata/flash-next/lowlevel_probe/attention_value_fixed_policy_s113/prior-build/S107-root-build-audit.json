@@ -1,0 +1,52 @@
+{
+  "utc": "2026-10-15T23:45:42.555372+00:00",
+  "status": "ROOT_ACCEPT_SUCCESSFUL_EXACT_ONE_TU_BUILD_GO_SELECTED_COMPILED_AUDIT",
+  "actual_exit": 0,
+  "tee_exit": 0,
+  "CPU_wrapper_elapsed_s": 220,
+  "ninja_plan": {
+    "compiled": [
+      {
+        "source": "/work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+        "object": "CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o"
+      }
+    ],
+    "archives": [
+      "libstrata_kernels.a"
+    ],
+    "links": 1
+  },
+  "changed": {
+    "status": "PASS_EXPECTED_THREE_ARTIFACT_HASHES_CHANGED",
+    "artifacts": {
+      "strata": {
+        "before": "e3ca8ac25c1f1e6042792906be3e7faa55e14a1cddaeece176f15c52f6b071fd",
+        "after": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca"
+      },
+      "libstrata_kernels.a": {
+        "before": "bdb6a9ae43ad16bf56f66f87f0893f5c0429a2af6d61478e6af82240260cee58",
+        "after": "cf710683aec404599d1cc6173bf8364e6d30731bda82b315df286bf58aed9b38"
+      },
+      "CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o": {
+        "before": "b9f931cb65927a2869a1b26bce8cfa834b112bccdfe08d26e9364634473294dd",
+        "after": "e4dafa843014ad3aeb4e2c15e2bfa26c834f8e6fa0d8873032e5235ce06a9667"
+      }
+    }
+  },
+  "build_sha256": {
+    "/out/strata-q6-a4-s107": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca",
+    "libstrata_kernels.a": "cf710683aec404599d1cc6173bf8364e6d30731bda82b315df286bf58aed9b38",
+    "CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o": "e4dafa843014ad3aeb4e2c15e2bfa26c834f8e6fa0d8873032e5235ce06a9667",
+    "CMakeFiles/strata_kernels.dir/src/kernels/cuda/iq_kernels.dp.cpp.o": "09447b7e983dc8c0299172b6c1a84c09e68a9383f0680b13f658d030e69f73a9",
+    "libstrata_prefill.a": "9d1edec2d6b1efc05651133fd725470cbf9ed6c63c8e9ddcaf54ae2d0e1055fc",
+    "CMakeFiles/strata_kernels.dir/src/kernels/cuda/qsa_decode_attn.dp.cpp.o": "06eb664c9a991790c01b413117f78475d9ff2836cde77534d69fef2b2c85014d",
+    "CMakeFiles/strata_prefill.dir/src/prefill/prefill.cpp.o": "ae8493fd019782eeb0b8b1653d099b0bc0c709bb327251c57e32b93405f02f5b",
+    "libstrata_engine.a": "c908c6755e3c4b684f9a16beeebde53f272af72fb93673d6e62e958f10567b3c",
+    "CMakeCache.txt": "fee542911252057f97fac8113086ded01130c7888ac96a7490e28cdec814cc22"
+  },
+  "source_sha256": "ae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252",
+  "expected_other_archives_objects_sources_and_cache_pre_post_pass": true,
+  "source_build_flags": "Exact planned DPC++2026.1/O3/precise/SG32/perkernel/BMG31/correct-roundeddivsqrt/maxlinkjobs4; pinned e41/noDRI/networknone/UID1000/jobs4/diskTMP",
+  "GPU_GO": false,
+  "pending": "Actual main original/CENTER/candidate binding and computational reuse plus manual selected-host guard/payload read"
+}

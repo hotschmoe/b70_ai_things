@@ -1,0 +1,1 @@
+FROZEN SOURCE ONLY. No config generation, main/source mutation, build, GPU, model CLI or clients. Root full-read/review/separate GO required.

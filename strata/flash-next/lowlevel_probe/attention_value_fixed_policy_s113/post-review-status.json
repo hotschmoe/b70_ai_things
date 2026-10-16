@@ -1,0 +1,17 @@
+{
+  "status": "ACTUAL_POSTREVIEWS_CLOSED_ROOT_FULLREAD_AND_DECISION_RETAINED",
+  "models": [
+    {
+      "id": "claude-opus-5-5",
+      "elapsed_s": 55.23648395499913,
+      "exit": 0
+    },
+    {
+      "id": "claude-fable-5-1",
+      "elapsed_s": 64.73715449502924,
+      "exit": 0
+    }
+  ],
+  "root_decision": "postreviews/root-post-decision.json",
+  "cumulative_usage_included": false
+}

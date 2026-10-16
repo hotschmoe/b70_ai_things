@@ -1,0 +1,58 @@
+{
+  "status": "SOURCE_ONLY_UNAPPLIED",
+  "before": {
+    "sycl/src/prefill/prefill.cpp": {
+      "sha256": "b6f7d1e50073ba1dbc7f9dacc2ab2000e1237fa2b33220beb7cff25908062162",
+      "bytes": 303635,
+      "modified_by_candidate": true
+    },
+    "sycl/src/core/layer.cpp": {
+      "sha256": "c89d9bb9a1c37616e9e415730e667b821e88ab73239a1dc5a27867aac7b04016",
+      "bytes": 120574,
+      "modified_by_candidate": false
+    },
+    "sycl/src/program/generate.cpp": {
+      "sha256": "6433d750e414aeb9c71135257ae40a8f9e38ea661537c251b50cabdbc2217d83",
+      "bytes": 867808,
+      "modified_by_candidate": false
+    },
+    "sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp": {
+      "sha256": "013e3b3df3cd4685af6330d9ab38223f41846e6a07aaeab2f7a534f66d1f36fe",
+      "bytes": 49375,
+      "modified_by_candidate": false
+    },
+    "include/strata/kernels/qsa_prefill_attn.hpp": {
+      "sha256": "87af3d42d17fe6f74343e90bbdea4b3aee8c7c5fb7095a19b22dc64d69d642c5",
+      "bytes": 744,
+      "modified_by_candidate": false
+    },
+    "sycl/src/kernels/cuda/qsa_prompt_attn.dp.cpp": {
+      "sha256": "d57239375f2cbd8a2392516359f5f077c9c5d26af1c05af684f693c3e21f127a",
+      "bytes": 100645,
+      "modified_by_candidate": false
+    },
+    "sycl/src/kernels/cuda/qsa_prompt_attn_xmx.dp.cpp": {
+      "sha256": "793c2f10b2302a65601ec5da054064adf7bd64f0119fbe7dc562ae1b990bee66",
+      "bytes": 22065,
+      "modified_by_candidate": false
+    },
+    "sycl/src/core/conversation_snapshot.cpp": {
+      "sha256": "8aad8aa2615b28b8f579ef725f99c79cf994ffd95dc7fd931dec300082d745a5",
+      "bytes": 16695,
+      "modified_by_candidate": false
+    }
+  },
+  "candidate_prefill_sha256": "2a1d8faa8bd58f112f4555a5ba7ab988b143fdb773106c8907903f0ecfafe16e",
+  "patch_sha256": "67e608b6df9d10bf4384fd68876d5879cc220cadaae0caa97ba97debed229ecf",
+  "inverse_reconstructs_entire_S93_prefill": true,
+  "unchanged_math_wrapper_header": true,
+  "S93_binary_identity": "551cca4140b3f014bfb800e2f6d2c5d9a46733da02b835d0b2ead9fa5cf05db3",
+  "actual_mode_inference": "Source+arguments imply KvPlan0; not a separately logged GPU/readback observation",
+  "measured_config_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-serving/mode1/config.json",
+  "measured_config_sha256": "a1862c96dd3f5b830ae4fc07f5935bdca1df90a1106d42b2dd260ae2a3dc8731",
+  "measured_identity_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-serving/mode1/native-process-identity.json",
+  "measured_identity_sha256": "9c14489e2a524c2e7f605a714776df34ded7b5530d33558c8a144dd8b7b9765f",
+  "engine_excerpt_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-main-s93-serving/mode1/engine-final.log",
+  "engine_final_sha256": "d597897c7b633cd8f6772122a1bbd20e524d657697bbd69d2e500ef05e613e54",
+  "reset_restore_mode0_mapping_preserved_source": true
+}

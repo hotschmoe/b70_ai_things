@@ -418,3 +418,13 @@ Original production/default remains unchanged. Next S113 prefill fixed-policy
 discriminator needs no rebuild; separate defaultOFF MTP integration is source
 preparation only. Targets remain unmet and S30RAMrestore remains retained.
 [S112 evidence and limits](20261016_strata_greedy_top1.md).
+
+
+S113 completes the new fixed-policy attention-value serving discriminator:
+4K native prefill median1294.9->1299.2tok/s(+.3321%),32K1548.9->1590.6
+(+2.6922%). Allwarm/six-timed response/work/capture gates,functionals,identity,
+normalteardown and fullhealth pass. Three nested fixed-order observations
+per shape remain descriptive; keepdefaultOFF/no immediate repeat/cachecampaign.
+Bothprefilltargets remain unmet; S94 workfailure/causeunresolved is preserved.
+S30boundedRAMrestore remains retained, no new C2decode/context qualification.
+[S113 evidence and limits](20261016_strata_attention_value_fixed_policy.md).

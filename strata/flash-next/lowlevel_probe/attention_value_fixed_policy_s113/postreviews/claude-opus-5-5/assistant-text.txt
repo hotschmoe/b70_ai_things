@@ -1,0 +1,64 @@
+# S113 close, and the HC low-rank activation candidate
+
+## S113: close
+
+**Agree: keep default OFF, with no immediate retest and no full-cache campaign.**
+
+- **Exactness:** every gate passed, including exact native work at every ON request under the pinned draft policy. This is the first clean matched run for the value-domain kernel.
+- **Timing:** 32K prompt time fell from 21,129 to 20,576 ms (about \u22122.6%, ranges not overlapping). 4K is roughly unchanged (about \u22120.3%).
+- **Limits:** one fixed OFF\u2192ON sequence with three nested observations per shape. That is descriptive, not replicated, and both shapes remain below the 2000 tok/s prefill target.
+- **The S94 cause stays unresolved.** The pinned policy removed the discriminator; it did not explain the earlier mismatch.
+
+Record S113 as a qualified opt-in candidate. Revisit it only inside a later combined prefill evaluation, not as a standalone repeat.
+
+## HC candidate: HC_SOURCE_PREP_GO
+
+This covers source preparation of one private strict oracle. Build and execution stay gated, as below.
+
+### Mechanism check
+
+The idea is sound and distinct from S69, MORE, SG16 and GRF256. It moves the activation `v = y/(1+exp(\u2212y))` from all 160 UP work-groups to the single existing producer (reduce), and keeps every kernel boundary, the raw `part` and inject outputs, and the UP body unchanged.
+
+**Arithmetic notes:**
+
+1. **The `+0` in UP is effectively an identity.** Reduce starts from `+0.0f` and adds 80 slices under round-to-nearest, so `part` can never be \u22120. Therefore `0 + p == p` bitwise, and NaN propagates either way. Keep the add anyway for textual parity; the oracle should confirm it rather than rely on this argument.
+2. **`/4.0f` is exact-equivalent to `*0.25f`** for all finite inputs, subnormals included, since both round the same exact value. It is still better to keep the literal division so the compiler sees the same IR.
+3. **`native::exp` is the real obligation.** It is implementation-defined, typically a multiply by log2(e) followed by the hardware `math.exp`. Bit equality between producer and consumer holds only if both kernels emit the **same instruction sequence and denormal mode**. That has to be shown in the compiled code; source parity does not prove it.
+4. **The final division.** With `-cl-fp32-correctly-rounded-divide-sqrt` it should be IEEE-rounded in both kernels. Confirm in the ISA that both use the same division sequence (an IEEE macro versus `math.inv` followed by a multiply).
+
+**Coupling, an important design constraint:**
+- Reduce-new writing `lo` while UP-old recomputes it is harmless: UP overwrites with the same values.
+- UP-new paired with reduce-old would read a stale `lo`.
+- So **one latched predicate must select both kernels together**, and only on the exact path: `gr_down_sliced` without `gr_more_groups`, `nsplit = 1`, the normal non-GRF, non-ILP C16 UP, and `T \u2264 kFusedGrMaxT`. Every other path stays original.
+
+**Payoff caveat.** The prologue's global loads (`part`) become global loads (`lo`), so only the exp/div work and its latency before the barrier are removed. UP may be dominated by streaming the BF16 `w_up` weights (about 6.5 MB per call). The saving could be hidden under memory latency.
+
+### Cheapest next step
+
+**First, one offline decode of the currently selected `gr_up_multi_cols<16,false,true>` and `gr_down_reduce_k` images from the current main binary.** No build, no GPU. Answer three questions:
+
+1. **Prologue share.** How many instructions does the UP prologue execute per iteration (loads, exp lowering, division sequence, local and global stores), relative to the body before the barrier? Is the main loop's first weight load issued only after the barrier? If the prologue is a negligible serial prefix, record that and stop the candidate.
+2. **Exact FP sequence and denormal mode** for `x/4`, `\u2212x`, `native::exp`, `1+e` and the division in UP. This becomes the template the reduce epilogue's ISA must match exactly.
+3. **Reduce resources:** grid of T\xd7324 over 128, SIMD32. Adding the epilogue must not create spills or a new serial bottleneck.
+
+Source preparation can proceed in parallel, but no build until step 1 is reviewed.
+
+### Gates for the private oracle (after the decode supports it)
+
+- **Build scope:**
+  - Only private reduce-new and UP-new classes with unique names.
+  - The private originals must be bound to their actual images and match the selected main images' computational prefixes before they count as the baseline.
+  - No MMVQ or main rebuild.
+- **Pre-GPU ISA:**
+  - The reduce-new epilogue's FP sequence must be instruction-identical to the UP prologue: same exp lowering, same division sequence, same denormal mode.
+  - The UP-new body after the barrier must be unchanged.
+  - Resources, with absent spill or scratch fields read as unknown.
+- **Strict runtime:**
+  - The existing 12 cases (T 1/2/6, apply 0/1, inject 0/1) and the 36 S39 anchors.
+  - Initial/changed A/B/A, eager and captured, with persistent scratch.
+  - Compare raw `part2`, `part` and inject before UP. Compare the candidate's `lo` *before* UP against the control's `lo` *after* UP. Compare final R, `lo`, `rs`, inject, mixed and `xn`, plus tails, guards and read-only weights.
+  - Add only one bounded epilogue input list: \xb10 sums, subnormals, large magnitudes (exp overflow to inf giving v = 0 or \u22120), NaN.
+  - No tolerance, stop at the first mismatch.
+- **Fixture allocation:** disjoint explicit spans only. The production selector must later prove the caller's span disjointness.
+- **Timing:** only after every strict check passes. One balanced whole-read (reduce + UP) comparison in the same lease, descriptive only. No UP-only win claim, and no use of S95 per-cycle sums.
+- **HOLD triggers:** an exp or division lowering mismatch, any byte difference, or a reduce-side spill or bottleneck. No retries.

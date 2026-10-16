@@ -1,0 +1,16 @@
+{
+  "status": "AST_BASH_SOURCE_ONLY_PASS",
+  "Python": {
+    "client.py": "AST_PASS",
+    "compare.py": "AST_PASS",
+    "make_configs.py": "AST_PASS",
+    "start_arm.py": "AST_PASS",
+    "stop_and_health.py": "AST_PASS"
+  },
+  "embedded_proc_AST_count": 1,
+  "bash_n": 0,
+  "S94_stop_byte_exact": true,
+  "configs_clients_or_scripts_imported_executed": false,
+  "model_GPU_build_trace_large_artifact_hash": false,
+  "sourcecode_hashes_only_not_model_weights": true
+}

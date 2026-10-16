@@ -1,0 +1,17 @@
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -3330,9 +3330,11 @@
+                                                                             m.attn, T, m.cs))
+                         for (int64_t t0 = 0; t0 < T; t0 += m.attn_batch) {
+                             const int64_t nb = std::min(m.attn_batch, T - t0);
+-                            // Widths are monotone across this fresh prefill chunk; once the first is
+-                            // cap2051 all32 are full. Staged identity pages are published on m.cs.
+-                            const bool value_domain = staged && st.kv_int8 && nb == 32 && m.cap == 2051 &&
++                            // Widths are monotone across this prefill batch; firstwidth2051 makes all32 full.
++                            // Both staged and fully resident pools have complete identity pages; no ring/elastic pools.
++                            const bool complete_identity_pages = staged ||
++                                (st.kv_mode == 0 && st.kv_elastic < 0 && st.n_pages > 0 && st.n_slots >= st.n_pages);
++                            const bool value_domain = complete_identity_pages && st.kv_int8 && nb == 32 && m.cap == 2051 &&
+                                 m.steps_host[(size_t) (t0 * strata::kernels::kStepCount +
+                                                      strata::kernels::kStepWidth)] == m.cap;
+                             if (value_domain)

@@ -1,0 +1,922 @@
+[strata] 2026-10-16 00:45:58 engine started: /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/strata-q6-a4-s107 --serve --pack /mnt/vm_8tb/b70/build/strata-ab/packs/ista-gsq-rco-iq3-xxs --native /mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf --ple-gguf /mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf --ple-io direct --expert-parallel-device 1 --stream-experts --expert-profile /mnt/vm_8tb/b70/build/strata-ab/src/data/expert-profile-sycl.bin --expert-cache auto --vram-reserve-mib 1024 --prefill 12288 --no-prefill-borrow --max-context 200000 --kv int8 --spec 4 --mtp /mnt/vm_8tb/b70/build/strata-ab/mtp-bf16/rt --spec-min-p 0 --conversation-cache-mib 32768 --conversation-cache-slots 4 --suffix-draft 0 --lookup-chain 0 --mtp-max-t 4 --batch 2
+strata generate: PCIe probe: 9.8 GB/s host->device (best of 9.5 9.5 9.6 9.8) -> pcie_frac 0.27 (default 0.55)
+strata generate: this CPU has no AVX-512: the expert kernels run on AVX-2 (multi-token for the i-quant gate/up rows)
+strata generate: native pack: /mnt/vm_8tb/b70/build/strata-ab/packs/ista-gsq-rco-iq3-xxs experts (largest blob 2.33 MB), token embedding IQ3_S in mapped host memory (260 MiB, 0.3 s)
+strata generate: 1466 MiB of weights loaded from /mnt/vm_8tb/b70/build/strata-ab/packs/ista-gsq-rco-iq3-xxs in 2.8 s (302 canonical tensors skipped: served natively)
+strata generate: 300 native projection matrices, 1781.11 MiB of weights, in 1.2 s
+strata generate: PLE direct read probe: 79877 rows/s (fine)
+strata generate: the SSD is kept awake while rows are read: one page of the table after 100 ms without a read, until 60 s after the last request (STRATA_SSD_KEEPALIVE=0 turns it off)
+strata generate: profile /mnt/vm_8tb/b70/build/strata-ab/src/data/expert-profile-sycl.bin: 24576 ranked pairs, built for 24576 slots
+strata generate: PLE on, table 320001536 rows of /mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf
+strata generate: --batch-mtp: up to 2 proposals per slot per window (STRATA_BATCH_MTP_DEPTH, experimental)
+strata generate: --batch: 2 slot sessions on CUDA0 (2.82 GiB each); 20.11 GiB free
+strata generate: --batch 2: the slot sessions take 5.63 GiB of VRAM on CUDA0 that the expert cache would otherwise hold
+strata mtp: draft layer loaded, 1027 MiB of VRAM (experts 675, dense 111), files read in 1.46 s (537 MiB/s)
+strata mtp: shared draft weights, 241 MiB of private state and buffers
+strata mtp: shared draft weights, 241 MiB of private state and buffers
+strata: STRATA_BATCH_MTP_PLE_PREFETCH requested=0 mode=OFF slots=2 wired=0 table_open=1 slot_ple_ready=0 depth=2 vector_budget=6 cap=16 (experimental CPU prefetch)
+strata generate: experimental native Q5_K head, 437043200 bytes, in 0.4 s
+strata generate: GPU 0: Intel(R) Arc(TM) Pro B70 Graphics, compute capability 20.2
+strata generate: experts streamed from the GGUF on demand (--stream-experts): no host arena; every expert must fit the VRAM cache
+strata generate: 15 pool workers on logical processors 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15, the host thread on 0 (draining too) (--host-core first)
+strata trace: 18656 MiB free after the weights, the session and the drafter
+strata generate: STRATA_OWNED_PRICE=exact: the prompt path's own buffers for a 12288-token chunk: 5608 MiB (the 0.1.39 rule: 8320 MiB)
+strata generate: expert cache auto: 18.22 GiB free, 1024 MiB reserved (+11 MiB for the draft head) -> 5378 slots
+strata generate: per-layer slots use each layer's blob: 5378 uniform slots (11.67 GiB) -> 7152 slots, 149 per layer (11.63 GiB)
+strata generate: expert cache 7152 slots, 11.63 GiB of VRAM; policy is
+strata trace: 6746 MiB free after opening the expert cache
+strata generate: the GPU computes the experts in the cache; it rounds differently from the CPU,
+                 so a reply can differ slightly from a run without the cache (same quality:
+                 bench/results/2026-09-27-cache-parity).
+                 R4.2g PER-LAYER: each layer owns 149 slots (0..148).
+strata generate: expert parallel: this card holds 149 experts per layer, card 1 the other 363 (each layer's traffic dealt evenly between them)
+strata generate: profile fill: 11.63 GiB in 7.2 s (1.72 GB/s, serial)
+strata trace: 6746 MiB free after the profile fill
+strata generate: pre-filled 7152 of 7152 slots from the profile in 7.2 s (1723 MB/s); slot 0 verified
+strata generate: expert parallel: card 1 has 31.84 GiB free, its 17424 experts take 28.34 GiB (363 per layer)
+strata generate: expert parallel: card 1 holds 17424 experts (28.34 GiB, filled in 22.7 s); slot 0 verified
+strata trace: 6746 MiB free after the R4 hit path
+strata generate: R4 hit path ON - resident experts are computed on the GPU
+strata generate: 15 expert-pool workers + the host thread
+strata trace: 6746 MiB free after the expert cache and the graphs
+strata generate: session is up (engine 0.1.44.1)
+strata generate: token graph hit path: 7152 resident experts, decided on the device
+strata serve: the prompt path allocates its own buffers (too few cache slots to borrow)
+strata: copy engine: the prompt path's expert copies run on the GPU's copy engine (queue group 1), not the compute engine (STRATA_COPY_ENGINE=0 turns it off)
+strata prefill: EP row reduction enabled: one FP32 row per token returns; FP32 addition order changes (STRATA_EP_PREFILL_REDUCE=1)
+strata prefill: expert parallel: card 1 computes its experts' rows of each prompt chunk (1260 MiB of exchange regions); 2009 MiB left free on it
+strata trace: 1894 MiB free after the head and the prompt path
+strata verify: expert parallel with card 1: the peer computes the experts this card does not hold (inbox 23.0 KiB per group, spin bound 2000000)
+strata verify: window up to 8 tokens, 81.9 MiB of device buffers (100% VRAM resident: zero-doorbell graph)
+strata serve: STRATA_BATCH_MTP_PAIR_HEAD: the two slots share one two-column head call per draft depth (experimental, not measured in-serve)
+strata verify: batch windows of up to 2 sequences (layers [0, 48))
+strata trace: 1788 MiB free after the verifier and the drafter's binding
+strata serve: 1786 MiB of VRAM free with everything loaded
+strata trace: request 4060 0
+strata trace: prompt start 4059 -1
+strata batch prefill quantum: allocated 12288 requested 0 effective 12288 eligible 0 from 0 to 4053
+strata trace: prompt chunk 0 of 4053
+strata: prefill attention value pipeline selected (nq32 cap2051 INT8 page4)
+strata trace: read 4053 tokens (batched) in 3162.8 ms
+strata verify: captured the 4-token window (upload no error, sync no error)
+strata verify: captured the 2-token window (upload no error, sync no error)
+strata trace: read 6 tokens (windows) in 144.3 ms
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 4059 1
+strata verify: captured the 1-token window (upload no error, sync no error)
+strata trace: window 4060 4
+strata trace: window 4063 4
+strata trace: window 4064 4
+strata trace: window 4066 4
+strata trace: window 4070 4
+strata trace: window 4072 4
+strata trace: window 4075 4
+strata trace: window 4079 4
+strata trace: window 4083 4
+strata trace: window 4087 4
+strata trace: window 4088 4
+strata trace: window 4089 4
+strata trace: window 4091 4
+strata trace: window 4092 4
+strata trace: window 4093 4
+strata trace: window 4095 4
+strata trace: window 4096 4
+strata trace: window 4100 4
+strata trace: window 4101 4
+strata trace: window 4105 4
+strata trace: window 4106 4
+strata trace: window 4107 4
+strata trace: window 4108 4
+strata trace: window 4109 4
+strata trace: window 4111 4
+strata trace: window 4112 4
+strata trace: window 4116 4
+strata trace: window 4120 4
+strata trace: window 4124 4
+strata trace: window 4125 4
+strata trace: window 4128 4
+strata trace: window 4129 4
+strata trace: window 4131 4
+strata trace: window 4134 4
+strata trace: window 4136 4
+strata trace: window 4139 4
+strata trace: window 4142 4
+strata trace: window 4144 4
+strata trace: window 4145 4
+strata trace: window 4149 4
+strata trace: window 4151 4
+strata trace: window 4154 4
+strata trace: window 4158 4
+strata trace: window 4162 4
+strata trace: window 4165 4
+strata trace: window 4168 4
+strata trace: window 4169 4
+strata trace: window 4173 4
+strata trace: window 4174 4
+strata trace: window 4176 4
+strata trace: window 4177 4
+strata trace: window 4181 4
+strata trace: window 4185 4
+strata trace: window 4189 4
+strata trace: window 4190 4
+strata trace: window 4191 4
+strata trace: window 4193 4
+strata trace: window 4197 4
+strata trace: window 4199 4
+strata trace: window 4203 4
+strata trace: window 4206 4
+strata trace: window 4207 4
+strata trace: window 4209 4
+strata trace: window 4211 4
+strata trace: window 4215 4
+strata trace: window 4219 4
+strata trace: window 4223 4
+strata trace: window 4227 4
+strata trace: window 4229 4
+strata trace: window 4231 4
+strata trace: window 4235 4
+strata trace: window 4239 4
+strata trace: window 4243 4
+strata trace: window 4245 4
+strata trace: window 4246 4
+strata trace: window 4249 4
+strata trace: window 4253 4
+strata trace: window 4257 4
+strata trace: window 4261 4
+strata trace: window 4263 4
+strata trace: window 4267 4
+strata trace: window 4270 4
+strata trace: window 4274 4
+strata trace: window 4278 4
+strata trace: window 4279 4
+strata trace: window 4283 4
+strata trace: window 4287 4
+strata trace: window 4289 4
+strata trace: window 4293 4
+strata trace: window 4296 4
+strata trace: window 4298 4
+strata trace: window 4301 4
+strata trace: window 4305 4
+strata trace: window 4309 4
+strata trace: window 4313 4
+strata serve: prompt 4060 tokens = 0 reused + 4060 read in 3399 ms (1194.5 tok/s), 256 generated in 3484 ms (73.5 tok/s), drafts accepted 162 of 285, 1 checkpoints
+strata serve: conversation cache: parked 4317 tokens in 205.9 ms; parked=1 bytes=302104816 evictions=0 snapshot_bytes=302104816 reused_kv_bytes=0
+strata trace: request 4059 0
+strata trace: prompt start 4058 -1
+strata batch prefill quantum: allocated 12288 requested 0 effective 12288 eligible 0 from 0 to 4052
+strata trace: prompt chunk 0 of 4052
+strata trace: read 4052 tokens (batched) in 2757.9 ms
+strata trace: read 6 tokens (windows) in 57.5 ms
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 4058 1
+strata trace: window 4059 4
+strata trace: window 4062 4
+strata trace: window 4064 4
+strata trace: window 4065 4
+strata trace: window 4067 4
+strata trace: window 4069 4
+strata trace: window 4071 4
+strata trace: window 4072 4
+strata trace: window 4074 4
+strata trace: window 4078 4
+strata trace: window 4079 4
+strata trace: window 4082 4
+strata trace: window 4083 4
+strata trace: window 4084 4
+strata trace: window 4085 4
+strata trace: window 4088 4
+strata trace: window 4092 4
+strata trace: window 4093 4
+strata trace: window 4094 4
+strata trace: window 4096 4
+strata trace: window 4098 4
+strata trace: window 4099 4
+strata trace: window 4100 4
+strata trace: window 4102 4
+strata trace: window 4106 4
+strata trace: window 4109 4
+strata trace: window 4113 4
+strata trace: window 4117 4
+strata trace: window 4121 4
+strata trace: window 4122 4
+strata trace: window 4125 4
+strata trace: window 4126 4
+strata trace: window 4130 4
+strata trace: window 4134 4
+strata trace: window 4138 4
+strata trace: window 4140 4
+strata trace: window 4142 4
+strata trace: window 4144 4
+strata trace: window 4148 4
+strata trace: window 4151 4
+strata trace: window 4155 4
+strata trace: window 4157 4
+strata trace: window 4159 4
+strata trace: window 4163 4
+strata trace: window 4167 4
+strata trace: window 4168 4
+strata trace: window 4172 4
+strata trace: window 4174 4
+strata trace: window 4178 4
+strata trace: window 4179 4
+strata trace: window 4182 4
+strata trace: window 4183 4
+strata trace: window 4185 4
+strata trace: window 4186 4
+strata trace: window 4188 4
+strata trace: window 4192 4
+strata trace: window 4196 4
+strata trace: window 4199 4
+strata trace: window 4201 4
+strata trace: window 4202 4
+strata trace: window 4203 4
+strata trace: window 4204 4
+strata trace: window 4206 4
+strata trace: window 4209 4
+strata trace: window 4210 4
+strata trace: window 4214 4
+strata trace: window 4218 4
+strata trace: window 4222 4
+strata trace: window 4224 4
+strata trace: window 4227 4
+strata trace: window 4229 4
+strata trace: window 4232 4
+strata trace: window 4234 4
+strata trace: window 4235 4
+strata trace: window 4236 4
+strata trace: window 4237 4
+strata trace: window 4239 4
+strata trace: window 4242 4
+strata trace: window 4243 4
+strata trace: window 4245 4
+strata trace: window 4247 4
+strata trace: window 4248 4
+strata trace: window 4251 4
+strata trace: window 4255 4
+strata trace: window 4256 4
+strata trace: window 4258 4
+strata trace: window 4262 4
+strata trace: window 4266 4
+strata trace: window 4268 4
+strata trace: window 4269 4
+strata trace: window 4273 4
+strata trace: window 4277 4
+strata trace: window 4279 4
+strata trace: window 4283 4
+strata trace: window 4285 4
+strata trace: window 4286 4
+strata trace: window 4289 4
+strata trace: window 4293 4
+strata trace: window 4295 4
+strata trace: window 4296 4
+strata trace: window 4298 4
+strata trace: window 4299 4
+strata trace: window 4303 4
+strata trace: window 4307 4
+strata trace: window 4311 4
+strata serve: prompt 4059 tokens = 0 reused + 4059 read in 3124 ms (1299.2 tok/s), 256 generated in 3807 ms (67.2 tok/s), drafts accepted 150 of 315, 1 checkpoints
+strata serve: conversation cache: parked 4314 tokens in 203.2 ms; parked=2 bytes=604148560 evictions=0 snapshot_bytes=302043744 reused_kv_bytes=0
+strata trace: request 4059 0
+strata trace: prompt start 4058 -1
+strata batch prefill quantum: allocated 12288 requested 0 effective 12288 eligible 0 from 0 to 4052
+strata trace: prompt chunk 0 of 4052
+strata trace: read 4052 tokens (batched) in 2760.4 ms
+strata trace: read 6 tokens (windows) in 57.3 ms
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 4058 1
+strata trace: window 4059 4
+strata trace: window 4062 4
+strata trace: window 4063 4
+strata trace: window 4065 4
+strata trace: window 4069 4
+strata trace: window 4071 4
+strata trace: window 4072 4
+strata trace: window 4076 4
+strata trace: window 4079 4
+strata trace: window 4083 4
+strata trace: window 4086 4
+strata trace: window 4087 4
+strata trace: window 4091 4
+strata trace: window 4095 4
+strata trace: window 4097 4
+strata trace: window 4100 4
+strata trace: window 4101 4
+strata trace: window 4103 4
+strata trace: window 4107 4
+strata trace: window 4110 4
+strata trace: window 4111 4
+strata trace: window 4114 4
+strata trace: window 4115 4
+strata trace: window 4119 4
+strata trace: window 4120 4
+strata trace: window 4123 4
+strata trace: window 4126 4
+strata trace: window 4127 4
+strata trace: window 4128 4
+strata trace: window 4129 4
+strata trace: window 4130 4
+strata trace: window 4133 4
+strata trace: window 4136 4
+strata trace: window 4137 4
+strata trace: window 4139 4
+strata trace: window 4140 4
+strata trace: window 4141 4
+strata trace: window 4144 4
+strata trace: window 4148 4
+strata trace: window 4152 4
+strata trace: window 4153 4
+strata trace: window 4155 4
+strata trace: window 4158 4
+strata trace: window 4160 4
+strata trace: window 4163 4
+strata trace: window 4165 4
+strata trace: window 4167 4
+strata trace: window 4170 4
+strata trace: window 4173 4
+strata trace: window 4177 4
+strata trace: window 4179 4
+strata trace: window 4180 4
+strata trace: window 4183 4
+strata trace: window 4187 4
+strata trace: window 4191 4
+strata trace: window 4193 4
+strata trace: window 4197 4
+strata trace: window 4198 4
+strata trace: window 4199 4
+strata trace: window 4203 4
+strata trace: window 4207 4
+strata trace: window 4211 4
+strata trace: window 4215 4
+strata trace: window 4219 4
+strata trace: window 4223 4
+strata trace: window 4227 4
+strata trace: window 4229 4
+strata trace: window 4232 4
+strata trace: window 4233 4
+strata trace: window 4237 4
+strata trace: window 4238 4
+strata trace: window 4242 4
+strata trace: window 4246 4
+strata trace: window 4250 4
+strata trace: window 4252 4
+strata trace: window 4255 4
+strata trace: window 4259 4
+strata trace: window 4263 4
+strata trace: window 4265 4
+strata trace: window 4266 4
+strata trace: window 4269 4
+strata trace: window 4270 4
+strata trace: window 4273 4
+strata trace: window 4275 4
+strata trace: window 4279 4
+strata trace: window 4282 4
+strata trace: window 4284 4
+strata trace: window 4285 4
+strata trace: window 4289 4
+strata trace: window 4293 4
+strata trace: window 4294 4
+strata trace: window 4295 4
+strata trace: window 4299 4
+strata trace: window 4302 4
+strata trace: window 4304 4
+strata trace: window 4305 4
+strata trace: window 4308 4
+strata trace: window 4311 4
+strata trace: window 4313 4
+strata serve: prompt 4059 tokens = 0 reused + 4059 read in 3123 ms (1299.7 tok/s), 256 generated in 3592 ms (71.3 tok/s), drafts accepted 156 of 297, 1 checkpoints
+strata serve: conversation cache: parked 4314 tokens in 202.3 ms; parked=3 bytes=906192304 evictions=0 snapshot_bytes=302043744 reused_kv_bytes=0
+strata trace: request 4059 0
+strata trace: prompt start 4058 -1
+strata batch prefill quantum: allocated 12288 requested 0 effective 12288 eligible 0 from 0 to 4052
+strata trace: prompt chunk 0 of 4052
+strata trace: read 4052 tokens (batched) in 2765.9 ms
+strata trace: read 6 tokens (windows) in 57.7 ms
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 4058 1
+strata trace: window 4059 4
+strata trace: window 4062 4
+strata trace: window 4063 4
+strata trace: window 4065 4
+strata trace: window 4069 4
+strata trace: window 4073 4
+strata trace: window 4077 4
+strata trace: window 4079 4
+strata trace: window 4083 4
+strata trace: window 4086 4
+strata trace: window 4087 4
+strata trace: window 4091 4
+strata trace: window 4095 4
+strata trace: window 4097 4
+strata trace: window 4100 4
+strata trace: window 4101 4
+strata trace: window 4103 4
+strata trace: window 4107 4
+strata trace: window 4110 4
+strata trace: window 4111 4
+strata trace: window 4114 4
+strata trace: window 4115 4
+strata trace: window 4117 4
+strata trace: window 4121 4
+strata trace: window 4125 4
+strata trace: window 4126 4
+strata trace: window 4129 4
+strata trace: window 4130 4
+strata trace: window 4131 4
+strata trace: window 4133 4
+strata trace: window 4136 4
+strata trace: window 4139 4
+strata trace: window 4141 4
+strata trace: window 4142 4
+strata trace: window 4143 4
+strata trace: window 4144 4
+strata trace: window 4147 4
+strata trace: window 4151 4
+strata trace: window 4155 4
+strata trace: window 4156 4
+strata trace: window 4159 4
+strata trace: window 4163 4
+strata trace: window 4165 4
+strata trace: window 4167 4
+strata trace: window 4171 4
+strata trace: window 4172 4
+strata trace: window 4176 4
+strata trace: window 4177 4
+strata trace: window 4181 4
+strata trace: window 4185 4
+strata trace: window 4189 4
+strata trace: window 4193 4
+strata trace: window 4195 4
+strata trace: window 4196 4
+strata trace: window 4200 4
+strata trace: window 4204 4
+strata trace: window 4207 4
+strata trace: window 4208 4
+strata trace: window 4210 4
+strata trace: window 4214 4
+strata trace: window 4218 4
+strata trace: window 4220 4
+strata trace: window 4224 4
+strata trace: window 4226 4
+strata trace: window 4227 4
+strata trace: window 4231 4
+strata trace: window 4235 4
+strata trace: window 4239 4
+strata trace: window 4243 4
+strata trace: window 4247 4
+strata trace: window 4251 4
+strata trace: window 4253 4
+strata trace: window 4254 4
+strata trace: window 4258 4
+strata trace: window 4260 4
+strata trace: window 4264 4
+strata trace: window 4265 4
+strata trace: window 4267 4
+strata trace: window 4268 4
+strata trace: window 4272 4
+strata trace: window 4276 4
+strata trace: window 4280 4
+strata trace: window 4284 4
+strata trace: window 4287 4
+strata trace: window 4291 4
+strata trace: window 4295 4
+strata trace: window 4297 4
+strata trace: window 4300 4
+strata trace: window 4301 4
+strata trace: window 4302 4
+strata trace: window 4305 4
+strata trace: window 4306 4
+strata trace: window 4310 4
+strata serve: prompt 4059 tokens = 0 reused + 4059 read in 3130 ms (1296.7 tok/s), 256 generated in 3381 ms (75.7 tok/s), drafts accepted 162 of 279, 1 checkpoints
+strata serve: conversation cache: parked 4314 tokens in 212.4 ms; parked=4 bytes=1208236048 evictions=0 snapshot_bytes=302043744 reused_kv_bytes=0
+strata trace: request 32728 0
+strata trace: prompt start 32727 -1
+strata batch prefill quantum: allocated 12288 requested 0 effective 12288 eligible 0 from 0 to 32721
+strata trace: prompt chunk 0 of 12288
+strata trace: prompt chunk 0 of 12288
+strata QSA prefill tiled: enabled=0 nq=256 idx=4x128 R4 stride=50002 active=4097..50001 first_active=4097 tile=8 key_wg=256 SG32
+strata trace: prompt chunk 0 of 8145
+strata trace: read 32721 tokens (batched) in 19761.6 ms
+strata trace: read 6 tokens (windows) in 59.6 ms
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 32727 1
+strata trace: window 32728 4
+strata trace: window 32731 4
+strata trace: window 32732 4
+strata trace: window 32736 4
+strata trace: window 32740 4
+strata trace: window 32741 4
+strata trace: window 32745 4
+strata trace: window 32748 4
+strata trace: window 32749 4
+strata trace: window 32751 4
+strata trace: window 32755 4
+strata trace: window 32756 4
+strata trace: window 32757 4
+strata trace: window 32761 4
+strata trace: window 32765 4
+strata trace: window 32766 4
+strata trace: window 32768 4
+strata trace: window 32769 4
+strata trace: window 32771 4
+strata trace: window 32774 4
+strata trace: window 32775 4
+strata trace: window 32778 4
+strata trace: window 32781 4
+strata trace: window 32785 4
+strata trace: window 32789 4
+strata trace: window 32792 4
+strata trace: window 32793 4
+strata trace: window 32796 4
+strata trace: window 32799 4
+strata trace: window 32800 4
+strata trace: window 32804 4
+strata trace: window 32806 4
+strata trace: window 32808 4
+strata trace: window 32812 4
+strata trace: window 32813 4
+strata trace: window 32815 4
+strata trace: window 32817 4
+strata trace: window 32821 4
+strata trace: window 32822 4
+strata trace: window 32823 4
+strata trace: window 32827 4
+strata trace: window 32829 4
+strata trace: window 32833 4
+strata trace: window 32837 4
+strata trace: window 32840 4
+strata trace: window 32842 4
+strata trace: window 32844 4
+strata trace: window 32846 4
+strata trace: window 32849 4
+strata trace: window 32851 4
+strata trace: window 32855 4
+strata trace: window 32859 4
+strata trace: window 32860 4
+strata trace: window 32863 4
+strata trace: window 32865 4
+strata trace: window 32869 4
+strata trace: window 32872 4
+strata trace: window 32876 4
+strata trace: window 32879 4
+strata trace: window 32882 4
+strata trace: window 32886 4
+strata trace: window 32890 4
+strata trace: window 32894 4
+strata trace: window 32898 4
+strata trace: window 32900 4
+strata trace: window 32902 4
+strata trace: window 32904 4
+strata trace: window 32905 4
+strata trace: window 32906 4
+strata trace: window 32907 4
+strata trace: window 32911 4
+strata trace: window 32912 4
+strata trace: window 32913 4
+strata trace: window 32917 4
+strata trace: window 32919 4
+strata trace: window 32922 4
+strata trace: window 32926 4
+strata trace: window 32930 4
+strata trace: window 32934 4
+strata trace: window 32936 4
+strata trace: window 32937 4
+strata trace: window 32941 4
+strata trace: window 32945 4
+strata trace: window 32946 4
+strata trace: window 32950 4
+strata trace: window 32954 4
+strata trace: window 32955 4
+strata trace: window 32956 4
+strata trace: window 32957 4
+strata trace: window 32959 4
+strata trace: window 32961 4
+strata trace: window 32965 4
+strata trace: window 32969 4
+strata trace: window 32973 4
+strata trace: window 32977 4
+strata trace: window 32981 4
+strata serve: prompt 32728 tokens = 0 reused + 32728 read in 20134 ms (1625.5 tok/s), 256 generated in 3672 ms (69.7 tok/s), drafts accepted 161 of 288, 2 checkpoints
+strata serve: conversation cache: parked 32985 tokens in 577.0 ms; parked=4 bytes=1764216032 evictions=1 snapshot_bytes=858084800 reused_kv_bytes=0
+strata trace: request 32728 0
+strata trace: prompt start 32727 -1
+strata batch prefill quantum: allocated 12288 requested 0 effective 12288 eligible 0 from 0 to 32721
+strata trace: prompt chunk 0 of 12288
+strata trace: prompt chunk 0 of 12288
+strata trace: prompt chunk 0 of 8145
+strata trace: read 32721 tokens (batched) in 19802.7 ms
+strata trace: read 6 tokens (windows) in 60.5 ms
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 32727 1
+strata trace: window 32728 4
+strata trace: window 32731 4
+strata trace: window 32732 4
+strata trace: window 32734 4
+strata trace: window 32738 4
+strata trace: window 32742 4
+strata trace: window 32746 4
+strata trace: window 32748 4
+strata trace: window 32752 4
+strata trace: window 32755 4
+strata trace: window 32756 4
+strata trace: window 32759 4
+strata trace: window 32762 4
+strata trace: window 32763 4
+strata trace: window 32765 4
+strata trace: window 32769 4
+strata trace: window 32773 4
+strata trace: window 32777 4
+strata trace: window 32778 4
+strata trace: window 32779 4
+strata trace: window 32781 4
+strata trace: window 32784 4
+strata trace: window 32785 4
+strata trace: window 32789 4
+strata trace: window 32793 4
+strata trace: window 32797 4
+strata trace: window 32799 4
+strata trace: window 32800 4
+strata trace: window 32802 4
+strata trace: window 32804 4
+strata trace: window 32805 4
+strata trace: window 32806 4
+strata trace: window 32807 4
+strata trace: window 32808 4
+strata trace: window 32809 4
+strata trace: window 32810 4
+strata trace: window 32811 4
+strata trace: window 32812 4
+strata trace: window 32814 4
+strata trace: window 32818 4
+strata trace: window 32821 4
+strata trace: window 32824 4
+strata trace: window 32828 4
+strata trace: window 32831 4
+strata trace: window 32834 4
+strata trace: window 32836 4
+strata trace: window 32840 4
+strata trace: window 32844 4
+strata trace: window 32845 4
+strata trace: window 32849 4
+strata trace: window 32851 4
+strata trace: window 32853 4
+strata trace: window 32854 4
+strata trace: window 32856 4
+strata trace: window 32860 4
+strata trace: window 32864 4
+strata trace: window 32866 4
+strata trace: window 32868 4
+strata trace: window 32872 4
+strata trace: window 32876 4
+strata trace: window 32879 4
+strata trace: window 32883 4
+strata trace: window 32887 4
+strata trace: window 32889 4
+strata trace: window 32893 4
+strata trace: window 32897 4
+strata trace: window 32901 4
+strata trace: window 32903 4
+strata trace: window 32906 4
+strata trace: window 32907 4
+strata trace: window 32908 4
+strata trace: window 32910 4
+strata trace: window 32911 4
+strata trace: window 32915 4
+strata trace: window 32919 4
+strata trace: window 32923 4
+strata trace: window 32925 4
+strata trace: window 32927 4
+strata trace: window 32930 4
+strata trace: window 32931 4
+strata trace: window 32932 4
+strata trace: window 32936 4
+strata trace: window 32940 4
+strata trace: window 32943 4
+strata trace: window 32944 4
+strata trace: window 32945 4
+strata trace: window 32948 4
+strata trace: window 32949 4
+strata trace: window 32950 4
+strata trace: window 32954 4
+strata trace: window 32955 4
+strata trace: window 32959 4
+strata trace: window 32963 4
+strata trace: window 32965 4
+strata trace: window 32966 4
+strata trace: window 32969 4
+strata trace: window 32970 4
+strata trace: window 32973 4
+strata trace: window 32974 4
+strata trace: window 32978 4
+strata trace: window 32981 4
+strata serve: prompt 32728 tokens = 0 reused + 32728 read in 20576 ms (1590.6 tok/s), 256 generated in 3867 ms (66.2 tok/s), drafts accepted 154 of 303, 2 checkpoints
+strata serve: conversation cache: parked 32983 tokens in 593.7 ms; parked=4 bytes=2320196024 evictions=2 snapshot_bytes=858023736 reused_kv_bytes=0
+strata trace: request 32728 0
+strata trace: prompt start 32727 -1
+strata batch prefill quantum: allocated 12288 requested 0 effective 12288 eligible 0 from 0 to 32721
+strata trace: prompt chunk 0 of 12288
+strata trace: prompt chunk 0 of 12288
+strata trace: prompt chunk 0 of 8145
+strata trace: read 32721 tokens (batched) in 19803.0 ms
+strata trace: read 6 tokens (windows) in 60.3 ms
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 32727 1
+strata trace: window 32728 4
+strata trace: window 32731 4
+strata trace: window 32732 4
+strata trace: window 32734 4
+strata trace: window 32738 4
+strata trace: window 32742 4
+strata trace: window 32746 4
+strata trace: window 32748 4
+strata trace: window 32752 4
+strata trace: window 32755 4
+strata trace: window 32756 4
+strata trace: window 32759 4
+strata trace: window 32762 4
+strata trace: window 32763 4
+strata trace: window 32764 4
+strata trace: window 32766 4
+strata trace: window 32767 4
+strata trace: window 32770 4
+strata trace: window 32774 4
+strata trace: window 32777 4
+strata trace: window 32778 4
+strata trace: window 32779 4
+strata trace: window 32781 4
+strata trace: window 32782 4
+strata trace: window 32786 4
+strata trace: window 32790 4
+strata trace: window 32791 4
+strata trace: window 32792 4
+strata trace: window 32796 4
+strata trace: window 32797 4
+strata trace: window 32798 4
+strata trace: window 32799 4
+strata trace: window 32801 4
+strata trace: window 32805 4
+strata trace: window 32808 4
+strata trace: window 32811 4
+strata trace: window 32813 4
+strata trace: window 32815 4
+strata trace: window 32816 4
+strata trace: window 32817 4
+strata trace: window 32819 4
+strata trace: window 32820 4
+strata trace: window 32822 4
+strata trace: window 32823 4
+strata trace: window 32827 4
+strata trace: window 32829 4
+strata trace: window 32830 4
+strata trace: window 32831 4
+strata trace: window 32834 4
+strata trace: window 32835 4
+strata trace: window 32836 4
+strata trace: window 32837 4
+strata trace: window 32841 4
+strata trace: window 32843 4
+strata trace: window 32844 4
+strata trace: window 32846 4
+strata trace: window 32847 4
+strata trace: window 32849 4
+strata trace: window 32850 4
+strata trace: window 32852 4
+strata trace: window 32856 4
+strata trace: window 32857 4
+strata trace: window 32861 4
+strata trace: window 32865 4
+strata trace: window 32869 4
+strata trace: window 32873 4
+strata trace: window 32876 4
+strata trace: window 32877 4
+strata trace: window 32878 4
+strata trace: window 32880 4
+strata trace: window 32884 4
+strata trace: window 32888 4
+strata trace: window 32890 4
+strata trace: window 32894 4
+strata trace: window 32897 4
+strata trace: window 32901 4
+strata trace: window 32905 4
+strata trace: window 32909 4
+strata trace: window 32912 4
+strata trace: window 32915 4
+strata trace: window 32919 4
+strata trace: window 32923 4
+strata trace: window 32925 4
+strata trace: window 32928 4
+strata trace: window 32929 4
+strata trace: window 32933 4
+strata trace: window 32934 4
+strata trace: window 32935 4
+strata trace: window 32939 4
+strata trace: window 32943 4
+strata trace: window 32947 4
+strata trace: window 32948 4
+strata trace: window 32950 4
+strata trace: window 32951 4
+strata trace: window 32954 4
+strata trace: window 32955 4
+strata trace: window 32958 4
+strata trace: window 32960 4
+strata trace: window 32961 4
+strata trace: window 32965 4
+strata trace: window 32968 4
+strata trace: window 32970 4
+strata trace: window 32974 4
+strata trace: window 32975 4
+strata trace: window 32976 4
+strata trace: window 32980 4
+strata trace: window 32981 4
+strata serve: prompt 32728 tokens = 0 reused + 32728 read in 20595 ms (1589.1 tok/s), 256 generated in 4095 ms (62.5 tok/s), drafts accepted 150 of 321, 2 checkpoints
+strata serve: conversation cache: parked 32985 tokens in 589.1 ms; parked=4 bytes=2876237080 evictions=3 snapshot_bytes=858084800 reused_kv_bytes=0
+strata trace: request 25 0
+strata trace: prompt start 24 -1
+strata trace: read 18 tokens (windows) in 147.3 ms
+strata trace: read 6 tokens (windows) in 55.5 ms
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 24 1
+strata serve: prompt 25 tokens = 0 reused + 25 read in 928 ms (26.9 tok/s), 1 generated in 26 ms (38.0 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata trace: request 26 0
+strata trace: prompt start 25 -1
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 25 1
+strata batch: slot 0 takes 26 tokens (copied in 192.6 ms)
+strata serve: prompt 26 tokens = 25 reused + 1 read in 0 ms (41517.9 tok/s), 1 generated in 21 ms (47.7 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata verify: captured the batch window over slots 0,0,0
+strata batch: 1 windows, avg 2.00 rows, 71.18 ms/window = run 70.37 (CUDA0 GPU-reach wait 0.00 + CPU experts 0.00) + commit 0.79 + emit 0.02; per layer-window: CPU experts 0.00, VRAM hits 0.00, PCIe 0.00; 28.1 rows/s over 71 ms of wall time (admissions included)
+strata batch pair head: 0 windows drafted as a pair, 0 deferred but solo
+strata serve: conversation cache: parked 26 tokens in 154.5 ms; parked=4 bytes=2810751760 evictions=4 snapshot_bytes=236558424 reused_kv_bytes=0
+strata trace: request 25 0
+strata trace: prompt start 24 -1
+strata trace: read 18 tokens (windows) in 148.8 ms
+strata trace: read 6 tokens (windows) in 55.7 ms
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 24 1
+strata batch: slot 1 takes 25 tokens (copied in 187.4 ms)
+strata serve: prompt 25 tokens = 0 reused + 25 read in 476 ms (52.5 tok/s), 1 generated in 21 ms (46.9 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata verify: captured the batch window over slots 1,1,1
+strata batch: 1 windows, avg 3.00 rows, 57.36 ms/window = run 56.54 (CUDA0 GPU-reach wait 0.00 + CPU experts 0.00) + commit 0.81 + emit 0.02; per layer-window: CPU experts 0.00, VRAM hits 0.00, PCIe 0.00; 52.3 rows/s over 57 ms of wall time (admissions included)
+strata batch pair head: 0 windows drafted as a pair, 0 deferred but solo
+strata serve: conversation cache: parked 25 tokens in 51.7 ms; parked=4 bytes=2189225380 evictions=5 snapshot_bytes=236558420 reused_kv_bytes=0
+strata trace: request 68 0
+strata trace: prompt start 67 -1
+strata verify: captured the 3-token window (upload no error, sync no error)
+strata trace: read 63 tokens (windows) in 510.1 ms
+strata trace: read 4 tokens (windows) in 30.4 ms
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 67 1
+strata trace: window 68 4
+strata trace: window 72 4
+strata trace: window 76 4
+strata trace: window 80 4
+strata trace: window 84 4
+strata trace: window 88 4
+strata trace: window 91 4
+strata trace: window 92 4
+strata trace: window 93 4
+strata trace: window 96 4
+strata trace: window 98 4
+strata trace: window 101 4
+strata trace: window 102 4
+strata trace: window 106 4
+strata trace: window 110 4
+strata trace: window 113 4
+strata trace: window 117 4
+strata trace: window 118 4
+strata trace: window 121 4
+strata trace: window 122 4
+strata trace: window 126 4
+strata trace: window 127 4
+strata trace: window 131 4
+strata trace: window 135 4
+strata serve: prompt 68 tokens = 0 reused + 68 read in 681 ms (99.9 tok/s), 70 generated in 878 ms (79.7 tok/s), drafts accepted 47 of 72, 1 checkpoints
+strata serve: conversation cache: parked 139 tokens in 51.9 ms; parked=4 bytes=1569470268 evictions=6 snapshot_bytes=238268624 reused_kv_bytes=0
+strata trace: request 311 0
+strata trace: prompt start 310 -1
+strata batch prefill quantum: allocated 12288 requested 0 effective 12288 eligible 0 from 0 to 294
+strata trace: prompt chunk 0 of 294
+strata trace: read 294 tokens (batched) in 1178.8 ms
+strata trace: read 16 tokens (windows) in 121.3 ms
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 310 1
+strata trace: window 311 4
+strata trace: window 315 4
+strata trace: window 319 4
+strata trace: window 323 4
+strata trace: window 327 4
+strata serve: prompt 311 tokens = 0 reused + 311 read in 1432 ms (217.2 tok/s), 21 generated in 201 ms (104.4 tok/s), drafts accepted 15 of 15, 1 checkpoints
+strata trace: request 379 0
+strata trace: prompt start 378 -1
+strata trace: read 41 tokens (windows) in 329.4 ms
+strata trace: read 6 tokens (windows) in 54.6 ms
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 378 1
+strata trace: window 379 4
+strata trace: window 381 4
+strata trace: window 385 4
+strata trace: window 389 4
+strata trace: window 393 4
+strata trace: window 395 4
+strata trace: window 399 4
+strata serve: prompt 379 tokens = 331 reused + 48 read in 423 ms (113.5 tok/s), 25 generated in 271 ms (92.3 tok/s), drafts accepted 17 of 21, 2 checkpoints
+strata serve final: ple io: 1889472 rows, 94.6% row-cache hits, 36594 SSD reads (153.2 MB), read p50 299 us p99 2617 us, blocked 288.876 ms total (submit 165.141 ms), cache 36599/1048576 rows, SSD kept awake by 1436 reads (slowest 9.1 ms), prefetch_gathers=807 prefetch_tokens=3161

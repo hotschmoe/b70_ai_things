@@ -1,0 +1,48 @@
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "hotschmoe-dd",
+      "object": "model",
+      "status": {
+        "value": "loaded"
+      },
+      "meta": {
+        "n_ctx": 200000
+      },
+      "architecture": {
+        "input_modalities": [
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ]
+      },
+      "aliases": [
+        "qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata"
+      ]
+    },
+    {
+      "id": "qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata",
+      "object": "model",
+      "status": {
+        "value": "loaded"
+      },
+      "meta": {
+        "n_ctx": 200000
+      },
+      "architecture": {
+        "input_modalities": [
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ]
+      },
+      "aliases": [
+        "qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata"
+      ],
+      "alias_of": "hotschmoe-dd"
+    }
+  ]
+}

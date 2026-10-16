@@ -1,0 +1,24 @@
+{
+  "command": [
+    "systemd-run",
+    "--user",
+    "--unit=strata-attn-value-fixed-s113-mode0",
+    "--collect",
+    "--setenv=B70_S113_CONTAINER=strata-s113-mode0",
+    "--property=WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things",
+    "--property=StandardOutput=append:/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/server.log",
+    "--property=StandardError=append:/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/server.log",
+    "/bin/bash",
+    "-c",
+    "exec 7>&-; exec /bin/bash \"$1\" \"$2\"",
+    "bash",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/harness-prep/launch_stage.sh",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/config.json"
+  ],
+  "exit": 0,
+  "stdout": "",
+  "stderr": "Running as unit: strata-attn-value-fixed-s113-mode0.service; invocation ID: 588352613f5d40479643ecb25ea5837e\n",
+  "unit": "strata-attn-value-fixed-s113-mode0",
+  "container": "strata-s113-mode0",
+  "epoch_ns": 1792111279714870604
+}

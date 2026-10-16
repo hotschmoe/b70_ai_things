@@ -1,0 +1,58 @@
+{
+  "arms": {
+    "0": {
+      "exe": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/strata-q6-a4-s107",
+      "sha256": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca"
+    },
+    "1": {
+      "exe": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/strata-q6-a4-s107",
+      "sha256": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca"
+    }
+  },
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "same_binary": true,
+  "HC_state": "COMMON_LO_ONCE_S51",
+  "S49_state": "OFF_BOTH",
+  "native": {
+    "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+    "sibling_path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+    "resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+    "expected_sha256": "219ea929900dfa9ef091f3aa473fdba6874b65fcb36526d7d851ac9e95856d15",
+    "size_bytes": 47039860096,
+    "sibling_resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+    "sibling_expected_sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+    "payload_SHA_verification": "ROOT_COPY_CLOSURE_REQUIRED_BEFORE_START;config_stat_is_not_hash_proof"
+  },
+  "base_config_sha256": "5883bf0beb661eb2e6603d49aee2fc910b87c9f3d82d8a97b1c07073a01d6901",
+  "root_binary_audit_required": true,
+  "ambient_attention_routes": {
+    "STRATA_PROMPT_ATTN_XMX": "0",
+    "STRATA_KV_ROT": "0"
+  },
+  "containers": {
+    "0": "strata-s113-mode0",
+    "1": "strata-s113-mode1"
+  },
+  "warm4K_requests": 1,
+  "warm_output_tokens": 256,
+  "warm_tokenization": "OBSERVE_AND_MATCH_NEW_TAG_NO_OLD_COUNT_ASSUMPTION",
+  "fixed_work_args": {
+    "--suffix-draft": "0",
+    "--lookup-chain": "0",
+    "--spec": "4",
+    "--mtp-max-t": "4",
+    "--spec-min-p": "0"
+  },
+  "request_spec_min_p": 0,
+  "prefill_cases": [
+    "p4096",
+    "p32768"
+  ],
+  "prefill_repeats": 3,
+  "prefill_completion_tokens": 256,
+  "common_trace": "STRATA_TRACE1_PROMPT_START_ONLY_CPU_RING_ABSENT",
+  "arm_difference": "STRATA_ATTN_VALUE_PIPELINE0/1 and arm-local log/container/service names only",
+  "capture_scope": "source/build/config+observed first-emission request; ON-only value HOST marker once from NEW unmeasured4K warm through all prefills+raw native part headers+successful use/no errors; no independent GPU-dispatch/call-count visibility",
+  "latency_scope": "client wall/SSE content-event gaps; matched TRACE1 CPU logging, CPU ring/profile absent; not token ITL or device-only service",
+  "candidate_scope": "NEW fixed-policy discriminator, not S94 clearance or proven cause fix; defaultOFF resident-mode0/fullwidth nq32/cap2051/INT8/page4; QSA/Q6A4/CENTER/IQ2/wholepairgraph0; no promotion"
+}

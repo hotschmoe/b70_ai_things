@@ -1,0 +1,57 @@
+{
+  "request": {
+    "model": "hotschmoe-dd",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Compute 23 times 17. Give just the result after reasoning."
+      }
+    ],
+    "max_tokens": 256,
+    "temperature": 0,
+    "chat_template_kwargs": {
+      "enable_thinking": true
+    },
+    "strata_tune": {
+      "spec_min_p": 0
+    }
+  },
+  "response": {
+    "id": "chatcmpl-efdcd3e9bce045b3885c1194",
+    "object": "chat.completion",
+    "created": 1792111742,
+    "model": "hotschmoe-dd",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "391",
+          "reasoning_content": "We need answer user: \"Compute 23 times 17. Give just the result after reasoning.\" Need likely provide just result? They say after reasoning maybe final just result. Need compute 23*17 = 391. Need final only 391? Ensure no extra.\n"
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 68,
+      "completion_tokens": 70,
+      "total_tokens": 138,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 68,
+      "prompt_ms": 680.8,
+      "prompt_per_token_ms": 10.012,
+      "prompt_per_second": 99.9,
+      "predicted_n": 70,
+      "predicted_ms": 878.5,
+      "predicted_per_token_ms": 12.55,
+      "predicted_per_second": 79.7,
+      "draft_n": 72,
+      "draft_n_accepted": 47
+    }
+  }
+}

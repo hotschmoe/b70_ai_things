@@ -1,0 +1,67 @@
+gpu-run: [b70s4dayz] acquired card(s) 0 1 -> docker run --rm -i --name strata-s113-mode0 --cidfile /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/attempt.cid --network host --cap-add SYS_PTRACE --memory 90g --device /dev/dri --ulimit memlock=-1 -v /mnt/vm_8tb/b70/build/strata-ab:/mnt/vm_8tb/b70/build/strata-ab -v /mnt/vm_8tb/b70/results:/mnt/vm_8tb/b70/results -v /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/config.json:/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/config.json:ro -v /mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-s:/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-s:ro -v /mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-xxs:/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-xxs:ro -v /mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco:/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco:ro -e ONEAPI_DEVICE_SELECTOR=level_zero:* -e SYCL_CACHE_PERSISTENT=0 -e ZES_ENABLE_SYSMAN=1 -e STRATA_VERIFY_DEVICE_PLAN=1 -e STRATA_VERIFY_NO_HOST=1 -e STRATA_MIRROR_MIB=0 -e STRATA_STAGE_TRIM=1 -e STRATA_KV_WIDE_HOST=0 -e STRATA_STAGER_THREADS=12 --entrypoint bash sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2 -lc source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; cd "$3"; exec "$1/venv/bin/python" sycl/serve/server_intel.py --engine strata --config "$2" --host 127.0.0.1 --port 18085 bash /mnt/vm_8tb/b70/build/strata-ab /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/config.json /mnt/vm_8tb/b70/build/strata-ab/src-ep
+loading the model (the first start takes a minute or two) ...
+[strata] GPUs [0, 1]: the cards compute each layer's experts together (--expert-parallel-device)
+[strata] starting the engine: reading the model's weights ...
+[strata] streaming the experts from the model files into the GPU's memory (and a pinned RAM mirror for what does not fit); the first start takes a few minutes ...
+[strata] filling the GPU's expert cache (7152 experts, 11.63 GiB of VRAM) ...
+[strata] still starting (29 s) - please wait ...
+[strata] still starting (49 s) - please wait ...
+[strata] almost ready ...
+[strata] model aliases: qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata
+ready: http://127.0.0.1:18085/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/messages, context 200000 tokens)
+       open http://127.0.0.1:18085/ in a browser to chat; close this window to stop the model
+[strata] reading the prompt: 4,053 of 4,060 tokens, 3 s so far
+[strata] answering: 47 of max 256 tokens, 64.7 tok/s, 4 s
+[strata] answering: 115 of max 256 tokens, 66.3 tok/s, 5 s
+[strata] answering: 191 of max 256 tokens, 69.6 tok/s, 6 s
+[strata] done: 256 tokens in 7 s (74.6 tok/s) (length, cancel=False)
+[strata] reading the prompt: 4,052 of 4,059 tokens, 3 s so far
+[strata] answering: 45 of max 256 tokens, 51.9 tok/s, 4 s
+[strata] answering: 126 of max 256 tokens, 67.2 tok/s, 5 s
+[strata] answering: 188 of max 256 tokens, 65.2 tok/s, 6 s
+[strata] done: 256 tokens in 7 s (67.6 tok/s) (length, cancel=False)
+[strata] reading the prompt: 4,052 of 4,059 tokens, 3 s so far
+[strata] answering: 62 of max 256 tokens, 72.0 tok/s, 4 s
+[strata] answering: 123 of max 256 tokens, 65.8 tok/s, 5 s
+[strata] answering: 209 of max 256 tokens, 72.5 tok/s, 6 s
+[strata] done: 256 tokens in 7 s (71.7 tok/s) (length, cancel=False)
+[strata] reading the prompt: 4,052 of 4,059 tokens, 3 s so far
+[strata] answering: 64 of max 256 tokens, 74.4 tok/s, 4 s
+[strata] answering: 136 of max 256 tokens, 72.5 tok/s, 5 s
+[strata] answering: 215 of max 256 tokens, 74.5 tok/s, 6 s
+[strata] done: 256 tokens in 7 s (76.2 tok/s) (length, cancel=False)
+[strata] reading the prompt: 12,288 of 32,728 tokens, 7 s so far
+[strata] reading the prompt: 24,576 of 32,728 tokens, 15 s so far
+[strata] reading the prompt: 32,721 of 32,728 tokens, 21 s so far
+[strata] answering: 52 of max 256 tokens, 62.7 tok/s, 22 s
+[strata] answering: 123 of max 256 tokens, 66.2 tok/s, 23 s
+[strata] answering: 196 of max 256 tokens, 67.9 tok/s, 24 s
+[strata] done: 256 tokens in 24 s (70.1 tok/s) (length, cancel=False)
+[strata] reading the prompt: 12,288 of 32,728 tokens, 8 s so far
+[strata] reading the prompt: 24,576 of 32,728 tokens, 15 s so far
+[strata] reading the prompt: 32,721 of 32,728 tokens, 21 s so far
+[strata] answering: 58 of max 256 tokens, 69.6 tok/s, 22 s
+[strata] answering: 119 of max 256 tokens, 63.9 tok/s, 23 s
+[strata] answering: 197 of max 256 tokens, 68.1 tok/s, 24 s
+[strata] done: 256 tokens in 25 s (66.6 tok/s) (length, cancel=False)
+[strata] reading the prompt: 12,288 of 32,728 tokens, 8 s so far
+[strata] reading the prompt: 24,576 of 32,728 tokens, 15 s so far
+[strata] reading the prompt: 32,721 of 32,728 tokens, 21 s so far
+[strata] answering: 53 of max 256 tokens, 63.6 tok/s, 22 s
+[strata] answering: 108 of max 256 tokens, 58.1 tok/s, 23 s
+[strata] answering: 175 of max 256 tokens, 60.6 tok/s, 24 s
+[strata] answering: 248 of max 256 tokens, 63.3 tok/s, 25 s
+[strata] done: 256 tokens in 25 s (62.9 tok/s) (length, cancel=False)
+[strata] answering: 3 of max 32 tokens, 10.1 tok/s, 1 s
+[strata] done: 4 tokens in 1 s (13.4 tok/s) (stop, cancel=False)
+[strata] reading the prompt: 18 of 25 tokens, 2 s so far
+[strata] done: 4 tokens in 2 s (15.4 tok/s) (stop, cancel=False)
+[strata] thinking: 27 of max 256 tokens, 84.8 tok/s, 1 s
+[strata] done: 70 tokens in 2 s (81.6 tok/s) (stop, cancel=False)
+[strata] reading the prompt: 294 of 311 tokens, 1 s so far
+[strata] done: 21 tokens in 2 s (116.4 tok/s) (stop, cancel=False)
+[strata] done: 25 tokens in 1 s (100.1 tok/s) (stop, cancel=False)
+
+[strata] stopping (Ctrl+C again to end the engine at once) ...
+[strata] stopped
+gpu-run: [b70s4dayz] done in 179s (exit 0)

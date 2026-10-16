@@ -24935,3 +24935,38 @@ mismatch, scratchzero/retry afterfailure, and historical cycle multiplication
 as current removablebudget. Targets still unmet/S30RAMrecovery retained.
 Evidence: strata/flash-next/lowlevel_probe/greedy_top1_s112/ and
  docs/20261016_strata_greedy_top1.md.
+
+
+## 2026-10-16 S113: attention-value passes new fixed-policy prefill comparison
+
+CONFIG -> Existing same S107main064b63ce, valueflag0/1ONLY; allothercandidatesOFF.
+Native suffix0/lookup0/spec4/mtpmax4/minp0; HTTPexplicitminp0. Headpair/depth2/
+EP149-363 allresident/2x200kINT8/32GiBparking/DirectPLE/prefill12288 common.
+No build/sourcechange inS113. New4Kwarm label samecharacterlength actual4060
+tokens BOTH; six unchangedtimedprompts4059/32728,256out/cache0 each.
+COMMAND -> Rootall6controller/source/pin/identityread and independentaudit;
+explicit sameboot modelstat+S107full/S112card0healthcontinuitypreflight. OFF
+thenON onefreshprocess each; warm7.074/7.070s, six-timedphase95.203/93.468s,
+functionals6.031/6.060s, normalstop+fullhealth58.101/58.396s. CPUquietoutside
+finite timings/serverpairleaseonly; rootfinallydriver alwaysnormalcleans.
+RESULT -> All7warm/timed responsepairs match fullrequest/text/concatenatedSSE
+content/usage/cache/prompt/output/draftoffered+accepted/nativeparts/captures
+before nextONrequest. ValueHOSTmarkeronceONbywarm/noneOFF, notGPUcallcount.
+Actualnativeargv/env/loadedlibstdc++/maps identitymatched; concurrentmath/
+reasoning/toolroundtripPASSboth. NormalTERM->QUIT/diagnostic/fullCID+NAMEgone/
+wrapper0/prestopRunning-notOOM/freshpercard+compiledhealth0 both;compare0allgates.
+Median nativeprompttok/s4K1294.9->1299.2(+.3321%);32K1548.9->1590.6(+2.6922%).
+Promptms3134.5->3124.3/21129.3->20576.2; clientTTFT3.16453->3.15428s/
+21.19172->20.63773s. Fixedorder3nestedrequests/shape, notindependentsignificance/
+stability/p95/rawtokenID/SSEchunkboundary ornewC2decode/cachequalification.
+VERDICT -> Retainmatchedoptin/defaultOFF/noimmediaterepeat/fullcachecampaign/
+shelfupstreamspeedpromotion. S94FAILED_NATIVE_WORK_MATCH/causeunresolved
+unchanged; fixedpolicy didnotproveitscause. Actualpost claude-opus-5-5
+55.236s/claude-fable-5-1 64.737s/rootread agree. NextseparateS114MTPintegration
+and HCexisting-UP/reduceofflineISAfirst; no HCimplementation/build/GPU from
+sourcecount. Rootrejects universalnegativezero/sourcebit-equivalence claims;
+extra+0/division/denorm/nonfinite/nativeexp remain obligations, absentmetadata
+unknown. No profiler/rawtraceparse/modelpayloadhash/dailyrestore/retry/reset.
+Evidence: strata/flash-next/lowlevel_probe/attention_value_fixed_policy_s113/
+ and docs/20261016_strata_attention_value_fixed_policy.md. Targetsremainunmet,
+S30boundedtrueRAMrestore retained; no default orqualification substitution.

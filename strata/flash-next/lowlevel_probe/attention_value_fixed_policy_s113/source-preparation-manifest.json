@@ -1,0 +1,89 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_QUEUED_NOT_GPU_AUTHORIZATION",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep",
+  "files": [
+    {
+      "path": "FROZEN.txt",
+      "bytes": 142,
+      "sha256": "d13ea604f68c856b82a74d95ae92b37c05109a5a0ce438194b726eadef3c2b19"
+    },
+    {
+      "path": "README.txt",
+      "bytes": 5558,
+      "sha256": "c8f86e3ecccf4f9049b4bc85d90cbe55dbbdc594f88296294fee8bd6a4e918b9"
+    },
+    {
+      "path": "artifact-continuity.json",
+      "bytes": 1389,
+      "sha256": "9d9c4ba6eba4b76d23e1c053e8405b8c1874a1270dc1e813c66d3b28e4d75e84"
+    },
+    {
+      "path": "controller-diff.patch",
+      "bytes": 51194,
+      "sha256": "f446f6cf71b34b95dc38d20f2a5e3f450905ae71e5472e62008d5a5bbd3a90ed"
+    },
+    {
+      "path": "expected-source.sha256",
+      "bytes": 2841,
+      "sha256": "8e7f9a34221e14cdcb10a5b51d686d72f4c9b6d97b65ee997a11da87917d0582"
+    },
+    {
+      "path": "harness-prep/client.py",
+      "bytes": 11103,
+      "sha256": "2799e59dd01111a48fbd2ee08b6171f4b04ea600f40ff28a63807e41645ed869"
+    },
+    {
+      "path": "harness-prep/compare.py",
+      "bytes": 8796,
+      "sha256": "f55132df9ecf8ff6a36c62aaee7971129315f372b802a3ca6a655878dec848af"
+    },
+    {
+      "path": "harness-prep/launch_stage.sh",
+      "bytes": 1881,
+      "sha256": "ecdee79b6e8eeef984c3121e9967f7c59e67fd7bd824c1c3df28791ef94d5a23"
+    },
+    {
+      "path": "harness-prep/make_configs.py",
+      "bytes": 4849,
+      "sha256": "f5d1c98f9235b2c088a439c3df2b81a69c6c8523947842520bffcd29702575d9"
+    },
+    {
+      "path": "harness-prep/start_arm.py",
+      "bytes": 8906,
+      "sha256": "6d77f00a6becf1d3fb7b3163245ef5a30cf85843445bc3c63448ea7823317f4e"
+    },
+    {
+      "path": "harness-prep/stop_and_health.py",
+      "bytes": 6382,
+      "sha256": "2a9366d86899ba17818df2248ffeb27bf7d92944c6ff42d3b037fb7f830b77eb"
+    },
+    {
+      "path": "source-only-validation.json",
+      "bytes": 467,
+      "sha256": "a20d9c86aaeadc4c7561db64cca8abae916e292d70681f58936f4dcef28cd568"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 3735,
+      "sha256": "db05328a213c9e23cfb5fcca7f0ce6ec4ecac3d56435bf4508139450d469785b"
+    },
+    {
+      "path": "timed-input-pins.json",
+      "bytes": 3138,
+      "sha256": "03520e5630c769b45033502951d89af26a4dfb73b8d68d6355c8322d3d797601"
+    },
+    {
+      "path": "warm-fixture-provenance.json",
+      "bytes": 714,
+      "sha256": "e88b654cbbbbf210c60942f12b9a78ef8f77faee22556f83a9658f455ff5b899"
+    },
+    {
+      "path": "warm-request.json",
+      "bytes": 21531,
+      "sha256": "6f1bcd5c7cd71d087dfde404d1b7777b8cd0b053c4654b1ac7b6835395036d9a"
+    }
+  ],
+  "main_source_edits": false,
+  "configs_generated": false,
+  "build_GPU_models_clients_or_largeartifact_hash": false
+}

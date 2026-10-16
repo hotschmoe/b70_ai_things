@@ -1,0 +1,1115 @@
+{
+  "status": "EXACT_ASCII_RECORD_COPIES_AND_FILTERED_POSTREVIEW_METADATA_COMPLETE",
+  "stage": "S113",
+  "source_runtime_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep",
+  "files": [
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/FROZEN.txt",
+      "target": "serving/FROZEN.txt",
+      "bytes": 142,
+      "sha256": "d13ea604f68c856b82a74d95ae92b37c05109a5a0ce438194b726eadef3c2b19"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/README.txt",
+      "target": "serving/README.txt",
+      "bytes": 5558,
+      "sha256": "c8f86e3ecccf4f9049b4bc85d90cbe55dbbdc594f88296294fee8bd6a4e918b9"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/artifact-continuity.json",
+      "target": "serving/artifact-continuity.json",
+      "bytes": 1389,
+      "sha256": "9d9c4ba6eba4b76d23e1c053e8405b8c1874a1270dc1e813c66d3b28e4d75e84"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/comparison.json",
+      "target": "serving/comparison.json",
+      "bytes": 26464,
+      "sha256": "963ebbba0ed811782eb22cf5784d7ecffbe78577f3ea3d7dca7ff037e7e4bc4e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/controller-diff.patch",
+      "target": "serving/controller-diff.patch",
+      "bytes": 51194,
+      "sha256": "f446f6cf71b34b95dc38d20f2a5e3f450905ae71e5472e62008d5a5bbd3a90ed"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/expected-source.sha256",
+      "target": "serving/expected-source.sha256",
+      "bytes": 2841,
+      "sha256": "8e7f9a34221e14cdcb10a5b51d686d72f4c9b6d97b65ee997a11da87917d0582"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/harness-prep/client.py",
+      "target": "serving/harness-prep/client.py",
+      "bytes": 11103,
+      "sha256": "2799e59dd01111a48fbd2ee08b6171f4b04ea600f40ff28a63807e41645ed869"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/harness-prep/compare.py",
+      "target": "serving/harness-prep/compare.py",
+      "bytes": 8796,
+      "sha256": "f55132df9ecf8ff6a36c62aaee7971129315f372b802a3ca6a655878dec848af"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/harness-prep/launch_stage.sh",
+      "target": "serving/harness-prep/launch_stage.sh",
+      "bytes": 1881,
+      "sha256": "ecdee79b6e8eeef984c3121e9967f7c59e67fd7bd824c1c3df28791ef94d5a23"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/harness-prep/make_configs.py",
+      "target": "serving/harness-prep/make_configs.py",
+      "bytes": 4849,
+      "sha256": "f5d1c98f9235b2c088a439c3df2b81a69c6c8523947842520bffcd29702575d9"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/harness-prep/start_arm.py",
+      "target": "serving/harness-prep/start_arm.py",
+      "bytes": 8906,
+      "sha256": "6d77f00a6becf1d3fb7b3163245ef5a30cf85843445bc3c63448ea7823317f4e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/harness-prep/stop_and_health.py",
+      "target": "serving/harness-prep/stop_and_health.py",
+      "bytes": 6382,
+      "sha256": "2a9366d86899ba17818df2248ffeb27bf7d92944c6ff42d3b037fb7f830b77eb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/aggregate-proof.json",
+      "target": "serving/mode0/aggregate-proof.json",
+      "bytes": 603,
+      "sha256": "22862b1503ca1e6c44c39a04ce975bb7c776c062d30c12a10178152b7dd66ee0"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/attempt.cid",
+      "target": "serving/mode0/attempt.cid",
+      "bytes": 64,
+      "sha256": "dffc6e2f4617fc8e4ae260153ceb229e29252e4fc231895f0590b91ed98a906e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/card-health.log",
+      "target": "serving/mode0/card-health.log",
+      "bytes": 560,
+      "sha256": "7dd7546c3d579390eebb483fa351e7a73f6d6870f3d8105fbe8234dded18be57"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/collective-health.log",
+      "target": "serving/mode0/collective-health.log",
+      "bytes": 1696,
+      "sha256": "f34485741668f9b867f639bc19565020e57d164d22237d53a26e9e8008b9466a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/config.json",
+      "target": "serving/mode0/config.json",
+      "bytes": 2702,
+      "sha256": "9ba0af5117d3afbfc06726435278186a509f44329e661edd0c39bfc51f5aad87"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/container-ready.json",
+      "target": "serving/mode0/container-ready.json",
+      "bytes": 13756,
+      "sha256": "c2de81e19bf393e6826e7c978c63b7386eb853ba051d7da41bbef2f5c6715bfd"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/container-removal.json",
+      "target": "serving/mode0/container-removal.json",
+      "bytes": 736,
+      "sha256": "1e9ed3c4c06c2bf883d0e8678c2c16d229c9a10b95f7df4f63e6533fc570333f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/docker-prestop-inspect.json",
+      "target": "serving/mode0/docker-prestop-inspect.json",
+      "bytes": 17862,
+      "sha256": "c88ec00bfceaa4f1a7a7af14f9c6537bbece822bbc9baad8597d83fba94f5a2e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/docker-prestop.json",
+      "target": "serving/mode0/docker-prestop.json",
+      "bytes": 13756,
+      "sha256": "9733dbd963c85914c88766c26d68f85ef52eedefaae6be990f0371497bf6ec6f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/engine-final.log",
+      "target": "serving/mode0/engine-final.log",
+      "bytes": 36598,
+      "sha256": "5714320f57910dfa4c43735bccdb55f9cae42b1ca71627b109e019035c7d4b83"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/engine.log",
+      "target": "serving/mode0/engine.log",
+      "bytes": 36598,
+      "sha256": "5714320f57910dfa4c43735bccdb55f9cae42b1ca71627b109e019035c7d4b83"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/functional/concurrent-math.json",
+      "target": "serving/mode0/functional/concurrent-math.json",
+      "bytes": 8025,
+      "sha256": "463bdeb6ea307c81cce806a84b0763f64e79a22f1bd7c131f5cd975892e7115a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/functional/health.json",
+      "target": "serving/mode0/functional/health.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/functional/models.json",
+      "target": "serving/mode0/functional/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/functional/thinking.json",
+      "target": "serving/mode0/functional/thinking.json",
+      "bytes": 1480,
+      "sha256": "cedc0895c0e8aa5f91292a135ffb6adca04ab9c27442ee9920b5ed1e34ccd577"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/functional/tool-final.json",
+      "target": "serving/mode0/functional/tool-final.json",
+      "bytes": 2508,
+      "sha256": "629f322d26991c05456c5894d5a204fef1317ec9e342446ba5f9d659ab725156"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/functional/tool-first.json",
+      "target": "serving/mode0/functional/tool-first.json",
+      "bytes": 2254,
+      "sha256": "8f91afadde3a0495135f2194409bd10e8060ce62c5d8f9d3ddce8140df437bc5"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/functional/verdict.json",
+      "target": "serving/mode0/functional/verdict.json",
+      "bytes": 91,
+      "sha256": "a903d5a1a01382b4c3af586ab82b48b25716a22e8bfbbc2d1bdcb7a2a972ff09"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/health-prestop.json",
+      "target": "serving/mode0/health-prestop.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/health-ready.json",
+      "target": "serving/mode0/health-ready.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/native-process-identity.json",
+      "target": "serving/mode0/native-process-identity.json",
+      "bytes": 87382,
+      "sha256": "3fff3f8b456ec173e880a3e672008f6c62c427fee63583dab80e9c3e61a118f1"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/normal-stop.json",
+      "target": "serving/mode0/normal-stop.json",
+      "bytes": 507,
+      "sha256": "4060691acfe4b8a6e55c03cb0084964543207e27af6f39837461ca21fdcc6f1a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/post-health.json",
+      "target": "serving/mode0/post-health.json",
+      "bytes": 479,
+      "sha256": "4f4696a73576ba0fb9e45c60eb2661bbb48876cef55f9820707899000d3ece67"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/complete.json",
+      "target": "serving/mode0/prefill/complete.json",
+      "bytes": 13236,
+      "sha256": "aca67677517b9011c52d103b206eb46cb5c30ae38e624a1a96b589a2d1b42f1a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/models.json",
+      "target": "serving/mode0/prefill/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p32768-0-engine.log",
+      "target": "serving/mode0/prefill/p32768-0-engine.log",
+      "bytes": 3690,
+      "sha256": "5a5327971d997fe7bac0df6a4eb6fc7507265575c8e2c6a62bbbbd4498e315ac"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p32768-0-start.json",
+      "target": "serving/mode0/prefill/p32768-0-start.json",
+      "bytes": 178,
+      "sha256": "cd0b8fa0e743ae00fc8183f5fbf8b1d6586fa8b8b1b659797b9d513f4ed68e39"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p32768-0-verdict.json",
+      "target": "serving/mode0/prefill/p32768-0-verdict.json",
+      "bytes": 2031,
+      "sha256": "c0cd283c2e3e33892f36b92a5dda4ef7877fdbcd42b5a85227ee6eee184a811e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p32768-0.json",
+      "target": "serving/mode0/prefill/p32768-0.json",
+      "bytes": 273222,
+      "sha256": "abcc0b6842d726bb4ffd469da459d3c262a9020fd7e2b84ac92981b7b85f90ad"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p32768-1-engine.log",
+      "target": "serving/mode0/prefill/p32768-1-engine.log",
+      "bytes": 3707,
+      "sha256": "ec09c8abf0aa9fe208e31fc1dfc256bd28b1226f8ecab2791aa17ff419fc54e1"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p32768-1-start.json",
+      "target": "serving/mode0/prefill/p32768-1-start.json",
+      "bytes": 178,
+      "sha256": "57e6937bda878a2b68910ae76786046acfc2b468652c8fd786a7698ac5a98a53"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p32768-1-verdict.json",
+      "target": "serving/mode0/prefill/p32768-1-verdict.json",
+      "bytes": 2032,
+      "sha256": "5b5ce407864ce047340720abffa3575f8b5d468129ad330144bebb2b5a82ada0"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p32768-1.json",
+      "target": "serving/mode0/prefill/p32768-1.json",
+      "bytes": 273223,
+      "sha256": "630af56fc37341b4bb722a9b1e7c8d22dfd1f94375ca7e69079178982c2faacb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p32768-2-engine.log",
+      "target": "serving/mode0/prefill/p32768-2-engine.log",
+      "bytes": 3881,
+      "sha256": "2fb79925ab16a228b2dd8fea53b1e7d2e7ac1fcbf2ea3dcd559fdaeae48d19ed"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p32768-2-start.json",
+      "target": "serving/mode0/prefill/p32768-2-start.json",
+      "bytes": 178,
+      "sha256": "0456c6a5bacdedb19e5934085d19289149e96672805811c5fa458d53516ba338"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p32768-2-verdict.json",
+      "target": "serving/mode0/prefill/p32768-2-verdict.json",
+      "bytes": 2031,
+      "sha256": "0e6e44e84992b0ab2d10eb424aefbc5cd9c627858e8793c58847324f0647aa38"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p32768-2.json",
+      "target": "serving/mode0/prefill/p32768-2.json",
+      "bytes": 275026,
+      "sha256": "cbf967f584952941d57e25a54b92b6c3e30c348f6cb7afbc70208aa782d93bf2"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p4096-0-engine.log",
+      "target": "serving/mode0/prefill/p4096-0-engine.log",
+      "bytes": 3631,
+      "sha256": "5e157f8b1504888ff28c10806601c2134cf440fd7a23aa87734e9f10e6558cd6"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p4096-0-start.json",
+      "target": "serving/mode0/prefill/p4096-0-start.json",
+      "bytes": 177,
+      "sha256": "eb069ee3642bc774491b1bb2a6cd5740d8609ef535770958fdea1e85f348a0f3"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p4096-0-verdict.json",
+      "target": "serving/mode0/prefill/p4096-0-verdict.json",
+      "bytes": 1719,
+      "sha256": "150d38b553b0c56d5379991a57e0cab75c7f5d328951c365602f806f87fe3243"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p4096-0.json",
+      "target": "serving/mode0/prefill/p4096-0.json",
+      "bytes": 124754,
+      "sha256": "141b620c53abc8b849f1973ef6e732cc67b55a648f73f88cb7dde09e209252bf"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p4096-1-engine.log",
+      "target": "serving/mode0/prefill/p4096-1-engine.log",
+      "bytes": 3463,
+      "sha256": "eef05914b5a525f437278b7917d5b08e9ed481bb6034ef64a9d275aab88d71f6"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p4096-1-start.json",
+      "target": "serving/mode0/prefill/p4096-1-start.json",
+      "bytes": 178,
+      "sha256": "e9d029664273767955349047398420ca7857307aa7ce11365770b3c7952c504e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p4096-1-verdict.json",
+      "target": "serving/mode0/prefill/p4096-1-verdict.json",
+      "bytes": 1721,
+      "sha256": "4675b949b19412816c96a52e18b6a164dac08eea88dcf3245d29a58bf8c0ee05"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p4096-1.json",
+      "target": "serving/mode0/prefill/p4096-1.json",
+      "bytes": 124075,
+      "sha256": "3b0ebdef103c06eb6cc7ce803fed4596b87978623d164d09c2db0ecd4e83578a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p4096-2-engine.log",
+      "target": "serving/mode0/prefill/p4096-2-engine.log",
+      "bytes": 3295,
+      "sha256": "4d5304e3c9e9b889ba3e90aa540cc8f4f9d51995b1f5e9cd5f7d639bc2e1728f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p4096-2-start.json",
+      "target": "serving/mode0/prefill/p4096-2-start.json",
+      "bytes": 178,
+      "sha256": "50f4d98e7a084aa454d82aa990f2fd41d52723b23925480d11e4b9c3d24d6bf0"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p4096-2-verdict.json",
+      "target": "serving/mode0/prefill/p4096-2-verdict.json",
+      "bytes": 1720,
+      "sha256": "d90fa9c8c55cc616aa62ff54d82f501d55b735866a4c55ecbd9864f8d83da0ad"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prefill/p4096-2.json",
+      "target": "serving/mode0/prefill/p4096-2.json",
+      "bytes": 122969,
+      "sha256": "391023eb1bfb9ffd111a300d2cde058df889a5388527a482d52f5a4757baf767"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/prestop-state.json",
+      "target": "serving/mode0/prestop-state.json",
+      "bytes": 73,
+      "sha256": "6740167a45e5da92794397fd4afd7e6e8bbeafc7e5924c800c4f151561219394"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/quit-command.json",
+      "target": "serving/mode0/quit-command.json",
+      "bytes": 272,
+      "sha256": "9ca285da5f76008e133e4f236e6fa0bc368ef0846c0e6c2eb43625a77ae2eb2f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/root-functional.log",
+      "target": "serving/mode0/root-functional.log",
+      "bytes": 239,
+      "sha256": "f8d2c7144a288399337339cdd72a619052885417a6e0944770ce3ea9378f1a9a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/root-phases.json",
+      "target": "serving/mode0/root-phases.json",
+      "bytes": 1400,
+      "sha256": "19b298b8465e32364c956528b68c873dada0c17a72eb4366e0beb11eec83d1c5"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/root-prefill.log",
+      "target": "serving/mode0/root-prefill.log",
+      "bytes": 297,
+      "sha256": "60f9208f79dd1d874a8e00ee5a3a375a4eccced4ff3db3e87ea72dbc4bf053f3"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/root-stop-health.log",
+      "target": "serving/mode0/root-stop-health.log",
+      "bytes": 238,
+      "sha256": "2c0c4035eb0302ef5b52bbaa3e249a2c626f5ba5d03797764aba49b905e77f6d"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/root-warm.log",
+      "target": "serving/mode0/root-warm.log",
+      "bytes": 293,
+      "sha256": "d1700bd5e70bf8a9ee15b3c032062f4d18f91ba98951e7d67c15c28a4528480e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/server.log",
+      "target": "serving/mode0/server.log",
+      "bytes": 6062,
+      "sha256": "a4c39d1b9d17f4a81048855f10cd15bbb3c3df935efef565071d1cc4e66b2238"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/start-result.json",
+      "target": "serving/mode0/start-result.json",
+      "bytes": 1228,
+      "sha256": "7470b1c2779cd9e27faea598a33ec30280e9a871a935fd72838ab1dff23173ad"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/warm4k/complete.json",
+      "target": "serving/mode0/warm4k/complete.json",
+      "bytes": 2631,
+      "sha256": "2ba8a3e6edbb5fb3ad5417e229d7cf122e7fa53f83f75a9f57431b1a753a8b19"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/warm4k/models.json",
+      "target": "serving/mode0/warm4k/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/warm4k/warm4k-engine.log",
+      "target": "serving/mode0/warm4k/warm4k-engine.log",
+      "bytes": 3434,
+      "sha256": "96bbb07ec32d9cc75a5bc381b58d36e2d2951b7deebe5c557aace655e82a22c6"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/warm4k/warm4k-start.json",
+      "target": "serving/mode0/warm4k/warm4k-start.json",
+      "bytes": 176,
+      "sha256": "240219b54172792df265f50d545e0ec0e6800a6cb351544af2b41adbec1d04a1"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/warm4k/warm4k-verdict.json",
+      "target": "serving/mode0/warm4k/warm4k-verdict.json",
+      "bytes": 1977,
+      "sha256": "6968be9639421b1757f30ab6c67b0cfb4b1190903244f849e850f5da042e8f79"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode0/warm4k/warm4k.json",
+      "target": "serving/mode0/warm4k/warm4k.json",
+      "bytes": 124112,
+      "sha256": "b733da70178204b89e1d3448b66f6dc8814b26eb176109ee8f62d937053f9342"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/aggregate-proof.json",
+      "target": "serving/mode1/aggregate-proof.json",
+      "bytes": 603,
+      "sha256": "509a1ca0303880d9037678d419f198729601c08b12a6462f3140140efe302bd9"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/attempt.cid",
+      "target": "serving/mode1/attempt.cid",
+      "bytes": 64,
+      "sha256": "8635c70805114498e987915feffb0ac6acc9b65011347192080e0f0e58c5ed38"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/card-health.log",
+      "target": "serving/mode1/card-health.log",
+      "bytes": 560,
+      "sha256": "a5ad677cfd0ea98c5941550d42eca87fbd38abdc1e64f9bee37add7715dfcdff"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/collective-health.log",
+      "target": "serving/mode1/collective-health.log",
+      "bytes": 1696,
+      "sha256": "94de0fa6ac9bda9a40bfef73d4ca59181cbfb278c49170959a4a4adf9108fe4f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/config.json",
+      "target": "serving/mode1/config.json",
+      "bytes": 2702,
+      "sha256": "c4333ba78921eefb5871282cb45fec289cad361c26c3a3e91b53c1b994888a7c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/container-ready.json",
+      "target": "serving/mode1/container-ready.json",
+      "bytes": 13757,
+      "sha256": "5610d2c48553d55177c2e6b9283a7ece900fdc6663079cbef657fb4144b11035"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/container-removal.json",
+      "target": "serving/mode1/container-removal.json",
+      "bytes": 736,
+      "sha256": "e26e7dce5c7a79881cf1ec5fe05bdddf73a6252c43d8cc885a7be868654c6189"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/docker-prestop-inspect.json",
+      "target": "serving/mode1/docker-prestop-inspect.json",
+      "bytes": 17863,
+      "sha256": "2dfe954fda2e04742219e4201f961bfb4543ddebfa630af84e1baa7cca890f4c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/docker-prestop.json",
+      "target": "serving/mode1/docker-prestop.json",
+      "bytes": 13757,
+      "sha256": "9cbd08c10c00cec53fe744949144c56fec5d690c20e9aebfaac3f987d3fbba72"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/engine-final.log",
+      "target": "serving/mode1/engine-final.log",
+      "bytes": 36673,
+      "sha256": "5d13ffec3b507f3c04c07b0fb37dfc8b810693ae6ffe57a467e7bededd11575e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/engine.log",
+      "target": "serving/mode1/engine.log",
+      "bytes": 36673,
+      "sha256": "5d13ffec3b507f3c04c07b0fb37dfc8b810693ae6ffe57a467e7bededd11575e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/functional/concurrent-math.json",
+      "target": "serving/mode1/functional/concurrent-math.json",
+      "bytes": 8027,
+      "sha256": "d70071824ad996195ef2bf094193e9a9c6f98d7433d9daccf0fef463fab97c85"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/functional/health.json",
+      "target": "serving/mode1/functional/health.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/functional/models.json",
+      "target": "serving/mode1/functional/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/functional/thinking.json",
+      "target": "serving/mode1/functional/thinking.json",
+      "bytes": 1479,
+      "sha256": "5109b5f0833fba970eedd4ae78a8ab7b13c72d2a4af5f1884da3ea0eb2b86674"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/functional/tool-final.json",
+      "target": "serving/mode1/functional/tool-final.json",
+      "bytes": 2508,
+      "sha256": "986b35dd5189608dd94e2b4b6c0c31b79413e14e8bb4d3f79360758e5cd859ee"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/functional/tool-first.json",
+      "target": "serving/mode1/functional/tool-first.json",
+      "bytes": 2254,
+      "sha256": "58102ebdb5a9e2296ed1a84341b147f1b27a7dc60fce7eb4f209bd12665978fb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/functional/verdict.json",
+      "target": "serving/mode1/functional/verdict.json",
+      "bytes": 91,
+      "sha256": "a903d5a1a01382b4c3af586ab82b48b25716a22e8bfbbc2d1bdcb7a2a972ff09"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/health-prestop.json",
+      "target": "serving/mode1/health-prestop.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/health-ready.json",
+      "target": "serving/mode1/health-ready.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/native-process-identity.json",
+      "target": "serving/mode1/native-process-identity.json",
+      "bytes": 87188,
+      "sha256": "728970d95a9ff4026aff091031d61c04cf4cb7eee76bafe6cd74e24bf7604a4a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/normal-stop.json",
+      "target": "serving/mode1/normal-stop.json",
+      "bytes": 507,
+      "sha256": "b43645b187a16a2b76b7e90b9e498f76698a43b43953655f17520fb421c0c2eb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/post-health.json",
+      "target": "serving/mode1/post-health.json",
+      "bytes": 479,
+      "sha256": "df64ead8a6619e46b1136643e7ef0713612491ca441302770e79563756d7e6ed"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/complete.json",
+      "target": "serving/mode1/prefill/complete.json",
+      "bytes": 13925,
+      "sha256": "9b0c8b3e5ac934bb809738776d98eb1fdd017a5efd3bc11c102c295fd39d6add"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/models.json",
+      "target": "serving/mode1/prefill/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p32768-0-control-parity.json",
+      "target": "serving/mode1/prefill/p32768-0-control-parity.json",
+      "bytes": 206,
+      "sha256": "86623a61fff15c077831f8774472da3dfebf02d58e225e5ce2bc8b609283fdeb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p32768-0-engine.log",
+      "target": "serving/mode1/prefill/p32768-0-engine.log",
+      "bytes": 3690,
+      "sha256": "523b85dc561e124d8eeeee829724644fb1163601b078400365343c661207467e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p32768-0-start.json",
+      "target": "serving/mode1/prefill/p32768-0-start.json",
+      "bytes": 178,
+      "sha256": "a100233b0ef7f854a0bdc9b53a920b6515eb67f986eb7caf941e81ce1384f251"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p32768-0-verdict.json",
+      "target": "serving/mode1/prefill/p32768-0-verdict.json",
+      "bytes": 2125,
+      "sha256": "cbb84169d95e0242ed669024ab1f31a89a12dcad794e23ff5fad5339de50ef79"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p32768-0.json",
+      "target": "serving/mode1/prefill/p32768-0.json",
+      "bytes": 273220,
+      "sha256": "ad538f6da9b0b3f29d22faa2fd0f4b8ead05cfc07bda79590c4c61a85c8731c6"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p32768-1-control-parity.json",
+      "target": "serving/mode1/prefill/p32768-1-control-parity.json",
+      "bytes": 206,
+      "sha256": "86623a61fff15c077831f8774472da3dfebf02d58e225e5ce2bc8b609283fdeb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p32768-1-engine.log",
+      "target": "serving/mode1/prefill/p32768-1-engine.log",
+      "bytes": 3707,
+      "sha256": "08b474e0be501ef9f27fe42b4ed4a80670383e0698c2457eabdbaa89b38358c0"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p32768-1-start.json",
+      "target": "serving/mode1/prefill/p32768-1-start.json",
+      "bytes": 178,
+      "sha256": "32b7b9c9faae1e96e5d8fa23a05aa9a9867e3f3f915b4ca9959c7632bbcd1861"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p32768-1-verdict.json",
+      "target": "serving/mode1/prefill/p32768-1-verdict.json",
+      "bytes": 2122,
+      "sha256": "bc709b967710ed7e5e7778a9b8e0445c810d167dbceaa794e8125c9d47b6c85f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p32768-1.json",
+      "target": "serving/mode1/prefill/p32768-1.json",
+      "bytes": 273210,
+      "sha256": "99317ff5adcabf48572d2170c08517d8f411e4d505a8cc705af70d3f4196d21e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p32768-2-control-parity.json",
+      "target": "serving/mode1/prefill/p32768-2-control-parity.json",
+      "bytes": 206,
+      "sha256": "86623a61fff15c077831f8774472da3dfebf02d58e225e5ce2bc8b609283fdeb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p32768-2-engine.log",
+      "target": "serving/mode1/prefill/p32768-2-engine.log",
+      "bytes": 3881,
+      "sha256": "4a5951c8fa8869c7c3e85b690990fd5ad545fb9df553f15e6c4c891cbaf660f2"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p32768-2-start.json",
+      "target": "serving/mode1/prefill/p32768-2-start.json",
+      "bytes": 178,
+      "sha256": "fe15cf45a026098e1b05297b9f80add0dbdc74d625bc6e4bbb11ba992d39cf73"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p32768-2-verdict.json",
+      "target": "serving/mode1/prefill/p32768-2-verdict.json",
+      "bytes": 2121,
+      "sha256": "0e6190a911ef6cef123f6b5f2c95aeb5ed2fcf0f30de8fe6fb4117ea4b64e48a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p32768-2.json",
+      "target": "serving/mode1/prefill/p32768-2.json",
+      "bytes": 275011,
+      "sha256": "606106d3fc2f20e526051c5578eae3f312fc28002795c09671e0344519b71cd5"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p4096-0-control-parity.json",
+      "target": "serving/mode1/prefill/p4096-0-control-parity.json",
+      "bytes": 206,
+      "sha256": "86623a61fff15c077831f8774472da3dfebf02d58e225e5ce2bc8b609283fdeb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p4096-0-engine.log",
+      "target": "serving/mode1/prefill/p4096-0-engine.log",
+      "bytes": 3631,
+      "sha256": "9efd447952a9c0c6b70956854e35f7be3d4d436292082d98a960de00c8694d06"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p4096-0-start.json",
+      "target": "serving/mode1/prefill/p4096-0-start.json",
+      "bytes": 177,
+      "sha256": "e7511caba8d9e2e473bc8f08f08e8911a4bde6e077b0fe50a6727dbe30f4ae97"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p4096-0-verdict.json",
+      "target": "serving/mode1/prefill/p4096-0-verdict.json",
+      "bytes": 1811,
+      "sha256": "88fdb531d9a53b618eaa511f24faa722a233bf4956025b81468e9234745dbabd"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p4096-0.json",
+      "target": "serving/mode1/prefill/p4096-0.json",
+      "bytes": 124746,
+      "sha256": "56f485f4dd5ae2224630a595d3ab40fc6a9b5b3eb9ee5d98b22929dcef1bcda2"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p4096-1-control-parity.json",
+      "target": "serving/mode1/prefill/p4096-1-control-parity.json",
+      "bytes": 206,
+      "sha256": "86623a61fff15c077831f8774472da3dfebf02d58e225e5ce2bc8b609283fdeb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p4096-1-engine.log",
+      "target": "serving/mode1/prefill/p4096-1-engine.log",
+      "bytes": 3463,
+      "sha256": "b8a4a180af1846069a5e06a12a77da50fddc999b91005883f5b26fa7bfea5e34"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p4096-1-start.json",
+      "target": "serving/mode1/prefill/p4096-1-start.json",
+      "bytes": 178,
+      "sha256": "df1be7abe901cb1c28314508fab2e5886a3a674e629a992ff93c9f5ed7adbc83"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p4096-1-verdict.json",
+      "target": "serving/mode1/prefill/p4096-1-verdict.json",
+      "bytes": 1813,
+      "sha256": "668b3a47c036115fd24216a714adb47a43f74f9b4a80ee6d67da4047d211fef9"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p4096-1.json",
+      "target": "serving/mode1/prefill/p4096-1.json",
+      "bytes": 124070,
+      "sha256": "95ff833f5693baf230ce2a791c01ceb962dcc40ab327a8be64a8861895c00b36"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p4096-2-control-parity.json",
+      "target": "serving/mode1/prefill/p4096-2-control-parity.json",
+      "bytes": 206,
+      "sha256": "86623a61fff15c077831f8774472da3dfebf02d58e225e5ce2bc8b609283fdeb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p4096-2-engine.log",
+      "target": "serving/mode1/prefill/p4096-2-engine.log",
+      "bytes": 3295,
+      "sha256": "7a656c923f43267f29dc38b4ae4525c1bde6ae53e70de883ca76a308db954137"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p4096-2-start.json",
+      "target": "serving/mode1/prefill/p4096-2-start.json",
+      "bytes": 178,
+      "sha256": "1700f6a80ffb88ee2a47d7ff520c3d6a524ae14b782edbd31ba931ed88aad0ca"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p4096-2-verdict.json",
+      "target": "serving/mode1/prefill/p4096-2-verdict.json",
+      "bytes": 1811,
+      "sha256": "7b33293c7efb9c1b045c1b37812341c86e71d1544d34f15777e8b4d43677d874"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prefill/p4096-2.json",
+      "target": "serving/mode1/prefill/p4096-2.json",
+      "bytes": 122977,
+      "sha256": "e163a872940913ff6480b7d7fdd670c6709acd546132869a2befec2c4d6edeca"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/prestop-state.json",
+      "target": "serving/mode1/prestop-state.json",
+      "bytes": 73,
+      "sha256": "6740167a45e5da92794397fd4afd7e6e8bbeafc7e5924c800c4f151561219394"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/quit-command.json",
+      "target": "serving/mode1/quit-command.json",
+      "bytes": 272,
+      "sha256": "6d0ffe69348509293d09933d92668cfd86d0a1d729dba94a4414bb5ae3ae68ea"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/root-functional.log",
+      "target": "serving/mode1/root-functional.log",
+      "bytes": 239,
+      "sha256": "644283a315896dc1c83e6828c83cfb80cc7cff2e93a8422fd9ee1a0fabb4b8fa"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/root-phases.json",
+      "target": "serving/mode1/root-phases.json",
+      "bytes": 1400,
+      "sha256": "14fc588fd2e03e8ed79da5c97158403b41821e3747dd78d812df84dae1b835dd"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/root-prefill.log",
+      "target": "serving/mode1/root-prefill.log",
+      "bytes": 297,
+      "sha256": "94aa8ecec8745397ae668daec9ea2b2c878bdec2b981689f57dfa7ada9aa24ea"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/root-stop-health.log",
+      "target": "serving/mode1/root-stop-health.log",
+      "bytes": 238,
+      "sha256": "bad3b9c073f91e46cf82750a7364466a6546e2e1e3ef7a2e24942fa655790d4c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/root-warm.log",
+      "target": "serving/mode1/root-warm.log",
+      "bytes": 293,
+      "sha256": "8f5fe5faae4519294f2563ca9d705747f061b41110e44b045e1288a1675ad032"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/server.log",
+      "target": "serving/mode1/server.log",
+      "bytes": 6012,
+      "sha256": "6e283278eac5389c948ff733bc3cee6658fadc2b42125889c86469dab396fa3d"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/start-result.json",
+      "target": "serving/mode1/start-result.json",
+      "bytes": 1228,
+      "sha256": "c358ed6c19748df1b54f13a77a0c237dd4ee70977b854d14d65a70a3f053588e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/warm4k/complete.json",
+      "target": "serving/mode1/warm4k/complete.json",
+      "bytes": 2821,
+      "sha256": "2c85bf0b5a5dbad77352c42dccf314ced54fdb02fba887cd7a3b350c36df1d7a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/warm4k/models.json",
+      "target": "serving/mode1/warm4k/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/warm4k/warm4k-control-parity.json",
+      "target": "serving/mode1/warm4k/warm4k-control-parity.json",
+      "bytes": 206,
+      "sha256": "86623a61fff15c077831f8774472da3dfebf02d58e225e5ce2bc8b609283fdeb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/warm4k/warm4k-engine.log",
+      "target": "serving/mode1/warm4k/warm4k-engine.log",
+      "bytes": 3510,
+      "sha256": "5e3118f5084c1e8bf0653852e31ec0707ce0cabb4c5a4f664d9bac7951cac1a1"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/warm4k/warm4k-start.json",
+      "target": "serving/mode1/warm4k/warm4k-start.json",
+      "bytes": 176,
+      "sha256": "7e21fc5711659865efe6f73bc6bffdde1804f62c5313c1896ceb05b368b947a8"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/warm4k/warm4k-verdict.json",
+      "target": "serving/mode1/warm4k/warm4k-verdict.json",
+      "bytes": 2067,
+      "sha256": "a0e3fabf55cd7dc7f9a9054d9322c4ba957cc4796fab35bb0af921e0eb30fda5"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/warm4k/warm4k.json",
+      "target": "serving/mode1/warm4k/warm4k.json",
+      "bytes": 124108,
+      "sha256": "7efb6f3cf5523afb5b73124d092e1eb3f9216aeef2bd62066d2c076344afcb24"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/root-preflight-go.json",
+      "target": "serving/root-preflight-go.json",
+      "bytes": 2515,
+      "sha256": "a04645dc3d21579cb29abd65a9b0641bb21717c48178079d58ff88532d35bf73"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/root_run_ready_arm.py",
+      "target": "serving/root_run_ready_arm.py",
+      "bytes": 1732,
+      "sha256": "dfb6fdd0e5991feaa23453f4b61248d2599aeac2e6da4cdeb0952ca72a02da21"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/serving-inputs.json",
+      "target": "serving/serving-inputs.json",
+      "bytes": 3042,
+      "sha256": "79cf2c1f4efa82c6ba106ebfca763c3b04263a2a82568b0f70f9acc05b12724b"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/source-only-validation.json",
+      "target": "serving/source-only-validation.json",
+      "bytes": 467,
+      "sha256": "a20d9c86aaeadc4c7561db64cca8abae916e292d70681f58936f4dcef28cd568"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/source-pins.json",
+      "target": "serving/source-pins.json",
+      "bytes": 3735,
+      "sha256": "db05328a213c9e23cfb5fcca7f0ce6ec4ecac3d56435bf4508139450d469785b"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/timed-input-pins.json",
+      "target": "serving/timed-input-pins.json",
+      "bytes": 3138,
+      "sha256": "03520e5630c769b45033502951d89af26a4dfb73b8d68d6355c8322d3d797601"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/warm-fixture-provenance.json",
+      "target": "serving/warm-fixture-provenance.json",
+      "bytes": 714,
+      "sha256": "e88b654cbbbbf210c60942f12b9a78ef8f77faee22556f83a9658f455ff5b899"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/warm-request.json",
+      "target": "serving/warm-request.json",
+      "bytes": 21531,
+      "sha256": "6f1bcd5c7cd71d087dfde404d1b7777b8cd0b053c4654b1ac7b6835395036d9a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-independent-audit/manifest.json",
+      "target": "independent-source-review/manifest.json",
+      "bytes": 379,
+      "sha256": "434d1c7ad454600bec8eb86f5a42b306c96bb2d77bcc0a5c72acc9823a8fdd2c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-independent-audit/note.md",
+      "target": "independent-source-review/note.md",
+      "bytes": 6377,
+      "sha256": "02ff540f52f5f1951584ad6593d2f6b22556c5c21961c7e2187894a1e26cc403"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-independent-audit/source-checks.json",
+      "target": "independent-source-review/source-checks.json",
+      "bytes": 10520,
+      "sha256": "76d41ba1d4ac886c54140b6b7da499a65c947a068a6e1157d1cc702a574133c8"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep-manifest.json",
+      "target": "source-preparation-manifest.json",
+      "bytes": 2841,
+      "sha256": "7fd952de01b73868232d3358d7a332b60f95b4a0aff4a2d4908e074b4e122ca4"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/root-build-audit.json",
+      "target": "prior-build/S107-root-build-audit.json",
+      "bytes": 2810,
+      "sha256": "e6e7c14897a8d3f123e7e160306f1d27c98595c30ba49e4d60fd6778fb86c538"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/build-sha256.txt",
+      "target": "prior-build/S107-build-sha256.txt",
+      "bytes": 954,
+      "sha256": "df200c97e86b03a1f7e005a24902d79391bc6f22f986c3a9db66d676f4a85038"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-prep/experimental-attn-value-resident-s94.patch",
+      "target": "source/S94-resident-caller.patch",
+      "bytes": 1442,
+      "sha256": "67e608b6df9d10bf4384fd68876d5879cc220cadaae0caa97ba97debed229ecf"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-prep/source-pins.json",
+      "target": "source/S94-source-pins.json",
+      "bytes": 2951,
+      "sha256": "275f488f0441ad250f6cd6dbb45b4bf8a7460f660b2684626eb026eb6138ac45"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build/build/root-build-closure.json",
+      "target": "prior-build/S94-root-build-closure.json",
+      "bytes": 11918,
+      "sha256": "526c82060e95cb57620e3e7e30d34d992e631d283696ff4e165b390c2185239b"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build/build/build-sha256.txt",
+      "target": "prior-build/S94-build-sha256.txt",
+      "bytes": 700,
+      "sha256": "af85e2a5093dbb80239bffe242cdbcc0af8db2faf668c4bde13b4d5537d8f4f5"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-build/expected-unchanged-build-inputs.sha256",
+      "target": "prior-build/S94-expected-unchanged-inputs.sha256",
+      "bytes": 1533,
+      "sha256": "94629f1e689cabe314d1438566ca647920e672fd23fab2f01e2ba9aa644c5a0a"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/mode1/post-health.json",
+      "target": "prehealth-context/S107-last-full-post-health.json",
+      "bytes": 480,
+      "sha256": "07d3cd2a8b20d399c3857f266903cec5f65c35265a51c55fa7fd6575a40bfcbb"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/greedy-top1-s112-run-v2/closure.json",
+      "target": "prehealth-context/S112-later-card0-private-closure.json",
+      "bytes": 403,
+      "sha256": "45cd5fc22a002ae7744aab296f096c591480714218dca063b07aaa0df04788e0"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/prefill/prefill.cpp",
+      "target": "source/prefill.cpp",
+      "bytes": 303875,
+      "sha256": "2a1d8faa8bd58f112f4555a5ba7ab988b143fdb773106c8907903f0ecfafe16e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp",
+      "target": "source/qsa_decode_attn.dp.cpp",
+      "bytes": 49375,
+      "sha256": "013e3b3df3cd4685af6330d9ab38223f41846e6a07aaeab2f7a534f66d1f36fe"
+    },
+    {
+      "source": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/bench_serving.py",
+      "target": "source/bench_serving.py",
+      "bytes": 8227,
+      "sha256": "6f7751440113a6b6d092dd1bf9a0c734309d28ecffe5ac535412c22201852101"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s113-post-hc-source-reviews-20261016/packet.txt",
+      "target": "postreviews/packet.txt",
+      "bytes": 33243,
+      "sha256": "1026d515c2ca59897dc91290a2318f0ced9c44f224389f0a59d5df108cf115d1"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s113-post-hc-source-reviews-20261016/review-prefix.txt",
+      "target": "postreviews/review-prefix.txt",
+      "bytes": 494,
+      "sha256": "fa9aa4d0429f8dc785902f22c8cdbf06b50fe7e27fbde80bacce81e63b52cdc0"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s113-post-hc-source-reviews-20261016/review.py",
+      "target": "postreviews/review.py",
+      "bytes": 4734,
+      "sha256": "57f255bea06c9fe21a843fdd36fbb6c5df54a2c119f127aa3f8e91ddcfe9933e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s113-post-hc-source-reviews-20261016/root-post-decision.json",
+      "target": "postreviews/root-post-decision.json",
+      "bytes": 2390,
+      "sha256": "4fc4e6b10a2801e96c1a9149e104d2146487bf4e6225a7dfab1f99e28dccdd92"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s113-post-hc-source-reviews-20261016/claude-opus-5-5/assistant-text.txt",
+      "target": "postreviews/claude-opus-5-5/assistant-text.txt",
+      "bytes": 5887,
+      "sha256": "dbd2312bece7937ff885022b6986809762d66becca25c24dc56d3cbaa3976c9c"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s113-post-hc-source-reviews-20261016/claude-opus-5-5/command.json",
+      "target": "postreviews/claude-opus-5-5/command.json",
+      "bytes": 1230,
+      "sha256": "e1a6f3ec8d6c5fc51b5fc2efeb1c3782f6ccba4db8191d7a6d620c8b9a54ef8f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s113-post-hc-source-reviews-20261016/claude-opus-5-5/prompt.txt",
+      "target": "postreviews/claude-opus-5-5/prompt.txt",
+      "bytes": 33758,
+      "sha256": "f61b6d2fb2f93dace23ba012eaa07380a42afd413bd817420177f07f73b86a69"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s113-post-hc-source-reviews-20261016/claude-fable-5-1/assistant-text.txt",
+      "target": "postreviews/claude-fable-5-1/assistant-text.txt",
+      "bytes": 5596,
+      "sha256": "aafcf7ea91cb9611970267227261b457f1e4806cf19a81d3f9c4bced4c1d3b0d"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s113-post-hc-source-reviews-20261016/claude-fable-5-1/command.json",
+      "target": "postreviews/claude-fable-5-1/command.json",
+      "bytes": 1232,
+      "sha256": "ef4e266349f9ea1fe052ca6f8b55f99879a2f110506e5ba92453cd3666f85548"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s113-post-hc-source-reviews-20261016/claude-fable-5-1/prompt.txt",
+      "target": "postreviews/claude-fable-5-1/prompt.txt",
+      "bytes": 33758,
+      "sha256": "f61b6d2fb2f93dace23ba012eaa07380a42afd413bd817420177f07f73b86a69"
+    }
+  ],
+  "copy_count": 181,
+  "copy_bytes": 3924103,
+  "large_artifacts_read_or_copied": false,
+  "limits": "Historical source-only status records/manifests retained exact. Raw model completion metadata remains external; no cumulative usage copied. All served response records retained exact.",
+  "derived_records": [
+    {
+      "target": "postreviews/claude-opus-5-5/completion-filtered.json",
+      "bytes": 925,
+      "sha256": "ba7fd356feba904125032a6307057f14b85115e41f53926cd36d541b0ad82846",
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s113-post-hc-source-reviews-20261016/claude-opus-5-5/completion.json",
+      "source_sha256": "2ed58800b2c9704aa1d6752b70ee5a4b5ef2710ed611660bec3aaf19113f62be",
+      "derivation": "Explicit selected identity/session/local elapsed/exit/source-packet fields only; no cumulative usage."
+    },
+    {
+      "target": "postreviews/claude-fable-5-1/completion-filtered.json",
+      "bytes": 928,
+      "sha256": "fb5a1d8c4a13937dab0f51c559076952c740595d2b48a818b27e3dc2becbbe18",
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s113-post-hc-source-reviews-20261016/claude-fable-5-1/completion.json",
+      "source_sha256": "e9a5f3f69735fd07d51125276b26981a3383b876438ccd6ac42fe669d5c7d908",
+      "derivation": "Explicit selected identity/session/local elapsed/exit/source-packet fields only; no cumulative usage."
+    }
+  ]
+}

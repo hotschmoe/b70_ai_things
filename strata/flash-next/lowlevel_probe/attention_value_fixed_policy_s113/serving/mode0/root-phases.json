@@ -1,0 +1,53 @@
+{
+  "phases": [
+    {
+      "phase": "warm",
+      "command": [
+        "bin/cpu-run",
+        "python3",
+        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/harness-prep/client.py",
+        "0",
+        "warm"
+      ],
+      "exit": 0,
+      "elapsed_s": 7.074000694963615
+    },
+    {
+      "phase": "prefill",
+      "command": [
+        "bin/cpu-run",
+        "--quiet",
+        "python3",
+        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/harness-prep/client.py",
+        "0",
+        "prefill"
+      ],
+      "exit": 0,
+      "elapsed_s": 95.20335518498905
+    },
+    {
+      "phase": "functional",
+      "command": [
+        "bin/cpu-run",
+        "python3",
+        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/harness-prep/client.py",
+        "0",
+        "functional"
+      ],
+      "exit": 0,
+      "elapsed_s": 6.030757694039494
+    }
+  ],
+  "exception": null,
+  "cleanup": {
+    "command": [
+      "bin/cpu-run",
+      "python3",
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/harness-prep/stop_and_health.py",
+      "0"
+    ],
+    "exit": 0,
+    "elapsed_s": 58.10104381595738
+  },
+  "no_retry": true
+}

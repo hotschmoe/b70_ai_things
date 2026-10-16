@@ -1,0 +1,49 @@
+{
+  "utc": "2026-10-16T00:41:16.987200+00:00",
+  "previous_goal_turn_class": "PROGRESS_actual_postreviews_and_next_experiment_source_frozen",
+  "status": "ROOT_GO_FINITE_FIXED_POLICY_PREFILL",
+  "boot_id": "b785982c-4954-4d23-808c-48a7534ce3bd",
+  "model_stat_continuity_not_new_hash": {
+    "primary": {
+      "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+      "resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+      "stat": {
+        "dev": 44,
+        "ino": 1156777,
+        "size": 47039860096,
+        "mtime_ns": 1792062519977528586
+      },
+      "matches_retained_S107_stat": true
+    },
+    "sibling": {
+      "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+      "resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+      "stat": {
+        "dev": 44,
+        "ino": 1068321,
+        "size": 28800138432,
+        "mtime_ns": 1791869062502802041
+      },
+      "matches_retained_S107_stat": true
+    }
+  },
+  "retained_model_closure": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-nvme-placement-s53/closure.json",
+  "retained_model_closure_sha256": "74fbecdb8f0c740ed902996950f91d7dbd6022e111006cbbfdefc4f3166f3d33",
+  "prehealth_contextual_reuse": {
+    "last_full_two_card_and_collective": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/mode1/post-health.json",
+    "sha256": "07d3cd2a8b20d399c3857f266903cec5f65c35265a51c55fa7fd6575a40bfcbb",
+    "later_card0_private_closed_health": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/greedy-top1-s112-run-v2/closure.json",
+    "same_boot": true,
+    "no_other_coordinated_GPU_work_since": true,
+    "scope": "Shared log and root actions inspected. Not attestation of uncoordinated activity."
+  },
+  "root_read_all_six_actual_controllers": true,
+  "frozen_manifest_verified_payloads": 16,
+  "source_prior_pins_verified": 15,
+  "independent_audit": "attn-value-fixed-policy-s113-independent-audit",
+  "actual_opus_fable_post_reviews": "s112-private-post-reviews-20261016",
+  "stop_after_any_client_gate_failure": true,
+  "cleanup_explicit_required": true,
+  "S94_failure_preserved": true,
+  "no_build_source_change_or_promotion": true
+}

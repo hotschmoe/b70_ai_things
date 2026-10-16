@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "checks": {
+    "work": true,
+    "usage": true,
+    "native_part_intervals": true,
+    "capture_stats": true
+  },
+  "request_text_SSE_work_checked": true,
+  "normalization": null
+}

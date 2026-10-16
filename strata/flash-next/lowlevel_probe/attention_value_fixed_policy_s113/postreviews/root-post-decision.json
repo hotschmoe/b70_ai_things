@@ -1,0 +1,32 @@
+{
+  "stage": "S113 completed prefill and next HC source decision",
+  "actual_models": [
+    {
+      "id": "claude-opus-5-5",
+      "elapsed_s": 55.23648395499913,
+      "exit": 0
+    },
+    {
+      "id": "claude-fable-5-1",
+      "elapsed_s": 64.73715449502924,
+      "exit": 0
+    }
+  ],
+  "root_read_both_full_assistant_texts": true,
+  "S113_verdict": "PASS_MATCHED_DISCRIMINATOR; retain default OFF, descriptive only, no immediate repeat or full-cache campaign.32K1548.9->1590.6tok/s(+2.6922%),4K1294.9->1299.2(+.3321%). S94 unresolved and unchanged.",
+  "next": "S114 isolated MTP build and main binding audit; HC offline selected original UP/reduce ISA audit first, no private implementation/build/GPU until that supports source hypothesis.",
+  "HC_source_scope": "One producer-activation relocation on normal sliced/nonMORE/C16/nonILP/nonGRF nsplit1 path only; all four kernels, raw part, owner private lo and existing boundary retained.",
+  "root_corrections": [
+    "S113 is a matched tested opt-in candidate, not qualified shelf/default/stability gain; wording qualified candidate from model not adopted.",
+    "HTTP requests explicitly override minp0; suffix/lookup/spec/mtpmax/minp native argv fixed. Packet shorthand bothnative+HTTP is not evidence of five explicit HTTP fields.",
+    "Do not infer the cause was removed/explained by fixed policy; S94 remains unresolved.",
+    "Preserve the extra +0 add/division and signedzero/subnormal/nonfinite obligations; do not rely on model universal claim that reduced x cannot be negative zero or source bit-equivalence.",
+    "No universal lowering/nativeexp/denorm assertion. Actual selected ISA and private strict fixtures must decide.",
+    "Absent spill/scratch fields unknown, not zero or automatically qualified no-spill. Raw byte identity, computational body and ordered FP dataflow are distinct claims; register/scheduling differences must be explicit.",
+    "Historical family times/source160-fold expression counts do not give current removable critical-path budget."
+  ],
+  "HC_permission": "Offline extraction/decode preparation only now; source fixture may be prepared only after root reads actual existing selected ISA; no live kernel change/build/GPU.",
+  "root_HC_frozen_payloads_and_current_excerpt_verified": true,
+  "root_HC_selected_source_read": true,
+  "S114_source_applied_separate_after_S113_closure": true
+}

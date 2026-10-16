@@ -1,0 +1,956 @@
+{
+  "status": "PASS_MATCHED_DISCRIMINATOR",
+  "checks": {
+    "identity_image_native": true,
+    "warm4k": true,
+    "p4096-0": true,
+    "p4096-1": true,
+    "p4096-2": true,
+    "p32768-0": true,
+    "p32768-1": true,
+    "p32768-2": true,
+    "functionals": true,
+    "normal_and_health": true,
+    "fullCID_NAME_absence": true,
+    "normalQUIT_diag": true,
+    "final_value_HOST_0": true,
+    "QSA_OFF_0": true,
+    "unrelated_HOST_absent_0": true,
+    "CENTER_OFF_if_reached_0": true,
+    "final_value_HOST_1": true,
+    "QSA_OFF_1": true,
+    "unrelated_HOST_absent_1": true,
+    "CENTER_OFF_if_reached_1": true,
+    "startup_captures_equal": true,
+    "loader_provenance": true
+  },
+  "same_binary": true,
+  "requests": [
+    {
+      "name": "warm4k",
+      "unmeasured_warm": true,
+      "matched": true,
+      "checks": {
+        "request_equal": true,
+        "full_text_SSE_equal": true,
+        "usage_equal": true,
+        "native_work_equal": true,
+        "HTTP_fixed_minp": true,
+        "local_gates": true,
+        "fresh_and_output": true,
+        "parts_and_captures": true,
+        "value_host_marker": true
+      },
+      "work": [
+        {
+          "cache_n": 0,
+          "prompt_n": 4060,
+          "predicted_n": 256,
+          "draft_n": 285,
+          "draft_n_accepted": 162
+        },
+        {
+          "cache_n": 0,
+          "prompt_n": 4060,
+          "predicted_n": 256,
+          "draft_n": 285,
+          "draft_n_accepted": 162
+        }
+      ],
+      "usage": [
+        {
+          "prompt_tokens": 4060,
+          "completion_tokens": 256,
+          "total_tokens": 4316,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        {
+          "prompt_tokens": 4060,
+          "completion_tokens": 256,
+          "total_tokens": 4316,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        }
+      ],
+      "observed_capture_stats": [
+        {
+          "logged_capture_layouts": [
+            "strata verify: captured the 4-token window (upload no error, sync no error)",
+            "strata verify: captured the 2-token window (upload no error, sync no error)",
+            "strata verify: captured the 1-token window (upload no error, sync no error)"
+          ],
+          "native_window_rows": [],
+          "paired_solo": []
+        },
+        {
+          "logged_capture_layouts": [
+            "strata verify: captured the 4-token window (upload no error, sync no error)",
+            "strata verify: captured the 2-token window (upload no error, sync no error)",
+            "strata verify: captured the 1-token window (upload no error, sync no error)"
+          ],
+          "native_window_rows": [],
+          "paired_solo": []
+        }
+      ],
+      "VALUE_HOST_observations": [
+        {
+          "selected": false,
+          "count": 0,
+          "raw": [],
+          "scope": "HOST selection only, not independent GPU dispatch/call count",
+          "first_emission_request": null
+        },
+        {
+          "selected": true,
+          "count": 1,
+          "raw": [
+            "strata: prefill attention value pipeline selected (nq32 cap2051 INT8 page4)"
+          ],
+          "scope": "HOST selection only, not independent GPU dispatch/call count",
+          "first_emission_request": "warm4k"
+        }
+      ],
+      "metrics": [
+        {
+          "ttft_s": 3.4798407830530778,
+          "wall_s": 6.909530244010966,
+          "client_decode_tps": 74.3507547557324,
+          "content_event_gap_ms": {
+            "count": 245,
+            "p50": 0.0887489877641201,
+            "p95": 36.22598359361291,
+            "maximum": 42.115972959436476
+          },
+          "native_prompt_tps": 1188.8,
+          "native_prompt_ms": 3415.1,
+          "output_sha256": "0561fafe4c7006e6d09b273bda58e59472a2d275d79f755afa9ddf1d2ed2435b"
+        },
+        {
+          "ttft_s": 3.4631496249930933,
+          "wall_s": 6.893470349023119,
+          "client_decode_tps": 74.33707239491581,
+          "content_event_gap_ms": {
+            "count": 245,
+            "p50": 0.098828983027488,
+            "p95": 36.25952419824898,
+            "maximum": 42.05475701019168
+          },
+          "native_prompt_tps": 1194.5,
+          "native_prompt_ms": 3398.8,
+          "output_sha256": "0561fafe4c7006e6d09b273bda58e59472a2d275d79f755afa9ddf1d2ed2435b"
+        }
+      ]
+    },
+    {
+      "name": "p4096-0",
+      "unmeasured_warm": false,
+      "matched": true,
+      "checks": {
+        "request_equal": true,
+        "full_text_SSE_equal": true,
+        "usage_equal": true,
+        "native_work_equal": true,
+        "HTTP_fixed_minp": true,
+        "local_gates": true,
+        "fresh_and_output": true,
+        "timed_prompt_count": true,
+        "parts_and_captures": true,
+        "value_host_marker": true
+      },
+      "work": [
+        {
+          "cache_n": 0,
+          "prompt_n": 4059,
+          "predicted_n": 256,
+          "draft_n": 315,
+          "draft_n_accepted": 150
+        },
+        {
+          "cache_n": 0,
+          "prompt_n": 4059,
+          "predicted_n": 256,
+          "draft_n": 315,
+          "draft_n_accepted": 150
+        }
+      ],
+      "usage": [
+        {
+          "prompt_tokens": 4059,
+          "completion_tokens": 256,
+          "total_tokens": 4315,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        {
+          "prompt_tokens": 4059,
+          "completion_tokens": 256,
+          "total_tokens": 4315,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        }
+      ],
+      "observed_capture_stats": [
+        {
+          "logged_capture_layouts": [],
+          "native_window_rows": [],
+          "paired_solo": []
+        },
+        {
+          "logged_capture_layouts": [],
+          "native_window_rows": [],
+          "paired_solo": []
+        }
+      ],
+      "VALUE_HOST_observations": [
+        {
+          "selected": false,
+          "count": 0,
+          "raw": [],
+          "scope": "HOST selection only, not independent GPU dispatch/call count",
+          "first_emission_request": null
+        },
+        {
+          "selected": true,
+          "count": 1,
+          "raw": [
+            "strata: prefill attention value pipeline selected (nq32 cap2051 INT8 page4)"
+          ],
+          "scope": "HOST selection only, not independent GPU dispatch/call count",
+          "first_emission_request": "warm4k"
+        }
+      ],
+      "metrics": [
+        {
+          "ttft_s": 3.1835404310259037,
+          "wall_s": 6.968698694021441,
+          "client_decode_tps": 67.36838522524431,
+          "content_event_gap_ms": {
+            "count": 246,
+            "p50": 0.10172848124057055,
+            "p95": 36.36338547221385,
+            "maximum": 36.8096079910174
+          },
+          "native_prompt_tps": 1287.5,
+          "native_prompt_ms": 3152.7,
+          "output_sha256": "4cc1afbabebee14a0f00b57b64d9ad10b331db0ad4c508fb39894cbfe3b1bca0"
+        },
+        {
+          "ttft_s": 3.154280752991326,
+          "wall_s": 6.941191908030305,
+          "client_decode_tps": 67.33720162953632,
+          "content_event_gap_ms": {
+            "count": 246,
+            "p50": 0.08941054693423212,
+            "p95": 36.37046823860146,
+            "maximum": 36.99524200055748
+          },
+          "native_prompt_tps": 1299.2,
+          "native_prompt_ms": 3124.3,
+          "output_sha256": "4cc1afbabebee14a0f00b57b64d9ad10b331db0ad4c508fb39894cbfe3b1bca0"
+        }
+      ]
+    },
+    {
+      "name": "p4096-1",
+      "unmeasured_warm": false,
+      "matched": true,
+      "checks": {
+        "request_equal": true,
+        "full_text_SSE_equal": true,
+        "usage_equal": true,
+        "native_work_equal": true,
+        "HTTP_fixed_minp": true,
+        "local_gates": true,
+        "fresh_and_output": true,
+        "timed_prompt_count": true,
+        "parts_and_captures": true,
+        "value_host_marker": true
+      },
+      "work": [
+        {
+          "cache_n": 0,
+          "prompt_n": 4059,
+          "predicted_n": 256,
+          "draft_n": 297,
+          "draft_n_accepted": 156
+        },
+        {
+          "cache_n": 0,
+          "prompt_n": 4059,
+          "predicted_n": 256,
+          "draft_n": 297,
+          "draft_n_accepted": 156
+        }
+      ],
+      "usage": [
+        {
+          "prompt_tokens": 4059,
+          "completion_tokens": 256,
+          "total_tokens": 4315,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        {
+          "prompt_tokens": 4059,
+          "completion_tokens": 256,
+          "total_tokens": 4315,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        }
+      ],
+      "observed_capture_stats": [
+        {
+          "logged_capture_layouts": [],
+          "native_window_rows": [],
+          "paired_solo": []
+        },
+        {
+          "logged_capture_layouts": [],
+          "native_window_rows": [],
+          "paired_solo": []
+        }
+      ],
+      "VALUE_HOST_observations": [
+        {
+          "selected": false,
+          "count": 0,
+          "raw": [],
+          "scope": "HOST selection only, not independent GPU dispatch/call count",
+          "first_emission_request": null
+        },
+        {
+          "selected": true,
+          "count": 1,
+          "raw": [
+            "strata: prefill attention value pipeline selected (nq32 cap2051 INT8 page4)"
+          ],
+          "scope": "HOST selection only, not independent GPU dispatch/call count",
+          "first_emission_request": "warm4k"
+        }
+      ],
+      "metrics": [
+        {
+          "ttft_s": 3.1645262250094675,
+          "wall_s": 6.735226578020956,
+          "client_decode_tps": 71.4145615117034,
+          "content_event_gap_ms": {
+            "count": 244,
+            "p50": 0.09412950021214783,
+            "p95": 36.29175198730081,
+            "maximum": 36.822182999458164
+          },
+          "native_prompt_tps": 1294.9,
+          "native_prompt_ms": 3134.5,
+          "output_sha256": "6020ad772966a94e334d959bfdbc0eb281a0b45cfb5053a59d34cd15b07dfa2b"
+        },
+        {
+          "ttft_s": 3.1532427750062197,
+          "wall_s": 6.724597516003996,
+          "client_decode_tps": 71.4014760484861,
+          "content_event_gap_ms": {
+            "count": 244,
+            "p50": 0.10552597814239562,
+            "p95": 36.409682559315115,
+            "maximum": 36.77796799456701
+          },
+          "native_prompt_tps": 1299.7,
+          "native_prompt_ms": 3123.1,
+          "output_sha256": "6020ad772966a94e334d959bfdbc0eb281a0b45cfb5053a59d34cd15b07dfa2b"
+        }
+      ]
+    },
+    {
+      "name": "p4096-2",
+      "unmeasured_warm": false,
+      "matched": true,
+      "checks": {
+        "request_equal": true,
+        "full_text_SSE_equal": true,
+        "usage_equal": true,
+        "native_work_equal": true,
+        "HTTP_fixed_minp": true,
+        "local_gates": true,
+        "fresh_and_output": true,
+        "timed_prompt_count": true,
+        "parts_and_captures": true,
+        "value_host_marker": true
+      },
+      "work": [
+        {
+          "cache_n": 0,
+          "prompt_n": 4059,
+          "predicted_n": 256,
+          "draft_n": 279,
+          "draft_n_accepted": 162
+        },
+        {
+          "cache_n": 0,
+          "prompt_n": 4059,
+          "predicted_n": 256,
+          "draft_n": 279,
+          "draft_n_accepted": 162
+        }
+      ],
+      "usage": [
+        {
+          "prompt_tokens": 4059,
+          "completion_tokens": 256,
+          "total_tokens": 4315,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        {
+          "prompt_tokens": 4059,
+          "completion_tokens": 256,
+          "total_tokens": 4315,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        }
+      ],
+      "observed_capture_stats": [
+        {
+          "logged_capture_layouts": [],
+          "native_window_rows": [],
+          "paired_solo": []
+        },
+        {
+          "logged_capture_layouts": [],
+          "native_window_rows": [],
+          "paired_solo": []
+        }
+      ],
+      "VALUE_HOST_observations": [
+        {
+          "selected": false,
+          "count": 0,
+          "raw": [],
+          "scope": "HOST selection only, not independent GPU dispatch/call count",
+          "first_emission_request": null
+        },
+        {
+          "selected": true,
+          "count": 1,
+          "raw": [
+            "strata: prefill attention value pipeline selected (nq32 cap2051 INT8 page4)"
+          ],
+          "scope": "HOST selection only, not independent GPU dispatch/call count",
+          "first_emission_request": "warm4k"
+        }
+      ],
+      "metrics": [
+        {
+          "ttft_s": 3.150887324998621,
+          "wall_s": 6.509625065024011,
+          "client_decode_tps": 75.92137872547094,
+          "content_event_gap_ms": {
+            "count": 242,
+            "p50": 0.07351048407144845,
+            "p95": 36.473630167893134,
+            "maximum": 71.78574101999402
+          },
+          "native_prompt_tps": 1300.6,
+          "native_prompt_ms": 3120.8,
+          "output_sha256": "bf5c4f729df88fc5ae55e99761c99ba5d1c932abf1b3be063a2ea5bca5ec2312"
+        },
+        {
+          "ttft_s": 3.160772879025899,
+          "wall_s": 6.521173669025302,
+          "client_decode_tps": 75.88380551477174,
+          "content_event_gap_ms": {
+            "count": 242,
+            "p50": 0.07431147969327867,
+            "p95": 36.48330966534559,
+            "maximum": 71.88618299551308
+          },
+          "native_prompt_tps": 1296.7,
+          "native_prompt_ms": 3130.3,
+          "output_sha256": "bf5c4f729df88fc5ae55e99761c99ba5d1c932abf1b3be063a2ea5bca5ec2312"
+        }
+      ]
+    },
+    {
+      "name": "p32768-0",
+      "unmeasured_warm": false,
+      "matched": true,
+      "checks": {
+        "request_equal": true,
+        "full_text_SSE_equal": true,
+        "usage_equal": true,
+        "native_work_equal": true,
+        "HTTP_fixed_minp": true,
+        "local_gates": true,
+        "fresh_and_output": true,
+        "timed_prompt_count": true,
+        "parts_and_captures": true,
+        "value_host_marker": true
+      },
+      "work": [
+        {
+          "cache_n": 0,
+          "prompt_n": 32728,
+          "predicted_n": 256,
+          "draft_n": 288,
+          "draft_n_accepted": 161
+        },
+        {
+          "cache_n": 0,
+          "prompt_n": 32728,
+          "predicted_n": 256,
+          "draft_n": 288,
+          "draft_n_accepted": 161
+        }
+      ],
+      "usage": [
+        {
+          "prompt_tokens": 32728,
+          "completion_tokens": 256,
+          "total_tokens": 32984,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        {
+          "prompt_tokens": 32728,
+          "completion_tokens": 256,
+          "total_tokens": 32984,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        }
+      ],
+      "observed_capture_stats": [
+        {
+          "logged_capture_layouts": [],
+          "native_window_rows": [],
+          "paired_solo": []
+        },
+        {
+          "logged_capture_layouts": [],
+          "native_window_rows": [],
+          "paired_solo": []
+        }
+      ],
+      "VALUE_HOST_observations": [
+        {
+          "selected": false,
+          "count": 0,
+          "raw": [],
+          "scope": "HOST selection only, not independent GPU dispatch/call count",
+          "first_emission_request": null
+        },
+        {
+          "selected": true,
+          "count": 1,
+          "raw": [
+            "strata: prefill attention value pipeline selected (nq32 cap2051 INT8 page4)"
+          ],
+          "scope": "HOST selection only, not independent GPU dispatch/call count",
+          "first_emission_request": "warm4k"
+        }
+      ],
+      "metrics": [
+        {
+          "ttft_s": 20.79202727699885,
+          "wall_s": 24.441808547999244,
+          "client_decode_tps": 69.86720054325484,
+          "content_event_gap_ms": {
+            "count": 241,
+            "p50": 0.08391001028940082,
+            "p95": 38.358821999281645,
+            "maximum": 38.73584000393748
+          },
+          "native_prompt_tps": 1579.0,
+          "native_prompt_ms": 20727.3,
+          "output_sha256": "c1784d40d27af69d3e2ec403d9ec8da85bedfc63d437811cf3cf93406a2c0646"
+        },
+        {
+          "ttft_s": 20.196708762960043,
+          "wall_s": 23.848060998949222,
+          "client_decode_tps": 69.83714074107083,
+          "content_event_gap_ms": {
+            "count": 241,
+            "p50": 0.07851002737879753,
+            "p95": 38.481835974380374,
+            "maximum": 38.752721971832216
+          },
+          "native_prompt_tps": 1625.5,
+          "native_prompt_ms": 20133.5,
+          "output_sha256": "c1784d40d27af69d3e2ec403d9ec8da85bedfc63d437811cf3cf93406a2c0646"
+        }
+      ]
+    },
+    {
+      "name": "p32768-1",
+      "unmeasured_warm": false,
+      "matched": true,
+      "checks": {
+        "request_equal": true,
+        "full_text_SSE_equal": true,
+        "usage_equal": true,
+        "native_work_equal": true,
+        "HTTP_fixed_minp": true,
+        "local_gates": true,
+        "fresh_and_output": true,
+        "timed_prompt_count": true,
+        "parts_and_captures": true,
+        "value_host_marker": true
+      },
+      "work": [
+        {
+          "cache_n": 0,
+          "prompt_n": 32728,
+          "predicted_n": 256,
+          "draft_n": 303,
+          "draft_n_accepted": 154
+        },
+        {
+          "cache_n": 0,
+          "prompt_n": 32728,
+          "predicted_n": 256,
+          "draft_n": 303,
+          "draft_n_accepted": 154
+        }
+      ],
+      "usage": [
+        {
+          "prompt_tokens": 32728,
+          "completion_tokens": 256,
+          "total_tokens": 32984,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        {
+          "prompt_tokens": 32728,
+          "completion_tokens": 256,
+          "total_tokens": 32984,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        }
+      ],
+      "observed_capture_stats": [
+        {
+          "logged_capture_layouts": [],
+          "native_window_rows": [],
+          "paired_solo": []
+        },
+        {
+          "logged_capture_layouts": [],
+          "native_window_rows": [],
+          "paired_solo": []
+        }
+      ],
+      "VALUE_HOST_observations": [
+        {
+          "selected": false,
+          "count": 0,
+          "raw": [],
+          "scope": "HOST selection only, not independent GPU dispatch/call count",
+          "first_emission_request": null
+        },
+        {
+          "selected": true,
+          "count": 1,
+          "raw": [
+            "strata: prefill attention value pipeline selected (nq32 cap2051 INT8 page4)"
+          ],
+          "scope": "HOST selection only, not independent GPU dispatch/call count",
+          "first_emission_request": "warm4k"
+        }
+      ],
+      "metrics": [
+        {
+          "ttft_s": 21.191715833963826,
+          "wall_s": 25.036836149985902,
+          "client_decode_tps": 66.31782078117318,
+          "content_event_gap_ms": {
+            "count": 241,
+            "p50": 0.08832901949062943,
+            "p95": 38.367367000319064,
+            "maximum": 39.63889100123197
+          },
+          "native_prompt_tps": 1548.9,
+          "native_prompt_ms": 21129.3,
+          "output_sha256": "39231d75efb901b80c7f9232b8ff5b726dca0eb48a21663e9aab4020e6a80c0c"
+        },
+        {
+          "ttft_s": 20.63773289398523,
+          "wall_s": 24.483494321990293,
+          "client_decode_tps": 66.30676519429285,
+          "content_event_gap_ms": {
+            "count": 241,
+            "p50": 0.09277701610699296,
+            "p95": 38.38540200376883,
+            "maximum": 38.70421997271478
+          },
+          "native_prompt_tps": 1590.6,
+          "native_prompt_ms": 20576.2,
+          "output_sha256": "39231d75efb901b80c7f9232b8ff5b726dca0eb48a21663e9aab4020e6a80c0c"
+        }
+      ]
+    },
+    {
+      "name": "p32768-2",
+      "unmeasured_warm": false,
+      "matched": true,
+      "checks": {
+        "request_equal": true,
+        "full_text_SSE_equal": true,
+        "usage_equal": true,
+        "native_work_equal": true,
+        "HTTP_fixed_minp": true,
+        "local_gates": true,
+        "fresh_and_output": true,
+        "timed_prompt_count": true,
+        "parts_and_captures": true,
+        "value_host_marker": true
+      },
+      "work": [
+        {
+          "cache_n": 0,
+          "prompt_n": 32728,
+          "predicted_n": 256,
+          "draft_n": 321,
+          "draft_n_accepted": 150
+        },
+        {
+          "cache_n": 0,
+          "prompt_n": 32728,
+          "predicted_n": 256,
+          "draft_n": 321,
+          "draft_n_accepted": 150
+        }
+      ],
+      "usage": [
+        {
+          "prompt_tokens": 32728,
+          "completion_tokens": 256,
+          "total_tokens": 32984,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        {
+          "prompt_tokens": 32728,
+          "completion_tokens": 256,
+          "total_tokens": 32984,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        }
+      ],
+      "observed_capture_stats": [
+        {
+          "logged_capture_layouts": [],
+          "native_window_rows": [],
+          "paired_solo": []
+        },
+        {
+          "logged_capture_layouts": [],
+          "native_window_rows": [],
+          "paired_solo": []
+        }
+      ],
+      "VALUE_HOST_observations": [
+        {
+          "selected": false,
+          "count": 0,
+          "raw": [],
+          "scope": "HOST selection only, not independent GPU dispatch/call count",
+          "first_emission_request": null
+        },
+        {
+          "selected": true,
+          "count": 1,
+          "raw": [
+            "strata: prefill attention value pipeline selected (nq32 cap2051 INT8 page4)"
+          ],
+          "scope": "HOST selection only, not independent GPU dispatch/call count",
+          "first_emission_request": "warm4k"
+        }
+      ],
+      "metrics": [
+        {
+          "ttft_s": 21.22955794999143,
+          "wall_s": 25.302878934016917,
+          "client_decode_tps": 62.60248112045287,
+          "content_event_gap_ms": {
+            "count": 245,
+            "p50": 0.10449899127706885,
+            "p95": 38.374168414156884,
+            "maximum": 38.70393894612789
+          },
+          "native_prompt_tps": 1546.1,
+          "native_prompt_ms": 21167.8,
+          "output_sha256": "a60024231063f96828d9765dfbd9af45708891034df5038de6cd3adf7ba36f43"
+        },
+        {
+          "ttft_s": 20.660431512980722,
+          "wall_s": 24.73457591596525,
+          "client_decode_tps": 62.58982863081603,
+          "content_event_gap_ms": {
+            "count": 245,
+            "p50": 0.08471199544146657,
+            "p95": 38.3217827999033,
+            "maximum": 38.48064399790019
+          },
+          "native_prompt_tps": 1589.1,
+          "native_prompt_ms": 20594.7,
+          "output_sha256": "a60024231063f96828d9765dfbd9af45708891034df5038de6cd3adf7ba36f43"
+        }
+      ]
+    }
+  ],
+  "timed_summary": {
+    "p4096": {
+      "native_prompt_tps": [
+        {
+          "median": 1294.9,
+          "range": [
+            1287.5,
+            1300.6
+          ]
+        },
+        {
+          "median": 1299.2,
+          "range": [
+            1296.7,
+            1299.7
+          ]
+        }
+      ],
+      "native_prompt_ms": [
+        {
+          "median": 3134.5,
+          "range": [
+            3120.8,
+            3152.7
+          ]
+        },
+        {
+          "median": 3124.3,
+          "range": [
+            3123.1,
+            3130.3
+          ]
+        }
+      ],
+      "ttft_s": [
+        {
+          "median": 3.1645262250094675,
+          "range": [
+            3.150887324998621,
+            3.1835404310259037
+          ]
+        },
+        {
+          "median": 3.154280752991326,
+          "range": [
+            3.1532427750062197,
+            3.160772879025899
+          ]
+        }
+      ],
+      "wall_s": [
+        {
+          "median": 6.735226578020956,
+          "range": [
+            6.509625065024011,
+            6.968698694021441
+          ]
+        },
+        {
+          "median": 6.724597516003996,
+          "range": [
+            6.521173669025302,
+            6.941191908030305
+          ]
+        }
+      ]
+    },
+    "p32768": {
+      "native_prompt_tps": [
+        {
+          "median": 1548.9,
+          "range": [
+            1546.1,
+            1579.0
+          ]
+        },
+        {
+          "median": 1590.6,
+          "range": [
+            1589.1,
+            1625.5
+          ]
+        }
+      ],
+      "native_prompt_ms": [
+        {
+          "median": 21129.3,
+          "range": [
+            20727.3,
+            21167.8
+          ]
+        },
+        {
+          "median": 20576.2,
+          "range": [
+            20133.5,
+            20594.7
+          ]
+        }
+      ],
+      "ttft_s": [
+        {
+          "median": 21.191715833963826,
+          "range": [
+            20.79202727699885,
+            21.22955794999143
+          ]
+        },
+        {
+          "median": 20.63773289398523,
+          "range": [
+            20.196708762960043,
+            20.660431512980722
+          ]
+        }
+      ],
+      "wall_s": [
+        {
+          "median": 25.036836149985902,
+          "range": [
+            24.441808547999244,
+            25.302878934016917
+          ]
+        },
+        {
+          "median": 24.483494321990293,
+          "range": [
+            23.848060998949222,
+            24.73457591596525
+          ]
+        }
+      ]
+    }
+  },
+  "normalization": [
+    "attention-value flag0/1",
+    "arm-local names/logs"
+  ],
+  "scope": "NEW fixed-policy/4K-warm protocol; no S94 retrospective clearance or proof of its probability cause. Three fixed-order timed samples per shape, not independent replication.",
+  "activation_scope": "Once eligible value HOST marker by unmeasured4K warm, not GPU dispatch or all call counts.",
+  "SSE_scope": "Content events may contain multiple tokens, not token ITL.",
+  "no_cache_campaign_or_promotion": true
+}

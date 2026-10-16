@@ -1,0 +1,80 @@
+{
+  "pins": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/prefill/prefill.cpp",
+      "bytes": 303875,
+      "sha256": "2a1d8faa8bd58f112f4555a5ba7ab988b143fdb773106c8907903f0ecfafe16e"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp",
+      "bytes": 49375,
+      "sha256": "013e3b3df3cd4685af6330d9ab38223f41846e6a07aaeab2f7a534f66d1f36fe"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp",
+      "bytes": 119274,
+      "sha256": "13500a3af44f30793617d51aff6639344d2d943a50b53bdfe3c60ba81081967f"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/serve/server.py",
+      "bytes": 418896,
+      "sha256": "a18cabeeecd151925c9835f53a8a296c16a8b8f31adb1b8372b75190532ecfc7"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/bench_serving.py",
+      "bytes": 8227,
+      "sha256": "6f7751440113a6b6d092dd1bf9a0c734309d28ecffe5ac535412c22201852101"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/mode0/config.json",
+      "bytes": 2689,
+      "sha256": "5883bf0beb661eb2e6603d49aee2fc910b87c9f3d82d8a97b1c07073a01d6901"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/comparison.json",
+      "bytes": 19062,
+      "sha256": "8c327ef447e2c20d00ab596beff5a1bc54fc33413129d27e703c9b6bd8c3e5ef"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/root-build-audit.json",
+      "bytes": 2810,
+      "sha256": "e6e7c14897a8d3f123e7e160306f1d27c98595c30ba49e4d60fd6778fb86c538"
+    }
+  ],
+  "original_S94_controllers": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/harness-prep/client.py",
+      "bytes": 16994,
+      "sha256": "868cdbb02e338bdc10b002c0afb4027e1a0515852bc975e7f335e9fa686dd7ac"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/harness-prep/compare.py",
+      "bytes": 8563,
+      "sha256": "6a72efa79918737f7bbf02639178ebe0aed39efa3e33656d945c76796d68a05f"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/harness-prep/launch_stage.sh",
+      "bytes": 1896,
+      "sha256": "6985eb6ab8975b0bacd76d934311834c18627092a172e849621538b0836bbaea"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/harness-prep/make_configs.py",
+      "bytes": 4269,
+      "sha256": "755e63de2eea834c001d4d44b6c34b975414878e09f5d5fcc9f7da30a75ffaac"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/harness-prep/start_arm.py",
+      "bytes": 7302,
+      "sha256": "c5e0aad3ee023a377c1f7e5ca0d90d1ffd668dbc582e08b138a0b6b56663d6a8"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-resident-s94-serving/harness-prep/stop_and_health.py",
+      "bytes": 6382,
+      "sha256": "2a9366d86899ba17818df2248ffeb27bf7d92944c6ff42d3b037fb7f830b77eb"
+    }
+  ],
+  "current_S107_identity_controller": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/harness-prep/start_arm.py",
+    "sha256": "dbb025aa9196ef25d5ffbafe0235becf30d7a3d41d5bee8fba71fc567dfc06dc"
+  }
+}
