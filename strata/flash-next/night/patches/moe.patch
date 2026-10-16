@@ -1,0 +1,1170 @@
+diff --git a/include/strata/kernels/iq_kernels.hpp b/include/strata/kernels/iq_kernels.hpp
+index 0a39f646..e6294cd3 100644
+--- a/include/strata/kernels/iq_kernels.hpp
++++ b/include/strata/kernels/iq_kernels.hpp
+@@ -87,6 +87,8 @@ void native_expert_set_mode(int mode, int phase);
+ /// true selects the older kernels that decode it again per column (STRATA_OLD_IQ_MMVQ=1 at startup).  Both give
+ /// bitwise the same results.  Set before graph capture; captured graphs keep the kernels they captured.
+ void iq_set_old_kernels(bool old);
++/// night lab bench: the STRATA_NIGHT_EP_ROWS kernels with rpl rows per lane (2; 0 off; -1 the environment's)
++void native_expert_set_night_rows(int rpl);
+ bool iq_old_kernels();
+ 
+ }  // namespace strata::kernels
+diff --git a/sycl/CMakeLists.txt b/sycl/CMakeLists.txt
+index e5e4b36a..d8eb650f 100644
+--- a/sycl/CMakeLists.txt
++++ b/sycl/CMakeLists.txt
+@@ -336,6 +336,10 @@ if(STRATA_SYCL_PARITY)
+   add_executable(native_grouped_parity ${_src})
+   target_link_libraries(native_grouped_parity PRIVATE strata_kernels)
+   add_test(NAME native_grouped_parity COMMAND native_grouped_parity)
++  # night lab: EP decode MoE microbench + STRATA_NIGHT_EP_* parity (not a ctest)
++  strata_resolve(_src src/kernels/ep_night_bench.cpp)
++  add_executable(ep_night_bench ${_src})
++  target_link_libraries(ep_night_bench PRIVATE strata_kernels)
+   # 0.1.40 (#783): the batched verify-window kernels against the ones they replace, bitwise (synthetic, no model)
+   foreach(p IN ITEMS verify native_multi kv_steps resident_plan gr_multi resident_plan_ep)   # resident_plan_ep: port-only
+     strata_resolve(_src src/kernels/${p}_parity.cpp)
+diff --git a/sycl/include/strata/core/verify.hpp b/sycl/include/strata/core/verify.hpp
+index cbe7f9c6..bbdeef64 100644
+--- a/sycl/include/strata/core/verify.hpp
++++ b/sycl/include/strata/core/verify.hpp
+@@ -59,6 +59,7 @@ struct VerifyEp {
+     const uint8_t* cache_base1 = nullptr;            ///< the peer's expert arena
+     const unsigned long long* slot_off1 = nullptr;   ///< the peer's per-slot offsets, its memory (null: slot * blob1)
+     int64_t blob1 = 0;
++    const unsigned long long* slot_off1_on0 = nullptr;   ///< night lab STRATA_NIGHT_EP_PLAN1: slot_off1, a copy here
+ };
+ 
+ struct VerifyHits {
+@@ -384,6 +385,19 @@ private:
+     const bool ep_verify_ = [] { const char* v = std::getenv("STRATA_EP_VERIFY"); return v && v[0] == '1'; }();
+     uint32_t ep_spin_ = 2000000u;                     ///< STRATA_EP_SPIN_MAX: reads before a wait gives up
+     size_t ep_slot_bytes_ = 0, ep_xq_off_ = 0;        ///< inbox: bytes per group, offset of the q8_1 rows
++    /// night lab STRATA_NIGHT_EP_PSUM=1 (default off): the inbox also carries the routing weights (at ep_w_off_) and
++    /// the peer returns one weighted-sum row per token into ep_psum_ (an EpRegion on this card) instead of a row per entry
++    bool ep_psum_ = false;
++    /// night lab STRATA_NIGHT_EP_PLAN1=1: card 0 makes card 1's plan too (resident_plan_ep_pair) and pushes it in the
++    /// inbox slot (at ep_plan_off_, ep_plan_words_ words); card 1 skips its resident_plan_ep
++    bool ep_plan1_on_ = false;
++    size_t ep_plan_off_ = 0;
++    int ep_plan_words_ = 0;
++    int32_t* ep_plan1_on0_ = nullptr;                 ///< card 1's plans as card 0 makes them (two groups), card 0
++    size_t ep_w_off_ = 0;
++    void* ep_psum_reg_ = nullptr;
++    float* ep_psum0_ = nullptr;                       ///< this card's address
++    float* ep_psum_on1_ = nullptr;                    ///< the peer's address
+     dpct::experimental::command_graph_exec_ptr ep_exec_[9] = {};   ///< the peer's graph per window size
+     std::map<std::vector<int>, dpct::experimental::command_graph_exec_ptr> ep_exec_bm_;   ///< ... per batch row layout
+     bool ep_init(std::string& err);
+diff --git a/sycl/include/strata/kernels/ep_kernels.hpp b/sycl/include/strata/kernels/ep_kernels.hpp
+index fea1b4bf..2e8e6298 100644
+--- a/sycl/include/strata/kernels/ep_kernels.hpp
++++ b/sycl/include/strata/kernels/ep_kernels.hpp
+@@ -25,6 +25,27 @@ void ep_wait(const uint32_t* flag, const uint32_t* ctr, uint32_t spin_max, uint3
+ void ep_send_rows(float* peer_rows, const float* rows, const int32_t* ids, const int32_t* res0, int n, int64_t row,
+                   uint32_t* done, uint32_t* peer_flag, const uint32_t* ctr, void* stream);
+ 
++/// Night lab STRATA_NIGHT_EP_PSUM (default off): ep_push plus the n_ids routing weights into peer_w (the same slot),
++/// so the peer can weight its own rows itself.
++/// STRATA_NIGHT_EP_PLAN1 (default off): also plan_words int32 of `plan` (card 1's plan, made on card 0) into
++/// peer_plan.  w / peer_w (and plan / peer_plan) may be null: not copied.
++void ep_push_w(const int32_t* ids, const float* w, int n_ids, const uint8_t* xq, size_t xq_bytes, int32_t* peer_ids,
++               float* peer_w, uint8_t* peer_xq, uint32_t* peer_flag, const uint32_t* ctr, void* stream,
++               const int32_t* plan = nullptr, int plan_words = 0, int32_t* peer_plan = nullptr);
++/// Night lab STRATA_NIGHT_EP_PSUM: the peer sends ONE row per token instead of one per entry: peer_sum[t] = the
++/// weighted sum (in entry order, first product rounded then one FMA per entry) of the rows of token t's entries card 0
++/// does not own (`res0`, the same partition as ep_send_rows); then *peer_flag = *ctr as ep_send_rows (`done` counts
++/// the work-groups, zero between calls).  A token with no peer entry gets a zero row.
++void ep_send_psum(float* peer_sum, const float* rows, const int32_t* ids, const float* w, const int32_t* res0,
++                  int n_tok, int k, int64_t row, uint32_t* done, uint32_t* peer_flag, const uint32_t* ctr, void* stream);
++/// Night lab STRATA_NIGHT_EP_PSUM: card 0's combine: out[t] = sum over the entries card 0 owns (res0[e] >= 0; first
++/// product rounded, then one FMA per entry, in entry order) of w * parts, + psum[t] (plain loads, as the combine reads
++/// the peer's rows in parts_; -DSTRATA_NIGHT_PSUM_UNCACHED=1 reads past the caches), + the shared row (gated: shared * sigmoid(sg[t]) rounded on its own, as
++/// native_moe_combine_multi_hits_gated; sg == nullptr: plain).  FP32 order differs from native_moe_combine_multi
++/// (the peer's products are summed first), so results agree to FP32 rounding, not bitwise.
++void ep_combine_psum(const float* parts, const float* w, const int32_t* ids, const int32_t* res0, const float* psum,
++                     const float* shared, const float* sg, float* out, int64_t row, int k, int n_tok, void* stream);
++
+ /// Copy `bytes` read past this card's caches, for data the other card wrote into this card's memory: an inbound PCIe
+ /// write does not invalidate this card's caches, so a plain load can return the previous window's data.  `bytes` is a
+ /// multiple of 4; both pointers are 4-byte aligned.
+@@ -47,6 +68,13 @@ void ep_compare(const float* parts, const float* peer_rows, const int32_t* ids,
+ /// resident_plan for one card of the pair.  An entry belongs to card 0 when its expert is resident there (`res0`),
+ /// else to card 1 (`res1`); an expert on neither is a plan error.  Role 1 is card 0, role 2 card 1: each plans only
+ /// its own entries, and counts[1] is their number.  res0 / res1 are this card's copies of both tables for the layer.
++/// Night lab STRATA_NIGHT_EP_PLAN1: both roles' plans on card 0 in ONE launch (work-group 0: role 1 into plan0 with
++/// card 0's arena; work-group 1: role 2 into plan1 with card 1's arena base / slot offsets as card 1 addresses them,
++/// slot_off1 a copy in card 0's memory or null), word for word what resident_plan_ep makes on each card.
++void resident_plan_ep_pair(const int32_t* ids, int n_entries, int k, const int32_t* res0, const int32_t* res1,
++                           int n_expert, const uint8_t* cache_base0, const unsigned long long* slot_off0, long long blob0,
++                           int32_t* plan0, const uint8_t* cache_base1, const unsigned long long* slot_off1,
++                           long long blob1, int32_t* plan1, long long capx, void* stream, uint32_t* plan_err);
+ void resident_plan_ep(const int32_t* ids, int n_entries, int k, const int32_t* res0, const int32_t* res1, int role,
+                       int n_expert, const uint8_t* cache_base, const unsigned long long* slot_off, long long blob,
+                       int32_t* plan, long long capx, void* stream, uint32_t* plan_err);
+diff --git a/sycl/src/core/verify.cpp b/sycl/src/core/verify.cpp
+index 1b7273eb..75732571 100644
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -74,6 +74,26 @@ constexpr float EPS = 1e-6f;
+ using Clock = std::chrono::steady_clock;
+ double ms_since(Clock::time_point t) { return std::chrono::duration<double, std::milli>(Clock::now() - t).count(); }
+ const bool g_dbg = std::getenv("STRATA_VERIFY_DEBUG") != nullptr;
++// night lab: STRATA_NIGHT_EP_PSUM=1 - the EP peer returns one weighted row per token (ep_send_psum / ep_combine_psum)
++inline bool g_night_ep_psum() {
++    static const bool on = [] {
++        const char* v = std::getenv("STRATA_NIGHT_EP_PSUM");
++        const bool b = v != nullptr && v[0] == '1';
++        if (b) std::fprintf(stderr, "strata night: STRATA_NIGHT_EP_PSUM=1 (EP peer returns per-token weighted sums)\n");
++        return b;
++    }();
++    return on;
++}
++// night lab: STRATA_NIGHT_EP_PLAN1=1 - card 0 plans card 1's entries too and pushes the plan with the rows
++inline bool g_night_ep_plan1() {
++    static const bool on = [] {
++        const char* v = std::getenv("STRATA_NIGHT_EP_PLAN1");
++        const bool b = v != nullptr && v[0] == '1';
++        if (b) std::fprintf(stderr, "strata night: STRATA_NIGHT_EP_PLAN1=1 (card 0 makes and pushes card 1's expert plan)\n");
++        return b;
++    }();
++    return on;
++}
+ inline bool g_lfuse() { static const bool on = [] { const char* v = std::getenv("STRATA_LFUSE"); return v != nullptr && v[0] == '1'; }(); return on; }
+ inline bool g_lfuse_gate() { static const bool on = [] { const char* v = std::getenv("STRATA_LFUSE_GATE"); return v == nullptr || v[0] != '0'; }(); return on; }
+ inline bool g_lfuse_pair() { static const bool on = [] { const char* v = std::getenv("STRATA_LFUSE_PAIR"); return v == nullptr || v[0] != '0'; }(); return on; }
+@@ -1342,6 +1362,14 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+             if (!moe_route(wt, g, l, K, mb, mixed_ + t * N, cs, err, nullptr)) return false;
+         }
+         static const bool ep_self = [] { const char* v = std::getenv("STRATA_EP_SELF"); return v && v[0] == '1'; }();
++        if (ar_on() && ep_on() && !ep_self && !ep_verify_ && ep_plan1_on_) {   // night lab: both cards' plans here
++            resident_plan_ep_pair(ids_ + tb * K, n * (int) K, (int) K, hits_.d_res + l * g.n_expert,
++                                  ep_cfg_.res1_on0 + l * g.n_expert, (int) g.n_expert, hits_.cache_base, slot_off_d_,
++                                  (long long) hits_.blob, plan_ + (size_t) grp * (size_t) (plan_i32_ + 16),
++                                  ep_cfg_.cache_base1, ep_cfg_.slot_off1_on0, (long long) ep_cfg_.blob1,
++                                  ep_plan1_on0_ + (size_t) grp * (size_t) (plan_i32_ + 16), (long long) max_t_ * K, cs,
++                                  m_plan_err_);
++        } else
+         if (ar_on() && ep_on() && !ep_self && !ep_verify_) {   // expert parallelism: this card's entries only, the peer's are its own plan
+             resident_plan_ep(ids_ + tb * K, n * (int) K, (int) K, hits_.d_res + l * g.n_expert,
+                              ep_cfg_.res1_on0 + l * g.n_expert, 1, (int) g.n_expert, hits_.cache_base, slot_off_d_,
+@@ -1427,12 +1455,22 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+             const size_t xq_bytes = (size_t) n * (N / 32) * 36;
+             uint8_t* slot0 = ep_inbox_on0_ + (size_t) grp * ep_slot_bytes_;
+             uint8_t* slot1 = ep_in1_ + (size_t) grp * ep_slot_bytes_;   // the inbox slot, copied past the caches
++            if (ep_psum_ || ep_plan1_on_)   // night lab: the routing weights / card 1's plan ride along
++                ep_push_w(ids_ + tb * K, ep_psum_ ? w_ + tb * K : nullptr, n * (int) K,
++                          nat_xq_ + (size_t) tb * (N / 32) * 36, xq_bytes, (int32_t*) slot0,
++                          ep_psum_ ? (float*) (slot0 + ep_w_off_) : nullptr, slot0 + ep_xq_off_,
++                          ep_inflag_on0_ + (size_t) ring * 16, ep_ctr0_, cs,
++                          ep_plan1_on_ ? ep_plan1_on0_ + (size_t) grp * (size_t) (plan_i32_ + 16) : nullptr,
++                          ep_plan_words_, ep_plan1_on_ ? (int32_t*) (slot0 + ep_plan_off_) : nullptr);
++            else
+             ep_push(ids_ + tb * K, n * (int) K, nat_xq_ + (size_t) tb * (N / 32) * 36, xq_bytes, (int32_t*) slot0,
+                     slot0 + ep_xq_off_, ep_inflag_on0_ + (size_t) ring * 16, ep_ctr0_, cs);
+             ep_wait(ep_inflag1_ + (size_t) ring * 16, ep_ctr1_, ep_spin_, ep_err1_, ring, ep_q_);
+             ep_copy_uncached(slot1, ep_inbox1_ + (size_t) grp * ep_slot_bytes_, ep_xq_off_ + xq_bytes, ep_q_);
+             const int64_t capx = (int64_t) max_t_ * K, cap = (int64_t) n * K;
+             int32_t* pl1 = ep_plan1_ + (size_t) grp * (size_t) (plan_i32_ + 16);
++            if (ep_plan1_on_) pl1 = (int32_t*) (slot1 + ep_plan_off_);   // night lab: card 0's plan, in the inbox copy
++            else
+             resident_plan_ep((const int32_t*) slot1, (int) cap, (int) K, ep_cfg_.res0_on1 + l * g.n_expert,
+                              ep_cfg_.res1 + l * g.n_expert, 2, (int) g.n_expert, ep_cfg_.cache_base1, ep_cfg_.slot_off1,
+                              (long long) ep_cfg_.blob1, pl1, (long long) capx, ep_q_, ep_plan_err1_);
+@@ -1442,6 +1480,11 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+             native_expert_grouped(L, (const unsigned long long*) (pl1 + ptr_off), pl1 + 4, pl1, pl1 + 4 + capx + 1,
+                                   pl1 + 4 + capx + 1 + capx, cap, cap, slot1 + ep_xq_off_, ep_scratch1_,
+                                   ep_rows1_ + (size_t) tb * K * N, ep_q_, 0);
++            if (ep_psum_)   // night lab: one weighted-sum row per token back to card 0
++                ep_send_psum(ep_psum_on1_ + (size_t) tb * N, ep_rows1_ + (size_t) tb * K * N, (const int32_t*) slot1,
++                             (const float*) (slot1 + ep_w_off_), ep_cfg_.res0_on1 + l * g.n_expert, n, (int) K, N,
++                             ep_done1_, ep_ret_on1_ + (size_t) ring * 16, ep_ctr1_, ep_q_);
++            else
+             ep_send_rows(ep_parts_on1_ + (size_t) tb * K * N, ep_rows1_ + (size_t) tb * K * N, (const int32_t*) slot1,
+                          ep_cfg_.res0_on1 + l * g.n_expert, (int) cap, N, ep_done1_, ep_ret_on1_ + (size_t) ring * 16,
+                          ep_ctr1_, ep_q_);
+@@ -1549,6 +1592,13 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+             ev_join_ != nullptr) {
+             cs->ext_oneapi_submit_barrier({*ev_join_});
+         }
++        if (ar_on() && ep_on() && ep_psum_) {   // night lab STRATA_NIGHT_EP_PSUM: own rows + the peer's per-token sums
++            try {
++                ep_combine_psum(parts_ + (size_t) tb * K * N, w_ + tb * K, ids_ + tb * K, hits_.d_res + l * g.n_expert,
++                                ep_psum0_ + (size_t) tb * N, shared_ + tb * N, sg_gated_[grp] ? sh_g_ + tb : nullptr,
++                                bo_ + tb * N, N, (int) K, n, cs);
++            } catch (const std::exception& e) { err = "verify combine: " + std::string(e.what()); return false; }
++        } else
+         if (sg_gated_[grp]) {   // STRATA_LFUSE: the shared expert's gate was not applied: the combine applies it (all rows are hits)
+             try {
+                 native_moe_combine_multi_hits_gated(parts_out, w_ + tb * K, shared_ + tb * N, sh_g_ + tb, bo_ + tb * N, N, K, n, cs);
+@@ -1799,6 +1849,21 @@ bool Verifier::ep_init(std::string& err) {
+     if (const char* v = std::getenv("STRATA_EP_SPIN_MAX")) ep_spin_ = (uint32_t) std::strtoul(v, nullptr, 10);
+     auto align = [](size_t b) { return (b + 255) / 256 * 256; };
+     ep_xq_off_ = align((size_t) MT * K * 4);
++    {   // night lab STRATA_NIGHT_EP_PSUM: the weights between the ids and the q8_1 rows (one copy covers all three)
++        static const bool self_env = [] { const char* v = std::getenv("STRATA_EP_SELF"); return v && v[0] == '1'; }();
++        ep_psum_ = g_night_ep_psum() && !ep_verify_ && !self_env && K == 10 && N % 4 == 0;
++        if (ep_psum_) { ep_w_off_ = ep_xq_off_; ep_xq_off_ += align((size_t) MT * K * 4); }
++        // STRATA_NIGHT_EP_PLAN1: card 1's plan (the words native_expert_grouped reads) before the q8_1 rows
++        ep_plan1_on_ = g_night_ep_plan1() && !ep_verify_ && !self_env &&
++                       (ep_cfg_.slot_off1 == nullptr || ep_cfg_.slot_off1_on0 != nullptr);
++        if (ep_plan1_on_) {
++            const int64_t capx = MT * K;
++            const int64_t ptr_off = ((4 + (capx + 1) + 2 * capx) + 1) & ~1ll;
++            ep_plan_words_ = (int) (ptr_off + 2 * capx);
++            ep_plan_off_ = ep_xq_off_;
++            ep_xq_off_ += align((size_t) ep_plan_words_ * 4);
++        }
++    }
+     ep_slot_bytes_ = ep_xq_off_ + align((size_t) MT * (N / 32) * 36);
+     const size_t flag_bytes = (size_t) (g.n_layers * 2 + 2) * 64;   // a 64-byte line per ring (G <= 2)
+     auto* inbox = new EpRegion, *inflag = new EpRegion, *parts = new EpRegion, *ret = new EpRegion;
+@@ -1806,6 +1871,12 @@ bool Verifier::ep_init(std::string& err) {
+     if (!ep_region_alloc(d1, d0, 2 * ep_slot_bytes_, *inbox, err) || !ep_region_alloc(d1, d0, flag_bytes, *inflag, err) ||
+         !ep_region_alloc(d0, d1, (size_t) MT * K * N * 4, *parts, err) || !ep_region_alloc(d0, d1, flag_bytes, *ret, err))
+         return false;
++    if (ep_psum_) {
++        auto* ps = new EpRegion;
++        ep_psum_reg_ = ps;
++        if (!ep_region_alloc(d0, d1, (size_t) MT * N * 4, *ps, err)) return false;
++        ep_psum0_ = (float*) ps->local; ep_psum_on1_ = (float*) ps->remote;
++    }
+     ep_inbox1_ = (uint8_t*) inbox->local;   ep_inbox_on0_ = (uint8_t*) inbox->remote;
+     ep_inflag1_ = (uint32_t*) inflag->local; ep_inflag_on0_ = (uint32_t*) inflag->remote;
+     ep_ret0_ = (uint32_t*) ret->local;       ep_ret_on1_ = (uint32_t*) ret->remote;
+@@ -1813,6 +1884,10 @@ bool Verifier::ep_init(std::string& err) {
+     // the peer writes its rows straight into parts_; the two checks keep this card's own rows apart from them
+     static const bool self = [] { const char* v = std::getenv("STRATA_EP_SELF"); return v && v[0] == '1'; }();
+     if (!ep_verify_ && !self) parts_ = ep_rows0_;
++    if (ep_plan1_on_) {
++        ep_plan1_on0_ = sycl::malloc_device<int32_t>((size_t) 2 * (plan_i32_ + 16), *cs_);
++        if (ep_plan1_on0_ == nullptr) { err = "verify: expert parallel: plan buffer failed"; return false; }
++    }
+     ep_ctr0_ = sycl::malloc_device<uint32_t>(16, *cs_);
+     cs_->memset(ep_ctr0_, 0, 64).wait();
+     ep_err0_ = (uint32_t*) strata::host_malloc_polled(64, *cs_);
+@@ -1849,7 +1924,7 @@ void Verifier::ep_free() {
+         for (auto& x : ep_exec_) { delete x; x = nullptr; }
+         for (auto& kv : ep_exec_bm_) delete kv.second;
+         ep_exec_bm_.clear();
+-        for (void** r : {&ep_inbox_, &ep_inflag_, &ep_parts_, &ep_ret_})
++        for (void** r : {&ep_inbox_, &ep_inflag_, &ep_parts_, &ep_ret_, &ep_psum_reg_})
+             if (*r != nullptr) { ep_region_free(*(EpRegion*) *r); delete (EpRegion*) *r; *r = nullptr; }
+         if (ep_q_ != nullptr) {
+             for (void* p : {(void*) ep_ctr1_, (void*) ep_plan1_, (void*) ep_in1_, (void*) ep_rows1_, (void*) ep_done1_,
+@@ -1858,6 +1933,7 @@ void Verifier::ep_free() {
+             for (uint32_t* p : {ep_err1_, ep_plan_err1_}) if (p) strata::host_free_polled(p, *ep_q_);
+         }
+         if (ep_ctr0_ != nullptr) sycl::free(ep_ctr0_, *cs_);
++        if (ep_plan1_on0_ != nullptr) { sycl::free(ep_plan1_on0_, *cs_); ep_plan1_on0_ = nullptr; }
+         if (ep_err0_ != nullptr) strata::host_free_polled(ep_err0_, *cs_);
+     } catch (...) {}   // at process exit the context can already be gone (see ~Verifier)
+     ep_q_ = nullptr; ep_ctr0_ = ep_ctr1_ = nullptr; ep_plan1_ = nullptr; ep_in1_ = nullptr; ep_rows1_ = nullptr; ep_done1_ = nullptr; ep_scratch1_ = nullptr;
+diff --git a/sycl/src/kernels/cuda/ep_kernels.dp.cpp b/sycl/src/kernels/cuda/ep_kernels.dp.cpp
+index 81f26a2b..fff448cd 100644
+--- a/sycl/src/kernels/cuda/ep_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/ep_kernels.dp.cpp
+@@ -1,6 +1,7 @@
+ // src/kernels/cuda/ep_kernels.dp.cpp (SYCL port only) - see include/strata/kernels/ep_kernels.hpp.
+ #include <sycl/sycl.hpp>
+ #include <algorithm>
++#include <stdexcept>
+ #include "strata/sycl_queue.hpp"
+ #include "strata/sycl_doorbell.hpp"
+ #include "strata/kernels/ep_kernels.hpp"
+@@ -143,6 +144,130 @@ void ep_send_rows(float* peer_rows, const float* rows, const int32_t* ids, const
+ }
+ 
+ 
++// ---- night lab STRATA_NIGHT_EP_PSUM ----
++#ifndef STRATA_NIGHT_PSUM_UNCACHED
++#define STRATA_NIGHT_PSUM_UNCACHED 0
++#endif
++// ----------------------------------------------------------------------------------
++void ep_push_w(const int32_t* ids, const float* w, int n_ids, const uint8_t* xq, size_t xq_bytes, int32_t* peer_ids,
++               float* peer_w, uint8_t* peer_xq, uint32_t* peer_flag, const uint32_t* ctr, void* stream,
++               const int32_t* plan, int plan_words, int32_t* peer_plan) {
++    constexpr size_t WG = 256;
++    const size_t words = xq_bytes / 4;
++    q_of(stream)->parallel_for<class ep_push_w_kernel>(sycl::nd_range<1>(WG, WG), [=](sycl::nd_item<1> it) {
++        const size_t lid = it.get_local_id(0);
++        for (size_t i = lid; i < (size_t) n_ids; i += WG) {
++            peer_ids[i] = ids[i];
++            if (w != nullptr) peer_w[i] = w[i];
++        }
++        if (plan != nullptr)
++            for (size_t i = lid; i < (size_t) plan_words; i += WG) peer_plan[i] = plan[i];
++        const uint32_t* s = (const uint32_t*) xq;
++        uint32_t* d = (uint32_t*) peer_xq;
++        for (size_t i = lid; i < words; i += WG) d[i] = s[i];
++        sycl::atomic_fence(sycl::memory_order::release, sycl::memory_scope::system);
++        sycl::group_barrier(it.get_group(), sycl::memory_scope::system);
++        if (lid == 0) sys_store(peer_flag, *ctr);
++    });
++}
++
++void ep_send_psum(float* peer_sum, const float* rows, const int32_t* ids, const float* w, const int32_t* res0,
++                  int n_tok, int k, int64_t row, uint32_t* done, uint32_t* peer_flag, const uint32_t* ctr, void* stream) {
++    if (n_tok <= 0) return;
++    constexpr size_t WG = 64;                       // 64 float4 = 256 columns per work-group
++    const int64_t n4 = row / 4;
++    const int chunks = (int) ((n4 + WG - 1) / WG);
++    const uint32_t total = (uint32_t) (n_tok * chunks);
++    using sys_rmw = sycl::atomic_ref<uint32_t, sycl::memory_order::acq_rel, sycl::memory_scope::system>;
++    q_of(stream)->parallel_for<class ep_send_psum_kernel>(
++        sycl::nd_range<1>((size_t) total * WG, WG), [=](sycl::nd_item<1> it) {
++            const int g = (int) it.get_group(0);
++            const int t = g / chunks;
++            const int64_t c4 = (int64_t) (g % chunks) * WG + (int64_t) it.get_local_id(0);
++            if (c4 < n4) {
++                sycl::float4 acc(0.0f);
++                for (int j = 0; j < k; ++j) {
++                    const int32_t e = ids[t * k + j];
++                    if (e >= 0 && res0[e] >= 0) continue;   // card 0's entry
++                    const sycl::float4 v = reinterpret_cast<const sycl::float4*>(rows + (size_t) (t * k + j) * row)[c4];
++                    acc = sycl::fma(v, sycl::float4(w[t * k + j]), acc);   // fma(v, w, 0) = the rounded product
++                }
++                reinterpret_cast<sycl::float4*>(peer_sum + (size_t) t * row)[c4] = acc;
++            }
++            sycl::atomic_fence(sycl::memory_order::release, sycl::memory_scope::system);
++            sycl::group_barrier(it.get_group());
++            if (it.get_local_id(0) == 0 && sys_rmw(*done).fetch_add(1u) == total - 1) {
++                *done = 0;
++                sycl::atomic_fence(sycl::memory_order::acq_rel, sycl::memory_scope::system);
++                sys_store(peer_flag, *ctr);
++            }
++        });
++}
++
++template <int KK, bool GATED> class ep_combine_psum_kernel;
++template <int KK, bool GATED>
++static void combine_psum_impl(const float* parts, const float* w, const int32_t* ids, const int32_t* res0,
++                              const float* psum, const float* shared, const float* sg, float* out, int64_t row,
++                              int n_tok, void* stream) {
++    constexpr size_t WG = 128;
++    const int64_t n4 = row / 4;
++    const size_t gx = (size_t) ((n4 + WG - 1) / WG);
++    q_of(stream)->parallel_for<ep_combine_psum_kernel<KK, GATED>>(
++        sycl::nd_range<2>(sycl::range<2>((size_t) n_tok, gx * WG), sycl::range<2>(1, WG)), [=](sycl::nd_item<2> it) {
++            const int t = (int) it.get_global_id(0);
++            const int64_t c4 = (int64_t) it.get_global_id(1);
++            if (c4 >= n4) return;
++            // every load first (they are independent): the peer's sum (past the caches), the shared row, ids, weights,
++            // all KK part rows (parts_ holds KK rows per token; the peer's are stale and only selected away)
++#if STRATA_NIGHT_PSUM_UNCACHED
++            const uint64_t* pw = reinterpret_cast<const uint64_t*>(psum + (size_t) t * row) + 2 * c4;
++            const auto lo = sycl::bit_cast<sycl::float2>(sys_load_mapped(pw));
++            const auto hi = sycl::bit_cast<sycl::float2>(sys_load_mapped(pw + 1));
++#else   // plain loads, as native_moe_combine_multi reads the peer's rows in parts_ (same region kind, same flag protocol)
++            const sycl::float4 pv = reinterpret_cast<const sycl::float4*>(psum + (size_t) t * row)[c4];
++            const sycl::float2 lo(pv.x(), pv.y()), hi(pv.z(), pv.w());
++#endif
++            const sycl::float4 sh = reinterpret_cast<const sycl::float4*>(shared + (size_t) t * row)[c4];
++            int32_t e[KK];
++            float wv[KK];
++            sycl::float4 p[KK];
++#pragma unroll
++            for (int j = 0; j < KK; ++j) {
++                e[j] = ids[t * KK + j];
++                wv[j] = w[t * KK + j];
++                p[j] = reinterpret_cast<const sycl::float4*>(parts + (size_t) (t * KK + j) * row)[c4];
++            }
++            bool own[KK];
++#pragma unroll
++            for (int j = 0; j < KK; ++j) own[j] = e[j] >= 0 && res0[e[j]] >= 0;
++            sycl::float4 sum(0.0f);
++            bool first = true;
++#pragma unroll
++            for (int j = 0; j < KK; ++j) {
++                if (!own[j]) continue;   // the peer's entry: it is in psum
++                if (first) { sum = p[j] * sycl::float4(wv[j]); first = false; }
++                else sum = sycl::fma(p[j], sycl::float4(wv[j]), sum);
++            }
++            sum += sycl::float4(lo.x(), lo.y(), hi.x(), hi.y());
++            if constexpr (GATED) {
++#pragma clang fp contract(off)
++                const float gg = 1.0f / (1.0f + sycl::native::exp(-sg[t]));
++                const sycl::float4 shg = sh * sycl::float4(gg);
++                sum += shg;
++            } else {
++                sum += sh;
++            }
++            reinterpret_cast<sycl::float4*>(out + (size_t) t * row)[c4] = sum;
++        });
++}
++void ep_combine_psum(const float* parts, const float* w, const int32_t* ids, const int32_t* res0, const float* psum,
++                     const float* shared, const float* sg, float* out, int64_t row, int k, int n_tok, void* stream) {
++    if (n_tok <= 0) return;
++    if (k != 10 || (row & 3) != 0) throw std::invalid_argument("ep_combine_psum: k must be 10 and row a multiple of 4");
++    if (sg != nullptr) combine_psum_impl<10, true>(parts, w, ids, res0, psum, shared, sg, out, row, n_tok, stream);
++    else combine_psum_impl<10, false>(parts, w, ids, res0, psum, shared, sg, out, row, n_tok, stream);
++}
++
+ void ep_compare(const float* parts, const float* peer_rows, const int32_t* ids, const int32_t* res0, int n, int64_t row,
+                 uint32_t* mismatch, void* stream) {
+     if (n <= 0) return;
+diff --git a/sycl/src/kernels/cuda/iq_kernels.dp.cpp b/sycl/src/kernels/cuda/iq_kernels.dp.cpp
+index de5a573f..83e3000d 100644
+--- a/sycl/src/kernels/cuda/iq_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/iq_kernels.dp.cpp
+@@ -2253,6 +2253,157 @@ __dpct_inline__ void native_down_kernel(
+     }
+ }
+ 
++// ---- night lab STRATA_NIGHT_EP_ROWS=2 (default off): each lane computes RPL rows of the expert for the same lane
++// parts, so a part's activation words (8 x 4-byte loads + the scale per entry: most of the loads of a small-window
++// dot) are read once per RPL rows instead of once per row.  Each (row, entry) keeps row_dot_multi_iq's k order,
++// Multi<TY>::finish and lanes_sum<LN>, so the outputs are bitwise the per-row kernels' (for the formats whose single
++// entry dot is bitwise the Multi one: checked by ep_night_bench grouped).
++template <int TY, int LANES, int R, int E>
++__dpct_inline__ void rows_dot_multi_iq(const uint8_t* const* rows, const block_q8_1* const* xs, int nb, int sub,
++                                       float (&out)[R][E]) {
++    using F = Fmt<TY>;
++    using M = Multi<TY>;
++    float s[R][E];
++#pragma unroll
++    for (int r = 0; r < R; ++r)
++#pragma unroll
++        for (int e = 0; e < E; ++e) s[r][e] = 0.f;
++    for (int k = sub; k < nb * F::ipb; k += LANES) {
++        const int kbx = k / F::ipb, iqs = F::step * (k % F::ipb);
++        int u[E][8];
++        float ds[E];
++#pragma unroll
++        for (int e = 0; e < E; ++e) M::acts(xs[e] + kbx * (F::qk / 32), iqs, u[e], ds[e]);
++#pragma unroll
++        for (int r = 0; r < R; ++r) {
++            MultiW m;
++            M::prep(rows[r], kbx, iqs, m, nullptr);
++#pragma unroll
++            for (int e = 0; e < E; ++e) {
++                int s0 = 0, s1 = 0;
++#pragma unroll
++                for (int j = 0; j < M::NW / 2; ++j) s0 = ggml_cuda_dp4a(m.w[j], u[e][j], s0);
++#pragma unroll
++                for (int j = M::NW / 2; j < M::NW; ++j) s1 = ggml_cuda_dp4a(m.w[j], u[e][j], s1);
++                s[r][e] += M::finish(s0, s1, m, ds[e]);
++            }
++        }
++    }
++#pragma unroll
++    for (int r = 0; r < R; ++r)
++#pragma unroll
++        for (int e = 0; e < E; ++e) out[r][e] = lanes_sum<LANES>(s[r][e]);
++}
++
++// gate/up: virtual rows v = row0 + rib + i * (256 / LN), i < RPL (gate rows, then up rows)
++template <int TG, int LN, int RPL>
++__dpct_inline__ void native_gu_kernel_rows(
++    const unsigned long long *__restrict__ grp_ptr,
++    const int32_t *__restrict__ grp_start, const int32_t *__restrict__ n_groups,
++    const int32_t *__restrict__ ent_tok, const block_q8_1 *__restrict__ xq,
++    NativeExpertLayout L, float *__restrict__ gate, float *__restrict__ up) {
++    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
++    const int ng = *n_groups;
++    if ((int) item_ct1.get_group(1) >= ng) return;
++    constexpr int RB = 256 / LN;
++    const int lid = (int) item_ct1.get_local_id(2);
++    const int rib = lid / LN, sub = lid % LN;
++    const int row0 = (int) item_ct1.get_group(2) * RB * RPL + rib;
++    const int nrows = (int) (2 * L.n_ff);
++    if (row0 >= nrows) return;   // no barrier below
++    const int nb = (int) (L.n_embd / Fmt<TG>::qk), xb = (int) (L.n_embd / 32);
++    size_t off[RPL];
++    float* dst[RPL];
++    bool live[RPL];
++#pragma unroll
++    for (int i = 0; i < RPL; ++i) {
++        const int v = row0 + i * RB;
++        live[i] = v < nrows;
++        const int vv = live[i] ? v : row0;   // a dead row repeats row0 (computed, not stored)
++        const bool is_up = vv >= L.n_ff;
++        const int r = is_up ? vv - (int) L.n_ff : vv;
++        off[i] = (is_up ? L.up_off : 0) + (size_t) r * L.gu_row;
++        dst[i] = (is_up ? up : gate) + r;
++    }
++    for (int g = (int) item_ct1.get_group(1); g < ng; g += (int) item_ct1.get_group_range(1)) {
++        const uint8_t* base = (const uint8_t*) grp_ptr[g];
++        const uint8_t* rows[RPL];
++#pragma unroll
++        for (int i = 0; i < RPL; ++i) rows[i] = base + off[i];
++        const int e0 = grp_start[g], e1 = grp_start[g + 1];
++        int e = e0;
++        auto pass = [&](auto ec) {
++            constexpr int EC = decltype(ec)::value;
++            const block_q8_1* xs[EC];
++#pragma unroll
++            for (int j = 0; j < EC; ++j) xs[j] = xq + (size_t) ent_tok[e + j] * xb;
++            float o[RPL][EC];
++            rows_dot_multi_iq<TG, LN, RPL, EC>(rows, xs, nb, sub, o);
++            if (sub == 0)
++#pragma unroll
++                for (int i = 0; i < RPL; ++i)
++                    if (live[i])
++#pragma unroll
++                        for (int j = 0; j < EC; ++j) dst[i][(size_t) (e + j) * L.n_ff] = o[i][j];
++            e += EC;
++        };
++        for (; e + 4 <= e1;) pass(std::integral_constant<int, 4>{});
++        if (e + 2 <= e1) pass(std::integral_constant<int, 2>{});
++        if (e < e1) pass(std::integral_constant<int, 1>{});
++    }
++}
++
++template <int TD, int LN, int RPL>
++__dpct_inline__ void native_down_kernel_rows(
++    const unsigned long long *__restrict__ grp_ptr,
++    const int32_t *__restrict__ grp_start, const int32_t *__restrict__ n_groups,
++    const int32_t *__restrict__ ent_dst, const block_q8_1 *__restrict__ hq,
++    NativeExpertLayout L, float *__restrict__ out) {
++    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
++    const int ng = *n_groups;
++    if ((int) item_ct1.get_group(1) >= ng) return;
++    constexpr int RB = 256 / LN;
++    const int lid = (int) item_ct1.get_local_id(2);
++    const int rib = lid / LN, sub = lid % LN;
++    const int r0 = (int) item_ct1.get_group(2) * RB * RPL + rib;
++    if (r0 >= L.n_embd) return;
++    const int nb = (int) (L.n_ff / Fmt<TD>::qk), hb = (int) (L.n_ff / 32);
++    int rr[RPL];
++    bool live[RPL];
++#pragma unroll
++    for (int i = 0; i < RPL; ++i) {
++        const int r = r0 + i * RB;
++        live[i] = r < L.n_embd;
++        rr[i] = live[i] ? r : r0;
++    }
++    for (int g = (int) item_ct1.get_group(1); g < ng; g += (int) item_ct1.get_group_range(1)) {
++        const uint8_t* base = (const uint8_t*) grp_ptr[g] + L.down_off;
++        const uint8_t* rows[RPL];
++#pragma unroll
++        for (int i = 0; i < RPL; ++i) rows[i] = base + (size_t) rr[i] * L.d_row;
++        const int e0 = grp_start[g], e1 = grp_start[g + 1];
++        int e = e0;
++        auto pass = [&](auto ec) {
++            constexpr int EC = decltype(ec)::value;
++            const block_q8_1* xs[EC];
++#pragma unroll
++            for (int j = 0; j < EC; ++j) xs[j] = hq + (size_t) (e + j) * hb;
++            float o[RPL][EC];
++            rows_dot_multi_iq<TD, LN, RPL, EC>(rows, xs, nb, sub, o);
++            if (sub == 0)
++#pragma unroll
++                for (int i = 0; i < RPL; ++i)
++                    if (live[i])
++#pragma unroll
++                        for (int j = 0; j < EC; ++j) out[(size_t) ent_dst[e + j] * L.n_embd + rr[i]] = o[i][j];
++            e += EC;
++        };
++        for (; e + 4 <= e1;) pass(std::integral_constant<int, 4>{});
++        if (e + 2 <= e1) pass(std::integral_constant<int, 2>{});
++        if (e < e1) pass(std::integral_constant<int, 1>{});
++    }
++}
++
+ // native_down_kernel with the entries taken GRP_NC at a time
+ template <int TD, bool SUB_DOWN = true>
+ /*
+@@ -4355,10 +4506,74 @@ inline int down_lanes() { static const int v = lanes_env("STRATA_DOWN_LANES"); r
+ // B70, 4-token windows, split on: 16 lanes reads Q4_K/Q5_1 experts at 439 GB/s against 426 at 8; the reduction order differs
+ // (other bits), so it stays opt-in.
+ inline int kq_gu_lanes() { static const int v = std::getenv("STRATA_KQ_GU_LANES") ? lanes_env("STRATA_KQ_GU_LANES") : gu_lanes(); return v; }
++// night lab STRATA_NIGHT_EP_ROWS=2: the multi-row grouped kernels (native_gu_kernel_rows / native_down_kernel_rows)
++int night_ep_rows() {
++    static const int v = [] {
++        const char* e = std::getenv("STRATA_NIGHT_EP_ROWS");
++        const int n = e ? std::atoi(e) : 0;
++        const int r = n == 2 ? 2 : 0;   // 4 measured slower than 2 (gate/up) and no better (down)
++        if (r) std::fprintf(stderr, "strata night: STRATA_NIGHT_EP_ROWS=%d (grouped expert lanes compute %d rows each)\n", r, r);
++        return r;
++    }();
++    return v;
++}
++int g_night_rows_force = -1;   // the bench: >= 0 overrides the environment (set before capture)
++inline int night_rows_now() { return g_night_rows_force >= 0 ? g_night_rows_force : night_ep_rows(); }
++template <int TG, int LN, int RPL>
++void launch_gu_rows_k(unsigned groups, dpct::queue_ptr s, const unsigned long long *grp_ptr, const int32_t *grp_start,
++                      const int32_t *n_groups, const int32_t *ent_tok, const block_q8_1 *X,
++                      const NativeExpertLayout &L, float *gate, float *up) {
++    constexpr int ROWS = (256 / LN) * RPL;
++    const unsigned gx = (unsigned) ((2 * L.n_ff + ROWS - 1) / ROWS);
++    auto exp_props = sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
++    s->parallel_for<dpct_kernel_name<class native_gu_rows, dpct_kernel_scalar<TG>, dpct_kernel_scalar<LN>, dpct_kernel_scalar<RPL>>>(
++        sycl::nd_range<3>(sycl::range<3>(1, groups, (size_t) gx * 256), sycl::range<3>(1, 1, 256)), exp_props,
++        [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(16)]] {
++            native_gu_kernel_rows<TG, LN, RPL>(grp_ptr, grp_start, n_groups, ent_tok, X, L, gate, up);
++        });
++}
++template <int TG, int LN, bool MULTI_OK>
++bool launch_gu_rows(unsigned groups, dpct::queue_ptr s, const unsigned long long *grp_ptr, const int32_t *grp_start,
++                    const int32_t *n_groups, const int32_t *ent_tok, const block_q8_1 *X,
++                    const NativeExpertLayout &L, float *gate, float *up) {
++    if constexpr (!MULTI_OK || LN > 16) { return false; }
++    else {
++        const int rpl = night_rows_now();
++        if (rpl == 2) launch_gu_rows_k<TG, LN, 2>(groups, s, grp_ptr, grp_start, n_groups, ent_tok, X, L, gate, up);
++        else return false;
++        return true;
++    }
++}
++template <int TD, int LN, int RPL>
++void launch_down_rows_k(unsigned groups, dpct::queue_ptr s, const unsigned long long *grp_ptr, const int32_t *grp_start,
++                        const int32_t *n_groups, const int32_t *ent_dst, const block_q8_1 *hq,
++                        const NativeExpertLayout &L, float *out) {
++    constexpr int ROWS = (256 / LN) * RPL;
++    const unsigned gx = (unsigned) ((L.n_embd + ROWS - 1) / ROWS);
++    auto exp_props = sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
++    s->parallel_for<dpct_kernel_name<class native_down_rows, dpct_kernel_scalar<TD>, dpct_kernel_scalar<LN>, dpct_kernel_scalar<RPL>>>(
++        sycl::nd_range<3>(sycl::range<3>(1, groups, (size_t) gx * 256), sycl::range<3>(1, 1, 256)), exp_props,
++        [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(16)]] {
++            native_down_kernel_rows<TD, LN, RPL>(grp_ptr, grp_start, n_groups, ent_dst, hq, L, out);
++        });
++}
++template <int TD, int LN>
++bool launch_down_rows(unsigned groups, dpct::queue_ptr s, const unsigned long long *grp_ptr, const int32_t *grp_start,
++                      const int32_t *n_groups, const int32_t *ent_dst, const block_q8_1 *hq,
++                      const NativeExpertLayout &L, float *out) {
++    if constexpr (!Multi<TD>::has || LN > 16) { return false; }
++    else {
++        const int rpl = night_rows_now();
++        if (rpl == 2) launch_down_rows_k<TD, LN, 2>(groups, s, grp_ptr, grp_start, n_groups, ent_dst, hq, L, out);
++        else return false;
++        return true;
++    }
++}
+ template <int TG, int LN, bool KM = true>
+ void launch_gu_port(unsigned groups, dpct::queue_ptr s, const unsigned long long *grp_ptr, const int32_t *grp_start,
+                     const int32_t *n_groups, const int32_t *ent_tok, const block_q8_1 *X,
+                     const NativeExpertLayout &L, float *gate, float *up) {
++    if (launch_gu_rows<TG, LN, Multi<TG>::has>(groups, s, grp_ptr, grp_start, n_groups, ent_tok, X, L, gate, up)) return;
+     constexpr int ROWS = 256 / LN;
+     const unsigned gx = (unsigned) ((2 * L.n_ff + ROWS - 1) / ROWS);
+     auto exp_props = sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
+@@ -4423,6 +4638,7 @@ template <int TD, int LN, bool KM = true>
+ void launch_down_port(unsigned groups, dpct::queue_ptr s, const unsigned long long *grp_ptr, const int32_t *grp_start,
+                       const int32_t *n_groups, const int32_t *ent_dst, const block_q8_1 *hq,
+                       const NativeExpertLayout &L, float *out) {
++    if (launch_down_rows<TD, LN>(groups, s, grp_ptr, grp_start, n_groups, ent_dst, hq, L, out)) return;
+     constexpr int ROWS = 256 / LN;
+     const unsigned gx = (unsigned) ((L.n_embd + ROWS - 1) / ROWS);
+     auto exp_props = sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
+@@ -4522,6 +4738,7 @@ void launch_down(dpct::dim3 grid, dpct::queue_ptr s,
+ }  // namespace
+ 
+ void iq_set_old_kernels(bool old) { g_old_kernels = old; }
++void native_expert_set_night_rows(int rpl) { g_night_rows_force = rpl; }
+ void native_expert_set_kq_split(bool on) { g_kq_split = on; }
+ bool iq_old_kernels() { return g_old_kernels; }
+ 
+diff --git a/sycl/src/kernels/cuda/verify_kernels.dp.cpp b/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+index 9946f7ae..ba3545ca 100644
+--- a/sycl/src/kernels/cuda/verify_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+@@ -2471,6 +2471,23 @@ void resident_plan_ep(const int32_t* ids, int n_entries, int k, const int32_t* r
+     }
+     check("resident_plan_ep");
+ }
++void resident_plan_ep_pair(const int32_t* ids, int n_entries, int k, const int32_t* res0, const int32_t* res1,
++                           int n_expert, const uint8_t* cache_base0, const unsigned long long* slot_off0, long long blob0,
++                           int32_t* plan0, const uint8_t* cache_base1, const unsigned long long* slot_off1,
++                           long long blob1, int32_t* plan1, long long capx, void* stream, uint32_t* plan_err) {
++    auto exp_props = sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
++    strata::q_of(stream)->parallel_for<dpct_kernel_name<class resident_plan_ep_pair_kernel>>(
++        sycl::nd_range<3>(sycl::range(1, 1, 2 * kResidentPlanMax), sycl::range(1, 1, kResidentPlanMax)), exp_props,
++        [=](sycl::nd_item<3> item_ct1) [[sycl::reqd_sub_group_size(32)]] {
++            if (item_ct1.get_group(2) == 0)   // card 0's own entries (role 1)
++                resident_plan_kernel(ids, n_entries, k, res0, n_expert, cache_base0, slot_off0, blob0, plan0, capx,
++                                     nullptr, 0, nullptr, plan_err, nullptr, res1, 1);
++            else                              // card 1's (role 2), its addresses
++                resident_plan_kernel(ids, n_entries, k, res1, n_expert, cache_base1, slot_off1, blob1, plan1, capx,
++                                     nullptr, 0, nullptr, plan_err, nullptr, res0, 2);
++        });
++    check("resident_plan_ep_pair");
++}
+ void wait_flag_ge_or(const uint32_t* flag, uint32_t value, const uint32_t* skip, void* stream) {
+     const uint32_t spin_max = strata::spin_max(*strata::q_of(stream));
+     {
+diff --git a/sycl/src/program/generate.cpp b/sycl/src/program/generate.cpp
+index e550bafa..b49c699f 100644
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -6186,6 +6186,11 @@ int main(int argc, char **argv) try {
+         ep_cfg.res0_on1 = res0_on1;
+         ep_cfg.cache_base1 = ep_cache->device_slot(0);
+         ep_cfg.slot_off1 = off1;
++        if (off1 != nullptr && std::getenv("STRATA_NIGHT_EP_PLAN1") && std::getenv("STRATA_NIGHT_EP_PLAN1")[0] == '1') {
++            auto* off1_on0 = sycl::malloc_device<unsigned long long>((size_t) ep_cache->slots(), dpct::get_in_order_queue());
++            dpct::get_in_order_queue().memcpy(off1_on0, ep_cache->slot_offsets(), (size_t) ep_cache->slots() * 8).wait();
++            ep_cfg.slot_off1_on0 = off1_on0;
++        }
+         ep_cfg.blob1 = (int64_t) strata::kernels::cpu::expert_layout().max_blob;
+     }
+     if (!o.no_capture && !o.no_token_graph && layer_dump == nullptr && half_dump == nullptr &&
+diff --git a/sycl/src/kernels/ep_night_bench.cpp b/sycl/src/kernels/ep_night_bench.cpp
+new file mode 100644
+index 00000000..aa332ec6
+--- /dev/null
++++ b/sycl/src/kernels/ep_night_bench.cpp
+@@ -0,0 +1,460 @@
++// src/kernels/ep_night_bench.cpp (night lab, SYCL port only) - the EP decode MoE pieces on ONE card, synthetic.
++//
++//   ep_night_bench grouped [reps]   routed grouped expert calls (native_expert_grouped) at the EP verify shapes:
++//                                   48 layers per graph, each with its own experts (weights stream from DRAM),
++//                                   gate/up+SwiGLU phase, down phase and the whole call; us per call and GB/s.
++//   ep_night_bench send             STRATA_NIGHT_EP_PSUM: ep_send_rows + combine (old) against ep_send_psum +
++//                                   combine_ep (new); max abs / rel error and timings (the peer buffer local or host).
++//
++// Random bytes are valid codes for every expert format here; only the fp16 block scales are set (small, finite).
++#define DPCT_PROFILING_ENABLED
++#include <sycl/sycl.hpp>
++#include <dpct/dpct.hpp>
++#include "strata/kernels/iq_kernels.hpp"
++#include "strata/kernels/native_moe.hpp"
++#include "strata/kernels/ep_kernels.hpp"
++
++#include <algorithm>
++#include <chrono>
++#include <cmath>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <numeric>
++#include <random>
++#include <string>
++#include <vector>
++
++namespace k = strata::kernels;
++
++namespace {
++
++const char* name_of(int t) {
++    switch (t) {
++        case 16: return "IQ2_XXS"; case 17: return "IQ2_XS"; case 18: return "IQ3_XXS"; case 20: return "IQ4_NL";
++        case 21: return "IQ3_S"; case 22: return "IQ2_S"; case 42: return "Q2_0"; default: return "?";
++    }
++}
++int block_values(int t) { return t == 20 ? 32 : t == 42 ? 64 : 256; }
++
++std::vector<uint8_t> random_rows(int t, int64_t rows, int64_t n, std::mt19937& rng) {
++    const size_t rb = k::iq_row_bytes(t, n), bs = k::iq_row_bytes(t, block_values(t));
++    std::vector<uint8_t> w((size_t) rows * rb);
++    std::uniform_int_distribution<int> byte(0, 255), ex(2, 8), man(0, 1023), sgn(0, 1);
++    for (auto& b : w) b = (uint8_t) byte(rng);
++    for (size_t o = 0; o < w.size(); o += bs) {
++        const uint16_t h = (uint16_t) ((sgn(rng) ? 0x8000 : 0) | (ex(rng) << 10) | man(rng));
++        std::memcpy(&w[o], &h, 2);
++    }
++    return w;
++}
++
++sycl::queue& Q() { static sycl::queue* q = dpct::get_current_device().create_queue(true); return *q; }
++
++template <class F>
++double time_graph_us(sycl::queue& q, F&& record, int calls, int reps) {
++    namespace ex = sycl::ext::oneapi::experimental;
++    ex::command_graph<ex::graph_state::modifiable> g(q.get_context(), q.get_device());
++    g.begin_recording(q);
++    record();
++    g.end_recording(q);
++    auto ge = g.finalize();
++    for (int i = 0; i < 5; ++i) q.ext_oneapi_graph(ge);
++    q.wait();
++    std::vector<double> t;
++    for (int trial = 0; trial < 5; ++trial) {
++        const auto a = std::chrono::steady_clock::now();
++        for (int i = 0; i < reps; ++i) q.ext_oneapi_graph(ge);
++        q.wait();
++        const auto b = std::chrono::steady_clock::now();
++        t.push_back(std::chrono::duration<double, std::micro>(b - a).count() / ((double) reps * calls));
++    }
++    std::sort(t.begin(), t.end());
++    return t[t.size() / 2];
++}
++
++// ------------------------------------------------------------------------------------------------ grouped
++struct Scenario {
++    const char* what;
++    int T;                  // window rows
++    std::vector<int> sizes; // entries per group (group = one expert)
++};
++
++struct Grouped {
++    k::NativeExpertLayout L;
++    int T, K = 10, cap, ng, NL;
++    size_t slot;
++    uint8_t* arena = nullptr;
++    std::vector<unsigned long long*> lptr;
++    uint8_t* xq = nullptr; uint8_t* scr = nullptr; float* out = nullptr;
++    int32_t *start = nullptr, *n = nullptr, *dst = nullptr, *tok = nullptr;
++    Grouped(int gu, int dt, const Scenario& sc, int nl, std::mt19937& rng, sycl::queue& q) {
++        L = k::native_expert_layout(gu, dt, 2560, 640);
++        T = sc.T; cap = T * K; ng = (int) sc.sizes.size(); NL = nl;
++        slot = (L.bytes + 255) & ~(size_t) 255;
++        const int nb = 8;   // distinct random blobs, replicated over the arena
++        std::vector<std::vector<uint8_t>> hb;
++        for (int b = 0; b < nb; ++b) {
++            auto blob = random_rows(gu, 2 * 640, 2560, rng);
++            const auto down = random_rows(dt, 2560, 640, rng);
++            blob.insert(blob.end(), down.begin(), down.end());
++            hb.push_back(std::move(blob));
++        }
++        arena = sycl::malloc_device<uint8_t>(slot * (size_t) (nl * ng) + 256, q);
++        for (int l = 0; l < nl; ++l) {
++            std::vector<unsigned long long> p;
++            for (int j = 0; j < ng; ++j) {
++                uint8_t* d = arena + slot * (size_t) (l * ng + j);
++                q.memcpy(d, hb[(size_t) ((l * ng + j) % nb)].data(), L.bytes);
++                p.push_back((unsigned long long) d);
++            }
++            auto* dp = sycl::malloc_device<unsigned long long>(std::max(ng, 1), q);
++            if (ng) q.memcpy(dp, p.data(), p.size() * 8);
++            q.wait();
++            lptr.push_back(dp);
++        }
++        std::normal_distribution<float> nd(0.f, 1.f);
++        std::vector<float> x((size_t) T * 2560);
++        for (auto& v : x) v = nd(rng);
++        float* dx = sycl::malloc_device<float>(x.size(), q);
++        q.memcpy(dx, x.data(), x.size() * 4).wait();
++        xq = sycl::malloc_device<uint8_t>((size_t) T * 80 * 36, q);
++        k::quantize_q8_1_rows(dx, T, 2560, xq, &q);
++        q.wait();
++        sycl::free(dx, q);
++        scr = sycl::malloc_device<uint8_t>(k::native_expert_scratch_bytes(cap, 640), q);
++        out = sycl::malloc_device<float>((size_t) cap * 2560, q);
++        start = sycl::malloc_device<int32_t>(cap + 1, q);
++        n = sycl::malloc_device<int32_t>(1, q);
++        dst = sycl::malloc_device<int32_t>(cap, q);
++        tok = sycl::malloc_device<int32_t>(cap, q);
++        // the plan: groups in order, each group's tokens distinct, destinations scattered
++        std::vector<int32_t> st(1, 0), tk, ds(cap);
++        std::iota(ds.begin(), ds.end(), 0);
++        std::shuffle(ds.begin(), ds.end(), rng);
++        for (int m : sc.sizes) {
++            std::vector<int> tt(T);
++            std::iota(tt.begin(), tt.end(), 0);
++            std::shuffle(tt.begin(), tt.end(), rng);
++            for (int i = 0; i < m; ++i) tk.push_back(tt[(size_t) (i % T)]);
++            st.push_back(st.back() + m);
++        }
++        tk.resize(cap, 0);
++        q.memcpy(start, st.data(), st.size() * 4);
++        q.memcpy(n, &ng, 4);
++        q.memcpy(dst, ds.data(), ds.size() * 4);
++        q.memcpy(tok, tk.data(), tk.size() * 4);
++        q.wait();
++    }
++    ~Grouped() {
++        sycl::queue& q = Q();
++        for (auto* p : lptr) sycl::free(p, q);
++        for (void* p : {(void*) arena, (void*) xq, (void*) scr, (void*) out, (void*) start, (void*) n, (void*) dst,
++                        (void*) tok})
++            sycl::free(p, q);
++    }
++    // the whole call once from a NaN-filled output; the output bits
++    std::vector<uint32_t> result(sycl::queue& q, int rows) {
++        q.memset(out, 0xFF, (size_t) cap * 2560 * 4).wait();
++        q.memset(scr, 0x3C, k::native_expert_scratch_bytes(cap, 640)).wait();
++        k::native_expert_set_night_rows(rows);
++        k::native_expert_grouped(L, lptr[0], start, n, dst, tok, cap, cap, xq, scr, out, &q, 0);
++        k::native_expert_set_night_rows(0);
++        q.wait();
++        std::vector<uint32_t> o((size_t) cap * 2560);
++        q.memcpy(o.data(), out, o.size() * 4).wait();
++        return o;
++    }
++    double run(sycl::queue& q, int phase, int64_t gy, int reps, int rows = 0) {
++        k::native_expert_set_night_rows(rows);
++        k::native_expert_set_mode(-1, phase);
++        const double us = time_graph_us(q, [&] {
++            for (int l = 0; l < NL; ++l)
++                k::native_expert_grouped(L, lptr[(size_t) l], start, n, dst, tok, cap, cap, xq, scr, out, &q, gy);
++        }, NL, reps);
++        k::native_expert_set_mode(-1, 0);
++        k::native_expert_set_night_rows(0);
++        return us;
++    }
++};
++
++std::vector<int> sizes_of(std::initializer_list<std::pair<int, int>> v) {   // {count, size} pairs
++    std::vector<int> s;
++    for (auto [c, m] : v) for (int i = 0; i < c; ++i) s.push_back(m);
++    return s;
++}
++
++int g_bad = 0;
++int grouped_bench(int reps) {
++    sycl::queue& q = Q();
++    std::mt19937 rng(1016);
++    const Scenario scs[] = {
++        {"C2 card0 14g/30e", 6, sizes_of({{1, 4}, {3, 3}, {7, 2}, {3, 1}})},
++        {"C2 card1 26g/30e", 6, sizes_of({{4, 2}, {22, 1}})},
++        {"C1 card0 10g/20e", 4, sizes_of({{2, 3}, {6, 2}, {2, 1}})},
++        {"C1 card1 18g/20e", 4, sizes_of({{2, 2}, {16, 1}})},
++    };
++    const int pairs[][2] = {{16, 42}, {17, 20}, {21, 42}, {22, 42}, {18, 20}};
++    std::printf("grouped: us per call (48 layers per graph, median of 5 x %d replays); GB/s = groups x blob bytes / call\n", reps);
++    std::printf("%-8s/%-7s %-18s %8s %8s %8s | %8s %8s %8s | %6s %6s | %s\n", "gate/up", "down", "scenario",
++                "gu+sw", "down", "all", "R2:gu+sw", "R2:down", "R2:all", "GB/s", "R2GB/s", "rows vs base");
++    // EPB_PAIRS="16:42,21:42" / EPB_SCEN="01" restrict the table (default: all)
++    const char* fp = std::getenv("EPB_PAIRS");
++    const char* fs = std::getenv("EPB_SCEN");
++    int si = -1;
++    for (const auto& pr : pairs)
++        for (const auto& sc : scs) {
++            si = (int) (&sc - scs);
++            if (fp && !std::strstr(fp, (std::to_string(pr[0]) + ":" + std::to_string(pr[1])).c_str())) continue;
++            if (fs && !std::strchr(fs, '0' + si)) continue;
++            Grouped G(pr[0], pr[1], sc, 48, rng, q);
++            const double gu = G.run(q, 1, 0, reps), dn = G.run(q, 2, 0, reps), all = G.run(q, 0, 0, reps);
++            const double g2 = G.run(q, 1, 0, reps, 2), d2 = G.run(q, 2, 0, reps, 2), a2 = G.run(q, 0, 0, reps, 2);
++            const auto a = G.result(q, 0), b = G.result(q, 2);
++            size_t diff = 0, written = 0;
++            for (size_t i = 0; i < a.size(); ++i) { diff += a[i] != b[i]; written += a[i] != 0xFFFFFFFFu; }
++            g_bad += diff != 0 || written == 0;
++            const double mb = (double) G.ng * (double) G.L.bytes / 1e6;
++            std::printf("%-8s/%-7s %-18s %8.2f %8.2f %8.2f | %8.2f %8.2f %8.2f | %6.1f %6.1f | %s (%zu written, %zu differ)\n",
++                        name_of(pr[0]), name_of(pr[1]), sc.what, gu, dn, all, g2, d2, a2, mb * 1e3 / all,
++                        mb * 1e3 / a2, diff == 0 && written ? "bitwise" : "FAIL", written, diff);
++        }
++    std::printf("grouped: %d failures\n", g_bad);
++    return g_bad ? 1 : 0;
++}
++
++// ------------------------------------------------------------------------------------------------ send (PSUM)
++struct Err { double max_abs = 0, max_rel = 0, ref_abs = 0; };
++Err compare(const std::vector<float>& a, const std::vector<float>& b) {
++    Err e;
++    for (size_t i = 0; i < a.size(); ++i) {
++        const double d = std::fabs((double) a[i] - (double) b[i]);
++        e.max_abs = std::max(e.max_abs, d);
++        e.ref_abs = std::max(e.ref_abs, std::fabs((double) a[i]));
++        if (std::fabs(a[i]) > 1e-3) e.max_rel = std::max(e.max_rel, d / std::fabs((double) a[i]));
++        if (!std::isfinite(b[i]) && std::isfinite(a[i])) { e.max_abs = INFINITY; }
++    }
++    return e;
++}
++
++int send_bench(int reps) {
++    sycl::queue& q = Q();
++    std::mt19937 rng(77);
++    const int K = 10, NE = 512, NRES0 = 145;
++    const int64_t N = 2560;
++    int fails = 0;
++    for (const int T : {6, 4, 1}) {
++        const int cap = T * K;
++        std::vector<int> perm(NE);
++        std::iota(perm.begin(), perm.end(), 0);
++        std::shuffle(perm.begin(), perm.end(), rng);
++        std::vector<int32_t> res0(NE, -1);
++        for (int i = 0; i < NRES0; ++i) res0[(size_t) perm[(size_t) i]] = i;
++        std::vector<int32_t> ids(cap);
++        std::vector<float> w(cap), sg(T);
++        std::uniform_real_distribution<float> uw(0.02f, 1.0f), u01(0.f, 1.f);
++        std::normal_distribution<float> nd(0.f, 1.f);
++        int own = 0;
++        for (int t = 0; t < T; ++t) {
++            std::vector<int> used;
++            float ws = 0;
++            for (int j = 0; j < K; ++j) {
++                int e;
++                do {   // about half the entries on card 0 (its hot experts)
++                    e = u01(rng) < 0.5f ? perm[(size_t) (rng() % NRES0)] : perm[(size_t) (NRES0 + rng() % (NE - NRES0))];
++                } while (std::find(used.begin(), used.end(), e) != used.end());
++                used.push_back(e);
++                ids[(size_t) (t * K + j)] = e;
++                own += res0[(size_t) e] >= 0;
++                w[(size_t) (t * K + j)] = uw(rng);
++                ws += w[(size_t) (t * K + j)];
++            }
++            for (int j = 0; j < K; ++j) w[(size_t) (t * K + j)] /= ws;
++            sg[(size_t) t] = nd(rng);
++        }
++        std::vector<float> rows1((size_t) cap * N), ownr((size_t) cap * N), shared((size_t) T * N);
++        for (auto& v : rows1) v = 0.05f * nd(rng);
++        for (auto& v : ownr) v = 0.05f * nd(rng);
++        for (auto& v : shared) v = 0.05f * nd(rng);
++        std::vector<float> parts_init((size_t) cap * N, std::nanf(""));
++        for (int e = 0; e < cap; ++e)
++            if (res0[(size_t) ids[(size_t) e]] >= 0)
++                std::memcpy(&parts_init[(size_t) e * N], &ownr[(size_t) e * N], N * 4);
++        auto dev = [&](const void* h, size_t bytes) {
++            void* d = sycl::malloc_device(bytes + 256, q);
++            q.memcpy(d, h, bytes).wait();
++            return d;
++        };
++        auto* d_ids = (int32_t*) dev(ids.data(), ids.size() * 4);
++        auto* d_w = (float*) dev(w.data(), w.size() * 4);
++        auto* d_sg = (float*) dev(sg.data(), sg.size() * 4);
++        auto* d_res0 = (int32_t*) dev(res0.data(), res0.size() * 4);
++        auto* d_rows1 = (float*) dev(rows1.data(), rows1.size() * 4);
++        auto* d_shared = (float*) dev(shared.data(), shared.size() * 4);
++        auto* d_pold = (float*) dev(parts_init.data(), parts_init.size() * 4);
++        auto* d_pnew = (float*) dev(parts_init.data(), parts_init.size() * 4);
++        auto* d_psum = sycl::malloc_device<float>((size_t) T * N, q);
++        auto* d_oold = sycl::malloc_device<float>((size_t) T * N, q);
++        auto* d_onew = sycl::malloc_device<float>((size_t) T * N, q);
++        auto* d_ctl = sycl::malloc_device<uint32_t>(64, q);   // done, flag, ctr
++        q.memset(d_ctl, 0, 256).wait();
++        uint32_t *done = d_ctl, *flag = d_ctl + 16, *ctr = d_ctl + 32;
++        // host reference (double): sum_j w * row + shared (plain) / + shared * sigmoid(sg) (gated)
++        std::vector<float> ref((size_t) T * N), refg((size_t) T * N);
++        for (int t = 0; t < T; ++t)
++            for (int64_t c = 0; c < N; ++c) {
++                double s = 0;
++                for (int j = 0; j < K; ++j) {
++                    const size_t e = (size_t) (t * K + j);
++                    const float v = res0[(size_t) ids[e]] >= 0 ? ownr[e * N + c] : rows1[e * N + c];
++                    s += (double) w[e] * v;
++                }
++                ref[(size_t) t * N + c] = (float) (s + shared[(size_t) t * N + c]);
++                refg[(size_t) t * N + c] = (float) (s + shared[(size_t) t * N + c] / (1.0 + std::exp(-(double) sg[(size_t) t])));
++            }
++        for (const bool gated : {false, true}) {
++            q.memcpy(d_pold, parts_init.data(), parts_init.size() * 4).wait();
++            k::ep_send_rows(d_pold, d_rows1, d_ids, d_res0, cap, N, done, flag, ctr, &q);
++            if (gated) k::native_moe_combine_multi_hits_gated(d_pold, d_w, d_shared, d_sg, d_oold, N, K, T, &q);
++            else if (T > 1) k::native_moe_combine_multi(d_pold, d_w, d_shared, d_oold, N, K, T, &q);
++            else k::native_moe_combine(d_pold, d_w, d_shared, d_oold, N, K, &q);
++            k::ep_send_psum(d_psum, d_rows1, d_ids, d_w, d_res0, T, K, N, done, flag, ctr, &q);
++            k::ep_combine_psum(d_pnew, d_w, d_ids, d_res0, d_psum, d_shared, gated ? d_sg : nullptr, d_onew, N, K, T, &q);
++            q.wait();
++            std::vector<float> o_old((size_t) T * N), o_new((size_t) T * N);
++            q.memcpy(o_old.data(), d_oold, o_old.size() * 4);
++            q.memcpy(o_new.data(), d_onew, o_new.size() * 4).wait();
++            uint32_t ctl[64];
++            q.memcpy(ctl, d_ctl, 256).wait();
++            const Err on = compare(o_old, o_new), ro = compare(gated ? refg : ref, o_old), rn = compare(gated ? refg : ref, o_new);
++            const bool ok = on.max_abs <= 4e-6 * std::max(1.0, on.ref_abs) * 8 && ctl[0] == 0;
++            fails += !ok;
++            std::printf("psum parity T=%d %s: own entries %d/%d; old vs new max|d| %.3g (max rel %.3g, |out| max %.3g); "
++                        "vs fp64 ref: old %.3g new %.3g; done=%u %s\n",
++                        T, gated ? "gated" : "plain", own, cap, on.max_abs, on.max_rel, on.ref_abs, ro.max_abs, rn.max_abs,
++                        ctl[0], ok ? "OK" : "FAIL");
++        }
++        // timings: 48 calls per graph; the peer destination in device memory (local) or pinned host memory (PCIe)
++        if (T > 1) {
++            float* h_parts = sycl::malloc_host<float>((size_t) cap * N, q);
++            float* h_psum = sycl::malloc_host<float>((size_t) T * N, q);
++            const double s_old_d = time_graph_us(q, [&] { for (int i = 0; i < 48; ++i) k::ep_send_rows(d_pold, d_rows1, d_ids, d_res0, cap, N, done, flag, ctr, &q); }, 48, reps);
++            const double s_new_d = time_graph_us(q, [&] { for (int i = 0; i < 48; ++i) k::ep_send_psum(d_psum, d_rows1, d_ids, d_w, d_res0, T, K, N, done, flag, ctr, &q); }, 48, reps);
++            const double s_old_h = time_graph_us(q, [&] { for (int i = 0; i < 48; ++i) k::ep_send_rows(h_parts, d_rows1, d_ids, d_res0, cap, N, done, flag, ctr, &q); }, 48, reps);
++            const double s_new_h = time_graph_us(q, [&] { for (int i = 0; i < 48; ++i) k::ep_send_psum(h_psum, d_rows1, d_ids, d_w, d_res0, T, K, N, done, flag, ctr, &q); }, 48, reps);
++            const double c_old = time_graph_us(q, [&] { for (int i = 0; i < 48; ++i) k::native_moe_combine_multi(d_pold, d_w, d_shared, d_oold, N, K, T, &q); }, 48, reps);
++            const double c_new = time_graph_us(q, [&] { for (int i = 0; i < 48; ++i) k::ep_combine_psum(d_pnew, d_w, d_ids, d_res0, d_psum, d_shared, nullptr, d_onew, N, K, T, &q); }, 48, reps);
++            const int peer = cap - own;
++            std::printf("psum timing T=%d (peer entries %d): send old/new  device %.2f / %.2f us  host(PCIe) %.2f / %.2f us "
++                        "(%.0f / %.0f KB); combine old/new %.2f / %.2f us\n",
++                        T, peer, s_old_d, s_new_d, s_old_h, s_new_h, peer * N * 4 / 1024.0, T * N * 4 / 1024.0, c_old, c_new);
++            sycl::free(h_parts, q);
++            sycl::free(h_psum, q);
++        }
++        for (void* p : {(void*) d_ids, (void*) d_w, (void*) d_sg, (void*) d_res0, (void*) d_rows1, (void*) d_shared,
++                        (void*) d_pold, (void*) d_pnew, (void*) d_psum, (void*) d_oold, (void*) d_onew, (void*) d_ctl})
++            sycl::free(p, q);
++    }
++    std::printf("send: %d failures\n", fails);
++    return fails ? 1 : 0;
++}
++
++// ------------------------------------------------------------------------------------------------ plan (PLAN1)
++// resident_plan_ep_pair (both roles in one launch on card 0) against resident_plan_ep role 1 and role 2 (as each card
++// makes it today), word for word over the words native_expert_grouped reads; and the launch times.
++int plan_bench(int reps) {
++    sycl::queue& q = Q();
++    std::mt19937 rng(4242);
++    const int K = 10, NE = 512, MT = 8;
++    const long long capx = (long long) MT * K;
++    const long long ptr_off = ((4 + (capx + 1) + 2 * capx) + 1) & ~1ll;
++    const size_t words = (size_t) (ptr_off + 4 * capx + capx + 1 + 1 + 16);
++    const int used = (int) (ptr_off + 2 * capx);
++    auto* d_ids = sycl::malloc_device<int32_t>(capx, q);
++    auto* d_r0 = sycl::malloc_device<int32_t>(NE, q);
++    auto* d_r1 = sycl::malloc_device<int32_t>(NE, q);
++    auto* d_off0 = sycl::malloc_device<unsigned long long>(NE, q);
++    auto* d_off1 = sycl::malloc_device<unsigned long long>(NE, q);
++    int32_t* pl[4];
++    for (auto& p : pl) { p = sycl::malloc_device<int32_t>(words, q); }
++    auto* d_err = sycl::malloc_device<uint32_t>(4, q);
++    const uint8_t* base0 = reinterpret_cast<const uint8_t*>(uintptr_t(0x100000000ull));   // never dereferenced
++    const uint8_t* base1 = reinterpret_cast<const uint8_t*>(uintptr_t(0x200000000ull));
++    int fails = 0, cases = 0;
++    for (int it = 0; it < 200; ++it) {
++        const int T = 1 + (int) (rng() % MT), n = T * K;
++        std::vector<int> perm(NE);
++        std::iota(perm.begin(), perm.end(), 0);
++        std::shuffle(perm.begin(), perm.end(), rng);
++        std::vector<int32_t> r0(NE, -1), r1(NE, -1);
++        const int n0 = 100 + (int) (rng() % 100);
++        for (int i = 0; i < NE; ++i) { if (i < n0) r0[(size_t) perm[(size_t) i]] = i; else r1[(size_t) perm[(size_t) i]] = i - n0; }
++        for (int i = 0; i < 20; ++i) r1[(size_t) perm[(size_t) i]] = 400 + i;   // some experts on both cards
++        std::vector<int32_t> ids((size_t) n);
++        for (int t = 0; t < T; ++t)
++            for (int j = 0; j < K; ++j) {
++                int e;
++                bool dup;
++                do { e = (it % 3 == 0) ? perm[(size_t) (rng() % 40)] : (int) (rng() % NE);   // hot sets: repeats across tokens
++                     dup = false; for (int jj = 0; jj < j; ++jj) dup |= ids[(size_t) (t * K + jj)] == e; } while (dup);
++                ids[(size_t) (t * K + j)] = e;
++            }
++        std::vector<unsigned long long> off0(NE), off1(NE);
++        for (int i = 0; i < NE; ++i) { off0[(size_t) i] = (unsigned long long) i * 1868800ull + 4096; off1[(size_t) i] = (unsigned long long) i * 1305600ull; }
++        q.memcpy(d_ids, ids.data(), (size_t) n * 4);
++        q.memcpy(d_r0, r0.data(), NE * 4);
++        q.memcpy(d_r1, r1.data(), NE * 4);
++        q.memcpy(d_off0, off0.data(), NE * 8);
++        q.memcpy(d_off1, off1.data(), NE * 8);
++        for (auto* p : pl) q.memset(p, 0x5A, words * 4);
++        q.memset(d_err, 0, 16).wait();
++        const bool use_off = it % 2 == 0;
++        k::resident_plan_ep(d_ids, n, K, d_r0, d_r1, 1, NE, base0, use_off ? d_off0 : nullptr, 1868800, pl[0], capx, &q, d_err);
++        k::resident_plan_ep(d_ids, n, K, d_r0, d_r1, 2, NE, base1, use_off ? d_off1 : nullptr, 1305600, pl[1], capx, &q, d_err + 1);
++        k::resident_plan_ep_pair(d_ids, n, K, d_r0, d_r1, NE, base0, use_off ? d_off0 : nullptr, 1868800, pl[2], base1,
++                                 use_off ? d_off1 : nullptr, 1305600, pl[3], capx, &q, d_err + 2);
++        q.wait();
++        std::vector<int32_t> h[4];
++        for (int i = 0; i < 4; ++i) { h[i].resize(words); q.memcpy(h[i].data(), pl[i], words * 4).wait(); }
++        // the words the grouped call reads: counts, start, dst, tok over the used groups / entries, ptr of the used groups
++        auto cmp = [&](const std::vector<int32_t>& a, const std::vector<int32_t>& b) {
++            const int ng = a[0], ne = a[1];
++            bool ok = a[0] == b[0] && a[1] == b[1];
++            for (int g = 0; g <= ng && ok; ++g) ok = a[(size_t) (4 + g)] == b[(size_t) (4 + g)];
++            for (int e = 0; e < ne && ok; ++e)
++                ok = a[(size_t) (4 + capx + 1 + e)] == b[(size_t) (4 + capx + 1 + e)] &&
++                     a[(size_t) (4 + 2 * capx + 1 + e)] == b[(size_t) (4 + 2 * capx + 1 + e)];
++            for (int g = 0; g < ng && ok; ++g)
++                ok = a[(size_t) (ptr_off + 2 * g)] == b[(size_t) (ptr_off + 2 * g)] && a[(size_t) (ptr_off + 2 * g + 1)] == b[(size_t) (ptr_off + 2 * g + 1)];
++            bool full = true;   // and every word up to `used`
++            for (int i = 0; i < used; ++i) full &= a[(size_t) i] == b[(size_t) i];
++            return std::make_pair(ok, full);
++        };
++        const auto c0 = cmp(h[0], h[2]), c1 = cmp(h[1], h[3]);
++        ++cases;
++        if (!c0.first || !c1.first) {
++            ++fails;
++            if (fails < 5) std::printf("plan pair case %d (T=%d): role1 %s role2 %s\n", it, T, c0.first ? "ok" : "DIFF", c1.first ? "ok" : "DIFF");
++        }
++        if (it < 3) std::printf("plan pair case %d: T=%d groups r1=%d/%d r2=%d/%d entries %d+%d; all %d words equal: %s/%s\n", it, T,
++                                h[0][0], h[2][0], h[1][0], h[3][0], h[0][1], h[1][1], used, c0.second ? "yes" : "no", c1.second ? "yes" : "no");
++    }
++    // launch cost: 48 calls in a graph (T = 6)
++    const double t1 = time_graph_us(q, [&] { for (int i = 0; i < 48; ++i) k::resident_plan_ep(d_ids, 60, K, d_r0, d_r1, 1, NE, base0, d_off0, 1868800, pl[0], capx, &q, d_err); }, 48, reps);
++    const double t2 = time_graph_us(q, [&] { for (int i = 0; i < 48; ++i) k::resident_plan_ep_pair(d_ids, 60, K, d_r0, d_r1, NE, base0, d_off0, 1868800, pl[2], base1, d_off1, 1305600, pl[3], capx, &q, d_err); }, 48, reps);
++    std::printf("plan: %d cases, %d failures; launch (in-order graph, back to back) role-1 only %.2f us, pair %.2f us\n", cases, fails, t1, t2);
++    for (void* p : {(void*) d_ids, (void*) d_r0, (void*) d_r1, (void*) d_off0, (void*) d_off1, (void*) d_err}) sycl::free(p, q);
++    for (auto* p : pl) sycl::free(p, q);
++    return fails ? 1 : 0;
++}
++
++}  // namespace
++
++int main(int argc, char** argv) {
++    const std::string mode = argc > 1 ? argv[1] : "grouped";
++    if (mode == "grouped") return grouped_bench(argc > 2 ? std::atoi(argv[2]) : 20);
++    if (mode == "send") return send_bench(argc > 2 ? std::atoi(argv[2]) : 20);
++    if (mode == "plan") return plan_bench(argc > 2 ? std::atoi(argv[2]) : 20);
++    std::fprintf(stderr, "usage: ep_night_bench grouped|send\n");
++    return 2;
++}

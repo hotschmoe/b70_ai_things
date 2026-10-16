@@ -1,0 +1,126 @@
+diff --git a/include/strata/core/verify.hpp b/include/strata/core/verify.hpp
+index a9dc19db..eeb9cb5d 100644
+--- a/include/strata/core/verify.hpp
++++ b/include/strata/core/verify.hpp
+@@ -322,13 +322,13 @@ private:
+     std::vector<SessionState*> slots_;
+     bool batch_rec_ = false;               ///< record_window is capturing a batch window
+     int row_base_ = 0;                     ///< ... its hand-off rows start here (a pipeline group's own rows)
+-    int brow_[8] = {};                     ///< ... and row t is slot brow_[t]
++    int brow_[16] = {};                    ///< ... and row t is slot brow_[t]
+     bool last_batch_ = false;              ///< the last run was a batch window (set_plan_slot: one group)
+     std::map<std::vector<int>, cudaGraphExec_t> exec_bm_, commit_bm_;   ///< full row layout avoids slot-ID collisions
+     std::map<std::vector<int>, uint64_t> bm_used_;   ///< last use of each captured layout (LRU)
+     uint64_t bm_tick_ = 0;
+     size_t batch_graph_limit_ = 0;         ///< 0: keep every captured batch graph (0.1.39); N: LRU-evict beyond N layouts
+-    int last_rows_[8] = {};                ///< the slots of the last batch window's rows
++    int last_rows_[16] = {};               ///< the slots of the last batch window's rows
+     std::vector<int> bkey(const int* rows, int S, int hbase) const {   // #871: the doorbell variant has its own graphs
+         std::vector<int> k = batch_key(rows, S, hbase);
+         k.push_back(ar_off_ ? 1 : 0);
+@@ -345,14 +345,14 @@ private:
+     bool b_running_ = false;
+     int64_t b_k_ = 0, b_steps_ = 0;
+     std::chrono::steady_clock::time_point b_last_;
+-    int32_t b_out_[8] = {};
++    int32_t b_out_[16] = {};   // night T12: kVerifyCapT rows
+     std::vector<strata::kernels::SamplerParams> slot_sp_;
+     bool sample_rows(int S, std::string& err);   ///< the sampled slots' rows of the last batch window
+     int32_t* h_commitb_ = nullptr; int32_t* m_commitb_ = nullptr;   // per slot [1, 0, pos, -1 ..], stride 2 + max_t
+     int32_t* commitb_ = nullptr;
+     float* tail_snap_b_ = nullptr;         ///< per (slot, QSA layer) indexer tail snapshot
+     void* arena_b_ = nullptr;
+-    int64_t last_pos_b_[8] = {};
++    int64_t last_pos_b_[16] = {};   // night T12: kVerifyCapT rows
+     bool capture_batch(const int* rows, int S, int hbase, std::string& err);
+     /// Free the graph pair of the least recently used batch layout other than `keep` (`evicted`: there was one).
+     bool evict_batch_graph(const std::vector<int>& keep, bool& evicted, std::string& err);
+@@ -446,7 +446,7 @@ private:
+     float* ple_val_ = nullptr;
+     int last_t_ = 0;
+     int64_t last_pos0_ = 0;
+-    int32_t last_tokens_[8] = {};
++    int32_t last_tokens_[16] = {};   // night T12: kVerifyCapT rows
+     int64_t n_vocab_ = 0;
+     cudaStream_t cs_ = nullptr;
+     cudaStream_t sh_cs_ = nullptr;
+diff --git a/sycl/include/strata/core/verify.hpp b/sycl/include/strata/core/verify.hpp
+index bbdeef64..751d8e49 100644
+--- a/sycl/include/strata/core/verify.hpp
++++ b/sycl/include/strata/core/verify.hpp
+@@ -284,14 +284,14 @@ private:
+     std::vector<SessionState*> slots_;
+     bool batch_rec_ = false;               ///< record_window is capturing a batch window
+     int row_base_ = 0;                     ///< ... its hand-off rows start here (a pipeline group's own rows)
+-    int brow_[8] = {};                     ///< ... and row t is slot brow_[t]
++    int brow_[16] = {};                    ///< ... and row t is slot brow_[t]
+     bool last_batch_ = false;              ///< the last run was a batch window (set_plan_slot: one group)
+     std::map<std::vector<int>, dpct::experimental::command_graph_exec_ptr>
+         exec_bm_, commit_bm_; ///< full row layout avoids slot-ID collisions
+     std::map<std::vector<int>, uint64_t> bm_used_;   ///< last use of each captured layout (LRU, only with a graph limit)
+     uint64_t bm_tick_ = 0;
+     size_t batch_graph_limit_ = 0;         ///< 0: keep every captured batch graph (0.1.39); N: LRU-evict beyond N layouts
+-    int last_rows_[8] = {};                ///< the slots of the last batch window's rows
++    int last_rows_[16] = {};               ///< the slots of the last batch window's rows
+     std::vector<int> bkey(const int* rows, int S, int hbase) const {   // #871: the doorbell variant has its own graphs
+         std::vector<int> k = batch_key(rows, S, hbase);
+         k.push_back(ar_off_ ? 1 : 0);
+@@ -308,14 +308,14 @@ private:
+     bool b_running_ = false;
+     int64_t b_k_ = 0, b_steps_ = 0;
+     std::chrono::steady_clock::time_point b_last_;
+-    int32_t b_out_[8] = {};
++    int32_t b_out_[16] = {};   // night T12: kVerifyCapT rows
+     std::vector<strata::kernels::SamplerParams> slot_sp_;
+     bool sample_rows(int S, std::string& err);   ///< the sampled slots' rows of the last batch window
+     int32_t* h_commitb_ = nullptr; int32_t* m_commitb_ = nullptr;   // per slot [1, 0, pos, -1 ..], stride 2 + max_t
+     int32_t* commitb_ = nullptr;
+     float* tail_snap_b_ = nullptr;         ///< per (slot, QSA layer) indexer tail snapshot
+     void* arena_b_ = nullptr;
+-    int64_t last_pos_b_[8] = {};
++    int64_t last_pos_b_[16] = {};   // night T12: kVerifyCapT rows
+     bool capture_batch(const int* rows, int S, int hbase, std::string& err);
+     void collect_profile();   ///< STRATA_VERIFY_PROFILE: add the last window's stamps to prof_sum_
+     void accumulate_profile(const unsigned long long* stamps);   ///< one window's stamps (host copy) into prof_sum_
+@@ -457,7 +457,7 @@ private:
+     float* ple_val_ = nullptr;
+     int last_t_ = 0;
+     int64_t last_pos0_ = 0;
+-    int32_t last_tokens_[8] = {};
++    int32_t last_tokens_[16] = {};   // night T12: kVerifyCapT rows
+     int64_t n_vocab_ = 0;
+     dpct::queue_ptr cs_ = &dpct::get_in_order_queue();
+     float* dbgR_ = nullptr;   ///< SYCL port debug: R (token 0) after every layer, n_layers x n_embd
+diff --git a/sycl/src/core/verify.cpp b/sycl/src/core/verify.cpp
+index 8d04e0bc..3f740bcc 100644
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -3228,6 +3228,12 @@ catch (sycl::exception const &exc) {
+ 
+ bool Verifier::capture_batch(const int *rows, int S, int hbase,
+                              std::string &err) try {
++    if (S > (int) (sizeof(brow_) / sizeof(brow_[0]))) {   // night T12 guard
++        std::fprintf(stderr, "strata night T12: capture_batch with %d rows exceeds brow_ (%d)\n", S,
++                     (int) (sizeof(brow_) / sizeof(brow_[0])));
++        err = "verify: batch window wider than the host row arrays";
++        return false;
++    }
+     dpct::experimental::command_graph_exec_ptr &ex =
+         exec_bm_[bkey(rows, S, hbase)];
+     if (ex != nullptr) return true;
+@@ -3514,6 +3520,15 @@ bool Verifier::stage_batch(const int *rows, int S, int hbase,
+                            std::string &err) try {
+     using namespace strata::kernels;
+     host_boundary::mark("stage_enter", S, hbase);
++    // night T12 guard: the per-row host arrays (brow_, last_rows_, last_tokens_, last_pos_b_, b_out_, ple_rows) hold
++    // kVerifyCapT rows
++    if (S > strata::kernels::kVerifyCapT || S > (int) (sizeof(last_rows_) / sizeof(last_rows_[0])) ||
++        S > (int) (sizeof(brow_) / sizeof(brow_[0]))) {
++        std::fprintf(stderr, "strata night T12: stage_batch with %d rows exceeds the host row arrays (%d)\n", S,
++                     (int) (sizeof(last_rows_) / sizeof(last_rows_[0])));
++        err = "verify: batch window wider than the host row arrays";
++        return false;
++    }
+     if (S < 1 || S > max_t_ || hbase < 0 ||
+         (next_ != nullptr && hbase + S > (int) slots_.size())) {
+         err = "verify: batch rows out of range (init_slots)";

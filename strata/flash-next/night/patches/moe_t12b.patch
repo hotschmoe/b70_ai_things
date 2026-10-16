@@ -1,0 +1,77 @@
+diff --git a/sycl/src/core/verify.cpp b/sycl/src/core/verify.cpp
+index 8d04e0bc..575b7f15 100644
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -2288,8 +2288,10 @@ bool Verifier::capture_commit(std::string &err) try {
+                 gdn_conv_commit(conv, qkv, (int) C, commit_, cs_);
+                 gdn_step_norm_multi(state, h_L_ + (size_t) gdn_index * MT * C, (int) C, gate_L_ + (size_t) gdn_index * MT * HV,
+                                     beta_L_ + (size_t) gdn_index * MT * HV, z_, (const float*) wnm->data, EPS, y_dummy_,
+-                                    (int) g.ssm_k_heads, (int) HV, (int) MT, commit_, cs_,
+-                                    (int) MT);   // S26: t_out_begin = MT - the replay's outputs (y_dummy_) are never read
++                                    (int) g.ssm_k_heads, (int) HV, (int) std::min<int64_t>(MT, strata::kernels::kVerifyMaxT),
++                                    commit_, cs_,
++                                    (int) std::min<int64_t>(MT, strata::kernels::kVerifyMaxT));   // S26: t_out_begin = MT - the replay's outputs (y_dummy_) are never read
++                                    // (night T12: a one-request window keeps <= kVerifyMaxT rows; MT may be 12)
+                 ++gdn_index;
+             } else {
+                 const QsaState& st = ss.qsa_states[qsa_index];
+@@ -3173,7 +3175,10 @@ catch (sycl::exception const &exc) {
+ // SYCL port: capture every window graph now (one per window size) instead of on first use, so the first request
+ // does not pay for them (a 2,400-node graph takes tens of ms to finalize on this backend).
+ bool Verifier::warm(std::string &err) {
+-    for (int T = 1; T <= max_t_; ++T)
++    // night T12: a batch-MTP verifier's max_t_ can be 12, but a one-request window never exceeds --spec (<= 8):
++    // capture those only (the batch windows capture on first use, capture_batch)
++    const int tmax = std::min<int>((int) max_t_, strata::kernels::kVerifyMaxT);
++    for (int T = 1; T <= tmax; ++T)
+         if (!capture(T, err)) return false;
+     return true;
+ }
+diff --git a/sycl/src/kernels/cuda/native_mmvq.dp.cpp b/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+index f0389ff1..52cb5960 100644
+--- a/sycl/src/kernels/cuda/native_mmvq.dp.cpp
++++ b/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+@@ -3683,11 +3683,20 @@ void launch_multi(const void* weights, const void* x_q8_1, float* y, int n_in, i
+     }
+ }
+ 
++thread_local bool t12_probe = false;   // night T12: native_mmvq's whole-width try (its throw is expected and caught)
+ void validate_shape(int n_in, int ncols, int block_elems = Q8K) {
+     if (n_in <= 0 || n_in % block_elems != 0) {
+         throw std::invalid_argument("native MMVQ requires n_in > 0 and divisible by its block element count");
+     }
+-    if (ncols < 1 || ncols > MAX_NCOLS) throw std::invalid_argument("native MMVQ requires 1 <= ncols <= 8");
++    if (ncols < 1 || ncols > MAX_NCOLS) {
++        if (verify_t12() && !t12_probe) {   // night T12 diagnostics: who reached the 8-column cap (first 4 only)
++            static int shown = 0;
++            if (shown++ < 4)
++                std::fprintf(stderr, "strata night T12: validate_shape(n_in %d, ncols %d, block %d) is about to throw (caller %p)\n",
++                             n_in, ncols, block_elems, __builtin_return_address(0));
++        }
++        throw std::invalid_argument("native MMVQ requires 1 <= ncols <= 8");
++    }
+ }
+ void validate_pointer(const void* p) {
+     if (!p || reinterpret_cast<std::uintptr_t>(p) % 4 != 0) {
+@@ -4600,6 +4609,9 @@ void native_q6_k_mmvq_stride224(const void* weights, const void* x_q8_1, float*
+ bool native_mmvq_multi_exact() { return g_multi_exact; }
+ 
+ std::size_t native_q8_1_bytes(int n_in, int ncols) {
++    // night T12: a 12-row window sizes its q8_1 scratch (Verifier::init: xq_, sh_xq_) for up to kVerifyCapT columns
++    if (ncols > MAX_NCOLS && verify_t12() && ncols <= kVerifyCapT) validate_shape(n_in, 1);
++    else
+     validate_shape(n_in, ncols);
+     return std::size_t(ncols) * std::size_t(n_in / Q8K) * sizeof(Q81Block);
+ }
+@@ -5394,8 +5406,9 @@ void native_mmvq(int ggml_type, const void* weights, const void* x_q8_1, float*
+                  int n_in, int n_out, int ncols, void* stream) {
+     if (ncols > MAX_NCOLS && verify_t12() && ncols <= kVerifyCapT) {
+         if (ggml_type == 12 || ggml_type == 13 || ggml_type == 14 || ggml_type == 23) {
+-            try { native_mmvq_dispatch(ggml_type, weights, x_q8_1, y, n_in, n_out, ncols, stream); return; }
+-            catch (const std::invalid_argument&) {}   // not taken whole (nothing was launched): chunk below
++            t12_probe = true;
++            try { native_mmvq_dispatch(ggml_type, weights, x_q8_1, y, n_in, n_out, ncols, stream); t12_probe = false; return; }
++            catch (const std::invalid_argument&) { t12_probe = false; }   // not taken whole (nothing launched): chunk below
+         }
+         const size_t xcol = (size_t) (n_in / 32) * 36;
+         native_mmvq_dispatch(ggml_type, weights, x_q8_1, y, n_in, n_out, MAX_NCOLS, stream);

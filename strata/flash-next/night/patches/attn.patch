@@ -1,0 +1,1183 @@
+diff --git a/include/strata/kernels/qsa_decode_attn.hpp b/include/strata/kernels/qsa_decode_attn.hpp
+index 45c0f301..d7901424 100644
+--- a/include/strata/kernels/qsa_decode_attn.hpp
++++ b/include/strata/kernels/qsa_decode_attn.hpp
+@@ -43,4 +43,23 @@ void qsa_decode_attn_step(const float* q, const QsaAttnPools& pools, const int32
+ void qsa_decode_attn_batch(const float* q, const QsaAttnPools& pools, const int32_t* ids, const int32_t* steps,
+                            int64_t cap, const QsaShapes& s, float* scratch, float* attn, int64_t n_q, void* stream);
+ 
++/// Night-lab (STRATA_NIGHT_ATTN_BATCH): the batched form over SEVERAL KV pool sets in one launch - a C2 verify window's
++/// rows belong to different slot sessions, each with its own pools.  Rows [sum(rows[0..k)), +rows[k]) read pools[k];
++/// q / ids / steps / scratch / attn are row-contiguous exactly as for qsa_decode_attn_batch, and every row's arithmetic
++/// is that call's (the work-group of query z reads pools[slot(z)] and nothing else differs): bitwise the per-slot calls.
++/// At most kQsaAttnMaxPools pool sets, all of one KV format; otherwise it falls back to one call per pool set.
++inline constexpr int kQsaAttnMaxPools = 4;
++void qsa_decode_attn_multi(const float* q, const QsaAttnPools* pools, const int* rows, int n_pools, const int32_t* ids,
++                           const int32_t* steps, int64_t cap, const QsaShapes& s, float* scratch, float* attn,
++                           void* stream);
++
++/// Night-lab switches (latched from the environment, one stderr line when on):
++///   STRATA_NIGHT_ATTN_MERGE_ACTIVE=1 - the merge folds only the chunks the row's selection reaches (ceil(width/64)),
++///                                      their loads issued 8 at a time in the same fold order;
++///                                      the chunks past it hold m = -FLT_MAX, which both merge loops skip: bitwise.
++///   STRATA_NIGHT_ATTN_VPIPE=1        - decode calls (n_q <= 8) use the S93 value-pipelined chunk kernel (four V loads
++///                                      in flight, cells folded in the same ascending order): bitwise.
++bool qsa_night_merge_active();
++bool qsa_night_vpipe();
++
+ }  // namespace strata::kernels
+diff --git a/sycl/CMakeLists.txt b/sycl/CMakeLists.txt
+index e5e4b36a..7a13dd17 100644
+--- a/sycl/CMakeLists.txt
++++ b/sycl/CMakeLists.txt
+@@ -359,6 +359,10 @@ if(STRATA_SYCL_PARITY)
+   strata_resolve(_src src/kernels/qsa_prompt_attn_parity.cpp)
+   add_executable(qsa_prompt_attn_parity ${_src})
+   target_link_libraries(qsa_prompt_attn_parity PRIVATE strata_kernels)
++  # night-lab STRATA_NIGHT_ATTN_BATCH: verify-window QSA select/attention per row vs per slot vs one launch (bitwise + timing)
++  strata_resolve(_src src/kernels/qsa_verify_batch_parity.cpp)
++  add_executable(qsa_verify_batch_parity ${_src})
++  target_link_libraries(qsa_verify_batch_parity PRIVATE strata_kernels)
+   # the hybrid K8V4 KV test (upstream 0.1.27) passes its appends, gathers and attention here and fails only its
+   # last step, the same tensor-core prompt kernel. Built, not registered, until that kernel is ported.
+   strata_resolve(_src src/kernels/kv_hybrid_parity.cpp)
+diff --git a/sycl/src/core/verify.cpp b/sycl/src/core/verify.cpp
+index 1b7273eb..31fdc82a 100644
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -102,6 +102,19 @@ bool env_on(const char* name) {
+ // S143: process-constant before capture; only privately checked three-row groups.
+ const bool g_qsa_commit_group_steps = env_on("STRATA_QSA_COMMIT_GROUP_STEPS");
+ const bool g_gdn_commit_layers = env_on("STRATA_GDN_COMMIT_LAYERS");
++// Night-lab STRATA_NIGHT_ATTN_BATCH (default 0): a batch (C2) verify window's QSA attention per slot instead of per row.
++//   1    the rows of a slot share one scores / K/V-append / indexer-append launch, and the whole window one top-k, one
++//        chunk (one launch over every slot's pools) and one merge: 24 -> 5 select/attention launches per layer at C2
++//   slot the per-slot form of everything (scores, top-k, chunk+merge per slot): 24 -> 8
++// Every row's arithmetic is the per-row call's (each kernel's per-query work is independent of its batch): bitwise.
++const int g_night_attn_batch = [] {
++    const char* e = std::getenv("STRATA_NIGHT_ATTN_BATCH");
++    int m = 0;
++    if (e != nullptr && e[0] != 0 && e[0] != '0') m = std::strcmp(e, "slot") == 0 ? 2 : 1;
++    if (m) std::fprintf(stderr, "strata night: STRATA_NIGHT_ATTN_BATCH=%s (batch verify QSA attention per slot%s, bitwise)\n",
++                        e, m == 1 ? ", one top-k/chunk/merge launch per window" : "");
++    return m;
++}();
+ #if defined(STRATA_USE_HIP)
+ const bool g_coherent = env_on("STRATA_VERIFY_COHERENT");
+ const bool g_doorbell_store = env_on("STRATA_DOORBELL_STORE");
+@@ -1148,6 +1161,38 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+                         for (int t = tb; t < te; ++t)
+                             kv_append_step(st.k_pool, st.v_pool, st.page_table, step_ + t * kStepCount,
+                                            kcur_ + t * NKV * HD, vcur_ + t * NKV * HD, s, cs, &st.host);
++                } else if (batch_rec_ && g_night_attn_batch && dec_batch && !g_no_batch_kv) {
++                    // night: a slot's contiguous rows in one launch - kv_append_q8_steps / q4_steps are the single-cell
++                    // kernels per token (kv_steps_parity); K8V4 and FP16 pools keep the row loop
++                    for (int t = tb; t < te;) {
++                        const int first = t;
++                        while (t < te && brow_[t] == brow_[first]) ++t;
++                        const int cnt = t - first;
++                        const QsaState& sx = slot_ss(first).qsa_states[qi];
++                        const int32_t* step_f = step_ + first * kStepCount;
++                        const float* kc_f = kcur_ + first * NKV * HD;
++                        const float* vc_f = vcur_ + first * NKV * HD;
++                        if (!sx.kv_hybrid && sx.kv_q4)
++                            kv_append_q4_steps(sx.k_q4, sx.v_q4, sx.page_table, step_f, kStepCount, cnt, kc_f, vc_f, s, cs,
++                                               &sx.host);
++                        else if (!sx.kv_hybrid && sx.kv_int8)
++                            kv_append_q8_steps(sx.k_q, sx.v_q, sx.k_scale, sx.v_scale, sx.page_table, step_f, kStepCount,
++                                               kc_f, vc_f, (int) (NKV * HD), cnt, s, cs, &sx.host);
++                        else
++                            for (int u = first; u < t; ++u) {
++                                const int32_t* step_u = step_ + u * kStepCount;
++                                if (sx.kv_hybrid) {
++                                    const KvHostPools hk = kv_hybrid_k_half(sx.host), hv = kv_hybrid_v_half(sx.host);
++                                    const bool mirror = sx.host.present();
++                                    kv_append_q8_step(sx.k_q, sx.k_q, sx.k_scale, sx.k_scale, sx.page_table, step_u,
++                                                      kcur_ + u * NKV * HD, kcur_ + u * NKV * HD, s, cs, mirror ? &hk : nullptr);
++                                    kv_append_q4_step(sx.v_q4, sx.v_q4, sx.page_table, step_u, vcur_ + u * NKV * HD,
++                                                      vcur_ + u * NKV * HD, s, cs, mirror ? &hv : nullptr);
++                                } else
++                                    kv_append_step(sx.k_pool, sx.v_pool, sx.page_table, step_u, kcur_ + u * NKV * HD,
++                                                   vcur_ + u * NKV * HD, s, cs, &sx.host);
++                            }
++                    }
+                 } else
+                 for (int t = tb; t < te; ++t) {
+                     const QsaState& st = slot_ss(t).qsa_states[qi];   // the row's own K/V (ss's outside a batch)
+@@ -1174,6 +1219,18 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+                     native_qsa_indexer_append_steps(idx_raw + tb * ID, step_ + tb * kStepCount + kStepPos, kStepCount,
+                                                     n, 0, (const float*) wikn->data, EPS, ib, s, st.max_cells,
+                                                     rope_scaling(), cs);
++                } else if (batch_rec_ && g_night_attn_batch && dec_batch && !g_no_batch_kv) {
++                    // night: a slot's contiguous rows in one append (one work-group walks them in order, as the
++                    // single-row calls would one after another)
++                    for (int t = tb; t < te;) {
++                        const int first = t;
++                        while (t < te && brow_[t] == brow_[first]) ++t;
++                        const QsaState& sx = slot_ss(first).qsa_states[qi];
++                        const QsaIndexerBuffers ib{sx.idx_tail, sx.idx_dead, sx.idx_pooled, sx.idx_block_pos};
++                        native_qsa_indexer_append_steps(idx_raw + first * ID, step_ + first * kStepCount + kStepPos,
++                                                        kStepCount, t - first, 0, (const float*) wikn->data, EPS, ib, s,
++                                                        sx.max_cells, rope_scaling(), cs);
++                    }
+                 } else {
+                     for (int t = tb; t < te; ++t) {
+                         const QsaState& sx = slot_ss(t).qsa_states[qi];
+@@ -1245,6 +1302,61 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+                 }
+                 }
+                 stamp(l, 10, grp);
++                if (batch_rec_ && g_night_attn_batch) {
++                    // night: the rows of a slot select and attend in one launch per kernel (each kernel's query z
++                    // reads only its own q / step / scores / selection / scratch rows: the per-row calls' bits);
++                    // mode 1 also runs the window's top-k, chunk (every slot's pools) and merge as one launch each
++                    int gb[kQsaAttnMaxPools + 1], ng = 0;
++                    bool groups_ok = true;
++                    for (int t = tb; t < te;) {
++                        const int first = t;
++                        while (t < te && brow_[t] == brow_[first]) ++t;
++                        if (ng < kQsaAttnMaxPools) gb[ng] = first; else groups_ok = false;
++                        ++ng;
++                    }
++                    if (ng <= kQsaAttnMaxPools) gb[ng] = te;
++                    const bool one = g_night_attn_batch == 1 && groups_ok;
++                    for (int t = tb; t < te;) {   // per slot: the scores (one read of the slot's pooled keys)
++                        const int first = t;
++                        while (t < te && brow_[t] == brow_[first]) ++t;
++                        const QsaState& sx = slot_ss(first).qsa_states[qi];
++                        qsa_block_scores(sx.idx_pooled, sx.idx_dead, qidx_ + first * IQ * ID, step_ + first * kStepCount,
++                                         t - first, max_blocks_, s, scores_ + (size_t) first * max_blocks_, cs);
++                        if (!one)
++                            qsa_block_topk(scores_ + (size_t) first * max_blocks_, step_ + first * kStepCount, t - first,
++                                           max_blocks_, cap_, s, sel_ + (size_t) first * cap_, cs);
++                    }
++                    if (one)
++                        qsa_block_topk(scores_ + (size_t) tb * max_blocks_, step_ + tb * kStepCount, n, max_blocks_, cap_,
++                                       s, sel_ + (size_t) tb * cap_, cs);
++                    stamp(l, 11, grp);
++                    for (int t = tb; t < te;) {
++                        const int first = t;
++                        while (t < te && brow_[t] == brow_[first]) ++t;
++                        qsa_kv_resolve(slot_ss(first).qsa_states[qi], *g_, sel_ + (size_t) first * cap_,
++                                       step_ + first * kStepCount, t - first, cap_, cs);
++                    }
++                    stamp(l, 12, grp);
++                    if (one) {
++                        QsaAttnPools pp[kQsaAttnMaxPools];
++                        int rows[kQsaAttnMaxPools];
++                        for (int k2 = 0; k2 < ng; ++k2) {
++                            pp[k2] = qsa_attn_pools(slot_ss(gb[k2]).qsa_states[qi]);
++                            rows[k2] = gb[k2 + 1] - gb[k2];
++                        }
++                        qsa_decode_attn_multi(qcur_ + tb * NH * HD, pp, rows, ng, sel_ + (size_t) tb * cap_,
++                                              step_ + tb * kStepCount, cap_, s,
++                                              attn_scratch_ + (size_t) tb * attn_scratch_floats_, attn_ + tb * NH * HD, cs);
++                    } else
++                        for (int t = tb; t < te;) {
++                            const int first = t;
++                            while (t < te && brow_[t] == brow_[first]) ++t;
++                            qsa_decode_attn_batch(qcur_ + first * NH * HD, qsa_attn_pools(slot_ss(first).qsa_states[qi]),
++                                                  sel_ + (size_t) first * cap_, step_ + first * kStepCount, cap_, s,
++                                                  attn_scratch_ + (size_t) first * attn_scratch_floats_,
++                                                  attn_ + first * NH * HD, t - first, cs);
++                        }
++                } else
+                 if (batch_rec_) {   // each row selects and attends over its own slot's K/V
+                     for (int t = tb; t < te; ++t) {
+                         const QsaState& sx = slot_ss(t).qsa_states[qi];
+diff --git a/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp b/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp
+index ff6a6f19..1524ff4b 100644
+--- a/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp
++++ b/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp
+@@ -611,6 +611,80 @@ __dpct_inline__ void attn_merge_kernel(const float *__restrict__ part_acc,
+     attn[(size_t) h * HD + d] = L > 0.0f ? acc / L : 0.0f;
+ }
+ 
++// Night-lab STRATA_NIGHT_ATTN_MERGE_ACTIVE: attn_merge_kernel with both loops bounded by the chunks the row's
++// selection reaches.  A chunk c >= ceil(width / CHUNK) has n_here <= 0, so attn_chunk_kernel wrote m = -FLT_MAX for
++// it: fmax(M, -FLT_MAX) == M in the first loop and the second loop `continue`s on it - the same bits, without the
++// serial walk over every chunk of the capacity (the MTP drafter's 32K window is 512 chunks).
++__dpct_inline__ void attn_merge_active_kernel(const float *__restrict__ part_acc,
++                                              const float *__restrict__ part_m,
++                                              const float *__restrict__ part_l,
++                                              int n_chunks, float *__restrict__ attn,
++                                              long long scratch_stride,
++                                              const int32_t *__restrict__ steps) {
++    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
++    const int z = (int) item_ct1.get_group(1);
++    part_acc += (size_t)z * (size_t)scratch_stride;
++    part_m += (size_t)z * (size_t)scratch_stride;
++    part_l += (size_t)z * (size_t)scratch_stride;
++    attn += (size_t)z * (size_t)item_ct1.get_group_range(2) * HD;
++    const int n_ids = steps[(size_t) z * kStepCount + kStepWidth];
++    const int n_act = n_ids <= 0 ? 0 : (n_ids + CHUNK - 1) / CHUNK;
++    const int nc = n_act < n_chunks ? n_act : n_chunks;
++    const int h = item_ct1.get_group(2); // global query head
++    const int kvh = h / G, hl = h % G;
++    const int d = item_ct1.get_local_id(2);
++    // the loads of MU chunks are issued together, then folded one by one in ascending order: the same operations
++    // in the same order as attn_merge_kernel (a 512-chunk MTP merge was one dependent load chain per thread)
++    constexpr int MU = 8;
++    const float* pm_h = part_m + (size_t) kvh * n_chunks * G + hl;
++    const float* pl_h = part_l + (size_t) kvh * n_chunks * G + hl;
++    const float* pa_h = part_acc + ((size_t) kvh * n_chunks * G + hl) * HD + d;
++    float M = -FLT_MAX;
++    int c = 0;
++    for (; c + MU <= nc; c += MU) {
++        float pm[MU];
++#pragma unroll
++        for (int j = 0; j < MU; ++j) pm[j] = pm_h[(size_t) (c + j) * G];
++#pragma unroll
++        for (int j = 0; j < MU; ++j) M = sycl::fmax(M, pm[j]);
++    }
++    for (; c < nc; ++c) M = sycl::fmax(M, pm_h[(size_t) c * G]);
++    float L = 0.0f, acc = 0.0f;
++    c = 0;
++    for (; c + MU <= nc; c += MU) {
++        float pm[MU], pl[MU], pa[MU];
++#pragma unroll
++        for (int j = 0; j < MU; ++j) {
++            pm[j] = pm_h[(size_t) (c + j) * G];
++            pl[j] = pl_h[(size_t) (c + j) * G];
++            pa[j] = pa_h[(size_t) (c + j) * G * HD];
++        }
++#pragma unroll
++        for (int j = 0; j < MU; ++j) {
++            if (pm[j] == -FLT_MAX) continue;
++            const float w = sycl::native::exp(pm[j] - M);
++            L = sycl::fma(pl[j], w, L);
++            acc = sycl::fma(pa[j], w, acc);
++        }
++    }
++    for (; c < nc; ++c) {
++        const float m = pm_h[(size_t) c * G];
++        if (m == -FLT_MAX) continue;
++        const float w = sycl::native::exp(m - M);
++        L = sycl::fma(pl_h[(size_t) c * G], w, L);
++        acc = sycl::fma(pa_h[(size_t) c * G * HD], w, acc);
++    }
++    attn[(size_t) h * HD + d] = L > 0.0f ? acc / L : 0.0f;
++}
++
++// Night-lab STRATA_NIGHT_ATTN_BATCH: up to kQsaAttnMaxPools KV pool sets in one launch; query z reads the set whose
++// row range holds it (a work-group-uniform choice), everything else is attn_chunk_kernel's.
++struct AttnMultiPools {
++    QsaAttnPools p[kQsaAttnMaxPools];
++    int zbeg[kQsaAttnMaxPools];   // first row of each set
++    int n;
++};
++
+ #if defined(STRATA_EXPERIMENTAL_SM60)
+ // the current device is below sm_75 (per device: a layer split can mix cards); STRATA_ATTN_PRE75=0 turns PR #540's
+ // kernel off (A/B)
+@@ -649,6 +723,14 @@ void qsa_decode_attn_batch(const float* q, const QsaAttnPools& pools, const int3
+         std::fprintf(stderr, "qsa_decode_attn_batch: unsupported geometry or missing buffers\n");
+         std::exit(1);
+     }
++    // night-lab: a decode-sized call (verify window, MTP body) through the bitwise-equal night launch when one of its
++    // switches is on; prompt chunks (n_q > 8) keep the original kernels
++    static const bool night_lane_cell = [] { const char* v = std::getenv("STRATA_ATTN_LANECELL"); return v && v[0] == '1'; }();
++    if (n_q <= 8 && !night_lane_cell && (qsa_night_vpipe() || qsa_night_merge_active())) {
++        const int rows = (int) n_q;
++        qsa_decode_attn_multi(q, &pools, &rows, 1, ids, steps, cap, s, scratch, attn, stream);
++        return;
++    }
+     const int kv_mode = pools.k_q4 != nullptr ? 2 : (pools.k_q != nullptr && pools.v_q4 != nullptr ? 3
+                         : (pools.k_q != nullptr ? 1 : 0));
+     const int n_chunks = (int) ((cap + CHUNK - 1) / CHUNK);
+@@ -793,6 +875,135 @@ void qsa_decode_attn_batch(const float* q, const QsaAttnPools& pools, const int3
+     const dpct::err0 e = 0;
+ }
+ 
++// ---- night-lab: several pool sets in one launch, the active-bounded merge, the value-pipelined decode chunk
++template <int KV_MODE, bool VP> class attn_chunk_multi_night;   // kernel names: namespace scope (globally visible)
++class attn_merge_night;
++class attn_merge_active_night;
++namespace {
++bool night_env(const char* name) {
++    const char* v = std::getenv(name);
++    return v != nullptr && v[0] == '1' && v[1] == '\0';
++}
++int kv_mode_of(const QsaAttnPools& p) {
++    return p.k_q4 != nullptr ? 2 : (p.k_q != nullptr && p.v_q4 != nullptr ? 3 : (p.k_q != nullptr ? 1 : 0));
++}
++template <int M, bool VP>
++void launch_chunk_multi(dpct::queue_ptr st, const sycl::range<3>& groups, const float* q, const AttnMultiPools& mp,
++                        const int32_t* ids, const int32_t* steps, int n_kv_heads, int page_size, float scale,
++                        float* part_acc, float* part_m, float* part_l, int n_chunks, int cap, long long stride) {
++    auto exp_props = sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
++    const AttnMultiPools mpv = mp;
++    st->parallel_for<attn_chunk_multi_night<M, VP>>(
++        sycl::nd_range<3>(groups * sycl::range<3>(1, 1, THREADS), sycl::range<3>(1, 1, THREADS)), exp_props,
++        [=](sycl::nd_item<3> item_ct1) [[sycl::reqd_sub_group_size(32)]] {
++            const int z = (int) item_ct1.get_group(0);
++            QsaAttnPools p = mpv.p[0];
++#pragma unroll
++            for (int k = 1; k < kQsaAttnMaxPools; ++k)
++                if (k < mpv.n && z >= mpv.zbeg[k]) p = mpv.p[k];
++            attn_chunk_kernel<M, false, VP>(q, p, ids, steps, n_kv_heads, page_size, scale, part_acc, part_m,
++                                            part_l, n_chunks, cap, stride);
++        });
++}
++}  // namespace
++
++bool qsa_night_merge_active() {
++    static const bool on = [] {
++        const bool v = night_env("STRATA_NIGHT_ATTN_MERGE_ACTIVE");
++        if (v) std::fprintf(stderr, "strata night: STRATA_NIGHT_ATTN_MERGE_ACTIVE=1 (decode attention merge over active chunks, loads 8 deep, bitwise)\n");
++        return v;
++    }();
++    return on;
++}
++bool qsa_night_vpipe() {
++    static const bool on = [] {
++        const bool v = night_env("STRATA_NIGHT_ATTN_VPIPE");
++        if (v) std::fprintf(stderr, "strata night: STRATA_NIGHT_ATTN_VPIPE=1 (decode attention value-pipelined chunk kernel, bitwise)\n");
++        return v;
++    }();
++    return on;
++}
++
++void qsa_decode_attn_multi(const float* q, const QsaAttnPools* pools, const int* rows, int n_pools, const int32_t* ids,
++                           const int32_t* steps, int64_t cap, const QsaShapes& s, float* scratch, float* attn,
++                           void* stream) {
++    if (n_pools <= 0) return;
++    int64_t n_q = 0;
++    bool uniform = n_pools <= kQsaAttnMaxPools;
++    const int kv_mode = kv_mode_of(pools[0]);
++    for (int k = 0; k < n_pools; ++k) {
++        n_q += rows[k];
++        if (kv_mode_of(pools[k]) != kv_mode) uniform = false;
++        if (!pools[k].page_table) {
++            std::fprintf(stderr, "qsa_decode_attn_multi: missing page table\n");
++            std::exit(1);
++        }
++    }
++    static const bool lane_cell = [] { const char* v = std::getenv("STRATA_ATTN_LANECELL"); return v && v[0] == '1'; }();
++    if (n_q <= 0) return;
++    if (s.head_dim != HD || s.n_head != (int64_t) G * s.n_head_kv || cap <= 0 || !scratch || !ids || !steps ||
++        n_q > 65535) {
++        std::fprintf(stderr, "qsa_decode_attn_multi: unsupported geometry or missing buffers\n");
++        std::exit(1);
++    }
++    if (!uniform || lane_cell) {
++        // not one launch: one call per pool set (LANECELL: the original entrypoint, whose night hook is off then)
++        const long long stride = (long long) qsa_decode_attn_scratch_floats(cap, s);
++        int64_t r0 = 0;
++        for (int k = 0; k < n_pools; ++k) {
++            if (rows[k] > 0) {
++                const float* qk = q + (size_t) r0 * s.n_head * HD;
++                const int32_t* idk = ids + (size_t) r0 * cap;
++                const int32_t* stk = steps + (size_t) r0 * kStepCount;
++                float* sck = scratch + (size_t) r0 * stride;
++                float* atk = attn + (size_t) r0 * s.n_head * HD;
++                if (lane_cell) qsa_decode_attn_batch(qk, pools[k], idk, stk, cap, s, sck, atk, rows[k], stream);
++                else qsa_decode_attn_multi(qk, &pools[k], &rows[k], 1, idk, stk, cap, s, sck, atk, stream);
++            }
++            r0 += rows[k];
++        }
++        return;
++    }
++    const int n_chunks = (int) ((cap + CHUNK - 1) / CHUNK);
++    const long long stride = (long long) qsa_decode_attn_scratch_floats(cap, s);
++    float* part_acc = scratch;
++    float* part_m = scratch + (size_t) n_chunks * s.n_head * HD;
++    float* part_l = part_m + (size_t) n_chunks * s.n_head;
++    const float scale = 1.0f / sqrtf((float) HD);
++    AttnMultiPools mp{};
++    {
++        int r0 = 0;
++        for (int k = 0; k < n_pools; ++k) { mp.p[k] = pools[k]; mp.zbeg[k] = r0; r0 += rows[k]; }
++        for (int k = n_pools; k < kQsaAttnMaxPools; ++k) { mp.p[k] = pools[0]; mp.zbeg[k] = r0 + 1 + 65536; }
++        mp.n = n_pools;
++    }
++    const sycl::range<3> groups((size_t) n_q, (size_t) s.n_head_kv, (size_t) n_chunks);
++    dpct::queue_ptr st = strata::q_of(stream);
++    dpct::has_capability_or_fail(st->get_device(), {sycl::aspect::fp16});
++    const bool vp = qsa_night_vpipe();
++    const int nkv = (int) s.n_head_kv, ps = (int) s.page_size, capi = (int) cap;
++    if (kv_mode == 3) { if (vp) launch_chunk_multi<3, true>(st, groups, q, mp, ids, steps, nkv, ps, scale, part_acc, part_m, part_l, n_chunks, capi, stride);
++                        else launch_chunk_multi<3, false>(st, groups, q, mp, ids, steps, nkv, ps, scale, part_acc, part_m, part_l, n_chunks, capi, stride); }
++    else if (kv_mode == 2) { if (vp) launch_chunk_multi<2, true>(st, groups, q, mp, ids, steps, nkv, ps, scale, part_acc, part_m, part_l, n_chunks, capi, stride);
++                             else launch_chunk_multi<2, false>(st, groups, q, mp, ids, steps, nkv, ps, scale, part_acc, part_m, part_l, n_chunks, capi, stride); }
++    else if (kv_mode == 1) { if (vp) launch_chunk_multi<1, true>(st, groups, q, mp, ids, steps, nkv, ps, scale, part_acc, part_m, part_l, n_chunks, capi, stride);
++                             else launch_chunk_multi<1, false>(st, groups, q, mp, ids, steps, nkv, ps, scale, part_acc, part_m, part_l, n_chunks, capi, stride); }
++    else { if (vp) launch_chunk_multi<0, true>(st, groups, q, mp, ids, steps, nkv, ps, scale, part_acc, part_m, part_l, n_chunks, capi, stride);
++           else launch_chunk_multi<0, false>(st, groups, q, mp, ids, steps, nkv, ps, scale, part_acc, part_m, part_l, n_chunks, capi, stride); }
++    auto exp_props = sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
++    const sycl::nd_range<3> mr(sycl::range<3>(1, (size_t) n_q, (size_t) s.n_head) * sycl::range<3>(1, 1, HD),
++                               sycl::range<3>(1, 1, HD));
++    if (qsa_night_merge_active()) {
++        st->parallel_for<attn_merge_active_night>(mr, exp_props, [=](sycl::nd_item<3> item_ct1) {
++            attn_merge_active_kernel(part_acc, part_m, part_l, n_chunks, attn, stride, steps);
++        });
++    } else {
++        st->parallel_for<attn_merge_night>(mr, exp_props, [=](sycl::nd_item<3> item_ct1) {
++            attn_merge_kernel(part_acc, part_m, part_l, n_chunks, attn, stride);
++        });
++    }
++}
++
+ // S93: only the staged prefill caller opts in; decode/verify/MTP keep the original entrypoint.
+ void qsa_prefill_attn_value_batch(const float* q, const QsaAttnPools& pools,
+                                 const int32_t* ids, const int32_t* steps,
+diff --git a/sycl/src/kernels/cuda/qsa_select.dp.cpp b/sycl/src/kernels/cuda/qsa_select.dp.cpp
+index bb69ee67..ffbf88be 100644
+--- a/sycl/src/kernels/cuda/qsa_select.dp.cpp
++++ b/sycl/src/kernels/cuda/qsa_select.dp.cpp
+@@ -16,6 +16,8 @@
+ #include <cstring>
+ 
+ namespace strata::kernels {
++class block_topk_wide_scan_night;   // night-lab kernel name (namespace scope: globally visible)
++template <int NQ> class block_scores_t_night;
+ namespace {
+ 
+ constexpr int IDX_DIM = 128, IDX_HEADS = 4, R = 4;
+@@ -881,6 +883,7 @@ block_topk_wide_kernel exceeds 128 bytes and may cause high register pressure.
+ Consult with your hardware vendor to find the total register size available and
+ adjust the code, or use smaller sub-group size to avoid high register pressure.
+ */
++template <bool SCAN = false>
+ __dpct_inline__ void block_topk_wide_kernel(const float *__restrict__ scores,
+                                             const int32_t *__restrict__ steps,
+                                             int64_t max_blocks, int64_t cap,
+@@ -954,6 +957,21 @@ auto &hist =
+         better performance if there is no access to global memory.
+         */
+         item_ct1.barrier();
++        if constexpr (SCAN) {
++            // night-lab STRATA_NIGHT_TOPK_SCAN: the digit search below as one work-group scan instead of thread 0
++            // walking 256 bins.  S(t) = cells in digits >= t is non-increasing, so above + S(t) >= width holds on
++            // t = 1..d for exactly the d the serial loop stops at (0 when it holds nowhere), and the cells above the
++            // threshold digit are above + S(d + 1).  Integers only: the same digit and count.
++            const int i = t;                                   // scan slot i holds digit 255 - i
++            const int v = i < 256 ? hist[0][255 - i] : 0;
++            const int Q = sycl::inclusive_scan_over_group(item_ct1.get_group(), v, sycl::plus<int>());   // S(255 - i)
++            const int pr = (i < 255 && (int64_t) above + Q >= width) ? 1 : 0;
++            const int d = sycl::reduce_over_group(item_ct1.get_group(), pr, sycl::plus<int>());
++            if (d <= 254 ? i == 254 - d : i == 0) {
++                s_digit = d;
++                s_above = d <= 254 ? above + Q : above;
++            }
++        } else
+         if (t == 0) {
+             int cum = above, d = 255;
+ #pragma unroll
+@@ -1209,6 +1227,109 @@ auto &qs = *sycl::ext::oneapi::group_local_memory_for_overwrite<
+     }
+ }
+ 
++// Night-lab STRATA_NIGHT_QSA_SCORES_T=1: block_scores_multi_kernel (early-exit staging) with the NQ x 4 (query, head)
++// warp reductions of a block done together by a transposed butterfly: at offset o each lane keeps half of its values
++// and adds the partner's copy of that half (one shuffle per value kept), so 4*NQ reductions cost ~16-31 shuffles
++// instead of 20*NQ.  Every reduction combines the same lane sets in the same tree as the butterfly (stage o pairs lane
++// l with l ^ o; only the operand order of each addition differs, and IEEE addition is commutative), each lane's
++// partial is the same expression, and the head sum is 0 + relu(h0) + relu(h1) + relu(h2) + relu(h3) in that order:
++// the same bits.
++template <int m, class SG>
++__dpct_inline__ void scores_t_halve(float* v, int lane, int o, const SG& sg) {
++    const bool up = (lane & o) != 0;
++#pragma unroll
++    for (int j = 0; j < m / 2; ++j) {
++        const float send = up ? v[j] : v[j + m / 2];
++        const float keep = up ? v[j + m / 2] : v[j];
++        const float recv = sycl::permute_group_by_xor(sg, send, o);
++        v[j] = keep + recv;
++    }
++}
++template <int NQ>
++__dpct_inline__ void block_scores_multi_t_kernel(
++    const float *__restrict__ pooled, const float *__restrict__ dead,
++    const float *__restrict__ q_idx, const int32_t *__restrict__ steps,
++    int64_t max_blocks, float *__restrict__ out) {
++    constexpr int C = NQ * IDX_HEADS;
++    constexpr int M = C <= 4 ? 4 : (C <= 8 ? 8 : (C <= 16 ? 16 : 32));   // values per lane, a power of two
++    constexpr int P = M == 4 ? 2 : (M == 8 ? 3 : (M == 16 ? 4 : 5));      // halving stages
++    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
++    auto sg = sycl::ext::oneapi::this_work_item::get_sub_group();
++    auto &qs = *sycl::ext::oneapi::group_local_memory_for_overwrite<
++        float[MQ * IDX_HEADS * IDX_DIM]>(
++        sycl::ext::oneapi::this_work_item::get_work_group<3>());
++    auto &s_nkv =
++        *sycl::ext::oneapi::group_local_memory_for_overwrite<int64_t[MQ]>(
++            sycl::ext::oneapi::this_work_item::get_work_group<3>());
++    auto &s_nbid =
++        *sycl::ext::oneapi::group_local_memory_for_overwrite<int64_t[MQ]>(
++            sycl::ext::oneapi::this_work_item::get_work_group<3>());
++    if (item_ct1.get_local_id(2) < (size_t) NQ) {
++        s_nkv[item_ct1.get_local_id(2)] =
++            steps[item_ct1.get_local_id(2) * kStepCount + kStepNKv];
++        s_nbid[item_ct1.get_local_id(2)] =
++            steps[item_ct1.get_local_id(2) * kStepCount + kStepNBid];
++    }
++    item_ct1.barrier(sycl::access::fence_space::local_space);
++    int64_t top = 0;
++    for (int q = 0; q < NQ; ++q) top = s_nbid[q] > top ? s_nbid[q] : top;
++    if ((int64_t)item_ct1.get_group(2) * SCORE_WARPS > top) return;
++    for (int i = item_ct1.get_local_id(2); i < NQ * IDX_HEADS * IDX_DIM;
++         i += item_ct1.get_local_range(2)) qs[i] = q_idx[i];
++    item_ct1.barrier(sycl::access::fence_space::local_space);
++    const int lane = item_ct1.get_local_id(2) & 31;
++    const int64_t wstride = (int64_t)item_ct1.get_group_range(2) * SCORE_WARPS;
++    for (int64_t b = (int64_t)item_ct1.get_group(2) * SCORE_WARPS +
++                     (item_ct1.get_local_id(2) >> 5);
++         b <= top && b < max_blocks; b += wstride) {
++        const sycl::float4 kp = *reinterpret_cast<const sycl::float4 *>(
++            pooled + b * IDX_DIM + lane * 4);
++        const sycl::float4 kd =
++            *reinterpret_cast<const sycl::float4 *>(dead + lane * 4);
++        float v[M];
++#pragma unroll
++        for (int qi = 0; qi < NQ; ++qi) {
++            const sycl::float4 k4 = (b == s_nbid[qi]) ? kd : kp;
++            const float* q = qs + qi * IDX_HEADS * IDX_DIM + lane * 4;
++#pragma unroll
++            for (int h = 0; h < IDX_HEADS; ++h) {
++                const sycl::float4 q4 =
++                    *reinterpret_cast<const sycl::float4 *>(q + h * IDX_DIM);
++                float d = k4.x() * q4.x() + k4.y() * q4.y() + k4.z() * q4.z() +
++                          k4.w() * q4.w();
++                v[qi * IDX_HEADS + h] = d;
++            }
++        }
++#pragma unroll
++        for (int c = C; c < M; ++c) v[c] = 0.0f;
++        // P halving stages (o = 16, 8, ...): a lane with bit o clear keeps the lower half of its values
++        scores_t_halve<M>(v, lane, 16, sg);
++        if constexpr (P >= 2) scores_t_halve<M / 2>(v, lane, 8, sg);
++        if constexpr (P >= 3) scores_t_halve<M / 4>(v, lane, 4, sg);
++        if constexpr (P >= 4) scores_t_halve<M / 8>(v, lane, 2, sg);
++        if constexpr (P >= 5) scores_t_halve<M / 16>(v, lane, 1, sg);
++        // the remaining stages: a plain butterfly on the one value left (combo lane >> (5 - P))
++        float r = v[0];
++#pragma unroll
++        for (int o = 16 >> P; o > 0; o >>= 1) r += sycl::permute_group_by_xor(sg, r, o);
++        // lane qi < NQ gathers its query's four heads (combo 4 qi + h sits on lane (4 qi + h) << (5 - P))
++        const int qi = lane < NQ ? lane : 0;
++        float score = 0.0f;
++#pragma unroll
++        for (int h = 0; h < IDX_HEADS; ++h) {
++            const float d = sycl::select_from_group(sg, r, (unsigned) ((qi * IDX_HEADS + h) << (5 - P)));
++            score += d > 0.0f ? d : 0.0f;
++        }
++        if (lane < NQ) {
++            const int64_t n_bid = s_nbid[lane];
++            if (b <= n_bid) {
++                if (b == n_bid && s_nkv[lane] % R != 0) score += 1e9f;
++                out[lane * max_blocks + b] = score;
++            }
++        }
++    }
++}
++
+ #if !defined(__HIPCC__)
+ // ---- the decode top-k on a thread-block cluster (sm_90+; S19).  One CTA per query (block_topk_reg_kernel, or
+ // block_topk_kernel above 33,792 blocks: a --max-context over ~135K) makes four radix passes and two scans over up to
+@@ -1602,6 +1723,36 @@ void qsa_block_scores(const float* pooled, const float* dead, const float* q_idx
+     if (multi && nq <= MQ && active_blocks <= 0) {   // no active count: decode (captured or not) and prefill's pooled16
+         // STRATA_QSA_EARLY_EXIT=0 keeps the old staging (every CTA loads the queries first); the scores are the same bits
+         static const bool early = [] { const char* v = std::getenv("STRATA_QSA_EARLY_EXIT"); return v == nullptr || std::atoi(v) != 0; }();
++        static const bool night_t = [] {
++            const char* v = std::getenv("STRATA_NIGHT_QSA_SCORES_T");
++            const bool on = v != nullptr && v[0] == '1' && v[1] == '\0';
++            if (on) std::fprintf(stderr, "strata night: STRATA_NIGHT_QSA_SCORES_T=1 (decode QSA block scores, transposed warp reductions, bitwise)\n");
++            return on;
++        }();
++        if (night_t && early) {
++            auto exp_props = sycl::ext::oneapi::experimental::properties{
++                sycl::ext::oneapi::experimental::use_root_sync};
++            const sycl::nd_range<3> r(sycl::range(1, 1, 256) * sycl::range(1, 1, SCORE_WARPS * 32),
++                                      sycl::range(1, 1, SCORE_WARPS * 32));
++            sycl::queue* qq = strata::q_of(stream);
++#define STRATA_NIGHT_SCORES_T(NQ_)                                                                                  \
++            qq->parallel_for<block_scores_t_night<NQ_>>(r, exp_props,                                              \
++                [=](sycl::nd_item<3> item_ct1) [[sycl::reqd_sub_group_size(32)]] {                                 \
++                    block_scores_multi_t_kernel<NQ_>(pooled, dead, q_idx, steps, max_blocks, scores);              \
++                });
++            switch (nq) {
++                case 1: STRATA_NIGHT_SCORES_T(1) break;
++                case 2: STRATA_NIGHT_SCORES_T(2) break;
++                case 3: STRATA_NIGHT_SCORES_T(3) break;
++                case 4: STRATA_NIGHT_SCORES_T(4) break;
++                case 5: STRATA_NIGHT_SCORES_T(5) break;
++                case 6: STRATA_NIGHT_SCORES_T(6) break;
++                case 7: STRATA_NIGHT_SCORES_T(7) break;
++                default: STRATA_NIGHT_SCORES_T(8) break;
++            }
++#undef STRATA_NIGHT_SCORES_T
++            return;
++        }
+         {
+             auto exp_props = sycl::ext::oneapi::experimental::properties{
+                 sycl::ext::oneapi::experimental::use_root_sync};
+@@ -2035,6 +2186,23 @@ void qsa_block_topk(const float* scores, const int32_t* steps, int64_t nq, int64
+         const char* v = std::getenv("STRATA_TOPK_STREAM");
+         return v == nullptr || v[0] != '0';
+     }();
++    static const bool night_scan = [] {
++        const char* v = std::getenv("STRATA_NIGHT_TOPK_SCAN");
++        const bool on = v != nullptr && v[0] == '1' && v[1] == '\0';
++        if (on) std::fprintf(stderr, "strata night: STRATA_NIGHT_TOPK_SCAN=1 (QSA wide top-k digit search as a work-group scan, same ids)\n");
++        return on;
++    }();
++    if (night_scan && (reach > fit || (turing_wide && counted && reach > 22528))) {
++        auto exp_props = sycl::ext::oneapi::experimental::properties{
++            sycl::ext::oneapi::experimental::use_root_sync};
++        strata::q_of(stream)->parallel_for<block_topk_wide_scan_night>(
++            sycl::nd_range<3>(sycl::range(1, 1, (unsigned)nq) * sycl::range(1, 1, TK_T), sycl::range(1, 1, TK_T)),
++            exp_props,
++            [=](sycl::nd_item<3> item_ct1) [[sycl::reqd_sub_group_size(32)]] {
++                block_topk_wide_kernel<true>(scores, steps, max_blocks, cap, ids);
++            });
++        return;
++    }
+     if (reach > fit || (turing_wide && counted && reach > 22528))   // past the register kernel's reach, or Turing's band
+         /*
+         DPCT1049: The work-group size passed to the SYCL kernel may exceed
+diff --git a/sycl/src/kernels/qsa_verify_batch_parity.cpp b/sycl/src/kernels/qsa_verify_batch_parity.cpp
+new file mode 100644
+index 00000000..a6df27c7
+--- /dev/null
++++ b/sycl/src/kernels/qsa_verify_batch_parity.cpp
+@@ -0,0 +1,540 @@
++// src/kernels/qsa_verify_batch_parity.cpp - night-lab (STRATA_NIGHT_ATTN_BATCH): a verify window's QSA select +
++// attention + K/V / indexer appends, row by row (the batch-window path of verify.cpp) against the per-slot calls and
++// the one-launch-per-window form, bitwise, and their graph-replay time per layer.
++//
++// Realistic shapes: 24 q heads, 2 KV heads, head_dim 256, INT8 K/V (64-value fp16 scales), page size 4 through a
++// random page permutation, indexer 4 x 128 with random pooled keys (random top-k selections), the serving capacity
++// (200000 cells: max_blocks 50002, the wide top-k kernel). 12 attention layers with their own pools (no L2 reuse
++// across layers). Shapes: C2 = 2 slots x 3 rows, C1 = 1 slot x 4 rows, C2d1 = 2 slots x 2 rows; contexts from argv.
++// Also the MTP drafter call (1 row, 32K window = 512 chunks).
++//
++//   qsa_verify_batch_parity [--ctx 1024,16384,65536] [--ref FILE] [--reps N]
++// --ref: the first run (no night env) writes one FNV-1a hash per output; later runs (STRATA_NIGHT_ATTN_VPIPE=1,
++// STRATA_NIGHT_ATTN_MERGE_ACTIVE=1) compare against it.  In-process, the batched paths are compared byte for byte
++// against the row-by-row path.
++#define DPCT_PROFILING_ENABLED
++#include <sycl/sycl.hpp>
++#include <dpct/dpct.hpp>
++#include "strata/kernels/kv_q8.hpp"
++#include "strata/kernels/native_qsa_indexer.hpp"
++#include "strata/kernels/qsa.hpp"
++#include "strata/kernels/qsa_decode_attn.hpp"
++#include "strata/kernels/qsa_select.hpp"
++#include "strata/kernels/rope_scaling.hpp"
++
++#include <algorithm>
++#include <chrono>
++#include <cmath>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <map>
++#include <numeric>
++#include <random>
++#include <string>
++#include <vector>
++
++namespace k = strata::kernels;
++namespace sx = sycl::ext::oneapi::experimental;
++
++namespace {
++int g_fail = 0;
++constexpr int L = 12;            // attention layers
++constexpr int64_t kMaxCells = 200000;
++
++inline uint32_t hsh(uint32_t x) {
++    x ^= x >> 16; x *= 0x7feb352du; x ^= x >> 15; x *= 0x846ca68bu; x ^= x >> 16;
++    return x;
++}
++void fill_i8(sycl::queue& q, int8_t* p, size_t n, uint32_t seed) {
++    const uint32_t s0 = hsh(seed * 0x9e3779b9u + 1);
++    q.parallel_for(sycl::range<1>(n), [=](sycl::id<1> i) {
++        const uint32_t h = hsh((uint32_t) i[0] ^ s0) ^ hsh((uint32_t) (i[0] >> 32) + s0);
++        p[i] = (int8_t) ((int) (h % 255u) - 127);
++    });
++}
++void fill_scale(sycl::queue& q, uint16_t* p, size_t n, uint32_t seed) {
++    const uint32_t s0 = hsh(seed * 0x9e3779b9u + 7);
++    q.parallel_for(sycl::range<1>(n), [=](sycl::id<1> i) {
++        const uint32_t h = hsh((uint32_t) i[0] ^ s0);
++        const float v = 0.002f + (float) (h % 1000u) * 2e-5f;
++        p[i] = sycl::bit_cast<uint16_t>(sycl::half(v));
++    });
++}
++void fill_f32(sycl::queue& q, float* p, size_t n, uint32_t seed, float amp) {
++    const uint32_t s0 = hsh(seed * 0x9e3779b9u + 13);
++    q.parallel_for(sycl::range<1>(n), [=](sycl::id<1> i) {
++        const uint32_t h = hsh((uint32_t) i[0] ^ s0);
++        p[i] = ((float) (h & 0xffffffu) / 16777216.0f * 2.0f - 1.0f) * amp;
++    });
++}
++template <typename T>
++T* dalloc(sycl::queue& q, size_t n) {
++    T* p = sycl::malloc_device<T>(n + 64, q);
++    if (!p) { std::fprintf(stderr, "malloc_device failed (%zu)\n", n); std::exit(2); }
++    q.memset(p, 0, (n + 64) * sizeof(T)).wait();
++    return p;
++}
++template <typename T>
++std::vector<T> fetch(sycl::queue& q, const T* d, size_t n) {
++    std::vector<T> h(n);
++    q.memcpy(h.data(), d, n * sizeof(T)).wait();
++    return h;
++}
++uint64_t fnv(const void* p, size_t n, uint64_t h = 1469598103934665603ull) {
++    const uint8_t* b = (const uint8_t*) p;
++    for (size_t i = 0; i < n; ++i) { h ^= b[i]; h *= 1099511628211ull; }
++    return h;
++}
++double now_us() {
++    return std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now().time_since_epoch()).count();
++}
++
++struct SlotLayer {   // one slot's QSA state of ONE layer
++    int8_t *k_q = nullptr, *v_q = nullptr;
++    uint16_t *k_s = nullptr, *v_s = nullptr;
++    int32_t* pt = nullptr;
++    float *pooled = nullptr, *dead = nullptr, *tail = nullptr;
++    int32_t* bpos = nullptr;
++    int64_t cells = 0, pages = 0;
++    k::QsaAttnPools pools() const {
++        k::QsaAttnPools p;
++        p.k_q = k_q; p.v_q = v_q; p.k_scale = k_s; p.v_scale = v_s; p.page_table = pt;
++        return p;
++    }
++    k::QsaIndexerBuffers ib() const { return k::QsaIndexerBuffers{tail, dead, pooled, bpos}; }
++};
++
++struct Shape {
++    const char* name;
++    int slots, per;   // rows = slots * per, contiguous per slot
++};
++
++struct Ctx {
++    sycl::queue& q;
++    k::QsaShapes s;
++    int64_t ctx;
++    int64_t cap, max_blocks;
++    int rows_max = 8;
++    std::vector<SlotLayer> sl;   // [L][2]
++    // window buffers (shared by the layers, as the verifier's are)
++    float *qcur, *qidx, *scores, *scratch, *attn, *idx_raw, *kcur, *vcur, *gamma;
++    int32_t *sel, *steps;
++    int64_t scratch_floats;
++    SlotLayer& at(int l, int slot) { return sl[(size_t) l * 2 + slot]; }
++};
++
++void make_ctx(Ctx& c) {
++    sycl::queue& q = c.q;
++    const k::QsaShapes& s = c.s;
++    const int64_t HD = s.head_dim, NKV = s.n_head_kv, G = HD / k::KV_Q8_GROUP;
++    c.cap = k::qsa_selection_width(k::kTopkMaxCells, s);
++    c.max_blocks = kMaxCells / s.idx_block + 2;
++    c.scratch_floats = (int64_t) k::qsa_decode_attn_scratch_floats(c.cap, s);
++    c.sl.resize((size_t) L * 2);
++    std::mt19937 rng(1234u + (uint32_t) c.ctx);
++    for (int l = 0; l < L; ++l)
++        for (int j = 0; j < 2; ++j) {
++            SlotLayer& x = c.at(l, j);
++            x.cells = ((c.ctx + 64 + 3) / 4) * 4;
++            x.pages = x.cells / s.page_size;
++            const size_t rows = (size_t) x.pages * NKV * s.page_size;
++            x.k_q = dalloc<int8_t>(q, rows * HD);
++            x.v_q = dalloc<int8_t>(q, rows * HD);
++            x.k_s = dalloc<uint16_t>(q, rows * G);
++            x.v_s = dalloc<uint16_t>(q, rows * G);
++            const uint32_t seed = (uint32_t) (l * 2 + j + 1) * 101u + (uint32_t) c.ctx;
++            fill_i8(q, x.k_q, rows * HD, seed);
++            fill_i8(q, x.v_q, rows * HD, seed + 1);
++            fill_scale(q, x.k_s, rows * G, seed + 2);
++            fill_scale(q, x.v_s, rows * G, seed + 3);
++            std::vector<int32_t> perm((size_t) x.pages);
++            std::iota(perm.begin(), perm.end(), 0);
++            std::shuffle(perm.begin(), perm.end(), rng);
++            x.pt = dalloc<int32_t>(q, (size_t) x.pages);
++            q.memcpy(x.pt, perm.data(), perm.size() * 4).wait();
++            const size_t prow = (size_t) (x.cells / s.idx_block + 2);
++            x.pooled = dalloc<float>(q, prow * s.idx_dim);
++            x.dead = dalloc<float>(q, (size_t) s.idx_dim);
++            x.tail = dalloc<float>(q, (size_t) (s.idx_block - 1) * s.idx_dim);
++            x.bpos = dalloc<int32_t>(q, 1);
++            fill_f32(q, x.pooled, prow * s.idx_dim, seed + 4, 1.0f);
++            fill_f32(q, x.dead, (size_t) s.idx_dim, seed + 5, 1.0f);
++            fill_f32(q, x.tail, (size_t) (s.idx_block - 1) * s.idx_dim, seed + 6, 1.0f);
++        }
++    const int R = c.rows_max;
++    c.qcur = dalloc<float>(q, (size_t) R * s.n_head * HD);
++    c.qidx = dalloc<float>(q, (size_t) R * s.idx_n_head * s.idx_dim);
++    c.scores = dalloc<float>(q, (size_t) R * c.max_blocks);
++    c.scratch = dalloc<float>(q, (size_t) R * c.scratch_floats);
++    c.attn = dalloc<float>(q, (size_t) L * R * s.n_head * HD);
++    c.sel = dalloc<int32_t>(q, (size_t) L * R * c.cap);
++    c.steps = dalloc<int32_t>(q, (size_t) R * k::kStepCount);
++    c.idx_raw = dalloc<float>(q, (size_t) R * s.idx_dim);
++    c.kcur = dalloc<float>(q, (size_t) R * NKV * HD);
++    c.vcur = dalloc<float>(q, (size_t) R * NKV * HD);
++    c.gamma = dalloc<float>(q, (size_t) s.idx_dim);
++    fill_f32(q, c.qcur, (size_t) R * s.n_head * HD, 77, 1.0f);
++    fill_f32(q, c.qidx, (size_t) R * s.idx_n_head * s.idx_dim, 78, 1.0f);
++    fill_f32(q, c.idx_raw, (size_t) R * s.idx_dim, 79, 1.0f);
++    fill_f32(q, c.kcur, (size_t) R * NKV * HD, 80, 2.0f);
++    fill_f32(q, c.vcur, (size_t) R * NKV * HD, 81, 2.0f);
++    std::vector<float> gam((size_t) s.idx_dim);
++    for (size_t i = 0; i < gam.size(); ++i) gam[i] = 0.75f + 0.5f * (float) ((i * 37) % 64) / 64.0f;
++    q.memcpy(c.gamma, gam.data(), gam.size() * 4).wait();
++}
++void free_ctx(Ctx& c) {
++    sycl::queue& q = c.q;
++    for (auto& x : c.sl) {
++        sycl::free(x.k_q, q); sycl::free(x.v_q, q); sycl::free(x.k_s, q); sycl::free(x.v_s, q); sycl::free(x.pt, q);
++        sycl::free(x.pooled, q); sycl::free(x.dead, q); sycl::free(x.tail, q); sycl::free(x.bpos, q);
++    }
++    for (void* p : {(void*) c.qcur, (void*) c.qidx, (void*) c.scores, (void*) c.scratch, (void*) c.attn, (void*) c.sel,
++                    (void*) c.steps, (void*) c.idx_raw, (void*) c.kcur, (void*) c.vcur, (void*) c.gamma})
++        sycl::free(p, q);
++    c.sl.clear();
++}
++
++// positions of a shape's rows: slot j's window starts at ctx - 8 j (slot B a little shorter)
++void set_steps(Ctx& c, const Shape& sh) {
++    std::vector<int32_t> h((size_t) sh.slots * sh.per * k::kStepCount);
++    for (int j = 0; j < sh.slots; ++j)
++        for (int r = 0; r < sh.per; ++r) {
++            const int64_t pos = c.ctx - 8 * j + r;
++            k::qsa_step_fill(h.data() + (size_t) (j * sh.per + r) * k::kStepCount, pos, c.s);
++        }
++    c.q.memcpy(c.steps, h.data(), h.size() * 4).wait();
++}
++
++enum Path { kRow = 0, kSlot = 1, kOne = 2 };
++const char* path_name[3] = {"row", "slot", "one"};
++
++// one layer's select + attention for the window, as verify.cpp's batch branch issues it
++void attn_layer(Ctx& c, const Shape& sh, int l, Path p, int mask = 7) {   // mask: 1 scores, 2 top-k, 4 attention
++    const k::QsaShapes& s = c.s;
++    void* st = &c.q;
++    const int64_t NH = s.n_head, HD = s.head_dim, IQ = s.idx_n_head, ID = s.idx_dim;
++    const int n = sh.slots * sh.per;
++    float* attn_l = c.attn + (size_t) l * c.rows_max * NH * HD;
++    int32_t* sel_l = c.sel + (size_t) l * c.rows_max * c.cap;
++    if (p == kRow) {
++        for (int t = 0; t < n; ++t) {
++            const SlotLayer& x = c.at(l, t / sh.per);
++            if (mask & 1)
++            k::qsa_block_scores(x.pooled, x.dead, c.qidx + t * IQ * ID, c.steps + t * k::kStepCount, 1, c.max_blocks, s,
++                                c.scores + (size_t) t * c.max_blocks, st);
++            if (mask & 2)
++            k::qsa_block_topk(c.scores + (size_t) t * c.max_blocks, c.steps + t * k::kStepCount, 1, c.max_blocks, c.cap,
++                              s, sel_l + (size_t) t * c.cap, st);
++            if (mask & 4)
++            k::qsa_decode_attn_batch(c.qcur + t * NH * HD, x.pools(), sel_l + (size_t) t * c.cap,
++                                     c.steps + t * k::kStepCount, c.cap, s, c.scratch + (size_t) t * c.scratch_floats,
++                                     attn_l + t * NH * HD, 1, st);
++        }
++        return;
++    }
++    for (int j = 0; j < sh.slots; ++j) {
++        const int f = j * sh.per;
++        const SlotLayer& x = c.at(l, j);
++        if (mask & 1)
++        k::qsa_block_scores(x.pooled, x.dead, c.qidx + f * IQ * ID, c.steps + f * k::kStepCount, sh.per, c.max_blocks,
++                            s, c.scores + (size_t) f * c.max_blocks, st);
++        if (p == kSlot && (mask & 2))
++            k::qsa_block_topk(c.scores + (size_t) f * c.max_blocks, c.steps + f * k::kStepCount, sh.per, c.max_blocks,
++                              c.cap, s, sel_l + (size_t) f * c.cap, st);
++    }
++    if (p == kOne) {
++        if (mask & 2) k::qsa_block_topk(c.scores, c.steps, n, c.max_blocks, c.cap, s, sel_l, st);
++        if (!(mask & 4)) return;
++        k::QsaAttnPools pp[k::kQsaAttnMaxPools];
++        int rows[k::kQsaAttnMaxPools];
++        for (int j = 0; j < sh.slots; ++j) { pp[j] = c.at(l, j).pools(); rows[j] = sh.per; }
++        k::qsa_decode_attn_multi(c.qcur, pp, rows, sh.slots, sel_l, c.steps, c.cap, s, c.scratch, attn_l, st);
++        return;
++    }
++    if (!(mask & 4)) return;
++    for (int j = 0; j < sh.slots; ++j) {
++        const int f = j * sh.per;
++        k::qsa_decode_attn_batch(c.qcur + f * NH * HD, c.at(l, j).pools(), sel_l + (size_t) f * c.cap,
++                                 c.steps + f * k::kStepCount, c.cap, s, c.scratch + (size_t) f * c.scratch_floats,
++                                 attn_l + f * NH * HD, sh.per, st);
++    }
++}
++
++// one layer's K/V append and indexer append: row by row, or per slot
++void prep_layer(Ctx& c, const Shape& sh, int l, bool per_slot) {
++    const k::QsaShapes& s = c.s;
++    void* st = &c.q;
++    const int64_t NKV = s.n_head_kv, HD = s.head_dim, ID = s.idx_dim;
++    const float eps = 1e-6f;
++    if (!per_slot) {
++        for (int t = 0; t < sh.slots * sh.per; ++t) {
++            const SlotLayer& x = c.at(l, t / sh.per);
++            k::kv_append_q8_step(x.k_q, x.v_q, x.k_s, x.v_s, x.pt, c.steps + t * k::kStepCount, c.kcur + t * NKV * HD,
++                                 c.vcur + t * NKV * HD, s, st, nullptr);
++        }
++        for (int t = 0; t < sh.slots * sh.per; ++t) {
++            const SlotLayer& x = c.at(l, t / sh.per);
++            k::native_qsa_indexer_append(c.idx_raw + t * ID, c.steps + t * k::kStepCount + k::kStepPos, 0, c.gamma, eps,
++                                         x.ib(), s, x.cells, k::rope_scaling(), st);
++        }
++        return;
++    }
++    for (int j = 0; j < sh.slots; ++j) {
++        const int f = j * sh.per;
++        const SlotLayer& x = c.at(l, j);
++        k::kv_append_q8_steps(x.k_q, x.v_q, x.k_s, x.v_s, x.pt, c.steps + f * k::kStepCount, k::kStepCount,
++                              c.kcur + f * NKV * HD, c.vcur + f * NKV * HD, (int) (NKV * HD), sh.per, s, st, nullptr);
++    }
++    for (int j = 0; j < sh.slots; ++j) {
++        const int f = j * sh.per;
++        const SlotLayer& x = c.at(l, j);
++        k::native_qsa_indexer_append_steps(c.idx_raw + f * ID, c.steps + f * k::kStepCount + k::kStepPos, k::kStepCount,
++                                           sh.per, 0, c.gamma, eps, x.ib(), s, x.cells, k::rope_scaling(), st);
++    }
++}
++
++template <class F>
++double time_graph(sycl::queue& q, int reps, F&& body) {
++    sx::command_graph g{q.get_context(), q.get_device()};
++    g.begin_recording(q);
++    body();
++    g.end_recording();
++    auto ex = g.finalize();
++    for (int i = 0; i < 3; ++i) q.ext_oneapi_graph(ex);
++    q.wait();
++    std::vector<double> v;
++    for (int b = 0; b < 7; ++b) {
++        const double t0 = now_us();
++        for (int r = 0; r < reps; ++r) q.ext_oneapi_graph(ex);
++        q.wait();
++        v.push_back((now_us() - t0) / reps);
++    }
++    std::sort(v.begin(), v.end());
++    return v[v.size() / 2];
++}
++
++std::map<std::string, uint64_t> g_ref, g_out;
++bool g_have_ref = false;
++void record(const std::string& key, uint64_t h) {
++    g_out[key] = h;
++    if (g_have_ref) {
++        auto it = g_ref.find(key);
++        if (it == g_ref.end()) std::printf("  ref %-34s missing\n", key.c_str());
++        else if (it->second != h) { std::printf("  ref %-34s DIFF (%016llx vs %016llx)\n", key.c_str(), (unsigned long long) h, (unsigned long long) it->second); ++g_fail; }
++    }
++}
++
++void compare_f32(const char* what, const std::vector<float>& a, const std::vector<float>& b) {
++    double mabs = 0, mrel = 0;
++    size_t nd = 0;
++    for (size_t i = 0; i < a.size(); ++i) {
++        if (std::memcmp(&a[i], &b[i], 4) != 0) {
++            ++nd;
++            const double d = std::fabs((double) a[i] - (double) b[i]);
++            mabs = std::max(mabs, d);
++            mrel = std::max(mrel, d / std::max(1e-30, std::fabs((double) a[i])));
++        }
++    }
++    if (nd) { std::printf("  %-40s %zu of %zu floats differ, max abs %.3g max rel %.3g\n", what, nd, a.size(), mabs, mrel); ++g_fail; }
++    else std::printf("  %-40s bitwise (%zu floats)\n", what, a.size());
++}
++}  // namespace
++
++int main(int argc, char** argv) {
++    std::vector<int64_t> ctxs = {1024, 16384, 65536};
++    std::string ref_path;
++    int reps = 20;
++    for (int i = 1; i < argc; ++i) {
++        if (!std::strcmp(argv[i], "--ctx") && i + 1 < argc) {
++            ctxs.clear();
++            std::string a = argv[++i];
++            size_t p = 0;
++            while (p < a.size()) { size_t e = a.find(',', p); if (e == std::string::npos) e = a.size(); ctxs.push_back(std::atoll(a.substr(p, e - p).c_str())); p = e + 1; }
++        } else if (!std::strcmp(argv[i], "--ref") && i + 1 < argc) ref_path = argv[++i];
++        else if (!std::strcmp(argv[i], "--reps") && i + 1 < argc) reps = std::atoi(argv[++i]);
++    }
++    if (!ref_path.empty()) {
++        if (FILE* f = std::fopen(ref_path.c_str(), "r")) {
++            char key[128]; unsigned long long h;
++            while (std::fscanf(f, "%127s %llx", key, &h) == 2) g_ref[key] = h;
++            std::fclose(f);
++            g_have_ref = !g_ref.empty();
++        }
++    }
++    sycl::queue q{sycl::gpu_selector_v, {sycl::property::queue::in_order()}};
++    std::printf("device: %s  ref: %s  env VPIPE=%d MERGE_ACTIVE=%d\n",
++                q.get_device().get_info<sycl::info::device::name>().c_str(),
++                g_have_ref ? "compare" : (ref_path.empty() ? "none" : "write"), k::qsa_night_vpipe() ? 1 : 0,
++                k::qsa_night_merge_active() ? 1 : 0);
++    const Shape shapes[] = {{"C2_2x3", 2, 3}, {"C1_1x4", 1, 4}, {"C2d1_2x2", 2, 2}};
++    for (int64_t ctx : ctxs) {
++        Ctx c{q, k::qsa_real_shapes(), ctx, 0, 0};
++        make_ctx(c);
++        q.wait();
++        std::printf("\n=== context %lld (cap %lld, max_blocks %lld, 12 layers) ===\n", (long long) ctx, (long long) c.cap,
++                    (long long) c.max_blocks);
++        for (const Shape& sh : shapes) {
++            const int n = sh.slots * sh.per;
++            set_steps(c, sh);
++            const size_t attn_n = (size_t) L * c.rows_max * c.s.n_head * c.s.head_dim, sel_n = (size_t) L * c.rows_max * c.cap;
++            std::vector<float> a_ref;
++            std::vector<int32_t> s_ref;
++            double t_us[3] = {0, 0, 0};
++            for (int p = 0; p < 3; ++p) {
++                if (p == kSlot && sh.slots == 1) {}   // C1: slot == one launch per kernel already (still run it)
++                q.memset(c.attn, 0, attn_n * 4).wait();
++                q.memset(c.sel, 0, sel_n * 4).wait();
++                for (int l = 0; l < L; ++l) attn_layer(c, sh, l, (Path) p);
++                q.wait();
++                auto a = fetch(q, c.attn, attn_n);
++                auto sv = fetch(q, c.sel, sel_n);
++                char key[96];
++                std::snprintf(key, sizeof key, "attn_%lld_%s", (long long) ctx, sh.name);
++                record(std::string(key) + "_" + path_name[p], fnv(a.data(), a.size() * 4, fnv(sv.data(), sv.size() * 4)));
++                if (p == kRow) { a_ref = a; s_ref = sv; }
++                else {
++                    char w[96];
++                    std::snprintf(w, sizeof w, "%s %s vs row: attn", sh.name, path_name[p]);
++                    compare_f32(w, a_ref, a);
++                    if (std::memcmp(s_ref.data(), sv.data(), sv.size() * 4) != 0) { std::printf("  %s %s vs row: selection DIFFERS\n", sh.name, path_name[p]); ++g_fail; }
++                }
++                t_us[p] = time_graph(q, reps, [&] { for (int l = 0; l < L; ++l) attn_layer(c, sh, l, (Path) p); }) / L;
++            }
++            {   // component split (graph replay, 12 layers): scores / top-k / chunk+merge per path
++                double comp[3][3];
++                for (int p = 0; p < 3; ++p)
++                    for (int m = 0; m < 3; ++m)
++                        comp[p][m] = time_graph(q, reps, [&] { for (int l = 0; l < L; ++l) attn_layer(c, sh, l, (Path) p, 1 << m); }) / L;
++                std::printf("  %-9s split us/layer (scores/topk/attn): row %.1f/%.1f/%.1f  slot %.1f/%.1f/%.1f  one %.1f/%.1f/%.1f\n",
++                            sh.name, comp[0][0], comp[0][1], comp[0][2], comp[1][0], comp[1][1], comp[1][2], comp[2][0],
++                            comp[2][1], comp[2][2]);
++            }
++            // the K/V + indexer appends: parity from one saved state, then time
++            std::vector<std::vector<float>> tail0, pooled0;
++            for (int j = 0; j < sh.slots; ++j) {
++                const SlotLayer& x = c.at(0, j);
++                tail0.push_back(fetch(q, x.tail, (size_t) (c.s.idx_block - 1) * c.s.idx_dim));
++                pooled0.push_back(fetch(q, x.pooled, (size_t) (x.cells / c.s.idx_block + 2) * c.s.idx_dim));
++            }
++            auto snap = [&](int j) {
++                const SlotLayer& x = c.at(0, j);
++                const size_t rows = (size_t) x.pages * c.s.n_head_kv * c.s.page_size;
++                std::vector<uint8_t> out;
++                auto push = [&](const void* d, size_t bytes) { std::vector<uint8_t> h(bytes); q.memcpy(h.data(), d, bytes).wait(); out.insert(out.end(), h.begin(), h.end()); };
++                push(x.k_q, rows * c.s.head_dim); push(x.v_q, rows * c.s.head_dim);
++                push(x.k_s, rows * 8); push(x.v_s, rows * 8);
++                push(x.tail, (size_t) (c.s.idx_block - 1) * c.s.idx_dim * 4);
++                push(x.pooled, (size_t) (x.cells / c.s.idx_block + 2) * c.s.idx_dim * 4);
++                push(x.dead, (size_t) c.s.idx_dim * 4); push(x.bpos, 4);
++                return out;
++            };
++            auto restore = [&]() {
++                for (int j = 0; j < sh.slots; ++j) {
++                    const SlotLayer& x = c.at(0, j);
++                    q.memcpy(x.tail, tail0[(size_t) j].data(), tail0[(size_t) j].size() * 4).wait();
++                    q.memcpy(x.pooled, pooled0[(size_t) j].data(), pooled0[(size_t) j].size() * 4).wait();
++                    q.memset(x.bpos, 0, 4).wait();
++                }
++            };
++            double tp[2] = {0, 0};
++            std::vector<std::vector<uint8_t>> st_row;
++            for (int ps = 0; ps < 2; ++ps) {
++                restore();
++                prep_layer(c, sh, 0, ps == 1);
++                q.wait();
++                for (int j = 0; j < sh.slots; ++j) {
++                    auto sn = snap(j);
++                    if (ps == 0) st_row.push_back(sn);
++                    else if (sn != st_row[(size_t) j]) { std::printf("  %s prep slot %d: per-slot state DIFFERS from per-row\n", sh.name, j); ++g_fail; }
++                    char key[96];
++                    std::snprintf(key, sizeof key, "prep_%lld_%s_s%d_%s", (long long) ctx, sh.name, j, ps ? "slot" : "row");
++                    record(key, fnv(sn.data(), sn.size()));
++                }
++                tp[ps] = time_graph(q, reps, [&] { for (int l = 0; l < L; ++l) prep_layer(c, sh, l, ps == 1); }) / L;
++            }
++            restore();
++            std::printf("  %-9s rows %d | attn us/layer: row %7.1f  slot %7.1f  one %7.1f | prep us/layer: row %5.1f slot %5.1f | launches/layer row %d slot %d one %d\n",
++                        sh.name, n, t_us[0], t_us[1], t_us[2], tp[0], tp[1], 4 * n, 4 * sh.slots, sh.slots + 3);
++            std::printf("  RESULT ctx=%lld shape=%s rows=%d attn_row=%.2f attn_slot=%.2f attn_one=%.2f prep_row=%.2f prep_slot=%.2f\n",
++                        (long long) ctx, sh.name, n, t_us[0], t_us[1], t_us[2], tp[0], tp[1]);
++        }
++        // the block scores alone for 5..8 queries of one slot (the verify shapes above reach 4 per slot)
++        for (int nq = 5; nq <= 8; ++nq) {
++            const Shape sh{"S1", 1, nq};
++            set_steps(c, sh);
++            q.memset(c.scores, 0, (size_t) c.rows_max * c.max_blocks * 4).wait();
++            const SlotLayer& x = c.at(0, 0);
++            k::qsa_block_scores(x.pooled, x.dead, c.qidx, c.steps, nq, c.max_blocks, c.s, c.scores, &q);
++            q.wait();
++            auto sc = fetch(q, c.scores, (size_t) nq * c.max_blocks);
++            char key[64];
++            std::snprintf(key, sizeof key, "scores%d_%lld", nq, (long long) ctx);
++            record(key, fnv(sc.data(), sc.size() * 4));
++        }
++        // the top-k alone on tie-heavy scores (8 distinct values): 6 queries, the C2 rows' steps
++        {
++            const Shape sh{"C2_2x3", 2, 3};
++            set_steps(c, sh);
++            const uint32_t s0 = 0x51ed27u + (uint32_t) ctx;
++            float* sc = c.scores;
++            q.parallel_for(sycl::range<1>((size_t) 6 * c.max_blocks), [=](sycl::id<1> i) {
++                sc[i] = (float) (hsh((uint32_t) i[0] ^ s0) % 8u) * 0.25f;
++            }).wait();
++            k::qsa_block_topk(c.scores, c.steps, 6, c.max_blocks, c.cap, c.s, c.sel, &q);
++            q.wait();
++            auto ids = fetch(q, c.sel, (size_t) 6 * c.cap);
++            char key[64];
++            std::snprintf(key, sizeof key, "topk_ties_%lld", (long long) ctx);
++            record(key, fnv(ids.data(), ids.size() * 4));
++            const double t1 = time_graph(q, reps, [&] { for (int l = 0; l < L; ++l) k::qsa_block_topk(c.scores, c.steps, 1, c.max_blocks, c.cap, c.s, c.sel, &q); }) / L;
++            const double t6 = time_graph(q, reps, [&] { for (int l = 0; l < L; ++l) k::qsa_block_topk(c.scores, c.steps, 6, c.max_blocks, c.cap, c.s, c.sel, &q); }) / L;
++            std::printf("  top-k (ties) us/launch: 1 query %.1f, 6 queries %.1f\n", t1, t6);
++            std::printf("  RESULT ctx=%lld topk1=%.2f topk6=%.2f\n", (long long) ctx, t1, t6);
++        }
++        // the MTP drafter's call: 1 row, 32K window = 512 chunks, ids = the window's cells
++        {
++            const int64_t capm = 32768;
++            const int64_t sfl = (int64_t) k::qsa_decode_attn_scratch_floats(capm, c.s);
++            float* scr = dalloc<float>(q, (size_t) sfl);
++            int32_t* idm = dalloc<int32_t>(q, (size_t) capm * 4);
++            int32_t* stm = dalloc<int32_t>(q, (size_t) k::kStepCount * 4);
++            float* outm = dalloc<float>(q, (size_t) 4 * c.s.n_head * c.s.head_dim);
++            const int64_t nkv = ctx + 1, W = std::min<int64_t>(nkv, capm);
++            std::vector<int32_t> hid((size_t) capm * 4, 0), hst((size_t) k::kStepCount * 4);
++            for (int u = 0; u < 4; ++u) {
++                for (int64_t i = 0; i < W; ++i) hid[(size_t) (u * capm + i)] = (int32_t) (nkv - W + i);
++                int32_t* sp = hst.data() + u * k::kStepCount;
++                sp[k::kStepPos] = (int32_t) (nkv - 1); sp[k::kStepNKv] = (int32_t) nkv;
++                sp[k::kStepNBid] = (int32_t) (nkv / c.s.idx_block); sp[k::kStepWidth] = (int32_t) W;
++            }
++            q.memcpy(idm, hid.data(), hid.size() * 4).wait();
++            q.memcpy(stm, hst.data(), hst.size() * 4).wait();
++            auto body = [&] {
++                for (int u = 0; u < 4; ++u)   // four replays' worth (C2: 2 depths x 2 owners), each on its own layer pools
++                    k::qsa_decode_attn_batch(c.qcur, c.at(u, 0).pools(), idm + (size_t) u * capm, stm + u * k::kStepCount,
++                                             capm, c.s, scr, outm + (size_t) u * c.s.n_head * c.s.head_dim, 1, &q);
++            };
++            body();
++            q.wait();
++            auto om = fetch(q, outm, (size_t) 4 * c.s.n_head * c.s.head_dim);
++            char key[64];
++            std::snprintf(key, sizeof key, "mtp_%lld", (long long) ctx);
++            record(key, fnv(om.data(), om.size() * 4));
++            const double tm = time_graph(q, reps, body) / 4;
++            std::printf("  MTP 1 row, 512 chunks, window %lld: %.1f us/call\n", (long long) W, tm);
++            std::printf("  RESULT ctx=%lld mtp_call=%.2f\n", (long long) ctx, tm);
++            sycl::free(scr, q); sycl::free(idm, q); sycl::free(stm, q); sycl::free(outm, q);
++        }
++        free_ctx(c);
++    }
++    if (!ref_path.empty() && !g_have_ref) {
++        if (FILE* f = std::fopen(ref_path.c_str(), "w")) {
++            for (auto& kv : g_out) std::fprintf(f, "%s %016llx\n", kv.first.c_str(), (unsigned long long) kv.second);
++            std::fclose(f);
++            std::printf("\nwrote %zu reference hashes to %s\n", g_out.size(), ref_path.c_str());
++        }
++    }
++    std::printf("\n%s (%d failures)\n", g_fail ? "FAIL" : "PASS", g_fail);
++    return g_fail ? 1 : 0;
++}

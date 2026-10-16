@@ -25886,3 +25886,20 @@ Devloop -> Preserveusefulsourcevalidation/strictwork/health; avoidrepeat
 permissionmistake byexplicitBash/Python orcheckingmodebeforelaunch. See
 docs/20261016_strata_gdn_commit_serving_hold.md and
 docs/20261016_strata_night_handoff.md.
+
+## 2026-10-16 Night lab (Claude Opus 5.5 orchestrating agents): Strata decode/concurrency/prefill
+
+CONFIG -> Codex S148 tree as base (src-ep branch night-20261016 53402da2), EP config, fixed-prompt lean harness
+(strata/flash-next/night/nl.py), reflink worktrees per agent, DRM fdinfo GPU-busy sampling, teacher-forced NLL gates
+(nl_ppl.py). Agents: Claude Opus 5.5 subagents (mmvq, hc, moe, attn, prefill, trace), Claude Fable 5.1 strategy consult.
+COMMAND -> ~25 engine commits, every change behind default-off STRATA_NIGHT_* flags; A/B per stage on the same binary.
+RESULT -> C1 91.1 -> 140 tok/s; C2 51.2 -> 91.5/stream (wall agg 87 -> 164); C4 25.5 -> 51.2/stream (wall agg 88 ->
+185); prefill 4K 1138 -> ~2180, 32K 1568 -> ~2200; long-context C1 78 -> 127-131. Biggest levers: KREG small-batch
+MMVQ (ISA: 468 movs/step, serialized activation loads; +23 % C1), ISA-guided IQ expert decode (Q2_0 476 -> 142-203
+instructions/step), HC v2 Q8 read (HC_Q8 alone had no GPU path), batched verify attention (bitwise), linear verify graph
+(shared expert in post: 2,226 event resets/replay gone), D2D batch admission + park move (380 -> 70 ms), XMX prefill
+(grouped IQ-decode joint_matrix experts, union-of-selection QSA attention), halves pipeline. NLL gates: decode 3.1974 ->
+3.1920, prefill 2.5142 -> 2.4771 (no degradation); bitwise-claimed flags verified bit-identical end to end.
+bench_context_four on the final stack: PASS (restores ~415 ms, replay 0, RSS 17.2 GB, no swap/OOM); health HEALTHY.
+VERDICT -> research candidate night-final-v2 (configs in strata/flash-next/night/configs/); not promoted. Details,
+negative results and agent reports: docs/20261016_night_lab.md, strata/flash-next/night/agent-reports/.

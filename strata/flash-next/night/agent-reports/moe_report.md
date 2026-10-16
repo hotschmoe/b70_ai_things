@@ -357,3 +357,84 @@ Total ~-0.35 ms per C1 window (~1.6% of ~22.4 ms), ~-0.4 ms per C2 cycle.
 - The xor shuffle lowering (a0-indirect, ~6 instr per 16 lanes) affects every warp reduction in the engine
   (lanes_sum, warp_sum, GDN norms, quantizers); a native sub-group reduce or SLM tree may be cheaper in the
   latency-bound kernels - worth an ISA experiment.
+
+## 10. Fourth mission: 12-row verify windows (STRATA_NIGHT_VERIFY_T12=1) for C4 x depth 2
+
+Base: main dc023c67 (worktree reset to it). Engine: /mnt/vm_8tb/b70/results/night-20261016/builds/strata-moe-t12a
+= dc023c67 + agents/moe_t12.patch (applies on dc023c67; main's uncommitted generate.cpp change is NOT included).
+Flag: STRATA_NIGHT_VERIFY_T12=1 (runtime, latched, one stderr line). Off: every new branch is behind it (and > 8
+rows), host arrays are only larger, the window cap stays 8, so C1/C2/C4-depth1 run the same code (bitwise).
+
+### 10.1 What limited the window to 8 rows (audit)
+
+- Engine caps: kVerifyMaxT = 8 for batch_pack's window, the verifier's max_t (batch MTP), Verifier::init's check
+  (also cpu::MAXT = 8, the CPU expert pool's arrays), host arrays in generate.cpp's batch loop (rows/tok/outb/pos/
+  first/active/glen/pend, BSlot::draft), the sampler history (kHistSlots), run_slots/batch_launch rows[8],
+  ple_rows[kVerifyMaxT * PLE_N_HEADS] (x2), pl_ple_rows_, and FusedGrArgs fa[kFusedGrMaxT] (x4: the per-layer HC read
+  and three head mixers).
+- Kernel entry points that throw / exit above 8 rows: native_mmvq (validate_shape, MAX_NCOLS = 8; only the KREG
+  formats Q4_K/Q5_K/Q6_K/IQ4_XS take 9-16 columns, with STRATA_NIGHT_MMVQ2 bit0), native_quantize_q8_1 (the same
+  validate_shape), bf16_gemv_fp32_mmvf_multi (router, indexer, PLE, shared gate: 1..8), shared_expert_multi (1..8),
+  fused_gr_read_multi (kFusedGrMaxT = 8; HC v2 inside), gdn_ab_multi and gdn_conv_l2_multi (kVerifyMaxT).
+- Already fine at 12 rows: router top-10 (any n), resident_plan* (120 entries <= kResidentPlanMax 128; 16 rows would
+  not fit), native_expert_grouped and the night IQ kernels (any entries per group), EP push/psum/plan1/combine (sized
+  by max_t_), native_moe_combine_multi, gr_write_multi, quantize_q8_1_rows, norm/rope (rows <= 65535), QSA
+  attention (per slot / qsa_decode_attn_multi any n_q, 4 pools = 4 slots), GDN_SLOTS (4 slots x <= 8 rows), sampler,
+  every buffer allocated from max_t_. gdn_commit_layers (S145) requires MT == 8 and turns itself off at 12 (it is
+  off in the serving config anyway).
+
+### 10.2 Changes
+
+- verify_kernels.hpp: kVerifyCapT = 16 (host array capacity), verify_t12(), verify_max_t() (12 with the flag).
+- generate.cpp: batch arrays -> kVerifyCapT; batch_pack and the batch-MTP verifier max_t -> verify_max_t().
+- verify.cpp: init accepts up to verify_max_t(); more than cpu::MAXT rows only with expert parallel (no CPU pool);
+  the fixed arrays above -> kVerifyCapT.
+- Chunking at the entry points (only when > 8 rows and the flag): rows [0, 8) then [8, n) with offset pointers:
+  native_mmvq (KREG formats first try the whole 12 columns - one weight read - and chunk only if not taken),
+  native_quantize_q8_1, bf16_gemv_fp32_mmvf_multi, shared_expert_multi (its q8 scratch reused, pre-quantized input
+  offset), fused_gr_read_multi (not with STRATA_QFUSE counters), gdn_ab_multi, gdn_conv_l2_multi (second half with
+  t_begin = 8: same history/qkv buffers).
+
+### 10.3 Checks
+
+CONFIG -> `STRATA_NIGHT_VERIFY_T12=1 ep_night_bench t12` on card 1, with the default MMVQ kernels and again with
+STRATA_NIGHT_MMVQ=1 MMVQ2=1 SHEXP=1 GDN_AB=1 (agents/moe_work/t12a.txt).
+RESULT -> for every entry point: the 12-row call is memcmp-equal to the same entry called on rows [0, 8) and
+[8, 12) separately (offsets right); native_mmvq for Q4_K, Q5_K, Q6_K, IQ4_XS, IQ3_S, IQ4_NL, Q8_0, Q2_0 (2560 ->
+1024) is also equal to two 6-row calls (max rel diff 0: the column arithmetic does not depend on the call width,
+also for KREG taking all 12 columns). Engine builds and links; flag-off path unchanged by construction.
+NOT RUN: a whole 12-row window against two 6-row windows (needs the model on both cards = a server run).
+
+VERDICT -> ready for the serving coherence check: C4, --batch 4, STRATA_BATCH_MTP=1 STRATA_BATCH_MTP_DEPTH=2
+(+ the rest of the night stack) + STRATA_NIGHT_VERIFY_T12=1: batch_pack should now take all four 3-row slots in one
+12-row window. Watch the engine log for "verify: the window must hold" (init) and for VRAM (max_t 12 enlarges the
+per-window buffers by ~1.5x, roughly +20-40 MB on card 0). Rows 0-7 / 8-11 chunking means MMVQ IQ3_S / IQ4_NL / Q8_0,
+the router / indexer BF16 GEMVs, the shared expert and the HC read read their weights twice in a 12-row window; the
+KREG formats (most dense bytes) read them once.
+
+### 10.4 Fix t12b (startup abort "native MMVQ requires 1 <= ncols <= 8")
+
+Cause (found by listing every validate_shape caller): Verifier::init sizes xq_ / sh_xq_ with
+native_q8_1_bytes(max_in, T), T = max_t_ = 12, and that size helper ran validate_shape(ncols <= 8) - an uncaught throw
+at init. Two more startup paths would have exited next: Verifier::warm() captured one-request windows T = 1..max_t_
+(9..12 run the non-batch path, whose gdn_step_norm_multi exits above 8 rows), and capture_commit() recorded the
+one-request commit with n_tok = MT = 12 (same exit).
+Fix (agents/moe_t12b.patch, on main 5fb1411f): native_q8_1_bytes accepts up to kVerifyCapT columns with the flag;
+warm() captures one-request windows only up to kVerifyMaxT (they never exceed --spec <= 8; batch windows capture on
+first use); capture_commit passes min(MT, 8) rows (n_keep <= T <= 8 there). Diagnostic: with the flag, validate_shape
+prints "strata night T12: validate_shape(n_in, ncols, block) is about to throw (caller %p)" (first 4; not for the
+expected, caught whole-width try in native_mmvq). Engine: builds/strata-moe-t12b. Flag-off behavior unchanged.
+
+### 10.5 Fix t12c (SIGSEGV after the first 12-row window capture)
+
+Cause: Verifier members still sized 8 and written per row of a batch window: brow_[8] (capture_batch, the slot of
+each row), last_rows_[8], last_tokens_[8], last_pos_b_[8] (stage_batch / commit_slot_prefixes / sample_rows) and
+b_out_[8] (both include/ and sycl/include verify.hpp). The 9-row window already overflowed them by one (stack-free
+member overflow into the next members, silent); the 12-row one wrote 4 past and crashed. Fix: all five -> 16
+(kVerifyCapT), plus a host guard in capture_batch (before recording) and stage_batch that prints
+"strata night T12: ... with N rows exceeds the host row arrays" and fails the window instead of overflowing.
+Audit of the rest of the per-window host path: generate.cpp batch_step arrays (rows/tok/outb/pos/first/active/glen/
+pend, BSlot::draft) were already kVerifyCapT; the MtpPair args are per pair (2); exec_/ep_exec_/groups_/seg_[9] are
+indexed by one-request window size only (<= 8 after the warm() cap); mapped buffers, commitb_ (CB = 2 + max_t_) and
+hist snapshots are sized from max_t_; mtp.hpp's [8] arrays are the drafter's chain (<= --mtp-max-t).
+Patch agents/moe_t12c.patch (on main f498be11), engine builds/strata-moe-t12c.

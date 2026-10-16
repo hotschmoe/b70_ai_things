@@ -507,3 +507,10 @@ and fullposthealthPASS; stopfornight atuserrequest. Throughputtargets
 remainunmet; retainedS30context/RAMscope unchanged.
 [GDN serving HOLD](20261016_strata_gdn_commit_serving_hold.md),
 [next-session handoff](20261016_strata_night_handoff.md).
+
+Night lab 2026-10-16 (docs/20261016_night_lab.md; candidate configs strata/flash-next/night/configs/night-final-v2-c2.json
+and -c4.json, engine src-ep branch night-20261016 1c360526, all changes behind default-off STRATA_NIGHT_* flags):
+prefill 4K ~2180 / 32K ~2150-2250 tok/s (goal MET), 200k fresh prefill ~1600; C1 decode 140 tok/s (goal 150: 93 %),
+C2 ~92/stream (~164 wall aggregate), C4 ~51/stream (~185 wall aggregate); long-context (35-41K) C1 127-131.
+200k x 2 + four-conversation RAM parking without recompute re-qualified on this stack (restores ~415 ms, replay 0,
+RSS 17.2 GB). Teacher-forced NLL gates on decode and prefill paths within the rounding band. Not promoted.

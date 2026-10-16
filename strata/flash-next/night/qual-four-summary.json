@@ -1,0 +1,478 @@
+{
+  "correctness_passed": true,
+  "four_distinct": true,
+  "context_size": 200000,
+  "prompt_target": 199600,
+  "forced_ram_exchange_passed": true,
+  "configured_parking_gib": 32,
+  "actual_prompt_tokens": [
+    199501,
+    199501,
+    199501,
+    199501
+  ],
+  "cached_return_latency": {
+    "resident": {
+      "samples": 3,
+      "ttft_p50_s": 2.4561958690173924,
+      "ttft_p95_s": 2.98760815631249,
+      "p95_target_s": 2.0,
+      "latency_target_met": false
+    },
+    "ram_restore": {
+      "samples": 5,
+      "ttft_p50_s": 4.549094303976744,
+      "ttft_p95_s": 4.667616040189751,
+      "p95_target_s": 2.0,
+      "latency_target_met": false
+    },
+    "unattributed_mixed_pair": {
+      "samples": 0,
+      "ttft_p50_s": null,
+      "ttft_p95_s": null,
+      "p95_target_s": 2.0,
+      "latency_target_met": null
+    }
+  },
+  "native_full_restores": [
+    {
+      "tokens": 199531,
+      "elapsed_ms": 413.8,
+      "payload_bytes": 3163725744
+    },
+    {
+      "tokens": 199839,
+      "elapsed_ms": 412.5,
+      "payload_bytes": 3168427056
+    },
+    {
+      "tokens": 199839,
+      "elapsed_ms": 410.7,
+      "payload_bytes": 3168427056
+    },
+    {
+      "tokens": 199839,
+      "elapsed_ms": 422.3,
+      "payload_bytes": 3168427056
+    },
+    {
+      "tokens": 199839,
+      "elapsed_ms": 411.8,
+      "payload_bytes": 3168427056
+    }
+  ],
+  "retained_prompt_history_reused": true,
+  "retained_history_reused": true,
+  "maximum_prior_tail_replayed_tokens": 0,
+  "cached_per_conversation": {
+    "A": {
+      "samples": 2,
+      "ttft_p50_s": 3.5994698929716833,
+      "ttft_p95_s": 4.454131862876238,
+      "requests": [
+        {
+          "phase": "resident1",
+          "ttft_s": 4.549094303976744,
+          "wall_s": 8.635497896990273,
+          "client_decode_tps": 62.402059462743765,
+          "gaps_ms": {
+            "count": 251,
+            "p50": 0.46038703294470906,
+            "p95": 34.19033301179297,
+            "maximum": 92.29655301896855
+          },
+          "timings": {
+            "cache_n": 199531,
+            "prompt_n": 53,
+            "prompt_ms": 1857.1,
+            "prompt_per_token_ms": 35.04,
+            "prompt_per_second": 28.5,
+            "predicted_n": 256,
+            "predicted_ms": 4071.6,
+            "predicted_per_token_ms": 15.905,
+            "predicted_per_second": 62.9,
+            "draft_n": 246,
+            "draft_n_accepted": 132
+          }
+        },
+        {
+          "phase": "exchange1",
+          "ttft_s": 2.649845481966622,
+          "wall_s": 5.9599054489517584,
+          "client_decode_tps": 8.459061249425918,
+          "gaps_ms": {
+            "count": 25,
+            "p50": 0.38812897400930524,
+            "p95": 923.4485415858187,
+            "maximum": 1879.736484028399
+          },
+          "timings": {
+            "cache_n": 199839,
+            "prompt_n": 31,
+            "prompt_ms": 1729.0,
+            "prompt_per_token_ms": 55.774,
+            "prompt_per_second": 17.9,
+            "predicted_n": 29,
+            "predicted_ms": 2157.5,
+            "predicted_per_token_ms": 74.397,
+            "predicted_per_second": 13.4,
+            "draft_n": 18,
+            "draft_n_accepted": 18
+          }
+        }
+      ]
+    },
+    "B": {
+      "samples": 2,
+      "ttft_p50_s": 3.5622473770054057,
+      "ttft_p95_s": 4.5576937341946175,
+      "requests": [
+        {
+          "phase": "resident1",
+          "ttft_s": 2.4561958690173924,
+          "wall_s": 8.417098748032004,
+          "client_decode_tps": 42.77875435577533,
+          "gaps_ms": {
+            "count": 251,
+            "p50": 0.22384600015357137,
+            "p95": 35.219299024902284,
+            "maximum": 1980.166885012295
+          },
+          "timings": {
+            "cache_n": 199529,
+            "prompt_n": 55,
+            "prompt_ms": 1514.4,
+            "prompt_per_token_ms": 27.535,
+            "prompt_per_second": 36.3,
+            "predicted_n": 256,
+            "predicted_ms": 5867.3,
+            "predicted_per_token_ms": 22.919,
+            "predicted_per_second": 43.6,
+            "draft_n": 234,
+            "draft_n_accepted": 137
+          }
+        },
+        {
+          "phase": "exchange1",
+          "ttft_s": 4.668298884993419,
+          "wall_s": 6.257699219044298,
+          "client_decode_tps": 17.616707005866076,
+          "gaps_ms": {
+            "count": 25,
+            "p50": 0.10114198084920645,
+            "p95": 165.6230573775242,
+            "maximum": 1118.5153310070746
+          },
+          "timings": {
+            "cache_n": 199839,
+            "prompt_n": 31,
+            "prompt_ms": 731.3,
+            "prompt_per_token_ms": 23.59,
+            "prompt_per_second": 42.4,
+            "predicted_n": 29,
+            "predicted_ms": 332.5,
+            "predicted_per_token_ms": 11.466,
+            "predicted_per_second": 87.2,
+            "draft_n": 22,
+            "draft_n_accepted": 20
+          }
+        }
+      ]
+    },
+    "C": {
+      "samples": 2,
+      "ttft_p50_s": 3.8557693134935107,
+      "ttft_p95_s": 4.58397312622692,
+      "requests": [
+        {
+          "phase": "resident1",
+          "ttft_s": 3.046653966011945,
+          "wall_s": 6.8542424099869095,
+          "client_decode_tps": 66.97152377471515,
+          "gaps_ms": {
+            "count": 251,
+            "p50": 0.22790400544181466,
+            "p95": 33.50554403732531,
+            "maximum": 65.33766898792237
+          },
+          "timings": {
+            "cache_n": 199529,
+            "prompt_n": 55,
+            "prompt_ms": 1530.5,
+            "prompt_per_token_ms": 27.827,
+            "prompt_per_second": 35.9,
+            "predicted_n": 256,
+            "predicted_ms": 3793.6,
+            "predicted_per_token_ms": 14.819,
+            "predicted_per_second": 67.5,
+            "draft_n": 228,
+            "draft_n_accepted": 141
+          }
+        },
+        {
+          "phase": "exchange1",
+          "ttft_s": 4.664884660975076,
+          "wall_s": 5.177228504966479,
+          "client_decode_tps": 54.650798147327514,
+          "gaps_ms": {
+            "count": 25,
+            "p50": 0.25097804609686136,
+            "p95": 50.362145632971014,
+            "maximum": 192.1140169724822
+          },
+          "timings": {
+            "cache_n": 199839,
+            "prompt_n": 31,
+            "prompt_ms": 708.3,
+            "prompt_per_token_ms": 22.848,
+            "prompt_per_second": 43.8,
+            "predicted_n": 29,
+            "predicted_ms": 325.3,
+            "predicted_per_token_ms": 11.217,
+            "predicted_per_second": 89.1,
+            "draft_n": 22,
+            "draft_n_accepted": 20
+          }
+        }
+      ]
+    },
+    "D": {
+      "samples": 2,
+      "ttft_p50_s": 1.986735916492762,
+      "ttft_p95_s": 2.593610990254092,
+      "requests": [
+        {
+          "phase": "resident1",
+          "ttft_s": 1.3124302789801732,
+          "wall_s": 6.922607856977265,
+          "client_decode_tps": 45.45310668954589,
+          "gaps_ms": {
+            "count": 251,
+            "p50": 0.23505795979872346,
+            "p95": 33.526388491736725,
+            "maximum": 1627.04195297556
+          },
+          "timings": {
+            "cache_n": 199531,
+            "prompt_n": 53,
+            "prompt_ms": 363.8,
+            "prompt_per_token_ms": 6.864,
+            "prompt_per_second": 145.7,
+            "predicted_n": 256,
+            "predicted_ms": 5515.3,
+            "predicted_per_token_ms": 21.544,
+            "predicted_per_second": 46.4,
+            "draft_n": 238,
+            "draft_n_accepted": 135
+          }
+        },
+        {
+          "phase": "exchange1",
+          "ttft_s": 2.661041554005351,
+          "wall_s": 4.884972164989449,
+          "client_decode_tps": 12.590320876787558,
+          "gaps_ms": {
+            "count": 25,
+            "p50": 1.188324997201562,
+            "p95": 653.0892682028915,
+            "maximum": 1126.821527024731
+          },
+          "timings": {
+            "cache_n": 199839,
+            "prompt_n": 31,
+            "prompt_ms": 1713.6,
+            "prompt_per_token_ms": 55.277,
+            "prompt_per_second": 18.1,
+            "predicted_n": 29,
+            "predicted_ms": 1061.1,
+            "predicted_per_token_ms": 36.59,
+            "predicted_per_second": 27.3,
+            "draft_n": 18,
+            "draft_n_accepted": 18
+          }
+        }
+      ]
+    }
+  },
+  "phase_reports": [
+    {
+      "phase": "initial-AB",
+      "content_interval_overlap_s": -117.20391244901111,
+      "native_batch_depth": 2,
+      "single_slot_max_emitted_rows": 3,
+      "native_batch_windows": [
+        {
+          "windows": 10,
+          "emitted_rows_per_window": 2.7
+        },
+        {
+          "windows": 2,
+          "emitted_rows_per_window": 2.0
+        }
+      ],
+      "actual_ram_restores": 0,
+      "snapshot_restore_records": [],
+      "snapshot_restore_payload_bytes": 0,
+      "intended_ram_exchange": false,
+      "forced_exchange_passed": true,
+      "restore_classification": "resident_only"
+    },
+    {
+      "phase": "resident1-AB",
+      "content_interval_overlap_s": 3.86930558498716,
+      "native_batch_depth": 2,
+      "single_slot_max_emitted_rows": 3,
+      "native_batch_windows": [
+        {
+          "windows": 126,
+          "emitted_rows_per_window": 4.04
+        }
+      ],
+      "actual_ram_restores": 1,
+      "snapshot_restore_records": [
+        {
+          "tokens": 199531,
+          "elapsed_ms": 413.8,
+          "payload_bytes": 3163725744
+        }
+      ],
+      "snapshot_restore_payload_bytes": 3163725744,
+      "intended_ram_exchange": false,
+      "forced_exchange_passed": true,
+      "restore_classification": "mixed"
+    },
+    {
+      "phase": "initial-CD",
+      "content_interval_overlap_s": -117.16233443003148,
+      "native_batch_depth": 2,
+      "single_slot_max_emitted_rows": 3,
+      "native_batch_windows": [
+        {
+          "windows": 10,
+          "emitted_rows_per_window": 2.7
+        },
+        {
+          "windows": 2,
+          "emitted_rows_per_window": 1.0
+        }
+      ],
+      "actual_ram_restores": 0,
+      "snapshot_restore_records": [],
+      "snapshot_restore_payload_bytes": 0,
+      "intended_ram_exchange": false,
+      "forced_exchange_passed": true,
+      "restore_classification": "resident_only"
+    },
+    {
+      "phase": "resident1-CD",
+      "content_interval_overlap_s": 3.8054950649966486,
+      "native_batch_depth": 2,
+      "single_slot_max_emitted_rows": 3,
+      "native_batch_windows": [
+        {
+          "windows": 119,
+          "emitted_rows_per_window": 4.28
+        }
+      ],
+      "actual_ram_restores": 0,
+      "snapshot_restore_records": [],
+      "snapshot_restore_payload_bytes": 0,
+      "intended_ram_exchange": false,
+      "forced_exchange_passed": true,
+      "restore_classification": "resident_only"
+    },
+    {
+      "phase": "exchange1-AB",
+      "content_interval_overlap_s": 1.2833009700407274,
+      "native_batch_depth": 2,
+      "single_slot_max_emitted_rows": 3,
+      "native_batch_windows": [
+        {
+          "windows": 11,
+          "emitted_rows_per_window": 4.45
+        }
+      ],
+      "actual_ram_restores": 2,
+      "snapshot_restore_records": [
+        {
+          "tokens": 199839,
+          "elapsed_ms": 412.5,
+          "payload_bytes": 3168427056
+        },
+        {
+          "tokens": 199839,
+          "elapsed_ms": 410.7,
+          "payload_bytes": 3168427056
+        }
+      ],
+      "snapshot_restore_payload_bytes": 6336854112,
+      "intended_ram_exchange": true,
+      "forced_exchange_passed": true,
+      "restore_classification": "ram_only"
+    },
+    {
+      "phase": "exchange1-CD",
+      "content_interval_overlap_s": 0.2197801090660505,
+      "native_batch_depth": 2,
+      "single_slot_max_emitted_rows": 3,
+      "native_batch_windows": [
+        {
+          "windows": 11,
+          "emitted_rows_per_window": 4.45
+        }
+      ],
+      "actual_ram_restores": 2,
+      "snapshot_restore_records": [
+        {
+          "tokens": 199839,
+          "elapsed_ms": 422.3,
+          "payload_bytes": 3168427056
+        },
+        {
+          "tokens": 199839,
+          "elapsed_ms": 411.8,
+          "payload_bytes": 3168427056
+        }
+      ],
+      "snapshot_restore_payload_bytes": 6336854112,
+      "intended_ram_exchange": true,
+      "forced_exchange_passed": true,
+      "restore_classification": "ram_only"
+    }
+  ],
+  "total_context_tokens_at_end": {
+    "A": 199899,
+    "B": 199899,
+    "C": 199899,
+    "D": 199899
+  },
+  "sampled_peak_native_rss_bytes": 17188253696,
+  "native_hwm_before_bytes": 3578318848,
+  "native_hwm_after_bytes": 17189126144,
+  "sampled_peak_exchange_native_rss_bytes": 16250679296,
+  "sampled_peak_exchange_container_bytes": 16278462464,
+  "container_memory_at_sampled_peak": {
+    "ts": 1792159113.4364932,
+    "phase": "initial-CD",
+    "VmHWM": 17188253696,
+    "VmRSS": 17188253696,
+    "cgroup_anon_bytes": 17104900096,
+    "cgroup_file_bytes": 39542784,
+    "cgroup_swap_bytes": 0,
+    "cgroup_oom_kill": 0,
+    "cgroup_current_bytes": 17189265408,
+    "cgroup_lifetime_peak_bytes": 17189265408,
+    "host_available_bytes": 72219369472
+  },
+  "cgroup_oom_kill_delta": 0,
+  "cgroup_swap_before_bytes": 0,
+  "cgroup_swap_max_bytes": 0,
+  "sampled_peak_container_ram_bytes": 17189265408,
+  "container_lifetime_peak_bytes": 17191620608,
+  "minimum_host_available_bytes": 72212021248,
+  "ram_sample_period_s": 0.05,
+  "ram_samples": 10814,
+  "native_pid": 913920,
+  "config_sha256": "25763c2a2757e7288f9cd4dec68e2693f6c81d471150570a7be18d8fef609a89",
+  "note": "Empirical p95 on bounded samples; sampled exchange peaks and lifetime cgroup peak are separate. Restore bytes are snapshot restore API payload, not physical PCIe traffic; native records belong to each request pair and are not assigned to individual streams."
+}

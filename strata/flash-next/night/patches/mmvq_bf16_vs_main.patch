@@ -1,0 +1,430 @@
+--- a/sycl/src/kernels/cuda/native_bf16.dp.cpp
++++ b/sycl/src/kernels/cuda/native_bf16.dp.cpp
+@@ -1,5 +1,6 @@
+ #define DPCT_PROFILING_ENABLED
+ #include <sycl/sycl.hpp>
++#include <sycl/ext/intel/experimental/grf_size_properties.hpp>
+ #include <dpct/dpct.hpp>
+ #include "strata/sycl_queue.hpp"
+ #include "strata/kernels/verify_kernels.hpp"
+@@ -8,6 +9,7 @@
+ #include "strata/kernels/bf16_bits.hpp"
+ 
+ #include <cstdlib>
++#include <cstdio>
+ #include <limits>
+ #include <stdexcept>
+ #include <string>
+@@ -532,6 +534,167 @@
+     return best;
+ }
+ 
++// ---------------------------------------------------------------- night: STRATA_NIGHT_BF16=1 (KREG for BF16 x FP32)
++// Bit for bit the multi kernel's arithmetic: virtual thread t of BLOCK (mmvf_block_size) walks pairs t, t + BLOCK, ...
++// with the two ordered fmas; a 32-thread warp's xor butterfly is replayed for its lane 0 and the partials[32] stage
++// likewise. Mapping: one SIMD16 sub-group = one warp, lane l holds the warp's virtual threads 2l and 2l + 1 (adjacent
++// pairs: one 8-byte weight load and one float4 activation load per step), level 16 of the butterfly is a xor-8
++// shuffle, ..., level 1 is the in-lane add. One group (BLOCK / 2 lanes) spans the row's K; the activations of the
++// lane's pairs are loaded ONCE into registers and R output rows stream per tile (the old kernel re-read every
++// activation row per output row from L1/L2).
++inline bool night_bf16_env() {
++    static const bool v = [] {
++        const char* e = std::getenv("STRATA_NIGHT_BF16");
++        const bool on = e && e[0] == '1';
++        if (on) std::fprintf(stderr, "strata night bf16: enabled=1 KREG BF16 x FP32 GEMV (bf16_gemv_fp32_mmvf[_multi], bitwise)\n");
++        return on;
++    }();
++    return v;
++}
++int g_night_bf16_override = -1;
++inline bool night_bf16_on() { return g_night_bf16_override >= 0 ? g_night_bf16_override != 0 : night_bf16_env(); }
++__dpct_inline__ float night_bf16_xor32_lane0(float* v) {
++#pragma unroll
++    for (int o = 16; o > 0; o >>= 1)
++#pragma unroll
++        for (int i = 0; i < o; ++i) v[i] = v[i] + v[i + o];
++    return v[0];
++}
++// KMAX = n_in / 2 / BLOCK exactly and NW = BLOCK / 32 (compile-time: no per-load guards - with them IGC put every load
++// in its own divergent block, 65 goto/join + 83 sync per tile in the ISA, and the kernel ran 0.4-0.8x the old one)
++template <int NT, int R, int KMAX, int NW>
++void night_bf16_kernel(const float* __restrict__ x, int64_t ldx, const uint16_t* __restrict__ w, float* __restrict__ y,
++                       int64_t ldy, int n_in, int n_out, float* __restrict__ slm,
++                       const uint16_t* __restrict__ w2, float* __restrict__ y2, int64_t ldy2, int n2) {
++    auto it = sycl::ext::oneapi::this_work_item::get_nd_item<1>();
++    const sycl::sub_group sg = it.get_sub_group();
++    const int lid = int(it.get_local_id(0)), l = int(sg.get_local_linear_id()), wi = lid / 16;
++    constexpr int nw = NW, block = 32 * NW;
++    const int t0 = 32 * wi + 2 * l;
++    sycl::float4 xa[NT][KMAX];
++#pragma unroll
++    for (int j = 0; j < NT; ++j)
++#pragma unroll
++        for (int k = 0; k < KMAX; ++k) {
++            const int p = t0 + block * k;
++            xa[j][k] = *reinterpret_cast<const sycl::float4*>(x + std::size_t(j) * ldx + 2 * std::size_t(p));
++        }
++    const int n_tot = n_out + n2;   // n2 > 0: a second matrix on the same input (rows n_out ..)
++    const int ntiles = (n_tot + R - 1) / R;
++    int buf = 0;
++    for (int t = int(it.get_group(0)); t < ntiles; t += int(it.get_group_range(0))) {
++        const int row0 = t * R;
++        sycl::uint2 wv[R][KMAX];
++#pragma unroll
++        for (int r = 0; r < R; ++r) {
++            const int row = sycl::min(row0 + r, n_tot - 1);
++            const uint16_t* wr = row < n_out ? w + std::size_t(row) * n_in : w2 + std::size_t(row - n_out) * n_in;
++            const sycl::uint2* wp2 = reinterpret_cast<const sycl::uint2*>(wr);
++#pragma unroll
++            for (int k = 0; k < KMAX; ++k) {
++                wv[r][k] = wp2[(t0 + block * k) >> 1];
++            }
++        }
++        float* part = slm + buf * (R * NT * nw);
++#pragma unroll
++        for (int r = 0; r < R; ++r)
++#pragma unroll
++            for (int j = 0; j < NT; ++j) {
++                float a0 = 0.0f, a1 = 0.0f;
++#pragma unroll
++                for (int k = 0; k < KMAX; ++k) {   // pairs p = t0 + BLOCK k and p + 1
++                    const uint32_t u0 = wv[r][k].x(), u1 = wv[r][k].y();
++                    a0 = sycl::fma(sycl::bit_cast<float>(u0 << 16), xa[j][k].x(), a0);
++                    a0 = sycl::fma(sycl::bit_cast<float>(u0 & 0xFFFF0000u), xa[j][k].y(), a0);
++                    a1 = sycl::fma(sycl::bit_cast<float>(u1 << 16), xa[j][k].z(), a1);
++                    a1 = sycl::fma(sycl::bit_cast<float>(u1 & 0xFFFF0000u), xa[j][k].w(), a1);
++                }
++                // lane 0's xor butterfly over the warp's 32 virtual threads: v[i] = v[i] + v[i ^ o] (own first)
++                a0 = a0 + sycl::permute_group_by_xor(sg, a0, 8); a1 = a1 + sycl::permute_group_by_xor(sg, a1, 8);   // o = 16
++                a0 = a0 + sycl::permute_group_by_xor(sg, a0, 4); a1 = a1 + sycl::permute_group_by_xor(sg, a1, 4);   // o = 8
++                a0 = a0 + sycl::permute_group_by_xor(sg, a0, 2); a1 = a1 + sycl::permute_group_by_xor(sg, a1, 2);   // o = 4
++                a0 = a0 + sycl::permute_group_by_xor(sg, a0, 1); a1 = a1 + sycl::permute_group_by_xor(sg, a1, 1);   // o = 2
++                if (l == 0) part[(r * NT + j) * nw + wi] = a0 + a1;                                                 // o = 1
++            }
++        it.barrier(sycl::access::fence_space::local_space);
++        for (int k = lid; k < R * NT; k += int(it.get_local_range(0))) {
++            const int r = k / NT, j = k % NT;
++            float v[32];
++#pragma unroll
++            for (int i = 0; i < 32; ++i) v[i] = i < nw ? part[k * nw + i] : 0.0f;
++            const float s = night_bf16_xor32_lane0(v);
++            const int row = row0 + r;
++            if (row < n_out) y[std::size_t(j) * ldy + row] = s;
++            else if (row < n_tot) y2[std::size_t(j) * ldy2 + row - n_out] = s;
++        }
++        buf ^= 1;
++    }
++}
++template <int NT, int R, int KMAX, int NW, int GRF>
++void launch_night_bf16(const float* x, int64_t ldx, const uint16_t* w, float* y, int64_t ldy, int n_in, int n_out,
++                       dpct::queue_ptr st, const uint16_t* w2, float* y2, int64_t ldy2, int n2) {
++    const int L = 16 * NW, tiles = (n_out + n2 + R - 1) / R, nw = NW;
++    st->submit([&](sycl::handler& h) {
++        sycl::local_accessor<float, 1> slm(sycl::range<1>(2 * R * NT * nw), h);
++        auto k = [=](sycl::nd_item<1>) [[sycl::reqd_sub_group_size(16)]] {
++            night_bf16_kernel<NT, R, KMAX, NW>(x, ldx, w, y, ldy, n_in, n_out, slm.get_multi_ptr<sycl::access::decorated::no>().get(),
++                                               w2, y2, ldy2, n2);
++        };
++        const sycl::nd_range<1> nr(std::size_t(tiles) * L, L);
++        if constexpr (GRF == 256)
++            h.parallel_for<dpct_kernel_name<class night_bf16_g, dpct_kernel_scalar<NT>, dpct_kernel_scalar<R>, dpct_kernel_scalar<KMAX>, dpct_kernel_scalar<NW>>>(
++                nr, sycl::ext::oneapi::experimental::properties{sycl::ext::intel::experimental::grf_size<256>}, k);
++        else
++            h.parallel_for<dpct_kernel_name<class night_bf16, dpct_kernel_scalar<NT>, dpct_kernel_scalar<R>, dpct_kernel_scalar<KMAX>, dpct_kernel_scalar<NW>>>(nr, k);
++    });
++}
++inline int night_bf16_r() { static const int v = std::getenv("STRATA_NIGHT_BF16_R") ? std::atoi(std::getenv("STRATA_NIGHT_BF16_R")) : 0; return v; }
++template <int NT, int KMAX, int NW>
++void night_bf16_nt(const float* x, int64_t ldx, const uint16_t* w, float* y, int64_t ldy, int n_in, int n_out, dpct::queue_ptr st,
++                   const uint16_t* w2, float* y2, int64_t ldy2, int n2) {
++    // R = 4 rows per tile (bench, T = 2..8); T = 1 (only the 640-wide shapes take it) R = 2
++    const int rsel = night_bf16_r() ? night_bf16_r() : (NT == 1 ? 2 : 4);
++    constexpr int G = NT * KMAX * 4 > 48 ? 256 : 128;   // the activation registers per lane
++    if (rsel == 1) launch_night_bf16<NT, 1, KMAX, NW, G>(x, ldx, w, y, ldy, n_in, n_out, st, w2, y2, ldy2, n2);
++    else if (rsel == 2) launch_night_bf16<NT, 2, KMAX, NW, G>(x, ldx, w, y, ldy, n_in, n_out, st, w2, y2, ldy2, n2);
++    else if (rsel == 8) launch_night_bf16<NT, 8, KMAX, NW, G>(x, ldx, w, y, ldy, n_in, n_out, st, w2, y2, ldy2, n2);
++    else launch_night_bf16<NT, 4, KMAX, NW, G>(x, ldx, w, y, ldy, n_in, n_out, st, w2, y2, ldy2, n2);
++}
++template <int KMAX, int NW>
++void night_bf16_k(const float* x, int64_t ldx, const uint16_t* w, float* y, int64_t ldy, int n_in, int n_out, int n_tok, dpct::queue_ptr st,
++                  const uint16_t* w2, float* y2, int64_t ldy2, int n2) {
++    switch (n_tok) {
++        case 1: night_bf16_nt<1, KMAX, NW>(x, ldx, w, y, ldy, n_in, n_out, st, w2, y2, ldy2, n2); break;
++        case 2: night_bf16_nt<2, KMAX, NW>(x, ldx, w, y, ldy, n_in, n_out, st, w2, y2, ldy2, n2); break;
++        case 3: night_bf16_nt<3, KMAX, NW>(x, ldx, w, y, ldy, n_in, n_out, st, w2, y2, ldy2, n2); break;
++        case 4: night_bf16_nt<4, KMAX, NW>(x, ldx, w, y, ldy, n_in, n_out, st, w2, y2, ldy2, n2); break;
++        case 5: night_bf16_nt<5, KMAX, NW>(x, ldx, w, y, ldy, n_in, n_out, st, w2, y2, ldy2, n2); break;
++        case 6: night_bf16_nt<6, KMAX, NW>(x, ldx, w, y, ldy, n_in, n_out, st, w2, y2, ldy2, n2); break;
++        case 7: night_bf16_nt<7, KMAX, NW>(x, ldx, w, y, ldy, n_in, n_out, st, w2, y2, ldy2, n2); break;
++        default: night_bf16_nt<8, KMAX, NW>(x, ldx, w, y, ldy, n_in, n_out, st, w2, y2, ldy2, n2); break;
++    }
++}
++// true when launched; the shapes it takes: n_in = 2560 (BLOCK 256, 5 steps) and 640 (BLOCK 160, 2 steps)
++bool try_night_bf16(const float* x, int64_t ldx, const uint16_t* w, float* y, int64_t ldy, int64_t n_in, int64_t n_out, int n_tok,
++                    void* stream, const uint16_t* w2 = nullptr, float* y2 = nullptr, int64_t ldy2 = 0, int64_t n2 = 0) {
++    if (!night_bf16_on() || n_tok < 1 || n_tok > 8 || n_in <= 0 || n_in > (1 << 20) || (n_in & 3) != 0 || n_out <= 0 ||
++        n_out > (1 << 30) || !x || !w || !y || !stream || (reinterpret_cast<uintptr_t>(x) & 15u) != 0 || (ldx & 3) != 0 ||
++        (reinterpret_cast<uintptr_t>(w) & 7u) != 0 || ((n_in * 2) & 7) != 0 || n2 < 0 || n_out + n2 > (1 << 30) ||
++        (n2 > 0 && (!w2 || !y2 || (reinterpret_cast<uintptr_t>(w2) & 7u) != 0)))
++        return false;
++    // T = 1 at n_in = 2560: the old kernel was as fast (one row per group already streams; bench x0.78-0.95)
++    if (n_tok == 1 && n_in != 640) return false;
++    const int block = mmvf_block_size(n_in);
++    if ((n_in / 2) % block != 0) return false;   // whole BLOCK steps only (2560: 5 x 256, 640: 2 x 160)
++    const int64_t iters = n_in / 2 / block;
++    const dpct::queue_ptr st = strata::q_of(stream);
++    if (block == 256 && iters == 5) night_bf16_k<5, 8>(x, ldx, w, y, ldy, (int) n_in, (int) n_out, n_tok, st, w2, y2, ldy2, (int) n2);
++    else if (block == 160 && iters == 2) night_bf16_k<2, 5>(x, ldx, w, y, ldy, (int) n_in, (int) n_out, n_tok, st, w2, y2, ldy2, (int) n2);
++    else return false;
++    return true;
++}
++
++
+ }  // namespace
+ 
+ bool bf16_gemv_fp32_mmvf_multi_aux(const float* x, int64_t ldx, const uint16_t* w, float* y, int64_t ldy,
+@@ -587,6 +750,7 @@
+         return;
+     }
+     if (n_tok == 1 && ldy >= n_out) { bf16_gemv_fp32_mmvf(x, w, y, n_in, n_out, stream); return; }
++    if (try_night_bf16(x, ldx, w, y, ldy, n_in, n_out, n_tok, stream)) return;   // STRATA_NIGHT_BF16=1 (bitwise)
+     if (n_tok < 1 || n_tok > 8 || n_in <= 0 || (n_in & 1) != 0 || n_out <= 0 || (ldx & 1) != 0 || x == nullptr ||
+         w == nullptr || y == nullptr || (reinterpret_cast<uintptr_t>(x) & 7u) != 0)
+         throw std::invalid_argument("bf16_gemv_fp32_mmvf_multi: 1..8 rows, even n_in/ldx, aligned pointers");
+@@ -874,6 +1038,7 @@
+         (reinterpret_cast<uintptr_t>(w) & 3u) != 0 ||
+         (reinterpret_cast<uintptr_t>(y) & 3u) != 0)
+         throw std::invalid_argument("bf16_gemv_fp32_mmvf: null or misaligned pointer");
++    if (try_night_bf16(x, n_in, w, y, n_out, n_in, n_out, 1, stream)) return;   // STRATA_NIGHT_BF16=1 (bitwise)
+     const dpct::queue_ptr st = strata::q_of(stream);
+ #define STRATA_MMVF_CASE(N)                                                    \
+     case N: {                                                                  \
+@@ -947,4 +1112,12 @@
+     }
+ }
+ 
++void night_bf16_set(int on) { g_night_bf16_override = on; }   // bench toggle: -1 = STRATA_NIGHT_BF16
++// STRATA_NIGHT_BF16=1: two BF16 matrices on the same activation rows in ONE launch (each output bitwise its own
++// bf16_gemv_fp32_mmvf_multi call). Returns false (nothing launched) when the night path is off or the shape not taken.
++bool night_bf16_gemv_pair(const float* x, int64_t ldx, const uint16_t* w1, float* y1, int64_t ldy1, int64_t n_out1,
++                          const uint16_t* w2, float* y2, int64_t ldy2, int64_t n_out2, int64_t n_in, int n_tok, void* stream) {
++    if (n_tok < 2) return false;
++    return try_night_bf16(x, ldx, w1, y1, ldy1, n_in, n_out1, n_tok, stream, w2, y2, ldy2, n_out2);
++}
+ }  // namespace strata::kernels
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -32,6 +32,10 @@
+ #include "strata/kernels/native_head_mmvq.hpp"
+ #include "strata/kernels/native_qsa.hpp"
+ #include "strata/kernels/native_qsa_indexer.hpp"
++namespace strata::kernels {   // night STRATA_NIGHT_BF16 (native_bf16.dp.cpp): two BF16 GEMVs on the same rows in one launch
++bool night_bf16_gemv_pair(const float* x, int64_t ldx, const uint16_t* w1, float* y1, int64_t ldy1, int64_t n_out1,
++                          const uint16_t* w2, float* y2, int64_t ldy2, int64_t n_out2, int64_t n_in, int n_tok, void* stream);
++}
+ #include "strata/kernels/native_rope.hpp"
+ #include "strata/kernels/ngram.hpp"
+ #include "strata/kernels/ple.hpp"
+@@ -1168,7 +1172,13 @@
+                 // window's rows each - row-wise identical arithmetic (STRATA_DEC_BATCH=0: token by token)
+                 const bool qb = dec_batch && n > 1 && native_qsa_enabled() && native_rope_enabled() && !st.kv_q4;
+                 if (!q8_attn) native_quantize_q8_1(xm, xq_, (int) N, n, cs);
+-                if (qb) bf16_gemv_fp32_mmvf_multi(mixed_ + tb * N, N, (const uint16_t*) wik->data, idx_raw + tb * ID, ID, N, ID, n, cs);
++                // night STRATA_NIGHT_BF16=1: the indexer k_proj and q_proj (both BF16, both on these rows of mixed_) in one
++                // launch here; each output bitwise its own call. The q_proj call below is then skipped.
++                const bool idx_q_done = qb && strata::kernels::night_bf16_gemv_pair(
++                    mixed_ + tb * N, N, (const uint16_t*) wik->data, idx_raw + tb * ID, ID, ID, (const uint16_t*) wiq->data,
++                    qidx_ + tb * IQ * ID, IQ * ID, IQ * ID, N, n, cs);
++                if (idx_q_done) {}
++                else if (qb) bf16_gemv_fp32_mmvf_multi(mixed_ + tb * N, N, (const uint16_t*) wik->data, idx_raw + tb * ID, ID, N, ID, n, cs);
+                 else for (int t = tb; t < te; ++t)
+                     bf16_gemv_fp32_mmvf(mixed_ + t * N, (const uint16_t*) wik->data, idx_raw + t * ID, (int) N, (int) ID, cs);
+                 stamp(l, 7, grp);
+@@ -1317,6 +1327,7 @@
+                     norm_rope(qcur_ + tb * NH * HD, wqn, (int) (n * NH), (int) HD, pos_ + tb * NH);
+                     }
+                     if (st.kv_rot) fwht256_inplace_cuda(qcur_ + tb * NH * HD, (int64_t) n * NH, cs);   // <Hq, Hk> = <q, k>
++                    if (!idx_q_done)
+                     bf16_gemv_fp32_mmvf_multi(mixed_ + tb * N, N, (const uint16_t*) wiq->data, qidx_ + tb * IQ * ID, IQ * ID,
+                                               N, IQ * ID, n, cs);
+                     norm_rope(qidx_ + tb * IQ * ID, wiqn, (int) (n * IQ), (int) ID, pos_i + tb * IQ);
+--- a/sycl/src/kernels/cuda/native_mmvq.dp.cpp
++++ b/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+@@ -2678,8 +2678,11 @@
+     constexpr int P = night_p<R, NCOLS>();
+     const int tiles = (n_out + R - 1) / R;
+     // one group per resident slot: 8 XVE x (8 threads at GRF128, 4 at GRF256) per Xe-core
++    // STRATA_NIGHT_MMVQ2_CAP_PCT (A/B knob for the in-engine C2 regression): persistent groups as a percentage of the
++    // resident slots (default 100); 0 = one group per tile (no persistence: the hardware dispatcher balances)
++    static const int cap_pct = [] { const char* e = std::getenv("STRATA_NIGHT_MMVQ2_CAP_PCT"); return e ? std::atoi(e) : 100; }();
+     const int cap = night_xe_cores(s) * std::max(1, (GRF == 256 ? 32 : 64) / nsg);
+-    const int groups = std::min(tiles, cap);
++    const int groups = cap_pct <= 0 ? tiles : std::min(tiles, std::max(1, cap * cap_pct / 100));
+     s->submit([&](sycl::handler& h) {
+         sycl::local_accessor<float, 1> slm(sycl::range<1>(2 * nsg * P + F::kTableWords), h);
+         auto k = [=](sycl::nd_item<1>) [[sycl::reqd_sub_group_size(16)]] {
+--- a/sycl/CMakeLists.txt
++++ b/sycl/CMakeLists.txt
+@@ -393,6 +393,8 @@
+   target_link_libraries(night_mmvq_bench PRIVATE strata_kernels)
+   add_executable(night_shexp_bench ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/night_shexp_bench.cpp)   # STRATA_NIGHT_SHEXP A/B
+   target_link_libraries(night_shexp_bench PRIVATE strata_kernels)
++  add_executable(night_bf16_bench ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/night_bf16_bench.cpp)   # STRATA_NIGHT_BF16 A/B
++  target_link_libraries(night_bf16_bench PRIVATE strata_kernels)
+   add_executable(mmvq_sg_bench ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/mmvq_sg_bench.cpp)   # SIMD16 vs 32 decode mmvq
+   target_link_libraries(mmvq_sg_bench PRIVATE strata_kernels)
+   add_executable(q6k_align_bench ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/q6k_align_bench.cpp)   # Q6_K block alignment
+--- a/sycl/src/kernels/night_bf16_bench.cpp
++++ b/sycl/src/kernels/night_bf16_bench.cpp
+@@ -0,0 +1,151 @@
++// sycl/src/kernels/night_bf16_bench.cpp - STRATA_NIGHT_BF16 A/B: bf16_gemv_fp32_mmvf_multi (T > 1) / bf16_gemv_fp32_mmvf
++// (T = 1) original vs the night KREG kernel at the decode shapes, NMAT distinct weight copies per graph (> L2), graph
++// replay; us per call, GB/s of weights, bitwise comparison.
++//     night_bf16_bench [T=1,2,3,4,6,8]
++#define DPCT_PROFILING_ENABLED
++#include <sycl/sycl.hpp>
++#include <dpct/dpct.hpp>
++#include "strata/kernels/bf16_gemv.hpp"
++#include <algorithm>
++#include <cmath>
++#include <cstdint>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <functional>
++#include <string>
++#include <vector>
++
++namespace strata::kernels {
++void night_bf16_set(int on);
++bool night_bf16_gemv_pair(const float* x, int64_t ldx, const uint16_t* w1, float* y1, int64_t ldy1, int64_t n_out1,
++                          const uint16_t* w2, float* y2, int64_t ldy2, int64_t n_out2, int64_t n_in, int n_tok, void* stream);
++}
++namespace k = strata::kernels;
++namespace sx = sycl::ext::oneapi::experimental;
++
++namespace {
++uint64_t rs = 0x9E3779B97F4A7C15ull;
++inline uint64_t xr() { rs ^= rs << 13; rs ^= rs >> 7; rs ^= rs << 17; return rs; }
++inline float urand() { return (float) ((double) (xr() >> 11) / 9007199254740992.0 * 2.0 - 1.0); }
++std::vector<int> parse_list(const char* s) {
++    std::vector<int> v; std::string t(s); size_t p = 0;
++    while (p < t.size()) { size_t e = t.find(',', p); if (e == std::string::npos) e = t.size(); v.push_back(std::atoi(t.substr(p, e - p).c_str())); p = e + 1; }
++    return v;
++}
++double time_graph(sycl::queue& q, int n, const std::function<void(int)>& f, int reps) {
++    sx::command_graph g(q.get_context(), q.get_device());
++    g.begin_recording(q);
++    for (int i = 0; i < n; ++i) f(i);
++    g.end_recording(q);
++    auto ge = g.finalize();
++    for (int i = 0; i < 2; ++i) q.ext_oneapi_graph(ge);
++    q.wait();
++    std::vector<double> us;
++    for (int i = 0; i < reps; ++i) {
++        sycl::event e0 = q.ext_oneapi_submit_barrier();
++        q.ext_oneapi_graph(ge);
++        sycl::event e1 = q.ext_oneapi_submit_barrier();
++        e1.wait();
++        us.push_back(double(e1.get_profiling_info<sycl::info::event_profiling::command_end>() -
++                            e0.get_profiling_info<sycl::info::event_profiling::command_start>()) / 1e3 / n);
++    }
++    std::sort(us.begin(), us.end());
++    return us[us.size() / 2];
++}
++}  // namespace
++
++int main(int argc, char** argv) {
++    const std::vector<int> tl = parse_list(argc > 1 ? argv[1] : "1,2,3,4,6,8");
++    sycl::queue q(sycl::gpu_selector_v, {sycl::property::queue::in_order(), sycl::property::queue::enable_profiling()});
++    struct Shape { int n_in, n_out; const char* name; };
++    const Shape shapes[] = {{2560, 512, "router/idx_q"}, {2560, 128, "idx_k"}, {2560, 48, "ssm_ab"}, {2560, 2560, "2560sq"}, {640, 2560, "640x2560"}};
++    const size_t POOL = (size_t) 512 << 20;
++    uint16_t* wp = (uint16_t*) sycl::malloc_device(POOL, q);
++    {
++        std::vector<uint16_t> h(POOL / 2);
++        for (auto& v : h) { const float f = urand() * 0.05f; uint32_t b; std::memcpy(&b, &f, 4); v = (uint16_t) (b >> 16); }
++        q.memcpy(wp, h.data(), POOL).wait();
++    }
++    float* x = sycl::malloc_device<float>((size_t) 8 * 2560, q);
++    {
++        std::vector<float> h((size_t) 8 * 2560);
++        for (auto& v : h) v = urand();
++        q.memcpy(x, h.data(), h.size() * 4).wait();
++    }
++    float *y = sycl::malloc_device<float>((size_t) 8 * 2560, q), *y2 = sycl::malloc_device<float>((size_t) 8 * 2560, q);
++    std::printf("night_bf16_bench: original bf16 mmvf vs STRATA_NIGHT_BF16 KREG; us/call, GB/s of weights, bits\n");
++    for (const Shape& sh : shapes) {
++        const size_t wb = (size_t) sh.n_in * sh.n_out * 2, slot = (wb + 255) & ~(size_t) 255;
++        const int ndist = (int) std::min<size_t>(128, POOL / slot), nmat = std::max(ndist, 32);
++        for (const int T : tl) {
++            auto call = [&](const uint16_t* w, float* o) {
++                if (T == 1) k::bf16_gemv_fp32_mmvf(x, w, o, sh.n_in, sh.n_out, &q);
++                else k::bf16_gemv_fp32_mmvf_multi(x, sh.n_in, w, o, sh.n_out, sh.n_in, sh.n_out, T, &q);
++            };
++            std::vector<float> r[2]; double us[2];
++            for (int nt = 0; nt < 2; ++nt) {
++                k::night_bf16_set(nt);
++                r[nt].resize((size_t) T * sh.n_out);
++                float* o = nt ? y2 : y;
++                q.memset(o, 0, r[nt].size() * 4).wait();
++                call(wp, o); q.wait();
++                q.memcpy(r[nt].data(), o, r[nt].size() * 4).wait();
++                us[nt] = time_graph(q, nmat, [&](int m) { call(wp + (size_t) (m % ndist) * (slot / 2), o); }, 11);
++            }
++            k::night_bf16_set(-1);
++            size_t neq = 0; double mabs = 0;
++            for (size_t i = 0; i < r[0].size(); ++i) {
++                if (std::memcmp(&r[0][i], &r[1][i], 4) != 0) ++neq;
++                mabs = std::max(mabs, (double) std::fabs(r[0][i] - r[1][i]));
++            }
++            std::printf("%-12s %5d x %5d T %d  orig %7.2f us %6.1f GB/s  night %7.2f us %6.1f GB/s (%4.1f%%)  x%.2f  bits differ %zu/%zu (maxabs %.1e)\n",
++                        sh.name, sh.n_in, sh.n_out, T, us[0], wb / us[0] / 1e3, us[1], wb / us[1] / 1e3, wb / us[1] / 1e3 / 6.08,
++                        us[0] / us[1], neq, r[0].size(), mabs);
++            std::fflush(stdout);
++        }
++    }
++    // the QSA indexer k_proj (2560 -> 128) + q_proj (2560 -> 512) on the same rows: two calls vs one pair launch
++    {
++        const int N = 2560, NK = 128, NQ = 512;
++        const size_t kb = (size_t) N * NK * 2, qb = (size_t) N * NQ * 2, slot = ((kb + qb) + 255) & ~(size_t) 255;
++        const int ndist = (int) std::min<size_t>(128, POOL / slot);
++        float *yk = sycl::malloc_device<float>((size_t) 8 * NK, q), *yq = sycl::malloc_device<float>((size_t) 8 * NQ, q);
++        for (const int T : tl) {
++            if (T < 2) continue;
++            auto two = [&](int m) {
++                const uint16_t* wk = wp + (size_t) (m % ndist) * (slot / 2); const uint16_t* wq = wk + (size_t) N * NK;
++                k::night_bf16_set(0);
++                k::bf16_gemv_fp32_mmvf_multi(x, N, wk, yk, NK, N, NK, T, &q);
++                k::bf16_gemv_fp32_mmvf_multi(x, N, wq, yq, NQ, N, NQ, T, &q);
++            };
++            auto two_n = [&](int m) {
++                const uint16_t* wk = wp + (size_t) (m % ndist) * (slot / 2); const uint16_t* wq = wk + (size_t) N * NK;
++                k::night_bf16_set(1);
++                k::bf16_gemv_fp32_mmvf_multi(x, N, wk, yk, NK, N, NK, T, &q);
++                k::bf16_gemv_fp32_mmvf_multi(x, N, wq, yq, NQ, N, NQ, T, &q);
++            };
++            auto pair = [&](int m) {
++                const uint16_t* wk = wp + (size_t) (m % ndist) * (slot / 2); const uint16_t* wq = wk + (size_t) N * NK;
++                k::night_bf16_set(1);
++                k::night_bf16_gemv_pair(x, N, wk, yk, NK, NK, wq, yq, NQ, NQ, N, T, &q);
++            };
++            std::vector<float> rk[2], rq[2];
++            for (int v = 0; v < 2; ++v) {
++                if (v) pair(0); else two(0);
++                q.wait();
++                rk[v].resize((size_t) T * NK); rq[v].resize((size_t) T * NQ);
++                q.memcpy(rk[v].data(), yk, rk[v].size() * 4).wait(); q.memcpy(rq[v].data(), yq, rq[v].size() * 4).wait();
++            }
++            size_t neq = 0;
++            for (size_t i = 0; i < rk[0].size(); ++i) neq += std::memcmp(&rk[0][i], &rk[1][i], 4) != 0;
++            for (size_t i = 0; i < rq[0].size(); ++i) neq += std::memcmp(&rq[0][i], &rq[1][i], 4) != 0;
++            const double t2 = time_graph(q, 64, two, 11), t2n = time_graph(q, 64, two_n, 11), tp = time_graph(q, 64, pair, 11);
++            k::night_bf16_set(-1);
++            std::printf("idx k+q pair  2560 x 128+512 T %d  orig 2 calls %7.2f us  night 2 calls %7.2f us  night pair %7.2f us  x%.2f  bits differ %zu\n",
++                        T, t2, t2n, tp, t2 / tp, neq);
++            std::fflush(stdout);
++        }
++    }
++    return 0;
++}

@@ -1,5 +1,11 @@
 # mmvq: dense small-batch MMVQ toward bandwidth roofline (night 2026-10-16)
 
+ROUND 4 (latest, BF16 GEMVs): engine /mnt/vm_8tb/b70/results/night-20261016/builds/strata-mmvqm-bf16b (sha256
+c69534036ba33123..., built from a reflink copy of main's working tree taken ~13:00 incl. its then-staged T12 changes,
++ this round), flag STRATA_NIGHT_BF16=1. Delta vs main's CURRENT working tree (13:20; only this round's edits, main's
+later T12 guards preserved): agents/mmvq_bf16_vs_main.patch (git apply --check passes).
+See "Round 4" at the end.
+
 ROUND 3 (latest, shared expert): engine /mnt/vm_8tb/b70/results/night-20261016/builds/strata-mmvq-shexp2
 (sha256 a9b00e320da52c34...), flag STRATA_NIGHT_SHEXP=1. Delta vs main (60b7f900):
 agents/mmvq_shexp_vs_main.patch (applies cleanly); full worktree diff vs e1b7ee8a: agents/mmvq.patch. See "Round 3".
@@ -288,3 +294,57 @@ Note: the fused path uses the KREG traits for IQ3_S/IQ4_NL regardless of STRATA_
 STRATA_NIGHT_MMVQ=1 (round 1), STRATA_NIGHT_MMVQ2=1 (+ round 2; orchestrator's STRATA_NIGHT_MMVQ2_MASK kept),
 STRATA_NIGHT_SHEXP=1 (round 3; =2 = experimental in-kernel q8 handoff, slower), STRATA_NIGHT_SHEXP_MIXED_MAXC=n caps
 the column count for mixed-type gate/up pairs (default 8).
+
+
+# Round 4: BF16 x FP32 GEMVs (STRATA_NIGHT_BF16=1)
+
+## What it does
+- Drop-in inside bf16_gemv_fp32_mmvf_multi (T = 2..8) and bf16_gemv_fp32_mmvf (T = 1, only n_in = 640): every caller
+  of the BF16 mmvf path (MoE router 2560->512, QSA indexer q 2560->512 / k 2560->128, PLE, ...) takes it.
+- BITWISE equal to the existing kernel by construction: the old kernel's virtual thread t of BLOCK (mmvf_block_size:
+  256 for 2560, 160 for 640) walks pairs t, t + BLOCK, ... with two ordered fmas; here one SIMD16 sub-group is one
+  32-thread warp, lane l holds virtual threads 2l, 2l+1 (adjacent pairs: one 8-byte weight load, one float4
+  activation load per step), the warp's xor butterfly is replayed for its lane 0 (levels 16..2 = xor 8..1 shuffles,
+  level 1 in-lane) and the partials[32] stage is replayed in its exact operand order. One group (BLOCK/2 lanes) spans
+  K, the activations are loaded ONCE into registers, R = 4 output rows per tile (the old kernel re-read every
+  activation row for every output row: n_out x T x n_in floats through L1/L2).
+- night_bf16_gemv_pair(): two BF16 matrices on the same rows in one launch (rows [0, n1) from w1, [n1, n1+n2) from
+  w2). verify.cpp (main) now computes the QSA indexer k_proj AND q_proj in one launch at the k_proj site and skips
+  the later q_proj call when it ran (12 QSA layers).
+- ISA lesson: the first version guarded every load (p < npairs): IGC put each load in its own divergent block (65
+  goto/join + 83 sync per tile) and ran 0.4-0.8x the old kernel; shapes with whole BLOCK steps only (2560: 5 x 256,
+  640: 2 x 160) as compile-time KMAX/NW removed all of it. T = 1 at n_in = 2560 stays on the old kernel (break-even).
+
+## E11 A/B (night_bf16_bench, card 1, >= 32 distinct weight copies per graph, two runs agree within 1%; raw
+bf16_ab_v3_{1,2}.txt). us per call orig -> night (% of 608 GB/s), all outputs 0 differing bits:
+
+| shape | T1 | T2 | T3 | T4 | T6 | T8 |
+|---|---|---|---|---|---|---|
+| router / idx q 2560x512 | 7.26 (orig) | 7.90 -> 6.44 (67%) | 8.79 -> 6.71 | 9.73 -> 7.40 (58%) | 11.65 -> 8.03 (54%) | 20.34 -> 8.95 (48%) |
+| idx k 2560x128 | 3.68 (orig) | 3.93 -> 3.09 | 4.28 -> 3.35 | 4.64 -> 3.84 | 5.32 -> 4.40 | 10.72 -> 5.10 |
+| 2560x48 (ssm_ab shape*) | 2.94 (orig) | 3.31 -> 2.21 | 3.48 -> 2.68 | 3.67 -> 2.85 | 4.08 -> 2.70 | 9.20 -> 3.06 |
+| 2560x2560 | 28.4 (orig) | 30.1 -> 24.3 (89%) | 33.3 -> 25.0 | 37.4 -> 25.4 (85%) | 45.6 -> 26.5 | 71.9 -> 28.8 |
+| 640x2560 | 10.82 -> 7.90 | 12.06 -> 10.71 | 13.89 -> 7.68 | 15.82 -> 8.23 | 20.30 -> 9.44 | 33.30 -> 10.90 |
+| idx k+q pair (one launch) | - | 11.82 -> 7.75 | 13.07 -> 8.05 | 14.35 -> 9.20 | 17.00 -> 9.97 | 31.06 -> 11.80 |
+
+(*) ssm_alpha/ssm_beta go through gdn_ab_multi (fused, changed by agent moe), not this path; the row shows the shape.
+Estimated per C1 window (T = 4, router x48 + indexer pair x12): about -105 us router, -62 us indexer; per C2 cycle
+(T = 6): about -175 us router, -84 us indexer; C4 (T = 8): about -550 us router, -230 us indexer. Not measured in serving.
+
+## On the round-2 pipelined regression in-engine (hypothesis, not tested)
+The pipelined kernels launch exactly one group per resident slot (Xe-cores x 32 / threads-per-group at GRF256) and
+walk a STATIC tile list (t += groups). On card 0 other queues run at the same time (EP push / copy kernels, the
+ep_wait spin kernel, the shared-expert queue). Any slot they hold delays a persistent group's start, and that group
+then finishes its whole fixed share late (no dynamic balancing), while the one-group-per-tile round-1 kernels are
+balanced by the hardware dispatcher. GRF256 groups also cannot share an XVE's thread slots the way GRF128 groups do.
+C1 (fewer concurrent kernels on the EP path) being neutral fits. Tests that would decide it: (a) the pipelined
+kernels with an atomic dynamic tile counter instead of the static stride; (b) fewer persistent groups; (c) the probe
+with a concurrent spin kernel on a second queue.
+Knob added for (b): STRATA_NIGHT_MMVQ2_CAP_PCT (default 100 = unchanged; 0 = one group per tile). Isolated (card 1,
+nothing concurrent) it only costs: Q4_K gate nc6 22.8 us at 100, 30.1 at 50, 33.7 at 0 (round 1: 26.0); nc8 24.3 /
+33.1 / 38.2 (round 1: 35.8); outputs unchanged (same per-row arithmetic). If C2 serving improves at 50 or 0 despite
+that, slot starvation by the concurrent EP kernels is the cause.
+
+## Flags (all default off)
+STRATA_NIGHT_MMVQ=1, STRATA_NIGHT_MMVQ2=1 (+ STRATA_NIGHT_MMVQ2_MASK), STRATA_NIGHT_SHEXP=1, STRATA_NIGHT_BF16=1
+(STRATA_NIGHT_BF16_R=1|2|4|8 overrides the rows per tile, bench knob).

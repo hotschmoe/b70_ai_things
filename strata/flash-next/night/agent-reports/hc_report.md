@@ -259,3 +259,45 @@ Changes / settings:
 - Not done: async D2H (D2D snapshot into a staging device buffer, host copy in the background) - it would hide
   the remaining ~27-42 ms but needs VRAM proportional to the conversation's K/V (up to GBs at 200K) and deferred
   cache insertion; the RAM-parking semantics are unchanged by the two changes above.
+
+# Mission 5 (persistent single-kernel HC read, STRATA_NIGHT_HC=q8p) - NEGATIVE, not integrated
+
+Code kept outside the engine: hc_work/fused_gr_night_q8p.inc (kernel), hc_work/hc_probe.cpp mode `p`,
+hc_work/coop_probe.cpp (co-residency / barrier probe). Engine source is unchanged from strata-hc-park1.
+
+## C1 co-residency on this stack (coop_probe, card 1)
+
+- `max_num_work_groups` (sycl kernel_queue_specific) answers 256 for a 256-thread group with 0 or 64 KB SLM: not an
+  occupancy answer; unusable as the co-residency bound.
+- root_group barrier (use_root_sync -> cooperative launch): works eagerly (3000 launches, 0 wrong) but a SYCL graph
+  containing it fails at finalize/replay: `level_zero backend failed with error: 45 (UR_RESULT_ERROR_INVALID_ARGUMENT)`.
+  The verify window is a graph, so the runtime cannot GUARANTEE co-residency where it would be used.
+- Device: 32 Xe-cores x 8 EUs x 8 threads, 128 KB local memory. The q8p grid was therefore derived from the device:
+  Xe-cores x min(threads / 16, 128 KB / kernel SLM) / margin (2 default; 1 tested) -> 64 / 120 groups.
+- Hand-made device-scope barrier: sense reversal (arrival count + generation, last arrival resets the count). An
+  earlier monotonic-target barrier DEADLOCKED in the probe when two grid sizes shared one counter (fixed design;
+  card 1 healthy afterwards, xpu-health OK). Barrier cost (one-barrier kernel minus an empty one, graph replay):
+  ~1.2-1.5 us at 64 groups, ~2.9-3.8 us at 120 groups, vs ~0.6-0.8 us for a kernel boundary between empty kernels.
+
+## C2 q8p kernel and result
+
+Phase A = down2q's units and arithmetic (incl. its per-row-group last-block reduction); each block then issues its
+up unit's Q8 weight loads (up3q<2> layout) into registers, arrives at the grid barrier, and runs the up unit.
+Correctness: lo and R_out bitwise = v2q; mixed FP32-rounding vs v2q (max rel 1.7e-5) and vs FP64 on the Q8 weights
+(3.0e-5); stress 48 reads x 100 graph replays at T=1/4/6 per grid size: 0 bad replays, no hang.
+
+| T | v2q us/read | q8p grid 120 | q8p grid 64 |
+|---|---:|---:|---:|
+| 1 | 24.8 | 28.0 | 31.1 |
+| 4 | 29.4 | 33.6 | 39.3 |
+| 6 | 34.8 | 39.4 | 52.7 |
+
+VERDICT: slower at every T. The grid barrier at 120 groups costs more than the kernel boundary it removes, and the up
+phase loses the 160-group spread; a smaller (safer) grid serialises phase A. Without a runtime co-residency guarantee
+inside graphs the design is also a hang risk in serving. Not integrated; STRATA_NIGHT_HC=q8p does not exist in the
+engine.
+
+INCIDENT (for the coordinator): the deadlocked barrier probe at 12:39-12:46 outlived its `timeout` (the docker
+client was killed, the container kept running) after gpu-run released card 1; agent wt-attn acquired card 1 at
+12:46:04 while the hung kernel still occupied it (killed at ~12:46, card 1 HEALTHY). Measurements on card 1 around
+12:40-12:47 may be disturbed. run_probe.sh now names the container and kills it before releasing the lease.

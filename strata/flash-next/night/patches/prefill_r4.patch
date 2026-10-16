@@ -1,0 +1,499 @@
+--- a/sycl/include/strata/kernels/night_grouped.hpp
++++ b/sycl/include/strata/kernels/night_grouped.hpp
+@@ -23,6 +23,13 @@
+ /// `ent` is device memory (n_ent entries).  Returns false (nothing launched) for an unsupported type / shape.
+ bool night_grouped_f16(int ty, bool gu, const NightGroupedEntry* ent, int n_ent, int mt, const uint16_t* X, float* Y,
+                        int N, int K, size_t up_off, void* stream);
++/// STRATA_NIGHT_PREFILL_DQ32: iq_dequant_expert_f16's values and layout from one work-item per 32-value sub-block;
++/// false (nothing launched) for a type pair it does not cover.  night_dq32_on() = the flag (night_dq32_override(0/1)
++/// forces it for the parity probe; -1 back to the environment).
++bool night_dequant_expert_f16(int gu_type, int d_type, const void* gate, const void* up, const void* down, int64_t n_ff,
++                              int64_t n_embd, uint16_t* dst_gu, uint16_t* dst_d, void* stream);
++bool night_dq32_on();
++void night_dq32_override(int on);
+ /// The entry row cap for mt.
+ constexpr int night_grouped_rows(int mt) { return 8 * mt; }
+ 
+--- a/sycl/src/kernels/cuda/dequant_bf16.dp.cpp
++++ b/sycl/src/kernels/cuda/dequant_bf16.dp.cpp
+@@ -10,6 +10,7 @@
+ #include "strata/kernels/iq_kernels.hpp"
+ 
+ #include <cstdio>
++#include <type_traits>
+ #include <cstdlib>
+ 
+ namespace strata::kernels {
+@@ -216,6 +217,50 @@
+     }
+ }
+ 
++// night lab STRATA_NIGHT_PREFILL_DDQ=1: the FP16 dense dequant with coalesced stores.  Each work-item still decodes one
++// 32-value group (group32, the same values), into local memory; the work-group then writes its groups out 16 bytes
++// per lane, consecutive lanes on consecutive bytes (the scalar 2-byte stores reached 93-151 GB/s).
++bool night_ddq_on() {
++    static const bool v = [] {
++        const char* e = std::getenv("STRATA_NIGHT_PREFILL_DDQ");
++        const bool on = e && e[0] == '1';
++        if (on) std::fprintf(stderr, "strata: STRATA_NIGHT_PREFILL_DDQ=1: the dense FP16 dequant stores through local memory "
++                                     "(coalesced; the same values; night lab)\n");
++        return on;
++    }();
++    return v;
++}
++int g_night_ddq = -1;
++template <int TY> class k_night_ddq;
++template <int TY>
++void night_ddq_launch(const uint8_t* p, int64_t row_bytes, int64_t row0, int64_t rows, int64_t gpr, int64_t ld, H16* out,
++                      sycl::queue& q) {
++    constexpr int WG = 256;
++    const int64_t total = rows * gpr;
++    q.submit([&](sycl::handler& h) {
++        sycl::local_accessor<H16, 1> st(WG * 32, h);
++        h.parallel_for<k_night_ddq<TY>>(sycl::nd_range<1>((size_t) ((total + WG - 1) / WG) * WG, WG), [=](sycl::nd_item<1> it) {
++            const int lid = (int) it.get_local_id(0);
++            const int64_t g0 = (int64_t) it.get_group(0) * WG, g = g0 + lid;
++            H16* mine = st.template get_multi_ptr<sycl::access::decorated::no>().get() + lid * 32;
++            if (g < total) {
++                const int64_t r = g / gpr, gi = g % gpr;
++                group32<TY>(p + (row0 + r) * row_bytes, (int) gi, mine);
++            }
++            sycl::group_barrier(it.get_group());
++            const H16* sb = st.template get_multi_ptr<sycl::access::decorated::no>().get();
++#pragma unroll
++            for (int c = 0; c < 4; ++c) {
++                const int idx = c * WG + lid, gl = idx >> 2, part = idx & 3;   // group gl's 8-value part
++                const int64_t gg = g0 + gl;
++                if (gg >= total) continue;
++                const int64_t r = gg / gpr, gi = gg % gpr;
++                const sycl::vec<uint16_t, 8> v = *reinterpret_cast<const sycl::vec<uint16_t, 8>*>(sb + gl * 32 + part * 8);
++                *reinterpret_cast<sycl::vec<uint16_t, 8>*>(out + r * ld + gi * 32 + part * 8) = v;
++            }
++        });
++    });
++}
+ template <typename T>
+ void launch(int type, const void* blocks, int64_t row0, int64_t rows, int64_t cols, T* out, void* stream,
+             int64_t ld = 0) {
+@@ -230,6 +275,25 @@
+     const unsigned grid = (unsigned) ((total + 255) / 256);
+     const uint8_t* p = (const uint8_t*) blocks;
+     dpct::queue_ptr st = strata::q_of(stream);
++    if constexpr (std::is_same_v<T, H16>) {   // night lab DDQ (16-byte aligned rows only)
++        if ((g_night_ddq >= 0 ? g_night_ddq != 0 : night_ddq_on()) && ld % 8 == 0 &&
++            reinterpret_cast<uintptr_t>(out) % 16 == 0) {
++            switch (type) {
++                case 2: night_ddq_launch<2>(p, row_bytes, row0, rows, gpr, ld, out, *st); return;
++                case 6: night_ddq_launch<6>(p, row_bytes, row0, rows, gpr, ld, out, *st); return;
++                case 7: night_ddq_launch<7>(p, row_bytes, row0, rows, gpr, ld, out, *st); return;
++                case 8: night_ddq_launch<8>(p, row_bytes, row0, rows, gpr, ld, out, *st); return;
++                case 11: night_ddq_launch<11>(p, row_bytes, row0, rows, gpr, ld, out, *st); return;
++                case 12: night_ddq_launch<12>(p, row_bytes, row0, rows, gpr, ld, out, *st); return;
++                case 13: night_ddq_launch<13>(p, row_bytes, row0, rows, gpr, ld, out, *st); return;
++                case 14: night_ddq_launch<14>(p, row_bytes, row0, rows, gpr, ld, out, *st); return;
++                case 20: night_ddq_launch<20>(p, row_bytes, row0, rows, gpr, ld, out, *st); return;
++                case 23: night_ddq_launch<23>(p, row_bytes, row0, rows, gpr, ld, out, *st); return;
++                case 42: night_ddq_launch<42>(p, row_bytes, row0, rows, gpr, ld, out, *st); return;
++                default: break;
++            }
++        }
++    }
+ #define STRATA_DQ(TY)                                                          \
+     {                                                                          \
+         auto exp_props = sycl::ext::oneapi::experimental::properties{          \
+@@ -284,6 +348,7 @@
+ 
+ }  // namespace
+ 
++void night_ddq_override(int on) { g_night_ddq = on; }
+ bool dequant_bf16_supported(int ggml_type) noexcept {
+     int a, b;
+     return geometry(ggml_type, a, b);
+--- a/sycl/src/kernels/cuda/iq_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/iq_kernels.dp.cpp
+@@ -5517,6 +5517,8 @@
+         std::fprintf(stderr, "iq_dequant_expert_f16: types %d/%d, %lld x %lld\n", gt, dt, (long long) n_ff, (long long) n_embd);
+         std::exit(1);
+     }
++    // night lab STRATA_NIGHT_PREFILL_DQ32=1: the same values from one work-item per 32-value sub-block
++    if (night_dq32_on() && night_dequant_expert_f16(gt, dt, gate, up, down, n_ff, n_embd, dst_gu, dst_d, stream)) return;
+     const int64_t per_row = n_embd / 256, gu_wgs = 2 * n_ff * per_row, d_wgs = n_ff * n_embd / 256;
+     {
+         auto exp_props = sycl::ext::oneapi::experimental::properties{
+--- a/sycl/src/kernels/cuda/night_grouped_expert.inc
++++ b/sycl/src/kernels/cuda/night_grouped_expert.inc
+@@ -344,6 +344,162 @@
+ }
+ }  // namespace nightg
+ 
++namespace nightg {
++// one 8-value run il (0..3) of sub-block ib of superblock ibs, loading only what the run needs (the original run
++// decoders' loads, as 2-byte words where they are byte pairs), the IQ2 sign byte computed and the masks as shifts, the
++// grid entry as one 64- or 32-bit load; no register array indexed by il.  Values bit for bit the dq_* ones.
++inline uint32_t ld8(const uint8_t* p) { return *p; }
++template <int TY>
++inline void dq_run_fast(const uint8_t* vx, int64_t ibs, int ib, int il, float* v) {
++    if constexpr (TY == 21) {   // IQ3_S
++        const uint8_t* x = vx + ibs * 110;
++        const float d = h2f(ld16(x)) * (1 + 2 * ((ld8(x + 106 + ib / 2) >> 4 * (ib % 2)) & 0xf));
++        const uint32_t qh = ld8(x + 66 + ib), qw = ld16(x + 2 + 8 * ib + 2 * il), signs = ld8(x + 74 + 4 * ib + il);
++        const uint32_t g1 = iq3s_grid[(qw & 0xff) | ((qh << (8 - 2 * il)) & 256)];
++        const uint32_t g2 = iq3s_grid[(qw >> 8) | ((qh << (7 - 2 * il)) & 256)];
++#pragma unroll
++        for (int j = 0; j < 4; ++j) {
++            v[j] = d * (float) ((g1 >> (8 * j)) & 0xff) * ((signs >> j) & 1 ? -1.f : 1.f);
++            v[4 + j] = d * (float) ((g2 >> (8 * j)) & 0xff) * ((signs >> (j + 4)) & 1 ? -1.f : 1.f);
++        }
++    } else if constexpr (TY == 16) {   // IQ2_XXS
++        const uint8_t* x = vx + ibs * 66;
++        const uint32_t aux32 = ld16(x + 6 + 8 * ib) | (ld16(x + 8 + 8 * ib) << 16);
++        const float d = h2f(ld16(x)) * (0.5f + (aux32 >> 28)) * 0.25f;
++        const uint64_t g = iq2xxs_grid[ld8(x + 2 + 8 * ib + il)];
++        const uint32_t signs = ksign7((aux32 >> 7 * il) & 127);
++#pragma unroll
++        for (int j = 0; j < 8; ++j) v[j] = d * (float) ((g >> (8 * j)) & 0xff) * ((signs >> j) & 1 ? -1.f : 1.f);
++    } else if constexpr (TY == 18) {   // IQ3_XXS
++        const uint8_t* x = vx + ibs * 98;
++        const uint32_t aux32 = ld16(x + 66 + 4 * ib) | (ld16(x + 68 + 4 * ib) << 16);
++        const float d = h2f(ld16(x)) * (0.5f + (aux32 >> 28)) * 0.5f;
++        const uint32_t qw = ld16(x + 2 + 8 * ib + 2 * il);
++        const uint32_t g1 = iq3xxs_grid[qw & 0xff], g2 = iq3xxs_grid[qw >> 8];
++        const uint32_t signs = ksign7((aux32 >> 7 * il) & 127);
++#pragma unroll
++        for (int j = 0; j < 4; ++j) {
++            v[j] = d * (float) ((g1 >> (8 * j)) & 0xff) * ((signs >> j) & 1 ? -1.f : 1.f);
++            v[4 + j] = d * (float) ((g2 >> (8 * j)) & 0xff) * ((signs >> (j + 4)) & 1 ? -1.f : 1.f);
++        }
++    } else if constexpr (TY == 17) {   // IQ2_XS
++        const uint8_t* x = vx + ibs * 74;
++        const uint32_t q = ld16(x + 2 + 8 * ib + 2 * il);
++        const uint64_t g = iq2xs_grid[q & 511];
++        const float d = h2f(ld16(x)) * (0.5f + ((ld8(x + 66 + ib) >> 4 * (il / 2)) & 0xf)) * 0.25f;
++        const uint32_t signs = ksign7(q >> 9);
++#pragma unroll
++        for (int j = 0; j < 8; ++j) v[j] = d * (float) ((g >> (8 * j)) & 0xff) * ((signs >> j) & 1 ? -1.f : 1.f);
++    } else if constexpr (TY == 22) {   // IQ2_S
++        const uint8_t* x = vx + ibs * 82;
++        const uint64_t g = iq2s_grid[ld8(x + 2 + 4 * ib + il) | ((ld8(x + 66 + ib) << (8 - 2 * il)) & 0x300)];
++        const float d = h2f(ld16(x)) * (0.5f + ((ld8(x + 74 + ib) >> 4 * (il / 2)) & 0xf)) * 0.25f;
++        const uint32_t signs = ld8(x + 34 + 4 * ib + il);
++#pragma unroll
++        for (int j = 0; j < 8; ++j) v[j] = d * (float) ((g >> (8 * j)) & 0xff) * ((signs >> j) & 1 ? -1.f : 1.f);
++    } else if constexpr (TY == 42) {   // Q2_0: sub-block ib = half ib % 2 of block ib / 2; run il = 8 values
++        const uint8_t* x = vx + (ibs * 4 + ib / 2) * 18;
++        const float d = h2f(ld16(x));
++        const uint32_t w = ld16(x + 2 + 8 * (ib % 2) + 2 * il);
++#pragma unroll
++        for (int j = 0; j < 8; ++j) v[j] = d * (float) ((int) ((w >> (2 * j)) & 3) - 1);
++    } else if constexpr (TY == 20) {   // IQ4_NL: run il = values 8 il .. of the block: il < 2 low nibbles of qs[8 (il & 1) ..]
++        const uint8_t* x = vx + (ibs * 8 + ib) * 18;
++        const float d = h2f(ld16(x));
++        const int sh = il < 2 ? 0 : 4;
++        const uint8_t* q4 = x + 2 + 8 * (il & 1);
++#pragma unroll
++        for (int i = 0; i < 4; ++i) {
++            const uint32_t q = ld16(q4 + 2 * i);
++            v[2 * i] = d * kvalues_iq4nl[(q >> sh) & 0xf];
++            v[2 * i + 1] = d * kvalues_iq4nl[(q >> (8 + sh)) & 0xf];
++        }
++    }
++}
++
++}  // namespace nightg
++
++// ---- night lab STRATA_NIGHT_PREFILL_DQ32=1: iq_dequant_expert_f16 with one work-item per 32-value sub-block (the
++// fields shared by its four runs loaded once, signs computed: load_raw + decode above), the same FP16 values and the
++// same layout (gate/up interleaved rows 2r / 2r + 1, then the down matrix flat).  Consecutive work-items take
++// consecutive sub-blocks of a row: their 64-byte writes are contiguous.
++namespace nightg {
++template <int GT, int DT> class k_night_dq32;
++template <int GT, int DT>
++void dq32_launch(sycl::queue& q, const uint8_t* gate, const uint8_t* up, const uint8_t* down, int64_t n_ff, int64_t n_embd,
++                 half* ygu, half* yd) {
++    // one work-item per 8-value run; run u writes values [8u, 8u + 8) of the gate/up image (then of the down matrix):
++    // consecutive lanes write consecutive 16 bytes, as the original kernel.  32-bit index math on this model's shape
++    // (n_embd 2560, n_ff 640: constants, so the divisions are multiply-shifts).
++    constexpr uint32_t NE = 2560, FF = 640, RUNS_ROW = NE / 8;   // 320 runs per gate/up virtual row
++    constexpr uint32_t gu_units = 2 * FF * RUNS_ROW, d_units = FF * NE / 8, units = gu_units + d_units;
++    (void) n_ff; (void) n_embd;
++    constexpr size_t WG = 256;
++    q.parallel_for<k_night_dq32<GT, DT>>(sycl::nd_range<1>((units + WG - 1) / WG * WG, WG), [=](sycl::nd_item<1> it) {
++        const uint32_t u = (uint32_t) it.get_global_id(0);
++        if (u >= units) return;
++        // IQ2_XXS / IQ3_XXS: the run decoders above (1.3-1.9x the original kernel's speed on those formats); every other
++        // format: the original run decoder (dq_run: the same as iq_dequant_expert_f16), only the launch shape differs
++        const int il = (int) (u & 3);
++        if (u < gu_units) {
++            const uint32_t vr = u / RUNS_ROW, rr = u % RUNS_ROW;   // run rr of virtual row vr
++            const uint8_t* base = (vr & 1) ? up : gate;
++            const uint32_t ibs = (vr >> 1) * (NE / 256) + rr / 32, tid = rr % 32;
++            half* yy = ygu + (size_t) vr * NE + (rr / 32) * 256;
++            if constexpr (GT == 16 || GT == 18) {
++                float v[8];
++                dq_run_fast<GT>(base, ibs, (int) (tid >> 2), il, v);
++                sycl::vec<half, 8> hv;
++#pragma unroll
++                for (int j = 0; j < 8; ++j) hv[j] = half(v[j]);
++                *reinterpret_cast<sycl::vec<half, 8>*>(yy + 8 * tid) = hv;
++            } else {
++                dq_run<GT>(base, ibs, yy, (int) tid);
++            }
++        } else {
++            const uint32_t r = u - gu_units, flat = r * 8;
++            dq_run<DT>(down, flat >> 8, yd + (flat & ~255u), (int) ((flat & 255) >> 3));
++        }
++    });
++}
++template <int GT>
++bool dq32_by_dt(sycl::queue& q, int dt, const uint8_t* g, const uint8_t* u, const uint8_t* d, int64_t n_ff, int64_t n_embd,
++                half* ygu, half* yd) {
++    if (dt == 42) { dq32_launch<GT, 42>(q, g, u, d, n_ff, n_embd, ygu, yd); return true; }
++    if (dt == 20) { dq32_launch<GT, 20>(q, g, u, d, n_ff, n_embd, ygu, yd); return true; }
++    return false;
++}
++}  // namespace nightg
++
++static int g_night_dq32 = -1;   // -1: the environment
++void night_dq32_override(int on) { g_night_dq32 = on; }
++bool night_dq32_on() {
++    static const bool env = [] {
++        const char* e = std::getenv("STRATA_NIGHT_PREFILL_DQ32");
++        const bool on = e && e[0] == '1';
++        if (on) std::fprintf(stderr, "strata: STRATA_NIGHT_PREFILL_DQ32=1: the prompt experts' FP16 dequant takes one work-item "
++                                     "per 32-value sub-block (the same values; night lab)\n");
++        return on;
++    }();
++    return g_night_dq32 >= 0 ? g_night_dq32 != 0 : env;
++}
++bool night_dequant_expert_f16(int gt, int dt, const void* gate, const void* up, const void* down, int64_t n_ff,
++                              int64_t n_embd, uint16_t* dst_gu, uint16_t* dst_d, void* stream) {
++    if (n_embd != 2560 || n_ff != 640) return false;   // the kernel's constants (this model's expert shape)
++    sycl::queue& q = *strata::q_of(stream);
++    const auto *g = (const uint8_t*) gate, *u = (const uint8_t*) up, *d = (const uint8_t*) down;
++    auto* ygu = reinterpret_cast<sycl::half*>(dst_gu);
++    auto* yd = reinterpret_cast<sycl::half*>(dst_d);
++    switch (gt) {
++        case 16: return nightg::dq32_by_dt<16>(q, dt, g, u, d, n_ff, n_embd, ygu, yd);
++        case 17: return nightg::dq32_by_dt<17>(q, dt, g, u, d, n_ff, n_embd, ygu, yd);
++        case 18: return nightg::dq32_by_dt<18>(q, dt, g, u, d, n_ff, n_embd, ygu, yd);
++        case 21: return nightg::dq32_by_dt<21>(q, dt, g, u, d, n_ff, n_embd, ygu, yd);
++        case 22: return nightg::dq32_by_dt<22>(q, dt, g, u, d, n_ff, n_embd, ygu, yd);
++        default: return false;
++    }
++}
++
+ bool night_grouped_f16(int ty, bool gu, const NightGroupedEntry* ent, int n_ent, int mt, const uint16_t* X, float* Y,
+                        int N, int K, size_t up_off, void* stream) {
+     if (n_ent <= 0) return true;
+--- a/sycl/src/kernels/night_grouped_bench.cpp
++++ b/sycl/src/kernels/night_grouped_bench.cpp
+@@ -4,6 +4,8 @@
+ //   night_grouped_bench mix gt dt T n_exp median sigma max_rows   (lognormal mix, experts <= max_rows only, GU + down)
+ #include "strata/kernels/iq_kernels.hpp"
+ #include "strata/kernels/night_grouped.hpp"
++#include "strata/kernels/iq_dequant_expert.hpp"
++#include "strata/kernels/dequant_bf16.hpp"
+ #include "strata/prefill/gemm.hpp"
+ #include "strata/prefill/kernels.hpp"
+ #include "strata/sycl_queue.hpp"
+@@ -167,6 +169,77 @@
+     // in place), then batches of small experts (<= T rows) from the last batch down: grouped gate/up -> GUf, one
+     // swiglu -> Hh, grouped down -> rows in place.  Compared with every expert on the reference path (no alias).
+     //   night_grouped_bench pipe gt dt T n_exp median sigma G
++    // dq: STRATA_NIGHT_PREFILL_DQ32's dequant against iq_dequant_expert_f16 (bitwise), GPU time per expert
++    //   night_grouped_bench dq gt dt n_experts
++    // ddq: STRATA_NIGHT_PREFILL_DDQ's dense FP16 dequant vs the original (bitwise) and GPU time
++    //   night_grouped_bench ddq type rows cols
++    if (mode == "ddq") {
++        const int ty = std::atoi(argv[2]);
++        const int64_t R = std::atoll(argv[3]), C = std::atoll(argv[4]);
++        const size_t rb = sk::iq_row_bytes(ty, C) ? sk::iq_row_bytes(ty, C) : 0;
++        int be = ty == 42 ? 64 : (ty == 2 || ty == 6 || ty == 7 || ty == 8 || ty == 20) ? 32 : 256;
++        int bb = ty == 2 ? 18 : ty == 6 ? 22 : ty == 7 ? 24 : ty == 8 ? 34 : ty == 20 ? 18 : ty == 11 ? 110 : ty == 12 ? 144 :
++                 ty == 13 ? 176 : ty == 14 ? 210 : ty == 23 ? 136 : 18;
++        (void) rb;
++        const size_t bytes = (size_t) R * (C / be) * bb;
++        std::vector<uint8_t> hb(bytes);
++        for (auto& x : hb) x = (uint8_t) rng();
++        for (size_t o = 0; o + 1 < bytes; o += bb) { hb[o] = 0x00; hb[o + 1] = 0x2C; }
++        uint8_t* Wd = sycl::malloc_device<uint8_t>(bytes, *q);
++        q->memcpy(Wd, hb.data(), bytes).wait();
++        uint16_t* a = sycl::malloc_device<uint16_t>((size_t) R * C, *q);
++        uint16_t* b = sycl::malloc_device<uint16_t>((size_t) R * C, *q);
++        sk::night_ddq_override(0); sk::dequant_f16(ty, Wd, 0, R, C, a, q);
++        sk::night_ddq_override(1); sk::dequant_f16(ty, Wd, 0, R, C, b, q);
++        q->wait();
++        std::vector<uint16_t> ha((size_t) R * C), hb2((size_t) R * C);
++        q->memcpy(ha.data(), a, ha.size() * 2); q->memcpy(hb2.data(), b, hb2.size() * 2).wait();
++        const bool same = std::memcmp(ha.data(), hb2.data(), ha.size() * 2) == 0;
++        double h0, g0, h1, g1;
++        cx.time([&] { sk::night_ddq_override(0); sk::dequant_f16(ty, Wd, 0, R, C, a, q); }, 5, h0, g0);
++        cx.time([&] { sk::night_ddq_override(1); sk::dequant_f16(ty, Wd, 0, R, C, b, q); }, 5, h1, g1);
++        sk::night_ddq_override(-1);
++        const double mb = (bytes + (double) R * C * 2) / 1e6;
++        std::printf("ddq type %2d %lld x %lld: %s | original %.3f ms (%.0f GB/s), coalesced %.3f ms (%.0f GB/s), %.2fx\n", ty,
++                    (long long) R, (long long) C, same ? "bitwise equal" : "DIFFER", g0, mb / g0, g1, mb / g1, g0 / g1);
++        return 0;
++    }
++    if (mode == "dq") {
++        const int gt = std::atoi(argv[2]), dt = std::atoi(argv[3]), n = argc > 4 ? std::atoi(argv[4]) : 16;
++        const size_t gmat = sk::iq_row_bytes(gt, NE) * FF, dmat = sk::iq_row_bytes(dt, FF) * NE;
++        const size_t up_off = gmat, down_off = 2 * gmat, blob = (down_off + dmat + 255) & ~(size_t) 255;
++        uint8_t* W = sycl::malloc_device<uint8_t>(blob * n, *q);
++        for (int e = 0; e < n; ++e) {
++            auto g = rand_mat(rng, gt, FF, NE), u = rand_mat(rng, gt, FF, NE), d = rand_mat(rng, dt, NE, FF);
++            q->memcpy(W + e * blob, g.data(), gmat); q->memcpy(W + e * blob + up_off, u.data(), gmat);
++            q->memcpy(W + e * blob + down_off, d.data(), dmat); q->wait();
++        }
++        uint16_t *ga = sycl::malloc_device<uint16_t>((size_t) 1280 * NE, *q), *da = sycl::malloc_device<uint16_t>((size_t) NE * 640, *q);
++        uint16_t *gb = sycl::malloc_device<uint16_t>((size_t) 1280 * NE, *q), *db = sycl::malloc_device<uint16_t>((size_t) NE * 640, *q);
++        size_t bad = 0;
++        std::vector<uint16_t> h1((size_t) 1280 * NE), h2((size_t) 1280 * NE), h3((size_t) NE * 640), h4((size_t) NE * 640);
++        for (int e = 0; e < n; ++e) {
++            const uint8_t* bd = W + e * blob;
++            sk::night_dq32_override(0); sk::iq_dequant_expert_f16(gt, dt, bd, bd + up_off, bd + down_off, FF, NE, ga, da, q);
++            sk::night_dq32_override(1); sk::iq_dequant_expert_f16(gt, dt, bd, bd + up_off, bd + down_off, FF, NE, gb, db, q);
++            q->memcpy(h1.data(), ga, h1.size() * 2); q->memcpy(h2.data(), gb, h2.size() * 2);
++            q->memcpy(h3.data(), da, h3.size() * 2); q->memcpy(h4.data(), db, h4.size() * 2); q->wait();
++            bad += std::memcmp(h1.data(), h2.data(), h1.size() * 2) != 0;
++            bad += std::memcmp(h3.data(), h4.data(), h3.size() * 2) != 0;
++        }
++        double hr, gr, hn, gn;
++        auto loop = [&](int on) {
++            sk::night_dq32_override(on);
++            for (int e = 0; e < 64; ++e) { const uint8_t* bd = W + (e % n) * blob; sk::iq_dequant_expert_f16(gt, dt, bd, bd + up_off, bd + down_off, FF, NE, ga, da, q); }
++        };
++        cx.time([&] { loop(0); }, 3, hr, gr);
++        cx.time([&] { loop(1); }, 3, hn, gn);
++        sk::night_dq32_override(-1);
++        std::printf("dq gt %2d dt %2d: %d experts, %zu of %d matrices differ (want 0) | per expert: iq_dequant_expert_f16 %.2f us, "
++                    "dq32 %.2f us (%.2fx), host %.2f / %.2f us\n", gt, dt, n, bad, 2 * n, gr * 1000 / 64, gn * 1000 / 64,
++                    gr / gn, hr * 1000 / 64, hn * 1000 / 64);
++        return 0;
++    }
+     if (mode == "pipe") {
+         const int gt = std::atoi(argv[2]), dt = std::atoi(argv[3]);
+         const int64_t T = std::atoll(argv[4]);
+--- a/sycl/src/prefill/gemm.dp.cpp
++++ b/sycl/src/prefill/gemm.dp.cpp
+@@ -1008,6 +1008,23 @@
+         }
+         return;
+     }
++    if (dqc_on_) {   // night lab DQCACHE: the second half of a layer finds the first half's dequantized weight
++        for (int i = 0; i < dqc_n_; ++i)
++            if (dqc_ent_[i].w == W_blocks && dqc_ent_[i].N == N && dqc_ent_[i].K == K) {
++                ++dqc_hits_;
++                f16(X, dqc_ + dqc_ent_[i].off, Y, T, N, K, ldy, beta);
++                return;
++            }
++        const size_t need = (size_t) (N * K + 127) & ~(size_t) 127;
++        if (dqc_n_ < kDqcMax && dqc_used_ + need <= dqc_elems_) {
++            uint16_t* dst = dqc_ + dqc_used_;
++            dqc_ent_[dqc_n_++] = {W_blocks, N, K, dqc_used_};
++            dqc_used_ += need;
++            strata::kernels::dequant_f16(ggml_type, W_blocks, 0, N, K, dst, stream_);
++            f16(X, dst, Y, T, N, K, ldy, beta);
++            return;
++        }
++    }
+     strata::kernels::dequant_f16(ggml_type, W_blocks, 0, N, K, scratch_, stream_);
+     f16(X, scratch_, Y, T, N, K, ldy, beta);
+ }
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -337,6 +337,12 @@
+                                     "each chunk runs as two halves interleaved per layer (the two cards overlap)");
+     return v;
+ }
++// STRATA_NIGHT_PREFILL_DQCACHE=1 (with HALVES): each layer's dense weights are dequantized once for both halves
++inline bool night_dqcache() {
++    static const bool v = night_env("STRATA_NIGHT_PREFILL_DQCACHE",
++                                    "under HALVES each layer's dense weights are dequantized once for both halves (bitwise)");
++    return v;
++}
+ inline bool night_grouped() {
+     static const bool v = night_env("STRATA_NIGHT_PREFILL_GROUPED",
+                                     "card 1's small experts run through one grouped decode + XMX launch per projection");
+@@ -662,6 +668,7 @@
+     float* hv_w_host = nullptr;
+     float *hv_w = nullptr, *hv_shared = nullptr, *hv_sg = nullptr;
+     sycl::queue* hv_q0 = nullptr;
++    uint16_t* hv_dqc = nullptr;   // DQCACHE buffer (card 0)
+     uint32_t* hv_err0 = nullptr;   // card 0's doorbell-timeout word (card 0's context; early_err is card 1's)
+     // per-half host staging of card 1's tables and of both cards' grouped-entry tables: a half's copies may still be
+     // pending when the other half refills its own (no host wait on card 1 in the layer loop)
+@@ -761,7 +768,7 @@
+     ~PeerPrefill() {
+         if (ng0_ent && ng0_q) sycl::free(ng0_ent, *ng0_q);   // night lab GROUPED: the primary's table, its own queue
+         if (hv_q0) {   // night lab HALVES: the primary's buffers
+-            for (void* hp : {(void*) hv_w_host, (void*) hv_w, (void*) hv_shared, (void*) hv_sg, (void*) hv_err0}) if (hp) sycl::free(hp, *hv_q0);
++            for (void* hp : {(void*) hv_w_host, (void*) hv_w, (void*) hv_shared, (void*) hv_sg, (void*) hv_err0, (void*) hv_dqc}) if (hp) sycl::free(hp, *hv_q0);
+         }
+         if (dev < 0) return;
+         int prev = 0;
+@@ -2051,6 +2058,12 @@
+             pp->hv_shared = sycl::malloc_device<float>(TM * N, *pp->hv_q0);
+             pp->hv_sg = sycl::malloc_device<float>(TM, *pp->hv_q0);
+             pp->hv_err0 = sycl::malloc_host<uint32_t>(1, *pp->hv_q0);
++            if (night_dqcache()) {   // one layer's dense weights in FP16 (GDN 62.5M, QSA 54.7M values)
++                const size_t elems = (size_t) 66 << 20;
++                pp->hv_dqc = sycl::malloc_device<uint16_t>(elems, *pp->hv_q0);
++                if (pp->hv_dqc) m.gemm.dqc_attach(pp->hv_dqc, elems);
++                else std::fprintf(stderr, "strata prefill: STRATA_NIGHT_PREFILL_DQCACHE: 132 MB do not fit on card 0 - off\n");
++            }
+             ok = pp->hv_w_host && pp->hv_w && pp->hv_shared && pp->hv_sg && pp->hv_err0;
+             if (ok) {
+                 *pp->hv_err0 = 0;
+@@ -3132,6 +3145,10 @@
+             const int32_t* steps_host_p = m.steps_host.data() + hv_t0 * strata::kernels::kStepCount;
+             const int64_t hv_ldx = hc_pad() && T >= std::max<int64_t>(pf_switch_min_t(), 64) && !gr_unfused() && !m.xn16_lo ? D + XN_PAD : D;
+             HalfView hview(m, sub >= 0 ? hv_t0 : 0, hv_ldx, sub >= 0);
++            // DQCACHE: the first half's stage 1 fills the layer's entries, the second half's reuses them
++            if (sub == 0 && stage == 1) m.gemm.dqc_reset();
++            m.gemm.dqc_enable(stage == 1);
++            struct DqcOff { Gemm& g; ~DqcOff() { g.dqc_enable(false); } } dqc_off{m.gemm};
+             core::progress_beat();   // the serve watchdog: a prompt chunk of 8192 tokens is still moving
+             if (l > LB) pf_step("reading the prompt (batched, step sync): the experts and the rest of layer", l - 1);
+             core::progress_at("reading the prompt (batched): layer", l, p0);   // #251: a stall names layer and chunk
+--- a/include/strata/kernels/dequant_bf16.hpp
++++ b/include/strata/kernels/dequant_bf16.hpp
+@@ -18,6 +18,8 @@
+                   void* stream);
+ 
+ /// The same into FP16 bits (the prompt path's quantized-weight GEMMs: Q2_0 values are exact in FP16).
++/// Night lab: force STRATA_NIGHT_PREFILL_DDQ (the coalesced-store FP16 dense dequant) on (1) / off (0) / env (-1).
++void night_ddq_override(int on);
+ void dequant_f16(int ggml_type, const void* blocks, int64_t row0, int64_t rows, int64_t cols, uint16_t* out,
+                  void* stream);
+ 
+--- a/include/strata/prefill/gemm.hpp
++++ b/include/strata/prefill/gemm.hpp
+@@ -55,11 +55,27 @@
+     /// Caller-owned buffers only: the scratch and workspace moved (the prompt path laid its buffers out again).
+     void rebind(uint16_t* scratch, int64_t scratch_elems, void* workspace, size_t ws_bytes);
+ 
++    /// Night lab STRATA_NIGHT_PREFILL_DQCACHE (HALVES): native() keeps each dequantized weight in `buf` (elems FP16
++    /// values) while enabled, and a later native() of the same weight (same blocks, N, K) skips the dequant: the
++    /// GEMM reads the same FP16 values, so the products are bitwise the same.  reset() forgets the entries.
++    void dqc_attach(uint16_t* buf, size_t elems) { dqc_ = buf; dqc_elems_ = elems; dqc_reset(); }
++    void dqc_reset() { dqc_used_ = 0; dqc_n_ = 0; }
++    void dqc_enable(bool on) { dqc_on_ = on && dqc_ != nullptr; }
++    int64_t dqc_hits() const { return dqc_hits_; }
++
+     uint16_t* scratch() const { return scratch_; }
+     int64_t scratch_elems() const { return scratch_elems_; }
+     void* stream() const { return stream_; }
+ 
+ private:
++    uint16_t* dqc_ = nullptr;
++    size_t dqc_elems_ = 0, dqc_used_ = 0;
++    bool dqc_on_ = false;
++    int64_t dqc_hits_ = 0;
++    static constexpr int kDqcMax = 16;
++    struct DqcEntry { const void* w; int64_t N, K; size_t off; };
++    DqcEntry dqc_ent_[kDqcMax] = {};
++    int dqc_n_ = 0;
+     void* handle_ = nullptr;
+     void* stream_ = nullptr;
+     uint16_t* scratch_ = nullptr;

@@ -406,3 +406,65 @@ Requested runs (same 8377-token context, DUMP_R each):
 2. Control for (b): reference twice (run-to-run determinism) and F16SUM=1 vs off (a known rounding-only change ~10x
    larger than GROUPED's per-expert one): if F16SUM's dump divergence is similar, GROUPED's is chaotic sensitivity.
 3. If 1 shows BAD on one card only: GROUPED_CARDS=1 / 2 to confirm, and GROUPED_CARDS=<good card> is the safe sub-flag.
+
+## 11. Round 4 (12:20-): dequant costs and the 4K path (engine strata-prefill-d1, main dc023c67 + prefill_r4.patch)
+
+Worktree re-synced to main HEAD dc023c67 (git archive); incremental patch vs main:
+/mnt/vm_8tb/b70/results/night-20261016/agents/prefill_r4.patch. All three flags default off, all bitwise.
+
+### 11a. STRATA_NIGHT_PREFILL_DQ32=1: the large experts' FP16 dequant (iq_dequant_expert_f16)
+
+CONFIG -> card 1, night_grouped_bench dq: 16 random experts per format pair, 64 back-to-back dequants, profiling
+events; bitwise compare of both FP16 matrices of every expert vs the original kernel.
+Iterations: v1 one work-item per 32 values (scattered 64-byte stores) 26-35 us; v2/v3 one per 8-value run reading
+a register array by a runtime index (private memory) 43-63 us; v4 per-run decoders that load only the run's fields
+(2-byte words, computed IQ2 signs, shift masks, one grid load); v5 = v4 for IQ2_XXS / IQ3_XXS, the original run
+decoders for the rest, in the same launch; v6 IQ4_NL table in local memory: slower (24.5 vs 19.6 us), reverted.
+RESULT (v5, us per expert, gate/up + down, original -> DQ32, all 0 of 32 matrices differ):
+
+| gate/up / down | Q2_0 down | IQ4_NL down |
+| --- | --- | --- |
+| IQ3_S | 10.95 -> 10.22 | 19.64 -> 19.59 |
+| IQ2_XXS | 27.71 -> 14.73 (1.88x) | 36.34 -> 25.62 (1.42x) |
+| IQ2_XS | 9.89 -> 9.18 | 18.53 -> 18.71 |
+| IQ3_XXS | 19.58 -> 14.94 (1.31x) | 28.17 -> 24.54 (1.15x) |
+| IQ2_S | 10.22 -> 9.17 | 19.10 -> 18.91 |
+
+VERDICT -> bitwise, never slower; IQ2_XXS / IQ3_XXS layers gain 4-13 us per large expert (~15 layers). With GROUPED
+only experts over 64 rows (half of them at 4K) still take this path: ~20 ms per 12288 chunk on card 1 (hidden under
+HALVES) and ~8 ms on card 0. Small end-to-end gain; safe to stack. IQ4_NL down (+9 us per expert over Q2_0) stays the
+cost: its table gathers resisted three rewrites.
+
+### 11b. STRATA_NIGHT_PREFILL_DDQ=1: the dense FP16 dequant (Gemm::native's dequant_f16, K-quant / IQ4_XS types)
+
+The original writes one 2-byte value per store from one work-item per 32 values; DDQ decodes the same group32 into
+local memory and writes 16 bytes per lane, consecutive lanes on consecutive bytes.
+RESULT (card 1, random blocks, GPU ms, bitwise equal in all):
+
+| type, shape | original | DDQ |
+| --- | --- | --- |
+| Q4_K 10240 x 2560 (qkv) | 0.375 (179 GB/s) | 0.223 (302 GB/s), 1.69x |
+| Q5_K 6144 x 2560 (z) | 0.229 (184 GB/s) | 0.132 (320 GB/s), 1.73x |
+| Q6_K 2560 x 6144 (out) | 0.410 (108 GB/s) | 0.314 (141 GB/s), 1.31x |
+| IQ4_XS 12288 x 2560 (attn_q) | 0.476 (167 GB/s) | 0.293 (271 GB/s), 1.62x |
+| Q6_K 640 x 2560 (shared) | 0.044 | 0.035, 1.28x |
+
+VERDICT -> ~40% off the dense dequant (~64 ms per chunk -> ~40 ms; doubled under HALVES): ~25 ms per 4K prompt
+without HALVES, ~50 ms with.
+
+### 11c. STRATA_NIGHT_PREFILL_DQCACHE=1 (with HALVES): one dense dequant per layer for both halves
+
+HALVES runs every dense projection twice per layer (once per half), each one dequantizing its weight again. DQCACHE
+gives Gemm::native a 132 MB arena on card 0: the first half's stage 1 dequantizes into it (one entry per weight, at
+most 16), the second half's stage 1 finds the entry (same blocks, N, K) and runs its GEMM on the same FP16 values
+(bitwise); reset at each layer's first half. Expected: the second dequant pass gone, ~40-64 ms per 4K prompt
+(~2-3%), ~1% at 32K. Needs the two-card run.
+
+### 11d. Not done: HC traffic (analysis item 7)
+
+A fused HC up-projection + mix (gr_upmix exists only for HIP gfx11) would save ~2.5 ms per half-layer at 12288
+(~0.6 s per 32K, ~70 ms per 4K): a BF16 XMX GEMM with the gr_mix_r epilogue. Not started in this round.
+
+Flags to try on top of the current best (GROUPED + HALVES + EARLY + F16SUM + XMX attention): STRATA_NIGHT_PREFILL_DDQ=1,
+STRATA_NIGHT_PREFILL_DQ32=1, STRATA_NIGHT_PREFILL_DQCACHE=1 (all bitwise vs without them: STRATA_PREFILL_DUMP_R must be
+identical).

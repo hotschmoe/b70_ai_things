@@ -1,0 +1,819 @@
+diff --git a/include/strata/prefill/kernels.hpp b/include/strata/prefill/kernels.hpp
+index f12f34b9..4259171a 100644
+--- a/include/strata/prefill/kernels.hpp
++++ b/include/strata/prefill/kernels.hpp
+@@ -69,6 +69,12 @@ void gdn_recurrence(float* state, const float* h, const float* gate, const float
+ void gdn_recurrence_variant(int variant, float* state, const float* h, const float* gate, const float* beta,
+                             const float* z, const float* gamma, float eps, float* y, uint16_t* y16, int64_t T,
+                             void* stream, int64_t ld16 = 0);
++/// Night-lab STRATA_NIGHT_GDN_CHUNK=1 (latched): the recurrence in 64-token chunkwise (WY) form, FP32 (gdn_chunk.dp.cpp);
++/// the same outputs as gdn_recurrence at FP32 rounding level. False (nothing launched) for T < 64.
++bool gdn_night_chunk();
++bool gdn_recurrence_chunked(float* state, const float* h, const float* gate, const float* beta, const float* z,
++                            const float* gamma, float eps, float* y, uint16_t* y16, int64_t T, void* stream,
++                            int64_t ld16 = 0);
+ 
+ // ---- MoE
+ /// softmax over 512, top-10 (ties to the lower id), weights renormalised over the ten (the native router).
+diff --git a/sycl/CMakeLists.txt b/sycl/CMakeLists.txt
+index b1435b9b..57b9b605 100644
+--- a/sycl/CMakeLists.txt
++++ b/sycl/CMakeLists.txt
+@@ -248,7 +248,8 @@ target_link_libraries(strata_engine PUBLIC strata_core strata_kernels strata_ker
+ strata_resolve(_prefill src/prefill/gemm.cu src/prefill/kernels.cu src/prefill/prefill.cpp)
+ add_library(strata_prefill STATIC ${_prefill}
+             ${CMAKE_CURRENT_SOURCE_DIR}/src/prefill/moe_fused_stub.cpp   # upstream's fused int8 kernels: not built here
+-            ${CMAKE_CURRENT_SOURCE_DIR}/src/prefill/xmx_moe.dp.cpp)      # A770 port: grouped XMX expert GEMM
++            ${CMAKE_CURRENT_SOURCE_DIR}/src/prefill/xmx_moe.dp.cpp      # A770 port: grouped XMX expert GEMM
++            ${CMAKE_CURRENT_SOURCE_DIR}/src/prefill/gdn_chunk.dp.cpp)    # night-lab: chunkwise GDN recurrence
+ target_compile_options(strata_prefill PUBLIC -qmkl=sequential)
+ target_link_options(strata_prefill PUBLIC -qmkl=sequential)
+ target_link_libraries(strata_prefill PUBLIC strata_engine)
+@@ -360,6 +361,10 @@ if(STRATA_SYCL_PARITY)
+   strata_resolve(_src src/kernels/qsa_prompt_attn_parity.cpp)
+   add_executable(qsa_prompt_attn_parity ${_src})
+   target_link_libraries(qsa_prompt_attn_parity PRIVATE strata_kernels)
++  # night-lab STRATA_NIGHT_GDN_CHUNK: prompt GDN recurrence, token scan vs chunkwise (accuracy + timing)
++  strata_resolve(_src src/kernels/gdn_chunk_bench.cpp)
++  add_executable(gdn_chunk_bench ${_src})
++  target_link_libraries(gdn_chunk_bench PRIVATE strata_kernels strata_prefill)
+   # night-lab STRATA_NIGHT_PATTN_XMX: prompt QSA attention, current kernels vs union-tile XMX (accuracy + timing)
+   strata_resolve(_src src/kernels/qsa_pattn_bench.cpp)
+   add_executable(qsa_pattn_bench ${_src})
+diff --git a/sycl/src/kernels/cuda/qsa_prompt_attn_union.dp.cpp b/sycl/src/kernels/cuda/qsa_prompt_attn_union.dp.cpp
+index 57c9d0e0..a82a8938 100644
+--- a/sycl/src/kernels/cuda/qsa_prompt_attn_union.dp.cpp
++++ b/sycl/src/kernels/cuda/qsa_prompt_attn_union.dp.cpp
+@@ -18,6 +18,7 @@
+ namespace strata::kernels {
+ class pattn_union_build_night;    // kernel names: namespace scope
+ class pattn_union_attn_night;
++class pattn_union_attn_t_night;
+ namespace {
+ namespace jm = sycl::ext::oneapi::experimental::matrix;
+ namespace jmi = sycl::ext::intel::experimental::matrix;
+@@ -27,7 +28,16 @@ constexpr int CH = 32;                                       // union cells per
+ constexpr int QS = HD, SS = CH + 1, PS = CH + 8;             // local strides (halves / floats / halves)
+ constexpr int RANGE = 16384;                                 // union build: cells per local bitmap pass
+ constexpr int BUILD_THREADS = 256;
+-constexpr int64_t TILE_BATCH = 256;                          // tiles per (build, attention) launch pair
++// tiles per (build, attention) launch pair: STRATA_NIGHT_PATTN_TILES (64..1024, default 256; 512 is ~5% faster in mode 2
++// for ~75 MB more scratch)
++int64_t tile_batch() {
++    static const int64_t tb = [] {
++        const char* v = std::getenv("STRATA_NIGHT_PATTN_TILES");
++        int64_t x = v ? std::atoll(v) : 256;
++        return x < 64 ? (int64_t) 64 : (x > 1024 ? (int64_t) 1024 : x);
++    }();
++    return tb;
++}
+ static_assert(HD == strata::core::kCompiledGeometry.head_dim &&
+               G == strata::core::kCompiledGeometry.n_head / strata::core::kCompiledGeometry.n_head_kv,
+               "qsa_prompt_attn_union is compiled for core/geometry.hpp");
+@@ -340,6 +350,262 @@ void union_attn(const float* __restrict__ q, QsaAttnPools p, const int32_t* __re
+         });
+ }
+ 
++// ---- mode 2 (STRATA_NIGHT_PATTN_XMX=2): S^T = K Q^T. The scores come out with one ROW PER LANE (the accumulator's
++// columns are the tile's rows), so each lane holds its row's cells: the softmax needs no local copy of S and no
++// shuffles; K is staged row-major (coalesced, no transposition) and Q^T is a per-tile constant B operand. P goes
++// through local memory once (rows x cells, the A operand of O = P V); V keeps its packed B layout. 64-cell chunks.
++// Sub-group s = (row group rg = s / 2 of 16 rows, half hf = s % 2): QK over cells [32 hf, +32), PV over dims [128 hf,
++// +128); the pair exchanges the row maxima and sums through local memory.
++constexpr int CH2 = 64, RG = ROWS / 16, PS2 = CH2 + 8;
++constexpr size_t QT_H = (size_t) HD * ROWS, K2_H = (size_t) CH2 * HD, V2_H = (size_t) CH2 * HD;
++constexpr size_t SLOT2 = QT_H + K2_H + V2_H;   // halves per work-group staging slot
++struct Lay2 {
++    static constexpr size_t p = (size_t) RG * 16 * PS2 * 2;
++    static constexpr size_t x = (size_t) RG * 2 * 16 * 4;
++    static constexpr size_t al = (size_t) ROWS * 4;
++    static constexpr size_t rows = (size_t) 2 * CH2 * 8;
++    static constexpr size_t mask = (size_t) 2 * CH2 * 4;
++    static constexpr size_t bytes = p + 2 * x + 2 * al + rows + mask + 16 * 8;
++};
++
++void union_attn_t(const float* __restrict__ q, QsaAttnPools p, const int32_t* __restrict__ ulist,
++                  const int32_t* __restrict__ ucount, int64_t cap, int64_t q0, int64_t n_q, int n_kv_heads,
++                  int page_size, float scale_log2, float* __restrict__ attn, uint8_t* smem, sycl::half* gstage) {
++    auto it = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
++    auto sg = it.get_sub_group();
++    uint8_t* at = smem;
++    auto take = [&](size_t b) { uint8_t* r = at; at += (b + 15) & ~(size_t) 15; return r; };
++    sycl::half* sP = (sycl::half*) take(Lay2::p);
++    float* xmax = (float*) take(Lay2::x);
++    float* xsum = (float*) take(Lay2::x);
++    float* xal = (float*) take(Lay2::al);
++    float* xl = (float*) take(Lay2::al);
++    long long* srow2 = (long long*) take(Lay2::rows);
++    uint32_t* smk2 = (uint32_t*) take(Lay2::mask);
++
++    const int tile = (int) it.get_group(2), kvh = (int) it.get_group(1);
++    const int t = (int) it.get_local_id(2), lane = (int) sg.get_local_id()[0], sgid = (int) sg.get_group_id()[0];
++    const int rg = sgid >> 1, hf = sgid & 1;
++    const int64_t t0 = q0 + (int64_t) tile * TQ;
++    const int n_head = n_kv_heads * G;
++    const int32_t* list = ulist + (size_t) tile * TQ * cap;
++    const int U = ucount[tile];
++    sycl::half* qt = gstage + ((size_t) tile * n_kv_heads + kvh) * SLOT2;
++    sycl::half* ks = qt + QT_H;
++    sycl::half* vs = ks + K2_H;
++    auto entry = [&](int c, long long& r, uint32_t& mk) {
++        r = -1; mk = 0u;
++        if (c < U) {
++            const uint32_t e = (uint32_t) list[c];
++            const int cell = (int) (e & 0xFFFFFFu);
++            const long long page = (long long) p.page_table[cell / page_size];
++            if (page >= 0) { r = (page * n_kv_heads + kvh) * page_size + (cell % page_size); mk = e >> 24; }
++        }
++    };
++    // Q^T packed for B (dim pairs interleaved per row): word (k/2) * ROWS + n = q[n][k], q[n][k+1]
++    for (int i = t; i < (HD / 2) * ROWS; i += THREADS) {
++        const int n = i / (HD / 2), kp2 = i % (HD / 2);
++        const int j = n / G, h = n % G;
++        sycl::float2 v(0.0f);
++        if (t0 + j < n_q) v = *reinterpret_cast<const sycl::float2*>(q + (size_t) (t0 + j) * n_head * HD + (size_t) (kvh * G + h) * HD + 2 * kp2);
++        reinterpret_cast<uint32_t*>(qt)[(size_t) kp2 * ROWS + n] = sycl::bit_cast<uint32_t>(sycl::half2(v.x(), v.y()));
++    }
++    TC O[2][8];
++#pragma unroll
++    for (int rt = 0; rt < 2; ++rt)
++#pragma unroll
++        for (int dd = 0; dd < 8; ++dd) jm::joint_matrix_fill(sg, O[rt][dd], 0.0f);
++    float m_run = -INFINITY, l_run = 0.0f;   // this lane's row 16 rg + lane
++    const int myrow = 16 * rg + lane;
++    if (t < CH2) { long long r; uint32_t mk; entry(t, r, mk); srow2[t] = r; smk2[t] = mk; }
++    it.barrier(sycl::access::fence_space::global_and_local);
++
++    for (int c0 = 0, buf = 0; c0 < U; c0 += CH2, buf ^= 1) {
++        const long long* srow = srow2 + buf * CH2;
++        const uint32_t* smk = smk2 + buf * CH2;
++        // staging: all of this thread's K and V loads issued first (raw 16-byte words + scales), then converted and
++        // stored - one memory latency per chunk instead of one per item. K row-major (16 lanes per cell row), V packed.
++        {
++            constexpr int KI = (CH2 * (HD / 16) + THREADS - 1) / THREADS;          // 6
++            constexpr int VI = ((CH2 / 2) * (HD / 16) + THREADS - 1) / THREADS;    // 3
++            sycl::vec<uint32_t, 4> kr[KI];
++            float ksc[KI];
++            sycl::vec<uint32_t, 4> vr[VI][2];
++            float vsc[VI][2];
++#pragma unroll
++            for (int a = 0; a < KI; ++a) {
++                const int i = t + a * THREADS;
++                ksc[a] = 0.0f;
++                kr[a] = sycl::vec<uint32_t, 4>(0u);
++                if (i < CH2 * (HD / 16)) {
++                    const int n = i / (HD / 16), k0 = (i % (HD / 16)) * 16;
++                    const long long r = srow[n];
++                    if (r >= 0) {
++                        kr[a] = *reinterpret_cast<const sycl::vec<uint32_t, 4>*>(p.k_q + r * HD + k0);
++                        ksc[a] = (float) sycl::bit_cast<sycl::half>(p.k_scale[r * (HD / KV_Q8_GROUP) + k0 / KV_Q8_GROUP]);
++                    }
++                }
++            }
++#pragma unroll
++            for (int a = 0; a < VI; ++a) {
++                const int i = t + a * THREADS;
++#pragma unroll
++                for (int e = 0; e < 2; ++e) {
++                    vsc[a][e] = 0.0f;
++                    vr[a][e] = sycl::vec<uint32_t, 4>(0u);
++                    if (i < (CH2 / 2) * (HD / 16)) {
++                        const int cp = i / (HD / 16), d0 = (i % (HD / 16)) * 16;
++                        const long long r = srow[2 * cp + e];
++                        if (r >= 0) {
++                            vr[a][e] = *reinterpret_cast<const sycl::vec<uint32_t, 4>*>(p.v_q + r * HD + d0);
++                            vsc[a][e] = (float) sycl::bit_cast<sycl::half>(p.v_scale[r * (HD / KV_Q8_GROUP) + d0 / KV_Q8_GROUP]);
++                        }
++                    }
++                }
++            }
++            auto byte = [](const sycl::vec<uint32_t, 4>& w, int u) {
++                return (float) (int8_t) ((w[u >> 2] >> (8 * (u & 3))) & 0xFFu);
++            };
++#pragma unroll
++            for (int a = 0; a < KI; ++a) {
++                const int i = t + a * THREADS;
++                if (i >= CH2 * (HD / 16)) continue;
++                const int n = i / (HD / 16), k0 = (i % (HD / 16)) * 16;
++                sycl::vec<uint32_t, 8> w;
++                const float sc = ksc[a];
++#pragma unroll
++                for (int u = 0; u < 8; ++u)
++                    w[u] = sycl::bit_cast<uint32_t>(sycl::half2(byte(kr[a], 2 * u) * sc, byte(kr[a], 2 * u + 1) * sc));
++                *reinterpret_cast<sycl::vec<uint32_t, 8>*>(ks + (size_t) n * HD + k0) = w;
++            }
++#pragma unroll
++            for (int a = 0; a < VI; ++a) {
++                const int i = t + a * THREADS;
++                if (i >= (CH2 / 2) * (HD / 16)) continue;
++                const int cp = i / (HD / 16), d0 = (i % (HD / 16)) * 16;
++                sycl::vec<uint32_t, 8> o0, o1;
++#pragma unroll
++                for (int u = 0; u < 8; ++u) {
++                    o0[u] = sycl::bit_cast<uint32_t>(sycl::half2(byte(vr[a][0], u) * vsc[a][0], byte(vr[a][1], u) * vsc[a][1]));
++                    o1[u] = sycl::bit_cast<uint32_t>(sycl::half2(byte(vr[a][0], u + 8) * vsc[a][0], byte(vr[a][1], u + 8) * vsc[a][1]));
++                }
++                uint32_t* dst = reinterpret_cast<uint32_t*>(vs) + (size_t) cp * HD + d0;
++                *reinterpret_cast<sycl::vec<uint32_t, 8>*>(dst) = o0;
++                *reinterpret_cast<sycl::vec<uint32_t, 8>*>(dst + 8) = o1;
++            }
++        }
++        it.barrier(sycl::access::fence_space::global_and_local);
++        long long nr = -1;
++        uint32_t nmk = 0u;
++        if (t < CH2) entry(c0 + CH2 + t, nr, nmk);
++        // S^T (32 cells of this half x the group's 16 rows) = K Q^T; 4 K tiles + 1 Q^T tile per k-step, double-buffered
++        TC ST[4];
++#pragma unroll
++        for (int m = 0; m < 4; ++m) jm::joint_matrix_fill(sg, ST[m], 0.0f);
++        {
++            const sycl::half* kb = ks + (size_t) (32 * hf) * HD;
++            const sycl::half* qb = qt + (size_t) (16 * rg) * 2;
++            TA Ac[4], An[4];
++            TB Bc, Bn;
++#pragma unroll
++            for (int m = 0; m < 4; ++m) jm::joint_matrix_load(sg, Ac[m], gptr(kb + (size_t) (8 * m) * HD), (size_t) HD);
++            jm::joint_matrix_load(sg, Bc, gptr(qb), (size_t) (ROWS * 2));
++#pragma unroll
++            for (int kk = 0; kk < HD / 16; kk += 2) {
++#pragma unroll
++                for (int m = 0; m < 4; ++m)
++                    jm::joint_matrix_load(sg, An[m], gptr(kb + (size_t) (8 * m) * HD + (kk + 1) * 16), (size_t) HD);
++                jm::joint_matrix_load(sg, Bn, gptr(qb + (size_t) ((kk + 1) * 8) * (ROWS * 2)), (size_t) (ROWS * 2));
++#pragma unroll
++                for (int m = 0; m < 4; ++m) jm::joint_matrix_mad(sg, ST[m], Ac[m], Bc, ST[m]);
++                if (kk + 2 < HD / 16) {
++#pragma unroll
++                    for (int m = 0; m < 4; ++m)
++                        jm::joint_matrix_load(sg, Ac[m], gptr(kb + (size_t) (8 * m) * HD + (kk + 2) * 16), (size_t) HD);
++                    jm::joint_matrix_load(sg, Bc, gptr(qb + (size_t) ((kk + 2) * 8) * (ROWS * 2)), (size_t) (ROWS * 2));
++                }
++#pragma unroll
++                for (int m = 0; m < 4; ++m) jm::joint_matrix_mad(sg, ST[m], An[m], Bn, ST[m]);
++            }
++        }
++        // online softmax, the row in the lane: element (cell row, col) of ST[m] is cell 32 hf + 8 m + row of row col
++        float mx = -INFINITY;
++#pragma unroll
++        for (int m = 0; m < 4; ++m)
++            jmi::joint_matrix_apply(sg, ST[m], [&](float& v, size_t row, size_t col) {
++                const int c = 32 * hf + 8 * m + (int) row, jq = (16 * rg + (int) col) / G;
++                const bool ok = (smk[c] >> jq) & 1u;
++                v = ok ? v * scale_log2 : -INFINITY;
++                mx = sycl::fmax(mx, v);
++            });
++        xmax[(rg * 2 + hf) * 16 + lane] = mx;
++        it.barrier(sycl::access::fence_space::local_space);
++        const float m_new = sycl::fmax(m_run, sycl::fmax(mx, xmax[(rg * 2 + (hf ^ 1)) * 16 + lane]));
++        const float alpha = m_new == -INFINITY ? 1.0f : (m_run == -INFINITY ? 0.0f : sycl::exp2(m_run - m_new));
++        float sum = 0.0f;
++#pragma unroll
++        for (int m = 0; m < 4; ++m)
++            jmi::joint_matrix_apply(sg, ST[m], [&](float& v, size_t row, size_t col) {
++                const float e = (v == -INFINITY || m_new == -INFINITY) ? 0.0f : sycl::exp2(v - m_new);
++                sum += e;
++                sP[(size_t) (16 * rg + (int) col) * PS2 + 32 * hf + 8 * m + (int) row] = sycl::half(e);
++            });
++        xsum[(rg * 2 + hf) * 16 + lane] = sum;
++        if (hf == 0) xal[myrow] = alpha;
++        m_run = m_new;
++        const bool rescale = sycl::any_of_group(sg, alpha != 1.0f);
++        it.barrier(sycl::access::fence_space::local_space);
++        l_run = l_run * alpha + sum + xsum[(rg * 2 + (hf ^ 1)) * 16 + lane];
++        if (rescale) {
++#pragma unroll
++            for (int rt = 0; rt < 2; ++rt)
++#pragma unroll
++                for (int dd = 0; dd < 8; ++dd)
++                    jmi::joint_matrix_apply(sg, O[rt][dd], [=](float& v, size_t row, size_t) { v *= xal[16 * rg + 8 * rt + row]; });
++        }
++        // O += P V for the group's 16 rows x this half's 128 dims
++        {
++            TA Pt[2][4];
++#pragma unroll
++            for (int rt = 0; rt < 2; ++rt)
++#pragma unroll
++                for (int kq = 0; kq < 4; ++kq)
++                    jm::joint_matrix_load(sg, Pt[rt][kq], lptr(sP + (size_t) (16 * rg + 8 * rt) * PS2 + kq * 16), (size_t) PS2);
++            const sycl::half* vb = vs + (size_t) (128 * hf) * 2;
++#pragma unroll
++            for (int kq = 0; kq < 4; ++kq) {
++                TB Vc, Vn;
++                jm::joint_matrix_load(sg, Vc, gptr(vb + (size_t) (kq * 8) * (HD * 2)), (size_t) (HD * 2));
++#pragma unroll
++                for (int dd = 0; dd < 8; dd += 2) {
++                    jm::joint_matrix_load(sg, Vn, gptr(vb + (size_t) (kq * 8) * (HD * 2) + (dd + 1) * 16 * 2), (size_t) (HD * 2));
++                    jm::joint_matrix_mad(sg, O[0][dd], Pt[0][kq], Vc, O[0][dd]);
++                    jm::joint_matrix_mad(sg, O[1][dd], Pt[1][kq], Vc, O[1][dd]);
++                    if (dd + 2 < 8)
++                        jm::joint_matrix_load(sg, Vc, gptr(vb + (size_t) (kq * 8) * (HD * 2) + (dd + 2) * 16 * 2), (size_t) (HD * 2));
++                    jm::joint_matrix_mad(sg, O[0][dd + 1], Pt[0][kq], Vn, O[0][dd + 1]);
++                    jm::joint_matrix_mad(sg, O[1][dd + 1], Pt[1][kq], Vn, O[1][dd + 1]);
++                }
++            }
++        }
++        if (t < CH2) { srow2[(buf ^ 1) * CH2 + t] = nr; smk2[(buf ^ 1) * CH2 + t] = nmk; }
++        it.barrier(sycl::access::fence_space::global_and_local);
++    }
++    if (hf == 0) xl[myrow] = l_run;
++    it.barrier(sycl::access::fence_space::local_space);
++#pragma unroll
++    for (int rt = 0; rt < 2; ++rt)
++#pragma unroll
++        for (int dd = 0; dd < 8; ++dd)
++            jmi::joint_matrix_apply(sg, O[rt][dd], [=](float& v, size_t row, size_t col) {
++                const int rr = 16 * rg + 8 * rt + (int) row, j = rr / G, h = rr % G;
++                if (t0 + j < n_q) {
++                    const float l = xl[rr];
++                    attn[(size_t) (t0 + j) * n_head * HD + (size_t) (kvh * G + h) * HD + 128 * hf + 16 * dd + col] = l > 0.0f ? v / l : 0.0f;
++                }
++            });
++}
++
+ struct Scratch {
+     sycl::device dev;
+     int32_t* ulist = nullptr;
+@@ -350,15 +616,20 @@ struct Scratch {
+ std::vector<Scratch>& scratches() { static std::vector<Scratch> v; return v; }
+ }  // namespace
+ 
+-bool qsa_night_pattn_xmx() {
+-    static const bool on = [] {
++namespace {
++int pattn_mode() {
++    static const int m = [] {
+         const char* v = std::getenv("STRATA_NIGHT_PATTN_XMX");
+-        const bool e = v != nullptr && v[0] == '1' && v[1] == '\0';
+-        if (e) std::fprintf(stderr, "strata night: STRATA_NIGHT_PATTN_XMX=1 (prompt QSA attention, 8-query union tiles on XMX, FP16 products)\n");
++        const int e = (v != nullptr && (v[0] == '1' || v[0] == '2') && v[1] == '\0') ? v[0] - '0' : 0;
++        if (e) std::fprintf(stderr, "strata night: STRATA_NIGHT_PATTN_XMX=%d (prompt QSA attention, 8-query union tiles on XMX, FP16 products%s)\n",
++                            e, e == 2 ? ", S^T = K Q^T, 64-cell chunks" : "");
+         return e;
+     }();
+-    return on;
++    return m;
+ }
++}  // namespace
++
++bool qsa_night_pattn_xmx() { return pattn_mode() != 0; }
+ 
+ bool qsa_prompt_attn_union(const float* q, const QsaAttnPools& pools, const int32_t* ids, const int32_t* steps,
+                            int64_t cap, const QsaShapes& s, float* attn, int64_t n_q, void* stream) {
+@@ -367,7 +638,8 @@ bool qsa_prompt_attn_union(const float* q, const QsaAttnPools& pools, const int3
+         !pools.page_table || !pools.k_q || !pools.v_q || !pools.k_scale || !pools.v_scale || pools.k_q4 || pools.v_q4)
+         return false;
+     sycl::queue* st = strata::q_of(stream);
+-    if (st->get_device().get_info<sycl::info::device::local_mem_size>() < Lay::bytes) return false;
++    const int mode = pattn_mode() == 2 ? 2 : 1;
++    if (st->get_device().get_info<sycl::info::device::local_mem_size>() < (mode == 2 ? Lay2::bytes : Lay::bytes)) return false;
+     Scratch* sc = nullptr;
+     for (auto& x : scratches())
+         if (x.dev == st->get_device()) sc = &x;
+@@ -376,9 +648,9 @@ bool qsa_prompt_attn_union(const float* q, const QsaAttnPools& pools, const int3
+         st->wait();
+         if (sc->ulist) sycl::free(sc->ulist, *st);
+         if (sc->ucount) sycl::free(sc->ucount, *st);
+-        sc->ulist = sycl::malloc_device<int32_t>((size_t) TILE_BATCH * TQ * cap, *st);
+-        sc->ucount = sycl::malloc_device<int32_t>((size_t) TILE_BATCH, *st);
+-        if (!sc->gstage) sc->gstage = sycl::malloc_device<sycl::half>((size_t) TILE_BATCH * 2 * 2 * CH * HD, *st);
++        sc->ulist = sycl::malloc_device<int32_t>((size_t) tile_batch() * TQ * cap, *st);
++        sc->ucount = sycl::malloc_device<int32_t>((size_t) tile_batch(), *st);
++        if (!sc->gstage) sc->gstage = sycl::malloc_device<sycl::half>((size_t) tile_batch() * 2 * SLOT2, *st);   // >= mode 1's
+         sc->cap = cap;
+         if (!sc->ulist || !sc->ucount || !sc->gstage) { std::fprintf(stderr, "qsa_prompt_attn_union: no scratch\n"); return false; }
+     }
+@@ -388,8 +660,8 @@ bool qsa_prompt_attn_union(const float* q, const QsaAttnPools& pools, const int3
+     const float scale_log2 = 1.4426950408889634f / std::sqrt((float) HD);
+     const int nkv = (int) s.n_head_kv, ps = (int) s.page_size;
+     const int64_t n_tiles = (n_q + TQ - 1) / TQ;
+-    for (int64_t b0 = 0; b0 < n_tiles; b0 += TILE_BATCH) {
+-        const int64_t nt = sycl::min<int64_t>(TILE_BATCH, n_tiles - b0);
++    for (int64_t b0 = 0; b0 < n_tiles; b0 += tile_batch()) {
++        const int64_t nt = sycl::min<int64_t>(tile_batch(), n_tiles - b0);
+         const int64_t q0 = b0 * TQ;
+         st->submit([&](sycl::handler& cgh) {
+             sycl::local_accessor<uint32_t, 1> sm(sycl::range<1>(RANGE / 4), cgh);
+@@ -399,6 +671,19 @@ bool qsa_prompt_attn_union(const float* q, const QsaAttnPools& pools, const int3
+                     union_build(ids, steps, cap, q0, n_q, ulist, ucount, sm.get_multi_ptr<sycl::access::decorated::no>().get());
+                 });
+         });
++        if (mode == 2) {
++            st->submit([&](sycl::handler& cgh) {
++                sycl::local_accessor<uint8_t, 1> slm(sycl::range<1>(Lay2::bytes), cgh);
++                cgh.parallel_for<pattn_union_attn_t_night>(
++                    sycl::nd_range<3>(sycl::range<3>(1, (size_t) nkv, (size_t) nt * THREADS), sycl::range<3>(1, 1, THREADS)),
++                    sycl::ext::oneapi::experimental::properties{sycl::ext::intel::experimental::grf_size<256>},
++                    [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(SG)]] {
++                        union_attn_t(q, pools, ulist, ucount, cap, q0, n_q, nkv, ps, scale_log2, attn,
++                                     slm.get_multi_ptr<sycl::access::decorated::no>().get(), gstage);
++                    });
++            });
++            continue;
++        }
+         st->submit([&](sycl::handler& cgh) {
+             sycl::local_accessor<uint8_t, 1> slm(sycl::range<1>(Lay::bytes), cgh);
+             cgh.parallel_for<pattn_union_attn_night>(
+diff --git a/sycl/src/kernels/gdn_chunk_bench.cpp b/sycl/src/kernels/gdn_chunk_bench.cpp
+new file mode 100644
+index 00000000..1fb89bcf
+--- /dev/null
++++ b/sycl/src/kernels/gdn_chunk_bench.cpp
+@@ -0,0 +1,102 @@
++// src/kernels/gdn_chunk_bench.cpp - night-lab STRATA_NIGHT_GDN_CHUNK: the prompt GDN recurrence, token scan
++// (gdn_recurrence_variant 0, the production kernels on the B70) against the chunkwise form (gdn_recurrence_chunked):
++// final state, raw outputs y and the normalized FP16 outputs, max abs / rel error and time.
++// Inputs as gdn_parity's prefill fixture: S=128, HK=16, HV=48 (value head h reads key head h % 16), nonzero initial
++// state, q/k ~ N(0, 0.08^2) per element (unit-norm-ish heads), v ~ N(0, 0.7^2), z ~ N(0,1), gamma ~ 1 + 0.2 N,
++// beta in [0.1, 0.9], log decay -(0.02 | 2.0) * (1 + |N|) (shallow / deep).
++//   gdn_chunk_bench [--T 12288] [--seed 1] [--reps 3] [--variant 0]
++#include <sycl/sycl.hpp>
++#include <dpct/dpct.hpp>
++#include "strata/prefill/kernels.hpp"
++
++#include <algorithm>
++#include <chrono>
++#include <cmath>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <random>
++#include <vector>
++
++int main(int argc, char** argv) {
++    int T = 12288, seed = 1, reps = 3, variant = 0;
++    for (int i = 1; i < argc; ++i) {
++        if (!std::strcmp(argv[i], "--T") && i + 1 < argc) T = std::atoi(argv[++i]);
++        else if (!std::strcmp(argv[i], "--seed") && i + 1 < argc) seed = std::atoi(argv[++i]);
++        else if (!std::strcmp(argv[i], "--reps") && i + 1 < argc) reps = std::atoi(argv[++i]);
++        else if (!std::strcmp(argv[i], "--variant") && i + 1 < argc) variant = std::atoi(argv[++i]);
++    }
++    constexpr int S = 128, HK = 16, HV = 48, C = 10240;
++    sycl::queue q(sycl::gpu_selector_v, sycl::property_list{sycl::property::queue::in_order{}});
++    std::mt19937 rng(seed);
++    std::normal_distribution<float> gauss(0.0f, 1.0f);
++    std::vector<float> st(size_t(S) * HV * S), h(size_t(T) * C), gate(size_t(T) * HV), beta(gate.size()),
++        z(size_t(T) * HV * S), gamma(S);
++    for (auto& x : st) x = gauss(rng) * 0.03f;
++    for (int t = 0; t < T; ++t)
++        for (int j = 0; j < C; ++j) h[size_t(t) * C + j] = gauss(rng) * (j < 2 * HK * S ? 0.08f : 0.7f);
++    for (auto& x : gate) x = -(seed % 2 ? 0.02f : 2.0f) * (1.0f + std::fabs(gauss(rng)));
++    for (auto& x : beta) x = 0.1f + float(rng() % 800) / 1000.0f;
++    for (auto& x : z) x = gauss(rng);
++    for (auto& x : gamma) x = 1.0f + 0.2f * gauss(rng);
++    auto copy = [&](const std::vector<float>& src) {
++        float* p = sycl::malloc_device<float>(src.size(), q);
++        q.memcpy(p, src.data(), src.size() * 4).wait();
++        return p;
++    };
++    float *dst = copy(st), *dh = copy(h), *dg = copy(gate), *db = copy(beta), *dz = copy(z), *dgm = copy(gamma);
++    float* dy = sycl::malloc_device<float>(z.size(), q);
++    uint16_t* dy16 = sycl::malloc_device<uint16_t>(z.size(), q);
++    std::vector<float> st_a(st.size()), st_b(st.size()), y_a(z.size()), y_b(z.size());
++    std::vector<uint16_t> h_a(z.size()), h_b(z.size());
++    auto run = [&](bool chunked, std::vector<float>& ost, std::vector<float>& oy, std::vector<uint16_t>& o16) {
++        double best = 1e30;
++        for (int r = 0; r <= reps; ++r) {
++            q.memcpy(dst, st.data(), st.size() * 4).wait();
++            const auto t0 = std::chrono::steady_clock::now();
++            if (chunked) {
++                if (!strata::prefill::gdn_recurrence_chunked(dst, dh, dg, db, dz, dgm, 1e-6f, dy, dy16, T, &q)) {
++                    std::fprintf(stderr, "chunked refused\n");
++                    std::exit(3);
++                }
++            } else {
++                strata::prefill::gdn_recurrence_variant(variant, dst, dh, dg, db, dz, dgm, 1e-6f, dy, dy16, T, &q);
++            }
++            q.wait_and_throw();
++            const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
++            if (r > 0) best = std::min(best, ms);   // run 0 warms up
++        }
++        q.memcpy(ost.data(), dst, ost.size() * 4).wait();
++        q.memcpy(oy.data(), dy, oy.size() * 4).wait();
++        q.memcpy(o16.data(), dy16, o16.size() * 2).wait();
++        return best;
++    };
++    const double ta = run(false, st_a, y_a, h_a);
++    const double tb = run(true, st_b, y_b, h_b);
++    auto cmp = [](const char* what, const std::vector<float>& a, const std::vector<float>& b) {
++        double mabs = 0, mref = 0, sabs = 0, srel = 0;
++        size_t bad = 0;
++        for (size_t i = 0; i < a.size(); ++i) {
++            if (!std::isfinite(b[i])) { ++bad; continue; }
++            const double d = std::fabs((double) a[i] - b[i]);
++            mabs = std::max(mabs, d);
++            mref = std::max(mref, std::fabs((double) a[i]));
++            sabs += d;
++            srel += std::fabs((double) a[i]);
++        }
++        std::printf("  %-12s max abs %.3e  (max |ref| %.3e -> %.3e of it)  rel L1 %.3e  non-finite %zu\n", what, mabs,
++                    mref, mref > 0 ? mabs / mref : 0.0, srel > 0 ? sabs / srel : 0.0, bad);
++    };
++    std::vector<float> fa(h_a.size()), fb(h_b.size());
++    for (size_t i = 0; i < h_a.size(); ++i) {
++        fa[i] = (float) sycl::bit_cast<sycl::half>(h_a[i]);
++        fb[i] = (float) sycl::bit_cast<sycl::half>(h_b[i]);
++    }
++    std::printf("T=%d seed=%d (%s decay): scan variant %d %.3f ms, chunked %.3f ms -> %.2fx\n", T, seed,
++                seed % 2 ? "shallow" : "deep", variant, ta, tb, ta / tb);
++    cmp("state", st_a, st_b);
++    cmp("y (raw o)", y_a, y_b);
++    cmp("y16 (normed)", fa, fb);
++    std::printf("RESULT T=%d seed=%d scan_ms=%.3f chunk_ms=%.3f\n", T, seed, ta, tb);
++    return 0;
++}
+diff --git a/sycl/src/prefill/gdn_chunk.dp.cpp b/sycl/src/prefill/gdn_chunk.dp.cpp
+new file mode 100644
+index 00000000..ca6fed0e
+--- /dev/null
++++ b/sycl/src/prefill/gdn_chunk.dp.cpp
+@@ -0,0 +1,277 @@
++// SYCL (night-lab STRATA_NIGHT_GDN_CHUNK=1): the prompt path's gated delta-net recurrence in chunkwise form.
++//
++// gdn_recurrence walks the T tokens one after another (S_t = g_t (I - b_t k_t k_t^T) S_{t-1} + b_t k_t v_t^T,
++// o_t = S_t^T q_t / sqrt(128)): ~1.45 us per token on the B70, 17.9-22.7 ms per 12288-token chunk and GDN layer.
++// The standard chunkwise (WY) form replaces 64 sequential token steps by one step on 64-token blocks. Within a chunk,
++// with G = cumsum(log decay) (all exponents below are <= 0, so nothing overflows):
++//   A_ij  = b_i exp(G_i - G_j) k_i.k_j  (j < i),   (I + A) W = diag(b e^G) K,   (I + A) U = diag(b) V
++//   QK_ij = exp(G_i - G_j) q_i.k_j      (j <= i)
++// and across chunks (the only sequential part), per 32-column block of the 128x128 state:
++//   Vn = U - W S,   O = (q e^G) S + QK Vn = (q e^G - QK W) S + QK U,   S' = e^{G_L} S + (k e^{G_L - G})^T Vn.
++// K1 (every chunk and head in parallel) builds W, U, Qt = q e^G - QK W, Ou = QK U and G; K2 (head x column block,
++// chunks in order) carries the state in registers; K3 is gdn_out_norm_kernel's norm.
++// STATUS (night lab): correct (FP32 rounding level vs the scan) but 4.3x SLOWER on the B70 in this FP32 form - K2
++// re-reads W/Qt/k rows from L1/L2 in every sub-group and K1 runs one 101 KB work-group per Xe core. Next: the K1
++// products (k k^T, q k^T, QK W, QK U) on XMX and K2's rows staged once per work-group. Keep the flag off. FP32 throughout; the summation order differs from the scan,
++// so the result agrees at FP32 rounding level, not bitwise.
++#include "strata/prefill/kernels.hpp"
++#include "strata/sycl_queue.hpp"
++#include <sycl/sycl.hpp>
++#include <sycl/ext/intel/experimental/grf_size_properties.hpp>
++#include <dpct/dpct.hpp>
++#include <cmath>
++#include <cstdint>
++#include <cstdio>
++#include <cstdlib>
++#include <vector>
++
++namespace strata::prefill {
++class gdn_chunk_k1_night;
++class gdn_chunk_k2_night;
++class gdn_chunk_norm_night;
++namespace {
++constexpr int S = 128, HK = 16, HV = 48, C = 10240;
++constexpr int CL = 64;          // tokens per chunk
++constexpr int SEG = 8;          // chunks per K1/K2 launch pair (scratch)
++constexpr int KP = S + 4;       // local row stride (floats)
++constexpr int CB = 32;          // state columns per K2 work-group
++
++inline float sigm_(float x) { return 1.0f / (1.0f + sycl::native::exp(-x)); }
++inline uint16_t hf_(float f) {
++    return sycl::bit_cast<unsigned short, sycl::half>(sycl::vec<float, 1>(f).convert<sycl::half, sycl::rounding_mode::rte>()[0]);
++}
++
++// K1: one work-group (256) per (segment chunk ci, value head)
++void k1(const float* __restrict__ h, const float* __restrict__ gate, const float* __restrict__ beta, int64_t T,
++        int64_t c0, float* __restrict__ W, float* __restrict__ U, float* __restrict__ Qt, float* __restrict__ Ou,
++        float* __restrict__ Gs, float* smem) {
++    auto it = sycl::ext::oneapi::this_work_item::get_nd_item<2>();
++    const int head = (int) it.get_group(0), ci = (int) it.get_group(1), tid = (int) it.get_local_id(1);
++    const int qh = head % HK;
++    const int64_t t0 = (c0 + ci) * CL;
++    const int L = (int) (T - t0 < CL ? T - t0 : CL);
++    float* ks = smem;                       // [CL][KP]
++    float* qs = ks + CL * KP;               // [CL][KP]
++    float* sA = qs + CL * KP;               // [CL][CL + 1]
++    float* sQ = sA + CL * (CL + 1);         // [CL][CL + 1]  q_i.k_j exp(G_i - G_j), j <= i
++    float* sG = sQ + CL * (CL + 1);         // [CL]
++    float* sB = sG + CL;                    // [CL]
++    for (int e = tid; e < CL * S; e += 256) {
++        const int i = e / S, d = e % S;
++        const bool ok = i < L;
++        ks[i * KP + d] = ok ? h[(t0 + i) * C + HK * S + qh * S + d] : 0.0f;
++        qs[i * KP + d] = ok ? h[(t0 + i) * C + qh * S + d] : 0.0f;
++    }
++    if (tid < CL) sB[tid] = tid < L ? beta[(t0 + tid) * HV + head] : 0.0f;
++    if (tid == 0) {
++        float g = 0.0f;
++        for (int i = 0; i < CL; ++i) { if (i < L) g += gate[(t0 + i) * HV + head]; sG[i] = g; }
++    }
++    it.barrier(sycl::access::fence_space::local_space);
++    // Gram (k.k) and q.k on 4x4 blocks: block (bi, bj) = (tid / 16, tid % 16), lower blocks only
++    {
++        const int bi = tid / 16, bj = tid % 16;
++        if (bi >= bj) {
++            float kk[4][4], qk[4][4];
++#pragma unroll
++            for (int a = 0; a < 4; ++a)
++#pragma unroll
++                for (int b = 0; b < 4; ++b) { kk[a][b] = 0.0f; qk[a][b] = 0.0f; }
++            for (int d = 0; d < S; ++d) {
++                float ki[4], qi[4], kj[4];
++#pragma unroll
++                for (int a = 0; a < 4; ++a) { ki[a] = ks[(4 * bi + a) * KP + d]; qi[a] = qs[(4 * bi + a) * KP + d]; kj[a] = ks[(4 * bj + a) * KP + d]; }
++#pragma unroll
++                for (int a = 0; a < 4; ++a)
++#pragma unroll
++                    for (int b = 0; b < 4; ++b) { kk[a][b] = sycl::fma(ki[a], kj[b], kk[a][b]); qk[a][b] = sycl::fma(qi[a], kj[b], qk[a][b]); }
++            }
++#pragma unroll
++            for (int a = 0; a < 4; ++a)
++#pragma unroll
++                for (int b = 0; b < 4; ++b) {
++                    const int i = 4 * bi + a, j = 4 * bj + b;
++                    const float dec = sycl::exp(sG[i] - sG[j]);
++                    sA[i * (CL + 1) + j] = j < i ? sB[i] * dec * kk[a][b] : 0.0f;
++                    sQ[i * (CL + 1) + j] = (j <= i && i < L) ? dec * qk[a][b] : 0.0f;
++                }
++        }
++    }
++    it.barrier(sycl::access::fence_space::local_space);
++    // forward substitution, one column per thread in registers: threads 0..127 W's columns, 128..255 U's
++    {
++        const int col = tid % S;
++        const bool isU = tid >= S;
++        float x[CL];
++#pragma unroll
++        for (int i = 0; i < CL; ++i) {
++            float v = 0.0f;
++            if (i < L) v = isU ? sB[i] * h[(t0 + i) * C + 2 * HK * S + head * S + col] : sB[i] * sycl::exp(sG[i]) * ks[i * KP + col];
++            x[i] = v;
++        }
++#pragma unroll
++        for (int i = 1; i < CL; ++i) {
++            float acc = x[i];
++#pragma unroll
++            for (int j = 0; j < i; ++j) acc = sycl::fma(-sA[i * (CL + 1) + j], x[j], acc);
++            x[i] = acc;
++        }
++        float* out = (isU ? U : W) + ((size_t) ci * HV + head) * CL * S + col;
++#pragma unroll
++        for (int i = 0; i < CL; ++i) out[(size_t) i * S] = x[i];
++        // the state-independent parts of the output: O = (q e^G - QK W) S + QK U
++        float* out2 = (isU ? Ou : Qt) + ((size_t) ci * HV + head) * CL * S + col;
++#pragma unroll
++        for (int i = 0; i < CL; ++i) {
++            float acc = 0.0f;
++#pragma unroll
++            for (int jj = 0; jj <= i; ++jj) acc = sycl::fma(sQ[i * (CL + 1) + jj], x[jj], acc);
++            out2[(size_t) i * S] = isU ? acc : (i < L ? qs[i * KP + col] * sycl::exp(sG[i]) - acc : 0.0f);
++        }
++    }
++    if (tid < CL) Gs[((size_t) ci * HV + head) * CL + tid] = sG[tid];
++}
++
++// K2: one work-group (256 = 16 sub-groups of 16) per (value head, 32-column block); the segment's chunks in order.
++// Lane l of sub-group s: column cb * 32 + 2 s + l / 8, state rows (l % 8) * 16 .. + 16 in registers.
++void k2(float* __restrict__ state, const float* __restrict__ h, int64_t T, int64_t c0, int nc,
++        const float* __restrict__ W, const float* __restrict__ U, const float* __restrict__ Qt,
++        const float* __restrict__ Ou, const float* __restrict__ Gs, float* __restrict__ y) {
++    auto it = sycl::ext::oneapi::this_work_item::get_nd_item<2>();
++    auto sg = it.get_sub_group();
++    const int head = (int) it.get_group(0), cb = (int) it.get_group(1);
++    const int lane = (int) sg.get_local_id()[0], sgid = (int) sg.get_group_id()[0];
++    const int rgp = lane % 8, j = cb * CB + 2 * sgid + lane / 8, qh = head % HK;
++    const int r0 = rgp * 16;
++    float sv[16];
++#pragma unroll
++    for (int q = 0; q < 16; ++q) sv[q] = state[((size_t) (r0 + q) * HV + head) * S + j];
++    const float rs = sycl::rsqrt((float) S);
++    for (int ci = 0; ci < nc; ++ci) {
++        const int64_t t0 = (c0 + ci) * CL;
++        const int L = (int) (T - t0 < CL ? T - t0 : CL);
++        const size_t base = ((size_t) ci * HV + head) * CL * S;
++        const float* Gc = Gs + ((size_t) ci * HV + head) * CL;
++        float vn[CL];
++        // Vn = U - W S and O = Qt S + Ou (rows r; the 8 lanes of a column hold 16 state rows each)
++#pragma unroll
++        for (int r = 0; r < CL; ++r) {
++            float pw = 0.0f, pq = 0.0f;
++            if (r < L) {
++                const sycl::float4* w4 = reinterpret_cast<const sycl::float4*>(W + base + (size_t) r * S + r0);
++                const sycl::float4* q4 = reinterpret_cast<const sycl::float4*>(Qt + base + (size_t) r * S + r0);
++#pragma unroll
++                for (int u = 0; u < 4; ++u) {
++                    const sycl::float4 w = w4[u], qq = q4[u];
++                    pw = sycl::fma(w.x(), sv[4 * u], pw); pw = sycl::fma(w.y(), sv[4 * u + 1], pw);
++                    pw = sycl::fma(w.z(), sv[4 * u + 2], pw); pw = sycl::fma(w.w(), sv[4 * u + 3], pw);
++                    pq = sycl::fma(qq.x(), sv[4 * u], pq); pq = sycl::fma(qq.y(), sv[4 * u + 1], pq);
++                    pq = sycl::fma(qq.z(), sv[4 * u + 2], pq); pq = sycl::fma(qq.w(), sv[4 * u + 3], pq);
++                }
++            }
++            pw += sycl::permute_group_by_xor(sg, pw, 1);
++            pq += sycl::permute_group_by_xor(sg, pq, 1);
++            pw += sycl::permute_group_by_xor(sg, pw, 2);
++            pq += sycl::permute_group_by_xor(sg, pq, 2);
++            pw += sycl::permute_group_by_xor(sg, pw, 4);
++            pq += sycl::permute_group_by_xor(sg, pq, 4);
++            vn[r] = r < L ? U[base + (size_t) r * S + j] - pw : 0.0f;
++            if (rgp == 0 && r < L) y[(t0 + r) * HV * S + (size_t) head * S + j] = (pq + Ou[base + (size_t) r * S + j]) * rs;
++        }
++        // S' = e^{G_L} S + (k e^{G_L - G})^T Vn
++        const float gl = Gc[L - 1];
++        const float egl = sycl::exp(gl);
++#pragma unroll
++        for (int q = 0; q < 16; ++q) sv[q] *= egl;
++#pragma unroll
++        for (int r = 0; r < CL; ++r) {
++            if (r >= L) continue;
++            const float c = sycl::exp(gl - Gc[r]) * vn[r];
++            const sycl::float4* k4 = reinterpret_cast<const sycl::float4*>(h + (t0 + r) * C + HK * S + qh * S + r0);
++#pragma unroll
++            for (int u = 0; u < 4; ++u) {
++                const sycl::float4 kk = k4[u];
++                sv[4 * u] = sycl::fma(kk.x(), c, sv[4 * u]); sv[4 * u + 1] = sycl::fma(kk.y(), c, sv[4 * u + 1]);
++                sv[4 * u + 2] = sycl::fma(kk.z(), c, sv[4 * u + 2]); sv[4 * u + 3] = sycl::fma(kk.w(), c, sv[4 * u + 3]);
++            }
++        }
++    }
++#pragma unroll
++    for (int q = 0; q < 16; ++q) state[((size_t) (r0 + q) * HV + head) * S + j] = sv[q];
++}
++
++struct Scratch { sycl::device dev; float* buf = nullptr; };
++std::vector<Scratch>& scratches() { static std::vector<Scratch> v; return v; }
++}  // namespace
++
++bool gdn_night_chunk() {
++    static const bool on = [] {
++        const char* v = std::getenv("STRATA_NIGHT_GDN_CHUNK");
++        const bool e = v != nullptr && v[0] == '1' && v[1] == '\0';
++        if (e) std::fprintf(stderr, "strata night: STRATA_NIGHT_GDN_CHUNK=1 (prompt GDN recurrence in 64-token chunkwise form, FP32)\n");
++        return e;
++    }();
++    return on;
++}
++
++bool gdn_recurrence_chunked(float* state, const float* h, const float* gate, const float* beta, const float* z,
++                            const float* gamma, float eps, float* y, uint16_t* y16, int64_t T, void* stream, int64_t ld16) {
++    if (T < CL) return false;
++    if (ld16 <= 0) ld16 = (int64_t) HV * S;
++    sycl::queue* q = strata::q_of(stream);
++    const size_t wsz = (size_t) SEG * HV * CL * S, gsz = (size_t) SEG * HV * CL;
++    Scratch* sc = nullptr;
++    for (auto& x : scratches())
++        if (x.dev == q->get_device()) sc = &x;
++    if (sc == nullptr) {
++        scratches().push_back(Scratch{q->get_device()});
++        sc = &scratches().back();
++        sc->buf = sycl::malloc_device<float>(4 * wsz + gsz, *q);
++        if (!sc->buf) { std::fprintf(stderr, "gdn_recurrence_chunked: no scratch\n"); return false; }
++    }
++    float* W = sc->buf;
++    float* U = W + wsz;
++    float* Qt = U + wsz;
++    float* Ou = Qt + wsz;
++    float* Gs = Ou + wsz;
++    const int64_t nchunks = (T + CL - 1) / CL;
++    constexpr size_t k1_floats = (size_t) 2 * CL * KP + 2 * CL * (CL + 1) + 2 * CL;
++    for (int64_t c0 = 0; c0 < nchunks; c0 += SEG) {
++        const int nc = (int) (nchunks - c0 < SEG ? nchunks - c0 : SEG);
++        q->submit([&](sycl::handler& cgh) {
++            sycl::local_accessor<float, 1> sm(sycl::range<1>(k1_floats), cgh);
++            cgh.parallel_for<gdn_chunk_k1_night>(
++                sycl::nd_range<2>(sycl::range<2>(HV, (size_t) nc * 256), sycl::range<2>(1, 256)),
++                [=](sycl::nd_item<2>) [[sycl::reqd_sub_group_size(16)]] {
++                    k1(h, gate, beta, T, c0, W, U, Qt, Ou, Gs, sm.get_multi_ptr<sycl::access::decorated::no>().get());
++                });
++        });
++        q->parallel_for<gdn_chunk_k2_night>(
++            sycl::nd_range<2>(sycl::range<2>(HV, (size_t) (S / CB) * 256), sycl::range<2>(1, 256)),
++            sycl::ext::oneapi::experimental::properties{sycl::ext::intel::experimental::grf_size<256>},
++            [=](sycl::nd_item<2>) [[sycl::reqd_sub_group_size(16)]] { k2(state, h, T, c0, nc, W, U, Qt, Ou, Gs, y); });
++    }
++    // the output norm: gdn_out_norm_kernel's arithmetic (32-lane warp sums of 4 partials, the same order)
++    q->submit([&](sycl::handler& cgh) {
++        sycl::local_accessor<float, 1> wsum(sycl::range<1>(4), cgh);
++        cgh.parallel_for<gdn_chunk_norm_night>(
++            sycl::nd_range<2>(sycl::range<2>((size_t) T, (size_t) HV * S), sycl::range<2>(1, S)),
++            [=](sycl::nd_item<2> it) [[sycl::reqd_sub_group_size(32)]] {
++                auto sg = it.get_sub_group();
++                const int64_t t = it.get_group(0);
++                const int head = (int) it.get_group(1), col = (int) it.get_local_id(1);
++                const size_t at = (size_t) t * HV * S + (size_t) head * S + col;
++                const float oc = y[at];
++                float sp = oc * oc;
++                for (int o = 16; o > 0; o >>= 1) sp += sycl::permute_group_by_xor(sg, sp, o);
++                if ((col & 31) == 0) wsum[col >> 5] = sp;
++                it.barrier(sycl::access::fence_space::local_space);
++                const float ss = wsum[0] + wsum[1] + wsum[2] + wsum[3];
++                const float v = oc * sycl::rsqrt(ss / (float) S + eps) * gamma[col] * sigm_(z[t * HV * S + head * S + col]);
++                y16[(size_t) t * ld16 + (size_t) head * S + col] = hf_(v);
++            });
++    });
++    return true;
++}
++
++}  // namespace strata::prefill
+diff --git a/sycl/src/prefill/kernels.dp.cpp b/sycl/src/prefill/kernels.dp.cpp
+index 7f187957..938f9e52 100644
+--- a/sycl/src/prefill/kernels.dp.cpp
++++ b/sycl/src/prefill/kernels.dp.cpp
+@@ -2762,6 +2762,8 @@ void gdn_recurrence_variant(int variant, float* state, const float* h, const flo
+ }
+ void gdn_recurrence(float* state, const float* h, const float* gate, const float* beta, const float* z,
+                     const float* gamma, float eps, float* y, uint16_t* y16, int64_t T, void* stream, int64_t ld16) {
++    // night-lab STRATA_NIGHT_GDN_CHUNK=1: the chunkwise (WY) form for chunks of at least 64 tokens
++    if (gdn_night_chunk() && gdn_recurrence_chunked(state, h, gate, beta, z, gamma, eps, y, y16, T, stream, ld16)) return;
+     // Aurora (S23): four lanes per column + the grid-stride norm, the same bits (tests/hip/gdn_rec_head.cpp);
+     // STRATA_GDN_HEAD=1 (on by default on gfx1151; off with STRATA_GDN_HEAD=0 or STRATA_GDN_REC_HEADS) takes them
+     // (AMD builds only; the arch defaults set STRATA_GDN_HEAD=1 on gfx1151 and leave other cards on the earlier kernels)

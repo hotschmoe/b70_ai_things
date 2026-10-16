@@ -1,0 +1,597 @@
+diff --git a/include/strata/kernels/verify_kernels.hpp b/include/strata/kernels/verify_kernels.hpp
+index 3d175fa4..de63e7c7 100644
+--- a/include/strata/kernels/verify_kernels.hpp
++++ b/include/strata/kernels/verify_kernels.hpp
+@@ -19,6 +19,13 @@
+ namespace strata::kernels {
+ 
+ inline constexpr int kVerifyMaxT = 8;
++/// night lab STRATA_NIGHT_VERIFY_T12=1 (default off): a verify window may hold 12 rows (C4 with
++/// STRATA_BATCH_MTP_DEPTH=2: 4 slots x 3 rows).  kVerifyCapT sizes the host-side arrays; verify_max_t() is the
++/// window cap the engine uses (12 with the flag, else kVerifyMaxT).  Kernels with an 8-row cap chunk the rows at
++/// their entry points (rows 0-7, 8-11) only when called with more than 8 rows.
++inline constexpr int kVerifyCapT = 16;
++bool verify_t12();
++int verify_max_t();
+ 
+ /// For token t of T: conv over [history(3) | qkv_0 .. qkv_t] -> SiLU -> L2 norm of the q/k heads -> h[t].
+ /// `history` is NOT written, but with `commit` (one token): it then keeps the token, as gdn_conv_commit.  Bitwise
+diff --git a/sycl/src/core/verify.cpp b/sycl/src/core/verify.cpp
+index 729094ae..8d04e0bc 100644
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -520,8 +520,12 @@ bool Verifier::init(const WeightTable &wt, const ModelGeometry &g,
+     max_t_ = max_t;
+     sampling_.greedy = true;      // a fresh verifier samples greedily until set_sampling says otherwise
+     sampling_.temperature = 0.0f;
+-    if (max_t < 2 || max_t > strata::kernels::kVerifyMaxT || max_t > strata::kernels::cpu::MAXT) {
+-        err = "verify: the window must hold 2.." + std::to_string(strata::kernels::kVerifyMaxT) + " tokens";
++    // night STRATA_NIGHT_VERIFY_T12: up to 12 rows; the CPU expert pool's rows stay capped at cpu::MAXT, so a wider
++    // window needs every routed expert on a GPU (expert parallel, checked in ep_init / the device plan)
++    if (max_t < 2 || max_t > strata::kernels::verify_max_t() ||
++        (max_t > strata::kernels::cpu::MAXT && !(strata::kernels::verify_t12() && ep_on()))) {
++        err = "verify: the window must hold 2.." + std::to_string(strata::kernels::verify_max_t()) + " tokens" +
++              (max_t > strata::kernels::cpu::MAXT ? " (more than 8: expert parallel only)" : "");
+         return false;
+     }
+     if (hits.d_res == nullptr || hits.cache_base == nullptr || hits.blob <= 0) {
+@@ -1033,7 +1037,7 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+             pending = false;
+         }
+         auto gr_read_group = [&](int half, bool apply, float* inj_prev, float* inj_out) {
+-            FusedGrArgs fa[kFusedGrMaxT];
++            FusedGrArgs fa[kVerifyCapT];
+             for (int t = tb; t < te; ++t) {
+                 FusedGrArgs& a = fa[t - tb];
+                 a.R = Rt(t); a.R_out = Rt(t); a.apply = apply;
+@@ -1822,7 +1826,7 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+         // (no pending write, no inject)
+         const bool mix_q8 = hd->hc_q8 != nullptr && hu->hc_q8 != nullptr && head_ != nullptr && head_->loaded();
+         if (mix_q8) {
+-            FusedGrArgs fa[kFusedGrMaxT];
++            FusedGrArgs fa[kVerifyCapT];
+             for (int t = 0; t < T; ++t) {
+                 FusedGrArgs& a = fa[t];
+                 a.R = Rt(t); a.R_out = Rt(t); a.apply = false;
+@@ -1835,7 +1839,7 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+             fused_gr_read_multi(fa, T, xn_, cs);
+         }
+         else if (fuse_head_gr) {
+-            FusedGrArgs fa[kFusedGrMaxT];
++            FusedGrArgs fa[kVerifyCapT];
+             for (int t = 0; t < T; ++t) {
+                 FusedGrArgs& a = fa[t];
+                 a.R = Rt(t); a.R_out = Rt(t); a.apply = true;
+@@ -1858,7 +1862,7 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+                 err = "verify: the output_hc_* weights have the wrong engine forms";
+                 return false;
+             }
+-            FusedGrArgs fa[kFusedGrMaxT];
++            FusedGrArgs fa[kVerifyCapT];
+             for (int t = 0; t < T; ++t) {
+                 fa[t].R = Rt(t); fa[t].R_out = Rt(t); fa[t].apply = false;
+                 fa[t].w_norm = (const float*) hn->data; fa[t].w_down = (const uint16_t*) hd->data;
+@@ -2426,7 +2430,7 @@ bool Verifier::run(int T, const int32_t *tokens, int64_t pos0, PoolMultiFn pool,
+     if (!staged_) stage_inputs(T, tokens, pos0);
+     staged_ = false;
+     const bool do_ple = ss.ple.ready() && ple_stage();
+-    uint32_t ple_rows[kVerifyMaxT * PLE_N_HEADS];
++    uint32_t ple_rows[kVerifyCapT * PLE_N_HEADS];
+     if (do_ple) {
+         int32_t prev[2] = {ss.ple_prev[0], ss.ple_prev[1]};
+         for (int t = 0; t < T; ++t) {
+@@ -3591,7 +3595,7 @@ bool Verifier::stage_batch(const int *rows, int S, int hbase,
+         for (int64_t h = 0; h < g.idx_q_heads; ++h) pi[t * g.idx_q_heads + h] = (int32_t) pos[t];
+     }
+     if (ss_->ple.ready() && ple_stage()) {
+-        uint32_t ple_rows[kVerifyMaxT * PLE_N_HEADS];   // (not `rows`: that is the slots of the window's rows)
++        uint32_t ple_rows[kVerifyCapT * PLE_N_HEADS];   // (not `rows`: that is the slots of the window's rows)
+         for (int t = 0; t < S; ++t) {
+             const SessionState& sx = *slots_[(size_t) rows[t]];
+             int32_t prev[2] = {sx.ple_prev[0], sx.ple_prev[1]};
+@@ -3640,8 +3644,8 @@ catch (sycl::exception const &exc) {
+ 
+ bool Verifier::run_slots(int S, const int32_t* tokens, const int64_t* pos, PoolMultiFn pool, void* user, int32_t* out,
+                          std::string& err) {
+-    int rows[8] = {};
+-    for (int t = 0; t < S && t < 8; ++t) rows[t] = t;
++    int rows[strata::kernels::kVerifyCapT] = {};
++    for (int t = 0; t < S && t < strata::kernels::kVerifyCapT; ++t) rows[t] = t;
+     return run_slot_rows(rows, S, tokens, pos, pool, user, out, err);
+ }
+ 
+@@ -3921,8 +3925,8 @@ bool Verifier::batch_launch(int base, int S, const int32_t *tokens,
+                             const int64_t *pos, std::string &err) try {
+     const OnDevice on_device(device_);
+     if (b_running_) { err = "verify: batch_launch while this stage is busy"; return false; }
+-    int rows[8] = {};
+-    for (int t = 0; t < S && t < 8; ++t) rows[t] = base + t;
++    int rows[strata::kernels::kVerifyCapT] = {};
++    for (int t = 0; t < S && t < strata::kernels::kVerifyCapT; ++t) rows[t] = base + t;
+     if (!stage_batch(rows, S, base, tokens, pos, err)) return false;
+     if (ep_on()) ep_q_->ext_oneapi_graph(*ep_exec_bm_[bkey(rows, S, base)]);   // the peer's half first, as run()
+     dpct::err0 le = DPCT_CHECK_ERROR(
+@@ -4153,7 +4157,7 @@ bool Verifier::capture_all(std::string &err) try {
+                                functionality is redundant in SYCL.
+                                */
+     }
+-    pl_ple_rows_.assign((size_t) strata::kernels::kVerifyMaxT * strata::kernels::PLE_N_HEADS, 0u);
++    pl_ple_rows_.assign((size_t) strata::kernels::kVerifyCapT * strata::kernels::PLE_N_HEADS, 0u);
+     return true;
+ }
+ catch (sycl::exception const &exc) {
+diff --git a/sycl/src/kernels/cuda/fused_gr.dp.cpp b/sycl/src/kernels/cuda/fused_gr.dp.cpp
+index abaf16d4..b4dc8625 100644
+--- a/sycl/src/kernels/cuda/fused_gr.dp.cpp
++++ b/sycl/src/kernels/cuda/fused_gr.dp.cpp
+@@ -1771,6 +1771,14 @@ static float* down_partials(sycl::queue* q) {
+ 
+ bool fused_gr_read_multi(const FusedGrArgs* a, int n_tok, float* xn_scratch, void* stream, unsigned long long* stamp_buf,
+                          int stamp_i0) {
++    if (n_tok > kFusedGrMaxT && verify_t12() && n_tok <= kVerifyCapT && xn_scratch != nullptr && a[0].q8_cnt == nullptr) {
++        // night T12: rows [0, 8) and [8, n), each row's read is its own; xn holds hc * n_embd floats per row
++        const size_t row = (size_t) D;   // hc * n_embd
++        const bool r0 = fused_gr_read_multi(a, kFusedGrMaxT, xn_scratch, stream, stamp_buf, stamp_i0);
++        const bool r1 = fused_gr_read_multi(a + kFusedGrMaxT, n_tok - kFusedGrMaxT, xn_scratch + row * kFusedGrMaxT, stream,
++                                            nullptr, stamp_i0);
++        return r0 && r1;
++    }
+     if (n_tok < 1 || n_tok > kFusedGrMaxT || xn_scratch == nullptr) {
+         std::fprintf(stderr, "fused_gr_read_multi: invalid arguments\n");
+         std::exit(1);
+diff --git a/sycl/src/kernels/cuda/native_bf16.dp.cpp b/sycl/src/kernels/cuda/native_bf16.dp.cpp
+index 28f8db8e..94428404 100644
+--- a/sycl/src/kernels/cuda/native_bf16.dp.cpp
++++ b/sycl/src/kernels/cuda/native_bf16.dp.cpp
+@@ -2,6 +2,7 @@
+ #include <sycl/sycl.hpp>
+ #include <dpct/dpct.hpp>
+ #include "strata/sycl_queue.hpp"
++#include "strata/kernels/verify_kernels.hpp"
+ #include "strata/kernels/bf16_gemv.hpp"
+ #include "s26_tsum.dp.hpp"
+ #include "strata/kernels/bf16_bits.hpp"
+@@ -580,6 +581,11 @@ bool bf16_gemv_fp32_mmvf_multi_aux(const float* x, int64_t ldx, const uint16_t*
+ 
+ void bf16_gemv_fp32_mmvf_multi(const float* x, int64_t ldx, const uint16_t* w, float* y, int64_t ldy,
+                                int64_t n_in, int64_t n_out, int n_tok, void* stream) {
++    if (n_tok > 8 && verify_t12() && n_tok <= kVerifyCapT) {   // night T12: rows [0, 8) and [8, n) (row-independent)
++        bf16_gemv_fp32_mmvf_multi(x, ldx, w, y, ldy, n_in, n_out, 8, stream);
++        bf16_gemv_fp32_mmvf_multi(x + (size_t) ldx * 8, ldx, w, y + (size_t) ldy * 8, ldy, n_in, n_out, n_tok - 8, stream);
++        return;
++    }
+     if (n_tok == 1 && ldy >= n_out) { bf16_gemv_fp32_mmvf(x, w, y, n_in, n_out, stream); return; }
+     if (n_tok < 1 || n_tok > 8 || n_in <= 0 || (n_in & 1) != 0 || n_out <= 0 || (ldx & 1) != 0 || x == nullptr ||
+         w == nullptr || y == nullptr || (reinterpret_cast<uintptr_t>(x) & 7u) != 0)
+diff --git a/sycl/src/kernels/cuda/native_mmvq.dp.cpp b/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+index c409d62c..f0389ff1 100644
+--- a/sycl/src/kernels/cuda/native_mmvq.dp.cpp
++++ b/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+@@ -29,6 +29,7 @@
+ #include <dpct/dpct.hpp>
+ #include "strata/sycl_math.hpp"
+ #include "strata/sycl_queue.hpp"
++#include "strata/kernels/verify_kernels.hpp"
+ #include "strata/kernels/native_mmvq.hpp"
+ #include "strata/kernels/native_head_mmvq.hpp"
+ #include "strata/kernels/dp4a.hpp"
+@@ -4604,6 +4605,12 @@ std::size_t native_q8_1_bytes(int n_in, int ncols) {
+ }
+ 
+ void native_quantize_q8_1(const float* x, void* x_q8_1, int n_in, int ncols, void* stream) {
++    if (ncols > MAX_NCOLS && verify_t12() && ncols <= kVerifyCapT) {   // night T12: per 32-element block, chunked
++        native_quantize_q8_1(x, x_q8_1, n_in, MAX_NCOLS, stream);
++        native_quantize_q8_1(x + (size_t) n_in * MAX_NCOLS, (uint8_t*) x_q8_1 + (size_t) (n_in / 32) * 36 * MAX_NCOLS,
++                             n_in, ncols - MAX_NCOLS, stream);
++        return;
++    }
+     validate_shape(n_in, ncols);
+     validate_pointer(x);
+     validate_pointer(x_q8_1);
+@@ -5378,8 +5385,28 @@ void native_mmvq_head(int ggml_type, const void* weights, const void* x_q8_1, fl
+     native_mmvq(ggml_type, weights, x_q8_1, y, n_in, n_out, ncols, stream);
+ }
+ 
++void native_mmvq_dispatch(int ggml_type, const void* weights, const void* x_q8_1, float* y,
++                          int n_in, int n_out, int ncols, void* stream);
++// night lab STRATA_NIGHT_VERIFY_T12: more than 8 columns (a 12-row verify window).  The KREG formats take 9-16 columns
++// whole where STRATA_NIGHT_MMVQ2 enables it (one weight read); every other kernel caps at 8, so the columns go as
++// [0, 8) and [8, n) - each column's arithmetic is that column's in the narrower call.
+ void native_mmvq(int ggml_type, const void* weights, const void* x_q8_1, float* y,
+                  int n_in, int n_out, int ncols, void* stream) {
++    if (ncols > MAX_NCOLS && verify_t12() && ncols <= kVerifyCapT) {
++        if (ggml_type == 12 || ggml_type == 13 || ggml_type == 14 || ggml_type == 23) {
++            try { native_mmvq_dispatch(ggml_type, weights, x_q8_1, y, n_in, n_out, ncols, stream); return; }
++            catch (const std::invalid_argument&) {}   // not taken whole (nothing was launched): chunk below
++        }
++        const size_t xcol = (size_t) (n_in / 32) * 36;
++        native_mmvq_dispatch(ggml_type, weights, x_q8_1, y, n_in, n_out, MAX_NCOLS, stream);
++        native_mmvq(ggml_type, weights, (const uint8_t*) x_q8_1 + xcol * MAX_NCOLS, y + (size_t) n_out * MAX_NCOLS,
++                    n_in, n_out, ncols - MAX_NCOLS, stream);
++        return;
++    }
++    native_mmvq_dispatch(ggml_type, weights, x_q8_1, y, n_in, n_out, ncols, stream);
++}
++void native_mmvq_dispatch(int ggml_type, const void* weights, const void* x_q8_1, float* y,
++                          int n_in, int n_out, int ncols, void* stream) {
+     switch (ggml_type) {
+     case 2: native_q4_0_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
+     case 6: native_q5_0_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
+diff --git a/sycl/src/kernels/cuda/shared_expert.dp.cpp b/sycl/src/kernels/cuda/shared_expert.dp.cpp
+index 765552b6..27d60c68 100644
+--- a/sycl/src/kernels/cuda/shared_expert.dp.cpp
++++ b/sycl/src/kernels/cuda/shared_expert.dp.cpp
+@@ -22,6 +22,7 @@
+ #include <sycl/sycl.hpp>
+ #include <dpct/dpct.hpp>
+ #include "strata/sycl_queue.hpp"
++#include "strata/kernels/verify_kernels.hpp"
+ #include "strata/kernels/shared_expert.hpp"
+ #include "strata/kernels/bf16_gemv.hpp"
+ #include "strata/kernels/bf16_bits.hpp"
+@@ -322,6 +323,17 @@ void shared_expert_multi(int n_tok, const float* x, const uint16_t* x_bf16, cons
+                          const uint16_t* gate_inp_bf16, float* gate, float* up, float* g, float* out, int64_t n_embd,
+                          int64_t n_ff, void* stream, const void* x_q8_1_ready, int lfuse) {
+     const bool gate_deferred = (lfuse & 1) != 0, pair = (lfuse & 2) != 0;
++    if (n_tok > 8 && verify_t12() && n_tok <= kVerifyCapT) {   // night T12: rows [0, 8) and [8, n); the scratch is reused
++        const size_t xrow = (size_t) (n_embd / 32) * 36;
++        shared_expert_multi(8, x, x_bf16, nw, gate_inp_bf16, gate, up, g, out, n_embd, n_ff, stream, x_q8_1_ready, lfuse);
++        NativeSharedWeights w2 = nw;
++        if (w2.x_q8_1) w2.x_q8_1 = (const uint8_t*) w2.x_q8_1 + xrow * 8;
++        shared_expert_multi(n_tok - 8, x ? x + (size_t) n_embd * 8 : nullptr, x_bf16 ? x_bf16 + (size_t) n_embd * 8 : nullptr,
++                            w2, gate_inp_bf16, gate ? gate + (size_t) n_ff * 8 : nullptr, up ? up + (size_t) n_ff * 8 : nullptr,
++                            g ? g + 8 : nullptr, out + (size_t) n_embd * 8, n_embd, n_ff, stream,
++                            x_q8_1_ready ? (const uint8_t*) x_q8_1_ready + xrow * 8 : nullptr, lfuse);
++        return;
++    }
+     if (n_tok < 1 || n_tok > 8 || !nw.q8_1 || !nw.gate_data || !nw.up_data || !nw.down_data || !stream)
+         throw std::invalid_argument("shared_expert_multi: needs 1..8 tokens, native weights, scratch and a stream");
+     dpct::queue_ptr cs = strata::q_of(stream);
+diff --git a/sycl/src/kernels/cuda/verify_kernels.dp.cpp b/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+index 8a4b00e1..77288c04 100644
+--- a/sycl/src/kernels/cuda/verify_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+@@ -1718,8 +1718,25 @@ void dense_steps(const int32_t* cells, int n, int32_t* steps, void* stream) {
+     check("dense_steps");
+ }
+ 
++bool verify_t12() {
++    static const bool on = [] {
++        const char* e = std::getenv("STRATA_NIGHT_VERIFY_T12");
++        const bool b = e != nullptr && e[0] == '1';
++        if (b) std::fprintf(stderr, "strata night: STRATA_NIGHT_VERIFY_T12=1 (verify windows of up to 12 rows)\n");
++        return b;
++    }();
++    return on;
++}
++int verify_max_t() { return verify_t12() ? 12 : kVerifyMaxT; }
+ void gdn_conv_l2_multi(const float* history, const float* qkv, const float* conv_w, float* h, int channels,
+                        int qk_heads, float eps, int n_tok, void* stream, int t_begin, bool commit) {
++    if (n_tok > kVerifyMaxT && !commit && verify_t12() && n_tok <= kVerifyCapT) {   // night T12: rows [0, 8) and [8, n)
++        // token t reads [history | qkv_0 .. qkv_t]: the second call keeps the same buffers and starts at t_begin + 8
++        gdn_conv_l2_multi(history, qkv, conv_w, h, channels, qk_heads, eps, kVerifyMaxT, stream, t_begin, false);
++        gdn_conv_l2_multi(history, qkv, conv_w, h, channels, qk_heads, eps, n_tok - kVerifyMaxT, stream,
++                          t_begin + kVerifyMaxT, false);
++        return;
++    }
+     if (!history || !qkv || !conv_w || !h || channels % S != 0 || n_tok < 1 || n_tok > kVerifyMaxT ||
+         (commit && (n_tok != 1 || t_begin != 0))) {
+         std::fprintf(stderr, "gdn_conv_l2_multi: invalid arguments\n");
+@@ -1815,6 +1832,12 @@ bool night_gdn_ab() {
+ void gdn_ab_set_night(int on) { g_night_gdn_ab_force = on; }
+ void gdn_ab_multi(const float* x, const uint16_t* w_alpha, const uint16_t* w_beta, const float* dt, const float* ssm_a,
+                   float* gate, float* beta, int n_embd, int h_v, int n_tok, void* stream) {
++    if (n_tok > kVerifyMaxT && verify_t12() && n_tok <= kVerifyCapT) {   // night T12: column-independent, chunked
++        gdn_ab_multi(x, w_alpha, w_beta, dt, ssm_a, gate, beta, n_embd, h_v, kVerifyMaxT, stream);
++        gdn_ab_multi(x + (size_t) kVerifyMaxT * n_embd, w_alpha, w_beta, dt, ssm_a, gate + (size_t) kVerifyMaxT * h_v,
++                     beta + (size_t) kVerifyMaxT * h_v, n_embd, h_v, n_tok - kVerifyMaxT, stream);
++        return;
++    }
+     if (n_embd % 8 != 0 || n_tok < 1 || n_tok > kVerifyMaxT) {
+         std::fprintf(stderr, "gdn_ab_multi: invalid arguments\n");
+         std::exit(1);
+diff --git a/sycl/src/kernels/ep_night_bench.cpp b/sycl/src/kernels/ep_night_bench.cpp
+index 162f4c82..bf2f6b96 100644
+--- a/sycl/src/kernels/ep_night_bench.cpp
++++ b/sycl/src/kernels/ep_night_bench.cpp
+@@ -13,6 +13,11 @@
+ #include "strata/kernels/iq_kernels.hpp"
+ #include "strata/kernels/native_moe.hpp"
+ #include "strata/kernels/ep_kernels.hpp"
++#include <type_traits>
++#include "strata/kernels/fused_gr.hpp"
++#include "strata/kernels/shared_expert.hpp"
++#include "strata/kernels/bf16_gemv.hpp"
++#include "strata/kernels/native_mmvq.hpp"
+ #include "strata/kernels/native_router.hpp"
+ #include "strata/kernels/verify_kernels.hpp"
+ 
+@@ -656,6 +661,189 @@ int gdnstep_bench(int reps) {
+     return bad ? 1 : 0;
+ }
+ 
++// ------------------------------------------------------------------------------------------------ t12 (VERIFY_T12)
++// Each entry point that chunks above 8 rows (STRATA_NIGHT_VERIFY_T12=1): the 12-row call against the same entry called
++// on rows [0, 8) and [8, 12) with offset pointers (must be memcmp-equal: the offsets are right), and for MMVQ against
++// two 6-row calls (the column arithmetic of a 6- vs 8-/4-column kernel; reported).
++size_t blk_bytes(int t) { return k::iq_row_bytes(t, (t == 20 || t == 8) ? 32 : t == 42 ? 64 : 256); }
++std::vector<uint8_t> rand_w(int t, int64_t rows, int64_t n, std::mt19937& rng) {
++    const size_t rb = k::iq_row_bytes(t, n), bs = blk_bytes(t);
++    std::vector<uint8_t> w((size_t) rows * rb);
++    std::uniform_int_distribution<int> byte(0, 255), ex(1, 5), man(0, 1023), sgn(0, 1);
++    for (auto& b : w) b = (uint8_t) byte(rng);
++    for (size_t o = 0; o < w.size(); o += bs) {
++        auto h = [&] { return (uint16_t) ((sgn(rng) ? 0x8000 : 0) | (ex(rng) << 10) | man(rng)); };
++        if (t == 14) { const uint16_t d = h(); std::memcpy(&w[o + 208], &d, 2); }
++        else {
++            const uint16_t d = h(); std::memcpy(&w[o], &d, 2);
++            if (t == 12 || t == 13) { const uint16_t m = h(); std::memcpy(&w[o + 2], &m, 2); }
++        }
++    }
++    return w;
++}
++template <class T> T* up(sycl::queue& q, const std::vector<T>& h) { T* d = sycl::malloc_device<T>(h.size() + 64, q); q.memcpy(d, h.data(), h.size() * sizeof(T)).wait(); return d; }
++template <class T> std::vector<T> down(sycl::queue& q, const T* d, size_t n) { std::vector<T> h(n); q.memcpy(h.data(), d, n * sizeof(T)).wait(); return h; }
++struct Cmp { bool same = true; double max_rel = 0; };
++template <class T> Cmp cmpv(const std::vector<T>& a, const std::vector<T>& b) {
++    Cmp c; c.same = !std::memcmp(a.data(), b.data(), a.size() * sizeof(T));
++    if constexpr (std::is_floating_point_v<T>)
++        for (size_t i = 0; i < a.size(); ++i) {
++            const double d = std::fabs((double) a[i] - (double) b[i]), m = std::fabs((double) a[i]);
++            if (m > 1e-6) c.max_rel = std::max(c.max_rel, d / m);
++        }
++    return c;
++}
++int t12_bench() {
++    sycl::queue& q = Q();
++    std::mt19937 rng(1212);
++    std::normal_distribution<float> nd(0.f, 1.f);
++    const int T = 12;
++    int bad = 0;
++    auto report = [&](const char* what, bool same, double rel6 = -1) {
++        bad += !same;
++        if (rel6 >= 0) std::printf("t12 %-34s 12 rows vs [0,8)+[8,12): %s; vs 6+6 rows max rel %.3g\n", what, same ? "bitwise" : "FAIL", rel6);
++        else std::printf("t12 %-34s 12 rows vs [0,8)+[8,12): %s\n", what, same ? "bitwise" : "FAIL");
++    };
++    // quantize
++    const int NI = 2560;
++    std::vector<float> x((size_t) T * NI);
++    for (auto& v : x) v = nd(rng);
++    float* d_x = up(q, x);
++    const size_t xr = (size_t) (NI / 32) * 36;
++    uint8_t* xq12 = sycl::malloc_device<uint8_t>(xr * T, q);
++    uint8_t* xq84 = sycl::malloc_device<uint8_t>(xr * T, q);
++    k::native_quantize_q8_1(d_x, xq12, NI, T, &q);
++    k::native_quantize_q8_1(d_x, xq84, NI, 8, &q);
++    k::native_quantize_q8_1(d_x + 8 * NI, xq84 + 8 * xr, NI, 4, &q);
++    q.wait();
++    report("native_quantize_q8_1", cmpv(down(q, xq12, xr * T), down(q, xq84, xr * T)).same);
++    // MMVQ, every format the window uses
++    for (int t : {12, 13, 14, 23, 21, 20, 8, 42}) {
++        const int NO = 1024;
++        auto w = rand_w(t, NO, NI, rng);
++        uint8_t* d_w = up(q, w);
++        float* y12 = sycl::malloc_device<float>((size_t) T * NO, q);
++        float* y84 = sycl::malloc_device<float>((size_t) T * NO, q);
++        float* y66 = sycl::malloc_device<float>((size_t) T * NO, q);
++        k::native_mmvq(t, d_w, xq12, y12, NI, NO, T, &q);
++        k::native_mmvq(t, d_w, xq12, y84, NI, NO, 8, &q);
++        k::native_mmvq(t, d_w, xq12 + 8 * xr, y84 + 8 * NO, NI, NO, 4, &q);
++        k::native_mmvq(t, d_w, xq12, y66, NI, NO, 6, &q);
++        k::native_mmvq(t, d_w, xq12 + 6 * xr, y66 + 6 * NO, NI, NO, 6, &q);
++        q.wait();
++        const auto a = down(q, y12, (size_t) T * NO), b = down(q, y84, (size_t) T * NO), c = down(q, y66, (size_t) T * NO);
++        char nm[48]; std::snprintf(nm, sizeof nm, "native_mmvq type %d 2560->1024", t);
++        report(nm, cmpv(a, b).same, cmpv(a, c).max_rel);
++        for (void* p : {(void*) d_w, (void*) y12, (void*) y84, (void*) y66}) sycl::free(p, q);
++    }
++    // BF16 multi GEMV (the router 2560 -> 512)
++    {
++        std::vector<uint16_t> w((size_t) 512 * NI);
++        for (auto& v : w) { float f = 0.05f * nd(rng); uint32_t u; std::memcpy(&u, &f, 4); v = (uint16_t) (u >> 16); }
++        uint16_t* d_w = up(q, w);
++        float* y12 = sycl::malloc_device<float>((size_t) T * 512, q);
++        float* y84 = sycl::malloc_device<float>((size_t) T * 512, q);
++        k::bf16_gemv_fp32_mmvf_multi(d_x, NI, d_w, y12, 512, NI, 512, T, &q);
++        k::bf16_gemv_fp32_mmvf_multi(d_x, NI, d_w, y84, 512, NI, 512, 8, &q);
++        k::bf16_gemv_fp32_mmvf_multi(d_x + 8 * NI, NI, d_w, y84 + 8 * 512, 512, NI, 512, 4, &q);
++        q.wait();
++        report("bf16_gemv_fp32_mmvf_multi 2560->512", cmpv(down(q, y12, (size_t) T * 512), down(q, y84, (size_t) T * 512)).same);
++        for (void* p : {(void*) d_w, (void*) y12, (void*) y84}) sycl::free(p, q);
++    }
++    // GDN ab + conv/l2
++    {
++        const int hv = 48, C = 10240;
++        std::vector<uint16_t> wa((size_t) hv * NI), wb((size_t) hv * NI);
++        for (auto* v : {&wa, &wb}) for (auto& e : *v) { float f = 0.05f * nd(rng); uint32_t u; std::memcpy(&u, &f, 4); e = (uint16_t) (u >> 16); }
++        std::vector<float> dt(hv), sa(hv);
++        for (auto& e : dt) e = nd(rng);
++        for (auto& e : sa) e = -std::fabs(nd(rng));
++        uint16_t *d_wa = up(q, wa), *d_wb = up(q, wb);
++        float *d_dt = up(q, dt), *d_sa = up(q, sa);
++        float* g12 = sycl::malloc_device<float>(T * hv, q); float* b12 = sycl::malloc_device<float>(T * hv, q);
++        float* g84 = sycl::malloc_device<float>(T * hv, q); float* b84 = sycl::malloc_device<float>(T * hv, q);
++        k::gdn_ab_multi(d_x, d_wa, d_wb, d_dt, d_sa, g12, b12, NI, hv, T, &q);
++        k::gdn_ab_multi(d_x, d_wa, d_wb, d_dt, d_sa, g84, b84, NI, hv, 8, &q);
++        k::gdn_ab_multi(d_x + 8 * NI, d_wa, d_wb, d_dt, d_sa, g84 + 8 * hv, b84 + 8 * hv, NI, hv, 4, &q);
++        q.wait();
++        report("gdn_ab_multi", cmpv(down(q, g12, T * hv), down(q, g84, T * hv)).same && cmpv(down(q, b12, T * hv), down(q, b84, T * hv)).same);
++        std::vector<float> hist((size_t) C * 3), qkv((size_t) T * C), cw((size_t) C * 4);
++        for (auto* v : {&hist, &qkv, &cw}) for (auto& e : *v) e = 0.3f * nd(rng);
++        float *d_hist = up(q, hist), *d_qkv = up(q, qkv), *d_cw = up(q, cw);
++        float* h12 = sycl::malloc_device<float>((size_t) T * C, q); float* h84 = sycl::malloc_device<float>((size_t) T * C, q);
++        k::gdn_conv_l2_multi(d_hist, d_qkv, d_cw, h12, C, 32, 1e-6f, T, &q);
++        k::gdn_conv_l2_multi(d_hist, d_qkv, d_cw, h84, C, 32, 1e-6f, 8, &q, 0, false);
++        k::gdn_conv_l2_multi(d_hist, d_qkv, d_cw, h84, C, 32, 1e-6f, 4, &q, 8, false);
++        q.wait();
++        report("gdn_conv_l2_multi", cmpv(down(q, h12, (size_t) T * C), down(q, h84, (size_t) T * C)).same);
++        for (void* p : {(void*) d_wa, (void*) d_wb, (void*) d_dt, (void*) d_sa, (void*) g12, (void*) b12, (void*) g84, (void*) b84,
++                        (void*) d_hist, (void*) d_qkv, (void*) d_cw, (void*) h12, (void*) h84}) sycl::free(p, q);
++    }
++    // shared expert (IQ3_S gate/up 2560 -> 640, IQ4_NL down 640 -> 2560, BF16 gate row)
++    {
++        const int FF = 640;
++        auto wg = rand_w(21, FF, NI, rng), wu = rand_w(21, FF, NI, rng), wd = rand_w(20, NI, FF, rng);
++        std::vector<uint16_t> gi(NI);
++        for (auto& e : gi) { float f = 0.05f * nd(rng); uint32_t u; std::memcpy(&u, &f, 4); e = (uint16_t) (u >> 16); }
++        uint8_t *d_wg = up(q, wg), *d_wu = up(q, wu), *d_wd = up(q, wd);
++        uint16_t* d_gi = up(q, gi);
++        std::vector<uint16_t> xb((size_t) T * NI);
++        for (size_t i = 0; i < xb.size(); ++i) { uint32_t u; std::memcpy(&u, &x[i], 4); xb[i] = (uint16_t) (u >> 16); }
++        uint16_t* d_xb = up(q, xb);
++        uint8_t* scr = sycl::malloc_device<uint8_t>(xr * 16 + (size_t) 16 * (FF / 32) * 36, q);
++        float* gate = sycl::malloc_device<float>((size_t) T * FF, q); float* upb = sycl::malloc_device<float>((size_t) T * FF, q);
++        float* gg[2] = {sycl::malloc_device<float>(T, q), sycl::malloc_device<float>(T, q)};
++        float* out[2] = {sycl::malloc_device<float>((size_t) T * NI, q), sycl::malloc_device<float>((size_t) T * NI, q)};
++        k::NativeSharedWeights nw;
++        nw.gate_type = 21; nw.gate_data = d_wg; nw.up_type = 21; nw.up_data = d_wu; nw.down_type = 20; nw.down_data = d_wd;
++        nw.q8_1 = scr;
++        k::shared_expert_multi(T, d_x, d_xb, nw, d_gi, gate, upb, gg[0], out[0], NI, FF, &q, nullptr, 0);
++        k::shared_expert_multi(8, d_x, d_xb, nw, d_gi, gate, upb, gg[1], out[1], NI, FF, &q, nullptr, 0);
++        k::shared_expert_multi(4, d_x + 8 * NI, d_xb + 8 * NI, nw, d_gi, gate + 8 * FF, upb + 8 * FF, gg[1] + 8, out[1] + 8 * NI, NI, FF, &q, nullptr, 0);
++        q.wait();
++        report("shared_expert_multi (IQ3_S/IQ4_NL)", cmpv(down(q, out[0], (size_t) T * NI), down(q, out[1], (size_t) T * NI)).same &&
++                                                     cmpv(down(q, gg[0], T), down(q, gg[1], T)).same);
++        for (void* p : {(void*) d_wg, (void*) d_wu, (void*) d_wd, (void*) d_gi, (void*) d_xb, (void*) scr, (void*) gate, (void*) upb,
++                        (void*) gg[0], (void*) gg[1], (void*) out[0], (void*) out[1]}) sycl::free(p, q);
++    }
++    // the HC read (BF16 weights: the per-layer read with inject, no pending write)
++    {
++        const int D = 10240, LR = 320, HCn = 4;
++        auto bfv = [&](size_t n, float s) { std::vector<uint16_t> v(n); for (auto& e : v) { float f = s * nd(rng); uint32_t u; std::memcpy(&u, &f, 4); e = (uint16_t) (u >> 16); } return v; };
++        std::vector<float> R((size_t) T * D), wn(D);
++        for (auto& e : R) e = nd(rng);
++        for (auto& e : wn) e = 1.0f + 0.1f * nd(rng);
++        float *d_R = up(q, R), *d_wn = up(q, wn);
++        uint16_t *d_wd = up(q, bfv((size_t) LR * D, 0.02f)), *d_wu = up(q, bfv((size_t) D * LR, 0.02f)), *d_wi = up(q, bfv((size_t) HCn * D, 0.02f));
++        float* lo[2]; float* rs[2]; float* io[2]; float* mx[2]; float* xn[2];
++        for (int v = 0; v < 2; ++v) {
++            lo[v] = sycl::malloc_device<float>((size_t) T * LR, q); rs[v] = sycl::malloc_device<float>(T * HCn, q);
++            io[v] = sycl::malloc_device<float>(T * HCn, q); mx[v] = sycl::malloc_device<float>((size_t) T * 2560, q);
++            xn[v] = sycl::malloc_device<float>((size_t) T * D, q);
++        }
++        auto args = [&](int v, int t) {
++            k::FusedGrArgs a;
++            a.R = d_R + (size_t) t * D; a.R_out = const_cast<float*>(a.R); a.apply = false;
++            a.w_norm = d_wn; a.w_down = d_wd; a.w_up = d_wu; a.w_inject = d_wi; a.eps = 1e-6f;
++            a.lo = lo[v] + t * LR; a.rs = rs[v] + t * HCn; a.inject_out = io[v] + t * HCn; a.mixed = mx[v] + (size_t) t * 2560;
++            return a;
++        };
++        k::FusedGrArgs f0[16], f1[16];
++        for (int t = 0; t < T; ++t) { f0[t] = args(0, t); f1[t] = args(1, t); }
++        k::fused_gr_read_multi(f0, T, xn[0], &q);
++        k::fused_gr_read_multi(f1, 8, xn[1], &q);
++        k::fused_gr_read_multi(f1 + 8, 4, xn[1] + (size_t) 8 * D, &q);
++        q.wait();
++        report("fused_gr_read_multi (HC read)", cmpv(down(q, mx[0], (size_t) T * 2560), down(q, mx[1], (size_t) T * 2560)).same &&
++                                               cmpv(down(q, io[0], T * HCn), down(q, io[1], T * HCn)).same);
++        for (void* p : {(void*) d_R, (void*) d_wn, (void*) d_wd, (void*) d_wu, (void*) d_wi}) sycl::free(p, q);
++        for (int v = 0; v < 2; ++v) for (void* p : {(void*) lo[v], (void*) rs[v], (void*) io[v], (void*) mx[v], (void*) xn[v]}) sycl::free(p, q);
++    }
++    for (void* p : {(void*) d_x, (void*) xq12, (void*) xq84}) sycl::free(p, q);
++    std::printf("t12: %d failures (verify_max_t() = %d)\n", bad, k::verify_max_t());
++    return bad ? 1 : 0;
++}
++
+ }  // namespace
+ 
+ int main(int argc, char** argv) {
+@@ -665,6 +853,7 @@ int main(int argc, char** argv) {
+     if (mode == "plan") return plan_bench(argc > 2 ? std::atoi(argv[2]) : 20);
+     if (mode == "router") return router_bench(argc > 2 ? std::atoi(argv[2]) : 20);
+     if (mode == "gdnab") return gdnab_bench(argc > 2 ? std::atoi(argv[2]) : 20);
++    if (mode == "t12") return t12_bench();
+     if (mode == "gdnstep") return gdnstep_bench(argc > 2 ? std::atoi(argv[2]) : 20);
+     std::fprintf(stderr, "usage: ep_night_bench grouped|send\n");
+     return 2;
+diff --git a/sycl/src/program/generate.cpp b/sycl/src/program/generate.cpp
+index 3c1cf562..4f480163 100644
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -4040,7 +4040,7 @@ int main(int argc, char **argv) try {
+     }
+     std::vector<std::vector<std::unique_ptr<strata::core::SessionState>>> bslot_ss;
+     if (o.batch != 0) {
+-        const int cap = strata::kernels::kVerifyMaxT;
++        const int cap = strata::kernels::verify_max_t();
+         const char* off = !o.serve ? "it needs --serve" : o.batch < 2 ? "it needs 2 or more slots"
+                         : split_same ? "it needs each stage of a layer split on its own GPU" : nullptr;
+         if (off != nullptr) {
+@@ -7323,7 +7323,7 @@ int main(int argc, char **argv) try {
+         // the widest window; a request without penalties gets a null buffer and takes the byte-for-byte
+         // neutral path (no upload, no buffer handed to the sampler).
+         constexpr int kPenaltyWindowCap = 4096;
+-        constexpr size_t kHistSlots = (size_t) kPenaltyWindowCap * (size_t) strata::kernels::kVerifyMaxT;
++        constexpr size_t kHistSlots = (size_t) kPenaltyWindowCap * (size_t) strata::kernels::kVerifyCapT;
+         int32_t* d_hist = nullptr;
+         std::vector<int32_t> hist_stage(kHistSlots, -1);
+         const int hist_dev = last_st ? last_st->dev : -1;   // with the head: the last stage's device
+@@ -7527,7 +7527,7 @@ int main(int argc, char **argv) try {
+         if (batch_mtp) ver.set_batch_graph_limit(64);   // --batch-mtp only: slot rotation makes many layouts (LRU); 0.1.39 keeps all
+         if (ep_cfg.device >= 0) ver.set_ep(ep_cfg);
+         if (!ver.init(wt, g, ss, vh, native_head.loaded() ? &native_head : nullptr,
+-                      batch_mtp ? strata::kernels::kVerifyMaxT : std::max(o.spec, o.batch), err) ||
++                      batch_mtp ? strata::kernels::verify_max_t() : std::max(o.spec, o.batch), err) ||
+             (use_mtp && !mtp.bind(last_st ? last_st->wt : wt, last_st ? &last_st->head : &native_head,
+                                   pipe ? pl_mtp_R : ver.final_R_all(), err))) {
+             std::fprintf(stderr, "strata serve: %s\n", err.c_str());
+@@ -9129,7 +9129,7 @@ int main(int argc, char **argv) try {
+         struct BSlot {
+             bool active = false, stop = false;
+             int32_t x = 0;                 ///< the token the next window feeds (not yet in the slot's state)
+-            std::array<int32_t, strata::kernels::kVerifyMaxT> draft{}; ///< the slot's next MTP proposal
++            std::array<int32_t, strata::kernels::kVerifyCapT> draft{}; ///< the slot's next MTP proposal
+             bool draft_ready = false;
+             int n_draft = 0;               ///< the drafts `draft` holds (what the drafter returned, <= the depth)
+             int64_t p = 0;                 ///< its position
+@@ -9435,16 +9435,16 @@ int main(int argc, char **argv) try {
+         // so it keeps the conversation it holds
+         auto batch_step = [&]() -> bool {
+             int S = 0;
+-            int rows[strata::kernels::kVerifyMaxT] = {};
+-            int32_t tok[strata::kernels::kVerifyMaxT] = {}, outb[strata::kernels::kVerifyMaxT] = {};
+-            int64_t pos[strata::kernels::kVerifyMaxT] = {};
+-            int first[strata::kernels::kVerifyMaxT] = {}, active[strata::kernels::kVerifyMaxT] = {};
++            int rows[strata::kernels::kVerifyCapT] = {};
++            int32_t tok[strata::kernels::kVerifyCapT] = {}, outb[strata::kernels::kVerifyCapT] = {};
++            int64_t pos[strata::kernels::kVerifyCapT] = {};
++            int first[strata::kernels::kVerifyCapT] = {}, active[strata::kernels::kVerifyCapT] = {};
+             static size_t next_slot = 0;
+             // An MTP slot's group is its current token and the drafts it holds (1 + n_draft rows, n_draft <= the
+             // depth; two rows with the default depth 1); rotate slots when the window cannot take them all
+             // (batch_depth.hpp: the first slot that does not fit ends the window, none is skipped for a later one).
+             int A = 0;
+-            int glen[strata::kernels::kVerifyMaxT] = {};
++            int glen[strata::kernels::kVerifyCapT] = {};
+             {
+                 const size_t nb = bs.size();
+                 std::vector<int> nd(nb, 0);
+@@ -9455,7 +9455,7 @@ int main(int argc, char **argv) try {
+                         bs[b].n_draft, bs[b].p, (int64_t) o.max_context) : 0;
+                 }
+                 A = strata::core::batch_pack(act.get(), nd.data(), (int) nb, next_slot, batch_mtp,
+-                                             strata::kernels::kVerifyMaxT, rows, first, glen, active, &S);
++                                             strata::kernels::verify_max_t(), rows, first, glen, active, &S);
+             }
+             for (int a = 0; a < A; ++a) {
+                 const BSlot& sl = bs[(size_t) active[a]];
+@@ -9521,7 +9521,7 @@ int main(int argc, char **argv) try {
+             // STRATA_BATCH_MTP_PAIR_HEAD: the slots' drafts are deferred past this loop (their rows copied here) so the
+             // two can run as a pair; off, each slot drafts inside the loop exactly as before
+             struct PendDraft { int b = 0, t = 0, G = 0, nd = 0; };
+-            PendDraft pend[strata::kernels::kVerifyMaxT];
++            PendDraft pend[strata::kernels::kVerifyCapT];
+             int n_pend = 0;
+             for (int t = 0; t < A; ++t) {
+                 const int b = active[t];
+@@ -9672,8 +9672,8 @@ int main(int argc, char **argv) try {
+         struct PGroup {
+             bool inflight = false;
+             int stage = 0;                  ///< the stage it runs on or waits for
+-            int32_t tok[strata::kernels::kVerifyMaxT] = {};
+-            int64_t pos[strata::kernels::kVerifyMaxT] = {};
++            int32_t tok[strata::kernels::kVerifyCapT] = {};
++            int64_t pos[strata::kernels::kVerifyCapT] = {};
+             int64_t since = 0;              ///< tick it started waiting (fairness)
+         };
+         std::vector<PGroup> pg((size_t) (piped ? o.batch_groups : 0));
