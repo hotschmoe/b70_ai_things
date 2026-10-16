@@ -25211,3 +25211,22 @@ inferences rejected. Exact retained ISA first, one offline decode only by
 root selection if needed. No throughput/default/target change. Evidence:
 strata/flash-next/lowlevel_probe/dense_mmvq_source_s121/ and
  docs/20261016_strata_dense_mmvq_attribution.md.
+
+
+## 2026-10-16 S124: upstream and contribution refresh
+
+CONFIG -> Read-only official GitHub/gh queries02:25:32-02:28:18UTC plus
+retained local source HEAD/status. No fetch, source mutation or external reply.
+COMMAND -> gh main/PR2511/author contributions and four inline-comment APIs,
+all exit0. Root read dated findings/current responses, verifies seven exact
+small ASCII copies and two explicitly derived records. No build/GPU/model.
+RESULT -> Upstream main remains296b59d2, exactly local baseHEAD; overlays
+remain dirty intentionally. Contributions2511/2468/2526/2623 OPEN/CLEAN,
+last two stilldraft. CLEAN is mergeability, not test/review qualification.
+No new inline reviews/status checks; PR2511 latest conversation is our
+already-posted6199010242 response on head91b02a5c. No unanswered new request.
+VERDICT -> No duplicate response or rebuild. No intervening upstream main
+change invalidates ongoing source audits. Scope is these four PRs/main at
+querytime, not all open work. Evidence:
+strata/flash-next/lowlevel_probe/upstream_refresh_s124/ and
+ docs/20261016_strata_upstream_refresh.md.

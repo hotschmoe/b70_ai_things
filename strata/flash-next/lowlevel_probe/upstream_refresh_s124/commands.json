@@ -1,0 +1,175 @@
+[
+  {
+    "name": "upstream-main",
+    "argv": [
+      "gh",
+      "api",
+      "repos/Niko1221/Strata/commits/main",
+      "--jq",
+      "{sha:.sha,url:.html_url,commit_author:.commit.author,commit_committer:.commit.committer,subject:(.commit.message|split(\"\\n\")[0]),parents:[.parents[].sha]}"
+    ],
+    "utc": "2026-10-16T02:25:32.151394+00:00",
+    "exit": 0,
+    "bytes": 592
+  },
+  {
+    "name": "pr2511",
+    "argv": [
+      "gh",
+      "pr",
+      "view",
+      "2511",
+      "--repo",
+      "Niko1221/Strata",
+      "--json",
+      "number,title,state,isDraft,mergeStateStatus,reviewDecision,headRefName,headRefOid,baseRefName,baseRefOid,updatedAt,url,author,reviews,comments,statusCheckRollup"
+    ],
+    "utc": "2026-10-16T02:25:32.152084+00:00",
+    "exit": 0,
+    "bytes": 3096
+  },
+  {
+    "name": "pr2511-inline",
+    "argv": [
+      "gh",
+      "api",
+      "--paginate",
+      "repos/Niko1221/Strata/pulls/2511/comments?per_page=100"
+    ],
+    "utc": "2026-10-16T02:25:32.152430+00:00",
+    "exit": 0,
+    "bytes": 2
+  },
+  {
+    "name": "related-prs",
+    "argv": [
+      "gh",
+      "pr",
+      "list",
+      "--repo",
+      "Niko1221/Strata",
+      "--author",
+      "@me",
+      "--state",
+      "all",
+      "--limit",
+      "20",
+      "--json",
+      "number,title,state,isDraft,headRefOid,updatedAt,url,reviewDecision"
+    ],
+    "utc": "2026-10-16T02:25:32.152970+00:00",
+    "exit": 0,
+    "bytes": 1131
+  },
+  {
+    "name": "pr2468",
+    "argv": [
+      "gh",
+      "pr",
+      "view",
+      "2468",
+      "--repo",
+      "Niko1221/Strata",
+      "--json",
+      "number,title,state,isDraft,mergeStateStatus,reviewDecision,headRefOid,baseRefOid,updatedAt,url,reviews,comments,statusCheckRollup"
+    ],
+    "utc": "2026-10-16T02:27:58.873116+00:00",
+    "exit": 0,
+    "bytes": 417
+  },
+  {
+    "name": "pr2526",
+    "argv": [
+      "gh",
+      "pr",
+      "view",
+      "2526",
+      "--repo",
+      "Niko1221/Strata",
+      "--json",
+      "number,title,state,isDraft,mergeStateStatus,reviewDecision,headRefOid,baseRefOid,updatedAt,url,reviews,comments,statusCheckRollup"
+    ],
+    "utc": "2026-10-16T02:27:58.873823+00:00",
+    "exit": 0,
+    "bytes": 413
+  },
+  {
+    "name": "pr2623",
+    "argv": [
+      "gh",
+      "pr",
+      "view",
+      "2623",
+      "--repo",
+      "Niko1221/Strata",
+      "--json",
+      "number,title,state,isDraft,mergeStateStatus,reviewDecision,headRefOid,baseRefOid,updatedAt,url,reviews,comments,statusCheckRollup"
+    ],
+    "utc": "2026-10-16T02:27:58.874531+00:00",
+    "exit": 0,
+    "bytes": 426
+  },
+  {
+    "name": "pr2468-inline",
+    "argv": [
+      "gh",
+      "api",
+      "--paginate",
+      "repos/Niko1221/Strata/pulls/2468/comments?per_page=100"
+    ],
+    "utc": "2026-10-16T02:28:17.640825+00:00",
+    "exit": 0,
+    "bytes": 2
+  },
+  {
+    "name": "pr2526-inline",
+    "argv": [
+      "gh",
+      "api",
+      "--paginate",
+      "repos/Niko1221/Strata/pulls/2526/comments?per_page=100"
+    ],
+    "utc": "2026-10-16T02:28:17.641331+00:00",
+    "exit": 0,
+    "bytes": 2
+  },
+  {
+    "name": "pr2623-inline",
+    "argv": [
+      "gh",
+      "api",
+      "--paginate",
+      "repos/Niko1221/Strata/pulls/2623/comments?per_page=100"
+    ],
+    "utc": "2026-10-16T02:28:17.641842+00:00",
+    "exit": 0,
+    "bytes": 2
+  },
+  {
+    "name": "local-source-identity",
+    "argv": [
+      "git",
+      "-C",
+      "/mnt/vm_8tb/b70/build/strata-ab/src-ep",
+      "log",
+      "-1",
+      "--format=%H%n%cs%n%s"
+    ],
+    "utc": "2026-10-16T02:28:17.642160+00:00",
+    "exit": 0,
+    "bytes": 169
+  },
+  {
+    "name": "local-source-status",
+    "argv": [
+      "git",
+      "-C",
+      "/mnt/vm_8tb/b70/build/strata-ab/src-ep",
+      "status",
+      "--short"
+    ],
+    "utc": "2026-10-16T02:28:17.642487+00:00",
+    "exit": 0,
+    "bytes": 1280
+  }
+]

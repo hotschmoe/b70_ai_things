@@ -1,0 +1,43 @@
+{
+  "author": {
+    "id": "MDQ6VXNlcjI0MzA5ODQ1",
+    "is_bot": false,
+    "login": "hotschmoe",
+    "name": "hotschmoe"
+  },
+  "baseRefName": "main",
+  "baseRefOid": "296b59d2f73c8f04a805df29c2fa97655adace78",
+  "comments": [
+    {
+      "id": "IC_kwDOUpvcvc8AAAABcJvx_Q",
+      "author": {
+        "login": "qiuzan2001"
+      },
+      "createdAt": "2026-10-15T04:12:39Z",
+      "url": "https://github.com/Niko1221/Strata/pull/2511#issuecomment-6184235517",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOUpvcvc8AAAABcX1jwg",
+      "author": {
+        "login": "hotschmoe"
+      },
+      "createdAt": "2026-10-15T18:11:18Z",
+      "url": "https://github.com/Niko1221/Strata/pull/2511#issuecomment-6199010242",
+      "viewerDidAuthor": true
+    }
+  ],
+  "headRefName": "batch-mtp-restore-accounting",
+  "headRefOid": "91b02a5c0fc45e782c02bd13e05204fdc5b0e698",
+  "isDraft": false,
+  "mergeStateStatus": "CLEAN",
+  "number": 2511,
+  "reviewDecision": "",
+  "reviews": [],
+  "state": "OPEN",
+  "statusCheckRollup": [],
+  "title": "Report batch MTP draft counts across slot handoffs",
+  "updatedAt": "2026-10-15T18:11:18Z",
+  "url": "https://github.com/Niko1221/Strata/pull/2511",
+  "derived_scope": "Comment records retain only id, author, createdAt, url and viewerDidAuthor. All other comment fields omitted; full response remains external. No review acceptance inference."
+}

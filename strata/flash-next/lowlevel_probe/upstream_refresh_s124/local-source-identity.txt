@@ -1,0 +1,3 @@
+296b59d2f73c8f04a805df29c2fa97655adace78
+2026-10-14
+Merge f-1441-perf (Responses/Codex honours reasoning_effort; setup keeps the installed size on a re-run) into f-1441
