@@ -1,0 +1,35 @@
+strata trace: request 107 0
+strata trace: prompt start 106 -1
+strata batch prefill quantum: allocated 12288 requested 0 effective 12288 eligible 0 from 0 to 100
+strata trace: prompt chunk 0 of 100
+strata trace: read 100 tokens (batched) in 761.9 ms
+strata verify: captured the 4-token window (upload no error, sync no error)
+strata verify: captured the 2-token window (upload no error, sync no error)
+strata trace: read 6 tokens (windows) in 145.1 ms
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 106 1
+strata verify: captured the 1-token window (upload no error, sync no error)
+strata serve: prompt 107 tokens = 0 reused + 107 read in 999 ms (107.1 tok/s), 1 generated in 67 ms (14.9 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata trace: request 108 0
+strata trace: prompt start 107 -1
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 107 1
+strata batch: slot 0 takes 108 tokens (copied in 189.2 ms)
+strata serve: prompt 108 tokens = 107 reused + 1 read in 0 ms (38066.2 tok/s), 1 generated in 22 ms (46.5 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata verify: captured the batch window over slots 0,0,0
+strata serve: conversation cache: parked 108 tokens in 154.1 ms; parked=1 bytes=237786344 evictions=0 snapshot_bytes=237786344 reused_kv_bytes=0
+strata trace: request 107 0
+strata trace: prompt start 106 -1
+strata batch prefill quantum: allocated 12288 requested 0 effective 12288 eligible 0 from 0 to 100
+strata trace: prompt chunk 0 of 100
+strata trace: read 100 tokens (batched) in 587.8 ms
+strata trace: read 6 tokens (windows) in 54.1 ms
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 106 1
+strata batch: slot 1 takes 107 tokens (copied in 191.5 ms)
+strata serve: prompt 107 tokens = 0 reused + 107 read in 900 ms (118.9 tok/s), 1 generated in 21 ms (46.8 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata Q6 center: enabled=0 C6 A2 R1 SG32 PF0 shapes=6144x2560,2560x10240
+strata verify: captured the batch window over slots 1,1,1,0,0,0
+strata verify: captured the batch window over slots 1,1,1
+strata batch: 95 windows, avg 5.36 rows, 47.41 ms/window = run 40.33 (CUDA0 GPU-reach wait 0.00 + CPU experts 0.00) + commit 1.55 + emit 5.52; per layer-window: CPU experts 0.00, VRAM hits 0.00, PCIe 0.00; 90.6 rows/s over 5617 ms of wall time (admissions included)
+strata batch pair head: 92 windows drafted as a pair, 2 deferred but solo (last: one active slot)

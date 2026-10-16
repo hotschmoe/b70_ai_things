@@ -1,0 +1,11 @@
+{
+  "client.py": "AST_PASS",
+  "compare.py": "AST_PASS",
+  "make_configs.py": "AST_PASS",
+  "start_arm.py": "AST_PASS",
+  "embedded_native_identity": "AST_PASS",
+  "stop_and_health.py": "AST_PASS",
+  "stop_exact_passed_S144": true,
+  "no_materialization": true,
+  "no_imports_clients_workloads": true
+}

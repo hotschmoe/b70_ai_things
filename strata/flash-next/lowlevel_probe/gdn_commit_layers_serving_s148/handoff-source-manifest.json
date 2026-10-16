@@ -1,0 +1,12 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_STOPPED_FOR_NIGHT",
+  "runtime_pending_at_cutoff": "S148",
+  "no_new_research_after_stop": true,
+  "no_execution_or_implementation": true,
+  "files": {
+    "findings.md": {
+      "bytes": 6015,
+      "sha256": "adf85a8d30f12e47fa221b2b15ff5bd06b95b96a928f39d41d016d0ed1dabd01"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "present_once": true,
+  "raw": [
+    [
+      "ple io: 189152 rows, 78.0% row-cache hits, 40974 SSD reads (171.5 MB), read p50 288 us p99 1755 us, blocked 722.707 ms total (submit 273.574 ms), cache 40974/1048576 rows, SSD kept awake by 668 reads (slowest 7.1 ms), prefetch_gathers=39 prefetch_tokens=101",
+      "39",
+      "101"
+    ]
+  ],
+  "log_sha256": "e4f9a21ab2f77deaa16f52cb62b5b3251b7b8a943f7b59d313386d5f8a1bba18",
+  "scope": "process cumulative: includes prefill/admission/functionals, not coding-only",
+  "prefetch_gathers": 39,
+  "prefetch_tokens": 101,
+  "requests": 189152
+}

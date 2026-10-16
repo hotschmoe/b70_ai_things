@@ -1,0 +1,32 @@
+{
+  "client.py": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s144-serving-prep/harness-prep/client.py",
+    "bytes": 13242,
+    "sha256": "be5ebafee505a2deaea19001c8be8c961a35ac965ed476ca2d71183845554fc9"
+  },
+  "compare.py": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s144-serving-prep/harness-prep/compare.py",
+    "bytes": 9425,
+    "sha256": "ae5d496ddc0166907d2c44810ce85583364acd16d94a12e796fa68c621720555"
+  },
+  "launch_stage.sh": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s144-serving-prep/harness-prep/launch_stage.sh",
+    "bytes": 1881,
+    "sha256": "e372493208dabfc3dfb752079505ff7f0da230a7d11cd4947205466d1a6a7801"
+  },
+  "make_configs.py": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s144-serving-prep/harness-prep/make_configs.py",
+    "bytes": 6770,
+    "sha256": "a04f4f8136c255464e34925093e4d21ee6662bb7d8f64bb6ef3eaf396daeaf05"
+  },
+  "start_arm.py": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s144-serving-prep/harness-prep/start_arm.py",
+    "bytes": 9479,
+    "sha256": "267d5655edc25fcbf54b3f913602c418292897c751908799a830463cf4408396"
+  },
+  "stop_and_health.py": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s144-serving-prep/harness-prep/stop_and_health.py",
+    "bytes": 7343,
+    "sha256": "341a5ca61b4e55872558770b689321041e3dc793cb311994cf662404139a130e"
+  }
+}

@@ -25864,3 +25864,25 @@ modelscan/ISAround/cachewarm/GPUtouch inbuild.
 VERDICT -> Source/buildPASS/defaultOFF; S148matchedserving separate,
 notnumerical/runtime/RAMqualification. See
 docs/20261016_strata_gdn_commit_layer_main.md.
+
+
+## 2026-10-16 S148: GDN serving HOLD; stop for tonight
+
+CONFIG -> SameNEW S14798f0357dcontrol/ON soleGDNflag0/1; allothers0,
+commonanalyticROPE0/GDNmodes0/1/0, fixed107x1500C2/CPUringABSENT.
+COMMAND -> Root24879explicitbashsequence; warm+3timedpairs perarm,
+immediateONparity/failstop/normalcleanup. Rootfirstdirecthelpercall126
+BEFOREscript/GPU becauseunexecutable; unchangedbytesinvokedviaBash.
+RESULT -> Controlallphases/functionalsPASS; ONwarm/repeat1/repeat2exactPASS.
+Repeat3fullrequest/text/SSE/usageequal butslot1draft1140/934->1142/933,
+windows556->557/solo2->3/roundedrows5.33->5.32; nativeworkgateFAIL.
+ONfunctionalsNOTRUN/comparatorNOTRUN; qualifiedONspeedNULL(not0),
+allrawrowsretained/no matchedsubsetstats/causaldiagnosis. Rootterminal2
+expectedfailstop; BOTHnormalQUIT/wrapper0/fullCIDNAMEgone/card+compiled
+posthealth0, CPU/GPUleasesfree. No reset/retry/newexperiment/modelcall.
+VERDICT -> HOLD/defaultOFF/no promotion/newRAMqualification. Userasked
+finishcurrentanddonefortonight; goalpausedafterfinalcommit/push.
+Devloop -> Preserveusefulsourcevalidation/strictwork/health; avoidrepeat
+permissionmistake byexplicitBash/Python orcheckingmodebeforelaunch. See
+docs/20261016_strata_gdn_commit_serving_hold.md and
+docs/20261016_strata_night_handoff.md.

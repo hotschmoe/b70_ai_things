@@ -1,0 +1,726 @@
+{
+  "copies": [
+    {
+      "destination": "root-final-result.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/root-HOLD-summary.json",
+      "bytes": 9454,
+      "sha256": "c872ae08adf66f16ac23b89b5b4a78e057c2d61b1bf2102d50e6fc1141dc732a",
+      "curated_sha256": "c872ae08adf66f16ac23b89b5b4a78e057c2d61b1bf2102d50e6fc1141dc732a",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "source-prep-README.md",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/README.md",
+      "bytes": 2411,
+      "sha256": "2ac35f7f9b71548d6729f7525e30b4c27ce6c1c9b2d9ed3fc1c547ca955c5bd0",
+      "curated_sha256": "2ac35f7f9b71548d6729f7525e30b4c27ce6c1c9b2d9ed3fc1c547ca955c5bd0",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "controller-diff.patch",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/controller-diff.patch",
+      "bytes": 23775,
+      "sha256": "cbaeb98a83f41dac78cda81864d47c41f3ebf15825e61d21aafcfceb074ed51e",
+      "curated_sha256": "cbaeb98a83f41dac78cda81864d47c41f3ebf15825e61d21aafcfceb074ed51e",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "original-source-pins.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/original-source-pins.json",
+      "bytes": 1734,
+      "sha256": "6010b85f94a52f3a6c97ddaad5ae083fdd1e7532f3ed163f1ce61dce62bdbaf4",
+      "curated_sha256": "6010b85f94a52f3a6c97ddaad5ae083fdd1e7532f3ed163f1ce61dce62bdbaf4",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "required-root-inputs.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/required-root-inputs.json",
+      "bytes": 732,
+      "sha256": "28ee7a246b9c06cdf04b08663e003a6792a8a70fc4fe831bda22af13f144e373",
+      "curated_sha256": "28ee7a246b9c06cdf04b08663e003a6792a8a70fc4fe831bda22af13f144e373",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "reused-prehealth.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/reused-prehealth.json",
+      "bytes": 2273,
+      "sha256": "8e344471f25acef837698c4bf07c87a6a76e5b9856a14768447db68232c7fa22",
+      "curated_sha256": "8e344471f25acef837698c4bf07c87a6a76e5b9856a14768447db68232c7fa22",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "root-HOLD-summary.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/root-HOLD-summary.json",
+      "bytes": 9454,
+      "sha256": "c872ae08adf66f16ac23b89b5b4a78e057c2d61b1bf2102d50e6fc1141dc732a",
+      "curated_sha256": "c872ae08adf66f16ac23b89b5b4a78e057c2d61b1bf2102d50e6fc1141dc732a",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "serving-inputs.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/serving-inputs.json",
+      "bytes": 3653,
+      "sha256": "46f15ac3a5a5d33b55e91506ef423d47a9560431deecab418d6665ea87d84d03",
+      "curated_sha256": "46f15ac3a5a5d33b55e91506ef423d47a9560431deecab418d6665ea87d84d03",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "validation.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/validation.json",
+      "bytes": 303,
+      "sha256": "633634f5612158e8a2f5bf21eddefcec237ca78b184dcac326367173a40066a0",
+      "curated_sha256": "633634f5612158e8a2f5bf21eddefcec237ca78b184dcac326367173a40066a0",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "harness-prep/client.py",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/harness-prep/client.py",
+      "bytes": 13349,
+      "sha256": "97e106c535738b47cdc4344de963b706ecd232be94105c8c799e454671e5ce38",
+      "curated_sha256": "97e106c535738b47cdc4344de963b706ecd232be94105c8c799e454671e5ce38",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "harness-prep/compare.py",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/harness-prep/compare.py",
+      "bytes": 9931,
+      "sha256": "d03927d64912963c09185a528cc765715561cae3e29c8e27c73f196c819b2d40",
+      "curated_sha256": "d03927d64912963c09185a528cc765715561cae3e29c8e27c73f196c819b2d40",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "harness-prep/launch_stage.sh",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/harness-prep/launch_stage.sh",
+      "bytes": 1881,
+      "sha256": "88b213d687cf18c2f7b070c038421d03fddb8ae297cab7f17639f1dd79e32f5f",
+      "curated_sha256": "88b213d687cf18c2f7b070c038421d03fddb8ae297cab7f17639f1dd79e32f5f",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "harness-prep/make_configs.py",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/harness-prep/make_configs.py",
+      "bytes": 7172,
+      "sha256": "bc60920798b30149e89f398cb9875fb4c1a9ade7bbfdb8e7a0acf9f97f3ba079",
+      "curated_sha256": "bc60920798b30149e89f398cb9875fb4c1a9ade7bbfdb8e7a0acf9f97f3ba079",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "harness-prep/start_arm.py",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/harness-prep/start_arm.py",
+      "bytes": 9981,
+      "sha256": "5e152a66ba86e6f1e1c538929e69e0c1d61db98221302decfbb7f25bef94d214",
+      "curated_sha256": "5e152a66ba86e6f1e1c538929e69e0c1d61db98221302decfbb7f25bef94d214",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "harness-prep/stop_and_health.py",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/harness-prep/stop_and_health.py",
+      "bytes": 7343,
+      "sha256": "341a5ca61b4e55872558770b689321041e3dc793cb311994cf662404139a130e",
+      "curated_sha256": "341a5ca61b4e55872558770b689321041e3dc793cb311994cf662404139a130e",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "root-lifecycle/root-invocation-note.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s148-root-lifecycle-helper/root-invocation-note.json",
+      "bytes": 442,
+      "sha256": "83fd43efa3ee3b277db72ecd7c3d1c25d6fee1c1d168bbb2461a6be91c85dba6",
+      "curated_sha256": "83fd43efa3ee3b277db72ecd7c3d1c25d6fee1c1d168bbb2461a6be91c85dba6",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "external-source-manifest.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep-manifest.json",
+      "bytes": 1985,
+      "sha256": "0b3f9f353c7df4b350955ce4d9ec360656eb5e6e1bb5100a918ef27db04a8d02",
+      "curated_sha256": "0b3f9f353c7df4b350955ce4d9ec360656eb5e6e1bb5100a918ef27db04a8d02",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/config.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/config.json",
+      "bytes": 3119,
+      "sha256": "251b7d42c3d063e182747bf890ba3a0174e9c9855a9b31b13bbc885816d42093",
+      "curated_sha256": "251b7d42c3d063e182747bf890ba3a0174e9c9855a9b31b13bbc885816d42093",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/aggregate-proof.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/aggregate-proof.json",
+      "bytes": 597,
+      "sha256": "3348156e54e2f53db82a3a7bd50268d8f50f6dacee26f713b1f754c28074260c",
+      "curated_sha256": "3348156e54e2f53db82a3a7bd50268d8f50f6dacee26f713b1f754c28074260c",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/normal-stop.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/normal-stop.json",
+      "bytes": 507,
+      "sha256": "b890b7d6e3798aeb04acdf5ad2f62017fb497f28c86a331ea430be615bdbd6cc",
+      "curated_sha256": "b890b7d6e3798aeb04acdf5ad2f62017fb497f28c86a331ea430be615bdbd6cc",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/post-health.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/post-health.json",
+      "bytes": 479,
+      "sha256": "8402dd63a66f63b13127415177a6f98bb6539fa82818e1399f372f93478b4d20",
+      "curated_sha256": "8402dd63a66f63b13127415177a6f98bb6539fa82818e1399f372f93478b4d20",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/container-removal.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/container-removal.json",
+      "bytes": 604,
+      "sha256": "822c20b60a8afa95c3ad564117e49c22f64deca82cde981df19be21f8e226514",
+      "curated_sha256": "822c20b60a8afa95c3ad564117e49c22f64deca82cde981df19be21f8e226514",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/prestop-state.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/prestop-state.json",
+      "bytes": 73,
+      "sha256": "6740167a45e5da92794397fd4afd7e6e8bbeafc7e5924c800c4f151561219394",
+      "curated_sha256": "6740167a45e5da92794397fd4afd7e6e8bbeafc7e5924c800c4f151561219394",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/quit-command.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/quit-command.json",
+      "bytes": 272,
+      "sha256": "e96013bdb338cac2e1a04fb4a43d8498fc89d5678b6628398e41171817303d5c",
+      "curated_sha256": "e96013bdb338cac2e1a04fb4a43d8498fc89d5678b6628398e41171817303d5c",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/health-ready.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/health-ready.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99",
+      "curated_sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/health-prestop.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/health-prestop.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99",
+      "curated_sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/root-phases.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/root-phases.json",
+      "bytes": 1425,
+      "sha256": "4e6a923c97cbed3b1367db4892c1416dcfa29da27a85957821c616f0a5ce51d3",
+      "curated_sha256": "4e6a923c97cbed3b1367db4892c1416dcfa29da27a85957821c616f0a5ce51d3",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/card-health.log",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/card-health.log",
+      "bytes": 560,
+      "sha256": "7dd7546c3d579390eebb483fa351e7a73f6d6870f3d8105fbe8234dded18be57",
+      "curated_sha256": "7dd7546c3d579390eebb483fa351e7a73f6d6870f3d8105fbe8234dded18be57",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/collective-health.log",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/collective-health.log",
+      "bytes": 1696,
+      "sha256": "8f612ee7569becd3911faef496db1d1f5c2c214b2b35a2626ad55e49663e0ebd",
+      "curated_sha256": "8f612ee7569becd3911faef496db1d1f5c2c214b2b35a2626ad55e49663e0ebd",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/functional/verdict.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/functional/verdict.json",
+      "bytes": 91,
+      "sha256": "a903d5a1a01382b4c3af586ab82b48b25716a22e8bfbbc2d1bdcb7a2a972ff09",
+      "curated_sha256": "a903d5a1a01382b4c3af586ab82b48b25716a22e8bfbbc2d1bdcb7a2a972ff09",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/functional/models.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/functional/models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f",
+      "curated_sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/coding/warm/pair.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/coding/warm/pair.json",
+      "bytes": 5136,
+      "sha256": "bc804399c78765ed4482abd96378fb16095f288d400e27dab57148aa28349297",
+      "curated_sha256": "bc804399c78765ed4482abd96378fb16095f288d400e27dab57148aa28349297",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/coding/warm/admission-gate.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/coding/warm/admission-gate.json",
+      "bytes": 2411,
+      "sha256": "fb56954c544e364068e951e9ed1d1203cc6c3e0457cd99d642300243a7db3726",
+      "curated_sha256": "fb56954c544e364068e951e9ed1d1203cc6c3e0457cd99d642300243a7db3726",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/coding/warm/window-start.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/coding/warm/window-start.json",
+      "bytes": 61,
+      "sha256": "f9a4210b2cdc580e051ef0a3c299ad4b19fdf5980243ef67c7cbc6f6e6c9b990",
+      "curated_sha256": "f9a4210b2cdc580e051ef0a3c299ad4b19fdf5980243ef67c7cbc6f6e6c9b990",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/coding/warm/engine-segment.log",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/coding/warm/engine-segment.log",
+      "bytes": 2452,
+      "sha256": "826ef5dbafef63f65e11c770d3670355c6a7830d5a5c4ed90a6528c8cb52ea2c",
+      "curated_sha256": "826ef5dbafef63f65e11c770d3670355c6a7830d5a5c4ed90a6528c8cb52ea2c",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/coding/repeat1/pair.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/coding/repeat1/pair.json",
+      "bytes": 4705,
+      "sha256": "e9aaa1bde2cdd2bc88f928754753809f32b3a3d0925e2404f9e21bf64a807447",
+      "curated_sha256": "e9aaa1bde2cdd2bc88f928754753809f32b3a3d0925e2404f9e21bf64a807447",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/coding/repeat1/admission-gate.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/coding/repeat1/admission-gate.json",
+      "bytes": 2414,
+      "sha256": "fe81451bc393e377d3eae2640271687242a38a0578d56305cbd741004825ba86",
+      "curated_sha256": "fe81451bc393e377d3eae2640271687242a38a0578d56305cbd741004825ba86",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/coding/repeat1/window-start.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/coding/repeat1/window-start.json",
+      "bytes": 61,
+      "sha256": "47ba45e2fe308312a9c127130b0bba54c9aeb79d0e9e47f0e8bac0b5faab1fb9",
+      "curated_sha256": "47ba45e2fe308312a9c127130b0bba54c9aeb79d0e9e47f0e8bac0b5faab1fb9",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/coding/repeat1/engine-segment.log",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/coding/repeat1/engine-segment.log",
+      "bytes": 2614,
+      "sha256": "2dfd0d87cbe70e5d76edf9b4d3464373acf30563b0dd8a57d6b8e911bcee661a",
+      "curated_sha256": "2dfd0d87cbe70e5d76edf9b4d3464373acf30563b0dd8a57d6b8e911bcee661a",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/coding/repeat2/pair.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/coding/repeat2/pair.json",
+      "bytes": 4707,
+      "sha256": "14d78105cbec165bcabecdab44febfe5d1959b5cb74bc6c7557401b65187cd7e",
+      "curated_sha256": "14d78105cbec165bcabecdab44febfe5d1959b5cb74bc6c7557401b65187cd7e",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/coding/repeat2/admission-gate.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/coding/repeat2/admission-gate.json",
+      "bytes": 2416,
+      "sha256": "be00a45ea0fce00cceef200bf0549a221f21a48684a9f780a90437435fbc920f",
+      "curated_sha256": "be00a45ea0fce00cceef200bf0549a221f21a48684a9f780a90437435fbc920f",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/coding/repeat2/window-start.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/coding/repeat2/window-start.json",
+      "bytes": 62,
+      "sha256": "10ade10b12a733bf666d360e3df5aab4f3f3c968eaaff11fa906b804a51c247d",
+      "curated_sha256": "10ade10b12a733bf666d360e3df5aab4f3f3c968eaaff11fa906b804a51c247d",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/coding/repeat2/engine-segment.log",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/coding/repeat2/engine-segment.log",
+      "bytes": 2617,
+      "sha256": "928381e2fb4d602978f76f0b4d69b877d2038f8c750c5bd587c9b41c7a5642a6",
+      "curated_sha256": "928381e2fb4d602978f76f0b4d69b877d2038f8c750c5bd587c9b41c7a5642a6",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/coding/repeat3/pair.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/coding/repeat3/pair.json",
+      "bytes": 4708,
+      "sha256": "2b8aa853d21f684305ff9d16672c1229dfbd8ac2e6214bffb9f8c96069cd9b58",
+      "curated_sha256": "2b8aa853d21f684305ff9d16672c1229dfbd8ac2e6214bffb9f8c96069cd9b58",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/coding/repeat3/admission-gate.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/coding/repeat3/admission-gate.json",
+      "bytes": 2416,
+      "sha256": "fddaaa0471fe0d1a6f30dfcb48784448ac22305eca84442ed1fdc27284b1c730",
+      "curated_sha256": "fddaaa0471fe0d1a6f30dfcb48784448ac22305eca84442ed1fdc27284b1c730",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/coding/repeat3/window-start.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/coding/repeat3/window-start.json",
+      "bytes": 62,
+      "sha256": "5992207a4eea54c65dfdfebc4a95c7da1e89721500ace51a96301716824682a4",
+      "curated_sha256": "5992207a4eea54c65dfdfebc4a95c7da1e89721500ace51a96301716824682a4",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode0/coding/repeat3/engine-segment.log",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/coding/repeat3/engine-segment.log",
+      "bytes": 3431,
+      "sha256": "21e81be54266f595edddbaded4755c2e3ff2b1f2656c9b425bb327afd2885eba",
+      "curated_sha256": "21e81be54266f595edddbaded4755c2e3ff2b1f2656c9b425bb327afd2885eba",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/config.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/config.json",
+      "bytes": 3119,
+      "sha256": "3bd9025f5cc6b487c2e515c215a83d745dff733320ed149d0f5d90499f86df9a",
+      "curated_sha256": "3bd9025f5cc6b487c2e515c215a83d745dff733320ed149d0f5d90499f86df9a",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/aggregate-proof.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/aggregate-proof.json",
+      "bytes": 594,
+      "sha256": "4f8e127e26e6d9de75d95d71c49a050011d0f817cd222a2d1ff1c5756a37bc0d",
+      "curated_sha256": "4f8e127e26e6d9de75d95d71c49a050011d0f817cd222a2d1ff1c5756a37bc0d",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/normal-stop.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/normal-stop.json",
+      "bytes": 534,
+      "sha256": "5a977487d0f1815b8978907ca83261c079b3918e1df7110ce20b5dd38eb38c50",
+      "curated_sha256": "5a977487d0f1815b8978907ca83261c079b3918e1df7110ce20b5dd38eb38c50",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/post-health.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/post-health.json",
+      "bytes": 479,
+      "sha256": "10df4f65edc51d36a7d3c727c2e05f4a7ca1908d6cdda148929872434caed266",
+      "curated_sha256": "10df4f65edc51d36a7d3c727c2e05f4a7ca1908d6cdda148929872434caed266",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/container-removal.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/container-removal.json",
+      "bytes": 604,
+      "sha256": "147029c829f0048cedb92e201d73f121ad25a58ab319fc4f0aefcd913acc7dbc",
+      "curated_sha256": "147029c829f0048cedb92e201d73f121ad25a58ab319fc4f0aefcd913acc7dbc",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/prestop-state.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/prestop-state.json",
+      "bytes": 73,
+      "sha256": "6740167a45e5da92794397fd4afd7e6e8bbeafc7e5924c800c4f151561219394",
+      "curated_sha256": "6740167a45e5da92794397fd4afd7e6e8bbeafc7e5924c800c4f151561219394",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/quit-command.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/quit-command.json",
+      "bytes": 272,
+      "sha256": "fd22cdcab22b32cbfb4dfea470b99dcb3a6e9ecda5b53c61734a9e93d4be2575",
+      "curated_sha256": "fd22cdcab22b32cbfb4dfea470b99dcb3a6e9ecda5b53c61734a9e93d4be2575",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/health-ready.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/health-ready.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99",
+      "curated_sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/health-prestop.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/health-prestop.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99",
+      "curated_sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/root-phases.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/root-phases.json",
+      "bytes": 1074,
+      "sha256": "848063f9c3dd0345060882c881b9bd499e6218358cd6fe052630d4a1ddf750a6",
+      "curated_sha256": "848063f9c3dd0345060882c881b9bd499e6218358cd6fe052630d4a1ddf750a6",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/card-health.log",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/card-health.log",
+      "bytes": 560,
+      "sha256": "a5ad677cfd0ea98c5941550d42eca87fbd38abdc1e64f9bee37add7715dfcdff",
+      "curated_sha256": "a5ad677cfd0ea98c5941550d42eca87fbd38abdc1e64f9bee37add7715dfcdff",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/collective-health.log",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/collective-health.log",
+      "bytes": 1696,
+      "sha256": "b4bc34e380da062a88eb264324257c984b21fee768f3cab530b8dd5d5298d487",
+      "curated_sha256": "b4bc34e380da062a88eb264324257c984b21fee768f3cab530b8dd5d5298d487",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/warm/pair.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/warm/pair.json",
+      "bytes": 5217,
+      "sha256": "5dad418127c513af9903c1f76f10012039f124868c5539a778b039b58a567a9b",
+      "curated_sha256": "5dad418127c513af9903c1f76f10012039f124868c5539a778b039b58a567a9b",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/warm/admission-gate.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/warm/admission-gate.json",
+      "bytes": 2411,
+      "sha256": "2a92adc79a4dbbabe4a0b52500d9cb194d0972ee72dc61419da1f58ec9ea5a8e",
+      "curated_sha256": "2a92adc79a4dbbabe4a0b52500d9cb194d0972ee72dc61419da1f58ec9ea5a8e",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/warm/window-start.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/warm/window-start.json",
+      "bytes": 61,
+      "sha256": "b38d2823aee9ff7436bc08f9762408a87232c9a3c40447c505a03d89c6a6f615",
+      "curated_sha256": "b38d2823aee9ff7436bc08f9762408a87232c9a3c40447c505a03d89c6a6f615",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/warm/engine-segment.log",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/warm/engine-segment.log",
+      "bytes": 2534,
+      "sha256": "5b6e469600b3581570629207cdcb9e8f442926c341579164e11a3b45fbcab073",
+      "curated_sha256": "5b6e469600b3581570629207cdcb9e8f442926c341579164e11a3b45fbcab073",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/warm/control-parity.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/warm/control-parity.json",
+      "bytes": 250,
+      "sha256": "fca4039e3790b1521caee0f23f243de192cb7bb2300e88e6952f7db39ee33eef",
+      "curated_sha256": "fca4039e3790b1521caee0f23f243de192cb7bb2300e88e6952f7db39ee33eef",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/repeat1/pair.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/repeat1/pair.json",
+      "bytes": 4784,
+      "sha256": "a99a29bd158c3c4cc69dd9d45699239ecdf6de7313e4a4b628247f8dad03a483",
+      "curated_sha256": "a99a29bd158c3c4cc69dd9d45699239ecdf6de7313e4a4b628247f8dad03a483",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/repeat1/admission-gate.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/repeat1/admission-gate.json",
+      "bytes": 2414,
+      "sha256": "9adaa471fc8ddfec6b8ebf5161a5a4939b36e46255fa16b805d562b94bbc1407",
+      "curated_sha256": "9adaa471fc8ddfec6b8ebf5161a5a4939b36e46255fa16b805d562b94bbc1407",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/repeat1/window-start.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/repeat1/window-start.json",
+      "bytes": 61,
+      "sha256": "90120edff8c67dba18a3576837693651cbc5bc256ba4eb9c16829ebc07e0330f",
+      "curated_sha256": "90120edff8c67dba18a3576837693651cbc5bc256ba4eb9c16829ebc07e0330f",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/repeat1/engine-segment.log",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/repeat1/engine-segment.log",
+      "bytes": 2614,
+      "sha256": "528cd8aeff3c7329bafb565a8d74bb573493303d2986e809a455f09d26081c3e",
+      "curated_sha256": "528cd8aeff3c7329bafb565a8d74bb573493303d2986e809a455f09d26081c3e",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/repeat1/control-parity.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/repeat1/control-parity.json",
+      "bytes": 213,
+      "sha256": "7c7cb812524dc00d16d74683bb18851a2e1ce41bf70f72044a6e50bd942bd014",
+      "curated_sha256": "7c7cb812524dc00d16d74683bb18851a2e1ce41bf70f72044a6e50bd942bd014",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/repeat2/pair.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/repeat2/pair.json",
+      "bytes": 4791,
+      "sha256": "79732d838bb69d1c67ae937a880b64e147015c6636f43fa81f844a5115c34c6f",
+      "curated_sha256": "79732d838bb69d1c67ae937a880b64e147015c6636f43fa81f844a5115c34c6f",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/repeat2/admission-gate.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/repeat2/admission-gate.json",
+      "bytes": 2416,
+      "sha256": "cf082e616e9eaea741663694c8c5fba7a9b295969d9d6ffa79c6a1e4e1b0cddd",
+      "curated_sha256": "cf082e616e9eaea741663694c8c5fba7a9b295969d9d6ffa79c6a1e4e1b0cddd",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/repeat2/window-start.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/repeat2/window-start.json",
+      "bytes": 62,
+      "sha256": "5c4a0c688180fb4e0a654b78d3ff37348b1be6fac2a6884912c2089f46787fda",
+      "curated_sha256": "5c4a0c688180fb4e0a654b78d3ff37348b1be6fac2a6884912c2089f46787fda",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/repeat2/engine-segment.log",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/repeat2/engine-segment.log",
+      "bytes": 2617,
+      "sha256": "cd1833672f76e9e34d8d98d152987ab339bd75574ab6e59cfd9b0cde85f4dce4",
+      "curated_sha256": "cd1833672f76e9e34d8d98d152987ab339bd75574ab6e59cfd9b0cde85f4dce4",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/repeat2/control-parity.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/repeat2/control-parity.json",
+      "bytes": 213,
+      "sha256": "7c7cb812524dc00d16d74683bb18851a2e1ce41bf70f72044a6e50bd942bd014",
+      "curated_sha256": "7c7cb812524dc00d16d74683bb18851a2e1ce41bf70f72044a6e50bd942bd014",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/repeat3/pair.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/repeat3/pair.json",
+      "bytes": 4787,
+      "sha256": "b21fee8476693220ed317d042a797cb166a991531fb0e0dbe40cbe6d15634f0d",
+      "curated_sha256": "b21fee8476693220ed317d042a797cb166a991531fb0e0dbe40cbe6d15634f0d",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/repeat3/admission-gate.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/repeat3/admission-gate.json",
+      "bytes": 2416,
+      "sha256": "d9ee707857d0dff8b3bb52eee461b56a7546ea0142f57fcd02ba7b42fdba2251",
+      "curated_sha256": "d9ee707857d0dff8b3bb52eee461b56a7546ea0142f57fcd02ba7b42fdba2251",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/repeat3/window-start.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/repeat3/window-start.json",
+      "bytes": 62,
+      "sha256": "3bd3eb3c48130980630b136116929d20ca99e4cb2fdf5dabf8e32b83d1ed14bb",
+      "curated_sha256": "3bd3eb3c48130980630b136116929d20ca99e4cb2fdf5dabf8e32b83d1ed14bb",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/repeat3/engine-segment.log",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/repeat3/engine-segment.log",
+      "bytes": 3431,
+      "sha256": "ee7cdf3eab7b7b3b427ad234b67617b12c4ab41d22ff87b3a32bb83b8f350dbd",
+      "curated_sha256": "ee7cdf3eab7b7b3b427ad234b67617b12c4ab41d22ff87b3a32bb83b8f350dbd",
+      "transform": "exact ASCII"
+    },
+    {
+      "destination": "mode1/coding/repeat3/control-parity.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/coding/repeat3/control-parity.json",
+      "bytes": 230,
+      "sha256": "37f8636b4a5ed0c103a935a3a420d4097ce6359f33f82a784e0ffef50a2e3049",
+      "curated_sha256": "37f8636b4a5ed0c103a935a3a420d4097ce6359f33f82a784e0ffef50a2e3049",
+      "transform": "exact ASCII"
+    }
+  ],
+  "derived": [
+    {
+      "destination": "mode0/native-identity-projection.json",
+      "sources": [
+        {
+          "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/native-process-identity.json",
+          "bytes": 87291,
+          "sha256": "b2e3cc44901302ea882fd1a1deca2f27d83a6f42285dfa5a4e6931ff2b1bb28e"
+        }
+      ],
+      "kind": "explicit_derived_projection"
+    },
+    {
+      "destination": "mode0/container-ready-projection.json",
+      "sources": [
+        {
+          "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/container-ready.json",
+          "bytes": 13771,
+          "sha256": "fd5723894ed53c60d3dc40d77b846193cad36c2c6765a4dbb3c82412fc2b7b22"
+        }
+      ],
+      "kind": "explicit_derived_projection"
+    },
+    {
+      "destination": "mode0/engine-excerpt.json",
+      "sources": [
+        {
+          "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/engine-final.log",
+          "bytes": 22838,
+          "sha256": "4e9f21231bed6f8d394c975adf9358caebb0ebe64ce7e463c6ea73523faef99f"
+        }
+      ],
+      "kind": "explicit_derived_projection"
+    },
+    {
+      "destination": "mode0/functional/external-response-index.json",
+      "sources": [],
+      "kind": "explicit_derived_projection"
+    },
+    {
+      "destination": "mode1/native-identity-projection.json",
+      "sources": [
+        {
+          "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/native-process-identity.json",
+          "bytes": 88181,
+          "sha256": "dff79f2d6e73452d6b3cdc6d6d2c8572f0a3117453c4124631135524959702d6"
+        }
+      ],
+      "kind": "explicit_derived_projection"
+    },
+    {
+      "destination": "mode1/container-ready-projection.json",
+      "sources": [
+        {
+          "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/container-ready.json",
+          "bytes": 13771,
+          "sha256": "349676435d8a1c68acfea1b3fd63c586d4233cbb52d7e01c0ba3b08b9690b00b"
+        }
+      ],
+      "kind": "explicit_derived_projection"
+    },
+    {
+      "destination": "mode1/engine-excerpt.json",
+      "sources": [
+        {
+          "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/engine-final.log",
+          "bytes": 17801,
+          "sha256": "e4f9a21ab2f77deaa16f52cb62b5b3251b7b8a943f7b59d313386d5f8a1bba18"
+        }
+      ],
+      "kind": "explicit_derived_projection"
+    },
+    {
+      "destination": "mode1/functional/external-response-index.json",
+      "sources": [],
+      "kind": "explicit_derived_projection"
+    },
+    {
+      "destination": "curation-summary.json",
+      "sources": [
+        {
+          "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/root-HOLD-summary.json",
+          "bytes": 9454,
+          "sha256": "c872ae08adf66f16ac23b89b5b4a78e057c2d61b1bf2102d50e6fc1141dc732a"
+        }
+      ],
+      "kind": "explicit_derived_projection"
+    }
+  ],
+  "scope": "Small source/result/projection evidence only; no rawSSE/maps/binary/model reads or workload/modelCLI by curator."
+}

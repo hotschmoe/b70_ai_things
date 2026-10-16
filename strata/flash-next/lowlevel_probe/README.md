@@ -395,3 +395,11 @@ reasoning and root decisions. [Integration decision](../../../docs/20261016_stra
 incremental-build evidence, including the single-object ownership repair.
 Source/build PASS is separate from serving qualification.
 [Build record](../../../docs/20261016_strata_gdn_commit_layer_main.md).
+
+
+## GDN serving HOLD and night handoff (S148)
+
+`gdn_commit_layers_serving_s148/` retains all pair receipts and the unmatched
+last native-work gate, with normal closure/full-health evidence. No qualified
+ON speed or retry. [Dated HOLD](../../../docs/20261016_strata_gdn_commit_serving_hold.md),
+[night handoff](../../../docs/20261016_strata_night_handoff.md).

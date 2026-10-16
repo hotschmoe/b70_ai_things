@@ -498,3 +498,12 @@ private-bundle medians1191.211->881.0445us are not a serving gain or isolated
 launch-count effect: layer batching, ordinary launch property and private
 compilation changed together. No new150tok/s/context/RAM-restore qualification.
 [Private GDN evidence](20261016_strata_gdn_commit_layer_oracle.md).
+
+
+S148 GDN soleflag same-new-binary serving is HOLD: allfourpairs retain
+exact request/text/SSE/usage, but lastpairnativework/windows/solo differ.
+No qualifiedONspeed/subsetcomparison/retry/promotion. Bothnormalclosures
+and fullposthealthPASS; stopfornight atuserrequest. Throughputtargets
+remainunmet; retainedS30context/RAMscope unchanged.
+[GDN serving HOLD](20261016_strata_gdn_commit_serving_hold.md),
+[next-session handoff](20261016_strata_night_handoff.md).

@@ -1,0 +1,53 @@
+{
+  "status": "FROZEN_S148_SOURCE_ONLY_ACTUAL_S147_RECEIPT_PENDING",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep",
+  "file_count": 11,
+  "total_bytes": 78612,
+  "files": {
+    "README.md": {
+      "bytes": 2411,
+      "sha256": "2ac35f7f9b71548d6729f7525e30b4c27ce6c1c9b2d9ed3fc1c547ca955c5bd0"
+    },
+    "controller-diff.patch": {
+      "bytes": 23775,
+      "sha256": "cbaeb98a83f41dac78cda81864d47c41f3ebf15825e61d21aafcfceb074ed51e"
+    },
+    "harness-prep/client.py": {
+      "bytes": 13349,
+      "sha256": "97e106c535738b47cdc4344de963b706ecd232be94105c8c799e454671e5ce38"
+    },
+    "harness-prep/compare.py": {
+      "bytes": 9931,
+      "sha256": "d03927d64912963c09185a528cc765715561cae3e29c8e27c73f196c819b2d40"
+    },
+    "harness-prep/launch_stage.sh": {
+      "bytes": 1881,
+      "sha256": "88b213d687cf18c2f7b070c038421d03fddb8ae297cab7f17639f1dd79e32f5f"
+    },
+    "harness-prep/make_configs.py": {
+      "bytes": 7172,
+      "sha256": "bc60920798b30149e89f398cb9875fb4c1a9ade7bbfdb8e7a0acf9f97f3ba079"
+    },
+    "harness-prep/start_arm.py": {
+      "bytes": 9981,
+      "sha256": "5e152a66ba86e6f1e1c538929e69e0c1d61db98221302decfbb7f25bef94d214"
+    },
+    "harness-prep/stop_and_health.py": {
+      "bytes": 7343,
+      "sha256": "341a5ca61b4e55872558770b689321041e3dc793cb311994cf662404139a130e"
+    },
+    "original-source-pins.json": {
+      "bytes": 1734,
+      "sha256": "6010b85f94a52f3a6c97ddaad5ae083fdd1e7532f3ed163f1ce61dce62bdbaf4"
+    },
+    "required-root-inputs.json": {
+      "bytes": 732,
+      "sha256": "28ee7a246b9c06cdf04b08663e003a6792a8a70fc4fe831bda22af13f144e373"
+    },
+    "validation.json": {
+      "bytes": 303,
+      "sha256": "633634f5612158e8a2f5bf21eddefcec237ca78b184dcac326367173a40066a0"
+    }
+  },
+  "scope": "No live source/config/run/build/GPU/model calls; AST/bash source checks only. Actual receipt must bindbothchanged sourceSHA/exe."
+}

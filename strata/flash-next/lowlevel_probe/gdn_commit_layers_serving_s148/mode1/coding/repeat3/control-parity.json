@@ -1,0 +1,9 @@
+{
+  "status": "FAIL_OR_UNMATCHED_STOP_REMAINING_ARM_WORK",
+  "checks": {
+    "request_text_SSE_usage": true,
+    "native_per_request_work": false,
+    "native_windows_pair_solo_rows_captures": false
+  },
+  "normalization": null
+}

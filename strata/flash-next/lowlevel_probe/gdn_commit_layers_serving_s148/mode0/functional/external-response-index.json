@@ -1,0 +1,25 @@
+{
+  "existing": [
+    {
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/functional/concurrent-math.json",
+      "bytes": 8026,
+      "sha256": "73f27feba515c52640f5efded004f4a0be8a6ce53ce7016e8cc282a93890344c"
+    },
+    {
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/functional/thinking.json",
+      "bytes": 1480,
+      "sha256": "e473baee29a08740c23f0cc639eac4e99b1177d6e52a58ef5c57af84e5d73e0c"
+    },
+    {
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/functional/tool-first.json",
+      "bytes": 2254,
+      "sha256": "14e389efaf1c6ec8a8dcda163a9bc06d8d58c203bde6771662ea6d9b29f568c0"
+    },
+    {
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode0/functional/tool-final.json",
+      "bytes": 2508,
+      "sha256": "98d8bed03422b6fef2edc6fefca57c6409ae8b46af0dfcf1c9b8a4a925ec0bcf"
+    }
+  ],
+  "scope": "Missing functional files remain absent; do not infer PASS or run additional requests."
+}

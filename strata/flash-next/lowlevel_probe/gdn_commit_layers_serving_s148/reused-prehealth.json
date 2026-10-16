@@ -1,0 +1,38 @@
+{
+  "stage": "S146_with_retained_S144_card1_collective",
+  "root_revalidated_no_intervening_GPU_or_stack_change": true,
+  "all_required_health_exit0": true,
+  "boot_id": "b785982c-4954-4d23-808c-48a7534ce3bd",
+  "kernel": "7.1.0-070100-generic",
+  "scope": "Composite: S144 bothcard+compiled collective posthealth; intervening S145/S146 were singlecard0 only, normally closed with card0posthealth0. No GPU since S146; no stack change. Reuse card1/collective, latestcard0. No claim zero GPU between S144 and S146. Root owns all leases.",
+  "sources": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s144-serving-prep/mode1/post-health.json",
+      "sha256": "9a2333aa498ea17749dc29f0e0c05fea9b5ce2e7b623a59636213277de2383df"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s144-serving-prep/mode1/normal-stop.json",
+      "sha256": "141daf115083991d3bf5b65b3fa6aeea9b09d008d2c63c4378f57f23d5cbadb6"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s144-serving-prep/mode1/container-removal.json",
+      "sha256": "c4bd8815e8dbb922fd74a930340d05d24ca550cd064cc1f02b5fd3910fcfd59e"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s145-private-run/closure.json",
+      "sha256": "4caa678b87fd9197e2e0c482cc5d80c3883d6d48d4382890d3199c5074302903"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/closure.json",
+      "sha256": "80ff43a15c41f288d1a36539266a4374d52bbd0ac4bcb4394638eb6efac040fe"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/post-health.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/identity-before.json",
+      "sha256": "a5cc5ca481d70a1d84be64e3379558464f325e2c70cb1204156da4845c793eaa"
+    }
+  ]
+}

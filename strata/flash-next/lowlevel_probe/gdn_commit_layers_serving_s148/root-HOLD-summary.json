@@ -1,0 +1,324 @@
+{
+  "stage": "S148",
+  "status": "HOLD_UNMATCHED_NATIVE_WORK_NO_SERVING_SPEED_CLAIM",
+  "same_new_binary": "98f0357dd01d176476edcb101ec489280deb2925399a64d31b44ef3abfe17200",
+  "root_sequence_handle": 24879,
+  "root_sequence_terminal_exit": 2,
+  "all_four_pairs_request_text_SSE_usage_equal": true,
+  "ON_exact_work_PASS": [
+    "warm",
+    "repeat1",
+    "repeat2"
+  ],
+  "ON_repeat3_parity": {
+    "status": "FAIL_OR_UNMATCHED_STOP_REMAINING_ARM_WORK",
+    "checks": {
+      "request_text_SSE_usage": true,
+      "native_per_request_work": false,
+      "native_windows_pair_solo_rows_captures": false
+    },
+    "normalization": null
+  },
+  "ON_repeat3_differences": {
+    "work_timings": [
+      [
+        {
+          "cache_n": 0,
+          "prompt_n": 107,
+          "predicted_n": 1500,
+          "draft_n": 1110,
+          "draft_n_accepted": 943
+        },
+        {
+          "cache_n": 0,
+          "prompt_n": 107,
+          "predicted_n": 1500,
+          "draft_n": 1140,
+          "draft_n_accepted": 934
+        }
+      ],
+      [
+        {
+          "cache_n": 0,
+          "prompt_n": 107,
+          "predicted_n": 1500,
+          "draft_n": 1110,
+          "draft_n_accepted": 943
+        },
+        {
+          "cache_n": 0,
+          "prompt_n": 107,
+          "predicted_n": 1500,
+          "draft_n": 1142,
+          "draft_n_accepted": 933
+        }
+      ]
+    ],
+    "native_windows": [
+      556,
+      557
+    ],
+    "solo": [
+      2,
+      3
+    ],
+    "native_window_rows": [
+      [
+        [
+          "556",
+          "5.33"
+        ]
+      ],
+      [
+        [
+          "557",
+          "5.32"
+        ]
+      ]
+    ]
+  },
+  "ON_functionals": "NOT_RUN_AFTER_GATE_FAILURE",
+  "control_functionals": "PASS",
+  "comparator": "NOT_RUN_FAIL_STOP_SEQUENCE",
+  "qualified_ON_speed": null,
+  "timings_scope": "All raw measured rows retained as unmatched diagnostics; no selecting first2pairs/aggregation, no speed or regression claim.",
+  "all_normal_cleanup_fullhealth_pass": true,
+  "arms": [
+    {
+      "arm": "0",
+      "phases": {
+        "phases": [
+          {
+            "phase": "warm",
+            "command": [
+              "bin/cpu-run",
+              "--quiet",
+              "python3",
+              "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/harness-prep/client.py",
+              "0",
+              "warm"
+            ],
+            "exit": 0,
+            "elapsed_s": 7.0768186380155385
+          },
+          {
+            "phase": "timed",
+            "command": [
+              "bin/cpu-run",
+              "--quiet",
+              "python3",
+              "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/harness-prep/client.py",
+              "0",
+              "timed"
+            ],
+            "exit": 0,
+            "elapsed_s": 87.87260518100811
+          },
+          {
+            "phase": "functional",
+            "command": [
+              "bin/cpu-run",
+              "python3",
+              "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/harness-prep/client.py",
+              "0",
+              "functional"
+            ],
+            "exit": 0,
+            "elapsed_s": 6.211240972974338
+          }
+        ],
+        "exception": null,
+        "cleanup": {
+          "command": [
+            "bin/cpu-run",
+            "python3",
+            "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/harness-prep/stop_and_health.py",
+            "0"
+          ],
+          "exit": 0,
+          "elapsed_s": 59.717438694962766
+        },
+        "no_retry": true
+      },
+      "normal_stop": {
+        "status": "PASS_NORMAL_TEARDOWN",
+        "signal": "TERM to server -> QUIT to native engine",
+        "container_removed": true,
+        "lease_wrapper_exit": 0,
+        "all_wrapper_terminal_exits": [
+          0
+        ],
+        "prestop_state": {
+          "Running": true,
+          "OOMKilled": false,
+          "inspect_succeeded": true
+        },
+        "container_missing_or_inspect_failed_before_stop": false,
+        "diagnostic_before_any_forced_container_stop": true,
+        "no_force_stop_used": true,
+        "functional_status": "PASS",
+        "epoch_ns": 1792129972888706384
+      },
+      "post_health": {
+        "card": {
+          "command": [
+            "bin/gpu-run",
+            "bin/xpu-health",
+            "--img",
+            "b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78",
+            "--timeout",
+            "400"
+          ],
+          "exit": 0,
+          "elapsed_s": 27.41213632200379
+        },
+        "collective": {
+          "command": [
+            "bin/gpu-run",
+            "bin/xpu-collective-health",
+            "--timeout",
+            "400"
+          ],
+          "exit": 0,
+          "elapsed_s": 26.047499748994596
+        }
+      },
+      "removal": {
+        "docker_ps_exit": 0,
+        "docker_ps_stderr": "",
+        "entries": [
+          [
+            "5d04f34e963b9c32f36ac1dde359f4eb99a1cce2e114f3c8424365d96db49ca1",
+            "b70_grafana"
+          ],
+          [
+            "0cc1aad4ab1b03345c73455c1fb22d8f5798f9643ebec3ac439ed5c2e984a9db",
+            "b70_prometheus"
+          ],
+          [
+            "ee813f751899a489a29dad25891ada93939a4fd817eaaead23e1036ef344a0d1",
+            "open-webui"
+          ]
+        ],
+        "created_cid": "e81fba63c6c8e1e0014de9dd79dcf2753dd43a2e2078f4554f4b03e6f0e88cb0",
+        "expected_name": "strata-s148-mode0",
+        "full_cid_absent": true,
+        "name_absent": true,
+        "epoch_ns": 1792129972888447200
+      }
+    },
+    {
+      "arm": "1",
+      "phases": {
+        "phases": [
+          {
+            "phase": "warm",
+            "command": [
+              "bin/cpu-run",
+              "--quiet",
+              "python3",
+              "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/harness-prep/client.py",
+              "1",
+              "warm"
+            ],
+            "exit": 0,
+            "elapsed_s": 7.036789782985579
+          },
+          {
+            "phase": "timed",
+            "command": [
+              "bin/cpu-run",
+              "--quiet",
+              "python3",
+              "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/harness-prep/client.py",
+              "1",
+              "timed"
+            ],
+            "exit": 1,
+            "elapsed_s": 87.60480532096699
+          }
+        ],
+        "exception": null,
+        "cleanup": {
+          "command": [
+            "bin/cpu-run",
+            "python3",
+            "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/harness-prep/stop_and_health.py",
+            "1"
+          ],
+          "exit": 0,
+          "elapsed_s": 60.56003997504013
+        },
+        "no_retry": true
+      },
+      "normal_stop": {
+        "status": "PASS_NORMAL_TEARDOWN",
+        "signal": "TERM to server -> QUIT to native engine",
+        "container_removed": true,
+        "lease_wrapper_exit": 0,
+        "all_wrapper_terminal_exits": [
+          0
+        ],
+        "prestop_state": {
+          "Running": true,
+          "OOMKilled": false,
+          "inspect_succeeded": true
+        },
+        "container_missing_or_inspect_failed_before_stop": false,
+        "diagnostic_before_any_forced_container_stop": true,
+        "no_force_stop_used": true,
+        "functional_status": "NOT_COMPLETED_FAILED_OR_INVALID",
+        "epoch_ns": 1792130157461638909
+      },
+      "post_health": {
+        "card": {
+          "command": [
+            "bin/gpu-run",
+            "bin/xpu-health",
+            "--img",
+            "b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78",
+            "--timeout",
+            "400"
+          ],
+          "exit": 0,
+          "elapsed_s": 26.57453316502506
+        },
+        "collective": {
+          "command": [
+            "bin/gpu-run",
+            "bin/xpu-collective-health",
+            "--timeout",
+            "400"
+          ],
+          "exit": 0,
+          "elapsed_s": 28.079707083001267
+        }
+      },
+      "removal": {
+        "docker_ps_exit": 0,
+        "docker_ps_stderr": "",
+        "entries": [
+          [
+            "5d04f34e963b9c32f36ac1dde359f4eb99a1cce2e114f3c8424365d96db49ca1",
+            "b70_grafana"
+          ],
+          [
+            "0cc1aad4ab1b03345c73455c1fb22d8f5798f9643ebec3ac439ed5c2e984a9db",
+            "b70_prometheus"
+          ],
+          [
+            "ee813f751899a489a29dad25891ada93939a4fd817eaaead23e1036ef344a0d1",
+            "open-webui"
+          ]
+        ],
+        "created_cid": "0db2ec38e8cc366024a802f950867c008eeb72aca8935da30683b9d53c952335",
+        "expected_name": "strata-s148-mode1",
+        "full_cid_absent": true,
+        "name_absent": true,
+        "epoch_ns": 1792130157461305864
+      }
+    }
+  ],
+  "retry_or_new_experiment": false,
+  "next": "Stop tonight per user; no causal/numeric diagnosis from lastpairwork mismatch. Source defaultOFF; no promotion or newRAMqualification."
+}

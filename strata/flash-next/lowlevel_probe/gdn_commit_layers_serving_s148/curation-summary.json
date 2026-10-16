@@ -1,0 +1,15 @@
+{
+  "status": "HOLD_UNMATCHED_NATIVE_WORK_NO_SERVING_SPEED_CLAIM",
+  "root_result": {
+    "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/root-HOLD-summary.json",
+    "bytes": 9454,
+    "sha256": "c872ae08adf66f16ac23b89b5b4a78e057c2d61b1bf2102d50e6fc1141dc732a"
+  },
+  "comparator_executed": false,
+  "qualified_timed_summary": null,
+  "absent_expected_optional_files": [
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/functional/verdict.json",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s148-serving-prep/mode1/functional/models.json"
+  ],
+  "scope": "Entire trial retained; no matched subset selection. HOLD speed NULL not zero; raw timing diagnostics not qualified. No new comparator/model/workload."
+}

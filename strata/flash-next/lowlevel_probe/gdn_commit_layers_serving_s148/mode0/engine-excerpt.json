@@ -1,0 +1,23 @@
+{
+  "lines": [
+    "strata generate: --batch 2: the slot sessions take 5.63 GiB of VRAM on CUDA0 that the expert cache would otherwise hold",
+    "strata generate: expert cache auto: 18.22 GiB free, 1024 MiB reserved (+11 MiB for the draft head) -> 5378 slots",
+    "strata generate: expert cache 7152 slots, 11.63 GiB of VRAM; policy is",
+    "strata trace: 6746 MiB free after opening the expert cache",
+    "strata generate: expert parallel: this card holds 149 experts per layer, card 1 the other 363 (each layer's traffic dealt evenly between them)",
+    "strata generate: expert parallel: card 1 has 31.84 GiB free, its 17424 experts take 28.34 GiB (363 per layer)",
+    "strata generate: expert parallel: card 1 holds 17424 experts (28.34 GiB, filled in 11.2 s); slot 0 verified",
+    "strata generate: R4 hit path ON - resident experts are computed on the GPU",
+    "strata trace: 6746 MiB free after the expert cache and the graphs",
+    "strata generate: token graph hit path: 7152 resident experts, decided on the device",
+    "strata prefill: expert parallel: card 1 computes its experts' rows of each prompt chunk (1260 MiB of exchange regions); 2010 MiB left free on it",
+    "strata verify: captured the 4-token window (upload no error, sync no error)",
+    "strata verify: captured the 2-token window (upload no error, sync no error)",
+    "strata verify: captured the 1-token window (upload no error, sync no error)",
+    "strata verify: captured the batch window over slots 0,0,0",
+    "strata verify: captured the batch window over slots 1,1,1,0,0,0",
+    "strata verify: captured the batch window over slots 1,1,1",
+    "strata verify: captured the 3-token window (upload no error, sync no error)"
+  ],
+  "scope": "Listed identity/marker/residency/capture substrings preserving order; full log external."
+}

@@ -1,0 +1,7 @@
+{
+  "first_direct_invocation_exit": 126,
+  "cause": "run_both.sh not executable; shell refused BEFORE script/start/controller/GPU touch",
+  "correction": "invoke explicitly with bash, frozen script bytes/mode unchanged",
+  "root_lesson": "Use explicit bash/python for source-only helpers unless executable checked; root repeated prior avoidable permission setup mistake.",
+  "no_benchmark_retry_or_native_attempt_in_first_invocation": true
+}

@@ -1,0 +1,139 @@
+{
+  "gdn_commit_layers_host_selection_marker": "strata GDN commit layers: enabled=1 layers=36 owners=2 rows=3 host-selection-only",
+  "all_eligible_shapes_or_gpu_dispatch_observed": false,
+  "logged_capture_layouts": [
+    "strata verify: captured the 4-token window (upload no error, sync no error)",
+    "strata verify: captured the 2-token window (upload no error, sync no error)",
+    "strata verify: captured the 1-token window (upload no error, sync no error)",
+    "strata verify: captured the batch window over slots 0,0,0",
+    "strata verify: captured the batch window over slots 1,1,1,0,0,0",
+    "strata verify: captured the batch window over slots 1,1,1"
+  ],
+  "native_window_rows": [
+    [
+      "95",
+      "5.36"
+    ]
+  ],
+  "status": "PASS_HTTP_TEXT_COUNTS_FINITE_AND_PAIRED",
+  "wall_s": 6.868615559011232,
+  "output_sha256": [
+    "276f3b7d226be7dc0df606b66e3a367acc6d39872a1242b5f1ad18085b120353",
+    "48d11e3fed8dcda66502ff1a86f0c83bbe8f460aff177c12ebb736bbdc53ceca"
+  ],
+  "usage": [
+    {
+      "prompt_tokens": 107,
+      "completion_tokens": 256,
+      "total_tokens": 363,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    {
+      "prompt_tokens": 107,
+      "completion_tokens": 256,
+      "total_tokens": 363,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    }
+  ],
+  "work_timings": [
+    {
+      "cache_n": 0,
+      "prompt_n": 107,
+      "predicted_n": 256,
+      "draft_n": 188,
+      "draft_n_accepted": 160
+    },
+    {
+      "cache_n": 0,
+      "prompt_n": 107,
+      "predicted_n": 256,
+      "draft_n": 188,
+      "draft_n_accepted": 161
+    }
+  ],
+  "native_windows": 95,
+  "paired": 92,
+  "solo": 2,
+  "raw_native_token_ids_observed": false,
+  "aggregate_output_tps": 74.54195035392324,
+  "stream_metrics": [
+    {
+      "ttft_s": 1.0576670040027238,
+      "completion_wall_s": 6.786489305028226,
+      "decode_tps": 44.51176639819201,
+      "whole_request_output_tps": 37.722007431784384,
+      "content_event_gap_ms": {
+        "count": 222,
+        "p50": 0.20116352243348956,
+        "p95": 46.65630657109432,
+        "maximum": 1198.4296480077319
+      }
+    },
+    {
+      "ttft_s": 2.25213546003215,
+      "completion_wall_s": 6.833757060987409,
+      "decode_tps": 55.65714984992061,
+      "whole_request_output_tps": 37.46109171212044,
+      "content_event_gap_ms": {
+        "count": 223,
+        "p50": 0.19968097331002355,
+        "p95": 46.645201224600896,
+        "maximum": 278.95422698929906
+      }
+    }
+  ],
+  "admission_gate": {
+    "status": "PASS_NATIVE_PROMPT_START_ORDER_AND_CLIENT_OVERLAP",
+    "fresh_engine_byte_offset": 6327,
+    "only_request0_outstanding": true,
+    "native_prompt_start_line": "strata trace: prompt start 106 -1",
+    "native_prompt_count_minus1": 106,
+    "marker_byte_offset": 6355,
+    "marker_observed_monotonic_ns": 454545204332696,
+    "marker_observed_epoch_ns": 1792130057091543858,
+    "request1_submit_monotonic_ns": 454545204338828,
+    "client_overlap_ns": 6765992327,
+    "request0_lifetime": {
+      "client_call_start_monotonic_ns": 454545193841304,
+      "client_call_start_epoch_ns": 1792130057081053338,
+      "model": "hotschmoe-dd",
+      "messages": [
+        {
+          "role": "user",
+          "content": "[Flash-Next concurrent coding repeat 0 slot 0] Implement a Python asyncio bounded worker pool for processing file paths. Requirements: fixed worker count, bounded queue for backpressure, preserve input order in results, propagate the first worker exception, cancel and await all outstanding tasks on failure, and handle caller cancellation without leaked tasks. Explain the shutdown protocol, provide complete typed code using only the standard library, and include three meaningful tests for ordering, worker failure, and cancellation."
+        }
+      ],
+      "max_new_tokens": 256,
+      "strata_tune": {
+        "spec_min_p": 0
+      },
+      "client_call_end_monotonic_ns": 454551981148558,
+      "client_call_end_epoch_ns": 1792130063868360082
+    },
+    "request1_lifetime": {
+      "client_call_start_monotonic_ns": 454545215156231,
+      "client_call_start_epoch_ns": 1792130057102367684,
+      "model": "hotschmoe-dd",
+      "messages": [
+        {
+          "role": "user",
+          "content": "[Flash-Next concurrent coding repeat 0 slot 1] Implement a Python asyncio bounded worker pool for processing file paths. Requirements: fixed worker count, bounded queue for backpressure, preserve input order in results, propagate the first worker exception, cancel and await all outstanding tasks on failure, and handle caller cancellation without leaked tasks. Explain the shutdown protocol, provide complete typed code using only the standard library, and include three meaningful tests for ordering, worker failure, and cancellation."
+        }
+      ],
+      "max_new_tokens": 256,
+      "strata_tune": {
+        "spec_min_p": 0
+      },
+      "client_call_end_monotonic_ns": 454552049661338,
+      "client_call_end_epoch_ns": 1792130063936872501
+    }
+  },
+  "client_overlap_ns": 6765992327,
+  "repeat": 0,
+  "output_tokens_per_stream": 256,
+  "exact_gate": "full UTF8 text/SSE content plus usage/native work; not raw token IDs"
+}

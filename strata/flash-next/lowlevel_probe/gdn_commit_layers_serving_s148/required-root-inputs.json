@@ -1,0 +1,27 @@
+{
+  "status": "SOURCE_ONLY_ACTUAL_RECEIPTS_PENDING",
+  "build_stage": "S147",
+  "build_receipt_required": [
+    "build_exit=0",
+    "tee_exit=0",
+    "exe.path",
+    "exe.sha256",
+    "verify_source.path",
+    "verify_source.sha256",
+    "verify_kernel_source.path",
+    "verify_kernel_source.sha256"
+  ],
+  "future_actual_exe_sha256": null,
+  "future_actual_source_hashes": null,
+  "candidate": "STRATA_GDN_COMMIT_LAYERS0/1",
+  "common_domain": {
+    "STRATA_QSA_COMMIT_GROUP_STEPS": "0",
+    "STRATA_ROPE_TABLE": "0",
+    "STRATA_GDN_SPLIT": "0",
+    "STRATA_GDN_COMMIT_SPLIT": "1",
+    "STRATA_DBG_GDN": "0",
+    "STRATA_Q5_HEAD_RUNTIME_ONES": "0",
+    "STRATA_Q5_HEAD_RUNTIME_ONES_C6": "0"
+  },
+  "no_configs_generated": true
+}

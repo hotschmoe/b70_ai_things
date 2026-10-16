@@ -1,0 +1,17 @@
+{
+  "scope": "Source-only proposed next session; S148 was pending at its cutoff, now HOLD in dated root handoff. No new tests or claimed combined winner.",
+  "files": [
+    {
+      "original": "/mnt/vm_8tb/b70/results/combined-winner-full-context-source-20261016/findings.md",
+      "copy": "handoff-source-findings.md",
+      "bytes": 6015,
+      "sha256": "adf85a8d30f12e47fa221b2b15ff5bd06b95b96a928f39d41d016d0ed1dabd01"
+    },
+    {
+      "original": "/mnt/vm_8tb/b70/results/combined-winner-full-context-source-20261016/manifest.json",
+      "copy": "handoff-source-manifest.json",
+      "bytes": 323,
+      "sha256": "22fb22a472e3ceb7d1dc045d4525e3d6aa9570b4130f21afdac0d0357f298798"
+    }
+  ]
+}
