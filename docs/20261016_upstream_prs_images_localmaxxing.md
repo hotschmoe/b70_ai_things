@@ -95,3 +95,13 @@ the same rendered command run by hand loaded fine. Second attempt on 7381fb3: re
 ok, 512-token reply 135 tok/s incl. prompt (one request), metrics read, clean stop in 4 s, health before/after ok.
 VERDICT -> PR #4 opened with nine open questions for the maintainer (entry layout, fork branch until #1798/#2205 land,
 stop timeout, images not in the recipe).
+
+## Images on the SYCL port upstream (Niko1221/Strata#2817, issue #2816)
+
+sycl/setup_intel.py forced images off (`hip_vision` stubbed to "none", `--vision none`, the config's vision section
+dropped); the engine side (`--vision`, GENI, M-RoPE table) was already on main. The PR (Claude Fable 5.1 subagent)
+builds the CPU strata-vision for `setup --backend sycl --vision cpu` the way setup does for AMD (#304), keeps the
+vision section, and documents it; setup.py byte-identical; tools.test_setup_sycl 24/24.
+GPU check on main 296b59d2 (its own build, layer split 30, 65536): the 448x448 quadrant picture answered correctly
+("Red, Green, Blue, Yellow" in the asked order), 246 prompt tokens in 1.48 s incl. the encode; text with `--vision`
+identical to main without it (same SHAs and draft counts, 81.7 / 79.4 vs 81.8 / 79.4 tok/s). DD down ~3 min.
