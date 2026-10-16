@@ -1,0 +1,46 @@
+{
+  "public": {
+    "PASS": true,
+    "checks": {
+      "computational_prefix_8128_exact": true,
+      "normalized_metadata_exact": true,
+      "options_exact": true,
+      "constants_exact": true,
+      "raw_normalized_relocations_exact": true,
+      "decoded_normalized_relocations_exact": true
+    },
+    "reference": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-audit-v2/q5-c2.zebin",
+    "reference_image_sha256": "aa4d0202dd32cca82dad2cce6497c74125c640a0006f3f8dbe30ae04fc6bd859",
+    "reference_computation_sha256": "18122b62c089a6e96f1178f77b936884acd543f4f8814b87a1d143328ae5b5c1",
+    "actual_computation_sha256": "18122b62c089a6e96f1178f77b936884acd543f4f8814b87a1d143328ae5b5c1",
+    "raw_full_image_exact": false,
+    "raw_complete_text_exact": false,
+    "first_changed_text_byte": 8140,
+    "new_text_bytes": 8320,
+    "old_text_bytes": 8320,
+    "computational_EOT_end": 8128,
+    "limits": "Strict computation/meta/options/data/raw+decoded relocation gates. Full raw image/text identities retained; no relaxed prefix or new decode/retry."
+  },
+  "candidate": {
+    "PASS": true,
+    "checks": {
+      "computational_prefix_6272_exact": true,
+      "full_metadata_exact": true,
+      "options_exact": true,
+      "constants_exact": true,
+      "raw_normalized_relocations_exact": true,
+      "decoded_normalized_relocations_exact": true
+    },
+    "reference": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-built-audit/candidate.zebin",
+    "reference_image_sha256": "6069468cf1b16aa42e7a868b0e928b8c512784485f3b7c553bf4df78dd6612a7",
+    "reference_computation_sha256": "34b9addcc36d9a90471ef7dab05aa1c4843068fc4f458d662eaa7847afc9f145",
+    "actual_computation_sha256": "34b9addcc36d9a90471ef7dab05aa1c4843068fc4f458d662eaa7847afc9f145",
+    "raw_full_image_exact": true,
+    "raw_complete_text_exact": true,
+    "first_changed_text_byte": null,
+    "new_text_bytes": 6464,
+    "old_text_bytes": 6464,
+    "computational_EOT_end": 6272,
+    "limits": "Strict computation/meta/options/data/raw+decoded relocation gates. Full raw image/text identities retained; no relaxed prefix or new decode/retry."
+  }
+}

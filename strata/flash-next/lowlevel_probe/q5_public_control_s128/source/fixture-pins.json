@@ -1,0 +1,76 @@
+{
+  "status": "SOURCE_METADATA_AND_SMALL_EXPORTED_FIXTURE_VALIDATION_ONLY",
+  "S52_identity_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/decode-next-s52-prep/v3/run-clean/identity.json",
+  "S52_identity_sha256": "8861bb9a1cf930b3ad2be8c9227ed26ef7260d796f52c8db9fd0adbf481104b7",
+  "model_lock": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/model-lock-ista-iq3.json",
+  "model_lock_sha256": "c6ae0f0dc1610866f81fec6c052fc1b23c275a1a6f9fa7b42b9a963741d55e1c",
+  "model_id": "qwen3.8-flash-next/ista-gsq-rco-iq3-xxs",
+  "revision": "ed59f92082b1e93c0e96d60a8b11aab089b52f09",
+  "logical_shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-xxs/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+  "resolved_shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-xxs/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+  "shard_size": 47039860096,
+  "model_lock_shard_sha256_not_reread": "219ea929900dfa9ef091f3aa473fdba6874b65fcb36526d7d851ac9e95856d15",
+  "current_stat": {
+    "device": 45,
+    "inode": 19967899,
+    "size": 47039860096,
+    "mtime_ns": 1791870156129047577,
+    "ctime_ns": 1791870156423056842
+  },
+  "head_slice": {
+    "offset": 11024256,
+    "bytes": 437043200,
+    "sha256_from_actual_S52": "93f1c7cb7a7cf8134ce9f8cf80c5416df968f7f1ddcc16f2159a9521080826a5",
+    "fnv64_from_actual_S52_source": "da8746c3dcc2469e",
+    "N": 2560,
+    "M": 248320,
+    "type": 13
+  },
+  "fixtures": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/decode-next-s52-prep/v3/run-clean/A1/C2-input-a.bin",
+      "bytes": 61440,
+      "sha256": "e4253c3ad61518c84a293ea15148471cbd534a2f583feb301a964096c5f14763"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/decode-next-s52-prep/v3/run-clean/A1/C2-input-b.bin",
+      "bytes": 61440,
+      "sha256": "2c1b1922aaa573abf7532b5e8d104d2309716aa0e87b42b93db0c6dcce572cd2"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/decode-next-s52-prep/v3/run-clean/A1/C2-eager-a-q8.bin",
+      "bytes": 5760,
+      "sha256": "26fb472a1cde8617a0f6e76bb2c46cb2355d7f8e12d724a4c4783846d7a089f8"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/decode-next-s52-prep/v3/run-clean/A1/C2-eager-b-q8.bin",
+      "bytes": 5760,
+      "sha256": "d2c74e01d227ab25c6225548158434a6761937b01ae19787f98f21ddd705b300"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/decode-next-s52-prep/v3/run-clean/A1/C2-eager-a.bin",
+      "bytes": 1986560,
+      "sha256": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/decode-next-s52-prep/v3/run-clean/A1/C2-eager-b.bin",
+      "bytes": 1986560,
+      "sha256": "9105fc0a0be0f200d0a3ded98b71c57c5e64f9f2238c45271999bfb493b0c5b5"
+    }
+  ],
+  "model_payload_bytes_read_during_prep": 0,
+  "preferred_runtime_NVMe_shard": {
+    "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+    "config_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/mode0/config.json",
+    "config_sha256": "9220de2d7efe649cad0c777a33282132b347c0baad46119dbaec3441d10fffd9",
+    "stat": {
+      "device": 44,
+      "inode": 1156777,
+      "size": 47039860096,
+      "mtime_ns": 1792062519977528586,
+      "ctime_ns": 1792062590206707891
+    },
+    "payload_not_read": true,
+    "runtime_requirement": "Exact slice SHA256 93f1c7cb7a7cf8134ce9f8cf80c5416df968f7f1ddcc16f2159a9521080826a5 and FNV must be checked under later authorized CPU/GPU lease; no full47GB hash."
+  }
+}

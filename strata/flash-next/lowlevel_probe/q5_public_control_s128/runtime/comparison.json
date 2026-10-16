@@ -1,0 +1,243 @@
+{
+  "status": "PASS_FULL_BYTES_READONLY_GUARDS_DOT",
+  "shapes": {
+    "head": {
+      "snapshots": 49,
+      "hashes": {
+        "eager-public-a": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "eager-original-a": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "eager-candidate-a": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "repeat-original-a": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "repeat-candidate-a": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "graph-public-a": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "graph-original-a": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "graph-candidate-a": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "graph-repeat-public-a": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "graph-repeat-original-a": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "graph-repeat-candidate-a": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "batch20-original-a": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "batch20-candidate-a": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "restore-eager-public": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "restore-eager-original": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "restore-eager-candidate": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "restore-graph-public": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "restore-graph-original": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "restore-graph-candidate": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "restore-batch20-original": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "restore-batch20-candidate": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "final": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7",
+        "eager-public-b": "9105fc0a0be0f200d0a3ded98b71c57c5e64f9f2238c45271999bfb493b0c5b5",
+        "eager-original-b": "9105fc0a0be0f200d0a3ded98b71c57c5e64f9f2238c45271999bfb493b0c5b5",
+        "eager-candidate-b": "9105fc0a0be0f200d0a3ded98b71c57c5e64f9f2238c45271999bfb493b0c5b5",
+        "repeat-original-b": "9105fc0a0be0f200d0a3ded98b71c57c5e64f9f2238c45271999bfb493b0c5b5",
+        "repeat-candidate-b": "9105fc0a0be0f200d0a3ded98b71c57c5e64f9f2238c45271999bfb493b0c5b5",
+        "graph-public-b": "9105fc0a0be0f200d0a3ded98b71c57c5e64f9f2238c45271999bfb493b0c5b5",
+        "graph-original-b": "9105fc0a0be0f200d0a3ded98b71c57c5e64f9f2238c45271999bfb493b0c5b5",
+        "graph-candidate-b": "9105fc0a0be0f200d0a3ded98b71c57c5e64f9f2238c45271999bfb493b0c5b5",
+        "graph-repeat-public-b": "9105fc0a0be0f200d0a3ded98b71c57c5e64f9f2238c45271999bfb493b0c5b5",
+        "graph-repeat-original-b": "9105fc0a0be0f200d0a3ded98b71c57c5e64f9f2238c45271999bfb493b0c5b5",
+        "graph-repeat-candidate-b": "9105fc0a0be0f200d0a3ded98b71c57c5e64f9f2238c45271999bfb493b0c5b5",
+        "batch20-original-b": "9105fc0a0be0f200d0a3ded98b71c57c5e64f9f2238c45271999bfb493b0c5b5",
+        "batch20-candidate-b": "9105fc0a0be0f200d0a3ded98b71c57c5e64f9f2238c45271999bfb493b0c5b5"
+      },
+      "DOTs": {
+        "single-public": {
+          "sha256": "5daa534efa5b22da3b34a1b72fd867a7602aeaa348db709736b60b8c6e1cbecd",
+          "nodes": 1,
+          "kernel_names": [
+            "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_111launch_wideINS2_7WideQ5KELi2EEEvPKvS6_PfiiPN4sycl3_V15queueEiE16native_mmvq_wideS4_18dpct_kernel_scalarILi2EEEE"
+          ],
+          "resources": [
+            "0xffffd556b6401000",
+            "0xffffd556d0601000",
+            "0xffffffffff621000"
+          ]
+        },
+        "single-original": {
+          "sha256": "256e8458cf92e6e2465d48251abe0d49d01893f3267e829e6eec9ab1fdf55f26",
+          "nodes": 1,
+          "kernel_names": [
+            "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_111launch_wideINS2_7WideQ5KELi2EEEvPKvS6_PfiiPN4sycl3_V15queueEiE16native_mmvq_wideS4_18dpct_kernel_scalarILi2EEEE"
+          ],
+          "resources": [
+            "0xffffd556b6401000",
+            "0xffffd556d0601000",
+            "0xffffffffff621000"
+          ]
+        },
+        "single-candidate": {
+          "sha256": "ecd89e1d642f53791336ad9263ddd8c0a506073451dc410848d4d690cdf9d56c",
+          "nodes": 1,
+          "kernel_names": [
+            "_ZTSN4s12615RuntimeOnesQ5C2E"
+          ],
+          "resources": [
+            "0xffffd556b6401000",
+            "0xffffd556d0601000",
+            "0xffffffffff621000"
+          ]
+        },
+        "batch20-original": {
+          "sha256": "822253a8b0f5a0b7e5d961820d6e22cb0bd21c691f561f218afb205289488819",
+          "nodes": 20,
+          "kernel_names": [
+            "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_111launch_wideINS2_7WideQ5KELi2EEEvPKvS6_PfiiPN4sycl3_V15queueEiE16native_mmvq_wideS4_18dpct_kernel_scalarILi2EEEE"
+          ],
+          "resources": [
+            "0xffffd556b6401000",
+            "0xffffd556d0601000",
+            "0xffffffffff621000"
+          ]
+        },
+        "batch20-candidate": {
+          "sha256": "ba98f7c53ebf13ff3e8daab2e23489ab181924b8b5bc28e12ffedb3237fcbccb",
+          "nodes": 20,
+          "kernel_names": [
+            "_ZTSN4s12615RuntimeOnesQ5C2E"
+          ],
+          "resources": [
+            "0xffffd556b6401000",
+            "0xffffd556d0601000",
+            "0xffffffffff621000"
+          ]
+        }
+      },
+      "completed_wall_pairs": [
+        {
+          "round": 0,
+          "original_us": 1266.6567,
+          "candidate_us": 944.2616,
+          "change_percent": -25.45244500739624
+        },
+        {
+          "round": 1,
+          "original_us": 1281.06315,
+          "candidate_us": 950.9007750000001,
+          "change_percent": -25.772529246509034
+        }
+      ],
+      "median_pair_change_percent": -25.612487126952637,
+      "raw_samples": [
+        {
+          "type": "timing_sample",
+          "shape": "head",
+          "round": 0,
+          "slot": 0,
+          "arm": "original",
+          "order": "OCCO",
+          "captured_projection_calls": 20,
+          "quantization_in_timed_graph": false,
+          "enqueue_us": 16.531,
+          "complete_us": 25265.725,
+          "barrier_span_us": 25270.625,
+          "checked_full_bytes": true
+        },
+        {
+          "type": "timing_sample",
+          "shape": "head",
+          "round": 0,
+          "slot": 1,
+          "arm": "candidate",
+          "order": "OCCO",
+          "captured_projection_calls": 20,
+          "quantization_in_timed_graph": false,
+          "enqueue_us": 15.119,
+          "complete_us": 18898.968,
+          "barrier_span_us": 18897.083,
+          "checked_full_bytes": true
+        },
+        {
+          "type": "timing_sample",
+          "shape": "head",
+          "round": 0,
+          "slot": 2,
+          "arm": "candidate",
+          "order": "OCCO",
+          "captured_projection_calls": 20,
+          "quantization_in_timed_graph": false,
+          "enqueue_us": 15.059,
+          "complete_us": 18871.496,
+          "barrier_span_us": 18870.104,
+          "checked_full_bytes": true
+        },
+        {
+          "type": "timing_sample",
+          "shape": "head",
+          "round": 0,
+          "slot": 3,
+          "arm": "original",
+          "order": "OCCO",
+          "captured_projection_calls": 20,
+          "quantization_in_timed_graph": false,
+          "enqueue_us": 16.171,
+          "complete_us": 25400.543,
+          "barrier_span_us": 25397.917,
+          "checked_full_bytes": true
+        },
+        {
+          "type": "timing_sample",
+          "shape": "head",
+          "round": 1,
+          "slot": 0,
+          "arm": "candidate",
+          "order": "COOC",
+          "captured_projection_calls": 20,
+          "quantization_in_timed_graph": false,
+          "enqueue_us": 15.81,
+          "complete_us": 18941.73,
+          "barrier_span_us": 18939.583,
+          "checked_full_bytes": true
+        },
+        {
+          "type": "timing_sample",
+          "shape": "head",
+          "round": 1,
+          "slot": 1,
+          "arm": "original",
+          "order": "COOC",
+          "captured_projection_calls": 20,
+          "quantization_in_timed_graph": false,
+          "enqueue_us": 16.571,
+          "complete_us": 25515.682,
+          "barrier_span_us": 25513.646,
+          "checked_full_bytes": true
+        },
+        {
+          "type": "timing_sample",
+          "shape": "head",
+          "round": 1,
+          "slot": 2,
+          "arm": "original",
+          "order": "COOC",
+          "captured_projection_calls": 20,
+          "quantization_in_timed_graph": false,
+          "enqueue_us": 16.1,
+          "complete_us": 25726.844,
+          "barrier_span_us": 25725.208,
+          "checked_full_bytes": true
+        },
+        {
+          "type": "timing_sample",
+          "shape": "head",
+          "round": 1,
+          "slot": 3,
+          "arm": "candidate",
+          "order": "COOC",
+          "captured_projection_calls": 20,
+          "quantization_in_timed_graph": false,
+          "enqueue_us": 15.76,
+          "complete_us": 19094.301,
+          "barrier_span_us": 19091.667,
+          "checked_full_bytes": true
+        }
+      ]
+    }
+  },
+  "whole_weight_checks": 2,
+  "raw_integer_cells": 656,
+  "DOT_nodes": 43,
+  "DOT_edges": 38,
+  "limits": "2 balanced round means nested in one process; 20 projection calls/graph, canonical saved Q8 ready outside graphs; completed host wall primary, barrier span includes boundaries; no population, kernel cause or serving claim",
+  "serving_qualified": false,
+  "speed_qualified": false
+}

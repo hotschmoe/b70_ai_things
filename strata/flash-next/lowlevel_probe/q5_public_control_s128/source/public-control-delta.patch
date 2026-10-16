@@ -1,0 +1,35 @@
+--- a/q5_runtime_ones_leaf.cpp
++++ b/q5_runtime_ones_leaf.cpp
+@@ -1,4 +1,4 @@
+-// SOURCE ONLY S126: Q5 C2 full head, runtime packed ones operand only.
++// SOURCE ONLY S128: verified public Q5 C2 control; unchanged S126 runtime-ones candidate.
+ #define DPCT_PROFILING_ENABLED
+ #include <sycl/sycl.hpp>
+ #include <dpct/dpct.hpp>
+@@ -144,7 +144,7 @@
+     }
+     void call(int arm){
+         if(arm==0)K::native_mmvq(13,w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,C,&q);
+-        else if(arm==1)s126::launch_original(w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,q);
++        else if(arm==1)K::native_mmvq(13,w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,C,&q);
+         else if(arm==2)s126::launch_candidate(w.ptr(),xq.ptr(),y.ptr<float>(),d.N,d.M,runtime_ones,q);
+         else need(false,"bad projection arm");
+     }
+@@ -177,7 +177,7 @@
+             raw_gate(q,xq,expectedq[changed],qbytes,runtime_ones,"canonical-"+label);
+             output_reset();call(0);expected[changed]=snapshot("eager-public-"+label,true);
+             strict_equal(expected[changed],anchor[changed],"saved S52 RPW1 public byte anchor");
+-            // The private-original/public byte anchor precedes every candidate gate.
++            // S128: arm1 is the same verified production public kernel as arm0.
+             output_reset();call(1);equal_snapshot("eager-original-"+label,true);
+             output_reset();call(2);equal_snapshot("eager-candidate-"+label,true);
+             for(int arm:{1,2}){output_reset();call(arm);equal_snapshot(std::string("repeat-")+armname(arm)+"-"+label,true);}
+@@ -259,7 +259,7 @@
+     for(auto& state:states){state->warm();state->timing();}
+     for(auto& state:states)state->weight_payload_check("after-timing-final");
+     q.wait_and_throw();states.clear();q.wait_and_throw();need(!cleanup_error,"graph cleanup failure");
+-    text(out/"result.json","{\"status\":\"PASS\",\"scope\":\"S126_ONE_HEAD_RUNTIME_ONES_ONLY\",\"shapes\":1,\"paired_rounds_per_shape\":2,\"samples_per_round\":4,\"calls_per_graph\":20,\"public_original_bit_anchor\":true,\"candidate_full_bytes\":true,\"serving_qualified\":false,\"speed_qualified\":false}\n");return 0;
++    text(out/"result.json","{\"status\":\"PASS\",\"scope\":\"S128_PUBLIC_CONTROL_RUNTIME_ONES\",\"shapes\":1,\"paired_rounds_per_shape\":2,\"samples_per_round\":4,\"calls_per_graph\":20,\"public_original_bit_anchor\":true,\"candidate_full_bytes\":true,\"serving_qualified\":false,\"speed_qualified\":false}\n");return 0;
+ }
+ int main(int argc,char** argv){
+     setvbuf(stdout,nullptr,_IONBF,0);fs::path out;bool created=false;

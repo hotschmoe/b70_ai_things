@@ -1,0 +1,9 @@
+{
+  "status": "DERIVED_POINTER_CORRECTION_RAW_RECEIPT_UNCHANGED",
+  "raw_closure": "runtime/closure.json",
+  "raw_timing_summary_value": "analysis.json",
+  "actual_completed_analyzer_output": "runtime/comparison.json",
+  "actual_external_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/comparison.json",
+  "basis": "Root terminal-run message and existing actual output; raw closure remains byte-exact.",
+  "no_new_execution": true
+}

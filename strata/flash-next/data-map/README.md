@@ -447,3 +447,14 @@ S119-S121 followups (2026-10-16): [offline AOT cache reuse](../../../docs/202610
 
 
 [S122 Q5 input-sum ISA](../../../docs/20261016_strata_q5_c2_rawsum.md) shows four distinct raw16 sums expanded into 160 static vector instructions. The next private source candidate uses a runtime-uniform packed ones operand; no speed result exists. [Structural source review](../../../docs/20261016_strata_structural_decode_leads.md) records primary-only MTP placement, cross-card ownership costs and a distinct Q6 matrix-layout proposal. Same-device owner-queue overlap is being checked first; cross-card and Q6 expansion are parked. Historical operation data remains unchanged.
+
+
+[S128 Q5 C2 head oracle](../../../docs/20261016_strata_q5_public_control_runtime_ones.md)
+passes49snapshots/656rawsumcells/2wholeweights/eager+graph A/B/A/normalhealth.
+Production1266.656700/1281.063150us versus private944.261600/950.900775us
+are two balanced round means, all8samples retained, 20ready-Q8 projections
+per graph on initial inputA. Both A/B fixtures pass full logits. This is a
+whole private-build comparison, not an isolated operand or serving gain.
+The explicit C2 head source can also serve two-token verifier windows; C6
+was not tested. S126 clone HOLD remains. Historical operation rows/HTML
+remain unchanged. Main integration and separate matched flags are next.

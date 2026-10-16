@@ -1,0 +1,26 @@
+{
+  "GPU_GO": true,
+  "binary_sha256": "5d5b6a2a6332543196f54d4901336b680317c31e44be6b08da6af38b04bcc8a2",
+  "scope": "ONE_PRIVATE_Q5_C2_PUBLIC_CONTROL_ORACLE_CONDITIONAL_TIMING_ONLY",
+  "actual_responding_models": [
+    "claude-opus-5-5",
+    "claude-fable-5-1"
+  ],
+  "model_elapsed_s": [
+    32.265327081957366,
+    46.18455005600117
+  ],
+  "models": "Both EXPERIMENT_GO_CONDITIONAL_ON_EXACT_REBIND; root full responses read",
+  "source_delta_full_read": true,
+  "compiled_facts": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-built-audit/facts.json",
+  "compiled_facts_sha256": "835a84d65e3c2bc89a6edc3ddb547df015ba500ad17f41a164585a11d11a7771",
+  "host_findings": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-host-independent/findings.md",
+  "host_findings_sha256": "19dcfbbdfcc95a3fc878eb6635dfdedd1a3d11782debb82fb69302000e9cbffb",
+  "candidate_ISA": "Whole image/text exact to independently fully reviewed V3; no new decoder",
+  "runner_full_read_and_manifest_verified": true,
+  "S126_private_clone_HOLD_preserved": true,
+  "timing_interpretation": "Whole candidate build versus production; does not isolate ones operand/private TU context",
+  "fresh_card0_pre_post_health_required": true,
+  "main_serving_Q4_approval": false,
+  "retries": 0
+}

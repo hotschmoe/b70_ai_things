@@ -1,0 +1,26 @@
+{
+  "inputs": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-built-audit/facts.json",
+      "bytes": 65179,
+      "sha256": "835a84d65e3c2bc89a6edc3ddb547df015ba500ad17f41a164585a11d11a7771"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-built-audit/control-comparison.json",
+      "bytes": 2237,
+      "sha256": "b5a9bff3495239fb9dde1d9252b69328615da3a3ff3177f5158123fa103d9143"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-built-audit/candidate.ze_info",
+      "bytes": 2732,
+      "sha256": "43624b890e3692f34746f54a9ede88d841765a5f32585f596ef29d0054042018"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep/q5_runtime_ones_leaf.cpp",
+      "bytes": 20556,
+      "sha256": "c4275ea009f2cf81c4a466c88fd5637c5923fc254a9242c029d772cdfeda21ae"
+    }
+  ],
+  "CPU_lease": "bin/cpu-run python3 bounded static review copy, exit0/0s",
+  "GPU_build_decoder_or_compiled_audit_execution": false
+}

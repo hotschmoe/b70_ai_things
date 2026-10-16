@@ -25350,3 +25350,35 @@ as an independent candidate for a minimal main build and finite matched
 comparison, without a new private framework/redundant review round. No actual
 KV-byte proof, hardware overlap, noise band or speed forecast. See
 docs/20261016_strata_mtp_owner_queues_source.md.
+
+
+## 2026-10-16 S128: packed Q5 head passes with actual production control
+
+CONFIG -> Q5_K N2560/M248320/C2/RPW1/SG32, actual437043200B head and
+savedS52 canonicalQ8 A/B. Nominal original arm now uses actual public
+production kernel; unchanged candidate header/runtimeones. S126 HOLD stays.
+
+COMMAND -> CPU-only adapterbuild0/22.138738s; selectedaudit0/2.244261s;
+independent actualhost argv/word/capture/binding review. Actual Opus5.5
+32.265327s/Fable5.1 46.184550s conditionalGO closed byroot. One quiet
+card0 leased43s window, fresh pinned pre/posthealth, no retry/reset.
+
+RESULT -> Public8128B computation/meta/options/data/relocs exactS122.
+Candidate WHOLEimage/text exact priorV3; reusedISA withoutdecoder. All49
+snapshots/656INT64cells/2wholeweights/74bins/5DOT43nodes38edges PASS.
+Eager/repeats/ownsingle+batchgraphs/change/restore full logits equal public
+andS52; guards/tails/inputs/Q8 unchanged. All8timings retained: two20call
+completedwall means1266.656700->944.261600us(-25.452445%) and
+1281.063150->950.900775us(-25.772529%). Timing usesinitialA; B isstrict
+coverage. Native/start/wait/rm/analysis/identity/driver/tee0, OOMfalse, full
+CID+NAMEgone, freshcard0health0. Rawclosure wronganalysis.jsonlabel kept;
+actualcomparison.json indexed separately.
+
+VERDICT -> Bounded private PASS; wholebuild context confounds isolatedones
+cause, no serving/population/universalFP claim. Actual postresult+production
+source Opus43.736249s/Fable63.623681s CPU_BUILD_GO_WITH_CONDITIONS only;
+root selected otherwise-required combined mainbuild and separateflag tests.
+Cleanup removedonlythreeobsolete S126V3 build files65,011,104Blogical;
+65,019,904Ballocated beforeunlink, not a measuredfree-space increase.
+Sources/selectedimages/ISA/failures/currentmain/activeinfra preserved.
+See docs/20261016_strata_q5_public_control_runtime_ones.md.

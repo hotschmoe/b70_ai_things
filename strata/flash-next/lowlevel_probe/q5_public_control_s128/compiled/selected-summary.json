@@ -1,0 +1,312 @@
+{
+  "status": "PASS_FOUR_STATIC_BINDINGS_STRICT_PUBLIC8128_CANDIDATE6272_REUSE",
+  "source_prep": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep",
+  "source_manifest_sha256": "ff92d152aba1213372ff8fb8e2ccfe750962d3b2aeeef9feea66cbcf506a85df",
+  "private_artifact_hashes": {
+    "q5_runtime_ones_s126": "5d5b6a2a6332543196f54d4901336b680317c31e44be6b08da6af38b04bcc8a2",
+    "q5_runtime_ones_leaf.o": "d050c0069a52069e7eaec299d18d0a47081fe0c6102d031876ca48e58b80a779",
+    "leaf.images.o": "e5968f2fbeb9e0b4e1d0287ab1ca8b16208dd51e063bb286c19a6ca667fd69ca"
+  },
+  "public_member": {
+    "archive": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/frozen-inputs/libstrata_kernels.a",
+    "archive_sha256_reused": "f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8",
+    "archive_stat": {
+      "device": 45,
+      "inode": 23937825,
+      "size": 19468072,
+      "mtime_ns": 1792067232644493521,
+      "ctime_ns": 1792067232644493521
+    },
+    "member": "native_mmvq.dp.cpp.o",
+    "object_sha256": "64050c1ebd9e6ed31006d7c9800b0b6bf7748d23512b6c6dfecbc6c4da67e9d1",
+    "object_bytes": 8098872,
+    "substituted_S107_object": false
+  },
+  "selected": {
+    "candidate": {
+      "kernel": "_ZTSN4s12615RuntimeOnesQ5C2E",
+      "executable_offset": 2878416,
+      "image_bytes": 27816,
+      "image_sha256": "6069468cf1b16aa42e7a868b0e928b8c512784485f3b7c553bf4df78dd6612a7",
+      "text_bytes": 6464,
+      "text_sha256": "cbf570964fe19c15b61ebeeb714efb22145882748f5f7378b60721d2f3005fdb",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "missing_metadata": "UNKNOWN, not zero; barrier_count is not an instruction count",
+      "payload_user_arguments": [
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 0,
+          "offset": 0,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        },
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 1,
+          "offset": 8,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        },
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 2,
+          "offset": 16,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 3,
+          "offset": 24,
+          "size": 4
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 4,
+          "offset": 28,
+          "size": 4
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 5,
+          "offset": 32,
+          "size": 4
+        }
+      ],
+      "options_ascii": "-cl-fp32-correctly-rounded-divide-sqrt"
+    },
+    "raw16": {
+      "kernel": "_ZTSN4s1269Raw16SumsE",
+      "executable_offset": 2870640,
+      "image_bytes": 7776,
+      "image_sha256": "5d09a7c263099a0a3f714270428f97cbd954297d0681bcbf1beece741b7d203f",
+      "text_bytes": 1024,
+      "text_sha256": "f0c838e946faca36cee3d76e7c71a771197d89e54d1c56ecd5c1b13cb86bd196",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "missing_metadata": "UNKNOWN, not zero; barrier_count is not an instruction count",
+      "payload_user_arguments": [
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 0,
+          "offset": 40,
+          "size": 4
+        },
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 1,
+          "offset": 24,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        },
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 2,
+          "offset": 32,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        }
+      ],
+      "options_ascii": "-cl-fp32-correctly-rounded-divide-sqrt"
+    },
+    "raw16_wrapper": {
+      "kernel": "_ZTSN4sycl3_V16detail19__pf_kernel_wrapperIN4s1269Raw16SumsEEE",
+      "executable_offset": 2838880,
+      "image_bytes": 9920,
+      "image_sha256": "865b400c49df01b6387a62df0548ed5473fd10ed430405099b3f83b6acd89157",
+      "text_bytes": 1472,
+      "text_sha256": "5969e4cf4758b911ba0d6947a930ad23fec23bbc8cd87156a9cefd65a8af7d0e",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "missing_metadata": "UNKNOWN, not zero; barrier_count is not an instruction count",
+      "payload_user_arguments": [
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 0,
+          "offset": 24,
+          "size": 8,
+          "source_offset": 0
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 1,
+          "offset": 32,
+          "size": 5,
+          "source_offset": 0
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 1,
+          "offset": 40,
+          "size": 1,
+          "source_offset": 5
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 1,
+          "offset": 44,
+          "size": 1,
+          "source_offset": 6
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 1,
+          "offset": 48,
+          "size": 1,
+          "source_offset": 7
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 1,
+          "offset": 56,
+          "size": 8,
+          "source_offset": 8,
+          "is_ptr": "true"
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 1,
+          "offset": 64,
+          "size": 8,
+          "source_offset": 16,
+          "is_ptr": "true"
+        }
+      ],
+      "options_ascii": "-cl-fp32-correctly-rounded-divide-sqrt"
+    },
+    "public": {
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_111launch_wideINS2_7WideQ5KELi2EEEvPKvS6_PfiiPN4sycl3_V15queueEiE16native_mmvq_wideS4_18dpct_kernel_scalarILi2EEEE",
+      "executable_offset": 58161696,
+      "image_bytes": 30160,
+      "image_sha256": "9a22abe7791348fa975aad5e1e771afebc4294e2828a74ac75e3d0b506c0fa55",
+      "text_bytes": 8320,
+      "text_sha256": "8f37f1e37867d12383888b7385be7f7d2c8ce47b28fd7d25c877901fb3f9b60a",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "missing_metadata": "UNKNOWN, not zero; barrier_count is not an instruction count",
+      "payload_user_arguments": [
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 0,
+          "offset": 0,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        },
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 1,
+          "offset": 8,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        },
+        {
+          "arg_type": "arg_bypointer",
+          "arg_index": 2,
+          "offset": 16,
+          "size": 8,
+          "addrmode": "stateless",
+          "addrspace": "global",
+          "access_type": "readwrite"
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 3,
+          "offset": 24,
+          "size": 4
+        },
+        {
+          "arg_type": "arg_byvalue",
+          "arg_index": 4,
+          "offset": 28,
+          "size": 4
+        }
+      ],
+      "options_ascii": "-cl-fp32-correctly-rounded-divide-sqrt"
+    }
+  },
+  "private_original_host_Info_absent": true,
+  "ISA": "Reused exact S126 candidate6272 computation plus full metadata/options/data/relocations; root reads existing independent ledger. No new decoder needed.",
+  "all_image_walk": false,
+  "main_archive_model_fresh_hash": false,
+  "GPU_build_decoder_invocations": 0,
+  "projection_note": "Per-form kernel, image/text hashes, payload arguments, resources and options only. Full metadata/constants/relocs remain in external facts and were checked by exact control-comparison receipt."
+}

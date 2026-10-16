@@ -1,0 +1,104 @@
+{
+  "scope": "ldd-resolved prospective dependencies only; not actual leaf proc maps/dlopen proof",
+  "libraries": [
+    {
+      "ldd_line": "\tlibze_loader.so.1 => /lib/x86_64-linux-gnu/libze_loader.so.1 (0x00007c736fd2d000)",
+      "resolved_path": "/usr/lib/x86_64-linux-gnu/libze_loader.so.1.28.2",
+      "bytes": 1592952,
+      "mtime_ns": 1776968950000000000,
+      "sha256": "0fe232b18985ae078dd546b57bc6d11bacf1030834c0544f7e3feb53ed71c1d0"
+    },
+    {
+      "ldd_line": "\tlibsycl.so.9 => /opt/intel/oneapi/compiler/2026.1/lib/libsycl.so.9 (0x00007c736f952000)",
+      "resolved_path": "/opt/intel/oneapi/compiler/2026.1/lib/libsycl.so.9.0.0",
+      "bytes": 11677728,
+      "mtime_ns": 1781723845000000000,
+      "sha256": "c22729e471bd31391c04c24e753fd609a9b4cc4f14462cd61d124269cdb3261f"
+    },
+    {
+      "ldd_line": "\tlibstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007c736f6d4000)",
+      "resolved_path": "/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33",
+      "bytes": 2592224,
+      "mtime_ns": 1766093810000000000,
+      "sha256": "1fd75fe70354a416d75aef22bcae68c47bd25d20e2d0568c30b1a9838cf62f11"
+    },
+    {
+      "ldd_line": "\tlibm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007c736f5eb000)",
+      "resolved_path": "/usr/lib/x86_64-linux-gnu/libm.so.6",
+      "bytes": 952616,
+      "mtime_ns": 1769761674000000000
+    },
+    {
+      "ldd_line": "\tlibgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007c736f5bb000)",
+      "resolved_path": "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1",
+      "bytes": 183024,
+      "mtime_ns": 1766093810000000000
+    },
+    {
+      "ldd_line": "\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007c736f3a9000)",
+      "resolved_path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+      "bytes": 2125328,
+      "mtime_ns": 1769761674000000000
+    },
+    {
+      "ldd_line": "\t/lib64/ld-linux-x86-64.so.2 (0x00007c736fec0000)",
+      "resolved_path": "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
+      "bytes": 236616,
+      "mtime_ns": 1769761674000000000
+    },
+    {
+      "ldd_line": "\tlibdl.so.2 => /lib/x86_64-linux-gnu/libdl.so.2 (0x00007c736f3a4000)",
+      "resolved_path": "/usr/lib/x86_64-linux-gnu/libdl.so.2",
+      "bytes": 14408,
+      "mtime_ns": 1769761674000000000
+    },
+    {
+      "ldd_line": "\tlibur_loader.so.0 => /opt/intel/oneapi/compiler/2026.1/lib/libur_loader.so.0 (0x00007c736e5e4000)",
+      "resolved_path": "/opt/intel/oneapi/compiler/2026.1/lib/libur_loader.so.0.12.0",
+      "bytes": 25008600,
+      "mtime_ns": 1781723842000000000
+    },
+    {
+      "ldd_line": "\tlibpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007c736e5df000)",
+      "resolved_path": "/usr/lib/x86_64-linux-gnu/libpthread.so.0",
+      "bytes": 14408,
+      "mtime_ns": 1769761674000000000
+    },
+    {
+      "ldd_line": "\tlibrt.so.1 => /lib/x86_64-linux-gnu/librt.so.1 (0x00007c736e5d8000)",
+      "resolved_path": "/usr/lib/x86_64-linux-gnu/librt.so.1",
+      "bytes": 14624,
+      "mtime_ns": 1769761674000000000
+    },
+    {
+      "ldd_line": "\tlibimf.so => /opt/intel/oneapi/compiler/2026.1/lib/libimf.so (0x00007c736e189000)",
+      "resolved_path": "/opt/intel/oneapi/compiler/2026.1/lib/libimf.so",
+      "bytes": 4865192,
+      "mtime_ns": 1781723844000000000
+    },
+    {
+      "ldd_line": "\tlibz.so.1 => /lib/x86_64-linux-gnu/libz.so.1 (0x00007c736e16d000)",
+      "resolved_path": "/usr/lib/x86_64-linux-gnu/libz.so.1.3",
+      "bytes": 113000,
+      "mtime_ns": 1723170800000000000
+    },
+    {
+      "ldd_line": "\tlibsvml.so => /opt/intel/oneapi/compiler/2026.1/lib/libsvml.so (0x00007c736c9bc000)",
+      "resolved_path": "/opt/intel/oneapi/compiler/2026.1/lib/libsvml.so",
+      "bytes": 28103240,
+      "mtime_ns": 1781723843000000000
+    },
+    {
+      "ldd_line": "\tlibirng.so => /opt/intel/oneapi/compiler/2026.1/lib/libirng.so (0x00007c736c8c3000)",
+      "resolved_path": "/opt/intel/oneapi/compiler/2026.1/lib/libirng.so",
+      "bytes": 1100272,
+      "mtime_ns": 1781723844000000000
+    },
+    {
+      "ldd_line": "\tlibintlc.so.5 => /opt/intel/oneapi/compiler/2026.1/lib/libintlc.so.5 (0x00007c736c860000)",
+      "resolved_path": "/opt/intel/oneapi/compiler/2026.1/lib/libintlc.so.5",
+      "bytes": 415824,
+      "mtime_ns": 1781723846000000000
+    }
+  ]
+}

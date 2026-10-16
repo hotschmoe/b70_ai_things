@@ -1,0 +1,100 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_S128_CORRECTED_HARNESS_NO_BUILD_GPU",
+  "base": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3",
+  "files": {
+    "README.md": {
+      "bytes": 3811,
+      "sha256": "8a6b8914f0ade10adb59398204f7f15904e46a840dd32e211556f815c4587686"
+    },
+    "analyze.py": {
+      "bytes": 3276,
+      "sha256": "1da9710d3a2f107c4aa7eda75b14fab2b00db4890d6132408a4f0e4a595985b6"
+    },
+    "build-container.sh": {
+      "bytes": 1959,
+      "sha256": "c4cb4c96bb00319796b6c24296f846f13987257da961d2cbe8db3f922ffae5f8"
+    },
+    "build.sh": {
+      "bytes": 1494,
+      "sha256": "5e2621040667689e0f15c7c45de59a601650b1dccad94cd43272d19fcbf26fdc"
+    },
+    "env-source-check.json": {
+      "bytes": 1323,
+      "sha256": "90ddc8686b7a3d0462e994dd24ae9e7e159ddbf211e63707d92c55c586d0722c"
+    },
+    "expected-container.sha256": {
+      "bytes": 1053,
+      "sha256": "6d6b78f4d7a35150684cc34a7d556adb8ac717b890f3635a1b0f19b67a91c4c8"
+    },
+    "fixture-pins.json": {
+      "bytes": 4004,
+      "sha256": "ee6c759741e099689c146df3ab700ee04a43fb37d1a8d31e50a8a22808554ddf"
+    },
+    "historical-s126-HOLD.json": {
+      "bytes": 223,
+      "sha256": "974e947aa792d489a87cbf8c754dbc6ca6006af01d808cba2265cc396e5d48ab"
+    },
+    "historical-s126-control-comparison.json": {
+      "bytes": 1542,
+      "sha256": "a9102f40e240bf2c8f79fa108f355d5d45c974513818693e6654a4cf86d00c37"
+    },
+    "historical-s126-v3-README.md": {
+      "bytes": 7165,
+      "sha256": "afc67c11a176445e780acf7f2775b3a8cbb0cc96f433cd8cb16b26cac185cae2"
+    },
+    "preparation-checks.json": {
+      "bytes": 760,
+      "sha256": "5e1d71f3980ccd77cefef9de89c282b11eb751a80dca947835c9990de650d7d1"
+    },
+    "private_q5_runtime_ones.hpp": {
+      "bytes": 10105,
+      "sha256": "a8045fa37108f99ad448e48e6994319845a72327c092989245afcd95094a94c1"
+    },
+    "q5_runtime_ones_leaf.cpp": {
+      "bytes": 20556,
+      "sha256": "c4275ea009f2cf81c4a466c88fd5637c5923fc254a9242c029d772cdfeda21ae"
+    },
+    "s128-host-delta.patch": {
+      "bytes": 2572,
+      "sha256": "735d7af94fa693fad52410f34adefe43f36c60a739634a42267d9a97dd633965"
+    },
+    "s128-host-inverse.patch": {
+      "bytes": 2572,
+      "sha256": "ed5708bd5a0240688aa5209c425fe3ad3c3c98d01216e8f65194ea753036325a"
+    },
+    "sdk-dp4a.txt": {
+      "bytes": 1149,
+      "sha256": "53ccd4d7d4d3c60856a8fc9a02d37f220ed9762aa5b373ca8aa03dd486ee3895"
+    },
+    "source-ledger.json": {
+      "bytes": 1440,
+      "sha256": "09ccf02702b059245682dc8ce5c7b8720f458c4606731ccff2304b99b8738848"
+    },
+    "source-link-bindings.json": {
+      "bytes": 1293,
+      "sha256": "e17c1eaf6822b4d71fc0024409c53d7b7d24d03b4491b888aa0b24132a4a2bad"
+    },
+    "source-pins.json": {
+      "bytes": 2357,
+      "sha256": "be6784009e787bd33b75466be458a32561fdea340d586f8a4a0293765aaa4d00"
+    },
+    "source-review-packet.txt": {
+      "bytes": 49192,
+      "sha256": "cbbd7dbfd5b6110b1fc08a362997d8fc0a5f5da9a3dc469bde8c876e00c7f1f7"
+    },
+    "v2-delta.patch": {
+      "bytes": 9744,
+      "sha256": "6729e00370a67a3ee032b3acadf5c9d1c13de581a849a1ab02af1b00c31261ff"
+    },
+    "v3-host-delta.patch": {
+      "bytes": 5861,
+      "sha256": "ef812cb3fd9252301eba42e55d227b649bd03d155ad8fa9abe79d674edb6e4e7"
+    },
+    "v3-host-inverse.patch": {
+      "bytes": 5861,
+      "sha256": "ca5e99b44d2b6d376097eea3d6172b9028804c963b005e76fcb8bd480e4fb5d3"
+    }
+  },
+  "total_bytes": 139312,
+  "validation": "Source inverse/kernel header exact, AST/bash -n only; no C++ compile."
+}

@@ -1,0 +1,40 @@
+{
+  "status": "DELETED_ONLY_THREE_OBSOLETE_ROOT_OWNED_ARTIFACTS",
+  "utc": "2026-10-16T03:26:56.916198+00:00",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3/build/q5_runtime_ones_s126",
+      "bytes": 64558040,
+      "allocated_bytes_before": 64561152,
+      "prior_build_record_sha256": "66fae0f1087f04f5443d8276edf1722588ed155eeac728251c1933817122ab2b",
+      "fresh_hash": false,
+      "reason": "Obsolete CPU-only S126 HOLD build replaced by strict S128 PASS; source/logs/selected images/ISA retained",
+      "absent_after": true
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3/build/q5_runtime_ones_leaf.o",
+      "bytes": 288736,
+      "allocated_bytes_before": 290816,
+      "prior_build_record_sha256": "8e75c111fe10c0ce7b85c9b41a37e7fbcbe52b8da6caf17642d4fd0b2efd4152",
+      "fresh_hash": false,
+      "reason": "Obsolete CPU-only S126 HOLD build replaced by strict S128 PASS; source/logs/selected images/ISA retained",
+      "absent_after": true
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3/build/leaf.images.o",
+      "bytes": 164328,
+      "allocated_bytes_before": 167936,
+      "prior_build_record_sha256": "e5968f2fbeb9e0b4e1d0287ab1ca8b16208dd51e063bb286c19a6ca667fd69ca",
+      "fresh_hash": false,
+      "reason": "Obsolete CPU-only S126 HOLD build replaced by strict S128 PASS; source/logs/selected images/ISA retained",
+      "absent_after": true
+    }
+  ],
+  "logical_bytes_removed": 65011104,
+  "allocated_bytes_removed": 65019904,
+  "preserved": "All source/commands/identities/audit selected images/HOLD/ISA; all S128/currentmain/frozenpublic/activeinfra/userwork",
+  "worktrees": "one primary only",
+  "dangling_images": 0,
+  "stopped_containers": 0,
+  "swap_flush_or_process_kill": false
+}

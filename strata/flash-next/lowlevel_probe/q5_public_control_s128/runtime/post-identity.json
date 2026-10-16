@@ -1,0 +1,76 @@
+{
+  "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep",
+  "source_manifest": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep-manifest.json",
+  "manifest_sha256": "ff92d152aba1213372ff8fb8e2ccfe750962d3b2aeeef9feea66cbcf506a85df",
+  "binary_sha256": "5d5b6a2a6332543196f54d4901336b680317c31e44be6b08da6af38b04bcc8a2",
+  "binary_stat": {
+    "device": 45,
+    "inode": 24093807,
+    "size": 64551840,
+    "mtime_ns": 1792120472345150227,
+    "ctime_ns": 1792120472345398217
+  },
+  "build_sha256_record_sha256": "55183ac8e91dcace46973b21c371b250d9c2b81ef1b3a5dcd9445c40293f7866",
+  "compiler_version": "Intel(R) oneAPI DPC++/C++ Compiler 2026.1.0 (2026.1.0.20260617)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /opt/intel/oneapi/compiler/2026.1/bin/compiler\nConfiguration file: /opt/intel/oneapi/compiler/2026.1/bin/compiler/../icpx.cfg\n",
+  "root_GPU_GO": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-root-GO.json",
+  "root_GPU_GO_sha256": "362854af0f47fbb96bfb3606435bcb22a108621972c5fae61f8e7a5981bc438b",
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "requested_card": 0,
+  "required_actual_native_PCI": "0000:0b:00.0",
+  "selectors": {
+    "ZE_AFFINITY_MASK": "0",
+    "ONEAPI_DEVICE_SELECTOR": "level_zero:*"
+  },
+  "model_lock_sha256": "c6ae0f0dc1610866f81fec6c052fc1b23c275a1a6f9fa7b42b9a963741d55e1c",
+  "selected_head_slice": {
+    "offset": 11024256,
+    "bytes": 437043200,
+    "sha256_from_actual_S52": "93f1c7cb7a7cf8134ce9f8cf80c5416df968f7f1ddcc16f2159a9521080826a5",
+    "fnv64_from_actual_S52_source": "da8746c3dcc2469e",
+    "N": 2560,
+    "M": 248320,
+    "type": 13
+  },
+  "shard_path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+  "shard_stat": {
+    "device": 44,
+    "inode": 1156777,
+    "size": 47039860096,
+    "mtime_ns": 1792062519977528586,
+    "ctime_ns": 1792062590206707891
+  },
+  "fixtures": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/decode-next-s52-prep/v3/run-clean/A1/C2-input-a.bin",
+      "bytes": 61440,
+      "sha256": "e4253c3ad61518c84a293ea15148471cbd534a2f583feb301a964096c5f14763"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/decode-next-s52-prep/v3/run-clean/A1/C2-input-b.bin",
+      "bytes": 61440,
+      "sha256": "2c1b1922aaa573abf7532b5e8d104d2309716aa0e87b42b93db0c6dcce572cd2"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/decode-next-s52-prep/v3/run-clean/A1/C2-eager-a-q8.bin",
+      "bytes": 5760,
+      "sha256": "26fb472a1cde8617a0f6e76bb2c46cb2355d7f8e12d724a4c4783846d7a089f8"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/decode-next-s52-prep/v3/run-clean/A1/C2-eager-b-q8.bin",
+      "bytes": 5760,
+      "sha256": "d2c74e01d227ab25c6225548158434a6761937b01ae19787f98f21ddd705b300"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/decode-next-s52-prep/v3/run-clean/A1/C2-eager-a.bin",
+      "bytes": 1986560,
+      "sha256": "dfbef42e1c60379dd5e9f84065fef4dd6def0695a7da452ef47bb3ef86fbcee7"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/decode-next-s52-prep/v3/run-clean/A1/C2-eager-b.bin",
+      "bytes": 1986560,
+      "sha256": "9105fc0a0be0f200d0a3ded98b71c57c5e64f9f2238c45271999bfb493b0c5b5"
+    }
+  ],
+  "validation": "selected slice hashed once before; leaf FNV actual load and twice full device payload checks; post same stat; no whole model hash",
+  "boot_id": "b785982c-4954-4d23-808c-48a7534ce3bd"
+}

@@ -1,0 +1,12 @@
+{
+  "command": [
+    "bash",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep/build.sh"
+  ],
+  "exit": 0,
+  "elapsed_s": 22.138737515022513,
+  "automatic_retry": false,
+  "root_source_read_GO": true,
+  "independent_model_review_in_parallel": true,
+  "GPU": false
+}

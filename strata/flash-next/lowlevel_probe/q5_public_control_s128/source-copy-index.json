@@ -1,0 +1,453 @@
+{
+  "format": 1,
+  "stage": "S128",
+  "scope": "Small exact ASCII evidence plus explicitly marked projections; no raw binary/model hash performed during curation.",
+  "copies": [
+    {
+      "destination": "source/public-control-delta.patch",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep/s128-host-delta.patch",
+      "bytes": 2572,
+      "sha256": "735d7af94fa693fad52410f34adefe43f36c60a739634a42267d9a97dd633965",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "source/public-control-inverse.patch",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep/s128-host-inverse.patch",
+      "bytes": 2572,
+      "sha256": "ed5708bd5a0240688aa5209c425fe3ad3c3c98d01216e8f65194ea753036325a",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "source/source-pins.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep/source-pins.json",
+      "bytes": 2357,
+      "sha256": "be6784009e787bd33b75466be458a32561fdea340d586f8a4a0293765aaa4d00",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "source/fixture-pins.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep/fixture-pins.json",
+      "bytes": 4004,
+      "sha256": "ee6c759741e099689c146df3ab700ee04a43fb37d1a8d31e50a8a22808554ddf",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "source/preparation-checks.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep/preparation-checks.json",
+      "bytes": 760,
+      "sha256": "5e1d71f3980ccd77cefef9de89c282b11eb751a80dca947835c9990de650d7d1",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "source/external-prep-manifest.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep-manifest.json",
+      "bytes": 3579,
+      "sha256": "ff92d152aba1213372ff8fb8e2ccfe750962d3b2aeeef9feea66cbcf506a85df",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "build/execution.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-build-execution.json",
+      "bytes": 341,
+      "sha256": "4b192093b7b1be23553eba9301024ea838d99bdcfda3575682f5b4bf2f60a3d4",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "build/build.log",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep/build/build.log",
+      "bytes": 2629,
+      "sha256": "ea697b9cc069dc9b343f6e954ae08720fc65cc236e672a1278df7864821de4d7",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "build/sha256.txt",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep/build/sha256.txt",
+      "bytes": 729,
+      "sha256": "55183ac8e91dcace46973b21c371b250d9c2b81ef1b3a5dcd9445c40293f7866",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "build/build.exit",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep/build/build.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "build/tee.exit",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep/build/tee.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "compiled/audit-execution.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-audit-execution.json",
+      "bytes": 976,
+      "sha256": "157b85805b8d3f0f76c13f54e267483ea80d695152b4594825ff9862fee3dbce",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "compiled/control-comparison.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-built-audit/control-comparison.json",
+      "bytes": 2237,
+      "sha256": "b5a9bff3495239fb9dde1d9252b69328615da3a3ff3177f5158123fa103d9143",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "host/findings.md",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-host-independent/findings.md",
+      "bytes": 3976,
+      "sha256": "19dcfbbdfcc95a3fc878eb6635dfdedd1a3d11782debb82fb69302000e9cbffb",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "host/binding-summary.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-host-independent/binding-summary.json",
+      "bytes": 23065,
+      "sha256": "47b60085c6a5c0888fb7ff8d013d8250a9aea240b398304512353c3d29754e18",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "host/source-pins.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-host-independent/source-pins.json",
+      "bytes": 1232,
+      "sha256": "584be28b942496dbb1e8ee59d998be59402fc8539307c44c813ee48bc4bd2d0f",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "compiled/root-GO.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-root-GO.json",
+      "bytes": 1367,
+      "sha256": "362854af0f47fbb96bfb3606435bcb22a108621972c5fae61f8e7a5981bc438b",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runner/vs-s126-runner.patch",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run-prep/vs-s126-runner.patch",
+      "bytes": 14330,
+      "sha256": "f88a6d94f0a0a4bcb96009449f2d061c7a024d2f549cf3423850a2b7b8bfa4e1",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runner/analyze.py",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run-prep/analyze.py",
+      "bytes": 7942,
+      "sha256": "4230d8ff6751c69c9a02a8e4a6ae58142a50efae23d086fd30b60dfccc952959",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runner/harness-pins.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run-prep/harness-pins.json",
+      "bytes": 717,
+      "sha256": "c3e9a4a764b4736a99a32e88239d7738ee353ee1899dd729f22b3a36ac42c897",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runner/external-manifest.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run-prep-manifest.json",
+      "bytes": 1320,
+      "sha256": "247f7282d7ef2cf8415c597c86fa490db084d61826aaaa23f448d28de481a111",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/closure.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/closure.json",
+      "bytes": 512,
+      "sha256": "ec70344ad3329b1541ff9b51ee508e968df4fa746c2a85e98544324311a4821b",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/comparison.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/comparison.json",
+      "bytes": 10096,
+      "sha256": "f8f5e5458a0737aaa4aea8ebe35e23e340e13407c19ae6616a0da0d502cccfac",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/leaf.log",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/leaf.log",
+      "bytes": 15059,
+      "sha256": "c4e1b7c7eb0fe2a805c4af5695a3083c6fa3da7483740c7f8ff1ee65cb42fc5b",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/leaf/result.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/leaf/result.json",
+      "bytes": 255,
+      "sha256": "f5d8d215f208110b6a208abe6cea67b9b2d9295b9310ba23c821b599cb67dca9",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/driver.log",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/driver.log",
+      "bytes": 2224,
+      "sha256": "ff8e2980b999b4fe6a43b8776fd00730e5b6237d122edf4f1ed07eb99af0b6cf",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/driver.exit",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/driver.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/tee.exit",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/tee.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/leaf.exit",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/leaf.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/identity.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/identity.json",
+      "bytes": 3988,
+      "sha256": "caafb233f93e3974d70fd895daf8157ea430e1968ac0ebe4de195e2980df1bcc",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/post-identity.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/post-identity.json",
+      "bytes": 3988,
+      "sha256": "caafb233f93e3974d70fd895daf8157ea430e1968ac0ebe4de195e2980df1bcc",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/identity.exit",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/identity.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/post-identity.exit",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/post-identity.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/container-removal.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/container-removal.json",
+      "bytes": 371,
+      "sha256": "6dc713855b19b222d6ec8179bccd4653ac6afb7f520b9a07a26186e942afc6a2",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/pre-health-command.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/pre-health-command.json",
+      "bytes": 215,
+      "sha256": "eb404bf57e095a30d6f83bcd0c0f665fc2efe1a85135f850a17082ff49269932",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/post-health-command.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/post-health-command.json",
+      "bytes": 215,
+      "sha256": "eb404bf57e095a30d6f83bcd0c0f665fc2efe1a85135f850a17082ff49269932",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/pre-health.exit",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/pre-health.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/post-health.exit",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/post-health.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/pre-health.stderr",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/pre-health.stderr",
+      "bytes": 183,
+      "sha256": "35688b399e44f71de0d2f935a8e6b4e7530e565cb50e97f9b5771ccaee35e70f",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/post-health.stderr",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/post-health.stderr",
+      "bytes": 183,
+      "sha256": "35688b399e44f71de0d2f935a8e6b4e7530e565cb50e97f9b5771ccaee35e70f",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/normal-wait.exit",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/normal-wait.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/normal-rm.exit",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/normal-rm.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/docker-start.exit",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/docker-start.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/analysis.exit",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/analysis.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/analysis.stdout",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/analysis.stdout",
+      "bytes": 92,
+      "sha256": "eaf4d254ad066a88d553da39f94f9509446a06762d7bbeb180d86d04b86b3a39",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/effective-entry-env.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/effective-entry-env.json",
+      "bytes": 1481,
+      "sha256": "df2d04efcab9e237f689ead7a254051087ca22e81fc5f7221867e2f4524cd28c",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/prospective-library-identities.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/prospective-library-identities.json",
+      "bytes": 4290,
+      "sha256": "6532846d44d81edb45ca22ff602c25d323b038e330f35d564f073675fc5fa533",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/runtime-ldd.txt",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/runtime-ldd.txt",
+      "bytes": 1273,
+      "sha256": "9dc92916eddaf080f517ada702453d7c09b381dac06511a7541ab25b2278066f",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/runtime-LD_LIBRARY_PATH.txt",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/runtime-LD_LIBRARY_PATH.txt",
+      "bytes": 1096,
+      "sha256": "4b49a22b5a6069198c4c563899f2a05a456696886e1b2897ca1b377f57842011",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/leaf-wall.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/leaf-wall.json",
+      "bytes": 35,
+      "sha256": "b19bb99980b730fb5d72aa495b8d2bb7403dfbe5b7081f3b5f2f2b74882def17",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/DOT/batch20-candidate.dot",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/leaf/head/batch20-candidate.dot",
+      "bytes": 8505,
+      "sha256": "ba98f7c53ebf13ff3e8daab2e23489ab181924b8b5bc28e12ffedb3237fcbccb",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/DOT/batch20-original.dot",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/leaf/head/batch20-original.dot",
+      "bytes": 10565,
+      "sha256": "822253a8b0f5a0b7e5d961820d6e22cb0bd21c691f561f218afb205289488819",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/DOT/single-candidate.dot",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/leaf/head/single-candidate.dot",
+      "bytes": 411,
+      "sha256": "ecd89e1d642f53791336ad9263ddd8c0a506073451dc410848d4d690cdf9d56c",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/DOT/single-original.dot",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/leaf/head/single-original.dot",
+      "bytes": 514,
+      "sha256": "256e8458cf92e6e2465d48251abe0d49d01893f3267e829e6eec9ab1fdf55f26",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/DOT/single-public.dot",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/leaf/head/single-public.dot",
+      "bytes": 514,
+      "sha256": "5daa534efa5b22da3b34a1b72fd867a7602aeaa348db709736b60b8c6e1cbecd",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "compiled/selected-summary.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-built-audit/facts.json",
+      "source_bytes": 65179,
+      "source_sha256": "835a84d65e3c2bc89a6edc3ddb547df015ba500ad17f41a164585a11d11a7771",
+      "bytes": 9465,
+      "sha256": "e2538459706c28897f286a996927a940e0fac4fb831ad53e03752ee435508c92",
+      "kind": "derived",
+      "derivation": "Per-form kernel, image/text hashes, payload arguments, resources and options only. Full metadata/constants/relocs remain in external facts and were checked by exact control-comparison receipt."
+    },
+    {
+      "destination": "runtime/final-container-derived.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/container-final.json",
+      "source_bytes": 14999,
+      "source_sha256": "d1bc4a6388ac07df43e10f4c9e4cf02a56ec99005c18c3af8813a8b8e95ea145",
+      "bytes": 2092,
+      "sha256": "0538063b616733d36c3c054ef3e304252d70d5938b9ebc265fc60bb55aef8683",
+      "kind": "derived",
+      "derivation": "Select final immutable identity, native argv and complete final Docker State; omit Docker platform/config repetition."
+    },
+    {
+      "destination": "reviews/claude-opus-5-5-text.txt",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s128-public-control-reviews-20261016/claude-opus-5-5/assistant-text.txt",
+      "bytes": 5094,
+      "sha256": "05fcd0efc847dbbbdd97386a9dfc83eb850e0956e9a6475e472b9b6e1192528a",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "reviews/claude-opus-5-5-metadata.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s128-public-control-reviews-20261016/claude-opus-5-5/completion.json",
+      "source_bytes": 8562,
+      "source_sha256": "286eea8a377a45703eb1ebdf0fa56bec53d50bf97cd4e74339219a5f732005d3",
+      "bytes": 502,
+      "sha256": "2aa6468e2929563a1e34a27689f90548a63cb5e8e81f6d115a5cfa54aba5aadc",
+      "kind": "derived",
+      "derivation": "Filter actual completion metadata only; omit cumulative session usage and duplicate result prose."
+    },
+    {
+      "destination": "reviews/claude-fable-5-1-text.txt",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s128-public-control-reviews-20261016/claude-fable-5-1/assistant-text.txt",
+      "bytes": 4132,
+      "sha256": "2855ded161c7daacade5113cf3014c74f06eb8de92604691e5342367b0a4ca28",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "reviews/claude-fable-5-1-metadata.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s128-public-control-reviews-20261016/claude-fable-5-1/completion.json",
+      "source_bytes": 7584,
+      "source_sha256": "87cd67e7a9c1fe0230186428712f289430083861c216c2744cc862533c58ce11",
+      "bytes": 503,
+      "sha256": "7fe76ff2e57eff3ceadf0b3228127496a63a12ae60b7f370824a3176a3954d0c",
+      "kind": "derived",
+      "derivation": "Filter actual completion metadata only; omit cumulative session usage and duplicate result prose."
+    },
+    {
+      "destination": "build/obsolete-s126-cleanup.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-s126-obsolete-build-cleanup.json",
+      "bytes": 2001,
+      "sha256": "ec471f62a131caa5977241c1fc3b07b9220b0db699850447070fef78ece4b4e7",
+      "kind": "exact_ascii_copy"
+    }
+  ]
+}

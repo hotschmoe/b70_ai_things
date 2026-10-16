@@ -1,0 +1,143 @@
+--- s126/ROOT_RUN.sh
++++ s128/ROOT_RUN.sh
+@@ -6,7 +6,7 @@
+ OUT=${1:?new disk output directory required};shift
+ mkdir "$OUT" || { echo 'FAIL preserve prior attempt; no automatic retry';exit 2; }
+ OUT=$(realpath "$OUT")
+-B70_CPU_LOCK_TIMEOUT=0 B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=S126-Q5-RUNTIME-ONES \
++B70_CPU_LOCK_TIMEOUT=0 B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=S128-Q5-PUBLIC-CONTROL \
+  "$REPO/bin/cpu-run" --quiet "$REPO/bin/gpu-run" --card 0 \
+  env ZE_AFFINITY_MASK=0 ONEAPI_DEVICE_SELECTOR='level_zero:*' \
+  python3 "$HERE/leased_run.py" --out "$OUT" "$@" 2>&1 | tee "$OUT/driver.log"
+--- s126/leased_run.py
++++ s128/leased_run.py
+@@ -1,15 +1,15 @@
+-"""ROOT-only finite S126; quiet CPU/card0 lease inherited; no forced recovery."""
++"""ROOT-only finite S128; quiet CPU/card0 lease inherited; no forced recovery."""
+ from pathlib import Path
+ import argparse,grp,hashlib,json,os,re,subprocess,sys,time
+ P=Path(__file__).resolve().parent;R=P.parent;REPO=Path('/mnt/vm_8tb/github/b70_ai_things')
+ IMAGE='sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2';HEALTH='b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78'
+-PCI='0000:0b:00.0';NAME='strata-q5-runtime-ones-s126-private'
++PCI='0000:0b:00.0';NAME='strata-q5-public-control-s128-private'
+ p=argparse.ArgumentParser()
+ for n in['out','source','source-manifest','audit']:p.add_argument('--'+n,type=Path,required=True)
+ for n in['exe-sha256','audit-sha256','manifest-sha256']:p.add_argument('--'+n,required=True)
+ a=p.parse_args();O=a.out.resolve();S=a.source.resolve();EXE=S/'build/q5_runtime_ones_s126';EXESHA=a.exe_sha256
+-SOURCE_MANIFEST_SHA='cbc8aedaa29c2852cff60f1eb51c6f4da638fd7fd2076816dd0d774bf6fb3d86'
+-assert S.parent==R and S.name=='q5-c2-runtime-ones-s126-prep-v3','explicit reviewed V3 source only'
++SOURCE_MANIFEST_SHA='ff92d152aba1213372ff8fb8e2ccfe750962d3b2aeeef9feea66cbcf506a85df'
++assert S.parent==R and S.name=='q5-public-control-runtime-ones-s128-prep','explicit reviewed S128 source only'
+ def sha(f):
+  with f.open('rb')as stream:return hashlib.file_digest(stream,'sha256').hexdigest()
+ def save(n,v):(O/n).write_text(json.dumps(v,indent=2)+'\n',encoding='ascii')
+@@ -99,13 +99,13 @@
+ while True:
+  ci=inspect_owned()
+  if ci is not None and not ci['State']['Running']:break
+- print('S126 HOLD owned container live/state unknown; same leases retained, no force/reset/health',flush=True);time.sleep(5)
++ print('S128 HOLD owned container live/state unknown; same leases retained, no force/reset/health',flush=True);time.sleep(5)
+ save('container-final.json',ci);native=int(ci['State']['ExitCode']);oom=bool(ci['State']['OOMKilled']);(O/'leaf.exit').write_text(str(native)+'\n')
+ wait=command('normal-wait',['docker','wait',cid]);waittext=(O/'normal-wait.stdout').read_text().strip();waitcode=int(waittext)if re.fullmatch(r'\d+',waittext)else None
+ stderr=(O/'leaf.stderr').read_text()
+ failures=re.findall(r'^S126 STRICT_FAILURE: (.*)$',stderr,re.M)
+ raw_numeric={'extremes-ones exact INT64 raw16 gate','payload-negative-control exact INT64 raw16 gate','canonical-a exact INT64 raw16 gate','canonical-b exact INT64 raw16 gate'}
+-# V3 proves validation tail is checked before raw INT64 comparison. Every
++# S128 retains V3 validation tail is checked before raw INT64 comparison. Every
+ # full-output comparison follows snapshot guards/tails/input/Q8 checks.
+ full_numeric=lambda m:m=='STRICT saved S52 RPW1 public byte anchor'or bool(re.fullmatch(r'STRICT head (?:eager-(?:original|candidate)-[ab]|repeat-(?:original|candidate)-[ab]|restore-eager-(?:public|original|candidate)|graph-(?:public|original|candidate)-[ab]|graph-repeat-(?:public|original|candidate)-[ab]|batch20-(?:original|candidate)-[ab]|restore-graph-(?:public|original|candidate)|restore-batch20-(?:original|candidate)|warm-[0-2]-(?:original|candidate)|timed-r[01]-s[0-3]-(?:original|candidate)|final) full output bytes',m))
+ cleanup_bad=any(t.lower()in stderr.lower()for t in['HOLD','drain failed','capture balance','cleanup failed'])
+@@ -115,7 +115,7 @@
+ while True:
+  r=subprocess.run(['docker','ps','-a','--no-trunc','--format','{{.ID}} {{.Names}}'],capture_output=True,text=True);save('container-enumeration.json',{'exit':r.returncode,'stdout':r.stdout,'stderr':r.stderr});rows=[x.split()for x in r.stdout.splitlines()]
+  if r.returncode==0 and all(len(x)==2 and x[0]!=cid and x[1]!=NAME for x in rows):break
+- print('S126 HOLD CID/NAME absence unconfirmed; same leases retained, no health',flush=True);time.sleep(5)
++ print('S128 HOLD CID/NAME absence unconfirmed; same leases retained, no health',flush=True);time.sleep(5)
+ removal={'full_cid':cid,'name':NAME,'full_cid_absent':True,'name_absent':True,'docker_start_terminal':True,'normal_wait_exit':wait,'wait_native_exit':waitcode,'normal_rm_exit':rm,'final_native_exit':native,'final_OOMKilled':oom,'no_force_stop':True};save('container-removal.json',removal)
+ if not normal_state or not(native==0 or numeric_failure):
+  save('recovery-required.json',{'status':'ROOT_RECOVERY_REQUIRED_NO_BLIND_GPU_HEALTH','normal_state':normal_state,'native_exit':native,'numeric_failure_whitelisted':numeric_failure,'strict_failure_messages':failures,'removal':removal,'automatic_health_or_reset':False});raise SystemExit(2)
+@@ -132,5 +132,5 @@
+ (O/'analysis.exit').write_text(str(analysis)+'\n');after=checked_identity('post-identity',False);same=before==after
+ if not same:(O/'post-identity.exit').write_text('2\n')
+ passed=start_rc==native==pre==post==analysis==0 and not oom and same
+-save('closure.json',{'status':'PASS_PRIVATE_S126_STRICT_TIMING_DIAGNOSTIC_ONLY'if passed else'FAIL_PRESERVE_NULL_TIMINGS_NO_RETRY','docker_start_exit':start_rc,'native_exit':native,'normal_wait_exit':wait,'pre_health_exit':pre,'post_health_exit':post,'analysis_exit':analysis,'identity_equal':same,'final_OOMKilled':oom,'full_cid_absent':True,'name_absent':True,'normal_rm_exit':rm,'normal_numeric_failure':numeric_failure,'processes':1,'retries':0,'force_stop_or_reset':False,'timing_summary':'analysis.json'if passed else None,'speed_or_serving_qualified':False})
++save('closure.json',{'status':'PASS_PRIVATE_S128_STRICT_TIMING_DIAGNOSTIC_ONLY'if passed else'FAIL_PRESERVE_NULL_TIMINGS_NO_RETRY','docker_start_exit':start_rc,'native_exit':native,'normal_wait_exit':wait,'pre_health_exit':pre,'post_health_exit':post,'analysis_exit':analysis,'identity_equal':same,'final_OOMKilled':oom,'full_cid_absent':True,'name_absent':True,'normal_rm_exit':rm,'normal_numeric_failure':numeric_failure,'processes':1,'retries':0,'force_stop_or_reset':False,'timing_summary':'analysis.json'if passed else None,'speed_or_serving_qualified':False})
+ print(json.dumps({'status':'PASS'if passed else'FAIL','post_health':post,'analysis':analysis}),flush=True);raise SystemExit(0 if passed else 2)
+--- s126/analyze.py
++++ s128/analyze.py
+@@ -15,11 +15,11 @@
+   n=succ[n][0]
+  need(seen==ids,'DOT chain');blocks=dict(re.findall(r'^"([^"\n]+)" \[(.*?)\];$',s,re.M));resources=[]
+  for n,k in nodes:
+-  need(('native_mmvq_wide'in k and'native_mmvq_wide_rpw'not in k and'WideQ5K'in k and'ILi2EE'in k)if arm=='public'else('OriginalQ5C2'if arm=='original'else'RuntimeOnesQ5C2')in k,'DOT kernel')
++  need(('native_mmvq_wide'in k and'native_mmvq_wide_rpw'not in k and'WideQ5K'in k and'ILi2EE'in k)if arm in('public','original')else'RuntimeOnesQ5C2'in k,'DOT kernel')
+   v={x for x in re.findall(r'Type: Pointer Ptr: [^()\\\n]+\((0x[0-9a-fA-F]+)\)',blocks[n])if int(x,16)};need(len(v)==3,'DOT resources');resources.append(v)
+  need(all(v==resources[0]for v in resources),'DOT per-node resources');return {'sha256':sha(f),'nodes':count,'kernel_names':sorted({k for n,k in nodes}),'resources':sorted(resources[0])}
+ try:
+- result_json=json.loads((leaf/'result.json').read_text());need(result_json['status']=='PASS'and result_json['scope']=='S126_ONE_HEAD_RUNTIME_ONES_ONLY'and result_json['shapes']==1 and result_json['paired_rounds_per_shape']==2 and result_json['samples_per_round']==4 and result_json['calls_per_graph']==20,'leaf result');rows=[json.loads(l)for l in(p/'leaf.log').read_text().splitlines()if l.startswith('{')];identity=[x for x in rows if x['type']=='identity'];need(len(identity)==1 and identity[0]['pci']=='0000:0b:00.0'and identity[0]['public_type']==13 and identity[0]['C']==2 and identity[0]['runtime_ones']==16843009,'identity')
++ result_json=json.loads((leaf/'result.json').read_text());need(result_json['status']=='PASS'and result_json['scope']=='S128_PUBLIC_CONTROL_RUNTIME_ONES'and result_json['shapes']==1 and result_json['paired_rounds_per_shape']==2 and result_json['samples_per_round']==4 and result_json['calls_per_graph']==20,'leaf result');rows=[json.loads(l)for l in(p/'leaf.log').read_text().splitlines()if l.startswith('{')];identity=[x for x in rows if x['type']=='identity'];need(len(identity)==1 and identity[0]['pci']=='0000:0b:00.0'and identity[0]['public_type']==13 and identity[0]['C']==2 and identity[0]['runtime_ones']==16843009,'identity')
+  raw=[x for x in rows if x['type']=='raw16_gate'];need([(x['label'],x['word'],x['cells'])for x in raw]==[('extremes-ones',16843009,8),('payload-negative-control',16843010,8),('canonical-a',16843009,320),('canonical-b',16843009,320)],'raw gate exact matrix');need(all(x['INT64_exact']and x['readonly_guards']for x in raw),'raw gate checks')
+  weights=[x for x in rows if x['type']=='weight_payload_check'];need([(x['boundary'],x['bytes'])for x in weights]==[('after-correctness-before-timing',437043200),('after-timing-final',437043200)],'two wholeweight checks');need(all(x['weight_guards_checked']and x['weight_payload_verified']for x in weights),'wholeweight result')
+  correct=[x for x in rows if x['type']=='correctness_pass'];need(len(correct)==1 and{x['shape']for x in correct}=={'head'},'correctness');first=next(i for i,x in enumerate(rows)if x['type']=='timing_sample');need(all(rows.index(x)<first for x in correct),'timing before correctness');result={}
+@@ -49,4 +49,4 @@
+  v={'status':'PASS_FULL_BYTES_READONLY_GUARDS_DOT','shapes':result,'whole_weight_checks':2,'raw_integer_cells':656,'DOT_nodes':43,'DOT_edges':38,'limits':'2 balanced round means nested in one process; 20 projection calls/graph, canonical saved Q8 ready outside graphs; completed host wall primary, barrier span includes boundaries; no population, kernel cause or serving claim','serving_qualified':False,'speed_qualified':False}
+  with(p/'comparison.json').open('x',encoding='ascii')as f:json.dump(v,f,indent=2);f.write('\n')
+  print(json.dumps({'status':v['status'],'timings':{k:z['median_pair_change_percent']for k,z in result.items()}}))
+-except Exception as e:print('S126 analysis failure: '+str(e),file=sys.stderr);sys.exit(5 if isinstance(e,ValueError)else 2)
++except Exception as e:print('S128 analysis failure: '+str(e),file=sys.stderr);sys.exit(5 if isinstance(e,ValueError)else 2)
+--- s126/README.md
++++ s128/README.md
+@@ -1,23 +1,23 @@
+-# S126 one-card private runtime-ones runner - FROZEN SOURCE ONLY
++# S128 one-card public-control runtime-ones runner - FROZEN SOURCE ONLY
+ 
+ CONFIG -> One physical card0, mask0/level_zero:*, native PCI0000:0b:00.0.
+-Exactly frozen sourceV3 cbc8aedaa29c2852cff60f1eb51c6f4da638fd7fd2076816dd0d774bf6fb3d86.
+-Actual EXE SHA is UNKNOWN until root CPU build; required argument, never guessed.
++Exactly frozen S128 source ff92d152aba1213372ff8fb8e2ccfe750962d3b2aeeef9feea66cbcf506a85df.
++Actual S128 EXE SHA is pending root CPU build; required argument, never guessed.
+ Source/header/fixtures remain in their frozen source directory, unchanged here.
+ 
+ COMMAND -> ROOT ONLY after build and full selected compiled audit GO, announced
+ card0 window (~60s including fresh health). No automatic launch/retry:
+ 
+   bash ROOT_RUN.sh NEW_RUN_DIR \
+-    --source R/q5-c2-runtime-ones-s126-prep-v3 \
+-    --source-manifest R/q5-c2-runtime-ones-s126-prep-v3-manifest.json \
+-    --manifest-sha256 cbc8aedaa29c2852cff60f1eb51c6f4da638fd7fd2076816dd0d774bf6fb3d86 \
++    --source R/q5-public-control-runtime-ones-s128-prep \
++    --source-manifest R/q5-public-control-runtime-ones-s128-prep-manifest.json \
++    --manifest-sha256 ff92d152aba1213372ff8fb8e2ccfe750962d3b2aeeef9feea66cbcf506a85df \
+     --exe-sha256 ROOT_ACTUAL_SHA \
+     --audit ROOT_COMPILED_GO_JSON --audit-sha256 ROOT_ACTUAL_AUDIT_SHA
+ 
+ Replace R with the absolute shared result root. Audit must contain GPU_GO:true
+ and binary_sha256 equal to actual pinned executable. It must resolve live
+-hostbindings, original/public8128-EOT control identity and candidate payload/ISA;
++production-control/candidate hostbindings, public8128-EOT identity and candidate payload/ISA;
+ this runner does not manufacture that decision or decode more images.
+ 
+ RESULT -> Prepared lifecycle, not a runtime result.
+@@ -40,7 +40,7 @@
+   fullCID+NAME absence BEFORE health. A live/unknown container or unresolved
+   removal holds the SAME leases for root; no forced stop/reset/alternate/retry.
+ - Known numeric exit5 only (raw INT64 or full-logit mismatch) may receive normal
+-  posthealth. V3 raw validation tail now precedes INT64 comparison, and cleanup
++  posthealth. The retained V3 raw validation tail now precedes INT64 comparison, and cleanup
+   failures force2; guard/tail/readonly/runtime/unknown failures require root
+   recovery review without blindly touching GPU health. Failure summaries NULL.
+ - All native logs/final state/removal captured before health. Successful native
+@@ -55,3 +55,13 @@
+ 
+ VERDICT -> FROZEN/UNEXECUTED; await root read, actual build pins and GPU GO.
+ No source/build/GPU/model calls, configs, profiler, full-cache request or restore.
++
++S128 scope correction -> Control arm1 calls the SAME verified production
++native_mmvq kernel as arm0. Both public/original DOT labels MUST bind
++native_mmvq_wide Q5 C2/RPW1; candidate RuntimeOnesQ5C2 remains unique. Private
++OriginalQ5C2 is unused. Labels original, q5_runtime_ones_s126 executable basename
++and S126 STRICT_FAILURE native prefix are intentional lineage. Result scope is
++S128_PUBLIC_CONTROL_RUNTIME_ONES. S126 clone-prefix HOLD remains preserved,
++not relaxed or retrospectively passed. Candidate/header/math, fixtures,49
++snapshots/74 binaries/5DOTs/43nodes/38edges and8timings unchanged. Health,
++lifecycle and failure classification remain the frozen S126 runner's.

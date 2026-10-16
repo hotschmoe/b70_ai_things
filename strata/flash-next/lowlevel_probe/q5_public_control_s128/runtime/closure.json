@@ -1,0 +1,20 @@
+{
+  "status": "PASS_PRIVATE_S128_STRICT_TIMING_DIAGNOSTIC_ONLY",
+  "docker_start_exit": 0,
+  "native_exit": 0,
+  "normal_wait_exit": 0,
+  "pre_health_exit": 0,
+  "post_health_exit": 0,
+  "analysis_exit": 0,
+  "identity_equal": true,
+  "final_OOMKilled": false,
+  "full_cid_absent": true,
+  "name_absent": true,
+  "normal_rm_exit": 0,
+  "normal_numeric_failure": false,
+  "processes": 1,
+  "retries": 0,
+  "force_stop_or_reset": false,
+  "timing_summary": "analysis.json",
+  "speed_or_serving_qualified": false
+}

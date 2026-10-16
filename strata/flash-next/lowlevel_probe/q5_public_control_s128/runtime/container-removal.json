@@ -1,0 +1,13 @@
+{
+  "full_cid": "d6883caf8cdcd918cf322b086266c3601e02b6f5a1db11a804619569f7e35c8f",
+  "name": "strata-q5-public-control-s128-private",
+  "full_cid_absent": true,
+  "name_absent": true,
+  "docker_start_terminal": true,
+  "normal_wait_exit": 0,
+  "wait_native_exit": 0,
+  "normal_rm_exit": 0,
+  "final_native_exit": 0,
+  "final_OOMKilled": false,
+  "no_force_stop": true
+}

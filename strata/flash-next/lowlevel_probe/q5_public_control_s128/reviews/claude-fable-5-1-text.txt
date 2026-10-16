@@ -1,0 +1,27 @@
+**EXPERIMENT_GO_CONDITIONAL_ON_EXACT_REBIND.**
+
+**Reference correction**
+
+Using the verified production kernel for both the reference arm and the timed control arm is the right fix. The copied private original failed its prefix gate with an unknown cause, and a control whose compiled body is not the production body cannot anchor anything. The production image passed every gate: 8128-byte prefix through EOT, normalised metadata, options, constants, raw and decoded relocations, with only the known post-EOT trailer differing. The harness change is purely host side: arm 1 now calls the public entry, its graphs capture that kernel, and every strict comparison still runs against the S52 anchor and across arms. The "original" label on arm 1 is now a misnomer; record in the analysis scope that arm 1 is the production kernel so nobody later reads it as a private clone.
+
+One consequence must be stated honestly. With the private original gone, a timing difference between arm 1 and the candidate is "production build versus candidate build", not "ones operand versus literal" in isolation. The candidate ISA review shows the packed-correction mechanism is present and the tracked ledger matches, so the mechanism is real, but the candidate was also compiled in a different translation context that reschedules loads and branches. The divergent clone is the evidence that context alone can change code. Any timing result is therefore attributable to the candidate build as a whole. If root wants a cleaner attribution later, the 167-byte divergence of the clone should be diagnosed on CPU first; it is not a precondition for this bounded run.
+
+**Candidate compiled mechanism**
+
+The ISA review is sufficient for a bounded experiment: a fifth by-value argument of four bytes at offset 32, loaded once into a uniform register and consumed by all sixteen correction dp4a sites, no write to that register across the K loop, the four 40-instruction byte-sum chains gone, sixteen weighted dp4a intact, the same MUL then MAD contraction boundary per term, half scales converted at the same points, two accumulators from zero, the same XOR tree and lane-zero column-major stores, same control register mask and divide option. Static count differences carry no timing meaning. The exact payload value is a host obligation, which the harness enforces by refusing anything other than 0x01010101 and proves on device through the raw gates with the negative-control word.
+
+**Conditions on the rebuilt executable, all CPU, before any lease**
+
+1. Public image in the new binary: prefix 8128 exact to the S122 reference, metadata, options, constants and both relocation views exact. Trailer-only raw differences recorded, not relaxed.
+2. Candidate image: prefix 6272 exact to the audited V3 candidate, metadata exact including the fifth argument, options and relocations exact. Any body change means the audited ISA no longer applies; stop before GPU, no automatic re-decode.
+3. Host binding: the argv word reaches the candidate launch's captured payload, and the three registered classes map to distinct info, cache, guard and name pointers.
+4. Resources read from both selected images: SIMD32, GRF128, no spill or scratch reported; absent fields recorded as unknown.
+5. Harness identity: leaf and header hashes match the reviewed delta, 49 snapshots and 4 raw gates expected, timing only after the full-weight check.
+
+**Run conditions**
+
+One quiet leased card0 window, physical PCI 0b:00.0, fresh pinned health before and after, owned container with normal teardown, no retry or reset. First strict failure stops with the mismatch dump preserved. Raw extremes and canonical sums run before any projection. Timing is two balanced rounds of 20-call graphs in one process and is descriptive only.
+
+**Limits**
+
+A pass proves bit-exact logits for this head on these fixtures and graph replays, plus that the packed lowering survives in the built image. It does not prove universal FP identity, does not isolate the ones operand from build-context effects, and says nothing about the Q4_K C6 shapes or serving. No serving, main or Q4 approval follows.

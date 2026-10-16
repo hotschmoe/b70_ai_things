@@ -1,0 +1,20 @@
+{
+  "scope": "S128 SOURCE ONLY; no compilation/GPU",
+  "version": "S128",
+  "historical_v3_checks": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-runtime-ones-s126-prep-v3/preparation-checks.json",
+  "python_AST_analyze": true,
+  "bash_n": [
+    "build.sh",
+    "build-container.sh"
+  ],
+  "CXX_compilation_performed": false,
+  "GPU": false,
+  "leaf_narrow_inverse_exact_v3": true,
+  "candidate_header_byteexact_v3": true,
+  "public_control_same_call_as_arm0": true,
+  "private_original_host_references": 0,
+  "fixture_49_gates_timing_unchanged": true,
+  "analyzer_byteexact_v3": true,
+  "candidate_compiled_prefix6272_exact": "PENDING postbuild; source identity is not compiled identity",
+  "build_dir_exists": false
+}

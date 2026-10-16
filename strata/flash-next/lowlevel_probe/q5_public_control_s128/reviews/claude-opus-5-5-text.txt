@@ -1,0 +1,58 @@
+S128 REVIEW: public-bound control correction and runtime-ones experiment
+
+VERDICT: EXPERIMENT_GO_CONDITIONAL_ON_EXACT_REBIND. This covers one finite card-0 strict oracle with conditional timing. No serving, main build or Q4 approval.
+
+REFERENCE CORRECTION: SOUND
+
+- The S126 HOLD stands as recorded. The private OriginalQ5C2 clone failed its prefix gate (first difference at byte 167; text 8704 vs 8320 bytes). That failure is not relaxed or explained away.
+- Using the verified production public kernel as the control is better than a clone. It passed every S122 gate: 8128-byte prefix through EOT, normalized metadata, options, constants, and raw and decoded relocations. Arms 0 and 1 are now the same production code, so "public = S52 anchor" and "arm1 = arm0" are honest controls. The only private device code left is the candidate and the Raw16Sums validator.
+- The host delta is minimal and correct: arm 1 calls `K::native_mmvq(13, \u2026)`; comments and scope strings change; nothing else does. The V3 hardening (balanced graph capture, cleanup_error, raw tail check before the INT64 comparison) is present.
+
+CANDIDATE COMPILED MECHANISM: ACCEPTED, BOUNDED
+
+- **Payload is used, not merely declared.** Arg5 is a 4-byte signed int at offset 32 and is loaded through the cross-thread payload into r4.0. All 16 correction DP4As use uniform r4.0, and nothing writes r4.0 inside the K loop.
+- **The expansion is gone:** 32 DP4As (16 weighted, 16 correction), and no ADD3 anywhere in the computation.
+- **Operand mapping:** weight lo/hi, ua/uc per column, rawA/rawC and dotA/dotC chains each map one-to-one onto the S122 semantic values. Each chain starts at zero with four ordered DP4As.
+- **FP ledger:** the same contraction boundaries per column:
+  - `MUL(-ml\xb7rawA)`, then `MAD(dl\xb7dotA + product)`;
+  - likewise for C;
+  - `MUL(dc\xb7termC)`, then `MAD(da\xb7termA + product)`;
+  - a separate accumulator ADD.
+  - ds[0] stays half until conversion, and ds[1] is not used.
+- **Unchanged structure:** K loop stride, two accumulators with XOR 16\u21921 FP-add trees, lane-0 column-major stores, CR0 mask and options.
+- **Limits:** this is a mechanism result only. The scheduling, the scale/min branch layout and the code size (6272 vs 8128-byte prefix) all differ, so neither cost nor universal bit equivalence is established from static analysis.
+
+CAVEAT THAT AFFECTS INTERPRETATION
+
+The cloned original failed to reproduce production code inside this private TU. So the private compilation context (struct definitions, inlining, and possibly the prelink options: the IMAGES line lacks `-fp-model=precise`, as noted for S104) can itself change codegen. The candidate was compiled in that same context.
+
+Consequences:
+- **Correctness is unaffected.** It is decided by candidate logits matching the public bytes.
+- **Timing is affected.** Public-vs-candidate timing measures runtime-ones plus private-TU context, not runtime-ones in isolation. A favourable result justifies a main-TU integration build that measures the attributable effect; it does not justify a speed claim. An unfavourable or neutral result closes this spelling without spending a main build.
+
+CONDITIONS BEFORE GPU (root closes; any failure is HOLD with no automatic decode or rebuild)
+
+1. The new executable's public Q5 C2 selected image again matches the S122 prefix through 8128 bytes, plus normalized metadata, options, constants and relocations, bound through its live host Info/cache/guard/name pointer.
+2. The candidate image's prefix through EOT at 6272 bytes, its normalized metadata, options, data and raw and decoded relocations all exactly equal the decoded V3 candidate.
+3. Host argv \u2192 `runtime_ones` \u2192 `launch_candidate` capture \u2192 arg5 forwarding is bound, with the value 0x01010101 proven on the host path.
+4. Raw16Sums is bound as a separate class and is never captured into the timed graphs. This is visible in the DOT files: 5 graphs, 43 kernel nodes.
+5. Environment variable spellings `STRATA_MMVQ_WIDE_K` and `STRATA_MMVQ_WIDE_K_RPW` are confirmed against the archive source used by the public arm.
+
+RUN DESIGN: ACCEPTABLE AS STATED
+
+- One quiet leased card-0 window, physical PCI 0b:00.0, image e41.
+- Fresh pinned health before and after; owned normal teardown; no retry or reset.
+- Order:
+  1. 4 raw gates (656 cells, INT64-exact, including extremes and the payload negative control);
+  2. public = S52 anchor; arm 1 = public; candidate = public in full logits bytes for inputs A and B;
+  3. repeats, eager restore, single and batch-20 graph A/B/A;
+  4. guards, read-only Q8 and input, 0xFF tails;
+  5. a full weight payload check;
+  6. only then warm-up, 8 timings, and the final payload check.
+- The first strict failure exits with code 5 and nothing further runs.
+
+LIMITS TO RECORD
+
+- A pass is bounded: one real head slice and two seeded Q8 inputs.
+- Timing is two nested rounds in one process, descriptive only, confounded by the private TU context as noted above, and not a serving forecast.
+- No generalization to Q4_K or other wide paths without their own compiled checks.

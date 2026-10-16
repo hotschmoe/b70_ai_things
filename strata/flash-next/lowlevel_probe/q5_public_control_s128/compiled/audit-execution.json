@@ -1,0 +1,23 @@
+{
+  "command": [
+    "bin/cpu-run",
+    "python3",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-compiled-audit-prep/audit.py",
+    "--prep",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep",
+    "--expected-manifest-sha256",
+    "ff92d152aba1213372ff8fb8e2ccfe750962d3b2aeeef9feea66cbcf506a85df",
+    "--expected-exe-sha256",
+    "5d5b6a2a6332543196f54d4901336b680317c31e44be6b08da6af38b04bcc8a2",
+    "--expected-object-sha256",
+    "d050c0069a52069e7eaec299d18d0a47081fe0c6102d031876ca48e58b80a779",
+    "--expected-images-sha256",
+    "e5968f2fbeb9e0b4e1d0287ab1ca8b16208dd51e063bb286c19a6ca667fd69ca",
+    "--out",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-built-audit"
+  ],
+  "exit": 0,
+  "elapsed_s": 2.2442613180028275,
+  "automatic_retry": false,
+  "GPU": false
+}

@@ -1,0 +1,15 @@
+{
+  "scope": "References only; existing measured identities reused, no new model/binary/archive/cache read.",
+  "source_header_shared_with_S126": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep/private_q5_runtime_ones.hpp",
+  "source_header_sha256": "a8045fa37108f99ad448e48e6994319845a72327c092989245afcd95094a94c1",
+  "frozen_source_manifest_sha256": "ff92d152aba1213372ff8fb8e2ccfe750962d3b2aeeef9feea66cbcf506a85df",
+  "full_source_and_build_recipes": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep",
+  "full_runner": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run-prep",
+  "frozen_runner_manifest_sha256": "247f7282d7ef2cf8415c597c86fa490db084d61826aaaa23f448d28de481a111",
+  "full_compiled_host_relocations": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-built-audit/facts.json",
+  "binary_sha256": "5d5b6a2a6332543196f54d4901336b680317c31e44be6b08da6af38b04bcc8a2",
+  "external_runtime_exports": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-run/leaf",
+  "full_reference_S126_committed": "../q5_runtime_ones_s126/README.md",
+  "raw_snapshot_payloads_not_duplicated": true,
+  "binary_object_archive_SPIRV_ASM_not_duplicated": true
+}
