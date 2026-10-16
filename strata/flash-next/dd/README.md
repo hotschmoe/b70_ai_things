@@ -33,3 +33,23 @@ Operations:
 Measured at deploy (fixed prompts): C1 ~141 tok/s (2048-token code reply 152.6), C2 ~92/stream, prefill 4K ~2200 /
 32K ~2150 tok/s; functional checks pass through the frontdoor and through open-webui. Feedback from real use goes in
 JOURNAL.md / docs/20261016_night_lab.md follow-ups.
+
+## Soak notes (from 2026-10-16: weeks of office use)
+
+What recovers by itself: an engine crash (the server starts the engine again on the next request), a dead container
+(systemd restarts it after 30 s), a host reboot (both units, open-webui, Prometheus and Grafana come back; the DD start
+runs per-card health first). A reply stuck on one token is ended after 256 repeats. There is no content watchdog (the
+old dd-watchdog stays retired by operator decision).
+
+What needs a hand:
+- Replies turn to garbage (`!!!!` or nonsense) and stay that way: `systemctl --user restart hotschmoe-dd` (about 45 s).
+  The SYCL port has no non-finite-logits guard (upstream's #879 guard is CUDA/HIP only), so a poisoned conversation
+  cache survives until the engine restarts.
+- The unit fails to start (its xpu-health step fails, or DEVICE_LOST in engine.log): `bin/xe-reset`, then start it
+  again; reboot only if the reset ladder fails.
+- Replies cut off while thinking: the defaults are medium effort with a 16,384-token thinking budget; the open-webui
+  "think harder" preset allows 32,768. Raise reasoning_budget_tokens in hotschmoe-dd.json (and restart) if needed.
+- Logs: engine.log carries per-window trace lines (a few MB per hour of generation); server.log and frontdoor.log
+  grow about 1 MB a day. Plenty of disk; look at them monthly.
+Report odd behaviour with the time and the client (open-webui, Pi, API) so it can be matched in the logs and the
+Grafana dashboard (:3001).
