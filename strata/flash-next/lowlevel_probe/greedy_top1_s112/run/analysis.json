@@ -1,0 +1,77 @@
+{
+  "status": "PASS_ALL48_STRICT_AND_FINITE_TIMING_DIAGNOSTIC_ONLY",
+  "actual_config": "CONFIG S112_PRIVATE kernel=GreedyTop1S112 leader_acquire=1 device=Intel(R) Arc(TM) Pro B70 Graphics",
+  "strict_cases": 48,
+  "timing_shape": 248320,
+  "timing4097": false,
+  "raw_timing_rows": [
+    {
+      "n": 248320,
+      "repeat": 0,
+      "route": "reference",
+      "two_owner_chain_host_us": 166.116
+    },
+    {
+      "n": 248320,
+      "repeat": 0,
+      "route": "candidate",
+      "two_owner_chain_host_us": 116.482
+    },
+    {
+      "n": 248320,
+      "repeat": 0,
+      "route": "candidate",
+      "two_owner_chain_host_us": 116.261
+    },
+    {
+      "n": 248320,
+      "repeat": 0,
+      "route": "reference",
+      "two_owner_chain_host_us": 164.744
+    },
+    {
+      "n": 248320,
+      "repeat": 1,
+      "route": "reference",
+      "two_owner_chain_host_us": 166.136
+    },
+    {
+      "n": 248320,
+      "repeat": 1,
+      "route": "candidate",
+      "two_owner_chain_host_us": 116.342
+    },
+    {
+      "n": 248320,
+      "repeat": 1,
+      "route": "candidate",
+      "two_owner_chain_host_us": 116.543
+    },
+    {
+      "n": 248320,
+      "repeat": 1,
+      "route": "reference",
+      "two_owner_chain_host_us": 165.205
+    }
+  ],
+  "two_nested_ABBA_round_means": [
+    {
+      "repeat": 0,
+      "means_us": {
+        "reference": 165.43,
+        "candidate": 116.3715
+      },
+      "candidate_change_pct": -29.655141147313067
+    },
+    {
+      "repeat": 1,
+      "means_us": {
+        "reference": 165.6705,
+        "candidate": 116.4425
+      },
+      "candidate_change_pct": -29.714402986651223
+    }
+  ],
+  "scope": "One process, two ABBA rounds; host completed two-owner greedy/probability/select chain. Not isolated argmax GPU service, population, early mapped publication or serving qualification.",
+  "speed_qualified": false
+}

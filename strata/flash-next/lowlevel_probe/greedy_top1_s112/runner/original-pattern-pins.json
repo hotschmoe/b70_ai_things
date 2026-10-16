@@ -1,0 +1,22 @@
+{
+  "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-runner-prep",
+  "pins": {
+    "ROOT_RUN.sh": {
+      "bytes": 726,
+      "sha256": "dc7559fd5a7e0dc44e41c3b06b227f49a8f368add98873ce1a8cd2fbbe36997d"
+    },
+    "leased_run.sh": {
+      "bytes": 5779,
+      "sha256": "c4081780f5f3bc623ab42bc71ff106387f520cc0588c46f44a16326dfaa3ca27"
+    },
+    "analyze.py": {
+      "bytes": 6726,
+      "sha256": "7e3402de2a8fd164ab60ac5f055cac4e7290c312ae6aef62aa6ade8d93df3c79"
+    },
+    "runtime_identity.py": {
+      "bytes": 2785,
+      "sha256": "eb5a7c2bab17e16ba75858cca9c443a563beac2ae598ec039ac819a604727064"
+    }
+  },
+  "changes": "Model/fixture handling removed. Non--rm create/start-a final state observation replaces old automatic force-cleanup path. Root-audited v2 args and48/8 exact parser added."
+}

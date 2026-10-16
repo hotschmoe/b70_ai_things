@@ -1,0 +1,11 @@
+{
+  "full_cid": "15ede7d7840e202f0f5e71bda24298077d3fb65b870c3e2d9dad8eb07acf5c93",
+  "name": "strata-greedy-top1-s112-v2",
+  "full_cid_absent": true,
+  "name_absent": true,
+  "docker_start_terminal": true,
+  "normal_rm_exit": 0,
+  "final_native_exit": 0,
+  "final_OOMKilled": false,
+  "no_force_stop": true
+}

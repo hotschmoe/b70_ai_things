@@ -1,0 +1,27 @@
+{
+  "status": "FROZEN_SOURCE_ONLY",
+  "image_id": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "files": [
+    {
+      "file": "exact-header-excerpts.json",
+      "bytes": 4380,
+      "sha256": "7257d66d0519ba620e65ad7cab8e3b4cf850964e5e37090447ba23400e1655c3"
+    },
+    {
+      "file": "helper-inspection.json",
+      "bytes": 4063,
+      "sha256": "3e1ed270b9eddd5b17979217f8c04ac35d5e6dab4c5df49b7009c72136004a8c"
+    },
+    {
+      "file": "nd-item-inspection.json",
+      "bytes": 2245,
+      "sha256": "7961ccd5be4a0631a034496160e4662011ccd4a6e15fb89a343418dd2c5fec37"
+    },
+    {
+      "file": "note.md",
+      "bytes": 3654,
+      "sha256": "347804674c65a43f0920a88f60acf4328b32744692e486642dea253b871ad9ad"
+    }
+  ],
+  "execution": "Three finite read-only/no-DRI/network-none header inspections; all exit 0. No build/GPU/kernel/source changes."
+}

@@ -1,0 +1,41 @@
+{
+  "root_explicit_revalidation_env": true,
+  "source": "S107 mode1 full card+compiled posthealth",
+  "pins": {
+    "status": "HISTORICAL_S107_HEALTH_SOURCE_PINS_ONLY_NOT_CURRENT_HEALTH_AUTHORIZATION",
+    "files": [
+      {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/mode1/post-health.json",
+        "bytes": 480,
+        "sha256": "07d3cd2a8b20d399c3857f266903cec5f65c35265a51c55fa7fd6575a40bfcbb"
+      },
+      {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/mode1/card-health.log",
+        "bytes": 560,
+        "sha256": "a4f4291de9b9c5dde6b89baf0670299b96f68f869b5c76a2bc399e78fa71b5f8"
+      },
+      {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/mode1/collective-health.log",
+        "bytes": 1696,
+        "sha256": "67862d88010c70da68728ba01d753363ad5c7304245c7926293892f230322c20"
+      },
+      {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/mode1/normal-stop.json",
+        "bytes": 265,
+        "sha256": "14d21c2dcf6c9a2156220378103a5c9c177fcdb5ee8577dd4eba40b7e2b0eb62"
+      },
+      {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/mode1/container-removal.json",
+        "bytes": 710,
+        "sha256": "51fee49ddc9dca9bbc423279f1f3b995860c7e052f4adf2ca0a4ccd837badbaf"
+      },
+      {
+        "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/root-result-summary.json",
+        "bytes": 2949,
+        "sha256": "fae0aca4f2be9c99f68a81218592f726431bc7302ef8b0f3831a9bd6a6ba2ab9"
+      }
+    ],
+    "boot_id": "b785982c-4954-4d23-808c-48a7534ce3bd"
+  },
+  "scope": "Same-host/current stack/no-intervening coordinated GPU work must be revalidated by root immediately before this run; copied health is historical, not a fresh invocation."
+}

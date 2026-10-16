@@ -1,0 +1,133 @@
+S112 greedy top1 source audit (2026-10-16)
+
+CONFIG -> SOURCE ONLY during leased S107 serving. No live edits, build,
+GPU, model calls, payload reads, raw trace or heavy CPU. Exact pins and
+bounded local-git history are retained. Historical S108 names the kernel
+sampler_greedy_kernel_5b2c3f, not row_sample_greedy_v2. Two owner samplers
+sum179.1135us median across12 first-head intervals; this is diagnostic
+historical service, not removable wall time or a speed prediction.
+
+COMMAND -> Read current post-head dispatch, greedy and argmax kernels,
+atomic helper, allocation/capture ownership; local blame/show of selector
+origins; inspect existing SYCL verify_parity, not execute it.
+
+RESULT -> Existing parallel top1 is available but architecture-gated out.
+MtpDrafter::record_post_head1138..1154 calls argmax_rows only when
+argmax_rows_wanted(). verify_kernels.cpp1586..1600 restricts this to
+major==8 plus STRATA_MULTI_BLOCK_ARGMAX (default enabled). B70 startup
+reports20.2. sampler.cpp1401..1406 hard-disables SYCL cluster greedy, so
+STRATA_ARGMAX_MULTI does not activate a cluster path either. The observed
+fallback is ONE WG1024/owner, scanning248320 vocabulary elements with
+up to243 elements/thread, then local reductions. This serializes the
+row within one WG; source alone does not prove occupancy or critical path.
+
+Local history: CUDA commit3e4aa1d6189afe44ae9b70d965d0737ff1a8cc1a
+introduced argmax_rows for sm80..89 because sm90+ already used a cluster
+argmax; its message specifies last-block merging and parity tests. SYCL
+re-migration23a38a0bb75c7a24d975536c5b4b6a4400ffb1e1 copied the gate.
+No B70-specific safety rationale was found in those bounded records.
+This is an inherited NVIDIA selection rule, not evidence the kernel is
+qualified on B70. Do not emulate major8 or flip a global capability knob.
+
+Exact comparison contract, NO PENALTIES:
+sampler.cpp91 returns unmodified logit for count<=0; record_post_head passes
+history=null, penalty window0, greedy=true, temperature0. Its scan starts
+(value=-inf,index=n_vocab), visits ascending indices per thread and takes
+strictly larger values. Subgroup/local merges compare greater value, then
+lower index on equality; all missing candidates finally map to0.
+argmax_rows uses the SAME initial sentinel, strict scan and value/index
+comparison, but partitions the row into contiguous chunks. For finite
+logits, maximum+lowest-index is independent of partition/reduction tree;
+there is no FP sum or approximate math to reassociate. +0/-0 compare equal,
+so lower index wins; negative-only rows and subnormals use the same source
+comparisons. This source argument is not compiled all-input proof.
+
+Nonfinite ID behavior in BOTH source routes: NaN comparisons never win,
+-inf never beats the sentinel, +inf wins and ties select lower index.
+If nothing beats-inf (all NaN/-inf), return0. This is the existing ID
+behavior, not validation of nonfinite model state, exception/payload
+semantics, or permission to bypass nonfinite serving gates. Unchanged
+probability kernels can yield NaN; preserve their behavior and diagnostics.
+For subsets, compare indices within the SAME ordered subset then run
+existing map_ids. Subset-order tie semantics differ from full-token-order
+semantics; never compare different vocab policies as arithmetic parity.
+
+Existing argmax_rows shape/cost (verify_kernels.cpp1508..1537):
+nb=min(128,max(1,ceil(n/4096))), per_block=ceil(n/nb), WG256/SG32.
+n248320 ->61WG, chunk4071, <=16 elements/thread, last chunk4060.
+One kernel launch/owner STILL; two owner calls remain two launches.
+ArgRow = counter+padding16B +128 FP32 values512B +128 int IDs512B =
+1040B/row source layout. Each MtpDrafter already allocates max_t*sizeof
+ArgRow at mtp.cpp456, zero-fills its arena at467, and owns separate scratch.
+Current post-head calls T1, using row0. No new device allocation, logits
+copy, second reduction launch or vocabulary projection is required.
+
+Publication/liveness audit: argmax_rows_kernel1373..1436 writes per-WG
+(value,index) from leader, performs device-scope acq_rel fence, and uses
+dpct::atomic_fetch_add(counter,1) to elect the last WG. dpct atomic.hpp
+25..43 defaults to RELAXED order, DEVICE scope. Each WG shares its last
+flag through a local barrier. Non-last WGs return; last WG performs a
+second device acq_rel fence, volatile-loads partials, reduces and writes
+ID; last leader resets counter with plain store0. There is NO polling,
+grid-wide barrier or requirement for all61 WGs to be resident together.
+Thus no obvious occupancy-dependent spin deadlock is introduced. The
+use_root_sync launch property is present but the body has no root barrier.
+
+Intended cross-WG publication relies on release-fence -> relaxed atomic
+RMW chain -> acquire-fence forwarding for every partial. This is a real
+SYCL memory-model/implementation obligation, not proved by the CUDA major8
+gate or source resemblance. Existing active row_top_prob_split uses a
+related fence/counter protocol, but that does not independently validate
+argmax's different leader/reduction path. No B70 compiled ISA, scratch
+counter readback, forwarding stress or graph replay proof exists here.
+HOLD direct serving enablement until actual independent source review and
+finite private runtime oracle settle this. If that publication cannot be
+justified, use explicit producer/consumer kernel dependency instead; do
+not silently assume cached/volatile loads repair missing synchronization.
+
+Plain reset is safe only with completed prior invocation and no scratch
+overlap: all WGs incremented before last is elected, no other WG later
+writes that counter, next invocation waits on in-order queue completion.
+Pair::draft idles BOTH private queues before pair queue reads their state,
+then waits before return; ordinary solo uses its own queue/scratch. Captured
+mode must be immutable or keyed, never reuse an incompatible graph. Verify
+these exact lifetime conditions, init0/reset0, per-owner separation and
+buffer guards in the private oracle. Interrupted/failed replay must drain
+and report; no automatic redraft/reuse of uncertain scratch state.
+
+Simplest candidate concept -> DefaultOFF MTP-only host dispatch selects
+EXISTING argmax_rows for the known unpenalized greedy full-head path.
+Retain two owner launches, exact probabilities, ID mapping, selectors,
+publication fences, draft counters and target verification. Default source
+route remains original. Do not initially combine with S109 probability
+omission, global verifier changes, two-row ID/scratch interface changes,
+or a new fusion. One combined two-owner launch would need different
+output/scratch bindings because current slot outputs are separate; that is
+extra scope without evidence. This is not a proposal to rerun head RPW2:
+RPW2 changes projection row packing; this changes post-logit top1 selection.
+S55 retained RPW2 defaultOFF with a small unresolved favorable serving
+observation, not a proven regression or a blanket ban on sampler work.
+
+Strict private oracle plan, NOT IMPLEMENTED/EXECUTED:
+Reuse the retained SYCL verify_parity concept instead of a new framework.
+Narrow to current248320 and irregular4097 rows, two distinct owners, no
+penalties. Compare ORIGINAL greedy vs existing argmax_rows exact int32 IDs
+against an independent host max/lowest-index reference. Include ties across
+WG/SG/chunk boundaries, first/last maxima, +/-0, all-negative, denormals,
+NaN mixtures, +inf ties and allNaN/-inf fallback0. No tolerance. Feed equal
+IDs through the SAME current top-probability/select kernels on each side;
+check full resulting probability bytes, selected tokens/residuals, mapped
+publication, readonly logits and allocation guards. Do not simultaneously
+test an unrelated probability reduction change.
+Capture fresh mapped A/B/A replays on the same in-order queue, repeated on
+one persistent per-owner scratch: inspect counter0 after each completed
+replay and owner guards. Existing verify_parity repeats scratch but lacks
+counter/guard/capture-freshness checks and is not claimed run on this B70.
+Only after compiled kernel identity, exact private parity/lifecycle and
+post-health should one finite same-binary serving comparison be considered.
+No broad tuning sweep, full model-weight read or fresh GPU trace is needed
+for that first discriminator. No speed target or savings is established.
+
+VERDICT -> Concrete reusable-kernel lead, pending publication review and
+compiled private proof. Existing ported selector misses B70; the kernel is
+not production-qualified merely because a host branch could select it.

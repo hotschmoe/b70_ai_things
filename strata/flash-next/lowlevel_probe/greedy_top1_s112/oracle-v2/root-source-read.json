@@ -1,0 +1,14 @@
+{
+  "utc": "2026-10-16T00:18:33.135992+00:00",
+  "status": "ROOT_FULLREAD_PENDING_ACTUALMODELS",
+  "v2_manifest_sha256": "b614a572e6a366c50fe43b451a7c640039d6e86be8435092e62bbca55e4e8d26",
+  "all13_payload_sha_bytes_ascii_verified": true,
+  "unchanged_scripts_header_projection": true,
+  "previous_goal_turn_class": "progress",
+  "previous_evidence": [
+    "73bca99f matchedS107serving+fullhealth+push",
+    "e916ad78 S108 boundedprofiling+sourceaudits+push"
+  ],
+  "CPU_build_GO": false,
+  "GPU_GO": false
+}

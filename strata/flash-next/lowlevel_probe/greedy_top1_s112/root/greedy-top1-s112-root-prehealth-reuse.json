@@ -1,0 +1,8 @@
+{
+  "utc": "2026-10-16T00:31:36.074846+00:00",
+  "status": "EXPLICIT_ROOT_CONTEXTUAL_PREHEALTH_REUSE",
+  "source": "S107mode1 fullpercard+compiledcollectiveposthealth",
+  "boot_id": "b785982c-4954-4d23-808c-48a7534ce3bd",
+  "scope": "Sameboot/runtime and no intervening coordinated GPU work in sharedlog; rootonlyCPUbuild/audit/offlinedecode/readonlySDK/CLItoolsnone, noDRI inCPUcontainers. Bothleasesobservedfree. Doesnotattestuncoordinatedactivity. Freshcard0posthealthrequired.",
+  "source_pins_sha256": "57106111cf913c044ce20961cd29b232a74022d70fcd8d994297953f29914254"
+}

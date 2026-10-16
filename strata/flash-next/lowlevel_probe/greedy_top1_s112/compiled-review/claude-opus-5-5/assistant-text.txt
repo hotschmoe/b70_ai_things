@@ -1,0 +1,37 @@
+# S112 compiled private oracle review
+
+**Verdict: GPU_GO** for one finite private card-0 oracle under the stated protocol. I found no concrete blocking issue in the compiled candidate.
+
+## Publication and dataflow, from the candidate ISA
+
+1. **Scan** (L656). A `load.d32` per element, then `cmp (gt)` with a predicated update of value and index. The comparison is strict, so NaN never wins. The \u2212inf sentinel and the index sentinel `n` (r2.6) are initialised at L552 and L608.
+2. **Within-work-group reduction** (L864\u2013L2528 and L3008\u2013L4656).
+   - Each merge is `gt`, or else `lt index` combined with `eq value`, matching `arg_take`.
+   - The SLM staging goes through a barrier with an SLM/UGM work-group fence.
+3. **Leader publication** (L4768).
+   - `store.ugm` writes `pv[b]` and `pi[b]`.
+   - Then `fence.ugm.invalidate.gpu` with a wait on its response (`$13.dst`): the release fence.
+   - Then `atomic_iadd.ugm` returning the old value. The compiler aggregated it per sub-group, and only lane 0 is active.
+   - **The new acquire:** `fence.ugm.invalidate.gpu` with a wait (`$0.dst`), completed *before* the `store.slm` of the last-work-group flag at offset 0x200.
+   - The acquire is ordered as the source requires.
+4. **Barrier** (L5632). Work-group SLM/UGM fences, then signal and `sync.bar`. Then the flag is loaded from SLM, and non-last work-groups `jmpi` straight to EOT.
+5. **Last work-group** (L5872).
+   - Another `fence.ugm.invalidate.gpu` with a wait, then loads of `pv`/`pi` predicated on `nb > lid`, then a re-reduction with the same compare logic.
+   - Lane 0 stores `out = (bi < n) ? bi : 0`, then a plain `store.d32x1t` of 0 to the counter.
+   - No path stores to the output or counter before the partials are consumed.
+
+**Resources.** SIMD32, GRF 128, `barrier_count` 1, SLM 544 bytes, `has_global_atomics: true`. The spill and scratch fields are absent, which means unknown. The payload binds logits, scratch, out, n and per_block as expected.
+
+## Bounded notes, not blockers
+
+- **Denormals.** The prologue ORs `cr0` with 0x400004C0. The 0xC0 bits are consistent with denormal-retain mode on Xe. I treat this as indicative only, since it is not reported in the `ze_info` field. The original sampler's mode is unread. A fixture-6 mismatch between baseline and host remains the pre-declared HOLD; do not reinterpret it after the fact.
+- **`use_root_sync`.** Retain it. If the launch is rejected, that is a HOLD at launch time, not a correctness question. There is no root barrier in the body, and nothing suggests a hang path.
+- **Image ownership.** The original greedy, probability and select images belong to this private binary. The result says nothing about production-main image equality.
+- **What a PASS proves.** It is a finite, bounded runtime check of the cross-work-group publication. It is not a memory-model proof for all inputs or all hardware.
+
+## Protocol to keep
+
+- **Setup:** a quiet CPU outside the card-0 lease, pinned to card 0. Pre and post checks on the executable, receipt, manifest and runner pins. Normal owned `docker create`/`start` with OOM and exit-code inspection, then removal confirmed by full CID and name, then fresh card-0 health.
+- **Correctness first:** all 48 strict cases (4097 then 248,320; two owners; two routes; eager and captured; fresh-data A/B/A; counters zero; read-only; guards; full ID, probability and select bytes), before the 2 ABBA timing rounds.
+- **Timing:** descriptive only.
+- **Failure handling:** stop at the first mismatch, with no retry, redraft or reset-only recovery.

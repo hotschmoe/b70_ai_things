@@ -1,0 +1,20 @@
+{
+  "status": "SOURCE_PREPARATION_NO_ARTIFACT_HASH_OR_BUILD",
+  "kernel_archive_sha256": "cf710683aec404599d1cc6173bf8364e6d30731bda82b315df286bf58aed9b38",
+  "archive_hash_provenance": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/build-sha256.txt",
+  "archive_hash_provenance_sha256": "df200c97e86b03a1f7e005a24902d79391bc6f22f986c3a9db66d676f4a85038",
+  "unchanged_inputs_provenance": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/expected-unchanged-build-inputs.sha256",
+  "unchanged_inputs_provenance_sha256": "c0599ed2445a9888a0873993dc3093d415172d773775a3d424512d88c69f280b",
+  "source_pins_computed_now": [
+    "sycl/src/kernels/cuda/sampler.dp.cpp",
+    "sycl/src/kernels/cuda/verify_kernels.dp.cpp",
+    "sycl/include/dpct/atomic.hpp",
+    "sycl/include/strata/sycl_queue.hpp",
+    "sycl/include/dpct/graph.hpp",
+    "sycl/include/strata/kernels/sampler.hpp",
+    "include/strata/kernels/verify_kernels.hpp"
+  ],
+  "object_binding_at_future_build": "Extract only sampler.dp.cpp.o and verify_kernels.dp.cpp.o from the pinned archive; cmp to actual original object paths and hash selected objects. Compile only private oracle TU/new candidate kernel.",
+  "actual_image_binding": "PENDING: selected original greedy/top-prob/select plus unique candidate registered-name/Info/image hashes require actual post-build root audit before GPU. Object/source pins and symbol inventory alone are not that audit.",
+  "scope_check_root_evidence": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s112-barrier-scope-check"
+}

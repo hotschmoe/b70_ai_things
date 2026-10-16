@@ -1,0 +1,26 @@
+[
+  {
+    "command": [
+      "git",
+      "-C",
+      "/mnt/vm_8tb/b70/build/strata-ab/src-ep",
+      "show",
+      "-s",
+      "--format=%H%n%s%n%b",
+      "3e4aa1d6189afe44ae9b70d965d0737ff1a8cc1a"
+    ],
+    "stdout": "3e4aa1d6189afe44ae9b70d965d0737ff1a8cc1a\nF7: the head's argmax and the draft's top probability over many blocks a row (fork fbb8bfa)\nThe verify head's argmax and the draft's top probability over many blocks a row.\n\nThe draft head's top probability ran row_top_prob, one 1024-thread block a row over the 40,525-token draft head\n(and the head's greedy pick, sampler_greedy_kernel, one block a row on sm_80 to sm_89).  argmax_rows scans a row\nin up to 128 blocks (4,096 logits each), the row's last block merging their picks (the larger value, on equality\nthe lower index: the one-block kernel's order); row_top_prob_split computes row_top_prob's 32 warps' sums in 8\nblocks, the row's last block adding them in order.  Both keep their counters and partials in per-row slots of one\nscratch.  Bitwise: the new verify_parity test checks them against sample_tokens' greedy pick and row_top_prob (ties,\nNaN, -inf, 1-8 rows on one scratch).\n\nCUDA only: argmax_rows is used on sm_80 to sm_89 (sm_90+ keeps sample_tokens' cluster kernel); row_top_prob_split on\nevery CUDA card; HIP and the cards below sm_80 keep the old kernels (STRATA_MULTI_BLOCK_ARGMAX=0 turns both off).\nPorted from eddoursul's fork, commit fbb8bfa (MIT).\n\nCo-authored-by: Eddoursul <git@eddoursul.win>\n\n"
+  },
+  {
+    "command": [
+      "git",
+      "-C",
+      "/mnt/vm_8tb/b70/build/strata-ab/src-ep",
+      "show",
+      "-s",
+      "--format=%H%n%s%n%b",
+      "23a38a0bb75c7a24d975536c5b4b6a4400ffb1e1"
+    ],
+    "stdout": "23a38a0bb75c7a24d975536c5b4b6a4400ffb1e1\nsycl: re-migrate the port to 0.1.40.1 (dpct 2025.3, 3-way merge per docs/INTEL.md)\nThe sycl/ copies were at 0.1.39 and did not build against the 0.1.40.x shared\nheaders (load_experts_gguf ready argument, fused_gr_read_multi bool, Gemm::bf16/native ldx,\n13 symbols missing at link). Re-migrated the 5ffcce43 and 0.1.40.1 trees with migrate.sh,\nmerged with merge_upstream.py, hand-resolved the conflicts (the port's tuned expert and\nMMVQ kernels kept; verify, mtp, generate adopt 0.1.40.1 with the port's queue handling).\nStubs: vmm (no driver VMM on Level Zero), --remote-expert-opt. Dropped upstream's\nopt-in AMD S26/S27 grouped-expert kernels and STRATA_QFUSE/HC_Q8 reads on SYCL.\nbuild.sh and migrate.sh source setvars.sh outside set -u (they exited silently).\n\n"
+  }
+]

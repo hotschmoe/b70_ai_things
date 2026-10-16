@@ -1,0 +1,10 @@
+ElfType 64b
+Section name, Section type
+.text.s112_top1_candidate, 1
+.symtab, 2
+.spv, 4278190089
+.misc.buildOptions, 4278190100
+.note.intelgt.metrics, 7
+.rel.text._ZTS16dpct_kernel_nameIJZN12s112_private6launchEPKfiPvPiRN4sycl3_V15queueEE14GreedyTop1S112EE, 9
+.ze_info, 4278190097
+.note.intelgt.compat, 7

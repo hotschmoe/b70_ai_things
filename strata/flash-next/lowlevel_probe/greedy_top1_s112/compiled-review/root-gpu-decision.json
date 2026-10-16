@@ -1,0 +1,43 @@
+{
+  "utc": "2026-10-16T00:30:49.401787+00:00",
+  "status": "ROOT_ONE_FINITE_CARD0_PRIVATE_ORACLE_GO",
+  "GPU_GO": true,
+  "binary_sha256": "5c8281323022a15f6ff8c89b988cf6fd95d1c4db528f40f6f05c678f407667ec",
+  "models": [
+    {
+      "requested": "claude-opus-5-5",
+      "responding_models": [
+        "claude-opus-5-5"
+      ],
+      "elapsed_s": 37.142254662991036,
+      "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "source_packet_sha256": "84d2af7ddf19255afd83f1561cdd97dcf5168bf30333b577589857258566127b",
+      "exit": 0
+    },
+    {
+      "requested": "claude-fable-5-1",
+      "responding_models": [
+        "claude-fable-5-1"
+      ],
+      "elapsed_s": 66.12077267403947,
+      "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "source_packet_sha256": "84d2af7ddf19255afd83f1561cdd97dcf5168bf30333b577589857258566127b",
+      "exit": 0
+    }
+  ],
+  "v2_manifest_sha256": "b614a572e6a366c50fe43b451a7c640039d6e86be8435092e62bbca55e4e8d26",
+  "runner_manifest_sha256": "7665e580ec7c640a611e1a5d1590308de71df3928189f757b415f9984a34f50e",
+  "root_read": [
+    "Fullv1source/v2diff/header/buildscripts/fixtureproof/exactinverse; declarations+TopRowcounter0.",
+    "ActualfourInfo/cache/guard/name/imagebindings, candidatehostwrapperfull, selectedmetadatafour.",
+    "CandidateISA scan/sentinel, gt/equal+lowerindex, partialstores/returningRMW/GPUinvalidate waitbeforeSLMflagstore/WGbarrier, lastreaderGPUfence/partialloads, finalIDandcounterreset.",
+    "FullROOT_RUN/leased_run/analyze.py andall9runnerpins."
+  ],
+  "limits": [
+    "ReferenceimagesbelongtoprivateEXE, no production-main devicebyteidentity.",
+    "DenormmodeUNKNOWN: candidatecr0literalobserved/referenceprologueunread. Do notinferidenticalCR0. Hostbaseline mismatchHOLD.",
+    "Rootsync retained, runtime61WG supportnotassumed. No hardwarefault/allinput/occupancy/speed/servingproof. Absentfieldsunknown.",
+    "Failedreplaydrain/report/stop, noretry/redraft/forcedstop/reset-onlyrecovery."
+  ],
+  "protocol": "OnequietCPU/card0/pin0 process; exactly48strictbefore8realshapeABBAhostchainrecords; non--rm containerfinalOOM/ExitCode thennormalrm/fullCIDNAMEabsence/freshpostcard0health. Prehealthreuseonlyexplicitrootrevalidation."
+}

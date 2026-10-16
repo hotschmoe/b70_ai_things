@@ -1,0 +1,25 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_AUDIT_AND_DECODER_UNEXECUTED_ROOT_GO_REQUIRED",
+  "files": {
+    "README.txt": {
+      "bytes": 6852,
+      "sha256": "8cfa473ae05881512ebaa5caf07450f94968ca5fe13292e3dd955849facd0365"
+    },
+    "audit.py": {
+      "bytes": 12937,
+      "sha256": "394c731a496d5d9b7c50f19f5cb2d4a34f355dc0640dda5e594c770778fb148d"
+    },
+    "decode-candidate.sh": {
+      "bytes": 2140,
+      "sha256": "ffe5e9cbe48aac31bdd86759af8b12c56034818aef17ac31b274c103601b065a"
+    },
+    "pins.json": {
+      "bytes": 3113,
+      "sha256": "13f9f98c3d2373ea6913a223d2353040ae4c2dede25789c57ebac032d8f8ad12"
+    },
+    "source-only-validation.json": {
+      "bytes": 277,
+      "sha256": "992d78086048023115850f5b7818a1f276b9824c66740d725d3f6fa1ff6842af"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "status": "SOURCE_SYNTAX_ONLY_PASS",
+  "Python": {
+    "analyze.py": "AST_PASS",
+    "leased_run.py": "AST_PASS"
+  },
+  "bash_n_exit": 0,
+  "scripts_imported_or_executed": false,
+  "configs_build_GPU_models_or_clients": false,
+  "v2_source_and_binary_binding": "MANDATORY_FUTURE_ROOT_SHA_ARGS; no v1 hash substituted"
+}

@@ -1,0 +1,637 @@
+ROOT EXACT S112 PRIVATE V2 REVIEW
+Previous actual Opus/Fable both ranked hardened multiWG argmax private oracle first; S107 closed/defaultOFF. Pinned SDK check confirms legacy barrier Workgroup/Workgroup/0x310, so candidate adds leader device acquire after relaxed RMW before WG barrier. One unique isolated private header; no production/default edit. Reuse original greedy/prob/select archive cf710683 (CPU build verifies source+member identities). V2 fixes real boundary fixtures, subnormal host-reference test, cleanup and all48-strict-beforetiming. Root has fullread v1+v2diff/header/buildscripts; v2manifest b614a572e6a366c50fe43b451a7c640039d6e86be8435092e62bbca55e4e8d26.
+Review source for actual false positives/undefined behavior/graph/scratch/scope and link recipe. Need one CPU-only build, then actualkernelbinding+onecandidateISA audit, then one quiet card0 finite test with optional2ABBAhostwholechain timing only afterbothshapes48strict. No modelweights, tracecampaign or tests beyond uncertainty. Timing is descriptive sameprocess/twoowners, not isolateddevice/criticalpath/serving. Preserve exactIDs/downstreambytes and baselinehostmismatchHOLD, no automatic retry/redraft/reset-only recovery.
+Question: any concrete blocker to CPU build? Is current unused use_root_sync property a correctness/runtime launch issue worth changing before a bounded test, or retain inherited launch until evidence? No root-group barrier in body. Do not assume B70 capability from CUDA selector.
+
+
+V2 README.txt
+S112 private top1 oracle preparation v2 (2026-10-16)
+
+CONFIG -> SOURCE PREPARATION ONLY; no build, compiler, Docker, GPU or model
+execution. No production source/archive edits or binary/kernel hashes now.
+Root approved one private leader-acquire hardening after reviewing actual
+SDK work-group barrier scope. Existing argmax is not currently selected on
+B70; no observed runtime bug or production regression is claimed.
+
+SOURCE -> private_argmax.hpp clones ONLY argmax helper/kernel body into
+namespace s112_private with unique registered class GreedyTop1S112. The
+sole semantic body delta is: leader captures relaxed fetch_add old value,
+performs device-scope memory_order::acquire, THEN publishes last flag before
+the WG barrier. Original pre-RMW release/acq_rel and post-barrier acq_rel
+fences, FP comparisons, ties, layout, loops and reset remain exact.
+source-projection.json and candidate-body.diff prove exact inverse source
+reconstruction. Compile only oracle.cpp/new candidate kernel; old greedy,
+row_top_prob_split and mtp_select come from the pinned S107 archive.
+
+ORACLE -> Irregular4097 FIRST, then known vocabulary248320. Two owners, each with
+separate reference/candidate logits, arg/top scratch, device IDs/probabilities,
+residuals/token/selector row, guarded uncached mapped token/prob outputs.
+All device/mapped allocations have128B guards. Scratch has4row capacity,
+initialized ONCE; every completed replay checks all counters0 and unused
+rows bytezero. No reset between replays, retries or counter-only recovery.
+Same downstream probability/select functions on BOTH routes; exact int32
+IDs also checked against an independent ascending host maximum/sentinel
+reference. Full probability/residual/token/mapped bytes match, readonly
+logits/residual input/selector row and all guards checked, unused output
+slots must retain poison. Synthetic residual stride10240 uses source HC4*N2560;
+no model weights or production activation equivalence is claimed.
+
+Finite set: two shapes x eager/captured x four changing A/B/A triplets =
+48cases, each checks two owners x two routes. Inputs include unique/tied
+maxima crossing chunks, signedzero, all-negative finite background, finite
+max amid NaN/-Inf, allNaN/-Inf fallback0, +Inf ties, minimum subnormals,
+and ties on actual computed chunk boundaries. nb/per use the kernel's
+formula for EACH shape; both owners' first A/B/A maxima change WG chunks.
+The subnormal case places a lower-index+0 competitor against a higher-index
+positive minimum subnormal: host-reference equality is meaningful.
+Subnormal/NaN source behavior is not silently weakened: any old greedy vs
+host mismatch is HOLD too, and would require explicit diagnosis. No claim
+of exhaustive bit-pattern coverage. Inputs are uploaded OUTSIDE capture,
+then the same captured operation graph reads fresh device contents A/B/A;
+this is not a mapped-input-copy graph test. Mapped output is inspected after
+queue completion; no early-publication/poll-timing proof is claimed.
+
+Capture exceptions first balance recording using the pinned DPCT manager
+ownership rule: begin/record failure retrieves/ends via DPCT; if end assigned
+g before throwing, cleanup invokes g->end_recording directly. It then drains
+and rethrows the ORIGINAL exception; cleanup failures are separately reported.
+No recapture/replay/continue. All replay failures drain/report/stop. Route destruction drains before
+freeing bound allocations; cleanup failures prevent PASS. No redraft,
+automatic retry or alternate kernel selection on failure. Existing queues
+are in-order; graph lifetime ends before buffers. No owner scratch overlap.
+
+Optional --timing: only for n248320 AFTER ALL48 strict cases, two ABBA rounds,
+one captured two-owner chain per observation, host wall + completion wait.
+Staging/reset/readback are outside each measured chain; guards/counters
+still checked after each. Includes greedy/prob/select work, not isolated
+argmax GPU service, critical-path proof or model serving throughput. Root explicitly plans --timing in the same finite lease if strict gates pass.
+The irregular shape is never timed.
+No long soak or broad shape sweep is proposed.
+
+CPU BUILD -> ROOT ONLY after full source/runner review:
+  bash <this directory>/build.sh
+Timeout0 bin/cpu-run, same e41/DPC++2026.1, O3 precise, SG32/per_kernel,
+BMG-G31 AOT/jobs4, UID1000/cpus4, noDRI/networknone/diskTMP/cacheOFF.
+Existing live build tree is mounted READ ONLY. Link the original kernels
+archive normally, not --whole-archive; helper core/spec/CPU/ggml archives
+are grouped to resolve existing dependencies. No configure, Ninja, source
+compile of original kernels, ownership repair or automatic relink fallback.
+Undefined-symbol/link/identity errors stop for root review. Build snapshots
+extract/hash/cmp only original sampler/verify object members, write private
+object/binary hashes and symbol/section inventory. Expected source/archive/
+CMake identities are checked before/after. Successful link is NOT GPU GO.
+
+Actual compiled registered name/Info/cache/guard/image bindings are PENDING
+until a binary exists; see identity-plan.json. Root must audit selected
+original and private candidate images before GPU. This preparation does not
+invent those hashes or call a symbol listing an image-dispatch proof.
+
+GPU RUNNER -> NOT AUTHORIZED/EXECUTED by this preparation. Root must first
+supply actual binary identity/image-audit closure, then wrap a finite pinned
+one-card container in bin/cpu-run --quiet OUTSIDE bin/gpu-run --card N,
+with matching workload device pin and applicable per-card pre/post health.
+No model payload, collective or full server is needed by this standalone
+oracle. Retain owned full CID/name, native exit, normal teardown and health
+before claims. Current S107 serving lease has priority.
+
+VERDICT -> FROZEN SOURCE ONLY. Not a test result, speed claim or permission
+to select the original unhardened argmax on B70. Root full-read and actual
+post-build compiled-image audit remain required before any GPU execution.
+
+VERSION -> Immutable v1 stays at greedy-top1-s112-oracle-prep. This v2 changes
+fixture boundary arithmetic, meaningful subnormal competition, balanced
+capture-error cleanup and timing gate/order only. Private argmax header/body,
+original archive bindings, CPU build flags and failure-stop policy are exact
+v1. from-v1.diff and v1-reference.json bind the recut; no build has run.
+
+
+V2 oracle.cpp
+// SOURCE PREPARATION ONLY: exact-ID/bytes oracle, no model weights.
+#define DPCT_PROFILING_ENABLED
+#include <sycl/sycl.hpp>
+#include <dpct/dpct.hpp>
+#include "strata/sycl_queue.hpp"
+#include "strata/kernels/sampler.hpp"
+#include "strata/kernels/verify_kernels.hpp"
+#include "private_argmax.hpp"
+#include <algorithm>
+#include <array>
+#include <atomic>
+#include <chrono>
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+#include <exception>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
+using namespace strata::kernels;
+namespace {
+constexpr size_t GUARD=128, RESIDUAL=4*2560;
+constexpr unsigned char CANARY=0xa5;
+bool cleanup_error=false;
+void need(bool b,const char* what){if(!b)throw std::runtime_error(what);}
+float from_bits(uint32_t x){float f;std::memcpy(&f,&x,4);return f;}
+struct Device {
+ sycl::queue& q;size_t bytes;uint8_t* raw;uint8_t* p;
+ Device(sycl::queue& qq,size_t n):q(qq),bytes(n),raw(sycl::malloc_device<uint8_t>(n+2*GUARD,q)),p(raw?raw+GUARD:nullptr){
+  need(raw!=nullptr,"device allocation");q.memset(raw,CANARY,n+2*GUARD).wait_and_throw();
+ }
+ ~Device(){try{if(raw)sycl::free(raw,q);}catch(...){cleanup_error=true;}}
+ Device(const Device&)=delete;Device& operator=(const Device&)=delete;
+ template<class T>T* as(){return reinterpret_cast<T*>(p);}
+ void upload(const void* h){q.memcpy(p,h,bytes).wait_and_throw();}
+ void fill(unsigned char x){q.memset(p,x,bytes).wait_and_throw();}
+ std::vector<uint8_t> read(){std::vector<uint8_t>b(bytes+2*GUARD);q.memcpy(b.data(),raw,b.size()).wait_and_throw();
+  need(std::all_of(b.begin(),b.begin()+GUARD,[](auto x){return x==CANARY;}),"device prefix guard");
+  need(std::all_of(b.end()-GUARD,b.end(),[](auto x){return x==CANARY;}),"device suffix guard");
+  return std::vector<uint8_t>(b.begin()+GUARD,b.end()-GUARD);
+ }
+};
+struct Mapped {
+ sycl::queue& q;size_t bytes;uint8_t* raw;uint8_t* p;
+ Mapped(sycl::queue& qq,size_t n):q(qq),bytes(n),raw(static_cast<uint8_t*>(strata::host_malloc_polled(n+2*GUARD,q))),p(raw?raw+GUARD:nullptr){
+  need(raw!=nullptr,"polled host allocation");std::memset(raw,CANARY,n+2*GUARD);
+ }
+ ~Mapped(){try{if(raw)strata::host_free_polled(raw,q);}catch(...){cleanup_error=true;}}
+ template<class T>T* as(){return reinterpret_cast<T*>(p);}
+ void check()const{for(size_t i=0;i<GUARD;++i)need(raw[i]==CANARY&&p[bytes+i]==CANARY,"mapped guard");}
+};
+struct Route {
+ sycl::queue& q;bool candidate;int n;
+ Device logits,arg,top,ids,prob,rsrc,rdst,row,token;
+ Mapped published,published_prob;
+ dpct::experimental::command_graph_exec_ptr graph=nullptr;
+ Route(sycl::queue& qq,bool c,int nv):q(qq),candidate(c),n(nv),
+ logits(q,size_t(n)*4),arg(q,argmax_rows_scratch_bytes(4)),top(q,row_top_prob_scratch_bytes(4)),
+ ids(q,8*4),prob(q,8*4),rsrc(q,RESIDUAL*4),rdst(q,RESIDUAL*4),row(q,4),token(q,4),published(q,8),published_prob(q,8){
+  need(arg.bytes==4*sizeof(s112_private::ArgRow),"arg scratch source layout");arg.fill(0);top.fill(0);int zero=0;row.upload(&zero);
+ }
+ ~Route(){try{q.wait_and_throw();}catch(...){cleanup_error=true;}if(graph)delete graph;}
+ void record(){
+  if(candidate)s112_private::launch(logits.as<float>(),n,arg.p,ids.as<int32_t>(),q);
+  else{SamplerParams sp;sp.greedy=true;sp.temperature=0.0f;sample_tokens(logits.as<float>(),1,n,nullptr,0,sp,ids.as<int32_t>(),&q);}
+  // Identical downstream functions/arguments, including all original probability work.
+  row_top_prob_split(logits.as<float>(),1,n,ids.as<int32_t>(),prob.as<float>(),top.p,&q);
+  mtp_select(rsrc.as<float>(),RESIDUAL,ids.as<int32_t>(),row.as<int32_t>(),rdst.as<float>(),token.as<int32_t>(),published.as<int32_t>(),0,&q,prob.as<float>(),published_prob.as<float>());
+ }
+ void capture(){
+  need(!graph,"capture once");dpct::experimental::command_graph_ptr g=nullptr;
+  bool begin_attempted=false,end_completed=false;
+  try{
+   begin_attempted=true;dpct::experimental::begin_recording(&q);
+   record();dpct::experimental::end_recording(&q,&g);end_completed=true;
+   need(g!=nullptr,"capture ended without graph");
+   graph=new sycl::ext::oneapi::experimental::command_graph<sycl::ext::oneapi::experimental::graph_state::executable>(g->finalize());
+   delete g;g=nullptr;q.wait_and_throw();
+  }catch(...){
+   const auto original=std::current_exception();
+   // DPCT end sets g and erases its manager entry BEFORE calling native end.
+   // Balance a still-owned/uncertain recording before any drain; never recapture.
+   if(begin_attempted&&!end_completed){
+    try{if(g)g->end_recording();else dpct::experimental::end_recording(&q,&g);}
+    catch(...){cleanup_error=true;std::fprintf(stderr,"CLEANUP HOLD capture balance failed\n");}
+   }
+   try{q.wait_and_throw();}catch(...){cleanup_error=true;std::fprintf(stderr,"CLEANUP HOLD capture drain failed\n");}
+   delete g;std::rethrow_exception(original);
+  }
+ }
+ void poison_outputs(){ids.fill(0xcc);prob.fill(0xcc);rdst.fill(0xcc);token.fill(0xcc);
+  std::memset(published.p,0xcc,published.bytes);std::memset(published_prob.p,0xcc,published_prob.bytes);
+  reinterpret_cast<volatile int32_t*>(published.p)[0]=-1;std::atomic_thread_fence(std::memory_order_seq_cst);
+ }
+ void run(bool captured){if(captured){need(graph!=nullptr,"missing graph");q.ext_oneapi_graph(*graph);}else record();}
+};
+struct Snap{std::vector<uint8_t> ids,prob,residual,token,pub,pubprob;};
+void zero_counters(Route& r){
+ auto a=r.arg.read(),t=r.top.read();const size_t as=argmax_rows_scratch_bytes(1),ts=row_top_prob_scratch_bytes(1);
+ for(int j=0;j<4;++j){uint32_t ac,tc;std::memcpy(&ac,a.data()+j*as,4);std::memcpy(&tc,t.data()+j*ts,4);need(ac==0&&tc==0,"scratch counter not reset");}
+ need(std::all_of(a.begin()+as,a.end(),[](auto x){return x==0;}),"unused arg rows changed");
+ need(std::all_of(t.begin()+ts,t.end(),[](auto x){return x==0;}),"unused top rows changed");
+}
+Snap snapshot(Route& r,const std::vector<float>& h,const std::vector<float>& residual,int expected){
+ auto l=r.logits.read(),src=r.rsrc.read(),row=r.row.read();
+ need(l.size()==h.size()*4&&std::memcmp(l.data(),h.data(),l.size())==0,"logits modified");
+ need(src.size()==residual.size()*4&&std::memcmp(src.data(),residual.data(),src.size())==0,"residual source modified");
+ int ri;std::memcpy(&ri,row.data(),4);need(ri==0,"selector row changed");
+ Snap s{r.ids.read(),r.prob.read(),r.rdst.read(),r.token.read(),std::vector<uint8_t>(r.published.p,r.published.p+8),std::vector<uint8_t>(r.published_prob.p,r.published_prob.p+8)};
+ int id,tok,pub;std::memcpy(&id,s.ids.data(),4);std::memcpy(&tok,s.token.data(),4);std::memcpy(&pub,s.pub.data(),4);
+ need(id==expected&&tok==expected&&pub==expected,"exact host/ID/token/publication mismatch");
+ need(std::memcmp(s.residual.data(),residual.data(),s.residual.size())==0,"selected residual mismatch");
+ need(std::memcmp(s.prob.data(),s.pubprob.data(),4)==0,"published probability mismatch");
+ for(size_t j=4;j<s.ids.size();++j)need(s.ids[j]==0xcc,"ID unused output changed");
+ for(size_t j=4;j<s.prob.size();++j)need(s.prob[j]==0xcc,"prob unused output changed");
+ for(size_t j=4;j<8;++j)need(s.pub[j]==0xcc&&s.pubprob[j]==0xcc,"mapped unused output changed");
+ r.published.check();r.published_prob.check();zero_counters(r);return s;
+}
+void equal(const Snap&a,const Snap&b){need(a.ids==b.ids&&a.prob==b.prob&&a.residual==b.residual&&a.token==b.token&&a.pub==b.pub&&a.pubprob==b.pubprob,"strict downstream bytes differ");}
+int host_id(const std::vector<float>& x){float best=-INFINITY;int id=int(x.size());for(int i=0;i<int(x.size());++i)if(x[i]>best){best=x[i];id=i;}return id<int(x.size())?id:0;}
+std::vector<float> fixture(int n,int owner,int kind){
+ std::vector<float>x(n,-4.0f);
+ const int nb=std::min(128,std::max(1,(n+4095)/4096)),per=(n+nb-1)/nb;
+ need(nb>=2,"fixture requires multiple WG chunks");
+ const int last=(nb-1)*per;
+ const int a=owner?per:n-1,b=owner?n-1:1;
+ switch(kind){
+ case 0:for(int i=0;i<n;++i)x[i]=float((i*17+owner*31)%257)-128.0f;x[a]=1000.0f;break;
+ case 1:x[owner?0:per-1]=x[owner?last:per]=1000.0f;break;
+ case 2:x[owner?17:4]=from_bits(0x80000000);x[owner?4:17]=0.0f;break;
+ case 3:for(int i=0;i<n;++i)x[i]=i%7? -INFINITY:from_bits(0x7fc01234);x[a]=x[b]=-2.0f;break;
+ case 4:for(int i=0;i<n;++i)x[i]=i%7? -INFINITY:from_bits(0x7fc01234);break;
+ case 5:x[a]=x[b]=INFINITY;break;
+ case 6:x[0]=0.0f;x[owner?n-1:per]=from_bits(1);break;
+ case 7:x[owner?per-1:last-1]=x[owner?per:last]=1000.0f;break;
+ default:throw std::runtime_error("fixture kind");
+ }return x;
+}
+std::vector<float> residual_fixture(int owner,int kind){std::vector<float>x(RESIDUAL);for(size_t i=0;i<x.size();++i)x[i]=float(int(i%193)-96)+float(owner*8+kind)*0.125f;return x;}
+void stage(Route&r,const std::vector<float>&h,const std::vector<float>&rs){r.logits.upload(h.data());r.rsrc.upload(rs.data());r.poison_outputs();}
+}
+int main(int argc,char**argv)try{
+ bool timing=false;for(int i=1;i<argc;++i){need(std::string(argv[i])=="--timing","usage: oracle [--timing]");timing=true;}
+ auto& q=dpct::get_in_order_queue();need(q.has_property<sycl::property::queue::in_order>(),"in-order queue required");
+ std::printf("CONFIG S112_PRIVATE kernel=GreedyTop1S112 leader_acquire=1 device=%s\n",q.get_device().get_info<sycl::info::device::name>().c_str());
+ size_t cases=0;
+ for(int n:{4097,248320}){
+  std::array<std::unique_ptr<Route>,2> ref,cand;
+  for(int o=0;o<2;++o){ref[o]=std::make_unique<Route>(q,false,n);cand[o]=std::make_unique<Route>(q,true,n);ref[o]->capture();cand[o]->capture();}
+  // Each triplet changes fixture data, returns to A, and reuses persistent owner scratch.
+  // Eager first, then captured; no reset of arg/top scratch after initial allocation.
+  for(bool captured:{false,true})for(const std::array<int,3>& seq:{std::array<int,3>{0,1,0},std::array<int,3>{2,3,2},std::array<int,3>{4,5,4},std::array<int,3>{6,7,6}}){
+   for(int kind:seq){
+    std::array<std::vector<float>,2> h,rs;std::array<int,2> expected;
+    for(int o=0;o<2;++o){h[o]=fixture(n,o,kind);rs[o]=residual_fixture(o,kind);expected[o]=host_id(h[o]);stage(*ref[o],h[o],rs[o]);stage(*cand[o],h[o],rs[o]);}
+    // Both owners have independent allocations; only ordering/queue is shared, as in the pair tail.
+    for(int o=0;o<2;++o)ref[o]->run(captured);
+    for(int o=0;o<2;++o)cand[o]->run(captured);q.wait_and_throw();
+    for(int o=0;o<2;++o)equal(snapshot(*ref[o],h[o],rs[o],expected[o]),snapshot(*cand[o],h[o],rs[o],expected[o]));
+    ++cases;
+   }
+  }
+  std::printf("RESULT n=%d eager_and_capture=PASS owner_routes=4 cases=%zu\n",n,cases);
+  if(timing&&n==248320){
+   need(cases==48,"all strict cases must pass before timing");
+   // Balanced diagnostic whole-chain timings ONLY after all correctness cases for this shape.
+   // Inputs already staged; reset/readback/guards are outside each measured two-owner chain.
+   std::array<std::vector<float>,2> h,rs;for(int o=0;o<2;++o){h[o]=fixture(n,o,0);rs[o]=residual_fixture(o,0);}
+   for(int repeat=0;repeat<2;++repeat)for(int route:{0,1,1,0}){
+    auto& selected=route?cand:ref;for(int o=0;o<2;++o)stage(*selected[o],h[o],rs[o]);
+    auto a=std::chrono::steady_clock::now();for(int o=0;o<2;++o)selected[o]->run(true);q.wait_and_throw();auto b=std::chrono::steady_clock::now();
+    for(int o=0;o<2;++o)(void)snapshot(*selected[o],h[o],rs[o],host_id(h[o]));
+    std::printf("TIMING n=%d repeat=%d route=%s two_owner_chain_host_us=%.3f\n",n,repeat,route?"candidate":"reference",std::chrono::duration<double,std::micro>(b-a).count());
+   }
+  }
+  q.wait_and_throw();
+ }
+ need(!cleanup_error,"cleanup or drain failure");
+ std::printf("VERDICT PASS_STRICT_PRIVATE_ID_DOWNSTREAM_BYTES_GUARDS_COUNTERS_CAPTURE cases=%zu speed_qualified=0\n",cases);return 0;
+}catch(const std::exception&e){try{dpct::get_in_order_queue().wait_and_throw();}catch(...){}std::fprintf(stderr,"VERDICT HOLD %s\n",e.what());return 1;}
+
+
+V2 private_argmax.hpp
+// Isolated S112 private candidate; original production source/archive remain untouched.
+#pragma once
+#include <sycl/sycl.hpp>
+#include <dpct/dpct.hpp>
+#include "strata/sycl_queue.hpp"
+#include <algorithm>
+namespace s112_private {
+constexpr int kArgMaxBlocks = 128, kArgThreads = 256, kTopBlocks = 8;
+
+// the larger value, on equality the lower index: sampler_greedy_kernel's order
+__dpct_inline__ void arg_take(float ov, int oi, float &bv, int &bi) {
+    if (ov > bv || (ov == bv && oi < bi)) { bv = ov; bi = oi; }
+}
+
+// a block's (value, index) pick, in thread 0; `none` is the index of no candidate
+__dpct_inline__ void arg_block(float &bv, int &bi, int none) {
+    /*
+    DPCT1115: The sycl::ext::oneapi::group_local_memory_for_overwrite is
+    used to allocate group-local memory at the none kernel functor scope of a
+    work-group data parallel kernel. You may need to adjust the code.
+    */
+    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+auto &sv = *sycl::ext::oneapi::group_local_memory_for_overwrite<float[32]>(
+    sycl::ext::oneapi::this_work_item::get_work_group<3>());
+    /*
+    DPCT1115: The sycl::ext::oneapi::group_local_memory_for_overwrite is
+    used to allocate group-local memory at the none kernel functor scope of a
+    work-group data parallel kernel. You may need to adjust the code.
+    */
+    auto &si = *sycl::ext::oneapi::group_local_memory_for_overwrite<int[32]>(
+        sycl::ext::oneapi::this_work_item::get_work_group<3>());
+    for (int off = 16; off > 0; off >>= 1) {
+        /*
+        DPCT1108: '__shfl_down_sync' was migrated with the experimental
+        feature masked sub_group function which may not be supported by all
+        compilers or runtimes. You may need to adjust the code.
+        */
+        /*
+        DPCT1121: Make sure that the "bv" which is used in the SYCL group
+        function/algorithm is initialized.
+        */
+        const float ov = dpct::experimental::shift_sub_group_left(
+            0xffffffffu, sycl::ext::oneapi::this_work_item::get_sub_group(), bv,
+            off);
+        /*
+        DPCT1108: '__shfl_down_sync' was migrated with the experimental
+        feature masked sub_group function which may not be supported by all
+        compilers or runtimes. You may need to adjust the code.
+        */
+        /*
+        DPCT1121: Make sure that the "bi" which is used in the SYCL group
+        function/algorithm is initialized.
+        */
+        const int oi = dpct::experimental::shift_sub_group_left(
+            0xffffffffu, sycl::ext::oneapi::this_work_item::get_sub_group(), bi,
+            off);
+        arg_take(ov, oi, bv, bi);
+    }
+    const int warp = (int)(item_ct1.get_local_id(2) >> 5),
+              lane = (int)(item_ct1.get_local_id(2) & 31);
+    if (lane == 0) { sv[warp] = bv; si[warp] = bi; }
+    /*
+    DPCT1065: Consider replacing sycl::nd_item::barrier() with
+    sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better
+    performance if there is no access to global memory.
+    */
+    item_ct1.barrier();
+    if (warp == 0) {
+        const int nw = (int)(item_ct1.get_local_range(2) >> 5);
+        bv = lane < nw ? sv[lane] : sycl::bit_cast<float, int>(0xff800000);
+        bi = lane < nw ? si[lane] : none;
+        for (int off = 16; off > 0; off >>= 1) {
+            /*
+            DPCT1108: '__shfl_down_sync' was migrated with the experimental
+            feature masked sub_group function which may not be supported by all
+            compilers or runtimes. You may need to adjust the code.
+            */
+            /*
+            DPCT1121: Make sure that the "bv" which is used in the SYCL
+            group function/algorithm is initialized.
+            */
+            const float ov = dpct::experimental::shift_sub_group_left(
+                0xffffffffu, sycl::ext::oneapi::this_work_item::get_sub_group(),
+                bv, off);
+            /*
+            DPCT1108: '__shfl_down_sync' was migrated with the experimental
+            feature masked sub_group function which may not be supported by all
+            compilers or runtimes. You may need to adjust the code.
+            */
+            /*
+            DPCT1121: Make sure that the "bi" which is used in the SYCL
+            group function/algorithm is initialized.
+            */
+            const int oi = dpct::experimental::shift_sub_group_left(
+                0xffffffffu, sycl::ext::oneapi::this_work_item::get_sub_group(),
+                bi, off);
+            arg_take(ov, oi, bv, bi);
+        }
+    }
+}
+
+// A row's scratch, whatever the launch's row count (one scratch serves windows of every size): its counter, then
+// the blocks' values and indices.
+struct ArgRow {
+    unsigned counter;
+    unsigned pad[3];
+    float v[kArgMaxBlocks];
+    int i[kArgMaxBlocks];
+};
+
+// grid (blocks, rows): block b scans [b * per_block, +per_block) of its row
+__dpct_inline__ void argmax_rows_kernel(const float *__restrict__ logits, int n,
+                                        int per_block,
+                                        ArgRow *__restrict__ rows,
+                                        int32_t *out) {
+    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+    const int row = (int)item_ct1.get_group(1), b = (int)item_ct1.get_group(2),
+              nb = (int)item_ct1.get_group_range(2);
+    unsigned* counter = &rows[row].counter;
+    float* pv = rows[row].v;
+    int* pi = rows[row].i;
+    const float* l = logits + (size_t) row * n;
+    const int lo = b * per_block, hi = sycl::min(n, lo + per_block);
+    float bv = sycl::bit_cast<float, int>(0xff800000); // -inf
+    int bi = n;
+    for (int v = lo + (int)item_ct1.get_local_id(2); v < hi;
+         v += (int)item_ct1.get_local_range(2)) {
+        const float s = l[v];
+        if (s > bv) { bv = s; bi = v; }
+    }
+    arg_block(bv, bi, n);
+    auto &last = *sycl::ext::oneapi::group_local_memory_for_overwrite<bool>(
+        sycl::ext::oneapi::this_work_item::get_work_group<3>());
+    if (item_ct1.get_local_id(2) == 0) {
+        pv[b] = bv;
+        pi[b] = bi;
+        /*
+        DPCT1078: Consider replacing memory_order::acq_rel with
+        memory_order::seq_cst for correctness if strong memory order
+        restrictions are needed.
+        */
+        sycl::atomic_fence(sycl::memory_order::acq_rel,
+                           sycl::memory_scope::device);
+        const unsigned s112_prior =
+            dpct::atomic_fetch_add<sycl::access::address_space::generic_space>(counter, 1u);
+        // Sole hardening: acquire on the RMW leader before publishing last to its WG.
+        sycl::atomic_fence(sycl::memory_order::acquire, sycl::memory_scope::device);
+        last = s112_prior == (unsigned)(nb - 1);
+    }
+    /*
+    DPCT1065: Consider replacing sycl::nd_item::barrier() with
+    sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better
+    performance if there is no access to global memory.
+    */
+    item_ct1.barrier();
+    if (!last) return;
+    /*
+    DPCT1078: Consider replacing memory_order::acq_rel with
+    memory_order::seq_cst for correctness if strong memory order restrictions
+    are needed.
+    */
+    sycl::atomic_fence(sycl::memory_order::acq_rel, sycl::memory_scope::device);
+    bv = sycl::bit_cast<float, int>(0xff800000);
+    bi = n;
+    if ((int)item_ct1.get_local_id(2) < nb) {
+        bv = ((volatile const float *)pv)[item_ct1.get_local_id(2)];
+        bi = ((volatile const int *)pi)[item_ct1.get_local_id(2)];
+    }
+    arg_block(bv, bi, n);
+    if (item_ct1.get_local_id(2) == 0) {
+        out[row] = bi < n ? bi : 0;   // no value above -inf: 0, as the one-block kernel
+        *counter = 0;
+    }
+}
+
+
+inline void launch(const float* logits,int n,void* scratch,int32_t* out,sycl::queue& q) {
+    const int nb=std::min(kArgMaxBlocks,std::max(1,(n+4095)/4096));
+    const int per=(n+nb-1)/nb;
+    const auto props=sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
+    q.parallel_for<dpct_kernel_name<class GreedyTop1S112>>(
+      sycl::nd_range<3>(sycl::range(1,1,nb)*sycl::range(1,1,kArgThreads),sycl::range(1,1,kArgThreads)),
+      props,[=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {
+        argmax_rows_kernel(logits,n,per,static_cast<ArgRow*>(scratch),out);
+      });
+}
+}
+
+
+V2 candidate-body.diff
+--- original/argmax-helpers-and-kernel
++++ S112/private-argmax-helpers-and-kernel
+@@ -134,9 +134,11 @@
+         */
+         sycl::atomic_fence(sycl::memory_order::acq_rel,
+                            sycl::memory_scope::device);
+-        last =
+-            dpct::atomic_fetch_add<sycl::access::address_space::generic_space>(
+-                counter, 1u) == (unsigned)(nb - 1);
++        const unsigned s112_prior =
++            dpct::atomic_fetch_add<sycl::access::address_space::generic_space>(counter, 1u);
++        // Sole hardening: acquire on the RMW leader before publishing last to its WG.
++        sycl::atomic_fence(sycl::memory_order::acquire, sycl::memory_scope::device);
++        last = s112_prior == (unsigned)(nb - 1);
+     }
+     /*
+     DPCT1065: Consider replacing sycl::nd_item::barrier() with
+
+
+V2 source-projection.json
+{
+  "status": "PASS_SOURCE_ONLY_EXACT_INVERSE",
+  "source_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp",
+  "source_sha256": "5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e",
+  "original_selected_body_bytes": 7241,
+  "original_selected_body_sha256": "2fb56d64bdab9998434697eb7ade011850b3965c8fd951d797e3cbb9bd593840",
+  "candidate_selected_body_bytes": 7444,
+  "candidate_selected_body_sha256": "773c2f4870191eedb7fbaca657addba76add7f54255971d8ce6bd9e23efcb55b",
+  "inverse_exact": true,
+  "removed_original_statement": "        last =\n            dpct::atomic_fetch_add<sycl::access::address_space::generic_space>(\n                counter, 1u) == (unsigned)(nb - 1);",
+  "replacement_statement": "        const unsigned s112_prior =\n            dpct::atomic_fetch_add<sycl::access::address_space::generic_space>(counter, 1u);\n        // Sole hardening: acquire on the RMW leader before publishing last to its WG.\n        sycl::atomic_fence(sycl::memory_order::acquire, sycl::memory_scope::device);\n        last = s112_prior == (unsigned)(nb - 1);",
+  "arithmetic_changed": false,
+  "namespace": "s112_private",
+  "registered_candidate_class": "GreedyTop1S112",
+  "only_semantic_body_delta": "Leader device-scope acquire after relaxed RMW and before work-group publication; prior release/acq_rel and post-barrier acq_rel preserved."
+}
+
+
+V2 build.sh
+#!/usr/bin/env bash
+# ROOT ONLY after full source review; CPU build only, never invokes GPU.
+set -euo pipefail
+[[ $(id -u) == 1000 ]]
+HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+REPO=/mnt/vm_8tb/github/b70_ai_things
+IMAGE=sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2
+mkdir "$HERE/build"
+mkdir "$HERE/build/tmp" "$HERE/build/cache"
+docker image inspect "$IMAGE" > "$HERE/build/image.json"
+python3 - "$HERE/build/image.json" "$IMAGE" <<'PY'
+import json,sys
+assert json.load(open(sys.argv[1]))[0]['Id']==sys.argv[2]
+PY
+set +e
+B70_CPU_LOCK_TIMEOUT=0 B70_AGENT=S112-private-oracle-build "$REPO/bin/cpu-run" docker run --rm --network none --cpus 4 -u "1000:$(id -g)" \
+ -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_DIR=/out/cache \
+ -e SYCL_CACHE_PERSISTENT=0 -e MAX_JOBS=4 -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 \
+ -v /mnt/vm_8tb/b70/build/strata-ab:/work:ro -v "$HERE":/src:ro -v "$HERE/build":/out \
+ --entrypoint bash "$IMAGE" /src/build-container.sh 2>&1 | tee "$HERE/build/build.log"
+rc=("${PIPESTATUS[@]}")
+set -e
+printf '%s\n' "${rc[0]}" > "$HERE/build/build.exit"
+printf '%s\n' "${rc[1]}" > "$HERE/build/tee.exit"
+[[ ${rc[0]} == 0 && ${rc[1]} == 0 ]]
+
+
+V2 build-container.sh
+#!/usr/bin/env bash
+source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1
+set -euo pipefail
+[[ $(id -u) == 1000 && ! -e /dev/dri && -w /out/tmp ]]
+command -v icpx python3 ar cmp sha256sum readelf renice ionice >/dev/null
+renice 19 -p $$ >/dev/null
+ionice -c3 -p $$
+export TMPDIR=/out/tmp XDG_CACHE_HOME=/out/cache SYCL_CACHE_DIR=/out/cache
+export SYCL_CACHE_PERSISTENT=0 OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 MAX_JOBS=4
+cd /out
+sha256sum -c /src/expected-container.sha256
+icpx --version > compiler-version.txt
+mkdir bound-objects
+for object in sampler.dp.cpp.o verify_kernels.dp.cpp.o;do
+ ar p /work/src-ep/build-sycl-ep/libstrata_kernels.a "$object" > "bound-objects/$object"
+ cmp "bound-objects/$object" "/work/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/$object"
+done
+sha256sum bound-objects/* > original-objects.sha256
+# Compile only the private TU (new top1 kernel plus host oracle); no original kernel recompilation.
+FLAGS=(-O3 -DNDEBUG -std=c++20 -fsycl -fsycl-targets=spir64_gen
+ -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise
+ -I/src -I/work/src-ep/sycl/include -I/work/src-ep/include -I/work/src-ep/third_party/ggml
+ -Wall -Wextra -Wno-deprecated-declarations -Wno-unused-parameter -Wno-unused-variable)
+printf '%q ' icpx "${FLAGS[@]}" -MD -MF oracle.d -c /src/oracle.cpp -o oracle.o > compile-command.txt
+printf '\n' >> compile-command.txt
+TIMEFORMAT='private_compile_seconds=%R'
+{ time icpx "${FLAGS[@]}" -MD -MF oracle.d -c /src/oracle.cpp -o oracle.o; } > compile.log 2> compile.stderr-time
+B=/work/src-ep/build-sycl-ep
+LINK=(-O3 -fsycl -fsycl-targets=spir64_gen -fsycl-device-code-split=per_kernel
+ -fsycl-max-parallel-link-jobs=4 -Xsycl-target-backend=spir64_gen
+ '-device bmg-g31 -options -cl-fp32-correctly-rounded-divide-sqrt' -qmkl=sequential
+ oracle.o -Wl,--start-group "$B/libstrata_kernels.a" "$B/libstrata_core.a" "$B/libstrata_spec.a"
+ "$B/libstrata_kernels_cpu.a" "$B/ggml/src/libggml-cpu.a" "$B/ggml/src/libggml-base.a"
+ -Wl,--end-group -lze_loader -o greedy_top1_s112)
+printf '%q ' icpx "${LINK[@]}" > link-command.txt
+printf '\n' >> link-command.txt
+TIMEFORMAT='private_link_seconds=%R'
+{ time icpx "${LINK[@]}"; } > link.log 2> link.stderr-time
+sha256sum -c /src/expected-container.sha256
+sha256sum /src/oracle.cpp /src/private_argmax.hpp oracle.o greedy_top1_s112 > build-sha256.txt
+readelf -sW oracle.o > private-object-symbols.txt
+readelf -SW greedy_top1_s112 > executable-sections.txt
+readelf -sW greedy_top1_s112 > executable-symbols.txt
+printf '%s\n' BUILD_PASS_IMAGE_BINDING_AUDIT_REQUIRED_BEFORE_GPU > status.txt
+
+
+V2 expected-container.sha256
+c8e75a72b90cd21c798cc67571d42d5228c275241c6dcbc94d8f4dee9e62cacd  /src/oracle.cpp
+c1652c6aaba20b7cfd83320b86234c6fbcf25bcf985fa966873ee737bd5b90ba  /src/private_argmax.hpp
+b227dbe8ded71292b6373c886204174c6b04d3212e1872ca00bff646053feb1a  /work/src-ep/sycl/src/kernels/cuda/sampler.dp.cpp
+5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e  /work/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+f95e543bb0ac98bfe5bff5a27b1185f9739d7cd69a501a9aed472a3a27f01ff0  /work/src-ep/sycl/include/dpct/atomic.hpp
+2b9ada924e3023ab742e826f9c9850324ccc978cfc4ca8d0a36b3e7b6c79c51a  /work/src-ep/sycl/include/strata/sycl_queue.hpp
+9933c09306a7a91bb242fa913694541fc4166bcf6d5a1a2a81ee9dac91b05f31  /work/src-ep/sycl/include/dpct/graph.hpp
+d4c154af107e8b9b731c957899873175157855e937cee6e3892205cef5258207  /work/src-ep/sycl/include/strata/kernels/sampler.hpp
+c59529e560fbea77ca4a268fac1e65ca24a8f3826b0589e961813978f4903fb9  /work/src-ep/include/strata/kernels/verify_kernels.hpp
+cf710683aec404599d1cc6173bf8364e6d30731bda82b315df286bf58aed9b38  /work/src-ep/build-sycl-ep/libstrata_kernels.a
+34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286  /work/src-ep/build-sycl-ep/libstrata_core.a
+9b8288852c37f1cd3ee61afa3ee8402a775b5a8c37eb1985575810cbc885621a  /work/src-ep/build-sycl-ep/libstrata_spec.a
+6b82f67b33d741310f43785a3a3c2b50ddd4a821b196f5094ef772a01df4e6fb  /work/src-ep/build-sycl-ep/libstrata_kernels_cpu.a
+23ce520e356f71ccd946953a3546075d261b1d6153e7ff82c3151e01527e82e7  /work/src-ep/build-sycl-ep/ggml/src/libggml-cpu.a
+293516f3e8a101a7e6b732347094047ea905e40204fa5489c7202e0e5c2d0f8d  /work/src-ep/build-sycl-ep/ggml/src/libggml-base.a
+fee542911252057f97fac8113086ded01130c7888ac96a7490e28cdec814cc22  /work/src-ep/build-sycl-ep/CMakeCache.txt
+89cb173d8c8699943e1f4cb84c7dee2ddc0aba3178eef713198b64748108340b  /work/src-ep/build-sycl-ep/build.ninja
+
+
+PINNED SDK CHECK
+# S112 pinned SDK barrier scope check - 2026-10-16
+
+CONFIG -> Pinned image sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2; compiler include root /opt/intel/oneapi/compiler/2026.1/include/sycl. Source-only, no compiler, GPU, kernel change, model consultation, or live source edit.
+
+COMMAND -> docker image inspect confirmed the exact image ID. Three finite docker run Python header reads used --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges --user 1000:1000 --cpus 1 --memory 512m --entrypoint python3, no mounts and no /dev/dri. All exited 0. The first read inspected nd_item.hpp; the second inspected helpers.hpp, spirv_types.hpp, and group_algorithm.hpp; the third retained exact line excerpts below. This was light source inspection, not a build or measurement.
+
+RESULT -> nd_item.hpp:213-220 defaults accessSpace to global_and_local. It passes getSPIRVMemorySemanticsMask(accessSpace) to __spirv_ControlBarrier(Workgroup, Workgroup, flags). The first operand is execution scope; the second is memory scope. Both are Workgroup, explicitly NOT Device. This method itself has no deprecation annotation in this header; the following mem_fence method does. SYCL 2020 removes the older nd_item barrier interface, while this SDK retains it.
+
+helpers.hpp:189-232 defaults LocalScopeMask to WorkgroupMemory and selects SequentiallyConsistent | CrossWorkgroupMemory | WorkgroupMemory for global_and_local. spirv_types.hpp defines Workgroup scope=2, Device scope=1, and these memory-semantics bits as 0x10 | 0x200 | 0x100 = 0x310. CrossWorkgroupMemory identifies the affected global memory region; it does not widen the second ControlBarrier scope operand to Device. The complete front-end mapping is therefore ControlBarrier(exec=2, memory=2, semantics=0x310).
+
+Exact full-header byte counts/SHA256 and verbatim, numbered excerpts are in exact-header-excerpts.json. Initial independent read records are also retained. No binary/SPIR-V/ISA decode was performed; this establishes SDK source semantics rather than emitted hardware fence instructions.
+
+Specification comparison -> Khronos SYCL 2020 section 4.17.2 group_barrier defaults its fence scope to Group::fence_scope, the narrowest scope covering the group. For a work-group that is work_group; callers may request a wider scope. Its implicit release/acquire ordering covers global and local memory. Appendix D says nd_item::barrier was removed and replaced by group_barrier. This comparison does not substitute the modern API's default for the legacy SDK implementation: the actual legacy implementation above independently fixes Workgroup/Workgroup. SPIR-V memory-region flags and execution/memory scope operands are separate concepts.
+
+Primary specification URLs checked 2026-10-16:
+- https://registry.khronos.org/SYCL/specs/sycl-2020/html/sycl-2020.html (revision 12, commit b3bcc5d5cc83217d14ebbb904e353c5a0d17f52b; sections 4.17.2, 4.15.1 and Appendix D)
+- https://github.khronos.org/SYCL_Reference/iface/group-functions.html
+- https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html (Memory Semantics, OpControlBarrier)
+
+VERDICT -> The proposed counterargument that this pinned nd_item::barrier supplies DEVICE-scope fences is unsupported by, and conflicts with, its explicit source operands. This bounded inspection does not establish a universal hardware fault, observed wrong result, or a complete correctness proof of the surrounding reduction protocol. Parent owns the full release/RMW/acquire-chain assessment and any private hardened-kernel experiment. Live kernel remains unchanged; no GPU execution is authorized by this note.

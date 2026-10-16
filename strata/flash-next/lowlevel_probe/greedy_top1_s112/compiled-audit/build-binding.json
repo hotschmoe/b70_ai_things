@@ -1,0 +1,24 @@
+{
+  "status": "PASS_BUILD_AND_TWO_ORIGINAL_MEMBER_BINDINGS",
+  "exe_sha256": "5c8281323022a15f6ff8c89b988cf6fd95d1c4db528f40f6f05c678f407667ec",
+  "object_sha256": "33ac05b10ca02904d270646691c9df35ecd3aacab42df7f032d90eb016dc6e1a",
+  "original_objects": {
+    "sampler.dp.cpp.o": {
+      "bytes": 193416,
+      "sha256": "1199c7addeeb64dc3cd51f5d6218d1379696d6674e386b83144787ebf8fe97e7",
+      "archive": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/libstrata_kernels.a",
+      "archive_sha256_reused": "cf710683aec404599d1cc6173bf8364e6d30731bda82b315df286bf58aed9b38",
+      "source": "S107 archive identity plus S112 exact selected-member comparisons"
+    },
+    "verify_kernels.dp.cpp.o": {
+      "bytes": 503792,
+      "sha256": "584e694fc1ece4740fe4550e2c34fafd28a77921d81960039d01f3c27dbb6613",
+      "archive": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/libstrata_kernels.a",
+      "archive_sha256_reused": "cf710683aec404599d1cc6173bf8364e6d30731bda82b315df286bf58aed9b38",
+      "source": "S107 archive identity plus S112 exact selected-member comparisons"
+    }
+  },
+  "full_archive_rehash": false,
+  "build_hash_record_sha256": "7eafb05f2a61a72b22cbdd81a0ef0e96befc489344cc7bc18eaca0e9ad620337",
+  "limits": "Pre/post archive hashes reused from terminal0 frozen build; selected bytes actually compared. No historical individual-object hash invented."
+}

@@ -1,0 +1,19 @@
+{
+  "status": "PASS_SOURCE_PREPARATION_CHECKS_NOT_CPP_COMPILED",
+  "original_body_inverse_exact": true,
+  "candidate_only_leader_acquire_body_change": true,
+  "initial_scratch_reset_occurrences": 1,
+  "two_owner_inputs_change_maxima": true,
+  "bash_syntax": "PASS via bash -n on both scripts",
+  "embedded_build_python_syntax": "PASS",
+  "cpp_compile_executed": false,
+  "docker_executed": false,
+  "large_artifact_hash_performed": false,
+  "gpu_executed": false,
+  "scope_evidence_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s112-barrier-scope-check",
+  "actual_object_and_image_binding": "PENDING_POST_BUILD_ROOT_AUDIT",
+  "version": "v2",
+  "fixture_boundaries": "Computed nb/per for both248320 and4097; both owners A/B maxima cross WG chunks",
+  "capture_exception_cleanup": "Balance recording using DPCT ownership state before drain; rethrow original exception",
+  "timing_gate": "Only n248320 after all48 strict cases; no irregular timing"
+}

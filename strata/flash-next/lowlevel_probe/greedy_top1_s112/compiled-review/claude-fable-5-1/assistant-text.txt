@@ -1,0 +1,30 @@
+**GPU_GO for the one finite card0 oracle.** No concrete blocker in the compiled candidate.
+
+**Publication chain, as emitted**
+
+- Leader stores its partial value and index to the scratch row at offsets 16 and 528, which match the row layout of counter, pad, 128 values, 128 indices.
+- A device-scope fence with response wait precedes the returning atomic add. That is the release.
+- The prior count is reconstructed from the returned value, then a second device-scope invalidating fence is issued and its response is waited on before the local flag byte is stored. That is the new leader acquire, and it sits before the work-group barrier as intended.
+- Barrier, then every lane reads the flag from local memory. Non-last groups go straight to end of thread. The last group executes another device-scope invalidating fence with response wait before any lane loads partials, and the loads are bounded by lane index below the group count.
+- The reduction repeats the strict greater-than, then equal-value lower-index merge through sub-group shuffles and two local-memory stages, matching the source and the single-block sampler.
+- The final store is predicated on the lane-zero flag computed earlier, the index is clamped to zero when it equals the sentinel, and the counter is reset by a plain store after the output store. Only the last group reaches this path.
+
+The chain is therefore release fence, returning RMW, acquire fence, barrier, acquire fence, loads. Volatile reads compile to ordinary loads, which is acceptable because the invalidating fence precedes them.
+
+**Arithmetic and sentinel**
+
+Scan initialises to negative infinity and index n, uses strict greater-than, and every merge takes larger value or equal value with lower index. NaN never wins a compare. Matches the reference kernel's rule.
+
+**Resources and launch**
+
+SIMD32, 128 GRF, 544 bytes of local memory, one barrier, no spill or scratch fields. Launch dims come from the host, 61 groups for the vocabulary shape and 2 for the irregular shape. The root-sync property is retained unchanged. If the runtime rejects the launch, that is a HOLD, not a reason to drop the property mid-test.
+
+**Things to classify in advance, not blockers**
+
+- Control register bits are set at entry and the denormal mode is not reported. Both routes run under the same setting, so a fixture 6 result where both routes agree with each other but not the host is a baseline property of the existing kernels. Record it as HOLD requiring diagnosis, not as a candidate fault, and do not add a decoder run to settle it afterwards.
+- The flag-byte store and the partial stores are ordinary stores separated from the barrier only by the fences shown. That is correct on this ISA; the oracle's counter-zero and unused-row checks after every replay are the runtime confirmation.
+- Timing at the end is a two-owner host chain in one process. It carries no device-service or serving meaning.
+
+**Limits of a pass**
+
+Exact IDs and identical downstream bytes on 48 fixture cases, eager and captured, with persistent scratch hygiene on this card. Not an all-input proof, not a hardware fault claim, and not a production selector change. The production argmax remains unselected until a separate source and serving gate.

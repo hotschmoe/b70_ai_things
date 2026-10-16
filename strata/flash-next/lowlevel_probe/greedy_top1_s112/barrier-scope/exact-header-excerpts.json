@@ -1,0 +1,35 @@
+[
+  {
+    "path": "/opt/intel/oneapi/compiler/2026.1/include/sycl/nd_item.hpp",
+    "bytes": 24185,
+    "sha256": "106fd073ea68952397977e545f8e192af209e0ea6fa6f553fd395d4e17176e25",
+    "first_line": 208,
+    "last_line": 222,
+    "text": "  nd_range<Dimensions> get_nd_range() const {\n    return nd_range<Dimensions>(get_global_range(), get_local_range(),\n                                get_offset());\n  }\n\n  void barrier([[maybe_unused]] access::fence_space accessSpace =\n                   access::fence_space::global_and_local) const {\n#ifdef __SYCL_DEVICE_ONLY__\n    uint32_t flags = _V1::detail::getSPIRVMemorySemanticsMask(accessSpace);\n    __spirv_ControlBarrier(__spv::Scope::Workgroup, __spv::Scope::Workgroup,\n                           flags);\n#endif\n  }\n\n  /// Executes a work-group mem-fence with memory ordering on the local address\n"
+  },
+  {
+    "path": "/opt/intel/oneapi/compiler/2026.1/include/sycl/detail/helpers.hpp",
+    "bytes": 9614,
+    "sha256": "492d671f0be1697649be080325007ad0b5b5e815246cc9e27a6a23163d16d3c2",
+    "first_line": 189,
+    "last_line": 239,
+    "text": "inline constexpr uint32_t\ngetSPIRVMemorySemanticsMask(const access::fence_space AccessSpace,\n                            const __spv::MemorySemanticsMask LocalScopeMask =\n                                __spv::MemorySemanticsMask::WorkgroupMemory) {\n  // Huge ternary operator below is a workaround for constexpr function\n  // requirement that such function can only contain return statement and\n  // nothing more\n  //\n  // It is equivalent to the following code:\n  //\n  // uint32_t Flags =\n  //     static_cast<uint32_t>(__spv::MemorySemanticsMask::SequentiallyConsistent);\n  // switch (AccessSpace) {\n  // case access::fence_space::global_space:\n  //   Flags |=\n  //       static_cast<uint32_t>(__spv::MemorySemanticsMask::CrossWorkgroupMemory);\n  //   break;\n  // case access::fence_space::local_space:\n  //   Flags |= static_cast<uint32_t>(LocalScopeMask);\n  //   break;\n  // case access::fence_space::global_and_local:\n  // default:\n  //   Flags |= static_cast<uint32_t>(\n  //                __spv::MemorySemanticsMask::CrossWorkgroupMemory) |\n  //            static_cast<uint32_t>(LocalScopeMask);\n  //   break;\n  // }\n  // return Flags;\n\n  return (AccessSpace == access::fence_space::global_space)\n             ? static_cast<uint32_t>(\n                   __spv::MemorySemanticsMask::SequentiallyConsistent |\n                   __spv::MemorySemanticsMask::CrossWorkgroupMemory)\n         : (AccessSpace == access::fence_space::local_space)\n             ? static_cast<uint32_t>(\n                   __spv::MemorySemanticsMask::SequentiallyConsistent |\n                   LocalScopeMask)\n             : /* default: (AccessSpace ==\n                  access::fence_space::global_and_local) */\n             static_cast<uint32_t>(\n                 __spv::MemorySemanticsMask::SequentiallyConsistent |\n                 __spv::MemorySemanticsMask::CrossWorkgroupMemory |\n                 LocalScopeMask);\n}\n\n// To ensure loop unrolling is done when processing dimensions.\ntemplate <size_t... Inds, class F>\nconstexpr void loop_impl(std::integer_sequence<size_t, Inds...>, F &&f) {\n  (f(std::integral_constant<size_t, Inds>{}), ...);\n}\n\n"
+  },
+  {
+    "path": "/opt/intel/oneapi/compiler/2026.1/include/sycl/__spirv/spirv_types.hpp",
+    "bytes": 5891,
+    "sha256": "b41a5f15ea10cd50f8a85ab9b29dd35d474a08dee30fa4bc272271b878b583a9",
+    "excerpts": [
+      {
+        "first_line": 35,
+        "last_line": 52,
+        "text": "// - spv namespace renamed to __spv\nnamespace __spv {\n\nstruct Scope {\n\n  enum Flag : int32_t {\n    CrossDevice = 0,\n    Device = 1,\n    Workgroup = 2,\n    Subgroup = 3,\n    Invocation = 4,\n  };\n\n  constexpr Scope(Flag flag) : flag_value(flag) {}\n\n  constexpr operator int32_t() const { return flag_value; }\n\n  Flag flag_value;\n"
+      },
+      {
+        "first_line": 96,
+        "last_line": 110,
+        "text": "\n  enum Flag : int32_t {\n    None = 0x0,\n    Acquire = 0x2,\n    Release = 0x4,\n    AcquireRelease = 0x8,\n    SequentiallyConsistent = 0x10,\n    UniformMemory = 0x40,\n    SubgroupMemory = 0x80,\n    WorkgroupMemory = 0x100,\n    CrossWorkgroupMemory = 0x200,\n    AtomicCounterMemory = 0x400,\n    ImageMemory = 0x800,\n  };\n\n"
+      }
+    ]
+  }
+]

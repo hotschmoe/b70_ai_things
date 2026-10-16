@@ -1,0 +1,129 @@
+{
+  "status": "PASS_SOURCE_FORMULA_BOUNDARY_CHECK_ONLY_NOT_GPU",
+  "shapes": [
+    {
+      "n": 4097,
+      "nb": 2,
+      "per": 2049,
+      "owners": [
+        {
+          "owner": 0,
+          "first_A_B_A_indices": [
+            4096,
+            2048,
+            4096
+          ],
+          "first_A_B_A_WG_chunks": [
+            1,
+            0,
+            1
+          ],
+          "B_ties": [
+            2048,
+            2049
+          ],
+          "kind7_ties": [
+            2048,
+            2049
+          ],
+          "kind7_WG_chunks": [
+            0,
+            1
+          ],
+          "kind6_lower_zero_index": 0,
+          "kind6_positive_subnormal_index": 2049
+        },
+        {
+          "owner": 1,
+          "first_A_B_A_indices": [
+            2049,
+            0,
+            2049
+          ],
+          "first_A_B_A_WG_chunks": [
+            1,
+            0,
+            1
+          ],
+          "B_ties": [
+            0,
+            2049
+          ],
+          "kind7_ties": [
+            2048,
+            2049
+          ],
+          "kind7_WG_chunks": [
+            0,
+            1
+          ],
+          "kind6_lower_zero_index": 0,
+          "kind6_positive_subnormal_index": 4096
+        }
+      ]
+    },
+    {
+      "n": 248320,
+      "nb": 61,
+      "per": 4071,
+      "owners": [
+        {
+          "owner": 0,
+          "first_A_B_A_indices": [
+            248319,
+            4070,
+            248319
+          ],
+          "first_A_B_A_WG_chunks": [
+            60,
+            0,
+            60
+          ],
+          "B_ties": [
+            4070,
+            4071
+          ],
+          "kind7_ties": [
+            244259,
+            244260
+          ],
+          "kind7_WG_chunks": [
+            59,
+            60
+          ],
+          "kind6_lower_zero_index": 0,
+          "kind6_positive_subnormal_index": 4071
+        },
+        {
+          "owner": 1,
+          "first_A_B_A_indices": [
+            4071,
+            0,
+            4071
+          ],
+          "first_A_B_A_WG_chunks": [
+            1,
+            0,
+            1
+          ],
+          "B_ties": [
+            0,
+            244260
+          ],
+          "kind7_ties": [
+            4070,
+            4071
+          ],
+          "kind7_WG_chunks": [
+            0,
+            1
+          ],
+          "kind6_lower_zero_index": 0,
+          "kind6_positive_subnormal_index": 248319
+        }
+      ]
+    }
+  ],
+  "strict_case_count": 48,
+  "timing_scope": "Only actual248320 after all48 strict cases; irregular4097 first, not timed"
+}

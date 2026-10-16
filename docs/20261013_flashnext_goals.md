@@ -409,3 +409,12 @@ with warm nested improvements4.85%/2.20%; main source proposal prepared only,
 no serving gain or target change. S30 recovery remains retained.
 [S106 graph result](20261015_strata_graph_capture_and_bottlenecks.md),
 [S104 private Q6 lead](20261015_strata_q6_aligned_loads.md).
+
+
+S112 passes48 strict private greedy-selection cases on one B70. Completed
+two-owner host chains average165.55->116.41us in two nestedABBA rounds;
+this includes common probability/select work and establishes no serving gain.
+Original production/default remains unchanged. Next S113 prefill fixed-policy
+discriminator needs no rebuild; separate defaultOFF MTP integration is source
+preparation only. Targets remain unmet and S30RAMrestore remains retained.
+[S112 evidence and limits](20261016_strata_greedy_top1.md).

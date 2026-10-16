@@ -1,0 +1,1 @@
+FROZEN SOURCE ONLY. No build/decoder/GPU/CLI execution. Future v2 exact source/output and compiled root receipt must be reviewed/bound before separate GO.

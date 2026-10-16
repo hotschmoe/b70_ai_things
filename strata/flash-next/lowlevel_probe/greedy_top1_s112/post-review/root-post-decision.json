@@ -1,0 +1,31 @@
+{
+  "stage": "S112 private oracle post-result decision",
+  "actual_models": [
+    {
+      "id": "claude-opus-5-5",
+      "elapsed_s": 29.88153884699568,
+      "exit": 0
+    },
+    {
+      "id": "claude-fable-5-1",
+      "elapsed_s": 23.814467140997294,
+      "exit": 0
+    }
+  ],
+  "root_read_both_full_assistant_texts": true,
+  "decision": "Accept bounded48-case private PASS. Next GPU discriminator S113 no-build fixed-policy prefill after controller/source review. Prepare isolated default-OFF MTP-only S112 integration in parallel, do not build or enable until concrete source review. Defer S111 probability omission. Higher-service head/HC investigations source-only for now.",
+  "private_timing_scope": "Two nested ABBA rounds in one process; two-owner completed host greedy+probability+select chain ~165.5->116.4us. Not isolated greedy GPU time or serving gain.",
+  "root_corrections": [
+    "A future S113 failure does not establish an exact cause or independence from suffix/lookup policy; prior S94 unresolved and unchanged.",
+    "Do not zero/reuse scratch as failure recovery or retry failed capture. Normal drain, record and stop; no masked failure.",
+    "Do not multiply historical cycle frequencies or compare trace-era timing to derive current attainable serving gain.",
+    "48 fixtures establish bounded tested behavior, not universal correctness; CR0/reference denorm interpretation remains unknown outside tested subnormal fixture."
+  ],
+  "execution_authorization": "CPU source preparation only. No new live patch/build/GPU action authorized by this receipt; S113 root controller/source verification remains pending.",
+  "six_hour_budget_order": [
+    "S113 no-build prefill matched-work test",
+    "S112 isolated MTP integration source and compiled review then one matched C2 comparison if justified",
+    "head/HC structural source candidate, bounded low-level probe only if actual mechanism and strict oracle ready",
+    "qualify a worthwhile winner with mixed-prefill/C2 and context/cache only if a winner warrants it; retain prior RAM restore evidence otherwise"
+  ]
+}

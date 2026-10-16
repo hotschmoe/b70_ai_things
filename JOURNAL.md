@@ -24903,3 +24903,35 @@ servingGO. PinnedSDKbarrierWG/WG confirmed; isolatedprivate leaderdeviceacquire 
 authorized, livekernels unchanged/compiled+GPU gates pending. Evidence:
 strata/flash-next/lowlevel_probe/q6_a4_main_serving_s107/ and
  docs/20261016_strata_q6_a4_serving.md.
+
+
+## 2026-10-16 S112: private multi-WG greedy selection passes strict oracle
+
+CONFIG -> Isolated uniquely named parallelargmax clone, original sampler/probability/
+selector from pinned S107 archive. Leader device-acquire before WG last-flag
+publication; original default source/kernel/major8 selector unchanged. Pinned
+SDK barrier has WG execution AND memory scope; no prior runtime failure of
+unselected original inferred. Two owners/private scratch,4097 then248320.
+COMMAND -> Actual source Opus70.713s/Fable75.236s/rootread; one28s CPU-only
+TU/link (9.355/6.104s), private executable5c828132. Actual selected host/name/
+metadata binding and one candidate ISA decode/rootfullread: waited GPU fence
+after returning atomic before flag/barrier, bounded loads/output/reset.
+Actual compiled Opus37.142s/Fable66.121s GO; one26s quiet card0 window,48strict
+before8timings. Reuse sameboot S107fullhealth explicitly revalidated; fresh
+card0posthealth. Old archive members exact, not production-main image proof.
+RESULT -> All48 eager/captured freshABA cases PASS: independent CPU IDs and
+exact downstream probability/select/token/mappedbytes, cross-WG ties/nonfinites/
+subnormal versuszero, guards/readonly/unusedrows/counters0. Scratch initialized
+once. Two nestedABBA completed TWO-OWNER HOST chains165.430->116.3715us and
+165.6705->116.4425us(-29.655/-29.714%); four samples/route/oneprocess, includes
+probability/select/completion, staging/readbackoutside. Not isolatedargmaxGPU
+time/arbitraryinputproof/currentservinggain. Native/start/identity/analysis/
+wrapper/tee/removal/health0, finalOOMfalse/fullCID+NAMEgone, no retry/reset.
+VERDICT -> Bounded privatePASS/defaultunchanged. Actualpost claude-opus-5-5
+29.882s/claude-fable-5-1 23.814s/rootfullread: S113 no-build fixed-policy
+prefill next, isolated defaultOFF MTP integration source separately; probability
+elision deferred. Root rejects claimed suffix-independentcause from future
+mismatch, scratchzero/retry afterfailure, and historical cycle multiplication
+as current removablebudget. Targets still unmet/S30RAMrecovery retained.
+Evidence: strata/flash-next/lowlevel_probe/greedy_top1_s112/ and
+ docs/20261016_strata_greedy_top1.md.

@@ -1,0 +1,17 @@
+--- original/argmax-helpers-and-kernel
++++ S112/private-argmax-helpers-and-kernel
+@@ -134,9 +134,11 @@
+         */
+         sycl::atomic_fence(sycl::memory_order::acq_rel,
+                            sycl::memory_scope::device);
+-        last =
+-            dpct::atomic_fetch_add<sycl::access::address_space::generic_space>(
+-                counter, 1u) == (unsigned)(nb - 1);
++        const unsigned s112_prior =
++            dpct::atomic_fetch_add<sycl::access::address_space::generic_space>(counter, 1u);
++        // Sole hardening: acquire on the RMW leader before publishing last to its WG.
++        sycl::atomic_fence(sycl::memory_order::acquire, sycl::memory_scope::device);
++        last = s112_prior == (unsigned)(nb - 1);
+     }
+     /*
+     DPCT1065: Consider replacing sycl::nd_item::barrier() with

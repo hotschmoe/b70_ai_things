@@ -1,0 +1,17 @@
+{
+  "status": "FROZEN_SOURCE_AUDIT_NO_IMPLEMENTATION",
+  "files": {
+    "contract.txt": {
+      "bytes": 8553,
+      "sha256": "f43d9f846832cb788da5feed2c0e284fed69fff81265d441b9bca1035c5db2c0"
+    },
+    "local-history.json": {
+      "bytes": 2555,
+      "sha256": "aafd87204a23244d764e8fde486d60b5d6a3eb4c2be797b6facd1603ef30fef1"
+    },
+    "pins.json": {
+      "bytes": 1131,
+      "sha256": "1a5bc5a5913f0f6eb8ed2b3d26bd1668bbe7efacb893157968e8627f5b87db62"
+    }
+  }
+}

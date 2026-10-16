@@ -1,0 +1,44 @@
+{
+  "utc": "2026-10-16T00:21:50.711657+00:00",
+  "status": "ROOT_CPU_BUILD_GO_NO_GPU",
+  "models": [
+    {
+      "requested": "claude-opus-5-5",
+      "responding_models": [
+        "claude-opus-5-5"
+      ],
+      "elapsed_s": 70.7128593880334,
+      "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "source_packet_sha256": "ddcecfe73f97233642e3d1e3f360e200ce629cc3f123931e2bffc6f9c3201812",
+      "source_packet_unchanged": true,
+      "exit": 0
+    },
+    {
+      "requested": "claude-fable-5-1",
+      "responding_models": [
+        "claude-fable-5-1"
+      ],
+      "elapsed_s": 75.23565608001081,
+      "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "source_packet_sha256": "ddcecfe73f97233642e3d1e3f360e200ce629cc3f123931e2bffc6f9c3201812",
+      "source_packet_unchanged": true,
+      "exit": 0
+    }
+  ],
+  "root_checks": [
+    "Full v1 header/oracle/README/buildscripts plus full v2diff/manifest/fixtureproof read. All13 v2payloadsha/bytes/ASCII verified.",
+    "Root independently reverses added acquire statement and observes exact helper/kernel source match apart from span trailing blank lines; declared7241-byte exact span expression requested, not yet independently reproduced.",
+    "TopRow starts with unsignedcounter; scratch byte0 assumption matches source.",
+    "Original sampler/verify compile flags are O3/precise/SG32 same as candidate; actual private image denorm fields still toinspect.",
+    "Source/helper/metadata identities and upstreammain/PR2511 refreshed, unchanged."
+  ],
+  "corrections": [
+    "Linked reference images belong to actual privateEXE; unchanged archive objects do not prove production-main device-image identity.",
+    "No assumption that61WG launch always works; keep inheritedroot_sync forfirstdiscriminator, runtime rejection remainsHOLD.",
+    "Denorm baseline-vs-host mismatch remainsHOLD even ifbothroutesagree; do not reinterpret as candidate fault or relax gate.",
+    "Device fence after atomic before WG handoff must be inspected in actual selected candidate ISA before GPU."
+  ],
+  "CPU_build_GO": true,
+  "GPU_GO": false,
+  "protocol": "OneCPU-only privateTU compile/link, no unchanged kernel/source rebuild, noDRI; then actualselectedimage/memberaudit andonecandidateofflineISAdecode. GPU requires separate rootreview/runnerbinding."
+}

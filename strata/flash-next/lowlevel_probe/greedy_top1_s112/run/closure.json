@@ -1,0 +1,17 @@
+{
+  "status": "PASS_PRIVATE_STRICT_DIAGNOSTIC_ONLY",
+  "docker_start_exit": 0,
+  "native_exit": 0,
+  "pre_health_exit": 0,
+  "post_health_exit": 0,
+  "analysis_exit": 0,
+  "identity_equal": true,
+  "final_OOMKilled": false,
+  "full_cid_absent": true,
+  "name_absent": true,
+  "normal_rm_exit": 0,
+  "processes": 1,
+  "retries": 0,
+  "force_stop_or_reset": false,
+  "speed_or_serving_qualified": false
+}

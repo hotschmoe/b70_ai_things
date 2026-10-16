@@ -1,0 +1,42 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/greedy-top1-s112-runner-prep",
+  "files": {
+    "FROZEN.txt": {
+      "bytes": 155,
+      "sha256": "6f6a915fe38109d0db3824b38a1941c88228f3183e2334caef027cc6dc014a21"
+    },
+    "README.txt": {
+      "bytes": 3763,
+      "sha256": "1447e585229b6c779e651bced8c734da6206ae366131c08679a9449b66aefbb9"
+    },
+    "ROOT_RUN.sh": {
+      "bytes": 795,
+      "sha256": "f41075030373df04444deca02c67c6c433727c3ea84f6969aed264f3bf38c2df"
+    },
+    "analyze.py": {
+      "bytes": 2345,
+      "sha256": "d6847d9f5b73d7d7d16a270ea5ae36252088cfd6361a189e7bb12a3f8f4db80a"
+    },
+    "harness-pins.json": {
+      "bytes": 352,
+      "sha256": "cfe7b3e9dfe05de1fb2cb384b88af891ed6ea758eb2d9a5703a256fc13613abe"
+    },
+    "leased_run.py": {
+      "bytes": 9434,
+      "sha256": "0c56b37bf336f4208d5c3d2789644acf9272ead3b25f84332b6fdd47f3960fcb"
+    },
+    "original-pattern-pins.json": {
+      "bytes": 859,
+      "sha256": "3d9e83b57952d81222c15f548f1a72f0a798105fdee89e25e4cb329c27834d8e"
+    },
+    "prehealth-pins.json": {
+      "bytes": 1711,
+      "sha256": "57106111cf913c044ce20961cd29b232a74022d70fcd8d994297953f29914254"
+    },
+    "source-only-validation.json": {
+      "bytes": 324,
+      "sha256": "5433d6658580e74bb107c39181f837a9ff6fea454578a46955ff3e26702d5ee1"
+    }
+  }
+}

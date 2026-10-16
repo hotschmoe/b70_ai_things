@@ -1,0 +1,1 @@
+Independent compiled review. No tools/build/GPU. Return GPU_GO or HOLD for one finite reviewed private oracle only, concrete blockers under500words. No user permission request. No speed/serving claim. Source was reviewed in your immediately prior own-session turn.

@@ -1,0 +1,27 @@
+**Result judgment**
+
+The oracle closes the correctness question for the hardened multi-group argmax on this card: exact IDs, identical downstream bytes, counter hygiene, graph replay. The timing is one process, two owners, whole chain, and says that the greedy pick dropped by roughly 50 us per two-owner call. That is a private primitive number. The last two integrations turned larger private gains into serving changes under half a percent, so this should be expected to land in the same band unless the pick is on the per-depth critical path, which no join has shown.
+
+**Next GPU window: B first, A queued**
+
+B costs no build and targets prefill, where the target gap is largest and where S94 left an unresolved matched-work failure. It is also the only option that can produce a decisive outcome either way in one window: ON matches work and passes, or it fails the draft gate again and S94's cause is confirmed independent of the now-fixed suffix and lookup settings. Run B with the exact S107 binary, the common fixed draft flags, the one unmeasured warm, the six timed inputs, stop on the first ON mismatch, and never describe a pass as resolving S105.
+
+**Parallel source work: A, smallest design**
+
+Choose the isolated path: one private header included only by mtp.cpp, defining the hardened kernel under a unique registered class, selected by a default-OFF flag inside record_post_head only when the existing argmax trait is not already wanted, the head is the full vocabulary, and no penalties apply. Reasons it beats parameterizing the shared helper: no public API or archive-member change, no kernel TU rebuild, the original algorithm and the verifier's selection stay untouched, and the whole addition reverts by deleting one include and one branch. The algorithm duplication is the price of leaving the shared kernel's memory order alone, which is the right trade until upstream adopts the acquire fix. Keep two owner launches and separate scratch. Zero the argmax scratch on the pair's error drain path so an aborted replay cannot leave a stuck counter.
+
+Gates for A before any serving run: binding audit of the new class in the main binary, ISA check that the leader acquire survived, flag-off images unchanged from S107, and the same probability and select kernels on both arms.
+
+**What stops A early**
+
+- Flag-on marker present but any first-pair text, SSE, usage, draft or capture mismatch.
+- Serving delta inside the same noise band as S106 and S107 after three matched pairs. Record it, keep it default OFF, stop. No second run.
+- Any launch rejection from the root-sync property in the main binary.
+
+**C and D**
+
+C stays queued behind A and must not be combined with it. Its ceiling is smaller than A's and the serving test cannot separate the two. D should continue as source reading only, aimed at the head and the shared and HC families, because the census already shows those are the only services large enough to matter. No new trace.
+
+**Caveat on targets**
+
+None of A, B or C moves decode toward 150 per stream. B is the only one with a plausible prefill effect, and only if the S94 kernel actually activates and passes. Larger gains still require a mechanism on the head or expert path, not another selector or submission-count change.

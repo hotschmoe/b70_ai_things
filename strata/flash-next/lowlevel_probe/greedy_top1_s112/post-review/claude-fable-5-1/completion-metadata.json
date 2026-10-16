@@ -1,0 +1,30 @@
+{
+  "record_type": "DERIVED_FILTERED_COMPLETION_METADATA",
+  "source": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s112-private-post-reviews-20261016/claude-fable-5-1/completion.json",
+    "bytes": 6688,
+    "sha256": "341dcb6a9230d14103d647d45bec5e662d737850d4b44debd10e786d2bd96b40"
+  },
+  "omitted_fields": [
+    "result_events"
+  ],
+  "metadata": {
+    "requested": "claude-fable-5-1",
+    "responding_models": [
+      "claude-fable-5-1"
+    ],
+    "session_ids": [
+      "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+    ],
+    "fresh_session_requested": false,
+    "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+    "resume_session_matches_response": true,
+    "exit": 0,
+    "elapsed_s": 23.814467140997294,
+    "launch_exception": null,
+    "source_packet_sha256": "7af33633828ff6d380ef95cd13f1ff8874571a0d239aaa90d9f60de6fd13dcbe",
+    "source_packet_unchanged": true,
+    "parse_errors": [],
+    "retries": 0
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "record_type": "DERIVED_FILTERED_COMPLETION_METADATA",
+  "source": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s112-private-source-reviews-20261016/claude-opus-5-5/completion.json",
+    "bytes": 7054,
+    "sha256": "d407419653de172d34c608721af4e13572996b7735d74f34c0359c105d276acc"
+  },
+  "omitted_fields": [
+    "result_events"
+  ],
+  "metadata": {
+    "requested": "claude-opus-5-5",
+    "responding_models": [
+      "claude-opus-5-5"
+    ],
+    "session_ids": [
+      "c26cbc95-bbed-461b-b165-8adee1464b9e"
+    ],
+    "fresh_session_requested": false,
+    "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+    "resume_session_matches_response": true,
+    "exit": 0,
+    "elapsed_s": 70.7128593880334,
+    "launch_exception": null,
+    "source_packet_sha256": "ddcecfe73f97233642e3d1e3f360e200ce629cc3f123931e2bffc6f9c3201812",
+    "source_packet_unchanged": true,
+    "parse_errors": [],
+    "retries": 0
+  }
+}

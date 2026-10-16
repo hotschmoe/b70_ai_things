@@ -1,0 +1,27 @@
+**CPU_BUILD_GO.** No blocking defect in the hardened kernel, the oracle, or the link recipe.
+
+**Kernel**
+
+The leader now executes a device-scope acquire fence between its relaxed fetch_add and the local flag write, so the work-group barrier carries happens-before to every lane of the last group. That closes the gap I raised. The pre-RMW release fence, post-barrier fence, strict scan, lower-index merge, zero fallback and plain reset are unchanged. The pinned SDK check confirms the legacy barrier is work-group scope, which is exactly why the leader fence was needed.
+
+**Oracle logic**
+
+- Downstream calls match the production tail: probability split on the same IDs, then the selector with row 0, residual stride 4 times 2560, mapped token and probability. Byte comparison across routes plus exact host IDs is the right discriminator.
+- Fixtures compute chunk boundaries from the kernel's own formula for each shape, so the tie and crossing cases land where intended. Signed-zero, NaN mix, all-NaN fallback and infinity ties produce the expected lowest-index results by the same strict comparison on host and device.
+- Capture happens once per route before staging, eager runs precede replays, graphs die before buffers, and persistent scratch is checked for zero counters and untouched unused rows after every case. Case count reaches 48 before timing is allowed.
+- Capture-failure cleanup balances the recording and rethrows the original exception without recapture.
+
+**Distinct checks before the GPU lease, all CPU**
+
+1. Confirm the top-probability scratch row places its counter at offset zero. The oracle reads the first word of each row as the counter. If the layout differs, every case would HOLD falsely.
+2. Confirm the selector and scratch-size functions are declared in the two kernel headers the oracle includes. A miss is a compile stop, not a silent problem, but it costs a build cycle.
+3. Decide in advance how a subnormal mismatch is classified. If the device flushes denormals, both routes will agree with each other and disagree with the host. That is a baseline property of the existing greedy kernel, still a HOLD by the stated rule, and should not be read as a candidate fault.
+4. After the build: registered name, host info and image binding for the private class, and an ISA read confirming a device-scope fence instruction after the atomic and a 61 by 256 launch for the large shape, 2 by 256 for the small one.
+
+**Root sync property**
+
+Retain it unchanged. The body has no root-group barrier, so the property only constrains launch residency, which 61 groups of 256 easily satisfy on this card. Changing it now would make the oracle test a different launch from the one any later host dispatch would use. Revisit only if the runtime rejects the launch or the ISA audit shows a cooperative-launch artefact.
+
+**Limits**
+
+A pass establishes exact IDs and identical downstream bytes on these fixtures and graph replays, plus counter hygiene. Timing is a same-process two-owner chain and says nothing about critical path or serving. No production dispatch is implied by a pass.

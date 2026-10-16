@@ -1,0 +1,16 @@
+{
+  "status": "PASS_SOURCE_ONLY_EXACT_INVERSE",
+  "source_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp",
+  "source_sha256": "5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e",
+  "original_selected_body_bytes": 7241,
+  "original_selected_body_sha256": "2fb56d64bdab9998434697eb7ade011850b3965c8fd951d797e3cbb9bd593840",
+  "candidate_selected_body_bytes": 7444,
+  "candidate_selected_body_sha256": "773c2f4870191eedb7fbaca657addba76add7f54255971d8ce6bd9e23efcb55b",
+  "inverse_exact": true,
+  "removed_original_statement": "        last =\n            dpct::atomic_fetch_add<sycl::access::address_space::generic_space>(\n                counter, 1u) == (unsigned)(nb - 1);",
+  "replacement_statement": "        const unsigned s112_prior =\n            dpct::atomic_fetch_add<sycl::access::address_space::generic_space>(counter, 1u);\n        // Sole hardening: acquire on the RMW leader before publishing last to its WG.\n        sycl::atomic_fence(sycl::memory_order::acquire, sycl::memory_scope::device);\n        last = s112_prior == (unsigned)(nb - 1);",
+  "arithmetic_changed": false,
+  "namespace": "s112_private",
+  "registered_candidate_class": "GreedyTop1S112",
+  "only_semantic_body_delta": "Leader device-scope acquire after relaxed RMW and before work-group publication; prior release/acq_rel and post-barrier acq_rel preserved."
+}

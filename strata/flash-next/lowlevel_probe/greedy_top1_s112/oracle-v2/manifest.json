@@ -1,0 +1,57 @@
+{
+  "status": "FROZEN_V2_SOURCE_ONLY_REQUIRES_ROOT_AND_ACTUAL_MODEL_REVIEW_BEFORE_BUILD",
+  "files": {
+    "README.txt": {
+      "bytes": 6389,
+      "sha256": "12e786afd8a7128d0c8e02c7496449bbb99bc5416fb7448b9951aa3d428ae873"
+    },
+    "build-container.sh": {
+      "bytes": 2619,
+      "sha256": "78672ab5e927f8ac6c6a9359e4cc02c49caf063043309a4577d79b9dc3676a66"
+    },
+    "build.sh": {
+      "bytes": 1214,
+      "sha256": "faf326b49cebcc560ed27c5f73039c74c33454c740831472311ec4d186f69ec8"
+    },
+    "candidate-body.diff": {
+      "bytes": 813,
+      "sha256": "16958d99918d6e4ced845dd4bd21167a99deaa54161d3489996a582dbb89d28b"
+    },
+    "expected-container.sha256": {
+      "bytes": 1876,
+      "sha256": "8e028ca530cdbdb77108b9b7db177520026f16770f372fe4a3994eb183ed9647"
+    },
+    "fixture-boundary-proof.json": {
+      "bytes": 2564,
+      "sha256": "1aa0c31e5b843b8bcfbac89a9d88e4add250d999a85e8c7927bf3adaea701ceb"
+    },
+    "from-v1.diff": {
+      "bytes": 9970,
+      "sha256": "a120b45f4d0c07cc82b104fce58004cc5807c3be53b0c71c00d527acb7f6623a"
+    },
+    "identity-plan.json": {
+      "bytes": 1668,
+      "sha256": "99ef424988b47cd53ed2a0dc8baca3112a6e125bae5f82630a2b3198a21e2b15"
+    },
+    "oracle.cpp": {
+      "bytes": 11789,
+      "sha256": "c8e75a72b90cd21c798cc67571d42d5228c275241c6dcbc94d8f4dee9e62cacd"
+    },
+    "private_argmax.hpp": {
+      "bytes": 8303,
+      "sha256": "c1652c6aaba20b7cfd83320b86234c6fbcf25bcf985fa966873ee737bd5b90ba"
+    },
+    "source-only-validation.json": {
+      "bytes": 991,
+      "sha256": "b65e9cd6fa66108441ad85de9b825e83e93843b181695167c6d4a23769721dc0"
+    },
+    "source-projection.json": {
+      "bytes": 1404,
+      "sha256": "b224c7e4a89cffbec39dc0fad7f7d07212f55c2a3ec976262089f1dc5f7d9210"
+    },
+    "v1-reference.json": {
+      "bytes": 435,
+      "sha256": "bcd8b104da457da14d3b3a73810765de238bcde7fab12e6dfc34da3c8d2f6c55"
+    }
+  }
+}

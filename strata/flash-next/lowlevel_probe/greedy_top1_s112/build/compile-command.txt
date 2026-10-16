@@ -1,0 +1,1 @@
+icpx -O3 -DNDEBUG -std=c++20 -fsycl -fsycl-targets=spir64_gen -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -I/src -I/work/src-ep/sycl/include -I/work/src-ep/include -I/work/src-ep/third_party/ggml -Wall -Wextra -Wno-deprecated-declarations -Wno-unused-parameter -Wno-unused-variable -MD -MF oracle.d -c /src/oracle.cpp -o oracle.o 

@@ -1,0 +1,1 @@
+ROOT authorizes one post-result decision review only. Resume your own prior S112 session; no tools or actions. Judge the supplied completed result and choose the next smallest useful step. Reply in <=500 words with prioritization, caveats and concrete gates. Avoid redundant tests/builds or promoting private microbenchmarks to model speed claims.

@@ -1,0 +1,5 @@
+{
+  "exit": 0,
+  "stdout": "abc6220232176de0c93901e34e7d66f78e91ae40a51df0152bf1c9f306884d5a xpu-health-1203363-17874-11440-card0\n5d04f34e963b9c32f36ac1dde359f4eb99a1cce2e114f3c8424365d96db49ca1 b70_grafana\n0cc1aad4ab1b03345c73455c1fb22d8f5798f9643ebec3ac439ed5c2e984a9db b70_prometheus\nee813f751899a489a29dad25891ada93939a4fd817eaaead23e1036ef344a0d1 open-webui\n",
+  "stderr": ""
+}

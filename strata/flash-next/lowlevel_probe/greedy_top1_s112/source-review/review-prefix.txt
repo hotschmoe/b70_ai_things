@@ -1,0 +1,1 @@
+Independent exact-source review. No tools/build/GPU. Answer CPU_BUILD_GO or HOLD with concrete blockers and necessary distinct checks, under500words. Root is authorized to prepare/build/test; no user permission question. GPU needs separate actual compiled-image closure. Avoid speculative tuning/test expansion.

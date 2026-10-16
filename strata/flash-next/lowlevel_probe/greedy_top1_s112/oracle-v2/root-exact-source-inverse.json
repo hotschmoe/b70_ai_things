@@ -1,0 +1,11 @@
+{
+  "utc": "2026-10-16T00:25:51.834810+00:00",
+  "status": "PASS_INDEPENDENT_EXACT_SOURCE_INVERSE",
+  "original_bytes": 7241,
+  "candidate_bytes": 7444,
+  "original_sha256": "2fb56d64bdab9998434697eb7ade011850b3965c8fd951d797e3cbb9bd593840",
+  "candidate_sha256": "773c2f4870191eedb7fbaca657addba76add7f54255971d8ce6bd9e23efcb55b",
+  "full_inverse_byte_exact": true,
+  "span": "constexpr kArgMaxBlocks declaration through before TopRow comment; header through newline before inline launch; no trimming",
+  "TopRow_counter_byte0": true
+}

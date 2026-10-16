@@ -1,0 +1,50 @@
+# S112 post-result decision
+
+## Disposition
+
+- **Accept** the bounded result.
+- **Correctness:** 48 strict cases passed, with exact IDs and identical downstream bytes, across cross-work-group ties and nonfinite values, with counters persisting across observations.
+- **Timing:** the private two-owner chain went from about 165 \xb5s to 116 \xb5s (about \u221249 \xb5s), in nested ABBA rounds within one process.
+- **What it is not:** model speed or target progress. For calibration, the post-head chain runs about twice per C2 cycle against a cycle of roughly 57 ms. Expect a small serving effect, in the same class as Q6 A4 (+0.43%). Do not compute a percentage from the old S108 timings.
+
+## Priority for the next ~6 hours
+
+- **GPU window: B first.** It needs no build, uses the existing audited binary, and targets prefill, which has a larger unmet goal. Its stop-on-first-mismatch gate is cheap.
+- **In parallel on CPU:** prepare A's source and do its CPU build, then the compiled audit. Run A's serving comparison in the next GPU window after B.
+- **C:** defer. Its ceiling is lower, and it must not be combined with A.
+- **D:** limit to source mapping of the head (about 1.2 ms per depth) and HC paths, looking for a structural mechanism, not knobs.
+
+## B gates
+
+- **Configuration:** the same binary for both arms, with suffix 0, lookup 0, spec 4, MTP max T 4 and min-p 0 fixed in both. All other flags OFF.
+- **Stop rule:** stop on the first difference in text, SSE, usage, native work or captures. A mismatch is recorded as unresolved, not as a new attribution.
+- **Run:** one unmeasured 4K warm-up, then the original 3 \xd7 4K and 3 \xd7 32K inputs, then functionals, QUIT and health.
+- **Claims:** a pass shows the activation and matched work under the fixed policy only. Prefill timings are descriptive. It does not fix the S94 cause and gives no default change.
+
+## A: smallest integration design
+
+1. **Header.** Add the S112 private header **byte-identical** to the one tested, in its unique namespace, and include it only from `mtp.cpp`.
+   - This duplicates the algorithm, but it keeps the kernel body exactly as tested and leaves `verify_kernels`, the CUDA-style selector and the default memory order untouched.
+2. **Selection** in `MtpDrafter::record_post_head`. The branch requires:
+   - a process-latched, default-OFF environment flag, read before any capture;
+   - `!sub` (full head only);
+   - T = 1, unpenalized greedy, and `argmax_rows_wanted()` false.
+
+   Otherwise use the original `sample_tokens`. The probability, mapping and select calls stay unchanged.
+3. **Scratch.** Reuse each owner's `arg_scratch_`, which is zero-filled at init and otherwise unused on B70. Assert its size against `sizeof(s112_private::ArgRow)`.
+4. **Marker:** once, at the first eligible use; host selection only.
+
+**Pre-GPU gates:**
+- an incremental build;
+- the new main kernel's ISA matching the reviewed S112 candidate in its publication sequence, compares, store and reset, and its resources;
+- the OFF sampler/probability/select images unchanged.
+
+**Serving gate:** the same new binary, flag 0/1, with fixed-work flags in both arms, and strict text, SSE, usage, native work and captures. Then functionals, QUIT and health.
+
+## What stops A early
+
+- Any ID, work or capture mismatch.
+- A launch rejection, for example from `use_root_sync` cooperative limits.
+- A main-binary ISA that departs from the reviewed publication order.
+- A counter left nonzero after failure. There is no reset-only recovery.
+- A serving delta within the range of the earlier small results: keep default OFF and do not repeat. The 150 tok/s per-stream and prefill targets remain unmet regardless.

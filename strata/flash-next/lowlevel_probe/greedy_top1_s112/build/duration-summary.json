@@ -1,0 +1,17 @@
+{
+  "record_type": "DERIVED_BUILD_DURATION",
+  "compile_source": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/greedy-top1-s112-oracle-prep-v2/build/compile.stderr-time",
+    "bytes": 16649,
+    "sha256": "bd80c8a8a3d0e28c5d5521b57a49e2a8857e0e540094e19f0ee8ae40d10421cb"
+  },
+  "link_source": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/greedy-top1-s112-oracle-prep-v2/build/link.stderr-time",
+    "bytes": 27,
+    "sha256": "e79eec67b0d9bfc4283d2c9558b509bfbc85046cd9792668f71185e2a5a118cf"
+  },
+  "private_compile_seconds": 9.355,
+  "private_link_seconds": 6.104,
+  "wrapper_elapsed_s_from_build_log": 28,
+  "scope": "Observed private compile/link and wrapper durations; no inferred compiler-cache hit or setup attribution."
+}

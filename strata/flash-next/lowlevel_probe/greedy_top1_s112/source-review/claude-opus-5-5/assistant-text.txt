@@ -1,0 +1,42 @@
+# S112 private v2 review
+
+**Verdict: CPU_BUILD_GO.** I found no blocker to the CPU-only build.
+
+## Source checks
+
+- **Hardening.**
+  - Each leader's release fence comes before the relaxed RMW, so its partial stores are released through the counter's release sequence.
+  - The new device acquire fence is placed after the RMW, in the same thread.
+  - The pinned SDK barrier is work-group scope (`exec=2`, `mem=2`, semantics `0x310`). It carries the leader's happens-before to the reader threads inside the work-group.
+  - The retained post-barrier `acq_rel` is redundant but harmless.
+  - The diff is a single statement. Arithmetic, ties, sentinel, layout and reset are unchanged.
+- **Liveness.** There is no spinning and no grid-wide barrier, and the last work-group is elected by count.
+- **Oracle false positives.**
+  - All fixtures have well-defined host answers: \xb10 ties go to the lower index; NaN and \u2212inf with finite \u22122 ties resolve to the lower index; all NaN or \u2212inf gives 0; +inf ties go to the lower index.
+  - The chunk-boundary fixtures use the kernel's own `nb`/`per` formula. For n = 4097, nb = 2 and per = 2049.
+  - The unused-slot poison checks match T = 1 writes, and the mapped tail bytes 4..7 are checked.
+- **Lifetime.** Each graph is deleted in `~Route` after a wait, before its member buffers are freed. Capture-error balancing never recaptures.
+- **Link recipe.**
+  - The non-whole-archive link pulls only the referenced members, and the link step AOT-compiles their device code.
+  - Consequently the "original" greedy, probability and select images are this binary's own compile, not the production main images.
+  - That is acceptable for an in-binary A/B, but say so explicitly.
+
+## `use_root_sync`
+
+**Keep it as inherited.** No root-group barrier exists in the body. The property may route the launch through cooperative-launch limits, but 61 work-groups of 256 items each is small. Production kernels already launch with this property inside graphs. Removing it would add a second variable to a test meant to isolate the fence. If the launch were rejected, it would fail at launch; it would not hang or corrupt data.
+
+## Checks needed before GPU (distinct, not expansions)
+
+1. **`TopRow` counter offset.** `zero_counters` assumes the `row_top_prob_split` scratch counter sits at byte 0 of each `TopRow` row. Confirm this from the `verify_kernels` source; otherwise you get a false HOLD.
+2. **Denormal mode in the image audit.** Fixture 6 (+0 at index 0 against the minimum positive subnormal at a higher index) expects the subnormal to win. If either image flushes denormals, both routes would tie and return 0, and the host check would HOLD *both* routes.
+   - Read the denorm/FTZ execution mode of the original sampler image and the candidate image.
+   - If either flushes, pre-declare the outcome: the run HOLDs on the baseline-versus-host mismatch, as the README states. Do not reinterpret it after the fact.
+3. **Compiled bindings in this binary.** Bind the original `sampler_greedy`, `row_top_prob_split` and `mtp_select` images and the candidate `GreedyTop1S112` image.
+4. **Candidate ISA.** It must show:
+   - the device fence after the atomic add and before the work-group barrier;
+   - a fence emitted again after the barrier;
+   - identical compare-and-select logic;
+   - SIMD32. Absent spill or scratch fields are unknown, not zero.
+5. **Run order.** Then one quiet card-0 run: 48 strict cases first, then the optional two ABBA timing rounds. The timing is descriptive only.
+
+Retain the policy: stop at the first mismatch, no retries, no reset-only recovery.
