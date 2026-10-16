@@ -55,7 +55,8 @@
   "--mtp-max-t",
   "4",
   "--mtp-draft-vocab",
-  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/data/draft_vocab_en.bin"
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/data/draft_vocab_en.bin",
+  "--vision"
  ],
  "log": "/mnt/vm_8tb/b70/results/hotschmoe-dd/engine.log",
  "env": {
@@ -135,5 +136,11 @@
   "STRATA_NIGHT_PREFILL_DQCACHE": "1",
   "STRATA_NIGHT_BF16": "1",
   "STRATA_MTP_SHARED_BRANCH": "0"
+ },
+ "vision": {
+  "exe": "/mnt/vm_8tb/b70/build/strata-ab/build-vision-cpu/bin/strata-vision",
+  "mmproj": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-xxs/mmproj-Qwen3.8-Flash-Next-BF16.gguf",
+  "model": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+  "threads": 8
  }
 }

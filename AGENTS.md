@@ -55,7 +55,7 @@ machinery, one JOURNAL entry per stage. NVMe is /mnt/cache; /mnt/vm_8tb is
 SATA.
 
 - DAILY DRIVER since 2026-10-16: hotschmoe-dd.service = Strata night-final-v3 (strata/flash-next/dd/README.md;
-  C1 ~141, C2 ~92/stream, prefill ~2200 tok/s; docs/20261016_night_lab.md). It holds both GPU leases: stop it
+  C1 ~141, C2 ~92/stream, prefill ~2200 tok/s, image input on; docs/20261016_night_lab.md). It holds both GPU leases: stop it
   (`systemctl --user stop hotschmoe-dd`) before research GPU work and restart it afterwards.
 - Serving candidate: ISTA GSQ-RCO ~3-bit GGUF, all experts in VRAM
   (strata/flash-next/model-lock-ista-iq3.json, build under

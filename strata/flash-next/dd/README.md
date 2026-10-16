@@ -7,6 +7,7 @@ depth 2, 2 slots x 200k context, 32 GiB / 4-entry RAM parking. Engine and flags:
 |---|---|
 | Engine binary | /mnt/vm_8tb/b70/build/strata-ab/releases/strata-night-20261016 (src-ep branch night-20261016, sha256 52d1778c...) |
 | Config | strata/flash-next/dd/hotschmoe-dd.json (= night/configs/night-final-v3-c2.json, release exe, log path) |
+| Images | on since 2026-10-16: the config's "vision" section (CPU strata-vision, build-vision-cpu/bin, mmproj BF16) + `--vision`; text-only fallback hotschmoe-dd-text.json |
 | Backend | 127.0.0.1:18124 (Strata server, container `hotschmoe-dd`, holds the GPU pair lease) |
 | Public endpoint | 0.0.0.0:18080/v1, API key /mnt/vm_8tb/b70/secrets/dd_api_key (frontdoor: vllm/fp8/openai_key_frontdoor.py) |
 | Model ids | `hotschmoe-dd` (first), `qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata` |
@@ -19,6 +20,7 @@ Install (already done): `cp strata/flash-next/dd/*.service ~/.config/systemd/use
 systemctl --user enable --now hotschmoe-dd-frontdoor hotschmoe-dd`. Start runs per-card xpu-health first, then loads in ~40 s.
 
 Operations:
+- Text-only fallback: `DD_CONFIG=.../hotschmoe-dd-text.json` in the unit, or copy it over hotschmoe-dd.json, then restart.
 - Status: `systemctl --user status hotschmoe-dd`, `curl -s localhost:18080/health`.
 - Research mode (frees both GPUs): `systemctl --user stop hotschmoe-dd` (the frontdoor can stay; it answers 502 meanwhile).
   Restart: `systemctl --user start hotschmoe-dd`.

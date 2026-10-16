@@ -25903,3 +25903,21 @@ instructions/step), HC v2 Q8 read (HC_Q8 alone had no GPU path), batched verify 
 bench_context_four on the final stack: PASS (restores ~415 ms, replay 0, RSS 17.2 GB, no swap/OOM); health HEALTHY.
 VERDICT -> research candidate night-final-v2 (configs in strata/flash-next/night/configs/); not promoted. Details,
 negative results and agent reports: docs/20261016_night_lab.md, strata/flash-next/night/agent-reports/.
+
+## 2026-10-16 Upstream PRs, images on the daily driver, localmaxxing (Claude Opus 5.5 orchestrating)
+
+CONFIG -> six night-lab changes ported onto upstream Strata main 296b59d2 by Claude Opus 5.5 / Claude Fable 5.1
+(claude-fable-5-1) subagents, one opt-in SYCL-only commit each; shared incremental build tree (night/pr_build.sh);
+2-card layer-split validation config (night/configs/pr-main-layer-c1.json, 65536 context: 200000 does not fit all
+experts on main); daily driver stopped 17:43-19:13 UTC with the user's OK.
+COMMAND -> night/pr_validate.sh phases A (flag off vs main) to E (timed flag-on, NLL, kernel benches, C2), parity
+self-tests on card 1, night/pr_submit.sh; CPU strata-vision build + vision config; lmx_verified.py.
+RESULT -> flag off identical to main for all six; flag on: KREG C1 +19.5 % (window -12 %), IQ decode +7.7 % bitwise,
+decode attention bitwise (+0.6 % C1, +2 % C2, kernels 1.3-4x), prompt union prefill +15-16 %, HC Q8 fix window -5.3 %,
+HC fused window -2.5 %; NLL no degradation. Filed Niko1221/Strata PRs #2802 #2804 #2806 #2808 #2810 #2812 with issues
+#2801 #2803 #2805 #2807 #2809 #2811, bug #2800 (--pipeline-windows 2 on SYCL). Engine published as
+hotschmoe/Strata b70-night-20261016 (1c360526). Images on hotschmoe-dd (CPU encoder, C1 unchanged 140.9).
+localmaxxing: MTP 122.2 (Verified) / 117.9, no speculation 66.2 / 65.9 (both Verified).
+VERDICT -> submitted; DD back with images. Open: C2 text-vs-vision A/B (84.5 vs ~92/stream, noisy), prompt-union
+in-engine probe (optional), b70-launcher Strata engine PR (in preparation). Details:
+docs/20261016_upstream_prs_images_localmaxxing.md.

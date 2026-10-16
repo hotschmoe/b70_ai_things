@@ -1,0 +1,4 @@
+mtp code-v1: id cmvb7klih01i2le01fbecospu APPROVED verified=False tokSOut=117.9 issues=['Acceptance stats imply 460 emitted tokens (specAcceptedTokens + specDraftTokens / specNumTokens) but outputTokens is 512.']
+mtp reasoning-v1: id cmvb7j24x01hzle01zgemx67l APPROVED verified=True tokSOut=122.2 issues=[]
+no-spec code-v1: id cmvbcyy0g01lwle018fc70y57 APPROVED verified=True tokSOut=65.9 issues=[]
+no-spec reasoning-v1: id cmvbcxjlt01ltle015qjvi90i APPROVED verified=True tokSOut=66.2 issues=[]

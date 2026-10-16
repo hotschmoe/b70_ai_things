@@ -1,0 +1,9 @@
+{
+  "cpu": "AMD Ryzen Threadripper 1950X 16-Core Processor",
+  "gpuCount": 2,
+  "gpuName": "Intel Arc Pro B70",
+  "hwClass": "DISCRETE_GPU",
+  "os": "Linux",
+  "ramGb": 128,
+  "vramGb": 32
+}
