@@ -1,0 +1,19 @@
+{
+  "status": "PASS_NORMAL_TEARDOWN",
+  "signal": "TERM to server -> QUIT to native engine",
+  "container_removed": true,
+  "lease_wrapper_exit": 0,
+  "all_wrapper_terminal_exits": [
+    0
+  ],
+  "prestop_state": {
+    "Running": true,
+    "OOMKilled": false,
+    "inspect_succeeded": true
+  },
+  "container_missing_or_inspect_failed_before_stop": false,
+  "diagnostic_before_any_forced_container_stop": true,
+  "no_force_stop_used": true,
+  "functional_status": "PASS",
+  "epoch_ns": 1792123323942716665
+}

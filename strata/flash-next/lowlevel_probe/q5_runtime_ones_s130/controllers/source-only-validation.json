@@ -1,0 +1,17 @@
+{
+  "status": "SOURCE_ONLY_PREPARATION",
+  "Python_AST": "PASS_SIX_CONTROLLERS_PLUS_EMBEDDED_NATIVE_PROC_PROBE",
+  "bash_n": {
+    "exit": 0,
+    "stderr": ""
+  },
+  "stop_controller_byte_exact_S114_v2": true,
+  "sole_candidate_env": "STRATA_Q5_HEAD_RUNTIME_ONES 0/01010101",
+  "explicit_common_owner_queues_and_MTP_parallel_argmax_OFF": true,
+  "actual_future_EXE_SHA_required": true,
+  "no_faked_binary_SHA": true,
+  "configs_or_mode_dirs_generated": false,
+  "controller_import_execution": false,
+  "build_GPU_model_network_calls": 0,
+  "parent": "mtp-parallel-argmax-s114-serving-prep-v2"
+}

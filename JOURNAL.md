@@ -25412,3 +25412,30 @@ normal teardown and bothcard/collective health. Both features defaultOFF;
 runtime results recorded separately. No reuse of S128 byte-exact ISA or
 25percent private speed as a newmain claim. See
 docs/20261016_strata_combined_main_source_build.md.
+
+
+## 2026-10-16 S130: Q5 C2 runtime-ones finite serving comparison passes
+
+CONFIG -> Same frozen S129 ee8854f8; sole algorithm flag Q5runtimeones
+0/01010101, ownerqueues/parallelargmax/othercandidates OFF, fixedspec4/
+maxT4/minp0/depth2/EP149+363/parallel2/200k/32GiB. HOSTselection scopeC2
+also includes verifierT2, not MTP-only.
+
+COMMAND -> One warm107/256pair + three fresh107/1500pairs perarm with
+quietCPU; immediateON request/text/SSE/usage/nativework/captureparity
+before each nextpair. Existing concurrentmath/thinking/toolfunctionals.
+NormalQUIT/ownedfullCID+NAMEabsence/diagnostics BEFOREbothcard+compiled
+collectivehealth, no reset/retry/dailyrestore.
+
+RESULT -> Comparator PASS_MATCHED_DISCRIMINATOR ALLgates; loader/model/
+image/environment/sourceboundEXE same. Aggregate med103.145490 OFF ->
+103.824901 ON(+0.658692%); all3pairchanges+.658692/+.855500/+.897113%.
+Streamdecodemedians53.512690/55.852132 ->53.993319/56.249907tok/s. Warm
+andalltimed draft offers/accepts/windows/pairsolo/printedrows/layouts
+match; functionalsPASS. Normalhealth closures57.918019/60.295668s0.
+
+VERDICT -> DefaultOFF, onefixed-orderprocesspair/no noiseband/population
+or promotion. No25percentprivate-to-serving extrapolation. S129newbody
+HOLD remains; userdeferredoptionalCPUcertification, actualfiniteGPU
+paritypassed. ReusecompletedcontrolforindependentS131 toskipmodelreload
+and extra control. See docs/20261016_strata_q5_runtime_ones_serving.md.

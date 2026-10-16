@@ -1,0 +1,6 @@
+{
+  "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-runtime-ones-s130-serving-prep/controller-diff.patch",
+  "bytes": 20623,
+  "sha256": "c77ec67be267cfc72bf9cdd563dbc18585caab2bfb3221bebc538acab5630125",
+  "scope": "Exact parent delta external to avoid duplicating six complete curated controller bodies."
+}

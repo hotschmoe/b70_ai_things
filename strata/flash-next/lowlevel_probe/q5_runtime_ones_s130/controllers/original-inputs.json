@@ -1,0 +1,36 @@
+{
+  "parent": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2",
+  "six_controller_inputs": {
+    "make_configs.py": {
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/make_configs.py",
+      "bytes": 5273,
+      "sha256": "d9a337d639bf2d36cfb65d8902b88f9eed3559b3fadf443620576e0dc64d9d7d"
+    },
+    "start_arm.py": {
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/start_arm.py",
+      "bytes": 8801,
+      "sha256": "70227f1c0ac6dbd4400f0cee3f974182119c90b0d3cd564e04d13ed054869f5c"
+    },
+    "client.py": {
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/client.py",
+      "bytes": 12897,
+      "sha256": "f7007993ac3ffa0bfef10c6d7f5ae6fd6089cb5bf263841e40bb20dc4e658132"
+    },
+    "compare.py": {
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/compare.py",
+      "bytes": 8499,
+      "sha256": "1a4f2bf777654e27248caedce2a7191f3c394108027566aa218786d72ddccedd"
+    },
+    "stop_and_health.py": {
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/stop_and_health.py",
+      "bytes": 7343,
+      "sha256": "341a5ca61b4e55872558770b689321041e3dc793cb311994cf662404139a130e"
+    },
+    "launch_stage.sh": {
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/launch_stage.sh",
+      "bytes": 1881,
+      "sha256": "7c1f0dba355ae25cff1837e97a3485ce6c6526658dff1461c02866ddc576bcce"
+    }
+  },
+  "scope": "Exact frozen executed S114-v2 sources; no parent generated configs/results copied."
+}

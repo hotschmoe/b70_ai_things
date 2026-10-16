@@ -1,0 +1,52 @@
+{
+  "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-runtime-ones-s130-serving-prep/mode1/engine-final.log",
+  "bytes": 22967,
+  "sha256": "eaa0514b440aee78f35f02a00052a1a9da95b8f50c1549f615f4b214e128b2a7",
+  "selected_actual_lines": [
+    {
+      "line": 32,
+      "text": "strata generate: expert parallel: this card holds 149 experts per layer, card 1 the other 363 (each layer's traffic dealt evenly between them)"
+    },
+    {
+      "line": 36,
+      "text": "strata generate: expert parallel: card 1 has 31.84 GiB free, its 17424 experts take 28.34 GiB (363 per layer)"
+    },
+    {
+      "line": 60,
+      "text": "strata verify: captured the 4-token window (upload no error, sync no error)"
+    },
+    {
+      "line": 61,
+      "text": "strata Q5 head runtime ones: enabled=1 word=01010101 N=2560 M=248320 C=2 RPW=1 host-selection-only"
+    },
+    {
+      "line": 62,
+      "text": "strata verify: captured the 2-token window (upload no error, sync no error)"
+    },
+    {
+      "line": 66,
+      "text": "strata verify: captured the 1-token window (upload no error, sync no error)"
+    },
+    {
+      "line": 74,
+      "text": "strata verify: captured the batch window over slots 0,0,0"
+    },
+    {
+      "line": 87,
+      "text": "strata verify: captured the batch window over slots 1,1,1,0,0,0"
+    },
+    {
+      "line": 88,
+      "text": "strata verify: captured the batch window over slots 1,1,1"
+    },
+    {
+      "line": 240,
+      "text": "strata verify: captured the 3-token window (upload no error, sync no error)"
+    },
+    {
+      "line": 299,
+      "text": "strata serve final: ple io: 199248 rows, 75.3% row-cache hits, 48175 SSD reads (201.6 MB), read p50 304 us p99 1920 us, blocked 770.197 ms total (submit 320.032 ms), cache 48180/1048576 rows, SSD kept awake by 746 reads (slowest 6.0 ms), prefetch_gathers=129 prefetch_tokens=429"
+    }
+  ],
+  "selection": "Q5/experimental activation, verifier captures, normal-QUIT aggregate and expert residency only; full raw final native log external. Pair-local engine-segment logs remain exact copies."
+}

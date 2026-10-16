@@ -1,0 +1,9 @@
+{
+  "source_build_stage": "../combined_main_s129/README.md",
+  "source_build_doc": "docs/20261016_strata_combined_main_source_build.md",
+  "S129_committed": "1f72ac89",
+  "selected_candidate_body_HOLD": "New main text6208 vs6464 private, firstdiff281; metadata/ABI/default-control receipts pass, optional ISA/host/four-MTP certification deferred. Runtime gates do not resolve ISA identity.",
+  "S128_private_stage": "../q5_public_control_s128/README.md",
+  "S128_not_a_serving_prediction": true,
+  "source_build_images_headers_archives_not_duplicated": true
+}

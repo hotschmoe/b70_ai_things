@@ -1,0 +1,65 @@
+{
+  "status": "PASS_MATCHED_DISCRIMINATOR",
+  "paired_changes": [
+    {
+      "label": "repeat1",
+      "aggregate_tps_change_percent": 0.65869176315001,
+      "pair_wall_change_percent": -0.654381406724347,
+      "matched": true
+    },
+    {
+      "label": "repeat2",
+      "aggregate_tps_change_percent": 0.8554997190259872,
+      "pair_wall_change_percent": -0.8482430025227305,
+      "matched": true
+    },
+    {
+      "label": "repeat3",
+      "aggregate_tps_change_percent": 0.8971134845418005,
+      "pair_wall_change_percent": -0.8891369173601227,
+      "matched": true
+    }
+  ],
+  "median_aggregate_rate_change_percent": 0.65869176315001,
+  "timed_summary": {
+    "pair_wall_median_s": [
+      29.085130184015725,
+      28.894802499969956
+    ],
+    "aggregate_output_tps_median": [
+      103.1454898437658,
+      103.82490068942742
+    ],
+    "per_stream_medians": [
+      [
+        {
+          "ttft_s": 0.9003673070110381,
+          "completion_wall_s": 28.91241460200399,
+          "decode_tps": 53.51268988710941,
+          "whole_request_output_tps": 51.880827687633925
+        },
+        {
+          "ttft_s": 2.079497524013277,
+          "completion_wall_s": 28.8693790769903,
+          "decode_tps": 55.85213228237774,
+          "whole_request_output_tps": 51.95816633256037
+        }
+      ],
+      [
+        {
+          "ttft_s": 0.9040093820076436,
+          "completion_wall_s": 28.666703451017383,
+          "decode_tps": 53.99331910202717,
+          "whole_request_output_tps": 52.32551425255578
+        },
+        {
+          "ttft_s": 2.073976336978376,
+          "completion_wall_s": 28.69066170102451,
+          "decode_tps": 56.249906553477516,
+          "whole_request_output_tps": 52.281819625876274
+        }
+      ]
+    ]
+  },
+  "scope": "Arithmetic from actual completed comparator, not new benchmark; three nested pairs/one fixed-order process perarm, no noise band or promotion."
+}
