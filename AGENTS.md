@@ -54,6 +54,8 @@ small measured changes; no long-lived fork, no admission/receipt/source-plan
 machinery, one JOURNAL entry per stage. NVMe is /mnt/cache; /mnt/vm_8tb is
 SATA.
 
+- Night-lab 2026-10-16 candidate (not promoted): strata/flash-next/night/configs/night-final-v3-c2.json
+  (C1 141, C2 ~92/stream, C4 ~51/stream, prefill ~2200 tok/s, 200k RAM recovery requalified); see docs/20261016_night_lab.md.
 - Serving candidate: ISTA GSQ-RCO ~3-bit GGUF, all experts in VRAM
   (strata/flash-next/model-lock-ista-iq3.json, build under
   /mnt/vm_8tb/b70/build/strata-ab).
