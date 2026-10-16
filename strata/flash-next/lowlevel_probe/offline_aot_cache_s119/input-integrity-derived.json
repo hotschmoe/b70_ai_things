@@ -1,0 +1,25 @@
+{
+  "status": "DERIVED_FROM_EXECUTED_SOURCE_ASSERTIONS_AND_PASS_NOT_SEPARATE_HASH_LOGS",
+  "executed_script": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/aot-cache-discriminator-prep-v2/run-cache.py",
+  "executed_script_sha256": "7c87550dbbf14a1dfe4ee5d69d63a7ee0aeca36915c0e9623faaa74c2fc91449",
+  "result_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/aot-cache-discriminator-run-v2/result.json",
+  "result_sha256": "1326dfa5138147289e4065fd7f273f4f43df66bee5989edde5d9dc72ea512d99",
+  "input_pin_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/aot-cache-discriminator-prep-v2/input-pins.json",
+  "input_pin_sha256": "e4871f79c21c8774293b155091cd3b7f1b3986d3f7ae0d4a423d21d8a5580df6",
+  "inputs": {
+    "S107-sampler.spv": {
+      "bytes": 12064,
+      "expected_sha256": "cb7c681c3910b1e988de6ed5f4177cf2829dbea3853b88d8e501908034edb5d5",
+      "pre_hash_compared_equal_to_pin": true,
+      "post_hash_compared_equal_to_pre": true
+    },
+    "S114-sampler.spv": {
+      "bytes": 12060,
+      "expected_sha256": "cab2e5eda91a0148d36230463b1efb72b35b113c6b30045f7063f76fb8661dd1",
+      "pre_hash_compared_equal_to_pin": true,
+      "post_hash_compared_equal_to_pre": true
+    }
+  },
+  "raw_separate_pre_post_digest_files_emitted": false,
+  "new_input_hash_or_payload_read_for_curation": false
+}

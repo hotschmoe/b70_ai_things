@@ -1,0 +1,42 @@
+--- v1/run.sh
++++ v2/run.sh
+@@ -4,18 +4,18 @@
+ [[ $(id -u) == 1000 ]]
+ HERE=$(cd -- "$(dirname -- "$0")" && pwd)
+ ROOTDIR=$(dirname "$HERE")
+-OUT="$ROOTDIR/aot-cache-discriminator-run"
++OUT="$ROOTDIR/aot-cache-discriminator-run-v2"
+ IMAGE=sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2
+ REPO=/mnt/vm_8tb/github/b70_ai_things
+ command -v docker python3 sha256sum tee >/dev/null
+ [[ ! -e "$OUT" && ! -e "$OUT.log" && ! -e "$OUT.exit" ]]
+ (cd "$HERE" && sha256sum -c expected-prep.sha256)
+ [[ $(docker image inspect --format '{{.Id}}' "$IMAGE") == "$IMAGE" ]]
+-mkdir "$OUT" "$OUT/tmp"
++mkdir "$OUT" "$OUT/tmp" "$OUT/offline-cache"
+ docker image inspect "$IMAGE" > "$OUT.image.json"
+ set +e
+-B70_AGENT=offline-cache-tiny-discriminator B70_CPU_LOCK_TIMEOUT=0 "$REPO/bin/cpu-run" docker run --rm --network none --cpus 4 -u "$(id -u):$(id -g)" --cap-drop ALL --security-opt no-new-privileges \
+- -e TMPDIR=/out/tmp -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 -e SYCL_CACHE_PERSISTENT=0 -e NEO_CACHE_STATS=1 \
++B70_AGENT=offline-cache-tiny-discriminator B70_CPU_LOCK_TIMEOUT=0 "$REPO/bin/cpu-run" docker run --rm --network none --workdir /out --cpus 4 -u "$(id -u):$(id -g)" --cap-drop ALL --security-opt no-new-privileges \
++ -e TMPDIR=/out/tmp -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 -e SYCL_CACHE_PERSISTENT=0 -e NEO_CACHE_STATS=1 -e NEO_CACHE_PERSISTENT=1 -e NEO_CACHE_DIR=/out/offline-cache \
+  -v /mnt/vm_8tb/b70:/mnt/vm_8tb/b70:ro -v "$HERE":/prep:ro -v "$OUT":/out \
+  --entrypoint bash "$IMAGE" -c '
+ source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1
+--- v1/run-cache.py
++++ v2/run-cache.py
+@@ -37,8 +37,12 @@
+  need(prefix and meta and opts and data and rels,'direct-input compilation differs from selected source image; no relaxed or alternative flags')
+  return comp
+ need(os.getuid()==1000 and not Path('/dev/dri').exists(),'CPU-only UID1000/noDRI')
+-need({x.name for x in O.iterdir()}=={'tmp'} and (O/'tmp').is_dir() and not any((O/'tmp').iterdir()),'fresh result with empty disk TMP only, preserve prior attempts')
+-(O/'offline-cache').mkdir()
++need({x.name for x in O.iterdir()}=={'tmp','offline-cache'} and all((O/n).is_dir()and not any((O/n).iterdir())for n in['tmp','offline-cache']),'fresh precreated empty TMP/cache only; preserve prior attempts')
++need(Path.cwd()==O and os.environ.get('NEO_CACHE_PERSISTENT')=='1'and os.environ.get('NEO_CACHE_DIR')==str(O/'offline-cache'),'explicit cwd/enabled absolute env cache path')
++cache=O/'offline-cache';st=cache.stat()
++need(st.st_uid==1000 and os.access(O,os.W_OK|os.X_OK)and os.access(cache,os.W_OK|os.X_OK),'owned writable cwd and existing cache before ANY ocloc CLI')
++need(cache.resolve()==Path(os.environ['NEO_CACHE_DIR']).resolve(),'environment/CLI/statistics same cache path')
++save('cache-path-preflight.json',{'actual_cwd':str(Path.cwd()),'uid':os.getuid(),'gid':os.getgid(),'cache_path':str(cache),'cache_resolved':str(cache.resolve()),'cache_uid':st.st_uid,'cache_gid':st.st_gid,'cache_mode':oct(st.st_mode&511),'cwd_writable':os.access(O,os.W_OK|os.X_OK),'cache_writable':os.access(cache,os.W_OK|os.X_OK),'cache_preexists_before_any_ocloc_CLI':True,'NEO_CACHE_PERSISTENT':os.environ['NEO_CACHE_PERSISTENT'],'NEO_CACHE_DIR':os.environ['NEO_CACHE_DIR'],'NEO_CACHE_STATS':os.environ.get('NEO_CACHE_STATS'),'CLI_cache_dir':str(cache),'stats_cache_dir':str(cache),'source_supported_config_path':'26.22.38646.4 getDefaultCompilerCacheConfig reads existing NEO_CACHE_DIR with persistent=1 before compile CLI fallback; actual cache selection/hits still require later counters'})
+ records=[];pins=json.loads((P/'input-pins.json').read_text());before={n:sha((P/'inputs'/n).read_bytes())for n in pins}
+ try:
+  need(os.environ.get('NEO_CACHE_STATS')=='1','supported counter collection enabled')

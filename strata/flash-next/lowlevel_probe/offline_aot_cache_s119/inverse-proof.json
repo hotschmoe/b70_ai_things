@@ -1,0 +1,13 @@
+{
+  "status": "PASS_SOURCE_ONLY_SETUP_DELTA_EXACT_INVERSE",
+  "run-cache.py_inverse_exact": true,
+  "run.sh_inverse_exact": true,
+  "compile_compare_stats_and_loop_unchanged": true,
+  "input_bytes_unchanged": true,
+  "Python_AST": true,
+  "bash_n": true,
+  "new_run_dir_absent": true,
+  "no_execution_compile_GPU_or_CLI": true,
+  "parent_prep_manifest_sha256": "7ad0fbee0f0c327b95bed2baa74716b89ce1bcfc7642ad5e05defdfbda2f86c8",
+  "first_failure_manifest_sha256": "2912e9396eb0578576e74bf48e4f0cfd2118c5a589a672a9ae3e354ea3143822"
+}

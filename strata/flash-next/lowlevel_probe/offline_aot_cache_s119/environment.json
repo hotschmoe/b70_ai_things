@@ -1,0 +1,9 @@
+{
+  "NEO_CACHE_STATS": "1",
+  "NEO_CACHE_PERSISTENT": "1",
+  "TMPDIR": "/out/tmp",
+  "NEO_CACHE_DIR": "/out/offline-cache",
+  "OMP_NUM_THREADS": "4",
+  "SYCL_CACHE_PERSISTENT": "0",
+  "MKL_NUM_THREADS": "4"
+}

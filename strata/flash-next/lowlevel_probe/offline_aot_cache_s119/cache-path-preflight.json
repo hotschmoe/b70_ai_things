@@ -1,0 +1,19 @@
+{
+  "actual_cwd": "/out",
+  "uid": 1000,
+  "gid": 1000,
+  "cache_path": "/out/offline-cache",
+  "cache_resolved": "/out/offline-cache",
+  "cache_uid": 1000,
+  "cache_gid": 1000,
+  "cache_mode": "0o775",
+  "cwd_writable": true,
+  "cache_writable": true,
+  "cache_preexists_before_any_ocloc_CLI": true,
+  "NEO_CACHE_PERSISTENT": "1",
+  "NEO_CACHE_DIR": "/out/offline-cache",
+  "NEO_CACHE_STATS": "1",
+  "CLI_cache_dir": "/out/offline-cache",
+  "stats_cache_dir": "/out/offline-cache",
+  "source_supported_config_path": "26.22.38646.4 getDefaultCompilerCacheConfig reads existing NEO_CACHE_DIR with persistent=1 before compile CLI fallback; actual cache selection/hits still require later counters"
+}

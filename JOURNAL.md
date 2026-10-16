@@ -25133,3 +25133,27 @@ config-onlydepth3rerun: S21alreadyrejected;64TOTAL/24windows notperstream
 Targetsremainunmet/S30RAMrestore retained. Evidence:
 strata/flash-next/lowlevel_probe/hc_lowrank_producer_s116/ and
  docs/20261016_strata_hc_lowrank_producer_oracle.md.
+
+
+## 2026-10-16 S119: exact-input offline compiler cache reuse
+
+CONFIG -> S117 setup failure preserved. Same pinned S107/S114 sampler IR,
+BMG-G31 and math options; explicit owned /out cwd and precreated cache,
+NEO_CACHE_PERSISTENT=1, matching environment/CLI/statistics paths. Same e41
+image, UID1000, four CPUs, no DRI/network, disk TMP; runtime cache remains off.
+COMMAND -> One cpu-run cold/warm/changed sequence, handle16905, wrapper9s,
+exit0/tee0. No source compile, full main link, GPU or model read. Root read
+setup/inverse proof, scripts and results; verified31 exact small ASCII copies.
+RESULT -> Cold .141323937s hits0/misses1; identical warm .021773478s hits1/
+misses1; changed .150169621s hits1/misses2. ALL THREE whole native images,
+complete text, metadata/options/constants/relocations match their respective
+retained main references exactly. Changed IR misses despite equal native
+computational prefixes. Executed assertions checked input pins before and
+unchanged hashes afterward; separate raw digest logs were not emitted.
+VERDICT -> Actual postreviews claude-opus-5-5 52.551s and claude-fable-5-1
+48.835s, both exit0/root full-read, support pinned persistent offline cache
+on the next otherwise-required build only. One warm observation is not a
+timing population or a saving forecast for the146.468s main AOT link. No
+dedicated relink, cache sweep or GPU test. Evidence:
+strata/flash-next/lowlevel_probe/offline_aot_cache_s119/ and
+ docs/20261016_strata_offline_aot_cache_reuse.md.

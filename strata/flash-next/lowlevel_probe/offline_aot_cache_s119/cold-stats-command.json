@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "/usr/bin/ocloc",
+    "cache",
+    "-show-stats",
+    "-dir",
+    "/out/offline-cache"
+  ],
+  "exit": 0
+}

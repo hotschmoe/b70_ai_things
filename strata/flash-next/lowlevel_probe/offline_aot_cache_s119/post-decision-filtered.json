@@ -1,0 +1,27 @@
+{
+  "status": "FILTERED_S119_SCOPE_FROM_COMBINED_S116_S119_POST_DECISION",
+  "source_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s116-post-reviews-20261016/root-post-decision.json",
+  "source_sha256": "48ae872638ef9c1a7ed72a55c87eb97fdb81f840172bbe34b5c04446ef7b30d1",
+  "root_full_read_both_actual_answers": true,
+  "actual_models": [
+    {
+      "responding_models": [
+        "claude-opus-5-5"
+      ],
+      "exit": 0,
+      "elapsed_s": 52.55109219800215,
+      "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e"
+    },
+    {
+      "responding_models": [
+        "claude-fable-5-1"
+      ],
+      "exit": 0,
+      "elapsed_s": 48.83498633198906,
+      "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+    }
+  ],
+  "combined_packet_sha256": "7f9794a12bb8b6fec6f40d806415462eeef2168ac30997aace3351574689665b",
+  "S119_decision": "Genuineexact-inputcachehit/changedIRmiss;ALL3fullimagesandtextsbyteexact respectiveoriginals; acceptboundedmechanism. Pinpersistentofflinecache on NEXT OTHERWISE REQUIRED build withsource/SDK/flags/artifactbindings andactualcache+linkreceipts. No standalone146slinktest or wholemainforecast.",
+  "no_new_model_calls_in_curation": true
+}
