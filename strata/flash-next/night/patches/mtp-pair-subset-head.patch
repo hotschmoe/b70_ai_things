@@ -1,0 +1,61 @@
+commit ecd09e6fa9d0968b42577b876aa59b29f572b2c3
+Author: hotschmoe <stronggarner66@gmail.com>
+Date:   Fri Oct 16 07:30:45 2026 +0000
+
+    night: MtpPair shares a draft-vocab subset head (C2 paired drafts)
+
+diff --git a/sycl/src/core/mtp.cpp b/sycl/src/core/mtp.cpp
+index a2d43e3e..4b676c9c 100644
+--- a/sycl/src/core/mtp.cpp
++++ b/sycl/src/core/mtp.cpp
+@@ -2083,10 +2083,13 @@ bool MtpPair::init(MtpDrafter* a, MtpDrafter* b, std::string& err) try {
+         err = "mtp pair: the two slots differ (device, head, window or vocabulary)";
+         return false;
+     }
+-    if (a->dhead_ != nullptr || b->dhead_ != nullptr) {
+-        err = "mtp pair: the first probe shares the full head only (STRATA_MTP_FULL_HEAD=1 or no draft_vocab.bin)";
++    if (a->dhead_ != b->dhead_ || (a->dhead_ != nullptr && (a->n_dvocab_ != b->n_dvocab_ || a->dvocab_ != b->dvocab_))) {
++        err = "mtp pair: the two slots need the same (shared) draft head";   // night: a shared subset head is supported
+         return false;
+     }
++    if (a->dhead_ != nullptr)
++        std::fprintf(stderr, "strata night: mtp pair uses the shared draft-vocab head (%lld tokens, type %d)\n",
++                     (long long) a->n_dvocab_, a->dhead_type_);
+     if (a->head_->type() != 13) {   // Q5_K: the format the shared two-column call was measured on
+         err = "mtp pair: the first probe shares a Q5_K head only (type " + std::to_string(a->head_->type()) + ")";
+         return false;
+@@ -2139,7 +2142,7 @@ bool MtpPair::eligible(const Args& A, const Args& B, std::string& why) const {
+         if (d.coupled_active_ || d.coupled_rec_) { why = "coupled draft sampling"; return false; }
+         if (d.force_on_ || d.h_force_ != nullptr) { why = "the forcing graphs"; return false; }
+         if (d.src_R_ != nullptr) { why = "a rebound residual source"; return false; }
+-        if (d.dhead_ != nullptr || d.head_ != d_[0]->head_) { why = "the head changed"; return false; }
++        if (d.dhead_ != d_[0]->dhead_ || d.head_ != d_[0]->head_) { why = "the head changed"; return false; }
+         steps[c] = steps_of(d, x.p, x.a);
+     }
+     if (steps[0] < 1 || steps[1] < 1) { why = "a slot has no step left"; return false; }
+@@ -2220,8 +2223,10 @@ bool MtpPair::capture_tail(int j, std::string& err) try {
+     try {
+         native_quantize_q8_1(a.sample_, xq2_, (int) N, 1, cs_);
+         native_quantize_q8_1(b.sample_, xq2_ + col_bytes_, (int) N, 1, cs_);
+-        native_mmvq_head(a.head_->type(), a.head_->weights(), xq2_, logits2_, (int) N, (int) nv_, 2, cs_);
+-        ok = a.record_post_head(logits2_, cs_, err) && b.record_post_head(logits2_ + nv_, cs_, err);
++        if (a.dhead_ != nullptr) native_mmvq(a.dhead_type_, a.dhead_, xq2_, logits2_, (int) N, (int) a.n_dvocab_, 2, cs_);
++        else native_mmvq_head(a.head_->type(), a.head_->weights(), xq2_, logits2_, (int) N, (int) nv_, 2, cs_);
++        ok = a.record_post_head(logits2_, cs_, err) &&
++             b.record_post_head(logits2_ + (a.dhead_ != nullptr ? a.n_dvocab_ : nv_), cs_, err);
+         if (ok) {
+             mtp_select(a.R_, HCN, a.out_ids_, a.row_ + 1, a.Rin_, a.tok_, a.m_out_, j, cs_, a.probs_, a.m_prob_);
+             mtp_select(b.R_, HCN, b.out_ids_, b.row_ + 1, b.Rin_, b.tok_, b.m_out_, j, cs_, b.probs_, b.m_prob_);
+@@ -2285,8 +2290,10 @@ bool MtpPair::capture_pair_depth2(int T0, int T1, std::string& err) try {
+             bool ok = true;
+         native_quantize_q8_1(a.sample_, xq2_, (int) N, 1, cs_);
+         native_quantize_q8_1(b.sample_, xq2_ + col_bytes_, (int) N, 1, cs_);
+-        native_mmvq_head(a.head_->type(), a.head_->weights(), xq2_, logits2_, (int) N, (int) nv_, 2, cs_);
+-        ok = a.record_post_head(logits2_, cs_, err) && b.record_post_head(logits2_ + nv_, cs_, err);
++        if (a.dhead_ != nullptr) native_mmvq(a.dhead_type_, a.dhead_, xq2_, logits2_, (int) N, (int) a.n_dvocab_, 2, cs_);
++        else native_mmvq_head(a.head_->type(), a.head_->weights(), xq2_, logits2_, (int) N, (int) nv_, 2, cs_);
++        ok = a.record_post_head(logits2_, cs_, err) &&
++             b.record_post_head(logits2_ + (a.dhead_ != nullptr ? a.n_dvocab_ : nv_), cs_, err);
+         if (ok) {
+             mtp_select(a.R_, HCN, a.out_ids_, a.row_ + 1, a.Rin_, a.tok_, a.m_out_, j, cs_, a.probs_, a.m_prob_);
+             mtp_select(b.R_, HCN, b.out_ids_, b.row_ + 1, b.Rin_, b.tok_, b.m_out_, j, cs_, b.probs_, b.m_prob_);

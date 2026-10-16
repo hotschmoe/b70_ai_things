@@ -1,0 +1,95 @@
+commit 20a33ed613278f087a30991757ba7ba1ae3f17f2
+Author: hotschmoe <stronggarner66@gmail.com>
+Date:   Fri Oct 16 07:22:38 2026 +0000
+
+    night: STRATA_NIGHT_SH_LATE shared expert after own experts, before ep_wait (linear verify graph, no fork/join resets)
+
+diff --git a/sycl/src/core/verify.cpp b/sycl/src/core/verify.cpp
+index 1b7273eb..5cc72720 100644
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -843,6 +843,17 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+                shared_expert_native_bf16_enabled();
+     };
+     bool sg_gated_[2] = {false, false};   // per group: the combine applies the shared gate
++    // night STRATA_NIGHT_SH_LATE=1 (EP, all resident): the shared expert is recorded on the main queue in post(), after
++    // this card's own routed experts and before the peer wait (no fork/join: a linear graph without per-node resets);
++    // its gate/up read the experts' q8_1 image of xm (the same bytes its own quantize writes)
++    static const bool night_sh_late_env = [] {
++        const char* e = std::getenv("STRATA_NIGHT_SH_LATE");
++        const bool on = e && e[0] == '1';
++        if (on) std::fprintf(stderr, "strata night: STRATA_NIGHT_SH_LATE=1 shared expert after own experts, before ep_wait (linear verify graph)\n");
++        return on;
++    }();
++    struct ShDefer { bool on = false; NativeSharedWeights nsw{}; const uint16_t* wgi = nullptr; bool sg_ready = false; };
++    ShDefer sh_def_[2];
+     if (!batch_rec_) groups_[T] = G;
+     const int64_t nQall = g.n_qsa_layers();
+     // a batch window: row t is slot t, whose state lives in its own session
+@@ -1299,9 +1310,12 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+             const char* e = std::getenv("STRATA_SH_FORK_LATE");
+             return !e || e[0] != '0';
+         }();
+-        const bool sh_fork = sh_stream_on() && !prof_on_ && !g_stepped &&
++        const bool night_sh_late = night_sh_late_env && ar_on() && ep_on() && !ep_verify_ &&
++                                   strata::kernels::cpu::expert_layout().native;
++        const bool sh_fork = !night_sh_late && sh_stream_on() && !prof_on_ && !g_stepped &&
+                              sh_cs_ != &dpct::get_in_order_queue() &&
+                              ev_fork_ != nullptr && ev_join_ != nullptr;
++        sh_def_[grp].on = false;
+         const bool sh_fork_late = sh_fork && sh_fork_late_env && !ar_on();
+         dpct::queue_ptr sh_stream = sh_fork ? sh_cs_ : cs;
+         if (sh_fork && !sh_fork_late) {
+@@ -1397,6 +1411,11 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+             // experts' q8_1 image of xm is made first and the shared expert's gate/up read it (quantize_q8_1_rows and
+             // native_quantize_q8_1 write the same bytes)
+             qdedup = g_qdedup() && !sh_fork && strata::kernels::cpu::expert_layout().native;
++            if (night_sh_late) {   // recorded in post(); the experts' quantize below makes nat_xq_
++                sh_def_[grp].on = true; sh_def_[grp].nsw = nsw; sh_def_[grp].wgi = (const uint16_t*) wgi->data;
++                sh_def_[grp].sg_ready = sg_ready; sg_gated_[grp] = sg_ready;
++                qdedup = false;
++            } else {
+             if (qdedup && !q8_ffn) quantize_q8_1_rows(xm, n, N, nat_xq_ + (size_t) tb * (N / 32) * 36, cs);
+             if (!shared_expert_native_bf16_enabled()) {
+                 if (dec_batch) f32_to_bf16_bulk(mixed_ + tb * N, sh_bf16_ + tb * N, (int64_t) n * N, sh_stream);   // contiguous rows
+@@ -1413,6 +1432,7 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+                 return false;
+             }
+             if (sh_fork) dpct::sync_barrier(ev_join_, sh_cs_);
++            }   // !night_sh_late
+         }
+         if (strata::kernels::cpu::expert_layout().native) {
+             if (!qdedup)
+@@ -1490,6 +1510,23 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+         if (ar_on()) {
+             stamp(l, 19, grp);
+             grouped(p_ptr, p_start, p_counts, 0, parts_out);
++            if (sh_def_[grp].on) {   // night STRATA_NIGHT_SH_LATE: the shared expert fills this card's wait for the peer
++                const float* xm_l = mixed_ + tb * N;
++                if (!shared_expert_native_bf16_enabled()) {
++                    if (dec_batch) f32_to_bf16_bulk(mixed_ + tb * N, sh_bf16_ + tb * N, (int64_t) n * N, cs);
++                    else for (int t = tb; t < te; ++t) f32_to_bf16_bulk(mixed_ + t * N, sh_bf16_ + t * N, N, cs);
++                }
++                try {
++                    shared_expert_multi(n, xm_l, sh_bf16_ + tb * N, sh_def_[grp].nsw, sh_def_[grp].wgi,
++                                        sh_gate_ + (size_t) tb * g.n_ff, sh_up_ + (size_t) tb * g.n_ff, sh_g_ + tb,
++                                        shared_ + tb * N, N, g.n_ff, cs,
++                                        (const void*) (nat_xq_ + (size_t) tb * (N / 32) * 36),
++                                        (sh_def_[grp].sg_ready ? 1 : 0) | (lfuse_on(n) && g_lfuse_pair() ? 2 : 0));
++                } catch (const std::exception& e) {
++                    err = std::string("verify shared expert (late): ") + e.what();
++                    return false;
++                }
++            }
+             static const bool ep_self = [] { const char* v = std::getenv("STRATA_EP_SELF"); return v && v[0] == '1'; }();
+             if (ep_on() && ep_verify_) {   // the check: this card computed every row; compare the peer's with them
+                 ep_wait(ep_ret0_ + (size_t) ring * 16, ep_ctr0_, ep_spin_, ep_err0_, ring, cs);
+@@ -1544,7 +1581,7 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+         }
+         // Same condition as `sh_fork` above, which is per group and out of scope here: wait only when the fork
+         // actually ran (a wait on an event never recorded is a no-op, but saying it outright reads better).
+-        if (sh_stream_on() && !prof_on_ &&
++        if (!sh_def_[grp].on && sh_stream_on() && !prof_on_ &&
+             sh_cs_ != &dpct::get_in_order_queue() && ev_fork_ != nullptr &&
+             ev_join_ != nullptr) {
+             cs->ext_oneapi_submit_barrier({*ev_join_});

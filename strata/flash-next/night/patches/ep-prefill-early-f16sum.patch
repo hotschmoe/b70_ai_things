@@ -1,0 +1,1116 @@
+diff --git a/sycl/CMakeLists.txt b/sycl/CMakeLists.txt
+index e5e4b36a..c4dec681 100644
+--- a/sycl/CMakeLists.txt
++++ b/sycl/CMakeLists.txt
+@@ -389,6 +389,10 @@ if(STRATA_SYCL_PARITY)
+   target_link_libraries(xmx_gemm_bench PRIVATE strata_kernels strata_prefill)   # -qmkl for the oneMKL reference
+   add_executable(xmx_group_parity ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/xmx_group_parity.cpp)   # A770: fused grouped XMX
+   target_link_libraries(xmx_group_parity PRIVATE strata_kernels strata_prefill)
++  add_executable(night_ep_expert_bench ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/night_ep_expert_bench.cpp)   # night lab: EP peer expert loop
++  target_link_libraries(night_ep_expert_bench PRIVATE strata_kernels strata_prefill)
++  add_executable(night_ep_sum_bench ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/night_ep_sum_bench.cpp)   # night lab: F16 EP sums + doorbell
++  target_link_libraries(night_ep_sum_bench PRIVATE strata_kernels)
+   # one native expert three ways on real GGUF rows (ggml reference, CPU path, GPU native_expert_grouped):
+   #   native_expert_parity <shard1.gguf> [layer ...]
+   if(STRATA_NATIVE_EXPERTS)
+diff --git a/sycl/include/strata/kernels/ep_kernels.hpp b/sycl/include/strata/kernels/ep_kernels.hpp
+index fea1b4bf..efa4e92b 100644
+--- a/sycl/include/strata/kernels/ep_kernels.hpp
++++ b/sycl/include/strata/kernels/ep_kernels.hpp
+@@ -39,6 +39,29 @@ void ep_prefill_finish(const float* rows, const int32_t* slot, const float* weig
+                        const float* shared, const float* gate, float* out,
+                        int64_t tokens, int64_t local_rows, int64_t width, int k, void* stream);
+ 
++/// Night lab (STRATA_NIGHT_PREFILL_F16SUM=1): ep_prefill_reduce with the per-token sum sent as FP16 times a per-token
++/// power-of-two scale (half the PCIe bytes).  The FP32 sums are those of ep_prefill_reduce (same FMA order); each row is
++/// scaled by 2^-e so its largest magnitude lands in [2^14, 2^15), rounded to FP16 (relative error <= 2^-11 for every
++/// value above max * 2^-28), and 2^e is written to scale[t].  sum_h holds tokens * width halves, `width` / 4 a multiple
++/// of 160 work-items x 4 vectors (width 2560).
++void ep_prefill_reduce_h(const float* rows, const int32_t* slot, const float* weights, uint16_t* sum_h, float* scale,
++                         int64_t tokens, int64_t local_rows, int64_t width, int k, void* stream, bool push);
++/// ep_prefill_finish reading the peer sum straight from ep_prefill_reduce_h's FP16 rows (past this card's caches, as
++/// ep_copy_uncached): out = (primary sum + peer) + shared * sigmoid(gate), the order of ep_prefill_finish.
++void ep_prefill_finish_h(const float* rows, const int32_t* slot, const float* weights, const float* shared,
++                         const float* gate, const uint16_t* sum_h, const float* scale, float* out, int64_t tokens,
++                         int64_t local_rows, int64_t width, int k, void* stream);
++
++/// Night lab (STRATA_NIGHT_PREFILL_EARLY): copy n4 float4s (16-byte loads and stores, the grid of copy_f32_wide) into
++/// the other card's memory, then raise *peer_flag to `value` once EVERY work-group has fenced its stores at system scope
++/// (the last group to count itself in `done` - this card's memory, zero between calls - resets it and stores the flag),
++/// as ep_send_rows: a flag raised by a separate later kernel was seen before all rows had arrived.
++void ep_push_signal(void* peer_dst, const void* src, int64_t n4, uint32_t* done, uint32_t* peer_flag, uint32_t value,
++                    void* stream);
++/// Night lab: spin until *flag (this card's memory) - value >= 0 as int32 (epochs only grow), then fence (acquire); at
++/// spin_max loads *err (mapped host memory) = code and the wait gives up.
++void ep_wait_value(const uint32_t* flag, uint32_t value, uint32_t spin_max, uint32_t* err, uint32_t code, void* stream);
++
+ /// STRATA_EP_VERIFY=1: add to *mismatch (host) the peer-owned rows where peer_rows (read past the caches, as
+ /// ep_copy_uncached) differs from this card's parts.
+ void ep_compare(const float* parts, const float* peer_rows, const int32_t* ids, const int32_t* res0, int n, int64_t row,
+diff --git a/sycl/include/strata/kernels/iq_dequant_expert.hpp b/sycl/include/strata/kernels/iq_dequant_expert.hpp
+index 56deefd8..7077db2d 100644
+--- a/sycl/include/strata/kernels/iq_dequant_expert.hpp
++++ b/sycl/include/strata/kernels/iq_dequant_expert.hpp
+@@ -8,4 +8,10 @@ namespace strata::kernels {
+ /// of 256) -> dst_d (as iq_dequant_f16).  Same argument rules as the two functions.
+ void iq_dequant_expert_f16(int gu_type, int d_type, const void* gate, const void* up, const void* down, int64_t n_ff,
+                            int64_t n_embd, uint16_t* dst_gu, uint16_t* dst_d, void* stream);
++/// Night lab (STRATA_NIGHT_PREFILL_WAVE): n <= kDqGroupMax experts in one launch, each expert's values those of
++/// iq_dequant_expert_f16 byte for byte.  Expert i's blob at blob[i] (up at +up_off, down at +down_off); its outputs go to
++/// dst_gu + i * 2 * n_ff * n_embd and dst_d + i * n_embd * n_ff (contiguous slots).
++constexpr int kDqGroupMax = 16;
++void iq_dequant_experts_f16(int gu_type, int d_type, int n, const uint8_t* const* blob, size_t up_off, size_t down_off,
++                            int64_t n_ff, int64_t n_embd, uint16_t* dst_gu, uint16_t* dst_d, void* stream);
+ }  // namespace strata::kernels
+diff --git a/sycl/src/kernels/cuda/ep_kernels.dp.cpp b/sycl/src/kernels/cuda/ep_kernels.dp.cpp
+index 81f26a2b..60d16d25 100644
+--- a/sycl/src/kernels/cuda/ep_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/ep_kernels.dp.cpp
+@@ -1,6 +1,7 @@
+ // src/kernels/cuda/ep_kernels.dp.cpp (SYCL port only) - see include/strata/kernels/ep_kernels.hpp.
+ #include <sycl/sycl.hpp>
+ #include <algorithm>
++#include <cstdlib>
+ #include "strata/sycl_queue.hpp"
+ #include "strata/sycl_doorbell.hpp"
+ #include "strata/kernels/ep_kernels.hpp"
+@@ -81,6 +82,130 @@ void ep_prefill_finish(const float* rows, const int32_t* slot, const float* weig
+         });
+ }
+ 
++// Night lab: FP16 + per-token power-of-two scale return of the peer sums (see ep_kernels.hpp).
++template<bool Push> class ep_prefill_reduce_h_kernel;
++template<bool Push>
++static void reduce_h_impl(const float* rows, const int32_t* slot, const float* weights, uint16_t* sum_h, float* scale,
++                          int64_t tokens, int64_t local_rows, int64_t width, int k, void* stream) {
++    constexpr int WG = 160, V = 4;                       // 160 x 4 float4 = 2560 values per token row
++    const int64_t vec_row = width / 4;
++    // STRATA_NIGHT_PREFILL_F16SUM_GROUPS: the work-groups of the push (default 64, as ep_prefill_reduce's push)
++    static const int64_t push_groups = [] {
++        const char* v = std::getenv("STRATA_NIGHT_PREFILL_F16SUM_GROUPS");
++        return v ? std::max<int64_t>(1, std::atoll(v)) : (int64_t) 64;
++    }();
++    const size_t groups = Push ? (size_t) std::min<int64_t>(tokens, push_groups) : (size_t) std::min<int64_t>(tokens, 1024);
++    q_of(stream)->parallel_for<ep_prefill_reduce_h_kernel<Push>>(
++        sycl::nd_range<1>(groups * WG, WG), [=](sycl::nd_item<1> it) {
++            const int lid = (int) it.get_local_id(0);
++            for (int64_t t = it.get_group(0); t < tokens; t += (int64_t) groups) {
++                sycl::float4 acc[V];
++                float mx = 0.0f;
++                for (int v = 0; v < V; ++v) {
++                    const int64_t d = ((int64_t) lid + (int64_t) v * WG) * 4;
++                    sycl::float4 a(0.0f);
++                    if (d < width) {
++                        for (int j = 0; j < k; ++j) {
++                            const int64_t row = slot[t * k + j] - local_rows;
++                            if (row >= 0) {
++                                const auto value = *reinterpret_cast<const sycl::float4*>(rows + row * width + d);
++                                a = sycl::fma(sycl::float4(weights[t * k + j]), value, a);
++                            }
++                        }
++                    }
++                    acc[v] = a;
++                    mx = sycl::fmax(mx, sycl::fmax(sycl::fmax(sycl::fabs(a.x()), sycl::fabs(a.y())),
++                                                   sycl::fmax(sycl::fabs(a.z()), sycl::fabs(a.w()))));
++                }
++                mx = sycl::reduce_over_group(it.get_group(), mx, sycl::maximum<float>());
++                int e = 0;
++                if (mx > 0.0f && sycl::isfinite(mx)) e = sycl::ilogb(mx) - 14;   // max * 2^-e in [2^14, 2^15)
++                const float inv = sycl::ldexp(1.0f, -e);
++                for (int v = 0; v < V; ++v) {
++                    const int64_t d = ((int64_t) lid + (int64_t) v * WG) * 4;
++                    if (d >= width) continue;
++                    const sycl::float4 a = acc[v] * inv;
++                    sycl::vec<sycl::half, 4> h(sycl::half(a.x()), sycl::half(a.y()), sycl::half(a.z()), sycl::half(a.w()));
++                    *reinterpret_cast<sycl::vec<sycl::half, 4>*>(sum_h + t * width + d) = h;
++                }
++                if (lid == 0) scale[t] = sycl::ldexp(1.0f, e);
++                (void) vec_row;
++            }
++            if constexpr (Push) sycl::atomic_fence(sycl::memory_order::release, sycl::memory_scope::system);
++        });
++}
++void ep_prefill_reduce_h(const float* rows, const int32_t* slot, const float* weights, uint16_t* sum_h, float* scale,
++                         int64_t tokens, int64_t local_rows, int64_t width, int k, void* stream, bool push) {
++    if (tokens <= 0) return;
++    if (push) reduce_h_impl<true>(rows, slot, weights, sum_h, scale, tokens, local_rows, width, k, stream);
++    else reduce_h_impl<false>(rows, slot, weights, sum_h, scale, tokens, local_rows, width, k, stream);
++}
++
++void ep_prefill_finish_h(const float* rows, const int32_t* slot, const float* weights, const float* shared,
++                         const float* gate, const uint16_t* sum_h, const float* scale, float* out, int64_t tokens,
++                         int64_t local_rows, int64_t width, int k, void* stream) {
++    constexpr size_t WG = 256;
++    const size_t vectors = (size_t) tokens * (size_t) width / 4;
++    q_of(stream)->parallel_for<class ep_prefill_finish_h_kernel>(
++        sycl::nd_range<1>(((vectors + WG - 1) / WG) * WG, WG), [=](sycl::nd_item<1> it) {
++            const size_t i = it.get_global_id(0);
++            if (i >= vectors) return;
++            const int64_t t = i / (width / 4), d = i % (width / 4) * 4;
++            sycl::float4 acc(0.0f);
++            for (int j = 0; j < k; ++j) {
++                const int64_t row = slot[t * k + j];
++                if (row < local_rows) {
++                    const auto value = *reinterpret_cast<const sycl::float4*>(rows + row * width + d);
++                    acc = sycl::fma(sycl::float4(weights[t * k + j]), value, acc);
++                }
++            }
++            // 4 halves = 2 words, read past the caches (the other card wrote them over PCIe)
++            const uint32_t* w = reinterpret_cast<const uint32_t*>(sum_h + t * width + d);
++            const uint32_t w0 = load_uncached(w), w1 = load_uncached(w + 1);
++            const uint32_t sw = load_uncached(reinterpret_cast<const uint32_t*>(scale + t));
++            const float sc = sycl::bit_cast<float>(sw);
++            const auto h0 = sycl::bit_cast<sycl::vec<sycl::half, 2>>(w0), h1 = sycl::bit_cast<sycl::vec<sycl::half, 2>>(w1);
++            const sycl::float4 peer(sc * (float) h0[0], sc * (float) h0[1], sc * (float) h1[0], sc * (float) h1[1]);
++            const float g = 1.0f / (1.0f + sycl::native::exp(-gate[t]));
++            const auto sh = reinterpret_cast<const sycl::float4*>(shared)[i];
++            auto* dst = reinterpret_cast<sycl::float4*>(out);
++            dst[i] = acc + peer + sh * g;
++        });
++}
++
++void ep_push_signal(void* peer_dst, const void* src, int64_t n4, uint32_t* done, uint32_t* peer_flag, uint32_t value,
++                    void* stream) {
++    if (n4 <= 0) return;
++    constexpr size_t WG = 256;
++    const size_t groups = (size_t) std::min<int64_t>((n4 + (int64_t) WG - 1) / (int64_t) WG, 4096);
++    using sys_rmw = sycl::atomic_ref<uint32_t, sycl::memory_order::acq_rel, sycl::memory_scope::system>;
++    sycl::float4* d = (sycl::float4*) peer_dst;
++    const sycl::float4* s = (const sycl::float4*) src;
++    q_of(stream)->parallel_for<class night_ep_push_signal_kernel>(sycl::nd_range<1>(groups * WG, WG), [=](sycl::nd_item<1> it) {
++        for (int64_t i = (int64_t) it.get_global_id(0); i < n4; i += (int64_t) (groups * WG)) d[i] = s[i];
++        sycl::atomic_fence(sycl::memory_order::release, sycl::memory_scope::system);
++        sycl::group_barrier(it.get_group(), sycl::memory_scope::system);
++        if (it.get_local_id(0) == 0 && sys_rmw(*done).fetch_add(1u) == (uint32_t) groups - 1) {
++            *done = 0;   // every group has counted itself: the next call starts from zero
++            sycl::atomic_fence(sycl::memory_order::acq_rel, sycl::memory_scope::system);
++            sys_store(peer_flag, value);
++        }
++    });
++}
++
++void ep_wait_value(const uint32_t* flag, uint32_t value, uint32_t spin_max, uint32_t* err, uint32_t code, void* stream) {
++    q_of(stream)->single_task<class night_ep_wait_value_kernel>([=] {
++        uint32_t spin = 0;
++        while ((int32_t) (sys_load(flag) - value) < 0) {
++            if (++spin >= spin_max) {
++                if (err != nullptr) sys_store(err, code);
++                break;
++            }
++        }
++        sycl::atomic_fence(sycl::memory_order::acquire, sycl::memory_scope::system);
++    });
++}
++
+ void ep_bump(uint32_t* ctr, void* stream) {
+     q_of(stream)->single_task<class ep_bump_kernel>([=] { *ctr += 1; });
+ }
+diff --git a/sycl/src/kernels/cuda/iq_kernels.dp.cpp b/sycl/src/kernels/cuda/iq_kernels.dp.cpp
+index de5a573f..0aa2deab 100644
+--- a/sycl/src/kernels/cuda/iq_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/iq_kernels.dp.cpp
+@@ -4765,6 +4765,60 @@ void iq_dequant_expert_f16(int gt, int dt, const void* gate, const void* up, con
+     check("iq_dequant_expert_f16");
+ }
+ 
++// Night lab (STRATA_NIGHT_PREFILL_WAVE): up to kDqGroupMax experts' gate/up and down matrices in ONE launch, each
++// expert's values exactly iq_dequant_expert_f16's (the same dq_dispatch per superblock); dimension 1 of the grid is the
++// expert.  The blob pointers are picked with constant indices only (a dynamically indexed by-value array lands in
++// private memory: measured 34 ms instead of ~0.2 ms for 16 experts), the outputs are slots at a fixed stride.
++namespace {
++struct DqBlobs { const uint8_t* b[kDqGroupMax]; };
++static_assert(kDqGroupMax == 16, "dq_pick below lists 16 cases");
++inline const uint8_t* dq_pick(const DqBlobs& g, int e) {
++    switch (e) {
++        case 0: return g.b[0];   case 1: return g.b[1];   case 2: return g.b[2];   case 3: return g.b[3];
++        case 4: return g.b[4];   case 5: return g.b[5];   case 6: return g.b[6];   case 7: return g.b[7];
++        case 8: return g.b[8];   case 9: return g.b[9];   case 10: return g.b[10]; case 11: return g.b[11];
++        case 12: return g.b[12]; case 13: return g.b[13]; case 14: return g.b[14]; default: return g.b[15];
++    }
++}
++}  // namespace
++void iq_dequant_experts_f16(int gt, int dt, int n, const uint8_t* const* blob, size_t up_off, size_t down_off,
++                            int64_t n_ff, int64_t n_embd, uint16_t* dst_gu, uint16_t* dst_d, void* stream) {
++    if (n <= 0) return;
++    if (n > kDqGroupMax || n_embd % 256 != 0 || (n_ff * n_embd) % 256 != 0 || !is_iq(gt) || !is_iq(dt)) {
++        std::fprintf(stderr, "iq_dequant_experts_f16: types %d/%d, %lld x %lld, n %d\n", gt, dt, (long long) n_ff,
++                     (long long) n_embd, n);
++        std::exit(1);
++    }
++    DqBlobs g{};
++    for (int i = 0; i < kDqGroupMax; ++i) g.b[i] = blob[i < n ? i : 0];
++    const int64_t per_row = n_embd / 256, gu_wgs = 2 * n_ff * per_row, d_wgs = n_ff * n_embd / 256;
++    const int64_t gu_elems = 2 * n_ff * n_embd, d_elems = n_ff * n_embd;
++    sycl::half* ygu0 = (sycl::half*) dst_gu;
++    sycl::half* yd0 = (sycl::half*) dst_d;
++    strata::q_of(stream)->submit([&](sycl::handler& cgh) {
++        cgh.parallel_for<class night_dequant_experts_kernel>(
++            sycl::nd_range<3>(sycl::range(1, (size_t) n, (size_t) (gu_wgs + d_wgs) * 32), sycl::range(1, 1, 32)),
++            [=](sycl::nd_item<3> it) {
++                const int e = (int) it.get_group(1);
++                const int64_t wg = it.get_group(2);
++                const uint8_t* bd = dq_pick(g, e);
++                if (wg < gu_wgs) {
++                    const int64_t i = wg >> 1;
++                    const int parity = (int) (wg & 1);
++                    const int64_t r = i / per_row, c = i % per_row;
++                    dq_dispatch<sycl::half>(gt, parity ? (const void*) (bd + up_off) : (const void*) bd, i,
++                                            ygu0 + e * gu_elems + ((2 * r + parity) * per_row + c) * QK_K,
++                                            it.get_local_id(2));
++                } else {
++                    const int64_t j = wg - gu_wgs;
++                    dq_dispatch<sycl::half>(dt, (const void*) (bd + down_off), j, yd0 + e * d_elems + j * QK_K,
++                                            it.get_local_id(2));
++                }
++            });
++    });
++    check("iq_dequant_experts_f16");
++}
++
+ bool native_expert_supported(int gu_type, int d_type, int64_t n_embd, int64_t n_ff) noexcept {
+     const int qg = gu_qk(gu_type), qd = d_qk(d_type);
+     return qg > 0 && qd > 0 && is_iq(gu_type) && is_iq(d_type) && n_embd % qg == 0 && n_ff % qd == 0 &&
+diff --git a/sycl/src/kernels/night_ep_expert_bench.cpp b/sycl/src/kernels/night_ep_expert_bench.cpp
+new file mode 100644
+index 00000000..9f244587
+--- /dev/null
++++ b/sycl/src/kernels/night_ep_expert_bench.cpp
+@@ -0,0 +1,489 @@
++// night_ep_expert_bench (night lab 2026-10-16): the EP prefill peer's expert loop on ONE card.
++//   ORIG : per expert gather_rows16 + iq_dequant_expert_f16 + oneMKL GU + swiglu_interleaved + oneMKL down (5 launches)
++//   GRP  : experts with <= small_max rows first (contiguous rows), batched: one gather per batch, iq_xmx_grouped
++//          GU over up to 16 experts, one swiglu, iq_xmx_grouped down; the large experts as ORIG.
++// Reports host enqueue time, end-to-end wall time and GPU-only time (queue held by a gate kernel while enqueuing),
++// and the error of GRP against ORIG (rows of large experts must be bitwise equal).
++//   night_ep_expert_bench T n_exp median sigma gu_type d_type [small_max=64] [reps=3] [seed=1]
++#include "strata/kernels/iq_kernels.hpp"
++#include "strata/kernels/iq_dequant_expert.hpp"
++#include "strata/prefill/gemm.hpp"
++#include "strata/prefill/kernels.hpp"
++#include "strata/prefill/xmx_moe.hpp"
++#include <oneapi/mkl.hpp>
++#include "strata/sycl_queue.hpp"
++#include <sycl/sycl.hpp>
++#include <dpct/dpct.hpp>
++#include <algorithm>
++#include <chrono>
++#include <cmath>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <random>
++#include <string>
++#include <vector>
++#include <thread>
++#include <atomic>
++#include <pthread.h>
++
++using Clock = std::chrono::steady_clock;
++static double ms_since(Clock::time_point a) { return std::chrono::duration<double, std::milli>(Clock::now() - a).count(); }
++static uint16_t f2h(float f) { return sycl::bit_cast<uint16_t>(sycl::half(f)); }
++
++int main(int argc, char** argv) {
++    const int64_t T = argc > 1 ? std::atoll(argv[1]) : 12288;
++    const int n_exp = argc > 2 ? std::atoi(argv[2]) : 245;
++    const double median = argc > 3 ? std::atof(argv[3]) : 60;
++    const double sigma = argc > 4 ? std::atof(argv[4]) : 1.88;
++    const int gt = argc > 5 ? std::atoi(argv[5]) : 21;
++    const int dt = argc > 6 ? std::atoi(argv[6]) : 42;
++    const int small_max = argc > 7 ? std::atoi(argv[7]) : 64;
++    const int reps = argc > 8 ? std::atoi(argv[8]) : 3;
++    const int seed = argc > 9 ? std::atoi(argv[9]) : 1;
++    const int64_t N = 2560, FF = 640;
++    std::setvbuf(stdout, nullptr, _IONBF, 0);
++    sycl::queue* q = &dpct::get_in_order_queue();
++    std::printf("device: %s\n", q->get_device().get_info<sycl::info::device::name>().c_str());
++    std::mt19937 rng(seed);
++    // row counts per expert
++    std::lognormal_distribution<double> ld(std::log(median), sigma);
++    std::vector<int32_t> cnt(n_exp);
++    int64_t rows = 0;
++    for (auto& c : cnt) { c = (int32_t) std::clamp<double>(std::round(ld(rng)), 1.0, (double) T); rows += c; }
++    int n_small = 0; int64_t rows_small = 0;
++    for (int32_t c : cnt) if (c <= small_max) { ++n_small; rows_small += c; }
++    std::printf("T %lld experts %d rows %lld (mean %.1f) small(<=%d) %d experts %lld rows; gu %d down %d\n",
++                (long long) T, n_exp, (long long) rows, (double) rows / n_exp, small_max, n_small,
++                (long long) rows_small, gt, dt);
++    // expert blobs: gate | up | down, random bytes with d = 0.0625 at each block start
++    const size_t gu_mat = strata::kernels::iq_row_bytes(gt, N) * FF;
++    const size_t d_mat = strata::kernels::iq_row_bytes(dt, FF) * N;
++    const size_t up_off = gu_mat, down_off = 2 * gu_mat;   // native_expert_layout
++    const size_t blob_bytes = (down_off + d_mat + 255) & ~(size_t) 255;
++    auto blk_of = [](int ty) { return ty == 20 ? 32 : ty == 42 ? 64 : 256; };
++    const size_t gblk = strata::kernels::iq_row_bytes(gt, blk_of(gt)), dblk = strata::kernels::iq_row_bytes(dt, blk_of(dt));
++    if (gu_mat == 0 || d_mat == 0) { std::printf("unsupported types\n"); return 2; }
++    uint8_t* blobs = sycl::malloc_device<uint8_t>(blob_bytes * n_exp, *q);
++    {
++        std::vector<uint8_t> h(blob_bytes);
++        for (int e = 0; e < n_exp; ++e) {
++            for (auto& x : h) x = (uint8_t) rng();
++            for (size_t o = 0; o + 1 < gu_mat; o += gblk) { h[o] = 0x00; h[o + 1] = 0x2C; h[up_off + o] = 0x00; h[up_off + o + 1] = 0x2C; }
++            for (size_t o = 0; o + 1 < d_mat; o += dblk) { h[down_off + o] = 0x00; h[down_off + o + 1] = 0x2C; }
++            q->memcpy(blobs + (size_t) e * blob_bytes, h.data(), blob_bytes).wait();
++        }
++    }
++    // activations (T x N fp16), the source token per row, outputs
++    std::vector<uint16_t> hx((size_t) T * N);
++    std::normal_distribution<float> nd(0.f, 1.f);
++    for (auto& x : hx) x = f2h(nd(rng) * 0.25f);
++    uint16_t* X = sycl::malloc_device<uint16_t>(hx.size(), *q);
++    q->memcpy(X, hx.data(), hx.size() * 2);
++    std::vector<int32_t> hsrc((size_t) rows);
++    for (auto& s : hsrc) s = (int32_t) (rng() % T);
++    int32_t* src = sycl::malloc_device<int32_t>(rows, *q);
++    q->memcpy(src, hsrc.data(), rows * 4);
++    uint16_t* Xs = sycl::malloc_device<uint16_t>((size_t) T * N, *q);
++    float* GUf = sycl::malloc_device<float>((size_t) T * 1280, *q);
++    uint16_t* Hh = sycl::malloc_device<uint16_t>((size_t) T * 640, *q);
++    uint16_t* dq_gu = sycl::malloc_device<uint16_t>((size_t) 1280 * N, *q);
++    uint16_t* dq_d = sycl::malloc_device<uint16_t>((size_t) N * 640, *q);
++    float* out_a = sycl::malloc_device<float>((size_t) rows * N, *q);
++    float* out_b = sycl::malloc_device<float>((size_t) rows * N, *q);
++    q->wait();
++    strata::prefill::Gemm gemm;
++    std::string err;
++    if (!gemm.init(q, 1 << 20, err)) { std::printf("gemm init: %s\n", err.c_str()); return 2; }
++    // busy: a kernel that keeps the queue occupied for ~busy_ms so a whole loop can be queued before the GPU reaches
++    // it (bounded: no host flag).  GPU time of a loop = wall(busy + loop) - wall(busy).
++    uint32_t* sink = sycl::malloc_device<uint32_t>(1, *q);
++    auto busy = [&](uint32_t iters) {
++        q->single_task<class night_busy_kernel>([=] {
++            uint32_t x = 1;
++            for (uint32_t i = 0; i < iters; ++i) x = x * 1664525u + 1013904223u;
++            *sink = x;
++        });
++    };
++    uint32_t busy_iters = 1u << 20;
++    double busy_ms = 0;
++    for (int tries = 0; tries < 12; ++tries) {
++        q->wait();
++        auto a = Clock::now();
++        busy(busy_iters);
++        q->wait();
++        busy_ms = ms_since(a);
++        if (busy_ms > 120) break;
++        busy_iters = (uint32_t) std::min<double>(4.0e9, busy_iters * std::max(2.0, 150.0 / std::max(busy_ms, 0.01)));
++    }
++    std::printf("busy kernel: %u iterations = %.1f ms\n", busy_iters, busy_ms);
++    auto gate = [&]() { busy(busy_iters); };
++    // pageable vs pinned host -> device copies queued behind a busy kernel: does the call block until it executes?
++    {
++        const size_t nb = 490u << 10;
++        std::vector<uint8_t> pg(nb, 1);
++        uint8_t* pin = sycl::malloc_host<uint8_t>(nb, *q);
++        uint8_t* dd = sycl::malloc_device<uint8_t>(nb, *q);
++        std::memset(pin, 1, nb);
++        q->memcpy(dd, pg.data(), nb); q->memcpy(dd, pin, nb); q->wait();
++        gate();
++        auto a = Clock::now();
++        q->memcpy(dd, pg.data(), nb);
++        const double t_pg = ms_since(a);
++        q->wait();
++        gate();
++        a = Clock::now();
++        q->memcpy(dd, pin, nb);
++        const double t_pin = ms_since(a);
++        q->wait();
++        std::printf("host->device 490 KB memcpy queued behind a %.0f ms kernel: pageable call returns after %.2f ms, "
++                    "pinned after %.3f ms\n", busy_ms, t_pg, t_pin);
++        std::vector<uint8_t> back(nb);
++        gate();
++        a = Clock::now();
++        q->memcpy(back.data(), dd, nb);
++        const double t_d2h = ms_since(a);
++        q->wait();
++        std::printf("device->pageable host 490 KB memcpy behind the busy kernel: call returns after %.2f ms\n", t_d2h);
++        sycl::free(pin, *q); sycl::free(dd, *q);
++    }
++    // ORIG: experts in id order, rows contiguous by expert
++    std::vector<int64_t> off_a(n_exp + 1, 0);
++    for (int e = 0; e < n_exp; ++e) off_a[e + 1] = off_a[e] + cnt[e];
++    auto orig = [&](float* out) {
++        for (int e = 0; e < n_exp; ++e) {
++            const int64_t o = off_a[e], ne = cnt[e];
++            const uint8_t* bd = blobs + (size_t) e * blob_bytes;
++            strata::prefill::gather_rows16(X, src + o, Xs, ne, N, q);
++            strata::kernels::iq_dequant_expert_f16(gt, dt, bd, bd + up_off, bd + down_off, FF, N, dq_gu, dq_d, q);
++            gemm.f16(Xs, dq_gu, GUf, ne, 1280, N);
++            strata::prefill::swiglu_interleaved(GUf, Hh, ne, q);
++            gemm.f16(Hh, dq_d, out + o * N, ne, N, 640);
++        }
++    };
++    // GRP: the same rows in a different place: small experts first.  src_b holds the rows in that order; the
++    // comparison maps them back.
++    std::vector<int> order;
++    for (int e = 0; e < n_exp; ++e) if (cnt[e] <= small_max) order.push_back(e);
++    const int n_sm = (int) order.size();
++    for (int e = 0; e < n_exp; ++e) if (cnt[e] > small_max) order.push_back(e);
++    std::vector<int64_t> off_b(n_exp, 0);
++    std::vector<int32_t> hsrc_b((size_t) rows);
++    {
++        int64_t r = 0;
++        for (int e : order) { off_b[e] = r; std::memcpy(&hsrc_b[r], &hsrc[off_a[e]], cnt[e] * 4); r += cnt[e]; }
++    }
++    int32_t* src_b = sycl::malloc_device<int32_t>(rows, *q);
++    q->memcpy(src_b, hsrc_b.data(), rows * 4).wait();
++    int launches_b = 0;
++    auto grp = [&](float* out) {
++        launches_b = 0;
++        int j = 0;
++        while (j < n_sm) {   // batches of <= T rows
++            int j1 = j; int64_t br = 0;
++            while (j1 < n_sm && br + cnt[order[j1]] <= T) br += cnt[order[j1++]];
++            const int64_t o0 = off_b[order[j]];
++            strata::prefill::gather_rows16(X, src_b + o0, Xs, br, N, q); ++launches_b;
++            for (int g0 = j; g0 < j1; g0 += strata::kernels::kXmxGroupMax) {
++                const int g1 = std::min(j1, g0 + strata::kernels::kXmxGroupMax), ng = g1 - g0;
++                const uint8_t* ga[strata::kernels::kXmxGroupMax]; const uint8_t* gb[strata::kernels::kXmxGroupMax];
++                const uint8_t* gd[strata::kernels::kXmxGroupMax]; int32_t gc[strata::kernels::kXmxGroupMax];
++                int64_t gr = 0;
++                for (int i = 0; i < ng; ++i) {
++                    const uint8_t* bd = blobs + (size_t) order[g0 + i] * blob_bytes;
++                    ga[i] = bd; gb[i] = bd + up_off; gd[i] = bd + down_off; gc[i] = cnt[order[g0 + i]]; gr += gc[i];
++                }
++                const int64_t lo = off_b[order[g0]] - o0;   // the group's first row inside the batch
++                strata::kernels::iq_xmx_grouped(gt, ga, gb, gc, ng, Xs + lo * N, GUf + lo * 1280, 1280, (int) N, q);
++                strata::prefill::swiglu_interleaved(GUf + lo * 1280, Hh + lo * 640, gr, q);
++                strata::kernels::iq_xmx_grouped(dt, gd, nullptr, gc, ng, Hh + lo * 640, out + off_b[order[g0]] * N,
++                                                (int) N, 640, q);
++                launches_b += 3;
++            }
++            j = j1;
++        }
++        for (int jj = n_sm; jj < n_exp; ++jj) {
++            const int e = order[jj];
++            const int64_t o = off_b[e], ne = cnt[e];
++            const uint8_t* bd = blobs + (size_t) e * blob_bytes;
++            strata::prefill::gather_rows16(X, src_b + o, Xs, ne, N, q);
++            strata::kernels::iq_dequant_expert_f16(gt, dt, bd, bd + up_off, bd + down_off, FF, N, dq_gu, dq_d, q);
++            gemm.f16(Xs, dq_gu, GUf, ne, 1280, N);
++            strata::prefill::swiglu_interleaved(GUf, Hh, ne, q);
++            gemm.f16(Hh, dq_d, out + o * N, ne, N, 640);
++            launches_b += 5;
++        }
++    };
++    // WAVE: waves of <= 16 experts and <= T rows in ORIG's order: one gather, one grouped dequant into 16 slots, GU
++    // per expert (direct oneMKL or one gemm_batch), one swiglu, down likewise.
++    constexpr int W = 16;
++    std::vector<uint16_t*> wgu(W), wd(W);
++    uint16_t* wgu0 = sycl::malloc_device<uint16_t>((size_t) W * 1280 * N, *q);
++    uint16_t* wd0 = sycl::malloc_device<uint16_t>((size_t) W * N * 640, *q);
++    for (int i = 0; i < W; ++i) { wgu[i] = wgu0 + (size_t) i * 1280 * N; wd[i] = wd0 + (size_t) i * N * 640; }
++    float* out_c = sycl::malloc_device<float>((size_t) rows * N, *q);
++    float* out_d = sycl::malloc_device<float>((size_t) rows * N, *q);
++    struct BatchArgs {
++        oneapi::mkl::transpose ta[W], tb[W];
++        int64_t m[W], n[W], k[W], lda[W], ldb[W], ldc[W], gs[W];
++        float alpha[W], beta[W];
++        const sycl::half* a[W]; const sycl::half* b[W]; float* c[W];
++    };
++    BatchArgs* ba = sycl::malloc_shared<BatchArgs>(4, *q);   // ring of 2 waves x (GU, down)
++    int wave_launches = 0;
++    auto mkl_f16 = [&](const uint16_t* Xp, const uint16_t* Wp, float* Yp, int64_t M, int64_t Nn, int64_t Kk) {
++        oneapi::mkl::blas::column_major::gemm(*q, oneapi::mkl::transpose::trans, oneapi::mkl::transpose::nontrans,
++                                              Nn, M, Kk, 1.0f, (const sycl::half*) Wp, Kk, (const sycl::half*) Xp, Kk,
++                                              0.0f, Yp, Nn, oneapi::mkl::blas::compute_mode::unset);
++    };
++    auto wave = [&](float* out, bool batch, bool direct) {
++        wave_launches = 0;
++        int j = 0, wv = 0;
++        while (j < n_exp) {
++            int j1 = j; int64_t br = 0;
++            while (j1 < n_exp && j1 - j < W && br + cnt[j1] <= T) br += cnt[j1++];
++            const int nw = j1 - j;
++            const int64_t o0 = off_a[j];
++            strata::prefill::gather_rows16(X, src + o0, Xs, br, N, q);
++            const uint8_t* bl[W];
++            for (int i = 0; i < nw; ++i) bl[i] = blobs + (size_t) (j + i) * blob_bytes;
++            strata::kernels::iq_dequant_experts_f16(gt, dt, nw, bl, up_off, down_off, FF, N, wgu0, wd0, q);
++            wave_launches += 2;
++            if (batch) {
++                BatchArgs& A = ba[(wv & 1) * 2];
++                for (int i = 0; i < nw; ++i) {
++                    const int64_t lo = off_a[j + i] - o0;
++                    A.ta[i] = oneapi::mkl::transpose::trans; A.tb[i] = oneapi::mkl::transpose::nontrans;
++                    A.m[i] = 1280; A.n[i] = cnt[j + i]; A.k[i] = N; A.lda[i] = N; A.ldb[i] = N; A.ldc[i] = 1280; A.gs[i] = 1;
++                    A.alpha[i] = 1.0f; A.beta[i] = 0.0f;
++                    A.a[i] = (const sycl::half*) wgu[i]; A.b[i] = (const sycl::half*) (Xs + lo * N); A.c[i] = GUf + lo * 1280;
++                }
++                oneapi::mkl::blas::column_major::gemm_batch(*q, A.ta, A.tb, A.m, A.n, A.k, A.alpha, A.a, A.lda, A.b, A.ldb,
++                                                            A.beta, A.c, A.ldc, (int64_t) nw, A.gs,
++                                                            oneapi::mkl::blas::compute_mode::unset);
++            } else {
++                for (int i = 0; i < nw; ++i) {
++                    const int64_t lo = off_a[j + i] - o0;
++                    if (direct) mkl_f16(Xs + lo * N, wgu[i], GUf + lo * 1280, cnt[j + i], 1280, N);
++                    else gemm.f16(Xs + lo * N, wgu[i], GUf + lo * 1280, cnt[j + i], 1280, N);
++                }
++            }
++            strata::prefill::swiglu_interleaved(GUf, Hh, br, q);
++            if (batch) {
++                BatchArgs& A = ba[(wv & 1) * 2 + 1];
++                for (int i = 0; i < nw; ++i) {
++                    const int64_t lo = off_a[j + i] - o0;
++                    A.ta[i] = oneapi::mkl::transpose::trans; A.tb[i] = oneapi::mkl::transpose::nontrans;
++                    A.m[i] = N; A.n[i] = cnt[j + i]; A.k[i] = 640; A.lda[i] = 640; A.ldb[i] = 640; A.ldc[i] = N; A.gs[i] = 1;
++                    A.alpha[i] = 1.0f; A.beta[i] = 0.0f;
++                    A.a[i] = (const sycl::half*) wd[i]; A.b[i] = (const sycl::half*) (Hh + lo * 640); A.c[i] = out + off_a[j + i] * N;
++                }
++                oneapi::mkl::blas::column_major::gemm_batch(*q, A.ta, A.tb, A.m, A.n, A.k, A.alpha, A.a, A.lda, A.b, A.ldb,
++                                                            A.beta, A.c, A.ldc, (int64_t) nw, A.gs,
++                                                            oneapi::mkl::blas::compute_mode::unset);
++                wave_launches += 3;
++                q->wait();   // the shared argument ring: keep it simple in the probe (2 slots would race)
++            } else {
++                for (int i = 0; i < nw; ++i) {
++                    const int64_t lo = off_a[j + i] - o0;
++                    if (direct) mkl_f16(Hh + lo * 640, wd[i], out + off_a[j + i] * N, cnt[j + i], N, 640);
++                    else gemm.f16(Hh + lo * 640, wd[i], out + off_a[j + i] * N, cnt[j + i], N, 640);
++                }
++                wave_launches += 1 + 2 * nw;
++            }
++            j = j1; ++wv;
++        }
++    };
++    struct R { double host, wall, gpu; };
++    auto measure2 = [&](auto f, float* out) {
++        R best{1e30, 1e30, 1e30};
++        f(out); q->wait();
++        for (int r = 0; r < reps; ++r) {
++            q->wait();
++            auto a = Clock::now();
++            f(out);
++            const double h = ms_since(a);
++            q->wait();
++            const double w = ms_since(a);
++            auto b = Clock::now();
++            gate();
++            f(out);
++            const double hb = ms_since(b);
++            q->wait();
++            const double g = ms_since(b) - busy_ms;
++            if (hb > busy_ms * 0.8) std::printf("  (warning: host enqueue %.1f ms under the busy kernel)\n", hb);
++            best.host = std::min(best.host, h); best.wall = std::min(best.wall, w); best.gpu = std::min(best.gpu, g);
++        }
++        return best;
++    };
++    const R ra = measure2(orig, out_a);
++    const R rb = measure2(grp, out_b);
++    std::printf("ORIG: launches %d  host %.2f ms  wall %.2f ms  gpu %.2f ms\n", 5 * n_exp, ra.host, ra.wall, ra.gpu);
++    std::printf("GRP : launches %d  host %.2f ms  wall %.2f ms  gpu %.2f ms\n", launches_b, rb.host, rb.wall, rb.gpu);
++    const R rc = measure2([&](float* o) { wave(o, false, false); }, out_c);
++    std::printf("WAVE-dpct : launches %d  host %.2f ms  wall %.2f ms  gpu %.2f ms\n", wave_launches, rc.host, rc.wall, rc.gpu);
++    const R rd = measure2([&](float* o) { wave(o, false, true); }, out_d);
++    std::printf("WAVE-mkl  : launches %d  host %.2f ms  wall %.2f ms  gpu %.2f ms\n", wave_launches, rd.host, rd.wall, rd.gpu);
++    {
++        std::vector<float> a((size_t) rows * N), c((size_t) rows * N), d((size_t) rows * N);
++        q->memcpy(a.data(), out_a, a.size() * 4); q->memcpy(c.data(), out_c, c.size() * 4);
++        q->memcpy(d.data(), out_d, d.size() * 4).wait();
++        std::printf("WAVE-dpct vs ORIG: %s; WAVE-mkl vs ORIG: %s\n",
++                    std::memcmp(a.data(), c.data(), a.size() * 4) ? "DIFFER" : "bitwise equal",
++                    std::memcmp(a.data(), d.data(), a.size() * 4) ? "DIFFER" : "bitwise equal");
++    }
++    if (std::getenv("NIGHT_BENCH_BATCH")) {
++        float* out_e = out_c;
++        // the batched one (waits per wave: host time is not representative, GPU time is)
++        auto t0 = Clock::now();
++        wave(out_e, true, false); q->wait();
++        const double tb = ms_since(t0);
++        std::vector<float> a((size_t) rows * N), e((size_t) rows * N);
++        q->memcpy(a.data(), out_a, a.size() * 4); q->memcpy(e.data(), out_e, e.size() * 4).wait();
++        double mx = 0, em = 0; size_t nd2 = 0;
++        for (size_t i = 0; i < a.size(); ++i) { mx = std::max(mx, (double) std::fabs(a[i])); const double df = std::fabs((double) a[i] - e[i]); em = std::max(em, df); nd2 += df != 0; }
++        std::printf("WAVE-batch: launches %d  wall(with per-wave waits) %.2f ms; vs ORIG max abs %.3e (max |ref| %.3e), %zu values differ\n",
++                    wave_launches, tb, em, mx, nd2);
++    }
++    // compare
++    std::vector<float> a((size_t) rows * N), b((size_t) rows * N);
++    q->memcpy(a.data(), out_a, a.size() * 4);
++    q->memcpy(b.data(), out_b, b.size() * 4).wait();
++    double emax_s = 0, mx_s = 0, emax_l = 0;
++    size_t neq_l = 0, nonfin = 0;
++    for (int e = 0; e < n_exp; ++e) {
++        const bool sm = cnt[e] <= small_max;
++        for (int64_t r = 0; r < cnt[e]; ++r) {
++            const float* pa = &a[(size_t) (off_a[e] + r) * N];
++            const float* pb = &b[(size_t) (off_b[e] + r) * N];
++            for (int64_t i = 0; i < N; ++i) {
++                if (!std::isfinite(pa[i]) || !std::isfinite(pb[i])) { ++nonfin; continue; }
++                const double d = std::fabs((double) pa[i] - pb[i]);
++                if (sm) { emax_s = std::max(emax_s, d); mx_s = std::max(mx_s, (double) std::fabs(pa[i])); }
++                else { emax_l = std::max(emax_l, d); neq_l += std::memcmp(&pa[i], &pb[i], 4) != 0; }
++            }
++        }
++    }
++    std::printf("error: small experts max abs %.3e (max |ref| %.3e, rel %.2e); large experts max abs %.3e, %zu words differ; "
++                "non-finite %zu\n", emax_s, mx_s, mx_s > 0 ? emax_s / mx_s : 0.0, emax_l, neq_l, nonfin);
++    // PAR: the ORIG loop split over P host threads, each with its own in-order queue, Gemm and buffers on the SAME
++    // card (experts [p*n/P, (p+1)*n/P) to thread p); outputs land at the same rows, so the result must be bitwise ORIG's.
++    for (int P : {2, 3}) {
++        std::vector<sycl::queue*> qs(P);
++        std::vector<strata::prefill::Gemm*> gs(P);
++        std::vector<uint16_t*> xs(P), hs(P), dg(P), dd(P);
++        std::vector<float*> gus(P);
++        for (int p = 0; p < P; ++p) {
++            qs[p] = p == 0 ? q : new sycl::queue(q->get_context(), q->get_device(), sycl::property::queue::in_order());
++            gs[p] = new strata::prefill::Gemm();
++            if (!gs[p]->init(qs[p], 1 << 20, err)) { std::printf("gemm init: %s\n", err.c_str()); return 2; }
++            xs[p] = sycl::malloc_device<uint16_t>((size_t) T * N, *q);
++            hs[p] = sycl::malloc_device<uint16_t>((size_t) T * 640, *q);
++            gus[p] = sycl::malloc_device<float>((size_t) T * 1280, *q);
++            dg[p] = sycl::malloc_device<uint16_t>((size_t) 1280 * N, *q);
++            dd[p] = sycl::malloc_device<uint16_t>((size_t) N * 640, *q);
++        }
++        float* out_p = out_c;
++        auto part = [&](int p) {
++            sycl::queue* qq = qs[p];
++            for (int e = p * n_exp / P; e < (p + 1) * n_exp / P; ++e) {
++                const int64_t o = off_a[e], ne = cnt[e];
++                const uint8_t* bd = blobs + (size_t) e * blob_bytes;
++                strata::prefill::gather_rows16(X, src + o, xs[p], ne, N, qq);
++                strata::kernels::iq_dequant_expert_f16(gt, dt, bd, bd + up_off, bd + down_off, FF, N, dg[p], dd[p], qq);
++                gs[p]->f16(xs[p], dg[p], gus[p], ne, 1280, N);
++                strata::prefill::swiglu_interleaved(gus[p], hs[p], ne, qq);
++                gs[p]->f16(hs[p], dd[p], out_p + o * N, ne, N, 640);
++            }
++        };
++        // persistent workers (as the engine would keep them), released by a generation counter
++        std::atomic<int> gen{0}, done{0};
++        std::atomic<bool> quit{false};
++        std::vector<std::thread> th;
++        for (int p = 1; p < P; ++p)
++            th.emplace_back([&, p] {
++                cpu_set_t cs; CPU_ZERO(&cs); CPU_SET(16 + p, &cs); pthread_setaffinity_np(pthread_self(), sizeof(cs), &cs);
++                int seen = 0;
++                while (!quit.load()) {
++                    const int g = gen.load();
++                    if (g == seen) { std::this_thread::yield(); continue; }
++                    seen = g;
++                    part(p);
++                    done.fetch_add(1);
++                }
++            });
++        auto run = [&]() {
++            done.store(0);
++            gen.fetch_add(1);
++            part(0);
++            while (done.load() < P - 1) std::this_thread::yield();
++        };
++        run(); for (auto* qq : qs) qq->wait();
++        double hbest = 1e30, wbest = 1e30;
++        for (int r = 0; r < reps; ++r) {
++            for (auto* qq : qs) qq->wait();
++            auto a = Clock::now();
++            run();
++            const double h = ms_since(a);
++            for (auto* qq : qs) qq->wait();
++            const double w = ms_since(a);
++            hbest = std::min(hbest, h); wbest = std::min(wbest, w);
++        }
++        quit.store(true);
++        for (auto& t : th) t.join();
++        std::vector<float> a((size_t) rows * N), c((size_t) rows * N);
++        q->memcpy(a.data(), out_a, a.size() * 4); q->memcpy(c.data(), out_p, c.size() * 4).wait();
++        std::printf("PAR%d (threads, queues): host %.2f ms  wall %.2f ms; vs ORIG %s\n", P, hbest, wbest,
++                    std::memcmp(a.data(), c.data(), a.size() * 4) ? "DIFFER" : "bitwise equal");
++    }
++    // per-launch host cost of each kernel type (M = 32)
++    {
++        const int L = 400;
++        auto per = [&](const char* name, auto f) {
++            q->wait();
++            gate();
++            auto a0 = Clock::now();
++            for (int i = 0; i < L; ++i) f();
++            const double h = ms_since(a0) * 1000.0 / L;
++            q->wait();
++            auto b0 = Clock::now();
++            for (int i = 0; i < L; ++i) f();
++            q->wait();
++            const double w = ms_since(b0) * 1000.0 / L;
++            std::printf("  %-26s host %6.2f us/launch   back-to-back %7.2f us/launch\n", name, h, w);
++        };
++        const uint8_t* bd = blobs;
++        per("gather_rows16 M=32", [&] { strata::prefill::gather_rows16(X, src, Xs, 32, N, q); });
++        per("iq_dequant_expert_f16", [&] { strata::kernels::iq_dequant_expert_f16(gt, dt, bd, bd + up_off, bd + down_off, FF, N, dq_gu, dq_d, q); });
++        per("oneMKL f16 GU M=32", [&] { gemm.f16(Xs, dq_gu, GUf, 32, 1280, N); });
++        per("swiglu_interleaved M=32", [&] { strata::prefill::swiglu_interleaved(GUf, Hh, 32, q); });
++        per("oneMKL f16 down M=32", [&] { gemm.f16(Hh, dq_d, out_a, 32, N, 640); });
++        const uint8_t* ga[16]; const uint8_t* gb[16]; const uint8_t* gd[16]; int32_t gc[16];
++        for (int i = 0; i < 16; ++i) { const uint8_t* p = blobs + (size_t) (i % n_exp) * blob_bytes; ga[i] = p; gb[i] = p + up_off; gd[i] = p + down_off; gc[i] = 32; }
++        per("direct oneMKL GU M=32", [&] { mkl_f16(Xs, dq_gu, GUf, 32, 1280, N); });
++        per("direct oneMKL down M=32", [&] { mkl_f16(Hh, dq_d, out_a, 32, N, 640); });
++        {
++            const uint8_t* bl[16];
++            for (int i = 0; i < 16; ++i) bl[i] = blobs + (size_t) (i % n_exp) * blob_bytes;
++            per("iq_dequant_experts_f16 x16", [&] { strata::kernels::iq_dequant_experts_f16(gt, dt, 16, bl, up_off, down_off, FF, N, wgu0, wd0, q); });
++            const uint16_t* wg16[16]; const uint16_t* wd16[16]; int32_t c16[16];
++            for (int i = 0; i < 16; ++i) { wg16[i] = wgu[i]; wd16[i] = wd[i]; c16[i] = 32; }
++            per("xmx::grouped_f16 GU 16x32", [&] { strata::prefill::xmx::grouped_f16(Xs, wg16, c16, 16, GUf, 1280, (int) N, q); });
++            per("xmx::grouped_f16 down 16x32", [&] { strata::prefill::xmx::grouped_f16(Hh, wd16, c16, 16, out_a, (int) N, 640, q); });
++            BatchArgs& A = ba[0];
++            for (int i = 0; i < 16; ++i) {
++                A.ta[i] = oneapi::mkl::transpose::trans; A.tb[i] = oneapi::mkl::transpose::nontrans;
++                A.m[i] = 1280; A.n[i] = 32; A.k[i] = N; A.lda[i] = N; A.ldb[i] = N; A.ldc[i] = 1280; A.gs[i] = 1;
++                A.alpha[i] = 1.0f; A.beta[i] = 0.0f;
++                A.a[i] = (const sycl::half*) wgu[i]; A.b[i] = (const sycl::half*) (Xs + i * 32 * N); A.c[i] = GUf + i * 32 * 1280;
++            }
++            per("gemm_batch GU 16 groups x32", [&] {
++                oneapi::mkl::blas::column_major::gemm_batch(*q, A.ta, A.tb, A.m, A.n, A.k, A.alpha, A.a, A.lda, A.b, A.ldb,
++                                                            A.beta, A.c, A.ldc, (int64_t) 16, A.gs,
++                                                            oneapi::mkl::blas::compute_mode::unset); });
++        }
++        per("iq_xmx_grouped GU 16x32", [&] { strata::kernels::iq_xmx_grouped(gt, ga, gb, gc, 16, Xs, GUf, 1280, (int) N, q); });
++        per("iq_xmx_grouped down 16x32", [&] { strata::kernels::iq_xmx_grouped(dt, gd, nullptr, gc, 16, Hh, out_a, (int) N, 640, q); });
++    }
++    return 0;
++}
+diff --git a/sycl/src/kernels/night_ep_sum_bench.cpp b/sycl/src/kernels/night_ep_sum_bench.cpp
+new file mode 100644
+index 00000000..7be1a179
+--- /dev/null
++++ b/sycl/src/kernels/night_ep_sum_bench.cpp
+@@ -0,0 +1,135 @@
++// night_ep_sum_bench (night lab 2026-10-16): STRATA_NIGHT_PREFILL_F16SUM's kernels against the FP32 reduce/finish on
++// ONE card (the "remote" sum region is local here, so the PCIe time is not measured: the bytes halve), and the
++// STRATA_NIGHT_PREFILL_EARLY doorbell kernels (signal on one queue, wait on another).
++//   night_ep_sum_bench [T=12288] [peer_frac=0.7] [outlier_scale=100]
++#include "strata/kernels/ep_kernels.hpp"
++#include "strata/sycl_queue.hpp"
++#include <sycl/sycl.hpp>
++#include <dpct/dpct.hpp>
++#include <algorithm>
++#include <chrono>
++#include <cmath>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <random>
++#include <vector>
++
++using Clock = std::chrono::steady_clock;
++static double ms_since(Clock::time_point a) { return std::chrono::duration<double, std::milli>(Clock::now() - a).count(); }
++
++int main(int argc, char** argv) {
++    std::setvbuf(stdout, nullptr, _IONBF, 0);
++    const int64_t T = argc > 1 ? std::atoll(argv[1]) : 12288;
++    const double peer_frac = argc > 2 ? std::atof(argv[2]) : 0.7;
++    const float outlier = argc > 3 ? (float) std::atof(argv[3]) : 100.0f;
++    const int64_t N = 2560;
++    const int K = 10;
++    sycl::queue* q = &dpct::get_in_order_queue();
++    std::mt19937 rng(7);
++    // grouped rows: local rows first, then peer rows; every (t, k) gets a distinct row
++    const int64_t R = T * K;
++    std::vector<int32_t> slot((size_t) R);
++    std::vector<char> is_peer((size_t) R);
++    int64_t n_peer = 0;
++    std::uniform_real_distribution<double> u01(0, 1);
++    for (int64_t i = 0; i < R; ++i) { is_peer[i] = u01(rng) < peer_frac; n_peer += is_peer[i]; }
++    const int64_t local_rows = R - n_peer;
++    {
++        std::vector<int64_t> perm_l, perm_p;
++        for (int64_t i = 0; i < local_rows; ++i) perm_l.push_back(i);
++        for (int64_t i = 0; i < n_peer; ++i) perm_p.push_back(local_rows + i);
++        std::shuffle(perm_l.begin(), perm_l.end(), rng);
++        std::shuffle(perm_p.begin(), perm_p.end(), rng);
++        int64_t a = 0, b = 0;
++        for (int64_t i = 0; i < R; ++i) slot[i] = (int32_t) (is_peer[i] ? perm_p[b++] : perm_l[a++]);
++    }
++    std::vector<float> w((size_t) R), gate((size_t) T);
++    for (int64_t t = 0; t < T; ++t) {
++        double s = 0; for (int k = 0; k < K; ++k) { w[t * K + k] = (float) u01(rng); s += w[t * K + k]; }
++        for (int k = 0; k < K; ++k) w[t * K + k] = (float) (w[t * K + k] / s);
++        gate[t] = (float) (u01(rng) * 4 - 2);
++    }
++    // expert rows: N(0, 0.05) with 0.1% outliers x outlier_scale (massive-activation style), and some tiny rows
++    std::normal_distribution<float> nd(0.f, 0.05f);
++    std::vector<float> rows((size_t) R * N), shared((size_t) T * N);
++    for (size_t i = 0; i < rows.size(); ++i) { rows[i] = nd(rng); if (u01(rng) < 1e-3) rows[i] *= outlier; }
++    for (int64_t r = 0; r < R; r += 997) for (int64_t i = 0; i < N; ++i) rows[(size_t) r * N + i] *= 1e-6f;
++    for (auto& x : shared) x = nd(rng);
++    auto dev = [&](auto& v) { using E = typename std::decay_t<decltype(v)>::value_type; E* p = sycl::malloc_device<E>(v.size(), *q); q->memcpy(p, v.data(), v.size() * sizeof(E)); return p; };
++    float* d_rows = dev(rows); float* d_w = dev(w); float* d_gate = dev(gate); float* d_shared = dev(shared);
++    int32_t* d_slot = dev(slot);
++    float* sum32 = sycl::malloc_device<float>((size_t) T * N, *q);
++    float* bo_a = sycl::malloc_device<float>((size_t) T * N, *q);
++    float* bo_b = sycl::malloc_device<float>((size_t) T * N, *q);
++    uint8_t* sumh = sycl::malloc_device<uint8_t>((size_t) T * N * 4, *q);
++    q->wait();
++    std::printf("T %lld rows %lld (peer %lld)\n", (long long) T, (long long) R, (long long) n_peer);
++    auto ref = [&](bool push) {
++        strata::kernels::ep_prefill_reduce(d_rows + (size_t) local_rows * N, d_slot, d_w, sum32, T, local_rows, N, K, q, push);
++        strata::kernels::ep_copy_uncached(bo_a, sum32, (size_t) T * N * 4, q);
++        strata::kernels::ep_prefill_finish(d_rows, d_slot, d_w, d_shared, d_gate, bo_a, T, local_rows, N, K, q);
++    };
++    auto mine = [&](bool push) {
++        strata::kernels::ep_prefill_reduce_h(d_rows + (size_t) local_rows * N, d_slot, d_w, (uint16_t*) sumh,
++                                             (float*) (sumh + (size_t) T * N * 2), T, local_rows, N, K, q, push);
++        strata::kernels::ep_prefill_finish_h(d_rows, d_slot, d_w, d_shared, d_gate, (const uint16_t*) sumh,
++                                             (const float*) (sumh + (size_t) T * N * 2), bo_b, T, local_rows, N, K, q);
++    };
++    auto tm = [&](auto f) { f(); q->wait(); double best = 1e30; for (int r = 0; r < 5; ++r) { auto a = Clock::now(); f(); q->wait(); best = std::min(best, ms_since(a)); } return best; };
++    const double t_red32 = tm([&] { strata::kernels::ep_prefill_reduce(d_rows + (size_t) local_rows * N, d_slot, d_w, sum32, T, local_rows, N, K, q, true); });
++    const double t_redh = tm([&] { strata::kernels::ep_prefill_reduce_h(d_rows + (size_t) local_rows * N, d_slot, d_w, (uint16_t*) sumh, (float*) (sumh + (size_t) T * N * 2), T, local_rows, N, K, q, true); });
++    const double t_fin32 = tm([&] { strata::kernels::ep_copy_uncached(bo_a, sum32, (size_t) T * N * 4, q); strata::kernels::ep_prefill_finish(d_rows, d_slot, d_w, d_shared, d_gate, bo_a, T, local_rows, N, K, q); });
++    const double t_finh = tm([&] { strata::kernels::ep_prefill_finish_h(d_rows, d_slot, d_w, d_shared, d_gate, (const uint16_t*) sumh, (const float*) (sumh + (size_t) T * N * 2), bo_b, T, local_rows, N, K, q); });
++    std::printf("push-mode reduce (64 groups, local target): FP32 %.3f ms (%.1f MB out) | FP16 %.3f ms (%.1f MB out)\n",
++                t_red32, T * N * 4 / 1e6, t_redh, (T * N * 2 + T * 4) / 1e6);
++    std::printf("card-0 side: copy_uncached + finish %.3f ms | finish_h %.3f ms\n", t_fin32, t_finh);
++    ref(true); mine(true); q->wait();
++    std::vector<float> a((size_t) T * N), b((size_t) T * N), s32((size_t) T * N);
++    q->memcpy(a.data(), bo_a, a.size() * 4); q->memcpy(b.data(), bo_b, b.size() * 4); q->memcpy(s32.data(), sum32, s32.size() * 4).wait();
++    // error of the peer sum itself and of the layer output
++    std::vector<uint16_t> hh((size_t) T * N); std::vector<float> sc((size_t) T);
++    q->memcpy(hh.data(), sumh, hh.size() * 2); q->memcpy(sc.data(), sumh + (size_t) T * N * 2, T * 4).wait();
++    double max_rel_sum = 0, mean_rel_sum = 0, max_abs_out = 0, max_out = 0, rms_d = 0, rms_o = 0; size_t nz = 0, nonfin = 0;
++    for (int64_t t = 0; t < T; ++t)
++        for (int64_t i = 0; i < N; ++i) {
++            const size_t j = (size_t) t * N + i;
++            const float hv = (float) sycl::bit_cast<sycl::half>(hh[j]) * sc[t];
++            if (!std::isfinite(hv) || !std::isfinite(b[j])) { ++nonfin; continue; }
++            if (s32[j] != 0.0f) { const double r = std::fabs((hv - s32[j]) / s32[j]); max_rel_sum = std::max(max_rel_sum, r); mean_rel_sum += r; ++nz; }
++            const double d = std::fabs((double) a[j] - b[j]);
++            max_abs_out = std::max(max_abs_out, d); max_out = std::max(max_out, (double) std::fabs(a[j]));
++            rms_d += d * d; rms_o += (double) a[j] * a[j];
++        }
++    std::printf("peer sum FP16xscale vs FP32: max rel %.3e, mean rel %.3e (2^-11 = %.3e); layer output: max abs %.3e "
++                "(max |out| %.3e), rms err / rms out %.3e; non-finite %zu\n",
++                max_rel_sum, mean_rel_sum / std::max<size_t>(nz, 1), std::ldexp(1.0, -11), max_abs_out, max_out,
++                std::sqrt(rms_d / std::max(rms_o, 1e-30)), nonfin);
++    // doorbell on ONE card: a cross-queue spin deadlocks on one compute engine, so this checks the semantics only:
++    // ep_push_signal copies bit-exactly and raises the flag to the value (counter back to 0); ep_wait_value returns at
++    // once on a flag already at/after the value and gives up with err at the bound otherwise.
++    {
++        uint32_t* flag = sycl::malloc_device<uint32_t>(1, *q);
++        uint32_t* done = sycl::malloc_device<uint32_t>(1, *q);
++        uint32_t* err = sycl::malloc_host<uint32_t>(1, *q);
++        uint8_t* dst = sycl::malloc_device<uint8_t>((size_t) T * N * 2, *q);
++        q->memset(flag, 0, 4); q->memset(done, 0, 4); q->memset(dst, 0, (size_t) T * N * 2); q->wait(); *err = 0;
++        const double tp = tm([&] { strata::kernels::ep_push_signal(dst, d_rows, T * N / 8, done, flag, 3u, q); });
++        std::vector<uint8_t> hd((size_t) T * N * 2);
++        uint32_t hf = 0, hdn = 0;
++        q->memcpy(hd.data(), dst, hd.size()); q->memcpy(&hf, flag, 4); q->memcpy(&hdn, done, 4).wait();
++        const bool same = std::memcmp(hd.data(), rows.data(), hd.size()) == 0;
++        std::printf("ep_push_signal (local target): %.3f ms for %.1f MB, copy %s, flag %u (want 3), counter %u (want 0)\n",
++                    tp, hd.size() / 1e6, same ? "bit-exact" : "WRONG", hf, hdn);
++        auto a0 = Clock::now();
++        strata::kernels::ep_wait_value(flag, 2u, 50000000u, err, 1u, q);
++        strata::kernels::ep_wait_value(flag, 3u, 50000000u, err, 2u, q);
++        q->wait();
++        std::printf("ep_wait_value on flag 3 for 2 and 3: %.3f ms, err %u (want 0)\n", ms_since(a0), *err);
++        a0 = Clock::now();
++        strata::kernels::ep_wait_value(flag, 4u, 200000u, err, 3u, q);   // never signalled: must give up with err = 3
++        q->wait();
++        std::printf("ep_wait_value bound: err %u (want 3) after %.1f ms (200000 spins)\n", *err, ms_since(a0));
++    }
++    return 0;
++}
+diff --git a/sycl/src/prefill/prefill.cpp b/sycl/src/prefill/prefill.cpp
+index 3577a722..fd9bc460 100644
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -307,6 +307,31 @@ inline bool gr_unfused() {
+ 
+ double ms_since(Clock::time_point t) { return std::chrono::duration<double, std::milli>(Clock::now() - t).count(); }
+ 
++// Night lab 2026-10-16 (all default off; each latched once and announced on stderr when on).
++// STRATA_NIGHT_PREFILL_EARLY=1 (expert parallel, IPC path): the host waits only for the router's ids and weights, not
++//   for the whole queue; the activation push, a doorbell to card 1 and the shared expert are queued after that point,
++//   and card 1's first kernel spins on the doorbell instead of relying on the host's full drain.  Same kernels, same
++//   inputs: bitwise the same outputs.
++// STRATA_NIGHT_PREFILL_F16SUM=1 (with STRATA_EP_PREFILL_REDUCE=1): card 1's per-token peer sums cross PCIe as FP16
++//   with a per-token power-of-two scale (half the bytes); card 0's finish reads them directly.  Changes numerics
++//   (relative error <= 2^-11 per value of the peer sum).
++inline bool night_env(const char* name, const char* what) {
++    const char* e = std::getenv(name);
++    const bool on = e && e[0] == '1';
++    if (on) std::fprintf(stderr, "strata prefill: %s=1: %s (night lab)\n", name, what);
++    return on;
++}
++inline bool night_early() {
++    static const bool v = night_env("STRATA_NIGHT_PREFILL_EARLY",
++                                    "card 1 starts on a doorbell after the activation push; the shared expert runs after the host's routing wait");
++    return v;
++}
++inline bool night_f16sum() {
++    static const bool v = night_env("STRATA_NIGHT_PREFILL_F16SUM",
++                                    "the EP peer sums return as FP16 x per-token power-of-two scale (numerics change)");
++    return v;
++}
++
+ // Either cudaMalloc (owned, freed with the object) or a bump allocation from a borrowed region; with no base and
+ // no region it only counts, which is how `bytes_needed` sizes the region.
+ struct Alloc {
+@@ -550,6 +575,14 @@ struct PeerPrefill {
+     bool reduce_rows = false;
+     bool reduce_push = false;
+     core::EpRegion sum_reg;
++    // night lab: STRATA_NIGHT_PREFILL_EARLY's doorbell (on card 1, written by card 0) and its epoch / error flag;
++    // STRATA_NIGHT_PREFILL_F16SUM's FP16 sums in sum_reg (T*N halves, then T float scales)
++    core::EpRegion flag_reg;
++    uint32_t epoch = 0;
++    uint32_t* early_err = nullptr;
++    uint32_t* push_done = nullptr;   // on the primary: ep_push_signal's group counter (zero between calls)
++    bool early = false;
++    bool f16sum = false;
+     int32_t* reduce_slot = nullptr;
+     float* reduce_weight = nullptr;
+     std::vector<int32_t> reduce_slot_host;
+@@ -647,6 +680,8 @@ struct PeerPrefill {
+         core::ep_region_free(x_reg);
+         core::ep_region_free(rows_reg);
+         core::ep_region_free(sum_reg);
++        core::ep_region_free(flag_reg);   // night lab EARLY
++        if (early_err) sycl::free(early_err, *s);
+         for (void *p : owned)
+             DPCT_CHECK_ERROR(sycl::free(p, dpct::get_in_order_queue()));
+         if (ev_done) dpct::destroy_event(ev_done);
+@@ -1898,6 +1933,16 @@ bool Prefill::set_ep_peer(int device, core::ExpertCache* cache, std::string& err
+     if (ok && pp->reduce_rows)
+         ok = core::ep_region_alloc(pp->reduce_push ? primary : device, pp->reduce_push ? device : primary,
+                                    (size_t) m.T_max * N * 4, pp->sum_reg, err);
++    if (ok && night_early() && (m.T_max * N) % 8 == 0) {
++        ok = core::ep_region_alloc(device, primary, 4096, pp->flag_reg, err);
++        if (ok) {   // the primary's group counter: a small allocation of its own, zeroed
++            pp->push_done = sycl::malloc_device<uint32_t>(16, dpct::get_in_order_queue());
++            ok = pp->push_done != nullptr;
++            if (ok) dpct::get_in_order_queue().memset(pp->push_done, 0, 64).wait();
++        }
++        pp->early = ok;
++    }
++    if (ok && pp->reduce_rows && night_f16sum()) pp->f16sum = true;
+     if (!ok) return false;
+     const core::OnDevice on(device);
+     ok = DPCT_CHECK_ERROR(pp->s = dpct::get_current_device().create_queue(true)) == 0 &&
+@@ -1928,6 +1973,11 @@ bool Prefill::set_ep_peer(int device, core::ExpertCache* cache, std::string& err
+         std::fprintf(stderr, "strata prefill: EP row reduction enabled: one FP32 row per token returns; "
+                              "FP32 addition order changes (STRATA_EP_PREFILL_REDUCE=1)\n");
+     }
++    if (ok && pp->early) {
++        pp->early_err = sycl::malloc_host<uint32_t>(1, *pp->s);
++        ok = pp->early_err != nullptr;
++        if (ok) *pp->early_err = 0;
++    }
+     if (ok) {
+         pp->gemm = std::make_unique<Gemm>();
+         ok = pp->gemm->init(pp->s, 1 << 20, err);
+@@ -3365,13 +3415,20 @@ bool Prefill::run_impl(const int64_t *tokens, int64_t n, int64_t pos0,
+                     if (!bf16_proj(m.gemm, wr, m.mixed_bf, m.logits, T, v.name("ffn_gate_inp.weight"), err, 0, m.mixed_bf_lo)) return false;
+                     route(m.logits, m.ids, m.w, T, m.g->n_expert, m.cs);
+                     // the shared expert and its scalar gate
+-                    if (!native_proj(m.gemm, wsg, m.mixed_h, m.sgate, T, v.name("ffn_gate_shexp.weight"), err)) return false;
+-                    if (!native_proj(m.gemm, wsu, m.mixed_h, m.sup, T, v.name("ffn_up_shexp.weight"), err)) return false;
+-                    swiglu_pair(m.sgate, m.sup, m.sh_h, T, m.cs);
+-                    if (!native_proj(m.gemm, wsd, m.sh_h, m.shared, T, v.name("ffn_down_shexp.weight"), err)) return false;
+-                    if (wgi->kind != core::WeightKind::Bf16InF32) { err = "prefill: shared gate is not BF16"; return false; }
+-                    m.gemm.bf16(m.mixed_bf, (const uint16_t*) wgi->data, m.sg, T, 1, N);
+-                    if (m.mixed_bf_lo) m.gemm.bf16(m.mixed_bf_lo, (const uint16_t*) wgi->data, m.sg, T, 1, N, 0, 1.0f);
++                    auto shared_expert = [&]() -> bool {
++                        if (!native_proj(m.gemm, wsg, m.mixed_h, m.sgate, T, v.name("ffn_gate_shexp.weight"), err)) return false;
++                        if (!native_proj(m.gemm, wsu, m.mixed_h, m.sup, T, v.name("ffn_up_shexp.weight"), err)) return false;
++                        swiglu_pair(m.sgate, m.sup, m.sh_h, T, m.cs);
++                        if (!native_proj(m.gemm, wsd, m.sh_h, m.shared, T, v.name("ffn_down_shexp.weight"), err)) return false;
++                        if (wgi->kind != core::WeightKind::Bf16InF32) { err = "prefill: shared gate is not BF16"; return false; }
++                        m.gemm.bf16(m.mixed_bf, (const uint16_t*) wgi->data, m.sg, T, 1, N);
++                        if (m.mixed_bf_lo) m.gemm.bf16(m.mixed_bf_lo, (const uint16_t*) wgi->data, m.sg, T, 1, N, 0, 1.0f);
++                        return true;
++                    };
++                    // night lab EARLY: the expert-parallel IPC layer queues the shared expert after the host's routing
++                    // wait point instead (below); every other layer keeps it here
++                    const bool night_early_l = m.pp && m.pp->ipc() && m.pp->early;
++                    if (!night_early_l && !shared_expert()) return false;
+                     // #136: STRATA_PF_FUSED=1 - the Q2_0 pack's experts on the fused int8 kernels (moe_fused.hpp),
+                     // grouped on the GPU: no host sync.  Only where every expert's place is known before the routing -
+                     // the streamed walk, in which every non-resident expert of the layer comes through the ring in id
+@@ -3389,6 +3446,7 @@ bool Prefill::run_impl(const int64_t *tokens, int64_t n, int64_t pos0,
+                     const bool fused_only = mmq_plan().any && mmq_plan().fo[(size_t) l];
+                     const bool fused_nat = (use_mmq || fused_only) && stream_all && no_peer && lay.native && fused::native_supported(mmq_gt, mmq_dt);
+                     const bool fused_l = (use_mmq && stream_all && no_peer && !lay.native && fused::enabled()) || fused_nat;
++                    if (night_early_l && fused_l && !shared_expert()) return false;   // (EP never takes fused_l)
+                     // #583 / #954: the fused layout's GU/H/Xq hold the grouping tables and the int8 rows, sized for
+                     // stream_all_min() - 1 tokens of MMQ's rows, so a layer that takes MMQ or the FP16 path at the FULL
+                     // chunk would write T*K rows into a (stream_all_min() - 1)*K-row buffer: an illegal access, or a kernel
+@@ -3483,6 +3541,20 @@ bool Prefill::run_impl(const int64_t *tokens, int64_t n, int64_t pos0,
+                         */
+                         else m.cs->memcpy(m.ids_host.data(), m.ids,
+                                           (size_t)T * K * 4);
++                        if (night_early_l) {
++                            // night lab EARLY: the host needs only the ids and weights; the push, the doorbell that
++                            // tells card 1 the rows are there, and the shared expert run while the host routes
++                            if (m.pp->reduce_rows)
++                                m.cs->memcpy(m.pp->reduce_weight_host.data(), m.w, (size_t) T * K * 4);
++                            sycl::event routed = m.cs->ext_oneapi_submit_barrier();
++                            // the copy_f32_wide bytes (FP16 bits); every group fences, the last raises the doorbell
++                            strata::kernels::ep_push_signal(m.pp->x_reg.remote, m.mixed_h, T * N / 8, m.pp->push_done,
++                                                            (uint32_t*) m.pp->flag_reg.remote, ++m.pp->epoch, m.cs);
++                            if (!shared_expert()) return false;
++                            core::progress_at("reading the prompt (batched): waiting for the GPU (attention, router) at layer",
++                                              l, p0);
++                            routed.wait();
++                        } else {
+                         // before the wait below, which covers it; a kernel, as the region is not USM of this context
+                         if (m.pp && m.pp->ipc()) copy_f32_wide((float*) m.pp->x_reg.remote, (const float*) m.mixed_h, T * N / 2, m.cs);   // FP16 bits
+                         if (m.pp && m.pp->reduce_rows)
+@@ -3492,6 +3564,7 @@ bool Prefill::run_impl(const int64_t *tokens, int64_t n, int64_t pos0,
+                         core::progress_at("reading the prompt (batched): waiting for the GPU (attention, router) at layer",
+                                           l, p0);
+                         m.cs->wait();
++                        }
+                         core::progress_at("reading the prompt (batched): layer", l, p0);
+                         pt.fold();
+                         if (pe.on) {   // the peer's marks so far are done: the primary waited for its last rows
+@@ -3673,6 +3746,9 @@ bool Prefill::run_impl(const int64_t *tokens, int64_t n, int64_t pos0,
+                             behavior.
+                             */
+                             // ipc: inbound PCIe writes do not invalidate this card's caches
++                            if (P.ipc() && P.early)   // night lab EARLY: card 0's push of this layer has landed
++                                strata::kernels::ep_wait_value((const uint32_t*) P.flag_reg.local, P.epoch, 50000000u,
++                                                               P.early_err, 1u, ps);
+                             if (P.ipc()) strata::kernels::ep_copy_uncached(P.mixed_h, P.x_reg.local, (size_t) T * N * 2, ps);
+                             else if (P.p2p) dpct::async_dpct_memcpy(
+                                 P.mixed, P.dev, m.mixed, prevd,
+@@ -3761,7 +3837,12 @@ bool Prefill::run_impl(const int64_t *tokens, int64_t n, int64_t pos0,
+                                     P.gemm->f16(P.Hh, P.dq_d, rows + o * N, ne, N, 640);
+                                 }
+                                 strata::core::prefill_host::mark("peer_loop_end");
+-                                if (P.reduce_rows)
++                                if (P.reduce_rows && P.f16sum) {   // night lab F16SUM: FP16 rows, then T scales
++                                    uint8_t* sb = (uint8_t*) (P.reduce_push ? P.sum_reg.remote : P.sum_reg.local);
++                                    strata::kernels::ep_prefill_reduce_h(rows, P.reduce_slot, P.reduce_weight,
++                                        (uint16_t*) sb, (float*) (sb + (size_t) T * N * 2),
++                                        T, rows_local, N, (int) K, ps, P.reduce_push);
++                                } else if (P.reduce_rows)
+                                     strata::kernels::ep_prefill_reduce(rows, P.reduce_slot, P.reduce_weight,
+                                         (float*) (P.reduce_push ? P.sum_reg.remote : P.sum_reg.local),
+                                         T, rows_local, N, (int) K, ps, P.reduce_push);
+@@ -4473,7 +4554,14 @@ bool Prefill::run_impl(const int64_t *tokens, int64_t n, int64_t pos0,
+                             const core::OnDevice d(m.pp->dev);
+                             m.pp->s->wait();
+                         }
+-                        if (m.pp->reduce_rows)
++                        if (m.pp->early && *m.pp->early_err != 0) {
++                            err = "prefill (STRATA_NIGHT_PREFILL_EARLY): card 1 gave up waiting for card 0's activation push at layer " +
++                                  std::to_string(l);
++                            return false;
++                        }
++                        if (m.pp->reduce_rows && m.pp->f16sum) {
++                            // night lab F16SUM: ep_prefill_finish_h below reads the FP16 sums itself
++                        } else if (m.pp->reduce_rows)
+                             strata::kernels::ep_copy_uncached(m.bo, m.pp->reduce_push ? m.pp->sum_reg.local : m.pp->sum_reg.remote,
+                                                              (size_t) T * N * 4, m.cs);
+                         else
+@@ -4484,7 +4572,12 @@ bool Prefill::run_impl(const int64_t *tokens, int64_t n, int64_t pos0,
+                         if (!m.pp->p2p)
+                             copy_f32_wide(m.Dm + (size_t) m.pp->back_at * N, m.pp->host_rows, m.pp->back_rows * N, m.cs);
+                     }
+-                    if (peer_now && m.pp->reduce_rows)
++                    if (peer_now && m.pp->ipc() && m.pp->reduce_rows && m.pp->f16sum) {
++                        const uint8_t* sb = (const uint8_t*) (m.pp->reduce_push ? m.pp->sum_reg.local : m.pp->sum_reg.remote);
++                        strata::kernels::ep_prefill_finish_h(m.Dm, m.slot_dev, m.w, m.shared, m.sg, (const uint16_t*) sb,
++                                                             (const float*) (sb + (size_t) T * N * 2), m.bo,
++                                                             T, m.pp->back_at, N, (int) K, m.cs);
++                    } else if (peer_now && m.pp->reduce_rows)
+                         strata::kernels::ep_prefill_finish(m.Dm, m.slot_dev, m.w, m.shared, m.sg, m.bo,
+                                                          T, m.pp->back_at, N, (int) K, m.cs);
+                     else
