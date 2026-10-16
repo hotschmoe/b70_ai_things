@@ -1,0 +1,132 @@
+{
+  "qsa_commit_group_steps_host_selection_marker": "strata QSA commit grouped steps: enabled=1 host-selection-only",
+  "all_eligible_shapes_or_gpu_dispatch_observed": false,
+  "logged_capture_layouts": [],
+  "native_window_rows": [
+    [
+      "556",
+      "5.33"
+    ]
+  ],
+  "status": "PASS_HTTP_TEXT_COUNTS_FINITE_AND_PAIRED",
+  "wall_s": 29.463351544982288,
+  "output_sha256": [
+    "642fe4fea6d7df904f1b9030f2928ffb5c9ada68bbebb26aef0e6ccc68d3abc0",
+    "87959243e14fc43ea30aa61145a647645bb8d49e348c4d1a6c653144e3da9ad2"
+  ],
+  "usage": [
+    {
+      "prompt_tokens": 107,
+      "completion_tokens": 1500,
+      "total_tokens": 1607,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    {
+      "prompt_tokens": 107,
+      "completion_tokens": 1500,
+      "total_tokens": 1607,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    }
+  ],
+  "work_timings": [
+    {
+      "cache_n": 0,
+      "prompt_n": 107,
+      "predicted_n": 1500,
+      "draft_n": 1110,
+      "draft_n_accepted": 943
+    },
+    {
+      "cache_n": 0,
+      "prompt_n": 107,
+      "predicted_n": 1500,
+      "draft_n": 1140,
+      "draft_n_accepted": 934
+    }
+  ],
+  "native_windows": 556,
+  "paired": 553,
+  "solo": 2,
+  "raw_native_token_ids_observed": false,
+  "aggregate_output_tps": 101.82141008024291,
+  "stream_metrics": [
+    {
+      "ttft_s": 0.9288204069598578,
+      "completion_wall_s": 28.646659396996256,
+      "decode_tps": 54.08069512702049,
+      "whole_request_output_tps": 52.36212639011173,
+      "content_event_gap_ms": {
+        "count": 1332,
+        "p50": 0.23394598974846303,
+        "p95": 47.47264538600575,
+        "maximum": 1347.0269149984233
+      }
+    },
+    {
+      "ttft_s": 2.085921759949997,
+      "completion_wall_s": 29.227841404965147,
+      "decode_tps": 55.228223338849375,
+      "whole_request_output_tps": 51.32092990436112,
+      "content_event_gap_ms": {
+        "count": 1332,
+        "p50": 0.2290765114594251,
+        "p95": 47.48489574994892,
+        "maximum": 424.7977150371298
+      }
+    }
+  ],
+  "admission_gate": {
+    "status": "PASS_NATIVE_PROMPT_START_ORDER_AND_CLIENT_OVERLAP",
+    "fresh_engine_byte_offset": 14078,
+    "only_request0_outstanding": true,
+    "native_prompt_start_line": "strata trace: prompt start 106 -1",
+    "native_prompt_count_minus1": 106,
+    "marker_byte_offset": 14251,
+    "marker_observed_monotonic_ns": 453010347638080,
+    "marker_observed_epoch_ns": 1792128522234849062,
+    "request1_submit_monotonic_ns": 453010347645544,
+    "client_overlap_ns": 28436337799,
+    "request0_lifetime": {
+      "client_call_start_monotonic_ns": 453010146152159,
+      "client_call_start_epoch_ns": 1792128522033363642,
+      "model": "hotschmoe-dd",
+      "messages": [
+        {
+          "role": "user",
+          "content": "[Flash-Next concurrent coding repeat 3 slot 0] Implement a Python asyncio bounded worker pool for processing file paths. Requirements: fixed worker count, bounded queue for backpressure, preserve input order in results, propagate the first worker exception, cancel and await all outstanding tasks on failure, and handle caller cancellation without leaked tasks. Explain the shutdown protocol, provide complete typed code using only the standard library, and include three meaningful tests for ordering, worker failure, and cancellation."
+        }
+      ],
+      "max_new_tokens": 1500,
+      "strata_tune": {
+        "spec_min_p": 0
+      },
+      "client_call_end_monotonic_ns": 453038795395772,
+      "client_call_end_epoch_ns": 1792128550682607055
+    },
+    "request1_lifetime": {
+      "client_call_start_monotonic_ns": 453010359057973,
+      "client_call_start_epoch_ns": 1792128522246269105,
+      "model": "hotschmoe-dd",
+      "messages": [
+        {
+          "role": "user",
+          "content": "[Flash-Next concurrent coding repeat 3 slot 1] Implement a Python asyncio bounded worker pool for processing file paths. Requirements: fixed worker count, bounded queue for backpressure, preserve input order in results, propagate the first worker exception, cancel and await all outstanding tasks on failure, and handle caller cancellation without leaked tasks. Explain the shutdown protocol, provide complete typed code using only the standard library, and include three meaningful tests for ordering, worker failure, and cancellation."
+        }
+      ],
+      "max_new_tokens": 1500,
+      "strata_tune": {
+        "spec_min_p": 0
+      },
+      "client_call_end_monotonic_ns": 453039589506719,
+      "client_call_end_epoch_ns": 1792128551476718442
+    }
+  },
+  "client_overlap_ns": 28436337799,
+  "repeat": 3,
+  "output_tokens_per_stream": 1500,
+  "exact_gate": "full UTF8 text/SSE content plus usage/native work; not raw token IDs"
+}

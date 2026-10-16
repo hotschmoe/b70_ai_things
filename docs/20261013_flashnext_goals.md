@@ -481,3 +481,11 @@ Stop treating instrumented3.3ms as productionhostcost; no CPUGPUclockjoin.
 [actual Opus/Fable decisions](20261016_strata_s141_s142_review_decisions.md).
 Targets and retained S30fullRAMrecovery remain unchanged; newgroupflag
 matched serving is pending, and fullcontext qualification is not implied.
+
+
+S144QSAgroup3 same-new-binary serving passes exact output/work,
+functionals/normalteardown/fullhealth but aggregate103.088499->102.983199
+tok/s(-.102145%, fixedorder/nestedn3) supplies no observedgain. DefaultOFF
+andpark/no retest/promotion. Private42%chain change didnotforecastwhole
+serving. Alltargetsremainunmet/retainedS30RAMscopeunchanged.
+[S144 measured result](20261016_strata_qsa_commit_group_serving.md).

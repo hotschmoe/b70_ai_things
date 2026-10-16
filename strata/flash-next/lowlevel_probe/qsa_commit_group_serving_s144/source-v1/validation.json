@@ -1,0 +1,20 @@
+{
+  "client.py": "AST_PASS_NO_IMPORT_OR_EXECUTION",
+  "compare.py": "AST_PASS_NO_IMPORT_OR_EXECUTION",
+  "make_configs.py": "AST_PASS_NO_IMPORT_OR_EXECUTION",
+  "start_arm.py": "AST_PASS_NO_IMPORT_OR_EXECUTION",
+  "start_arm embedded probe": "AST_PASS",
+  "stop_and_health.py": "AST_PASS_NO_IMPORT_OR_EXECUTION",
+  "launch_stage.sh": "BASH_N_PASS_ONLY",
+  "stop_controller_exact_S139": true,
+  "source_only_no_configs": true,
+  "inherited_modes": {
+    "client.py": "0o755",
+    "compare.py": "0o755",
+    "launch_stage.sh": "0o755",
+    "make_configs.py": "0o755",
+    "start_arm.py": "0o755",
+    "stop_and_health.py": "0o755"
+  },
+  "no_runtime_or_models": true
+}

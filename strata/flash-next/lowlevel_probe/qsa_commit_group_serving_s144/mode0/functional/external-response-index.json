@@ -1,0 +1,38 @@
+[
+  {
+    "file": "concurrent-math.json",
+    "identity": {
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s144-serving-prep/mode0/functional/concurrent-math.json",
+      "bytes": 8022,
+      "sha256": "9717d142b4dd23b90c39ec4e915d3ed976f47fd5dc1e2ed91fc27d433d8c510e"
+    },
+    "scope": "Full response/request JSON external; actual functional verdict copied."
+  },
+  {
+    "file": "thinking.json",
+    "identity": {
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s144-serving-prep/mode0/functional/thinking.json",
+      "bytes": 1480,
+      "sha256": "f46dd72049dc69a02c87752a3e3753c6dea603c21157e1886a21d2cac90b1b53"
+    },
+    "scope": "Full response/request JSON external; actual functional verdict copied."
+  },
+  {
+    "file": "tool-first.json",
+    "identity": {
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s144-serving-prep/mode0/functional/tool-first.json",
+      "bytes": 2253,
+      "sha256": "188d61b99d2dd4367831d50ff910aa0e606cdd7dbd6599dc80a31ec56cd73a47"
+    },
+    "scope": "Full response/request JSON external; actual functional verdict copied."
+  },
+  {
+    "file": "tool-final.json",
+    "identity": {
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s144-serving-prep/mode0/functional/tool-final.json",
+      "bytes": 2508,
+      "sha256": "19922cb73870f8a98e9a79d2acac89f2d0a3faaf34f22a5139a04d1b3ca8be3e"
+    },
+    "scope": "Full response/request JSON external; actual functional verdict copied."
+  }
+]

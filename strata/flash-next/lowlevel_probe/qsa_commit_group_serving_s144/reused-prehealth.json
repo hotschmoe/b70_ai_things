@@ -1,0 +1,26 @@
+{
+  "stage": "S142",
+  "root_revalidated_no_intervening_GPU_or_stack_change": true,
+  "all_required_health_exit0": true,
+  "boot_id": "b785982c-4954-4d23-808c-48a7534ce3bd",
+  "kernel": "7.1.0-070100-generic",
+  "scope": "Latest S142 fullbothcard+compiled posthealth; only CPU build/source work since; revalidate immediately before S144start",
+  "sources": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/run/post-health.json",
+      "sha256": "b90f34290f2eefe25e836b069bfdac79879609011b7355439cee2f3befde4c80"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/run/normal-stop.json",
+      "sha256": "7b23d83fb13f68b2b7a71c8e1b4b194daa5e903432207eb31c96f7df5eff71a8"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/run/container-removal.json",
+      "sha256": "f33e13e94c066c2c2fd4d550eb412c0a110515a9e505fdd1f418137d4665f6db"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/run/closure.json",
+      "sha256": "713a233653c02e8bb08aab66a3bda72a6ff8d714d2a84c092778e803e2dcda18"
+    }
+  ]
+}

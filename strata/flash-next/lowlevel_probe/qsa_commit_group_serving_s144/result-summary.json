@@ -1,0 +1,83 @@
+{
+  "status": "PASS_MATCHED_DISCRIMINATOR",
+  "comparison_sha256": "8076f39a5d145f19ddd2c667dde149206b17e0a9293386cb3b44e4d2b1ce0142",
+  "all_checks_true": true,
+  "timed_summary": {
+    "pair_wall_median_s": [
+      29.101209385029506,
+      29.130965346004814
+    ],
+    "aggregate_output_tps_median": [
+      103.0884991859921,
+      102.98319895572692
+    ],
+    "per_stream_medians": [
+      [
+        {
+          "ttft_s": 0.9110694029950537,
+          "completion_wall_s": 28.921024645969737,
+          "decode_tps": 53.51668672787228,
+          "whole_request_output_tps": 51.8653823079201
+        },
+        {
+          "ttft_s": 2.081352258042898,
+          "completion_wall_s": 28.895657362008933,
+          "decode_tps": 55.86014250376536,
+          "whole_request_output_tps": 51.910914543586436
+        }
+      ],
+      [
+        {
+          "ttft_s": 0.9045185840222985,
+          "completion_wall_s": 28.943957488052547,
+          "decode_tps": 53.45673153337847,
+          "whole_request_output_tps": 51.824288389698204
+        },
+        {
+          "ttft_s": 2.083825503010303,
+          "completion_wall_s": 28.919711682014167,
+          "decode_tps": 55.80413207745607,
+          "whole_request_output_tps": 51.86773701249879
+        }
+      ]
+    ]
+  },
+  "aggregate_change_of_medians_pct": -0.10214546830796811,
+  "paired_changes": [
+    {
+      "label": "repeat1",
+      "aggregate_change_pct": -0.10214546830796811,
+      "pair_wall_change_pct": 0.10224991195937339
+    },
+    {
+      "label": "repeat2",
+      "aggregate_change_pct": -0.09688698478698132,
+      "pair_wall_change_pct": 0.09698094670207436
+    },
+    {
+      "label": "repeat3",
+      "aggregate_change_pct": 0.0599211869497962,
+      "pair_wall_change_pct": -0.059885302965445586
+    }
+  ],
+  "source_binding": {
+    "verify_source": {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp",
+      "sha256": "c28de288061beae19949982ff3de7cf0a54fcae4d23f61e3a0374f90aeb435c6"
+    },
+    "root_build_receipt": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s143-main-build/root-serving-build-receipt.json",
+      "sha256": "e4b9b6373296def1965ffa3bba8333779548a2f9faff5d2bfccda4e53a72ff9f"
+    }
+  },
+  "common_RoPE0_config_and_actual_native_env_both_verified": true,
+  "only_groupflag_diff_after_log_normalization": true,
+  "source_V1_all_frozen_hashes_match": true,
+  "V2_created_or_executed": false,
+  "scope": "One fixed OFF->ON sequence, distinctarmprocesses,n3nested. No observedgain/defaultOFF/park; no quantifiednoise/regression/population/promotion claim. S141private chain result not servingforecast. No rawtokenIDs/nativeITL/devicecount proof.",
+  "review_references": [
+    "S143source/build796faaaa",
+    "actualmodels5c9aa822"
+  ],
+  "future_postreview": "Not consumed or claimed here."
+}

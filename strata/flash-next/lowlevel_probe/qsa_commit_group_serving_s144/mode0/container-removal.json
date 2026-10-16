@@ -1,0 +1,23 @@
+{
+  "docker_ps_exit": 0,
+  "docker_ps_stderr": "",
+  "entries": [
+    [
+      "5d04f34e963b9c32f36ac1dde359f4eb99a1cce2e114f3c8424365d96db49ca1",
+      "b70_grafana"
+    ],
+    [
+      "0cc1aad4ab1b03345c73455c1fb22d8f5798f9643ebec3ac439ed5c2e984a9db",
+      "b70_prometheus"
+    ],
+    [
+      "ee813f751899a489a29dad25891ada93939a4fd817eaaead23e1036ef344a0d1",
+      "open-webui"
+    ]
+  ],
+  "created_cid": "6faad97357b82e9efc6f818d71230401dcc69d125763384adbb92b000f16f561",
+  "expected_name": "strata-s144-mode0",
+  "full_cid_absent": true,
+  "name_absent": true,
+  "epoch_ns": 1792128375007203376
+}

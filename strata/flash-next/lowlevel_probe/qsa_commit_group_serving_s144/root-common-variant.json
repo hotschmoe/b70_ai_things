@@ -1,0 +1,30 @@
+{
+  "before_any_start": true,
+  "source_controllers_unchanged_V1_frozen": true,
+  "configs": [
+    {
+      "arm": "0",
+      "before_sha256": "952606bc855d55713339867930860baab77a12322a6d281b1ca8fdb515a68123",
+      "after_sha256": "9c2391ee84189284a44f6706563cb6df805dafa226ada5bf94d6bc3213f56ab3",
+      "only_common_env_change": {
+        "STRATA_ROPE_TABLE": {
+          "before": null,
+          "after": "0"
+        }
+      }
+    },
+    {
+      "arm": "1",
+      "before_sha256": "cbecd614f6f62fdae05126e3793b60d8ced16a73207e1be418345293bd8cf45e",
+      "after_sha256": "4e64510768f0915e63a60f928d4f847e3e42f5437a58270925c3764835fb26e9",
+      "only_common_env_change": {
+        "STRATA_ROPE_TABLE": {
+          "before": null,
+          "after": "0"
+        }
+      }
+    }
+  ],
+  "verification": "existing actual-native-env loop checks EVERYconfigenv key including ROPE0; root verifies config+native again before trustingresult",
+  "why_direct_root_change": "avoid duplicate controller version/check cycle for common env value"
+}

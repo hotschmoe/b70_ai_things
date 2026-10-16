@@ -1,0 +1,60 @@
+{
+  "stage": "S144",
+  "commands": [
+    {
+      "phase": "start0",
+      "command": [
+        "bin/cpu-run",
+        "python3",
+        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s144-serving-prep/harness-prep/start_arm.py",
+        "0"
+      ],
+      "exit": 0,
+      "elapsed_s": 28.51314476900734
+    },
+    {
+      "phase": "ready_phases0",
+      "command": [
+        "python3",
+        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s144-root-lifecycle-helper/root_run_ready_arm.py",
+        "144",
+        "0"
+      ],
+      "exit": 0,
+      "elapsed_s": 160.5859471410513
+    },
+    {
+      "phase": "start1",
+      "command": [
+        "bin/cpu-run",
+        "python3",
+        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s144-serving-prep/harness-prep/start_arm.py",
+        "1"
+      ],
+      "exit": 0,
+      "elapsed_s": 28.492334350012243
+    },
+    {
+      "phase": "ready_phases1",
+      "command": [
+        "python3",
+        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s144-root-lifecycle-helper/root_run_ready_arm.py",
+        "144",
+        "1"
+      ],
+      "exit": 0,
+      "elapsed_s": 160.30130675196415
+    },
+    {
+      "phase": "compare",
+      "command": [
+        "bin/cpu-run",
+        "python3",
+        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s144-serving-prep/harness-prep/compare.py"
+      ],
+      "exit": 0,
+      "elapsed_s": 0.2938591549755074
+    }
+  ],
+  "automatic_retry": false
+}

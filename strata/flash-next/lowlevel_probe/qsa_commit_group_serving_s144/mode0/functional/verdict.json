@@ -1,0 +1,6 @@
+{
+  "status": "PASS",
+  "arithmetic": true,
+  "thinking": true,
+  "tool_roundtrip": true
+}

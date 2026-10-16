@@ -25777,3 +25777,23 @@ ofnewfollowup_task; newassignmentsnowexplicitlyrestartagent. Routine
 commonenv0editeddirectlywithrootconfigdelta/nativeenvgatebeforestart,
 no extra controller-version round. No benchmarkrepeatneeded. See
 docs/20261016_strata_qsa_commit_group_build.md.
+
+
+## 2026-10-16 S144: group3 QSA matched serving has no observed gain
+
+CONFIG -> Fresh SAME S143b5104c30binary OFF/ON; groupflag0/1 only
+algorithm delta/allothercandidates0 inclC2/C6. CommonanalyticROPE0
+rootaddedbeforestart/exactconfigdelta/actualnativeenvbothverified;
+frozenV1controllersunchanged/noV2. ReusedhealthyS142preflight.
+COMMAND -> Warm+3fresh107x1500C2pairs/immediateONparity, existing
+functionals, normalQUIT/fullCID+NAMEgone/fullbothcardcollectivehealth
+eacharm. Rootsequence6598terminal0/comparator0.
+RESULT -> Allstrictoutput/SSE/usage/drafts/windows/rows/captures/
+functionals/identity/marker/teardown/healthPASS. Aggregate103.088499->
+102.983199tok/s(-.102145%); paired-.102145/-.096887/+.059921%.
+Perstream53.516687/55.860143->53.456732/55.804132.
+VERDICT -> Noobservedservinggain/defaultOFF/park, no repeatedtiming
+or promotion/no quantifiednoise/population/regressionclaim. S141private
+42%chainchange didnotforecastserving. Fullcontext/RAMqualification
+separate. NextlargerGDNprivateprobealreadybuilt/nogainclaimhere. See
+docs/20261016_strata_qsa_commit_group_serving.md.
