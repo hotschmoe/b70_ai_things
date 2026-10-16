@@ -1,0 +1,8 @@
+/work/src-ep/sycl/src/kernels/cuda/native_qsa_indexer.dp.cpp: OK
+/work/src-ep/sycl/src/kernels/cuda/native_rope.dp.cpp: OK
+/work/src-ep/include/strata/kernels/native_qsa_indexer.hpp: OK
+/work/src-ep/include/strata/kernels/mrope.hpp: OK
+/work/src-ep/include/strata/kernels/rope_scaling.hpp: OK
+/work/src-ep/include/strata/kernels/qsa.hpp: OK
+/work/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_qsa_indexer.dp.cpp.o: OK
+/work/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_rope.dp.cpp.o: OK

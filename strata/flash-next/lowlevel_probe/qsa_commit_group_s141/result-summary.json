@@ -1,0 +1,89 @@
+{
+  "status": "S141_CLOSED_PRIVATE_STRICT_AND_NORMAL_HEALTH_ONLY",
+  "comparison_sha256": "85a5010a7eec0d51e5a05b8c9e5af5773ff5c5dcce07dd052e5d590b6ba39a13",
+  "snapshot_freshness_from_saved_SHA_only": [
+    {
+      "case": 0,
+      "A0_equals_A2": true,
+      "A0_differs_B1": true
+    },
+    {
+      "case": 1,
+      "A0_equals_A2": true,
+      "A0_differs_B1": true
+    },
+    {
+      "case": 2,
+      "A0_equals_A2": true,
+      "A0_differs_B1": true
+    },
+    {
+      "case": 3,
+      "A0_equals_A2": true,
+      "A0_differs_B1": true
+    },
+    {
+      "case": 4,
+      "A0_equals_A2": true,
+      "A0_differs_B1": true
+    },
+    {
+      "case": 5,
+      "A0_equals_A2": true,
+      "A0_differs_B1": true
+    },
+    {
+      "case": 6,
+      "A0_equals_A2": true,
+      "A0_differs_B1": true
+    },
+    {
+      "case": 7,
+      "A0_equals_A2": true,
+      "A0_differs_B1": true
+    },
+    {
+      "case": 8,
+      "A0_equals_A2": true,
+      "A0_differs_B1": true
+    },
+    {
+      "case": 9,
+      "A0_equals_A2": true,
+      "A0_differs_B1": true
+    },
+    {
+      "case": 10,
+      "A0_equals_A2": true,
+      "A0_differs_B1": true
+    },
+    {
+      "case": 11,
+      "A0_equals_A2": true,
+      "A0_differs_B1": true
+    }
+  ],
+  "snapshots": 36,
+  "external_snapshot_bytes": 5754240,
+  "no_raw_snapshot_read_rehash": true,
+  "timing_entries": 8,
+  "control_median_us": 151.7345,
+  "grouped_median_us": 87.908,
+  "change_of_medians_pct": -42.06459308858565,
+  "scope": "instrument-free completed HOST captured chain:24 tail D2D restores +72/24 public append calls,2owners*12layers,not isolatedkernel/serving",
+  "all_actual_exit_records_read": {
+    "pre-health.exit": "0",
+    "create.exit": "0",
+    "leaf.exit": "0",
+    "normal-wait.exit": "0",
+    "normal-rm.exit": "0",
+    "analysis.exit": "0",
+    "post-health.exit": "0"
+  },
+  "whole_window_seconds_root_rounded": 41,
+  "docker_start_attached_seconds_actual_elapsed_receipt": 5.573246214014944,
+  "DOT_exports_observed": false,
+  "no_measured_device_submission_count": true,
+  "root_read_scope": "Parent fully read V1 source packet and V2 finite/lifecycle delta, comparison and closure. Actual model next-plan consultation is retained separately, not a new S141 full-source consultation.",
+  "future_main_source": "Pending separate source selector and root decision; no main build or serving result here."
+}

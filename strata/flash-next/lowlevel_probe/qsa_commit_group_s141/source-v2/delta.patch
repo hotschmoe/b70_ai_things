@@ -1,0 +1,98 @@
+--- a/oracle.cpp
++++ b/oracle.cpp
+@@ -7,6 +7,7 @@
+ #include <algorithm>
+ #include <array>
+ #include <chrono>
++#include <cmath>
+ #include <cstdio>
+ #include <cstring>
+ #include <exception>
+@@ -47,7 +48,8 @@
+  explicit State(sycl::queue&q):tail(q,3*D*4,"tail"),dead(q,D*4,"dead"),pool(q,(CAP/4+1)*D*4,"pooled"),bpos(q,4,"block_pos"){}
+  std::array<Buffer*,4>buffers(){return{&tail,&dead,&pool,&bpos};}
+  K::QsaIndexerBuffers args(){return{tail.ptr<float>(),dead.ptr<float>(),pool.ptr<float>(),bpos.ptr<int32_t>()};}
+- std::array<Bytes,4>get(){return{tail.get(),dead.get(),pool.get(),bpos.get()};}
++ std::array<Bytes,4>get(){std::array<Bytes,4>x{tail.get(),dead.get(),pool.get(),bpos.get()};
++  for(int field=0;field<3;++field)for(size_t i=0;i<x[field].size();i+=4){float value;std::memcpy(&value,x[field].data()+i,4);need(std::isfinite(value),"nonfinite state float field "+std::to_string(field)+" byte "+std::to_string(i));}return x;}
+  void put(const std::array<Bytes,4>&x){auto b=buffers();for(int i=0;i<4;++i)b[i]->put(x[i]);}
+  void init(int tag){std::vector<float>t(3*D),d(D),p((CAP/4+1)*D);for(size_t i=0;i<t.size();++i)t[i]=float(int((i+tag)%29)-14)/32;for(size_t i=0;i<d.size();++i)d[i]=float(int((i+tag)%31)-15)/16;for(size_t i=0;i<p.size();++i)p[i]=float(int((i+tag)%43)-21)/8;tail.putv(t);dead.putv(d);pool.putv(p);bpos.putv(std::vector<int32_t>{-1});}
+ };
+--- a/leased_run.py
++++ b/leased_run.py
+@@ -25,25 +25,43 @@
+ for n in['tmp','cache']:(O/n).mkdir()
+ entry='source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; set -euo pipefail; ldd /probe/qsa_three_steps > /out/runtime-ldd.txt; exec /probe/qsa_three_steps /out/leaf 0000:0b:00.0 --timing'
+ create=['docker','create','--name',NAME,'--cidfile',str(O/'attempt.cid'),'--network','none','--pull','never','--workdir','/out','--device','/dev/dri','--group-add',str(grp.getgrnam('render').gr_gid),'-u','1000:'+str(os.getgid()),'-e','ZE_AFFINITY_MASK=0','-e','ONEAPI_DEVICE_SELECTOR=level_zero:*','-e','STRATA_ROPE_TABLE=0','-e','SYCL_CACHE_PERSISTENT=0','-e','SYCL_CACHE_DIR=/out/cache','-e','XDG_CACHE_HOME=/out/cache','-e','TMPDIR=/out/tmp','-e','OMP_NUM_THREADS=1','-e','MKL_NUM_THREADS=1','-v',str(EXE.parent)+':/probe:ro','-v',str(O)+':/out','--entrypoint','bash',IMAGE,'-c',entry]
+-assert cmd('create',create)==0
+-cid=(O/'attempt.cid').read_text().strip();assert re.fullmatch('[0-9a-f]{64}',cid)
+-def inspect():
+- r=subprocess.run(['docker','inspect',cid],capture_output=True,text=True);save('latest-inspect.json',{'exit':r.returncode,'stdout':r.stdout,'stderr':r.stderr})
+- if r.returncode:return None
+- ci=json.loads(r.stdout)[0];assert ci['Id']==cid and ci['Name']=='/'+NAME and ci['Image']==IMAGE;return ci
+-ci=inspect();assert ci and ci['Config']['User']=='1000:'+str(os.getgid());save('created.json',ci)
+-t=time.monotonic();start=cmd('leaf',['docker','start','-a',cid]);save('elapsed.json',{'seconds':time.monotonic()-t})
+-# Unknown/live state retains the SAME lease; no blind health or forced cleanup.
+-while True:
++def hold_root(reason,detail=None):
++ save('lifecycle-HOLD.json',{'status':'HOLD_SAME_LEASE_ROOT_REQUIRED','reason':reason,'detail':detail,'no_force_reset_retry_or_health':True})
++ print('HOLD '+reason+'; SAME CPU/GPU leases retained; root intervention required',flush=True)
++ while True:time.sleep(5)
++# From the first create attempt until confirmed full CID/NAME absence, every
++# uncertain lifecycle error holds THIS process/lease instead of escaping.
++try:
++ create_rc=cmd('create',create)
++ if create_rc!=0:hold_root('create status nonzero',{'exit':create_rc})
++ if not(O/'attempt.cid').is_file():hold_root('create missing CID file')
++ cid=(O/'attempt.cid').read_text().strip()
++ if not re.fullmatch('[0-9a-f]{64}',cid):hold_root('create invalid CID')
++ def inspect():
++  r=subprocess.run(['docker','inspect',cid],capture_output=True,text=True);save('latest-inspect.json',{'exit':r.returncode,'stdout':r.stdout,'stderr':r.stderr})
++  if r.returncode:hold_root('owned container inspect failed',{'exit':r.returncode})
++  ci=json.loads(r.stdout)[0]
++  if not(ci['Id']==cid and ci['Name']=='/'+NAME and ci['Image']==IMAGE):hold_root('owned container inspect identity mismatch')
++  return ci
+  ci=inspect()
+- if ci is not None and not ci['State']['Running']:break
+- print('HOLD container live/unknown; retain lease, root recovery required',flush=True);time.sleep(5)
+-save('final-state.json',ci);native=ci['State']['ExitCode'];normal=start==native==0 and not ci['State']['OOMKilled']and not ci['State'].get('Dead')and not ci['State'].get('Error')
+-wait=cmd('normal-wait',['docker','wait',cid]);assert wait==0 and(O/'normal-wait.stdout').read_text().strip()==str(native)
+-assert cmd('normal-rm',['docker','rm',cid])==0
+-r=subprocess.run(['docker','ps','-a','--no-trunc','--format','{{.ID}} {{.Names}}'],capture_output=True,text=True);save('enumeration.json',{'exit':r.returncode,'stdout':r.stdout,'stderr':r.stderr});assert r.returncode==0
+-assert all(len(x.split())==2 and x.split()[0]!=cid and x.split()[1]!=NAME for x in r.stdout.splitlines())
+-save('removal.json',{'CID':cid,'name':NAME,'CID_absent':True,'name_absent':True,'normal_wait':True,'normal_rm':True,'native_exit':native,'OOMKilled':ci['State']['OOMKilled'],'no_force_reset_retry':True})
++ if ci['Config']['User']!='1000:'+str(os.getgid()):hold_root('created container user mismatch')
++ if str(EXE.parent)+':/probe:ro'not in ci['HostConfig']['Binds']:hold_root('created executable mount mismatch')
++ save('created.json',ci)
++ t=time.monotonic();start=cmd('leaf',['docker','start','-a',cid]);save('elapsed.json',{'seconds':time.monotonic()-t})
++ ci=inspect()
++ if ci['State']['Running']:hold_root('owned container still running after start terminal')
++ save('final-state.json',ci);native=ci['State']['ExitCode'];normal=start==native==0 and not ci['State']['OOMKilled']and not ci['State'].get('Dead')and not ci['State'].get('Error')
++ wait=cmd('normal-wait',['docker','wait',cid])
++ if wait!=0 or(O/'normal-wait.stdout').read_text().strip()!=str(native):hold_root('normal wait unconfirmed',{'exit':wait,'expected_native_exit':native})
++ rm=cmd('normal-rm',['docker','rm',cid])
++ if rm!=0:hold_root('normal remove unconfirmed',{'exit':rm})
++ r=subprocess.run(['docker','ps','-a','--no-trunc','--format','{{.ID}} {{.Names}}'],capture_output=True,text=True);save('enumeration.json',{'exit':r.returncode,'stdout':r.stdout,'stderr':r.stderr})
++ if r.returncode!=0:hold_root('post-remove enumeration failed',{'exit':r.returncode})
++ rows=[x.split()for x in r.stdout.splitlines()]
++ if not all(len(x)==2 and x[0]!=cid and x[1]!=NAME for x in rows):hold_root('full CID/NAME absence unconfirmed')
++ save('removal.json',{'CID':cid,'name':NAME,'CID_absent':True,'name_absent':True,'normal_wait':True,'normal_rm':True,'native_exit':native,'OOMKilled':ci['State']['OOMKilled'],'no_force_reset_retry':True})
++except Exception as error:
++ hold_root('lifecycle exception',{'type':type(error).__name__,'message':str(error)})
+ if not normal:
+  save('closure.json',{'status':'HOLD_ROOT_REVIEW_NO_AUTOMATIC_HEALTH_OR_RETRY','native_exit':native});raise SystemExit(2)
+ assert cmd('analysis',[sys.executable,str(P/'analyze.py'),str(O)])==0
+--- a/README.md
++++ b/README.md
+@@ -1,4 +1,4 @@
+-# S141 existing-public-kernel QSA grouped commit oracle (SOURCE ONLY)
++# S141 existing-public-kernel QSA grouped commit oracle V2 (SOURCE ONLY)
+ 
+ CONFIG -> No production patch/main build. Compare existing native_qsa_indexer_append called3times against existing native_qsa_indexer_append_steps(stride1,n_steps3). Both wrappers already submit the SAME compiled kernel class; arithmetic source is unchanged. Analytic text RoPE only (STRATA_ROPE_TABLE0, no IMRoPE map), geometry128/4/64, capacity32, base0, epsilon1e-6, default freq_base1e7.24 truly disjoint states =12QSA layers *2owners, separately allocated for BOTH arms. Runtime n_steps changes; no new device source/class.
+ 
+@@ -17,3 +17,5 @@
+ Only after all36 phases pass: one independently seeded timing fixture, one untimed replay per arm, then8 ABBA/BAAB captured completed-HOST chain measurements. Each includes24 D2D tail restores +72/control or24/candidate append calls. Every measured final full state/readonly/guard is checked outside timed interval. Preserve all eight samples. No isolated-kernel or serving-speed claim, no clean profile-vs-wall conversion. Existing recorded indexer service172.360us is NOT a predicted removable latency budget.
+ 
+ VERDICT -> PENDING. If strict mismatch/capture/guard/health failure, retain it and stop. Private PASS would support a later small default-OFF production selector, with one-row groups retaining old path and no prefix-RAM/PLE/KV format or ordering change; main/source implementation is deliberately deferred until root sees this result. S136 LEFT/source obligations are frozen separately at s136-left-commit-readiness. No claim that the larger recurrent GDN commit is copy-only or that all MTP work is small.
++
++V2 narrow preexecution correction -> V1 retained unused. State::get now checks every returned tail/dead/pooled float for finiteness using the same complete guarded readbacks; block_pos remains integer. After first docker create attempt, create/CID/inspect/normal-wait/rm/enumeration uncertainties enter hold_root on the SAME CPU/GPU leases, with no automatic retry/reset/health. Actual kernel/fixtures/timing counts unchanged. Fresh prehealth remains enabled; no assumed reuse of S140 health.

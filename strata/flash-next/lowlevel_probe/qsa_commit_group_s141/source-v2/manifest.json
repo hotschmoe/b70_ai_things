@@ -1,0 +1,65 @@
+{
+  "stage": "S141_V2",
+  "status": "SOURCE_ONLY_NO_BUILD_OR_GPU",
+  "original_manifest_sha256": "39ecbd681b98ff22a0c425e5d486838b7634d7cd511a3591dce8ad08f182756f",
+  "changed": {
+    "oracle.cpp": {
+      "original_sha256": "575ace36618105a7cf7e0cd78cf4948f9b82b69ba559051528efc4dd81219140",
+      "candidate_sha256": "3bdf0f1570fef3aaeb1ef13f9956c9c2a496be4e5b41853d2bd4fd2152c3afbe"
+    },
+    "leased_run.py": {
+      "original_sha256": "05eef9a1a424fbaddd911d00e6d241ba1ea5d52fb45a25e95e97aa4d8435833c",
+      "candidate_sha256": "a4bf600c93133aeb52c7dd6e322eee453d35c28a39308413381c0bb1918a178a"
+    },
+    "README.md": {
+      "original_sha256": "aaa71834109a8c15b13a115445c02c81eefe158a21a892f7b36a878237f10cba",
+      "candidate_sha256": "5104fc27732214425c4ee4820a0f35289a5443a062783c98fc0742a50ad5f2f1"
+    }
+  },
+  "files": {
+    "README.md": {
+      "bytes": 5134,
+      "sha256": "5104fc27732214425c4ee4820a0f35289a5443a062783c98fc0742a50ad5f2f1"
+    },
+    "analyze.py": {
+      "bytes": 1625,
+      "sha256": "336103d5ea5a823253c55e664480c8962d8ed59b1e9f288aa31202931b070a0d"
+    },
+    "build-container.sh": {
+      "bytes": 1763,
+      "sha256": "9d40a7c60faa4926b2c66cf13bf721dfa7fe955c5dd13e0beb5f0471f1359071"
+    },
+    "build.sh": {
+      "bytes": 1097,
+      "sha256": "04cf3a456e50fc72fcbbf0e2caa105000fb4a77b2d1a3d787b418ac13f0c36a7"
+    },
+    "delta.patch": {
+      "bytes": 9439,
+      "sha256": "06fdcb73f13d5998bf18a41403177f5cad2d062662ca798b973a490ce0c7e3d0"
+    },
+    "expected-input.sha256": {
+      "bytes": 1042,
+      "sha256": "c4f17355d982e205ed6deaae1b824b06163d3b14a48a46f48a23a0a146085548"
+    },
+    "input-pins.json": {
+      "bytes": 1925,
+      "sha256": "f05d9c4f1c95bbaf819b217da7cc0372a1cfca16ea3d8e2f4e4ff269dda298df"
+    },
+    "inverse.patch": {
+      "bytes": 9439,
+      "sha256": "e52c296083bc61bec24565ea3aacd993d2394301a9114b9e8493d491072a3101"
+    },
+    "leased_run.py": {
+      "bytes": 6466,
+      "sha256": "a4bf600c93133aeb52c7dd6e322eee453d35c28a39308413381c0bb1918a178a"
+    },
+    "oracle.cpp": {
+      "bytes": 11549,
+      "sha256": "3bdf0f1570fef3aaeb1ef13f9956c9c2a496be4e5b41853d2bd4fd2152c3afbe"
+    },
+    "run.sh": {
+      "bytes": 331,
+      "sha256": "0d44bec68051c6b78820a2bdf61f33183ca2ce77aef8d0fd159c9d91558af36a"
+    }
+  }
+}

@@ -25697,3 +25697,22 @@ privateprocess, notretroactivecheckerPASS/mainqueueproperty/perfgain.
 Keep source/runtime package distinction, queuepropertytestparked; next
 S142samebinary ring WITHOUTunitrace tocheckprofilerperturbation. See
 docs/20261016_strata_ur_adapter_discovery.md.
+
+
+## 2026-10-16 S141: existing QSA group commit private GPU oracle
+
+CONFIG -> Existing public append3calls vssteps(n3,stride1,base0),24
+disjoint layer/ownerstates. No production edit/new devicearithmetic.
+COMMAND -> Minimal2existingobjectCPUbuild0/21s (host9.987/AOT1.428/
+link0.199s), V2finite/lifecyclepreexec fixes only. Onequietcard0lease41s.
+RESULT -> All36strictABAphases/96completefields/eagercaptured/finite/
+guards/readonly/restoredtail/stalepooled/rejectedprefixPASS. Saved
+36snapshothashes verify12casesA0=A2!=B1. All8balancedtimings retained:
+completedrestore+appendchain median151.7345->87.908us(-42.064593%).
+Native/create/analyzer/wait/rm/preposthealth individually0, nonOOM/noError,
+fullCID+NAMEgone; existingexe635f49f2. No retry/reset/force.
+VERDICT -> Private stateandchain PASS, sourcecalls72->24notmeasured
+submissioncount/noDOTexport, no isolatedkernel/servingforecast. Root
+selects small defaultOFFsourceprep then actualincrementalbuild after
+ongoingS142closes; fullcontext/RAMnotnewlyqualified. See
+docs/20261016_strata_qsa_commit_group_oracle.md.
