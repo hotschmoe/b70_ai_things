@@ -1,0 +1,33 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NO_APPLY_BUILD_GPU",
+  "files": {
+    "README.md": {
+      "bytes": 5892,
+      "sha256": "69c0f6759c0a9a5a4e5c8c846d41021728b1b1a40f3e01e4a04fef596b7a87fd"
+    },
+    "candidate.patch": {
+      "bytes": 8430,
+      "sha256": "f817b6424a67dddd420ca8a50efb3302e4aa7ff66f001bc1193f4431e12408f2"
+    },
+    "inverse.patch": {
+      "bytes": 8430,
+      "sha256": "0f8dcc78e1154babb5874bf04ff39907bb70daf4ed7b97f46800d60b9f03f9c5"
+    },
+    "pins.json": {
+      "bytes": 582,
+      "sha256": "66cf5b5c2b9b6f46484e899e6d6b11ab68bfc9472c004c663e134ba7cc6385ef"
+    },
+    "projection.json": {
+      "bytes": 1459,
+      "sha256": "45b1a19bb7ecdf01db865ef380c02e2b1c2c4d716b9fae43724d7f52c85cdbb8"
+    },
+    "verify.cpp": {
+      "bytes": 228338,
+      "sha256": "95dd8805dad41fa5f37efc9e1dcba1afebaeecba6e2bc99e6c33eb75c81f2443"
+    },
+    "verify_kernels.dp.cpp": {
+      "bytes": 121110,
+      "sha256": "30ae8029330ea1ffcb2a0874f67ed95a8761677d488b801735383545e9b68da2"
+    }
+  }
+}

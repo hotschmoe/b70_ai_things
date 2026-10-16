@@ -25846,3 +25846,21 @@ allothers0. RejectoptionalCPUring (no ringON/OFFoverheadproof), universal
 1.6msbudget/strongest/closedlever/hiddenstateguarantee/RAMqualification.
 KeepcleanservingringABSENT; no private26%forecast. Sourceappliedseparately,
 actualbuildpending. See docs/20261016_strata_gdn_commit_integration_decision.md.
+
+
+## 2026-10-16 S147: default-OFF GDN source and incremental main build
+
+CONFIG -> V2 exacttwo3rowowners/MT8/full36GDN/native modes/in_order;
+directexistinghelperreuse, boundedseven disjointspans beforecapture.
+Nullz/y/normdatafallbackold, missingnormexistingerror; QSA/PLEtail/waitunchanged.
+COMMAND -> Rootreview/actualOpusFableGO/exacttwo-sourceapply. Initial26211
+preflight1 BEFORENinja becauseone503792Bpublickernelobjectrootowned;
+retainedfailedattempt+atomicbyteidenticalnamedfileownershiprepair.
+RESULT -> Corrected3421terminal0/build0/tee0/cpuwrapper65s(integer);
+Ninja52.846s/exactFIVE:kernelcompile11.531/archive.313,core16.828/
+archive.128/link35.865(overlapping). Cache+1555hits/+56misses descriptive.
+Source/buildsystemprepostguards0; main98f0357d. No configure/oldmainhash/
+modelscan/ISAround/cachewarm/GPUtouch inbuild.
+VERDICT -> Source/buildPASS/defaultOFF; S148matchedserving separate,
+notnumerical/runtime/RAMqualification. See
+docs/20261016_strata_gdn_commit_layer_main.md.

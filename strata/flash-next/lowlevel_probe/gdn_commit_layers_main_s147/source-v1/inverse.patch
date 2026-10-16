@@ -1,0 +1,154 @@
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -57,8 +57,6 @@
+ #include <cmath>
+ #include <cstdio>
+ #include <cstdlib>
+-#include <cstdint>
+-#include <limits>
+ #include <cstring>
+ #include <exception>
+ #include <immintrin.h>
+@@ -101,7 +99,6 @@
+ }
+ // S143: process-constant before capture; only privately checked three-row groups.
+ const bool g_qsa_commit_group_steps = env_on("STRATA_QSA_COMMIT_GROUP_STEPS");
+-const bool g_gdn_commit_layers = env_on("STRATA_GDN_COMMIT_LAYERS");
+ #if defined(STRATA_USE_HIP)
+ const bool g_coherent = env_on("STRATA_VERIFY_COHERENT");
+ const bool g_doorbell_store = env_on("STRATA_DOORBELL_STORE");
+@@ -3085,46 +3082,6 @@
+                                 (uint64_t) g.ssm_conv_channels * (g.ssm_d_conv - 1);
+     const int64_t TS = (s.idx_block - 1) * ID;
+     const int64_t HS = (int64_t) NG_HIST * NG_HC_DIM;
+-    // Prove S145's narrow layout and relevant span bounds BEFORE recording.
+-    bool gdn_layers_eligible = false;
+-    if (g_gdn_commit_layers && S == 6 && MT == 8 && hbase == 0 && lb_ == 0 && le_ == 48 &&
+-        g.n_layers == 48 && g.qsa_interval == 4 && g.ssm_state_size == 128 &&
+-        g.ssm_d_conv == 4 && C == 10240 && HV == 48 && g.ssm_k_heads == 16 && ZV == 6144 &&
+-        rows[0] == rows[1] && rows[1] == rows[2] && rows[3] == rows[4] && rows[4] == rows[5] &&
+-        rows[0] != rows[3] && rows[0] >= 0 && rows[3] >= 0 &&
+-        (size_t) rows[0] < slots_.size() && (size_t) rows[3] < slots_.size()) {
+-        const char* sp = std::getenv("STRATA_GDN_SPLIT");
+-        const char* cs = std::getenv("STRATA_GDN_COMMIT_SPLIT");
+-        const char* dbg = std::getenv("STRATA_DBG_GDN");
+-        bool fits = (!sp || std::strcmp(sp, "0") == 0) && (!cs || std::strcmp(cs, "1") == 0) &&
+-                    (!dbg || std::strcmp(dbg, "0") == 0);
+-        struct Span { uintptr_t begin = 0, end = 0; } spans[7];
+-        auto span = [&](int i, const void* p, size_t bytes) {
+-            const uintptr_t b = reinterpret_cast<uintptr_t>(p);
+-            if (!p || !bytes || b % alignof(float) || bytes > std::numeric_limits<uintptr_t>::max() - b)
+-                return false;
+-            spans[i] = Span{b, b + bytes};
+-            return true;
+-        };
+-        for (int owner = 0; owner < 2 && fits; ++owner) {
+-            const SessionState* x = slots_[(size_t) rows[3 * owner]];
+-            fits = x && x->layer_lo == 0 && x->layer_hi == 48 && x->gdn_ord0 == 0 && x->gdn_alloc == 36 &&
+-                   span(owner, x->gdn_state, (size_t) 36 * 817152 * sizeof(float));
+-        }
+-        fits = fits && span(2, qkv_L_, (size_t) 36 * 8 * 10240 * sizeof(float)) &&
+-               span(3, h_L_, (size_t) 36 * 8 * 10240 * sizeof(float)) &&
+-               span(4, gate_L_, (size_t) 36 * 8 * 48 * sizeof(float)) &&
+-               span(5, beta_L_, (size_t) 36 * 8 * 48 * sizeof(float)) &&
+-               slots_.size() <= std::numeric_limits<size_t>::max() / (10 * sizeof(int32_t)) &&
+-               span(6, commitb_, slots_.size() * 10 * sizeof(int32_t));
+-        for (int i = 0; i < 7 && fits; ++i)
+-            for (int j = i + 1; j < 7 && fits; ++j)
+-                fits = spans[i].end <= spans[j].begin || spans[j].end <= spans[i].begin;
+-        gdn_layers_eligible = fits;
+-        if (fits)   // keep every per-layer norm-weight presence check before batching
+-            for (int64_t l = lb_; l < le_; ++l)
+-                if (!is_qsa_layer(g, l) && !need(LayerView(*wt_, l), "ssm_norm.weight", err)) return false;
+-    }
+     if (DPCT_CHECK_ERROR(dpct::experimental::begin_recording(cs_)) != 0) {
+         err = "verify: begin batch commit capture failed";
+         return false;
+@@ -3134,37 +3091,10 @@
+         for (int t = 0; t < S; ++t)
+             if (t == 0 || rows[t] != rows[t - 1])
+                 copy_i32_from_mapped(commitb_ + (size_t) rows[t] * CB, m_commitb_ + (size_t) rows[t] * CB, CB, cs_);
+-        bool gdn_layers_batched = false;
+-        if (gdn_layers_eligible) {
+-            for (int owner = 0; owner < 2 && ok; ++owner) {
+-                const int first = 3 * owner;
+-                SessionState& x = *slots_[(size_t) rows[first]];
+-                if (!gdn_commit_layers(x.gdn_state, 817152, 786432, qkv_L_ + (size_t) first * C, 81920,
+-                                       h_L_ + (size_t) first * C, 81920, gate_L_ + (size_t) first * HV,
+-                                       beta_L_ + (size_t) first * HV, 384, (int) C, 16, 48, 3, 36,
+-                                       commitb_ + (size_t) rows[first] * CB, cs_)) {
+-                    err = "verify: GDN layer commit eligibility changed during capture";
+-                    ok = false;   // discard capture; never replay partial batch plus fallback
+-                }
+-            }
+-            gdn_layers_batched = ok;
+-            if (ok) {
+-                static const bool gdn_commit_layers_s147_logged = [] {
+-                    std::fprintf(stderr, "strata GDN commit layers: enabled=1 layers=36 owners=2 rows=3 host-selection-only\n");
+-                    std::fflush(stderr);
+-                    return true;
+-                }();
+-                (void) gdn_commit_layers_s147_logged;
+-            }
+-        }
+         int64_t qsa_index = 0, gdn_index = 0;
+         for (int64_t l = 0; l < lb_; ++l) (is_qsa_layer(g, l) ? qsa_index : gdn_index) += 1;
+         for (int64_t l = lb_; l < le_ && ok; ++l) {
+             const LayerView v(*wt_, l);
+-            if (!is_qsa_layer(g, l) && gdn_layers_batched) {
+-                ++gdn_index;
+-                continue;
+-            }
+             if (!is_qsa_layer(g, l)) {
+                 const WeightRef* wnm = need(v, "ssm_norm.weight", err);
+                 if (!wnm) { ok = false; break; }
+--- a/sycl/src/kernels/cuda/verify_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+@@ -16,7 +16,6 @@
+ #include <algorithm>
+ #include <cstdio>
+ #include <cstdlib>
+-#include <cstring>
+ #include <cmath>
+ #include <atomic>
+ #include <chrono>
+@@ -1713,39 +1712,6 @@
+     check("gdn_conv_commit");
+ }
+ 
+-// S147: existing declaration, only S145's privately tested domain; ordinary launches.
+-bool gdn_commit_layers(float* state, int64_t state_stride, int64_t conv_off, const float* qkv, int64_t qkv_stride,
+-                       const float* h, int64_t h_stride, const float* gate, const float* beta, int64_t gb_stride,
+-                       int conv_channels, int h_k, int h_v, int n_max, int n_layers, const int32_t* n_keep, void* stream) {
+-    static const bool modes_ok = [] {
+-        const char* sp = std::getenv("STRATA_GDN_SPLIT");
+-        const char* cs = std::getenv("STRATA_GDN_COMMIT_SPLIT");
+-        const char* dbg = std::getenv("STRATA_DBG_GDN");
+-        return (!sp || std::strcmp(sp, "0") == 0) && (!cs || std::strcmp(cs, "1") == 0) &&
+-               (!dbg || std::strcmp(dbg, "0") == 0);
+-    }();
+-    if (!modes_ok || !stream || !state || !qkv || !h || !gate || !beta || !n_keep ||
+-        conv_channels != 10240 || h_k != 16 || h_v != 48 || n_max != 3 || n_layers != 36 ||
+-        state_stride != 817152 || conv_off != 786432 || qkv_stride != 81920 || h_stride != 81920 || gb_stride != 384)
+-        return false;
+-    auto* q = strata::q_of(stream);
+-    q->parallel_for<class gdn_conv_commit_layers_s147>(
+-        sycl::nd_range<3>(sycl::range<3>(1, 36, 40) * sycl::range<3>(1, 1, 256), sycl::range<3>(1, 1, 256)),
+-        [=](sycl::nd_item<3> item) {
+-            const int64_t l = item.get_group(1);
+-            gdn_conv_commit_kernel(state + l * state_stride + conv_off, qkv + l * qkv_stride, conv_channels, n_keep);
+-        });
+-    q->parallel_for<class gdn_state_commit_layers_s147>(
+-        sycl::nd_range<3>(sycl::range<3>(36, 4, 48) * sycl::range<3>(1, RG, 32), sycl::range<3>(1, RG, 32)),
+-        [=](sycl::nd_item<3> item) {
+-            const int64_t l = item.get_group(0);
+-            gdn_step_commit_kernel(state + l * state_stride, h + l * h_stride, conv_channels,
+-                                   gate + l * gb_stride, beta + l * gb_stride, h_k, h_v, n_keep);
+-        });
+-    check("gdn_commit_layers");
+-    return true;
+-}
+-
+ void gdn_ab_multi(const float* x, const uint16_t* w_alpha, const uint16_t* w_beta, const float* dt, const float* ssm_a,
+                   float* gate, float* beta, int n_embd, int h_v, int n_tok, void* stream) {
+     if (n_embd % 8 != 0 || n_tok < 1 || n_tok > kVerifyMaxT) {

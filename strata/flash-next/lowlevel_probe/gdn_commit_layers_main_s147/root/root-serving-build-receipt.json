@@ -1,0 +1,24 @@
+{
+  "stage": "S147",
+  "build_exit": 0,
+  "tee_exit": 0,
+  "exe": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s147-main-build/build/strata-s147",
+    "sha256": "98f0357dd01d176476edcb101ec489280deb2925399a64d31b44ef3abfe17200"
+  },
+  "verify_source": {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp",
+    "sha256": "f669057242387e85ba3d433e8be0acacfff0c835a28af34f60fc278ccd88410b"
+  },
+  "verify_kernel_source": {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp",
+    "sha256": "929813472cd1ee9710c811e9c05fe48e8e459daa9fb62527f4cedb0839b86afb"
+  },
+  "actual_dry_plan": "PASS_EXACT_FIVE",
+  "actual_root_handle": 3421,
+  "terminal_exit": 0,
+  "cpu_wrapper_reported_elapsed_seconds": 65,
+  "failed_preflight": "failed-ownership-preflight-1",
+  "ownership_repair": "root-ownership-repair.json",
+  "no_GPU_or_ISA_certification_in_build": true
+}

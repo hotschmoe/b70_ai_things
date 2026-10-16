@@ -1,0 +1,58 @@
+{
+  "strata": {
+    "uid": 1000,
+    "gid": 1000,
+    "size": 92491968,
+    "mtime_ns": 1792127897673812289,
+    "writable": true,
+    "parent_writable": true
+  },
+  "libstrata_engine.a": {
+    "uid": 1000,
+    "gid": 1000,
+    "size": 3903442,
+    "mtime_ns": 1792127865334809246,
+    "writable": true,
+    "parent_writable": true
+  },
+  "libstrata_kernels.a": {
+    "uid": 1000,
+    "gid": 1000,
+    "size": 19570894,
+    "mtime_ns": 1792125898784646287,
+    "writable": true,
+    "parent_writable": true
+  },
+  "CMakeFiles/strata_engine.dir/src/core/verify.cpp.o": {
+    "uid": 1000,
+    "gid": 1000,
+    "size": 704656,
+    "mtime_ns": 1792127865247806547,
+    "writable": true,
+    "parent_writable": true
+  },
+  "CMakeFiles/strata_kernels.dir/src/kernels/cuda/verify_kernels.dp.cpp.o": {
+    "uid": 1000,
+    "gid": 1000,
+    "size": 503792,
+    "mtime_ns": 1792009179144814262,
+    "writable": true,
+    "parent_writable": true
+  },
+  ".ninja_log": {
+    "uid": 1000,
+    "gid": 1000,
+    "size": 22113,
+    "mtime_ns": 1792127898405834994,
+    "writable": true,
+    "parent_writable": true
+  },
+  ".ninja_deps": {
+    "uid": 1000,
+    "gid": 1000,
+    "size": 484152,
+    "mtime_ns": 1792127865260806951,
+    "writable": true,
+    "parent_writable": true
+  }
+}

@@ -1,0 +1,84 @@
+--- S143/build.sh
++++ S147/build.sh
+@@ -1,8 +1,8 @@
+ #!/usr/bin/env bash
+-# ROOT ONLY after full read. Five required reviewed post-apply SHA arguments.
++# ROOT ONLY after full read. Six required reviewed post-apply SHA arguments.
+ # No apply/restore/ownership repair/retry, no GPU or cache warm.
+ set -euo pipefail
+-[[ $(id -u) == 1000 && $# == 5 ]]
++[[ $(id -u) == 1000 && $# == 6 ]]
+ HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+ REPO=/mnt/vm_8tb/github/b70_ai_things
+ IMAGE=sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2
+@@ -29,7 +29,7 @@
+ import json,sys
+ assert json.load(open(sys.argv[1]))[0]['Id']==sys.argv[2]
+ PY
+-cmd=(env B70_CPU_LOCK_TIMEOUT=0 B70_AGENT=S143-QSA-commit-three-steps "$REPO/bin/cpu-run" env MAX_JOBS=4 docker run --rm --network none --cpus 4 -u "1000:$(id -g)" \
++cmd=(env B70_CPU_LOCK_TIMEOUT=0 B70_AGENT=S147-GDN-layer-commit "$REPO/bin/cpu-run" env MAX_JOBS=4 docker run --rm --network none --cpus 4 -u "1000:$(id -g)" \
+  -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_DIR=/out/cache \
+  -e SYCL_CACHE_PERSISTENT=0 -e NEO_CACHE_PERSISTENT=1 -e NEO_CACHE_DIR=/out/offline-cache -e NEO_CACHE_STATS=1 \
+  -e MAX_JOBS=4 -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 \
+--- S143/build-container.sh
++++ S147/build-container.sh
+@@ -26,7 +26,7 @@
+ sha256sum -c /prep/expected-unchanged-source.sha256
+ sha256sum -c /prep/expected-build-state.sha256
+ python3 /prep/guard.py cache-after
+-cp --reflink=auto strata /out/strata-s143
+-# Exactly the new main/verify object/engine archive hash once, plus tiny bindings.
+-sha256sum /out/strata-s143 CMakeFiles/strata_engine.dir/src/core/verify.cpp.o libstrata_engine.a /work/src-ep/sycl/CMakeLists.txt /work/src-ep/sycl/src/core/mtp.cpp /work/src-ep/sycl/include/strata/core/mtp.hpp /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp /work/src-ep/sycl/src/core/verify.cpp CMakeCache.txt build.ninja CMakeFiles/rules.ninja ggml/src/ggml-version.h > /out/build-sha256.txt
++cp --reflink=auto strata /out/strata-s147
++# Exactly new main/two changed objects/two changed archives hash once, plus tiny bindings.
++sha256sum /out/strata-s147 CMakeFiles/strata_engine.dir/src/core/verify.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/verify_kernels.dp.cpp.o libstrata_engine.a libstrata_kernels.a /work/src-ep/sycl/CMakeLists.txt /work/src-ep/sycl/src/core/mtp.cpp /work/src-ep/sycl/include/strata/core/mtp.hpp /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp /work/src-ep/sycl/src/core/verify.cpp /work/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp CMakeCache.txt build.ninja CMakeFiles/rules.ninja ggml/src/ggml-version.h > /out/build-sha256.txt
+ cat /out/build-sha256.txt
+--- S143/guard.py
++++ S147/guard.py
+@@ -6,7 +6,7 @@
+ def save(n,d):(O/n).write_text(json.dumps(d,indent=2)+'\n')
+ mode=sys.argv[1]
+ if mode=='before':
+- names=['strata','libstrata_engine.a','CMakeFiles/strata_engine.dir/src/core/verify.cpp.o','.ninja_log','.ninja_deps']
++ names=['strata','libstrata_engine.a','libstrata_kernels.a','CMakeFiles/strata_engine.dir/src/core/verify.cpp.o','CMakeFiles/strata_kernels.dir/src/kernels/cuda/verify_kernels.dp.cpp.o','.ninja_log','.ninja_deps']
+  rows={}
+  for n in names:
+   p=Path(n);s=p.stat();rows[n]=dict(uid=s.st_uid,gid=s.st_gid,size=s.st_size,mtime_ns=s.st_mtime_ns,writable=os.access(p,os.W_OK),parent_writable=os.access(p.parent,os.W_OK))
+@@ -24,15 +24,15 @@
+    assert all(x in a for x in ['-O3','-fp-model=precise','-fsycl','-fsycl-targets=spir64_gen','-fsycl-default-sub-group-size=32','-fsycl-device-code-split=per_kernel'])
+    compiled.append((a[a.index('-c')+1],a[a.index('-o')+1]))
+   elif '/ar 'in cmd or 'llvm-ar 'in cmd:
+-   assert 'libstrata_engine.a'in a;archives.append('libstrata_engine.a')
++   names=[n for n in ['libstrata_engine.a','libstrata_kernels.a']if n in a];assert len(names)==1;archives.extend(names)
+   else:
+    assert '-o'in a and a[a.index('-o')+1]=='strata'
+    assert '/opt/intel/oneapi/compiler/2026.1/bin/icpx'in a
+    assert all(x in a for x in ['-O3','-fsycl-max-parallel-link-jobs=4','-fsycl','-fsycl-targets=spir64_gen','-fsycl-device-code-split=per_kernel'])
+    assert a.count('-Xsycl-target-backend=spir64_gen')==1
+    assert '-device bmg-g31 -options -cl-fp32-correctly-rounded-divide-sqrt -allow_caching -cache_dir /out/offline-cache'in a;links.append(cmd)
+- assert len(actions)==3 and compiled==[('/work/src-ep/sycl/src/core/verify.cpp','CMakeFiles/strata_engine.dir/src/core/verify.cpp.o')] and archives==['libstrata_engine.a'] and len(links)==1,(actions,compiled,archives,links)
+- save('root-validated-plan.json',dict(status='PASS_EXACT_THREE',compiled=compiled,archives=archives,links=links))
++ assert len(actions)==5 and sorted(compiled)==sorted([('/work/src-ep/sycl/src/core/verify.cpp','CMakeFiles/strata_engine.dir/src/core/verify.cpp.o'),('/work/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp','CMakeFiles/strata_kernels.dir/src/kernels/cuda/verify_kernels.dp.cpp.o')]) and sorted(archives)==['libstrata_engine.a','libstrata_kernels.a'] and len(links)==1,(actions,compiled,archives,links)
++ save('root-validated-plan.json',dict(status='PASS_EXACT_FIVE',compiled=compiled,archives=archives,links=links))
+ elif mode in ('cache-before','cache-after'):
+  cmd=['/usr/bin/ocloc','cache','-show-stats','-dir','/out/offline-cache'];p=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT);(O/(mode+'.txt')).write_bytes(p.stdout)
+  m=re.search(rb'(?m)^Version\s+Hits\s+Misses\s+Hit Rate\s*\n\s*(\d+)\s+(\d+)\s+(\d+)\s+[0-9.]+%',p.stdout)
+--- S143/expected-applied-source.sha256
++++ S147/expected-applied-source.sha256
+@@ -2,4 +2,5 @@
+ 452a051e3a2219d0c6a00c8cdf795b798e763fcc793fbbb4dff1b4dda7903aff  /work/src-ep/sycl/src/core/mtp.cpp
+ e6314c05da00d175ae2990a5157bc24d3bea16602afa2138858eaee77200dbdd  /work/src-ep/sycl/include/strata/core/mtp.hpp
+ dd08daf548eab9ab69375ed1702dfa85214bd1431e9957126d12eea51ed569d1  /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+-c28de288061beae19949982ff3de7cf0a54fcae4d23f61e3a0374f90aeb435c6  /work/src-ep/sycl/src/core/verify.cpp
++f669057242387e85ba3d433e8be0acacfff0c835a28af34f60fc278ccd88410b  /work/src-ep/sycl/src/core/verify.cpp
++929813472cd1ee9710c811e9c05fe48e8e459daa9fb62527f4cedb0839b86afb  /work/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+--- S143/expected-unchanged-source.sha256
++++ S147/expected-unchanged-source.sha256
+@@ -18,7 +18,6 @@
+ 99f925bfdc0a295e3314bea43a2fc0f7119f80f1a5111b38939e1478bf67f2d8  /work/src-ep/sycl/src/core/native_dense.cpp
+ 83c233dd1f9de362cf646eb6f3d95dd97278ae43a30aeeed205b3067ef358a7e  /work/src-ep/sycl/include/strata/kernels/native_mmvq.hpp
+ b227dbe8ded71292b6373c886204174c6b04d3212e1872ca00bff646053feb1a  /work/src-ep/sycl/src/kernels/cuda/sampler.dp.cpp
+-5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e  /work/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+ d4c154af107e8b9b731c957899873175157855e937cee6e3892205cef5258207  /work/src-ep/sycl/include/strata/kernels/sampler.hpp
+ c59529e560fbea77ca4a268fac1e65ca24a8f3826b0589e961813978f4903fb9  /work/src-ep/include/strata/kernels/verify_kernels.hpp
+ 66776dce10405ad3826e6f19edf23a9811113fa6c62832de56d93d907b827154  /work/src-ep/sycl/include/dpct/device.hpp

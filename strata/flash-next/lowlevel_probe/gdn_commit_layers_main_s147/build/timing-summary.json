@@ -1,0 +1,63 @@
+{
+  "targets": [
+    {
+      "target": "CMakeFiles/strata_kernels.dir/src/kernels/cuda/verify_kernels.dp.cpp.o",
+      "start_ms": 19,
+      "end_ms": 11550,
+      "duration_ms": 11531,
+      "output_mtime_ns": 1792129739476916085,
+      "command_hash": "b0d2f22499605d76"
+    },
+    {
+      "target": "libstrata_kernels.a",
+      "start_ms": 11550,
+      "end_ms": 11863,
+      "duration_ms": 313,
+      "output_mtime_ns": 1792129739731923983,
+      "command_hash": "3041e9f34e6cc63a"
+    },
+    {
+      "target": "CMakeFiles/strata_engine.dir/src/core/verify.cpp.o",
+      "start_ms": 20,
+      "end_ms": 16848,
+      "duration_ms": 16828,
+      "output_mtime_ns": 1792129744774080148,
+      "command_hash": "d90f52b5ed19b203"
+    },
+    {
+      "target": "libstrata_engine.a",
+      "start_ms": 16848,
+      "end_ms": 16976,
+      "duration_ms": 128,
+      "output_mtime_ns": 1792129744908084298,
+      "command_hash": "99c80ae0b62cc611"
+    },
+    {
+      "target": "strata",
+      "start_ms": 16976,
+      "end_ms": 52841,
+      "duration_ms": 35865,
+      "output_mtime_ns": 1792129779990170853,
+      "command_hash": "a3253d6ccd530a74"
+    }
+  ],
+  "interval_span_ms": 52822,
+  "ninja_reported_seconds": 52.846,
+  "cpu_wrapper_integer_seconds": 65,
+  "scope": "Ninja target action intervals overlap; do not sum durations as wall; final link combines SYCL/AOT/backend/hostlink, not isolatedAOT",
+  "cache": {
+    "before": {
+      "hits": 4532,
+      "misses": 1903
+    },
+    "after": {
+      "hits": 6087,
+      "misses": 1959
+    },
+    "delta": {
+      "hits": 1555,
+      "misses": 56
+    },
+    "interpretation": "descriptive counters, no causal perkernel/cache-speed claim"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "gdn_conv_commit_kernel": {
+    "before_after_exact": true,
+    "bytes": 759,
+    "sha256": "5ca5481c038762083e4274cc87af1f9367b6d1f85a164c2fa50247b45ea2cdbe"
+  },
+  "gdn_step_commit_kernel": {
+    "before_after_exact": true,
+    "bytes": 3260,
+    "sha256": "3ec1643904e63d8fada73a554d64a6c91110273776699c15547c76c13c0fef4c"
+  },
+  "gdn_conv_commit": {
+    "original_public_launcher_exact_substring": true,
+    "sha256": "837f504140e1e13a718de0dc53f2e2a7a407b122f43a2494e4e6faf6a217abcc"
+  },
+  "gdn_step_norm_multi": {
+    "original_public_launcher_exact_substring": true,
+    "sha256": "80d6b12c7c5f0cc102ddc7d7e68ecfb613bff8b1a3e28891323046250b2aa9ef"
+  },
+  "batch_original_GDN_fallback": {
+    "exact_substring": true,
+    "sha256": "9603d4a559e8af0211b5eff251e009cd1399ad0f906c3c62f98e7055de41ca0c"
+  },
+  "QSA_and_PLE_capture_tail": {
+    "exact_substring": true,
+    "sha256": "c35e0ae26e47a37de76ce7055337d3bfdf462f6e4d2e8a14026421200e37b334"
+  },
+  "new_wrapper_geometry": {
+    "conv_groups": [
+      1,
+      36,
+      40
+    ],
+    "conv_local": [
+      1,
+      1,
+      256
+    ],
+    "state_groups": [
+      36,
+      4,
+      48
+    ],
+    "state_local": [
+      1,
+      4,
+      32
+    ],
+    "ordinary_launch": true,
+    "kernel_body_reuse": "direct existing named functions, NO copied FP body",
+    "S145_scope": "same math helpers, layergeometry, pointerstrides and ordinarylaunch bundle; maincompile/servingstillunqualified"
+  },
+  "V2_validation": {
+    "null_z_y": "fallbackold",
+    "missing_norm_ref": "existing neederror",
+    "null_norm_data": "fallbackold/public invalidargument",
+    "queue": "explicit HOST in_orderproperty guard; no backendquery",
+    "source_math_and_public_launchers_unchanged": true
+  }
+}

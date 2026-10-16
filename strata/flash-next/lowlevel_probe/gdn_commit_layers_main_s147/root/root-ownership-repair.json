@@ -1,0 +1,19 @@
+{
+  "stage": "S147",
+  "cause": "Existing public verify-kernel object was root-owned/nonwritable, preflight stopped BEFORE Ninja/dryplan/compile",
+  "preserved_attempt": "failed-ownership-preflight-1",
+  "only_named_file": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/verify_kernels.dp.cpp.o",
+  "sha256_before_after": "584e694fc1ece4740fe4550e2c34fafd28a77921d81960039d01f3c27dbb6613",
+  "bytes": 503792,
+  "uid_before_after": [
+    0,
+    1000
+  ],
+  "gid_before_after": [
+    0,
+    1000
+  ],
+  "mode_and_mtime_unchanged": true,
+  "method": "one atomic byte-identical replacement in owned writable parent",
+  "no_sudo_broad_chown_configure_GPU_or_source_change": true
+}

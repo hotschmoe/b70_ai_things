@@ -1,0 +1,14 @@
+{
+  "sycl/src/core/verify.cpp": {
+    "original_sha256": "c28de288061beae19949982ff3de7cf0a54fcae4d23f61e3a0374f90aeb435c6",
+    "candidate_sha256": "95dd8805dad41fa5f37efc9e1dcba1afebaeecba6e2bc99e6c33eb75c81f2443",
+    "original_bytes": 224196,
+    "candidate_bytes": 228338
+  },
+  "sycl/src/kernels/cuda/verify_kernels.dp.cpp": {
+    "original_sha256": "5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e",
+    "candidate_sha256": "30ae8029330ea1ffcb2a0874f67ed95a8761677d488b801735383545e9b68da2",
+    "original_bytes": 119038,
+    "candidate_bytes": 121110
+  }
+}

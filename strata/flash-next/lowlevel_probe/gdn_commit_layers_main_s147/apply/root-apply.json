@@ -1,0 +1,24 @@
+{
+  "stage": "S147",
+  "status": "APPLIED_EXACT_V2",
+  "source_prep": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s147-main-source-prep-v2",
+  "source_manifest_sha256": "eac7cd48b8db98fb3f81e6b9b59ff25735c1e0671d89798581b378bd96e1c65e",
+  "files": {
+    "sycl/src/core/verify.cpp": {
+      "original_sha256": "c28de288061beae19949982ff3de7cf0a54fcae4d23f61e3a0374f90aeb435c6",
+      "candidate_sha256": "f669057242387e85ba3d433e8be0acacfff0c835a28af34f60fc278ccd88410b",
+      "original_bytes": 224196,
+      "candidate_bytes": 228592
+    },
+    "sycl/src/kernels/cuda/verify_kernels.dp.cpp": {
+      "original_sha256": "5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e",
+      "candidate_sha256": "929813472cd1ee9710c811e9c05fe48e8e459daa9fb62527f4cedb0839b86afb",
+      "original_bytes": 119038,
+      "candidate_bytes": 121185
+    }
+  },
+  "actual_Opus_Fable_CPU_BUILD_GO_root_read": true,
+  "S146_normal_closed_health0": true,
+  "only_two_small_source_backups": true,
+  "time_unix": 1792129673.9664028
+}

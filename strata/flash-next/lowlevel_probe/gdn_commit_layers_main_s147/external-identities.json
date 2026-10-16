@@ -1,0 +1,82 @@
+{
+  "identity_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s147-main-build/build/build-sha256.txt",
+  "identity_source_sha256": "dbafe135784b4fcc9bfa3bb66df47ede8203df89c4e839feab8cc2b3b1b84d31",
+  "recorded_build_outputs": {
+    "/out/strata-s147": {
+      "sha256_from_actual_build_receipt": "98f0357dd01d176476edcb101ec489280deb2925399a64d31b44ef3abfe17200",
+      "payload_not_read_or_copied": true
+    },
+    "CMakeFiles/strata_engine.dir/src/core/verify.cpp.o": {
+      "sha256_from_actual_build_receipt": "9efefd0dffaa807ddb7c6887bd7be8b4753ba3353a566b317d7d7a6daac96f71",
+      "payload_not_read_or_copied": true
+    },
+    "CMakeFiles/strata_kernels.dir/src/kernels/cuda/verify_kernels.dp.cpp.o": {
+      "sha256_from_actual_build_receipt": "75e94132d0a46e64675c91c895a0ceffb02abdc38fae1cecb858db312e6c6ccf",
+      "payload_not_read_or_copied": true
+    },
+    "libstrata_engine.a": {
+      "sha256_from_actual_build_receipt": "f3051641409ef44a4013744eb6429e84d92d65e680f4303e821a2bfa78305685",
+      "payload_not_read_or_copied": true
+    },
+    "libstrata_kernels.a": {
+      "sha256_from_actual_build_receipt": "4e3d0e36cd7d4efd73b5b7f28ce697a2aa488ee222bdae4a3dc81fd9b88f2d11",
+      "payload_not_read_or_copied": true
+    },
+    "/work/src-ep/sycl/CMakeLists.txt": {
+      "sha256_from_actual_build_receipt": "66726a2abf0f2374ece12bd802ef4ebdad40bada27290a7afb480c849063cb23",
+      "payload_not_read_or_copied": true
+    },
+    "/work/src-ep/sycl/src/core/mtp.cpp": {
+      "sha256_from_actual_build_receipt": "452a051e3a2219d0c6a00c8cdf795b798e763fcc793fbbb4dff1b4dda7903aff",
+      "payload_not_read_or_copied": true
+    },
+    "/work/src-ep/sycl/include/strata/core/mtp.hpp": {
+      "sha256_from_actual_build_receipt": "e6314c05da00d175ae2990a5157bc24d3bea16602afa2138858eaee77200dbdd",
+      "payload_not_read_or_copied": true
+    },
+    "/work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp": {
+      "sha256_from_actual_build_receipt": "dd08daf548eab9ab69375ed1702dfa85214bd1431e9957126d12eea51ed569d1",
+      "payload_not_read_or_copied": true
+    },
+    "/work/src-ep/sycl/src/core/verify.cpp": {
+      "sha256_from_actual_build_receipt": "f669057242387e85ba3d433e8be0acacfff0c835a28af34f60fc278ccd88410b",
+      "payload_not_read_or_copied": true
+    },
+    "/work/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp": {
+      "sha256_from_actual_build_receipt": "929813472cd1ee9710c811e9c05fe48e8e459daa9fb62527f4cedb0839b86afb",
+      "payload_not_read_or_copied": true
+    },
+    "CMakeCache.txt": {
+      "sha256_from_actual_build_receipt": "6aa2a72cbbbec3fe40a2099fa9adad135e0d0be8fe83e4bcf4c4ae112e2c0c3b",
+      "payload_not_read_or_copied": true
+    },
+    "build.ninja": {
+      "sha256_from_actual_build_receipt": "7c817b74530ebe9b4ee4e65992dfeade7ef04dd3396ac462c20078641b4e714d",
+      "payload_not_read_or_copied": true
+    },
+    "CMakeFiles/rules.ninja": {
+      "sha256_from_actual_build_receipt": "63232ef5ca7e9ad650ad73482f8b06014fff94bebe1aa868697414b7d1cde704",
+      "payload_not_read_or_copied": true
+    },
+    "ggml/src/ggml-version.h": {
+      "sha256_from_actual_build_receipt": "9e45eee8391971371922f51b66925184609125d467c444744599f680b78edc92",
+      "payload_not_read_or_copied": true
+    }
+  },
+  "whole_sources_not_duplicated": {
+    "sycl/src/core/verify.cpp": {
+      "original_sha256": "c28de288061beae19949982ff3de7cf0a54fcae4d23f61e3a0374f90aeb435c6",
+      "candidate_sha256": "f669057242387e85ba3d433e8be0acacfff0c835a28af34f60fc278ccd88410b",
+      "original_bytes": 224196,
+      "candidate_bytes": 228592
+    },
+    "sycl/src/kernels/cuda/verify_kernels.dp.cpp": {
+      "original_sha256": "5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e",
+      "candidate_sha256": "929813472cd1ee9710c811e9c05fe48e8e459daa9fb62527f4cedb0839b86afb",
+      "original_bytes": 119038,
+      "candidate_bytes": 121185
+    }
+  },
+  "external_before_backups": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s147-root-apply",
+  "reason": "Full old/new core files, main/object/archive binaries, full Ninja log, model payload excluded; complete source inverse patches and small exact receipts retained."
+}

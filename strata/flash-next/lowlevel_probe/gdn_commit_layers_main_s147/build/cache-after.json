@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/usr/bin/ocloc",
+    "cache",
+    "-show-stats",
+    "-dir",
+    "/out/offline-cache"
+  ],
+  "exit": 0,
+  "counters": {
+    "version": 1,
+    "hits": 6087,
+    "misses": 1959
+  }
+}

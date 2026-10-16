@@ -1,0 +1,37 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NO_APPLY_BUILD_GPU",
+  "files": {
+    "README.md": {
+      "bytes": 6727,
+      "sha256": "038fd6b89dbf492c9a66581e5f3092ab0f685618e4007d23dfb617a27c44818e"
+    },
+    "candidate.patch": {
+      "bytes": 8765,
+      "sha256": "9d490cb7a1722bc2977ead02f1ed459eaea489598c92c6fe4a59ad9fab06bae8"
+    },
+    "delta-from-v1.patch": {
+      "bytes": 5375,
+      "sha256": "4412c14f5423c084418e6b4184434c58d38c16943b3ec5831d710dd9466c2a11"
+    },
+    "inverse.patch": {
+      "bytes": 8765,
+      "sha256": "868cfa30740faf53bc3c5bbef893cb51426a7d72d3836f7f4a807bc67dcbbc4b"
+    },
+    "pins.json": {
+      "bytes": 582,
+      "sha256": "c8437240888ccba648aecc4f09fe8e05e3b4a02449d29007b1ce4cf15e504ea9"
+    },
+    "projection.json": {
+      "bytes": 1747,
+      "sha256": "0e4410be46fe52152addf12e009f45c52348c3f8629a6da73b6041357159932f"
+    },
+    "verify.cpp": {
+      "bytes": 228592,
+      "sha256": "f669057242387e85ba3d433e8be0acacfff0c835a28af34f60fc278ccd88410b"
+    },
+    "verify_kernels.dp.cpp": {
+      "bytes": 121185,
+      "sha256": "929813472cd1ee9710c811e9c05fe48e8e459daa9fb62527f4cedb0839b86afb"
+    }
+  }
+}

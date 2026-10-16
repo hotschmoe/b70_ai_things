@@ -1,0 +1,45 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NO_CONFIGURE_NINJA_BUILD_GPU",
+  "files": {
+    "README.md": {
+      "bytes": 2105,
+      "sha256": "0ac734282f65a3568d7383fcee89e9c5473baeedf241e320ae023877cf0f42ec"
+    },
+    "build-container.sh": {
+      "bytes": 2072,
+      "sha256": "f9f13a608e690b6750adeabe5fcc248ce7bad2364b232c24ad60dd0535f44f0b"
+    },
+    "build.sh": {
+      "bytes": 2314,
+      "sha256": "295c2024bd621c06d02c25cda44017598525502a238314bc832ee1b32693453d"
+    },
+    "compiler-version.txt": {
+      "bytes": 257,
+      "sha256": "06b5b1015f3c581440fb4cf00258edc0db8d98696ca3252cf69045e1f8c283d4"
+    },
+    "delta-from-s143.patch": {
+      "bytes": 7238,
+      "sha256": "b687e86dee69edf68b1d9d0efb26228a419396823e749aa23555e3598d719c5b"
+    },
+    "expected-applied-source.sha256": {
+      "bytes": 659,
+      "sha256": "baec16e40585674faef7076af705580f9ccd661dbd81abd81f386df61dd2a61e"
+    },
+    "expected-build-state.sha256": {
+      "bytes": 338,
+      "sha256": "781b883830971a1dd742c6a0a2a7ebac3aa82c71c9abe9d38714061c91f63695"
+    },
+    "expected-unchanged-source.sha256": {
+      "bytes": 2760,
+      "sha256": "af426d3214745a445b86b580704e8251aa774f01eff99af1d6da7be01bb54a7e"
+    },
+    "guard.py": {
+      "bytes": 3466,
+      "sha256": "dcf540d0cf3e324166e4b219dd44d8d1a5a0aa3191e2e7274c2f2e488edd542f"
+    },
+    "prior-configured-guards.json": {
+      "bytes": 167,
+      "sha256": "69b75dc7d2493d82f432048472c1ebb683392c472834a11fbe53e01b24db6f2d"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "status": "PASS_EXACT_FIVE",
+  "compiled": [
+    [
+      "/work/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp",
+      "CMakeFiles/strata_kernels.dir/src/kernels/cuda/verify_kernels.dp.cpp.o"
+    ],
+    [
+      "/work/src-ep/sycl/src/core/verify.cpp",
+      "CMakeFiles/strata_engine.dir/src/core/verify.cpp.o"
+    ]
+  ],
+  "archives": [
+    "libstrata_kernels.a",
+    "libstrata_engine.a"
+  ],
+  "links": [
+    ": && /opt/intel/oneapi/compiler/2026.1/bin/icpx -O3 -DNDEBUG -fsycl-max-parallel-link-jobs=4    -fsycl -fsycl-targets=spir64_gen -Xsycl-target-backend=spir64_gen \"-device bmg-g31 -options -cl-fp32-correctly-rounded-divide-sqrt -allow_caching -cache_dir /out/offline-cache\" -fsycl-device-code-split=per_kernel -qmkl=sequential CMakeFiles/strata.dir/src/program/generate.cpp.o -o strata  libstrata_engine.a  libstrata_prefill.a  libstrata_spec.a  libstrata_engine.a  libstrata_kernels.a  libstrata_core.a  /usr/lib/x86_64-linux-gnu/libze_loader.so  libstrata_kernels_cpu.a  ggml/src/libggml-cpu.a  ggml/src/libggml-base.a && :"
+  ]
+}

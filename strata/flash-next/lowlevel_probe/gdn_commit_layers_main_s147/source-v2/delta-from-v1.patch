@@ -1,0 +1,73 @@
+--- V1/verify.cpp
++++ V2/verify.cpp
+@@ -3087,7 +3087,8 @@
+     const int64_t HS = (int64_t) NG_HIST * NG_HC_DIM;
+     // Prove S145's narrow layout and relevant span bounds BEFORE recording.
+     bool gdn_layers_eligible = false;
+-    if (g_gdn_commit_layers && S == 6 && MT == 8 && hbase == 0 && lb_ == 0 && le_ == 48 &&
++    if (g_gdn_commit_layers && cs_ && cs_->has_property<sycl::property::queue::in_order>() && z_ && y_dummy_ &&
++        S == 6 && MT == 8 && hbase == 0 && lb_ == 0 && le_ == 48 &&
+         g.n_layers == 48 && g.qsa_interval == 4 && g.ssm_state_size == 128 &&
+         g.ssm_d_conv == 4 && C == 10240 && HV == 48 && g.ssm_k_heads == 16 && ZV == 6144 &&
+         rows[0] == rows[1] && rows[1] == rows[2] && rows[3] == rows[4] && rows[4] == rows[5] &&
+@@ -3121,9 +3122,13 @@
+             for (int j = i + 1; j < 7 && fits; ++j)
+                 fits = spans[i].end <= spans[j].begin || spans[j].end <= spans[i].begin;
+         gdn_layers_eligible = fits;
+-        if (fits)   // keep every per-layer norm-weight presence check before batching
++        if (fits)   // keep missing-weight errors and old public null-data validation
+             for (int64_t l = lb_; l < le_; ++l)
+-                if (!is_qsa_layer(g, l) && !need(LayerView(*wt_, l), "ssm_norm.weight", err)) return false;
++                if (!is_qsa_layer(g, l)) {
++                    const WeightRef* wnm = need(LayerView(*wt_, l), "ssm_norm.weight", err);
++                    if (!wnm) return false;
++                    if (!wnm->data) { gdn_layers_eligible = false; break; }
++                }
+     }
+     if (DPCT_CHECK_ERROR(dpct::experimental::begin_recording(cs_)) != 0) {
+         err = "verify: begin batch commit capture failed";
+--- V1/verify_kernels.dp.cpp
++++ V2/verify_kernels.dp.cpp
+@@ -1729,6 +1729,7 @@
+         state_stride != 817152 || conv_off != 786432 || qkv_stride != 81920 || h_stride != 81920 || gb_stride != 384)
+         return false;
+     auto* q = strata::q_of(stream);
++    if (!q->has_property<sycl::property::queue::in_order>()) return false;
+     q->parallel_for<class gdn_conv_commit_layers_s147>(
+         sycl::nd_range<3>(sycl::range<3>(1, 36, 40) * sycl::range<3>(1, 1, 256), sycl::range<3>(1, 1, 256)),
+         [=](sycl::nd_item<3> item) {
+--- V1/README.md
++++ V2/README.md
+@@ -1,4 +1,4 @@
+-# S147 default-OFF GDN layer commit source (no apply/build/GPU)
++# S147 V2 default-OFF GDN layer commit source (no apply/build/GPU)
+ 
+ CONFIG -> Actual S145 private fullstate PASS:36layers/2owners/MT8/three proposed rows, accepted pairs(1,3)/(2,2)/(3,1), A/B/A eager/captured/235MBcompletebytes/finite/guards/readonly/snapshot-bytecontinuation/outputsentinel/normalhealth. That proof covers the private compiled bundle, not this future main build or all input/configurations. No serving-speed forecast from1191.211->881.0445us private whole-chain medians.
+ 
+@@ -25,3 +25,5 @@
+ RESULT -> Projected source pins in pins.json; no live apply or compiler/Ninja/GPU. Expected later incremental main needs twoTUcompiles(verify core and verify kernels), twoarchives(engine,kernels), one mainlink if no other dirty dependency (ACTUAL dryplan must decide, no five-action PASS assumed). Native dd08,mtp/CMake/default flags remain unchanged. No model/main/archive scan/oldbackup/cachewarm or all-image/ISA framework.
+ 
+ VERDICT -> SOURCE review pending. Main serving requires fresh sameNEWbinary control/ON with sole flag difference, strict output/work/captures/marker/functionals/normalhealth; private timing is no serving prediction. If tiny/no serving gain, retain evidence and stop rather than repeat instrumentation/certification.
++
++V2 validation preservation -> Actual need() only checks WeightRef existence, not data. Although z_/y_dummy_ are mandatory guarded-arena carves at init, eligibility now explicitly requires both nonnull; null retains exact old path. Norm prepass returns existing missing-weight error, but a present WeightRef with null data disables batching/breaks prepass so original loop/public invalid-argument behavior remains. No substitute error, ignored invalid weight or extra output allocation. Private S145 used explicit in_order queue; V2 checks actual queue's HOST property before capture and in API (no GPU/backend query), otherwise old fallback. Default create_queue uses create_in_order_queue unless DPCT_USM_LEVEL_NONE; external set_stream is not assumed. V1 retained unused. Ordinary new classes/body arithmetic/geometry unchanged.
+--- V1/pins.json
++++ V2/pins.json
+@@ -1,14 +1,14 @@
+ {
+   "sycl/src/core/verify.cpp": {
+     "original_sha256": "c28de288061beae19949982ff3de7cf0a54fcae4d23f61e3a0374f90aeb435c6",
+-    "candidate_sha256": "95dd8805dad41fa5f37efc9e1dcba1afebaeecba6e2bc99e6c33eb75c81f2443",
++    "candidate_sha256": "f669057242387e85ba3d433e8be0acacfff0c835a28af34f60fc278ccd88410b",
+     "original_bytes": 224196,
+-    "candidate_bytes": 228338
++    "candidate_bytes": 228592
+   },
+   "sycl/src/kernels/cuda/verify_kernels.dp.cpp": {
+     "original_sha256": "5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e",
+-    "candidate_sha256": "30ae8029330ea1ffcb2a0874f67ed95a8761677d488b801735383545e9b68da2",
++    "candidate_sha256": "929813472cd1ee9710c811e9c05fe48e8e459daa9fb62527f4cedb0839b86afb",
+     "original_bytes": 119038,
+-    "candidate_bytes": 121110
++    "candidate_bytes": 121185
+   }
+ }

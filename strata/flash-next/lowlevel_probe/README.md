@@ -387,3 +387,11 @@ normal state/health proof. Tags work but perturb this chain; routine integration
 is parked. [Method evidence](../../../docs/20261016_strata_native_graph_tag_method.md).
 `gdn_commit_integration_reviews_s145_s147/` retains actual Opus/Fable source
 reasoning and root decisions. [Integration decision](../../../docs/20261016_strata_gdn_commit_integration_decision.md).
+
+
+## Guarded GDN main build (S147)
+
+`gdn_commit_layers_main_s147/` retains exact source/inverses and completed
+incremental-build evidence, including the single-object ownership repair.
+Source/build PASS is separate from serving qualification.
+[Build record](../../../docs/20261016_strata_gdn_commit_layer_main.md).
