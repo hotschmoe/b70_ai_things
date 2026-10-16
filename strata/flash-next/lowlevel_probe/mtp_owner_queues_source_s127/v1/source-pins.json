@@ -1,0 +1,27 @@
+{
+  "status": "SOURCE_ONLY_NO_APPLY_BUILD_GPU",
+  "base": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp",
+      "bytes": 121495,
+      "sha256": "2d26e686c2aa6065d33461464efa39975db8e0cc5196f8962a216b4c5fa2a589"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/core/mtp.hpp",
+      "bytes": 23233,
+      "sha256": "1d418cc592056373f68b7343bd3d1ac958e5452cb812007497881234cad9fd9f"
+    }
+  ],
+  "candidate": [
+    {
+      "path": "sycl/src/core/mtp.cpp",
+      "bytes": 124556,
+      "sha256": "ef59647fc0488425015e75df0129bdc7a181853a62c3f3b9f8cd28ebee39c3e1"
+    },
+    {
+      "path": "sycl/include/strata/core/mtp.hpp",
+      "bytes": 23691,
+      "sha256": "e6314c05da00d175ae2990a5157bc24d3bea16602afa2138858eaee77200dbdd"
+    }
+  ]
+}

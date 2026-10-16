@@ -1,0 +1,17 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NO_EXECUTION",
+  "files": {
+    "findings.md": {
+      "bytes": 6475,
+      "sha256": "fe85c0d7012d8c9dd3d1ee3582e22ef227e1e491e988889b7735782c507bae2b"
+    },
+    "pins.json": {
+      "bytes": 6030,
+      "sha256": "edb2ae5082cf09f8dca5c2cfa46a621aadc229af670d6286c4feda1f18d21241"
+    },
+    "source-excerpts.json": {
+      "bytes": 57646,
+      "sha256": "787e29f33bbea37f2e4d4238b675d729c6541f6fad959c1c1aa470b4419849cb"
+    }
+  }
+}

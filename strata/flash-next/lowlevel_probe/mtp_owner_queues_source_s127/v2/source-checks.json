@@ -1,0 +1,23 @@
+{
+  "status": "V2_SOURCE_INVARIANTS_ONLY_NOT_COMPILED_OR_RUNTIME",
+  "checks": {
+    "record_front_body_byteexact": true,
+    "record_rest_body_byteexact": true,
+    "record_post_head_body_byteexact": true,
+    "tail_body_byteexact": true,
+    "original_launch_arm_byteexact": true,
+    "new_kernel_calls": false,
+    "original_ple_lambda_byteexact": true,
+    "owner_mode_initial_hint_before_first_join": true,
+    "new_explicit_device_allocations_or_frees_in_patch": false,
+    "existing_per_queue_HC_lazy_allocations_may_materialize": true,
+    "possible_new_queue_HC_bytes_source_default": 870400,
+    "v2_inverse_reconstructs_v1_cpp_exact": true,
+    "v2_hpp_byteexact_v1": true,
+    "owner_only_std_exception_handler_preserves_OFF_rethrow": true,
+    "original_SYCL_handler_still_precedes_std_handler": true,
+    "owner_drain_before_error_string_assignment": true,
+    "ON_prestaging_wait_and_throw_cs_and_side": true,
+    "missing_completed_tail_output_has_owner_depth": true
+  }
+}

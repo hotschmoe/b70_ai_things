@@ -1,0 +1,42 @@
+--- v1/sycl/src/core/mtp.cpp
++++ v2/sycl/src/core/mtp.cpp
+@@ -2340,8 +2340,11 @@
+     }
+     host_boundary::mark("pair_capture_ready", T[0], T[1]);
+     if (owner_queues_) {
+-        d_[0]->cs_->wait_and_throw();
+-        d_[1]->cs_->wait_and_throw();
++        // Readiness is not the noexcept cleanup drain: propagate errors before mapped staging.
++        for (MtpDrafter* d : d_) {
++            d->cs_->wait_and_throw();
++            if (d->side_ && d->side_ != d->cs_) d->side_->wait_and_throw();
++        }
+     } else {
+     for (int c = 0; c < 2; ++c)
+         if (!d_[c]->idle(err)) return false;
+@@ -2424,7 +2427,7 @@
+                 cs_->wait_and_throw();
+                 for (int c = 0; c < 2; ++c) {
+                     const int32_t tok = ((volatile int32_t*) d_[c]->h_out_)[j];
+-                    if (tok < 0) { err = "mtp pair: owner tail output missing"; return false; }
++                    if (tok < 0) { err = "mtp pair: completed owner tail output missing owner=" + std::to_string(c) + " depth=" + std::to_string(j); return false; }
+                     prefetch_ple(c, tok);
+                 }
+             }
+@@ -2479,10 +2482,15 @@
+     host_boundary::mark("pair_return", max_steps);
+     return true;
+ } catch (sycl::exception const& e) {
++    drain_owner_queues(); // ON: finish every possible writer before allocating the error string.
+     err = std::string("mtp pair: ") + e.what();
+-    drain_owner_queues();
+     try { if (cs_) cs_->wait(); } catch (...) {}
+     return false;
++} catch (std::exception const& e) {
++    if (!owner_queues_) throw; // Preserve the original OFF behavior for non-SYCL exceptions.
++    drain_owner_queues();
++    err = std::string("mtp pair owner queues: ") + e.what();
++    return false;
+ }
+ 
+ }  // namespace strata::core

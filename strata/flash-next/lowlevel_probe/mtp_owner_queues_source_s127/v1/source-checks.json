@@ -1,0 +1,14 @@
+{
+  "status": "SOURCE_INVARIANTS_ONLY_NOT_COMPILED_OR_RUNTIME",
+  "checks": {
+    "record_front_body_byteexact": true,
+    "record_rest_body_byteexact": true,
+    "record_post_head_body_byteexact": true,
+    "tail_body_byteexact": true,
+    "original_launch_arm_byteexact": true,
+    "new_device_allocations_or_frees": false,
+    "new_kernel_calls": false,
+    "original_ple_lambda_byteexact": true,
+    "owner_mode_initial_hint_before_first_join": true
+  }
+}

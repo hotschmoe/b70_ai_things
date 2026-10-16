@@ -1,0 +1,31 @@
+{
+  "stage": "S127",
+  "status": "SOURCE_ONLY_UNAPPLIED_UNBUILT_UNTESTED",
+  "actual_response_ids": [
+    "claude-opus-5-5",
+    "claude-fable-5-1"
+  ],
+  "root_full_reads_reported": true,
+  "accepted_source_findings": [
+    "same-device distinct owner queue graph caches, each replayed on recording queue",
+    "explicit host joins before unchanged A-queue paired tail; tail completed before next depth",
+    "no source-visible MTP GPU PLE host service request; CPU prefetch ordering remains part of candidate cost"
+  ],
+  "V1_to_V2_corrections": [
+    "ON readiness wait_and_throw on both cs and side per owner",
+    "retain SYCL exception handler; add std exception handler conditional ON, rethrow OFF; ON drain before err string allocation",
+    "negative completed tail output includes owner and depth",
+    "correct idle ordinary DPCT macro false-return semantics; no general fatal-idle claim",
+    "possible850KiB existing lazy HC scratch per unseen queue; process-lifetime key/ownership caveat",
+    "S125 refers to Q6 pre-expansion source feasibility, not a fused-forward implementation"
+  ],
+  "root_limits": [
+    "No completed KV/residual/intermediate byte proof",
+    "No realized overlap, resource occupancy, hardware cause or speed forecast",
+    "No deterministic-draft-offer theorem from fixed policy",
+    "Serving text/SSE/work coherence is not raw token-ID or full KV-byte equality",
+    "No noise band, significance or earlier-small-effects promotion threshold established",
+    "No claim that model agreement is runtime evidence or V2 was resubmitted to models",
+    "A later main build/finite matched comparison requires separate root authorization; no private or serving campaign launched here"
+  ]
+}

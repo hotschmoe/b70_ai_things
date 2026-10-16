@@ -1,0 +1,35 @@
+{
+  "status": "V2_SOURCE_ONLY_NO_APPLY_BUILD_GPU",
+  "base": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp",
+      "bytes": 121495,
+      "sha256": "2d26e686c2aa6065d33461464efa39975db8e0cc5196f8962a216b4c5fa2a589"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/core/mtp.hpp",
+      "bytes": 23233,
+      "sha256": "1d418cc592056373f68b7343bd3d1ac958e5452cb812007497881234cad9fd9f"
+    }
+  ],
+  "candidate": [
+    {
+      "path": "sycl/src/core/mtp.cpp",
+      "bytes": 125111,
+      "sha256": "452a051e3a2219d0c6a00c8cdf795b798e763fcc793fbbb4dff1b4dda7903aff"
+    },
+    {
+      "path": "sycl/include/strata/core/mtp.hpp",
+      "bytes": 23691,
+      "sha256": "e6314c05da00d175ae2990a5157bc24d3bea16602afa2138858eaee77200dbdd"
+    }
+  ],
+  "parent_manifest": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-pair-owner-queues-s127-source/manifest.json",
+    "sha256": "e42e3c422d9bcab4e8ba0761e6430e8153c8676c7be9c4e74f363763f7d07f25"
+  },
+  "static_audit_manifest": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-pair-owner-queues-s127-static-audit-manifest.json",
+    "sha256": "670851cf718aacc75c2a59c05769c5aca7e2ed5b004d89fb9fd48726ed78865e"
+  }
+}

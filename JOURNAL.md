@@ -25324,3 +25324,29 @@ VERDICT -> CLOSED CPU-only overall HOLD, candidate mechanism PASS only.
 Separate S128 will use the verified public production control directly;
 failed clone gate remains historical HOLD. See
 docs/20261016_strata_q5_runtime_ones_compiled.md and curated evidence.
+
+
+## 2026-10-16 S127: distinct owner queues for paired MTP, source only
+
+CONFIG -> Default-OFF same-device scheduling candidate. B records/replays its
+head-free forward on its existing owner queue, A on A; host joins both before
+unchanged A-queue paired tail, then completes tail before the next depth.
+Whole-pair graph bypassed only ON. No kernel math/argument change.
+
+COMMAND -> Bounded source/callee scratch audit, external V1/V2 candidate
+patches, read-only apply/reverse/source projections. Actual claude-opus-5-5
+56.541902s and claude-fable-5-1 92.955938s returned SOURCE_DESIGN_GO with
+corrections; full independent responses retained and root-read.
+
+RESULT -> V2 adds ON main+side wait_and_throw readiness and standard-exception
+drain with OFF rethrow. Existing idle waits only main and its macro returns
+errors, not a general fatal exit. No unkeyed mutable device scratch blocker
+found on the bounded current path. HC queue-keyed lazy buffers can add850KiB
+per unseen queue and persist for process lifetime. MTP forwards have no
+source-visible PLE GPU host-service request; not a verifier-wide argument.
+
+VERDICT -> SOURCE ONLY, unapplied/unbuilt/untested at this checkpoint. Keep
+as an independent candidate for a minimal main build and finite matched
+comparison, without a new private framework/redundant review round. No actual
+KV-byte proof, hardware overlap, noise band or speed forecast. See
+docs/20261016_strata_mtp_owner_queues_source.md.

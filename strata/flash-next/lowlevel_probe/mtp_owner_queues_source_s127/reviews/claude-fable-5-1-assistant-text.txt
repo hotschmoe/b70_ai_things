@@ -1,0 +1,27 @@
+**SOURCE_DESIGN_GO, with three corrections before apply.**
+
+**What the patch gets right**
+
+- Queue selection is latched at init, so a cache entry is always replayed on the queue it was recorded on. The whole-pair graph is bypassed in ON mode, so no cross-queue graph exists.
+- Dependencies are explicit host joins: both forwards complete before the unchanged tail reads either sample, and the tail completes before either owner's next depth reads its token and residual. No wait is removed; no cross-queue graph edge is assumed.
+- OFF resolves every new branch to the original queue, idle call, launch arm and prefetch positions. The drain helper is a no-op when OFF.
+- The B forward's shared-expert fork uses B's own side queue and events, exactly as its solo graphs already do, so recording it on B's queue is not new territory.
+- Error paths drain both owners and both side branches, then the pair queue, and still never redraft.
+
+**Corrections**
+
+1. **Standard exceptions in the ON route.** The CPU prefetch runs between the owner launches and the joins. If it throws std::exception, draft() unwinds past the sycl-only catch with forwards in flight and without recording an error. Wrap the ON-route prefetch calls in a try block that sets err and returns false, so the existing not-ok branch drains. Keep the OFF route untouched; its prefetch runs after submission exactly as today, and changing it would alter the control arm. Do not add a general std::exception catch to draft().
+2. **ON pre-staging idle.** The ON branch waits only each owner's main queue. The original idle helper is replaced because of its fatal wrapper, which is reasonable, but the replacement should also wait each owner's side queue so an error on a side branch surfaces here rather than later. Use wait_and_throw on both queues per owner, not the no-throw drain.
+3. **Cross-owner static scratch audit, the actual ownership proof needed.** The fused GR reader keys its partials buffers by queue pointer. With OFF, both owners ran on A's queue and shared one buffer serially. With ON, B's reads run on B's queue and lazily allocate a second buffer at capture time. That is safe, but it shows the class of hazard: any callee holding a process-global or static device scratch not keyed by queue or owner would now be written concurrently by A and B. Before apply, enumerate every static or global device buffer reachable from record_front and record_rest with head false, including router top-k, quantizers, norm and rope helpers, grouped experts and the shared expert, and confirm each is per-queue, per-drafter or per-call. Record the list. If any is process-global, HOLD until it is keyed or the candidate is dropped.
+
+**PLE question**
+
+The source reading holds for the current resident drafter: no device-side PLE request is issued inside these forwards, so the blocking joins cannot strand a host-serviced request. Keep the pending-hint case in the test and state explicitly that this argument expires if a future forward adds a PLE request. Do not generalise to the verifier.
+
+**Validation choice**
+
+No arithmetic changes and no new buffers, so the right first test is the existing matched same-binary serving comparison, flag 0 then 1, with the strict per-pair gates: identical text, usage, drafts offered and accepted, windows, captures, functionals, teardown and health. That already proves token-level equality of the two schedules under real inputs, cold prefetch state and both shared-branch settings as configured. A private oracle adds little here unless the scratch audit finds something shared, in which case the audit result is the blocker, not a test. One addition to the matched run: the marker must appear once on ON after captures, and the run must include at least one pair with unequal effective T and one solo fallback window, which the usual mixed prompts already produce.
+
+**Limits**
+
+Hardware overlap of the two forwards is not implied by two queues; the driver may serialise them. The added per-depth host joins and the earlier prefetch timing are costs the completed pair must absorb. The serving comparison answers only whether the whole pair is shorter in that configuration. No claim about the per-owner forward cost or an attainable ceiling follows from this source.

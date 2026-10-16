@@ -1,0 +1,47 @@
+{
+  "status": "FROZEN_SOURCE_PREPARATION_ONLY_NO_LIVE_APPLY_BUILD_GPU",
+  "files": [
+    {
+      "path": "findings.md",
+      "bytes": 6185,
+      "sha256": "bed86b3877b075e106ce185a2bbfad08d12b6ed6e172ed76260d2aa5cb054574"
+    },
+    {
+      "path": "owner-queues.patch",
+      "bytes": 16142,
+      "sha256": "f17dfa6fa1c90a22e3cb0e9a76023d58c11b419b75b1cfdd582abcd3ae6af4b2"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 816,
+      "sha256": "e256ff75350b3a30690dcd7d13dda18ea5c2450f18a1934cf14ebfa889a2a85f"
+    },
+    {
+      "path": "source-excerpts.json",
+      "bytes": 54292,
+      "sha256": "ddab79ca32b5d86260d5ff3b6996f98cb00d1c85b35fadd602fa2ea131548978"
+    },
+    {
+      "path": "source-checks.json",
+      "bytes": 460,
+      "sha256": "b363371e4728a151abc23e5e0bbd1767157714e0dc8c524dfa868b95bd0abb18"
+    },
+    {
+      "path": "apply-check.json",
+      "bytes": 359,
+      "sha256": "e9eae9b0836a2b7c7eb3a13ff6bb68ca073d75e4372232310a966152158f1eaa"
+    },
+    {
+      "path": "candidate/sycl/src/core/mtp.cpp",
+      "bytes": 124556,
+      "sha256": "ef59647fc0488425015e75df0129bdc7a181853a62c3f3b9f8cd28ebee39c3e1"
+    },
+    {
+      "path": "candidate/sycl/include/strata/core/mtp.hpp",
+      "bytes": 23691,
+      "sha256": "e6314c05da00d175ae2990a5157bc24d3bea16602afa2138858eaee77200dbdd"
+    }
+  ],
+  "total_payload_bytes": 226501,
+  "validation": "Exact live base pins/snippets unchanged; external candidate arithmetic and tail bodies unchanged; git apply --check0 only. Candidate full files preserve original UTF8 comments; new diff/findings/JSON ASCII."
+}

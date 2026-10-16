@@ -1,0 +1,53 @@
+{
+  "status": "FROZEN_V2_SOURCE_PREPARATION_ONLY_NO_LIVE_APPLY_BUILD_GPU",
+  "parent_manifest_sha256": "e42e3c422d9bcab4e8ba0761e6430e8153c8676c7be9c4e74f363763f7d07f25",
+  "v2_delta_only": "ON readiness/error handling and truthful findings; header/kernel arguments untouched",
+  "source_encoding": "V2 delta/new prose ASCII; full copied upstream candidate preserves its original comment bytes",
+  "files": [
+    {
+      "path": "apply-check.json",
+      "bytes": 814,
+      "sha256": "adc4da904f20b561af733fa2005f04199a9e6f76bc4ebb8ccf0bc048c87472f6"
+    },
+    {
+      "path": "candidate/sycl/include/strata/core/mtp.hpp",
+      "bytes": 23691,
+      "sha256": "e6314c05da00d175ae2990a5157bc24d3bea16602afa2138858eaee77200dbdd"
+    },
+    {
+      "path": "candidate/sycl/src/core/mtp.cpp",
+      "bytes": 125111,
+      "sha256": "452a051e3a2219d0c6a00c8cdf795b798e763fcc793fbbb4dff1b4dda7903aff"
+    },
+    {
+      "path": "findings.md",
+      "bytes": 8805,
+      "sha256": "2a75050e283decc9ad643ec29feabe300dce260471568a26c8a68233710cc955"
+    },
+    {
+      "path": "owner-queues.patch",
+      "bytes": 16790,
+      "sha256": "dce4f90e005e2350c35e8605a792712a464f3651bf21e1aff54372d24a276d8c"
+    },
+    {
+      "path": "source-checks.json",
+      "bytes": 989,
+      "sha256": "0bbc2162a09a159fb0145570d1ba5f84f18e25c902d3fa7c3b01b04fceed9470"
+    },
+    {
+      "path": "source-excerpts.json",
+      "bytes": 56058,
+      "sha256": "d8a4800833ed424aec202ed88c83264aebf5cd9acb5905276d23f218e05e6f1e"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 1333,
+      "sha256": "733dfe0d1b94a7da1e716861cb0a43e05cd81e56b70c21e04a298ef697d5fbab"
+    },
+    {
+      "path": "v2-vs-v1.patch",
+      "bytes": 1786,
+      "sha256": "94d6fd28ff63f44f412af14e5b58013152e861d6b24d329d2ef0fd41e0ebd080"
+    }
+  ]
+}

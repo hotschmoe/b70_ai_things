@@ -1,0 +1,25 @@
+{
+  "command": [
+    "git",
+    "apply",
+    "--check",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-pair-owner-queues-s127-source-v2/owner-queues.patch"
+  ],
+  "cwd": "/mnt/vm_8tb/b70/build/strata-ab/src-ep",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "",
+  "reverse_check_command": [
+    "git",
+    "apply",
+    "--reverse",
+    "--check",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-pair-owner-queues-s127-source-v2/owner-queues.patch"
+  ],
+  "reverse_check_cwd": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-pair-owner-queues-s127-source-v2/candidate",
+  "reverse_exit": 0,
+  "reverse_stdout": "",
+  "reverse_stderr": "",
+  "live_apply": false,
+  "external_candidate_only": true
+}

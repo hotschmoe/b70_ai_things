@@ -1,0 +1,45 @@
+S127 REVIEW: same-device owner-queue overlap for paired MTP forwards
+
+VERDICT: SOURCE_DESIGN_GO, with three corrections required before the patch is applied. This approves the source design only. There is no build or GPU approval, and no runtime oracle has been seen.
+
+EVIDENCE THAT SUPPORTS THE DESIGN
+
+- The arithmetic is unchanged. The only edit to the capture functions is the queue argument (owner B's head-free graphs are recorded on B.cs_). The kernels, arguments and the paired tail are untouched. The whole-pair graph is bypassed while the mode is on, and the mode is latched at init, so the graph caches cannot switch queues later.
+- The dependency order is explicit and correct:
+  1. depth-j forwards for A (on A.cs_, which is also the tail queue) and B (on B.cs_);
+  2. host joins on both queues;
+  3. the tail on A.cs_;
+  4. a host wait on the tail;
+  5. the next depth.
+
+  B's token and Rin_ for depth j+1 are written by mtp_select on A.cs_ and completed before B.cs_ is used again. No cross-queue graph edge is assumed.
+- Ownership is per drafter: state arena, mapped records, scratch, sh_fork_/sh_join_ events and side_. The shared expert's branch is joined into its own cs_ inside the graph, so a cs_ join covers it. The fused_gr partial buffers are keyed per queue, so B.cs_ gets its own.
+- PLE: the audit that the resident MTP forward has no host-service pump is source-supported. The hint count and order per owner are preserved: one initial hint plus one per depth, matching the OFF path's count.
+- Lifetime: the pair drains both owners' queues and side branches before deleting graphs, and it is declared after the drafters, so it is destroyed first.
+
+CORRECTIONS (required)
+
+1. Non-SYCL exceptions while owner graphs are active. `draft()`'s function-try catches only `sycl::exception`. In ON mode, `prefetch_ple` (and other host code between submit and join) can throw `std::exception` while A or B graphs are executing. The exception would unwind past the caller with queues still running, and the caller could then free or reuse buffers under live kernels.
+   - Add `catch (const std::exception& e)` that calls `drain_owner_queues()`, waits on cs_, sets err and returns false when owner_queues_ is set.
+   - To keep the OFF path byte-identical in behaviour, rethrow when !owner_queues_. The OFF path has the same latent issue on cs_, but fixing it is a separate change.
+2. Pre-staging readiness in ON mode. The patch replaces `MtpDrafter::idle()` with `cs_->wait_and_throw()` on each owner, to avoid idle's fatal wrapper. Read idle() and reproduce exactly what it synchronizes (side_, chain state, anything else), minus the fatal exit. Otherwise ON could stage mapped inputs while an owner's side branch from a previous solo launch is still pending. If idle() only waits on cs_, document that fact in a comment.
+3. Mutable state outside the per-queue maps. The ownership claim rests on per-drafter scratch plus queue-keyed function statics. Before apply, do a bounded source check of every callee in record_front/record_rest/record_forward for function-static device buffers or caches keyed by anything other than queue or owner pointer: `moe_grouped_s2`'s `new_grouped(...)` state, quantizer helpers, router, `fused_gr` `slice_partials`, rope tables. Any process-global mutable scratch used by both owners concurrently is a blocker. Read-only tables are fine.
+
+MINOR (root can fix)
+
+- A negative `h_out_` after a completed tail returns false. That is correct under the no-redraft rule, but name the depth and owner in err.
+- The marker is host-selection only. Do not count it as evidence of overlap.
+
+VALIDATION RECOMMENDATION
+
+There is no new arithmetic, so a private oracle framework is not the most efficient first runtime test. After the corrections, one incremental main build and one same-binary single-flag matched C2 serving comparison are appropriate:
+- **Policy:** pin the fixed-work policy (suffix 0, lookup 0, spec 4, MTP max T 4, min-p 0), as in S106/S107, so draft offers are deterministic.
+- **Gates at every ON pair, before the next:** exact request, text, SSE, usage and native work (offered and accepted drafts, windows, pair/solo counts, captures). Equal drafts are the end-to-end evidence that both owners' KV, residual and sample paths are unchanged under concurrency.
+- **Rest:** functionals, normal QUIT, CID and name gone, full health on both cards. The ON marker must be present and absent in OFF.
+
+Injected launch-failure testing is not feasible in serving. Rely on the source error-path review plus correction 1.
+
+Stop conditions:
+- Any work or text mismatch: stop, HOLD, no retry.
+- Correction 3 finds shared mutable state: redesign before any build.
+- A serving result within the range of earlier small effects: keep default OFF, do not repeat, and record that hardware did not overlap enough to beat the added host joins. Completed-pair timing includes every join and hint, and no CPU/GPU clock join is inferred.

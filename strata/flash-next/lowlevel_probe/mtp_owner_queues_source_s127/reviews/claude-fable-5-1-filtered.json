@@ -1,0 +1,59 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 92.95593825099058,
+  "launch_exception": null,
+  "source_packet_sha256": "495253090c55997b9bb17bd09548d5c99df17a120775f572a9feb5f0ddcdb402",
+  "source_packet_unchanged": true,
+  "kind": "filtered_actual_review_metadata",
+  "derived_from": {
+    "completion_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s127-source-reviews-20261016/claude-fable-5-1/completion.json",
+    "completion_sha256": "7301d6a400b4c3449f56e6d1bc7bc7371e0ded9580d4ef6e3674e21e565261f9",
+    "assistant_response_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s127-source-reviews-20261016/claude-fable-5-1/assistant-text.txt",
+    "assistant_response_sha256": "52deb7d4e8309b2d0a973ba6fd1f0e2550fa3d0d5987c958d48c7020f76cfa02",
+    "command_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s127-source-reviews-20261016/claude-fable-5-1/command.json",
+    "command_sha256": "49cc56eede2cdb7f843cc41dc88f2be2fcbe436414815d4accb84bb6fad76fda"
+  },
+  "actual_init_model": "claude-fable-5-1",
+  "actual_init_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "actual_init_tools": [],
+  "actual_init_mcp_servers": [],
+  "actual_argv": [
+    "/home/hotschmoe/.local/bin/claude",
+    "-p",
+    "--resume",
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+    "--model",
+    "claude-fable-5-1",
+    "--effort",
+    "low",
+    "--tools",
+    "",
+    "--strict-mcp-config",
+    "--disable-slash-commands",
+    "--setting-sources",
+    "",
+    "--settings",
+    "{\"disableAllHooks\":true}",
+    "--permission-mode",
+    "dontAsk",
+    "--max-turns",
+    "1",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "root_full_response_read_reported": true,
+  "disposition": "SOURCE_DESIGN_GO_WITH_REQUIRED_CORRECTIONS_ONLY",
+  "reviewed_version": "S127 V1; narrow V2 corrections root-authorized without a second model call",
+  "usage_fields_omitted": "All cumulative cost/token/API-duration fields deliberately omitted; elapsed_s is this invocation wall time."
+}
