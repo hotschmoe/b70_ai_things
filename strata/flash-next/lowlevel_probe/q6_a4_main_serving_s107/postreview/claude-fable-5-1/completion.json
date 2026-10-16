@@ -1,0 +1,120 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 78.29928767599631,
+  "launch_exception": null,
+  "source_packet_sha256": "ca9006b601ff24b111dba858ee435d32a4393a542124ff0b632403c8ff9213ba",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 1067520,
+      "stop_reason": "end_turn",
+      "session_id": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "total_cost_usd": 10.42344625,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 22341,
+        "cache_read_input_tokens": 296065,
+        "output_tokens": 4857,
+        "output_tokens_details": {
+          "thinking_tokens": 3818
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 22341,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 4857,
+            "cache_read_input_tokens": 296065,
+            "cache_creation_input_tokens": 22341,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 22341
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 36,
+          "outputTokens": 67121,
+          "thinkingTokens": 47136,
+          "cacheReadInputTokens": 2847585,
+          "cacheCreationInputTokens": 317757,
+          "webSearchRequests": 0,
+          "costUSD": 10.42344625,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**Q6: no more testing now.** S107 is a clean matched pass with a small descriptive positive from one sequence. Keep it default OFF with its evidence; another run would only re-measure noise.\n\n**S112 publication review, concrete finding**\n\nThe protocol is release fence, relaxed RMW, acquire fence. In the SYCL and C++ model that chain is valid only when the acquire fence is sequenced after the RMW in the same thread. Here only thread 0 performs the RMW. It then writes the local flag and hits the work-group barrier, and the acquire fence at line 1423 comes after the barrier. So thread 0's own loads are ordered, but lanes 1 to 60 read the partials after a barrier that was crossed before any synchronizes-with edge existed. Formally those loads race with the other work-groups' stores. On this hardware it will usually work because the last group has never touched those lines, but that is luck, not the model. Fix is one line: thread 0 executes the device-scope acquire fence immediately after the fetch_add and before writing the local flag, so the barrier carries the ordering to every lane. Keep the existing fence at 1423 as well.\n\nSecond item: the plain counter reset is safe only if every invocation completes. A failed or aborted replay leaves a nonzero counter, the next call elects no last group, and the output row is never written, so a stale token is used silently. The existing split-probability kernel has the same exposure, so this is not new, but the oracle must check the counter after every replay and any later host dispatch must re-zero the scratch on the error drain path.\n\nNo other defect: the sentinel, strict scan, value-then-lower-index merge, zero fallback and no-polling structure match the single-block sampler.\n\n**S111 review**\n\nNo blocking bug. Mode is construction-latched, the no-probability cache is depth-2 only, both pointers are nulled in the selector, defaults reproduce the original path, and the marker sits in both graph modes. Its payoff is two kernels of about 64 us per head depth, which cannot be distinguished by a three-pair serving run.\n\n**Ranking**\n\n1. S112 private oracle, with the fence fix in the private copy.\n2. S111, as the prepared fallback, not combined.\n3. Subset-head policy. It targets the 1.2 ms head, the only post-head item large enough to matter, but it changes draft semantics and acceptance and needs its own evaluation. It is the right medium-term source direction, not the next bounded test.\n\n**Single next experiment**\n\nOne card0 strict private oracle for argmax: original greedy sampler versus the hardened argmax_rows on 248320 and 4097 rows, two owners, exact int32 IDs against a host lowest-index reference, with ties across chunk and sub-group boundaries, signed zeros, all-negative, denormal, NaN mixtures, +inf ties and the all-NaN fallback. Feed the IDs through the unchanged probability and select kernels on both sides and compare full bytes. Fresh mapped A, B, A replays on one in-order queue with persistent scratch, counter zero and guards checked after every replay. No timing until all of that passes, and no serving enablement from this packet.",
+      "ttft_ms": 61921,
+      "type": "result",
+      "duration_ms": 77281,
+      "uuid": "6aeca4ec-6565-4949-a451-3c17dbac7d05",
+      "ttft_stream_ms": 1796,
+      "time_to_request_ms": 125,
+      "first_content_frame_ms": 1796,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

@@ -1,0 +1,120 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 45.86620071699144,
+  "launch_exception": null,
+  "source_packet_sha256": "fc74d5d02ed8d035d5bf4a57645e0f86b1852cee9bd2f4f0d753ecaf2c0000e4",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 975315,
+      "stop_reason": "end_turn",
+      "session_id": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "total_cost_usd": 9.4614265,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 19741,
+        "cache_read_input_tokens": 271953,
+        "output_tokens": 2882,
+        "output_tokens_details": {
+          "thinking_tokens": 1958
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 19741,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 2882,
+            "cache_read_input_tokens": 271953,
+            "cache_creation_input_tokens": 19741,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 19741
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-fable-5-1": {
+          "inputTokens": 32,
+          "outputTokens": 61505,
+          "thinkingTokens": 43318,
+          "cacheReadInputTokens": 2259826,
+          "cacheCreationInputTokens": 291045,
+          "webSearchRequests": 0,
+          "costUSD": 9.4614265,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 64000,
+          "canonicalModel": "claude-fable-5-1",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "**GO for one incremental SYCL build of the native MMVQ TU, kernels archive and main link.** No correctness or fallback defect found.\n\n**Eligibility and fallback**\n\n- The branch sits inside the compile-time C6 scope, after the existing CENTER branch, inside the RPW1 and A2 scope, after the packed registry and the wide gate. Every ineligible case falls through to the untouched original launches, as the proof lists.\n- Condition order is right: shapes, even blocks, base alignment and CENTER off are evaluated before the flag, so the marker fires only on a genuinely eligible call. The '1' convention matches the CENTER sibling.\n- The latch lives in a function-local static, so a capture that selects the kernel is stable for the process.\n\n**Alignment and bounds**\n\nBoth shapes have even blocks per row, so row strides of 5040 and 2100 keep every row base dword aligned once the matrix base is. The helper's 20-byte window reaches at most block offset 195 and at most two bytes before an odd-index block, never before the row. No tail padding is assumed, which matters because NativeDense publishes an exact-size allocation.\n\n**Kernel body**\n\nThe kernel is the S104 body with the name and a static assert; the helper is byte-exact. The discarded A2 branch still references an existing helper, so it compiles. Constants and block types match the originals.\n\n**Main compiler identity requirements, the real gate**\n\nSource equality transfers nothing by itself. Before any GPU:\n\n1. Confirm the main CMake flags for this TU match the private build: precise FP model, per-kernel split, default sub-group 32, the same AOT device and backend options. A different contraction policy would silently change the MAD pattern.\n2. Audit the new registered class in the main binary: host info, cache, guard, name pointer and selected image are distinct. Then check the image: funnel on the five dwords with the bit-1 selects, 48 dp4a, 20 FP MUL, 6 MAD, 36 ADD in the inspected order, six accumulators, XOR 16 to 1, lane-zero stores, SIMD32 and 128 GRF. Register allocation can change inside the larger TU, so a spill or SIMD change is a HOLD.\n3. Confirm the original wide and CENTER images keep their registered names and that the OFF path's computational prefix still matches S102 modulo the known post-EOT words.\n\n**Serving test rule**\n\nSame binary, flag 0 then 1, the S100 gate set. The marker must appear exactly once on ON and never on OFF. If ON shows no marker, the base alignment guard or the matrix types excluded every call. Record that as NOT_REACHED, not as a pass or a candidate failure, and do not relax the guard in the same cycle. Timing from that run stays descriptive.",
+      "ttft_ms": 30903,
+      "type": "result",
+      "duration_ms": 44581,
+      "uuid": "d08156f8-ac13-4840-9ad9-00d53b9a965e",
+      "ttft_stream_ms": 2013,
+      "time_to_request_ms": 96,
+      "first_content_frame_ms": 2014,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

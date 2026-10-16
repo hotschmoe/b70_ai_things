@@ -1,0 +1,92 @@
+{
+  "status": "PASS_EXISTING_BOUNDED_FUNCTIONALS",
+  "concurrent_math": [
+    {
+      "text": "323",
+      "output_sha256": "3949ac1596ec77106a709a618bf5adcb19b77537ce8bcbdf54ff830169cdd084",
+      "usage": {
+        "prompt_tokens": 25,
+        "completion_tokens": 4,
+        "total_tokens": 29,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "request": {
+        "model": "hotschmoe-dd",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Return only the integer: 17 * 19."
+          }
+        ],
+        "max_tokens": 32,
+        "temperature": 0,
+        "stream": true,
+        "stream_options": {
+          "include_usage": true
+        },
+        "chat_template_kwargs": {
+          "enable_thinking": false
+        },
+        "strata_tune": {
+          "spec_min_p": 0
+        }
+      }
+    },
+    {
+      "text": "667",
+      "output_sha256": "8b5551ea922dd24625c45051c64adb50fdff91fecdf5327a02c7b0be3933965e",
+      "usage": {
+        "prompt_tokens": 25,
+        "completion_tokens": 4,
+        "total_tokens": 29,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "request": {
+        "model": "hotschmoe-dd",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Return only the integer: 23 * 29."
+          }
+        ],
+        "max_tokens": 32,
+        "temperature": 0,
+        "stream": true,
+        "stream_options": {
+          "include_usage": true
+        },
+        "chat_template_kwargs": {
+          "enable_thinking": false
+        },
+        "strata_tune": {
+          "spec_min_p": 0
+        }
+      }
+    }
+  ],
+  "thinking": {
+    "content": "391",
+    "reasoning_content_present": true,
+    "reasoning_content_sha256": "75fa5d3d4f6307c7a71031bd47980531c761832ac802e1c498957aa9e34d7fec"
+  },
+  "tool_first": {
+    "tool_calls": [
+      {
+        "id": "call_7f9b4170e16f4c588dbe676a",
+        "type": "function",
+        "function": {
+          "name": "lookup_build_status",
+          "arguments": "{\"project\":\"b70-demo\"}"
+        }
+      }
+    ]
+  },
+  "tool_final": {
+    "content": "The build status for project b70-demo is passed, with 17 tests passed and 0 tests failed."
+  },
+  "scope": "Functional fields recomputed from saved responses; raw chunks/reasoning stay external, not a new test or model-quality qualification."
+}

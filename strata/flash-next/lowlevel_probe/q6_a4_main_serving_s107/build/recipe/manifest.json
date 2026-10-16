@@ -1,0 +1,41 @@
+{
+  "status": "FROZEN_BUILD_PREPARATION_ONLY_NOT_EXECUTED",
+  "files": {
+    "README.txt": {
+      "bytes": 2488,
+      "sha256": "097f73d774eab1421d59cc4243f28e5516e68297d1028ea7d7c3762b5e080cea"
+    },
+    "build-container.sh": {
+      "bytes": 5514,
+      "sha256": "85030a218c77dc6d4527ca6202b0fb110a3ca579af26927e7cc4357e86ac2e32"
+    },
+    "build.sh": {
+      "bytes": 1365,
+      "sha256": "c20766628e19acf113f621c6638eae4c4be0dbc1f238c0a8f05f556ed876a05b"
+    },
+    "expected-applied-source.sha256": {
+      "bytes": 120,
+      "sha256": "e12a17b7c6ce03bec103bec76184f379b0e80daf21ca0fc8cf7e43ed26bf25c2"
+    },
+    "expected-before-build.sha256": {
+      "bytes": 293,
+      "sha256": "10183761abcc382907054c899332c5e5288c8adca2d6a561a45e38875d71ac71"
+    },
+    "expected-unchanged-build-inputs.sha256": {
+      "bytes": 1539,
+      "sha256": "c0599ed2445a9888a0873993dc3093d415172d773775a3d424512d88c69f280b"
+    },
+    "expected-unchanged-source.sha256": {
+      "bytes": 2500,
+      "sha256": "5a7836d5f129b5d616396795776be71be2eebf8ceaeb4f464c1ff8e6c27afe8f"
+    },
+    "from-s106.diff": {
+      "bytes": 11765,
+      "sha256": "18e2c5890ba7773a80907d441fb84742736f1828f3968ef5ef72e4ae2bcdb570"
+    },
+    "source-only-validation.json": {
+      "bytes": 871,
+      "sha256": "e23b88d8c72757d229827635b2283cd7125b0cc98dc4e18b6a5ffcf36ac0bd77"
+    }
+  }
+}

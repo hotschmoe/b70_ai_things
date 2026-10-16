@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "exact_copies_verified": 81,
+  "derived_summaries_verified": 7,
+  "derived_source_hashes_checked": true,
+  "provenance_functional_log_subset_and_latency_recomputed": true,
+  "raw_SSE_or_large_artifact_rehash": false
+}

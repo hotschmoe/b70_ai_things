@@ -1,0 +1,1 @@
+Review this independent root-frozen packet. No tools, builds or GPU. Identify concrete blockers and choose the single most useful next experiment. Keep response under500 words. Preserve evidence limits; no throughput prediction or automatic promotion.

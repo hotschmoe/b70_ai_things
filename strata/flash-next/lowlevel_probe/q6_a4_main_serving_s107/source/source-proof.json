@@ -1,0 +1,47 @@
+{
+  "status": "SOURCE_ONLY_NOT_APPLIED_BUILT_OR_EXECUTED",
+  "original_sha256": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584",
+  "candidate_sha256": "ae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252",
+  "patch_sha256": "acdd2e15f908aa71cdd5fb6163c2432f8e6fd5df1417e2169a99c956fccdd5df",
+  "S104_reference_header_sha256": "a5c69ed76b35530f600e278dba019660723c5c67789d69dde4c5b67dc55548e9",
+  "old_wide_kernel_text_sha256": "129003057453e50dcd12d00e29b6236409d04112d4a02c56469866abd2b6eeed",
+  "old_wide_kernel_text_byte_exact_in_candidate": true,
+  "new_A4_helper_byte_exact_S104": true,
+  "new_kernel_inverse_rename_and_staticassert_removal_equals_S104_function": true,
+  "full_inverse_removes_only_added_helpers_kernel_and_guard_branch": true,
+  "new_registered_kernel_class": "native_mmvq_q6k_a4_c6",
+  "new_flag": "STRATA_Q6_A4",
+  "source_pins": {
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp": {
+      "bytes": 185685,
+      "sha256": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/native_dense.cpp": {
+      "bytes": 21570,
+      "sha256": "99f925bfdc0a295e3314bea43a2fc0f7119f80f1a5111b38939e1478bf67f2d8"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp": {
+      "bytes": 223107,
+      "sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/sycl_queue.hpp": {
+      "bytes": 14310,
+      "sha256": "2b9ada924e3023ab742e826f9c9850324ccc978cfc4ca8d0a36b3e7b6c79c51a"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/kernels/native_mmvq.hpp": {
+      "bytes": 8175,
+      "sha256": "83c233dd1f9de362cf646eb6f3d95dd97278ae43a30aeeed205b3067ef358a7e"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/sycl_math.hpp": {
+      "bytes": 1271,
+      "sha256": "ac45a7a9b7d3cdc4b1b8c1c413c416911fb4ca91373d69bb34947815dbb3eec6"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/kernels/dp4a.hpp": {
+      "bytes": 2827,
+      "sha256": "dbbf686ebcc60d569ed1e0bf688d98666a1d46b7f85d8d7e073d28d6ab775eba"
+    }
+  },
+  "parent_reported_fresh_upstream": "296b59d2f73c8f04a805df29c2fa97655adace78 unchanged at S106 closure; this preparation did not invoke network/modeltools",
+  "inverse_patch_sha256": "5c2e4e9cbe886bbd01b300e5befe82b6497a691c52ada3de08aab42079e5d425",
+  "old_source_reconstructed_by_removing_only_two_additions": true
+}

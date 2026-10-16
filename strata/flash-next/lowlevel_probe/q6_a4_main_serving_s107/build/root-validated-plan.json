@@ -1,0 +1,12 @@
+{
+  "compiled": [
+    {
+      "source": "/work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+      "object": "CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o"
+    }
+  ],
+  "archives": [
+    "libstrata_kernels.a"
+  ],
+  "links": 1
+}

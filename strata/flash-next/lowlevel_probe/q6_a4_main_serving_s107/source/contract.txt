@@ -1,0 +1,91 @@
+S104 Q6 A4 narrow main proposal, 2026-10-15
+STATUS: SOURCE ONLY, NOT APPLIED, COMPILED OR EXECUTED.
+
+CONFIG
+Original TU c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584.
+STRATA_Q6_A4 defaults OFF (only first env byte '1' enables), process-static.
+Graph capture fixes the selected kernel; later environment changes cannot alter
+existing graphs. No public API, ABI, queue, ownership, registry or layout change.
+
+COMMAND
+Private copies and forward/inverse source patches only. Source checks prove:
+removing exactly the added helper/kernel/flag and guarded branch reconstructs
+the original full TU; old wide-kernel text remains byte exact; load16_a4 is exact
+S104 helper; inverse function rename/static_assert removal equals S104 kernel.
+No compile, model call, GPU touch, controller change or live-source mutation.
+Root reports fresh upstream296b59d2f73c8f04a805df29c2fa97655adace78 unchanged.
+
+RESULT: eligibility and fallback
+native_mmvq type14 -> native_q6_k_mmvq -> existing wide gate ->
+launch_q6k_wide<6>. Existing packed registry is consulted FIRST and still wins.
+New branch is inside RPW1/A2 and compile-time C6, after existing CENTER branch.
+It requires PF exactly0, N6144/M2560 or N2560/M10240, complete even Q6 blocks
+per row, weights base%4==0, CENTER disabled, A4 enabled. Workgroup remains four
+SG32/128 workitems. New unique registered class native_mmvq_q6k_a4_c6 calls
+fixed native_mmvq_q6k_a4_kernel<true>; original kernel/registered names untouched.
+
+Fallback proof:
+- flag absent/0: original launch.
+- other quant types: original native_mmvq switch branches.
+- C!=6: new branch excluded at compile time.
+- RPW!=1 or A2 false: enclosing branch excludes new launch.
+- PF2/3/4/6: original early returns; unsupported positive or negative PF retain
+  original fallthrough but cannot enter new branch (explicit PF==0).
+- CENTER enabled: original CENTER path wins for these exact shapes.
+- other dimensions, incomplete/odd blocks, base%4!=0: original launch.
+- disabled wide gate, packed registry hit, stride224 route: unchanged paths.
+No new wait, synchronization, allocation, packing or per-operation print.
+
+ON-only once marker at first eligible HOST use/capture, not loaded startup:
+strata Q6 A4: enabled=1 C6 A2 R1 SG32 PF0 CENTER0 shapes=6144x2560,2560x10240 base_mod4=0
+It proves host selection only, not independent GPU dispatch or execution count.
+No eligible call means no initializer/marker. OFF has no new marker.
+
+RESULT: caller/alignment/bounds
+NativeDense validates native 2D matrix shapes, allocates each independently,
+copies exact native bytes and publishes full allocation base as native_data.
+No tensor offset is added on publication. malloc_device_guarded wraps device
+allocation; this does NOT establish observed actual alignment. Runtime %4 guard
+is authoritative. Existing Q6/Q8 type/layout assertions remain unchanged.
+For N6144/2560, blocks_per_row=24/10; row strides5040/2100 divisible4. A guarded
+base4 therefore makes every row base4. Block stride210 alternates base mod4=0/2.
+ql requested offsets0..112, qh offsets128..176. Helper rounds requested pointer
+down4, reads five aligned dwords (20bytes), reconstructs16 requested bytes with
+unsigned shifts/OR. At mod2 it starts2bytes before requested field: first block
+of every row is base4, and odd-index blocks have preceding bytes inside that row.
+Even conservative final qh read reaches block offset195<210; ql max131. Thus
+reads stay in allocation including final row/block; no tail padding is assumed.
+Both output dimensions are multiples4; K multiple256. Kernel retains exact S104
+K mapping, sign/scales/DP4A, FP products/accumulation order, XOR16..1, lane0 store,
+Q8 loads and output pitch. No activation representation substitution.
+
+Caller references (original pinned paths in source-proof.json):
+native_mmvq.dp.cpp:3550 packed-first/public wide gate;3567 C6;
+3832..3852 generic type14 dispatch. NativeDense native_dense.cpp:238..259 validates
+and independently allocates/copies;321 records pending;389..390 publishes base.
+sycl_queue.hpp:259 malloc_device_guarded. verify.cpp:1030 qkv,1072 ssm_out,
+1283 attn_output call native_mmvq through matrix native_type/native_data. Source
+routes do not establish actual eligible call incidence or pointer observations.
+
+RESULT: retained evidence and limits
+S104 CPU build25s excluding queue. Actual one quiet card0 process40s,114 strict
+snapshots/10DOT, public+saved-S44+private original/candidate full-byte initial,
+changed/repeat/restore, immutable operands/guards, identity/health/teardown PASS.
+Four nested balanced graph timing pairs/20 projections per batch, canonical Q8
+ready outside timing: out6144->2560 medians63.09685->60.0528125us, pairedmedian
+-4.85287114%; qkv2560->10240 73.8277->72.2073375us,-2.20463784%. Warm private
+projection evidence, not independent-process, population or serving proof.
+Observed SIMD32/GRF128/eu8 only; absent scratch/spill fields unknown, not zero.
+Actual models claude-opus-5-5(23.074s),claude-fable-5-1(18.456s) recommended
+conditional source prep after S106; root accepted with these limits. S106 clean
+whole-graph matched discriminator+0.059862% had no meaningful serving win; it is
+separate from this unbuilt A4 source proposal. No pointer value, dynamic traffic,
+critical-path coverage, global non-slower property or main serving gain proved.
+
+VERDICT
+GO source proposal only, default OFF. Root actual-source/model review before
+application; actual-main selected host/image binding, resources/ISA and strict
+matched serving remain future gates. Prefer one later planned same-new-binary
+single-flag serving comparison over another private repeat/sweep/full-cache run.
+Source copying does not guarantee final compiler contraction/scheduling/ISA.
+No GPU/build/model invocation or controller execution is authorized here.

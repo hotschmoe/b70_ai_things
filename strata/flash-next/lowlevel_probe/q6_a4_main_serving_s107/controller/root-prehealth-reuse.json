@@ -1,0 +1,11 @@
+{
+  "status": "REUSE_LAST_COORDINATED_GPU_CLOSURE_AS_PREHEALTH",
+  "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-whole-graph-s106-api-prep/mode1/post-health.json",
+  "source_sha256": "16844ff1148e2032639deeb2f829f4e845b85479d2cc7d6b9107f9ec633e4eae",
+  "boot_id": "b785982c-4954-4d23-808c-48a7534ce3bd",
+  "card_and_compiled10_collective_exit0": true,
+  "no_intervening_GPU_work_in_shared_coordination_log": true,
+  "only_offline_noDRI_CPU_work_since": true,
+  "lease_status_before_start": "bothfree",
+  "scope": "Retained pinned health in same boot/runtime; no new health invocation or absolute claim about uncoordinated external activity."
+}

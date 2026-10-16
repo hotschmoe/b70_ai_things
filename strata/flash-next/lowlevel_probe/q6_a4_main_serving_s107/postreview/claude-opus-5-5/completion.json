@@ -1,0 +1,120 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 41.11766024003737,
+  "launch_exception": null,
+  "source_packet_sha256": "ca9006b601ff24b111dba858ee435d32a4393a542124ff0b632403c8ff9213ba",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 828013,
+      "stop_reason": "end_turn",
+      "session_id": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "total_cost_usd": 4.3108892,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 23116,
+        "cache_read_input_tokens": 291258,
+        "output_tokens": 2936,
+        "output_tokens_details": {
+          "thinking_tokens": 1546
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 23116,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 2936,
+            "cache_read_input_tokens": 291258,
+            "cache_creation_input_tokens": 23116,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 23116
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 36,
+          "outputTokens": 62196,
+          "thinkingTokens": 34740,
+          "cacheReadInputTokens": 2785126,
+          "cacheCreationInputTokens": 313725,
+          "webSearchRequests": 0,
+          "costUSD": 4.3108892,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# S112 vs S111 vs subset-head, and Q6\n\n## Q6 (S107): no more testing now\n\nOne fixed OFF\u2192ON sequence with three nested pairs showed +0.28 to +0.43%. Keep it default OFF and retained. A further serving run would not resolve anything new.\n\n## S112 publication audit: one concrete spec-level gap\n\n**What is fine:**\n- Each leader stores `pv[b]`/`pi[b]`, then issues a device-scope `acq_rel` fence, then a relaxed `fetch_add`. That is a valid release fence before the RMW.\n- Successive RMWs on the counter form a release sequence, so the last leader's RMW reads from every earlier increment.\n\n**The gap:**\n- Only the leader performs the atomic read.\n- The acquire fence (line 1423) comes *after* the work-group barrier, and the threads that load partials (local id < nb) did not perform the RMW themselves.\n- In the C++/SYCL memory model, a thread's acquire fence synchronizes only if it is sequenced after an atomic read in that same thread. So for the non-leader readers there is no formal happens-before chain to the other work-groups' partial stores.\n- It probably works in practice: each thread's device acquire fence likely invalidates its L1, the loads are volatile, and `row_top_prob_split` uses a similar protocol in production. That is evidence, not proof.\n\n**Minimal fix:** in the leader block, put the device `acq_rel` fence immediately after the `fetch_add` and before the barrier. Equivalently, make the RMW `acq_rel`. Then the chain is:\n\n1. release fence in each work-group, then RMW;\n2. the leader's acquire synchronizes with all of them;\n3. the work-group barrier (global fence space) carries that to every reader thread.\n\nThe existing post-barrier fence can stay.\n\n**Inspected and fine:**\n- **Counter reset:** a plain store after all `nb` increments, on per-owner scratch, with in-order queues and drains around `Pair::draft`.\n- **Liveness:** no spin and no residency requirement.\n- **Tie and NaN semantics:** match the one-work-group sampler.\n\n## Ranking\n\n1. **S112 private strict oracle.** It targets the larger historical service: the two samplers sum to about 179 \u00b5s, against about 64 \u00b5s for the two probability kernels. It keeps probabilities and all downstream kernels unchanged.\n   - The oracle should cover the planned exact-ID cases: ties across work-group and chunk boundaries, \u00b10, \u00b1inf, NaN, all-NaN giving 0, and lengths 248,320 and 4,097.\n   - It should check probability, select and residual bytes, A/B/A graph replays on persistent per-owner scratch, counter = 0 after each replay, and guards.\n   - **Add one distinct check:** a forwarding stress of many back-to-back replays in which each replay's logits move the maximum into a different work-group's chunk. This exercises cross-work-group publication specifically.\n   - Do this only after the gating question below is answered. A clean result would not prove the memory model, but it is the right finite discriminator.\n2. **S111 (skip the probability kernels).** Keep it as the prepared fallback. I see no blocking defects:\n   - the mode is constructor-constant;\n   - the `tail_no_prob_` cache is separate;\n   - select receives null/null probability pointers;\n   - depth-1 calls stay on `tail_`.\n\n   Its ceiling is lower. Do not combine it with S112.\n3. **Subset-head policy.** Potentially larger, but it changes draft proposals and native work, so it is a policy experiment that needs acceptance gates. Defer it.\n\n## Decision needed first\n\nShould S112 apply the fence fix before the private oracle? This changes shared kernel source, so it needs root's approval.\n\n- **Recommended:** apply the fence fix, then run the oracle. The fence fix is a correctness strengthening that does not change any value or comparison.\n- **If root wants the existing kernel tested exactly as-is:** run the oracle unchanged, but record the formal gap explicitly. Either way, do not proceed to serving until it is resolved.",
+      "ttft_ms": 23138,
+      "type": "result",
+      "duration_ms": 40040,
+      "uuid": "477b78e3-fe03-4e19-8ec1-34f0c1bc6b16",
+      "ttft_stream_ms": 2511,
+      "time_to_request_ms": 110,
+      "first_content_frame_ms": 2512,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

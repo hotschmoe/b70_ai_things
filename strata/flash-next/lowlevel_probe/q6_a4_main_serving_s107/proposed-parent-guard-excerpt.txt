@@ -1,0 +1,110 @@
+Actual original-host-0.asm selected main parent guard/closure/fallback excerpt.
+SOURCE /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-compiled-audit/original-host-0.asm
+SOURCE_SHA256 45dc0b420bdf0a4aae5ff3a39eaebe51d3233e04bb9fa6f9e9736e841447ddfc
+Line numbers retained; excerpt is not full host-path equivalence proof.
+127:    4c94b:	83 fd 04             	cmp    $0x4,%ebp
+128:    4c94e:	0f 84 b4 0b 00 00    	je     4d508 <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0xe98>
+129:    4c954:	83 fd 02             	cmp    $0x2,%ebp
+130:    4c957:	0f 84 49 09 00 00    	je     4d2a6 <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0xc36>
+131:    4c95d:	83 fd 01             	cmp    $0x1,%ebp
+132:    4c960:	0f 85 03 0e 00 00    	jne    4d769 <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x10f9>
+133:    4c966:	0f b6 05 00 00 00 00 	movzbl 0x0(%rip),%eax        # 4c96d <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x2fd>	4c969: R_X86_64_PC32	.bss+0x204
+134:    4c96d:	84 c0                	test   %al,%al
+135:    4c96f:	0f 84 e8 29 00 00    	je     4f35d <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x2ced>
+136:    4c975:	80 3d 00 00 00 00 00 	cmpb   $0x0,0x0(%rip)        # 4c97c <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x30c>	4c977: R_X86_64_PC32	.bss+0x1fb
+137:    4c97c:	0f 84 68 20 00 00    	je     4e9ea <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x237a>
+138:    4c982:	4d 63 f8             	movslq %r8d,%r15
+139:    4c985:	0f b6 05 00 00 00 00 	movzbl 0x0(%rip),%eax        # 4c98c <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x31c>	4c988: R_X86_64_PC32	.bss+0x1954
+140:    4c98c:	84 c0                	test   %al,%al
+141:    4c98e:	0f 84 57 2a 00 00    	je     4f3eb <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x2d7b>
+142:    4c994:	49 83 c7 03          	add    $0x3,%r15
+143:    4c998:	83 3d 00 00 00 00 00 	cmpl   $0x0,0x0(%rip)        # 4c99f <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x32f>	4c99a: R_X86_64_PC32	.bss+0x194b
+144:    4c99f:	0f 84 27 23 00 00    	je     4eccc <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x265c>
+145:    4c9a5:	0f b6 05 00 00 00 00 	movzbl 0x0(%rip),%eax        # 4c9ac <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x33c>	4c9a8: R_X86_64_PC32	.bss+0x1954
+146:    4c9ac:	84 c0                	test   %al,%al
+147:    4c9ae:	0f 84 be 2b 00 00    	je     4f572 <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x2f02>
+148:    4c9b4:	83 3d 00 00 00 00 00 	cmpl   $0x0,0x0(%rip)        # 4c9bb <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x34b>	4c9b6: R_X86_64_PC32	.bss+0x194b
+149:    4c9bb:	0f 85 f1 0f 00 00    	jne    4d9b2 <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x1342>
+150:    4c9c1:	81 f9 00 18 00 00    	cmp    $0x1800,%ecx
+151:    4c9c7:	75 09                	jne    4c9d2 <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x362>
+152:    4c9c9:	41 81 f8 00 0a 00 00 	cmp    $0xa00,%r8d
+153:    4c9d0:	74 19                	je     4c9eb <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x37b>
+154:    4c9d2:	81 f9 00 0a 00 00    	cmp    $0xa00,%ecx
+155:    4c9d8:	0f 85 d4 0f 00 00    	jne    4d9b2 <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x1342>
+156:    4c9de:	41 81 f8 00 28 00 00 	cmp    $0x2800,%r8d
+157:    4c9e5:	0f 85 c7 0f 00 00    	jne    4d9b2 <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x1342>
+158:    4c9eb:	40 f6 c7 03          	test   $0x3,%dil
+159:    4c9ef:	0f 85 bd 0f 00 00    	jne    4d9b2 <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x1342>
+160:    4c9f5:	44 89 c5             	mov    %r8d,%ebp
+161:    4c9f8:	41 89 ce             	mov    %ecx,%r14d
+162:    4c9fb:	48 89 54 24 60       	mov    %rdx,0x60(%rsp)
+163:    4ca00:	49 89 f5             	mov    %rsi,%r13
+164:    4ca03:	49 89 fc             	mov    %rdi,%r12
+165:    4ca06:	e8 c5 89 03 00       	call   853d0 <_ZN6strata7kernels12_GLOBAL__N_110q6k_centerEv>
+166:    4ca0b:	4c 89 e7             	mov    %r12,%rdi
+167:    4ca0e:	4c 89 ee             	mov    %r13,%rsi
+168:    4ca11:	48 8b 54 24 60       	mov    0x60(%rsp),%rdx
+169:    4ca16:	44 89 f1             	mov    %r14d,%ecx
+170:    4ca19:	41 89 e8             	mov    %ebp,%r8d
+171:    4ca1c:	84 c0                	test   %al,%al
+172:    4ca1e:	0f 85 8e 0f 00 00    	jne    4d9b2 <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x1342>
+173:    4ca24:	e8 57 8c 03 00       	call   85680 <_ZN6strata7kernels12_GLOBAL__N_16q6k_a4Ev>
+174:    4ca29:	4c 89 e7             	mov    %r12,%rdi
+175:    4ca2c:	4c 89 ee             	mov    %r13,%rsi
+176:    4ca2f:	48 8b 54 24 60       	mov    0x60(%rsp),%rdx
+177:    4ca34:	44 89 f1             	mov    %r14d,%ecx
+178:    4ca37:	41 89 e8             	mov    %ebp,%r8d
+179:    4ca3a:	84 c0                	test   %al,%al
+180:    4ca3c:	0f 84 70 0f 00 00    	je     4d9b2 <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x1342>
+181:    4ca42:	49 c1 e7 03          	shl    $0x3,%r15
+182:    4ca46:	48 b8 e0 ff ff ff 1f 00 00 00 	movabs $0x1fffffffe0,%rax
+183:    4ca50:	4c 21 f8             	and    %r15,%rax
+184:    4ca53:	48 c7 84 24 70 02 00 00 01 00 00 00 	movq   $0x1,0x270(%rsp)
+185:    4ca5f:	48 c7 84 24 78 02 00 00 04 00 00 00 	movq   $0x4,0x278(%rsp)
+186:    4ca6b:	48 89 84 24 80 02 00 00 	mov    %rax,0x280(%rsp)
+187:    4ca73:	48 c7 84 24 88 02 00 00 01 00 00 00 	movq   $0x1,0x288(%rsp)
+188:    4ca7f:	48 c7 84 24 90 02 00 00 04 00 00 00 	movq   $0x4,0x290(%rsp)
+189:    4ca8b:	48 c7 84 24 98 02 00 00 20 00 00 00 	movq   $0x20,0x298(%rsp)
+190:    4ca97:	0f 57 c0             	xorps  %xmm0,%xmm0
+191:    4ca9a:	0f 11 84 24 a0 02 00 00 	movups %xmm0,0x2a0(%rsp)
+192:    4caa2:	48 c7 84 24 b0 02 00 00 00 00 00 00 	movq   $0x0,0x2b0(%rsp)
+193:    4caae:	48 89 bc 24 48 01 00 00 	mov    %rdi,0x148(%rsp)
+194:    4cab6:	48 89 b4 24 50 01 00 00 	mov    %rsi,0x150(%rsp)
+195:    4cabe:	48 89 94 24 58 01 00 00 	mov    %rdx,0x158(%rsp)
+196:    4cac6:	89 8c 24 60 01 00 00 	mov    %ecx,0x160(%rsp)
+197:    4cacd:	44 89 84 24 64 01 00 00 	mov    %r8d,0x164(%rsp)
+198:    4cad5:	48 8b 84 24 b0 02 00 00 	mov    0x2b0(%rsp),%rax
+199:    4cadd:	48 89 44 24 40       	mov    %rax,0x40(%rsp)
+200:    4cae2:	0f 10 84 24 70 02 00 00 	movups 0x270(%rsp),%xmm0
+201:    4caea:	0f 10 8c 24 80 02 00 00 	movups 0x280(%rsp),%xmm1
+202:    4caf2:	0f 10 94 24 90 02 00 00 	movups 0x290(%rsp),%xmm2
+203:    4cafa:	0f 10 9c 24 a0 02 00 00 	movups 0x2a0(%rsp),%xmm3
+204:    4cb02:	0f 11 5c 24 30       	movups %xmm3,0x30(%rsp)
+205:    4cb07:	0f 11 54 24 20       	movups %xmm2,0x20(%rsp)
+206:    4cb0c:	0f 11 4c 24 10       	movups %xmm1,0x10(%rsp)
+207:    4cb11:	0f 11 04 24          	movups %xmm0,(%rsp)
+208:    4cb15:	4c 8d b4 24 08 05 00 00 	lea    0x508(%rsp),%r14
+209:    4cb1d:	48 8d 94 24 48 01 00 00 	lea    0x148(%rsp),%rdx
+210:    4cb25:	4c 89 f7             	mov    %r14,%rdi
+211:    4cb28:	48 89 de             	mov    %rbx,%rsi
+212:    4cb2b:	e8 a0 8b 03 00       	call   856d0 <_ZN4sycl3_V15queue12parallel_forI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_121native_mmvq_q6k_a4_c6EEELi3EJZNS6_15launch_q6k_wideILi6EEEvPKvSB_PfiiPS1_EUlNS0_7nd_itemILi3EEEE8_EEENSt9enable_ifIXsr6detail23AreAllButLastReductionsIDpT1_EE5valueENS0_5eventEE4typeENS0_8nd_rangeIXT0_EEEDpOSI_>
+213:    4cb30:	e9 d9 24 00 00       	jmp    4f00e <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x299e>
+773:    4d9b2:	48 89 7c 24 68       	mov    %rdi,0x68(%rsp)
+774:    4d9b7:	48 89 74 24 70       	mov    %rsi,0x70(%rsp)
+775:    4d9bc:	48 89 54 24 78       	mov    %rdx,0x78(%rsp)
+776:    4d9c1:	89 8c 24 80 00 00 00 	mov    %ecx,0x80(%rsp)
+777:    4d9c8:	44 89 84 24 84 00 00 00 	mov    %r8d,0x84(%rsp)
+778:    4d9d0:	48 8b 05 00 00 00 00 	mov    0x0(%rip),%rax        # 4d9d7 <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x1367>	4d9d3: R_X86_64_PC32	.rodata+0x786ac
+779:    4d9d7:	48 89 84 24 20 01 00 00 	mov    %rax,0x120(%rsp)
+780:    4d9df:	0f 10 05 00 00 00 00 	movups 0x0(%rip),%xmm0        # 4d9e6 <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x1376>	4d9e2: R_X86_64_PC32	.rodata+0x7869c
+781:    4d9e6:	0f 29 84 24 10 01 00 00 	movaps %xmm0,0x110(%rsp)
+782:    4d9ee:	4c 8d b4 24 88 00 00 00 	lea    0x88(%rsp),%r14
+783:    4d9f6:	48 8d b4 24 10 01 00 00 	lea    0x110(%rsp),%rsi
+784:    4d9fe:	4c 89 f7             	mov    %r14,%rdi
+785:    4da01:	e8 00 00 00 00       	call   4da06 <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x1396>	4da02: R_X86_64_PLT32	_ZN4sycl3_V16detail14tls_code_loc_tC1ERKNS1_13code_locationE-0x4
+786:    4da06:	4c 89 f7             	mov    %r14,%rdi
+787:    4da09:	e8 00 00 00 00       	call   4da0e <_ZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS4_PfiiPN4sycl3_V15queueE+0x139e>	4da0a: R_X86_64_PLT32	_ZN4sycl3_V16detail14tls_code_loc_t5queryEv-0x4
+788:    4da0e:	49 89 c6             	mov    %rax,%r14
+789:    4da11:	49 c1 e7 03          	shl    $0x3,%r15
+790:    4da15:	48 b8 e0 ff ff ff 1f 00 00 00 	movabs $0x1fffffffe0,%rax
+791:    4da1f:	4c 21 f8             	and    %r15,%rax

@@ -1,0 +1,37 @@
+# S107 review: default-OFF Q6 A4 main integration
+
+**Verdict: GO** for one incremental SYCL build of the `native_mmvq` TU and its dependents. I found no blocking source issue.
+
+## Correctness and default fallback
+
+- **Guard placement.** The new branch sits inside `launch_q6k_wide<6>` under `rpw == 1 && q6k_a2()`, after the CENTER branch and before the original `wide_a2` launch.
+- **Conditions, all required:** PF == 0, one of the two exact shapes, an even block count per row, `weights % 4 == 0`, CENTER off, and `q6k_a4()` last.
+- **Anything else falls through** to the untouched original launch.
+- **The packed registry is still consulted first,** so packed heads keep their existing path.
+- **Marker behaviour:**
+  - `q6k_center()` already runs for these shapes in OFF, so OFF gets no new marker.
+  - `q6k_a4()` is evaluated last, so its initializer and marker fire only on an eligible call.
+  - The flag is latched before capture.
+- **The kernel body is the S104 function** with a `static_assert` added; the `!CAND` arm is dead code under `<true>`.
+- **The registered name `native_mmvq_q6k_a4_c6` is new.** The original kernel text is byte-exact. The source-level inverse reconstructs the original TU.
+
+## Alignment and bounds
+
+- **Row bases.** Row strides are 5040 and 2100 bytes, both divisible by 4. With `base % 4` guarded at runtime, every row base is dword-aligned. Block 0 of each row is aligned, so the `a\u22122` read only happens on odd blocks, into the preceding block's `d` field within the same row.
+- **Upper bound.** The furthest reads end at block offset 195 (`qh`) and 131 (`ql`), below 210. The last block of the last row stays in bounds, and no tail padding is assumed.
+- **The runtime pointer guard is authoritative.** The `NativeDense` publication path only makes alignment likely; the guard is what enforces it.
+
+## Compiled identity requirements after the build, before any GPU run
+
+1. **OFF path.** The actual `native_mmvq_q6k_wide_a2<6>` image must keep the S102/S85 16384-byte computational prefix. The CENTER-6 image should also be unchanged. Any drift in the C6 kernels means **HOLD**.
+2. **New kernel binding.** Bind the new kernel's Info, cache, guard, name pointer and selected image. Its ISA must match the reviewed S104 body:
+   - `d32x4` + `d32` loads with the bit-1 funnel and select;
+   - 48 DP4As in two ordered chains;
+   - the same per-column MAD-then-ADD FP ledger;
+   - XOR 16\u21921 and lane-0 stores;
+   - SIMD32 at GRF128, with no new spill or scratch fields. Absent fields are not evidence of zero.
+3. **Build flags.** Confirm the TU was built with `-fp-model=precise`, SG32 and per-kernel device code split.
+
+## Afterwards (not authorized here)
+
+Run one same-new-binary, single-flag matched serving comparison with strict output and native-work gates. It must also show the ON marker exactly once and absent in OFF. The marker proves host selection only. Report the result descriptively.

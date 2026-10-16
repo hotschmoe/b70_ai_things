@@ -1,0 +1,32 @@
+{
+  "scope": "Median of3 per-request percentile summaries, per stream/arm. Not pooled percentiles or native token ITL; content events may hold multiple tokens.",
+  "arms": [
+    "OFF",
+    "ON"
+  ],
+  "streams": [
+    {
+      "stream": 0,
+      "median_of_three_request_p50_ms": [
+        0.20829201093874872,
+        0.21373748313635588
+      ],
+      "median_of_three_request_p95_ms": [
+        47.53632242791355,
+        47.436322865542024
+      ]
+    },
+    {
+      "stream": 1,
+      "median_of_three_request_p50_ms": [
+        0.20660401787608862,
+        0.22773400996811688
+      ],
+      "median_of_three_request_p95_ms": [
+        47.54164023324847,
+        47.41977758822031
+      ]
+    }
+  ],
+  "source_full_percentiles_retained": "comparison.json pairs.streams.content_event_gap_ms"
+}

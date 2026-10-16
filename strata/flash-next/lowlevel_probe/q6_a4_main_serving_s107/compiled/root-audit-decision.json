@@ -1,0 +1,37 @@
+{
+  "utc": "2026-10-15T23:48:52.568342+00:00",
+  "status": "ROOT_ACCEPT_COMPUTATIONAL_REUSE_AND_HOST_LAUNCH_GO_ONE_FINITE_SAME_BINARY_SERVING_COMPARE",
+  "new_binary": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca",
+  "root_read": [
+    "frozen audit source/README",
+    "actual build plan/proof",
+    "three metadata execution/payload blocks",
+    "candidate Info/cache/guard launch wrapper",
+    "original-host parent selected guard/argument span4c94b..4cb30",
+    "S107 fullcontrollerdiff/manifest and inheritedS106controllers"
+  ],
+  "host_guard_observations": {
+    "parent": "launch_q6k_wide<6>",
+    "shape_compares": "4c9c1..4c9e5 K6144/M2560 OR K2560/M10240",
+    "alignment": "4c9eb tests matrixbase low2bits",
+    "center_and_A4": "4ca06 center getter; 4ca24 A4 getter, false A4 returns originalwide path4d9b2",
+    "capture_args": "4caae..4cacd stores w/x/y/N/M atclosure+0/8/16/24/28;4cb2b calls candidate wrapper856d0",
+    "payload": "Actual selected main metadata pointers0/8/16 and scalars24/28, same as S104. No universal allpath machine equivalence claim."
+  },
+  "prefix_bytes": {
+    "original": 16384,
+    "center": 10688,
+    "candidate": 15344
+  },
+  "raw_whole_text_equal": {
+    "original": false,
+    "center": true,
+    "candidate": false
+  },
+  "unexplained_post_EOT_differences_preserved": true,
+  "no_new_decoder_needed": true,
+  "resource_limits": "OnlyobservedSIMD32/GRF128/eu8 match; missingprivate/spill/scratch fieldsunknown",
+  "candidate_scope": "hostselectionmarkeronly; compiled body equality transfers reviewed instruction evidence, not universalnumerical/servingspeed proof",
+  "serving_protocol": "Graph0 BOTH, A4only0/1, one warm256+3timedfresh107/1500C2pairs+functionals; immediateeachONwork/text/capturegate; normalQUIT/fullCIDNAME/fullhealth. No repeats or cachecampaign pendingworthy result.",
+  "GPU_GO": true
+}

@@ -1,0 +1,28 @@
+{
+  "original": {
+    "image": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-isa/original.zebin",
+    "image_sha256": "6bc2acb286c7c00eea4678f404681b329d42e6dac05d268bd995b5e6feb2d6b8",
+    "name": "_ZTSN3s859PrivateC6ILb0EEE",
+    "ASM": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-isa/original-disasm/.text._ZTSN3s859PrivateC6ILb0EEE.asm",
+    "EOT_end": 16384,
+    "ASM_sha256": "668ee30e1417c8c70c2aedd99660f8a94bb215653531281e4c5a492d02711a09",
+    "expected_registered_main_name": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS5_PfiiPN4sycl3_V15queueEE23native_mmvq_q6k_wide_a218dpct_kernel_scalarILi6EEEE"
+  },
+  "center": {
+    "image": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-main-s87-isa/candidate.zebin",
+    "image_sha256": "87f4e963357fabcb56c12129ae6a26fb99ccbbf8fd7bc3e08bbecd07fb62f3ab",
+    "name": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS5_PfiiPN4sycl3_V15queueEE23native_mmvq_q6k_center6EE",
+    "ASM": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-main-s87-isa/candidate-disasm/.text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS5_PfiiPN4sycl3_V15queueEE23native_mmvq_q6k_center6EE.asm",
+    "EOT_end": 10688,
+    "ASM_sha256": "7dc9a9e2cc63cb45ac5a4fa54bf5f7ce362d32e4647d5d3cffe5ce7d4b0272a6",
+    "expected_registered_main_name": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_115launch_q6k_wideILi6EEEvPKvS5_PfiiPN4sycl3_V15queueEE23native_mmvq_q6k_center6EE"
+  },
+  "candidate": {
+    "image": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-compiled-audit/candidate.zebin",
+    "image_sha256": "e39a2c221a5c342bfc3f2d13cc8d752a084ef571ae7856363cc673e155d6701c",
+    "name": "_ZTSN4s10411PrivateC6A4ILb1EEE",
+    "ASM": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-candidate-isa/disasm/.text.s104_a4_candidate.asm",
+    "EOT_end": 15344,
+    "ASM_sha256": "8c5d8144f6f2a43cd7c3ef9d0ae9cf82ce5bfa77b20b414fe9c6437789934720"
+  }
+}

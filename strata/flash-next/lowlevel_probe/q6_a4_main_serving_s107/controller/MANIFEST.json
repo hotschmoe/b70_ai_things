@@ -1,0 +1,61 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_UNEXECUTED",
+  "folder": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep",
+  "controller_count": 6,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3765,
+      "sha256": "61a487bbb503cf4c38eb9a370ee0b9c5872a7d8a5c9bfb21f04fcbb0f7cb3aa4"
+    },
+    {
+      "path": "controller-diff.patch",
+      "bytes": 19029,
+      "sha256": "614a2988641ed7bfc2ade64cd6b8672319a71c7937d568b68c816037a51adc15"
+    },
+    {
+      "path": "harness-prep/client.py",
+      "bytes": 12238,
+      "sha256": "c230835583d50ec1922cf5315298cbafff34d07d261f6a249e765fb9998b95da"
+    },
+    {
+      "path": "harness-prep/compare.py",
+      "bytes": 8071,
+      "sha256": "2b7a6d49d5674ad7de93a3de27a342e84ec185dc4763efdb397fb7023d6625c5"
+    },
+    {
+      "path": "harness-prep/launch_stage.sh",
+      "bytes": 1881,
+      "sha256": "5c17ace3c24bce65e0208c166f245e272f72d47c838c166b06cf6c7f576d980d"
+    },
+    {
+      "path": "harness-prep/make_configs.py",
+      "bytes": 5092,
+      "sha256": "a837c276dae0997e49d4a55c7d66278b397df7261ea9ed5f439602c8c28d6828"
+    },
+    {
+      "path": "harness-prep/start_arm.py",
+      "bytes": 8712,
+      "sha256": "dbb025aa9196ef25d5ffbafe0235becf30d7a3d41d5bee8fba71fc567dfc06dc"
+    },
+    {
+      "path": "harness-prep/stop_and_health.py",
+      "bytes": 4346,
+      "sha256": "c88d392434bb358d2b9ca9293026c52fb47a3269a59d1f7f011444bdc3b8a74d"
+    },
+    {
+      "path": "original-inputs.json",
+      "bytes": 6107,
+      "sha256": "74b70082bd8c206c66e775549cbfb3c1185143cee09c06458aa19892a17e4024"
+    },
+    {
+      "path": "source-only-validation.json",
+      "bytes": 471,
+      "sha256": "8b67b663342b022797fa3f4cdaff3e93adc1a993ffad5560c41dc53ce6560e55"
+    }
+  ],
+  "source_main_edits": false,
+  "configs_generated": false,
+  "binary_binding": "ROOT_REQUIRED_FUTURE_EXE_AND_FULL_SHA256",
+  "build_GPU_serving_or_CLI_models": false
+}

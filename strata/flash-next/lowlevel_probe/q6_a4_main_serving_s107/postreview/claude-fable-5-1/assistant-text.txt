@@ -1,0 +1,23 @@
+**Q6: no more testing now.** S107 is a clean matched pass with a small descriptive positive from one sequence. Keep it default OFF with its evidence; another run would only re-measure noise.
+
+**S112 publication review, concrete finding**
+
+The protocol is release fence, relaxed RMW, acquire fence. In the SYCL and C++ model that chain is valid only when the acquire fence is sequenced after the RMW in the same thread. Here only thread 0 performs the RMW. It then writes the local flag and hits the work-group barrier, and the acquire fence at line 1423 comes after the barrier. So thread 0's own loads are ordered, but lanes 1 to 60 read the partials after a barrier that was crossed before any synchronizes-with edge existed. Formally those loads race with the other work-groups' stores. On this hardware it will usually work because the last group has never touched those lines, but that is luck, not the model. Fix is one line: thread 0 executes the device-scope acquire fence immediately after the fetch_add and before writing the local flag, so the barrier carries the ordering to every lane. Keep the existing fence at 1423 as well.
+
+Second item: the plain counter reset is safe only if every invocation completes. A failed or aborted replay leaves a nonzero counter, the next call elects no last group, and the output row is never written, so a stale token is used silently. The existing split-probability kernel has the same exposure, so this is not new, but the oracle must check the counter after every replay and any later host dispatch must re-zero the scratch on the error drain path.
+
+No other defect: the sentinel, strict scan, value-then-lower-index merge, zero fallback and no-polling structure match the single-block sampler.
+
+**S111 review**
+
+No blocking bug. Mode is construction-latched, the no-probability cache is depth-2 only, both pointers are nulled in the selector, defaults reproduce the original path, and the marker sits in both graph modes. Its payoff is two kernels of about 64 us per head depth, which cannot be distinguished by a three-pair serving run.
+
+**Ranking**
+
+1. S112 private oracle, with the fence fix in the private copy.
+2. S111, as the prepared fallback, not combined.
+3. Subset-head policy. It targets the 1.2 ms head, the only post-head item large enough to matter, but it changes draft semantics and acceptance and needs its own evaluation. It is the right medium-term source direction, not the next bounded test.
+
+**Single next experiment**
+
+One card0 strict private oracle for argmax: original greedy sampler versus the hardened argmax_rows on 248320 and 4097 rows, two owners, exact int32 IDs against a host lowest-index reference, with ties across chunk and sub-group boundaries, signed zeros, all-negative, denormal, NaN mixtures, +inf ties and the all-NaN fallback. Feed the IDs through the unchanged probability and select kernels on both sides and compare full bytes. Fresh mapped A, B, A replays on one in-order queue with persistent scratch, counter zero and guards checked after every replay. No timing until all of that passes, and no serving enablement from this packet.

@@ -24874,3 +24874,32 @@ coverage/sourceaudit; root corrects selector-span/probability-pool/row-column
 claims, no model-endorsed speed gain. Both terminal0 with matching ownresumes.
 Evidence: strata/flash-next/lowlevel_probe/head_readiness_s108/ and
  docs/20261015_strata_mtp_head_readiness.md.
+
+
+## 2026-10-16 S107: Q6 aligned loads pass matched serving, small observation
+
+CONFIG -> Started20261015, closed20261016. Same064b63ce main botharms,
+A4flag0/1only; graph0 BOTH/allothercandidatesOFF. Fixed suffix0/lookup0/
+spec4/mtpmax4/minp0 native+HTTP; depth2/headpair/EP149/363/2x200k/32GiB retained.
+COMMAND -> Actualsource Opus29.275s/Fable45.866s/rootread;220s CPU-only
+one-nativeTU/archive/main build. Actual original/CENTER/A4 hostbindings and
+EOTprefix16384/10688/15344 exactS102-S85/S87/S104 plusmeta/data/options/relocs.
+Original/A4 raw8postEOTbytesdiffer each, rawidentityFALSE; CENTERwholeexact.
+No newdecoder or114private rerun. Oncewarm107/256+3fresh107/1500C2pairs/
+functionals perarm. Contextprehealth reused coordinatedS106APIposthealth
+sameboot/runtime/nointerveningcoordinatedGPU validation; freshfullposthealth.
+RESULT -> All4pairtext/SSE/usage/request/nativework/windows/pair/solo/printed
+rows/captures exact; functionals/loader/identity/normalQUIT/fullCID+NAME/
+percard+compiledhealth0 BOTH. ONHOSTmarkeroncecheckedafterwarm/OFFnone, graphnoneBOTH;
+not allshapes/counts/GPUdispatch. Aggregate medians102.892755->103.332800tok/s
+(+0.427673%); paired+.427673,+.275745,+.395947%. Streamdecode medians53.467855/
+55.853516->53.610680/55.987458. SSE event-gap p50/p95 retained, not tokenITL.
+SG32/GRF128/eu8 observed; absentbarrier/SLM/spill/scratchunknown, notzero.
+VERDICT -> Modest descriptive fixedOFF->ON/n3nested observation, keepdefaultOFF;
+no population/stability/150tok/s/trafficcause or standalonecachequalification,
+repeat/promotion. Actualpostreviews claude-opus-5-5(41.118s)/claude-fable-5-1(78.299s)
+retain defaultOFF/closeQ6; rankseparateS112privatefirst/S111fallback, no
+servingGO. PinnedSDKbarrierWG/WG confirmed; isolatedprivate leaderdeviceacquire sourceprep
+authorized, livekernels unchanged/compiled+GPU gates pending. Evidence:
+strata/flash-next/lowlevel_probe/q6_a4_main_serving_s107/ and
+ docs/20261016_strata_q6_a4_serving.md.

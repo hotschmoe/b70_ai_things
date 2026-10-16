@@ -1,0 +1,6 @@
+{
+  "status": "PASS_EXACT_PATCH_APPLIED",
+  "original_sha256": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584",
+  "candidate_sha256": "ae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252",
+  "patch_sha256": "acdd2e15f908aa71cdd5fb6163c2432f8e6fd5df1417e2169a99c956fccdd5df"
+}

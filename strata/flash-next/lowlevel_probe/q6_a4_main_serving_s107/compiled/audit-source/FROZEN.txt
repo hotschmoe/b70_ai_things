@@ -1,0 +1,1 @@
+FROZEN: source-only audit preparation. No new artifact audit/hash, build, GPU, decoder or model call.

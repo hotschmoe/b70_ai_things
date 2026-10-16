@@ -1,0 +1,141 @@
+{
+  "status": "CLOSED_STATIC_EVIDENCE_ONLY_RUNTIME_PENDING_ROOT",
+  "main_sha256": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca",
+  "CPU_wrapper_elapsed_s": 220,
+  "actual_models": {
+    "claude-opus-5-5": {
+      "elapsed_s": 29.27514214598341,
+      "session_ids": [
+        "c26cbc95-bbed-461b-b165-8adee1464b9e"
+      ],
+      "exit": 0,
+      "root_full_read": true,
+      "verdict": "GO_ONE_INCREMENTAL_SYCL_BUILD"
+    },
+    "claude-fable-5-1": {
+      "elapsed_s": 45.86620071699144,
+      "session_ids": [
+        "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+      ],
+      "exit": 0,
+      "root_full_read": true,
+      "verdict": "GO_ONE_INCREMENTAL_SYCL_BUILD"
+    }
+  },
+  "compiled_prefix_reuse": {
+    "original": {
+      "computational_prefix_bytes": 16384,
+      "computational_prefix_exact": true,
+      "normalized_execution_payload_metadata_equal": true,
+      "options_equal": true,
+      "constant_sections_equal": true,
+      "relocation_sections_equal": true,
+      "raw_full_image_equal": false,
+      "raw_whole_target_text_equal": false,
+      "target_text_differing_offsets_common_length": [
+        16396,
+        16397,
+        16398,
+        16399,
+        16412,
+        16413,
+        16414,
+        16415
+      ]
+    },
+    "center": {
+      "computational_prefix_bytes": 10688,
+      "computational_prefix_exact": true,
+      "normalized_execution_payload_metadata_equal": true,
+      "options_equal": true,
+      "constant_sections_equal": true,
+      "relocation_sections_equal": true,
+      "raw_full_image_equal": true,
+      "raw_whole_target_text_equal": true,
+      "target_text_differing_offsets_common_length": []
+    },
+    "candidate": {
+      "computational_prefix_bytes": 15344,
+      "computational_prefix_exact": true,
+      "normalized_execution_payload_metadata_equal": true,
+      "options_equal": true,
+      "constant_sections_equal": true,
+      "relocation_sections_equal": true,
+      "raw_full_image_equal": false,
+      "raw_whole_target_text_equal": false,
+      "target_text_differing_offsets_common_length": [
+        15356,
+        15357,
+        15358,
+        15359,
+        15372,
+        15373,
+        15374,
+        15375
+      ]
+    }
+  },
+  "resources": {
+    "original": {
+      "grf_count": [
+        "128"
+      ],
+      "simd_size": [
+        "32"
+      ],
+      "slm_size": [],
+      "barrier_count": [],
+      "spill_size": [],
+      "scratch_size": [],
+      "eu_thread_count": [
+        "8"
+      ]
+    },
+    "center": {
+      "grf_count": [
+        "128"
+      ],
+      "simd_size": [
+        "32"
+      ],
+      "slm_size": [],
+      "barrier_count": [],
+      "spill_size": [],
+      "scratch_size": [],
+      "eu_thread_count": [
+        "8"
+      ]
+    },
+    "candidate": {
+      "grf_count": [
+        "128"
+      ],
+      "simd_size": [
+        "32"
+      ],
+      "slm_size": [],
+      "barrier_count": [],
+      "spill_size": [],
+      "scratch_size": [],
+      "eu_thread_count": [
+        "8"
+      ]
+    }
+  },
+  "compiled_evidence_limits": [
+    "Original prefix16384 is retained S102/S85 original, CENTER10688 actual S87, A4 candidate15344 S104.",
+    "Original and A4 each have8 differing raw target bytes, all after EOT. Raw full/text identity false; CENTER entire image/text exact.",
+    "Absent barrier/SLM/spill/scratch fields unknown, not measured0.",
+    "Reviewed existing computational body/metadata/data/reloc identity transferred; no fresh decoder or114-private-snapshot rerun.",
+    "Main host guards and closure argument offsets read by root; not a universal allpaths equivalence proof."
+  ],
+  "protocol": {
+    "same_binary": true,
+    "whole_pair_graph": "0 BOTH",
+    "sole_candidate_arm_difference": "STRATA_Q6_A4 0/1",
+    "fixed_policy": "suffix0/lookup0/spec4/mtpmax4/minp0 native and HTTP",
+    "workload": "one warm107/256C2pair +3fresh107/1500C2pairs +existing functionals",
+    "scope": "A4 once eligible host-selection marker only; not all shape/count/GPU dispatch proof"
+  },
+  "runtime_results": "PENDING_ROOT_FINAL_CLOSURE_NOT_READ_OR_COPIED"
+}

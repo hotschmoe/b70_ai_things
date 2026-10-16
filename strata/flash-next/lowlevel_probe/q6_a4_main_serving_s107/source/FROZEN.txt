@@ -1,0 +1,2 @@
+FROZEN 2026-10-15: source proposal only. No main source edit, build, CLI/model call, controller or GPU execution.
+Root must review before any application. External manifest is ../q6-a4-main-source-prep-manifest.json.

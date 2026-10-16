@@ -1,0 +1,48 @@
+{
+  "status": "Q6_CLOSED_DEFAULT_OFF_NEXT_S112_PRIVATE_SOURCE_GATE_PENDING",
+  "models": [
+    {
+      "requested": "claude-opus-5-5",
+      "responding_models": [
+        "claude-opus-5-5"
+      ],
+      "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "exit": 0,
+      "elapsed_s": 41.11766024003737,
+      "source_packet_sha256": "ca9006b601ff24b111dba858ee435d32a4393a542124ff0b632403c8ff9213ba",
+      "source_packet_unchanged": true,
+      "resume_session_matches_response": true
+    },
+    {
+      "requested": "claude-fable-5-1",
+      "responding_models": [
+        "claude-fable-5-1"
+      ],
+      "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "exit": 0,
+      "elapsed_s": 78.29928767599631,
+      "source_packet_sha256": "ca9006b601ff24b111dba858ee435d32a4393a542124ff0b632403c8ff9213ba",
+      "source_packet_unchanged": true,
+      "resume_session_matches_response": true
+    }
+  ],
+  "S107": "Accept exact observed work/text/capture/functional/identity/teardown/health pass and small descriptive positive only. Keep opt-in/defaultOFF; no repeat or standalone context/cache campaign.",
+  "next_priority": [
+    "S112 source/compiled/private oracle before any production selector enablement, preserve existing probability/select operations.",
+    "S111 probability-only omission remains independently prepared fallback, unapplied and not combined.",
+    "S110 shared subset head is a separate policy experiment, deferred."
+  ],
+  "reviewer_concerns": [
+    "Both independently flag a possible leader-only RMW/acquire-before-barrier forwarding gap for nonleader partial readers in existing argmax. Root checks actual pinned nd_item::barrier implementation/scope before declaring a defect.",
+    "If strengthening is warranted, isolate candidate private argmax with original arithmetic and one acquire after leader RMW before barrier; preserve default/live source until reviewed.",
+    "Check per-owner scratch counter zero and guards after every completed replay plus bounded changing-max publication cases. Failed replay drains/reports/stops, no automatic retry/redraft or counter-reset-only recovery."
+  ],
+  "root_corrections": [
+    "Do not infer a three-pair test is inherently unable to distinguish an effect, or that repeated runs only measure noise; stop here because incremental information is low for the modest S107 discriminator.",
+    "Historical first-head service pools are not critical-path savings ceilings; no extrapolation to all depths or serving gain.",
+    "Do not add routine scratch re-zero and continue after failed replay: other state can be uncertain.",
+    "Model consensus alone does not prove a SYCL memory-model defect; verify actual barrier semantics.",
+    "No user permission request is required for authorized isolated source preparation/private testing."
+  ],
+  "source_apply_build_GPU_GO": false
+}

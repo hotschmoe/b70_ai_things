@@ -1,0 +1,76 @@
+{
+  "utc": "2026-10-16T00:02:55.883593+00:00",
+  "status": "PASS_MATCHED_DISCRIMINATOR",
+  "comparison_sha256": "8c327ef447e2c20d00ab596beff5a1bc54fc33413129d27e703c9b6bd8c3e5ef",
+  "checks": {
+    "identity_image_and_effective_native_env": true,
+    "warm": true,
+    "repeat1": true,
+    "repeat2": true,
+    "repeat3": true,
+    "functionals": true,
+    "health_teardown": true,
+    "full_CID_and_NAME_absence": true,
+    "final_diagnostics_complete": true,
+    "final_host_marker_0": true,
+    "unrelated_IQ2_multi_OFF_0": true,
+    "pair_graph_OFF_0": true,
+    "final_host_marker_1": true,
+    "unrelated_IQ2_multi_OFF_1": true,
+    "pair_graph_OFF_1": true,
+    "logged_startup_capture_equal": true,
+    "native_loader_provenance": true
+  },
+  "timed_summary": {
+    "pair_wall_median_s": [
+      29.156571772007737,
+      29.032408006023616
+    ],
+    "aggregate_output_tps_median": [
+      102.89275513797548,
+      103.33279965539073
+    ],
+    "per_stream_medians": [
+      [
+        {
+          "ttft_s": 0.9252274630125612,
+          "completion_wall_s": 28.960764201998245,
+          "decode_tps": 53.46785452891006,
+          "whole_request_output_tps": 51.794213354925986
+        },
+        {
+          "ttft_s": 2.118401248997543,
+          "completion_wall_s": 28.948905191966332,
+          "decode_tps": 55.85351595461148,
+          "whole_request_output_tps": 51.81543101727619
+        }
+      ],
+      [
+        {
+          "ttft_s": 0.9204542420338839,
+          "completion_wall_s": 28.88130095700035,
+          "decode_tps": 53.6106797938146,
+          "whole_request_output_tps": 51.93671857903011
+        },
+        {
+          "ttft_s": 2.083461264963262,
+          "completion_wall_s": 28.82527776400093,
+          "decode_tps": 55.98745752714507,
+          "whole_request_output_tps": 52.03765987203452
+        }
+      ]
+    ]
+  },
+  "aggregate_median_change_pct": 0.42767298516319663,
+  "paired_changes_pct": [
+    0.42767298516319663,
+    0.2757448186433198,
+    0.39594684816632864
+  ],
+  "scope": "One fixed OFF->ON process sequence, three nested matched timed pairs. Descriptive small positive, not an independently replicated speed/stability result or qualification.",
+  "decision": "Keep default OFF; retain opt-in source/evidence, no standalone context/cache rerun for this small discriminator. Prioritize MTP selection/source leads and one focused private gate before serving.",
+  "build_s": 220,
+  "main_sha256": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca",
+  "private_evidence_reused": "S104 exact arithmetic snapshots and reviewed instruction ledger reused only after S107 actual original/CENTER/candidate computational prefixes+metadata+bindings verified. No repeated114private or newdecoder.",
+  "source_candidates": "S111 probability-only omission and S112 existing multiWG greedy argmax remain source-only/unapplied. S112 publication/replay gates before any serving enablement."
+}

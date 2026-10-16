@@ -1,0 +1,600 @@
+SOURCE REVIEW REQUEST: narrow default-OFF S104 Q6 A4 main integration.
+Evaluate eligibility/fallback/alignment/static capture and bounded build GO/HOLD.
+Preparation does not invoke models. Private evidence is not main serving proof.
+
+S104 Q6 A4 narrow main proposal, 2026-10-15
+STATUS: SOURCE ONLY, NOT APPLIED, COMPILED OR EXECUTED.
+
+CONFIG
+Original TU c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584.
+STRATA_Q6_A4 defaults OFF (only first env byte '1' enables), process-static.
+Graph capture fixes the selected kernel; later environment changes cannot alter
+existing graphs. No public API, ABI, queue, ownership, registry or layout change.
+
+COMMAND
+Private copies and forward/inverse source patches only. Source checks prove:
+removing exactly the added helper/kernel/flag and guarded branch reconstructs
+the original full TU; old wide-kernel text remains byte exact; load16_a4 is exact
+S104 helper; inverse function rename/static_assert removal equals S104 kernel.
+No compile, model call, GPU touch, controller change or live-source mutation.
+Root reports fresh upstream296b59d2f73c8f04a805df29c2fa97655adace78 unchanged.
+
+RESULT: eligibility and fallback
+native_mmvq type14 -> native_q6_k_mmvq -> existing wide gate ->
+launch_q6k_wide<6>. Existing packed registry is consulted FIRST and still wins.
+New branch is inside RPW1/A2 and compile-time C6, after existing CENTER branch.
+It requires PF exactly0, N6144/M2560 or N2560/M10240, complete even Q6 blocks
+per row, weights base%4==0, CENTER disabled, A4 enabled. Workgroup remains four
+SG32/128 workitems. New unique registered class native_mmvq_q6k_a4_c6 calls
+fixed native_mmvq_q6k_a4_kernel<true>; original kernel/registered names untouched.
+
+Fallback proof:
+- flag absent/0: original launch.
+- other quant types: original native_mmvq switch branches.
+- C!=6: new branch excluded at compile time.
+- RPW!=1 or A2 false: enclosing branch excludes new launch.
+- PF2/3/4/6: original early returns; unsupported positive or negative PF retain
+  original fallthrough but cannot enter new branch (explicit PF==0).
+- CENTER enabled: original CENTER path wins for these exact shapes.
+- other dimensions, incomplete/odd blocks, base%4!=0: original launch.
+- disabled wide gate, packed registry hit, stride224 route: unchanged paths.
+No new wait, synchronization, allocation, packing or per-operation print.
+
+ON-only once marker at first eligible HOST use/capture, not loaded startup:
+strata Q6 A4: enabled=1 C6 A2 R1 SG32 PF0 CENTER0 shapes=6144x2560,2560x10240 base_mod4=0
+It proves host selection only, not independent GPU dispatch or execution count.
+No eligible call means no initializer/marker. OFF has no new marker.
+
+RESULT: caller/alignment/bounds
+NativeDense validates native 2D matrix shapes, allocates each independently,
+copies exact native bytes and publishes full allocation base as native_data.
+No tensor offset is added on publication. malloc_device_guarded wraps device
+allocation; this does NOT establish observed actual alignment. Runtime %4 guard
+is authoritative. Existing Q6/Q8 type/layout assertions remain unchanged.
+For N6144/2560, blocks_per_row=24/10; row strides5040/2100 divisible4. A guarded
+base4 therefore makes every row base4. Block stride210 alternates base mod4=0/2.
+ql requested offsets0..112, qh offsets128..176. Helper rounds requested pointer
+down4, reads five aligned dwords (20bytes), reconstructs16 requested bytes with
+unsigned shifts/OR. At mod2 it starts2bytes before requested field: first block
+of every row is base4, and odd-index blocks have preceding bytes inside that row.
+Even conservative final qh read reaches block offset195<210; ql max131. Thus
+reads stay in allocation including final row/block; no tail padding is assumed.
+Both output dimensions are multiples4; K multiple256. Kernel retains exact S104
+K mapping, sign/scales/DP4A, FP products/accumulation order, XOR16..1, lane0 store,
+Q8 loads and output pitch. No activation representation substitution.
+
+Caller references (original pinned paths in source-proof.json):
+native_mmvq.dp.cpp:3550 packed-first/public wide gate;3567 C6;
+3832..3852 generic type14 dispatch. NativeDense native_dense.cpp:238..259 validates
+and independently allocates/copies;321 records pending;389..390 publishes base.
+sycl_queue.hpp:259 malloc_device_guarded. verify.cpp:1030 qkv,1072 ssm_out,
+1283 attn_output call native_mmvq through matrix native_type/native_data. Source
+routes do not establish actual eligible call incidence or pointer observations.
+
+RESULT: retained evidence and limits
+S104 CPU build25s excluding queue. Actual one quiet card0 process40s,114 strict
+snapshots/10DOT, public+saved-S44+private original/candidate full-byte initial,
+changed/repeat/restore, immutable operands/guards, identity/health/teardown PASS.
+Four nested balanced graph timing pairs/20 projections per batch, canonical Q8
+ready outside timing: out6144->2560 medians63.09685->60.0528125us, pairedmedian
+-4.85287114%; qkv2560->10240 73.8277->72.2073375us,-2.20463784%. Warm private
+projection evidence, not independent-process, population or serving proof.
+Observed SIMD32/GRF128/eu8 only; absent scratch/spill fields unknown, not zero.
+Actual models claude-opus-5-5(23.074s),claude-fable-5-1(18.456s) recommended
+conditional source prep after S106; root accepted with these limits. S106 clean
+whole-graph matched discriminator+0.059862% had no meaningful serving win; it is
+separate from this unbuilt A4 source proposal. No pointer value, dynamic traffic,
+critical-path coverage, global non-slower property or main serving gain proved.
+
+VERDICT
+GO source proposal only, default OFF. Root actual-source/model review before
+application; actual-main selected host/image binding, resources/ISA and strict
+matched serving remain future gates. Prefer one later planned same-new-binary
+single-flag serving comparison over another private repeat/sweep/full-cache run.
+Source copying does not guarantee final compiler contraction/scheduling/ISA.
+No GPU/build/model invocation or controller execution is authorized here.
+
+FORWARD PATCH: full added helper/kernel/flag/branch
+--- a/sycl/src/kernels/cuda/native_mmvq.dp.cpp
++++ b/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+@@ -1635,6 +1635,122 @@
+             if (lane == 0 && row0 + r < n_out) y[std::size_t(j) * n_out + row0 + r] = v;
+         }
+ }
++// S104: only the isolated A4 load specialization; the existing wide kernel stays untouched.
++// A4 scalar reads are 4-byte aligned, never misaligned int4 dereferences.
++// Host launch guard requires base%4==0 and the two complete Q6 shapes.
++__dpct_inline__ sycl::int4 load16_a4(const void* p) {
++    const uintptr_t a = reinterpret_cast<uintptr_t>(p);
++    const int* q = reinterpret_cast<const int*>(a & ~uintptr_t(3));
++    const bool half = (a & 2) != 0;
++    const uint32_t d[5] = {uint32_t(q[0]), uint32_t(q[1]), uint32_t(q[2]), uint32_t(q[3]), uint32_t(q[4])};
++    uint32_t o[4];
++#pragma unroll
++    for (int i = 0; i < 4; ++i) o[i] = half ? (d[i] >> 16) | (d[i + 1] << 16) : d[i];
++    return sycl::int4((int) o[0], (int) o[1], (int) o[2], (int) o[3]);
++}
++
++template<bool CAND>
++void native_mmvq_q6k_a4_kernel(const Q6KBlock* __restrict__ w, const Q81Block* __restrict__ x,
++                                 float* __restrict__ y, int n_in, int n_out) {
++    static_assert(CAND && QK == 256 && Q8K == 32 && WARP == 32 && WARPS == 4, "S104 A4 tested specialization only");
++    constexpr int NCOLS=6,RPW=1,SG=32,BS=sizeof(Q6KBlock); constexpr bool A2=true;
++    auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
++    const int lane = int(item.get_local_id(2)), warp = int(item.get_local_id(1));
++    constexpr int NWG = WARPS * WARP / SG;              // sub-groups per work-group
++    const int row0 = (int(item.get_group(2)) * NWG + warp) * RPW;
++    if (row0 >= n_out) return;
++    const int blocks_per_row = n_in / QK, x_stride = n_in / Q8K;
++    const int g = lane & 7, sub = lane >> 3;            // position group within the block, block within the iteration
++    const int vh_shift = 2 * ((g & 3) >> 1);
++    const int qh4_idx = 2 * (g >> 2) + (g & 1);
++    const int scale_offset = 8 * (g >> 2) + (g & 3);
++    const int bq8_offset = 4 * (g >> 2) + ((g & 3) >> 1);
++    const int u_int4 = g & 1;                           // ints 4(g%2)..+3 of the q8 block = one int4
++    float acc[RPW][NCOLS] = {};
++    for (int kbx = sub; kbx < blocks_per_row; kbx += SG / 8) {
++        const int kby = kbx * (QK / Q8K);
++        sycl::int4 ql4[RPW], qh4[RPW]; float dsc0[RPW], dsc1[RPW];
++#pragma unroll
++        for (int r = 0; r < RPW; ++r) {
++            const Q6KBlock* b = reinterpret_cast<const Q6KBlock*>(reinterpret_cast<const uint8_t*>(w) +
++                (std::size_t(row0 + (row0 + r < n_out ? r : 0)) * blocks_per_row + kbx) * BS);
++            if constexpr (A2) {
++                if constexpr(CAND) {
++                    ql4[r] = load16_a4(b->ql + 16 * g);
++                    qh4[r] = load16_a4(b->qh + 16 * qh4_idx);
++                } else {
++                ql4[r] = load16_a2(b->ql + 16 * g);
++                qh4[r] = load16_a2(b->qh + 16 * qh4_idx);
++                }
++            } else {
++                ql4[r] = reinterpret_cast<const sycl::int4*>(b->ql)[g];
++                qh4[r] = reinterpret_cast<const sycl::int4*>(b->qh)[qh4_idx];
++            }
++            const float d = b->d;
++            dsc0[r] = d * (float) b->scales[scale_offset]; dsc1[r] = d * (float) b->scales[scale_offset + 4];
++        }
++        // the activations once per column, shared by the RPW rows
++        sycl::int4 u0[NCOLS], u1[NCOLS];
++        float ds0[NCOLS], ds1[NCOLS];
++#pragma unroll
++        for (int j = 0; j < NCOLS; ++j) {
++            const Q81Block* xb = x + std::size_t(j) * x_stride + kby + bq8_offset;
++            if constexpr (A2) {   // Q8_1 qs sits at offset 4 of a 36-byte block: 4-byte aligned, so four int loads
++                const int* p0 = reinterpret_cast<const int*>(xb[0].qs) + 4 * u_int4;
++                const int* p1 = reinterpret_cast<const int*>(xb[2].qs) + 4 * u_int4;
++                u0[j] = sycl::int4(p0[0], p0[1], p0[2], p0[3]);
++                u1[j] = sycl::int4(p1[0], p1[1], p1[2], p1[3]);
++            } else {
++                u0[j] = reinterpret_cast<const sycl::int4*>(xb[0].qs)[u_int4];
++                u1[j] = reinterpret_cast<const sycl::int4*>(xb[2].qs)[u_int4];
++            }
++            ds0[j] = xb[0].ds[0]; ds1[j] = xb[2].ds[0];
++        }
++#pragma unroll
++        for (int r = 0; r < RPW; ++r) {
++            const int vl[4] = {ql4[r].x(), ql4[r].y(), ql4[r].z(), ql4[r].w()};
++            const int vh[4] = {qh4[r].x() >> vh_shift, qh4[r].y() >> vh_shift, qh4[r].z() >> vh_shift, qh4[r].w() >> vh_shift};
++            int vi0[4], vi1[4];
++#pragma unroll
++            for (int p = 0; p < 4; ++p) {
++                vi0[p] = dpct::vectorized_binary<sycl::char4>((vl[p] & 0x0f0f0f0f) | ((vh[p] << 4) & 0x30303030), 0x20202020, dpct::sub_sat());
++                vi1[p] = dpct::vectorized_binary<sycl::char4>(((vl[p] >> 4) & 0x0f0f0f0f) | (((vh[p] >> 4) << 4) & 0x30303030), 0x20202020, dpct::sub_sat());
++            }
++#pragma unroll
++            for (int j = 0; j < NCOLS; ++j) {
++                int s0 = 0, s1 = 0;
++                s0 = strata::dp4a(vi0[0], u0[j].x(), s0); s0 = strata::dp4a(vi0[1], u0[j].y(), s0);
++                s0 = strata::dp4a(vi0[2], u0[j].z(), s0); s0 = strata::dp4a(vi0[3], u0[j].w(), s0);
++                s1 = strata::dp4a(vi1[0], u1[j].x(), s1); s1 = strata::dp4a(vi1[1], u1[j].y(), s1);
++                s1 = strata::dp4a(vi1[2], u1[j].z(), s1); s1 = strata::dp4a(vi1[3], u1[j].w(), s1);
++                acc[r][j] += ds0[j] * dsc0[r] * (float) s0 + ds1[j] * dsc1[r] * (float) s1;
++            }
++        }
++    }
++    auto sg = item.get_sub_group();
++#pragma unroll
++    for (int r = 0; r < RPW; ++r)
++#pragma unroll
++        for (int j = 0; j < NCOLS; ++j) {
++            float v = acc[r][j];
++#pragma unroll
++            for (int o = SG / 2; o > 0; o >>= 1) v += sycl::permute_group_by_xor(sg, v, o);
++            if (lane == 0 && row0 + r < n_out) y[std::size_t(j) * n_out + row0 + r] = v;
++        }
++}
++
++// Experimental default OFF; consulted only after all tested-domain guards.
++// One ON marker at first eligible host use/capture, not per operation or GPU proof.
++inline bool q6k_a4() {
++    static const bool enabled = [] {
++        const char* e = std::getenv("STRATA_Q6_A4");
++        const bool on = e && e[0] == '1';
++        if (on) std::fprintf(stderr, "strata Q6 A4: enabled=1 C6 A2 R1 SG32 PF0 CENTER0 shapes=6144x2560,2560x10240 base_mod4=0\n");
++        return on;
++    }();
++    return enabled;
++}
++
+ // SYCL port: the wide Q6_K kernel with its weight loads issued U steps ahead. The wide kernel's 2560-wide rows
+ // are ~3 steps of load -> wait -> dot per sub-group, so each sub-group has one 16-byte load per lane in flight
+ // at a time and the kernel is latency-bound (~146 GB/s). Here a sub-group first issues the ql/qh/scale loads
+@@ -1749,6 +1865,20 @@
+                     sycl::nd_range<3>(sycl::range(1, 1, blocks) * sycl::range(1, WARPS, WARP), sycl::range(1, WARPS, WARP)),
+                     [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {
+                         native_mmvq_q6k_wide_kernel<6, 1, WARP, (int) sizeof(Q6KBlock), true, true>(w, x, y, n_in, n_out);
++                    });
++                return;
++            }
++            // A4 was tested only with CENTER off, canonical C6/A2/RPW1/SG32,
++            // the two complete shapes and a dword-aligned matrix base. Even
++            // blocks_per_row keeps every row base dword aligned (24 or 10 blocks).
++            if (q6k_pf() == 0 &&
++                ((n_in == 6144 && n_out == 2560) || (n_in == 2560 && n_out == 10240)) &&
++                n_in % QK == 0 && (n_in / QK) % 2 == 0 &&
++                (reinterpret_cast<uintptr_t>(weights) & 3u) == 0 && !q6k_center() && q6k_a4()) {
++                s->parallel_for<dpct_kernel_name<class native_mmvq_q6k_a4_c6>>(
++                    sycl::nd_range<3>(sycl::range(1, 1, blocks) * sycl::range(1, WARPS, WARP), sycl::range(1, WARPS, WARP)),
++                    [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {
++                        native_mmvq_q6k_a4_kernel<true>(w, x, y, n_in, n_out);
+                     });
+                 return;
+             }
+
+ORIGINAL CONSTANTS AND Q6/Q8 TYPES
+native_mmvq.original.dp.cpp:57-63
+57: constexpr int QK = 256;
+58: constexpr int Q8K = 32;
+59: constexpr int QI = 32;
+60: constexpr int VDR = 2;
+61: constexpr int WARPS = 4;
+62: constexpr int WARP = 32;
+63: constexpr int QUANT_THREADS = 256;
+native_mmvq.original.dp.cpp:71-74
+71: struct Q81Block {
+72:     sycl::half2 ds;
+73:     int8_t qs[32];
+74: };
+native_mmvq.original.dp.cpp:96-102
+96: struct Q6KBlock {
+97:     uint8_t ql[128];
+98:     uint8_t qh[64];
+99:     int8_t scales[16];
+100:     sycl::half d;
+101: };
+102: struct Q40Block {
+native_mmvq.original.dp.cpp:120-133
+120: static_assert(sizeof(Q81Block) == 36 && alignof(Q81Block) == 4);
+121: static_assert(sizeof(Q20Block) == 18 && alignof(Q20Block) == 2 && offsetof(Q20Block, qs) == 2);
+122: static_assert(sizeof(Q3KBlock) == 110 && alignof(Q3KBlock) == 2 && offsetof(Q3KBlock, qs) == 32 &&
+123:               offsetof(Q3KBlock, scales) == 96 && offsetof(Q3KBlock, d) == 108);
+124: static_assert(sizeof(IQ4XSBlock) == 136 && alignof(IQ4XSBlock) == 2 &&
+125:               offsetof(IQ4XSBlock, scales_h) == 2 && offsetof(IQ4XSBlock, scales_l) == 4 &&
+126:               offsetof(IQ4XSBlock, qs) == 8);
+127: static_assert(offsetof(Q5KBlock, scales) == 4 && offsetof(Q5KBlock, qh) == 16 &&
+128:               offsetof(Q5KBlock, qs) == 48 && offsetof(Q81Block, qs) == 4);
+129: static_assert(sizeof(Q4KBlock) == 144 && alignof(Q4KBlock) == 4 &&
+130:               offsetof(Q4KBlock, scales) == 4 && offsetof(Q4KBlock, qs) == 16);
+131: static_assert(sizeof(Q6KBlock) == 210 && alignof(Q6KBlock) == 2 &&
+132:               offsetof(Q6KBlock, qh) == 128 && offsetof(Q6KBlock, scales) == 192 &&
+133:               offsetof(Q6KBlock, d) == 208);
+
+ORIGINAL UNCHANGED A2 HELPER AND WIDE KERNEL
+native_mmvq.original.dp.cpp:1516-1640
+1516: __dpct_inline__ sycl::int4 load16_a2(const void* p) {
+1517:     const uintptr_t a = reinterpret_cast<uintptr_t>(p);
+1518:     const sycl::int4* q = reinterpret_cast<const sycl::int4*>(a & ~uintptr_t(15));
+1519:     const int k = int(a >> 2) & 3;          // dword offset within the first aligned chunk
+1520:     const bool half = (a & 2) != 0;          // and a 2-byte shift (the address is always 2-byte aligned)
+1521:     // the second chunk only when the address is unaligned: then it holds needed bytes, so (16-byte chunks never
+1522:     // straddle a page) it cannot fault even at the very end of an allocation
+1523:     const sycl::int4 lo = q[0], hi = (a & 15) ? q[1] : lo;
+1524:     const uint32_t d[8] = {(uint32_t) lo.x(), (uint32_t) lo.y(), (uint32_t) lo.z(), (uint32_t) lo.w(),
+1525:                            (uint32_t) hi.x(), (uint32_t) hi.y(), (uint32_t) hi.z(), (uint32_t) hi.w()};
+1526:     uint32_t w[5];
+1527: #pragma unroll
+1528:     for (int i = 0; i < 5; ++i)              // w = d[k .. k+4] by selects (no indexed register access)
+1529:         w[i] = k == 0 ? d[i] : k == 1 ? d[i + 1] : k == 2 ? d[i + 2] : d[(i + 3) & 7];
+1530:     uint32_t o[4];
+1531: #pragma unroll
+1532:     for (int i = 0; i < 4; ++i) o[i] = half ? (w[i] >> 16) | (w[i + 1] << 16) : w[i];
+1533:     return sycl::int4((int) o[0], (int) o[1], (int) o[2], (int) o[3]);
+1534: }
+1535: inline bool q6k_a2() {   // STRATA_MMVQ_A2=0 turns the aligned-load path off
+1536:     static const bool v = std::getenv("STRATA_MMVQ_A2") == nullptr || std::atoi(std::getenv("STRATA_MMVQ_A2")) != 0;
+1537:     return v;
+1538: }
+1539: 
+1540: inline bool q6k_center() {   // experimental, default OFF; latched before graph capture
+1541:     static const bool v = [] {
+1542:         const char* e = std::getenv("STRATA_Q6_CENTER");
+1543:         const bool enabled = e && e[0] == '1';
+1544:         std::fprintf(stderr, "strata Q6 center: enabled=%d C6 A2 R1 SG32 PF0 shapes=6144x2560,2560x10240\n", enabled ? 1 : 0);
+1545:         return enabled;
+1546:     }();
+1547:     return v;
+1548: }
+1549: 
+1550: template <int NCOLS, int RPW, int SG = WARP, int BS = (int) sizeof(Q6KBlock), bool A2 = false,
+1551:           bool CENTER = false>   // BS: block stride; CENTER only for the tested C6/A2/RPW1/SG32 shapes
+1552: void native_mmvq_q6k_wide_kernel(const Q6KBlock* __restrict__ w, const Q81Block* __restrict__ x,
+1553:                                  float* __restrict__ y, int n_in, int n_out) {
+1554:     auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+1555:     const int lane = int(item.get_local_id(2)), warp = int(item.get_local_id(1));
+1556:     constexpr int NWG = WARPS * WARP / SG;              // sub-groups per work-group
+1557:     const int row0 = (int(item.get_group(2)) * NWG + warp) * RPW;
+1558:     if (row0 >= n_out) return;
+1559:     const int blocks_per_row = n_in / QK, x_stride = n_in / Q8K;
+1560:     const int g = lane & 7, sub = lane >> 3;            // position group within the block, block within the iteration
+1561:     const int vh_shift = 2 * ((g & 3) >> 1);
+1562:     const int qh4_idx = 2 * (g >> 2) + (g & 1);
+1563:     const int scale_offset = 8 * (g >> 2) + (g & 3);
+1564:     const int bq8_offset = 4 * (g >> 2) + ((g & 3) >> 1);
+1565:     const int u_int4 = g & 1;                           // ints 4(g%2)..+3 of the q8 block = one int4
+1566:     float acc[RPW][NCOLS] = {};
+1567:     for (int kbx = sub; kbx < blocks_per_row; kbx += SG / 8) {
+1568:         const int kby = kbx * (QK / Q8K);
+1569:         sycl::int4 ql4[RPW], qh4[RPW]; float dsc0[RPW], dsc1[RPW];
+1570: #pragma unroll
+1571:         for (int r = 0; r < RPW; ++r) {
+1572:             const Q6KBlock* b = reinterpret_cast<const Q6KBlock*>(reinterpret_cast<const uint8_t*>(w) +
+1573:                 (std::size_t(row0 + (row0 + r < n_out ? r : 0)) * blocks_per_row + kbx) * BS);
+1574:             if constexpr (A2) {
+1575:                 ql4[r] = load16_a2(b->ql + 16 * g);
+1576:                 qh4[r] = load16_a2(b->qh + 16 * qh4_idx);
+1577:             } else {
+1578:                 ql4[r] = reinterpret_cast<const sycl::int4*>(b->ql)[g];
+1579:                 qh4[r] = reinterpret_cast<const sycl::int4*>(b->qh)[qh4_idx];
+1580:             }
+1581:             const float d = b->d;
+1582:             dsc0[r] = d * (float) b->scales[scale_offset]; dsc1[r] = d * (float) b->scales[scale_offset + 4];
+1583:         }
+1584:         // the activations once per column, shared by the RPW rows
+1585:         sycl::int4 u0[NCOLS], u1[NCOLS];
+1586:         float ds0[NCOLS], ds1[NCOLS];
+1587: #pragma unroll
+1588:         for (int j = 0; j < NCOLS; ++j) {
+1589:             const Q81Block* xb = x + std::size_t(j) * x_stride + kby + bq8_offset;
+1590:             if constexpr (A2) {   // Q8_1 qs sits at offset 4 of a 36-byte block: 4-byte aligned, so four int loads
+1591:                 const int* p0 = reinterpret_cast<const int*>(xb[0].qs) + 4 * u_int4;
+1592:                 const int* p1 = reinterpret_cast<const int*>(xb[2].qs) + 4 * u_int4;
+1593:                 u0[j] = sycl::int4(p0[0], p0[1], p0[2], p0[3]);
+1594:                 u1[j] = sycl::int4(p1[0], p1[1], p1[2], p1[3]);
+1595:             } else {
+1596:                 u0[j] = reinterpret_cast<const sycl::int4*>(xb[0].qs)[u_int4];
+1597:                 u1[j] = reinterpret_cast<const sycl::int4*>(xb[2].qs)[u_int4];
+1598:             }
+1599:             ds0[j] = xb[0].ds[0]; ds1[j] = xb[2].ds[0];
+1600:         }
+1601: #pragma unroll
+1602:         for (int r = 0; r < RPW; ++r) {
+1603:             const int vl[4] = {ql4[r].x(), ql4[r].y(), ql4[r].z(), ql4[r].w()};
+1604:             const int vh[4] = {qh4[r].x() >> vh_shift, qh4[r].y() >> vh_shift, qh4[r].z() >> vh_shift, qh4[r].w() >> vh_shift};
+1605:             int vi0[4], vi1[4];
+1606: #pragma unroll
+1607:             for (int p = 0; p < 4; ++p) {
+1608:                 if constexpr (CENTER) {
+1609:                     vi0[p] = sycl::bit_cast<int>((uint32_t((vl[p] & 0x0f0f0f0f) | ((vh[p] << 4) & 0x30303030)) + 0x60606060u) ^ 0x80808080u);
+1610:                     vi1[p] = sycl::bit_cast<int>((uint32_t(((vl[p] >> 4) & 0x0f0f0f0f) | (((vh[p] >> 4) << 4) & 0x30303030)) + 0x60606060u) ^ 0x80808080u);
+1611:                 } else {
+1612:                 vi0[p] = dpct::vectorized_binary<sycl::char4>((vl[p] & 0x0f0f0f0f) | ((vh[p] << 4) & 0x30303030), 0x20202020, dpct::sub_sat());
+1613:                 vi1[p] = dpct::vectorized_binary<sycl::char4>(((vl[p] >> 4) & 0x0f0f0f0f) | (((vh[p] >> 4) << 4) & 0x30303030), 0x20202020, dpct::sub_sat());
+1614:                 }
+1615:             }
+1616: #pragma unroll
+1617:             for (int j = 0; j < NCOLS; ++j) {
+1618:                 int s0 = 0, s1 = 0;
+1619:                 s0 = strata::dp4a(vi0[0], u0[j].x(), s0); s0 = strata::dp4a(vi0[1], u0[j].y(), s0);
+1620:                 s0 = strata::dp4a(vi0[2], u0[j].z(), s0); s0 = strata::dp4a(vi0[3], u0[j].w(), s0);
+1621:                 s1 = strata::dp4a(vi1[0], u1[j].x(), s1); s1 = strata::dp4a(vi1[1], u1[j].y(), s1);
+1622:                 s1 = strata::dp4a(vi1[2], u1[j].z(), s1); s1 = strata::dp4a(vi1[3], u1[j].w(), s1);
+1623:                 acc[r][j] += ds0[j] * dsc0[r] * (float) s0 + ds1[j] * dsc1[r] * (float) s1;
+1624:             }
+1625:         }
+1626:     }
+1627:     auto sg = item.get_sub_group();
+1628: #pragma unroll
+1629:     for (int r = 0; r < RPW; ++r)
+1630: #pragma unroll
+1631:         for (int j = 0; j < NCOLS; ++j) {
+1632:             float v = acc[r][j];
+1633: #pragma unroll
+1634:             for (int o = SG / 2; o > 0; o >>= 1) v += sycl::permute_group_by_xor(sg, v, o);
+1635:             if (lane == 0 && row0 + r < n_out) y[std::size_t(j) * n_out + row0 + r] = v;
+1636:         }
+1637: }
+1638: // SYCL port: the wide Q6_K kernel with its weight loads issued U steps ahead. The wide kernel's 2560-wide rows
+1639: // are ~3 steps of load -> wait -> dot per sub-group, so each sub-group has one 16-byte load per lane in flight
+1640: // at a time and the kernel is latency-bound (~146 GB/s). Here a sub-group first issues the ql/qh/scale loads
+
+ORIGINAL COMPLETE ORIGINAL WIDE LAUNCHER
+native_mmvq.original.dp.cpp:1715-1802
+1715: inline int q6k_pf() {   // STRATA_MMVQ_PF: weight-load steps issued ahead in the wide Q6_K kernel (0 = off)
+1716:     static const int v = std::getenv("STRATA_MMVQ_PF") ? std::atoi(std::getenv("STRATA_MMVQ_PF")) : 0;
+1717:     return v;
+1718: }
+1719: inline int q6k_wide_rpw() {
+1720:     static const int v = std::getenv("STRATA_MMVQ_WIDE_RPW") ? std::atoi(std::getenv("STRATA_MMVQ_WIDE_RPW")) : 1;
+1721:     return v;
+1722: }
+1723: template <int NCOLS>
+1724: void launch_q6k_wide(const void* weights, const void* x_q8_1, float* y, int n_in, int n_out, dpct::queue_ptr s) {
+1725:     const auto* w = static_cast<const Q6KBlock*>(weights);
+1726:     const auto* x = static_cast<const Q81Block*>(x_q8_1);
+1727:     const int rpw = q6k_wide_rpw();
+1728:     if (const int pf = q6k_pf(); pf > 0) {
+1729:         const unsigned blocks = unsigned((std::size_t(n_out) + WARPS - 1) / WARPS);
+1730:         const sycl::range<3> t(1, WARPS, WARP);
+1731: #define STRATA_Q6PF(UU) if (pf == UU && q6k_a2()) { \
+1732:             s->parallel_for<dpct_kernel_name<class native_mmvq_q6k_pf_a2, dpct_kernel_scalar<NCOLS>, dpct_kernel_scalar<UU>>>( \
+1733:                 sycl::nd_range<3>(sycl::range(1, 1, blocks) * t, t), \
+1734:                 [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] { native_mmvq_q6k_pf_kernel<NCOLS, UU, true>(w, x, y, n_in, n_out); }); \
+1735:             return; } \
+1736:         if (pf == UU) { \
+1737:             s->parallel_for<dpct_kernel_name<class native_mmvq_q6k_pf, dpct_kernel_scalar<NCOLS>, dpct_kernel_scalar<UU>>>( \
+1738:                 sycl::nd_range<3>(sycl::range(1, 1, blocks) * t, t), \
+1739:                 [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] { native_mmvq_q6k_pf_kernel<NCOLS, UU>(w, x, y, n_in, n_out); }); \
+1740:             return; }
+1741:         STRATA_Q6PF(2) STRATA_Q6PF(3) STRATA_Q6PF(4) STRATA_Q6PF(6)
+1742: #undef STRATA_Q6PF
+1743:     }
+1744:     if (rpw == 1 && q6k_a2()) {
+1745:         const unsigned blocks = unsigned((std::size_t(n_out) + WARPS - 1) / WARPS);
+1746:         if constexpr (NCOLS == 6) {
+1747:             if (q6k_pf() == 0 && ((n_in == 6144 && n_out == 2560) || (n_in == 2560 && n_out == 10240)) && q6k_center()) {
+1748:                 s->parallel_for<dpct_kernel_name<class native_mmvq_q6k_center6>>(
+1749:                     sycl::nd_range<3>(sycl::range(1, 1, blocks) * sycl::range(1, WARPS, WARP), sycl::range(1, WARPS, WARP)),
+1750:                     [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {
+1751:                         native_mmvq_q6k_wide_kernel<6, 1, WARP, (int) sizeof(Q6KBlock), true, true>(w, x, y, n_in, n_out);
+1752:                     });
+1753:                 return;
+1754:             }
+1755:         }
+1756:         s->parallel_for<dpct_kernel_name<class native_mmvq_q6k_wide_a2, dpct_kernel_scalar<NCOLS>>>(
+1757:             sycl::nd_range<3>(sycl::range(1, 1, blocks) * sycl::range(1, WARPS, WARP), sycl::range(1, WARPS, WARP)),
+1758:             [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {
+1759:                 native_mmvq_q6k_wide_kernel<NCOLS, 1, WARP, (int) sizeof(Q6KBlock), true>(w, x, y, n_in, n_out);
+1760:             });
+1761:         return;
+1762:     }
+1763:     if (rpw == 1 && mmvq_sg16(false, n_out)) {
+1764:         constexpr int NWG = WARPS * WARP / 16;
+1765:         const unsigned blocks = unsigned((std::size_t(n_out) + NWG - 1) / NWG);
+1766:         s->parallel_for<dpct_kernel_name<class native_mmvq_q6k_wide16, dpct_kernel_scalar<NCOLS>>>(
+1767:             sycl::nd_range<3>(sycl::range(1, 1, blocks) * sycl::range(1, NWG, 16), sycl::range(1, NWG, 16)),
+1768:             [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(16)]] { native_mmvq_q6k_wide_kernel<NCOLS, 1, 16>(w, x, y, n_in, n_out); });
+1769:         return;
+1770:     }
+1771:     // RP rows per sub-group share each column's activation loads (the rows' own lanes, k order and butterfly: every
+1772:     // output the same bits); with the aligned loads (A2) unless STRATA_MMVQ_A2=0
+1773: #define STRATA_Q6W(RP) if (rpw == RP) { \
+1774:         const unsigned blocks = unsigned((std::size_t(n_out) + WARPS * RP - 1) / (WARPS * RP)); \
+1775:         if (q6k_a2()) { \
+1776:             s->parallel_for<dpct_kernel_name<class native_mmvq_q6k_wide_a2r, dpct_kernel_scalar<NCOLS>, dpct_kernel_scalar<RP>>>( \
+1777:                 sycl::nd_range<3>(sycl::range(1, 1, blocks) * sycl::range(1, WARPS, WARP), sycl::range(1, WARPS, WARP)), \
+1778:                 [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] { \
+1779:                     native_mmvq_q6k_wide_kernel<NCOLS, RP, WARP, (int) sizeof(Q6KBlock), true>(w, x, y, n_in, n_out); }); \
+1780:             return; } \
+1781:         s->parallel_for<dpct_kernel_name<class native_mmvq_q6k_wide, dpct_kernel_scalar<NCOLS>, dpct_kernel_scalar<RP>>>( \
+1782:             sycl::nd_range<3>(sycl::range(1, 1, blocks) * sycl::range(1, WARPS, WARP), sycl::range(1, WARPS, WARP)), \
+1783:             [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] { native_mmvq_q6k_wide_kernel<NCOLS, RP>(w, x, y, n_in, n_out); }); \
+1784:         return; }
+1785:     STRATA_Q6W(1) STRATA_Q6W(2) STRATA_Q6W(4)
+1786: #undef STRATA_Q6W
+1787:     const unsigned blocks = unsigned((std::size_t(n_out) + WARPS - 1) / WARPS);
+1788:     s->parallel_for<dpct_kernel_name<class native_mmvq_q6k_wide1, dpct_kernel_scalar<NCOLS>>>(
+1789:         sycl::nd_range<3>(sycl::range(1, 1, blocks) * sycl::range(1, WARPS, WARP), sycl::range(1, WARPS, WARP)),
+1790:         [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] { native_mmvq_q6k_wide_kernel<NCOLS, 1>(w, x, y, n_in, n_out); });
+1791: }
+1792: // ---------------------------------------------------------------- SYCL port: wide kernels for Q4_K, Q5_K, IQ4_XS
+1793: //
+1794: // The Q6_K wide kernel's shape for the other 256-element formats: 8 lanes share a block, each lane's weights are one
+1795: // or two 16-byte loads, a 32-lane sub-group has four blocks in flight, one row per sub-group. The multi kernel these
+1796: // replace does 4-byte loads (Q4_K/Q5_K, 230-280 GB/s) or global-memory codebook lookups (IQ4_XS, ~100 GB/s).
+1797: // Lane g of a block: Q4_K/Q5_K take qs bytes [16g, 16g+16) = sub-blocks 2(g/2) (low nibbles) and 2(g/2)+1 (high
+1798: // nibbles) at positions 16(g%2)..+15; IQ4_XS takes sub-block g (16 bytes, low nibbles = positions 0-15).
+1799: __dpct_inline__ sycl::int4 ld_q8_16(const Q81Block* b, int half) {   // Q8_1 qs is 4-byte aligned: four int loads
+1800:     const int* q = reinterpret_cast<const int*>(b->qs) + 4 * half;
+1801:     return sycl::int4(q[0], q[1], q[2], q[3]);
+1802: }
+
+ORIGINAL PUBLIC Q6 ENTRY AND GENERIC TYPE DISPATCH
+native_mmvq.original.dp.cpp:3550-3575
+3550: void native_q6_k_mmvq(const void* weights, const void* x_q8_1, float* y,
+3551:                       int n_in, int n_out, int ncols, void* stream) {
+3552:     if (q6_packed_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream)) return;   // STRATA_Q6_PACKED=1 heads
+3553:     // SYCL port: 16-byte-load kernel for the decode shapes (ncols <= 4)
+3554:     // With the aligned loads (load16_a2) the wide kernel wins on every Q6_K shape and window width: 2.6-3.4x the
+3555:     // misaligned-load kernels in q6k_align_bench, decode 44.9 -> 54 tok/s on the Coder, output tokens identical.
+3556:     // Without them (STRATA_MMVQ_A2=0) it won only on n_out >= 4096 at 1-4 columns, the old gate.
+3557:     static const int wide_min = std::getenv("STRATA_MMVQ_WIDE_MIN") ? std::atoi(std::getenv("STRATA_MMVQ_WIDE_MIN")) : q6k_a2() ? 0 : 4096;
+3558:     static const int wide_maxc = std::getenv("STRATA_MMVQ_WIDE_MAXC") ? std::atoi(std::getenv("STRATA_MMVQ_WIDE_MAXC")) : q6k_a2() ? 8 : 4;
+3559:     if (g_q6k_wide && ncols >= 1 && ncols <= wide_maxc && n_in % 256 == 0 && n_out >= wide_min) {
+3560:         const auto s = strata::q_of(stream);
+3561:         switch (ncols) {
+3562:             case 1: launch_q6k_wide<1>(weights, x_q8_1, y, n_in, n_out, s); return;
+3563:             case 2: launch_q6k_wide<2>(weights, x_q8_1, y, n_in, n_out, s); return;
+3564:             case 3: launch_q6k_wide<3>(weights, x_q8_1, y, n_in, n_out, s); return;
+3565:             case 4: launch_q6k_wide<4>(weights, x_q8_1, y, n_in, n_out, s); return;
+3566:             case 5: launch_q6k_wide<5>(weights, x_q8_1, y, n_in, n_out, s); return;
+3567:             case 6: launch_q6k_wide<6>(weights, x_q8_1, y, n_in, n_out, s); return;
+3568:             case 7: launch_q6k_wide<7>(weights, x_q8_1, y, n_in, n_out, s); return;
+3569:             default: launch_q6k_wide<8>(weights, x_q8_1, y, n_in, n_out, s); return;
+3570:         }
+3571:     }
+3572:     // SYCL port: the row-blocked kernel for the decode shapes (ncols <= 4)
+3573:     if (ncols >= 1 && ncols <= 4 && rowwarp_rpw() > 0 && n_in % 256 == 0) {
+3574:         dpct::queue_ptr s = strata::q_of(stream);
+3575:         const int rpw = rowwarp_rpw();
+native_mmvq.original.dp.cpp:3832-3852
+3832: void native_mmvq(int ggml_type, const void* weights, const void* x_q8_1, float* y,
+3833:                  int n_in, int n_out, int ncols, void* stream) {
+3834:     switch (ggml_type) {
+3835:     case 2: native_q4_0_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
+3836:     case 6: native_q5_0_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
+3837:     case 7: iq_mmvq(ggml_type, weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
+3838:     case 8: native_q8_0_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
+3839:     case 20: native_iq4_nl_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
+3840:     case 11: native_q3_k_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
+3841:     case 12: native_q4_k_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
+3842:     case 13: native_q5_k_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
+3843:     case 14: native_q6_k_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
+3844:     case 23: native_iq4_xs_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
+3845:     case 42: native_q2_0_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
+3846:     case 16: case 17: case 18: case 21: case 22: case 29:
+3847:         iq_mmvq(ggml_type, weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
+3848:     default: throw std::invalid_argument("unsupported native MMVQ GGML type");
+3849:     }
+3850: }
+3851: 
+3852: } // namespace strata::kernels
+
+EXACT SOURCE IDENTITY AND INVERSE CHECKS
+{
+  "status": "SOURCE_ONLY_NOT_APPLIED_BUILT_OR_EXECUTED",
+  "original_sha256": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584",
+  "candidate_sha256": "ae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252",
+  "patch_sha256": "acdd2e15f908aa71cdd5fb6163c2432f8e6fd5df1417e2169a99c956fccdd5df",
+  "S104_reference_header_sha256": "a5c69ed76b35530f600e278dba019660723c5c67789d69dde4c5b67dc55548e9",
+  "old_wide_kernel_text_sha256": "129003057453e50dcd12d00e29b6236409d04112d4a02c56469866abd2b6eeed",
+  "old_wide_kernel_text_byte_exact_in_candidate": true,
+  "new_A4_helper_byte_exact_S104": true,
+  "new_kernel_inverse_rename_and_staticassert_removal_equals_S104_function": true,
+  "full_inverse_removes_only_added_helpers_kernel_and_guard_branch": true,
+  "new_registered_kernel_class": "native_mmvq_q6k_a4_c6",
+  "new_flag": "STRATA_Q6_A4",
+  "source_pins": {
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp": {
+      "bytes": 185685,
+      "sha256": "c1cdeabe747754e5f0b3d2f4710c06d4dc50911fc692100be5191559a9ac8584"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/native_dense.cpp": {
+      "bytes": 21570,
+      "sha256": "99f925bfdc0a295e3314bea43a2fc0f7119f80f1a5111b38939e1478bf67f2d8"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp": {
+      "bytes": 223107,
+      "sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/sycl_queue.hpp": {
+      "bytes": 14310,
+      "sha256": "2b9ada924e3023ab742e826f9c9850324ccc978cfc4ca8d0a36b3e7b6c79c51a"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/kernels/native_mmvq.hpp": {
+      "bytes": 8175,
+      "sha256": "83c233dd1f9de362cf646eb6f3d95dd97278ae43a30aeeed205b3067ef358a7e"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/sycl_math.hpp": {
+      "bytes": 1271,
+      "sha256": "ac45a7a9b7d3cdc4b1b8c1c413c416911fb4ca91373d69bb34947815dbb3eec6"
+    },
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/kernels/dp4a.hpp": {
+      "bytes": 2827,
+      "sha256": "dbbf686ebcc60d569ed1e0bf688d98666a1d46b7f85d8d7e073d28d6ab775eba"
+    }
+  },
+  "parent_reported_fresh_upstream": "296b59d2f73c8f04a805df29c2fa97655adace78 unchanged at S106 closure; this preparation did not invoke network/modeltools",
+  "inverse_patch_sha256": "5c2e4e9cbe886bbd01b300e5befe82b6497a691c52ada3de08aab42079e5d425",
+  "old_source_reconstructed_by_removing_only_two_additions": true
+}

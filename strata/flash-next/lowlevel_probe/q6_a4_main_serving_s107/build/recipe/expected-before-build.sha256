@@ -1,0 +1,3 @@
+e3ca8ac25c1f1e6042792906be3e7faa55e14a1cddaeece176f15c52f6b071fd  strata
+bdb6a9ae43ad16bf56f66f87f0893f5c0429a2af6d61478e6af82240260cee58  libstrata_kernels.a
+b9f931cb65927a2869a1b26bce8cfa834b112bccdfe08d26e9364634473294dd  CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o

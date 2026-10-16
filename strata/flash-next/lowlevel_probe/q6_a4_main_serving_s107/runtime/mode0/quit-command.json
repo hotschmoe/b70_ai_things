@@ -1,0 +1,11 @@
+{
+  "command": [
+    "docker",
+    "kill",
+    "--signal=TERM",
+    "311f6db58d82e83c5dab46ab6b6ff1494f6df90ce06f789b9bd1fb47ca8e38e6"
+  ],
+  "exit": 0,
+  "stdout": "311f6db58d82e83c5dab46ab6b6ff1494f6df90ce06f789b9bd1fb47ca8e38e6\n",
+  "stderr": ""
+}

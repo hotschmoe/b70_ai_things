@@ -1,0 +1,10 @@
+{
+  "status": "PASS_EXACT_OBSERVABLE_PAIR",
+  "checks": {
+    "request_text_SSE_usage": true,
+    "native_per_request_work": true,
+    "native_windows_pair_solo_rows_captures": true,
+    "startup_logged_captures": true
+  },
+  "normalization": null
+}

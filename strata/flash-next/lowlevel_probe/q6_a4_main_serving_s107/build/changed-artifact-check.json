@@ -1,0 +1,17 @@
+{
+  "status": "PASS_EXPECTED_THREE_ARTIFACT_HASHES_CHANGED",
+  "artifacts": {
+    "strata": {
+      "before": "e3ca8ac25c1f1e6042792906be3e7faa55e14a1cddaeece176f15c52f6b071fd",
+      "after": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca"
+    },
+    "libstrata_kernels.a": {
+      "before": "bdb6a9ae43ad16bf56f66f87f0893f5c0429a2af6d61478e6af82240260cee58",
+      "after": "cf710683aec404599d1cc6173bf8364e6d30731bda82b315df286bf58aed9b38"
+    },
+    "CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o": {
+      "before": "b9f931cb65927a2869a1b26bce8cfa834b112bccdfe08d26e9364634473294dd",
+      "after": "e4dafa843014ad3aeb4e2c15e2bfa26c834f8e6fa0d8873032e5235ce06a9667"
+    }
+  }
+}

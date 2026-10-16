@@ -1,0 +1,47 @@
+{
+  "status": "SOURCE_ONLY_AST_PASS",
+  "pins": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-compiled-audit-prep/audit.py",
+      "bytes": 15639,
+      "sha256": "818512bef0adbd8bce053e7b43c2f6794da83527236fcded5f36d11fad162312"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s102-audit-prep-v2/audit.py",
+      "bytes": 13230,
+      "sha256": "33936a71aa314afc51905563b7072a73f74c5ceb632218a1d2fb9d0194e06618"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/host_binding.py",
+      "bytes": 6232,
+      "sha256": "37ecf55c43300319f0a3baaf15bede814934bd3ee1b0a11b32a38dc6066d4aa6"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-source-prep/source-proof.json",
+      "bytes": 2579,
+      "sha256": "c56fe2999d0624da80a9572670d281b3d3dd6633066e72baa92d7ff22a1ad534"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-source-prep/q6-a4-main.patch",
+      "bytes": 8286,
+      "sha256": "acdd2e15f908aa71cdd5fb6163c2432f8e6fd5df1417e2169a99c956fccdd5df"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-main-s87-isa/selection.json",
+      "bytes": 3217,
+      "sha256": "ae11a1df237b43ee45f0a78abe17d26380c4203e20950275c1ec7e4a4947f3d6"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-s104-compiled-audit/facts.json",
+      "bytes": 42087,
+      "sha256": "719063b4c735a5c9fa32443b07c04e61d8d4451242748c75a00b10657ad2365a"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build-container.sh",
+      "bytes": 5514,
+      "sha256": "85030a218c77dc6d4527ca6202b0fb110a3ca579af26927e7cc4357e86ac2e32"
+    }
+  ],
+  "new_binary_or_object_read_or_hash": false,
+  "artifact_audit_or_decoder_GPU_build": false
+}

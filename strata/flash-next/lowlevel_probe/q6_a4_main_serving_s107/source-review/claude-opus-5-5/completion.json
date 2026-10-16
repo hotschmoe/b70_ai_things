@@ -1,0 +1,120 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 29.27514214598341,
+  "launch_exception": null,
+  "source_packet_sha256": "fc74d5d02ed8d035d5bf4a57645e0f86b1852cee9bd2f4f0d753ecaf2c0000e4",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 764717,
+      "stop_reason": "end_turn",
+      "session_id": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "total_cost_usd": 3.8922272,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 20223,
+        "cache_read_input_tokens": 267469,
+        "output_tokens": 2077,
+        "output_tokens_details": {
+          "thinking_tokens": 939
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 20223,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 2077,
+            "cache_read_input_tokens": 267469,
+            "cache_creation_input_tokens": 20223,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 20223
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 32,
+          "outputTokens": 57726,
+          "thinkingTokens": 32507,
+          "cacheReadInputTokens": 2206176,
+          "cacheCreationInputTokens": 287043,
+          "webSearchRequests": 0,
+          "costUSD": 3.8922272,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "# S107 review: default-OFF Q6 A4 main integration\n\n**Verdict: GO** for one incremental SYCL build of the `native_mmvq` TU and its dependents. I found no blocking source issue.\n\n## Correctness and default fallback\n\n- **Guard placement.** The new branch sits inside `launch_q6k_wide<6>` under `rpw == 1 && q6k_a2()`, after the CENTER branch and before the original `wide_a2` launch.\n- **Conditions, all required:** PF == 0, one of the two exact shapes, an even block count per row, `weights % 4 == 0`, CENTER off, and `q6k_a4()` last.\n- **Anything else falls through** to the untouched original launch.\n- **The packed registry is still consulted first,** so packed heads keep their existing path.\n- **Marker behaviour:**\n  - `q6k_center()` already runs for these shapes in OFF, so OFF gets no new marker.\n  - `q6k_a4()` is evaluated last, so its initializer and marker fire only on an eligible call.\n  - The flag is latched before capture.\n- **The kernel body is the S104 function** with a `static_assert` added; the `!CAND` arm is dead code under `<true>`.\n- **The registered name `native_mmvq_q6k_a4_c6` is new.** The original kernel text is byte-exact. The source-level inverse reconstructs the original TU.\n\n## Alignment and bounds\n\n- **Row bases.** Row strides are 5040 and 2100 bytes, both divisible by 4. With `base % 4` guarded at runtime, every row base is dword-aligned. Block 0 of each row is aligned, so the `a\u22122` read only happens on odd blocks, into the preceding block's `d` field within the same row.\n- **Upper bound.** The furthest reads end at block offset 195 (`qh`) and 131 (`ql`), below 210. The last block of the last row stays in bounds, and no tail padding is assumed.\n- **The runtime pointer guard is authoritative.** The `NativeDense` publication path only makes alignment likely; the guard is what enforces it.\n\n## Compiled identity requirements after the build, before any GPU run\n\n1. **OFF path.** The actual `native_mmvq_q6k_wide_a2<6>` image must keep the S102/S85 16384-byte computational prefix. The CENTER-6 image should also be unchanged. Any drift in the C6 kernels means **HOLD**.\n2. **New kernel binding.** Bind the new kernel's Info, cache, guard, name pointer and selected image. Its ISA must match the reviewed S104 body:\n   - `d32x4` + `d32` loads with the bit-1 funnel and select;\n   - 48 DP4As in two ordered chains;\n   - the same per-column MAD-then-ADD FP ledger;\n   - XOR 16\u21921 and lane-0 stores;\n   - SIMD32 at GRF128, with no new spill or scratch fields. Absent fields are not evidence of zero.\n3. **Build flags.** Confirm the TU was built with `-fp-model=precise`, SG32 and per-kernel device code split.\n\n## Afterwards (not authorized here)\n\nRun one same-new-binary, single-flag matched serving comparison with strict output and native-work gates. It must also show the ON marker exactly once and absent in OFF. The marker proves host selection only. Report the result descriptively.",
+      "ttft_ms": 15004,
+      "type": "result",
+      "duration_ms": 28279,
+      "uuid": "8e3c115b-1869-42fd-a2db-9ed29548faad",
+      "ttft_stream_ms": 2192,
+      "time_to_request_ms": 98,
+      "first_content_frame_ms": 2193,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

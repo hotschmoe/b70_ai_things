@@ -1,0 +1,53 @@
+# S112 vs S111 vs subset-head, and Q6
+
+## Q6 (S107): no more testing now
+
+One fixed OFF\u2192ON sequence with three nested pairs showed +0.28 to +0.43%. Keep it default OFF and retained. A further serving run would not resolve anything new.
+
+## S112 publication audit: one concrete spec-level gap
+
+**What is fine:**
+- Each leader stores `pv[b]`/`pi[b]`, then issues a device-scope `acq_rel` fence, then a relaxed `fetch_add`. That is a valid release fence before the RMW.
+- Successive RMWs on the counter form a release sequence, so the last leader's RMW reads from every earlier increment.
+
+**The gap:**
+- Only the leader performs the atomic read.
+- The acquire fence (line 1423) comes *after* the work-group barrier, and the threads that load partials (local id < nb) did not perform the RMW themselves.
+- In the C++/SYCL memory model, a thread's acquire fence synchronizes only if it is sequenced after an atomic read in that same thread. So for the non-leader readers there is no formal happens-before chain to the other work-groups' partial stores.
+- It probably works in practice: each thread's device acquire fence likely invalidates its L1, the loads are volatile, and `row_top_prob_split` uses a similar protocol in production. That is evidence, not proof.
+
+**Minimal fix:** in the leader block, put the device `acq_rel` fence immediately after the `fetch_add` and before the barrier. Equivalently, make the RMW `acq_rel`. Then the chain is:
+
+1. release fence in each work-group, then RMW;
+2. the leader's acquire synchronizes with all of them;
+3. the work-group barrier (global fence space) carries that to every reader thread.
+
+The existing post-barrier fence can stay.
+
+**Inspected and fine:**
+- **Counter reset:** a plain store after all `nb` increments, on per-owner scratch, with in-order queues and drains around `Pair::draft`.
+- **Liveness:** no spin and no residency requirement.
+- **Tie and NaN semantics:** match the one-work-group sampler.
+
+## Ranking
+
+1. **S112 private strict oracle.** It targets the larger historical service: the two samplers sum to about 179 \xb5s, against about 64 \xb5s for the two probability kernels. It keeps probabilities and all downstream kernels unchanged.
+   - The oracle should cover the planned exact-ID cases: ties across work-group and chunk boundaries, \xb10, \xb1inf, NaN, all-NaN giving 0, and lengths 248,320 and 4,097.
+   - It should check probability, select and residual bytes, A/B/A graph replays on persistent per-owner scratch, counter = 0 after each replay, and guards.
+   - **Add one distinct check:** a forwarding stress of many back-to-back replays in which each replay's logits move the maximum into a different work-group's chunk. This exercises cross-work-group publication specifically.
+   - Do this only after the gating question below is answered. A clean result would not prove the memory model, but it is the right finite discriminator.
+2. **S111 (skip the probability kernels).** Keep it as the prepared fallback. I see no blocking defects:
+   - the mode is constructor-constant;
+   - the `tail_no_prob_` cache is separate;
+   - select receives null/null probability pointers;
+   - depth-1 calls stay on `tail_`.
+
+   Its ceiling is lower. Do not combine it with S112.
+3. **Subset-head policy.** Potentially larger, but it changes draft proposals and native work, so it is a policy experiment that needs acceptance gates. Defer it.
+
+## Decision needed first
+
+Should S112 apply the fence fix before the private oracle? This changes shared kernel source, so it needs root's approval.
+
+- **Recommended:** apply the fence fix, then run the oracle. The fence fix is a correctness strengthening that does not change any value or comparison.
+- **If root wants the existing kernel tested exactly as-is:** run the oracle unchanged, but record the formal gap explicitly. Either way, do not proceed to serving until it is resolved.

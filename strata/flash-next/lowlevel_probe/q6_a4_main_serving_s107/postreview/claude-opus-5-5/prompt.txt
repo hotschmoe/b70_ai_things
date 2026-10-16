@@ -1,0 +1,918 @@
+Review this independent root-frozen packet. No tools, builds or GPU. Identify concrete blockers and choose the single most useful next experiment. Keep response under500 words. Preserve evidence limits; no throughput prediction or automatic promotion.
+
+ROOT FROZEN PACKET:
+ROOT DECISION REQUEST 2026-10-16
+Q6S107 clean serving is complete. S111/S112 are UNAPPLIED source candidates, choose next iteration. Does Q6 warrant any more testing now? Rank S112 strict private argmax oracle vs S111 mainbuild+serving vs subsethead policy development. We favor S112 source/compiled/private correctness first if publication is valid, retaining unchanged probabilities. Examine fence/relaxedRMW/lastWG forwarding+local barrier and counter reset; reject on a concrete bug rather than assuming inheritedCUDAgate proves support. S111 is a prepared separate fallback, not a combination. Any required extra test should resolve a distinct uncertainty. Fixed OFF->ON n3 is not independentreplication. HistoricalS108 firsthead sampler179.1135/prob64.009us are service, no wallbudget/seconddepth extrapolation.
+
+
+S107 RESULT
+{
+  "utc": "2026-10-16T00:02:55.883593+00:00",
+  "status": "PASS_MATCHED_DISCRIMINATOR",
+  "comparison_sha256": "8c327ef447e2c20d00ab596beff5a1bc54fc33413129d27e703c9b6bd8c3e5ef",
+  "checks": {
+    "identity_image_and_effective_native_env": true,
+    "warm": true,
+    "repeat1": true,
+    "repeat2": true,
+    "repeat3": true,
+    "functionals": true,
+    "health_teardown": true,
+    "full_CID_and_NAME_absence": true,
+    "final_diagnostics_complete": true,
+    "final_host_marker_0": true,
+    "unrelated_IQ2_multi_OFF_0": true,
+    "pair_graph_OFF_0": true,
+    "final_host_marker_1": true,
+    "unrelated_IQ2_multi_OFF_1": true,
+    "pair_graph_OFF_1": true,
+    "logged_startup_capture_equal": true,
+    "native_loader_provenance": true
+  },
+  "timed_summary": {
+    "pair_wall_median_s": [
+      29.156571772007737,
+      29.032408006023616
+    ],
+    "aggregate_output_tps_median": [
+      102.89275513797548,
+      103.33279965539073
+    ],
+    "per_stream_medians": [
+      [
+        {
+          "ttft_s": 0.9252274630125612,
+          "completion_wall_s": 28.960764201998245,
+          "decode_tps": 53.46785452891006,
+          "whole_request_output_tps": 51.794213354925986
+        },
+        {
+          "ttft_s": 2.118401248997543,
+          "completion_wall_s": 28.948905191966332,
+          "decode_tps": 55.85351595461148,
+          "whole_request_output_tps": 51.81543101727619
+        }
+      ],
+      [
+        {
+          "ttft_s": 0.9204542420338839,
+          "completion_wall_s": 28.88130095700035,
+          "decode_tps": 53.6106797938146,
+          "whole_request_output_tps": 51.93671857903011
+        },
+        {
+          "ttft_s": 2.083461264963262,
+          "completion_wall_s": 28.82527776400093,
+          "decode_tps": 55.98745752714507,
+          "whole_request_output_tps": 52.03765987203452
+        }
+      ]
+    ]
+  },
+  "aggregate_median_change_pct": 0.42767298516319663,
+  "paired_changes_pct": [
+    0.42767298516319663,
+    0.2757448186433198,
+    0.39594684816632864
+  ],
+  "scope": "One fixed OFF->ON process sequence, three nested matched timed pairs. Descriptive small positive, not an independently replicated speed/stability result or qualification.",
+  "decision": "Keep default OFF; retain opt-in source/evidence, no standalone context/cache rerun for this small discriminator. Prioritize MTP selection/source leads and one focused private gate before serving.",
+  "build_s": 220,
+  "main_sha256": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca",
+  "private_evidence_reused": "S104 exact arithmetic snapshots and reviewed instruction ledger reused only after S107 actual original/CENTER/candidate computational prefixes+metadata+bindings verified. No repeated114private or newdecoder.",
+  "source_candidates": "S111 probability-only omission and S112 existing multiWG greedy argmax remain source-only/unapplied. S112 publication/replay gates before any serving enablement."
+}
+
+
+S109 CONSUMERS
+S109 paired MTP post-head probability source contract, 2026-10-15
+
+CONFIG -> Source-only inspection during the unrelated S107 build. No patch,
+GPU, model consultation, build, trace parse or serving run. Inputs and full
+source hashes are in pins.json; S108 bounded CSV only, never raw trace.
+
+COMMAND -> Read record_post_head, MtpPair init/eligible/capture/draft, all
+h_prob_/m_prob_ reads/writes, chain_prob callers, solo dprob callers, batch
+acceptance/counters, and the actual sampler/top-probability/select kernels.
+
+RESULT -> A narrow pair-only omission is source-justified as a candidate.
+record_post_head (mtp.cpp1138..1154) chooses a GREEDY argmax (SamplerParams
+sp.greedy=true; sp.temperature=0) and then UNCONDITIONALLY computes the
+chosen-token probability via row_top_prob_split/row_top_prob. Pair tail at
+2144..2161 calls this once per slot; whole-pair tail at2214..2226 duplicates
+the same sequence. Both selectors currently publish probs_ to m_prob_.
+
+Actual S108 first-C2-head shapes (same 12 reviewed historical intervals):
+head SIMD32 grid{62080;1;1} WG{32;4;1}; each sampler SIMD32
+grid{1;1;1} WG{1024;1;1}; each top-probability SIMD32 grid{8;1;1}
+WG{128;1;1}; each select SIMD32 grid{1;1;1} WG{256;1;1}.
+These are recorded kernel-name dimensions; argument n_vocab/buffer owners
+were not independently logged. Head then sampler/prob/sampler/prob/select/
+select is source-consistent, not an arbitrary-window classifier.
+
+Why probability has no consumer for the current paired BATCH call:
+- mtp.hpp Args (313..325) promises drafts + n_drafts only; its comment says
+  min_p always0, no returned probabilities. There is no probability pointer.
+- generate.cpp9400..9525 emits target picks, uses exact prefix batch_keep,
+  increments drafts_offered by glen-1 and drafts_accepted by keep-1, calls
+  pair->draft or solo draft(...,nullptr,0.0f,&nd), then clamps nd to depth.
+  No dprob, suffix policy, confidence cutoff or probabilistic acceptance is
+  read in this batch path. Source slot admission/coherence guards remain due.
+- Pair::draft (2246..2380) polls h_out_ for PLE token prefetch and reads
+  draft IDs/counts after queue completion. It NEVER reads h_prob_. It
+  increments rounds and elapsed ms, neither dependent on probability value.
+- mtp_select_kernel966..998 copies residual rows, writes next token, then
+  optionally probability, system fence, and publishes mapped token:
+  if (probs != nullptr && out_p != nullptr) out_p[j] = probs[row];
+  Passing BOTH optional probability arguments null avoids stale probs_
+  reads while retaining residual/token writes, barrier, fence and ready ID.
+
+Eligibility for a proposed defaultOFF PAIR-ONLY fast path:
+Retain every existing MtpPair::init/eligible guard (2015..2085): same device,
+geometry/head/window/vocab, full Q5_K head type13, multi-exact MMVQ layout,
+valid Args ownership/T/a/token/output, equal positive step counts, no subset
+head, forcing, live pipeline chain, rebound source residual, TOP2 diagnostic,
+or coupled_active_/coupled_rec_. Only the known batch Args contract with no
+probability consumer qualifies. Start with current depth2; near-context-end
+and unequal-step fallback keep original behavior. Greedy here is guaranteed
+by the paired recorder/eligibility, not merely a client temperature claim.
+
+The omission must apply consistently to BOTH capture_tail and whole-pair
+capture, with mode immutable for the object's captured graph lifetime or
+explicitly included in the graph-cache key. Do NOT toggle an unkeyed cached
+record per request. Keep ordinary solo/chain/coupled captures unchanged.
+A later solo fallback must record/replay its original probability-producing
+graph before any probability use; pair mode cannot globally disable a shared
+record_post_head. Private probs_/h_prob_ scratch values may differ/remain
+stale in the omitted mode; they are not bitwise-state-equivalence targets.
+No reader is exposed by pair Args, and normal future probability-producing
+captures overwrite their needed rows. Never fabricate probability=1 or
+reuse stale probability in any consumer. Keep counters and PLE order exact.
+
+All identified probability consumers/blockers outside this scope:
+1. Solo draft1543..1746: positive min_p reads pj and loops while pj>=min_p;
+   even min_p<=0 copies h_prob_ whenever caller probs pointer is nonnull.
+2. generate.cpp11773..11804 and12989..13017: positive spec_min_p compares
+   dprob>=threshold; optional lookup-chain multiplies dprob even if min_p0
+   to price a chain. Disabling only confidence is insufficient generically.
+3. chain_outputs_ready/chain_poll1912/1954 unconditionally copy h_prob_ into
+   public chain_prob(). Pipeline caller11500..11540 thresholds/confidence
+   t_rule and stores per-step probabilities, with spec_min_p checks.
+4. Coupled sampling record_rest1123..1129 computes token/prob together via
+   coupled_draft_sample; this path is excluded by pair eligibility. TOP2,
+   forcing, subset mapping and arbitrary stochastic requests stay original.
+No other SYCL h_prob_/m_prob_ consumers were found; allocation/free are not
+semantic readers. Cache KV serialization does not expose these private
+probability buffers. This is source reasoning, not a numerical/ABI proof.
+
+VERDICT -> Prepare one narrowly gated pair-only skip of the TWO probability
+kernels per head depth; retain BOTH greedy argmax kernels and selectors.
+This omits dead semantic work without reassociating any required FP math.
+Argmax comparisons/ties/NaN handling remain the original sampler; no new
+online softmax, exponent approximation or reduction order is proposed.
+Keeping the default route source/math intact remains an implementation
+requirement. No patch or executable was produced by this audit.
+
+S108 reports four sampler/prob ops sum243.175us, NOT four removable ops.
+The two probability ops alone sum a descriptive median64.009000us
+across12 nested historical intervals. Their omission is not demonstrated
+wall gain, a critical-path budget, or an S106/S107 timing result. Preserve
+matched output/native-work/capture/health gates in any later bounded test;
+source consultation and actual executable audit must precede GPU work.
+
+
+S111 CONTRACT
+S111 default-OFF pair-only probability omission candidate, 2026-10-16
+
+CONFIG -> SOURCE ONLY outside live checkout/build. Two SYCL files, no kernel
+TU, sampler, selector or generate.cpp edits. Baseline mtp.cpp13500a3a and
+mtp.hpp1d418cc5 are exactly S109's pinned S106 whole-pair source. Candidate
+patch/hashes and source-only proof are supplied; nothing has been applied,
+compiled, executed, consulted with models, or tested on GPU.
+
+COMMAND -> S109 consumer contract plus current helper/pair/selector/source
+readers, source constant-condition projections, in-memory patch/hash checking,
+and git apply --check --whitespace=error only. No live-source apply occurs.
+
+RESULT -> STRATA_BATCH_MTP_PAIR_SKIP_PROB=1 opts in; every other/unset value
+is OFF. The value is read ONCE at MtpPair construction into a const member.
+It cannot change during that object's capture/cache lifetime. This is not a
+per-request tuning switch. Existing S106 STRATA_BATCH_MTP_PAIR_GRAPH parser,
+defaultOFF behavior and max_steps==2 predicate are retained byte-for-byte.
+
+Only eligible paired max_steps==2 calls omit probability work. All existing
+init/eligible guards remain byte-identical: ownership, full same Q5_K head,
+vocab/device/geometry/window, exact MMVQ, no live chain/coupled/forcing/TOP2/
+rebound residual, and equal positive step counts. Args exposes only draft IDs
+and count, no probability output. No new solo/admission/fallback decision.
+
+Implementation:
+- record_post_head gains explicit bool probability=true. ONE existing greedy
+  sampler/argmax block is retained unchanged; false skips only the following
+  row_top_prob_split/row_top_prob call. Subset mapping still follows as before;
+  pair eligibility already rejects subset heads. Every existing solo/chain
+  record_rest call uses the true default; there is no global helper env check.
+- Both original component-tail and S106 whole-pair-tail recorders pass the
+  selected probability mode to this helper. In omitted mode BOTH probability
+  pointers in EACH mtp_select call are nullptr. This prevents stale probs_
+  reads as well as mapped h_prob_ writes. No fabricated probability is used.
+- Component tail_[9] remains the original probability-producing cache. A
+  separate tail_no_prob_[2] owns ONLY depth2 j0/j1 captures. The same selected
+  mode chooses capture AND launch. A later near-context depth1 or other-depth
+  paired call uses tail_ even if no-prob tails were captured earlier, so cache
+  modes cannot alias. j is bounded by max_steps2 whenever no-prob is selected.
+- The exact(T0,T1) whole-pair cache is already depth2-only. Its recorder uses
+  the constructor-const mode; no new cache-key dimension is needed. Component
+  versus whole-pair flags are independent and supported consistently.
+- One marker after successful chosen captures reports enabled1/depth2/greedy
+  unchanged/null select probabilities/host-selection-only. OFF or depth!=2
+  emits no candidate marker. The marker precedes idle/staging and proves host
+  selection only, never a successful GPU dispatch or all-key/cache coverage.
+
+Mode table (source semantics):
+flag0, any admitted depth/graph -> original probability helper/args/tail cache.
+flag1 + depth2 + component graph -> no-prob component tails0/1.
+flag1 + depth2 + whole-pair graph -> immutable no-prob whole-pair capture.
+flag1 + depth1/other depth -> original probability-producing component tails.
+existing guard failure -> original caller solo fallback; no pair touches state.
+existing capture/launch failure -> original error/drain/report, never redraft.
+
+Preserved data/lifetime/error ledger:
+Shared head/quantization and both greedy picks are unchanged, including tie/
+NaN behavior of the original chosen sampler. Select R_src/row/ids/R_dst/tok/
+m_out/j and queue stay identical. Original select kernel966..998 writes
+residuals, barriers, writes next token, optionally probability, system fence,
+then mapped ready ID. Passing null/null only bypasses the optional probability
+branch; it does not remove any ready/fence/residual operation or mapped field.
+Mapped allocation size/layout/alignment, host staging/fence, PLE polling/order,
+queue waits, slot output/count/elapsed counters and scratch allocation remain.
+No device wait removal, commit overlap or new stream is proposed.
+
+Private probs_/h_prob_ contents may remain stale in ON paired mode. They are
+not observable results of pair Args and are deliberately not state-equivalence
+checks. S109 finds no pair reader. Original solo/default captures compute
+needed probability rows before all min_p/probs-return uses; chain/coupled/
+confidence/lookup-policy readers remain their original producers/consumers.
+Probability scratch is left untouched. Existing completed split-probability
+calls reset their counter to0 (verify_kernels1506); skipping introduces no
+scratch mutation or partial call. Error paths retain their original drain and
+no-redraft contract. No claim is made about recovery after an existing failed
+capture beyond those original rules.
+
+Existing actual caller constructs/binds one pair after both slot binds
+(generate.cpp7565); pointer/geometry lifetime assumptions stay the original
+ones. The new const mode is immutable even if init is retried. New component
+graphs drain with cs_ before destruction alongside existing caches, before
+shared scratch free. No admission receipt, rebind epoch or generic framework.
+
+DEFAULT-PATH PROOF -> default-source-proof.json records actual in-memory
+candidate SHA checks and source projections. probability=true yields the old
+helper byte-for-byte, including sampler/probability/map order. Constant OFF
+mode yields the ENTIRE original component-capture, whole-pair-capture and
+pair-draft methods byte-for-byte after direct condition/default substitution.
+The unmodified eligible/staging/fence/output/PLE/counters source spans also
+match. This is SOURCE proof, not compiled identity/ABI, numerical or timing
+proof. Constructor env read and an empty extra cleanup loop are new host work.
+
+BUILD SCOPE -> mtp.hpp changes a private helper symbol and MtpPair layout plus
+constructor linkage. Rebuild all actual header dependencies before linking;
+direct source includes are mtp.cpp, program/generate.cpp, prefill/prefill.cpp.
+Do not patch only one object into an old-layout binary. No kernel body/archive
+change is intended, but actual compiled-source/archive audit is still needed.
+
+VERDICT -> Ready for root's actual independent Opus/Fable source review only.
+No review, apply/build, GPU runner, test results or serving promotion exists.
+Potential64.009us is the descriptive median of TWO probability operations in
+S108's FIRST-head historical intervals, not four removable sampler/probability
+operations and not measured wall savings. Source omits two probability calls
+per selected depth, while all required sampler math remains. No speed forecast
+or extrapolation to the second depth/S106/S107 is made. Root chooses any future
+matched same-binary fixed-work test after reviews and executable audit, with
+other candidate flags held identical and full identity/correctness/teardown/
+health gates. Scratch differences are scoped explicitly; outputs and native
+work must still match. Historical source-only records remain historical.
+
+
+S111 PATCH
+--- a/sycl/src/core/mtp.cpp
++++ b/sycl/src/core/mtp.cpp
+@@ -1135,7 +1135,7 @@
+     return record_post_head(head_logits_, cs, err);   // the same calls in the same order as before the split
+ }
+ 
+-bool MtpDrafter::record_post_head(const float* logits, dpct::queue_ptr cs, std::string& err) {
++bool MtpDrafter::record_post_head(const float* logits, dpct::queue_ptr cs, std::string& err, bool probability) {
+     using namespace strata::kernels;
+     const int T = 1;
+     const bool sub = dhead_ != nullptr;
+@@ -1149,8 +1149,10 @@
+             sp.temperature = 0.0f;
+             sample_tokens(logits, T, (int) nv, nullptr, 0, sp, out_ids_, cs);
+         }
+-        if (multi_block_head_ops()) row_top_prob_split(logits, T, (int) nv, out_ids_, probs_, top_scratch_, cs);
+-        else row_top_prob(logits, T, (int) nv, out_ids_, probs_, cs);
++        if (probability) {
++            if (multi_block_head_ops()) row_top_prob_split(logits, T, (int) nv, out_ids_, probs_, top_scratch_, cs);
++            else row_top_prob(logits, T, (int) nv, out_ids_, probs_, cs);
++        }
+         if (sub) map_ids(out_ids_, dvocab_, T, cs);
+     } catch (const std::exception& e) {
+         err = std::string("mtp: ") + e.what();
+@@ -1994,7 +1996,13 @@
+     }();
+     return on;
+ }
++bool pair_skip_probability_on() {
++    const char* e = std::getenv("STRATA_BATCH_MTP_PAIR_SKIP_PROB");
++    return e != nullptr && std::strcmp(e, "1") == 0;
++}
+ } // namespace
++
++MtpPair::MtpPair() : skip_pair_prob_(pair_skip_probability_on()) {}
+ 
+ MtpPair::~MtpPair() {
+     if (cs_) { try { cs_->wait(); } catch (...) {} }
+@@ -2002,6 +2010,7 @@
+     for (auto& per_slot : pre_round_) for (auto& e : per_slot) if (e) delete e;
+     for (auto& per_slot : pre_step_) for (auto& e : per_slot) if (e) delete e;
+     for (auto& e : tail_) if (e) delete e;
++    for (auto& e : tail_no_prob_) if (e) delete e;
+     if (alloc_queue_) { try { alloc_queue_->wait(); } catch (...) {} }
+     if (xq2_) sycl::free(xq2_, *alloc_queue_);
+     if (logits2_) sycl::free(logits2_, *alloc_queue_);
+@@ -2142,8 +2151,8 @@
+ 
+ // Depth j's tail for both slots: their two mixed rows quantized into the two columns, ONE two-column head call,
+ // each slot's pick and probability from its own logits row, each slot's next input (mtp_select) to its own buffers.
+-bool MtpPair::capture_tail(int j, std::string& err) try {
+-    dpct::experimental::command_graph_exec_ptr& exec = tail_[j];
++bool MtpPair::capture_tail(int j, std::string& err, bool skip_probability) try {
++    dpct::experimental::command_graph_exec_ptr& exec = skip_probability ? tail_no_prob_[j] : tail_[j];
+     if (exec) return true;
+     using namespace strata::kernels;
+     MtpDrafter& a = *d_[0];
+@@ -2155,10 +2164,13 @@
+         native_quantize_q8_1(a.sample_, xq2_, (int) N, 1, cs_);
+         native_quantize_q8_1(b.sample_, xq2_ + col_bytes_, (int) N, 1, cs_);
+         native_mmvq_head(a.head_->type(), a.head_->weights(), xq2_, logits2_, (int) N, (int) nv_, 2, cs_);
+-        ok = a.record_post_head(logits2_, cs_, err) && b.record_post_head(logits2_ + nv_, cs_, err);
++        ok = a.record_post_head(logits2_, cs_, err, !skip_probability) &&
++             b.record_post_head(logits2_ + nv_, cs_, err, !skip_probability);
+         if (ok) {
+-            mtp_select(a.R_, HCN, a.out_ids_, a.row_ + 1, a.Rin_, a.tok_, a.m_out_, j, cs_, a.probs_, a.m_prob_);
+-            mtp_select(b.R_, HCN, b.out_ids_, b.row_ + 1, b.Rin_, b.tok_, b.m_out_, j, cs_, b.probs_, b.m_prob_);
++            mtp_select(a.R_, HCN, a.out_ids_, a.row_ + 1, a.Rin_, a.tok_, a.m_out_, j, cs_,
++                       skip_probability ? nullptr : a.probs_, skip_probability ? nullptr : a.m_prob_);
++            mtp_select(b.R_, HCN, b.out_ids_, b.row_ + 1, b.Rin_, b.tok_, b.m_out_, j, cs_,
++                       skip_probability ? nullptr : b.probs_, skip_probability ? nullptr : b.m_prob_);
+         }
+     } catch (const std::exception& e) {
+         err = std::string("mtp pair: ") + e.what();
+@@ -2213,6 +2225,7 @@
+             return ok;
+         };
+         auto record_tail = [&](int j) {
++            const bool skip_probability = skip_pair_prob_; // This cache is depth2-only; mode is immutable.
+             MtpDrafter& a = *d_[0];
+             MtpDrafter& b = *d_[1];
+             const int64_t N = a.g_->n_embd, HCN = a.g_->hc * N;
+@@ -2220,10 +2233,13 @@
+         native_quantize_q8_1(a.sample_, xq2_, (int) N, 1, cs_);
+         native_quantize_q8_1(b.sample_, xq2_ + col_bytes_, (int) N, 1, cs_);
+         native_mmvq_head(a.head_->type(), a.head_->weights(), xq2_, logits2_, (int) N, (int) nv_, 2, cs_);
+-        ok = a.record_post_head(logits2_, cs_, err) && b.record_post_head(logits2_ + nv_, cs_, err);
++        ok = a.record_post_head(logits2_, cs_, err, !skip_probability) &&
++             b.record_post_head(logits2_ + nv_, cs_, err, !skip_probability);
+         if (ok) {
+-            mtp_select(a.R_, HCN, a.out_ids_, a.row_ + 1, a.Rin_, a.tok_, a.m_out_, j, cs_, a.probs_, a.m_prob_);
+-            mtp_select(b.R_, HCN, b.out_ids_, b.row_ + 1, b.Rin_, b.tok_, b.m_out_, j, cs_, b.probs_, b.m_prob_);
++            mtp_select(a.R_, HCN, a.out_ids_, a.row_ + 1, a.Rin_, a.tok_, a.m_out_, j, cs_,
++                       skip_probability ? nullptr : a.probs_, skip_probability ? nullptr : a.m_prob_);
++            mtp_select(b.R_, HCN, b.out_ids_, b.row_ + 1, b.Rin_, b.tok_, b.m_out_, j, cs_,
++                       skip_probability ? nullptr : b.probs_, skip_probability ? nullptr : b.m_prob_);
+         }
+             return ok;
+         };
+@@ -2253,6 +2269,7 @@
+     // the graphs (cached; a capture syncs the pair queue), then both slots' own queues idle: the pair queue reads
+     // what their last solo launches wrote
+     const bool whole_pair = max_steps == 2 && pair_graph_depth2_on();
++    const bool skip_probability = max_steps == 2 && skip_pair_prob_;
+     if (whole_pair) {
+         if (!capture_pair_depth2(T[0], T[1], err)) return false;
+         if (!pair_graph_marked_) {
+@@ -2266,7 +2283,11 @@
+         for (int c = 0; c < 2; ++c)
+             if (!capture_pre_step(c, j, err)) return false;
+     for (int j = 0; j < max_steps; ++j)
+-        if (!capture_tail(j, err)) return false;
++        if (!capture_tail(j, err, skip_probability)) return false;
++    }
++    if (skip_probability && !pair_prob_skip_marked_) {
++        std::fprintf(stderr, "strata MTP pair skip-prob: enabled=1 depth=2 greedy=unchanged select-prob=null host-selection-only\n");
++        pair_prob_skip_marked_ = true;
+     }
+     host_boundary::mark("pair_capture_ready", T[0], T[1]);
+     for (int c = 0; c < 2; ++c)
+@@ -2309,9 +2330,9 @@
+     host_boundary::mark("pair_submit_begin", max_steps);
+     bool ok = [&] {
+         if (whole_pair) return launch(pair_exec_[T[0]][T[1]], "whole pair depth2");
+-    bool ok = launch(pre_round_[0][T[0]], "round A") && launch(pre_round_[1][T[1]], "round B") && launch(tail_[0], "head 0");
++    bool ok = launch(pre_round_[0][T[0]], "round A") && launch(pre_round_[1][T[1]], "round B") && launch(skip_probability ? tail_no_prob_[0] : tail_[0], "head 0");
+     for (int j = 1; ok && j < max_steps; ++j)
+-        ok = launch(pre_step_[0][j], "step A") && launch(pre_step_[1][j], "step B") && launch(tail_[j], "head");
++        ok = launch(pre_step_[0][j], "step A") && launch(pre_step_[1][j], "step B") && launch(skip_probability ? tail_no_prob_[j] : tail_[j], "head");
+         return ok;
+     }();
+     if (!ok) {   // the slots' K/V may already be written: drain and report, the caller must not draft again
+--- a/sycl/include/strata/core/mtp.hpp
++++ b/sycl/include/strata/core/mtp.hpp
+@@ -177,7 +177,8 @@
+     bool record_rest(int step_row, dpct::queue_ptr cs, std::string &err, bool head = true);
+     /// The head's tail on `logits` (one row of the draft vocabulary): the greedy pick to out_ids_, its probability
+     /// to probs_, a subset index mapped back to a token id.  record_rest's own tail (on head_logits_) and MtpPair's.
+-    bool record_post_head(const float* logits, dpct::queue_ptr cs, std::string& err);
++    // probability=false is only for the guarded MtpPair depth2 contract; solo/chain callers keep the default.
++    bool record_post_head(const float* logits, dpct::queue_ptr cs, std::string& err, bool probability = true);
+     void norm_rope(float *data, const float *gamma, int rows, int cols,
+                    const int32_t *p, dpct::queue_ptr cs);
+     bool capture_prefill(int T, std::string& err);
+@@ -307,7 +308,7 @@
+ /// slots to their own draft(); nothing is touched before every guard has passed.
+ class MtpPair {
+ public:
+-    MtpPair() = default;
++    MtpPair();
+     ~MtpPair();
+     MtpPair(const MtpPair&) = delete;
+     MtpPair& operator=(const MtpPair&) = delete;
+@@ -337,7 +338,7 @@
+     bool capture_pair_depth2(int T0, int T1, std::string& err);
+     bool capture_pre_round(int c, int T, std::string& err);
+     bool capture_pre_step(int c, int j, std::string& err);
+-    bool capture_tail(int j, std::string& err);
++    bool capture_tail(int j, std::string& err, bool skip_probability);
+     int steps_of(const MtpDrafter& d, int64_t p, int a) const;
+     MtpDrafter* d_[2] = {nullptr, nullptr};
+     bool ok_ = false;
+@@ -352,9 +353,13 @@
+     dpct::experimental::command_graph_exec_ptr pre_round_[2][9] = {};
+     dpct::experimental::command_graph_exec_ptr pre_step_[2][9] = {};
+     dpct::experimental::command_graph_exec_ptr tail_[9] = {};
++    // Only depth2 j=0/1 may omit probabilities; depth1/other-depth captures always use tail_ above.
++    dpct::experimental::command_graph_exec_ptr tail_no_prob_[2] = {};
+     // Whole-pair cache is used only at max_steps==2; T0/T1 are the exact effective round lengths (1..8).
+     dpct::experimental::command_graph_exec_ptr pair_exec_[9][9] = {};
+     bool pair_graph_marked_ = false; // Once per pair object; host selection, not GPU execution evidence.
++    const bool skip_pair_prob_; // Latched at construction, immutable for every owned graph cache lifetime.
++    bool pair_prob_skip_marked_ = false; // Once host selection only; does not prove GPU execution.
+ };
+ 
+ }  // namespace strata::core
+
+
+S112 AUDIT
+S112 greedy top1 source audit (2026-10-16)
+
+CONFIG -> SOURCE ONLY during leased S107 serving. No live edits, build,
+GPU, model calls, payload reads, raw trace or heavy CPU. Exact pins and
+bounded local-git history are retained. Historical S108 names the kernel
+sampler_greedy_kernel_5b2c3f, not row_sample_greedy_v2. Two owner samplers
+sum179.1135us median across12 first-head intervals; this is diagnostic
+historical service, not removable wall time or a speed prediction.
+
+COMMAND -> Read current post-head dispatch, greedy and argmax kernels,
+atomic helper, allocation/capture ownership; local blame/show of selector
+origins; inspect existing SYCL verify_parity, not execute it.
+
+RESULT -> Existing parallel top1 is available but architecture-gated out.
+MtpDrafter::record_post_head1138..1154 calls argmax_rows only when
+argmax_rows_wanted(). verify_kernels.cpp1586..1600 restricts this to
+major==8 plus STRATA_MULTI_BLOCK_ARGMAX (default enabled). B70 startup
+reports20.2. sampler.cpp1401..1406 hard-disables SYCL cluster greedy, so
+STRATA_ARGMAX_MULTI does not activate a cluster path either. The observed
+fallback is ONE WG1024/owner, scanning248320 vocabulary elements with
+up to243 elements/thread, then local reductions. This serializes the
+row within one WG; source alone does not prove occupancy or critical path.
+
+Local history: CUDA commit3e4aa1d6189afe44ae9b70d965d0737ff1a8cc1a
+introduced argmax_rows for sm80..89 because sm90+ already used a cluster
+argmax; its message specifies last-block merging and parity tests. SYCL
+re-migration23a38a0bb75c7a24d975536c5b4b6a4400ffb1e1 copied the gate.
+No B70-specific safety rationale was found in those bounded records.
+This is an inherited NVIDIA selection rule, not evidence the kernel is
+qualified on B70. Do not emulate major8 or flip a global capability knob.
+
+Exact comparison contract, NO PENALTIES:
+sampler.cpp91 returns unmodified logit for count<=0; record_post_head passes
+history=null, penalty window0, greedy=true, temperature0. Its scan starts
+(value=-inf,index=n_vocab), visits ascending indices per thread and takes
+strictly larger values. Subgroup/local merges compare greater value, then
+lower index on equality; all missing candidates finally map to0.
+argmax_rows uses the SAME initial sentinel, strict scan and value/index
+comparison, but partitions the row into contiguous chunks. For finite
+logits, maximum+lowest-index is independent of partition/reduction tree;
+there is no FP sum or approximate math to reassociate. +0/-0 compare equal,
+so lower index wins; negative-only rows and subnormals use the same source
+comparisons. This source argument is not compiled all-input proof.
+
+Nonfinite ID behavior in BOTH source routes: NaN comparisons never win,
+-inf never beats the sentinel, +inf wins and ties select lower index.
+If nothing beats-inf (all NaN/-inf), return0. This is the existing ID
+behavior, not validation of nonfinite model state, exception/payload
+semantics, or permission to bypass nonfinite serving gates. Unchanged
+probability kernels can yield NaN; preserve their behavior and diagnostics.
+For subsets, compare indices within the SAME ordered subset then run
+existing map_ids. Subset-order tie semantics differ from full-token-order
+semantics; never compare different vocab policies as arithmetic parity.
+
+Existing argmax_rows shape/cost (verify_kernels.cpp1508..1537):
+nb=min(128,max(1,ceil(n/4096))), per_block=ceil(n/nb), WG256/SG32.
+n248320 ->61WG, chunk4071, <=16 elements/thread, last chunk4060.
+One kernel launch/owner STILL; two owner calls remain two launches.
+ArgRow = counter+padding16B +128 FP32 values512B +128 int IDs512B =
+1040B/row source layout. Each MtpDrafter already allocates max_t*sizeof
+ArgRow at mtp.cpp456, zero-fills its arena at467, and owns separate scratch.
+Current post-head calls T1, using row0. No new device allocation, logits
+copy, second reduction launch or vocabulary projection is required.
+
+Publication/liveness audit: argmax_rows_kernel1373..1436 writes per-WG
+(value,index) from leader, performs device-scope acq_rel fence, and uses
+dpct::atomic_fetch_add(counter,1) to elect the last WG. dpct atomic.hpp
+25..43 defaults to RELAXED order, DEVICE scope. Each WG shares its last
+flag through a local barrier. Non-last WGs return; last WG performs a
+second device acq_rel fence, volatile-loads partials, reduces and writes
+ID; last leader resets counter with plain store0. There is NO polling,
+grid-wide barrier or requirement for all61 WGs to be resident together.
+Thus no obvious occupancy-dependent spin deadlock is introduced. The
+use_root_sync launch property is present but the body has no root barrier.
+
+Intended cross-WG publication relies on release-fence -> relaxed atomic
+RMW chain -> acquire-fence forwarding for every partial. This is a real
+SYCL memory-model/implementation obligation, not proved by the CUDA major8
+gate or source resemblance. Existing active row_top_prob_split uses a
+related fence/counter protocol, but that does not independently validate
+argmax's different leader/reduction path. No B70 compiled ISA, scratch
+counter readback, forwarding stress or graph replay proof exists here.
+HOLD direct serving enablement until actual independent source review and
+finite private runtime oracle settle this. If that publication cannot be
+justified, use explicit producer/consumer kernel dependency instead; do
+not silently assume cached/volatile loads repair missing synchronization.
+
+Plain reset is safe only with completed prior invocation and no scratch
+overlap: all WGs incremented before last is elected, no other WG later
+writes that counter, next invocation waits on in-order queue completion.
+Pair::draft idles BOTH private queues before pair queue reads their state,
+then waits before return; ordinary solo uses its own queue/scratch. Captured
+mode must be immutable or keyed, never reuse an incompatible graph. Verify
+these exact lifetime conditions, init0/reset0, per-owner separation and
+buffer guards in the private oracle. Interrupted/failed replay must drain
+and report; no automatic redraft/reuse of uncertain scratch state.
+
+Simplest candidate concept -> DefaultOFF MTP-only host dispatch selects
+EXISTING argmax_rows for the known unpenalized greedy full-head path.
+Retain two owner launches, exact probabilities, ID mapping, selectors,
+publication fences, draft counters and target verification. Default source
+route remains original. Do not initially combine with S109 probability
+omission, global verifier changes, two-row ID/scratch interface changes,
+or a new fusion. One combined two-owner launch would need different
+output/scratch bindings because current slot outputs are separate; that is
+extra scope without evidence. This is not a proposal to rerun head RPW2:
+RPW2 changes projection row packing; this changes post-logit top1 selection.
+S55 retained RPW2 defaultOFF with a small unresolved favorable serving
+observation, not a proven regression or a blanket ban on sampler work.
+
+Strict private oracle plan, NOT IMPLEMENTED/EXECUTED:
+Reuse the retained SYCL verify_parity concept instead of a new framework.
+Narrow to current248320 and irregular4097 rows, two distinct owners, no
+penalties. Compare ORIGINAL greedy vs existing argmax_rows exact int32 IDs
+against an independent host max/lowest-index reference. Include ties across
+WG/SG/chunk boundaries, first/last maxima, +/-0, all-negative, denormals,
+NaN mixtures, +inf ties and allNaN/-inf fallback0. No tolerance. Feed equal
+IDs through the SAME current top-probability/select kernels on each side;
+check full resulting probability bytes, selected tokens/residuals, mapped
+publication, readonly logits and allocation guards. Do not simultaneously
+test an unrelated probability reduction change.
+Capture fresh mapped A/B/A replays on the same in-order queue, repeated on
+one persistent per-owner scratch: inspect counter0 after each completed
+replay and owner guards. Existing verify_parity repeats scratch but lacks
+counter/guard/capture-freshness checks and is not claimed run on this B70.
+Only after compiled kernel identity, exact private parity/lifecycle and
+post-health should one finite same-binary serving comparison be considered.
+No broad tuning sweep, full model-weight read or fresh GPU trace is needed
+for that first discriminator. No speed target or savings is established.
+
+VERDICT -> Concrete reusable-kernel lead, pending publication review and
+compiled private proof. Existing ported selector misses B70; the kernel is
+not production-qualified merely because a host branch could select it.
+
+
+CURRENT SOURCE sycl/src/kernels/cuda/verify_kernels.dp.cpp:1320..1436
+1320:         arg_take(ov, oi, bv, bi);
+1321:     }
+1322:     const int warp = (int)(item_ct1.get_local_id(2) >> 5),
+1323:               lane = (int)(item_ct1.get_local_id(2) & 31);
+1324:     if (lane == 0) { sv[warp] = bv; si[warp] = bi; }
+1325:     /*
+1326:     DPCT1065: Consider replacing sycl::nd_item::barrier() with
+1327:     sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better
+1328:     performance if there is no access to global memory.
+1329:     */
+1330:     item_ct1.barrier();
+1331:     if (warp == 0) {
+1332:         const int nw = (int)(item_ct1.get_local_range(2) >> 5);
+1333:         bv = lane < nw ? sv[lane] : sycl::bit_cast<float, int>(0xff800000);
+1334:         bi = lane < nw ? si[lane] : none;
+1335:         for (int off = 16; off > 0; off >>= 1) {
+1336:             /*
+1337:             DPCT1108: '__shfl_down_sync' was migrated with the experimental
+1338:             feature masked sub_group function which may not be supported by all
+1339:             compilers or runtimes. You may need to adjust the code.
+1340:             */
+1341:             /*
+1342:             DPCT1121: Make sure that the "bv" which is used in the SYCL
+1343:             group function/algorithm is initialized.
+1344:             */
+1345:             const float ov = dpct::experimental::shift_sub_group_left(
+1346:                 0xffffffffu, sycl::ext::oneapi::this_work_item::get_sub_group(),
+1347:                 bv, off);
+1348:             /*
+1349:             DPCT1108: '__shfl_down_sync' was migrated with the experimental
+1350:             feature masked sub_group function which may not be supported by all
+1351:             compilers or runtimes. You may need to adjust the code.
+1352:             */
+1353:             /*
+1354:             DPCT1121: Make sure that the "bi" which is used in the SYCL
+1355:             group function/algorithm is initialized.
+1356:             */
+1357:             const int oi = dpct::experimental::shift_sub_group_left(
+1358:                 0xffffffffu, sycl::ext::oneapi::this_work_item::get_sub_group(),
+1359:                 bi, off);
+1360:             arg_take(ov, oi, bv, bi);
+1361:         }
+1362:     }
+1363: }
+1364: 
+1365: // A row's scratch, whatever the launch's row count (one scratch serves windows of every size): its counter, then
+1366: // the blocks' values and indices.
+1367: struct ArgRow {
+1368:     unsigned counter;
+1369:     unsigned pad[3];
+1370:     float v[kArgMaxBlocks];
+1371:     int i[kArgMaxBlocks];
+1372: };
+1373: 
+1374: // grid (blocks, rows): block b scans [b * per_block, +per_block) of its row
+1375: __dpct_inline__ void argmax_rows_kernel(const float *__restrict__ logits, int n,
+1376:                                         int per_block,
+1377:                                         ArgRow *__restrict__ rows,
+1378:                                         int32_t *out) {
+1379:     auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+1380:     const int row = (int)item_ct1.get_group(1), b = (int)item_ct1.get_group(2),
+1381:               nb = (int)item_ct1.get_group_range(2);
+1382:     unsigned* counter = &rows[row].counter;
+1383:     float* pv = rows[row].v;
+1384:     int* pi = rows[row].i;
+1385:     const float* l = logits + (size_t) row * n;
+1386:     const int lo = b * per_block, hi = sycl::min(n, lo + per_block);
+1387:     float bv = sycl::bit_cast<float, int>(0xff800000); // -inf
+1388:     int bi = n;
+1389:     for (int v = lo + (int)item_ct1.get_local_id(2); v < hi;
+1390:          v += (int)item_ct1.get_local_range(2)) {
+1391:         const float s = l[v];
+1392:         if (s > bv) { bv = s; bi = v; }
+1393:     }
+1394:     arg_block(bv, bi, n);
+1395:     auto &last = *sycl::ext::oneapi::group_local_memory_for_overwrite<bool>(
+1396:         sycl::ext::oneapi::this_work_item::get_work_group<3>());
+1397:     if (item_ct1.get_local_id(2) == 0) {
+1398:         pv[b] = bv;
+1399:         pi[b] = bi;
+1400:         /*
+1401:         DPCT1078: Consider replacing memory_order::acq_rel with
+1402:         memory_order::seq_cst for correctness if strong memory order
+1403:         restrictions are needed.
+1404:         */
+1405:         sycl::atomic_fence(sycl::memory_order::acq_rel,
+1406:                            sycl::memory_scope::device);
+1407:         last =
+1408:             dpct::atomic_fetch_add<sycl::access::address_space::generic_space>(
+1409:                 counter, 1u) == (unsigned)(nb - 1);
+1410:     }
+1411:     /*
+1412:     DPCT1065: Consider replacing sycl::nd_item::barrier() with
+1413:     sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better
+1414:     performance if there is no access to global memory.
+1415:     */
+1416:     item_ct1.barrier();
+1417:     if (!last) return;
+1418:     /*
+1419:     DPCT1078: Consider replacing memory_order::acq_rel with
+1420:     memory_order::seq_cst for correctness if strong memory order restrictions
+1421:     are needed.
+1422:     */
+1423:     sycl::atomic_fence(sycl::memory_order::acq_rel, sycl::memory_scope::device);
+1424:     bv = sycl::bit_cast<float, int>(0xff800000);
+1425:     bi = n;
+1426:     if ((int)item_ct1.get_local_id(2) < nb) {
+1427:         bv = ((volatile const float *)pv)[item_ct1.get_local_id(2)];
+1428:         bi = ((volatile const int *)pi)[item_ct1.get_local_id(2)];
+1429:     }
+1430:     arg_block(bv, bi, n);
+1431:     if (item_ct1.get_local_id(2) == 0) {
+1432:         out[row] = bi < n ? bi : 0;   // no value above -inf: 0, as the one-block kernel
+1433:         *counter = 0;
+1434:     }
+1435: }
+1436: 
+
+
+CURRENT SOURCE sycl/src/kernels/cuda/verify_kernels.dp.cpp:1508..1538
+1508: 
+1509: }  // namespace
+1510: 
+1511: uint64_t argmax_rows_scratch_bytes(int n_rows) { return (uint64_t) n_rows * sizeof(ArgRow); }
+1512: 
+1513: void argmax_rows(const float* logits, int n_rows, int n, void* scratch, int32_t* out, void* stream) {
+1514:     if (n_rows <= 0) return;
+1515:     const int nb = std::min(kArgMaxBlocks, std::max(1, (n + 4095) / 4096));
+1516:     const int per_block = (n + nb - 1) / nb;
+1517:     {
+1518:         auto exp_props = sycl::ext::oneapi::experimental::properties{
+1519:             sycl::ext::oneapi::experimental::use_root_sync};
+1520: 
+1521:         strata::q_of(stream)
+1522:             ->parallel_for<dpct_kernel_name<class argmax_rows_kernel_d5bcf6>>(
+1523:                 sycl::nd_range<3>(
+1524:                     sycl::range(1, (unsigned)n_rows, (unsigned)nb) *
+1525:                         sycl::range(1, 1, kArgThreads),
+1526:                     sycl::range(1, 1, kArgThreads)),
+1527:                 exp_props,
+1528:                 [=](sycl::nd_item<3> item_ct1)
+1529:                     [[sycl::reqd_sub_group_size(32)]] {
+1530:                         argmax_rows_kernel(logits, n, per_block,
+1531:                                            (ArgRow *)scratch, out);
+1532:                     });
+1533:     }
+1534:     check("argmax_rows");
+1535: }
+1536: 
+1537: uint64_t row_top_prob_scratch_bytes(int n_rows) { return (uint64_t) n_rows * sizeof(TopRow); }
+1538: 
+
+
+CURRENT SOURCE sycl/include/dpct/atomic.hpp:15..44
+15: 
+16: /// Atomically add the value operand to the value at the addr and assign the
+17: /// result to the value at addr.
+18: /// \param [in, out] addr The pointer to the data.
+19: /// \param operand The value to add to the value at \p addr.
+20: /// \param memoryOrder The memory ordering used.
+21: /// \returns The value at the \p addr before the call.
+22: template <typename T,
+23:           sycl::access::address_space addressSpace =
+24:               sycl::access::address_space::global_space,
+25:           sycl::memory_order memoryOrder = sycl::memory_order::relaxed,
+26:           sycl::memory_scope memoryScope = sycl::memory_scope::device>
+27: inline T atomic_fetch_add(T *addr, T operand) {
+28:   auto atm =
+29:       sycl::atomic_ref<T, memoryOrder, memoryScope, addressSpace>(addr[0]);
+30:   return atm.fetch_add(operand);
+31: }
+32: 
+33: template <sycl::access::address_space addressSpace =
+34:               sycl::access::address_space::global_space,
+35:           sycl::memory_order memoryOrder = sycl::memory_order::relaxed,
+36:           sycl::memory_scope memoryScope = sycl::memory_scope::device,
+37:           typename T1, typename T2>
+38: inline T1 atomic_fetch_add(T1 *addr, T2 operand) {
+39:   auto atm =
+40:       sycl::atomic_ref<T1, memoryOrder, memoryScope, addressSpace>(addr[0]);
+41:   return atm.fetch_add(operand);
+42: }
+43: 
+44: template <sycl::access::address_space addressSpace =
+
+
+CURRENT SOURCE sycl/src/kernels/cuda/sampler.dp.cpp:174..270
+174:     // elements contributes nothing rather than contributing a bogus zero.
+175:     float bv = sycl::bit_cast<float, int>(0xff800000); // -inf
+176:     int best = n_vocab;
+177:     for (int v = item_ct1.get_local_id(2); v < n_vocab;
+178:          v += item_ct1.get_local_range(2)) {
+179:         const float s = apply_penalties(l[v], hit_count(v, dpct_local), p);
+180:         if (s > bv) { bv = s; best = v; }
+181:     }
+182:     for (int off = 16; off > 0; off >>= 1) {
+183:         /*
+184:         DPCT1108: '__shfl_down_sync' was migrated with the experimental
+185:         feature masked sub_group function which may not be supported by all
+186:         compilers or runtimes. You may need to adjust the code.
+187:         */
+188:         const float ov = dpct::experimental::shift_sub_group_left(
+189:             0xFFFFFFFFu, sycl::ext::oneapi::this_work_item::get_sub_group(), bv,
+190:             off);
+191:         /*
+192:         DPCT1108: '__shfl_down_sync' was migrated with the experimental
+193:         feature masked sub_group function which may not be supported by all
+194:         compilers or runtimes. You may need to adjust the code.
+195:         */
+196:         const int oi = dpct::experimental::shift_sub_group_left(
+197:             0xFFFFFFFFu, sycl::ext::oneapi::this_work_item::get_sub_group(),
+198:             best, off);
+199:         if (ov > bv || (ov == bv && oi < best)) { bv = ov; best = oi; }
+200:     }
+201:     auto &sv = *sycl::ext::oneapi::group_local_memory_for_overwrite<float[32]>(
+202:         sycl::ext::oneapi::this_work_item::get_work_group<3>());
+203:     auto &si = *sycl::ext::oneapi::group_local_memory_for_overwrite<int[32]>(
+204:         sycl::ext::oneapi::this_work_item::get_work_group<3>());
+205:     const int warp = (int)(item_ct1.get_local_id(2) >> 5),
+206:               lane = (int)(item_ct1.get_local_id(2) & 31);
+207:     if (lane == 0) { sv[warp] = bv; si[warp] = best; }
+208:     item_ct1.barrier(sycl::access::fence_space::local_space);
+209:     if (warp == 0) {
+210:         const int nw = (int)((item_ct1.get_local_range(2) + 31) >> 5);
+211:         float wv =
+212:             lane < nw ? sv[lane] : sycl::bit_cast<float, int>(0xff800000);
+213:         int wi = lane < nw ? si[lane] : n_vocab;
+214:         for (int off = 16; off > 0; off >>= 1) {
+215:             /*
+216:             DPCT1108: '__shfl_down_sync' was migrated with the experimental
+217:             feature masked sub_group function which may not be supported by all
+218:             compilers or runtimes. You may need to adjust the code.
+219:             */
+220:             const float ov = dpct::experimental::shift_sub_group_left(
+221:                 0xFFFFFFFFu, sycl::ext::oneapi::this_work_item::get_sub_group(),
+222:                 wv, off);
+223:             /*
+224:             DPCT1108: '__shfl_down_sync' was migrated with the experimental
+225:             feature masked sub_group function which may not be supported by all
+226:             compilers or runtimes. You may need to adjust the code.
+227:             */
+228:             const int oi = dpct::experimental::shift_sub_group_left(
+229:                 0xFFFFFFFFu, sycl::ext::oneapi::this_work_item::get_sub_group(),
+230:                 wi, off);
+231:             if (ov > wv || (ov == wv && oi < wi)) { wv = ov; wi = oi; }
+232:         }
+233:         // A tie between two `-inf` candidates leaves `wi == n_vocab`, and the serial version answered 0.
+234:         if (lane == 0) out[t] = (wi < n_vocab) ? wi : 0;
+235:     }
+236: }
+237: 
+238: #if !defined(__HIPCC__)
+239: /// **THE SAME ARGMAX ON A THREAD-BLOCK CLUSTER (sm_90+, S19), FOR THE CALLS WITHOUT PENALTIES.**  One block per
+240: /// token reads its 1 MB row (248,320 logits) on one SM with one load in flight per thread: latency-bound, 40 us per
+241: /// call on an RTX 5070, for every verify window and every draft step.  Here a cluster of `kAmCtas` CTAs shares the
+242: /// row, each thread keeps four loads in flight, and the CTAs' results meet in CTA 0's shared memory (distributed
+243: /// shared memory): 6 us (decode_cluster_parity --bench).
+244: ///
+245: /// The answer is a function of the row alone, so it is the one-block kernel's bit for bit: the LOWEST index whose value
+246: /// is the largest non-NaN value above -inf (each thread walks its elements in ascending order with a strict `>`, and
+247: /// every merge takes the larger value or, on equality, the smaller index - an order-free rule), and 0 when there is
+248: /// none (all -inf / NaN), as there.  NaN never wins a `>`.
+249: ///
+250: /// Barriers: a relaxed cluster arrive at entry, waited before the remote store (CTA 0 must be running); each CTA's
+251: /// result goes to slot `rank` of CTA 0, released by the next arrive; CTAs 1.. then exit (a cluster wait counts the
+252: /// threads that have not exited) and CTA 0 waits, reads its own slots, and writes the token.
+253: constexpr int kAmCtas = 8;      // CTAs per token (the portable cluster size)
+254: constexpr int kAmThreads = 1024;
+255: #if defined(DPCT_COMPATIBILITY_TEMP) && DPCT_COMPATIBILITY_TEMP >= 900
+256: #define STRATA_AM_CLUSTER 1
+257: #else
+258: #define STRATA_AM_CLUSTER 0     // older targets: a trap, never launched (sample_greedy_cluster checks)
+259: #endif
+260: #if STRATA_AM_CLUSTER
+261: __dpct_inline__ void am_take(float s, int v, float &bv, int &best) {
+262:     if (s > bv) { bv = s; best = v; }
+263: }
+264: __dpct_inline__ void am_merge(float ov, int oi, float &bv, int &best) {
+265:     if (ov > bv || (ov == bv && oi < best)) { bv = ov; best = oi; }
+266: }
+267: #endif
+268: // grid (kAmCtas, n_tokens), cluster (kAmCtas, 1, 1), kAmThreads threads
+269: void sampler_greedy_cluster_kernel(const float* __restrict__ logits,
+270:                                                                             int n_vocab, int* __restrict__ out) {
+
+
+CURRENT SOURCE sycl/src/core/mtp.cpp:1138..1157
+1138: bool MtpDrafter::record_post_head(const float* logits, dpct::queue_ptr cs, std::string& err) {
+1139:     using namespace strata::kernels;
+1140:     const int T = 1;
+1141:     const bool sub = dhead_ != nullptr;
+1142:     const int64_t nv = sub ? n_dvocab_ : n_vocab_;
+1143:     try {
+1144:         if (argmax_rows_wanted()) {
+1145:             argmax_rows(logits, T, (int) nv, arg_scratch_, out_ids_, cs);
+1146:         } else {
+1147:             SamplerParams sp;
+1148:             sp.greedy = true;
+1149:             sp.temperature = 0.0f;
+1150:             sample_tokens(logits, T, (int) nv, nullptr, 0, sp, out_ids_, cs);
+1151:         }
+1152:         if (multi_block_head_ops()) row_top_prob_split(logits, T, (int) nv, out_ids_, probs_, top_scratch_, cs);
+1153:         else row_top_prob(logits, T, (int) nv, out_ids_, probs_, cs);
+1154:         if (sub) map_ids(out_ids_, dvocab_, T, cs);
+1155:     } catch (const std::exception& e) {
+1156:         err = std::string("mtp: ") + e.what();
+1157:         return false;

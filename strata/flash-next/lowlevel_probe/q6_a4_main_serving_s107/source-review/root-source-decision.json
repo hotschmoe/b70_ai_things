@@ -1,0 +1,46 @@
+{
+  "utc": "2026-10-15T23:37:17.695458+00:00",
+  "status": "ROOT_GO_APPLY_ONE_TU_AND_ONE_INCREMENTAL_BUILD_THEN_COMPILED_GATE",
+  "actual_models": {
+    "claude-opus-5-5": {
+      "elapsed_s": 29.27514214598341,
+      "session_ids": [
+        "c26cbc95-bbed-461b-b165-8adee1464b9e"
+      ],
+      "exit": 0,
+      "root_full_read": true,
+      "verdict": "GO_ONE_INCREMENTAL_SYCL_BUILD"
+    },
+    "claude-fable-5-1": {
+      "elapsed_s": 45.86620071699144,
+      "session_ids": [
+        "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+      ],
+      "exit": 0,
+      "root_full_read": true,
+      "verdict": "GO_ONE_INCREMENTAL_SYCL_BUILD"
+    }
+  },
+  "upstream_main_and_live_HEAD": "296b59d2f73c8f04a805df29c2fa97655adace78",
+  "PR2511": "OPEN head91b02a5c0fc45e782c02bd13e05204fdc5b0e698 unchanged",
+  "packet_sha256": "fc74d5d02ed8d035d5bf4a57645e0f86b1852cee9bd2f4f0d753ecaf2c0000e4",
+  "source_inverse_and_all_payload_hashes_verified": true,
+  "root_full_read": [
+    "contract",
+    "patch",
+    "sourceproof",
+    "full37494Bpacket",
+    "NativeDense exact allocation/publication and verifier qkv/out/attention call sites",
+    "both actual model answers"
+  ],
+  "guard": "C6/A2/RPW1/SG32/PF0/CENTER0/twoexactshapes/evenblocks/base4/defaultOFF; existing original code/names preserved",
+  "correction": "Opus a-2 preceding-block-d explanation applies to odd-block ql offset0. Other ql/qh prefix reads lie within the same block/row; guarded lower/upper row bounds hold. Runtime guard enforces alignment; no actual pointer value observed.",
+  "compiled_gate": [
+    "Actual buildflags/oneTU-only plan, other archives/objects unchanged.",
+    "Distinct new Info/cache/guard/namepointer/selected image binding; compare actual S104 candidate computational ledger/metadata.",
+    "Default original C6 computationalprefix16384S102/S85 retained, raw postEOTdifferences explicit.",
+    "CENTER registered image retained and compared using old reviewed image; no extra GPU flag sweep."
+  ],
+  "GPU_GO": false,
+  "pending": "Build and selected main image audit; no serving/default promotion based on source."
+}

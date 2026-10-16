@@ -1,0 +1,17 @@
+{
+  "status": "SOURCE_SYNTAX_ONLY_PASS",
+  "python": {
+    "client.py": "AST_PASS",
+    "compare.py": "AST_PASS",
+    "make_configs.py": "AST_PASS",
+    "start_arm.py": "AST_PASS",
+    "stop_and_health.py": "AST_PASS"
+  },
+  "embedded_proc_AST_count": 1,
+  "bash_n_exit": 0,
+  "stop_and_health_byte_exact_S106": true,
+  "marker_matches_source_proposal": true,
+  "configs_generated": false,
+  "script_imports_or_execution": false,
+  "build_GPU_model_CLI_or_HTTP": false
+}

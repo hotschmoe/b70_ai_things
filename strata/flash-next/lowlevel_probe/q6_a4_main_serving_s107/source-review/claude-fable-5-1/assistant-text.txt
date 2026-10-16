@@ -1,0 +1,27 @@
+**GO for one incremental SYCL build of the native MMVQ TU, kernels archive and main link.** No correctness or fallback defect found.
+
+**Eligibility and fallback**
+
+- The branch sits inside the compile-time C6 scope, after the existing CENTER branch, inside the RPW1 and A2 scope, after the packed registry and the wide gate. Every ineligible case falls through to the untouched original launches, as the proof lists.
+- Condition order is right: shapes, even blocks, base alignment and CENTER off are evaluated before the flag, so the marker fires only on a genuinely eligible call. The '1' convention matches the CENTER sibling.
+- The latch lives in a function-local static, so a capture that selects the kernel is stable for the process.
+
+**Alignment and bounds**
+
+Both shapes have even blocks per row, so row strides of 5040 and 2100 keep every row base dword aligned once the matrix base is. The helper's 20-byte window reaches at most block offset 195 and at most two bytes before an odd-index block, never before the row. No tail padding is assumed, which matters because NativeDense publishes an exact-size allocation.
+
+**Kernel body**
+
+The kernel is the S104 body with the name and a static assert; the helper is byte-exact. The discarded A2 branch still references an existing helper, so it compiles. Constants and block types match the originals.
+
+**Main compiler identity requirements, the real gate**
+
+Source equality transfers nothing by itself. Before any GPU:
+
+1. Confirm the main CMake flags for this TU match the private build: precise FP model, per-kernel split, default sub-group 32, the same AOT device and backend options. A different contraction policy would silently change the MAD pattern.
+2. Audit the new registered class in the main binary: host info, cache, guard, name pointer and selected image are distinct. Then check the image: funnel on the five dwords with the bit-1 selects, 48 dp4a, 20 FP MUL, 6 MAD, 36 ADD in the inspected order, six accumulators, XOR 16 to 1, lane-zero stores, SIMD32 and 128 GRF. Register allocation can change inside the larger TU, so a spill or SIMD change is a HOLD.
+3. Confirm the original wide and CENTER images keep their registered names and that the OFF path's computational prefix still matches S102 modulo the known post-EOT words.
+
+**Serving test rule**
+
+Same binary, flag 0 then 1, the S100 gate set. The marker must appear exactly once on ON and never on OFF. If ON shows no marker, the base alignment guard or the matrix types excluded every call. Record that as NOT_REACHED, not as a pass or a candidate failure, and do not relax the guard in the same cycle. Timing from that run stays descriptive.
