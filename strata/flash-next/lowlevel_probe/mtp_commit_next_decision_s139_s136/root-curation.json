@@ -1,0 +1,9 @@
+{
+  "draft_manifest_sha256": "a7e7fc677d12880f08f8d3f1e7832e5a2287bf6fa9a8fb0885075e19dd354aa8",
+  "all_draft_files_verified_before_copy": true,
+  "root_disposition_edits": [
+    "not_authorized_here renamed not_performed_in_this_curation; user already authorizes dependent GPU work",
+    "GDN/conv/KV changes corrected to behavior"
+  ],
+  "actual_model_replies_unchanged": true
+}

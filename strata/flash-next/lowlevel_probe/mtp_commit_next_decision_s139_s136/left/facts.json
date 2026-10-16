@@ -1,0 +1,113 @@
+{
+  "scope": "FIRST retained structurally compatible primary GPU cycle only; source-conditioned tensor roles",
+  "partial_receipt": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/root-partial-analysis.json",
+  "cycle_index": 3,
+  "cycle_events": 5151,
+  "cycle_duration_ms": 56.73325,
+  "left_duration_us": 11600.5,
+  "left_event_count": 2707,
+  "classes": {
+    "gdn_step": {
+      "count": 72,
+      "sum_recorded_service_us": 1166.737
+    },
+    "gdn_conv": {
+      "count": 72,
+      "sum_recorded_service_us": 133.825
+    },
+    "indexer": {
+      "count": 72,
+      "sum_recorded_service_us": 172.36
+    },
+    "event_reset": {
+      "count": 2338,
+      "sum_recorded_service_us": 2135.442
+    }
+  },
+  "anchors": [
+    {
+      "name": "zeCommandListAppendBarrier",
+      "trace_ts_us": 1792125388339539.5,
+      "duration_us": 0.52,
+      "pid": 4294952351,
+      "tid": 4294952351,
+      "id": "140506",
+      "cycle_relative_start_us": 5385.0
+    },
+    {
+      "name": "dpct_kernel_name<strata::kernels::copy_i32_from_mapped(int*, int const*, long, void*)::copy_i32_from_mapped_kernel_a44acc>[SIMD32 {1; 1; 1} {128; 1; 1}]",
+      "trace_ts_us": 1792125388341272.0,
+      "duration_us": 3.75,
+      "pid": 4294952351,
+      "tid": 4294952351,
+      "id": "140507",
+      "cycle_relative_start_us": 7117.5
+    },
+    {
+      "name": "dpct_kernel_name<strata::kernels::copy_indexed(float*, float const*, long, int const*, long, void*)::copy_indexed_kernel_b12e23>[SIMD32 {64; 1; 1} {256; 1; 1}]",
+      "trace_ts_us": 1792125388343379.0,
+      "duration_us": 3.437,
+      "pid": 4294952351,
+      "tid": 4294952351,
+      "id": "140750",
+      "cycle_relative_start_us": 9224.5
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy(D2D)[122880]",
+      "trace_ts_us": 1792125388344084.5,
+      "duration_us": 2.604,
+      "pid": 4294952351,
+      "tid": 4294952351,
+      "id": "140751",
+      "cycle_relative_start_us": 9930.0
+    },
+    {
+      "name": "zeCommandListAppendMemoryCopy(D2D)[122880]",
+      "trace_ts_us": 1792125388344154.5,
+      "duration_us": 1.458,
+      "pid": 4294952351,
+      "tid": 4294952351,
+      "id": "140752",
+      "cycle_relative_start_us": 10000.0
+    },
+    {
+      "name": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {30; 7; 1} {256; 1; 1}]",
+      "trace_ts_us": 1792125388344307.8,
+      "duration_us": 3.645,
+      "pid": 4294952351,
+      "tid": 4294952351,
+      "id": "140753",
+      "cycle_relative_start_us": 10153.25
+    },
+    {
+      "name": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {30; 7; 1} {256; 1; 1}]",
+      "trace_ts_us": 1792125388345043.0,
+      "duration_us": 3.229,
+      "pid": 4294952351,
+      "tid": 4294952351,
+      "id": "140868",
+      "cycle_relative_start_us": 10888.5
+    },
+    {
+      "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+      "trace_ts_us": 1792125388345755.0,
+      "duration_us": 1209.583,
+      "pid": 4294952351,
+      "tid": 4294952351,
+      "id": "140985",
+      "cycle_relative_start_us": 11600.5
+    }
+  ],
+  "coverage_from_sibling_frozen_analysis_ms": {
+    "union": 4.880681,
+    "uncovered": 6.719819,
+    "reset_only": 2.135442
+  },
+  "limitations": [
+    "CPU/GPU/peer clocks unjoined",
+    "uncovered recorded timeline is not proof of hardware idle or CPU cause",
+    "kernel pointers and owner IDs unknown",
+    "EventReset origin/tool perturbation unknown",
+    "no raw trace reread"
+  ]
+}

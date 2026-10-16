@@ -1,0 +1,725 @@
+S139 ACTUAL comparator/root summary:
+{
+  "status": "PASS_MATCHED_DISCRIMINATOR",
+  "checks": {
+    "identity_image_and_effective_native_env": true,
+    "warm": true,
+    "repeat1": true,
+    "repeat2": true,
+    "repeat3": true,
+    "functionals": true,
+    "health_teardown": true,
+    "full_CID_and_NAME_absence": true,
+    "final_diagnostics_complete": true,
+    "final_host_marker_0": true,
+    "C2_runtime_ones_OFF_0": true,
+    "original_parallel_argmax_OFF_0": true,
+    "owner_queues_OFF_0": true,
+    "unrelated_IQ2_multi_OFF_0": true,
+    "pair_graph_OFF_0": true,
+    "unrelated_A4_OFF_0": true,
+    "probability_skip_OFF_0": true,
+    "final_host_marker_1": true,
+    "C2_runtime_ones_OFF_1": true,
+    "original_parallel_argmax_OFF_1": true,
+    "owner_queues_OFF_1": true,
+    "unrelated_IQ2_multi_OFF_1": true,
+    "pair_graph_OFF_1": true,
+    "unrelated_A4_OFF_1": true,
+    "probability_skip_OFF_1": true,
+    "logged_startup_capture_equal": true,
+    "native_loader_provenance": true
+  },
+  "timed_summary": {
+    "pair_wall_median_s": [
+      29.10577500599902,
+      28.73751570301829
+    ],
+    "aggregate_output_tps_median": [
+      103.07232840842296,
+      104.3931573975586
+    ],
+    "per_stream_medians": [
+      [
+        {
+          "ttft_s": 0.9190537759568542,
+          "completion_wall_s": 28.951365590968635,
+          "decode_tps": 53.474005636497665,
+          "whole_request_output_tps": 51.81102754157905
+        },
+        {
+          "ttft_s": 2.11308848898625,
+          "completion_wall_s": 28.892130465013906,
+          "decode_tps": 55.86258853241048,
+          "whole_request_output_tps": 51.91725137114349
+        }
+      ],
+      [
+        {
+          "ttft_s": 0.9252277460182086,
+          "completion_wall_s": 28.493974929966498,
+          "decode_tps": 54.34419644220808,
+          "whole_request_output_tps": 52.64270792989582
+        },
+        {
+          "ttft_s": 2.0966182660195045,
+          "completion_wall_s": 28.522652276034933,
+          "decode_tps": 56.68870353990563,
+          "whole_request_output_tps": 52.58977971204724
+        }
+      ]
+    ]
+  },
+  "pairs": [
+    {
+      "label": "warm",
+      "matched": true,
+      "checks": {
+        "admission_overlap": true,
+        "request_equal": true,
+        "request_fixed_spec_min_p": true,
+        "full_text_equal": true,
+        "SSE_content_equal": true,
+        "output_cap_equal": true,
+        "usage_equal": true,
+        "native_draft_work_equal": true,
+        "native_window_pair_solo_equal": true,
+        "native_reported_rows_equal": true,
+        "logged_capture_layouts_equal": true,
+        "eligible_host_selection": true
+      },
+      "aggregate_output_tps": [
+        74.17482272452892,
+        75.03321805526753
+      ],
+      "pair_wall_s": [
+        6.902611711004283,
+        6.823644424031954
+      ]
+    },
+    {
+      "label": "repeat1",
+      "matched": true,
+      "checks": {
+        "admission_overlap": true,
+        "request_equal": true,
+        "request_fixed_spec_min_p": true,
+        "full_text_equal": true,
+        "SSE_content_equal": true,
+        "output_cap_equal": true,
+        "usage_equal": true,
+        "native_draft_work_equal": true,
+        "native_window_pair_solo_equal": true,
+        "native_reported_rows_equal": true,
+        "logged_capture_layouts_equal": true,
+        "eligible_host_selection": true
+      },
+      "aggregate_output_tps": [
+        103.07232840842296,
+        104.3931573975586
+      ],
+      "pair_wall_s": [
+        29.10577500599902,
+        28.73751570301829
+      ]
+    },
+    {
+      "label": "repeat2",
+      "matched": true,
+      "checks": {
+        "admission_overlap": true,
+        "request_equal": true,
+        "request_fixed_spec_min_p": true,
+        "full_text_equal": true,
+        "SSE_content_equal": true,
+        "output_cap_equal": true,
+        "usage_equal": true,
+        "native_draft_work_equal": true,
+        "native_window_pair_solo_equal": true,
+        "native_reported_rows_equal": true,
+        "logged_capture_layouts_equal": true,
+        "eligible_host_selection": true
+      },
+      "aggregate_output_tps": [
+        103.43116242707653,
+        105.08822204849251
+      ],
+      "pair_wall_s": [
+        29.004798260051757,
+        28.547442724986468
+      ]
+    },
+    {
+      "label": "repeat3",
+      "matched": true,
+      "checks": {
+        "admission_overlap": true,
+        "request_equal": true,
+        "request_fixed_spec_min_p": true,
+        "full_text_equal": true,
+        "SSE_content_equal": true,
+        "output_cap_equal": true,
+        "usage_equal": true,
+        "native_draft_work_equal": true,
+        "native_window_pair_solo_equal": true,
+        "native_reported_rows_equal": true,
+        "logged_capture_layouts_equal": true,
+        "eligible_host_selection": true
+      },
+      "aggregate_output_tps": [
+        101.68616438439963,
+        103.11033020805556
+      ],
+      "pair_wall_s": [
+        29.502538699947763,
+        29.09504793502856
+      ]
+    }
+  ]
+}
+
+q5-c6-marker-s138-curation-draft/20261016_strata_q5_c6_marker_build.md
+# S138: rebuilt C6 marker binding
+
+CONFIG -> Apply only the two C6 block-local identifier edits reviewed in
+[S137](20261016_strata_sycl_sibling_static_marker.md), committed a214916e.
+Native source changes from e25708bf to
+`dd08daf548eab9ab69375ed1702dfa85214bd1431e9957126d12eea51ed569d1`.
+The C2 branch, parser/guards, marker literals, launch arguments and device math
+remain source-exact under the inverse projection. Both actual source reviewers
+accepted a main build conditioned on a narrow rebuilt-host marker check; their
+full responses and filtered identities remain in S137 rather than duplicated.
+
+COMMAND -> One existing-config incremental CPU build in e41, no DRI/network,
+UID1000, four CPUs/threads, disk TMP and the existing persistent offline cache.
+The actual dry plan contains exactly native TU, kernels archive and main link.
+No configure or other source rebuild is claimed. Applied/unchanged source and
+build-state pins were checked before and after. The exact actual root wrapper,
+plan, compiler, cache counters, ownership observations and execution are retained.
+
+Before execution, root saw that the proposed V1 checker assumed LC symbols,
+where the actual object uses section-plus-addend string relocations. The
+manual-host wrapper omitted that automatic checker, retaining a separate
+required host check before GPU. V2 resolved the actual section/addend form.
+The unused V1 helper and exact source delta remain as lineage. This was a
+preexecution source/setup correction, not a failed build or repeated attempt.
+
+RESULT -> Build and tee exited0 with no retry. Total execution99.832075363s;
+Ninja90.933s. Root reported the last three Ninja durations: native57.886s,
+archive0.299s and link32.713s. Offline cache counters moved1314hits/1903misses
+to2923hits/1903misses:1609 additional hits, no additional miss. Those are actual
+counters for this build, not a controlled cache timing or population estimate.
+
+| Frozen output | SHA256 |
+| --- | --- |
+| Main | 6b37aef71607a4217192165523f413063c03d5a3cf042c6dd1031800ca2a6eb2 |
+| Native object | 98d502efe4007fbcf82ba5199cdb10c0e0de425da9a8f90ea9be16ca962c5dd6 |
+| Kernel archive | a1652f48f406acf1823cec8d7881be1b49881434e0fd342dff5b85dedee60227 |
+
+The separate required V2 host check exited0 in a root-reported0.249s. Root read
+the complete facts and both actual logging blocks. C2 guard0x68 references
+C2 text at string-section offset0x2a42 with fwrite length99. C6 guard0x78 now
+references C6 text at0x2b9a with length102. Parser guards remain distinct at
+0x368/0x388, with kernel-info records at0x10e08/0x11020. This corrects the
+specific compiled host marker symptom seen in S134. The actual selected host
+function and root-read disposition are preserved with their exact hashes.
+
+VERDICT -> CPU build and required narrow host-marker binding passed. No new
+device ISA/full-image certification or GPU arithmetic/dispatch proof is claimed.
+S134 remains its original failed marker/null comparison. A later same-NEW-binary
+control/ON finite serving stage must stand on its own identity, exact output/work,
+marker and normal teardown/health evidence; its outcome is not consumed here.
+The marker is host selection evidence only. No automatic serving, retry,
+compiler flag sweep or old-evidence rewrite follows from this build record.
+
+
+s136-verifier-bounded-ranking/findings.md
+# S136: verifier ranking after full saved-cycle reconciliation
+
+CONFIG -> One all-OFF instrumented 64-token C2 request pair, FIRST retained
+source-compatible primary-device cycle3, 5151 bounded events, no truncation.
+The original whole analyzer exited -2 after saved artifacts; global coverage was
+not completed. This note does not turn that attempt into an analyzer PASS.
+
+COMMAND -> `python3 s136-verifier-bounded-ranking/derive.py` reads ONLY the
+5,255,606-byte saved cycles.json, asserts its existing SHA, and sweeps sorted
+interval endpoints. Actual terminal0, 0.093 seconds. No raw trace, CPU/peer clock
+join, model/ELF reads, build, GPU, decoder or model consultation. Source reads
+are the unchanged verifier and existing S125/S44 small evidence.
+
+RESULT -> The missing budget is real in the retained timeline, but it is not
+all hidden MTP arithmetic. Do not select another kernel by treating j1 as the
+whole MTP path or by treating absent trace events as physical idle.
+
+| Same-clock interval | Span ms | Recorded union ms | Uncovered ms |
+| --- | ---: | ---: | ---: |
+| Previous C6 end -> first C2 start (LEFT) | 11.600500 | 4.880681 | 6.719819 |
+| First C2 vocabulary head | 1.209583 | 1.209583 | 0 |
+| First head end -> both selects complete | 0.289479 | 0.276038 | 0.013441 |
+| Both selects -> second C2 start (j1 compatible) | 1.311688 | 1.095440 | 0.216248 |
+| Second C2 vocabulary head | 1.207708 | 1.207708 | 0 |
+| Second head end -> both selects complete | 0.289479 | 0.274789 | 0.014690 |
+| Both selects -> following C6 start (verifier compatible) | 38.569313 | 34.849607 | 3.719706 |
+| Following C6 vocabulary head -> saved cycle end | 2.255500 | 2.255416 | 0.000084 |
+| TOTAL | 56.733250 | 46.049262 | 10.683988 |
+
+Offsets use saved primary-device timestamps relative to cycle start. Adding
+short durations after subtraction avoids rounding at epoch-sized floats. The
+0.062/0.063 us differences from earlier 1.311750/38.569250 arithmetic, and the
+0.084 us final suffix, are timestamp precision, not extra operations.
+
+LEFT includes 2338 `zeCommandListAppendEventReset` intervals with 2.135442 ms
+reset-only coverage, plus previous-window commit kernels and the depth0 fronts.
+The largest absent-record spans are 1.731980 ms (+5.385520 -> +7.117500) and
+0.702063 ms (+9.227937 -> +9.930000). Tooling origin/perturbation of resets is
+UNKNOWN. The forensic agent owns the source-conditioned LEFT call mapping;
+see sibling `s136-headfree-bounded-attribution`. It is incorrect to allocate
+LEFT wholesale to MTP forwards.
+
+The verifier-compatible region begins at second selects141201/141202 ending
+cycle+15.908437 ms. Its FIRST retained event is ep_bump141540 at +19.225500 ms:
+3.317063 ms with no retained primary event. Beyond that first gap, total absent
+coverage is another 0.402643 ms. This is a stronger readiness question than
+blindly calling the entire 38.569 ms arithmetic. No CPU cause, peer wait cause,
+owner identity, GPU stall or hardware-idle conclusion follows from this clock.
+
+## Actual verifier operation ranking
+
+These are sums of measured operation durations inside ONE saved interval,
+not medians, disjoint critical-path costs or attainable speedups. Different
+families overlap and roles remain source-conditioned.
+
+| Family | Calls | Service ms | Coverage with only this family active ms |
+| --- | ---: | ---: | ---: |
+| HC norm/down/reduce/up | 388 | 6.159098 | 6.158148 |
+| Routed GU | 48 | 4.411336 | 4.411067 |
+| Q6 dense | 71 | 3.818719 | 3.767660 |
+| QSA | 480 | 3.448338 | 3.447656 |
+| Routed down | 48 | 3.158937 | 3.158897 |
+| EP wait | 48 | 3.082584 | 1.160050 |
+| Q4 dense | 45 | 2.313627 | 2.066950 |
+| GDN | 180 | 1.505239 | 1.505117 |
+
+Other MMVQ service5.780543 ms and other operations3.096897 ms are retained in
+facts.json. Across all families, multi-family coverage1.923833 ms is explicitly
+kept unallocated. In particular EP wait largely overlaps useful work; removing
+its 3.083 ms duration is not an available 3.083 ms saving.
+
+The largest Q6 shape rows are native_q6k_wide_a2 C6 grid640 (29 calls,
+1.752695 ms) and grid2560 (14 calls,1.154160 ms), together2.906855 ms. Native
+RPW4 grid maps these to M2560 and M10240. Existing S41/S44 tensor headers map
+N6144/M2560 to attention/GDN output-compatible projections and N2560/M10240 to
+qkv-compatible projections. Names/grid do NOT prove each event's tensor.
+Other Q6 shapes account for0.911864 ms; do not silently widen the candidate.
+
+## Source seam and one candidate disposition
+
+Pinned verify.cpp e97ce93a... (full SHA/pins below) shows actual dependencies:
+HC read produces `mixed_` and, when fused quantization is selected, `xq_`;
+GDN qkv consumes xq_ and writes qkv_L_ (L1013-1030). GDN recurrence/norm
+produces y_/optionally xq_; output projection consumes it and writes bo_
+(L1064-1070). QSA attention gate produces attn32_, quantization writes xq_,
+output projection writes bo_ (L1278-1283). HC half1 reads bo_ with apply=true
+and produces mixed_/optionally nat_xq_ (L1289). Routed GU/down consumes nat_xq_,
+uses hit_scratch_, writes parts_; EP return precedes combined consumption
+(L1474-1498). Existing quant-producing fusion means there is not always a
+separate activation-quantization launch to remove.
+
+ONE distinct kernel mechanism remains the parked S125 exact Q6 pre-expansion
+plus multi-output signed-int8 DPAS. It is broader than the closed Q6 A4/load
+shuffle, packed-Q6, GRF/SG tuning and single-SG serial-K DPAS. It preserves each
+native-lane pair of dot16 results and FP parenthesization, uses parallel native
+K partitions, then reproduces the original XOR tree in a second kernel.
+However it adds offline-format ownership, two-launch dependency, INT32 tile
+SLM/barrier, global32-partial scratch and extra retained weight memory. It is
+not a small unproven direct `K32 dot` replacement.
+
+For ONE real S44 `blk.3.attn_output.weight` N6144/M2560/type14, original bytes
+12,902,400; pre-expansion adds16,834,560 bytes; native-lane scratch1,966,080
+bytes. Full29-output deployment alone adds488,202,240 bytes, before scratch;
+current serving headroom is UNKNOWN. Original bytes must remain for existing
+prefill/fallback. N2560/M10240 uses7,864,320 scratch bytes. This materially
+raises integration cost relative to a single runtime operand change.
+
+Cheapest meaningful kernel discriminator IF selected later: ONE representative
+S44 output shape, production GPU-produced Q8 rows, direct public Q6 control,
+then preexpanded candidate plus final native-XOR kernel counted together.
+Compare exact signed-code/scale/d extraction, per-native-lane INT32 dots and
+all consumed FP partials/final output, guards/read-only/tails, A/B/A freshness;
+only then completed-two-kernel timing. Preserve native half-scale products,
+pair-parenthesized FP update/K order and XOR16/8/4/2/1; strict mismatch stops.
+No broad shape sweep, no all-model packing, no compiled-ISA framework before
+a private GPU discriminator. Existing S44 offsets are references, not freshly
+read or rehashed model identity. No candidate source implementation is
+prepared here: S125's tile/reduction and layout are still source feasibility.
+
+VERDICT -> Rank verifier dense work as a real larger pool, but DO NOT yet
+select S125 production work or a paired-forward rewrite from this record.
+The largest unresolved end-to-end lead is the same-clock LEFT6.720 ms and
+post-pair3.317 ms absent-record readiness, with profiler-reset perturbation
+unresolved. Root should choose whether to explain those source/lifecycle
+boundaries first or deliberately parallelize ONE private Q6 output probe.
+Existing HC/GU mechanisms and rejected tuning are not reopened by this census.
+No serving forecast, physical-idle inference or claim of a current GPU win.
+
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp SHA256 e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2 L3060-3150
+    std::fprintf(stderr, "strata verify: captured the batch window over slots %s\n", list.c_str());
+    return true;
+}
+catch (sycl::exception const &exc) {
+  std::cerr << exc.what() << "Exception caught at file:" << __FILE__
+            << ", line:" << __LINE__ << std::endl;
+  std::exit(1);
+}
+
+bool Verifier::capture_commit_batch(const int *rows, int S, int hbase,
+                                    std::string &err) try {
+    dpct::experimental::command_graph_exec_ptr &cex =
+        commit_bm_[bkey(rows, S, hbase)];
+    if (cex != nullptr) return true;
+    using namespace strata::kernels;
+    const ModelGeometry& g = *g_;
+    const QsaShapes s = shapes_of(g);
+    const int64_t C = g.ssm_conv_channels, HV = g.ssm_v_heads, ZV = g.ssm_value_dim, ID = g.idx_key_dim, MT = max_t_;
+    const int64_t CB = 2 + MT, nQ = g.n_qsa_layers();
+    const uint64_t gdn_floats = (uint64_t) g.ssm_state_size * g.ssm_v_heads * g.ssm_state_size +
+                                (uint64_t) g.ssm_conv_channels * (g.ssm_d_conv - 1);
+    const int64_t TS = (s.idx_block - 1) * ID;
+    const int64_t HS = (int64_t) NG_HIST * NG_HC_DIM;
+    if (DPCT_CHECK_ERROR(dpct::experimental::begin_recording(cs_)) != 0) {
+        err = "verify: begin batch commit capture failed";
+        return false;
+    }
+    bool ok = true;
+    try {
+        for (int t = 0; t < S; ++t)
+            if (t == 0 || rows[t] != rows[t - 1])
+                copy_i32_from_mapped(commitb_ + (size_t) rows[t] * CB, m_commitb_ + (size_t) rows[t] * CB, CB, cs_);
+        int64_t qsa_index = 0, gdn_index = 0;
+        for (int64_t l = 0; l < lb_; ++l) (is_qsa_layer(g, l) ? qsa_index : gdn_index) += 1;
+        for (int64_t l = lb_; l < le_ && ok; ++l) {
+            const LayerView v(*wt_, l);
+            if (!is_qsa_layer(g, l)) {
+                const WeightRef* wnm = need(v, "ssm_norm.weight", err);
+                if (!wnm) { ok = false; break; }
+                for (int t = 0; t < S;) {
+                    const int first = t;
+                    while (t < S && rows[t] == rows[first]) ++t;
+                    SessionState& sx = *slots_[(size_t) rows[first]];
+                    const int32_t* keep = commitb_ + (size_t) rows[first] * CB;
+                    float* state = sx.gdn_state + (size_t) (gdn_index - sx.gdn_ord0) * gdn_floats;
+                    float* conv = state + (uint64_t) g.ssm_state_size * g.ssm_v_heads * g.ssm_state_size;
+                    gdn_conv_commit(conv, qkv_L_ + (size_t) gdn_index * MT * C + (size_t) first * C,
+                                    (int) C, keep, cs_);
+                    gdn_step_norm_multi(state, h_L_ + (size_t) gdn_index * MT * C + (size_t) first * C, (int) C,
+                                        gate_L_ + (size_t) gdn_index * MT * HV + (size_t) first * HV,
+                                        beta_L_ + (size_t) gdn_index * MT * HV + (size_t) first * HV,
+                                        z_ + (size_t) first * ZV, (const float*) wnm->data, EPS,
+                                        y_dummy_ + (size_t) first * ZV, (int) g.ssm_k_heads,
+                                        (int) HV, t - first, keep, cs_,
+                                        t - first > 1 ? t - first : 0);   // a 1-row group keeps the 0.1.39 kernel
+                }
+                ++gdn_index;
+            } else {
+                const WeightRef* wikn = need(v, "indexer.k_norm.weight", err);
+                if (!wikn) { ok = false; break; }
+                for (int t = 0; t < S;) {
+                    const int first = t;
+                    while (t < S && rows[t] == rows[first]) ++t;
+                    const QsaState& st = slots_[(size_t) rows[first]]->qsa_states[qsa_index];
+                    copy_from_mapped(st.idx_tail, tail_snap_b_ + ((size_t) rows[first] * nQ + qsa_index) * TS,
+                                     TS, cs_);
+                    const QsaIndexerBuffers ib{st.idx_tail, st.idx_dead, st.idx_pooled, st.idx_block_pos};
+                    for (int u = first; u < t; ++u)
+                        native_qsa_indexer_append(idx_raw_L_ + (size_t) (qsa_index * MT + u) * ID,
+                                                  commitb_ + (size_t) rows[first] * CB + 2 + (u - first),
+                                                  0, (const float*) wikn->data, EPS, ib, s, st.max_cells,
+                                                  rope_scaling(), cs_);
+                }
+                ++qsa_index;
+            }
+        }
+        if (ok && ss_->ple.ready() && ple_stage())
+            for (int t = 0; t < S;) {
+                const int first = t;
+                while (t < S && rows[t] == rows[first]) ++t;
+                copy_indexed(slots_[(size_t) rows[first]]->ple_hist, hist_snap_ + (size_t) first * HS,
+                             HS, commitb_ + (size_t) rows[first] * CB + 1, HS, cs_);
+            }
+    } catch (const std::exception& e) {
+        err = std::string("verify batch commit: ") + e.what();
+        ok = false;
+    }
+    dpct::experimental::command_graph_ptr graph = nullptr;
+    const dpct::err0 ce =
+        DPCT_CHECK_ERROR(dpct::experimental::end_recording(cs_, &graph));
+    if (!ok) {
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_qsa_indexer.dp.cpp SHA256 133027606e4dd23afb7b7a463d756d27fe4f312b10a82f884abfb0bcddedd465 L40-205
+              "native_qsa_indexer is compiled for core/geometry.hpp");
+inline float warp_sum(float x) {
+#pragma unroll
+    for (int offset = 16; offset; offset >>= 1)
+        /*
+        DPCT1108: '__shfl_xor_sync' was migrated with the experimental
+        feature masked sub_group function which may not be supported by all
+        compilers or runtimes. You may need to adjust the code.
+        */
+        x += dpct::experimental::permute_sub_group_by_xor(
+            0xffffffffu, sycl::ext::oneapi::this_work_item::get_sub_group(), x,
+            offset);
+    return x;
+}
+// TAB (#280, STRATA_ROPE_TABLE=1): the angles from the session's float64 table.  The host launches <false> whenever
+// no table applies - the default - so the default kernel is 0.1.31's code exactly (the table read is not in it;
+// with it merely skipped at run time, the compiled default path changed its results).
+template <bool TAB>
+__dpct_inline__ void
+append(const float *__restrict__ raw, const int32_t *__restrict__ pos_dev,
+       int pos_stride, int n_steps, int pos_base,
+       const float *__restrict__ gamma, float epsilon, float *__restrict__ tail,
+       float *__restrict__ dead, float *__restrict__ pooled,
+       int32_t *__restrict__ block_pos, int max_cells, float theta_scale,
+       float freq_scale, float corr_low, float corr_high, float ext_factor,
+       float mscale, const int32_t *__restrict__ mtab, RopeTab rt) {
+    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+auto &values = *sycl::ext::oneapi::group_local_memory_for_overwrite<float[D]>(
+    sycl::ext::oneapi::this_work_item::get_work_group<3>());
+    auto &partials =
+        *sycl::ext::oneapi::group_local_memory_for_overwrite<float[32]>(
+            sycl::ext::oneapi::this_work_item::get_work_group<3>());
+    const int d = item_ct1.get_local_id(2);
+    for (int step_idx = 0; step_idx < n_steps; ++step_idx) {
+        const int pos = pos_dev[(std::size_t) step_idx * pos_stride];
+        if (pos >= 0 && pos < max_cells) {
+            const float* raw_step = raw + (std::size_t) step_idx * D;
+            const int slot = pos % R;
+            float incoming = 0.0f;
+            if (d < D) {
+                // SET_ROWS stores F16; GET_ROWS expands those exact values to F32.
+                incoming =
+                    sycl::vec<sycl::half, 1>(
+                        sycl::vec<float, 1>(raw_step[d])
+                            .convert<sycl::half, sycl::rounding_mode::rte>()[0])
+                        .convert<float, sycl::rounding_mode::automatic>()[0];
+                if (slot < R - 1) tail[slot * D + d] = incoming;
+            }
+            if (pos == 0 || slot == R - 1) {
+                float mean = 0.0f;
+                if (d < D) {
+                    // The spare's four gather indices all name cell zero. Completed blocks
+                    // use chronological slices; each graph ADD materializes an F32 sum.
+                    float sum = pos == 0 ? incoming : tail[d];
+#pragma unroll
+                    for (int j = 1; j < R; ++j)
+                        /*
+                        DPCT1013: The rounding mode could not be specified
+                        and the generated code may have different accuracy than
+                        the original code. Verify the correctness. SYCL math
+                        built-in function rounding mode is aligned with OpenCL
+                        C 1.2 standard.
+                        */
+                        sum = sum + (pos == 0 || j == R - 1 ? incoming
+                                                             : tail[j * D + d]);
+                    /*
+                    DPCT1013: The rounding mode could not be specified and
+                    the generated code may have different accuracy than the
+                    original code. Verify the correctness. SYCL math built-in
+                    function rounding mode is aligned with OpenCL C 1.2
+                    standard.
+                    */
+                    mean = sycl::fma(0.25f, sum,
+                                     0.0f); // SCALE includes a zero bias.
+                }
+                float square_sum = 0.0f;
+                if (d < D) square_sum += mean * mean;
+                square_sum = warp_sum(square_sum);
+                const int lane = d % 32;
+                if (lane == 0) partials[d / 32] = square_sum;
+                /*
+                DPCT1118: SYCL group functions and algorithms must be
+                encountered in converged control flow. You may need to adjust
+                the code.
+                */
+                /*
+                DPCT1065: Consider replacing sycl::nd_item::barrier() with
+                sycl::nd_item::barrier(sycl::access::fence_space::local_space)
+                for better performance if there is no access to global memory.
+                */
+                item_ct1.barrier();
+                square_sum = lane < THREADS / 32 ? partials[lane] : 0.0f;
+                square_sum = warp_sum(square_sum);
+                const float scale = sycl::rsqrt(square_sum / D + epsilon);
+                if (d < D) values[d] = scale * mean * gamma[d];
+                /*
+                DPCT1118: SYCL group functions and algorithms must be
+                encountered in converged control flow. You may need to adjust
+                the code.
+                */
+                /*
+                DPCT1065: Consider replacing sycl::nd_item::barrier() with
+                sycl::nd_item::barrier(sycl::access::fence_space::local_space)
+                for better performance if there is no access to global memory.
+                */
+                item_ct1.barrier();
+                if (d < D) {
+                    const int b = pos / R;
+                    const int rope_pos = pos == 0 ? 0 : pos_base + R * b;
+                    float y = values[d];
+                    if (d < ROT) {
+                        const int pair = d % (ROT / 2);
+                        // The spare (pos == 0) keeps its zero angle; under YaRN the mscale magnitude still rides in
+                        // through cos(0) - which is exactly what the queries are scaled by, so the top-k is unmoved.
+                        float c, s;
+                        if (!(TAB && rope_tab_cs(rt, pos == 0 ? 0 : mrope_pos(mtab, rope_pos, pair), pair, c, s))) {
+                            const float theta_extrap =
+                                (pos == 0 ? 0
+                                          : mrope_pos(mtab, rope_pos, pair)) *
+                                dpct::pow(theta_scale, float(pair));
+                            rope_scaled_angle(theta_extrap, freq_scale, corr_low, corr_high, ext_factor, mscale, pair, c, s);
+                        }
+                        const float a = values[pair], z = values[pair + ROT / 2];
+                        y = d < ROT / 2 ? a * c - z * s : a * s + z * c;
+                    }
+                    pooled[std::size_t(b) * D + d] = y;
+                    if (pos == 0) dead[d] = y;
+                    else pooled[std::size_t(b + 1) * D + d] = dead[d];
+                    if (d == 0 && pos != 0) *block_pos = rope_pos;
+                }
+            }
+        }
+        /*
+        DPCT1118: SYCL group functions and algorithms must be encountered in
+        converged control flow. You may need to adjust the code.
+        */
+        /*
+        DPCT1065: Consider replacing sycl::nd_item::barrier() with
+        sycl::nd_item::barrier(sycl::access::fence_space::local_space) for
+        better performance if there is no access to global memory.
+        */
+        if (n_steps > 1) item_ct1.barrier();
+    }
+}
+// ---- C-2: the batched append.  The pooled key of a completed block b (its last cell pos = 4b+3), computed with
+// the single append's arithmetic: keys rounded through F16, summed tail[0]+tail[1]+tail[2]+incoming in that order,
+// the RMS norm, gamma, the rotation at pos_base + 4b.  `k(j)` is the key of the block's cell j: a row of this batch
+// (cell >= p0) or the tail the previous batch left (cell < p0).  Only the batch's last completed block writes the
+// spare after it (every earlier one's is overwritten by the next block in order).
+template <bool TAB>
+__dpct_inline__ float
+pooled_value(const float *values, int d, int rope_pos, float theta_scale,
+             float freq_scale, float corr_low, float corr_high,
+             float ext_factor, float mscale, const int32_t *mtab, bool zero_pos,
+             const RopeTab &rt) {
+    float y = values[d];
+    if (d < ROT) {
+        const int pair = d % (ROT / 2);
+        // The same rotation the single append applies, rope_scaling.hpp's helper shared: under none this is
+        // today's cosf/sinf; under linear/YaRN the pooled keys move with the cache's K, and the spare's zero
+        // angle carries the mscale magnitude through cos(0) exactly as the single append's does.
+        float c, s;
+        if (!(TAB && rope_tab_cs(rt, zero_pos ? 0 : mrope_pos(mtab, rope_pos, pair), pair, c, s))) {
+            const float theta_extrap =
+                (zero_pos ? 0 : mrope_pos(mtab, rope_pos, pair)) *
+                dpct::pow(theta_scale, float(pair));
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_qsa_indexer.dp.cpp SHA256 133027606e4dd23afb7b7a463d756d27fe4f312b10a82f884abfb0bcddedd465 L379-474
+void native_qsa_indexer_append_steps(const float* raw, const int32_t* relative_pos_device,
+                                     int pos_stride, int n_steps, int32_t pos_base,
+                                     const float* gamma, float epsilon, const QsaIndexerBuffers& b,
+                                     const QsaShapes& s, int64_t max_cells, const RopeScaling& scaling, void* stream) {
+    if (n_steps <= 0) return;
+    if (!stream || s.idx_dim != D || s.idx_block != R || s.n_rot != ROT ||
+        max_cells < 1 || max_cells > INT32_MAX || pos_base < 0 || pos_base % R ||
+        int64_t(pos_base) + max_cells > INT32_MAX || !std::isfinite(epsilon) || epsilon <= 0.0f ||
+        rope_scaling_invalid(scaling) != nullptr)
+        throw std::invalid_argument("native QSA indexer requires fixed geometry, aligned position base, positive capacity/epsilon, valid frequency/scaling and explicit stream");
+    const std::size_t pos_span = (n_steps == 1 || pos_stride <= 0) ? 4 : (std::size_t(n_steps - 1) * pos_stride + 1) * 4;
+    const Span spans[] = {{raw,std::size_t(n_steps)*D*4},{relative_pos_device,pos_span},{gamma,D*4},{b.tail,(R-1)*D*4},
+        {b.dead,D*4},{b.pooled,std::size_t(max_cells/R+1)*D*4},{b.block_pos,4}};
+    for (const auto& span : spans) validate(span);
+    for (int i = 0; i < 7; ++i) for (int j = i + 1; j < 7; ++j)
+        if (overlaps(spans[i], spans[j])) throw std::invalid_argument("native QSA indexer buffers overlap");
+    const float theta_scale = powf((float) scaling.freq_base, -2.0f / ROT);
+    const RopeKernelArgs k = scaling.kernel_args(ROT);   // none: the identity constants
+    const RopeTab rt = rope_table_for(scaling);
+    if (rt.cos != nullptr)
+    {
+        auto exp_props = sycl::ext::oneapi::experimental::properties{
+            sycl::ext::oneapi::experimental::use_root_sync};
+
+        ((sycl::queue *)(strata::q_of(stream)))
+            ->submit([&](sycl::handler &cgh) {
+                auto mrope_table_ct18 = mrope_table();
+
+                cgh.parallel_for<dpct_kernel_name<class append_182f95,
+                                                  dpct_kernel_scalar<true>>>(
+                    sycl::nd_range<3>(sycl::range(1, 1, THREADS),
+                                      sycl::range(1, 1, THREADS)),
+                    exp_props,
+                    [=](sycl::nd_item<3> item_ct1)
+                        [[sycl::reqd_sub_group_size(32)]] {
+                            append<true>(raw, relative_pos_device, pos_stride,
+                                         n_steps, pos_base, gamma, epsilon,
+                                         b.tail, b.dead, b.pooled, b.block_pos,
+                                         int(max_cells), theta_scale,
+                                         k.freq_scale, k.corr_low, k.corr_high,
+                                         k.ext_factor, k.attn_factor,
+                                         mrope_table_ct18, rt);
+                        });
+            });
+    } else {
+        auto exp_props = sycl::ext::oneapi::experimental::properties{
+            sycl::ext::oneapi::experimental::use_root_sync};
+
+        ((sycl::queue *)(strata::q_of(stream)))
+            ->submit([&](sycl::handler &cgh) {
+                auto mrope_table_ct18 = mrope_table();
+
+                cgh.parallel_for<dpct_kernel_name<class append_182f95,
+                                                  dpct_kernel_scalar<false>>>(
+                    sycl::nd_range<3>(sycl::range(1, 1, THREADS),
+                                      sycl::range(1, 1, THREADS)),
+                    exp_props,
+                    [=](sycl::nd_item<3> item_ct1)
+                        [[sycl::reqd_sub_group_size(32)]] {
+                            append<false>(raw, relative_pos_device, pos_stride,
+                                          n_steps, pos_base, gamma, epsilon,
+                                          b.tail, b.dead, b.pooled, b.block_pos,
+                                          int(max_cells), theta_scale,
+                                          k.freq_scale, k.corr_low, k.corr_high,
+                                          k.ext_factor, k.attn_factor,
+                                          mrope_table_ct18, rt);
+                        });
+            });
+    }
+    /*
+    DPCT1010: SYCL uses exceptions to report errors and does not use the
+    error codes. The cudaGetLastError function call was replaced with 0. You
+    need to rewrite this code.
+    */
+    const auto error = 0;
+    /*
+    DPCT1009: SYCL reports errors using exceptions and does not use error
+    codes. Please replace the "get_error_string_dummy(...)" with a real
+    error-handling function.
+    */
+    /*
+    DPCT1001: The statement could not be removed.
+    */
+    /*
+    DPCT1000: Error handling if-stmt was detected but could not be
+    rewritten.
+    */
+    if (error !=
+        0) throw std::runtime_error(dpct::get_error_string_dummy(error));
+}
+
+void native_qsa_indexer_append(const float* raw, const int32_t* relative_pos_device, int32_t pos_base,
+                               const float* gamma, float epsilon, const QsaIndexerBuffers& b,
+                               const QsaShapes& s, int64_t max_cells, const RopeScaling& scaling, void* stream) {
+    native_qsa_indexer_append_steps(raw, relative_pos_device, 0, 1, pos_base, gamma, epsilon, b, s, max_cells, scaling, stream);
+}
+
+ROOT SOURCE-CONDITIONED SEMANTICS: 48layers=36GDN+12QSA, contiguous batch row groups 1,1,1,0,0,0. GDN72step+72conv are 36layers*2owners, not three full copies; state-only recurrence replays accepted keep and stores final state. Indexer72=12layers*6proposedrows. pos=-1 rejects skipped device-side. Candidate replaces group3 single-row native_qsa_indexer_append calls with SAME existing native_qsa_indexer_append_steps n=3,pos_stride=1; preserve tail snapshot copy, owners/positions, restore PLE/hist/KV. Kernel endstepbarrier exists; source equivalence is not compiled FP proof. Minimal private GPU full buffers+guards+read-only A/B/A, crossing blocks/pos0/negative rejects/partial keeps/two owners/graph then finite paired timing, no model serve until pass. Main source prep separate defaultOFF. No candidate build/GPU yet. Root owns GPU; no other orchestrator. User asks skip redundant CPU, actual GPU soon.

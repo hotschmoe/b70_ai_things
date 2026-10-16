@@ -1,0 +1,120 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 61.40405546902912,
+  "launch_exception": null,
+  "source_packet_sha256": "e632717da59afdeb3f11a4ed96ccf91a16073ad5bf927861c8317bad29be6189",
+  "source_packet_unchanged": true,
+  "result_events": [
+    {
+      "duration_api_ms": 1681290,
+      "stop_reason": "end_turn",
+      "session_id": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "total_cost_usd": 11.0979794,
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 18389,
+        "cache_read_input_tokens": 745039,
+        "output_tokens": 4279,
+        "output_tokens_details": {
+          "thinking_tokens": 2154
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 18389,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 4279,
+            "cache_read_input_tokens": 745039,
+            "cache_creation_input_tokens": 18389,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 18389
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 72,
+          "outputTokens": 127654,
+          "thinkingTokens": 67340,
+          "cacheReadInputTokens": 12211897,
+          "cacheCreationInputTokens": 762779,
+          "webSearchRequests": 0,
+          "costUSD": 11.0979794,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "permission_denials": [],
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "fast_mode_disabled_reason": "sdk_opt_in_required",
+      "subagent_stats": {
+        "spawned": 0,
+        "requested": {
+          "background": 0,
+          "foreground": 0,
+          "unset": 0
+        },
+        "started_in_background": 0,
+        "max_depth": 0,
+        "spawned_by_subagents": 0,
+        "completed": 0,
+        "failed": 0,
+        "killed": {
+          "parent": 0,
+          "user": 0,
+          "system": 0
+        },
+        "refused": {
+          "depth_limit": 0,
+          "concurrency_limit": 0,
+          "budget": 0
+        },
+        "by_type": {}
+      },
+      "safety_stops": 0,
+      "is_error": false,
+      "num_turns": 1,
+      "subtype": "success",
+      "api_error_status": null,
+      "result": "Model ID: claude-opus-5-5\n\nS139 OBSERVATIONS (Q5 C6 runtime ones on the S138 binary)\n\n- **Gates:** all passed. Text, SSE, usage, native draft work, windows, pair/solo counts, rows and captures were exact in the warm-up and in every timed pair. The markers were correct, and teardown and health passed.\n- **Numbers:** aggregate median 103.07 to 104.39 tok/s (+1.28%), and all three timed pairs were positive (+1.28%, +1.60%, +1.40%). Per-stream decode went from about 53.5/55.9 to about 54.3/56.7.\n- **Scope:** one fixed OFF-then-ON sequence with three nested pairs. Descriptive only.\n- **Inference:** the C6 verifier head is on the per-window path, so it reaches more of the cycle than the C2 MTP head (S130: +0.66%).\n- **Disposition:** keep default OFF and retain it. Note it as the strongest small kernel result so far. Fold it into a later default/integration decision rather than promoting it now.\n\nPROPOSAL 1: QSA COMMIT INDEXER GROUPING. Source GO; a private GPU check first.\n\nObservations (source):\n- Inside `capture_commit_batch`, each QSA layer and owner group issues one `native_qsa_indexer_append` per proposed row, 72 per C2 commit (12 layers \u00d7 6 rows).\n- `native_qsa_indexer_append` is already `append_steps(..., n_steps=1, ...)`.\n- The keep vector entries `commitb_ + row*CB + 2 + (u-first)` are contiguous int32, so pos_stride = 1 is valid.\n- The raw rows `idx_raw_L_ + (qsa_index*MT + u)*ID` are contiguous with stride D, which the shape check enforces (`s.idx_dim == D`).\n\nWhy the grouping is low-risk:\n- The same registered kernel image (`append_182f95<false>`) runs the per-step body. Only the runtime loop count changes. No new device code is compiled.\n- **Within a step:** each thread d writes and reads only its own column of tail, dead and pooled; block_pos is written by d == 0. Positions are uniform across the work-group, so the inner barriers are reached in converged control flow.\n- **Across steps:** the end-of-step work-group barrier (global and local fence) orders step k's tail writes before step k+1's reads. Today that ordering comes from kernel boundaries.\n- Rejected rows are trailing (keep is -1 beyond n) and are skipped on the device in both forms.\n\nInference: about 48 fewer tiny kernel nodes per commit graph. The actual saving is unknown.\n\nSmall conditions:\n- **Selection:** a latched default-OFF flag read before the first `capture_commit_batch`. The commit graph cache key (rows, S, hbase) does not include the mode, so the mode must not change within a process.\n- **Scope:** group only the contiguous run `[first, t)` per owner. Keep the `tail_snap_b_` copy before the call, the per-owner `QsaState` buffers, the GDN commit, the PLE history restore, and the error path exactly as they are.\n- **Private GPU check (no model):** one tiny leaf that links the existing kernels archive and compares `append` \u00d7 n against `append_steps(n)` on identical starting tail, dead, pooled and block_pos buffers. Cases:\n  - n = 1..6;\n  - a block boundary crossing (slot R-1);\n  - pos = 0;\n  - trailing \u22121 rejects;\n  - partial keep;\n  - two independent owners;\n  - eager and graph A/B/A.\n\n  Pass requires full-byte equality of all four buffers plus guards and read-only raw, pos and gamma. Stop at the first mismatch.\n\n  This is the only direct evidence of indexer state bytes; served exactness alone checks them only indirectly.\n- **Then:** the main source change, an incremental build (the expected actions are the verify.cpp compile, the engine archive and the link; confirm with a dry plan), and one same-binary OFF/ON matched serving comparison with the existing gates.\n- **Preservation:** true RAM eviction and recovery, restore of accepted state, and PLE/history restoration are untouched by construction (only the commit graph's append calls change). The serving comparison must still pass its functionals.\n\nPROPOSAL 2: ATTRIBUTE THE 3.3 ms POST-PAIR GAP. CPU-only analysis of data already collected; no new GPU run.\n\nObservation:\n- In S136, on one clock, the second pair selects complete at +15.908 ms.\n- The first retained primary event in the verifier region is ep_bump at +19.226 ms: 3.317 ms with no recorded GPU event.\n- The cycle's LEFT interval also has 6.72 ms uncovered.\n- The S136 CPU ring holds 820 complete HOST_BOUNDARY records with 0 dropped.\n\nAction:\n- Read the existing ring only, in ordinal order, for one bounded cycle:\n  `pair_return` \u2192 slot copy / `slot_copy_begin` \u2192 `verify_enter` \u2192 `stage_batch` \u2192 `verify_submit_begin`.\n- Use CPU steady-clock spans only, with no CPU/GPU time join.\n- Report which host stages carry multi-millisecond spans. Candidates from source (to test against the data):\n  - the per-slot `memcpy(...).wait()` of residual rows;\n  - staging, including mapped writes and fences;\n  - EP plan and inbox preparation.\n\nStop:\n- If the host spans are small: record that the gap is not host-explained on this evidence, and do not infer GPU idle.\n- If one host stage dominates: the next source change targets that stage. For example, overlap the slot residual copy with staging, keeping accepted-state order.\n\nORDER\n\n1. The tiny append-grouping GPU check, a few minutes in one lease. In parallel, the CPU ring read for proposal 2.\n2. If the check passes: the main build and the OFF/ON serving pair for grouping.\n3. Choose the next host-readiness change from proposal 2's result.\n\nKeep S125 Q6 pre-expansion and the paired-HC rewrite parked until these simpler per-cycle items are resolved.",
+      "ttft_ms": 33553,
+      "type": "result",
+      "duration_ms": 60382,
+      "uuid": "2157c819-9959-4a39-b11f-368f0a9acf40",
+      "ttft_stream_ms": 3099,
+      "time_to_request_ms": 134,
+      "first_content_frame_ms": 3099,
+      "queued_turn_count": 0,
+      "result_index": 0
+    }
+  ],
+  "parse_errors": [],
+  "retries": 0
+}

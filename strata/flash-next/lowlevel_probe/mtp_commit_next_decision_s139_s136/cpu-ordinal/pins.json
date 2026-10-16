@@ -1,0 +1,14 @@
+{
+  "analysis": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/analysis/cpu/analysis.json",
+    "bytes": 397571,
+    "sha256": "0a28e217b9551cdd58fcee5e10166732c1c2c4ddb51451127f4d6d6228128d49"
+  },
+  "source_sha256": {
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2",
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp": "452a051e3a2219d0c6a00c8cdf795b798e763fcc793fbbb4dff1b4dda7903aff",
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp": "6433d750e414aeb9c71135257ae40a8f9e38ea661537c251b50cabdbc2217d83"
+  },
+  "selection": "Existing conservative16 replay windows;14 adjacent same-dump replay transitions. No GPU timestamp join.",
+  "validation": "820 records,dropped0 from saved validation.json; no raw trace or new ring parse."
+}

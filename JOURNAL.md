@@ -25661,3 +25661,20 @@ no promotion/population/general stability/deviceISA causal claim.
 S132private larger gain and S134failed marker remain separate. No
 retime/retry/extra baseline/cache campaign. Actual postmodels pending
 at curation cutoff. See docs/20261016_strata_q5_c6_serving.md.
+
+
+## 2026-10-16 S139/S136: actual-model decision and commit readiness
+
+CONFIG -> Closed S139 finite serving and S136 partial saved-data profile.
+COMMAND -> Own-session tools-disabled actual Opus5.5/Fable5.1 onceeach,
+37285B frozen packet e632717d; existing CPU ring/source ordinal audit.
+RESULT -> Actual claude-opus-5-5 61.404055s and claude-fable-5-1
+64.122247s exit0, root fullread. Both GO existing QSA steps privateoracle
+then conditional defaultOFFmain. LEFT72GDN=36layers*2owners, recurrence
+replay/onefinalstate; indexer72=12layers*6rows inclrejectednegative.
+CPU handoff-toPLE30.1475us, verifiersubmit3.2213425ms; clocksUNJOINED.
+VERDICT -> Preserve strict restoredtail/stalepooled/rejects/group/PLE
+ordering. No optionalISAaudit/rawreparse/repeatedbaseline. Correct model
+first-positive/strongest/reach claims; no population/promotion. Full200k
+4conversation RAM campaign deferred to selected winner, not waived. See
+docs/20261016_strata_mtp_commit_next_decision.md.

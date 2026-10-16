@@ -1,0 +1,19 @@
+{
+  "status": "FROZEN_CPU_ORDINAL_ONLY_NO_CLOCK_JOIN",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-cpu-handoff-ordinal-audit",
+  "files": {
+    "findings.md": {
+      "bytes": 2220,
+      "sha256": "8a35af83115907b4f238821b93091bfbdb3e41b3c22870f1ce819ef21417b500"
+    },
+    "pins.json": {
+      "bytes": 942,
+      "sha256": "4a78ab6cf13c089d3a053506a03ef171a955469f95fe0ddbaf5ee4afd1f93cf6"
+    },
+    "selected-records.json": {
+      "bytes": 1498,
+      "sha256": "6c47edbf7b824949c91270d20693a9b6895ff1848ad7f0271fefe8578dffcafc"
+    }
+  },
+  "payload_bytes": 4660
+}

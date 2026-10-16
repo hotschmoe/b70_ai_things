@@ -1,0 +1,25 @@
+**S139 reading**
+
+Observed: all gates matched, C6 marker correct once on ON, aggregate +1.28 percent with all three pairs positive. Inference: this is the first kernel-side flag whose serving delta is consistent in sign across pairs, but it is one nested OFF then ON sequence and stays default OFF. No promotion.
+
+**S136 reading**
+
+Observed: of a 56.7 ms cycle, 10.7 ms has no retained primary-device event, 6.7 ms of it between the previous verifier head and the first C2 head, 3.3 ms immediately after the second selects. Reset events dominate the left region and their perturbation is unknown. Inference: the largest unexplained end-to-end item is readiness and launch structure around the commit and draft boundary, not any single dense kernel. Absent events are not idle. Do not pick S125 from this.
+
+**Next measured change 1: QSA indexer commit grouping. GO for the private GPU oracle, then a same-binary serving run.**
+
+Source facts: the commit graph issues one indexer append per proposed row, 12 layers times 6 rows, each a single work-group launch. The steps entry point already exists, takes a position stride, loops steps inside one work-group, and has the end-of-step barrier. In the commit, raw rows and positions for one owner group are consecutive, so stride 1 and the same base pointers apply. Rejected rows are negative positions and are skipped per step in both forms. Tail, dead and pooled are read and written by the same lane index across steps, and the only cross-lane data, the local values array, is barrier-protected. The host validation and overlap checks cover the wider spans. Source arithmetic per step is identical; compiled FP equivalence is what the oracle tests.
+
+Mechanism: 72 launches become 24 per commit. Whether that moves the cycle is unknown and is exactly the readiness question S136 raised.
+
+Private oracle, one card, no model serve: real indexer geometry, two owners, group sizes 1 to 3, positions crossing a block boundary, position zero, negative rejects in the prefix pattern the commit produces, partial keeps, control single-call versus grouped-steps on identical staged tail, dead, pooled and block position buffers with guards; compare every output byte including untouched planes; eager and captured replay with A, B, A inputs; stop on first mismatch. Then completed-graph timing of the whole commit-shaped sequence, descriptive only.
+
+Main source after a pass: default-OFF flag inside capture_commit_batch only, replacing the inner row loop with one steps call per owner group, snapshot copy and owners unchanged, groups of one fall back to the existing single call. Serving: same new binary, control then ON, the existing identity, output, work, functional, teardown and health gates, plus the existing CPU-ring commit span as a secondary readout. RAM eviction recovery, accepted state and PLE history restoration are untouched by construction since the graph's other nodes are not edited; the serving run must still include a restore window.
+
+Blockers: none in the supplied source. One check at integration: the steps entry rejects a position base that is not block-aligned and the single call passes zero; the grouped call must pass the same zero.
+
+**Next measured change 2: finish the S136 attribution of the two gaps, then decide whether the same grouping pattern applies to the depth-0 fronts.**
+
+This is not a build. It is the one remaining read of the already-saved cycle to map the left region's events to commit, fronts and resets. If the fronts are launch-dominated the same way, the next measured change is a front-side grouping in the pair; if resets dominate, the profiler is perturbing and the serving commit span from change 1 is the only clean readout.
+
+Avoid: any ISA or image audit for change 1, soaks, reopening Q6 or HC mechanisms, and reading S139's 1.28 percent as a population effect.

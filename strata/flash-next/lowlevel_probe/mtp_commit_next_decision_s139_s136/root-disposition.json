@@ -1,0 +1,27 @@
+{
+  "status": "ROOT_ACCEPTED_NEXT_PRIVATE_QSA_STEPS_ORACLE_SOURCE_GO_ONLY",
+  "root_full_read_actual_replies": true,
+  "S139": "Matched finite serving +1.281458% change of aggregate medians, n3 nested fixed OFF->ON distinct processes; keep defaultOFF, no promotion/population claim.",
+  "selected_next": "Existing QSA append_steps private oracle first; only after strict complete-byte restored-tail/stale-pooled/rejected-trajectory checks pass, consider defaultOFF main selector and new matched serving run.",
+  "source_obligations": [
+    "Preserve contiguous per-owner grouping and pos_base0.",
+    "Preserve tail snapshot restore before updates and exact rejected-prefix semantics; no stale-pooled clearing.",
+    "Retain GDN/conv/KV behavior and PLE completion/history/accepted-token ordering.",
+    "No new device code means linking existing private oracle entry; actual production rebuild plan must independently stand."
+  ],
+  "corrections": [
+    "Fable first positive flag unsupported: S130 also had all positive throughput deltas.",
+    "Opus strongest small/wider reach not established; S29 was bigger and crossstage numbers do not prove causal reach/savings.",
+    "CPU actual slot_copy_begin/end precede same-window pair_return; previous return->next copy includes another verifier/commit.",
+    "CPU and GPU clocks unjoined. Neither uncovered GPU intervals nor host-call spans identify idle, data starvation or a removable budget.",
+    "No new CPU-ring instrumentation inserted into clean serving at this decision. Existing ordinal audit only."
+  ],
+  "RAM_scope": "Private restored-state/tail/stale-pooled/rejected-trajectory proof accepted now. Full200k/four-conversation serving-RAM restore campaign deferred to selected combined winner; no waiver, completion or new qualification claim.",
+  "not_performed_in_this_curation": [
+    "new GPU run",
+    "build or live source change",
+    "model CLI call",
+    "raw trace reparse",
+    "automatic priority expansion or repeated source review"
+  ]
+}

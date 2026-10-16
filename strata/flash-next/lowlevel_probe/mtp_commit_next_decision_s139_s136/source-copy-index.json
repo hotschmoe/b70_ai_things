@@ -1,0 +1,168 @@
+{
+  "status": "ACTUAL_MODEL_LEFT_CPU_ORDINAL_DECISION_CURATION",
+  "copies": [
+    {
+      "destination": "actual-reviews/source-packet.txt",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s139-s136-next-gpu-reviews-20261016/source-packet.txt",
+      "raw_bytes": 37285,
+      "raw_sha256": "e632717da59afdeb3f11a4ed96ccf91a16073ad5bf927861c8317bad29be6189",
+      "curated_bytes": 37285,
+      "curated_sha256": "e632717da59afdeb3f11a4ed96ccf91a16073ad5bf927861c8317bad29be6189",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "actual-reviews/packet.sha256",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s139-s136-next-gpu-reviews-20261016/packet.sha256",
+      "raw_bytes": 65,
+      "raw_sha256": "55fcdc95132896d4d68511a2d4816231d0bdf75ee4e8e99d3d9eab52885b03ba",
+      "curated_bytes": 65,
+      "curated_sha256": "55fcdc95132896d4d68511a2d4816231d0bdf75ee4e8e99d3d9eab52885b03ba",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "actual-reviews/review-prefix.txt",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s139-s136-next-gpu-reviews-20261016/review-prefix.txt",
+      "raw_bytes": 939,
+      "raw_sha256": "8b8ef80e48138c1ca85711ea6ba9cec4b9b44a9eb22d9f9bfb4ef8e0fe3ae65f",
+      "curated_bytes": 939,
+      "curated_sha256": "8b8ef80e48138c1ca85711ea6ba9cec4b9b44a9eb22d9f9bfb4ef8e0fe3ae65f",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "actual-reviews/review.py",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s139-s136-next-gpu-reviews-20261016/review.py",
+      "raw_bytes": 4703,
+      "raw_sha256": "520acb3de0003befa8ef07962d9405c579c44c60d54d057a84f1a66291a8898d",
+      "curated_bytes": 4703,
+      "curated_sha256": "520acb3de0003befa8ef07962d9405c579c44c60d54d057a84f1a66291a8898d",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "actual-reviews/claude-opus-5-5/assistant-text.txt",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s139-s136-next-gpu-reviews-20261016/claude-opus-5-5/assistant-text.txt",
+      "raw_bytes": 5489,
+      "raw_sha256": "eb6a01dd68803bc080fbf94ba27f8105c95e0c140bc09e94da5efc470c0b6a21",
+      "curated_bytes": 5489,
+      "curated_sha256": "eb6a01dd68803bc080fbf94ba27f8105c95e0c140bc09e94da5efc470c0b6a21",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "actual-reviews/claude-opus-5-5/completion.json",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s139-s136-next-gpu-reviews-20261016/claude-opus-5-5/completion.json",
+      "raw_bytes": 8966,
+      "raw_sha256": "71726d3e8e9fbeac941d2b101557fc596c731b105e7c3c2c580d165331126483",
+      "curated_bytes": 8966,
+      "curated_sha256": "71726d3e8e9fbeac941d2b101557fc596c731b105e7c3c2c580d165331126483",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "actual-reviews/claude-opus-5-5/command.json",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s139-s136-next-gpu-reviews-20261016/claude-opus-5-5/command.json",
+      "raw_bytes": 1243,
+      "raw_sha256": "f1aa2b507a9912856a79a49babd3ae97f4cfa795c0678d01595dfd6bba502e9e",
+      "curated_bytes": 1243,
+      "curated_sha256": "f1aa2b507a9912856a79a49babd3ae97f4cfa795c0678d01595dfd6bba502e9e",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "actual-reviews/claude-fable-5-1/assistant-text.txt",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s139-s136-next-gpu-reviews-20261016/claude-fable-5-1/assistant-text.txt",
+      "raw_bytes": 3861,
+      "raw_sha256": "03ad8c7922698946680ed76cf6c13a274dc5cba4796c0a10c24dfba3f716a619",
+      "curated_bytes": 3861,
+      "curated_sha256": "03ad8c7922698946680ed76cf6c13a274dc5cba4796c0a10c24dfba3f716a619",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "actual-reviews/claude-fable-5-1/completion.json",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s139-s136-next-gpu-reviews-20261016/claude-fable-5-1/completion.json",
+      "raw_bytes": 7292,
+      "raw_sha256": "88d23e665139b5f84693701368c521fa6f0ae6bcf2bce9cf3371f5e8c49ad43e",
+      "curated_bytes": 7292,
+      "curated_sha256": "88d23e665139b5f84693701368c521fa6f0ae6bcf2bce9cf3371f5e8c49ad43e",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "actual-reviews/claude-fable-5-1/command.json",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s139-s136-next-gpu-reviews-20261016/claude-fable-5-1/command.json",
+      "raw_bytes": 1245,
+      "raw_sha256": "2e355511bda7ca870ef85fe71097a7002dfef2bc68f5eb6d0e71a77a9fc79c47",
+      "curated_bytes": 1245,
+      "curated_sha256": "2e355511bda7ca870ef85fe71097a7002dfef2bc68f5eb6d0e71a77a9fc79c47",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "left/findings.md",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-left-commit-readiness/findings.md",
+      "raw_bytes": 5607,
+      "raw_sha256": "837fd430d748fbc4960b52e28f2aaefa325f7b15e32b71b33042365350fd43fa",
+      "curated_bytes": 5607,
+      "curated_sha256": "837fd430d748fbc4960b52e28f2aaefa325f7b15e32b71b33042365350fd43fa",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "left/facts.json",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-left-commit-readiness/facts.json",
+      "raw_bytes": 3964,
+      "raw_sha256": "881d8c16e54caecda475ece97b33dd122f4b82bee98f117c5f27f7d6262be0e3",
+      "curated_bytes": 3964,
+      "curated_sha256": "881d8c16e54caecda475ece97b33dd122f4b82bee98f117c5f27f7d6262be0e3",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "left/pins.json",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-left-commit-readiness/pins.json",
+      "raw_bytes": 2266,
+      "raw_sha256": "56f569febe04f4c545bb0e6cd8ccc6c649968137730c94b36289b4aac8a87bb1",
+      "curated_bytes": 2266,
+      "curated_sha256": "56f569febe04f4c545bb0e6cd8ccc6c649968137730c94b36289b4aac8a87bb1",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "left/manifest.json",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-left-commit-readiness/manifest.json",
+      "raw_bytes": 670,
+      "raw_sha256": "73562e749f67d7d355e2c462707482fc20c64625a9c65b4706aa056c31961086",
+      "curated_bytes": 670,
+      "curated_sha256": "73562e749f67d7d355e2c462707482fc20c64625a9c65b4706aa056c31961086",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "cpu-ordinal/findings.md",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-cpu-handoff-ordinal-audit/findings.md",
+      "raw_bytes": 2220,
+      "raw_sha256": "8a35af83115907b4f238821b93091bfbdb3e41b3c22870f1ce819ef21417b500",
+      "curated_bytes": 2220,
+      "curated_sha256": "8a35af83115907b4f238821b93091bfbdb3e41b3c22870f1ce819ef21417b500",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "cpu-ordinal/selected-records.json",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-cpu-handoff-ordinal-audit/selected-records.json",
+      "raw_bytes": 1498,
+      "raw_sha256": "6c47edbf7b824949c91270d20693a9b6895ff1848ad7f0271fefe8578dffcafc",
+      "curated_bytes": 1498,
+      "curated_sha256": "6c47edbf7b824949c91270d20693a9b6895ff1848ad7f0271fefe8578dffcafc",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "cpu-ordinal/pins.json",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-cpu-handoff-ordinal-audit/pins.json",
+      "raw_bytes": 942,
+      "raw_sha256": "4a78ab6cf13c089d3a053506a03ef171a955469f95fe0ddbaf5ee4afd1f93cf6",
+      "curated_bytes": 942,
+      "curated_sha256": "4a78ab6cf13c089d3a053506a03ef171a955469f95fe0ddbaf5ee4afd1f93cf6",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "cpu-ordinal/external-manifest.json",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-cpu-handoff-ordinal-audit-manifest.json",
+      "raw_bytes": 624,
+      "raw_sha256": "996e53ae44e3f9845ea1bcc02915d3780d6360ec92896239deef8b1e356b70be",
+      "curated_bytes": 624,
+      "curated_sha256": "996e53ae44e3f9845ea1bcc02915d3780d6360ec92896239deef8b1e356b70be",
+      "transform": "exact ASCII copy"
+    }
+  ],
+  "scope": "Full escaped ASCII responses/completions/commands/prefix/sourcepacket/review runner; exact bounded evidence. No rawtrace/model/binary read or runtime/CLI execution."
+}

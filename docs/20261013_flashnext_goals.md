@@ -456,3 +456,16 @@ nestedABBArounds inoneprocess/all8samples retained, notservinggain. Keep
 privateproof, deferdedicatedmainbuild/serve; no newdefault/context/cache
 qualification. Targetsremainunmet/S30RAMrestore retained.
 [S116 result and limits](20261016_strata_hc_lowrank_producer_oracle.md).
+
+
+S139 corrected C6 head runtime-word candidate passes fresh same-binary
+C2 serving: aggregate103.072328->104.393157tok/s(+1.281458%); stream
+decode53.474006/55.862589->54.344196/56.688704. Exact output/work,
+functionals, normal teardown and full health match. One fixed OFFthenON
+sequence/three nested pairs, defaultOFF;150tok/s perstream remains unmet.
+No new context/RAM qualification: retained S30 recovery remains the bounded
+full-size evidence. [S139 result](20261016_strata_q5_c6_serving.md).
+S136 full bounded-cycle readiness/commit attribution and actual
+Opus5.5/Fable5.1 select one existing-kernel QSA commit grouping private
+GPU oracle next, before broader Q6/HC work. Its result is still pending.
+[Decision and each actual agent's reasoning](20261016_strata_mtp_commit_next_decision.md).

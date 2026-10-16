@@ -1,0 +1,41 @@
+{
+  "scope": "Small original review records retained external; no full prompt/event duplication. Full source packet and complete actual response/completion are curated separately.",
+  "files": [
+    {
+      "absolute_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s139-s136-next-gpu-reviews-20261016/claude-opus-5-5/events.jsonl",
+      "bytes": 29035,
+      "sha256": "26ee00995b13dc562990fe7b6f658f4c76ad36fafe1879574e734e163238d456",
+      "copied": false
+    },
+    {
+      "absolute_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s139-s136-next-gpu-reviews-20261016/claude-opus-5-5/prompt.txt",
+      "bytes": 38245,
+      "sha256": "7d101a1e3003b826b59ea37ff4d52039e51fd9f732e277fb73cfdfedf127c4e9",
+      "copied": false
+    },
+    {
+      "absolute_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s139-s136-next-gpu-reviews-20261016/claude-opus-5-5/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copied": false
+    },
+    {
+      "absolute_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s139-s136-next-gpu-reviews-20261016/claude-fable-5-1/events.jsonl",
+      "bytes": 25683,
+      "sha256": "b176a7f491364120e883fe8d2cf5bfea25ccabe77d7ea35cd31deb700ddb2572",
+      "copied": false
+    },
+    {
+      "absolute_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s139-s136-next-gpu-reviews-20261016/claude-fable-5-1/prompt.txt",
+      "bytes": 38245,
+      "sha256": "7d101a1e3003b826b59ea37ff4d52039e51fd9f732e277fb73cfdfedf127c4e9",
+      "copied": false
+    },
+    {
+      "absolute_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s139-s136-next-gpu-reviews-20261016/claude-fable-5-1/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copied": false
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "status": "FROZEN_SOURCE_AND_RETAINED_BOUNDED_DATA_ONLY",
+  "files": [
+    {
+      "path": "facts.json",
+      "bytes": 3964,
+      "sha256": "881d8c16e54caecda475ece97b33dd122f4b82bee98f117c5f27f7d6262be0e3"
+    },
+    {
+      "path": "findings.md",
+      "bytes": 5607,
+      "sha256": "837fd430d748fbc4960b52e28f2aaefa325f7b15e32b71b33042365350fd43fa"
+    },
+    {
+      "path": "pins.json",
+      "bytes": 2266,
+      "sha256": "56f569febe04f4c545bb0e6cd8ccc6c649968137730c94b36289b4aac8a87bb1"
+    },
+    {
+      "path": "source-excerpts.txt",
+      "bytes": 37896,
+      "sha256": "ab3e57249cc048a34e21de0d45f5fa55058d6f40d7763e96b17bd1b371268670"
+    }
+  ]
+}

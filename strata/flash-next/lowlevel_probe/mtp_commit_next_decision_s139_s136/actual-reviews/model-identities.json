@@ -1,0 +1,34 @@
+[
+  {
+    "requested": "claude-opus-5-5",
+    "responding_models": [
+      "claude-opus-5-5"
+    ],
+    "session_ids": [
+      "c26cbc95-bbed-461b-b165-8adee1464b9e"
+    ],
+    "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+    "resume_session_matches_response": true,
+    "exit": 0,
+    "elapsed_s": 61.40405546902912,
+    "source_packet_sha256": "e632717da59afdeb3f11a4ed96ccf91a16073ad5bf927861c8317bad29be6189",
+    "source_packet_unchanged": true,
+    "retries": 0
+  },
+  {
+    "requested": "claude-fable-5-1",
+    "responding_models": [
+      "claude-fable-5-1"
+    ],
+    "session_ids": [
+      "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+    ],
+    "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+    "resume_session_matches_response": true,
+    "exit": 0,
+    "elapsed_s": 64.12224741699174,
+    "source_packet_sha256": "e632717da59afdeb3f11a4ed96ccf91a16073ad5bf927861c8317bad29be6189",
+    "source_packet_unchanged": true,
+    "retries": 0
+  }
+]

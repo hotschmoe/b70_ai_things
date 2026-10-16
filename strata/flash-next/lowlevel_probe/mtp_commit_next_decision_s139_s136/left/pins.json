@@ -1,0 +1,86 @@
+{
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp": {
+    "sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2",
+    "bytes": 223107,
+    "line_ranges_in_excerpt": [
+      [
+        1117,
+        1125
+      ],
+      [
+        3069,
+        3149
+      ],
+      [
+        3492,
+        3559
+      ]
+    ]
+  },
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp": {
+    "sha256": "5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e",
+    "bytes": 119038,
+    "line_ranges_in_excerpt": [
+      [
+        112,
+        133
+      ],
+      [
+        232,
+        322
+      ]
+    ]
+  },
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_qsa_indexer.dp.cpp": {
+    "sha256": "133027606e4dd23afb7b7a463d756d27fe4f312b10a82f884abfb0bcddedd465",
+    "bytes": 30783,
+    "line_ranges_in_excerpt": [
+      [
+        59,
+        188
+      ],
+      [
+        379,
+        402
+      ],
+      [
+        470,
+        476
+      ]
+    ]
+  },
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/core/geometry.hpp": {
+    "sha256": "e9869988fbdc9e18ef3d144dd91e9266c18a190e9ec1a7351ce5c7b858bbd838",
+    "bytes": 4805,
+    "line_ranges_in_excerpt": [
+      [
+        20,
+        58
+      ]
+    ]
+  },
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp": {
+    "sha256": "6433d750e414aeb9c71135257ae40a8f9e38ea661537c251b50cabdbc2217d83",
+    "bytes": 867808,
+    "line_ranges_in_excerpt": [
+      [
+        9375,
+        9500
+      ]
+    ]
+  },
+  "retained_data": {
+    "cycles.json": {
+      "bytes": 5255606,
+      "sha256": "4783c04c69341d8eb55270443e94a473c0953f215b50171a8b395a45203f8e48"
+    },
+    "raw_trace_external_not_read": {
+      "sha256": "f5650d4daa36dc19fde1af631d19c434bab83ac6f04fb1b5ab509be5123baef6",
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/trace/strata-s133.467.json"
+    },
+    "partial_receipt": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/root-partial-analysis.json",
+      "sha256": "7e5054cd04370a20eb605bfabe337c3960d3f23706d854970a351fff450015e3"
+    }
+  }
+}

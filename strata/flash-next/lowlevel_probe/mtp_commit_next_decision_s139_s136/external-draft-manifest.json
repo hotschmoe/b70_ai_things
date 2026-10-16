@@ -1,0 +1,109 @@
+{
+  "status": "FROZEN_ACTUAL_S139_S136_MODEL_DECISION_WITH_LEFT_CPU_ORDINAL",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s139-s136-next-decision-curation-draft",
+  "file_count": 25,
+  "total_bytes": 110006,
+  "files": {
+    "20261016_strata_mtp_commit_next_decision.md": {
+      "bytes": 4851,
+      "sha256": "a82ac367ced391131e835999770c871c1b91e1652fbf67571c85a4f965702e1f"
+    },
+    "payload/README.md": {
+      "bytes": 949,
+      "sha256": "9c89105f23ed2613fa6cc35f677596c8eb0ff40363bfd7405ce3605de31efa3f"
+    },
+    "payload/actual-reviews/claude-fable-5-1/assistant-text.txt": {
+      "bytes": 3861,
+      "sha256": "03ad8c7922698946680ed76cf6c13a274dc5cba4796c0a10c24dfba3f716a619"
+    },
+    "payload/actual-reviews/claude-fable-5-1/command.json": {
+      "bytes": 1245,
+      "sha256": "2e355511bda7ca870ef85fe71097a7002dfef2bc68f5eb6d0e71a77a9fc79c47"
+    },
+    "payload/actual-reviews/claude-fable-5-1/completion.json": {
+      "bytes": 7292,
+      "sha256": "88d23e665139b5f84693701368c521fa6f0ae6bcf2bce9cf3371f5e8c49ad43e"
+    },
+    "payload/actual-reviews/claude-opus-5-5/assistant-text.txt": {
+      "bytes": 5489,
+      "sha256": "eb6a01dd68803bc080fbf94ba27f8105c95e0c140bc09e94da5efc470c0b6a21"
+    },
+    "payload/actual-reviews/claude-opus-5-5/command.json": {
+      "bytes": 1243,
+      "sha256": "f1aa2b507a9912856a79a49babd3ae97f4cfa795c0678d01595dfd6bba502e9e"
+    },
+    "payload/actual-reviews/claude-opus-5-5/completion.json": {
+      "bytes": 8966,
+      "sha256": "71726d3e8e9fbeac941d2b101557fc596c731b105e7c3c2c580d165331126483"
+    },
+    "payload/actual-reviews/model-identities.json": {
+      "bytes": 973,
+      "sha256": "432120aa1310667ce5efd295da3d32a425ef420c21def1240230233605950c5e"
+    },
+    "payload/actual-reviews/packet.sha256": {
+      "bytes": 65,
+      "sha256": "55fcdc95132896d4d68511a2d4816231d0bdf75ee4e8e99d3d9eab52885b03ba"
+    },
+    "payload/actual-reviews/review-prefix.txt": {
+      "bytes": 939,
+      "sha256": "8b8ef80e48138c1ca85711ea6ba9cec4b9b44a9eb22d9f9bfb4ef8e0fe3ae65f"
+    },
+    "payload/actual-reviews/review.py": {
+      "bytes": 4703,
+      "sha256": "520acb3de0003befa8ef07962d9405c579c44c60d54d057a84f1a66291a8898d"
+    },
+    "payload/actual-reviews/source-packet.txt": {
+      "bytes": 37285,
+      "sha256": "e632717da59afdeb3f11a4ed96ccf91a16073ad5bf927861c8317bad29be6189"
+    },
+    "payload/cpu-ordinal/external-manifest.json": {
+      "bytes": 624,
+      "sha256": "996e53ae44e3f9845ea1bcc02915d3780d6360ec92896239deef8b1e356b70be"
+    },
+    "payload/cpu-ordinal/findings.md": {
+      "bytes": 2220,
+      "sha256": "8a35af83115907b4f238821b93091bfbdb3e41b3c22870f1ce819ef21417b500"
+    },
+    "payload/cpu-ordinal/pins.json": {
+      "bytes": 942,
+      "sha256": "4a78ab6cf13c089d3a053506a03ef171a955469f95fe0ddbaf5ee4afd1f93cf6"
+    },
+    "payload/cpu-ordinal/selected-records.json": {
+      "bytes": 1498,
+      "sha256": "6c47edbf7b824949c91270d20693a9b6895ff1848ad7f0271fefe8578dffcafc"
+    },
+    "payload/left/facts.json": {
+      "bytes": 3964,
+      "sha256": "881d8c16e54caecda475ece97b33dd122f4b82bee98f117c5f27f7d6262be0e3"
+    },
+    "payload/left/findings.md": {
+      "bytes": 5607,
+      "sha256": "837fd430d748fbc4960b52e28f2aaefa325f7b15e32b71b33042365350fd43fa"
+    },
+    "payload/left/manifest-list.json": {
+      "bytes": 947,
+      "sha256": "9d7a63d7088e3dc8088e743366f2b04ac69e0efaad82dc8e7304bac1ae97e6c0"
+    },
+    "payload/left/manifest.json": {
+      "bytes": 670,
+      "sha256": "73562e749f67d7d355e2c462707482fc20c64625a9c65b4706aa056c31961086"
+    },
+    "payload/left/pins.json": {
+      "bytes": 2266,
+      "sha256": "56f569febe04f4c545bb0e6cd8ccc6c649968137730c94b36289b4aac8a87bb1"
+    },
+    "payload/raw-external-index.json": {
+      "bytes": 2053,
+      "sha256": "f93f23fd99fa20c7a7f45faca0dc8d70208deaed6df02cba11f8b1eeb96c6740"
+    },
+    "payload/root-disposition.json": {
+      "bytes": 2002,
+      "sha256": "c33dabb942498e698dd26d7faf726079cd75f4e49649298b9d38573beb1b2fe2"
+    },
+    "source-copy-index.json": {
+      "bytes": 9352,
+      "sha256": "46ad57aacd84a2d9fe8fcf8f219184be71c695fb3cadb11f009b83391bd4ff7d"
+    }
+  },
+  "scope": "Actual completed model consultation and bounded retained data only; no new source/build/GPU/model execution or rawtrace read. Future privateGO not completed result."
+}
