@@ -153,7 +153,7 @@ index 45c0f301..d7901424 100644
 +
  }  // namespace strata::kernels
 diff --git a/include/strata/kernels/verify_kernels.hpp b/include/strata/kernels/verify_kernels.hpp
-index 5b37cdf4..de63e7c7 100644
+index 5b37cdf4..f2c46ded 100644
 --- a/include/strata/kernels/verify_kernels.hpp
 +++ b/include/strata/kernels/verify_kernels.hpp
 @@ -19,6 +19,13 @@
@@ -181,20 +181,39 @@ index 5b37cdf4..de63e7c7 100644
  void gdn_ab_multi(const float* x, const uint16_t* w_alpha, const uint16_t* w_beta, const float* dt, const float* ssm_a,
                    float* gate, float* beta, int n_embd, int h_v, int n_tok, void* stream);
  /// The recurrence + output norm for T tokens (h = (T, conv_channels) as q|k|v, gate/beta (T, h_v), z/y
-@@ -41,6 +52,13 @@ void gdn_ab_multi(const float* x, const uint16_t* w_alpha, const uint16_t* w_bet
+@@ -40,7 +51,21 @@ void gdn_ab_multi(const float* x, const uint16_t* w_alpha, const uint16_t* w_bet
+ /// *n_keep tokens are run and the state is written (commit; `y` may be scratch).  Bitwise `fused_gdn_step_norm`.
  void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const float* gate, const float* beta,
                           const float* z, const float* gamma, float eps, float* y, int h_k, int h_v, int n_tok,
-                          const int32_t* n_keep, void* stream, int t_out_begin = 0, void* xq_out = nullptr);
+-                         const int32_t* n_keep, void* stream, int t_out_begin = 0, void* xq_out = nullptr);
++                         const int32_t* n_keep, void* stream, int t_out_begin = 0, void* xq_out = nullptr,
++                         float* dsave = nullptr);   // night GDN2: a verify (n_keep null) stores row t's delta at dsave[t][h_v * 128]
++/// night-lab STRATA_NIGHT_GDN2=1 (latched; off under STRATA_GDN_SPLIT / STRATA_QFUSE): the commit from the deltas a
++/// verify saved (gdn_step_norm_multi's dsave): bitwise gdn_step_norm_multi's state-only commit of the first *n_keep rows.
++bool night_gdn2();
++void gdn_commit_delta(float* state, const float* h, int conv_channels, const float* gate, const float* dsave, int h_k,
++                      int h_v, const int32_t* n_keep, void* stream);
 +/// night-lab STRATA_NIGHT_GDN_SLOTS (default off): gdn_step_norm_multi's verify form (n_keep null, every row's output,
 +/// no q8 image) for up to 4 slot groups in one launch; slot i: state states[i], rows [row0[i], row0[i] + nrows[i]) of
 +/// h / gate / beta / z / y. Bitwise the per-slot calls. False (nothing launched) when it does not apply.
 +bool night_gdn_slots_enabled();
 +bool night_gdn_step_norm_slots(float* const* states, const int* row0, const int* nrows, int nslots, const float* h,
 +                               int conv_channels, const float* gate, const float* beta, const float* z,
-+                               const float* gamma, float eps, float* y, int h_k, int h_v, void* stream);
++                               const float* gamma, float eps, float* y, int h_k, int h_v, void* stream,
++                               float* dsave = nullptr);
  /// The commit of `n_layers` GDN layers in two launches (engine-latency): layer i's conv history is
  /// `state + i * state_stride + conv_off` and its qkv rows `qkv + i * qkv_stride`, as gdn_conv_commit; its recurrence
  /// state `state + i * state_stride` over the first *n_keep rows of `h + i * h_stride` / `gate|beta + i * gb_stride`, as
+@@ -49,7 +74,8 @@ void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const
+ /// state-only kernel (STRATA_GDN_SPLIT=1, STRATA_GDN_COMMIT_SPLIT=0, STRATA_DBG_GDN=1): the caller then keeps the loop.
+ bool gdn_commit_layers(float* state, int64_t state_stride, int64_t conv_off, const float* qkv, int64_t qkv_stride,
+                        const float* h, int64_t h_stride, const float* gate, const float* beta, int64_t gb_stride,
+-                       int conv_channels, int h_k, int h_v, int n_max, int n_layers, const int32_t* n_keep, void* stream);
++                       int conv_channels, int h_k, int h_v, int n_max, int n_layers, const int32_t* n_keep, void* stream,
++                       const float* dsave = nullptr, int64_t d_stride = 0);   // night GDN2: the verify's deltas, layer stride
+ /// (xq_out, S26 STRATA_QFUSE: also write the q8_1 image of output rows [t_out_begin, n_tok) there - the bytes
+ /// native_quantize_q8_1(y + t_out_begin * value_dim, xq_out, value_dim, n_tok - t_out_begin) would write.)
+ /// Spin until *flag >= value (a mapped host flag).  The value is fixed at capture, so several rings can be
 diff --git a/include/strata/prefill/gemm.hpp b/include/strata/prefill/gemm.hpp
 index 0740fd0d..5b888192 100644
 --- a/include/strata/prefill/gemm.hpp
@@ -245,7 +264,7 @@ index f12f34b9..4259171a 100644
  // ---- MoE
  /// softmax over 512, top-10 (ties to the lower id), weights renormalised over the ten (the native router).
 diff --git a/sycl/CMakeLists.txt b/sycl/CMakeLists.txt
-index e5e4b36a..4b682003 100644
+index e5e4b36a..24cd62b3 100644
 --- a/sycl/CMakeLists.txt
 +++ b/sycl/CMakeLists.txt
 @@ -226,6 +226,7 @@ foreach(k IN LISTS _kernel_cu)
@@ -277,10 +296,14 @@ index e5e4b36a..4b682003 100644
    # 0.1.40 (#783): the batched verify-window kernels against the ones they replace, bitwise (synthetic, no model)
    foreach(p IN ITEMS verify native_multi kv_steps resident_plan gr_multi resident_plan_ep)   # resident_plan_ep: port-only
      strata_resolve(_src src/kernels/${p}_parity.cpp)
-@@ -359,6 +365,18 @@ if(STRATA_SYCL_PARITY)
+@@ -359,6 +365,22 @@ if(STRATA_SYCL_PARITY)
    strata_resolve(_src src/kernels/qsa_prompt_attn_parity.cpp)
    add_executable(qsa_prompt_attn_parity ${_src})
    target_link_libraries(qsa_prompt_attn_parity PRIVATE strata_kernels)
++  # night-lab STRATA_NIGHT_GDN2: GDN verify delta store + commit from deltas vs the state-only commit (bitwise + timing)
++  strata_resolve(_src src/kernels/gdn2_bench.cpp)
++  add_executable(gdn2_bench ${_src})
++  target_link_libraries(gdn2_bench PRIVATE strata_kernels)
 +  # night-lab STRATA_NIGHT_GDN_CHUNK: prompt GDN recurrence, token scan vs chunkwise (accuracy + timing)
 +  strata_resolve(_src src/kernels/gdn_chunk_bench.cpp)
 +  add_executable(gdn_chunk_bench ${_src})
@@ -296,7 +319,7 @@ index e5e4b36a..4b682003 100644
    # the hybrid K8V4 KV test (upstream 0.1.27) passes its appends, gathers and attention here and fails only its
    # last step, the same tensor-core prompt kernel. Built, not registered, until that kernel is ported.
    strata_resolve(_src src/kernels/kv_hybrid_parity.cpp)
-@@ -371,6 +389,12 @@ if(STRATA_SYCL_PARITY)
+@@ -371,6 +393,12 @@ if(STRATA_SYCL_PARITY)
    target_link_libraries(mmvq_bench PRIVATE strata_kernels)
    add_executable(dense_bench ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/dense_bench.cpp)   # the decode window's dense GEMVs, graph, hash
    target_link_libraries(dense_bench PRIVATE strata_kernels)
@@ -309,7 +332,7 @@ index e5e4b36a..4b682003 100644
    add_executable(mmvq_sg_bench ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/mmvq_sg_bench.cpp)   # SIMD16 vs 32 decode mmvq
    target_link_libraries(mmvq_sg_bench PRIVATE strata_kernels)
    add_executable(q6k_align_bench ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/q6k_align_bench.cpp)   # Q6_K block alignment
-@@ -389,6 +413,12 @@ if(STRATA_SYCL_PARITY)
+@@ -389,6 +417,12 @@ if(STRATA_SYCL_PARITY)
    target_link_libraries(xmx_gemm_bench PRIVATE strata_kernels strata_prefill)   # -qmkl for the oneMKL reference
    add_executable(xmx_group_parity ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/xmx_group_parity.cpp)   # A770: fused grouped XMX
    target_link_libraries(xmx_group_parity PRIVATE strata_kernels strata_prefill)
@@ -348,7 +371,7 @@ index d33037d7..e5bb57fa 100644
      uint8_t* experts_ = nullptr;
      // Slot drafters borrow immutable weights and head; each still owns its state and scratch.
 diff --git a/sycl/include/strata/core/verify.hpp b/sycl/include/strata/core/verify.hpp
-index cbe7f9c6..751d8e49 100644
+index cbe7f9c6..b8a726b5 100644
 --- a/sycl/include/strata/core/verify.hpp
 +++ b/sycl/include/strata/core/verify.hpp
 @@ -59,6 +59,7 @@ struct VerifyEp {
@@ -422,6 +445,14 @@ index cbe7f9c6..751d8e49 100644
      int64_t n_vocab_ = 0;
      dpct::queue_ptr cs_ = &dpct::get_in_order_queue();
      float* dbgR_ = nullptr;   ///< SYCL port debug: R (token 0) after every layer, n_layers x n_embd
+@@ -499,6 +513,7 @@ private:
+     uint8_t* xq_ = nullptr;                                   // T columns of q8_1
+     uint8_t* sh_xq_ = nullptr;                                // T columns of q8_1 for shared expert branch
+     float *qkv_L_ = nullptr, *h_L_ = nullptr, *gate_L_ = nullptr, *beta_L_ = nullptr;   // per GDN layer
++    float* delta_L_ = nullptr;   // night GDN2: per GDN layer, the verify rows' deltas [MT][h_v * 128] (null when off)
+     float *z_ = nullptr, *y_ = nullptr, *y_dummy_ = nullptr;
+     float *qfull_ = nullptr, *qcur_ = nullptr, *kcur_ = nullptr, *vcur_ = nullptr, *idx_raw_L_ = nullptr;
+     float *qidx_ = nullptr, *scores_ = nullptr, *attn_ = nullptr, *attn32_ = nullptr, *attn_scratch_ = nullptr;
 diff --git a/sycl/include/strata/kernels/ep_kernels.hpp b/sycl/include/strata/kernels/ep_kernels.hpp
 index fea1b4bf..4581feff 100644
 --- a/sycl/include/strata/kernels/ep_kernels.hpp
@@ -1177,7 +1208,7 @@ index 9e1c7913..b17e30fb 100644
                              bytes).wait()) != 0) {
                          err = "native dense (STRATA_HC_Q8) upload " + tensor.name; return false;
 diff --git a/sycl/src/core/verify.cpp b/sycl/src/core/verify.cpp
-index 1b7273eb..d035c69a 100644
+index 1b7273eb..f44b0b05 100644
 --- a/sycl/src/core/verify.cpp
 +++ b/sycl/src/core/verify.cpp
 @@ -32,6 +32,10 @@
@@ -1253,7 +1284,15 @@ index 1b7273eb..d035c69a 100644
          return false;
      }
      if (hits.d_res == nullptr || hits.cache_base == nullptr || hits.blob <= 0) {
-@@ -843,6 +884,17 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -583,6 +624,7 @@ bool Verifier::init(const WeightTable &wt, const ModelGeometry &g,
+         xq_ = b.take<uint8_t>(strata::kernels::native_q8_1_bytes(max_in, (int) T));
+         sh_xq_ = b.take<uint8_t>(strata::kernels::native_q8_1_bytes(max_in, (int) T));
+         qkv_L_ = b.take<float>(nG * T * C); h_L_ = b.take<float>(nG * T * C);
++        delta_L_ = strata::kernels::night_gdn2() ? b.take<float>(nG * T * ZV) : nullptr;
+         gate_L_ = b.take<float>(nG * T * HV); beta_L_ = b.take<float>(nG * T * HV);
+         z_ = b.take<float>(T * ZV); y_ = b.take<float>(T * ZV); y_dummy_ = b.take<float>(T * ZV);
+         qfull_ = b.take<float>(T * NH * 2 * HD); qcur_ = b.take<float>(T * NH * HD);
+@@ -843,6 +885,17 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
                 shared_expert_native_bf16_enabled();
      };
      bool sg_gated_[2] = {false, false};   // per group: the combine applies the shared gate
@@ -1271,7 +1310,7 @@ index 1b7273eb..d035c69a 100644
      if (!batch_rec_) groups_[T] = G;
      const int64_t nQall = g.n_qsa_layers();
      // a batch window: row t is slot t, whose state lives in its own session
-@@ -989,7 +1041,7 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -989,7 +1042,7 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
              pending = false;
          }
          auto gr_read_group = [&](int half, bool apply, float* inj_prev, float* inj_out) {
@@ -1280,11 +1319,13 @@ index 1b7273eb..d035c69a 100644
              for (int t = tb; t < te; ++t) {
                  FusedGrArgs& a = fa[t - tb];
                  a.R = Rt(t); a.R_out = Rt(t); a.apply = apply;
-@@ -1056,7 +1108,22 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -1056,7 +1109,25 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
                  native_mmvq(wg->native_type, wg->native_data, xq_, z_ + (size_t) tb * ZV, (int) N, (int) ZV, n, cs);
                  stamp(l, 5, grp);
                  // the recurrence from the untouched state over tokens [0, te); outputs only for this group's
 -                if (batch_rec_) {   // each slot's recurrence over its own proposed-token group
++                // (night GDN2: every verify row's delta is kept for the commit)
++                float* const dsave_l = delta_L_ ? delta_L_ + (size_t) gi * MT * ZV : nullptr;
 +                bool night_slots_done = false;
 +                if (batch_rec_ && night_gdn_slots_enabled()) {   // night-lab: every slot group in one launch (bitwise)
 +                    float* st4[4] = {}; int r4[4] = {}, n4[4] = {}; int ns = 0;
@@ -1297,14 +1338,31 @@ index 1b7273eb..d035c69a 100644
 +                    }
 +                    if (ns >= 1 && ns <= 4)
 +                        night_slots_done = night_gdn_step_norm_slots(st4, r4, n4, ns, hb, (int) C, gate, beta, z_,
-+                                                                     (const float*) wnm->data, EPS, y_, (int) HK, (int) HV, cs);
++                                                                     (const float*) wnm->data, EPS, y_, (int) HK, (int) HV, cs,
++                                                                     dsave_l);
 +                }
 +                if (night_slots_done) {
 +                } else if (batch_rec_) {   // each slot's recurrence over its own proposed-token group
                      for (int t = tb; t < te;) {
                          const int first = t;
                          while (t < te && brow_[t] == brow_[first]) ++t;
-@@ -1105,7 +1172,13 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -1065,11 +1136,13 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+                         gdn_step_norm_multi(stx, hb + (size_t) first * C, (int) C, gate + (size_t) first * HV,
+                                             beta + (size_t) first * HV, z_ + (size_t) first * ZV,
+                                             (const float*) wnm->data, EPS, y_ + (size_t) first * ZV,
+-                                            (int) HK, (int) HV, t - first, nullptr, cs, 0);
++                                            (int) HK, (int) HV, t - first, nullptr, cs, 0, nullptr,
++                                            dsave_l ? dsave_l + (size_t) first * ZV : nullptr);
+                     }
+                 } else
+                 gdn_step_norm_multi(state, hb, (int) C, gate, beta, z_, (const float*) wnm->data, EPS, y_, (int) HK,
+-                                    (int) HV, te, self_commit ? one_ : nullptr, cs, tb, g_qfuse() ? (void*) xq_ : nullptr);
++                                    (int) HV, te, self_commit ? one_ : nullptr, cs, tb, g_qfuse() ? (void*) xq_ : nullptr,
++                                    dsave_l);
+                 stamp(l, 6, grp);
+                 if (!g_qfuse()) native_quantize_q8_1(y_ + (size_t) tb * ZV, xq_, (int) ZV, n, cs);   // STRATA_QFUSE: done above
+                 native_mmvq(wout->native_type, wout->native_data, xq_, bo_ + tb * N, (int) ZV, (int) N, n, cs);
+@@ -1105,7 +1178,13 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
                  // window's rows each - row-wise identical arithmetic (STRATA_DEC_BATCH=0: token by token)
                  const bool qb = dec_batch && n > 1 && native_qsa_enabled() && native_rope_enabled() && !st.kv_q4;
                  if (!q8_attn) native_quantize_q8_1(xm, xq_, (int) N, n, cs);
@@ -1319,7 +1377,7 @@ index 1b7273eb..d035c69a 100644
                  else for (int t = tb; t < te; ++t)
                      bf16_gemv_fp32_mmvf(mixed_ + t * N, (const uint16_t*) wik->data, idx_raw + t * ID, (int) N, (int) ID, cs);
                  stamp(l, 7, grp);
-@@ -1148,6 +1221,38 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -1148,6 +1227,38 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
                          for (int t = tb; t < te; ++t)
                              kv_append_step(st.k_pool, st.v_pool, st.page_table, step_ + t * kStepCount,
                                             kcur_ + t * NKV * HD, vcur_ + t * NKV * HD, s, cs, &st.host);
@@ -1358,7 +1416,7 @@ index 1b7273eb..d035c69a 100644
                  } else
                  for (int t = tb; t < te; ++t) {
                      const QsaState& st = slot_ss(t).qsa_states[qi];   // the row's own K/V (ss's outside a batch)
-@@ -1174,6 +1279,18 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -1174,6 +1285,18 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
                      native_qsa_indexer_append_steps(idx_raw + tb * ID, step_ + tb * kStepCount + kStepPos, kStepCount,
                                                      n, 0, (const float*) wikn->data, EPS, ib, s, st.max_cells,
                                                      rope_scaling(), cs);
@@ -1377,7 +1435,7 @@ index 1b7273eb..d035c69a 100644
                  } else {
                      for (int t = tb; t < te; ++t) {
                          const QsaState& sx = slot_ss(t).qsa_states[qi];
-@@ -1210,6 +1327,7 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -1210,6 +1333,7 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
                      norm_rope(qcur_ + tb * NH * HD, wqn, (int) (n * NH), (int) HD, pos_ + tb * NH);
                      }
                      if (st.kv_rot) fwht256_inplace_cuda(qcur_ + tb * NH * HD, (int64_t) n * NH, cs);   // <Hq, Hk> = <q, k>
@@ -1385,7 +1443,7 @@ index 1b7273eb..d035c69a 100644
                      bf16_gemv_fp32_mmvf_multi(mixed_ + tb * N, N, (const uint16_t*) wiq->data, qidx_ + tb * IQ * ID, IQ * ID,
                                                N, IQ * ID, n, cs);
                      norm_rope(qidx_ + tb * IQ * ID, wiqn, (int) (n * IQ), (int) ID, pos_i + tb * IQ);
-@@ -1245,6 +1363,61 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -1245,6 +1369,61 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
                  }
                  }
                  stamp(l, 10, grp);
@@ -1447,7 +1505,7 @@ index 1b7273eb..d035c69a 100644
                  if (batch_rec_) {   // each row selects and attends over its own slot's K/V
                      for (int t = tb; t < te; ++t) {
                          const QsaState& sx = slot_ss(t).qsa_states[qi];
-@@ -1299,9 +1472,12 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -1299,9 +1478,12 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
              const char* e = std::getenv("STRATA_SH_FORK_LATE");
              return !e || e[0] != '0';
          }();
@@ -1461,7 +1519,7 @@ index 1b7273eb..d035c69a 100644
          const bool sh_fork_late = sh_fork && sh_fork_late_env && !ar_on();
          dpct::queue_ptr sh_stream = sh_fork ? sh_cs_ : cs;
          if (sh_fork && !sh_fork_late) {
-@@ -1342,6 +1518,14 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -1342,6 +1524,14 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
              if (!moe_route(wt, g, l, K, mb, mixed_ + t * N, cs, err, nullptr)) return false;
          }
          static const bool ep_self = [] { const char* v = std::getenv("STRATA_EP_SELF"); return v && v[0] == '1'; }();
@@ -1476,7 +1534,7 @@ index 1b7273eb..d035c69a 100644
          if (ar_on() && ep_on() && !ep_self && !ep_verify_) {   // expert parallelism: this card's entries only, the peer's are its own plan
              resident_plan_ep(ids_ + tb * K, n * (int) K, (int) K, hits_.d_res + l * g.n_expert,
                               ep_cfg_.res1_on0 + l * g.n_expert, 1, (int) g.n_expert, hits_.cache_base, slot_off_d_,
-@@ -1397,6 +1581,11 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -1397,6 +1587,11 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
              // experts' q8_1 image of xm is made first and the shared expert's gate/up read it (quantize_q8_1_rows and
              // native_quantize_q8_1 write the same bytes)
              qdedup = g_qdedup() && !sh_fork && strata::kernels::cpu::expert_layout().native;
@@ -1488,7 +1546,7 @@ index 1b7273eb..d035c69a 100644
              if (qdedup && !q8_ffn) quantize_q8_1_rows(xm, n, N, nat_xq_ + (size_t) tb * (N / 32) * 36, cs);
              if (!shared_expert_native_bf16_enabled()) {
                  if (dec_batch) f32_to_bf16_bulk(mixed_ + tb * N, sh_bf16_ + tb * N, (int64_t) n * N, sh_stream);   // contiguous rows
-@@ -1413,6 +1602,7 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -1413,6 +1608,7 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
                  return false;
              }
              if (sh_fork) dpct::sync_barrier(ev_join_, sh_cs_);
@@ -1496,7 +1554,7 @@ index 1b7273eb..d035c69a 100644
          }
          if (strata::kernels::cpu::expert_layout().native) {
              if (!qdedup)
-@@ -1427,12 +1617,22 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -1427,12 +1623,22 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
              const size_t xq_bytes = (size_t) n * (N / 32) * 36;
              uint8_t* slot0 = ep_inbox_on0_ + (size_t) grp * ep_slot_bytes_;
              uint8_t* slot1 = ep_in1_ + (size_t) grp * ep_slot_bytes_;   // the inbox slot, copied past the caches
@@ -1519,7 +1577,7 @@ index 1b7273eb..d035c69a 100644
              resident_plan_ep((const int32_t*) slot1, (int) cap, (int) K, ep_cfg_.res0_on1 + l * g.n_expert,
                               ep_cfg_.res1 + l * g.n_expert, 2, (int) g.n_expert, ep_cfg_.cache_base1, ep_cfg_.slot_off1,
                               (long long) ep_cfg_.blob1, pl1, (long long) capx, ep_q_, ep_plan_err1_);
-@@ -1442,6 +1642,11 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -1442,6 +1648,11 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
              native_expert_grouped(L, (const unsigned long long*) (pl1 + ptr_off), pl1 + 4, pl1, pl1 + 4 + capx + 1,
                                    pl1 + 4 + capx + 1 + capx, cap, cap, slot1 + ep_xq_off_, ep_scratch1_,
                                    ep_rows1_ + (size_t) tb * K * N, ep_q_, 0);
@@ -1531,7 +1589,7 @@ index 1b7273eb..d035c69a 100644
              ep_send_rows(ep_parts_on1_ + (size_t) tb * K * N, ep_rows1_ + (size_t) tb * K * N, (const int32_t*) slot1,
                           ep_cfg_.res0_on1 + l * g.n_expert, (int) cap, N, ep_done1_, ep_ret_on1_ + (size_t) ring * 16,
                           ep_ctr1_, ep_q_);
-@@ -1490,6 +1695,23 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -1490,6 +1701,23 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
          if (ar_on()) {
              stamp(l, 19, grp);
              grouped(p_ptr, p_start, p_counts, 0, parts_out);
@@ -1555,7 +1613,7 @@ index 1b7273eb..d035c69a 100644
              static const bool ep_self = [] { const char* v = std::getenv("STRATA_EP_SELF"); return v && v[0] == '1'; }();
              if (ep_on() && ep_verify_) {   // the check: this card computed every row; compare the peer's with them
                  ep_wait(ep_ret0_ + (size_t) ring * 16, ep_ctr0_, ep_spin_, ep_err0_, ring, cs);
-@@ -1544,11 +1766,18 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -1544,11 +1772,18 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
          }
          // Same condition as `sh_fork` above, which is per group and out of scope here: wait only when the fork
          // actually ran (a wait on an event never recorded is a no-op, but saying it outright reads better).
@@ -1575,7 +1633,7 @@ index 1b7273eb..d035c69a 100644
          if (sg_gated_[grp]) {   // STRATA_LFUSE: the shared expert's gate was not applied: the combine applies it (all rows are hits)
              try {
                  native_moe_combine_multi_hits_gated(parts_out, w_ + tb * K, shared_ + tb * N, sh_g_ + tb, bo_ + tb * N, N, K, n, cs);
-@@ -1608,7 +1837,7 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -1608,7 +1843,7 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
          // (no pending write, no inject)
          const bool mix_q8 = hd->hc_q8 != nullptr && hu->hc_q8 != nullptr && head_ != nullptr && head_->loaded();
          if (mix_q8) {
@@ -1584,7 +1642,7 @@ index 1b7273eb..d035c69a 100644
              for (int t = 0; t < T; ++t) {
                  FusedGrArgs& a = fa[t];
                  a.R = Rt(t); a.R_out = Rt(t); a.apply = false;
-@@ -1621,7 +1850,7 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -1621,7 +1856,7 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
              fused_gr_read_multi(fa, T, xn_, cs);
          }
          else if (fuse_head_gr) {
@@ -1593,7 +1651,7 @@ index 1b7273eb..d035c69a 100644
              for (int t = 0; t < T; ++t) {
                  FusedGrArgs& a = fa[t];
                  a.R = Rt(t); a.R_out = Rt(t); a.apply = true;
-@@ -1644,7 +1873,7 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+@@ -1644,7 +1879,7 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
                  err = "verify: the output_hc_* weights have the wrong engine forms";
                  return false;
              }
@@ -1602,7 +1660,7 @@ index 1b7273eb..d035c69a 100644
              for (int t = 0; t < T; ++t) {
                  fa[t].R = Rt(t); fa[t].R_out = Rt(t); fa[t].apply = false;
                  fa[t].w_norm = (const float*) hn->data; fa[t].w_down = (const uint16_t*) hd->data;
-@@ -1799,6 +2028,21 @@ bool Verifier::ep_init(std::string& err) {
+@@ -1799,6 +2034,21 @@ bool Verifier::ep_init(std::string& err) {
      if (const char* v = std::getenv("STRATA_EP_SPIN_MAX")) ep_spin_ = (uint32_t) std::strtoul(v, nullptr, 10);
      auto align = [](size_t b) { return (b + 255) / 256 * 256; };
      ep_xq_off_ = align((size_t) MT * K * 4);
@@ -1624,7 +1682,7 @@ index 1b7273eb..d035c69a 100644
      ep_slot_bytes_ = ep_xq_off_ + align((size_t) MT * (N / 32) * 36);
      const size_t flag_bytes = (size_t) (g.n_layers * 2 + 2) * 64;   // a 64-byte line per ring (G <= 2)
      auto* inbox = new EpRegion, *inflag = new EpRegion, *parts = new EpRegion, *ret = new EpRegion;
-@@ -1806,6 +2050,12 @@ bool Verifier::ep_init(std::string& err) {
+@@ -1806,6 +2056,12 @@ bool Verifier::ep_init(std::string& err) {
      if (!ep_region_alloc(d1, d0, 2 * ep_slot_bytes_, *inbox, err) || !ep_region_alloc(d1, d0, flag_bytes, *inflag, err) ||
          !ep_region_alloc(d0, d1, (size_t) MT * K * N * 4, *parts, err) || !ep_region_alloc(d0, d1, flag_bytes, *ret, err))
          return false;
@@ -1637,7 +1695,7 @@ index 1b7273eb..d035c69a 100644
      ep_inbox1_ = (uint8_t*) inbox->local;   ep_inbox_on0_ = (uint8_t*) inbox->remote;
      ep_inflag1_ = (uint32_t*) inflag->local; ep_inflag_on0_ = (uint32_t*) inflag->remote;
      ep_ret0_ = (uint32_t*) ret->local;       ep_ret_on1_ = (uint32_t*) ret->remote;
-@@ -1813,6 +2063,10 @@ bool Verifier::ep_init(std::string& err) {
+@@ -1813,6 +2069,10 @@ bool Verifier::ep_init(std::string& err) {
      // the peer writes its rows straight into parts_; the two checks keep this card's own rows apart from them
      static const bool self = [] { const char* v = std::getenv("STRATA_EP_SELF"); return v && v[0] == '1'; }();
      if (!ep_verify_ && !self) parts_ = ep_rows0_;
@@ -1648,7 +1706,7 @@ index 1b7273eb..d035c69a 100644
      ep_ctr0_ = sycl::malloc_device<uint32_t>(16, *cs_);
      cs_->memset(ep_ctr0_, 0, 64).wait();
      ep_err0_ = (uint32_t*) strata::host_malloc_polled(64, *cs_);
-@@ -1849,7 +2103,7 @@ void Verifier::ep_free() {
+@@ -1849,7 +2109,7 @@ void Verifier::ep_free() {
          for (auto& x : ep_exec_) { delete x; x = nullptr; }
          for (auto& kv : ep_exec_bm_) delete kv.second;
          ep_exec_bm_.clear();
@@ -1657,7 +1715,7 @@ index 1b7273eb..d035c69a 100644
              if (*r != nullptr) { ep_region_free(*(EpRegion*) *r); delete (EpRegion*) *r; *r = nullptr; }
          if (ep_q_ != nullptr) {
              for (void* p : {(void*) ep_ctr1_, (void*) ep_plan1_, (void*) ep_in1_, (void*) ep_rows1_, (void*) ep_done1_,
-@@ -1858,6 +2112,7 @@ void Verifier::ep_free() {
+@@ -1858,6 +2118,7 @@ void Verifier::ep_free() {
              for (uint32_t* p : {ep_err1_, ep_plan_err1_}) if (p) strata::host_free_polled(p, *ep_q_);
          }
          if (ep_ctr0_ != nullptr) sycl::free(ep_ctr0_, *cs_);
@@ -1665,8 +1723,15 @@ index 1b7273eb..d035c69a 100644
          if (ep_err0_ != nullptr) strata::host_free_polled(ep_err0_, *cs_);
      } catch (...) {}   // at process exit the context can already be gone (see ~Verifier)
      ep_q_ = nullptr; ep_ctr0_ = ep_ctr1_ = nullptr; ep_plan1_ = nullptr; ep_in1_ = nullptr; ep_rows1_ = nullptr; ep_done1_ = nullptr; ep_scratch1_ = nullptr;
-@@ -2044,8 +2299,10 @@ bool Verifier::capture_commit(std::string &err) try {
+@@ -2042,10 +2303,17 @@ bool Verifier::capture_commit(std::string &err) try {
+                 float* conv = state + (uint64_t) g.ssm_state_size * g.ssm_v_heads * g.ssm_state_size;
+                 const float* qkv = qkv_L_ + (size_t) gdn_index * MT * C;
                  gdn_conv_commit(conv, qkv, (int) C, commit_, cs_);
++                if (delta_L_ != nullptr)   // night GDN2: the state from the verify's saved deltas (bitwise the commit below)
++                    gdn_commit_delta(state, h_L_ + (size_t) gdn_index * MT * C, (int) C, gate_L_ + (size_t) gdn_index * MT * HV,
++                                     delta_L_ + (size_t) gdn_index * MT * (size_t) (HV * g.ssm_state_size),
++                                     (int) g.ssm_k_heads, (int) HV, commit_, cs_);
++                else
                  gdn_step_norm_multi(state, h_L_ + (size_t) gdn_index * MT * C, (int) C, gate_L_ + (size_t) gdn_index * MT * HV,
                                      beta_L_ + (size_t) gdn_index * MT * HV, z_, (const float*) wnm->data, EPS, y_dummy_,
 -                                    (int) g.ssm_k_heads, (int) HV, (int) MT, commit_, cs_,
@@ -1678,7 +1743,7 @@ index 1b7273eb..d035c69a 100644
                  ++gdn_index;
              } else {
                  const QsaState& st = ss.qsa_states[qsa_index];
-@@ -2186,7 +2443,7 @@ bool Verifier::run(int T, const int32_t *tokens, int64_t pos0, PoolMultiFn pool,
+@@ -2186,7 +2454,7 @@ bool Verifier::run(int T, const int32_t *tokens, int64_t pos0, PoolMultiFn pool,
      if (!staged_) stage_inputs(T, tokens, pos0);
      staged_ = false;
      const bool do_ple = ss.ple.ready() && ple_stage();
@@ -1687,7 +1752,7 @@ index 1b7273eb..d035c69a 100644
      if (do_ple) {
          int32_t prev[2] = {ss.ple_prev[0], ss.ple_prev[1]};
          for (int t = 0; t < T; ++t) {
-@@ -2929,7 +3186,10 @@ catch (sycl::exception const &exc) {
+@@ -2929,7 +3197,10 @@ catch (sycl::exception const &exc) {
  // SYCL port: capture every window graph now (one per window size) instead of on first use, so the first request
  // does not pay for them (a 2,400-node graph takes tens of ms to finalize on this backend).
  bool Verifier::warm(std::string &err) {
@@ -1699,7 +1764,7 @@ index 1b7273eb..d035c69a 100644
          if (!capture(T, err)) return false;
      return true;
  }
-@@ -2984,6 +3244,12 @@ catch (sycl::exception const &exc) {
+@@ -2984,6 +3255,12 @@ catch (sycl::exception const &exc) {
  
  bool Verifier::capture_batch(const int *rows, int S, int hbase,
                               std::string &err) try {
@@ -1712,7 +1777,30 @@ index 1b7273eb..d035c69a 100644
      dpct::experimental::command_graph_exec_ptr &ex =
          exec_bm_[bkey(rows, S, hbase)];
      if (ex != nullptr) return true;
-@@ -3270,6 +3536,15 @@ bool Verifier::stage_batch(const int *rows, int S, int hbase,
+@@ -3147,7 +3424,8 @@ bool Verifier::capture_commit_batch(const int *rows, int S, int hbase,
+                 if (!gdn_commit_layers(x.gdn_state, 817152, 786432, qkv_L_ + (size_t) first * C, 81920,
+                                        h_L_ + (size_t) first * C, 81920, gate_L_ + (size_t) first * HV,
+                                        beta_L_ + (size_t) first * HV, 384, (int) C, 16, 48, 3, 36,
+-                                       commitb_ + (size_t) rows[first] * CB, cs_)) {
++                                       commitb_ + (size_t) rows[first] * CB, cs_,
++                                       delta_L_ ? delta_L_ + (size_t) first * ZV : nullptr, (int64_t) MT * (int64_t) ZV)) {
+                     err = "verify: GDN layer commit eligibility changed during capture";
+                     ok = false;   // discard capture; never replay partial batch plus fallback
+                 }
+@@ -3182,6 +3460,12 @@ bool Verifier::capture_commit_batch(const int *rows, int S, int hbase,
+                     float* conv = state + (uint64_t) g.ssm_state_size * g.ssm_v_heads * g.ssm_state_size;
+                     gdn_conv_commit(conv, qkv_L_ + (size_t) gdn_index * MT * C + (size_t) first * C,
+                                     (int) C, keep, cs_);
++                    if (delta_L_ != nullptr)   // night GDN2
++                        gdn_commit_delta(state, h_L_ + (size_t) gdn_index * MT * C + (size_t) first * C, (int) C,
++                                         gate_L_ + (size_t) gdn_index * MT * HV + (size_t) first * HV,
++                                         delta_L_ + ((size_t) gdn_index * MT + (size_t) first) * (size_t) ZV,
++                                         (int) g.ssm_k_heads, (int) HV, keep, cs_);
++                    else
+                     gdn_step_norm_multi(state, h_L_ + (size_t) gdn_index * MT * C + (size_t) first * C, (int) C,
+                                         gate_L_ + (size_t) gdn_index * MT * HV + (size_t) first * HV,
+                                         beta_L_ + (size_t) gdn_index * MT * HV + (size_t) first * HV,
+@@ -3270,6 +3554,15 @@ bool Verifier::stage_batch(const int *rows, int S, int hbase,
                             std::string &err) try {
      using namespace strata::kernels;
      host_boundary::mark("stage_enter", S, hbase);
@@ -1728,7 +1816,7 @@ index 1b7273eb..d035c69a 100644
      if (S < 1 || S > max_t_ || hbase < 0 ||
          (next_ != nullptr && hbase + S > (int) slots_.size())) {
          err = "verify: batch rows out of range (init_slots)";
-@@ -3351,7 +3626,7 @@ bool Verifier::stage_batch(const int *rows, int S, int hbase,
+@@ -3351,7 +3644,7 @@ bool Verifier::stage_batch(const int *rows, int S, int hbase,
          for (int64_t h = 0; h < g.idx_q_heads; ++h) pi[t * g.idx_q_heads + h] = (int32_t) pos[t];
      }
      if (ss_->ple.ready() && ple_stage()) {
@@ -1737,7 +1825,7 @@ index 1b7273eb..d035c69a 100644
          for (int t = 0; t < S; ++t) {
              const SessionState& sx = *slots_[(size_t) rows[t]];
              int32_t prev[2] = {sx.ple_prev[0], sx.ple_prev[1]};
-@@ -3400,8 +3675,8 @@ catch (sycl::exception const &exc) {
+@@ -3400,8 +3693,8 @@ catch (sycl::exception const &exc) {
  
  bool Verifier::run_slots(int S, const int32_t* tokens, const int64_t* pos, PoolMultiFn pool, void* user, int32_t* out,
                           std::string& err) {
@@ -1748,7 +1836,7 @@ index 1b7273eb..d035c69a 100644
      return run_slot_rows(rows, S, tokens, pos, pool, user, out, err);
  }
  
-@@ -3681,8 +3956,8 @@ bool Verifier::batch_launch(int base, int S, const int32_t *tokens,
+@@ -3681,8 +3974,8 @@ bool Verifier::batch_launch(int base, int S, const int32_t *tokens,
                              const int64_t *pos, std::string &err) try {
      const OnDevice on_device(device_);
      if (b_running_) { err = "verify: batch_launch while this stage is busy"; return false; }
@@ -1759,7 +1847,7 @@ index 1b7273eb..d035c69a 100644
      if (!stage_batch(rows, S, base, tokens, pos, err)) return false;
      if (ep_on()) ep_q_->ext_oneapi_graph(*ep_exec_bm_[bkey(rows, S, base)]);   // the peer's half first, as run()
      dpct::err0 le = DPCT_CHECK_ERROR(
-@@ -3913,7 +4188,7 @@ bool Verifier::capture_all(std::string &err) try {
+@@ -3913,7 +4206,7 @@ bool Verifier::capture_all(std::string &err) try {
                                 functionality is redundant in SYCL.
                                 */
      }
@@ -4356,7 +4444,7 @@ index 28f8db8e..71c89772 100644
 +}
  }  // namespace strata::kernels
 diff --git a/sycl/src/kernels/cuda/native_mmvq.dp.cpp b/sycl/src/kernels/cuda/native_mmvq.dp.cpp
-index 96913121..5bcd8960 100644
+index 96913121..4db1de91 100644
 --- a/sycl/src/kernels/cuda/native_mmvq.dp.cpp
 +++ b/sycl/src/kernels/cuda/native_mmvq.dp.cpp
 @@ -25,9 +25,11 @@
@@ -4379,7 +4467,7 @@ index 96913121..5bcd8960 100644
  #include <cstdio>
  #include <vector>
  #include <cmath>
-@@ -2230,6 +2233,1229 @@ bool try_wide(const void* weights, const void* x_q8_1, float* y, int n_in, int n
+@@ -2230,6 +2233,1345 @@ bool try_wide(const void* weights, const void* x_q8_1, float* y, int n_in, int n
      }
  }
  
@@ -5606,10 +5694,126 @@ index 96913121..5bcd8960 100644
 +std::mutex& night_shexp_mutex() { static std::mutex m; return m; }
 +std::unordered_map<const void*, uint32_t*>& night_shexp_counters() { static std::unordered_map<const void*, uint32_t*> m; return m; }
 +
++// ---------------------------------------------------------------- night: STRATA_NIGHT_IQ3S_LO=1 (IQ3_S, 1-4 columns)
++// The serving kernel's own mapping (mmvq_multi_kernel<21>: 4 SIMD32 sub-groups per group, one row each, lane = part
++// k = lane + 32 i, s[c] += d * sumi per part, xor 16..1 warp sum, lane c stores), so every output is BITWISE the
++// serving kernel's, with a cheaper decode: the round-2 IQ3_S decode (16-bit word loads gathered once, sign masks by
++// shifts, (g ^ m) + (m & 0x01010101) - exact, the grid bytes are odd 1..15), no per-part 64-bit index products, and
++// optionally the grid in SLM (one 2 KB fill per group). No K split, no cross-sub-group reduction, no GRF256: the
++// round-2 KREG IQ3_S lost in-engine at <= 4 columns although it won standalone.
++int g_night_iq3s_lo_override = -1;   // bench toggle (night_iq3s_lo_set)
++inline bool night_iq3s_lo_env();
++inline bool night_iq3s_lo() { return g_night_iq3s_lo_override >= 0 ? g_night_iq3s_lo_override != 0 : night_iq3s_lo_env(); }
++inline bool night_iq3s_lo_env() {
++    static const bool v = [] {
++        const char* e = std::getenv("STRATA_NIGHT_IQ3S_LO");
++        const bool on = e && e[0] == '1';
++        if (on) std::fprintf(stderr, "strata night iq3s lo: enabled=1 IQ3_S 1-4 columns, serving mapping, bitwise\n");
++        return on;
++    }();
++    return v;
++}
++template <bool SLM_GRID>
++__dpct_inline__ void night_iq3s_lo_decode(const NightIQ3SBlock* __restrict__ b, int ib, const uint32_t* __restrict__ T, int (&g)[8],
++                                          int& ls, float& dw) {
++    const uint16_t* q16 = reinterpret_cast<const uint16_t*>(b->qs) + 4 * ib;
++    const uint32_t qa = uint32_t(q16[0]) | (uint32_t(q16[1]) << 16), qb = uint32_t(q16[2]) | (uint32_t(q16[3]) << 16);
++    const uint32_t qh = b->qh[ib];
++    const uint16_t* s16 = reinterpret_cast<const uint16_t*>(b->signs) + 2 * ib;
++    const uint32_t sg = uint32_t(s16[0]) | (uint32_t(s16[1]) << 16);
++#pragma unroll
++    for (int l0 = 0; l0 < 8; l0 += 2) {
++        const uint32_t qw = l0 < 4 ? qa : qb;
++        const uint32_t i0 = ((qw >> (8 * (l0 & 3))) & 0xFF) | ((qh << (8 - l0)) & 0x100);
++        const uint32_t i1 = ((qw >> (8 * ((l0 + 1) & 3))) & 0xFF) | ((qh << (7 - l0)) & 0x100);
++        const uint32_t sp = (sg >> (4 * l0)) & 0xFF;
++        const uint32_t m0 = night_spread4s(sp & 0x0F), m1 = night_spread4s(sp >> 4);
++        g[l0 + 0] = (int) ((T[i0] ^ m0) + (m0 & 0x01010101u));
++        g[l0 + 1] = (int) ((T[i1] ^ m1) + (m1 & 0x01010101u));
++    }
++    ls = 1 + 2 * ((b->scales[ib >> 1] >> (4 * (ib & 1))) & 0x0F);
++    dw = (float) b->d;
++}
++template <int NC, bool SLM_GRID>
++void night_iq3s_lo_kernel(const uint8_t* __restrict__ w, std::size_t rb, const Q81Block* __restrict__ x, float* __restrict__ y,
++                          int n_in, int n_out, uint32_t* __restrict__ slm) {
++    auto it = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
++    const uint32_t* T = kNightIq3sGrid;
++    if constexpr (SLM_GRID) {
++        const int lid = int(it.get_local_id(1)) * 32 + int(it.get_local_id(2));
++        for (int i = lid; i < 512; i += 128) slm[i] = kNightIq3sGrid[i];
++        it.barrier(sycl::access::fence_space::local_space);
++        T = slm;
++    }
++    const int row = int(it.get_group(2)) * 4 + int(it.get_local_id(1));
++    if (row >= n_out) return;
++    const int lane = int(it.get_local_id(2));
++    const int nb = n_in / 256, xbs = n_in / 32;
++    const NightIQ3SBlock* br = reinterpret_cast<const NightIQ3SBlock*>(w + std::size_t(row) * rb);
++    float s[NC];
++#pragma unroll
++    for (int c = 0; c < NC; ++c) s[c] = 0.0f;
++    for (int k = lane; k < nb * 8; k += 32) {
++        const int kbx = k >> 3, ib = k & 7;
++        int g[8]; int ls; float dw;
++        night_iq3s_lo_decode<SLM_GRID>(br + kbx, ib, T, g, ls, dw);
++#pragma unroll
++        for (int c = 0; c < NC; ++c) {
++            const Q81Block* xb = x + std::size_t(c) * xbs + kbx * 8 + ib;
++            const int* q8 = reinterpret_cast<const int*>(xb->qs);
++            int sumi = 0;
++#pragma unroll
++            for (int j = 0; j < 8; ++j) sumi = strata::dp4a(g[j], q8[j], sumi);
++            sumi *= ls;
++            const float d = dw * (float) xb->ds[0];
++            const float t = d * sumi;   // its own statement (no fma contraction): the serving apply() returns d * sumi
++            s[c] += t;
++        }
++    }
++    const sycl::sub_group sg = it.get_sub_group();
++#pragma unroll
++    for (int c = 0; c < NC; ++c) {
++        float v = s[c];
++#pragma unroll
++        for (int o = 16; o > 0; o >>= 1) v += sycl::permute_group_by_xor(sg, v, o);
++        if (lane == c) y[std::size_t(c) * n_out + row] = v;
++    }
++}
++template <int NC, bool SLM_GRID>
++void launch_night_iq3s_lo(const void* weights, const void* x_q8_1, float* y, int n_in, int n_out, dpct::queue_ptr s) {
++    const auto* w = static_cast<const uint8_t*>(weights);
++    const auto* x = static_cast<const Q81Block*>(x_q8_1);
++    const std::size_t rb = std::size_t(n_in / 256) * sizeof(NightIQ3SBlock);
++    const unsigned groups = unsigned((n_out + 3) / 4);
++    s->submit([&](sycl::handler& h) {
++        sycl::local_accessor<uint32_t, 1> slm(sycl::range<1>(SLM_GRID ? 512 : 1), h);
++        h.parallel_for<dpct_kernel_name<class night_iq3s_lo, dpct_kernel_scalar<NC>, dpct_kernel_scalar<SLM_GRID>>>(
++            sycl::nd_range<3>(sycl::range(1, 1, groups) * sycl::range(1, 4, 32), sycl::range(1, 4, 32)),
++            [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {
++                night_iq3s_lo_kernel<NC, SLM_GRID>(w, rb, x, y, n_in, n_out, slm.get_multi_ptr<sycl::access::decorated::no>().get());
++            });
++    });
++}
++// grid in SLM (one fill per group) for the large outputs, from global memory for the small ones (probe3, card 1)
++inline int night_iq3s_lo_slm_min() {
++    static const int v = std::getenv("STRATA_NIGHT_IQ3S_LO_SLM_MIN") ? std::atoi(std::getenv("STRATA_NIGHT_IQ3S_LO_SLM_MIN")) : 2048;
++    return v;
++}
++bool try_night_iq3s_lo(const void* w, const void* x, float* y, int n_in, int n_out, int ncols, void* stream) {
++    if (!night_iq3s_lo() || !w || !x || !y || !stream || ncols < 1 || ncols > 4 || n_out <= 0 || n_in <= 0 || n_in % QK != 0 ||
++        (reinterpret_cast<uintptr_t>(w) & 1u) || (reinterpret_cast<uintptr_t>(x) & 3u)) return false;
++    const auto s = strata::q_of(stream);
++    const bool slm = n_out >= night_iq3s_lo_slm_min();
++#define STRATA_IQ3LO(NC) case NC: if (slm) launch_night_iq3s_lo<NC, true>(w, x, y, n_in, n_out, s); \
++                                  else launch_night_iq3s_lo<NC, false>(w, x, y, n_in, n_out, s); return true;
++    switch (ncols) { STRATA_IQ3LO(1) STRATA_IQ3LO(2) STRATA_IQ3LO(3) STRATA_IQ3LO(4) default: return false; }
++#undef STRATA_IQ3LO
++}
++
  // SYCL port: wide kernels for the 32-element formats Q8_0 (34-byte blocks) and IQ4_NL (18). Both are only 2-byte
  // aligned, so the weights come through load16_a2 (page-safe). Q8_0: 2 lanes per block (16 quants each), 16 blocks
  // per sub-group step; IQ4_NL: 1 lane per block (its 16 bytes = 32 nibbles), 32 blocks per step. One row per
-@@ -2460,11 +3686,20 @@ void launch_multi(const void* weights, const void* x_q8_1, float* y, int n_in, i
+@@ -2460,11 +3802,20 @@ void launch_multi(const void* weights, const void* x_q8_1, float* y, int n_in, i
      }
  }
  
@@ -5631,7 +5835,7 @@ index 96913121..5bcd8960 100644
  }
  void validate_pointer(const void* p) {
      if (!p || reinterpret_cast<std::uintptr_t>(p) % 4 != 0) {
-@@ -3296,6 +4531,73 @@ void native_q6_k_unpack(const void* weights) {
+@@ -3296,6 +4647,73 @@ void native_q6_k_unpack(const void* weights) {
  
  void native_mmvq_set_multi_exact(bool exact) { g_multi_exact = exact; }
  void native_mmvq_set_q6k_wide(bool on) { g_q6k_wide = on; }
@@ -5705,7 +5909,7 @@ index 96913121..5bcd8960 100644
  void native_q6_k_mmvq_stride224(const void* weights, const void* x_q8_1, float* y, int n_in, int n_out, int ncols,
                                  void* stream) {
      const auto s = strata::q_of(stream);
-@@ -3310,11 +4612,20 @@ void native_q6_k_mmvq_stride224(const void* weights, const void* x_q8_1, float*
+@@ -3310,11 +4728,20 @@ void native_q6_k_mmvq_stride224(const void* weights, const void* x_q8_1, float*
  bool native_mmvq_multi_exact() { return g_multi_exact; }
  
  std::size_t native_q8_1_bytes(int n_in, int ncols) {
@@ -5726,7 +5930,7 @@ index 96913121..5bcd8960 100644
      validate_shape(n_in, ncols);
      validate_pointer(x);
      validate_pointer(x_q8_1);
-@@ -3378,6 +4689,7 @@ void native_swiglu_quantize_q8_1(const float* gate, const float* up, void* x_q8_
+@@ -3378,6 +4805,7 @@ void native_swiglu_quantize_q8_1(const float* gate, const float* up, void* x_q8_
  
  void native_q5_k_mmvq(const void* weights, const void* x_q8_1, float* y,
                        int n_in, int n_out, int ncols, void* stream) {
@@ -5734,7 +5938,7 @@ index 96913121..5bcd8960 100644
      validate_shape(n_in, ncols, QK);
      if (n_out <= 0) throw std::invalid_argument("native MMVQ requires n_out > 0");
      validate_pointer(weights);
-@@ -3601,6 +4913,7 @@ void native_q3_k_f32(const void* weights, const float* x, void* scratch_q8_1,
+@@ -3601,6 +5029,7 @@ void native_q3_k_f32(const void* weights, const float* x, void* scratch_q8_1,
  
  void native_iq4_xs_mmvq(const void* weights, const void* x_q8_1, float* y,
                         int n_in, int n_out, int ncols, void* stream) {
@@ -5742,7 +5946,7 @@ index 96913121..5bcd8960 100644
      validate_shape(n_in, ncols, 256);
      if (n_out <= 0) throw std::invalid_argument("native MMVQ requires n_out > 0");
      validate_pointer(weights);
-@@ -3692,6 +5005,7 @@ void native_iq4_xs_f32(const void* weights, const float* x, void* scratch_q8_1,
+@@ -3692,6 +5121,7 @@ void native_iq4_xs_f32(const void* weights, const float* x, void* scratch_q8_1,
  
  void native_q4_k_mmvq(const void* weights, const void* x_q8_1, float* y,
                        int n_in, int n_out, int ncols, void* stream) {
@@ -5750,7 +5954,7 @@ index 96913121..5bcd8960 100644
      validate_shape(n_in, ncols, 256);
      if (n_out <= 0) throw std::invalid_argument("native MMVQ requires n_out > 0");
      validate_pointer(weights);
-@@ -3769,6 +5083,7 @@ void native_q4_k_f32(const void* weights, const float* x, void* scratch_q8_1,
+@@ -3769,6 +5199,7 @@ void native_q4_k_f32(const void* weights, const float* x, void* scratch_q8_1,
  void native_q6_k_mmvq(const void* weights, const void* x_q8_1, float* y,
                        int n_in, int n_out, int ncols, void* stream) {
      if (q6_packed_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream)) return;   // STRATA_Q6_PACKED=1 heads
@@ -5758,7 +5962,7 @@ index 96913121..5bcd8960 100644
      // SYCL port: 16-byte-load kernel for the decode shapes (ncols <= 4)
      // With the aligned loads (load16_a2) the wide kernel wins on every Q6_K shape and window width: 2.6-3.4x the
      // misaligned-load kernels in q6k_align_bench, decode 44.9 -> 54 tok/s on the Coder, output tokens identical.
-@@ -3982,6 +5297,7 @@ void native_q8_0_f32(const void* weights, const float* x, void* scratch_q8_1,
+@@ -3982,6 +5413,7 @@ void native_q8_0_f32(const void* weights, const float* x, void* scratch_q8_1,
  
  void native_iq4_nl_mmvq(const void* weights, const void* x_q8_1, float* y,
                         int n_in, int n_out, int ncols, void* stream) {
@@ -5766,7 +5970,7 @@ index 96913121..5bcd8960 100644
      if (try_wide32<Wide32IQ4NL>(weights, x_q8_1, y, n_in, n_out, ncols, stream)) { launch_check(); return; }
      small_mmvq<IQ4NLBlock, 4>(weights, x_q8_1, y, n_in, n_out, ncols, stream);
  }
-@@ -4084,8 +5400,29 @@ void native_mmvq_head(int ggml_type, const void* weights, const void* x_q8_1, fl
+@@ -4084,8 +5516,29 @@ void native_mmvq_head(int ggml_type, const void* weights, const void* x_q8_1, fl
      native_mmvq(ggml_type, weights, x_q8_1, y, n_in, n_out, ncols, stream);
  }
  
@@ -5796,14 +6000,19 @@ index 96913121..5bcd8960 100644
      switch (ggml_type) {
      case 2: native_q4_0_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
      case 6: native_q5_0_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
-@@ -4099,6 +5436,7 @@ void native_mmvq(int ggml_type, const void* weights, const void* x_q8_1, float*
+@@ -4099,9 +5552,12 @@ void native_mmvq(int ggml_type, const void* weights, const void* x_q8_1, float*
      case 23: native_iq4_xs_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
      case 42: native_q2_0_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
      case 16: case 17: case 18: case 21: case 22: case 29:
++        if (ggml_type == 21 && try_night_iq3s_lo(weights, x_q8_1, y, n_in, n_out, ncols, stream)) { launch_check(); break; }   // STRATA_NIGHT_IQ3S_LO=1
 +        if (ggml_type == 21 && try_night_iq3s(weights, x_q8_1, y, n_in, n_out, ncols, stream)) { launch_check(); break; }   // STRATA_NIGHT_MMVQ2=1
          iq_mmvq(ggml_type, weights, x_q8_1, y, n_in, n_out, ncols, stream); break;
      default: throw std::invalid_argument("unsupported native MMVQ GGML type");
      }
+ }
+ 
++void night_iq3s_lo_set(int on) { g_night_iq3s_lo_override = on; }   // bench toggle: -1 = STRATA_NIGHT_IQ3S_LO
+ } // namespace strata::kernels
 diff --git a/sycl/src/kernels/cuda/native_router.dp.cpp b/sycl/src/kernels/cuda/native_router.dp.cpp
 index e392b88a..7e56550f 100644
 --- a/sycl/src/kernels/cuda/native_router.dp.cpp
@@ -8309,7 +8518,7 @@ index 44d81a08..27d60c68 100644
      if (!(pair && nw.gate_type == nw.up_type &&
            native_mmvq_pair(nw.gate_type, nw.gate_data, nw.up_data, x_q8_1, gate, up, (int) n_embd, (int) n_ff, n_tok, stream))) {
 diff --git a/sycl/src/kernels/cuda/verify_kernels.dp.cpp b/sycl/src/kernels/cuda/verify_kernels.dp.cpp
-index 9946f7ae..77288c04 100644
+index 9946f7ae..882e168b 100644
 --- a/sycl/src/kernels/cuda/verify_kernels.dp.cpp
 +++ b/sycl/src/kernels/cuda/verify_kernels.dp.cpp
 @@ -4,6 +4,7 @@
@@ -8379,7 +8588,81 @@ index 9946f7ae..77288c04 100644
  // State-only commit kernel: each head's 128 independent state columns are split across 4 blocks of 32 columns
  // (48 * 4 = 192 blocks of 128 threads across all SMs, vs 48 blocks of 512 threads), with no sq/o/norm/z/y work.
  /*
-@@ -1665,8 +1718,25 @@ void dense_steps(const int32_t* cells, int n, int32_t* steps, void* stream) {
+@@ -352,7 +405,7 @@ __dpct_inline__ void gdn_step_norm_multi_kernel(
+     const float *__restrict__ z, const float *__restrict__ gamma, float eps,
+     float *__restrict__ y, int h_k, int h_v, int T,
+     const int32_t *__restrict__ n_keep, int t_out_begin,
+-    GdnQ81 *__restrict__ xq) {
++    GdnQ81 *__restrict__ xq, float *__restrict__ dsave = nullptr) {
+     auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+ auto &sk = *sycl::ext::oneapi::group_local_memory_for_overwrite<float[2][S]>(
+     sycl::ext::oneapi::this_work_item::get_work_group<3>());
+@@ -429,6 +482,8 @@ auto &sk = *sycl::ext::oneapi::group_local_memory_for_overwrite<float[2][S]>(
+         item_ct1.barrier();
+         const float kv_col = red_kv[0][col] + red_kv[1][col] + red_kv[2][col] + red_kv[3][col];
+         const float delta = (ht[2 * qk + head * S + col] - g * kv_col) * beta[(size_t) t * h_v + head];
++        // night-lab STRATA_NIGHT_GDN2: this row's delta for the commit (a store only; the arithmetic is unchanged)
++        if (dsave != nullptr && rg == 0) dsave[(size_t) t * value_dim + head * S + col] = delta;
+         if (!need_out) {
+ #pragma unroll
+             for (int r = 0; r < RPG; ++r)
+@@ -1140,8 +1195,55 @@ void copy_row_to_first(const int32_t* row_dev, float* a, int64_t a_n, float* b,
+     check("copy_row_to_first");
+ }
+ 
++// night-lab STRATA_NIGHT_MTP_SELECT=1: mtp_select's residual copy (hc * n_embd floats) over several work-groups as
++// float4 instead of one work-group's float loop (15 us on the B70 for 40 KB); work-group 0 then writes the token,
++// its probability and the mapped outputs exactly as the one-group kernel does. The same bytes everywhere.
++namespace {
++bool night_mtp_select_on() {
++    static const bool v = [] {
++        const char* e = std::getenv("STRATA_NIGHT_MTP_SELECT");
++        const bool on = e != nullptr && e[0] == '1';
++        if (on) std::fprintf(stderr, "strata: STRATA_NIGHT_MTP_SELECT=1: the drafter's row select copies over many work-groups\n");
++        return on;
++    }();
++    return v;
++}
++}  // namespace
++void night_mtp_select(const float* R_src, int64_t R_stride, const int32_t* ids, const int32_t* row_dev, float* R_dst,
++                      int32_t* tok_dst, int32_t* out, int j, void* stream, const float* probs, float* out_p) {
++    const bool v4 = R_stride % 4 == 0 && (reinterpret_cast<uintptr_t>(R_src) & 15u) == 0 &&
++                    (reinterpret_cast<uintptr_t>(R_dst) & 15u) == 0;
++    const int64_t units = v4 ? R_stride / 4 : R_stride;
++    const unsigned groups = (unsigned) std::max<int64_t>(1, std::min<int64_t>((units + 255) / 256, 64));
++    strata::q_of(stream)->parallel_for<dpct_kernel_name<class night_mtp_select_k>>(
++        sycl::nd_range<3>(sycl::range(1, 1, groups * 256), sycl::range(1, 1, 256)), [=](sycl::nd_item<3> it) {
++            const int row = *row_dev;
++            const int64_t g0 = (int64_t) it.get_global_id(2), gn = (int64_t) it.get_global_range(2);
++            if (v4) {
++                const sycl::float4* s4 = reinterpret_cast<const sycl::float4*>(R_src + (size_t) row * R_stride);
++                sycl::float4* d4 = reinterpret_cast<sycl::float4*>(R_dst);
++                for (int64_t i = g0; i < units; i += gn) d4[i] = s4[i];
++            } else {
++                for (int64_t i = g0; i < units; i += gn) R_dst[i] = R_src[(size_t) row * R_stride + i];
++            }
++            it.barrier(sycl::access::fence_space::local_space);
++            if (it.get_group(2) == 0 && it.get_local_id(2) == 0) {
++                const int32_t tok = ids[row];
++                *tok_dst = tok;
++                if (probs != nullptr && out_p != nullptr) ((volatile float*) out_p)[j] = probs[row];
++                sycl::atomic_fence(sycl::memory_order::acq_rel, sycl::memory_scope::system);
++                if (out != nullptr) ((volatile int32_t*) out)[j] = tok;
++            }
++        });
++    check("night_mtp_select");
++}
++
+ void mtp_select(const float* R_src, int64_t R_stride, const int32_t* ids, const int32_t* row_dev, float* R_dst,
+                 int32_t* tok_dst, int32_t* out, int j, void* stream, const float* probs, float* out_p) {
++    if (night_mtp_select_on()) {
++        night_mtp_select(R_src, R_stride, ids, row_dev, R_dst, tok_dst, out, j, stream, probs, out_p);
++        return;
++    }
+     {
+         auto exp_props = sycl::ext::oneapi::experimental::properties{
+             sycl::ext::oneapi::experimental::use_root_sync};
+@@ -1665,8 +1767,25 @@ void dense_steps(const int32_t* cells, int n, int32_t* steps, void* stream) {
      check("dense_steps");
  }
  
@@ -8405,7 +8688,61 @@ index 9946f7ae..77288c04 100644
      if (!history || !qkv || !conv_w || !h || channels % S != 0 || n_tok < 1 || n_tok > kVerifyMaxT ||
          (commit && (n_tok != 1 || t_begin != 0))) {
          std::fprintf(stderr, "gdn_conv_l2_multi: invalid arguments\n");
-@@ -1747,14 +1817,42 @@ bool gdn_commit_layers(float* state, int64_t state_stride, int64_t conv_off, con
+@@ -1714,9 +1833,31 @@ void gdn_conv_commit(float* history, const float* qkv, int channels, const int32
+ }
+ 
+ // S147: existing declaration, only S145's privately tested domain; ordinary launches.
++// night-lab STRATA_NIGHT_GDN2: one state element column block of gdn_commit_delta (see there), for the layer launch
++__dpct_inline__ void gdn_commit_delta_body(float* __restrict__ state, const float* __restrict__ h, int conv_channels,
++                                           const float* __restrict__ gate, const float* __restrict__ dsave, int h_k,
++                                           int h_v, int n, int head, int rb, int col) {
++    constexpr int RB = 8;
++    const int qk = S * h_k, value_dim = S * h_v, r0 = rb * RB, qh = head % h_k;
++    const size_t row_stride = (size_t) h_v * S;
++    float* base = state + ((size_t) r0 * h_v + head) * S + col;
++    float sv[RB];
++#pragma unroll
++    for (int i = 0; i < RB; ++i) sv[i] = base[(size_t) i * row_stride];
++    for (int t = 0; t < n; ++t) {
++        const float g = sycl::native::exp(gate[(size_t) t * h_v + head]);
++        const float d = dsave[(size_t) t * value_dim + head * S + col];
++        const float* kt = h + (size_t) t * conv_channels + qk + qh * S + r0;
++#pragma unroll
++        for (int i = 0; i < RB; ++i) sv[i] = sycl::fma((float) g, sv[i], kt[i] * d);
++    }
++#pragma unroll
++    for (int i = 0; i < RB; ++i) base[(size_t) i * row_stride] = sv[i];
++}
+ bool gdn_commit_layers(float* state, int64_t state_stride, int64_t conv_off, const float* qkv, int64_t qkv_stride,
+                        const float* h, int64_t h_stride, const float* gate, const float* beta, int64_t gb_stride,
+-                       int conv_channels, int h_k, int h_v, int n_max, int n_layers, const int32_t* n_keep, void* stream) {
++                       int conv_channels, int h_k, int h_v, int n_max, int n_layers, const int32_t* n_keep, void* stream,
++                       const float* dsave, int64_t d_stride) {
+     static const bool modes_ok = [] {
+         const char* sp = std::getenv("STRATA_GDN_SPLIT");
+         const char* cs = std::getenv("STRATA_GDN_COMMIT_SPLIT");
+@@ -1736,6 +1877,20 @@ bool gdn_commit_layers(float* state, int64_t state_stride, int64_t conv_off, con
+             const int64_t l = item.get_group(1);
+             gdn_conv_commit_kernel(state + l * state_stride + conv_off, qkv + l * qkv_stride, conv_channels, n_keep);
+         });
++    if (dsave != nullptr) {   // night GDN2: the states from the verify's saved deltas (bitwise the launch below)
++        q->parallel_for<class gdn_state_commit_layers_delta_night>(
++            sycl::nd_range<3>(sycl::range<3>(36, (size_t) h_v * (S / 8), S), sycl::range<3>(1, 1, S)),
++            [=](sycl::nd_item<3> item) {
++                const int n = *n_keep;
++                if (n <= 0) return;
++                const int64_t l = item.get_group(0);
++                const int hb = (int) item.get_group(1);
++                gdn_commit_delta_body(state + l * state_stride, h + l * h_stride, conv_channels, gate + l * gb_stride,
++                                      dsave + l * d_stride, h_k, h_v, n, hb / (S / 8), hb % (S / 8), (int) item.get_local_id(2));
++            });
++        check("gdn_commit_layers (delta)");
++        return true;
++    }
+     q->parallel_for<class gdn_state_commit_layers_s147>(
+         sycl::nd_range<3>(sycl::range<3>(36, 4, 48) * sycl::range<3>(1, RG, 32), sycl::range<3>(1, RG, 32)),
+         [=](sycl::nd_item<3> item) {
+@@ -1747,14 +1902,42 @@ bool gdn_commit_layers(float* state, int64_t state_stride, int64_t conv_off, con
      return true;
  }
  
@@ -8448,7 +8785,7 @@ index 9946f7ae..77288c04 100644
      switch (n_tok) {
      case 1: {
          auto exp_props = sycl::ext::oneapi::experimental::properties{
-@@ -1866,6 +1964,75 @@ void gdn_ab_multi(const float* x, const uint16_t* w_alpha, const uint16_t* w_bet
+@@ -1866,10 +2049,81 @@ void gdn_ab_multi(const float* x, const uint16_t* w_alpha, const uint16_t* w_bet
      check("gdn_ab_multi");
  }
  
@@ -8494,7 +8831,7 @@ index 9946f7ae..77288c04 100644
 +}
 +bool night_gdn_step_norm_slots(float* const* states, const int* row0, const int* nrows, int nslots, const float* h,
 +                               int conv_channels, const float* gate, const float* beta, const float* z,
-+                               const float* gamma, float eps, float* y, int h_k, int h_v, void* stream) {
++                               const float* gamma, float eps, float* y, int h_k, int h_v, void* stream, float* dsave) {
 +    static const bool split = [] { const char* v = std::getenv("STRATA_GDN_SPLIT"); return v && v[0] == '1'; }();
 +    if (split || nslots < 1 || nslots > 4 || !h || !gate || !beta || !z || !gamma || !y || h_k <= 0 || h_v % h_k)
 +        return false;   // the caller keeps the per-slot launches
@@ -8515,7 +8852,8 @@ index 9946f7ae..77288c04 100644
 +                                                    conv_channels, gate + (size_t) r0 * h_v, beta + (size_t) r0 * h_v,
 +                                                    z + (size_t) r0 * value_dim, gamma, eps,
 +                                                    y + (size_t) r0 * value_dim, h_k, h_v, gdn_slot_pick<2>(a, sl),
-+                                                    nullptr, 0, nullptr);
++                                                    nullptr, 0, nullptr,
++                                                    dsave ? dsave + (size_t) r0 * value_dim : nullptr);
 +        });
 +    check("night_gdn_step_norm_slots");
 +    return true;
@@ -8523,8 +8861,14 @@ index 9946f7ae..77288c04 100644
 +
  void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const float* gate, const float* beta,
                           const float* z, const float* gamma, float eps, float* y, int h_k, int h_v, int n_tok,
-                          const int32_t* n_keep, void* stream, int t_out_begin, void* xq_out) {
-@@ -2006,6 +2173,15 @@ void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const
+-                         const int32_t* n_keep, void* stream, int t_out_begin, void* xq_out) {
++                         const int32_t* n_keep, void* stream, int t_out_begin, void* xq_out, float* dsave) {
+     GdnQ81* const xq = static_cast<GdnQ81*>(xq_out);   // S26: non-null = also the outputs' q8_1 (STRATA_QFUSE)
++    if (n_keep != nullptr) dsave = nullptr;             // night GDN2: only a verify (no state write) saves its deltas
+     if (!state || !h || !gate || !beta || !z || !gamma || !y || h_k <= 0 || h_v % h_k || n_tok < 1 ||
+         n_tok > kVerifyMaxT) {
+         std::fprintf(stderr, "gdn_step_norm_multi: invalid arguments\n");
+@@ -2006,6 +2260,15 @@ void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const
          the limit. To get the device limit, query
          info::device::max_work_group_size. Adjust the work-group size if needed.
          */
@@ -8540,7 +8884,7 @@ index 9946f7ae..77288c04 100644
          if (all_out) {
              auto exp_props = sycl::ext::oneapi::experimental::properties{
                  sycl::ext::oneapi::experimental::use_root_sync};
-@@ -2044,6 +2220,14 @@ void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const
+@@ -2044,6 +2307,14 @@ void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const
                                  xq);
                          });
          }
@@ -8550,12 +8894,83 @@ index 9946f7ae..77288c04 100644
 +            sycl::ext::oneapi::experimental::properties{sycl::ext::intel::experimental::grf_size<256>},
 +            [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {
 +                gdn_step_norm_multi_kernel<true, false>(state, h, conv_channels, gate, beta, z, gamma, eps, y, h_k, h_v,
-+                                                        n_tok, nullptr, 0, nullptr);
++                                                        n_tok, nullptr, 0, nullptr, dsave);
 +            });
      } else if (all_out) {
          /*
          DPCT1049: The work-group size passed to the SYCL kernel may exceed
-@@ -2471,6 +2655,23 @@ void resident_plan_ep(const int32_t* ids, int n_entries, int k, const int32_t* r
+@@ -2062,7 +2333,7 @@ void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const
+                     [[sycl::reqd_sub_group_size(32)]] {
+                         gdn_step_norm_multi_kernel<true, false>(
+                             state, h, conv_channels, gate, beta, z, gamma, eps,
+-                            y, h_k, h_v, n_tok, nullptr, 0, nullptr);
++                            y, h_k, h_v, n_tok, nullptr, 0, nullptr, dsave);
+                     });
+     } else {
+         /*
+@@ -2082,12 +2353,60 @@ void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const
+                     [[sycl::reqd_sub_group_size(32)]] {
+                         gdn_step_norm_multi_kernel<false, false>(
+                             state, h, conv_channels, gate, beta, z, gamma, eps,
+-                            y, h_k, h_v, n_tok, n_keep, t_out_begin, nullptr);
++                            y, h_k, h_v, n_tok, n_keep, t_out_begin, nullptr, dsave);
+                     });
+     }
+     check("gdn_step_norm_multi");
+ }
+ 
++// ---- night-lab STRATA_NIGHT_GDN2: the commit from the verifier's saved deltas.
++// The verify recurrence (gdn_step_norm_multi_kernel) and the state-only commit (gdn_step_commit_kernel) run the same
++// per-row arithmetic from the same state: kv over each 32-row group by the same fma chain, red[0] + red[1] + red[2] +
++// red[3], delta = (v - g kv) beta, s = fma(g, s, k delta). For the accepted prefix both kernels therefore compute the
++// same deltas, and the commit only needs the last step: per state element, n times s = fma(g_t, s, k_t[row] delta_t[col])
++// - no reductions, no barriers, no local memory: 768 work-groups streaming the 3 MB state of a layer once each way.
++bool night_gdn2() {
++    static const bool on = [] {
++        const char* e = std::getenv("STRATA_NIGHT_GDN2");
++        const char* sp = std::getenv("STRATA_GDN_SPLIT");
++        const char* qf = std::getenv("STRATA_QFUSE");
++        const bool want = e != nullptr && e[0] == '1';
++        const bool blocked = (sp && sp[0] == '1') || (qf && std::atoi(qf) != 0);
++        if (want) std::fprintf(stderr, "strata night: STRATA_NIGHT_GDN2=%d (GDN commit from the verifier's saved deltas, bitwise)%s\n",
++                               blocked ? 0 : 1, blocked ? " - off: STRATA_GDN_SPLIT / STRATA_QFUSE verify paths save no deltas" : "");
++        return want && !blocked;
++    }();
++    return on;
++}
++void gdn_commit_delta(float* state, const float* h, int conv_channels, const float* gate, const float* dsave, int h_k,
++                      int h_v, const int32_t* n_keep, void* stream) {
++    constexpr int RB = 8;   // state rows per work-item
++    const int qk = S * h_k, value_dim = S * h_v;
++    strata::q_of(stream)->parallel_for<dpct_kernel_name<class gdn_commit_delta_night>>(
++        sycl::nd_range<2>(sycl::range<2>((size_t) h_v * (S / RB), S), sycl::range<2>(1, S)),
++        [=](sycl::nd_item<2> it) {
++            const int n = *n_keep;
++            if (n <= 0) return;
++            const int head = (int) it.get_group(0) / (S / RB), rb = (int) it.get_group(0) % (S / RB);
++            const int col = (int) it.get_local_id(1), r0 = rb * RB, qh = head % h_k;
++            const size_t row_stride = (size_t) h_v * S;
++            float* base = state + ((size_t) r0 * h_v + head) * S + col;
++            float sv[RB];
++#pragma unroll
++            for (int i = 0; i < RB; ++i) sv[i] = base[(size_t) i * row_stride];
++            for (int t = 0; t < n; ++t) {
++                const float g = sycl::native::exp(gate[(size_t) t * h_v + head]);
++                const float d = dsave[(size_t) t * value_dim + head * S + col];
++                const float* kt = h + (size_t) t * conv_channels + qk + qh * S + r0;
++#pragma unroll
++                for (int i = 0; i < RB; ++i) sv[i] = sycl::fma((float) g, sv[i], kt[i] * d);
++            }
++#pragma unroll
++            for (int i = 0; i < RB; ++i) base[(size_t) i * row_stride] = sv[i];
++        });
++    check("gdn_commit_delta");
++}
++
+ namespace {
+ __dpct_inline__ void wait_flag_ge_kernel(const volatile uint32_t *flag,
+                                          uint32_t value, uint32_t spin_max) {
+@@ -2471,6 +2790,23 @@ void resident_plan_ep(const int32_t* ids, int n_entries, int k, const int32_t* r
      }
      check("resident_plan_ep");
  }
@@ -9550,6 +9965,211 @@ index 00000000..6defe728
 +    if (mode == "gdnstep") return gdnstep_bench(argc > 2 ? std::atoi(argv[2]) : 20);
 +    std::fprintf(stderr, "usage: ep_night_bench grouped|send\n");
 +    return 2;
++}
+diff --git a/sycl/src/kernels/gdn2_bench.cpp b/sycl/src/kernels/gdn2_bench.cpp
+new file mode 100644
+index 00000000..52e54862
+--- /dev/null
++++ b/sycl/src/kernels/gdn2_bench.cpp
+@@ -0,0 +1,199 @@
++// src/kernels/gdn2_bench.cpp - night-lab STRATA_NIGHT_GDN2: the GDN verify recurrence with its delta store and the
++// commit from the saved deltas (gdn_commit_delta) against the state-only commit (gdn_step_norm_multi with n_keep),
++// bitwise, plus graph-replay times. Shapes of the model: S=128, h_k=16, h_v=48, conv channels 10240.
++//   gdn2_bench [--T 4] [--slots 1|2] [--reps 200]     (run with STRATA_NIGHT_GDN_GRF=1 as the serving stack does)
++#include <sycl/sycl.hpp>
++#include <dpct/dpct.hpp>
++#include "strata/kernels/verify_kernels.hpp"
++
++#include <algorithm>
++#include <chrono>
++#include <cmath>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <random>
++#include <vector>
++
++namespace k = strata::kernels;
++namespace sx = sycl::ext::oneapi::experimental;
++
++int main(int argc, char** argv) {
++    int T = 4, slots = 1, reps = 200;
++    for (int i = 1; i < argc; ++i) {
++        if (!std::strcmp(argv[i], "--T") && i + 1 < argc) T = std::atoi(argv[++i]);
++        else if (!std::strcmp(argv[i], "--slots") && i + 1 < argc) slots = std::atoi(argv[++i]);
++        else if (!std::strcmp(argv[i], "--reps") && i + 1 < argc) reps = std::atoi(argv[++i]);
++    }
++    constexpr int S = 128, HK = 16, HV = 48, C = 10240, ZV = HV * S;
++    sycl::queue q(sycl::gpu_selector_v, sycl::property_list{sycl::property::queue::in_order{}});
++    const int R = T * slots;                       // window rows (slot j: rows [j T, j T + T))
++    const size_t SF = (size_t) S * HV * S;         // state floats per slot
++    std::mt19937 rng(11);
++    std::normal_distribution<float> gs(0.0f, 1.0f);
++    std::vector<float> st((size_t) slots * SF), h((size_t) R * C), gate((size_t) R * HV), beta(gate.size()), z((size_t) R * ZV), gamma(S);
++    for (auto& x : st) x = gs(rng) * 0.03f;
++    for (int t = 0; t < R; ++t)
++        for (int j = 0; j < C; ++j) h[(size_t) t * C + j] = gs(rng) * (j < 2 * HK * S ? 0.08f : 0.7f);
++    for (auto& x : gate) x = -0.05f * (1.0f + std::fabs(gs(rng)));
++    for (auto& x : beta) x = 0.1f + float(rng() % 800) / 1000.0f;
++    for (auto& x : z) x = gs(rng);
++    for (auto& x : gamma) x = 1.0f + 0.2f * gs(rng);
++    auto up = [&](const std::vector<float>& v) { float* p = sycl::malloc_device<float>(v.size(), q); q.memcpy(p, v.data(), v.size() * 4).wait(); return p; };
++    float *dst = up(st), *dh = up(h), *dg = up(gate), *db = up(beta), *dz = up(z), *dgm = up(gamma);
++    float* dy = sycl::malloc_device<float>((size_t) R * ZV, q);
++    float* dy2 = sycl::malloc_device<float>((size_t) R * ZV, q);
++    float* dd = sycl::malloc_device<float>((size_t) R * ZV, q);
++    float* dscr = sycl::malloc_device<float>((size_t) R * ZV, q);
++    int32_t* keep = sycl::malloc_device<int32_t>(16, q);
++    float* sbase = dst;   // the state the verify reads (the timing loop points it at each layer's own)
++    auto verify = [&](float* y, float* ds) {
++        if (slots == 1) {
++            k::gdn_step_norm_multi(sbase, dh, C, dg, db, dz, dgm, 1e-6f, y, HK, HV, T, nullptr, &q, 0, nullptr, ds);
++        } else {
++            float* stp[4]; int r0[4], nr[4];
++            for (int j = 0; j < slots; ++j) { stp[j] = sbase + (size_t) j * SF; r0[j] = j * T; nr[j] = T; }
++            if (!k::night_gdn_step_norm_slots(stp, r0, nr, slots, dh, C, dg, db, dz, dgm, 1e-6f, y, HK, HV, &q, ds)) {
++                std::fprintf(stderr, "slots launch refused\n"); std::exit(3);
++            }
++        }
++    };
++    // 1. verify outputs: with and without the delta store
++    verify(dy, nullptr);
++    verify(dy2, dd);
++    q.wait();
++    std::vector<float> ya((size_t) R * ZV), yb(ya.size());
++    q.memcpy(ya.data(), dy, ya.size() * 4); q.memcpy(yb.data(), dy2, yb.size() * 4).wait();
++    int fails = 0;
++    if (std::memcmp(ya.data(), yb.data(), ya.size() * 4) != 0) { std::printf("  verify outputs DIFFER with the delta store\n"); ++fails; }
++    else std::printf("  verify outputs: bitwise with and without the delta store (%zu floats)\n", ya.size());
++    // 2. commit of n = 1..T rows per slot: state-only commit vs the delta commit, bitwise
++    for (int n = 1; n <= T; ++n) {
++        std::vector<float> sa((size_t) slots * SF), sb(sa.size());
++        for (int pass = 0; pass < 2; ++pass) {
++            q.memcpy(dst, st.data(), st.size() * 4).wait();
++            q.memcpy(keep, &n, 4).wait();
++            for (int j = 0; j < slots; ++j) {
++                float* sj = dst + (size_t) j * SF;
++                const size_t r0 = (size_t) j * T;
++                if (pass == 0)
++                    k::gdn_step_norm_multi(sj, dh + r0 * C, C, dg + r0 * HV, db + r0 * HV, dz + r0 * ZV, dgm, 1e-6f,
++                                           dscr + r0 * ZV, HK, HV, T, keep, &q, T);
++                else
++                    k::gdn_commit_delta(sj, dh + r0 * C, C, dg + r0 * HV, dd + r0 * ZV, HK, HV, keep, &q);
++            }
++            q.wait();
++            q.memcpy(pass == 0 ? sa.data() : sb.data(), dst, sa.size() * 4).wait();
++        }
++        size_t nd = 0; double mabs = 0;
++        for (size_t i = 0; i < sa.size(); ++i)
++            if (std::memcmp(&sa[i], &sb[i], 4) != 0) { ++nd; mabs = std::max(mabs, (double) std::fabs(sa[i] - sb[i])); }
++        if (nd) { std::printf("  commit n=%d: %zu of %zu state floats differ (max abs %.3e)\n", n, nd, sa.size(), mabs); ++fails; }
++        else std::printf("  commit n=%d: state bitwise (%zu floats)\n", n, sa.size());
++    }
++    // 3. graph-replay times: 36 layers, each with its own state (DRAM-resident as in the engine); us per layer
++    float* dst36 = sycl::malloc_device<float>((size_t) 36 * slots * SF, q);
++    for (int l = 0; l < 36; ++l) q.memcpy(dst36 + (size_t) l * slots * SF, st.data(), st.size() * 4);
++    q.wait();
++    int lay = 0;
++    const int nk = T;
++    q.memcpy(keep, &nk, 4).wait();
++    auto time_graph = [&](auto&& body) {
++        sx::command_graph g{q.get_context(), q.get_device()};
++        g.begin_recording(q);
++        for (int l = 0; l < 36; ++l) { lay = l; body(); }
++        g.end_recording();
++        auto ex = g.finalize();
++        q.ext_oneapi_graph(ex); q.wait();
++        std::vector<double> v;
++        for (int b = 0; b < 5; ++b) {
++            const auto t0 = std::chrono::steady_clock::now();
++            for (int r = 0; r < reps / 5; ++r) q.ext_oneapi_graph(ex);
++            q.wait();
++            v.push_back(std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - t0).count() / (reps / 5) / 36);
++        }
++        std::sort(v.begin(), v.end());
++        return v[2];
++    };
++    const double tv0 = time_graph([&] { sbase = dst36 + (size_t) lay * slots * SF; verify(dy, nullptr); });
++    const double tv1 = time_graph([&] { sbase = dst36 + (size_t) lay * slots * SF; verify(dy2, dd); });
++    const double tc0 = time_graph([&] {
++        for (int j = 0; j < slots; ++j) {
++            const size_t r0 = (size_t) j * T;
++            k::gdn_step_norm_multi(dst36 + ((size_t) lay * slots + j) * SF, dh + r0 * C, C, dg + r0 * HV, db + r0 * HV, dz + r0 * ZV, dgm, 1e-6f,
++                                   dscr + r0 * ZV, HK, HV, T, keep, &q, T);
++        }
++    });
++    const double tc1 = time_graph([&] {
++        for (int j = 0; j < slots; ++j) {
++            const size_t r0 = (size_t) j * T;
++            k::gdn_commit_delta(dst36 + ((size_t) lay * slots + j) * SF, dh + r0 * C, C, dg + r0 * HV, dd + r0 * ZV, HK, HV, keep, &q);
++        }
++    });
++    std::printf("T=%d slots=%d (n_keep=%d): verify %.2f -> %.2f us (delta store); commit %.2f -> %.2f us per layer\n",
++                T, slots, nk, tv0, tv1, tc0, tc1);
++    std::printf("RESULT T=%d slots=%d verify_us=%.2f verify_dsave_us=%.2f commit_us=%.2f commit_delta_us=%.2f per_window_ms_saved=%.3f\n",
++                T, slots, tv0, tv1, tc0, tc1, 36.0 * ((tv0 + tc0) - (tv1 + tc1)) / 1000.0);
++    // 4. the C2 batched layer commit (gdn_commit_layers: 36 layers, 3 rows of an owner, the engine's strides) with
++    //    and without the deltas: bitwise + time
++    if (T == 3) {
++        constexpr int64_t SS2 = 817152, CO = 786432, HS = 81920, GB = 384, NL = 36, MTB = 8;
++        float* stL = sycl::malloc_device<float>((size_t) NL * SS2, q);
++        float* qkvL = sycl::malloc_device<float>((size_t) NL * HS, q);
++        float* hL = sycl::malloc_device<float>((size_t) NL * HS, q);
++        float* gL = sycl::malloc_device<float>((size_t) NL * GB, q);
++        float* bL = sycl::malloc_device<float>((size_t) NL * GB, q);
++        float* dL = sycl::malloc_device<float>((size_t) NL * MTB * ZV, q);
++        std::vector<float> conv0((size_t) (SS2 - CO));
++        for (auto& x : conv0) x = gs(rng) * 0.1f;
++        for (int l = 0; l < NL; ++l) {
++            q.memcpy(stL + l * SS2, st.data(), SF * 4);
++            q.memcpy(stL + l * SS2 + CO, conv0.data(), conv0.size() * 4);
++            q.memcpy(hL + l * HS, h.data(), (size_t) 3 * C * 4);
++            q.memcpy(qkvL + l * HS, h.data(), (size_t) 3 * C * 4);
++            q.memcpy(gL + l * GB, gate.data(), (size_t) 3 * HV * 4);
++            q.memcpy(bL + l * GB, beta.data(), (size_t) 3 * HV * 4);
++        }
++        q.wait();
++        for (int l = 0; l < NL; ++l)   // each layer's verify, saving its deltas
++            k::gdn_step_norm_multi(stL + l * SS2, hL + l * HS, C, gL + l * GB, bL + l * GB, dz, dgm, 1e-6f, dy, HK, HV, 3,
++                                   nullptr, &q, 0, nullptr, dL + (size_t) l * MTB * ZV);
++        q.wait();
++        std::vector<float> keep_state((size_t) NL * SS2), ra(keep_state.size()), rb(keep_state.size());
++        q.memcpy(keep_state.data(), stL, keep_state.size() * 4).wait();
++        for (int n = 1; n <= 3; ++n) {
++            int32_t kv2[16] = {n, n - 1, 0, 1, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
++            for (int i = 2; i < 2 + 3; ++i) kv2[i] = i - 2 < n ? i - 2 : -1;
++            for (int pass = 0; pass < 2; ++pass) {
++                q.memcpy(stL, keep_state.data(), keep_state.size() * 4).wait();
++                q.memcpy(keep, kv2, sizeof kv2).wait();
++                if (!k::gdn_commit_layers(stL, SS2, CO, qkvL, HS, hL, HS, gL, bL, GB, C, HK, HV, 3, NL, keep, &q,
++                                          pass ? dL : nullptr, MTB * ZV)) { std::printf("  commit_layers refused\n"); ++fails; break; }
++                q.wait();
++                q.memcpy(pass ? rb.data() : ra.data(), stL, ra.size() * 4).wait();
++            }
++            const bool same = std::memcmp(ra.data(), rb.data(), ra.size() * 4) == 0;
++            std::printf("  commit_layers n=%d: %s (%zu floats incl. conv history)\n", n, same ? "bitwise" : "DIFFER", ra.size());
++            if (!same) ++fails;
++        }
++        int32_t kv3[16] = {3, 2, 0, 1, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
++        q.memcpy(keep, kv3, sizeof kv3).wait();
++        auto tl = [&](bool delta) {
++            sx::command_graph g{q.get_context(), q.get_device()};
++            g.begin_recording(q);
++            k::gdn_commit_layers(stL, SS2, CO, qkvL, HS, hL, HS, gL, bL, GB, C, HK, HV, 3, NL, keep, &q, delta ? dL : nullptr, MTB * ZV);
++            g.end_recording();
++            auto ex = g.finalize();
++            q.ext_oneapi_graph(ex); q.wait();
++            const auto t0 = std::chrono::steady_clock::now();
++            for (int r = 0; r < 20; ++r) q.ext_oneapi_graph(ex);
++            q.wait();
++            return std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - t0).count() / 20;
++        };
++        const double l0 = tl(false), l1 = tl(true);
++        std::printf("RESULT commit_layers (36 layers, one owner, n=3): %.1f -> %.1f us (x2 owners per C2 cycle: %.3f ms saved)\n",
++                    l0, l1, 2 * (l0 - l1) / 1000.0);
++    }
++    std::printf("%s (%d failures)\n", fails ? "FAIL" : "PASS", fails);
++    return fails ? 1 : 0;
 +}
 diff --git a/sycl/src/kernels/gdn_chunk_bench.cpp b/sycl/src/kernels/gdn_chunk_bench.cpp
 new file mode 100644
@@ -10855,10 +11475,10 @@ index 00000000..e3011dfb
 +}
 diff --git a/sycl/src/kernels/night_mmvq_bench.cpp b/sycl/src/kernels/night_mmvq_bench.cpp
 new file mode 100644
-index 00000000..d0cf10e3
+index 00000000..3deb7e8e
 --- /dev/null
 +++ b/sycl/src/kernels/night_mmvq_bench.cpp
-@@ -0,0 +1,151 @@
+@@ -0,0 +1,153 @@
 +// sycl/src/kernels/night_mmvq_bench.cpp - STRATA_NIGHT_MMVQ A/B through the public native_mmvq / native_mmvq_head API:
 +// the original dispatch (night off) against the night KREG kernels (night on) at the decode shapes and window widths,
 +// random valid weights, native_quantize_q8_1 activations, NMAT distinct weight copies per graph (>= ~600 MB streamed
@@ -10880,7 +11500,7 @@ index 00000000..d0cf10e3
 +#include <string>
 +#include <vector>
 +
-+namespace strata::kernels { void native_mmvq_set_night(int on); }
++namespace strata::kernels { void native_mmvq_set_night(int on); void night_iq3s_lo_set(int on); }
 +namespace k = strata::kernels;
 +namespace sx = sycl::ext::oneapi::experimental;
 +
@@ -10979,8 +11599,10 @@ index 00000000..d0cf10e3
 +                const size_t ny = (size_t) nc * sh.n_out;
 +                std::vector<float> res[3];
 +                double us[3];
++                const bool lo = std::getenv("BENCH_IQ3S_LO") != nullptr;   // level 2 column = level 0 + STRATA_NIGHT_IQ3S_LO
 +                for (int lv = 0; lv < 3; ++lv) {
-+                    k::native_mmvq_set_night(lv);
++                    k::night_iq3s_lo_set(lo && lv == 2 ? 1 : 0);
++                    k::native_mmvq_set_night(lo && lv == 2 ? 0 : lv);
 +                    res[lv].resize(ny);
 +                    q.memset(y2, 0, ny * 4).wait();
 +                    call(dpool, y2, lv); q.wait();

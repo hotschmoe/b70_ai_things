@@ -1,7 +1,9 @@
 # mmvq: dense small-batch MMVQ toward bandwidth roofline (night 2026-10-16)
 
-ROUND 5 (in progress, IQ3_S at 1-4 columns): flag STRATA_NIGHT_IQ3S_LO=1; engine (candidate, main 1c360526 copy)
-/mnt/vm_8tb/b70/results/night-20261016/builds/strata-mmvqn-lo1. See "Round 5" at the end.
+ROUND 5 (IQ3_S at 1-4 columns): flag STRATA_NIGHT_IQ3S_LO=1 (bitwise the serving kernel). Patch vs main 1174aa66
+(includes 14405cdc): agents/mmvq_iq3s_lo.patch (git apply --check passes). Engine on that main:
+/mnt/vm_8tb/b70/results/night-20261016/builds/strata-mmvqo-iq3slo (sha256 a5cf1861ef9b6fc9...; earlier build on 1c360526: strata-mmvqn-lo1).
+Not served yet. See "Round 5" at the end.
 
 ROUND 4 (latest, BF16 GEMVs): engine /mnt/vm_8tb/b70/results/night-20261016/builds/strata-mmvqm-bf16b (sha256
 c69534036ba33123..., built from a reflink copy of main's working tree taken ~13:00 incl. its then-staged T12 changes,
@@ -353,28 +355,59 @@ STRATA_NIGHT_MMVQ=1, STRATA_NIGHT_MMVQ2=1 (+ STRATA_NIGHT_MMVQ2_MASK), STRATA_NI
 (STRATA_NIGHT_BF16_R=1|2|4|8 overrides the rows per tile, bench knob).
 
 
-# Round 5: IQ3_S dense at 1-4 columns (STRATA_NIGHT_IQ3S_LO=1) - EARLY NUMBERS
+# Round 5: IQ3_S dense at 1-4 columns (STRATA_NIGHT_IQ3S_LO=1)
 
-## ISA: where the serving kernel's time goes (mmvq_multi_kernel<21>, ISA dump, loop per 32-weight part, SIMD32)
+## ISA: where the serving kernel's time goes (mmvq_multi_kernel<21>, IGC dump, loop body per 32-weight part, SIMD32)
 | kernel | instr per part, 1 col | 4 cols | notes |
 |---|---:|---:|---|
-| serving mmvq_multi_kernel<21> | 527 | 612 | mov 293 (dpct vectorized_binary per-byte emulation of the sign masks and the signed subtract), sel 32 |
-| new "O" (serving mapping, grid in global) | 238 | 317 | mov 26: sign masks by shifts, (g ^ m) + (m & 0x01..) |
-| new "Os" (serving mapping, grid in SLM) | 207 | 287 | |
-| round-2 KREG (SIMD16, per row-thread, R2) | 237 | - | plus tsum/SLM/barrier per tile, per-group 2 KB table fill |
-"O"/"Os" keep the serving kernel's exact mapping and arithmetic order (4 SIMD32 sub-groups, one row each, lane =
-part, s += d * sumi as its own statement - the first version wrote s += d * sumi in one expression and IGC contracted
-it to an fma: 3304 output bits differed until split), so they are BITWISE the serving kernel.
+| serving mmvq_multi_kernel<21> | 527 | 612 | mov 293 + sel 32: dpct vectorized_binary emulates the sign masks and the signed byte subtract byte by byte |
+| new "O" (serving mapping, grid from global memory) | 238 | 317 | mov 26: sign masks by shifts, (g ^ m) + (m & 0x01010101) |
+| new "Os" (serving mapping, grid in SLM, one 2 KB fill per group) | 207 | 287 | |
+| round-2 KREG IQ3_S (SIMD16, per row-thread, R2) | 237 | - | + transposed butterfly, SLM sum, barrier per tile, 2 KB table per group |
 
-## E12 standalone (no background), us per call, card 1 (raw probe3/lo_r2_bg0.txt)
-| case | base | lv2 (round 2) | O | Os | best KREG |
-|---|---|---|---|---|---|
-| gate 2560x6144 nc1 | 60.5 | 50.8 | 55.0 | 48.2 | s4 50.7 |
-| gate nc2 / nc3 / nc4 | 65.5 / 67.6 / 76.9 | 55.8 / 64.6 / 66.5 | 60.6 / 61.9 / 66.3 | 59.9 / 63.2 / 66.7 | x4 54.8 / x4 59.8 / x2 66.2 |
-| qkv 2560x10240 nc1 / nc4 | 99.3 / 125.3 | 81.7 / 102.2 | 92.3 / 109.4 | 77.7 / 111.1 | |
-| out 6144x2560 nc1 / nc4 | 82.9 / 103.5 | 50.3 / 70.8 | 76.5 / 95.8 | 59.6 / 90.0 | s4 66.1 (nc4) |
-| sh_gu 2560x640 nc1 / nc4 | 9.0 / 11.3 | 7.9 / 8.5 | 8.1 / 9.8 | 7.6 / 10.1 | x2 6.9 / 8.1 |
-| kv 2560x512 nc1 / nc4 | 7.1 / 9.2 | 6.6 / 7.3 | 6.5 / 8.2 | 6.5 / 8.3 | x2 5.8 / 6.7 |
-Standalone every candidate beats the serving kernel; the in-engine C1 loss of round 2 is therefore not its own
-time. Background-load matrix (PROBE_BG 1 = PCIe-polling spin group, 2 = 8 streaming groups, 3 = both) pending: the
-GPU is held by serving runs.
+## Design: "O" / "Os" = the serving kernel's own structure with the cheaper decode -> BITWISE
+4 SIMD32 sub-groups per group, one row each; lane = part k = lane + 32 i; per part the same integer dot (8 dp4a in
+order, * ls), d = dw * ds, s += d * sumi; xor 16..1 warp sum; lane c stores column c. Every output has the serving
+kernel's bits (the first version wrote s += d * sumi as one expression and IGC contracted it to an fma - 3304 of 6144
+outputs differed by 1-2 ulp - the product is now its own statement). The decode (16-bit word loads gathered once,
+shift-built sign masks, signed grid bytes as (g ^ m) + (m & 0x01010101), exact because every iq3s grid byte is odd
+1..15) gives the same integers as the serving code. No K split, no cross-sub-group reduction, no GRF256.
+Engine: try_night_iq3s_lo() ahead of the round-2 KREG IQ3_S in native_mmvq() (type 21, ncols 1-4, any shape); Os
+(SLM grid) for n_out >= 2048, O otherwise (STRATA_NIGHT_IQ3S_LO_SLM_MIN overrides the threshold).
+
+## E12 engine A/B (night_mmvq_bench through native_mmvq, card 1, BENCH_IQ3S_LO=1; raw mmvq_work/engine_ab_iq3s_lo.txt)
+us per call, serving -> STRATA_NIGHT_IQ3S_LO; every row 0 differing output bits:
+
+| shape | nc1 | nc2 | nc3 | nc4 |
+|---|---|---|---|---|
+| attn_gate 2560x6144 | 61.6 -> 49.4 (x1.25) | 68.0 -> 61.6 (x1.11) | 68.5 -> 65.2 (x1.06) | 73.1 -> 69.3 (x1.06) |
+| attn_qkv 2560x10240 | 99.1 -> 78.8 (x1.28) | 111.5 -> 99.8 (x1.12) | 112.5 -> 108.0 (x1.05) | 119.4 -> 115.2 (x1.05) |
+| ssm_out 6144x2560 | 87.5 -> 59.6 (x1.47) | 90.8 -> 76.7 (x1.18) | 89.8 -> 82.8 (x1.09) | 95.2 -> 89.4 (x1.06) |
+| attn_q 2560x12288 | 118.9 -> 93.4 (x1.30) | 133.2 -> 118.1 (x1.13) | 134.4 -> 129.0 (x1.05) | 142.8 -> 137.8 (x1.04) |
+| k/v 2560x512 | 7.27 -> 6.59 | 7.94 -> 7.24 | 8.06 -> 7.64 | 8.51 -> 8.15 |
+| shared gate/up 2560x640 | 8.87 -> 8.05 | 9.75 -> 9.03 | 10.08 -> 9.13 | 10.70 -> 9.74 |
+
+## E13 probe with concurrent background load (probe3/mmvq_probe3.cpp; raw lo_r2_bg0.txt, lo_r3.txt)
+PROBE_BG=1: one group spinning on a device flag on a second queue (the EP wait), 2: 8 groups streaming 256 MB, 3:
+both (flag set by a copy on a third queue). us per call (base = serving, lv2 = round-2 dispatch, s4 = KREG R4
+GRF128, x4 = KREG global grid, O / Os as above):
+| case | bg | base | lv2 | s4 | x4 | O | Os |
+|---|---|---|---|---|---|---|---|
+| gate nc1 | 0 / 1 / 2 | 60.5 / 60.5 / 60.4 | 50.8 / 51.2 / 51.2 | 50.7 / 51.1 / 51.2 | 51.5 / 52.1 / 52.2 | 55.0 / 55.6 / 55.5 | 48.2 / 48.7 / 48.8 |
+| gate nc4 | 0 / 2 | 76.9 / 76.8 | 66.5 / 66.5 | 66.6 / 66.6 | 69.0 / 69.4 | 66.3 / 66.6 | 66.7 / 67.4 |
+| out nc1 | 0 / 1 / 2 | 82.9 / 82.6 / 82.5 | 50.3 / 50.7 / 50.7 | 50.7 / 50.8 / 50.9 | 52.0 / 52.5 / 52.6 | 76.5 / 76.4 / 76.5 | 59.6 / 59.5 / 59.5 |
+| out nc4 | 0 / 1 / 2 | 103.5 / 103.4 / 103.3 | 70.8 / 70.7 / 70.8 | 66.1 / 66.2 / 65.8 | 74.1 / 74.0 / 74.1 | 95.8 / 95.9 / 95.7 | 90.0 / 89.7 / 89.5 |
+| qkv nc1 / nc4 | 0 / 1 | 99.3/125.3 , 98.9/124.8 | 81.7/102.2 , 81.6/101.7 | 81.5/107.7 , 81.7/108.3 | 85.2/111.2 , 85.4/111.7 | 92.3/109.4 , 92.8/110.2 | 77.7/111.1 , 78.0/112.0 |
+RESULT -> the background kernels (a spinning group, 8 streaming groups) change no kernel by more than ~1%: they do
+not reproduce the in-engine round-2 loss. Mode 3 and the qkv/bg2 rows were cut by the end of the window.
+VERDICT / interpretation -> neither occupancy nor bandwidth contention of this size explains round 2's C1 -3.5%.
+The remaining difference between round 2 and the serving kernel that this probe cannot see is NUMERICAL: round-2
+KREG changes every IQ3_S output at FP32-rounding level (4399 of 6144 bits at nc1), which can flip greedy tokens and
+MTP acceptance in serving; a +-3% tok/s swing at C1 / C2 is within that effect. STRATA_NIGHT_IQ3S_LO is bitwise, so
+its serving A/B measures speed only.
+
+## Recommendation for nc1-4
+Wire STRATA_NIGHT_IQ3S_LO=1 (O/Os, bitwise; 1.04-1.47x in the engine bench, largest at nc1-2) and keep round-2 KREG
+IQ3_S for >= 5 columns (MMVQ2 MASK bit1). If the serving A/B confirms that the bitwise path does not regress, the
+faster non-bitwise KREG s4 (ssm_out 6144x2560: x1.56-1.65 vs x1.06-1.47 for O/Os) is the next step at n_in > 4096,
+judged by token-matched serving runs (acceptance-normalised) rather than raw tok/s.
