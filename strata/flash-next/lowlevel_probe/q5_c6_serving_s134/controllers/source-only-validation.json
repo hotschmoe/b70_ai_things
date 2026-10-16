@@ -1,0 +1,13 @@
+{
+  "status": "SOURCE_ONLY_NO_EXECUTION",
+  "python_AST_including_embedded_native_probe": "PASS",
+  "bash_n": "PASS",
+  "robust_stop_byteexact_S130": true,
+  "new_binary_required": true,
+  "old_S130_sha256": "ee8854f8313d9610f7e79197fc4b9451e79b2a1a447a062bbf50c3a50a211702",
+  "source_S130_comparison_status": "PASS_MATCHED_DISCRIMINATOR",
+  "source_S130_inputs_sha256": "c418cd3baabcee2df8d9752148667fbb2ebfc2196c511ed6da785ccb9ab51649",
+  "controllers_imported": false,
+  "configs_mode_dirs_created": false,
+  "build_GPU_large_payload_hashes": false
+}

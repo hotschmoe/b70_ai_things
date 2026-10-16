@@ -1,0 +1,43 @@
+{
+  "status": "HOLD_FAILED_MARKER_NULL_COMPARISON",
+  "derivation": "Parent/root closed-run notice plus exact source/client/phase/identity/log/cleanup artifacts; not a comparator output.",
+  "actual_comparator_run": false,
+  "comparison_file_exists": false,
+  "control_status": "WARM_THREE_TIMED_FUNCTIONALS_NORMALHEALTH_PASS",
+  "ON_status": "WARM_MARKER_ASSERTION_EXIT1_BEFORE_PAIR_RECORD_NO_TIMED_FUNCTIONALS",
+  "ON_actual_binary_sha256": "fe57222eea163dd7396f2bdabb95d2c18326a729c4d7919d400a9614f42d47ee",
+  "ON_effective_Q5_C2_word": "0",
+  "ON_effective_Q5_C6_word": "01010101",
+  "observed_old_marker": "strata Q5 head runtime ones: enabled=1 word=01010101 N=2560 M=248320 C=2 RPW=1 host-selection-only",
+  "observed_marker_line": 86,
+  "cause": "UNKNOWN_PENDING_SEPARATE_SOURCE_HOST_DIAGNOSIS",
+  "numeric_failure": "NOT_ESTABLISHED_BY_MARKER_ASSERTION",
+  "candidate_timed_metrics": null,
+  "OFF_ON_comparison_metrics": null,
+  "control_only_timings": [
+    {
+      "label": "repeat1",
+      "wall_s": 29.137339778011665,
+      "aggregate_output_tps": 102.96066912271564,
+      "scope": "CONTROL_ONLY_DESCRIPTIVE_NOT_AN_OFF_ON_COMPARISON"
+    },
+    {
+      "label": "repeat2",
+      "wall_s": 28.994428603968117,
+      "aggregate_output_tps": 103.46815386420225,
+      "scope": "CONTROL_ONLY_DESCRIPTIVE_NOT_AN_OFF_ON_COMPARISON"
+    },
+    {
+      "label": "repeat3",
+      "wall_s": 29.51109856599942,
+      "aggregate_output_tps": 101.65666972006206,
+      "scope": "CONTROL_ONLY_DESCRIPTIVE_NOT_AN_OFF_ON_COMPARISON"
+    }
+  ],
+  "ON_cleanup_exit": 0,
+  "ON_cleanup_elapsed_s": 57.635690869006794,
+  "root_helper_terminal_exit": 2,
+  "root_helper_exception": null,
+  "retries": 0,
+  "source_changes_or_retry_after_failure": "NONE_AT_CURATOR_CUTOFF"
+}

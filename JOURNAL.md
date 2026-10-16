@@ -25518,3 +25518,28 @@ recorded; no new image/ISA/independent-host certification. Historical
 S129 body HOLD remains. S134 uses fresh control/ON on this same NEW main,
 with strict finite output/work checks and normal health closures. See
 docs/20261016_strata_q5_c6_main_build.md.
+
+
+## 2026-10-16 S134: C6 serving warm marker gate stops comparison
+
+CONFIG -> Fresh same-S133-main control/ON; sole C6 flag0/01010101,
+C2/ownerqueues/parallelargmax/other candidates0. Actual /proc executable
+fe57222e and effective C2=0/C6=01010101 confirmed for ON.
+
+COMMAND -> Reused completed health (S131 pair+collective/S132 card0,
+no intervening GPU), full posthealth retained per arm. Control warm,
+three timed pairs, functionals and normal health closed. ON warm stopped
+at marker assertion before pair.json/parity or any timed request.
+
+RESULT -> ON emitted OLD C2 HOST marker, new C6 marker absent. Client
+warm exit1/7.030741s; lifecycle helper terminal2, exceptionnull. No ON
+timed/functionals/comparator; comparison metrics NULL, not zero. Normal
+QUIT/removal/aggregate/full both-card+compiled health PASS both arms,
+ON closure57.635691s0. Failure and actual env/EXE identity preserved.
+
+VERDICT -> HOLD, not numerical failure or proof C2 GPU ran. No automatic
+retry, expected-marker waiver or speed claim. Separate S137 bounded host
+inspection finds both logging blocks reference C2 text, despite distinct
+parsers/guards/C6 metadata; fresh CPU reproduction and source-name fix
+are recorded separately. See
+docs/20261016_strata_q5_c6_serving_marker_hold.md.

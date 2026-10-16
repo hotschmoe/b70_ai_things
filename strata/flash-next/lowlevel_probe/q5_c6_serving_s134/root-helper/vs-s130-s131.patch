@@ -1,0 +1,19 @@
+--- S130-S131/root_run_ready_arm.py
++++ S134/root_run_ready_arm.py
+@@ -1,12 +1,12 @@
+ #!/usr/bin/env python3
+-"""Root-only finite S130/S131 phases; always attempt normal owned cleanup once."""
++"""Root-only finite S134 phases; always attempt normal owned cleanup once."""
+ from pathlib import Path
+ import argparse,json,subprocess,time
+ R=Path(__file__).resolve().parent.parent
+ REPO=Path('/mnt/vm_8tb/github/b70_ai_things')
+-p=argparse.ArgumentParser();p.add_argument('stage',choices=['130','131']);p.add_argument('arm',choices=['0','1']);a=p.parse_args()
+-assert a.stage=='130' or a.arm=='1','S131 only runs owner ON against read-only S130 baseline'
+-D=R/({'130':'q5-runtime-ones-s130-serving-prep','131':'mtp-owner-queues-s131-serving-prep'}[a.stage])
++p=argparse.ArgumentParser();p.add_argument('stage',choices=['134']);p.add_argument('arm',choices=['0','1']);a=p.parse_args()
++assert a.stage=='134'
++D=R/'q5-head-c6-runtime-ones-s134-serving-prep'
+ out=D/('mode'+a.arm);assert(out/'container-ready.json').is_file()
+ result=out/'root-phases.json';assert not result.exists(),'No phase retry'
+ records=[];stop=None;exc=None

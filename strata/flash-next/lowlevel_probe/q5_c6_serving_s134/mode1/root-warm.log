@@ -1,0 +1,10 @@
+cpu-run: [b70s4dayz] acquired (quiet) -> python3 /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-s134-serving-prep/harness-prep/client.py 1 warm
+Traceback (most recent call last):
+  File "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-s134-serving-prep/harness-prep/client.py", line 138, in <module>
+    if a.phase=='warm':pair(out,0)
+                       ~~~~^^^^^^^
+  File "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-s134-serving-prep/harness-prep/client.py", line 80, in pair
+    assert not re.search(r'^strata Q5 head runtime ones:',full,re.M),'C2 runtime ones unexpectedly ON'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: C2 runtime ones unexpectedly ON
+cpu-run: [b70s4dayz] done in 7s (exit 1)

@@ -1,0 +1,9 @@
+{
+  "status": "ROOT_REPORTED_PRELIMINARY_HOST_LOGGING_FACT_NOT_ROOT_CAUSE",
+  "provenance": "Parent/root message while S134 curation was being prepared, not an independently rerun audit.",
+  "native_object_sha256": "9dc9cccc29eb293188e2d893705c9ee87475727b7fa43a9ccb66f58020533017",
+  "observation": "Both actual C2/C6 host logging blocks reference SAME C2 rodata string/length99. Parsers have distinct environment-string offsets/exact0-off semantics; dispatch guards distinct.",
+  "not_proven": "Actual C2 GPU path activation, exact C6 device dispatch or cause of string sharing.",
+  "full_evidence_and_CPU_reproducer": "Pending separate agent/root freeze at this cutoff; no new compiler/audit run by curator.",
+  "failed_runtime_and_NULL_comparison_preserved": true
+}

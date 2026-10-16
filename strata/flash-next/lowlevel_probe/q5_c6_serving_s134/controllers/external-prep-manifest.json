@@ -1,0 +1,49 @@
+{
+  "status": "FROZEN_SOURCE_ONLY",
+  "files": {
+    "FROZEN": {
+      "bytes": 25,
+      "sha256": "6b2e1a0d917146d39bf2d3d856b4fd90400a33ef8b0ccbcf055a55c6889e1262"
+    },
+    "README.md": {
+      "bytes": 3157,
+      "sha256": "59dfe106af8dc5fb92077173f0e066a83d25304826f96264cfd3a9a79739170d"
+    },
+    "controller-diff.patch": {
+      "bytes": 19348,
+      "sha256": "6f1f0a07693469dae250f2cbdc22efa61341ee8240a6c3699eb1b30d1e646a6f"
+    },
+    "harness-prep/client.py": {
+      "bytes": 13241,
+      "sha256": "bf7a062e30964ca367c8a6d0fc90def01acb10cae45fb2670dc9cef1367af91b"
+    },
+    "harness-prep/compare.py": {
+      "bytes": 9021,
+      "sha256": "218d7015c25d59f888d23d83fed25f95600b8b879cee6d55256ea0eb6af74474"
+    },
+    "harness-prep/launch_stage.sh": {
+      "bytes": 1881,
+      "sha256": "2b9f6ad0ae7bdf48c8f55327d1d26f5477850a8bb3c3a8bd3df9e8e9d84e01a6"
+    },
+    "harness-prep/make_configs.py": {
+      "bytes": 5568,
+      "sha256": "a5d594cc82bf61dc0da77f7688915e073e27e03cf0c0f469d1bd783fea50779b"
+    },
+    "harness-prep/start_arm.py": {
+      "bytes": 9002,
+      "sha256": "2f87a28b9615ab2d722208fbafd2694307ae59d8442e1ef1ea76cf497a2c3de8"
+    },
+    "harness-prep/stop_and_health.py": {
+      "bytes": 7343,
+      "sha256": "341a5ca61b4e55872558770b689321041e3dc793cb311994cf662404139a130e"
+    },
+    "original-inputs.json": {
+      "bytes": 1692,
+      "sha256": "a7102731f722b890853426d6a0c4e1db8deb218514e79f91c914b031fb9b8e7f"
+    },
+    "source-only-validation.json": {
+      "bytes": 555,
+      "sha256": "795f2c03057c603022b09de966ca30f4eee177d706dfd7e9e953d905f59062c6"
+    }
+  }
+}

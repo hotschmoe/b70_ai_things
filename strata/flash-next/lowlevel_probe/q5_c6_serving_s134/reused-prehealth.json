@@ -1,0 +1,18 @@
+{
+  "status": "REUSE_LAST_COMPLETED_HEALTH_NO_INTERVENING_GPU_TOUCH",
+  "pair_and_compiled_collective": "S131 normal final closure",
+  "latest_card0": "S132 normal private pre/post closure",
+  "intervening_work": "CPU-only S133 build, no drivers/runtime changes or GPU work",
+  "root_loop_decision": "User explicitly prioritizes real GPU tests; avoid redundant prehealth, preserve both full posthealths for serving arms",
+  "evidence": {
+    "mtp-owner-queues-s131-serving-prep/mode1/post-health.json": {
+      "sha256": "924bc53029bf727be865c4ad011fe794cf85f7f1e20621dc3e1e81e2b9555eb1"
+    },
+    "mtp-owner-queues-s131-serving-prep/mode1/normal-stop.json": {
+      "sha256": "51738af6b0fc758b9b96963e36c791a390267b224bb648cfccfe6579340a14d8"
+    },
+    "q5-head-c6-runtime-ones-private-run/closure.json": {
+      "sha256": "5b931137d18f3b87c11198c101734669441fc938496236231419d2c34056ebb7"
+    }
+  }
+}

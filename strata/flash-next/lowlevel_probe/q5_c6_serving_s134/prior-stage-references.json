@@ -1,0 +1,9 @@
+{
+  "S133_build": "../q5_c6_main_s133/README.md",
+  "S133_commit": "5fbe9c02",
+  "whole_new_EXE_sha256": "fe57222eea163dd7396f2bdabb95d2c18326a729c4d7919d400a9614f42d47ee",
+  "S132_private_result": "../q5_c6_runtime_ones_s132/README.md",
+  "no_new_ISA_image_host_certification": true,
+  "postfailure_diagnosis": "Root reported preliminary narrow host logging alias observation; full evidence/CPU reproducer pending; cause not established.",
+  "new_curator_GPU_build_CLI_repo_work": false
+}
