@@ -1,0 +1,250 @@
+{
+  "Id": "abc6220232176de0c93901e34e7d66f78e91ae40a51df0152bf1c9f306884d5a",
+  "Created": "2026-10-13T04:59:47.696942839Z",
+  "Path": "python3",
+  "Args": [
+    "-c",
+    "import sys\ntry:\n    import torch\n    if torch.xpu.device_count() < 1:\n        print(\"HEALTH_FAIL no-xpu-device\"); sys.exit(1)\n    x = torch.randn(2048, 2048, device=\"xpu:0\")\n    y = x.matmul(x)\n    torch.xpu.synchronize()\n    z = torch.randn(16, 16, device=\"xpu:0\").matmul(torch.randn(16, 16, device=\"xpu:0\"))\n    torch.xpu.synchronize()\n    if not bool(torch.isfinite(y).all().item()):\n        print(\"HEALTH_FAIL nonfinite-large-matmul\"); sys.exit(1)\n    if not bool(torch.isfinite(z).all().item()):\n        print(\"HEALTH_FAIL nonfinite-small-matmul\"); sys.exit(1)\n    print(\"HEALTH_OK True\")\n    sys.exit(0)\nexcept Exception as e:\n    print(\"HEALTH_FAIL\", type(e).__name__, str(e)[:200])\n    sys.exit(1)"
+  ],
+  "State": {
+    "Status": "created",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "0001-01-01T00:00:00Z",
+    "FinishedAt": "0001-01-01T00:00:00Z"
+  },
+  "Image": "sha256:d55637b3353eaf470677627dc1627c3dda3ec6a6abb0298451aed34b73937067",
+  "ResolvConfPath": "",
+  "HostnamePath": "",
+  "HostsPath": "",
+  "LogPath": "",
+  "Name": "/xpu-health-1203363-17874-11440-card0",
+  "RestartCount": 0,
+  "Driver": "overlayfs",
+  "Platform": "linux",
+  "MountLabel": "",
+  "ProcessLabel": "",
+  "AppArmorProfile": "",
+  "ExecIDs": null,
+  "HostConfig": {
+    "Binds": [
+      "/dev/dri/by-path:/dev/dri/by-path"
+    ],
+    "ContainerIDFile": "",
+    "LogConfig": {
+      "Type": "json-file",
+      "Config": {}
+    },
+    "NetworkMode": "bridge",
+    "PortBindings": {},
+    "RestartPolicy": {
+      "Name": "no",
+      "MaximumRetryCount": 0
+    },
+    "AutoRemove": true,
+    "VolumeDriver": "",
+    "VolumesFrom": null,
+    "ConsoleSize": [
+      0,
+      0
+    ],
+    "CapAdd": null,
+    "CapDrop": null,
+    "CgroupnsMode": "private",
+    "Dns": null,
+    "DnsOptions": [],
+    "DnsSearch": [],
+    "ExtraHosts": null,
+    "GroupAdd": null,
+    "IpcMode": "private",
+    "Cgroup": "",
+    "Links": null,
+    "OomScoreAdj": 0,
+    "PidMode": "",
+    "Privileged": false,
+    "PublishAllPorts": false,
+    "ReadonlyRootfs": false,
+    "SecurityOpt": null,
+    "UTSMode": "",
+    "UsernsMode": "",
+    "ShmSize": 67108864,
+    "Runtime": "runc",
+    "Isolation": "",
+    "CpuShares": 0,
+    "Memory": 0,
+    "NanoCpus": 0,
+    "CgroupParent": "",
+    "BlkioWeight": 0,
+    "BlkioWeightDevice": [],
+    "BlkioDeviceReadBps": [],
+    "BlkioDeviceWriteBps": [],
+    "BlkioDeviceReadIOps": [],
+    "BlkioDeviceWriteIOps": [],
+    "CpuPeriod": 0,
+    "CpuQuota": 0,
+    "CpuRealtimePeriod": 0,
+    "CpuRealtimeRuntime": 0,
+    "CpusetCpus": "",
+    "CpusetMems": "",
+    "Devices": [
+      {
+        "PathOnHost": "/dev/dri",
+        "PathInContainer": "/dev/dri",
+        "CgroupPermissions": "rwm"
+      }
+    ],
+    "DeviceCgroupRules": null,
+    "DeviceRequests": null,
+    "MemoryReservation": 0,
+    "MemorySwap": 0,
+    "MemorySwappiness": null,
+    "OomKillDisable": false,
+    "PidsLimit": null,
+    "Ulimits": [],
+    "CpuCount": 0,
+    "CpuPercent": 0,
+    "IOMaximumIOps": 0,
+    "IOMaximumBandwidth": 0,
+    "MaskedPaths": [
+      "/proc/acpi",
+      "/proc/asound",
+      "/proc/interrupts",
+      "/proc/kcore",
+      "/proc/keys",
+      "/proc/latency_stats",
+      "/proc/sched_debug",
+      "/proc/scsi",
+      "/proc/timer_list",
+      "/proc/timer_stats",
+      "/sys/devices/virtual/powercap",
+      "/sys/firmware"
+    ],
+    "ReadonlyPaths": [
+      "/proc/bus",
+      "/proc/fs",
+      "/proc/irq",
+      "/proc/sys",
+      "/proc/sysrq-trigger"
+    ]
+  },
+  "Storage": {
+    "RootFS": {
+      "Snapshot": {
+        "Name": "overlayfs"
+      }
+    }
+  },
+  "Mounts": [
+    {
+      "Type": "bind",
+      "Source": "/dev/dri/by-path",
+      "Destination": "/dev/dri/by-path",
+      "Mode": "",
+      "RW": true,
+      "Propagation": "rprivate"
+    }
+  ],
+  "Config": {
+    "Hostname": "abc622023217",
+    "Domainname": "",
+    "User": "",
+    "AttachStdin": false,
+    "AttachStdout": true,
+    "AttachStderr": true,
+    "Tty": false,
+    "OpenStdin": false,
+    "StdinOnce": false,
+    "Env": [
+      "ZE_AFFINITY_MASK=0",
+      "PATH=/opt/venv/bin:/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "DEBIAN_FRONTEND=noninteractive",
+      "VIRTUAL_ENV=/opt/venv",
+      "UV_PYTHON_INSTALL_DIR=/opt/uv/python",
+      "UV_HTTP_TIMEOUT=500",
+      "PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/xpu",
+      "UV_EXTRA_INDEX_URL=https://download.pytorch.org/whl/xpu",
+      "UV_INDEX_STRATEGY=unsafe-best-match",
+      "UV_LINK_MODE=copy",
+      "LD_LIBRARY_PATH=/tmp/ucx_install/lib:/opt/venv/lib:/usr/local/lib",
+      "VLLM_TARGET_DEVICE=xpu",
+      "VLLM_WORKER_MULTIPROC_METHOD=spawn"
+    ],
+    "Cmd": [
+      "-c",
+      "import sys\ntry:\n    import torch\n    if torch.xpu.device_count() < 1:\n        print(\"HEALTH_FAIL no-xpu-device\"); sys.exit(1)\n    x = torch.randn(2048, 2048, device=\"xpu:0\")\n    y = x.matmul(x)\n    torch.xpu.synchronize()\n    z = torch.randn(16, 16, device=\"xpu:0\").matmul(torch.randn(16, 16, device=\"xpu:0\"))\n    torch.xpu.synchronize()\n    if not bool(torch.isfinite(y).all().item()):\n        print(\"HEALTH_FAIL nonfinite-large-matmul\"); sys.exit(1)\n    if not bool(torch.isfinite(z).all().item()):\n        print(\"HEALTH_FAIL nonfinite-small-matmul\"); sys.exit(1)\n    print(\"HEALTH_OK True\")\n    sys.exit(0)\nexcept Exception as e:\n    print(\"HEALTH_FAIL\", type(e).__name__, str(e)[:200])\n    sys.exit(1)"
+    ],
+    "Image": "sha256:d55637b3353eaf470677627dc1627c3dda3ec6a6abb0298451aed34b73937067",
+    "Volumes": null,
+    "WorkingDir": "/workspace/vllm",
+    "Entrypoint": [
+      "python3"
+    ],
+    "Labels": {
+      "b70.native.conv.contract": "upstream5802-on-r276-r35-r50-r221",
+      "b70.native.conv.upstream": "5802a414d47855b01b63121bce3655795ef8dfa8",
+      "b70.native.parent.sha256": "271db0d4882124e21ac6a4d080bfeab303fbb08b9ec10e11f21d10fb0723998f",
+      "b70.xpu-health": "xpu-health-1203363-17874-11440",
+      "neural.download.base.digest": "sha256:f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f",
+      "neural.download.build.lane": "qwen38-int4-gdn-spec-group-sync-free-r276",
+      "neural.download.composite.base.r139": "sha256:901ae9e0ade0109e94dd162d0cf2c398440325b1791f3191376fa0013dc29878",
+      "neural.download.kernel.base-gdn-patch": "qwen38-dynamic-active-width-serial-gdn-r35",
+      "neural.download.kernel.base-gdn-patch.sha256": "ad583014c92b8611a9e4e87868a3d492c3b6802ee557814b9ec794f147cd973e",
+      "neural.download.kernel.gdn-library.sha256": "2c343620d689409bfa371a8b4c3db680e4786f23bc092411e7d03140f1b2a355",
+      "neural.download.kernel.head": "1e90ffa672ba02f17a909da11838a4c55b199783",
+      "neural.download.kernel.split-gdn-patch": "qwen38-gdn-split-serial-gates-r50",
+      "neural.download.kernel.split-gdn-patch.sha256": "40ca8c3fc15fea1b7dda8d268761f0b1339eb821f5d8357b3da7600585fe750f",
+      "neural.download.kernel.wheel.sha256": "f3d999060c11ad6db5b4033d50d19c6b665492380075480d041ec4ee58fdfeb6",
+      "neural.download.kernel.xpu-extension.sha256": "1632cafcf2afc0bc039dd49ebbb5eda4e62d626f4c20729aecd9e87874d1dc08",
+      "neural.download.onednn.patch.sha256": "180112219b5b8d2f44eae5e32134fe3b80e50b75f332c000a37eec17c7557e13",
+      "neural.download.vllm.draft-int4-r62.patch.sha256": "594ee1a38fef377bba34db98f2fd7f51641ea9697b4bb622c9a54634b0bd87ab",
+      "neural.download.vllm.flash-attn.py.sha256": "c90006b0e4e59eab26fce7c1636b99507b8eabf3acf2d88d62b6e569939975d1",
+      "neural.download.vllm.gdn-split-mixed.patch.sha256": "b17e31320a7622d245cb6ea242c6e961d5c214f75678b44ba4bd66eef6ee99b2",
+      "neural.download.vllm.llm-base-proposer.py.sha256": "96131347dd01576e3bf956371a25937bc17c1476489cab13d1030a5a1a00240b",
+      "neural.download.vllm.mtp1-serial-attention.patch.sha256": "127b4bc1dc9096e630698202bbc06f74ce4e87f603f3bdc64d09a0dfcc26fe30",
+      "neural.download.vllm.overlay": "XPU Qwen/Gemma MTP1 RMSNorm serial exact r31",
+      "neural.download.vllm.overlay.base": "sha256:d19f802ba702a9cb94b155f807a4674a0100702aee838323372f740d7168e34e",
+      "neural.download.vllm.vocab-parallel-embedding.py.sha256": "a67215084b55800174b37166e7e74593e62e4b2d7460da59ad2eb4a23c8c8ba7",
+      "neural.download.xpu.extension.sha256": "6717e3ec7fe3e7cdc26cd66b84aabdd076f211e5bed62b8711b7377fca8668d9",
+      "org.opencontainers.image.version": "24.04"
+    }
+  },
+  "NetworkSettings": {
+    "SandboxID": "",
+    "SandboxKey": "",
+    "Ports": {},
+    "Networks": {
+      "bridge": {
+        "IPAMConfig": null,
+        "Links": null,
+        "Aliases": null,
+        "DriverOpts": null,
+        "GwPriority": 0,
+        "NetworkID": "",
+        "EndpointID": "",
+        "Gateway": "",
+        "IPAddress": "",
+        "MacAddress": "",
+        "IPPrefixLen": 0,
+        "IPv6Gateway": "",
+        "GlobalIPv6Address": "",
+        "GlobalIPv6PrefixLen": 0,
+        "DNSNames": null
+      }
+    }
+  },
+  "ImageManifestDescriptor": {
+    "mediaType": "application/vnd.oci.image.manifest.v1+json",
+    "digest": "sha256:d55637b3353eaf470677627dc1627c3dda3ec6a6abb0298451aed34b73937067",
+    "size": 12460,
+    "platform": {
+      "architecture": "amd64",
+      "os": "linux"
+    }
+  }
+}

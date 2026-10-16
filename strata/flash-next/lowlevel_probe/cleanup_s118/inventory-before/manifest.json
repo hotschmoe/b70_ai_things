@@ -1,0 +1,41 @@
+{
+  "status": "FROZEN_READ_ONLY_NO_DELETION_NO_MEANINGFUL_SCOPED_RECLAIM",
+  "files": [
+    {
+      "name": "commands.json",
+      "bytes": 43701,
+      "sha256": "071822ab38d07af852a38e627bd9b6570e2aab899f3f63272646a25c7fc3007e"
+    },
+    {
+      "name": "docker-metadata.json",
+      "bytes": 49005,
+      "sha256": "e9fd8a5ff627a46e78ff8e26ad3032c6c1e6609f30e4b348913f697a5dec679f"
+    },
+    {
+      "name": "findings.md",
+      "bytes": 4277,
+      "sha256": "dafce727d715bc6c62776d201caaa76f1c04c3ede943f0f21272ebfb5e77a970"
+    },
+    {
+      "name": "inventory.py",
+      "bytes": 5639,
+      "sha256": "68488f3008e96e75f2f9db0988ca1b41d6431a6fc483c5582642c08d8be6e6b9"
+    },
+    {
+      "name": "selected-image-identities.json",
+      "bytes": 4424,
+      "sha256": "afafa2726f61c9d560b4ad1845010f33ce00218160e4056e80211d0013c6ced9"
+    },
+    {
+      "name": "tmp-cache-inventory.json",
+      "bytes": 3798,
+      "sha256": "618e3e653af8bbd0d9a01e0131626c0c46992f248751ae5266791c537fc6f95e"
+    },
+    {
+      "name": "worktree-dirty.json",
+      "bytes": 763,
+      "sha256": "2b789c6cb7839465df3d0f306b0e675f6667e9793c25f1f51a4071e5c38e8667"
+    }
+  ],
+  "limits": "Only eight explicit TMP/cache roots recursively sized; source/currentbuild/experiments/models/archive/quarantine/userdirty/containers protected. Docker untagged/unused not proof deletable."
+}

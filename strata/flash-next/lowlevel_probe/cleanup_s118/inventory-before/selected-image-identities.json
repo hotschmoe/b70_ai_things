@@ -1,0 +1,109 @@
+{
+  "argv": [
+    "docker",
+    "image",
+    "inspect",
+    "sha256:1a13d3d2b0adc63422a643eb5c59524842577d99ca3935b4b8c2c432e739e127",
+    "sha256:1db27a8b75ae1d6b3cbf16ebbb88310c2b5548221c8df1335082b2a54dba209a",
+    "sha256:2ac07cf8fde4631de59912f2349729cf130947671b85c087550885cae8e65c46",
+    "sha256:521eb277c0733f8c2ce47aea1bb98ed576c6f1ad63bf5baf22d38fc07abf54ad",
+    "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+    "sha256:e9db518398753434ee5aab9740a25f1d3134396a30be1569cfad8f8b0d90740c",
+    "sha256:f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f"
+  ],
+  "exit": 0,
+  "selected_fields_only": true,
+  "images": [
+    {
+      "Id": "sha256:1a13d3d2b0adc63422a643eb5c59524842577d99ca3935b4b8c2c432e739e127",
+      "RepoTags": [
+        "intel/sglang-dev@sha256:1a13d3d2b0adc63422a643eb5c59524842577d99ca3935b4b8c2c432e739e127"
+      ],
+      "RepoDigests": [
+        "intel/sglang-dev@sha256:1a13d3d2b0adc63422a643eb5c59524842577d99ca3935b4b8c2c432e739e127"
+      ],
+      "Parent": null,
+      "Created": "2026-09-03T22:15:41.436229732Z",
+      "Size": 6708469969
+    },
+    {
+      "Id": "sha256:1db27a8b75ae1d6b3cbf16ebbb88310c2b5548221c8df1335082b2a54dba209a",
+      "RepoTags": [
+        "vllm/vllm-openai-xpu@sha256:1db27a8b75ae1d6b3cbf16ebbb88310c2b5548221c8df1335082b2a54dba209a"
+      ],
+      "RepoDigests": [
+        "vllm/vllm-openai-xpu@sha256:1db27a8b75ae1d6b3cbf16ebbb88310c2b5548221c8df1335082b2a54dba209a"
+      ],
+      "Parent": null,
+      "Created": "2026-09-09T01:58:28.088913019Z",
+      "Size": 4165111423
+    },
+    {
+      "Id": "sha256:2ac07cf8fde4631de59912f2349729cf130947671b85c087550885cae8e65c46",
+      "RepoTags": [
+        "vllm/vllm-openai-xpu@sha256:2ac07cf8fde4631de59912f2349729cf130947671b85c087550885cae8e65c46"
+      ],
+      "RepoDigests": [
+        "vllm/vllm-openai-xpu@sha256:2ac07cf8fde4631de59912f2349729cf130947671b85c087550885cae8e65c46"
+      ],
+      "Parent": null,
+      "Created": "2026-08-26T05:11:05.812873496Z",
+      "Size": 4157324054
+    },
+    {
+      "Id": "sha256:521eb277c0733f8c2ce47aea1bb98ed576c6f1ad63bf5baf22d38fc07abf54ad",
+      "RepoTags": [
+        "b70/kv-native-base:521eb277c073",
+        "b70/r276-bang-base:20260910",
+        "b70/r276-prefix-base:20260908",
+        "ghcr.io/steveseguin/vllm-openai-xpu-qwen38-int4@sha256:521eb277c0733f8c2ce47aea1bb98ed576c6f1ad63bf5baf22d38fc07abf54ad"
+      ],
+      "RepoDigests": [
+        "b70/kv-native-base@sha256:521eb277c0733f8c2ce47aea1bb98ed576c6f1ad63bf5baf22d38fc07abf54ad",
+        "b70/r276-bang-base@sha256:521eb277c0733f8c2ce47aea1bb98ed576c6f1ad63bf5baf22d38fc07abf54ad",
+        "b70/r276-prefix-base@sha256:521eb277c0733f8c2ce47aea1bb98ed576c6f1ad63bf5baf22d38fc07abf54ad",
+        "ghcr.io/steveseguin/vllm-openai-xpu-qwen38-int4@sha256:521eb277c0733f8c2ce47aea1bb98ed576c6f1ad63bf5baf22d38fc07abf54ad"
+      ],
+      "Parent": null,
+      "Created": "2026-09-06T04:22:07.005355809-04:00",
+      "Size": 5823148023
+    },
+    {
+      "Id": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+      "RepoTags": [
+        "strata-ab-build:ocloc"
+      ],
+      "RepoDigests": [
+        "strata-ab-build@sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2"
+      ],
+      "Parent": null,
+      "Created": "2026-10-13T05:12:00.425790505Z",
+      "Size": 3828888593
+    },
+    {
+      "Id": "sha256:e9db518398753434ee5aab9740a25f1d3134396a30be1569cfad8f8b0d90740c",
+      "RepoTags": [
+        "intel/oneapi@sha256:e9db518398753434ee5aab9740a25f1d3134396a30be1569cfad8f8b0d90740c"
+      ],
+      "RepoDigests": [
+        "intel/oneapi@sha256:e9db518398753434ee5aab9740a25f1d3134396a30be1569cfad8f8b0d90740c"
+      ],
+      "Parent": null,
+      "Created": "2026-07-02T10:44:45.413813979Z",
+      "Size": 3599004217
+    },
+    {
+      "Id": "sha256:f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f",
+      "RepoTags": [
+        "vllm/vllm-openai-xpu@sha256:f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f"
+      ],
+      "RepoDigests": [
+        "vllm/vllm-openai-xpu@sha256:f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f"
+      ],
+      "Parent": null,
+      "Created": "2026-08-14T05:09:36.607926454Z",
+      "Size": 4649189937
+    }
+  ],
+  "limits": "No full Config/environment retained; ancestry and reclaimable-layer bytes not audited."
+}

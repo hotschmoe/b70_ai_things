@@ -1,0 +1,5 @@
+{
+  "worktree_porcelain": "worktree /mnt/vm_8tb/github/b70_ai_things\nHEAD af597e4b71e57f62916e6216aec729a56f72cf5d\nbranch refs/heads/master\n\n",
+  "dirty_porcelain": " M sglang/w8a8/serve_ornith15_w8a8.sh\n M vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so\n?? sglang/refresh/tune_ornith_moe_xpu.py\n?? vllm/fp8/probe_qwen38_fp8_mtp_conc_matrix.py\n?? vllm/fp8/run_qwen38_fp8_r187_mtp_conc_150k_matrix.sh\n?? vllm/fp8/serve_qwen38_fp8_steve_r187_mtp3_daily.sh\n?? vllm/int4/guard_candidate/\n?? vllm/int4/mamba_copy_oracle/postprocess_plans.json\n?? vllm/w8a8/ornith15_s2b/\n?? vllm/w8a8/serve_ornith15_w8a8.sh\n",
+  "verdict": "All existing dirty paths protected; no worktree removal candidate when only the registered main clone exists."
+}

@@ -25071,3 +25071,27 @@ leased; rootspendsnextGPUwindow on S116HC ifcompiledgatespass. All19small
 curatedsourcecopies match; no binary/SPIRVcopy. Evidence:
 strata/flash-next/lowlevel_probe/offline_aot_cache_s117/ and
  docs/20261016_strata_offline_aot_cache.md.
+
+
+## 2026-10-16 S118: scoped stale-artifact cleanup
+
+CONFIG -> Userrequested parallel investigation/testing and stale worktree/
+image/docs/scratch/build/cache cleanup; protect userdirty, models/fallback,
+currentStrata, S107/S112/S114/S116 artifacts and experiment evidence.
+COMMAND -> Readonlyworktree/Dockermetadata;1sCPUlease sizes8explicitold
+TMP/cache roots, thenboundedmetadata5historicalprivatebuilds/10tmpcache
+dirs/toolintermediates. No whole8TB/results/trace/modelwalk or S116scan.
+Rootinspectsexactabc622...oldhealthcontainer2026-10-13/created/Runningfalse/
+Pid0/neverstarted/ExecIDsnull/noactivehealthunit, thennormaldocker rm.
+RESULT -> One registeredmainworktree;10unrelateddirtypaths retained.
+18tmp/cachelocations empty/0allocated, no named .bc/.spv/.ll/.tmp at5roots.
+83distinctimageIDs/91tagdigestrows;3runninginfra protected. ONE stale
+never-startedhealthcontainer removed rm0/sameCIDabsentinspect1; noforce/
+secondmutation/GPUtouch/runningkill/imagechange. Firstpost-rm errorstring
+casepredicate corrected byabsencecheckonly; rawrmstdoutnotretained, proof
+explicit. Removedcontainer'sd55637b3image stillfallback-pinned/retained.
+VERDICT -> Scopedcleanupclosed, no meaningfulfreed-byteclaim or broadprune.
+Rootverified12exactsmallsourcecopies. Furthercleanupneedsspecificsafe
+candidate, not deletingretained evidence to manufacture a saving. Evidence:
+strata/flash-next/lowlevel_probe/cleanup_s118/ and
+ docs/20261016_strata_scoped_cleanup.md.

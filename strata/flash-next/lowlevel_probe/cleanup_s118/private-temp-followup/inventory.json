@@ -1,0 +1,159 @@
+{
+  "utc": "2026-10-16T01:46:52.188669+00:00",
+  "status": "READ_ONLY_FIVE_HISTORICAL_PRIVATE_BUILDS_NO_MEANINGFUL_TOOL_INTERMEDIATE_CANDIDATE",
+  "roots": [
+    {
+      "build_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-private-prep/build",
+      "selected_temp_or_generated_entries": [
+        {
+          "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-private-prep/build/cache",
+          "entries": 0,
+          "empty": true,
+          "directory_allocated_bytes": 0,
+          "scope": "Empty directory observed directly; no recursive walk needed."
+        },
+        {
+          "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-private-prep/build/tmp",
+          "entries": 0,
+          "empty": true,
+          "directory_allocated_bytes": 0,
+          "scope": "Empty directory observed directly; no recursive walk needed."
+        }
+      ],
+      "intermediate_suffixes_checked_at_build_root": [
+        ".bc",
+        ".spv",
+        ".ll",
+        ".tmp"
+      ],
+      "protected_other_files": "All sources, exe/object/archive/selected-image/ISA/log/record files untouched and unsized as directory trees."
+    },
+    {
+      "build_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep/build",
+      "selected_temp_or_generated_entries": [
+        {
+          "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep/build/cache",
+          "entries": 0,
+          "empty": true,
+          "directory_allocated_bytes": 0,
+          "scope": "Empty directory observed directly; no recursive walk needed."
+        },
+        {
+          "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep/build/tmp",
+          "entries": 0,
+          "empty": true,
+          "directory_allocated_bytes": 0,
+          "scope": "Empty directory observed directly; no recursive walk needed."
+        }
+      ],
+      "intermediate_suffixes_checked_at_build_root": [
+        ".bc",
+        ".spv",
+        ".ll",
+        ".tmp"
+      ],
+      "protected_other_files": "All sources, exe/object/archive/selected-image/ISA/log/record files untouched and unsized as directory trees."
+    },
+    {
+      "build_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep-v2/build",
+      "selected_temp_or_generated_entries": [
+        {
+          "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep-v2/build/cache",
+          "entries": 0,
+          "empty": true,
+          "directory_allocated_bytes": 0,
+          "scope": "Empty directory observed directly; no recursive walk needed."
+        },
+        {
+          "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep-v2/build/tmp",
+          "entries": 0,
+          "empty": true,
+          "directory_allocated_bytes": 0,
+          "scope": "Empty directory observed directly; no recursive walk needed."
+        }
+      ],
+      "intermediate_suffixes_checked_at_build_root": [
+        ".bc",
+        ".spv",
+        ".ll",
+        ".tmp"
+      ],
+      "protected_other_files": "All sources, exe/object/archive/selected-image/ISA/log/record files untouched and unsized as directory trees."
+    },
+    {
+      "build_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-prep/build",
+      "selected_temp_or_generated_entries": [
+        {
+          "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-prep/build/cache",
+          "entries": 0,
+          "empty": true,
+          "directory_allocated_bytes": 0,
+          "scope": "Empty directory observed directly; no recursive walk needed."
+        },
+        {
+          "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-prep/build/tmp",
+          "entries": 0,
+          "empty": true,
+          "directory_allocated_bytes": 0,
+          "scope": "Empty directory observed directly; no recursive walk needed."
+        }
+      ],
+      "intermediate_suffixes_checked_at_build_root": [
+        ".bc",
+        ".spv",
+        ".ll",
+        ".tmp"
+      ],
+      "protected_other_files": "All sources, exe/object/archive/selected-image/ISA/log/record files untouched and unsized as directory trees."
+    },
+    {
+      "build_root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-graph-s103-prep-v2/build",
+      "selected_temp_or_generated_entries": [
+        {
+          "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-graph-s103-prep-v2/build/cache",
+          "entries": 0,
+          "empty": true,
+          "directory_allocated_bytes": 0,
+          "scope": "Empty directory observed directly; no recursive walk needed."
+        },
+        {
+          "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-graph-s103-prep-v2/build/tmp",
+          "entries": 0,
+          "empty": true,
+          "directory_allocated_bytes": 0,
+          "scope": "Empty directory observed directly; no recursive walk needed."
+        }
+      ],
+      "intermediate_suffixes_checked_at_build_root": [
+        ".bc",
+        ".spv",
+        ".ll",
+        ".tmp"
+      ],
+      "protected_other_files": "All sources, exe/object/archive/selected-image/ISA/log/record files untouched and unsized as directory trees."
+    }
+  ],
+  "reference_check": {
+    "argv": [
+      "rg",
+      "-n",
+      "TMPDIR|XDG_CACHE_HOME|SYCL_CACHE_DIR|SYCL_CACHE_PERSISTENT|save-temps|\\.bc|\\.spv",
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-private-prep/build.sh",
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-private-prep/build-container.sh",
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep/build-container.sh",
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep/build.sh",
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep-v2/build-container.sh",
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep-v2/build.sh",
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-prep/build.sh",
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-prep/build-container.sh",
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-graph-s103-prep-v2/build-container.sh",
+      "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-graph-s103-prep-v2/build.sh"
+    ],
+    "exit": 0,
+    "stdout": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/paired-graph-s103-prep-v2/build.sh:14:  -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_PERSISTENT=0 -e MAX_JOBS=4 \\\n/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-prep/build.sh:18:  -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_DIR=/out/cache \\\n/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-prep/build.sh:19:  -e SYCL_CACHE_PERSISTENT=0 -e MAX_JOBS=4 -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 \\\n/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep-v2/build.sh:20:  -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_DIR=/out/cache \\\n/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep-v2/build.sh:21:  -e SYCL_CACHE_PERSISTENT=0 -e MAX_JOBS=4 -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 \\\n/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep/build.sh:20:  -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_DIR=/out/cache \\\n/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-center-s85-prep/build.sh:21:  -e SYCL_CACHE_PERSISTENT=0 -e MAX_JOBS=4 -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 \\\n/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-private-prep/build.sh:20:  -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_DIR=/out/cache \\\n/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-private-prep/build.sh:21:  -e SYCL_CACHE_PERSISTENT=0 -e MAX_JOBS=4 -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 \\\n",
+    "stderr": ""
+  },
+  "S116_or_current_source_build_scanned": false,
+  "deletion": false,
+  "whole_R_walk": false
+}

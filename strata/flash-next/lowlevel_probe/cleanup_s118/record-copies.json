@@ -1,0 +1,78 @@
+{
+  "status": "FINAL_EXACT_SMALL_COPIES_ONE_ROOT_REMOVAL",
+  "copies": [
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/cleanup-inventory-20261016-next-kernel/commands.json",
+      "target": "strata/flash-next/lowlevel_probe/cleanup_s118/inventory-before/commands.json",
+      "bytes": 43701,
+      "sha256": "071822ab38d07af852a38e627bd9b6570e2aab899f3f63272646a25c7fc3007e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/cleanup-inventory-20261016-next-kernel/docker-metadata.json",
+      "target": "strata/flash-next/lowlevel_probe/cleanup_s118/inventory-before/docker-metadata.json",
+      "bytes": 49005,
+      "sha256": "e9fd8a5ff627a46e78ff8e26ad3032c6c1e6609f30e4b348913f697a5dec679f"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/cleanup-inventory-20261016-next-kernel/findings.md",
+      "target": "strata/flash-next/lowlevel_probe/cleanup_s118/inventory-before/findings.md",
+      "bytes": 4277,
+      "sha256": "dafce727d715bc6c62776d201caaa76f1c04c3ede943f0f21272ebfb5e77a970"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/cleanup-inventory-20261016-next-kernel/inventory.py",
+      "target": "strata/flash-next/lowlevel_probe/cleanup_s118/inventory-before/inventory.py",
+      "bytes": 5639,
+      "sha256": "68488f3008e96e75f2f9db0988ca1b41d6431a6fc483c5582642c08d8be6e6b9"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/cleanup-inventory-20261016-next-kernel/manifest.json",
+      "target": "strata/flash-next/lowlevel_probe/cleanup_s118/inventory-before/manifest.json",
+      "bytes": 1372,
+      "sha256": "878181d982d70f26a833ea0fbe9dbb48931c8cd1682c5b6dd521b030aab7f144"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/cleanup-inventory-20261016-next-kernel/selected-image-identities.json",
+      "target": "strata/flash-next/lowlevel_probe/cleanup_s118/inventory-before/selected-image-identities.json",
+      "bytes": 4424,
+      "sha256": "afafa2726f61c9d560b4ad1845010f33ce00218160e4056e80211d0013c6ced9"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/cleanup-inventory-20261016-next-kernel/tmp-cache-inventory.json",
+      "target": "strata/flash-next/lowlevel_probe/cleanup_s118/inventory-before/tmp-cache-inventory.json",
+      "bytes": 3798,
+      "sha256": "618e3e653af8bbd0d9a01e0131626c0c46992f248751ae5266791c537fc6f95e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/cleanup-inventory-20261016-next-kernel/worktree-dirty.json",
+      "target": "strata/flash-next/lowlevel_probe/cleanup_s118/inventory-before/worktree-dirty.json",
+      "bytes": 763,
+      "sha256": "2b789c6cb7839465df3d0f306b0e675f6667e9793c25f1f51a4071e5c38e8667"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/cleanup-private-temp-followup-s118/inventory.json",
+      "target": "strata/flash-next/lowlevel_probe/cleanup_s118/private-temp-followup/inventory.json",
+      "bytes": 9117,
+      "sha256": "18d4a8be9ff5a6aac0805218a80d2c6aaa8581f106b45909a5e9a514b62f9061"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/cleanup-s118-root/container-before.json",
+      "target": "strata/flash-next/lowlevel_probe/cleanup_s118/root-removal/container-before.json",
+      "bytes": 9537,
+      "sha256": "d14407183c269f0645d7991d76050412ec42569c33d387491661fa8b74dfb864"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/cleanup-s118-root/health-units.txt",
+      "target": "strata/flash-next/lowlevel_probe/cleanup_s118/root-removal/health-units.txt",
+      "bytes": 123,
+      "sha256": "31af18661a75c554c6544c88039da378c543241f6f6bbcbbe124a73ed50c85f9"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/cleanup-s118-root/result.json",
+      "target": "strata/flash-next/lowlevel_probe/cleanup_s118/root-removal/result.json",
+      "bytes": 1047,
+      "sha256": "a7bddbca2b756252467fc0f3b0a795bd5763c708611fb03265a86637af92606a"
+    }
+  ],
+  "limits": "Only explicit small metadata/source recipes/receipts copied. No binary/archive/model/trace/selected ISA reads or deletions by this agent."
+}

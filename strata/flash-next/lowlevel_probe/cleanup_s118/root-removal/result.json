@@ -1,0 +1,22 @@
+{
+  "status": "REMOVED_ONE_STALE_NEVER_STARTED_HEALTH_CONTAINER_ABSENCE_VERIFIED",
+  "cid": "abc6220232176de0c93901e34e7d66f78e91ae40a51df0152bf1c9f306884d5a",
+  "name": "/xpu-health-1203363-17874-11440-card0",
+  "created": "2026-10-13T04:59:47.696942839Z",
+  "normal_rm_argv": [
+    "docker",
+    "rm",
+    "abc6220232176de0c93901e34e7d66f78e91ae40a51df0152bf1c9f306884d5a"
+  ],
+  "normal_rm_exit": 0,
+  "normal_rm_exit_scope": "Original command return asserted0 before post-removal error-string case assertion failed; raw rm stdout was not saved. No second rm or force.",
+  "post_removal_inspect_exit": 1,
+  "post_removal_stdout": "[]\n",
+  "post_removal_stderr": "error: no such object: abc6220232176de0c93901e34e7d66f78e91ae40a51df0152bf1c9f306884d5a\n",
+  "initial_verification_failure": "Case-sensitive No such object predicate did not accept lowercase error. Rechecked same object; no mutation retry.",
+  "force": false,
+  "GPU_touch": false,
+  "image_removed": false,
+  "running_process_killed": false,
+  "epoch_ns": 1792115138945538714
+}

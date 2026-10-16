@@ -1,0 +1,81 @@
+{
+  "utc": "2026-10-16T01:42:50.362814+00:00",
+  "scan_roots": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/greedy-top1-s112-oracle-prep-v2/build/tmp",
+      "allocated_bytes": 0,
+      "immediate_entries": [],
+      "observed_open_fds": [],
+      "container_mount_refs": [],
+      "scope": "Only named tmp/cache subtree; parent experiment outputs/binaries/objects/raw evidence protected."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/greedy-top1-s112-oracle-prep-v2/build/cache",
+      "allocated_bytes": 0,
+      "immediate_entries": [],
+      "observed_open_fds": [],
+      "container_mount_refs": [],
+      "scope": "Only named tmp/cache subtree; parent experiment outputs/binaries/objects/raw evidence protected."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/greedy-top1-s112-run-v2/tmp",
+      "allocated_bytes": 0,
+      "immediate_entries": [],
+      "observed_open_fds": [],
+      "container_mount_refs": [],
+      "scope": "Only named tmp/cache subtree; parent experiment outputs/binaries/objects/raw evidence protected."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/greedy-top1-s112-run-v2/cache",
+      "allocated_bytes": 0,
+      "immediate_entries": [
+        {
+          "name": "neo_compiler_cache",
+          "type": "directory",
+          "lstat_bytes": 0,
+          "allocated_bytes": 0,
+          "mtime_ns": 1792110703201270303
+        }
+      ],
+      "observed_open_fds": [],
+      "container_mount_refs": [],
+      "scope": "Only named tmp/cache subtree; parent experiment outputs/binaries/objects/raw evidence protected."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-build/build/tmp",
+      "allocated_bytes": 0,
+      "immediate_entries": [],
+      "observed_open_fds": [],
+      "container_mount_refs": [],
+      "scope": "Only named tmp/cache subtree; parent experiment outputs/binaries/objects/raw evidence protected."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-build/build/cache",
+      "allocated_bytes": 0,
+      "immediate_entries": [],
+      "observed_open_fds": [],
+      "container_mount_refs": [],
+      "scope": "Only named tmp/cache subtree; parent experiment outputs/binaries/objects/raw evidence protected."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/tmp",
+      "allocated_bytes": 0,
+      "immediate_entries": [],
+      "observed_open_fds": [],
+      "container_mount_refs": [],
+      "scope": "Only named tmp/cache subtree; parent experiment outputs/binaries/objects/raw evidence protected."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s114-default-isa-addendum/tmp",
+      "allocated_bytes": 0,
+      "immediate_entries": [],
+      "observed_open_fds": [],
+      "container_mount_refs": [],
+      "scope": "Only named tmp/cache subtree; parent experiment outputs/binaries/objects/raw evidence protected."
+    }
+  ],
+  "du_exit": 0,
+  "open_fd_scope": "Visible /proc fd symlinks only; permission-limited, no persistent guarantee or hidden memory-mapped-file proof.",
+  "protected": "All source/build-sycl-ep, S107/S112/S114/S116 binaries/archives/objects/source/results, all R experiment evidence except explicit expendable temporary subtrees after root approval, models/fallback/archive/quarantine/user dirty paths/current containers.",
+  "no_deletion": true
+}
