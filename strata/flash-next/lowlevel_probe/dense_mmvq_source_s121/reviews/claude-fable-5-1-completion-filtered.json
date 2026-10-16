@@ -1,0 +1,12 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "exit": 0,
+  "elapsed_s": 66.38021585199749,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "source_packet_sha256": "60317481c1feded3982e8b1e2a20f54ce15aefea775e00a29bf8925094e6f619",
+  "source_packet_unchanged": true,
+  "resume_session_matches_response": true
+}

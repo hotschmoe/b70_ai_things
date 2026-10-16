@@ -1,0 +1,31 @@
+**Facts from the packet**
+
+- The non-vocabulary MMVQ ranking is recorded whole-collection service, not a cycle budget. The two largest Q6 rows were already the A4 shapes and are closed for that mechanism.
+- Q4_K and Q5_K share one apply helper. Per lane, column and block pair it issues four dp4a for the weighted low dot, four for the weighted high dot, and eight more against a constant of ones, purely to form the two integer half-sums for the affine minimum correction. Those eight depend only on the activation bytes, yet every row's sub-group recomputes them. The Q5_K head is the extreme case: 248320 rows each recompute the same sums for the same two columns.
+- The stored ds second half is the FP16 float sum of the raw activations, not the integer sum of the encoded bytes. It cannot substitute. An exact adjunct would have to be derived from the clamped int8 bytes and fits int16.
+- The FP expression is fixed: scale times (weight dot minus min times sum), per half, then added. Replacing the integer sum operand with a loaded exact integer keeps every float operation and its order. That is a source argument, not compiled proof.
+
+**Hypotheses, labelled**
+
+- Whether the compiler keeps eight dp4a against ones, folds them into cheaper byte adds, or CSEs them across the two columns is unknown. Across rows it cannot CSE, since rows are different work-items.
+- The head path is probably bandwidth dominated. Source-conditioned weight bytes per call and the recorded median give roughly 360 GB/s of weight bytes per second on that row, which is near the card's plausible ceiling. If so, removing integer ALU work there would buy little even if every site survives. This is inferred from a recorded median and a byte count, not measured traffic.
+- The Q4_K C6 QKV row has six columns per weight load and therefore a higher ALU share per byte. It is the more plausible beneficiary of this adjunct, and it uses the same helper.
+
+**Risks that decide the candidate**
+
+- Producer multiplicity. The Q8 image for dense consumers comes from several producers: the native quantizer, the GDN fused store, the row quantizer under QDEDUP, and the SwiGLU quantizer. Any adjunct must be written by every producer that can feed a Q4_K or Q5_K consumer, or the consumer must know when it is absent. The C2 head path has one producer, which is why it is the safest first binding, but it is also the path least likely to gain.
+- Scratch ownership, stride and capture: the adjunct must live with the Q8 image it describes and be recorded in the same graphs. Nothing here is proven yet.
+- The signed-byte sum range and exact int-to-float conversion are fine; the clamp must be applied before summing so the adjunct matches the dp4a over stored bytes.
+
+**Decision: CPU_AUDIT_GO on the single Q5_K C2 RPW1 image, with a reframed question.**
+
+Bind the host branch under head-RPW2 off, wide-K on, generic RPW1, two columns, and extract exactly one image with its metadata and relocations. If no retained decode matches, report ISA_UNKNOWN and let root decide on one offline decode. In the ISA, answer three things: whether the eight ones-dp4a sites survive per column and per block pair, whether they share operands with the weighted dots, and the proportion of the inner loop that is sends and waits versus integer and float ALU. Count static sites only.
+
+**Stop conditions**
+
+- Host binding or registered name not unique: HOLD.
+- Ones-sums already folded into something trivial: close the adjunct.
+- Sites survive but the loop is dominated by loads and waits: record the head as a poor target and move the question to the Q4_K C6 QKV image before any source proposal. No prototype until that second read, and no timing claim from either.
+- Sites survive and the loop is ALU heavy: only then prepare a narrow source proposal with single-producer scope, strict Q8 byte preservation, FP order unchanged, and a private strict oracle, under the usual gates.
+
+No sweeps, no serving run, no cache qualification, and no rerun of rejected RPW2, SWAR, DPAS or depth-3 configurations.

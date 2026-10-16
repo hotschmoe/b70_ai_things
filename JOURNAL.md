@@ -25183,3 +25183,31 @@ barriers and fewer WGs; net saving unknown. Primary dense MMVQ source audit
 proceeds independently. No serving/default/promotion/target change. Evidence:
 strata/flash-next/lowlevel_probe/routed_gu17_activation_s120/ and
  docs/20261016_strata_routed_gu17_activation_audit.md.
+
+
+## 2026-10-16 S121: primary dense MMVQ attribution and integer half-sum lead
+
+CONFIG -> Existing small S95 census/source/retained header summaries only.
+Primary quantized nonvocabulary MMVQ excludes the full Q5 head; routed GU,
+HC and BF16 paths are separate. No model/large trace/ELF/archive payload read.
+COMMAND -> Source agent derives exact format/shape role sets and six frozen
+payloads; root full-read findings/audit plan/math/dispatch, verifies six exact
+copies. Actual own-session reviews claude-opus-5-5 46.035s and
+claude-fable-5-1 66.380s, both exit0/root full-read, CPU_AUDIT_GO.
+RESULT -> Whole collection102rows/9600calls/361.772043ms, NOT per-cycle
+wall budget. Largest Q6 C6 shapes6144->2560/2560->10240 already A4-tested,
+no repeat; weight unpack/scale already outside columns. New Q4/Q5 minimum
+correction repeats two exact raw16-byte encoded-Q8 integer sums per row.
+Eight logical DP4A sites are input-only; ds[1] full32 prequantized FP16 sum
+cannot substitute. Adjunct int16 bound fits, but producer/load/lifetime cost
+unknown. Same helper serves full Q5 C2 head; its42calls/50.470608ms excluded
+from nonvocab ranking. RPW1 rows separate SG/WG prohibit cross-row CSE;
+distinct columns have distinct inputs. Actual lowering remains unresolved.
+VERDICT -> Root selects ONE existing Q5 C2/RPW1 host-bound image audit,
+not a candidate/build/GPU or serving test. Integer algebra is not compiled
+FP proof; encoded bytes/service is not physical bandwidth; static instruction
+proportions are not dynamic critical-path cost. Reviewers' opposing bandwidth
+inferences rejected. Exact retained ISA first, one offline decode only by
+root selection if needed. No throughput/default/target change. Evidence:
+strata/flash-next/lowlevel_probe/dense_mmvq_source_s121/ and
+ docs/20261016_strata_dense_mmvq_attribution.md.

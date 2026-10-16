@@ -1,0 +1,393 @@
+{
+  "status": "SOURCE_ONLY_EXISTING_CSV_AND_METADATA_ATTRIBUTION",
+  "CSV": {
+    "path": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/lowlevel_probe/current_c2_profile_s95/runtime/analysis/gpu/operations.csv",
+    "bytes": 301220,
+    "sha256": "6e7b53de561f54252c5e170ed0e9f45818be3a46e0aea4fdf44b388ac7bdf584"
+  },
+  "filter": "kind=gpu AND process contains #0 AND operation contains mmvq; exclude WideQ5K grid62080 fullvocabulary, matching existing S95 extended family predicate",
+  "scope": "Whole collection, NOT reviewed-cycle medians, no phase/event-tensor join or wall budget. BF16 mmvf/GEMM, HC, native_gu_port/native_down_port are outside this quantized-MMVQ predicate.",
+  "canonical_rows": 859,
+  "nonvocabulary_rows": 102,
+  "nonvocabulary_calls": 9600,
+  "nonvocabulary_recorded_total_ms": 361.772043,
+  "format_pools": {
+    "Q6_K": {
+      "count": 2059,
+      "total_ms": 111.049292,
+      "CSV_rows": 18
+    },
+    "Q4_K": {
+      "count": 1305,
+      "total_ms": 64.939024,
+      "CSV_rows": 18
+    },
+    "IQ4_XS": {
+      "count": 1943,
+      "total_ms": 60.430027,
+      "CSV_rows": 18
+    },
+    "IQ3_S": {
+      "count": 1595,
+      "total_ms": 56.39630299999999,
+      "CSV_rows": 15
+    },
+    "Q5_K": {
+      "count": 406,
+      "total_ms": 28.14744,
+      "CSV_rows": 15
+    },
+    "Q8_0": {
+      "count": 900,
+      "total_ms": 17.596079999999997,
+      "CSV_rows": 12
+    },
+    "IQ4_NL": {
+      "count": 1160,
+      "total_ms": 16.71137,
+      "CSV_rows": 3
+    },
+    "Q2_0": {
+      "count": 232,
+      "total_ms": 6.5025070000000005,
+      "CSV_rows": 3
+    }
+  },
+  "top12_operation_rows": [
+    {
+      "CSV_line": 17,
+      "format": "Q6_K",
+      "NCOLS": 6,
+      "grid_x": 640,
+      "count": 696,
+      "recorded_total_ms": 43.823245,
+      "recorded_median_us": 60.625,
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_q6k_wide<6>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_q6k_wide_a2, dpct_kernel_scalar<6> >[SIMD32 {640; 1; 1} {32; 4; 1}]",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine": "Thread 467 L0 Compute Engine<0,0>",
+      "retained_header_role_set": [
+        {
+          "N": 6144,
+          "M": 2560,
+          "tensor_suffix": "attn_output.weight",
+          "count": 10
+        },
+        {
+          "N": 6144,
+          "M": 2560,
+          "tensor_suffix": "ssm_out.weight",
+          "count": 19
+        }
+      ]
+    },
+    {
+      "CSV_line": 21,
+      "format": "Q6_K",
+      "NCOLS": 6,
+      "grid_x": 2560,
+      "count": 336,
+      "recorded_total_ms": 28.765068,
+      "recorded_median_us": 82.604,
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_q6k_wide<6>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_q6k_wide_a2, dpct_kernel_scalar<6> >[SIMD32 {2560; 1; 1} {32; 4; 1}]",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine": "Thread 467 L0 Compute Engine<0,0>",
+      "retained_header_role_set": [
+        {
+          "N": 2560,
+          "M": 10240,
+          "tensor_suffix": "attn_qkv.weight",
+          "count": 14
+        }
+      ]
+    },
+    {
+      "CSV_line": 34,
+      "format": "IQ3_S",
+      "NCOLS": 6,
+      "grid_x": 1536,
+      "count": 240,
+      "recorded_total_ms": 21.133954,
+      "recorded_median_us": 84.27,
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_mmvq_multi_nc<21, false>(dpct::dim3, dpct::dim3, sycl::_V1::queue*, unsigned char const*, unsigned long, block_q8_1 const*, float*, int, int, int)::{lambda(sycl::_V1::handler&)#6}::operator()(sycl::_V1::handler&) const::mmvq_multi_kernel_3404b2, dpct_kernel_scalar<21>, dpct_kernel_scalar<6>, dpct_kernel_scalar<0>, dpct_kernel_scalar<1> >[SIMD32 {1536; 1; 1} {32; 4; 1}]",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine": "Thread 467 L0 Compute Engine<0,0>",
+      "retained_header_role_set": [
+        {
+          "N": 2560,
+          "M": 6144,
+          "tensor_suffix": "attn_gate.weight",
+          "count": 10
+        }
+      ]
+    },
+    {
+      "CSV_line": 35,
+      "format": "Q4_K",
+      "NCOLS": 6,
+      "grid_x": 2560,
+      "count": 192,
+      "recorded_total_ms": 20.115752,
+      "recorded_median_us": 100.104,
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ4K, 6>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ4K, dpct_kernel_scalar<6> >[SIMD32 {2560; 1; 1} {32; 4; 1}]",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine": "Thread 467 L0 Compute Engine<0,0>",
+      "retained_header_role_set": [
+        {
+          "N": 2560,
+          "M": 10240,
+          "tensor_suffix": "attn_qkv.weight",
+          "count": 8
+        }
+      ]
+    },
+    {
+      "CSV_line": 39,
+      "format": "IQ4_XS",
+      "NCOLS": 6,
+      "grid_x": 2560,
+      "count": 264,
+      "recorded_total_ms": 17.762699,
+      "recorded_median_us": 64.27,
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideIQ4XS, 6>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideIQ4XS, dpct_kernel_scalar<6> >[SIMD32 {2560; 1; 1} {32; 4; 1}]",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine": "Thread 467 L0 Compute Engine<0,0>",
+      "retained_header_role_set": [
+        {
+          "N": 2560,
+          "M": 10240,
+          "tensor_suffix": "attn_qkv.weight",
+          "count": 11
+        }
+      ]
+    },
+    {
+      "CSV_line": 44,
+      "format": "IQ3_S",
+      "NCOLS": 6,
+      "grid_x": 160,
+      "count": 960,
+      "recorded_total_ms": 14.746782999999999,
+      "recorded_median_us": 15.104,
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_mmvq_multi_nc<21, false>(dpct::dim3, dpct::dim3, sycl::_V1::queue*, unsigned char const*, unsigned long, block_q8_1 const*, float*, int, int, int)::{lambda(sycl::_V1::handler&)#6}::operator()(sycl::_V1::handler&) const::mmvq_multi_kernel_3404b2, dpct_kernel_scalar<21>, dpct_kernel_scalar<6>, dpct_kernel_scalar<0>, dpct_kernel_scalar<1> >[SIMD32 {160; 1; 1} {32; 4; 1}]",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine": "Thread 467 L0 Compute Engine<0,0>",
+      "retained_header_role_set": [
+        {
+          "N": 2560,
+          "M": 640,
+          "tensor_suffix": "ffn_up_shexp.weight",
+          "count": 27
+        },
+        {
+          "N": 2560,
+          "M": 640,
+          "tensor_suffix": "ffn_gate_shexp.weight",
+          "count": 13
+        }
+      ]
+    },
+    {
+      "CSV_line": 45,
+      "format": "IQ4_NL",
+      "NCOLS": 6,
+      "grid_x": 640,
+      "count": 960,
+      "recorded_total_ms": 14.386042999999999,
+      "recorded_median_us": 14.479,
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32IQ4NL, 6>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32IQ4NL, dpct_kernel_scalar<6> >[SIMD32 {640; 1; 1} {32; 4; 1}]",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine": "Thread 467 L0 Compute Engine<0,0>"
+    },
+    {
+      "CSV_line": 50,
+      "format": "IQ4_XS",
+      "NCOLS": 6,
+      "grid_x": 1536,
+      "count": 264,
+      "recorded_total_ms": 11.149788000000001,
+      "recorded_median_us": 40.625,
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideIQ4XS, 6>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideIQ4XS, dpct_kernel_scalar<6> >[SIMD32 {1536; 1; 1} {32; 4; 1}]",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine": "Thread 467 L0 Compute Engine<0,0>",
+      "retained_header_role_set": [
+        {
+          "N": 2560,
+          "M": 6144,
+          "tensor_suffix": "attn_gate.weight",
+          "count": 11
+        }
+      ]
+    },
+    {
+      "CSV_line": 52,
+      "format": "Q4_K",
+      "NCOLS": 6,
+      "grid_x": 1536,
+      "count": 168,
+      "recorded_total_ms": 11.093789000000001,
+      "recorded_median_us": 63.02,
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ4K, 6>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ4K, dpct_kernel_scalar<6> >[SIMD32 {1536; 1; 1} {32; 4; 1}]",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine": "Thread 467 L0 Compute Engine<0,0>",
+      "retained_header_role_set": [
+        {
+          "N": 2560,
+          "M": 6144,
+          "tensor_suffix": "attn_gate.weight",
+          "count": 7
+        }
+      ]
+    },
+    {
+      "CSV_line": 53,
+      "format": "Q5_K",
+      "NCOLS": 6,
+      "grid_x": 640,
+      "count": 120,
+      "recorded_total_ms": 10.968294,
+      "recorded_median_us": 87.604,
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 6>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<6> >[SIMD32 {640; 1; 1} {32; 4; 1}]",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine": "Thread 467 L0 Compute Engine<0,0>",
+      "retained_header_role_set": [
+        {
+          "N": 6144,
+          "M": 2560,
+          "tensor_suffix": "ssm_out.weight",
+          "count": 4
+        },
+        {
+          "N": 6144,
+          "M": 2560,
+          "tensor_suffix": "attn_output.weight",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "CSV_line": 55,
+      "format": "Q4_K",
+      "NCOLS": 6,
+      "grid_x": 640,
+      "count": 120,
+      "recorded_total_ms": 9.718277,
+      "recorded_median_us": 78.07249999999999,
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ4K, 6>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ4K, dpct_kernel_scalar<6> >[SIMD32 {640; 1; 1} {32; 4; 1}]",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine": "Thread 467 L0 Compute Engine<0,0>",
+      "retained_header_role_set": [
+        {
+          "N": 6144,
+          "M": 2560,
+          "tensor_suffix": "ssm_out.weight",
+          "count": 4
+        },
+        {
+          "N": 6144,
+          "M": 2560,
+          "tensor_suffix": "attn_output.weight",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "CSV_line": 57,
+      "format": "Q6_K",
+      "NCOLS": 6,
+      "grid_x": 3072,
+      "count": 96,
+      "recorded_total_ms": 9.58621,
+      "recorded_median_us": 97.239,
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_q6k_wide<6>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_q6k_wide_a2, dpct_kernel_scalar<6> >[SIMD32 {3072; 1; 1} {32; 4; 1}]",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine": "Thread 467 L0 Compute Engine<0,0>",
+      "retained_header_role_set": [
+        {
+          "N": 2560,
+          "M": 12288,
+          "tensor_suffix": "attn_q.weight",
+          "count": 4
+        }
+      ]
+    }
+  ],
+  "head_context_separate_excluded_from_nonvocab_ranking": [
+    {
+      "CSV_line": 12,
+      "format": "Q5_K",
+      "NCOLS": 6,
+      "grid_x": 62080,
+      "count": 24,
+      "recorded_total_ms": 54.263217,
+      "recorded_median_us": 2261.1454999999996,
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 6>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<6> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine": "Thread 467 L0 Compute Engine<0,0>"
+    },
+    {
+      "CSV_line": 13,
+      "format": "Q5_K",
+      "NCOLS": 2,
+      "grid_x": 62080,
+      "count": 42,
+      "recorded_total_ms": 50.470608,
+      "recorded_median_us": 1201.562,
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine": "Thread 467 L0 Compute Engine<0,0>"
+    },
+    {
+      "CSV_line": 46,
+      "format": "Q5_K",
+      "NCOLS": 1,
+      "grid_x": 62080,
+      "count": 14,
+      "recorded_total_ms": 14.008536,
+      "recorded_median_us": 996.145,
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<1> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine": "Thread 467 L0 Compute Engine<0,0>"
+    },
+    {
+      "CSV_line": 118,
+      "format": "Q5_K",
+      "NCOLS": 3,
+      "grid_x": 62080,
+      "count": 2,
+      "recorded_total_ms": 3.146145,
+      "recorded_median_us": 1573.0725,
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 3>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<3> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine": "Thread 467 L0 Compute Engine<0,0>"
+    }
+  ],
+  "Q8_0_columns": {
+    "1": {
+      "count": 634,
+      "total_ms": 12.777427999999999
+    },
+    "4": {
+      "count": 86,
+      "total_ms": 1.617256
+    },
+    "8": {
+      "count": 48,
+      "total_ms": 1.535609
+    },
+    "3": {
+      "count": 99,
+      "total_ms": 1.246008
+    },
+    "2": {
+      "count": 27,
+      "total_ms": 0.323948
+    },
+    "6": {
+      "count": 6,
+      "total_ms": 0.095831
+    }
+  },
+  "head_encoded_bytes_source_conditioned": 437043200,
+  "new_model_reads": 0,
+  "GPU_build_decode_newtrace_calls": 0
+}

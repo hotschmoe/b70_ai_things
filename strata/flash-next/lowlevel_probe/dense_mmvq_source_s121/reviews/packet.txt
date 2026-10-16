@@ -1,0 +1,300 @@
+ROOT CURRENT DECISION: S121 primary dense source attribution and raw integer Q8 half-sum adjunct. Source only. Existing strict numerical gates unchanged. Review the concrete arithmetic/lowering/ownership risks and select at most ONE cheap discriminator. Do not request general sweeps, full serving, cache qualification or repeat rejected knobs. No new kernel is currently authorized. Root proposes ONE existing Q5_K C2/RPW1 actual host-bound image extraction, then exact retained ISA reuse; if no decode exists, separate decision for one offline decode before any prototype. Raw sum integer DP4A may be cheap/already CSE. Do not predict speed from static counts. S119 cache result passed and is committed; enable it next otherwise-required full build only. S120 existing IQ2_XS compiler already coalesces eight Q8 words into two d32x4 sends; pairing speculative and not selected. S116 private HC passed exact bounded gates with 1.59% lower host graph median in one process but retained private/no dedicated main build. Main current matched decode remains ~54/56 tokens/s per stream, far below150; correct RAM recovery retained. S21 depth3 rejected and no config-only depth rerun. Aim to move efficiently to an actual worthwhile kernel test, but no gate waiver.
+
+# S121 primary dense MMVQ attribution and one integer-preparation lead
+
+CONFIG -> S95 canonical859-row operation CSV, primary device #0, operation
+contains mmvq, excluding WideQ5K grid62080 vocabulary head. This is the SAME
+extended predicate as S95. BF16 MMVF/GEMM, HC and routed GU/down are separate.
+Source/retained descriptors only; no model/trace payload, binary hash,
+compiler/decoder/GPU or source edit. Opus depth3 rerun
+is NOT selected: S21 already rejected it;64/24 aggregate two streams, not a
+per-stream3-token window ceiling.
+
+COMMAND -> derive.py reads the small CSV and retained S41/S57/S63 header JSON,
+joins format/output-row sets to current dispatch/callers, and pins exact source
+excerpts. ranking.json retains exact operation strings, counts, scope and
+source-conditioned role sets; no per-event tensor/layer/phase join.
+
+RESULT -> Whole-collection quantized nonvocabulary MMVQ:102 rows,9600 calls,
+361.772043ms recorded service. Family ranking (ms): Q6_K111.049292,
+Q4_K64.939024, IQ4_XS60.430027, IQ3_S56.396303, Q5_K28.147440,
+Q8_017.596080, IQ4_NL16.711370, Q2_06.502507. Whole collection includes retained
+capture/cold/other phases. Do NOT divide by a cycle count, add these sums to
+CPU/peer time, infer physical traffic/idle or call them removable wall budget.
+
+| Largest individual C6 operation row | Calls | Recorded ms | Retained metadata role set |
+| --- | ---: | ---: | --- |
+| Q6_K grid640 |696|43.823245|6144->2560;10 attn_output +19 ssm_out tensors |
+| Q6_K grid2560 |336|28.765068|2560->10240;14 attn_qkv tensors |
+| IQ3_S grid1536 |240|21.133954|2560->6144;10 attn_gate tensors |
+| Q4_K grid2560 |192|20.115752|2560->10240;8 attn_qkv tensors |
+| IQ4_XS grid2560 |264|17.762699|2560->10240;11 attn_qkv tensors |
+
+Four subgroups/one row each bind C6 grid to M=4*grid. Header supplies K and
+role set; grid alone supplies neither. In particular Q6 M2560 is NOT a shared-
+down K640 ambiguity here: retained Q6 descriptors contain only the29 K6144
+matrices for that row count. Source calls verify.cpp1070/1283 name their
+ssm_out/attn_output consumers. Counts reconcile sets, not individual events.
+
+Both largest Q6 shapes were A4-tested in S104/S107; matched serving
+observation+0.427673%, defaultOFF/no repeat. This closes an A4 repeat, not all possible mechanisms on those shapes. Source1552..1640 already
+hoists ql/qh reconstruction, signed6-bit centering and d*scale outside NCOLS;
+u0/u1/ds are prepared once per column/kbx and shared across RPW rows. Each
+column's distinct dot remains. There is no new weight-decode-across-columns
+hoist. Source hoisting is not emitted-load/CSE/traffic proof. CENTER, global
+Q6 RPW2 and packed Q6 are distinct already-reviewed mechanisms, not next tests.
+
+Prior levers stay closed: IQ4_XS C6 RPW2 S59 was tiny/inconclusive;
+Q4/Q5 C6 RPW2 metadata already declares spill/scratch; IQ3_S SWAR S65 was mixed,
+and S75 SG16/DPAS was7.7-7.9x slower. Q8_0's17.596ms pool mixes columns1/2/3/4/6/8
+and MTP projections; names/rows alone do not identify each input/role. Its
+Wide32Q8 already hoists weight load across columns. No quant-format sweep.
+
+## Distinct lead: exact input-only minimum-correction sums
+
+WideQ4K::apply at1954..1960 computes two integer sum16(q8) values per lane/column/
+kbx as dp4a4(ones,ua/uc,0), solely for the affine minimum correction. Each
+sum uses four logical DP4A calls: eight total, independent of the weight ROW.
+Weights/scales are already hoisted outside j at2095..2098. WideQ5K::apply1994
+forwards to this SAME helper. FP expression must stay literally ordered:
+
+    da*(dl*float(dot_lo)-ml*float(sum16_a))
+      + dc*(dh*float(dot_hi)-mh*float(sum16_c))
+
+A possible narrow producer adjunct stores each canonical Q8 block's TWO raw
+signed integer16-byte sums AFTER rounding/clamping/int8 encoding, from the same stored q bytes. Keep all
+36-byte Q8_1 bytes unchanged; no new weight format, requantization or altered
+FP scale/subtract/add/butterfly. For arbitrary signed int8, each exact sum is
+[-2048,2032], fitting int16; for native clamped[-127,127] it is[-2032,2032].
+strata::dp4a uses signed int32 operands; integer conversion to FP32 is exact. Native ds[1] stores the FP16 FULL32 raw-activation float sum, NOT either
+raw16 encoded-q integer sum and NOT a substitute.
+No universal compiled equivalence follows; FP/store/load modes still need proof.
+
+For N2560, adjunct size is4*(N/32)*C:1920B at C6 or640B at C2. These are logical
+storage sizes, not physical traffic. Added loads, producer integer reduction,
+scratch ownership/stride/lifetime/capture and readiness could outweigh saved
+integer work. Compiler may already CSE/simplify the ones-dot; actual lowering
+is UNKNOWN. Do not build a candidate before resolving that cheaper question.
+
+The SAME helper serves Q5_K fullvocabulary C2: current
+MtpPair tail quantizes two separate owner rows2198..2199, calls
+native_mmvq_head2200 -> defaultOFF head-RPW2 fallback3959 ->native_mmvq type13
+->native_q5_k_mmvq3290 ->try_wide<WideQ5K>3298 ->native_mmvq_wide_kernel ->apply.
+WideK/defaultRPW1 and N2560/C2 are explicit conditions; RPW2/head/subset routes
+must not be silently substituted. Head M248320 encoded bytes437043200
+(416.796875MiB), source-conditioned; no payload read/physical traffic claim.
+Its EXCLUDED S95 C2 row is42 calls/50.470608ms, median1201.562us; this head
+context does not inflate the nonvocabulary ranking above.
+
+## Cheapest discriminator and stop condition
+
+Select ONE existing Q5_K C2/RPW1 image, not a format sweep: bind actual public
+host branch, Info/cache/guard/name/image and constants/options before inspecting
+whether raw-q8 sum16 sites survive, how they lower, and what predicates/data
+loads feed each min term. The source-only audit-plan.md specifies this target.
+Reuse retained selected ISA only after exact body/metadata agreement; no new
+decoder is authorized by this note. If no exact retained decode exists, report
+ISA_UNKNOWN to root before considering one bounded offline decode.
+
+VERDICT -> Concrete new integer-preparation hypothesis; NO candidate/build/GPU
+GO or timing forecast. Stop if compiler already folds the correction cheaply,
+actual role/image binding is ambiguous, or auxiliary ownership/canonical-Q8/
+FP-expression preservation is unsupported. Repeated quantizers in MTP embedding
+versus hidden consume different normalized inputs; shared GU and GDN QKV/Z
+already share one Q8 image. Global QFUSE remains blocked by batch-rec output
+omission and noncanonical finite/clamp helpers; do not enable it as a shortcut.
+A strict private oracle would still be needed after source/compiled approval.
+
+# ONE selected existing-image discriminator; SOURCE ONLY, not executed
+
+Target: current original WideQ5K C2/RPW1 full-vocabulary route. Registered
+operation is the exact launch_wide<WideQ5K,2> native_mmvq_wide name in
+ranking.json/head_context_separate_excluded_from_nonvocab_ranking. N2560,
+M248320, grid62080/local(32,4,1), SG32. This is the C2 full-head path, not
+C6 verifier, RPW2, subset, Q6 A4 or GU17.
+
+Use frozen S107 main064b63ce... and actual native object e4dafa843014ad3aeb4e2c15e2bfa26c834f8e6fa0d8873032e5235ce06a9667
+identities already bound by q6-a4-main-s107-compiled-audit/facts.json. Native
+source SHAae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252.
+The prior Q6 audit establishes this object's provenance, NOT this Q5 image.
+Reuse retained build hashes and check stat continuity; do not rescan/rehash a
+large main/archive/model or read tensor payload. Object/member path comes from
+the exact S107 binding record/build receipt, never a guessed current archive.
+
+1. Root approves bounded CPU-only extraction first. Read ELF symbol/header/
+   relocation metadata only for public native_mmvq_head, native_mmvq case13,
+   native_q5_k_mmvq and launch_wide<WideQ5K,2>. Confirm branch under headRPW2=0,
+   wideK=1, generic RPW1, ncols2. Trace all w/x/y/N/M
+   arguments, final Info/cache/guard/name pointers and actual embedded image.
+   Exactly ONE selected image, no all-images extraction. If registered name
+   or host destination is not uniquely bound, HOLD.
+2. Save selected metadata/options/constants/data/decoded relocations and
+   selected text/image hashes. Missing resources UNKNOWN; no actual-dispatch
+   claim from host binding. Prior Q6/S55 resources cannot stand in for Q5 C2.
+3. Search existing retained Q5 C2 decode records by file metadata/index only.
+   Reuse ASM only if selected computational body, metadata/options/constants/
+   relocations match its pinned original. No exact retained decode identified
+   by S121's bounded path inventory. Report ISA_UNKNOWN, request root's next
+   decision; no decode/build/GPU execution follows from this source plan.
+4. If root later selects ONE offline decode: pinned e41/DPC2026.1 ocloc BMG-G31,
+   noDRI/networknone/UID1000/diskTMP under cpu-run; one shortname alias preserving
+   every executable/data/relocation byte. No third image or format sweep.
+5. Actual ISA question: distinguish weighted q5*q8 integer dots from input-only
+   ones*q8 half16 sums. Follow q8 loads, signedness, integer chains/conversions,
+   per-column and per-row loops, compiler CSE/strength reduction, scales/mins,
+   FP products/subtract/add and XOR tree. Count static sites only, not cycles,
+   saved wall time, physical traffic or a new serving ceiling. Preserve exact
+   materialized q8 bytes as the producer adjunct's source, not pre-rounding xi.
+   An absent/folded/cheap correction closes this candidate. Surviving sites
+   justify at most a later narrow source proposal with ownership/strict gates.
+
+No source application, prototype, AOT/link, GPU, model call or restore is
+selected. The same source helper also serves Q4_K C6 QKV, but it is contextual
+reuse, not a second image/test in this discriminator.
+
+EXACT FROZEN SOURCE EXCERPTS:
+{
+  "source_root": "/mnt/vm_8tb/b70/build/strata-ab/src-ep",
+  "excerpts": {
+    "sycl/src/kernels/cuda/native_mmvq.dp.cpp": [
+      {
+        "first_line": 191,
+        "last_line": 205,
+        "text": "__dpct_inline__ void native_quantize_q8_1_kernel(const float *__restrict__ x,\n                                                 Q81Block *__restrict__ y,\n                                                 int n_in) {\n    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();\n    const int i = int(item_ct1.get_group(2)) * QUANT_THREADS +\n                  int(item_ct1.get_local_id(2));\n    if (i >= n_in) return; // n_in is a multiple of 32: only whole warps return.\n    const float xi = x[i];\n    const float amax = warp_max(sycl::fabs(xi));\n    const float sum = warp_sum(xi);\n    const float d = q8_1_finite(amax / 127.0f);   // #606: q8_1_finite.hpp - the same bits for every finite block\n    const int8_t q = q8_1_quant(xi, d, amax);\n    y[i / Q8K].qs[i % Q8K] = q;\n    if (i % Q8K == 0) y[i / Q8K].ds = q8_1_ds(d, sum);\n}"
+      },
+      {
+        "first_line": 1552,
+        "last_line": 1640,
+        "text": "void native_mmvq_q6k_wide_kernel(const Q6KBlock* __restrict__ w, const Q81Block* __restrict__ x,\n                                 float* __restrict__ y, int n_in, int n_out) {\n    auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();\n    const int lane = int(item.get_local_id(2)), warp = int(item.get_local_id(1));\n    constexpr int NWG = WARPS * WARP / SG;              // sub-groups per work-group\n    const int row0 = (int(item.get_group(2)) * NWG + warp) * RPW;\n    if (row0 >= n_out) return;\n    const int blocks_per_row = n_in / QK, x_stride = n_in / Q8K;\n    const int g = lane & 7, sub = lane >> 3;            // position group within the block, block within the iteration\n    const int vh_shift = 2 * ((g & 3) >> 1);\n    const int qh4_idx = 2 * (g >> 2) + (g & 1);\n    const int scale_offset = 8 * (g >> 2) + (g & 3);\n    const int bq8_offset = 4 * (g >> 2) + ((g & 3) >> 1);\n    const int u_int4 = g & 1;                           // ints 4(g%2)..+3 of the q8 block = one int4\n    float acc[RPW][NCOLS] = {};\n    for (int kbx = sub; kbx < blocks_per_row; kbx += SG / 8) {\n        const int kby = kbx * (QK / Q8K);\n        sycl::int4 ql4[RPW], qh4[RPW]; float dsc0[RPW], dsc1[RPW];\n#pragma unroll\n        for (int r = 0; r < RPW; ++r) {\n            const Q6KBlock* b = reinterpret_cast<const Q6KBlock*>(reinterpret_cast<const uint8_t*>(w) +\n                (std::size_t(row0 + (row0 + r < n_out ? r : 0)) * blocks_per_row + kbx) * BS);\n            if constexpr (A2) {\n                ql4[r] = load16_a2(b->ql + 16 * g);\n                qh4[r] = load16_a2(b->qh + 16 * qh4_idx);\n            } else {\n                ql4[r] = reinterpret_cast<const sycl::int4*>(b->ql)[g];\n                qh4[r] = reinterpret_cast<const sycl::int4*>(b->qh)[qh4_idx];\n            }\n            const float d = b->d;\n            dsc0[r] = d * (float) b->scales[scale_offset]; dsc1[r] = d * (float) b->scales[scale_offset + 4];\n        }\n        // the activations once per column, shared by the RPW rows\n        sycl::int4 u0[NCOLS], u1[NCOLS];\n        float ds0[NCOLS], ds1[NCOLS];\n#pragma unroll\n        for (int j = 0; j < NCOLS; ++j) {\n            const Q81Block* xb = x + std::size_t(j) * x_stride + kby + bq8_offset;\n            if constexpr (A2) {   // Q8_1 qs sits at offset 4 of a 36-byte block: 4-byte aligned, so four int loads\n                const int* p0 = reinterpret_cast<const int*>(xb[0].qs) + 4 * u_int4;\n                const int* p1 = reinterpret_cast<const int*>(xb[2].qs) + 4 * u_int4;\n                u0[j] = sycl::int4(p0[0], p0[1], p0[2], p0[3]);\n                u1[j] = sycl::int4(p1[0], p1[1], p1[2], p1[3]);\n            } else {\n                u0[j] = reinterpret_cast<const sycl::int4*>(xb[0].qs)[u_int4];\n                u1[j] = reinterpret_cast<const sycl::int4*>(xb[2].qs)[u_int4];\n            }\n            ds0[j] = xb[0].ds[0]; ds1[j] = xb[2].ds[0];\n        }\n#pragma unroll\n        for (int r = 0; r < RPW; ++r) {\n            const int vl[4] = {ql4[r].x(), ql4[r].y(), ql4[r].z(), ql4[r].w()};\n            const int vh[4] = {qh4[r].x() >> vh_shift, qh4[r].y() >> vh_shift, qh4[r].z() >> vh_shift, qh4[r].w() >> vh_shift};\n            int vi0[4], vi1[4];\n#pragma unroll\n            for (int p = 0; p < 4; ++p) {\n                if constexpr (CENTER) {\n                    vi0[p] = sycl::bit_cast<int>((uint32_t((vl[p] & 0x0f0f0f0f) | ((vh[p] << 4) & 0x30303030)) + 0x60606060u) ^ 0x80808080u);\n                    vi1[p] = sycl::bit_cast<int>((uint32_t(((vl[p] >> 4) & 0x0f0f0f0f) | (((vh[p] >> 4) << 4) & 0x30303030)) + 0x60606060u) ^ 0x80808080u);\n                } else {\n                vi0[p] = dpct::vectorized_binary<sycl::char4>((vl[p] & 0x0f0f0f0f) | ((vh[p] << 4) & 0x30303030), 0x20202020, dpct::sub_sat());\n                vi1[p] = dpct::vectorized_binary<sycl::char4>(((vl[p] >> 4) & 0x0f0f0f0f) | (((vh[p] >> 4) << 4) & 0x30303030), 0x20202020, dpct::sub_sat());\n                }\n            }\n#pragma unroll\n            for (int j = 0; j < NCOLS; ++j) {\n                int s0 = 0, s1 = 0;\n                s0 = strata::dp4a(vi0[0], u0[j].x(), s0); s0 = strata::dp4a(vi0[1], u0[j].y(), s0);\n                s0 = strata::dp4a(vi0[2], u0[j].z(), s0); s0 = strata::dp4a(vi0[3], u0[j].w(), s0);\n                s1 = strata::dp4a(vi1[0], u1[j].x(), s1); s1 = strata::dp4a(vi1[1], u1[j].y(), s1);\n                s1 = strata::dp4a(vi1[2], u1[j].z(), s1); s1 = strata::dp4a(vi1[3], u1[j].w(), s1);\n                acc[r][j] += ds0[j] * dsc0[r] * (float) s0 + ds1[j] * dsc1[r] * (float) s1;\n            }\n        }\n    }\n    auto sg = item.get_sub_group();\n#pragma unroll\n    for (int r = 0; r < RPW; ++r)\n#pragma unroll\n        for (int j = 0; j < NCOLS; ++j) {\n            float v = acc[r][j];\n#pragma unroll\n            for (int o = SG / 2; o > 0; o >>= 1) v += sycl::permute_group_by_xor(sg, v, o);\n            if (lane == 0 && row0 + r < n_out) y[std::size_t(j) * n_out + row0 + r] = v;\n        }\n}\n// S104: only the isolated A4 load specialization; the existing wide kernel stays untouched.\n// A4 scalar reads are 4-byte aligned, never misaligned int4 dereferences.\n// Host launch guard requires base%4==0 and the two complete Q6 shapes."
+      },
+      {
+        "first_line": 1870,
+        "last_line": 1893,
+        "text": "            }\n            // A4 was tested only with CENTER off, canonical C6/A2/RPW1/SG32,\n            // the two complete shapes and a dword-aligned matrix base. Even\n            // blocks_per_row keeps every row base dword aligned (24 or 10 blocks).\n            if (q6k_pf() == 0 &&\n                ((n_in == 6144 && n_out == 2560) || (n_in == 2560 && n_out == 10240)) &&\n                n_in % QK == 0 && (n_in / QK) % 2 == 0 &&\n                (reinterpret_cast<uintptr_t>(weights) & 3u) == 0 && !q6k_center() && q6k_a4()) {\n                s->parallel_for<dpct_kernel_name<class native_mmvq_q6k_a4_c6>>(\n                    sycl::nd_range<3>(sycl::range(1, 1, blocks) * sycl::range(1, WARPS, WARP), sycl::range(1, WARPS, WARP)),\n                    [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {\n                        native_mmvq_q6k_a4_kernel<true>(w, x, y, n_in, n_out);\n                    });\n                return;\n            }\n        }\n        s->parallel_for<dpct_kernel_name<class native_mmvq_q6k_wide_a2, dpct_kernel_scalar<NCOLS>>>(\n            sycl::nd_range<3>(sycl::range(1, 1, blocks) * sycl::range(1, WARPS, WARP), sycl::range(1, WARPS, WARP)),\n            [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {\n                native_mmvq_q6k_wide_kernel<NCOLS, 1, WARP, (int) sizeof(Q6KBlock), true>(w, x, y, n_in, n_out);\n            });\n        return;\n    }\n    if (rpw == 1 && mmvq_sg16(false, n_out)) {"
+      },
+      {
+        "first_line": 1928,
+        "last_line": 2000,
+        "text": "// nibbles) at positions 16(g%2)..+15; IQ4_XS takes sub-block g (16 bytes, low nibbles = positions 0-15).\n__dpct_inline__ sycl::int4 ld_q8_16(const Q81Block* b, int half) {   // Q8_1 qs is 4-byte aligned: four int loads\n    const int* q = reinterpret_cast<const int*>(b->qs) + 4 * half;\n    return sycl::int4(q[0], q[1], q[2], q[3]);\n}\n__dpct_inline__ int dp4a4(const sycl::int4 a, const sycl::int4 b, int acc) {\n    acc = strata::dp4a(a.x(), b.x(), acc); acc = strata::dp4a(a.y(), b.y(), acc);\n    acc = strata::dp4a(a.z(), b.z(), acc); return strata::dp4a(a.w(), b.w(), acc);\n}\n__dpct_inline__ void k4_scale_min(const uint8_t* sc, int j, float& s, float& m) {   // ggml get_scale_min_k4\n    if (j < 4) { s = (float) (sc[j] & 63); m = (float) (sc[j + 4] & 63); }\n    else { s = (float) ((sc[j + 4] & 0xF) | ((sc[j - 4] >> 6) << 4)); m = (float) ((sc[j + 4] >> 4) | ((sc[j] >> 6) << 4)); }\n}\nstruct WideQ4K {\n    using Block = Q4KBlock;\n    struct W { sycl::int4 lo, hi; float dl, dh, ml, mh; int sb, half; };\n    static W load(const Block* b, int g) {\n        W r; r.sb = 2 * (g >> 1); r.half = g & 1;\n        const sycl::int4 q = reinterpret_cast<const sycl::int4*>(b->qs)[g];          // 16-byte aligned (144 = 9 x 16)\n        r.lo = sycl::int4(q.x() & 0x0f0f0f0f, q.y() & 0x0f0f0f0f, q.z() & 0x0f0f0f0f, q.w() & 0x0f0f0f0f);\n        r.hi = sycl::int4((q.x() >> 4) & 0x0f0f0f0f, (q.y() >> 4) & 0x0f0f0f0f, (q.z() >> 4) & 0x0f0f0f0f, (q.w() >> 4) & 0x0f0f0f0f);\n        const sycl::float2 dm = b->dm.convert<float, sycl::rounding_mode::automatic>();\n        float s0, m0, s1, m1; k4_scale_min(b->scales, r.sb, s0, m0); k4_scale_min(b->scales, r.sb + 1, s1, m1);\n        r.dl = dm.x() * s0; r.ml = dm.y() * m0; r.dh = dm.x() * s1; r.mh = dm.y() * m1;\n        return r;\n    }\n    static float apply(const W& r, const Q81Block* xb) {   // xb = this column's Q8_1 blocks of the 256-block\n        const Q81Block* a = xb + r.sb; const Q81Block* c = xb + r.sb + 1;\n        const sycl::int4 ua = ld_q8_16(a, r.half), uc = ld_q8_16(c, r.half);\n        const sycl::int4 ones(0x01010101, 0x01010101, 0x01010101, 0x01010101);\n        const float da = (float) a->ds[0], dc = (float) c->ds[0];\n        return da * (r.dl * (float) dp4a4(r.lo, ua, 0) - r.ml * (float) dp4a4(ones, ua, 0)) +\n               dc * (r.dh * (float) dp4a4(r.hi, uc, 0) - r.mh * (float) dp4a4(ones, uc, 0));\n    }\n    // apply() in two parts for several rows of one sub-group: the activations depend on the lane alone (sb, half from g)\n    struct A { sycl::int4 ua, uc; float da, dc; };\n    static A act(const Q81Block* xb, int g) {\n        const int sb = 2 * (g >> 1), half = g & 1;\n        const Q81Block* a = xb + sb; const Q81Block* c = xb + sb + 1;\n        A v; v.ua = ld_q8_16(a, half); v.uc = ld_q8_16(c, half); v.da = (float) a->ds[0]; v.dc = (float) c->ds[0];\n        return v;\n    }\n    static float dot(const W& r, const A& v) {   // apply's expression, the same operations in the same order\n        const sycl::int4 ones(0x01010101, 0x01010101, 0x01010101, 0x01010101);\n        return v.da * (r.dl * (float) dp4a4(r.lo, v.ua, 0) - r.ml * (float) dp4a4(ones, v.ua, 0)) +\n               v.dc * (r.dh * (float) dp4a4(r.hi, v.uc, 0) - r.mh * (float) dp4a4(ones, v.uc, 0));\n    }\n};\nstruct WideQ5K {\n    using Block = Q5KBlock;\n    using W = WideQ4K::W;\n    static W load(const Block* b, int g) {\n        W r; r.sb = 2 * (g >> 1); r.half = g & 1;\n        const sycl::int4 q = reinterpret_cast<const sycl::int4*>(b->qs)[g];          // qs at 48, 176 = 11 x 16\n        const sycl::int4 h = reinterpret_cast<const sycl::int4*>(b->qh)[r.half];     // qh bytes of positions 16h..+15\n        const int sl = r.sb, sh = r.sb + 1;\n        auto hb = [](int v, int bit) { return ((v >> bit) & 0x01010101) << 4; };\n        r.lo = sycl::int4((q.x() & 0x0f0f0f0f) | hb(h.x(), sl), (q.y() & 0x0f0f0f0f) | hb(h.y(), sl),\n                          (q.z() & 0x0f0f0f0f) | hb(h.z(), sl), (q.w() & 0x0f0f0f0f) | hb(h.w(), sl));\n        r.hi = sycl::int4(((q.x() >> 4) & 0x0f0f0f0f) | hb(h.x(), sh), ((q.y() >> 4) & 0x0f0f0f0f) | hb(h.y(), sh),\n                          ((q.z() >> 4) & 0x0f0f0f0f) | hb(h.z(), sh), ((q.w() >> 4) & 0x0f0f0f0f) | hb(h.w(), sh));\n        const sycl::float2 dm = b->dm.convert<float, sycl::rounding_mode::automatic>();\n        float s0, m0, s1, m1; k4_scale_min(b->scales, r.sb, s0, m0); k4_scale_min(b->scales, r.sb + 1, s1, m1);\n        r.dl = dm.x() * s0; r.ml = dm.y() * m0; r.dh = dm.x() * s1; r.mh = dm.y() * m1;\n        return r;\n    }\n    static float apply(const W& r, const Q81Block* xb) { return WideQ4K::apply(r, xb); }\n    using A = WideQ4K::A;\n    static A act(const Q81Block* xb, int g) { return WideQ4K::act(xb, g); }\n    static float dot(const W& r, const A& v) { return WideQ4K::dot(r, v); }\n};\n__dpct_inline__ uint32_t iq4_lut4(uint32_t q4) {   // four nibbles -> four codebook bytes, codebook in registers\n    constexpr uint32_t t0 = 0xBFAD9881u, t1 = 0xF6EADDCFu, t2 = 0x26190D01u, t3 = 0x71594535u;"
+      },
+      {
+        "first_line": 2080,
+        "last_line": 2124,
+        "text": "}\ntemplate <typename F, int NCOLS>\nvoid native_mmvq_wide_kernel(const typename F::Block* __restrict__ w, const Q81Block* __restrict__ x,\n                             float* __restrict__ y, int n_in, int n_out) {\n    auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();\n    const int lane = int(item.get_local_id(2)), warp = int(item.get_local_id(1));\n    const int row = int(item.get_group(2)) * WARPS + warp;\n    if (row >= n_out) return;\n    const int blocks_per_row = n_in / QK, x_stride = n_in / Q8K;\n    const int g = lane & 7, sub = lane >> 3;\n    const typename F::Block* wr = w + std::size_t(row) * blocks_per_row;\n    float acc[NCOLS] = {};\n    for (int kbx = sub; kbx < blocks_per_row; kbx += 4) {\n        const typename F::W wv = F::load(wr + kbx, g);\n#pragma unroll\n        for (int j = 0; j < NCOLS; ++j) acc[j] += F::apply(wv, x + std::size_t(j) * x_stride + kbx * (QK / Q8K));\n    }\n    auto sg = item.get_sub_group();\n#pragma unroll\n    for (int j = 0; j < NCOLS; ++j) {\n        float v = acc[j];\n#pragma unroll\n        for (int o = WARP / 2; o > 0; o >>= 1) v += sycl::permute_group_by_xor(sg, v, o);\n        if (lane == 0) y[std::size_t(j) * n_out + row] = v;\n    }\n}\ntemplate <typename F, int NCOLS>\nvoid launch_wide(const void* weights, const void* x_q8_1, float* y, int n_in, int n_out, dpct::queue_ptr s,\n                 int rpw = wide_k_rpw()) {\n    const auto* w = static_cast<const typename F::Block*>(weights);\n    const auto* x = static_cast<const Q81Block*>(x_q8_1);\n#define STRATA_WKR(RP) if (rpw == RP) { \\\n        const unsigned b = unsigned((std::size_t(n_out) + WARPS * RP - 1) / (WARPS * RP)); \\\n        s->parallel_for<dpct_kernel_name<class native_mmvq_wide_rpw, F, dpct_kernel_scalar<NCOLS>, dpct_kernel_scalar<RP>>>( \\\n            sycl::nd_range<3>(sycl::range(1, 1, b) * sycl::range(1, WARPS, WARP), sycl::range(1, WARPS, WARP)), \\\n            [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] { native_mmvq_wide_rpw_kernel<F, NCOLS, RP>(w, x, y, n_in, n_out); }); \\\n        return; }\n    STRATA_WKR(2) STRATA_WKR(4)\n#undef STRATA_WKR\n    const unsigned blocks = unsigned((std::size_t(n_out) + WARPS - 1) / WARPS);\n    s->parallel_for<dpct_kernel_name<class native_mmvq_wide, F, dpct_kernel_scalar<NCOLS>>>(\n        sycl::nd_range<3>(sycl::range(1, 1, blocks) * sycl::range(1, WARPS, WARP), sycl::range(1, WARPS, WARP)),\n        [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] { native_mmvq_wide_kernel<F, NCOLS>(w, x, y, n_in, n_out); });\n}\ninline bool wide_k() {   // STRATA_MMVQ_WIDE_K=0: Q4_K/Q5_K/IQ4_XS through the multi kernel (the old path)"
+      },
+      {
+        "first_line": 2148,
+        "last_line": 2159,
+        "text": "struct Wide32Q8 {\n    using Block = Q80Block;\n    static constexpr int LPB = 2;\n    struct W { sycl::int4 q; float d; int half; };\n    static W load(const Block* b, int l) {\n        W r; r.half = l; r.q = load16_a2(b->qs + 16 * l); r.d = (float) b->d; return r;\n    }\n    static float apply(const W& r, const Q81Block* xb) {\n        return r.d * (float) xb->ds[0] * (float) dp4a4(r.q, ld_q8_16(xb, r.half), 0);\n    }\n};\nstruct Wide32IQ4NL {"
+      },
+      {
+        "first_line": 2178,
+        "last_line": 2202,
+        "text": "template <typename F, int NCOLS>\nvoid native_mmvq_wide32_kernel(const typename F::Block* __restrict__ w, const Q81Block* __restrict__ x,\n                               float* __restrict__ y, int n_in, int n_out) {\n    auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();\n    const int lane = int(item.get_local_id(2)), warp = int(item.get_local_id(1));\n    const int row = int(item.get_group(2)) * WARPS + warp;\n    if (row >= n_out) return;\n    constexpr int BPS = WARP / F::LPB;                  // blocks per sub-group step\n    const int blocks_per_row = n_in / 32;\n    const int l = lane % F::LPB, sub = lane / F::LPB;\n    const typename F::Block* wr = w + std::size_t(row) * blocks_per_row;\n    float acc[NCOLS] = {};\n    for (int kb = sub; kb < blocks_per_row; kb += BPS) {\n        const typename F::W wv = F::load(wr + kb, l);\n#pragma unroll\n        for (int j = 0; j < NCOLS; ++j) acc[j] += F::apply(wv, x + std::size_t(j) * blocks_per_row + kb);\n    }\n    auto sg = item.get_sub_group();\n#pragma unroll\n    for (int j = 0; j < NCOLS; ++j) {\n        float v = acc[j];\n#pragma unroll\n        for (int o = WARP / 2; o > 0; o >>= 1) v += sycl::permute_group_by_xor(sg, v, o);\n        if (lane == 0) y[std::size_t(j) * n_out + row] = v;\n    }"
+      },
+      {
+        "first_line": 3290,
+        "last_line": 3301,
+        "text": "void native_q5_k_mmvq(const void* weights, const void* x_q8_1, float* y,\n                      int n_in, int n_out, int ncols, void* stream) {\n    validate_shape(n_in, ncols, QK);\n    if (n_out <= 0) throw std::invalid_argument(\"native MMVQ requires n_out > 0\");\n    validate_pointer(weights);\n    validate_pointer(x_q8_1);\n    validate_pointer(y);\n    validate_stream(stream);\n    if (try_wide<WideQ5K>(weights, x_q8_1, y, n_in, n_out, ncols, stream)) { launch_check(); return; }\n    STRATA_WAVE_MMVQ(Q5KTraits)\n    if (ncols > 1) {\n        launch_multi<Q5KTraits>(weights, x_q8_1, y, n_in, n_out, ncols, stream);"
+      },
+      {
+        "first_line": 3856,
+        "last_line": 3868,
+        "text": "bool native_mmvq_pair(int ggml_type, const void* w1, const void* w2, const void* x_q8_1, float* y1, float* y2,\n                      int n_in, int n_out, int ncols, void* stream) {\n    using F = SmallTraits<Q80Block, 8>;\n    // only where both calls would run native_mmvq_multi_kernel<F, ncols, WARPS, 1> (exact layout, not packed)\n    if (ggml_type != 8 || !g_multi_exact || ncols < 2 || ncols > 8 || n_out <= 0 || n_in <= 0 || n_in % 32 != 0 ||\n        n_in / F::DIV < F::BPI || !w1 || !w2 || !x_q8_1 || !y1 || !y2 || !stream)\n        return false;\n    const auto& reg = q8_packed_registry();\n    if (reg.count(w1) || reg.count(w2)) return false;\n    const auto* a = static_cast<const Q80Block*>(w1);\n    const auto* b = static_cast<const Q80Block*>(w2);\n    const auto* x = static_cast<const Q81Block*>(x_q8_1);\n    const auto s = strata::q_of(stream);"
+      },
+      {
+        "first_line": 3912,
+        "last_line": 3926,
+        "text": "std::size_t native_mmvq_weight_bytes(int ggml_type, int n_in, int n_out) {\n    int block_elems, block_bytes;\n    switch (ggml_type) {\n    case 2: block_elems = 32; block_bytes = 18; break;\n    case 6: block_elems = 32; block_bytes = 22; break;\n    case 7: block_elems = 32; block_bytes = 24; break;\n    case 8: block_elems = 32; block_bytes = 34; break;\n    case 20: block_elems = 32; block_bytes = 18; break;\n    case 11: block_elems = 256; block_bytes = 110; break;\n    case 12: block_elems = 256; block_bytes = 144; break;\n    case 13: block_elems = 256; block_bytes = 176; break;\n    case 14: block_elems = 256; block_bytes = 210; break;\n    case 23: block_elems = 256; block_bytes = 136; break;\n    case 42: block_elems = 64; block_bytes = 18; break;\n    case 16: case 17: case 18: case 21: case 22: case 29:"
+      },
+      {
+        "first_line": 3940,
+        "last_line": 3980,
+        "text": "void native_mmvq_head(int ggml_type, const void* weights, const void* x_q8_1, float* y,\n                      int n_in, int n_out, int ncols, void* stream) {\n    static const bool head_rpw2 = [] {\n        const char* e = std::getenv(\"STRATA_HEAD_Q5K_RPW2\");\n        return e != nullptr && std::strcmp(e, \"1\") == 0;\n    }();\n    if (head_rpw2 && ggml_type == 13 && n_in == 2560 && n_out == 248320 &&\n        (ncols == 2 || ncols == 6) && wide_k()) {\n        validate_shape(n_in, ncols, QK);\n        validate_pointer(weights);\n        validate_pointer(x_q8_1);\n        validate_pointer(y);\n        validate_stream(stream);\n        const auto s = strata::q_of(stream);\n        if (ncols == 2) launch_wide<WideQ5K, 2>(weights, x_q8_1, y, n_in, n_out, s, 2);\n        else launch_wide<WideQ5K, 6>(weights, x_q8_1, y, n_in, n_out, s, 2);\n        launch_check();\n        return;\n    }\n    native_mmvq(ggml_type, weights, x_q8_1, y, n_in, n_out, ncols, stream);\n}\n\nvoid native_mmvq(int ggml_type, const void* weights, const void* x_q8_1, float* y,\n                 int n_in, int n_out, int ncols, void* stream) {\n    switch (ggml_type) {\n    case 2: native_q4_0_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 6: native_q5_0_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 7: iq_mmvq(ggml_type, weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 8: native_q8_0_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 20: native_iq4_nl_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 11: native_q3_k_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 12: native_q4_k_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 13: native_q5_k_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 14: native_q6_k_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 23: native_iq4_xs_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 42: native_q2_0_mmvq(weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    case 16: case 17: case 18: case 21: case 22: case 29:\n        iq_mmvq(ggml_type, weights, x_q8_1, y, n_in, n_out, ncols, stream); break;\n    default: throw std::invalid_argument(\"unsupported native MMVQ GGML type\");\n    }\n}"
+      }
+    ],
+    "sycl/src/core/verify.cpp": [
+      {
+        "first_line": 1029,
+        "last_line": 1031,
+        "text": "                if (!q8_attn) native_quantize_q8_1(xm, xq_, (int) N, n, cs);\n                native_mmvq(wqkv->native_type, wqkv->native_data, xq_, qkv + (size_t) tb * C, (int) N, (int) C, n, cs);\n                stamp(l, 2, grp);"
+      },
+      {
+        "first_line": 1051,
+        "last_line": 1071,
+        "text": "                native_mmvq(wg->native_type, wg->native_data, xq_, z_ + (size_t) tb * ZV, (int) N, (int) ZV, n, cs);\n                stamp(l, 5, grp);\n                // the recurrence from the untouched state over tokens [0, te); outputs only for this group's\n                if (batch_rec_) {   // each slot's recurrence over its own proposed-token group\n                    for (int t = tb; t < te;) {\n                        const int first = t;\n                        while (t < te && brow_[t] == brow_[first]) ++t;\n                        SessionState& sx = slot_ss(first);\n                        float* stx = sx.gdn_state + (size_t) (gi - sx.gdn_ord0) * gdn_floats;\n                        gdn_step_norm_multi(stx, hb + (size_t) first * C, (int) C, gate + (size_t) first * HV,\n                                            beta + (size_t) first * HV, z_ + (size_t) first * ZV,\n                                            (const float*) wnm->data, EPS, y_ + (size_t) first * ZV,\n                                            (int) HK, (int) HV, t - first, nullptr, cs, 0);\n                    }\n                } else\n                gdn_step_norm_multi(state, hb, (int) C, gate, beta, z_, (const float*) wnm->data, EPS, y_, (int) HK,\n                                    (int) HV, te, self_commit ? one_ : nullptr, cs, tb, g_qfuse() ? (void*) xq_ : nullptr);\n                stamp(l, 6, grp);\n                if (!g_qfuse()) native_quantize_q8_1(y_ + (size_t) tb * ZV, xq_, (int) ZV, n, cs);   // STRATA_QFUSE: done above\n                native_mmvq(wout->native_type, wout->native_data, xq_, bo_ + tb * N, (int) ZV, (int) N, n, cs);\n            } else {"
+      },
+      {
+        "first_line": 1279,
+        "last_line": 1284,
+        "text": "                        qsa_gate_apply_f32(attn_ + t * NH * HD, qfull_ + t * NH * 2 * HD, s, attn32_ + t * NH * HD, cs);\n                }\n                stamp(l, 14, grp);\n                native_quantize_q8_1(attn32_ + tb * NH * HD, xq_, (int) (NH * HD), n, cs);\n                native_mmvq(wo->native_type, wo->native_data, xq_, bo_ + tb * N, (int) (NH * HD), (int) N, n, cs);\n            }"
+      },
+      {
+        "first_line": 1387,
+        "last_line": 1405,
+        "text": "            nsw.gate_type = wsg->native_type; nsw.gate_data = wsg->native_data;\n            nsw.up_type = wsu->native_type; nsw.up_data = wsu->native_data;\n            nsw.down_type = wsd->native_type; nsw.down_data = wsd->native_data;\n            nsw.q8_1 = sh_fork ? sh_xq_ : xq_;\n            // STRATA_VERIFY_QDEDUP=1 (not with the forked shared-expert stream, which quantizes into its own buffer): the\n            // experts' q8_1 image of xm is made first and the shared expert's gate/up read it (quantize_q8_1_rows and\n            // native_quantize_q8_1 write the same bytes)\n            qdedup = g_qdedup() && !sh_fork && strata::kernels::cpu::expert_layout().native;\n            if (qdedup && !q8_ffn) quantize_q8_1_rows(xm, n, N, nat_xq_ + (size_t) tb * (N / 32) * 36, cs);\n            if (!shared_expert_native_bf16_enabled()) {\n                if (dec_batch) f32_to_bf16_bulk(mixed_ + tb * N, sh_bf16_ + tb * N, (int64_t) n * N, sh_stream);   // contiguous rows\n                else for (int t = tb; t < te; ++t) f32_to_bf16_bulk(mixed_ + t * N, sh_bf16_ + t * N, N, sh_stream);\n            }\n            try {\n                shared_expert_multi(n, xm, sh_bf16_ + tb * N, nsw, (const uint16_t*) wgi->data, sh_gate_ + (size_t) tb * g.n_ff,\n                                    sh_up_ + (size_t) tb * g.n_ff, sh_g_ + tb, shared_ + tb * N, N, g.n_ff, sh_stream,\n                                    qdedup ? (const void*) (nat_xq_ + (size_t) tb * (N / 32) * 36) : nullptr,\n                                    (sg_ready ? 1 : 0) | (lfuse_on(n) && g_lfuse_pair() ? 2 : 0));\n                sg_gated_[grp] = sg_ready;"
+      },
+      {
+        "first_line": 1663,
+        "last_line": 1667,
+        "text": "            try {\n                native_quantize_q8_1(head_mixed_, xq_, (int) N, T, cs);\n                native_mmvq_head(head_->type(), head_->weights(), xq_, head_logits_, (int) N, (int) n_vocab_, T, cs);\n            } catch (const std::exception& e) {\n                err = std::string(\"verify head: \") + e.what();"
+      }
+    ],
+    "sycl/src/kernels/cuda/shared_expert.dp.cpp": [
+      {
+        "first_line": 313,
+        "last_line": 340,
+        "text": "void shared_expert_multi(int n_tok, const float* x, const uint16_t* x_bf16, const NativeSharedWeights& nw,\n                         const uint16_t* gate_inp_bf16, float* gate, float* up, float* g, float* out, int64_t n_embd,\n                         int64_t n_ff, void* stream, const void* x_q8_1_ready, int lfuse) {\n    const bool gate_deferred = (lfuse & 1) != 0, pair = (lfuse & 2) != 0;\n    if (n_tok < 1 || n_tok > 8 || !nw.q8_1 || !nw.gate_data || !nw.up_data || !nw.down_data || !stream)\n        throw std::invalid_argument(\"shared_expert_multi: needs 1..8 tokens, native weights, scratch and a stream\");\n    dpct::queue_ptr cs = strata::q_of(stream);\n    // the activation's q8_1: the caller's (STRATA_VERIFY_QDEDUP, x_q8_1_ready) or the descriptor's, else quantized here\n    const void* x_q8_1 = x_q8_1_ready ? x_q8_1_ready : nw.x_q8_1;\n    if (!x_q8_1) {\n        native_quantize_q8_1(x, nw.q8_1, (int) n_embd, n_tok, stream);\n        x_q8_1 = nw.q8_1;\n    }\n    // S26 STRATA_LFUSE (gate_deferred): gate and up in one launch where the pair applies (bitwise the two calls)\n    if (!(pair && nw.gate_type == nw.up_type &&\n          native_mmvq_pair(nw.gate_type, nw.gate_data, nw.up_data, x_q8_1, gate, up, (int) n_embd, (int) n_ff, n_tok, stream))) {\n        native_mmvq(nw.gate_type, nw.gate_data, x_q8_1, gate, (int) n_embd, (int) n_ff, n_tok, stream);\n        native_mmvq(nw.up_type, nw.up_data, x_q8_1, up, (int) n_embd, (int) n_ff, n_tok, stream);\n    }\n    const int n = (int) (n_ff * n_tok);\n    if (fused_swiglu_q81_enabled()) {\n        native_swiglu_quantize_q8_1(gate, up, nw.q8_1, (int) n_ff, n_tok, stream);\n    } else {\n        {\n            auto exp_props = sycl::ext::oneapi::experimental::properties{\n                sycl::ext::oneapi::experimental::use_root_sync};\n\n            cs->parallel_for<"
+      },
+      {
+        "first_line": 356,
+        "last_line": 358,
+        "text": "        error codes. The cudaGetLastError function call was replaced with 0. You\n        need to rewrite this code.\n        */"
+      }
+    ],
+    "sycl/src/core/mtp.cpp": [
+      {
+        "first_line": 206,
+        "last_line": 212,
+        "text": "const void* MtpDrafter::wq(const char* name, int& type) const {\n    if (dense4_ != nullptr)\n        for (const auto& e : q4_off_)\n            if (e.first == name) { type = GGML_Q4_0; return dense4_ + e.second; }\n    type = GGML_Q8_0;\n    return q8(name);\n}"
+      },
+      {
+        "first_line": 850,
+        "last_line": 863,
+        "text": "        }\n        native_qsa_rms_norm_weighted(emb_, f32(\"pre_fc_norm_embedding.weight\"), en_, (int) N, T, EPS, cs);\n        native_quantize_q8_1(en_, xq_, (int) N, T, cs);\n        native_mmvq(wt_fc_embedding, wp_fc_embedding, xq_, e2_, (int) N, (int) N, T, cs);\n        if (hnorm_stream_)   // --mtp-hnorm stream: one RMS per stream, each scaled by its slice of the weight\n            native_qsa_rms_norm_grouped(Rin_, f32(\"pre_fc_norm_hidden.weight\"), hn_, (int) N, (int) HC, (int) (T * HC), EPS, cs);\n        else\n            native_qsa_rms_norm_weighted(Rin_, f32(\"pre_fc_norm_hidden.weight\"), hn_, (int) (HC * N), T, EPS, cs);\n        for (int c0 = 0; c0 < T * HC; c0 += 8) {\n            const int nc = (int) std::min<int64_t>(8, T * HC - c0);\n            native_quantize_q8_1(hn_ + (size_t) c0 * N, xq_, (int) N, nc, cs);\n            native_mmvq(wt_fc_hidden, wp_fc_hidden, xq_, h2_ + (size_t) c0 * N, (int) N, (int) N, nc, cs);\n        }\n        add_streams_broadcast(h2_, e2_, R_, N, (int) HC, T, cs);"
+      },
+      {
+        "first_line": 878,
+        "last_line": 883,
+        "text": "        // ---- attention: K/V into the layer's own cache\n        native_quantize_q8_1(mixed_, xq_, (int) N, T, cs);\n        native_mmvq(wt_k_proj, wp_k_proj, xq_, kcur_, (int) N, (int) (NKV * HD), T, cs);\n        native_mmvq(wt_v_proj, wp_v_proj, xq_, vcur_, (int) N, (int) (NKV * HD), T, cs);\n        // #783 PR-d (stuchapin909): the T tokens' K norm, K/V rotation and K/V append each run once over all T rows\n        // (every row is independent; the rope keeps its per-token positions). STRATA_NO_BATCH_KV_STEP=1 appends per token."
+      },
+      {
+        "first_line": 2190,
+        "last_line": 2204,
+        "text": "    if (exec) return true;\n    using namespace strata::kernels;\n    MtpDrafter& a = *d_[0];\n    MtpDrafter& b = *d_[1];\n    const int64_t N = a.g_->n_embd, HCN = a.g_->hc * N;\n    if (DPCT_CHECK_ERROR(dpct::experimental::begin_recording(cs_)) != 0) { err = \"mtp pair: begin capture\"; return false; }\n    bool ok = true;\n    try {\n        native_quantize_q8_1(a.sample_, xq2_, (int) N, 1, cs_);\n        native_quantize_q8_1(b.sample_, xq2_ + col_bytes_, (int) N, 1, cs_);\n        native_mmvq_head(a.head_->type(), a.head_->weights(), xq2_, logits2_, (int) N, (int) nv_, 2, cs_);\n        ok = a.record_post_head(logits2_, cs_, err) && b.record_post_head(logits2_ + nv_, cs_, err);\n        if (ok) {\n            mtp_select(a.R_, HCN, a.out_ids_, a.row_ + 1, a.Rin_, a.tok_, a.m_out_, j, cs_, a.probs_, a.m_prob_);\n            mtp_select(b.R_, HCN, b.out_ids_, b.row_ + 1, b.Rin_, b.tok_, b.m_out_, j, cs_, b.probs_, b.m_prob_);"
+      }
+    ],
+    "sycl/src/kernels/cuda/verify_kernels.dp.cpp": [
+      {
+        "first_line": 306,
+        "last_line": 338,
+        "text": "// native_quantize_q8_1_kernel's quantizer (the same XOR-tree max and sum, d = amax / 127, roundf(x / d), ds = (d, sum)).\nstruct GdnQ81 { sycl::half2 ds; int8_t qs[32]; };\n__dpct_inline__ void gdn_q8_1_store(GdnQ81 *__restrict__ xq, size_t idx,\n                                    float xi) {\n    // no contraction: xi is a product here, and fma(a, b, shfl) would round the first sum unlike the separate\n    // quantizer, which reads xi from memory (S26 harness: ds.sum differed by 1 ulp without this)\n#pragma clang fp contract(off)\n    float amax = sycl::fabs(xi), sum = xi;\n#pragma unroll\n    /*\n    DPCT1108: '__shfl_xor_sync' was migrated with the experimental feature\n    masked sub_group function which may not be supported by all compilers or\n    runtimes. You may need to adjust the code.\n    */\n    for (int o = 16; o > 0; o >>= 1) amax = sycl::fmax(\n        amax, dpct::experimental::permute_sub_group_by_xor(\n                  0xffffffffu,\n                  sycl::ext::oneapi::this_work_item::get_sub_group(), amax, o));\n#pragma unroll\n    /*\n    DPCT1108: '__shfl_xor_sync' was migrated with the experimental feature\n    masked sub_group function which may not be supported by all compilers or\n    runtimes. You may need to adjust the code.\n    */\n    for (int o = 16; o > 0; o >>= 1) sum +=\n        dpct::experimental::permute_sub_group_by_xor(\n            0xffffffffu, sycl::ext::oneapi::this_work_item::get_sub_group(),\n            sum, o);\n    const float d = amax / 127.0f;\n    const int8_t q = amax == 0.0f ? 0 : sycl::round(xi / d);\n    xq[idx / 32].qs[idx % 32] = q;\n    if (idx % 32 == 0) xq[idx / 32].ds = sycl::half2(d, sum);\n}"
+      }
+    ],
+    "sycl/include/strata/sycl_math.hpp": [
+      {
+        "first_line": 1,
+        "last_line": 18,
+        "text": "// include/strata/sycl_math.hpp - the SYCL port's device math that dpct emulates but the hardware has.\n#pragma once\n#include <sycl/sycl.hpp>\n#include <dpct/dpct.hpp>\n#include <cstdint>\n\nnamespace strata {\n// CUDA's __dp4a(int, int, int): four signed byte products summed into c. One place to change it: the byte\n// unpack + multiply-add form is what IGC pattern-matches into the DP4A instruction (sycl::ext::oneapi::dot_acc is\n// the same emulation and its header defines non-inline functions, which breaks the link across TUs).\ntemplate <typename A, typename B, typename C>\ninline int32_t dp4a(A a, B b, C c) {\n    return dpct::dp4a((int32_t) a, (int32_t) b, (int32_t) c);\n}\n}  // namespace strata\n\nnamespace strata {\n// The accumulator of the sampler's top_p / temperature tail (exp, sum, cumulative scan over the <= 64 kept logits).  FP64 is"
+      }
+    ],
+    "sycl/include/strata/kernels/q8_1_finite.hpp": [
+      {
+        "first_line": 21,
+        "last_line": 44,
+        "text": "    return sycl::fabs(v) > kHalfMax ? sycl::copysign((float)kHalfMax, (float)v)\n                                    : v;\n}\n\n/// The block's quantized value of `xi` for the (finite) scale `d`; `amax` = 0 is an all-zero block.\n__dpct_inline__ int8_t q8_1_quant(const float xi, const float d,\n                                  const float amax) {\n    if (amax == 0.0f) return 0;\n    const float q = sycl::round(xi / d);\n    return (int8_t) (q > 127.0f ? 127.0f : q < -127.0f ? -127.0f : q);\n}\n\n__dpct_inline__ sycl::half2 q8_1_ds(const float d, const float sum) {\n    return sycl::half2(\n        sycl::vec<float, 1>(q8_1_finite(d))\n            .convert<sycl::half, sycl::rounding_mode::automatic>()[0],\n        sycl::vec<float, 1>(q8_1_finite(sum))\n            .convert<sycl::half, sycl::rounding_mode::automatic>()[0]);\n}\n\n}  // namespace strata::kernels"
+      }
+    ]
+  },
+  "scope": "Exact UTF8 text excerpts JSON-escaped to ASCII; source-only, no compiler or runtime proof."
+}

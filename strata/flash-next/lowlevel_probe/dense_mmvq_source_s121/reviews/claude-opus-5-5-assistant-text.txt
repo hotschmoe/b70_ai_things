@@ -1,0 +1,52 @@
+S121 REVIEW: primary dense attribution and the Q8 half-sum adjunct
+
+Verdict: CPU_AUDIT_GO for root's bounded step 1 only: host binding plus extraction of the one selected WideQ5K C2/RPW1 image. Any decode remains a separate root decision. No prototype.
+
+FACTS FROM SOURCE
+
+1. The ones-sums are row-independent but recomputed per row. In WideQ4K::apply (reused by WideQ5K), each (lane, kbx, column) evaluates dp4a4(ones, ua) and dp4a4(ones, uc). That is 8 logical DP4As beside the 8 weighted DP4As. With RPW1, each sub-group owns one row (native_mmvq_wide_kernel), so every row recomputes the same input-only sums.
+
+2. Correction to the packet's framing. The compiler cannot CSE these across rows. Different rows are different sub-groups or work-groups, and per-work-item code has nothing to share. Within one work-item, each (kbx, j) already computes each sum only once. So "may already be CSE'd" is structurally excluded. The open questions are only:
+   - lowering: real DP4A with an all-ones operand, a byte-add or SAD-style reduction, or folding into a neighbouring instruction;
+   - how much of the loop the correction occupies relative to the loads.
+
+3. Integer exactness is the strongest point of the idea. sum16 is an exact integer, bounded to [-2032, 2032] for clamped q, and its int\u2192float conversion is exact. Any producer that sums the *stored* int8 bytes yields the identical integer regardless of reduction order. If the consumer keeps the literal FP expression and only changes where the integer comes from, the output bits are unchanged by construction. The packet is right that ds[1] (the FP16 sum of the pre-quantization values xi) is not a substitute.
+
+4. The default RPW1 head kernel is the only path in scope. Head RPW2 (S55) would share activations across two rows, but it is default OFF and unresolved, and it is not part of this question.
+
+HYPOTHESES (unproven)
+
+- Static bytes over service is about 437 MB per 1.2 ms, roughly 360 GB/s. That suggests the head is not purely bandwidth-limited, so integer work might matter. It is not a traffic measurement.
+- A producer-side adjunct swaps 8 DP4As per (kbx, j) for one extra small load per (kbx, j). In a latency-sensitive loop that load could cost as much as the DP4As it removes. Nothing here supports a saving estimate.
+
+OWNERSHIP AND ROUTE RISKS (for any later proposal)
+
+- Q8 images have several producers: native_quantize_q8_1, gdn_q8_1_store, quantize_q8_1_rows, swiglu-quantize and the QFUSE paths. A consumer kernel that reads an adjunct must only be selected where its producer provably wrote that adjunct. In the C2 head, the input xq2_ is written by two native_quantize_q8_1 calls at column offsets (mtp.cpp 2198\u20132199). The adjunct would need an identical per-column stride, the same capture, the same lifetime, and the same graph-key immutability.
+- Use a new consumer kernel class with explicit guards: type 13, N 2560, M 248320, C2, RPW1, wide-K, head RPW2 off. Never modify the shared helper that also serves Q4_K C6 QKV and other paths.
+- The canonical 36-byte Q8_1 bytes must stay unchanged. The adjunct must be a separate buffer, never packed into ds.
+
+EXTRACTION STEP (as root wrote it)
+
+- Bind native_mmvq_head \u2192 case 13 \u2192 native_q5_k_mmvq \u2192 try_wide \u2192 launch_wide<WideQ5K,2>, with head RPW2 = 0, wide-K = 1 and default RPW 1. Record the final Info, cache, guard, name pointer and the one selected image, from the S107 binding records only.
+- Look for an exact retained decode. If none exists, report ISA_UNKNOWN.
+
+STOP CONDITIONS
+
+1. The registered name, host branch or image cannot be uniquely bound: HOLD.
+2. If decoded later, the ones-sums lower to something cheap compared with the loop's loads and weighted dots (for example fused or byte-add forms that are a small fraction of loop instructions): close the candidate. Static site counts alone are not a speed argument either way.
+3. A later source proposal cannot express producer and consumer ownership, column stride, capture keys and lifetime for xq2_ without touching shared helpers or other producers: close.
+4. The canonical Q8 bytes or the literal FP expression would have to change: close.
+
+IF IT SURVIVES
+
+A later private strict oracle would need:
+- the full-vocabulary C2 head on real or seeded weights;
+- exact logits bytes and ID downstream;
+- adjunct bytes checked against an independent host integer sum of the stored q bytes;
+- guards, A/B/A eager and captured.
+
+Timing only after all of that, descriptive only.
+
+DEV-LOOP NOTE
+
+Root's sequence is right: binding first, decode only if justified. One correction to how it is framed: the static question to answer is how the per-row recomputation lowers. Whether CSE removed it is already answered from source: it cannot have.

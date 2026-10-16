@@ -439,3 +439,8 @@ HOST medians73.766->72.593us in oneprocess/eightnestedABBA samples. This is
 a private readiness/arithmetic finding, not new operation-row/device timing
 or serving qualification. Keep the source/ISA schedule and raw-minuszero
 coverage limits in the linked report; no dedicated main integration selected.
+
+
+S119-S121 followups (2026-10-16): [offline AOT cache reuse](../../../docs/20261016_strata_offline_aot_cache_reuse.md) passes exact-input hit/changed-input miss and all three whole-image comparisons. This improves the available build loop, with no whole-build speed measurement.
+
+[GU17 calibration](../../../docs/20261016_strata_routed_gu17_activation_audit.md) finds the compiler already coalesces eight activation words into two vector-load sites; no new narrow kernel is selected. [Dense MMVQ attribution](../../../docs/20261016_strata_dense_mmvq_attribution.md) maps larger primary projection shapes and identifies repeated Q4/Q5 input-only integer half-sums as a new source lead. One existing Q5 C2 selected-image audit is next; no new kernel or speed result. Historical operation rows and HTML data remain unchanged.

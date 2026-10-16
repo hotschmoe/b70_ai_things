@@ -1,0 +1,56 @@
+{
+  "status": "S121_CPU_AUDIT_GO_ONE_EXISTING_Q5_C2_IMAGE_NO_PROTOTYPE",
+  "root_full_read_both_actual_answers": true,
+  "packet_sha256": "60317481c1feded3982e8b1e2a20f54ce15aefea775e00a29bf8925094e6f619",
+  "decision": "One Q5_K C2 RPW1 selected-image extraction and actual host binding; exact retained ISA reuse first. Root may select one offline decode after binding. No new kernel/build/GPU or serving test.",
+  "corrections": [
+    "RPW1 rows are separate subgroups/workgroups: compiler CSE cannot share sums across them. Distinct columns consume distinct inputs. Actual lowering/local strength reduction is the open question.",
+    "Integer exactness and preserving the source FP expression do not establish universal compiled output equivalence; strict private gates remain required.",
+    "Encoded weight bytes divided by instrumented service do not measure physical bandwidth or establish bandwidth dominance. Reviewers disagree on that inference; root accepts neither.",
+    "Static send/wait/ALU proportions do not establish dynamic critical-path cost. No serving saving forecast."
+  ],
+  "exact_review_copies": [
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s121-source-reviews-20261016/claude-opus-5-5/assistant-text.txt",
+      "copy": "reviews/claude-opus-5-5-assistant-text.txt",
+      "bytes": 4766,
+      "sha256": "8ddf5609581512c4f6f071cafb2841de769dabb276b6dd7cb0bc4ea078c89680"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s121-source-reviews-20261016/claude-opus-5-5/command.json",
+      "copy": "reviews/claude-opus-5-5-command.json",
+      "bytes": 1235,
+      "sha256": "36e7a1d0095bbcd125a402cd02e6a1e0c25ba51f05f7d2a4e00c7f6a76407f3e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s121-source-reviews-20261016/claude-fable-5-1/assistant-text.txt",
+      "copy": "reviews/claude-fable-5-1-assistant-text.txt",
+      "bytes": 4060,
+      "sha256": "4fd83e91d398e06237b2743aa33321483b6e325beafdec17087501b806af7ea9"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s121-source-reviews-20261016/claude-fable-5-1/command.json",
+      "copy": "reviews/claude-fable-5-1-command.json",
+      "bytes": 1237,
+      "sha256": "cef245e49390b95dc56a4856a774ccc9bab50ae086da52e5953ffd86434aab0d"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s121-source-reviews-20261016/packet.txt",
+      "copy": "reviews/packet.txt",
+      "bytes": 48036,
+      "sha256": "60317481c1feded3982e8b1e2a20f54ce15aefea775e00a29bf8925094e6f619"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s121-source-reviews-20261016/review.py",
+      "copy": "reviews/review.py",
+      "bytes": 4709,
+      "sha256": "544c96128d0eb71dee9196f0398754d047ea5616760354c21ab60b8adf927b0b"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s121-source-reviews-20261016/review-prefix.txt",
+      "copy": "reviews/review-prefix.txt",
+      "bytes": 301,
+      "sha256": "159f961aa45552fd0ececd866ec306337ccd7d42d25ea58a0408e9bc44243e99"
+    }
+  ]
+}

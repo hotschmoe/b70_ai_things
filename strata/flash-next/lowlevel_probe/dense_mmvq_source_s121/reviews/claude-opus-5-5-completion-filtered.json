@@ -1,0 +1,12 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "exit": 0,
+  "elapsed_s": 46.03505625703838,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "source_packet_sha256": "60317481c1feded3982e8b1e2a20f54ce15aefea775e00a29bf8925094e6f619",
+  "source_packet_unchanged": true,
+  "resume_session_matches_response": true
+}

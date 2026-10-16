@@ -1,0 +1,47 @@
+{
+  "status": "EXACT_SIX_FROZEN_SOURCE_ONLY_PAYLOAD_COPIES",
+  "source_manifest": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/primary-dense-mmvq-source-s121/manifest.json",
+  "source_manifest_sha256": "bad4f4f97ff1a301b872bdc3372f7849b34b147a053de4c24f737d28edd4c686",
+  "source_manifest_status": "FROZEN_SOURCE_ONLY_ONE_SELECTED_Q5K_C2_AUDIT_PLAN_NO_EXECUTION",
+  "files": [
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/primary-dense-mmvq-source-s121/audit-plan.md",
+      "copy": "audit-plan.md",
+      "bytes": 3183,
+      "sha256": "60140be453ae5af2b585c2a1872f491adaad7bd2afbae9ee79de0cb856da0557"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/primary-dense-mmvq-source-s121/derive.py",
+      "copy": "derive.py",
+      "bytes": 5983,
+      "sha256": "a4d6216622a1a9752f2514a975ebc2729bcfa13aa7c9a6238f0c493368504985"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/primary-dense-mmvq-source-s121/findings.md",
+      "copy": "findings.md",
+      "bytes": 6590,
+      "sha256": "ab5b716567afba32ed016a78e75aab7c8eaad51c2189f3f86e587191ff67fc9e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/primary-dense-mmvq-source-s121/pins.json",
+      "copy": "pins.json",
+      "bytes": 4596,
+      "sha256": "fe6d16e9fbafb79d11cbab664a9222182bc48b97bee1817002beb579d9127e63"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/primary-dense-mmvq-source-s121/ranking.json",
+      "copy": "ranking.json",
+      "bytes": 15372,
+      "sha256": "1363864dc9c8aa12f542e6e8c914c531b733ad693acbb82ac12fdf5d1c987d43"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/primary-dense-mmvq-source-s121/source-excerpts.json",
+      "copy": "source-excerpts.json",
+      "bytes": 36970,
+      "sha256": "057f7f1b7a1b67afb1ecd5b217faa663c881e04278c979851c6e6dcdaf2f6973"
+    }
+  ],
+  "copy_bytes": 72694,
+  "source_scope": "Source and retained small S95/descriptor summaries only; no new kernel, build, GPU, model/large trace/ELF/archive payload read.",
+  "not_copied": "Original operation CSV is already curated at current_c2_profile_s95/runtime/analysis/gpu/operations.csv; no CSV duplicate."
+}
