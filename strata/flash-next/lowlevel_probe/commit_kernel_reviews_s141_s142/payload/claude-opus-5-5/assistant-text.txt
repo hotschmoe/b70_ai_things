@@ -1,0 +1,70 @@
+Model ID: claude-opus-5-5
+
+S143 SOURCE CHECK (verify.cpp-only, group length 3 only): no blocker. Two small conditions.
+
+Observations (source):
+- **Arguments:**
+  - The raw base is `idx_raw_L_ + (qsa_index*MT + first)*ID`, and the three rows are contiguous with stride D.
+  - Positions are `commitb_ + row*CB + 2`, contiguous int32, with stride 1.
+  - Base 0, and n_steps = t \u2212 first = 3.
+  - Gamma, EPS, the buffers, max_cells, the queue and RoPE scaling are the same as the per-row call.
+- **Ordering:** the tail restore stays before the branch. GDN, conv, KV, PLE history, error paths and graph lifetime are untouched. The else body is the original loop.
+- **Flag:** the selection is a namespace-scope const evaluated at process start, before any capture. The marker uses a unique static name.
+- **Eligibility:** restricting to length 3 matches what S141 actually exercised.
+
+Conditions:
+
+1. **RoPE table variant.** `append_steps` launches `append<true>` when `rope_table_for(scaling)` returns a table (`STRATA_ROPE_TABLE=1`). S141 used the analytic (`<false>`) path. Confirm the serving environment does not set a RoPE table. If it does, the grouped path is untested for that variant: HOLD that arm.
+2. **Validation throw.** `append_steps` validates spans and overlap. A throw during capture lands in the existing `capture_commit_batch` std::exception path. That is acceptable; just do not add a fallback.
+
+Proceed as root planned:
+- Apply and record the actual dry plan (expected: verify.cpp.o, engine archive, strata link; anything else stop).
+- Build, then a fresh same-new-binary OFF/ON pair, every other flag 0, with the existing warm-up, 3 timed pairs, functionals, full normal teardown and health.
+- The marker shows host selection only. Served exactness is the integration evidence.
+- True RAM recovery and accepted-state/PLE ordering are unaffected by construction.
+
+S142 INTERPRETATION
+
+Observation:
+- Without unitrace, on the same binary, policy and requests, `verify_submit` drops from 3.22 to 0.067 ms and `pair_submit` from 1.95 to 0.046 ms, with disjoint ranges.
+- The whole-window bracket is 57.2 vs 46.5 ms, which is diagnostic only.
+- The combined pair_submit\u2192pair_return span moves much less (5.98 to 5.37 ms), and pair poll/PLE grows.
+
+Inference:
+- The profiler bundle substantially inflates host submission brackets, and probably the LEFT/post-pair trace gaps as well.
+- Treat the S136 3.3 ms and much of LEFT as instrumentation-conditioned. Do not optimize them.
+- In unprofiled runs the work moves into dependency waits, which means the GPU-side work remains the real cost.
+- Unprofiled commit is about 1.59 ms per window (CPU bracket including the wait), and is on the path between verify and the next draft.
+
+ONE NEXT MECHANISM TO PREPARE IN PARALLEL: batch GDN commit across layers
+
+Observation (source/S136):
+- Commit issues `gdn_step_norm_multi` 72 times (36 layers \xd7 2 owner groups) and `gdn_conv_commit` 72 times.
+- Each call is independent per layer and owner (its own state, conv history, qkv/h/gate/beta slices and keep vector).
+- Each replays the accepted prefix and stores one final state.
+
+Proposal (source-only for now): a new kernel class, layer-batched, reusing the existing per-layer body unchanged. Pass a small device table of per-(layer, owner) pointers and keep pointers, with grid.z = layer and owner.
+- Each work-group executes exactly the existing per-layer arithmetic and order, so the FP ledger per cell is unchanged by construction. There is no cross-layer reduction.
+- Batch conv commit the same way: a copy-only selection.
+- This replaces up to 144 graph nodes with about 2\u20134.
+
+Required source fix found while auditing: every layer's call writes the same `y_dummy_ + first*ZV`. That is harmless when serial but becomes a write race when batched. Give each layer its own dummy slice, or add a no-output variant; only if the output is provably never read.
+
+Smallest strict GPU-first discriminator: a private fixture with 36 synthetic layers \xd7 2 owners at real dimensions (state 128\xd748\xd7128 floats, conv history, keep 1..3, rejected suffixes). Compare the existing per-layer calls against the batched kernel on:
+- complete state bytes;
+- conv history;
+- guards;
+- read-only inputs;
+- finite values;
+- eager and captured A/B/A.
+
+Stop at the first mismatch. Only then, one completed whole-commit-chain timing.
+
+Stop conditions:
+- the existing GDN step kernel uses per-launch shared or global scratch that cannot be duplicated per layer;
+- its launch geometry or register footprint cannot accept an extra grid dimension without changing the body;
+- the commit graph's tail snapshot or PLE sequencing would need reordering.
+
+In any of these cases, keep the per-layer path and drop the idea.
+
+Deferred: verifier HC, routed and Q6 pools (S125 needs +488 MB and two launches), until commit batching and the S143/S139 results are in.

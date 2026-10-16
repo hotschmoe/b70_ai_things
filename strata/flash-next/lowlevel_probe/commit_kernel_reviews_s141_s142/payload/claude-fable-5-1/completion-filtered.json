@@ -1,0 +1,32 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 54.71873091801535,
+  "launch_exception": null,
+  "source_packet_sha256": "3ebaac494891deb6a43b53db137eef116ba228c0130fd3646271e0330cfe6404",
+  "source_packet_unchanged": true,
+  "parse_errors": [],
+  "retries": 0,
+  "terminal_results": [
+    {
+      "type": "result",
+      "subtype": "success",
+      "terminal_reason": "completed",
+      "stop_reason": "end_turn",
+      "is_error": false,
+      "api_error_status": null,
+      "num_turns": 1,
+      "session_id": "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+    }
+  ],
+  "filter_scope": "Cumulative result/modelUsage/usage/cost/duration_api fields omitted; actual call elapsed_s/model/session/terminal evidence retained. Full originals external."
+}

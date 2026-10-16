@@ -1,0 +1,500 @@
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/kernels/verify_kernels.hpp L29..53
+29: void gdn_conv_commit(float* history, const float* qkv, int channels, const int32_t* n_keep, void* stream);
+30: /// alpha/beta for T columns of x (T, n_embd): gate (T, h_v), beta (T, h_v).  Bitwise `fused_gdn_ab` per column.
+31: /// gdn_conv_l2_multi and gdn_ab_multi in one launch (143-amdk)
+32: void gdn_conv_ab_multi(const float* history, const float* qkv, const float* conv_w, float* h, int channels, int qk_heads,
+33:                        float eps, int n_tok, int t_begin, bool commit, const float* x, const uint16_t* w_alpha,
+34:                        const uint16_t* w_beta, const float* dt, const float* ssm_a, float* gate, float* beta, int n_embd,
+35:                        int h_v, void* stream);
+36: void gdn_ab_multi(const float* x, const uint16_t* w_alpha, const uint16_t* w_beta, const float* dt, const float* ssm_a,
+37:                   float* gate, float* beta, int n_embd, int h_v, int n_tok, void* stream);
+38: /// The recurrence + output norm for T tokens (h = (T, conv_channels) as q|k|v, gate/beta (T, h_v), z/y
+39: /// (T, value_dim)).  With `n_keep == nullptr` the state is read and NOT written (verify); otherwise the first
+40: /// *n_keep tokens are run and the state is written (commit; `y` may be scratch).  Bitwise `fused_gdn_step_norm`.
+41: void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const float* gate, const float* beta,
+42:                          const float* z, const float* gamma, float eps, float* y, int h_k, int h_v, int n_tok,
+43:                          const int32_t* n_keep, void* stream, int t_out_begin = 0, void* xq_out = nullptr);
+44: /// The commit of `n_layers` GDN layers in two launches (engine-latency): layer i's conv history is
+45: /// `state + i * state_stride + conv_off` and its qkv rows `qkv + i * qkv_stride`, as gdn_conv_commit; its recurrence
+46: /// state `state + i * state_stride` over the first *n_keep rows of `h + i * h_stride` / `gate|beta + i * gb_stride`, as
+47: /// gdn_step_norm_multi's commit (n_keep set, no outputs).  Every layer's arithmetic is the per-layer call's, so the result
+48: /// is bitwise the loop of per-layer calls.  Returns false (nothing launched) when the per-layer commit would not take the
+49: /// state-only kernel (STRATA_GDN_SPLIT=1, STRATA_GDN_COMMIT_SPLIT=0, STRATA_DBG_GDN=1): the caller then keeps the loop.
+50: bool gdn_commit_layers(float* state, int64_t state_stride, int64_t conv_off, const float* qkv, int64_t qkv_stride,
+51:                        const float* h, int64_t h_stride, const float* gate, const float* beta, int64_t gb_stride,
+52:                        int conv_channels, int h_k, int h_v, int n_max, int n_layers, const int32_t* n_keep, void* stream);
+53: /// (xq_out, S26 STRATA_QFUSE: also write the q8_1 image of output rows [t_out_begin, n_tok) there - the bytes
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/src/kernels/cuda/verify_kernels.cu L175..284
+175: __device__ __forceinline__ void gdn_step_commit_body(float* __restrict__ state, const float* __restrict__ hbuf, int C,
+176:                                                      const float* __restrict__ gate, const float* __restrict__ beta,
+177:                                                      int h_k, int h_v, int n);
+178: 
+179: template <bool DBG>
+180: __global__ void __launch_bounds__(32 * RG) gdn_step_commit_kernel(float* __restrict__ state,
+181:                                                                   const float* __restrict__ hbuf, int C,
+182:                                                                   const float* __restrict__ gate,
+183:                                                                   const float* __restrict__ beta,
+184:                                                                   int h_k, int h_v,
+185:                                                                   const int32_t* __restrict__ n_keep, int n_max) {
+186:     const int n = *n_keep;
+187:     if (n <= 0) return;
+188:     if (DBG && n > n_max) {
+189:         if (blockIdx.x == 0 && blockIdx.y == 0 && threadIdx.x == 0 && threadIdx.y == 0)
+190:             printf("strata DBG: gdn_step_commit: n_keep %d is past the window's %d rows: commit skipped (#937)\n", n, n_max);
+191:         return;
+192:     }
+193:     gdn_step_commit_body(state, hbuf, C, gate, beta, h_k, h_v, n);
+194: }
+195: 
+196: // engine-latency: gdn_step_commit_kernel for every GDN layer of the commit in one launch (blockIdx.z = the layer); each
+197: // layer's blocks run gdn_step_commit_body on that layer's state and rows, exactly as its own launch did
+198: __global__ void __launch_bounds__(32 * RG) gdn_step_commit_layers_kernel(float* __restrict__ state, long long state_stride,
+199:                                                                          const float* __restrict__ hbuf, long long h_stride,
+200:                                                                          int C, const float* __restrict__ gate,
+201:                                                                          const float* __restrict__ beta, long long gb_stride,
+202:                                                                          int h_k, int h_v, const int32_t* __restrict__ n_keep) {
+203:     const int n = *n_keep;
+204:     if (n <= 0) return;
+205:     const long long z = blockIdx.z;
+206:     gdn_step_commit_body(state + z * state_stride, hbuf + z * h_stride, C, gate + z * gb_stride, beta + z * gb_stride, h_k,
+207:                          h_v, n);
+208: }
+209: 
+210: // engine-latency: gdn_conv_commit_kernel for every GDN layer in one launch (blockIdx.y = the layer)
+211: __global__ void gdn_conv_commit_layers_kernel(float* __restrict__ hist0, long long hist_stride, const float* __restrict__ qkv0,
+212:                                               long long qkv_stride, int C, const int32_t* __restrict__ n_keep) {
+213:     const int c = blockIdx.x * blockDim.x + threadIdx.x;
+214:     if (c >= C) return;
+215:     const int n = *n_keep;
+216:     if (n <= 0) return;
+217:     float* hist = hist0 + (long long) blockIdx.y * hist_stride;
+218:     const float* qkv = qkv0 + (long long) blockIdx.y * qkv_stride;
+219:     float seq[3];
+220: #pragma unroll
+221:     for (int j = 0; j < 3; ++j) {
+222:         const int src = n + j;          // the last three of [hist(3) | x_0..x_{n-1}]
+223:         seq[j] = src < 3 ? hist[c * 3 + src] : qkv[(size_t) (src - 3) * C + c];
+224:     }
+225:     hist[c * 3] = seq[0];
+226:     hist[c * 3 + 1] = seq[1];
+227:     hist[c * 3 + 2] = seq[2];
+228: }
+229: 
+230: __device__ __forceinline__ void gdn_step_commit_body(float* __restrict__ state, const float* __restrict__ hbuf, int C,
+231:                                                      const float* __restrict__ gate, const float* __restrict__ beta,
+232:                                                      int h_k, int h_v, int n) {
+233:     __shared__ float sk[S];
+234:     __shared__ float red[RG][32];
+235:     const int head = blockIdx.x;
+236:     const int col_local = threadIdx.x;
+237:     const int col = blockIdx.y * 32 + col_local;
+238:     const int rg = threadIdx.y;
+239:     const int tid = rg * 32 + col_local;    // 0 .. 127
+240:     const int qh = head % h_k;
+241:     const int qk = S * h_k;
+242:     float s[RPG];
+243:     float* base = state + ((size_t) (rg * RPG) * h_v + head) * S + col;
+244:     const size_t row_stride = (size_t) h_v * S;
+245: #pragma unroll
+246:     for (int r = 0; r < RPG; ++r) s[r] = base[r * row_stride];
+247:     for (int t = 0; t < n; ++t) {
+248:         const float* ht = hbuf + (size_t) t * C;
+249:         __syncthreads();
+250:         sk[tid] = ht[qk + qh * S + tid];
+251:         __syncthreads();
+252:         const float g = __expf(gate[(size_t) t * h_v + head]);
+253:         float kv = 0.0f;
+254: #pragma unroll
+255:         for (int r = 0; r < RPG; ++r) kv = fmaf(s[r], sk[rg * RPG + r], kv);
+256:         red[rg][col_local] = kv;
+257:         __syncthreads();
+258:         const float kv_col = red[0][col_local] + red[1][col_local] + red[2][col_local] + red[3][col_local];
+259:         const float delta = (ht[2 * qk + head * S + col] - g * kv_col) * beta[(size_t) t * h_v + head];
+260: #pragma unroll
+261:         for (int r = 0; r < RPG; ++r) s[r] = fmaf(g, s[r], sk[rg * RPG + r] * delta);
+262:     }
+263: #pragma unroll
+264:     for (int r = 0; r < RPG; ++r) base[r * row_stride] = s[r];
+265: }
+266: 
+267: // S26 (STRATA_QFUSE=1): the q8_1 image of a 32-column block, written by the warp that holds those columns with
+268: // native_quantize_q8_1_kernel's quantizer (the same XOR-tree max and sum, d = amax / 127, roundf(x / d), ds = (d, sum)).
+269: struct GdnQ81 { half2 ds; int8_t qs[32]; };
+270: __device__ __forceinline__ void gdn_q8_1_store(GdnQ81* __restrict__ xq, size_t idx, float xi) {
+271:     // no contraction: xi is a product here, and fma(a, b, shfl) would round the first sum unlike the separate
+272:     // quantizer, which reads xi from memory (S26 harness: ds.sum differed by 1 ulp without this)
+273: #pragma clang fp contract(off)
+274:     float amax = fabsf(xi), sum = xi;
+275: #pragma unroll
+276:     for (int o = 16; o > 0; o >>= 1) amax = fmaxf(amax, __shfl_xor_sync(0xffffffffu, amax, o));
+277: #pragma unroll
+278:     for (int o = 16; o > 0; o >>= 1) sum += __shfl_xor_sync(0xffffffffu, sum, o);
+279:     const float d = q8_1_finite(amax / 127.0f);   // #606: as native_quantize_q8_1_kernel - finite blocks bit for bit
+280:     const int8_t q = q8_1_quant(xi, d, amax);
+281:     xq[idx / 32].qs[idx % 32] = q;
+282:     if (idx % 32 == 0) xq[idx / 32].ds = q8_1_ds(d, sum);   // #606: clamped (the QFUSE path bypassed the finite helper)
+283: }
+284: 
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/src/kernels/cuda/verify_kernels.cu L1019..1039
+1019: bool gdn_commit_layers(float* state, int64_t state_stride, int64_t conv_off, const float* qkv, int64_t qkv_stride,
+1020:                        const float* h, int64_t h_stride, const float* gate, const float* beta, int64_t gb_stride,
+1021:                        int conv_channels, int h_k, int h_v, int n_max, int n_layers, const int32_t* n_keep, void* stream) {
+1022:     // the per-layer commit's kernel choice (gdn_step_norm_multi below): only its state-only kernel is batched here
+1023:     static const bool per_layer = [] {
+1024:         const char* sp = std::getenv("STRATA_GDN_SPLIT");
+1025:         const char* cs = std::getenv("STRATA_GDN_COMMIT_SPLIT");
+1026:         const char* dbg = std::getenv("STRATA_DBG_GDN");
+1027:         return (sp && sp[0] == '1') || (cs && cs[0] == '0') || (dbg && dbg[0] == '1');
+1028:     }();
+1029:     if (per_layer || n_layers <= 0 || n_layers > 65535 || n_max < 1 || n_max > kVerifyMaxT || n_keep == nullptr ||
+1030:         h_v <= 0 || h_k <= 0 || h_v % h_k != 0)
+1031:         return false;
+1032:     cudaStream_t st = (cudaStream_t) stream;
+1033:     gdn_conv_commit_layers_kernel<<<dim3((unsigned) ((conv_channels + 255) / 256), (unsigned) n_layers), 256, 0, st>>>(
+1034:         state + conv_off, (long long) state_stride, qkv, (long long) qkv_stride, conv_channels, n_keep);
+1035:     gdn_step_commit_layers_kernel<<<dim3((unsigned) h_v, 4u, (unsigned) n_layers), dim3(32, RG), 0, st>>>(
+1036:         state, (long long) state_stride, h, (long long) h_stride, conv_channels, gate, beta, (long long) gb_stride, h_k, h_v,
+1037:         n_keep);
+1038:     check("gdn_commit_layers");
+1039:     return true;
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/src/core/verify.cpp L2027..2061
+2027:         err = "verify: begin commit capture failed";
+2028:         return false;
+2029:     }
+2030:     bool ok = true;
+2031:     try {
+2032:         copy_i32_from_mapped(commit_, m_commit_, 2 + MT, cs_);
+2033:         int64_t qsa_index = 0, gdn_index = 0;
+2034:         for (int64_t l = 0; l < lb_; ++l) (is_qsa_layer(g, l) ? qsa_index : gdn_index) += 1;
+2035:         // engine-latency (STRATA_COMMIT_BATCH, default on; =0 keeps the per-layer loop): every GDN layer's conv history and
+2036:         // state in two launches instead of two per layer (~70 graph nodes fewer; the same arithmetic per layer, bitwise).
+2037:         // The commit runs between a window and the draft round, which on HIP waits for it.
+2038: #if defined(STRATA_GPU_METAL)   // no batched commit kernels on Metal: the per-layer loop (the Mac engine's gated path)
+2039:         static const bool commit_batch = false;
+2040: #else
+2041:         static const bool commit_batch = [] { const char* e = std::getenv("STRATA_COMMIT_BATCH"); return !e || e[0] != '0'; }();
+2042: #endif
+2043:         bool gdn_batched = false;
+2044:         if (commit_batch) {
+2045:             int64_t n_gdn = 0;
+2046:             bool norms_ok = true;   // the per-layer loop checks each layer's ssm_norm.weight: keep that check
+2047:             for (int64_t l = lb_; l < le_ && norms_ok; ++l)
+2048:                 if (!is_qsa_layer(g, l)) {
+2049:                     ++n_gdn;
+2050:                     norms_ok = need(LayerView(*wt_, l), "ssm_norm.weight", err) != nullptr;
+2051:                 }
+2052:             if (!norms_ok) ok = false;
+2053:             else if (n_gdn > 0)
+2054:                 gdn_batched = gdn_commit_layers(
+2055:                     ss.gdn_state + (size_t) (gdn_index - ss.gdn_ord0) * gdn_floats, (int64_t) gdn_floats,
+2056:                     (int64_t) g.ssm_state_size * g.ssm_v_heads * g.ssm_state_size, qkv_L_ + (size_t) gdn_index * MT * C,
+2057:                     MT * C, h_L_ + (size_t) gdn_index * MT * C, MT * C, gate_L_ + (size_t) gdn_index * MT * HV,
+2058:                     beta_L_ + (size_t) gdn_index * MT * HV, MT * HV, (int) C, (int) g.ssm_k_heads, (int) HV, (int) MT,
+2059:                     (int) n_gdn, commit_, cs_);
+2060:         }
+2061:         // the QSA layers' tail restore + indexer append, one launch for all of them (one block per layer)
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp L112..133
+112: gdn_conv_commit_kernel(float *__restrict__ hist, const float *__restrict__ qkv,
+113:                        int C, const int32_t *__restrict__ n_keep) {
+114:     auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+115:     const int c = item_ct1.get_group(2) * item_ct1.get_local_range(2) +
+116:                   item_ct1.get_local_id(2);
+117:     if (c >= C) return;
+118:     const int n = *n_keep;
+119:     if (n <= 0) return;
+120:     float seq[3];
+121: #pragma unroll
+122:     for (int j = 0; j < 3; ++j) {
+123:         const int src = n + j;          // the last three of [hist(3) | x_0..x_{n-1}]
+124:         seq[j] = src < 3 ? hist[c * 3 + src] : qkv[(size_t) (src - 3) * C + c];
+125:     }
+126:     hist[c * 3] = seq[0];
+127:     hist[c * 3 + 1] = seq[1];
+128:     hist[c * 3 + 2] = seq[2];
+129: }
+130: 
+131: template <int MAX_T = kVerifyMaxT, bool EXACT_T = false>
+132: /*
+133: DPCT1110: The total declared local variable size in device function
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp L232..303
+232: __dpct_inline__ void gdn_step_commit_kernel(
+233:     float *__restrict__ state, const float *__restrict__ hbuf, int C,
+234:     const float *__restrict__ gate, const float *__restrict__ beta, int h_k,
+235:     int h_v, const int32_t *__restrict__ n_keep) {
+236:     auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+237:     const int n = *n_keep;
+238:     if (n <= 0) return;
+239:     auto &sk = *sycl::ext::oneapi::group_local_memory_for_overwrite<float[S]>(
+240:         sycl::ext::oneapi::this_work_item::get_work_group<3>());
+241:     auto &red =
+242:         *sycl::ext::oneapi::group_local_memory_for_overwrite<float[RG][32]>(
+243:             sycl::ext::oneapi::this_work_item::get_work_group<3>());
+244:     const int head = item_ct1.get_group(2);
+245:     const int col_local = item_ct1.get_local_id(2);
+246:     const int col = item_ct1.get_group(1) * 32 + col_local;
+247:     const int rg = item_ct1.get_local_id(1);
+248:     const int tid = rg * 32 + col_local;    // 0 .. 127
+249:     const int qh = head % h_k;
+250:     const int qk = S * h_k;
+251:     float s[RPG];
+252:     float* base = state + ((size_t) (rg * RPG) * h_v + head) * S + col;
+253:     const size_t row_stride = (size_t) h_v * S;
+254: #pragma unroll
+255:     for (int r = 0; r < RPG; ++r) s[r] = base[r * row_stride];
+256:     for (int t = 0; t < n; ++t) {
+257:         const float* ht = hbuf + (size_t) t * C;
+258:         /*
+259:         DPCT1118: SYCL group functions and algorithms must be encountered in
+260:         converged control flow. You may need to adjust the code.
+261:         */
+262:         /*
+263:         DPCT1065: Consider replacing sycl::nd_item::barrier() with
+264:         sycl::nd_item::barrier(sycl::access::fence_space::local_space) for
+265:         better performance if there is no access to global memory.
+266:         */
+267:         item_ct1.barrier();
+268:         sk[tid] = ht[qk + qh * S + tid];
+269:         /*
+270:         DPCT1118: SYCL group functions and algorithms must be encountered in
+271:         converged control flow. You may need to adjust the code.
+272:         */
+273:         /*
+274:         DPCT1065: Consider replacing sycl::nd_item::barrier() with
+275:         sycl::nd_item::barrier(sycl::access::fence_space::local_space) for
+276:         better performance if there is no access to global memory.
+277:         */
+278:         item_ct1.barrier();
+279:         const float g = sycl::native::exp(gate[(size_t)t * h_v + head]);
+280:         float kv = 0.0f;
+281: #pragma unroll
+282:         for (int r = 0; r < RPG; ++r)
+283:             kv = sycl::fma(s[r], sk[rg * RPG + r], kv);
+284:         red[rg][col_local] = kv;
+285:         /*
+286:         DPCT1118: SYCL group functions and algorithms must be encountered in
+287:         converged control flow. You may need to adjust the code.
+288:         */
+289:         /*
+290:         DPCT1065: Consider replacing sycl::nd_item::barrier() with
+291:         sycl::nd_item::barrier(sycl::access::fence_space::local_space) for
+292:         better performance if there is no access to global memory.
+293:         */
+294:         item_ct1.barrier();
+295:         const float kv_col = red[0][col_local] + red[1][col_local] + red[2][col_local] + red[3][col_local];
+296:         const float delta = (ht[2 * qk + head * S + col] - g * kv_col) * beta[(size_t) t * h_v + head];
+297: #pragma unroll
+298:         for (int r = 0; r < RPG; ++r)
+299:             s[r] = sycl::fma((float)g, s[r], sk[rg * RPG + r] * delta);
+300:     }
+301: #pragma unroll
+302:     for (int r = 0; r < RPG; ++r) base[r * row_stride] = s[r];
+303: }
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp L1696..1713
+1696: void gdn_conv_commit(float* history, const float* qkv, int channels, const int32_t* n_keep, void* stream) {
+1697:     {
+1698:         auto exp_props = sycl::ext::oneapi::experimental::properties{
+1699:             sycl::ext::oneapi::experimental::use_root_sync};
+1700: 
+1701:         strata::q_of(stream)
+1702:             ->parallel_for<
+1703:                 dpct_kernel_name<class gdn_conv_commit_kernel_dc1d7f>>(
+1704:                 sycl::nd_range<3>(
+1705:                     sycl::range(1, 1, (unsigned)((channels + 255) / 256)) *
+1706:                         sycl::range(1, 1, 256),
+1707:                     sycl::range(1, 1, 256)),
+1708:                 exp_props, [=](sycl::nd_item<3> item_ct1) {
+1709:                     gdn_conv_commit_kernel(history, qkv, channels, n_keep);
+1710:                 });
+1711:     }
+1712:     check("gdn_conv_commit");
+1713: }
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp L1834..1849
+1834: void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const float* gate, const float* beta,
+1835:                          const float* z, const float* gamma, float eps, float* y, int h_k, int h_v, int n_tok,
+1836:                          const int32_t* n_keep, void* stream, int t_out_begin, void* xq_out) {
+1837:     GdnQ81* const xq = static_cast<GdnQ81*>(xq_out);   // S26: non-null = also the outputs' q8_1 (STRATA_QFUSE)
+1838:     if (!state || !h || !gate || !beta || !z || !gamma || !y || h_k <= 0 || h_v % h_k || n_tok < 1 ||
+1839:         n_tok > kVerifyMaxT) {
+1840:         std::fprintf(stderr, "gdn_step_norm_multi: invalid arguments\n");
+1841:         std::exit(1);
+1842:     }
+1843:     static const bool split = [] { const char* v = std::getenv("STRATA_GDN_SPLIT"); return v && v[0] == '1'; }();
+1844:     // S26: the split runs where it is faster (gfx1151 harness, h_v 48: the commit 8-19% per call; a window of 2+ rows
+1845:     // 3-13%; one row: no gain, the old kernel stays) - bitwise equal in every case
+1846:     if (split && (t_out_begin >= n_tok || n_tok - t_out_begin >= 2)) {
+1847:         const dpct::dim3 grid((unsigned)h_v, S / GS_COLS), block(GS_COLS, RG);
+1848:         if (t_out_begin >= n_tok) {   // no outputs (the commit): the state only
+1849:                                       /*
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp L1943..1966
+1943:     static const bool commit_split = [] {
+1944:         const char* e = std::getenv("STRATA_GDN_COMMIT_SPLIT");
+1945:         return !e || e[0] != '0';
+1946:     }();
+1947:     if (commit_split && n_keep != nullptr && t_out_begin >= n_tok) {
+1948:         {
+1949:             auto exp_props = sycl::ext::oneapi::experimental::properties{
+1950:                 sycl::ext::oneapi::experimental::use_root_sync};
+1951: 
+1952:             strata::q_of(stream)
+1953:                 ->parallel_for<
+1954:                     dpct_kernel_name<class gdn_step_commit_kernel_5d9da7>>(
+1955:                     sycl::nd_range<3>(sycl::range(1, 4u, (unsigned)h_v) *
+1956:                                           sycl::range(1, RG, 32),
+1957:                                       sycl::range(1, RG, 32)),
+1958:                     exp_props, [=](sycl::nd_item<3> item_ct1) {
+1959:                         gdn_step_commit_kernel(state, h, conv_channels, gate,
+1960:                                                beta, h_k, h_v, n_keep);
+1961:                     });
+1962:         }
+1963:         check("gdn_step_commit");
+1964:         return;
+1965:     }
+1966:     const dpct::dim3 g1((unsigned)h_v), b1(S, RG);
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/session.cpp L40..47
+40: /// The floats one GDN layer's recurrent + conv state needs.  `gdn_buffers_bytes` carves them for ONE layer and
+41: /// `GdnBuffers::state`/`conv_state` point INTO that carve, so a session with 36 GDN layers has to give each one
+42: /// its own - they cannot share, because the recurrence is the whole point.
+43: uint64_t gdn_state_floats(const ModelGeometry& g) {
+44:     return (uint64_t) g.ssm_state_size * g.ssm_v_heads * g.ssm_state_size +
+45:            (uint64_t) g.ssm_conv_channels * (g.ssm_d_conv - 1);
+46: }
+47: 
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/session.cpp L92..102
+92:     s.layer_hi = layer_hi;
+93:     const int64_t I = std::max<int64_t>(g.qsa_interval, 1);
+94:     const int64_t q_n_range = layer_hi / I - layer_lo / I;
+95:     s.qsa_ord0 = layer_lo / I;
+96:     s.qsa_alloc = std::max<int64_t>(q_n_range, g.n_qsa_layers() > 0 ? 1 : 0);
+97:     s.gdn_ord0 = layer_lo - layer_lo / I;
+98:     s.gdn_alloc = std::max<int64_t>((layer_hi - layer_lo) - q_n_range, 0);
+99: 
+100:     gdn_buffers_init(g, take(gdn_buffers_bytes(g)), s.gdn);
+101:     s.gdn_state = (float*) take((uint64_t) s.gdn_alloc * gdn_state_floats(g) * 4);
+102: 
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp L577..585
+577:         mixed_ = b.take<float>(T * N); bo_ = b.take<float>(T * N);
+578:         inj_ = b.take<float>(T * HC); inj2_ = b.take<float>(T * HC);
+579:         lo_ = b.take<float>(T * (uint64_t) g.hc_lr); rs_ = b.take<float>(T * HC); xn_ = b.take<float>(T * HC * N);
+580:         xq_ = b.take<uint8_t>(strata::kernels::native_q8_1_bytes(max_in, (int) T));
+581:         sh_xq_ = b.take<uint8_t>(strata::kernels::native_q8_1_bytes(max_in, (int) T));
+582:         qkv_L_ = b.take<float>(nG * T * C); h_L_ = b.take<float>(nG * T * C);
+583:         gate_L_ = b.take<float>(nG * T * HV); beta_L_ = b.take<float>(nG * T * HV);
+584:         z_ = b.take<float>(T * ZV); y_ = b.take<float>(T * ZV); y_dummy_ = b.take<float>(T * ZV);
+585:         qfull_ = b.take<float>(T * NH * 2 * HD); qcur_ = b.take<float>(T * NH * HD);
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp L2937..2952
+2937:                           std::string &err) try {
+2938:     const OnDevice on_device(device_);
+2939:     if (g_ == nullptr || ss_ == nullptr) { err = "verify: init_slots before init"; return false; }
+2940:     if (slots.empty()) {
+2941:         err = "verify: init_slots needs at least one session";
+2942:         return false;
+2943:     }
+2944:     for (SessionState* x : slots) {
+2945:         if (x == nullptr || x->layer_lo != ss_->layer_lo || x->layer_hi != ss_->layer_hi ||
+2946:             x->max_cells != ss_->max_cells || x->gdn_ord0 != ss_->gdn_ord0 || x->qsa_ord0 != ss_->qsa_ord0) {
+2947:             err = "verify: a slot's session is not carved like the stage's own (layer range, context)";
+2948:             return false;
+2949:         }
+2950:     }
+2951:     const strata::kernels::QsaShapes s = shapes_of(*g_);
+2952:     const int64_t S = (int64_t) slots.size(), CB = 2 + max_t_;
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp L3090..3120
+3090:     try {
+3091:         for (int t = 0; t < S; ++t)
+3092:             if (t == 0 || rows[t] != rows[t - 1])
+3093:                 copy_i32_from_mapped(commitb_ + (size_t) rows[t] * CB, m_commitb_ + (size_t) rows[t] * CB, CB, cs_);
+3094:         int64_t qsa_index = 0, gdn_index = 0;
+3095:         for (int64_t l = 0; l < lb_; ++l) (is_qsa_layer(g, l) ? qsa_index : gdn_index) += 1;
+3096:         for (int64_t l = lb_; l < le_ && ok; ++l) {
+3097:             const LayerView v(*wt_, l);
+3098:             if (!is_qsa_layer(g, l)) {
+3099:                 const WeightRef* wnm = need(v, "ssm_norm.weight", err);
+3100:                 if (!wnm) { ok = false; break; }
+3101:                 for (int t = 0; t < S;) {
+3102:                     const int first = t;
+3103:                     while (t < S && rows[t] == rows[first]) ++t;
+3104:                     SessionState& sx = *slots_[(size_t) rows[first]];
+3105:                     const int32_t* keep = commitb_ + (size_t) rows[first] * CB;
+3106:                     float* state = sx.gdn_state + (size_t) (gdn_index - sx.gdn_ord0) * gdn_floats;
+3107:                     float* conv = state + (uint64_t) g.ssm_state_size * g.ssm_v_heads * g.ssm_state_size;
+3108:                     gdn_conv_commit(conv, qkv_L_ + (size_t) gdn_index * MT * C + (size_t) first * C,
+3109:                                     (int) C, keep, cs_);
+3110:                     gdn_step_norm_multi(state, h_L_ + (size_t) gdn_index * MT * C + (size_t) first * C, (int) C,
+3111:                                         gate_L_ + (size_t) gdn_index * MT * HV + (size_t) first * HV,
+3112:                                         beta_L_ + (size_t) gdn_index * MT * HV + (size_t) first * HV,
+3113:                                         z_ + (size_t) first * ZV, (const float*) wnm->data, EPS,
+3114:                                         y_dummy_ + (size_t) first * ZV, (int) g.ssm_k_heads,
+3115:                                         (int) HV, t - first, keep, cs_,
+3116:                                         t - first > 1 ? t - first : 0);   // a 1-row group keeps the 0.1.39 kernel
+3117:                 }
+3118:                 ++gdn_index;
+3119:             } else {
+3120:                 const WeightRef* wikn = need(v, "indexer.k_norm.weight", err);
+
+FILE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp L3508..3560
+3508:     const OnDevice on_device(device_);
+3509:     if (!last_batch_ || last_t_ < 1) { err = "verify: commit_slots without a batch window"; return false; }
+3510:     const int S = last_t_;
+3511:     const Clock::time_point t0 = Clock::now();
+3512:     const int64_t CB = 2 + max_t_;
+3513:     // One prefix per slot: rejected draft rows must not enter recurrent state.
+3514:     for (int t = 0; t < S;) {
+3515:         const int first = t;
+3516:         while (t < S && last_rows_[t] == last_rows_[first]) ++t;
+3517:         const int n = keep[last_rows_[first]];
+3518:         if (n < 1 || n > t - first) {
+3519:             err = "verify: accepted prefix is outside its slot group";
+3520:             return false;
+3521:         }
+3522:         int32_t* c = h_commitb_ + (size_t) last_rows_[first] * CB;
+3523:         c[0] = n;
+3524:         c[1] = n - 1;
+3525:         for (int j = 0; j < max_t_; ++j)
+3526:             c[2 + j] = j < n ? (int32_t) last_pos_b_[first + j] : -1;
+3527:     }
+3528:     std::atomic_thread_fence(std::memory_order_seq_cst);
+3529:     const dpct::err0 le = DPCT_CHECK_ERROR(
+3530:         (cs_)->ext_oneapi_graph(*commit_bm_[bkey(last_rows_, S, row_base_)]));
+3531:     /*
+3532:     DPCT1009: SYCL reports errors using exceptions and does not use error
+3533:     codes. Please replace the "get_error_string_dummy(...)" with a real
+3534:     error-handling function.
+3535:     */
+3536:     /*
+3537:     DPCT1001: The statement could not be removed.
+3538:     */
+3539:     /*
+3540:     DPCT1000: Error handling if-stmt was detected but could not be rewritten.
+3541:     */
+3542:     if (le != 0) {
+3543:       err = std::string("verify: batch commit launch: ") +
+3544:             dpct::get_error_string_dummy(le);
+3545:       return false;
+3546:     }
+3547:     const dpct::err0 se = DPCT_CHECK_ERROR(cs_->wait());
+3548:     /*
+3549:     DPCT1009: SYCL reports errors using exceptions and does not use error
+3550:     codes. Please replace the "get_error_string_dummy(...)" with a real
+3551:     error-handling function.
+3552:     */
+3553:     /*
+3554:     DPCT1001: The statement could not be removed.
+3555:     */
+3556:     /*
+3557:     DPCT1000: Error handling if-stmt was detected but could not be rewritten.
+3558:     */
+3559:     if (se != 0) {
+3560:       err = std::string("verify: batch commit: ") +

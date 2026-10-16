@@ -468,3 +468,14 @@ verifier gap are larger unresolved leads, with reset/profiler perturbation
 unknown. Full-cycle/source evidence and partial analyzer exit-2 are explicit.
 No CPU/GPU/peer clock join, physical idle or removable wall budget is claimed.
 Historical CSV, operation-data.json and generated HTML remain unchanged.
+
+
+[S142 matched unprofiled CPU ring](../../../docs/20261016_strata_unprofiled_cpu_ring.md)
+finds verifier-submit3.221343->0.067378ms and pair-submit1.950670->
+0.046123ms without unitrace, samebinary/outputs/work/replayIDs. Later
+polling increases; direct combined pair interval5.978394->5.370319ms.
+Do not assign instrumented LEFT/postpair gaps to physicalidle/production
+hostcost from this map. Historical operation timing datasets stay unchanged.
+[S141/S142 actual model decisions](../../../docs/20261016_strata_s141_s142_review_decisions.md)
+retain each agent's reasoning, root corrections and a source-only upstream
+GDN layer-commit port lead. No GPU performance for that port is claimed.

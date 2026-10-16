@@ -1,0 +1,7 @@
+{
+  "draft_manifest_sha256": "0e6cd9012107ae1c56b239f42963b8bdfc559ef6e6a628164dbb00c1b208a81b",
+  "all_manifest_payloads_verified": true,
+  "root_full_read_both_actual_answers_dateddoc_disposition_and_GDN_findings": true,
+  "rootdoc_change": "remove now-obsolete outside-repository draft-location sentence; add payloadlink",
+  "private_GDN_source_prep_selected_after_frozen_audit": "S145 source-only inprogress, not runtimequalification"
+}

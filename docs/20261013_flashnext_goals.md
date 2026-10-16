@@ -469,3 +469,15 @@ S136 full bounded-cycle readiness/commit attribution and actual
 Opus5.5/Fable5.1 select one existing-kernel QSA commit grouping private
 GPU oracle next, before broader Q6/HC work. Its result is still pending.
 [Decision and each actual agent's reasoning](20261016_strata_mtp_commit_next_decision.md).
+
+
+S141 grouped-indexer private complete-state oracle passes36strict phases;
+completed restore+append-chain151.7345->87.908us is private only, no serving
+forecast. S142samebinary diagnostic WITHOUTunitrace matches all output/work
+and820ringrecords, but submitbrackets shrink sharply and later polling grows.
+Stop treating instrumented3.3ms as productionhostcost; no CPUGPUclockjoin.
+[QSA oracle](20261016_strata_qsa_commit_group_oracle.md),
+[unprofiled diagnostic](20261016_strata_unprofiled_cpu_ring.md),
+[actual Opus/Fable decisions](20261016_strata_s141_s142_review_decisions.md).
+Targets and retained S30fullRAMrecovery remain unchanged; newgroupflag
+matched serving is pending, and fullcontext qualification is not implied.

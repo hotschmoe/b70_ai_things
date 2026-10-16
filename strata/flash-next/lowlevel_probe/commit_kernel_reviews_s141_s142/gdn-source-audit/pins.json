@@ -1,0 +1,111 @@
+{
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/kernels/verify_kernels.hpp": {
+    "sha256": "c59529e560fbea77ca4a268fac1e65ca24a8f3826b0589e961813978f4903fb9",
+    "bytes": 13591,
+    "ranges": [
+      [
+        29,
+        53
+      ]
+    ]
+  },
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/src/kernels/cuda/verify_kernels.cu": {
+    "sha256": "1ae7aa29210002210511b8390d54c77f979e909937cba03b8f20cc5686a73bfd",
+    "bytes": 76809,
+    "ranges": [
+      [
+        175,
+        284
+      ],
+      [
+        1019,
+        1039
+      ]
+    ]
+  },
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/src/core/verify.cpp": {
+    "sha256": "16f400260d1f0fcbe635d13575b0cd5bcd63463be691d5d69e8fe9981862d4cd",
+    "bytes": 203669,
+    "ranges": [
+      [
+        2027,
+        2061
+      ]
+    ]
+  },
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp": {
+    "sha256": "5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e",
+    "bytes": 119038,
+    "ranges": [
+      [
+        112,
+        133
+      ],
+      [
+        232,
+        303
+      ],
+      [
+        1696,
+        1713
+      ],
+      [
+        1834,
+        1849
+      ],
+      [
+        1943,
+        1966
+      ]
+    ]
+  },
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/session.cpp": {
+    "sha256": "30e7f5788d8d97df6ea395ca4ecbe20b11b17b412722ef8fe1c8bc20d3095144",
+    "bytes": 68097,
+    "ranges": [
+      [
+        40,
+        47
+      ],
+      [
+        92,
+        102
+      ]
+    ]
+  },
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp": {
+    "sha256": "c28de288061beae19949982ff3de7cf0a54fcae4d23f61e3a0374f90aeb435c6",
+    "bytes": 224196,
+    "ranges": [
+      [
+        577,
+        585
+      ],
+      [
+        2937,
+        2952
+      ],
+      [
+        3090,
+        3120
+      ],
+      [
+        3508,
+        3560
+      ]
+    ]
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/run/analysis/cpu/analysis.json": {
+    "sha256": "2834bce6b64c8c902974cad353530779efb06c60b3373ddd7ce974ecbde4a996",
+    "bytes": 397222,
+    "field": "replay_same_window_span_stats_ms.commit",
+    "value": {
+      "count": 16,
+      "min_ms": 1.525158,
+      "median_ms": 1.585553,
+      "p95_ms": 1.61558775,
+      "max_ms": 1.617324,
+      "sum_ms": 25.335884
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "status": "FROZEN_SOURCE_AUDIT_ONLY_NO_IMPLEMENTATION_BUILD_GPU",
+  "files": {
+    "facts.json": {
+      "bytes": 1634,
+      "sha256": "32366183abb03e47f42891033ddb0593d14409be42185fec5931d47a919510c0"
+    },
+    "findings.md": {
+      "bytes": 7826,
+      "sha256": "71aa610f0c19e357209101932d8d6c1a8c1e5bc5fc5c30f7e949d48d93db48a2"
+    },
+    "pins.json": {
+      "bytes": 2373,
+      "sha256": "902a9951aea5547163fb84a23f51ddfc0ca4c613b010b639829ac8b537fd751d"
+    },
+    "source-excerpts.txt": {
+      "bytes": 30420,
+      "sha256": "df75c38c2f386ca1b60b3f9395dee4ebee7898e4fa5321b88de9a4f9d335d865"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "status": "FROZEN_ROOT_DIRECTED_SOURCE_DECISION_TRANSCRIPTION_FOR_ROOT_CURATION_REVIEW",
+  "provenance": "Parent root task/messages, not a newly obtained model answer or new runtime gate; original source/model answers remain immutable",
+  "S143_source": {
+    "decision": "SOURCE_GO_N3_ONLY",
+    "STRATA_ROPE_TABLE": "0 explicitly BOTH future S144 arms, assert actual native process environment",
+    "validation_throw": "Existing capture exception path, no automatic fallback",
+    "main_runtime_status": "PENDING_S144; source review is not integration qualification",
+    "build_status_at_direction": "Root already running incremental build; curation is not an additional GO block"
+  },
+  "S142": {
+    "accepted": "Profiler bundle accompanies inflated CPU submission brackets on one matched107x64/allflag0 pair; same replay IDs, nativework, output and health",
+    "rejected_model_inferences": [
+      "S136 or S95 LEFT/postpair GPU gaps proved instrumentation artifacts",
+      "Physical CPU/GPU cause or idle proven",
+      "GPU side is the real cost established",
+      "General real decode cycle is46ms",
+      "Unprofiled commit1.586ms is an additive cycle budget"
+    ],
+    "limits": "CPU clocks only; native waits may include other dependencies; no CPU/GPU join; diagnostic commit bracket useful but not a performance budget"
+  },
+  "GDN_next": {
+    "decision": "BOUNDED_SOURCE_AUDIT_ACCEPTED_NOT_IMPLEMENTATION_OR_GPU_GO",
+    "baseline_per_layer_state_plus_conv": "36layers*2owners*2kinds=144 source calls in relevant source-conditioned commit",
+    "existing_upstream_alternative": "gdn_commit_layers already batches two kinds per owner, four total for two owners; SYCL implementation missing",
+    "ydummy_claim": "ROOT_REJECTS required allocation fix for selected state-only SYCL branch: accepts only state/h/C/gate/beta/hk/hv/keep and returns before y/z/gamma/output kernels; upstream gdn_commit_layers has no y args",
+    "source_pins": {
+      "frozen_source_audit": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layer-batching-source",
+      "manifest_sha256": "60cad635445a92c1af70e4250c222043958912b6677d50b3c7534567de4bf9bd",
+      "findings_sha256": "71aa610f0c19e357209101932d8d6c1a8c1e5bc5fc5c30f7e949d48d93db48a2",
+      "SYCL_selected_source": "sycl/src/kernels/cuda/verify_kernels.dp.cpp SHA5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e L232-303,L1834-1849,L1943-1966",
+      "upstream_API_and_implementation": "include/strata/kernels/verify_kernels.hpp L44-53 and src/kernels/cuda/verify_kernels.cu L1019-1039; exactfullSHAs in gdn-source-audit/pins.json"
+    },
+    "remaining_source_constraints": "Two disjoint exact3row ownergroups; SessionState nonoverlap not generally proven by init_slots; explicit eligibility/span proof and finite strict fixture required. Exact source math is not universal compiled FP equivalence."
+  },
+  "parked": [
+    "queueprofiling property experiment",
+    "Q6 pre-expansion production work",
+    "more broad traces"
+  ],
+  "no_new_models_or_workloads": true
+}

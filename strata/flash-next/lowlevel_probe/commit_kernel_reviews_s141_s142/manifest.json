@@ -1,0 +1,102 @@
+{
+  "status": "FROZEN_DRAFT_OUTSIDE_REPO_AND_EXPERIMENT_ROOT",
+  "exact_copies_verified": 17,
+  "filtered_completions_verified": 2,
+  "external_raw_originals_indexed": 4,
+  "payload_files": {
+    "20261016_strata_s141_s142_review_decisions.md": {
+      "bytes": 5473,
+      "sha256": "a02660314a7daf0447018850b1dc5cdbfe8f365d9fa37ec277e0a09e279975c5"
+    },
+    "README.md": {
+      "bytes": 658,
+      "sha256": "c80a503c2faef993fff83f96186aac72489e4604da98b59f212dc27c909c0052"
+    },
+    "gdn-source-audit/facts.json": {
+      "bytes": 1634,
+      "sha256": "32366183abb03e47f42891033ddb0593d14409be42185fec5931d47a919510c0"
+    },
+    "gdn-source-audit/findings.md": {
+      "bytes": 7826,
+      "sha256": "71aa610f0c19e357209101932d8d6c1a8c1e5bc5fc5c30f7e949d48d93db48a2"
+    },
+    "gdn-source-audit/manifest.json": {
+      "bytes": 622,
+      "sha256": "60cad635445a92c1af70e4250c222043958912b6677d50b3c7534567de4bf9bd"
+    },
+    "gdn-source-audit/pins.json": {
+      "bytes": 2373,
+      "sha256": "902a9951aea5547163fb84a23f51ddfc0ca4c613b010b639829ac8b537fd751d"
+    },
+    "gdn-source-audit/source-excerpts.txt": {
+      "bytes": 30420,
+      "sha256": "df75c38c2f386ca1b60b3f9395dee4ebee7898e4fa5321b88de9a4f9d335d865"
+    },
+    "payload/claude-fable-5-1/assistant-text.txt": {
+      "bytes": 4520,
+      "sha256": "c37ef470f0c0fa113aa1f46f02a69e89d4f52b11c66264c119060c0e2d979f7b"
+    },
+    "payload/claude-fable-5-1/command.json": {
+      "bytes": 1285,
+      "sha256": "4a5170496b53d6dd2b72c26e4f6405a08e49de74488b435928ba965af66470e4"
+    },
+    "payload/claude-fable-5-1/completion-filtered.json": {
+      "bytes": 1020,
+      "sha256": "b3ab9ed8cdf9be11a5398dab66189ef691c653053d9f308242af1a3b21cad81e"
+    },
+    "payload/claude-fable-5-1/prompt.txt": {
+      "bytes": 32242,
+      "sha256": "9f6fc3fd3694a5f21dd9ed4a11517fe6faee2be15864bb686a40ba2c814662f2"
+    },
+    "payload/claude-fable-5-1/stderr.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "payload/claude-opus-5-5/assistant-text.txt": {
+      "bytes": 4903,
+      "sha256": "56a26472402d70f3c93d5191388995e252bc405791934a740b16cbf6aaa7e840"
+    },
+    "payload/claude-opus-5-5/command.json": {
+      "bytes": 1283,
+      "sha256": "00d5349b6b6c9fd39eb1481345798bf682ceaf6cd4d5fadd3d2b770c3cc6ff98"
+    },
+    "payload/claude-opus-5-5/completion-filtered.json": {
+      "bytes": 1018,
+      "sha256": "ac3c95d6fb80ef920944874587c79ddb2ab54ae6ad70158d53581e7ba601d883"
+    },
+    "payload/claude-opus-5-5/prompt.txt": {
+      "bytes": 32242,
+      "sha256": "9f6fc3fd3694a5f21dd9ed4a11517fe6faee2be15864bb686a40ba2c814662f2"
+    },
+    "payload/claude-opus-5-5/stderr.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "payload/packet.sha256": {
+      "bytes": 65,
+      "sha256": "4e48667fbc10603d407130536e55864f2778f656c095de7966fa8ac8b58b59dc"
+    },
+    "payload/review-prefix.txt": {
+      "bytes": 873,
+      "sha256": "2306afe3a36945a0669bc3e2818eef05195aa4f4bd90c5ce82243316b33d3ff9"
+    },
+    "payload/review.py": {
+      "bytes": 4737,
+      "sha256": "b43efa6bc1c895a530df80c631698576e9a2b4c041192576055715e93eaf3a78"
+    },
+    "payload/source-packet.txt": {
+      "bytes": 31348,
+      "sha256": "3ebaac494891deb6a43b53db137eef116ba228c0130fd3646271e0330cfe6404"
+    },
+    "root-disposition.json": {
+      "bytes": 3094,
+      "sha256": "ad4738453e8802a4aff2ed489d7ed76139c9cdd1bd35eb9c7e36f1ec31b7d90d"
+    },
+    "source-copy-index.json": {
+      "bytes": 9827,
+      "sha256": "44055631975d6be81f7848748ea29d9b1d76255e05fbc36b4ff596b03aeca983"
+    }
+  },
+  "no_new_review_or_execution_gate": true,
+  "no_workloads_GPU_build_CLI_model_calls_repo_edits": true
+}

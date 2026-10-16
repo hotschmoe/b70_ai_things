@@ -1,0 +1,71 @@
+{
+  "geometry": {
+    "state_size": 128,
+    "key_heads": 16,
+    "value_heads": 48,
+    "conv_channels": 10240,
+    "GDN_layers": 36,
+    "owners": 2,
+    "group_rows": 3,
+    "max_t": 8
+  },
+  "logical_layout_not_physical_traffic": {
+    "recurrence_floats_per_layer": 786432,
+    "conv_floats_per_layer": 30720,
+    "state_stride_floats": 817152,
+    "state_stride_bytes": 3268608,
+    "per_owner_36layers_bytes": 117669888,
+    "twoowners_bytes": 235339776,
+    "h_qkv_layer_stride_floats": 81920,
+    "gate_beta_layer_stride_floats": 384
+  },
+  "launches": {
+    "control_state": 72,
+    "control_conv": 72,
+    "candidate_state": 2,
+    "candidate_conv": 2,
+    "description": "two existing-CUDA-source kernel roles perowner; not one72descriptor kernel"
+  },
+  "S142_native_clock_whole_commit_ms": {
+    "count": 16,
+    "min_ms": 1.525158,
+    "median_ms": 1.585553,
+    "p95_ms": 1.61558775,
+    "max_ms": 1.617324,
+    "sum_ms": 25.335884
+  },
+  "S136_GPU_recorded_service_ms": {
+    "state72": 1.166737,
+    "conv72": 0.133825
+  },
+  "clock_join": "NONE",
+  "declared_state_WG": {
+    "local": [
+      1,
+      4,
+      32
+    ],
+    "groups_per_layer": [
+      1,
+      4,
+      48
+    ],
+    "SLM_floats": 256,
+    "register_state_floats_per_thread": 32,
+    "barriers_per_accepted_step": 3
+  },
+  "candidate_state_WG": {
+    "local": [
+      1,
+      4,
+      32
+    ],
+    "groups_per_owner": [
+      36,
+      4,
+      48
+    ],
+    "new_layer_dimension": "group0; existing bodyhead=group2 unchanged",
+    "actual_resources": "UNKNOWN untilcompiled/runtime; same declared body is not universal resource/FP proof"
+  }
+}

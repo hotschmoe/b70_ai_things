@@ -1,0 +1,389 @@
+Actual independent review at experiment decision. Read NEW results. User wants GPUs used; skip redundant CPU/image/ISA certification and repeated timing baseline, retain strict state/work/health. Root has sourceGO from your previous reply and now S141 strict PASS, plans narrow defaultOFF main plus finite same-new-binary control/ON serving without another permission gate. Correct any actual source/experiment blocker only. Interpret S142 profiler perturbation; do not chase instrumented3.3ms as production cost. Recommend ONE next source-supported kernel/commit mechanism worth preparing parallel while serving; larger potential but finite strict GPU-first experiment. Be concise; no repeated broadpolicy/audit framework. Distinguish observation/inference/source-only. Preserve true RAM recovery and accepted-state/PLE ordering. No other model answer/tools or execution.
+
+ROOT FROZEN PACKET:
+qsa-indexer-three-steps-s141-curation-draft/20261016_strata_qsa_commit_group_oracle.md
+# S141: existing QSA three-step commit oracle
+
+CONFIG -> Compare three existing native_qsa_indexer_append calls with one
+existing native_qsa_indexer_append_steps call, stride1/n_steps3, position-base0.
+No main source change or new device arithmetic. Twenty-four disjoint states
+represent12 QSA layers by two owners, separately allocated per arm. Analytic
+text RoPE only, geometry128/4/64, capacity32, epsilon1e-6 and frequency base1e7.
+The same existing public indexer and rope object inputs were pinned before/after.
+This is a private synthetic-state oracle, not a model/weights/cache qualification.
+
+COMMAND -> One CPU-leased e41/noDRI/network-none/UID1000 four-CPU build compiled
+only the host fixture, reused two unchanged public objects and prelinked their
+device images. Build and tee exited0, wrapper rounded21s. Exact component
+receipts: host fixture9.987s, existing-object AOT1.428s, host link0.199s. No main
+or kernel-source compile, image/ISA certification or repeated build occurred.
+The frozen executable SHA is
+`635f49f2b9bcc73c96fc30245b760f932b5c982b7e49b1142eebe6cdadf42065`.
+
+V1 was unused. V2 added finite-float validation of complete returned state and
+held the SAME leases for uncertain create/inspect/wait/removal states instead
+of escaping to blind health. Exact delta/inverse, V1 manifest and complete V2
+source/scripts are retained. These were preexecution corrections, not a failed
+GPU attempt. Root read the original full source packet and narrow V2 delta.
+
+One card0 CPU-quiet window then ran strict cases before conditional timings,
+with fresh pinned pre/post card0 health, exact device/PCI pin, non-auto-removed
+owned container and normal wait/removal. No retry, force stop, reset or extra
+probe. Runtime prospective ldd is scoped as such, not actual mapped-library
+identity. No model file or main executable was read for this oracle.
+
+RESULT -> Native, analyzer, create/wait/rm and both health exits were individually
+recorded0. Root's whole leased window was rounded41s; the attached container
+start interval receipt was5.573246s, a different scope. Identity matched, final
+OOMKilledfalse/noError, full CID and NAME absent, closure PASS_PRIVATE_STRICT_AND_NORMAL_HEALTH.
+
+All12 base cases times initial/changed/restored A/B/A passed:36 strict phases,
+eager and captured, all96 complete state fields per phase, finite floats,
+guards and read-only operands. Starts0/2/3/7 and complementary accepted prefixes
+exercise position0, block crossings and rejected -1 suffixes. Each state first
+builds a chronological prefix, saves its device tail, applies all speculative
+mutations, then commits from identical speculative state after restoring the
+saved tail. Full tail/dead/pooled/block_pos comparisons retain stale speculative
+pooled bytes; no invented clearing or failed-state reset masks a mismatch.
+
+The completed analyzer indexed36 full159840B snapshots,5754240B total, left
+external. An additional cheap saved-SHA check verified every case has A0=A2
+and A0!=B1. No raw snapshot was re-read or rehashed for curation. This freshness
+check supplements the original complete-byte and immutable-operand gates.
+
+| Completed HOST captured-chain timing | Control three appends | Grouped steps |
+| --- | ---: | ---: |
+| Median of4 samples, us | 151.7345 | 87.9080 |
+| Source tail D2D restores per sample | 24 | 24 |
+| Source append calls per sample | 72 | 24 |
+
+Change of medians is-42.064593089%. All eight ABBA/BAAB samples remain retained:
+control151.579,155.547,150.888,151.890us; grouped88.048,87.768,87.527,88.057us,
+in their original interleaved order in comparison.json and leaf.stdout.
+Timing includes restores, graph submission and completed whole-chain work.
+It is not isolated kernel latency. There was NO actual DOT export or measured
+submission-count proof; the72/24 call figures are source counts. One process
+with nested samples does not establish population speed or serving savings.
+
+VERDICT -> Private finite complete-state contract passed and the tested grouped
+restore+append chain was descriptively lower in this window. A later default-OFF
+main selector and matched serving require their own source/build/runtime gates;
+no main change, promotion or serving forecast follows here. Preserve per-owner
+grouping, position-base0, tail snapshots, rejected-prefix semantics, PLE/history
+completion and unrelated GDN/conv/KV behavior. This tests a small staged-state
+contract, not full200k/four-conversation RAM eviction/recovery. Source and result
+indexes preserve exact provenance while leaving binaries and larger buffers
+external. Curation performed no compiler, GPU or model invocation.
+
+
+s142-independent-cpu-interpretation/findings.md
+# S142 independent interpretation: profiler bundle changes CPU brackets
+
+CONFIG -> SAME S133fe57 executable, all-OFF serving flags, nativework policy,
+107prompt/64output each fresh orderedC2 pair as S136. CPUring and TRACE1 remain;
+S142 removes unitrace injection/control/flush and the associated capture setup.
+One instrumented reference and one unprofiled diagnostic, fixed chronological
+order; this is not a serving candidate or significance/stability experiment.
+
+COMMAND -> Read existing CPU-comparison.json and both already-parsed small
+CPUanalysis.json records, original source bracket windows and closure records.
+No parser execution, rawtrace, binary/modelhash, build, GPU or new request.
+Root's actual corrected run closed0: start30.464s, collect3.893s, stop59.166s,
+analyze0.182s. Earlier nonexecutable-wrapper startup is retained separately;
+no native executable launched in that failed startup. Permissionfix was root's
+explicit byteidentical chmod-only setupcontinuation, not an unrecorded retry.
+
+RESULT -> All820declared markers present, dropped0, window0=0, explicit final
+window_end; full request/text/concatSSE/usage/nativework/nativewindows/paired/
+solo/capturelayout gates match S136. Both parsers independently select EXACT
+SAME16replaywindow IDs5..16 and19..22. Both fullnormalQUIT/fullhealth closed;
+no broad functional campaign was attempted in S142.
+
+| CPU steady-clock bracket, n16 | S136 unitrace median ms | S142 no unitrace median ms |
+| --- | ---: | ---: |
+| verify_submit | 3.2213425 | 0.067378 |
+| pair_submit | 1.9506695 | 0.046123 |
+| commit | 2.928889 | 1.585553 |
+| stage_PLE | 0.709177 | 0.6686695 |
+| pair_poll_and_PLE | 1.0989555 | 2.7100315 |
+| pair_queue_wait | 2.9238945 | 2.617585 |
+| whole_window (diagnostic only) | 57.1811135 | 46.4703525 |
+
+The verifier-submit ranges are disjoint in this sample:3.062910..3.532445ms
+versus0.062059..0.103747ms. Removing the profiler bundle accompanies a3.1539645ms
+median reduction in that CPU bracket (97.9084percent). This is strong practical
+reason to stop budgeting the instrumented3.221ms as ordinary baseline hostcost.
+It identifies a configuration-level perturbation, not an individual LevelZero
+API, eventreset implementation, device bubble or GPU3.317ms-gap cause.
+
+Source verify.cpp L3326-3347 brackets peer graph submission, primary graph
+submission/errorcheck and existing ext_oneapi_empty, AFTER stage_batch. It is
+not merely one API and excludes earlier PLE staging. mtp.cpp L2406-2448 brackets
+actual chosen launch path and ext_oneapi_empty; with ownerqueues/pairgraph OFF
+this is the existing componentgraph path, not a changed arithmetic kernel.
+
+Crucially, not every interval shrinks. Pairpoll+PLE rises1.611076ms while
+submission returns earlier. That bracket (mtp.cpp L2459-2468) contains prefetch
+callbacks and waiting for mapped first-depth outputs. It is not pure PLEcompute;
+an earlier bracket start can expose more dependency waiting. Do not call it a
+PLEregression or add/subtract independent medians to reconstruct a step.
+
+A direct combined interval from each saved window's existing records gives
+pair_submit_begin->pair_return median5.978394ms in S136 vs5.370319ms in S142
+(ranges5.951828..5.987546 vs5.341534..5.403742ms, n16each). This is computed from
+each window's endpoint timestamps before taking a median, not summed medians.
+It changes much less than the submit bracket alone. End-to-end behavior absorbs
+some earlier return into later polling/waiting. This is CPU-clock observation,
+not a GPU execution decomposition or clean serving throughput gain.
+
+Cross-window matched n14: pair_return->nextstage_PLE_begin0.0301475->0.022573ms;
+pair_return->nextverify_submit_begin0.759122->0.703531ms. Current unprofiled PLE
+staging remains about0.669ms. No CPU/peer/GPU-clock joins were made, and these
+numbers cannot be used to allocate S136's LEFT or device uncovered intervals.
+
+VERDICT -> Park queueprofiling-property builds and stop pursuing the traced
+3.3ms gap as a demonstrated production host bottleneck. Keep S136 operation
+names/shapes/order and source-conditioned service rankings, with explicit
+profiler perturbation warning on all timing/readiness interpretation. Use
+S142 as the current CPU-bracket diagnostic; prioritize the already-approved
+real QSA/kernel experiments. If future tracing is needed, keep it short and
+interpret against an unprofiled CPU control rather than optimizing tracing
+infrastructure or repeatedly collecting huge traces. No runtime override,
+synchronization removal, serving promotion or repeat campaign follows here.
+
+
+s136-left-commit-readiness/findings.md
+# S136 LEFT commit and readiness source closure
+
+CONFIG -> FIRST structurally compatible cycle3 of the one instrumented107/64 C2 pair; all optimization flags0. Current source48 layers, QSA every4:36 GDN and12 QSA. GPU/native/normal teardown and health closed. Analysis intentionally PARTIAL: original parser was interrupted only after useful bounded outputs saved; no complete-parser PASS. CPU/GPU/peer clocks UNJOINED; no physical idle or clean serving-latency claim.
+
+COMMAND -> Read retained5151-event timeline, current commit/indexer/GDN sources and root partial receipt only. No raw279MB trace parse, model payload, build or GPU. Exact source pins/ranges and selected event anchors accompany this note.
+
+RESULT -> The interval from prior C6 end to first C2 head140985 is11.600500ms. It contains2707 recorded GPU events. Same-clock coverage supplied by sibling s136-verifier-bounded-ranking: union4.880681ms, uncovered6.719819ms, EventReset-only2.135442ms. These are recorded coverage categories, not additive critical-path removable budgets.2338 EventReset records sum2.135442ms; origin and instrumentation perturbation UNKNOWN.
+
+-72 GDN-step commits =36 GDN layers *2 contiguous owner groups; recorded service sum1.166737ms. NOT24 layers *3 states. Kernel loads persistent128*48*128 floats per layer/slot into per-thread registers, REPLAYS accepted n recurrences in original order and stores ONE final state. Speculative forward does not retain a full recurrent-state checkpoint per proposed row. Selecting/copying the last accepted full state is unavailable here.
+-72 convolution commits =36*2 groups; service sum0.133825ms. Each channel first reads the three selected entries of [old history3 | accepted raw qkv], then writes all three. History122880B per layer/slot. This is copy-only; recurrent GDN step is not.
+-72 indexer appends =12 QSA layers *6 proposed rows; service sum0.172360ms. Host writes accepted positions for prefix n>=1 and -1 for rejected rows. All six calls occur; negative positions skip updates in device kernel. These counts are source-compatible structural attribution, not bound device-pointer proof.
+
+Readiness landmarks: barrier140506 ends at+5.3855ms; mapped-int copy140507 begins+7.1175ms (1.732ms uncovered). copy_indexed140750 ends+9.228ms; first D2D122880 begins+9.930ms (0.702ms uncovered). Two per-slot final_R copies of G*HC*N*4 with G3/HC4/N2560 are source-compatible with D2D122880 events140751/140752; no pointer proof. First seven-record MTP pre_round-compatible copy140753 only begins+10.15325ms, second140868+10.8885ms. Thus the first10.15ms is not all MTP depth0 arithmetic. capture_pre_round includes record_front(T) catch-up then single-row record_rest; attention-HC norm geometry is T3-compatible while latter HC is T1-compatible. Exact owners/T arguments remain unknown.
+
+Prefix/state obligations -> Before speculation each slot/layer saves its indexer tail. Commit restores that DEVICE tail snapshot, then replays accepted positions in chronological order into the same tail/dead/pooled/block_pos buffers; rejected positions stay -1. pooled entries after partial rejection can contain stale speculative values according to the existing contract: compare COMPLETE buffers to control, do not invent clearing. GDN state/conv must reflect accepted prefix only. PLE history selects snapshot n-1 and host updates accepted tokens only AFTER commit graph wait. Keep all KV writes, index bounds/capacity/position-base, snapshots, queue ordering, graph lifetime and completion-before-cache/snapshot/eviction readers unchanged. Tail snapshot copy name does not establish a host-RAM transfer. No prefix-RAM layout or restore change is proposed. Distinct slot labels alone do not prove disjoint buffer spans.
+
+VERDICT -> Existing public native_qsa_indexer_append_steps is the smallest different lead. Single-row append ALREADY delegates to steps(...pos_stride0,n_steps1...). The same append kernel supports stride1/n_steps3, preserves exact source arithmetic per valid row, and has an end-of-step WG barrier for n_steps>1. One call per layer/group after its unchanged tail restore would reduce72 indexer launches to24 for this geometry; n=3 includes rejected -1 positions. This is source-only: loop/barrier/compiler differences still require strict complete-byte eager/captured private oracle before any production selector. No speed or compiled-FP-equivalence claim. Larger GDN/conv cross-layer batching is deferred; their nonaliasing, recurrence/resources and lifetimes make a broader change than this existing API seam.
+
+Next finite discriminator -> Compare original three append calls with one existing steps call on two disjoint owner states, restored tails, accepted n1/2/3 and rejected -1 suffixes, positions crossing0 and4-cell block boundaries, initial/changed A-B-A eager/captured. Compare all tail/dead/pooled/block_pos bytes, guards and read-only inputs; include partial acceptance after speculative mutations and compare original restored-state trajectory. Failure drains/reports/stops; no clearing/retry. Only after strict pass, one balanced completed whole commit-indexer chain timing with identical restore, source flags and queue; no serving forecast. Production flag remains default OFF; implementation/run pending root review.
+
+Precision -> The earlier frozen j1 note used subtraction of large absolute timestamps (1311.75us). Relative timestamp+duration gives1311.688us; this sub0.1us cancellation correction does not change attribution. No all-MTP-small conclusion: LEFT readiness and verifier-side uncovered intervals remain distinct unknowns.
+
+
+s136-verifier-bounded-ranking/findings.md
+# S136: verifier ranking after full saved-cycle reconciliation
+
+CONFIG -> One all-OFF instrumented 64-token C2 request pair, FIRST retained
+source-compatible primary-device cycle3, 5151 bounded events, no truncation.
+The original whole analyzer exited -2 after saved artifacts; global coverage was
+not completed. This note does not turn that attempt into an analyzer PASS.
+
+COMMAND -> `python3 s136-verifier-bounded-ranking/derive.py` reads ONLY the
+5,255,606-byte saved cycles.json, asserts its existing SHA, and sweeps sorted
+interval endpoints. Actual terminal0, 0.093 seconds. No raw trace, CPU/peer clock
+join, model/ELF reads, build, GPU, decoder or model consultation. Source reads
+are the unchanged verifier and existing S125/S44 small evidence.
+
+RESULT -> The missing budget is real in the retained timeline, but it is not
+all hidden MTP arithmetic. Do not select another kernel by treating j1 as the
+whole MTP path or by treating absent trace events as physical idle.
+
+| Same-clock interval | Span ms | Recorded union ms | Uncovered ms |
+| --- | ---: | ---: | ---: |
+| Previous C6 end -> first C2 start (LEFT) | 11.600500 | 4.880681 | 6.719819 |
+| First C2 vocabulary head | 1.209583 | 1.209583 | 0 |
+| First head end -> both selects complete | 0.289479 | 0.276038 | 0.013441 |
+| Both selects -> second C2 start (j1 compatible) | 1.311688 | 1.095440 | 0.216248 |
+| Second C2 vocabulary head | 1.207708 | 1.207708 | 0 |
+| Second head end -> both selects complete | 0.289479 | 0.274789 | 0.014690 |
+| Both selects -> following C6 start (verifier compatible) | 38.569313 | 34.849607 | 3.719706 |
+| Following C6 vocabulary head -> saved cycle end | 2.255500 | 2.255416 | 0.000084 |
+| TOTAL | 56.733250 | 46.049262 | 10.683988 |
+
+Offsets use saved primary-device timestamps relative to cycle start. Adding
+short durations after subtraction avoids rounding at epoch-sized floats. The
+0.062/0.063 us differences from earlier 1.311750/38.569250 arithmetic, and the
+0.084 us final suffix, are timestamp precision, not extra operations.
+
+LEFT includes 2338 `zeCommandListAppendEventReset` intervals with 2.135442 ms
+reset-only coverage, plus previous-window commit kernels and the depth0 fronts.
+The largest absent-record spans are 1.731980 ms (+5.385520 -> +7.117500) and
+0.702063 ms (+9.227937 -> +9.930000). Tooling origin/perturbation of resets is
+UNKNOWN. The forensic agent owns the source-conditioned LEFT call mapping;
+see sibling `s136-headfree-bounded-attribution`. It is incorrect to allocate
+LEFT wholesale to MTP forwards.
+
+The verifier-compatible region begins at second selects141201/141202 ending
+cycle+15.908437 ms. Its FIRST retained event is ep_bump141540 at +19.225500 ms:
+3.317063 ms with no retained primary event. Beyond that first gap, total absent
+coverage is another 0.402643 ms. This is a stronger readiness question than
+blindly calling the entire 38.569 ms arithmetic. No CPU cause, peer wait cause,
+owner identity, GPU stall or hardware-idle conclusion follows from this clock.
+
+## Actual verifier operation ranking
+
+These are sums of measured operation durations inside ONE saved interval,
+not medians, disjoint critical-path costs or attainable speedups. Different
+families overlap and roles remain source-conditioned.
+
+| Family | Calls | Service ms | Coverage with only this family active ms |
+| --- | ---: | ---: | ---: |
+| HC norm/down/reduce/up | 388 | 6.159098 | 6.158148 |
+| Routed GU | 48 | 4.411336 | 4.411067 |
+| Q6 dense | 71 | 3.818719 | 3.767660 |
+| QSA | 480 | 3.448338 | 3.447656 |
+| Routed down | 48 | 3.158937 | 3.158897 |
+| EP wait | 48 | 3.082584 | 1.160050 |
+| Q4 dense | 45 | 2.313627 | 2.066950 |
+| GDN | 180 | 1.505239 | 1.505117 |
+
+Other MMVQ service5.780543 ms and other operations3.096897 ms are retained in
+facts.json. Across all families, multi-family coverage1.923833 ms is explicitly
+kept unallocated. In particular EP wait largely overlaps useful work; removing
+its 3.083 ms duration is not an available 3.083 ms saving.
+
+The largest Q6 shape rows are native_q6k_wide_a2 C6 grid640 (29 calls,
+1.752695 ms) and grid2560 (14 calls,1.154160 ms), together2.906855 ms. Native
+RPW4 grid maps these to M2560 and M10240. Existing S41/S44 tensor headers map
+N6144/M2560 to attention/GDN output-compatible projections and N2560/M10240 to
+qkv-compatible projections. Names/grid do NOT prove each event's tensor.
+Other Q6 shapes account for0.911864 ms; do not silently widen the candidate.
+
+## Source seam and one candidate disposition
+
+Pinned verify.cpp e97ce93a... (full SHA/pins below) shows actual dependencies:
+HC read produces `mixed_` and, when fused quantization is selected, `xq_`;
+GDN qkv consumes xq_ and writes qkv_L_ (L1013-1030). GDN recurrence/norm
+produces y_/optionally xq_; output projection consumes it and writes bo_
+(L1064-1070). QSA attention gate produces attn32_, quantization writes xq_,
+output projection writes bo_ (L1278-1283). HC half1 reads bo_ with apply=true
+and produces mixed_/optionally nat_xq_ (L1289). Routed GU/down consumes nat_xq_,
+uses hit_scratch_, writes parts_; EP return precedes combined consumption
+(L1474-1498). Existing quant-producing fusion means there is not always a
+separate activation-quantization launch to remove.
+
+ONE distinct kernel mechanism remains the parked S125 exact Q6 pre-expansion
+plus multi-output signed-int8 DPAS. It is broader than the closed Q6 A4/load
+shuffle, packed-Q6, GRF/SG tuning and single-SG serial-K DPAS. It preserves each
+native-lane pair of dot16 results and FP parenthesization, uses parallel native
+K partitions, then reproduces the original XOR tree in a second kernel.
+However it adds offline-format ownership, two-launch dependency, INT32 tile
+SLM/barrier, global32-partial scratch and extra retained weight memory. It is
+not a small unproven direct `K32 dot` replacement.
+
+For ONE real S44 `blk.3.attn_output.weight` N6144/M2560/type14, original bytes
+12,902,400; pre-expansion adds16,834,560 bytes; native-lane scratch1,966,080
+bytes. Full29-output deployment alone adds488,202,240 bytes, before scratch;
+current serving headroom is UNKNOWN. Original bytes must remain for existing
+prefill/fallback. N2560/M10240 uses7,864,320 scratch bytes. This materially
+raises integration cost relative to a single runtime operand change.
+
+Cheapest meaningful kernel discriminator IF selected later: ONE representative
+S44 output shape, production GPU-produced Q8 rows, direct public Q6 control,
+then preexpanded candidate plus final native-XOR kernel counted together.
+Compare exact signed-code/scale/d extraction, per-native-lane INT32 dots and
+all consumed FP partials/final output, guards/read-only/tails, A/B/A freshness;
+only then completed-two-kernel timing. Preserve native half-scale products,
+pair-parenthesized FP update/K order and XOR16/8/4/2/1; strict mismatch stops.
+No broad shape sweep, no all-model packing, no compiled-ISA framework before
+a private GPU discriminator. Existing S44 offsets are references, not freshly
+read or rehashed model identity. No candidate source implementation is
+prepared here: S125's tile/reduction and layout are still source feasibility.
+
+VERDICT -> Rank verifier dense work as a real larger pool, but DO NOT yet
+select S125 production work or a paired-forward rewrite from this record.
+The largest unresolved end-to-end lead is the same-clock LEFT6.720 ms and
+post-pair3.317 ms absent-record readiness, with profiler-reset perturbation
+unresolved. Root should choose whether to explain those source/lifecycle
+boundaries first or deliberately parallelize ONE private Q6 output probe.
+Existing HC/GU mechanisms and rejected tuning are not reopened by this census.
+No serving forecast, physical-idle inference or claim of a current GPU win.
+
+
+ROOT scope: production candidate verify.cpp ONLY flagSTRATA_QSA_COMMIT_GROUP_STEPS defaultOFF, latched beforecapture; apply groupedsteps ONLY contiguousgroupLen==3, allothergroupsoldloop. Private S141 onlyruntime n_steps3: acceptedkeep1..3 is notn_steps2; this exact3 guard avoids broadened numericalclaim/extra privateGPU. Sameexistingkernel rawrowsstrideD,posstride1,pos_base0; tailrestore/GDN/conv/KV/PLEhist/errorpaths untouched. Hostmarkeruniqueidentifier avoidsS137siblingstaticnamebug. Sourcepatchnotyetapplied/mainbuildPENDING; upcoming actualdryplanthenincremental verifyTU+enginearchive+link (recordACTUALplan). Offlinecachedsmallbuild nooptionalISA prerequisite. ActualsourceGO alreadyconditionalstrictPASS. S144freshsameNEWbinaryONLYgroupflag0/1; C2/C6/othercandidates0, exactexistingwarm+3timedwork gates/functionals/fullnormalposthealth. Full200k4chatcampaign deferred untilcombinedwinner, notwaived.
+S140originalcheckerHOLDmissedstdout loggerline; independent savedstdout explicitSelecteddevice/platformLevelZeroV2/B70 +stderrV1defaultskip provesV2 forprivateprocessonly, no mainqueueprofiling/perfproof. Queueproperty/inorder-knob experiments PARKED after S142.
+Potential next audit: GDN commits72steps=36layers*2owners, ~1.167ms service underinstrumentation, nativelyCPUcommitwhole1.586ms; existingstate-onlyreplaysacceptedrecurrence writesONEfinalstate, not3copies. Could onebatchedpublickernel acrossindependentlayer/ownerparameters preserveper-cellFPledger andacceptedprefix, versus selectinglaststateimpossible? NeedsourceauditthenfiniteexactGPUoracle, avoid claimingallstatecommitscopyonly orassumefullstatestored. OtherlargerpoolsverifierHC6.16/routed7.57/Q6dense3.82msinstrumentedonly; parkedQ6preexpansionadds488MB+2launches/scratch. Newkernelchoice musthonor realcriticalpath nottracegapcause. Rootwilldecide sourceonly beforeanynewimplementation.
+S142firststartupPermissionErrorwrappernot+x BEFOREnativeEXEC preservedfailed-startup-permission-1; rootchmod664->775byteidentical explicitcorrectedsetup oneactualpair, nothiddenbenchmarkretry. Actualstart30.464/collect3.893/normalstop59.166/analyze.182s all0, fullCIDNAMEgone/bothcard+compiledcollectivehealth0. BothCPUrings820/0drops, same16replayIDs, requestsoutputs/nativework/capturesmatch. No CPUGPUclockjoin/idle/servinggainclaim.
+
+ACTUAL S143 SOURCE CANDIDATE ROOT FULLREAD:
+
+===== README.md =====
+# S143 default-OFF three-row QSA commit grouping (source only)
+
+CONFIG -> S141 private passed only runtime n_steps3 (accepted prefix1/2/3),36 eager/captured A/B/A phases, full state/guards/finite/read-only, normal health. Production eligibility is therefore groupLen==3 ONLY. All other lengths preserve old loop. This does not generalize n_steps2/4/5/6 from accepted-prefix tests.
+
+COMMAND -> External source candidate only; no live edit/apply/build/GPU. Root applies candidate.patch after complete source review and S142 closure. verify.cpp ONLY: process-constant const bool reads existing env_on("STRATA_QSA_COMMIT_GROUP_STEPS") before capture. Unset/'0' OFF; '1' ON. For eligible3rows, existing append_steps raw first row, commitpositions+2, stride1,n_steps3,base0. Tail restore remains BEFORE branch. All gamma/epsilon/buffers/shapes/capacity/RoPE/queue arguments unchanged. No device code or header/parser implementation changes.
+
+RESULT -> Projected verify SHA c28de288061beae19949982ff3de7cf0a54fcae4d23f61e3a0374f90aeb435c6 from original e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2. OFF else body is exact original after removing4 added indentation spaces. Full inverse patch restores original bytes. GDN,position records,PLE,KV,snapshots,queue/wait,eviction/restore contracts unchanged. Three-row rejected positions remain -1 and device loop skips them; complete stale pooled/dead/blockpos side effects retained.
+
+HOST marker exact: strata QSA commit grouped steps: enabled=1 host-selection-only
+
+Unique static identifier qsa_commit_group_steps_logged avoids the previously observed sibling logged-name collision. Emits once only at first selected three-row capture (startup allowed); OFF emits none. This proves host selection only, not per-layer/owner shapes, graph execution, or all GPU dispatch. Harness needs fresh sameNEWbinary OFF+ON, no S139/S142 crossbinarycontrol substitution; all other experimental flags0.
+
+VERDICT -> Source ready for root review, main application/build PENDING. Existing configured Ninja target should require exactly verify.cpp.o,libstrata_engine.a,strata IF no other dependency changed; root actual dryplan must establish this, no assumed three-action PASS. No configure/kernel-archive/mainbackup/cachewarm/ISA certification. Existing stable offlinecache/precise/e41/BMG-G31/SG32 flags and native/HC/attention sources preserved. Expected build recipe separately supplied. Main numerical/output/work/capture/health remains to qualify actual integration. S141 private whole-chain timing is no serving forecast.
+
+===== candidate.patch =====
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -97,6 +97,8 @@
+     const char* e = std::getenv(name);
+     return e != nullptr && e[0] != 0 && e[0] != '0';
+ }
++// S143: process-constant before capture; only privately checked three-row groups.
++const bool g_qsa_commit_group_steps = env_on("STRATA_QSA_COMMIT_GROUP_STEPS");
+ #if defined(STRATA_USE_HIP)
+ const bool g_coherent = env_on("STRATA_VERIFY_COHERENT");
+ const bool g_doorbell_store = env_on("STRATA_DOORBELL_STORE");
+@@ -3124,11 +3126,24 @@
+                     copy_from_mapped(st.idx_tail, tail_snap_b_ + ((size_t) rows[first] * nQ + qsa_index) * TS,
+                                      TS, cs_);
+                     const QsaIndexerBuffers ib{st.idx_tail, st.idx_dead, st.idx_pooled, st.idx_block_pos};
+-                    for (int u = first; u < t; ++u)
+-                        native_qsa_indexer_append(idx_raw_L_ + (size_t) (qsa_index * MT + u) * ID,
+-                                                  commitb_ + (size_t) rows[first] * CB + 2 + (u - first),
+-                                                  0, (const float*) wikn->data, EPS, ib, s, st.max_cells,
+-                                                  rope_scaling(), cs_);
++                    if (g_qsa_commit_group_steps && t - first == 3) {
++                        static const bool qsa_commit_group_steps_logged = [] {
++                            std::fprintf(stderr, "strata QSA commit grouped steps: enabled=1 host-selection-only\n");
++                            std::fflush(stderr);
++                            return true;
++                        }();
++                        (void) qsa_commit_group_steps_logged;
++                        native_qsa_indexer_append_steps(idx_raw_L_ + (size_t) (qsa_index * MT + first) * ID,
++                                                       commitb_ + (size_t) rows[first] * CB + 2,
++                                                       1, t - first, 0, (const float*) wikn->data, EPS, ib, s,
++                                                       st.max_cells, rope_scaling(), cs_);
++                    } else {
++                        for (int u = first; u < t; ++u)
++                            native_qsa_indexer_append(idx_raw_L_ + (size_t) (qsa_index * MT + u) * ID,
++                                                      commitb_ + (size_t) rows[first] * CB + 2 + (u - first),
++                                                      0, (const float*) wikn->data, EPS, ib, s, st.max_cells,
++                                                      rope_scaling(), cs_);
++                    }
+                 }
+                 ++qsa_index;
+             }
+
+===== projection.json =====
+{
+  "source_path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp",
+  "original_sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2",
+  "candidate_sha256": "c28de288061beae19949982ff3de7cf0a54fcae4d23f61e3a0374f90aeb435c6",
+  "source_changes": "process-constant bool after existing env_on; ONLY THREE-row QSA commit host branch",
+  "OFF_else_body_dedent4_exact": true,
+  "inverse_replacements_exact": true,
+  "flag": "STRATA_QSA_COMMIT_GROUP_STEPS",
+  "ON": "1",
+  "OFF": "0 or unset",
+  "HOST_marker": "strata QSA commit grouped steps: enabled=1 host-selection-only",
+  "marker_scope": "first selected THREE-row capture only; startup allowed; no per-layer/owner/GPU-dispatch proof",
+  "unchanged": "all other verify code,tail restore,position records,PLE,GDN,KV,queue/wait,source kernel bodies and header",
+  "eligibility": "groupLen==3 ONLY; every other group length old loop"
+}

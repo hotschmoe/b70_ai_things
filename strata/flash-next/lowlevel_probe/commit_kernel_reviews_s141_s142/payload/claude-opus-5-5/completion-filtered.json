@@ -1,0 +1,32 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 53.78712227300275,
+  "launch_exception": null,
+  "source_packet_sha256": "3ebaac494891deb6a43b53db137eef116ba228c0130fd3646271e0330cfe6404",
+  "source_packet_unchanged": true,
+  "parse_errors": [],
+  "retries": 0,
+  "terminal_results": [
+    {
+      "type": "result",
+      "subtype": "success",
+      "terminal_reason": "completed",
+      "stop_reason": "end_turn",
+      "is_error": false,
+      "api_error_status": null,
+      "num_turns": 1,
+      "session_id": "c26cbc95-bbed-461b-b165-8adee1464b9e"
+    }
+  ],
+  "filter_scope": "Cumulative result/modelUsage/usage/cost/duration_api fields omitted; actual call elapsed_s/model/session/terminal evidence retained. Full originals external."
+}

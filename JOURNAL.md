@@ -25737,3 +25737,22 @@ productionhostcost. NoCPUGPUjoin/physicalidle/APIcause/servinggainclaim.
 Useexistingtraceforshapes/order withtiminglimits; rootreviewed strict
 stateGPUcandidate/mainworkcontinues. See
 docs/20261016_strata_unprofiled_cpu_ring.md.
+
+
+## 2026-10-16 S141/S142 actual model reviews and GDN port source lead
+
+CONFIG -> Frozen31348B packet3ebaac49 includes strictQSAprivatePASS,
+matchedunprofiledCPUdiagnostic andexactn3S143mainpatch.
+COMMAND -> Actualownsessiontools-disabled Opus5.5/Fable5.1 onceeach;
+no othermodelanswers or addedruntimeapprovalgate.
+RESULT -> claude-opus-5-5 53.787122s/claude-fable-5-1 54.718731s,
+exit0/respondingIDsmatch/packetunchanged, rootFULLREADbothanswers.
+BothGO n3source; analyticROPE0explicit bothS144actualenv. Bothpropose
+GDNbatching; sourceauditfindsexistingCUDA2kernelsPEROWNER=4total,
+SYCLportmissing, exactcurrentstatebody reusefeasible/pinsretained.
+VERDICT -> Rejectmodelgapartefact/GPUrealcost/general46msclaims:
+S142CPUbundleperturbationonly/nojoin/idle/APIcause. Rejecty_dummy
+extraallocation: actualstate-onlybranchneverreads/writesy/z/gamma.
+PrivateGDNsourceprepS145selectedafteraudit, no implementation/runtime
+PASS. MainS144runtimepending, alltargets/S30RAMscope unchanged. See
+docs/20261016_strata_s141_s142_review_decisions.md.
