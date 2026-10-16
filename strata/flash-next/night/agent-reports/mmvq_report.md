@@ -1,5 +1,11 @@
 # mmvq: dense small-batch MMVQ toward bandwidth roofline (night 2026-10-16)
 
+ROUND 2 (latest): engine /mnt/vm_8tb/b70/results/night-20261016/builds/strata-mmvq-r2b (sha256 a4b0ff80a16e197e...),
+patch /mnt/vm_8tb/b70/results/night-20261016/agents/mmvq.patch (round 1 + round 2, vs base e1b7ee8a).
+New flag STRATA_NIGHT_MMVQ2=1 (implies STRATA_NIGHT_MMVQ=1; one stderr line). Round-1 behaviour (STRATA_NIGHT_MMVQ=1
+alone) is unchanged. Round-1 serving A/B by the orchestrator: C1 107.2 -> 131.7 tok/s, C2 63.9 -> 73.1 tok/s/stream.
+See "Round 2" at the end.
+
 Status: v2 (supersedes v1). Flag: `STRATA_NIGHT_MMVQ=1` (default off; one stderr line when enabled).
 Engine: /mnt/vm_8tb/b70/results/night-20261016/builds/strata-mmvq-v2 (sha256 4491772b10e4a8cc...)
         (v1 = strata-mmvq-v1, Q4_K/Q5_K/Q6_K only, sha256 9c4b0f877310f284...)
@@ -154,3 +160,72 @@ not done tonight.
 - Probe: mmvq_work/probe/{kern_base.hpp (verbatim serving kernels), kern_night.hpp, mmvq_probe.cpp, build.sh,
   run.sh, loopmix.py}; ISA dumps: ISA=1 ./build.sh <src> <out> -> probe/isa_<out>/.
 - Engine A/B: nl_wt.sh ninja mmvq night_mmvq_bench; mmvq_work/run_engine_bench.sh <types> <ncols> [shape].
+
+
+# Round 2 (STRATA_NIGHT_MMVQ2=1)
+
+## What it adds
+1. Software-pipelined persistent KREG (night_pf_kernel): one group per resident slot (Xe-cores x (32 or 64)/threads
+   per group), the next tile's raw weight loads issued before this tile's decode + dots; same lanes/butterfly/SLM
+   order as round 1 (bitwise equal to round-1 KREG at the same NCOLS/R). Used for n_in <= 4096 only:
+   Q4_K/Q5_K nc5-8 R4 GRF256, nc9-12 R2 GRF256; IQ4_XS nc5-6 R2 GRF128, nc7-8 R4 GRF256, nc9-16 R2 GRF256;
+   Q6_K nc6-8 R2 GRF256 with 4-byte-aligned raw loads (needs matrix base % 4 == 0 and an even block count per row;
+   else round 1). The 6144-wide projections keep round 1 (12-thread groups fit badly at GRF256; no win measured).
+2. ncols 9-16 for Q4_K/Q5_K/Q6_K/IQ4_XS (incl. head): direct where measured (above), otherwise two calls of
+   ceil(n/2) + floor(n/2) columns. The night hooks now run before validate_shape (which still caps the
+   original kernels at 8).
+3. IQ3_S dense (type 21, previously mmvq_multi_nc<21>): KREG lane = sub-block, iq3s grid in a per-group SLM table,
+   sign masks by shifts; tiles R2 for n_out <= 1024, else nc1-2/5-6 R4, nc3-4/7-8 R8 GRF256 (from the probe2 helper,
+   mmvq_work/probe2/, verbatim baseline kern_iq3s_base.hpp).
+4. IQ4_NL with n_in <= 1024 (shared-expert down 640 -> 2560): one lane per 32-value block, R4, select-chain codebook.
+5. Q8_0 (MTP drafter): NOT changed - probe2 measured 0.94-1.17x (already 63-91% of roofline).
+
+## E8 engine A/B round 2 (night_mmvq_bench now times orig / level 1 / level 2; above 8 columns orig and level 1 are
+two calls of 8 + rest; card 1, same protocol; raw: mmvq_work/engine_ab_r2{,_c,_d,_q6}.txt)
+
+us per call (orig / lv1 / lv2), % = lv2 of 608 GB/s:
+
+| case | nc5 | nc6 | nc8 | nc12 | nc16 |
+|---|---|---|---|---|---|
+| Q4_K qkv 2560x10240 | 86.3/37.7/34.0 | 105.1/40.3/35.3 (69%) | 133.8/56.0/37.5 (65%) | 203/80.2/56.3 | 258/99.6/67.9 |
+| Q4_K gate 2560x6144 | 54.6/24.9/21.9 | 64.9/26.2/22.8 (64%) | 80.6/36.1/24.3 (60%) | 122/53.6/35.2 | 155/64.1/42.2 |
+| Q4_K attn_q 2560x12288 | 104/44.8/40.1 | 127/47.7/41.4 (70%) | 160/66.2/43.9 (66%) | 246/96.1/68.1 | 312/121/80.6 |
+| Q5_K gate | 62.5/29.7/28.1 | 70.1/33.6/27.6 (64%) | 84.8/40.9/33.5 | 129/61.2/37.9 | 160/71.9/56.6 |
+| Q5_K attn_q | 121/54.1/52.2 | 137/62.3/51.1 (70%) | 167/75.4/59.8 | 261/111/72.7 | 324/139/108 |
+| Q5_K HEAD 2560x248320 | 2266/997/957 | 2632/1160/948 (76%) | 3316/1383/1036 (69%) | 5360/2290/1352 | 6667/2767/2043 |
+| Q6_K gate | 51.3/30.7/31.0 (lv1 path) | 56.1/36.2/33.6 (63%) | 97.7/40.3/35.2 (60%) | 148/64.6/57.2 | 200/76.0/59.6 |
+| Q6_K qkv / attn_q nc6 | | 86.1/56.4/54.5, 105.9/69.4/67.1 | 160/63.8/57.4, 194/76.5/69.4 | | |
+| IQ4_XS qkv | 56.5/40.7/36.5 | 65.4/48.6/39.6 (58%) | 78.5/55.0/44.4 | 138/88.7/52.9 | 164/104/56.4 |
+| *_K / IQ4_XS out 6144x2560 | lv2 = lv1 (round-1 tiles) | | | | |
+
+IQ3_S (orig -> lv2; lv1 = orig): gate 2560x6144 nc1 61.6->52.4, nc2 67.7->57.0, nc4 72.7->67.6, nc6 84.7->67.5,
+nc8 90.9->72.6; out 6144x2560 nc1 87.5->50.7, nc6 110.3->68.9; qkv nc6 139->109; attn_q nc6 167->127;
+sh_gu 2560x640 nc6 12.4->11.0; kv nc6 10.3->9.1. Still only 15-23% of roofline (issue/latency-bound: ~180
+instructions per row-thread, 8 dependent SLM grid gathers; probe2 report).
+IQ4_NL 640x2560 (orig -> lv2): nc1 8.82->6.59, nc2 9.60->6.71, nc4 11.42->7.12, nc6 13.39->8.54, nc8 16.07->9.19.
+
+Errors (lv2 vs original): max abs <= 1.2e-4 on outputs up to ~620 (K-quants), IQ3_S <= 9.5e-6 (outputs ~50),
+IQ4_NL <= 1.9e-6; max rel <= 7e-5; no non-finite values. Level 1 vs level 2 at nc <= 4 are identical paths.
+
+## Cost per extra column (ncols 9-16, for a 12-16 row verify window)
+Measured lv2, us: Q4_K gate nc8 24.3 -> nc12 35.2 -> nc16 42.2 (+2.7 us/col to 12, +1.8 us/col to 16);
+Q5_K head 1036 -> 1352 -> 2043 (16 = two calls of 8); Q6_K gate 35.2 -> 57.2 (6+6) -> 59.6 (8+8);
+IQ4_XS qkv 44.4 -> 52.9 -> 56.4 (direct). One 12-row call vs two 6-row windows: Q4_K gate 35.2 vs 45.6 (-23%),
+Q5_K head 1352 vs 1896 (-29%), Q6_K gate 57.2 vs 67.2 (-15%), IQ4_XS qkv 52.9 vs 79.3 (-33%).
+Direct KREG above 12 columns runs out of registers (activations 10-12 regs/col/lane): nc16 direct d2g was 2-3x
+slower than two calls (probe r2_wide.txt), so 13-16 columns are split.
+
+## Estimated C2 effect of round 2 on top of round 1 (card 0, trace census x lv1->lv2 nc6 ratios; not measured
+in serving): Q5_K head C6 -0.21 ms, Q4_K/Q5_K dense -0.15, Q6_K -0.1, IQ4_XS -0.28, IQ3_S ~-0.4 (1.93 -> ~1.53),
+IQ4_NL shared down -0.21 (0.58 -> ~0.37): ~-1.3 ms per C2 cycle. C4 depth1 (nc8) gains more (Q4_K nc8 -32%,
+head nc8 -25%, Q6_K nc8 -10%, IQ4_XS nc8 -19% vs level 1).
+
+## E9 negative / parked
+- Q6_K pipelined with 16-byte-aligned raw chunks (A2): slower (spills, select-heavy funnel), not used.
+- Q6_K pipelined at nc5: slower than round 1 (excluded); 6144-wide projections: no pipelined win.
+- One open oddity: at level 2 an (8 pipelined GRF256) + (4 round-1 GRF128) column split ran ~25% slower than the
+  sum of its parts (Q6_K nc12); splitting into equal halves (6+6, both pipelined) fixed it. Not root-caused.
+
+## Flags summary
+STRATA_NIGHT_MMVQ=1: round 1 (Q4_K/Q5_K/Q6_K/IQ4_XS, head, ncols 1-8). STRATA_NIGHT_MMVQ2=1: round 1 + round 2
+(pipelined nc5-12, ncols 9-16, IQ3_S, IQ4_NL<=1024 wide). Both default off.

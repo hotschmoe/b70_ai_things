@@ -1,0 +1,43 @@
+diff --git a/sycl/src/kernels/cuda/native_mmvq.dp.cpp b/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+index 0cbb7dcb..43ad77b7 100644
+--- a/sycl/src/kernels/cuda/native_mmvq.dp.cpp
++++ b/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+@@ -2269,6 +2269,11 @@ inline int night_level() {
+ }
+ inline bool night_mmvq_on() { return night_level() >= 1; }
+ inline bool night_mmvq2_on() { return night_level() >= 2; }
++// night A/B: STRATA_NIGHT_MMVQ2_MASK bit0 pipelined/9-16 col KREG, bit1 IQ3_S, bit2 IQ4_NL (default all)
++inline int night_mmvq2_mask() {
++    static const int m = [] { const char* e = std::getenv("STRATA_NIGHT_MMVQ2_MASK"); return e ? std::atoi(e) : 7; }();
++    return m;
++}
+ 
+ template <int O, int N, int P>
+ __dpct_inline__ void night_tsum(float (&v)[P], const sycl::sub_group& sg, int lane) {
+@@ -2775,7 +2780,7 @@ void night_run(const void* weights, const void* x_q8_1, float* y, int n_in, int
+ }
+ template <typename F>
+ bool try_night(const void* weights, const void* x_q8_1, float* y, int n_in, int n_out, int ncols, void* stream) {
+-    const bool lv2 = night_mmvq2_on();
++    const bool lv2 = night_mmvq2_on() && (night_mmvq2_mask() & 1);
+     if (!night_mmvq_on() || ncols < 1 || ncols > (lv2 ? 16 : 8) || n_out <= 0 || n_in <= 0 || n_in % QK != 0 || n_in > 32768) return false;
+     if ((std::is_same_v<F, NightQ4K> || std::is_same_v<F, NightQ5K>) && (reinterpret_cast<uintptr_t>(weights) & 15u) != 0) return false;
+     if (std::is_same_v<F, NightIQ4XS> && (reinterpret_cast<uintptr_t>(weights) & 7u) != 0) return false;
+@@ -3059,7 +3064,7 @@ void night_iq3s_dispatch(const void* w, const void* x, float* y, int n_in, int n
+     else launch_night_kreg2<F, NCOLS, 8, 256>(w, x, y, n_in, n_out, s);
+ }
+ bool try_night_iq3s(const void* w, const void* x, float* y, int n_in, int n_out, int ncols, void* stream) {
+-    if (!night_mmvq2_on() || !w || !x || !y || !stream || ncols < 1 || ncols > 8 || n_out <= 0 || n_in <= 0 ||
++    if (!night_mmvq2_on() || !(night_mmvq2_mask() & 2) || !w || !x || !y || !stream || ncols < 1 || ncols > 8 || n_out <= 0 || n_in <= 0 ||
+         n_in % QK != 0 || n_in > 32768 || (reinterpret_cast<uintptr_t>(w) & 1u) || (reinterpret_cast<uintptr_t>(x) & 3u)) return false;
+     const auto s = strata::q_of(stream);
+     switch (ncols) {
+@@ -3075,7 +3080,7 @@ bool try_night_iq3s(const void* w, const void* x, float* y, int n_in, int n_out,
+ }
+ // IQ4_NL: only the measured class (n_in <= 1024, the 640-wide shared-expert down); R=4 GRF128 at every width
+ bool try_night_iq4nl(const void* w, const void* x, float* y, int n_in, int n_out, int ncols, void* stream) {
+-    if (!night_mmvq2_on() || !w || !x || !y || !stream || ncols < 1 || ncols > 8 || n_out <= 0 || n_in <= 0 ||
++    if (!night_mmvq2_on() || !(night_mmvq2_mask() & 4) || !w || !x || !y || !stream || ncols < 1 || ncols > 8 || n_out <= 0 || n_in <= 0 ||
+         n_in % 32 != 0 || n_in > 1024 || (reinterpret_cast<uintptr_t>(w) & 1u) || (reinterpret_cast<uintptr_t>(x) & 3u)) return false;
+     const auto s = strata::q_of(stream);
+     using F = NightIQ4NL1;

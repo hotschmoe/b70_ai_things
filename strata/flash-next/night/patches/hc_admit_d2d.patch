@@ -1,0 +1,466 @@
+diff --git a/include/strata/core/conversation_snapshot.hpp b/include/strata/core/conversation_snapshot.hpp
+index 80b1de8b..6721a425 100644
+--- a/include/strata/core/conversation_snapshot.hpp
++++ b/include/strata/core/conversation_snapshot.hpp
+@@ -44,6 +44,11 @@ bool conversation_session_read_limits(SessionReadLimits& limits, const SessionSt
+                                       const QsaState& draft, uint64_t max_tokens, uint64_t max_checkpoints,
+                                       std::string& error);
+ 
++// night-lab STRATA_NIGHT_ADMIT_D2D (generate.cpp's slot admission): conversation_kv_save(from) + conversation_kv_restore(to)
++// as device-to-device queue copies (the same checks, bytes and residency fix-ups); one wait at the end when sync_end.
++bool conversation_kv_copy_device(const QsaState& from, const QsaState& to, const ModelGeometry& g, int64_t upto,
++                                 bool include_index, std::string& error, bool sync_end = true);
++
+ struct ConversationStateSizes {
+     size_t gdn = 0, ple = 0, tail = 0, dead = 0, block_pos = 0;
+ };
+@@ -60,6 +65,14 @@ bool conversation_checkpoint_save(ConversationCheckpoint& checkpoint, const Sess
+                                   const ModelGeometry& g, std::string& error);
+ bool conversation_checkpoint_restore(const ConversationCheckpoint& checkpoint, SessionState& session,
+                                      const ModelGeometry& g, std::string& error);
++/// night-lab STRATA_NIGHT_ADMIT_D2D: checkpoint_save(ck{ids}, from) + checkpoint_restore(ck, to) as device-to-device
++/// queue copies (the same checks, bytes, pooled row and ple_prev); one wait at the end when sync_end.
++bool conversation_checkpoint_copy_device(const SessionState& from, SessionState& to, const ModelGeometry& g,
++                                         const std::vector<int32_t>& ids, std::string& error, bool sync_end = true);
++/// STRATA_NIGHT_ADMIT_VERIFY: `session` holds what conversation_checkpoint_restore(checkpoint, session) writes
++/// (running state and ple_prev; read back, no state change)
++bool conversation_checkpoint_verify_device(const ConversationCheckpoint& checkpoint, const SessionState& session,
++                                           const ModelGeometry& g, std::string& error);
+ 
+ struct ConversationView {
+     const std::vector<int32_t>& ids;
+diff --git a/sycl/src/core/conversation_snapshot.cpp b/sycl/src/core/conversation_snapshot.cpp
+index 17b8cd50..01e6646a 100644
+--- a/sycl/src/core/conversation_snapshot.cpp
++++ b/sycl/src/core/conversation_snapshot.cpp
+@@ -250,6 +250,48 @@ bool conversation_kv_restore(const ConversationKv& image, const QsaState& st, co
+     return false;
+ }
+ 
++// night-lab STRATA_NIGHT_ADMIT_D2D: conversation_kv_save(image, from, upto, index) + conversation_kv_restore(image, to)
++// without the host round trip: save's layout / validity of `from`, restore's validation of that image against `to`
++// (format, cells, geometry, part sizes, target pools), the five parts' bytes [0, size) from pools(from) to pools(to),
++// then restore's residency fix-ups of `to` (kv_mode 1: the streaming map reset; kv_mode 2: the ring refill), all on
++// the current device's in-order queue; ONE wait at the end when sync_end.
++bool conversation_kv_copy_device(const QsaState& from, const QsaState& to, const ModelGeometry& g, int64_t upto,
++                                 bool index, std::string& error, bool sync_end) try {
++    Layout lf{}, lt{};
++    if (!layout(from, g, upto, index, lf, error) || !valid(from, lf, upto, error)) return false;   // save
++    if (!layout(to, g, upto, index, lt, error) || !valid(to, lt, upto, error)) return false;       // restore
++    if (lf.format != lt.format || lf.cells != lt.cells || lf.page_size != lt.page_size || lf.pooled_rows != lt.pooled_rows) {
++        error = "conversation snapshot: incompatible K/V geometry";
++        return false;
++    }
++    const std::array<size_t,5> sf = {lf.data, lf.value_data, lf.scales, lf.value_scales, lf.pooled};
++    const std::array<size_t,5> st = {lt.data, lt.value_data, lt.scales, lt.value_scales, lt.pooled};
++    if (sf != st) { error = "conversation snapshot: invalid K/V payload size"; return false; }
++    const auto src = pools(from);
++    const auto dst = pools(to);
++    for (size_t i = 0; i < 5; ++i)
++        if (sf[i] && !dst[i]) { error = "conversation snapshot: missing target state buffer"; return false; }
++    sycl::queue& q = dpct::get_in_order_queue();
++    for (size_t i = 0; i < 5; ++i) {
++        if (!sf[i]) continue;
++        if (!src[i]) { error = "conversation snapshot: missing state buffer"; return false; }
++        q.memcpy(dst[i], src[i], sf[i]);
++    }
++    if (to.kv_mode == 1) strata::kernels::kv_stream_reset(to.map, nullptr);
++    if (to.kv_mode == 2 && upto > 0) {
++        auto shapes = strata::kernels::qsa_real_shapes();
++        shapes.n_head_kv = g.n_head_kv; shapes.head_dim = g.head_dim;
++        const int64_t end = (upto + shapes.page_size - 1) / shapes.page_size;
++        strata::kernels::kv_ring_restore(qsa_attn_pools(to), to.host, qsa_kv_format(to),
++                                        std::max<int64_t>(0, end - to.n_slots), end, to.n_slots, shapes, nullptr);
++    }
++    if (sync_end) q.wait_and_throw();
++    return true;
++} catch (sycl::exception const& e) {
++    error = std::string("conversation snapshot device copy: ") + e.what();
++    return false;
++}
++
+ bool conversation_kv_part_sizes(const QsaState& st, const ModelGeometry& g, int64_t upto, bool index,
+                                 std::array<uint64_t, 5>& sizes, std::string& error) {
+     Layout l{};
+diff --git a/sycl/src/core/conversation_snapshot_test.cpp b/sycl/src/core/conversation_snapshot_test.cpp
+index c7e70951..c344426a 100644
+--- a/sycl/src/core/conversation_snapshot_test.cpp
++++ b/sycl/src/core/conversation_snapshot_test.cpp
+@@ -36,12 +36,14 @@ struct Fixture {
+     ModelGeometry g;
+     QsaState state;
+     std::vector<void*> device, host;
++    std::vector<std::pair<void*,size_t>> all;   // night: every allocation, for byte comparisons of two fixtures
+     std::array<void*,5> sources{};
+     std::array<size_t,5> sizes{};
+ 
+     template<class T> void alloc(T*& p, size_t n, bool pinned = false) {
+         if (!n) return;
+         void* raw = nullptr;
++        struct Rec { std::vector<std::pair<void*,size_t>>& v; T*& p; size_t n; ~Rec() { if (p) v.emplace_back((void*) p, n); } } rec{all, p, n};
+         if (pinned) {
+             /*
+             DPCT1048: The original value cudaHostAllocMapped is not
+@@ -310,6 +312,76 @@ void full_session(int fmt, int mode, int experts) {
+     check(spare==a.checkpoints[0].dead,"checkpoint rebuilds spare row over a later completed block");
+     check(ss.ple_prev[0]==2 && ss.ple_prev[1]==3,"checkpoint PLE token window");
+ }
++
++// night-lab STRATA_NIGHT_ADMIT_D2D: the device-to-device copies leave the target byte-for-byte as the save + restore
++// pairs do. Fixtures B (D2D) and C (old path) start identical (every allocation filled the same way), A is the source.
++std::vector<uint8_t> read_all(const Fixture& f) {
++    std::vector<uint8_t> out;
++    for (const auto& [p, n] : f.all) {
++        const size_t at = out.size();
++        out.resize(at + n);
++        dpct::get_in_order_queue().memcpy(out.data() + at, p, n).wait();
++    }
++    return out;
++}
++void fill_all(Fixture& f, uint8_t salt) {
++    for (const auto& [p, n] : f.all) {
++        std::vector<uint8_t> data(n);
++        for (size_t j = 0; j < n; ++j) data[j] = (uint8_t) (salt + j * 13 + j / 509);
++        dpct::get_in_order_queue().memcpy(p, data.data(), n).wait();
++    }
++}
++void d2d_admission(int fmt, int mode) {
++    Fixture A(fmt, mode), B(fmt, mode), C(fmt, mode);
++    for (Fixture* f : {&A, &B, &C}) { f->g.n_layers = 4; f->g.ssm_state_size = 2; f->g.ssm_v_heads = 2; f->g.ssm_conv_channels = 8; }
++    const ModelGeometry& g = A.g;
++    std::string err;
++    ConversationStateSizes sizes;
++    check(conversation_state_sizes(g, sizes, err), "d2d: geometry sizes");
++    SessionState sa, sb, sc;
++    Fixture* fx[3] = {&A, &B, &C};
++    SessionState* ss[3] = {&sa, &sb, &sc};
++    for (int i = 0; i < 3; ++i) {
++        SessionState& s1 = *ss[i];
++        Fixture& f = *fx[i];
++        s1.max_cells = 96; s1.qsa_states = &f.state;
++        s1.layer_hi = g.n_layers; s1.gdn_alloc = g.n_gdn_layers(); s1.qsa_alloc = g.n_qsa_layers();
++        f.alloc(s1.gdn_state, sizes.gdn); f.alloc(s1.ple_hist, sizes.ple);
++        f.alloc(f.state.idx_tail, sizes.tail); f.alloc(f.state.idx_dead, sizes.dead);
++        f.alloc(f.state.idx_block_pos, sizes.block_pos);
++    }
++    for (int64_t upto : {0, 1, 3, 4, 5, 63, 64, 65, 96}) {
++        const bool index = mode != 2;
++        fill_all(A, 41); fill_all(B, 7); fill_all(C, 7);
++        cuda_check(DPCT_CHECK_ERROR(dpct::get_current_device().queues_wait_and_throw()));
++        std::vector<int32_t> ids((size_t) upto);
++        for (size_t i = 0; i < ids.size(); ++i) ids[i] = (int32_t) (3 * i + 1);
++        // old path into C (generate.cpp copy_to_slot's order: running state, then the K/V)
++        if (mode != 2) {   // a draft ring layer has no session running state
++            ConversationCheckpoint ck;
++            ck.ids = ids;
++            check(conversation_checkpoint_save(ck, sa, g, err) && conversation_checkpoint_restore(ck, sc, g, err), "d2d: old checkpoint pair");
++        }
++        ConversationKv img;
++        check(conversation_kv_save(img, A.state, g, upto, index, err), "d2d: old kv save");
++        cuda_check(DPCT_CHECK_ERROR(dpct::get_current_device().queues_wait_and_throw()));
++        check(conversation_kv_restore(img, C.state, g, upto, index, err), "d2d: old kv restore");
++        // D2D into B
++        if (mode != 2) check(conversation_checkpoint_copy_device(sa, sb, g, ids, err, false), "d2d: checkpoint copy");
++        check(conversation_kv_copy_device(A.state, B.state, g, upto, index, err, true), "d2d: kv copy");
++        cuda_check(DPCT_CHECK_ERROR(dpct::get_current_device().queues_wait_and_throw()));
++        check(read_all(B) == read_all(C), "d2d: target bytes equal the save + restore pair (every allocation)");
++        check(sb.ple_prev[0] == sc.ple_prev[0] && sb.ple_prev[1] == sc.ple_prev[1], "d2d: ple_prev");
++        if (mode != 2) {
++            ConversationCheckpoint ck;
++            ck.ids = ids;
++            check(conversation_checkpoint_save(ck, sa, g, err) && conversation_checkpoint_verify_device(ck, sb, g, err),
++                  "d2d: checkpoint verify helper agrees");
++        }
++        uint64_t fp = 0;
++        check(conversation_kv_verify(img, B.state, g, upto, index, fp, err), "d2d: kv verify (authoritative + ring)");
++    }
++}
+ }
+ 
+ int main() {
+@@ -428,5 +500,10 @@ int main() {
+     for (int fmt : {kKvF16,kKvInt8,kKvQ4}) for (int mode : {0,1}) for (int experts : {256,512})
+         full_session(fmt,mode,experts);
+     for (int experts : {256,512}) full_session(3,0,experts);
++    for (int fmt : std::array<int,4>{kKvF16,kKvInt8,kKvQ4,3}) for (int mode : {0,1,2}) {
++        if (fmt==3 && mode!=0) continue;
++        d2d_admission(fmt,mode);
++    }
++    std::printf("conversation_snapshot_test: night D2D admission copies byte-identical to save + restore (all formats/modes)\n");
+     std::printf("conversation_snapshot_test: %d checks passed\n",checks);
+ }
+diff --git a/sycl/src/core/conversation_state.cpp b/sycl/src/core/conversation_state.cpp
+index f6bd041d..03268fb8 100644
+--- a/sycl/src/core/conversation_state.cpp
++++ b/sycl/src/core/conversation_state.cpp
+@@ -6,7 +6,9 @@
+ 
+ #include <algorithm>
+ #include <array>
++#include <cstring>
+ #include <limits>
++#include <vector>
+ 
+ namespace strata::core {
+ namespace {
+@@ -203,6 +205,82 @@ bool conversation_checkpoint_restore(const ConversationCheckpoint& c, SessionSta
+     return sync(error);
+ }
+ 
++// night-lab STRATA_NIGHT_ADMIT_D2D: conversation_checkpoint_save(ck{ids}, from) + conversation_checkpoint_restore(ck, to)
++// without the host round trip. The same checks (save's targets of `from`, restore's validation of the payload against
++// `to`), the same bytes in the same order (GDN rows, PLE history, per owned QSA layer tail / dead / block position and,
++// for a non-empty prefix, the pooled row from the dead row), the same ple_prev; every copy an async queue memcpy on
++// the current device's in-order queue, ONE wait at the end (sync_end; false leaves them queued for the caller).
++bool conversation_checkpoint_copy_device(const SessionState& from, SessionState& to, const ModelGeometry& g,
++                                         const std::vector<int32_t>& ids, std::string& error, bool sync_end) {
++    ConversationStateSizes zf, zt;
++    if (!checkpoint_targets(from, g, ids.size(), zf, error)) return false;          // save
++    if (!checkpoint_targets(to, g, ids.size(), zt, error)) return false;            // restore: validate
++    const size_t lf = owned_qsa(from), lt = owned_qsa(to);
++    const size_t ple_f = from.ple_hist ? zf.ple : 0, ple_t = to.ple_hist ? zt.ple : 0;
++    if (zf.gdn != zt.gdn || ple_f != ple_t || lf * zf.tail != lt * zt.tail || lf * zf.dead != lt * zt.dead ||
++        lf * zf.block_pos != lt * zt.block_pos || lf != lt)
++        return fail(error, "invalid checkpoint running-state payload");
++    try {
++        sycl::queue& q = dpct::get_in_order_queue();
++        auto cp = [&](void* dst, const void* src, size_t bytes) {
++            if (!bytes) return true;
++            if (!dst || !src) return fail(error, "missing running-state buffer");
++            q.memcpy(dst, src, bytes);
++            return true;
++        };
++        if (!cp(to.gdn_state, from.gdn_state, zf.gdn) || !cp(to.ple_hist, from.ple_hist, ple_f)) return false;
++        for (size_t j = 0; j < lf; ++j) {
++            const auto& sf = owned(from, j);
++            const auto& st = owned(to, j);
++            if (!cp(st.idx_tail, sf.idx_tail, zf.tail) || !cp(st.idx_dead, sf.idx_dead, zf.dead) ||
++                !cp(st.idx_block_pos, sf.idx_block_pos, zf.block_pos)) return false;
++            if (!ids.empty()) {
++                const size_t row = ids.size() / strata::kernels::qsa_real_shapes().idx_block;
++                if (!cp(st.idx_pooled + row * g.idx_key_dim, sf.idx_dead, zf.dead)) return false;
++            }
++        }
++    } catch (sycl::exception const& e) {
++        error = std::string("conversation snapshot running-state copy: ") + e.what();
++        return false;
++    }
++    const size_t tokens = ids.size();
++    to.ple_prev[0] = tokens >= 2 ? ids[tokens - 2] : -1;
++    to.ple_prev[1] = tokens >= 1 ? ids[tokens - 1] : -1;
++    return !sync_end || sync(error);
++}
++
++// STRATA_NIGHT_ADMIT_VERIFY: `ss` holds exactly what conversation_checkpoint_restore(c, ss) writes to the GDN rows, the
++// PLE history, the per-layer tail / dead / block position and ple_prev (read back after a sync; no state change)
++bool conversation_checkpoint_verify_device(const ConversationCheckpoint& c, const SessionState& ss,
++                                           const ModelGeometry& g, std::string& error) {
++    if (!conversation_checkpoint_validate(c, ss, g, error) || !sync(error)) return false;
++    ConversationStateSizes z;
++    if (!conversation_session_sizes(g, ss, z, error)) return false;
++    std::vector<uint8_t> buf;
++    auto same = [&](const void* dev, const uint8_t* want, size_t n, const char* what) {
++        if (!n) return true;
++        buf.resize(n);
++        if (!copy(buf.data(), dev, n, error)) return false;
++        if (std::memcmp(buf.data(), want, n) != 0) { error = std::string("admission verify: ") + what + " bytes differ"; return false; }
++        return true;
++    };
++    if (!same(ss.gdn_state, c.gdn.data(), c.gdn.size(), "GDN state") || !same(ss.ple_hist, c.ple.data(), c.ple.size(), "PLE history"))
++        return false;
++    for (size_t j = 0; j < owned_qsa(ss); ++j) {
++        const auto& st = owned(ss, j);
++        if (!same(st.idx_tail, c.tails.data() + j * z.tail, z.tail, "indexer tail") ||
++            !same(st.idx_dead, c.dead.data() + j * z.dead, z.dead, "indexer dead row") ||
++            !same(st.idx_block_pos, c.block_pos.data() + j * z.block_pos, z.block_pos, "indexer block position"))
++            return false;
++    }
++    const size_t tokens = c.ids.size();
++    if (ss.ple_prev[0] != (tokens >= 2 ? c.ids[tokens - 2] : -1) || ss.ple_prev[1] != (tokens >= 1 ? c.ids[tokens - 1] : -1)) {
++        error = "admission verify: ple_prev differs";
++        return false;
++    }
++    return true;
++}
++
+ bool conversation_snapshot_bytes(const ConversationView& view, const SessionState& ss,
+                                  const ModelGeometry& g, const QsaState* draft, size_t& bytes, std::string& error) {
+     bytes = 0;
+diff --git a/sycl/src/program/generate.cpp b/sycl/src/program/generate.cpp
+index e550bafa..7ab60d10 100644
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -9144,6 +9144,65 @@ int main(int argc, char **argv) try {
+             in_lines.pop_front();
+             return true;
+         };
++        // night-lab STRATA_NIGHT_ADMIT_D2D=1: the slot copies below as device-to-device queue copies (the same
++        // checks and bytes as each save + restore pair, one wait per stage) instead of a host round trip with a
++        // device sync per piece; STRATA_NIGHT_ADMIT_VERIFY=1 also runs the old saves and compares every region the old
++        // restores would write (and the draft ring) against the slot, once per copy, and logs the result
++        static const bool night_d2d = [] {
++            const char* v = std::getenv("STRATA_NIGHT_ADMIT_D2D");
++            const bool on = v != nullptr && v[0] == '1';
++            if (on) std::fprintf(stderr, "strata: STRATA_NIGHT_ADMIT_D2D=1: batch slot copies device to device\n");
++            return on;
++        }();
++        static const bool night_verify = [] { const char* v = std::getenv("STRATA_NIGHT_ADMIT_VERIFY"); return v != nullptr && v[0] == '1'; }();
++        double night_park_ms = 0.0, night_copy_ms = 0.0;
++        // the D2D copy of one stage's sessions (running state + every owned QSA layer's K/V) and, with
++        // STRATA_NIGHT_ADMIT_VERIFY, the comparison with what the old save + restore pairs write
++        auto night_stage_copy = [&](strata::core::SessionState& from, strata::core::SessionState& to,
++                                    const std::vector<int32_t>& ck_ids, bool with_checkpoint, int64_t upto,
++                                    std::string& e) -> bool {
++            if (with_checkpoint && !strata::core::conversation_checkpoint_copy_device(from, to, g, ck_ids, e, false)) return false;
++            for (int64_t j = 0; j < from.qsa_alloc; ++j)
++                if (!strata::core::conversation_kv_copy_device(from.qsa_states[from.qsa_ord0 + j], to.qsa_states[to.qsa_ord0 + j],
++                                                               g, upto, true, e, false))
++                    return false;
++            if (DPCT_CHECK_ERROR(dpct::get_current_device().queues_wait_and_throw()) != 0) {
++                e = "batch slot copy: device sync failed"; return false;
++            }
++            if (!night_verify) return true;
++            std::string why;
++            bool ok = true;
++            if (with_checkpoint) {
++                strata::core::ConversationCheckpoint ck;
++                ck.ids = ck_ids;
++                ok = strata::core::conversation_checkpoint_save(ck, from, g, why) &&
++                     strata::core::conversation_checkpoint_verify_device(ck, to, g, why);
++            }
++            for (int64_t j = 0; ok && j < from.qsa_alloc; ++j) {
++                strata::core::ConversationKv img;
++                uint64_t fp = 0;
++                ok = strata::core::conversation_kv_save(img, from.qsa_states[from.qsa_ord0 + j], g, upto, true, why) &&
++                     strata::core::conversation_kv_verify(img, to.qsa_states[to.qsa_ord0 + j], g, upto, true, fp, why);
++            }
++            std::fprintf(stderr, "strata: STRATA_NIGHT_ADMIT_VERIFY: stage copy of %lld tokens (%lld QSA layers%s): %s%s\n",
++                         (long long) upto, (long long) from.qsa_alloc, with_checkpoint ? " + running state" : "",
++                         ok ? "PASS" : "FAIL: ", ok ? "" : why.c_str());
++            return true;
++        };
++        auto night_draft_copy = [&](const strata::core::QsaState& from, const strata::core::QsaState& to, int64_t upto,
++                                    std::string& e) -> bool {
++            if (!strata::core::conversation_kv_copy_device(from, to, draft_geometry, upto, false, e, true)) return false;
++            if (night_verify) {
++                std::string why;
++                strata::core::ConversationKv img;
++                uint64_t fp = 0;
++                const bool ok = strata::core::conversation_kv_save(img, from, draft_geometry, upto, false, why) &&
++                                strata::core::conversation_kv_verify(img, to, draft_geometry, upto, false, fp, why);
++                std::fprintf(stderr, "strata: STRATA_NIGHT_ADMIT_VERIFY: draft K/V copy of %lld tokens: %s%s\n",
++                             (long long) upto, ok ? "PASS" : "FAIL: ", ok ? "" : why.c_str());
++            }
++            return true;
++        };
+         // the session a request just left behind (its prompt) -> slot b's sessions, on every stage
+         auto copy_to_slot = [&](int b, const std::vector<int32_t> &ids,
+                                 std::string &e) -> bool {
+@@ -9158,6 +9217,10 @@ int main(int argc, char **argv) try {
+                     0) {
+                     e = "batch admission: device sync failed"; return false;
+                 }
++                if (night_d2d) {
++                    if (!night_stage_copy(from, to, ids, true, upto, e)) return false;
++                    continue;
++                }
+                 strata::core::ConversationCheckpoint ck;
+                 ck.ids = ids;
+                 if (!strata::core::conversation_checkpoint_save(ck, from, g, e) ||
+@@ -9183,6 +9246,11 @@ int main(int argc, char **argv) try {
+             if (batch_mtp) {
+                 // Admission first builds the solo draft KV; copy it into the slot before drafting.
+                 strata::core::ConversationKv image;
++                if (night_d2d) {
++                    if (!mtp.idle(e) || !slot_mtp[(size_t)b]->idle(e) ||
++                        !night_draft_copy(mtp.kv_state(), slot_mtp[(size_t)b]->kv_state(), upto, e))
++                        return false;
++                } else
+                 if (!mtp.idle(e) || !slot_mtp[(size_t)b]->idle(e) ||
+                     !strata::core::conversation_kv_save(image, mtp.kv_state(),
+                                                         draft_geometry, upto,
+@@ -9222,6 +9290,13 @@ int main(int argc, char **argv) try {
+                     0) {
+                     e = "batch slot restore: device sync failed"; return false;
+                 }
++                if (night_d2d) {   // a checkpoint's running state still comes from its host copy; the rest D2D
++                    if (at != nullptr &&
++                        !strata::core::conversation_checkpoint_restore(k == 0 ? *at : at->stage_parts[k - 1], to, g, e))
++                        return false;
++                    if (!night_stage_copy(from, to, bs[(size_t) b].ids, at == nullptr, upto, e)) return false;
++                    continue;
++                }
+                 if (at != nullptr) {
+                     if (!strata::core::conversation_checkpoint_restore(k == 0 ? *at : at->stage_parts[k - 1], to, g, e))
+                         return false;
+@@ -9253,6 +9328,11 @@ int main(int argc, char **argv) try {
+             if (batch_mtp) {
+                 // A returning solo request resumes from its slot's draft KV.
+                 strata::core::ConversationKv image;
++                if (night_d2d) {
++                    if (!slot_mtp[(size_t)b]->idle(e) || !mtp.idle(e) ||
++                        !night_draft_copy(slot_mtp[(size_t)b]->kv_state(), mtp.kv_state(), upto, e))
++                        return false;
++                } else
+                 if (!slot_mtp[(size_t)b]->idle(e) || !mtp.idle(e) ||
+                     !strata::core::conversation_kv_save(
+                         image, slot_mtp[(size_t)b]->kv_state(), draft_geometry,
+@@ -10852,7 +10932,12 @@ int main(int argc, char **argv) try {
+                             e = err;
+                             return false;
+                         }
++                        const auto ty1 = Clock::now();
+                         if (can && copy_to_slot(ys, pre, ye)) {
++                            if (night_d2d)
++                                std::fprintf(stderr, "strata batch: yield copy: park %.1f ms, copy %.1f ms\n",
++                                             std::chrono::duration<double, std::milli>(ty1 - ty).count(),
++                                             std::chrono::duration<double, std::milli>(Clock::now() - ty1).count());
+                             BSlot& sl = bs[(size_t) ys];
+                             sl = BSlot{};
+                             sl.ids = std::move(pre);
+@@ -12134,11 +12219,16 @@ int main(int argc, char **argv) try {
+                     std::printf("ERR %s\n", err.c_str());
+                     return 1;
+                 }
++                const auto tc1 = Clock::now();
++                night_park_ms = std::chrono::duration<double, std::milli>(tc1 - tc0).count();
++                night_copy_ms = 0.0;
++                double night_draft_ms = 0.0;
+                 if (cont && !copy_to_slot(admit_slot, live, err)) {
+                     std::fprintf(stderr, "strata serve: batch admission failed: %s\n", err.c_str());
+                     bs[(size_t) admit_slot].cached = false;   // its sessions may be half written
+                     cont = false;
+                 }
++                night_copy_ms = std::chrono::duration<double, std::milli>(Clock::now() - tc1).count();
+                 if (cont) {
+                     ver.set_slot_sampling(admit_slot, req_sp);   // the request's own sampling, row by row
+                     BSlot& sl = bs[(size_t) admit_slot];
+@@ -12150,6 +12240,7 @@ int main(int argc, char **argv) try {
+                     sl.max_new = admit_max_new;
+                     sl.t0 = Clock::now();
+                     sl.ids = live;
++                    const auto tc2 = Clock::now();
+                     if (batch_mtp) {
+                         int nd = 0;
+                         if (!slot_mtp[(size_t) admit_slot]->draft_first(1, ver.final_R_all(), sl.x,
+@@ -12162,6 +12253,7 @@ int main(int argc, char **argv) try {
+                         sl.n_draft = nd < 0 ? 0 : nd > batch_depth ? batch_depth : nd;
+                         sl.draft_ready = true;
+                     }
++                    night_draft_ms = std::chrono::duration<double, std::milli>(Clock::now() - tc2).count();
+                     sl.cvec = cvec_cached;
+                     sl.img = !live_imgs.empty();   // pictures: not matched again by tokens alone, so not cached
+                     const ConvCheckpoint* best = nullptr;
+@@ -12170,6 +12262,12 @@ int main(int argc, char **argv) try {
+                             std::equal(c.ids.begin(), c.ids.end(), live.begin()))
+                             best = &c;
+                     if (best != nullptr && !sl.img) sl.checks.push_back(*best);
++                    if (night_d2d)
++                        std::fprintf(stderr, "strata batch: slot %d takes %lld tokens (copied in %.1f ms: park %.1f, copy %.1f, "
++                                             "draft_first %.1f ms)\n", admit_slot, (long long) live.size(),
++                                     std::chrono::duration<double, std::milli>(Clock::now() - tc0).count(), night_park_ms,
++                                     night_copy_ms, night_draft_ms);
++                    else
+                     std::fprintf(stderr, "strata batch: slot %d takes %lld tokens (copied in %.1f ms)\n", admit_slot,
+                                  (long long) live.size(), std::chrono::duration<double, std::milli>(Clock::now() - tc0).count());
+                 }

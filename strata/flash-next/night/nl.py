@@ -237,6 +237,22 @@ def cmd_bench(a):
             print(json.dumps({k: summ[k] for k in summ if k not in ('sha',)}), flush=True)
             (out / f'decode-c{c}-r{rep}.json').write_text(json.dumps(
                 [{k: v for k, v in r.items() if k not in ('start', 'first', 'end')} for r in rows], indent=1))
+    if a.long:
+        docs = sorted((REPO / 'docs').glob('2026*.md'))
+        corpus = ''.join(ch if ord(ch) < 128 else ' ' for p in docs for ch in p.read_text(errors='replace'))
+        for c in [int(x) for x in a.long_c.split(',') if x]:
+            prompts = []
+            for i in range(c):
+                off = ((i + 3 * c) * 7919 * 13) % max(1, len(corpus) - a.long * 4)
+                ctx = corpus[off:off + a.long * 4]
+                prompts.append(f"[{tag} long{a.long} c{c} s{i}] " + ctx + "\n\nUsing the notes above as background, " + CODING)
+            if a.long_warm and c > 1:   # prefill each context first so the timed streams decode together from cache
+                for p in prompts:
+                    send([{"role": "user", "content": p}], 1)
+            summ, rows = run_concurrent(prompts, a.tokens, a.name, busy=False)
+            summ['long_ctx_tokens'] = [ (r['usage'] or {}).get('prompt_tokens') for r in rows]
+            res.setdefault('long', []).append(summ)
+            print(json.dumps({k: summ[k] for k in ('c', 'engine_tps', 'client_decode_tps', 'ttft_s', 'long_ctx_tokens', 'drafts')}), flush=True)
     for n in [int(x) for x in a.prefill.split(',') if x]:
         for rep in range(a.prefill_reps):
             p = f"[{tag} prefill {n} r{rep} {time.time_ns()}] " + FILLER * max(1, (n - 60) // 13) + \
@@ -297,6 +313,8 @@ def main():
     x.add_argument('--prefill-reps', type=int, default=1); x.add_argument('--tag')
     x.add_argument('--mix', action='store_true'); x.add_argument('--warm', action='store_true')
     x.add_argument('--no-busy', action='store_true'); x.add_argument('--force', action='store_true')
+    x.add_argument('--long', type=int, default=0, help='approx context tokens for long-context decode')
+    x.add_argument('--long-c', default='1,2'); x.add_argument('--long-warm', action='store_true')
     x = s.add_parser('stop'); x.add_argument('name'); x.add_argument('--no-health', action='store_true')
     a = p.parse_args()
     {'start': cmd_start, 'bench': cmd_bench, 'stop': cmd_stop}[a.cmd](a)

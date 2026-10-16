@@ -111,3 +111,93 @@ Down2 shape sweep at T=6 (rows/lane, columns/sub-group): (1,80) 30.6, (2,40) 26.
   went to the HC read). The same row-per-lane / uniform-activation structure should apply to the 2560->512 GEMV.
 - Engine-level serving validation (coherence, tok/s) is for the orchestrator: suggested A/B
   `STRATA_NIGHT_HC=1` and `STRATA_NIGHT_HC=q8 STRATA_HC_Q8=1` against the current config.
+
+# Mission 2 (router / small BF16 GEMVs / GDN per-slot work)
+
+Engine: /mnt/vm_8tb/b70/results/night-20261016/builds/strata-hc-gdn1 (HC v2 + GDN slots; base e1b7ee8a)
+Patch (this mission only, applies on top of hc.patch): /mnt/vm_8tb/b70/results/night-20261016/agents/hc_gdn_slots.patch
+Full worktree diff vs e1b7ee8a: /mnt/vm_8tb/b70/results/night-20261016/agents/hc_full.patch
+
+## G1 STRATA_NIGHT_GDN_SLOTS=1 (verify recurrence of every slot group in one launch) - KEEP
+
+CONFIG: verify batch window (batch_rec_), STRATA_GDN_SPLIT unset/0 (the config). The per-slot loop launched
+gdn_step_norm_multi_kernel<true,false> once per slot group (48 blocks of 512 threads each); the night launcher runs
+the same kernel body on grid (head, slot) with per-slot state / row offsets (select chain, no runtime-indexed arg).
+COMMAND: hc_work/gdn_probe (36 layers of distinct 3.1 MB states per slot, graph replay, card 1).
+RESULT (us per GDN layer, y bitwise equal in every case):
+
+| window | per-slot launches | one launch | per 36 layers |
+|---|---:|---:|---:|
+| C2: 2 slots x 3 rows | 25.4 | 19.5 | -0.21 ms |
+| 2 slots x 4 rows | 29.1 | 21.6 | -0.27 ms |
+| C4: 4 slots x 2 rows | 43.1 | 33.9 | -0.33 ms |
+| C1: 1 slot x 4 rows (not batch_rec_) | 14.7 | 14.9 | n/a (path not used) |
+
+VERDICT: bitwise, -0.21 ms per C2 cycle, -0.33 ms per C4 cycle. Falls back to the per-slot loop if GDN_SPLIT=1,
+more than 4 slot groups, or a group > 8 rows.
+
+## R1 router (STRATA_NIGHT_ROUTER) - NOT integrated (negative result, code kept in hc_work/)
+
+CONFIG: 2560 -> 512 BF16 router GEMV + shared-gate row (2560 -> 1) + native_router_top10_multi, 16 weight sets,
+graph replay. COMMAND: hc_work/router_probe (+ NIGHT_ROUTER_MODE builds). RESULT at T=6 (us): default GEMV 11.4,
+gate 2.9, top-10 7.5, chain 22.5. STRATA_MMVF_ROWS rows kernel (the S26 LFUSE aux path's GEMV): 30.2 (14-31 at T=2-8,
+1.3-2.7x slower than the default on B70). Fused one-launch variants (all bitwise, stress-checked):
+- GEMV + gate row as block 513 of the default-arithmetic GEMV: 11.6 (vs 11.4 + 2.9) - the only win (-2.7 us/layer),
+  but it needs the LFUSE gate-deferred plumbing (sg_ready / gated combine) to drop the shared expert's own gate launch.
+- + last-block top-10: 25-27.5 (worse than the 22.5 chain). The device-scope arrival counter alone cost ~5 us over 512
+  blocks (two-level counting did not help: the acq_rel RMWs, not contention), and the top-10 tail costs ~8 us inside
+  the last block: native_router_top10's 7.5 us is its own serial 10-round argmax latency, not launch overhead.
+VERDICT: no engine change. Next step if pursued: a faster top-10 (parallel rank-by-count selection, bitwise ties to
+the lower id) - the selection, not the launch, is the cost; and enable the gate row only together with LFUSE.
+Files: hc_work/night_router.inc, hc_work/night_router.hpp, hc_work/night_router_native_bf16.diff.
+
+## Not done (time)
+
+- gdn_ab_multi (ssm_alpha/beta 2560->48 x2, 36 x 11.2 us per C2 cycle): only 96 sub-groups in flight; bitwise needs
+  each lane's 10 chunks in order, so the lever is ILP (hoisted loads), not more groups.
+- indexer q/k pair GEMV (2560->512 + 2560->128 share the input; default mmvf kernel per output is bitwise-movable
+  into one launch: ~1 launch + ~4 us per QSA layer, 12 layers).
+- commit batching across slots/layers (gdn_step_commit 72 x 16.1 us per C2 cycle, already ~390 GB/s: mostly
+  bandwidth; S145 layer batching is gated by STRATA_GDN_COMMIT_LAYERS, not re-investigated).
+
+# Mission 3 (batch slot admission: host round trip -> device to device)
+
+Engine: /mnt/vm_8tb/b70/results/night-20261016/builds/strata-hc-admit1 (also carries HC v2 and GDN slots, default off)
+Patch (this mission only): /mnt/vm_8tb/b70/results/night-20261016/agents/hc_admit_d2d.patch
+Full worktree diff vs e1b7ee8a: /mnt/vm_8tb/b70/results/night-20261016/agents/hc_full.patch
+
+Flags: `STRATA_NIGHT_ADMIT_D2D=1` (D2D copies + split timing in the admission log line),
+`STRATA_NIGHT_ADMIT_VERIFY=1` (with D2D: after each stage / draft copy, runs the OLD saves from the source and compares
+every region the old restores write against the slot: running state via conversation_checkpoint_verify_device,
+every QSA layer's K/V via conversation_kv_verify (authoritative pools + the draft ring's resident pages); logs
+`strata: STRATA_NIGHT_ADMIT_VERIFY: ... PASS` or `FAIL: <why>` once per copy; slow, for one request).
+
+## A1 design
+
+- conversation_checkpoint_copy_device(from, to, g, ids, err, sync_end) (conversation_state.cpp): save's targets check
+  of `from`, restore's payload validation against `to`, then queue memcpys on the current device's in-order queue in
+  the pair's order: GDN rows, PLE history, per owned QSA layer idx_tail / idx_dead / idx_block_pos and (non-empty
+  prefix) the pooled row ids.size()/idx_block from idx_dead; ple_prev set from ids. No host buffer, no per-piece wait.
+- conversation_kv_copy_device(from, to, g, upto, index, err, sync_end) (conversation_snapshot.cpp): layout/valid of
+  both, the image-vs-target checks of restore (format incl. rotation, cells, page size, pooled rows, part sizes,
+  target pools), the five parts [0, size) from pools(from) to pools(to) (host-authoritative pools for kv_mode 1/2, as
+  save/restore use), then restore's fix-ups on the same queue: kv_mode 1 kv_stream_reset, kv_mode 2 kv_ring_restore.
+- generate.cpp: copy_to_slot and copy_from_slot (main <-> slot sessions on every stage, then the MTP draft K/V) use
+  them behind the flag: one device-wide sync before (as before), one after each stage, one after the draft copy.
+  copy_from_slot with a checkpoint `at` still restores that checkpoint's running state from its host copy (it has no
+  device source), then copies the K/V D2D. The pooled-row order is preserved (checkpoint row first, K/V pooled after,
+  same in-order queue), so the final bytes match.
+- Admission log with the flag: `strata batch: slot S takes N tokens (copied in X ms: park P, copy C, draft_first D ms)`;
+  the yield path logs `strata batch: yield copy: park P ms, copy C ms`. park_slot (RAM cache) is unchanged.
+
+## A2 validation
+
+CONFIG: conversation_snapshot_test (existing fixtures) + new d2d_admission(fmt, mode): source A, targets B (D2D) and
+C (old save + restore pair, generate.cpp's order), B and C initialised identically (every allocation), A different.
+COMMAND: `nl_wt.sh ninja hc conversation_snapshot_test`, run on card 1. RESULT: every allocation of B (K/V pools,
+host pools, scales, pooled rows, page tables / streaming map / ring slots, GDN rows, PLE, indexer tail/dead/pos)
+byte-identical to C for F16 / INT8 / Q4 x kv_mode 0/1/2 and hybrid K8V4 mode 0, upto in {0,1,3,4,5,63,64,65,96};
+ple_prev equal; conversation_checkpoint_verify_device and conversation_kv_verify agree. "4640 checks passed".
+VERDICT: the D2D path writes exactly the bytes of the save + restore pairs. Not measured end to end (no servers):
+expected copy time ~1 ms per admission (about 120 MB of GDN state at device bandwidth plus the K/V) against
+388-620 ms now; park_slot time is reported separately.

@@ -1,0 +1,111 @@
+diff --git a/include/strata/kernels/verify_kernels.hpp b/include/strata/kernels/verify_kernels.hpp
+index 5b37cdf4..47f5e428 100644
+--- a/include/strata/kernels/verify_kernels.hpp
++++ b/include/strata/kernels/verify_kernels.hpp
+@@ -41,6 +41,13 @@ void gdn_ab_multi(const float* x, const uint16_t* w_alpha, const uint16_t* w_bet
+ void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const float* gate, const float* beta,
+                          const float* z, const float* gamma, float eps, float* y, int h_k, int h_v, int n_tok,
+                          const int32_t* n_keep, void* stream, int t_out_begin = 0, void* xq_out = nullptr);
++/// night-lab STRATA_NIGHT_GDN_SLOTS (default off): gdn_step_norm_multi's verify form (n_keep null, every row's output,
++/// no q8 image) for up to 4 slot groups in one launch; slot i: state states[i], rows [row0[i], row0[i] + nrows[i]) of
++/// h / gate / beta / z / y. Bitwise the per-slot calls. False (nothing launched) when it does not apply.
++bool night_gdn_slots_enabled();
++bool night_gdn_step_norm_slots(float* const* states, const int* row0, const int* nrows, int nslots, const float* h,
++                               int conv_channels, const float* gate, const float* beta, const float* z,
++                               const float* gamma, float eps, float* y, int h_k, int h_v, void* stream);
+ /// The commit of `n_layers` GDN layers in two launches (engine-latency): layer i's conv history is
+ /// `state + i * state_stride + conv_off` and its qkv rows `qkv + i * qkv_stride`, as gdn_conv_commit; its recurrence
+ /// state `state + i * state_stride` over the first *n_keep rows of `h + i * h_stride` / `gate|beta + i * gb_stride`, as
+diff --git a/sycl/src/core/verify.cpp b/sycl/src/core/verify.cpp
+index 1b7273eb..26217866 100644
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -1056,7 +1056,22 @@ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
+                 native_mmvq(wg->native_type, wg->native_data, xq_, z_ + (size_t) tb * ZV, (int) N, (int) ZV, n, cs);
+                 stamp(l, 5, grp);
+                 // the recurrence from the untouched state over tokens [0, te); outputs only for this group's
+-                if (batch_rec_) {   // each slot's recurrence over its own proposed-token group
++                bool night_slots_done = false;
++                if (batch_rec_ && night_gdn_slots_enabled()) {   // night-lab: every slot group in one launch (bitwise)
++                    float* st4[4] = {}; int r4[4] = {}, n4[4] = {}; int ns = 0;
++                    for (int t = tb; t < te;) {
++                        const int first = t;
++                        while (t < te && brow_[t] == brow_[first]) ++t;
++                        if (ns == 4) { ns = 5; break; }
++                        SessionState& sx = slot_ss(first);
++                        st4[ns] = sx.gdn_state + (size_t) (gi - sx.gdn_ord0) * gdn_floats; r4[ns] = first; n4[ns] = t - first; ++ns;
++                    }
++                    if (ns >= 1 && ns <= 4)
++                        night_slots_done = night_gdn_step_norm_slots(st4, r4, n4, ns, hb, (int) C, gate, beta, z_,
++                                                                     (const float*) wnm->data, EPS, y_, (int) HK, (int) HV, cs);
++                }
++                if (night_slots_done) {
++                } else if (batch_rec_) {   // each slot's recurrence over its own proposed-token group
+                     for (int t = tb; t < te;) {
+                         const int first = t;
+                         while (t < te && brow_[t] == brow_[first]) ++t;
+diff --git a/sycl/src/kernels/cuda/verify_kernels.dp.cpp b/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+index 9946f7ae..b590ca39 100644
+--- a/sycl/src/kernels/cuda/verify_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+@@ -1866,6 +1866,60 @@ void gdn_ab_multi(const float* x, const uint16_t* w_alpha, const uint16_t* w_bet
+     check("gdn_ab_multi");
+ }
+ 
++// night-lab STRATA_NIGHT_GDN_SLOTS: the verify recurrence (no commit, every row's output) of up to 4 slot groups of a
++// batch window in ONE launch: block (head, slot) runs gdn_step_norm_multi_kernel<true, false> - the kernel the per-slot
++// calls take (STRATA_GDN_SPLIT off, no q8 image) - on that slot's state and rows. Bitwise the per-slot launches.
++namespace {
++struct GdnSlotArgs {
++    float* state[4];
++    int row0[4];
++    int n[4];
++};
++template <int K>
++__dpct_inline__ auto gdn_slot_pick(const GdnSlotArgs& a, int s) {
++    if constexpr (K == 0) { float* v = a.state[0]; v = s == 1 ? a.state[1] : v; v = s == 2 ? a.state[2] : v; v = s == 3 ? a.state[3] : v; return v; }
++    else if constexpr (K == 1) { int v = a.row0[0]; v = s == 1 ? a.row0[1] : v; v = s == 2 ? a.row0[2] : v; v = s == 3 ? a.row0[3] : v; return v; }
++    else { int v = a.n[0]; v = s == 1 ? a.n[1] : v; v = s == 2 ? a.n[2] : v; v = s == 3 ? a.n[3] : v; return v; }
++}
++}  // namespace
++bool night_gdn_slots_enabled() {
++    static const bool v = [] {
++        const char* e = std::getenv("STRATA_NIGHT_GDN_SLOTS");
++        const bool on = e != nullptr && e[0] == '1';
++        if (on) std::fprintf(stderr, "strata: STRATA_NIGHT_GDN_SLOTS=1: one verify recurrence launch for every slot group\n");
++        return on;
++    }();
++    return v;
++}
++bool night_gdn_step_norm_slots(float* const* states, const int* row0, const int* nrows, int nslots, const float* h,
++                               int conv_channels, const float* gate, const float* beta, const float* z,
++                               const float* gamma, float eps, float* y, int h_k, int h_v, void* stream) {
++    static const bool split = [] { const char* v = std::getenv("STRATA_GDN_SPLIT"); return v && v[0] == '1'; }();
++    if (split || nslots < 1 || nslots > 4 || !h || !gate || !beta || !z || !gamma || !y || h_k <= 0 || h_v % h_k)
++        return false;   // the caller keeps the per-slot launches
++    GdnSlotArgs a{};
++    for (int i = 0; i < 4; ++i) {
++        const int j = i < nslots ? i : 0;
++        if (!states[j] || nrows[j] < 1 || nrows[j] > kVerifyMaxT) return false;
++        a.state[i] = states[j]; a.row0[i] = row0[j]; a.n[i] = nrows[j];
++    }
++    const int value_dim = S * h_v;
++    const dpct::dim3 b1(S, RG);
++    strata::q_of(stream)->parallel_for<dpct_kernel_name<class night_gdn_step_norm_slots_k>>(
++        sycl::nd_range<3>(sycl::range(1, (unsigned) nslots, (unsigned) h_v) * b1, b1),
++        [=](sycl::nd_item<3> item) [[sycl::reqd_sub_group_size(32)]] {
++            const int sl = (int) item.get_group(1);
++            const int r0 = gdn_slot_pick<1>(a, sl);
++            gdn_step_norm_multi_kernel<true, false>(gdn_slot_pick<0>(a, sl), h + (size_t) r0 * conv_channels,
++                                                    conv_channels, gate + (size_t) r0 * h_v, beta + (size_t) r0 * h_v,
++                                                    z + (size_t) r0 * value_dim, gamma, eps,
++                                                    y + (size_t) r0 * value_dim, h_k, h_v, gdn_slot_pick<2>(a, sl),
++                                                    nullptr, 0, nullptr);
++        });
++    check("night_gdn_step_norm_slots");
++    return true;
++}
++
+ void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const float* gate, const float* beta,
+                          const float* z, const float* gamma, float eps, float* y, int h_k, int h_v, int n_tok,
+                          const int32_t* n_keep, void* stream, int t_out_begin, void* xq_out) {
