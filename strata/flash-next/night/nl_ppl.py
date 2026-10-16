@@ -22,9 +22,9 @@ def texts(n, chars=5200):
     return out
 
 
-def make_config(base, out, tsv):
+def make_config(base, out, tsv, short_read='8192'):
     c = json.loads(Path(base).read_text())
-    c['args'] += ['--short-read', '8192']
+    c['args'] += ['--short-read', short_read]
     c['env']['STRATA_LOGPOS'] = tsv
     c['log'] = str(Path(tsv).with_suffix('.engine.log'))
     Path(out).write_text(json.dumps(c, indent=1))
@@ -39,13 +39,35 @@ def summarize(tsv):
 def main():
     cmd = sys.argv[1]
     if cmd == 'config':
-        make_config(*sys.argv[2:5]); return
+        make_config(*sys.argv[2:6]); return
     if cmd == 'run':
         sys.path.insert(0, str(HERE)); import nl
         tsv = sys.argv[2]; n = int(sys.argv[sys.argv.index('--n') + 1]) if '--n' in sys.argv else 3
         for i, t in enumerate(texts(n)):
             r = nl.send([{"role": "user", "content": t}], 1)
             print('text', i, 'prompt_n', (r['timings'] or {}).get('prompt_n'), flush=True)
+        time.sleep(2)
+        print(json.dumps(summarize(tsv)))
+        return
+    if cmd == 'longrun':   # prefill-path gate: long context via prefill, follow-up via decode windows (LOGPOS)
+        sys.path.insert(0, str(HERE)); import nl
+        tsv = sys.argv[2]
+        docs = sorted((REPO / 'docs').glob('2026*.md'))
+        corpus = ''.join(ch if ord(ch) < 128 else ' ' for p in docs for ch in p.read_text(errors='replace'))
+        npairs = int(sys.argv[sys.argv.index('--pairs') + 1]) if '--pairs' in sys.argv else 2
+        offs = (0, 200000) if npairs == 2 else [int(i * (len(corpus) - 40000) / npairs) for i in range(npairs)]
+        long_texts = [p.read_text(errors='replace') for p in TEXTS]
+        for k, off in enumerate(offs):
+            ctx = corpus[off:off + 32000]
+            src = long_texts[k % 3]; fo = (k // 3) * 5200 % max(1, len(src) - 5200)
+            follow = ''.join(ch if ord(ch) < 128 else ' ' for ch in src[fo:fo + 5200])
+            m1 = [{"role": "user", "content": f"[gate {k}] Read these notes carefully.\n" + ctx}]
+            r1 = nl.send(m1, 1)
+            # fixed assistant turn: the generated first token can differ between arms and would change the context
+            m2 = m1 + [{"role": "assistant", "content": "Understood."}, {"role": "user", "content": follow}]
+            r2 = nl.send(m2, 1)
+            print('pair', k, 'r1 prompt_n', (r1['timings'] or {}).get('prompt_n'), 'r2 prompt_n',
+                  (r2['timings'] or {}).get('prompt_n'), 'cache_n', (r2['timings'] or {}).get('cache_n'), flush=True)
         time.sleep(2)
         print(json.dumps(summarize(tsv)))
         return

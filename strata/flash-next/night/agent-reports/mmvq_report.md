@@ -1,5 +1,9 @@
 # mmvq: dense small-batch MMVQ toward bandwidth roofline (night 2026-10-16)
 
+ROUND 3 (latest, shared expert): engine /mnt/vm_8tb/b70/results/night-20261016/builds/strata-mmvq-shexp2
+(sha256 a9b00e320da52c34...), flag STRATA_NIGHT_SHEXP=1. Delta vs main (60b7f900):
+agents/mmvq_shexp_vs_main.patch (applies cleanly); full worktree diff vs e1b7ee8a: agents/mmvq.patch. See "Round 3".
+
 ROUND 2 (latest): engine /mnt/vm_8tb/b70/results/night-20261016/builds/strata-mmvq-r2b (sha256 a4b0ff80a16e197e...),
 patch /mnt/vm_8tb/b70/results/night-20261016/agents/mmvq.patch (round 1 + round 2, vs base e1b7ee8a).
 New flag STRATA_NIGHT_MMVQ2=1 (implies STRATA_NIGHT_MMVQ=1; one stderr line). Round-1 behaviour (STRATA_NIGHT_MMVQ=1
@@ -229,3 +233,58 @@ head nc8 -25%, Q6_K nc8 -10%, IQ4_XS nc8 -19% vs level 1).
 ## Flags summary
 STRATA_NIGHT_MMVQ=1: round 1 (Q4_K/Q5_K/Q6_K/IQ4_XS, head, ncols 1-8). STRATA_NIGHT_MMVQ2=1: round 1 + round 2
 (pipelined nc5-12, ncols 9-16, IQ3_S, IQ4_NL<=1024 wide). Both default off.
+
+
+# Round 3: fused shared expert (STRATA_NIGHT_SHEXP=1)
+
+## Before (per layer, verifier, native bf16 gate path, x_q8_1 ready as with STRATA_NIGHT_SH_LATE)
+6 launches: gate mmvq, up mmvq, swiglu+q8_1, down mmvq, bf16 gate row (2560 -> 1), sigmoid+scale rows. Breakdown
+(card 1, (gate,up,down) = (IQ4_XS, IQ3_S, IQ4_NL), nc1): gate 5.1 us, up 7.8, swiglu+q8 2.0, down 6.7, gate row 1.9,
+scale ~1.5. The pack mixes formats: gate/up types differ in 31 of 48 layers (13 (gate, up) pairs: Q4_K/Q5_K/Q6_K/
+IQ3_S/IQ4_XS); down IQ4_NL x40, Q2_0 x8.
+
+## After: 3 launches
+1. gate + up in ONE KREG launch (both matrices' tiles in one group; each matrix keeps its own format's lanes and
+   activation registers, shared when the types match; per-format SLM tables side by side), epilogue h = silu(gate) *
+   up (the fused quantizer's expression) -> h; NCOLS extra groups compute the shared gate row bit for bit like
+   bf16_f32_mmvf_kernel<256> (virtual-thread fma order + replayed xor-butterfly trees).
+2. native_quantize_q8_1(h) (same q bytes/ds as native_swiglu_quantize_q8_1 on gate/up).
+3. down (IQ4_NL one lane per block; Q2_0 lane = Q20Traits iqs) with the sigmoid scale in its epilogue.
+Tiles: same-type pairs R2 (GRF128 nc<=3, GRF256 above); mixed pairs R2 (GRF256 for nc>=3).
+Tried and rejected (measured): in-kernel q8 quantization via a grid handoff (device-scope atomic per 32-row chunk;
+STRATA_NIGHT_SHEXP=2 keeps it): +6-7 us per call (fences + tail); mixed pairs at R1: slower than two launches;
+the gate row as ONE extra group with per-column serial loops: +5-10 us at nc>=4 (fixed: one group per column, loads
+hoisted).
+
+## E10 per-layer A/B (night_shexp_bench, card 1, 48 distinct layers per graph, in-order graph replay)
+CONFIG -> shared_expert_multi(nc, x, nw, gate_inp_bf16, ..., x_q8_1_ready, lfuse=0), native bf16 on, original vs
+STRATA_NIGHT_SHEXP (toggle night_shexp_set). Baseline MMVQ level 2 (raw shexp_ab_v6.txt) and level 1 (shexp_ab_v6_lv1.txt).
+COMMAND -> mmvq_work/run_shexp_bench.sh 1,2,4,6,8 {2,1}
+RESULT (us per layer call, orig -> night, MMVQ level 2 baseline; level-1 baseline in parentheses):
+
+| (gate, up, down) x layers | nc1 | nc4 | nc6 | nc8 |
+|---|---|---|---|---|
+| IQ4_XS, IQ3_S, IQ4_NL x8 | 24.9 -> 18.7 (28.1) | 26.4 -> 24.2 (32.6) | 31.8 -> 27.0 (38.9) | 47.3 -> 29.1 (50.4) |
+| IQ3_S, IQ3_S, IQ4_NL x7 | 27.6 -> 21.1 (32.0) | 29.9 -> 26.2 (38.4) | 36.8 -> 28.4 (44.6) | 42.5 -> 30.2 (59.0) |
+| Q4_K, IQ3_S, IQ4_NL x8 | 23.7 -> 18.2 (26.9) | 25.9 -> 24.5 (32.0) | 39.7 -> 28.0 (58.9) | 47.2 -> 31.8 (72.5) |
+| IQ4_XS, IQ4_XS, IQ4_NL x6 | 22.1 -> 15.7 (24.3) | 22.9 -> 20.3 (26.9) | 26.8 -> 23.2 (33.6) | 37.1 -> 24.5 (42.0) |
+| IQ3_S, IQ4_XS, IQ4_NL x3 | 24.9 -> 18.2 | 26.4 -> 24.5 | 31.7 -> 26.9 | 41.9 -> 29.3 |
+| IQ4_XS, Q4_K, IQ4_NL x2 | 21.0 -> 14.9 | 22.4 -> 20.7 | 29.8 -> 23.9 | 37.5 -> 25.9 |
+| IQ4_XS, Q6_K, IQ4_NL x2 | 22.0 -> 15.7 | 23.6 -> 20.7 | 31.0 -> 23.6 | 37.7 -> 25.4 |
+| Q4_K, Q4_K, IQ4_NL x2 | 19.8 -> 14.2 | 21.9 -> 17.8 | 28.7 -> 20.3 | 36.8 -> 22.1 |
+| IQ3_S, IQ3_S, Q2_0 x2 | 42.3 -> 22.5 | 43.0 -> 28.2 | 53.1 -> 31.2 | 62.9 -> 36.1 |
+| IQ4_XS, Q6_K, Q2_0 x1 | 36.8 -> 17.2 | 36.8 -> 22.5 | 47.5 -> 26.3 | 58.0 -> 31.4 |
+
+nc2: 1.27-1.64x. Speedup vs level 2: 1.06-1.66x (never slower); vs level 1: 1.29-2.37x.
+Correctness: vs the level-2 path every IQ4_NL-down layer is BITWISE identical (0 differing output bits at every nc;
+the KREG sums do not depend on R/NCOLS, the h/q8 expression and the scale factor are the originals, the gate row
+replays bf16_f32_mmvf_kernel's order). Q2_0-down layers: KREG vs the multi kernel's order, max abs 3e-5 of 269
+(1.1e-7 relative). Vs level 1: max abs <= 1.95e-3 of 1.5e4 (1.3e-7 relative), FP32 rounding level.
+VERDICT -> ship behind STRATA_NIGHT_SHEXP=1. Estimated from the layer mix (not measured in serving): about -160 us
+per C1 window (nc4) and about -350 us per C2 cycle (nc6) against the level-2 path (more against level 1).
+Note: the fused path uses the KREG traits for IQ3_S/IQ4_NL regardless of STRATA_NIGHT_MMVQ2(_MASK).
+
+## Flags (all default off)
+STRATA_NIGHT_MMVQ=1 (round 1), STRATA_NIGHT_MMVQ2=1 (+ round 2; orchestrator's STRATA_NIGHT_MMVQ2_MASK kept),
+STRATA_NIGHT_SHEXP=1 (round 3; =2 = experimental in-kernel q8 handoff, slower), STRATA_NIGHT_SHEXP_MIXED_MAXC=n caps
+the column count for mixed-type gate/up pairs (default 8).

@@ -1,0 +1,590 @@
+diff --git a/include/strata/kernels/native_router.hpp b/include/strata/kernels/native_router.hpp
+index a940e1b3..c6a9393a 100644
+--- a/include/strata/kernels/native_router.hpp
++++ b/include/strata/kernels/native_router.hpp
+@@ -5,6 +5,8 @@ namespace strata::kernels {
+ // Configure before session capture. Existing graphs retain their selected kernels.
+ // This experiment is off by default and does not modify the legacy router.
+ void native_router_set_enabled(bool enabled);
++/// night lab bench: STRATA_NIGHT_TOPK10 (1 on, 0 off, -1 the environment; set before capture)
++void native_router_set_night_topk(int on);
+ bool native_router_enabled();
+ 
+ // Pinned CUDA topk-moe contract for ONE token, 512 experts, top 10, softmax,
+diff --git a/include/strata/kernels/verify_kernels.hpp b/include/strata/kernels/verify_kernels.hpp
+index 47f5e428..3d175fa4 100644
+--- a/include/strata/kernels/verify_kernels.hpp
++++ b/include/strata/kernels/verify_kernels.hpp
+@@ -33,6 +33,10 @@ void gdn_conv_ab_multi(const float* history, const float* qkv, const float* conv
+                        float eps, int n_tok, int t_begin, bool commit, const float* x, const uint16_t* w_alpha,
+                        const uint16_t* w_beta, const float* dt, const float* ssm_a, float* gate, float* beta, int n_embd,
+                        int h_v, void* stream);
++/// night lab bench: STRATA_NIGHT_GDN_GRF (1 on, 0 off, -1 the environment; set before capture)
++void gdn_grf_set_night(int on);
++/// night lab bench: STRATA_NIGHT_GDN_AB (1 on, 0 off, -1 the environment; set before capture)
++void gdn_ab_set_night(int on);
+ void gdn_ab_multi(const float* x, const uint16_t* w_alpha, const uint16_t* w_beta, const float* dt, const float* ssm_a,
+                   float* gate, float* beta, int n_embd, int h_v, int n_tok, void* stream);
+ /// The recurrence + output norm for T tokens (h = (T, conv_channels) as q|k|v, gate/beta (T, h_v), z/y
+diff --git a/sycl/include/strata/kernels/native_router.hpp b/sycl/include/strata/kernels/native_router.hpp
+index 4edfea61..cfc49e0b 100644
+--- a/sycl/include/strata/kernels/native_router.hpp
++++ b/sycl/include/strata/kernels/native_router.hpp
+@@ -5,6 +5,8 @@ namespace strata::kernels {
+ // Configure before session capture. Existing graphs retain their selected kernels.
+ // This experiment is off by default and does not modify the legacy router.
+ void native_router_set_enabled(bool enabled);
++/// night lab bench: STRATA_NIGHT_TOPK10 (1 on, 0 off, -1 the environment; set before capture)
++void native_router_set_night_topk(int on);
+ bool native_router_enabled();
+ 
+ // Pinned CUDA topk-moe contract for ONE token, 512 experts, top 10, softmax,
+diff --git a/sycl/src/kernels/cuda/native_router.dp.cpp b/sycl/src/kernels/cuda/native_router.dp.cpp
+index e392b88a..e90b694c 100644
+--- a/sycl/src/kernels/cuda/native_router.dp.cpp
++++ b/sycl/src/kernels/cuda/native_router.dp.cpp
+@@ -29,6 +29,8 @@
+ #include <cfloat>
+ #include <cstddef>
+ #include <cstdint>
++#include <cstdio>
++#include <cstdlib>
+ #include <stdexcept>
+ 
+ namespace strata::kernels {
+@@ -216,6 +218,111 @@ __dpct_inline__ void route_multi(const float *__restrict__ logits,
+     const float inverse_selected_sum = 1.0f / selected_sum;
+     if (lane < 10) weights[lane] = selected * inverse_selected_sum;
+ }
++// ---- night lab STRATA_NIGHT_TOPK10=1 (default off): route<NE> with the same prologue (softmax bits) and the same
++// selection, but no dynamic register-array indexing and a short dependency chain per round: each lane keeps its
++// best (first maximum = lowest id on ties, as the 15-step scan) from a 4-level tree, and only the round's winning lane
++// clears its entry (statically unrolled selects) and recomputes it; the cross-lane (value, id) tree, ids[rank],
++// the winner lanes' selected_sum order and the final warp_sum are unchanged: bitwise the same ids and weights.
++// the same xor trees as warp_sum / warp_max, through the SPIR-V ShuffleXor (constant mask) instead of dpct's generic
++// shuffle with a computed lane id (IGC lowers that to an a0-indirect gather: ~14 movs per shuffle in route<512>)
++__dpct_inline__ float night_warp_sum(sycl::sub_group sg, float value) {
++#pragma unroll
++    for (int mask = 16; mask; mask >>= 1) value += sycl::permute_group_by_xor(sg, value, mask);
++    return value;
++}
++__dpct_inline__ float night_warp_max(sycl::sub_group sg, float value) {
++#pragma unroll
++    for (int mask = 16; mask; mask >>= 1) value = sycl::fmax(value, sycl::permute_group_by_xor(sg, value, mask));
++    return value;
++}
++template <int NE>
++__dpct_inline__ void lane_best(const float (&v)[NE / 32], int lane, float& best, int& expert) {
++    constexpr int N = NE / 32;
++    float bv[N];
++    int bi[N];
++#pragma unroll
++    for (int i = 0; i < N; ++i) { bv[i] = v[i]; bi[i] = i; }
++#pragma unroll
++    for (int w = 1; w < N; w *= 2)
++#pragma unroll
++        for (int i = 0; i + w < N; i += 2 * w)
++            {   // strict: the lower index keeps ties
++                const bool take = bv[i + w] > bv[i];
++                bv[i] = take ? bv[i + w] : bv[i];
++                bi[i] = take ? bi[i + w] : bi[i];
++            }
++    best = bv[0];
++    expert = lane + bi[0] * 32;
++}
++template <int NE>
++__dpct_inline__ void route_night(const float *__restrict__ logits, int32_t *__restrict__ ids,
++                                 float *__restrict__ weights) {
++    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
++    logits += (size_t)item_ct1.get_group(2) * NE;
++    ids += (size_t)item_ct1.get_group(2) * 10;
++    weights += (size_t)item_ct1.get_group(2) * 10;
++    if (item_ct1.get_local_id(1) != 0) return;
++    const int lane = item_ct1.get_local_id(2);
++    float values[NE / 32];
++#pragma unroll
++    for (int i = 0; i < NE / 32; ++i) values[i] = logits[lane + i * 32];
++    sycl::group_barrier(item_ct1.get_sub_group());
++    float maximum = -INFINITY;
++#pragma unroll
++    for (int i = 0; i < NE / 32; ++i) maximum = sycl::max(maximum, values[i]);
++    maximum = night_warp_max(item_ct1.get_sub_group(), maximum);
++    float sum = 0.0f;
++#pragma unroll
++    for (int i = 0; i < NE / 32; ++i) {
++        values[i] = sycl::native::exp(values[i] - maximum);
++        sum += values[i];
++    }
++    const float reciprocal = 1.0f / night_warp_sum(item_ct1.get_sub_group(), sum);
++#pragma unroll
++    for (int i = 0; i < NE / 32; ++i) {
++        values[i] *= reciprocal;
++        if (sycl::isnan(values[i])) values[i] = -FLT_MAX;
++    }
++    float lb;
++    int le;
++    lane_best<NE>(values, lane, lb, le);
++    float selected = 0.0f, selected_sum = 0.0f;
++#pragma unroll
++    for (int rank = 0; rank < 10; ++rank) {
++        float best = lb;
++        int expert = le;
++#pragma unroll
++        for (int mask = 16; mask; mask >>= 1) {
++            const float other = sycl::permute_group_by_xor(item_ct1.get_sub_group(), best, mask);
++            const int other_id = sycl::permute_group_by_xor(item_ct1.get_sub_group(), expert, mask);
++            const bool take = (other > best) | ((other == best) & (other_id < expert));   // branch-free, same rule
++            best = take ? other : best;
++            expert = take ? other_id : expert;
++        }
++        if ((expert & 31) == lane) {
++            const int slot = expert >> 5;
++#pragma unroll
++            for (int i = 0; i < NE / 32; ++i) values[i] = i == slot ? -INFINITY : values[i];
++            ids[rank] = expert;
++            selected_sum += best;
++            lane_best<NE>(values, lane, lb, le);
++        }
++        if (rank == lane) selected = best;
++    }
++    selected_sum = sycl::max(night_warp_sum(item_ct1.get_sub_group(), selected_sum), 6.103515625e-5f);
++    const float inverse_selected_sum = 1.0f / selected_sum;
++    if (lane < 10) weights[lane] = selected * inverse_selected_sum;
++}
++int g_night_topk_force = -1;   // the bench: >= 0 overrides the environment (set before capture)
++bool night_topk10() {
++    static const bool env = [] {
++        const char* v = std::getenv("STRATA_NIGHT_TOPK10");
++        const bool b = v != nullptr && v[0] == '1';
++        if (b) std::fprintf(stderr, "strata night: STRATA_NIGHT_TOPK10=1 (router top-10 without dynamic indexing)\n");
++        return b;
++    }();
++    return g_night_topk_force >= 0 ? g_night_topk_force != 0 : env;
++}
+ bool valid(const void* p, size_t bytes) {
+     const auto address = reinterpret_cast<uintptr_t>(p);
+     return p && address % 4 == 0 && bytes <= UINTPTR_MAX - address;
+@@ -226,6 +333,7 @@ bool overlap(const void* a, size_t an, const void* b, size_t bn) {
+ }
+ }
+ void native_router_set_enabled(bool value) { enabled.store(value, std::memory_order_relaxed); }
++void native_router_set_night_topk(int on) { g_night_topk_force = on; }
+ bool native_router_enabled() { return enabled.load(std::memory_order_relaxed); }
+ void native_router_top10(const float* logits, int32_t* ids, float* weights, void* stream) {
+     if (!stream || !valid(logits, 512 * 4) || !valid(ids, 10 * 4) || !valid(weights, 10 * 4)
+@@ -236,6 +344,13 @@ void native_router_top10(const float* logits, int32_t* ids, float* weights, void
+         auto exp_props = sycl::ext::oneapi::experimental::properties{
+             sycl::ext::oneapi::experimental::use_root_sync};
+ 
++        if (night_topk10()) {
++            ((sycl::queue *)(strata::q_of(stream)))
++                ->parallel_for<dpct_kernel_name<class route_512_night>>(
++                    sycl::nd_range<3>(sycl::range(1, 8, 32), sycl::range(1, 8, 32)), exp_props,
++                    [=](sycl::nd_item<3> item_ct1) [[sycl::reqd_sub_group_size(32)]] { route_night<512>(logits, ids, weights); });
++            return;
++        }
+         ((sycl::queue *)(strata::q_of(stream)))
+             ->parallel_for<dpct_kernel_name<class route_96e6fb>>(
+                 sycl::nd_range<3>(sycl::range(1, 8, 32), sycl::range(1, 8, 32)),
+@@ -273,6 +388,13 @@ void native_router_top10_multi(const float* logits, int32_t* ids, float* weights
+     // SYCL port: one block per token running the single-token route<512> (the same kernel as the 256-expert multi
+     // launch below).  Upstream's one-warp-per-token route_multi gives the same bits (native_multi_parity checks
+     // that) but hung an Arc A750 (Alchemist) on its first launch.
++    if (night_topk10()) {
++        ((sycl::queue *)(strata::q_of(stream)))
++            ->parallel_for<dpct_kernel_name<class route_512_multi_night>>(
++                sycl::nd_range<3>(sycl::range(1, 1, (unsigned) n_tok) * sycl::range(1, 8, 32), sycl::range(1, 8, 32)),
++                [=](sycl::nd_item<3> item_ct1) [[sycl::reqd_sub_group_size(32)]] { route_night<512>(logits, ids, weights); });
++        return;
++    }
+     ((sycl::queue *)(strata::q_of(stream)))
+         ->parallel_for<dpct_kernel_name<class route_512_multi>>(
+             sycl::nd_range<3>(sycl::range(1, 1, (unsigned) n_tok) * sycl::range(1, 8, 32), sycl::range(1, 8, 32)),
+@@ -304,6 +426,13 @@ void native_router_top10_multi_ne(const float* logits, int32_t* ids, float* weig
+     if (!stream || n_tok < 1 || n_expert != 256 || !valid(logits, (size_t) n_tok * 256 * 4) || !valid(ids, (size_t) n_tok * 10 * 4) ||
+         !valid(weights, (size_t) n_tok * 10 * 4))
+         throw std::invalid_argument("native router (multi, 256): a stream, 256 experts and aligned [n,256]/[n,10] buffers");
++    if (night_topk10()) {
++        ((sycl::queue *)(strata::q_of(stream)))
++            ->parallel_for<dpct_kernel_name<class route_256_multi_night>>(
++                sycl::nd_range<3>(sycl::range(1, 1, (unsigned) n_tok) * sycl::range(1, 8, 32), sycl::range(1, 8, 32)),
++                [=](sycl::nd_item<3> item_ct1) [[sycl::reqd_sub_group_size(32)]] { route_night<256>(logits, ids, weights); });
++        return;
++    }
+     ((sycl::queue *)(strata::q_of(stream)))
+         ->parallel_for<dpct_kernel_name<class route_256_multi>>(
+             sycl::nd_range<3>(sycl::range(1, 1, (unsigned) n_tok) * sycl::range(1, 8, 32), sycl::range(1, 8, 32)),
+diff --git a/sycl/src/kernels/cuda/verify_kernels.dp.cpp b/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+index 3764811f..8a4b00e1 100644
+--- a/sycl/src/kernels/cuda/verify_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+@@ -4,6 +4,7 @@
+ // elementwise.cu) with the same operation order, so a verify window reproduces plain decode bit for bit.
+ #define DPCT_PROFILING_ENABLED
+ #include <sycl/sycl.hpp>
++#include <sycl/ext/intel/experimental/grf_size_properties.hpp>
+ #include "strata/core/geometry.hpp"
+ #include <dpct/dpct.hpp>
+ #include "strata/sycl_queue.hpp"
+@@ -222,6 +223,58 @@ __dpct_inline__ void gdn_ab_multi_kernel(
+     }
+ }
+ 
++// night lab STRATA_NIGHT_GDN_AB=1 (default off): gdn_ab_multi with one sub-group per (row, token) instead of one per
++// row looping over the tokens: T x more sub-groups in flight (96 at most before: ~3% of the card), each lane's chunk
++// order, FMA chain, xor tree and epilogue unchanged - bitwise the same gate / beta.  Loads of two chunks are issued
++// ahead of their FMAs (the chain itself stays sequential).
++__dpct_inline__ void gdn_ab_night_kernel(const float *__restrict__ x, const uint16_t *__restrict__ wa,
++                                         const uint16_t *__restrict__ wb, const float *__restrict__ dt,
++                                         const float *__restrict__ ssm_a, float *__restrict__ gate,
++                                         float *__restrict__ beta, int n, int h_v) {
++    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
++    const int row = item_ct1.get_group(2) * 2 + (item_ct1.get_local_id(2) >> 5), lane = item_ct1.get_local_id(2) & 31;
++    const int t = item_ct1.get_group(1);
++    if (row >= 2 * h_v) return;
++    const bool is_beta = row >= h_v;
++    const int r = is_beta ? row - h_v : row;
++    const sycl::uint4 *w4 = reinterpret_cast<const sycl::uint4 *>((is_beta ? wb : wa) + (size_t) r * n);
++    const float* xt = x + (size_t) t * n;
++    float a = 0.0f;
++    auto step = [&](const sycl::uint4& wv, const sycl::float4& xa, const sycl::float4& xb) {
++        a = sycl::fma(sycl::bit_cast<float>(wv.x() << 16), xa.x(), a);
++        a = sycl::fma(sycl::bit_cast<float>(wv.x() & 0xffff0000u), xa.y(), a);
++        a = sycl::fma(sycl::bit_cast<float>(wv.y() << 16), xa.z(), a);
++        a = sycl::fma(sycl::bit_cast<float>(wv.y() & 0xffff0000u), xa.w(), a);
++        a = sycl::fma(sycl::bit_cast<float>(wv.z() << 16), xb.x(), a);
++        a = sycl::fma(sycl::bit_cast<float>(wv.z() & 0xffff0000u), xb.y(), a);
++        a = sycl::fma(sycl::bit_cast<float>(wv.w() << 16), xb.z(), a);
++        a = sycl::fma(sycl::bit_cast<float>(wv.w() & 0xffff0000u), xb.w(), a);
++    };
++    int j = lane;
++    for (; j + 32 < n / 8; j += 64) {
++        const sycl::uint4 w0 = w4[j], w1 = w4[j + 32];
++        const sycl::float4 x0a = *reinterpret_cast<const sycl::float4 *>(xt + j * 8);
++        const sycl::float4 x0b = *reinterpret_cast<const sycl::float4 *>(xt + j * 8 + 4);
++        const sycl::float4 x1a = *reinterpret_cast<const sycl::float4 *>(xt + (j + 32) * 8);
++        const sycl::float4 x1b = *reinterpret_cast<const sycl::float4 *>(xt + (j + 32) * 8 + 4);
++        step(w0, x0a, x0b);
++        step(w1, x1a, x1b);
++    }
++    for (; j < n / 8; j += 32)
++        step(w4[j], *reinterpret_cast<const sycl::float4 *>(xt + j * 8), *reinterpret_cast<const sycl::float4 *>(xt + j * 8 + 4));
++#pragma unroll
++    for (int o = 16; o > 0; o >>= 1)
++        a += dpct::experimental::permute_sub_group_by_xor(0xffffffffu, sycl::ext::oneapi::this_work_item::get_sub_group(), a, o);
++    if (lane != 0) return;
++    if (is_beta) {
++        beta[(size_t) t * h_v + r] = 1.0f / (1.0f + sycl::native::exp(-a));
++    } else {
++        const float v = a + dt[r];
++        const float sp = v > 20.0f ? v : sycl::log1p(sycl::native::exp(v));
++        gate[(size_t) t * h_v + r] = sp * ssm_a[r];
++    }
++}
++
+ // State-only commit kernel: each head's 128 independent state columns are split across 4 blocks of 32 columns
+ // (48 * 4 = 192 blocks of 128 threads across all SMs, vs 48 blocks of 512 threads), with no sq/o/norm/z/y work.
+ /*
+@@ -1747,6 +1800,19 @@ bool gdn_commit_layers(float* state, int64_t state_stride, int64_t conv_off, con
+     return true;
+ }
+ 
++namespace {
++int g_night_gdn_ab_force = -1;   // the bench: >= 0 overrides the environment
++bool night_gdn_ab() {
++    static const bool env = [] {
++        const char* v = std::getenv("STRATA_NIGHT_GDN_AB");
++        const bool b = v != nullptr && v[0] == '1';
++        if (b) std::fprintf(stderr, "strata night: STRATA_NIGHT_GDN_AB=1 (gdn_ab_multi: a sub-group per row and token)\n");
++        return b;
++    }();
++    return g_night_gdn_ab_force >= 0 ? g_night_gdn_ab_force != 0 : env;
++}
++}  // namespace
++void gdn_ab_set_night(int on) { g_night_gdn_ab_force = on; }
+ void gdn_ab_multi(const float* x, const uint16_t* w_alpha, const uint16_t* w_beta, const float* dt, const float* ssm_a,
+                   float* gate, float* beta, int n_embd, int h_v, int n_tok, void* stream) {
+     if (n_embd % 8 != 0 || n_tok < 1 || n_tok > kVerifyMaxT) {
+@@ -1755,6 +1821,15 @@ void gdn_ab_multi(const float* x, const uint16_t* w_alpha, const uint16_t* w_bet
+     }
+     const unsigned blocks = (unsigned) ((2 * h_v + 1) / 2);
+     dpct::queue_ptr st = strata::q_of(stream);
++    if (night_gdn_ab()) {
++        auto exp_props = sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
++        st->parallel_for<dpct_kernel_name<class gdn_ab_night>>(
++            sycl::nd_range<3>(sycl::range(1, (unsigned) n_tok, blocks) * sycl::range(1, 1, 64), sycl::range(1, 1, 64)),
++            exp_props, [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {
++                gdn_ab_night_kernel(x, w_alpha, w_beta, dt, ssm_a, gate, beta, n_embd, h_v);
++            });
++        return;
++    }
+     switch (n_tok) {
+     case 1: {
+         auto exp_props = sycl::ext::oneapi::experimental::properties{
+@@ -1882,6 +1957,21 @@ __dpct_inline__ auto gdn_slot_pick(const GdnSlotArgs& a, int s) {
+     else { int v = a.n[0]; v = s == 1 ? a.n[1] : v; v = s == 2 ? a.n[2] : v; v = s == 3 ? a.n[3] : v; return v; }
+ }
+ }  // namespace
++// night lab STRATA_NIGHT_GDN_GRF=1 (default off): the per-slot verify recurrence (gdn_step_norm_multi_kernel<true, *>,
++// the C1 window's path) compiled with 256 GRF: at 128 GRF IGC spills 704-1152 bytes per thread (32 state rows x SIMD32
++// = 64 GRF of state alone).  Same code: bitwise.  Not used for the GDN_SLOTS launch (2 slots: 96 work-groups of 512
++// threads; at 256 GRF the halved occupancy made it 1-12% slower, ep_night_bench gdnstep).
++int g_night_gdn_grf_force = -1;
++bool night_gdn_grf() {
++    static const bool env = [] {
++        const char* e = std::getenv("STRATA_NIGHT_GDN_GRF");
++        const bool on = e != nullptr && e[0] == '1';
++        if (on) std::fprintf(stderr, "strata night: STRATA_NIGHT_GDN_GRF=1 (GDN verify recurrence with 256 GRF, no spills)\n");
++        return on;
++    }();
++    return g_night_gdn_grf_force >= 0 ? g_night_gdn_grf_force != 0 : env;
++}
++void gdn_grf_set_night(int on) { g_night_gdn_grf_force = on; }
+ bool night_gdn_slots_enabled() {
+     static const bool v = [] {
+         const char* e = std::getenv("STRATA_NIGHT_GDN_SLOTS");
+@@ -2060,6 +2150,15 @@ void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const
+         the limit. To get the device limit, query
+         info::device::max_work_group_size. Adjust the work-group size if needed.
+         */
++        if (all_out && night_gdn_grf()) {
++            strata::q_of(stream)->parallel_for<dpct_kernel_name<class gdn_step_norm_multi_grf, dpct_kernel_scalar<true>>>(
++                sycl::nd_range<3>(g1 * b1, b1),
++                sycl::ext::oneapi::experimental::properties{sycl::ext::intel::experimental::grf_size<256>},
++                [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {
++                    gdn_step_norm_multi_kernel<true, true>(state, h, conv_channels, gate, beta, z, gamma, eps, y, h_k,
++                                                           h_v, n_tok, nullptr, 0, xq);
++                });
++        } else
+         if (all_out) {
+             auto exp_props = sycl::ext::oneapi::experimental::properties{
+                 sycl::ext::oneapi::experimental::use_root_sync};
+@@ -2098,6 +2197,14 @@ void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const
+                                 xq);
+                         });
+         }
++    } else if (all_out && night_gdn_grf()) {
++        strata::q_of(stream)->parallel_for<dpct_kernel_name<class gdn_step_norm_multi_grf, dpct_kernel_scalar<false>>>(
++            sycl::nd_range<3>(g1 * b1, b1),
++            sycl::ext::oneapi::experimental::properties{sycl::ext::intel::experimental::grf_size<256>},
++            [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {
++                gdn_step_norm_multi_kernel<true, false>(state, h, conv_channels, gate, beta, z, gamma, eps, y, h_k, h_v,
++                                                        n_tok, nullptr, 0, nullptr);
++            });
+     } else if (all_out) {
+         /*
+         DPCT1049: The work-group size passed to the SYCL kernel may exceed
+diff --git a/sycl/src/kernels/ep_night_bench.cpp b/sycl/src/kernels/ep_night_bench.cpp
+index b609cf22..162f4c82 100644
+--- a/sycl/src/kernels/ep_night_bench.cpp
++++ b/sycl/src/kernels/ep_night_bench.cpp
+@@ -13,6 +13,8 @@
+ #include "strata/kernels/iq_kernels.hpp"
+ #include "strata/kernels/native_moe.hpp"
+ #include "strata/kernels/ep_kernels.hpp"
++#include "strata/kernels/native_router.hpp"
++#include "strata/kernels/verify_kernels.hpp"
+ 
+ #include <algorithm>
+ #include <chrono>
+@@ -470,6 +472,190 @@ int plan_bench(int reps) {
+     return fails ? 1 : 0;
+ }
+ 
++// ------------------------------------------------------------------------------------------------ router (TOPK10)
++int router_bench(int reps) {
++    sycl::queue& q = Q();
++    std::mt19937 rng(5150);
++    const int NE = 512, MAXT = 8, TRIALS = 400;
++    float* d_l = sycl::malloc_device<float>((size_t) MAXT * NE * 48, q);
++    int32_t* d_i[2];
++    float* d_w[2];
++    for (int v = 0; v < 2; ++v) { d_i[v] = sycl::malloc_device<int32_t>(MAXT * 10 * 48, q); d_w[v] = sycl::malloc_device<float>(MAXT * 10 * 48, q); }
++    std::normal_distribution<float> nd(0.f, 1.f);
++    std::uniform_int_distribution<int> pick(0, NE - 1);
++    int bad = 0;
++    long checked = 0;
++    for (int trial = 0; trial < TRIALS; ++trial) {
++        const int T = 1 + trial % MAXT;
++        std::vector<float> l((size_t) T * NE);
++        const int kind = trial % 5;
++        for (auto& v : l) v = (kind == 0 ? 0.5f : kind == 1 ? 3.0f : 1.5f) * nd(rng);
++        if (kind == 2) for (auto& v : l) v = std::round(v * 4.0f) / 4.0f;   // many exact ties
++        if (kind == 3) for (int t = 0; t < T; ++t) for (int k = 0; k < 40; ++k) l[(size_t) t * NE + pick(rng)] = 2.5f;   // tied leaders
++        if (kind == 4) for (int t = 0; t < T; ++t) for (int k = 0; k < NE; ++k) l[(size_t) t * NE + k] = (k % 7 == 0) ? 1.0f : -1.0f;
++        q.memcpy(d_l, l.data(), l.size() * 4).wait();
++        std::vector<int32_t> ids[2];
++        std::vector<float> w[2];
++        for (int v = 0; v < 2; ++v) {
++            q.memset(d_i[v], 0xFF, MAXT * 40).wait();
++            q.memset(d_w[v], 0xFF, MAXT * 40).wait();
++            k::native_router_set_night_topk(v);
++            if (T == 1 && trial % 2) k::native_router_top10(d_l, d_i[v], d_w[v], &q);
++            else k::native_router_top10_multi(d_l, d_i[v], d_w[v], T, &q);
++            q.wait();
++            ids[v].resize((size_t) T * 10); w[v].resize((size_t) T * 10);
++            q.memcpy(ids[v].data(), d_i[v], (size_t) T * 40).wait();
++            q.memcpy(w[v].data(), d_w[v], (size_t) T * 40).wait();
++        }
++        k::native_router_set_night_topk(-1);
++        checked += T;
++        if (std::memcmp(ids[0].data(), ids[1].data(), (size_t) T * 40) || std::memcmp(w[0].data(), w[1].data(), (size_t) T * 40)) {
++            if (bad < 5) std::printf("router trial %d (T=%d kind %d): DIFF ids0 %d ids1 %d\n", trial, T, kind, ids[0][0], ids[1][0]);
++            ++bad;
++        }
++    }
++    std::printf("router top-10: %ld token rows (ties, flat, wide, tied leaders), night vs default ids+weights bitwise: %s\n",
++                checked, bad ? "FAIL" : "equal");
++    for (int T : {1, 4, 6, 8}) {
++        double t[2];
++        for (int v = 0; v < 2; ++v) {
++            k::native_router_set_night_topk(v);
++            t[v] = time_graph_us(q, [&] { for (int i = 0; i < 48; ++i) k::native_router_top10_multi(d_l + (size_t) i * MAXT * NE, d_i[v] + i * MAXT * 10, d_w[v] + i * MAXT * 10, T, &q); }, 48, reps);
++        }
++        k::native_router_set_night_topk(-1);
++        std::printf("router top-10 T=%d: default %.2f us, night %.2f us per call (48 in a graph)\n", T, t[0], t[1]);
++    }
++    sycl::free(d_l, q);
++    for (int v = 0; v < 2; ++v) { sycl::free(d_i[v], q); sycl::free(d_w[v], q); }
++    return bad ? 1 : 0;
++}
++
++// ------------------------------------------------------------------------------------------------ gdnab (GDN_AB)
++int gdnab_bench(int reps) {
++    sycl::queue& q = Q();
++    std::mt19937 rng(77);
++    const int n = 2560, hv = 48, MAXT = 8, NL = 36;
++    std::normal_distribution<float> nd(0.f, 1.f);
++    auto bf16 = [](float f) { uint32_t u; std::memcpy(&u, &f, 4); return (uint16_t) ((u + 0x7FFF + ((u >> 16) & 1)) >> 16); };
++    std::vector<uint16_t> wa((size_t) NL * hv * n), wb((size_t) NL * hv * n);
++    for (auto& v : wa) v = bf16(0.05f * nd(rng));
++    for (auto& v : wb) v = bf16(0.05f * nd(rng));
++    std::vector<float> x((size_t) MAXT * n), dt(hv), sa(hv);
++    for (auto& v : x) v = nd(rng);
++    for (auto& v : dt) v = nd(rng);
++    for (auto& v : sa) v = -std::fabs(nd(rng));
++    uint16_t* d_wa = sycl::malloc_device<uint16_t>(wa.size(), q);
++    uint16_t* d_wb = sycl::malloc_device<uint16_t>(wb.size(), q);
++    float* d_x = sycl::malloc_device<float>(x.size(), q);
++    float* d_dt = sycl::malloc_device<float>(hv, q);
++    float* d_sa = sycl::malloc_device<float>(hv, q);
++    float* d_g[2]; float* d_b[2];
++    for (int v = 0; v < 2; ++v) { d_g[v] = sycl::malloc_device<float>(MAXT * hv, q); d_b[v] = sycl::malloc_device<float>(MAXT * hv, q); }
++    q.memcpy(d_wa, wa.data(), wa.size() * 2); q.memcpy(d_wb, wb.data(), wb.size() * 2);
++    q.memcpy(d_x, x.data(), x.size() * 4); q.memcpy(d_dt, dt.data(), hv * 4); q.memcpy(d_sa, sa.data(), hv * 4); q.wait();
++    int bad = 0;
++    for (int T = 1; T <= MAXT; ++T)
++        for (int layer : {0, 13, 35}) {
++            std::vector<float> g[2], b[2];
++            for (int v = 0; v < 2; ++v) {
++                q.memset(d_g[v], 0xFF, MAXT * hv * 4).wait(); q.memset(d_b[v], 0xFF, MAXT * hv * 4).wait();
++                k::gdn_ab_set_night(v);
++                k::gdn_ab_multi(d_x, d_wa + (size_t) layer * hv * n, d_wb + (size_t) layer * hv * n, d_dt, d_sa, d_g[v], d_b[v], n, hv, T, &q);
++                q.wait();
++                g[v].resize((size_t) T * hv); b[v].resize((size_t) T * hv);
++                q.memcpy(g[v].data(), d_g[v], (size_t) T * hv * 4).wait(); q.memcpy(b[v].data(), d_b[v], (size_t) T * hv * 4).wait();
++            }
++            if (std::memcmp(g[0].data(), g[1].data(), (size_t) T * hv * 4) || std::memcmp(b[0].data(), b[1].data(), (size_t) T * hv * 4)) {
++                ++bad; std::printf("gdn_ab T=%d layer %d: DIFF\n", T, layer);
++            }
++        }
++    k::gdn_ab_set_night(-1);
++    std::printf("gdn_ab_multi: night vs default gate+beta bitwise for T=1..8 x 3 weight sets: %s\n", bad ? "FAIL" : "equal");
++    for (int T : {1, 4, 6, 8}) {
++        double t[2];
++        for (int v = 0; v < 2; ++v) {
++            k::gdn_ab_set_night(v);
++            t[v] = time_graph_us(q, [&] { for (int l = 0; l < NL; ++l) k::gdn_ab_multi(d_x, d_wa + (size_t) l * hv * n, d_wb + (size_t) l * hv * n, d_dt, d_sa, d_g[v], d_b[v], n, hv, T, &q); }, NL, reps);
++        }
++        k::gdn_ab_set_night(-1);
++        std::printf("gdn_ab_multi T=%d: default %.2f us, night %.2f us per call (36 layers' weights in a graph)\n", T, t[0], t[1]);
++    }
++    for (void* p : {(void*) d_wa, (void*) d_wb, (void*) d_x, (void*) d_dt, (void*) d_sa, (void*) d_g[0], (void*) d_g[1], (void*) d_b[0], (void*) d_b[1]}) sycl::free(p, q);
++    return bad ? 1 : 0;
++}
++
++// ------------------------------------------------------------------------------------------------ gdnstep (GDN_GRF)
++int gdnstep_bench(int reps) {
++    sycl::queue& q = Q();
++    std::mt19937 rng(99);
++    const int hk = 16, hv = 48, S = 128, C = 2 * S * hk + S * hv, VD = S * hv, MAXT = 8, NL = 36, NS = 2;
++    const size_t st_floats = (size_t) hv * S * S;
++    std::normal_distribution<float> nd(0.f, 1.f);
++    std::uniform_real_distribution<float> u01(0.05f, 0.95f);
++    float* d_st = sycl::malloc_device<float>(st_floats * NL * NS, q);
++    {
++        std::vector<float> st(st_floats);
++        for (auto& v : st) v = 0.05f * nd(rng);
++        for (int i = 0; i < NL * NS; ++i) q.memcpy(d_st + st_floats * i, st.data(), st_floats * 4);
++        q.wait();
++    }
++    std::vector<float> h((size_t) MAXT * C), g(MAXT * hv), b(MAXT * hv), z((size_t) MAXT * VD), gam(S);
++    for (auto& v : h) v = 0.1f * nd(rng);
++    for (auto& v : g) v = -std::fabs(0.3f * nd(rng));
++    for (auto& v : b) v = u01(rng);
++    for (auto& v : z) v = nd(rng);
++    for (auto& v : gam) v = 1.0f + 0.1f * nd(rng);
++    float* d_h = sycl::malloc_device<float>(h.size(), q); float* d_g = sycl::malloc_device<float>(g.size(), q);
++    float* d_b = sycl::malloc_device<float>(b.size(), q); float* d_z = sycl::malloc_device<float>(z.size(), q);
++    float* d_gam = sycl::malloc_device<float>(S, q);
++    float* d_y[2] = {sycl::malloc_device<float>((size_t) MAXT * VD, q), sycl::malloc_device<float>((size_t) MAXT * VD, q)};
++    uint8_t* d_xq[2] = {sycl::malloc_device<uint8_t>((size_t) MAXT * VD / 32 * 36, q), sycl::malloc_device<uint8_t>((size_t) MAXT * VD / 32 * 36, q)};
++    q.memcpy(d_h, h.data(), h.size() * 4); q.memcpy(d_g, g.data(), g.size() * 4); q.memcpy(d_b, b.data(), b.size() * 4);
++    q.memcpy(d_z, z.data(), z.size() * 4); q.memcpy(d_gam, gam.data(), S * 4); q.wait();
++    const float eps = 1e-6f;
++    int bad = 0;
++    auto run_one = [&](int v, int T, int layer, bool slots, bool xq) {
++        k::gdn_grf_set_night(v);
++        float* st = d_st + st_floats * (size_t) (layer * NS);
++        if (slots) {
++            float* sts[2] = {st, st + st_floats};
++            const int r0[2] = {0, T / 2}, nr[2] = {T / 2, T - T / 2};
++            if (!k::night_gdn_step_norm_slots(sts, r0, nr, 2, d_h, C, d_g, d_b, d_z, d_gam, eps, d_y[v], hk, hv, &q)) std::printf("slots launch refused\n");
++        } else {
++            k::gdn_step_norm_multi(st, d_h, C, d_g, d_b, d_z, d_gam, eps, d_y[v], hk, hv, T, nullptr, &q, 0, xq ? d_xq[v] : nullptr);
++        }
++    };
++    for (int T : {2, 3, 4, 6, 8})
++        for (int mode = 0; mode < 3; ++mode) {
++            const bool slots = mode == 2, xq = mode == 1;
++            if (slots && T < 2) continue;
++            for (int v = 0; v < 2; ++v) { q.memset(d_y[v], 0xFF, (size_t) MAXT * VD * 4).wait(); q.memset(d_xq[v], 0x5A, (size_t) MAXT * VD / 32 * 36).wait(); run_one(v, T, 5, slots, xq); q.wait(); }
++            std::vector<float> y0((size_t) T * VD), y1((size_t) T * VD);
++            q.memcpy(y0.data(), d_y[0], y0.size() * 4).wait(); q.memcpy(y1.data(), d_y[1], y1.size() * 4).wait();
++            bool same = !std::memcmp(y0.data(), y1.data(), y0.size() * 4);
++            if (xq) {
++                std::vector<uint8_t> a((size_t) T * VD / 32 * 36), c(a.size());
++                q.memcpy(a.data(), d_xq[0], a.size()).wait(); q.memcpy(c.data(), d_xq[1], c.size()).wait();
++                same = same && !std::memcmp(a.data(), c.data(), a.size());
++            }
++            if (!same) { ++bad; std::printf("gdn step T=%d mode %d: DIFF\n", T, mode); }
++        }
++    k::gdn_grf_set_night(-1);
++    std::printf("gdn verify recurrence: 256-GRF vs default y (+q8_1 image) bitwise, T=2..8, per-slot / q8 / 2-slot: %s\n", bad ? "FAIL" : "equal");
++    for (int T : {3, 4, 6, 8})
++        for (int mode : {0, 2}) {
++            double t[2];
++            for (int v = 0; v < 2; ++v) {
++                t[v] = time_graph_us(q, [&] { for (int l = 0; l < NL; ++l) run_one(v, T, l, mode == 2, false); }, NL, reps);
++            }
++            k::gdn_grf_set_night(-1);
++            std::printf("gdn verify recurrence %s T=%d: default %.2f us, 256 GRF %.2f us per layer (%d layers' states in a graph)\n",
++                        mode == 2 ? "2 slots, one launch" : "1 slot", T, t[0], t[1], NL);
++        }
++    for (void* p : {(void*) d_st, (void*) d_h, (void*) d_g, (void*) d_b, (void*) d_z, (void*) d_gam, (void*) d_y[0], (void*) d_y[1], (void*) d_xq[0], (void*) d_xq[1]}) sycl::free(p, q);
++    return bad ? 1 : 0;
++}
++
+ }  // namespace
+ 
+ int main(int argc, char** argv) {
+@@ -477,6 +663,9 @@ int main(int argc, char** argv) {
+     if (mode == "grouped") return grouped_bench(argc > 2 ? std::atoi(argv[2]) : 20);
+     if (mode == "send") return send_bench(argc > 2 ? std::atoi(argv[2]) : 20);
+     if (mode == "plan") return plan_bench(argc > 2 ? std::atoi(argv[2]) : 20);
++    if (mode == "router") return router_bench(argc > 2 ? std::atoi(argv[2]) : 20);
++    if (mode == "gdnab") return gdnab_bench(argc > 2 ? std::atoi(argv[2]) : 20);
++    if (mode == "gdnstep") return gdnstep_bench(argc > 2 ? std::atoi(argv[2]) : 20);
+     std::fprintf(stderr, "usage: ep_night_bench grouped|send\n");
+     return 2;
+ }

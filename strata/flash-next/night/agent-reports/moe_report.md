@@ -302,3 +302,58 @@ EP patch, expect ~-1.5 to -1.8 ms per C2 cycle (~3.5% of 46.5 ms) and more at C4
 Q2_0 passes). The remaining expert time is now IQ4_NL down (~78 us/call card 1 C2) and the IQ3/IQ2_S gate/up
 (~100-110 us card 1 C2, ~2-4% better than ROWS=2): next levers are fewer grid gathers (8 per IQ3 part) and the
 IQ4_NL down at 16 weights per part. Serving check (coherence, identity, C2/C4 throughput) needed.
+
+## 9. Third mission: GDN verify kernels and the router top-10 (card 0 latency-bound per-layer kernels)
+
+Base: main tree 60b7f900 (worktree reset to it; my earlier work is in it). Engine:
+/mnt/vm_8tb/b70/results/night-20261016/builds/strata-moe-gdn1 = 60b7f900 + agents/moe_gdn.patch (applies on 60b7f900).
+Flags (default off, independent, latched, one stderr line each): STRATA_NIGHT_GDN_AB=1, STRATA_NIGHT_TOPK10=1,
+STRATA_NIGHT_GDN_GRF=1. All bitwise (checked below). Bench: ep_night_bench {router|gdnab|gdnstep}.
+
+### 9.1 ISA findings (relinked ep_night_bench with IGC_ShaderDumpEnable, agents/moe_work/isa3, isa4)
+
+- native_router_top10_multi (route<512>): 2,770 instructions, fully unrolled, one sub-group per token: mov 1,517 -
+  every dpct::experimental::permute_sub_group_by_xor (and sycl::permute_group_by_xor too: same code) is lowered to an
+  a0-indirect gather (mov a0 / add a0 / mov r[a0] per 16 lanes) - plus 117 goto/join pairs from the short-circuit
+  tie rule `other > best || (other == best && ...)` and the 15-step serial per-lane argmax. A latency chain on one
+  sub-group per token (the card is otherwise idle), so instruction count and dependency depth are the cost.
+- gdn_ab_multi: one sub-group per output row (96 rows: 96 sub-groups on a 32-core card) looping over the T tokens:
+  T accumulator chains in one lane, 1,511 instructions at T=6.
+- gdn_step_norm_multi_kernel (verify recurrence): every variant SPILLS at 128 GRF: 704 B (per-slot <true,false>),
+  1,152 B (q8 <true,true>), 832 B (GDN_SLOTS launch), 8.9-9.7 KB (the commit-side <false,*> variants, not used when
+  STRATA_GDN_COMMIT_SPLIT routes commits to gdn_step_commit, which does not spill). 32 state rows x SIMD32 = 64 GRF of
+  state per thread alone; per-t loop 463 instructions incl. 44 loads and spill sends.
+
+### 9.2 Results (card 1, graph replay; bitwise in every case)
+
+CONFIG/COMMAND -> agents/moe_work/rg1.txt, rg3.txt, gs1.txt.
+
+| kernel | change | check | T=1 | T=4 | T=6 | T=8 |
+| --- | --- | --- | ---: | ---: | ---: | ---: |
+| router top-10 (STRATA_NIGHT_TOPK10) | per-lane best by 4-level tree (first max = lower id, as the scan), no dynamic register indexing (winner lane clears by unrolled selects, recomputes only its best), branch-free (value, id) tie rule; same softmax prologue, same xor trees, same per-lane selected_sum order | 1,800 token rows (random, many exact ties, flat, 40 tied leaders): ids + weights memcmp-equal | 7.21 -> 5.35 us | 7.16 -> 5.20 | 7.17 -> 5.20 | 7.17 -> 5.19 |
+| gdn_ab_multi (STRATA_NIGHT_GDN_AB) | one sub-group per (row, token): T x more sub-groups; each lane's chunk order / FMA chain / xor tree / epilogue unchanged; 2 chunks' loads issued ahead | T=1..8 x 3 weight sets: gate + beta memcmp-equal | 4.25 -> 3.76 us | 6.03 -> 3.32 | 7.83 -> 3.69 | 15.68 -> 4.06 |
+| GDN verify recurrence, per slot (STRATA_NIGHT_GDN_GRF) | same kernel with grf_size<256> (no spills) | y and the q8_1 image memcmp-equal, T=2..8 | - | 14.74 -> 13.38 us (T=3: 12.87 -> 11.75) | 18.46 -> 16.62 | 22.20 -> 19.88 |
+
+GDN_GRF on the 2-slot GDN_SLOTS launch was 1-12% SLOWER (halved occupancy for 96 x 512-thread groups), so the flag
+leaves that launch alone; it applies to the per-slot path (C1 windows; C2/C4 with GDN_SLOTS keep their launch).
+
+Per window/cycle estimates (trace_best3 counts):
+- TOPK10: -2.0 us x 48 layers = -0.10 ms per C1 window and per C2 cycle (+ 3-4 MTP calls: -0.006 ms).
+- GDN_AB: trace 9.2 us (C1, T=4) / 11.9 us (C2, T=6) per call x 36 -> ~3.3-3.7 us: -0.2 ms per C1 window,
+  -0.3 ms per C2 cycle (the bench's default is faster than the trace, so the in-graph saving may be larger).
+- GDN_GRF: -1.4 us x 36 = -0.05 ms per C1 window.
+Total ~-0.35 ms per C1 window (~1.6% of ~22.4 ms), ~-0.4 ms per C2 cycle.
+
+### 9.3 Not done / next
+
+- gdn_step_commit (72 x 15.9 us per C2 cycle, 1.14 ms; 377 GB/s): its 768 SIMD32 threads (48 heads x 128 cols x 4 row
+  groups) fit in one wave, so load (3 MB), recurrence and store (3 MB) phases serialize; the two slots' commits run
+  back to back in the in-order commit graph. A one-launch commit for all slots (as GDN_SLOTS did for verify) would
+  overlap them: estimated ~-9 us per layer, ~-0.3 ms per C2 cycle. Not started: the engine already has a batched
+  commit (gdn_commit_layers, all 36 layers per owner in one launch, STRATA_GDN_COMMIT_LAYERS, S145 "-26% private",
+  on HOLD at 0 in the serving config) - re-qualifying that is the cheaper route than a new slot-merged commit.
+- route_night<256> (the 256-expert model path) compiles and follows the same rule but was not exercised (model: 512).
+- Router BF16 GEMV 2560->512 (11.9 us, 36-44% of roofline): not attempted (hc found row-per-lane slower).
+- The xor shuffle lowering (a0-indirect, ~6 instr per 16 lanes) affects every warp reduction in the engine
+  (lanes_sum, warp_sum, GDN norms, quantizers); a native sub-group reduce or SLM tree may be cheaper in the
+  latency-bound kernels - worth an ISA experiment.

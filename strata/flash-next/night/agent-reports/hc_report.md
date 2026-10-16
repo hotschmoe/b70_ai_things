@@ -201,3 +201,61 @@ ple_prev equal; conversation_checkpoint_verify_device and conversation_kv_verify
 VERDICT: the D2D path writes exactly the bytes of the save + restore pairs. Not measured end to end (no servers):
 expected copy time ~1 ms per admission (about 120 MB of GDN state at device bandwidth plus the K/V) against
 388-620 ms now; park_slot time is reported separately.
+
+# Mission 4 (HC Q8 toward bandwidth; park_slot)
+
+Engine: /mnt/vm_8tb/b70/results/night-20261016/builds/strata-hc-park1 (HC v2 unchanged from the merged version;
+adds STRATA_NIGHT_PARK_MOVE). Patch (this mission, generate.cpp only): agents/hc_park_move.patch.
+
+## H1 HC Q8 v2: where the time goes (probe, card 1, graph replay; us per read / per kernel)
+
+| T | read (DRAM) | read (weights L2-resident) | down2q DRAM / L2 | up2q DRAM / L2 |
+|---|---:|---:|---|---|
+| 1 | 24.8 | 14.2 | 12.8 / 8.8 | 8.2 / 5.6 |
+| 4 | 29.6 | 19.7 | 15.6 / 12.0 | 10.0 / 7.4 |
+| 6 | 34.4 | 26.5 | 18.3 / 16.3 | 12.2 / 9.7 |
+| 8 | 46.6 | 36.5 | 18.3 / 16.4 (T=8 spills) | 12.3 / 9.6 |
+
+Only ~25-40% of a read is DRAM time; the rest is fixed per-kernel latency (the down kernel's chain staging ->
+dots -> SLM partial sum -> global partial -> arrival counter -> last-group reduce, the ~4 us kernel boundary between
+down and up) plus per-row issue that grows ~1.5 us per row in down2q even from L2.
+
+Tried (all correct: FP32-rounding vs the FP64 reference on the Q8 weights; PF bitwise = no PF), none faster:
+- up3q (one row per lane over K/2 or all of K, one wave of 80/40 groups instead of 1.6 waves): KP2 = up2q
+  (24.4 vs 24.8 T=1, 34.1 vs 34.4 T=6), KP1 worse (+1..+10 us).
+- L2 prefetch of the up kernel's Q8 bytes from inside down2q (sycl prefetch, L2 hint): no change (24.8 / 34.5).
+- down2q shapes (rows per lane, columns per sub-group): (4,32) 13.0/15.5/18.2 us at T=1/4/6 stays best; (2,32)
+  +2-3 us, (1,32) +5-10, (1,160) +4-24, (2,160) +14-26; GRF256 (8,32) +0.7 us, GRF256 (4,32) +1-3 us.
+VERDICT: v2 Q8 is at a local optimum of this structure; nothing integrated. A further step needs a different
+structure (fold the last-group reduction and the down/up boundary away, e.g. one persistent kernel with a device
+barrier, or overlap the up weights' DRAM stream with the down kernel through a concurrent queue), not tuning.
+Experiment code kept in hc_work/fused_gr_night_v3exp.inc and hc_probe.cpp (modes v3, d2q).
+
+## P1 park_slot: why ~190 ms for a 104-token conversation (probe hc_work/park_probe.cpp, card 1)
+
+The parked image holds the conversation's GDN running state (36 layers x 3.27 MB = 117.7 MB, independent of tokens)
+and the slot's checkpoints (each another full 117.7 MB running state). Measured per piece:
+
+| piece (117.7 MB) | default glibc | GLIBC_TUNABLES=glibc.malloc.hugetlb=1 |
+|---|---:|---:|
+| fresh std::vector resize (zero fill + 4 KB page faults; checkpoint_save's c.gdn.resize) | 63-64 ms | 15 ms |
+| D2H device -> pageable vector (pinned is the same: ~4.4 GB/s on this link) | 27 ms | 27 ms |
+| one checkpoint's host copy (SavedConversation.checkpoints = view.checkpoints) | 75-78 ms | 21 ms |
+| sum of the three | ~170 ms (the observed 184-200 ms) | ~63 ms |
+
+So the cost is host page faults on two fresh 118 MB allocations, then the PCIe read; the K/V of a short conversation
+is noise.
+
+Changes / settings:
+- `STRATA_NIGHT_PARK_MOVE=1` (generate.cpp park_source / park_slot): a slot's checkpoints are MOVED into the parked
+  image instead of copied (the slot is overwritten right after its park in both callers: admission and the prompt
+  yield). The view used for validation and the budget estimate still includes them; the saved image is identical
+  (same checkpoint objects); main-session parks (park_current) and layer splits keep the copy. Removes the 21-78 ms
+  checkpoint copy.
+- Recommended env (no code): `GLIBC_TUNABLES=glibc.malloc.hugetlb=1` on the engine process: malloc uses
+  madvise(MADV_HUGEPAGE) for its large mmap chunks (host THP mode is [madvise]), so the 118 MB allocations fault
+  2 MB pages: resize 63 -> 15 ms, host copies 77 -> 21 ms. Process-wide; restores read the same vectors.
+- Expected park with both: ~15 (allocation) + 27 (D2H) + K/V ~ 45 ms instead of ~190 ms. Not measured in serving.
+- Not done: async D2H (D2D snapshot into a staging device buffer, host copy in the background) - it would hide
+  the remaining ~27-42 ms but needs VRAM proportional to the conversation's K/V (up to GBs at 200K) and deferred
+  cache insertion; the RAM-parking semantics are unchanged by the two changes above.

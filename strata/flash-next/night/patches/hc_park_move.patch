@@ -1,0 +1,42 @@
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -7836,6 +7836,7 @@
+             const strata::core::QsaState* draft_last;     ///< ... with the last stage's image (a split: the drafter's GPU)
+             bool with_reuse;                              ///< the retained K/V describes this source (the main session's)
+             std::string what;                             ///< the log's words after the token count ("", " from slot 1")
++            bool checks_expire = false;                   ///< night: `checks` is discarded right after (a slot about to be overwritten)
+         };
+         // Save only on a switch/rewind, not on each continuing request. No graph
+         // addresses change: all parked images live in ordinary host vectors.
+@@ -7929,8 +7930,21 @@
+                 }
+                 strata::core::SavedConversation image;
+                 size_t reused_bytes = 0;
+-                if (!strata::core::conversation_snapshot_save(image, view, src.session, g, draft0, err,
++                // night-lab STRATA_NIGHT_PARK_MOVE=1: a slot's checkpoints (each a full running state, ~118 MB of GDN
++                // rows) are MOVED into the image instead of copied - the slot is overwritten right after its park. The
++                // view above already validated them and counted them in the estimate; the image is the same.
++                static const bool night_park_move = [] {
++                    const char* v = std::getenv("STRATA_NIGHT_PARK_MOVE");
++                    const bool on = v != nullptr && v[0] == '1';
++                    if (on) std::fprintf(stderr, "strata: STRATA_NIGHT_PARK_MOVE=1: a parked slot's checkpoints move into the image\n");
++                    return on;
++                }();
++                const bool move_checks = night_park_move && src.checks_expire && n_st == 0;
++                static const std::vector<ConvCheckpoint> no_checks;
++                const strata::core::ConversationView save_view{src.ids, src.imgs, move_checks ? no_checks : view.checkpoints, src.cvec};
++                if (!strata::core::conversation_snapshot_save(image, save_view, src.session, g, draft0, err,
+                         std::move(reuse), &reused_bytes)) return false;
++                if (move_checks) image.checkpoints = std::move(checks);
+                 for (size_t k = 0; k < n_st; ++k) {   // the later stages (the last one with the draft layer's K/V)
+                     auto& st = stages[k];
+                     const strata::core::OnDevice on(st->dev);
+@@ -9396,7 +9410,7 @@
+             ParkSource src{sl.ids, no_imgs, sl.checks, sl.cvec, *bslot_ss[0][(size_t) b], {},
+                            n_st > 0 || !batch_mtp ? nullptr : &slot_mtp[(size_t) b]->kv_state(),
+                            batch_mtp && n_st > 0 ? &slot_mtp[(size_t) b]->kv_state() : nullptr, false,
+-                           " from slot " + std::to_string(b)};
++                           " from slot " + std::to_string(b), true};
+             for (size_t k = 1; k < bslot_ss.size(); ++k) src.stage_sessions.push_back(bslot_ss[k][(size_t) b].get());
+             try { return park_source(src, 0); }
+             catch (const std::bad_alloc&) {
