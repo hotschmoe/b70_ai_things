@@ -1,0 +1,16 @@
+{
+  "command": [
+    "bash",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/combined-main-s129-build-continuation/build.sh",
+    "66726a2abf0f2374ece12bd802ef4ebdad40bada27290a7afb480c849063cb23",
+    "452a051e3a2219d0c6a00c8cdf795b798e763fcc793fbbb4dff1b4dda7903aff",
+    "e6314c05da00d175ae2990a5157bc24d3bea16602afa2138858eaee77200dbdd",
+    "88a4e5add68fc2e8461ad891a1c31a2af3267ad4cfacd9a1534ce660079f100a"
+  ],
+  "exit": 1,
+  "elapsed_s": 11.87753649498336,
+  "automatic_retry": false,
+  "explicit_setup_continuation": true,
+  "initial_compile_or_configure_ran": false,
+  "GPU": false
+}

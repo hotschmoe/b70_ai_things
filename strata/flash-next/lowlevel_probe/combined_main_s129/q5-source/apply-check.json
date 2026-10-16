@@ -1,0 +1,13 @@
+{
+  "command": [
+    "git",
+    "apply",
+    "--check",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-runtime-ones-main-source-prep-v2/runtime-ones-main.patch"
+  ],
+  "cwd": "/mnt/vm_8tb/b70/build/strata-ab/src-ep",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "",
+  "live_apply": false
+}

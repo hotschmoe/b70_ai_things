@@ -1,0 +1,12 @@
+{
+  "root_authorized": true,
+  "initial_attempt": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/combined-main-s129-build",
+  "initial_wrapper_exit": 1,
+  "initial_elapsed_s": 12.212106333987322,
+  "stopped_before_configure_compile": true,
+  "reason": "Only generated CMake root ownership repaired; exact bytes preserved",
+  "all_frozen_payload_bytes_equal_initial": true,
+  "repair": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/combined-main-s129-generated-file-ownership-repair/repair.json",
+  "automatic_retry": false,
+  "GPU": false
+}

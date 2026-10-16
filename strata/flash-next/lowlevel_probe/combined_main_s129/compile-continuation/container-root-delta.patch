@@ -1,0 +1,39 @@
+--- initial/build-container.sh
++++ explicit-compile-continuation/build-container.sh
+@@ -15,21 +15,15 @@
+ icpx --version > /out/compiler-version.txt
+ cmp /out/compiler-version.txt /prep/compiler-version.txt
+ python3 /prep/guard.py before
+-mkdir /out/before
+-for f in strata CMakeFiles/strata_engine.dir/src/core/mtp.cpp.o CMakeFiles/strata_prefill.dir/src/prefill/prefill.cpp.o CMakeFiles/strata.dir/src/program/generate.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o .ninja_log .ninja_deps;do
+- cp --parents --reflink=auto "$f" /out/before/
+-done
+-sha256sum /out/before/CMakeFiles/strata_engine.dir/src/core/mtp.cpp.o /out/before/CMakeFiles/strata_prefill.dir/src/prefill/prefill.cpp.o /out/before/CMakeFiles/strata.dir/src/program/generate.cpp.o /out/before/CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o > /out/objects-before.sha256
+-cp CMakeCache.txt /out/CMakeCache.before.txt
+-cp build.ninja /out/build.ninja.before.txt
+-cp CMakeFiles/rules.ninja /out/rules.ninja.before.txt
++# Configuration was already completed and guarded; no second configure or main backup.
++cp /prep/prior-configured-guards.json /out/configured-guards-reused.json
++cp /prep/CMakeCache.configured.txt /out/CMakeCache.configured.txt
++cp /prep/build.ninja.configured.txt /out/build.ninja.configured.txt
++cp /prep/rules.ninja.configured.txt /out/rules.ninja.configured.txt
++cmp CMakeCache.txt /out/CMakeCache.configured.txt
++cmp build.ninja /out/build.ninja.configured.txt
++cmp CMakeFiles/rules.ninja /out/rules.ninja.configured.txt
+ python3 /prep/guard.py cache-before
+-printf '%s\n' 'cmake -S /work/src-ep/sycl -B /work/src-ep/build-sycl-ep -DSTRATA_SYCL_AOT_CACHE_DIR=/out/offline-cache' > /out/configure-command.txt
+-cmake -S /work/src-ep/sycl -B /work/src-ep/build-sycl-ep -DSTRATA_SYCL_AOT_CACHE_DIR=/out/offline-cache > /out/configure.log 2>&1
+-python3 /prep/guard.py configured
+-cp CMakeCache.txt /out/CMakeCache.configured.txt
+-cp build.ninja /out/build.ninja.configured.txt
+-cp CMakeFiles/rules.ninja /out/rules.ninja.configured.txt
+ ninja -n -v strata > /out/ninja-plan.txt
+ python3 /prep/guard.py plan
+ TIMEFORMAT='incremental_build_seconds=%R'
+@@ -44,5 +38,5 @@
+ cp --reflink=auto strata /out/strata-s129
+ cmp strata /out/strata-s129
+ # Each new main/object/changed archive is hashed once, here; no large prehash loops.
+-sha256sum /out/strata-s129 CMakeFiles/strata_engine.dir/src/core/mtp.cpp.o CMakeFiles/strata_prefill.dir/src/prefill/prefill.cpp.o CMakeFiles/strata.dir/src/program/generate.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o libstrata_engine.a libstrata_prefill.a libstrata_kernels.a /work/src-ep/sycl/CMakeLists.txt /work/src-ep/sycl/src/core/mtp.cpp /work/src-ep/sycl/include/strata/core/mtp.hpp /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp CMakeCache.txt build.ninja CMakeFiles/rules.ninja > /out/build-sha256.txt
++sha256sum /out/strata-s129 CMakeFiles/strata_engine.dir/src/core/mtp.cpp.o CMakeFiles/strata_prefill.dir/src/prefill/prefill.cpp.o CMakeFiles/strata.dir/src/program/generate.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o libstrata_engine.a libstrata_prefill.a libstrata_kernels.a ggml/src/libggml-base.a ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o ggml/src/ggml-version.h /work/llama-pinned/ggml/src/ggml.c /work/src-ep/sycl/CMakeLists.txt /work/src-ep/sycl/src/core/mtp.cpp /work/src-ep/sycl/include/strata/core/mtp.hpp /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp CMakeCache.txt build.ninja CMakeFiles/rules.ninja > /out/build-sha256.txt
+ cat /out/build-sha256.txt

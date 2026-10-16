@@ -1,0 +1,41 @@
+{
+  "status": "APPLIED_EXACT_REVIEWED_SOURCE_ONLY_NO_BUILD_GPU",
+  "utc": "2026-10-16T03:35:02.636486+00:00",
+  "before": {
+    "sycl/CMakeLists.txt": "af2c33703f0fcb53b7f0f9b0aa823ce3fef7c9209ea24036e8b9f597fb07592f",
+    "sycl/src/core/mtp.cpp": "2d26e686c2aa6065d33461464efa39975db8e0cc5196f8962a216b4c5fa2a589",
+    "sycl/include/strata/core/mtp.hpp": "1d418cc592056373f68b7343bd3d1ac958e5452cb812007497881234cad9fd9f",
+    "sycl/src/kernels/cuda/native_mmvq.dp.cpp": "ae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252"
+  },
+  "after": {
+    "sycl/CMakeLists.txt": "66726a2abf0f2374ece12bd802ef4ebdad40bada27290a7afb480c849063cb23",
+    "sycl/src/core/mtp.cpp": "452a051e3a2219d0c6a00c8cdf795b798e763fcc793fbbb4dff1b4dda7903aff",
+    "sycl/include/strata/core/mtp.hpp": "e6314c05da00d175ae2990a5157bc24d3bea16602afa2138858eaee77200dbdd",
+    "sycl/src/kernels/cuda/native_mmvq.dp.cpp": "88a4e5add68fc2e8461ad891a1c31a2af3267ad4cfacd9a1534ce660079f100a"
+  },
+  "patches": [
+    {
+      "patch": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-runtime-ones-main-source-prep-v2/runtime-ones-main.patch",
+      "sha256": "2de2028a9ad4e17d05dce884326b642f33d10ad5d3e1ef243939f718b68c4dd0",
+      "check_exit": 0
+    },
+    {
+      "patch": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-pair-owner-queues-s127-source-v2/owner-queues.patch",
+      "sha256": "dce4f90e005e2350c35e8605a792712a464f3651bf21e1aff54372d24a276d8c",
+      "check_exit": 0
+    },
+    {
+      "patch": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/main-aot-cache-adoption-source-20261016/cmake-cache-option.patch",
+      "sha256": "d9ab67d13c7f5a38b3f4b6c4f916ed3c0679191c52a0dcaf808f68eb38ce2502",
+      "check_exit": 0
+    }
+  ],
+  "actual_responding_models": [
+    "claude-opus-5-5",
+    "claude-fable-5-1"
+  ],
+  "verdicts": "CPU_BUILD_GO_WITH_CONDITIONS, root fullread",
+  "other_existing_dirty_changes_preserved": true,
+  "build": false,
+  "GPU": false
+}

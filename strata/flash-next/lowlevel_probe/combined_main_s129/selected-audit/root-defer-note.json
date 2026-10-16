@@ -1,0 +1,10 @@
+{
+  "status": "ROOT_DIRECTED_FINITE_SERVING_OPTIONAL_CPU_AUDITS_DEFERRED",
+  "provenance": "Parent/root task message delivered to mtp_q4_share after successful S129 compile and selected audit. This is a derived instruction note, not a model/audit verdict.",
+  "user_direction": "Sole orchestrator root; prioritize finite GPU serving, skip optional CPU certification.",
+  "preserved_actual_audit_status": "HOLD_COMPILED_DIFFERENCE_ROOT_DECISION",
+  "remaining_optional_tasks": "Main candidate ISA, independent host and four-MTP-image certification deferred; not completed or retroactively passed.",
+  "runtime_basis": "Reviewed exact source, selected metadata/ABI/default-control receipts plus root-directed immediate strict finite serving gates.",
+  "S130_S131_runtime_result": "PENDING_NOT_CONSUMED_BY_CURATOR",
+  "new_CLI_decoder_build_GPU_model_call_by_curator": false
+}

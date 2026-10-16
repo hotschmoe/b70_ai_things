@@ -1,0 +1,78 @@
+{
+  "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_127launch_q5_head_runtime_onesEPKvS4_PfiiiPN4sycl3_V15queueEE31native_mmvq_q5k_runtime_ones_c2EE",
+  "executable_offset": 33023232,
+  "image_bytes": 28128,
+  "image_sha256": "de2e4a5382cd412a41b56fe0736d22892f03f9ab87b6f9c9ce43d09317b3cd0c",
+  "text_bytes": 6208,
+  "text_sha256": "c6b37505f4f46473aa8e2839d6f4ee9ca600673370817e2392112883be6ecaf6",
+  "execution_fields": {
+    "grf_count": [
+      "128"
+    ],
+    "simd_size": [
+      "32"
+    ],
+    "slm_size": [],
+    "barrier_count": [],
+    "spill_size": [],
+    "scratch_size": [],
+    "eu_thread_count": [
+      "8"
+    ],
+    "subgroup_independent_forward_progress": [
+      "true"
+    ]
+  },
+  "missing_fields": "UNKNOWN, not zero",
+  "payload_user_arguments": [
+    {
+      "arg_type": "arg_bypointer",
+      "arg_index": 0,
+      "offset": 0,
+      "size": 8,
+      "addrmode": "stateless",
+      "addrspace": "global",
+      "access_type": "readwrite"
+    },
+    {
+      "arg_type": "arg_bypointer",
+      "arg_index": 1,
+      "offset": 8,
+      "size": 8,
+      "addrmode": "stateless",
+      "addrspace": "global",
+      "access_type": "readwrite"
+    },
+    {
+      "arg_type": "arg_bypointer",
+      "arg_index": 2,
+      "offset": 16,
+      "size": 8,
+      "addrmode": "stateless",
+      "addrspace": "global",
+      "access_type": "readwrite"
+    },
+    {
+      "arg_type": "arg_byvalue",
+      "arg_index": 3,
+      "offset": 24,
+      "size": 4
+    },
+    {
+      "arg_type": "arg_byvalue",
+      "arg_index": 4,
+      "offset": 28,
+      "size": 4
+    },
+    {
+      "arg_type": "arg_byvalue",
+      "arg_index": 5,
+      "offset": 32,
+      "size": 4
+    }
+  ],
+  "options_ascii": "-cl-fp32-correctly-rounded-divide-sqrt",
+  "status": "HOLD_COMPILED_DIFFERENCE_ROOT_DECISION",
+  "source_sha256": "88a4e5add68fc2e8461ad891a1c31a2af3267ad4cfacd9a1534ce660079f100a",
+  "limits": "Selected candidate identity/payload/resource projection only. New main computation mismatch remains HOLD; this is not ISA/host forwarding proof. Full raw metadata and host records stay external."
+}

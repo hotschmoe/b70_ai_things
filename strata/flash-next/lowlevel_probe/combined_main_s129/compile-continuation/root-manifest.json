@@ -1,0 +1,90 @@
+{
+  "status": "ROOT_READ_EXPLICIT_TEN_ACTION_COMPILE_ONLY_CONTINUATION",
+  "files": [
+    {
+      "path": "CMakeCache.configured.txt",
+      "bytes": 28660,
+      "sha256": "6aa2a72cbbbec3fe40a2099fa9adad135e0d0be8fe83e4bcf4c4ae112e2c0c3b"
+    },
+    {
+      "path": "README.md",
+      "bytes": 1278,
+      "sha256": "735088ed1c4459ea5ed1f620680184e7e39975482fd646fff2ad4e2adf7788f0"
+    },
+    {
+      "path": "baseline-stat.json",
+      "bytes": 3488,
+      "sha256": "78d13d6b4fb264ac177630e4df21d4be01221af892eab6c7891b8b748e217b6b"
+    },
+    {
+      "path": "build-container.sh",
+      "bytes": 2729,
+      "sha256": "31559660b60baae0838189e15522cbc1d10145158eb28fd6af23f23915400366"
+    },
+    {
+      "path": "build-container.sh.root-delta.patch",
+      "bytes": 3608,
+      "sha256": "d63a32e7926ed676f0a002167984ede3a87408c11ff087f26b8963f2c6d64763"
+    },
+    {
+      "path": "build.ninja.configured.txt",
+      "bytes": 254909,
+      "sha256": "7c817b74530ebe9b4ee4e65992dfeade7ef04dd3396ac462c20078641b4e714d"
+    },
+    {
+      "path": "build.sh",
+      "bytes": 2363,
+      "sha256": "60de2e5608ced7b60f1cd3cf7b5a4d8a56f61a793e48cfb2db9af125a47a0df3"
+    },
+    {
+      "path": "compiler-version.txt",
+      "bytes": 257,
+      "sha256": "06b5b1015f3c581440fb4cf00258edc0db8d98696ca3252cf69045e1f8c283d4"
+    },
+    {
+      "path": "expected-applied-source.sha256",
+      "bytes": 432,
+      "sha256": "e2b7cb283b0550fb2cd9496c395ffb503f3db61030bde9025762bd38534146d5"
+    },
+    {
+      "path": "expected-build-system.sha256",
+      "bytes": 248,
+      "sha256": "5766c43ac7c011b161bddec54506a733e3028a28270bc16c0a250fa8e5a31160"
+    },
+    {
+      "path": "expected-unchanged-source.sha256",
+      "bytes": 2987,
+      "sha256": "f2d4e274f8d8a451d745f9a1eea120ebae1eab7751c69b2b8c757d89c6c039e4"
+    },
+    {
+      "path": "guard.py",
+      "bytes": 5783,
+      "sha256": "809adf95def2ad52a4607fe46ec72f199324b5561f1a0fac77542176f5cc0d22"
+    },
+    {
+      "path": "guard.py.root-delta.patch",
+      "bytes": 3090,
+      "sha256": "cd32a10ddcdfbe55d1f455689403b0beb914903fef31d13b76991b8063c1557c"
+    },
+    {
+      "path": "prior-configured-guards.json",
+      "bytes": 167,
+      "sha256": "69b75dc7d2493d82f432048472c1ebb683392c472834a11fbe53e01b24db6f2d"
+    },
+    {
+      "path": "reused-S114-identities.sha256",
+      "bytes": 2141,
+      "sha256": "0bb45ea8e770c3c5118910a335d20c55596ac508d816c6957a3fe7c4364c597b"
+    },
+    {
+      "path": "root-continuation-decision.json",
+      "bytes": 1059,
+      "sha256": "e6f3d794b06b7459ff733bd73c6b268baf986104db21863459ddd7e4ddf85c67"
+    },
+    {
+      "path": "rules.ninja.configured.txt",
+      "bytes": 41325,
+      "sha256": "63232ef5ca7e9ad650ad73482f8b06014fff94bebe1aa868697414b7d1cde704"
+    }
+  ]
+}

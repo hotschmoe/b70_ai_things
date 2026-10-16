@@ -1,0 +1,17 @@
+{
+  "inverse_entire_TU_exact": true,
+  "runtime_apply_inverse_equals_S128_private": true,
+  "candidate_kernel_inverse_equals_S128_private": true,
+  "original_WideQ4K_WideQ5K_apply_load_unchanged": true,
+  "original_native_wide_kernel_and_launch_unchanged": true,
+  "no_public_header_ABI_change": true,
+  "no_new_device_buffers_or_CMake": true,
+  "only_new_kernel_instantiation": "native_mmvq_q5k_runtime_ones_kernel<WideQ5K,2>",
+  "compiled_lowering_numeric_speed": "UNKNOWN until actual main build/audit/qualification",
+  "head_wrapper_OFF_restore_exact": true,
+  "native_q5_k_mmvq_entire_body_unchanged": true,
+  "only_dispatch_seam": "Explicit native_mmvq_head after unchanged RPW2 override and before unchanged generic fallback",
+  "V2_delta_inverse_exact_V1": true,
+  "V2_change": "Only five existing validate_shape/pointer/stream checks before ON marker/launch; candidate apply/kernel bodies byteexact V1",
+  "ON_validation_matches_existing_RPW2_branch": true
+}

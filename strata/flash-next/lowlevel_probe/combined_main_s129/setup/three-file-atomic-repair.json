@@ -1,0 +1,43 @@
+{
+  "status": "ONLY_THREE_KNOWN_GENERATED_FILES_REPAIRED_BYTES_UNCHANGED",
+  "utc": "2026-10-16T03:41:09.795025+00:00",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeCache.txt",
+      "bytes": 28555,
+      "sha256_before_and_after": "fee542911252057f97fac8113086ded01130c7888ac96a7490e28cdec814cc22",
+      "before_uid": 0,
+      "after_uid": 1000,
+      "before_gid": 0,
+      "after_gid": 1000,
+      "mode_unchanged": true,
+      "mtime_unchanged": true,
+      "method": "Atomic user-owned byte-identical replacement in writable parent; no privileged container or broad chown"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/build.ninja",
+      "bytes": 252839,
+      "sha256_before_and_after": "89cb173d8c8699943e1f4cb84c7dee2ddc0aba3178eef713198b64748108340b",
+      "before_uid": 0,
+      "after_uid": 1000,
+      "before_gid": 0,
+      "after_gid": 1000,
+      "mode_unchanged": true,
+      "mtime_unchanged": true,
+      "method": "Atomic user-owned byte-identical replacement in writable parent; no privileged container or broad chown"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/rules.ninja",
+      "bytes": 41325,
+      "sha256_before_and_after": "63232ef5ca7e9ad650ad73482f8b06014fff94bebe1aa868697414b7d1cde704",
+      "before_uid": 0,
+      "after_uid": 1000,
+      "before_gid": 0,
+      "after_gid": 1000,
+      "mode_unchanged": true,
+      "mtime_unchanged": true,
+      "method": "Atomic user-owned byte-identical replacement in writable parent; no privileged container or broad chown"
+    }
+  ],
+  "compile_configure_GPU": false
+}

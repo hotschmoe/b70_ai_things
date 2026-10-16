@@ -1,0 +1,8 @@
+{
+  "actual_plan": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/combined-main-s129-compile-continuation/build/ninja-plan.txt",
+  "sha256": "d08d4e46233b618a7390ecae98bf8ac760eede1db53695b7e51a6180b3514553",
+  "bytes": 10013,
+  "exact_to_already_copied_setup_ten_action_plan": true,
+  "curated_plan": "setup/ten-action-ninja-plan.txt",
+  "meaning": "The plan initially caused a scope stop; after explicit explained root disposition the same exact planned actions ran. The first STOP remains historical."
+}

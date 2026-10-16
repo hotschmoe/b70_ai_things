@@ -1,0 +1,66 @@
+{
+  "status": "SOURCE_AND_EXISTING_METADATA_PROJECTION_ONLY_NOT_NEW_COMPILED_LAYOUT",
+  "rows": [
+    {
+      "struct": "Q5KBlock",
+      "source_snippets": {
+        "native_source": "struct Q5KBlock {\n    sycl::half2 dm;\n    uint8_t scales[12];\n    uint8_t qh[32];\n    uint8_t qs[128];\n};",
+        "private_source": "struct Q5KBlock {sycl::half2 dm;uint8_t scales[12];uint8_t qh[32];uint8_t qs[128];};"
+      },
+      "whitespace_only_declarations_exact": true,
+      "reference_type_name": "struct s126::Q5KBlock*;8",
+      "expected_main_type_name": "struct strata::kernels::(anonymous namespace)::Q5KBlock*;8",
+      "each_retained_metadata_occurrences": 1
+    },
+    {
+      "struct": "Q81Block",
+      "source_snippets": {
+        "native_source": "struct Q81Block {\n    sycl::half2 ds;\n    int8_t qs[32];\n};",
+        "private_source": "struct Q81Block {sycl::half2 ds;int8_t qs[32];};"
+      },
+      "whitespace_only_declarations_exact": true,
+      "reference_type_name": "struct s126::Q81Block*;8",
+      "expected_main_type_name": "struct strata::kernels::(anonymous namespace)::Q81Block*;8",
+      "each_retained_metadata_occurrences": 1
+    }
+  ],
+  "source_pins": {
+    "native_source": {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+      "bytes": 197097,
+      "sha256": "88a4e5add68fc2e8461ad891a1c31a2af3267ad4cfacd9a1534ce660079f100a"
+    },
+    "private_source": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep/private_q5_runtime_ones.hpp",
+      "bytes": 10105,
+      "sha256": "a8045fa37108f99ad448e48e6994319845a72327c092989245afcd95094a94c1"
+    },
+    "native_metadata": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c2-selected-s122-audit-v2/q5-c2.ze_info",
+      "bytes": 2803,
+      "sha256": "ef2f1754882995964c7bc30184f247338de4d957cb35c3ddee57d5e3dc086edb"
+    },
+    "private_metadata": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-s128-built-audit/candidate.ze_info",
+      "bytes": 2732,
+      "sha256": "43624b890e3692f34746f54a9ede88d841765a5f32585f596ef29d0054042018"
+    },
+    "source_projection": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-runtime-ones-main-source-prep-v2/source-projection.json",
+      "bytes": 968,
+      "sha256": "6e67fc33c36a7bbc5f4e285e679484788be0947aa6c3f5187fe1157257cb0902"
+    }
+  },
+  "allowed_projection": "Candidate only: full registered classname plus exactly these TWO complete quoted type_name values, one occurrence each on corresponding side. No namespace stripping, no other metadata changes. Preserve full raw metadata, inventories, ABI/resources/options/constants/raw+decoded relocations and compiled prefix gates.",
+  "layout_evidence": {
+    "Q5KBlock": "Same ordered sycl::half2 dm; uint8_t scales[12]; qh[32]; qs[128]. Native asserts sizeof176/align4/scales4/qh16/qs48; private asserts sizeof176/qs48.",
+    "Q81Block": "Same ordered sycl::half2 ds; int8_t qs[32]. Native asserts sizeof36/align4/qs4; private asserts sizeof36/qs4."
+  },
+  "limits": [
+    "Source declarations match modulo whitespace, not a universal binary or FP equivalence theorem.",
+    "Existing selected metadata confirms pointer8/global and lexical type-name difference; NEW main compiled payload/resources/prefix remain pending.",
+    "Source projection is retained exact inverse mapping of candidate helper and kernel to S128; no source changes made here."
+  ],
+  "audit_v1_unchanged": true,
+  "audit_executions": 0
+}

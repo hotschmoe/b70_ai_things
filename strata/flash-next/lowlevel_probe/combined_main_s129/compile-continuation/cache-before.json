@@ -1,0 +1,11 @@
+{
+  "command": [
+    "/usr/bin/ocloc",
+    "cache",
+    "-show-stats",
+    "-dir",
+    "/out/offline-cache"
+  ],
+  "exit": 0,
+  "counters": "UNKNOWN_UNPARSED_OR_FRESH_CACHE"
+}

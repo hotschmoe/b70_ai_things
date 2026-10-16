@@ -1,0 +1,51 @@
+{
+  "status": "FROZEN_V2_SOURCE_ONLY_VALIDATION_CONTRACT_FIX_NO_LIVE_APPLY_BUILD_GPU",
+  "files": {
+    "native_mmvq.dp.cpp": {
+      "bytes": 197097,
+      "sha256": "88a4e5add68fc2e8461ad891a1c31a2af3267ad4cfacd9a1534ce660079f100a"
+    },
+    "runtime-ones-main.patch": {
+      "bytes": 4983,
+      "sha256": "2de2028a9ad4e17d05dce884326b642f33d10ad5d3e1ef243939f718b68c4dd0"
+    },
+    "runtime-ones-main.inverse.patch": {
+      "bytes": 4983,
+      "sha256": "4e647eb8b04bbbd6f4dc5c359d5b33d3e63b181a145d537933e9a498822b84c2"
+    },
+    "source-projection.json": {
+      "bytes": 968,
+      "sha256": "6e67fc33c36a7bbc5f4e285e679484788be0947aa6c3f5187fe1157257cb0902"
+    },
+    "pins.json": {
+      "bytes": 1052,
+      "sha256": "80bbd858ceb06b26f28e2bf925b3f53a95ba8705c4c7f15c828644664a2ca80b"
+    },
+    "apply-check.json": {
+      "bytes": 331,
+      "sha256": "10c32a90ed74c0a0bb2886944ec7cd3797d5ec9cf5b72ee0b432683d72004423"
+    },
+    "README.md": {
+      "bytes": 4955,
+      "sha256": "87e1ac6765721b3a93951a2ae8ed5c92434d21242763df0ca2128a403e12d82e"
+    },
+    "source-seams.json": {
+      "bytes": 10283,
+      "sha256": "ac7e2ca5ec193eba813b32b08cd1d63d581af896e22d7062a31e8258a03ac5b0"
+    },
+    "root-review-packet.txt": {
+      "bytes": 23532,
+      "sha256": "752da4bdbef02b36eb82e31b403d6720d317cdfc5aee6469b4cce08275e0f421"
+    },
+    "v2-validation-delta.patch": {
+      "bytes": 733,
+      "sha256": "3dbead520de70c3146f4aad4131e17d6708a375852beb998875a5d4272f04cfb"
+    },
+    "v2-validation-inverse.patch": {
+      "bytes": 733,
+      "sha256": "f0750263910bdb3466100eb023142b2a9b12e4feb8810a0450aa1900106d8a6d"
+    }
+  },
+  "total_bytes": 249650,
+  "review_packet_bytes": 23532
+}

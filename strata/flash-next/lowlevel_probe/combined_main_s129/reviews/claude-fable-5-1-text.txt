@@ -1,0 +1,39 @@
+**CPU_BUILD_GO_WITH_CONDITIONS** for one incremental main build carrying both default-OFF changes and the link-only cache option. No serving or default approval follows.
+
+**Q5 head runtime-ones, source evidence**
+
+- The device body is the S128 private apply and kernel with renames only, reusing the production Q5 load, block types, 16-byte loads and dp4a helper. Inverse projection to the base TU is exact. The explicit head wrapper is the only seam, after the RPW2 override and before the unchanged generic fallback, so the ON route replaces exactly the kernel S122 decoded and S128 timed.
+- V2 restores the five validation checks the RPW2 branch performs. Correct and necessary.
+- Env parse: unset or literal zero means OFF; any other value than the exact word throws. Note that a throw inside the static initialiser is retried on the next call, so a bad value throws on every eligible call. Inside pair capture that lands in the existing std::exception catch and fails the pair; in the verifier head call it lands in that caller's catch. Acceptable for an opt-in.
+- One scope fact to record, not a defect: the seam matches any explicit head call with exactly two columns. The verifier's head call passes the window token count, so a two-token verify window will also take the candidate. Same kernel route, same shape, same oracle coverage, but the marker may fire from the verifier before the pair, and the serving gates compare both paths. Say so in the packet rather than describing this as MTP-only.
+
+**Owner queues V2, source evidence**
+
+The three corrections I asked for are present: ON readiness waits both the owner queue and the side branch with throwing waits, the ON route catches std::exception, drains every writer before building the error string and returns false, while OFF rethrows as before. The static-scratch audit found no unkeyed device scratch on the head-free paths. The one real consequence is the per-queue HC partials maps: B's queue may lazily allocate about 850 KiB at first capture. That is an allocation inside capture, so a failure surfaces as a capture error with the existing drain. Record the expected materialisation and keep the "no new buffers" claim corrected as the audit states.
+
+**Cache option, source evidence**
+
+The suffix lands inside the existing backend argument string, which the driver splits into the same argv shape S119 used, and the empty default reproduces the old string byte for byte. It never touches frontend flags. Fine.
+
+**Build conditions**
+
+1. Regenerate CMake with the cache directory option, pre-created and writable by UID 1000 before any compiler call, persistent cache env set, SYCL cache persistent off, stats on. Record hit and miss counters as adoption evidence only.
+2. Post-configure Ninja dry plan targeting the executable must show exactly the eight expected actions. Anything else stops the build for inspection.
+3. Frontend flags, defines, includes, precise FP model, SG32, per-kernel split and the BMG target must be byte-identical to the current generated files apart from the backend suffix.
+
+**Compiled gates before any lease, all on the new binary**
+
+1. Default C2 head image: 8128-byte prefix through EOT, metadata, options, constants and both relocation views exact to S122. Trailer differences recorded.
+2. Candidate image: 6272-byte prefix, metadata with the sixth four-byte argument, options and relocations exact to the S128 image. If the body differs in this translation unit, preserve the image and STOP for root; no decoder or equivalence waiver by default.
+3. Host binding: the parsed word reaches the candidate launch payload; new class has distinct info, cache, guard and name entries; the RPW2 branch and generic fallback are untouched in the wrapper disassembly.
+4. Other kernels in the rebuilt native TU that serving selects: identity receipts against S107 or S114 references, not an all-image walk.
+5. MTP object: the owner-queue branch, drains and both catches present; OFF path forwards as before.
+6. Resources read for the candidate; absent fields unknown.
+
+**Runtime, after separate root GO**
+
+Three arms on one binary: all candidate flags OFF, Q5 only ON, owner queues only ON. Each ON arm against the same control, strict per-pair text, SSE, usage, offered and accepted drafts, windows and captures before the next pair, functionals, normal quit, container absence, fresh both-card and compiled health. Marker once per ON arm, never on OFF. For the owner-queue arm, note any observed unequal-T or solo windows without asserting coverage.
+
+**Untested claims to keep out of the packet**
+
+S128's 25 percent is a private whole-build comparison on one head shape in one process. It does not isolate the operand, predict the head's share of a decode cycle, or predict serving. Owner-queue overlap is unobserved until the matched run. The cache result proves hit and miss semantics on one module, not link time.

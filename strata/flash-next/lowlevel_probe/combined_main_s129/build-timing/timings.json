@@ -1,0 +1,95 @@
+{
+  "status": "PASS_LAST_TEN_TARGETS_BOUND_TO_ROOT_PLAN",
+  "rows": [
+    {
+      "target": "CMakeFiles/strata_engine.dir/src/core/mtp.cpp.o",
+      "start_ms": 19,
+      "end_ms": 13764,
+      "mtime_ns": 1792122601340119103,
+      "command_hash": "ed59386c935a5678",
+      "duration_ms": 13745
+    },
+    {
+      "target": "ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o",
+      "start_ms": 13765,
+      "end_ms": 15779,
+      "mtime_ns": 1792122603354181920,
+      "command_hash": "46d7914e74af2640",
+      "duration_ms": 2014
+    },
+    {
+      "target": "ggml/src/libggml-base.a",
+      "start_ms": 15779,
+      "end_ms": 15848,
+      "mtime_ns": 1792122603433184384,
+      "command_hash": "64b8e91a03e23d27",
+      "duration_ms": 69
+    },
+    {
+      "target": "CMakeFiles/strata_prefill.dir/src/prefill/prefill.cpp.o",
+      "start_ms": 20,
+      "end_ms": 17833,
+      "mtime_ns": 1792122605409246016,
+      "command_hash": "e3ad5d5e5793d19",
+      "duration_ms": 17813
+    },
+    {
+      "target": "CMakeFiles/strata.dir/src/program/generate.cpp.o",
+      "start_ms": 20,
+      "end_ms": 42855,
+      "mtime_ns": 1792122630431026424,
+      "command_hash": "f78d39e1c2e159cf",
+      "duration_ms": 42835
+    },
+    {
+      "target": "CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o",
+      "start_ms": 19,
+      "end_ms": 58631,
+      "mtime_ns": 1792122646193518042,
+      "command_hash": "1b80894bc8d024ce",
+      "duration_ms": 58612
+    },
+    {
+      "target": "libstrata_kernels.a",
+      "start_ms": 58640,
+      "end_ms": 58981,
+      "mtime_ns": 1792122646505527774,
+      "command_hash": "3041e9f34e6cc63a",
+      "duration_ms": 341
+    },
+    {
+      "target": "libstrata_engine.a",
+      "start_ms": 58982,
+      "end_ms": 59070,
+      "mtime_ns": 1792122646653532390,
+      "command_hash": "99c80ae0b62cc611",
+      "duration_ms": 88
+    },
+    {
+      "target": "libstrata_prefill.a",
+      "start_ms": 59070,
+      "end_ms": 59126,
+      "mtime_ns": 1792122646710534168,
+      "command_hash": "8ed1950fd62116cb",
+      "duration_ms": 56
+    },
+    {
+      "target": "strata",
+      "start_ms": 59126,
+      "end_ms": 205836,
+      "mtime_ns": 1792122792580083710,
+      "command_hash": "a3253d6ccd530a74",
+      "duration_ms": 146710
+    }
+  ],
+  "min_start_ms": 19,
+  "max_end_ms": 205836,
+  "logged_envelope_ms": 205817,
+  "active_interval_union_ms": 205807,
+  "peak_overlapping_actions": 4,
+  "ninja_elapsed_s": 205.843,
+  "wrapper_elapsed_s": 217.87034453300294,
+  "wrapper_minus_ninja_s": 12.027344533002946,
+  "final_link_s": 146.71,
+  "native_compile_s": 58.612
+}

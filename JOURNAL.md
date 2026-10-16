@@ -25382,3 +25382,33 @@ Cleanup removedonlythreeobsolete S126V3 build files65,011,104Blogical;
 65,019,904Ballocated beforeunlink, not a measuredfree-space increase.
 Sources/selectedimages/ISA/failures/currentmain/activeinfra preserved.
 See docs/20261016_strata_q5_public_control_runtime_ones.md.
+
+
+## 2026-10-16 S129: combined main built; finite GPU comparisons selected
+
+CONFIG -> One incremental default-OFF Q5 C2 runtime-ones/owner-queue build,
+with link-only AOT cache adoption. Same frozen binary for independent flags.
+
+COMMAND -> Actual Opus5.5 43.736249s/Fable5.1 63.623681s conditioned CPU
+build GO; root applied reviewed four-source hashes. Ownership preflight
+stopped12.212106s; explicit repaired continuation stopped11.877536s at
+ten-action rather than eight-action plan. Preserved both stops.
+
+RESULT -> Bounded Ninja diagnosis identified77B generated ggml-version.h
+CPU dependency; old header bytes UNKNOWN. Five named root-owned generated
+outputs replaced byte-exact/mtime+mode preserved. Explicit ten-action
+compile-only continuation217.870345s/exit0, Ninja205.843s, no reconfigure.
+Main ee8854f8; actual full source/artifact pins retained. NativeTU58.612s,
+final link146.710s includes AOT/host work, not isolated backend duration.
+Initial persistent cache hits0/misses1608, beforeUNKNOWN, no speed claim.
+Selected defaultQ5/Q6 prefix+companion gates PASS; new candidate text6208
+versus6464 differs at281: BODY HOLD despite metadata/ABI/options/data/
+relocations PASS. Newmain ISA/host/four-MTP audits deferred, not passed.
+
+VERDICT -> User prioritizes realGPU finite tests over optional CPU
+certification. Root preserves candidate HOLD and proceeds on reviewed
+source/ABI/default-control plus immediate output/work parity, functional,
+normal teardown and bothcard/collective health. Both features defaultOFF;
+runtime results recorded separately. No reuse of S128 byte-exact ISA or
+25percent private speed as a newmain claim. See
+docs/20261016_strata_combined_main_source_build.md.

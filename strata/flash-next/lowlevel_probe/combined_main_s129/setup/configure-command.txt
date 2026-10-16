@@ -1,0 +1,1 @@
+cmake -S /work/src-ep/sycl -B /work/src-ep/build-sycl-ep -DSTRATA_SYCL_AOT_CACHE_DIR=/out/offline-cache

@@ -1,0 +1,13 @@
+{
+  "status": "FROZEN_SOURCE_ONLY",
+  "files": {
+    "proof.json": {
+      "bytes": 3706,
+      "sha256": "fae77bc9b036680070195d425a9da05afa03b5d237d609adb135aec4be4e21eb"
+    },
+    "note.md": {
+      "bytes": 985,
+      "sha256": "659aec1b3f600f6c8a9c934115313576d300a79d28df6353a87d5ec60ab74a2d"
+    }
+  }
+}

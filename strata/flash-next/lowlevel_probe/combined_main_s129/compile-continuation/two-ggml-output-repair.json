@@ -1,0 +1,23 @@
+{
+  "status": "REPAIRED_TWO_PLANNED_CPU_GGML_OUTPUTS_ONLY",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o",
+      "bytes": 272416,
+      "sha256_before_after": "2abc44ab42cc4652112de45c227d03a17104ae6e9ee336f1de13912661bb55f9",
+      "uid_before": 0,
+      "uid_after": 1000,
+      "mode_mtime_bytes_unchanged": true,
+      "method": "atomic user-owned replacement of only two planned generated outputs"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/ggml/src/libggml-base.a",
+      "bytes": 1920010,
+      "sha256_before_after": "293516f3e8a101a7e6b732347094047ea905e40204fa5489c7202e0e5c2d0f8d",
+      "uid_before": 0,
+      "uid_after": 1000,
+      "mode_mtime_bytes_unchanged": true,
+      "method": "atomic user-owned replacement of only two planned generated outputs"
+    }
+  ]
+}

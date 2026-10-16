@@ -1,0 +1,16 @@
+{
+  "root_authorized": true,
+  "reason": "Actual Ninja sole additional dirty input is regenerated77B ggml-version.h, consumed only by ggml_version()/ggml_commit(); prior header bytes unknown",
+  "expected_actions": 10,
+  "source_compile_actions": 5,
+  "archive_actions": 4,
+  "final_links": 1,
+  "reconfigure": false,
+  "prior_configuration_proof": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/combined-main-s129-build-continuation/build/configured-guards.json",
+  "prior_main_and_four_object_backups": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/combined-main-s129-build-continuation/build/before",
+  "two_output_ownership_repair": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/combined-main-s129-ggml-output-ownership/repair.json",
+  "actual_source_models": "Opus43.736/Fable63.624 CPU_BUILD_GO_WITH_CONDITIONS; root accepts explained additional CPU metadata dependency",
+  "automatic_retry": false,
+  "actual_compile_runs_so_far": 0,
+  "GPU": false
+}

@@ -1,0 +1,14 @@
+--- a/sycl/src/kernels/cuda/native_mmvq.dp.cpp
++++ b/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+@@ -4022,6 +4022,11 @@
+     if (ggml_type == 13 && n_in == 2560 && n_out == 248320 && ncols == 2 && wide_k() && wide_k_rpw() == 1) {
+         const int ones_word = q5_head_runtime_ones_word();
+         if (ones_word != 0) {
++            validate_shape(n_in, ncols, QK);
++            validate_pointer(weights);
++            validate_pointer(x_q8_1);
++            validate_pointer(y);
++            validate_stream(stream);
+             static const bool logged = [] {
+                 std::fprintf(stderr, "strata Q5 head runtime ones: enabled=1 word=01010101 N=2560 M=248320 C=2 RPW=1 host-selection-only\n");
+                 return true;

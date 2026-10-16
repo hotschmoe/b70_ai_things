@@ -1,0 +1,21 @@
+{
+  "source_base": {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+    "bytes": 192865,
+    "sha256": "ae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252"
+  },
+  "candidate_TU": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-runtime-ones-main-source-prep-v2/native_mmvq.dp.cpp",
+    "bytes": 197097,
+    "sha256": "88a4e5add68fc2e8461ad891a1c31a2af3267ad4cfacd9a1534ce660079f100a"
+  },
+  "private_source_reference": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep/private_q5_runtime_ones.hpp",
+    "bytes": 10105,
+    "sha256": "a8045fa37108f99ad448e48e6994319845a72327c092989245afcd95094a94c1"
+  },
+  "v1_source_preparation": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-runtime-ones-main-source-prep",
+    "manifest_sha256": "a64749c116c91ed68689a21e5f99685e996584880a2ad67d0b0028e3720fdd39"
+  }
+}

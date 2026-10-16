@@ -1,0 +1,104 @@
+--- a/sycl/src/kernels/cuda/native_mmvq.dp.cpp
++++ b/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+@@ -38,6 +38,7 @@
+ #include <algorithm>
+ #include <cstdint>
+ #include <cstdlib>
++#include <cstdio>
+ #include <cstring>
+ #include <limits>
+ #include <stdexcept>
+@@ -2103,6 +2104,68 @@
+         if (lane == 0) y[std::size_t(j) * n_out + row] = v;
+     }
+ }
++// Full-head Q5 C2/RPW1 only: same audited arithmetic, runtime ones operand.
++inline float q5_head_runtime_ones_apply(const WideQ5K::W& r, const Q81Block* xb, int ones_word) {   // xb = this column's Q8_1 blocks of the 256-block
++        const Q81Block* a = xb + r.sb; const Q81Block* c = xb + r.sb + 1;
++        const sycl::int4 ua = ld_q8_16(a, r.half), uc = ld_q8_16(c, r.half);
++        const sycl::int4 ones(ones_word, ones_word, ones_word, ones_word);
++        const float da = (float) a->ds[0], dc = (float) c->ds[0];
++        return da * (r.dl * (float) dp4a4(r.lo, ua, 0) - r.ml * (float) dp4a4(ones, ua, 0)) +
++               dc * (r.dh * (float) dp4a4(r.hi, uc, 0) - r.mh * (float) dp4a4(ones, uc, 0));
++    }
++template <typename F, int NCOLS>
++void native_mmvq_q5k_runtime_ones_kernel(const typename F::Block* __restrict__ w, const Q81Block* __restrict__ x,
++                             float* __restrict__ y, int n_in, int n_out, int ones_word) {
++    auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
++    const int lane = int(item.get_local_id(2)), warp = int(item.get_local_id(1));
++    const int row = int(item.get_group(2)) * WARPS + warp;
++    if (row >= n_out) return;
++    const int blocks_per_row = n_in / QK, x_stride = n_in / Q8K;
++    const int g = lane & 7, sub = lane >> 3;
++    const typename F::Block* wr = w + std::size_t(row) * blocks_per_row;
++    float acc[NCOLS] = {};
++    for (int kbx = sub; kbx < blocks_per_row; kbx += 4) {
++        const typename F::W wv = F::load(wr + kbx, g);
++#pragma unroll
++        for (int j = 0; j < NCOLS; ++j) acc[j] += q5_head_runtime_ones_apply(wv, x + std::size_t(j) * x_stride + kbx * (QK / Q8K), ones_word);
++    }
++    auto sg = item.get_sub_group();
++#pragma unroll
++    for (int j = 0; j < NCOLS; ++j) {
++        float v = acc[j];
++#pragma unroll
++        for (int o = WARP / 2; o > 0; o >>= 1) v += sycl::permute_group_by_xor(sg, v, o);
++        if (lane == 0) y[std::size_t(j) * n_out + row] = v;
++    }
++}
++
++// Word-valued opt-in, latched on first eligible Q5 head call. The host-parsed
++// scalar is captured as an argument; the device never sees a literal ones vector.
++int q5_head_runtime_ones_word() {
++    static int word = [] {
++        const char* e = std::getenv("STRATA_Q5_HEAD_RUNTIME_ONES");
++        if (e == nullptr || std::strcmp(e, "0") == 0) return 0;
++        char* end = nullptr;
++        const unsigned long parsed = std::strtoul(e, &end, 16);
++        if (end == nullptr || *end != '\0' || parsed != 0x01010101ul)
++            throw std::invalid_argument("STRATA_Q5_HEAD_RUNTIME_ONES requires 01010101 (or unset/0)");
++        return static_cast<int>(parsed);
++    }();
++    return word;
++}
++
++void launch_q5_head_runtime_ones(const void* weights, const void* x_q8_1, float* y,
++                                 int n_in, int n_out, int ones_word, dpct::queue_ptr s) {
++    const auto* w = static_cast<const Q5KBlock*>(weights);
++    const auto* x = static_cast<const Q81Block*>(x_q8_1);
++    const unsigned blocks = unsigned((std::size_t(n_out) + WARPS - 1) / WARPS);
++    s->parallel_for<dpct_kernel_name<class native_mmvq_q5k_runtime_ones_c2>>(
++        sycl::nd_range<3>(sycl::range(1, 1, blocks) * sycl::range(1, WARPS, WARP), sycl::range(1, WARPS, WARP)),
++        [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {
++            native_mmvq_q5k_runtime_ones_kernel<WideQ5K, 2>(w, x, y, n_in, n_out, ones_word);
++        });
++}
++
+ template <typename F, int NCOLS>
+ void launch_wide(const void* weights, const void* x_q8_1, float* y, int n_in, int n_out, dpct::queue_ptr s,
+                  int rpw = wide_k_rpw()) {
+@@ -3956,6 +4019,24 @@
+         launch_check();
+         return;
+     }
++    if (ggml_type == 13 && n_in == 2560 && n_out == 248320 && ncols == 2 && wide_k() && wide_k_rpw() == 1) {
++        const int ones_word = q5_head_runtime_ones_word();
++        if (ones_word != 0) {
++            validate_shape(n_in, ncols, QK);
++            validate_pointer(weights);
++            validate_pointer(x_q8_1);
++            validate_pointer(y);
++            validate_stream(stream);
++            static const bool logged = [] {
++                std::fprintf(stderr, "strata Q5 head runtime ones: enabled=1 word=01010101 N=2560 M=248320 C=2 RPW=1 host-selection-only\n");
++                return true;
++            }();
++            (void) logged;
++            launch_q5_head_runtime_ones(weights, x_q8_1, y, n_in, n_out, ones_word, strata::q_of(stream));
++            launch_check();
++            return;
++        }
++    }
+     native_mmvq(ggml_type, weights, x_q8_1, y, n_in, n_out, ncols, stream);
+ }
+ 

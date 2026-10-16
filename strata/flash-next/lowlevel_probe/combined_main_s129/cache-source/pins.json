@@ -1,0 +1,74 @@
+{
+  "status": "READ_ONLY_SOURCE_AND_GENERATED_BUILD_PINS_NO_LARGE_BINARY_HASH",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/CMakeLists.txt",
+      "bytes": 26336,
+      "sha256": "af2c33703f0fcb53b7f0f9b0aa823ce3fef7c9209ea24036e8b9f597fb07592f"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeCache.txt",
+      "bytes": 28555,
+      "sha256": "fee542911252057f97fac8113086ded01130c7888ac96a7490e28cdec814cc22"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/build.ninja",
+      "bytes": 252839,
+      "sha256": "89cb173d8c8699943e1f4cb84c7dee2ddc0aba3178eef713198b64748108340b"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/rules.ninja",
+      "bytes": 41325,
+      "sha256": "63232ef5ca7e9ad650ad73482f8b06014fff94bebe1aa868697414b7d1cde704"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp",
+      "bytes": 121495,
+      "sha256": "2d26e686c2aa6065d33461464efa39975db8e0cc5196f8962a216b4c5fa2a589"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/core/mtp.hpp",
+      "bytes": 23233,
+      "sha256": "1d418cc592056373f68b7343bd3d1ac958e5452cb812007497881234cad9fd9f"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+      "bytes": 192865,
+      "sha256": "ae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/lowlevel_probe/offline_aot_cache_s119/run.sh",
+      "bytes": 1559,
+      "sha256": "2f4fdb61152f920da9f0f9397a775a047fe998203f116bf75edd83c232d981fa"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/lowlevel_probe/offline_aot_cache_s119/result.json",
+      "bytes": 12434,
+      "sha256": "1326dfa5138147289e4065fd7f273f4f43df66bee5989edde5d9dc72ea512d99"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/lowlevel_probe/offline_aot_cache_s119/post-decision-filtered.json",
+      "bytes": 1227,
+      "sha256": "f1242f8f63e02e599e2bd8b3399350e9c6ab6b044578777fb659e18746ef6cf5"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/lowlevel_probe/offline_aot_cache_s117/forwarding-proof.json",
+      "bytes": 525,
+      "sha256": "fffc9ff0c962e397c5b208a570b036b6d861cd2b10e16b6b99aaaeb9e64bf508"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-pair-owner-queues-s127-source-v2/manifest.json",
+      "bytes": 1818,
+      "sha256": "1889933c3bed582ac61a8003dc251a398fab90e8daa05916b03f089939484169"
+    }
+  ],
+  "future_cache": {
+    "host": "/mnt/vm_8tb/b70/cache/strata-aot-bmg-g31",
+    "exists_now": false,
+    "parent_uid": 1000,
+    "parent_writable": true,
+    "container": "/out/offline-cache",
+    "create_as_UID1000_before_any_ocloc": true
+  },
+  "archive_model_main_payload_reads": false
+}

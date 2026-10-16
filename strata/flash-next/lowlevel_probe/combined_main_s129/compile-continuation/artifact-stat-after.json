@@ -1,0 +1,154 @@
+{
+  "strata": {
+    "size": 92446064,
+    "mtime_ns": 1792122792580083710,
+    "inode": 24105938,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "libstrata_engine.a": {
+    "size": 3901682,
+    "mtime_ns": 1792122646653532390,
+    "inode": 24095388,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "libstrata_prefill.a": {
+    "size": 1476630,
+    "mtime_ns": 1792122646710534168,
+    "inode": 24095391,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "libstrata_kernels.a": {
+    "size": 19560270,
+    "mtime_ns": 1792122646505527774,
+    "inode": 24095385,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "CMakeFiles/strata_engine.dir/src/core/mtp.cpp.o": {
+    "size": 491856,
+    "mtime_ns": 1792122601340119103,
+    "inode": 24095361,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "CMakeFiles/strata_prefill.dir/src/prefill/prefill.cpp.o": {
+    "size": 707344,
+    "mtime_ns": 1792122605409246016,
+    "inode": 24095374,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "CMakeFiles/strata.dir/src/program/generate.cpp.o": {
+    "size": 1706416,
+    "mtime_ns": 1792122630431026424,
+    "inode": 24095380,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o": {
+    "size": 8138944,
+    "mtime_ns": 1792122646193518042,
+    "inode": 24095384,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "libstrata_core.a": {
+    "size": 585338,
+    "mtime_ns": 1791995676280787911,
+    "inode": 23294109,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "libstrata_spec.a": {
+    "size": 48656,
+    "mtime_ns": 1791995663759405335,
+    "inode": 23293762,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "libstrata_kernels_cpu.a": {
+    "size": 2108228,
+    "mtime_ns": 1791995759903342892,
+    "inode": 23296307,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "ggml/src/libggml-base.a": {
+    "size": 1920010,
+    "mtime_ns": 1792122603433184384,
+    "inode": 24095369,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "ggml/src/libggml-cpu.a": {
+    "size": 2098926,
+    "mtime_ns": 1791995759847341181,
+    "inode": 23296302,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "CMakeFiles/strata_engine.dir/src/core/verify.cpp.o": {
+    "size": 702896,
+    "mtime_ns": 1792083524684361118,
+    "inode": 23970807,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "CMakeFiles/strata_kernels.dir/src/kernels/cuda/fused_gr.dp.cpp.o": {
+    "size": 607880,
+    "mtime_ns": 1792063966486432962,
+    "inode": 23918545,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "CMakeFiles/strata_kernels.dir/src/kernels/cuda/qsa_select.dp.cpp.o": {
+    "size": 165232,
+    "mtime_ns": 1792086138908504988,
+    "inode": 23981128,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "CMakeFiles/strata_kernels.dir/src/kernels/cuda/qsa_decode_attn.dp.cpp.o": {
+    "size": 277944,
+    "mtime_ns": 1792092825169782643,
+    "inode": 24011069,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "CMakeFiles/strata_kernels.dir/src/kernels/cuda/iq_kernels.dp.cpp.o": {
+    "size": 2877296,
+    "mtime_ns": 1792100839197078646,
+    "inode": 24034004,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o": {
+    "size": 272416,
+    "mtime_ns": 1792122603354181920,
+    "inode": 24095367,
+    "device": 45,
+    "uid": 1000,
+    "gid": 1000
+  }
+}

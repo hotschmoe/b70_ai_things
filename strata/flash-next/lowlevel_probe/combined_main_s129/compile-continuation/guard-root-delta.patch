@@ -1,0 +1,40 @@
+--- initial/guard.py
++++ explicit-compile-continuation/guard.py
+@@ -7,8 +7,9 @@
+ '/work/src-ep/sycl/src/core/mtp.cpp':'CMakeFiles/strata_engine.dir/src/core/mtp.cpp.o',
+ '/work/src-ep/sycl/src/prefill/prefill.cpp':'CMakeFiles/strata_prefill.dir/src/prefill/prefill.cpp.o',
+ '/work/src-ep/sycl/src/program/generate.cpp':'CMakeFiles/strata.dir/src/program/generate.cpp.o',
+-'/work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp':'CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o'}
+-ARCHIVES={'libstrata_engine.a','libstrata_prefill.a','libstrata_kernels.a'}
++'/work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp':'CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o',
++'/work/llama-pinned/ggml/src/ggml.c':'ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o'}
++ARCHIVES={'libstrata_engine.a','libstrata_prefill.a','libstrata_kernels.a','ggml/src/libggml-base.a'}
+ CHANGED={'strata',*COMPILES.values(),*ARCHIVES}
+ def save(name,value): (OUT/name).write_text(json.dumps(value,indent=2)+'\n')
+ def metadata(p):
+@@ -44,9 +45,12 @@
+   cmd=line.split('] ',1)[1];a=shlex.split(cmd);actions.append(cmd)
+   assert '--regenerate-during-build' not in cmd
+   if '-c' in a:
+-   assert a[0]=='/opt/intel/oneapi/compiler/2026.1/bin/icpx',cmd
+-   assert all(x in a for x in ['-O3','-fp-model=precise','-fsycl','-fsycl-targets=spir64_gen','-fsycl-default-sub-group-size=32','-fsycl-device-code-split=per_kernel']),cmd
+    source=a[a.index('-c')+1];obj=a[a.index('-o')+1];assert source not in compiled
++   if source=='/work/llama-pinned/ggml/src/ggml.c':
++    assert a[0]=='/opt/intel/oneapi/compiler/2026.1/bin/icx' and all(x in a for x in ['-O3','-fp-model=precise','-std=gnu11']),cmd
++   else:
++    assert a[0]=='/opt/intel/oneapi/compiler/2026.1/bin/icpx',cmd
++    assert all(x in a for x in ['-O3','-fp-model=precise','-fsycl','-fsycl-targets=spir64_gen','-fsycl-default-sub-group-size=32','-fsycl-device-code-split=per_kernel']),cmd
+    compiled[source]=obj
+   elif '/ar ' in cmd or 'llvm-ar ' in cmd:
+    hits=[x for x in ARCHIVES if x in a];assert len(hits)==1,cmd;archives+=hits
+@@ -57,8 +61,8 @@
+    assert a.count('-Xsycl-target-backend=spir64_gen')==1
+    assert '-device bmg-g31 -options -cl-fp32-correctly-rounded-divide-sqrt -allow_caching -cache_dir /out/offline-cache' in a,cmd
+    links.append(cmd)
+- assert len(actions)==8 and compiled==COMPILES and len(archives)==3 and set(archives)==ARCHIVES and len(links)==1,(len(actions),compiled,archives,links)
+- save('root-validated-plan.json',dict(status='PASS_EXACT_EIGHT',compiled=compiled,archives=archives,links=links))
++ assert len(actions)==10 and compiled==COMPILES and len(archives)==4 and set(archives)==ARCHIVES and len(links)==1,(len(actions),compiled,archives,links)
++ save('root-validated-plan.json',dict(status='PASS_EXACT_TEN_GENERATED_CPU_VERSION_DEPENDENCY',compiled=compiled,archives=archives,links=links))
+ elif mode in ('cache-before','cache-after'):
+  cmd=['/usr/bin/ocloc','cache','-show-stats','-dir','/out/offline-cache']
+  p=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)

@@ -1,0 +1,48 @@
+S129 REVIEW: combined main build with Q5 runtime-ones, S127 owner queues and offline AOT cache
+
+VERDICT: CPU_BUILD_GO_WITH_CONDITIONS, for one incremental main build containing three independent changes: the default-OFF Q5 C2 head runtime-ones path (V2), the default-OFF S127 owner queues (V2), and the link-only offline AOT cache option. No GPU or serving approval. No default change follows from private timing.
+
+SOURCE EVIDENCE (accepted)
+
+Q5 V2:
+- **Device body.** The new apply and kernel bodies are the S128-passing private bodies with function renames only. They reuse the production `WideQ5K::load`, block types, `ld_q8_16` and `dp4a4`. There is one new class and one `<WideQ5K,2>` instantiation, and the original Q4K/Q5K apply, wide kernel and launch are untouched.
+- **Dispatch seam.** It is reached only from `native_mmvq_head`, after the unchanged RPW2 branch (which keeps priority) and before the unchanged fallback. Conditions: type 13, N 2560, M 248320, C2, wide-K, RPW 1, and a parsed nonzero word. V2 adds the same five validations as the RPW2 branch.
+- **Parsing.** The value is parsed on the host and latched in a non-constexpr static. An invalid value throws on the first eligible call, which in practice happens during capture and lands in the existing error path. There is no automatic fallback.
+- **Scope note:** `native_mmvq_head` is also called by the verifier head with T columns, so verifier windows with T = 2 select the candidate as well as the MTP pair tail. Whether verifier windows with T = 2 occur in the matched run is unknown. The native-work and output gates cover both callers; just do not describe the effect as MTP-only. Solo MTP heads (C1) are not eligible.
+
+S127 V2 implements the required corrections:
+- ON readiness calls `wait_and_throw` on both `cs_` and `side_`.
+- The `std::exception` handler drains when ON and rethrows when OFF.
+- Drains happen before building the error string.
+- The static audit's findings are accepted: no unkeyed mutable global device scratch on the head-free paths, and about 850 KiB of HC allocations keyed per queue may be materialized lazily for B's queue. The lazy `malloc` without a null check remains an error and health concern, not a reason to retry.
+
+Cache option: an empty-by-default CMake option that appends only `-allow_caching -cache_dir \u2026` to the existing single backend argument. Frontend flags are unchanged.
+
+CONDITIONS BEFORE THE BUILD
+
+1. **Dry plan.** The post-configure plan must show exactly the expected 8 actions: compiles of `mtp.cpp`, `prefill.cpp`, `generate.cpp` and `native_mmvq.dp.cpp`; the engine, prefill and kernels archives; one final link. A diff of `build.ninja` against the pre-regeneration copy must show only the backend string change. Anything else: stop and inspect.
+2. **Cache directory.** The stable cache directory exists, is owned by UID 1000 and is writable before any compiler call. `NEO_CACHE_PERSISTENT=1`, `NEO_CACHE_DIR` matches the CLI path, stats are on, and `SYCL_CACHE_PERSISTENT=0`.
+3. **Unchanged build policy:** e41/DPC++ 2026.1, BMG-G31, SG32, per-kernel split, O3, precise FP, jobs 4.
+
+COMPILED GATES AFTER THE BUILD (root-owned; any failure is HOLD with the image preserved, no automatic decode)
+
+4. **Q5 production control.** The default C2 `launch_wide<WideQ5K,2>` image in the new binary must match the S122 8128-byte prefix plus normalized metadata, options, constants and relocations, bound through its live host Info/cache/guard/name pointer. Also check the other selected images in that TU that are used on the matched path (Q6 C6 and other wide-K images), via exact identity receipts. A per-kernel split makes stability likely, but it must be verified.
+5. **Q5 candidate.** The new class must be bound uniquely: 6-argument schema, payload at offset 32, `getenv` \u2192 parsed word \u2192 captured argument forwarding. Compare it to the S128 6272-byte prefix, metadata, options, data and relocations.
+   - If it matches: reuse the S128 ISA review.
+   - If it differs: the main TU context changed codegen, as the S126 clone did. Preserve the image and stop for a root decision. A minimal acceptance would be 32 DP4As (16/16), no expanded chains, and the S128 FP/K/tree/store ledger, which would require one decode root explicitly selects.
+6. **S127.** Host-side changes only. Confirm the MTP and verifier device images are unchanged where the TUs were recompiled (prefill and generate have no device code changes), and bind the new host paths by symbol and relocation.
+7. **Cache.** Record the actual hit/miss counters and link time descriptively. No gain is claimed.
+
+SERVING (separate root GO after gates 4\u20137)
+
+- **Arms:** the same frozen binary with three arms, each in its own process: all candidates OFF, Q5 ON only, owner queues ON only. Never combined.
+- **Policy:** suffix 0, lookup 0, spec 4, MTP max T 4, min-p 0, depth 2, pair head ON, everything else OFF.
+- **Gates at every pair before the next:** exact request, text, SSE, usage and native work (offered and accepted drafts, windows, pair/solo counts, captures). The marker must be present in its own arm and absent elsewhere.
+- **Closing:** functionals, normal QUIT, CID and name gone, fresh health on both cards and compiled health.
+- Report unequal-T or solo pairs only if observed.
+
+LIMITS
+
+- S128's \u221225% compares a whole private build with production; it says nothing about isolated operand effect or serving impact.
+- Matched served coherence does not prove every KV byte or raw token ID, and owner-queue overlap is not proven by markers.
+- Each comparison is a single fixed-order run, so there is no noise band. Small results keep their flags default OFF with no repeat.

@@ -1,0 +1,23 @@
+{
+  "status": "EXACT_EXTERNAL_SOURCE_PROJECTION_NO_APPLY_CONFIGURE_BUILD",
+  "source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/CMakeLists.txt",
+  "source_sha256": "af2c33703f0fcb53b7f0f9b0aa823ce3fef7c9209ea24036e8b9f597fb07592f",
+  "candidate_sha256": "66726a2abf0f2374ece12bd802ef4ebdad40bada27290a7afb480c849063cb23",
+  "inverse_replacement_exact": true,
+  "empty_option_backend_string_exact": "-device bmg-g31 -options -cl-fp32-correctly-rounded-divide-sqrt",
+  "selected_option_backend_string": "-device bmg-g31 -options -cl-fp32-correctly-rounded-divide-sqrt -allow_caching -cache_dir /out/offline-cache",
+  "compile_FLAGS_DEFINES_INCLUDES_rows_exact": true,
+  "compile_rows_checked": 550,
+  "Ninja_only_backend_argument_changes": 46,
+  "actual_new_CMake_configuration_generated": false,
+  "future_configure_option": "-DSTRATA_SYCL_AOT_CACHE_DIR=/out/offline-cache",
+  "future_env": {
+    "NEO_CACHE_PERSISTENT": "1",
+    "NEO_CACHE_DIR": "/out/offline-cache",
+    "NEO_CACHE_STATS": "1",
+    "SYCL_CACHE_PERSISTENT": "0"
+  },
+  "future_host_cache_path": "/mnt/vm_8tb/b70/cache/strata-aot-bmg-g31",
+  "future_container_cache_path": "/out/offline-cache",
+  "cache_directory_created_now": false
+}

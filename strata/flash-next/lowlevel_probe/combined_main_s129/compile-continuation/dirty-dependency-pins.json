@@ -1,0 +1,42 @@
+[
+  {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/ggml/CMakeLists.txt",
+    "bytes": 21658,
+    "sha256": "f4754450a3a00e405d2ffb6a904fe5571ec85c39ad12c666e73af1addccd5e00"
+  },
+  {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/ggml/src/CMakeLists.txt",
+    "bytes": 26989,
+    "sha256": "38ddf053a1adfc14bb84b7722e3c4ec01909694f7e51e32013f36e7a324fa4f0"
+  },
+  {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/ggml/src/ggml-version.h.in",
+    "bytes": 95,
+    "sha256": "2b6f26259bfc6768229c90b127fee770f60271e74f4513d7abecb5900fa0b112"
+  },
+  {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/ggml/src/ggml.c",
+    "bytes": 260689,
+    "sha256": "1a634ca1df25db2fbd526cba9bfe11fccd5aa9b31f819c3cac6b630be03f9f51"
+  },
+  {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/ggml/src/ggml-version.h",
+    "bytes": 77,
+    "sha256": "9e45eee8391971371922f51b66925184609125d467c444744599f680b78edc92"
+  },
+  {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/combined-main-s129-build-continuation/build/configured-guards.json",
+    "bytes": 167,
+    "sha256": "69b75dc7d2493d82f432048472c1ebb683392c472834a11fbe53e01b24db6f2d"
+  },
+  {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/combined-main-s129-build-continuation/build/ninja-plan.txt",
+    "bytes": 10013,
+    "sha256": "d08d4e46233b618a7390ecae98bf8ac760eede1db53695b7e51a6180b3514553"
+  },
+  {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/combined-main-s129-build-continuation/build/configure.log",
+    "bytes": 543,
+    "sha256": "8087df3ef4ce6028d140b2913e622ba5bf61acebedf79f9297d311b87f9f2f66"
+  }
+]
