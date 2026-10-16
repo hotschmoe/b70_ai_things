@@ -1,0 +1,1166 @@
+{
+  "request": {
+    "model": "hotschmoe-dd",
+    "messages": [
+      {
+        "role": "user",
+        "content": "[Flash-Next concurrent coding repeat 0 slot 0] Implement a Python asyncio bounded worker pool for processing file paths. Requirements: fixed worker count, bounded queue for backpressure, preserve input order in results, propagate the first worker exception, cancel and await all outstanding tasks on failure, and handle caller cancellation without leaked tasks. Explain the shutdown protocol, provide complete typed code using only the standard library, and include three meaningful tests for ordering, worker failure, and cancellation."
+      }
+    ],
+    "max_tokens": 64,
+    "temperature": 0,
+    "stream": true,
+    "stream_options": {
+      "include_usage": true
+    },
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    }
+  },
+  "ttft_s": 1.054933911014814,
+  "wall_s": 3.5338591170147993,
+  "content_events": [
+    {
+      "chunk_index": 1,
+      "elapsed_s": 1.054933911014814
+    },
+    {
+      "chunk_index": 2,
+      "elapsed_s": 1.0884981129784137
+    },
+    {
+      "chunk_index": 3,
+      "elapsed_s": 1.348853252013214
+    },
+    {
+      "chunk_index": 4,
+      "elapsed_s": 2.5453239590278827
+    },
+    {
+      "chunk_index": 5,
+      "elapsed_s": 2.5994823040091433
+    },
+    {
+      "chunk_index": 6,
+      "elapsed_s": 2.5996968830004334
+    },
+    {
+      "chunk_index": 7,
+      "elapsed_s": 2.6466099949902855
+    },
+    {
+      "chunk_index": 8,
+      "elapsed_s": 2.6468843379989266
+    },
+    {
+      "chunk_index": 9,
+      "elapsed_s": 2.6470728580025025
+    },
+    {
+      "chunk_index": 10,
+      "elapsed_s": 2.693500433990266
+    },
+    {
+      "chunk_index": 11,
+      "elapsed_s": 2.6936893240199424
+    },
+    {
+      "chunk_index": 12,
+      "elapsed_s": 2.693919322977308
+    },
+    {
+      "chunk_index": 13,
+      "elapsed_s": 2.73982648702804
+    },
+    {
+      "chunk_index": 14,
+      "elapsed_s": 2.7400442120269872
+    },
+    {
+      "chunk_index": 15,
+      "elapsed_s": 2.786663294013124
+    },
+    {
+      "chunk_index": 16,
+      "elapsed_s": 2.786754037020728
+    },
+    {
+      "chunk_index": 17,
+      "elapsed_s": 2.833378438022919
+    },
+    {
+      "chunk_index": 18,
+      "elapsed_s": 2.83359474001918
+    },
+    {
+      "chunk_index": 19,
+      "elapsed_s": 2.8338145799934864
+    },
+    {
+      "chunk_index": 20,
+      "elapsed_s": 2.8797911659930833
+    },
+    {
+      "chunk_index": 21,
+      "elapsed_s": 2.87997859303141
+    },
+    {
+      "chunk_index": 22,
+      "elapsed_s": 2.926082953985315
+    },
+    {
+      "chunk_index": 23,
+      "elapsed_s": 2.9263443420059048
+    },
+    {
+      "chunk_index": 24,
+      "elapsed_s": 2.9265132540022023
+    },
+    {
+      "chunk_index": 25,
+      "elapsed_s": 2.972206139995251
+    },
+    {
+      "chunk_index": 26,
+      "elapsed_s": 2.9724098080187105
+    },
+    {
+      "chunk_index": 27,
+      "elapsed_s": 3.018718977982644
+    },
+    {
+      "chunk_index": 28,
+      "elapsed_s": 3.0189502490102313
+    },
+    {
+      "chunk_index": 29,
+      "elapsed_s": 3.0653962009819224
+    },
+    {
+      "chunk_index": 30,
+      "elapsed_s": 3.0655842589912936
+    },
+    {
+      "chunk_index": 31,
+      "elapsed_s": 3.065691283030901
+    },
+    {
+      "chunk_index": 32,
+      "elapsed_s": 3.1114462169934995
+    },
+    {
+      "chunk_index": 33,
+      "elapsed_s": 3.111643993994221
+    },
+    {
+      "chunk_index": 34,
+      "elapsed_s": 3.1581868900102563
+    },
+    {
+      "chunk_index": 35,
+      "elapsed_s": 3.1583797680214047
+    },
+    {
+      "chunk_index": 36,
+      "elapsed_s": 3.158482112979982
+    },
+    {
+      "chunk_index": 37,
+      "elapsed_s": 3.2046473899972625
+    },
+    {
+      "chunk_index": 38,
+      "elapsed_s": 3.2048795120208524
+    },
+    {
+      "chunk_index": 39,
+      "elapsed_s": 3.2512226270046085
+    },
+    {
+      "chunk_index": 40,
+      "elapsed_s": 3.298869938997086
+    },
+    {
+      "chunk_index": 41,
+      "elapsed_s": 3.2990744190174155
+    },
+    {
+      "chunk_index": 42,
+      "elapsed_s": 3.3469556270283647
+    },
+    {
+      "chunk_index": 43,
+      "elapsed_s": 3.3471114939893596
+    },
+    {
+      "chunk_index": 44,
+      "elapsed_s": 3.3473188090138137
+    },
+    {
+      "chunk_index": 45,
+      "elapsed_s": 3.3931964869843796
+    },
+    {
+      "chunk_index": 46,
+      "elapsed_s": 3.3933607999933884
+    },
+    {
+      "chunk_index": 47,
+      "elapsed_s": 3.3935461040236987
+    },
+    {
+      "chunk_index": 48,
+      "elapsed_s": 3.439508482988458
+    },
+    {
+      "chunk_index": 49,
+      "elapsed_s": 3.4397127730189823
+    },
+    {
+      "chunk_index": 50,
+      "elapsed_s": 3.439880452991929
+    },
+    {
+      "chunk_index": 51,
+      "elapsed_s": 3.4865878319833428
+    },
+    {
+      "chunk_index": 52,
+      "elapsed_s": 3.486814003030304
+    },
+    {
+      "chunk_index": 53,
+      "elapsed_s": 3.5328825549804606
+    },
+    {
+      "chunk_index": 54,
+      "elapsed_s": 3.5331042379839346
+    },
+    {
+      "chunk_index": 55,
+      "elapsed_s": 3.5332663169829175
+    }
+  ],
+  "content_event_gap_ms": {
+    "count": 54,
+    "p50": 0.23169652558863163,
+    "p95": 50.07820595055815,
+    "maximum": 1196.4707070146687
+  },
+  "client_decode_tps": 25.41423994863376,
+  "usage": {
+    "prompt_tokens": 107,
+    "completion_tokens": 64,
+    "total_tokens": 171,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 107,
+    "prompt_ms": 996.8,
+    "prompt_per_token_ms": 9.316,
+    "prompt_per_second": 107.3,
+    "predicted_n": 64,
+    "predicted_ms": 2398.2,
+    "predicted_per_token_ms": 37.472,
+    "predicted_per_second": 26.7,
+    "draft_n": 46,
+    "draft_n_accepted": 39
+  },
+  "text": "```python\n\"\"\"\nBounded async worker pool for processing file paths.\n\nFeatures:\n- Fixed worker count\n- Bounded queue for backpressure\n- Preserves input order in results\n- Propagates first worker exception\n- Cancels and awaits all outstanding tasks on failure\n- Handles caller cancellation without",
+  "output_sha256": "8ecbe594a5d3f4ff87106972e96ff2a631629102c1ae2abffea60482c8887c46",
+  "chunks": [
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "role": "assistant",
+            "content": ""
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "```"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "python"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "\n\"\"\""
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "\nB"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "ounded"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " async"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " worker"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " pool"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " for"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " processing"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " file"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " paths"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "."
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "\n\nFeatures"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": ":"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "\n-"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " Fixed"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " worker"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " count"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "\n-"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " B"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "ounded"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " queue"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " for"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " back"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "pressure"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "\n-"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " Pres"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "erves"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " input"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " order"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " in"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " results"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "\n-"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " Prop"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "ag"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "ates"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " first"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " worker"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " exception"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "\n-"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " Canc"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "els"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " and"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " awaits"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " all"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " outstanding"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " tasks"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " on"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " failure"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": "\n-"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " Handles"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " caller"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " cancellation"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {
+            "content": " without"
+          },
+          "finish_reason": null
+        }
+      ]
+    },
+    {
+      "id": "chatcmpl-888e2665f2bf434e8606326a",
+      "object": "chat.completion.chunk",
+      "created": 1792127573,
+      "model": "hotschmoe-dd",
+      "choices": [
+        {
+          "index": 0,
+          "delta": {},
+          "finish_reason": "length"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 107,
+        "completion_tokens": 64,
+        "total_tokens": 171,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 107,
+        "prompt_ms": 996.8,
+        "prompt_per_token_ms": 9.316,
+        "prompt_per_second": 107.3,
+        "predicted_n": 64,
+        "predicted_ms": 2398.2,
+        "predicted_per_token_ms": 37.472,
+        "predicted_per_second": 26.7,
+        "draft_n": 46,
+        "draft_n_accepted": 39
+      }
+    }
+  ],
+  "client_lifetime": {
+    "client_call_start_monotonic_ns": 452061141973455,
+    "client_call_start_epoch_ns": 1792127573029184999,
+    "model": "hotschmoe-dd",
+    "messages": [
+      {
+        "role": "user",
+        "content": "[Flash-Next concurrent coding repeat 0 slot 0] Implement a Python asyncio bounded worker pool for processing file paths. Requirements: fixed worker count, bounded queue for backpressure, preserve input order in results, propagate the first worker exception, cancel and await all outstanding tasks on failure, and handle caller cancellation without leaked tasks. Explain the shutdown protocol, provide complete typed code using only the standard library, and include three meaningful tests for ordering, worker failure, and cancellation."
+      }
+    ],
+    "max_new_tokens": 64,
+    "client_call_end_monotonic_ns": 452064676317527,
+    "client_call_end_epoch_ns": 1792127576563528830
+  },
+  "prefix_matches_s16": true
+}

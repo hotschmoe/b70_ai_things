@@ -1,0 +1,613 @@
+{
+  "status": "CPU_RING_DIAGNOSTIC_ONLY",
+  "instrumented_reference": "S136 with unitrace",
+  "candidate": "S142 without unitrace; same S133binary/flags/request",
+  "old_replay_windows": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    19,
+    20,
+    21,
+    22
+  ],
+  "new_replay_windows": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    19,
+    20,
+    21,
+    22
+  ],
+  "old_span_stats_ms": {
+    "post_enter_to_run": {
+      "count": 16,
+      "min_ms": 0.000401,
+      "median_ms": 0.000491,
+      "p95_ms": 0.0006385000000000001,
+      "max_ms": 0.000661,
+      "sum_ms": 0.008066
+    },
+    "run_call_to_return": {
+      "count": 16,
+      "min_ms": 46.942071,
+      "median_ms": 48.116480499999994,
+      "p95_ms": 48.3877105,
+      "max_ms": 48.414559,
+      "sum_ms": 767.802768
+    },
+    "stage_capture": {
+      "count": 16,
+      "min_ms": 0.000581,
+      "median_ms": 0.001112,
+      "p95_ms": 0.0040125000000000004,
+      "max_ms": 0.006492,
+      "sum_ms": 0.024506
+    },
+    "stage_PLE": {
+      "count": 16,
+      "min_ms": 0.034065,
+      "median_ms": 0.709177,
+      "p95_ms": 0.97399725,
+      "max_ms": 1.149051,
+      "sum_ms": 11.018749
+    },
+    "stage_inputs_after_PLE": {
+      "count": 16,
+      "min_ms": 0.000361,
+      "median_ms": 0.000391,
+      "p95_ms": 0.0005135000000000001,
+      "max_ms": 0.000551,
+      "sum_ms": 0.006613
+    },
+    "stage_ready_to_verify_submit": {
+      "count": 16,
+      "min_ms": 9e-05,
+      "median_ms": 9.55e-05,
+      "p95_ms": 0.00135725,
+      "max_ms": 0.005129,
+      "sum_ms": 0.0065509999999999995
+    },
+    "verify_submit": {
+      "count": 16,
+      "min_ms": 3.06291,
+      "median_ms": 3.2213425,
+      "p95_ms": 3.52641875,
+      "max_ms": 3.532445,
+      "sum_ms": 52.044171
+    },
+    "verify_postsubmit_to_wait": {
+      "count": 16,
+      "min_ms": 0.000581,
+      "median_ms": 0.0008320000000000001,
+      "p95_ms": 0.0011394999999999999,
+      "max_ms": 0.001192,
+      "sum_ms": 0.013897
+    },
+    "verify_queue_wait": {
+      "count": 16,
+      "min_ms": 43.174808,
+      "median_ms": 43.86798,
+      "p95_ms": 44.13350375,
+      "max_ms": 44.365658,
+      "sum_ms": 701.589708
+    },
+    "verify_waitreturn_to_runreturn": {
+      "count": 16,
+      "min_ms": 0.160576,
+      "median_ms": 0.1688625,
+      "p95_ms": 0.17417225,
+      "max_ms": 0.174293,
+      "sum_ms": 2.690083
+    },
+    "commit": {
+      "count": 16,
+      "min_ms": 2.838693,
+      "median_ms": 2.928889,
+      "p95_ms": 2.9572485,
+      "max_ms": 2.95761,
+      "sum_ms": 46.681474
+    },
+    "pair_call_to_enter": {
+      "count": 16,
+      "min_ms": 0.00011,
+      "median_ms": 0.0001955,
+      "p95_ms": 0.0003085,
+      "max_ms": 0.000391,
+      "sum_ms": 0.003325
+    },
+    "pair_capture": {
+      "count": 16,
+      "min_ms": 0.000571,
+      "median_ms": 0.0009220000000000001,
+      "p95_ms": 0.00129725,
+      "max_ms": 0.001433,
+      "sum_ms": 0.015319000000000001
+    },
+    "pair_slots_idle": {
+      "count": 16,
+      "min_ms": 0.025028,
+      "median_ms": 0.025504,
+      "p95_ms": 0.0258465,
+      "max_ms": 0.025869,
+      "sum_ms": 0.407589
+    },
+    "pair_input_stage": {
+      "count": 16,
+      "min_ms": 0.000932,
+      "median_ms": 0.001147,
+      "p95_ms": 0.0014030000000000002,
+      "max_ms": 0.001493,
+      "sum_ms": 0.018594
+    },
+    "pair_inputs_to_submit": {
+      "count": 16,
+      "min_ms": 5e-05,
+      "median_ms": 6e-05,
+      "p95_ms": 0.0012805000000000002,
+      "max_ms": 0.004699,
+      "sum_ms": 0.005831
+    },
+    "pair_submit": {
+      "count": 16,
+      "min_ms": 1.929289,
+      "median_ms": 1.9506695,
+      "p95_ms": 1.97754825,
+      "max_ms": 1.980516,
+      "sum_ms": 31.223184
+    },
+    "pair_postsubmit_to_poll": {
+      "count": 16,
+      "min_ms": 3e-05,
+      "median_ms": 4e-05,
+      "p95_ms": 5e-05,
+      "max_ms": 5e-05,
+      "sum_ms": 0.00063
+    },
+    "pair_poll_and_PLE": {
+      "count": 16,
+      "min_ms": 1.080981,
+      "median_ms": 1.0989555,
+      "p95_ms": 1.11989225,
+      "max_ms": 1.121147,
+      "sum_ms": 17.605325
+    },
+    "pair_queue_wait": {
+      "count": 16,
+      "min_ms": 2.911181,
+      "median_ms": 2.9238945000000003,
+      "p95_ms": 2.936379,
+      "max_ms": 2.946117,
+      "sum_ms": 46.779715
+    },
+    "pair_waitdone_to_return": {
+      "count": 16,
+      "min_ms": 0.00031,
+      "median_ms": 0.000491,
+      "p95_ms": 0.000611,
+      "max_ms": 0.000761,
+      "sum_ms": 0.007813
+    },
+    "pair_return_to_caller": {
+      "count": 16,
+      "min_ms": 7e-05,
+      "median_ms": 8.5e-05,
+      "p95_ms": 0.00017575000000000002,
+      "max_ms": 0.00019,
+      "sum_ms": 0.0016430000000000001
+    },
+    "pair_caller_to_flush": {
+      "count": 16,
+      "min_ms": 5e-05,
+      "median_ms": 6.5e-05,
+      "p95_ms": 0.00018825,
+      "max_ms": 0.00039,
+      "sum_ms": 0.001421
+    },
+    "stdout_flush": {
+      "count": 16,
+      "min_ms": 0.000521,
+      "median_ms": 0.000682,
+      "p95_ms": 0.000892,
+      "max_ms": 0.000982,
+      "sum_ms": 0.011464
+    },
+    "post_flush_to_end": {
+      "count": 16,
+      "min_ms": 5e-05,
+      "median_ms": 6.05e-05,
+      "p95_ms": 0.00014325,
+      "max_ms": 0.00018,
+      "sum_ms": 0.001392
+    },
+    "whole_window": {
+      "count": 16,
+      "min_ms": 55.99964,
+      "median_ms": 57.1811135,
+      "p95_ms": 57.52223875,
+      "max_ms": 57.561178,
+      "sum_ms": 913.336336
+    }
+  },
+  "new_span_stats_ms": {
+    "post_enter_to_run": {
+      "count": 16,
+      "min_ms": 0.00012,
+      "median_ms": 0.000131,
+      "p95_ms": 0.00173325,
+      "max_ms": 0.00516,
+      "sum_ms": 0.008638999999999999
+    },
+    "run_call_to_return": {
+      "count": 16,
+      "min_ms": 38.242381,
+      "median_ms": 39.5107045,
+      "p95_ms": 39.75744975,
+      "max_ms": 39.76833,
+      "sum_ms": 630.600737
+    },
+    "stage_capture": {
+      "count": 16,
+      "min_ms": 0.000371,
+      "median_ms": 0.0004055,
+      "p95_ms": 0.0008445,
+      "max_ms": 0.000852,
+      "sum_ms": 0.007977999999999999
+    },
+    "stage_PLE": {
+      "count": 16,
+      "min_ms": 0.032211,
+      "median_ms": 0.6686695,
+      "p95_ms": 0.949355,
+      "max_ms": 0.966683,
+      "sum_ms": 10.449471
+    },
+    "stage_inputs_after_PLE": {
+      "count": 16,
+      "min_ms": 0.000211,
+      "median_ms": 0.0002255,
+      "p95_ms": 0.00035775,
+      "max_ms": 0.000561,
+      "sum_ms": 0.004015
+    },
+    "stage_ready_to_verify_submit": {
+      "count": 16,
+      "min_ms": 9e-05,
+      "median_ms": 9.1e-05,
+      "p95_ms": 0.00011025,
+      "max_ms": 0.000111,
+      "sum_ms": 0.001536
+    },
+    "verify_submit": {
+      "count": 16,
+      "min_ms": 0.062059,
+      "median_ms": 0.067378,
+      "p95_ms": 0.091018,
+      "max_ms": 0.103747,
+      "sum_ms": 1.170361
+    },
+    "verify_postsubmit_to_wait": {
+      "count": 16,
+      "min_ms": 0.00011,
+      "median_ms": 0.00034100000000000005,
+      "p95_ms": 0.000441,
+      "max_ms": 0.000441,
+      "sum_ms": 0.00567
+    },
+    "verify_queue_wait": {
+      "count": 16,
+      "min_ms": 38.101603,
+      "median_ms": 38.635214500000004,
+      "p95_ms": 39.004467,
+      "max_ms": 39.060741,
+      "sum_ms": 618.553361
+    },
+    "verify_waitreturn_to_runreturn": {
+      "count": 16,
+      "min_ms": 0.003627,
+      "median_ms": 0.0041875,
+      "p95_ms": 0.00637475,
+      "max_ms": 0.010229,
+      "sum_ms": 0.073159
+    },
+    "commit": {
+      "count": 16,
+      "min_ms": 1.525158,
+      "median_ms": 1.585553,
+      "p95_ms": 1.61558775,
+      "max_ms": 1.617324,
+      "sum_ms": 25.335884
+    },
+    "pair_call_to_enter": {
+      "count": 16,
+      "min_ms": 3e-05,
+      "median_ms": 5.5e-05,
+      "p95_ms": 0.0001025,
+      "max_ms": 0.0002,
+      "sum_ms": 0.00099
+    },
+    "pair_capture": {
+      "count": 16,
+      "min_ms": 0.00022,
+      "median_ms": 0.000301,
+      "p95_ms": 0.0004035,
+      "max_ms": 0.000411,
+      "sum_ms": 0.005083
+    },
+    "pair_slots_idle": {
+      "count": 16,
+      "min_ms": 0.001262,
+      "median_ms": 0.001633,
+      "p95_ms": 0.0018732500000000001,
+      "max_ms": 0.001904,
+      "sum_ms": 0.026018
+    },
+    "pair_input_stage": {
+      "count": 16,
+      "min_ms": 0.00026,
+      "median_ms": 0.0003555,
+      "p95_ms": 0.00047599999999999997,
+      "max_ms": 0.000521,
+      "sum_ms": 0.0056819999999999996
+    },
+    "pair_inputs_to_submit": {
+      "count": 16,
+      "min_ms": 5e-05,
+      "median_ms": 6.05e-05,
+      "p95_ms": 7.35e-05,
+      "max_ms": 8.1e-05,
+      "sum_ms": 0.001015
+    },
+    "pair_submit": {
+      "count": 16,
+      "min_ms": 0.04222,
+      "median_ms": 0.046123,
+      "p95_ms": 0.0510545,
+      "max_ms": 0.051107,
+      "sum_ms": 0.740028
+    },
+    "pair_postsubmit_to_poll": {
+      "count": 16,
+      "min_ms": 2e-05,
+      "median_ms": 4e-05,
+      "p95_ms": 6.1e-05,
+      "max_ms": 9.1e-05,
+      "sum_ms": 0.0006720000000000001
+    },
+    "pair_poll_and_PLE": {
+      "count": 16,
+      "min_ms": 2.671914,
+      "median_ms": 2.7100315000000004,
+      "p95_ms": 2.72374025,
+      "max_ms": 2.742248,
+      "sum_ms": 43.323468
+    },
+    "pair_queue_wait": {
+      "count": 16,
+      "min_ms": 2.588104,
+      "median_ms": 2.617585,
+      "p95_ms": 2.650065,
+      "max_ms": 2.652837,
+      "sum_ms": 41.890718
+    },
+    "pair_waitdone_to_return": {
+      "count": 16,
+      "min_ms": 0.00024,
+      "median_ms": 0.00025,
+      "p95_ms": 0.00031775,
+      "max_ms": 0.000341,
+      "sum_ms": 0.004106
+    },
+    "pair_return_to_caller": {
+      "count": 16,
+      "min_ms": 0.0001,
+      "median_ms": 0.00012,
+      "p95_ms": 0.00014275,
+      "max_ms": 0.000151,
+      "sum_ms": 0.001984
+    },
+    "pair_caller_to_flush": {
+      "count": 16,
+      "min_ms": 5e-05,
+      "median_ms": 5.5e-05,
+      "p95_ms": 7e-05,
+      "max_ms": 7e-05,
+      "sum_ms": 0.00092
+    },
+    "stdout_flush": {
+      "count": 16,
+      "min_ms": 0.000291,
+      "median_ms": 0.000311,
+      "p95_ms": 0.0018335,
+      "max_ms": 0.006011,
+      "sum_ms": 0.011023
+    },
+    "post_flush_to_end": {
+      "count": 16,
+      "min_ms": 5e-05,
+      "median_ms": 6e-05,
+      "p95_ms": 6.324999999999999e-05,
+      "max_ms": 7e-05,
+      "sum_ms": 0.000912
+    },
+    "whole_window": {
+      "count": 16,
+      "min_ms": 45.274197,
+      "median_ms": 46.470352500000004,
+      "p95_ms": 46.775157,
+      "max_ms": 46.784376,
+      "sum_ms": 742.64106
+    }
+  },
+  "old_cross_window_stats_ms": {
+    "pair_return->stage_ple_begin": {
+      "count": 14,
+      "min_ms": 0.026932,
+      "median_ms": 0.0301475,
+      "p95_ms": 0.03476775,
+      "max_ms": 0.03676,
+      "sum_ms": 0.42576200000000003
+    },
+    "pair_return->verify_submit_begin": {
+      "count": 14,
+      "min_ms": 0.457382,
+      "median_ms": 0.759122,
+      "p95_ms": 1.027437,
+      "max_ms": 1.180681,
+      "sum_ms": 10.825489
+    },
+    "pair_return->window_enter": {
+      "count": 14,
+      "min_ms": 0.002555,
+      "median_ms": 0.002955,
+      "p95_ms": 0.003581,
+      "max_ms": 0.003737,
+      "sum_ms": 0.042629
+    },
+    "pair_wait_done->stage_ple_begin": {
+      "count": 14,
+      "min_ms": 0.027382,
+      "median_ms": 0.030728,
+      "p95_ms": 0.03530825,
+      "max_ms": 0.037281,
+      "sum_ms": 0.432784
+    },
+    "pair_wait_done->verify_submit_begin": {
+      "count": 14,
+      "min_ms": 0.457873,
+      "median_ms": 0.759573,
+      "p95_ms": 1.0279329999999998,
+      "max_ms": 1.181242,
+      "sum_ms": 10.832511
+    },
+    "pair_wait_done->window_enter": {
+      "count": 14,
+      "min_ms": 0.003005,
+      "median_ms": 0.0034660000000000003,
+      "p95_ms": 0.0040995,
+      "max_ms": 0.004288,
+      "sum_ms": 0.049651
+    },
+    "window_end->stage_ple_begin": {
+      "count": 14,
+      "min_ms": 0.02623,
+      "median_ms": 0.029145,
+      "p95_ms": 0.0333926,
+      "max_ms": 0.035678,
+      "sum_ms": 0.411646
+    },
+    "window_end->verify_submit_begin": {
+      "count": 14,
+      "min_ms": 0.4564,
+      "median_ms": 0.7582610000000001,
+      "p95_ms": 1.02651165,
+      "max_ms": 1.179729,
+      "sum_ms": 10.811373
+    },
+    "window_end->window_enter": {
+      "count": 14,
+      "min_ms": 0.001623,
+      "median_ms": 0.0020235,
+      "p95_ms": 0.002326,
+      "max_ms": 0.002495,
+      "sum_ms": 0.028513
+    }
+  },
+  "new_cross_window_stats_ms": {
+    "pair_return->stage_ple_begin": {
+      "count": 14,
+      "min_ms": 0.021872,
+      "median_ms": 0.022573,
+      "p95_ms": 0.029303549999999998,
+      "max_ms": 0.030118,
+      "sum_ms": 0.32945
+    },
+    "pair_return->verify_submit_begin": {
+      "count": 14,
+      "min_ms": 0.479784,
+      "median_ms": 0.703531,
+      "p95_ms": 0.9746224,
+      "max_ms": 0.989367,
+      "sum_ms": 10.067395
+    },
+    "pair_return->window_enter": {
+      "count": 14,
+      "min_ms": 0.001112,
+      "median_ms": 0.001288,
+      "p95_ms": 0.0037258499999999984,
+      "max_ms": 0.007074,
+      "sum_ms": 0.024457
+    },
+    "pair_wait_done->stage_ple_begin": {
+      "count": 14,
+      "min_ms": 0.022192,
+      "median_ms": 0.022813,
+      "p95_ms": 0.02958105,
+      "max_ms": 0.030428,
+      "sum_ms": 0.333056
+    },
+    "pair_wait_done->verify_submit_begin": {
+      "count": 14,
+      "min_ms": 0.480025,
+      "median_ms": 0.7037715,
+      "p95_ms": 0.9748724,
+      "max_ms": 0.989617,
+      "sum_ms": 10.071001
+    },
+    "pair_wait_done->window_enter": {
+      "count": 14,
+      "min_ms": 0.001352,
+      "median_ms": 0.0015375,
+      "p95_ms": 0.003973499999999998,
+      "max_ms": 0.007334,
+      "sum_ms": 0.028063
+    },
+    "window_end->stage_ple_begin": {
+      "count": 14,
+      "min_ms": 0.021331,
+      "median_ms": 0.022017000000000002,
+      "p95_ms": 0.025006549999999995,
+      "max_ms": 0.029396,
+      "sum_ms": 0.315733
+    },
+    "window_end->verify_submit_begin": {
+      "count": 14,
+      "min_ms": 0.479263,
+      "median_ms": 0.703,
+      "p95_ms": 0.9739997499999999,
+      "max_ms": 0.988836,
+      "sum_ms": 10.053678
+    },
+    "window_end->window_enter": {
+      "count": 14,
+      "min_ms": 0.000571,
+      "median_ms": 0.0006765,
+      "p95_ms": 0.0011549999999999998,
+      "max_ms": 0.001402,
+      "sum_ms": 0.01074
+    }
+  },
+  "not_clean_serving_speed_qualification": true,
+  "no_CPU_GPU_clock_join": true,
+  "no_causal_GPUgap_or_idle_claim": true,
+  "profiler_perturbation_candidate_not_single_API_attribution": true
+}

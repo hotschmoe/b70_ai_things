@@ -1,0 +1,17 @@
+{
+  "status": "FROZEN_INDEPENDENT_ALREADY_PARSED_CPU_DIAGNOSTIC_REVIEW",
+  "files": {
+    "findings.md": {
+      "bytes": 4570,
+      "sha256": "5b08ef036fe2acb4b3d0f1c18c77c39ee1bd59d5f8fcac3c2f1b785ff4dbd32d"
+    },
+    "pins.json": {
+      "bytes": 2365,
+      "sha256": "d3458395784a1284bac31bd16dac7e9865a7b21e3febc46f911736b9170afb70"
+    },
+    "source-brackets.txt": {
+      "bytes": 2919,
+      "sha256": "abe3e924741c405bb01f802793cca004c65892d3fe1b2423bcf57237a1cb1e1a"
+    }
+  }
+}

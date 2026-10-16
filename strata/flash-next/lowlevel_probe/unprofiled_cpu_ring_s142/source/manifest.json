@@ -1,0 +1,69 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NO_EXECUTION",
+  "files": {
+    "README.md": {
+      "bytes": 3347,
+      "sha256": "077a6e6936240e90b5cae04a756f169a0a49d6f35ba1fb3eeeea9184b9b2ce97"
+    },
+    "config.json": {
+      "bytes": 2945,
+      "sha256": "8d88255c9eac26b53d8a2a7870b44e5eb7f1c117edeee296302053045224d679"
+    },
+    "controller.py": {
+      "bytes": 10545,
+      "sha256": "1e246d89ef007f514c90afc614426170c4420c08da04f877bcfd2f1ccae7b042"
+    },
+    "controller.py.patch": {
+      "bytes": 12848,
+      "sha256": "f04bb4c38b4eceb7f9894d67675ebdd57bdd5691e1af51dfe6b09056af0dcbb6"
+    },
+    "cpu_markers.py": {
+      "bytes": 15240,
+      "sha256": "25b1b1d0d176e069d624d7eeb9cd49d257f53bf995540d404598b42710dbb51d"
+    },
+    "expected-source.sha256": {
+      "bytes": 2758,
+      "sha256": "5559986e743351ece55110baa7b7272807726d03c7b485f0eddf5acda732dc1e"
+    },
+    "inputs.json": {
+      "bytes": 2689,
+      "sha256": "fa5ae461da9b46b60bc30c924dcc77ce434633ef04c067ceafbecc77952066d7"
+    },
+    "launch.sh": {
+      "bytes": 1968,
+      "sha256": "84e1e9b16b336c383dc36ee36f1ccd7316bd15110968868a8a3c287e386703d6"
+    },
+    "launch.sh.patch": {
+      "bytes": 1091,
+      "sha256": "e8d5a4ee28ab5e77f23440bcbc6c7feaf723344a73aefe000352f36fa9dbbb7a"
+    },
+    "pair.py": {
+      "bytes": 8308,
+      "sha256": "2b28d446fdf7ff1480a4f7004f0c8daf23bf26983dec50a9517faaf395306221"
+    },
+    "pair.py.patch": {
+      "bytes": 2804,
+      "sha256": "7270886f096578bce7c4ad603673128780e9344d16960515c684bac3b5cd11f5"
+    },
+    "parent-pins.json": {
+      "bytes": 2345,
+      "sha256": "7b30d557961eb522b9a314434aa7a74e44eafb2fb6512f4004379963296152eb"
+    },
+    "stop.py": {
+      "bytes": 6306,
+      "sha256": "7e1b2429c0af22345a80564872b30c76292347211ffe41f53e7aa5043f6d147d"
+    },
+    "stop.py.patch": {
+      "bytes": 2435,
+      "sha256": "7b24fcf91b1c69a1352a0febdc42cb37d21f1af0ce269148ff693c7241713ca3"
+    },
+    "trace-engine.sh": {
+      "bytes": 337,
+      "sha256": "0d3f02e58b37fee7e26d0a801e9f4b3ee0614e1697f42fc479fdcb3a83d64304"
+    },
+    "trace-engine.sh.patch": {
+      "bytes": 991,
+      "sha256": "1f03f59478b069a2e9e5696ba88cc04fc5fbb30015181a911a281d85f3eee552"
+    }
+  }
+}

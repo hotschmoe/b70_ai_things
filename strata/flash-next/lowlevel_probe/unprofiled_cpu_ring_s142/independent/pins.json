@@ -1,0 +1,42 @@
+{
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/run/CPU-comparison.json": {
+    "bytes": 14437,
+    "sha256": "e570a577845eeb3ef6a7f5a65baa6e9624fc09b50701b3207aef03ff8609a05c"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/run/analysis/cpu/analysis.json": {
+    "bytes": 397222,
+    "sha256": "2834bce6b64c8c902974cad353530779efb06c60b3373ddd7ce974ecbde4a996"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/run/analysis/cpu/validation.json": {
+    "bytes": 502,
+    "sha256": "666379d26ef495c53dd46533ab90c9949ca71b5b4f7501e37d181b3b856bb03a"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/run/pair/S136-work-comparison.json": {
+    "bytes": 299,
+    "sha256": "87c3879766d1d644f39fb186f58efe6b79dbb87639fd59a783717075e12b3d1c"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/run/ring-closure.json": {
+    "bytes": 502,
+    "sha256": "92056e5a8d461ce331de66c6d104f7e1c7ef0d8f187b1702394f595aa5b2d40e"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/run/normal-stop.json": {
+    "bytes": 534,
+    "sha256": "7b23d83fb13f68b2b7a71c8e1b4b194daa5e903432207eb31c96f7df5eff71a8"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/run/post-health.json": {
+    "bytes": 479,
+    "sha256": "b90f34290f2eefe25e836b069bfdac79879609011b7355439cee2f3befde4c80"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/analysis/cpu/analysis.json": {
+    "bytes": 397571,
+    "sha256": "0a28e217b9551cdd58fcee5e10166732c1c2c4ddb51451127f4d6d6228128d49"
+  },
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp": {
+    "bytes": 223107,
+    "sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2"
+  },
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp": {
+    "bytes": 125111,
+    "sha256": "452a051e3a2219d0c6a00c8cdf795b798e763fcc793fbbb4dff1b4dda7903aff"
+  }
+}

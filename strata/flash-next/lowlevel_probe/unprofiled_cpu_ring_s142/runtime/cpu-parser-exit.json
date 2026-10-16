@@ -1,0 +1,10 @@
+{
+  "command": [
+    "/usr/bin/python3",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/cpu_markers.py",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/run/pair-engine-complete.log",
+    "--output",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/run/analysis/cpu"
+  ],
+  "exit": 0
+}

@@ -1,0 +1,25 @@
+--- S136/pair.py
++++ S142/pair.py
+@@ -25,6 +25,11 @@
+   required=['cache_n','prompt_n','predicted_n','draft_n','draft_n_accepted']
+   assert all(k in row['timings'] and isinstance(row['timings'][k],(int,float)) and not isinstance(row['timings'][k],bool) and math.isfinite(row['timings'][k]) and row['timings'][k]>=0 for k in required),'Missing/nonfinite/negative native work field'
+   row['prefix_matches_s16']=ref['text'].startswith(row['text']) if repeat==0 else None;save(dst/f'coding-{i}.json',row)
++  same=json.loads((R/'current-mtp-profile-s136/run/pair'/f'coding-{i}.json').read_text())
++  assert row['request']==same['request'] and row['text']==same['text'] and row['usage']==same['usage'] and row['output_sha256']==same['output_sha256']
++  assert all(row['timings'][k]==same['timings'][k]for k in required),'Native perrequest work differs S136'
++  sse=lambda v:''.join(choice.get('delta',{}).get('content','')or''for chunk in v['chunks']for choice in chunk.get('choices',[]))
++  assert sse(row)==row['text']==sse(same),'Concat SSE content differs S136'
+   assert row['usage']['completion_tokens']==64 and row['usage']['prompt_tokens']==107
+   if repeat==0:assert row['prefix_matches_s16']
+   assert all(math.isfinite(row[k]) for k in ['ttft_s','wall_s','client_decode_tps'])
+@@ -77,6 +82,9 @@
+   'usage':[r['usage'] for r in rows],'work_timings':[{k:r['timings'][k] for k in ['cache_n','prompt_n','predicted_n','draft_n','draft_n_accepted']} for r in rows],
+   'native_windows':sum(map(int,native_windows)),'paired':sum(int(x) for x,y in pairs),'solo':sum(int(y) for x,y in pairs),'raw_native_token_ids_observed':False,'aggregate_output_tps':sum(r['usage']['completion_tokens'] for r in rows)/elapsed,'stream_metrics':[{'ttft_s':r['ttft_s'],'completion_wall_s':r['wall_s'],'decode_tps':r['client_decode_tps'],'whole_request_output_tps':r['usage']['completion_tokens']/r['wall_s'],'content_event_gap_ms':r['content_event_gap_ms']} for r in rows],
+   'admission_gate':gate,'client_overlap_ns':overlap,'repeat':repeat,'exact_gate':'full UTF8 text/SSE content plus usage/native work; not raw token IDs'})
+- print('S95 ordered64x2 pair complete; no generation warmup.',flush=True)
++ actual=json.loads((dst/'pair.json').read_text());reference=json.loads((R/'current-mtp-profile-s136/run/pair/pair.json').read_text())
++ keys=['output_sha256','usage','work_timings','native_windows','paired','solo','native_window_rows','logged_capture_layouts']
++ checks={k:actual[k]==reference[k]for k in keys};save(dst/'S136-work-comparison.json',{'checks':checks,'all_match':all(checks.values()),'raw_SSE_event_segmentation_not_compared':True});assert all(checks.values()),checks
++ print('S142 unprofiled ordered64x2 diagnostic complete; no generation warmup.',flush=True)
+ 
+ if __name__=='__main__':pair(D/'run',0)

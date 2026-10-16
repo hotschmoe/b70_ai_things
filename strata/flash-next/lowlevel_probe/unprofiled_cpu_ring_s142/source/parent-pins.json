@@ -1,0 +1,42 @@
+{
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/controller.py": {
+    "bytes": 15250,
+    "sha256": "87edbd62362b11cb927a3b38ebef026d152bceea957ee610b31f481b40ad90f7"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/pair.py": {
+    "bytes": 7256,
+    "sha256": "2e6ab3aee41358d5c8e8a5cef6455e90676bf84f18b151ab02ec149470247154"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/stop.py": {
+    "bytes": 7271,
+    "sha256": "06bda25525b240f5fd1b4bfd6f71afaafb27651be4bd4c13907a0e79266a29f1"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/cpu_markers.py": {
+    "bytes": 15240,
+    "sha256": "25b1b1d0d176e069d624d7eeb9cd49d257f53bf995540d404598b42710dbb51d"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/trace-engine.sh": {
+    "bytes": 620,
+    "sha256": "cff0c97980a9a390f4f9afe325ef5b178e00ed9b37bda84a249dfac7e34a7e77"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/ring-closure.json": {
+    "bytes": 502,
+    "sha256": "8404afdc9f8abc0b61d729fae0249369efe818e98898fa131144afcfdf0f251a"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/pair/pair.json": {
+    "bytes": 5015,
+    "sha256": "91adf087540aa2f4e3468c89bd23d376450fa24ac67bddb3532abd959c43876b"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/pair/coding-0.json": {
+    "bytes": 26440,
+    "sha256": "d4700f640e1e12f7ed31c654df0ccdc02f22691cfabdf072977f194f7c833b3d"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/pair/coding-1.json": {
+    "bytes": 26438,
+    "sha256": "2c123a15a916440df85fdd4b5093953a44be38316ba87e0972e950d285641ef0"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/analysis/cpu/validation.json": {
+    "bytes": 493,
+    "sha256": "69b5f596b5189f2c1fd42332b9d11cd4a51a08214a054fa88c35c5c665c867fd"
+  }
+}

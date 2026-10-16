@@ -1,0 +1,8 @@
+{
+  "status": "ONE_UNPROFILED_PAIR_NUMERIC_NATIVE_WORK_RING_PASS",
+  "CPU_clock_only": true,
+  "no_raw_trace_created_or_parsed": true,
+  "no_unitrace_controls": true,
+  "no_generation_flush": true,
+  "serving_or_speed_qualified": false
+}

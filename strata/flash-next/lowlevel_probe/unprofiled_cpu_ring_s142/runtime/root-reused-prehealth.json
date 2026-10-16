@@ -1,0 +1,28 @@
+{
+  "stage": "S142",
+  "root_same_boot_no_intervening_GPU_attested": true,
+  "boot_id": "b785982c-4954-4d23-808c-48a7534ce3bd",
+  "current_kernel": "7.1.0-070100-generic",
+  "latest_card0": "S141 normal private native0 and posthealth0",
+  "latest_card1_and_collective": "S139 ON normal full posthealth0; only S140/S141 healthy-closed card0 work since",
+  "S140": "checkerHOLD only, nativeleaf0, normalremoval, rootreview/manualcard0health0",
+  "receipt_outside_run_before_start_because_controller_creates_run": true,
+  "records": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-indexer-three-steps-s141-run/closure.json": {
+      "bytes": 310,
+      "sha256": "4caa678b87fd9197e2e0c482cc5d80c3883d6d48d4382890d3199c5074302903"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-s139-serving-prep/mode1/post-health.json": {
+      "bytes": 480,
+      "sha256": "14fdc1919311859a8274c5d589b4271c5b921f8299a0560d42c2bbd3fe542be3"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-s139-serving-prep/mode1/normal-stop.json": {
+      "bytes": 507,
+      "sha256": "46fb4f9bbdfbb33a65de7405dcede062ab7dfdd9d7af235acb05a60bac181f85"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/ur-adapter-discovery-prep/run/root-diagnostic-review.json": {
+      "bytes": 627,
+      "sha256": "95106f4625d610b184616421fae1dea582284e63cecb3910cb162febb0589100"
+    }
+  }
+}

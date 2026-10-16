@@ -25716,3 +25716,24 @@ submissioncount/noDOTexport, no isolatedkernel/servingforecast. Root
 selects small defaultOFFsourceprep then actualincrementalbuild after
 ongoingS142closes; fullcontext/RAMnotnewlyqualified. See
 docs/20261016_strata_qsa_commit_group_oracle.md.
+
+
+## 2026-10-16 S142: matched CPU ring without unitrace
+
+CONFIG -> SAME S133fe57/allOFF/107x64C2/policy/ring+TRACE1 asS136,
+withoutunitrace/preload/loggers/controls/rawtrace/flush; no newbuild.
+COMMAND -> FirststartupPermissionError BEFOREnativeEXEC preserved;
+rootchmod664->775wrapperbytesexact, explicitcorrectedsetup. ONEactual
+GPUpair thennormalQUIT/fullhealth, oneexistingCPUringparser.
+RESULT -> Correctedstart0/30.464s/collect0/3.893s/stop0/59.166s/
+analyze0/.182s; exactfulloutputs/usage/work/windows/captures matchS136,
+820markers/drop0/same16replayIDs. Bothcard+compiledcollectivehealth0.
+VerifierCPUsubmit3.221343->.067378ms, pairsubmit1.950670->.046123;
+pairpoll/PLE1.098956->2.710032. Directpairsubmit->return5.978394->
+5.370319ms; wholewindow57.181114->46.470353 diagnostic.
+VERDICT -> Profilerbundle materiallyperturbsCPUbrackets. Parkqueue
+property/driverknob experiments; do notchase3.3ms tracegap as proven
+productionhostcost. NoCPUGPUjoin/physicalidle/APIcause/servinggainclaim.
+Useexistingtraceforshapes/order withtiminglimits; rootreviewed strict
+stateGPUcandidate/mainworkcontinues. See
+docs/20261016_strata_unprofiled_cpu_ring.md.

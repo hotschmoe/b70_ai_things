@@ -1,0 +1,30 @@
+--- S136/stop.py
++++ S142/stop.py
+@@ -32,18 +32,6 @@
+ try:health=get('http://127.0.0.1:18085','/health')
+ except Exception as e:health={'observation_failed':type(e).__name__,'detail':str(e),'cleanup_still_required':True}
+ save(out/'health-prestop.json',health)
+-# On failed collection/startup, best-effort stop the named profiler in this
+-# validated owned CID without blocking normal TERM; no flush generation here.
+-try:stopped=json.loads((out/'unitrace-stop.json').read_text()).get('exit')==0
+-except (OSError,ValueError):stopped=False
+-if not stopped and ci is not None and prestate['Running']is True and not(out/'unitrace-cleanup-stop.json').exists():
+- cmd=['docker','exec',cid,'/mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/build/unitrace','--stop',profile['session']]
+- try:
+-  r=subprocess.run(cmd,capture_output=True,text=True,timeout=30);rec={'command':cmd,'exit':r.returncode,'stdout':r.stdout,'stderr':r.stderr}
+- except Exception as e:
+-  captured=lambda x:x.decode('utf8','replace')if isinstance(x,bytes)else x
+-  rec={'command':cmd,'exit':None,'exception':type(e).__name__,'detail':str(e),'stdout':captured(getattr(e,'stdout',None)),'stderr':captured(getattr(e,'stderr',None))}
+- save(out/'unitrace-cleanup-stop.json',rec)
+ # A missing/stopped owned container gets no TERM. Authoritative CID/name-gone
+ # and wrapper-terminal checks still run; that path cannot qualify as healthy.
+ if ci is not None and prestate['Running']is True:
+@@ -77,7 +65,7 @@
+  raise SystemExit('Abnormal/unknown teardown recorded; root recovery ladder required before any further GPU/collective work')
+ raw=(out/'engine.log').read_bytes();(out/'engine-final.log').write_bytes(raw)
+ text=raw.decode('utf8');matches=re.findall(r'^strata serve final: (ple io: .*prefetch_gathers=(\d+) prefetch_tokens=(\d+))$',text,re.M)
+-diag={'present_once':len(matches)==1,'raw':matches,'log_sha256':hashlib.sha256(raw).hexdigest(),'scope':'process cumulative, includes admission/pair and optional unprofiled flush; not per-window'}
++diag={'present_once':len(matches)==1,'raw':matches,'log_sha256':hashlib.sha256(raw).hexdigest(),'scope':'process cumulative, includes admission and ONE diagnosticpair; no unitrace or flush; not per-window'}
+ if len(matches)==1:
+  diag.update(prefetch_gathers=int(matches[0][1]),prefetch_tokens=int(matches[0][2]),requests=int(re.search(r'^ple io: (\d+) rows',matches[0][0])[1]))
+ save(out/'aggregate-proof.json',diag)

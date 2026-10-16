@@ -1,0 +1,52 @@
+{
+  "stage": "S142",
+  "corrected_setup_continuation": "permission only, before any native workload; failed attempt preserved",
+  "commands": [
+    {
+      "phase": "start",
+      "command": [
+        "bin/cpu-run",
+        "python3",
+        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/controller.py",
+        "start"
+      ],
+      "exit": 0,
+      "elapsed_s": 30.464337344979867
+    },
+    {
+      "phase": "collect",
+      "command": [
+        "bin/cpu-run",
+        "--quiet",
+        "python3",
+        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/controller.py",
+        "collect"
+      ],
+      "exit": 0,
+      "elapsed_s": 3.8929653789964505
+    },
+    {
+      "phase": "stop",
+      "command": [
+        "bin/cpu-run",
+        "--quiet",
+        "python3",
+        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/controller.py",
+        "stop"
+      ],
+      "exit": 0,
+      "elapsed_s": 59.16580972599331
+    },
+    {
+      "phase": "analyze",
+      "command": [
+        "python3",
+        "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/controller.py",
+        "analyze"
+      ],
+      "exit": 0,
+      "elapsed_s": 0.18215603899443522
+    }
+  ],
+  "automatic_retry": false
+}

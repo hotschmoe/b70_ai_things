@@ -1,0 +1,63 @@
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp L3322-3347
+    host_boundary::mark("verify_enter", S);
+    const OnDevice on_device(device_);
+    const ModelGeometry& g = *g_;
+    if (!stage_batch(rows, S, 0, tokens, pos, err)) return false;
+    host_boundary::mark("verify_submit_begin", S);
+    if (ep_on()) ep_q_->ext_oneapi_graph(*ep_exec_bm_[bkey(rows, S, 0)]);   // the peer's half first, as run()
+    const dpct::err0 le =
+        DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*exec_bm_[bkey(rows, S, 0)]));
+    /*
+    DPCT1009: SYCL reports errors using exceptions and does not use error
+    codes. Please replace the "get_error_string_dummy(...)" with a real
+    error-handling function.
+    */
+    /*
+    DPCT1001: The statement could not be removed.
+    */
+    /*
+    DPCT1000: Error handling if-stmt was detected but could not be rewritten.
+    */
+    if (le != 0) {
+      err = std::string("verify: batch launch: ") +
+            dpct::get_error_string_dummy(le);
+      return false;
+    }
+    (void)DPCT_CHECK_ERROR(((cs_)->ext_oneapi_empty()));
+    host_boundary::mark("verify_submit_end", S);
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp L2430-2448
+                    if (tok < 0) { err = "mtp pair: completed owner tail output missing owner=" + std::to_string(c) + " depth=" + std::to_string(j); return false; }
+                    prefetch_ple(c, tok);
+                }
+            }
+            return true;
+        }
+        if (whole_pair) return launch(pair_exec_[T[0]][T[1]], "whole pair depth2");
+    bool ok = launch(pre_round_[0][T[0]], "round A") && launch(pre_round_[1][T[1]], "round B") && launch(tail_[0], "head 0");
+    for (int j = 1; ok && j < max_steps; ++j)
+        ok = launch(pre_step_[0][j], "step A") && launch(pre_step_[1][j], "step B") && launch(tail_[j], "head");
+        return ok;
+    }();
+    if (!ok) {   // the slots' K/V may already be written: drain and report, the caller must not draft again
+        drain_owner_queues();
+        try { cs_->wait(); } catch (...) {}
+        return false;
+    }
+    (void)DPCT_CHECK_ERROR(((cs_)->ext_oneapi_empty()));
+    host_boundary::mark("pair_submit_end", max_steps);
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp L2459-2470
+    host_boundary::mark("pair_poll_begin", max_steps);
+    if (!owner_queues_)
+        for (int c = 0; c < 2; ++c) prefetch_ple(c, args[c]->tokens[args[c]->a]);
+    for (int j = 0; j + 1 < max_steps; ++j)
+        for (int c = 0; c < 2; ++c) {
+            wait_out(c, j);
+            args[c]->drafts[j] = ((volatile int32_t*) d_[c]->h_out_)[j];
+            if (!owner_queues_) prefetch_ple(c, args[c]->drafts[j]);
+        }
+    host_boundary::mark("pair_wait_begin", max_steps);
+    if (DPCT_CHECK_ERROR(cs_->wait()) != 0) { err = "mtp pair: the draft queue failed"; drain_owner_queues(); return false; }
+    host_boundary::mark("pair_wait_done", max_steps);
+

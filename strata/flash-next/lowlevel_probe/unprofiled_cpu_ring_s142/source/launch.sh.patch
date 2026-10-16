@@ -1,0 +1,20 @@
+--- S136/launch.sh
++++ S142/launch.sh
+@@ -6,7 +6,7 @@
+ results=/mnt/vm_8tb/b70/results
+ weights=$repo/models/files/qwen3.8-flash-next
+ nvme=/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco
+-container="strata-mtp-headfree-s136"
++container="strata-unprofiled-ring-s142"
+ config=$(realpath "${1:-$repo/strata/flash-next/serve-iq3xxs-200k.json}")
+ source_dir=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["cwd"])' "$config")
+ ipc_opts=()
+@@ -16,7 +16,7 @@
+   ipc_opts=(--cap-add SYS_PTRACE)
+ fi
+ cd "$repo"
+-exec bin/gpu-run docker run --rm -i --name "$container" --cidfile "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/attempt.cid" --network host \
++exec bin/gpu-run docker run --rm -i --name "$container" --cidfile "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-unprofiled-ring-s142-prep/run/attempt.cid" --network host \
+   "${ipc_opts[@]}" \
+   --memory 90g --device /dev/dri --ulimit memlock=-1 \
+   -v "$build:$build" -v "$results:$results" -v "$config:$config:ro" \

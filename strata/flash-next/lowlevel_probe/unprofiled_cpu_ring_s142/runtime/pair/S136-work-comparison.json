@@ -1,0 +1,14 @@
+{
+  "checks": {
+    "output_sha256": true,
+    "usage": true,
+    "work_timings": true,
+    "native_windows": true,
+    "paired": true,
+    "solo": true,
+    "native_window_rows": true,
+    "logged_capture_layouts": true
+  },
+  "all_match": true,
+  "raw_SSE_event_segmentation_not_compared": true
+}

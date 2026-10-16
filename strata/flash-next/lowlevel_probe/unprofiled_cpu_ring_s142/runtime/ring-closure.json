@@ -1,0 +1,17 @@
+{
+  "status": "COMPLETE_DECLARED_COUNTS_DROPPED0_AND_FINAL_WINDOW_END",
+  "log_sha256": "dee92991c52bc4d697dea6941a96b12f46c58fc3e03ecf41c614777a6a97a63e",
+  "dump_headers": [
+    {
+      "index": 0,
+      "header_line": 36,
+      "declared_records": 820,
+      "dropped": 0
+    }
+  ],
+  "actual_records": 820,
+  "window0_records": 0,
+  "all_cold_solo_tail_records_retained": true,
+  "no_footer_exists": true,
+  "scope": "Idle observation AND complete declared dump; snapshot before optional flush."
+}

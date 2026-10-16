@@ -1,0 +1,40 @@
+{
+  "status": "PASS_NATIVE_PROMPT_START_ORDER_AND_CLIENT_OVERLAP",
+  "fresh_engine_byte_offset": 6330,
+  "only_request0_outstanding": true,
+  "native_prompt_start_line": "strata trace: prompt start 106 -1",
+  "native_prompt_count_minus1": 106,
+  "marker_byte_offset": 6358,
+  "marker_observed_monotonic_ns": 452061152362943,
+  "marker_observed_epoch_ns": 1792127573039573695,
+  "request1_submit_monotonic_ns": 452061152368013,
+  "client_overlap_ns": 3513211261,
+  "request0_lifetime": {
+    "client_call_start_monotonic_ns": 452061141973455,
+    "client_call_start_epoch_ns": 1792127573029184999,
+    "model": "hotschmoe-dd",
+    "messages": [
+      {
+        "role": "user",
+        "content": "[Flash-Next concurrent coding repeat 0 slot 0] Implement a Python asyncio bounded worker pool for processing file paths. Requirements: fixed worker count, bounded queue for backpressure, preserve input order in results, propagate the first worker exception, cancel and await all outstanding tasks on failure, and handle caller cancellation without leaked tasks. Explain the shutdown protocol, provide complete typed code using only the standard library, and include three meaningful tests for ordering, worker failure, and cancellation."
+      }
+    ],
+    "max_new_tokens": 64,
+    "client_call_end_monotonic_ns": 452064676317527,
+    "client_call_end_epoch_ns": 1792127576563528830
+  },
+  "request1_lifetime": {
+    "client_call_start_monotonic_ns": 452061163106266,
+    "client_call_start_epoch_ns": 1792127573050318000,
+    "model": "hotschmoe-dd",
+    "messages": [
+      {
+        "role": "user",
+        "content": "[Flash-Next concurrent coding repeat 0 slot 1] Implement a Python asyncio bounded worker pool for processing file paths. Requirements: fixed worker count, bounded queue for backpressure, preserve input order in results, propagate the first worker exception, cancel and await all outstanding tasks on failure, and handle caller cancellation without leaked tasks. Explain the shutdown protocol, provide complete typed code using only the standard library, and include three meaningful tests for ordering, worker failure, and cancellation."
+      }
+    ],
+    "max_new_tokens": 64,
+    "client_call_end_monotonic_ns": 452064742580660,
+    "client_call_end_epoch_ns": 1792127576629791763
+  }
+}

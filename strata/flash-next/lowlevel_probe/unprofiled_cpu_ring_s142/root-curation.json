@@ -1,0 +1,9 @@
+{
+  "stage": "S142",
+  "all_exact_copy_index_entries_verified": true,
+  "source_copy_index_sha256": "38011de60afffd8cfb6abdafbae2b611591abcd34af20271e659e404cb0e6768",
+  "root_full_read_dateddoc_independentnote_CPUcomparison_source_deltas_and_actual_phases": true,
+  "all_four_corrected_phases_exit": 0,
+  "first_startup_failure_preserved": true,
+  "no_new_main_source_readback_required_after_later_S143_apply": true
+}

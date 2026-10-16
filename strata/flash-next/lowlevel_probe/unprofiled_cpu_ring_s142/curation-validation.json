@@ -1,0 +1,11 @@
+{
+  "status": "PASS_BOUNDED_CURATION_EXACTCOPY_AND_ASCII",
+  "exact_copies": 69,
+  "derived": 2,
+  "all_expected_modes_preserved": true,
+  "direct_wrapper_executable": true,
+  "source_copy_index_sha256": "38011de60afffd8cfb6abdafbae2b611591abcd34af20271e659e404cb0e6768",
+  "doc_sha256": "c68d0883de06c3498f43a66656ebc6929fe6e99105ae985429a30cad9ce532d8",
+  "no_GPU_build_model_or_rawtrace_read": true,
+  "no_JOURNAL_goals_stage_commit_changes": true
+}

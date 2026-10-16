@@ -1,0 +1,15 @@
+{
+  "stage": "S142",
+  "status": "CORRECTED_SETUP_CONTINUATION_AFTER_PERMISSION_ERROR_BEFORE_NATIVE_EXEC",
+  "failed_startup_exit": 1,
+  "native_executable_started": false,
+  "model_load_or_measurements": false,
+  "failed_full_CID": "1d8cfa7f400fdf9a76ccf5d7f87f021554052917527434d276e6eaed77b4ba02",
+  "full_CID_NAME_absent": true,
+  "wrapper_mode_before": "0o664",
+  "wrapper_mode_after": "0o775",
+  "wrapper_bytes_unchanged_sha256": "0d3f02e58b37fee7e26d0a801e9f4b3ee0614e1697f42fc479fdcb3a83d64304",
+  "failed_output_moved_to": "failed-startup-permission-1",
+  "root_explicit_next_action": "one corrected setup startup, no automatic GPU/measurement retry",
+  "no_GPU_crash_or_reset": true
+}

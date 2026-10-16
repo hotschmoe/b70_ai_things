@@ -1,0 +1,10 @@
+{
+  "epoch_us": 1792127572936134.2,
+  "request_source_sha256": [
+    "42549e8e028f55dbd504b330ff072892d2bf6a4df905aef1b7e008d023b73000",
+    "08410b99f021c0d2d48fbdeb46577a11e798b67698800dd555b68c826395e1db"
+  ],
+  "capture": "No generation warmup, same S133binary/flags; no unitrace or URlogger injection",
+  "request": "One ordered107prompt/64output EACH coding pair",
+  "CPU_clock_only": true
+}
