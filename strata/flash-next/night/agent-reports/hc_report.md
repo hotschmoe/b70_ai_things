@@ -301,3 +301,28 @@ INCIDENT (for the coordinator): the deadlocked barrier probe at 12:39-12:46 outl
 client was killed, the container kept running) after gpu-run released card 1; agent wt-attn acquired card 1 at
 12:46:04 while the hung kernel still occupied it (killed at ~12:46, card 1 HEALTHY). Measurements on card 1 around
 12:40-12:47 may be disturbed. run_probe.sh now names the container and kills it before releasing the lease.
+
+# Mission 6 (drafter: HC Q8 [dropped, duplicate]; sampling kernels; event resets)
+
+Worktree synced to main 1c360526 first (worktree commits afef4bb9 = my previous state, 598ad74c = sync).
+Engine: /mnt/vm_8tb/b70/results/night-20261016/builds/strata-hc-mtpsel (main 1c360526 + this patch).
+Patch (against main 1c360526): agents/hc_mtp_select.patch (verify_kernels.dp.cpp only).
+
+- Drafter HC Q8: built (STRATA_NIGHT_MTP_HC_Q8, map keyed by the dense weights, native_dense's q8_0_of exported as
+  night_hc_q8_split), then dropped as a duplicate of the moe agent's STRATA_NIGHT_MTP_HCQ8 (same quantizer and split
+  layout; the moe version stores the copies as drafter members and frees them; mine had no header change and shape
+  checks against the geometry). Kept for reference: hc_work/hc_mtp_hc_q8_dropped.patch. Not in the engine.
+- STRATA_NIGHT_MTP_SELECT=1: mtp_select (one 256-thread work-group copying the drafter's 10240-float residual row,
+  then the token / probability / mapped outputs) as float4 copies over 10 work-groups, work-group 0 writing the token
+  outputs exactly as before. Probe (hc_work/select_probe.cpp, graph replay, card 1): outputs bitwise EQUAL;
+  7.44 -> 1.75 us per launch (the C1 trace showed it at 15.3 us in situ, 3 per window): ~17-40 us per C1 window.
+- sample_tokens on the draft-vocab subset (~47-52K rows from the head size) vs the S112 multi-group argmax (already
+  bitwise for the full vocab): ids equal in 160 trials incl. ties and all -inf; 6.8 -> 5.4 us at 40.5K, 9.9 -> 5.5 at
+  65K (32.3 -> 7.0 at 248K, the case STRATA_MTP_PARALLEL_ARGMAX already covers). ~2 us per step at the subset size:
+  not integrated (below the bar).
+- Drafter eventResets (153 per C1 window, 49-55 per step): the only multi-queue construct recorded in the step graphs
+  is the shared-expert branch (side_ joins the cs_ capture transitively through sh_fork_ / sh_join_ barriers), which
+  makes each step graph non-linear (every node gets a sync event, reset on each replay). With
+  STRATA_MTP_SHARED_BRANCH=0 nothing else in record_forward / mtp_select / force_token touches another queue, so the
+  step graphs are linear and the resets should go (expected; confirm in a trace - the reset probe
+  hc_work/reset_probe.cpp reproduces the fork vs linear graph for unitrace -h if needed).

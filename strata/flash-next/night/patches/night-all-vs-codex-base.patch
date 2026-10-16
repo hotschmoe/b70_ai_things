@@ -106,15 +106,21 @@ index 0a39f646..e4591f94 100644
  
  }  // namespace strata::kernels
 diff --git a/include/strata/kernels/native_router.hpp b/include/strata/kernels/native_router.hpp
-index a940e1b3..c6a9393a 100644
+index a940e1b3..f5957762 100644
 --- a/include/strata/kernels/native_router.hpp
 +++ b/include/strata/kernels/native_router.hpp
-@@ -5,6 +5,8 @@ namespace strata::kernels {
+@@ -5,6 +5,14 @@ namespace strata::kernels {
  // Configure before session capture. Existing graphs retain their selected kernels.
  // This experiment is off by default and does not modify the legacy router.
  void native_router_set_enabled(bool enabled);
 +/// night lab bench: STRATA_NIGHT_TOPK10 (1 on, 0 off, -1 the environment; set before capture)
 +void native_router_set_night_topk(int on);
++/// night lab STRATA_NIGHT_MTP_ROUTE: native_router_top10 (one token, 512 experts) and moe_group_resident's plan of its
++/// 10 experts (resident at base + id * blob) in one launch; ids / weights bitwise the top-10's, the plan word for
++/// word moe_group_resident's (n = 10 distinct ids)
++void native_router_top10_group(const float* logits, int32_t* ids, float* weights, const uint8_t* base, long long blob,
++                               unsigned long long* grp_ptr, int32_t* grp_start, int32_t* counts, int32_t* ent_dst,
++                               int32_t* ent_tok, void* stream);
  bool native_router_enabled();
  
  // Pinned CUDA topk-moe contract for ONE token, 512 experts, top 10, softmax,
@@ -316,6 +322,31 @@ index e5e4b36a..4b682003 100644
    # one native expert three ways on real GGUF rows (ggml reference, CPU path, GPU native_expert_grouped):
    #   native_expert_parity <shard1.gguf> [layer ...]
    if(STRATA_NATIVE_EXPERTS)
+diff --git a/sycl/include/strata/core/mtp.hpp b/sycl/include/strata/core/mtp.hpp
+index d33037d7..e5bb57fa 100644
+--- a/sycl/include/strata/core/mtp.hpp
++++ b/sycl/include/strata/core/mtp.hpp
+@@ -219,6 +219,12 @@ private:
+     /// a projection's weights for the draft layer's own pass: the Q4_0 copy under --mtp-q4, else the Q8_0 original
+     const void* wq(const char* name, int& type) const;
+     bool make_q4_dense(const std::vector<uint8_t>& blob, std::string& err);
++    /// night lab STRATA_NIGHT_MTP_HCQ8=1 (default off): Q8_0 copies of the drafter's hyper-connection down / up
++    /// projections (attn, mlp, final mixer), made from dense.bin's BF16 at load with the verifier's STRATA_HC_Q8
++    /// quantizer and layout (STRATA_NIGHT_HC=q8: its split layout); the fused HC read then takes its Q8 path.  Draft
++    /// numerics change (the verifier decides every token), so this is a draft-quality / speed trade.
++    bool make_hc_q8(const std::vector<uint8_t>& blob, std::string& err);
++    const uint8_t* hcq8(const char* name) const;
+     bool make_q4_head(std::string& err);
+     void record_top2(int j);
+     std::vector<int32_t> top2_, dvocab_host_;
+@@ -249,6 +255,7 @@ private:
+ 
+     struct Tensor { std::string name, kind; int64_t rows = 0, cols = 0; uint64_t off = 0, bytes = 0; };
+     std::vector<Tensor> tensors_;
++    std::vector<std::pair<std::string, uint8_t*>> hc_q8_;   ///< night STRATA_NIGHT_MTP_HCQ8: name -> device Q8_0
+     uint8_t* dense_ = nullptr;
+     uint8_t* experts_ = nullptr;
+     // Slot drafters borrow immutable weights and head; each still owns its state and scratch.
 diff --git a/sycl/include/strata/core/verify.hpp b/sycl/include/strata/core/verify.hpp
 index cbe7f9c6..751d8e49 100644
 --- a/sycl/include/strata/core/verify.hpp
@@ -496,15 +527,21 @@ index 56deefd8..7077db2d 100644
 +                            int64_t n_ff, int64_t n_embd, uint16_t* dst_gu, uint16_t* dst_d, void* stream);
  }  // namespace strata::kernels
 diff --git a/sycl/include/strata/kernels/native_router.hpp b/sycl/include/strata/kernels/native_router.hpp
-index 4edfea61..cfc49e0b 100644
+index 4edfea61..4726d88f 100644
 --- a/sycl/include/strata/kernels/native_router.hpp
 +++ b/sycl/include/strata/kernels/native_router.hpp
-@@ -5,6 +5,8 @@ namespace strata::kernels {
+@@ -5,6 +5,14 @@ namespace strata::kernels {
  // Configure before session capture. Existing graphs retain their selected kernels.
  // This experiment is off by default and does not modify the legacy router.
  void native_router_set_enabled(bool enabled);
 +/// night lab bench: STRATA_NIGHT_TOPK10 (1 on, 0 off, -1 the environment; set before capture)
 +void native_router_set_night_topk(int on);
++/// night lab STRATA_NIGHT_MTP_ROUTE: native_router_top10 (one token, 512 experts) and moe_group_resident's plan of its
++/// 10 experts (resident at base + id * blob) in one launch; ids / weights bitwise the top-10's, the plan word for
++/// word moe_group_resident's (n = 10 distinct ids)
++void native_router_top10_group(const float* logits, int32_t* ids, float* weights, const uint8_t* base, long long blob,
++                               unsigned long long* grp_ptr, int32_t* grp_start, int32_t* counts, int32_t* ent_dst,
++                               int32_t* ent_tok, void* stream);
  bool native_router_enabled();
  
  // Pinned CUDA topk-moe contract for ONE token, 512 experts, top 10, softmax,
@@ -845,10 +882,193 @@ index f6bd041d..03268fb8 100644
                                   const ModelGeometry& g, const QsaState* draft, size_t& bytes, std::string& error) {
      bytes = 0;
 diff --git a/sycl/src/core/mtp.cpp b/sycl/src/core/mtp.cpp
-index a2d43e3e..4b676c9c 100644
+index a2d43e3e..098901ef 100644
 --- a/sycl/src/core/mtp.cpp
 +++ b/sycl/src/core/mtp.cpp
-@@ -2083,10 +2083,13 @@ bool MtpPair::init(MtpDrafter* a, MtpDrafter* b, std::string& err) try {
+@@ -174,6 +174,7 @@ MtpDrafter::~MtpDrafter() {
+     if (sh_fork_) dpct::destroy_event(sh_fork_);
+     if (sh_join_) dpct::destroy_event(sh_join_);
+     if (owns_weights_ && dense_) sycl::free(dense_, dpct::get_in_order_queue());
++    if (owns_weights_) for (auto& e : hc_q8_) if (e.second) sycl::free(e.second, dpct::get_in_order_queue());
+     if (owns_weights_ && experts_)
+         sycl::free(experts_, dpct::get_in_order_queue());
+     if (state_arena_) sycl::free(state_arena_, dpct::get_in_order_queue());
+@@ -195,6 +196,90 @@ const float* MtpDrafter::f32(const char* name) const {
+     for (const auto& t : tensors_) if (t.name == name && t.kind == "f32") return (const float*) (dense_ + t.off);
+     return nullptr;
+ }
++namespace {
++// night STRATA_NIGHT_MTP_HCQ8: native_dense.cpp's STRATA_HC_Q8 quantizer (ggml reference rounding, fp16 d = amax / 127)
++uint16_t night_half_bits(float x) {
++    uint32_t u;
++    std::memcpy(&u, &x, 4);
++    const uint32_t sign = (u >> 16) & 0x8000u;
++    int32_t e = (int32_t) ((u >> 23) & 0xffu) - 127 + 15;
++    uint32_t m = u & 0x7fffffu;
++    if (((u >> 23) & 0xffu) == 0xffu) return (uint16_t) (sign | 0x7c00u | (m ? 0x200u : 0u));
++    if (e <= 0) {
++        if (e < -10) return (uint16_t) sign;
++        m |= 0x800000u;
++        const int shift = 14 - e;
++        uint32_t h = m >> shift;
++        const uint32_t rem = m & ((1u << shift) - 1u), half = 1u << (shift - 1);
++        if (rem > half || (rem == half && (h & 1u))) ++h;
++        return (uint16_t) (sign | h);
++    }
++    if (e >= 31) return (uint16_t) (sign | 0x7c00u);
++    uint32_t h = ((uint32_t) e << 10) | (m >> 13);
++    const uint32_t rem = m & 0x1fffu;
++    if (rem > 0x1000u || (rem == 0x1000u && (h & 1u))) ++h;
++    return (uint16_t) (sign | h);
++}
++std::vector<uint8_t> night_q8_0_of(const float* x, uint64_t n) {
++    std::vector<uint8_t> out((size_t) (n / 32 * 34));
++    for (uint64_t b = 0; b < n / 32; ++b) {
++        float amax = 0.0f;
++        for (int j = 0; j < 32; ++j) amax = (std::max)(amax, std::fabs(x[b * 32 + j]));
++        const float d = amax / 127.0f, id = d != 0.0f ? 1.0f / d : 0.0f;
++        uint8_t* o = out.data() + b * 34;
++        const uint16_t hb = night_half_bits(d);
++        std::memcpy(o, &hb, 2);
++        for (int j = 0; j < 32; ++j) o[2 + j] = (uint8_t) (int8_t) std::lround(x[b * 32 + j] * id);
++    }
++    return out;
++}
++}  // namespace
++bool MtpDrafter::make_hc_q8(const std::vector<uint8_t>& blob, std::string& err) {
++    static const bool on = [] {
++        const char* v = std::getenv("STRATA_NIGHT_MTP_HCQ8");
++        const bool b = v != nullptr && v[0] == '1';
++        if (b) std::fprintf(stderr, "strata night: STRATA_NIGHT_MTP_HCQ8=1 (the drafter's HC down/up projections as Q8_0)\n");
++        return b;
++    }();
++    if (!on) return true;
++    static const bool night_split = [] { const char* v = std::getenv("STRATA_NIGHT_HC"); return v && std::strcmp(v, "q8") == 0; }();
++    uint64_t total = 0;
++    for (const auto& t : tensors_) {
++        if (t.kind != "bf16" || t.name.find("hyper_connection") == std::string::npos ||
++            (t.name.find("input_mix_weight_down") == std::string::npos && t.name.find("input_mix_weight_up") == std::string::npos))
++            continue;
++        const uint64_t rows = (uint64_t) t.rows, K = (uint64_t) t.cols, n = rows * K;
++        if (K % 32 != 0 || t.off + n * 2 > blob.size()) { err = "mtp (STRATA_NIGHT_MTP_HCQ8): bad shape for " + t.name; return false; }
++        const uint16_t* src = (const uint16_t*) (blob.data() + t.off);
++        std::vector<float> f((size_t) n);
++        for (uint64_t i = 0; i < n; ++i) { const uint32_t u = (uint32_t) src[i] << 16; std::memcpy(&f[i], &u, 4); }
++        std::vector<uint8_t> q8 = night_q8_0_of(f.data(), n);
++        if (night_split) {   // the night HC read's layout: int8 quants [rows][K], then fp16 scales [rows][K / 32]
++            const uint64_t nb = K / 32;
++            std::vector<uint8_t> split(q8.size());
++            uint8_t* qs = split.data();
++            uint8_t* ds = split.data() + rows * K;
++            for (uint64_t r = 0; r < rows; ++r)
++                for (uint64_t b = 0; b < nb; ++b) {
++                    const uint8_t* s = q8.data() + (r * nb + b) * 34;
++                    std::memcpy(ds + (r * nb + b) * 2, s, 2);
++                    std::memcpy(qs + r * K + b * 32, s + 2, 32);
++                }
++            q8.swap(split);
++        }
++        uint8_t* p = (uint8_t*) strata::malloc_device_guarded(q8.size(), dpct::get_in_order_queue());
++        if (p == nullptr) { err = "mtp (STRATA_NIGHT_MTP_HCQ8): allocation failed"; return false; }
++        dpct::get_in_order_queue().memcpy(p, q8.data(), q8.size()).wait();
++        hc_q8_.push_back({t.name, p});
++        total += q8.size();
++    }
++    std::fprintf(stderr, "strata night: MTP HC Q8: %zu projections, %.1f MiB\n", hc_q8_.size(), total / 1048576.0);
++    return true;
++}
++const uint8_t* MtpDrafter::hcq8(const char* name) const {
++    for (const auto& e : hc_q8_) if (e.first == name) return e.second;
++    return nullptr;
++}
+ const uint16_t* MtpDrafter::bf16(const char* name) const {
+     for (const auto& t : tensors_) if (t.name == name && t.kind == "bf16") return (const uint16_t*) (dense_ + t.off);
+     return nullptr;
+@@ -296,6 +381,7 @@ bool MtpDrafter::load(const std::string &rt_dir, const ModelGeometry &g,
+         dense_ = shared->dense_;
+         experts_ = shared->experts_;
+         tensors_ = shared->tensors_;
++        hc_q8_ = shared->hc_q8_;   // night STRATA_NIGHT_MTP_HCQ8 (borrowed, owner frees)
+         owns_weights_ = false;
+         owns_draft_head_ = false;
+     }
+@@ -353,6 +439,7 @@ bool MtpDrafter::load(const std::string &rt_dir, const ModelGeometry &g,
+         dpct::get_in_order_queue().memcpy(dense_, blob.data(), blob.size()).wait();
+         vram_ += blob.size();
+         if (q4_ && !make_q4_dense(blob, err)) return false;
++        if (!make_hc_q8(blob, err)) return false;
+     }
+     // ---- the 512 routed experts, one blob each
+     if (shared == nullptr) {
+@@ -869,6 +956,8 @@ bool MtpDrafter::record_front(int T, int row0, dpct::queue_ptr cs,
+                 fa[t].w_norm = f32("attn_hyper_connection.hc_norm.weight");
+                 fa[t].w_down = bf16("attn_hyper_connection.input_mix_weight_down.weight");
+                 fa[t].w_up = bf16("attn_hyper_connection.input_mix_weight_up.weight");
++                fa[t].q8_down = hcq8("attn_hyper_connection.input_mix_weight_down.weight");   // night HCQ8 (null: BF16)
++                fa[t].q8_up = hcq8("attn_hyper_connection.input_mix_weight_up.weight");
+                 fa[t].w_inject = bf16("attn_hyper_connection.block_inject_weight.weight");
+                 fa[t].eps = EPS; fa[t].lo = lo_ + t * g.hc_lr; fa[t].rs = rs_ + t * HC;
+                 fa[t].inject_out = inj_ + t * HC; fa[t].mixed = mixed_ + t * N;
+@@ -994,6 +1083,8 @@ bool MtpDrafter::record_rest(int step_row, dpct::queue_ptr cs,
+                 fa[t].w_norm = f32("mlp_hyper_connection.hc_norm.weight");
+                 fa[t].w_down = bf16("mlp_hyper_connection.input_mix_weight_down.weight");
+                 fa[t].w_up = bf16("mlp_hyper_connection.input_mix_weight_up.weight");
++                fa[t].q8_down = hcq8("mlp_hyper_connection.input_mix_weight_down.weight");
++                fa[t].q8_up = hcq8("mlp_hyper_connection.input_mix_weight_up.weight");
+                 fa[t].w_inject = bf16("mlp_hyper_connection.block_inject_weight.weight");
+                 fa[t].eps = EPS; fa[t].lo = lo_ + t * g.hc_lr; fa[t].rs = rs_ + t * HC;
+                 fa[t].inject_out = inj2_ + t * HC; fa[t].mixed = mixed_ + t * N;
+@@ -1067,6 +1158,13 @@ bool MtpDrafter::record_rest(int step_row, dpct::queue_ptr cs,
+               err = "mtp: the shared expert's branch"; return false;
+             }
+         }
++        static const bool night_route = [] {
++            const char* v = std::getenv("STRATA_NIGHT_MTP_ROUTE");
++            const bool b = v != nullptr && v[0] == '1';
++            if (b) std::fprintf(stderr, "strata night: STRATA_NIGHT_MTP_ROUTE=1 (drafter top-10 + resident plan in one launch)\n");
++            return b;
++        }();
++        bool night_routed = false;
+         // #783 PR-c (stuchapin909): a multi-token window routes in two launches (one router GEMV reading the weight once,
+         // one top-10 over all rows - each row bitwise the single-token call) and combines in one
+         if (T > 1 && native_router_enabled() && g.n_expert == 512 && K == 10) {
+@@ -1075,10 +1173,17 @@ bool MtpDrafter::record_rest(int step_row, dpct::queue_ptr cs,
+         } else {
+         for (int t = 0; t < T; ++t) {
+             bf16_gemv_fp32_mmvf(mixed_ + t * N, bf16("mlp.gate.weight"), logits_ + t * g.n_expert, (int) N, (int) g.n_expert, cs);
++            if (night_route && T == 1 && native_router_enabled() && g.n_expert == 512 && K == 10) {
++                // night STRATA_NIGHT_MTP_ROUTE: the top-10 and the resident plan in one launch
++                native_router_top10_group(logits_, ids_, w_, experts_, (long long) strata::kernels::cpu::BLOB, grp_ptr_,
++                                          grp_start_, grp_counts_, hit_dst_, hit_slot_, cs);
++                night_routed = true;
++            } else
+             if (native_router_enabled() && g.n_expert == 512 && K == 10) native_router_top10(logits_ + t * g.n_expert, ids_ + t * K, w_ + t * K, cs);
+             else router_top10(logits_ + t * g.n_expert, 1, (int) g.n_expert, (int) K, ids_ + t * K, w_ + t * K, cs);
+         }
+         }
++        if (!night_routed)
+         moe_group_resident(ids_, (int) (T * K), (int) K, experts_, (int64_t) strata::kernels::cpu::BLOB, grp_ptr_,
+                            grp_start_, grp_counts_, hit_dst_, hit_slot_, cs);
+         quantize_q8_0_scaled(mixed_, hit_xq_, hit_xs_, (int64_t) T * N, cs);
+@@ -1121,6 +1226,8 @@ bool MtpDrafter::record_rest(int step_row, dpct::queue_ptr cs,
+                 fa[t].w_norm = f32("hyper_connection_mixer.hc_norm.weight");
+                 fa[t].w_down = bf16("hyper_connection_mixer.input_mix_weight_down.weight");
+                 fa[t].w_up = bf16("hyper_connection_mixer.input_mix_weight_up.weight");
++                fa[t].q8_down = hcq8("hyper_connection_mixer.input_mix_weight_down.weight");
++                fa[t].q8_up = hcq8("hyper_connection_mixer.input_mix_weight_up.weight");
+                 fa[t].w_inject = nullptr;
+                 fa[t].eps = EPS; fa[t].lo = lo_ + t * g.hc_lr; fa[t].rs = rs_ + t * HC;
+                 fa[t].inject_out = dummy_inj_; fa[t].mixed = sample_ + t * N;
+@@ -1134,6 +1241,8 @@ bool MtpDrafter::record_rest(int step_row, dpct::queue_ptr cs,
+                 fa[t].w_norm = f32("hyper_connection_mixer.hc_norm.weight");
+                 fa[t].w_down = bf16("hyper_connection_mixer.input_mix_weight_down.weight");
+                 fa[t].w_up = bf16("hyper_connection_mixer.input_mix_weight_up.weight");
++                fa[t].q8_down = hcq8("hyper_connection_mixer.input_mix_weight_down.weight");
++                fa[t].q8_up = hcq8("hyper_connection_mixer.input_mix_weight_up.weight");
+                 fa[t].eps = EPS; fa[t].lo = lo_ + t * g.hc_lr; fa[t].rs = rs_ + t * HC; fa[t].mixed = sample_ + t * N;
+             }
+             fused_gr_read_multi(fa, T, xn_, cs);
+@@ -2083,10 +2192,13 @@ bool MtpPair::init(MtpDrafter* a, MtpDrafter* b, std::string& err) try {
          err = "mtp pair: the two slots differ (device, head, window or vocabulary)";
          return false;
      }
@@ -864,7 +1084,7 @@ index a2d43e3e..4b676c9c 100644
      if (a->head_->type() != 13) {   // Q5_K: the format the shared two-column call was measured on
          err = "mtp pair: the first probe shares a Q5_K head only (type " + std::to_string(a->head_->type()) + ")";
          return false;
-@@ -2139,7 +2142,7 @@ bool MtpPair::eligible(const Args& A, const Args& B, std::string& why) const {
+@@ -2139,7 +2251,7 @@ bool MtpPair::eligible(const Args& A, const Args& B, std::string& why) const {
          if (d.coupled_active_ || d.coupled_rec_) { why = "coupled draft sampling"; return false; }
          if (d.force_on_ || d.h_force_ != nullptr) { why = "the forcing graphs"; return false; }
          if (d.src_R_ != nullptr) { why = "a rebound residual source"; return false; }
@@ -873,7 +1093,7 @@ index a2d43e3e..4b676c9c 100644
          steps[c] = steps_of(d, x.p, x.a);
      }
      if (steps[0] < 1 || steps[1] < 1) { why = "a slot has no step left"; return false; }
-@@ -2220,8 +2223,10 @@ bool MtpPair::capture_tail(int j, std::string& err) try {
+@@ -2220,8 +2332,10 @@ bool MtpPair::capture_tail(int j, std::string& err) try {
      try {
          native_quantize_q8_1(a.sample_, xq2_, (int) N, 1, cs_);
          native_quantize_q8_1(b.sample_, xq2_ + col_bytes_, (int) N, 1, cs_);
@@ -886,7 +1106,7 @@ index a2d43e3e..4b676c9c 100644
          if (ok) {
              mtp_select(a.R_, HCN, a.out_ids_, a.row_ + 1, a.Rin_, a.tok_, a.m_out_, j, cs_, a.probs_, a.m_prob_);
              mtp_select(b.R_, HCN, b.out_ids_, b.row_ + 1, b.Rin_, b.tok_, b.m_out_, j, cs_, b.probs_, b.m_prob_);
-@@ -2285,8 +2290,10 @@ bool MtpPair::capture_pair_depth2(int T0, int T1, std::string& err) try {
+@@ -2285,8 +2399,10 @@ bool MtpPair::capture_pair_depth2(int T0, int T1, std::string& err) try {
              bool ok = true;
          native_quantize_q8_1(a.sample_, xq2_, (int) N, 1, cs_);
          native_quantize_q8_1(b.sample_, xq2_ + col_bytes_, (int) N, 1, cs_);
@@ -5585,7 +5805,7 @@ index 96913121..5bcd8960 100644
      default: throw std::invalid_argument("unsupported native MMVQ GGML type");
      }
 diff --git a/sycl/src/kernels/cuda/native_router.dp.cpp b/sycl/src/kernels/cuda/native_router.dp.cpp
-index e392b88a..e90b694c 100644
+index e392b88a..7e56550f 100644
 --- a/sycl/src/kernels/cuda/native_router.dp.cpp
 +++ b/sycl/src/kernels/cuda/native_router.dp.cpp
 @@ -29,6 +29,8 @@
@@ -5597,7 +5817,7 @@ index e392b88a..e90b694c 100644
  #include <stdexcept>
  
  namespace strata::kernels {
-@@ -216,6 +218,111 @@ __dpct_inline__ void route_multi(const float *__restrict__ logits,
+@@ -216,6 +218,182 @@ __dpct_inline__ void route_multi(const float *__restrict__ logits,
      const float inverse_selected_sum = 1.0f / selected_sum;
      if (lane < 10) weights[lane] = selected * inverse_selected_sum;
  }
@@ -5696,6 +5916,77 @@ index e392b88a..e90b694c 100644
 +    const float inverse_selected_sum = 1.0f / selected_sum;
 +    if (lane < 10) weights[lane] = selected * inverse_selected_sum;
 +}
++template <int NE>
++__dpct_inline__ void route_night_group(const float *__restrict__ logits, int32_t *__restrict__ ids,
++                                       float *__restrict__ weights, const uint8_t* base, long long blob,
++                                       unsigned long long* grp_ptr, int32_t* grp_start, int32_t* counts,
++                                       int32_t* ent_dst, int32_t* ent_tok) {
++    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
++    logits += (size_t)item_ct1.get_group(2) * NE;
++    ids += (size_t)item_ct1.get_group(2) * 10;
++    weights += (size_t)item_ct1.get_group(2) * 10;
++    if (item_ct1.get_local_id(1) != 0) return;
++    const int lane = item_ct1.get_local_id(2);
++    float values[NE / 32];
++#pragma unroll
++    for (int i = 0; i < NE / 32; ++i) values[i] = logits[lane + i * 32];
++    sycl::group_barrier(item_ct1.get_sub_group());
++    float maximum = -INFINITY;
++#pragma unroll
++    for (int i = 0; i < NE / 32; ++i) maximum = sycl::max(maximum, values[i]);
++    maximum = night_warp_max(item_ct1.get_sub_group(), maximum);
++    float sum = 0.0f;
++#pragma unroll
++    for (int i = 0; i < NE / 32; ++i) {
++        values[i] = sycl::native::exp(values[i] - maximum);
++        sum += values[i];
++    }
++    const float reciprocal = 1.0f / night_warp_sum(item_ct1.get_sub_group(), sum);
++#pragma unroll
++    for (int i = 0; i < NE / 32; ++i) {
++        values[i] *= reciprocal;
++        if (sycl::isnan(values[i])) values[i] = -FLT_MAX;
++    }
++    float lb;
++    int le;
++    lane_best<NE>(values, lane, lb, le);
++    float selected = 0.0f, selected_sum = 0.0f;
++    int my_expert = 0;
++#pragma unroll
++    for (int rank = 0; rank < 10; ++rank) {
++        float best = lb;
++        int expert = le;
++#pragma unroll
++        for (int mask = 16; mask; mask >>= 1) {
++            const float other = sycl::permute_group_by_xor(item_ct1.get_sub_group(), best, mask);
++            const int other_id = sycl::permute_group_by_xor(item_ct1.get_sub_group(), expert, mask);
++            const bool take = (other > best) | ((other == best) & (other_id < expert));   // branch-free, same rule
++            best = take ? other : best;
++            expert = take ? other_id : expert;
++        }
++        if ((expert & 31) == lane) {
++            const int slot = expert >> 5;
++#pragma unroll
++            for (int i = 0; i < NE / 32; ++i) values[i] = i == slot ? -INFINITY : values[i];
++            ids[rank] = expert;
++            selected_sum += best;
++            lane_best<NE>(values, lane, lb, le);
++        }
++        if (rank == lane) { selected = best; my_expert = expert; }
++    }
++    selected_sum = sycl::max(night_warp_sum(item_ct1.get_sub_group(), selected_sum), 6.103515625e-5f);
++    const float inverse_selected_sum = 1.0f / selected_sum;
++    if (lane < 10) weights[lane] = selected * inverse_selected_sum;
++    // night STRATA_NIGHT_MTP_ROUTE: moe_group_resident's plan of this one token's 10 (distinct) experts - group g is
++    // rank g's expert at base + id * blob, one entry each (entry g -> row g, token 0)
++    if (lane < 10) {
++        grp_ptr[lane] = (unsigned long long) (base + (size_t) my_expert * (size_t) blob);
++        grp_start[lane] = lane;
++        ent_dst[lane] = lane;
++        ent_tok[lane] = 0;
++    }
++    if (lane == 10) { grp_start[10] = 10; counts[0] = 10; counts[1] = 10; }
++}
 +int g_night_topk_force = -1;   // the bench: >= 0 overrides the environment (set before capture)
 +bool night_topk10() {
 +    static const bool env = [] {
@@ -5709,15 +6000,25 @@ index e392b88a..e90b694c 100644
  bool valid(const void* p, size_t bytes) {
      const auto address = reinterpret_cast<uintptr_t>(p);
      return p && address % 4 == 0 && bytes <= UINTPTR_MAX - address;
-@@ -226,6 +333,7 @@ bool overlap(const void* a, size_t an, const void* b, size_t bn) {
+@@ -226,6 +404,17 @@ bool overlap(const void* a, size_t an, const void* b, size_t bn) {
  }
  }
  void native_router_set_enabled(bool value) { enabled.store(value, std::memory_order_relaxed); }
 +void native_router_set_night_topk(int on) { g_night_topk_force = on; }
++void native_router_top10_group(const float* logits, int32_t* ids, float* weights, const uint8_t* base, long long blob,
++                               unsigned long long* grp_ptr, int32_t* grp_start, int32_t* counts, int32_t* ent_dst,
++                               int32_t* ent_tok, void* stream) {
++    ((sycl::queue *)(strata::q_of(stream)))
++        ->parallel_for<dpct_kernel_name<class route_512_night_group>>(
++            sycl::nd_range<3>(sycl::range(1, 8, 32), sycl::range(1, 8, 32)),
++            [=](sycl::nd_item<3> item_ct1) [[sycl::reqd_sub_group_size(32)]] {
++                route_night_group<512>(logits, ids, weights, base, blob, grp_ptr, grp_start, counts, ent_dst, ent_tok);
++            });
++}
  bool native_router_enabled() { return enabled.load(std::memory_order_relaxed); }
  void native_router_top10(const float* logits, int32_t* ids, float* weights, void* stream) {
      if (!stream || !valid(logits, 512 * 4) || !valid(ids, 10 * 4) || !valid(weights, 10 * 4)
-@@ -236,6 +344,13 @@ void native_router_top10(const float* logits, int32_t* ids, float* weights, void
+@@ -236,6 +425,13 @@ void native_router_top10(const float* logits, int32_t* ids, float* weights, void
          auto exp_props = sycl::ext::oneapi::experimental::properties{
              sycl::ext::oneapi::experimental::use_root_sync};
  
@@ -5731,7 +6032,7 @@ index e392b88a..e90b694c 100644
          ((sycl::queue *)(strata::q_of(stream)))
              ->parallel_for<dpct_kernel_name<class route_96e6fb>>(
                  sycl::nd_range<3>(sycl::range(1, 8, 32), sycl::range(1, 8, 32)),
-@@ -273,6 +388,13 @@ void native_router_top10_multi(const float* logits, int32_t* ids, float* weights
+@@ -273,6 +469,13 @@ void native_router_top10_multi(const float* logits, int32_t* ids, float* weights
      // SYCL port: one block per token running the single-token route<512> (the same kernel as the 256-expert multi
      // launch below).  Upstream's one-warp-per-token route_multi gives the same bits (native_multi_parity checks
      // that) but hung an Arc A750 (Alchemist) on its first launch.
@@ -5745,7 +6046,7 @@ index e392b88a..e90b694c 100644
      ((sycl::queue *)(strata::q_of(stream)))
          ->parallel_for<dpct_kernel_name<class route_512_multi>>(
              sycl::nd_range<3>(sycl::range(1, 1, (unsigned) n_tok) * sycl::range(1, 8, 32), sycl::range(1, 8, 32)),
-@@ -304,6 +426,13 @@ void native_router_top10_multi_ne(const float* logits, int32_t* ids, float* weig
+@@ -304,6 +507,13 @@ void native_router_top10_multi_ne(const float* logits, int32_t* ids, float* weig
      if (!stream || n_tok < 1 || n_expert != 256 || !valid(logits, (size_t) n_tok * 256 * 4) || !valid(ids, (size_t) n_tok * 10 * 4) ||
          !valid(weights, (size_t) n_tok * 10 * 4))
          throw std::invalid_argument("native router (multi, 256): a stream, 256 experts and aligned [n,256]/[n,10] buffers");
@@ -8280,10 +8581,10 @@ index 9946f7ae..77288c04 100644
      {
 diff --git a/sycl/src/kernels/ep_night_bench.cpp b/sycl/src/kernels/ep_night_bench.cpp
 new file mode 100644
-index 00000000..bf2f6b96
+index 00000000..6defe728
 --- /dev/null
 +++ b/sycl/src/kernels/ep_night_bench.cpp
-@@ -0,0 +1,860 @@
+@@ -0,0 +1,966 @@
 +// src/kernels/ep_night_bench.cpp (night lab, SYCL port only) - the EP decode MoE pieces on ONE card, synthetic.
 +//
 +//   ep_night_bench grouped [reps]   routed grouped expert calls (native_expert_grouped) at the EP verify shapes:
@@ -8299,6 +8600,7 @@ index 00000000..bf2f6b96
 +#include "strata/kernels/iq_kernels.hpp"
 +#include "strata/kernels/native_moe.hpp"
 +#include "strata/kernels/ep_kernels.hpp"
++#include "strata/kernels/s2_expert_grouped.hpp"
 +#include <type_traits>
 +#include "strata/kernels/fused_gr.hpp"
 +#include "strata/kernels/shared_expert.hpp"
@@ -9130,6 +9432,109 @@ index 00000000..bf2f6b96
 +    return bad ? 1 : 0;
 +}
 +
++// ------------------------------------------------------------------------------------------------ hc1 (MTP_HCQ8)
++// The drafter's single-row HC read: BF16 weights vs the Q8_0 copies (STRATA_NIGHT_HC=q8: the split layout)
++std::vector<uint8_t> hq8_of(const std::vector<uint16_t>& w, uint64_t rows, uint64_t K, bool split) {
++    const uint64_t n = rows * K, nb = K / 32;
++    std::vector<uint8_t> out((size_t) (n / 32 * 34));
++    for (uint64_t b = 0; b < n / 32; ++b) {
++        float x[32], amax = 0.f;
++        for (int j = 0; j < 32; ++j) { const uint32_t u = (uint32_t) w[b * 32 + j] << 16; std::memcpy(&x[j], &u, 4); amax = std::max(amax, std::fabs(x[j])); }
++        const float d = amax / 127.0f, id = d != 0.0f ? 1.0f / d : 0.0f;
++        const sycl::half h = (sycl::half) d;
++        std::memcpy(&out[b * 34], &h, 2);
++        for (int j = 0; j < 32; ++j) out[b * 34 + 2 + j] = (uint8_t) (int8_t) std::lround(x[j] * id);
++    }
++    if (!split) return out;
++    std::vector<uint8_t> s(out.size());
++    for (uint64_t r = 0; r < rows; ++r)
++        for (uint64_t b = 0; b < nb; ++b) {
++            std::memcpy(&s[rows * K + (r * nb + b) * 2], &out[(r * nb + b) * 34], 2);
++            std::memcpy(&s[r * K + b * 32], &out[(r * nb + b) * 34 + 2], 32);
++        }
++    return s;
++}
++int hc1_bench(int reps) {
++    sycl::queue& q = Q();
++    std::mt19937 rng(31);
++    std::normal_distribution<float> nd(0.f, 1.f);
++    const int D = 10240, LR = 320, HCn = 4, NL = 16;
++    const char* hv = std::getenv("STRATA_NIGHT_HC");
++    const bool split = hv && std::strcmp(hv, "q8") == 0;
++    auto bfv = [&](size_t n, float s) { std::vector<uint16_t> v(n); for (auto& e : v) { float f = s * nd(rng); uint32_t u; std::memcpy(&u, &f, 4); e = (uint16_t) (u >> 16); } return v; };
++    std::vector<float> R((size_t) D), wn(D);
++    for (auto& e : R) e = nd(rng);
++    for (auto& e : wn) e = 1.0f + 0.1f * nd(rng);
++    float *d_R = up(q, R), *d_wn = up(q, wn);
++    std::vector<uint16_t*> wd(NL), wu(NL), wi(NL);
++    std::vector<uint8_t*> qd(NL), qu(NL);
++    for (int l = 0; l < NL; ++l) {
++        auto a = bfv((size_t) LR * D, 0.02f), b = bfv((size_t) D * LR, 0.02f), c = bfv((size_t) HCn * D, 0.02f);
++        wd[l] = up(q, a); wu[l] = up(q, b); wi[l] = up(q, c);
++        qd[l] = up(q, hq8_of(a, LR, D, split)); qu[l] = up(q, hq8_of(b, D, LR, split));
++    }
++    float* lo = sycl::malloc_device<float>(LR, q); float* rs = sycl::malloc_device<float>(HCn, q);
++    float* io = sycl::malloc_device<float>(HCn, q); float* mx = sycl::malloc_device<float>(2560, q);
++    float* xn = sycl::malloc_device<float>(D, q);
++    auto args = [&](int l, bool q8, bool inj) {
++        k::FusedGrArgs a;
++        a.R = d_R; a.R_out = d_R; a.apply = false; a.w_norm = d_wn; a.w_down = wd[l]; a.w_up = wu[l];
++        a.w_inject = inj ? wi[l] : nullptr; a.eps = 1e-6f; a.lo = lo; a.rs = rs; a.inject_out = io; a.mixed = mx;
++        if (q8) { a.q8_down = qd[l]; a.q8_up = qu[l]; }
++        return a;
++    };
++    for (bool inj : {true, false}) {
++        double t[2];
++        for (int v = 0; v < 2; ++v)
++            t[v] = time_graph_us(q, [&] { for (int l = 0; l < NL; ++l) { k::FusedGrArgs a = args(l, v == 1, inj); k::fused_gr_read_multi(&a, 1, xn, &q); } }, NL, reps);
++        std::printf("MTP HC read, 1 row, %s (%s): BF16 %.2f us, Q8_0 %.2f us per read (%d weight sets in a graph)\n",
++                    inj ? "with inject (attn/mlp)" : "final mixer", split ? "STRATA_NIGHT_HC=q8 split layout" : "plain Q8_0", t[0], t[1], NL);
++    }
++    return 0;
++}
++
++// ------------------------------------------------------------------------------------------------ mtproute
++int mtproute_bench(int reps) {
++    sycl::queue& q = Q();
++    std::mt19937 rng(808);
++    std::normal_distribution<float> nd(0.f, 1.f);
++    const int NE = 512;
++    const long long BLOB = 1382400;
++    const uint8_t* base = reinterpret_cast<const uint8_t*>(uintptr_t(0x300000000ull));   // never dereferenced
++    float* d_l = sycl::malloc_device<float>(NE * 64, q);
++    struct Out { int32_t *ids, *gs, *cnt, *dst, *tok; float* w; unsigned long long* ptr; };
++    Out o[2];
++    for (auto& x : o) {
++        x.ids = sycl::malloc_device<int32_t>(16, q); x.w = sycl::malloc_device<float>(16, q);
++        x.ptr = sycl::malloc_device<unsigned long long>(16, q); x.gs = sycl::malloc_device<int32_t>(16, q);
++        x.cnt = sycl::malloc_device<int32_t>(4, q); x.dst = sycl::malloc_device<int32_t>(16, q); x.tok = sycl::malloc_device<int32_t>(16, q);
++    }
++    int bad = 0;
++    for (int trial = 0; trial < 300; ++trial) {
++        std::vector<float> l(NE);
++        for (auto& v : l) v = (trial % 3 == 0 ? 3.0f : 1.0f) * nd(rng);
++        if (trial % 4 == 1) for (auto& v : l) v = std::round(v * 4.0f) / 4.0f;
++        q.memcpy(d_l, l.data(), NE * 4).wait();
++        for (auto& x : o) for (void* p : {(void*) x.ids, (void*) x.w, (void*) x.ptr, (void*) x.gs, (void*) x.cnt, (void*) x.dst, (void*) x.tok}) q.memset(p, 0x5A, 64).wait();
++        k::native_router_top10(d_l, o[0].ids, o[0].w, &q);
++        k::moe_group_resident(o[0].ids, 10, 10, base, BLOB, o[0].ptr, o[0].gs, o[0].cnt, o[0].dst, o[0].tok, &q);
++        k::native_router_top10_group(d_l, o[1].ids, o[1].w, base, BLOB, o[1].ptr, o[1].gs, o[1].cnt, o[1].dst, o[1].tok, &q);
++        q.wait();
++        auto rd = [&](const void* p, size_t n) { std::vector<uint8_t> h(n); q.memcpy(h.data(), p, n).wait(); return h; };
++        const bool same = rd(o[0].ids, 40) == rd(o[1].ids, 40) && rd(o[0].w, 40) == rd(o[1].w, 40) &&
++                          rd(o[0].ptr, 80) == rd(o[1].ptr, 80) && rd(o[0].gs, 44) == rd(o[1].gs, 44) &&
++                          rd(o[0].cnt, 8) == rd(o[1].cnt, 8) && rd(o[0].dst, 40) == rd(o[1].dst, 40) && rd(o[0].tok, 40) == rd(o[1].tok, 40);
++        bad += !same;
++    }
++    const double t0 = time_graph_us(q, [&] { for (int i = 0; i < 48; ++i) { k::native_router_top10(d_l, o[0].ids, o[0].w, &q);
++        k::moe_group_resident(o[0].ids, 10, 10, base, BLOB, o[0].ptr, o[0].gs, o[0].cnt, o[0].dst, o[0].tok, &q); } }, 48, reps);
++    const double t1 = time_graph_us(q, [&] { for (int i = 0; i < 48; ++i)
++        k::native_router_top10_group(d_l, o[1].ids, o[1].w, base, BLOB, o[1].ptr, o[1].gs, o[1].cnt, o[1].dst, o[1].tok, &q); }, 48, reps);
++    std::printf("mtp route: 300 rows, top-10 + moe_group_resident vs fused: ids/weights/plan %s; %.2f -> %.2f us per pair of launches\n",
++                bad ? "FAIL" : "bitwise", t0, t1);
++    return bad ? 1 : 0;
++}
++
 +}  // namespace
 +
 +int main(int argc, char** argv) {
@@ -9140,6 +9545,8 @@ index 00000000..bf2f6b96
 +    if (mode == "router") return router_bench(argc > 2 ? std::atoi(argv[2]) : 20);
 +    if (mode == "gdnab") return gdnab_bench(argc > 2 ? std::atoi(argv[2]) : 20);
 +    if (mode == "t12") return t12_bench();
++    if (mode == "hc1") return hc1_bench(argc > 2 ? std::atoi(argv[2]) : 20);
++    if (mode == "mtproute") return mtproute_bench(argc > 2 ? std::atoi(argv[2]) : 20);
 +    if (mode == "gdnstep") return gdnstep_bench(argc > 2 ? std::atoi(argv[2]) : 20);
 +    std::fprintf(stderr, "usage: ep_night_bench grouped|send\n");
 +    return 2;

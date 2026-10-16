@@ -438,3 +438,46 @@ pend, BSlot::draft) were already kVerifyCapT; the MtpPair args are per pair (2);
 indexed by one-request window size only (<= 8 after the warm() cap); mapped buffers, commitb_ (CB = 2 + max_t_) and
 hist snapshots are sized from max_t_; mtp.hpp's [8] arrays are the drafter's chain (<= --mtp-max-t).
 Patch agents/moe_t12c.patch (on main f498be11), engine builds/strata-moe-t12c.
+
+## 11. Fifth mission: the MTP drafter step
+
+Base: main 1c360526. Engine: /mnt/vm_8tb/b70/results/night-20261016/builds/strata-moe-mtp2 = 1c360526 +
+agents/moe_mtp.patch. Flags (default off): STRATA_NIGHT_MTP_HCQ8=1, STRATA_NIGHT_MTP_ROUTE=1. Existing knob to A/B:
+STRATA_MTP_SHARED_BRANCH=0.
+
+### 11.1 Where a drafter step goes (trace_best3 C1, 3 steps per window, profiled: 686 us per step)
+
+mmvq_wide32 Q8 (q/o/shared, 9.2 launches) 181 us - at roofline; KREG draft head 131 us - at roofline; HC BF16 read
+(hc_down2 + hc_up2, 3 reads: attn, mlp, final mixer) 111 us; moe_grouped_s2 (S2 2-bit experts, 3 launches) 49 us;
+event resets (51 per step) 45 us + barriers (2) 16 us; attention chunk 31 us; mtp_select 15 us (one work-group);
+q8 quantize 15 us (6.5 launches); sample_tokens 13 us; router GEMV 11 us; norms 15 us; router top-10 7.7 us +
+moe_group_resident 4.7 us; the rest 1-7 us each.
+The drafter's experts are experts.bin S2 blobs (cpu::BLOB 1.38 MB, 2-bit codes + fp16 scales: moe_grouped_s2), not
+GGUF IQ blobs, so the STRATA_NIGHT_IQ kernels do not apply as is (a T = 1 S2 kernel with the activation in registers
+instead of SLM staging is the next step there: GU ~395 GB/s, down ~200 GB/s today).
+
+### 11.2 Changes
+
+- STRATA_NIGHT_MTP_HCQ8=1: at load, Q8_0 copies of the drafter's six HC down/up projections from dense.bin's BF16,
+  the verifier's STRATA_HC_Q8 quantizer (native_dense q8_0_of / half_bits, ggml reference rounding) and, with
+  STRATA_NIGHT_HC=q8, its split layout; the three fused HC reads get q8_down / q8_up (inject stays BF16, as the
+  verifier's). 19.7 MiB extra VRAM (borrowed by slot drafters). NOT bitwise: draft numerics change (the verifier
+  decides every token), so judge it by acceptance and tok/s.
+  Bench (card 1, `ep_night_bench hc1`, 1 row, 16 weight sets, STRATA_NIGHT_HC=q8 STRATA_HC_Q8=1): attn/mlp read
+  34.47 -> 25.46 us, final mixer 34.42 -> 25.16 us: ~-27 us per step (3 reads), ~-0.08 ms per C1 window. (Without
+  STRATA_NIGHT_HC=q8 the plain read does not take Q8 at one row: no change, so the flag needs HC=q8.)
+- STRATA_NIGHT_MTP_ROUTE=1: the one-token top-10 (TOPK10 tree kernel) also writes moe_group_resident's plan (10
+  distinct experts: grp_ptr = base + id * BLOB, grp_start 0..10, counts 10/10, ent_dst = g, ent_tok = 0) - one launch
+  instead of two. Bench `ep_night_bench mtproute`: 300 rows (incl. ties) ids, weights and every plan word memcmp-equal;
+  10.71 -> 5.63 us per step (~-0.015 ms per C1 window). Bitwise.
+- Recommendation, no code: STRATA_MTP_SHARED_BRANCH=0 runs the drafter's shared expert on its own in-order queue
+  instead of a fork/join branch: the recorded drafter graph becomes linear (no 51 event resets + 2 barriers per step,
+  ~60 us profiled), at the cost of the shared expert's ~10-15 us overlap with the router/experts - the SH_LATE trade
+  for the verifier. Bitwise (same kernels, same inputs). Needs an unprofiled A/B (in-order node gaps are the unknown).
+
+### 11.3 Not done
+
+- S2 expert kernels at T = 1 (gu_grouped_t / down_grouped_t: per-WG SLM staging of the activation, down at 20 of 32
+  lanes): ~-15-20 us per step possible, bitwise if each lane keeps its chunk order.
+- mtp_select / sample_tokens / row_top_prob_split (single work-group kernels, ~35 us per step together).
+- The drafter's BF16 router GEMV (11 us) could use the KREG BF16 path (STRATA_NIGHT_BF16) if it covers 1 row.
