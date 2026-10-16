@@ -57,6 +57,8 @@ SATA.
 - DAILY DRIVER since 2026-10-16: hotschmoe-dd.service = Strata night-final-v3 (strata/flash-next/dd/README.md;
   C1 ~141, C2 ~92/stream, prefill ~2200 tok/s, image input on; docs/20261016_night_lab.md). It holds both GPU leases: stop it
   (`systemctl --user stop hotschmoe-dd`) before research GPU work and restart it afterwards.
+- Next investigations (ranked: card balance first, then prefill, C1 decode, C4 aggregate):
+  docs/20261016_next_investigations.md.
 - Serving candidate: ISTA GSQ-RCO ~3-bit GGUF, all experts in VRAM
   (strata/flash-next/model-lock-ista-iq3.json, build under
   /mnt/vm_8tb/b70/build/strata-ab).
