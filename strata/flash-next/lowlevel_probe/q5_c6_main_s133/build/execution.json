@@ -1,0 +1,14 @@
+{
+  "command": [
+    "bash",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-main-s133-build/build.sh",
+    "66726a2abf0f2374ece12bd802ef4ebdad40bada27290a7afb480c849063cb23",
+    "452a051e3a2219d0c6a00c8cdf795b798e763fcc793fbbb4dff1b4dda7903aff",
+    "e6314c05da00d175ae2990a5157bc24d3bea16602afa2138858eaee77200dbdd",
+    "e25708bf5fcd6c4be0e189db415ac6031ba51d443f51723a39c5d9304ceb82ed"
+  ],
+  "exit": 0,
+  "elapsed_s": 129.69414204300847,
+  "no_retry": true,
+  "no_configure_or_ISA_audit": true
+}

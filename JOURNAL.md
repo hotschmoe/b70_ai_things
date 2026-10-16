@@ -25493,3 +25493,28 @@ smallmainbuild+NEWbinaryfreshcontrol/ON; graphAPIoraclenotMTPapproval.
 Rootconfirmedloadedhead/T6reachabilityandcorrectedmodelcausal/sign/
 processwordingseparately; rawresponsesunchanged. S126/S129HOLDs remain.
 See docs/20261016_strata_q5_c6_runtime_ones_private.md.
+
+
+## 2026-10-16 S133: C6-only serving candidate built with cache reuse
+
+CONFIG -> Independent default-OFF C6 runtime-ones selector, existing C2
+flag0 for later comparisons. Only native head type13/N2560/M248320/C6/
+RPW1 eligible; original RPW2 and C2 paths retain priority.
+
+COMMAND -> Root confirmed actual six-row batch -> record_window(T=6)
+-> native_mmvq_head(...T), applied reviewed patch88a4e5ad->e25708bf.
+Actual model source GO is retained in S132. One CPU-only compile, no
+configure, repeated old-main backup, model scan or optional ISA audit.
+
+RESULT -> Exit0/tee0, wrapper129.694142s/Ninja116.751s; exact3 actions:
+nativeTU58.104s, archive.347s, final AOT/main link58.267s. Existing168-edge
+policy/build-state and source pins PASS before/after. Frozen main
+fe57222eea163dd7396f2bdabb95d2c18326a729c4d7919d400a9614f42d47ee.
+Cache reported +1314hits/+295misses. Earlier S129 link146.710s had different
+inputs: descriptive reuse, no isolated cache-caused speed claim.
+
+VERDICT -> Build PASS only, C6 defaultOFF. Whole executable identity is
+recorded; no new image/ISA/independent-host certification. Historical
+S129 body HOLD remains. S134 uses fresh control/ON on this same NEW main,
+with strict finite output/work checks and normal health closures. See
+docs/20261016_strata_q5_c6_main_build.md.

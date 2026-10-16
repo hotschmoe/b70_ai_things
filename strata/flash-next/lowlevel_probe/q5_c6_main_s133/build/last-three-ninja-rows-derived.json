@@ -1,0 +1,29 @@
+{
+  "status": "LAST_THREE_ROWS_BOUND_TO_ACTUAL_ROOT_THREE_ACTION_PLAN",
+  "absolute_source": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/.ninja_log",
+  "source_is_mutable": "Extracted after S133 completion; full Ninja log intentionally not copied or hashed.",
+  "rows": [
+    {
+      "target": "CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o",
+      "start_ms": 14,
+      "end_ms": 58118,
+      "duration_s": 58.104,
+      "raw_ninja_log_row": "14\t58118\t1792124560558096213\tCMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o\t1b80894bc8d024ce"
+    },
+    {
+      "target": "libstrata_kernels.a",
+      "start_ms": 58132,
+      "end_ms": 58479,
+      "duration_s": 0.347,
+      "raw_ninja_log_row": "58132\t58479\t1792124560841104983\tlibstrata_kernels.a\t3041e9f34e6cc63a"
+    },
+    {
+      "target": "strata",
+      "start_ms": 58479,
+      "end_ms": 116746,
+      "duration_s": 58.267,
+      "raw_ninja_log_row": "58479\t116746\t1792124618382888189\tstrata\ta3253d6ccd530a74"
+    }
+  ],
+  "scope": "Ninja build elapsed intervals, not runtime/GPU kernel timings or isolated cache causality."
+}

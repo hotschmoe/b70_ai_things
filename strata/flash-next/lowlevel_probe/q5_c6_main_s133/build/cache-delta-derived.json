@@ -1,0 +1,15 @@
+{
+  "reported_before": {
+    "version": 1,
+    "hits": 0,
+    "misses": 1608
+  },
+  "reported_after": {
+    "version": 1,
+    "hits": 1314,
+    "misses": 1903
+  },
+  "delta_hits": 1314,
+  "delta_misses": 295,
+  "interpretation": "Reported persistent offline-cache reuse during this otherwise-required build; changed inputs/new kernel and different action count prevent an isolated causal link-speed benchmark."
+}

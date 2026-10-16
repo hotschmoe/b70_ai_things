@@ -1,0 +1,45 @@
+// NEW C6 parser and launch seam
+int q5_head_runtime_ones_c6_word() {
+    static int word = [] {
+        const char* e = std::getenv("STRATA_Q5_HEAD_RUNTIME_ONES_C6");
+        if (e == nullptr || std::strcmp(e, "0") == 0) return 0;
+        char* end = nullptr;
+        const unsigned long parsed = std::strtoul(e, &end, 16);
+        if (end == nullptr || *end != '\0' || parsed != 0x01010101ul)
+            throw std::invalid_argument("STRATA_Q5_HEAD_RUNTIME_ONES_C6 requires 01010101 (or unset/0)");
+        return static_cast<int>(parsed);
+    }();
+    return word;
+}
+
+void launch_q5_head_runtime_ones_c6(const void* weights, const void* x_q8_1, float* y,
+                                 int n_in, int n_out, int ones_word, dpct::queue_ptr s) {
+    const auto* w = static_cast<const Q5KBlock*>(weights);
+    const auto* x = static_cast<const Q81Block*>(x_q8_1);
+    const unsigned blocks = unsigned((std::size_t(n_out) + WARPS - 1) / WARPS);
+    s->parallel_for<dpct_kernel_name<class native_mmvq_q5k_runtime_ones_c6>>(
+        sycl::nd_range<3>(sycl::range(1, 1, blocks) * sycl::range(1, WARPS, WARP), sycl::range(1, WARPS, WARP)),
+        [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {
+            native_mmvq_q5k_runtime_ones_kernel<WideQ5K, 6>(w, x, y, n_in, n_out, ones_word);
+        });
+}
+
+// NEW explicit-head selection after existing C2 block
+    if (ggml_type == 13 && n_in == 2560 && n_out == 248320 && ncols == 6 && wide_k() && wide_k_rpw() == 1) {
+        const int ones_word = q5_head_runtime_ones_c6_word();
+        if (ones_word != 0) {
+            validate_shape(n_in, ncols, QK);
+            validate_pointer(weights);
+            validate_pointer(x_q8_1);
+            validate_pointer(y);
+            validate_stream(stream);
+            static const bool logged = [] {
+                std::fprintf(stderr, "strata Q5 head runtime ones C6: enabled=1 word=01010101 N=2560 M=248320 C=6 RPW=1 host-selection-only\n");
+                return true;
+            }();
+            (void) logged;
+            launch_q5_head_runtime_ones_c6(weights, x_q8_1, y, n_in, n_out, ones_word, strata::q_of(stream));
+            launch_check();
+            return;
+        }
+    }

@@ -1,0 +1,33 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_CONDITIONAL",
+  "files": {
+    "README.md": {
+      "bytes": 2836,
+      "sha256": "ddddc086b19165dc1f00b5afa3a507078c33f217754bca8e76e46e95b3ceb0e1"
+    },
+    "added-source.txt": {
+      "bytes": 2195,
+      "sha256": "10dbb1e2d16a82e3baeeb3aec3a1e893f60c46ad1de786fcaed3ed8ae7339c51"
+    },
+    "candidate.patch": {
+      "bytes": 3340,
+      "sha256": "c17e453dad031836fb356b17d0f7894595415a583c6448437919d3324283477b"
+    },
+    "exact-projection.json": {
+      "bytes": 1455,
+      "sha256": "f7cfadf53ddd03ad8bd18abeebbdaa416b4ec034f97bcf97d27bbbd702c90675"
+    },
+    "incremental-build-plan.json": {
+      "bytes": 754,
+      "sha256": "892f6743d5c171a85e3a4022379b72b4670e1ca3bb750f0e91ebad60ad277985"
+    },
+    "inverse.patch": {
+      "bytes": 3340,
+      "sha256": "2d712636a732820627fa861a134bfb1c82b371454dfcb2bdb4b3f64a0d4eec7e"
+    },
+    "review-packet.txt": {
+      "bytes": 8581,
+      "sha256": "d809bcd272f4aa2a88d4c1ca1cbf67835c5e0b75f147d81ca3f6ed8e5714298d"
+    }
+  }
+}

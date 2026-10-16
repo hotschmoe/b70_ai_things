@@ -1,0 +1,65 @@
+--- S129/build.sh
++++ S133/build.sh
+@@ -15,8 +15,8 @@
+ PY
+ mkdir "$HERE/build"
+ mkdir "$HERE/build/tmp" "$HERE/build/cache"
+-# UID1000 creates the stable cache BEFORE any ocloc CLI. Existing cache is retained.
+-if [[ ! -e "$CACHE" ]]; then mkdir "$CACHE"; fi
++# Existing S129 cache only; do not create, warm, clear or replace it.
++[[ -d "$CACHE" ]]
+ python3 - "$CACHE" "$HERE/build/cache-ownership.json" <<'PY'
+ import json,os,pathlib,sys
+ p=pathlib.Path(sys.argv[1]);s=p.stat()
+@@ -29,7 +29,7 @@
+ import json,sys
+ assert json.load(open(sys.argv[1]))[0]['Id']==sys.argv[2]
+ PY
+-cmd=(env B70_CPU_LOCK_TIMEOUT=0 B70_AGENT=S129-combined-main-cache "$REPO/bin/cpu-run" env MAX_JOBS=4 docker run --rm --network none --cpus 4 -u "1000:$(id -g)" \
++cmd=(env B70_CPU_LOCK_TIMEOUT=0 B70_AGENT=S133-C6-native-only "$REPO/bin/cpu-run" env MAX_JOBS=4 docker run --rm --network none --cpus 4 -u "1000:$(id -g)" \
+  -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_DIR=/out/cache \
+  -e SYCL_CACHE_PERSISTENT=0 -e NEO_CACHE_PERSISTENT=1 -e NEO_CACHE_DIR=/out/offline-cache -e NEO_CACHE_STATS=1 \
+  -e MAX_JOBS=4 -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 \
+--- S129/build-container.sh
++++ S133/build-container.sh
+@@ -10,19 +10,13 @@
+ cd /work/src-ep/build-sycl-ep
+ sha256sum -c /prep/expected-applied-source.sha256
+ sha256sum -c /prep/expected-unchanged-source.sha256
+-sha256sum -c /prep/expected-build-system.sha256
++sha256sum -c /prep/expected-build-state.sha256
+ cp /prep/expected-applied-source.sha256 /out/applied-source-before.sha256
+ icpx --version > /out/compiler-version.txt
+ cmp /out/compiler-version.txt /prep/compiler-version.txt
++cp /prep/prior-configured-guards.json /out/configured-guards-reused.json
+ python3 /prep/guard.py before
+-# Configuration was already completed and guarded; no second configure or main backup.
+-cp /prep/prior-configured-guards.json /out/configured-guards-reused.json
+-cp /prep/CMakeCache.configured.txt /out/CMakeCache.configured.txt
+-cp /prep/build.ninja.configured.txt /out/build.ninja.configured.txt
+-cp /prep/rules.ninja.configured.txt /out/rules.ninja.configured.txt
+-cmp CMakeCache.txt /out/CMakeCache.configured.txt
+-cmp build.ninja /out/build.ninja.configured.txt
+-cmp CMakeFiles/rules.ninja /out/rules.ninja.configured.txt
++# NO configure, old main backup/hash, model scan, image audit or cache warm.
+ python3 /prep/guard.py cache-before
+ ninja -n -v strata > /out/ninja-plan.txt
+ python3 /prep/guard.py plan
+@@ -30,13 +24,9 @@
+ { time ninja -j4 -v strata; } > /out/ninja.log 2> /out/ninja.stderr-time
+ sha256sum -c /prep/expected-applied-source.sha256
+ sha256sum -c /prep/expected-unchanged-source.sha256
+-cmp CMakeCache.txt /out/CMakeCache.configured.txt
+-cmp build.ninja /out/build.ninja.configured.txt
+-cmp CMakeFiles/rules.ninja /out/rules.ninja.configured.txt
+-python3 /prep/guard.py after
++sha256sum -c /prep/expected-build-state.sha256
+ python3 /prep/guard.py cache-after
+-cp --reflink=auto strata /out/strata-s129
+-cmp strata /out/strata-s129
+-# Each new main/object/changed archive is hashed once, here; no large prehash loops.
+-sha256sum /out/strata-s129 CMakeFiles/strata_engine.dir/src/core/mtp.cpp.o CMakeFiles/strata_prefill.dir/src/prefill/prefill.cpp.o CMakeFiles/strata.dir/src/program/generate.cpp.o CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o libstrata_engine.a libstrata_prefill.a libstrata_kernels.a ggml/src/libggml-base.a ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o ggml/src/ggml-version.h /work/llama-pinned/ggml/src/ggml.c /work/src-ep/sycl/CMakeLists.txt /work/src-ep/sycl/src/core/mtp.cpp /work/src-ep/sycl/include/strata/core/mtp.hpp /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp CMakeCache.txt build.ninja CMakeFiles/rules.ninja > /out/build-sha256.txt
++cp --reflink=auto strata /out/strata-s133
++# Exactly the new main/native object/kernel archive hash once, plus tiny bindings.
++sha256sum /out/strata-s133 CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o libstrata_kernels.a /work/src-ep/sycl/CMakeLists.txt /work/src-ep/sycl/src/core/mtp.cpp /work/src-ep/sycl/include/strata/core/mtp.hpp /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp CMakeCache.txt build.ninja CMakeFiles/rules.ninja ggml/src/ggml-version.h > /out/build-sha256.txt
+ cat /out/build-sha256.txt

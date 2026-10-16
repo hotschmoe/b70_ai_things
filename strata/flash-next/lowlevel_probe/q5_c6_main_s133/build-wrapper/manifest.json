@@ -1,0 +1,49 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NO_EXECUTION",
+  "files": {
+    "README.md": {
+      "bytes": 2737,
+      "sha256": "0913c60a69ac6e08918ed181151185377316426ae36f41b2a53c1a69f11b9643"
+    },
+    "build-container.sh": {
+      "bytes": 1896,
+      "sha256": "07b2577094c84135139f9f917bc49b5a6884b803403e7447d865c7c3dd9f3ba5"
+    },
+    "build.sh": {
+      "bytes": 2313,
+      "sha256": "16ec3d3e398cdad3b92b56f2c2b0f43a2800c821c051bc9a89027369d9c84c63"
+    },
+    "compiler-version.txt": {
+      "bytes": 257,
+      "sha256": "06b5b1015f3c581440fb4cf00258edc0db8d98696ca3252cf69045e1f8c283d4"
+    },
+    "expected-applied-source.sha256": {
+      "bytes": 432,
+      "sha256": "46739733259ae4d084732034b308edfd0cae904cc15f98a3a7c3e2af9ad647d6"
+    },
+    "expected-build-state.sha256": {
+      "bytes": 338,
+      "sha256": "781b883830971a1dd742c6a0a2a7ebac3aa82c71c9abe9d38714061c91f63695"
+    },
+    "expected-unchanged-source.sha256": {
+      "bytes": 2987,
+      "sha256": "f2d4e274f8d8a451d745f9a1eea120ebae1eab7751c69b2b8c757d89c6c039e4"
+    },
+    "guard.py": {
+      "bytes": 3199,
+      "sha256": "ccdf9f2964ddb896cc06c20fbe3723ddce8cd19604f3299a3539678724b1244c"
+    },
+    "prior-configured-guards.json": {
+      "bytes": 167,
+      "sha256": "69b75dc7d2493d82f432048472c1ebb683392c472834a11fbe53e01b24db6f2d"
+    },
+    "review-packet.txt": {
+      "bytes": 11419,
+      "sha256": "a44b5f1f0ea15aecdd247b5870d9efb00d0ee60ba84b089fe31d854446043965"
+    },
+    "vs-s129-build.patch": {
+      "bytes": 4299,
+      "sha256": "003ad518f870d6bc740d074b52e21877b02a68604b0f1bb8fb24bd32ce8d994a"
+    }
+  }
+}

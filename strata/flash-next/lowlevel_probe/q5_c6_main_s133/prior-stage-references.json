@@ -1,0 +1,18 @@
+{
+  "actual_source_model_decisions": "../q5_c6_runtime_ones_s132/postreviews/",
+  "actual_source_models": [
+    "claude-opus-5-5",
+    "claude-fable-5-1"
+  ],
+  "actual_elapsed_s": [
+    56.71987363300286,
+    66.84930184902623
+  ],
+  "source_review_packet_sha256": "9e2f0022a6ee0fbf752b7de166463dbdffa5e91fcc15c400bbded733d004ee8f",
+  "S132_commit": "7088473d",
+  "S129_build_and_cache_adoption": "../combined_main_s129/README.md",
+  "S129_candidate_body_HOLD": "Preserved/not resolved; no new optional compiled-image/ISA/host audit required or performed for S133.",
+  "artifact_scope": "Only whole EXE/native-object/kernel-archive identities from actual build ledger; no selected candidate-image identity claim.",
+  "S134_serving": "Separate next stage; no outcome consumed or claimed here.",
+  "raw_ASMs_images_binaries_TUs_Ninja_CMake_dumps_backups_not_duplicated": true
+}

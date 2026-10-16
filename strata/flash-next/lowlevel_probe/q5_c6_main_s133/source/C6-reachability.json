@@ -1,0 +1,41 @@
+{
+  "status": "ROOT_CONFIRMED_C6_VERIFIER_REACHABILITY_SOURCE_AND_RETAINED_LOG",
+  "source": {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp",
+    "bytes": 223107,
+    "sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2",
+    "excerpts": [
+      {
+        "first_line": 796,
+        "last_line": 803,
+        "source": "// so the CPU computes A's experts of layer l while the GPU runs B's mixer and router of layer l, and B's experts\n// while the GPU combines A and runs A's layer l+1.  B's mixer only needs A's mixer of the same layer (K/V, GDN\n// state), never A's experts, so nothing waits that did not wait before.  Every token's arithmetic is unchanged.\nbool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {\n    using namespace strata::kernels;\n    const ModelGeometry& g = *g_;\n    // 0.1.43 (STRATA_VERIFY_LEAN=0 turns it off): with the device plan under STRATA_VERIFY_NO_HOST no host ever answers a doorbell, so\n    // a layer's doorbell publish, the three flag waits, the plan copy, the PCIe-share group and its staging kernels are nodes of"
+      },
+      {
+        "first_line": 1662,
+        "last_line": 1668,
+        "source": "        if (head_ != nullptr && head_->loaded()) {\n            try {\n                native_quantize_q8_1(head_mixed_, xq_, (int) N, T, cs);\n                native_mmvq_head(head_->type(), head_->weights(), xq_, head_logits_, (int) N, (int) n_vocab_, T, cs);\n            } catch (const std::exception& e) {\n                err = std::string(\"verify head: \") + e.what();\n                return false;"
+      },
+      {
+        "first_line": 2999,
+        "last_line": 3005,
+        "source": "    row_base_ = hbase;\n    for (int t = 0; t < S; ++t) brow_[t] = rows[t];\n    std::string rerr;\n    const bool ok = record_window(S, cs_, rerr);\n    batch_rec_ = false;\n    row_base_ = 0;\n    dpct::experimental::command_graph_ptr graph = nullptr;"
+      }
+    ]
+  },
+  "retained_control_log": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-runtime-ones-s130-serving-prep/mode0/engine-final.log",
+    "bytes": 22849,
+    "sha256": "e2d7a4fcfd1df3d42ef409d7c8fd6aa580b1eba9879e9ef9a54b78a90657ecbd",
+    "lines": [
+      {
+        "line": 18,
+        "text": "strata generate: experimental native Q5_K head, 437043200 bytes, in 0.1 s"
+      },
+      {
+        "line": 86,
+        "text": "strata verify: captured the batch window over slots 1,1,1,0,0,0"
+      }
+    ]
+  },
+  "limits": "record_window(S) forwards T=S into explicit head; source+observed six-slot capture establishes plausible selected domain, not launch counts/timing/cause or future C6 runtime result."
+}

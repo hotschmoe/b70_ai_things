@@ -1,0 +1,20 @@
+{
+  "status": "INFERRED_SOURCE_ONLY_NO_NINJA_QUERY_OR_BUILD",
+  "target": "strata",
+  "required_source_changes": [
+    "sycl/src/kernels/cuda/native_mmvq.dp.cpp"
+  ],
+  "expected_actions": [
+    "compile CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o",
+    "archive libstrata_kernels.a",
+    "link strata"
+  ],
+  "conditions": [
+    "existing S129 configured cache/build flags preserved",
+    "no configure/regeneration or changed generated ggml-version.h",
+    "all other source/header/dependency timestamps unchanged"
+  ],
+  "actual_future_dryplan_required": true,
+  "unexpected_action": "STOP_FOR_ROOT_REVIEW_NOT_FORCE_DEPENDENCIES",
+  "cache": "reuse existing S129 link-only cache and stable /out/offline-cache; no cache warm"
+}
