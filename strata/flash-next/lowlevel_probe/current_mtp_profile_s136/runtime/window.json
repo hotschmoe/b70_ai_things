@@ -1,0 +1,7 @@
+{
+  "start_us": 1792125393110564.0,
+  "end_us": 1792125403262463.2,
+  "scope": "One instrumented pair plus completion observation, before pause/stop/optional flush; all capture/solo/tail retained",
+  "native_steady_to_trace_join_allowed": false,
+  "control_errors": []
+}

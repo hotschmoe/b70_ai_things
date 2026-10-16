@@ -1,0 +1,5 @@
+{
+  "needed": true,
+  "reason": "Explicit stop not yet observed as closed stable trace; ONE existing unprofiled native flush only",
+  "excluded_from_pair_window_and_native_counters": true
+}

@@ -1,0 +1,1189 @@
+{
+  "status": "BOUNDED_SAVED_TIMELINE_DERIVATION_ONLY",
+  "input": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/analysis/gpu/cycles.json",
+    "bytes": 5255606,
+    "sha256": "4783c04c69341d8eb55270443e94a473c0953f215b50171a8b395a45203f8e48"
+  },
+  "cycle": {
+    "index": 3,
+    "primary_pid": 4294952351,
+    "trace_start_us": 1792125388334154.5,
+    "trace_end_us": 1792125388390887.8,
+    "duration_us": 56733.25,
+    "events": 5151,
+    "no_boundary_crossers": true
+  },
+  "anchors": {
+    "140985": {
+      "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+      "trace_ts_us": 1792125388345755.0,
+      "duration_us": 1209.583,
+      "pid": 4294952351,
+      "tid": 4294952351,
+      "id": "140985"
+    },
+    "140990": {
+      "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+      "trace_ts_us": 1792125388347218.8,
+      "duration_us": 16.77,
+      "pid": 4294952351,
+      "tid": 4294952351,
+      "id": "140990"
+    },
+    "140991": {
+      "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+      "trace_ts_us": 1792125388347237.5,
+      "duration_us": 16.562,
+      "pid": 4294952351,
+      "tid": 4294952351,
+      "id": "140991"
+    },
+    "141196": {
+      "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+      "trace_ts_us": 1792125388348565.8,
+      "duration_us": 1207.708,
+      "pid": 4294952351,
+      "tid": 4294952351,
+      "id": "141196"
+    },
+    "141201": {
+      "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+      "trace_ts_us": 1792125388350029.0,
+      "duration_us": 15.833,
+      "pid": 4294952351,
+      "tid": 4294952351,
+      "id": "141201"
+    },
+    "141202": {
+      "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+      "trace_ts_us": 1792125388350047.0,
+      "duration_us": 15.937,
+      "pid": 4294952351,
+      "tid": 4294952351,
+      "id": "141202"
+    },
+    "143765": {
+      "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 6>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<6> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+      "trace_ts_us": 1792125388388632.2,
+      "duration_us": 2255.416,
+      "pid": 4294952351,
+      "tid": 4294952351,
+      "id": "143765"
+    }
+  },
+  "segments": {
+    "LEFT_previous_C6_end_to_first_C2": {
+      "start_cycle_us": 0,
+      "end_cycle_us": 11600.5,
+      "span_us": 11600.5,
+      "overlap_clipped_event_count": 2707,
+      "family_counts": {
+        "other": 93,
+        "event_reset": 2338,
+        "GDN": 144,
+        "QSA": 88,
+        "HC": 24,
+        "other_MMVQ": 20
+      },
+      "family_service_us": {
+        "other": 496.94000000000136,
+        "event_reset": 2135.4420000000428,
+        "GDN": 1300.5620000000054,
+        "QSA": 394.01999999999407,
+        "HC": 284.67899999999827,
+        "other_MMVQ": 408.84600000000137
+      },
+      "recorded_union_us": 4880.681000000043,
+      "uncovered_us": 6719.818999999957,
+      "one_family_only_coverage_us": {
+        "other": 357.1730000000008,
+        "event_reset": 2135.4420000000428,
+        "GDN": 1300.5620000000054,
+        "QSA": 393.9789999999948,
+        "other_MMVQ": 395.8060000000023,
+        "HC": 247.90899999999783
+      },
+      "multiple_family_coverage_us": 49.80999999999949,
+      "top8_uncovered_intervals": [
+        {
+          "start_cycle_us": 5385.52,
+          "end_cycle_us": 7117.5,
+          "duration_us": 1731.9799999999996,
+          "before": {
+            "id": "140506",
+            "name": "zeCommandListAppendBarrier",
+            "start_cycle_us": 5385.0,
+            "end_cycle_us": 5385.52
+          },
+          "after": {
+            "id": "140507",
+            "name": "dpct_kernel_name<strata::kernels::copy_i32_from_mapped(int*, int const*, long, void*)::copy_i32_from_mapped_kernel_a44acc>[SIMD32 {1; 1; 1} {128; 1; 1}]",
+            "start_cycle_us": 7117.5,
+            "end_cycle_us": 7121.25
+          }
+        },
+        {
+          "start_cycle_us": 9227.937,
+          "end_cycle_us": 9930.0,
+          "duration_us": 702.0630000000001,
+          "before": {
+            "id": "140750",
+            "name": "dpct_kernel_name<strata::kernels::copy_indexed(float*, float const*, long, int const*, long, void*)::copy_indexed_kernel_b12e23>[SIMD32 {64; 1; 1} {256; 1; 1}]",
+            "start_cycle_us": 9224.5,
+            "end_cycle_us": 9227.937
+          },
+          "after": {
+            "id": "140751",
+            "name": "zeCommandListAppendMemoryCopy(D2D)[122880]",
+            "start_cycle_us": 9930.0,
+            "end_cycle_us": 9932.604
+          }
+        },
+        {
+          "start_cycle_us": 10001.458,
+          "end_cycle_us": 10153.25,
+          "duration_us": 151.79199999999946,
+          "before": {
+            "id": "140752",
+            "name": "zeCommandListAppendMemoryCopy(D2D)[122880]",
+            "start_cycle_us": 10000.0,
+            "end_cycle_us": 10001.458
+          },
+          "after": {
+            "id": "140753",
+            "name": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {30; 7; 1} {256; 1; 1}]",
+            "start_cycle_us": 10153.25,
+            "end_cycle_us": 10156.895
+          }
+        },
+        {
+          "start_cycle_us": 9932.604,
+          "end_cycle_us": 10000.0,
+          "duration_us": 67.39600000000064,
+          "before": {
+            "id": "140751",
+            "name": "zeCommandListAppendMemoryCopy(D2D)[122880]",
+            "start_cycle_us": 9930.0,
+            "end_cycle_us": 9932.604
+          },
+          "after": {
+            "id": "140752",
+            "name": "zeCommandListAppendMemoryCopy(D2D)[122880]",
+            "start_cycle_us": 10000.0,
+            "end_cycle_us": 10001.458
+          }
+        },
+        {
+          "start_cycle_us": 10882.27,
+          "end_cycle_us": 10888.5,
+          "duration_us": 6.229999999999563,
+          "before": {
+            "id": "140867",
+            "name": "zeCommandListAppendBarrier",
+            "start_cycle_us": 10881.75,
+            "end_cycle_us": 10882.27
+          },
+          "after": {
+            "id": "140868",
+            "name": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {30; 7; 1} {256; 1; 1}]",
+            "start_cycle_us": 10888.5,
+            "end_cycle_us": 10891.729
+          }
+        },
+        {
+          "start_cycle_us": 11584.02,
+          "end_cycle_us": 11590.25,
+          "duration_us": 6.229999999999563,
+          "before": {
+            "id": "140982",
+            "name": "zeCommandListAppendBarrier",
+            "start_cycle_us": 11583.5,
+            "end_cycle_us": 11584.02
+          },
+          "after": {
+            "id": "140983",
+            "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+            "start_cycle_us": 11590.25,
+            "end_cycle_us": 11594.0
+          }
+        },
+        {
+          "start_cycle_us": 85.187,
+          "end_cycle_us": 88.75,
+          "duration_us": 3.5630000000000024,
+          "before": {
+            "id": "138279",
+            "name": "zeCommandListAppendBarrier",
+            "start_cycle_us": 0.5,
+            "end_cycle_us": 85.187
+          },
+          "after": {
+            "id": "138280",
+            "name": "zeCommandListAppendEventReset",
+            "start_cycle_us": 88.75,
+            "end_cycle_us": 89.843
+          }
+        },
+        {
+          "start_cycle_us": 8732.395,
+          "end_cycle_us": 8735.75,
+          "duration_us": 3.3549999999995634,
+          "before": {
+            "id": "140692",
+            "name": "dpct_kernel_name<strata::kernels::gdn_step_norm_multi(float*, float const*, int, float const*, float const*, float const*, float const*, float, float*, int, int, int, int const*, void*, int, void*)::gdn_step_commit_kernel_5d9da7>[SIMD32 {48; 4; 1} {32; 4; 1}]",
+            "start_cycle_us": 8716.25,
+            "end_cycle_us": 8732.395
+          },
+          "after": {
+            "id": "140693",
+            "name": "dpct_kernel_name<strata::kernels::gdn_conv_commit(float*, float const*, int, int const*, void*)::gdn_conv_commit_kernel_dc1d7f>[SIMD32 {40; 1; 1} {256; 1; 1}]",
+            "start_cycle_us": 8735.75,
+            "end_cycle_us": 8737.52
+          }
+        }
+      ],
+      "top15_operation_rows": [
+        {
+          "name": "zeCommandListAppendEventReset",
+          "count": 2338,
+          "service_us": 2135.4420000000428
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::gdn_step_norm_multi(float*, float const*, int, float const*, float const*, float const*, float const*, float, float*, int, int, int, int const*, void*, int, void*)::gdn_step_commit_kernel_5d9da7>[SIMD32 {48; 4; 1} {32; 4; 1}]",
+          "count": 72,
+          "service_us": 1166.737000000001
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::native_qsa_indexer_append_steps(float const*, int const*, int, int, int, float const*, float, strata::kernels::QsaIndexerBuffers const&, strata::kernels::QsaShapes const&, long, strata::kernels::RopeScaling const&, void*)::{lambda(sycl::_V1::handler&)#2}::operator()(sycl::_V1::handler&) const::append_182f95, dpct_kernel_scalar<0> >[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "count": 72,
+          "service_us": 172.35999999999603
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::gdn_conv_commit(float*, float const*, int, int const*, void*)::gdn_conv_commit_kernel_dc1d7f>[SIMD32 {40; 1; 1} {256; 1; 1}]",
+          "count": 72,
+          "service_us": 133.82500000000437
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {3072; 1; 1} {32; 4; 1}]",
+          "count": 2,
+          "service_us": 130.10300000000097
+        },
+        {
+          "name": "zeCommandListAppendBarrier",
+          "count": 6,
+          "service_us": 124.058000000001
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gr_up_cols<16>(sycl::_V1::queue*, strata::kernels::(anonymous namespace)::GrMulti const&, bool)::gr_up_multi_cols, dpct_kernel_scalar<16> >[SIMD32 {160; 1; 1} {256; 1; 1}]",
+          "count": 6,
+          "service_us": 118.43499999999949
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::{lambda(sycl::_V1::handler&)#3}::operator()(sycl::_V1::handler&) const::gr_down_sliced_k>[SIMD32 {80; 1; 1} {256; 1; 1}]",
+          "count": 6,
+          "service_us": 105.41400000000067
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::qsa_decode_attn_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> >[SIMD32 {512; 2; 1} {256; 1; 1}]",
+          "count": 2,
+          "service_us": 93.54100000000108
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::qsa_decode_attn_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)::attn_merge_kernel_338175>[SIMD32 {24; 1; 1} {256; 1; 1}]",
+          "count": 2,
+          "service_us": 89.47799999999916
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {640; 1; 1} {32; 4; 1}]",
+          "count": 4,
+          "service_us": 85.83100000000013
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {6; 1; 1} {1024; 1; 1}]",
+          "count": 1,
+          "service_us": 84.166
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 8>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<8> >[SIMD32 {640; 1; 1} {32; 4; 1}]",
+          "count": 2,
+          "service_us": 64.6869999999999
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::moe_grouped_s2(unsigned long long const*, int const*, int const*, int const*, int const*, long, long, unsigned char const*, float const*, void*, float*, void*)::gu_grouped_t_kernel_998f94>[SIMD32 {40; 10; 1} {256; 1; 1}]",
+          "count": 2,
+          "service_us": 57.810999999999694
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 3>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<3> >[SIMD32 {640; 1; 1} {32; 4; 1}]",
+          "count": 2,
+          "service_us": 51.66599999999926
+        }
+      ]
+    },
+    "first_C2_head": {
+      "start_cycle_us": 11600.5,
+      "end_cycle_us": 12810.083,
+      "span_us": 1209.5830000000005,
+      "overlap_clipped_event_count": 1,
+      "family_counts": {
+        "vocabulary_head": 1
+      },
+      "family_service_us": {
+        "vocabulary_head": 1209.5830000000005
+      },
+      "recorded_union_us": 1209.5830000000005,
+      "uncovered_us": 0.0,
+      "one_family_only_coverage_us": {
+        "vocabulary_head": 1209.5830000000005
+      },
+      "multiple_family_coverage_us": 0.0,
+      "top8_uncovered_intervals": [],
+      "top15_operation_rows": [
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "count": 1,
+          "service_us": 1209.5830000000005
+        }
+      ]
+    },
+    "first_pair_tail": {
+      "start_cycle_us": 12810.083,
+      "end_cycle_us": 13099.562,
+      "span_us": 289.47899999999936,
+      "overlap_clipped_event_count": 6,
+      "family_counts": {
+        "other": 6
+      },
+      "family_service_us": {
+        "other": 276.03800000000047
+      },
+      "recorded_union_us": 276.03800000000047,
+      "uncovered_us": 13.440999999998894,
+      "one_family_only_coverage_us": {
+        "other": 276.03800000000047
+      },
+      "multiple_family_coverage_us": 0.0,
+      "top8_uncovered_intervals": [
+        {
+          "start_cycle_us": 12901.875,
+          "end_cycle_us": 12904.5,
+          "duration_us": 2.625,
+          "before": {
+            "id": "140986",
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "start_cycle_us": 12812.5,
+            "end_cycle_us": 12901.875
+          },
+          "after": {
+            "id": "140987",
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "start_cycle_us": 12904.5,
+            "end_cycle_us": 12936.791
+          }
+        },
+        {
+          "start_cycle_us": 13061.77,
+          "end_cycle_us": 13064.25,
+          "duration_us": 2.4799999999995634,
+          "before": {
+            "id": "140989",
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "start_cycle_us": 13030.0,
+            "end_cycle_us": 13061.77
+          },
+          "after": {
+            "id": "140990",
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "start_cycle_us": 13064.25,
+            "end_cycle_us": 13081.02
+          }
+        },
+        {
+          "start_cycle_us": 12810.083,
+          "end_cycle_us": 12812.5,
+          "duration_us": 2.4169999999994616,
+          "before": null,
+          "after": {
+            "id": "140986",
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "start_cycle_us": 12812.5,
+            "end_cycle_us": 12901.875
+          }
+        },
+        {
+          "start_cycle_us": 13028.02,
+          "end_cycle_us": 13030.0,
+          "duration_us": 1.9799999999995634,
+          "before": {
+            "id": "140988",
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "start_cycle_us": 12938.75,
+            "end_cycle_us": 13028.02
+          },
+          "after": {
+            "id": "140989",
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "start_cycle_us": 13030.0,
+            "end_cycle_us": 13061.77
+          }
+        },
+        {
+          "start_cycle_us": 13081.02,
+          "end_cycle_us": 13083.0,
+          "duration_us": 1.9799999999995634,
+          "before": {
+            "id": "140990",
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "start_cycle_us": 13064.25,
+            "end_cycle_us": 13081.02
+          },
+          "after": {
+            "id": "140991",
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "start_cycle_us": 13083.0,
+            "end_cycle_us": 13099.562
+          }
+        },
+        {
+          "start_cycle_us": 12936.791,
+          "end_cycle_us": 12938.75,
+          "duration_us": 1.9590000000007421,
+          "before": {
+            "id": "140987",
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "start_cycle_us": 12904.5,
+            "end_cycle_us": 12936.791
+          },
+          "after": {
+            "id": "140988",
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "start_cycle_us": 12938.75,
+            "end_cycle_us": 13028.02
+          }
+        }
+      ],
+      "top15_operation_rows": [
+        {
+          "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+          "count": 2,
+          "service_us": 178.64500000000044
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+          "count": 2,
+          "service_us": 64.0609999999997
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "count": 2,
+          "service_us": 33.332000000000335
+        }
+      ]
+    },
+    "j1_headfree_source_compatible": {
+      "start_cycle_us": 13099.562,
+      "end_cycle_us": 14411.25,
+      "span_us": 1311.688,
+      "overlap_clipped_event_count": 204,
+      "family_counts": {
+        "other": 48,
+        "QSA": 16,
+        "other_MMVQ": 18,
+        "HC": 24,
+        "event_reset": 98
+      },
+      "family_service_us": {
+        "other": 247.89899999999943,
+        "QSA": 225.92799999999806,
+        "other_MMVQ": 330.8239999999987,
+        "HC": 261.76200000000244,
+        "event_reset": 85.16999999998552
+      },
+      "recorded_union_us": 1095.439999999986,
+      "uncovered_us": 216.24800000001414,
+      "one_family_only_coverage_us": {
+        "other": 191.75600000000122,
+        "QSA": 225.92799999999806,
+        "other_MMVQ": 318.1170000000002,
+        "HC": 223.742000000002,
+        "event_reset": 85.16999999998552
+      },
+      "multiple_family_coverage_us": 50.72699999999895,
+      "top8_uncovered_intervals": [
+        {
+          "start_cycle_us": 13099.562,
+          "end_cycle_us": 13122.5,
+          "duration_us": 22.938000000000102,
+          "before": null,
+          "after": {
+            "id": "140992",
+            "name": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {1; 2; 1} {256; 1; 1}]",
+            "start_cycle_us": 13122.5,
+            "end_cycle_us": 13125.52
+          }
+        },
+        {
+          "start_cycle_us": 14395.625,
+          "end_cycle_us": 14401.5,
+          "duration_us": 5.875,
+          "before": {
+            "id": "141193",
+            "name": "zeCommandListAppendBarrier",
+            "start_cycle_us": 14395.0,
+            "end_cycle_us": 14395.625
+          },
+          "after": {
+            "id": "141194",
+            "name": "dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]",
+            "start_cycle_us": 14401.5,
+            "end_cycle_us": 14404.729
+          }
+        },
+        {
+          "start_cycle_us": 13754.77,
+          "end_cycle_us": 13760.5,
+          "duration_us": 5.729999999999563,
+          "before": {
+            "id": "141092",
+            "name": "zeCommandListAppendBarrier",
+            "start_cycle_us": 13754.25,
+            "end_cycle_us": 13754.77
+          },
+          "after": {
+            "id": "141093",
+            "name": "dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {1; 2; 1} {256; 1; 1}]",
+            "start_cycle_us": 13760.5,
+            "end_cycle_us": 13763.625
+          }
+        },
+        {
+          "start_cycle_us": 13632.645,
+          "end_cycle_us": 13635.75,
+          "duration_us": 3.1049999999995634,
+          "before": {
+            "id": "141042",
+            "name": "zeCommandListAppendBarrier",
+            "start_cycle_us": 13612.75,
+            "end_cycle_us": 13632.645
+          },
+          "after": {
+            "id": "141043",
+            "name": "zeCommandListAppendEventReset",
+            "start_cycle_us": 13635.75,
+            "end_cycle_us": 13636.687
+          }
+        },
+        {
+          "start_cycle_us": 14273.666,
+          "end_cycle_us": 14276.5,
+          "duration_us": 2.834000000000742,
+          "before": {
+            "id": "141143",
+            "name": "zeCommandListAppendBarrier",
+            "start_cycle_us": 14254.5,
+            "end_cycle_us": 14273.666
+          },
+          "after": {
+            "id": "141144",
+            "name": "zeCommandListAppendEventReset",
+            "start_cycle_us": 14276.5,
+            "end_cycle_us": 14277.437
+          }
+        },
+        {
+          "start_cycle_us": 13643.937,
+          "end_cycle_us": 13646.25,
+          "duration_us": 2.313000000000102,
+          "before": {
+            "id": "141046",
+            "name": "zeCommandListAppendEventReset",
+            "start_cycle_us": 13643.0,
+            "end_cycle_us": 13643.937
+          },
+          "after": {
+            "id": "141047",
+            "name": "zeCommandListAppendEventReset",
+            "start_cycle_us": 13646.25,
+            "end_cycle_us": 13647.187
+          }
+        },
+        {
+          "start_cycle_us": 13654.437,
+          "end_cycle_us": 13656.75,
+          "duration_us": 2.313000000000102,
+          "before": {
+            "id": "141050",
+            "name": "zeCommandListAppendEventReset",
+            "start_cycle_us": 13653.5,
+            "end_cycle_us": 13654.437
+          },
+          "after": {
+            "id": "141051",
+            "name": "zeCommandListAppendEventReset",
+            "start_cycle_us": 13656.75,
+            "end_cycle_us": 13657.687
+          }
+        },
+        {
+          "start_cycle_us": 13685.937,
+          "end_cycle_us": 13688.25,
+          "duration_us": 2.313000000000102,
+          "before": {
+            "id": "141062",
+            "name": "zeCommandListAppendEventReset",
+            "start_cycle_us": 13685.0,
+            "end_cycle_us": 13685.937
+          },
+          "after": {
+            "id": "141063",
+            "name": "zeCommandListAppendEventReset",
+            "start_cycle_us": 13688.25,
+            "end_cycle_us": 13689.187
+          }
+        }
+      ],
+      "top15_operation_rows": [
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {3072; 1; 1} {32; 4; 1}]",
+          "count": 2,
+          "service_us": 121.66599999999926
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {640; 1; 1} {32; 4; 1}]",
+          "count": 6,
+          "service_us": 119.68399999999929
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gr_up_cols<16>(sycl::_V1::queue*, strata::kernels::(anonymous namespace)::GrMulti const&, bool)::gr_up_multi_cols, dpct_kernel_scalar<16> >[SIMD32 {160; 1; 1} {256; 1; 1}]",
+          "count": 6,
+          "service_us": 108.74700000000121
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::qsa_decode_attn_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> >[SIMD32 {512; 2; 1} {256; 1; 1}]",
+          "count": 2,
+          "service_us": 93.95700000000033
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::{lambda(sycl::_V1::handler&)#3}::operator()(sycl::_V1::handler&) const::gr_down_sliced_k>[SIMD32 {80; 1; 1} {256; 1; 1}]",
+          "count": 6,
+          "service_us": 91.45600000000013
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::qsa_decode_attn_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)::attn_merge_kernel_338175>[SIMD32 {24; 1; 1} {256; 1; 1}]",
+          "count": 2,
+          "service_us": 89.58199999999852
+        },
+        {
+          "name": "zeCommandListAppendEventReset",
+          "count": 98,
+          "service_us": 85.16999999998552
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::moe_grouped_s2(unsigned long long const*, int const*, int const*, int const*, int const*, long, long, unsigned char const*, float const*, void*, float*, void*)::gu_grouped_t_kernel_998f94>[SIMD32 {40; 10; 1} {256; 1; 1}]",
+          "count": 2,
+          "service_us": 56.76999999999862
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 4>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<4> >[SIMD32 {640; 1; 1} {32; 4; 1}]",
+          "count": 2,
+          "service_us": 43.123999999999796
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::gr_norm_split_k>[SIMD32 {4; 1; 1} {256; 1; 1}]",
+          "count": 6,
+          "service_us": 40.52000000000044
+        },
+        {
+          "name": "zeCommandListAppendBarrier",
+          "count": 4,
+          "service_us": 40.20600000000013
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::moe_grouped_s2(unsigned long long const*, int const*, int const*, int const*, int const*, long, long, unsigned char const*, float const*, void*, float*, void*)::down_grouped_t_kernel_12b16d>[SIMD32 {40; 10; 1} {256; 1; 1}]",
+          "count": 2,
+          "service_us": 35.41599999999926
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {160; 1; 1} {32; 4; 1}]",
+          "count": 4,
+          "service_us": 28.12199999999939
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::native_qsa_rms_norm_weighted(float const*, float const*, float*, int, int, float, void*)::norm_127936, dpct_kernel_scalar<1024> >[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+          "count": 4,
+          "service_us": 21.143999999998414
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::gr_down_reduce_k>[SIMD32 {3; 1; 1} {128; 1; 1}]",
+          "count": 6,
+          "service_us": 21.03900000000067
+        }
+      ]
+    },
+    "second_C2_head": {
+      "start_cycle_us": 14411.25,
+      "end_cycle_us": 15618.958,
+      "span_us": 1207.7080000000005,
+      "overlap_clipped_event_count": 1,
+      "family_counts": {
+        "vocabulary_head": 1
+      },
+      "family_service_us": {
+        "vocabulary_head": 1207.7080000000005
+      },
+      "recorded_union_us": 1207.7080000000005,
+      "uncovered_us": 0.0,
+      "one_family_only_coverage_us": {
+        "vocabulary_head": 1207.7080000000005
+      },
+      "multiple_family_coverage_us": 0.0,
+      "top8_uncovered_intervals": [],
+      "top15_operation_rows": [
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "count": 1,
+          "service_us": 1207.7080000000005
+        }
+      ]
+    },
+    "second_pair_tail": {
+      "start_cycle_us": 15618.958,
+      "end_cycle_us": 15908.437,
+      "span_us": 289.47899999999936,
+      "overlap_clipped_event_count": 6,
+      "family_counts": {
+        "other": 6
+      },
+      "family_service_us": {
+        "other": 274.78899999999885
+      },
+      "recorded_union_us": 274.78899999999885,
+      "uncovered_us": 14.69000000000051,
+      "one_family_only_coverage_us": {
+        "other": 274.78899999999885
+      },
+      "multiple_family_coverage_us": 0.0,
+      "top8_uncovered_intervals": [
+        {
+          "start_cycle_us": 15618.958,
+          "end_cycle_us": 15622.0,
+          "duration_us": 3.0419999999994616,
+          "before": null,
+          "after": {
+            "id": "141197",
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "start_cycle_us": 15622.0,
+            "end_cycle_us": 15711.687
+          }
+        },
+        {
+          "start_cycle_us": 15871.916,
+          "end_cycle_us": 15874.5,
+          "duration_us": 2.584000000000742,
+          "before": {
+            "id": "141200",
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "start_cycle_us": 15840.25,
+            "end_cycle_us": 15871.916
+          },
+          "after": {
+            "id": "141201",
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "start_cycle_us": 15874.5,
+            "end_cycle_us": 15890.333
+          }
+        },
+        {
+          "start_cycle_us": 15837.729,
+          "end_cycle_us": 15840.25,
+          "duration_us": 2.5210000000006403,
+          "before": {
+            "id": "141199",
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "start_cycle_us": 15748.25,
+            "end_cycle_us": 15837.729
+          },
+          "after": {
+            "id": "141200",
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "start_cycle_us": 15840.25,
+            "end_cycle_us": 15871.916
+          }
+        },
+        {
+          "start_cycle_us": 15745.937,
+          "end_cycle_us": 15748.25,
+          "duration_us": 2.313000000000102,
+          "before": {
+            "id": "141198",
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "start_cycle_us": 15713.75,
+            "end_cycle_us": 15745.937
+          },
+          "after": {
+            "id": "141199",
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "start_cycle_us": 15748.25,
+            "end_cycle_us": 15837.729
+          }
+        },
+        {
+          "start_cycle_us": 15890.333,
+          "end_cycle_us": 15892.5,
+          "duration_us": 2.1669999999994616,
+          "before": {
+            "id": "141201",
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "start_cycle_us": 15874.5,
+            "end_cycle_us": 15890.333
+          },
+          "after": {
+            "id": "141202",
+            "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+            "start_cycle_us": 15892.5,
+            "end_cycle_us": 15908.437
+          }
+        },
+        {
+          "start_cycle_us": 15711.687,
+          "end_cycle_us": 15713.75,
+          "duration_us": 2.063000000000102,
+          "before": {
+            "id": "141197",
+            "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+            "start_cycle_us": 15622.0,
+            "end_cycle_us": 15711.687
+          },
+          "after": {
+            "id": "141198",
+            "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+            "start_cycle_us": 15713.75,
+            "end_cycle_us": 15745.937
+          }
+        }
+      ],
+      "top15_operation_rows": [
+        {
+          "name": "dpct_kernel_name<strata::kernels::sample_tokens(float const*, int, int, int const*, int, strata::kernels::SamplerParams const&, int*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::sampler_greedy_kernel_5b2c3f>[SIMD32 {1; 1; 1} {1024; 1; 1}]",
+          "count": 2,
+          "service_us": 179.16599999999926
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::row_top_prob_split(float const*, int, int, int const*, float*, void*, void*)::row_top_prob_split_kernel_9495b0>[SIMD32 {8; 1; 1} {128; 1; 1}]",
+          "count": 2,
+          "service_us": 63.852999999999156
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+          "count": 2,
+          "service_us": 31.770000000000437
+        }
+      ]
+    },
+    "verifier_source_compatible": {
+      "start_cycle_us": 15908.437,
+      "end_cycle_us": 54477.75,
+      "span_us": 38569.313,
+      "overlap_clipped_event_count": 2225,
+      "family_counts": {
+        "other": 733,
+        "HC": 388,
+        "other_MMVQ": 184,
+        "GDN": 180,
+        "routed_GU": 48,
+        "routed_down": 48,
+        "EP_wait": 48,
+        "Q6_dense": 71,
+        "Q4_dense": 45,
+        "QSA": 480
+      },
+      "family_service_us": {
+        "other": 3096.896999999437,
+        "HC": 6159.09799999966,
+        "other_MMVQ": 5780.542999999834,
+        "GDN": 1505.238999999874,
+        "routed_GU": 4411.335999999956,
+        "routed_down": 3158.936999999958,
+        "EP_wait": 3082.5839999999516,
+        "Q6_dense": 3818.7189999999136,
+        "Q4_dense": 2313.626999999964,
+        "QSA": 3448.3379999995122
+      },
+      "recorded_union_us": 34849.60699999838,
+      "uncovered_us": 3719.706000001621,
+      "one_family_only_coverage_us": {
+        "other": 2748.0749999996187,
+        "HC": 6158.147999999666,
+        "other_MMVQ": 4502.15399999994,
+        "GDN": 1505.1169999998783,
+        "routed_GU": 4411.066999999963,
+        "routed_down": 3158.896999999957,
+        "EP_wait": 1160.0500000002394,
+        "Q6_dense": 3767.6599999999235,
+        "Q4_dense": 2066.949999999986,
+        "QSA": 3447.655999999519
+      },
+      "multiple_family_coverage_us": 1923.8329999996931,
+      "top8_uncovered_intervals": [
+        {
+          "start_cycle_us": 15908.437,
+          "end_cycle_us": 19225.5,
+          "duration_us": 3317.063,
+          "before": null,
+          "after": {
+            "id": "141540",
+            "name": "strata::kernels::ep_bump(unsigned int*, void*)::ep_bump_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+            "start_cycle_us": 19225.5,
+            "end_cycle_us": 19227.895
+          }
+        },
+        {
+          "start_cycle_us": 19469.916,
+          "end_cycle_us": 19470.75,
+          "duration_us": 0.8339999999989232,
+          "before": {
+            "id": "141555",
+            "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_mmvq_multi_nc<21, false>(dpct::dim3, dpct::dim3, sycl::_V1::queue*, unsigned char const*, unsigned long, block_q8_1 const*, float*, int, int, int)::{lambda(sycl::_V1::handler&)#6}::operator()(sycl::_V1::handler&) const::mmvq_multi_kernel_3404b2, dpct_kernel_scalar<21>, dpct_kernel_scalar<6>, dpct_kernel_scalar<0>, dpct_kernel_scalar<1> >[SIMD32 {1536; 1; 1} {32; 4; 1}]",
+            "start_cycle_us": 19385.75,
+            "end_cycle_us": 19469.916
+          },
+          "after": {
+            "id": "141556",
+            "name": "_ZTS16dpct_kernel_nameIJZN6strata7kernels19gdn_step_norm_multiEPfPKfiS4_S4_S4_S4_fS2_iiiPKiPviS7_E33gdn_step_norm_multi_kernel_42ae26_118dpct_kernel_scalarILi1EES9_ILi0EEEE[SIMD32 {48; 1; 1} {128; 4; 1}]",
+            "start_cycle_us": 19470.75,
+            "end_cycle_us": 19484.604
+          }
+        },
+        {
+          "start_cycle_us": 24823.791,
+          "end_cycle_us": 24824.5,
+          "duration_us": 0.7089999999989232,
+          "before": {
+            "id": "141907",
+            "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideIQ4XS, 6>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideIQ4XS, dpct_kernel_scalar<6> >[SIMD32 {3072; 1; 1} {32; 4; 1}]",
+            "start_cycle_us": 24746.5,
+            "end_cycle_us": 24823.791
+          },
+          "after": {
+            "id": "141908",
+            "name": "dpct_kernel_name<strata::kernels::native_qsa_rms_norm_rope(float const*, int, float const*, float*, int, int, int, float, strata::kernels::RopeScaling const&, int const*, void*)::{lambda(sycl::_V1::handler&)#2}::operator()(sycl::_V1::handler&) const::norm_rope_kernel_f9c8ef, dpct_kernel_scalar<0> >[SIMD32 {144; 1; 1} {256; 1; 1}]",
+            "start_cycle_us": 24824.5,
+            "end_cycle_us": 24827.104
+          }
+        },
+        {
+          "start_cycle_us": 20183.375,
+          "end_cycle_us": 20184.0,
+          "duration_us": 0.625,
+          "before": {
+            "id": "141584",
+            "name": "dpct_kernel_name<strata::kernels::bf16_gemv_fp32_mmvf_multi(float const*, long, unsigned short const*, float*, long, long, long, int, void*)::{lambda(sycl::_V1::handler&)#55}::operator()(sycl::_V1::handler&) const::bf16_f32_mmvf_multi_kernel_eddebc, dpct_kernel_scalar<256>, dpct_kernel_scalar<6>, dpct_kernel_scalar<1> >[SIMD32 {2560; 1; 1} {256; 1; 1}]",
+            "start_cycle_us": 20137.75,
+            "end_cycle_us": 20183.375
+          },
+          "after": {
+            "id": "141585",
+            "name": "dpct_kernel_name<strata::kernels::native_gr_post_multi(float const*, float const*, float const*, float*, int, int, int, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::post_a7f844>[SIMD32 {40; 6; 1} {256; 1; 1}]",
+            "start_cycle_us": 20184.0,
+            "end_cycle_us": 20186.291
+          }
+        },
+        {
+          "start_cycle_us": 49234.625,
+          "end_cycle_us": 49235.25,
+          "duration_us": 0.625,
+          "before": {
+            "id": "143422",
+            "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<22, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<22>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 60; 1} {256; 1; 1}]",
+            "start_cycle_us": 49161.5,
+            "end_cycle_us": 49234.625
+          },
+          "after": {
+            "id": "143423",
+            "name": "dpct_kernel_name<strata::kernels::native_expert_grouped(strata::kernels::NativeExpertLayout const&, unsigned long long const*, int const*, int const*, int const*, int const*, long, long, void const*, void*, float*, void*, long)::swiglu_q8_1_entries_kernel_115291>[SIMD32 {150; 1; 1} {256; 1; 1}]",
+            "start_cycle_us": 49235.25,
+            "end_cycle_us": 49238.895
+          }
+        },
+        {
+          "start_cycle_us": 52503.875,
+          "end_cycle_us": 52504.5,
+          "duration_us": 0.625,
+          "before": {
+            "id": "143632",
+            "name": "dpct_kernel_name<strata::kernels::bf16_gemv_fp32_mmvf_multi(float const*, long, unsigned short const*, float*, long, long, long, int, void*)::{lambda(sycl::_V1::handler&)#55}::operator()(sycl::_V1::handler&) const::bf16_f32_mmvf_multi_kernel_eddebc, dpct_kernel_scalar<256>, dpct_kernel_scalar<6>, dpct_kernel_scalar<1> >[SIMD32 {512; 1; 1} {256; 1; 1}]",
+            "start_cycle_us": 52492.0,
+            "end_cycle_us": 52503.875
+          },
+          "after": {
+            "id": "143633",
+            "name": "dpct_kernel_name<strata::kernels::native_router_top10_multi(float const*, int*, float*, int, void*)::route_512_multi>[SIMD32 {6; 1; 1} {32; 8; 1}]",
+            "start_cycle_us": 52504.5,
+            "end_cycle_us": 52512.104
+          }
+        },
+        {
+          "start_cycle_us": 35403.895,
+          "end_cycle_us": 35404.5,
+          "duration_us": 0.6050000000032014,
+          "before": {
+            "id": "142557",
+            "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<22, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<22>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 60; 1} {256; 1; 1}]",
+            "start_cycle_us": 35329.0,
+            "end_cycle_us": 35403.895
+          },
+          "after": {
+            "id": "142558",
+            "name": "dpct_kernel_name<strata::kernels::native_expert_grouped(strata::kernels::NativeExpertLayout const&, unsigned long long const*, int const*, int const*, int const*, int const*, long, long, void const*, void*, float*, void*, long)::swiglu_q8_1_entries_kernel_115291>[SIMD32 {150; 1; 1} {256; 1; 1}]",
+            "start_cycle_us": 35404.5,
+            "end_cycle_us": 35407.52
+          }
+        },
+        {
+          "start_cycle_us": 34051.416,
+          "end_cycle_us": 34052.0,
+          "duration_us": 0.5840000000025611,
+          "before": {
+            "id": "142487",
+            "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<17, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<17>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 60; 1} {256; 1; 1}]",
+            "start_cycle_us": 33942.25,
+            "end_cycle_us": 34051.416
+          },
+          "after": {
+            "id": "142488",
+            "name": "dpct_kernel_name<strata::kernels::native_expert_grouped(strata::kernels::NativeExpertLayout const&, unsigned long long const*, int const*, int const*, int const*, int const*, long, long, void const*, void*, float*, void*, long)::swiglu_q8_1_entries_kernel_115291>[SIMD32 {150; 1; 1} {256; 1; 1}]",
+            "start_cycle_us": 34052.0,
+            "end_cycle_us": 34055.125
+          }
+        }
+      ],
+      "top15_operation_rows": [
+        {
+          "name": "strata::kernels::ep_wait(unsigned int const*, unsigned int const*, unsigned int, unsigned int*, unsigned int, void*)::ep_wait_kernel[SIMD32 {1; 1; 1} {1; 1; 1}]",
+          "count": 48,
+          "service_us": 3082.5839999999516
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gr_up_cols<16>(sycl::_V1::queue*, strata::kernels::(anonymous namespace)::GrMulti const&, bool)::gr_up_multi_cols, dpct_kernel_scalar<16> >[SIMD32 {160; 1; 1} {256; 1; 1}]",
+          "count": 97,
+          "service_us": 2896.100999999915
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::qsa_decode_attn_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> >[SIMD32 {33; 2; 1} {256; 1; 1}]",
+          "count": 72,
+          "service_us": 2483.8219999999164
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::{lambda(sycl::_V1::handler&)#3}::operator()(sycl::_V1::handler&) const::gr_down_sliced_k>[SIMD32 {80; 1; 1} {256; 1; 1}]",
+          "count": 97,
+          "service_us": 2195.8939999999056
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_down_port<42, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*)::native_down_port, dpct_kernel_scalar<42>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {80; 60; 1} {256; 1; 1}]",
+          "count": 30,
+          "service_us": 1983.3209999999817
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_q6k_wide<6>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_q6k_wide_a2, dpct_kernel_scalar<6> >[SIMD32 {640; 1; 1} {32; 4; 1}]",
+          "count": 29,
+          "service_us": 1752.694999999967
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<21, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<21>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 60; 1} {256; 1; 1}]",
+          "count": 13,
+          "service_us": 1179.7859999999782
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_down_port<20, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*)::native_down_port, dpct_kernel_scalar<20>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {80; 60; 1} {256; 1; 1}]",
+          "count": 18,
+          "service_us": 1175.6159999999763
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_q6k_wide<6>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_q6k_wide_a2, dpct_kernel_scalar<6> >[SIMD32 {2560; 1; 1} {32; 4; 1}]",
+          "count": 14,
+          "service_us": 1154.1599999999817
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<17, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<17>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 60; 1} {256; 1; 1}]",
+          "count": 10,
+          "service_us": 997.8089999999975
+        },
+        {
+          "name": "_ZTS16dpct_kernel_nameIJZN6strata7kernels19gdn_step_norm_multiEPfPKfiS4_S4_S4_S4_fS2_iiiPKiPviS7_E33gdn_step_norm_multi_kernel_42ae26_118dpct_kernel_scalarILi1EES9_ILi0EEEE[SIMD32 {48; 1; 1} {128; 4; 1}]",
+          "count": 72,
+          "service_us": 952.1589999999342
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<16, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<16>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 60; 1} {256; 1; 1}]",
+          "count": 9,
+          "service_us": 915.4139999999934
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_mmvq_multi_nc<21, false>(dpct::dim3, dpct::dim3, sycl::_V1::queue*, unsigned char const*, unsigned long, block_q8_1 const*, float*, int, int, int)::{lambda(sycl::_V1::handler&)#6}::operator()(sycl::_V1::handler&) const::mmvq_multi_kernel_3404b2, dpct_kernel_scalar<21>, dpct_kernel_scalar<6>, dpct_kernel_scalar<0>, dpct_kernel_scalar<1> >[SIMD32 {1536; 1; 1} {32; 4; 1}]",
+          "count": 10,
+          "service_us": 841.4529999999941
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<22, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<22>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 60; 1} {256; 1; 1}]",
+          "count": 10,
+          "service_us": 809.9949999999917
+        },
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ4K, 6>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ4K, dpct_kernel_scalar<6> >[SIMD32 {2560; 1; 1} {32; 4; 1}]",
+          "count": 8,
+          "service_us": 798.0169999999925
+        }
+      ]
+    },
+    "following_C6_head": {
+      "start_cycle_us": 54477.75,
+      "end_cycle_us": 56733.25,
+      "span_us": 2255.5,
+      "overlap_clipped_event_count": 1,
+      "family_counts": {
+        "vocabulary_head": 1
+      },
+      "family_service_us": {
+        "vocabulary_head": 2255.4159999999974
+      },
+      "recorded_union_us": 2255.4159999999974,
+      "uncovered_us": 0.08400000000256114,
+      "one_family_only_coverage_us": {
+        "vocabulary_head": 2255.4159999999974
+      },
+      "multiple_family_coverage_us": 0.0,
+      "top8_uncovered_intervals": [
+        {
+          "start_cycle_us": 56733.166,
+          "end_cycle_us": 56733.25,
+          "duration_us": 0.08400000000256114,
+          "before": {
+            "id": "143765",
+            "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 6>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<6> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+            "start_cycle_us": 54477.75,
+            "end_cycle_us": 56733.166
+          },
+          "after": null
+        }
+      ],
+      "top15_operation_rows": [
+        {
+          "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 6>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<6> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+          "count": 1,
+          "service_us": 2255.4159999999974
+        }
+      ]
+    }
+  },
+  "limits": [
+    "Source-compatible intervals are not proved owner/tensor bindings.",
+    "All service/coverage uses one retained primary-device trace clock; no CPU/peer join.",
+    "Uncovered intervals are absent recorded events, not physical idle or host cause.",
+    "Float timestamps have approximately 0.25us precision; relative timestamp plus duration avoids large-float addition loss. Last 0.084us head suffix is rounding.",
+    "Original whole analyzer was interrupted; this bounded derivation does not retroactively pass global coverage.",
+    "Event reset origin/overhead and profiler perturbation are unresolved.",
+    "Family service includes overlap; multiple-family coverage is kept separate, never allocated as critical-path savings."
+  ],
+  "elapsed_s": 0.09245673503028229
+}

@@ -1,0 +1,413 @@
+{
+  "status": "BOUNDED_DERIVED_FROM_PRESERVED_PARTIAL_ANALYSIS_NOT_FULL_PARSER_PASS",
+  "source_status": "PARTIAL_ANALYSIS_SAVED_BOUNDED_GPU_CYCLE_AND_COMPLETE_CPU_RING",
+  "cycle": 3,
+  "cycle_span_us": 56733.25,
+  "source_cycle_event_count": 5151,
+  "raw_trace_sha256": "f5650d4daa36dc19fde1af631d19c434bab83ac6f04fb1b5ab509be5123baef6",
+  "interval": {
+    "start_trace_us": 1792125388347254.0,
+    "end_trace_us": 1792125388348565.8,
+    "span_us": 1311.75,
+    "lower_anchor": [
+      {
+        "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+        "trace_ts_us": 1792125388347218.8,
+        "duration_us": 16.77,
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "id": "140990"
+      },
+      {
+        "name": "dpct_kernel_name<strata::kernels::mtp_select(float const*, long, int const*, int const*, float*, int*, int*, int, void*, float const*, float*)::mtp_select_kernel_4611fe>[SIMD32 {1; 1; 1} {256; 1; 1}]",
+        "trace_ts_us": 1792125388347237.5,
+        "duration_us": 16.562,
+        "pid": 4294952351,
+        "tid": 4294952351,
+        "id": "140991"
+      }
+    ],
+    "upper_anchor": {
+      "name": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide<strata::kernels::(anonymous namespace)::WideQ5K, 2>(void const*, void const*, float*, int, int, sycl::_V1::queue*, int)::native_mmvq_wide, strata::kernels::(anonymous namespace)::WideQ5K, dpct_kernel_scalar<2> >[SIMD32 {62080; 1; 1} {32; 4; 1}]",
+      "trace_ts_us": 1792125388348565.8,
+      "duration_us": 1207.708,
+      "pid": 4294952351,
+      "tid": 4294952351,
+      "id": "141196"
+    },
+    "events": 204,
+    "boundary_crossers": []
+  },
+  "family_name_buckets": {
+    "other_named_kernels": {
+      "count": 40,
+      "service_us": 128.214,
+      "ids": [
+        "140992",
+        "140993",
+        "140994",
+        "140997",
+        "141000",
+        "141008",
+        "141009",
+        "141011",
+        "141012",
+        "141015",
+        "141022",
+        "141023",
+        "141024",
+        "141025",
+        "141027",
+        "141032",
+        "141034",
+        "141035",
+        "141036",
+        "141037",
+        "141093",
+        "141094",
+        "141095",
+        "141098",
+        "141101",
+        "141109",
+        "141110",
+        "141112",
+        "141113",
+        "141116",
+        "141123",
+        "141124",
+        "141125",
+        "141126",
+        "141128",
+        "141133",
+        "141135",
+        "141136",
+        "141137",
+        "141138"
+      ]
+    },
+    "Q8_quantize": {
+      "count": 12,
+      "service_us": 29.682,
+      "ids": [
+        "140995",
+        "140998",
+        "141005",
+        "141016",
+        "141029",
+        "141096",
+        "141099",
+        "141106",
+        "141117",
+        "141130",
+        "141194",
+        "141195"
+      ]
+    },
+    "Q8_dense_or_shared": {
+      "count": 18,
+      "service_us": 330.824,
+      "ids": [
+        "140996",
+        "140999",
+        "141006",
+        "141007",
+        "141010",
+        "141017",
+        "141030",
+        "141031",
+        "141033",
+        "141097",
+        "141100",
+        "141107",
+        "141108",
+        "141111",
+        "141118",
+        "141131",
+        "141132",
+        "141134"
+      ]
+    },
+    "HC_norm": {
+      "count": 6,
+      "service_us": 40.52,
+      "ids": [
+        "141001",
+        "141018",
+        "141038",
+        "141102",
+        "141119",
+        "141139"
+      ]
+    },
+    "HC_down": {
+      "count": 6,
+      "service_us": 91.456,
+      "ids": [
+        "141002",
+        "141019",
+        "141039",
+        "141103",
+        "141120",
+        "141140"
+      ]
+    },
+    "HC_reduce": {
+      "count": 6,
+      "service_us": 21.039,
+      "ids": [
+        "141003",
+        "141020",
+        "141040",
+        "141104",
+        "141121",
+        "141141"
+      ]
+    },
+    "HC_UP": {
+      "count": 6,
+      "service_us": 108.747,
+      "ids": [
+        "141004",
+        "141021",
+        "141041",
+        "141105",
+        "141122",
+        "141142"
+      ]
+    },
+    "attention_chunk": {
+      "count": 2,
+      "service_us": 93.957,
+      "ids": [
+        "141013",
+        "141114"
+      ]
+    },
+    "attention_merge": {
+      "count": 2,
+      "service_us": 89.582,
+      "ids": [
+        "141014",
+        "141115"
+      ]
+    },
+    "routed_GU": {
+      "count": 2,
+      "service_us": 56.77,
+      "ids": [
+        "141026",
+        "141127"
+      ]
+    },
+    "routed_DOWN": {
+      "count": 2,
+      "service_us": 35.416,
+      "ids": [
+        "141028",
+        "141129"
+      ]
+    },
+    "L0_named_GPU_lane_interval": {
+      "count": 102,
+      "service_us": 125.376,
+      "ids": [
+        "141042",
+        "141043",
+        "141044",
+        "141045",
+        "141046",
+        "141047",
+        "141048",
+        "141049",
+        "141050",
+        "141051",
+        "141052",
+        "141053",
+        "141054",
+        "141055",
+        "141056",
+        "141057",
+        "141058",
+        "141059",
+        "141060",
+        "141061",
+        "141062",
+        "141063",
+        "141064",
+        "141065",
+        "141066",
+        "141067",
+        "141068",
+        "141069",
+        "141070",
+        "141071",
+        "141072",
+        "141073",
+        "141074",
+        "141075",
+        "141076",
+        "141077",
+        "141078",
+        "141079",
+        "141080",
+        "141081",
+        "141082",
+        "141083",
+        "141084",
+        "141085",
+        "141086",
+        "141087",
+        "141088",
+        "141089",
+        "141090",
+        "141091",
+        "141092",
+        "141143",
+        "141144",
+        "141145",
+        "141146",
+        "141147",
+        "141148",
+        "141149",
+        "141150",
+        "141151",
+        "141152",
+        "141153",
+        "141154",
+        "141155",
+        "141156",
+        "141157",
+        "141158",
+        "141159",
+        "141160",
+        "141161",
+        "141162",
+        "141163",
+        "141164",
+        "141165",
+        "141166",
+        "141167",
+        "141168",
+        "141169",
+        "141170",
+        "141171",
+        "141172",
+        "141173",
+        "141174",
+        "141175",
+        "141176",
+        "141177",
+        "141178",
+        "141179",
+        "141180",
+        "141181",
+        "141182",
+        "141183",
+        "141184",
+        "141185",
+        "141186",
+        "141187",
+        "141188",
+        "141189",
+        "141190",
+        "141191",
+        "141192",
+        "141193"
+      ]
+    }
+  },
+  "HC_six_ordered_bundles": [
+    {
+      "ids": [
+        "141001",
+        "141002",
+        "141003",
+        "141004"
+      ],
+      "start_relative_us": 85.25,
+      "end_relative_us": 129.562,
+      "service_us": 43.644
+    },
+    {
+      "ids": [
+        "141018",
+        "141019",
+        "141020",
+        "141021"
+      ],
+      "start_relative_us": 348.0,
+      "end_relative_us": 391.0,
+      "service_us": 42.395
+    },
+    {
+      "ids": [
+        "141038",
+        "141039",
+        "141040",
+        "141041"
+      ],
+      "start_relative_us": 487.25,
+      "end_relative_us": 532.625,
+      "service_us": 44.791
+    },
+    {
+      "ids": [
+        "141102",
+        "141103",
+        "141104",
+        "141105"
+      ],
+      "start_relative_us": 726.75,
+      "end_relative_us": 771.895,
+      "service_us": 44.581
+    },
+    {
+      "ids": [
+        "141119",
+        "141120",
+        "141121",
+        "141122"
+      ],
+      "start_relative_us": 989.0,
+      "end_relative_us": 1032.27,
+      "service_us": 42.915
+    },
+    {
+      "ids": [
+        "141139",
+        "141140",
+        "141141",
+        "141142"
+      ],
+      "start_relative_us": 1129.5,
+      "end_relative_us": 1173.645,
+      "service_us": 43.436
+    }
+  ],
+  "HC_service_sum_us": 261.762,
+  "q_proj_compatible": {
+    "ids": [
+      "141010",
+      "141111"
+    ],
+    "service_us": 121.666
+  },
+  "o_proj_position_compatible": {
+    "ids": [
+      "141017",
+      "141118"
+    ],
+    "service_us": 73.437
+  },
+  "all_collected_GPU_interval_union_us": 1095.44,
+  "named_kernel_union_us": 1008.084,
+  "named_kernel_service_sum_us": 1026.207,
+  "source_conditioned_ownership": "two consecutive owner-compatible pre_step bodies; no actual owner/tensor pointer logged",
+  "clock_limit": "one primary-GPU trace clock only; native steady/client/peer clocks unjoined",
+  "limits": [
+    "one FIRST complete source-compatible cycle; no fastest selection/population/speed prediction",
+    "GPU lane events named ze are not host API timing and may overlap named kernels",
+    "individual event starts at epoch magnitude are quantized; source role/order is not exact buffer identity",
+    "no raw trace reparse, full gap scan, new GPU/serve or large artifact read"
+  ]
+}

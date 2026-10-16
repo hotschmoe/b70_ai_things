@@ -1,0 +1,13 @@
+{
+  "command": [
+    "docker",
+    "exec",
+    "30efc75f88786edfbc23cd571b6c8548b8c4e0cb737e1af38ec0a278f5da5b7d",
+    "/mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/build/unitrace",
+    "--pause",
+    "s136headfree"
+  ],
+  "exit": 0,
+  "stdout": "",
+  "stderr": "[INFO] Session s136headfree is paused\n"
+}

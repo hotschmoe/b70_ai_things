@@ -1,0 +1,12 @@
+{
+  "status": "REUSE_VALID_COMPLETED_HEALTH_NO_INTERVENING_GPU_TOUCH",
+  "pair_and_collective": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-s134-serving-prep/mode1/post-health.json",
+  "latest_card0": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-cross-queue-graph-event-private-prep-v2/run/closure.json",
+  "evidence_sha256": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-s134-serving-prep/mode1/post-health.json": "c7e332386c057de3991a395dbadb29cf4dbb502a88896bb830a965efb2556297",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-cross-queue-graph-event-private-prep-v2/run/closure.json": "0ff1d9804319819c01ec7752b3ed35bde176bd75ab7deb4d7f3370db2945609f"
+  },
+  "subsequent_work": "tiny CPU-only repro, no GPU/driver changes",
+  "all_candidate_flags": "0; only healthy S134 control configuration used",
+  "profile_not_speed_qualification": true
+}

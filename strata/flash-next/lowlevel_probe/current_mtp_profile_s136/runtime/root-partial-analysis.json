@@ -1,0 +1,52 @@
+{
+  "status": "PARTIAL_ANALYSIS_SAVED_BOUNDED_GPU_CYCLE_AND_COMPLETE_CPU_RING",
+  "original_analyzer_exit": -2,
+  "interruption_reason": "Stop redundant global GPU-gap host-API overlap scan after useful complete outputs saved; all original exit/logs retained",
+  "one_raw_trace_parse_only": true,
+  "GPU_native_normal_health_closed": true,
+  "bounded_cycle": {
+    "index": 3,
+    "events": 5151,
+    "duration_ms": 56.73325,
+    "full_vocabulary_head_column_counts": {
+      "2": 2,
+      "6": 1
+    },
+    "primary_ep_wait_count": 48,
+    "scope": {
+      "first_source_compatible_cycle": true,
+      "event_count": 5151,
+      "cap": 6000,
+      "truncated": false,
+      "cap_exceeded_INCONCLUSIVE": false,
+      "includes_boundary_crossers": true,
+      "tensor_owner_binding": "UNKNOWN_SOURCE_CONDITIONED_ONLY"
+    }
+  },
+  "GPU_complete_census_saved": true,
+  "CPU_ring_parser_run_once": true,
+  "missing": "global coverage-gaps.json not generated; no complete-analyzer PASS",
+  "limitations": [
+    "CPU/GPU/peer clocks UNJOINED",
+    "tensor/owner attribution source-conditioned UNKNOWN",
+    "one instrumented pair; no clean latency/population/physical-idle claim"
+  ],
+  "saved_artifact_identities": {
+    "analysis/gpu/cycles.json": {
+      "bytes": 5255606,
+      "sha256": "4783c04c69341d8eb55270443e94a473c0953f215b50171a8b395a45203f8e48"
+    },
+    "analysis/gpu/census.json": {
+      "bytes": 1402,
+      "sha256": "de2f6b2b6767ffe2466dd0fa934dc7961e7b329d536ba00ab5e8df3b42803bef"
+    },
+    "analysis/gpu/operations.csv": {
+      "bytes": 366770,
+      "sha256": "b43891f26d129b7ee6373ab07598eddd337e46671f4c15fbd123e3232dab3833"
+    },
+    "root-stop-redundant-analysis.json": {
+      "bytes": 1300,
+      "sha256": "bc22ba947f6f0199852a14fe08f37025e06dfec760f1f5617dda8b14375df063"
+    }
+  }
+}

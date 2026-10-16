@@ -1,0 +1,17 @@
+--- future/analyze_trace.py
++++ materialized-s136/analyze_trace.py
+@@ -86,12 +86,7 @@
+  end=None;last=None
+  for e in ordered:
+   if end is not None and e['ts']>end:
+-   coverage.append({'process':process,'trace_start_us':end,'trace_end_us':e['ts'],'gap_us':e['ts']-end,'previous_operation':last['name'],'next_operation':e['name']})
++   coverage.append({'process':process,'trace_start_us':end,'trace_end_us':e['ts'],'gap_us':e['ts']-end,'previous_operation':last['name'],'next_operation':e['name'],'overlapping_host_L0_API_names':counts([x for x in selected if x.get('cat')!='gpu_op'and x.get('name','').startswith('ze')and x['ts']<e['ts']and x['ts']+x['dur']>end])})
+   if end is None or e['ts']+e['dur']>end:end=e['ts']+e['dur'];last=e
+ coverage.sort(key=lambda x:-x['gap_us'])
+-coverage_total=len(coverage)
+-coverage=coverage[:50]  # Same stable top50 order; do not evaluate unused gaps.
+-host_l0=[x for x in selected if x.get('cat')!='gpu_op' and x.get('name','').startswith('ze')]
+-for gap in coverage:
+- gap['overlapping_host_L0_API_names']=counts([x for x in host_l0 if x['ts']<gap['trace_end_us'] and x['ts']+x['dur']>gap['trace_start_us']])
+-(a.output/'coverage-gaps.json').write_text(json.dumps({'scope':'Gaps in collected GPU-operation coverage per device, not measured physical idle or a causal CPU/data-readiness budget. Adjacent names/API overlaps are associations only; devices never joined.','total_count':coverage_total,'largest50':coverage},indent=2,ensure_ascii=True)+'\n',encoding='ascii')
++(a.output/'coverage-gaps.json').write_text(json.dumps({'scope':'Gaps in collected GPU-operation coverage per device, not measured physical idle or a causal CPU/data-readiness budget. Adjacent names/API overlaps are associations only; devices never joined.','total_count':len(coverage),'largest50':coverage[:50]},indent=2,ensure_ascii=True)+'\n',encoding='ascii')

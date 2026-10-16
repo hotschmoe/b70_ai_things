@@ -1,0 +1,10 @@
+{
+  "epoch_us": 1792125393040519.5,
+  "request_source_sha256": [
+    "42549e8e028f55dbd504b330ff072892d2bf6a4df905aef1b7e008d023b73000",
+    "08410b99f021c0d2d48fbdeb46577a11e798b67698800dd555b68c826395e1db"
+  ],
+  "capture": "Injected from start; no generation warmup; resume before first GEN/capture",
+  "request": "One ordered107prompt/64output EACH coding pair",
+  "native_steady_to_trace_join_allowed": false
+}

@@ -1,0 +1,6 @@
+{"status": "STRUCTURAL_CANDIDATES_REVIEW_REQUIRED", "target6_heads": 22, "candidate_cycles": 21, "proposed_interior_cycles": 12}
+Traceback (most recent call last):
+  File "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/analyze_trace.py", line 89, in <module>
+    coverage.append({'process':process,'trace_start_us':end,'trace_end_us':e['ts'],'gap_us':e['ts']-end,'previous_operation':last['name'],'next_operation':e['name'],'overlapping_host_L0_API_names':counts([x for x in selected if x.get('cat')!='gpu_op'and x.get('name','').startswith('ze')and x['ts']<e['ts']and x['ts']+x['dur']>end])})
+                                                                                                                                                                                                             ^
+KeyboardInterrupt

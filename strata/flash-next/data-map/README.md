@@ -458,3 +458,13 @@ whole private-build comparison, not an isolated operand or serving gain.
 The explicit C2 head source can also serve two-token verifier windows; C6
 was not tested. S126 clone HOLD remains. Historical operation rows/HTML
 remain unchanged. Main integration and separate matched flags are next.
+
+
+[S136 current MTP profile](../../../docs/20261016_strata_current_mtp_profile.md)
+adds one bounded5151-event cycle:56.733250ms, with46.049262ms recorded
+coverage and10.683988ms absent coverage. The narrow j1 head-free interval
+is1.3117ms; it is not the whole MTP path. LEFT readiness and the initial
+verifier gap are larger unresolved leads, with reset/profiler perturbation
+unknown. Full-cycle/source evidence and partial analyzer exit-2 are explicit.
+No CPU/GPU/peer clock join, physical idle or removable wall budget is claimed.
+Historical CSV, operation-data.json and generated HTML remain unchanged.

@@ -1,0 +1,64 @@
+{
+  "binary": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-main-s133-build/build/strata-s133",
+  "binary_sha256": "fe57222eea163dd7396f2bdabb95d2c18326a729c4d7919d400a9614f42d47ee",
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "container": "strata-mtp-headfree-s136",
+  "session": "s136headfree",
+  "config_env": {
+    "STRATA_EP_PREFILL_REDUCE": "1",
+    "STRATA_OWNED_PRICE": "exact",
+    "STRATA_EP_PREFILL_PUSH": "1",
+    "STRATA_BATCH_MTP": "1",
+    "STRATA_BATCH_MTP_DEPTH": "2",
+    "STRATA_BATCH_MTP_PAIR_HEAD": "1",
+    "STRATA_BATCH_PREFILL_QUANTUM": "0",
+    "STRATA_PREFILL_FIRST": "0",
+    "STRATA_BATCH_MTP_PLE_PREFETCH_DIAG": "1",
+    "STRATA_BATCH_MTP_PLE_PREFETCH": "0",
+    "STRATA_TRACE": "1",
+    "STRATA_MMVQ_WIDE": "1",
+    "STRATA_MMVQ_WIDE_MIN": "0",
+    "STRATA_MMVQ_WIDE_MAXC": "8",
+    "STRATA_Q6_PACKED": "0",
+    "STRATA_MMVQ_WIDE_K": "1",
+    "STRATA_MMVQ_WIDE_K_RPW": "1",
+    "STRATA_HEAD_Q5K_RPW2": "0",
+    "STRATA_MMVQ_WIDE_RPW": "1",
+    "STRATA_MMVQ_A2": "1",
+    "STRATA_MMVQ_PF": "0",
+    "STRATA_Q6_CENTER": "0",
+    "STRATA_QSA_PREFILL_TILED": "0",
+    "STRATA_ATTN_VALUE_PIPELINE": "0",
+    "STRATA_PROMPT_ATTN_XMX": "0",
+    "STRATA_KV_ROT": "0",
+    "STRATA_EXPERT_SPLIT": "0",
+    "STRATA_GU_LANES": "8",
+    "STRATA_IQ2XS_MULTI": "0",
+    "STRATA_BATCH_MTP_PAIR_GRAPH": "0",
+    "STRATA_Q6_A4": "0",
+    "STRATA_BATCH_MTP_PAIR_SKIP_PROB": "0",
+    "STRATA_MTP_PARALLEL_ARGMAX": "0",
+    "STRATA_BATCH_MTP_OWNER_QUEUES": "0",
+    "STRATA_Q5_HEAD_RUNTIME_ONES": "0",
+    "STRATA_Q5_HEAD_RUNTIME_ONES_C6": "0",
+    "STRATA_HOST_BOUNDARY": "1"
+  },
+  "saved_request_files": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_accounting_20261014/concurrency/coding-0-0.json",
+      "sha256": "42549e8e028f55dbd504b330ff072892d2bf6a4df905aef1b7e008d023b73000"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_accounting_20261014/concurrency/coding-0-1.json",
+      "sha256": "08410b99f021c0d2d48fbdeb46577a11e798b67698800dd555b68c826395e1db"
+    }
+  ],
+  "outputs_per_request": 64,
+  "prompt_per_request": 107,
+  "binary_selection": "ROOT_SELECTED_CURRENT_S133_BINARY_S134_DEFAULT_OFF_DIAGNOSTIC",
+  "binary_audit": {
+    "scope": "No new CPU certification; actual completed build + S134 mode0 normal healthy serving only; C6 ON marker failure remains unqualified",
+    "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-s134-serving-prep/serving-inputs.json",
+    "sha256": "c0bcbbca941b2158c85ffb0cd6bb2255bdce8c8a7563bcef141a04717ebf43cc"
+  }
+}

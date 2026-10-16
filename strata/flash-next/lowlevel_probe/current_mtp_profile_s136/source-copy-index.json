@@ -1,0 +1,412 @@
+{
+  "status": "S136_NORMAL_COLLECTION_CLOSED_PARTIAL_GPU_ANALYSIS_COMPLETE_CPU_RING",
+  "copies": [
+    {
+      "destination": "source/analyze_trace.py",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/analyze_trace.py",
+      "bytes": 10652,
+      "sha256": "aad69ccc2a7f0bb0b50a0535bd7ad1bf2dda370e85f3198f2ab1d749c9efd551",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "source/calibrate.py",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/calibrate.py",
+      "bytes": 1213,
+      "sha256": "9bedd1a11d0a7a5763074f150b2882c4ea0976eedf78950e52f638eab8a7e5f9",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "source/clock_bridge.py",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/clock_bridge.py",
+      "bytes": 1424,
+      "sha256": "b3a2fa2d75e49fa878f20166a3e3596143f054e03640ad8b627c6e811fdd0ad9",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "source/config.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/config.json",
+      "bytes": 2927,
+      "sha256": "c4e58f50b17cf989cef8dd94b18085f527249460dffc901a5cb9361695b31249",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "source/controller.py",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/controller.py",
+      "bytes": 15250,
+      "sha256": "87edbd62362b11cb927a3b38ebef026d152bceea957ee610b31f481b40ad90f7",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "source/cpu_markers.py",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/cpu_markers.py",
+      "bytes": 15240,
+      "sha256": "25b1b1d0d176e069d624d7eeb9cd49d257f53bf995540d404598b42710dbb51d",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "source/expected-source.sha256",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/expected-source.sha256",
+      "bytes": 3284,
+      "sha256": "ccc52038d566d49ed29c6efc721d5b52a7049859044d7d4c485bf8ac64d796f4",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "source/inputs.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/inputs.json",
+      "bytes": 2713,
+      "sha256": "38c8944b04a95e511c512d124145fd0b839af9247fdb63e103b4daeb6f92cba2",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "source/launch.sh",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/launch.sh",
+      "bytes": 1956,
+      "sha256": "26a4f264e085f860302cf1ced55b75c40d8e92538afed559f17bf27d600c4469",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "source/pair.py",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/pair.py",
+      "bytes": 7256,
+      "sha256": "2e6ab3aee41358d5c8e8a5cef6455e90676bf84f18b151ab02ec149470247154",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "source/reused-prehealth.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/reused-prehealth.json",
+      "bytes": 1052,
+      "sha256": "0e5ab895f5015620d3126b34c46158a0ecb7c37df3f984cb6d6724f0a7b1ec3a",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "source/stop.py",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/stop.py",
+      "bytes": 7271,
+      "sha256": "06bda25525b240f5fd1b4bfd6f71afaafb27651be4bd4c13907a0e79266a29f1",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "source/trace-engine.sh",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/trace-engine.sh",
+      "bytes": 620,
+      "sha256": "cff0c97980a9a390f4f9afe325ef5b178e00ed9b37bda84a249dfac7e34a7e77",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/root-partial-analysis.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/root-partial-analysis.json",
+      "bytes": 1815,
+      "sha256": "7e5054cd04370a20eb605bfabe337c3960d3f23706d854970a351fff450015e3",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/root-stop-redundant-analysis.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/root-stop-redundant-analysis.json",
+      "bytes": 1300,
+      "sha256": "bc22ba947f6f0199852a14fe08f37025e06dfec760f1f5617dda8b14375df063",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/raw-parser-exit.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/raw-parser-exit.json",
+      "bytes": 754,
+      "sha256": "08ea668b438c2c297b67cc36c431e03ae2d5a9d22b0aca4fd004f99fb7fd5938",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/analysis/gpu/census.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/analysis/gpu/census.json",
+      "bytes": 1402,
+      "sha256": "de2f6b2b6767ffe2466dd0fa934dc7961e7b329d536ba00ab5e8df3b42803bef",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/analysis/gpu/interior-window.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/analysis/gpu/interior-window.json",
+      "bytes": 364,
+      "sha256": "048d3591d9a32c70130702f454f7d42b4ce4b8f738b3c07e0a8e3315c6755ae2",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/analysis/gpu-parser.log",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/analysis/gpu-parser.log",
+      "bytes": 876,
+      "sha256": "0baad7ec1feca7eb1f2308bf41e8418dbefd170b15f6fa4ac35f176c9b4ca7e2",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/analysis/cpu/validation.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/analysis/cpu/validation.json",
+      "bytes": 493,
+      "sha256": "69b5f596b5189f2c1fd42332b9d11cd4a51a08214a054fa88c35c5c665c867fd",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/closure.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/closure.json",
+      "bytes": 155,
+      "sha256": "713a233653c02e8bb08aab66a3bda72a6ff8d714d2a84c092778e803e2dcda18",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/post-health.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/post-health.json",
+      "bytes": 480,
+      "sha256": "8548566917c0f935e781e3a2e1488b65a90d8dc5511e2a613710ff9e01f3dcf7",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/collection.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/collection.json",
+      "bytes": 517,
+      "sha256": "bd3b59e751f7d32279164c39c0a4fac1f7c016c5c319b783c92233f15a6c5d24",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/collection-start.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/collection-start.json",
+      "bytes": 416,
+      "sha256": "6e765d79542f297e85415aaa605adef843f7b8169e8f9ac36828d0890a645ebd",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/collection-models.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/collection-models.json",
+      "bytes": 909,
+      "sha256": "77ceff6ee11f3d41f14eb6ffc9dfd5a3e90f413e6f1244d86358c3d6d6db609f",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/ring-closure.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/ring-closure.json",
+      "bytes": 502,
+      "sha256": "8404afdc9f8abc0b61d729fae0249369efe818e98898fa131144afcfdf0f251a",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/flush-decision.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/flush-decision.json",
+      "bytes": 190,
+      "sha256": "fac68f76cb32b628814e6e27dcda8b5b3f2c31918b856061931d8deb54c23602",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/normal-stop.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/normal-stop.json",
+      "bytes": 534,
+      "sha256": "bf846739c1157636b0a5a57fc8b770244ccc50267b2465e865af4db603f6abe7",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/native-process-identity.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/native-process-identity.json",
+      "bytes": 1797,
+      "sha256": "f7aa69e31a20f53a8d61a9f0b187cfd6533d79269e68c401e293f1d2348b2820",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/profiler-identity.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/profiler-identity.json",
+      "bytes": 384,
+      "sha256": "be8f925fcbf047732e52301c84be299515ee0e30b0026050b5a39cf5c5713220",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/aggregate-proof.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/aggregate-proof.json",
+      "bytes": 598,
+      "sha256": "619a2e9345421fb6e38a90304dee631f0df1c365103b4168ba8316db884673e2",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/container-removal.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/container-removal.json",
+      "bytes": 611,
+      "sha256": "f7cbe820184ec153d8c48b1e5f5080fc1642fa33e4df3bbb88ffa2f91d15bc12",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/prestop-state.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/prestop-state.json",
+      "bytes": 73,
+      "sha256": "6740167a45e5da92794397fd4afd7e6e8bbeafc7e5924c800c4f151561219394",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/pair/pair.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/pair/pair.json",
+      "bytes": 5015,
+      "sha256": "91adf087540aa2f4e3468c89bd23d376450fa24ac67bddb3532abd959c43876b",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/pair/admission-gate.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/pair/admission-gate.json",
+      "bytes": 2309,
+      "sha256": "e798c7aa39ee5c228f2e76d27a0ec9110de67e984fe9a3ac8bea76440be00e35",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/pair-client-exit.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/pair-client-exit.json",
+      "bytes": 16,
+      "sha256": "3e42a2ad3dbeab9d1167d20261ad6305bdea31103ffc09c30f25558345966de2",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/slots-idle.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/slots-idle.json",
+      "bytes": 199,
+      "sha256": "650c644dac0c2bf01c62a5218bc5b3a05cf2f66ae2c3769bc1459bd035be9bed",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/unitrace-pause.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/unitrace-pause.json",
+      "bytes": 316,
+      "sha256": "8d7fa12643ce64376b5061421ba9bc75be8d93e8a136d930da822331fb26b45e",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/unitrace-resume.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/unitrace-resume.json",
+      "bytes": 318,
+      "sha256": "6fb6fe96645b5c1d8b162e81b215876a0ea95ee6a6d39ff9d04648adb7ce9b5b",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/unitrace-stop.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/unitrace-stop.json",
+      "bytes": 355,
+      "sha256": "0e0548b219ff22bc268ae414cfcc025a83415081f8ea332126f1667413c44260",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/quit-command.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/quit-command.json",
+      "bytes": 272,
+      "sha256": "273ba96089081e23e4cfb83268d77577074757022cbd72c43115fe2180552f66",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/card-health.log",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/card-health.log",
+      "bytes": 560,
+      "sha256": "7dd7546c3d579390eebb483fa351e7a73f6d6870f3d8105fbe8234dded18be57",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/collective-health.log",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/collective-health.log",
+      "bytes": 1696,
+      "sha256": "ddea29a59785c754d3decc06db6ad9bce966d2aab7fc94e5f2d1302eda5ba16d",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/post-stop-flush.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/post-stop-flush.json",
+      "bytes": 3645,
+      "sha256": "1f81ad2ecd2600efb8f08366dcca65eb3daecf55773c9d7d247fe81269a76aba",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/health-ready.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/health-ready.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/health-prestop.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/health-prestop.json",
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "runtime/window.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/window.json",
+      "bytes": 271,
+      "sha256": "80390962fe7b2ab5d09df8ad37ae6cf50ced207ce909d8ab5fa373ac382a662e",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "bounded-attribution/facts.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-headfree-bounded-attribution/facts.json",
+      "bytes": 8957,
+      "sha256": "96ca1f86eaec15c932c08ed08f4c3251e44e1069090a9a74ddb137b85ccc5957",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "bounded-attribution/findings.md",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-headfree-bounded-attribution/findings.md",
+      "bytes": 4361,
+      "sha256": "ecc4eb53c21af6229a346f99f5a9b76a8ab4017956c117f9ad9d553510540935",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "bounded-attribution/headfree-events.csv",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-headfree-bounded-attribution/headfree-events.csv",
+      "bytes": 35799,
+      "sha256": "348919be56d0a4092ed2a75a3b715fbd0e7bcd33f0645c31475e5e3779ef8f1c",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "bounded-attribution/pins.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-headfree-bounded-attribution/pins.json",
+      "bytes": 956,
+      "sha256": "bf2551644978662e13b3163503661a70075df13c8b592ec1b8b5f4e183340a26",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "bounded-attribution/whole-collection-context.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-headfree-bounded-attribution/whole-collection-context.json",
+      "bytes": 1015,
+      "sha256": "7cc342e2a7f81d8f090bdf2afd0783813123cd6f65e1c24a7ed1b9c89e036c4f",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "bounded-attribution/manifest.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-headfree-bounded-attribution/manifest.json",
+      "bytes": 772,
+      "sha256": "03c8d4ad44e6970e33467c15ecb41974c352c2ca60385acad2172d52cfb4ddf9",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "future-parser-fix/analyze_trace.py",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-coverage-loop-source-fix/analyze_trace.py",
+      "bytes": 10845,
+      "sha256": "f2f2bcaf3a044a57dc253a6e3ee02e84fdb3f4aa6ad871e804508cf0fbc13643",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "future-parser-fix/candidate.patch",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-coverage-loop-source-fix/candidate.patch",
+      "bytes": 1874,
+      "sha256": "07883e2ef2e124e971581fb0df0a9238d86bbc8eed71733930e9a155e36b34c2",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "future-parser-fix/findings.md",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-coverage-loop-source-fix/findings.md",
+      "bytes": 1465,
+      "sha256": "69b38a0b9ec284145b8ef75ede6cbb66666dc384f0d2712fd38c1841cf657dc9",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "future-parser-fix/inverse.patch",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-coverage-loop-source-fix/inverse.patch",
+      "bytes": 1874,
+      "sha256": "70c358b0b1fba0248b1af09356049e9dce83a4d5f18587f391eac915b2fd6e5a",
+      "kind": "exact_ascii_copy"
+    },
+    {
+      "destination": "future-parser-fix/pins.json",
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s136-coverage-loop-source-fix/pins.json",
+      "bytes": 354,
+      "sha256": "dc3c48d03fe8c6cb33d484491691933cdbbc68a11ab5df32a3f6311485583704",
+      "kind": "exact_ascii_copy"
+    }
+  ],
+  "scope": "Only compact saved/source ASCII artifacts read. No raw trace reparse, no GPU/compiler/model call, no large artifact hashing by curator."
+}

@@ -1,0 +1,23 @@
+{
+  "source_root_partial_sha256": "7e5054cd04370a20eb605bfabe337c3960d3f23706d854970a351fff450015e3",
+  "reused_saved_identities": {
+    "analysis/gpu/cycles.json": {
+      "bytes": 5255606,
+      "sha256": "4783c04c69341d8eb55270443e94a473c0953f215b50171a8b395a45203f8e48"
+    },
+    "analysis/gpu/census.json": {
+      "bytes": 1402,
+      "sha256": "de2f6b2b6767ffe2466dd0fa934dc7961e7b329d536ba00ab5e8df3b42803bef"
+    },
+    "analysis/gpu/operations.csv": {
+      "bytes": 366770,
+      "sha256": "b43891f26d129b7ee6373ab07598eddd337e46671f4c15fbd123e3232dab3833"
+    },
+    "root-stop-redundant-analysis.json": {
+      "bytes": 1300,
+      "sha256": "bc22ba947f6f0199852a14fe08f37025e06dfec760f1f5617dda8b14375df063"
+    }
+  },
+  "source_raw_trace_SHA_reused_not_read": "f5650d4daa36dc19fde1af631d19c434bab83ac6f04fb1b5ab509be5123baef6",
+  "scope": "Read only saved compact cycles/census/CSV and partial receipt; current raw279MB trace not opened"
+}

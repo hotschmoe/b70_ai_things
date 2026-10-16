@@ -1,0 +1,26 @@
+{
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp": {
+    "bytes": 223107,
+    "sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/root-partial-analysis.json": {
+    "bytes": 1815,
+    "sha256": "7e5054cd04370a20eb605bfabe337c3960d3f23706d854970a351fff450015e3"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/expected-source.sha256": {
+    "bytes": 3284,
+    "sha256": "ccc52038d566d49ed29c6efc721d5b52a7049859044d7d4c485bf8ac64d796f4"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/dense-q6-preexpand-s125-source/findings.md": {
+    "bytes": 6058,
+    "sha256": "3c8aba7dc91c724fc86588261acf272f6fd09e58209cee3df4ee5b4ec6ffa947"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/dense-q6-preexpand-s125-source/capacity-algebra.json": {
+    "bytes": 11054,
+    "sha256": "d221bf385ef438fac7f6bca598b93f7a0763439cfde7bdc8272ebd8b1e87e7a5"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-reference-s44-prep/fixture-selection.json": {
+    "bytes": 2110,
+    "sha256": "54e21a6fed0dcbb12156d0db31d47fddc55f0555c1b4d2f3693dface42e487fe"
+  }
+}

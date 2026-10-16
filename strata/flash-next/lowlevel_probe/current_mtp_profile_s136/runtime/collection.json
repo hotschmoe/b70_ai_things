@@ -1,0 +1,13 @@
+{
+  "status": "PAIR_PREFIX_USAGE_NATIVE_WORK_RING_AND_STOP_PASS_TRACE_UNPARSED",
+  "trace": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/trace/strata-s133.467.json",
+    "bytes": 279154635,
+    "mtime_ns": 1792125408750405826,
+    "bounded_tail_and_stable_metadata_only": true,
+    "JSON_validity_unproved": true
+  },
+  "GPU_dispatch_unproved_until_analysis": true,
+  "no_raw_trace_parsed": true,
+  "instrumented_speed_qualified": false
+}

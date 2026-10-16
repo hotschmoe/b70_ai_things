@@ -1,0 +1,33 @@
+{
+  "status": "ONE_PARSE_CURRENT_OPERATION_CENSUS_REQUIRES_REVIEW",
+  "trace_sha256": "f5650d4daa36dc19fde1af631d19c434bab83ac6f04fb1b5ab509be5123baef6",
+  "complete_events": 749782,
+  "total_trace_events": 1720861,
+  "total_complete_events": 749782,
+  "gpu_busy_union_ms": {
+    "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0": 1926.37875,
+    "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1": 1472.62625
+  },
+  "gpu_engine_union_ms": [
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine": "Thread 467 L0 Compute Engine<0,0>",
+      "union_ms": 1926.37875
+    },
+    {
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1",
+      "engine": "Thread 467 L0 Compute Engine<0,0>",
+      "union_ms": 1472.62625
+    }
+  ],
+  "all_cycle_count": 21,
+  "structural_replay_candidate_count": 15,
+  "limits": [
+    "Per-device/engine service and host spans are not additive wall budgets.",
+    "No physical traffic/bandwidth/occupancy/idle or causal removable-gap conclusion.",
+    "Kernel name/grid/type/columns do not identify every weight or shared-expert branch.",
+    "Actual API invocation counts retain poll/timeout ambiguity.",
+    "One instrumented pair; nested cycles are not independent replication.",
+    "No native steady clock bridge: reconcile CPU markers ordinally only."
+  ]
+}

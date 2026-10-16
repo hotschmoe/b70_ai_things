@@ -1,0 +1,100 @@
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp L986-1030
+        auto gr_read_group = [&](int half, bool apply, float* inj_prev, float* inj_out) {
+            FusedGrArgs fa[kFusedGrMaxT];
+            for (int t = tb; t < te; ++t) {
+                FusedGrArgs& a = fa[t - tb];
+                a.R = Rt(t); a.R_out = Rt(t); a.apply = apply;
+                a.bo_prev = bo_ + t * N; a.inj_prev = inj_prev + t * HC;
+                a.w_norm = (const float*) wn[half]->data; a.w_down = (const uint16_t*) wd[half]->data;
+                a.w_up = (const uint16_t*) wu[half]->data; a.w_inject = (const uint16_t*) wi[half]->data;
+                a.q8_down = (const uint8_t*) wd[half]->hc_q8; a.q8_up = (const uint8_t*) wu[half]->hc_q8;
+                a.q8_inject = (const uint8_t*) wi[half]->hc_q8;
+                a.eps = EPS; a.lo = lo_ + t * g.hc_lr; a.rs = rs_ + t * HC;
+                a.inject_out = inj_out + t * HC; a.mixed = mixed_ + t * N;
+                if (qcnt_ != nullptr) {   // S26 STRATA_QFUSE: the consumer's q8_1 image written by the read itself
+                    a.q8_cnt = qcnt_;
+                    if (half == 0) a.q8_mixed = xq_ + (size_t) (t - tb) * (N / 32) * 36;
+                    else if (strata::kernels::cpu::expert_layout().native) a.q8_mixed = nat_xq_ + (size_t) t * (N / 32) * 36;
+                }
+            }
+            return fused_gr_read_multi(fa, n, xn_ + (size_t) tb * HC * N, cs, (prof_on_ && grp == 0) ? prof_ : nullptr,
+                                (int) (l * kProfPer + (half == 0 ? 27 : 30)));
+        };
+        const bool q8_attn = gr_read_group(0, pending, inj2_, inj_);   // true: xq_ holds mixed's q8_1 (STRATA_QFUSE)
+        stamp(l, 1, grp);
+        float* xm = mixed_ + tb * N;
+        try {
+            if (!is_qsa_layer(g, l)) {
+                // ======================= GDN =======================
+                const WeightRef *wqkv = need(v, "attn_qkv.weight", err), *wg = need(v, "attn_gate.weight", err),
+                                *wout = need(v, "ssm_out.weight", err), *wa = need(v, "ssm_alpha.weight", err),
+                                *wb = need(v, "ssm_beta.weight", err), *wc = need(v, "ssm_conv1d.weight", err),
+                                *wnm = need(v, "ssm_norm.weight", err), *wdt = need(v, "ssm_dt.bias", err),
+                                *wsa = need(v, "ssm_a", err);
+                if (!wqkv || !wg || !wout || !wa || !wb || !wc || !wnm || !wdt || !wsa) return false;
+                if (!native_of(wqkv, v.name("attn_qkv.weight"), err) || !native_of(wg, v.name("attn_gate.weight"), err) ||
+                    !native_of(wout, v.name("ssm_out.weight"), err))
+                    return false;
+                const int64_t gi = gdn_idx[(size_t) l];
+                float* state = ss.gdn_state + (size_t) (gi - ss.gdn_ord0) * gdn_floats;
+                float* conv = state + (uint64_t) g.ssm_state_size * g.ssm_v_heads * g.ssm_state_size;
+                float* qkv = qkv_L_ + (size_t) gi * MT * C;
+                float* hb = h_L_ + (size_t) gi * MT * C;
+                float* gate = gate_L_ + (size_t) gi * MT * HV;
+                float* beta = beta_L_ + (size_t) gi * MT * HV;
+                if (!q8_attn) native_quantize_q8_1(xm, xq_, (int) N, n, cs);
+                native_mmvq(wqkv->native_type, wqkv->native_data, xq_, qkv + (size_t) tb * C, (int) N, (int) C, n, cs);
+
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp L1064-1071
+                    }
+                } else
+                gdn_step_norm_multi(state, hb, (int) C, gate, beta, z_, (const float*) wnm->data, EPS, y_, (int) HK,
+                                    (int) HV, te, self_commit ? one_ : nullptr, cs, tb, g_qfuse() ? (void*) xq_ : nullptr);
+                stamp(l, 6, grp);
+                if (!g_qfuse()) native_quantize_q8_1(y_ + (size_t) tb * ZV, xq_, (int) ZV, n, cs);   // STRATA_QFUSE: done above
+                native_mmvq(wout->native_type, wout->native_data, xq_, bo_ + tb * N, (int) ZV, (int) N, n, cs);
+            } else {
+
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp L1278-1291
+                    else
+                        qsa_gate_apply_f32(attn_ + t * NH * HD, qfull_ + t * NH * 2 * HD, s, attn32_ + t * NH * HD, cs);
+                }
+                stamp(l, 14, grp);
+                native_quantize_q8_1(attn32_ + tb * NH * HD, xq_, (int) (NH * HD), n, cs);
+                native_mmvq(wo->native_type, wo->native_data, xq_, bo_ + tb * N, (int) (NH * HD), (int) N, n, cs);
+            }
+        } catch (const std::exception& e) {
+            err = "verify layer " + std::to_string(l) + ": " + e.what();
+            return false;
+        }
+        stamp(l, 16, grp);
+        const bool q8_ffn = gr_read_group(1, true, inj_, inj2_);   // true: nat_xq_ holds the MoE input's q8_1 (STRATA_QFUSE)
+        // with CPU experts in the window the shared expert forks off once the doorbell is published (it no longer
+
+SOURCE /mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp L1474-1498
+            if (lay.native) {
+                // the layer's GGUF formats (i-quant gate/up, Q2_0 / IQ4_NL down)
+                const auto& f = lay.fmt[(size_t) l];
+                const NativeExpertLayout L = native_expert_layout(f.gu_type, f.d_type, f.n_embd, f.n_ff);
+                native_expert_grouped(L, gp, gs, gn, p_dst, p_tok, cap, cap,
+                                      nat_xq_ + (size_t) tb * (N / 32) * 36, hit_scratch_, dst_buf, cs, gy);
+            } else {
+                moe_grouped_s2(gp, gs, gn, p_dst, p_tok, cap, cap, hit_xq_ + (size_t) tb * (N / 32) * 34,
+                               hit_xs_ + (size_t) tb * (N / 32), hit_scratch_, dst_buf, cs);
+            }
+        };
+        if (ar_on()) {
+            stamp(l, 19, grp);
+            grouped(p_ptr, p_start, p_counts, 0, parts_out);
+            static const bool ep_self = [] { const char* v = std::getenv("STRATA_EP_SELF"); return v && v[0] == '1'; }();
+            if (ep_on() && ep_verify_) {   // the check: this card computed every row; compare the peer's with them
+                ep_wait(ep_ret0_ + (size_t) ring * 16, ep_ctr0_, ep_spin_, ep_err0_, ring, cs);
+                ep_compare(parts_out, ep_rows0_ + (size_t) tb * K * N, ids_ + tb * K, hits_.d_res + l * g.n_expert,
+                           (int) cap, N, ep_err0_ + 8, cs);
+            } else if (ep_on() && !ep_self) {   // the peer's rows are in parts_ once its flag is up
+                ep_wait(ep_ret0_ + (size_t) ring * 16, ep_ctr0_, ep_spin_, ep_err0_, ring, cs);
+            }
+            stamp(l, 20, grp);
+        } else {
+            if (device_plan_) {   // E-6: skipped when the device planned this group (all its experts resident)
+

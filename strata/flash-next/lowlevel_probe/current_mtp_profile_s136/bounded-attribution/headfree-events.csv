@@ -1,0 +1,205 @@
+id,relative_start_us,duration_us,family,name
+140992,23.0,3.02,other_named_kernels,"dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {1; 2; 1} {256; 1; 1}]"
+140993,26.25,3.333,other_named_kernels,"dpct_kernel_name<strata::kernels::iq_embed_rows(int, void const*, unsigned long, int const*, long, long, float*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::embed_rows_kernel_284a43>[SIMD32 {10; 1; 1} {32; 1; 1}]"
+140994,29.75,3.437,other_named_kernels,"dpct_kernel_name<strata::kernels::native_qsa_rms_norm_weighted(float const*, float const*, float*, int, int, float, void*)::norm_127936, dpct_kernel_scalar<1024> >[SIMD32 {1; 1; 1} {1024; 1; 1}]"
+140995,33.5,2.395,Q8_quantize,"dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]"
+140996,36.0,16.77,Q8_dense_or_shared,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {640; 1; 1} {32; 4; 1}]"
+140997,53.0,5.729,other_named_kernels,"dpct_kernel_name<strata::kernels::native_qsa_rms_norm_weighted(float const*, float const*, float*, int, int, float, void*)::norm_127936, dpct_kernel_scalar<1024> >[SIMD32 {1; 1; 1} {1024; 1; 1}]"
+140998,59.0,2.812,Q8_quantize,"dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {40; 1; 1} {256; 1; 1}]"
+140999,62.0,21.562,Q8_dense_or_shared,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 4>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<4> >[SIMD32 {640; 1; 1} {32; 4; 1}]"
+141000,83.75,1.354,other_named_kernels,"dpct_kernel_name<strata::kernels::add_streams_broadcast(float const*, float const*, float*, long, int, int, void*)::add_streams_broadcast_kernel_7de8f5>[SIMD32 {40; 1; 1} {256; 1; 1}]"
+141001,85.25,6.458,HC_norm,"dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::gr_norm_split_k>[SIMD32 {4; 1; 1} {256; 1; 1}]"
+141002,91.75,14.479,HC_down,"dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::{lambda(sycl::_V1::handler&)#3}::operator()(sycl::_V1::handler&) const::gr_down_sliced_k>[SIMD32 {80; 1; 1} {256; 1; 1}]"
+141003,106.5,3.645,HC_reduce,"dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::gr_down_reduce_k>[SIMD32 {3; 1; 1} {128; 1; 1}]"
+141004,110.5,19.062,HC_UP,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gr_up_cols<16>(sycl::_V1::queue*, strata::kernels::(anonymous namespace)::GrMulti const&, bool)::gr_up_multi_cols, dpct_kernel_scalar<16> >[SIMD32 {160; 1; 1} {256; 1; 1}]"
+141005,129.75,1.875,Q8_quantize,"dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]"
+141006,131.75,4.583,Q8_dense_or_shared,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {128; 1; 1} {32; 4; 1}]"
+141007,136.5,4.583,Q8_dense_or_shared,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {128; 1; 1} {32; 4; 1}]"
+141008,141.25,3.02,other_named_kernels,"dpct_kernel_name<strata::kernels::native_qsa_rms_norm_rope(float const*, int, float const*, float*, int, int, int, float, strata::kernels::RopeScaling const&, int const*, void*)::{lambda(sycl::_V1::handler&)#2}::operator()(sycl::_V1::handler&) const::norm_rope_kernel_f9c8ef, dpct_kernel_scalar<0> >[SIMD32 {2; 1; 1} {256; 1; 1}]"
+141009,144.5,2.708,other_named_kernels,"dpct_kernel_name<strata::kernels::kv_append_q8_steps(signed char*, signed char*, unsigned short*, unsigned short*, int const*, int const*, int, float const*, float const*, int, int, strata::kernels::QsaShapes const&, void*, strata::kernels::KvHostPools const*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::kv_append_q8_kernel_b60fdc, dpct_kernel_scalar<1> >[SIMD32 {2; 4; 2} {64; 1; 1}]"
+141010,147.25,60.625,Q8_dense_or_shared,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {3072; 1; 1} {32; 4; 1}]"
+141011,208.5,3.125,other_named_kernels,"dpct_kernel_name<strata::kernels::native_qsa_rms_norm_rope(float const*, int, float const*, float*, int, int, int, float, strata::kernels::RopeScaling const&, int const*, void*)::{lambda(sycl::_V1::handler&)#2}::operator()(sycl::_V1::handler&) const::norm_rope_kernel_f9c8ef, dpct_kernel_scalar<0> >[SIMD32 {24; 1; 1} {256; 1; 1}]"
+141012,211.75,1.25,other_named_kernels,"dpct_kernel_name<strata::kernels::window_ids(int*, int, int, int*, long, void*)::window_ids_kernel_581536>[SIMD32 {8; 1; 1} {256; 1; 1}]"
+141013,213.25,47.187,attention_chunk,"dpct_kernel_name<strata::kernels::qsa_decode_attn_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> >[SIMD32 {512; 2; 1} {256; 1; 1}]"
+141014,260.5,44.791,attention_merge,"dpct_kernel_name<strata::kernels::qsa_decode_attn_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)::attn_merge_kernel_338175>[SIMD32 {24; 1; 1} {256; 1; 1}]"
+141015,305.5,1.77,other_named_kernels,"dpct_kernel_name<strata::kernels::native_qsa_gate_apply(float const*, float const*, float*, int, int, void*)::gate_148967>[SIMD32 {24; 1; 1} {256; 1; 1}]"
+141016,307.5,2.708,Q8_quantize,"dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {24; 1; 1} {256; 1; 1}]"
+141017,310.5,37.083,Q8_dense_or_shared,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {640; 1; 1} {32; 4; 1}]"
+141018,348.0,7.5,HC_norm,"dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::gr_norm_split_k>[SIMD32 {4; 1; 1} {256; 1; 1}]"
+141019,355.5,15.0,HC_down,"dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::{lambda(sycl::_V1::handler&)#3}::operator()(sycl::_V1::handler&) const::gr_down_sliced_k>[SIMD32 {80; 1; 1} {256; 1; 1}]"
+141020,370.75,3.645,HC_reduce,"dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::gr_down_reduce_k>[SIMD32 {3; 1; 1} {128; 1; 1}]"
+141021,374.75,16.25,HC_UP,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gr_up_cols<16>(sycl::_V1::queue*, strata::kernels::(anonymous namespace)::GrMulti const&, bool)::gr_up_multi_cols, dpct_kernel_scalar<16> >[SIMD32 {160; 1; 1} {256; 1; 1}]"
+141022,391.0,7.604,other_named_kernels,"dpct_kernel_name<strata::kernels::bf16_gemv_fp32_mmvf(float const*, unsigned short const*, float*, long, long, void*)::{lambda(sycl::_V1::handler&)#8}::operator()(sycl::_V1::handler&) const::bf16_f32_mmvf_kernel_2903a5, dpct_kernel_scalar<256> >[SIMD32 {512; 1; 1} {256; 1; 1}]"
+141023,399.0,7.708,other_named_kernels,"dpct_kernel_name<strata::kernels::native_router_top10(float const*, int*, float*, void*)::route_96e6fb>[SIMD32 {1; 1; 1} {32; 8; 1}]"
+141024,406.75,4.791,other_named_kernels,"dpct_kernel_name<strata::kernels::moe_group_resident(int const*, int, int, unsigned char const*, long, unsigned long long*, int*, int*, int*, int*, void*)::group_resident_kernel_5c38b8>[SIMD32 {1; 1; 1} {128; 1; 1}]"
+141025,411.75,2.604,other_named_kernels,"dpct_kernel_name<strata::kernels::quantize_q8_0_scaled(float const*, unsigned char*, float*, long, void*)::quantize_q8_0_scaled_kernel_caf6f4>[SIMD32 {20; 1; 1} {128; 1; 1}]"
+141026,415.0,28.229,routed_GU,"dpct_kernel_name<strata::kernels::moe_grouped_s2(unsigned long long const*, int const*, int const*, int const*, int const*, long, long, unsigned char const*, float const*, void*, float*, void*)::gu_grouped_t_kernel_998f94>[SIMD32 {40; 10; 1} {256; 1; 1}]"
+141027,443.5,2.604,other_named_kernels,"dpct_kernel_name<strata::kernels::moe_grouped_s2(unsigned long long const*, int const*, int const*, int const*, int const*, long, long, unsigned char const*, float const*, void*, float*, void*)::swiglu_quantize_q8_0_scaled_kernel_1271ea>[SIMD32 {25; 1; 1} {256; 1; 1}]"
+141028,446.25,17.5,routed_DOWN,"dpct_kernel_name<strata::kernels::moe_grouped_s2(unsigned long long const*, int const*, int const*, int const*, int const*, long, long, unsigned char const*, float const*, void*, float*, void*)::down_grouped_t_kernel_12b16d>[SIMD32 {40; 10; 1} {256; 1; 1}]"
+141029,454.5,2.5,Q8_quantize,"dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]"
+141030,457.25,9.27,Q8_dense_or_shared,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {160; 1; 1} {32; 4; 1}]"
+141031,466.75,4.791,Q8_dense_or_shared,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {160; 1; 1} {32; 4; 1}]"
+141032,471.75,1.979,other_named_kernels,"dpct_kernel_name<strata::kernels::native_swiglu_quantize_q8_1(float const*, float const*, void*, int, int, void*)::native_swiglu_quantize_q8_1_kernel_85e13e>[SIMD32 {3; 1; 1} {256; 1; 1}]"
+141033,474.0,6.041,Q8_dense_or_shared,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {640; 1; 1} {32; 4; 1}]"
+141034,480.25,2.812,other_named_kernels,"dpct_kernel_name<strata::kernels::bf16_gemv_fp32_mmvf(float const*, unsigned short const*, float*, long, long, void*)::{lambda(sycl::_V1::handler&)#8}::operator()(sycl::_V1::handler&) const::bf16_f32_mmvf_kernel_2903a5, dpct_kernel_scalar<256> >[SIMD32 {1; 1; 1} {256; 1; 1}]"
+141035,483.25,0.937,other_named_kernels,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_sigmoid_scale_rows(float*, float const*, int, int, sycl::_V1::queue*)::sigmoid_scale_rows_vec4_kernel_723a94>[SIMD32 {5; 1; 1} {128; 1; 1}]"
+141036,484.25,1.25,other_named_kernels,"dpct_kernel_name<strata::kernels::native_moe_combine(float const*, float const*, float const*, float*, long, long, void*)::combine_k10_vec4_503ec2>[SIMD32 {5; 1; 1} {128; 1; 1}]"
+141037,485.75,1.458,other_named_kernels,"dpct_kernel_name<strata::kernels::native_gr_post_multi(float const*, float const*, float const*, float*, int, int, int, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::post_a7f844>[SIMD32 {40; 1; 1} {256; 1; 1}]"
+141038,487.25,6.25,HC_norm,"dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::gr_norm_split_k>[SIMD32 {4; 1; 1} {256; 1; 1}]"
+141039,493.75,15.937,HC_down,"dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::{lambda(sycl::_V1::handler&)#3}::operator()(sycl::_V1::handler&) const::gr_down_sliced_k>[SIMD32 {80; 1; 1} {256; 1; 1}]"
+141040,510.0,3.229,HC_reduce,"dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::gr_down_reduce_k>[SIMD32 {3; 1; 1} {128; 1; 1}]"
+141041,513.25,19.375,HC_UP,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gr_up_cols<16>(sycl::_V1::queue*, strata::kernels::(anonymous namespace)::GrMulti const&, bool)::gr_up_multi_cols, dpct_kernel_scalar<16> >[SIMD32 {160; 1; 1} {256; 1; 1}]"
+141042,513.25,19.895,L0_named_GPU_lane_interval,zeCommandListAppendBarrier
+141043,536.25,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141044,538.5,0.989,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141045,541.25,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141046,543.5,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141047,546.75,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141048,549.25,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141049,551.75,0.885,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141050,554.0,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141051,557.25,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141052,559.5,0.989,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141053,562.25,1.041,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141054,564.5,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141055,567.5,0.989,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141056,570.0,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141057,572.5,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141058,575.0,0.989,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141059,578.25,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141060,580.5,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141061,583.25,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141062,585.5,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141063,588.75,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141064,591.25,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141065,594.0,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141066,596.25,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141067,599.5,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141068,602.0,0.989,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141069,604.5,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141070,606.75,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141071,609.75,0.781,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141072,612.0,0.781,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141073,614.25,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141074,616.5,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141075,619.25,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141076,621.25,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141077,623.75,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141078,626.0,0.885,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141079,628.5,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141080,630.5,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141081,632.75,0.677,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141082,634.75,0.677,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141083,637.0,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141084,639.0,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141085,641.0,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141086,643.0,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141087,645.5,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141088,647.25,0.781,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141089,649.5,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141090,651.5,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141091,653.75,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141092,654.75,0.52,L0_named_GPU_lane_interval,zeCommandListAppendBarrier
+141093,661.0,3.125,other_named_kernels,"dpct_kernel_name<strata::kernels::copy_from_mapped_multi(strata::kernels::MappedCopy const*, int, void*)::copy_from_mapped_multi_kernel_66c71e>[SIMD32 {1; 2; 1} {256; 1; 1}]"
+141094,664.5,3.854,other_named_kernels,"dpct_kernel_name<strata::kernels::iq_embed_rows(int, void const*, unsigned long, int const*, long, long, float*, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::embed_rows_kernel_284a43>[SIMD32 {10; 1; 1} {32; 1; 1}]"
+141095,668.5,3.437,other_named_kernels,"dpct_kernel_name<strata::kernels::native_qsa_rms_norm_weighted(float const*, float const*, float*, int, int, float, void*)::norm_127936, dpct_kernel_scalar<1024> >[SIMD32 {1; 1; 1} {1024; 1; 1}]"
+141096,672.25,2.395,Q8_quantize,"dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]"
+141097,674.75,17.395,Q8_dense_or_shared,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {640; 1; 1} {32; 4; 1}]"
+141098,692.25,8.541,other_named_kernels,"dpct_kernel_name<strata::kernels::native_qsa_rms_norm_weighted(float const*, float const*, float*, int, int, float, void*)::norm_127936, dpct_kernel_scalar<1024> >[SIMD32 {1; 1; 1} {1024; 1; 1}]"
+141099,701.25,2.187,Q8_quantize,"dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {40; 1; 1} {256; 1; 1}]"
+141100,703.5,21.562,Q8_dense_or_shared,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 4>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<4> >[SIMD32 {640; 1; 1} {32; 4; 1}]"
+141101,725.5,1.25,other_named_kernels,"dpct_kernel_name<strata::kernels::add_streams_broadcast(float const*, float const*, float*, long, int, int, void*)::add_streams_broadcast_kernel_7de8f5>[SIMD32 {40; 1; 1} {256; 1; 1}]"
+141102,726.75,6.458,HC_norm,"dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::gr_norm_split_k>[SIMD32 {4; 1; 1} {256; 1; 1}]"
+141103,733.5,15.833,HC_down,"dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::{lambda(sycl::_V1::handler&)#3}::operator()(sycl::_V1::handler&) const::gr_down_sliced_k>[SIMD32 {80; 1; 1} {256; 1; 1}]"
+141104,749.5,3.645,HC_reduce,"dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::gr_down_reduce_k>[SIMD32 {3; 1; 1} {128; 1; 1}]"
+141105,753.25,18.645,HC_UP,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gr_up_cols<16>(sycl::_V1::queue*, strata::kernels::(anonymous namespace)::GrMulti const&, bool)::gr_up_multi_cols, dpct_kernel_scalar<16> >[SIMD32 {160; 1; 1} {256; 1; 1}]"
+141106,772.25,1.875,Q8_quantize,"dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]"
+141107,774.25,4.479,Q8_dense_or_shared,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {128; 1; 1} {32; 4; 1}]"
+141108,779.0,4.583,Q8_dense_or_shared,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {128; 1; 1} {32; 4; 1}]"
+141109,783.75,2.916,other_named_kernels,"dpct_kernel_name<strata::kernels::native_qsa_rms_norm_rope(float const*, int, float const*, float*, int, int, int, float, strata::kernels::RopeScaling const&, int const*, void*)::{lambda(sycl::_V1::handler&)#2}::operator()(sycl::_V1::handler&) const::norm_rope_kernel_f9c8ef, dpct_kernel_scalar<0> >[SIMD32 {2; 1; 1} {256; 1; 1}]"
+141110,786.75,2.916,other_named_kernels,"dpct_kernel_name<strata::kernels::kv_append_q8_steps(signed char*, signed char*, unsigned short*, unsigned short*, int const*, int const*, int, float const*, float const*, int, int, strata::kernels::QsaShapes const&, void*, strata::kernels::KvHostPools const*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::kv_append_q8_kernel_b60fdc, dpct_kernel_scalar<1> >[SIMD32 {2; 4; 2} {64; 1; 1}]"
+141111,790.0,61.041,Q8_dense_or_shared,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {3072; 1; 1} {32; 4; 1}]"
+141112,851.5,3.02,other_named_kernels,"dpct_kernel_name<strata::kernels::native_qsa_rms_norm_rope(float const*, int, float const*, float*, int, int, int, float, strata::kernels::RopeScaling const&, int const*, void*)::{lambda(sycl::_V1::handler&)#2}::operator()(sycl::_V1::handler&) const::norm_rope_kernel_f9c8ef, dpct_kernel_scalar<0> >[SIMD32 {24; 1; 1} {256; 1; 1}]"
+141113,854.75,1.25,other_named_kernels,"dpct_kernel_name<strata::kernels::window_ids(int*, int, int, int*, long, void*)::window_ids_kernel_581536>[SIMD32 {8; 1; 1} {256; 1; 1}]"
+141114,856.0,46.77,attention_chunk,"dpct_kernel_name<strata::kernels::qsa_decode_attn_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)::attn_chunk_kernel_2ad0a4, dpct_kernel_scalar<1> >[SIMD32 {512; 2; 1} {256; 1; 1}]"
+141115,903.0,44.791,attention_merge,"dpct_kernel_name<strata::kernels::qsa_decode_attn_batch(float const*, strata::kernels::QsaAttnPools const&, int const*, int const*, long, strata::kernels::QsaShapes const&, float*, float*, long, void*)::attn_merge_kernel_338175>[SIMD32 {24; 1; 1} {256; 1; 1}]"
+141116,948.0,1.77,other_named_kernels,"dpct_kernel_name<strata::kernels::native_qsa_gate_apply(float const*, float const*, float*, int, int, void*)::gate_148967>[SIMD32 {24; 1; 1} {256; 1; 1}]"
+141117,950.0,2.395,Q8_quantize,"dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {24; 1; 1} {256; 1; 1}]"
+141118,952.5,36.354,Q8_dense_or_shared,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {640; 1; 1} {32; 4; 1}]"
+141119,989.0,7.5,HC_norm,"dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::gr_norm_split_k>[SIMD32 {4; 1; 1} {256; 1; 1}]"
+141120,996.75,14.895,HC_down,"dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::{lambda(sycl::_V1::handler&)#3}::operator()(sycl::_V1::handler&) const::gr_down_sliced_k>[SIMD32 {80; 1; 1} {256; 1; 1}]"
+141121,1011.75,3.75,HC_reduce,"dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::gr_down_reduce_k>[SIMD32 {3; 1; 1} {128; 1; 1}]"
+141122,1015.5,16.77,HC_UP,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gr_up_cols<16>(sycl::_V1::queue*, strata::kernels::(anonymous namespace)::GrMulti const&, bool)::gr_up_multi_cols, dpct_kernel_scalar<16> >[SIMD32 {160; 1; 1} {256; 1; 1}]"
+141123,1032.5,7.5,other_named_kernels,"dpct_kernel_name<strata::kernels::bf16_gemv_fp32_mmvf(float const*, unsigned short const*, float*, long, long, void*)::{lambda(sycl::_V1::handler&)#8}::operator()(sycl::_V1::handler&) const::bf16_f32_mmvf_kernel_2903a5, dpct_kernel_scalar<256> >[SIMD32 {512; 1; 1} {256; 1; 1}]"
+141124,1040.25,7.708,other_named_kernels,"dpct_kernel_name<strata::kernels::native_router_top10(float const*, int*, float*, void*)::route_96e6fb>[SIMD32 {1; 1; 1} {32; 8; 1}]"
+141125,1048.0,4.583,other_named_kernels,"dpct_kernel_name<strata::kernels::moe_group_resident(int const*, int, int, unsigned char const*, long, unsigned long long*, int*, int*, int*, int*, void*)::group_resident_kernel_5c38b8>[SIMD32 {1; 1; 1} {128; 1; 1}]"
+141126,1053.0,2.5,other_named_kernels,"dpct_kernel_name<strata::kernels::quantize_q8_0_scaled(float const*, unsigned char*, float*, long, void*)::quantize_q8_0_scaled_kernel_caf6f4>[SIMD32 {20; 1; 1} {128; 1; 1}]"
+141127,1056.0,28.541,routed_GU,"dpct_kernel_name<strata::kernels::moe_grouped_s2(unsigned long long const*, int const*, int const*, int const*, int const*, long, long, unsigned char const*, float const*, void*, float*, void*)::gu_grouped_t_kernel_998f94>[SIMD32 {40; 10; 1} {256; 1; 1}]"
+141128,1084.75,2.708,other_named_kernels,"dpct_kernel_name<strata::kernels::moe_grouped_s2(unsigned long long const*, int const*, int const*, int const*, int const*, long, long, unsigned char const*, float const*, void*, float*, void*)::swiglu_quantize_q8_0_scaled_kernel_1271ea>[SIMD32 {25; 1; 1} {256; 1; 1}]"
+141129,1087.5,17.916,routed_DOWN,"dpct_kernel_name<strata::kernels::moe_grouped_s2(unsigned long long const*, int const*, int const*, int const*, int const*, long, long, unsigned char const*, float const*, void*, float*, void*)::down_grouped_t_kernel_12b16d>[SIMD32 {40; 10; 1} {256; 1; 1}]"
+141130,1096.0,2.916,Q8_quantize,"dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]"
+141131,1099.25,9.27,Q8_dense_or_shared,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {160; 1; 1} {32; 4; 1}]"
+141132,1108.75,4.791,Q8_dense_or_shared,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {160; 1; 1} {32; 4; 1}]"
+141133,1113.5,2.083,other_named_kernels,"dpct_kernel_name<strata::kernels::native_swiglu_quantize_q8_1(float const*, float const*, void*, int, int, void*)::native_swiglu_quantize_q8_1_kernel_85e13e>[SIMD32 {3; 1; 1} {256; 1; 1}]"
+141134,1116.0,6.041,Q8_dense_or_shared,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {640; 1; 1} {32; 4; 1}]"
+141135,1122.25,3.02,other_named_kernels,"dpct_kernel_name<strata::kernels::bf16_gemv_fp32_mmvf(float const*, unsigned short const*, float*, long, long, void*)::{lambda(sycl::_V1::handler&)#8}::operator()(sycl::_V1::handler&) const::bf16_f32_mmvf_kernel_2903a5, dpct_kernel_scalar<256> >[SIMD32 {1; 1; 1} {256; 1; 1}]"
+141136,1125.5,0.937,other_named_kernels,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_sigmoid_scale_rows(float*, float const*, int, int, sycl::_V1::queue*)::sigmoid_scale_rows_vec4_kernel_723a94>[SIMD32 {5; 1; 1} {128; 1; 1}]"
+141137,1126.5,1.145,other_named_kernels,"dpct_kernel_name<strata::kernels::native_moe_combine(float const*, float const*, float const*, float*, long, long, void*)::combine_k10_vec4_503ec2>[SIMD32 {5; 1; 1} {128; 1; 1}]"
+141138,1128.0,1.458,other_named_kernels,"dpct_kernel_name<strata::kernels::native_gr_post_multi(float const*, float const*, float const*, float*, int, int, int, void*)::{lambda(sycl::_V1::handler&)#1}::operator()(sycl::_V1::handler&) const::post_a7f844>[SIMD32 {40; 1; 1} {256; 1; 1}]"
+141139,1129.5,6.354,HC_norm,"dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::gr_norm_split_k>[SIMD32 {4; 1; 1} {256; 1; 1}]"
+141140,1136.0,15.312,HC_down,"dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::{lambda(sycl::_V1::handler&)#3}::operator()(sycl::_V1::handler&) const::gr_down_sliced_k>[SIMD32 {80; 1; 1} {256; 1; 1}]"
+141141,1151.75,3.125,HC_reduce,"dpct_kernel_name<strata::kernels::fused_gr_read_multi(strata::kernels::FusedGrArgs const*, int, float*, void*, unsigned long long*, int)::gr_down_reduce_k>[SIMD32 {3; 1; 1} {128; 1; 1}]"
+141142,1155.0,18.645,HC_UP,"dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gr_up_cols<16>(sycl::_V1::queue*, strata::kernels::(anonymous namespace)::GrMulti const&, bool)::gr_up_multi_cols, dpct_kernel_scalar<16> >[SIMD32 {160; 1; 1} {256; 1; 1}]"
+141143,1155.0,19.166,L0_named_GPU_lane_interval,zeCommandListAppendBarrier
+141144,1177.0,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141145,1179.5,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141146,1182.25,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141147,1184.5,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141148,1187.5,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141149,1189.75,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141150,1192.5,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141151,1194.75,0.885,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141152,1197.75,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141153,1200.25,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141154,1202.75,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141155,1205.0,0.989,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141156,1208.25,0.885,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141157,1210.5,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141158,1213.25,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141159,1215.5,0.885,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141160,1218.5,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141161,1221.0,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141162,1223.5,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141163,1226.0,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141164,1229.25,0.989,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141165,1231.5,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141166,1234.25,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141167,1236.5,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141168,1239.75,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141169,1242.25,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141170,1244.75,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141171,1247.25,0.885,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141172,1250.0,0.781,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141173,1252.25,0.781,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141174,1254.75,0.781,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141175,1257.0,0.781,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141176,1259.5,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141177,1261.75,0.885,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141178,1264.25,0.885,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141179,1266.25,0.937,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141180,1268.75,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141181,1270.75,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141182,1273.0,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141183,1275.0,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141184,1277.5,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141185,1279.5,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141186,1281.75,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141187,1283.75,0.781,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141188,1286.0,0.781,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141189,1288.0,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141190,1290.25,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141191,1292.25,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141192,1294.5,0.729,L0_named_GPU_lane_interval,zeCommandListAppendEventReset
+141193,1295.5,0.625,L0_named_GPU_lane_interval,zeCommandListAppendBarrier
+141194,1302.0,3.229,Q8_quantize,"dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]"
+141195,1307.5,2.395,Q8_quantize,"dpct_kernel_name<strata::kernels::native_quantize_q8_1(float const*, void*, int, int, void*)::native_quantize_q8_1_kernel_b480d2>[SIMD32 {10; 1; 1} {256; 1; 1}]"

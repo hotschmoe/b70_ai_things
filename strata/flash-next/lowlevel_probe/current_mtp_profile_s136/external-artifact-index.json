@@ -1,0 +1,38 @@
+{
+  "scope": "Existing completed analysis identities reused; large artifacts not newly read or hashed by curator.",
+  "trace": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/trace/strata-s133.467.json",
+    "bytes": 279154635,
+    "mtime_ns": 1792125408750405826,
+    "bounded_tail_and_stable_metadata_only": true,
+    "JSON_validity_unproved": true
+  },
+  "raw_trace_sha256_reused": "f5650d4daa36dc19fde1af631d19c434bab83ac6f04fb1b5ab509be5123baef6",
+  "saved_analysis": {
+    "analysis/gpu/cycles.json": {
+      "bytes": 5255606,
+      "sha256": "4783c04c69341d8eb55270443e94a473c0953f215b50171a8b395a45203f8e48"
+    },
+    "analysis/gpu/census.json": {
+      "bytes": 1402,
+      "sha256": "de2f6b2b6767ffe2466dd0fa934dc7961e7b329d536ba00ab5e8df3b42803bef"
+    },
+    "analysis/gpu/operations.csv": {
+      "bytes": 366770,
+      "sha256": "b43891f26d129b7ee6373ab07598eddd337e46671f4c15fbd123e3232dab3833"
+    },
+    "root-stop-redundant-analysis.json": {
+      "bytes": 1300,
+      "sha256": "bc22ba947f6f0199852a14fe08f37025e06dfec760f1f5617dda8b14375df063"
+    }
+  },
+  "not_copied": [
+    "279154635B raw trace",
+    "5255606B cycles.json",
+    "366770B operations.csv",
+    "397571B CPU analysis.json",
+    "raw SSE and engine ring logs",
+    "large clock calibration snapshots and maps"
+  ],
+  "status": "ORIGINAL_GPU_ANALYZER_INTERRUPTED_EXIT_MINUS2_NO_GLOBAL_GAPS"
+}

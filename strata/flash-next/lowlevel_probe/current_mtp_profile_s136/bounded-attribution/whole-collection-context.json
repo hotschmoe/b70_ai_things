@@ -1,0 +1,18 @@
+{
+  "scope": "Entire instrumented collection including capture/cold/solo/tail; NOT per-depth or MTP-only totals",
+  "CSV_rows": 1003,
+  "matching_rows": [
+    {
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {3072; 1; 1} {32; 4; 1}]",
+      "count": "95",
+      "total_ms": "5.97131",
+      "median_us": "61.458"
+    },
+    {
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_wide32<strata::kernels::(anonymous namespace)::Wide32Q8, 1>(void const*, void const*, float*, int, int, sycl::_V1::queue*)::native_mmvq_wide32, strata::kernels::(anonymous namespace)::Wide32Q8, dpct_kernel_scalar<1> >[SIMD32 {640; 1; 1} {32; 4; 1}]",
+      "count": "243",
+      "total_ms": "4.976761",
+      "median_us": "16.562"
+    }
+  ]
+}

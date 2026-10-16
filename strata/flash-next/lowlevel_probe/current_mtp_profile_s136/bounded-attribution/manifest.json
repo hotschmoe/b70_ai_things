@@ -1,0 +1,25 @@
+{
+  "status": "FROZEN_BOUNDED_ATTRIBUTION_PRESERVED_PARTIAL_ANALYSIS",
+  "files": {
+    "facts.json": {
+      "bytes": 8957,
+      "sha256": "96ca1f86eaec15c932c08ed08f4c3251e44e1069090a9a74ddb137b85ccc5957"
+    },
+    "findings.md": {
+      "bytes": 4361,
+      "sha256": "ecc4eb53c21af6229a346f99f5a9b76a8ab4017956c117f9ad9d553510540935"
+    },
+    "headfree-events.csv": {
+      "bytes": 35799,
+      "sha256": "348919be56d0a4092ed2a75a3b715fbd0e7bcd33f0645c31475e5e3779ef8f1c"
+    },
+    "pins.json": {
+      "bytes": 956,
+      "sha256": "bf2551644978662e13b3163503661a70075df13c8b592ec1b8b5f4e183340a26"
+    },
+    "whole-collection-context.json": {
+      "bytes": 1015,
+      "sha256": "7cc342e2a7f81d8f090bdf2afd0783813123cd6f65e1c24a7ed1b9c89e036c4f"
+    }
+  }
+}

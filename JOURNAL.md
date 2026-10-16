@@ -25613,3 +25613,28 @@ VERDICT -> Required host-marker correction PASS; no device ISA/arithmetic
 proof or speed claim. S134 remains failed/null. Fresh same-new-binary
 serving is a separate stage. No broad optional CPU audit or rebuild. See
 docs/20261016_strata_q5_c6_marker_build.md.
+
+
+## 2026-10-16 S136: current MTP profile and bounded full-cycle ranking
+
+CONFIG -> Frozen S133 main, all candidate flags0, one107prompt/64output
+C2 pair with paused unitrace and CPU boundary ring; no verifier profiler.
+
+COMMAND -> One collection, normal QUIT/fullCID+NAMEgone, both-card and
+compiled-collective health0. One raw analyzer interrupted ONLY after
+useful cycles/census/operations saved: redundant discarded-gap host scan.
+Original exit-2 preserved. CPU ring parser0/820records/dropped0.
+
+RESULT -> FIRST compatible5151-event cycle56.733250ms. Saved-data-only
+reconciliation0.093s: union46.049262ms/uncovered10.683988ms. LEFT
+11.600500ms includes6.719819ms absent records; verifier38.569313ms
+includes3.317063ms initial gap. Narrow j1body1.3117ms is not allMTP.
+Verifier service HC6.159098/Q6dense3.818719/routedGU4.411336/down
+3.158937ms overlap; EPwait3.082584ms only1.160050ms exclusivefamily.
+
+VERDICT -> Partial analysis preserved, not global analyzer PASS; no
+physicalidle/CPUcause/clean serving forecast. Prioritize readiness audit
+and existing-kernel commit launch grouping before larger Q6 rewrite.
+Future top50-first analyzer source fix remains UNRUN; no279MB reparse.
+Historical map operations/HTML stay unchanged. See
+docs/20261016_strata_current_mtp_profile.md.

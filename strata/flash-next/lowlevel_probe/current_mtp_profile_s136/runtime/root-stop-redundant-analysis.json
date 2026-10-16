@@ -1,0 +1,29 @@
+{
+  "status": "ROOT_STOP_REDUNDANT_CPU_COVERAGE_SCAN_AFTER_USEFUL_OUTPUTS",
+  "pid": 4140910,
+  "signal": "SIGINT",
+  "command": [
+    "/usr/bin/python3",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/analyze_trace.py",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/trace/strata-s133.467.json",
+    "--timebase",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/timebase-before.json",
+    "--start-us",
+    "1792125393110564.0",
+    "--end-us",
+    "1792125403262463.2",
+    "--output",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/analysis/gpu"
+  ],
+  "already_saved": [
+    "cycles.json",
+    "census.json",
+    "operations.csv",
+    "interior-window.json"
+  ],
+  "omitted": "global gap host-overlap scan: repeated full selected-event scan per gap, although output keeps only top50",
+  "raw_trace_reparse": false,
+  "GPU_or_serve_affected": false,
+  "root_next": "Use saved bounded cycle; run only still-unrun CPU ring parser separately; report original analyzer interruption, not full parser PASS",
+  "epoch_ns": 1792125638741581933
+}
