@@ -9,6 +9,9 @@ acceptance-normalised for non-bitwise changes) and the NLL gates (nl_ppl.py).
 
 ## 0. Elastic KV: 4 slots up to 200K each, overflow parked to RAM (user, 2026-10-16: investigate and build next)
 
+Serving rule (user, 2026-10-16): the DD runs either 2 x 200K (today) or 4 x 200K (once this lands). A reduced
+per-slot context (e.g. 4 x 64K) is not a DD option.
+
 Want: serve `--parallel 4` with `--max-context 200000` per slot. Most conversations stay far below 200K, so VRAM is
 committed only for the cells a slot actually reaches. When the live slots together outgrow VRAM, the least recently
 active slot's KV goes to system RAM and is restored later without recompute. Two full 200K contexts resident at once
