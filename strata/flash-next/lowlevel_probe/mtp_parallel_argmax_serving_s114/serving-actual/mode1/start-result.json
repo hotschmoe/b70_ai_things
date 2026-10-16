@@ -1,0 +1,24 @@
+{
+  "command": [
+    "systemd-run",
+    "--user",
+    "--unit=strata-mtp-parallel-argmax-s114-mode1",
+    "--collect",
+    "--setenv=B70_S114_CONTAINER=strata-s114-mode1",
+    "--property=WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things",
+    "--property=StandardOutput=append:/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/mode1/server.log",
+    "--property=StandardError=append:/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/mode1/server.log",
+    "/bin/bash",
+    "-c",
+    "exec 7>&-; exec /bin/bash \"$1\" \"$2\"",
+    "bash",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/launch_stage.sh",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/mode1/config.json"
+  ],
+  "exit": 0,
+  "stdout": "",
+  "stderr": "Running as unit: strata-mtp-parallel-argmax-s114-mode1.service; invocation ID: ad073b2f6ad84365b412c4dde9581a33\n",
+  "unit": "strata-mtp-parallel-argmax-s114-mode1",
+  "container": "strata-s114-mode1",
+  "epoch_ns": 1792113865083155069
+}

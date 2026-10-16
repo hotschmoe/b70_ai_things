@@ -1,0 +1,30 @@
+{
+  "status": "ROOT_CPU_BUILD_GO_SOURCE_APPLIED_NO_GPU_GO",
+  "models": [
+    {
+      "id": "claude-opus-5-5",
+      "elapsed_s": 40.294854942010716
+    },
+    {
+      "id": "claude-fable-5-1",
+      "elapsed_s": 45.95778065000195
+    }
+  ],
+  "root_full_source_read": true,
+  "root_actual_sampler_fields_and_defaults_verified": true,
+  "root_independent_inverse_exact": true,
+  "header_exact_tested_private": true,
+  "source_files_applied": [
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp",
+    "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp_argmax_s112.hpp"
+  ],
+  "candidate_mtp_sha256": "2d26e686c2aa6065d33461464efa39975db8e0cc5196f8962a216b4c5fa2a589",
+  "S113_all_gate_cleanup_health_closed": true,
+  "root_corrections": [
+    "No universal equivalence from boundedfixtures; actual main selected-image and serving gates required.",
+    "Do not infer exact stale-counter runtime behavior after failed replay; record/drain/stop with no reset/retry.",
+    "Model request for historical OFF capture equality is not a new historical rerun; actual newbinary OFF/ON strict capture equality and selected-defaultimage comparison remain gates.",
+    "Copied header first comment retained verbatim as historical S112 provenance; it is now compiled into opt-in main, and original shared source/default algorithms remain unchanged."
+  ],
+  "next": "Inspect actual ninja plan, one CPU-only incremental build then compiled audit before any GPU lease."
+}

@@ -1,0 +1,40 @@
+{
+  "status": "FROZEN_INDEPENDENT_STATIC_HOST_AUDIT_NO_RUNTIME_GO",
+  "files": [
+    {
+      "file": "bind.asm",
+      "bytes": 58208,
+      "sha256": "dbe2651aa5efea28d6dfa7ed6e7d6c61d490a063ee4ffdb1b66cd91a8bed4693"
+    },
+    {
+      "file": "flag-helper.asm",
+      "bytes": 2447,
+      "sha256": "94a453030a9871b9b1895f0bb4f8adb307c17e81c0499eb92d500e1c3730fc9c"
+    },
+    {
+      "file": "flag-name-rodata.txt",
+      "bytes": 289,
+      "sha256": "bf4b62bb7dbf9077777e2f993d5aa0b02ee6461b2838b2a9fdb703bf230015b8"
+    },
+    {
+      "file": "narrow-objdump-commands.json",
+      "bytes": 1985,
+      "sha256": "2f49213941f59fee923ea55d009140d91a1c2b388a77e808774b25dd01097ecb"
+    },
+    {
+      "file": "note.md",
+      "bytes": 8838,
+      "sha256": "ee92066cdd5064f26c55f828606deb20e25bda3c4471b1db5979081747a69e68"
+    },
+    {
+      "file": "pair-tail.asm",
+      "bytes": 20771,
+      "sha256": "da3b3ecc1190f0cf739576b3e274c1218d382ecf43bcafc2a8aa834d67736588"
+    },
+    {
+      "file": "pins-and-bindings.json",
+      "bytes": 7840,
+      "sha256": "4c7a22755040fa6053ff0950a07f3eb862f30ba80f85f8168e01f97a32105489"
+    }
+  ]
+}

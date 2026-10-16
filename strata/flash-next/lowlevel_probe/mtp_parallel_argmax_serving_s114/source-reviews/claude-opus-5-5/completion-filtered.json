@@ -1,0 +1,23 @@
+{
+  "requested": "claude-opus-5-5",
+  "responding_models": [
+    "claude-opus-5-5"
+  ],
+  "session_ids": [
+    "c26cbc95-bbed-461b-b165-8adee1464b9e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 40.294854942010716,
+  "launch_exception": null,
+  "source_packet_sha256": "705b2c21374635372f4215c9fcfbd9380bf8532f2de3c082475583bede937cd4",
+  "source_packet_unchanged": true,
+  "parse_errors": [],
+  "retries": 0,
+  "filtered_from": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s114-mtp-source-reviews-20261016/claude-opus-5-5/completion.json",
+  "source_bytes": 7371,
+  "source_sha256": "4af3599ce8a9f3463d4662996f09d279627780aa75303f30b0c61f1e38b97e0f",
+  "omitted": "Cumulative result duration, cost, token usage, modelUsage and full event stream; local elapsed/exit and responding IDs retained."
+}

@@ -1,0 +1,73 @@
+MTP-only parallel argmax integration SOURCE PATCH, 2026-10-16
+STATUS: unapplied/unbuilt/unexecuted; S113 serving has execution priority.
+
+CONFIG -> STRATA_MTP_PARALLEL_ARGMAX defaultOFF, accepts exact string1 only.
+Process-static getter is initialized during bind before post-head captures.
+No instance field/class layout/API change; flag cannot alter an existing graph.
+New local header sycl/src/core/mtp_argmax_s112.hpp is byte-EXACT S112 v2 private
+header. It is included ONLY in this SYCL mtp.cpp and excluded for HIP macros.
+Namespace/class s112_private::GreedyTop1S112 remains the tested private name,
+unique in current production source; separate private executable is not linked
+into main. This consciously differs from the earlier DESIGN's suggested rename:
+root allowed exact-header retention; actual-main uniqueness must still be audited.
+
+COMMAND -> Prepare private original/candidate/wholeheader and forward/inverse
+patch only. Four exact inverse substitutions reconstruct the full original
+mtp.cpp13500a3a byte-for-byte. sampler.dp.cpp/verify_kernels.dp.cpp/public
+headers untouched. No live source, compiler, models/CLI, GPU or large artifact.
+
+RESULT -> Existing argmax_rows_wanted FIRST branch/call is untouched. New
+selection exists only INSIDE its existing ELSE after unchanged local
+SamplerParams greedy=true/temp0. Gates fullhead(no dhead_), T1,nv248320,
+!coupled_active_/!coupled_rec_, local greedy/temp<=0/unpenalized defaults,
+then immutableflag. Every other case retains the original sample_tokens call
+and arguments. No added query to argmax_rows_wanted or device-major predicate.
+No change to coupled sampling, subset/map_ids, global sampler, decoder/verifier,
+row_top_prob[_split], mtp_select, output strides or original registered names.
+HIP preprocessing removes the new include/getter/bind checks/selection and
+leaves the original call expression. Generic non-SYCL core source is untouched.
+
+Scratch -> Existing ArgRow capacity reused, never allocated/shared/reset anew.
+Header asserts added OUTSIDE the exact copied header:1040B/align4/counter0/
+v16/i528. At bind, opt-in full248320 head requires nonnull scratch,max_t>=1,
+public scratchbytes(1)==1040 and scratchbytes(max_t)>=1040; mismatch fails bind
+explicitly before capture. No fallback masking of scratch ABI failure.
+Original load carves max_t rows privately even for shared-weight slots and
+zeroes whole arena once. Subsequent default-queue ident upload wait completes
+that initialization before owner queue use. max_t4 reserves4160 logical bytes
+(4352B bump-rounded); candidate launches row0 only, gridrows1, nb61/per4071.
+No uint/int wrap in this domain from correctly reset counter; counter is reset
+by normal last block exactly as tested. No memset/reset after failure or retry.
+
+Owners/graphs -> Global+each batch slot has private arena,arg_scratch,out_ids,
+probs. Pair tail passes logits2_ and logits2_+nv_ separately; each helper scans
+one contiguous row into its owner's slot0 output/scratch. Pair idles both
+owner queues; in-order production queue and graph edges serialize reuse.
+Existing chain_live checks and coupled separate graphs stay intact. Solo,
+component pair tails and whole-pair captures all use record_post_head; no
+special duplicated pair selector. Root keeps whole-pair graphOFF for eventual
+comparison. Existing wait/graph destruction before arena free and pair-before-
+slot destruction unchanged. Mapped publication/polling not modified; snapshots
+after queue completion do not prove every early host-poll interleaving.
+
+Marker -> Once, only first actual eligible HOST selection/capture:
+strata MTP parallel argmax: enabled=1 rows=1 vocab=248320 host-selection-only
+OFF/ineligible paths emit none. Not independent GPU-dispatch, call-count or
+all-owner coverage evidence. No per-call prints/counters, profiler or receipts.
+
+Dependencies -> Only modified SYCLmtp.cpp plus one local header. Planned
+mtp.cpp.o -> libstrata_engine.a -> main AOT link; unchanged kernels archive,
+public headers and CMake. Actual future ninja dryrun must confirm, not assumed.
+Private header source identity is not actual-main compiled equivalence: root
+must bind new Info/cache/guard/name/image/callsite, compare candidate body and
+preserve original sampler/probability/select images before any serving GO.
+No new private rerun or blanket resource/scratch0 claim. Keep original failure
+and HOLD on unexpected source/compiled/layout drift, no automatic alternatives.
+
+VERDICT -> Source proposal only. Parent postreviews Opus29.882s/Fable23.814s
+prefer isolated header but S113 no-build serving FIRST. Root selects exact
+source after fullread/actualmodels before application/build. Only a later
+cost-justified single-flag matched C2 OFF/ON, all other candidates fixedOFF,
+can assess serving; no S111 probability omission combined. Private48-case and
+nested twoABBA host-chain165.5->116.4us observations do not justify historical
+cycle multiplication, population/serving gain or automatic followup.

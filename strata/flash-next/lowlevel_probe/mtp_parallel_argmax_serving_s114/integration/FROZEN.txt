@@ -1,0 +1,1 @@
+FROZEN UNAPPLIED SOURCE PATCH. No live edits/build/GPU/model calls; root fullread and actual source consultation before any application.

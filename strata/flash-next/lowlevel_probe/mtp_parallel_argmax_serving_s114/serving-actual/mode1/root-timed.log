@@ -1,0 +1,5 @@
+cpu-run: [b70s4dayz] acquired (quiet) -> python3 /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/client.py 1 timed
+S114 pair complete; release quiet CPU lease before functional requests.
+S114 pair complete; release quiet CPU lease before functional requests.
+S114 pair complete; release quiet CPU lease before functional requests.
+cpu-run: [b70s4dayz] done in 87s (exit 0)

@@ -1,0 +1,15 @@
+276: (W)     add (1|M0)               r80.0<1>:q    r3.6<0;1,0>:q     r2.2<0;1,0>:q    {Compacted}
+277: (W)     mov (1|M0)               r81.0<1>:uq   r3.2<0;1,0>:uq                   {Compacted}
+278: (W)     mov (1|M0)               r82.0<1>:d    0:w                               {Compacted}
+279: (W)     send.ugm (1|M0)          null     r80  r78:1  0x0            0x02008584           {A@1,$2} // wr:1+1, rd:0; store.ugm.d32x1t.a64
+280: (W)     send.ugm (1|M0)          null     r81  r82:1  0x0            0x02008584           {I@1,$3} // wr:1+1, rd:0; store.ugm.d32x1t.a64
+281: L3648:
+282:         join (32|M0)                         L3664                                
+283: L3664:
+284: (W)     mov (16|M0)              r127.0<1>:f   r79.0<1;1,0>:f                  
+285: (W)     send.gtwy (1|M0)         null     r127  null:0  0x0            0x02000010           {EOT,F@1,$4} // wr:1+0, rd:0; end of thread
+286: L3696:
+287: (W)     mov (16|M0)              null<1>:ud    0x452BE4FE:ud                             
+288: (W)     mov (16|M0)              null<1>:ud    0x7550F85E:ud                             
+289: (W)     mov (16|M0)              null<1>:ud    0x0:ud                             
+290: (W)     mov (16|M0)              null<1>:ud    0x1:ud                             

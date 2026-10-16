@@ -1,0 +1,154 @@
+{
+  "status": "SOURCE_ONLY_UNEXECUTED_NO_CONFIGS",
+  "binary_binding": "ROOT_REQUIRED_ACTUAL_S114_EXE_AND_FULL_SHA256_AFTER_BUILD_AND_IMAGE_AUDIT",
+  "source_controller_manifest": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/MANIFEST.json",
+    "sha256": "234a518c71cdf3bb02b0ab08658042f0e71ce8f5f2a463b583e4b98ad0720ef3"
+  },
+  "source_controller_pins": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/harness-prep/make_configs.py",
+      "bytes": 5092,
+      "sha256": "a837c276dae0997e49d4a55c7d66278b397df7261ea9ed5f439602c8c28d6828"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/harness-prep/start_arm.py",
+      "bytes": 8712,
+      "sha256": "dbb025aa9196ef25d5ffbafe0235becf30d7a3d41d5bee8fba71fc567dfc06dc"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/harness-prep/launch_stage.sh",
+      "bytes": 1881,
+      "sha256": "5c17ace3c24bce65e0208c166f245e272f72d47c838c166b06cf6c7f576d980d"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/harness-prep/client.py",
+      "bytes": 12238,
+      "sha256": "c230835583d50ec1922cf5315298cbafff34d07d261f6a249e765fb9998b95da"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/harness-prep/compare.py",
+      "bytes": 8071,
+      "sha256": "2b7a6d49d5674ad7de93a3de27a342e84ec185dc4763efdb397fb7023d6625c5"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-prep/harness-prep/stop_and_health.py",
+      "bytes": 4346,
+      "sha256": "c88d392434bb358d2b9ca9293026c52fb47a3269a59d1f7f011444bdc3b8a74d"
+    }
+  ],
+  "old_controller_sources_verified": true,
+  "future_arm_flag": "STRATA_MTP_PARALLEL_ARGMAX 0/1 ONLY",
+  "exact_on_marker": "strata MTP parallel argmax: enabled=1 rows=1 vocab=248320 host-selection-only",
+  "marker_scope": "At least first eligible selection must have happened by completed warm; one cumulative literal ON, none OFF; emission may precede warm during startup capture; no dispatch/call/all-shape claim",
+  "native_workload": {
+    "warm_pairs": 1,
+    "timed_fresh_pairs": 3,
+    "prompt_tokens_per_stream": 107,
+    "warm_output_tokens_per_stream": 256,
+    "timed_output_tokens_per_stream": 1500,
+    "batch_mtp_depth": 2,
+    "pair_head": 1,
+    "fixed_args": {
+      "--suffix-draft": "0",
+      "--lookup-chain": "0",
+      "--spec": "4",
+      "--mtp-max-t": "4",
+      "--spec-min-p": "0"
+    }
+  },
+  "common_OFF": [
+    "STRATA_Q6_A4",
+    "STRATA_Q6_CENTER",
+    "STRATA_Q6_PACKED",
+    "STRATA_IQ2XS_MULTI",
+    "STRATA_ATTN_VALUE_PIPELINE",
+    "STRATA_QSA_PREFILL_TILED",
+    "STRATA_PROMPT_ATTN_XMX",
+    "STRATA_KV_ROT",
+    "STRATA_BATCH_MTP_PAIR_GRAPH",
+    "STRATA_BATCH_MTP_PAIR_SKIP_PROB",
+    "STRATA_HEAD_Q5K_RPW2"
+  ],
+  "no_model_payload_or_binary_hash_during_preparation": true,
+  "source_proposal_binding": "Root must add actual S114 source/build/image review before generating configs; no current source proposal identity invented.",
+  "observed_controller_dependency_pins": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-lo-once-serving-s51-prep/mode1/config.json",
+      "bytes": 1958,
+      "sha256": "959df3d15f689fefd8525079d7be3287939000477a4e84ecc497542402a08321"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-lo-once-serving-s51-prep/serving-inputs.json",
+      "bytes": 2060,
+      "sha256": "d3dfe4cbe4c1e79ed7703892e59908c79191ff012216516186e5afa905b4c34e"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-lo-once-serving-s51-prep/comparison.json",
+      "bytes": 58177,
+      "sha256": "ba1b15307c56e70344c045e7e5f662db53a2cac2f82e48ebaeea63bd391aa08c"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/bench_serving.py",
+      "bytes": 8227,
+      "sha256": "6f7751440113a6b6d092dd1bf9a0c734309d28ecffe5ac535412c22201852101"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/evals/configs/models.yaml",
+      "bytes": 124333,
+      "sha256": "f211b469396bb7e2a650c037b0c5553942feffcb50b04172485ab3bbf2cf700b"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/bin/cpu-run",
+      "bytes": 3056,
+      "sha256": "18227d973d492efb66fb882cf9dc2d217d577c401a7d6fa1e491c997246e47da"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/bin/gpu-run",
+      "bytes": 4114,
+      "sha256": "c5276c9b19d93ea79f5b54b38611993ba99d68c67639432bb8770de567322ad1"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/bin/xpu-health",
+      "bytes": 4112,
+      "sha256": "1da0367b96174291cd2200059adcf7082782ff526be03426f7a48ed6d7396d18"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/bin/xpu-collective-health",
+      "bytes": 3927,
+      "sha256": "593fbcf1e1b20054840234741aea7f9777ef41ca2d3914b60a5bdd5d42346da0"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_accounting_20261014/concurrency/coding-0-0.json",
+      "bytes": 546800,
+      "sha256": "42549e8e028f55dbd504b330ff072892d2bf6a4df905aef1b7e008d023b73000"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_accounting_20261014/concurrency/coding-0-1.json",
+      "bytes": 551931,
+      "sha256": "08410b99f021c0d2d48fbdeb46577a11e798b67698800dd555b68c826395e1db"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/prefill-quantum-s33/q0/functional/thinking.json",
+      "bytes": 1430,
+      "sha256": "329638b4e9e6e58e2d12005cea08bf43b85f01084f8f020395c3fd882c9ce611"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/prefill-quantum-s33/q0/functional/tool-first.json",
+      "bytes": 2204,
+      "sha256": "f7dae597325f80aab226519ae302c579489d6d7a1cc9e0d1110ed6d30d68a363"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/prefill-quantum-s33/q0/functional/tool-final.json",
+      "bytes": 2458,
+      "sha256": "d685f4153eae8586ef254cc6da4cfe785502701bfd84d49da24292a2f07ffd99"
+    }
+  ],
+  "dependency_scope": "Current small controller/workload/lifecycle inputs only; no native source/build/main/archive/model payload identity asserted. Reference request/output JSON bytes pinned, not copied or reinterpreted.",
+  "controller_changes_beyond_candidate_switch": [
+    "Explicit common A4=0/probskip=0 and unrelated activation exclusions",
+    "Warm ON parity blocks timed; all four ON pair parity receipts required before functionals",
+    "Final comparator requires exact card+collective post-health key set, rejecting partial closures"
+  ],
+  "stop_and_health_exact_S107_copy": true
+}

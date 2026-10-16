@@ -437,3 +437,13 @@ result. Keep extra+0/division/nativeexp/store-load and full intermediate/final
 strict checks. Static workgroups/opcodes do not forecast speed. All targets
 and retained S30 RAM recovery remain unchanged.
 [S115 compiled mechanism and limits](20261016_strata_hc_lowrank_producer.md).
+
+
+S114 default-OFF parallel MTP argmax main integration passes matched warm and
+three C2 pairs, functionals, identity, normal teardown and full health. Same
+binary aggregate103.073716->103.673778tok/s(+.582168%); perstream53.485/55.836
+->53.858/56.241. FixedOFFthenON/nestedpairs, descriptive only. KeepdefaultOFF,
+no immediate repeat/cachecampaign/shelf promotion. Probability omission is
+still unexecuted source prep, a separate mechanism. Next small private HC
+producer oracle build/compiled audit; no forecast gain. Targets still unmet
+and S30 RAM recovery retained. [S114 evidence](20261016_strata_mtp_parallel_argmax.md).

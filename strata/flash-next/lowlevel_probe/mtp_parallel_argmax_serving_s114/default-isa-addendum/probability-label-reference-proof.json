@@ -1,0 +1,92 @@
+[
+  {
+    "line": 38,
+    "targets": [
+      592,
+      592
+    ],
+    "instruction": "(f1.0)  goto (32|M0)                         L592                  L592                "
+  },
+  {
+    "line": 41,
+    "targets": [
+      592,
+      960
+    ],
+    "instruction": "        goto (32|M0)                         L592                  L960                "
+  },
+  {
+    "line": 43,
+    "targets": [
+      960
+    ],
+    "instruction": "        join (32|M0)                         L960                                "
+  },
+  {
+    "line": 71,
+    "targets": [
+      960,
+      960
+    ],
+    "instruction": "(~f2.0) goto (32|M0)                         L960                  L960                "
+  },
+  {
+    "line": 74,
+    "targets": [
+      744
+    ],
+    "instruction": "(W)     jmpi                                 L744                                "
+  },
+  {
+    "line": 76,
+    "targets": [
+      976
+    ],
+    "instruction": "        join (32|M0)                         L976                                "
+  },
+  {
+    "line": 114,
+    "targets": [
+      1600,
+      1600
+    ],
+    "instruction": "(~f0.0) goto (32|M0)                         L1600                  L1600                "
+  },
+  {
+    "line": 126,
+    "targets": [
+      1616
+    ],
+    "instruction": "        join (32|M0)                         L1616                                "
+  },
+  {
+    "line": 141,
+    "targets": [
+      2288,
+      2288
+    ],
+    "instruction": "(~f3.0) goto (32|M0)                         L2288                  L2288                "
+  },
+  {
+    "line": 175,
+    "targets": [
+      2304
+    ],
+    "instruction": "        join (32|M0)                         L2304                                "
+  },
+  {
+    "line": 194,
+    "targets": [
+      3648,
+      3648
+    ],
+    "instruction": "(~f0.0) goto (32|M0)                         L3648                  L3648                "
+  },
+  {
+    "line": 282,
+    "targets": [
+      3664
+    ],
+    "instruction": "        join (32|M0)                         L3664                                "
+  }
+]

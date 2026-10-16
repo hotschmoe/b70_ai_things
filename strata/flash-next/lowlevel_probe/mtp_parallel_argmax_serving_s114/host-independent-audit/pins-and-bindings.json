@@ -1,0 +1,183 @@
+{
+  "status": "READ_ONLY_EXISTING_TEXT_AND_SOURCE_AUDIT",
+  "main_SHA_reused_from_selected_audit": "d1c4968ffbb62e66753e0c016d830d7af53154d0de6c6b8f1b966fec4d518e92",
+  "MTP_object_SHA_reused_from_selected_audit": "c430dcd6f274371345fbb1aec1cd38ad6182a8ab1b046e704b8300cc76aad385",
+  "small_source_and_record_files": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/selection.json",
+      "bytes": 95792,
+      "sha256": "2d8459f38de4a8a009e1e92eb2d2c71caf6f7305475353b12920e198ad1fc42d"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/source-owner-proof.json",
+      "bytes": 1391,
+      "sha256": "a59c6ddcc0be267a457110d6064d8697e1b95c5cb014e8f931fe2f078dbb576d"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/record-post-head-0.asm",
+      "bytes": 32562,
+      "sha256": "7975436c109e0cd7c6ab27d23dfb48fb3e0b2ec897c8e7aa1bf4aec479547be6"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/candidate-host-0.asm",
+      "bytes": 28626,
+      "sha256": "0c6d4414dada0a6e7abef1b22d1cc053fe87ba2a77896c0cab4c8caedba0a8bd"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/sampler-host-0.asm",
+      "bytes": 34231,
+      "sha256": "1fe81c80b387ab08c095d279374b7f06e4d618f114962574903c59a7493f62c4"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/probability-host-0.asm",
+      "bytes": 30732,
+      "sha256": "876d9e2d1e69b80581ad264b5471d2d79f38620c0f62a520d26ec6c43a56f910"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/select-host-0.asm",
+      "bytes": 31153,
+      "sha256": "a23047aa1d7400decd8e18cd29fe44733e26a832294db8401a45480646f2a9a8"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/comparison.json",
+      "bytes": 4951,
+      "sha256": "a90f85832097f65d7173cdd06b2b6cf0e4b9babdc8eca612e2a16e9be93a16ad"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/candidate.ze_info",
+      "bytes": 2933,
+      "sha256": "4c1a921e9a6ea4395406d78a348ccac24eef20ddeb7a15fcfadd3be796422c58"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp",
+      "bytes": 121495,
+      "sha256": "2d26e686c2aa6065d33461464efa39975db8e0cc5196f8962a216b4c5fa2a589"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp_argmax_s112.hpp",
+      "bytes": 8303,
+      "sha256": "c1652c6aaba20b7cfd83320b86234c6fbcf25bcf985fa966873ee737bd5b90ba"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/core/mtp.hpp",
+      "bytes": 19140,
+      "sha256": "125b28af6439180039d5875f4bcda3c529e4499c8f136ed06a9d936385ab4f61"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/kernels/sampler.hpp",
+      "bytes": 5744,
+      "sha256": "d4c154af107e8b9b731c957899873175157855e937cee6e3892205cef5258207"
+    }
+  ],
+  "selected_compiled_bindings": {
+    "candidate": {
+      "Info_hex": "0xc2e258",
+      "cache_guard_hex": [
+        "0x5562198",
+        "0x5562190"
+      ],
+      "name_pointer_hex": "0xb7cbae",
+      "kernel": "_ZTS16dpct_kernel_nameIJZN12s112_private6launchEPKfiPvPiRN4sycl3_V15queueEE14GreedyTop1S112EE",
+      "host_functions": [
+        "_ZN12s112_private6launchEPKfiPvPiRN4sycl3_V15queueE"
+      ]
+    },
+    "sampler": {
+      "Info_hex": "0xc3a428",
+      "cache_guard_hex": [
+        "0x5562c50",
+        "0x5562c48"
+      ],
+      "name_pointer_hex": "0xb83344",
+      "kernel": "_ZTS16dpct_kernel_nameIJZZN6strata7kernels13sample_tokensEPKfiiPKiiRKNS1_13SamplerParamsEPiPvENKUlRN4sycl3_V17handlerEE_clESE_E28sampler_greedy_kernel_5b2c3fEE",
+      "host_functions": [
+        "_ZN4sycl3_V16detail19type_erased_cgfo_ty7invokerIZN6strata7kernels13sample_tokensEPKfiiPKiiRKNS5_13SamplerParamsEPiPvEUlRNS0_7handlerEE_E4callEPKvSG_"
+      ]
+    },
+    "probability": {
+      "Info_hex": "0xcea688",
+      "cache_guard_hex": [
+        "0x55695e0",
+        "0x55695d8"
+      ],
+      "name_pointer_hex": "0xbbd850",
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels18row_top_prob_splitEPKfiiPKiPfPvS7_E32row_top_prob_split_kernel_9495b0EE",
+      "host_functions": [
+        "_ZN6strata7kernels18row_top_prob_splitEPKfiiPKiPfPvS6_"
+      ]
+    },
+    "select": {
+      "Info_hex": "0xcea3c8",
+      "cache_guard_hex": [
+        "0x5569560",
+        "0x5569558"
+      ],
+      "name_pointer_hex": "0xbbd4ec",
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels10mtp_selectEPKflPKiS5_PfPiS7_iPvS3_S6_E24mtp_select_kernel_4611feEE",
+      "host_functions": [
+        "_ZN6strata7kernels10mtp_selectEPKflPKiS4_PfPiS6_iPvS2_S5_"
+      ]
+    }
+  },
+  "compiled_original_wrapper_relocations": [
+    {
+      "relocation_offset_hex": "0xde51",
+      "target": "_ZN6strata7kernels13sample_tokensEPKfiiPKiiRKNS0_13SamplerParamsEPiPv",
+      "containing_functions": [
+        "_ZN6strata4core10MtpDrafter16record_post_headEPKfPN4sycl3_V15queueERNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+      ]
+    },
+    {
+      "relocation_offset_hex": "0xde89",
+      "target": "_ZN6strata7kernels18row_top_prob_splitEPKfiiPKiPfPvS6_",
+      "containing_functions": [
+        "_ZN6strata4core10MtpDrafter16record_post_headEPKfPN4sycl3_V15queueERNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+      ]
+    },
+    {
+      "relocation_offset_hex": "0xf307",
+      "target": "_ZN6strata7kernels10mtp_selectEPKflPKiS4_PfPiS6_iPvS2_S5_",
+      "containing_functions": [
+        "_ZN6strata4core10MtpDrafter13capture_roundEibRNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+      ]
+    },
+    {
+      "relocation_offset_hex": "0xf643",
+      "target": "_ZN6strata7kernels10mtp_selectEPKflPKiS4_PfPiS6_iPvS2_S5_",
+      "containing_functions": [
+        "_ZN6strata4core10MtpDrafter12capture_stepEibRNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+      ]
+    },
+    {
+      "relocation_offset_hex": "0x16eb7",
+      "target": "_ZN6strata7kernels10mtp_selectEPKflPKiS4_PfPiS6_iPvS2_S5_",
+      "containing_functions": [
+        "_ZN6strata4core7MtpPair12capture_tailEiRNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+      ]
+    },
+    {
+      "relocation_offset_hex": "0x16f0e",
+      "target": "_ZN6strata7kernels10mtp_selectEPKflPKiS4_PfPiS6_iPvS2_S5_",
+      "containing_functions": [
+        "_ZN6strata4core7MtpPair12capture_tailEiRNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE"
+      ]
+    },
+    {
+      "relocation_offset_hex": "0x178c0",
+      "target": "_ZN6strata7kernels10mtp_selectEPKflPKiS4_PfPiS6_iPvS2_S5_",
+      "containing_functions": [
+        "_ZZN6strata4core7MtpPair19capture_pair_depth2EiiRNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEENKUliE_clEi"
+      ]
+    },
+    {
+      "relocation_offset_hex": "0x17911",
+      "target": "_ZN6strata7kernels10mtp_selectEPKflPKiS4_PfPiS6_iPvS2_S5_",
+      "containing_functions": [
+        "_ZZN6strata4core7MtpPair19capture_pair_depth2EiiRNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEENKUliE_clEi"
+      ]
+    }
+  ],
+  "build_GPU_CLI_decoder": false,
+  "no_executable_archive_model_read_or_hash": true,
+  "known_MTP_object_nm_objdump_read_without_rehash": true
+}

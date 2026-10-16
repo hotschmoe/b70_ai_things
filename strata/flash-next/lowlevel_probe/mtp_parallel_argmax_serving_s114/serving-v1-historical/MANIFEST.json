@@ -1,0 +1,69 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_FOR_ROOT_REVIEW_NO_RUN_AUTHORIZATION",
+  "directory": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 6415,
+      "sha256": "af6fcb88b6f9230e4bd16589a1adbf3445b7ac930c538c393f0d3fdf513f6aad",
+      "ASCII": true
+    },
+    {
+      "path": "controller-diff.patch",
+      "bytes": 23208,
+      "sha256": "ea5501be1dbb3d89661984b7a2b44de8667070519dd99509840223ae3bb30ea5",
+      "ASCII": true
+    },
+    {
+      "path": "harness-prep/client.py",
+      "bytes": 12897,
+      "sha256": "f7007993ac3ffa0bfef10c6d7f5ae6fd6089cb5bf263841e40bb20dc4e658132",
+      "ASCII": true
+    },
+    {
+      "path": "harness-prep/compare.py",
+      "bytes": 8499,
+      "sha256": "1a4f2bf777654e27248caedce2a7191f3c394108027566aa218786d72ddccedd",
+      "ASCII": true
+    },
+    {
+      "path": "harness-prep/launch_stage.sh",
+      "bytes": 1881,
+      "sha256": "7c1f0dba355ae25cff1837e97a3485ce6c6526658dff1461c02866ddc576bcce",
+      "ASCII": true
+    },
+    {
+      "path": "harness-prep/make_configs.py",
+      "bytes": 5273,
+      "sha256": "d9a337d639bf2d36cfb65d8902b88f9eed3559b3fadf443620576e0dc64d9d7d",
+      "ASCII": true
+    },
+    {
+      "path": "harness-prep/start_arm.py",
+      "bytes": 8801,
+      "sha256": "70227f1c0ac6dbd4400f0cee3f974182119c90b0d3cd564e04d13ed054869f5c",
+      "ASCII": true
+    },
+    {
+      "path": "harness-prep/stop_and_health.py",
+      "bytes": 4346,
+      "sha256": "c88d392434bb358d2b9ca9293026c52fb47a3269a59d1f7f011444bdc3b8a74d",
+      "ASCII": true
+    },
+    {
+      "path": "original-inputs.json",
+      "bytes": 7203,
+      "sha256": "c04befd3e41b4a12a6b2f5feed81bf8514f7b144710121aa2e4c028d113c3c2a",
+      "ASCII": true
+    },
+    {
+      "path": "source-only-validation.json",
+      "bytes": 1341,
+      "sha256": "961ea995b6f53e89a7261a1850972223d7c461503d02ce59dc54e48d390bd5f4",
+      "ASCII": true
+    }
+  ],
+  "indexed_file_count": 10,
+  "indexed_bytes": 79864,
+  "exclusions": "No self-hash; no generated configs, native binary, archive, object, model payload or production source identity. Source/build/compiled-image binding remains required before future execution."
+}

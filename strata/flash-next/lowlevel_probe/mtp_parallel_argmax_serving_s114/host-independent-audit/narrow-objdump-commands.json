@@ -1,0 +1,56 @@
+{
+  "status": "ACTUAL_HOST_ONLY_OBJDUMP_READ_PARENT_AUTHORIZED",
+  "known_current_object_sha256_reused": "c430dcd6f274371345fbb1aec1cd38ad6182a8ab1b046e704b8300cc76aad385",
+  "object_rehashed": false,
+  "commands": [
+    {
+      "command": [
+        "objdump",
+        "-drw",
+        "--disassemble=_ZN6strata4core12_GLOBAL__N_122mtp_parallel_argmax_onEv",
+        "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_engine.dir/src/core/mtp.cpp.o"
+      ],
+      "exit": 0,
+      "output": "flag-helper.asm",
+      "bytes": 2447,
+      "sha256": "94a453030a9871b9b1895f0bb4f8adb307c17e81c0499eb92d500e1c3730fc9c"
+    },
+    {
+      "command": [
+        "objdump",
+        "-drw",
+        "--disassemble=_ZN6strata4core10MtpDrafter4bindERKNS0_11WeightTableEPKNS0_10NativeHeadEPKfRNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEPKS1_",
+        "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_engine.dir/src/core/mtp.cpp.o"
+      ],
+      "exit": 0,
+      "output": "bind.asm",
+      "bytes": 58208,
+      "sha256": "dbe2651aa5efea28d6dfa7ed6e7d6c61d490a063ee4ffdb1b66cd91a8bed4693"
+    },
+    {
+      "command": [
+        "objdump",
+        "-drw",
+        "--disassemble=_ZN6strata4core7MtpPair12capture_tailEiRNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE",
+        "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_engine.dir/src/core/mtp.cpp.o"
+      ],
+      "exit": 0,
+      "output": "pair-tail.asm",
+      "bytes": 20771,
+      "sha256": "da3b3ecc1190f0cf739576b3e274c1218d382ecf43bcafc2a8aa834d67736588"
+    },
+    {
+      "command": [
+        "objdump",
+        "-s",
+        "--section=.rodata.str1.1",
+        "--start-address=0x1dc0",
+        "--stop-address=0x1de0",
+        "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_engine.dir/src/core/mtp.cpp.o"
+      ],
+      "exit": 0,
+      "output": "flag-name-rodata.txt"
+    }
+  ],
+  "GPU_build_deviceISAdecoder": false
+}

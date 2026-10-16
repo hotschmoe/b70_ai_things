@@ -1,0 +1,11 @@
+{
+  "root_full_read_patch_contract_and_packet": true,
+  "exact_inverse_hunks": 4,
+  "full_prior_source_recovered": true,
+  "all_source_pins_current": true,
+  "header_exact_tested": true,
+  "actual_upstream_HEAD": "296b59d2f73c8f04a805df29c2fa97655adace78",
+  "PR2511_head": "91b02a5c0fc45e782c02bd13e05204fdc5b0e698",
+  "source_applied": false,
+  "build_authorized": false
+}

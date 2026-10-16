@@ -1,0 +1,35 @@
+{
+  "status": "PASS_SOURCE_ONLY_STATIC_PREPARATION",
+  "checks": {
+    "no_generated_configs_inputs_or_modes": true,
+    "no_controller_pycache": true,
+    "six_expected_controllers_only": true,
+    "five_python_AST_parse": true,
+    "embedded_native_proc_probe_AST": true,
+    "launcher_bash_n": true,
+    "original_controller_manifest_hash": true,
+    "source_controller_pins_verified": true,
+    "observed_controller_dependency_pins_verified": true,
+    "exact_original_teardown": true,
+    "exact_regenerated_diff": true,
+    "only_expected_five_changed": true,
+    "exact_marker_client_and_compare": true,
+    "warm_parity_before_timed_and_all_pair_parity_before_functionals": true,
+    "partial_health_cannot_close": true,
+    "sole_candidate_normalization": true,
+    "common_A4_and_probability_skip_OFF": true,
+    "all_packet_bytes_ASCII": true
+  },
+  "changed_controller_files": [
+    "make_configs.py",
+    "start_arm.py",
+    "launch_stage.sh",
+    "client.py",
+    "compare.py"
+  ],
+  "controllers_imported_or_executed": false,
+  "configs_generated": false,
+  "model_cli_native_binary_archive_model_payload_or_GPU_access": false,
+  "build_executed": false,
+  "review_scope": "Python AST including embedded probe, bash -n, exact original/diff/teardown/ASCII/absence checks and source inspection; no runtime correctness claim."
+}

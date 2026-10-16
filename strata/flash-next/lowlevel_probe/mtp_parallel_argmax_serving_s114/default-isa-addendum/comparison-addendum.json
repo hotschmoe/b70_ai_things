@@ -1,0 +1,173 @@
+{
+  "status": "PASS_BOUNDED_TWO_DEFAULT_COMPUTATIONAL_REUSE_ROOT_READ_REQUIRED",
+  "first_HOLD_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/HOLD.json",
+  "first_HOLD_unchanged": true,
+  "first_comparison_sha256": "a90f85832097f65d7173cdd06b2b6cf0e4b9babdc8eca612e2a16e9be93a16ad",
+  "results": {
+    "sampler": {
+      "status": "PASS_BOUNDED_S107_COMPUTATIONAL_REUSE",
+      "registered_name": "_ZTS16dpct_kernel_nameIJZZN6strata7kernels13sample_tokensEPKfiiPKiiRKNS1_13SamplerParamsEPiPvENKUlRN4sycl3_V17handlerEE_clESE_E28sampler_greedy_kernel_5b2c3fEE",
+      "current_image_sha256": "72d196b7cf23fef008f09d411c25ddae5f7ec7b77337318f41321b622f9dab8b",
+      "S107_image_sha256": "7f4347f632132103b8eb596b8b935e6f8e8ab5893b8b4ce80b3e65c339932a34",
+      "current_ASM_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s114-default-isa-addendum/sampler-disasm/.text.s114_sampler.asm",
+      "current_ASM_sha256": "8229f829c9ec66bf7c8a3c6868599846e3ad3de6d266043d246ebf51cc703526",
+      "raw_full_image_exact": false,
+      "raw_complete_text_exact": false,
+      "actual_EOT_line": 652,
+      "actual_EOT_end_byte": 7536,
+      "prefix_bytes": 7536,
+      "prefix_sha256": "269fcb5225fa95451134ea65869398f69f27fd98a46e172ad22e0cf5c40af001",
+      "prefix_through_actual_EOT_exact": true,
+      "all_label_references_before_EOT": true,
+      "label_reference_instructions": 97,
+      "max_label_reference": 7504,
+      "indirect_call_ret_extra_control": [],
+      "raw_text_changed_offsets": [
+        7548,
+        7549,
+        7550,
+        7551,
+        7564,
+        7565,
+        7566,
+        7567
+      ],
+      "changed_bytes_all_after_EOT": true,
+      "actual_postEOT_instructions": [
+        "(W)     mov (16|M0)              null<1>:ud    0x38DF2CE9:ud                             ",
+        "(W)     mov (16|M0)              null<1>:ud    0x665F8AAE:ud                             "
+      ],
+      "raw_metadata_equal": true,
+      "options_equal": true,
+      "constant_data_equal": true,
+      "relocations_equal": true,
+      "all_changed_sections": {
+        ".text._ZTS16dpct_kernel_nameIJZZN6strata7kernels13sample_tokensEPKfiiPKiiRKNS1_13SamplerParamsEPiPvENKUlRN4sycl3_V17handlerEE_clESE_E28sampler_greedy_kernel_5b2c3fEE": {
+          "new_bytes": 7744,
+          "reference_bytes": 7744,
+          "new_sha256": "54311e4a55ade9e62bab455afb96c2135cd01779e3fc662423623ff15870ee05",
+          "reference_sha256": "3541ccf01f257c7b3fde1d7247ccda7490c1f5224a5f5b4df28ab2828cb26ca6"
+        },
+        ".spv": {
+          "new_bytes": 12060,
+          "reference_bytes": 12064,
+          "new_sha256": "cab2e5eda91a0148d36230463b1efb72b35b113c6b30045f7063f76fb8661dd1",
+          "reference_sha256": "cb7c681c3910b1e988de6ed5f4177cf2829dbea3853b88d8e501908034edb5d5"
+        }
+      },
+      "embedded_SPIRV_semantics": "UNCLASSIFIED_RAW_DIFFERENCE; no SPIR-V execution or full-program equivalence claim",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [
+          "256"
+        ],
+        "barrier_count": [
+          "1"
+        ],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ]
+      },
+      "resource_absence": "unknown, not measuredzero"
+    },
+    "probability": {
+      "status": "PASS_BOUNDED_S107_COMPUTATIONAL_REUSE",
+      "registered_name": "_ZTS16dpct_kernel_nameIJZN6strata7kernels18row_top_prob_splitEPKfiiPKiPfPvS7_E32row_top_prob_split_kernel_9495b0EE",
+      "current_image_sha256": "22dcc58a0d0df31f82667b16328123fd8bd6bb8a2e360058bfa1705214646522",
+      "S107_image_sha256": "5221bf9a69a32958c78e39522efe09d9355f35b4aec6d0dcffc1324d23490f86",
+      "current_ASM_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s114-default-isa-addendum/probability-disasm/.text.s114_probability.asm",
+      "current_ASM_sha256": "64f2079c5da70cdd88f8d714622d445522abcb95ad67ea4b505ac5469e1cb4a2",
+      "raw_full_image_exact": false,
+      "raw_complete_text_exact": false,
+      "actual_EOT_line": 285,
+      "actual_EOT_end_byte": 3696,
+      "prefix_bytes": 3696,
+      "prefix_sha256": "1dbf0dbb428228da2719efff15ceb447e0a706198261190d2ec75920ce538f1d",
+      "prefix_through_actual_EOT_exact": true,
+      "all_label_references_before_EOT": true,
+      "label_reference_instructions": 12,
+      "max_label_reference": 3664,
+      "indirect_call_ret_extra_control": [],
+      "raw_text_changed_offsets": [
+        3708,
+        3709,
+        3710,
+        3711,
+        3724,
+        3725,
+        3726,
+        3727
+      ],
+      "changed_bytes_all_after_EOT": true,
+      "actual_postEOT_instructions": [
+        "(W)     mov (16|M0)              null<1>:ud    0x452BE4FE:ud                             ",
+        "(W)     mov (16|M0)              null<1>:ud    0x7550F85E:ud                             "
+      ],
+      "raw_metadata_equal": true,
+      "options_equal": true,
+      "constant_data_equal": true,
+      "relocations_equal": true,
+      "all_changed_sections": {
+        ".text._ZTS16dpct_kernel_nameIJZN6strata7kernels18row_top_prob_splitEPKfiiPKiPfPvS7_E32row_top_prob_split_kernel_9495b0EE": {
+          "new_bytes": 3904,
+          "reference_bytes": 3904,
+          "new_sha256": "16d0202df02e424f5cb5c0743647a6283bd6b0bcc1d0d8ed84ec4af35cc3d292",
+          "reference_sha256": "b42b2d1e58f8b53515a75518b1a30131a5ac1b15b38fcb13f25683d79bf0f7bc"
+        },
+        ".spv": {
+          "new_bytes": 7992,
+          "reference_bytes": 7996,
+          "new_sha256": "f94954c662fc591efbeac4dbaaa847273a3d65c53724ae98941aa7ee1f455eb5",
+          "reference_sha256": "78295c508b82de70e04b27c8857d056dd92e3dfc3a8e26f35d4624ddc0ac5107"
+        }
+      },
+      "embedded_SPIRV_semantics": "UNCLASSIFIED_RAW_DIFFERENCE; no SPIR-V execution or full-program equivalence claim",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [
+          "32"
+        ],
+        "barrier_count": [
+          "1"
+        ],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ]
+      },
+      "resource_absence": "unknown, not measuredzero"
+    }
+  },
+  "candidate_from_first_audit": {
+    "computational_prefix_bytes": 9728,
+    "computational_prefix_exact": true,
+    "metadata_options_data_relocations_all_equal": true,
+    "raw_image_text_identity": false
+  },
+  "select_raw_whole_image_exact": true,
+  "decoder_invocations": 2,
+  "GPU": 0,
+  "compiler_invocations": 0,
+  "new_main_archive_model_hashes": 0,
+  "GPU_GO": false,
+  "limits": [
+    "Additive explanation of the original HOLD only; does not rewrite the failed first audit.",
+    "Actual current ASM establishes EOT/control bounds; identical native prefix establishes same reference prefix bytes.",
+    "Two MOV-immediate raw differences are after EOT; their values and embedded SPIR-V meaning remain unclassified.",
+    "Root must independently read current host guard/argument/owner forwarding and accept static reuse before any GPU.",
+    "No runtime publication, serving latency, physical traffic or universal program identity claim."
+  ]
+}

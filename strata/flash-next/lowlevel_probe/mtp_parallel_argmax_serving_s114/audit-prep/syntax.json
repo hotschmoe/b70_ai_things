@@ -1,0 +1,12 @@
+{
+  "python_AST": [
+    "audit.py",
+    "helpers.py"
+  ],
+  "bash_n": [
+    "audit.sh"
+  ],
+  "execution": false,
+  "GPU": false,
+  "decoder": false
+}

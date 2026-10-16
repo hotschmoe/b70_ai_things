@@ -1,0 +1,24 @@
+{
+  "status": "PASS_SOURCE_ONLY_STATIC_PREPARATION_V2",
+  "parent_v1": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep",
+  "S113_robust_stop_parent": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/harness-prep/stop_and_health.py",
+  "five_other_controllers_byteexact": [
+    "client.py",
+    "compare.py",
+    "launch_stage.sh",
+    "make_configs.py",
+    "start_arm.py"
+  ],
+  "changed_controller_files": [
+    "stop_and_health.py"
+  ],
+  "all_python_AST": true,
+  "launcher_bash_n": true,
+  "diagnostic_recovery_gate_line": 77,
+  "first_GPU_health_loop_line": 85,
+  "diagnostic_gate_raises_before_GPU_health": true,
+  "parent_validation_historical_only": true,
+  "no_controller_import_execution_config_generation_GPU_build_or_CLI": true,
+  "parent_v1_manifest_sha256": "26af759e40dc0e7e3aa25e53f8a92a93d1bef45ee02b52f740a98d3ddfdc980f",
+  "robust_stop_parent_sha256": "2a9366d86899ba17818df2248ffeb27bf7d92944c6ff42d3b037fb7f830b77eb"
+}

@@ -1,0 +1,10 @@
+{
+  "status": "ok",
+  "max_context": 200000,
+  "model": "hotschmoe-dd",
+  "images": false,
+  "api_key": false,
+  "image_generation": false,
+  "loaded": true,
+  "service": "strata"
+}

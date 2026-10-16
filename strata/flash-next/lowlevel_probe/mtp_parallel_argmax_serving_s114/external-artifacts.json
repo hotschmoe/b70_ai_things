@@ -1,0 +1,68 @@
+{
+  "status": "RETAINED_IDENTITIES_NO_NEW_BINARY_READ_OR_HASH",
+  "artifacts": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/candidate.zebin",
+      "bytes": 27616,
+      "sha256": "103bf7f92a6066cfd3fb0e4f38397202af4db4ef3f30ecb1b7360d13a77f4b44",
+      "identity_source": "compiled-first-audit/selection.json#selected.candidate",
+      "curation_read_or_rehash": false
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/sampler.zebin",
+      "bytes": 26984,
+      "sha256": "72d196b7cf23fef008f09d411c25ddae5f7ec7b77337318f41321b622f9dab8b",
+      "identity_source": "compiled-first-audit/selection.json#selected.sampler",
+      "curation_read_or_rehash": false
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/probability.zebin",
+      "bytes": 16664,
+      "sha256": "22dcc58a0d0df31f82667b16328123fd8bd6bb8a2e360058bfa1705214646522",
+      "identity_source": "compiled-first-audit/selection.json#selected.probability",
+      "curation_read_or_rehash": false
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/select.zebin",
+      "bytes": 11968,
+      "sha256": "2c0f94fd1c9ad5ea8627a9d968f4f29317ceb0d382fd175a1628bbbe2b7a7abf",
+      "identity_source": "compiled-first-audit/selection.json#selected.select",
+      "curation_read_or_rehash": false
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/S107-sampler.zebin",
+      "bytes": 26984,
+      "sha256": "7f4347f632132103b8eb596b8b935e6f8e8ab5893b8b4ce80b3e65c339932a34",
+      "identity_source": "compiled-first-audit/selection.json#S107_selected.sampler",
+      "curation_read_or_rehash": false
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/S107-probability.zebin",
+      "bytes": 16672,
+      "sha256": "5221bf9a69a32958c78e39522efe09d9355f35b4aec6d0dcffc1324d23490f86",
+      "identity_source": "compiled-first-audit/selection.json#S107_selected.probability",
+      "curation_read_or_rehash": false
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/S107-select.zebin",
+      "bytes": 11968,
+      "sha256": "2c0f94fd1c9ad5ea8627a9d968f4f29317ceb0d382fd175a1628bbbe2b7a7abf",
+      "identity_source": "compiled-first-audit/selection.json#S107_selected.select",
+      "curation_read_or_rehash": false
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-build/build/strata-mtp-argmax-s114",
+      "bytes": 92401240,
+      "sha256": "d1c4968ffbb62e66753e0c016d830d7af53154d0de6c6b8f1b966fec4d518e92",
+      "identity_source": "build-actual/build-sha256.txt and selection.json; size observed by directory stat only",
+      "curation_read_or_rehash": false
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_engine.dir/src/core/mtp.cpp.o",
+      "sha256": "c430dcd6f274371345fbb1aec1cd38ad6182a8ab1b046e704b8300cc76aad385",
+      "identity_source": "compiled-first-audit/selection.json; original path per build receipt must be consulted",
+      "curation_read_or_rehash": false
+    }
+  ],
+  "other_external": "Full original/candidate UTF8 mtp.cpp, binaries/archives/objects, device disassemblies and raw CLI events remain external. Exact paths/known identities retained in source-pins, build receipts, selection and ISA addendum."
+}

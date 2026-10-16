@@ -1,0 +1,11 @@
+{
+  "bash_n": true,
+  "embedded_python_AST": [
+    "PYOWN",
+    "PYPLAN",
+    "PYGEN",
+    "PYCHANGED"
+  ],
+  "build_execution": false,
+  "GPU": false
+}

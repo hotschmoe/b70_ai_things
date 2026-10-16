@@ -25001,3 +25001,47 @@ these decodes. Root read exact findings/UP-reduce excerpts and all47curated
 source-target copies match. Default/targets/S30RAMrestore unchanged. Evidence:
 strata/flash-next/lowlevel_probe/hc_lowrank_producer_s115/ and
  docs/20261016_strata_hc_lowrank_producer.md.
+
+
+## 2026-10-16 S114: parallel MTP argmax passes bounded main serving gates
+
+CONFIG -> New maind1c4968f samebinaryflag STRATA_MTP_PARALLEL_ARGMAX0/1
+ONLY; S112headerc1652c6a, mtp.cpp2d26e686. ExistingargmaxpredicateFIRST;
+fullhead/T1/vocab248320/unpenalizedgreedy/noncoupled guard; ownerprivate
+1040Bscratch, oldprobability/map/select/defaultcalls retained. S111probskip/
+wholepairgraph/allothercandidatesOFF. Native suffix0/lookup0/spec4/mtpmax4/
+minp0; HTTPminp0, headpair/depth2/EP149-363 allresident/two200kINT8/32GiB4parked/
+DirectPLE/prefill12288 common.
+COMMAND -> Actualsource Opus40.295s/Fable45.958s/rootfullread/inverseexact;
+oneCPU mainincrementalbuild174s wrapper (compile13.310/archive.126/AOT146.468s).
+Source/keyobject/archive/CMakepins unchanged except exact3plannedactions.
+Initialcompiled auditHOLDexit5 preserved; two defaultselectedCPUdecodes11s
+plus boundedcontrolflow/EOTaddendum explain8changedpostEOTbytes each, no
+decoderrepeat. Candidate9728Bnativeprefix exactS112; oldsampler7536/prob3696
+prefix exactS107; selectorwholeimageexact; rawimages/text/SPIRVnotuniversal.
+Actualhostguard/ownerA-Blaunchread+compiled Opus24.336/Fable23.710 finiteGO.
+Root6controllers+v2diagBEFOREhealthgate read; oneOFFthenON warm+3freshC2pairs
+(107in/256warm,1500timed each), concurrentfunctionals/normalQUIT/fullhealth.
+RESULT -> ALL immediatewarm/eachpair and finalcompare gatesPASS: fullrequest/
+text/concatSSE/usage/native5workfields/windows/pairsolo/roundedrows/captures.
+HOSTmarkerOFF0/ON1, notGPUdispatchcount. Nativeargv/env/loadedlibstdc++/maps
+matched. Math/reasoning/toolsPASS, prestopRunning/notOOM/normalTERM->QUIT/
+fullCID+NAMEgone/wrapper0/finaldiag/freshpercard+compiledcollective0 BOTH.
+Aggregate103.073716->103.673778tok/s(+.582168%); perstream53.485314/55.836291
+->53.858032/56.240725, TTFT.913302/2.096913->.914998/2.090230s. Three
+nestedfixedorderpairs/oneprocessperarm, notsignificance/stability/p95/rawID/
+SSEchunksegmentation/deviceITL ornewprefill/cachequalification. Process
+cumulativePLEgathers129/128,tokens429/428,rows199200/199184 DIFFER; includes
+prefill/functionals, notcoding-only matchedwork orwholeprocessidentity.
+VERDICT -> Retainoptin/defaultOFF, close/noimmediaterepeat/cachecampaign/
+shelfpromotion. Actualpost claude-opus-5-5 68.062s/claude-fable-5-1 86.535s/
+rootfullread agree; private49us chain saving didnotpredictservingimpact.
+NextONEsmallprivateS116HCbuild/compiledauditGO only, strictFP/owner/capture/
+healthbeforeGPU. RootrejectsFable universalFPstoreforward/divvs.25subnormal
+equivalence and probabilitypath-classclosure (S111sourceONLYunexecuted).
+Anchorprovenance36actualhashes eacholdmode match; originalbuiltS39v2source/
+747776Bfields/0xffpoisonverified, oldunbuiltv1difference clarified. No GPU
+reset/retry/privateoracle rerun/candidate decoderrepeat/dailyrestore. Targets
+stillunmet/S30RAMrecoveryretained. Evidence:
+strata/flash-next/lowlevel_probe/mtp_parallel_argmax_serving_s114/ and
+ docs/20261016_strata_mtp_parallel_argmax.md.

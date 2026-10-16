@@ -1,0 +1,60 @@
+# S114 serving result and S116 private HC source review
+
+## S114: park, default OFF, retained
+
+**What was measured:**
+- One fixed OFF\u2192ON sequence with three nested timed pairs, all exactly matched: request, text, SSE content, usage, native work, windows and captures.
+- Functionals, normal QUIT, teardown and full health all passed.
+- The aggregate median moved +0.58%, and per-stream decode went from about 53.5/55.8 to about 53.9/56.2 tok/s.
+
+**What it does not show:**
+- **Fixed-order nesting, not significance.** These are nested fixed-order observations; they say nothing about significance, stability or tail latency.
+- **Client gaps.** The client SSE gaps (p95 about 47 ms) are content-event gaps, not per-token ITL.
+- **Marker.** The single host marker proves host selection once, not GPU dispatch or a call count.
+- **Private vs serving.** The private \u221249 \xb5s two-owner chain does not translate into serving impact; +0.58% is the observed descriptive serving number.
+- **PLE counters.** The process-level counters differ (129/128 gathers), but they include admission and functionals. Only the coding-path counters are the matched-work evidence.
+
+**Decision:** keep the opt-in source and evidence, with no default change, repeat or cache campaign.
+
+**Practical priority:** S107, S113 and S114 each produced roughly 0.4\u20132.7% descriptive gains. The 150 tok/s per-stream target needs about 2.7\xd7, so these mechanisms are retained increments, not a path to the target.
+
+## S116 source review: CPU_BUILD_GO
+
+This covers the offline six-image private build and the compiled audit only.
+
+**Source checks:**
+- **Candidate reduce.** It preserves the raw 80-slice sum and the raw `part` store, then computes `y = 0; y += part[\u2026]; y /= HC; v = y/(1+native::exp(\u2212y))` from the same 32-bit value, and writes `lo` through `GR_PICK`. The inject rows are unchanged.
+- **Candidate UP.** It replaces only the activation in the prologue with a load of the completed `lo`. The body after the barrier is text-identical to the control.
+- **Ordering.** Reduce and UP are separate kernels on an in-order queue, so `lo` is complete before UP reads it.
+- **Fixture correctness:**
+  - Host vectors (`rr`, `xx`, `p`, `raw`) stay in scope until the next `wait_and_throw`.
+  - Graphs are destroyed before their buffers.
+  - Moved `unique_ptr` routes keep the captured addresses stable.
+  - The control's pre-UP `lo` must still be poison; the candidate's pre-UP `lo` must equal the control's post-UP `lo`.
+  - The 747,776-byte anchor layout matches the field sizes.
+- **Diagnostics:** both the synthetic `part2` path and the direct control-only probe are correctly labelled as not cross-context proof.
+
+**Pre-build check, a distinct question:** confirm the provenance of the anchor directory `\u2026/s39-prep/run-profiled/mode1`. Mode 1 in S39 may be the GRF256 arm, and the run was profiled. The anchors are valid only if S39 recorded mode1 bytes equal to the default-mode bytes, with the same 0xFF tail poisoning. Otherwise the control comparison is against the wrong reference.
+
+**Compiled audit gates (HOLD on any failure):**
+1. The control reduce and control UP must match the S115 original images in their computational prefixes through EOT, resources, options, data and relocations.
+2. The candidate reduce epilogue must reproduce the control UP's FP sequence:
+   - the `+0` add;
+   - the `/4` lowering. If one image uses `mul 0.25` and the other a true division, record that difference explicitly for root decision rather than assuming it is fine;
+   - unary minus, `native::exp` lowering, `+1`, the same `invm`/`madm` division sequence;
+   - the same CR0 bits;
+   - its operand must be the same register value as the raw `part` store.
+3. Candidate UP: the prologue becomes load and SLM store only, the instructions from the barrier onward match the control, and resources show no new spill or scratch fields. Absent fields are unknown, not zero.
+4. Reduce resources: no new spill.
+
+## One recommended next action
+
+Run the S116 anchor-provenance check, then the CPU-only private build and the selected compiled audit. No GPU.
+
+**Stop if any of these holds:**
+- the anchors do not correspond to default-mode bytes;
+- the control images fail to match S115;
+- the candidate epilogue's exp or division lowering, CR0 or operand source differs from the control UP;
+- new spill or scratch appears.
+
+Even if every gate passes later, any timing is a descriptive whole-read comparison only, with no model-gain claim.

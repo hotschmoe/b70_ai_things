@@ -1,0 +1,23 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 23.709831425978336,
+  "launch_exception": null,
+  "source_packet_sha256": "ed9f15698a21d99e3e495f8c255ddf777d8409aaabd88a78b0258f1d206bcd6a",
+  "source_packet_unchanged": true,
+  "parse_errors": [],
+  "retries": 0,
+  "filtered_from": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s114-main-compiled-reviews-20261016/claude-fable-5-1/completion.json",
+  "source_bytes": 7095,
+  "source_sha256": "feb66b0998e9c2f0ae4dc3bc00678986ce8befc05cde7864ed1f1843aa7ced38",
+  "omitted": "Cumulative result duration, cost, token usage, modelUsage and full event stream; local elapsed/exit and responding IDs retained."
+}

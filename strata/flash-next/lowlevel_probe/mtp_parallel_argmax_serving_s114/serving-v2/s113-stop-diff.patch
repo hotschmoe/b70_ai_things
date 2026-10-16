@@ -1,0 +1,33 @@
+--- S113/harness-prep/stop_and_health.py
++++ S114v2/harness-prep/stop_and_health.py
+@@ -63,16 +63,27 @@
+  # Root follows the recovery ladder; no requests/force/retry occur here.
+  save(out/'recovery-required.json',{'status':'ROOT_RECOVERY_LADDER_REQUIRED','normal_stop':normal_record,'removal':removal,'automatic_post_health_or_collectives_started':False,'automatic_reset':False})
+  raise SystemExit('Abnormal/unknown teardown recorded; root recovery ladder required before any further GPU/collective work')
+-raw=(out/'engine.log').read_bytes();(out/'engine-final.log').write_bytes(raw)
+-text=raw.decode('utf8');matches=re.findall(r'^strata serve final: (ple io: .*prefetch_gathers=(\d+) prefetch_tokens=(\d+))$',text,re.M)
++log_error=None;raw=b''
++try:raw=(out/'engine.log').read_bytes();text=raw.decode('utf8')
++except (OSError,UnicodeDecodeError) as e:
++ text='';log_error={'type':type(e).__name__,'detail':str(e)}
++(out/'engine-final.log').write_bytes(raw)
++matches=re.findall(r'^strata serve final: (ple io: .*prefetch_gathers=(\d+) prefetch_tokens=(\d+))$',text,re.M)
+ diag={'present_once':len(matches)==1,'raw':matches,'log_sha256':hashlib.sha256(raw).hexdigest(),'scope':'process cumulative: includes prefill/admission/functionals, not coding-only'}
+ if len(matches)==1:
+  diag.update(prefetch_gathers=int(matches[0][1]),prefetch_tokens=int(matches[0][2]),requests=int(re.search(r'^ple io: (\d+) rows',matches[0][0])[1]))
++if log_error is not None:diag['log_observation_error']=log_error
+ save(out/'aggregate-proof.json',diag)
++if not diag['present_once']:
++ # A missing/duplicated normal-QUIT diagnostic is not a healthy TP closure.
++ # Save the failed qualification before any card or collective GPU probe.
++ normal_record.update(status='FAIL_ROOT_RECOVERY_LADDER_REQUIRED',reason='normal-QUIT final diagnostic absent, duplicated or unreadable',normal_quit_diagnostic_present_once=False)
++ save(out/'normal-stop.json',normal_record)
++ save(out/'recovery-required.json',{'status':'ROOT_RECOVERY_LADDER_REQUIRED','reason':'normal-QUIT final diagnostic absent, duplicated or unreadable','normal_stop':normal_record,'aggregate_proof':diag,'removal':removal,'automatic_post_health_or_collectives_started':False,'automatic_reset':False})
++ raise SystemExit('Normal-QUIT aggregate proof absent/duplicated/unreadable; root recovery required before any further GPU/collective work')
+ records={}
+ for label,cmd in [('card',['bin/gpu-run','bin/xpu-health','--img','b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78','--timeout','400']),('collective',['bin/gpu-run','bin/xpu-collective-health','--timeout','400'])]:
+  t=time.monotonic()
+  with (out/(label+'-health.log')).open('w') as f:r=subprocess.run(cmd,cwd=REPO,stdout=f,stderr=subprocess.STDOUT)
+  records[label]={'command':cmd,'exit':r.returncode,'elapsed_s':time.monotonic()-t};save(out/'post-health.json',records)
+  assert r.returncode==0,'Root follows health/recovery ladder; no automatic retry'
+-assert diag['present_once'],'Normal-QUIT aggregate proof absent/duplicated'

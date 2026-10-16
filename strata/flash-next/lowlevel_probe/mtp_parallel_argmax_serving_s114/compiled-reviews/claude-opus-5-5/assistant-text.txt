@@ -1,0 +1,54 @@
+# S114 actual main build: compiled gate
+
+**Verdict: GPU_GO** for one finite matched C2 OFF/ON serving comparison. This is conditional on root's own read of the v2 cleanup controller before execution, which is outside this review. I found no blocking compiled or forwarding issue.
+
+## Evidence accepted (bounded)
+
+**Candidate kernel.**
+- The 9,728-byte computational prefix through EOT matches the S112 kernel that passed the private oracle exactly. That covers the publication chain, the compares, the output and the reset.
+- Metadata, options, constants and relocations are all equal.
+- Resources: SG32, GRF 128, SLM 544, one barrier. Absent spill or scratch fields remain unknown.
+
+**Default sampler and probability images.**
+- The first HOLD was correct to raise and is correctly preserved.
+- The additive decode shows every byte through the actual EOT matches S107 (sampler EOT at 7536, probability at 3696), and every label reference sits before the EOT.
+- The only differences are 8 bytes inside two `mov null, imm` words after EOT. These are not reachable from any branch, with no indirect call, return or extra jump. Executable code is unchanged.
+- Metadata, options, constants and relocations are equal.
+
+**Select image:** whole image byte-exact.
+
+**Host forwarding** (`record_post_head`, `de12..de2b`):
+- `argmax_rows_wanted()` is still tested first, and its true edge never reaches the flag.
+- The new path requires: no draft head, `nv == 0x3ca00` (248,320), both coupled bytes false, and the process-static flag accepting exactly `"1"`.
+- The penalty and greedy checks are constant-folded from the local `SamplerParams`. That is acceptable, because no request parameters flow into this call.
+- The candidate receives the **same** owner fields used by the original `argmax_rows` call: scratch at `+0x640`, IDs at `+0x778`, the same logits register and the same queue.
+- All three branches rejoin at `de59`. The probability and mapping calls are unchanged and use the same IDs pointer.
+- **Bind:** the same guarded initialization of the static flag, the 1040-byte ABI check and the capacity check, with failure returning explicitly. No graph work happens in bind.
+- **Launch:** nb = 61, per = 4071, global {1, 1, 15616}, local 256. The closure order matches the `ze_info` payload offsets, and the launch goes through the candidate's own DeviceKernelInfo cache.
+- **Pair tail:** owner A and owner B are separate fields, B's logits row is at `+4\xb7nv`, and both share the pair queue, as in source.
+
+## Limits to carry into the result
+
+- **Raw images are not identical**, so this is not full-image or SPIR-V equivalence. The embedded SPIR-V difference stays unclassified. Reuse rests only on identical native code through EOT plus identical metadata.
+- **The whole-depth-2 caller bodies were not disassembled.** The whole-pair graph is OFF in both arms, so the inspected component-tail path is the relevant one.
+- **The host marker** proves host selection once, not GPU dispatch counts or per-owner coverage.
+- **The S112 private oracle** was a different binary. The serving run is the first in-main execution of this kernel. A launch rejection (for example cooperative or `use_root_sync` limits) or any mismatch is a HOLD, with no retry and no scratch reset.
+- **Timing interpretation.** The private \u221249 \xb5s chain does not predict serving. Expect a small effect, in the class of S107's +0.43%. A small descriptive result leads to closing the candidate with default OFF and no retest or cache campaign. The per-stream and prefill targets remain unmet.
+
+## Execution conditions (root-owned)
+
+- **v2 controller:**
+  - It detects abnormal teardown of the owned CID.
+  - It checks the final QUIT diagnostics **before** any post-health or collective step.
+  - A missing diagnostic means "root recovery required": no blind health check, no forced stop, no retry.
+- **Pre-health:** reuse is allowed only with explicit same-boot, no-intervening-GPU revalidation. Post-health is fresh for both arms.
+- **Configuration:**
+  - Same new main binary, flag 0/1 only, every other candidate OFF.
+  - Native and HTTP suffix 0, lookup 0, spec 4, MTP max T 4, min-p 0.
+  - Head pair at depth 2, whole-pair graph OFF.
+- **Requests:**
+  - One ordered C2 warm-up (107/256) per arm.
+  - Then three fresh 107/1500 pairs per arm. Request 1 is released only after request 0's native prompt start is observed, and the client lifetimes must overlap.
+- **Strict match at every ON pair before the next:** request, full text, concatenated SSE, usage, the five work fields, windows, pair/solo counts, printed rows and captures.
+- **Marker:** exactly once with ON, absent with OFF.
+- **Closing:** functionals, normal QUIT, full CID and name gone, wrapper exit 0, full per-card and compiled health.

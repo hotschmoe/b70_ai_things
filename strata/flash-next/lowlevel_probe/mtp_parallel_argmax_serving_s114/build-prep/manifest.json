@@ -1,0 +1,42 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NO_BUILD_GPU",
+  "directory": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-build",
+  "files": {
+    "FROZEN": {
+      "bytes": 110,
+      "sha256": "1ec754aeb68d98df0d9b09d9f4a8c9aa95e1c9b7cc06eb51a427e573ed8bb3e0"
+    },
+    "README.md": {
+      "bytes": 1515,
+      "sha256": "3c374fb124c8e4a827ffdf6b8e2a263495ddc8e82dd19bede899764ddc409e86"
+    },
+    "build-container.sh": {
+      "bytes": 6085,
+      "sha256": "180e49fee1c25a04ad63711f1cf19ebfac54660db690d3772d874d702cdbfe93"
+    },
+    "build.sh": {
+      "bytes": 1370,
+      "sha256": "85df4f3569a15bc79397fed8ddd859293290fa311090ce5303c3a349abdf070f"
+    },
+    "expected-applied-source.sha256": {
+      "bytes": 214,
+      "sha256": "67bfd1135d9bf854460c679afebc2fbe7a7a0ffabfcf146bdc1033632a1cf157"
+    },
+    "expected-before-build.sha256": {
+      "bytes": 158,
+      "sha256": "d9af263bb9781dad3767b56e1dc98d962483cdc34eaf9a0513407620ddc2e6f0"
+    },
+    "expected-unchanged-build-inputs.sha256": {
+      "bytes": 1674,
+      "sha256": "37d680cc2e0e2f0a847fc7a845c3a0d4a964af11f2f2f459efd58554448c787f"
+    },
+    "expected-unchanged-source.sha256": {
+      "bytes": 3106,
+      "sha256": "c8b989b885d5a1cb5fa69f40c62526681d392d6112bc2d727d12fd39bb4731ff"
+    },
+    "syntax.json": {
+      "bytes": 153,
+      "sha256": "f987d941cb31fcd9781bc3969735bf30247acf00608c4cff5d074abd06770fdf"
+    }
+  }
+}

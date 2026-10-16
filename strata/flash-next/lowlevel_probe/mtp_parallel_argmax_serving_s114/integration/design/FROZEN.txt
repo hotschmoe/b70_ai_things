@@ -1,0 +1,1 @@
+FROZEN SOURCE-ONLY DESIGN. No source generation, live edits, build, artifact audit, models, GPU or execution authorization.

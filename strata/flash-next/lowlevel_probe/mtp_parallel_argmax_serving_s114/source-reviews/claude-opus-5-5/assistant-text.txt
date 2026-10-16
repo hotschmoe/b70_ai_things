@@ -1,0 +1,47 @@
+# S112 MTP integration patch review
+
+**Verdict: CPU_BUILD_GO.** I found no blocking source defect.
+
+## Checks passed
+
+- **Immutable flag and default path.**
+  - The flag is a function-local static that accepts exactly `"1"`, is process-constant, and has no field or layout change.
+  - The original `argmax_rows_wanted()` branch is untouched. The new selection sits only inside its `else`, after the unchanged `SamplerParams` setup.
+  - Every ineligible case reaches the original `sample_tokens(...)` call with identical arguments.
+  - HIP builds compile out everything new. The four-change inverse reconstructs the original file.
+- **Full-head greedy guard.** The guard requires `!sub`, T = 1, `nv == 248320`, not coupled, greedy with temperature \u2264 0, and default penalties.
+  - Probability, `map_ids` and select are downstream and unchanged.
+  - The `coupled_*` checks are conservative only: both kernels produce the same ID, so replaying an old capture cannot change semantics.
+- **Owner scratch.**
+  - Each drafter's `arg_scratch_` (max_t rows, zeroed once at load, before `bind`) is otherwise unused on B70, because `argmax_rows_wanted()` is false.
+  - The bind-time ABI and capacity check fails explicitly before any capture, with no masking fallback.
+  - Only row 0 is used, and per-owner separation matches the tested oracle.
+- **Capture and lifetime.**
+  - Pair tails pass per-owner logits rows into per-owner scratch, serialized on the in-order `cs_`.
+  - `Pair::draft` idles both owner queues before launching and waits on `cs_` before returning, so no concurrent invocation shares a counter.
+  - Graph destruction still precedes the arena free.
+- **Failure.** A launch or capture exception propagates to the existing `err` / return-false path, with no retry and no reset. A counter left nonzero after an abnormal stop is a HOLD condition, not something to recover from.
+
+## Non-blocking notes
+
+- **Field-name compile check.** `SamplerParams` must actually have the fields `penalty_last_n`, `penalty_repeat`, `penalty_freq` and `penalty_present`. If a name is wrong, compilation fails, which is safe.
+- **Silent never-selected risk.** If the default values differ from the literals in the guard (for example `penalty_repeat \u2260 1.0f`), the path is silently never selected. Make the ON marker a required gate.
+- **Header provenance.** The header's first comment ("production \u2026 untouched") is retained as provenance. Note in the commit that it is now compiled into main.
+- **Includes.** `<cstdlib>` is assumed to be included already for `getenv`; if not, the compile fails closed.
+
+## Minimum gates before GPU
+
+1. **Dependency plan.** The actual Ninja dry run must show only `mtp.cpp.o`, the engine archive and the main link. The kernels archive, the public headers and the other TUs must be byte-unchanged.
+2. **New kernel binding.** In the new main binary, bind `GreedyTop1S112`'s Info, cache, guard, name pointer, image and callsite as unique.
+3. **Candidate ISA.** It must match the reviewed S112 publication sequence:
+   - the release fence, then the returning atomic, then an acquire with a wait, before the SLM flag;
+   - the barrier, then the device invalidate, then the partial loads;
+   - the gt / eq-lower-index compares, the `bi < n ? bi : 0` output, and the counter reset;
+   - SIMD32, GRF 128, SLM 544. Absent spill or scratch fields remain unknown.
+4. **OFF images.** The original `sampler_greedy`, `row_top_prob_split` and `mtp_select` images must be unchanged from the current main binary.
+5. **Later serving gate** (not authorized here):
+   - same new binary, flag 0/1;
+   - all other candidates fixed OFF, with fixed-work flags in both arms;
+   - the ON marker exactly once and absent in OFF;
+   - strict text, SSE, usage, native work and captures; functionals, QUIT and full health;
+   - stop at the first mismatch, no S111 combination, and descriptive timing only.

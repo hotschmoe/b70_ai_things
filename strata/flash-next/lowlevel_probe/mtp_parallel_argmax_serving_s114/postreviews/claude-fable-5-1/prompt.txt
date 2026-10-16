@@ -1,0 +1,838 @@
+You are reviewing B70/Strata S114 AFTER its one finite paired serving comparison, in your own resumed session. Read only the attached frozen packet; no tools or other model replies. Give independent concise verdict: retain/park/promote? Evaluate matched evidence and practical priority. Distinguish nested fixed-order observations from significance, client SSE-event gaps from token ITL, once host marker from GPU dispatch/count, source/private speed from serving impact. No cache campaign or immediate repeat for a small gain. Review the next bounded candidate only to the extent its actual source/evidence is attached. Preserve strict FP/owner/capture and normal teardown/health gates. Do not infer negative-zero impossibility, universal identity, arbitrary tolerance, device idle, quantified savings from historical medians, or a new default/shelf qualification. Record ONE recommended next action and what would stop it.
+
+ROOT FROZEN PACKET:
+S114 CLOSED SERVING RESULT AND NEXT S116 PRIVATE SOURCE DECISION.
+{"stage":"S114_CLOSED_ROOT_READ_AND_COMPARE_PASS","same_binary_sha256":"d1c4968ffbb62e66753e0c016d830d7af53154d0de6c6b8f1b966fec4d518e92","image":"e41d59c0","flag_only":"STRATA_MTP_PARALLEL_ARGMAX0/1; other candidates OFF incl probability skip/wholepairgraph","policy":"suffix0/lookup0/spec4/mtpmax4/minp0 native; HTTP minp0; depth2/headpair; EP149/363 allresident; DirectPLE; two200k/32GiB4entries/prefill12288","comparison_checks":{"identity_image_and_effective_native_env":true,"warm":true,"repeat1":true,"repeat2":true,"repeat3":true,"functionals":true,"health_teardown":true,"full_CID_and_NAME_absence":true,"final_diagnostics_complete":true,"final_host_marker_0":true,"unrelated_IQ2_multi_OFF_0":true,"pair_graph_OFF_0":true,"unrelated_A4_OFF_0":true,"probability_skip_OFF_0":true,"final_host_marker_1":true,"unrelated_IQ2_multi_OFF_1":true,"pair_graph_OFF_1":true,"unrelated_A4_OFF_1":true,"probability_skip_OFF_1":true,"logged_startup_capture_equal":true,"native_loader_provenance":true},"timed_summary":{"pair_wall_median_s":[29.105383048998192,28.93692164501408],"aggregate_output_tps_median":[103.07371646508051,103.67377832385668],"per_stream_medians":[[{"ttft_s":0.9133018040447496,"completion_wall_s":28.93282978096977,"decode_tps":53.485314277577395,"whole_request_output_tps":51.844220263121564},{"ttft_s":2.0969130599987693,"completion_wall_s":28.89684407802997,"decode_tps":55.836291150380085,"whole_request_output_tps":51.90878270130673}],[{"ttft_s":0.9149975059553981,"completion_wall_s":28.74224900000263,"decode_tps":53.8580319151907,"whole_request_output_tps":52.18798292366971},{"ttft_s":2.090230046014767,"completion_wall_s":28.728050160978455,"decode_tps":56.24072520945649,"whole_request_output_tps":52.21377683465139}]]},"aggregate_descriptive_percent":0.5821676750924709,"pairs":[{"label":"warm","matched":true,"aggregate_output_tps":[74.69610466416515,75.0016513222537],"pair_wall_s":[6.854440433031414,6.826516362954862]},{"label":"repeat1","matched":true,"aggregate_output_tps":[103.07371646508051,103.67377832385668],"pair_wall_s":[29.105383048998192,28.93692164501408]},{"label":"repeat2","matched":true,"aggregate_output_tps":[103.4926802959372,104.18256328358166],"pair_wall_s":[28.987557297979947,28.79560557397781]},{"label":"repeat3","matched":true,"aggregate_output_tps":[101.74824000301086,102.22002990853306],"pair_wall_s":[29.484539486002177,29.348455509985797]}],"phases":[{"phases":[{"phase":"warm","command":["bin/cpu-run","--quiet","python3","/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/client.py","0","warm"],"exit":0,"elapsed_s":7.021394188050181},{"phase":"timed","command":["bin/cpu-run","--quiet","python3","/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/client.py","0","timed"],"exit":0,"elapsed_s":87.75777313299477},{"phase":"functional","command":["bin/cpu-run","python3","/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/client.py","0","functional"],"exit":0,"elapsed_s":6.156507878971752}],"exception":null,"cleanup":{"command":["bin/cpu-run","python3","/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/stop_and_health.py","0"],"exit":0,"elapsed_s":59.281864117016084},"no_retry":true},{"phases":[{"phase":"warm","command":["bin/cpu-run","--quiet","python3","/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/client.py","1","warm"],"exit":0,"elapsed_s":6.998883272986859},{"phase":"timed","command":["bin/cpu-run","--quiet","python3","/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/client.py","1","timed"],"exit":0,"elapsed_s":87.37310462299502},{"phase":"functional","command":["bin/cpu-run","python3","/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/client.py","1","functional"],"exit":0,"elapsed_s":6.1491713970317505}],"exception":null,"cleanup":{"command":["bin/cpu-run","python3","/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/stop_and_health.py","1"],"exit":0,"elapsed_s":63.2934246250079},"no_retry":true}],"normal_stop":[{"status":"PASS_NORMAL_TEARDOWN","signal":"TERM to server -> QUIT to native engine","container_removed":true,"lease_wrapper_exit":0,"all_wrapper_terminal_exits":[0],"prestop_state":{"Running":true,"OOMKilled":false,"inspect_succeeded":true},"container_missing_or_inspect_failed_before_stop":false,"diagnostic_before_any_forced_container_stop":true,"no_force_stop_used":true,"functional_status":"PASS","epoch_ns":1792113408198983871},{"status":"PASS_NORMAL_TEARDOWN","signal":"TERM to server -> QUIT to native engine","container_removed":true,"lease_wrapper_exit":0,"all_wrapper_terminal_exits":[0],"prestop_state":{"Running":true,"OOMKilled":false,"inspect_succeeded":true},"container_missing_or_inspect_failed_before_stop":false,"diagnostic_before_any_forced_container_stop":true,"no_force_stop_used":true,"functional_status":"PASS","epoch_ns":1792114017139532223}],"post_health":[{"card":{"command":["bin/gpu-run","bin/xpu-health","--img","b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78","--timeout","400"],"exit":0,"elapsed_s":28.559583447990008},"collective":{"command":["bin/gpu-run","bin/xpu-collective-health","--timeout","400"],"exit":0,"elapsed_s":27.20486106199678}},{"card":{"command":["bin/gpu-run","bin/xpu-health","--img","b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78","--timeout","400"],"exit":0,"elapsed_s":35.385896917956416},"collective":{"command":["bin/gpu-run","bin/xpu-collective-health","--timeout","400"],"exit":0,"elapsed_s":24.709206702944357}}],"scope_limits":["ONE fixedOFFthenON sequence/three nested pairs; no independent run/significance/stability/p95 claim.","Fullrequest/text/concatSSEcontent/usage/native offered accepted/windows/pairsolo/rounded reportedrows/captures exact each warm+timed pair; not raw tokenIDs/event chunk boundaries/allGPUcalls.","Once ON eligibleHOSTmarker bywarm may be startup; no dispatch/count/all-owner proof.","Process cumulative PLEgathers129vs128/tokens429vs428 DIFFER: includes admission/prefill/functionals; does not imply wholeprocess identical work. Coding-only measured counters match.","Client SSEcontent-eventgap p95~47ms not tokenITL or device latency. No new context/RAMrestore/prefill qualification.","Source/default native computational prefixes reuse bounded S107/S112 proofs; raw image/text not equal and embedded SPIRVunclassified.","DefaultOFF; retain result no immediate repeat/cachecampaign/shelf/default/speedpromotion.","S112 private completed TWOOWNERhostchain165.55->116.41us was not pureargmax/device timing or serving guarantee; actual serving now+.58% descriptive only."],"root_next_proposal":"Review complete S116 SOURCE ONLY attached. If acceptable authorize ONE small offline six-image private build then selected compiled old/new audit, NOT GPU/production. No main AOT for this fixture. Full strict/anchor/FP/ownership/capture before timing.","dev_loop":"Actual main incremental compile13.310s/archive.126s/AOTlink146.468s. Separate agent SOURCE/PREFLIGHT tiny offlinecache sampler cold/warm/changed-input discriminator, no compile/run yet; actual e41 help supports allow_caching/cache_dir and -### forwards. ExactSPIRVinput changes may miss despite same native prefix. No cache hit/wholelink gain claim."}
+
+S116 FULL PRIVATE SOURCE PROPOSAL:
+S116 SOURCE-ONLY REVIEW. Root accepted actual S115 original HC ISA. Review FULL source below; no build/GPU GO yet. One candidate relocates repeated UP activation to its existing sliced reduce producer, keeping norm/down/reduce/UP FOUR boundaries, raw part2/raw part/inject, private owner lo, exact remaining UP FP body. Normal C16/SG32/defaultGRF/nonMORE/nonILP/nsplit1/T1,2,6 only. Exactly six namespace-scope classes, one lambda/Info definition per class; shared original norm/down plus control/candidate reduce+UP. No entire fused_gr TU, all variants, archive prelink or main AOT.
+
+FP gate: candidate preserves raw-part store, NEW +0, reads m.part, source /HC, native exp/unary minus, denominator +1, final division. No volatile. Compiler may forward reload ONLY if actual new ISA proves the identical materialized 32-bit raw-store operand and exact ordered epilogue; do not assume store/load boundary equivalence. Old UP actual +0@1072, scale@1720 (compiler mul0.25, not permission to rewrite source), exp1744, invm1792/1968 +14 madm sites, group0 global-store2992, first barrier3200, first w_up6448; original reduce80 FP-add/raw-store chain. Both CR0 OR0x400004C0 is raw observation, NO denorm/rounding inference or universal x-not-negative-zero claim. Later selected control compiled gate: computational prefixes through EOT82848/16272 and normalized resources/options/data/relocs vs original S115 images. Unexpected differences HOLD for explicit root inspection, never silently relax source similarity into identity. Candidate FP/dataflow/resources must be read before GPU. Private classes differ in raw image identity by name; source projection is separate from compiled bytes and ordered arithmetic.
+
+Strict fixture: exact S73 seed/distribution/scales/generation order and S39 snapshot fields.12 base cases=T1,2,6 x apply/inject0/1, A-B-A eager and captured BOTH routes:72 eager+72 captured whole reads;36 UNIQUE historical anchors compared bytewise BEFORE timing. Future CPU preflight must hash all36 actual anchors from s39-anchors.json (historical hashes reused, payload NOT read during prep). No new candidate-derived reference. Prefix raw part2/part/inject/rs/xn/R equal; candidate pre-UP lo equals control post-UP lo; all finals/inactive planes/tails/guards exact. Per-owner allocations explicitly disjoint from each other/read-only shared inputs/weights; intentional R_out==R remains. Changed B must affect mixed; A and capture return exact. Selected HC classes have NO counters/reset logic. Full weight readonly checks at strict/diagnostic/final boundaries avoid13MB copies per unchanged case.
+
+FP diagnostic adds NO class/runtime branch: synthetic part2->same actual reduce+UP, T2/apply0/inject1,14 striped +/-zero/subnormal/minnormal/1/Inf/quietNaN patterns, A-B-A eager/captured both routes=12 two-kernel calls. Record ACTUAL reduced raw-part bits: signed partials do NOT guarantee same-signed reduced zeros. ONE direct control-UP-only raw-part probe exposes arbitrary raw bits but is explicitly NOT candidate cross-context proof; remaining reachability gaps stay open. No toy implementation-mirroring helper test.
+
+Capture exceptions balance recording BEFORE drain, preserve original error/report/stop; drain before USM free, cleanup blocks verdict. Any mismatch HOLD, no tolerance/reset/retry. Optional timing only after all strict/anchor/FP checks: reuse warmed T6/apply1/inject1 four-kernel graph, two ABBA rounds/8 points/one whole read per point; upload/drain outside window, completed HOST span, check all bytes each point. No UP-only/device-cycle/model-gain claim, long soak or rerun.
+
+Build proposal: pinned e41/DPC2026.1/O3/precise/SG32/perkernel/BMG-G31/divsqrt, CPU lease/jobs4/noDRI/networknone/UID1000/diskTMP; one TU ->six private images ->small SYCL-only host link, no archive/main AOT. Source/header checksums before/after. Actual source-model review/CPU_BUILD_GO, compiled audit/read/root GPU_GO and a separately prepared lifecycle/health runner remain mandatory. No private build, native CLI, GPU/model/network/production edit has run.
+
+Source pins: source d62bcb252eecdbcaae81095907c2241e39c4798b7854bb499fb5643fecb24e99; public header199b44c105bebb8356498c2171943c236c9c0dfd4b899e400c62082f3966ebf4; original UP image d8b21b3d266f2876d8a6b82d8e923d04eefc41c95dedf989d80409c7b515c0a0; reduce e3bc585a3a07820bbf2da672d8460a8d09201901388650342fad2036347a0e6b.
+
+===== FULL private_hc.hpp SHA256 452f17c508b984b926ba934ca1da5edcf405aa13c43a7ad202e9791a5ebaeda1 =====
+// S116 SOURCE ONLY. Four exact selected control bodies and two narrow candidates.
+#pragma once
+#include <sycl/sycl.hpp>
+#include <dpct/dpct.hpp>
+#include <utility>
+#include <cstdint>
+#include "strata/kernels/fused_gr.hpp"
+namespace s116_private {
+using strata::kernels::FusedGrArgs;
+using strata::kernels::kFusedGrMaxT;
+constexpr int N=2560, HC=4, D=N*HC, LR=320, THREADS=256, WARPS=8;
+constexpr int DOWN_SPLIT=4, UPM_COLS=16;
+__dpct_inline__ float s116_warp_sum(float v) {
+#pragma unroll
+    /*
+    DPCT1108: '__shfl_xor_sync' was migrated with the experimental feature
+    masked sub_group function which may not be supported by all compilers or
+    runtimes. You may need to adjust the code.
+    */
+    for (int o = 16; o > 0; o >>= 1) v +=
+        dpct::experimental::permute_sub_group_by_xor(
+            0xffffffffu, sycl::ext::oneapi::this_work_item::get_sub_group(), v,
+            o);
+    return v;
+}
+__dpct_inline__ float s116_sigmoid(float x) {
+    return 1.0f / (1.0f + sycl::native::exp(-x));
+}
+
+// 8 bf16 packed in a uint4 against 8 floats.
+__dpct_inline__ float s116_dot8(const sycl::uint4 w, const float *x) {
+    float acc = 0.0f;
+    const uint32_t v[4] = {w.x(), w.y(), w.z(), w.w()};
+#pragma unroll
+    for (int j = 0; j < 4; ++j) {
+        acc = sycl::fma(sycl::bit_cast<float>(v[j] << 16), (float)(x[2 * j]),
+                        acc);
+        acc = sycl::fma(sycl::bit_cast<float>(v[j] & 0xffff0000u),
+                        (float)(x[2 * j + 1]), acc);
+    }
+    return acc;
+}
+struct HCMultiS116 {
+    FusedGrArgs a[kFusedGrMaxT];
+    float* xn;
+    int T;
+    float* part;   ///< [DOWN_SPLIT][kFusedGrMaxT][LR] partial row sums of the down kernel
+    int nsplit = DOWN_SPLIT;   ///< SYCL port: splits the up kernel sums (1 after the sliced down kernel's reduce)
+    float* part2 = nullptr;    ///< SYCL port: [GRS_SLICES][kFusedGrMaxT][LR + HC] slice partials of the sliced kernel
+};
+
+// SYCL port (Arc): a RUNTIME index into the by-value kernel argument (m.a[k]) makes IGC copy the whole HCMultiS116
+// (~1.2 KB) into every work-item's private scratch - unitrace: ~40 KB private per SIMD32 thread on the A770 for
+// gr_up_multi / gr_down_reduce / gr_norm_split. S116_GR_PICK selects ONE field with compile-time indices only (a chain
+// of selects over uniform kernel arguments), so nothing is copied. Addressing only: values and orders unchanged.
+template <class F, std::size_t... J>
+__dpct_inline__ auto s116_pick_impl(const HCMultiS116& m, int k, F f, std::index_sequence<J...>) {
+    auto v = f(m.a[0]);
+    ((v = (k == (int) J) ? f(m.a[J]) : v), ...);
+    return v;
+}
+#define S116_GR_PICK(m, k, field) \
+    s116_pick_impl((m), (k), [](const FusedGrArgs& x_) { return x_.field; }, std::make_index_sequence<kFusedGrMaxT>{})
+
+__dpct_inline__ void s116_norm_split(HCMultiS116 m) {
+    auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+    auto& part = *sycl::ext::oneapi::group_local_memory_for_overwrite<float[WARPS]>(item.get_group());
+    auto& s_rs = *sycl::ext::oneapi::group_local_memory_for_overwrite<float>(item.get_group());
+    const int tok = (int) item.get_group(2) / HC, c = (int) item.get_group(2) % HC;
+    const float* const aR = S116_GR_PICK(m, tok, R);
+    const bool aapply = S116_GR_PICK(m, tok, apply);
+    const float* const abo = S116_GR_PICK(m, tok, bo_prev);
+    const float* const awn = S116_GR_PICK(m, tok, w_norm);
+    const float aeps = S116_GR_PICK(m, tok, eps);
+    float* const ars = S116_GR_PICK(m, tok, rs);
+    float* xn = m.xn + (size_t) tok * D;
+    const int t = (int) item.get_local_id(2), lane = t & 31, warp = t >> 5;
+    const float gw = aapply ? 2.0f * s116_sigmoid(S116_GR_PICK(m, tok, inj_prev)[c] / (float) HC) : 0.0f;
+    constexpr int MAXK = (N + THREADS * 4 - 1) / (THREADS * 4) + 1;   // 3: float4s of one stream per thread
+    sycl::float4 keep[MAXK];
+    int kept = 0;
+    float ss = 0.0f;
+    for (int i = t * 4; i < D; i += THREADS * 4) {
+        if (i / N != c) continue;
+        const int d = i - c * N;
+        sycl::float4 r = *reinterpret_cast<const sycl::float4*>(aR + i);
+        if (aapply) {
+            const sycl::float4 b = *reinterpret_cast<const sycl::float4*>(abo + d);
+            r.x() = sycl::fma((float) (b.x()), gw, r.x());
+            r.y() = sycl::fma((float) (b.y()), gw, r.y());
+            r.z() = sycl::fma((float) (b.z()), gw, r.z());
+            r.w() = sycl::fma((float) (b.w()), gw, r.w());
+        }
+        const sycl::float4 g = *reinterpret_cast<const sycl::float4*>(awn + i);
+        ss += r.x() * r.x() + r.y() * r.y() + r.z() * r.z() + r.w() * r.w();
+        if (kept < MAXK) keep[kept++] = sycl::float4(r.x() * g.x(), r.y() * g.y(), r.z() * g.z(), r.w() * g.w());
+    }
+    const float v = s116_warp_sum(ss);
+    if (lane == 0) part[warp] = v;
+    item.barrier(sycl::access::fence_space::local_space);
+    if (t == 0) {
+        float sum = 0.0f;
+#pragma unroll
+        for (int w = 0; w < WARPS; ++w) sum += part[w];
+        s_rs = sycl::rsqrt(sum / (float) N + aeps);
+        ars[c] = s_rs;
+    }
+    item.barrier(sycl::access::fence_space::local_space);
+    const float rs = s_rs;
+    int k = 0;
+    for (int i = t * 4; i < D && k < kept; i += THREADS * 4) {
+        if (i / N != c) continue;
+        const sycl::float4 x = keep[k++];
+        *reinterpret_cast<sycl::float4*>(xn + i) = sycl::float4(x.x() * rs, x.y() * rs, x.z() * rs, x.w() * rs);
+    }
+}
+constexpr int GRS_COLS = 128, GRS_SLICES = D / GRS_COLS, GRS_ROWS = LR + HC;   // 80 slices, 324 rows
+constexpr int GRS_RB = (GRS_ROWS + WARPS * 8 - 1) / (WARPS * 8);                // 6 blocks of 64 rows
+// MORE (gr_more_groups): one work-group per (slice, row block) - 480 groups instead of 80; every row's sum is the same
+template <bool MORE = false>
+__dpct_inline__ void s116_down_sliced(HCMultiS116 m, float* tile) {
+    auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+    const int t = (int) item.get_local_id(2), lane = t & 31, warp = t >> 5;
+    const int g = (int) item.get_group(2);
+    const int T = m.T, sl = MORE ? g / GRS_RB : g, c0 = sl * GRS_COLS;
+    const int r_first = MORE ? (g % GRS_RB) * WARPS * 8 : 0, r_end = MORE ? r_first + WARPS * 8 : GRS_ROWS;
+    for (int i = t; i < T * GRS_COLS; i += THREADS) {
+        const int k = i / GRS_COLS, c = i - k * GRS_COLS;
+        tile[i] = m.xn[(size_t) k * D + c0 + c];
+    }
+    item.barrier(sycl::access::fence_space::local_space);
+    const int rsub = lane >> 2, q = lane & 3;
+    const bool inj = m.a[0].w_inject != nullptr;
+    for (int r0 = r_first; r0 < r_end; r0 += WARPS * 8) {
+        const int r = r0 + warp * 8 + rsub;
+        const bool ok = r < LR || (r < GRS_ROWS && inj);
+        const uint16_t* wrow = r < LR ? m.a[0].w_down + (size_t) r * D : m.a[0].w_inject + (size_t) (ok ? r - LR : 0) * D;
+        sycl::uint4 wv[4];
+#pragma unroll
+        for (int cc = 0; cc < 4; ++cc)
+            wv[cc] = ok ? reinterpret_cast<const sycl::uint4*>(wrow + c0)[q + 4 * cc] : sycl::uint4(0, 0, 0, 0);
+        float acc[kFusedGrMaxT];
+#pragma unroll
+        for (int k = 0; k < kFusedGrMaxT; ++k) {
+            acc[k] = 0.0f;
+            if (k < T) {
+#pragma unroll
+                for (int cc = 0; cc < 4; ++cc) acc[k] += s116_dot8(wv[cc], tile + k * GRS_COLS + (q + 4 * cc) * 8);
+            }
+        }
+        auto sg = item.get_sub_group();
+#pragma unroll
+        for (int k = 0; k < kFusedGrMaxT; ++k) {
+            if (k >= T) break;
+            float v = acc[k];
+            v += sycl::permute_group_by_xor(sg, v, 1);
+            v += sycl::permute_group_by_xor(sg, v, 2);
+            if (q == 0 && ok) m.part2[((size_t) sl * kFusedGrMaxT + k) * GRS_ROWS + r] = v;
+        }
+    }
+}
+template <bool MORE = false>
+__dpct_inline__ void s116_control_reduce(HCMultiS116 m) {
+    auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+    const int i = (int) item.get_global_id(2);
+    if (i >= m.T * GRS_ROWS) return;
+    const int k = i / GRS_ROWS, r = i - k * GRS_ROWS;
+    if (r >= LR && m.a[0].w_inject == nullptr) return;
+    float x = 0.0f;
+    if constexpr (MORE) {
+        // 8 loads in flight per step (the one-at-a-time loop was load-latency bound on the A770), then added one by
+        // one: x += slice 0, 1, 2, ... 79, the same sequence of float adds as the loop below (-fp-model=precise)
+        const float* src = m.part2 + (size_t) k * GRS_ROWS + r;
+        constexpr size_t SL_STRIDE = (size_t) kFusedGrMaxT * GRS_ROWS;
+        for (int sl = 0; sl < GRS_SLICES; sl += 8) {
+            float pv[8];
+#pragma unroll
+            for (int j = 0; j < 8; ++j) pv[j] = src[(size_t) (sl + j) * SL_STRIDE];
+#pragma unroll
+            for (int j = 0; j < 8; ++j) x += pv[j];
+        }
+    } else {
+        for (int sl = 0; sl < GRS_SLICES; ++sl) x += m.part2[((size_t) sl * kFusedGrMaxT + k) * GRS_ROWS + r];
+    }
+    if (r < LR) m.part[(size_t) k * LR + r] = x;   // split 0
+    else S116_GR_PICK(m, k, inject_out)[r - LR] = x;
+}
+template <int COLS = UPM_COLS, bool ILP = false, bool LO_ONCE = false>   // columns per block: 16 (the original), 8 or 4 - each row's dot, butterfly and the per-column
+__dpct_inline__ void s116_control_up(HCMultiS116 m) {   // stream sum unchanged, so the same bits; more blocks, fewer serial rows per warp
+    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+auto &lo = *sycl::ext::oneapi::group_local_memory_for_overwrite<
+    float[kFusedGrMaxT][LR]>(
+    sycl::ext::oneapi::this_work_item::get_work_group<3>());
+    auto &g = *sycl::ext::oneapi::group_local_memory_for_overwrite<
+        float[kFusedGrMaxT][HC][COLS]>(
+        sycl::ext::oneapi::this_work_item::get_work_group<3>());
+    const int t = item_ct1.get_local_id(2), lane = t & 31, warp = t >> 5;
+    const int T = m.T;
+    const int d0 = item_ct1.get_group(2) * COLS;
+#pragma unroll
+    for (int i = t; i < T * LR; i += THREADS) {   // the down kernel's partial sums, in split order, then silu
+        const int k = i / LR, r = i % LR;
+        float x = 0.0f;
+#pragma unroll
+        for (int sp = 0; sp < DOWN_SPLIT; ++sp) if (sp < m.nsplit) x += m.part[((size_t) sp * kFusedGrMaxT + k) * LR + r];
+        x /= (float) HC;
+        const float v = x / (1.0f + sycl::native::exp(-x));
+        lo[k][r] = v;
+        if (!LO_ONCE || item_ct1.get_group(2) == 0) S116_GR_PICK(m, k, lo)[r] = v;   // the same values in every block
+    }
+    /*
+    DPCT1065: Consider replacing sycl::nd_item::barrier() with
+    sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better
+    performance if there is no access to global memory.
+    */
+    item_ct1.barrier();
+    // this lane's token (lane < T), picked once - not per row
+    const int pk = lane < T ? lane : 0;
+    const float* const pR = S116_GR_PICK(m, pk, R);
+    const float* const pWn = S116_GR_PICK(m, pk, w_norm);
+    const float* const pRs = S116_GR_PICK(m, pk, rs);
+    const bool pApply = S116_GR_PICK(m, pk, apply);
+    const float* const pBo = S116_GR_PICK(m, pk, bo_prev);
+    const float* const pIp = S116_GR_PICK(m, pk, inj_prev);
+    float* const pRout = S116_GR_PICK(m, pk, R_out);
+    for (int r = warp; r < HC * COLS; r += WARPS) {
+        const int c = r / COLS, dd = r - c * COLS, i = c * N + d0 + dd;
+        const sycl::uint4 *w4 =
+            reinterpret_cast<const sycl::uint4 *>(m.a[0].w_up + (size_t)i * LR);
+        /*
+        DPCT1098: The '*' expression is used instead of the __ldg call.
+        These two expressions do not provide the exact same functionality. Check
+        the generated code for potential precision and/or performance issues.
+        */
+        const sycl::uint4 wa = *(w4 + lane);
+        /*
+        DPCT1098: The '*' expression is used instead of the __ldg call.
+        These two expressions do not provide the exact same functionality. Check
+        the generated code for potential precision and/or performance issues.
+        */
+        const sycl::uint4 wb =
+            lane < LR / 8 - 32 ? *(w4 + 32 + lane) : sycl::uint4(0, 0, 0, 0);
+        // the epilogue inputs of this lane's token, fetched while the dots run
+        float rv = 0.0f, wn = 0.0f, rsc = 0.0f, bo = 0.0f, ip = 0.0f;
+        bool apply = false;
+        if (lane < T) {
+            rv = pR[i];
+            wn = pWn[i];
+            rsc = pRs[c];
+            apply = pApply;
+            if (apply) { bo = pBo[d0 + dd]; ip = pIp[c]; }
+        }
+        float mine = 0.0f;
+        if constexpr (ILP) {   // STRATA_GR_UP_ILP: the T dots first, then their butterflies interleaved step by step -
+            float accs[kFusedGrMaxT];   // each value sees s116_warp_sum's shuffles in s116_warp_sum's order: the same bits
+#pragma unroll
+            for (int k = 0; k < kFusedGrMaxT; ++k) {
+                float acc = 0.0f;
+                if (k < T) {
+                    acc = s116_dot8(wa, lo[k] + lane * 8);
+                    if (lane < LR / 8 - 32) acc += s116_dot8(wb, lo[k] + (32 + lane) * 8);
+                }
+                accs[k] = acc;
+            }
+#pragma unroll
+            for (int o = 16; o > 0; o >>= 1)
+#pragma unroll
+                for (int k = 0; k < kFusedGrMaxT; ++k)
+                    if (k < T) accs[k] += dpct::experimental::permute_sub_group_by_xor(
+                                   0xffffffffu, sycl::ext::oneapi::this_work_item::get_sub_group(), accs[k], o);
+#pragma unroll
+            for (int k = 0; k < kFusedGrMaxT; ++k) if (k < T && lane == k) mine = accs[k];
+        } else {
+#pragma unroll
+        for (int k = 0; k < kFusedGrMaxT; ++k) {
+            if (k >= T) break;
+            float acc = s116_dot8(wa, lo[k] + lane * 8);
+            if (lane < LR / 8 - 32) acc += s116_dot8(wb, lo[k] + (32 + lane) * 8);
+            acc = s116_warp_sum(acc);
+            if (lane == k) mine = acc;
+        }
+        }
+        if (lane < T) {
+            if (apply) {
+                rv = sycl::fma(bo, 2.0f * s116_sigmoid(ip / (float)HC), rv);
+                pRout[i] = rv;
+            }
+            const float x = rv * wn * rsc;
+            g[lane][c][dd] = x * s116_sigmoid(mine);
+        }
+    }
+    /*
+    DPCT1065: Consider replacing sycl::nd_item::barrier() with
+    sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better
+    performance if there is no access to global memory.
+    */
+    item_ct1.barrier();
+    for (int i = t; i < T * COLS; i += THREADS) {
+        const int k = i / COLS, col = i - k * COLS;
+        float s = 0.0f;
+#pragma unroll
+        for (int c = 0; c < HC; ++c) s += g[k][c][col];
+        S116_GR_PICK(m, k, mixed)[d0 + col] = s / (float) HC;
+    }
+}
+
+template <bool MORE = false>
+__dpct_inline__ void s116_candidate_reduce(HCMultiS116 m) {
+    auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+    const int i = (int) item.get_global_id(2);
+    if (i >= m.T * GRS_ROWS) return;
+    const int k = i / GRS_ROWS, r = i - k * GRS_ROWS;
+    if (r >= LR && m.a[0].w_inject == nullptr) return;
+    float x = 0.0f;
+    if constexpr (MORE) {
+        // 8 loads in flight per step (the one-at-a-time loop was load-latency bound on the A770), then added one by
+        // one: x += slice 0, 1, 2, ... 79, the same sequence of float adds as the loop below (-fp-model=precise)
+        const float* src = m.part2 + (size_t) k * GRS_ROWS + r;
+        constexpr size_t SL_STRIDE = (size_t) kFusedGrMaxT * GRS_ROWS;
+        for (int sl = 0; sl < GRS_SLICES; sl += 8) {
+            float pv[8];
+#pragma unroll
+            for (int j = 0; j < 8; ++j) pv[j] = src[(size_t) (sl + j) * SL_STRIDE];
+#pragma unroll
+            for (int j = 0; j < 8; ++j) x += pv[j];
+        }
+    } else {
+        for (int sl = 0; sl < GRS_SLICES; ++sl) x += m.part2[((size_t) sl * kFusedGrMaxT + k) * GRS_ROWS + r];
+    }
+    if (r < LR) {
+        m.part[(size_t) k * LR + r] = x;   // preserve raw split 0 exactly
+        // Keep the UP expression's NEW +0 and source division. No volatile.
+        // A compiler may forward this FP32 load; later ISA must prove that the
+        // epilogue sees the exact 32-bit operand of the preserved raw store.
+        float y = 0.0f;
+        y += m.part[(size_t) k * LR + r];
+        y /= (float) HC;
+        const float v = y / (1.0f + sycl::native::exp(-y));
+        S116_GR_PICK(m, k, lo)[r] = v;
+    } else S116_GR_PICK(m, k, inject_out)[r - LR] = x;
+}
+template <int COLS = UPM_COLS, bool ILP = false, bool LO_ONCE = false>   // columns per block: 16 (the original), 8 or 4 - each row's dot, butterfly and the per-column
+__dpct_inline__ void s116_candidate_up(HCMultiS116 m) {   // stream sum unchanged, so the same bits; more blocks, fewer serial rows per warp
+    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+auto &lo = *sycl::ext::oneapi::group_local_memory_for_overwrite<
+    float[kFusedGrMaxT][LR]>(
+    sycl::ext::oneapi::this_work_item::get_work_group<3>());
+    auto &g = *sycl::ext::oneapi::group_local_memory_for_overwrite<
+        float[kFusedGrMaxT][HC][COLS]>(
+        sycl::ext::oneapi::this_work_item::get_work_group<3>());
+    const int t = item_ct1.get_local_id(2), lane = t & 31, warp = t >> 5;
+    const int T = m.T;
+    const int d0 = item_ct1.get_group(2) * COLS;
+#pragma unroll
+    for (int i = t; i < T * LR; i += THREADS) {   // the down kernel's partial sums, in split order, then silu
+        const int k = i / LR, r = i % LR;
+        lo[k][r] = S116_GR_PICK(m, k, lo)[r];   // completed producer result, same SLM/barrier
+    }
+    /*
+    DPCT1065: Consider replacing sycl::nd_item::barrier() with
+    sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better
+    performance if there is no access to global memory.
+    */
+    item_ct1.barrier();
+    // this lane's token (lane < T), picked once - not per row
+    const int pk = lane < T ? lane : 0;
+    const float* const pR = S116_GR_PICK(m, pk, R);
+    const float* const pWn = S116_GR_PICK(m, pk, w_norm);
+    const float* const pRs = S116_GR_PICK(m, pk, rs);
+    const bool pApply = S116_GR_PICK(m, pk, apply);
+    const float* const pBo = S116_GR_PICK(m, pk, bo_prev);
+    const float* const pIp = S116_GR_PICK(m, pk, inj_prev);
+    float* const pRout = S116_GR_PICK(m, pk, R_out);
+    for (int r = warp; r < HC * COLS; r += WARPS) {
+        const int c = r / COLS, dd = r - c * COLS, i = c * N + d0 + dd;
+        const sycl::uint4 *w4 =
+            reinterpret_cast<const sycl::uint4 *>(m.a[0].w_up + (size_t)i * LR);
+        /*
+        DPCT1098: The '*' expression is used instead of the __ldg call.
+        These two expressions do not provide the exact same functionality. Check
+        the generated code for potential precision and/or performance issues.
+        */
+        const sycl::uint4 wa = *(w4 + lane);
+        /*
+        DPCT1098: The '*' expression is used instead of the __ldg call.
+        These two expressions do not provide the exact same functionality. Check
+        the generated code for potential precision and/or performance issues.
+        */
+        const sycl::uint4 wb =
+            lane < LR / 8 - 32 ? *(w4 + 32 + lane) : sycl::uint4(0, 0, 0, 0);
+        // the epilogue inputs of this lane's token, fetched while the dots run
+        float rv = 0.0f, wn = 0.0f, rsc = 0.0f, bo = 0.0f, ip = 0.0f;
+        bool apply = false;
+        if (lane < T) {
+            rv = pR[i];
+            wn = pWn[i];
+            rsc = pRs[c];
+            apply = pApply;
+            if (apply) { bo = pBo[d0 + dd]; ip = pIp[c]; }
+        }
+        float mine = 0.0f;
+        if constexpr (ILP) {   // STRATA_GR_UP_ILP: the T dots first, then their butterflies interleaved step by step -
+            float accs[kFusedGrMaxT];   // each value sees s116_warp_sum's shuffles in s116_warp_sum's order: the same bits
+#pragma unroll
+            for (int k = 0; k < kFusedGrMaxT; ++k) {
+                float acc = 0.0f;
+                if (k < T) {
+                    acc = s116_dot8(wa, lo[k] + lane * 8);
+                    if (lane < LR / 8 - 32) acc += s116_dot8(wb, lo[k] + (32 + lane) * 8);
+                }
+                accs[k] = acc;
+            }
+#pragma unroll
+            for (int o = 16; o > 0; o >>= 1)
+#pragma unroll
+                for (int k = 0; k < kFusedGrMaxT; ++k)
+                    if (k < T) accs[k] += dpct::experimental::permute_sub_group_by_xor(
+                                   0xffffffffu, sycl::ext::oneapi::this_work_item::get_sub_group(), accs[k], o);
+#pragma unroll
+            for (int k = 0; k < kFusedGrMaxT; ++k) if (k < T && lane == k) mine = accs[k];
+        } else {
+#pragma unroll
+        for (int k = 0; k < kFusedGrMaxT; ++k) {
+            if (k >= T) break;
+            float acc = s116_dot8(wa, lo[k] + lane * 8);
+            if (lane < LR / 8 - 32) acc += s116_dot8(wb, lo[k] + (32 + lane) * 8);
+            acc = s116_warp_sum(acc);
+            if (lane == k) mine = acc;
+        }
+        }
+        if (lane < T) {
+            if (apply) {
+                rv = sycl::fma(bo, 2.0f * s116_sigmoid(ip / (float)HC), rv);
+                pRout[i] = rv;
+            }
+            const float x = rv * wn * rsc;
+            g[lane][c][dd] = x * s116_sigmoid(mine);
+        }
+    }
+    /*
+    DPCT1065: Consider replacing sycl::nd_item::barrier() with
+    sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better
+    performance if there is no access to global memory.
+    */
+    item_ct1.barrier();
+    for (int i = t; i < T * COLS; i += THREADS) {
+        const int k = i / COLS, col = i - k * COLS;
+        float s = 0.0f;
+#pragma unroll
+        for (int c = 0; c < HC; ++c) s += g[k][c][col];
+        S116_GR_PICK(m, k, mixed)[d0 + col] = s / (float) HC;
+    }
+}
+
+
+// Exactly six private, disjoint kernel types. No other HC variant materialized.
+class HCNormS116; class HCDownS116; class HCControlReduceS116;
+class HCControlUpS116; class HCCandidateReduceS116; class HCCandidateUpS116;
+inline void reduce_only(sycl::queue& q,HCMultiS116 m,bool candidate);
+inline void prefix(sycl::queue& q,HCMultiS116 m,bool candidate) {
+    q.parallel_for<dpct_kernel_name<HCNormS116>>(
+        sycl::nd_range<3>(sycl::range(1,1,m.T*HC)*sycl::range(1,1,THREADS),sycl::range(1,1,THREADS)),
+        [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {s116_norm_split(m);});
+    q.submit([&](sycl::handler& cgh) {
+        sycl::local_accessor<float,1> tile(sycl::range<1>(kFusedGrMaxT*GRS_COLS),cgh);
+        cgh.parallel_for<dpct_kernel_name<HCDownS116>>(
+            sycl::nd_range<3>(sycl::range(1,1,GRS_SLICES)*sycl::range(1,1,THREADS),sycl::range(1,1,THREADS)),
+            [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {s116_down_sliced<false>(m,tile.get_multi_ptr<sycl::access::decorated::no>().get());});
+    });
+    reduce_only(q,m,candidate);
+}
+inline void reduce_only(sycl::queue& q,HCMultiS116 m,bool candidate) {
+    const unsigned nr=unsigned((m.T*GRS_ROWS+127)/128);
+    const sycl::nd_range<3> red(sycl::range(1,1,nr)*sycl::range(1,1,128),sycl::range(1,1,128));
+    if(candidate)q.parallel_for<dpct_kernel_name<HCCandidateReduceS116>>(red,
+        [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {s116_candidate_reduce<false>(m);});
+    else q.parallel_for<dpct_kernel_name<HCControlReduceS116>>(red,
+        [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {s116_control_reduce<false>(m);});
+}
+inline void up(sycl::queue& q,HCMultiS116 m,bool candidate) {
+    const sycl::nd_range<3> nr(sycl::range(1,1,N/16)*sycl::range(1,1,THREADS),sycl::range(1,1,THREADS));
+    auto props=sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};
+    if(candidate)q.parallel_for<dpct_kernel_name<HCCandidateUpS116>>(nr,props,
+        [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {s116_candidate_up<16,false,true>(m);});
+    else q.parallel_for<dpct_kernel_name<HCControlUpS116>>(nr,props,
+        [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {s116_control_up<16,false,true>(m);});
+}
+inline void whole(sycl::queue& q,HCMultiS116 m,bool candidate){prefix(q,m,candidate);up(q,m,candidate);}
+#undef S116_GR_PICK
+} // namespace s116_private
+
+===== FULL oracle.cpp SHA256 c34c8df859637c406e6599350634f3ee1fc9db23f3b13897d858568bba882cad =====
+// S116 SOURCE ONLY. No build/run authorization from this file.
+#define DPCT_PROFILING_ENABLED
+#include "private_hc.hpp"
+#include "anchor_names.hpp"
+#include <algorithm>
+#include <array>
+#include <chrono>
+#include <cctype>
+#include <cmath>
+#include <cstdio>
+#include <cstring>
+#include <exception>
+#include <filesystem>
+#include <fstream>
+#include <functional>
+#include <iterator>
+#include <memory>
+#include <random>
+#include <set>
+#include <stdexcept>
+#include <string>
+#include <vector>
+namespace H=s116_private;
+namespace fs=std::filesystem;
+using Clock=std::chrono::steady_clock;
+using Bytes=std::vector<uint8_t>;
+constexpr int N=2560,HC=4,D=N*HC,LR=320,TM=8,ROWS=324,SLICES=80,SPLITS=4;
+constexpr size_t G=256;
+bool cleanup_error=false;
+static void need(bool b,const std::string& m){if(!b)throw std::runtime_error(m);}
+static uint16_t bf16(float x){uint32_t u;std::memcpy(&u,&x,4);return uint16_t((u+0x7fff+((u>>16)&1))>>16);}
+static void equal(const Bytes&a,const Bytes&b,const char*m){need(a==b,m);}
+static uint32_t word(const Bytes&x,size_t i){uint32_t u;need((i+1)*4<=x.size(),"word range");std::memcpy(&u,x.data()+i*4,4);return u;}
+static void finite(const Bytes&x,size_t n,const char*m,size_t offset=0){need((offset+n)*4<=x.size(),"finite range");for(size_t i=0;i<n;++i){float f;std::memcpy(&f,x.data()+(offset+i)*4,4);if(!std::isfinite(f))throw std::runtime_error(m);}}
+static void poison_after(const Bytes&x,size_t used,const char*m){need(used<=x.size(),"tail bound");for(size_t i=used;i<x.size();++i)need(x[i]==0xff,m);}
+struct Buffer {
+ sycl::queue& q;size_t bytes;uint8_t* raw;const char* name;
+ Buffer(sycl::queue&qq,size_t n,const char*label):q(qq),bytes(n),raw(sycl::malloc_device<uint8_t>(n+2*G,q)),name(label){
+  need(raw!=nullptr,std::string("allocation ")+name);q.memset(raw,0xd7,n+2*G);q.memset(raw+G,0xff,n);
+ }
+ ~Buffer(){try{q.wait_and_throw();if(raw)sycl::free(raw,q);}catch(...){cleanup_error=true;}}
+ Buffer(const Buffer&)=delete;Buffer&operator=(const Buffer&)=delete;
+ template<class T>T* ptr()const{return reinterpret_cast<T*>(raw+G);}
+ void poison(){q.memset(raw+G,0xff,bytes);}
+ template<class T>void put(const std::vector<T>&v){need(v.size()*sizeof(T)==bytes,"upload size");q.memcpy(raw+G,v.data(),bytes);}
+ Bytes get()const{Bytes v(bytes+2*G);q.memcpy(v.data(),raw,v.size()).wait_and_throw();
+  for(size_t i=0;i<G;++i)need(v[i]==0xd7&&v[bytes+G+i]==0xd7,std::string("guard ")+name);
+  return Bytes(v.begin()+G,v.begin()+G+bytes);
+ }
+ template<class T>void readonly(const std::vector<T>&v)const{auto b=get();need(b.size()==v.size()*sizeof(T)&&!std::memcmp(b.data(),v.data(),b.size()),std::string("read-only ")+name);}
+};
+static void disjoint(const Buffer&a,const Buffer&b){const auto x=reinterpret_cast<uintptr_t>(a.raw),y=reinterpret_cast<uintptr_t>(b.raw);need(x+a.bytes+2*G<=y||y+b.bytes+2*G<=x,"private USM spans alias");}
+struct Graph {
+ sycl::queue& q;dpct::experimental::command_graph_exec_ptr exec=nullptr;
+ explicit Graph(sycl::queue&qq):q(qq){}
+ ~Graph(){try{q.wait_and_throw();}catch(...){cleanup_error=true;}delete exec;}
+ void capture(const std::function<void()>&record){
+  q.wait_and_throw();need(!exec,"capture once");dpct::experimental::command_graph_ptr g=nullptr;bool begun=false,ended=false;
+  try{begun=true;dpct::experimental::begin_recording(&q);record();dpct::experimental::end_recording(&q,&g);ended=true;
+   need(g!=nullptr,"capture null");exec=new sycl::ext::oneapi::experimental::command_graph<sycl::ext::oneapi::experimental::graph_state::executable>(g->finalize());delete g;g=nullptr;q.wait_and_throw();
+  }catch(...){const auto original=std::current_exception();
+   if(begun&&!ended){try{if(g)g->end_recording();else dpct::experimental::end_recording(&q,&g);}catch(...){cleanup_error=true;std::fprintf(stderr,"HOLD capture balance failed\n");}}
+   try{q.wait_and_throw();}catch(...){cleanup_error=true;std::fprintf(stderr,"HOLD capture drain failed\n");}
+   delete g;std::rethrow_exception(original);
+  }
+ }
+ void replay(){need(exec!=nullptr,"graph absent");q.ext_oneapi_graph(*exec);}
+};
+struct Fixture {
+ std::vector<float> R,bo,inj,wn,Rb,bob,injb;
+ std::vector<uint16_t> wd,wu,wi;
+ Fixture():R(size_t(TM)*D),bo(size_t(TM)*N),inj(size_t(TM)*HC),wn(D),wd(size_t(LR)*D),wu(size_t(D)*LR),wi(size_t(HC)*D){
+  // Exact S39/S73 generation order, seed, distribution, scales, BF16 conversion.
+  std::mt19937 rng(7);std::normal_distribution<float>nd(0.f,1.f);
+  auto fill=[&](std::vector<float>&v,float scale){for(auto&x:v)x=scale*nd(rng);};
+  fill(R,1.f);fill(bo,.5f);fill(inj,1.f);fill(wn,.3f);for(auto&x:wn)x+=1.f;
+  for(auto&x:wd)x=bf16(.02f*nd(rng));for(auto&x:wu)x=bf16(.05f*nd(rng));for(auto&x:wi)x=bf16(.02f*nd(rng));
+  Rb=R;bob=bo;injb=inj;
+  for(size_t i=0;i<Rb.size();++i)Rb[i]=-.7f*Rb[i]+.001f*float(i%17);
+  for(auto&x:bob)x=-.4f*x+.02f;for(auto&x:injb)x+=.3f;
+ }
+};
+struct Shared {
+ sycl::queue&q;const Fixture&h;Buffer bo,inj,wn,wd,wu,wi;
+ Shared(sycl::queue&qq,const Fixture&hh):q(qq),h(hh),bo(q,h.bo.size()*4,"bo"),inj(q,h.inj.size()*4,"inj_prev"),wn(q,h.wn.size()*4,"w_norm"),wd(q,h.wd.size()*2,"w_down"),wu(q,h.wu.size()*2,"w_up"),wi(q,h.wi.size()*2,"w_inject"){
+  wn.put(h.wn);wd.put(h.wd);wu.put(h.wu);wi.put(h.wi);stage(false);
+ }
+ void stage(bool b){bo.put(b?h.bob:h.bo);inj.put(b?h.injb:h.inj);q.wait_and_throw();}
+ void inputs(bool b){bo.readonly(b?h.bob:h.bo);inj.readonly(b?h.injb:h.inj);}
+ void weights(){wn.readonly(h.wn);wd.readonly(h.wd);wu.readonly(h.wu);wi.readonly(h.wi);}
+};
+struct Snap {Bytes R,lo,rs,io,mix,xn,part,part2;};
+static Bytes anchored(const Snap&s){Bytes out;out.reserve(747776);for(const auto*b:{&s.R,&s.lo,&s.rs,&s.io,&s.mix,&s.xn})out.insert(out.end(),b->begin(),b->end());need(out.size()==747776,"S39 snapshot fields/size");return out;}
+static void equal_final(const Snap&a,const Snap&b){equal(a.R,b.R,"R bytes");equal(a.lo,b.lo,"lo bytes");equal(a.rs,b.rs,"rs bytes");equal(a.io,b.io,"inject bytes");equal(a.mix,b.mix,"mixed bytes");equal(a.xn,b.xn,"xn bytes");equal(a.part,b.part,"raw part bytes");equal(a.part2,b.part2,"raw part2 bytes");}
+struct Route {
+ sycl::queue&q;Shared&shared;bool candidate;int T,apply,inject;H::HCMultiS116 m{};
+ Buffer R,xn,lo,rs,io,mix,part,part2;Graph whole_graph,synthetic_graph;
+ Route(sycl::queue&qq,Shared&s,bool c,int t,int a,int i):q(qq),shared(s),candidate(c),T(t),apply(a),inject(i),R(q,size_t(TM)*D*4,"R"),xn(q,size_t(TM)*D*4,"xn"),lo(q,size_t(TM)*LR*4,"lo"),rs(q,size_t(TM)*HC*4,"rs"),io(q,size_t(TM)*HC*4,"inject_out"),mix(q,size_t(TM)*N*4,"mixed"),part(q,size_t(SPLITS)*TM*LR*4,"part"),part2(q,size_t(SLICES)*TM*ROWS*4,"part2"),whole_graph(q),synthetic_graph(q){
+  need(T==1||T==2||T==6,"only reviewed T1/2/6");
+  m.T=T;m.nsplit=1;m.xn=xn.ptr<float>();m.part=part.ptr<float>();m.part2=part2.ptr<float>();
+  for(int k=0;k<T;++k){auto&a=m.a[k];a.R=R.ptr<float>()+size_t(k)*D;a.R_out=R.ptr<float>()+size_t(k)*D;a.apply=apply;
+   a.bo_prev=s.bo.ptr<float>()+size_t(k)*N;a.inj_prev=s.inj.ptr<float>()+size_t(k)*HC;a.w_norm=s.wn.ptr<float>();a.w_down=s.wd.ptr<uint16_t>();a.w_up=s.wu.ptr<uint16_t>();a.w_inject=inject?s.wi.ptr<uint16_t>():nullptr;
+   a.lo=lo.ptr<float>()+size_t(k)*LR;a.rs=rs.ptr<float>()+size_t(k)*HC;a.inject_out=io.ptr<float>()+size_t(k)*HC;a.mixed=mix.ptr<float>()+size_t(k)*N;}
+  const auto own=buffers();for(size_t u=0;u<own.size();++u){for(size_t v=u+1;v<own.size();++v)disjoint(*own[u],*own[v]);for(Buffer*p:{&s.bo,&s.inj,&s.wn,&s.wd,&s.wu,&s.wi})disjoint(*own[u],*p);}
+ }
+ std::array<Buffer*,8>buffers(){return {&R,&xn,&lo,&rs,&io,&mix,&part,&part2};}
+ ~Route(){try{q.wait_and_throw();}catch(...){cleanup_error=true;}}
+ void stage(bool b){q.wait_and_throw();R.put(b?shared.h.Rb:shared.h.R);for(Buffer*p:{&xn,&lo,&rs,&io,&mix,&part,&part2})p->poison();q.wait_and_throw();}
+ void prefix(){H::prefix(q,m,candidate);}void up(){H::up(q,m,candidate);}void whole(){H::whole(q,m,candidate);}
+ void reduce(){H::reduce_only(q,m,candidate);}
+ Snap snapshot(bool b,bool final,bool ordinary=true){
+  q.wait_and_throw();Snap s{R.get(),lo.get(),rs.get(),io.get(),mix.get(),xn.get(),part.get(),part2.get()};
+  const auto&input=b?shared.h.Rb:shared.h.R;
+  need(!std::memcmp(s.R.data()+size_t(T)*D*4,input.data()+size_t(T)*D,(TM-T)*D*4),"inactive R tail");
+  if(!final||!apply)need(!std::memcmp(s.R.data(),input.data(),s.R.size()),"R premature/untaken write");
+  if(final&&apply)need(std::memcmp(s.R.data(),input.data(),size_t(T)*D*4)!=0,"pending write not exercised");
+  poison_after(s.lo,(final||candidate)?size_t(T)*LR*4:0,"lo tail/readiness");
+  poison_after(s.rs,size_t(T)*HC*4,"rs tail");poison_after(s.xn,size_t(T)*D*4,"xn tail");
+  poison_after(s.io,inject?size_t(T)*HC*4:0,"inject tail/untaken");poison_after(s.mix,final?size_t(T)*N*4:0,"mixed tail/readiness");
+  poison_after(s.part,size_t(T)*LR*4,"raw part inactive/split tail");
+  for(int sl=0;sl<SLICES;++sl)for(int k=0;k<TM;++k)for(int r=0;r<ROWS;++r){size_t pos=(size_t(sl)*TM+k)*ROWS+r;
+   if(k>=T||(r>=LR&&!inject))need(word(s.part2,pos)==0xffffffffu,"raw part2 inactive/untaken");}
+  if(ordinary){finite(s.R,size_t(T)*D,"finite R");finite(s.rs,size_t(T)*HC,"finite rs");finite(s.xn,size_t(T)*D,"finite xn");finite(s.part,size_t(T)*LR,"finite part");
+   if(inject)finite(s.io,size_t(T)*HC,"finite inject");if(final||candidate)finite(s.lo,size_t(T)*LR,"finite lo");if(final)finite(s.mix,size_t(T)*N,"finite mixed");
+   for(int sl=0;sl<SLICES;++sl)for(int k=0;k<T;++k)finite(s.part2,inject?ROWS:LR,"finite part2",(size_t(sl)*TM+k)*ROWS);
+  }
+  return s;
+ }
+};
+static void owners_disjoint(Route&a,Route&b){for(auto*x:a.buffers())for(auto*y:b.buffers())disjoint(*x,*y);}
+static std::set<std::string>anchors_checked;
+static void anchor(const std::string&name,const Snap&s){
+ if(std::find(s116_anchor_names.begin(),s116_anchor_names.end(),name)==s116_anchor_names.end())return;
+ if(anchors_checked.count(name))return;
+ std::ifstream f(fs::path(s116_anchor_dir)/name,std::ios::binary);need(bool(f),"historical anchor absent "+name);
+ Bytes expected{std::istreambuf_iterator<char>(f),std::istreambuf_iterator<char>()};equal(anchored(s),expected,"historical S39 anchor bytes");anchors_checked.insert(name);
+ std::printf("{\"type\":\"S39_anchor\",\"name\":\"%s\",\"bytes\":%zu,\"PASS\":true}\n",name.c_str(),expected.size());
+}
+static void pre_equal(const Snap&a,const Snap&b){equal(a.R,b.R,"prefix R");equal(a.rs,b.rs,"prefix rs");equal(a.xn,b.xn,"prefix xn");equal(a.io,b.io,"prefix inject");equal(a.part,b.part,"prefix raw part");equal(a.part2,b.part2,"prefix raw part2");equal(a.mix,b.mix,"prefix mixed poison");}
+static void producer_lo(const Snap&pre,const Snap&post){equal(pre.lo,post.lo,"candidate pre-UP lo vs control post-UP lo");}
+static constexpr std::array<uint32_t,14>special={0u,0x80000000u,1u,0x80000001u,0x007fffffu,0x807fffffu,0x00800000u,0x80800000u,0x3f800000u,0xbf800000u,0x7f800000u,0xff800000u,0x7fc12345u,0xffc54321u};
+static std::vector<uint32_t>partials(int T,bool changed){
+ std::vector<uint32_t>x(size_t(SLICES)*TM*ROWS,0xffffffffu);
+ for(int sl=0;sl<SLICES;++sl)for(int k=0;k<T;++k)for(int r=0;r<ROWS;++r){
+  const size_t i=(size_t(sl)*TM+k)*ROWS+r;const int kind=(r+k*3)%int(special.size());
+  x[i]=sl==0?special[kind]:(changed&&sl==1?special[(kind+5)%special.size()]:0u);
+ }
+ return x;
+}
+static void print_bits(const char*label,const Bytes&x,size_t n){std::printf("{\"type\":\"%s\",\"bits\":[",label);for(size_t i=0;i<n;++i)std::printf("%s\"%08x\"",i?",":"",word(x,i));std::printf("]}\n");}
+static int run(int argc,char**argv){
+ need(argc==4||argc==5,"usage: oracle NEW_OUTPUT_DIR --pci PHYSICAL_PCI [--timing]");need(std::string(argv[2])=="--pci","require explicit physical PCI");
+ const bool timing=argc==5;need(!timing||std::string(argv[4])=="--timing","only optional --timing");
+ const fs::path out=argv[1];need(fs::create_directory(out),"new output directory required");
+ need(dpct::device_count()==1,"one exposed physical device required");const sycl::device dev=dpct::dev_mgr::instance().get_device(0);
+ need(dev.has(sycl::aspect::ext_intel_pci_address),"PCI unavailable");std::string pci=dev.get_info<sycl::ext::intel::info::device::pci_address>();
+ std::transform(pci.begin(),pci.end(),pci.begin(),[](unsigned char c){return char(std::tolower(c));});need(pci==argv[3],"wrong physical PCI");
+ sycl::queue q(dpct::dev_mgr::instance().get_device(0).get_context(),dev,[](sycl::exception_list errors){for(const auto&e:errors)std::rethrow_exception(e);},sycl::property_list{sycl::property::queue::in_order()});
+ std::printf("CONFIG S116_PRIVATE sixHCclasses normalC16 sliced=1 MORE=0 ILP=0 GRF=default nsplit=1 pci=%s\n",pci.c_str());
+ try{
+  Fixture h;Shared shared(q,h);std::array<std::unique_ptr<Route>,2>timed;Snap timed_reference;size_t cases=0,eager=0,captured=0;
+  for(int T:{1,2,6})for(int apply:{0,1})for(int inject:{0,1}){
+   std::array<std::unique_ptr<Route>,2>route;for(int a=0;a<2;++a){route[a]=std::make_unique<Route>(q,shared,a!=0,T,apply,inject);route[a]->whole_graph.capture([&r=*route[a]]{r.whole();});}owners_disjoint(*route[0],*route[1]);
+   const std::string stem="T"+std::to_string(T)+"-a"+std::to_string(apply)+"-i"+std::to_string(inject);std::array<Snap,2>initial;
+   for(int state=0;state<3;++state){bool b=state==1;shared.stage(b);std::array<Snap,2>pre,post;
+    for(int a=0;a<2;++a){auto&r=*route[a];r.stage(b);r.prefix();pre[a]=r.snapshot(b,false);r.up();post[a]=r.snapshot(b,true);++eager;}
+    pre_equal(pre[0],pre[1]);equal_final(post[0],post[1]);producer_lo(pre[1],post[0]);
+    if(state==0){initial=post;if(T==6&&apply&&inject)timed_reference=post[0];}
+    if(state==1)need(post[0].mix!=initial[0].mix,"changed ordinary mixed not observable");
+    if(state==2)for(int a=0;a<2;++a)equal_final(post[a],initial[a]);
+    if(state<2)anchor(stem+(b?"-direct-b.bin":"-direct-a.bin"),post[0]);
+    for(int a=0;a<2;++a){auto&r=*route[a];r.stage(b);r.whole_graph.replay();const auto replay=r.snapshot(b,true);equal_final(replay,post[a]);++captured;if(a==0&&state<2)anchor(stem+(b?"-graph-b.bin":"-graph-a.bin"),replay);}
+    shared.inputs(b);
+   }
+   ++cases;std::printf("{\"type\":\"strict_case\",\"T\":%d,\"apply\":%d,\"inject\":%d,\"states\":\"A-B-A\",\"eager_and_captured\":true,\"raw_parts_final_bytes_guards_readonly\":true,\"PASS\":true}\n",T,apply,inject);
+   if(T==6&&apply&&inject)timed=std::move(route);
+  }
+  need(cases==12&&eager==72&&captured==72&&anchors_checked.size()==36,"strict coverage/anchor count");shared.weights();
+  // The SAME selected reduce+UP kernel classes, with synthetic part2 inputs.
+  // Norm/down are bypassed in this diagnostic, never in whole-read timing.
+  std::array<std::unique_ptr<Route>,2>diag;for(int a=0;a<2;++a){diag[a]=std::make_unique<Route>(q,shared,a!=0,2,0,1);diag[a]->synthetic_graph.capture([&r=*diag[a]]{r.reduce();r.up();});}owners_disjoint(*diag[0],*diag[1]);
+  std::array<Snap,2>first_diag;size_t diagnostics=0;
+  for(int state=0;state<3;++state){bool b=state==1;const auto p=partials(2,b);shared.stage(false);std::array<Snap,2>pre,post;
+   for(int a=0;a<2;++a){auto&r=*diag[a];r.stage(false);r.part2.put(p);
+    // Finite independent rs/xn are irrelevant to lo but make the UP inputs defined.
+    std::vector<float>rr(size_t(TM)*HC);std::vector<float>xx(size_t(TM)*D);for(int k=0;k<2;++k){for(int c=0;c<HC;++c)rr[k*HC+c]=1.f;for(int i=0;i<D;++i)xx[size_t(k)*D+i]=0.f;}
+    q.memcpy(r.rs.ptr<float>(),rr.data(),size_t(2)*HC*4);q.memcpy(r.xn.ptr<float>(),xx.data(),size_t(2)*D*4);r.reduce();pre[a]=r.snapshot(false,false,false);r.up();post[a]=r.snapshot(false,true,false);++diagnostics;
+   }
+   pre_equal(pre[0],pre[1]);equal_final(post[0],post[1]);producer_lo(pre[1],post[0]);
+   print_bits("synthetic_reduce_actual_raw_part",pre[0].part,special.size());print_bits("synthetic_candidate_preUP_lo",pre[1].lo,special.size());
+   if(state==0)first_diag=post;if(state==1)need(pre[0].part!=first_diag[0].part,"changed synthetic raw part not observable");if(state==2)for(int a=0;a<2;++a)equal_final(post[a],first_diag[a]);
+   for(int a=0;a<2;++a){auto&r=*diag[a];r.stage(false);r.part2.put(p);std::vector<float>rr(size_t(TM)*HC,1.f),xx(size_t(TM)*D,0.f);q.memcpy(r.rs.ptr<float>(),rr.data(),size_t(2)*HC*4);q.memcpy(r.xn.ptr<float>(),xx.data(),size_t(2)*D*4);r.synthetic_graph.replay();auto s=r.snapshot(false,true,false);equal_final(s,post[a]);++diagnostics;}
+  }
+  // Direct control-UP-only raw-part probe. NOT candidate cross-context proof.
+  shared.stage(false);auto&r=*diag[0];r.stage(false);std::vector<uint32_t>raw(size_t(SPLITS)*TM*LR,0xffffffffu);for(int k=0;k<2;++k)for(int i=0;i<LR;++i)raw[size_t(k)*LR+i]=special[(i+k*3)%special.size()];
+  r.part.put(raw);std::vector<float>rr(size_t(TM)*HC,1.f);q.memcpy(r.rs.ptr<float>(),rr.data(),size_t(2)*HC*4);r.up();q.wait_and_throw();r.part.readonly(raw);auto direct_lo=r.lo.get();poison_after(direct_lo,size_t(2)*LR*4,"direct control lo tail");print_bits("DIRECT_CONTROL_UP_ONLY_raw_input",r.part.get(),special.size());print_bits("DIRECT_CONTROL_UP_ONLY_lo_NOT_candidate_proof",direct_lo,special.size());
+  r.R.readonly(h.R);poison_after(r.mix.get(),size_t(2)*N*4,"direct mixed tail");poison_after(r.rs.get(),size_t(2)*HC*4,"direct rs tail");poison_after(r.io.get(),0,"direct io untaken");poison_after(r.xn.get(),0,"direct xn untaken");poison_after(r.part2.get(),0,"direct part2 untaken");
+  shared.weights();shared.inputs(false);need(diagnostics==12,"synthetic eager/captured A-B-A coverage");
+  std::printf("{\"type\":\"strict_complete_before_timing\",\"base_cases\":12,\"ordinary_eager_route_calls\":72,\"ordinary_captured_route_calls\":72,\"historical_unique_anchors\":36,\"synthetic_route_calls\":12,\"direct_control_only_probes\":1,\"HC_counters\":\"NONE_NO_RESET_LOGIC\",\"PASS\":true}\n");
+  if(timing){shared.stage(false);for(int round=0;round<2;++round)for(int arm:{0,1,1,0}){auto&t=*timed[arm];t.stage(false);q.wait_and_throw();const auto begin=Clock::now();t.whole_graph.replay();q.wait_and_throw();const auto end=Clock::now();auto s=t.snapshot(false,true);equal_final(s,timed_reference);double usec=std::chrono::duration<double,std::micro>(end-begin).count();need(std::isfinite(usec)&&usec>0,"finite timing");std::printf("{\"type\":\"timing\",\"round\":%d,\"arm\":%d,\"whole_reads\":1,\"graph_submissions\":1,\"completed_host_us\":%.6f}\n",round,arm,usec);}}
+  for(auto&t:timed)t.reset();for(auto&t:diag)t.reset();q.wait_and_throw();shared.weights();shared.inputs(false);
+
+ }
+ catch(...){const auto original=std::current_exception();try{q.wait_and_throw();}catch(...){cleanup_error=true;std::fprintf(stderr,"HOLD final drain failed\n");}std::rethrow_exception(original);}
+ q.wait_and_throw();need(!cleanup_error,"cleanup error");
+  std::ofstream result(out/"verdict.json");result<<"{\"status\":\"PASS_PRIVATE_STRICT_FIXTURES_ONLY\",\"base_cases\":12,\"anchors\":36,\"timing\":"<<(timing?"true":"false")<<",\"production_unchanged\":true}\n";need(bool(result),"verdict write");
+ return 0;
+}
+int main(int argc,char**argv){setvbuf(stdout,nullptr,_IONBF,0);try{return run(argc,argv);}catch(const std::exception&e){std::fprintf(stderr,"S116 HOLD: %s; no retry/reset/tolerance\n",e.what());return 5;}}
+
+===== FULL anchor_names.hpp SHA256 8bf2326a018e8c87d3db68c25ac2216e093a8ceee3d70100594582b46fd7639e =====
+#pragma once
+#include <array>
+inline constexpr const char* s116_anchor_dir="/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grf-oracle-s39-prep/run-profiled/mode1";
+inline constexpr std::array<const char*,36> s116_anchor_names={
+    "T1-a0-i0-direct-a.bin",
+    "T1-a0-i1-direct-a.bin",
+    "T1-a1-i0-direct-a.bin",
+    "T1-a1-i1-direct-a.bin",
+    "T2-a0-i0-direct-a.bin",
+    "T2-a0-i0-direct-b.bin",
+    "T2-a0-i0-graph-a.bin",
+    "T2-a0-i0-graph-b.bin",
+    "T2-a0-i1-direct-a.bin",
+    "T2-a0-i1-direct-b.bin",
+    "T2-a0-i1-graph-a.bin",
+    "T2-a0-i1-graph-b.bin",
+    "T2-a1-i0-direct-a.bin",
+    "T2-a1-i0-direct-b.bin",
+    "T2-a1-i0-graph-a.bin",
+    "T2-a1-i0-graph-b.bin",
+    "T2-a1-i1-direct-a.bin",
+    "T2-a1-i1-direct-b.bin",
+    "T2-a1-i1-graph-a.bin",
+    "T2-a1-i1-graph-b.bin",
+    "T6-a0-i0-direct-a.bin",
+    "T6-a0-i0-direct-b.bin",
+    "T6-a0-i0-graph-a.bin",
+    "T6-a0-i0-graph-b.bin",
+    "T6-a0-i1-direct-a.bin",
+    "T6-a0-i1-direct-b.bin",
+    "T6-a0-i1-graph-a.bin",
+    "T6-a0-i1-graph-b.bin",
+    "T6-a1-i0-direct-a.bin",
+    "T6-a1-i0-direct-b.bin",
+    "T6-a1-i0-graph-a.bin",
+    "T6-a1-i0-graph-b.bin",
+    "T6-a1-i1-direct-a.bin",
+    "T6-a1-i1-direct-b.bin",
+    "T6-a1-i1-graph-a.bin",
+    "T6-a1-i1-graph-b.bin",
+};
+
+===== FULL verify_anchors.py SHA256 cb8567b44b02fdda8b915ed4d48c5791b2dbc412b9b3148c96c98d63163f261c =====
+"""Future CPU preflight only: verify the 36 retained S39 snapshots before GPU."""
+from pathlib import Path
+import hashlib,json
+P=Path(__file__).resolve().parent
+x=json.loads((P/'s39-anchors.json').read_text())
+assert x['count']==len(x['anchors'])==36 and x['snapshot_bytes']==747776
+for name,expected in x['anchors'].items():
+ p=Path(x['anchor_directory'])/name
+ assert p.stat().st_size==747776,name
+ with p.open('rb')as f:actual=hashlib.file_digest(f,'sha256').hexdigest()
+ assert actual==expected,name
+print('PASS_36_EXACT_HISTORICAL_S39_ANCHORS_BEFORE_GPU')
+
+===== FULL build.sh SHA256 4a98eee8cfc5bdc12a58cbc72af1f1bea0dfb48687eb8b74ca41fd295fded49a =====
+#!/usr/bin/env bash
+# SOURCE ONLY. Root full-read + actual Opus/Fable CPU_BUILD_GO first.
+set -euo pipefail
+[[ $(id -u) == 1000 ]]
+HERE=$(cd -- "$(dirname -- "$0")" && pwd)
+IMAGE=sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2
+[[ ! -e "$HERE/build" ]]
+mkdir "$HERE/build"
+[[ $(docker image inspect --format '{{.Id}}' "$IMAGE") == "$IMAGE" ]]
+docker image inspect "$IMAGE" > "$HERE/build/image.json"
+# cpu-run must wrap this script. No GPU lease/device required for offline AOT.
+set +e
+docker run --rm --network none --cpus 4 -u "$(id -u):$(id -g)" \
+ --cap-drop ALL --security-opt no-new-privileges \
+ -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_DIR=/out/cache \
+ -e SYCL_CACHE_PERSISTENT=0 -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 \
+ -v /mnt/vm_8tb/b70/build/strata-ab:/work:ro \
+ -v "$HERE":/src:ro -v "$HERE/build":/out --entrypoint bash "$IMAGE" -c \
+ 'mkdir /out/tmp /out/cache; exec bash /src/build-container.sh' > "$HERE/build/build.log" 2>&1
+code=$?
+set -e
+printf '%s\n' "$code" > "$HERE/build/build.exit"
+exit "$code"
+
+===== FULL build-container.sh SHA256 fda3d623a49e990776eb3b82552cdfba481a3ed22540738b306d6eab2a305723 =====
+#!/usr/bin/env bash
+# Future CPU_BUILD_GO only. Six private kernel classes, no live TU/archive/main.
+source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1
+set -euo pipefail
+[[ ! -e /dev/dri ]]
+cd /out
+sha256sum -c /src/expected-container.sha256
+icpx --version > compiler-version.txt
+FLAGS=(-O3 -DNDEBUG -std=c++20 -fsycl -fsycl-targets=spir64_gen
+ -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel
+ -fp-model=precise -DSTRATA_Q6K_EXPERTS=1 -DSTRATA_XMX_SG16=1
+ -I/src -I/work/src-ep/sycl/include -I/work/src-ep/include)
+IMAGES=(-O3 -DNDEBUG -fsycl -fsycl-targets=spir64_gen
+ -fsycl-device-code-split=per_kernel -fsycl-max-parallel-link-jobs=4
+ -Xsycl-target-backend=spir64_gen "-device bmg-g31 -options -cl-fp32-correctly-rounded-divide-sqrt")
+TIMEFORMAT='S116_private_compile_seconds=%R'
+{ time icpx "${FLAGS[@]}" -c /src/oracle.cpp -o oracle.o > compile.log 2>&1; } 2> compile.time
+TIMEFORMAT='S116_six_HC_AOT_seconds=%R'
+{ time icpx -v "${IMAGES[@]}" -fsycl-link oracle.o -o private.images.o > prelink.log 2>&1; } 2> prelink.time
+TIMEFORMAT='S116_host_link_seconds=%R'
+{ time icpx -v -O3 -DNDEBUG oracle.o private.images.o /usr/lib/x86_64-linux-gnu/libze_loader.so -lsycl -lsycl-devicelib-host -Wl,-Map=/out/link.map -o hc_producer_s116 > host-link.log 2>&1; } 2> host-link.time
+sha256sum -c /src/expected-container.sha256
+sha256sum /src/oracle.cpp /src/private_hc.hpp /src/anchor_names.hpp oracle.o private.images.o hc_producer_s116 > build-sha256.txt
+printf '%s\n' BUILD_COMPLETE_SELECTED_CONTROL_AND_CANDIDATE_IMAGE_AUDIT_REQUIRED_BEFORE_GPU > status.txt
+
+===== FULL expected-container.sha256 SHA256 2016bfdf001eb666a8920785963873d0aa8876326fa2ffd9dc2381ae06c9caf5 =====
+c34c8df859637c406e6599350634f3ee1fc9db23f3b13897d858568bba882cad  /src/oracle.cpp
+452f17c508b984b926ba934ca1da5edcf405aa13c43a7ad202e9791a5ebaeda1  /src/private_hc.hpp
+8bf2326a018e8c87d3db68c25ac2216e093a8ceee3d70100594582b46fd7639e  /src/anchor_names.hpp
+fda3d623a49e990776eb3b82552cdfba481a3ed22540738b306d6eab2a305723  /src/build-container.sh
+199b44c105bebb8356498c2171943c236c9c0dfd4b899e400c62082f3966ebf4  /work/src-ep/include/strata/kernels/fused_gr.hpp

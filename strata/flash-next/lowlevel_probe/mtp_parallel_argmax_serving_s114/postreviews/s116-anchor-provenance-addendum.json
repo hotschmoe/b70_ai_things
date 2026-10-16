@@ -1,0 +1,10 @@
+{
+  "status": "PASS_ANCHOR_SOURCE_VERSION_RESOLVED",
+  "actual_built_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/grf-oracle-s39-prep/v2/grf_oracle.cpp",
+  "actual_build_source_sha256": "ae2fb80d8e43d4fde0bf638d19c64213f651a263662a7a47bb18c045b341c2dc",
+  "field_order": "R/lo/rs/inject/mixed/xn",
+  "snapshot_bytes": 747776,
+  "poison": "0xff",
+  "clarification": "Earlier root anchor provenance independently checked hashes correctly, but its historical checker420096 observation referred unbuilt v1. Actual v2 checker expects747776, actual v2 source matches S39 build-closure SHA; no historical inconsistency claimed.",
+  "mode0_mode1_36hash_equivalence": "PASS in s116-anchor-provenance.json; no repeat payload reads"
+}

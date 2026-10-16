@@ -1,0 +1,729 @@
+[
+  {
+    "line": 46,
+    "targets": [
+      1792
+    ],
+    "instruction": "(W&f0.0) jmpi                                L1792                                "
+  },
+  {
+    "line": 54,
+    "targets": [
+      784
+    ],
+    "instruction": "(W&f0.0) jmpi                                L784                                "
+  },
+  {
+    "line": 57,
+    "targets": [
+      800
+    ],
+    "instruction": "(W)     jmpi                                 L800                                "
+  },
+  {
+    "line": 66,
+    "targets": [
+      1728
+    ],
+    "instruction": "(W&f2.0) jmpi                                L1728                                "
+  },
+  {
+    "line": 70,
+    "targets": [
+      1072,
+      1072
+    ],
+    "instruction": "(~f3.0) goto (32|M0)                         L1072                  L1072                "
+  },
+  {
+    "line": 80,
+    "targets": [
+      1072,
+      1072
+    ],
+    "instruction": "(~f1.0) goto (32|M0)                         L1072                  L1072                "
+  },
+  {
+    "line": 83,
+    "targets": [
+      944
+    ],
+    "instruction": "(W)     jmpi                                 L944                                "
+  },
+  {
+    "line": 85,
+    "targets": [
+      1088
+    ],
+    "instruction": "        join (32|M0)                         L1088                                "
+  },
+  {
+    "line": 94,
+    "targets": [
+      1552,
+      1552
+    ],
+    "instruction": "(~f1.0) goto (32|M0)                         L1552                  L1552                "
+  },
+  {
+    "line": 108,
+    "targets": [
+      1472,
+      1472
+    ],
+    "instruction": "(~f0.0) goto (32|M0)                         L1472                  L1472                "
+  },
+  {
+    "line": 118,
+    "targets": [
+      1552
+    ],
+    "instruction": "        join (32|M0)                         L1552                                "
+  },
+  {
+    "line": 122,
+    "targets": [
+      1552,
+      1552
+    ],
+    "instruction": "(~f3.0) goto (32|M0)                         L1552                  L1552                "
+  },
+  {
+    "line": 125,
+    "targets": [
+      1224
+    ],
+    "instruction": "(W)     jmpi                                 L1224                                "
+  },
+  {
+    "line": 127,
+    "targets": [
+      1568
+    ],
+    "instruction": "        join (32|M0)                         L1568                                "
+  },
+  {
+    "line": 138,
+    "targets": [
+      1856
+    ],
+    "instruction": "(W)     jmpi                                 L1856                                "
+  },
+  {
+    "line": 144,
+    "targets": [
+      1832
+    ],
+    "instruction": "(W)     jmpi                                 L1832                                "
+  },
+  {
+    "line": 154,
+    "targets": [
+      1920,
+      1920
+    ],
+    "instruction": "(f0.0)  goto (32|M0)                         L1920                  L1920                "
+  },
+  {
+    "line": 158,
+    "targets": [
+      1920,
+      3680
+    ],
+    "instruction": "        goto (32|M0)                         L1920                  L3680                "
+  },
+  {
+    "line": 160,
+    "targets": [
+      3680
+    ],
+    "instruction": "        join (32|M0)                         L3680                                "
+  },
+  {
+    "line": 184,
+    "targets": [
+      3568
+    ],
+    "instruction": "(W&f3.0) jmpi                                L3568                                "
+  },
+  {
+    "line": 194,
+    "targets": [
+      3568,
+      3568
+    ],
+    "instruction": "(f1.0)  goto (32|M0)                         L3568                  L3568                "
+  },
+  {
+    "line": 197,
+    "targets": [
+      2792
+    ],
+    "instruction": "(W&f2.0) jmpi                                L2792                                "
+  },
+  {
+    "line": 224,
+    "targets": [
+      2416
+    ],
+    "instruction": "(W&~f1.0) jmpi                               L2416                                "
+  },
+  {
+    "line": 227,
+    "targets": [
+      2816
+    ],
+    "instruction": "(W)     jmpi                                 L2816                                "
+  },
+  {
+    "line": 232,
+    "targets": [
+      3008
+    ],
+    "instruction": "(W&f0.0) jmpi                                L3008                                "
+  },
+  {
+    "line": 244,
+    "targets": [
+      3008
+    ],
+    "instruction": "(W&f1.0) jmpi                                L3008                                "
+  },
+  {
+    "line": 247,
+    "targets": [
+      2848
+    ],
+    "instruction": "(W)     jmpi                                 L2848                                "
+  },
+  {
+    "line": 250,
+    "targets": [
+      3568,
+      3568
+    ],
+    "instruction": "(f2.0)  goto (32|M0)                         L3568                  L3568                "
+  },
+  {
+    "line": 254,
+    "targets": [
+      3480,
+      3480
+    ],
+    "instruction": "(f1.0)  goto (32|M0)                         L3480                  L3480                "
+  },
+  {
+    "line": 259,
+    "targets": [
+      3264,
+      3264
+    ],
+    "instruction": "(f2.0)  goto (32|M0)                         L3264                  L3264                "
+  },
+  {
+    "line": 269,
+    "targets": [
+      3480
+    ],
+    "instruction": "        join (32|M0)                         L3480                                "
+  },
+  {
+    "line": 273,
+    "targets": [
+      3440,
+      3440
+    ],
+    "instruction": "(f2.0)  goto (32|M0)                         L3440                  L3440                "
+  },
+  {
+    "line": 283,
+    "targets": [
+      3480
+    ],
+    "instruction": "        join (32|M0)                         L3480                                "
+  },
+  {
+    "line": 286,
+    "targets": [
+      3480,
+      3504
+    ],
+    "instruction": "        goto (32|M0)                         L3480                  L3504                "
+  },
+  {
+    "line": 288,
+    "targets": [
+      3504
+    ],
+    "instruction": "        join (32|M0)                         L3504                                "
+  },
+  {
+    "line": 292,
+    "targets": [
+      3568
+    ],
+    "instruction": "        join (32|M0)                         L3568                                "
+  },
+  {
+    "line": 298,
+    "targets": [
+      3680
+    ],
+    "instruction": "        join (32|M0)                         L3680                                "
+  },
+  {
+    "line": 305,
+    "targets": [
+      3680,
+      2096
+    ],
+    "instruction": "(f2.0)  goto.b (32|M0)                       L3680                  L2096                "
+  },
+  {
+    "line": 307,
+    "targets": [
+      3696
+    ],
+    "instruction": "        join (32|M0)                         L3696                                "
+  },
+  {
+    "line": 326,
+    "targets": [
+      4008,
+      4008
+    ],
+    "instruction": "(f3.0)  goto (32|M0)                         L4008                  L4008                "
+  },
+  {
+    "line": 330,
+    "targets": [
+      4008,
+      4008
+    ],
+    "instruction": "(f0.0)  goto (32|M0)                         L4008                  L4008                "
+  },
+  {
+    "line": 333,
+    "targets": [
+      4008,
+      4048
+    ],
+    "instruction": "        goto (32|M0)                         L4008                  L4048                "
+  },
+  {
+    "line": 335,
+    "targets": [
+      4048
+    ],
+    "instruction": "        join (32|M0)                         L4048                                "
+  },
+  {
+    "line": 341,
+    "targets": [
+      4064
+    ],
+    "instruction": "        join (32|M0)                         L4064                                "
+  },
+  {
+    "line": 358,
+    "targets": [
+      4368,
+      4368
+    ],
+    "instruction": "(f2.0)  goto (32|M0)                         L4368                  L4368                "
+  },
+  {
+    "line": 362,
+    "targets": [
+      4368,
+      4368
+    ],
+    "instruction": "(f3.0)  goto (32|M0)                         L4368                  L4368                "
+  },
+  {
+    "line": 365,
+    "targets": [
+      4368,
+      4416
+    ],
+    "instruction": "        goto (32|M0)                         L4368                  L4416                "
+  },
+  {
+    "line": 367,
+    "targets": [
+      4416
+    ],
+    "instruction": "        join (32|M0)                         L4416                                "
+  },
+  {
+    "line": 373,
+    "targets": [
+      4432
+    ],
+    "instruction": "        join (32|M0)                         L4432                                "
+  },
+  {
+    "line": 387,
+    "targets": [
+      4688,
+      4688
+    ],
+    "instruction": "(f1.0)  goto (32|M0)                         L4688                  L4688                "
+  },
+  {
+    "line": 391,
+    "targets": [
+      4688,
+      4688
+    ],
+    "instruction": "(f3.0)  goto (32|M0)                         L4688                  L4688                "
+  },
+  {
+    "line": 394,
+    "targets": [
+      4688,
+      4736
+    ],
+    "instruction": "        goto (32|M0)                         L4688                  L4736                "
+  },
+  {
+    "line": 396,
+    "targets": [
+      4736
+    ],
+    "instruction": "        join (32|M0)                         L4736                                "
+  },
+  {
+    "line": 402,
+    "targets": [
+      4752
+    ],
+    "instruction": "        join (32|M0)                         L4752                                "
+  },
+  {
+    "line": 416,
+    "targets": [
+      5008,
+      5008
+    ],
+    "instruction": "(f0.0)  goto (32|M0)                         L5008                  L5008                "
+  },
+  {
+    "line": 420,
+    "targets": [
+      5008,
+      5008
+    ],
+    "instruction": "(f3.0)  goto (32|M0)                         L5008                  L5008                "
+  },
+  {
+    "line": 423,
+    "targets": [
+      5008,
+      5056
+    ],
+    "instruction": "        goto (32|M0)                         L5008                  L5056                "
+  },
+  {
+    "line": 425,
+    "targets": [
+      5056
+    ],
+    "instruction": "        join (32|M0)                         L5056                                "
+  },
+  {
+    "line": 431,
+    "targets": [
+      5072
+    ],
+    "instruction": "        join (32|M0)                         L5072                                "
+  },
+  {
+    "line": 445,
+    "targets": [
+      5328,
+      5328
+    ],
+    "instruction": "(f3.0)  goto (32|M0)                         L5328                  L5328                "
+  },
+  {
+    "line": 449,
+    "targets": [
+      5328,
+      5328
+    ],
+    "instruction": "(f3.0)  goto (32|M0)                         L5328                  L5328                "
+  },
+  {
+    "line": 452,
+    "targets": [
+      5328,
+      5360
+    ],
+    "instruction": "        goto (32|M0)                         L5328                  L5360                "
+  },
+  {
+    "line": 454,
+    "targets": [
+      5360
+    ],
+    "instruction": "        join (32|M0)                         L5360                                "
+  },
+  {
+    "line": 458,
+    "targets": [
+      5376
+    ],
+    "instruction": "        join (32|M0)                         L5376                                "
+  },
+  {
+    "line": 462,
+    "targets": [
+      5520,
+      5520
+    ],
+    "instruction": "(~f3.0) goto (32|M0)                         L5520                  L5520                "
+  },
+  {
+    "line": 471,
+    "targets": [
+      5536
+    ],
+    "instruction": "        join (32|M0)                         L5536                                "
+  },
+  {
+    "line": 480,
+    "targets": [
+      7488,
+      7488
+    ],
+    "instruction": "(~f3.0) goto (32|M0)                         L7488                  L7488                "
+  },
+  {
+    "line": 485,
+    "targets": [
+      5760,
+      5760
+    ],
+    "instruction": "(f3.0)  goto (32|M0)                         L5760                  L5760                "
+  },
+  {
+    "line": 489,
+    "targets": [
+      5760,
+      5824
+    ],
+    "instruction": "        goto (32|M0)                         L5760                  L5824                "
+  },
+  {
+    "line": 491,
+    "targets": [
+      5824
+    ],
+    "instruction": "        join (32|M0)                         L5824                                "
+  },
+  {
+    "line": 497,
+    "targets": [
+      7488
+    ],
+    "instruction": "        join (32|M0)                         L7488                                "
+  },
+  {
+    "line": 511,
+    "targets": [
+      6096,
+      6096
+    ],
+    "instruction": "(f3.0)  goto (32|M0)                         L6096                  L6096                "
+  },
+  {
+    "line": 515,
+    "targets": [
+      6096,
+      6096
+    ],
+    "instruction": "(f3.0)  goto (32|M0)                         L6096                  L6096                "
+  },
+  {
+    "line": 518,
+    "targets": [
+      6096,
+      6144
+    ],
+    "instruction": "        goto (32|M0)                         L6096                  L6144                "
+  },
+  {
+    "line": 520,
+    "targets": [
+      6144
+    ],
+    "instruction": "        join (32|M0)                         L6144                                "
+  },
+  {
+    "line": 526,
+    "targets": [
+      7488
+    ],
+    "instruction": "        join (32|M0)                         L7488                                "
+  },
+  {
+    "line": 540,
+    "targets": [
+      6416,
+      6416
+    ],
+    "instruction": "(f3.0)  goto (32|M0)                         L6416                  L6416                "
+  },
+  {
+    "line": 544,
+    "targets": [
+      6416,
+      6416
+    ],
+    "instruction": "(f3.0)  goto (32|M0)                         L6416                  L6416                "
+  },
+  {
+    "line": 547,
+    "targets": [
+      6416,
+      6464
+    ],
+    "instruction": "        goto (32|M0)                         L6416                  L6464                "
+  },
+  {
+    "line": 549,
+    "targets": [
+      6464
+    ],
+    "instruction": "        join (32|M0)                         L6464                                "
+  },
+  {
+    "line": 555,
+    "targets": [
+      7488
+    ],
+    "instruction": "        join (32|M0)                         L7488                                "
+  },
+  {
+    "line": 568,
+    "targets": [
+      6720,
+      6720
+    ],
+    "instruction": "(f3.0)  goto (32|M0)                         L6720                  L6720                "
+  },
+  {
+    "line": 572,
+    "targets": [
+      6720,
+      6720
+    ],
+    "instruction": "(f2.0)  goto (32|M0)                         L6720                  L6720                "
+  },
+  {
+    "line": 575,
+    "targets": [
+      6720,
+      6768
+    ],
+    "instruction": "        goto (32|M0)                         L6720                  L6768                "
+  },
+  {
+    "line": 577,
+    "targets": [
+      6768
+    ],
+    "instruction": "        join (32|M0)                         L6768                                "
+  },
+  {
+    "line": 583,
+    "targets": [
+      7488
+    ],
+    "instruction": "        join (32|M0)                         L7488                                "
+  },
+  {
+    "line": 596,
+    "targets": [
+      7016,
+      7016
+    ],
+    "instruction": "(f2.0)  goto (32|M0)                         L7016                  L7016                "
+  },
+  {
+    "line": 600,
+    "targets": [
+      7016,
+      7016
+    ],
+    "instruction": "(f1.0)  goto (32|M0)                         L7016                  L7016                "
+  },
+  {
+    "line": 603,
+    "targets": [
+      7016,
+      7056
+    ],
+    "instruction": "        goto (32|M0)                         L7016                  L7056                "
+  },
+  {
+    "line": 605,
+    "targets": [
+      7056
+    ],
+    "instruction": "        join (32|M0)                         L7056                                "
+  },
+  {
+    "line": 611,
+    "targets": [
+      7488
+    ],
+    "instruction": "        join (32|M0)                         L7488                                "
+  },
+  {
+    "line": 624,
+    "targets": [
+      7280,
+      7280
+    ],
+    "instruction": "(f1.0)  goto (32|M0)                         L7280                  L7280                "
+  },
+  {
+    "line": 628,
+    "targets": [
+      7280,
+      7304
+    ],
+    "instruction": "(~f2.0) goto (32|M0)                         L7280                  L7304                "
+  },
+  {
+    "line": 630,
+    "targets": [
+      7304
+    ],
+    "instruction": "        join (32|M0)                         L7304                                "
+  },
+  {
+    "line": 634,
+    "targets": [
+      7488
+    ],
+    "instruction": "        join (32|M0)                         L7488                                "
+  },
+  {
+    "line": 637,
+    "targets": [
+      7488,
+      7488
+    ],
+    "instruction": "(~f3.0) goto (32|M0)                         L7488                  L7488                "
+  },
+  {
+    "line": 649,
+    "targets": [
+      7504
+    ],
+    "instruction": "        join (32|M0)                         L7504                                "
+  }
+]

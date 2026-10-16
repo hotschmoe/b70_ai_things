@@ -1,0 +1,186 @@
+{
+  "status": "FROZEN_CPU_ONLY_ADDENDUM_ROOT_READ_PENDING",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s114-default-isa-addendum",
+  "files": {
+    "FROZEN": {
+      "bytes": 131,
+      "sha256": "5989e30b3176ee2ec685d3e615bcf7726c4a129ea93ac161f64b8cb8f0296c13"
+    },
+    "README.md": {
+      "bytes": 2448,
+      "sha256": "143f7be97e4fd86d2170333109a5adb2114058ab65c9ec6ab85a25191c946bd7"
+    },
+    "analysis-v1-failure.txt": {
+      "bytes": 272,
+      "sha256": "f6d0703c7e2c5c487f2059bf55ee92149b7fb775e6298ecf15c15bb61900e715"
+    },
+    "analyze-v1.py": {
+      "bytes": 6105,
+      "sha256": "7868887b1d0ba6236f9c60f18cea957c830d1f0c09b44f92fbb3d86454656a1e"
+    },
+    "analyze.py": {
+      "bytes": 6184,
+      "sha256": "374d6b9f33d811c1f22f383bb1f5c58a819b4385c34e884e5150bedb1426792e"
+    },
+    "bindings.json": {
+      "bytes": 5481,
+      "sha256": "cad4cf029c357b54e146de8a5ca307ad773a72442102551858ba30cbf18d3cdf"
+    },
+    "commands.json": {
+      "bytes": 917,
+      "sha256": "5f654fe0beb1307a037897a56fbd3a20f47eacbf3991965a006113924326d557"
+    },
+    "comparison-addendum.json": {
+      "bytes": 7397,
+      "sha256": "58f5cb0855415a3bf9dee12b553a07804d0dc30c49ea22f833d18bcad2ea33de"
+    },
+    "decode.sh": {
+      "bytes": 1365,
+      "sha256": "c22d86b26e2d14e7cbe9b664d5e92f938ba56335ef03c661bb86bb9fcd630c86"
+    },
+    "inputs-after.sha256": {
+      "bytes": 186,
+      "sha256": "189f40943917e00336f1433d71a8cbb6b9f99c800cba10442c7877e8895e2717"
+    },
+    "inputs-before.sha256": {
+      "bytes": 186,
+      "sha256": "189f40943917e00336f1433d71a8cbb6b9f99c800cba10442c7877e8895e2717"
+    },
+    "prepare.py": {
+      "bytes": 2319,
+      "sha256": "c8e9f5ad518405e53bcd532c9958d7afcf541aaca64b2a89f9250298fb6a812c"
+    },
+    "probability-EOT-excerpt.txt": {
+      "bytes": 1294,
+      "sha256": "65c27d8ff5bc42eeea1d00a017ee36f5439f73baecb084818f057969a987a111"
+    },
+    "probability-alias.zebin": {
+      "bytes": 16664,
+      "sha256": "f02a4b409d4c527f84b30b52c407604194be2dc2dc15f068f4040afbf0e325db"
+    },
+    "probability-asm.sha256": {
+      "bytes": 117,
+      "sha256": "58ff3d050712b7a4344acc1bbbeda35740e6c62bf7ea1e681c34671bb10733c0"
+    },
+    "probability-decoder.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "probability-disasm/.misc.buildOptions": {
+      "bytes": 38,
+      "sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f"
+    },
+    "probability-disasm/.note.intelgt.compat": {
+      "bytes": 172,
+      "sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1"
+    },
+    "probability-disasm/.note.intelgt.metrics": {
+      "bytes": 3,
+      "sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c"
+    },
+    "probability-disasm/.rel.text._ZTS16dpct_kernel_nameIJZN6strata7kernels18row_top_prob_splitEPKfiiPKiPfPvS7_E32row_top_prob_split_kernel_9495b0EE": {
+      "bytes": 43,
+      "sha256": "ee7e374724b44a40fba5966333ccfc240d742254f34186ca217b4899add5c628"
+    },
+    "probability-disasm/.spv": {
+      "bytes": 7992,
+      "sha256": "f94954c662fc591efbeac4dbaaa847273a3d65c53724ae98941aa7ee1f455eb5"
+    },
+    "probability-disasm/.symtab": {
+      "bytes": 345,
+      "sha256": "6f1ac618485f7ef9505cec672a8c3aba034ed7c139490d4a64e2d2d413328ee2"
+    },
+    "probability-disasm/.text.s114_probability.asm": {
+      "bytes": 28100,
+      "sha256": "64f2079c5da70cdd88f8d714622d445522abcb95ad67ea4b505ac5469e1cb4a2"
+    },
+    "probability-disasm/.ze_info": {
+      "bytes": 3140,
+      "sha256": "ddc07c2ad9edd3de137e5db22518dfa31f7d18673b80c46ad2773541526c8e84"
+    },
+    "probability-disasm/sections.txt": {
+      "bytes": 322,
+      "sha256": "e2988a1ee6bce9a9d5b94a2c81b3914ab75327dbd2f6942a2e3fdf19bba2b817"
+    },
+    "probability-label-reference-proof.json": {
+      "bytes": 2073,
+      "sha256": "055c090e456ec76223c9485a5819a56cd80bf7f1e398431294096346c089feee"
+    },
+    "probability-ocloc.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "probability-ocloc.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "sampler-EOT-excerpt.txt": {
+      "bytes": 1205,
+      "sha256": "f8029c811aa03b2a792b5a5e22b8acd1aacb9c850cd845ab75877ddc20c2279c"
+    },
+    "sampler-alias.zebin": {
+      "bytes": 26984,
+      "sha256": "0ede33579c886f0db5bb6dac82201b8fd4bcada64989fb66f4e346c92f1715ae"
+    },
+    "sampler-asm.sha256": {
+      "bytes": 109,
+      "sha256": "20a0a8ce74674fb1b8f224112a2be0f893ef7d793b454722afb29808ce0977cd"
+    },
+    "sampler-decoder.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "sampler-disasm/.misc.buildOptions": {
+      "bytes": 38,
+      "sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f"
+    },
+    "sampler-disasm/.note.intelgt.compat": {
+      "bytes": 172,
+      "sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1"
+    },
+    "sampler-disasm/.note.intelgt.metrics": {
+      "bytes": 3,
+      "sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c"
+    },
+    "sampler-disasm/.rel.text._ZTS16dpct_kernel_nameIJZZN6strata7kernels13sample_tokensEPKfiiPKiiRKNS1_13SamplerParamsEPiPvENKUlRN4sycl3_V17handlerEE_clESE_E28sampler_greedy_kernel_5b2c3fEE": {
+      "bytes": 43,
+      "sha256": "ee7e374724b44a40fba5966333ccfc240d742254f34186ca217b4899add5c628"
+    },
+    "sampler-disasm/.spv": {
+      "bytes": 12060,
+      "sha256": "cab2e5eda91a0148d36230463b1efb72b35b113c6b30045f7063f76fb8661dd1"
+    },
+    "sampler-disasm/.symtab": {
+      "bytes": 382,
+      "sha256": "ef69435c62c1bca285bd4b842de42aa51c7b748df81254a20d612e9d1afead09"
+    },
+    "sampler-disasm/.text.s114_sampler.asm": {
+      "bytes": 49487,
+      "sha256": "8229f829c9ec66bf7c8a3c6868599846e3ad3de6d266043d246ebf51cc703526"
+    },
+    "sampler-disasm/.ze_info": {
+      "bytes": 5413,
+      "sha256": "efcdeaec9a136b232547c4db6b9418d10408b0df43846770d7b06157dbbf7ec3"
+    },
+    "sampler-disasm/sections.txt": {
+      "bytes": 363,
+      "sha256": "089b1b22b290c5781245950a5be227f47c1f6dde1ec3583b37217871fbca88b0"
+    },
+    "sampler-label-reference-proof.json": {
+      "bytes": 16905,
+      "sha256": "d9685b2151a550046fe88dc8d08ea19fb636e0d31b856649c084b2f6050013fc"
+    },
+    "sampler-ocloc.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "sampler-ocloc.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "tool.sha256": {
+      "bytes": 81,
+      "sha256": "0becf72301fda6f5845db153afeaae52bff8ac8117e946ce0d70997dc2561758"
+    }
+  }
+}

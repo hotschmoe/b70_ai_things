@@ -1,0 +1,1 @@
+CPU-light postdecode analysis exit1 before comparison output: assert not indirect. Predicate included direct jmpi L<label> as indirect. Actual 15 sampler/1 probability jmpi have explicit in-prefix labels already bounded by all-reference check. Decoder/build not repeated.

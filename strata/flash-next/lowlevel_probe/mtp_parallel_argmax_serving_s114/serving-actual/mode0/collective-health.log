@@ -1,0 +1,15 @@
+gpu-run: [b70s4dayz] acquired card(s) 0 1 -> bin/xpu-collective-health --timeout 400
+=== collective probe (img=b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78 p2p=0 timeout=400s) ===
+W1016 01:17:23.791000 1 torch/distributed/run.py:874] 
+W1016 01:17:23.791000 1 torch/distributed/run.py:874] *****************************************
+W1016 01:17:23.791000 1 torch/distributed/run.py:874] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1016 01:17:23.791000 1 torch/distributed/run.py:874] *****************************************
+2026:10:16-01:17:26:   41 |CCL_WARN| value of CCL_ATL_TRANSPORT changed to be ofi (default:mpi)
+2026:10:16-01:17:26:   41 |CCL_WARN| value of CCL_TOPO_P2P_ACCESS changed to be 0 (default:-1)
+2026:10:16-01:17:26:   41 |CCL_WARN| value of CCL_KERNEL_PATH changed to be /opt/venv/lib/ccl/kernels (default:)
+2026:10:16-01:17:26:   41 |CCL_WARN| could not get local_idx/count from environment variables, trying to get them from ATL
+2026:10:16-01:17:26:   42 |CCL_WARN| could not get local_idx/count from environment variables, trying to get them from ATL
+2026:10:16-01:17:26:   41:[0] |CCL_WARN| topology recognition shows PCIe connection between devices. If this is not correct, you can disable topology recognition, with CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0. This will assume XeLinks across devices
+COLLECTIVE_HEALTH_OK world_size=2 shape=4x5120 compiled_iterations=10 p2p=0
+xpu-collective-health: HEALTHY
+gpu-run: [b70s4dayz] done in 27s (exit 0)

@@ -1,0 +1,6 @@
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_engine.dir/src/core/mtp.cpp.o:     file format elf64-x86-64
+
+Contents of section .rodata.str1.1:
+ 1dc0 2e0a0053 54524154 415f4d54 505f5041  ...STRATA_MTP_PA
+ 1dd0 52414c4c 454c5f41 52474d41 58005354  RALLEL_ARGMAX.ST

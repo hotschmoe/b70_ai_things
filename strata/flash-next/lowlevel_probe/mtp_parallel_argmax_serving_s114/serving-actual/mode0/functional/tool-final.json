@@ -1,0 +1,97 @@
+{
+  "request": {
+    "model": "hotschmoe-dd",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Look up the build status of project b70-demo using lookup_build_status, then report status and test counts in one sentence including passed and failed test counts."
+      },
+      {
+        "role": "assistant",
+        "content": null,
+        "tool_calls": [
+          {
+            "id": "call_f1a3d915635540bd951b858c",
+            "type": "function",
+            "function": {
+              "name": "lookup_build_status",
+              "arguments": "{\"project\":\"b70-demo\"}"
+            }
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "call_f1a3d915635540bd951b858c",
+        "content": "{\"project\": \"b70-demo\", \"status\": \"passed\", \"tests_passed\": 17, \"tests_failed\": 0}"
+      }
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "lookup_build_status",
+          "description": "Look up current build status for a project",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "project": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "project"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    ],
+    "tool_choice": "auto",
+    "max_tokens": 256,
+    "temperature": 0,
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    },
+    "strata_tune": {
+      "spec_min_p": 0
+    }
+  },
+  "response": {
+    "id": "chatcmpl-dd171749097f4cb7b5b4cd93",
+    "object": "chat.completion",
+    "created": 1792113403,
+    "model": "hotschmoe-dd",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "The build status for project b70-demo is passed, with 17 tests passed and 0 tests failed."
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 379,
+      "completion_tokens": 25,
+      "total_tokens": 404,
+      "prompt_tokens_details": {
+        "cached_tokens": 331
+      }
+    },
+    "timings": {
+      "cache_n": 331,
+      "prompt_n": 48,
+      "prompt_ms": 470.1,
+      "prompt_per_token_ms": 9.794,
+      "prompt_per_second": 102.1,
+      "predicted_n": 25,
+      "predicted_ms": 270.9,
+      "predicted_per_token_ms": 10.836,
+      "predicted_per_second": 92.3,
+      "draft_n": 21,
+      "draft_n_accepted": 17
+    }
+  }
+}

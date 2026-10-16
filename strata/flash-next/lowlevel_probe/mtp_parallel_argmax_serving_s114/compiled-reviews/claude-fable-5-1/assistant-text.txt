@@ -1,0 +1,26 @@
+**GPU_GO for the one finite matched C2 OFF/ON serving comparison, subject to the controller hardening root is already preparing.** No compiled blocker.
+
+**What the compiled evidence establishes**
+
+- **Default path intact.** The existing architecture-gated argmax is still consulted first and never reaches the new flag. The new branch sits only in the old sampler else edge, after the subset-head, vocabulary and two coupled-state checks, then the process-static gate. The false edge calls the original sample_tokens with the original local parameters, null history and zero window. The compiler folded the penalty predicates because they are constants of a local object; that is correct and matches the source, and it means no request-variable sampler field is tested at runtime, which is as intended.
+- **Flag immutability.** The getter accepts exactly the one-character string 1 under a guard and stores once. Bind inlines the same initialisation before its capacity checks, so no capture can observe an uninitialised flag.
+- **Owner forwarding.** The candidate reads scratch and output IDs from the same two owner fields the original argmax path reads. Probability, split-scratch and select calls after the join use those same fields and are byte-identical in argument order. The pair tail calls A and B with distinct owner objects and the second logits row at plus vocabulary.
+- **Launch descriptor.** Host computes 61 groups of 256 for the fixed vocabulary and forwards the candidate's own device kernel info and the supplied queue. Payload mapping of logits, n, per-block, scratch and IDs matches the metadata.
+- **Device images.** Candidate computational prefix is byte-exact to the oracle-tested image through EOT, with equal metadata, options, constants and relocations. Select is whole-image exact. Sampler and split-probability differ only in two post-EOT immediate words, with every label reference and all control flow before EOT and no indirect transfers. That is sufficient bounded reuse of the S107 originals. It is not SPIR-V or whole-program equivalence, and the packet must keep saying so.
+
+**Limits that stay explicit**
+
+- Whole-pair depth-2 caller bodies were not disassembled. Whole-pair graph is OFF on both arms, so that path is not exercised. Do not enable it in this run.
+- The marker proves host selection once, possibly during startup capture. It is not a dispatch count.
+- A stuck counter after an aborted replay remains the inherited failure mode. The protocol's stop-on-first-mismatch and no-redraft rule cover it; any draft error must end the run, not continue drafting.
+- Resources are metadata only. Absent spill and scratch fields are unknown.
+
+**Preconditions before the lease**
+
+1. Controller v2 with owned-CID and abnormal-teardown detection, and the final QUIT diagnostic gated before any post-health, as root described. Missing diagnostic records recovery-required with no forced stop, health or retry.
+2. Fresh pre-health revalidation on the same boot with no intervening GPU use, both cards.
+3. All other candidate flags OFF, S111 not combined, fixed draft settings on both arms, HTTP min-p explicit.
+
+**Reading the result**
+
+Same binary, flag 0 then 1, one warm then three fresh pairs per arm, exact per-pair text, SSE, usage, the five work fields, windows, pair and solo counts, printed rows and captures before the next pair, then functionals, normal quit, full health. Marker exactly once on ON, none on OFF. The outcome is a descriptive serving delta from one sequence. The private 49 us chain saving predicts nothing here. A small or null delta closes the candidate as default OFF with no retest and no cache campaign.

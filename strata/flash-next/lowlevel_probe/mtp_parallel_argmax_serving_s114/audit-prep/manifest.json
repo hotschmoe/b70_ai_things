@@ -1,0 +1,42 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NO_AUDIT_EXECUTION",
+  "directory": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit-prep",
+  "files": {
+    "FROZEN": {
+      "bytes": 131,
+      "sha256": "1f8e7286add33d9624c5741b37018f2f7022d911aa72e897dea46545d5a38731"
+    },
+    "README.md": {
+      "bytes": 2612,
+      "sha256": "7a48bfacacd8ed1dcf294890edd79e2188d2b3c6d0660884d2835b53a755de50"
+    },
+    "audit.py": {
+      "bytes": 12819,
+      "sha256": "6c4b5c0a1b11493d420b513076d3d76b7c9019bc2a90abffebe5bbf81f1ef0b3"
+    },
+    "audit.sh": {
+      "bytes": 1036,
+      "sha256": "a5babe3146796f0835929e941b9a10b690e3c046049c35e955bda1abbc9fb6f5"
+    },
+    "expected-prep.sha256": {
+      "bytes": 631,
+      "sha256": "a33a49936759122b4e329fd34fa38e688e9eb3b5b00d4df5e61245a56f36724d"
+    },
+    "helpers.py": {
+      "bytes": 2037,
+      "sha256": "616415e2da7961e7c902340a0a18bc94e4982d544869e576044770e8020c1712"
+    },
+    "reference-pins.json": {
+      "bytes": 1933,
+      "sha256": "d05db4be31093a8a830a7c72e33935089fea4b9247c414a9761519485e16232a"
+    },
+    "source-binding-notes.txt": {
+      "bytes": 1924,
+      "sha256": "f42d388f6d6d9a67fdde0ccc30e4a7c389a950cdf8090404452aa48d2670d7c1"
+    },
+    "syntax.json": {
+      "bytes": 151,
+      "sha256": "21d84d64c7caf86a933d6277733f5e1b67fae020f43ee3fee474f879970872fe"
+    }
+  }
+}

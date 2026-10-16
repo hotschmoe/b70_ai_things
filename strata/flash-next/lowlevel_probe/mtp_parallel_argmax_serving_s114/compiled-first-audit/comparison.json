@@ -1,0 +1,174 @@
+{
+  "sampler": {
+    "raw_full_image_exact": false,
+    "raw_complete_text_exact": false,
+    "computational_prefix_bytes": null,
+    "computational_prefix_exact": false,
+    "execution_payload_metadata_equal": true,
+    "build_options_equal": true,
+    "constant_data_equal": true,
+    "relocation_sections_equal": true,
+    "text_size_delta": 0,
+    "text_changed_offsets": [
+      7548,
+      7549,
+      7550,
+      7551,
+      7564,
+      7565,
+      7566,
+      7567
+    ],
+    "section_diffs": {
+      ".text._ZTS16dpct_kernel_nameIJZZN6strata7kernels13sample_tokensEPKfiiPKiiRKNS1_13SamplerParamsEPiPvENKUlRN4sycl3_V17handlerEE_clESE_E28sampler_greedy_kernel_5b2c3fEE": {
+        "new": {
+          "bytes": 7744,
+          "type": 1,
+          "flags": 6,
+          "sha256": "54311e4a55ade9e62bab455afb96c2135cd01779e3fc662423623ff15870ee05"
+        },
+        "reference": {
+          "bytes": 7744,
+          "type": 1,
+          "flags": 6,
+          "sha256": "3541ccf01f257c7b3fde1d7247ccda7490c1f5224a5f5b4df28ab2828cb26ca6"
+        }
+      },
+      ".spv": {
+        "new": {
+          "bytes": 12060,
+          "type": 4278190089,
+          "flags": 0,
+          "sha256": "cab2e5eda91a0148d36230463b1efb72b35b113c6b30045f7063f76fb8661dd1"
+        },
+        "reference": {
+          "bytes": 12064,
+          "type": 4278190089,
+          "flags": 0,
+          "sha256": "cb7c681c3910b1e988de6ed5f4177cf2829dbea3853b88d8e501908034edb5d5"
+        }
+      }
+    },
+    "PASS": false
+  },
+  "probability": {
+    "raw_full_image_exact": false,
+    "raw_complete_text_exact": false,
+    "computational_prefix_bytes": null,
+    "computational_prefix_exact": false,
+    "execution_payload_metadata_equal": true,
+    "build_options_equal": true,
+    "constant_data_equal": true,
+    "relocation_sections_equal": true,
+    "text_size_delta": 0,
+    "text_changed_offsets": [
+      3708,
+      3709,
+      3710,
+      3711,
+      3724,
+      3725,
+      3726,
+      3727
+    ],
+    "section_diffs": {
+      ".text._ZTS16dpct_kernel_nameIJZN6strata7kernels18row_top_prob_splitEPKfiiPKiPfPvS7_E32row_top_prob_split_kernel_9495b0EE": {
+        "new": {
+          "bytes": 3904,
+          "type": 1,
+          "flags": 6,
+          "sha256": "16d0202df02e424f5cb5c0743647a6283bd6b0bcc1d0d8ed84ec4af35cc3d292"
+        },
+        "reference": {
+          "bytes": 3904,
+          "type": 1,
+          "flags": 6,
+          "sha256": "b42b2d1e58f8b53515a75518b1a30131a5ac1b15b38fcb13f25683d79bf0f7bc"
+        }
+      },
+      ".spv": {
+        "new": {
+          "bytes": 7992,
+          "type": 4278190089,
+          "flags": 0,
+          "sha256": "f94954c662fc591efbeac4dbaaa847273a3d65c53724ae98941aa7ee1f455eb5"
+        },
+        "reference": {
+          "bytes": 7996,
+          "type": 4278190089,
+          "flags": 0,
+          "sha256": "78295c508b82de70e04b27c8857d056dd92e3dfc3a8e26f35d4624ddc0ac5107"
+        }
+      }
+    },
+    "PASS": false
+  },
+  "select": {
+    "raw_full_image_exact": true,
+    "raw_complete_text_exact": true,
+    "computational_prefix_bytes": null,
+    "computational_prefix_exact": true,
+    "execution_payload_metadata_equal": true,
+    "build_options_equal": true,
+    "constant_data_equal": true,
+    "relocation_sections_equal": true,
+    "text_size_delta": 0,
+    "text_changed_offsets": [],
+    "section_diffs": {},
+    "PASS": true
+  },
+  "candidate": {
+    "raw_full_image_exact": false,
+    "raw_complete_text_exact": false,
+    "computational_prefix_bytes": 9728,
+    "computational_prefix_exact": true,
+    "execution_payload_metadata_equal": true,
+    "build_options_equal": true,
+    "constant_data_equal": true,
+    "relocation_sections_equal": true,
+    "text_size_delta": 0,
+    "text_changed_offsets": [
+      9740,
+      9741,
+      9742,
+      9743,
+      9756,
+      9757,
+      9758,
+      9759
+    ],
+    "section_diffs": {
+      ".text._ZTS16dpct_kernel_nameIJZN12s112_private6launchEPKfiPvPiRN4sycl3_V15queueEE14GreedyTop1S112EE": {
+        "new": {
+          "bytes": 9920,
+          "type": 1,
+          "flags": 6,
+          "sha256": "bf4a66ab3fc54db2c61226faa629b72941bf52c6be4713d60612a8cb054e770e"
+        },
+        "reference": {
+          "type": 1,
+          "flags": 6,
+          "bytes": 9920,
+          "sha256": "b85ec67a4d57dbfce474b9a1590e78c77b5cabd4af0fbb96c9aabd2dd5807c1b"
+        }
+      },
+      ".spv": {
+        "new": {
+          "bytes": 13196,
+          "type": 4278190089,
+          "flags": 0,
+          "sha256": "b4a17f7e16468935cda2162f72570854e30e34245d101a5d505a38fee314d7eb"
+        },
+        "reference": {
+          "type": 4278190089,
+          "flags": 0,
+          "bytes": 13196,
+          "sha256": "7f4b0b5b1e74a6396df9224e66865af5f7ea3c9217221d3beeb92a0b91ca4580"
+        }
+      }
+    },
+    "PASS": true,
+    "reference_EOT_end": 9728,
+    "reference_ASM_sha256": "201ca3db5646617431542d704ad8f55cde345833766234a72cbdd643ab9dd61c"
+  }
+}

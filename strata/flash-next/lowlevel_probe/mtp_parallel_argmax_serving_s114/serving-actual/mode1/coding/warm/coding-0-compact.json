@@ -1,0 +1,83 @@
+{
+  "request": {
+    "model": "hotschmoe-dd",
+    "messages": [
+      {
+        "role": "user",
+        "content": "[Flash-Next concurrent coding repeat 0 slot 0] Implement a Python asyncio bounded worker pool for processing file paths. Requirements: fixed worker count, bounded queue for backpressure, preserve input order in results, propagate the first worker exception, cancel and await all outstanding tasks on failure, and handle caller cancellation without leaked tasks. Explain the shutdown protocol, provide complete typed code using only the standard library, and include three meaningful tests for ordering, worker failure, and cancellation."
+      }
+    ],
+    "max_tokens": 256,
+    "temperature": 0,
+    "stream": true,
+    "stream_options": {
+      "include_usage": true
+    },
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    },
+    "strata_tune": {
+      "spec_min_p": 0
+    }
+  },
+  "ttft_s": 1.0389059290173464,
+  "wall_s": 6.745377694023773,
+  "content_event_gap_ms": {
+    "count": 222,
+    "p50": 0.1821824989747256,
+    "p95": 46.50419692334253,
+    "maximum": 1180.3956020157784
+  },
+  "client_decode_tps": 44.686105618488554,
+  "usage": {
+    "prompt_tokens": 107,
+    "completion_tokens": 256,
+    "total_tokens": 363,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 107,
+    "prompt_ms": 978.2,
+    "prompt_per_token_ms": 9.142,
+    "prompt_per_second": 109.4,
+    "predicted_n": 256,
+    "predicted_ms": 5625.4,
+    "predicted_per_token_ms": 21.974,
+    "predicted_per_second": 45.5,
+    "draft_n": 188,
+    "draft_n_accepted": 160
+  },
+  "text": "```python\n\"\"\"\nBounded async worker pool for processing file paths.\n\nFeatures:\n- Fixed worker count\n- Bounded queue for backpressure\n- Preserves input order in results\n- Propagates first worker exception\n- Cancels and awaits all outstanding tasks on failure\n- Handles caller cancellation without leaked tasks\n\"\"\"\n\nimport asyncio\nfrom collections import deque\nfrom typing import Any, Callable, Coroutine, TypeVar\n\nT = TypeVar(\"T\")\nR = TypeVar(\"R\")\n\n\nclass BoundedWorkerPool:\n    \"\"\"\n    A bounded async worker pool that processes items in order,\n    with backpressure via a bounded queue, ordered results,\n    and clean shutdown on failure or cancellation.\n    \"\"\"\n\n    def __init__(\n        self,\n        worker_count: int,\n        queue_maxsize: int,\n        process_fn: Callable[[T], Coroutine[Any, Any, R]],\n    ) -> None:\n        if worker_count <= 0:\n            raise ValueError(\"worker_count must be positive\")\n        if queue_maxsize <= 0:\n            raise ValueError(\"queue_maxsize must be positive\")\n\n        self._worker_count = worker_count\n        self._queue",
+  "output_sha256": "276f3b7d226be7dc0df606b66e3a367acc6d39872a1242b5f1ad18085b120353",
+  "client_lifetime": {
+    "client_call_start_monotonic_ns": 438401704862808,
+    "client_call_start_epoch_ns": 1792113913592074582,
+    "model": "hotschmoe-dd",
+    "messages": [
+      {
+        "role": "user",
+        "content": "[Flash-Next concurrent coding repeat 0 slot 0] Implement a Python asyncio bounded worker pool for processing file paths. Requirements: fixed worker count, bounded queue for backpressure, preserve input order in results, propagate the first worker exception, cancel and await all outstanding tasks on failure, and handle caller cancellation without leaked tasks. Explain the shutdown protocol, provide complete typed code using only the standard library, and include three meaningful tests for ordering, worker failure, and cancellation."
+      }
+    ],
+    "max_new_tokens": 256,
+    "strata_tune": {
+      "spec_min_p": 0
+    },
+    "client_call_end_monotonic_ns": 438408451046808,
+    "client_call_end_epoch_ns": 1792113920338258221
+  },
+  "prefix_matches_s16": true,
+  "SSE_concatenated_content": "```python\n\"\"\"\nBounded async worker pool for processing file paths.\n\nFeatures:\n- Fixed worker count\n- Bounded queue for backpressure\n- Preserves input order in results\n- Propagates first worker exception\n- Cancels and awaits all outstanding tasks on failure\n- Handles caller cancellation without leaked tasks\n\"\"\"\n\nimport asyncio\nfrom collections import deque\nfrom typing import Any, Callable, Coroutine, TypeVar\n\nT = TypeVar(\"T\")\nR = TypeVar(\"R\")\n\n\nclass BoundedWorkerPool:\n    \"\"\"\n    A bounded async worker pool that processes items in order,\n    with backpressure via a bounded queue, ordered results,\n    and clean shutdown on failure or cancellation.\n    \"\"\"\n\n    def __init__(\n        self,\n        worker_count: int,\n        queue_maxsize: int,\n        process_fn: Callable[[T], Coroutine[Any, Any, R]],\n    ) -> None:\n        if worker_count <= 0:\n            raise ValueError(\"worker_count must be positive\")\n        if queue_maxsize <= 0:\n            raise ValueError(\"queue_maxsize must be positive\")\n\n        self._worker_count = worker_count\n        self._queue",
+  "SSE_content_exact_text": true,
+  "original_chunk_count": 225,
+  "original_content_event_count": 223,
+  "curation_scope": "Full request, text, concatenated SSE content, usage, timing/work, lifetime and event-gap metrics retained. Raw chunk objects, response IDs and event timestamps omitted; no chunk segmentation or raw ID equality claim.",
+  "external_original": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/mode1/coding/warm/coding-0.json",
+    "bytes": 95424,
+    "sha256": "5f9413111fa1297c23ccb28d82826366862d3a81b536bdfc4014ac3c17d4c748"
+  }
+}

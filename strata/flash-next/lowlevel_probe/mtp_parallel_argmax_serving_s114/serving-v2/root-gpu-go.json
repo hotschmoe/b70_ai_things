@@ -1,0 +1,77 @@
+{
+  "utc": "2026-10-16T01:13:46.534555+00:00",
+  "status": "ROOT_GO_ONE_FINITE_MATCHED_C2_OFF_ON",
+  "previous_goal_turn_class": "PROGRESS_S113_GPU_closed_and_committed_f34c05b1_S114_source_build_and_additive_ISA_evidence",
+  "models": [
+    {
+      "id": "claude-opus-5-5",
+      "elapsed_s": 24.33563259599032,
+      "exit": 0
+    },
+    {
+      "id": "claude-fable-5-1",
+      "elapsed_s": 23.709831425978336,
+      "exit": 0
+    }
+  ],
+  "root_full_read_actual_record_launch_helper_bind_componentpairtail_ASM": true,
+  "root_read_additive_analyzer_EOT_control_proof": true,
+  "candidate_prefix9728_reuses_S112_ISA": true,
+  "default_sampler_probability_prefix7536_3696_match_S107": true,
+  "select_whole_image_exact": true,
+  "initial_audit_HOLD_preserved": true,
+  "raw_images_text_not_equal": true,
+  "embedded_SPIRV_semantics": "UNCLASSIFIED_NO_FULL_PROGRAM_OR_SPIRV_EQUIVALENCE_CLAIM",
+  "resources": "literal metadata only; barrier_count not count of static instructions; absent spill/scratch unknown",
+  "root_all_six_controllers_read": true,
+  "root_v2_full_diff_and_diag_before_health_gate_read": true,
+  "v2_manifest_payloads_verified": 16,
+  "same_boot": "b785982c-4954-4d23-808c-48a7534ce3bd",
+  "kernel": "7.1.0-070100-generic",
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "exe_sha256": "d1c4968ffbb62e66753e0c016d830d7af53154d0de6c6b8f1b966fec4d518e92",
+  "model_stat_continuity_not_new_hash": {
+    "primary": {
+      "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+      "resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+      "stat": {
+        "dev": 44,
+        "ino": 1156777,
+        "size": 47039860096,
+        "mtime_ns": 1792062519977528586
+      },
+      "retained_hash_closure_continuity": true
+    },
+    "sibling": {
+      "path": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+      "resolved": "/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+      "stat": {
+        "dev": 44,
+        "ino": 1068321,
+        "size": 28800138432,
+        "mtime_ns": 1791869062502802041
+      },
+      "retained_hash_closure_continuity": true
+    }
+  },
+  "retained_payload_closure": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-nvme-placement-s53/closure.json",
+  "contextual_prehealth_reuse": {
+    "last_full_both_card_collective_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-fixed-policy-s113-prep/mode1/post-health.json",
+    "sha256": "df64ead8a6619e46b1136643e7ef0713612491ca441302770e79563756d7e6ed",
+    "same_boot_runtime_and_no_intervening_coordinated_GPU": true,
+    "since": "Only CPU source/build/offline selected-image decodes, all noDRI; shared log and both free leases inspected. Does not attest uncoordinated activity."
+  },
+  "posthealth": "Fresh percard+compiled collective EACHarm only after healthy normalQUIT/ownedCID+NAMEgone+one finaldiag",
+  "all_other_candidates_OFF": true,
+  "whole_pair_graph_OFF": true,
+  "S111_probability_skip_not_combined": true,
+  "fixed_policy": "native suffix0/lookup0/spec4/mtpmax4/minp0; HTTP explicit minp0 only",
+  "stop_on_first_ON_match_failure": true,
+  "no_reset_retry_or_scratch_zero_recovery": true,
+  "limits": [
+    "Marker is once eligible HOST selection, may emit during startup capture; not GPU dispatch/count/all-owner proof.",
+    "Source owner arena/lifetime proof separate from inspected compiled fields/calls. Whole-depth2 caller bodies uninspected; its feature OFF.",
+    "S11248fixtures not universal correctness or current-main execution evidence. This serve is first current-main candidate execution.",
+    "Descriptive fixedOFFthenON/3nestedpairs only; smallgain means close/defaultOFF/no immediate repeat/cachecampaign."
+  ]
+}

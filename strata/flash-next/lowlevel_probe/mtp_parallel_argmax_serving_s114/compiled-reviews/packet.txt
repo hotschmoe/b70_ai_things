@@ -1,0 +1,1300 @@
+S114 ACTUAL MAIN COMPILED GATE. Source2d26e686/headerc1652c6a exact you reviewed. OnlySYCLmtp.cpp+localheader, no shared kernel/API/default-source changes. Processstaticexact1 flag initializedbind; isolatedfull248320/T1/unpenalized/noncoupled path afteroldargmaxwantedfalse. OwnerprivateArgRow1040, zeroonce load, no resets/retries. All probability/select/mapping unchanged. S112actualstrict48 private pass/eager+freshABA/counters/guards/downstream bytes; newnativekernelcomputationalprefix EXACT oldtested S112 through EOT9728 incl publicationchain+compare/reset. Do notrepeatprivateoracle orcandidateISAdecode withoutnewdifference.
+BUILD ACTUAL e41DPC2026.1 precise/SG32/perkernel/BMG-G31/correctlyroundeddivide-sqrt, noDRI/networknone/UID1000/4CPU/diskTMP undercpu-run. Actualplanexact3actions.174s wrapper,159.932s Ninja:13.310sMTPcompile,.126sarchive,146.468s mainAOTlink. All source/keyunchangedobjects/kernelarchivecf710pre+postPASS/ownership/cachesystemunchanged. MainSHA d1c4968ffbb62e66753e0c016d830d7af53154d0de6c6b8f1b966fec4d518e92; Mtpobjectc430dcd6f274371345fbb1aec1cd38ad6182a8ab1b046e704b8300cc76aad385. Source/build pass is NOTGPU_GO.
+FIRST AUDIT exit5/HOLD preserved: exact4hostInfo/name and8distinctcacheguards, actualforwardingcallrelocations allpresent. Select WHOLEIMAGE exact S107. Candidate prefix9728+metadata/options/constants/relocs exact S112; rawimage/textFALSE (8postEOTbytes),.spv rawdiffunclassified. Defaults sampler/prob rawfulltextFALSE(8bytes each) caused initialHOLD despiteallmeta/options/data/relocs equal.
+ADDITIVE actual2defaultdecoders,11sCPU/e41oclocBMG-G31/noDRI. Current sampler EOT7536/alllabelrefs<=7504;prob EOT3696/allrefs<=3664; allchanged8bytes areAFTEReot in two nullMOV immediates. Everybyte beforeandthroughactualEOTexactfrozenS107 originals. Noindirectcall/ret/extraunboundedjump found. Entireze_info/options/constants/relocs equal. .spv semantics UNCLASSIFIED; no universal/full-program/SPIRVexecution equivalence claim. NativeB70/BMG/pinnedruntime boundedreuse only, no independent runtimeimagedispatchproof. No automaticrebuild/retry/decoder. Rootread actualhostfullrecord/launch/helper/bind/componentpairtail instructions and additiveanalyzer/EOTproof; independenthostauditseparate note below. Uninspectedwhole-depth2 callerbodies explicit; WHOLEPAIRGRAPH OFFbotharms.
+SERVING PROTOCOL (source reviewed rootall6controllers): samenewmainflag0/1 ONLY; all A4/CENTER/PACKED/IQ2/value/QSA/wholepairgraph/headRPW2/probskipOFF; fixednative suffix0/lookup0/spec4/mtpmax4/minp0, HTTPexplicitminp0; headpair/depth2,EP149/363allresident/2x200kINT8/32GiB/fourparking/DirectPLE/prefill12288. OneorderedC2warm107/256 each then3fresh107/1500 pairs each, request1onlyafterobservednativepromptstartwhile0outstanding; actualclientlifetimeoverlaprequired. EveryONpair must match request/fulltext/concatenatedSSEcontent/usage/fiveworkfields/windows/pair/solo/printedrows/captures BEFORE nextpair/functionals. Startupcapturesmatch. OnceHOSTmarkerONbywarm/final (mayemitduringstartupcapture),OFFnone; notcallcount/GPUdispatchproof. Concurrentmath/thinking/toolfunctionals. CPUquiet outsidefinitebench;serverholdsleasedbothcards only. Stopfirstmismatch(no extrarequests)/no resetretry/scratchzero. DefaultOFFsmallgainmeansclose/noimmediateretestorcachecampaign.
+CLEANUP: Root noticed inheritedS107stop validates finalQUITdiag only AFTER GPUhealth. BeforeGPU rootrequires v2 withrobustS113ownedCID/abnormalteardown detection and finaldiag gate BEFORE anyposthealth/collective, missingdiag recordsroot-recovery-required(no blindhealth/force/retry). This is controller-onlyhardening currentlybeingprepared, NOTengine/kernelchange, and rootwillreadsourcebeforeexecution. Actualrootdriverfinallynormalcleanupafteranyphasefailure. BothfullCID+NAMEgone/wrapper0/prestopRunning-notOOM/fullpercard+compiledhealth required. PrehealthfreshS113bothfullsameboot/runtime/nointerveningGPU(onlyCPUbuild/offlinedecodes)explicitrootrevalidation; freshposthealthbotharms.
+PRIVATE49us twoownerhostchain saving does NOT predict currentservinggain. Targets150/stream+prefill2000stillunmet. NoGPUexecutedforS114yet.
+
+FIRST COMPARISON
+{
+  "sampler": {
+    "raw_full_image_exact": false,
+    "raw_complete_text_exact": false,
+    "computational_prefix_bytes": null,
+    "computational_prefix_exact": false,
+    "execution_payload_metadata_equal": true,
+    "build_options_equal": true,
+    "constant_data_equal": true,
+    "relocation_sections_equal": true,
+    "text_size_delta": 0,
+    "text_changed_offsets": [
+      7548,
+      7549,
+      7550,
+      7551,
+      7564,
+      7565,
+      7566,
+      7567
+    ],
+    "section_diffs": {
+      ".text._ZTS16dpct_kernel_nameIJZZN6strata7kernels13sample_tokensEPKfiiPKiiRKNS1_13SamplerParamsEPiPvENKUlRN4sycl3_V17handlerEE_clESE_E28sampler_greedy_kernel_5b2c3fEE": {
+        "new": {
+          "bytes": 7744,
+          "type": 1,
+          "flags": 6,
+          "sha256": "54311e4a55ade9e62bab455afb96c2135cd01779e3fc662423623ff15870ee05"
+        },
+        "reference": {
+          "bytes": 7744,
+          "type": 1,
+          "flags": 6,
+          "sha256": "3541ccf01f257c7b3fde1d7247ccda7490c1f5224a5f5b4df28ab2828cb26ca6"
+        }
+      },
+      ".spv": {
+        "new": {
+          "bytes": 12060,
+          "type": 4278190089,
+          "flags": 0,
+          "sha256": "cab2e5eda91a0148d36230463b1efb72b35b113c6b30045f7063f76fb8661dd1"
+        },
+        "reference": {
+          "bytes": 12064,
+          "type": 4278190089,
+          "flags": 0,
+          "sha256": "cb7c681c3910b1e988de6ed5f4177cf2829dbea3853b88d8e501908034edb5d5"
+        }
+      }
+    },
+    "PASS": false
+  },
+  "probability": {
+    "raw_full_image_exact": false,
+    "raw_complete_text_exact": false,
+    "computational_prefix_bytes": null,
+    "computational_prefix_exact": false,
+    "execution_payload_metadata_equal": true,
+    "build_options_equal": true,
+    "constant_data_equal": true,
+    "relocation_sections_equal": true,
+    "text_size_delta": 0,
+    "text_changed_offsets": [
+      3708,
+      3709,
+      3710,
+      3711,
+      3724,
+      3725,
+      3726,
+      3727
+    ],
+    "section_diffs": {
+      ".text._ZTS16dpct_kernel_nameIJZN6strata7kernels18row_top_prob_splitEPKfiiPKiPfPvS7_E32row_top_prob_split_kernel_9495b0EE": {
+        "new": {
+          "bytes": 3904,
+          "type": 1,
+          "flags": 6,
+          "sha256": "16d0202df02e424f5cb5c0743647a6283bd6b0bcc1d0d8ed84ec4af35cc3d292"
+        },
+        "reference": {
+          "bytes": 3904,
+          "type": 1,
+          "flags": 6,
+          "sha256": "b42b2d1e58f8b53515a75518b1a30131a5ac1b15b38fcb13f25683d79bf0f7bc"
+        }
+      },
+      ".spv": {
+        "new": {
+          "bytes": 7992,
+          "type": 4278190089,
+          "flags": 0,
+          "sha256": "f94954c662fc591efbeac4dbaaa847273a3d65c53724ae98941aa7ee1f455eb5"
+        },
+        "reference": {
+          "bytes": 7996,
+          "type": 4278190089,
+          "flags": 0,
+          "sha256": "78295c508b82de70e04b27c8857d056dd92e3dfc3a8e26f35d4624ddc0ac5107"
+        }
+      }
+    },
+    "PASS": false
+  },
+  "select": {
+    "raw_full_image_exact": true,
+    "raw_complete_text_exact": true,
+    "computational_prefix_bytes": null,
+    "computational_prefix_exact": true,
+    "execution_payload_metadata_equal": true,
+    "build_options_equal": true,
+    "constant_data_equal": true,
+    "relocation_sections_equal": true,
+    "text_size_delta": 0,
+    "text_changed_offsets": [],
+    "section_diffs": {},
+    "PASS": true
+  },
+  "candidate": {
+    "raw_full_image_exact": false,
+    "raw_complete_text_exact": false,
+    "computational_prefix_bytes": 9728,
+    "computational_prefix_exact": true,
+    "execution_payload_metadata_equal": true,
+    "build_options_equal": true,
+    "constant_data_equal": true,
+    "relocation_sections_equal": true,
+    "text_size_delta": 0,
+    "text_changed_offsets": [
+      9740,
+      9741,
+      9742,
+      9743,
+      9756,
+      9757,
+      9758,
+      9759
+    ],
+    "section_diffs": {
+      ".text._ZTS16dpct_kernel_nameIJZN12s112_private6launchEPKfiPvPiRN4sycl3_V15queueEE14GreedyTop1S112EE": {
+        "new": {
+          "bytes": 9920,
+          "type": 1,
+          "flags": 6,
+          "sha256": "bf4a66ab3fc54db2c61226faa629b72941bf52c6be4713d60612a8cb054e770e"
+        },
+        "reference": {
+          "type": 1,
+          "flags": 6,
+          "bytes": 9920,
+          "sha256": "b85ec67a4d57dbfce474b9a1590e78c77b5cabd4af0fbb96c9aabd2dd5807c1b"
+        }
+      },
+      ".spv": {
+        "new": {
+          "bytes": 13196,
+          "type": 4278190089,
+          "flags": 0,
+          "sha256": "b4a17f7e16468935cda2162f72570854e30e34245d101a5d505a38fee314d7eb"
+        },
+        "reference": {
+          "type": 4278190089,
+          "flags": 0,
+          "bytes": 13196,
+          "sha256": "7f4b0b5b1e74a6396df9224e66865af5f7ea3c9217221d3beeb92a0b91ca4580"
+        }
+      }
+    },
+    "PASS": true,
+    "reference_EOT_end": 9728,
+    "reference_ASM_sha256": "201ca3db5646617431542d704ad8f55cde345833766234a72cbdd643ab9dd61c"
+  }
+}
+
+ADDENDUM
+{
+  "status": "PASS_BOUNDED_TWO_DEFAULT_COMPUTATIONAL_REUSE_ROOT_READ_REQUIRED",
+  "first_HOLD_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-audit/HOLD.json",
+  "first_HOLD_unchanged": true,
+  "first_comparison_sha256": "a90f85832097f65d7173cdd06b2b6cf0e4b9babdc8eca612e2a16e9be93a16ad",
+  "results": {
+    "sampler": {
+      "status": "PASS_BOUNDED_S107_COMPUTATIONAL_REUSE",
+      "registered_name": "_ZTS16dpct_kernel_nameIJZZN6strata7kernels13sample_tokensEPKfiiPKiiRKNS1_13SamplerParamsEPiPvENKUlRN4sycl3_V17handlerEE_clESE_E28sampler_greedy_kernel_5b2c3fEE",
+      "current_image_sha256": "72d196b7cf23fef008f09d411c25ddae5f7ec7b77337318f41321b622f9dab8b",
+      "S107_image_sha256": "7f4347f632132103b8eb596b8b935e6f8e8ab5893b8b4ce80b3e65c339932a34",
+      "current_ASM_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s114-default-isa-addendum/sampler-disasm/.text.s114_sampler.asm",
+      "current_ASM_sha256": "8229f829c9ec66bf7c8a3c6868599846e3ad3de6d266043d246ebf51cc703526",
+      "raw_full_image_exact": false,
+      "raw_complete_text_exact": false,
+      "actual_EOT_line": 652,
+      "actual_EOT_end_byte": 7536,
+      "prefix_bytes": 7536,
+      "prefix_sha256": "269fcb5225fa95451134ea65869398f69f27fd98a46e172ad22e0cf5c40af001",
+      "prefix_through_actual_EOT_exact": true,
+      "all_label_references_before_EOT": true,
+      "label_reference_instructions": 97,
+      "max_label_reference": 7504,
+      "indirect_call_ret_extra_control": [],
+      "raw_text_changed_offsets": [
+        7548,
+        7549,
+        7550,
+        7551,
+        7564,
+        7565,
+        7566,
+        7567
+      ],
+      "changed_bytes_all_after_EOT": true,
+      "actual_postEOT_instructions": [
+        "(W)     mov (16|M0)              null<1>:ud    0x38DF2CE9:ud                             ",
+        "(W)     mov (16|M0)              null<1>:ud    0x665F8AAE:ud                             "
+      ],
+      "raw_metadata_equal": true,
+      "options_equal": true,
+      "constant_data_equal": true,
+      "relocations_equal": true,
+      "all_changed_sections": {
+        ".text._ZTS16dpct_kernel_nameIJZZN6strata7kernels13sample_tokensEPKfiiPKiiRKNS1_13SamplerParamsEPiPvENKUlRN4sycl3_V17handlerEE_clESE_E28sampler_greedy_kernel_5b2c3fEE": {
+          "new_bytes": 7744,
+          "reference_bytes": 7744,
+          "new_sha256": "54311e4a55ade9e62bab455afb96c2135cd01779e3fc662423623ff15870ee05",
+          "reference_sha256": "3541ccf01f257c7b3fde1d7247ccda7490c1f5224a5f5b4df28ab2828cb26ca6"
+        },
+        ".spv": {
+          "new_bytes": 12060,
+          "reference_bytes": 12064,
+          "new_sha256": "cab2e5eda91a0148d36230463b1efb72b35b113c6b30045f7063f76fb8661dd1",
+          "reference_sha256": "cb7c681c3910b1e988de6ed5f4177cf2829dbea3853b88d8e501908034edb5d5"
+        }
+      },
+      "embedded_SPIRV_semantics": "UNCLASSIFIED_RAW_DIFFERENCE; no SPIR-V execution or full-program equivalence claim",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [
+          "256"
+        ],
+        "barrier_count": [
+          "1"
+        ],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ]
+      },
+      "resource_absence": "unknown, not measuredzero"
+    },
+    "probability": {
+      "status": "PASS_BOUNDED_S107_COMPUTATIONAL_REUSE",
+      "registered_name": "_ZTS16dpct_kernel_nameIJZN6strata7kernels18row_top_prob_splitEPKfiiPKiPfPvS7_E32row_top_prob_split_kernel_9495b0EE",
+      "current_image_sha256": "22dcc58a0d0df31f82667b16328123fd8bd6bb8a2e360058bfa1705214646522",
+      "S107_image_sha256": "5221bf9a69a32958c78e39522efe09d9355f35b4aec6d0dcffc1324d23490f86",
+      "current_ASM_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s114-default-isa-addendum/probability-disasm/.text.s114_probability.asm",
+      "current_ASM_sha256": "64f2079c5da70cdd88f8d714622d445522abcb95ad67ea4b505ac5469e1cb4a2",
+      "raw_full_image_exact": false,
+      "raw_complete_text_exact": false,
+      "actual_EOT_line": 285,
+      "actual_EOT_end_byte": 3696,
+      "prefix_bytes": 3696,
+      "prefix_sha256": "1dbf0dbb428228da2719efff15ceb447e0a706198261190d2ec75920ce538f1d",
+      "prefix_through_actual_EOT_exact": true,
+      "all_label_references_before_EOT": true,
+      "label_reference_instructions": 12,
+      "max_label_reference": 3664,
+      "indirect_call_ret_extra_control": [],
+      "raw_text_changed_offsets": [
+        3708,
+        3709,
+        3710,
+        3711,
+        3724,
+        3725,
+        3726,
+        3727
+      ],
+      "changed_bytes_all_after_EOT": true,
+      "actual_postEOT_instructions": [
+        "(W)     mov (16|M0)              null<1>:ud    0x452BE4FE:ud                             ",
+        "(W)     mov (16|M0)              null<1>:ud    0x7550F85E:ud                             "
+      ],
+      "raw_metadata_equal": true,
+      "options_equal": true,
+      "constant_data_equal": true,
+      "relocations_equal": true,
+      "all_changed_sections": {
+        ".text._ZTS16dpct_kernel_nameIJZN6strata7kernels18row_top_prob_splitEPKfiiPKiPfPvS7_E32row_top_prob_split_kernel_9495b0EE": {
+          "new_bytes": 3904,
+          "reference_bytes": 3904,
+          "new_sha256": "16d0202df02e424f5cb5c0743647a6283bd6b0bcc1d0d8ed84ec4af35cc3d292",
+          "reference_sha256": "b42b2d1e58f8b53515a75518b1a30131a5ac1b15b38fcb13f25683d79bf0f7bc"
+        },
+        ".spv": {
+          "new_bytes": 7992,
+          "reference_bytes": 7996,
+          "new_sha256": "f94954c662fc591efbeac4dbaaa847273a3d65c53724ae98941aa7ee1f455eb5",
+          "reference_sha256": "78295c508b82de70e04b27c8857d056dd92e3dfc3a8e26f35d4624ddc0ac5107"
+        }
+      },
+      "embedded_SPIRV_semantics": "UNCLASSIFIED_RAW_DIFFERENCE; no SPIR-V execution or full-program equivalence claim",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [
+          "32"
+        ],
+        "barrier_count": [
+          "1"
+        ],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ]
+      },
+      "resource_absence": "unknown, not measuredzero"
+    }
+  },
+  "candidate_from_first_audit": {
+    "computational_prefix_bytes": 9728,
+    "computational_prefix_exact": true,
+    "metadata_options_data_relocations_all_equal": true,
+    "raw_image_text_identity": false
+  },
+  "select_raw_whole_image_exact": true,
+  "decoder_invocations": 2,
+  "GPU": 0,
+  "compiler_invocations": 0,
+  "new_main_archive_model_hashes": 0,
+  "GPU_GO": false,
+  "limits": [
+    "Additive explanation of the original HOLD only; does not rewrite the failed first audit.",
+    "Actual current ASM establishes EOT/control bounds; identical native prefix establishes same reference prefix bytes.",
+    "Two MOV-immediate raw differences are after EOT; their values and embedded SPIR-V meaning remain unclassified.",
+    "Root must independently read current host guard/argument/owner forwarding and accept static reuse before any GPU.",
+    "No runtime publication, serving latency, physical traffic or universal program identity claim."
+  ]
+}
+
+INDEPENDENT ACTUAL HOST NOTE
+# S114 independent compiled host guard/forwarding audit - 2026-10-16
+
+CONFIG -> Existing selected audit binds new main d1c4968ffbb62e66753e0c016d830d7af53154d0de6c6b8f1b966fec4d518e92 and MTP object c430dcd6f274371345fbb1aec1cd38ad6182a8ab1b046e704b8300cc76aad385. Actual mtp.cpp is2d26e686c2aa6065d33461464efa39975db8e0cc5196f8962a216b4c5fa2a589; tested private header c1652c6a... is unchanged. No new EXE/object/archive/model hash, build, GPU, CLI or device ISA decoder.
+
+COMMAND -> Read retained selection/source-owner/host ASM and pinned source/header. After explicit parent authorization, use nm --defined-only to select three exact host symbols and objdump -drw --disassemble for only mtp_parallel_argmax_on, bind and capture_tail from the known current object; remove empty section headings, preserve complete selected function bodies. One32-byte .rodata.str1.1 dump binds getenv's exact name. New output/pins/commands stay here only. Source allocation/lifetime evidence and actual compiled forwarding are distinguished below.
+
+RESULT -> Specified static host guards and argument paths are present. This is not a generic runtime GO or proof of device execution. Record-post-head and private launch offsets below refer to their retained object ASM; bind/helper/pair-tail refer to new narrow host reads.
+
+Guard order and unchanged default branch:
+- record_post_head dd20 entry preserves this=r15, logits=r12, supplied queue=r14. dd3c..dd58 select full/subset vocabulary from this+0x5f0 (draft head) and this+0x600 versus0x2c0.
+- dd5b calls argmax_rows_wanted FIRST. Its true edge dd64..dd80 calls the original argmax_rows(logits,1,nv,owner scratch,owner IDs,queue) and jumps to de59; it never reaches the new flag. The new path is exclusively in the old sampler else edge.
+- ddd8/dddb reject nonnull draft head; dddd/dde4 require nv=0x3ca00=248320; dde6/ddee and ddf0/ddf8 require the two coupled-state bytes this+0xf1/0xf2 to be false. Source maps these to coupled_active_/coupled_rec_. T=1 is a compile-time local here. Source-local SamplerParams sets greedy=true/temperature0 and default last_n0/repeat1/frequency0/present0; compiler folds those constant predicates rather than emitting new request-variable FP tests. No claim that arbitrary request sampler parameters are checked at runtime by these folded comparisons.
+- ddfa calls process-static gate98f0; false jumps to original sample_tokens atde32..de50 with original local sp pointer/history=null/history-count0/IDs/queue. True reaches candidate de12..de2b. Once-only HOST log is guard-protected de03..de0c/deda..df18, then rejoins the same candidate call. This marker is not per-call/device dispatch evidence.
+
+Actual immutable flag and bind ABI checks, gaps closed:
+- helper98f0..994c tests a static guard and returns stored on after initialization. First path9909 guard-acquire,9917 getenv,991c null check,9921 first byte0x31,9926 second byteNUL; null/other values storefalse, exact"1" stores true at9931 then guard-release993c. nm identifies static on at.bss0xa0 and guard0xa8. PC-relative .bss addends in objdump include relocation adjustments; they are not new object-field offsets.
+- Narrow rodata dump1dc0..1ddf confirms STRATA_MTP_PARALLEL_ARGMAX begins1dc3, the getenv argument in both helper and bind.
+- bind inlines that SAME guard/value initialization:8ac4 guard test,8d8b acquire,8da2 getenv,8da7/8dac/8db1 null/'1'/NUL,8e2a value store,8e35 release and branch back8ad3. It then checks flag/fullhead/fullvocab;8af3 requires max_t>0;8afd scratchnonnull;8b0c calls argmax_rows_scratch_bytes(1),8b11 compares0x410=1040;8b20 calls bytes(max_t),8b25/8b2b requires>0x40f. Failure8b2d sets error and reaches failure epilogue; successful path continues coupled setup/return. bind contains no graph capture/recording call. Source bind/load sequencing initializes this flag before captures; the compiled inline initialization and ABI checks are now independently observed, not merely a source comment. This does not prove callers cannot misuse an unbound object.
+
+Actual candidate forwarding and captured payload:
+- de12 loads scratch from[this+0x640] into rdx, de19 IDs from[this+0x778] into rcx; de20 logits=r12->rdi; de23 n=248320->esi; de28 queue=r14->r8; de2b calls s112_private::launch. The same this+0x640 and0x778 fields fed original argmax dd64/dd6b, so the new call retains that exact owner-relative scratch/output path. Field labels alone do not establish allocation ownership; source evidence below supplies that distinct claim.
+- private wrapper0xc saves supplied queue r8 inrbx;0xf preserves scratch rdx inr8.0x12..0x3c computes nb=min(128,max(1,ceil(n/4096)));0x40..0x47 computes per=ceil(n/nb). For the compiled guarded n248320 these give nb61/per4071.0x4a..0x5c capture logits,n,per,scratch,IDs in that order at stack0x38/40/44/48/50.0x9c shifts nb by8;0xa0..0xe0 construct global{1,1,nb*256}={1,1,15616}, local{1,1,256}; group-row dimension is1. This is host arithmetic/descriptor construction, not a measured NDRange replay count.
+-0x141/0x150 load candidate cache guard/value;0x2c7 uses actual candidate CompileTimeKernelInfo,0x2cc getDeviceKernelInfo,0x2d1 cache store.0x206..0x226 forwards the same saved queue, range view, closure and candidate DeviceKernelInfo to submit_kernel_direct_with_event_impl. Selected ze_info arg0 logits pointer/arg1 n/arg2 per/arg3 ArgRow*/arg4 IDs map to payload offsets0/24/28/8/16. Resources SG32/GRF128/SLM544/barrier1/eu8 are actual metadata, not occupancy; absent fields stay unknown.
+
+Actual two-owner capture chain:
+- capture_tail16d83 tests existing graph;16d9f/16da2 load A from pair[this+0] and B from[this+8];16dbb/16dbf begins recording on pair[this+0x18]. Existing two quantizations and one two-column head remain16dda/16df9/16e20.
+-16e29..16e39 calls A.record_post_head with Athis=r13, logits=pair[this+0x30], queue=pair[this+0x18], same error reference. False short-circuits at16e40.
+-16e46..16e5e calls Bthis=r15, same queue, logits=pair[this+0x30]+4*nv where nv=pair[this+0x40]. False short-circuits16e65. These are actual distinct owner FIELD loads and row pointer arithmetic, not proof the runtime field values cannot alias.
+- Successful code then loads A/B own out_ids and probability pointers for unchanged mtp_select calls; selection.MTP_forwarding_calls retains their actual capture_tail relocation plus capture_round/step and whole-depth2 owners. Whole-depth2 caller bodies were not independently disassembled here; its forwarding remains source/selected-relocation evidence.
+
+Downstream/probability unchanged:
+All old argmax, fallback sampler and candidate paths join de59. multi_block_head_ops remains first selector for probability. de5e/de65 load probs[this+0x638] and SAME IDs[this+0x778]; de70 loads topscratch[this+0x648]. de7b..de88 forwards SAME logits,rows1,nv,IDs,probs,topscratch,queue to row_top_prob_split; false edge de93..dea1 retains row_top_prob. Subset mapping remains deac..dec4. No probability pointer NULL/skip or extra scratch reset was introduced. Actual probability wrapper refs selected Info at2ff2 and direct submission2f4c; selected source/probability arithmetic identity is a separate image/addendum gate.
+
+Bindings and ownership scope:
+Four final Info addresses are candidate0xc2e258, sampler0xc3a428, probability0xcea688, select0xcea3c8. Eight cache/guard addresses and four registered-name pointers are distinct, retained in pins-and-bindings.json. Candidate references its actual private launch function; original sampler has a real command-group thunk; probability/select reference their real wrappers. This includes host references/name pointers, not just string existence.
+Actual source arena carve mtp472..475 allocates out_ids/probs/arg_scratch/top_scratch separately;480..487 allocates/zeros its owner arena. Header/static_assert and bind capacity checks preserve1040-byte ArgRow(counter0,v16,i528). Pair source2190..2204 forwards A/B own state on the same queue, borrowing weights rather than scratch. This is source ownership/lifetime evidence; compiled registers alone do not prove runtime allocation disjointness, readiness, freshness, graph replay or all-caller safety. No new persistent buffer, public layout or per-call clear appears.
+
+VERDICT -> ACCEPT only this bounded static guard/argument/owner-field audit. First-stage raw-text sampler/probability HOLD is preserved; root's separate actual EOT addendum must close it, and candidate prefix9728/metadata/options/data/relocation reuse and select full-image identity remain separate recorded gates. No universal binary equivalence, numerical result, runtime dispatch, device readiness, throughput, or serving GO follows from this host audit. No additional compiled-host ambiguity blocks the inspected default component-tail path; uninspected whole-pair caller bodies remain explicitly limited.
+
+ACTUAL SELECTED FOUR METADATA
+candidate.ze_info
+---
+version:         '1.71'
+kernels:
+  - name:            _ZTS16dpct_kernel_nameIJZN12s112_private6launchEPKfiPvPiRN4sycl3_V15queueEE14GreedyTop1S112EE
+    user_attributes:
+      intel_reqd_sub_group_size: 32
+      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]
+    execution_env:
+      barrier_count:   1
+      grf_count:       128
+      has_4gb_buffers: true
+      has_global_atomics: true
+      has_no_stateless_write: true
+      inline_data_payload_size: 32
+      offset_to_skip_per_thread_data_load: 128
+      simd_size:       32
+      slm_size:        544
+      subgroup_independent_forward_progress: true
+      eu_thread_count: 8
+    payload_arguments:
+      - arg_type:        arg_bypointer
+        offset:          0
+        size:            8
+        arg_index:       0
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_bypointer
+        offset:          8
+        size:            8
+        arg_index:       3
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_bypointer
+        offset:          16
+        size:            8
+        arg_index:       4
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_byvalue
+        offset:          24
+        size:            4
+        arg_index:       1
+      - arg_type:        arg_byvalue
+        offset:          28
+        size:            4
+        arg_index:       2
+      - arg_type:        group_count
+        offset:          32
+        size:            12
+      - arg_type:        global_size
+        offset:          44
+        size:            12
+      - arg_type:        local_size
+        offset:          56
+        size:            12
+    per_thread_payload_arguments:
+      - arg_type:        local_id
+        offset:          0
+        size:            64
+kernels_misc_info:
+  - name:            _ZTS16dpct_kernel_nameIJZN12s112_private6launchEPKfiPvPiRN4sycl3_V15queueEE14GreedyTop1S112EE
+    args_info:
+      - index:           0
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'float*;8'
+        type_qualifiers: NONE
+      - index:           1
+        address_qualifier: __private
+        access_qualifier: NONE
+        type_name:       'int;4'
+        type_qualifiers: NONE
+      - index:           2
+        address_qualifier: __private
+        access_qualifier: NONE
+        type_name:       'int;4'
+        type_qualifiers: NONE
+      - index:           3
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'struct s112_private::ArgRow*;8'
+        type_qualifiers: NONE
+      - index:           4
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'int*;8'
+        type_qualifiers: NONE
+...
+sampler.ze_info
+---
+version:         '1.71'
+kernels:
+  - name:            _ZTS16dpct_kernel_nameIJZZN6strata7kernels13sample_tokensEPKfiiPKiiRKNS1_13SamplerParamsEPiPvENKUlRN4sycl3_V17handlerEE_clESE_E28sampler_greedy_kernel_5b2c3fEE
+    user_attributes:
+      intel_reqd_sub_group_size: 32
+      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]
+    execution_env:
+      barrier_count:   1
+      grf_count:       128
+      has_4gb_buffers: true
+      has_no_stateless_write: true
+      indirect_stateless_count: 4
+      inline_data_payload_size: 32
+      offset_to_skip_per_thread_data_load: 128
+      simd_size:       32
+      slm_size:        256
+      subgroup_independent_forward_progress: true
+      eu_thread_count: 8
+    payload_arguments:
+      - arg_type:        arg_bypointer
+        offset:          0
+        size:            8
+        arg_index:       6
+        addrmode:        slm
+        addrspace:       local
+        access_type:     readwrite
+        slm_alignment:   1
+      - arg_type:        arg_bypointer
+        offset:          8
+        size:            8
+        arg_index:       0
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_bypointer
+        offset:          16
+        size:            8
+        arg_index:       2
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_bypointer
+        offset:          24
+        size:            8
+        arg_index:       5
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_byvalue
+        offset:          32
+        size:            4
+        arg_index:       1
+      - arg_type:        arg_byvalue
+        offset:          36
+        size:            4
+        arg_index:       3
+      - arg_type:        arg_byvalue
+        offset:          40
+        size:            37
+        arg_index:       4
+        source_offset:   0
+      - arg_type:        arg_byvalue
+        offset:          80
+        size:            1
+        arg_index:       4
+        source_offset:   37
+      - arg_type:        arg_byvalue
+        offset:          84
+        size:            1
+        arg_index:       4
+        source_offset:   38
+      - arg_type:        arg_byvalue
+        offset:          88
+        size:            1
+        arg_index:       4
+        source_offset:   39
+      - arg_type:        arg_byvalue
+        offset:          96
+        size:            17
+        arg_index:       4
+        source_offset:   40
+      - arg_type:        arg_byvalue
+        offset:          116
+        size:            1
+        arg_index:       4
+        source_offset:   57
+      - arg_type:        arg_byvalue
+        offset:          120
+        size:            1
+        arg_index:       4
+        source_offset:   58
+      - arg_type:        arg_byvalue
+        offset:          124
+        size:            1
+        arg_index:       4
+        source_offset:   59
+      - arg_type:        arg_byvalue
+        offset:          128
+        size:            1
+        arg_index:       4
+        source_offset:   60
+      - arg_type:        arg_byvalue
+        offset:          132
+        size:            1
+        arg_index:       4
+        source_offset:   61
+      - arg_type:        arg_byvalue
+        offset:          136
+        size:            1
+        arg_index:       4
+        source_offset:   62
+      - arg_type:        arg_byvalue
+        offset:          140
+        size:            1
+        arg_index:       4
+        source_offset:   63
+      - arg_type:        group_count
+        offset:          144
+        size:            12
+      - arg_type:        global_size
+        offset:          160
+        size:            12
+      - arg_type:        local_size
+        offset:          172
+        size:            12
+    per_thread_payload_arguments:
+      - arg_type:        local_id
+        offset:          0
+        size:            64
+kernels_misc_info:
+  - name:            _ZTS16dpct_kernel_nameIJZZN6strata7kernels13sample_tokensEPKfiiPKiiRKNS1_13SamplerParamsEPiPvENKUlRN4sycl3_V17handlerEE_clESE_E28sampler_greedy_kernel_5b2c3fEE
+    args_info:
+      - index:           0
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'float*;8'
+        type_qualifiers: NONE
+      - index:           1
+        address_qualifier: __private
+        access_qualifier: NONE
+        type_name:       'int;4'
+        type_qualifiers: NONE
+      - index:           2
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'char*;8'
+        type_qualifiers: NONE
+      - index:           3
+        address_qualifier: __private
+        access_qualifier: NONE
+        type_name:       'int;4'
+        type_qualifiers: NONE
+      - index:           4
+        address_qualifier: __private
+        access_qualifier: NONE
+        type_name:       'struct strata::kernels::SamplerParams;64'
+        type_qualifiers: NONE
+      - index:           5
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'int*;8'
+        type_qualifiers: NONE
+      - index:           6
+        address_qualifier: __local
+        access_qualifier: NONE
+        type_name:       'int*;8'
+        type_qualifiers: NONE
+...
+probability.ze_info
+---
+version:         '1.71'
+kernels:
+  - name:            _ZTS16dpct_kernel_nameIJZN6strata7kernels18row_top_prob_splitEPKfiiPKiPfPvS7_E32row_top_prob_split_kernel_9495b0EE
+    user_attributes:
+      intel_reqd_sub_group_size: 32
+      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]
+    execution_env:
+      barrier_count:   1
+      grf_count:       128
+      has_4gb_buffers: true
+      has_global_atomics: true
+      has_no_stateless_write: true
+      indirect_stateless_count: 1
+      inline_data_payload_size: 32
+      offset_to_skip_per_thread_data_load: 128
+      simd_size:       32
+      slm_size:        32
+      subgroup_independent_forward_progress: true
+      eu_thread_count: 8
+    payload_arguments:
+      - arg_type:        arg_bypointer
+        offset:          0
+        size:            8
+        arg_index:       0
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_bypointer
+        offset:          8
+        size:            8
+        arg_index:       2
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_bypointer
+        offset:          16
+        size:            8
+        arg_index:       3
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_bypointer
+        offset:          24
+        size:            8
+        arg_index:       4
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_byvalue
+        offset:          32
+        size:            4
+        arg_index:       1
+      - arg_type:        group_count
+        offset:          36
+        size:            12
+      - arg_type:        global_size
+        offset:          48
+        size:            12
+      - arg_type:        local_size
+        offset:          60
+        size:            12
+    per_thread_payload_arguments:
+      - arg_type:        local_id
+        offset:          0
+        size:            64
+kernels_misc_info:
+  - name:            _ZTS16dpct_kernel_nameIJZN6strata7kernels18row_top_prob_splitEPKfiiPKiPfPvS7_E32row_top_prob_split_kernel_9495b0EE
+    args_info:
+      - index:           0
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'float*;8'
+        type_qualifiers: NONE
+      - index:           1
+        address_qualifier: __private
+        access_qualifier: NONE
+        type_name:       'int;4'
+        type_qualifiers: NONE
+      - index:           2
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'int*;8'
+        type_qualifiers: NONE
+      - index:           3
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'float*;8'
+        type_qualifiers: NONE
+      - index:           4
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'struct strata::kernels::(anonymous namespace)::TopRow*;8'
+        type_qualifiers: NONE
+...
+select.ze_info
+---
+version:         '1.71'
+kernels:
+  - name:            _ZTS16dpct_kernel_nameIJZN6strata7kernels10mtp_selectEPKflPKiS5_PfPiS7_iPvS3_S6_E24mtp_select_kernel_4611feEE
+    user_attributes:
+      intel_reqd_sub_group_size: 32
+      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]
+    execution_env:
+      barrier_count:   1
+      grf_count:       128
+      has_4gb_buffers: true
+      has_no_stateless_write: true
+      indirect_stateless_count: 3
+      inline_data_payload_size: 32
+      offset_to_skip_per_thread_data_load: 128
+      simd_size:       32
+      subgroup_independent_forward_progress: true
+      eu_thread_count: 8
+    payload_arguments:
+      - arg_type:        arg_bypointer
+        offset:          0
+        size:            8
+        arg_index:       0
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_bypointer
+        offset:          8
+        size:            8
+        arg_index:       2
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_bypointer
+        offset:          16
+        size:            8
+        arg_index:       3
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_bypointer
+        offset:          24
+        size:            8
+        arg_index:       4
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_bypointer
+        offset:          32
+        size:            8
+        arg_index:       5
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_bypointer
+        offset:          40
+        size:            8
+        arg_index:       6
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_bypointer
+        offset:          48
+        size:            8
+        arg_index:       8
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_bypointer
+        offset:          56
+        size:            8
+        arg_index:       9
+        addrmode:        stateless
+        addrspace:       global
+        access_type:     readwrite
+      - arg_type:        arg_byvalue
+        offset:          64
+        size:            8
+        arg_index:       1
+      - arg_type:        arg_byvalue
+        offset:          72
+        size:            4
+        arg_index:       7
+      - arg_type:        group_count
+        offset:          76
+        size:            12
+      - arg_type:        local_size
+        offset:          96
+        size:            12
+    per_thread_payload_arguments:
+      - arg_type:        local_id
+        offset:          0
+        size:            64
+kernels_misc_info:
+  - name:            _ZTS16dpct_kernel_nameIJZN6strata7kernels10mtp_selectEPKflPKiS5_PfPiS7_iPvS3_S6_E24mtp_select_kernel_4611feEE
+    args_info:
+      - index:           0
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'float*;8'
+        type_qualifiers: NONE
+      - index:           1
+        address_qualifier: __private
+        access_qualifier: NONE
+        type_name:       'long;8'
+        type_qualifiers: NONE
+      - index:           2
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'int*;8'
+        type_qualifiers: NONE
+      - index:           3
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'int*;8'
+        type_qualifiers: NONE
+      - index:           4
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'float*;8'
+        type_qualifiers: NONE
+      - index:           5
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'int*;8'
+        type_qualifiers: NONE
+      - index:           6
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'char*;8'
+        type_qualifiers: NONE
+      - index:           7
+        address_qualifier: __private
+        access_qualifier: NONE
+        type_name:       'int;4'
+        type_qualifiers: NONE
+      - index:           8
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'char*;8'
+        type_qualifiers: NONE
+      - index:           9
+        address_qualifier: __global
+        access_qualifier: NONE
+        type_name:       'char*;8'
+        type_qualifiers: NONE
+...
+
+ACTUAL record_post_head INSTRUCTIONS (only repetitive angle-symbol names shortened; rawfile retained)
+dd20: 55 push %rbp
+dd21: 41 57 push %r15
+dd23: 41 56 push %r14
+dd25: 41 55 push %r13
+dd27: 41 54 push %r12
+dd29: 53 push %rbx
+dd2a: 48 83 ec 78 sub $0x78,%rsp
+dd2e: 48 89 4c 24 10 mov %rcx,0x10(%rsp)
+dd33: 49 89 d6 mov %rdx,%r14
+dd36: 49 89 f4 mov %rsi,%r12
+dd39: 49 89 ff mov %rdi,%r15
+dd3c: 48 8b 9f f0 05 00 00 mov 0x5f0(%rdi),%rbx
+dd43: 48 8d 87 00 06 00 00 lea 0x600(%rdi),%rax
+dd4a: 48 8d 8f c0 02 00 00 lea 0x2c0(%rdi),%rcx
+dd51: 48 85 db test %rbx,%rbx
+dd54: 48 0f 44 c1 cmove %rcx,%rax
+dd58: 4c 8b 28 mov (%rax),%r13
+dd5b: e8 00 00 00 00 call dd60 <symbol> dd5c: R_X86_64_PLT32 _ZN6strata7kernels18argmax_rows_wantedEv-0x4
+dd60: 84 c0 test %al,%al
+dd62: 74 26 je dd8a <symbol>
+dd64: 49 8b 8f 40 06 00 00 mov 0x640(%r15),%rcx
+dd6b: 4d 8b 87 78 07 00 00 mov 0x778(%r15),%r8
+dd72: 4c 89 e7 mov %r12,%rdi
+dd75: be 01 00 00 00 mov $0x1,%esi
+dd7a: 44 89 ea mov %r13d,%edx
+dd7d: 4d 89 f1 mov %r14,%r9
+dd80: e8 00 00 00 00 call dd85 <symbol> dd81: R_X86_64_PLT32 _ZN6strata7kernels11argmax_rowsEPKfiiPvPiS3_-0x4
+dd85: e9 cf 00 00 00 jmp de59 <symbol>
+dd8a: c7 44 24 38 14 00 00 00 movl $0x14,0x38(%rsp)
+dd92: f3 0f 10 05 00 00 00 00 movss 0x0(%rip),%xmm0 # dd9a <symbol> dd96: R_X86_64_PC32 .LCPI73_0-0x4
+dd9a: 0f 13 44 24 3c movlps %xmm0,0x3c(%rsp)
+dd9f: c7 44 24 4c 00 00 00 00 movl $0x0,0x4c(%rsp)
+dda7: f3 0f 10 05 00 00 00 00 movss 0x0(%rip),%xmm0 # ddaf <symbol> ddab: R_X86_64_PC32 .LCPI73_1-0x4
+ddaf: 0f 13 44 24 50 movlps %xmm0,0x50(%rsp)
+ddb4: c7 44 24 58 00 00 00 00 movl $0x0,0x58(%rsp)
+ddbc: 0f 57 c0 xorps %xmm0,%xmm0
+ddbf: 0f 11 44 24 60 movups %xmm0,0x60(%rsp)
+ddc4: c6 44 24 70 01 movb $0x1,0x70(%rsp)
+ddc9: 48 b8 00 00 00 00 01 00 00 00 movabs $0x100000000,%rax
+ddd3: 48 89 44 24 44 mov %rax,0x44(%rsp)
+ddd8: 48 85 db test %rbx,%rbx
+dddb: 75 55 jne de32 <symbol>
+dddd: 49 81 fd 00 ca 03 00 cmp $0x3ca00,%r13
+dde4: 75 4c jne de32 <symbol>
+dde6: 41 80 bf f1 00 00 00 00 cmpb $0x0,0xf1(%r15)
+ddee: 75 42 jne de32 <symbol>
+ddf0: 41 80 bf f2 00 00 00 00 cmpb $0x0,0xf2(%r15)
+ddf8: 75 38 jne de32 <symbol>
+ddfa: e8 f1 ba ff ff call 98f0 <symbol>
+ddff: 84 c0 test %al,%al
+de01: 74 2f je de32 <symbol>
+de03: 0f b6 05 00 00 00 00 movzbl 0x0(%rip),%eax # de0a <symbol> de06: R_X86_64_PC32 .bss+0x74
+de0a: 84 c0 test %al,%al
+de0c: 0f 84 c8 00 00 00 je deda <symbol>
+de12: 49 8b 97 40 06 00 00 mov 0x640(%r15),%rdx
+de19: 49 8b 8f 78 07 00 00 mov 0x778(%r15),%rcx
+de20: 4c 89 e7 mov %r12,%rdi
+de23: be 00 ca 03 00 mov $0x3ca00,%esi
+de28: 4d 89 f0 mov %r14,%r8
+de2b: e8 00 00 00 00 call de30 <symbol> de2c: R_X86_64_PLT32 _ZN12s112_private6launchEPKfiPvPiRN4sycl3_V15queueE-0x4
+de30: eb 27 jmp de59 <symbol>
+de32: 4c 8d 4c 24 38 lea 0x38(%rsp),%r9
+de37: 4c 89 e7 mov %r12,%rdi
+de3a: be 01 00 00 00 mov $0x1,%esi
+de3f: 44 89 ea mov %r13d,%edx
+de42: 31 c9 xor %ecx,%ecx
+de44: 45 31 c0 xor %r8d,%r8d
+de47: 41 56 push %r14
+de49: 41 ff b7 78 07 00 00 push 0x778(%r15)
+de50: e8 00 00 00 00 call de55 <symbol> de51: R_X86_64_PLT32 _ZN6strata7kernels13sample_tokensEPKfiiPKiiRKNS0_13SamplerParamsEPiPv-0x4
+de55: 48 83 c4 10 add $0x10,%rsp
+de59: e8 00 00 00 00 call de5e <symbol> de5a: R_X86_64_PLT32 _ZN6strata7kernels20multi_block_head_opsEv-0x4
+de5e: 4d 8b 87 38 06 00 00 mov 0x638(%r15),%r8
+de65: 49 8b 8f 78 07 00 00 mov 0x778(%r15),%rcx
+de6c: 84 c0 test %al,%al
+de6e: 74 23 je de93 <symbol>
+de70: 4d 8b 8f 48 06 00 00 mov 0x648(%r15),%r9
+de77: 48 83 ec 08 sub $0x8,%rsp
+de7b: 4c 89 e7 mov %r12,%rdi
+de7e: be 01 00 00 00 mov $0x1,%esi
+de83: 44 89 ea mov %r13d,%edx
+de86: 41 56 push %r14
+de88: e8 00 00 00 00 call de8d <symbol> de89: R_X86_64_PLT32 _ZN6strata7kernels18row_top_prob_splitEPKfiiPKiPfPvS6_-0x4
+de8d: 48 83 c4 10 add $0x10,%rsp
+de91: eb 13 jmp dea6 <symbol>
+de93: 4c 89 e7 mov %r12,%rdi
+de96: be 01 00 00 00 mov $0x1,%esi
+de9b: 44 89 ea mov %r13d,%edx
+de9e: 4d 89 f1 mov %r14,%r9
+dea1: e8 00 00 00 00 call dea6 <symbol> dea2: R_X86_64_PLT32 _ZN6strata7kernels12row_top_probEPKfiiPKiPfPv-0x4
+dea6: 40 b5 01 mov $0x1,%bpl
+dea9: 48 85 db test %rbx,%rbx
+deac: 74 1b je dec9 <symbol>
+deae: 49 8b b7 f8 05 00 00 mov 0x5f8(%r15),%rsi
+deb5: 49 8b bf 78 07 00 00 mov 0x778(%r15),%rdi
+debc: ba 01 00 00 00 mov $0x1,%edx
+dec1: 4c 89 f1 mov %r14,%rcx
+dec4: e8 00 00 00 00 call dec9 <symbol> dec5: R_X86_64_PLT32 _ZN6strata7kernels7map_idsEPiPKiiPv-0x4
+dec9: 89 e8 mov %ebp,%eax
+decb: 48 83 c4 78 add $0x78,%rsp
+decf: 5b pop %rbx
+ded0: 41 5c pop %r12
+ded2: 41 5d pop %r13
+ded4: 41 5e pop %r14
+ded6: 41 5f pop %r15
+ded8: 5d pop %rbp
+ded9: c3 ret
+deda: bf 00 00 00 00 mov $0x0,%edi dedb: R_X86_64_32 .bss+0x78
+dedf: e8 00 00 00 00 call dee4 <symbol> dee0: R_X86_64_PLT32 __cxa_guard_acquire-0x4
+dee4: 85 c0 test %eax,%eax
+dee6: 0f 84 26 ff ff ff je de12 <symbol>
+deec: 48 8b 0d 00 00 00 00 mov 0x0(%rip),%rcx # def3 <symbol> deef: R_X86_64_PC32 stderr-0x4
+def3: bf 00 00 00 00 mov $0x0,%edi def4: R_X86_64_32 .rodata.str1.1+0x20be
+def8: be 4e 00 00 00 mov $0x4e,%esi
+defd: ba 01 00 00 00 mov $0x1,%edx
+df02: e8 00 00 00 00 call df07 <symbol> df03: R_X86_64_PLT32 fwrite-0x4
+df07: c6 05 00 00 00 00 01 movb $0x1,0x0(%rip) # df0e <symbol> df09: R_X86_64_PC32 .bss+0x6b
+df0e: bf 00 00 00 00 mov $0x0,%edi df0f: R_X86_64_32 .bss+0x78
+df13: e8 00 00 00 00 call df18 <symbol> df14: R_X86_64_PLT32 __cxa_guard_release-0x4
+df18: e9 f5 fe ff ff jmp de12 <symbol>
+df1d: eb 00 jmp df1f <symbol>
+df1f: 49 89 c6 mov %rax,%r14
+df22: 83 fa 01 cmp $0x1,%edx
+df25: 0f 85 b6 00 00 00 jne dfe1 <symbol>
+df2b: 4c 89 f7 mov %r14,%rdi
+df2e: e8 00 00 00 00 call df33 <symbol> df2f: R_X86_64_PLT32 __cxa_begin_catch-0x4
+df33: 49 89 c6 mov %rax,%r14
+df36: 48 8d 7c 24 18 lea 0x18(%rsp),%rdi
+df3b: 48 8d 54 24 0f lea 0xf(%rsp),%rdx
+df40: be 00 00 00 00 mov $0x0,%esi df41: R_X86_64_32 .rodata.str1.1+0x3d9
+df45: e8 00 00 00 00 call df4a <symbol> df46: R_X86_64_PLT32 _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEC2IS3_EEPKcRKS3_-0x4
+df4a: 49 8b 06 mov (%r14),%rax
+df4d: 4c 89 f7 mov %r14,%rdi
+df50: ff 50 10 call *0x10(%rax)
+df53: 48 8d 7c 24 38 lea 0x38(%rsp),%rdi
+df58: 48 8d 74 24 18 lea 0x18(%rsp),%rsi
+df5d: 48 89 c2 mov %rax,%rdx
+df60: e8 00 00 00 00 call df65 <symbol> df61: R_X86_64_PLT32 _ZStplIcSt11char_traitsIcESaIcEENSt7__cxx1112basic_stringIT_T0_T1_EEOS8_PKS5_-0x4
+df65: 48 8d 74 24 38 lea 0x38(%rsp),%rsi
+df6a: 48 8b 7c 24 10 mov 0x10(%rsp),%rdi
+df6f: e8 00 00 00 00 call df74 <symbol> df70: R_X86_64_PLT32 _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEaSEOS4_-0x4
+df74: 48 8b 7c 24 38 mov 0x38(%rsp),%rdi
+df79: 48 8d 44 24 48 lea 0x48(%rsp),%rax
+df7e: 48 39 c7 cmp %rax,%rdi
+df81: 74 0d je df90 <symbol>
+df83: 48 8b 74 24 48 mov 0x48(%rsp),%rsi
+df88: 48 ff c6 inc %rsi
+df8b: e8 00 00 00 00 call df90 <symbol> df8c: R_X86_64_PLT32 _ZdlPvm-0x4
+df90: 48 8b 7c 24 18 mov 0x18(%rsp),%rdi
+df95: 48 8d 44 24 28 lea 0x28(%rsp),%rax
+df9a: 48 39 c7 cmp %rax,%rdi
+df9d: 74 0d je dfac <symbol>
+df9f: 48 8b 74 24 28 mov 0x28(%rsp),%rsi
+dfa4: 48 ff c6 inc %rsi
+dfa7: e8 00 00 00 00 call dfac <symbol> dfa8: R_X86_64_PLT32 _ZdlPvm-0x4
+dfac: e8 00 00 00 00 call dfb1 <symbol> dfad: R_X86_64_PLT32 __cxa_end_catch-0x4
+dfb1: 31 ed xor %ebp,%ebp
+dfb3: e9 11 ff ff ff jmp dec9 <symbol>
+dfb8: 49 89 c6 mov %rax,%r14
+dfbb: 48 8b 7c 24 18 mov 0x18(%rsp),%rdi
+dfc0: 48 8d 44 24 28 lea 0x28(%rsp),%rax
+dfc5: 48 39 c7 cmp %rax,%rdi
+dfc8: 74 12 je dfdc <symbol>
+dfca: 48 8b 74 24 28 mov 0x28(%rsp),%rsi
+dfcf: 48 ff c6 inc %rsi
+dfd2: e8 00 00 00 00 call dfd7 <symbol> dfd3: R_X86_64_PLT32 _ZdlPvm-0x4
+dfd7: eb 03 jmp dfdc <symbol>
+dfd9: 49 89 c6 mov %rax,%r14
+dfdc: e8 00 00 00 00 call dfe1 <symbol> dfdd: R_X86_64_PLT32 __cxa_end_catch-0x4
+dfe1: 4c 89 f7 mov %r14,%rdi
+dfe4: e8 00 00 00 00 call dfe9 <symbol> dfe5: R_X86_64_PLT32 _Unwind_Resume-0x4
+dfe9: 48 89 c7 mov %rax,%rdi
+dfec: e8 00 00 00 00 call dff1 <symbol> dfed: R_X86_64_PLT32 __clang_call_terminate-0x4
+
+ACTUAL private launch INSTRUCTIONS
+0: 41 57 push %r15
+2: 41 56 push %r14
+4: 53 push %rbx
+5: 48 81 ec c0 01 00 00 sub $0x1c0,%rsp
+c: 4c 89 c3 mov %r8,%rbx
+f: 49 89 d0 mov %rdx,%r8
+12: 8d 86 ff 0f 00 00 lea 0xfff(%rsi),%eax
+18: 8d 96 fe 1f 00 00 lea 0x1ffe(%rsi),%edx
+1e: 85 c0 test %eax,%eax
+20: 0f 49 d0 cmovns %eax,%edx
+23: c1 fa 0c sar $0xc,%edx
+26: 83 fa 02 cmp $0x2,%edx
+29: b8 01 00 00 00 mov $0x1,%eax
+2e: 0f 4d c2 cmovge %edx,%eax
+31: 3d 80 00 00 00 cmp $0x80,%eax
+36: 41 bf 80 00 00 00 mov $0x80,%r15d
+3c: 44 0f 4c f8 cmovl %eax,%r15d
+40: 42 8d 04 3e lea (%rsi,%r15,1),%eax
+44: ff c8 dec %eax
+46: 99 cltd
+47: 41 f7 ff idiv %r15d
+4a: 48 89 7c 24 38 mov %rdi,0x38(%rsp)
+4f: 89 74 24 40 mov %esi,0x40(%rsp)
+53: 89 44 24 44 mov %eax,0x44(%rsp)
+57: 4c 89 44 24 48 mov %r8,0x48(%rsp)
+5c: 48 89 4c 24 50 mov %rcx,0x50(%rsp)
+61: 48 8b 05 00 00 00 00 mov 0x0(%rip),%rax # 68 <symbol> 64: R_X86_64_PC32 .rodata+0x7fc
+68: 48 89 84 24 f0 00 00 00 mov %rax,0xf0(%rsp)
+70: 0f 10 05 00 00 00 00 movups 0x0(%rip),%xmm0 # 77 <symbol> 73: R_X86_64_PC32 .rodata+0x7ec
+77: 0f 29 84 24 e0 00 00 00 movaps %xmm0,0xe0(%rsp)
+7f: 4c 8d 74 24 58 lea 0x58(%rsp),%r14
+84: 48 8d b4 24 e0 00 00 00 lea 0xe0(%rsp),%rsi
+8c: 4c 89 f7 mov %r14,%rdi
+8f: e8 00 00 00 00 call 94 <symbol> 90: R_X86_64_PLT32 _ZN4sycl3_V16detail14tls_code_loc_tC1ERKNS1_13code_locationE-0x4
+94: 4c 89 f7 mov %r14,%rdi
+97: e8 00 00 00 00 call 9c <symbol> 98: R_X86_64_PLT32 _ZN4sycl3_V16detail14tls_code_loc_t5queryEv-0x4
+9c: 41 c1 e7 08 shl $0x8,%r15d
+a0: 48 c7 84 24 98 00 00 00 01 00 00 00 movq $0x1,0x98(%rsp)
+ac: 48 c7 84 24 a0 00 00 00 01 00 00 00 movq $0x1,0xa0(%rsp)
+b8: 4c 89 bc 24 a8 00 00 00 mov %r15,0xa8(%rsp)
+c0: 48 8d 8c 24 b0 00 00 00 lea 0xb0(%rsp),%rcx
+c8: 48 c7 84 24 b0 00 00 00 01 00 00 00 movq $0x1,0xb0(%rsp)
+d4: 48 c7 84 24 b8 00 00 00 01 00 00 00 movq $0x1,0xb8(%rsp)
+e0: 48 c7 84 24 c0 00 00 00 00 01 00 00 movq $0x100,0xc0(%rsp)
+ec: 48 8d 94 24 c8 00 00 00 lea 0xc8(%rsp),%rdx
+f4: 0f 57 c0 xorps %xmm0,%xmm0
+f7: 0f 11 84 24 c8 00 00 00 movups %xmm0,0xc8(%rsp)
+ff: 48 c7 84 24 d8 00 00 00 00 00 00 00 movq $0x0,0xd8(%rsp)
+10b: 48 8d b4 24 98 00 00 00 lea 0x98(%rsp),%rsi
+113: 48 89 74 24 78 mov %rsi,0x78(%rsp)
+118: 48 89 8c 24 80 00 00 00 mov %rcx,0x80(%rsp)
+120: 48 89 94 24 88 00 00 00 mov %rdx,0x88(%rsp)
+128: 48 c7 84 24 90 00 00 00 03 00 00 00 movq $0x3,0x90(%rsp)
+134: 48 8d 7c 24 28 lea 0x28(%rsp),%rdi
+139: 48 89 c6 mov %rax,%rsi
+13c: e8 00 00 00 00 call 141 <symbol> 13d: R_X86_64_PLT32 _ZN4sycl3_V16detail14tls_code_loc_tC1ERKNS1_13code_locationE-0x4
+141: 0f b6 05 00 00 00 00 movzbl 0x0(%rip),%eax # 148 <symbol> 144: R_X86_64_PC32 _ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN12s112_private14GreedyTop1S112EEEEERNS1_16DeviceKernelInfoEvE4Info-0x4
+148: 84 c0 test %al,%al
+14a: 0f 84 65 01 00 00 je 2b5 <symbol>
+150: 4c 8b 35 00 00 00 00 mov 0x0(%rip),%r14 # 157 <symbol> 153: R_X86_64_PC32 _ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN12s112_private14GreedyTop1S112EEEEERNS1_16DeviceKernelInfoEvE4Info-0x4
+157: c6 84 24 30 01 00 00 00 movb $0x0,0x130(%rsp)
+15f: c6 84 24 3a 01 00 00 00 movb $0x0,0x13a(%rsp)
+167: c6 84 24 3c 01 00 00 01 movb $0x1,0x13c(%rsp)
+16f: c6 84 24 44 01 00 00 00 movb $0x0,0x144(%rsp)
+177: c6 84 24 4c 01 00 00 00 movb $0x0,0x14c(%rsp)
+17f: c6 84 24 54 01 00 00 00 movb $0x0,0x154(%rsp)
+187: c6 84 24 5c 01 00 00 00 movb $0x0,0x15c(%rsp)
+18f: c6 84 24 64 01 00 00 00 movb $0x0,0x164(%rsp)
+197: c6 84 24 6c 01 00 00 00 movb $0x0,0x16c(%rsp)
+19f: c6 84 24 78 01 00 00 00 movb $0x0,0x178(%rsp)
+1a7: c6 84 24 90 01 00 00 00 movb $0x0,0x190(%rsp)
+1af: c6 84 24 b0 01 00 00 00 movb $0x0,0x1b0(%rsp)
+1b7: c6 84 24 b8 01 00 00 00 movb $0x0,0x1b8(%rsp)
+1bf: 48 c7 44 24 68 00 00 00 00 movq $0x0,0x68(%rsp) 1c4: R_X86_64_32S _ZTVN4sycl3_V16detail13HostKernelRefIZN12s112_private6launchEPKfiPvPiRNS0_5queueEEUlNS0_7nd_itemILi3EEEE_RSC_SB_Li3EEE+0x10
+1c8: 48 8d 44 24 38 lea 0x38(%rsp),%rax
+1cd: 48 89 44 24 70 mov %rax,0x70(%rsp)
+1d2: 0f 57 c0 xorps %xmm0,%xmm0
+1d5: 0f 29 84 24 00 01 00 00 movaps %xmm0,0x100(%rsp)
+1dd: 48 8d 7c 24 28 lea 0x28(%rsp),%rdi
+1e2: e8 00 00 00 00 call 1e7 <symbol> 1e3: R_X86_64_PLT32 _ZN4sycl3_V16detail14tls_code_loc_t5queryEv-0x4
+1e7: 31 c9 xor %ecx,%ecx
+1e9: 80 7c 24 30 00 cmpb $0x0,0x30(%rsp)
+1ee: 0f 94 c1 sete %cl
+1f1: 0f 28 84 24 00 01 00 00 movaps 0x100(%rsp),%xmm0
+1f9: 0f 11 04 24 movups %xmm0,(%rsp)
+1fd: 89 4c 24 18 mov %ecx,0x18(%rsp)
+201: 48 89 44 24 10 mov %rax,0x10(%rsp)
+206: 48 8d bc 24 18 01 00 00 lea 0x118(%rsp),%rdi
+20e: 48 8d 54 24 78 lea 0x78(%rsp),%rdx
+213: 48 8d 4c 24 68 lea 0x68(%rsp),%rcx
+218: 4c 8d 8c 24 28 01 00 00 lea 0x128(%rsp),%r9
+220: 48 89 de mov %rbx,%rsi
+223: 4d 89 f0 mov %r14,%r8
+226: e8 00 00 00 00 call 22b <symbol> 227: R_X86_64_PLT32 _ZN4sycl3_V136submit_kernel_direct_with_event_implERKNS0_5queueERKNS0_6detail16nd_range_view_v113nd_range_viewERNS4_17HostKernelRefBaseEPNS4_16DeviceKernelInfoENS0_4spanIKNS0_5eventELm18446744073709551615EEERKNS4_27kernel_launch_properties_v111PropsHolderIJNS0_3ext6oneapi12experimental23work_group_scratch_sizeENSJ_5intel12experimental12cache_configENSL_17use_root_sync_keyENSL_23work_group_progress_keyENSL_22sub_group_progress_keyENSL_22work_item_progress_keyENSL_4cuda12cluster_sizeILi1EEENSV_ILi2EEENSV_ILi3EEEEEERKNS4_13code_locationEb-0x4
+22b: 48 8d 7c 24 28 lea 0x28(%rsp),%rdi
+230: e8 00 00 00 00 call 235 <symbol> 231: R_X86_64_PLT32 _ZN4sycl3_V16detail14tls_code_loc_tD1Ev-0x4
+235: 48 8d 7c 24 58 lea 0x58(%rsp),%rdi
+23a: e8 00 00 00 00 call 23f <symbol> 23b: R_X86_64_PLT32 _ZN4sycl3_V16detail14tls_code_loc_tD1Ev-0x4
+23f: 48 8b 9c 24 20 01 00 00 mov 0x120(%rsp),%rbx
+247: 48 85 db test %rbx,%rbx
+24a: 74 43 je 28f <symbol>
+24c: 48 8b 43 08 mov 0x8(%rbx),%rax
+250: 48 b9 01 00 00 00 01 00 00 00 movabs $0x100000001,%rcx
+25a: 48 39 c8 cmp %rcx,%rax
+25d: 75 1c jne 27b <symbol>
+25f: 48 c7 43 08 00 00 00 00 movq $0x0,0x8(%rbx)
+267: 48 8b 03 mov (%rbx),%rax
+26a: 48 89 df mov %rbx,%rdi
+26d: ff 50 10 call *0x10(%rax)
+270: 48 8b 03 mov (%rbx),%rax
+273: 48 89 df mov %rbx,%rdi
+276: ff 50 18 call *0x18(%rax)
+279: eb 14 jmp 28f <symbol>
+27b: 80 3d 00 00 00 00 00 cmpb $0x0,0x0(%rip) # 282 <symbol> 27d: R_X86_64_PC32 __libc_single_threaded-0x5
+282: 74 18 je 29c <symbol>
+284: 8d 48 ff lea -0x1(%rax),%ecx
+287: 89 4b 08 mov %ecx,0x8(%rbx)
+28a: 83 f8 01 cmp $0x1,%eax
+28d: 74 1c je 2ab <symbol>
+28f: 48 81 c4 c0 01 00 00 add $0x1c0,%rsp
+296: 5b pop %rbx
+297: 41 5e pop %r14
+299: 41 5f pop %r15
+29b: c3 ret
+29c: b8 ff ff ff ff mov $0xffffffff,%eax
+2a1: f0 0f c1 43 08 lock xadd %eax,0x8(%rbx)
+2a6: 83 f8 01 cmp $0x1,%eax
+2a9: 75 e4 jne 28f <symbol>
+2ab: 48 89 df mov %rbx,%rdi
+2ae: e8 00 00 00 00 call 2b3 <symbol> 2af: R_X86_64_PLT32 _ZNSt16_Sp_counted_baseILN9__gnu_cxx12_Lock_policyE2EE24_M_release_last_use_coldEv-0x4
+2b3: eb da jmp 28f <symbol>
+2b5: bf 00 00 00 00 mov $0x0,%edi 2b6: R_X86_64_32 _ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN12s112_private14GreedyTop1S112EEEEERNS1_16DeviceKernelInfoEvE4Info
+2ba: e8 00 00 00 00 call 2bf <symbol> 2bb: R_X86_64_PLT32 __cxa_guard_acquire-0x4
+2bf: 85 c0 test %eax,%eax
+2c1: 0f 84 89 fe ff ff je 150 <symbol>
+2c7: bf 00 00 00 00 mov $0x0,%edi 2c8: R_X86_64_32 _ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN12s112_private14GreedyTop1S112EEEEE
+2cc: e8 00 00 00 00 call 2d1 <symbol> 2cd: R_X86_64_PLT32 _ZN4sycl3_V16detail19getDeviceKernelInfoERKNS1_27compile_time_kernel_info_v123CompileTimeKernelInfoTyE-0x4
+2d1: 48 89 05 00 00 00 00 mov %rax,0x0(%rip) # 2d8 <symbol> 2d4: R_X86_64_PC32 _ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN12s112_private14GreedyTop1S112EEEEERNS1_16DeviceKernelInfoEvE4Info-0x4
+2d8: bf 00 00 00 00 mov $0x0,%edi 2d9: R_X86_64_32 _ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN12s112_private14GreedyTop1S112EEEEERNS1_16DeviceKernelInfoEvE4Info
+2dd: e8 00 00 00 00 call 2e2 <symbol> 2de: R_X86_64_PLT32 __cxa_guard_release-0x4
+2e2: e9 69 fe ff ff jmp 150 <symbol>
+2e7: 48 89 c3 mov %rax,%rbx
+2ea: bf 00 00 00 00 mov $0x0,%edi 2eb: R_X86_64_32 _ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN12s112_private14GreedyTop1S112EEEEERNS1_16DeviceKernelInfoEvE4Info
+2ef: e8 00 00 00 00 call 2f4 <symbol> 2f0: R_X86_64_PLT32 __cxa_guard_abort-0x4
+2f4: eb 03 jmp 2f9 <symbol>
+2f6: 48 89 c3 mov %rax,%rbx
+2f9: 48 8d 7c 24 28 lea 0x28(%rsp),%rdi
+2fe: e8 00 00 00 00 call 303 <symbol> 2ff: R_X86_64_PLT32 _ZN4sycl3_V16detail14tls_code_loc_tD1Ev-0x4
+303: 48 8d 7c 24 58 lea 0x58(%rsp),%rdi
+308: e8 00 00 00 00 call 30d <symbol> 309: R_X86_64_PLT32 _ZN4sycl3_V16detail14tls_code_loc_tD1Ev-0x4
+30d: 48 89 df mov %rbx,%rdi
+310: e8 00 00 00 00 call 315 <symbol> 311: R_X86_64_PLT32 _Unwind_Resume-0x4
+315: 48 89 c3 mov %rax,%rbx
+318: 48 8d 7c 24 58 lea 0x58(%rsp),%rdi
+31d: e8 00 00 00 00 call 322 <symbol> 31e: R_X86_64_PLT32 _ZN4sycl3_V16detail14tls_code_loc_tD1Ev-0x4
+322: 48 89 df mov %rbx,%rdi
+325: e8 00 00 00 00 call 32a <symbol> 326: R_X86_64_PLT32 _Unwind_Resume-0x4
+
+ACTUAL helper INSTRUCTIONS
+98f0: 0f b6 05 00 00 00 00 movzbl 0x0(%rip),%eax # 98f7 <symbol> 98f3: R_X86_64_PC32 .bss+0xa4
+98f7: 84 c0 test %al,%al
+98f9: 74 08 je 9903 <symbol>
+98fb: 0f b6 05 00 00 00 00 movzbl 0x0(%rip),%eax # 9902 <symbol> 98fe: R_X86_64_PC32 .bss+0x9c
+9902: c3 ret
+9903: 50 push %rax
+9904: bf 00 00 00 00 mov $0x0,%edi 9905: R_X86_64_32 .bss+0xa8
+9909: e8 00 00 00 00 call 990e <symbol> 990a: R_X86_64_PLT32 __cxa_guard_acquire-0x4
+990e: 85 c0 test %eax,%eax
+9910: 74 2f je 9941 <symbol>
+9912: bf 00 00 00 00 mov $0x0,%edi 9913: R_X86_64_32 .rodata.str1.1+0x1dc3
+9917: e8 00 00 00 00 call 991c <symbol> 9918: R_X86_64_PLT32 getenv-0x4
+991c: 48 85 c0 test %rax,%rax
+991f: 74 0e je 992f <symbol>
+9921: 80 38 31 cmpb $0x31,(%rax)
+9924: 75 09 jne 992f <symbol>
+9926: 80 78 01 00 cmpb $0x0,0x1(%rax)
+992a: 0f 94 c0 sete %al
+992d: eb 02 jmp 9931 <symbol>
+992f: 31 c0 xor %eax,%eax
+9931: 88 05 00 00 00 00 mov %al,0x0(%rip) # 9937 <symbol> 9933: R_X86_64_PC32 .bss+0x9c
+9937: bf 00 00 00 00 mov $0x0,%edi 9938: R_X86_64_32 .bss+0xa8
+993c: e8 00 00 00 00 call 9941 <symbol> 993d: R_X86_64_PLT32 __cxa_guard_release-0x4
+9941: 48 83 c4 08 add $0x8,%rsp
+9945: 0f b6 05 00 00 00 00 movzbl 0x0(%rip),%eax # 994c <symbol> 9948: R_X86_64_PC32 .bss+0x9c
+994c: c3 ret
+
+ACTUAL EOT EXCERPTS
+643:         mov (16|M0)              r8.0<2>:f     r4.0<0;1,0>:f                    {I@1}
+644:         mov (16|M16)             r10.0<2>:f    r4.0<0;1,0>:f                   
+645:         mov (16|M0)              r8.1<2>:f     r4.1<0;1,0>:f                   
+646:         mov (16|M16)             r10.1<2>:ud   r4.1<0;1,0>:ud                   {F@2}
+647:         send.ugm (32|M0)         null     r8  r6:2  0x0            0x08000584           {A@1,$5} // wr:4+2, rd:0; store.ugm.d32.a64
+648: L7488:
+649:         join (32|M0)                         L7504                                
+650: L7504:
+651: (W)     mov (16|M0)              r127.0<1>:f   r44.0<1;1,0>:f                  
+652: (W)     send.gtwy (1|M0)         null     r127  null:0  0x0            0x02000010           {EOT,F@1,$6} // wr:1+0, rd:0; end of thread
+653: L7536:
+654: (W)     mov (16|M0)              null<1>:ud    0x38DF2CE9:ud                             
+655: (W)     mov (16|M0)              null<1>:ud    0x665F8AAE:ud                             
+656: (W)     mov (16|M0)              null<1>:ud    0x0:ud                             
+657: (W)     mov (16|M0)              null<1>:ud    0x1:ud                             
+276: (W)     add (1|M0)               r80.0<1>:q    r3.6<0;1,0>:q     r2.2<0;1,0>:q    {Compacted}
+277: (W)     mov (1|M0)               r81.0<1>:uq   r3.2<0;1,0>:uq                   {Compacted}
+278: (W)     mov (1|M0)               r82.0<1>:d    0:w                               {Compacted}
+279: (W)     send.ugm (1|M0)          null     r80  r78:1  0x0            0x02008584           {A@1,$2} // wr:1+1, rd:0; store.ugm.d32x1t.a64
+280: (W)     send.ugm (1|M0)          null     r81  r82:1  0x0            0x02008584           {I@1,$3} // wr:1+1, rd:0; store.ugm.d32x1t.a64
+281: L3648:
+282:         join (32|M0)                         L3664                                
+283: L3664:
+284: (W)     mov (16|M0)              r127.0<1>:f   r79.0<1;1,0>:f                  
+285: (W)     send.gtwy (1|M0)         null     r127  null:0  0x0            0x02000010           {EOT,F@1,$4} // wr:1+0, rd:0; end of thread
+286: L3696:
+287: (W)     mov (16|M0)              null<1>:ud    0x452BE4FE:ud                             
+288: (W)     mov (16|M0)              null<1>:ud    0x7550F85E:ud                             
+289: (W)     mov (16|M0)              null<1>:ud    0x0:ud                             
+290: (W)     mov (16|M0)              null<1>:ud    0x1:ud                             

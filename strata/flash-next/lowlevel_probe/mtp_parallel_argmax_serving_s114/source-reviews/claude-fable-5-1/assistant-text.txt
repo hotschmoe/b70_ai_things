@@ -1,0 +1,31 @@
+**CPU_BUILD_GO.** No blocking defect.
+
+**Default and immutability**
+
+The flag accepts only the exact string 1, lives in a function-local static, and is first evaluated inside bind before any capture. HIP preprocessing leaves the original call expression. With the flag off or any gate false, the original sample_tokens call runs with identical arguments, and the first branch for the architecture-gated argmax is untouched.
+
+**Full-head greedy guard**
+
+The branch is reached only in the existing else, after the local greedy parameters are constructed. It further requires no subset head, one row, the exact vocabulary, no coupled sampling in either mode, and the unpenalised defaults. History is null and the window is zero in the original call anyway, so penalties cannot apply. The penalty field checks are redundant but harmless. If any of those field names differ from the pinned sampler header, the compile fails loudly, which is the right failure.
+
+**Owner scratch and capture lifetime**
+
+Each drafter owns its argmax scratch, zeroed once at load, and the bind check asserts the production row size equals the tested 1040-byte layout and that at least one row exists. The kernel uses row zero only. Pair tails call the helper once per owner with separate logits rows and separate scratch, so no sharing. The static flag cannot change after capture, so every recorded graph is consistent with the branch it recorded. Queue passing is correct: the helper takes a reference to the queue the recorder is using.
+
+**Bind initialisation**
+
+The scratch check runs after the head is bound and before coupled setup and before any capture. Mismatch fails bind explicitly with no fallback masking.
+
+**Source versus runtime failure**
+
+A compile or link failure would come only from field names or the scratch-size declaration, both detectable at build. Runtime launch rejection from the root-sync property is a HOLD, as before. Counter reset relies on every replay completing. An aborted replay leaves a stuck counter and a later call would silently reuse a stale token. That is inherited from the existing split-probability protocol and is accepted under the no-reset rule, but the serving controller should treat any pair or solo draft failure as terminal for that process rather than continuing to draft.
+
+**Minimum pre-GPU gates**
+
+1. Ninja dry run shows only the one object, the engine archive and the main link rebuilt. Kernel archive and public headers untouched.
+2. Binding audit: the new registered class has its own host info, cache, guard, name pointer and image, and that image's text matches the private oracle candidate body apart from relocations, with the leader acquire fence present.
+3. Original sampler, split-probability and select images byte-identical to S107's.
+4. Flag off: no marker, and the OFF arm's logged captures equal S107.
+5. Serving: same binary, flag 0 then 1, marker exactly once on ON at the first capture, strict text, SSE, usage, drafts offered and accepted, windows and captures on every pair, functionals, normal quit, full health. All other candidate flags off, S111 not combined.
+
+The private 165 to 116 us chain and the 48-case pass are correctness and primitive evidence only. They do not predict the serving delta, which is what the single matched run exists to measure.

@@ -1,0 +1,65 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_S114_SERVING_V2",
+  "files": {
+    "FROZEN": {
+      "bytes": 152,
+      "sha256": "9604c23a6a9edd07afb057df9deac7dc7b21af3a71c79185dbc824036c032d45"
+    },
+    "README.md": {
+      "bytes": 7355,
+      "sha256": "eab8f4e9ce3440a707a7093d140d001b22c4ea70d68f9309b0e7936bc2a2ce44"
+    },
+    "controller-diff.patch": {
+      "bytes": 9038,
+      "sha256": "4abf60d80eef3f3fb2f741cbae7215823fd2a4df68800ae5f1c6ee33e00ad7c5"
+    },
+    "harness-prep/client.py": {
+      "bytes": 12897,
+      "sha256": "f7007993ac3ffa0bfef10c6d7f5ae6fd6089cb5bf263841e40bb20dc4e658132"
+    },
+    "harness-prep/compare.py": {
+      "bytes": 8499,
+      "sha256": "1a4f2bf777654e27248caedce2a7191f3c394108027566aa218786d72ddccedd"
+    },
+    "harness-prep/launch_stage.sh": {
+      "bytes": 1881,
+      "sha256": "7c1f0dba355ae25cff1837e97a3485ce6c6526658dff1461c02866ddc576bcce"
+    },
+    "harness-prep/make_configs.py": {
+      "bytes": 5273,
+      "sha256": "d9a337d639bf2d36cfb65d8902b88f9eed3559b3fadf443620576e0dc64d9d7d"
+    },
+    "harness-prep/start_arm.py": {
+      "bytes": 8801,
+      "sha256": "70227f1c0ac6dbd4400f0cee3f974182119c90b0d3cd564e04d13ed054869f5c"
+    },
+    "harness-prep/stop_and_health.py": {
+      "bytes": 7343,
+      "sha256": "341a5ca61b4e55872558770b689321041e3dc793cb311994cf662404139a130e"
+    },
+    "parent-MANIFEST.json": {
+      "bytes": 2286,
+      "sha256": "26af759e40dc0e7e3aa25e53f8a92a93d1bef45ee02b52f740a98d3ddfdc980f"
+    },
+    "parent-controller-diff.patch": {
+      "bytes": 23208,
+      "sha256": "ea5501be1dbb3d89661984b7a2b44de8667070519dd99509840223ae3bb30ea5"
+    },
+    "parent-original-inputs.json": {
+      "bytes": 7203,
+      "sha256": "c04befd3e41b4a12a6b2f5feed81bf8514f7b144710121aa2e4c028d113c3c2a"
+    },
+    "parent-source-only-validation.json": {
+      "bytes": 1341,
+      "sha256": "961ea995b6f53e89a7261a1850972223d7c461503d02ce59dc54e48d390bd5f4"
+    },
+    "s113-stop-diff.patch": {
+      "bytes": 3081,
+      "sha256": "27406e07a8afe8b1e49a03a3dbf1f0f274668a8ea391c423b0bd3d4a0f038277"
+    },
+    "source-only-validation.json": {
+      "bytes": 1076,
+      "sha256": "e7db7c88fe85d8d2b2f63e210ecd22ee42478b4beb9ecfda6b414979d988fd5d"
+    }
+  }
+}

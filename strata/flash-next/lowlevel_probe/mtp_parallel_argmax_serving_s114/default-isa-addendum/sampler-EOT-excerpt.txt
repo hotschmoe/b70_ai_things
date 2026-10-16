@@ -1,0 +1,15 @@
+643:         mov (16|M0)              r8.0<2>:f     r4.0<0;1,0>:f                    {I@1}
+644:         mov (16|M16)             r10.0<2>:f    r4.0<0;1,0>:f                   
+645:         mov (16|M0)              r8.1<2>:f     r4.1<0;1,0>:f                   
+646:         mov (16|M16)             r10.1<2>:ud   r4.1<0;1,0>:ud                   {F@2}
+647:         send.ugm (32|M0)         null     r8  r6:2  0x0            0x08000584           {A@1,$5} // wr:4+2, rd:0; store.ugm.d32.a64
+648: L7488:
+649:         join (32|M0)                         L7504                                
+650: L7504:
+651: (W)     mov (16|M0)              r127.0<1>:f   r44.0<1;1,0>:f                  
+652: (W)     send.gtwy (1|M0)         null     r127  null:0  0x0            0x02000010           {EOT,F@1,$6} // wr:1+0, rd:0; end of thread
+653: L7536:
+654: (W)     mov (16|M0)              null<1>:ud    0x38DF2CE9:ud                             
+655: (W)     mov (16|M0)              null<1>:ud    0x665F8AAE:ud                             
+656: (W)     mov (16|M0)              null<1>:ud    0x0:ud                             
+657: (W)     mov (16|M0)              null<1>:ud    0x1:ud                             

@@ -1,0 +1,333 @@
+{
+  "stage": "S114_CLOSED_ROOT_READ_AND_COMPARE_PASS",
+  "same_binary_sha256": "d1c4968ffbb62e66753e0c016d830d7af53154d0de6c6b8f1b966fec4d518e92",
+  "image": "e41d59c0",
+  "flag_only": "STRATA_MTP_PARALLEL_ARGMAX0/1; other candidates OFF incl probability skip/wholepairgraph",
+  "policy": "suffix0/lookup0/spec4/mtpmax4/minp0 native; HTTP minp0; depth2/headpair; EP149/363 allresident; DirectPLE; two200k/32GiB4entries/prefill12288",
+  "comparison_checks": {
+    "identity_image_and_effective_native_env": true,
+    "warm": true,
+    "repeat1": true,
+    "repeat2": true,
+    "repeat3": true,
+    "functionals": true,
+    "health_teardown": true,
+    "full_CID_and_NAME_absence": true,
+    "final_diagnostics_complete": true,
+    "final_host_marker_0": true,
+    "unrelated_IQ2_multi_OFF_0": true,
+    "pair_graph_OFF_0": true,
+    "unrelated_A4_OFF_0": true,
+    "probability_skip_OFF_0": true,
+    "final_host_marker_1": true,
+    "unrelated_IQ2_multi_OFF_1": true,
+    "pair_graph_OFF_1": true,
+    "unrelated_A4_OFF_1": true,
+    "probability_skip_OFF_1": true,
+    "logged_startup_capture_equal": true,
+    "native_loader_provenance": true
+  },
+  "timed_summary": {
+    "pair_wall_median_s": [
+      29.105383048998192,
+      28.93692164501408
+    ],
+    "aggregate_output_tps_median": [
+      103.07371646508051,
+      103.67377832385668
+    ],
+    "per_stream_medians": [
+      [
+        {
+          "ttft_s": 0.9133018040447496,
+          "completion_wall_s": 28.93282978096977,
+          "decode_tps": 53.485314277577395,
+          "whole_request_output_tps": 51.844220263121564
+        },
+        {
+          "ttft_s": 2.0969130599987693,
+          "completion_wall_s": 28.89684407802997,
+          "decode_tps": 55.836291150380085,
+          "whole_request_output_tps": 51.90878270130673
+        }
+      ],
+      [
+        {
+          "ttft_s": 0.9149975059553981,
+          "completion_wall_s": 28.74224900000263,
+          "decode_tps": 53.8580319151907,
+          "whole_request_output_tps": 52.18798292366971
+        },
+        {
+          "ttft_s": 2.090230046014767,
+          "completion_wall_s": 28.728050160978455,
+          "decode_tps": 56.24072520945649,
+          "whole_request_output_tps": 52.21377683465139
+        }
+      ]
+    ]
+  },
+  "aggregate_descriptive_percent": 0.5821676750924709,
+  "pairs": [
+    {
+      "label": "warm",
+      "matched": true,
+      "aggregate_output_tps": [
+        74.69610466416515,
+        75.0016513222537
+      ],
+      "pair_wall_s": [
+        6.854440433031414,
+        6.826516362954862
+      ]
+    },
+    {
+      "label": "repeat1",
+      "matched": true,
+      "aggregate_output_tps": [
+        103.07371646508051,
+        103.67377832385668
+      ],
+      "pair_wall_s": [
+        29.105383048998192,
+        28.93692164501408
+      ]
+    },
+    {
+      "label": "repeat2",
+      "matched": true,
+      "aggregate_output_tps": [
+        103.4926802959372,
+        104.18256328358166
+      ],
+      "pair_wall_s": [
+        28.987557297979947,
+        28.79560557397781
+      ]
+    },
+    {
+      "label": "repeat3",
+      "matched": true,
+      "aggregate_output_tps": [
+        101.74824000301086,
+        102.22002990853306
+      ],
+      "pair_wall_s": [
+        29.484539486002177,
+        29.348455509985797
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "phases": [
+        {
+          "phase": "warm",
+          "command": [
+            "bin/cpu-run",
+            "--quiet",
+            "python3",
+            "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/client.py",
+            "0",
+            "warm"
+          ],
+          "exit": 0,
+          "elapsed_s": 7.021394188050181
+        },
+        {
+          "phase": "timed",
+          "command": [
+            "bin/cpu-run",
+            "--quiet",
+            "python3",
+            "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/client.py",
+            "0",
+            "timed"
+          ],
+          "exit": 0,
+          "elapsed_s": 87.75777313299477
+        },
+        {
+          "phase": "functional",
+          "command": [
+            "bin/cpu-run",
+            "python3",
+            "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/client.py",
+            "0",
+            "functional"
+          ],
+          "exit": 0,
+          "elapsed_s": 6.156507878971752
+        }
+      ],
+      "exception": null,
+      "cleanup": {
+        "command": [
+          "bin/cpu-run",
+          "python3",
+          "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/stop_and_health.py",
+          "0"
+        ],
+        "exit": 0,
+        "elapsed_s": 59.281864117016084
+      },
+      "no_retry": true
+    },
+    {
+      "phases": [
+        {
+          "phase": "warm",
+          "command": [
+            "bin/cpu-run",
+            "--quiet",
+            "python3",
+            "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/client.py",
+            "1",
+            "warm"
+          ],
+          "exit": 0,
+          "elapsed_s": 6.998883272986859
+        },
+        {
+          "phase": "timed",
+          "command": [
+            "bin/cpu-run",
+            "--quiet",
+            "python3",
+            "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/client.py",
+            "1",
+            "timed"
+          ],
+          "exit": 0,
+          "elapsed_s": 87.37310462299502
+        },
+        {
+          "phase": "functional",
+          "command": [
+            "bin/cpu-run",
+            "python3",
+            "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/client.py",
+            "1",
+            "functional"
+          ],
+          "exit": 0,
+          "elapsed_s": 6.1491713970317505
+        }
+      ],
+      "exception": null,
+      "cleanup": {
+        "command": [
+          "bin/cpu-run",
+          "python3",
+          "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-s114-serving-prep-v2/harness-prep/stop_and_health.py",
+          "1"
+        ],
+        "exit": 0,
+        "elapsed_s": 63.2934246250079
+      },
+      "no_retry": true
+    }
+  ],
+  "normal_stop": [
+    {
+      "status": "PASS_NORMAL_TEARDOWN",
+      "signal": "TERM to server -> QUIT to native engine",
+      "container_removed": true,
+      "lease_wrapper_exit": 0,
+      "all_wrapper_terminal_exits": [
+        0
+      ],
+      "prestop_state": {
+        "Running": true,
+        "OOMKilled": false,
+        "inspect_succeeded": true
+      },
+      "container_missing_or_inspect_failed_before_stop": false,
+      "diagnostic_before_any_forced_container_stop": true,
+      "no_force_stop_used": true,
+      "functional_status": "PASS",
+      "epoch_ns": 1792113408198983871
+    },
+    {
+      "status": "PASS_NORMAL_TEARDOWN",
+      "signal": "TERM to server -> QUIT to native engine",
+      "container_removed": true,
+      "lease_wrapper_exit": 0,
+      "all_wrapper_terminal_exits": [
+        0
+      ],
+      "prestop_state": {
+        "Running": true,
+        "OOMKilled": false,
+        "inspect_succeeded": true
+      },
+      "container_missing_or_inspect_failed_before_stop": false,
+      "diagnostic_before_any_forced_container_stop": true,
+      "no_force_stop_used": true,
+      "functional_status": "PASS",
+      "epoch_ns": 1792114017139532223
+    }
+  ],
+  "post_health": [
+    {
+      "card": {
+        "command": [
+          "bin/gpu-run",
+          "bin/xpu-health",
+          "--img",
+          "b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78",
+          "--timeout",
+          "400"
+        ],
+        "exit": 0,
+        "elapsed_s": 28.559583447990008
+      },
+      "collective": {
+        "command": [
+          "bin/gpu-run",
+          "bin/xpu-collective-health",
+          "--timeout",
+          "400"
+        ],
+        "exit": 0,
+        "elapsed_s": 27.20486106199678
+      }
+    },
+    {
+      "card": {
+        "command": [
+          "bin/gpu-run",
+          "bin/xpu-health",
+          "--img",
+          "b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78",
+          "--timeout",
+          "400"
+        ],
+        "exit": 0,
+        "elapsed_s": 35.385896917956416
+      },
+      "collective": {
+        "command": [
+          "bin/gpu-run",
+          "bin/xpu-collective-health",
+          "--timeout",
+          "400"
+        ],
+        "exit": 0,
+        "elapsed_s": 24.709206702944357
+      }
+    }
+  ],
+  "scope_limits": [
+    "ONE fixedOFFthenON sequence/three nested pairs; no independent run/significance/stability/p95 claim.",
+    "Fullrequest/text/concatSSEcontent/usage/native offered accepted/windows/pairsolo/rounded reportedrows/captures exact each warm+timed pair; not raw tokenIDs/event chunk boundaries/allGPUcalls.",
+    "Once ON eligibleHOSTmarker bywarm may be startup; no dispatch/count/all-owner proof.",
+    "Process cumulative PLEgathers129vs128/tokens429vs428 DIFFER: includes admission/prefill/functionals; does not imply wholeprocess identical work. Coding-only measured counters match.",
+    "Client SSEcontent-eventgap p95~47ms not tokenITL or device latency. No new context/RAMrestore/prefill qualification.",
+    "Source/default native computational prefixes reuse bounded S107/S112 proofs; raw image/text not equal and embedded SPIRVunclassified.",
+    "DefaultOFF; retain result no immediate repeat/cachecampaign/shelf/default/speedpromotion.",
+    "S112 private completed TWOOWNERhostchain165.55->116.41us was not pureargmax/device timing or serving guarantee; actual serving now+.58% descriptive only."
+  ],
+  "root_next_proposal": "Review complete S116 SOURCE ONLY attached. If acceptable authorize ONE small offline six-image private build then selected compiled old/new audit, NOT GPU/production. No main AOT for this fixture. Full strict/anchor/FP/ownership/capture before timing.",
+  "dev_loop": "Actual main incremental compile13.310s/archive.126s/AOTlink146.468s. Separate agent SOURCE/PREFLIGHT tiny offlinecache sampler cold/warm/changed-input discriminator, no compile/run yet; actual e41 help supports allow_caching/cache_dir and -### forwards. ExactSPIRVinput changes may miss despite same native prefix. No cache hit/wholelink gain claim."
+}
