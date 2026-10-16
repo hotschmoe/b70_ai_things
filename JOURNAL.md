@@ -25543,3 +25543,29 @@ inspection finds both logging blocks reference C2 text, despite distinct
 parsers/guards/C6 metadata; fresh CPU reproduction and source-name fix
 are recorded separately. See
 docs/20261016_strata_q5_c6_serving_marker_hold.md.
+
+
+## 2026-10-16 S135: cross-queue graph/event ordering works on card0
+
+CONFIG -> Same device/context, two distinct in-order queues, separately
+captured Apre/Bpre/two-node tail graphs. Four unsigned kernels per depth,
+eight depths, fresh mapped A/B/A input. No model/KV/MTP math or timings.
+
+COMMAND -> CPU-only build+tee0/rounded21s, compiler-link9.273s. One quiet
+card0 window38s; two fresh mode processes compare host joins with graph
+events plus queue barriers. V2 lifecycle removes automatic force/timeout
+and blind abnormal posthealth before execution.
+
+RESULT -> PASS_GRAPH_API_ONLY: every depth intermediate/guard/input and
+all six32100B outputs match expected and cross-mode bytes. A restores/B
+differs. DOT nodes1/1/2; source counts72 graph submits/96 kernels each,
+barriers0->45 and per-depth host waits72->0, NOT measured L0 counts.
+Normal native/wait/rm/driver/tee0, OOMfalse/fullCID+NAMEgone, prepost
+card0health0, no force/reset/retry.
+
+VERDICT -> API ordering/freshness only; no hardware overlap, speed or MTP
+approval. Keep real tail wait/token validation/CPU PLE order and owner
+error drains. Actual subsequent Opus45.326265s/Fable30.869940s source
+reviews retain this lower-priority option behind profile/marker fix;
+S131 cause remains unmeasured. See
+docs/20261016_strata_cross_queue_graph_events.md.

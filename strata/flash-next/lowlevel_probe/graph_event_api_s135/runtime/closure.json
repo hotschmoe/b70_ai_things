@@ -1,0 +1,14 @@
+{
+  "status": "PASS_GRAPH_API_ONLY",
+  "container_exit": 0,
+  "pre_health_exit": 0,
+  "post_health_exit": 0,
+  "normal_exit_no_OOM": true,
+  "owned_fullCID": "fc35321372e54a0095aa674d8636fa6345a3cc5f276e43f028170140ac8d67a2",
+  "owned_name": "strata-cross-queue-graph-event",
+  "fullCID_and_NAME_gone": true,
+  "fresh_mode_processes": 2,
+  "retries": 0,
+  "MTP_numeric_qualified": false,
+  "speed_qualified": false
+}

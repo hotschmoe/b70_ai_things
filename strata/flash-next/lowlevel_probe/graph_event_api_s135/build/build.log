@@ -1,0 +1,44 @@
+cpu-run: [XQ-graph-event-offline-build] acquired (heavy) -> docker run --rm --network none --cpus 4 -u 1000:1000 -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_PERSISTENT=0 -e MAX_JOBS=4 -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 -v /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-cross-queue-graph-event-private-prep-v2:/src:ro -v /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-cross-queue-graph-event-private-prep-v2/build:/out -v /mnt/vm_8tb/b70/build/strata-ab/src-ep:/native:ro --entrypoint bash sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2 /src/build-container.sh
+/src/probe.cpp: OK
+/native/sycl/include/strata/sycl_doorbell.hpp: OK
+/native/sycl/include/strata/sycl_queue.hpp: OK
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+Compilation from IR - skipping loading of FCL
+Build succeeded.
+/src/probe.cpp: OK
+/native/sycl/include/strata/sycl_doorbell.hpp: OK
+/native/sycl/include/strata/sycl_queue.hpp: OK
+cpu-run: [XQ-graph-event-offline-build] done in 21s (exit 0)

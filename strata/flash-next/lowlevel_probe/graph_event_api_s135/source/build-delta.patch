@@ -1,0 +1,47 @@
+--- S103/build.sh
++++ XQ/build.sh
+@@ -4,16 +4,15 @@
+ P=$(cd -- "$(dirname -- "$0")" && pwd)
+ REPO=/mnt/vm_8tb/github/b70_ai_things
+ NATIVE=/mnt/vm_8tb/b70/build/strata-ab/src-ep
+-PTI=/mnt/vm_8tb/b70/build/strata-ab/pti-gpu
+ IMAGE=sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2
+ [[ $(id -u) == 1000 && $(docker image inspect --format '{{.Id}}' "$IMAGE") == "$IMAGE" ]]
+ mkdir "$P/build"
+ mkdir "$P/build/tmp" "$P/build/cache"
+ set +e
+-B70_AGENT=S103-offline-build "$REPO/bin/cpu-run" docker run --rm --network none --cpus 4 -u "$(id -u):$(id -g)" \
++B70_AGENT=XQ-graph-event-offline-build "$REPO/bin/cpu-run" docker run --rm --network none --cpus 4 -u "$(id -u):$(id -g)" \
+   -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_PERSISTENT=0 -e MAX_JOBS=4 \
+   -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 -v "$P":/src:ro -v "$P/build":/out \
+-  -v "$NATIVE":/native:ro -v "$PTI":"$PTI":ro --entrypoint bash "$IMAGE" /src/build-container.sh 2>&1 | tee "$P/build/build.log"
++  -v "$NATIVE":/native:ro --entrypoint bash "$IMAGE" /src/build-container.sh 2>&1 | tee "$P/build/build.log"
+ rc=("${PIPESTATUS[@]}")
+ set -e
+ printf '%s\n' "${rc[0]}" > "$P/build/build.exit"
+--- S103/build-container.sh
++++ XQ/build-container.sh
+@@ -9,12 +9,10 @@
+   -fsycl-device-code-split=per_kernel -fp-model=precise -fsycl-max-parallel-link-jobs=4
+   -Xsycl-target-backend=spir64_gen '-device bmg-g31 -options -cl-fp32-correctly-rounded-divide-sqrt'
+   -I/native/sycl/include -I/native/include -Wall -Wextra -Wno-deprecated-declarations)
+-printf '%q ' icpx "${FLAGS[@]}" /src/probe.cpp -lze_loader -o paired_graph_s103 > command.txt
++printf '%q ' icpx "${FLAGS[@]}" /src/probe.cpp -lze_loader -o cross_queue_graph > command.txt
+ printf '\n' >> command.txt
+ TIMEFORMAT='compile_link_seconds=%R'
+-{ time icpx "${FLAGS[@]}" /src/probe.cpp -lze_loader -o paired_graph_s103; } 2> compiler.stderr-time
++{ time icpx "${FLAGS[@]}" /src/probe.cpp -lze_loader -o cross_queue_graph; } 2> compiler.stderr-time
+ sha256sum -c /src/expected-container.sha256
+-sha256sum /src/probe.cpp paired_graph_s103 > build-sha256.txt
+-UNITRACE=/mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/build/unitrace
+-printf '%s  %s\n' 00fc84e5abbf19eddcd9010095b74857f4ec7df97c401ee0af7d70fb07ff1d68 "$UNITRACE" | sha256sum -c -
+-sha256sum paired_graph_s103 "$UNITRACE" "$(dirname -- "$UNITRACE")/libunitrace_tool.so" /src/probe.cpp > runtime.sha256
++sha256sum /src/probe.cpp cross_queue_graph > build-sha256.txt
++sha256sum cross_queue_graph /src/probe.cpp > runtime.sha256
+--- S103/expected-container.sha256
++++ XQ/expected-container.sha256
+@@ -1,3 +1,3 @@
+-713e96c452eeb782f24c18cd93f7eb2cd726fe45f1b23e6d5b0bc85e85b6c20b  /src/probe.cpp
++8feaa7989f09fe399cda26c768ecb624ba3b298633f6fa8fb601a38fd4de2885  /src/probe.cpp
+ 82b325b3a5ac199f96d73996cb51376851c7f8cd6fc85803b6960040442d5534  /native/sycl/include/strata/sycl_doorbell.hpp
+ 2b9ada924e3023ab742e826f9c9850324ccc978cfc4ca8d0a36b3e7b6c79c51a  /native/sycl/include/strata/sycl_queue.hpp

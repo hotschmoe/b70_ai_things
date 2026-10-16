@@ -1,0 +1,10 @@
+{
+  "status": "PASS_TWO_QUEUE_GRAPH_BARRIER_ORDERING_ONLY",
+  "both_modes_exact": true,
+  "fresh_processes": 2,
+  "same_4_kernel_operations_per_iteration": true,
+  "A_B_A": true,
+  "all_8_iteration_intermediates_checked_per_phase": true,
+  "actual_LevelZero_counts_measured": false,
+  "overlap_speed_MTP_qualified": false
+}

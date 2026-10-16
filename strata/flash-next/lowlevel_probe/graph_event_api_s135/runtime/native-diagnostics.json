@@ -1,0 +1,22 @@
+{
+  "docker_start_exit": 0,
+  "native_state": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-10-16T04:32:56.006609938Z",
+    "FinishedAt": "2026-10-16T04:32:59.181738315Z"
+  },
+  "user": "1000:1000",
+  "logs": [
+    "container.log",
+    "container.stderr"
+  ],
+  "automatic_health_or_force": false
+}

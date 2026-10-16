@@ -1,0 +1,3 @@
+{"type":"phase","mode":0,"phase":0,"iterations_checked":8,"graph_submits_source":24,"crossqueue_barriers_source":0,"intermediates_full_bytes":32100,"strict":true,"readonly":true,"guards":true}
+{"type":"phase","mode":0,"phase":1,"iterations_checked":8,"graph_submits_source":24,"crossqueue_barriers_source":0,"intermediates_full_bytes":32100,"strict":true,"readonly":true,"guards":true}
+{"type":"phase","mode":0,"phase":2,"iterations_checked":8,"graph_submits_source":24,"crossqueue_barriers_source":0,"intermediates_full_bytes":32100,"strict":true,"readonly":true,"guards":true}

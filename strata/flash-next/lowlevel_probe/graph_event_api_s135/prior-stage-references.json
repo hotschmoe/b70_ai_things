@@ -1,0 +1,10 @@
+{
+  "source_API_declaration_audit": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-cross-queue-graph-event-source",
+  "actual_probe_source_model_decisions": "../q5_c6_runtime_ones_s132/postreviews/",
+  "S132_commit": "7088473d",
+  "model_scope": "Original probe source/API design GO, not independent V2 lifecycle review or MTP integration approval. Root separately full-read narrow V2 lifecycle correction.",
+  "actual_binary_recorded_sha256": "575d592783f7e07bd7fed0988ad954de76cff9d2525e920c040c5914d6cfa79c",
+  "no_ISA_allimage_audit_or_runtime_count_claim": true,
+  "postfailure_postAPI_model_consultations": "PENDING_ROOT_SEPARATE_RECORD_NO_NEW_CALL_BY_CURATOR",
+  "no_binary_model_ASM_fulloutput_copy_or_freshhash": true
+}

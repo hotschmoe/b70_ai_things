@@ -1,0 +1,69 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_V2_LIFECYCLE_CORRECTION",
+  "files": {
+    "README.md": {
+      "bytes": 5087,
+      "sha256": "b65683efe1285068e57499fb10d27525dbcc2148692aea66cc49aefa80c83c97"
+    },
+    "ROOT_RUN.sh": {
+      "bytes": 721,
+      "sha256": "9627cf7d3f2cf5c626621ce4701a41e4e37d3e47c4631cede7086babbd3e1218"
+    },
+    "analyze.py": {
+      "bytes": 2754,
+      "sha256": "966043c2aa29d101708ebe5d4cd8c00e49673949fbaf5bcbee0a052ffef85ae7"
+    },
+    "build-container.sh": {
+      "bytes": 1021,
+      "sha256": "6bcf856e53edcd360b08c959cd6d3581efc536c7ca7021d2fc130f2310d7e06f"
+    },
+    "build-delta.patch": {
+      "bytes": 3025,
+      "sha256": "7d8761cd33b1ab82fe84e5e36e77beac404d9c748770751d04d69612a40c299b"
+    },
+    "build.sh": {
+      "bytes": 1042,
+      "sha256": "4cc274fd12f7cd4567feaa016b111810523e7ca0bcd2d43326c6d24a35213d2b"
+    },
+    "expected-container.sha256": {
+      "bytes": 302,
+      "sha256": "e90d3729c65ccd57eeafec89738acd29c1b7739c0ef618ca6349bf1a1cd525aa"
+    },
+    "leased-run-v2-delta.patch": {
+      "bytes": 8767,
+      "sha256": "9236cc9468daf9a19eb5d761d01c33f8ee28b54f8a81949fea025348fad57d4a"
+    },
+    "leased-run.sh": {
+      "bytes": 8535,
+      "sha256": "c817f5589da5c375753633907d7aba550be60a04a806681edfaba62c2b88da06"
+    },
+    "probe.cpp": {
+      "bytes": 9726,
+      "sha256": "8feaa7989f09fe399cda26c768ecb624ba3b298633f6fa8fb601a38fd4de2885"
+    },
+    "run-container.sh": {
+      "bytes": 645,
+      "sha256": "351fd327a1710c4fb33577b2eb11da4c4806421485e2acf906e40400da00c7b6"
+    },
+    "source-pins.json": {
+      "bytes": 1872,
+      "sha256": "ec91c21d7cfebb73e63ad02e842849c881b1ad45133fee3fc5fdca7bdb587a8e"
+    },
+    "source-review-packet.txt": {
+      "bytes": 20665,
+      "sha256": "a44dfb855d4838f4e1c9e1b7b4cbf08d0449122c672f46792be44c73af4d8e07"
+    },
+    "v2-checks.json": {
+      "bytes": 515,
+      "sha256": "9ff14d09f8d24a43ffd658e66c7994d75a458507ad4231c1996619d85bc55cc5"
+    },
+    "v2-runtime-review-packet.txt": {
+      "bytes": 19433,
+      "sha256": "9e360415142597157380c6a4d83132d19fdc35d216c32295533e18835c704144"
+    },
+    "v2-wrapper-note.md": {
+      "bytes": 2079,
+      "sha256": "46956e2266a1fc0a8c58c7be8725f20b214ac92d792f11352eb0bec94f5b09ce"
+    }
+  }
+}

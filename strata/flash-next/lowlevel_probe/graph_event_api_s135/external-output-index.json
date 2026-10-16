@@ -1,0 +1,53 @@
+{
+  "scope": "Six actual full intermediates32100B each,192600B total; already checked byte-exact by actual analyzer. Retain existing hashes, no raw payload copied or reread/rehash by curator.",
+  "outputs": [
+    {
+      "mode": "mode0",
+      "phase": 0,
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-cross-queue-graph-event-private-prep-v2/run/mode0/leaf/phase-0.bin",
+      "bytes": 32100,
+      "sha256_from_actual_completed_analyzer": "f18ea09cf3142a714b3448d930b1f6bd70d069423bd5b30ed390512faec4e5f2",
+      "fresh_payload_hash_by_curator": false
+    },
+    {
+      "mode": "mode0",
+      "phase": 1,
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-cross-queue-graph-event-private-prep-v2/run/mode0/leaf/phase-1.bin",
+      "bytes": 32100,
+      "sha256_from_actual_completed_analyzer": "1896087ca1b6333b6003cc19179382909cd8b1cd9a1676384d513191f01a8c8b",
+      "fresh_payload_hash_by_curator": false
+    },
+    {
+      "mode": "mode0",
+      "phase": 2,
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-cross-queue-graph-event-private-prep-v2/run/mode0/leaf/phase-2.bin",
+      "bytes": 32100,
+      "sha256_from_actual_completed_analyzer": "f18ea09cf3142a714b3448d930b1f6bd70d069423bd5b30ed390512faec4e5f2",
+      "fresh_payload_hash_by_curator": false
+    },
+    {
+      "mode": "mode1",
+      "phase": 0,
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-cross-queue-graph-event-private-prep-v2/run/mode1/leaf/phase-0.bin",
+      "bytes": 32100,
+      "sha256_from_actual_completed_analyzer": "f18ea09cf3142a714b3448d930b1f6bd70d069423bd5b30ed390512faec4e5f2",
+      "fresh_payload_hash_by_curator": false
+    },
+    {
+      "mode": "mode1",
+      "phase": 1,
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-cross-queue-graph-event-private-prep-v2/run/mode1/leaf/phase-1.bin",
+      "bytes": 32100,
+      "sha256_from_actual_completed_analyzer": "1896087ca1b6333b6003cc19179382909cd8b1cd9a1676384d513191f01a8c8b",
+      "fresh_payload_hash_by_curator": false
+    },
+    {
+      "mode": "mode1",
+      "phase": 2,
+      "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-cross-queue-graph-event-private-prep-v2/run/mode1/leaf/phase-2.bin",
+      "bytes": 32100,
+      "sha256_from_actual_completed_analyzer": "f18ea09cf3142a714b3448d930b1f6bd70d069423bd5b30ed390512faec4e5f2",
+      "fresh_payload_hash_by_curator": false
+    }
+  ]
+}
