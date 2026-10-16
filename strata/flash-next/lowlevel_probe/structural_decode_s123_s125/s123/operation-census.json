@@ -1,0 +1,30 @@
+{
+  "scope": "Only sums count fields from existing S95 canonical GPU rows, grouped by exact process and substring. MMVQ includes heads and cold/capture/solo/tail; not per-role numeric attribution or peer idle evidence. No rawtrace read.",
+  "source": {
+    "path": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/lowlevel_probe/current_c2_profile_s95/runtime/analysis/gpu/operations.csv",
+    "bytes": 301220,
+    "sha256": "6e7b53de561f54252c5e170ed0e9f45818be3a46e0aea4fdf44b388ac7bdf584"
+  },
+  "filters": {
+    "kind": "gpu",
+    "families": {
+      "MMVQ": "mmvq",
+      "GU": "native_gu_port",
+      "down": "native_down_port"
+    }
+  },
+  "counts_by_process": {
+    "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0": {
+      "MMVQ": 9682,
+      "down": 1392,
+      "GU": 1392
+    },
+    "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:44:0:0 #1": {
+      "down": 1392,
+      "GU": 1392,
+      "MMVQ": 0
+    }
+  },
+  "cross_device_clock_join": false,
+  "physical_traffic_or_idle_or_latency": false
+}

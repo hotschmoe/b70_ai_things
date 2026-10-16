@@ -1,0 +1,31 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "fresh_session_requested": false,
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 67.3098135109758,
+  "launch_exception": null,
+  "source_packet_sha256": "f6f0785367a77b7ca9432fc9e6c5b6541d6284cd59136e2fbed323999b9b31fd",
+  "source_packet_unchanged": true,
+  "parse_errors": [],
+  "retries": 0,
+  "result_events": [
+    {
+      "stop_reason": "end_turn",
+      "session_id": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "terminal_reason": "completed",
+      "is_error": false,
+      "subtype": "success",
+      "api_error_status": null,
+      "type": "result"
+    }
+  ],
+  "omissions": "Cumulative session usage/cost/API durations/modelUsage, duplicate result prose and stream timing removed; elapsed_s is this wrapper invocation."
+}

@@ -1,0 +1,27 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NO_IMPLEMENTATION_OR_EXECUTION",
+  "files": [
+    {
+      "path": "findings.md",
+      "bytes": 6229,
+      "sha256": "b118e9e9589ef0141fa8cf4aac58aba7e676a4d099604971ea303b70045db390"
+    },
+    {
+      "path": "source-excerpts.json",
+      "bytes": 41396,
+      "sha256": "a525c2b94403b752395826cdf5c7502fe3d0220dd98ef5a6143ba5cd9f9c55ec"
+    },
+    {
+      "path": "pins.json",
+      "bytes": 2640,
+      "sha256": "e4a84d53251fe3dba615532fc9b10d04f113aac31b0f1546148cad7e5cd01292"
+    },
+    {
+      "path": "operation-census.json",
+      "bytes": 1034,
+      "sha256": "19cf6cc2d7826b67d6114623bf4187cc7dc8167aff70dd546d53fefe52446442"
+    }
+  ],
+  "total_payload_bytes": 51299,
+  "validation": "Every source pin and exact line excerpt matched. ASCII payloads. No binaries/models/traces read."
+}

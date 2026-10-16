@@ -1,0 +1,139 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_STRUCTURAL_REVIEW",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1444,
+      "sha256": "504e0c0d2c4455fb4cd9786b04f4d9c1a604e2d655e0ac4337f37117bbfa529f"
+    },
+    {
+      "path": "external-identities.json",
+      "bytes": 885,
+      "sha256": "4bb7720e639c3f372fc5f4b834e54ca8088ee90b708973eaab7f248dc82d6126"
+    },
+    {
+      "path": "reviews/claude-fable-5-1-assistant-text.txt",
+      "bytes": 4534,
+      "sha256": "3b505b5c5bfcf43012b3793f3fb25a111fc5d2384188295eeb7bfe63de42e0d9"
+    },
+    {
+      "path": "reviews/claude-fable-5-1-command.json",
+      "bytes": 1217,
+      "sha256": "54998115c37b4f83ac594b0fc75d0d99935599242d3ddf0af2d6b669296a4482"
+    },
+    {
+      "path": "reviews/claude-fable-5-1-completion-filtered.json",
+      "bytes": 977,
+      "sha256": "89bff2921ef2eee912137eeeacdbe31464f6c0bc762e2fddcccf1af0d47957a4"
+    },
+    {
+      "path": "reviews/claude-opus-5-5-assistant-text.txt",
+      "bytes": 5523,
+      "sha256": "545fa934b5f55451fa26fd08bdacc36abff2a7b27a47f1abaefb8f878a1d44cc"
+    },
+    {
+      "path": "reviews/claude-opus-5-5-command.json",
+      "bytes": 1215,
+      "sha256": "ead1d38bc48e131e6cad18236290267d558334a76cb8a7437261084acfdc13cf"
+    },
+    {
+      "path": "reviews/claude-opus-5-5-completion-filtered.json",
+      "bytes": 977,
+      "sha256": "190142ed3c32cec39786fc841371518a8322ec4cdb060f0d8a5a4efb307600e5"
+    },
+    {
+      "path": "reviews/packet.sha256",
+      "bytes": 65,
+      "sha256": "338d810424893531a1d2fe693f416d59ba90c41278eac31f3f3bd18603cd327d"
+    },
+    {
+      "path": "reviews/prompt.txt",
+      "bytes": 52288,
+      "sha256": "b35d256e0fac479948eb92f428c8b6e7b14f6debf2612549350b33189b26f53e"
+    },
+    {
+      "path": "reviews/review-prefix.txt",
+      "bytes": 268,
+      "sha256": "8289f6f733921e6e7dd8bc933a5533c27ae5ba9e2eb225e450e59ce3ece03f0e"
+    },
+    {
+      "path": "reviews/review.py",
+      "bytes": 4680,
+      "sha256": "4acc32f1db8abac45407972965a2839a05249f1483cc5fa0349483f0e4038597"
+    },
+    {
+      "path": "reviews/root-decision.json",
+      "bytes": 2685,
+      "sha256": "2904562e87c164781844cf07acc2c27f856c35f8e7e35f690b2c788a845576f4"
+    },
+    {
+      "path": "s123/findings.md",
+      "bytes": 6229,
+      "sha256": "b118e9e9589ef0141fa8cf4aac58aba7e676a4d099604971ea303b70045db390"
+    },
+    {
+      "path": "s123/manifest.json",
+      "bytes": 835,
+      "sha256": "1c4d58f219494e957e5481a9a54abfaa6152de340949f4cc0c8d16d1c7c2101b"
+    },
+    {
+      "path": "s123/operation-census.json",
+      "bytes": 1034,
+      "sha256": "19cf6cc2d7826b67d6114623bf4187cc7dc8167aff70dd546d53fefe52446442"
+    },
+    {
+      "path": "s123/pins.json",
+      "bytes": 2640,
+      "sha256": "e4a84d53251fe3dba615532fc9b10d04f113aac31b0f1546148cad7e5cd01292"
+    },
+    {
+      "path": "s123/source-excerpts.json",
+      "bytes": 41396,
+      "sha256": "a525c2b94403b752395826cdf5c7502fe3d0220dd98ef5a6143ba5cd9f9c55ec"
+    },
+    {
+      "path": "s125/capacity-algebra.json",
+      "bytes": 11054,
+      "sha256": "d221bf385ef438fac7f6bca598b93f7a0763439cfde7bdc8272ebd8b1e87e7a5"
+    },
+    {
+      "path": "s125/findings.md",
+      "bytes": 6058,
+      "sha256": "3c8aba7dc91c724fc86588261acf272f6fd09e58209cee3df4ee5b4ec6ffa947"
+    },
+    {
+      "path": "s125/manifest.json",
+      "bytes": 663,
+      "sha256": "0396efb75bc7dd7a173da71f9c0146bb1c2617f8adeb2972b79144821bfc6256"
+    },
+    {
+      "path": "s125/pins.json",
+      "bytes": 3260,
+      "sha256": "d37221b2d6376fc8056fa8e60fff69ec8c48ba8538033a1695e0fb134d0fbce8"
+    },
+    {
+      "path": "s125/source-excerpts.txt",
+      "bytes": 18405,
+      "sha256": "6e714572a54ae9b5ff4167d6890350bd3ce70fb6a83629d268e9073b58ea12de"
+    },
+    {
+      "path": "source-copy-index.json",
+      "bytes": 10840,
+      "sha256": "260a7edd52dfa1ea330164fba85de6f9c0d82d7020beafd3da9f8a22c8e5caa9"
+    }
+  ],
+  "dated_document": {
+    "path": "docs/20261016_strata_structural_decode_leads.md",
+    "bytes": 4996,
+    "sha256": "162e23158eac5bf64071ffdc8252f4718676e38b4e61fec166082a1fc0f2d6cc"
+  },
+  "validation": {
+    "source_copy_records": 21,
+    "exact": 19,
+    "derived_filtered": 2,
+    "ASCII": true,
+    "local_links": true,
+    "frozen_source_manifests": true,
+    "no_GPU_build_test_or_live_source_changes": true
+  }
+}

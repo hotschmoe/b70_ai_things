@@ -25258,3 +25258,43 @@ authorize a prototype; structural consultations now running. Root verifies
 32 exact copies/one derived line record/all36 payloads. No serving/default/
 target change. Evidence: strata/flash-next/lowlevel_probe/q5_c2_rawsum_s122/
 and docs/20261016_strata_q5_c2_rawsum.md.
+
+
+## 2026-10-16 S123: dual-card MTP placement source feasibility
+
+CONFIG -> Current EP149/363/depth2 C2, source/config/small census only.
+COMMAND -> Source ownership audit: both slot drafters share primary weights;
+MtpPair serially submits A/B head-free forwards on its primary queue. Peer
+handles routed experts; service imbalance does not establish peer idle time.
+RESULT -> One forward per card would need peer-owned weights/state, valid
+embedding mapping, per-device graphs, explicit residual/sample/token/prob
+bridges and solo fallback. Logical sample10240B/depth, residual40960*G bytes;
+not measured traffic. Rough1027MiB peer owner plus optional416.797MiB head
+versus historical2010MiB pre-exchange free is not current headroom proof.
+VERDICT -> Actual claude-opus-5-5 50.373s and claude-fable-5-1 67.310s,
+both exit0/root full-read, favor simpler same-device directions. Root parks
+cross-card and selects S127 SOURCE-only owner-queue overlap feasibility
+before Opus's distinct C2 projection-batched alternative. S126 payload-only
+Q5 candidate remains first. No implementation/build/GPU or speed claim.
+Unsupported6ms draft bound/noise band/bandwidth inferences rejected. Evidence:
+strata/flash-next/lowlevel_probe/structural_decode_s123_s125/ and
+ docs/20261016_strata_structural_decode_leads.md.
+
+## 2026-10-16 S125: dense Q6 pre-expansion and matrix half-dot feasibility
+
+CONFIG -> Source/retained tensor dimensions only, no weights read/allocation.
+COMMAND -> Derive native per16 integer dots/scales, per-lane K accumulation
+and SG32 XOR tree; evaluate a distinct predecoded multi-output DPAS tile.
+RESULT -> Complementary zero-padded virtual outputs preserve two dot16
+integers via K32 matrix work;37.5% logical useful MAC cells, not utilization.
+Separate native-lane partitions need a second exact reduction kernel and
+1966080B scratch for C6/6144->2560. Original weights remain for prefill.
+Logical EXTRA274bytes/256weights:52matrix1,099,857,920B; all71 1,127,915,520B.
+Root narrower29output subset488,202,240B (~465.586MiB) leaves hypothetical
+1312.414MiB from old1778MiB, not measured current budget/residency proof.
+VERDICT -> Both actual structural reviews above/root park for setup, memory,
+padding and scratch costs behind nearer compiled lead. This differs from
+S75 serial on-the-fly IQ3 DPAS and is not categorically closed by S75 or A4.
+No implementation, numerical tolerance, build/GPU/default or speed forecast.
+Root verified19 exact copies/two filtered metadata records in shared bundle.
+Evidence: same structural_decode_s123_s125 bundle and dated report.

@@ -1,0 +1,53 @@
+INDEPENDENT REVIEW: S122/S126, S123, S125
+
+EVIDENCE (compiled or source facts)
+
+- S122 is an actual lowering fact, not a hypothesis. In the selected WideQ5K C2/RPW1 head image, all 16 DP4As are weighted dots. Each of the 4 raw-q8 sums becomes 40 vector ALU instructions (byte packing, sign extension, ADD/ADD3), 160 in the static loop body. Row-owning sub-groups make cross-row reuse impossible.
+- This was the reasonable outcome to expect: a compile-time `ones` constant lets the backend fold the emulated `dpct::dp4a` into plain byte adds before the DP4A pattern matcher runs.
+- The same helper (`WideQ4K::apply`/`dot`) also serves Q4_K and Q5_K wide paths. The expansion probably exists there too. That is a hypothesis until each image is read.
+- S123: MtpPair launches pre_round A, pre_round B and the shared tail serially on one queue. The slot drafters share weights and live on the primary card. The 5 ownership touchpoints (separate weight load, NativeEmbed device alias, per-device queues and graphs, bridges, solo fallback) are real costs. Per-owner forward service is not isolated, and peer idle time is unproven.
+- S125: the algebra is feasible, but it needs a second kernel, scratch, 37.5% useful MAC cells by geometry, and an extra 465 MiB for the 29-matrix subset. The same Q6 shapes already got A4 (+0.43% matched serving).
+
+HYPOTHESES (unmeasured)
+
+- Removing the 160-instruction expansion helps only if the head loop is ALU- or issue-limited rather than load-latency-limited. Static counts do not decide this.
+- MTP per-depth forwards at C1 may be dominated by weight streaming, in which case reading weights once for both slots matters more than overlapping them.
+
+PRIORITIES AND DECISIONS
+
+1. S126 runtime-uniform ones scalar: proceed with private source preparation, as root selected. It is the cheapest, most direct test of a confirmed compiled inefficiency.
+   - Add one cheap alternative spelling to keep in reserve if the scalar is const-folded: load the ones word from a tiny device constant buffer. That is also opaque to compile-time folding.
+   - Gate, in order:
+     a. The candidate image shows a DP4A whose operand traces to the kernel payload scalar.
+     b. The four 40-instruction chains are gone.
+     c. The weighted DP4A operands and the FP ledger are unchanged, including the MAD contraction positions on the same operands (lines 388\u2013400 in S122 terms) and the XOR tree.
+     d. Resources do not regress.
+   - Then the full strict oracle.
+   - Stop if: the scalar is folded back into the expansion; or a DP4A appears but the MAD/contraction pattern changes; or new spill or scratch shows up.
+   - If it passes, apply the same compiled check to the Q4_K C6 QKV image before anything is generalized. The shared helper does not justify blanket substitution.
+
+2. Structural work: SOURCE_DESIGN_GO for a different, lower-risk variant before S123.
+   - **The variant: a single-device paired MTP forward.** Both slots already share MTP weights on one device, and the verifier already runs slot-batched C2 projections. The variant batches A's and B's per-depth forward projections into C2 calls, with attention, KV, positions and residual state kept per owner, so the weights are streamed once per depth instead of twice.
+   - **Why it is preferred over S123:** it avoids the cross-context touchpoints (embedding alias, IPC bridges, peer memory, solo-head replication), and it removes the A-then-B serialization in a way that also reduces weight traffic. That last part is a hypothesis.
+   - **Design deliverables:**
+     - an exact list of projections in `record_front`/`record_rest`/`record_forward` that are slot-independent apart from their activations;
+     - which kernels support C2 with distinct column owners;
+     - how per-owner KV and attention stay separate;
+     - capture keys for unequal T0/T1;
+     - preserved fallback when only one slot is active.
+   - Stop if: the forward contains per-slot weight-dependent paths (routed MTP experts with per-token routing) that cannot be batched without reordering FP sums; or unequal T or row layouts force a cache-key explosion; or a strict FP-order-preserving C2 MMVQ for these shapes does not already exist.
+   - Note: routed experts per token are fine if the grouped kernels already take multiple tokens, which they do for the verifier. This needs confirming from source.
+
+3. S123 cross-device split: SOURCE_DESIGN_HOLD. Revisit only if the paired forward proves impossible, or if an isolated per-owner forward measurement shows the A/B serial span is material and cannot be batched. The NativeEmbed peer-access and solo-fallback head decisions are unresolved blockers, not details.
+
+4. S125 Q6 pre-expansion with DPAS: HOLD.
+   - The memory cost is large and the VRAM headroom is historical, not current.
+   - The two-kernel structure with scratch is close to the S75 failure mode.
+   - These shapes have already yielded a small gain.
+   - Revisit only after the ones fix and the paired-forward design are resolved, and only with a measured current free-VRAM budget.
+
+DEV-LOOP NOTES
+
+- Keep S126's first gate compile-and-ISA only. No GPU until the lowering is shown.
+- Fold any surviving private candidates (S116, S126) into the next build that is otherwise required, with the persistent offline cache. Each keeps its own single-flag arm.
+- Do not attach new private timing runs to candidates whose serving ceiling is likely below 1%. The goal needs roughly 2.7\xd7 per stream, so structural MTP work deserves design time now.

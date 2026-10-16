@@ -1,0 +1,229 @@
+{
+  "status": "CLOSED_SOURCE_ONLY_REVIEW_CURATION",
+  "records": [
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/dual-card-work-placement-s123-source/findings.md",
+      "target": "s123/findings.md",
+      "kind": "exact",
+      "bytes": 6229,
+      "source_sha256": "b118e9e9589ef0141fa8cf4aac58aba7e676a4d099604971ea303b70045db390",
+      "target_sha256": "b118e9e9589ef0141fa8cf4aac58aba7e676a4d099604971ea303b70045db390"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/dual-card-work-placement-s123-source/manifest.json",
+      "target": "s123/manifest.json",
+      "kind": "exact",
+      "bytes": 835,
+      "source_sha256": "1c4d58f219494e957e5481a9a54abfaa6152de340949f4cc0c8d16d1c7c2101b",
+      "target_sha256": "1c4d58f219494e957e5481a9a54abfaa6152de340949f4cc0c8d16d1c7c2101b"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/dual-card-work-placement-s123-source/operation-census.json",
+      "target": "s123/operation-census.json",
+      "kind": "exact",
+      "bytes": 1034,
+      "source_sha256": "19cf6cc2d7826b67d6114623bf4187cc7dc8167aff70dd546d53fefe52446442",
+      "target_sha256": "19cf6cc2d7826b67d6114623bf4187cc7dc8167aff70dd546d53fefe52446442"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/dual-card-work-placement-s123-source/pins.json",
+      "target": "s123/pins.json",
+      "kind": "exact",
+      "bytes": 2640,
+      "source_sha256": "e4a84d53251fe3dba615532fc9b10d04f113aac31b0f1546148cad7e5cd01292",
+      "target_sha256": "e4a84d53251fe3dba615532fc9b10d04f113aac31b0f1546148cad7e5cd01292"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/dual-card-work-placement-s123-source/source-excerpts.json",
+      "target": "s123/source-excerpts.json",
+      "kind": "exact",
+      "bytes": 41396,
+      "source_sha256": "a525c2b94403b752395826cdf5c7502fe3d0220dd98ef5a6143ba5cd9f9c55ec",
+      "target_sha256": "a525c2b94403b752395826cdf5c7502fe3d0220dd98ef5a6143ba5cd9f9c55ec"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/dense-q6-preexpand-s125-source/capacity-algebra.json",
+      "target": "s125/capacity-algebra.json",
+      "kind": "exact",
+      "bytes": 11054,
+      "source_sha256": "d221bf385ef438fac7f6bca598b93f7a0763439cfde7bdc8272ebd8b1e87e7a5",
+      "target_sha256": "d221bf385ef438fac7f6bca598b93f7a0763439cfde7bdc8272ebd8b1e87e7a5"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/dense-q6-preexpand-s125-source/findings.md",
+      "target": "s125/findings.md",
+      "kind": "exact",
+      "bytes": 6058,
+      "source_sha256": "3c8aba7dc91c724fc86588261acf272f6fd09e58209cee3df4ee5b4ec6ffa947",
+      "target_sha256": "3c8aba7dc91c724fc86588261acf272f6fd09e58209cee3df4ee5b4ec6ffa947"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/dense-q6-preexpand-s125-source/pins.json",
+      "target": "s125/pins.json",
+      "kind": "exact",
+      "bytes": 3260,
+      "source_sha256": "d37221b2d6376fc8056fa8e60fff69ec8c48ba8538033a1695e0fb134d0fbce8",
+      "target_sha256": "d37221b2d6376fc8056fa8e60fff69ec8c48ba8538033a1695e0fb134d0fbce8"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/dense-q6-preexpand-s125-source/source-excerpts.txt",
+      "target": "s125/source-excerpts.txt",
+      "kind": "exact",
+      "bytes": 18405,
+      "source_sha256": "6e714572a54ae9b5ff4167d6890350bd3ce70fb6a83629d268e9073b58ea12de",
+      "target_sha256": "6e714572a54ae9b5ff4167d6890350bd3ce70fb6a83629d268e9073b58ea12de"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/dense-q6-preexpand-s125-source-manifest.json",
+      "target": "s125/manifest.json",
+      "kind": "exact",
+      "bytes": 663,
+      "source_sha256": "0396efb75bc7dd7a173da71f9c0146bb1c2617f8adeb2972b79144821bfc6256",
+      "target_sha256": "0396efb75bc7dd7a173da71f9c0146bb1c2617f8adeb2972b79144821bfc6256"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/structural-s123-s125-reviews-20261016/root-decision.json",
+      "target": "reviews/root-decision.json",
+      "kind": "exact",
+      "bytes": 2685,
+      "source_sha256": "2904562e87c164781844cf07acc2c27f856c35f8e7e35f690b2c788a845576f4",
+      "target_sha256": "2904562e87c164781844cf07acc2c27f856c35f8e7e35f690b2c788a845576f4"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/structural-s123-s125-reviews-20261016/review-prefix.txt",
+      "target": "reviews/review-prefix.txt",
+      "kind": "exact",
+      "bytes": 268,
+      "source_sha256": "8289f6f733921e6e7dd8bc933a5533c27ae5ba9e2eb225e450e59ce3ece03f0e",
+      "target_sha256": "8289f6f733921e6e7dd8bc933a5533c27ae5ba9e2eb225e450e59ce3ece03f0e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/structural-s123-s125-reviews-20261016/review.py",
+      "target": "reviews/review.py",
+      "kind": "exact",
+      "bytes": 4680,
+      "source_sha256": "4acc32f1db8abac45407972965a2839a05249f1483cc5fa0349483f0e4038597",
+      "target_sha256": "4acc32f1db8abac45407972965a2839a05249f1483cc5fa0349483f0e4038597"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/structural-s123-s125-reviews-20261016/packet.sha256",
+      "target": "reviews/packet.sha256",
+      "kind": "exact",
+      "bytes": 65,
+      "source_sha256": "338d810424893531a1d2fe693f416d59ba90c41278eac31f3f3bd18603cd327d",
+      "target_sha256": "338d810424893531a1d2fe693f416d59ba90c41278eac31f3f3bd18603cd327d"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/structural-s123-s125-reviews-20261016/claude-opus-5-5/prompt.txt",
+      "target": "reviews/prompt.txt",
+      "kind": "exact",
+      "bytes": 52288,
+      "source_sha256": "b35d256e0fac479948eb92f428c8b6e7b14f6debf2612549350b33189b26f53e",
+      "target_sha256": "b35d256e0fac479948eb92f428c8b6e7b14f6debf2612549350b33189b26f53e"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/structural-s123-s125-reviews-20261016/claude-opus-5-5/assistant-text.txt",
+      "target": "reviews/claude-opus-5-5-assistant-text.txt",
+      "kind": "exact",
+      "bytes": 5523,
+      "source_sha256": "545fa934b5f55451fa26fd08bdacc36abff2a7b27a47f1abaefb8f878a1d44cc",
+      "target_sha256": "545fa934b5f55451fa26fd08bdacc36abff2a7b27a47f1abaefb8f878a1d44cc"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/structural-s123-s125-reviews-20261016/claude-opus-5-5/command.json",
+      "target": "reviews/claude-opus-5-5-command.json",
+      "kind": "exact",
+      "bytes": 1215,
+      "source_sha256": "ead1d38bc48e131e6cad18236290267d558334a76cb8a7437261084acfdc13cf",
+      "target_sha256": "ead1d38bc48e131e6cad18236290267d558334a76cb8a7437261084acfdc13cf"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/structural-s123-s125-reviews-20261016/claude-fable-5-1/assistant-text.txt",
+      "target": "reviews/claude-fable-5-1-assistant-text.txt",
+      "kind": "exact",
+      "bytes": 4534,
+      "source_sha256": "3b505b5c5bfcf43012b3793f3fb25a111fc5d2384188295eeb7bfe63de42e0d9",
+      "target_sha256": "3b505b5c5bfcf43012b3793f3fb25a111fc5d2384188295eeb7bfe63de42e0d9"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/structural-s123-s125-reviews-20261016/claude-fable-5-1/command.json",
+      "target": "reviews/claude-fable-5-1-command.json",
+      "kind": "exact",
+      "bytes": 1217,
+      "source_sha256": "54998115c37b4f83ac594b0fc75d0d99935599242d3ddf0af2d6b669296a4482",
+      "target_sha256": "54998115c37b4f83ac594b0fc75d0d99935599242d3ddf0af2d6b669296a4482"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/structural-s123-s125-reviews-20261016/claude-opus-5-5/completion.json",
+      "source_bytes": 8975,
+      "source_sha256": "dfa22bbfc8acb9934e23f0554f80a8682c83810c6a7c8d661d4aa4284ed96418",
+      "target": "reviews/claude-opus-5-5-completion-filtered.json",
+      "kind": "derived_filtered_metadata",
+      "recipe": {
+        "top_level_fields": [
+          "requested",
+          "responding_models",
+          "session_ids",
+          "fresh_session_requested",
+          "resume_session",
+          "resume_session_matches_response",
+          "exit",
+          "elapsed_s",
+          "launch_exception",
+          "source_packet_sha256",
+          "source_packet_unchanged",
+          "parse_errors",
+          "retries"
+        ],
+        "result_event_fields": [
+          "stop_reason",
+          "session_id",
+          "terminal_reason",
+          "is_error",
+          "subtype",
+          "api_error_status",
+          "type"
+        ],
+        "omissions_field": "Explanatory text, not source data."
+      },
+      "bytes": 977,
+      "target_sha256": "190142ed3c32cec39786fc841371518a8322ec4cdb060f0d8a5a4efb307600e5"
+    },
+    {
+      "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/structural-s123-s125-reviews-20261016/claude-fable-5-1/completion.json",
+      "source_bytes": 7977,
+      "source_sha256": "b6ed0141cb47ed34487284caf72b8b879147943ecced0af23ed649000c6538b0",
+      "target": "reviews/claude-fable-5-1-completion-filtered.json",
+      "kind": "derived_filtered_metadata",
+      "recipe": {
+        "top_level_fields": [
+          "requested",
+          "responding_models",
+          "session_ids",
+          "fresh_session_requested",
+          "resume_session",
+          "resume_session_matches_response",
+          "exit",
+          "elapsed_s",
+          "launch_exception",
+          "source_packet_sha256",
+          "source_packet_unchanged",
+          "parse_errors",
+          "retries"
+        ],
+        "result_event_fields": [
+          "stop_reason",
+          "session_id",
+          "terminal_reason",
+          "is_error",
+          "subtype",
+          "api_error_status",
+          "type"
+        ],
+        "omissions_field": "Explanatory text, not source data."
+      },
+      "bytes": 977,
+      "target_sha256": "89bff2921ef2eee912137eeeacdbe31464f6c0bc762e2fddcccf1af0d47957a4"
+    }
+  ]
+}

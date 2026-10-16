@@ -1,0 +1,15 @@
+{
+  "source_packet": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/structural-s123-s125-reviews-20261016/packet.txt",
+    "bytes": 51999,
+    "sha256": "f6f0785367a77b7ca9432fc9e6c5b6541d6284cd59136e2fbed323999b9b31fd",
+    "reason": "Exact actual combined prompt is copied once; raw source packet retained externally to avoid duplication."
+  },
+  "second_identical_prompt": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/structural-s123-s125-reviews-20261016/claude-fable-5-1/prompt.txt",
+    "bytes": 52288,
+    "sha256": "b35d256e0fac479948eb92f428c8b6e7b14f6debf2612549350b33189b26f53e",
+    "same_bytes_as": "reviews/prompt.txt"
+  },
+  "excluded": "events.jsonl, full cumulative completion metadata, duplicate prompt/packet and empty stderr. No model/binary/trace payloads scanned."
+}

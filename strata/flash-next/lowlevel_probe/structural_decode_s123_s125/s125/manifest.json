@@ -1,0 +1,22 @@
+{
+  "stage": "S125",
+  "status": "FROZEN_SOURCE_ONLY_CONDITIONAL_FEASIBILITY_IMPLEMENTATION_HOLD",
+  "files": {
+    "capacity-algebra.json": {
+      "bytes": 11054,
+      "sha256": "d221bf385ef438fac7f6bca598b93f7a0763439cfde7bdc8272ebd8b1e87e7a5"
+    },
+    "findings.md": {
+      "bytes": 6058,
+      "sha256": "3c8aba7dc91c724fc86588261acf272f6fd09e58209cee3df4ee5b4ec6ffa947"
+    },
+    "pins.json": {
+      "bytes": 3260,
+      "sha256": "d37221b2d6376fc8056fa8e60fff69ec8c48ba8538033a1695e0fb134d0fbce8"
+    },
+    "source-excerpts.txt": {
+      "bytes": 18405,
+      "sha256": "6e714572a54ae9b5ff4167d6890350bd3ce70fb6a83629d268e9073b58ea12de"
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "status": "CURRENT_SOURCE_AND_RETAINED_SMALL_RECORD_PINS_ONLY",
+  "pins": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp",
+      "bytes": 867808,
+      "sha256": "6433d750e414aeb9c71135257ae40a8f9e38ea661537c251b50cabdbc2217d83"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp",
+      "bytes": 121495,
+      "sha256": "2d26e686c2aa6065d33461464efa39975db8e0cc5196f8962a216b4c5fa2a589"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp",
+      "bytes": 223107,
+      "sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/native_head.cpp",
+      "bytes": 13417,
+      "sha256": "0f3ff9b25ce9cea1ad3393bb766eb2c34e93409ee91f71c5fd922971c2975f96"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/core/native_head.hpp",
+      "bytes": 2875,
+      "sha256": "146f33d42f4f928e8a984c6934c3fee2771cf6175f58ccf8775d1ca3bffaaba9"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/core/ep_mem.hpp",
+      "bytes": 2794,
+      "sha256": "2e7e66cc518d96edf056246e8b78dc382a4f9241aa46209de42d473fb8767ad6"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/strata/core/on_device.hpp",
+      "bytes": 1406,
+      "sha256": "f4fc309d6c537bc5c75b2912f13296a2e12740159e40cda2eac72884a61c3810"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/core/geometry.hpp",
+      "bytes": 4805,
+      "sha256": "e9869988fbdc9e18ef3d144dd91e9266c18a190e9ec1a7351ce5c7b858bbd838"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/lowlevel_probe/mtp_parallel_argmax_serving_s114/serving-actual/mode0/engine-final.log",
+      "bytes": 22851,
+      "sha256": "a38fc895817b1901a09e9bb7c8d93ee180689c8b9a5afc0a409941e03ec5d3b1"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/docs/20260825_xe_nonreboot_recovery_and_pcie_topology.md",
+      "bytes": 7457,
+      "sha256": "da3238294e5800e8393aae3fd2979193bb929071b371c6ac455dc5cfd10ce304"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/lowlevel_probe/current_c2_profile_s95/runtime/analysis/gpu/operations.csv",
+      "bytes": 301220,
+      "sha256": "6e7b53de561f54252c5e170ed0e9f45818be3a46e0aea4fdf44b388ac7bdf584"
+    }
+  ],
+  "scope": "Source pins describe current S114-era ownership; S95 census is a historical bounded whole collection. No binary/model/trace/build/GPU access."
+}

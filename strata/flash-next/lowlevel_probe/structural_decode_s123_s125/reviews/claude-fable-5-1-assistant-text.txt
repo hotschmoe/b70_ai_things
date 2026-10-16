@@ -1,0 +1,25 @@
+**Evidence versus hypothesis**
+
+Evidence: the Q5_K C2 image computes the four raw activation half-sums with 40 vector instructions each, not with packed dp4a; the 16 dp4a sites are all weighted dots; the FP ledger and XOR tree are as the source says. Same-helper reuse means the Q4_K C6 QKV shape carries the same lowering, though that image has not been read. Instrumented host spans from S95 put the whole paired draft, both depths, at roughly 6 ms inside a 57 ms cycle, with about 2.4 ms of that in the two shared heads. S75 showed a serial-K DPAS path 7.7 times slower; S104 showed a load-side change moving Q6 by 2 to 5 percent privately and 0.4 percent in serving.
+
+Hypotheses: the head is bandwidth dominated at its recorded median; the Q4_K C6 shape has more ALU per weight byte; the compiler will keep a runtime-uniform ones operand opaque and emit packed dp4a; the two owner forwards could overlap if they were not serialised.
+
+**S126: SOURCE_DESIGN_GO, narrow**
+
+This is the right first move. It is a one-operand spelling change in a shared helper, no layout, scratch, producer or lifetime change, and it has a decisive compiled gate before any GPU. Two cautions. First, do not pass the word only as a kernel argument and assume the backend will not fold it. The gate must show the scalar actually captured in the payload, consumed by dp4a as the weighted operand's partner, the four 40-instruction chains gone, and the weighted dots, conversions, MAD contraction points and tree byte-for-byte unchanged apart from the sum operand. If IGC instead emits a different expansion or inserts per-iteration moves that match or exceed what was removed, close this spelling. Second, pick the audit shape deliberately. Audit both the Q5_K C2 head image and the Q4_K C6 QKV image from the same build; the second is where ALU reduction has a plausible effect, the first is where it may not matter even if the lowering is perfect. Strict oracle after the compiled gate: exact output bytes against the original on both shapes, raw-sum extremes including all-minus-128 activations, A, B, A replays, guards. Then one balanced private timing per shape, reported as such. No serving run unless the private result clears the noise band seen across S106 to S114.
+
+**S123: SOURCE_DESIGN_HOLD on the cross-card version**
+
+The source reading is correct: the A and B forwards are serialised on one queue within each depth, and that is a genuine dependency. But the bound is small. Even perfect overlap of the non-head part of the pair saves at most a few milliseconds of a 57 ms cycle, and that is an instrumented upper bound, not a measurement. Against that, the cross-card design needs about 1 GiB of peer residency, possibly another 417 MiB for a solo-fallback head, a per-device embedding mapping that is unproven, dedicated IPC bridges, two-context capture, and a fallback redesign. That is a large project with a small ceiling.
+
+If the A/B dependency is worth attacking, test the cheap same-device form first as a design question: record A's and B's head-free graphs on their own existing owner queues with an event join before the shared tail, no new buffers, no bridges, no device change. Whether the GPU overlaps two low-occupancy forwards is unknown and is exactly what a private two-owner oracle on one card could show. Stop if graph recording across two queues is unsupported in the pinned SDK, or if the overlap does not shorten the completed pair in a strict private test.
+
+**S125: HOLD**
+
+The expanded format reads about 30 percent more weight bytes per matrix, uses 37.5 percent of the matrix engine cells, adds a second kernel and scratch, and commits roughly 466 MiB of primary VRAM for 29 matrices. If the Q6 kernel is bandwidth limited, which the A4 result makes plausible but does not prove, this loses by construction. The only thing that would reopen it is evidence that the Q6 C6 loop is issue bound, and S126's audit of the neighbouring Q4_K image will give a cheaper view of that question. Do not spend design effort here now.
+
+**Order and stop conditions**
+
+1. S126 source prep, then one CPU build and two-shape compiled audit. Stop if dp4a does not appear with the runtime operand or anything else in the ledger moves.
+2. S126 strict private oracle and two private timings. Stop before serving if the delta sits inside the known noise band.
+3. Only then revisit the same-device A/B overlap as a bounded source design. S123 cross-card and S125 stay parked, with their memory arithmetic recorded as logical, not measured.

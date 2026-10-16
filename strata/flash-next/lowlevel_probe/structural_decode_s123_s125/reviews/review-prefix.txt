@@ -1,0 +1,1 @@
+Independent critical engineering review. Approximately650 words, concise plain text. Explicitly separate evidence/hypothesis and select useful next work with concrete stop conditions. Do not approve unseen code or forecast speed from static counts. No tools available.

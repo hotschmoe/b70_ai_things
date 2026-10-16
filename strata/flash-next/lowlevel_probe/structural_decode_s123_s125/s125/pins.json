@@ -1,0 +1,73 @@
+{
+  "stage": "S125",
+  "scope": "SOURCE_ONLY; no model/header reread, compilation, GPU, model consultation or live source mutation",
+  "utc": "2026-10-16T02:34:43.396936+00:00",
+  "upstream_base": "296b59d2f73c8f04a805df29c2fa97655adace78",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+      "bytes": 192865,
+      "sha256": "ae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/native_dense.cpp",
+      "bytes": 21570,
+      "sha256": "99f925bfdc0a295e3314bea43a2fc0f7119f80f1a5111b38939e1478bf67f2d8"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/core/native_dense.hpp",
+      "bytes": 4552,
+      "sha256": "18b176524018ae9e1cc3fff92ee1bc277c2d8007f3c39043a56b6109a1df2e6f"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp",
+      "bytes": 867808,
+      "sha256": "6433d750e414aeb9c71135257ae40a8f9e38ea661537c251b50cabdbc2217d83"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/xmx_int8_bench.cpp",
+      "bytes": 15022,
+      "sha256": "0191dbed0d168c2604d582257169817edcfa87391a3df0870b4e17c7d1c1c92a"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp",
+      "bytes": 295028,
+      "sha256": "8bf1489cb53a2de442c051a8a64f577d330eadedbe200fd36ee967f33a29bb6d"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/CMakeLists.txt",
+      "bytes": 26336,
+      "sha256": "af2c33703f0fcb53b7f0f9b0aa823ce3fef7c9209ea24036e8b9f597fb07592f"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-packed-s41-prep/q6-header-index.json",
+      "bytes": 36876,
+      "sha256": "76c709974879e5b77811c072824c84b7cc84bf5706ba31460d9e997f51af8dd5"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-packed-s41-prep/feasibility.json",
+      "bytes": 6274,
+      "sha256": "c8313287b8619b9074c84a32c0de492d1c9e7b82fb1f4b9e173a06d73d1f3217"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-dense-owner-s46-prep/capacity-source-facts.json",
+      "bytes": 8524,
+      "sha256": "eddbfe920120b2e5654db1f16fde6ebc0fc966c7cb1989e3a4506b15699ccb1f"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/int8-xmx-capability-s74-isa/findings.md",
+      "bytes": 2495,
+      "sha256": "bfb495e16ccbf64a0e625271467b50a5b49d915889f6ed74b71270b9533b4ba5"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-root/root-runtime-decision.json",
+      "bytes": 7155,
+      "sha256": "633c2d4b473e556a33cea6c4282edd6e0d0f6885f5a2634e6b53bfb6355b7784"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq3s-int8-dpas-s75-prep-v2/README.md",
+      "bytes": 7783,
+      "sha256": "dac5841afe0ef690a40329270464e5456c0328b159e7b7e2c139321480e3c663"
+    }
+  ]
+}

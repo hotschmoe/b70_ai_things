@@ -1,0 +1,41 @@
+{
+  "status": "SOURCE_PREP_S126_FIRST_S127_OWNERQUEUE_DESIGN_CROSSCARD_AND_DPASEXPANSION_PARKED",
+  "root_full_read_both_actual_answers": true,
+  "models": [
+    {
+      "requested": "claude-opus-5-5",
+      "responding_models": [
+        "claude-opus-5-5"
+      ],
+      "exit": 0,
+      "elapsed_s": 50.373389194952324,
+      "resume_session": "c26cbc95-bbed-461b-b165-8adee1464b9e",
+      "source_packet_sha256": "f6f0785367a77b7ca9432fc9e6c5b6541d6284cd59136e2fbed323999b9b31fd"
+    },
+    {
+      "requested": "claude-fable-5-1",
+      "responding_models": [
+        "claude-fable-5-1"
+      ],
+      "exit": 0,
+      "elapsed_s": 67.3098135109758,
+      "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "source_packet_sha256": "f6f0785367a77b7ca9432fc9e6c5b6541d6284cd59136e2fbed323999b9b31fd"
+    }
+  ],
+  "decision": [
+    "S126 narrow Q5C2 runtime-uniformones private source first; no generalizedhelperchange or Q4image/build/sweep now. Actualpayload/DP4Alowering/FPledger/controlidentity beforeGPU numericaloracle/timing.",
+    "S127 source-only same-device two-owner queue proposal as cheapest structural discriminator. Both ownerqueues alreadycreated atload; explicitperdepthjoin beforepairedhead and beforeBnextdepth. Auditsharedstate/ownerbuffers/capture/fallback/error-drain, no arithmetic/newIPC. No apply/build/GPU.",
+    "Opus same-device C2 projection-batchedforward is a distinct design alternative, retained behind simplerownqueuecheck.",
+    "Park S123crossdevice for ownership/memory/embedding/fallback complexity; do not claim universalceiling.",
+    "Park S125Q6preexpandDPAS for implementation/scratch/padding/VRAMcost relative to nearercompiledlead. Distinctnewmechanism notclosedbyA4/S75; 29outputmatrixsubset extra488202240B logical (~465.586MiB), historicalremaining1312.414MiB notactualallocationproof."
+  ],
+  "corrections": [
+    "UninspectedQ4C6 image may or maynotshareexactlowering. Samehelper is sourceevidence, notcompiledproof.",
+    "Fable asserted ~6ms paireddraft/~2.4mshead decomposition and ceiling withoutmatching sourcepacket evidence; rootdoesnotacceptit as measuredcurrentcost or rigorouswallbound.",
+    "No calibratednoiseband exists from nestedS106-S114 sequences; no inventednumericpromotionthreshold.",
+    "Instructioncounts, encodedweightbytes/service andA4delta do notprove ALU/bandwidthdominance or a servingforecast.",
+    "FPcontract proofneeds actualdataflow/contractions/order/materialization, not rawregister/PCidentity; strictoraclestillrequired.",
+    "No tinydeviceconstantbuffer alternative implementation now, and no immediatemultishape/format sweep. Closeactualspellingifcompiledmechanismfails."
+  ]
+}

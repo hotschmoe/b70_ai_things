@@ -1,0 +1,281 @@
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp:96-106
+SHA256 ae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252
+96: struct Q6KBlock {
+97:     uint8_t ql[128];
+98:     uint8_t qh[64];
+99:     int8_t scales[16];
+100:     sycl::half d;
+101: };
+102: struct Q40Block {
+103:     sycl::half d;
+104:     uint8_t qs[16];
+105: };
+106: struct Q50Block {
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp:1550-1577
+SHA256 ae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252
+1550: template <int NCOLS, int RPW, int SG = WARP, int BS = (int) sizeof(Q6KBlock), bool A2 = false,
+1551:           bool CENTER = false>   // BS: block stride; CENTER only for the tested C6/A2/RPW1/SG32 shapes
+1552: void native_mmvq_q6k_wide_kernel(const Q6KBlock* __restrict__ w, const Q81Block* __restrict__ x,
+1553:                                  float* __restrict__ y, int n_in, int n_out) {
+1554:     auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+1555:     const int lane = int(item.get_local_id(2)), warp = int(item.get_local_id(1));
+1556:     constexpr int NWG = WARPS * WARP / SG;              // sub-groups per work-group
+1557:     const int row0 = (int(item.get_group(2)) * NWG + warp) * RPW;
+1558:     if (row0 >= n_out) return;
+1559:     const int blocks_per_row = n_in / QK, x_stride = n_in / Q8K;
+1560:     const int g = lane & 7, sub = lane >> 3;            // position group within the block, block within the iteration
+1561:     const int vh_shift = 2 * ((g & 3) >> 1);
+1562:     const int qh4_idx = 2 * (g >> 2) + (g & 1);
+1563:     const int scale_offset = 8 * (g >> 2) + (g & 3);
+1564:     const int bq8_offset = 4 * (g >> 2) + ((g & 3) >> 1);
+1565:     const int u_int4 = g & 1;                           // ints 4(g%2)..+3 of the q8 block = one int4
+1566:     float acc[RPW][NCOLS] = {};
+1567:     for (int kbx = sub; kbx < blocks_per_row; kbx += SG / 8) {
+1568:         const int kby = kbx * (QK / Q8K);
+1569:         sycl::int4 ql4[RPW], qh4[RPW]; float dsc0[RPW], dsc1[RPW];
+1570: #pragma unroll
+1571:         for (int r = 0; r < RPW; ++r) {
+1572:             const Q6KBlock* b = reinterpret_cast<const Q6KBlock*>(reinterpret_cast<const uint8_t*>(w) +
+1573:                 (std::size_t(row0 + (row0 + r < n_out ? r : 0)) * blocks_per_row + kbx) * BS);
+1574:             if constexpr (A2) {
+1575:                 ql4[r] = load16_a2(b->ql + 16 * g);
+1576:                 qh4[r] = load16_a2(b->qh + 16 * qh4_idx);
+1577:             } else {
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp:1584-1645
+SHA256 ae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252
+1584:         // the activations once per column, shared by the RPW rows
+1585:         sycl::int4 u0[NCOLS], u1[NCOLS];
+1586:         float ds0[NCOLS], ds1[NCOLS];
+1587: #pragma unroll
+1588:         for (int j = 0; j < NCOLS; ++j) {
+1589:             const Q81Block* xb = x + std::size_t(j) * x_stride + kby + bq8_offset;
+1590:             if constexpr (A2) {   // Q8_1 qs sits at offset 4 of a 36-byte block: 4-byte aligned, so four int loads
+1591:                 const int* p0 = reinterpret_cast<const int*>(xb[0].qs) + 4 * u_int4;
+1592:                 const int* p1 = reinterpret_cast<const int*>(xb[2].qs) + 4 * u_int4;
+1593:                 u0[j] = sycl::int4(p0[0], p0[1], p0[2], p0[3]);
+1594:                 u1[j] = sycl::int4(p1[0], p1[1], p1[2], p1[3]);
+1595:             } else {
+1596:                 u0[j] = reinterpret_cast<const sycl::int4*>(xb[0].qs)[u_int4];
+1597:                 u1[j] = reinterpret_cast<const sycl::int4*>(xb[2].qs)[u_int4];
+1598:             }
+1599:             ds0[j] = xb[0].ds[0]; ds1[j] = xb[2].ds[0];
+1600:         }
+1601: #pragma unroll
+1602:         for (int r = 0; r < RPW; ++r) {
+1603:             const int vl[4] = {ql4[r].x(), ql4[r].y(), ql4[r].z(), ql4[r].w()};
+1604:             const int vh[4] = {qh4[r].x() >> vh_shift, qh4[r].y() >> vh_shift, qh4[r].z() >> vh_shift, qh4[r].w() >> vh_shift};
+1605:             int vi0[4], vi1[4];
+1606: #pragma unroll
+1607:             for (int p = 0; p < 4; ++p) {
+1608:                 if constexpr (CENTER) {
+1609:                     vi0[p] = sycl::bit_cast<int>((uint32_t((vl[p] & 0x0f0f0f0f) | ((vh[p] << 4) & 0x30303030)) + 0x60606060u) ^ 0x80808080u);
+1610:                     vi1[p] = sycl::bit_cast<int>((uint32_t(((vl[p] >> 4) & 0x0f0f0f0f) | (((vh[p] >> 4) << 4) & 0x30303030)) + 0x60606060u) ^ 0x80808080u);
+1611:                 } else {
+1612:                 vi0[p] = dpct::vectorized_binary<sycl::char4>((vl[p] & 0x0f0f0f0f) | ((vh[p] << 4) & 0x30303030), 0x20202020, dpct::sub_sat());
+1613:                 vi1[p] = dpct::vectorized_binary<sycl::char4>(((vl[p] >> 4) & 0x0f0f0f0f) | (((vh[p] >> 4) << 4) & 0x30303030), 0x20202020, dpct::sub_sat());
+1614:                 }
+1615:             }
+1616: #pragma unroll
+1617:             for (int j = 0; j < NCOLS; ++j) {
+1618:                 int s0 = 0, s1 = 0;
+1619:                 s0 = strata::dp4a(vi0[0], u0[j].x(), s0); s0 = strata::dp4a(vi0[1], u0[j].y(), s0);
+1620:                 s0 = strata::dp4a(vi0[2], u0[j].z(), s0); s0 = strata::dp4a(vi0[3], u0[j].w(), s0);
+1621:                 s1 = strata::dp4a(vi1[0], u1[j].x(), s1); s1 = strata::dp4a(vi1[1], u1[j].y(), s1);
+1622:                 s1 = strata::dp4a(vi1[2], u1[j].z(), s1); s1 = strata::dp4a(vi1[3], u1[j].w(), s1);
+1623:                 acc[r][j] += ds0[j] * dsc0[r] * (float) s0 + ds1[j] * dsc1[r] * (float) s1;
+1624:             }
+1625:         }
+1626:     }
+1627:     auto sg = item.get_sub_group();
+1628: #pragma unroll
+1629:     for (int r = 0; r < RPW; ++r)
+1630: #pragma unroll
+1631:         for (int j = 0; j < NCOLS; ++j) {
+1632:             float v = acc[r][j];
+1633: #pragma unroll
+1634:             for (int o = SG / 2; o > 0; o >>= 1) v += sycl::permute_group_by_xor(sg, v, o);
+1635:             if (lane == 0 && row0 + r < n_out) y[std::size_t(j) * n_out + row0 + r] = v;
+1636:         }
+1637: }
+1638: // S104: only the isolated A4 load specialization; the existing wide kernel stays untouched.
+1639: // A4 scalar reads are 4-byte aligned, never misaligned int4 dereferences.
+1640: // Host launch guard requires base%4==0 and the two complete Q6 shapes.
+1641: __dpct_inline__ sycl::int4 load16_a4(const void* p) {
+1642:     const uintptr_t a = reinterpret_cast<uintptr_t>(p);
+1643:     const int* q = reinterpret_cast<const int*>(a & ~uintptr_t(3));
+1644:     const bool half = (a & 2) != 0;
+1645:     const uint32_t d[5] = {uint32_t(q[0]), uint32_t(q[1]), uint32_t(q[2]), uint32_t(q[3]), uint32_t(q[4])};
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/native_dense.cpp:141-155
+SHA256 99f925bfdc0a295e3314bea43a2fc0f7119f80f1a5111b38939e1478bf67f2d8
+141: NativeDense::~NativeDense() {
+142:     for (const void* p : packed_keys_) strata::kernels::native_q8_0_packed_unregister(p);
+143:     if (scratch_) sycl::free(scratch_, dpct::get_in_order_queue());
+144:     for (void *p : weights_)
+145:         DPCT_CHECK_ERROR(sycl::free(p, dpct::get_in_order_queue()));
+146: }
+147: 
+148: bool NativeDense::load(const std::vector<std::string> &shards,
+149:                        WeightTable &table, std::string &err,
+150:                        bool include_ple_key, int64_t layer_lo,
+151:                        int64_t layer_hi) try {
+152:     auto outside = [&](const std::string& name) {   // a blk.<l>. tensor of another stage's layers
+153:         if (layer_hi < 0 || name.rfind("blk.", 0) != 0) return false;
+154:         const long l = std::strtol(name.c_str() + 4, nullptr, 10);
+155:         return l < layer_lo || l >= layer_hi;
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/native_dense.cpp:384-408
+SHA256 99f925bfdc0a295e3314bea43a2fc0f7119f80f1a5111b38939e1478bf67f2d8
+384:         // All checks and allocations finish before publishing any reference.
+385:         weights_.reserve(pending.size());
+386:         uint64_t packed_bytes = 0;
+387:         size_t packed_count = 0;
+388:         for (auto& item : pending) {
+389:             item.ref->native_data = item.data.get();
+390:             item.ref->native_type = item.type;
+391:             item.ref->native_q8_1 = scratch.get();
+392:             if (item.packed) {
+393:                 strata::kernels::native_q8_0_packed_register(item.data.get(), item.packed.get(), (int) item.ref->ne0,
+394:                                                              (int) item.ref->ne1);
+395:                 packed_keys_.push_back(item.data.get());
+396:                 packed_bytes += item.bytes;
+397:                 ++packed_count;
+398:                 weights_.push_back(item.packed.release());
+399:             }
+400:             weights_.push_back(item.data.release());
+401:         }
+402:         if (packed_count)
+403:             std::fprintf(stderr, "native dense: STRATA_Q8_PACKED=1 packed %zu Q8_0 matrices for decode (+%.1f MiB)\n",
+404:                          packed_count, packed_bytes / 1048576.0);
+405:         scratch_ = scratch.release();
+406:         bytes_ = total + hc_q8_bytes;
+407:         if (hc_q8_requested())
+408:             std::fprintf(stderr, "strata: STRATA_HC_Q8=1: %.2f GiB of Q8_0 hyper-connection projections for the verify read\n",
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp:2939-2949
+SHA256 6433d750e414aeb9c71135257ae40a8f9e38ea661537c251b50cabdbc2217d83
+2939:     strata::core::NativeDense native_dense;
+2940:     if (!o.native_dense_gguf.empty()) {
+2941:         if (!native_dense.load(o.native_dense_gguf, wt, err, o.native_ple_key)) {
+2942:             std::fprintf(stderr, "strata generate: native dense projections: %s\n", err.c_str());
+2943:             return 1;
+2944:         }
+2945:         std::fprintf(stderr, "strata generate: %zu native projection matrices, %.2f MiB of weights, in %.1f s\n",
+2946:                      native_dense.tensor_count(), (double) native_dense.weight_bytes() / (1024.0 * 1024.0), load_s());
+2947:     }
+2948: 
+2949:     strata::kernels::gr_set_fp32_activations(o.gr_fp32_activations);
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/program/generate.cpp:4480-4504
+SHA256 6433d750e414aeb9c71135257ae40a8f9e38ea661537c251b50cabdbc2217d83
+4480:     };
+4481:     if (o.expert_cache < 0) {
+4482:         size_t free_b = 0, total_b = 0;
+4483:         free_b = strata::core::device_free_bytes(); (void) total_b;
+4484:         // Plan v0.3 P5: the batched prompt path's chunk buffers are allocated later, so they are reserved here -
+4485:         // under WDDM an over-subscribed allocation does not fail, it pages to system memory and crawls.
+4486:         // (with borrowing - the default with a profile - the prompt path lends cache slots instead; `pf_borrow` is
+4487:         // the predicate a local `borrow` was here, hoisted above so both cache-size branches read the same one)
+4488:         const int64_t prefill_mib = owned_prefill_mib();
+4489:         // the draft layer's head and logits are allocated when it binds, after this: 0.1.27's CJK subset made them
+4490:         // ~110-180 MiB larger, and out of the reserve they left 16 GB cards below the stall line (#199)
+4491:         int64_t mtp_bind = (!o.mtp.empty() && native_head.loaded())
+4492:                                ? (int64_t) mtp.bind_bytes(native_head.row_bytes(), n_vocab) : 0;
+4493:         for (const auto& d : slot_mtp)
+4494:             mtp_bind += (int64_t) d->bind_bytes(native_head.row_bytes(), n_vocab);
+4495:         const int64_t reserve = (((int64_t) o.vram_reserve_mib + prefill_mib) << 20) + mtp_bind + pipe_first;
+4496:         const int64_t blob = (int64_t) strata::kernels::cpu::expert_layout().max_blob;
+4497:         int64_t slots = ((int64_t) free_b - reserve) / blob;
+4498:         if (!profile.empty()) slots = std::min<int64_t>(slots, (int64_t) profile.size());
+4499:         o.expert_cache = (int) std::max<int64_t>(slots, 0);
+4500:         std::fprintf(stderr, "strata generate: expert cache auto: %.2f GiB free, %d MiB reserved (+%lld MiB for the "
+4501:                              "draft head) -> %d slots\n",
+4502:                      (double) free_b / 1073741824.0, o.vram_reserve_mib, (long long) (mtp_bind >> 20), o.expert_cache);
+4503:         // #496: the verify window cannot start without a cache (#174), and a cache too small to lend the prompt path
+4504:         // a 256-token chunk's buffers (plus the 128 slots a loan leaves; one slot without --prefill) makes it
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/xmx_int8_bench.cpp:83-91
+SHA256 0191dbed0d168c2604d582257169817edcfa87391a3df0870b4e17c7d1c1c92a
+83: 
+84: // mode 1/2: int8.  BLK: per-32 float epilogue (dw: [E][N][K/32] float, dx: [M][K/32] float)
+85: constexpr int KI = 32;   // joint_matrix int8 K
+86: template <bool BLK, class Name>
+87: void run_i8(sycl::queue& q, const int8_t* A, const int8_t* W, const float* dw, const float* dx, float* C, int M, int N, int K, int E) {
+88:     constexpr int KS = 64, LD = KS + 16;   // bytes
+89:     const int nmt = (M + BM - 1) / BM, nnt = N / BN, nkb = K / 32;
+90:     q.submit([&](sycl::handler& h) {
+91:         sycl::local_accessor<int8_t, 1> sa(BM * LD, h), sb(BN * LD, h);
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/xmx_int8_bench.cpp:127-156
+SHA256 0191dbed0d168c2604d582257169817edcfa87391a3df0870b4e17c7d1c1c92a
+127:                 for (int kk = 0; kk < KS; kk += KI) {
+128:                     jm::joint_matrix<sycl::sub_group, int8_t, jm::use::a, 8, KI, jm::layout::row_major> a[MT];
+129:                     jm::joint_matrix<sycl::sub_group, int8_t, jm::use::b, KI, SGW, jm::layout::col_major> b[NT];
+130:                     for (int i = 0; i < MT; ++i)
+131:                         jm::joint_matrix_load(sg, a[i], sa.template get_multi_ptr<sycl::access::decorated::no>() + (sgm * MT * 8 + i * 8) * LD + kk, LD);
+132:                     for (int j = 0; j < NT; ++j)
+133:                         jm::joint_matrix_load(sg, b[j], sb.template get_multi_ptr<sycl::access::decorated::no>() + (sgn * NT * SGW + j * SGW) * LD + kk, LD);
+134:                     if (BLK) {
+135:                         for (int i = 0; i < MT; ++i) for (int j = 0; j < NT; ++j) {
+136:                             jm::joint_matrix_fill(sg, tmp[i][j], 0);
+137:                             jm::joint_matrix_mad(sg, tmp[i][j], a[i], b[j], tmp[i][j]);
+138:                             const float sw = pdw[(sgn * NT * SGW + j * SGW + (int) sg.get_local_linear_id()) * 2 + kk / 32];
+139:                             const int rbase = sgm * MT * 8 + i * 8;
+140:                             int ei = 0;
+141:                             jm::joint_matrix_apply(sg, tmp[i][j], acc[i][j], [&](int32_t& t, float& ac) {
+142:                                 ac = sycl::fma((float) t * sw, pdx[(rbase + ei) * 2 + kk / 32], ac);
+143:                                 ++ei;
+144:                             });
+145:                         }
+146:                     } else {
+147:                         for (int i = 0; i < MT; ++i) for (int j = 0; j < NT; ++j) jm::joint_matrix_mad(sg, tmp[i][j], a[i], b[j], tmp[i][j]);
+148:                     }
+149:                 }
+150:                 it.barrier(sycl::access::fence_space::local_space);
+151:             }
+152:             for (int i = 0; i < MT; ++i) {
+153:                 const int r = m0 + sgm * MT * 8 + i * 8;
+154:                 if (r + 8 > M) continue;
+155:                 for (int j = 0; j < NT; ++j) {
+156:                     if (!BLK) {   // int32 -> float through a per-element copy
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp:5705-5728
+SHA256 8bf1489cb53a2de442c051a8a64f577d330eadedbe200fd36ee967f33a29bb6d
+5705: //
+5706: // The prompt path dequantizes every routed expert to FP16 (8 MB written, then read back by oneMKL) before its GEMMs:
+5707: // 39-41% of the prompt time on the B70 (2026-09-30), the GEMMs themselves another 16%. This kernel dequantizes a
+5708: // 16-feature strip of the weight matrix into local memory, packs it for the XMX B operand and multiplies it against
+5709: // every activation row with joint_matrix (16x16x16, FP16 in, FP32 out; sub-group 16 as XMX wants). The FP16 weights
+5710: // never touch global memory.
+5711: //
+5712: //   Y[M][n_out] = X[M][K] . W[n_out][K]^T      X FP16 row-major (lda K), Y FP32 (ldy), W quantized rows (a ggml IQ type)
+5713: //
+5714: // Gate/up: `up != nullptr`, virtual row 2r = gate row r, 2r+1 = up row r (the order iq_dequant_gu_f16 produces, which
+5715: // swiglu_interleaved expects). K must be a multiple of 256 (a QK_K block per slab) or the whole row must fit a slab
+5716: // (K = 640: 16 rows are 40 blocks, block-aligned since 16 * 640 / 256 = 40).
+5717: namespace xmx {
+5718: namespace jm = sycl::ext::oneapi::experimental::matrix;
+5719: constexpr int SG = 16;                 // XMX sub-group size
+5720: constexpr int NSG = 8;                 // sub-groups per work-group
+5721: constexpr int WG = SG * NSG;
+5722: constexpr int NT = 16;                 // features per work-group: one B tile
+5723: constexpr int MAXT = 4;                // C tiles per sub-group -> 512 rows per chunk
+5724: constexpr int APAD = 8;                // halves of padding on the staged A tile rows
+5725: struct Src { const uint8_t* gate; const uint8_t* up; int ty; int64_t per_row; };
+5726: struct Smem { sycl::half* stage; sycl::half* packed; sycl::half* atile; float* ctile; };
+5727: 
+5728: // the block index (x[ibs] in dq_dispatch) of virtual row v's k-range [k0, k0 + 256) - rows are per_row blocks long
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/CMakeLists.txt:241-249
+SHA256 af2c33703f0fcb53b7f0f9b0aa823ce3fef7c9209ea24036e8b9f597fb07592f
+241: # cuBLAS -> oneMKL through dpct::blas (needs the MKL SYCL BLAS domain)
+242: strata_resolve(_prefill src/prefill/gemm.cu src/prefill/kernels.cu src/prefill/prefill.cpp)
+243: add_library(strata_prefill STATIC ${_prefill}
+244:             ${CMAKE_CURRENT_SOURCE_DIR}/src/prefill/moe_fused_stub.cpp   # upstream's fused int8 kernels: not built here
+245:             ${CMAKE_CURRENT_SOURCE_DIR}/src/prefill/xmx_moe.dp.cpp)      # A770 port: grouped XMX expert GEMM
+246: target_compile_options(strata_prefill PUBLIC -qmkl=sequential)
+247: target_link_options(strata_prefill PUBLIC -qmkl=sequential)
+248: target_link_libraries(strata_prefill PUBLIC strata_engine)
+249: 
