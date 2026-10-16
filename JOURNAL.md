@@ -25756,3 +25756,24 @@ extraallocation: actualstate-onlybranchneverreads/writesy/z/gamma.
 PrivateGDNsourceprepS145selectedafteraudit, no implementation/runtime
 PASS. MainS144runtimepending, alltargets/S30RAMscope unchanged. See
 docs/20261016_strata_s141_s142_review_decisions.md.
+
+
+## 2026-10-16 S143: default-OFF QSA group3 source and main build
+
+CONFIG -> verify-onlyflaglatchedbeforecapture, exactly3rowgroupsuse
+existingstepsAPI; everyotherlengtholdloop. S141privateacceptedkeep
+1..3doesnotqualifyn_steps2/4..6. UniqueHOSTmarker/defaultOFF.
+COMMAND -> Rootreview/apply0 e97->c28afterS142fullhealthyclosure;
+existingconfiguredCPUbuild/noDRI/e41/UID1000/4jobs/offlinecache.
+RESULT -> ActualdryplanEXACT3, build0/tee0/root65.029741s, Ninja
+49.830s (verify16.660/archive.078/link33.065). Cache+1609hits/0miss;
+mainb5104c30, sourceprepost/buildstate/flagsunchanged. No configure/
+modelread/oldbinarybackup/hostmarkerISAaudit/retry.
+VERDICT -> Source/buildPASS; S144freshsameNEWbinary0/1servingseparate
+andpending. AnalyticROPE0commonbotharmsactualenvrequired. FullRAM
+recoverynotnewlyqualified. Actualmodelsdecision5c9aa822 retained.
+Devloop -> Rootcausedidlebyusing message oncompletedagentinstead
+ofnewfollowup_task; newassignmentsnowexplicitlyrestartagent. Routine
+commonenv0editeddirectlywithrootconfigdelta/nativeenvgatebeforestart,
+no extra controller-version round. No benchmarkrepeatneeded. See
+docs/20261016_strata_qsa_commit_group_build.md.

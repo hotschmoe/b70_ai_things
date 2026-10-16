@@ -1,0 +1,42 @@
+{
+  "strata": {
+    "uid": 1000,
+    "gid": 1000,
+    "size": 92491408,
+    "mtime_ns": 1792125930662637719,
+    "writable": true,
+    "parent_writable": true
+  },
+  "libstrata_engine.a": {
+    "uid": 1000,
+    "gid": 1000,
+    "size": 3901682,
+    "mtime_ns": 1792122646653532390,
+    "writable": true,
+    "parent_writable": true
+  },
+  "CMakeFiles/strata_engine.dir/src/core/verify.cpp.o": {
+    "uid": 1000,
+    "gid": 1000,
+    "size": 702896,
+    "mtime_ns": 1792083524684361118,
+    "writable": true,
+    "parent_writable": true
+  },
+  ".ninja_log": {
+    "uid": 1000,
+    "gid": 1000,
+    "size": 21892,
+    "mtime_ns": 1792125931563665742,
+    "writable": true,
+    "parent_writable": true
+  },
+  ".ninja_deps": {
+    "uid": 1000,
+    "gid": 1000,
+    "size": 480592,
+    "mtime_ns": 1792125898550639009,
+    "writable": true,
+    "parent_writable": true
+  }
+}

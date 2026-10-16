@@ -1,0 +1,25 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NO_APPLY_BUILD_GPU",
+  "files": {
+    "README.md": {
+      "bytes": 2572,
+      "sha256": "a6a90e4c62d6b1693b67ebba9be1070ba49a6eb7f9514b20ea348121e83ccb87"
+    },
+    "candidate.patch": {
+      "bytes": 2669,
+      "sha256": "672b56fdde285b7eaac4f77204a668705c98034a5a19a66b907bb66e07025406"
+    },
+    "inverse.patch": {
+      "bytes": 2669,
+      "sha256": "3221f3844e1c369e2a26c59e1b21fd34657994f51a75057d0d1ddacdaba7c125"
+    },
+    "projection.json": {
+      "bytes": 922,
+      "sha256": "11e5f793bd3bab0606d1a3d100322fdd0a3183471a372562a2c5dffb0088e087"
+    },
+    "verify.cpp": {
+      "bytes": 224196,
+      "sha256": "c28de288061beae19949982ff3de7cf0a54fcae4d23f61e3a0374f90aeb435c6"
+    }
+  }
+}

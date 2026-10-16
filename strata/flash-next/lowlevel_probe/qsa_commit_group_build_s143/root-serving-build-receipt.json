@@ -1,0 +1,24 @@
+{
+  "stage": "S143",
+  "build_exit": 0,
+  "tee_exit": 0,
+  "exe": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s143-main-build/build/strata-s143",
+    "sha256": "b5104c309877cf242b153075609c3386a1683c9cc388dea414fdd6522192f779"
+  },
+  "verify_source": {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp",
+    "sha256": "c28de288061beae19949982ff3de7cf0a54fcae4d23f61e3a0374f90aeb435c6"
+  },
+  "actual_dry_plan": "PASS_EXACT_THREE",
+  "execution": "root-execution.json",
+  "ninja_total_s": 49.83,
+  "actual_last_three_ninja_component_s": {
+    "verify_compile": 16.66,
+    "engine_archive": 0.078,
+    "main_link": 33.065
+  },
+  "cache_hits_delta": 1609,
+  "cache_misses_delta": 0,
+  "independent_device_ISA_or_numeric_proof_claimed": false
+}

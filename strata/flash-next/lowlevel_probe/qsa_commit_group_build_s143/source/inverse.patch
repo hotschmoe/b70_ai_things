@@ -1,0 +1,41 @@
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -97,8 +97,6 @@
+     const char* e = std::getenv(name);
+     return e != nullptr && e[0] != 0 && e[0] != '0';
+ }
+-// S143: process-constant before capture; only privately checked three-row groups.
+-const bool g_qsa_commit_group_steps = env_on("STRATA_QSA_COMMIT_GROUP_STEPS");
+ #if defined(STRATA_USE_HIP)
+ const bool g_coherent = env_on("STRATA_VERIFY_COHERENT");
+ const bool g_doorbell_store = env_on("STRATA_DOORBELL_STORE");
+@@ -3126,24 +3124,11 @@
+                     copy_from_mapped(st.idx_tail, tail_snap_b_ + ((size_t) rows[first] * nQ + qsa_index) * TS,
+                                      TS, cs_);
+                     const QsaIndexerBuffers ib{st.idx_tail, st.idx_dead, st.idx_pooled, st.idx_block_pos};
+-                    if (g_qsa_commit_group_steps && t - first == 3) {
+-                        static const bool qsa_commit_group_steps_logged = [] {
+-                            std::fprintf(stderr, "strata QSA commit grouped steps: enabled=1 host-selection-only\n");
+-                            std::fflush(stderr);
+-                            return true;
+-                        }();
+-                        (void) qsa_commit_group_steps_logged;
+-                        native_qsa_indexer_append_steps(idx_raw_L_ + (size_t) (qsa_index * MT + first) * ID,
+-                                                       commitb_ + (size_t) rows[first] * CB + 2,
+-                                                       1, t - first, 0, (const float*) wikn->data, EPS, ib, s,
+-                                                       st.max_cells, rope_scaling(), cs_);
+-                    } else {
+-                        for (int u = first; u < t; ++u)
+-                            native_qsa_indexer_append(idx_raw_L_ + (size_t) (qsa_index * MT + u) * ID,
+-                                                      commitb_ + (size_t) rows[first] * CB + 2 + (u - first),
+-                                                      0, (const float*) wikn->data, EPS, ib, s, st.max_cells,
+-                                                      rope_scaling(), cs_);
+-                    }
++                    for (int u = first; u < t; ++u)
++                        native_qsa_indexer_append(idx_raw_L_ + (size_t) (qsa_index * MT + u) * ID,
++                                                  commitb_ + (size_t) rows[first] * CB + 2 + (u - first),
++                                                  0, (const float*) wikn->data, EPS, ib, s, st.max_cells,
++                                                  rope_scaling(), cs_);
+                 }
+                 ++qsa_index;
+             }

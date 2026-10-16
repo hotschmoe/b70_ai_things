@@ -1,0 +1,8 @@
+{
+  "path": "/mnt/vm_8tb/b70/cache/strata-aot-bmg-g31",
+  "uid": 1000,
+  "gid": 1000,
+  "mode": "0o775",
+  "writable": true,
+  "symlink": false
+}

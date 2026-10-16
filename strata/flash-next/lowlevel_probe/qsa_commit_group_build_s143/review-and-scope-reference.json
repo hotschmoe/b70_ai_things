@@ -1,0 +1,22 @@
+{
+  "actual_source_review_checkpoint": "5c9aa822",
+  "scope": "Actual model post/private-pass and source GO evidence already committed separately; no duplicate responses or new consultation.",
+  "models": [
+    "claude-opus-5-5",
+    "claude-fable-5-1"
+  ],
+  "root_reported_elapsed_s": [
+    53.787,
+    54.719
+  ],
+  "required_variant": "S141 private only analytic RoPE; root common STRATA_ROPE_TABLE0 in both future S144 configurations, no map/IMRoPE text requests.",
+  "S141": "Private36 strict/complete state/read-only/guards/restored-tail/stale-pooled/reject contract passed; no main serving proof.",
+  "S144": "Runtime pending at this CPU-build curation cutoff; no runtime files consumed.",
+  "no_claims": [
+    "selected-device ISA or image identity",
+    "actual HOST marker proof",
+    "serving speed/coherence qualification",
+    "new RAM restore qualification",
+    "cache-caused build speed/population estimate"
+  ]
+}

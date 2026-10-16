@@ -1,0 +1,173 @@
+{
+  "status": "FROZEN_S143_SOURCE_APPLY_CPU_BUILD_PASS_RUNTIME_PENDING",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s143-curation-draft",
+  "file_count": 41,
+  "total_bytes": 78820,
+  "files": {
+    "20261016_strata_qsa_commit_group_build.md": {
+      "bytes": 3799,
+      "sha256": "ec42eb776bfd4bc310e5a89939620eb0ec922fdf11c8e4334b452799bb5d2d01"
+    },
+    "payload/README.md": {
+      "bytes": 1075,
+      "sha256": "bfc6518466e4ab491d0be79029c18acd823306b12fa147fa3cb84625b736bc1d"
+    },
+    "payload/apply.json": {
+      "bytes": 529,
+      "sha256": "9ab3aaabe1d61e374ab6fd29deaeb018c6ea1465823b603b4c1ff183bff38b47"
+    },
+    "payload/build-recipe/README.md": {
+      "bytes": 2273,
+      "sha256": "91dbd5d71da33b9af06c4fc23479c65d694a3cfc0f62b93a358578f9528c15ab"
+    },
+    "payload/build-recipe/build-container.sh": {
+      "bytes": 1916,
+      "sha256": "e87389377c0f771bf6cbf1f8f7ce64a4d867b207ec86345da19fb1c04e1cadc4"
+    },
+    "payload/build-recipe/build.sh": {
+      "bytes": 2321,
+      "sha256": "cbca52d2ffc85420f404266d547b99e66b7535c4a7b56eb49d2c977ad0ceae43"
+    },
+    "payload/build-recipe/delta-from-s133.patch": {
+      "bytes": 6296,
+      "sha256": "b45a99aeb6104a36e897f1dc9b7683f0f77674522da4281808488415683ee888"
+    },
+    "payload/build-recipe/expected-applied-source.sha256": {
+      "bytes": 536,
+      "sha256": "51feeba9e3cc9f123fba4615cfc00e19ad52fc7f39f28dbac9ce3b4bf170c491"
+    },
+    "payload/build-recipe/expected-build-state.sha256": {
+      "bytes": 338,
+      "sha256": "781b883830971a1dd742c6a0a2a7ebac3aa82c71c9abe9d38714061c91f63695"
+    },
+    "payload/build-recipe/expected-unchanged-source.sha256": {
+      "bytes": 2883,
+      "sha256": "7447e2d6b6448c3a29cf045313c0b0f0d0a5f0abf4f248260cbb8d4202839d73"
+    },
+    "payload/build-recipe/guard.py": {
+      "bytes": 3145,
+      "sha256": "2e18363baa73b773127f21ad38882003ef14b508bf0cf408152e05a0e58cb830"
+    },
+    "payload/build-recipe/manifest.json": {
+      "bytes": 1490,
+      "sha256": "71aae444e2ee5dcfdadfb398888ae800f685cf8b4cf61b83e7e416cfc5b825ca"
+    },
+    "payload/build-recipe/prior-configured-guards.json": {
+      "bytes": 167,
+      "sha256": "69b75dc7d2493d82f432048472c1ebb683392c472834a11fbe53e01b24db6f2d"
+    },
+    "payload/build-result/applied-source-before.sha256": {
+      "bytes": 536,
+      "sha256": "51feeba9e3cc9f123fba4615cfc00e19ad52fc7f39f28dbac9ce3b4bf170c491"
+    },
+    "payload/build-result/build-environment.json": {
+      "bytes": 369,
+      "sha256": "bb1b327dfc4ca4f5d3a9a51c8097403daddf3ffc543d9357dd2c73f97a9a1193"
+    },
+    "payload/build-result/build-sha256.txt": {
+      "bytes": 1159,
+      "sha256": "d4e232b27760c62faad4a487a6f7eddf84c33266ace6640e7c19ca60765aa888"
+    },
+    "payload/build-result/build.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "payload/build-result/build.log": {
+      "bytes": 5368,
+      "sha256": "c6282472d02f84ffa9b4b5d25a058dcd838464961a98d40a7e108837362f105b"
+    },
+    "payload/build-result/cache-after.json": {
+      "bytes": 203,
+      "sha256": "1bde2de247674b08a3f0f828b5703b9bc3ce9e32433d369efb62d3f8e2a0b1c3"
+    },
+    "payload/build-result/cache-after.txt": {
+      "bytes": 134,
+      "sha256": "ade54e616909225a08d9cd13b59e072166ebaac357156db1033415f1d3562ff0"
+    },
+    "payload/build-result/cache-before.json": {
+      "bytes": 203,
+      "sha256": "6deb905f31215f8020a75c42247a4d29e4c28f6577a173140e5712fae4e36662"
+    },
+    "payload/build-result/cache-before.txt": {
+      "bytes": 134,
+      "sha256": "72f09675b8cdcc53a1cb177db0097d0e15430c0480a6e648bc90f38d47a62afc"
+    },
+    "payload/build-result/cache-ownership.json": {
+      "bytes": 146,
+      "sha256": "1636f6c515bd8839b5115e6e4aecbc1a4fcd4c7cddd5d8b0f036678c563163e4"
+    },
+    "payload/build-result/command.txt": {
+      "bytes": 903,
+      "sha256": "2d34c2515056fe70247548def11556334bc864c564cc51c4411da5cab837390a"
+    },
+    "payload/build-result/compiler-version.txt": {
+      "bytes": 257,
+      "sha256": "06b5b1015f3c581440fb4cf00258edc0db8d98696ca3252cf69045e1f8c283d4"
+    },
+    "payload/build-result/configured-guards-reused.json": {
+      "bytes": 167,
+      "sha256": "69b75dc7d2493d82f432048472c1ebb683392c472834a11fbe53e01b24db6f2d"
+    },
+    "payload/build-result/image.json": {
+      "bytes": 6858,
+      "sha256": "41e0211327fe8f37eddc76cbae832da821d74ee637e1e850ca422aa23f5e301d"
+    },
+    "payload/build-result/ninja-plan.txt": {
+      "bytes": 2614,
+      "sha256": "76cda91ae6bd2738d23554b0db9fd6a0bc0212072d727b7750ae297dbe027fce"
+    },
+    "payload/build-result/ninja.stderr-time": {
+      "bytes": 33,
+      "sha256": "87a40dd2297da9566e91d51b1115894a3c5157eb59be45c1250fa682c1bda6e4"
+    },
+    "payload/build-result/ownership-before.json": {
+      "bytes": 870,
+      "sha256": "7d06ed17dd473d718e35a1489553e7dfd98410143833e4795022d23e6aab8058"
+    },
+    "payload/build-result/root-validated-plan.json": {
+      "bytes": 871,
+      "sha256": "c3e44a5f7be2557097dba497422028678409bbbfa09774f27783550e71805c87"
+    },
+    "payload/build-result/tee.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "payload/review-and-scope-reference.json": {
+      "bytes": 931,
+      "sha256": "f61befbb1e27ca277231da13105a360b7e770b03f5b2c6453acf344b6a494525"
+    },
+    "payload/root-execution.json": {
+      "bytes": 730,
+      "sha256": "3bacc76ce5aeabbd4c4c82e8bf2754a384a8db5087a57a616221417a1d12156e"
+    },
+    "payload/root-serving-build-receipt.json": {
+      "bytes": 842,
+      "sha256": "e4b9b6373296def1965ffa3bba8333779548a2f9faff5d2bfccda4e53a72ff9f"
+    },
+    "payload/source/README.md": {
+      "bytes": 2572,
+      "sha256": "a6a90e4c62d6b1693b67ebba9be1070ba49a6eb7f9514b20ea348121e83ccb87"
+    },
+    "payload/source/candidate.patch": {
+      "bytes": 2669,
+      "sha256": "672b56fdde285b7eaac4f77204a668705c98034a5a19a66b907bb66e07025406"
+    },
+    "payload/source/inverse.patch": {
+      "bytes": 2669,
+      "sha256": "3221f3844e1c369e2a26c59e1b21fd34657994f51a75057d0d1ddacdaba7c125"
+    },
+    "payload/source/manifest.json": {
+      "bytes": 741,
+      "sha256": "15da3097dcb149b50ea9eb3dce0ca2e8da541eff36b17d0d5a0f4ba0552e61ee"
+    },
+    "payload/source/projection.json": {
+      "bytes": 922,
+      "sha256": "11e5f793bd3bab0606d1a3d100322fdd0a3183471a372562a2c5dffb0088e087"
+    },
+    "source-copy-index.json": {
+      "bytes": 19147,
+      "sha256": "7163080b9ed5094d892048e7fa4474f5597afed7852e90881ae4a907bd29480a"
+    }
+  },
+  "scope": "No binary/model/wholeTU read or new hashes; no actual marker/ISA/serving proof; S144 runtime not consumed. No source apply/workload/CLI by curator."
+}

@@ -1,0 +1,8 @@
+{
+  "stage": "S143",
+  "all_draft_files_verified": true,
+  "draft_manifest_sha256": "7139069da75f11d2afedaad36d2015d1a11ed7746fdc54449f625aa7403d6716",
+  "root_actual_build_terminal_exit": 0,
+  "actual_ninja_last_three_durations_independently_read": true,
+  "no_new_certificate_or_runtime_pass_implied": true
+}
