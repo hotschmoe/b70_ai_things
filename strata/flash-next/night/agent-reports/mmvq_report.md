@@ -1,5 +1,8 @@
 # mmvq: dense small-batch MMVQ toward bandwidth roofline (night 2026-10-16)
 
+ROUND 5 (in progress, IQ3_S at 1-4 columns): flag STRATA_NIGHT_IQ3S_LO=1; engine (candidate, main 1c360526 copy)
+/mnt/vm_8tb/b70/results/night-20261016/builds/strata-mmvqn-lo1. See "Round 5" at the end.
+
 ROUND 4 (latest, BF16 GEMVs): engine /mnt/vm_8tb/b70/results/night-20261016/builds/strata-mmvqm-bf16b (sha256
 c69534036ba33123..., built from a reflink copy of main's working tree taken ~13:00 incl. its then-staged T12 changes,
 + this round), flag STRATA_NIGHT_BF16=1. Delta vs main's CURRENT working tree (13:20; only this round's edits, main's
@@ -348,3 +351,30 @@ that, slot starvation by the concurrent EP kernels is the cause.
 ## Flags (all default off)
 STRATA_NIGHT_MMVQ=1, STRATA_NIGHT_MMVQ2=1 (+ STRATA_NIGHT_MMVQ2_MASK), STRATA_NIGHT_SHEXP=1, STRATA_NIGHT_BF16=1
 (STRATA_NIGHT_BF16_R=1|2|4|8 overrides the rows per tile, bench knob).
+
+
+# Round 5: IQ3_S dense at 1-4 columns (STRATA_NIGHT_IQ3S_LO=1) - EARLY NUMBERS
+
+## ISA: where the serving kernel's time goes (mmvq_multi_kernel<21>, ISA dump, loop per 32-weight part, SIMD32)
+| kernel | instr per part, 1 col | 4 cols | notes |
+|---|---:|---:|---|
+| serving mmvq_multi_kernel<21> | 527 | 612 | mov 293 (dpct vectorized_binary per-byte emulation of the sign masks and the signed subtract), sel 32 |
+| new "O" (serving mapping, grid in global) | 238 | 317 | mov 26: sign masks by shifts, (g ^ m) + (m & 0x01..) |
+| new "Os" (serving mapping, grid in SLM) | 207 | 287 | |
+| round-2 KREG (SIMD16, per row-thread, R2) | 237 | - | plus tsum/SLM/barrier per tile, per-group 2 KB table fill |
+"O"/"Os" keep the serving kernel's exact mapping and arithmetic order (4 SIMD32 sub-groups, one row each, lane =
+part, s += d * sumi as its own statement - the first version wrote s += d * sumi in one expression and IGC contracted
+it to an fma: 3304 output bits differed until split), so they are BITWISE the serving kernel.
+
+## E12 standalone (no background), us per call, card 1 (raw probe3/lo_r2_bg0.txt)
+| case | base | lv2 (round 2) | O | Os | best KREG |
+|---|---|---|---|---|---|
+| gate 2560x6144 nc1 | 60.5 | 50.8 | 55.0 | 48.2 | s4 50.7 |
+| gate nc2 / nc3 / nc4 | 65.5 / 67.6 / 76.9 | 55.8 / 64.6 / 66.5 | 60.6 / 61.9 / 66.3 | 59.9 / 63.2 / 66.7 | x4 54.8 / x4 59.8 / x2 66.2 |
+| qkv 2560x10240 nc1 / nc4 | 99.3 / 125.3 | 81.7 / 102.2 | 92.3 / 109.4 | 77.7 / 111.1 | |
+| out 6144x2560 nc1 / nc4 | 82.9 / 103.5 | 50.3 / 70.8 | 76.5 / 95.8 | 59.6 / 90.0 | s4 66.1 (nc4) |
+| sh_gu 2560x640 nc1 / nc4 | 9.0 / 11.3 | 7.9 / 8.5 | 8.1 / 9.8 | 7.6 / 10.1 | x2 6.9 / 8.1 |
+| kv 2560x512 nc1 / nc4 | 7.1 / 9.2 | 6.6 / 7.3 | 6.5 / 8.2 | 6.5 / 8.3 | x2 5.8 / 6.7 |
+Standalone every candidate beats the serving kernel; the in-engine C1 loss of round 2 is therefore not its own
+time. Background-load matrix (PROBE_BG 1 = PCIe-polling spin group, 2 = 8 streaming groups, 3 = both) pending: the
+GPU is held by serving runs.
