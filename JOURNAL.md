@@ -25638,3 +25638,26 @@ and existing-kernel commit launch grouping before larger Q6 rewrite.
 Future top50-first analyzer source fix remains UNRUN; no279MB reparse.
 Historical map operations/HTML stay unchanged. See
 docs/20261016_strata_current_mtp_profile.md.
+
+
+## 2026-10-16 S139: corrected C6 runtime-word matched serving
+
+CONFIG -> Fresh SAME S138 main6b37aef7 OFF/ON processes; sole candidate
+C6 word0/01010101. C2/ownerqueues/argmax/other candidates0. Fixed
+EP149/363, all experts resident, depth2/pairedhead/spec4/min-p0.
+
+COMMAND -> Warm then3fresh107prompt/1500output C2 pairs, immediate
+strict ON parity, arithmetic/thinking/tool functionals, normal teardown
+and full CID+NAMEgone/both-card+compiled collective post-health each arm.
+
+RESULT -> Comparator0/PASS_MATCHED_DISCRIMINATOR: full text/SSE/usage/
+drafts/windows/rows/captures match. Aggregate median103.072328->
+104.393157tok/s(+1.281458%); individual+1.281458/+1.602089/+1.400550%.
+Perstreamdecode53.474006/55.862589->54.344196/56.688704. C6marker
+once bywarm/final, oldC2markerabsent. Functionals/closures/fullhealthPASS.
+
+VERDICT -> Descriptive fixed OFFthenON/three nested repeats; defaultOFF,
+no promotion/population/general stability/deviceISA causal claim.
+S132private larger gain and S134failed marker remain separate. No
+retime/retry/extra baseline/cache campaign. Actual postmodels pending
+at curation cutoff. See docs/20261016_strata_q5_c6_serving.md.

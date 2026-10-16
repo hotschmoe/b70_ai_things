@@ -1,0 +1,74 @@
+{
+  "status": "PASS_MATCHED_DISCRIMINATOR",
+  "comparison_sha256": "876240870791b0b1559644801f7c881f9c1c22671c9ef1f3fc62f00b4ebccd51",
+  "all_checks_true": true,
+  "same_binary": true,
+  "exe_sha256": "6b37aef71607a4217192165523f413063c03d5a3cf042c6dd1031800ca2a6eb2",
+  "timed_summary": {
+    "pair_wall_median_s": [
+      29.10577500599902,
+      28.73751570301829
+    ],
+    "aggregate_output_tps_median": [
+      103.07232840842296,
+      104.3931573975586
+    ],
+    "per_stream_medians": [
+      [
+        {
+          "ttft_s": 0.9190537759568542,
+          "completion_wall_s": 28.951365590968635,
+          "decode_tps": 53.474005636497665,
+          "whole_request_output_tps": 51.81102754157905
+        },
+        {
+          "ttft_s": 2.11308848898625,
+          "completion_wall_s": 28.892130465013906,
+          "decode_tps": 55.86258853241048,
+          "whole_request_output_tps": 51.91725137114349
+        }
+      ],
+      [
+        {
+          "ttft_s": 0.9252277460182086,
+          "completion_wall_s": 28.493974929966498,
+          "decode_tps": 54.34419644220808,
+          "whole_request_output_tps": 52.64270792989582
+        },
+        {
+          "ttft_s": 2.0966182660195045,
+          "completion_wall_s": 28.522652276034933,
+          "decode_tps": 56.68870353990563,
+          "whole_request_output_tps": 52.58977971204724
+        }
+      ]
+    ]
+  },
+  "aggregate_median_change_pct": 1.2814583793060885,
+  "paired_changes": [
+    {
+      "label": "repeat1",
+      "aggregate_tps_change_pct": 1.2814583793060885,
+      "pair_wall_change_pct": -1.2652447938762301
+    },
+    {
+      "label": "repeat2",
+      "aggregate_tps_change_pct": 1.6020893341349485,
+      "pair_wall_change_pct": -1.5768271544753465
+    },
+    {
+      "label": "repeat3",
+      "aggregate_tps_change_pct": 1.4005502442517415,
+      "pair_wall_change_pct": -1.3812057635566255
+    }
+  ],
+  "raw_token_IDs_observed": false,
+  "limits": [
+    "One fixed OFF then ON sequence, separate processes,3 nested repeats; no population or clean mechanism-isolation claim.",
+    "Client decode/wall/SSE content-event statistics, not native token ITL/device service.",
+    "HOST marker selection, not all kernel calls or GPU dispatch proof.",
+    "S132 private timing describes a different build/context; S134 marker/null comparison remains failed.",
+    "Default OFF retained; no promotion, fullcache qualification, retime or automatic repeat.",
+    "Actual new post-result model consultations pending root; none consumed by curator."
+  ]
+}

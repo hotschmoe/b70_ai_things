@@ -1,0 +1,11 @@
+{
+  "status": "REUSE_LAST_COMPLETED_FULL_HEALTH_NO_INTERVENING_GPU",
+  "pair_and_compiled_collective": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/post-health.json",
+  "normal_stop": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/normal-stop.json",
+  "identities": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/post-health.json": "8548566917c0f935e781e3a2e1488b65a90d8dc5511e2a613710ff9e01f3dcf7",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/current-mtp-profile-s136/run/normal-stop.json": "bf846739c1157636b0a5a57fc8b770244ccc50267b2465e865af4db603f6abe7"
+  },
+  "intervening_work": "CPU-only analysis plus S138 source/build/required host read; no GPU/runtime changes",
+  "full_per_arm_posthealth_retained": true
+}
