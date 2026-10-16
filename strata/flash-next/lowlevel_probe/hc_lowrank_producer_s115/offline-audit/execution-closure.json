@@ -1,0 +1,31 @@
+{
+  "status": "PASS_CPU_ONLY_TWO_SELECTED_OFFLINE_DECODES",
+  "cpu_wrapper_exit": 0,
+  "cpu_wrapper_elapsed_s": 12,
+  "prior_audit_parser_HOLD_retained": true,
+  "root_authorized_specific_parser_correction": true,
+  "builds": 0,
+  "GPU": 0,
+  "decoder_invocations": 2,
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "tool_sha256": "7a418c1e7dfc62b6fb3895bea111647fa3e1ff600bb69f6be2a3114b90c41eac",
+  "isolation": "network none; UID1000; cpus4; cap-drop ALL; no-new-privileges; disk TMPDIR; no /dev/dri; cpu-run serialized with S114 root work",
+  "decoder": {
+    "up": {
+      "exit": 0,
+      "input_before_after_identical": true,
+      "input_alias_sha256": "fe97dc8f0a60f4c20edd5679a8443e3b5447b5d5a941cedf372a2fd184d22cef",
+      "asm_sha256": "21d6b5f3546f2817004265222a7f65b39bee9b885a01f2bd94d65111b9839457",
+      "asm_bytes": 626376,
+      "stderr_bytes": 0
+    },
+    "reduce": {
+      "exit": 0,
+      "input_before_after_identical": true,
+      "input_alias_sha256": "ffd65f142d477e3cd2c36a1e7daf1f4462217ffeb4bb633729f20716391a5f96",
+      "asm_sha256": "50dd08418b95a26a4f56e9acb6cccebeaece48a6b0687b292edeadba65f8fdb6",
+      "asm_bytes": 110420,
+      "stderr_bytes": 0
+    }
+  }
+}

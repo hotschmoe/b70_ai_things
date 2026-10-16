@@ -1,0 +1,1042 @@
+---
+version:         '1.71'
+kernels:
+  - name:            _ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi16EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi16EEEE
+    user_attributes:
+      intel_reqd_sub_group_size: 32
+      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]
+    execution_env:
+      barrier_count:   1
+      grf_count:       128
+      has_4gb_buffers: true
+      has_no_stateless_write: true
+      inline_data_payload_size: 32
+      offset_to_skip_per_thread_data_load: 128
+      simd_size:       32
+      slm_size:        12288
+      subgroup_independent_forward_progress: true
+      eu_thread_count: 8
+    payload_arguments:
+      - arg_type:        arg_byvalue
+        offset:          0
+        size:            8
+        arg_index:       0
+        source_offset:   0
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          8
+        size:            8
+        arg_index:       0
+        source_offset:   8
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          16
+        size:            1
+        arg_index:       0
+        source_offset:   16
+      - arg_type:        arg_byvalue
+        offset:          20
+        size:            1
+        arg_index:       0
+        source_offset:   17
+      - arg_type:        arg_byvalue
+        offset:          24
+        size:            1
+        arg_index:       0
+        source_offset:   18
+      - arg_type:        arg_byvalue
+        offset:          28
+        size:            1
+        arg_index:       0
+        source_offset:   19
+      - arg_type:        arg_byvalue
+        offset:          32
+        size:            1
+        arg_index:       0
+        source_offset:   20
+      - arg_type:        arg_byvalue
+        offset:          36
+        size:            1
+        arg_index:       0
+        source_offset:   21
+      - arg_type:        arg_byvalue
+        offset:          40
+        size:            1
+        arg_index:       0
+        source_offset:   22
+      - arg_type:        arg_byvalue
+        offset:          44
+        size:            1
+        arg_index:       0
+        source_offset:   23
+      - arg_type:        arg_byvalue
+        offset:          48
+        size:            8
+        arg_index:       0
+        source_offset:   24
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          56
+        size:            8
+        arg_index:       0
+        source_offset:   32
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          64
+        size:            8
+        arg_index:       0
+        source_offset:   40
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          72
+        size:            8
+        arg_index:       0
+        source_offset:   48
+      - arg_type:        arg_byvalue
+        offset:          80
+        size:            8
+        arg_index:       0
+        source_offset:   56
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          88
+        size:            13
+        arg_index:       0
+        source_offset:   64
+      - arg_type:        arg_byvalue
+        offset:          104
+        size:            1
+        arg_index:       0
+        source_offset:   77
+      - arg_type:        arg_byvalue
+        offset:          108
+        size:            1
+        arg_index:       0
+        source_offset:   78
+      - arg_type:        arg_byvalue
+        offset:          112
+        size:            1
+        arg_index:       0
+        source_offset:   79
+      - arg_type:        arg_byvalue
+        offset:          120
+        size:            8
+        arg_index:       0
+        source_offset:   80
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          128
+        size:            8
+        arg_index:       0
+        source_offset:   88
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          136
+        size:            8
+        arg_index:       0
+        source_offset:   96
+      - arg_type:        arg_byvalue
+        offset:          144
+        size:            8
+        arg_index:       0
+        source_offset:   104
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          152
+        size:            40
+        arg_index:       0
+        source_offset:   112
+      - arg_type:        arg_byvalue
+        offset:          192
+        size:            8
+        arg_index:       0
+        source_offset:   152
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          200
+        size:            8
+        arg_index:       0
+        source_offset:   160
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          208
+        size:            1
+        arg_index:       0
+        source_offset:   168
+      - arg_type:        arg_byvalue
+        offset:          212
+        size:            1
+        arg_index:       0
+        source_offset:   169
+      - arg_type:        arg_byvalue
+        offset:          216
+        size:            1
+        arg_index:       0
+        source_offset:   170
+      - arg_type:        arg_byvalue
+        offset:          220
+        size:            1
+        arg_index:       0
+        source_offset:   171
+      - arg_type:        arg_byvalue
+        offset:          224
+        size:            1
+        arg_index:       0
+        source_offset:   172
+      - arg_type:        arg_byvalue
+        offset:          228
+        size:            1
+        arg_index:       0
+        source_offset:   173
+      - arg_type:        arg_byvalue
+        offset:          232
+        size:            1
+        arg_index:       0
+        source_offset:   174
+      - arg_type:        arg_byvalue
+        offset:          236
+        size:            1
+        arg_index:       0
+        source_offset:   175
+      - arg_type:        arg_byvalue
+        offset:          240
+        size:            8
+        arg_index:       0
+        source_offset:   176
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          248
+        size:            8
+        arg_index:       0
+        source_offset:   184
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          256
+        size:            8
+        arg_index:       0
+        source_offset:   192
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          264
+        size:            29
+        arg_index:       0
+        source_offset:   200
+      - arg_type:        arg_byvalue
+        offset:          296
+        size:            1
+        arg_index:       0
+        source_offset:   229
+      - arg_type:        arg_byvalue
+        offset:          300
+        size:            1
+        arg_index:       0
+        source_offset:   230
+      - arg_type:        arg_byvalue
+        offset:          304
+        size:            1
+        arg_index:       0
+        source_offset:   231
+      - arg_type:        arg_byvalue
+        offset:          312
+        size:            8
+        arg_index:       0
+        source_offset:   232
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          320
+        size:            8
+        arg_index:       0
+        source_offset:   240
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          328
+        size:            8
+        arg_index:       0
+        source_offset:   248
+      - arg_type:        arg_byvalue
+        offset:          336
+        size:            8
+        arg_index:       0
+        source_offset:   256
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          344
+        size:            40
+        arg_index:       0
+        source_offset:   264
+      - arg_type:        arg_byvalue
+        offset:          384
+        size:            8
+        arg_index:       0
+        source_offset:   304
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          392
+        size:            8
+        arg_index:       0
+        source_offset:   312
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          400
+        size:            1
+        arg_index:       0
+        source_offset:   320
+      - arg_type:        arg_byvalue
+        offset:          404
+        size:            1
+        arg_index:       0
+        source_offset:   321
+      - arg_type:        arg_byvalue
+        offset:          408
+        size:            1
+        arg_index:       0
+        source_offset:   322
+      - arg_type:        arg_byvalue
+        offset:          412
+        size:            1
+        arg_index:       0
+        source_offset:   323
+      - arg_type:        arg_byvalue
+        offset:          416
+        size:            1
+        arg_index:       0
+        source_offset:   324
+      - arg_type:        arg_byvalue
+        offset:          420
+        size:            1
+        arg_index:       0
+        source_offset:   325
+      - arg_type:        arg_byvalue
+        offset:          424
+        size:            1
+        arg_index:       0
+        source_offset:   326
+      - arg_type:        arg_byvalue
+        offset:          428
+        size:            1
+        arg_index:       0
+        source_offset:   327
+      - arg_type:        arg_byvalue
+        offset:          432
+        size:            8
+        arg_index:       0
+        source_offset:   328
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          440
+        size:            8
+        arg_index:       0
+        source_offset:   336
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          448
+        size:            8
+        arg_index:       0
+        source_offset:   344
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          456
+        size:            29
+        arg_index:       0
+        source_offset:   352
+      - arg_type:        arg_byvalue
+        offset:          488
+        size:            1
+        arg_index:       0
+        source_offset:   381
+      - arg_type:        arg_byvalue
+        offset:          492
+        size:            1
+        arg_index:       0
+        source_offset:   382
+      - arg_type:        arg_byvalue
+        offset:          496
+        size:            1
+        arg_index:       0
+        source_offset:   383
+      - arg_type:        arg_byvalue
+        offset:          504
+        size:            8
+        arg_index:       0
+        source_offset:   384
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          512
+        size:            8
+        arg_index:       0
+        source_offset:   392
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          520
+        size:            8
+        arg_index:       0
+        source_offset:   400
+      - arg_type:        arg_byvalue
+        offset:          528
+        size:            8
+        arg_index:       0
+        source_offset:   408
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          536
+        size:            40
+        arg_index:       0
+        source_offset:   416
+      - arg_type:        arg_byvalue
+        offset:          576
+        size:            8
+        arg_index:       0
+        source_offset:   456
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          584
+        size:            8
+        arg_index:       0
+        source_offset:   464
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          592
+        size:            1
+        arg_index:       0
+        source_offset:   472
+      - arg_type:        arg_byvalue
+        offset:          596
+        size:            1
+        arg_index:       0
+        source_offset:   473
+      - arg_type:        arg_byvalue
+        offset:          600
+        size:            1
+        arg_index:       0
+        source_offset:   474
+      - arg_type:        arg_byvalue
+        offset:          604
+        size:            1
+        arg_index:       0
+        source_offset:   475
+      - arg_type:        arg_byvalue
+        offset:          608
+        size:            1
+        arg_index:       0
+        source_offset:   476
+      - arg_type:        arg_byvalue
+        offset:          612
+        size:            1
+        arg_index:       0
+        source_offset:   477
+      - arg_type:        arg_byvalue
+        offset:          616
+        size:            1
+        arg_index:       0
+        source_offset:   478
+      - arg_type:        arg_byvalue
+        offset:          620
+        size:            1
+        arg_index:       0
+        source_offset:   479
+      - arg_type:        arg_byvalue
+        offset:          624
+        size:            8
+        arg_index:       0
+        source_offset:   480
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          632
+        size:            8
+        arg_index:       0
+        source_offset:   488
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          640
+        size:            8
+        arg_index:       0
+        source_offset:   496
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          648
+        size:            29
+        arg_index:       0
+        source_offset:   504
+      - arg_type:        arg_byvalue
+        offset:          680
+        size:            1
+        arg_index:       0
+        source_offset:   533
+      - arg_type:        arg_byvalue
+        offset:          684
+        size:            1
+        arg_index:       0
+        source_offset:   534
+      - arg_type:        arg_byvalue
+        offset:          688
+        size:            1
+        arg_index:       0
+        source_offset:   535
+      - arg_type:        arg_byvalue
+        offset:          696
+        size:            8
+        arg_index:       0
+        source_offset:   536
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          704
+        size:            8
+        arg_index:       0
+        source_offset:   544
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          712
+        size:            8
+        arg_index:       0
+        source_offset:   552
+      - arg_type:        arg_byvalue
+        offset:          720
+        size:            8
+        arg_index:       0
+        source_offset:   560
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          728
+        size:            40
+        arg_index:       0
+        source_offset:   568
+      - arg_type:        arg_byvalue
+        offset:          768
+        size:            8
+        arg_index:       0
+        source_offset:   608
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          776
+        size:            8
+        arg_index:       0
+        source_offset:   616
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          784
+        size:            1
+        arg_index:       0
+        source_offset:   624
+      - arg_type:        arg_byvalue
+        offset:          788
+        size:            1
+        arg_index:       0
+        source_offset:   625
+      - arg_type:        arg_byvalue
+        offset:          792
+        size:            1
+        arg_index:       0
+        source_offset:   626
+      - arg_type:        arg_byvalue
+        offset:          796
+        size:            1
+        arg_index:       0
+        source_offset:   627
+      - arg_type:        arg_byvalue
+        offset:          800
+        size:            1
+        arg_index:       0
+        source_offset:   628
+      - arg_type:        arg_byvalue
+        offset:          804
+        size:            1
+        arg_index:       0
+        source_offset:   629
+      - arg_type:        arg_byvalue
+        offset:          808
+        size:            1
+        arg_index:       0
+        source_offset:   630
+      - arg_type:        arg_byvalue
+        offset:          812
+        size:            1
+        arg_index:       0
+        source_offset:   631
+      - arg_type:        arg_byvalue
+        offset:          816
+        size:            8
+        arg_index:       0
+        source_offset:   632
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          824
+        size:            8
+        arg_index:       0
+        source_offset:   640
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          832
+        size:            8
+        arg_index:       0
+        source_offset:   648
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          840
+        size:            29
+        arg_index:       0
+        source_offset:   656
+      - arg_type:        arg_byvalue
+        offset:          872
+        size:            1
+        arg_index:       0
+        source_offset:   685
+      - arg_type:        arg_byvalue
+        offset:          876
+        size:            1
+        arg_index:       0
+        source_offset:   686
+      - arg_type:        arg_byvalue
+        offset:          880
+        size:            1
+        arg_index:       0
+        source_offset:   687
+      - arg_type:        arg_byvalue
+        offset:          888
+        size:            8
+        arg_index:       0
+        source_offset:   688
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          896
+        size:            8
+        arg_index:       0
+        source_offset:   696
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          904
+        size:            8
+        arg_index:       0
+        source_offset:   704
+      - arg_type:        arg_byvalue
+        offset:          912
+        size:            8
+        arg_index:       0
+        source_offset:   712
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          920
+        size:            40
+        arg_index:       0
+        source_offset:   720
+      - arg_type:        arg_byvalue
+        offset:          960
+        size:            8
+        arg_index:       0
+        source_offset:   760
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          968
+        size:            8
+        arg_index:       0
+        source_offset:   768
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          976
+        size:            1
+        arg_index:       0
+        source_offset:   776
+      - arg_type:        arg_byvalue
+        offset:          980
+        size:            1
+        arg_index:       0
+        source_offset:   777
+      - arg_type:        arg_byvalue
+        offset:          984
+        size:            1
+        arg_index:       0
+        source_offset:   778
+      - arg_type:        arg_byvalue
+        offset:          988
+        size:            1
+        arg_index:       0
+        source_offset:   779
+      - arg_type:        arg_byvalue
+        offset:          992
+        size:            1
+        arg_index:       0
+        source_offset:   780
+      - arg_type:        arg_byvalue
+        offset:          996
+        size:            1
+        arg_index:       0
+        source_offset:   781
+      - arg_type:        arg_byvalue
+        offset:          1000
+        size:            1
+        arg_index:       0
+        source_offset:   782
+      - arg_type:        arg_byvalue
+        offset:          1004
+        size:            1
+        arg_index:       0
+        source_offset:   783
+      - arg_type:        arg_byvalue
+        offset:          1008
+        size:            8
+        arg_index:       0
+        source_offset:   784
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1016
+        size:            8
+        arg_index:       0
+        source_offset:   792
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1024
+        size:            8
+        arg_index:       0
+        source_offset:   800
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1032
+        size:            29
+        arg_index:       0
+        source_offset:   808
+      - arg_type:        arg_byvalue
+        offset:          1064
+        size:            1
+        arg_index:       0
+        source_offset:   837
+      - arg_type:        arg_byvalue
+        offset:          1068
+        size:            1
+        arg_index:       0
+        source_offset:   838
+      - arg_type:        arg_byvalue
+        offset:          1072
+        size:            1
+        arg_index:       0
+        source_offset:   839
+      - arg_type:        arg_byvalue
+        offset:          1080
+        size:            8
+        arg_index:       0
+        source_offset:   840
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1088
+        size:            8
+        arg_index:       0
+        source_offset:   848
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1096
+        size:            8
+        arg_index:       0
+        source_offset:   856
+      - arg_type:        arg_byvalue
+        offset:          1104
+        size:            8
+        arg_index:       0
+        source_offset:   864
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1112
+        size:            40
+        arg_index:       0
+        source_offset:   872
+      - arg_type:        arg_byvalue
+        offset:          1152
+        size:            8
+        arg_index:       0
+        source_offset:   912
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1160
+        size:            8
+        arg_index:       0
+        source_offset:   920
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1168
+        size:            1
+        arg_index:       0
+        source_offset:   928
+      - arg_type:        arg_byvalue
+        offset:          1172
+        size:            1
+        arg_index:       0
+        source_offset:   929
+      - arg_type:        arg_byvalue
+        offset:          1176
+        size:            1
+        arg_index:       0
+        source_offset:   930
+      - arg_type:        arg_byvalue
+        offset:          1180
+        size:            1
+        arg_index:       0
+        source_offset:   931
+      - arg_type:        arg_byvalue
+        offset:          1184
+        size:            1
+        arg_index:       0
+        source_offset:   932
+      - arg_type:        arg_byvalue
+        offset:          1188
+        size:            1
+        arg_index:       0
+        source_offset:   933
+      - arg_type:        arg_byvalue
+        offset:          1192
+        size:            1
+        arg_index:       0
+        source_offset:   934
+      - arg_type:        arg_byvalue
+        offset:          1196
+        size:            1
+        arg_index:       0
+        source_offset:   935
+      - arg_type:        arg_byvalue
+        offset:          1200
+        size:            8
+        arg_index:       0
+        source_offset:   936
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1208
+        size:            8
+        arg_index:       0
+        source_offset:   944
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1216
+        size:            8
+        arg_index:       0
+        source_offset:   952
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1224
+        size:            29
+        arg_index:       0
+        source_offset:   960
+      - arg_type:        arg_byvalue
+        offset:          1256
+        size:            1
+        arg_index:       0
+        source_offset:   989
+      - arg_type:        arg_byvalue
+        offset:          1260
+        size:            1
+        arg_index:       0
+        source_offset:   990
+      - arg_type:        arg_byvalue
+        offset:          1264
+        size:            1
+        arg_index:       0
+        source_offset:   991
+      - arg_type:        arg_byvalue
+        offset:          1272
+        size:            8
+        arg_index:       0
+        source_offset:   992
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1280
+        size:            8
+        arg_index:       0
+        source_offset:   1000
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1288
+        size:            8
+        arg_index:       0
+        source_offset:   1008
+      - arg_type:        arg_byvalue
+        offset:          1296
+        size:            8
+        arg_index:       0
+        source_offset:   1016
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1304
+        size:            40
+        arg_index:       0
+        source_offset:   1024
+      - arg_type:        arg_byvalue
+        offset:          1344
+        size:            8
+        arg_index:       0
+        source_offset:   1064
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1352
+        size:            8
+        arg_index:       0
+        source_offset:   1072
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1360
+        size:            1
+        arg_index:       0
+        source_offset:   1080
+      - arg_type:        arg_byvalue
+        offset:          1364
+        size:            1
+        arg_index:       0
+        source_offset:   1081
+      - arg_type:        arg_byvalue
+        offset:          1368
+        size:            1
+        arg_index:       0
+        source_offset:   1082
+      - arg_type:        arg_byvalue
+        offset:          1372
+        size:            1
+        arg_index:       0
+        source_offset:   1083
+      - arg_type:        arg_byvalue
+        offset:          1376
+        size:            1
+        arg_index:       0
+        source_offset:   1084
+      - arg_type:        arg_byvalue
+        offset:          1380
+        size:            1
+        arg_index:       0
+        source_offset:   1085
+      - arg_type:        arg_byvalue
+        offset:          1384
+        size:            1
+        arg_index:       0
+        source_offset:   1086
+      - arg_type:        arg_byvalue
+        offset:          1388
+        size:            1
+        arg_index:       0
+        source_offset:   1087
+      - arg_type:        arg_byvalue
+        offset:          1392
+        size:            8
+        arg_index:       0
+        source_offset:   1088
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1400
+        size:            8
+        arg_index:       0
+        source_offset:   1096
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1408
+        size:            8
+        arg_index:       0
+        source_offset:   1104
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1416
+        size:            29
+        arg_index:       0
+        source_offset:   1112
+      - arg_type:        arg_byvalue
+        offset:          1448
+        size:            1
+        arg_index:       0
+        source_offset:   1141
+      - arg_type:        arg_byvalue
+        offset:          1452
+        size:            1
+        arg_index:       0
+        source_offset:   1142
+      - arg_type:        arg_byvalue
+        offset:          1456
+        size:            1
+        arg_index:       0
+        source_offset:   1143
+      - arg_type:        arg_byvalue
+        offset:          1464
+        size:            8
+        arg_index:       0
+        source_offset:   1144
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1472
+        size:            8
+        arg_index:       0
+        source_offset:   1152
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1480
+        size:            8
+        arg_index:       0
+        source_offset:   1160
+      - arg_type:        arg_byvalue
+        offset:          1488
+        size:            8
+        arg_index:       0
+        source_offset:   1168
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1496
+        size:            53
+        arg_index:       0
+        source_offset:   1176
+      - arg_type:        arg_byvalue
+        offset:          1552
+        size:            1
+        arg_index:       0
+        source_offset:   1229
+      - arg_type:        arg_byvalue
+        offset:          1556
+        size:            1
+        arg_index:       0
+        source_offset:   1230
+      - arg_type:        arg_byvalue
+        offset:          1560
+        size:            1
+        arg_index:       0
+        source_offset:   1231
+      - arg_type:        arg_byvalue
+        offset:          1568
+        size:            8
+        arg_index:       0
+        source_offset:   1232
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1576
+        size:            5
+        arg_index:       0
+        source_offset:   1240
+      - arg_type:        arg_byvalue
+        offset:          1584
+        size:            1
+        arg_index:       0
+        source_offset:   1245
+      - arg_type:        arg_byvalue
+        offset:          1588
+        size:            1
+        arg_index:       0
+        source_offset:   1246
+      - arg_type:        arg_byvalue
+        offset:          1592
+        size:            1
+        arg_index:       0
+        source_offset:   1247
+      - arg_type:        arg_byvalue
+        offset:          1600
+        size:            8
+        arg_index:       0
+        source_offset:   1248
+      - arg_type:        group_count
+        offset:          1608
+        size:            12
+      - arg_type:        global_size
+        offset:          1620
+        size:            12
+      - arg_type:        local_size
+        offset:          1632
+        size:            12
+    per_thread_payload_arguments:
+      - arg_type:        local_id
+        offset:          0
+        size:            64
+kernels_misc_info:
+  - name:            _ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi16EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi16EEEE
+    args_info:
+      - index:           0
+        address_qualifier: __private
+        access_qualifier: NONE
+        type_name:       'struct strata::kernels::(anonymous namespace)::__generated_GrMulti;1256'
+        type_qualifiers: NONE
+...

@@ -1,0 +1,48 @@
+--- attempt1/audit.py
++++ corrected/audit.py
+@@ -23,20 +23,13 @@
+  assert build['actual_exit']==0 and build['build_sha256']['/out/strata-q6-a4-s107']==EXPECTED
+  assert build['build_sha256']['libstrata_kernels.a']==pins['archive_sha256_reused']
+  before={str(p):stat(p)for p in [EXE,ARCHIVE,ORIGINAL]}
+- # Read only one selected archive member. No main/archive full rehash.
+- member=None
+- with ARCHIVE.open('rb')as f:
+-  assert f.read(8)==b'!<arch>\n';longnames=b''
+-  while True:
+-   h=f.read(60)
+-   if not h:break
+-   assert len(h)==60 and h[58:]==b'`\n';name=h[:16].decode().strip();n=int(h[48:58]);pos=f.tell()
+-   if name=='//':longnames=f.read(n)
+-   else:
+-    actual=longnames[int(name[1:]):].split(b'/\n')[0].decode()if name.startswith('/')and name[1:].isdigit()else name.rstrip('/')
+-    if actual=='fused_gr.dp.cpp.o':member=f.read(n);break
+-   f.seek(pos+n+(n&1))
+- assert member is not None and member==ORIGINAL.read_bytes(),'Selected archive/object mismatch'
++ # Reuse exact archive/member copy verified before the retained first parser HOLD.
++ prior_attempt=P/'attempt1-public-entry-predicate-HOLD'
++ retained=json.loads((prior_attempt/'closure.json').read_text())
++ member=(prior_attempt/'selected/fused_gr.dp.cpp.o').read_bytes()
++ assert sha(member)==retained['archive_member_copy']['sha256']
++ assert len(member)==retained['archive_member_copy']['bytes']
++ assert member==ORIGINAL.read_bytes(),'Retained archive/member/current object mismatch'
+  OBJ=O/'fused_gr.dp.cpp.o';OBJ.write_bytes(member)
+  # Reuse exactly the audited ELF class, with its four bounded-string transforms.
+  helper=R/'attn-value-binding-s92-build-audit/host_binding.py'
+@@ -67,7 +60,7 @@
+  assert len({h['registered_name_pointer']['pointer']for h in hosts.values()})==2
+  assert len({z['offset']for h in hosts.values()for z in h['final_cache_guard']})==4
+  wanted={fn for h in hosts.values()for row in h['actual_host_relocations']if row['target_metadata']==h['object_info']['name']for fn in row['containing_functions']}
+- fused=[z for z in obj.symbols if z['type']==2 and z['section']and 'fused_gr_read_multi'in z['name']and '.cold'not in z['name']]
++ fused=[z for z in obj.symbols if z['type']==2 and z['section']and z['name']=='_ZN6strata7kernels19fused_gr_read_multiEPKNS0_11FusedGrArgsEiPfPvPyi']
+  assert len(fused)==1;wanted.add(fused[0]['name'])
+  host_files={}
+  for i,fn in enumerate(sorted(wanted)):
+@@ -103,7 +96,7 @@
+    assert native['sha256']==EXPECTED and ci['Image']==pins['image']
+    runtime.append({'stage':stage,'arm':arm,'exe_sha256':native['sha256'],'image':ci['Image'],'configured_HC_flags':{k:v for k,v in cfg['env'].items()if k.startswith('STRATA_GR_')},'recorded_effective_HC_flags':{k:v for k,v in native['effective_config_env'].items()if k.startswith('STRATA_GR_')},'container_HC_environment':[k for k in ci['Config']['Env']if k.startswith('STRATA_GR_')],'effective_env_scope':'Native identity is a configured-key projection; absence there alone cannot prove full process absence. Container env and child_env source inherit/overlay strengthen source-conditioned normal-default selection, not dynamic dispatch proof.'})
+  after={str(p):stat(p)for p in [EXE,ARCHIVE,ORIGINAL]};assert before==after,'Input changed during selected extraction'
+- save('facts.json',{'status':'PASS_SELECTED_TWO_STATIC_BINDINGS_DECODE_REQUIRED','main':{'path':str(EXE),'known_sha256_reused':EXPECTED,'fresh_complete_hash':False,'stat_before':before[str(EXE)],'stat_after':after[str(EXE)]},'archive':{'path':str(ARCHIVE),'known_sha256_reused':pins['archive_sha256_reused'],'fresh_complete_hash':False,'selected_member_equals_object':True,'member_bytes':len(member),'member_sha256':sha(member),'stat_before':before[str(ARCHIVE)],'stat_after':after[str(ARCHIVE)]},'source_pin':next(x for x in pins['small_inputs']if x['path'].endswith('/fused_gr.dp.cpp')),'hosts':hosts,'host_function_files':host_files,'actual_host_helper_relocations':host_calls,'selected':selected,'historical_runtime_controls':runtime,'all_image_walk':False,'decoder_invocations':0,'GPU':0,'limits':['Static host Info/cache/guard/name/exact selected image binding is not runtime dispatch proof.','No current main/archive full hash; root-authorized existing identities reused with pre/post stat continuity and exact selected archive member/object comparison.','Normal-default source branch and historical selected S95 event name are separate evidence from static host binding.','Absent resource fields unknown; raw byte identity and ordered floating-point dataflow require separate claims.']})
++ save('facts.json',{'status':'PASS_SELECTED_TWO_STATIC_BINDINGS_DECODE_REQUIRED','main':{'path':str(EXE),'known_sha256_reused':EXPECTED,'fresh_complete_hash':False,'stat_before':before[str(EXE)],'stat_after':after[str(EXE)]},'archive':{'path':str(ARCHIVE),'known_sha256_reused':pins['archive_sha256_reused'],'fresh_complete_hash':False,'selected_member_equals_object':True,'archive_member_equality_scope':'Retained first attempt completed exact archive/member/object comparison before parser predicate HOLD; original object bytes rechecked against retained copy, no repeat archive scan.','first_attempt_closure_sha256':sha((prior_attempt/'closure.json').read_bytes()),'member_bytes':len(member),'member_sha256':sha(member),'stat_before':before[str(ARCHIVE)],'stat_after':after[str(ARCHIVE)]},'source_pin':next(x for x in pins['small_inputs']if x['path'].endswith('/fused_gr.dp.cpp')),'hosts':hosts,'host_function_files':host_files,'actual_host_helper_relocations':host_calls,'selected':selected,'historical_runtime_controls':runtime,'all_image_walk':False,'decoder_invocations':0,'GPU':0,'limits':['Static host Info/cache/guard/name/exact selected image binding is not runtime dispatch proof.','No current main/archive full hash; root-authorized existing identities reused with pre/post stat continuity and exact selected archive member/object comparison.','Normal-default source branch and historical selected S95 event name are separate evidence from static host binding.','Absent resource fields unknown; raw byte identity and ordered floating-point dataflow require separate claims.']})
+  print(json.dumps({'status':'PASS_SELECTED_TWO_STATIC_BINDINGS_DECODE_REQUIRED','resources':{k:v['execution_fields']for k,v in selected.items()},'selected_image_bytes':{k:v['image_bytes']for k,v in selected.items()}}))
+ except BaseException as e:
+  save('HOLD.json',{'status':'HOLD_STOP_FIRST_FAILURE','type':type(e).__name__,'error':str(e),'GPU':0});raise

@@ -1,0 +1,451 @@
+{
+  "status": "FROZEN_OFFLINE_TWO_SELECTED_OLD_HC_IMAGES_SOURCE_AND_ISA_REVIEW_REQUIRED_BEFORE_PRIVATE_ORACLE",
+  "directory": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit",
+  "file_count": 63,
+  "bytes": 3026594,
+  "files": [
+    {
+      "path": "attempt1-public-entry-predicate-HOLD/audit.py",
+      "bytes": 10869,
+      "sha256": "531b1daf358748416a0feb9617cc5e8acf953d6758be926c768c8330f18009a1",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "attempt1-public-entry-predicate-HOLD/closure.json",
+      "bytes": 868,
+      "sha256": "2805199600ecbfcd9d0a2d1180ffa5898ce5a33eb9abba4354e167ef8b505aad",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "attempt1-public-entry-predicate-HOLD/cpu-run.log",
+      "bytes": 513,
+      "sha256": "266a8de357f0706cc445055de2e1eac3426f7247eb6e1c67168018baf9c8e56e",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "attempt1-public-entry-predicate-HOLD/selected/HOLD.json",
+      "bytes": 97,
+      "sha256": "756159c1c2185ab9f69eb8080c3b796b94b93a625706db13e11893e37c272a85",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "attempt1-public-entry-predicate-HOLD/selected/fused_gr.dp.cpp.o",
+      "bytes": 607880,
+      "sha256": "27d0ab6aff30126bd317584b4b2cbacd0b4667764f9cf624738625c787c07d99",
+      "ASCII": false,
+      "kind": "binary"
+    },
+    {
+      "path": "audit.py",
+      "bytes": 11009,
+      "sha256": "a5a19541341765565cbc28c8557644cee3ee84cdeb00d88a80afc436ebc7cd47",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "cpu-run.log",
+      "bytes": 867,
+      "sha256": "a0ce53edb41c06296b23eeae56aa657f6db306d2be99cef4dd8fe72959be98a6",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "data-and-relocations.json",
+      "bytes": 3581,
+      "sha256": "9668ef421ad7a21e0b93a5da958902f971d5dab20fa4046649a8b9780f8ff006",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "decode.sh",
+      "bytes": 2331,
+      "sha256": "cc25cf9069d405ba0d470f96327df8854c5fb47aa3f82dc665db95b9568f4269",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "execution-closure.json",
+      "bytes": 1240,
+      "sha256": "2de40a76484dd179c983b67322bd71fff9e2bee6066b52ab582161c8f53ba961",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "findings.md",
+      "bytes": 7981,
+      "sha256": "7336b248ce60b1c8858a5104be086e949fff91f6459e0285a7a6fbc36f9c8d56",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "isa-summary.json",
+      "bytes": 6529,
+      "sha256": "91a8e14febbbdd08009d831d27fdf9dd686eeb237803507ff2273c5a464a976f",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "pins.json",
+      "bytes": 5785,
+      "sha256": "678ae3a867d373333e11049703308951cddff26b48571cd91d58855e2b8b4fa0",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "run.sh",
+      "bytes": 152,
+      "sha256": "52509d720730728517e2d9f9e833a820908f2d7bc966ff2e8259defb7a559178",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/decoder-image.json",
+      "bytes": 6858,
+      "sha256": "41e0211327fe8f37eddc76cbae832da821d74ee637e1e850ca422aa23f5e301d",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/facts.json",
+      "bytes": 85442,
+      "sha256": "9c26e7ebe88c609bdb4978e6ea46f9e04efd9887d8e7b31cfeddf04fd32a6642",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/fused_gr.dp.cpp.o",
+      "bytes": 607880,
+      "sha256": "27d0ab6aff30126bd317584b4b2cbacd0b4667764f9cf624738625c787c07d99",
+      "ASCII": false,
+      "kind": "binary"
+    },
+    {
+      "path": "selected/host-0.asm",
+      "bytes": 163269,
+      "sha256": "f6dadde3abf5fb709df5be8ef058d6ce5d521f9508a89297ffdb3ca5d23ba5c2",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/host-1.asm",
+      "bytes": 231905,
+      "sha256": "76ed164151d5f483029cc0f4bd36f1d71da227082c38a8d27f2ff7f002be5592",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/reduce-isa/asm.sha256",
+      "bytes": 109,
+      "sha256": "3574311551b269ea16f09c2283e130b9a8d303569fb029a1a9e45fe94d97acd5",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/reduce-isa/decoder.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/reduce-isa/disasm/.misc.buildOptions",
+      "bytes": 38,
+      "sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/reduce-isa/disasm/.note.intelgt.compat",
+      "bytes": 172,
+      "sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1",
+      "ASCII": false,
+      "kind": "binary"
+    },
+    {
+      "path": "selected/reduce-isa/disasm/.note.intelgt.metrics",
+      "bytes": 3,
+      "sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/reduce-isa/disasm/.rel.text._ZTS16dpct_kernel_nameIJZN6strata7kernels19fused_gr_read_multiEPKNS1_11FusedGrArgsEiPfPvPyiE16gr_down_reduce_kEE",
+      "bytes": 43,
+      "sha256": "ee7e374724b44a40fba5966333ccfc240d742254f34186ca217b4899add5c628",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/reduce-isa/disasm/.spv",
+      "bytes": 3808,
+      "sha256": "fa827b5107bb0807c339dea1133e2ce16a47c8012ed51d01846ad2a924c6f4ce",
+      "ASCII": false,
+      "kind": "binary"
+    },
+    {
+      "path": "selected/reduce-isa/disasm/.symtab",
+      "bytes": 329,
+      "sha256": "e994b86065fc1fcdd8ac687ca9410d181dfaddef29cee601459b2be74b300db4",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/reduce-isa/disasm/.text.hc_reduce.asm",
+      "bytes": 110420,
+      "sha256": "50dd08418b95a26a4f56e9acb6cccebeaece48a6b0687b292edeadba65f8fdb6",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/reduce-isa/disasm/.ze_info",
+      "bytes": 19866,
+      "sha256": "cfdffbd515f66f4ad30bfd613ca13389dc499b471fdd477702158fdf48eda98c",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/reduce-isa/disasm/sections.txt",
+      "bytes": 313,
+      "sha256": "c5f5603231c5ba14324cb1b1d95ef01e06664079ae1103fb79586bceabed488c",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/reduce-isa/input-after.sha256",
+      "bytes": 86,
+      "sha256": "863da00aac0504ca368b0f35283621b882b3fb29d73f5b0f85d7def133bcf98c",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/reduce-isa/input-before.sha256",
+      "bytes": 86,
+      "sha256": "863da00aac0504ca368b0f35283621b882b3fb29d73f5b0f85d7def133bcf98c",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/reduce-isa/ocloc.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/reduce-isa/ocloc.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/reduce-isa/status.txt",
+      "bytes": 47,
+      "sha256": "916e9004e7ab47e83873aacd2b9dca68f8734ce2f43bbd92ed1cb8c8cc29cf1d",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/reduce-isa/tool-path.txt",
+      "bytes": 15,
+      "sha256": "52de7767fd8b2c8e722ecd3ab1d1a3441b9446821186349ef0deda6f519dfbe9",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/reduce-isa/tool.sha256",
+      "bytes": 81,
+      "sha256": "0becf72301fda6f5845db153afeaae52bff8ac8117e946ce0d70997dc2561758",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/reduce-shortname.zebin",
+      "bytes": 41808,
+      "sha256": "ffd65f142d477e3cd2c36a1e7daf1f4462217ffeb4bb633729f20716391a5f96",
+      "ASCII": false,
+      "kind": "binary"
+    },
+    {
+      "path": "selected/reduce.ze_info",
+      "bytes": 19866,
+      "sha256": "cfdffbd515f66f4ad30bfd613ca13389dc499b471fdd477702158fdf48eda98c",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/reduce.zebin",
+      "bytes": 41808,
+      "sha256": "e3bc585a3a07820bbf2da672d8460a8d09201901388650342fad2036347a0e6b",
+      "ASCII": false,
+      "kind": "binary"
+    },
+    {
+      "path": "selected/up-isa/asm.sha256",
+      "bytes": 101,
+      "sha256": "0b58f9023ab584361dd95eae0cfd86596e4d152f548685f0f51e273a265fbda9",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/up-isa/decoder.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/up-isa/disasm/.misc.buildOptions",
+      "bytes": 38,
+      "sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/up-isa/disasm/.note.intelgt.compat",
+      "bytes": 172,
+      "sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1",
+      "ASCII": false,
+      "kind": "binary"
+    },
+    {
+      "path": "selected/up-isa/disasm/.note.intelgt.metrics",
+      "bytes": 3,
+      "sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/up-isa/disasm/.rel.text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi16EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi16EEEE",
+      "bytes": 43,
+      "sha256": "ee7e374724b44a40fba5966333ccfc240d742254f34186ca217b4899add5c628",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/up-isa/disasm/.spv",
+      "bytes": 21036,
+      "sha256": "1a91ed724f6487fe7c4b47f332b3ca7f88a887fd9e71df0d0598e28023003f5c",
+      "ASCII": false,
+      "kind": "binary"
+    },
+    {
+      "path": "selected/up-isa/disasm/.symtab",
+      "bytes": 374,
+      "sha256": "ef24d7ae6664186e136d84384357aa3369f6f3ec8aea0ed0a028402c054059d9",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/up-isa/disasm/.text.hc_up.asm",
+      "bytes": 626376,
+      "sha256": "21d6b5f3546f2817004265222a7f65b39bee9b885a01f2bd94d65111b9839457",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/up-isa/disasm/.ze_info",
+      "bytes": 31476,
+      "sha256": "7f9a748d10facfd2ec4315e284060e5d8abd5dcd075a1ba169e6e398c2917c26",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/up-isa/disasm/sections.txt",
+      "bytes": 362,
+      "sha256": "dbdc08e2ff925f5afb20424547b2f561cbafb2b170216b8f91d8980dcd473bdc",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/up-isa/input-after.sha256",
+      "bytes": 82,
+      "sha256": "e00651d7cd91ea3bd8d2bc5cbb24bb6fa0455604fbbccf44a36d2e429cb42f87",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/up-isa/input-before.sha256",
+      "bytes": 82,
+      "sha256": "e00651d7cd91ea3bd8d2bc5cbb24bb6fa0455604fbbccf44a36d2e429cb42f87",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/up-isa/ocloc.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/up-isa/ocloc.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/up-isa/status.txt",
+      "bytes": 47,
+      "sha256": "916e9004e7ab47e83873aacd2b9dca68f8734ce2f43bbd92ed1cb8c8cc29cf1d",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/up-isa/tool-path.txt",
+      "bytes": 15,
+      "sha256": "52de7767fd8b2c8e722ecd3ab1d1a3441b9446821186349ef0deda6f519dfbe9",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/up-isa/tool.sha256",
+      "bytes": 81,
+      "sha256": "0becf72301fda6f5845db153afeaae52bff8ac8117e946ce0d70997dc2561758",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/up-shortname.zebin",
+      "bytes": 137368,
+      "sha256": "fe97dc8f0a60f4c20edd5679a8443e3b5447b5d5a941cedf372a2fd184d22cef",
+      "ASCII": false,
+      "kind": "binary"
+    },
+    {
+      "path": "selected/up.ze_info",
+      "bytes": 31476,
+      "sha256": "7f9a748d10facfd2ec4315e284060e5d8abd5dcd075a1ba169e6e398c2917c26",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "selected/up.zebin",
+      "bytes": 137368,
+      "sha256": "d8b21b3d266f2876d8a6b82d8e923d04eefc41c95dedf989d80409c7b515c0a0",
+      "ASCII": false,
+      "kind": "binary"
+    },
+    {
+      "path": "source-isa-excerpts.json",
+      "bytes": 45491,
+      "sha256": "72291a6d8fcffc8f540113dd64fb63008d795168daac1d09d5f159c146873b75",
+      "ASCII": true,
+      "kind": "text"
+    },
+    {
+      "path": "validation.json",
+      "bytes": 645,
+      "sha256": "547ed1296048779e14fe2b4f333e76ff8ed00c49d3768f5811bd42f570a5cc83",
+      "ASCII": true,
+      "kind": "text"
+    }
+  ],
+  "scope": "Includes retained first audit-parser HOLD, selected member and two raw+section-name-aliased images, two CPU offline decodes/full external ASM and source/FP ledger; no GPU/build/model/production changes. Excludes this manifest self-hash.",
+  "full_raw_assembly_bytes": 736796
+}

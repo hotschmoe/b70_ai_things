@@ -1,0 +1,214 @@
+{
+  "up": {
+    "asm_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/up-isa/disasm/.text.hc_up.asm",
+    "asm_bytes": 626376,
+    "asm_sha256": "21d6b5f3546f2817004265222a7f65b39bee9b885a01f2bd94d65111b9839457",
+    "computational_EOT_end_byte": 82848,
+    "selected_text_bytes": 83072,
+    "static_instruction_count_through_first_EOT": 6417,
+    "static_opcode_counts": {
+      "add": 774,
+      "add3": 1,
+      "and": 299,
+      "asr": 8,
+      "bfn.0xEA": 4,
+      "bfn.0xF8": 4,
+      "cmp": 172,
+      "goto": 206,
+      "goto.b": 1,
+      "jmpi": 79,
+      "join": 176,
+      "mach": 24,
+      "mad": 1042,
+      "madm": 238,
+      "math.exp": 17,
+      "math.invm": 34,
+      "mov": 1967,
+      "mul": 116,
+      "or": 79,
+      "sel": 44,
+      "send.gtwy": 3,
+      "send.slm": 271,
+      "send.ugm": 81,
+      "shl": 454,
+      "shr": 11,
+      "sync.allrd": 45,
+      "sync.allwr": 66,
+      "sync.bar": 2,
+      "sync.nop": 191,
+      "xor": 8
+    },
+    "UP_prologue_static_counts": {
+      "add": 32,
+      "add3": 1,
+      "and": 4,
+      "cmp": 15,
+      "goto": 15,
+      "jmpi": 7,
+      "join": 10,
+      "mach": 8,
+      "mad": 2,
+      "madm": 14,
+      "math.exp": 1,
+      "math.invm": 2,
+      "mov": 52,
+      "mul": 19,
+      "or": 1,
+      "sel": 4,
+      "send.slm": 1,
+      "send.ugm": 14,
+      "shl": 6,
+      "shr": 1
+    },
+    "UP_loop_752_to_3008_static_counts": {
+      "add": 28,
+      "add3": 1,
+      "cmp": 8,
+      "goto": 13,
+      "jmpi": 6,
+      "join": 9,
+      "mach": 8,
+      "mad": 1,
+      "madm": 14,
+      "math.exp": 1,
+      "math.invm": 2,
+      "mov": 29,
+      "mul": 18,
+      "sel": 4,
+      "send.slm": 1,
+      "send.ugm": 5,
+      "shl": 5,
+      "shr": 1
+    },
+    "key_sites": {
+      "CR0": [
+        {
+          "line": 24,
+          "byte_offset": 328,
+          "op": "or",
+          "text": "(W)     or (1|M0)                cr0.0<1>:ud   cr0.0<0;1,0>:ud   0x400004C0:ud              {A@1}"
+        }
+      ],
+      "sync_bar": [
+        {
+          "line": 259,
+          "byte_offset": 3200,
+          "op": "sync.bar",
+          "text": "(W)     sync.bar                             0x0"
+        },
+        {
+          "line": 6918,
+          "byte_offset": 81552,
+          "op": "sync.bar",
+          "text": "(W)     sync.bar                             0x0"
+        }
+      ],
+      "math_exp": [
+        {
+          "line": 134,
+          "byte_offset": 1744,
+          "op": "math.exp",
+          "text": "        math.exp (32|M0)         r30.0<1>:f    r28.0<1;1,0>:f                   {F@1}"
+        }
+      ],
+      "math_invm": [
+        {
+          "line": 137,
+          "byte_offset": 1792,
+          "op": "math.invm",
+          "text": "        math.invm (16|M0) (eo)f2.0  r34.mme0:f  r42.nomme<1;1,0>:f  r44.nomme<1;1,0>:f {A@1}"
+        },
+        {
+          "line": 151,
+          "byte_offset": 1968,
+          "op": "math.invm",
+          "text": "        math.invm (16|M16) (eo)f2.0  r35.mme0:f  r43.nomme<1;1,0>:f  r45.nomme<1;1,0>:f {I@1}"
+        }
+      ],
+      "first_weight_vector_load": {
+        "line": 483,
+        "byte_offset": 6448,
+        "op": "send.ugm",
+        "text": "        send.ugm (32|M0)         r36      r27  null:0  0x0            0x08803580           {I@1,$1} // wr:4+0, rd:8; load.ugm.d32x4.a64"
+      },
+      "extra_positive_zero_add": [
+        {
+          "line": 79,
+          "byte_offset": 1072,
+          "op": "add",
+          "text": "        add (32|M0)              r28.0<1>:f    r38.0<1;1,0>:f    0.0:f               {$10.dst}"
+        }
+      ]
+    },
+    "address_reconstruction": "Validated every label through first EOT using 8-byte Compacted and 16-byte other instructions; trailing compiler metadata/padding excluded.",
+    "counts_scope": "Textual static instructions only; predicated/skipped/refinement/loop bodies are not dynamic instruction counts, cycles, SFU traffic, physical bandwidth or critical-path budget.",
+    "FP32_destination_add_static_count": 409
+  },
+  "reduce": {
+    "asm_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/reduce-isa/disasm/.text.hc_reduce.asm",
+    "asm_bytes": 110420,
+    "asm_sha256": "50dd08418b95a26a4f56e9acb6cccebeaece48a6b0687b292edeadba65f8fdb6",
+    "computational_EOT_end_byte": 16272,
+    "selected_text_bytes": 16512,
+    "static_instruction_count_through_first_EOT": 1165,
+    "static_opcode_counts": {
+      "add": 491,
+      "add3": 3,
+      "and": 3,
+      "cmp": 13,
+      "goto": 15,
+      "join": 9,
+      "mach": 160,
+      "macl": 1,
+      "mad": 2,
+      "mov": 40,
+      "mul": 322,
+      "or": 1,
+      "sel": 4,
+      "send.gtwy": 1,
+      "send.ugm": 90,
+      "shl": 8,
+      "shr": 1,
+      "sync.allrd": 1
+    },
+    "UP_prologue_static_counts": {},
+    "UP_loop_752_to_3008_static_counts": {},
+    "key_sites": {
+      "CR0": [
+        {
+          "line": 20,
+          "byte_offset": 280,
+          "op": "or",
+          "text": "(W)     or (1|M0)                cr0.0<1>:ud   cr0.0<0;1,0>:ud   0x400004C0:ud              {A@1}"
+        }
+      ],
+      "sync_bar": [],
+      "math_exp": [],
+      "math_invm": [],
+      "first_weight_vector_load": null,
+      "extra_positive_zero_add": []
+    },
+    "address_reconstruction": "Validated every label through first EOT using 8-byte Compacted and 16-byte other instructions; trailing compiler metadata/padding excluded.",
+    "counts_scope": "Textual static instructions only; predicated/skipped/refinement/loop bodies are not dynamic instruction counts, cycles, SFU traffic, physical bandwidth or critical-path budget.",
+    "FP32_destination_add_static_count": 80,
+    "source_reduce_fp_add_chain_endpoints": [
+      {
+        "line": 126,
+        "instruction": "        add (32|M0)              acc2.0<1>:f   r52.0<1;1,0>:f    0.0:f               {Compacted,$8.dst}"
+      },
+      {
+        "line": 131,
+        "instruction": "        add (32|M0)              acc2.0<1>:f   acc2.0<1;1,0>:f   r56.0<1;1,0>:f   {$9.dst}"
+      },
+      {
+        "line": 1089,
+        "instruction": "        add (32|M0)              acc2.0<1>:f   acc2.0<1;1,0>:f   r30.0<1;1,0>:f   {Compacted,$9.dst}"
+      },
+      {
+        "line": 1090,
+        "instruction": "        add (32|M0)              r108.0<1>:f   acc2.0<1;1,0>:f   r40.0<1;1,0>:f   {$10.dst}"
+      }
+    ],
+    "source_partial_data_load_static_count": 80
+  }
+}

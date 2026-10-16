@@ -1,0 +1,7 @@
+cpu-run: [HC-S115-selected-old-offline] acquired (heavy) -> bash /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/run.sh
+Traceback (most recent call last):
+  File "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/audit.py", line 71, in <module>
+    assert len(fused)==1;wanted.add(fused[0]['name'])
+           ^^^^^^^^^^^^^
+AssertionError
+cpu-run: [HC-S115-selected-old-offline] done in 0s (exit 1)

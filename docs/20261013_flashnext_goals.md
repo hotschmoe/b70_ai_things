@@ -428,3 +428,12 @@ per shape remain descriptive; keepdefaultOFF/no immediate repeat/cachecampaign.
 Bothprefilltargets remain unmet; S94 workfailure/causeunresolved is preserved.
 S30boundedRAMrestore remains retained, no new C2decode/context qualification.
 [S113 evidence and limits](20261016_strata_attention_value_fixed_policy.md).
+
+
+S115 selected original HC UP/reduce ISA confirms repeated nonlinear setup
+before the group0-only global store. Root authorized one private producer
+activation oracle SOURCE PREP (S116); no candidate build/runtime/performance
+result. Keep extra+0/division/nativeexp/store-load and full intermediate/final
+strict checks. Static workgroups/opcodes do not forecast speed. All targets
+and retained S30 RAM recovery remain unchanged.
+[S115 compiled mechanism and limits](20261016_strata_hc_lowrank_producer.md).

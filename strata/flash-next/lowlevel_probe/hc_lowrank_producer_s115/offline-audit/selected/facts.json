@@ -1,0 +1,766 @@
+{
+  "status": "PASS_SELECTED_TWO_STATIC_BINDINGS_DECODE_REQUIRED",
+  "main": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/strata-q6-a4-s107",
+    "known_sha256_reused": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca",
+    "fresh_complete_hash": false,
+    "stat_before": {
+      "device": 45,
+      "inode": 24075744,
+      "size": 92372200,
+      "mtime_ns": 1792107755228308854,
+      "ctime_ns": 1792107755228308854
+    },
+    "stat_after": {
+      "device": 45,
+      "inode": 24075744,
+      "size": 92372200,
+      "mtime_ns": 1792107755228308854,
+      "ctime_ns": 1792107755228308854
+    }
+  },
+  "archive": {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/libstrata_kernels.a",
+    "known_sha256_reused": "cf710683aec404599d1cc6173bf8364e6d30731bda82b315df286bf58aed9b38",
+    "fresh_complete_hash": false,
+    "selected_member_equals_object": true,
+    "archive_member_equality_scope": "Retained first attempt completed exact archive/member/object comparison before parser predicate HOLD; original object bytes rechecked against retained copy, no repeat archive scan.",
+    "first_attempt_closure_sha256": "2805199600ecbfcd9d0a2d1180ffa5898ce5a33eb9abba4354e167ef8b505aad",
+    "member_bytes": 607880,
+    "member_sha256": "27d0ab6aff30126bd317584b4b2cbacd0b4667764f9cf624738625c787c07d99",
+    "stat_before": {
+      "device": 45,
+      "inode": 24067334,
+      "size": 19547694,
+      "mtime_ns": 1792107607065717259,
+      "ctime_ns": 1792107607065717259
+    },
+    "stat_after": {
+      "device": 45,
+      "inode": 24067334,
+      "size": 19547694,
+      "mtime_ns": 1792107607065717259,
+      "ctime_ns": 1792107607065717259
+    }
+  },
+  "source_pin": {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/fused_gr.dp.cpp",
+    "bytes": 118531,
+    "sha256": "d62bcb252eecdbcaae81095907c2241e39c4798b7854bb499fb5643fecb24e99"
+  },
+  "hosts": {
+    "up": {
+      "object_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116gr_up_multi_colsE18dpct_kernel_scalarILi16EEEEEE",
+        "bind": 0,
+        "type": 1,
+        "section": 22,
+        "offset": 8768,
+        "size": 88
+      },
+      "object_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116gr_up_multi_colsE18dpct_kernel_scalarILi16EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 0,
+          "type": 1,
+          "section": 237,
+          "offset": 1512,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116gr_up_multi_colsE18dpct_kernel_scalarILi16EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 0,
+          "type": 1,
+          "section": 237,
+          "offset": 1504,
+          "size": 8
+        }
+      ],
+      "actual_host_relocations": [
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116gr_up_multi_colsE18dpct_kernel_scalarILi16EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 2,
+          "addend": 1508,
+          "normalized_destination": 1512,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_118launch_gr_up_multiEPN4sycl3_V15queueERKNS1_7GrMultiEb"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116gr_up_multi_colsE18dpct_kernel_scalarILi16EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 2,
+          "addend": 1500,
+          "normalized_destination": 1504,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_118launch_gr_up_multiEPN4sycl3_V15queueERKNS1_7GrMultiEb"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116gr_up_multi_colsE18dpct_kernel_scalarILi16EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 10,
+          "addend": 1512,
+          "normalized_destination": 1512,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_118launch_gr_up_multiEPN4sycl3_V15queueERKNS1_7GrMultiEb"
+          ]
+        },
+        {
+          "target_metadata": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116gr_up_multi_colsE18dpct_kernel_scalarILi16EEEEEE",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 10,
+          "addend": 8768,
+          "normalized_destination": 8768,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_118launch_gr_up_multiEPN4sycl3_V15queueERKNS1_7GrMultiEb"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116gr_up_multi_colsE18dpct_kernel_scalarILi16EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 2,
+          "addend": 1500,
+          "normalized_destination": 1504,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_118launch_gr_up_multiEPN4sycl3_V15queueERKNS1_7GrMultiEb"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116gr_up_multi_colsE18dpct_kernel_scalarILi16EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 10,
+          "addend": 1512,
+          "normalized_destination": 1512,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_118launch_gr_up_multiEPN4sycl3_V15queueERKNS1_7GrMultiEb"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116gr_up_multi_colsE18dpct_kernel_scalarILi16EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "",
+          "STT_SECTION": true,
+          "relocation_type": 10,
+          "addend": 1512,
+          "normalized_destination": 1512,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels12_GLOBAL__N_118launch_gr_up_multiEPN4sycl3_V15queueERKNS1_7GrMultiEb"
+          ]
+        }
+      ],
+      "final_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116gr_up_multi_colsE18dpct_kernel_scalarILi16EEEEEE",
+        "bind": 0,
+        "type": 1,
+        "section": 16,
+        "offset": 13474720,
+        "size": 88
+      },
+      "final_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116gr_up_multi_colsE18dpct_kernel_scalarILi16EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 0,
+          "type": 1,
+          "section": 31,
+          "offset": 89530984,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_116gr_up_multi_colsE18dpct_kernel_scalarILi16EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 0,
+          "type": 1,
+          "section": 31,
+          "offset": 89530976,
+          "size": 8
+        }
+      ],
+      "registered_name_pointer": {
+        "pointer": 12292344,
+        "name": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi16EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi16EEEE"
+      }
+    },
+    "reduce": {
+      "object_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEE",
+        "bind": 2,
+        "type": 1,
+        "section": 363,
+        "offset": 0,
+        "size": 88
+      },
+      "object_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 361,
+          "offset": 0,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 359,
+          "offset": 0,
+          "size": 8
+        }
+      ],
+      "actual_host_relocations": [
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels19fused_gr_read_multiEPKNS0_11FusedGrArgsEiPfPvPyi"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels19fused_gr_read_multiEPKNS0_11FusedGrArgsEiPfPvPyi"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels19fused_gr_read_multiEPKNS0_11FusedGrArgsEiPfPvPyi"
+          ]
+        },
+        {
+          "target_metadata": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEE",
+          "target_symbol": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEE",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels19fused_gr_read_multiEPKNS0_11FusedGrArgsEiPfPvPyi"
+          ]
+        },
+        {
+          "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 2,
+          "addend": -4,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels19fused_gr_read_multiEPKNS0_11FusedGrArgsEiPfPvPyi"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels19fused_gr_read_multiEPKNS0_11FusedGrArgsEiPfPvPyi"
+          ]
+        },
+        {
+          "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "STT_SECTION": false,
+          "relocation_type": 10,
+          "addend": 0,
+          "normalized_destination": 0,
+          "source_section": ".text",
+          "containing_functions": [
+            "_ZN6strata7kernels19fused_gr_read_multiEPKNS0_11FusedGrArgsEiPfPvPyi"
+          ]
+        }
+      ],
+      "final_info": {
+        "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEE",
+        "bind": 2,
+        "type": 1,
+        "section": 16,
+        "offset": 13486424,
+        "size": 88
+      },
+      "final_cache_guard": [
+        {
+          "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 31,
+          "offset": 89532200,
+          "size": 8
+        },
+        {
+          "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_reduce_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+          "bind": 2,
+          "type": 1,
+          "section": 31,
+          "offset": 89532192,
+          "size": 8
+        }
+      ],
+      "registered_name_pointer": {
+        "pointer": 12296263,
+        "name": "_ZTS16dpct_kernel_nameIJZN6strata7kernels19fused_gr_read_multiEPKNS1_11FusedGrArgsEiPfPvPyiE16gr_down_reduce_kEE"
+      }
+    }
+  },
+  "host_function_files": {
+    "_ZN6strata7kernels12_GLOBAL__N_118launch_gr_up_multiEPN4sycl3_V15queueERKNS1_7GrMultiEb": {
+      "path": "host-0.asm",
+      "bytes": 163269,
+      "sha256": "f6dadde3abf5fb709df5be8ef058d6ce5d521f9508a89297ffdb3ca5d23ba5c2"
+    },
+    "_ZN6strata7kernels19fused_gr_read_multiEPKNS0_11FusedGrArgsEiPfPvPyi": {
+      "path": "host-1.asm",
+      "bytes": 231905,
+      "sha256": "76ed164151d5f483029cc0f4bd36f1d71da227082c38a8d27f2ff7f002be5592"
+    }
+  },
+  "actual_host_helper_relocations": [
+    {
+      "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels23gr_down_sliced_k_grf256EEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "offset": 81791,
+      "addend": -4,
+      "relocation_type": 2,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN4sycl3_V16detail19type_erased_cgfo_ty7invokerIZN6strata7kernels19fused_gr_read_multiEPKNS5_11FusedGrArgsEiPfPvPyiEUlRNS0_7handlerEE1_E4callEPKvSD_"
+      ]
+    },
+    {
+      "target_symbol": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels23gr_down_sliced_k_grf256EEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "offset": 81806,
+      "addend": -4,
+      "relocation_type": 2,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN4sycl3_V16detail19type_erased_cgfo_ty7invokerIZN6strata7kernels19fused_gr_read_multiEPKNS5_11FusedGrArgsEiPfPvPyiEUlRNS0_7handlerEE1_E4callEPKvSD_"
+      ]
+    },
+    {
+      "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_sliced_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "offset": 82304,
+      "addend": -4,
+      "relocation_type": 2,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN4sycl3_V16detail19type_erased_cgfo_ty7invokerIZN6strata7kernels19fused_gr_read_multiEPKNS5_11FusedGrArgsEiPfPvPyiEUlRNS0_7handlerEE1_E4callEPKvSD_"
+      ]
+    },
+    {
+      "target_symbol": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_sliced_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "offset": 82319,
+      "addend": -4,
+      "relocation_type": 2,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN4sycl3_V16detail19type_erased_cgfo_ty7invokerIZN6strata7kernels19fused_gr_read_multiEPKNS5_11FusedGrArgsEiPfPvPyiEUlRNS0_7handlerEE1_E4callEPKvSD_"
+      ]
+    },
+    {
+      "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels23gr_down_sliced_k_grf256EEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "offset": 82631,
+      "addend": 0,
+      "relocation_type": 10,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN4sycl3_V16detail19type_erased_cgfo_ty7invokerIZN6strata7kernels19fused_gr_read_multiEPKNS5_11FusedGrArgsEiPfPvPyiEUlRNS0_7handlerEE1_E4callEPKvSD_"
+      ]
+    },
+    {
+      "target_symbol": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels23gr_down_sliced_k_grf256EEEEE",
+      "offset": 82649,
+      "addend": 0,
+      "relocation_type": 10,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN4sycl3_V16detail19type_erased_cgfo_ty7invokerIZN6strata7kernels19fused_gr_read_multiEPKNS5_11FusedGrArgsEiPfPvPyiEUlRNS0_7handlerEE1_E4callEPKvSD_"
+      ]
+    },
+    {
+      "target_symbol": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels23gr_down_sliced_k_grf256EEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "offset": 82661,
+      "addend": -4,
+      "relocation_type": 2,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN4sycl3_V16detail19type_erased_cgfo_ty7invokerIZN6strata7kernels19fused_gr_read_multiEPKNS5_11FusedGrArgsEiPfPvPyiEUlRNS0_7handlerEE1_E4callEPKvSD_"
+      ]
+    },
+    {
+      "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels23gr_down_sliced_k_grf256EEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "offset": 82666,
+      "addend": 0,
+      "relocation_type": 10,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN4sycl3_V16detail19type_erased_cgfo_ty7invokerIZN6strata7kernels19fused_gr_read_multiEPKNS5_11FusedGrArgsEiPfPvPyiEUlRNS0_7handlerEE1_E4callEPKvSD_"
+      ]
+    },
+    {
+      "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_sliced_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "offset": 82737,
+      "addend": 0,
+      "relocation_type": 10,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN4sycl3_V16detail19type_erased_cgfo_ty7invokerIZN6strata7kernels19fused_gr_read_multiEPKNS5_11FusedGrArgsEiPfPvPyiEUlRNS0_7handlerEE1_E4callEPKvSD_"
+      ]
+    },
+    {
+      "target_symbol": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_sliced_kEEEEE",
+      "offset": 82755,
+      "addend": 0,
+      "relocation_type": 10,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN4sycl3_V16detail19type_erased_cgfo_ty7invokerIZN6strata7kernels19fused_gr_read_multiEPKNS5_11FusedGrArgsEiPfPvPyiEUlRNS0_7handlerEE1_E4callEPKvSD_"
+      ]
+    },
+    {
+      "target_symbol": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_sliced_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "offset": 82767,
+      "addend": -4,
+      "relocation_type": 2,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN4sycl3_V16detail19type_erased_cgfo_ty7invokerIZN6strata7kernels19fused_gr_read_multiEPKNS5_11FusedGrArgsEiPfPvPyiEUlRNS0_7handlerEE1_E4callEPKvSD_"
+      ]
+    },
+    {
+      "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_sliced_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "offset": 82772,
+      "addend": 0,
+      "relocation_type": 10,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN4sycl3_V16detail19type_erased_cgfo_ty7invokerIZN6strata7kernels19fused_gr_read_multiEPKNS5_11FusedGrArgsEiPfPvPyiEUlRNS0_7handlerEE1_E4callEPKvSD_"
+      ]
+    },
+    {
+      "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_sliced_kEEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "offset": 82790,
+      "addend": 0,
+      "relocation_type": 10,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN4sycl3_V16detail19type_erased_cgfo_ty7invokerIZN6strata7kernels19fused_gr_read_multiEPKNS5_11FusedGrArgsEiPfPvPyiEUlRNS0_7handlerEE1_E4callEPKvSD_"
+      ]
+    },
+    {
+      "target_symbol": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels23gr_down_sliced_k_grf256EEEEERNS1_16DeviceKernelInfoEvE4Info",
+      "offset": 82805,
+      "addend": 0,
+      "relocation_type": 10,
+      "source_section": ".text",
+      "containing_functions": [
+        "_ZN4sycl3_V16detail19type_erased_cgfo_ty7invokerIZN6strata7kernels19fused_gr_read_multiEPKNS5_11FusedGrArgsEiPfPvPyiEUlRNS0_7handlerEE1_E4callEPKvSD_"
+      ]
+    },
+    {
+      "target_symbol": "_ZN4sycl3_V16detail18getKernelParamDescI16dpct_kernel_nameIJN6strata7kernels23gr_down_sliced_k_grf256EEEEENS1_19kernel_param_desc_tEi",
+      "offset": 72,
+      "addend": 0,
+      "relocation_type": 1,
+      "source_section": ".rodata._ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels23gr_down_sliced_k_grf256EEEEE",
+      "containing_functions": []
+    },
+    {
+      "target_symbol": "_ZN4sycl3_V16detail18getKernelParamDescI16dpct_kernel_nameIJN6strata7kernels16gr_down_sliced_kEEEEENS1_19kernel_param_desc_tEi",
+      "offset": 72,
+      "addend": 0,
+      "relocation_type": 1,
+      "source_section": ".rodata._ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels16gr_down_sliced_kEEEEE",
+      "containing_functions": []
+    }
+  ],
+  "selected": {
+    "up": {
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi16EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi16EEEE",
+      "main_image_offset": 34702336,
+      "image_bytes": 137368,
+      "image_sha256": "d8b21b3d266f2876d8a6b82d8e923d04eefc41c95dedf989d80409c7b515c0a0",
+      "text_bytes": 83072,
+      "text_sha256": "c8cca9b2057b1f014d3b0717299adc21b0d8c782b75625d1f34c99cd561b4324",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [
+          "12288"
+        ],
+        "barrier_count": [
+          "1"
+        ],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "has_global_atomics": [],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "absent_fields": "unknown, not zero",
+      "full_kernel_metadata": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi16EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi16EEEE\n    user_attributes:\n      intel_reqd_sub_group_size: 32\n      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]\n    execution_env:\n      barrier_count:   1\n      grf_count:       128\n      has_4gb_buffers: true\n      has_no_stateless_write: true\n      inline_data_payload_size: 32\n      offset_to_skip_per_thread_data_load: 128\n      simd_size:       32\n      slm_size:        12288\n      subgroup_independent_forward_progress: true\n      eu_thread_count: 8\n    payload_arguments:\n      - arg_type:        arg_byvalue\n        offset:          0\n        size:            8\n        arg_index:       0\n        source_offset:   0\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          8\n        size:            8\n        arg_index:       0\n        source_offset:   8\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          16\n        size:            1\n        arg_index:       0\n        source_offset:   16\n      - arg_type:        arg_byvalue\n        offset:          20\n        size:            1\n        arg_index:       0\n        source_offset:   17\n      - arg_type:        arg_byvalue\n        offset:          24\n        size:            1\n        arg_index:       0\n        source_offset:   18\n      - arg_type:        arg_byvalue\n        offset:          28\n        size:            1\n        arg_index:       0\n        source_offset:   19\n      - arg_type:        arg_byvalue\n        offset:          32\n        size:            1\n        arg_index:       0\n        source_offset:   20\n      - arg_type:        arg_byvalue\n        offset:          36\n        size:            1\n        arg_index:       0\n        source_offset:   21\n      - arg_type:        arg_byvalue\n        offset:          40\n        size:            1\n        arg_index:       0\n        source_offset:   22\n      - arg_type:        arg_byvalue\n        offset:          44\n        size:            1\n        arg_index:       0\n        source_offset:   23\n      - arg_type:        arg_byvalue\n        offset:          48\n        size:            8\n        arg_index:       0\n        source_offset:   24\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          56\n        size:            8\n        arg_index:       0\n        source_offset:   32\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          64\n        size:            8\n        arg_index:       0\n        source_offset:   40\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          72\n        size:            8\n        arg_index:       0\n        source_offset:   48\n      - arg_type:        arg_byvalue\n        offset:          80\n        size:            8\n        arg_index:       0\n        source_offset:   56\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          88\n        size:            13\n        arg_index:       0\n        source_offset:   64\n      - arg_type:        arg_byvalue\n        offset:          104\n        size:            1\n        arg_index:       0\n        source_offset:   77\n      - arg_type:        arg_byvalue\n        offset:          108\n        size:            1\n        arg_index:       0\n        source_offset:   78\n      - arg_type:        arg_byvalue\n        offset:          112\n        size:            1\n        arg_index:       0\n        source_offset:   79\n      - arg_type:        arg_byvalue\n        offset:          120\n        size:            8\n        arg_index:       0\n        source_offset:   80\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          128\n        size:            8\n        arg_index:       0\n        source_offset:   88\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          136\n        size:            8\n        arg_index:       0\n        source_offset:   96\n      - arg_type:        arg_byvalue\n        offset:          144\n        size:            8\n        arg_index:       0\n        source_offset:   104\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          152\n        size:            40\n        arg_index:       0\n        source_offset:   112\n      - arg_type:        arg_byvalue\n        offset:          192\n        size:            8\n        arg_index:       0\n        source_offset:   152\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          200\n        size:            8\n        arg_index:       0\n        source_offset:   160\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          208\n        size:            1\n        arg_index:       0\n        source_offset:   168\n      - arg_type:        arg_byvalue\n        offset:          212\n        size:            1\n        arg_index:       0\n        source_offset:   169\n      - arg_type:        arg_byvalue\n        offset:          216\n        size:            1\n        arg_index:       0\n        source_offset:   170\n      - arg_type:        arg_byvalue\n        offset:          220\n        size:            1\n        arg_index:       0\n        source_offset:   171\n      - arg_type:        arg_byvalue\n        offset:          224\n        size:            1\n        arg_index:       0\n        source_offset:   172\n      - arg_type:        arg_byvalue\n        offset:          228\n        size:            1\n        arg_index:       0\n        source_offset:   173\n      - arg_type:        arg_byvalue\n        offset:          232\n        size:            1\n        arg_index:       0\n        source_offset:   174\n      - arg_type:        arg_byvalue\n        offset:          236\n        size:            1\n        arg_index:       0\n        source_offset:   175\n      - arg_type:        arg_byvalue\n        offset:          240\n        size:            8\n        arg_index:       0\n        source_offset:   176\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          248\n        size:            8\n        arg_index:       0\n        source_offset:   184\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          256\n        size:            8\n        arg_index:       0\n        source_offset:   192\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          264\n        size:            29\n        arg_index:       0\n        source_offset:   200\n      - arg_type:        arg_byvalue\n        offset:          296\n        size:            1\n        arg_index:       0\n        source_offset:   229\n      - arg_type:        arg_byvalue\n        offset:          300\n        size:            1\n        arg_index:       0\n        source_offset:   230\n      - arg_type:        arg_byvalue\n        offset:          304\n        size:            1\n        arg_index:       0\n        source_offset:   231\n      - arg_type:        arg_byvalue\n        offset:          312\n        size:            8\n        arg_index:       0\n        source_offset:   232\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          320\n        size:            8\n        arg_index:       0\n        source_offset:   240\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          328\n        size:            8\n        arg_index:       0\n        source_offset:   248\n      - arg_type:        arg_byvalue\n        offset:          336\n        size:            8\n        arg_index:       0\n        source_offset:   256\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          344\n        size:            40\n        arg_index:       0\n        source_offset:   264\n      - arg_type:        arg_byvalue\n        offset:          384\n        size:            8\n        arg_index:       0\n        source_offset:   304\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          392\n        size:            8\n        arg_index:       0\n        source_offset:   312\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          400\n        size:            1\n        arg_index:       0\n        source_offset:   320\n      - arg_type:        arg_byvalue\n        offset:          404\n        size:            1\n        arg_index:       0\n        source_offset:   321\n      - arg_type:        arg_byvalue\n        offset:          408\n        size:            1\n        arg_index:       0\n        source_offset:   322\n      - arg_type:        arg_byvalue\n        offset:          412\n        size:            1\n        arg_index:       0\n        source_offset:   323\n      - arg_type:        arg_byvalue\n        offset:          416\n        size:            1\n        arg_index:       0\n        source_offset:   324\n      - arg_type:        arg_byvalue\n        offset:          420\n        size:            1\n        arg_index:       0\n        source_offset:   325\n      - arg_type:        arg_byvalue\n        offset:          424\n        size:            1\n        arg_index:       0\n        source_offset:   326\n      - arg_type:        arg_byvalue\n        offset:          428\n        size:            1\n        arg_index:       0\n        source_offset:   327\n      - arg_type:        arg_byvalue\n        offset:          432\n        size:            8\n        arg_index:       0\n        source_offset:   328\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          440\n        size:            8\n        arg_index:       0\n        source_offset:   336\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          448\n        size:            8\n        arg_index:       0\n        source_offset:   344\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          456\n        size:            29\n        arg_index:       0\n        source_offset:   352\n      - arg_type:        arg_byvalue\n        offset:          488\n        size:            1\n        arg_index:       0\n        source_offset:   381\n      - arg_type:        arg_byvalue\n        offset:          492\n        size:            1\n        arg_index:       0\n        source_offset:   382\n      - arg_type:        arg_byvalue\n        offset:          496\n        size:            1\n        arg_index:       0\n        source_offset:   383\n      - arg_type:        arg_byvalue\n        offset:          504\n        size:            8\n        arg_index:       0\n        source_offset:   384\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          512\n        size:            8\n        arg_index:       0\n        source_offset:   392\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          520\n        size:            8\n        arg_index:       0\n        source_offset:   400\n      - arg_type:        arg_byvalue\n        offset:          528\n        size:            8\n        arg_index:       0\n        source_offset:   408\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          536\n        size:            40\n        arg_index:       0\n        source_offset:   416\n      - arg_type:        arg_byvalue\n        offset:          576\n        size:            8\n        arg_index:       0\n        source_offset:   456\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          584\n        size:            8\n        arg_index:       0\n        source_offset:   464\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          592\n        size:            1\n        arg_index:       0\n        source_offset:   472\n      - arg_type:        arg_byvalue\n        offset:          596\n        size:            1\n        arg_index:       0\n        source_offset:   473\n      - arg_type:        arg_byvalue\n        offset:          600\n        size:            1\n        arg_index:       0\n        source_offset:   474\n      - arg_type:        arg_byvalue\n        offset:          604\n        size:            1\n        arg_index:       0\n        source_offset:   475\n      - arg_type:        arg_byvalue\n        offset:          608\n        size:            1\n        arg_index:       0\n        source_offset:   476\n      - arg_type:        arg_byvalue\n        offset:          612\n        size:            1\n        arg_index:       0\n        source_offset:   477\n      - arg_type:        arg_byvalue\n        offset:          616\n        size:            1\n        arg_index:       0\n        source_offset:   478\n      - arg_type:        arg_byvalue\n        offset:          620\n        size:            1\n        arg_index:       0\n        source_offset:   479\n      - arg_type:        arg_byvalue\n        offset:          624\n        size:            8\n        arg_index:       0\n        source_offset:   480\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          632\n        size:            8\n        arg_index:       0\n        source_offset:   488\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          640\n        size:            8\n        arg_index:       0\n        source_offset:   496\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          648\n        size:            29\n        arg_index:       0\n        source_offset:   504\n      - arg_type:        arg_byvalue\n        offset:          680\n        size:            1\n        arg_index:       0\n        source_offset:   533\n      - arg_type:        arg_byvalue\n        offset:          684\n        size:            1\n        arg_index:       0\n        source_offset:   534\n      - arg_type:        arg_byvalue\n        offset:          688\n        size:            1\n        arg_index:       0\n        source_offset:   535\n      - arg_type:        arg_byvalue\n        offset:          696\n        size:            8\n        arg_index:       0\n        source_offset:   536\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          704\n        size:            8\n        arg_index:       0\n        source_offset:   544\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          712\n        size:            8\n        arg_index:       0\n        source_offset:   552\n      - arg_type:        arg_byvalue\n        offset:          720\n        size:            8\n        arg_index:       0\n        source_offset:   560\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          728\n        size:            40\n        arg_index:       0\n        source_offset:   568\n      - arg_type:        arg_byvalue\n        offset:          768\n        size:            8\n        arg_index:       0\n        source_offset:   608\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          776\n        size:            8\n        arg_index:       0\n        source_offset:   616\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          784\n        size:            1\n        arg_index:       0\n        source_offset:   624\n      - arg_type:        arg_byvalue\n        offset:          788\n        size:            1\n        arg_index:       0\n        source_offset:   625\n      - arg_type:        arg_byvalue\n        offset:          792\n        size:            1\n        arg_index:       0\n        source_offset:   626\n      - arg_type:        arg_byvalue\n        offset:          796\n        size:            1\n        arg_index:       0\n        source_offset:   627\n      - arg_type:        arg_byvalue\n        offset:          800\n        size:            1\n        arg_index:       0\n        source_offset:   628\n      - arg_type:        arg_byvalue\n        offset:          804\n        size:            1\n        arg_index:       0\n        source_offset:   629\n      - arg_type:        arg_byvalue\n        offset:          808\n        size:            1\n        arg_index:       0\n        source_offset:   630\n      - arg_type:        arg_byvalue\n        offset:          812\n        size:            1\n        arg_index:       0\n        source_offset:   631\n      - arg_type:        arg_byvalue\n        offset:          816\n        size:            8\n        arg_index:       0\n        source_offset:   632\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          824\n        size:            8\n        arg_index:       0\n        source_offset:   640\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          832\n        size:            8\n        arg_index:       0\n        source_offset:   648\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          840\n        size:            29\n        arg_index:       0\n        source_offset:   656\n      - arg_type:        arg_byvalue\n        offset:          872\n        size:            1\n        arg_index:       0\n        source_offset:   685\n      - arg_type:        arg_byvalue\n        offset:          876\n        size:            1\n        arg_index:       0\n        source_offset:   686\n      - arg_type:        arg_byvalue\n        offset:          880\n        size:            1\n        arg_index:       0\n        source_offset:   687\n      - arg_type:        arg_byvalue\n        offset:          888\n        size:            8\n        arg_index:       0\n        source_offset:   688\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          896\n        size:            8\n        arg_index:       0\n        source_offset:   696\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          904\n        size:            8\n        arg_index:       0\n        source_offset:   704\n      - arg_type:        arg_byvalue\n        offset:          912\n        size:            8\n        arg_index:       0\n        source_offset:   712\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          920\n        size:            40\n        arg_index:       0\n        source_offset:   720\n      - arg_type:        arg_byvalue\n        offset:          960\n        size:            8\n        arg_index:       0\n        source_offset:   760\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          968\n        size:            8\n        arg_index:       0\n        source_offset:   768\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          976\n        size:            1\n        arg_index:       0\n        source_offset:   776\n      - arg_type:        arg_byvalue\n        offset:          980\n        size:            1\n        arg_index:       0\n        source_offset:   777\n      - arg_type:        arg_byvalue\n        offset:          984\n        size:            1\n        arg_index:       0\n        source_offset:   778\n      - arg_type:        arg_byvalue\n        offset:          988\n        size:            1\n        arg_index:       0\n        source_offset:   779\n      - arg_type:        arg_byvalue\n        offset:          992\n        size:            1\n        arg_index:       0\n        source_offset:   780\n      - arg_type:        arg_byvalue\n        offset:          996\n        size:            1\n        arg_index:       0\n        source_offset:   781\n      - arg_type:        arg_byvalue\n        offset:          1000\n        size:            1\n        arg_index:       0\n        source_offset:   782\n      - arg_type:        arg_byvalue\n        offset:          1004\n        size:            1\n        arg_index:       0\n        source_offset:   783\n      - arg_type:        arg_byvalue\n        offset:          1008\n        size:            8\n        arg_index:       0\n        source_offset:   784\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1016\n        size:            8\n        arg_index:       0\n        source_offset:   792\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1024\n        size:            8\n        arg_index:       0\n        source_offset:   800\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1032\n        size:            29\n        arg_index:       0\n        source_offset:   808\n      - arg_type:        arg_byvalue\n        offset:          1064\n        size:            1\n        arg_index:       0\n        source_offset:   837\n      - arg_type:        arg_byvalue\n        offset:          1068\n        size:            1\n        arg_index:       0\n        source_offset:   838\n      - arg_type:        arg_byvalue\n        offset:          1072\n        size:            1\n        arg_index:       0\n        source_offset:   839\n      - arg_type:        arg_byvalue\n        offset:          1080\n        size:            8\n        arg_index:       0\n        source_offset:   840\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1088\n        size:            8\n        arg_index:       0\n        source_offset:   848\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1096\n        size:            8\n        arg_index:       0\n        source_offset:   856\n      - arg_type:        arg_byvalue\n        offset:          1104\n        size:            8\n        arg_index:       0\n        source_offset:   864\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1112\n        size:            40\n        arg_index:       0\n        source_offset:   872\n      - arg_type:        arg_byvalue\n        offset:          1152\n        size:            8\n        arg_index:       0\n        source_offset:   912\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1160\n        size:            8\n        arg_index:       0\n        source_offset:   920\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1168\n        size:            1\n        arg_index:       0\n        source_offset:   928\n      - arg_type:        arg_byvalue\n        offset:          1172\n        size:            1\n        arg_index:       0\n        source_offset:   929\n      - arg_type:        arg_byvalue\n        offset:          1176\n        size:            1\n        arg_index:       0\n        source_offset:   930\n      - arg_type:        arg_byvalue\n        offset:          1180\n        size:            1\n        arg_index:       0\n        source_offset:   931\n      - arg_type:        arg_byvalue\n        offset:          1184\n        size:            1\n        arg_index:       0\n        source_offset:   932\n      - arg_type:        arg_byvalue\n        offset:          1188\n        size:            1\n        arg_index:       0\n        source_offset:   933\n      - arg_type:        arg_byvalue\n        offset:          1192\n        size:            1\n        arg_index:       0\n        source_offset:   934\n      - arg_type:        arg_byvalue\n        offset:          1196\n        size:            1\n        arg_index:       0\n        source_offset:   935\n      - arg_type:        arg_byvalue\n        offset:          1200\n        size:            8\n        arg_index:       0\n        source_offset:   936\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1208\n        size:            8\n        arg_index:       0\n        source_offset:   944\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1216\n        size:            8\n        arg_index:       0\n        source_offset:   952\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1224\n        size:            29\n        arg_index:       0\n        source_offset:   960\n      - arg_type:        arg_byvalue\n        offset:          1256\n        size:            1\n        arg_index:       0\n        source_offset:   989\n      - arg_type:        arg_byvalue\n        offset:          1260\n        size:            1\n        arg_index:       0\n        source_offset:   990\n      - arg_type:        arg_byvalue\n        offset:          1264\n        size:            1\n        arg_index:       0\n        source_offset:   991\n      - arg_type:        arg_byvalue\n        offset:          1272\n        size:            8\n        arg_index:       0\n        source_offset:   992\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1280\n        size:            8\n        arg_index:       0\n        source_offset:   1000\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1288\n        size:            8\n        arg_index:       0\n        source_offset:   1008\n      - arg_type:        arg_byvalue\n        offset:          1296\n        size:            8\n        arg_index:       0\n        source_offset:   1016\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1304\n        size:            40\n        arg_index:       0\n        source_offset:   1024\n      - arg_type:        arg_byvalue\n        offset:          1344\n        size:            8\n        arg_index:       0\n        source_offset:   1064\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1352\n        size:            8\n        arg_index:       0\n        source_offset:   1072\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1360\n        size:            1\n        arg_index:       0\n        source_offset:   1080\n      - arg_type:        arg_byvalue\n        offset:          1364\n        size:            1\n        arg_index:       0\n        source_offset:   1081\n      - arg_type:        arg_byvalue\n        offset:          1368\n        size:            1\n        arg_index:       0\n        source_offset:   1082\n      - arg_type:        arg_byvalue\n        offset:          1372\n        size:            1\n        arg_index:       0\n        source_offset:   1083\n      - arg_type:        arg_byvalue\n        offset:          1376\n        size:            1\n        arg_index:       0\n        source_offset:   1084\n      - arg_type:        arg_byvalue\n        offset:          1380\n        size:            1\n        arg_index:       0\n        source_offset:   1085\n      - arg_type:        arg_byvalue\n        offset:          1384\n        size:            1\n        arg_index:       0\n        source_offset:   1086\n      - arg_type:        arg_byvalue\n        offset:          1388\n        size:            1\n        arg_index:       0\n        source_offset:   1087\n      - arg_type:        arg_byvalue\n        offset:          1392\n        size:            8\n        arg_index:       0\n        source_offset:   1088\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1400\n        size:            8\n        arg_index:       0\n        source_offset:   1096\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1408\n        size:            8\n        arg_index:       0\n        source_offset:   1104\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1416\n        size:            29\n        arg_index:       0\n        source_offset:   1112\n      - arg_type:        arg_byvalue\n        offset:          1448\n        size:            1\n        arg_index:       0\n        source_offset:   1141\n      - arg_type:        arg_byvalue\n        offset:          1452\n        size:            1\n        arg_index:       0\n        source_offset:   1142\n      - arg_type:        arg_byvalue\n        offset:          1456\n        size:            1\n        arg_index:       0\n        source_offset:   1143\n      - arg_type:        arg_byvalue\n        offset:          1464\n        size:            8\n        arg_index:       0\n        source_offset:   1144\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1472\n        size:            8\n        arg_index:       0\n        source_offset:   1152\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1480\n        size:            8\n        arg_index:       0\n        source_offset:   1160\n      - arg_type:        arg_byvalue\n        offset:          1488\n        size:            8\n        arg_index:       0\n        source_offset:   1168\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1496\n        size:            53\n        arg_index:       0\n        source_offset:   1176\n      - arg_type:        arg_byvalue\n        offset:          1552\n        size:            1\n        arg_index:       0\n        source_offset:   1229\n      - arg_type:        arg_byvalue\n        offset:          1556\n        size:            1\n        arg_index:       0\n        source_offset:   1230\n      - arg_type:        arg_byvalue\n        offset:          1560\n        size:            1\n        arg_index:       0\n        source_offset:   1231\n      - arg_type:        arg_byvalue\n        offset:          1568\n        size:            8\n        arg_index:       0\n        source_offset:   1232\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1576\n        size:            5\n        arg_index:       0\n        source_offset:   1240\n      - arg_type:        arg_byvalue\n        offset:          1584\n        size:            1\n        arg_index:       0\n        source_offset:   1245\n      - arg_type:        arg_byvalue\n        offset:          1588\n        size:            1\n        arg_index:       0\n        source_offset:   1246\n      - arg_type:        arg_byvalue\n        offset:          1592\n        size:            1\n        arg_index:       0\n        source_offset:   1247\n      - arg_type:        arg_byvalue\n        offset:          1600\n        size:            8\n        arg_index:       0\n        source_offset:   1248\n      - arg_type:        group_count\n        offset:          1608\n        size:            12\n      - arg_type:        global_size\n        offset:          1620\n        size:            12\n      - arg_type:        local_size\n        offset:          1632\n        size:            12\n    per_thread_payload_arguments:\n      - arg_type:        local_id\n        offset:          0\n        size:            64\n",
+      "options_ascii": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "inventory": {
+        "": {
+          "type": 0,
+          "flags": 0,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        ".text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi16EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi16EEEE": {
+          "type": 1,
+          "flags": 6,
+          "bytes": 83072,
+          "sha256": "c8cca9b2057b1f014d3b0717299adc21b0d8c782b75625d1f34c99cd561b4324"
+        },
+        ".symtab": {
+          "type": 2,
+          "flags": 0,
+          "bytes": 96,
+          "sha256": "6282222f8f759a92c43961395eca33006f66c96879930081344c9c542d2b6403"
+        },
+        ".spv": {
+          "type": 4278190089,
+          "flags": 0,
+          "bytes": 21036,
+          "sha256": "1a91ed724f6487fe7c4b47f332b3ca7f88a887fd9e71df0d0598e28023003f5c"
+        },
+        ".misc.buildOptions": {
+          "type": 4278190100,
+          "flags": 0,
+          "bytes": 38,
+          "sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f"
+        },
+        ".note.intelgt.metrics": {
+          "type": 7,
+          "flags": 0,
+          "bytes": 3,
+          "sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c"
+        },
+        ".rel.text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi16EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi16EEEE": {
+          "type": 9,
+          "flags": 0,
+          "bytes": 32,
+          "sha256": "1e0901df04f721feb450423d70836de8b24b445c58268c542d69a1607dc91a03"
+        },
+        ".ze_info": {
+          "type": 4278190097,
+          "flags": 0,
+          "bytes": 31476,
+          "sha256": "7f9a748d10facfd2ec4315e284060e5d8abd5dcd075a1ba169e6e398c2917c26"
+        },
+        ".note.intelgt.compat": {
+          "type": 7,
+          "flags": 0,
+          "bytes": 172,
+          "sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1"
+        },
+        ".strtab": {
+          "type": 3,
+          "flags": 0,
+          "bytes": 655,
+          "sha256": "feeab30205ff52711e2e8d594abce131a73d31ef11bb0bb774438d5e652150c7"
+        }
+      },
+      "short_alias": {
+        "bytes": 137368,
+        "sha256": "fe97dc8f0a60f4c20edd5679a8443e3b5447b5d5a941cedf372a2fd184d22cef",
+        "section_name": ".text.hc_up",
+        "only_selected_section_name_changed": true,
+        "text_byte_exact": true
+      }
+    },
+    "reduce": {
+      "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels19fused_gr_read_multiEPKNS1_11FusedGrArgsEiPfPvPyiE16gr_down_reduce_kEE",
+      "main_image_offset": 29983264,
+      "image_bytes": 41808,
+      "image_sha256": "e3bc585a3a07820bbf2da672d8460a8d09201901388650342fad2036347a0e6b",
+      "text_bytes": 16512,
+      "text_sha256": "e522fac446a5a606f6381698541d7931c4e67c9a232271f64495b14d11cb4371",
+      "execution_fields": {
+        "grf_count": [
+          "128"
+        ],
+        "simd_size": [
+          "32"
+        ],
+        "slm_size": [],
+        "barrier_count": [],
+        "spill_size": [],
+        "scratch_size": [],
+        "eu_thread_count": [
+          "8"
+        ],
+        "has_global_atomics": [],
+        "subgroup_independent_forward_progress": [
+          "true"
+        ]
+      },
+      "absent_fields": "unknown, not zero",
+      "full_kernel_metadata": "_ZTS16dpct_kernel_nameIJZN6strata7kernels19fused_gr_read_multiEPKNS1_11FusedGrArgsEiPfPvPyiE16gr_down_reduce_kEE\n    user_attributes:\n      intel_reqd_sub_group_size: 32\n      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]\n    execution_env:\n      grf_count:       128\n      has_4gb_buffers: true\n      has_no_stateless_write: true\n      inline_data_payload_size: 32\n      offset_to_skip_per_thread_data_load: 128\n      simd_size:       32\n      subgroup_independent_forward_progress: true\n      eu_thread_count: 8\n    payload_arguments:\n      - arg_type:        global_id_offset\n        offset:          0\n        size:            12\n      - arg_type:        enqueued_local_size\n        offset:          12\n        size:            12\n      - arg_type:        arg_byvalue\n        offset:          24\n        size:            17\n        arg_index:       0\n        source_offset:   0\n      - arg_type:        arg_byvalue\n        offset:          44\n        size:            1\n        arg_index:       0\n        source_offset:   17\n      - arg_type:        arg_byvalue\n        offset:          48\n        size:            1\n        arg_index:       0\n        source_offset:   18\n      - arg_type:        arg_byvalue\n        offset:          52\n        size:            1\n        arg_index:       0\n        source_offset:   19\n      - arg_type:        arg_byvalue\n        offset:          56\n        size:            1\n        arg_index:       0\n        source_offset:   20\n      - arg_type:        arg_byvalue\n        offset:          60\n        size:            1\n        arg_index:       0\n        source_offset:   21\n      - arg_type:        arg_byvalue\n        offset:          64\n        size:            1\n        arg_index:       0\n        source_offset:   22\n      - arg_type:        arg_byvalue\n        offset:          68\n        size:            1\n        arg_index:       0\n        source_offset:   23\n      - arg_type:        arg_byvalue\n        offset:          72\n        size:            53\n        arg_index:       0\n        source_offset:   24\n      - arg_type:        arg_byvalue\n        offset:          128\n        size:            1\n        arg_index:       0\n        source_offset:   77\n      - arg_type:        arg_byvalue\n        offset:          132\n        size:            1\n        arg_index:       0\n        source_offset:   78\n      - arg_type:        arg_byvalue\n        offset:          136\n        size:            1\n        arg_index:       0\n        source_offset:   79\n      - arg_type:        arg_byvalue\n        offset:          144\n        size:            16\n        arg_index:       0\n        source_offset:   80\n      - arg_type:        arg_byvalue\n        offset:          160\n        size:            8\n        arg_index:       0\n        source_offset:   96\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          168\n        size:            65\n        arg_index:       0\n        source_offset:   104\n      - arg_type:        arg_byvalue\n        offset:          236\n        size:            1\n        arg_index:       0\n        source_offset:   169\n      - arg_type:        arg_byvalue\n        offset:          240\n        size:            1\n        arg_index:       0\n        source_offset:   170\n      - arg_type:        arg_byvalue\n        offset:          244\n        size:            1\n        arg_index:       0\n        source_offset:   171\n      - arg_type:        arg_byvalue\n        offset:          248\n        size:            1\n        arg_index:       0\n        source_offset:   172\n      - arg_type:        arg_byvalue\n        offset:          252\n        size:            1\n        arg_index:       0\n        source_offset:   173\n      - arg_type:        arg_byvalue\n        offset:          256\n        size:            1\n        arg_index:       0\n        source_offset:   174\n      - arg_type:        arg_byvalue\n        offset:          260\n        size:            1\n        arg_index:       0\n        source_offset:   175\n      - arg_type:        arg_byvalue\n        offset:          264\n        size:            53\n        arg_index:       0\n        source_offset:   176\n      - arg_type:        arg_byvalue\n        offset:          320\n        size:            1\n        arg_index:       0\n        source_offset:   229\n      - arg_type:        arg_byvalue\n        offset:          324\n        size:            1\n        arg_index:       0\n        source_offset:   230\n      - arg_type:        arg_byvalue\n        offset:          328\n        size:            1\n        arg_index:       0\n        source_offset:   231\n      - arg_type:        arg_byvalue\n        offset:          336\n        size:            16\n        arg_index:       0\n        source_offset:   232\n      - arg_type:        arg_byvalue\n        offset:          352\n        size:            8\n        arg_index:       0\n        source_offset:   248\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          360\n        size:            65\n        arg_index:       0\n        source_offset:   256\n      - arg_type:        arg_byvalue\n        offset:          428\n        size:            1\n        arg_index:       0\n        source_offset:   321\n      - arg_type:        arg_byvalue\n        offset:          432\n        size:            1\n        arg_index:       0\n        source_offset:   322\n      - arg_type:        arg_byvalue\n        offset:          436\n        size:            1\n        arg_index:       0\n        source_offset:   323\n      - arg_type:        arg_byvalue\n        offset:          440\n        size:            1\n        arg_index:       0\n        source_offset:   324\n      - arg_type:        arg_byvalue\n        offset:          444\n        size:            1\n        arg_index:       0\n        source_offset:   325\n      - arg_type:        arg_byvalue\n        offset:          448\n        size:            1\n        arg_index:       0\n        source_offset:   326\n      - arg_type:        arg_byvalue\n        offset:          452\n        size:            1\n        arg_index:       0\n        source_offset:   327\n      - arg_type:        arg_byvalue\n        offset:          456\n        size:            53\n        arg_index:       0\n        source_offset:   328\n      - arg_type:        arg_byvalue\n        offset:          512\n        size:            1\n        arg_index:       0\n        source_offset:   381\n      - arg_type:        arg_byvalue\n        offset:          516\n        size:            1\n        arg_index:       0\n        source_offset:   382\n      - arg_type:        arg_byvalue\n        offset:          520\n        size:            1\n        arg_index:       0\n        source_offset:   383\n      - arg_type:        arg_byvalue\n        offset:          528\n        size:            16\n        arg_index:       0\n        source_offset:   384\n      - arg_type:        arg_byvalue\n        offset:          544\n        size:            8\n        arg_index:       0\n        source_offset:   400\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          552\n        size:            65\n        arg_index:       0\n        source_offset:   408\n      - arg_type:        arg_byvalue\n        offset:          620\n        size:            1\n        arg_index:       0\n        source_offset:   473\n      - arg_type:        arg_byvalue\n        offset:          624\n        size:            1\n        arg_index:       0\n        source_offset:   474\n      - arg_type:        arg_byvalue\n        offset:          628\n        size:            1\n        arg_index:       0\n        source_offset:   475\n      - arg_type:        arg_byvalue\n        offset:          632\n        size:            1\n        arg_index:       0\n        source_offset:   476\n      - arg_type:        arg_byvalue\n        offset:          636\n        size:            1\n        arg_index:       0\n        source_offset:   477\n      - arg_type:        arg_byvalue\n        offset:          640\n        size:            1\n        arg_index:       0\n        source_offset:   478\n      - arg_type:        arg_byvalue\n        offset:          644\n        size:            1\n        arg_index:       0\n        source_offset:   479\n      - arg_type:        arg_byvalue\n        offset:          648\n        size:            53\n        arg_index:       0\n        source_offset:   480\n      - arg_type:        arg_byvalue\n        offset:          704\n        size:            1\n        arg_index:       0\n        source_offset:   533\n      - arg_type:        arg_byvalue\n        offset:          708\n        size:            1\n        arg_index:       0\n        source_offset:   534\n      - arg_type:        arg_byvalue\n        offset:          712\n        size:            1\n        arg_index:       0\n        source_offset:   535\n      - arg_type:        arg_byvalue\n        offset:          720\n        size:            16\n        arg_index:       0\n        source_offset:   536\n      - arg_type:        arg_byvalue\n        offset:          736\n        size:            8\n        arg_index:       0\n        source_offset:   552\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          744\n        size:            65\n        arg_index:       0\n        source_offset:   560\n      - arg_type:        arg_byvalue\n        offset:          812\n        size:            1\n        arg_index:       0\n        source_offset:   625\n      - arg_type:        arg_byvalue\n        offset:          816\n        size:            1\n        arg_index:       0\n        source_offset:   626\n      - arg_type:        arg_byvalue\n        offset:          820\n        size:            1\n        arg_index:       0\n        source_offset:   627\n      - arg_type:        arg_byvalue\n        offset:          824\n        size:            1\n        arg_index:       0\n        source_offset:   628\n      - arg_type:        arg_byvalue\n        offset:          828\n        size:            1\n        arg_index:       0\n        source_offset:   629\n      - arg_type:        arg_byvalue\n        offset:          832\n        size:            1\n        arg_index:       0\n        source_offset:   630\n      - arg_type:        arg_byvalue\n        offset:          836\n        size:            1\n        arg_index:       0\n        source_offset:   631\n      - arg_type:        arg_byvalue\n        offset:          840\n        size:            53\n        arg_index:       0\n        source_offset:   632\n      - arg_type:        arg_byvalue\n        offset:          896\n        size:            1\n        arg_index:       0\n        source_offset:   685\n      - arg_type:        arg_byvalue\n        offset:          900\n        size:            1\n        arg_index:       0\n        source_offset:   686\n      - arg_type:        arg_byvalue\n        offset:          904\n        size:            1\n        arg_index:       0\n        source_offset:   687\n      - arg_type:        arg_byvalue\n        offset:          912\n        size:            16\n        arg_index:       0\n        source_offset:   688\n      - arg_type:        arg_byvalue\n        offset:          928\n        size:            8\n        arg_index:       0\n        source_offset:   704\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          936\n        size:            65\n        arg_index:       0\n        source_offset:   712\n      - arg_type:        arg_byvalue\n        offset:          1004\n        size:            1\n        arg_index:       0\n        source_offset:   777\n      - arg_type:        arg_byvalue\n        offset:          1008\n        size:            1\n        arg_index:       0\n        source_offset:   778\n      - arg_type:        arg_byvalue\n        offset:          1012\n        size:            1\n        arg_index:       0\n        source_offset:   779\n      - arg_type:        arg_byvalue\n        offset:          1016\n        size:            1\n        arg_index:       0\n        source_offset:   780\n      - arg_type:        arg_byvalue\n        offset:          1020\n        size:            1\n        arg_index:       0\n        source_offset:   781\n      - arg_type:        arg_byvalue\n        offset:          1024\n        size:            1\n        arg_index:       0\n        source_offset:   782\n      - arg_type:        arg_byvalue\n        offset:          1028\n        size:            1\n        arg_index:       0\n        source_offset:   783\n      - arg_type:        arg_byvalue\n        offset:          1032\n        size:            53\n        arg_index:       0\n        source_offset:   784\n      - arg_type:        arg_byvalue\n        offset:          1088\n        size:            1\n        arg_index:       0\n        source_offset:   837\n      - arg_type:        arg_byvalue\n        offset:          1092\n        size:            1\n        arg_index:       0\n        source_offset:   838\n      - arg_type:        arg_byvalue\n        offset:          1096\n        size:            1\n        arg_index:       0\n        source_offset:   839\n      - arg_type:        arg_byvalue\n        offset:          1104\n        size:            16\n        arg_index:       0\n        source_offset:   840\n      - arg_type:        arg_byvalue\n        offset:          1120\n        size:            8\n        arg_index:       0\n        source_offset:   856\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1128\n        size:            65\n        arg_index:       0\n        source_offset:   864\n      - arg_type:        arg_byvalue\n        offset:          1196\n        size:            1\n        arg_index:       0\n        source_offset:   929\n      - arg_type:        arg_byvalue\n        offset:          1200\n        size:            1\n        arg_index:       0\n        source_offset:   930\n      - arg_type:        arg_byvalue\n        offset:          1204\n        size:            1\n        arg_index:       0\n        source_offset:   931\n      - arg_type:        arg_byvalue\n        offset:          1208\n        size:            1\n        arg_index:       0\n        source_offset:   932\n      - arg_type:        arg_byvalue\n        offset:          1212\n        size:            1\n        arg_index:       0\n        source_offset:   933\n      - arg_type:        arg_byvalue\n        offset:          1216\n        size:            1\n        arg_index:       0\n        source_offset:   934\n      - arg_type:        arg_byvalue\n        offset:          1220\n        size:            1\n        arg_index:       0\n        source_offset:   935\n      - arg_type:        arg_byvalue\n        offset:          1224\n        size:            53\n        arg_index:       0\n        source_offset:   936\n      - arg_type:        arg_byvalue\n        offset:          1280\n        size:            1\n        arg_index:       0\n        source_offset:   989\n      - arg_type:        arg_byvalue\n        offset:          1284\n        size:            1\n        arg_index:       0\n        source_offset:   990\n      - arg_type:        arg_byvalue\n        offset:          1288\n        size:            1\n        arg_index:       0\n        source_offset:   991\n      - arg_type:        arg_byvalue\n        offset:          1296\n        size:            16\n        arg_index:       0\n        source_offset:   992\n      - arg_type:        arg_byvalue\n        offset:          1312\n        size:            8\n        arg_index:       0\n        source_offset:   1008\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1320\n        size:            65\n        arg_index:       0\n        source_offset:   1016\n      - arg_type:        arg_byvalue\n        offset:          1388\n        size:            1\n        arg_index:       0\n        source_offset:   1081\n      - arg_type:        arg_byvalue\n        offset:          1392\n        size:            1\n        arg_index:       0\n        source_offset:   1082\n      - arg_type:        arg_byvalue\n        offset:          1396\n        size:            1\n        arg_index:       0\n        source_offset:   1083\n      - arg_type:        arg_byvalue\n        offset:          1400\n        size:            1\n        arg_index:       0\n        source_offset:   1084\n      - arg_type:        arg_byvalue\n        offset:          1404\n        size:            1\n        arg_index:       0\n        source_offset:   1085\n      - arg_type:        arg_byvalue\n        offset:          1408\n        size:            1\n        arg_index:       0\n        source_offset:   1086\n      - arg_type:        arg_byvalue\n        offset:          1412\n        size:            1\n        arg_index:       0\n        source_offset:   1087\n      - arg_type:        arg_byvalue\n        offset:          1416\n        size:            53\n        arg_index:       0\n        source_offset:   1088\n      - arg_type:        arg_byvalue\n        offset:          1472\n        size:            1\n        arg_index:       0\n        source_offset:   1141\n      - arg_type:        arg_byvalue\n        offset:          1476\n        size:            1\n        arg_index:       0\n        source_offset:   1142\n      - arg_type:        arg_byvalue\n        offset:          1480\n        size:            1\n        arg_index:       0\n        source_offset:   1143\n      - arg_type:        arg_byvalue\n        offset:          1488\n        size:            16\n        arg_index:       0\n        source_offset:   1144\n      - arg_type:        arg_byvalue\n        offset:          1504\n        size:            8\n        arg_index:       0\n        source_offset:   1160\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1512\n        size:            61\n        arg_index:       0\n        source_offset:   1168\n      - arg_type:        arg_byvalue\n        offset:          1576\n        size:            1\n        arg_index:       0\n        source_offset:   1229\n      - arg_type:        arg_byvalue\n        offset:          1580\n        size:            1\n        arg_index:       0\n        source_offset:   1230\n      - arg_type:        arg_byvalue\n        offset:          1584\n        size:            1\n        arg_index:       0\n        source_offset:   1231\n      - arg_type:        arg_byvalue\n        offset:          1592\n        size:            8\n        arg_index:       0\n        source_offset:   1232\n        is_ptr:          true\n      - arg_type:        arg_byvalue\n        offset:          1600\n        size:            5\n        arg_index:       0\n        source_offset:   1240\n      - arg_type:        arg_byvalue\n        offset:          1608\n        size:            1\n        arg_index:       0\n        source_offset:   1245\n      - arg_type:        arg_byvalue\n        offset:          1612\n        size:            1\n        arg_index:       0\n        source_offset:   1246\n      - arg_type:        arg_byvalue\n        offset:          1616\n        size:            1\n        arg_index:       0\n        source_offset:   1247\n      - arg_type:        arg_byvalue\n        offset:          1624\n        size:            8\n        arg_index:       0\n        source_offset:   1248\n        is_ptr:          true\n    per_thread_payload_arguments:\n      - arg_type:        local_id\n        offset:          0\n        size:            64\n",
+      "options_ascii": "-cl-fp32-correctly-rounded-divide-sqrt",
+      "inventory": {
+        "": {
+          "type": 0,
+          "flags": 0,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        ".text._ZTS16dpct_kernel_nameIJZN6strata7kernels19fused_gr_read_multiEPKNS1_11FusedGrArgsEiPfPvPyiE16gr_down_reduce_kEE": {
+          "type": 1,
+          "flags": 6,
+          "bytes": 16512,
+          "sha256": "e522fac446a5a606f6381698541d7931c4e67c9a232271f64495b14d11cb4371"
+        },
+        ".symtab": {
+          "type": 2,
+          "flags": 0,
+          "bytes": 96,
+          "sha256": "739e619dd84213bba53e7bf3eff86565993e083270291c7712dd96525c8997d6"
+        },
+        ".spv": {
+          "type": 4278190089,
+          "flags": 0,
+          "bytes": 3808,
+          "sha256": "fa827b5107bb0807c339dea1133e2ce16a47c8012ed51d01846ad2a924c6f4ce"
+        },
+        ".misc.buildOptions": {
+          "type": 4278190100,
+          "flags": 0,
+          "bytes": 38,
+          "sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f"
+        },
+        ".note.intelgt.metrics": {
+          "type": 7,
+          "flags": 0,
+          "bytes": 3,
+          "sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c"
+        },
+        ".rel.text._ZTS16dpct_kernel_nameIJZN6strata7kernels19fused_gr_read_multiEPKNS1_11FusedGrArgsEiPfPvPyiE16gr_down_reduce_kEE": {
+          "type": 9,
+          "flags": 0,
+          "bytes": 32,
+          "sha256": "1e0901df04f721feb450423d70836de8b24b445c58268c542d69a1607dc91a03"
+        },
+        ".ze_info": {
+          "type": 4278190097,
+          "flags": 0,
+          "bytes": 19866,
+          "sha256": "cfdffbd515f66f4ad30bfd613ca13389dc499b471fdd477702158fdf48eda98c"
+        },
+        ".note.intelgt.compat": {
+          "type": 7,
+          "flags": 0,
+          "bytes": 172,
+          "sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1"
+        },
+        ".strtab": {
+          "type": 3,
+          "flags": 0,
+          "bytes": 496,
+          "sha256": "c597b3dacaa9703b2dc3309d852afdd39221531603a047d1a96373846d251321"
+        }
+      },
+      "short_alias": {
+        "bytes": 41808,
+        "sha256": "ffd65f142d477e3cd2c36a1e7daf1f4462217ffeb4bb633729f20716391a5f96",
+        "section_name": ".text.hc_reduce",
+        "only_selected_section_name_changed": true,
+        "text_byte_exact": true
+      }
+    }
+  },
+  "historical_runtime_controls": [
+    {
+      "stage": "attn-value-fixed-policy-s113-prep",
+      "arm": 0,
+      "exe_sha256": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca",
+      "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+      "configured_HC_flags": {},
+      "recorded_effective_HC_flags": {},
+      "container_HC_environment": [],
+      "effective_env_scope": "Native identity is a configured-key projection; absence there alone cannot prove full process absence. Container env and child_env source inherit/overlay strengthen source-conditioned normal-default selection, not dynamic dispatch proof."
+    },
+    {
+      "stage": "attn-value-fixed-policy-s113-prep",
+      "arm": 1,
+      "exe_sha256": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca",
+      "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+      "configured_HC_flags": {},
+      "recorded_effective_HC_flags": {},
+      "container_HC_environment": [],
+      "effective_env_scope": "Native identity is a configured-key projection; absence there alone cannot prove full process absence. Container env and child_env source inherit/overlay strengthen source-conditioned normal-default selection, not dynamic dispatch proof."
+    },
+    {
+      "stage": "q6-a4-main-s107-prep",
+      "arm": 0,
+      "exe_sha256": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca",
+      "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+      "configured_HC_flags": {},
+      "recorded_effective_HC_flags": {},
+      "container_HC_environment": [],
+      "effective_env_scope": "Native identity is a configured-key projection; absence there alone cannot prove full process absence. Container env and child_env source inherit/overlay strengthen source-conditioned normal-default selection, not dynamic dispatch proof."
+    },
+    {
+      "stage": "q6-a4-main-s107-prep",
+      "arm": 1,
+      "exe_sha256": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca",
+      "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+      "configured_HC_flags": {},
+      "recorded_effective_HC_flags": {},
+      "container_HC_environment": [],
+      "effective_env_scope": "Native identity is a configured-key projection; absence there alone cannot prove full process absence. Container env and child_env source inherit/overlay strengthen source-conditioned normal-default selection, not dynamic dispatch proof."
+    }
+  ],
+  "all_image_walk": false,
+  "decoder_invocations": 0,
+  "GPU": 0,
+  "limits": [
+    "Static host Info/cache/guard/name/exact selected image binding is not runtime dispatch proof.",
+    "No current main/archive full hash; root-authorized existing identities reused with pre/post stat continuity and exact selected archive member/object comparison.",
+    "Normal-default source branch and historical selected S95 event name are separate evidence from static host binding.",
+    "Absent resource fields unknown; raw byte identity and ordered floating-point dataflow require separate claims."
+  ]
+}

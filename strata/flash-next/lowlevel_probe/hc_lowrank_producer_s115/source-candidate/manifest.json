@@ -1,0 +1,30 @@
+{
+  "status": "FROZEN_SOURCE_CANDIDATE_ONLY_NO_IMPLEMENTATION_OR_EXECUTION",
+  "files": [
+    {
+      "file": "S95-existing-small-operation-subset.json",
+      "bytes": 6406,
+      "sha256": "11170728b566c50bc3d39292bc75e940e91cc5a9a41396f0c36a36a65d417c5c"
+    },
+    {
+      "file": "findings.md",
+      "bytes": 9758,
+      "sha256": "02f341d3215b06d37502db8786d8c23f895a4b31c26c7039a23340114b51ade2"
+    },
+    {
+      "file": "lo-uses-source-scan.txt",
+      "bytes": 3233,
+      "sha256": "2781ac81d320e6f9b0ec871b2a5c18366f865af6369f6dc31f44502a5f193ced"
+    },
+    {
+      "file": "pins.json",
+      "bytes": 3801,
+      "sha256": "caf89383bd1a1fa2ad9106287275c57724bece27331b8d1ae2de5c98d1971732"
+    },
+    {
+      "file": "source-excerpts.json",
+      "bytes": 19081,
+      "sha256": "38ed650297f13c999ac136f513d3e574355a8b1d6c42b5d6eb4fd359ae53d741"
+    }
+  ]
+}

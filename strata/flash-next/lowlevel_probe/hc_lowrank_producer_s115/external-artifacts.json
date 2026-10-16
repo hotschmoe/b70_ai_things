@@ -1,0 +1,237 @@
+{
+  "status": "RECORDED_EXTERNAL_IDENTITIES_ONLY_NO_NEW_LARGE_ARTIFACT_READ_OR_HASH",
+  "records": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/attempt1-public-entry-predicate-HOLD/selected/fused_gr.dp.cpp.o",
+      "bytes": 607880,
+      "sha256": "27d0ab6aff30126bd317584b4b2cbacd0b4667764f9cf624738625c787c07d99",
+      "kind": "binary",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/fused_gr.dp.cpp.o",
+      "bytes": 607880,
+      "sha256": "27d0ab6aff30126bd317584b4b2cbacd0b4667764f9cf624738625c787c07d99",
+      "kind": "binary",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/host-0.asm",
+      "bytes": 163269,
+      "sha256": "f6dadde3abf5fb709df5be8ef058d6ce5d521f9508a89297ffdb3ca5d23ba5c2",
+      "kind": "text",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/host-1.asm",
+      "bytes": 231905,
+      "sha256": "76ed164151d5f483029cc0f4bd36f1d71da227082c38a8d27f2ff7f002be5592",
+      "kind": "text",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/reduce-isa/disasm/.misc.buildOptions",
+      "bytes": 38,
+      "sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f",
+      "kind": "text",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/reduce-isa/disasm/.note.intelgt.compat",
+      "bytes": 172,
+      "sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1",
+      "kind": "binary",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/reduce-isa/disasm/.note.intelgt.metrics",
+      "bytes": 3,
+      "sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c",
+      "kind": "text",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/reduce-isa/disasm/.rel.text._ZTS16dpct_kernel_nameIJZN6strata7kernels19fused_gr_read_multiEPKNS1_11FusedGrArgsEiPfPvPyiE16gr_down_reduce_kEE",
+      "bytes": 43,
+      "sha256": "ee7e374724b44a40fba5966333ccfc240d742254f34186ca217b4899add5c628",
+      "kind": "text",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/reduce-isa/disasm/.spv",
+      "bytes": 3808,
+      "sha256": "fa827b5107bb0807c339dea1133e2ce16a47c8012ed51d01846ad2a924c6f4ce",
+      "kind": "binary",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/reduce-isa/disasm/.symtab",
+      "bytes": 329,
+      "sha256": "e994b86065fc1fcdd8ac687ca9410d181dfaddef29cee601459b2be74b300db4",
+      "kind": "text",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/reduce-isa/disasm/.text.hc_reduce.asm",
+      "bytes": 110420,
+      "sha256": "50dd08418b95a26a4f56e9acb6cccebeaece48a6b0687b292edeadba65f8fdb6",
+      "kind": "text",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/reduce-isa/disasm/.ze_info",
+      "bytes": 19866,
+      "sha256": "cfdffbd515f66f4ad30bfd613ca13389dc499b471fdd477702158fdf48eda98c",
+      "kind": "text",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/reduce-shortname.zebin",
+      "bytes": 41808,
+      "sha256": "ffd65f142d477e3cd2c36a1e7daf1f4462217ffeb4bb633729f20716391a5f96",
+      "kind": "binary",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/reduce.zebin",
+      "bytes": 41808,
+      "sha256": "e3bc585a3a07820bbf2da672d8460a8d09201901388650342fad2036347a0e6b",
+      "kind": "binary",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/up-isa/disasm/.misc.buildOptions",
+      "bytes": 38,
+      "sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f",
+      "kind": "text",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/up-isa/disasm/.note.intelgt.compat",
+      "bytes": 172,
+      "sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1",
+      "kind": "binary",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/up-isa/disasm/.note.intelgt.metrics",
+      "bytes": 3,
+      "sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c",
+      "kind": "text",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/up-isa/disasm/.rel.text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi16EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi16EEEE",
+      "bytes": 43,
+      "sha256": "ee7e374724b44a40fba5966333ccfc240d742254f34186ca217b4899add5c628",
+      "kind": "text",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/up-isa/disasm/.spv",
+      "bytes": 21036,
+      "sha256": "1a91ed724f6487fe7c4b47f332b3ca7f88a887fd9e71df0d0598e28023003f5c",
+      "kind": "binary",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/up-isa/disasm/.symtab",
+      "bytes": 374,
+      "sha256": "ef24d7ae6664186e136d84384357aa3369f6f3ec8aea0ed0a028402c054059d9",
+      "kind": "text",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/up-isa/disasm/.text.hc_up.asm",
+      "bytes": 626376,
+      "sha256": "21d6b5f3546f2817004265222a7f65b39bee9b885a01f2bd94d65111b9839457",
+      "kind": "text",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/up-isa/disasm/.ze_info",
+      "bytes": 31476,
+      "sha256": "7f9a748d10facfd2ec4315e284060e5d8abd5dcd075a1ba169e6e398c2917c26",
+      "kind": "text",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/up-shortname.zebin",
+      "bytes": 137368,
+      "sha256": "fe97dc8f0a60f4c20edd5679a8443e3b5447b5d5a941cedf372a2fd184d22cef",
+      "kind": "binary",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/selected/up.zebin",
+      "bytes": 137368,
+      "sha256": "d8b21b3d266f2876d8a6b82d8e923d04eefc41c95dedf989d80409c7b515c0a0",
+      "kind": "binary",
+      "hash_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/MANIFEST.json",
+      "new_read_or_hash": false,
+      "reason": "Full host/device ASM or binary image/member/decoder payload retained external; bounded exact excerpts/metadata/inventories copied."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/strata-q6-a4-s107",
+      "sha256": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca",
+      "bytes": 92372200,
+      "new_read_or_hash": false,
+      "identity_source": "offline-audit/selected/facts.json prior root identity and unchanged pre/post stat, not new complete hash",
+      "reason": "Frozen S107 main external."
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/libstrata_kernels.a",
+      "sha256": "cf710683aec404599d1cc6173bf8364e6d30731bda82b315df286bf58aed9b38",
+      "bytes": 19547694,
+      "new_read_or_hash": false,
+      "identity_source": "offline-audit/selected/facts.json prior root identity and selected member comparison, not new complete hash",
+      "reason": "Kernel archive external."
+    }
+  ]
+}

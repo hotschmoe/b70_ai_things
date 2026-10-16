@@ -1,0 +1,10 @@
+ElfType 64b
+Section name, Section type
+.text.hc_up, 1
+.symtab, 2
+.spv, 4278190089
+.misc.buildOptions, 4278190100
+.note.intelgt.metrics, 7
+.rel.text._ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_117launch_gr_up_colsILi16EEEvPN4sycl3_V15queueERKNS2_7GrMultiEbE16gr_up_multi_cols18dpct_kernel_scalarILi16EEEE, 9
+.ze_info, 4278190097
+.note.intelgt.compat, 7

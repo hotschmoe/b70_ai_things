@@ -1,0 +1,656 @@
+---
+version:         '1.71'
+kernels:
+  - name:            _ZTS16dpct_kernel_nameIJZN6strata7kernels19fused_gr_read_multiEPKNS1_11FusedGrArgsEiPfPvPyiE16gr_down_reduce_kEE
+    user_attributes:
+      intel_reqd_sub_group_size: 32
+      intel_reqd_workgroup_walk_order: [ 0, 1, 2 ]
+    execution_env:
+      grf_count:       128
+      has_4gb_buffers: true
+      has_no_stateless_write: true
+      inline_data_payload_size: 32
+      offset_to_skip_per_thread_data_load: 128
+      simd_size:       32
+      subgroup_independent_forward_progress: true
+      eu_thread_count: 8
+    payload_arguments:
+      - arg_type:        global_id_offset
+        offset:          0
+        size:            12
+      - arg_type:        enqueued_local_size
+        offset:          12
+        size:            12
+      - arg_type:        arg_byvalue
+        offset:          24
+        size:            17
+        arg_index:       0
+        source_offset:   0
+      - arg_type:        arg_byvalue
+        offset:          44
+        size:            1
+        arg_index:       0
+        source_offset:   17
+      - arg_type:        arg_byvalue
+        offset:          48
+        size:            1
+        arg_index:       0
+        source_offset:   18
+      - arg_type:        arg_byvalue
+        offset:          52
+        size:            1
+        arg_index:       0
+        source_offset:   19
+      - arg_type:        arg_byvalue
+        offset:          56
+        size:            1
+        arg_index:       0
+        source_offset:   20
+      - arg_type:        arg_byvalue
+        offset:          60
+        size:            1
+        arg_index:       0
+        source_offset:   21
+      - arg_type:        arg_byvalue
+        offset:          64
+        size:            1
+        arg_index:       0
+        source_offset:   22
+      - arg_type:        arg_byvalue
+        offset:          68
+        size:            1
+        arg_index:       0
+        source_offset:   23
+      - arg_type:        arg_byvalue
+        offset:          72
+        size:            53
+        arg_index:       0
+        source_offset:   24
+      - arg_type:        arg_byvalue
+        offset:          128
+        size:            1
+        arg_index:       0
+        source_offset:   77
+      - arg_type:        arg_byvalue
+        offset:          132
+        size:            1
+        arg_index:       0
+        source_offset:   78
+      - arg_type:        arg_byvalue
+        offset:          136
+        size:            1
+        arg_index:       0
+        source_offset:   79
+      - arg_type:        arg_byvalue
+        offset:          144
+        size:            16
+        arg_index:       0
+        source_offset:   80
+      - arg_type:        arg_byvalue
+        offset:          160
+        size:            8
+        arg_index:       0
+        source_offset:   96
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          168
+        size:            65
+        arg_index:       0
+        source_offset:   104
+      - arg_type:        arg_byvalue
+        offset:          236
+        size:            1
+        arg_index:       0
+        source_offset:   169
+      - arg_type:        arg_byvalue
+        offset:          240
+        size:            1
+        arg_index:       0
+        source_offset:   170
+      - arg_type:        arg_byvalue
+        offset:          244
+        size:            1
+        arg_index:       0
+        source_offset:   171
+      - arg_type:        arg_byvalue
+        offset:          248
+        size:            1
+        arg_index:       0
+        source_offset:   172
+      - arg_type:        arg_byvalue
+        offset:          252
+        size:            1
+        arg_index:       0
+        source_offset:   173
+      - arg_type:        arg_byvalue
+        offset:          256
+        size:            1
+        arg_index:       0
+        source_offset:   174
+      - arg_type:        arg_byvalue
+        offset:          260
+        size:            1
+        arg_index:       0
+        source_offset:   175
+      - arg_type:        arg_byvalue
+        offset:          264
+        size:            53
+        arg_index:       0
+        source_offset:   176
+      - arg_type:        arg_byvalue
+        offset:          320
+        size:            1
+        arg_index:       0
+        source_offset:   229
+      - arg_type:        arg_byvalue
+        offset:          324
+        size:            1
+        arg_index:       0
+        source_offset:   230
+      - arg_type:        arg_byvalue
+        offset:          328
+        size:            1
+        arg_index:       0
+        source_offset:   231
+      - arg_type:        arg_byvalue
+        offset:          336
+        size:            16
+        arg_index:       0
+        source_offset:   232
+      - arg_type:        arg_byvalue
+        offset:          352
+        size:            8
+        arg_index:       0
+        source_offset:   248
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          360
+        size:            65
+        arg_index:       0
+        source_offset:   256
+      - arg_type:        arg_byvalue
+        offset:          428
+        size:            1
+        arg_index:       0
+        source_offset:   321
+      - arg_type:        arg_byvalue
+        offset:          432
+        size:            1
+        arg_index:       0
+        source_offset:   322
+      - arg_type:        arg_byvalue
+        offset:          436
+        size:            1
+        arg_index:       0
+        source_offset:   323
+      - arg_type:        arg_byvalue
+        offset:          440
+        size:            1
+        arg_index:       0
+        source_offset:   324
+      - arg_type:        arg_byvalue
+        offset:          444
+        size:            1
+        arg_index:       0
+        source_offset:   325
+      - arg_type:        arg_byvalue
+        offset:          448
+        size:            1
+        arg_index:       0
+        source_offset:   326
+      - arg_type:        arg_byvalue
+        offset:          452
+        size:            1
+        arg_index:       0
+        source_offset:   327
+      - arg_type:        arg_byvalue
+        offset:          456
+        size:            53
+        arg_index:       0
+        source_offset:   328
+      - arg_type:        arg_byvalue
+        offset:          512
+        size:            1
+        arg_index:       0
+        source_offset:   381
+      - arg_type:        arg_byvalue
+        offset:          516
+        size:            1
+        arg_index:       0
+        source_offset:   382
+      - arg_type:        arg_byvalue
+        offset:          520
+        size:            1
+        arg_index:       0
+        source_offset:   383
+      - arg_type:        arg_byvalue
+        offset:          528
+        size:            16
+        arg_index:       0
+        source_offset:   384
+      - arg_type:        arg_byvalue
+        offset:          544
+        size:            8
+        arg_index:       0
+        source_offset:   400
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          552
+        size:            65
+        arg_index:       0
+        source_offset:   408
+      - arg_type:        arg_byvalue
+        offset:          620
+        size:            1
+        arg_index:       0
+        source_offset:   473
+      - arg_type:        arg_byvalue
+        offset:          624
+        size:            1
+        arg_index:       0
+        source_offset:   474
+      - arg_type:        arg_byvalue
+        offset:          628
+        size:            1
+        arg_index:       0
+        source_offset:   475
+      - arg_type:        arg_byvalue
+        offset:          632
+        size:            1
+        arg_index:       0
+        source_offset:   476
+      - arg_type:        arg_byvalue
+        offset:          636
+        size:            1
+        arg_index:       0
+        source_offset:   477
+      - arg_type:        arg_byvalue
+        offset:          640
+        size:            1
+        arg_index:       0
+        source_offset:   478
+      - arg_type:        arg_byvalue
+        offset:          644
+        size:            1
+        arg_index:       0
+        source_offset:   479
+      - arg_type:        arg_byvalue
+        offset:          648
+        size:            53
+        arg_index:       0
+        source_offset:   480
+      - arg_type:        arg_byvalue
+        offset:          704
+        size:            1
+        arg_index:       0
+        source_offset:   533
+      - arg_type:        arg_byvalue
+        offset:          708
+        size:            1
+        arg_index:       0
+        source_offset:   534
+      - arg_type:        arg_byvalue
+        offset:          712
+        size:            1
+        arg_index:       0
+        source_offset:   535
+      - arg_type:        arg_byvalue
+        offset:          720
+        size:            16
+        arg_index:       0
+        source_offset:   536
+      - arg_type:        arg_byvalue
+        offset:          736
+        size:            8
+        arg_index:       0
+        source_offset:   552
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          744
+        size:            65
+        arg_index:       0
+        source_offset:   560
+      - arg_type:        arg_byvalue
+        offset:          812
+        size:            1
+        arg_index:       0
+        source_offset:   625
+      - arg_type:        arg_byvalue
+        offset:          816
+        size:            1
+        arg_index:       0
+        source_offset:   626
+      - arg_type:        arg_byvalue
+        offset:          820
+        size:            1
+        arg_index:       0
+        source_offset:   627
+      - arg_type:        arg_byvalue
+        offset:          824
+        size:            1
+        arg_index:       0
+        source_offset:   628
+      - arg_type:        arg_byvalue
+        offset:          828
+        size:            1
+        arg_index:       0
+        source_offset:   629
+      - arg_type:        arg_byvalue
+        offset:          832
+        size:            1
+        arg_index:       0
+        source_offset:   630
+      - arg_type:        arg_byvalue
+        offset:          836
+        size:            1
+        arg_index:       0
+        source_offset:   631
+      - arg_type:        arg_byvalue
+        offset:          840
+        size:            53
+        arg_index:       0
+        source_offset:   632
+      - arg_type:        arg_byvalue
+        offset:          896
+        size:            1
+        arg_index:       0
+        source_offset:   685
+      - arg_type:        arg_byvalue
+        offset:          900
+        size:            1
+        arg_index:       0
+        source_offset:   686
+      - arg_type:        arg_byvalue
+        offset:          904
+        size:            1
+        arg_index:       0
+        source_offset:   687
+      - arg_type:        arg_byvalue
+        offset:          912
+        size:            16
+        arg_index:       0
+        source_offset:   688
+      - arg_type:        arg_byvalue
+        offset:          928
+        size:            8
+        arg_index:       0
+        source_offset:   704
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          936
+        size:            65
+        arg_index:       0
+        source_offset:   712
+      - arg_type:        arg_byvalue
+        offset:          1004
+        size:            1
+        arg_index:       0
+        source_offset:   777
+      - arg_type:        arg_byvalue
+        offset:          1008
+        size:            1
+        arg_index:       0
+        source_offset:   778
+      - arg_type:        arg_byvalue
+        offset:          1012
+        size:            1
+        arg_index:       0
+        source_offset:   779
+      - arg_type:        arg_byvalue
+        offset:          1016
+        size:            1
+        arg_index:       0
+        source_offset:   780
+      - arg_type:        arg_byvalue
+        offset:          1020
+        size:            1
+        arg_index:       0
+        source_offset:   781
+      - arg_type:        arg_byvalue
+        offset:          1024
+        size:            1
+        arg_index:       0
+        source_offset:   782
+      - arg_type:        arg_byvalue
+        offset:          1028
+        size:            1
+        arg_index:       0
+        source_offset:   783
+      - arg_type:        arg_byvalue
+        offset:          1032
+        size:            53
+        arg_index:       0
+        source_offset:   784
+      - arg_type:        arg_byvalue
+        offset:          1088
+        size:            1
+        arg_index:       0
+        source_offset:   837
+      - arg_type:        arg_byvalue
+        offset:          1092
+        size:            1
+        arg_index:       0
+        source_offset:   838
+      - arg_type:        arg_byvalue
+        offset:          1096
+        size:            1
+        arg_index:       0
+        source_offset:   839
+      - arg_type:        arg_byvalue
+        offset:          1104
+        size:            16
+        arg_index:       0
+        source_offset:   840
+      - arg_type:        arg_byvalue
+        offset:          1120
+        size:            8
+        arg_index:       0
+        source_offset:   856
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1128
+        size:            65
+        arg_index:       0
+        source_offset:   864
+      - arg_type:        arg_byvalue
+        offset:          1196
+        size:            1
+        arg_index:       0
+        source_offset:   929
+      - arg_type:        arg_byvalue
+        offset:          1200
+        size:            1
+        arg_index:       0
+        source_offset:   930
+      - arg_type:        arg_byvalue
+        offset:          1204
+        size:            1
+        arg_index:       0
+        source_offset:   931
+      - arg_type:        arg_byvalue
+        offset:          1208
+        size:            1
+        arg_index:       0
+        source_offset:   932
+      - arg_type:        arg_byvalue
+        offset:          1212
+        size:            1
+        arg_index:       0
+        source_offset:   933
+      - arg_type:        arg_byvalue
+        offset:          1216
+        size:            1
+        arg_index:       0
+        source_offset:   934
+      - arg_type:        arg_byvalue
+        offset:          1220
+        size:            1
+        arg_index:       0
+        source_offset:   935
+      - arg_type:        arg_byvalue
+        offset:          1224
+        size:            53
+        arg_index:       0
+        source_offset:   936
+      - arg_type:        arg_byvalue
+        offset:          1280
+        size:            1
+        arg_index:       0
+        source_offset:   989
+      - arg_type:        arg_byvalue
+        offset:          1284
+        size:            1
+        arg_index:       0
+        source_offset:   990
+      - arg_type:        arg_byvalue
+        offset:          1288
+        size:            1
+        arg_index:       0
+        source_offset:   991
+      - arg_type:        arg_byvalue
+        offset:          1296
+        size:            16
+        arg_index:       0
+        source_offset:   992
+      - arg_type:        arg_byvalue
+        offset:          1312
+        size:            8
+        arg_index:       0
+        source_offset:   1008
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1320
+        size:            65
+        arg_index:       0
+        source_offset:   1016
+      - arg_type:        arg_byvalue
+        offset:          1388
+        size:            1
+        arg_index:       0
+        source_offset:   1081
+      - arg_type:        arg_byvalue
+        offset:          1392
+        size:            1
+        arg_index:       0
+        source_offset:   1082
+      - arg_type:        arg_byvalue
+        offset:          1396
+        size:            1
+        arg_index:       0
+        source_offset:   1083
+      - arg_type:        arg_byvalue
+        offset:          1400
+        size:            1
+        arg_index:       0
+        source_offset:   1084
+      - arg_type:        arg_byvalue
+        offset:          1404
+        size:            1
+        arg_index:       0
+        source_offset:   1085
+      - arg_type:        arg_byvalue
+        offset:          1408
+        size:            1
+        arg_index:       0
+        source_offset:   1086
+      - arg_type:        arg_byvalue
+        offset:          1412
+        size:            1
+        arg_index:       0
+        source_offset:   1087
+      - arg_type:        arg_byvalue
+        offset:          1416
+        size:            53
+        arg_index:       0
+        source_offset:   1088
+      - arg_type:        arg_byvalue
+        offset:          1472
+        size:            1
+        arg_index:       0
+        source_offset:   1141
+      - arg_type:        arg_byvalue
+        offset:          1476
+        size:            1
+        arg_index:       0
+        source_offset:   1142
+      - arg_type:        arg_byvalue
+        offset:          1480
+        size:            1
+        arg_index:       0
+        source_offset:   1143
+      - arg_type:        arg_byvalue
+        offset:          1488
+        size:            16
+        arg_index:       0
+        source_offset:   1144
+      - arg_type:        arg_byvalue
+        offset:          1504
+        size:            8
+        arg_index:       0
+        source_offset:   1160
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1512
+        size:            61
+        arg_index:       0
+        source_offset:   1168
+      - arg_type:        arg_byvalue
+        offset:          1576
+        size:            1
+        arg_index:       0
+        source_offset:   1229
+      - arg_type:        arg_byvalue
+        offset:          1580
+        size:            1
+        arg_index:       0
+        source_offset:   1230
+      - arg_type:        arg_byvalue
+        offset:          1584
+        size:            1
+        arg_index:       0
+        source_offset:   1231
+      - arg_type:        arg_byvalue
+        offset:          1592
+        size:            8
+        arg_index:       0
+        source_offset:   1232
+        is_ptr:          true
+      - arg_type:        arg_byvalue
+        offset:          1600
+        size:            5
+        arg_index:       0
+        source_offset:   1240
+      - arg_type:        arg_byvalue
+        offset:          1608
+        size:            1
+        arg_index:       0
+        source_offset:   1245
+      - arg_type:        arg_byvalue
+        offset:          1612
+        size:            1
+        arg_index:       0
+        source_offset:   1246
+      - arg_type:        arg_byvalue
+        offset:          1616
+        size:            1
+        arg_index:       0
+        source_offset:   1247
+      - arg_type:        arg_byvalue
+        offset:          1624
+        size:            8
+        arg_index:       0
+        source_offset:   1248
+        is_ptr:          true
+    per_thread_payload_arguments:
+      - arg_type:        local_id
+        offset:          0
+        size:            64
+kernels_misc_info:
+  - name:            _ZTS16dpct_kernel_nameIJZN6strata7kernels19fused_gr_read_multiEPKNS1_11FusedGrArgsEiPfPvPyiE16gr_down_reduce_kEE
+    args_info:
+      - index:           0
+        address_qualifier: __private
+        access_qualifier: NONE
+        type_name:       'struct strata::kernels::(anonymous namespace)::__generated_GrMulti;1256'
+        type_qualifiers: NONE
+...

@@ -1,0 +1,17 @@
+{
+  "status": "PASS_BOUNDED_OFFLINE_STATIC_AUDIT",
+  "checks": {
+    "source_ast": true,
+    "shell_parse": true,
+    "two_complete_offline_decodes": true,
+    "selected_main_stat_unchanged": true,
+    "selected_archive_stat_unchanged": true,
+    "small_source_pin_matches_candidate": true,
+    "selected_images_and_assemblies_match_records": true,
+    "no_DRI_GPU_build_or_native_CLI": true,
+    "first_parser_HOLD_preserved": true,
+    "findings_bounded_ASCII": true,
+    "all_authored_packet_files_ASCII": true
+  },
+  "scope": "No runtime correctness/performance proof; private oracle not implemented; no production edits/GPU/model/build."
+}

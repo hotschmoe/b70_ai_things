@@ -1,0 +1,96 @@
+[
+  {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/fused_gr.dp.cpp",
+    "sha256": "d62bcb252eecdbcaae81095907c2241e39c4798b7854bb499fb5643fecb24e99",
+    "excerpts": [
+      {
+        "first_line": 600,
+        "last_line": 624,
+        "text": "__dpct_inline__ void gr_down_reduce_kernel(GrMulti m) {\n    auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();\n    const int i = (int) item.get_global_id(2);\n    if (i >= m.T * GRS_ROWS) return;\n    const int k = i / GRS_ROWS, r = i - k * GRS_ROWS;\n    if (r >= LR && m.a[0].w_inject == nullptr) return;\n    float x = 0.0f;\n    if constexpr (MORE) {\n        // 8 loads in flight per step (the one-at-a-time loop was load-latency bound on the A770), then added one by\n        // one: x += slice 0, 1, 2, ... 79, the same sequence of float adds as the loop below (-fp-model=precise)\n        const float* src = m.part2 + (size_t) k * GRS_ROWS + r;\n        constexpr size_t SL_STRIDE = (size_t) kFusedGrMaxT * GRS_ROWS;\n        for (int sl = 0; sl < GRS_SLICES; sl += 8) {\n            float pv[8];\n#pragma unroll\n            for (int j = 0; j < 8; ++j) pv[j] = src[(size_t) (sl + j) * SL_STRIDE];\n#pragma unroll\n            for (int j = 0; j < 8; ++j) x += pv[j];\n        }\n    } else {\n        for (int sl = 0; sl < GRS_SLICES; ++sl) x += m.part2[((size_t) sl * kFusedGrMaxT + k) * GRS_ROWS + r];\n    }\n    if (r < LR) m.part[(size_t) k * LR + r] = x;   // split 0\n    else GR_PICK(m, k, inject_out)[r - LR] = x;\n}\n"
+      },
+      {
+        "first_line": 684,
+        "last_line": 709,
+        "text": "template <int COLS = UPM_COLS, bool ILP = false, bool LO_ONCE = false>   // columns per block: 16 (the original), 8 or 4 - each row's dot, butterfly and the per-column\n__dpct_inline__ void gr_up_multi_kernel(GrMulti m) {   // stream sum unchanged, so the same bits; more blocks, fewer serial rows per warp\n    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();\nauto &lo = *sycl::ext::oneapi::group_local_memory_for_overwrite<\n    float[kFusedGrMaxT][LR]>(\n    sycl::ext::oneapi::this_work_item::get_work_group<3>());\n    auto &g = *sycl::ext::oneapi::group_local_memory_for_overwrite<\n        float[kFusedGrMaxT][HC][COLS]>(\n        sycl::ext::oneapi::this_work_item::get_work_group<3>());\n    const int t = item_ct1.get_local_id(2), lane = t & 31, warp = t >> 5;\n    const int T = m.T;\n    const int d0 = item_ct1.get_group(2) * COLS;\n#pragma unroll\n    for (int i = t; i < T * LR; i += THREADS) {   // the down kernel's partial sums, in split order, then silu\n        const int k = i / LR, r = i % LR;\n        float x = 0.0f;\n#pragma unroll\n        for (int sp = 0; sp < DOWN_SPLIT; ++sp) if (sp < m.nsplit) x += m.part[((size_t) sp * kFusedGrMaxT + k) * LR + r];\n        x /= (float) HC;\n        const float v = x / (1.0f + sycl::native::exp(-x));\n        lo[k][r] = v;\n        if (!LO_ONCE || item_ct1.get_group(2) == 0) GR_PICK(m, k, lo)[r] = v;   // the same values in every block\n    }\n    /*\n    DPCT1065: Consider replacing sycl::nd_item::barrier() with\n    sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better\n"
+      },
+      {
+        "first_line": 842,
+        "last_line": 866,
+        "text": "                              return c == 4 || c == 8 || c == 32 || c == 64 ? c : UPM_COLS; }();\n    return v;\n}\ninline bool gr_up_ilp() {\n    static const bool v = [] { const char* e = std::getenv(\"STRATA_GR_UP_ILP\"); return e && e[0] == '1'; }();\n    return v;\n}\ntemplate <int C>\nvoid launch_gr_up_cols(dpct::queue_ptr st, const GrMulti& m, bool grf) {\n    auto exp_props = sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync};\n    const sycl::nd_range<3> r(sycl::range(1, 1, N / C) * sycl::range(1, 1, THREADS), sycl::range(1, 1, THREADS));\n    if (grf) {   // Arc A-series: large-GRF mode (256 regs/thread); at 128 this kernel spills ~3.4 KB/thread on the A770\n        st->parallel_for<dpct_kernel_name<class gr_up_multi_cols_grf256, dpct_kernel_scalar<C>>>(r,\n            sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::use_root_sync,\n                                                        sycl::ext::intel::experimental::grf_size<256>},\n            [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] { gr_up_multi_kernel<C>(m); });\n        return;\n    }\n    if (gr_up_ilp())\n        st->parallel_for<dpct_kernel_name<class gr_up_multi_cols_ilp, dpct_kernel_scalar<C>>>(r, exp_props,\n            [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] { gr_up_multi_kernel<C, true>(m); });\n    else\n        st->parallel_for<dpct_kernel_name<class gr_up_multi_cols, dpct_kernel_scalar<C>>>(r, exp_props,\n            [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] { gr_up_multi_kernel<C, false, (C == UPM_COLS)>(m); });\n}\n"
+      },
+      {
+        "first_line": 1757,
+        "last_line": 1771,
+        "text": "// one partials buffer per queue (the verifier's and the drafter's launches never share a queue; within a queue the\n// launches are ordered, and a graph capture records the pointer)\nstatic float* down_partials(sycl::queue* q) {\n    static std::mutex mu;\n    static std::unordered_map<sycl::queue*, float*> bufs;\n    std::lock_guard<std::mutex> lk(mu);\n    auto it = bufs.find(q);\n    if (it != bufs.end()) return it->second;\n    float* p = sycl::malloc_device<float>((size_t) DOWN_SPLIT * kFusedGrMaxT * LR, *q);\n    bufs[q] = p;\n    return p;\n}\n\nbool fused_gr_read_multi(const FusedGrArgs* a, int n_tok, float* xn_scratch, void* stream, unsigned long long* stamp_buf,\n                         int stamp_i0) {\n"
+      },
+      {
+        "first_line": 1954,
+        "last_line": 1984,
+        "text": "    }\n    const int chunk_tok = (dev >= 0 && dev < 64 && chunk[dev]) ? chunk[dev] : kFusedGrMaxT;\n    if (gr_down_sliced() && gr_more_groups(st)) {\n        m.part2 = slice_partials(st);\n        m.nsplit = 1;\n        if (gr_large_grf(st)) launch_gr_down_more<true>(st, m);\n        else launch_gr_down_more<false>(st, m);\n    } else if (gr_down_sliced()) {\n        m.part2 = slice_partials(st);\n        m.nsplit = 1;\n        const bool big = gr_large_grf(st);\n        st->submit([&](sycl::handler& cgh) {\n            sycl::local_accessor<float, 1> tl(sycl::range<1>((size_t) kFusedGrMaxT * GRS_COLS), cgh);\n            const sycl::nd_range<3> nr(sycl::range(1, 1, GRS_SLICES) * sycl::range(1, 1, THREADS), sycl::range(1, 1, THREADS));\n            if (big)\n                cgh.parallel_for<dpct_kernel_name<class gr_down_sliced_k_grf256>>(\n                    nr, sycl::ext::oneapi::experimental::properties{sycl::ext::intel::experimental::grf_size<256>},\n                    [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {\n                        gr_down_sliced_kernel(m, tl.get_multi_ptr<sycl::access::decorated::no>().get());\n                    });\n            else\n                cgh.parallel_for<dpct_kernel_name<class gr_down_sliced_k>>(\n                    nr, [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {\n                        gr_down_sliced_kernel(m, tl.get_multi_ptr<sycl::access::decorated::no>().get());\n                    });\n        });\n        const unsigned nred = unsigned((n_tok * GRS_ROWS + 127) / 128);\n        st->parallel_for<dpct_kernel_name<class gr_down_reduce_k>>(\n            sycl::nd_range<3>(sycl::range(1, 1, nred) * sycl::range(1, 1, 128), sycl::range(1, 1, 128)),\n            [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] { gr_down_reduce_kernel(m); });\n    } else if (gr_down_direct()) {\n"
+      }
+    ]
+  },
+  {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp",
+    "sha256": "13500a3af44f30793617d51aff6639344d2d943a50b53bdfe3c60ba81081967f",
+    "excerpts": [
+      {
+        "first_line": 76,
+        "last_line": 85,
+        "text": "struct Bump {\n    uint8_t* base = nullptr;\n    uint64_t used = 0;\n    template <typename T> T* take(uint64_t n) {\n        T* p = base ? (T*) (base + used) : nullptr;\n        used += (n * sizeof(T) + 255) & ~255ull;\n        return p;\n    }\n};\n\n"
+      },
+      {
+        "first_line": 432,
+        "last_line": 439,
+        "text": "        ident_ = b.take<int32_t>(T * (uint64_t) cap_);\n        Rin_ = b.take<float>(T * HC * N); R_ = b.take<float>(T * HC * N);\n        emb_ = b.take<float>(T * N); en_ = b.take<float>(T * N); e2_ = b.take<float>(T * N);\n        hn_ = b.take<float>(T * HC * N); h2_ = b.take<float>(T * HC * N);\n        mixed_ = b.take<float>(T * N); inj_ = b.take<float>(T * HC); inj2_ = b.take<float>(T * HC);\n        lo_ = b.take<float>(T * (uint64_t) g.hc_lr); rs_ = b.take<float>(T * HC); bo_ = b.take<float>(T * N);\n        xn_ = b.take<float>(T * HC * N);\n        xq_ = b.take<uint8_t>(strata::kernels::native_q8_1_bytes((int) (NH * HD), 8));\n"
+      },
+      {
+        "first_line": 837,
+        "last_line": 850,
+        "text": "            FusedGrArgs fa[kFusedGrMaxT];\n            for (int t = 0; t < T; ++t) {\n                fa[t].R = R_ + (size_t) t * HC * N; fa[t].R_out = R_ + (size_t) t * HC * N; fa[t].apply = false;\n                fa[t].w_norm = f32(\"attn_hyper_connection.hc_norm.weight\");\n                fa[t].w_down = bf16(\"attn_hyper_connection.input_mix_weight_down.weight\");\n                fa[t].w_up = bf16(\"attn_hyper_connection.input_mix_weight_up.weight\");\n                fa[t].w_inject = bf16(\"attn_hyper_connection.block_inject_weight.weight\");\n                fa[t].eps = EPS; fa[t].lo = lo_ + t * g.hc_lr; fa[t].rs = rs_ + t * HC;\n                fa[t].inject_out = inj_ + t * HC; fa[t].mixed = mixed_ + t * N;\n            }\n            fused_gr_read_multi(fa, T, xn_, cs);\n        }\n        // ---- attention: K/V into the layer's own cache\n        native_quantize_q8_1(mixed_, xq_, (int) N, T, cs);\n"
+      },
+      {
+        "first_line": 1085,
+        "last_line": 1119,
+        "text": "            gr_write_multi(R_, y_, inj2_, gs, R_, T, cs);\n        // ---- the final mixer and the main model's head\n        if (fuse_head_gr) {\n            FusedGrArgs fa[kFusedGrMaxT];\n            for (int t = 0; t < T; ++t) {\n                fa[t].R = R_ + (size_t) t * HC * N; fa[t].R_out = R_ + (size_t) t * HC * N; fa[t].apply = true;\n                fa[t].bo_prev = y_ + t * N; fa[t].inj_prev = inj2_ + t * HC;\n                fa[t].w_norm = f32(\"hyper_connection_mixer.hc_norm.weight\");\n                fa[t].w_down = bf16(\"hyper_connection_mixer.input_mix_weight_down.weight\");\n                fa[t].w_up = bf16(\"hyper_connection_mixer.input_mix_weight_up.weight\");\n                fa[t].w_inject = nullptr;\n                fa[t].eps = EPS; fa[t].lo = lo_ + t * g.hc_lr; fa[t].rs = rs_ + t * HC;\n                fa[t].inject_out = dummy_inj_; fa[t].mixed = sample_ + t * N;\n            }\n            fused_gr_read_multi(fa, T, xn_, cs);\n        } else if (head_mix_multi_on) {\n            // the window's rows in one read (CUDA; HIP keeps gr_read per row): bitwise the same sums\n            FusedGrArgs fa[kFusedGrMaxT];\n            for (int t = 0; t < T; ++t) {\n                fa[t].R = R_ + (size_t) t * HC * N; fa[t].R_out = R_ + (size_t) t * HC * N; fa[t].apply = false;\n                fa[t].w_norm = f32(\"hyper_connection_mixer.hc_norm.weight\");\n                fa[t].w_down = bf16(\"hyper_connection_mixer.input_mix_weight_down.weight\");\n                fa[t].w_up = bf16(\"hyper_connection_mixer.input_mix_weight_up.weight\");\n                fa[t].eps = EPS; fa[t].lo = lo_ + t * g.hc_lr; fa[t].rs = rs_ + t * HC; fa[t].mixed = sample_ + t * N;\n            }\n            fused_gr_read_multi(fa, T, xn_, cs);\n        } else {\n            for (int t = 0; t < T; ++t)\n                gr_read(R_ + (size_t) t * HC * N, f32(\"hyper_connection_mixer.hc_norm.weight\"),\n                        bf16(\"hyper_connection_mixer.input_mix_weight_down.weight\"),\n                        bf16(\"hyper_connection_mixer.input_mix_weight_up.weight\"), nullptr, EPS, gs, ss.block.gr,\n                        sample_ + t * N, dummy_inj_, cs);\n        }\n        if (!head) return true;   // MtpPair: the head over both slots' sample_ rows is one shared launch\n        native_quantize_q8_1(sample_, xq_, (int) N, T, cs);\n"
+      }
+    ]
+  },
+  {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp",
+    "sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2",
+    "excerpts": [
+      {
+        "first_line": 569,
+        "last_line": 580,
+        "text": "\n    // ---- the device arena: the same sequence counted, then carved\n    auto carve = [&](Bump& b) {\n        tok_ = b.take<int32_t>(T); step_ = b.take<int32_t>(T * strata::kernels::kStepCount);\n        pos_ = b.take<int32_t>(T * (NH + NKV + IQ)); commit_ = b.take<int32_t>(2 + T);\n        ple_ = b.take<float>(T * N); emb_ = b.take<float>(T * N); R_ = b.take<float>(T * HC * N);\n        mixed_ = b.take<float>(T * N); bo_ = b.take<float>(T * N);\n        inj_ = b.take<float>(T * HC); inj2_ = b.take<float>(T * HC);\n        lo_ = b.take<float>(T * (uint64_t) g.hc_lr); rs_ = b.take<float>(T * HC); xn_ = b.take<float>(T * HC * N);\n        xq_ = b.take<uint8_t>(strata::kernels::native_q8_1_bytes(max_in, (int) T));\n        sh_xq_ = b.take<uint8_t>(strata::kernels::native_q8_1_bytes(max_in, (int) T));\n        qkv_L_ = b.take<float>(nG * T * C); h_L_ = b.take<float>(nG * T * C);\n"
+      },
+      {
+        "first_line": 985,
+        "last_line": 1009,
+        "text": "        }\n        auto gr_read_group = [&](int half, bool apply, float* inj_prev, float* inj_out) {\n            FusedGrArgs fa[kFusedGrMaxT];\n            for (int t = tb; t < te; ++t) {\n                FusedGrArgs& a = fa[t - tb];\n                a.R = Rt(t); a.R_out = Rt(t); a.apply = apply;\n                a.bo_prev = bo_ + t * N; a.inj_prev = inj_prev + t * HC;\n                a.w_norm = (const float*) wn[half]->data; a.w_down = (const uint16_t*) wd[half]->data;\n                a.w_up = (const uint16_t*) wu[half]->data; a.w_inject = (const uint16_t*) wi[half]->data;\n                a.q8_down = (const uint8_t*) wd[half]->hc_q8; a.q8_up = (const uint8_t*) wu[half]->hc_q8;\n                a.q8_inject = (const uint8_t*) wi[half]->hc_q8;\n                a.eps = EPS; a.lo = lo_ + t * g.hc_lr; a.rs = rs_ + t * HC;\n                a.inject_out = inj_out + t * HC; a.mixed = mixed_ + t * N;\n                if (qcnt_ != nullptr) {   // S26 STRATA_QFUSE: the consumer's q8_1 image written by the read itself\n                    a.q8_cnt = qcnt_;\n                    if (half == 0) a.q8_mixed = xq_ + (size_t) (t - tb) * (N / 32) * 36;\n                    else if (strata::kernels::cpu::expert_layout().native) a.q8_mixed = nat_xq_ + (size_t) t * (N / 32) * 36;\n                }\n            }\n            return fused_gr_read_multi(fa, n, xn_ + (size_t) tb * HC * N, cs, (prof_on_ && grp == 0) ? prof_ : nullptr,\n                                (int) (l * kProfPer + (half == 0 ? 27 : 30)));\n        };\n        const bool q8_attn = gr_read_group(0, pending, inj2_, inj_);   // true: xq_ holds mixed's q8_1 (STRATA_QFUSE)\n        stamp(l, 1, grp);\n        float* xm = mixed_ + tb * N;\n"
+      },
+      {
+        "first_line": 1636,
+        "last_line": 1650,
+        "text": "            // the final mixer, the window's tokens in one read (fused_gr_read_multi without the pending write: the\n            // last layer's write was done above; its sums are gr_read's)\n            if (hn->kind != WeightKind::F32 || hd->kind != WeightKind::Bf16InF32 || hu->kind != WeightKind::Bf16InF32) {\n                err = \"verify: the output_hc_* weights have the wrong engine forms\";\n                return false;\n            }\n            FusedGrArgs fa[kFusedGrMaxT];\n            for (int t = 0; t < T; ++t) {\n                fa[t].R = Rt(t); fa[t].R_out = Rt(t); fa[t].apply = false;\n                fa[t].w_norm = (const float*) hn->data; fa[t].w_down = (const uint16_t*) hd->data;\n                fa[t].w_up = (const uint16_t*) hu->data; fa[t].eps = EPS;\n                fa[t].lo = lo_ + t * g.hc_lr; fa[t].rs = rs_ + t * HC; fa[t].mixed = head_mixed_ + t * N;\n            }\n            fused_gr_read_multi(fa, T, xn_, cs);\n        } else {\n"
+      }
+    ]
+  },
+  {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/kernels/fused_gr.hpp",
+    "sha256": "199b44c105bebb8356498c2171943c236c9c0dfd4b899e400c62082f3966ebf4",
+    "excerpts": [
+      {
+        "first_line": 20,
+        "last_line": 43,
+        "text": "#include <cstdint>\n\nnamespace strata::kernels {\n\nstruct FusedGrArgs {\n    const float* R = nullptr;          ///< (hc, n_embd), read by `down`; `up` updates it in place when apply\n    float* R_out = nullptr;            ///< == R for the in-place update\n    bool apply = false;                ///< fold the previous half's gr_write\n    const float* bo_prev = nullptr;    ///< that half's block output, n_embd\n    const float* inj_prev = nullptr;   ///< that half's injection, hc\n    const float* w_norm = nullptr;     ///< (hc * n_embd) f32\n    const uint16_t* w_down = nullptr;  ///< bf16 [hc_lr][hc*n_embd]\n    const uint16_t* w_up = nullptr;    ///< bf16 [hc*n_embd][hc_lr]\n    const uint16_t* w_inject = nullptr;///< bf16 [hc][hc*n_embd], or null (the final mixer)\n    float eps = 1e-6f;\n    float* lo = nullptr;               ///< workspace, hc_lr floats\n    float* rs = nullptr;               ///< workspace, hc floats\n    float* inject_out = nullptr;       ///< hc floats (when w_inject)\n    float* mixed = nullptr;            ///< n_embd\n    /// S23 experiment (STRATA_HC_Q8=1): the GGUF's Q8_0 projections (null: the BF16 ones above); fused_gr_read_multi\n    /// only\n    const uint8_t* q8_down = nullptr;  ///< Q8_0 [hc_lr][hc*n_embd]\n    const uint8_t* q8_up = nullptr;    ///< Q8_0 [hc*n_embd][hc_lr]\n    const uint8_t* q8_inject = nullptr;///< Q8_0 [hc][hc*n_embd]\n"
+      },
+      {
+        "first_line": 51,
+        "last_line": 59,
+        "text": "void fused_gr_read(const FusedGrArgs& a, void* stream);\n/// STRATA_HC_Q8 on a bf16 pack: `out` (n_blocks * 34 bytes) = the Q8_0 blocks (fp16 d = amax / 127, round(x / d), ggml's\n/// reference rounding) of `n_blocks * 32` bf16 values on the device.\n/// The inverse for a path with no Q8 kernel: bf16 (round to nearest even) of d * q for `n_blocks` Q8_0 blocks.\nvoid fused_gr_dequant_q8_0(const uint8_t* q8, uint16_t* bf16, int64_t n_blocks, void* stream);\nvoid fused_gr_quantize_q8_0(const uint16_t* bf16, uint8_t* out, int64_t n_blocks, void* stream);\n\n/// Plan v0.3 P6: the same read for up to 8 tokens that share the weights (a verify window): the weights are read\n/// once for all of them.  `a[t]` is token t's arguments (its own R, pending write, lo, rs, inject, mixed; the four\n"
+      }
+    ]
+  }
+]

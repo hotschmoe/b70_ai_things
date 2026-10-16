@@ -24970,3 +24970,34 @@ unknown. No profiler/rawtraceparse/modelpayloadhash/dailyrestore/retry/reset.
 Evidence: strata/flash-next/lowlevel_probe/attention_value_fixed_policy_s113/
  and docs/20261016_strata_attention_value_fixed_policy.md. Targetsremainunmet,
 S30boundedtrueRAMrestore retained; no default orqualification substitution.
+
+
+## 2026-10-16 S115: selected HC ISA confirms repeated low-rank activation
+
+CONFIG -> Original S107main064b63ce/kernelarchivecf710683, normal sliced
+C16/nonILP/nonGRF256/nonMORE HC2560/4/320,160 UPgroups. Existing main/archive
+hash receipts plus unchanged stat continuity; exact607880B member/object
+27d0ab6a checked. Historical S95 service is context, not removable budget.
+COMMAND -> CPU-only selected original UP/reduce extraction and two offline
+e41/noDRI/UID1000/BMG-G31 decodes under cpu-run. Initial public-entry
+substring parser HOLD preserved before decoder; root-authorized exact-symbol
+correction reused member, corrected wrapper12s/exit0/two decoders0. No model
+payload hash, fulltrace parse, production edit, build, GPU or new model call.
+RESULT -> Actual Info/cache/guard/name/host branches bind both selected
+images. UP split0+0/scale/exp/division refinement/SLM staging occur BEFORE
+group0-only global store predicate; other groups repeat activation. First
+w_up vector load follows first barrier. Reduce80 ordered load/add sites
+retain raw part/injection and no nonlinear sequence. Raw CR0 OR0x400004C0
+recorded, not interpreted as denorm semantics; absent resources UNKNOWN.
+Metadata barrier_count1 differs from two static UP sync.bar sites. No
+static-count-to-cycles/traffic/speed conversion or new runtime dispatch proof.
+VERDICT -> Specific producer-activation mechanism survives old-image check;
+ONE private oracle SOURCE PREP S116 authorized. Preserve extra+0/sourceHC
+division/nativeexp/store-load boundaries, raw intermediates, all UP math,
+owner scratch lifetime and four boundaries; strict FP/compiled oracle gates
+pending. Actual prior conditional claude-opus-5-5/55.236s and
+claude-fable-5-1/64.737s consulted in S113; no invented new consultation after
+these decodes. Root read exact findings/UP-reduce excerpts and all47curated
+source-target copies match. Default/targets/S30RAMrestore unchanged. Evidence:
+strata/flash-next/lowlevel_probe/hc_lowrank_producer_s115/ and
+ docs/20261016_strata_hc_lowrank_producer.md.

@@ -1,0 +1,20 @@
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/fused_gr.dp.cpp:182:        a.lo[row] = x / (1.0f + sycl::native::exp(-x));
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/fused_gr.dp.cpp:196:    for (int k = t; k < LR; k += THREADS) lo[k] = a.lo[k];
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/fused_gr.dp.cpp:1424:            m.a[k].lo[row] = x / (1.0f + sycl::native::exp(-x));
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/fused_gr.dp.cpp:1780:        if (!x.R || !x.w_norm || !x.w_down || !x.w_up || !x.lo || !x.rs || !x.mixed || (x.w_inject && !x.inject_out) ||
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/fused_gr.dp.cpp:2062:    if (!a.R || !a.w_norm || !a.w_down || !a.w_up || !a.lo || !a.rs || !a.mixed ||
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/fused_gr.dp.cpp:2169:        x.lo = (float*) take((size_t) TM * LR * 4); x.rs = (float*) take((size_t) TM * HC * 4);
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/fused_gr.dp.cpp:2273:        return same(s1.lo, s2.lo, (size_t) T * LR, "lo", T, apply, w) &&
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/fused_gr.dp.cpp:2294:                    x.lo = set[v].lo + (size_t) k * LR; x.rs = set[v].rs + (size_t) k * HC;
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/layer.cpp:1627:        fa.eps = RMS_EPS; fa.lo = bb.gr.lo; fa.rs = bb.gr_rs; fa.inject_out = bb.inject; fa.mixed = bb.mixed;
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/layer.cpp:1650:        fa.eps = RMS_EPS; fa.lo = bb.gr.lo; fa.rs = bb.gr_rs; fa.inject_out = bb.inject2; fa.mixed = bb.mixed;
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp:437:        lo_ = b.take<float>(T * (uint64_t) g.hc_lr); rs_ = b.take<float>(T * HC); bo_ = b.take<float>(T * N);
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp:844:                fa[t].eps = EPS; fa[t].lo = lo_ + t * g.hc_lr; fa[t].rs = rs_ + t * HC;
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp:969:                fa[t].eps = EPS; fa[t].lo = lo_ + t * g.hc_lr; fa[t].rs = rs_ + t * HC;
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp:1096:                fa[t].eps = EPS; fa[t].lo = lo_ + t * g.hc_lr; fa[t].rs = rs_ + t * HC;
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp:1108:                fa[t].eps = EPS; fa[t].lo = lo_ + t * g.hc_lr; fa[t].rs = rs_ + t * HC; fa[t].mixed = sample_ + t * N;
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp:577:        lo_ = b.take<float>(T * (uint64_t) g.hc_lr); rs_ = b.take<float>(T * HC); xn_ = b.take<float>(T * HC * N);
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp:996:                a.eps = EPS; a.lo = lo_ + t * g.hc_lr; a.rs = rs_ + t * HC;
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp:1613:                a.eps = EPS; a.lo = lo_ + t * g.hc_lr; a.rs = rs_ + t * HC;
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp:1629:                a.lo = lo_ + t * g.hc_lr;
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp:1647:                fa[t].lo = lo_ + t * g.hc_lr; fa[t].rs = rs_ + t * HC; fa[t].mixed = head_mixed_ + t * N;

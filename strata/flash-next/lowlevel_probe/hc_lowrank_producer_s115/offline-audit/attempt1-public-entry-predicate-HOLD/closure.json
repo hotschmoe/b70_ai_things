@@ -1,0 +1,14 @@
+{
+  "status": "AUDIT_PARSER_PREDICATE_HOLD_NO_CANDIDATE_FAILURE",
+  "cpu_wrapper_exit": 1,
+  "failed_predicate": "substring fused_gr_read_multi matched generated host helpers in addition to actual public entry",
+  "exact_public_entry": "_ZN6strata7kernels19fused_gr_read_multiEPKNS0_11FusedGrArgsEiPfPvPyi",
+  "archive_member_copy": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/hc-selected-old-s115-audit/attempt1-public-entry-predicate-HOLD/selected/fused_gr.dp.cpp.o",
+    "bytes": 607880,
+    "sha256": "27d0ab6aff30126bd317584b4b2cbacd0b4667764f9cf624738625c787c07d99"
+  },
+  "completed_before_HOLD": "Small pins, root/build identities, archive member equality to original object, both selected host Info/cache/guard/name bindings. No selected image saved or decoder run.",
+  "GPU": 0,
+  "decoder_invocations": 0
+}
