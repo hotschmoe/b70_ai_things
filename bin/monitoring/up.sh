@@ -20,7 +20,7 @@ docker rm -f b70_prometheus >/dev/null 2>&1 || true
 docker run -d --name b70_prometheus --restart unless-stopped --network host --user "$(id -u):$(id -g)" \
   -v "$M/prometheus.yaml:/etc/prometheus/prometheus.yml" \
   -v "$PROM_DATA:/prometheus" \
-  prom/prometheus:latest \
+  ${PROM_IMAGE:-prom/prometheus:v3.15.0} \
   --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus >/dev/null && echo "  prometheus up"
 
 echo "=== grafana (:3001, anonymous viewer, provisioned, persistent db) ==="
@@ -37,13 +37,13 @@ docker rm -f b70_grafana >/dev/null 2>&1 || true
 docker run -d --name b70_grafana --restart unless-stopped --network host --user 472 \
   -e GF_AUTH_ANONYMOUS_ENABLED=true -e GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer \
   -e GF_AUTH_BASIC_ENABLED=false -e GF_USERS_ALLOW_SIGN_UP=false \
-  -e GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/vllm-dashboard.json \
+  -e GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/${DD_DASHBOARD:-strata-dashboard.json} \
   -e GF_PATHS_PROVISIONING=/etc/grafana/provisioning -e GF_PATHS_DATA=/gfdata \
   -v "$GF_DATA:/gfdata" \
   -v "$M/grafana/dashboards/json:/var/lib/grafana/dashboards" \
   -v "$M/grafana/dashboards/config:/etc/grafana/provisioning/dashboards" \
   -v "$M/grafana/datasources:/etc/grafana/provisioning/datasources" \
-  grafana/grafana:latest cfg:server.http_port=3001 >/dev/null && echo "  grafana starting -> http://<box>:3001 (a fresh Grafana 13 db can take ~10 min to migrate)"
+  ${GRAFANA_IMAGE:-grafana/grafana:13.2.4} cfg:server.http_port=3001 >/dev/null && echo "  grafana starting -> http://<box>:3001 (a fresh Grafana 13 db can take ~10 min to migrate)"
 
 echo "=== verify (give it ~15s to scrape) ==="
 echo "  targets:  curl -s http://localhost:9090/api/v1/targets | grep -o '\"health\":\"[a-z]*\"'"

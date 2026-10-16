@@ -1,0 +1,592 @@
+{
+ "uid": "strata-dashboard",
+ "title": "hotschmoe-dd Strata (Flash-Next)",
+ "tags": [
+  "strata",
+  "b70"
+ ],
+ "timezone": "browser",
+ "schemaVersion": 39,
+ "refresh": "10s",
+ "time": {
+  "from": "now-6h",
+  "to": "now"
+ },
+ "panels": [
+  {
+   "id": 1,
+   "type": "stat",
+   "title": "Model loaded",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "ddyfngn31dg5cf"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddyfngn31dg5cf"
+     },
+     "expr": "strata:model_loaded{job=\"hotschmoe_dd_strata\"}",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "type": "stat",
+   "title": "Requests running",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "ddyfngn31dg5cf"
+   },
+   "gridPos": {
+    "x": 4,
+    "y": 0,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddyfngn31dg5cf"
+     },
+     "expr": "llamacpp:requests_processing{job=\"hotschmoe_dd_strata\"}",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "type": "stat",
+   "title": "Requests queued",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "ddyfngn31dg5cf"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 0,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddyfngn31dg5cf"
+     },
+     "expr": "llamacpp:requests_deferred{job=\"hotschmoe_dd_strata\"}",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "type": "stat",
+   "title": "Draft acceptance (15m)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "ddyfngn31dg5cf"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 0,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "decimals": 1
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddyfngn31dg5cf"
+     },
+     "expr": "100*increase(strata:drafts_accepted_total{job=\"hotschmoe_dd_strata\"}[15m])/clamp_min(increase(strata:drafts_offered_total{job=\"hotschmoe_dd_strata\"}[15m]),1)",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "type": "stat",
+   "title": "Tokens generated (total)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "ddyfngn31dg5cf"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 0,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddyfngn31dg5cf"
+     },
+     "expr": "llamacpp:tokens_predicted_total{job=\"hotschmoe_dd_strata\"}",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "type": "stat",
+   "title": "Requests (total)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "ddyfngn31dg5cf"
+   },
+   "gridPos": {
+    "x": 20,
+    "y": 0,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddyfngn31dg5cf"
+     },
+     "expr": "strata:requests_total{job=\"hotschmoe_dd_strata\"}",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "type": "timeseries",
+   "title": "Generation throughput (tok/s, all streams)",
+   "description": "Counters advance when a request finishes, so short windows are lumpy; use the engine average for per-request speed.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "ddyfngn31dg5cf"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 4,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 10
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddyfngn31dg5cf"
+     },
+     "expr": "rate(llamacpp:tokens_predicted_total{job=\"hotschmoe_dd_strata\"}[1m])",
+     "legendFormat": "generated tok/s",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "type": "timeseries",
+   "title": "Prompt throughput (tok/s)",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "ddyfngn31dg5cf"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 4,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 10
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddyfngn31dg5cf"
+     },
+     "expr": "rate(llamacpp:prompt_tokens_total{job=\"hotschmoe_dd_strata\"}[1m])",
+     "legendFormat": "prompt read tok/s",
+     "refId": "A"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddyfngn31dg5cf"
+     },
+     "expr": "rate(llamacpp:prompt_tokens_cached_total{job=\"hotschmoe_dd_strata\"}[1m])",
+     "legendFormat": "reused from cache tok/s",
+     "refId": "B"
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "type": "timeseries",
+   "title": "Engine average speed (tok/s)",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "ddyfngn31dg5cf"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 12,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 10
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddyfngn31dg5cf"
+     },
+     "expr": "llamacpp:predicted_tokens_seconds{job=\"hotschmoe_dd_strata\"}",
+     "legendFormat": "decode avg",
+     "refId": "A"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddyfngn31dg5cf"
+     },
+     "expr": "llamacpp:prompt_tokens_seconds{job=\"hotschmoe_dd_strata\"}",
+     "legendFormat": "prompt avg",
+     "refId": "B"
+    }
+   ]
+  },
+  {
+   "id": 10,
+   "type": "timeseries",
+   "title": "Requests running / queued",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "ddyfngn31dg5cf"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 12,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 10
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddyfngn31dg5cf"
+     },
+     "expr": "llamacpp:requests_processing{job=\"hotschmoe_dd_strata\"}",
+     "legendFormat": "running",
+     "refId": "A"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddyfngn31dg5cf"
+     },
+     "expr": "llamacpp:requests_deferred{job=\"hotschmoe_dd_strata\"}",
+     "legendFormat": "queued",
+     "refId": "B"
+    }
+   ]
+  },
+  {
+   "id": 11,
+   "type": "timeseries",
+   "title": "MTP draft acceptance (%)",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "ddyfngn31dg5cf"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 20,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 10
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddyfngn31dg5cf"
+     },
+     "expr": "100*rate(strata:drafts_accepted_total{job=\"hotschmoe_dd_strata\"}[5m])/clamp_min(rate(strata:drafts_offered_total{job=\"hotschmoe_dd_strata\"}[5m]),1e-9)",
+     "legendFormat": "accepted %",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 12,
+   "type": "timeseries",
+   "title": "Requests per minute",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "ddyfngn31dg5cf"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 20,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 10
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddyfngn31dg5cf"
+     },
+     "expr": "60*rate(strata:requests_total{job=\"hotschmoe_dd_strata\"}[5m])",
+     "legendFormat": "req/min",
+     "refId": "A"
+    }
+   ]
+  }
+ ],
+ "templating": {
+  "list": []
+ },
+ "annotations": {
+  "list": []
+ },
+ "editable": false,
+ "version": 1
+}

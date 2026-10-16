@@ -18,3 +18,12 @@ scrape_configs:
       # (each replica exposes its own /metrics; the nginx proxy on :18080 does not fan /metrics).
       - targets:
           - '127.0.0.1:18080'
+
+  # Strata (night-final-v3 hotschmoe-dd, 2026-10-16): the backend on loopback :18124 exposes Prometheus text at
+  # /metrics/prometheus (llamacpp:* + strata:* names). The :18080 frontdoor keys everything but /health and /metrics,
+  # and Strata's /metrics is JSON, so scrape the backend directly. The b70_daily job above applies when vLLM serves.
+  - job_name: hotschmoe_dd_strata
+    metrics_path: /metrics/prometheus
+    static_configs:
+      - targets:
+          - '127.0.0.1:18124'

@@ -1,0 +1,25 @@
+[Unit]
+Description=hotschmoe-dd: Strata Flash-Next IQ3_XXS night-final-v3 (backend 127.0.0.1:18124)
+After=network-online.target
+Wants=hotschmoe-dd-frontdoor.service
+
+[Service]
+Type=simple
+WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
+Environment=PATH=/home/hotschmoe/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=B70_GPU_LOCK_TIMEOUT=0
+Environment=B70_AGENT=hotschmoe-dd
+ExecStartPre=/mnt/vm_8tb/github/b70_ai_things/bin/gpu-run /mnt/vm_8tb/github/b70_ai_things/bin/xpu-health
+ExecStart=/bin/bash /mnt/vm_8tb/github/b70_ai_things/strata/flash-next/dd/dd_launch.sh
+ExecStop=/usr/bin/docker kill --signal=TERM hotschmoe-dd
+ExecStopPost=-/usr/bin/docker rm -f hotschmoe-dd
+KillMode=mixed
+TimeoutStartSec=900
+TimeoutStopSec=120
+Restart=on-failure
+RestartSec=30
+StandardOutput=append:/mnt/vm_8tb/b70/logs/hotschmoe-dd/server.log
+StandardError=append:/mnt/vm_8tb/b70/logs/hotschmoe-dd/server.log
+
+[Install]
+WantedBy=default.target

@@ -54,13 +54,14 @@ small measured changes; no long-lived fork, no admission/receipt/source-plan
 machinery, one JOURNAL entry per stage. NVMe is /mnt/cache; /mnt/vm_8tb is
 SATA.
 
-- Night-lab 2026-10-16 candidate (not promoted): strata/flash-next/night/configs/night-final-v3-c2.json
-  (C1 141, C2 ~92/stream, C4 ~51/stream, prefill ~2200 tok/s, 200k RAM recovery requalified); see docs/20261016_night_lab.md.
+- DAILY DRIVER since 2026-10-16: hotschmoe-dd.service = Strata night-final-v3 (strata/flash-next/dd/README.md;
+  C1 ~141, C2 ~92/stream, prefill ~2200 tok/s; docs/20261016_night_lab.md). It holds both GPU leases: stop it
+  (`systemctl --user stop hotschmoe-dd`) before research GPU work and restart it afterwards.
 - Serving candidate: ISTA GSQ-RCO ~3-bit GGUF, all experts in VRAM
   (strata/flash-next/model-lock-ista-iq3.json, build under
   /mnt/vm_8tb/b70/build/strata-ab).
 - Fallback daily driver: Qwen3.8-27B INT4 AutoRound on vLLM TP=2
-  (vllm/int4/native5802_trial/serve.py).
+  (vllm/int4/native5802_trial/serve.py; stop hotschmoe-dd + hotschmoe-dd-frontdoor first).
 - Model comparison: docs/20261013_flashnext_iq3_vs_27b_ab_brief.md, run with
   evals/abfast (Pi 1.2.0). The no-substitution rule is dropped.
 - Paused: the UD-Q4_K_XL RAM-spill campaign. Its evidence is in
