@@ -1,4 +1,4 @@
-# Next investigations (user, 2026-10-16): card balance, prefill, single-stream decode, C4 aggregate
+# Next investigations (user, 2026-10-16): elastic 4-slot KV (build next), card balance, prefill, single-stream decode, C4 aggregate
 
 The daily driver (Strata night-final-v3, 2x Arc Pro B70, expert parallel) measures C1 ~141 tok/s, C2 ~92/stream,
 C4 51.3/stream (188 wall aggregate, 64K context), prefill ~2200 tok/s at 4K-32K and ~1600 at 200K
@@ -7,7 +7,49 @@ card 1 mostly waits. Ranked list below; each item names the measured facts it st
 tried. Measure every idea with the night harness (strata/flash-next/night/nl.py, fixed prompts, same binary A/B,
 acceptance-normalised for non-bitwise changes) and the NLL gates (nl_ppl.py).
 
-## 1. Card balance (top priority)
+## 0. Elastic KV: 4 slots up to 200K each, overflow parked to RAM (user, 2026-10-16: investigate and build next)
+
+Want: serve `--parallel 4` with `--max-context 200000` per slot. Most conversations stay far below 200K, so VRAM is
+committed only for the cells a slot actually reaches. When the live slots together outgrow VRAM, the least recently
+active slot's KV goes to system RAM and is restored later without recompute. Two full 200K contexts resident at once
+remain the guaranteed floor (the goal in AGENTS.md); four long ones run with parking.
+
+Why now (measured on the live DD, 2026-10-16 ~23:00 UTC): a burst of agent traffic held 13-14 requests in flight
+against the 2 slots, so ~12 waited in queue. One prompt was still being read 57 s after it arrived, and prefix-cache
+reuse fell from ~1000-1500 to ~70-140 tok/s as clients pushed each other's cached prefixes out. C4 (4 slots at 64K)
+gives ~13 % more aggregate (185-188 vs ~164 wall) and twice the admission width, but its 64K cap breaks long agent
+sessions.
+
+Facts:
+- KV is allocated per slot for the whole `--max-context` at load. Engine log: `--batch 2` slot sessions take
+  5.63 GiB of VRAM on card 0 at 200K (expert cache 10.77 GiB, 6624 slots); `--batch 4` at 64K takes 4.01 GiB
+  (expert cache 14.52 GiB, 8928 slots). A static 4 x 200K would need ~11.3 GiB and does not fit beside the expert
+  cache.
+- The existing `--kv-grow` (elastic KV, src-ep sycl/src/program/generate.cpp:6429 KvGrow / kvg_ensure,
+  sycl/src/core/layer.cpp:579, docs/DETAILS.md) already does on-demand VMM mapping. It takes chunks from the expert
+  cache and hands them back, and captured graphs stay valid because addresses never move. Its limits: one GPU only,
+  and it turns itself off with `--batch`, `--vram-elastic` or `--peer-device`. All three limits apply to the DD (batch
+  MTP, expert parallel across two cards).
+- The conversation cache (`--conversation-cache-mib 32768 --conversation-cache-slots 4`) parks idle conversations to
+  RAM and restores them without recompute (~415 ms per 200K restore, replay 0; parking ~49-75 ms per admission with
+  PARK_MOVE). It does not evict a slot that is still running.
+
+Investigate, then build (small, measured, default-off flag):
+a. Read what blocks `--kv-grow` under `--batch` and expert parallel: per-slot KV pools versus one range, quiesce
+   across both cards' queues, and the expert-cache slot hand-back on card 0 only (KV lives on card 0; card 1
+   holds routed experts).
+b. Per-slot elastic KV under `--batch 4`: grow in steps (STRATA_KV_GROW_STEP 8192), with a reserve that guarantees
+   2 x 200K. Measure what each grow costs (quiesce + map) during decode of the other slots.
+c. Pressure eviction: when a grow cannot be met, park the coldest slot (generating or waiting on a tool call) with
+   the existing park path, unmap its chunks, and restore it on its next turn. The client sees TTFT, never a
+   recompute or an error.
+d. Decide the expert-cache trade with numbers: each GiB of KV costs ~615 expert slots on card 0. Measure C1/C2/C4
+   decode with the cache shrunk to match 2 x 200K live.
+e. Gates: C4 decode matched against night-final-v3-c4 (target: no regression at 64K), C2 200K needle x 2, a
+   4-conversation 100K+ forced-eviction run (restore without recompute, NLL gate), the abfast agent suite under
+   14-client load, and teardown/health.
+
+## 1. Card balance (top priority after item 0)
 
 Facts (unitrace of the final stack, C1, strata/flash-next/night/agent-reports/trace_final_analysis.md):
 - Per C1 verify window (29.3 ms profiled, ~22.9 ms unprofiled): card 0 computes ~20 ms (attention, GDN, HC,
