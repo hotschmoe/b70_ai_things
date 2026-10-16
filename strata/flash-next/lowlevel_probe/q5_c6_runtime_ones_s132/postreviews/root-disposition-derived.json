@@ -1,0 +1,27 @@
+{
+  "status": "ROOT_FULL_READ_ACCEPTED_POST_DECISION_WITH_CORRECTIONS",
+  "provenance": "Derived from parent/root task instructions after root full read; actual model responses retained byte-exact separately.",
+  "actual_models": ["claude-opus-5-5", "claude-fable-5-1"],
+  "actual_elapsed_s": [56.71987363300286, 66.84930184902623],
+  "actual_exits": [0, 0],
+  "own_resumes_confirmed": true,
+  "source_packet_sha256": "9e2f0022a6ee0fbf752b7de166463dbdffa5e91fcc15c400bbded733d004ee8f",
+  "packet_bytes": 64230,
+  "decisions": {
+    "Q5_C2": "Park/defaultOFF; no repeats. S129 candidate body HOLD remains unresolved.",
+    "owner_queues": "Park/defaultOFF; no repeats of the tested host-joined mapping. No overlap/cause diagnosis.",
+    "C6_production": "Conditional source/build GO, then same NEW binary fresh control/ON with strict per-pair runtime/identity/work/health gates; not an executed result or promotion.",
+    "graph_API_oracle": "Lower-priority standalone API CPU-build/card0 probe GO in principle; not MTP integration approval. Reviewed original probe source does not certify new lifecycle."
+  },
+  "root_corrections": [
+    "S131 pair wall changes are ALL POSITIVE: +0.32771948552399177%, +0.3412729414902671%, +0.1670007423762776%. Opus listed incorrect signs; raw comparison remains authoritative.",
+    "S130/S131 compare DISTINCT server processes; Fable's same-process wording is wrong. Only the private S132 projection rounds are nested in one process.",
+    "Host-join cost, net scheduling/cycle cause, lack of overlap and specific attainable cycle savings are UNMEASURED. Model explanations are hypotheses, not findings.",
+    "Historical operation pools/source reachability do not establish current head share, an end-to-end Amdahl bound or a serving forecast.",
+    "Root confirmed C6 reachability via verify.cpp record_window(int T), capture_batch record_window(S), head forwarding T, plus retained full-head identity and six-slot capture at control log line86.",
+    "Root found automatic force-cleanup/blind-health behavior in the original lower-level graph driver; a source-only V2 lifecycle fix is pending. Model source GO does not close that separate issue.",
+    "Optional image/ISA/independent-host certification is not a user GPU gate; reviewed source plus actual EXE/runtime identities and strict matched work remain. No new test-authorization ritual or certification pass is implied."
+  ],
+  "new_model_GPU_build_calls_by_curator": false,
+  "future_stages_executed_by_this_record": false
+}

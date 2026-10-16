@@ -1,0 +1,12 @@
+{
+  "status": "SOURCE_ONLY_NO_BUILD_GPU_MODEL_ISA_AUDIT",
+  "parent_S128_leaf_sha256": "c4275ea009f2cf81c4a466c88fd5637c5923fc254a9242c029d772cdfeda21ae",
+  "header_inverse_exact": true,
+  "header_change_scope": "candidate class declaration/parallel_for name, sole candidate<WideQ5K,6> instantiation, lineage comment; all apply/helpers/rawsum bodies EXACT S128",
+  "build_container_byteexact_S128": true,
+  "harness_counts": "49 snapshots,74 .bin,five DOT,two whole weights,8 timing samples unchanged",
+  "analyzer_change_scope": "canonical raw16 cells320->960 only",
+  "model_archive_anchor_payloads_read": 0,
+  "Python_AST": "PASS",
+  "source_syntax_only_build_scripts": "bash -n exit0"
+}

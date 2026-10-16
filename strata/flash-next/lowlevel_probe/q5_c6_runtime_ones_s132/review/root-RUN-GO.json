@@ -1,0 +1,11 @@
+{
+  "RUN_GO": true,
+  "scope": "Q5_HEAD_C6_RUNTIME_ONES_PRIVATE",
+  "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-private-prep",
+  "source_manifest_sha256": "5960e16c650b5efa8c08e2971ea51febf8df9dfaae1515ed2088b3ae1e585910",
+  "binary_sha256": "611a8283d8caa8365d1c60b8783ef0829b529d0a377021b4e0881b1e4d016a4f",
+  "independent_source_review_sha256": "40acf13bb8c1112cd83e8d1aef7e8a9fb34b1f336a528246a11e3a19a3929484",
+  "optional_cpu_compiled_certification": "DEFERRED_BY_USER",
+  "root_review": "Full C6 delta+source/build scripts and complete runner V1 plus exact two-line V2 schema/closure fix read. CPU build and tee0/source checks passed. Sole finite numerical experiment, no ISA equivalence or serving claim. S131 normalteardown/fullhealth PASS.",
+  "no_retry_reset": true
+}

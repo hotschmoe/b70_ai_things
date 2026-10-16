@@ -1,0 +1,14 @@
+{
+  "status": "SOURCE_ONLY_FROZEN",
+  "Python_AST": "PASS",
+  "bash_n": "PASS",
+  "ASCII": "PASS",
+  "old_source": {
+    "leased_run.py": "a6ef5f9c8b5a3eed6c9929e9c196e6be300e8b26dcd3ad13b423d1ca10549a5f",
+    "analyze.py": "4230d8ff6751c69c9a02a8e4a6ae58142a50efae23d086fd30b60dfccc952959",
+    "ROOT_RUN.sh": "72121768dd86d514f00fc8ec51a4f8fd7b38eb20f3993b0c126b499524e4267a"
+  },
+  "source_manifest_sha256": "5960e16c650b5efa8c08e2971ea51febf8df9dfaae1515ed2088b3ae1e585910",
+  "build_GPU_payload_reads": false,
+  "optional_compiled_certification": "DEFERRED_BY_USER_NOT_FAKE_AUDIT_PASS"
+}

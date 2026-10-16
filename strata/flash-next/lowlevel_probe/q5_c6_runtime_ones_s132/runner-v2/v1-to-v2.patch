@@ -1,0 +1,18 @@
+--- V1/leased_run.py
++++ V2/leased_run.py
+@@ -27,7 +27,7 @@
+  assert a.manifest_sha256==SOURCE_MANIFEST_SHA and sha(a.source_manifest)==a.manifest_sha256
+  manifest=json.loads(a.source_manifest.read_text());assert isinstance(manifest['files'],dict)
+  for name,row in manifest['files'].items():
+-  f=S/name;assert f.resolve().is_relative_to(S)and f.stat().st_size==row['bytes']and sha(f)==row['sha256_from_retained_S52_comparison']
++  f=S/name;assert f.resolve().is_relative_to(S)and f.stat().st_size==row['bytes']and sha(f)==row['sha256']
+  assert EXE.is_file()and sha(EXE)==EXESHA
+  assert (S/'build/build.exit').read_text().strip()=='0'and (S/'build/tee.exit').read_text().strip()=='0'and json.loads((S/'build/image.json').read_text())[0]['Id']==IMAGE
+  assert sha(a.root_go)==a.root_go_sha256;receipt=json.loads(a.root_go.read_text())
+@@ -137,5 +137,5 @@
+ (O/'analysis.exit').write_text(str(analysis)+'\n');after=checked_identity('post-identity',False);same=before==after
+ if not same:(O/'post-identity.exit').write_text('2\n')
+ passed=start_rc==native==pre==post==analysis==0 and not oom and same
+-save('closure.json',{'status':'PASS_PRIVATE_C6_STRICT_TIMING_DIAGNOSTIC_ONLY'if passed else'FAIL_PRESERVE_NULL_TIMINGS_NO_RETRY','docker_start_exit':start_rc,'native_exit':native,'normal_wait_exit':wait,'pre_health_exit':pre,'post_health_exit':post,'analysis_exit':analysis,'identity_equal':same,'final_OOMKilled':oom,'full_cid_absent':True,'name_absent':True,'normal_rm_exit':rm,'normal_numeric_failure':numeric_failure,'processes':1,'retries':0,'force_stop_or_reset':False,'timing_summary':'analysis.json'if passed else None,'speed_or_serving_qualified':False})
++save('closure.json',{'status':'PASS_PRIVATE_C6_STRICT_TIMING_DIAGNOSTIC_ONLY'if passed else'FAIL_PRESERVE_NULL_TIMINGS_NO_RETRY','docker_start_exit':start_rc,'native_exit':native,'normal_wait_exit':wait,'pre_health_exit':pre,'post_health_exit':post,'analysis_exit':analysis,'identity_equal':same,'final_OOMKilled':oom,'full_cid_absent':True,'name_absent':True,'normal_rm_exit':rm,'normal_numeric_failure':numeric_failure,'processes':1,'retries':0,'force_stop_or_reset':False,'timing_summary':'comparison.json'if passed else None,'speed_or_serving_qualified':False})
+ print(json.dumps({'status':'PASS'if passed else'FAIL','post_health':post,'analysis':analysis}),flush=True);raise SystemExit(0 if passed else 2)

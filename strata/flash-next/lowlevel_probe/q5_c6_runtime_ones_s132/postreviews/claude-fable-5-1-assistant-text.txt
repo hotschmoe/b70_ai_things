@@ -1,0 +1,43 @@
+Model: claude-fable-5-1.
+
+**1. S130 and S131 interpretation**
+
+Both runs passed every matched gate on the same binary: identical text, usage, drafts offered and accepted, windows, captures, functionals, teardown and fresh health. That is the correctness result and it is solid for these inputs.
+
+- Q5 C2 runtime ones: aggregate about +0.66 percent from one OFF then ON sequence. The private head kernel was 25 percent faster, but the C2 head is two calls per paired draft, so even a large kernel change is a small slice of a decode cycle. Decision: park as a default-OFF opt-in with its evidence. No repeat. The S129 compiled body HOLD stays recorded as an unresolved identity question that the serving equality did not clear.
+- Owner queues: about -0.33 percent, three of three pairs slower. The host joins per depth cost more than any overlap returned, or there was no overlap. Decision: park default OFF, mechanism closed in this form. Any future event-chained variant is a different design and needs its own evidence.
+
+Neither number has a noise band or population behind it; both are descriptive, same-process comparisons.
+
+**2. C6-only main source: CONDITIONAL GO, then one same-binary control/ON serving run**
+
+Evidence: S132 passed 49 strict snapshots, 1936 integer cells, two full weight checks and A, B, A graphs with a private 42 percent reduction on the six-column head. The C6 head is the verifier's full-vocabulary call on six-token windows, which S95 placed on the per-cycle path, so this shape has a plausible route to serving unlike the C2 case. The serving effect is still unknown and bounded above by the head's share of a cycle.
+
+Source: the patch is the reviewed C2 seam cloned with six columns, a separate flag, the five validation calls, its own kernel class and marker, and the shared apply and kernel bodies untouched. Inverse projection to the base TU is exact. Two scope facts to record: only windows with exactly six tokens take the candidate, so a run mixes candidate and original head calls, and the paired MTP tail never uses it. That is acceptable because the math is the same and every output is gated.
+
+Conditions, none of them ISA certification:
+- Apply only on the verified base TU hash, git apply check clean.
+- Post-apply Ninja dry plan must be exactly native TU, kernels archive, main link. Anything else stops for inspection; do not force dependencies.
+- Record the candidate image hash and the usual public control identity on the new binary; keep the S129-style body comparison as information, not a gate, per the user's priority. Record a body difference as HOLD-status information without blocking.
+- Serving: same new binary, all other flags OFF including the C2 word set to zero in both arms, control then ON, warm plus three matched pairs, strict per-pair gates before the next pair, marker once on ON, functionals, normal quit, container absence, fresh both-card and compiled health. Stop on first mismatch, no retry.
+
+Concrete blocker: none in the supplied source. The only way this run is wasted is if no six-token verify window occurs, which the logged captures already show it does at batch two.
+
+**3. Two-queue graph event oracle: GO for CPU build and one card0 run, low priority**
+
+The probe is small and correct for its purpose: two distinct in-order queues on one checked context, three independently finalised graphs, cross-queue ordering only through submit barriers on graph events, counter advance in a separate ordered node, eight depths with every intermediate checked, A, B, A mapped input, balanced capture cleanup, drains before frees. It answers one API question: does the runtime honour event dependencies between executable graph submissions on two queues. It does not measure overlap or Level Zero counts, and the README says so.
+
+Why still run it: S131 showed host joins cost. If the event path is rejected or incorrect, the whole event-chained MTP idea closes for free. If it passes, an upstream variant replacing only the pre-forward host joins becomes a bounded source change. Keep it after the C6 run in the same lease window if time allows, or the next window. No production approval follows from a pass.
+
+Blocker: none. One note: a runtime API rejection is a valid outcome and must be preserved, not retried.
+
+**4. Order, bottlenecks, redundancy**
+
+Order:
+1. Apply C6, incremental build, identity receipts, one control/ON serving run.
+2. Cross-queue oracle build and run.
+3. Park Q5 C2 and owner queues as opt-ins with their results.
+
+Bottlenecks the evidence now supports: the six-column verifier head and the head family generally are the only post-expert services where a private kernel win has a direct path to the cycle. Dense MMVQ and routed experts remain the largest families but every load-side or operand-side change so far moved serving under one percent. Decode at roughly 54 to 56 per stream versus 150 will not come from this class of change; it needs a change in what work the cycle does, not how a kernel does it.
+
+Avoid: repeating S130 or S131, another private head oracle for C2, ISA or all-image certification before the C6 serving run, soaks, combined-flag runs, and any noise-band or extrapolation claim.

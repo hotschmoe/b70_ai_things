@@ -1,0 +1,26 @@
+{
+  "status": "PASS_FULL_BYTES_READONLY_GUARDS_DOT",
+  "all_pairs": [
+    {
+      "round": 0,
+      "original_us": 2360.0637500000003,
+      "candidate_us": 1360.944175,
+      "change_percent": -42.334431644060466
+    },
+    {
+      "round": 1,
+      "original_us": 2379.0224,
+      "candidate_us": 1368.237825,
+      "change_percent": -42.48739209012912
+    }
+  ],
+  "median_pair_change_percent": -42.410911867094796,
+  "eight_samples_retained": 8,
+  "whole_weight_checks": 2,
+  "raw_integer_cells": 1936,
+  "DOT_nodes": 43,
+  "DOT_edges": 38,
+  "limits": "2 balanced round means nested in one process; 20 projection calls/graph, canonical saved Q8 ready outside graphs; completed host wall primary, barrier span includes boundaries; no population, kernel cause or serving claim",
+  "serving_qualified": false,
+  "speed_qualified": false
+}

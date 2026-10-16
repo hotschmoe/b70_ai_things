@@ -1,0 +1,22 @@
+{
+  "status": "V2_SOURCE_ONLY_FROZEN_PREEXECUTION_CORRECTION",
+  "source_manifest_row_keys": [
+    "bytes",
+    "sha256"
+  ],
+  "fixture_row_keys": [
+    "bytes",
+    "current_payload_rehashed",
+    "path",
+    "sha256_from_retained_S52_comparison"
+  ],
+  "source_manifest_sha256": "5960e16c650b5efa8c08e2971ea51febf8df9dfaae1515ed2088b3ae1e585910",
+  "V1_manifest_sha256": "d4e220e43d8eae6bc3211dde404f8eb7f36fe898817800ffb81f3a92f3b6a0aa",
+  "code_delta": "Only source manifest sha256 lookup and successful timing_summary comparison.json",
+  "unchanged_files": [
+    "analyze.py",
+    "ROOT_RUN.sh",
+    "root-go.example.json"
+  ],
+  "executed": false
+}

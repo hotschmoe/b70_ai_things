@@ -1,0 +1,17 @@
+[
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-private-run-prep-v2/leased_run.py",
+  "--out",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-private-run",
+  "--source",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-private-prep",
+  "--source-manifest",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-private-prep/manifest.json",
+  "--manifest-sha256",
+  "5960e16c650b5efa8c08e2971ea51febf8df9dfaae1515ed2088b3ae1e585910",
+  "--exe-sha256",
+  "611a8283d8caa8365d1c60b8783ef0829b529d0a377021b4e0881b1e4d016a4f",
+  "--root-go",
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-private-root-GO.json",
+  "--root-go-sha256",
+  "83704ee568c80beb2d5db9a18ea7aa109bbf837a878c0e524b6020d1fb65a629"
+]

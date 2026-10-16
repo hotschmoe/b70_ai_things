@@ -25464,3 +25464,32 @@ andnocausaloverlap/contentiondiagnosis. S129bodyHOLD remains; deferred
 CPUcertifications notretrospectivelycompleted. Root selects C6private
 shape probe next, optionalcrossqueueeventAPIoracle source-only. See
 docs/20261016_strata_mtp_owner_queues_serving.md.
+
+
+## 2026-10-16 S132: real C6 head runtime-ones private GPU result passes
+
+CONFIG -> N2560/M248320/C6/Q5_K/RPW1/SG32, actual437043200B fullhead;
+unchanged S128arithmetic/runtimeword with6columninstantiation. Both
+controlarms actualproductionnative(type13,C6), canonicalS52A/B/Q8/full
+logitanchors. No newproducer/format/tolerance or modelscan.
+
+COMMAND -> Adapterbuild+tee0/rounded24s, exactcompile10.374/prelink.549/
+hostlink.386s distinctscopes. Onequietcard0physical0b:00.0window47s;
+rootfullsource/independentsourcereview/V1plus2lineV2runnerfix. Optional
+ISA/compiledcertificationdeferredperuser, no decoder/auditframework.
+
+RESULT -> All49snapshots/1936INT64cells/2fullweightchecks/74bins/
+5DOT43nodes38edgesPASS; eager/repeats/capturedsingle+20/change/restore,
+fullpublic+S52logits/guards/tails/inputQ8readonly. EXE611a8283. All8timings
+retained: OCCO2360.063750->1360.944175us(-42.334432%); COOC2379.022400->
+1368.237825(-42.487392%),20projections/graph, Aonlytimed/Bstrict. Native/
+start/wait/rm/driver/tee/identity0, OOMfalse/fullCID+NAMEgone, prepost
+card0health0; no retry/reset/force/dailyrestore.
+
+VERDICT -> BoundedprivatePASS,2nestedrounds/wholebuildcontext, noisolated
+onescause/ISA/universalFP/servingforecast. ActualOpus5.5 56.719874s/
+Fable5.1 66.849302s ownresumesbothparkS130C2/S131queues, conditionalC6
+smallmainbuild+NEWbinaryfreshcontrol/ON; graphAPIoraclenotMTPapproval.
+Rootconfirmedloadedhead/T6reachabilityandcorrectedmodelcausal/sign/
+processwordingseparately; rawresponsesunchanged. S126/S129HOLDs remain.
+See docs/20261016_strata_q5_c6_runtime_ones_private.md.

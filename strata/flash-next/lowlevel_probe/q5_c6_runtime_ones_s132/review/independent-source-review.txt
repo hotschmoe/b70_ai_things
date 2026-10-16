@@ -1,0 +1,47 @@
+CONFIG -> Independent source-only review of frozen C6 private oracle,
+manifest5960e16c650b5efa8c08e2971ea51febf8df9dfaae1515ed2088b3ae1e585910.
+Exact S128 delta, full leaf/header/analyzer/build scripts and fixture pins read.
+
+COMMAND -> Small source/text SHA checks only; all13 manifest payloads match,
+ASCII; six fixture file sizes stat-checked. No model/archive/anchor payload
+read/hash, no import/controller/build/GPU/ISA/all-image audit.
+
+RESULT -> No concrete source blocker. Real C6 input61440B/Q8=17280B/output
+5959680B for N2560/M248320. Both public/original arms directly call the same
+retained public native_mmvq(type13,C6), never the unused private OriginalC2.
+Actual A/B public results must equal saved full S52 C6 anchors before any
+candidate timing; changed canonical Q8/output must differ. No fresh quantizer.
+Candidate instantiates unchanged source candidate_kernel<WideQ5K,6>, unique
+RuntimeOnesQ5C6 name; runtime signed4B ones operand still01010101.
+
+Geometry: 62080 workgroups, local(1,4,32)=128threads/4 SG32, one row perSG,
+exact248320 rows. lane&7 enumerates eight16-byte halves; lane>>3 partitions
+ten256-input blocks into K indices sub,sub+4,sub+8 when <10. Each row computes
+six columns with stride80 Q8 blocks. No explicit local/SLM accessor, barrier or
+scratch allocation; six private FP accumulators. Register pressure/scheduling
+and actual compiled resources remain UNKNOWN; source is not numerical proof.
+
+Raw16 validation covers960 cells for each A/B +8 extreme +8 changed payload
+=1936 INT64 comparisons, tail checked before integer reads. Full output bytes,
+input/Q8 read-only, weight/output guards and512B tails checked. Snapshot count:
+34 correctness +6 warm +8 timed +1 final=49. Saved34*2+4 input/canonical+2final
+=74 bins; three single/two batch20 DOTs=5. Two complete437043200B weight
+read-only checks bracket warming/timing. Eight samples remain OCCO then COOC,
+20 projections/graph, warm3 batches, unchanged canonical Q8 outside timing.
+Completed host/barrier spans are private projection scope, never serving gain.
+
+Build retains pinned e41/noDRI/networknone/UID1000 caller, fourCPU/diskTMP and
+cpu-run; unchanged S128 build recipe, frozen S59 library/common device image.
+The live native-source88a4 hash is current context, not that frozen library's
+compiled-input identity. Public S52 C6 anchor equality is a runtime gate, not
+assumed from context. Build outputs new private executable; no main edits.
+
+No private GPU launcher is included in this prep: root must adapt the already
+retained leased runner, pin physical0000:0b:00.0/card0, perform existing fresh
+pre/posthealth and exact fixture/slice identities in leased setup, run finite
+once, preserve any failure, no retry/tolerance relaxation. Source has balanced
+capture cleanup, drain/destruction and cleanup failure exit2 vs strict exit5.
+
+VERDICT -> SOURCE_REVIEW_FINITE_RUN_READY after root's normal build/lease gates;
+no additional CPU ISA certification prerequisite requested. No GPU/numeric/
+performance result claimed. Root is sole experiment orchestrator.

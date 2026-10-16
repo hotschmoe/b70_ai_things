@@ -1,0 +1,30 @@
+cpu-run: [Q5-C6-runtime-ones-adapter-only-build] acquired (heavy) -> env MAX_JOBS=4 docker run --rm --network none --cpus 4 -u 1000:1000 -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_DIR=/out/cache -e SYCL_CACHE_PERSISTENT=0 -e MAX_JOBS=4 -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 -v /mnt/vm_8tb/b70/build/strata-ab:/work:ro -v /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-private-prep:/src:ro -v /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-private-prep/build:/out -v /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/build:/common:ro -v /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/iq4xs-rpw2-s59-prep/frozen-inputs:/frozen:ro --entrypoint bash sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2 /src/build-container.sh
+/work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp: OK
+/work/src-ep/sycl/include/strata/sycl_math.hpp: OK
+/work/src-ep/sycl/include/dpct/math.hpp: OK
+/work/src-ep/sycl/include/strata/kernels/native_mmvq.hpp: OK
+/work/src-ep/include/strata/kernels/native_mmvq.hpp: OK
+/src/q5_runtime_ones_leaf.cpp: OK
+/src/private_q5_runtime_ones.hpp: OK
+/common/mmvq-core.images.o: OK
+/frozen/libstrata_kernels.a: OK
+/frozen/libstrata_core.a: OK
+/work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp: OK
+/work/src-ep/sycl/include/strata/sycl_math.hpp: OK
+/work/src-ep/sycl/include/dpct/math.hpp: OK
+/work/src-ep/sycl/include/strata/kernels/native_mmvq.hpp: OK
+/work/src-ep/include/strata/kernels/native_mmvq.hpp: OK
+/src/q5_runtime_ones_leaf.cpp: OK
+/src/private_q5_runtime_ones.hpp: OK
+/common/mmvq-core.images.o: OK
+/frozen/libstrata_kernels.a: OK
+/frozen/libstrata_core.a: OK
+a2bf99d0a4750e16eb797de183d7ebf075d36fd9a51a5cc8388784a053df675b  /src/q5_runtime_ones_leaf.cpp
+ab21735564d32683ffd407a2fe350979ecd2cc5366d6b14f92fe9b194e1504eb  /src/private_q5_runtime_ones.hpp
+8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21  /common/mmvq-core.images.o
+f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8  /frozen/libstrata_kernels.a
+34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286  /frozen/libstrata_core.a
+05dcf69636bcc90b346c49911b4acbe027d11aa7210158eea80fc28d38e22259  q5_runtime_ones_leaf.o
+630af79eb6eac4f0ad44ee97946887c75baf327958e028574ef15a7c4a9924fc  leaf.images.o
+611a8283d8caa8365d1c60b8783ef0829b529d0a377021b4e0881b1e4d016a4f  q5_runtime_ones_s126
+cpu-run: [Q5-C6-runtime-ones-adapter-only-build] done in 24s (exit 0)

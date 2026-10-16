@@ -1,0 +1,1 @@
+{"status":"PASS","scope":"Q5_HEAD_C6_RUNTIME_ONES_PRIVATE","shapes":1,"paired_rounds_per_shape":2,"samples_per_round":4,"calls_per_graph":20,"public_original_bit_anchor":true,"candidate_full_bytes":true,"serving_qualified":false,"speed_qualified":false}

@@ -1,0 +1,41 @@
+{
+  "status": "FROZEN_SOURCE_ONLY",
+  "files": {
+    "README.md": {
+      "bytes": 3120,
+      "sha256": "f04fd07adf9b5bea359d476bd64e61f7beca1a4b670ffd0d727597e880257bd5"
+    },
+    "ROOT_RUN.sh": {
+      "bytes": 809,
+      "sha256": "2b9c3fede6dcf7d601859f46020b33b1eff3a9c49e619d7b354da84ddbfcdb7f"
+    },
+    "analyze.py": {
+      "bytes": 7940,
+      "sha256": "9eb8f28f6c29cc00a8ebfd43ca88fb11043cb02d8e207bc706bfe0d6ee88adae"
+    },
+    "harness-pins.json": {
+      "bytes": 259,
+      "sha256": "f4e01a7d47d56061707c42cb6c7b150debe66a51eff5d79891bd9d32f420e5a2"
+    },
+    "leased_run.py": {
+      "bytes": 14569,
+      "sha256": "e669451d78fbed12e91ae8248596e0dd175cdf19e48129d834df4daaf0cd1876"
+    },
+    "review-packet.txt": {
+      "bytes": 27204,
+      "sha256": "80f52b67eb23b3584e0e14103048796b0a88bc14733e42bf05cb91d7b69ce40d"
+    },
+    "root-go.example.json": {
+      "bytes": 518,
+      "sha256": "b01a5692c8ac96150e9faae696fe7a43c6f692e7c3d1399db6fe5243c0617eaa"
+    },
+    "source-only-validation.json": {
+      "bytes": 593,
+      "sha256": "ea0db45334dbd97a1660604cc032ae1505f31cbd17253e25f74527f0c068c906"
+    },
+    "vs-s128-runner.patch": {
+      "bytes": 20085,
+      "sha256": "c4a95c56fe3541ba6593eca3a5f314be0ee36ee3c8904bd444fed3b2116b4098"
+    }
+  }
+}

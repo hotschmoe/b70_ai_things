@@ -1,0 +1,92 @@
+Model ID: claude-opus-5-5
+
+(1) S130 AND S131: INTERPRETATION AND DISPOSITION
+
+S130, Q5 C2 runtime ones:
+- **What it shows:** a matched discriminator pass. In every pair the text, SSE, usage and native work were exact (offered and accepted drafts, windows, pair/solo counts, captures), and health and teardown were clean.
+- **Numbers:** aggregate median 103.15 to 103.82 tok/s (+0.66%). Per-stream decode went from about 53.5/55.9 to about 54.0/56.2. The three timed pairs went +0.66%, +0.86% and +0.90%, one fixed OFF-then-ON sequence. That is descriptive only.
+- **Calibration:** the private result was -25.6% on the head kernel; serving showed +0.66%. The C2 MTP pair head is a small share of the cycle.
+- **Disposition:** PARK, default OFF, retained. The S129 body HOLD stands: the main candidate text differs from the private image (6208 vs 6464 bytes, first difference at byte 281). Correctness on this path rests on the matched served outputs and work, not on an ISA claim.
+
+S131, owner queues:
+- **What it shows:** also a matched pass. It reused the S130 control: same binary, same pinned policy.
+- **Numbers:** aggregate 103.15 to 102.81 (-0.33%), and every timed pair was slightly negative (+0.33%, -0.34%, -0.17% in pair wall).
+- **Interpretation:** the host joins plus same-device scheduling did not produce a net gain. Whether the hardware overlapped at all is unknown; the marker shows host selection only.
+- **Disposition:** PARK, default OFF. No repeat. Do not build further MTP owner-queue variants unless a mechanism removes the joins (see item 3).
+
+(2) C6-ONLY MAIN SOURCE, BUILD AND SERVING: CONDITIONAL GO
+
+The patch is narrow and textually sound:
+- a separate opt-in variable, unset or 0 meaning OFF;
+- exact parsing to 0x01010101;
+- the RPW2 branch and the C2 branch stay byte-exact and keep priority;
+- the C6 branch requires `native_mmvq_head`, type 13, N 2560, M 248320, ncols 6, wide-K and RPW 1, plus the five standard validations;
+- one new class and one `<WideQ5K,6>` instantiation;
+- the shared apply and kernel bodies are untouched.
+
+S132 private C6 passed all strict gates: 49 snapshots, 1936 INT64 cells, two whole-weight checks, graphs, guards. Its \u221242.4% compares a whole private build with production in one process. It is not a serving forecast.
+
+Required conditions (all grounded in evidence, none of them certification):
+
+a. **Confirm reachability.** In C2 serving, the batch verifier windows are logged as slots 1,1,1,0,0,0, i.e. 6 rows. Root must confirm from source that the batch verifier head reaches `native_mmvq_head` with ncols 6 on those windows. If it does not, the C6 arm exercises nothing in this workload. Do not build it for serving; record that instead. This is the one check that decides whether the experiment can show anything.
+
+b. **Real dry plan:** exactly three actions (the native TU, the kernels archive, the strata link) with the existing S129 configuration and cache. Any other action: stop and inspect, never force dependencies.
+
+c. **Same new binary, two arms:**
+   - control: C2 = 0 and C6 = 0;
+   - ON: C2 = 0 and C6 = 01010101;
+   - RPW2 = 0 in both, every other candidate OFF;
+   - pinned policy: min-p 0, spec 4, MTP max T 4, depth 2, pair head ON, suffix 0, lookup 0.
+
+d. **Gates:**
+   - the existing exact text, SSE, usage and native work at every pair before the next;
+   - startup captures equal;
+   - the C6 marker exactly once in ON and absent in control; the C2 marker absent in both;
+   - functionals, normal QUIT, CID and name gone, fresh health on both cards and compiled health.
+   - The first mismatch stops the run; no retry.
+
+e. **Claims:** none about ISA identity or resolving the S129 HOLD. The C6 main body is unverified at the image level, and served exactness is the correctness evidence. Serving gain is unknown until measured.
+
+(3) TWO-QUEUE GRAPH/EVENT ORACLE: GO for CPU build and one card-0 run, as optional and lower priority than item 2
+
+The source checks out:
+- **Context checks:** same context, device, in-order and Level Zero is verified at runtime.
+- **Graphs:** three independently captured graphs; the cross-queue barriers are deliberately never captured.
+- **Mode-1 dependencies:**
+  - B's next pre waits on the previous tail's event, which covers TailAdvance because it is in the tail graph.
+  - The A barrier waits on events from both producers.
+  - A's in-order queue orders its next pre after the tail.
+- **Data races:** producers only read the shared counter and the previous tail row and write disjoint planes. The counter is advanced in a separate ordered node.
+- **Checks:** strict comparison of all 8 iterations per phase, A/B/A, guards, mapped read-only inputs, balanced capture, and graphs destroyed before storage.
+
+Minor issues:
+- `<mutex>` is not included explicitly. A compile failure is the safe outcome.
+- The runner must set `STRATA_HOST_UNCACHED=1` (as S103 did), otherwise the uncached-allocation guard fails.
+
+Value: it answers only whether cross-queue event barriers work and are fresh on this stack. That is the precondition for removing S131's pre-forward host joins.
+
+Limits:
+- It is not MTP approval.
+- Even a pass does not license removing the per-depth tail wait or changing the order of h_out reads and PLE hints.
+- No overlap or timing claims.
+
+Run it in the same GPU window as item 2 only if it adds little lease time. If it passes, the only follow-up worth sourcing is an S127 variant that replaces the pre-forward host joins with an A-queue barrier and keeps the tail waits. If it fails, close cross-queue MTP work.
+
+(4) DEV-LOOP ORDER AND BOTTLENECKS
+
+1. Condition 2a: a source check of the batch verifier head's column count. It costs minutes and decides whether C6 is worth anything.
+2. If C6 is reachable: the three-action incremental build, then one GPU window with the C6 control/ON pair. Optionally append the cross-queue oracle in the same lease.
+3. After that, stop micro-candidates whose serving share is a single small head call. S107, S114 and S130 together suggest each such kernel lever yields roughly 0.4\u20130.9% in serving. The verifier head at T6 (if reachable) and the per-window dense, HC and MoE work are the only remaining kernel paths that run on every cycle.
+
+Bottlenecks:
+- Decode is about 54\u201356 tok/s per stream against a target of 150. With roughly 2.7 tokens per window, cycle time dominates, and the cycle is mostly verifier work (dense MMVQ, HC, routed experts, head) plus MTP.
+- Structural options on the record:
+  - the paired C2 MTP forward (batching A and B projections), which was design-approved earlier and not built;
+  - verifier-side head and dense work at T6.
+
+  These outrank further private kernel timing.
+
+Avoid:
+- private timing runs for candidates whose production path has not been shown to be reachable;
+- repeating parked flags;
+- optional CPU ISA certification that the user has deprioritized. Keep the strict served output and work gates, which have caught real issues before.

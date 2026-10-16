@@ -1,0 +1,13 @@
+{
+  "executable": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-private-prep/build/q5_runtime_ones_s126",
+  "recorded_SHA256": "611a8283d8caa8365d1c60b8783ef0829b529d0a377021b4e0881b1e4d016a4f",
+  "raw_full_outputs": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-private-run/leaf/head",
+  "raw_model_identity": "source/fixture-pins.json",
+  "public_archive": "S59 frozen kernels f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8; source/build hashes preserved, no new large hash by curator",
+  "selected_native_source_context": "88a4e5ad identifies current context only, not the frozen public archive input.",
+  "ISA_host_allimage_certification": "DEFERRED_BY_USER_NOT_COMPLETED_NOT_CLAIMED_PASS",
+  "prior_reference": "../q5_public_control_s128/README.md",
+  "independent_source_review_author": "Native agent source review, not an actual Claude response; root RUN_GO pins it.",
+  "postresult_actual_models": "CLOSED actual claude-opus-5-5 and claude-fable-5-1 own resumes; exact texts/filtered identities/root correcting disposition under postreviews.",
+  "no_binary_or_model_payload_copied_or_rehashed": true
+}

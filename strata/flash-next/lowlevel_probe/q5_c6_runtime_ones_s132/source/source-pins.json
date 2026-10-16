@@ -1,0 +1,56 @@
+{
+  "parent": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-public-control-runtime-ones-s128-prep",
+  "parent_files": {
+    "q5_runtime_ones_leaf.cpp": {
+      "bytes": 20556,
+      "sha256": "c4275ea009f2cf81c4a466c88fd5637c5923fc254a9242c029d772cdfeda21ae"
+    },
+    "private_q5_runtime_ones.hpp": {
+      "bytes": 10105,
+      "sha256": "a8045fa37108f99ad448e48e6994319845a72327c092989245afcd95094a94c1"
+    },
+    "build.sh": {
+      "bytes": 1494,
+      "sha256": "5e2621040667689e0f15c7c45de59a601650b1dccad94cd43272d19fcbf26fdc"
+    },
+    "build-container.sh": {
+      "bytes": 1959,
+      "sha256": "c4cb4c96bb00319796b6c24296f846f13987257da961d2cbe8db3f922ffae5f8"
+    },
+    "analyze.py": {
+      "bytes": 3276,
+      "sha256": "1da9710d3a2f107c4aa7eda75b14fab2b00db4890d6132408a4f0e4a595985b6"
+    },
+    "expected-container.sha256": {
+      "bytes": 1053,
+      "sha256": "6d6b78f4d7a35150684cc34a7d556adb8ac717b890f3635a1b0f19b67a91c4c8"
+    }
+  },
+  "candidate_files": {
+    "q5_runtime_ones_leaf.cpp": {
+      "bytes": 20561,
+      "sha256": "a2bf99d0a4750e16eb797de183d7ebf075d36fd9a51a5cc8388784a053df675b"
+    },
+    "private_q5_runtime_ones.hpp": {
+      "bytes": 10106,
+      "sha256": "ab21735564d32683ffd407a2fe350979ecd2cc5366d6b14f92fe9b194e1504eb"
+    },
+    "build.sh": {
+      "bytes": 1495,
+      "sha256": "9fbdae6d11941b802caf0d3d1e8709df8ae5851a191e1950085ff64272807c25"
+    },
+    "build-container.sh": {
+      "bytes": 1959,
+      "sha256": "c4cb4c96bb00319796b6c24296f846f13987257da961d2cbe8db3f922ffae5f8"
+    },
+    "analyze.py": {
+      "bytes": 3276,
+      "sha256": "360782c7a6e5b77e8e09e49b75d06fa56b440e46e7bef8c4ea5cb578219a60ea"
+    },
+    "expected-container.sha256": {
+      "bytes": 1053,
+      "sha256": "c46c176538eb11cd5b5da538ba352cbf9b74fde6cb17f53fdb1b11c6a756f804"
+    }
+  },
+  "large_payloads_rehashed": false
+}

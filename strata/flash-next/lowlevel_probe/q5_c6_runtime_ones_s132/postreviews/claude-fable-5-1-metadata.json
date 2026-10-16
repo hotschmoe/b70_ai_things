@@ -1,0 +1,74 @@
+{
+  "requested": "claude-fable-5-1",
+  "responding_models": [
+    "claude-fable-5-1"
+  ],
+  "session_ids": [
+    "cc64d072-c1c6-4d21-a194-c060a2f96f0e"
+  ],
+  "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+  "resume_session_matches_response": true,
+  "exit": 0,
+  "elapsed_s": 66.84930184902623,
+  "source_packet_sha256": "9e2f0022a6ee0fbf752b7de166463dbdffa5e91fcc15c400bbded733d004ee8f",
+  "source_packet_unchanged": true,
+  "retries": 0,
+  "parse_errors": [],
+  "launch_exception": null,
+  "actual_command": {
+    "argv": [
+      "/home/hotschmoe/.local/bin/claude",
+      "-p",
+      "--resume",
+      "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+      "--model",
+      "claude-fable-5-1",
+      "--effort",
+      "low",
+      "--tools",
+      "",
+      "--strict-mcp-config",
+      "--disable-slash-commands",
+      "--setting-sources",
+      "",
+      "--settings",
+      "{\"disableAllHooks\":true}",
+      "--permission-mode",
+      "dontAsk",
+      "--max-turns",
+      "1",
+      "--output-format",
+      "stream-json",
+      "--verbose"
+    ],
+    "cwd": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-s93-post-s94-source-reviews-20261015/claude-fable-5-1",
+    "fresh_session_requested": false,
+    "resume_session": "cc64d072-c1c6-4d21-a194-c060a2f96f0e",
+    "source_packet": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s130-s132-next-source-reviews-20261016/root-frozen-packet.txt",
+    "source_packet_sha256": "9e2f0022a6ee0fbf752b7de166463dbdffa5e91fcc15c400bbded733d004ee8f",
+    "prompt_sha256": "15b8c88b2864e3b07ee40968ca4dd3ad86d0411219b48303910429c651fd79e2",
+    "scope": "S130/S131 serving results, S132 private C6 result, conditional C6 production source and crossqueue graph API oracle; own prior session, no tools/build/GPU/other model answer"
+  },
+  "actual_prompt_identity": {
+    "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s130-s132-next-source-reviews-20261016/claude-fable-5-1/prompt.txt",
+    "bytes": 65425,
+    "sha256": "15b8c88b2864e3b07ee40968ca4dd3ad86d0411219b48303910429c651fd79e2",
+    "copied": false
+  },
+  "actual_packet_identity": {
+    "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s130-s132-next-source-reviews-20261016/root-frozen-packet.txt",
+    "bytes": 64230,
+    "sha256": "9e2f0022a6ee0fbf752b7de166463dbdffa5e91fcc15c400bbded733d004ee8f",
+    "copied": false
+  },
+  "full_completion_source_identity": {
+    "bytes": 8650,
+    "sha256": "c7e217e4849df99aa23387bb6c044129a8989ef79c19a3e6df10595645b034af"
+  },
+  "command_source_identity": {
+    "absolute_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s130-s132-next-source-reviews-20261016/claude-fable-5-1/command.json",
+    "bytes": 1274,
+    "sha256": "6fe95327c3e80f91a790ca29e822e3776d4df0e1c6bb396900ae5d6b0f9f5002"
+  },
+  "scope": "Filtered actual own-session metadata/command/prompt/packet identities; no cumulative usage/events/full-packet or duplicated model result."
+}

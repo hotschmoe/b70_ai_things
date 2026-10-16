@@ -1,0 +1,3 @@
+digraph dot {
+"0x7973740" [style=bold, label="ID = 0x7973740\nTYPE = CGExecKernel \nNAME = _ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_111launch_wideINS2_7WideQ5KELi6EEEvPKvS6_PfiiPN4sycl3_V15queueEiE16native_mmvq_wideS4_18dpct_kernel_scalarILi6EEEE\nARGS = \n0) Type: Pointer Ptr: 0x796e688(0xffffd556b6401000)\n1) Type: Pointer Ptr: 0x796e690(0xffffffffff611000)\n2) Type: Pointer Ptr: 0x796e698(0xffffd556d1601000)\n3) Type: STD_Layout Ptr: 0x796e6a0\n4) Type: STD_Layout Ptr: 0x796e6a4\n"];
+}

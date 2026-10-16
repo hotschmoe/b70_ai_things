@@ -1,0 +1,131 @@
+--- C6/q5_runtime_ones_leaf.cpp
++++ S128/q5_runtime_ones_leaf.cpp
+@@ -1,4 +1,4 @@
+-// SOURCE ONLY C6 shape screen: S128 public-control harness; runtime-ones math unchanged.
++// SOURCE ONLY S128: verified public Q5 C2 control; unchanged S126 runtime-ones candidate.
+ #define DPCT_PROFILING_ENABLED
+ #include <sycl/sycl.hpp>
+ #include <dpct/dpct.hpp>
+@@ -27,7 +27,7 @@
+ namespace fs=std::filesystem;
+ using Bytes=std::vector<uint8_t>;
+ using Clock=std::chrono::steady_clock;
+-constexpr int C=6,BATCH=20,WARM=3,ROUNDS=2;
++constexpr int C=2,BATCH=20,WARM=3,ROUNDS=2;
+ static int runtime_ones=0;
+ static bool cleanup_error=false;
+ constexpr size_t G=4096,TAIL=512;
+@@ -123,14 +123,14 @@
+         need(fnv(weights)==d.weight_fnv,"actual tensor FNV mismatch");
+         for(int changed:{0,1}){
+             const std::string label=changed?"b":"a";
+-            auto input=read(fixtures/("C6-input-"+label+".bin"),size_t(6)*d.N*4);
++            auto input=read(fixtures/("C2-input-"+label+".bin"),size_t(6)*d.N*4);
+             auto& dst=changed?b:a;std::memcpy(dst.data(),input.data(),dst.size()*4);finite(input);
+-            auto qinput=read(fixtures/("C6-eager-"+label+"-q8.bin"),qbytes);
++            auto qinput=read(fixtures/("C2-eager-"+label+"-q8.bin"),qbytes);
+             savedq[changed]=Bytes(qbytes+TAIL,0xff);std::copy(qinput.begin(),qinput.end(),savedq[changed].begin());
+-            anchor[changed]=read(fixtures/("C6-eager-"+label+".bin"),active);finite(anchor[changed]);
++            anchor[changed]=read(fixtures/("C2-eager-"+label+".bin"),active);finite(anchor[changed]);
+         }
+         w.put(weights.data(),weights.size());q.wait_and_throw();
+-        std::printf("{\"type\":\"shape_identity\",\"shape\":\"%s\",\"tensor\":\"%s\",\"N\":%d,\"M\":%d,\"C\":6,\"weight_bytes\":%zu,\"offset\":%zu,\"fnv\":\"%016llx\"}\n",d.tag,d.tensor,d.N,d.M,d.bytes,d.offset,(unsigned long long)d.weight_fnv);
++        std::printf("{\"type\":\"shape_identity\",\"shape\":\"%s\",\"tensor\":\"%s\",\"N\":%d,\"M\":%d,\"C\":2,\"weight_bytes\":%zu,\"offset\":%zu,\"fnv\":\"%016llx\"}\n",d.tag,d.tensor,d.N,d.M,d.bytes,d.offset,(unsigned long long)d.weight_fnv);
+     }
+     void guards(){for(Buffer* p:{&w,&x,&xq,&y})p->guards();}
+     void output_reset(){q.wait_and_throw();guards();y.poison();q.wait_and_throw();}
+@@ -177,7 +177,7 @@
+             raw_gate(q,xq,expectedq[changed],qbytes,runtime_ones,"canonical-"+label);
+             output_reset();call(0);expected[changed]=snapshot("eager-public-"+label,true);
+             strict_equal(expected[changed],anchor[changed],"saved S52 RPW1 public byte anchor");
+-            // C6: arm1 is the same production public kernel as arm0, no private clone.
++            // S128: arm1 is the same verified production public kernel as arm0.
+             output_reset();call(1);equal_snapshot("eager-original-"+label,true);
+             output_reset();call(2);equal_snapshot("eager-candidate-"+label,true);
+             for(int arm:{1,2}){output_reset();call(arm);equal_snapshot(std::string("repeat-")+armname(arm)+"-"+label,true);}
+@@ -248,7 +248,7 @@
+     std::string pci=dev.get_info<sycl::ext::intel::info::device::pci_address>();
+     std::transform(pci.begin(),pci.end(),pci.begin(),[](unsigned char c){return char(std::tolower(c));});
+     need(pci=="0000:0b:00.0","require physical card0 BDF0000:0b:00.0");
+-    std::printf("{\"type\":\"identity\",\"pci\":\"%s\",\"visible_devices\":1,\"driver\":\"%s\",\"device\":\"%s\",\"public_type\":13,\"C\":6,\"runtime_ones\":%d,\"timing_scope\":\"projection only; canonical Q8 outside graphs\"}\n",pci.c_str(),dev.get_info<sycl::info::device::driver_version>().c_str(),dev.get_info<sycl::info::device::name>().c_str(),runtime_ones);
++    std::printf("{\"type\":\"identity\",\"pci\":\"%s\",\"visible_devices\":1,\"driver\":\"%s\",\"device\":\"%s\",\"public_type\":13,\"C\":2,\"runtime_ones\":%d,\"timing_scope\":\"projection only; canonical Q8 outside graphs\"}\n",pci.c_str(),dev.get_info<sycl::info::device::driver_version>().c_str(),dev.get_info<sycl::info::device::name>().c_str(),runtime_ones);
+     sycl::queue q(dpct::dev_mgr::instance().get_device(0).get_context(),dev,
+         sycl::property_list{sycl::property::queue::in_order(),sycl::property::queue::enable_profiling()});
+     raw_extremes(q);
+@@ -259,7 +259,7 @@
+     for(auto& state:states){state->warm();state->timing();}
+     for(auto& state:states)state->weight_payload_check("after-timing-final");
+     q.wait_and_throw();states.clear();q.wait_and_throw();need(!cleanup_error,"graph cleanup failure");
+-    text(out/"result.json","{\"status\":\"PASS\",\"scope\":\"Q5_HEAD_C6_RUNTIME_ONES_PRIVATE\",\"shapes\":1,\"paired_rounds_per_shape\":2,\"samples_per_round\":4,\"calls_per_graph\":20,\"public_original_bit_anchor\":true,\"candidate_full_bytes\":true,\"serving_qualified\":false,\"speed_qualified\":false}\n");return 0;
++    text(out/"result.json","{\"status\":\"PASS\",\"scope\":\"S128_PUBLIC_CONTROL_RUNTIME_ONES\",\"shapes\":1,\"paired_rounds_per_shape\":2,\"samples_per_round\":4,\"calls_per_graph\":20,\"public_original_bit_anchor\":true,\"candidate_full_bytes\":true,\"serving_qualified\":false,\"speed_qualified\":false}\n");return 0;
+ }
+ int main(int argc,char** argv){
+     setvbuf(stdout,nullptr,_IONBF,0);fs::path out;bool created=false;
+--- C6/private_q5_runtime_ones.hpp
++++ S128/private_q5_runtime_ones.hpp
+@@ -1,5 +1,5 @@
+ #pragma once
+-// Private Q5 C6 shape screen: S128 runtime-ones math; unused original C2 retained.
++// S126 private Q5 C2 only: original exact source, candidate runtime ones operand.
+ #include <sycl/sycl.hpp>
+ #include <dpct/dpct.hpp>
+ #include "strata/sycl_math.hpp"
+@@ -143,7 +143,7 @@
+ }
+ 
+ class OriginalQ5C2;
+-class RuntimeOnesQ5C6;
++class RuntimeOnesQ5C2;
+ class Raw16Sums;
+ inline void launch_original(const void* weights,const void* xq,float* y,int n_in,int n_out,sycl::queue& q) {
+     const auto* w=static_cast<const Q5KBlock*>(weights);
+@@ -158,9 +158,9 @@
+     const auto* w=static_cast<const Q5KBlock*>(weights);
+     const auto* x=static_cast<const Q81Block*>(xq);
+     const unsigned blocks=unsigned((std::size_t(n_out)+WARPS-1)/WARPS);
+-    q.parallel_for<RuntimeOnesQ5C6>(
++    q.parallel_for<RuntimeOnesQ5C2>(
+         sycl::nd_range<3>(sycl::range(1,1,blocks)*sycl::range(1,WARPS,WARP),sycl::range(1,WARPS,WARP)),
+-        [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {candidate_kernel<WideQ5K,6>(w,x,y,n_in,n_out,ones_word);});
++        [=](sycl::nd_item<3>) [[sycl::reqd_sub_group_size(32)]] {candidate_kernel<WideQ5K,2>(w,x,y,n_in,n_out,ones_word);});
+ }
+ // Validation only, never a projection producer/sidecar or captured timed node.
+ inline void raw16_sums(const void* xq,int* out,int n_q8_blocks,int ones_word,sycl::queue& q) {
+--- C6/analyze.py
++++ S128/analyze.py
+@@ -4,7 +4,7 @@
+ out=Path(sys.argv[1]);log=Path(sys.argv[2]);summary={'status':'FAIL','timing':None}
+ try:
+  rows=[json.loads(line) for line in log.read_text().splitlines() if line.startswith('{')]
+- raw=[x for x in rows if x.get('type')=='raw16_gate'];assert [(x['label'],x['word'],x['cells']) for x in raw]==[('extremes-ones',16843009,8),('payload-negative-control',16843010,8),('canonical-a',16843009,960),('canonical-b',16843009,960)]
++ raw=[x for x in rows if x.get('type')=='raw16_gate'];assert [(x['label'],x['word'],x['cells']) for x in raw]==[('extremes-ones',16843009,8),('payload-negative-control',16843010,8),('canonical-a',16843009,320),('canonical-b',16843009,320)]
+  assert all(x['INT64_exact'] and x['readonly_guards'] for x in raw)
+  snaps=[x for x in rows if x.get('type')=='checked_snapshot'];assert len(snaps)==49
+  assert all(x['guards'] and x['tail'] and x['finite'] and x['input_readonly'] and x['weight_guards_checked'] and x['weight_payload_verified'] is False and x['Q8_readonly'] for x in snaps)
+--- C6/build.sh
++++ S128/build.sh
+@@ -15,7 +15,7 @@
+ assert json.load(open(sys.argv[1]))[0]['Id']==sys.argv[2]
+ PY
+ set +e
+-B70_CPU_LOCK_TIMEOUT=0 B70_AGENT=Q5-C6-runtime-ones-adapter-only-build "$REPO/bin/cpu-run" \
++B70_CPU_LOCK_TIMEOUT=0 B70_AGENT=S126-runtime-ones-adapter-only-build "$REPO/bin/cpu-run" \
+   env MAX_JOBS=4 docker run --rm --network none --cpus 4 -u "$(id -u):$(id -g)" \
+   -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_DIR=/out/cache \
+   -e SYCL_CACHE_PERSISTENT=0 -e MAX_JOBS=4 -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 \
+--- C6/expected-container.sha256
++++ S128/expected-container.sha256
+@@ -1,10 +1,10 @@
+-88a4e5add68fc2e8461ad891a1c31a2af3267ad4cfacd9a1534ce660079f100a  /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp
++ae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252  /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp
+ ac45a7a9b7d3cdc4b1b8c1c413c416911fb4ca91373d69bb34947815dbb3eec6  /work/src-ep/sycl/include/strata/sycl_math.hpp
+ 7c1b7175dbe29a43bff30a94381131096437d88415881a8a8c0704de53394c58  /work/src-ep/sycl/include/dpct/math.hpp
+ 83c233dd1f9de362cf646eb6f3d95dd97278ae43a30aeeed205b3067ef358a7e  /work/src-ep/sycl/include/strata/kernels/native_mmvq.hpp
+ 95c3ea0cb9802b93dc8eb23857349182d1bc1b6988ab875fc289812549042fb0  /work/src-ep/include/strata/kernels/native_mmvq.hpp
+-a2bf99d0a4750e16eb797de183d7ebf075d36fd9a51a5cc8388784a053df675b  /src/q5_runtime_ones_leaf.cpp
+-ab21735564d32683ffd407a2fe350979ecd2cc5366d6b14f92fe9b194e1504eb  /src/private_q5_runtime_ones.hpp
++c4275ea009f2cf81c4a466c88fd5637c5923fc254a9242c029d772cdfeda21ae  /src/q5_runtime_ones_leaf.cpp
++a8045fa37108f99ad448e48e6994319845a72327c092989245afcd95094a94c1  /src/private_q5_runtime_ones.hpp
+ 8f5a7efea1c815b497edfaa1bd33e02d86d4cf9ceea38fd9190d44bacfd7cd21  /common/mmvq-core.images.o
+ f2b53eb482814b2c9a046e524a1f76dee717fddc6fc45073a492880bb153e9a8  /frozen/libstrata_kernels.a
+ 34e91c40f01b7aa0e652e195228dfc1fadba93e40006c12788c81426567b0286  /frozen/libstrata_core.a
