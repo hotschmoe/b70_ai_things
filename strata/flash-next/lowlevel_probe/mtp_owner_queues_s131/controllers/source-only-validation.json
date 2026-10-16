@@ -1,0 +1,18 @@
+{
+  "status": "SOURCE_PREPARATION_ONLY",
+  "Python_AST": "PASS_WITH_EMBEDDED_NATIVE_PROC_PROBE",
+  "bash_n": {
+    "exit": 0,
+    "stderr": ""
+  },
+  "stop_math_cleanup_body_exact_S130": true,
+  "stop_only_argparse_change": "only1",
+  "control_dir_required": "Explicit completed S130/mode0; read-only artifact hashes bound at preparation and rechecked by comparison",
+  "no_control_config_write_or_launch": true,
+  "runtime_choices": "ONLY_ON1",
+  "candidate_algorithm_delta": "STRATA_BATCH_MTP_OWNER_QUEUES 0/1; Q5 word0 + MTPargmax0 both",
+  "captures": "Verifier layouts only; no owner MTP head-free queue/graph identity comparison",
+  "unknown_actual_exe_SHA_required": true,
+  "configs_mode_dirs_or_serving_inputs_generated": false,
+  "controller_import_execution_build_GPU_CLI": false
+}

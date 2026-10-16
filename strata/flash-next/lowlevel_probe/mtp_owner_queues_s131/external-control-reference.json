@@ -1,0 +1,124 @@
+{
+  "absolute_control_dir": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-runtime-ones-s130-serving-prep/mode0",
+  "read_only": true,
+  "bound_existing_control_artifact_pins": {
+    "config.json": {
+      "bytes": 2879,
+      "sha256": "cee5c1302f93ba23ef18ee92ca1ba18f0f00ea8177f728be0eac5332f0674421"
+    },
+    "container-ready.json": {
+      "bytes": 13757,
+      "sha256": "1c4ca48a72920530a64870b65f0cb83fac83db73454f310d0a87ae2b21194e70"
+    },
+    "health-ready.json": {
+      "bytes": 182,
+      "sha256": "267e0761722d9101590ac28c260c042582ee722e438a8ebcbe422bd085016d99"
+    },
+    "native-process-identity.json": {
+      "bytes": 86931,
+      "sha256": "fef2ea6b5529af188f579a57b88a59b19c39b92602ae46001d871ec7398d9aba"
+    },
+    "normal-stop.json": {
+      "bytes": 507,
+      "sha256": "930ccdb3a8db62225e27a28d4e801a6bfa44cd6ef317d338956752c1bd428d95"
+    },
+    "post-health.json": {
+      "bytes": 480,
+      "sha256": "333169b547328f8b31c9c708602cc6f465eab546edcc6476e8c8aafe847f5601"
+    },
+    "container-removal.json": {
+      "bytes": 604,
+      "sha256": "b0e693d582323c4802c6989eb341785115d2ea5d123e307bd6c5e408167e1fb9"
+    },
+    "aggregate-proof.json": {
+      "bytes": 597,
+      "sha256": "f9f31652cb58c71b147728a4bc158f2d69ae3542fe3937ab6391bca07aec930a"
+    },
+    "functional/verdict.json": {
+      "bytes": 91,
+      "sha256": "a903d5a1a01382b4c3af586ab82b48b25716a22e8bfbbc2d1bdcb7a2a972ff09"
+    },
+    "engine-final.log": {
+      "bytes": 22849,
+      "sha256": "e2d7a4fcfd1df3d42ef409d7c8fd6aa580b1eba9879e9ef9a54b78a90657ecbd"
+    },
+    "coding/warm/pair.json": {
+      "bytes": 5134,
+      "sha256": "e6fd1195792eefad60727c25690d07f3f1cd11c37414a27630d6cf0df69db1b5"
+    },
+    "coding/warm/window-start.json": {
+      "bytes": 61,
+      "sha256": "3d828139ec570b888dc9214ba117b1321ee107a8b0fbcfcec50b06f0d676c6ac"
+    },
+    "coding/warm/coding-0.json": {
+      "bytes": 95389,
+      "sha256": "48326dd66cdeef1ba99fb5ef05d68a010de706aaefcc07b0366b498e321be318"
+    },
+    "coding/warm/coding-1.json": {
+      "bytes": 95799,
+      "sha256": "d418f555700e8162e8d70ce1d24713af1ea1a034e05f8e9eb0ddf82722e78cc0"
+    },
+    "coding/repeat1/pair.json": {
+      "bytes": 4701,
+      "sha256": "e35aec34dfde0a6caecb7202b07ca5883dbdc4f589b9cc4623316f06715706e3"
+    },
+    "coding/repeat1/window-start.json": {
+      "bytes": 61,
+      "sha256": "a4fdc66ca3c7eee871799e6a0d90d9b64dd826c294c78cca56bf809087d44153"
+    },
+    "coding/repeat1/coding-0.json": {
+      "bytes": 552258,
+      "sha256": "eee725a4f91b06f8680131b6ef4014ae0ca2dd3f0ed7050ee69a75362ab96a77"
+    },
+    "coding/repeat1/coding-1.json": {
+      "bytes": 552254,
+      "sha256": "43a0a883a2d322fee8ce0ed1d90703309d409c270eca17fcf9a0c65c688619da"
+    },
+    "coding/repeat2/pair.json": {
+      "bytes": 4707,
+      "sha256": "346ee1333058e06f2663f8046b0838fecba8a01d7ff35f90b690fff678b3905b"
+    },
+    "coding/repeat2/window-start.json": {
+      "bytes": 62,
+      "sha256": "dee054c9e10fb7ae1d63d190e13f16c5b4cf78da40fbe9ea196af2a304ad24d5"
+    },
+    "coding/repeat2/coding-0.json": {
+      "bytes": 553040,
+      "sha256": "5ac7e892bb89b2ea0b2d83fa688f4acb07271b036a83dcc43c52c4d1d627b0b2"
+    },
+    "coding/repeat2/coding-1.json": {
+      "bytes": 554149,
+      "sha256": "c111097c4ba8df0fab6746049258cdeb34c7b9eb5105f83cdcffa755cac9199b"
+    },
+    "coding/repeat3/pair.json": {
+      "bytes": 4702,
+      "sha256": "aef138c2af9343f4b81185e504c2fa1ffbbebac25b3ca1883c929c5ed103837b"
+    },
+    "coding/repeat3/window-start.json": {
+      "bytes": 62,
+      "sha256": "f5cf45e6fc03c29f681e0a0473e32a4bd0c9e38fb0ec745339c2df2311d3f8f8"
+    },
+    "coding/repeat3/coding-0.json": {
+      "bytes": 552876,
+      "sha256": "eef9b6f989a515a33be1ef0c611a0768fcd1f2d3db1a14397689aafd6b3704c1"
+    },
+    "coding/repeat3/coding-1.json": {
+      "bytes": 553074,
+      "sha256": "9d14f7bc2896a08d6c942dcd67898d0a3fe1601b5f82ec2b2dcf8fe5520c3b38"
+    }
+  },
+  "same_binary_arm_records": {
+    "0": {
+      "exe": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/combined-main-s129-compile-continuation/build/strata-s129",
+      "sha256": "ee8854f8313d9610f7e79197fc4b9451e79b2a1a447a062bbf50c3a50a211702"
+    },
+    "1": {
+      "exe": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/combined-main-s129-compile-continuation/build/strata-s129",
+      "sha256": "ee8854f8313d9610f7e79197fc4b9451e79b2a1a447a062bbf50c3a50a211702"
+    }
+  },
+  "root_comparator_rechecked_control_pins": true,
+  "curator_control_raw_rehash": false,
+  "curated_baseline_reference": "../q5_runtime_ones_s130/README.md",
+  "note": "No S130 baseline files/controllers/SSE/maps recopied. Actual completed S131 comparator is authoritative for baseline hash continuity; raw pinned control files remain external."
+}

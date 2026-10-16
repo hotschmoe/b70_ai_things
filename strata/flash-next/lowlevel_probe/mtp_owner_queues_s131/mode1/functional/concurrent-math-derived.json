@@ -1,0 +1,66 @@
+[
+  {
+    "request": {
+      "model": "hotschmoe-dd",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Return only the integer: 17 * 19."
+        }
+      ],
+      "max_tokens": 32,
+      "temperature": 0,
+      "stream": true,
+      "stream_options": {
+        "include_usage": true
+      },
+      "chat_template_kwargs": {
+        "enable_thinking": false
+      },
+      "strata_tune": {
+        "spec_min_p": 0
+      }
+    },
+    "text": "323",
+    "usage": {
+      "prompt_tokens": 25,
+      "completion_tokens": 4,
+      "total_tokens": 29,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    }
+  },
+  {
+    "request": {
+      "model": "hotschmoe-dd",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Return only the integer: 23 * 29."
+        }
+      ],
+      "max_tokens": 32,
+      "temperature": 0,
+      "stream": true,
+      "stream_options": {
+        "include_usage": true
+      },
+      "chat_template_kwargs": {
+        "enable_thinking": false
+      },
+      "strata_tune": {
+        "spec_min_p": 0
+      }
+    },
+    "text": "667",
+    "usage": {
+      "prompt_tokens": 25,
+      "completion_tokens": 4,
+      "total_tokens": 29,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    }
+  }
+]

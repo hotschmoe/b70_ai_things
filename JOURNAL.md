@@ -25439,3 +25439,28 @@ or promotion. No25percentprivate-to-serving extrapolation. S129newbody
 HOLD remains; userdeferredoptionalCPUcertification, actualfiniteGPU
 paritypassed. ReusecompletedcontrolforindependentS131 toskipmodelreload
 and extra control. See docs/20261016_strata_q5_runtime_ones_serving.md.
+
+
+## 2026-10-16 S131: owner-queue MTP serving passes, no throughput gain
+
+CONFIG -> Same frozen S129 ee8854f8; sole algorithm ownerqueues0/1,
+Q5/parallelargmax/othercandidatesOFF; identical fixedpolicy/layout asS130.
+CompletedS130mode0 is read-only shared control with exactartifactpins.
+
+COMMAND -> OwnerONonly freshprocess, no additionalcontrol/modelreload.
+Warm107/256 + three107/1500C2pairs, immediatefulloutput/work/capture
+parity between eachgroup, existingfunctionals, normalQUIT/removal/
+finaldiagnostics/bothcard+compiledcollectiveposthealth.
+
+RESULT -> ComparatorALLgatesPASS; ONnormalclosure62.735733s0. Aggregate
+med103.145490->102.808566(-.326649%); individualpairchanges-.326649/
+-.340112/-.166722%. Streamdecodemedians53.512690/55.852132->
+53.363845/55.730334tok/s. Alltimeddraftoffers/accepts/windows/pairedsolo/
+printedrows/verifiercapturesmatch. FirsteligibleHOSTmarkeronce, not
+hardwareoverlap. Earliercontroltemporaldriftpossible, no noiseband.
+
+VERDICT -> DefaultOFF/parkcurrenthostjoinedownerpath; no observedgain
+andnocausaloverlap/contentiondiagnosis. S129bodyHOLD remains; deferred
+CPUcertifications notretrospectivelycompleted. Root selects C6private
+shape probe next, optionalcrossqueueeventAPIoracle source-only. See
+docs/20261016_strata_mtp_owner_queues_serving.md.

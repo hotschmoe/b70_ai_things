@@ -1,0 +1,353 @@
+--- S130/make_configs.py
++++ S131/make_configs.py
+@@ -1,71 +1,51 @@
+ #!/usr/bin/env python3
+-"""Create fresh S130 same-binary arms after root's actual build audit."""
+-import argparse, hashlib, json
++"""Bind a completed S130 mode0 read-only control; create only S131 owner-ON."""
++import argparse,copy,hashlib,json
+ from pathlib import Path
+-D = Path(__file__).resolve().parents[1]
+-p = argparse.ArgumentParser()
+-p.add_argument('--exe', type=Path, required=True)
+-p.add_argument('--sha256', required=True)
+-a = p.parse_args()
++D=Path(__file__).resolve().parents[1]
++p=argparse.ArgumentParser()
++p.add_argument('--control-dir',type=Path,required=True)
++p.add_argument('--exe',type=Path,required=True)
++p.add_argument('--sha256',required=True)
++a=p.parse_args()
++def read(p):return json.loads(p.read_text())
+ def sha(p):
+-    with p.open('rb') as f: return hashlib.file_digest(f, 'sha256').hexdigest()
+-exe = a.exe.resolve()
+-assert exe.is_file() and len(a.sha256)==64 and sha(exe) == a.sha256
+-assert not (D/'serving-inputs.json').exists()
+-assert all(not (D/f'mode{arm}').exists() for arm in [0, 1])
+-source = D.parent/'hc-lo-once-serving-s51-prep'
+-basefile = source/'mode1/config.json'
+-assert sha(basefile) == '959df3d15f689fefd8525079d7be3287939000477a4e84ecc497542402a08321'
+-base = json.loads(basefile.read_text())
+-prior = json.loads((source/'serving-inputs.json').read_text())
+-assert json.loads((source/'comparison.json').read_text())['status'] == 'PASS_MATCHED_DISCRIMINATOR'
+-assert base['args'][base['args'].index('--native')+1] == prior['native']['path']
+-assert base['args'][base['args'].index('--ple-gguf')+1] == prior['native']['sibling_path']
+-assert str(Path(prior['native']['path']).resolve()).startswith('/mnt/cache/')
+-assert Path(prior['native']['path']).stat().st_size == 47039860096
+-assert str(Path(prior['native']['sibling_path']).resolve()) == prior['native']['sibling_resolved']
+-assert Path(prior['native']['sibling_path']).stat().st_size == 28800138432
+-base['exe'] = str(exe)
+-# Fixed work in BOTH arms; this differs from S100 and is not its speed control.
+-fixed_work = {'--suffix-draft':'0', '--lookup-chain':'0', '--spec':'4', '--mtp-max-t':'4', '--spec-min-p':'0'}
+-for key, value in fixed_work.items():
+-    assert base['args'].count(key) <= 1
+-    if key in base['args']: base['args'][base['args'].index(key)+1] = value
+-    else: base['args'] += [key, value]
+-
+-base['env'].pop('STRATA_BATCH_COMMIT_OVERLAP', None)
+-for key in ['STRATA_HOST_BOUNDARY', 'STRATA_VERIFY_PROFILE', 'STRATA_PREFILL_HOST_BOUNDARY', 'STRATA_PREFILL_TIMING', 'STRATA_PREFILL_SYNC', 'STRATA_VERIFY_TRACE', 'STRATA_VERIFY_EAGER']:
+-    base['env'].pop(key, None)
+-base['env'].update(STRATA_MMVQ_WIDE='1', STRATA_MMVQ_WIDE_MIN='0', STRATA_MMVQ_WIDE_MAXC='8', STRATA_Q6_PACKED='0',
+-                   STRATA_MMVQ_WIDE_K='1', STRATA_MMVQ_WIDE_K_RPW='1',
+-                   STRATA_HEAD_Q5K_RPW2='0', STRATA_MMVQ_WIDE_RPW='1', STRATA_MMVQ_A2='1', STRATA_MMVQ_PF='0', STRATA_BATCH_MTP_PLE_PREFETCH='0', STRATA_TRACE='1', STRATA_Q6_CENTER='0', STRATA_QSA_PREFILL_TILED='0', STRATA_ATTN_VALUE_PIPELINE='0', STRATA_PROMPT_ATTN_XMX='0', STRATA_KV_ROT='0', STRATA_BATCH_PREFILL_QUANTUM='0', STRATA_PREFILL_FIRST='0', STRATA_EXPERT_SPLIT='0', STRATA_GU_LANES='8', STRATA_IQ2XS_MULTI='0', STRATA_BATCH_MTP_PAIR_GRAPH='0', STRATA_Q6_A4='0', STRATA_BATCH_MTP_PAIR_SKIP_PROB='0', STRATA_MTP_PARALLEL_ARGMAX='0', STRATA_BATCH_MTP_OWNER_QUEUES='0')
+-assert base['parallel'] == 2 and base['env']['STRATA_BATCH_MTP_PAIR_HEAD'] == '1'
+-assert base['env']['STRATA_BATCH_MTP_DEPTH'] == '2'
+-assert base['args'][base['args'].index('--max-context')+1] == '200000'
+-assert base['args'][base['args'].index('--ple-io')+1] == 'direct'
+-assert base['args'][base['args'].index('--prefill')+1] == '12288'
+-assert base['args'][base['args'].index('--conversation-cache-mib')+1] == '32768'
+-assert base['args'][base['args'].index('--conversation-cache-slots')+1] == '4'
+-arms = {}
+-for arm in ['0', '1']:
+-    out = D/f'mode{arm}'
+-    out.mkdir(exist_ok=False)
+-    c = json.loads(json.dumps(base))
+-    c['log'] = str(out/'engine.log')
+-    c['env']['STRATA_Q5_HEAD_RUNTIME_ONES'] = '01010101' if arm=='1' else '0'
+-    (out/'config.json').write_text(json.dumps(c, indent=2)+'\n', encoding='ascii')
+-    arms[arm] = {'exe': str(exe), 'sha256': a.sha256}
+-inputs = {'arms': arms, 'image': prior['image'], 'same_binary': True,
+-          'HC_state': 'COMMON_LO_ONCE_S51', 'S49_state': 'OFF_BOTH',
+-          'native': prior['native'], 'base_config_sha256': sha(basefile),
+-          'containers': {'0': 'strata-s130-mode0', '1': 'strata-s130-mode1'},
+-          'warm_pairs': 1, 'timed_fresh_pairs': 3, 'warm_output_tokens_per_stream': 256, 'timed_output_tokens_per_stream': 1500,
+-          'common_trace': 'STRATA_TRACE1_PROMPT_START_ONLY_CPU_RING_ABSENT',
+-          'arm_difference': 'STRATA_Q5_HEAD_RUNTIME_ONES 0/01010101 and arm-local log/container/service names only',
+-          'capture_scope': 'Q5 runtime ones once eligible HOST selection by warm (startup capture allowed), exact observed new-capture layouts; no all-shape/call count or independent GPU dispatch proof',
+-          'latency_scope': 'client wall/SSE content-event gaps; matched TRACE1 CPU logging, CPU ring/profile absent; not token ITL or device-only service',
+-          'candidate_scope': 'default-OFF explicit Q5 full-vocabulary C2 head runtime ones; C6 and all fallback routes unchanged; HOST selection only; no serving promotion',
+-          'fixed_work_args': fixed_work, 'request_spec_min_p': 0, 'S100_speed_comparison_allowed': False,
+-          'q5_runtime_ones_marker_scope': 'once first eligible HOST selection; startup capture permitted; no shape incidence, all launches or independent GPU dispatch'}
+-(D/'serving-inputs.json').write_text(json.dumps(inputs, indent=2)+'\n', encoding='ascii')
++ with p.open('rb')as f:return hashlib.file_digest(f,'sha256').hexdigest()
++control=a.control_dir.resolve();exe=a.exe.resolve()
++assert control==D.parent/'q5-runtime-ones-s130-serving-prep/mode0','Explicit completed S130 mode0 only'
++assert not(D/'serving-inputs.json').exists()and not(D/'mode1').exists()and not(D/'mode0').exists()
++assert len(a.sha256)==64 and sha(exe)==a.sha256
++base=read(control/'config.json');prior=read(control.parent/'serving-inputs.json')
++assert base['exe']==str(exe)==prior['arms']['0']['exe']
++assert prior['arms']['0']['sha256']==a.sha256
++assert base['env']['STRATA_BATCH_MTP_OWNER_QUEUES']=='0'
++assert base['env']['STRATA_Q5_HEAD_RUNTIME_ONES']=='0'and base['env']['STRATA_MTP_PARALLEL_ARGMAX']=='0'
++stop=read(control/'normal-stop.json');health=read(control/'post-health.json');gone=read(control/'container-removal.json')
++assert stop['status']=='PASS_NORMAL_TEARDOWN'and stop['lease_wrapper_exit']==0 and stop['container_removed']
++assert set(health)=={'card','collective'}and all(v['exit']==0 for v in health.values())
++assert gone['docker_ps_exit']==0 and gone['full_cid_absent']and gone['name_absent']
++assert read(control/'aggregate-proof.json')['present_once']and read(control/'functional/verdict.json')['status']=='PASS'
++critical=['config.json','container-ready.json','health-ready.json','native-process-identity.json','normal-stop.json','post-health.json','container-removal.json','aggregate-proof.json','functional/verdict.json','engine-final.log']
++for label in ['warm','repeat1','repeat2','repeat3']:
++ pair=read(control/f'coding/{label}/pair.json')
++ assert pair['status']=='PASS_HTTP_TEXT_COUNTS_FINITE_AND_PAIRED'and pair['paired']>0
++ assert pair['q5_runtime_ones_host_selection_marker']is None
++ assert pair['admission_gate']['status']=='PASS_NATIVE_PROMPT_START_ORDER_AND_CLIENT_OVERLAP'
++ for name in ['pair.json','window-start.json','coding-0.json','coding-1.json']:
++  critical.append(f'coding/{label}/{name}')
++pins={n:{'bytes':(control/n).stat().st_size,'sha256':sha(control/n)}for n in critical}
++out=D/'mode1';out.mkdir(exist_ok=False)
++c=copy.deepcopy(base);c['log']=str(out/'engine.log');c['env']['STRATA_BATCH_MTP_OWNER_QUEUES']='1'
++(out/'config.json').write_text(json.dumps(c,indent=2)+'\n',encoding='ascii')
++inputs=copy.deepcopy(prior)
++inputs.update(control_dir=str(control),control_read_only=True,control_artifact_pins=pins,
++ arms={'0':{'exe':str(exe),'sha256':a.sha256},'1':{'exe':str(exe),'sha256':a.sha256}},
++ containers={'0':prior['containers']['0'],'1':'strata-s131-owner-mode1'},
++ arm_difference='STRATA_BATCH_MTP_OWNER_QUEUES 0/1 and arm-local log/container/service names only',
++ candidate_scope='Owner-queue head-free submission with host joins; Q5 runtime ones and MTP parallel argmax OFF; no overlap/speed claim',
++ capture_scope='Verifier capture layouts/work equal; MTP owner head-free queue/graph identities are not required equal',
++ owner_queues_marker_scope='Once first eligible HOST selection by warm, startup capture permitted; no observed hardware overlap',
++ control_provenance='Completed S130 mode0 same binary/configuration except owner queues; no control regeneration or launch')
++inputs.pop('q5_runtime_ones_marker_scope',None)
++(D/'serving-inputs.json').write_text(json.dumps(inputs,indent=2)+'\n',encoding='ascii')
+ print(json.dumps(inputs))
+--- S130/start_arm.py
++++ S131/start_arm.py
+@@ -3,7 +3,7 @@
+ import argparse,hashlib,json,re,subprocess,time,urllib.request
+ from pathlib import Path
+ D=Path(__file__).resolve().parents[1];REPO=Path('/mnt/vm_8tb/github/b70_ai_things')
+-p=argparse.ArgumentParser();p.add_argument('arm',choices=['0','1']);a=p.parse_args();out=D/f'mode{a.arm}'
++p=argparse.ArgumentParser();p.add_argument('arm',choices=['1']);a=p.parse_args();out=D/f'mode{a.arm}'
+ assert not (out/'start-result.json').exists(),'Do not restart a prior arm'
+ inputs=json.loads((D/'serving-inputs.json').read_text());config=out/'config.json';c=json.loads(config.read_text())
+ arm=inputs['arms'][a.arm]
+@@ -12,26 +12,26 @@
+ assert all(k not in c['env'] for k in ['STRATA_HOST_BOUNDARY','STRATA_VERIFY_PROFILE','STRATA_PREFILL_HOST_BOUNDARY','STRATA_PREFILL_TIMING','STRATA_PREFILL_SYNC','STRATA_VERIFY_TRACE','STRATA_VERIFY_EAGER'])
+ assert c['env']['STRATA_TRACE']=='1' and c['env']['STRATA_BATCH_MTP_PLE_PREFETCH']=='0'
+ assert 'STRATA_BATCH_COMMIT_OVERLAP' not in c['env']
+-assert c['env']['STRATA_BATCH_MTP_PAIR_GRAPH']=='0' and c['env']['STRATA_Q5_HEAD_RUNTIME_ONES']==('01010101' if a.arm=='1' else '0') and c['env']['STRATA_IQ2XS_MULTI']=='0' and c['env']['STRATA_HEAD_Q5K_RPW2']=='0' and c['env']['STRATA_MMVQ_WIDE_K_RPW']=='1' and c['env']['STRATA_MMVQ_WIDE_K']=='1'
++assert c['env']['STRATA_BATCH_MTP_PAIR_GRAPH']=='0' and c['env']['STRATA_Q5_HEAD_RUNTIME_ONES']=='0' and c['env']['STRATA_IQ2XS_MULTI']=='0' and c['env']['STRATA_HEAD_Q5K_RPW2']=='0' and c['env']['STRATA_MMVQ_WIDE_K_RPW']=='1' and c['env']['STRATA_MMVQ_WIDE_K']=='1'
+ assert all(c['env'][k]==v for k,v in [('STRATA_MMVQ_WIDE','1'),('STRATA_MMVQ_WIDE_MIN','0'),('STRATA_MMVQ_WIDE_MAXC','8'),('STRATA_Q6_PACKED','0')])
+ assert c['env']['STRATA_MMVQ_A2']=='1' and c['env']['STRATA_MMVQ_WIDE_RPW']=='1' and c['env']['STRATA_MMVQ_PF']=='0'
+ assert inputs['same_binary'] and inputs['arms']['0']==inputs['arms']['1'] and inputs['HC_state']=='COMMON_LO_ONCE_S51'
+ assert c['args'][c['args'].index('--native')+1]==inputs['native']['path']
+ assert c['args'][c['args'].index('--ple-gguf')+1]==inputs['native']['sibling_path']
+-assert c['args'][c['args'].index('--ple-io')+1]=='direct','S130 requires explicit Direct PLE'
+-assert all(c['env'][k]==v for k,v in [('STRATA_Q6_CENTER','0'),('STRATA_QSA_PREFILL_TILED','0'),('STRATA_ATTN_VALUE_PIPELINE','0'),('STRATA_PROMPT_ATTN_XMX','0'),('STRATA_KV_ROT','0'),('STRATA_BATCH_PREFILL_QUANTUM','0'),('STRATA_PREFILL_FIRST','0'),('STRATA_EXPERT_SPLIT','0'),('STRATA_GU_LANES','8'),('STRATA_Q6_A4','0'),('STRATA_BATCH_MTP_PAIR_SKIP_PROB','0'),('STRATA_MTP_PARALLEL_ARGMAX','0'),('STRATA_BATCH_MTP_OWNER_QUEUES','0')])
++assert c['args'][c['args'].index('--ple-io')+1]=='direct','S131 requires explicit Direct PLE'
++assert all(c['env'][k]==v for k,v in [('STRATA_Q6_CENTER','0'),('STRATA_QSA_PREFILL_TILED','0'),('STRATA_ATTN_VALUE_PIPELINE','0'),('STRATA_PROMPT_ATTN_XMX','0'),('STRATA_KV_ROT','0'),('STRATA_BATCH_PREFILL_QUANTUM','0'),('STRATA_PREFILL_FIRST','0'),('STRATA_EXPERT_SPLIT','0'),('STRATA_GU_LANES','8'),('STRATA_Q6_A4','0'),('STRATA_BATCH_MTP_PAIR_SKIP_PROB','0'),('STRATA_MTP_PARALLEL_ARGMAX','0'),('STRATA_BATCH_MTP_OWNER_QUEUES','1')])
+ for key,value in inputs['fixed_work_args'].items():
+  assert c['args'].count(key)==1 and c['args'][c['args'].index(key)+1]==value
+ container=inputs['containers'][a.arm]
+-assert not subprocess.check_output(['docker','ps','-aq','--filter',f'name=^{container}$']).strip(),'Existing S130 container must be handled by owner'
++assert not subprocess.check_output(['docker','ps','-aq','--filter',f'name=^{container}$']).strip(),'Existing S131 container must be handled by owner'
+ try:
+  with urllib.request.urlopen('http://127.0.0.1:18085/health',timeout=2) as f:existing=json.load(f)
+ except OSError:pass
+ else:raise SystemExit('Port18085 already answers; preserve existing service, do not launch over it')
+-unit=f'strata-q5-runtime-ones-s130-mode{a.arm}'
++unit=f'strata-mtp-owner-queues-s131-mode{a.arm}'
+ # systemd manager creates the service; no cpu-run fd is transferred through DBus.
+ # Explicitly close 7 again in the detached service before gpu-run acquires 8/9.
+-cmd=['systemd-run','--user',f'--unit={unit}','--collect',f'--setenv=B70_S130_CONTAINER={container}',f'--property=WorkingDirectory={REPO}',
++cmd=['systemd-run','--user',f'--unit={unit}','--collect',f'--setenv=B70_S131_CONTAINER={container}',f'--property=WorkingDirectory={REPO}',
+      f'--property=StandardOutput=append:{out}/server.log',f'--property=StandardError=append:{out}/server.log',
+      '/bin/bash','-c','exec 7>&-; exec /bin/bash "$1" "$2"','bash',str(D/'harness-prep/launch_stage.sh'),str(config)]
+ t=time.monotonic();r=subprocess.run(cmd,capture_output=True,text=True,close_fds=True)
+--- S130/client.py
++++ S131/client.py
+@@ -1,5 +1,5 @@
+ #!/usr/bin/env python3
+-"""S130 ordered native-prompt-start pair + existing functionals; no native-token-ID claim."""
++"""S131 ordered native-prompt-start pair + existing functionals; no native-token-ID claim."""
+ import argparse,concurrent.futures,hashlib,json,math,re,sys,threading,time,urllib.request
+ from pathlib import Path
+ D=Path(__file__).resolve().parents[1];R=D.parent;REPO=Path('/mnt/vm_8tb/github/b70_ai_things')
+@@ -76,12 +76,12 @@
+  (dst/'engine-segment.log').write_text(log,encoding='utf8')
+  assert sum(int(x) for x,y in pairs)>0 and 'ERR batch MTP' not in log
+  full=(out/'engine.log').read_text()
+- markers=re.findall(r'^strata Q5 head runtime ones: .*$',full,re.M)
++ markers=re.findall(r'^strata MTP owner queues: .*$',full,re.M)
+  if out.name=='mode1':
+-  assert markers==['strata Q5 head runtime ones: enabled=1 word=01010101 N=2560 M=248320 C=2 RPW=1 host-selection-only'],'Eligible ON Q5 runtime ones HOST marker missing/duplicated/malformed'
+- else:assert not markers,'OFF arm emitted Q5 runtime ones ON marker'
++  assert markers==['strata MTP owner queues: enabled=1 same-device=1 host-joins=1 whole-pair-graph=0 host-selection-only'],'Eligible ON owner queues HOST marker missing/duplicated/malformed'
++ else:assert not markers,'OFF arm emitted owner queues ON marker'
+  assert not re.search(r'^strata MTP parallel argmax:',full,re.M),'Unrelated MTP parallel argmax unexpectedly ON'
+- assert not re.search(r'^strata MTP owner queues:',full,re.M),'Unrelated owner queues unexpectedly ON'
++ assert not re.search(r'^strata Q5 head runtime ones:',full,re.M),'Unrelated Q5 runtime ones unexpectedly ON'
+  assert not re.search(r'^strata MTP pair graph:',full,re.M),'Pair graph unexpectedly ON'
+  assert not re.search(r'^strata IQ2_XS multi:',full,re.M),'Unrelated IQ2 multi candidate unexpectedly ON'
+  assert not re.search(r'^strata Q6 A4:',full,re.M),'Unrelated A4 candidate unexpectedly ON'
+@@ -90,17 +90,17 @@
+  captures=re.findall(r'^strata verify: captured (?:the \d+-token window \(upload no error, sync no error\)|the batch window over slots [0-9,]+)$',log,re.M)
+  native_rows=re.findall(r'^strata batch: (\d+) windows, avg ([0-9.]+) rows,',log,re.M)
+  assert len(native_rows)==len(native_windows)
+- save(dst/'pair.json',{'q5_runtime_ones_host_selection_marker':markers[0]if markers else None,'all_eligible_shapes_or_gpu_dispatch_observed':False,'logged_capture_layouts':captures,'native_window_rows':native_rows,'status':'PASS_HTTP_TEXT_COUNTS_FINITE_AND_PAIRED','wall_s':elapsed,'output_sha256':[r['output_sha256'] for r in rows],
++ save(dst/'pair.json',{'owner_queues_host_selection_marker':markers[0]if markers else None,'all_eligible_shapes_or_gpu_dispatch_observed':False,'logged_capture_layouts':captures,'native_window_rows':native_rows,'status':'PASS_HTTP_TEXT_COUNTS_FINITE_AND_PAIRED','wall_s':elapsed,'output_sha256':[r['output_sha256'] for r in rows],
+   'usage':[r['usage'] for r in rows],'work_timings':[{k:r['timings'][k] for k in ['cache_n','prompt_n','predicted_n','draft_n','draft_n_accepted']} for r in rows],
+   'native_windows':sum(map(int,native_windows)),'paired':sum(int(x) for x,y in pairs),'solo':sum(int(y) for x,y in pairs),'raw_native_token_ids_observed':False,'aggregate_output_tps':sum(r['usage']['completion_tokens'] for r in rows)/elapsed,'stream_metrics':[{'ttft_s':r['ttft_s'],'completion_wall_s':r['wall_s'],'decode_tps':r['client_decode_tps'],'whole_request_output_tps':r['usage']['completion_tokens']/r['wall_s'],'content_event_gap_ms':r['content_event_gap_ms']} for r in rows],
+   'admission_gate':gate,'client_overlap_ns':overlap,'repeat':repeat,'output_tokens_per_stream':output_tokens,'exact_gate':'full UTF8 text/SSE content plus usage/native work; not raw token IDs'})
+  if out.name=='mode1':require_control_pair(out,repeat)
+- print('S130 pair complete; release quiet CPU lease before functional requests.',flush=True)
++ print('S131 pair complete; release quiet CPU lease before functional requests.',flush=True)
+ def require_control_pair(out,repeat):
+  # Fail this ON pair before sending the next pair/functionals. Never normalize
+  # per-slot work, capture layouts or admission order after seeing a mismatch.
+  label='warm'if repeat==0 else f'repeat{repeat}'
+- baseline=D/'mode0/coding'/label;candidate=out/'coding'/label
++ baseline=Path(json.loads((D/'serving-inputs.json').read_text())['control_dir'])/'coding'/label;candidate=out/'coding'/label
+  x=[json.loads((baseline/f'coding-{i}.json').read_text())for i in range(2)]
+  y=[json.loads((candidate/f'coding-{i}.json').read_text())for i in range(2)]
+  pairs=[json.loads((z/'pair.json').read_text())for z in [baseline,candidate]]
+@@ -111,8 +111,9 @@
+  if repeat==0:
+   startup=[]
+   for arm in [0,1]:
+-   folder=D/f'mode{arm}';offset=json.loads((folder/'coding/warm/window-start.json').read_text())['byte_offset']
+-   startup.append(re.findall(r'^strata verify: captured .*$',(folder/'engine.log').read_bytes()[:offset].decode(),re.M))
++   folder=Path(json.loads((D/'serving-inputs.json').read_text())['control_dir']) if arm==0 else D/'mode1';offset=json.loads((folder/'coding/warm/window-start.json').read_text())['byte_offset']
++   logpath=folder/('engine-final.log' if arm==0 else 'engine.log')
++   startup.append(re.findall(r'^strata verify: captured .*$',logpath.read_bytes()[:offset].decode(),re.M))
+   checks['startup_logged_captures']=startup[0]==startup[1]
+  save(candidate/'control-parity.json',{'status':'PASS_EXACT_OBSERVABLE_PAIR'if all(checks.values())else'FAIL_OR_UNMATCHED_STOP_REMAINING_ARM_WORK','checks':checks,'normalization':None})
+  assert all(checks.values()),'ON/control mismatch; stop remaining requests and normal-stop/health this server'
+@@ -133,7 +134,7 @@
+  final=json.loads((source/'tool-final.json').read_text())['request'];final['messages']=first['messages']+[msg,{'role':'tool','tool_call_id':calls[0]['id'],'content':json.dumps({'project':'b70-demo','status':'passed','tests_passed':17,'tests_failed':0})}]
+  tr=post(final);save(dst/'tool-final.json',{'request':final,'response':tr});txt=tr['choices'][0]['message']['content'].lower();assert all(x in txt for x in ['17','0','passed','failed'])
+  save(dst/'health.json',get(BASE,'/health'));save(dst/'verdict.json',{'status':'PASS','arithmetic':True,'thinking':True,'tool_roundtrip':True})
+-p=argparse.ArgumentParser();p.add_argument('arm',choices=['0','1']);p.add_argument('phase',choices=['warm','timed','functional']);a=p.parse_args();out=D/f'mode{a.arm}'
++p=argparse.ArgumentParser();p.add_argument('arm',choices=['1']);p.add_argument('phase',choices=['warm','timed','functional']);a=p.parse_args();out=D/f'mode{a.arm}'
+ if a.phase=='warm':pair(out,0)
+ elif a.phase=='timed':
+  assert json.loads((out/'coding/warm/pair.json').read_text())['status']=='PASS_HTTP_TEXT_COUNTS_FINITE_AND_PAIRED'
+--- S130/compare.py
++++ S131/compare.py
+@@ -1,28 +1,33 @@
+ #!/usr/bin/env python3
+-"""S130 exact observable output/work/capture gates; no per-window trace inference."""
++"""S131 exact observable output/work/capture gates; no per-window trace inference."""
+ import hashlib,json,re,statistics
+ from pathlib import Path
+ D=Path(__file__).resolve().parents[1]
+ def read(p):return json.loads(p.read_text())
+ def content(r):return ''.join(c.get('choices',[{}])[0].get('delta',{}).get('content')or'' for c in r['chunks']if c.get('choices'))
+-inputs=read(D/'serving-inputs.json');assert inputs['same_binary']and inputs['arms']['0']==inputs['arms']['1']
++inputs=read(D/'serving-inputs.json')
++def arm_dir(a):return Path(inputs['control_dir']) if int(a)==0 else D/'mode1'
++for name,pin in inputs['control_artifact_pins'].items():
++ path=arm_dir(0)/name;assert path.stat().st_size==pin['bytes']
++ with path.open('rb')as f:assert hashlib.file_digest(f,'sha256').hexdigest()==pin['sha256'],'Read-only control changed: '+name
++assert inputs['same_binary']and inputs['arms']['0']==inputs['arms']['1']
+ for a in ['0','1']:
+  with Path(inputs['arms'][a]['exe']).open('rb')as f:assert hashlib.file_digest(f,'sha256').hexdigest()==inputs['arms'][a]['sha256']
+-configs=[read(D/f'mode{a}/config.json')for a in range(2)];normalized=[]
++configs=[read(arm_dir(a)/f'config.json')for a in range(2)];normalized=[]
+ for a,c in enumerate(configs):
+- assert c['exe']==inputs['arms'][str(a)]['exe'] and c['log']==str(D/f'mode{a}/engine.log')
+- assert c['env']['STRATA_BATCH_MTP_PAIR_GRAPH']=='0'and c['env']['STRATA_Q5_HEAD_RUNTIME_ONES']==('01010101' if a else '0')and c['env']['STRATA_IQ2XS_MULTI']=='0'and'STRATA_BATCH_COMMIT_OVERLAP'not in c['env']
++ assert c['exe']==inputs['arms'][str(a)]['exe'] and c['log']==str(arm_dir(a)/f'engine.log')
++ assert c['env']['STRATA_BATCH_MTP_PAIR_GRAPH']=='0'and c['env']['STRATA_Q5_HEAD_RUNTIME_ONES']=='0'and c['env']['STRATA_IQ2XS_MULTI']=='0'and'STRATA_BATCH_COMMIT_OVERLAP'not in c['env']
+  for k,v in [('STRATA_MMVQ_WIDE','1'),('STRATA_MMVQ_WIDE_MIN','0'),('STRATA_MMVQ_WIDE_MAXC','8'),('STRATA_Q6_PACKED','0'),('STRATA_HEAD_Q5K_RPW2','0'),('STRATA_BATCH_MTP_PLE_PREFETCH','0'),('STRATA_TRACE','1'),('STRATA_MMVQ_WIDE_K','1'),('STRATA_MMVQ_WIDE_K_RPW','1'),('STRATA_MMVQ_WIDE_RPW','1'),('STRATA_MMVQ_A2','1'),('STRATA_MMVQ_PF','0')]:assert c['env'][k]==v
+  assert all(k not in c['env']for k in ['STRATA_HOST_BOUNDARY','STRATA_VERIFY_PROFILE','STRATA_PREFILL_HOST_BOUNDARY','STRATA_PREFILL_TIMING','STRATA_PREFILL_SYNC','STRATA_VERIFY_TRACE','STRATA_VERIFY_EAGER'])
+- assert all(c['env'][k]==v for k,v in [('STRATA_Q6_CENTER','0'),('STRATA_QSA_PREFILL_TILED','0'),('STRATA_ATTN_VALUE_PIPELINE','0'),('STRATA_PROMPT_ATTN_XMX','0'),('STRATA_KV_ROT','0'),('STRATA_BATCH_PREFILL_QUANTUM','0'),('STRATA_PREFILL_FIRST','0'),('STRATA_EXPERT_SPLIT','0'),('STRATA_GU_LANES','8'),('STRATA_Q6_A4','0'),('STRATA_BATCH_MTP_PAIR_SKIP_PROB','0'),('STRATA_MTP_PARALLEL_ARGMAX','0'),('STRATA_BATCH_MTP_OWNER_QUEUES','0')])
++ assert all(c['env'][k]==v for k,v in [('STRATA_Q6_CENTER','0'),('STRATA_QSA_PREFILL_TILED','0'),('STRATA_ATTN_VALUE_PIPELINE','0'),('STRATA_PROMPT_ATTN_XMX','0'),('STRATA_KV_ROT','0'),('STRATA_BATCH_PREFILL_QUANTUM','0'),('STRATA_PREFILL_FIRST','0'),('STRATA_EXPERT_SPLIT','0'),('STRATA_GU_LANES','8'),('STRATA_Q6_A4','0'),('STRATA_BATCH_MTP_PAIR_SKIP_PROB','0'),('STRATA_MTP_PARALLEL_ARGMAX','0'),('STRATA_BATCH_MTP_OWNER_QUEUES',str(a))])
+  for key,value in inputs['fixed_work_args'].items():assert c['args'].count(key)==1 and c['args'][c['args'].index(key)+1]==value
+- n=json.loads(json.dumps(c));del n['log'];del n['env']['STRATA_Q5_HEAD_RUNTIME_ONES'];normalized.append(n)
++ n=json.loads(json.dumps(c));del n['log'];del n['env']['STRATA_BATCH_MTP_OWNER_QUEUES'];normalized.append(n)
+ assert normalized[0]==normalized[1]
+-checks={'identity_image_and_effective_native_env':all(read(D/f'mode{a}/health-ready.json')['model']=='hotschmoe-dd'and read(D/f'mode{a}/container-ready.json')['Image']==inputs['image']and len(read(D/f'mode{a}/native-process-identity.json'))==1 for a in range(2))}
++checks={'identity_image_and_effective_native_env':all(read(arm_dir(a)/f'health-ready.json')['model']=='hotschmoe-dd'and read(arm_dir(a)/f'container-ready.json')['Image']==inputs['image']and len(read(arm_dir(a)/f'native-process-identity.json'))==1 for a in range(2))}
+ results=[]
+ for label in ['warm','repeat1','repeat2','repeat3']:
+  output_tokens=256 if label=='warm'else 1500
+- rows=[[read(D/f'mode{a}/coding/{label}/coding-{i}.json')for i in range(2)]for a in range(2)];pairs=[read(D/f'mode{a}/coding/{label}/pair.json')for a in range(2)]
++ rows=[[read(arm_dir(a)/f'coding/{label}/coding-{i}.json')for i in range(2)]for a in range(2)];pairs=[read(arm_dir(a)/f'coding/{label}/pair.json')for a in range(2)]
+  c={'admission_overlap':all(p['admission_gate']['status']=='PASS_NATIVE_PROMPT_START_ORDER_AND_CLIENT_OVERLAP'and p['client_overlap_ns']>0 for p in pairs),
+  'request_equal':all(rows[0][i]['request']==rows[1][i]['request']for i in range(2)),
+  'request_fixed_spec_min_p':all(r['request']['strata_tune']['spec_min_p']==0 for arm in rows for r in arm),
+@@ -34,30 +39,30 @@
+  'native_window_pair_solo_equal':all(pairs[0][k]==pairs[1][k]for k in ['native_windows','paired','solo']),
+  'native_reported_rows_equal':pairs[0]['native_window_rows']==pairs[1]['native_window_rows'],
+  'logged_capture_layouts_equal':pairs[0]['logged_capture_layouts']==pairs[1]['logged_capture_layouts'],
+- 'eligible_host_selection':pairs[0]['q5_runtime_ones_host_selection_marker']is None and pairs[1]['q5_runtime_ones_host_selection_marker']=='strata Q5 head runtime ones: enabled=1 word=01010101 N=2560 M=248320 C=2 RPW=1 host-selection-only'}
++ 'eligible_host_selection':pairs[0]['q5_runtime_ones_host_selection_marker']is None and pairs[1]['owner_queues_host_selection_marker']=='strata MTP owner queues: enabled=1 same-device=1 host-joins=1 whole-pair-graph=0 host-selection-only'}
+  checks[label]=all(c.values())
+  results.append({'label':label,'matched':checks[label],'checks':c,'pair_wall_s':[p['wall_s']for p in pairs],
+  'aggregate_output_tps':[p['aggregate_output_tps']for p in pairs],'streams':[p['stream_metrics']for p in pairs],
+  'native_work':[{'per_request':p['work_timings'],'windows':p['native_windows'],'paired':p['paired'],'solo':p['solo'],'reported_rows':p['native_window_rows'],'logged_new_captures':p['logged_capture_layouts']}for p in pairs]})
+-checks['functionals']=all(read(D/f'mode{a}/functional/verdict.json')['status']=='PASS'for a in range(2))
+-checks['health_teardown']=all(read(D/f'mode{a}/normal-stop.json')['lease_wrapper_exit']==0 and read(D/f'mode{a}/normal-stop.json')['container_removed']and set(read(D/f'mode{a}/post-health.json'))=={'card','collective'} and all(v['exit']==0 for v in read(D/f'mode{a}/post-health.json').values())for a in range(2))
+-checks['full_CID_and_NAME_absence']=all(read(D/f'mode{a}/container-removal.json')['docker_ps_exit']==0 and read(D/f'mode{a}/container-removal.json')['full_cid_absent'] and read(D/f'mode{a}/container-removal.json')['name_absent'] and read(D/f'mode{a}/container-removal.json')['created_cid']==read(D/f'mode{a}/container-ready.json')['Id'] for a in range(2))
+-checks['final_diagnostics_complete']=all(read(D/f'mode{a}/aggregate-proof.json')['present_once']for a in range(2))
++checks['functionals']=all(read(arm_dir(a)/f'functional/verdict.json')['status']=='PASS'for a in range(2))
++checks['health_teardown']=all(read(arm_dir(a)/f'normal-stop.json')['lease_wrapper_exit']==0 and read(arm_dir(a)/f'normal-stop.json')['container_removed']and set(read(arm_dir(a)/f'post-health.json'))=={'card','collective'} and all(v['exit']==0 for v in read(arm_dir(a)/f'post-health.json').values())for a in range(2))
++checks['full_CID_and_NAME_absence']=all(read(arm_dir(a)/f'container-removal.json')['docker_ps_exit']==0 and read(arm_dir(a)/f'container-removal.json')['full_cid_absent'] and read(arm_dir(a)/f'container-removal.json')['name_absent'] and read(arm_dir(a)/f'container-removal.json')['created_cid']==read(arm_dir(a)/f'container-ready.json')['Id'] for a in range(2))
++checks['final_diagnostics_complete']=all(read(arm_dir(a)/f'aggregate-proof.json')['present_once']for a in range(2))
+ startup=[]
+ for a in range(2):
+- log=(D/f'mode{a}/engine-final.log').read_text();offset=read(D/f'mode{a}/coding/warm/window-start.json')['byte_offset'];head=(D/f'mode{a}/engine-final.log').read_bytes()[:offset].decode()
++ log=(arm_dir(a)/f'engine-final.log').read_text();offset=read(arm_dir(a)/f'coding/warm/window-start.json')['byte_offset'];head=(arm_dir(a)/f'engine-final.log').read_bytes()[:offset].decode()
+  startup.append(re.findall(r'^strata verify: captured .*$',head,re.M))
+- markers=re.findall(r'^strata Q5 head runtime ones: .*$',log,re.M)
+- expected=read(D/'mode1/coding/warm/pair.json')['q5_runtime_ones_host_selection_marker']
++ markers=re.findall(r'^strata MTP owner queues: .*$',log,re.M)
++ expected=read(D/'mode1/coding/warm/pair.json')['owner_queues_host_selection_marker']
+  checks[f'final_host_marker_{a}']=markers==([expected]if a else[])
+  checks[f'original_parallel_argmax_OFF_{a}']=not re.search(r'^strata MTP parallel argmax:',log,re.M)
+- checks[f'owner_queues_OFF_{a}']=not re.search(r'^strata MTP owner queues:',log,re.M)
++ checks[f'Q5_runtime_ones_OFF_{a}']=not re.search(r'^strata Q5 head runtime ones:',log,re.M)
+  checks[f'unrelated_IQ2_multi_OFF_{a}']=not re.search(r'^strata IQ2_XS multi:',log,re.M)
+  checks[f'pair_graph_OFF_{a}']=not re.search(r'^strata MTP pair graph:',log,re.M)
+  checks[f'unrelated_A4_OFF_{a}']=not re.search(r'^strata Q6 A4:',log,re.M)
+  checks[f'probability_skip_OFF_{a}']=not re.search(r'^strata MTP pair skip-prob:',log,re.M)
+ checks['logged_startup_capture_equal']=startup[0]==startup[1]
+-provenance=[read(D/f'mode{a}/native-process-identity.json')[0]for a in range(2)]
++provenance=[read(arm_dir(a)/f'native-process-identity.json')[0]for a in range(2)]
+ checks['native_loader_provenance']=all(x['proc_maps']and x['proc_maps_sha256']==hashlib.sha256(x['proc_maps'].encode()).hexdigest()and len(x['loaded_libstdcxx'])==1 for x in provenance)and all(provenance[0][k]==provenance[1][k]for k in ['loader_environment','loaded_libstdcxx'])
+ matched=all(checks.values())
+ summary=None
+@@ -67,7 +72,7 @@
+  'per_stream_medians':[[{k:statistics.median(x['streams'][a][i][k]for x in results[1:])for k in ['ttft_s','completion_wall_s','decode_tps','whole_request_output_tps']}for i in range(2)]for a in range(2)]}
+ report={'status':'PASS_MATCHED_DISCRIMINATOR'if matched else'FAILED_OR_UNMATCHED','checks':checks,'same_binary':True,'pairs':results,'timed_summary':summary,
+  'latency_scope':'client wall and SSE content-event gaps; TRACE1 CPU logging common, CPU ring/profile absent; SSE events can contain many tokens, not token ITL/device service',
+- 'capture_scope':'Q5 runtime ones ON once eligible HOST selection by warm (startup capture allowed), exact observed new-capture logs and aggregate native work; not all shapes/calls/GPU dispatch',
++ 'capture_scope':'owner queues ON once eligible HOST selection by warm (startup capture allowed), exact observed new-capture logs and aggregate native work; not all shapes/calls/GPU dispatch',
+  'reported_rows_scope':'native printed avg rows rounded to2decimals, not exact unprinted per-window row sequence',
+- 'configuration_normalization':['STRATA_Q5_HEAD_RUNTIME_ONES 0/01010101','arm-local log/container/service names'],'raw_native_token_ids_observed':False,'no_promotion_claim':True,'S100_speed_comparison_allowed':False,'q5_runtime_ones_marker_scope':'first eligible HOST selection only, startup capture allowed; shape incidence/all launches/GPU dispatch not observed'}
++ 'configuration_normalization':['STRATA_BATCH_MTP_OWNER_QUEUES 0/1','arm-local log/container/service names'],'raw_native_token_ids_observed':False,'no_promotion_claim':True,'S100_speed_comparison_allowed':False,'owner_queues_marker_scope':'first eligible HOST selection only, startup capture allowed; shape incidence/all launches/GPU dispatch not observed'}
+ (D/'comparison.json').write_text(json.dumps(report,indent=2)+'\n',encoding='ascii');print(json.dumps({'status':report['status'],'checks':checks}));raise SystemExit(0 if matched else 2)
+--- S130/stop_and_health.py
++++ S131/stop_and_health.py
+@@ -4,7 +4,7 @@
+ from pathlib import Path
+ D=Path(__file__).resolve().parents[1];REPO=Path('/mnt/vm_8tb/github/b70_ai_things')
+ sys.path.insert(0,str(REPO/'strata/flash-next'));from bench_serving import get
+-p=argparse.ArgumentParser();p.add_argument('arm',choices=['0','1']);a=p.parse_args();out=D/f'mode{a.arm}'
++p=argparse.ArgumentParser();p.add_argument('arm',choices=['1']);a=p.parse_args();out=D/f'mode{a.arm}'
+ def save(p,x):p.write_text(json.dumps(x,indent=2,ensure_ascii=True)+'\n',encoding='ascii')
+ functional_file=out/'functional/verdict.json'
+ try:functional_status=json.loads(functional_file.read_text()).get('status')
+--- S130/launch_stage.sh
++++ S131/launch_stage.sh
+@@ -6,8 +6,8 @@
+ results=/mnt/vm_8tb/b70/results
+ weights=$repo/models/files/qwen3.8-flash-next
+ nvme=/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco
+-container="${B70_S130_CONTAINER:?set unique S130 container name}"
+-config=$(realpath "${1:?S130 arm config path required}")
++container="${B70_S131_CONTAINER:?set unique S131 container name}"
++config=$(realpath "${1:?S131 arm config path required}")
+ source_dir=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["cwd"])' "$config")
+ ipc_opts=()
+ # Level Zero's IPC handle import needs syscalls Docker permits with SYS_PTRACE.

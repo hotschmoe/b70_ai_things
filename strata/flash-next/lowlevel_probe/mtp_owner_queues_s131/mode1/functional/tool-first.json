@@ -1,0 +1,93 @@
+{
+  "request": {
+    "model": "hotschmoe-dd",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Look up the build status of project b70-demo using lookup_build_status, then report status and test counts in one sentence including passed and failed test counts."
+      }
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "lookup_build_status",
+          "description": "Look up current build status for a project",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "project": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "project"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    ],
+    "tool_choice": {
+      "type": "function",
+      "function": {
+        "name": "lookup_build_status"
+      }
+    },
+    "max_tokens": 256,
+    "temperature": 0,
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    },
+    "strata_tune": {
+      "spec_min_p": 0
+    }
+  },
+  "response": {
+    "id": "chatcmpl-891d6bf72ab04431bd31996f",
+    "object": "chat.completion",
+    "created": 1792124028,
+    "model": "hotschmoe-dd",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_0e0e25962ffa4c8a888a2042",
+              "type": "function",
+              "function": {
+                "name": "lookup_build_status",
+                "arguments": "{\"project\":\"b70-demo\"}"
+              }
+            }
+          ]
+        },
+        "finish_reason": "tool_calls"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 311,
+      "completion_tokens": 21,
+      "total_tokens": 332,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 311,
+      "prompt_ms": 1676.3,
+      "prompt_per_token_ms": 5.39,
+      "prompt_per_second": 185.5,
+      "predicted_n": 21,
+      "predicted_ms": 201.2,
+      "predicted_per_token_ms": 9.581,
+      "predicted_per_second": 104.4,
+      "draft_n": 15,
+      "draft_n_accepted": 15
+    }
+  }
+}

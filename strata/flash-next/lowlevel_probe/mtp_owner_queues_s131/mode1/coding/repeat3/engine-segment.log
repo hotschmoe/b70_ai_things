@@ -1,0 +1,50 @@
+strata serve: conversation cache: parked 107 tokens in 154.2 ms; parked=4 bytes=996930924 evictions=2 snapshot_bytes=237780196 reused_kv_bytes=0
+strata trace: request 107 0
+strata trace: prompt start 106 -1
+strata batch prefill quantum: allocated 12288 requested 0 effective 12288 eligible 0 from 0 to 100
+strata trace: prompt chunk 0 of 100
+strata trace: read 100 tokens (batched) in 582.8 ms
+strata trace: read 6 tokens (windows) in 55.7 ms
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 106 1
+strata serve: prompt 107 tokens = 0 reused + 107 read in 923 ms (115.9 tok/s), 1 generated in 27 ms (37.6 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata trace: request 108 0
+strata trace: prompt start 107 -1
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 107 1
+strata serve: conversation cache: dropped 1 superseded copy of this conversation; parked=3
+strata serve: conversation cache: parked 1606 tokens from slot 0 in 173.3 ms; parked=4 bytes=1019826772 evictions=2 snapshot_bytes=260682192 reused_kv_bytes=0
+strata batch: slot 0 takes 108 tokens (copied in 385.1 ms)
+strata serve: prompt 108 tokens = 107 reused + 1 read in 0 ms (33594.2 tok/s), 1 generated in 21 ms (46.9 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata serve: conversation cache: parked 108 tokens in 154.2 ms; parked=4 bytes=996930924 evictions=3 snapshot_bytes=237786344 reused_kv_bytes=0
+strata trace: request 107 0
+strata trace: prompt start 106 -1
+strata batch prefill quantum: allocated 12288 requested 0 effective 12288 eligible 0 from 0 to 100
+strata trace: prompt chunk 0 of 100
+strata trace: read 100 tokens (batched) in 577.9 ms
+strata trace: read 6 tokens (windows) in 54.4 ms
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 106 1
+strata serve: conversation cache: dropped 1 superseded copy of this conversation; parked=3
+strata serve: conversation cache: parked 1606 tokens from slot 1 in 168.1 ms; parked=4 bytes=1019832920 evictions=3 snapshot_bytes=260682192 reused_kv_bytes=0
+strata batch: slot 1 takes 107 tokens (copied in 378.8 ms)
+strata serve: prompt 107 tokens = 0 reused + 107 read in 910 ms (117.6 tok/s), 1 generated in 22 ms (46.3 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata batch: 556 windows, avg 5.33 rows, 46.91 ms/window = run 39.85 (CUDA0 GPU-reach wait 0.00 + CPU experts 0.00) + commit 1.57 + emit 5.49; per layer-window: CPU experts 0.00, VRAM hits 0.00, PCIe 0.00; 108.2 rows/s over 27392 ms of wall time (admissions included)
+strata batch pair head: 553 windows drafted as a pair, 2 deferred but solo (last: one active slot)
+strata serve: conversation cache: parked 107 tokens in 157.4 ms; parked=4 bytes=996930924 evictions=4 snapshot_bytes=237780196 reused_kv_bytes=0
+strata batch: slot 1 gave back 1574 tokens of this conversation (all it holds) in 203.3 ms
+strata trace: request 1575 0
+strata trace: prompt start 1574 -1
+strata trace: prompt done (slots refilled) -1 -1
+strata trace: window 1574 1
+strata trace: window 1575 4
+strata trace: window 1579 4
+strata trace: window 1583 4
+strata trace: window 1584 4
+strata trace: window 1588 4
+strata trace: window 1591 4
+strata trace: window 1593 4
+strata trace: window 1597 4
+strata trace: window 1599 4
+strata trace: window 1603 4
+strata serve: prompt 1575 tokens = 1574 reused + 1 read in 387 ms (2.6 tok/s), 32 generated in 386 ms (82.9 tok/s), drafts accepted 22 of 30, 1 checkpoints

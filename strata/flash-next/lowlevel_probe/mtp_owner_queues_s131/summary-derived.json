@@ -1,0 +1,65 @@
+{
+  "status": "PASS_MATCHED_DISCRIMINATOR",
+  "timed_summary": {
+    "pair_wall_median_s": [
+      29.085130184015725,
+      29.180447823018767
+    ],
+    "aggregate_output_tps_median": [
+      103.1454898437658,
+      102.80856613973805
+    ],
+    "per_stream_medians": [
+      [
+        {
+          "ttft_s": 0.9003673070110381,
+          "completion_wall_s": 28.91241460200399,
+          "decode_tps": 53.51268988710941,
+          "whole_request_output_tps": 51.880827687633925
+        },
+        {
+          "ttft_s": 2.079497524013277,
+          "completion_wall_s": 28.8693790769903,
+          "decode_tps": 55.85213228237774,
+          "whole_request_output_tps": 51.95816633256037
+        }
+      ],
+      [
+        {
+          "ttft_s": 0.9214573790086433,
+          "completion_wall_s": 29.011636935989372,
+          "decode_tps": 53.3638454307239,
+          "whole_request_output_tps": 51.703390722473415
+        },
+        {
+          "ttft_s": 2.1031100259860978,
+          "completion_wall_s": 28.970609359035734,
+          "decode_tps": 55.730334416638215,
+          "whole_request_output_tps": 51.77661199356721
+        }
+      ]
+    ]
+  },
+  "paired_changes": [
+    {
+      "label": "repeat1",
+      "aggregate_tps_change_percent": -0.32664899312426776,
+      "pair_wall_change_percent": 0.32771948552399177,
+      "matched": true
+    },
+    {
+      "label": "repeat2",
+      "aggregate_tps_change_percent": -0.34011223047694106,
+      "pair_wall_change_percent": 0.3412729414902671,
+      "matched": true
+    },
+    {
+      "label": "repeat3",
+      "aggregate_tps_change_percent": -0.16672231487273592,
+      "pair_wall_change_percent": 0.1670007423762776,
+      "matched": true
+    }
+  ],
+  "aggregate_median_change_percent": -0.32664899312426776,
+  "scope": "Arithmetic of completed comparator; shared completed earlier control, three nested pairs, no new baseline/noiseband/population/overlap/cause or speed claim."
+}
