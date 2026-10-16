@@ -136,5 +136,6 @@
   "STRATA_NIGHT_BF16": "1",
   "STRATA_MTP_SHARED_BRANCH": "0"
  },
- "reasoning_budget_tokens": 16384
+ "reasoning_budget_tokens": 16384,
+ "reasoning_effort": "medium"
 }
