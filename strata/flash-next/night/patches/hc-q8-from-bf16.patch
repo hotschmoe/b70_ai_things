@@ -1,0 +1,46 @@
+commit e1b7ee8aca9fb4f7a82e7bd7e53eb061ac1b7eae
+Author: hotschmoe <stronggarner66@gmail.com>
+Date:   Fri Oct 16 06:38:56 2026 +0000
+
+    night: HC Q8 from BF16 source tensors (STRATA_HC_Q8=1)
+
+diff --git a/sycl/src/core/native_dense.cpp b/sycl/src/core/native_dense.cpp
+index 9e1c7913..c02dd4a3 100644
+--- a/sycl/src/core/native_dense.cpp
++++ b/sycl/src/core/native_dense.cpp
+@@ -324,7 +324,11 @@ bool NativeDense::load(const std::vector<std::string> &shards,
+                     // STRATA_HC_Q8_INJECT=1 asks for a Q8_0 copy
+                     static const bool q8_inject = [] { const char* v = std::getenv("STRATA_HC_Q8_INJECT"); return v && v[0] == '1'; }();
+                     const bool f32_inject = q8_inject && tensor.type == 0 && tensor.name.ends_with("_inject.weight");
+-                    if ((tensor.type != 8 && !f32_inject) || !hc_q8_name(tensor.name) || tensor.shape.size() != 2) continue;
++                    // night: ISTA GGUFs keep the HC projections as BF16 (type 30); quantize them to Q8_0 here
++                    // (ggml reference rounding). Inject rows stay BF16 unless STRATA_HC_Q8_INJECT=1.
++                    const bool bf16_src = tensor.type == 30 &&
++                        (!tensor.name.ends_with("_inject.weight") || q8_inject);
++                    if ((tensor.type != 8 && !f32_inject && !bf16_src) || !hc_q8_name(tensor.name) || tensor.shape.size() != 2) continue;
+                     auto found = table.table_.find(tensor.name);
+                     if (found == table.table_.end() || found->second.hc_q8 != nullptr) continue;
+                     auto& ref = found->second;
+@@ -335,6 +339,13 @@ bool NativeDense::load(const std::vector<std::string> &shards,
+                     void* p = nullptr;
+                     std::vector<uint8_t> q8;
+                     if (f32_inject) q8 = q8_0_of((const float*) gguf.tensor_data(tensor), (uint64_t) ref.ne0 * (uint64_t) ref.ne1);
++                    if (bf16_src) {
++                        const uint64_t n = (uint64_t) ref.ne0 * (uint64_t) ref.ne1;
++                        const uint16_t* src = (const uint16_t*) gguf.tensor_data(tensor);
++                        std::vector<float> f((size_t) n);
++                        for (uint64_t i = 0; i < n; ++i) { const uint32_t u = (uint32_t) src[i] << 16; std::memcpy(&f[i], &u, 4); }
++                        q8 = q8_0_of(f.data(), n);
++                    }
+                     if (DPCT_CHECK_ERROR(
+                             p = (void *)strata::malloc_device_guarded(
+                                 bytes, dpct::get_in_order_queue())) != 0 ||
+@@ -347,7 +358,7 @@ bool NativeDense::load(const std::vector<std::string> &shards,
+                         */
+                         DPCT_CHECK_ERROR(dpct::get_in_order_queue().memcpy(
+                             p,
+-                            f32_inject ? (const void *)q8.data()
++                            (f32_inject || bf16_src) ? (const void *)q8.data()
+                                        : gguf.tensor_data(tensor),
+                             bytes).wait()) != 0) {
+                         err = "native dense (STRATA_HC_Q8) upload " + tensor.name; return false;
