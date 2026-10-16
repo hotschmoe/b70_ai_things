@@ -1,0 +1,7 @@
+{
+  "draft_manifest_sha256": "8bd005165f941f18a75510239863f18aee614b659430225efc48b0e9d45b0ee3",
+  "all_draft_files_verified": true,
+  "doc_correction": "actual driver.exit2, tee.exit0; frozen raw receipts and original checkerHOLD unchanged",
+  "root_full_read_stdout_stderr_and_selected_platform": true,
+  "selection_scope": "posthoc saved-stream analysis confirms V2 for privateprocess; not mainqueueprofiling/speed"
+}

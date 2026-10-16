@@ -1,0 +1,4 @@
+<LEVEL_ZERO>[INFO]: Skipping L0 V1 adapter: Using default adapter version based on device IP version
+<LEVEL_ZERO>[INFO]: Number of queue groups = 2
+<LEVEL_ZERO>[INFO]: main blitter/copy engine is available
+<LEVEL_ZERO>[INFO]: link blitter/copy engines are not available

@@ -1,0 +1,21 @@
+<LOADER>[INFO]: loaded adapter 0x0x1ce21a70 (libur_adapter_level_zero.so.0) from /opt/intel/oneapi/compiler/2026.1/lib/libur_adapter_level_zero.so.0
+<LOADER>[INFO]: loaded adapter 0x0x1ce25c00 (libur_adapter_level_zero_v2.so.0) from /opt/intel/oneapi/compiler/2026.1/lib/libur_adapter_level_zero_v2.so.0
+SYCL_UR_TRACE: Device allowed by SYCL_DEVICE_ALLOWLIST
+SYCL_UR_TRACE:   platform: Intel(R) oneAPI Unified Runtime over Level-Zero V2
+SYCL_UR_TRACE:   device: Intel(R) Arc(TM) Pro B70 Graphics
+SYCL_UR_TRACE: Device allowed by SYCL_DEVICE_ALLOWLIST
+SYCL_UR_TRACE:   platform: Intel(R) oneAPI Unified Runtime over Level-Zero V2
+SYCL_UR_TRACE:   device: Intel(R) Arc(TM) Pro B70 Graphics
+SYCL_UR_TRACE: Requested device_type: info::device_type::automatic
+SYCL_UR_TRACE: Selected device: -> final score = 1550
+SYCL_UR_TRACE:   platform: Intel(R) oneAPI Unified Runtime over Level-Zero V2
+SYCL_UR_TRACE:   device: Intel(R) Arc(TM) Pro B70 Graphics
+SYCL_UR_TRACE: Device allowed by SYCL_DEVICE_ALLOWLIST
+SYCL_UR_TRACE:   platform: Intel(R) oneAPI Unified Runtime over Level-Zero V2
+SYCL_UR_TRACE:   device: Intel(R) Arc(TM) Pro B70 Graphics
+SYCL_UR_TRACE: Device allowed by SYCL_DEVICE_ALLOWLIST
+SYCL_UR_TRACE:   platform: Intel(R) oneAPI Unified Runtime over Level-Zero V2
+SYCL_UR_TRACE:   device: Intel(R) Arc(TM) Pro B70 Graphics
+{"type":"phase","mode":0,"phase":0,"iterations_checked":8,"graph_submits_source":24,"crossqueue_barriers_source":0,"intermediates_full_bytes":32100,"strict":true,"readonly":true,"guards":true}
+{"type":"phase","mode":0,"phase":1,"iterations_checked":8,"graph_submits_source":24,"crossqueue_barriers_source":0,"intermediates_full_bytes":32100,"strict":true,"readonly":true,"guards":true}
+{"type":"phase","mode":0,"phase":2,"iterations_checked":8,"graph_submits_source":24,"crossqueue_barriers_source":0,"intermediates_full_bytes":32100,"strict":true,"readonly":true,"guards":true}

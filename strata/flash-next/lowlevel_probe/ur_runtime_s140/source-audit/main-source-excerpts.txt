@@ -1,0 +1,115 @@
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/dpct/device.hpp L616-629
+  sycl::queue *create_queue(bool enable_exception_handler = false) {
+#ifdef DPCT_USM_LEVEL_NONE
+    return create_out_of_order_queue(enable_exception_handler);
+#else
+    return create_in_order_queue(enable_exception_handler);
+#endif // DPCT_USM_LEVEL_NONE
+  }
+
+  sycl::queue *create_in_order_queue(bool enable_exception_handler = false) {
+    std::lock_guard<mutex_type> lock(m_mutex);
+    return create_queue_impl(enable_exception_handler,
+                             sycl::property::queue::in_order());
+  }
+
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/dpct/device.hpp L670-695
+  void init_queues() {
+    _q_in_order = create_queue_impl(true, sycl::property::queue::in_order());
+    _q_out_of_order = create_queue_impl(true);
+    _saved_queue = &default_queue();
+  }
+
+  /// Caller should acquire resource \p m_mutex before calling this function.
+  template <class... Properties>
+  sycl::queue *create_queue_impl(bool enable_exception_handler,
+                                 Properties... properties) {
+    sycl::async_handler eh = {};
+    if (enable_exception_handler) {
+      eh = exception_handler;
+    }
+    _queues.push_back(std::make_shared<sycl::queue>(
+        _ctx, *this, eh,
+        sycl::property_list(
+#ifdef DPCT_PROFILING_ENABLED
+            sycl::property::queue::enable_profiling(),
+#endif
+            properties...)));
+
+    return _queues.back().get();
+  }
+
+  void get_version(int &major, int &minor) const {
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/dpct/device.hpp L984-996
+    // completed.
+    queue->wait();
+  }
+#endif
+
+#ifdef DPCT_PROFILING_ENABLED
+  *event_ptr = queue->ext_oneapi_submit_barrier();
+#else
+  *event_ptr = queue->single_task([=]() {});
+#endif
+}
+
+static inline unsigned int push_device_for_curr_thread(unsigned int id) {
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp L1-6
+// src/core/mtp.cpp - see include/strata/core/mtp.hpp.
+#define DPCT_PROFILING_ENABLED
+#include <sycl/sycl.hpp>
+#include <dpct/dpct.hpp>
+#include "strata/sycl_queue.hpp"
+#include "strata/core/host_boundary_profile.hpp"
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp L510-533
+    */
+    if (force_on_ && hi_prio && 0 == 0)
+        /*
+        DPCT1025: The SYCL queue is created ignoring the flag and priority
+        options.
+        */
+        prio = DPCT_CHECK_ERROR(
+                   cs_ = dpct::get_current_device().create_queue(true)) == 0;
+    /*
+    DPCT1026: The call to cudaGetLastError was removed because this
+    functionality is redundant in SYCL.
+    */
+#endif
+    /*
+    DPCT1025: The SYCL queue is created ignoring the flag and priority
+    options.
+    */
+    if (!prio && DPCT_CHECK_ERROR(cs_ = dpct::get_current_device().create_queue(
+                                      true)) != 0) {
+      err = "mtp: stream"; return false;
+    }
+    /*
+    DPCT1025: The SYCL queue is created ignoring the flag and priority
+    options.
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp L1-5
+// src/core/verify.cpp - see include/strata/core/verify.hpp.
+#define DPCT_PROFILING_ENABLED
+#include <sycl/sycl.hpp>
+#include <dpct/dpct.hpp>
+#include "strata/sycl_queue.hpp"
+
+/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp L630-642
+        std::fprintf(stderr, "strata verify trace (#649): on\n");
+#endif
+    }
+    prof_on_ = std::getenv("STRATA_VERIFY_PROFILE") != nullptr;
+    if (prof_on_) {
+        const size_t np = (size_t) g.n_layers * kProfPer + 4;
+        /*
+        DPCT1026: The call to cudaGetLastError was removed because this
+        functionality is redundant in SYCL.
+        */
+        if (DPCT_CHECK_ERROR(prof_ = (unsigned long long *)sycl::malloc_device(
+                                 np * 8, dpct::get_in_order_queue())) != 0) {
+            prof_on_ = false; prof_ = nullptr;
+

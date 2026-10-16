@@ -25678,3 +25678,22 @@ ordering. No optionalISAaudit/rawreparse/repeatedbaseline. Correct model
 first-positive/strongest/reach claims; no population/promotion. Full200k
 4conversation RAM campaign deferred to selected winner, not waived. See
 docs/20261016_strata_mtp_commit_next_decision.md.
+
+
+## 2026-10-16 S140: runtime discovery with saved-stream correction
+
+CONFIG -> Same existing S135mode0card0binary, discoveryloggers only;
+no build/adapterforce/driverknob/perftiming. Source audit shows legacy
+driver-inorder env unset/0 may be same; no blind serving A/B selected.
+COMMAND -> One finite nativeoracle, latest healthy preflight reused,
+normalowned wait/removal/fullCID+NAMEgone. No retries/logger sweeps.
+RESULT -> Nativeleaf0/allstrictABA/DOTPASS. OriginalcheckerHOLD1
+lookedONLYstderr forloadedadaptertext; Docker1/driver2/tee0 preserved.
+RootreviewednonOOM/noError/stopped/removal, thenmanualcard0health0.
+Saved stdout had bothadapterloadedlines ANDexplicit Selecteddevice
+platformLevelZeroV2/B70; stderrV1defaultIPskip. Rootreadbothstreams.
+VERDICT -> Additive saved-stream analysis confirms selectedV2 for this
+privateprocess, notretroactivecheckerPASS/mainqueueproperty/perfgain.
+Keep source/runtime package distinction, queuepropertytestparked; next
+S142samebinary ring WITHOUTunitrace tocheckprofilerperturbation. See
+docs/20261016_strata_ur_adapter_discovery.md.

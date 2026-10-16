@@ -1,0 +1,10 @@
+{
+  "SYCL_UR_TRACE": "1",
+  "UR_LOG_LOADER": "level:info;output:stderr",
+  "UR_LOG_LEVEL_ZERO": "level:info;output:stderr",
+  "SYCL_UR_USE_LEVEL_ZERO_V2": null,
+  "UR_LOADER_USE_LEVEL_ZERO_V2": null,
+  "UR_L0_USE_DRIVER_INORDER_LISTS": null,
+  "ONEAPI_DEVICE_SELECTOR": "level_zero:*",
+  "ZE_AFFINITY_MASK": "0"
+}

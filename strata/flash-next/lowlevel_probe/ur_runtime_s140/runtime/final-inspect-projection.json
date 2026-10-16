@@ -1,0 +1,27 @@
+{
+  "Id": "0176b1b86242c05cd77840f683c4d6fe94d529eb6ce6c79b1ce6231f0f9e650d",
+  "Name": "/strata-ur-adapter-discovery",
+  "Image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "Path": "bash",
+  "Args": [
+    "/driver/run-container.sh"
+  ],
+  "State": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 1,
+    "Error": "",
+    "StartedAt": "2026-10-16T05:05:21.185281439Z",
+    "FinishedAt": "2026-10-16T05:05:24.302750977Z"
+  },
+  "source": {
+    "absolute_path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/ur-adapter-discovery-prep/run/final-inspect.json",
+    "bytes": 14274,
+    "sha256": "452b5803c42f08e9d52d19b509ade9e439abe69ac6342d0e1a26d4d032390305"
+  }
+}

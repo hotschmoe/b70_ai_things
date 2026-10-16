@@ -1,0 +1,42 @@
+{
+  "status": "ROOT_POSTHOC_TWO_STREAM_ANALYSIS_SELECTED_V2_PRIVATE_PROCESS",
+  "root_full_read_actual_stdout_and_stderr": true,
+  "original_discovery_checker_result": "HOLD exit1, container1; never rewritten as PASS",
+  "stdout_loaded_lines": [
+    {
+      "line_1based": 1,
+      "text": "<LOADER>[INFO]: loaded adapter 0x0x1ce21a70 (libur_adapter_level_zero.so.0) from /opt/intel/oneapi/compiler/2026.1/lib/libur_adapter_level_zero.so.0"
+    },
+    {
+      "line_1based": 2,
+      "text": "<LOADER>[INFO]: loaded adapter 0x0x1ce25c00 (libur_adapter_level_zero_v2.so.0) from /opt/intel/oneapi/compiler/2026.1/lib/libur_adapter_level_zero_v2.so.0"
+    }
+  ],
+  "stdout_selected_device": [
+    {
+      "selected_line_1based": 10,
+      "selected_line": "SYCL_UR_TRACE: Selected device: -> final score = 1550",
+      "following_platform_line": "SYCL_UR_TRACE:   platform: Intel(R) oneAPI Unified Runtime over Level-Zero V2",
+      "following_device_line": "SYCL_UR_TRACE:   device: Intel(R) Arc(TM) Pro B70 Graphics"
+    }
+  ],
+  "stderr_lines": [
+    "<LEVEL_ZERO>[INFO]: Skipping L0 V1 adapter: Using default adapter version based on device IP version",
+    "<LEVEL_ZERO>[INFO]: Number of queue groups = 2",
+    "<LEVEL_ZERO>[INFO]: main blitter/copy engine is available",
+    "<LEVEL_ZERO>[INFO]: link blitter/copy engines are not available"
+  ],
+  "native_LevelZero_strict_PASS": true,
+  "no_adapter_force_or_driverlist_knob": true,
+  "proof_scope": "Actual selected-platform trace for this private process, beyond loaded-DSO inference. Main queue flags, adapter knob behavior and speed remain unmeasured. No rerun.",
+  "original_sources": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/ur-adapter-discovery-prep/run/mode0/leaf.log",
+      "sha256": "d01fe108d67fa5842709feb371f1518b27870b3046b95f7b9831669482ed6c0a"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/ur-adapter-discovery-prep/run/mode0/leaf.stderr",
+      "sha256": "a979182d74b02529fb73b4542273c6d539998cd05a8dce1f0fe3951db556130d"
+    }
+  ]
+}

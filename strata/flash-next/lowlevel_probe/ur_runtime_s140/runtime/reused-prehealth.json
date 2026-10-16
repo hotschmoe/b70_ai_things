@@ -1,0 +1,16 @@
+{
+  "files": {
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-s139-serving-prep/mode1/post-health.json": {
+      "bytes": 480,
+      "sha256": "14fdc1919311859a8274c5d589b4271c5b921f8299a0560d42c2bbd3fe542be3"
+    },
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-head-c6-runtime-ones-s139-serving-prep/mode1/normal-stop.json": {
+      "bytes": 507,
+      "sha256": "46fb4f9bbdfbb33a65de7405dcede062ab7dfdd9d7af235acb05a60bac181f85"
+    }
+  },
+  "kernel": "7.1.0-070100-generic",
+  "boot_id": "b785982c-4954-4d23-808c-48a7534ce3bd",
+  "same_boot_and_no_intervening_GPU_root_attested": true,
+  "historical_boot_independently_recorded_in_S139_receipt": false
+}

@@ -1,0 +1,15 @@
+{
+  "stage": "S140",
+  "status": "DISCOVERY_HOLD_NATIVE_STRICT_PASS_NORMAL_REMOVAL_MANUAL_HEALTH_PASS",
+  "native_leaf_exit": 0,
+  "native_strict_DOT_PASS": true,
+  "discovery_checker_exit": 1,
+  "container_stopped_nonOOM_noError_and_CID_NAME_gone": true,
+  "root_read_environment_leaf_stderr_checker_traceback_and_native_state": true,
+  "observed": "default-IP V1 skip; surviving loaded-adapter message absent",
+  "actual_adapter_strictly_proved": false,
+  "no_retry": true,
+  "manual_card0_posthealth_authorized_after_review": true,
+  "manual_card0_posthealth_exit": 0,
+  "manual_health_log": "root-manual-post-health.log"
+}

@@ -1,0 +1,141 @@
+intel-level-zero-gpu	
+intel-oneapi-compiler-dpcpp-cpp	2026.1.0-235
+-rwxr-xr-x 1 root root    155892 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-asan-cpu.bc
+-rwxr-xr-x 1 root root    148352 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-asan-cpu.new.o
+-rwxr-xr-x 1 root root    166864 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-asan-cpu.o
+-rwxr-xr-x 1 root root     96092 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-asan-dg2.bc
+-rwxr-xr-x 1 root root     90080 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-asan-dg2.new.o
+-rwxr-xr-x 1 root root    106536 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-asan-dg2.o
+-rwxr-xr-x 1 root root     96224 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-asan-pvc.bc
+-rwxr-xr-x 1 root root     90352 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-asan-pvc.new.o
+-rwxr-xr-x 1 root root    107360 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-asan-pvc.o
+-rwxr-xr-x 1 root root     91352 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-asan.bc
+-rwxr-xr-x 1 root root    339232 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-asan.new.o
+-rwxr-xr-x 1 root root    403192 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-asan.o
+-rwxr-xr-x 1 root root      2592 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-bfloat16-nvptx64-nvidia-cuda.bc
+-rwxr-xr-x 1 root root      6592 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-bfloat16.bc
+-rwxr-xr-x 1 root root     29496 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-bfloat16.new.o
+-rwxr-xr-x 1 root root     31608 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-bfloat16.o
+-rwxr-xr-x 1 root root      2592 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-cmath-fp64-nvptx64-nvidia-cuda.bc
+-rwxr-xr-x 1 root root     11336 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-cmath-fp64.bc
+-rwxr-xr-x 1 root root     49880 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-cmath-fp64.new.o
+-rwxr-xr-x 1 root root     54760 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-cmath-fp64.o
+-rwxr-xr-x 1 root root      2584 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-cmath-nvptx64-nvidia-cuda.bc
+-rwxr-xr-x 1 root root     12372 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-cmath.bc
+-rwxr-xr-x 1 root root     54264 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-cmath.new.o
+-rwxr-xr-x 1 root root     59984 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-cmath.o
+-rwxr-xr-x 1 root root      2600 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-complex-fp64-nvptx64-nvidia-cuda.bc
+-rwxr-xr-x 1 root root     10772 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-complex-fp64.bc
+-rwxr-xr-x 1 root root     42976 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-complex-fp64.new.o
+-rwxr-xr-x 1 root root     48464 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-complex-fp64.o
+-rwxr-xr-x 1 root root      2588 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-complex-nvptx64-nvidia-cuda.bc
+-rwxr-xr-x 1 root root     10796 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-complex.bc
+-rwxr-xr-x 1 root root     43064 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-complex.new.o
+-rwxr-xr-x 1 root root     48648 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-complex.o
+-rwxr-xr-x 1 root root      8132 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-crt-nvptx64-nvidia-cuda.bc
+-rwxr-xr-x 1 root root      8244 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-crt.bc
+-rwxr-xr-x 1 root root     37888 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-crt.new.o
+-rwxr-xr-x 1 root root     39752 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-crt.o
+-rwxr-xr-x 1 root root   3289000 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-devicelib-host.a
+-rwxr-xr-x 1 root root   3289076 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-devicelib-host.new.a
+-rwxr-xr-x 1 root root      2596 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-bfloat16-nvptx64-nvidia-cuda.bc
+-rwxr-xr-x 1 root root      7032 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-bfloat16.bc
+-rwxr-xr-x 1 root root     30128 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-bfloat16.new.o
+-rwxr-xr-x 1 root root     33360 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-bfloat16.o
+-rwxr-xr-x 1 root root     12376 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-cmath-fp64-nvptx64-nvidia-cuda.bc
+-rwxr-xr-x 1 root root     11984 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-cmath-fp64.bc
+-rwxr-xr-x 1 root root     52376 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-cmath-fp64.new.o
+-rwxr-xr-x 1 root root     59768 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-cmath-fp64.o
+-rwxr-xr-x 1 root root      2588 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-cmath-nvptx64-nvidia-cuda.bc
+-rwxr-xr-x 1 root root     13156 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-cmath.bc
+-rwxr-xr-x 1 root root     57088 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-cmath.new.o
+-rwxr-xr-x 1 root root     65800 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-cmath.o
+-rwxr-xr-x 1 root root      2604 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-complex-fp64-nvptx64-nvidia-cuda.bc
+-rwxr-xr-x 1 root root     22568 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-complex-fp64.bc
+-rwxr-xr-x 1 root root     85184 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-complex-fp64.new.o
+-rwxr-xr-x 1 root root     97032 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-complex-fp64.o
+-rwxr-xr-x 1 root root      2596 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-complex-nvptx64-nvidia-cuda.bc
+-rwxr-xr-x 1 root root     21948 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-complex.bc
+-rwxr-xr-x 1 root root     82904 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-complex.new.o
+-rwxr-xr-x 1 root root     94648 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-complex.o
+-rwxr-xr-x 1 root root      7688 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-cstring-nvptx64-nvidia-cuda.bc
+-rwxr-xr-x 1 root root      6140 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-cstring.bc
+-rwxr-xr-x 1 root root     26448 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-cstring.new.o
+-rwxr-xr-x 1 root root     26672 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-cstring.o
+-rwxr-xr-x 1 root root     28896 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-imf-bf16.bc
+-rwxr-xr-x 1 root root    110088 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-imf-bf16.new.o
+-rwxr-xr-x 1 root root    134704 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-imf-bf16.o
+-rwxr-xr-x 1 root root   1422064 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-imf-fp64.bc
+-rwxr-xr-x 1 root root   5444840 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-imf-fp64.new.o
+-rwxr-xr-x 1 root root   5736544 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-imf-fp64.o
+-rwxr-xr-x 1 root root    361612 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-imf.bc
+-rwxr-xr-x 1 root root   1370816 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-imf.new.o
+-rwxr-xr-x 1 root root   1555608 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-fallback-imf.o
+-rwxr-xr-x 1 root root     15212 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-imf-bf16.bc
+-rwxr-xr-x 1 root root     65928 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-imf-bf16.new.o
+-rwxr-xr-x 1 root root     77104 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-imf-bf16.o
+-rwxr-xr-x 1 root root     36244 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-imf-fp64.bc
+-rwxr-xr-x 1 root root    157368 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-imf-fp64.new.o
+-rwxr-xr-x 1 root root    188448 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-imf-fp64.o
+-rwxr-xr-x 1 root root     74436 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-imf.bc
+-rwxr-xr-x 1 root root    321000 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-imf.new.o
+-rwxr-xr-x 1 root root    387088 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-imf.o
+-rwxr-xr-x 1 root root      2600 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-itt-compiler-wrappers-nvptx64-nvidia-cuda.bc
+-rwxr-xr-x 1 root root      5312 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-itt-compiler-wrappers.bc
+-rwxr-xr-x 1 root root     23552 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-itt-compiler-wrappers.new.o
+-rwxr-xr-x 1 root root     23760 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-itt-compiler-wrappers.o
+-rwxr-xr-x 1 root root      2576 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-itt-stubs-nvptx64-nvidia-cuda.bc
+-rwxr-xr-x 1 root root      4616 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-itt-stubs.bc
+-rwxr-xr-x 1 root root     21480 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-itt-stubs.new.o
+-rwxr-xr-x 1 root root     22224 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-itt-stubs.o
+-rwxr-xr-x 1 root root      2592 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-itt-user-wrappers-nvptx64-nvidia-cuda.bc
+-rwxr-xr-x 1 root root      5436 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-itt-user-wrappers.bc
+-rwxr-xr-x 1 root root     24368 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-itt-user-wrappers.new.o
+-rwxr-xr-x 1 root root     25336 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-itt-user-wrappers.o
+-rwxr-xr-x 1 root root 186015576 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-jit.so
+-rwxr-xr-x 1 root root 186015576 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-jit.so.22.1
+-rwxr-xr-x 1 root root     38876 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-msan-cpu.bc
+-rwxr-xr-x 1 root root     41632 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-msan-cpu.new.o
+-rwxr-xr-x 1 root root     46424 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-msan-cpu.o
+-rwxr-xr-x 1 root root     40688 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-msan-pvc.bc
+-rwxr-xr-x 1 root root     43376 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-msan-pvc.new.o
+-rwxr-xr-x 1 root root     48304 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-msan-pvc.o
+-rwxr-xr-x 1 root root     33564 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-msan.bc
+-rwxr-xr-x 1 root root    135696 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-msan.new.o
+-rwxr-xr-x 1 root root    152808 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-msan.o
+-rwxr-xr-x 1 root root      2592 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-native-bfloat16-nvptx64-nvidia-cuda.bc
+-rwxr-xr-x 1 root root      6592 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-native-bfloat16.bc
+-rwxr-xr-x 1 root root     29496 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-native-bfloat16.new.o
+-rwxr-xr-x 1 root root     31608 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-native-bfloat16.o
+lrwxrwxrwx 1 root root        26 Jun 18 04:34 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-preview.so -> ./libsycl-preview.so.9.0.0
+-rwxr-xr-x 1 root root  11677928 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-preview.so.9
+-rwxr-xr-x 1 root root  11677928 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-preview.so.9.0.0
+-rwxr-xr-x 1 root root     44304 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-preview.so.9.0.0-gdb.py
+-rwxr-xr-x 1 root root     38316 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-tsan-cpu.bc
+-rwxr-xr-x 1 root root     39496 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-tsan-cpu.new.o
+-rwxr-xr-x 1 root root     45624 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-tsan-cpu.o
+-rwxr-xr-x 1 root root     41716 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-tsan-pvc.bc
+-rwxr-xr-x 1 root root     43088 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-tsan-pvc.new.o
+-rwxr-xr-x 1 root root     49088 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-tsan-pvc.o
+-rwxr-xr-x 1 root root     44148 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-tsan.bc
+-rwxr-xr-x 1 root root    169992 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-tsan.new.o
+-rwxr-xr-x 1 root root    194472 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl-tsan.o
+lrwxrwxrwx 1 root root        14 Jun 18 04:34 /opt/intel/oneapi/compiler/2026.1/lib/libsycl.so -> ./libsycl.so.9
+lrwxrwxrwx 1 root root        18 Jun 18 04:34 /opt/intel/oneapi/compiler/2026.1/lib/libsycl.so.9 -> ./libsycl.so.9.0.0
+-rwxr-xr-x 1 root root  11677728 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl.so.9.0.0
+-rwxr-xr-x 1 root root     44304 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl.so.9.0.0-gdb.py
+-rwxr-xr-x 1 root root    265168 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libsycl_ur_trace_collector.so
+lrwxrwxrwx 1 root root        31 Jun 18 04:34 /opt/intel/oneapi/compiler/2026.1/lib/libur_adapter_level_zero.so -> ./libur_adapter_level_zero.so.0
+lrwxrwxrwx 1 root root        36 Jun 18 04:34 /opt/intel/oneapi/compiler/2026.1/lib/libur_adapter_level_zero.so.0 -> ./libur_adapter_level_zero.so.0.12.0
+-rwxr-xr-x 1 root root   4134632 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libur_adapter_level_zero.so.0.12.0
+lrwxrwxrwx 1 root root        34 Jun 18 04:34 /opt/intel/oneapi/compiler/2026.1/lib/libur_adapter_level_zero_v2.so -> ./libur_adapter_level_zero_v2.so.0
+lrwxrwxrwx 1 root root        39 Jun 18 04:34 /opt/intel/oneapi/compiler/2026.1/lib/libur_adapter_level_zero_v2.so.0 -> ./libur_adapter_level_zero_v2.so.0.12.0
+-rwxr-xr-x 1 root root   3983072 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libur_adapter_level_zero_v2.so.0.12.0
+lrwxrwxrwx 1 root root        19 Jun 18 04:34 /opt/intel/oneapi/compiler/2026.1/lib/libur_loader.so -> ./libur_loader.so.0
+lrwxrwxrwx 1 root root        24 Jun 18 04:34 /opt/intel/oneapi/compiler/2026.1/lib/libur_loader.so.0 -> ./libur_loader.so.0.12.0
+-rwxr-xr-x 1 root root  25008600 Jun 17 19:17 /opt/intel/oneapi/compiler/2026.1/lib/libur_loader.so.0.12.0
+Intel(R) oneAPI DPC++/C++ Compiler 2026.1.0 (2026.1.0.20260617)
+Target: x86_64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /opt/intel/oneapi/compiler/2026.1/bin/compiler
+Configuration file: /opt/intel/oneapi/compiler/2026.1/bin/compiler/../icpx.cfg

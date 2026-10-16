@@ -1,0 +1,6 @@
+{
+  "url": "https://api.github.com/repos/intel/llvm/commits?until=2026-06-18T00:00:00Z&per_page=1",
+  "sha": "5dc8ac225fa7965518fb49cce90516b46c745e0f",
+  "date": "2026-06-17T23:58:11Z",
+  "not_exact_sdk_source_identity": true
+}

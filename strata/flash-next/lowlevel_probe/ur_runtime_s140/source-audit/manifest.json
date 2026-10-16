@@ -1,0 +1,122 @@
+{
+  "status": "FROZEN_READ_ONLY_SOURCE_AND_INSTALLED_SDK_METADATA",
+  "active_adapter": "UNKNOWN_PENDING_S140",
+  "files": {
+    "findings.md": {
+      "bytes": 5859,
+      "sha256": "d9b2008e611b67336bf9c0d647c989b9b95181e877d1b2ae42070109984b0016"
+    },
+    "installed-adapter-markers-v2.txt": {
+      "bytes": 1359,
+      "sha256": "52eb235542989f2293e0e2fc6a6576f75e669b82beafcb0651e2ab57ddb07dba"
+    },
+    "installed-adapter-markers.txt": {
+      "bytes": 149,
+      "sha256": "63a5f4f315a261cbeffe6c4a4eccdfdc77b621e98d7f61c3509fc8333a42b2e5"
+    },
+    "installed-discovery-messages.txt": {
+      "bytes": 573,
+      "sha256": "2dad659eeb349e609093ab7b0a5e607d529a1d7117f5c4a978ad05cb1a38ee88"
+    },
+    "installed-inorder-helper.asm": {
+      "bytes": 8354,
+      "sha256": "80c1433e0ba6b9aa3e9d5a2ee76a418821ddacc9dc004d4c50bd5845f90181e4"
+    },
+    "installed-sdk.txt": {
+      "bytes": 15357,
+      "sha256": "e21a725c992d364dfe05b1c734f107e5f5d5afbf27ef6dfbd7b893a5c078ef91"
+    },
+    "main-source-excerpts.txt": {
+      "bytes": 3874,
+      "sha256": "bbeed923557f2f89acd3c5ce19a1c249549df1eb7f75990c79ba3626dce4f4e0"
+    },
+    "main-source-pins.json": {
+      "bytes": 537,
+      "sha256": "4f868130ec34fb4445ca629ff2bcf136f5393901062793018b33e33d5e25f6e3"
+    },
+    "pre-package-sycl-commit.json": {
+      "bytes": 238,
+      "sha256": "ca5fea44017ca2010703a51d6c33cc509e3b08d6b842512e0d634aa96675b7d5"
+    },
+    "pre-package-upstream-commit.json": {
+      "bytes": 229,
+      "sha256": "f4e870b3a8b2d5393246b5f60d19f85226f559e7b290fe08adf4e610ddf025d0"
+    },
+    "upstream-adapter.cpp": {
+      "bytes": 28195,
+      "sha256": "25e332ea618ede1c9c766afd9877054f59a4a9c930c535e684f2f475f4ed8689"
+    },
+    "upstream-commit.json": {
+      "bytes": 774,
+      "sha256": "5a4597ad4bd461928a02d529ae6a00018048b7afb7e75d5e32f8d6f6164b7034"
+    },
+    "upstream-common-platform.cpp": {
+      "bytes": 52643,
+      "sha256": "9f2b48a9fa9a2bd90abcd5de72d844c1b4f48da458853d84b304af5b0369ca9f"
+    },
+    "upstream-common-platform.hpp": {
+      "bytes": 14931,
+      "sha256": "933ac52db728352ecd4614505563b2b50b9074d8cdf643e93115ac80f9c317af"
+    },
+    "upstream-common.hpp": {
+      "bytes": 5264,
+      "sha256": "350645c3d21c600c34c572905518835e6529b5c8ee7f9a793baa974d130ff2b6"
+    },
+    "upstream-l0-directory.json": {
+      "bytes": 39426,
+      "sha256": "707514f77c76c034f5b5ea5d26162b6097a9de98a681735bded85f0719bf4b07"
+    },
+    "upstream-queue.cpp": {
+      "bytes": 106665,
+      "sha256": "8d78d3d5badf990258da223589fe0458a98ab4118133129154507a7c79f803a4"
+    },
+    "upstream-sycl-platform_impl.cpp": {
+      "bytes": 22865,
+      "sha256": "76334fd79d1e5f521855b64bf5376307cfd6de9de9b132a6f58de489458907bd"
+    },
+    "upstream-ur_interface_loader.cpp": {
+      "bytes": 33707,
+      "sha256": "62af47e25da8c05bc58159fa222ec930ba92763e52c11fda0c27ef3cdeebdea7"
+    },
+    "upstream-v1-adapter-entry.cpp": {
+      "bytes": 3345,
+      "sha256": "260a3138d2674aa92f197992cf9a37d07a723910b24eee185945979c0009565d"
+    },
+    "upstream-v1-queue.hpp": {
+      "bytes": 33754,
+      "sha256": "7ff61fbe819de723ca2867196ac0c0e8b8db371f03cfd1adef1895a03f69c9f6"
+    },
+    "upstream-v1-ur_level_zero.cpp": {
+      "bytes": 463,
+      "sha256": "193970612c0172a14fd29eeb900c4ae796c4c2171ef0a940e168361297eb3b3b"
+    },
+    "upstream-v2-README.md": {
+      "bytes": 1639,
+      "sha256": "613651da212a6ea7a83661f14b2de20bc3b1c5445b7eb1e96be01b6260827351"
+    },
+    "upstream-v2-adapter-entry.cpp": {
+      "bytes": 2894,
+      "sha256": "f7aa2396e5219d31cc43b7ed515a9887f04276461d66d1eefe5674cf1f578a3a"
+    },
+    "upstream-v2-command_list_manager.cpp": {
+      "bytes": 57406,
+      "sha256": "9cf8f17d31ef1095d66469e697f97d7126b34adbfba5e6d0dfe4f4fbfc54509f"
+    },
+    "upstream-v2-queue_api.cpp": {
+      "bytes": 27720,
+      "sha256": "6f0dae95320613ed2207dd6cb5fd08c68a6e7797f6f3fbdfaf3993bc8c37907f"
+    },
+    "upstream-v2-queue_create.cpp": {
+      "bytes": 7833,
+      "sha256": "4429882087faa43f296cd5d93fde6e9108b160810a22225ebde9c294dab134b6"
+    },
+    "upstream-v2-queue_immediate_in_order.cpp": {
+      "bytes": 6416,
+      "sha256": "11007901a0fe857b51055c2948131479c8860ab8a4ebdf713c3542c81659339c"
+    },
+    "upstream-v2-queue_immediate_in_order.hpp": {
+      "bytes": 27008,
+      "sha256": "fdac379c373f00f9091f242bdbc9256c666387a23509c738bcfe63c9101805e4"
+    }
+  }
+}

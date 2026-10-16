@@ -1,0 +1,12 @@
+{
+  "status": "ROOT_DIAGNOSTIC_REVIEW_REQUIRED_NO_BLIND_POSTHEALTH",
+  "docker_start_exit": 1,
+  "owned_fullCID": "0176b1b86242c05cd77840f683c4d6fe94d529eb6ce6c79b1ce6231f0f9e650d",
+  "owned_name": "strata-ur-adapter-discovery",
+  "normal_wait_and_rm_completed": true,
+  "fullCID_and_NAME_gone": true,
+  "native_state": "final-inspect.json",
+  "diagnostics": "native-diagnostics.json",
+  "posthealth_run": false,
+  "automatic_force_reset_retry": false
+}

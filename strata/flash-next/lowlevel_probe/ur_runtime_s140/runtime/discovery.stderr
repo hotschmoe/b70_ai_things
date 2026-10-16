@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/driver/discovery.py", line 18, in <module>
+    assert loaded,('HOLD no surviving adapter load proof',lib)
+           ^^^^^^
+AssertionError: ('HOLD no surviving adapter load proof', 'libur_adapter_level_zero_v2.so')

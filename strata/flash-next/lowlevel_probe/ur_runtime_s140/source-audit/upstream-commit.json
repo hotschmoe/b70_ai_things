@@ -1,0 +1,6 @@
+{
+  "url": "https://api.github.com/repos/intel/llvm/commits/sycl",
+  "sha": "b29c1834fc5795c9748173a1b3ab48e3d75abd28",
+  "date": "2026-10-15T19:05:56Z",
+  "message": "[SYCL][UR] Add `UR_DEVICE_INFO_FP16_ATOMIC` for querying 16-bit atomic support (#23420)\n\n`aspect::ext_oneapi_atomic16` was derived from the\n`cl_ext_float_atomics` extension string, which the L0 adapter had to\nfake and which OpenCL devices (e.g. Gen12) report with only partial fp16\natomic capabilities. Replace it with a dedicated boolean device-info\nquery.\n\n`aspect::ext_oneapi_atomic16` != `cl_ext_float_atomics` - driver can\nreport `cl_ext_float_atomics` without or with partial 16-bit support.\n\nFix CMPLRLLVM-78545\n\n---------\n\nCo-authored-by: Claude Fable 5.1 <noreply@anthropic.com>"
+}

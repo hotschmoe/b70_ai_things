@@ -1,0 +1,8 @@
+/opt/intel/oneapi/compiler/2026.1/lib/libur_adapter_level_zero.so.0.12.0
+Skipping L0 V1 adapter: {}
+Skipping Level Zero adapter due to the loader version: {} matches a skiplist entry (set SYCL_UR_L0_LOADER_SKIPLIST to override)
+Using default adapter version based on device IP version
+/opt/intel/oneapi/compiler/2026.1/lib/libur_adapter_level_zero_v2.so.0.12.0
+Skipping Level Zero adapter due to the loader version: {} matches a skiplist entry (set SYCL_UR_L0_LOADER_SKIPLIST to override)
+Using default adapter version based on device IP version
+Skipping L0 V2 adapter: {}

@@ -1,0 +1,17 @@
+{
+  "status": "S140_DISCOVERY_HOLD_PRESERVED_NATIVE_STRICT_PASS_MANUAL_HEALTH_PASS",
+  "checker": "Original discovery.py reads mode0/leaf.stderr only; required surviving loaded-adapter line absent there. Exit1 preserved, no comparison.json generated.",
+  "native": "Existing S135 mode0 leaf exited0, all three A/B/A phases and8 depths strict/read-only/guards/fulloutput/DOT passed. No new build.",
+  "stdout_observation": "Saved stdout has BOTH loaded-adapter lines and an explicit Selected device trace with immediately following Level-Zero V2 platform and B70 device. Root fully read both streams and accepts selectedV2 for this private process by additive posthoc analysis; original checker HOLD/container1 unchanged.",
+  "stderr_observation": "Exactly4 lines: V1 default-IP skip plus3 queue INFO lines.",
+  "closure": "Checker caused container exit1; driver/tee exit2. Stopped state nonOOM/noError, normalwait/rm/fullCID+NAMEgone before root review. Automatic posthealth correctly withheld; root then reviewed and manually ran card0 posthealth0.",
+  "source_limits": [
+    "Current official upstream SHA later than installed June SDK; not package-source or ABI byteidentity.",
+    "Both DSO strings/mapping do not identify active adapter; legacy knob string presence does not prove V2 queue semantics.",
+    "Main DPCT enable_profiling construction is source evidence only; this leaf uses in_order only.",
+    "No forced adapter, runtime knob change, performance/overlap/reset-cause claim, new build or retry.",
+    "Queue-property test parked; no next-stage result consumed."
+  ],
+  "no_curator_workload": true,
+  "posthoc_status": "ROOT_POSTHOC_TWO_STREAM_ANALYSIS_SELECTED_V2_PRIVATE_PROCESS"
+}

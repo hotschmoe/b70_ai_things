@@ -1,0 +1,14 @@
+{
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/include/dpct/device.hpp": {
+    "bytes": 33781,
+    "sha256": "66776dce10405ad3826e6f19edf23a9811113fa6c62832de56d93d907b827154"
+  },
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/mtp.cpp": {
+    "bytes": 125111,
+    "sha256": "452a051e3a2219d0c6a00c8cdf795b798e763fcc793fbbb4dff1b4dda7903aff"
+  },
+  "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp": {
+    "bytes": 223107,
+    "sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2"
+  }
+}

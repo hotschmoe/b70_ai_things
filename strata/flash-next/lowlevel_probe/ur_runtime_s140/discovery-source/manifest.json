@@ -1,0 +1,33 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NO_EXECUTION",
+  "files": {
+    "README.md": {
+      "bytes": 2950,
+      "sha256": "81691c4d3c6d5ab0c6fed79e81207d145cca8ffe45dfd1b592399f170c8b2834"
+    },
+    "ROOT_RUN.sh": {
+      "bytes": 850,
+      "sha256": "6ca3f98bd5a971e0f15a3996e2e632106823b6eaea607eb8333bcbc498bcc67d"
+    },
+    "discovery.py": {
+      "bytes": 1908,
+      "sha256": "ce2a71c957d0f66c6657f8a4eeec62dcd77177f639be47035ba50354cba85e7a"
+    },
+    "leased-run-delta.patch": {
+      "bytes": 5765,
+      "sha256": "67db07b539f245e675cd43484e2bf673aeea02e81976a3eebff8800e8e01e622"
+    },
+    "leased-run.sh": {
+      "bytes": 9982,
+      "sha256": "b5c94f7f01a3c1ee64c56615a40bd3cc2effd919049be4d8cb9b0aa1e33a45e3"
+    },
+    "run-container.sh": {
+      "bytes": 1036,
+      "sha256": "62295f739cd0bd49ba9f9ad0e3782bc55c9bf09ed77e797f990cc2df69e3834d"
+    },
+    "source-pins.json": {
+      "bytes": 1762,
+      "sha256": "19e4d774a5adaa4c5c20f2e30cd255002a2bc4d0fdd77bb570d928e062dd4e4b"
+    }
+  }
+}
