@@ -1,0 +1,6 @@
+Compiler cache stats:
+
+Cache directory: /out/offline-cache/
+Version    Hits    Misses    Hit Rate
+1         2923    1903      60.57%
+

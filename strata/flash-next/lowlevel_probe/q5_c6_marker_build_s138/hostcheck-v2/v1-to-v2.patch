@@ -1,0 +1,41 @@
+--- V1/host_check.py
++++ V2/host_check.py
+@@ -12,18 +12,28 @@
+ assert len(heads)==1,heads
+ asm=run(['objdump','-drw','--disassemble='+heads[0]['raw'],str(obj)]);(out/'native-head.asm').write_text(asm)
+ # Actual readelf metadata resolves only .LC symbols referenced by this HOST body.
+-sections={}
++sections={};section_names={}
+ for line in run(['readelf','-W','-S',str(obj)]).splitlines():
+- m=re.match(r'\s*\[\s*(\d+)\]\s+\S+\s+\S+\s+[0-9a-fA-F]+\s+([0-9a-fA-F]+)\s+([0-9a-fA-F]+)',line)
+- if m:sections[int(m[1])]=(int(m[2],16),int(m[3],16))
+-needed=set(re.findall(r'(?<!\w)(\.LC\d+)(?!\d)',asm));strings=[]
++ m=re.match(r'\s*\[\s*(\d+)\]\s+(\S+)\s+\S+\s+[0-9a-fA-F]+\s+([0-9a-fA-F]+)\s+([0-9a-fA-F]+)',line)
++ if m:
++  sections[int(m[1])]=(int(m[3],16),int(m[4],16));section_names[m[2]]=int(m[1])
++needed=set(re.findall(r'(?<!\w)(\.LC\d+)(?!\d)',asm));strings=[];targets={}
++# Actual observed native HOST form: R_X86_64_32 .rodata.str1.1+0xOFFSET.
++# Absolute relocations encode section offset directly; no PC-relative bias guess.
++for kind,name,add in re.findall(r'\b(R_X86_64_(?:32S?|64))\s+(\.rodata[\w.]*)([+-]0x[0-9a-fA-F]+)?',asm):
++ assert name in section_names,name
++ sec=section_names[name];value=int(add,0)if add else 0
++ targets[(sec,value)]={'reference':name+(add or ''),'relocation':kind}
++# .LC symbol fallback remains for toolchains that expose those labels.
++for line in run(['readelf','-W','-s',str(obj)]).splitlines():
++ a=line.split()
++ if len(a)>=8 and a[0].endswith(':')and a[7]in needed and a[6].isdigit():
++  targets[(int(a[6]),int(a[1],16))]={'reference':a[7],'relocation':'LC_SYMBOL_VALUE'}
+ with obj.open('rb')as stream:
+- for line in run(['readelf','-W','-s',str(obj)]).splitlines():
+-  a=line.split()
+-  if len(a)>=8 and a[0].endswith(':')and a[7]in needed and a[6].isdigit():
+-   sec=int(a[6]);value=int(a[1],16);offset,size=sections[sec];assert value<size
+-   stream.seek(offset+value);text=stream.read(min(512,size-value)).split(b'\0',1)[0].decode('ascii')
+-   if text.startswith('strata Q5 head runtime ones'):strings.append(dict(symbol=a[7],section=sec,value=value,text=text))
++ for (sec,value),reference in targets.items():
++  offset,size=sections[sec];assert 0<=value<size,(sec,value,size)
++  stream.seek(offset+value);text=stream.read(min(512,size-value)).split(b'\0',1)[0].decode('ascii')
++  if text.startswith('strata Q5 head runtime ones'):strings.append(dict(**reference,section=sec,value=value,text=text))
+ expected=['strata Q5 head runtime ones: enabled=1 word=01010101 N=2560 M=248320 C=2 RPW=1 host-selection-only\n','strata Q5 head runtime ones C6: enabled=1 word=01010101 N=2560 M=248320 C=6 RPW=1 host-selection-only\n']
+ assert sorted(x['text']for x in strings)==sorted(expected),strings
+ logs={key:[x for x in syms if x['name'].startswith('guard variable for strata::kernels::native_mmvq_head(')and x['name'].endswith('::'+key)]for key in ('logged','logged_c6')}

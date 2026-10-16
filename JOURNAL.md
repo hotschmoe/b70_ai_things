@@ -25593,3 +25593,23 @@ requiring only demonstrated-defect HOST references/guards/Info check
 before new GPU reload, no broad ISA/image certification or CPU repeat.
 Then fresh same-NEW-binary strict arms; no retroactive HOLD waiver. See
 docs/20261016_strata_sycl_sibling_static_marker.md.
+
+
+## 2026-10-16 S138: corrected C6 host marker build
+
+CONFIG -> Only the reviewed C6 local identifier changes; native source
+e25708bf->dd08daf5. Math, parser, launch and C2/OFF source stay exact.
+
+COMMAND -> One CPU-leased existing-config incremental e41 build, no DRI,
+three actions; separate required narrow host-reference check before GPU.
+V1 checker relocation assumption was corrected before execution, no retry.
+
+RESULT -> Build0/99.832075s, Ninja90.933s: native57.886/archive0.299/
+link32.713s. Cache +1609hits/0misses; main6b37aef7. Host check0/0.249s:
+C2 guard68->C2 literal2a42/99bytes; C6 guard78->C6 literal2b9a/102bytes;
+word/parser/Info stay distinct. Root read actual two host blocks/facts.
+
+VERDICT -> Required host-marker correction PASS; no device ISA/arithmetic
+proof or speed claim. S134 remains failed/null. Fresh same-new-binary
+serving is a separate stage. No broad optional CPU audit or rebuild. See
+docs/20261016_strata_q5_c6_marker_build.md.

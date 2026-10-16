@@ -1,0 +1,35 @@
+{
+  "status": "S138_CPU_BUILD_AND_REQUIRED_NARROW_HOST_CHECK_PASS_NO_GPU_RESULT",
+  "source": "Root completion message plus copied actual execution/build/host receipts. Timings below are root-reported last3 Ninja rows; raw full Ninja log not copied or newly parsed.",
+  "build_elapsed_s": 99.83207536296686,
+  "Ninja_s": 90.933,
+  "native_compile_s": 57.886,
+  "archive_s": 0.299,
+  "main_link_s": 32.713,
+  "required_hostcheck_s_root_reported": 0.249,
+  "build_exit": 0,
+  "tee_exit": 0,
+  "configured": false,
+  "retried": false,
+  "V1_LC_only_checker_executed": false,
+  "persistent_offline_cache_delta": {
+    "hits": 1609,
+    "misses": 0
+  },
+  "compiled_GPU_or_device_identity_claim": false,
+  "review_reference": {
+    "commit": "a214916e",
+    "subtree": "../q5_sibling_static_s137/actual-source-reviews/",
+    "actual_models": [
+      "claude-opus-5-5",
+      "claude-fable-5-1"
+    ],
+    "scope": "Both source/main-build GO conditioned on actual narrow host check; full replies not duplicated."
+  },
+  "limitations": [
+    "S134 marker failure remains unchanged.",
+    "Static host C2/C6 references prove corrected marker binding only, not GPU dispatch/device arithmetic identity.",
+    "Different build inputs/cache histories prevent causal build speed or population claims.",
+    "Future S139 serving outcome is not consumed or claimed here."
+  ]
+}

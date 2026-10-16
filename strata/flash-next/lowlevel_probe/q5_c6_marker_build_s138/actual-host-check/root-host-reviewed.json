@@ -1,0 +1,29 @@
+{
+  "status": "PASS_REQUIRED_NARROW_NATIVE_HOST_MARKER_BINDING",
+  "root_full_facts_and_both_logging_blocks_read": true,
+  "C2": {
+    "guard_bss": "0x68",
+    "marker_section_offset": "0x2a42",
+    "fwrite_bytes": 99
+  },
+  "C6": {
+    "guard_bss": "0x78",
+    "marker_section_offset": "0x2b9a",
+    "fwrite_bytes": 102
+  },
+  "parser_word_guards_distinct": [
+    "0x368",
+    "0x388"
+  ],
+  "KernelInfo_distinct": [
+    "0x10e08",
+    "0x11020"
+  ],
+  "actual_new_EXE_sha256": "6b37aef71607a4217192165523f413063c03d5a3cf042c6dd1031800ca2a6eb2",
+  "actual_new_native_object_sha256": "98d502efe4007fbcf82ba5199cdb10c0e0de425da9a8f90ea9be16ca962c5dd6",
+  "V1_LC_only_checker_not_run": true,
+  "V2_actual_section_addend_checker_exit": 0,
+  "facts_sha256": "77a3e7aae8a2d3fe5c69a15d58d190050df4d692d69e281f26a216dfe8a68665",
+  "GPU_dispatch_or_device_ISA_proof": false,
+  "S134_not_requalified": true
+}

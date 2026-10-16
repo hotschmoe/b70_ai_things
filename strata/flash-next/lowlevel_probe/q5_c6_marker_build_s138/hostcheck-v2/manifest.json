@@ -1,0 +1,18 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NO_EXECUTION",
+  "V1_sha256": "f7f6f91154e8551536d9df077dce0e50847c1740b1eb6baf6d11186fb8222f78",
+  "files": {
+    "README.md": {
+      "bytes": 899,
+      "sha256": "7ac72e76d32b0f18b9597da73cc605f21dafd0a88d65b08bfdd93bc32717ff8e"
+    },
+    "host_check.py": {
+      "bytes": 3916,
+      "sha256": "0f4a126429051cf1a497df9cf171f30b2368375139d748d3dcffedc58f4c86e4"
+    },
+    "v1-to-v2.patch": {
+      "bytes": 2915,
+      "sha256": "432a65fc508438dc5341936aa32e27553c7157cd962fe120096d11fcaceed35a"
+    }
+  }
+}

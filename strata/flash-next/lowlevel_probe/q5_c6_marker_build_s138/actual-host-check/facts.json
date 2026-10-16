@@ -1,0 +1,108 @@
+{
+  "status": "PASS_TWO_HOST_MARKER_REFERENCES_AND_DISTINCT_GUARDS",
+  "selected_host_symbol": {
+    "address": "0000000000067f90",
+    "kind": "T",
+    "raw": "_ZN6strata7kernels16native_mmvq_headEiPKvS2_PfiiiPv",
+    "name": "strata::kernels::native_mmvq_head(int, void const*, void const*, float*, int, int, int, void*)"
+  },
+  "referenced_marker_strings": [
+    {
+      "reference": ".rodata.str1.1+0x2a42",
+      "relocation": "R_X86_64_32",
+      "section": 287,
+      "value": 10818,
+      "text": "strata Q5 head runtime ones: enabled=1 word=01010101 N=2560 M=248320 C=2 RPW=1 host-selection-only\n"
+    },
+    {
+      "reference": ".rodata.str1.1+0x2b9a",
+      "relocation": "R_X86_64_32",
+      "section": 287,
+      "value": 11162,
+      "text": "strata Q5 head runtime ones C6: enabled=1 word=01010101 N=2560 M=248320 C=6 RPW=1 host-selection-only\n"
+    }
+  ],
+  "logging_guards": {
+    "logged": [
+      {
+        "address": "0000000000000068",
+        "kind": "b",
+        "raw": "_ZGVZN6strata7kernels16native_mmvq_headEiPKvS2_PfiiiPvE6logged",
+        "name": "guard variable for strata::kernels::native_mmvq_head(int, void const*, void const*, float*, int, int, int, void*)::logged"
+      }
+    ],
+    "logged_c6": [
+      {
+        "address": "0000000000000078",
+        "kind": "b",
+        "raw": "_ZGVZN6strata7kernels16native_mmvq_headEiPKvS2_PfiiiPvE9logged_c6",
+        "name": "guard variable for strata::kernels::native_mmvq_head(int, void const*, void const*, float*, int, int, int, void*)::logged_c6"
+      }
+    ]
+  },
+  "parser_guards": {
+    "q5_head_runtime_ones_word": [
+      {
+        "address": "0000000000000368",
+        "kind": "b",
+        "raw": "_ZGVZN6strata7kernels12_GLOBAL__N_125q5_head_runtime_ones_wordEvE4word",
+        "name": "guard variable for strata::kernels::(anonymous namespace)::q5_head_runtime_ones_word()::word"
+      }
+    ],
+    "q5_head_runtime_ones_c6_word": [
+      {
+        "address": "0000000000000388",
+        "kind": "b",
+        "raw": "_ZGVZN6strata7kernels12_GLOBAL__N_128q5_head_runtime_ones_c6_wordEvE4word",
+        "name": "guard variable for strata::kernels::(anonymous namespace)::q5_head_runtime_ones_c6_word()::word"
+      }
+    ]
+  },
+  "kernel_info_symbols": {
+    "c2": [
+      {
+        "address": "0000000000000378",
+        "kind": "b",
+        "raw": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_131native_mmvq_q5k_runtime_ones_c2EEEEERNS1_16DeviceKernelInfoEvE4Info",
+        "name": "guard variable for sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::(anonymous namespace)::native_mmvq_q5k_runtime_ones_c2> >()::Info"
+      },
+      {
+        "address": "0000000000010e08",
+        "kind": "r",
+        "raw": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_131native_mmvq_q5k_runtime_ones_c2EEEEE",
+        "name": "sycl::_V1::detail::compile_time_kernel_info_v1::CompileTimeKernelInfo<dpct_kernel_name<strata::kernels::(anonymous namespace)::native_mmvq_q5k_runtime_ones_c2> >"
+      },
+      {
+        "address": "0000000000000370",
+        "kind": "b",
+        "raw": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_131native_mmvq_q5k_runtime_ones_c2EEEEERNS1_16DeviceKernelInfoEvE4Info",
+        "name": "sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::(anonymous namespace)::native_mmvq_q5k_runtime_ones_c2> >()::Info"
+      }
+    ],
+    "c6": [
+      {
+        "address": "0000000000000398",
+        "kind": "b",
+        "raw": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_131native_mmvq_q5k_runtime_ones_c6EEEEERNS1_16DeviceKernelInfoEvE4Info",
+        "name": "guard variable for sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::(anonymous namespace)::native_mmvq_q5k_runtime_ones_c6> >()::Info"
+      },
+      {
+        "address": "0000000000011020",
+        "kind": "r",
+        "raw": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_131native_mmvq_q5k_runtime_ones_c6EEEEE",
+        "name": "sycl::_V1::detail::compile_time_kernel_info_v1::CompileTimeKernelInfo<dpct_kernel_name<strata::kernels::(anonymous namespace)::native_mmvq_q5k_runtime_ones_c6> >"
+      },
+      {
+        "address": "0000000000000390",
+        "kind": "b",
+        "raw": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_131native_mmvq_q5k_runtime_ones_c6EEEEERNS1_16DeviceKernelInfoEvE4Info",
+        "name": "sycl::_V1::detail::getDeviceKernelInfo<dpct_kernel_name<strata::kernels::(anonymous namespace)::native_mmvq_q5k_runtime_ones_c6> >()::Info"
+      }
+    ]
+  },
+  "kernel_info_status": {
+    "c2": "OBSERVED",
+    "c6": "OBSERVED"
+  },
+  "limits": "Static native HOST body/metadata only; root must read native-head.asm. No GPU dispatch or device math/ISA proof."
+}

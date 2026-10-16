@@ -1,0 +1,5 @@
+{
+  "status": "PASS_ALL_EXISTING_CACHE_AND_COMPILE_EDGES_UNCHANGED",
+  "compile_edges": 168,
+  "only_new_cache": "STRATA_SYCL_AOT_CACHE_DIR:PATH=/out/offline-cache"
+}

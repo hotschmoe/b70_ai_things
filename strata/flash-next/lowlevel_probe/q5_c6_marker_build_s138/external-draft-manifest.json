@@ -1,0 +1,197 @@
+{
+  "status": "FROZEN_S138_CPU_BUILD_REQUIRED_HOST_CHECK_PASS_ONLY",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q5-c6-marker-s138-curation-draft",
+  "file_count": 47,
+  "total_bytes": 152028,
+  "files": {
+    "20261016_strata_q5_c6_marker_build.md": {
+      "bytes": 3301,
+      "sha256": "390df019514d7e14879f9ad02edba8c8d54e12f7b24b436cac3f478f8c71399e"
+    },
+    "payload/README.md": {
+      "bytes": 1070,
+      "sha256": "5da82fffa6b73a0c15bd8ec1c32eaed2522ca379b36f70055854f7f51dd47bc5"
+    },
+    "payload/actual-host-check/facts.json": {
+      "bytes": 5060,
+      "sha256": "77a3e7aae8a2d3fe5c69a15d58d190050df4d692d69e281f26a216dfe8a68665"
+    },
+    "payload/actual-host-check/native-head.asm": {
+      "bytes": 69141,
+      "sha256": "99e0613be33d3d42dc17b67bf16749f7c9d40ec75469d9b90e1dc09b88277fdd"
+    },
+    "payload/actual-host-check/root-host-reviewed.json": {
+      "bytes": 900,
+      "sha256": "f314b0405a85d2fca55d3d9c388538417c2319ce14ff4547a47c49ec9ddc2151"
+    },
+    "payload/apply.json": {
+      "bytes": 511,
+      "sha256": "1f8717548ffb2e158156d769bd3dc0a972803bf1e4c875aab76f73c5b9fe3262"
+    },
+    "payload/build-recipe/build-container.sh": {
+      "bytes": 1970,
+      "sha256": "8ba5b7e28c5fdc57e56bcae7be70bbcfabacd1dae27e0c1de44f808359498c82"
+    },
+    "payload/build-recipe/build.sh": {
+      "bytes": 2319,
+      "sha256": "236b03e0c3844634655a41bc2983d0cdb23168870af80cf1d005d0cebc656b9f"
+    },
+    "payload/build-recipe/expected-applied-source.sha256": {
+      "bytes": 432,
+      "sha256": "66fd8171a97b6395b56e90db4d3c4cbf010f63d5b484214dc9392ef136fbd915"
+    },
+    "payload/build-recipe/expected-build-state.sha256": {
+      "bytes": 338,
+      "sha256": "781b883830971a1dd742c6a0a2a7ebac3aa82c71c9abe9d38714061c91f63695"
+    },
+    "payload/build-recipe/expected-unchanged-source.sha256": {
+      "bytes": 2987,
+      "sha256": "f2d4e274f8d8a451d745f9a1eea120ebae1eab7751c69b2b8c757d89c6c039e4"
+    },
+    "payload/build-recipe/guard.py": {
+      "bytes": 3199,
+      "sha256": "ccdf9f2964ddb896cc06c20fbe3723ddce8cd19604f3299a3539678724b1244c"
+    },
+    "payload/build-recipe/prior-configured-guards.json": {
+      "bytes": 167,
+      "sha256": "69b75dc7d2493d82f432048472c1ebb683392c472834a11fbe53e01b24db6f2d"
+    },
+    "payload/build-recipe/root-disposition.json": {
+      "bytes": 482,
+      "sha256": "1e975a9a74cccccadb95309635fc8ab45bfb165cf52fbd67b5a4c8e3c1087d66"
+    },
+    "payload/build-recipe/root-wrapper-delta.patch": {
+      "bytes": 896,
+      "sha256": "592c7a6773d894be6c82c63457ebd9391abb8f3e019a7e5081081f5ccfa5b1c1"
+    },
+    "payload/build-recipe/vs-s133-build.patch": {
+      "bytes": 2869,
+      "sha256": "ce3d6bb3a61ef34f0436899f4e52136df237ffa6fbe712eda7419929851ff61e"
+    },
+    "payload/build-result/applied-source-before.sha256": {
+      "bytes": 432,
+      "sha256": "66fd8171a97b6395b56e90db4d3c4cbf010f63d5b484214dc9392ef136fbd915"
+    },
+    "payload/build-result/build-environment.json": {
+      "bytes": 369,
+      "sha256": "bb1b327dfc4ca4f5d3a9a51c8097403daddf3ffc543d9357dd2c73f97a9a1193"
+    },
+    "payload/build-result/build-sha256.txt": {
+      "bytes": 1073,
+      "sha256": "c55c4eed88a1e0eb72782ca07d5d8a1bbce580336c5c2f7da1fc2b0290aeefd2"
+    },
+    "payload/build-result/build.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "payload/build-result/build.log": {
+      "bytes": 5304,
+      "sha256": "c65ca6e04b1f396a408c2f5834e8e5109bfec942045bada1c0dcf5d7dc5bd8cd"
+    },
+    "payload/build-result/cache-after.json": {
+      "bytes": 203,
+      "sha256": "6deb905f31215f8020a75c42247a4d29e4c28f6577a173140e5712fae4e36662"
+    },
+    "payload/build-result/cache-after.txt": {
+      "bytes": 134,
+      "sha256": "72f09675b8cdcc53a1cb177db0097d0e15430c0480a6e648bc90f38d47a62afc"
+    },
+    "payload/build-result/cache-before.json": {
+      "bytes": 203,
+      "sha256": "cd7b81636cd815eb404206b9a9227a379a58aa929f4711f43da80a4ac43b2239"
+    },
+    "payload/build-result/cache-before.txt": {
+      "bytes": 134,
+      "sha256": "307d812318b65d85ebf3f5dbd057dcb80ae8725896bbfb6b7b8e281af23844f8"
+    },
+    "payload/build-result/cache-ownership.json": {
+      "bytes": 146,
+      "sha256": "1636f6c515bd8839b5115e6e4aecbc1a4fcd4c7cddd5d8b0f036678c563163e4"
+    },
+    "payload/build-result/command.txt": {
+      "bytes": 927,
+      "sha256": "22fc30ece1744c312b0dfa791adb6cefde252c196d2ed25a453a6292ac6d55ba"
+    },
+    "payload/build-result/compiler-version.txt": {
+      "bytes": 257,
+      "sha256": "06b5b1015f3c581440fb4cf00258edc0db8d98696ca3252cf69045e1f8c283d4"
+    },
+    "payload/build-result/configured-guards-reused.json": {
+      "bytes": 167,
+      "sha256": "69b75dc7d2493d82f432048472c1ebb683392c472834a11fbe53e01b24db6f2d"
+    },
+    "payload/build-result/image.json": {
+      "bytes": 6858,
+      "sha256": "41e0211327fe8f37eddc76cbae832da821d74ee637e1e850ca422aa23f5e301d"
+    },
+    "payload/build-result/ninja-plan.txt": {
+      "bytes": 4800,
+      "sha256": "881b296252764ca2521967227abcba036a1bbc6176a524fea92132b3c5b4c17e"
+    },
+    "payload/build-result/ninja.stderr-time": {
+      "bytes": 33,
+      "sha256": "b50acc9f62de5e918267469e6ffd8faf111847b510b389c1eb04f8dda8642f55"
+    },
+    "payload/build-result/ownership-before.json": {
+      "bytes": 890,
+      "sha256": "9dce5d88956a39a5ae2f585d57065b9a8dcb1b71b02b60ebce9f35dbe48f1e99"
+    },
+    "payload/build-result/root-validated-plan.json": {
+      "bytes": 905,
+      "sha256": "b692e64310c79371a0c35525a48ebcced730ef9edd947745a78066dc59e74d01"
+    },
+    "payload/build-result/tee.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "payload/execution.json": {
+      "bytes": 621,
+      "sha256": "4769e00b7b73d9773a16cd5d1eb1a0e35703333264b915154b75e82d3d21ea56"
+    },
+    "payload/hostcheck-v2/README.md": {
+      "bytes": 899,
+      "sha256": "7ac72e76d32b0f18b9597da73cc605f21dafd0a88d65b08bfdd93bc32717ff8e"
+    },
+    "payload/hostcheck-v2/host_check.py": {
+      "bytes": 3916,
+      "sha256": "0f4a126429051cf1a497df9cf171f30b2368375139d748d3dcffedc58f4c86e4"
+    },
+    "payload/hostcheck-v2/manifest.json": {
+      "bytes": 548,
+      "sha256": "5d159605f866b81458f900ab8c216fc4b43311ea7347adebfd5ad3225369d020"
+    },
+    "payload/hostcheck-v2/v1-to-v2.patch": {
+      "bytes": 2915,
+      "sha256": "432a65fc508438dc5341936aa32e27553c7157cd962fe120096d11fcaceed35a"
+    },
+    "payload/preexecution-v1-host-check.py": {
+      "bytes": 3246,
+      "sha256": "f7f6f91154e8551536d9df077dce0e50847c1740b1eb6baf6d11186fb8222f78"
+    },
+    "payload/root-build-summary.json": {
+      "bytes": 1363,
+      "sha256": "c20da90a5df842490e460991d4a8410aa20c6f418b75ed2ded6a594577f4728d"
+    },
+    "payload/source/candidate.patch": {
+      "bytes": 736,
+      "sha256": "7ec63db37235dca07f8a0858791b1cd54a756fc610f3357ab50b6df0ab2c953f"
+    },
+    "payload/source/inverse.patch": {
+      "bytes": 736,
+      "sha256": "e5ec906b158812ab97ed3bfa013166628d1cbd66ad668827de451c4dc85ca9ff"
+    },
+    "payload/source/reference-pins.json": {
+      "bytes": 751,
+      "sha256": "7a6ae0a34325107afb68a4bf42bd26d233579b13563e3f481c37657dbb14ad3e"
+    },
+    "payload/source/source-projection.json": {
+      "bytes": 1079,
+      "sha256": "f46e37ff8f78fb90feb95ded849285a558ba772a7e4d11c9761c194d028efb3d"
+    },
+    "source-copy-index.json": {
+      "bytes": 16737,
+      "sha256": "68d2f4a3f20c0d9dc27b89c46b11965e73403a6d9dbbc608d6b6abdef160a082"
+    }
+  },
+  "scope": "No curator compiler/GPU/model run, no large-artifact rehash; no S139 outcome consumed."
+}

@@ -1,0 +1,39 @@
+--- S133/build.sh
++++ S138/build.sh
+@@ -29,7 +29,7 @@
+ import json,sys
+ assert json.load(open(sys.argv[1]))[0]['Id']==sys.argv[2]
+ PY
+-cmd=(env B70_CPU_LOCK_TIMEOUT=0 B70_AGENT=S133-C6-native-only "$REPO/bin/cpu-run" env MAX_JOBS=4 docker run --rm --network none --cpus 4 -u "1000:$(id -g)" \
++cmd=(env B70_CPU_LOCK_TIMEOUT=0 B70_AGENT=S138-C6-marker-identifier "$REPO/bin/cpu-run" env MAX_JOBS=4 docker run --rm --network none --cpus 4 -u "1000:$(id -g)" \
+  -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_DIR=/out/cache \
+  -e SYCL_CACHE_PERSISTENT=0 -e NEO_CACHE_PERSISTENT=1 -e NEO_CACHE_DIR=/out/offline-cache -e NEO_CACHE_STATS=1 \
+  -e MAX_JOBS=4 -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 \
+--- S133/build-container.sh
++++ S138/build-container.sh
+@@ -26,7 +26,15 @@
+ sha256sum -c /prep/expected-unchanged-source.sha256
+ sha256sum -c /prep/expected-build-state.sha256
+ python3 /prep/guard.py cache-after
+-cp --reflink=auto strata /out/strata-s133
++cp --reflink=auto strata /out/strata-s138
+ # Exactly the new main/native object/kernel archive hash once, plus tiny bindings.
+-sha256sum /out/strata-s133 CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o libstrata_kernels.a /work/src-ep/sycl/CMakeLists.txt /work/src-ep/sycl/src/core/mtp.cpp /work/src-ep/sycl/include/strata/core/mtp.hpp /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp CMakeCache.txt build.ninja CMakeFiles/rules.ninja ggml/src/ggml-version.h > /out/build-sha256.txt
++sha256sum /out/strata-s138 CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o libstrata_kernels.a /work/src-ep/sycl/CMakeLists.txt /work/src-ep/sycl/src/core/mtp.cpp /work/src-ep/sycl/include/strata/core/mtp.hpp /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp CMakeCache.txt build.ninja CMakeFiles/rules.ninja ggml/src/ggml-version.h > /out/build-sha256.txt
+ cat /out/build-sha256.txt
++
++# Tiny native HOST marker/guard evidence only; no GPU/ISA/image audit.
++set +e
++python3 /prep/host_check.py CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o /out/native-hostcheck > /out/native-hostcheck.log 2>&1
++host_rc=$?
++set -e
++printf '%s\n' "$host_rc" > /out/native-hostcheck.exit
++[[ $host_rc == 0 ]]
+--- S133/expected-applied-source.sha256
++++ S138/expected-applied-source.sha256
+@@ -1,4 +1,4 @@
+ 66726a2abf0f2374ece12bd802ef4ebdad40bada27290a7afb480c849063cb23  /work/src-ep/sycl/CMakeLists.txt
+ 452a051e3a2219d0c6a00c8cdf795b798e763fcc793fbbb4dff1b4dda7903aff  /work/src-ep/sycl/src/core/mtp.cpp
+ e6314c05da00d175ae2990a5157bc24d3bea16602afa2138858eaee77200dbdd  /work/src-ep/sycl/include/strata/core/mtp.hpp
+-e25708bf5fcd6c4be0e189db415ac6031ba51d443f51723a39c5d9304ceb82ed  /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp
++dd08daf548eab9ab69375ed1702dfa85214bd1431e9957126d12eea51ed569d1  /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp

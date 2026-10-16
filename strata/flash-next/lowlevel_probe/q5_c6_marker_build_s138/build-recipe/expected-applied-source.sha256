@@ -1,0 +1,4 @@
+66726a2abf0f2374ece12bd802ef4ebdad40bada27290a7afb480c849063cb23  /work/src-ep/sycl/CMakeLists.txt
+452a051e3a2219d0c6a00c8cdf795b798e763fcc793fbbb4dff1b4dda7903aff  /work/src-ep/sycl/src/core/mtp.cpp
+e6314c05da00d175ae2990a5157bc24d3bea16602afa2138858eaee77200dbdd  /work/src-ep/sycl/include/strata/core/mtp.hpp
+dd08daf548eab9ab69375ed1702dfa85214bd1431e9957126d12eea51ed569d1  /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp

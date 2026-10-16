@@ -1,0 +1,8 @@
+{
+  "status": "BUILD_ONLY_HOST_CHECK_REQUIRED_SEPARATELY",
+  "reason": "Before execution root saw actual S137 host uses section-plus-addend relocations; V1 .LC-only script predictably cannot resolve them. Omit automatic check; source/build policy unchanged. New checked helper or manual selected-function read follows build before GPU.",
+  "V1_checker_run": false,
+  "host_check_pass_claimed": false,
+  "source_build_3_actions_unchanged": true,
+  "automatic_rebuild_retry": false
+}

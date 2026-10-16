@@ -1,0 +1,12 @@
+{
+  "status": "APPLIED_TWO_IDENTIFIER_HOST_FIX",
+  "before_sha256": "e25708bf5fcd6c4be0e189db415ac6031ba51d443f51723a39c5d9304ceb82ed",
+  "after_sha256": "dd08daf548eab9ab69375ed1702dfa85214bd1431e9957126d12eea51ed569d1",
+  "patch_sha256": "7ec63db37235dca07f8a0858791b1cd54a756fc610f3357ab50b6df0ab2c953f",
+  "actual_model_GO": {
+    "claude-opus-5-5": 45.326264945964795,
+    "claude-fable-5-1": 30.869940494012553
+  },
+  "device_math_launch_policy_source_unchanged": true,
+  "S134_failure_preserved": true
+}

@@ -1,0 +1,14 @@
+--- S138-V1/build-container.sh
++++ S138-root/build-container.sh
+@@ -31,10 +31,4 @@
+ sha256sum /out/strata-s138 CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o libstrata_kernels.a /work/src-ep/sycl/CMakeLists.txt /work/src-ep/sycl/src/core/mtp.cpp /work/src-ep/sycl/include/strata/core/mtp.hpp /work/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp CMakeCache.txt build.ninja CMakeFiles/rules.ninja ggml/src/ggml-version.h > /out/build-sha256.txt
+ cat /out/build-sha256.txt
+ 
+-# Tiny native HOST marker/guard evidence only; no GPU/ISA/image audit.
+-set +e
+-python3 /prep/host_check.py CMakeFiles/strata_kernels.dir/src/kernels/cuda/native_mmvq.dp.cpp.o /out/native-hostcheck > /out/native-hostcheck.log 2>&1
+-host_rc=$?
+-set -e
+-printf '%s\n' "$host_rc" > /out/native-hostcheck.exit
+-[[ $host_rc == 0 ]]
++# Root performs required narrow HOST check separately before GPU reload.
