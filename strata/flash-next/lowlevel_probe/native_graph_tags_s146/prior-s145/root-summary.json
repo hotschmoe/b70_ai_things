@@ -1,0 +1,75 @@
+{
+  "status": "PASS_PRIVATE_STRICT_ONLY",
+  "closure": {
+    "status": "PASS_PRIVATE_STRICT_AND_NORMAL_HEALTH",
+    "pre_health_exit": 0,
+    "post_health_exit": 0,
+    "native_exit": 0,
+    "identity_equal": true,
+    "CID_absent": true,
+    "name_absent": true,
+    "normal_wait_rm": true,
+    "analysis": "comparison.json",
+    "retries": 0,
+    "serving_or_speed_qualified": false
+  },
+  "all_samples_us": [
+    [
+      1199.487,
+      1186.632,
+      1180.921,
+      1195.79
+    ],
+    [
+      861.262,
+      885.659,
+      879.627,
+      882.462
+    ]
+  ],
+  "median_us": [
+    1191.211,
+    881.0445
+  ],
+  "change_of_medians_percent": -26.037914357741833,
+  "saved_digest_freshness_checks": [
+    {
+      "pair": 1,
+      "kind": "eager",
+      "A_restored": true,
+      "B_changed": true
+    },
+    {
+      "pair": 1,
+      "kind": "continuation-eager",
+      "A_restored": true,
+      "B_changed": true
+    },
+    {
+      "pair": 2,
+      "kind": "eager",
+      "A_restored": true,
+      "B_changed": true
+    },
+    {
+      "pair": 2,
+      "kind": "continuation-eager",
+      "A_restored": true,
+      "B_changed": true
+    },
+    {
+      "pair": 3,
+      "kind": "eager",
+      "A_restored": true,
+      "B_changed": true
+    },
+    {
+      "pair": 3,
+      "kind": "continuation-eager",
+      "A_restored": true,
+      "B_changed": true
+    }
+  ],
+  "digest_not_numeric_comparator": true,
+  "root_full_read_source_projection_V2_delta_comparison_closure": true
+}

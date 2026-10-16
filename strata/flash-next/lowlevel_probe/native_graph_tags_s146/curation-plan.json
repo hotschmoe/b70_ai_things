@@ -1,0 +1,55 @@
+{
+  "status": "PLANNED_NOT_CURATED_RUNTIME_PENDING",
+  "intended_external_payload": "/mnt/vm_8tb/b70/results/native-tags-gdn-s146-curation",
+  "intended_doc": "20261016_strata_native_graph_tag_method.md",
+  "source_index": "source-index.json",
+  "runtime_not_read": true,
+  "pending_runtime_sources": [
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/identity-before.json",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/pre-health-reuse.json",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/leaf-command.json",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/leaf.stdout",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/leaf.stderr",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/leaf.exit",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/elapsed.json",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/analysis-command.json",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/analysis.exit",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/analysis.stdout",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/analysis.stderr",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/comparison.json",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/created.json",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/final-state.json",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/normal-wait.exit",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/normal-wait.stdout",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/normal-rm.exit",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/enumeration.json",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/removal.json",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/post-health-command.json",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/post-health.exit",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/post-health.stdout",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/post-health.stderr",
+    "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/native-tags-gdn-s146-run/closure.json"
+  ],
+  "pending_root_sources": [
+    "root command/phase records for handle41344",
+    "root final decision and optional actual model post-review answers/filtered completion receipts, only after root announces closure"
+  ],
+  "doc_contract": [
+    "CONFIG -> COMMAND -> RESULT -> VERDICT",
+    "Record actual supported/unsupported result without automatic fallback or retry.",
+    "Native3 only exact unsupported status + absence of fixture; native0 requires all eight checked rows.",
+    "Inherited S145 full numeric PASS is precondition; final state/read-only/guard/sentinel checks retained every S146 row.",
+    "No new device AOT; same images plus new host adapter; receipt identity, not an all-image audit claim.",
+    "Two event timestamps bracket device envelope of whole graph; no per-op occupancy/readiness causality, CPU/GPU clock join or serving gain.",
+    "Keep all eight samples and distinguish host submission, completed host chain and device envelope.",
+    "Native/API/strict failure preserves abnormal receipt and requires root decision before health.",
+    "Reuse preceding sameboot S145 post-health only with explicit root no-intervening-GPU attestation; actual S146 post-health still required."
+  ],
+  "excluded": [
+    "binary/object/archive/image copies",
+    "large link map copy",
+    "raw trace/profiler framework",
+    "new work or tests",
+    "runtime claims before root closure"
+  ]
+}

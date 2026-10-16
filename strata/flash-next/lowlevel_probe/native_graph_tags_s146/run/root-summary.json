@@ -1,0 +1,123 @@
+{
+  "status": "PASS_S146_NATIVE_TAG_METHOD_ONLY",
+  "cells": [
+    {
+      "arm": 0,
+      "tags": false,
+      "n": 2,
+      "completed_host_chain_us": {
+        "all": [
+          1186.893,
+          1190.98
+        ],
+        "median": 1188.9365,
+        "range": [
+          1186.893,
+          1190.98
+        ]
+      },
+      "host_graph_submit_us": {
+        "all": [
+          89.771,
+          92.867
+        ],
+        "median": 91.319,
+        "range": [
+          89.771,
+          92.867
+        ]
+      }
+    },
+    {
+      "arm": 0,
+      "tags": true,
+      "n": 2,
+      "completed_host_chain_us": {
+        "all": [
+          2099.813,
+          1949.597
+        ],
+        "median": 2024.705,
+        "range": [
+          1949.597,
+          2099.813
+        ]
+      },
+      "host_graph_submit_us": {
+        "all": [
+          321.483,
+          322.305
+        ],
+        "median": 321.894,
+        "range": [
+          321.483,
+          322.305
+        ]
+      },
+      "device_envelope_us": [
+        1351.615,
+        1355.989
+      ]
+    },
+    {
+      "arm": 1,
+      "tags": false,
+      "n": 2,
+      "completed_host_chain_us": {
+        "all": [
+          1058.398,
+          1027.739
+        ],
+        "median": 1043.0684999999999,
+        "range": [
+          1027.739,
+          1058.398
+        ]
+      },
+      "host_graph_submit_us": {
+        "all": [
+          94.51,
+          94.239
+        ],
+        "median": 94.37450000000001,
+        "range": [
+          94.239,
+          94.51
+        ]
+      }
+    },
+    {
+      "arm": 1,
+      "tags": true,
+      "n": 2,
+      "completed_host_chain_us": {
+        "all": [
+          2097.93,
+          1774.242
+        ],
+        "median": 1936.0859999999998,
+        "range": [
+          1774.242,
+          2097.93
+        ]
+      },
+      "host_graph_submit_us": {
+        "all": [
+          319.89,
+          321.193
+        ],
+        "median": 320.5415,
+        "range": [
+          319.89,
+          321.193
+        ]
+      },
+      "device_envelope_us": [
+        1039.792,
+        1028.125
+      ]
+    }
+  ],
+  "all8retained": true,
+  "scope": "One process/two observations per arm-tag cell, descriptive method result; device envelope not exclusive service/idle or host-clock join; S145 full strict campaign reused."
+}

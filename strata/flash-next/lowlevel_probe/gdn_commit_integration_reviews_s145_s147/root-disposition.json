@@ -1,0 +1,23 @@
+{
+  "status": "ROOT_ACCEPTED_S147_V2_CPU_BUILD_GO_CONDITIONAL_MATCHED_SERVING",
+  "root_full_read_both_actual_texts": true,
+  "accepted": [
+    "Source arithmetic/helper reuse, strides, fullrange/twoowners/sixrows3+3 domain checks and ownership/readiness reasoning.",
+    "One existing-config incremental build followed by fresh sameNEWbinary soleGDNflag0/1 serving with all other candidates0 and strict immediate output/work/capture/functionals/normalteardown/fullhealth."
+  ],
+  "rejected_or_qualified": [
+    "Both optional CPU-ring recommendations rejected: S142 was not matched ringON/OFF and establishes no negligible-overhead proof. Clean serving ring remains ABSENT, avoiding a new measurement/parser confound.",
+    "Fable 1.6ms bracket is not a universal savings bound; scopes/clocks/work vary and are not causally joined.",
+    "Strongest/launchcountclosed universal conclusions unsupported: this exact guarded candidate only; marker proves first host selection, not perwindow incidence or everylaunch.",
+    "Opus runtime mismatch would necessarily show in serving is too strong: bounded server observables do not prove all hidden state or allinput equivalence.",
+    "Source-preserved RAM/state layouts and ordering are not new runtime RAM-restore qualification; full200k/four-conversation campaign deferred to a selected winner.",
+    "S145 private26percent wholebundle is not a serving forecast or isolatedlaunchcount cause."
+  ],
+  "not_added": [
+    "new CPU ring to serving",
+    "new rawtrace parse",
+    "new model call",
+    "new hardware/compiledISA qualification claim"
+  ],
+  "source_status": "V2 no fixed issue in actual source reviews; future actual build/runtime receipts remain separate evidence."
+}

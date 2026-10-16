@@ -1,0 +1,381 @@
+ROOT DECISION CONTEXT: S147 newmain notbuilt/applied. S145 PASS_PRIVATE_STRICT_ONLY; all currenttestsnormalclosed. S144 matchedserving has no observedgain (-0.1021454683% aggregate change of medians), defaultOFF/park; no calibratednoise/regression/populationclaim. S14526.0379% is private completedHOSTwholebundle (batchgeometry+ordinarylaunch+privatecompile), no causal/count-onlyclaim or servingforecast.
+
+===== /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s147-main-source-prep-v2/review-packet.txt =====
+S147 V2 CRITICAL DEFAULT-OFF GDN MAIN SOURCE
+
+===== README.md =====
+# S147 V2 default-OFF GDN layer commit source (no apply/build/GPU)
+
+CONFIG -> Actual S145 private fullstate PASS:36layers/2owners/MT8/three proposed rows, accepted pairs(1,3)/(2,2)/(3,1), A/B/A eager/captured/235MBcompletebytes/finite/guards/readonly/snapshot-bytecontinuation/outputsentinel/normalhealth. That proof covers the private compiled bundle, not this future main build or all input/configurations. No serving-speed forecast from1191.211->881.0445us private whole-chain medians.
+
+COMMAND -> Root full source read then actual Opus/Fable decision before live apply/build. Two-file external patch only: sycl/src/core/verify.cpp and sycl/src/kernels/cuda/verify_kernels.dp.cpp. Existing public header declaration gdn_commit_layers unchanged. Exact inverse patch restores old bytes. No build wrapper/framework needed to assess critical source.
+
+Flag -> STRATA_GDN_COMMIT_LAYERS defaultOFF via existing env_on convention, process-constant before capture. OFF unset/'0'; ON '1'. Sole host marker (unique gdn_commit_layers_s147_logged):
+
+strata GDN commit layers: enabled=1 layers=36 owners=2 rows=3 host-selection-only
+
+Once per process, only after recording both eligible owner calls; startup capture allowed. No marker OFF/ineligible. Marker is host selection, not GPU execution/dispatch/resource proof.
+
+Eligibility -> Exactly full layer range[0,48),48layers/QSAinterval4 =>36GDN, state128/keyheads16/valueheads48/C10240/conv4/value6144, MT8/hbase0. Exactly6rows in two distinct contiguous groups3+3 at first0/3, valid slotindices. Each ownerSessionState full-range,gdn_ord0=0,gdn_alloc=36. Modes must be unset or literal SPLIT0/COMMIT_SPLIT1/DBG0 (anything else old fallback). No group1/2/4..8, layer split, alternate geometry or mode generalization. API implementation likewise returns false BEFORE launching for any non-tested dimensions/strides/modes; no alternate per-layer math selected implicitly.
+
+Before begin_recording -> Bounded7-span proof covers both complete117669888B owner GDN persistent ranges, entire qkv/h arrays each36*8*10240floats, gate/beta each36*8*48floats, and complete slots*10int32 devicecommitbuffer. Nonnull/nonzero,float alignment, checked uintptr end arithmetic and commit-size overflow; ALL7 spans pairwise disjoint. Source allocation/capacity comes from checked session gdn_alloc and verifier fixed-geometry arena allocation. Existing init_slots carving and stage_batch row/consecutive-position validation remain unchanged. No payload read or GPU query for these checks. Failed eligibility quietly retains exact old loop.
+
+Norm/error handling -> Eligible path checks EVERY GDN layer's ssm_norm.weight with the existing need(...,err), in layer order, BEFORE capture; a missing weight returns its existing error and no recording begins. Old path retains its original perlayer checks. Batched path skips only those already validated GDN calls while advancing gdn_index. If API eligibility unexpectedly changes mid-recording, mark capture invalid and use the existing end/delete failure path; NEVER record/replay owner0 batch plus fallback (no double commit). Existing graphcache key/lifetime and record/finalize cleanup remain.
+
+Math/launch -> New ordinary two-role wrapper uses EXISTING gdn_conv_commit_kernel and gdn_step_commit_kernel names directly: NO FP helper clones/changes. Projection records old helper and publiclauncher byte equality. Conv layer group1/local(1,1,256), state layergroup0/local(1,4,32),192WG perstate layer; pointers shifted by state817152floats/conv786432/qkv+h81920/gate+beta384. Two launches perowner, four total vs144 old. Helpers preserve all WGbarriers/SLM/indexing/native_exp/32-FMA/addtree/update/finalstore. No unused use_root_sync on NEW wrappers; public old wrappers retain it. SG32/default compiler flags unchanged. New class/main compilation can change scheduling/resources; no universal compiled FP or register proof claimed.
+
+State/readiness -> Original mapped->device keep copies stay FIRST. Every owner's accepted count remains dynamicdevice keep1..3, not captured host count. All conv layers before all state layers is safe in this domain because their subranges are disjoint and h/qkv/gate/beta were materialized by the verifier window before accepted commit. GDN kernel stores ONE final accepted recurrent state, not3snapshot copies. y_dummy/z/gamma are absent from state-only helper; publiccontrol branch returns before outputkernels, no extra scratch.
+
+QSA/PLE/KV -> Their capture code is byte-unchanged, including current QSAgroup flag/three-rowguard, tail restore, accepted-position -1 handling, stale pooled bytes, PLE n-1 snapshot. GDN commits are hoisted before those independent buffer operations, as clean upstream source does; session arena carving/state capacities are unchanged. Keep commit completion wait BEFORE PLEprev CPU update, draft, snapshot/cache/eviction observers and nextstage chaining. No snapshot/RAMrestore byte format or lifetime change, no intermediate observer added. Existing noalias/carving contract for GDN versus QSA/PLE arenas is retained; explicit new disjoint proof covers the reordered GDN owners and their mutable/read inputs.
+
+RESULT -> Projected source pins in pins.json; no live apply or compiler/Ninja/GPU. Expected later incremental main needs twoTUcompiles(verify core and verify kernels), twoarchives(engine,kernels), one mainlink if no other dirty dependency (ACTUAL dryplan must decide, no five-action PASS assumed). Native dd08,mtp/CMake/default flags remain unchanged. No model/main/archive scan/oldbackup/cachewarm or all-image/ISA framework.
+
+VERDICT -> SOURCE review pending. Main serving requires fresh sameNEWbinary control/ON with sole flag difference, strict output/work/captures/marker/functionals/normalhealth; private timing is no serving prediction. If tiny/no serving gain, retain evidence and stop rather than repeat instrumentation/certification.
+
+V2 validation preservation -> Actual need() only checks WeightRef existence, not data. Although z_/y_dummy_ are mandatory guarded-arena carves at init, eligibility now explicitly requires both nonnull; null retains exact old path. Norm prepass returns existing missing-weight error, but a present WeightRef with null data disables batching/breaks prepass so original loop/public invalid-argument behavior remains. No substitute error, ignored invalid weight or extra output allocation. Private S145 used explicit in_order queue; V2 checks actual queue's HOST property before capture and in API (no GPU/backend query), otherwise old fallback. Default create_queue uses create_in_order_queue unless DPCT_USM_LEVEL_NONE; external set_stream is not assumed. V1 retained unused. Ordinary new classes/body arithmetic/geometry unchanged.
+
+===== candidate.patch =====
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -57,6 +57,8 @@
+ #include <cmath>
+ #include <cstdio>
+ #include <cstdlib>
++#include <cstdint>
++#include <limits>
+ #include <cstring>
+ #include <exception>
+ #include <immintrin.h>
+@@ -99,6 +101,7 @@
+ }
+ // S143: process-constant before capture; only privately checked three-row groups.
+ const bool g_qsa_commit_group_steps = env_on("STRATA_QSA_COMMIT_GROUP_STEPS");
++const bool g_gdn_commit_layers = env_on("STRATA_GDN_COMMIT_LAYERS");
+ #if defined(STRATA_USE_HIP)
+ const bool g_coherent = env_on("STRATA_VERIFY_COHERENT");
+ const bool g_doorbell_store = env_on("STRATA_DOORBELL_STORE");
+@@ -3082,6 +3085,51 @@
+                                 (uint64_t) g.ssm_conv_channels * (g.ssm_d_conv - 1);
+     const int64_t TS = (s.idx_block - 1) * ID;
+     const int64_t HS = (int64_t) NG_HIST * NG_HC_DIM;
++    // Prove S145's narrow layout and relevant span bounds BEFORE recording.
++    bool gdn_layers_eligible = false;
++    if (g_gdn_commit_layers && cs_ && cs_->has_property<sycl::property::queue::in_order>() && z_ && y_dummy_ &&
++        S == 6 && MT == 8 && hbase == 0 && lb_ == 0 && le_ == 48 &&
++        g.n_layers == 48 && g.qsa_interval == 4 && g.ssm_state_size == 128 &&
++        g.ssm_d_conv == 4 && C == 10240 && HV == 48 && g.ssm_k_heads == 16 && ZV == 6144 &&
++        rows[0] == rows[1] && rows[1] == rows[2] && rows[3] == rows[4] && rows[4] == rows[5] &&
++        rows[0] != rows[3] && rows[0] >= 0 && rows[3] >= 0 &&
++        (size_t) rows[0] < slots_.size() && (size_t) rows[3] < slots_.size()) {
++        const char* sp = std::getenv("STRATA_GDN_SPLIT");
++        const char* cs = std::getenv("STRATA_GDN_COMMIT_SPLIT");
++        const char* dbg = std::getenv("STRATA_DBG_GDN");
++        bool fits = (!sp || std::strcmp(sp, "0") == 0) && (!cs || std::strcmp(cs, "1") == 0) &&
++                    (!dbg || std::strcmp(dbg, "0") == 0);
++        struct Span { uintptr_t begin = 0, end = 0; } spans[7];
++        auto span = [&](int i, const void* p, size_t bytes) {
++            const uintptr_t b = reinterpret_cast<uintptr_t>(p);
++            if (!p || !bytes || b % alignof(float) || bytes > std::numeric_limits<uintptr_t>::max() - b)
++                return false;
++            spans[i] = Span{b, b + bytes};
++            return true;
++        };
++        for (int owner = 0; owner < 2 && fits; ++owner) {
++            const SessionState* x = slots_[(size_t) rows[3 * owner]];
++            fits = x && x->layer_lo == 0 && x->layer_hi == 48 && x->gdn_ord0 == 0 && x->gdn_alloc == 36 &&
++                   span(owner, x->gdn_state, (size_t) 36 * 817152 * sizeof(float));
++        }
++        fits = fits && span(2, qkv_L_, (size_t) 36 * 8 * 10240 * sizeof(float)) &&
++               span(3, h_L_, (size_t) 36 * 8 * 10240 * sizeof(float)) &&
++               span(4, gate_L_, (size_t) 36 * 8 * 48 * sizeof(float)) &&
++               span(5, beta_L_, (size_t) 36 * 8 * 48 * sizeof(float)) &&
++               slots_.size() <= std::numeric_limits<size_t>::max() / (10 * sizeof(int32_t)) &&
++               span(6, commitb_, slots_.size() * 10 * sizeof(int32_t));
++        for (int i = 0; i < 7 && fits; ++i)
++            for (int j = i + 1; j < 7 && fits; ++j)
++                fits = spans[i].end <= spans[j].begin || spans[j].end <= spans[i].begin;
++        gdn_layers_eligible = fits;
++        if (fits)   // keep missing-weight errors and old public null-data validation
++            for (int64_t l = lb_; l < le_; ++l)
++                if (!is_qsa_layer(g, l)) {
++                    const WeightRef* wnm = need(LayerView(*wt_, l), "ssm_norm.weight", err);
++                    if (!wnm) return false;
++                    if (!wnm->data) { gdn_layers_eligible = false; break; }
++                }
++    }
+     if (DPCT_CHECK_ERROR(dpct::experimental::begin_recording(cs_)) != 0) {
+         err = "verify: begin batch commit capture failed";
+         return false;
+@@ -3091,10 +3139,37 @@
+         for (int t = 0; t < S; ++t)
+             if (t == 0 || rows[t] != rows[t - 1])
+                 copy_i32_from_mapped(commitb_ + (size_t) rows[t] * CB, m_commitb_ + (size_t) rows[t] * CB, CB, cs_);
++        bool gdn_layers_batched = false;
++        if (gdn_layers_eligible) {
++            for (int owner = 0; owner < 2 && ok; ++owner) {
++                const int first = 3 * owner;
++                SessionState& x = *slots_[(size_t) rows[first]];
++                if (!gdn_commit_layers(x.gdn_state, 817152, 786432, qkv_L_ + (size_t) first * C, 81920,
++                                       h_L_ + (size_t) first * C, 81920, gate_L_ + (size_t) first * HV,
++                                       beta_L_ + (size_t) first * HV, 384, (int) C, 16, 48, 3, 36,
++                                       commitb_ + (size_t) rows[first] * CB, cs_)) {
++                    err = "verify: GDN layer commit eligibility changed during capture";
++                    ok = false;   // discard capture; never replay partial batch plus fallback
++                }
++            }
++            gdn_layers_batched = ok;
++            if (ok) {
++                static const bool gdn_commit_layers_s147_logged = [] {
++                    std::fprintf(stderr, "strata GDN commit layers: enabled=1 layers=36 owners=2 rows=3 host-selection-only\n");
++                    std::fflush(stderr);
++                    return true;
++                }();
++                (void) gdn_commit_layers_s147_logged;
++            }
++        }
+         int64_t qsa_index = 0, gdn_index = 0;
+         for (int64_t l = 0; l < lb_; ++l) (is_qsa_layer(g, l) ? qsa_index : gdn_index) += 1;
+         for (int64_t l = lb_; l < le_ && ok; ++l) {
+             const LayerView v(*wt_, l);
++            if (!is_qsa_layer(g, l) && gdn_layers_batched) {
++                ++gdn_index;
++                continue;
++            }
+             if (!is_qsa_layer(g, l)) {
+                 const WeightRef* wnm = need(v, "ssm_norm.weight", err);
+                 if (!wnm) { ok = false; break; }
+--- a/sycl/src/kernels/cuda/verify_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+@@ -16,6 +16,7 @@
+ #include <algorithm>
+ #include <cstdio>
+ #include <cstdlib>
++#include <cstring>
+ #include <cmath>
+ #include <atomic>
+ #include <chrono>
+@@ -1712,6 +1713,40 @@
+     check("gdn_conv_commit");
+ }
+ 
++// S147: existing declaration, only S145's privately tested domain; ordinary launches.
++bool gdn_commit_layers(float* state, int64_t state_stride, int64_t conv_off, const float* qkv, int64_t qkv_stride,
++                       const float* h, int64_t h_stride, const float* gate, const float* beta, int64_t gb_stride,
++                       int conv_channels, int h_k, int h_v, int n_max, int n_layers, const int32_t* n_keep, void* stream) {
++    static const bool modes_ok = [] {
++        const char* sp = std::getenv("STRATA_GDN_SPLIT");
++        const char* cs = std::getenv("STRATA_GDN_COMMIT_SPLIT");
++        const char* dbg = std::getenv("STRATA_DBG_GDN");
++        return (!sp || std::strcmp(sp, "0") == 0) && (!cs || std::strcmp(cs, "1") == 0) &&
++               (!dbg || std::strcmp(dbg, "0") == 0);
++    }();
++    if (!modes_ok || !stream || !state || !qkv || !h || !gate || !beta || !n_keep ||
++        conv_channels != 10240 || h_k != 16 || h_v != 48 || n_max != 3 || n_layers != 36 ||
++        state_stride != 817152 || conv_off != 786432 || qkv_stride != 81920 || h_stride != 81920 || gb_stride != 384)
++        return false;
++    auto* q = strata::q_of(stream);
++    if (!q->has_property<sycl::property::queue::in_order>()) return false;
++    q->parallel_for<class gdn_conv_commit_layers_s147>(
++        sycl::nd_range<3>(sycl::range<3>(1, 36, 40) * sycl::range<3>(1, 1, 256), sycl::range<3>(1, 1, 256)),
++        [=](sycl::nd_item<3> item) {
++            const int64_t l = item.get_group(1);
++            gdn_conv_commit_kernel(state + l * state_stride + conv_off, qkv + l * qkv_stride, conv_channels, n_keep);
++        });
++    q->parallel_for<class gdn_state_commit_layers_s147>(
++        sycl::nd_range<3>(sycl::range<3>(36, 4, 48) * sycl::range<3>(1, RG, 32), sycl::range<3>(1, RG, 32)),
++        [=](sycl::nd_item<3> item) {
++            const int64_t l = item.get_group(0);
++            gdn_step_commit_kernel(state + l * state_stride, h + l * h_stride, conv_channels,
++                                   gate + l * gb_stride, beta + l * gb_stride, h_k, h_v, n_keep);
++        });
++    check("gdn_commit_layers");
++    return true;
++}
++
+ void gdn_ab_multi(const float* x, const uint16_t* w_alpha, const uint16_t* w_beta, const float* dt, const float* ssm_a,
+                   float* gate, float* beta, int n_embd, int h_v, int n_tok, void* stream) {
+     if (n_embd % 8 != 0 || n_tok < 1 || n_tok > kVerifyMaxT) {
+
+===== pins.json =====
+{
+  "sycl/src/core/verify.cpp": {
+    "original_sha256": "c28de288061beae19949982ff3de7cf0a54fcae4d23f61e3a0374f90aeb435c6",
+    "candidate_sha256": "f669057242387e85ba3d433e8be0acacfff0c835a28af34f60fc278ccd88410b",
+    "original_bytes": 224196,
+    "candidate_bytes": 228592
+  },
+  "sycl/src/kernels/cuda/verify_kernels.dp.cpp": {
+    "original_sha256": "5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e",
+    "candidate_sha256": "929813472cd1ee9710c811e9c05fe48e8e459daa9fb62527f4cedb0839b86afb",
+    "original_bytes": 119038,
+    "candidate_bytes": 121185
+  }
+}
+
+===== projection.json =====
+{
+  "gdn_conv_commit_kernel": {
+    "before_after_exact": true,
+    "bytes": 759,
+    "sha256": "5ca5481c038762083e4274cc87af1f9367b6d1f85a164c2fa50247b45ea2cdbe"
+  },
+  "gdn_step_commit_kernel": {
+    "before_after_exact": true,
+    "bytes": 3260,
+    "sha256": "3ec1643904e63d8fada73a554d64a6c91110273776699c15547c76c13c0fef4c"
+  },
+  "gdn_conv_commit": {
+    "original_public_launcher_exact_substring": true,
+    "sha256": "837f504140e1e13a718de0dc53f2e2a7a407b122f43a2494e4e6faf6a217abcc"
+  },
+  "gdn_step_norm_multi": {
+    "original_public_launcher_exact_substring": true,
+    "sha256": "80d6b12c7c5f0cc102ddc7d7e68ecfb613bff8b1a3e28891323046250b2aa9ef"
+  },
+  "batch_original_GDN_fallback": {
+    "exact_substring": true,
+    "sha256": "9603d4a559e8af0211b5eff251e009cd1399ad0f906c3c62f98e7055de41ca0c"
+  },
+  "QSA_and_PLE_capture_tail": {
+    "exact_substring": true,
+    "sha256": "c35e0ae26e47a37de76ce7055337d3bfdf462f6e4d2e8a14026421200e37b334"
+  },
+  "new_wrapper_geometry": {
+    "conv_groups": [
+      1,
+      36,
+      40
+    ],
+    "conv_local": [
+      1,
+      1,
+      256
+    ],
+    "state_groups": [
+      36,
+      4,
+      48
+    ],
+    "state_local": [
+      1,
+      4,
+      32
+    ],
+    "ordinary_launch": true,
+    "kernel_body_reuse": "direct existing named functions, NO copied FP body",
+    "S145_scope": "same math helpers, layergeometry, pointerstrides and ordinarylaunch bundle; maincompile/servingstillunqualified"
+  },
+  "V2_validation": {
+    "null_z_y": "fallbackold",
+    "missing_norm_ref": "existing neederror",
+    "null_norm_data": "fallbackold/public invalidargument",
+    "queue": "explicit HOST in_orderproperty guard; no backendquery",
+    "source_math_and_public_launchers_unchanged": true
+  }
+}
+
+===== /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s145-private-run/root-summary.json =====
+{
+  "status": "PASS_PRIVATE_STRICT_ONLY",
+  "closure": {
+    "status": "PASS_PRIVATE_STRICT_AND_NORMAL_HEALTH",
+    "pre_health_exit": 0,
+    "post_health_exit": 0,
+    "native_exit": 0,
+    "identity_equal": true,
+    "CID_absent": true,
+    "name_absent": true,
+    "normal_wait_rm": true,
+    "analysis": "comparison.json",
+    "retries": 0,
+    "serving_or_speed_qualified": false
+  },
+  "all_samples_us": [
+    [
+      1199.487,
+      1186.632,
+      1180.921,
+      1195.79
+    ],
+    [
+      861.262,
+      885.659,
+      879.627,
+      882.462
+    ]
+  ],
+  "median_us": [
+    1191.211,
+    881.0445
+  ],
+  "change_of_medians_percent": -26.037914357741833,
+  "saved_digest_freshness_checks": [
+    {
+      "pair": 1,
+      "kind": "eager",
+      "A_restored": true,
+      "B_changed": true
+    },
+    {
+      "pair": 1,
+      "kind": "continuation-eager",
+      "A_restored": true,
+      "B_changed": true
+    },
+    {
+      "pair": 2,
+      "kind": "eager",
+      "A_restored": true,
+      "B_changed": true
+    },
+    {
+      "pair": 2,
+      "kind": "continuation-eager",
+      "A_restored": true,
+      "B_changed": true
+    },
+    {
+      "pair": 3,
+      "kind": "eager",
+      "A_restored": true,
+      "B_changed": true
+    },
+    {
+      "pair": 3,
+      "kind": "continuation-eager",
+      "A_restored": true,
+      "B_changed": true
+    }
+  ],
+  "digest_not_numeric_comparator": true,
+  "root_full_read_source_projection_V2_delta_comparison_closure": true
+}
+
+===== /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s145-private-run/closure.json =====
+{
+  "status": "PASS_PRIVATE_STRICT_AND_NORMAL_HEALTH",
+  "pre_health_exit": 0,
+  "post_health_exit": 0,
+  "native_exit": 0,
+  "identity_equal": true,
+  "CID_absent": true,
+  "name_absent": true,
+  "normal_wait_rm": true,
+  "analysis": "comparison.json",
+  "retries": 0,
+  "serving_or_speed_qualified": false
+}
+
+===== BOUNDED S144 SUMMARY (DERIVED; source hash in pins) =====
+{
+  "status": "PASS_MATCHED_DISCRIMINATOR",
+  "all_checks_true": true,
+  "aggregate_change_of_medians_pct": -0.10214546830796811,
+  "scope": "One fixed OFF->ON sequence, distinctarmprocesses,n3nested. No observedgain/defaultOFF/park; no quantifiednoise/regression/population/promotion claim. S141private chain result not servingforecast. No rawtokenIDs/nativeITL/devicecount proof.",
+  "common_RoPE0_config_and_actual_native_env_both_verified": true,
+  "only_groupflag_diff_after_log_normalization": true,
+  "aggregate_output_tps_median": [
+    103.0884991859921,
+    102.98319895572692
+  ]
+}

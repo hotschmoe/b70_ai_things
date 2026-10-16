@@ -1,0 +1,51 @@
+--- S145-v2/oracle.cpp
++++ S146/oracle.cpp
+@@ -1,6 +1,8 @@
+ // S145 SOURCE ONLY. PUBLIC production control, private exact-body layer wrappers.
+ #include "private_gdn.hpp"
+ #include "strata/kernels/verify_kernels.hpp"
++#include <sycl/ext/oneapi/experimental/profiling_tag.hpp>
++#include <optional>
+ #include <algorithm>
+ #include <array>
+ #include <chrono>
+@@ -83,9 +85,37 @@
+  Snap compare(const std::string&why){auto control=snapshot(0),candidate=snapshot(1);equal_snap(control,candidate,why);readonly();return control;}
+ };
+ void receipt(const Snap&s,int pair,int phase,const char*kind){std::printf("{\"type\":\"snapshot\",\"pair\":%d,\"phase\":%d,\"kind\":\"%s\",\"complete_bytes_compared\":%zu,\"owner0_fnv1a64\":\"%016llx\",\"owner1_fnv1a64\":\"%016llx\",\"digest_not_numeric_comparator\":true}\n",pair,phase,kind,s[0].size()+s[1].size(),(unsigned long long)fnv(s[0]),(unsigned long long)fnv(s[1]));}
+-int run(int argc,char**argv){need(argc==3||argc==4,"NEW_DIR EXPECTED_PCI [--timing]");bool timing=argc==4;need(!timing||std::string(argv[3])=="--timing","timing arg");need(fs::create_directory(argv[1]),"new output directory");
++// S146 host-only method discriminator; same S145 device classes/images and whole-state comparator.
++int native_tags(sycl::queue&q){
++ need(q.is_in_order(),"S146 in-order queue required");
++ need(!q.has_property<sycl::property::queue::enable_profiling>(),"S146 no whole-queue profiling");
++ {Fixture f(q);f.capture();f.setup(2,false);f.stage();f.chain(0);f.chain(1);auto expected=f.compare("S146 public/private reference");
++  receipt(expected,2,0,"S146 reference");
++  for(int a:{0,1}){f.stage();f.graphs[a]->replay();auto actual=f.snapshot(a);equal_snap(actual,expected,"S146 warm state");f.readonly();}
++  // Two samples per arm x tag cell, mirrored around the middle. No 16-sample/new numeric campaign.
++  const int arms[8]={0,1,1,0,0,1,1,0};const bool tagged[8]={false,false,true,true,true,true,false,false};
++  for(int i=0;i<8;++i){const int a=arms[i];const bool tags=tagged[i];f.stage();
++   std::optional<sycl::event> begin_tag,end_tag;
++   auto wall_begin=Clock::now();
++   if(tags)begin_tag=sycl::ext::oneapi::experimental::submit_profiling_tag(q);
++   auto submit_begin=Clock::now();f.graphs[a]->replay();auto submit_end=Clock::now();
++   if(tags)end_tag=sycl::ext::oneapi::experimental::submit_profiling_tag(q);
++   q.wait_and_throw();auto wall_end=Clock::now();
++   // All queries/readbacks are AFTER the common existing completion wait and wall endpoint.
++   uint64_t begin_ns=0,end_ns=0;
++   if(tags){begin_ns=begin_tag->get_profiling_info<sycl::info::event_profiling::command_end>();end_ns=end_tag->get_profiling_info<sycl::info::event_profiling::command_start>();need(end_ns>begin_ns,"S146 unordered/zero device tag span");}
++   auto actual=f.snapshot(a);equal_snap(actual,expected,"S146 timed full state");f.readonly();
++   std::printf("{\"type\":\"native_tag_timing\",\"iteration\":%d,\"arm\":%d,\"tags\":%s,\"completed_host_chain_us\":%.6f,\"host_graph_submit_us\":%.6f,\"device_envelope_valid\":%s,\"device_envelope_ns\":%llu,\"begin_command_end_ns\":%llu,\"end_command_start_ns\":%llu,\"complete_state_bytes_checked\":%zu,\"guards\":true,\"readonly\":true,\"finite\":true,\"output_sentinel\":true,\"conv_calls_source\":%d,\"state_calls_source\":%d}\n",i,a,tags?"true":"false",std::chrono::duration<double,std::micro>(wall_end-wall_begin).count(),std::chrono::duration<double,std::micro>(submit_end-submit_begin).count(),tags?"true":"false",(unsigned long long)(tags?end_ns-begin_ns:0),(unsigned long long)begin_ns,(unsigned long long)end_ns,size_t(OWN)*STATE*4,a?2:72,a?2:72);
++  }
++  q.wait_and_throw();
++ }
++ need(!cleanup_error,"S146 cleanup failure");
++ std::printf("{\"status\":\"PASS_S146_NATIVE_TAG_METHOD_ONLY\",\"native_aspect\":true,\"queue_profiling\":false,\"tags_outside_capture\":true,\"samples\":8,\"samples_per_arm_tag_cell\":2,\"accepted_pair\":[2,2],\"S145_full_numeric_campaign_not_repeated\":true,\"per_kernel_occupancy_or_readiness_qualified\":false,\"serving_qualified\":false}\n");return 0;
++}
++int run(int argc,char**argv){need(argc==3||argc==4,"NEW_DIR EXPECTED_PCI [--timing|--native-tags]");bool tagmode=argc==4&&std::string(argv[3])=="--native-tags";bool timing=argc==4&&!tagmode;need(!timing||std::string(argv[3])=="--timing","timing arg");need(fs::create_directory(argv[1]),"new output directory");
+  for(const auto&v:std::array<std::pair<const char*,const char*>,3>{{{"STRATA_GDN_SPLIT","0"},{"STRATA_GDN_COMMIT_SPLIT","1"},{"STRATA_DBG_GDN","0"}}}){const char*e=std::getenv(v.first);need(e&&std::string(e)==v.second,std::string("require ")+v.first+"="+v.second);}
+- need(dpct::device_count()==1,"one pinned device");const sycl::device dev=dpct::dev_mgr::instance().get_device(0);need(dev.has(sycl::aspect::ext_intel_pci_address),"PCI extension");auto pci=dev.get_info<sycl::ext::intel::info::device::pci_address>();need(pci==argv[2],"PCI mismatch");sycl::queue q(dpct::dev_mgr::instance().get_device(0).get_context(),dev,sycl::property_list{sycl::property::queue::in_order()});
++ need(dpct::device_count()==1,"one pinned device");const sycl::device dev=dpct::dev_mgr::instance().get_device(0);need(dev.has(sycl::aspect::ext_intel_pci_address),"PCI extension");auto pci=dev.get_info<sycl::ext::intel::info::device::pci_address>();need(pci==argv[2],"PCI mismatch");if(tagmode&&!dev.has(sycl::aspect::ext_oneapi_queue_profiling_tag)){std::printf("{\"status\":\"UNSUPPORTED_S146_NATIVE_PROFILING_TAG\",\"native_aspect\":false,\"fallback_attempted\":false}\n");return 3;}sycl::queue q(dpct::dev_mgr::instance().get_device(0).get_context(),dev,sycl::property_list{sycl::property::queue::in_order()});
++ if(tagmode)return native_tags(q);
+  {Fixture f(q);f.capture();int strict=0;
+   for(int accepted:{1,2,3}){Snap initialA;
+    for(int phase=0;phase<3;++phase){f.setup(accepted,phase==1);f.stage();f.chain(0);f.chain(1);auto eager=f.compare("eager control/candidate");receipt(eager,accepted,phase,"eager");

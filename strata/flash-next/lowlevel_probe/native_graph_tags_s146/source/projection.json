@@ -1,0 +1,11 @@
+{
+  "base_oracle_sha256": "9b529f0e28dba97896f6ffd843e74f45a1366d04d7a511e64119140d71d6d4cd",
+  "new_oracle_sha256": "7a40b06c967a7f8853fa25f967fb208266a6b042163c9f93ba4c2afeb62c9a15",
+  "private_header_sha256": "07514009f0df79d4452c8112ebe067ff51e644fb4f54e29bd1b8aacf55c2786d",
+  "original_fixture_Buffer_Graph_chain_setup_stage_restore_snapshot_readonly_definitions_byteexact": true,
+  "normal_S145_numeric_and_timing_suffix_byteexact": true,
+  "no_new_device_kernel_or_class": "Source: native_tags contains only host operations and SDK internalProfilingTagImpl; existing private header byteexact",
+  "reuse_images_receipt": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s145-private-prep-v2/build/build-sha256.txt",
+  "reused_images_sha256_from_receipt": "38806a42b8de47b821c5ca00c05abbb2d536537cc129a17a62f4482f43f8efae",
+  "original_public_control_object": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/verify_kernels.dp.cpp.o"
+}

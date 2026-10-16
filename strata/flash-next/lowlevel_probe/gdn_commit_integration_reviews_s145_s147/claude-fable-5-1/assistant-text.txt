@@ -1,0 +1,23 @@
+**CPU_BUILD_GO.** No blocker in the V2 source.
+
+**Source checks (inference from the patch and prior pins)**
+
+- Pointer arithmetic matches the old per-layer calls: layer stride 817152 floats equals the 128 by 48 by 128 state plus the 3 by 10240 convolution history, conv offset 786432, qkv and h stride 8 by 10240, gate and beta stride 8 by 48, owner offsets by first row, keep pointer the same commit record the old calls used. The conv grid gives one thread per channel; the state grid is the old per-layer 4 by 48 groups with the layer in the leading group dimension. S145 ran this exact wrapper against the public per-layer path with complete state bytes, so a hidden dependence on the leading group index inside the kernel bodies is excluded for this geometry.
+- Math: the two existing kernel functions are called directly, no copied bodies, projection shows them byte-identical before and after. No y_dummy, z or gamma enter the state-only path and nothing new is allocated.
+- Eligibility is strict to the tested domain: six rows as two distinct contiguous owner groups, MT 8, full 48-layer range, current geometry, in-order queue, literal mode values, seven disjoint float-aligned spans with overflow-checked ends, every GDN norm weight present with non-null data. Anything else takes the untouched loop. The API itself re-checks dimensions, strides, modes and queue property and returns false before launching.
+- Ordering and state: keep copies from mapped memory are recorded first; both owner batches are recorded before the QSA and PLE nodes, which touch disjoint buffers; a mid-recording eligibility failure invalidates the capture through the existing end and delete path, so a partial batch plus fallback can never be replayed. The commit completion wait, PLE previous-token update, snapshot and cache observers are byte-unchanged.
+- Markers and flags: process-constant flag, unique static identifier, one print after both owner calls, none on OFF.
+
+Unproved until built: compiled scheduling and register use of the two new classes in the main TU, and any behaviour outside the tested domain, which the guards exclude rather than prove.
+
+**Build**
+
+Apply both files, dry plan must show the verify core object, the verify kernels object, the two archives and one link. Anything else stops for a look. No ISA or image work.
+
+**Quickest meaningful discriminator**
+
+One fresh pair on the same new binary: control then ON, sole difference this flag, QSA group flag and every other candidate zero. Existing gates: identity and effective environment, warm plus three timed pairs exact on text, SSE, usage, native work, windows and captures, marker once on ON only, functionals, normal quit, container absence, fresh health. Keep the CPU boundary ring on in both arms so the unprofiled commit bracket is read alongside the aggregate; S142 showed that bracket near 1.6 ms, which bounds what any commit-launch change can move in a roughly 46 ms cycle.
+
+**Expectation, stated plainly**
+
+S144 removed 48 commit launches and moved nothing. This removes 140 and replaces them with four larger launches, so it is the strongest launch-count test the commit path can offer. If the commit bracket and aggregate do not move, launch count in the commit graph is closed as a lever and the next work should go to the verifier's per-layer body, not to more commit restructuring. Private 26 percent is a whole-bundle private number and predicts nothing here. Keep RAM recovery and the 200k campaign deferred until a flag earns it.

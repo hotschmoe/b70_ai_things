@@ -1,0 +1,9 @@
+/work/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp: OK
+/work/src-ep/include/strata/kernels/verify_kernels.hpp: OK
+/work/src-ep/include/strata/core/geometry.hpp: OK
+/work/src-ep/sycl/include/strata/sycl_queue.hpp: OK
+/work/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/verify_kernels.dp.cpp.o: OK
+/prior/public-private.images.o: OK
+/opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/experimental/profiling_tag.hpp: OK
+/src/oracle.cpp: OK
+/src/private_gdn.hpp: OK

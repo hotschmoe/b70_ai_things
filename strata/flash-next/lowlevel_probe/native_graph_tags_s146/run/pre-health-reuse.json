@@ -1,0 +1,25 @@
+{
+  "source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s145-private-run",
+  "boot_id": "b785982c-4954-4d23-808c-48a7534ce3bd",
+  "root_no_intervening_GPU_attestation": true,
+  "S145_full_numeric_PASS": true,
+  "fresh_prehealth_skipped": true,
+  "records": {
+    "closure.json": {
+      "bytes": 310,
+      "sha256": "4caa678b87fd9197e2e0c482cc5d80c3883d6d48d4382890d3199c5074302903"
+    },
+    "post-health.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "identity-before.json": {
+      "bytes": 501,
+      "sha256": "9a1da0c830c5990183eef87bfc723f8b63c9f4a0c9779ac1fb8d2dbd526c9dcd"
+    },
+    "comparison.json": {
+      "bytes": 10080,
+      "sha256": "a58995e0602a1345d562dbdabb4189706d523bb56a9445ad5714803a19388e03"
+    }
+  }
+}

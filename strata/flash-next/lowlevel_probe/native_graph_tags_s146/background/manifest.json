@@ -1,0 +1,17 @@
+{
+  "status": "FROZEN_SOURCE_PRIMARY_DOC_ONLY_NO_BUILD_GPU_RUNTIME",
+  "files": {
+    "findings.md": {
+      "bytes": 8561,
+      "sha256": "1b9bd15672c4d0acb76d0cbd8972caa654526560d9e39d6948dd747f25934e43"
+    },
+    "local-source-excerpts.txt": {
+      "bytes": 13329,
+      "sha256": "c485c0b89e02370a29802abacda409796c7ec6ff592c727bba8c07b3bc0053c5"
+    },
+    "pins.json": {
+      "bytes": 3474,
+      "sha256": "255a83014cad38d1e028ff3c13c9967580debbce4909fb19281aa604d670267a"
+    }
+  }
+}

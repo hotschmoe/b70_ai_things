@@ -1,0 +1,231 @@
+===== README.md =====
+# S146 conditional native two-tag method on existing S145 GDN graphs
+
+SOURCE PREP ONLY. No source in active S145 V2 changed. No build/GPU/runtimequery,
+new download/model/binaryhash, rawtrace or CLI/model call here. Root reviews this
+small host delta. S145 completed fullnumericPASS is a GPU execution precondition;
+S146 does not repeat its9phase/continuation campaign or broaden keep/shape scope.
+
+Reuse -> private_gdn.hpp byteexact07514009f0df79d4452c8112ebe067ff51e644fb4f54e29bd1b8aacf55c2786d;
+all Buffer/Graph/Fixture/chain/setup/read-only/snapshot definitions and original
+S145 strict/timing suffix BYTEEXACT. New --native-tags branches before that
+unchanged path. Original public control object unchanged. Actual S145 build
+receipt pins public-private.images.o38806a42b8de47b821c5ca00c05abbb2d536537cc129a17a62f4482f43f8efae.
+Build prep compiles new hostoracle then uses the SAME existing deviceimageobject
+and public object in the already-proven host link form; no -fsycl-link/new AOT.
+The tag helper makes an internal host command, not a new devicekernel; existing
+private unique classes/arguments/math/WGs remain unchanged. Hostcompile emits
+device IR but that IR is not re-AOTed/registered instead of the reused images.
+A hostlink problem is HOLD, not permission for alternate image generation.
+
+Actual installed API -> See installed-api-evidence.json, exact e41 header SHA.
+No guessed experimental overload: submit_profiling_tag(queue&,...) -> event.
+Runtime native aspect query rides in S146's SAME leased invocation. If false,
+print UNSUPPORTED_S146_NATIVE_PROFILING_TAG and exit3 BEFORE queue/Fixture/tag
+submission. No nativefallback/profilingqueue/unsupported call is attempted.
+Aspecttrue proceeds with explicit in_order queue and asserts profilingproperty
+FALSE. Runtime capability status is a report, not a universal hardware claim.
+
+One finite method -> SAME whole36layer/twoowner S145 public/control graph144
+calls versus private graph4calls, accepted pair[2,2]. One eager fullstate golden
+control/candidate comparison plus existing captured warm check perarm. Eight
+samples only, TWO per cell of arm{control,candidate} x tags{OFF,ON}:
+ C0off,C1off,C1on,C0on,C0on,C1on,C1off,C0off.
+This is a mirrored method matrix, not16samples/new numeric campaign or serving
+qualification. Every sample resets BOTH armstates from seed outside timing,
+uses existing completionwait, checks COMPLETE selectedownerstate bytes/finite/
+guards plus ALLinputs/unusedz/gamma/outputsentinel read-only checks. No hashes
+replace byte comparison. Prior S145ABA/keep1..3/continuation strict campaign is
+reused; no claim this method reruns those cases. No secondtoytest is proposed.
+
+Timing contract -> Both modes start a hoststeady completedwall clock, optionally
+submit begin tag, separately bracket ONLYgraph.replay() hostreturn, optionally
+submit end tag, then q.wait_and_throw(), end completedwall clock. All event
+queries and state/read-only/guard readbacks happen AFTER that wait/wallendpoint.
+Capture itself is unchanged; tags are OUTSIDE graphcapture. Two tags only per
+ONmeasurement, none pernode. Hostclockcalls and existing queuewait are common.
+
+Tagged measurement reads begin.command_end and end.command_start, requires
+end>begin, stores both uint64 nanoseconds and their difference. OFF fields are0
+AND device_envelope_valid=false (no fake device measurement). Same-devicequeue
+DOMAIN only; no hostdeviceclockbridge, command_submit query, occupancy, per-op
+service/data-readiness/physicalidle/traffic or servinggain claim. Envelope may
+include graph dependencies, queuegaps and tagboundaries. No graphprofilingfinalize
+property or queueenable_profiling is added; no runtimeadapter/driver override.
+
+Report ALL8 rows, bothcellwall medians/ranges and hostgraphsubmit, taggeddevice
+envelopes; two samples/cell cannot establish significance/noiseband/stability.
+Any method overhead is descriptive completedwall ONvsOFF, not assumed negligible.
+A changed graphsubmit bracket alone is not a completechain optimization. The
+large public/private deviceenvelope difference, if any, is the EXISTING S145
+kernel mechanism; S146 adds no arithmetic improvement and forecasts no serving.
+
+Future execution -> Root binds actual S145 strictPASS/buildreceipt/newhostEXE
+identity and reuses existing finite lease/lifecycle/fullstate/health conventions.
+No new generic runner is written here. Root supplies onecard+physicalPCI pin,
+STRATA_GDN_SPLIT0/STRATA_GDN_COMMIT_SPLIT1/STRATA_DBG_GDN0, NOpreload/unitrace/
+URloggers, and --native-tags. Unsupported3 is an explicit normalcapability stop
+for root to review, not an automatic fallback/retry or a numericalfault whitelist.
+Any thrown API/numeric failure native1 preserves evidence/drains existing RAII;
+root decides cleanup/health as in S145, never automatic force/reset/retry.
+
+Verification -> Exact source projection and inverse diff, shellsyntax, executable
+modes on direct scripts. No compilation or GPU was performed; success/supported
+runtime and actual hostlink remain unclaimed. This is one private method test,
+not a profiling framework or main source/header change.
+
+===== host-delta.patch =====
+--- S145-v2/oracle.cpp
++++ S146/oracle.cpp
+@@ -1,6 +1,8 @@
+ // S145 SOURCE ONLY. PUBLIC production control, private exact-body layer wrappers.
+ #include "private_gdn.hpp"
+ #include "strata/kernels/verify_kernels.hpp"
++#include <sycl/ext/oneapi/experimental/profiling_tag.hpp>
++#include <optional>
+ #include <algorithm>
+ #include <array>
+ #include <chrono>
+@@ -83,9 +85,37 @@
+  Snap compare(const std::string&why){auto control=snapshot(0),candidate=snapshot(1);equal_snap(control,candidate,why);readonly();return control;}
+ };
+ void receipt(const Snap&s,int pair,int phase,const char*kind){std::printf("{\"type\":\"snapshot\",\"pair\":%d,\"phase\":%d,\"kind\":\"%s\",\"complete_bytes_compared\":%zu,\"owner0_fnv1a64\":\"%016llx\",\"owner1_fnv1a64\":\"%016llx\",\"digest_not_numeric_comparator\":true}\n",pair,phase,kind,s[0].size()+s[1].size(),(unsigned long long)fnv(s[0]),(unsigned long long)fnv(s[1]));}
+-int run(int argc,char**argv){need(argc==3||argc==4,"NEW_DIR EXPECTED_PCI [--timing]");bool timing=argc==4;need(!timing||std::string(argv[3])=="--timing","timing arg");need(fs::create_directory(argv[1]),"new output directory");
++// S146 host-only method discriminator; same S145 device classes/images and whole-state comparator.
++int native_tags(sycl::queue&q){
++ need(q.is_in_order(),"S146 in-order queue required");
++ need(!q.has_property<sycl::property::queue::enable_profiling>(),"S146 no whole-queue profiling");
++ {Fixture f(q);f.capture();f.setup(2,false);f.stage();f.chain(0);f.chain(1);auto expected=f.compare("S146 public/private reference");
++  receipt(expected,2,0,"S146 reference");
++  for(int a:{0,1}){f.stage();f.graphs[a]->replay();auto actual=f.snapshot(a);equal_snap(actual,expected,"S146 warm state");f.readonly();}
++  // Two samples per arm x tag cell, mirrored around the middle. No 16-sample/new numeric campaign.
++  const int arms[8]={0,1,1,0,0,1,1,0};const bool tagged[8]={false,false,true,true,true,true,false,false};
++  for(int i=0;i<8;++i){const int a=arms[i];const bool tags=tagged[i];f.stage();
++   std::optional<sycl::event> begin_tag,end_tag;
++   auto wall_begin=Clock::now();
++   if(tags)begin_tag=sycl::ext::oneapi::experimental::submit_profiling_tag(q);
++   auto submit_begin=Clock::now();f.graphs[a]->replay();auto submit_end=Clock::now();
++   if(tags)end_tag=sycl::ext::oneapi::experimental::submit_profiling_tag(q);
++   q.wait_and_throw();auto wall_end=Clock::now();
++   // All queries/readbacks are AFTER the common existing completion wait and wall endpoint.
++   uint64_t begin_ns=0,end_ns=0;
++   if(tags){begin_ns=begin_tag->get_profiling_info<sycl::info::event_profiling::command_end>();end_ns=end_tag->get_profiling_info<sycl::info::event_profiling::command_start>();need(end_ns>begin_ns,"S146 unordered/zero device tag span");}
++   auto actual=f.snapshot(a);equal_snap(actual,expected,"S146 timed full state");f.readonly();
++   std::printf("{\"type\":\"native_tag_timing\",\"iteration\":%d,\"arm\":%d,\"tags\":%s,\"completed_host_chain_us\":%.6f,\"host_graph_submit_us\":%.6f,\"device_envelope_valid\":%s,\"device_envelope_ns\":%llu,\"begin_command_end_ns\":%llu,\"end_command_start_ns\":%llu,\"complete_state_bytes_checked\":%zu,\"guards\":true,\"readonly\":true,\"finite\":true,\"output_sentinel\":true,\"conv_calls_source\":%d,\"state_calls_source\":%d}\n",i,a,tags?"true":"false",std::chrono::duration<double,std::micro>(wall_end-wall_begin).count(),std::chrono::duration<double,std::micro>(submit_end-submit_begin).count(),tags?"true":"false",(unsigned long long)(tags?end_ns-begin_ns:0),(unsigned long long)begin_ns,(unsigned long long)end_ns,size_t(OWN)*STATE*4,a?2:72,a?2:72);
++  }
++  q.wait_and_throw();
++ }
++ need(!cleanup_error,"S146 cleanup failure");
++ std::printf("{\"status\":\"PASS_S146_NATIVE_TAG_METHOD_ONLY\",\"native_aspect\":true,\"queue_profiling\":false,\"tags_outside_capture\":true,\"samples\":8,\"samples_per_arm_tag_cell\":2,\"accepted_pair\":[2,2],\"S145_full_numeric_campaign_not_repeated\":true,\"per_kernel_occupancy_or_readiness_qualified\":false,\"serving_qualified\":false}\n");return 0;
++}
++int run(int argc,char**argv){need(argc==3||argc==4,"NEW_DIR EXPECTED_PCI [--timing|--native-tags]");bool tagmode=argc==4&&std::string(argv[3])=="--native-tags";bool timing=argc==4&&!tagmode;need(!timing||std::string(argv[3])=="--timing","timing arg");need(fs::create_directory(argv[1]),"new output directory");
+  for(const auto&v:std::array<std::pair<const char*,const char*>,3>{{{"STRATA_GDN_SPLIT","0"},{"STRATA_GDN_COMMIT_SPLIT","1"},{"STRATA_DBG_GDN","0"}}}){const char*e=std::getenv(v.first);need(e&&std::string(e)==v.second,std::string("require ")+v.first+"="+v.second);}
+- need(dpct::device_count()==1,"one pinned device");const sycl::device dev=dpct::dev_mgr::instance().get_device(0);need(dev.has(sycl::aspect::ext_intel_pci_address),"PCI extension");auto pci=dev.get_info<sycl::ext::intel::info::device::pci_address>();need(pci==argv[2],"PCI mismatch");sycl::queue q(dpct::dev_mgr::instance().get_device(0).get_context(),dev,sycl::property_list{sycl::property::queue::in_order()});
++ need(dpct::device_count()==1,"one pinned device");const sycl::device dev=dpct::dev_mgr::instance().get_device(0);need(dev.has(sycl::aspect::ext_intel_pci_address),"PCI extension");auto pci=dev.get_info<sycl::ext::intel::info::device::pci_address>();need(pci==argv[2],"PCI mismatch");if(tagmode&&!dev.has(sycl::aspect::ext_oneapi_queue_profiling_tag)){std::printf("{\"status\":\"UNSUPPORTED_S146_NATIVE_PROFILING_TAG\",\"native_aspect\":false,\"fallback_attempted\":false}\n");return 3;}sycl::queue q(dpct::dev_mgr::instance().get_device(0).get_context(),dev,sycl::property_list{sycl::property::queue::in_order()});
++ if(tagmode)return native_tags(q);
+  {Fixture f(q);f.capture();int strict=0;
+   for(int accepted:{1,2,3}){Snap initialA;
+    for(int phase=0;phase<3;++phase){f.setup(accepted,phase==1);f.stage();f.chain(0);f.chain(1);auto eager=f.compare("eager control/candidate");receipt(eager,accepted,phase,"eager");
+
+===== projection.json =====
+{
+  "base_oracle_sha256": "9b529f0e28dba97896f6ffd843e74f45a1366d04d7a511e64119140d71d6d4cd",
+  "new_oracle_sha256": "7a40b06c967a7f8853fa25f967fb208266a6b042163c9f93ba4c2afeb62c9a15",
+  "private_header_sha256": "07514009f0df79d4452c8112ebe067ff51e644fb4f54e29bd1b8aacf55c2786d",
+  "original_fixture_Buffer_Graph_chain_setup_stage_restore_snapshot_readonly_definitions_byteexact": true,
+  "normal_S145_numeric_and_timing_suffix_byteexact": true,
+  "no_new_device_kernel_or_class": "Source: native_tags contains only host operations and SDK internalProfilingTagImpl; existing private header byteexact",
+  "reuse_images_receipt": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s145-private-prep-v2/build/build-sha256.txt",
+  "reused_images_sha256_from_receipt": "38806a42b8de47b821c5ca00c05abbb2d536537cc129a17a62f4482f43f8efae",
+  "original_public_control_object": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/verify_kernels.dp.cpp.o"
+}
+
+===== installed-api-evidence.json =====
+{
+  "status": "ACTUAL_E41_INSTALLED_HEADER_READ_PREVIOUS_SOURCE_STAGE_NO_RUNTIME_QUERY",
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "header": "/opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/experimental/profiling_tag.hpp",
+  "header_sha256": "8bf94c6e3c5006bdacd042c78293894823170cbd7db3930c7448c2124a9a8bd3",
+  "API": "sycl::ext::oneapi::experimental::submit_profiling_tag(queue &, const sycl::detail::code_location & = current()) -> sycl::event",
+  "native_condition": "Queue.get_device().has(sycl::aspect::ext_oneapi_queue_profiling_tag)",
+  "native_body": "Queue.submit(handler lambda calls sycl::detail::HandlerAccess::internalProfilingTagImpl(CGH))",
+  "otherwise": "If no queue::enable_profiling, throw invalid; else ext_oneapi_submit_barrier. S146 guard exits3 before tag call/fixture on aspectfalse, queueprofiling forbidden, so this fallback is not selected.",
+  "timestamps": [
+    "begin event info::event_profiling::command_end",
+    "end event info::event_profiling::command_start"
+  ],
+  "units": "SYCL profiling values nanoseconds, one devicequeue clock; not CPU epoch join",
+  "specification": "https://github.com/intel/llvm/blob/sycl/sycl/doc/extensions/experimental/sycl_ext_oneapi_profiling_tag.asciidoc",
+  "B70_native_capability": "UNKNOWN; one query in S146sameleasedattempt, no separate discovery"
+}
+
+===== build-container.sh =====
+#!/usr/bin/env bash
+source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1
+set -euo pipefail
+[[ ! -e /dev/dri && $(id -u) == 1000 ]]
+cd /out
+sha256sum -c /src/expected-input.sha256 > input-before.txt
+icpx --version > compiler-version.txt
+SRC=/work/src-ep
+FLAGS=(-O3 -DNDEBUG -std=c++20 -fsycl -fsycl-targets=spir64_gen -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -DSTRATA_Q6K_EXPERTS=1 -DSTRATA_XMX_SG16=1 -I/src -I"$SRC/sycl/include" -I"$SRC/include")
+TIMEFORMAT='S146_host_fixture_compile_seconds=%R'
+{ time icpx "${FLAGS[@]}" -c /src/oracle.cpp -o oracle.o > compile.log 2>&1; } 2> compile.time
+PUBLIC=$SRC/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/verify_kernels.dp.cpp.o
+# No -fsycl-link/AOT: retain actual S145 compiled public/private images unchanged.
+# New tag helper records a host command; no new device kernel is introduced.
+TIMEFORMAT='S146_host_link_reusing_S145_device_images_seconds=%R'
+{ time icpx -O3 -DNDEBUG -fp-model=precise oracle.o "$PUBLIC" /prior/public-private.images.o /usr/lib/x86_64-linux-gnu/libze_loader.so -lsycl -lsycl-devicelib-host -Wl,-Map=/out/link.map -o gdn_native_tags_s146 > host-link.log 2>&1; } 2> host-link.time
+sha256sum -c /src/expected-input.sha256 > input-after.txt
+sha256sum /src/oracle.cpp /src/private_gdn.hpp oracle.o gdn_native_tags_s146 > build-sha256.txt
+printf '%s\n' BUILD_COMPLETE_HOST_ADAPTER_REUSED_S145_DEVICE_IMAGES > status.txt
+
+===== build.sh =====
+#!/usr/bin/env bash
+set -euo pipefail
+HERE=$(cd -- "$(dirname -- "$0")" && pwd)
+REPO=/mnt/vm_8tb/github/b70_ai_things
+IMAGE=sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2
+[[ $(id -u) == 1000 && ! -e "$HERE/build" ]]
+mkdir "$HERE/build" "$HERE/build/tmp" "$HERE/build/cache"
+docker image inspect "$IMAGE" > "$HERE/build/image.json"
+[[ $(docker image inspect --format '{{.Id}}' "$IMAGE") == "$IMAGE" ]]
+set +e
+B70_AGENT=S146-native-tags-host-adapter-build "$REPO/bin/cpu-run" docker run --rm --network none --cpus 4 -u "$(id -u):$(id -g)" --cap-drop ALL --security-opt no-new-privileges \
+ -e TMPDIR=/out/tmp -e XDG_CACHE_HOME=/out/cache -e SYCL_CACHE_DIR=/out/cache -e SYCL_CACHE_PERSISTENT=0 -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 \
+ -v /mnt/vm_8tb/b70/build/strata-ab:/work:ro -v /mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s145-private-prep-v2/build:/prior:ro -v "$HERE":/src:ro -v "$HERE/build":/out --entrypoint bash "$IMAGE" /src/build-container.sh 2>&1 | tee "$HERE/build/build.log"
+rc=("${PIPESTATUS[@]}")
+set -e
+printf '%s\n' "${rc[0]}" > "$HERE/build/build.exit"
+printf '%s\n' "${rc[1]}" > "$HERE/build/tee.exit"
+[[ ${rc[0]} == 0 && ${rc[1]} == 0 ]]
+
+===== expected-input.sha256 =====
+5faf60ccd6e8d0665281253374bd97d4d874deb86f0aad479ce94f8565b2673e  /work/src-ep/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+c59529e560fbea77ca4a268fac1e65ca24a8f3826b0589e961813978f4903fb9  /work/src-ep/include/strata/kernels/verify_kernels.hpp
+e9869988fbdc9e18ef3d144dd91e9266c18a190e9ec1a7351ce5c7b858bbd838  /work/src-ep/include/strata/core/geometry.hpp
+2b9ada924e3023ab742e826f9c9850324ccc978cfc4ca8d0a36b3e7b6c79c51a  /work/src-ep/sycl/include/strata/sycl_queue.hpp
+584e694fc1ece4740fe4550e2c34fafd28a77921d81960039d01f3c27dbb6613  /work/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/verify_kernels.dp.cpp.o
+38806a42b8de47b821c5ca00c05abbb2d536537cc129a17a62f4482f43f8efae  /prior/public-private.images.o
+8bf94c6e3c5006bdacd042c78293894823170cbd7db3930c7448c2124a9a8bd3  /opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/experimental/profiling_tag.hpp
+7a40b06c967a7f8853fa25f967fb208266a6b042163c9f93ba4c2afeb62c9a15  /src/oracle.cpp
+07514009f0df79d4452c8112ebe067ff51e644fb4f54e29bd1b8aacf55c2786d  /src/private_gdn.hpp
+
+===== source-checks.json =====
+{
+  "status": "SOURCE_ONLY_CHECKS_PASS_NO_BUILD",
+  "original_ordinary_numeric_timing_suffix_byteexact": true,
+  "private_header_byteexact": true,
+  "one_native_aspect_query_before_fixture": true,
+  "two_tag_calls_outside_capture": true,
+  "finite_cells": {
+    "control_OFF": 2,
+    "control_ON": 2,
+    "candidate_OFF": 2,
+    "candidate_ON": 2
+  },
+  "script_syntax": "bash-n PASS",
+  "direct_script_executable_mode": "0775",
+  "no_build_GPU_extraction_or_runtime": true
+}
+

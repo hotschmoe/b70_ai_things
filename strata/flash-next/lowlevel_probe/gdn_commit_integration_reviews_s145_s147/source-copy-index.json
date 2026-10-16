@@ -1,0 +1,93 @@
+{
+  "status": "S145_S147_ACTUAL_SOURCE_DECISION_CURATION",
+  "copies": [
+    {
+      "destination": "manifest.json",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s145-s147-next-decision-reviews-20261016/manifest.json",
+      "raw_bytes": 735,
+      "raw_sha256": "423052553e297e0756df29dfbe182eebedd73caa1336abefb2b549925e854e91",
+      "curated_bytes": 735,
+      "curated_sha256": "423052553e297e0756df29dfbe182eebedd73caa1336abefb2b549925e854e91",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "source-pins.json",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s145-s147-next-decision-reviews-20261016/source-pins.json",
+      "raw_bytes": 1282,
+      "raw_sha256": "ad9dfa5ee245ce42bb034461a6d92d5a9fb883c32a8a5df922b915994dce2996",
+      "curated_bytes": 1282,
+      "curated_sha256": "ad9dfa5ee245ce42bb034461a6d92d5a9fb883c32a8a5df922b915994dce2996",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "source-packet.txt",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s145-s147-next-decision-reviews-20261016/source-packet.txt",
+      "raw_bytes": 21259,
+      "raw_sha256": "643852f7ce00c4bb8141102e40fd1a259b48fffa288855683dc6a7fa097fdca2",
+      "curated_bytes": 21259,
+      "curated_sha256": "643852f7ce00c4bb8141102e40fd1a259b48fffa288855683dc6a7fa097fdca2",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "packet.sha256",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s145-s147-next-decision-reviews-20261016/packet.sha256",
+      "raw_bytes": 84,
+      "raw_sha256": "19b743094506baf4c7d3361fa155a10f52ce000df5ff3fd9a3cff5d8cd8b2515",
+      "curated_bytes": 84,
+      "curated_sha256": "19b743094506baf4c7d3361fa155a10f52ce000df5ff3fd9a3cff5d8cd8b2515",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "review-prefix.txt",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s145-s147-next-decision-reviews-20261016/review-prefix.txt",
+      "raw_bytes": 1245,
+      "raw_sha256": "0b6a35b9fcafaa8e8edc7cbb8f3c5cff8d2a4483d784d07fc4fa6ec857c6847a",
+      "curated_bytes": 1245,
+      "curated_sha256": "0b6a35b9fcafaa8e8edc7cbb8f3c5cff8d2a4483d784d07fc4fa6ec857c6847a",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "claude-opus-5-5/assistant-text.txt",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s145-s147-next-decision-reviews-20261016/claude-opus-5-5/assistant-text.txt",
+      "raw_bytes": 4794,
+      "raw_sha256": "338e97d384d3cdf4f469d96ba052c9d3b76c5f0afe0100ca8f66747e395e253d",
+      "curated_bytes": 4794,
+      "curated_sha256": "338e97d384d3cdf4f469d96ba052c9d3b76c5f0afe0100ca8f66747e395e253d",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "claude-opus-5-5/command.json",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s145-s147-next-decision-reviews-20261016/claude-opus-5-5/command.json",
+      "raw_bytes": 1315,
+      "raw_sha256": "fc8230820ec19ae76fd2d3a77d1dfab6c486071db802c37a96328691a258f768",
+      "curated_bytes": 1315,
+      "curated_sha256": "fc8230820ec19ae76fd2d3a77d1dfab6c486071db802c37a96328691a258f768",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "claude-fable-5-1/assistant-text.txt",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s145-s147-next-decision-reviews-20261016/claude-fable-5-1/assistant-text.txt",
+      "raw_bytes": 3519,
+      "raw_sha256": "1d7ae643912693e5cb16b92eae35f2e09311cf4cef91e43ae87f7f333637d62f",
+      "curated_bytes": 3519,
+      "curated_sha256": "1d7ae643912693e5cb16b92eae35f2e09311cf4cef91e43ae87f7f333637d62f",
+      "transform": "exact ASCII copy"
+    },
+    {
+      "destination": "claude-fable-5-1/command.json",
+      "absolute_raw_source": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s145-s147-next-decision-reviews-20261016/claude-fable-5-1/command.json",
+      "raw_bytes": 1317,
+      "raw_sha256": "517c639bdad0bc46b95796b8caeec221be7f2eddf26413390c1f58c1e69a1152",
+      "curated_bytes": 1317,
+      "curated_sha256": "517c639bdad0bc46b95796b8caeec221be7f2eddf26413390c1f58c1e69a1152",
+      "transform": "exact ASCII copy"
+    }
+  ],
+  "derived": [
+    "claude-opus-5-5/metadata.json",
+    "claude-fable-5-1/metadata.json",
+    "root-disposition.json",
+    "raw-external-index.json"
+  ],
+  "scope": "Small exact/escapedASCII review evidence only; no GPU/build/newCLI/repo edits."
+}

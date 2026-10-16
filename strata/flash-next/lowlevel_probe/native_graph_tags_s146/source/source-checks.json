@@ -1,0 +1,16 @@
+{
+  "status": "SOURCE_ONLY_CHECKS_PASS_NO_BUILD",
+  "original_ordinary_numeric_timing_suffix_byteexact": true,
+  "private_header_byteexact": true,
+  "one_native_aspect_query_before_fixture": true,
+  "two_tag_calls_outside_capture": true,
+  "finite_cells": {
+    "control_OFF": 2,
+    "control_ON": 2,
+    "candidate_OFF": 2,
+    "candidate_ON": 2
+  },
+  "script_syntax": "bash-n PASS",
+  "direct_script_executable_mode": "0775",
+  "no_build_GPU_extraction_or_runtime": true
+}

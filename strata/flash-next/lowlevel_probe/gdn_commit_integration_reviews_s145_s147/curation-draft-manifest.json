@@ -1,0 +1,73 @@
+{
+  "status": "FROZEN_ACTUAL_S145_S147_SOURCE_BUILD_GO_ROOT_SCOPED",
+  "root": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/s145-s147-model-decision-curation-draft",
+  "file_count": 16,
+  "total_bytes": 51243,
+  "files": {
+    "20261016_strata_gdn_commit_integration_decision.md": {
+      "bytes": 3560,
+      "sha256": "94c006bf0c16af599d76c22b444bf0e385c44435c5b1aae7b9ad65ef579a9785"
+    },
+    "payload/README.md": {
+      "bytes": 605,
+      "sha256": "145827c327f0ea8df0760c95604d84e7816aeecdac82b29534f6e52d431fb729"
+    },
+    "payload/claude-fable-5-1/assistant-text.txt": {
+      "bytes": 3519,
+      "sha256": "1d7ae643912693e5cb16b92eae35f2e09311cf4cef91e43ae87f7f333637d62f"
+    },
+    "payload/claude-fable-5-1/command.json": {
+      "bytes": 1317,
+      "sha256": "517c639bdad0bc46b95796b8caeec221be7f2eddf26413390c1f58c1e69a1152"
+    },
+    "payload/claude-fable-5-1/metadata.json": {
+      "bytes": 960,
+      "sha256": "44a727aec1396c060e658dbc6cad67d05458ea370783f98ee84f1ac16c6ecaa0"
+    },
+    "payload/claude-opus-5-5/assistant-text.txt": {
+      "bytes": 4794,
+      "sha256": "338e97d384d3cdf4f469d96ba052c9d3b76c5f0afe0100ca8f66747e395e253d"
+    },
+    "payload/claude-opus-5-5/command.json": {
+      "bytes": 1315,
+      "sha256": "fc8230820ec19ae76fd2d3a77d1dfab6c486071db802c37a96328691a258f768"
+    },
+    "payload/claude-opus-5-5/metadata.json": {
+      "bytes": 957,
+      "sha256": "2e21ec323a923f197a5118a8d5e3fbc93086b53e62f4af0893937b42e4c8a48c"
+    },
+    "payload/manifest.json": {
+      "bytes": 735,
+      "sha256": "423052553e297e0756df29dfbe182eebedd73caa1336abefb2b549925e854e91"
+    },
+    "payload/packet.sha256": {
+      "bytes": 84,
+      "sha256": "19b743094506baf4c7d3361fa155a10f52ce000df5ff3fd9a3cff5d8cd8b2515"
+    },
+    "payload/raw-external-index.json": {
+      "bytes": 2991,
+      "sha256": "7f1b932d97472a21acd3875024f8d439e288701205cfa43e1762fe368bbb097f"
+    },
+    "payload/review-prefix.txt": {
+      "bytes": 1245,
+      "sha256": "0b6a35b9fcafaa8e8edc7cbb8f3c5cff8d2a4483d784d07fc4fa6ec857c6847a"
+    },
+    "payload/root-disposition.json": {
+      "bytes": 1728,
+      "sha256": "f424b0dbad90639e4476bf46057e9a647e4d848e141dcdff98cd28a129c06a97"
+    },
+    "payload/source-packet.txt": {
+      "bytes": 21259,
+      "sha256": "643852f7ce00c4bb8141102e40fd1a259b48fffa288855683dc6a7fa097fdca2"
+    },
+    "payload/source-pins.json": {
+      "bytes": 1282,
+      "sha256": "ad9dfa5ee245ce42bb034461a6d92d5a9fb883c32a8a5df922b915994dce2996"
+    },
+    "source-copy-index.json": {
+      "bytes": 4892,
+      "sha256": "0ecd92f002d2cae33f9cd933f6b3826bf86fa51cc6a8ced8ccc69e3caa95d0c8"
+    }
+  },
+  "scope": "Actual completed model replies and root scope only; no curator execution/repo edits. Optional ring rejected; no newbuild/runtime outcome."
+}

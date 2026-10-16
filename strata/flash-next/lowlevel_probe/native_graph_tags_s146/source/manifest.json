@@ -1,0 +1,72 @@
+{
+  "stage": "S146",
+  "status": "FROZEN_SOURCE_PREP_ONLY_NO_BUILD_GPU",
+  "files": {
+    "README.md": {
+      "bytes": 5118,
+      "sha256": "f32138efcb943d0d49c9de3c9f5a639005ceb0a75d236dbdb74e895123caf384",
+      "mode": "0o664"
+    },
+    "build-container.sh": {
+      "bytes": 1457,
+      "sha256": "30db571294a9817849087f0279a93c5ec5c4220c0df4141b67343d1fa566a2e4",
+      "mode": "0o775"
+    },
+    "build.sh": {
+      "bytes": 1240,
+      "sha256": "32541f7beb93592f7831ffca601ed5880ecc68b0148c7c9d299e2a867a15b78a",
+      "mode": "0o775"
+    },
+    "expected-input.sha256": {
+      "bytes": 1055,
+      "sha256": "5456dd60a0119dad7de5e6f022ff3ac6766f09c409076169eba05cb29c6ffe93",
+      "mode": "0o664"
+    },
+    "host-delta.patch": {
+      "bytes": 5989,
+      "sha256": "9ea23f0aa6ddef30a1969161c91dda75cf0bc229b9bf15ff801aac85733a1f4d",
+      "mode": "0o664"
+    },
+    "installed-api-evidence.json": {
+      "bytes": 1380,
+      "sha256": "24f500d1169343cb7b2118c813d710bba8e7a1b49a886dc5d6d9e2700e269b85",
+      "mode": "0o664"
+    },
+    "inverse.patch": {
+      "bytes": 5989,
+      "sha256": "ce8fe84a5f459f226bf83139e58764c2595c07a6e4205e298dc0758fcf7ba1c6",
+      "mode": "0o664"
+    },
+    "oracle.cpp": {
+      "bytes": 14602,
+      "sha256": "7a40b06c967a7f8853fa25f967fb208266a6b042163c9f93ba4c2afeb62c9a15",
+      "mode": "0o664"
+    },
+    "private_gdn.hpp": {
+      "bytes": 5215,
+      "sha256": "07514009f0df79d4452c8112ebe067ff51e644fb4f54e29bd1b8aacf55c2786d",
+      "mode": "0o664"
+    },
+    "projection.json": {
+      "bytes": 1043,
+      "sha256": "061db716b0195d60623586bc8f6aded940c6f9527994ea611e2b015b3561c1b2",
+      "mode": "0o664"
+    },
+    "source-checks.json": {
+      "bytes": 476,
+      "sha256": "c6b4624808a2d85308389c4aae88ba13b1247ec7128aeb9b0e18b63247fdaa72",
+      "mode": "0o664"
+    },
+    "source-pins.json": {
+      "bytes": 1239,
+      "sha256": "e9128ad6ed4cd9e0a79a640b510b92077b29cfeb10d56848f4b28815605ab32c",
+      "mode": "0o664"
+    },
+    "source-review-packet.txt": {
+      "bytes": 18002,
+      "sha256": "d265afb5955b69a5e8b0d928ea7d8a6fc272e13a42ac78912427f0fbc10736e6",
+      "mode": "0o664"
+    }
+  },
+  "GPU_execution_precondition": "Actual S145 V2 fullnumericPASS plus rootreview/sourcebuild and normallease/health; no additional statecampaign"
+}

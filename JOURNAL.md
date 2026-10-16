@@ -25814,3 +25814,35 @@ VERDICT -> Finite private bundle PASS, no isolated cause or serving forecast;
 main integration/owner layout/completion gates remain separate. See
 [dated evidence](docs/20261016_strata_gdn_commit_layer_oracle.md) and
 [exact receipts](strata/flash-next/lowlevel_probe/gdn_commit_layers_s145/).
+
+
+## 2026-10-16 S146: native graph timestamp tags work, perturb small chain
+
+CONFIG -> Same S145 deviceimages/publicobject, new host adapter only; explicit
+in_order/noqueueprofiling/two outside-capture tags, nativeaspect checked
+in SAME invocation. S145 fullnumeric campaign and sameboot posthealth reused.
+COMMAND -> CPUhostbuild0/tee0 about20s; one quietcard0 finite28s/terminal0.
+RESULT -> NativeaspectTRUE; eagerreference/warm/eight complete235339776B
+state checks/finite/guards/readonly/sentinel PASS. Native/analyzer/posthealth0,
+normalwaitrm/fullCIDNAMEgone. Two observations/cell: controlcompletedHOST
+1188.9365->2024.705us OFF->ON; candidate1043.0685->1936.086. Deviceenvelopes
+control1351.615/1355.989us,candidate1039.792/1028.125. All8rowsretained.
+VERDICT -> Methodworks in pinnedprocess but substantialperturbation; PARK
+routineintegration/occasionalboundeddiagnostic only/no followupGPU. No perop
+service/idle/occupancy/readinesscause/CPUGPUjoin/servingforecast. See
+docs/20261016_strata_native_graph_tag_method.md.
+
+
+## 2026-10-16 S145/S147: actual model integration decision
+
+CONFIG -> Frozen21259B S147V2criticalsource plus S145strictresult and
+S144parkednogain, ownresumedsessions/no tools/unchangedpacket.
+COMMAND -> Actual claude-opus-5-5 44.825505s and claude-fable-5-1
+55.009115s, each0/requestedrespondingexact/sessionmatch/rootFULLREAD.
+RESULT -> BothCPU_BUILD_GO: directbodyreuse/currentstrides/narrowguarded
+geometry/pre-capturebounds/nullfallback/order valid bysource review.
+VERDICT -> RootGO actualincrementalbuild then sameNEWbinary soleflagserve,
+allothers0. RejectoptionalCPUring (no ringON/OFFoverheadproof), universal
+1.6msbudget/strongest/closedlever/hiddenstateguarantee/RAMqualification.
+KeepcleanservingringABSENT; no private26%forecast. Sourceappliedseparately,
+actualbuildpending. See docs/20261016_strata_gdn_commit_integration_decision.md.

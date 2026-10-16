@@ -1,0 +1,17 @@
+{
+  "status": "ACTUAL_E41_INSTALLED_HEADER_READ_PREVIOUS_SOURCE_STAGE_NO_RUNTIME_QUERY",
+  "image": "sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2",
+  "header": "/opt/intel/oneapi/compiler/2026.1/include/sycl/ext/oneapi/experimental/profiling_tag.hpp",
+  "header_sha256": "8bf94c6e3c5006bdacd042c78293894823170cbd7db3930c7448c2124a9a8bd3",
+  "API": "sycl::ext::oneapi::experimental::submit_profiling_tag(queue &, const sycl::detail::code_location & = current()) -> sycl::event",
+  "native_condition": "Queue.get_device().has(sycl::aspect::ext_oneapi_queue_profiling_tag)",
+  "native_body": "Queue.submit(handler lambda calls sycl::detail::HandlerAccess::internalProfilingTagImpl(CGH))",
+  "otherwise": "If no queue::enable_profiling, throw invalid; else ext_oneapi_submit_barrier. S146 guard exits3 before tag call/fixture on aspectfalse, queueprofiling forbidden, so this fallback is not selected.",
+  "timestamps": [
+    "begin event info::event_profiling::command_end",
+    "end event info::event_profiling::command_start"
+  ],
+  "units": "SYCL profiling values nanoseconds, one devicequeue clock; not CPU epoch join",
+  "specification": "https://github.com/intel/llvm/blob/sycl/sycl/doc/extensions/experimental/sycl_ext_oneapi_profiling_tag.asciidoc",
+  "B70_native_capability": "UNKNOWN; one query in S146sameleasedattempt, no separate discovery"
+}

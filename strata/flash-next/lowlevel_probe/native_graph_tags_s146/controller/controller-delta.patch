@@ -1,0 +1,71 @@
+--- S145V2/leased_run.py
++++ S146/leased_run.py
+@@ -4,8 +4,10 @@
+ P=Path(__file__).resolve().parent;REPO=Path('/mnt/vm_8tb/github/b70_ai_things')
+ IMAGE='sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2'
+ HEALTH='b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78'
+-NAME='strata-gdn-layers-s145-private';EXE=P/'build/gdn_layers_s145'
+-assert len(sys.argv)==3,'NEW_OUTPUT_DIR EXPECTED_EXE_SHA256';O=Path(sys.argv[1]).resolve();expected=sys.argv[2]
++SOURCE=P.parent/'native-tags-gdn-s146-prep'
++NAME='strata-native-tags-s146';EXE=SOURCE/'build/gdn_native_tags_s146'
++assert len(sys.argv)==5,'NEW_OUTPUT_DIR EXPECTED_EXE_SHA256 S145_RUN S145_CLOSURE_SHA256';O=Path(sys.argv[1]).resolve();expected=sys.argv[2]
++prior=Path(sys.argv[3]).resolve();prior_closure_sha=sys.argv[4]
+ assert re.fullmatch('[0-9a-f]{64}',expected)and not O.exists();O.mkdir()
+ def sha(p):
+  with p.open('rb')as f:return hashlib.file_digest(f,'sha256').hexdigest()
+@@ -15,15 +17,27 @@
+  with(O/(label+'.stdout')).open('w')as out,(O/(label+'.stderr')).open('w')as err:r=subprocess.run(args,cwd=REPO,stdout=out,stderr=err)
+  (O/(label+'.exit')).write_text(str(r.returncode)+'\n');return r.returncode
+ assert os.getuid()==1000 and os.environ.get('ZE_AFFINITY_MASK')=='0'and os.environ.get('ONEAPI_DEVICE_SELECTOR')=='level_zero:*'
+-assert sha(EXE)==expected and(P/'build/build.exit').read_text().strip()=='0'and(P/'build/tee.exit').read_text().strip()=='0'
+-manifest=json.loads((P/'manifest.json').read_text())
+-for n,row in manifest['files'].items():assert(P/n).stat().st_size==row['bytes']and sha(P/n)==row['sha256'],n
++assert sha(EXE)==expected and(SOURCE/'build/build.exit').read_text().strip()=='0'and(SOURCE/'build/tee.exit').read_text().strip()=='0'
++receipt=(SOURCE/'build/build-sha256.txt').read_text().splitlines()
++assert sum(x.split()==[expected,'gdn_native_tags_s146']for x in receipt)==1
++manifest=json.loads((SOURCE/'manifest.json').read_text())
++for n,row in manifest['files'].items():assert(SOURCE/n).stat().st_size==row['bytes']and sha(SOURCE/n)==row['sha256'],n
+ assert json.loads(subprocess.check_output(['docker','image','inspect',IMAGE]))[0]['Id']==IMAGE
+ assert not subprocess.check_output(['docker','ps','-aq','--filter','name=^'+NAME+'$']).strip(),'preserve existing container'
+-save('identity-before.json',{'exe':str(EXE),'sha256':expected,'image':IMAGE,'manifest_sha256':sha(P/'manifest.json'),'PCI':'0000:0b:00.0','card':0,'boot_id':Path('/proc/sys/kernel/random/boot_id').read_text().strip()})
+-assert cmd('pre-health',[str(REPO/'bin/xpu-health'),'--card','0','--img',HEALTH,'--timeout','400'])==0
++save('identity-before.json',{'exe':str(EXE),'sha256':expected,'image':IMAGE,'manifest_sha256':sha(SOURCE/'manifest.json'),'PCI':'0000:0b:00.0','card':0,'boot_id':Path('/proc/sys/kernel/random/boot_id').read_text().strip()})
++assert prior==P.parent/'gdn-commit-layers-s145-private-run'
++assert re.fullmatch('[0-9a-f]{64}',prior_closure_sha) and sha(prior/'closure.json')==prior_closure_sha
++pc=json.loads((prior/'closure.json').read_text());pi=json.loads((prior/'identity-before.json').read_text());pr=json.loads((prior/'comparison.json').read_text())
++assert pc['status']=='PASS_PRIVATE_STRICT_AND_NORMAL_HEALTH' and pc['native_exit']==pc['post_health_exit']==0
++assert all(pc[k] is True for k in ['identity_equal','CID_absent','name_absent','normal_wait_rm'])
++assert (prior/'post-health.exit').read_text().strip()=='0' and pi['card']==0 and pi['PCI']=='0000:0b:00.0'
++assert pi['boot_id']==Path('/proc/sys/kernel/random/boot_id').read_text().strip()
++assert pi['sha256']=='0c8e52871906ac3cad7bde8f5ddaa9e9c8157aa24a7c142ff9391a4723308a55'
++assert pr['status']=='PASS_PRIVATE_STRICT_ONLY' and len(pr['phase_records'])==9 and len(pr['accepted_state_digest_receipts'])==18
++assert os.environ.get('B70_S146_NO_INTERVENING_GPU')=='1','root attests no intervening GPU since S145 post-health'
++save('pre-health-reuse.json',{'source':str(prior),'boot_id':pi['boot_id'],'root_no_intervening_GPU_attestation':True,'S145_full_numeric_PASS':True,'fresh_prehealth_skipped':True,'records':{n:{'bytes':(prior/n).stat().st_size,'sha256':sha(prior/n)} for n in ['closure.json','post-health.exit','identity-before.json','comparison.json']}})
+ for n in['tmp','cache']:(O/n).mkdir()
+-entry='source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; set -euo pipefail; ldd /probe/gdn_layers_s145 > /out/runtime-ldd.txt; exec /probe/gdn_layers_s145 /out/leaf 0000:0b:00.0 --timing'
++entry='source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; set -euo pipefail; ldd /probe/gdn_native_tags_s146 > /out/runtime-ldd.txt; exec /probe/gdn_native_tags_s146 /out/leaf 0000:0b:00.0 --native-tags'
+ create=['docker','create','--name',NAME,'--cidfile',str(O/'attempt.cid'),'--network','none','--pull','never','--workdir','/out','--device','/dev/dri','--group-add',str(grp.getgrnam('render').gr_gid),'-u','1000:'+str(os.getgid()),'-e','ZE_AFFINITY_MASK=0','-e','ONEAPI_DEVICE_SELECTOR=level_zero:*','-e','STRATA_GDN_SPLIT=0','-e','STRATA_GDN_COMMIT_SPLIT=1','-e','STRATA_DBG_GDN=0','-e','SYCL_CACHE_PERSISTENT=0','-e','SYCL_CACHE_DIR=/out/cache','-e','XDG_CACHE_HOME=/out/cache','-e','TMPDIR=/out/tmp','-e','OMP_NUM_THREADS=1','-e','MKL_NUM_THREADS=1','-v',str(EXE.parent)+':/probe:ro','-v',str(O)+':/out','--entrypoint','bash',IMAGE,'-c',entry]
+ def hold_root(reason,detail=None):
+  save('lifecycle-HOLD.json',{'status':'HOLD_SAME_LEASE_ROOT_REQUIRED','reason':reason,'detail':detail,'no_force_reset_retry_or_health':True})
+@@ -50,7 +64,7 @@
+  t=time.monotonic();start=cmd('leaf',['docker','start','-a',cid]);save('elapsed.json',{'seconds':time.monotonic()-t})
+  ci=inspect()
+  if ci['State']['Running']:hold_root('owned container still running after start terminal')
+- save('final-state.json',ci);native=ci['State']['ExitCode'];normal=start==native==0 and not ci['State']['OOMKilled']and not ci['State'].get('Dead')and not ci['State'].get('Error')
++ save('final-state.json',ci);native=ci['State']['ExitCode'];normal=start==native and native in (0,3) and not ci['State']['OOMKilled']and not ci['State'].get('Dead')and not ci['State'].get('Error')
+  wait=cmd('normal-wait',['docker','wait',cid])
+  if wait!=0 or(O/'normal-wait.stdout').read_text().strip()!=str(native):hold_root('normal wait unconfirmed',{'exit':wait,'expected_native_exit':native})
+  rm=cmd('normal-rm',['docker','rm',cid])
+@@ -64,8 +78,10 @@
+  hold_root('lifecycle exception',{'type':type(error).__name__,'message':str(error)})
+ if not normal:
+  save('closure.json',{'status':'HOLD_ROOT_REVIEW_NO_AUTOMATIC_HEALTH_OR_RETRY','native_exit':native});raise SystemExit(2)
+-assert cmd('analysis',[sys.executable,str(P/'analyze.py'),str(O)])==0
++analysis=cmd('analysis',[sys.executable,str(P/'analyze.py'),str(O)])
++if analysis!=0:
++ save('closure.json',{'status':'HOLD_ANALYSIS_NO_AUTOMATIC_HEALTH_OR_RETRY','native_exit':native,'analysis_exit':analysis});raise SystemExit(2)
+ post=cmd('post-health',[str(REPO/'bin/xpu-health'),'--card','0','--img',HEALTH,'--timeout','400'])
+ assert sha(EXE)==expected
+-save('closure.json',{'status':'PASS_PRIVATE_STRICT_AND_NORMAL_HEALTH'if post==0 else'HOLD_POST_HEALTH','pre_health_exit':0,'post_health_exit':post,'native_exit':native,'identity_equal':True,'CID_absent':True,'name_absent':True,'normal_wait_rm':True,'analysis':'comparison.json','retries':0,'serving_or_speed_qualified':False})
++save('closure.json',{'status':'PASS_S146_METHOD_OR_KNOWN_UNSUPPORTED_AND_NORMAL_HEALTH'if post==0 else'HOLD_POST_HEALTH','pre_health_reused_S145_post_health_exit':0,'post_health_exit':post,'native_exit':native,'identity_equal':True,'CID_absent':True,'name_absent':True,'normal_wait_rm':True,'analysis':'comparison.json','retries':0,'serving_or_speed_qualified':False})
+ raise SystemExit(0 if post==0 else 2)

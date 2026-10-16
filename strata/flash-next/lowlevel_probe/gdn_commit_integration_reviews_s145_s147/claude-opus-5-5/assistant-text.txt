@@ -1,0 +1,59 @@
+Model ID: claude-opus-5-5
+
+VERDICT: CPU_BUILD_GO for S147 V2, as part of one otherwise-required incremental main build. I found no source blocker.
+
+OBSERVATIONS (source, V2 patch)
+
+- **Math reuse.** The new wrapper calls the existing `gdn_conv_commit_kernel` and `gdn_step_commit_kernel` bodies directly; the projection shows both bodies, both public launchers, the old fallback loop and the QSA/PLE tail byte-unchanged. There is no copied FP body.
+- **Offsets match the source layout:**
+  - state stride 817152 = 128\xb748\xb7128 + 10240\xb73;
+  - conv region at +786432 (right after the recurrent state);
+  - qkv/h layer stride 81920 = MT 8 \xd7 10240, row offset `first*C`;
+  - gate/beta stride 384 = 8 \xd7 48;
+  - keep pointer `commitb_ + row*CB`, unchanged.
+- **Ordering:**
+  - **Original order:** per layer, per owner, conv commit then state commit.
+  - **New order:** per owner, all conv layers then all state layers, hoisted before QSA and PLE.
+  - **Why it is safe:** each conv/state pair touches disjoint subranges (the recurrent state region is separate from the conv history region), the two owners' 117 MB ranges are checked disjoint, and the qkv/h/gate/beta inputs are read-only and were materialized before commit.
+  - **QSA, PLE history and the tail restore:** byte-unchanged.
+  - **Completion before observers:** the commit wait still precedes the CPU PLE update, drafting and snapshot/cache readers.
+- **Guards before recording:**
+  - flag latched at process start;
+  - in-order host queue property;
+  - `z_` and `y_dummy_` non-null;
+  - exact geometry, S = 6 as two contiguous 3-row groups;
+  - full-range slot sessions;
+  - modes unset or default;
+  - 7 spans checked for overflow, alignment and pairwise disjointness;
+  - every GDN norm `WeightRef` present (otherwise the existing error), with null data falling back to the old path.
+
+  The API rechecks dimensions, strides, modes and in-order. A mid-recording false invalidates the whole capture: there is never a partial batch plus fallback.
+- **No extra allocation:** none for the state-only branch, and `y_dummy` is unused.
+
+SOURCE INFERENCES AND UNPROVED COMPILED BEHAVIOUR
+
+- The new lambdas omit `reqd_sub_group_size(32)` and `use_root_sync`. The main build's global `-fsycl-default-sub-group-size=32` should give SG32, matching S145's private compilation, but that is unproved for the main image. A runtime mismatch would show up as a state/output divergence in serving, not silently.
+- The two kernel bodies now see grid dimension 0 = 36 (state) and dimension 1 = 36 (conv). S145 validated exactly this geometry. Main-TU scheduling and register allocation may differ, with no compiled FP proof claimed.
+- The `gdn_commit_layers` signature must match the existing header declaration. A mismatch is a compile error, which is fail-closed.
+
+BUILD CONDITIONS
+
+- The actual dry plan must show exactly: the verify core TU, the verify kernels TU, the engine archive, the kernels archive, and the strata link. Anything else: stop.
+- Existing configuration, offline cache, e41/BMG-G31/SG32/precise unchanged. No configure step.
+
+QUICKEST MEANINGFUL GPU DISCRIMINATOR (after the build)
+
+- **Binary:** the fresh same new binary, two arms: `STRATA_GDN_COMMIT_LAYERS` 0 vs 1.
+- **Flags:** all other experimental flags 0, including the QSA group flag (parked by S144), C2 and C6.
+- **Policy:** the pinned fixed-work policy as in S139/S144.
+- **Gates at every pair before the next:** exact request, text, SSE, usage, native draft work, windows, pair/solo counts, rows and captures. The marker must appear once in ON and never in OFF. Then functionals, normal QUIT, CID and name gone, fresh health on both cards and compiled health.
+- **Optional (my recommendation):** run both arms with `STRATA_HOST_BOUNDARY=1`. S142 showed the CPU ring has negligible perturbation without unitrace. The per-window `commit` bracket then gives direct, descriptive mechanism evidence (unprofiled median about 1.59 ms in S142) alongside tok/s. No CPU/GPU join and no budget arithmetic.
+- **Reach caveat:** eligibility needs S = 6 with two 3-row groups. Other windows (solo, different row counts) take the old path, and the marker shows only first selection. If the commit bracket does not move, that is the explanation to check before calling the mechanism ineffective.
+
+DISPOSITION RULES
+
+- Small or no aggregate change (as in S144): keep default OFF, retain the evidence, no repeat or extra instrumentation.
+- A clear commit-bracket reduction without a tok/s change: record it, and treat commit as not limiting.
+- Any work or output mismatch: HOLD and preserve the evidence, no retry.
+
+Accepted-state, snapshot/cache, PLE ordering and true RAM recovery are preserved by construction. The private \u221226% bundle timing is not a serving forecast.

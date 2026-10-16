@@ -378,3 +378,12 @@ performance result. [Full audit](../../../docs/20261015_strata_attention_binding
 `gdn_commit_layers_s145/` retains the full-state and continuation receipts,
 source and finite controller. The private whole bundle passed; isolated chain
 latency does not forecast serving. [Dated evidence](../../../docs/20261016_strata_gdn_commit_layer_oracle.md).
+
+
+## Native graph tags and GDN integration review (S146/S147)
+
+`native_graph_tags_s146/` retains all eight native timestamp observations and
+normal state/health proof. Tags work but perturb this chain; routine integration
+is parked. [Method evidence](../../../docs/20261016_strata_native_graph_tag_method.md).
+`gdn_commit_integration_reviews_s145_s147/` retains actual Opus/Fable source
+reasoning and root decisions. [Integration decision](../../../docs/20261016_strata_gdn_commit_integration_decision.md).

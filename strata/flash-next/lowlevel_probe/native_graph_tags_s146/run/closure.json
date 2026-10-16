@@ -1,0 +1,13 @@
+{
+  "status": "PASS_S146_METHOD_OR_KNOWN_UNSUPPORTED_AND_NORMAL_HEALTH",
+  "pre_health_reused_S145_post_health_exit": 0,
+  "post_health_exit": 0,
+  "native_exit": 0,
+  "identity_equal": true,
+  "CID_absent": true,
+  "name_absent": true,
+  "normal_wait_rm": true,
+  "analysis": "comparison.json",
+  "retries": 0,
+  "serving_or_speed_qualified": false
+}

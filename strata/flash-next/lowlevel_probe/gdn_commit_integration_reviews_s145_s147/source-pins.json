@@ -1,0 +1,27 @@
+{
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s147-main-source-prep-v2/review-packet.txt": {
+    "bytes": 17970,
+    "sha256": "611bec60aabec1031252caca31a58e8b3638b30b750c641560ea46646fa16eb6"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s145-private-run/root-summary.json": {
+    "bytes": 1476,
+    "sha256": "e6ad670fa5125071e7cda0d01893ae4ea2295197d84ff095b2a4a2675f241cbb"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/gdn-commit-layers-s145-private-run/closure.json": {
+    "bytes": 310,
+    "sha256": "4caa678b87fd9197e2e0c482cc5d80c3883d6d48d4382890d3199c5074302903"
+  },
+  "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/qsa-commit-group-steps-s144-curation-draft/payload/result-summary.json": {
+    "bytes": 2891,
+    "sha256": "fd366564cf3d70406b2cf277ee4356d7e962890c15018aa18c43978f61f6be9c",
+    "derived_fields": [
+      "status",
+      "all_checks_true",
+      "aggregate_change_of_medians_pct",
+      "scope",
+      "common_RoPE0_config_and_actual_native_env_both_verified",
+      "only_groupflag_diff_after_log_normalization",
+      "aggregate_output_tps_median"
+    ]
+  }
+}
