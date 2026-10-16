@@ -1,0 +1,31 @@
+{
+  "scope": "Exact original whole-collection rows; not cycle attribution or current runtime dispatch",
+  "rows": [
+    {
+      "kind": "gpu",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+      "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<17, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<17>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 60; 1} {256; 1; 1}]",
+      "count": "240",
+      "total_ms": "24.731565",
+      "mean_us": "103.0481875",
+      "median_us": "98.69749999999999",
+      "p95_us": "151.85349999999994",
+      "min_us": "67.708",
+      "max_us": "198.645"
+    },
+    {
+      "kind": "gpu",
+      "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+      "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+      "operation": "dpct_kernel_name<strata::kernels::native_expert_grouped(strata::kernels::NativeExpertLayout const&, unsigned long long const*, int const*, int const*, int const*, int const*, long, long, void const*, void*, float*, void*, long)::swiglu_q8_1_entries_kernel_115291>[SIMD32 {150; 1; 1} {256; 1; 1}]",
+      "count": "1152",
+      "total_ms": "3.966223",
+      "mean_us": "3.4429019097222224",
+      "median_us": "3.333",
+      "p95_us": "4.895",
+      "min_us": "2.812",
+      "max_us": "5.937"
+    }
+  ]
+}

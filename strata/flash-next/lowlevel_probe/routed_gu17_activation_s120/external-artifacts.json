@@ -1,0 +1,61 @@
+{
+  "status": "RETAINED_IDENTITIES_ONLY_NO_NEW_ARTIFACT_READ_OR_HASH",
+  "artifacts": [
+    {
+      "kind": "exe",
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/strata-q6-a4-s107",
+      "sha256": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca",
+      "bytes": 92372200,
+      "identity_source": "audit-prep-v1/pins.json; actual small-object verification and build receipt context in actual-v2/selection.json",
+      "fresh_curation_read_or_hash": false
+    },
+    {
+      "kind": "object",
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/iq_kernels.dp.cpp.o",
+      "sha256": "09447b7e983dc8c0299172b6c1a84c09e68a9383f0680b13f658d030e69f73a9",
+      "bytes": 2877296,
+      "identity_source": "audit-prep-v1/pins.json; actual small-object verification and build receipt context in actual-v2/selection.json",
+      "fresh_curation_read_or_hash": false
+    },
+    {
+      "kind": "archive",
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/libstrata_kernels.a",
+      "sha256": "cf710683aec404599d1cc6173bf8364e6d30731bda82b315df286bf58aed9b38",
+      "bytes": null,
+      "identity_source": "audit-prep-v1/pins.json; actual small-object verification and build receipt context in actual-v2/selection.json",
+      "fresh_curation_read_or_hash": false
+    },
+    {
+      "kind": "selected_image",
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-gu17-existing-audit/selected.zebin",
+      "bytes": 43272,
+      "sha256": "e5836dfc76da441a9a5f54afa441997026d0623f1e9660b6aa102677fc29a453",
+      "identity_source": "actual-v2/selection.json and continuation-v2/root-execution-context.json",
+      "fresh_curation_read_or_hash": false
+    },
+    {
+      "kind": "selected_image",
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-gu17-existing-audit-v2/selected.zebin",
+      "bytes": 43272,
+      "sha256": "e5836dfc76da441a9a5f54afa441997026d0623f1e9660b6aa102677fc29a453",
+      "identity_source": "actual-v2/selection.json and continuation-v2/root-execution-context.json",
+      "fresh_curation_read_or_hash": false
+    },
+    {
+      "kind": "full_retained_selected_ASM",
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/disasm/.text.s97_qt17.asm",
+      "bytes": 47852,
+      "sha256": "4a75d3931dc6c810601bcf844ac81101d6c646c725ce84789e42ad697234339a",
+      "identity_source": "actual-v2/isa-reuse.json; original completed S97 manifest",
+      "fresh_curation_read_or_hash": false
+    },
+    {
+      "kind": "retained_actual_host_ASM",
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-audit/host-function-0.asm",
+      "bytes": 101431,
+      "sha256": "7ec82ed7ecaed9168ae8753799c38f2c57fb7a811d913e1549082b6522079c6a",
+      "fresh_curation_read_or_hash": false
+    }
+  ],
+  "limits": "Whole main/archive/model and complete host/device ASM not copied; only bounded derived operand excerpt. Native computational reuse is narrower than whole-image equality."
+}

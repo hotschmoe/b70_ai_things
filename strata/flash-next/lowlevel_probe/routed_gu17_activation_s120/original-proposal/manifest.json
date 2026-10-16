@@ -1,0 +1,26 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NO_LIVE_CHANGE_BUILD_GPU_TRACE_MODEL",
+  "files": [
+    {
+      "name": "S95-selected-operation-rows.json",
+      "bytes": 1612,
+      "sha256": "5865fb1fff63b13d4bdfb5a9ce5bd85822da7d4ffc3e74d4944a66262e9fa6ce"
+    },
+    {
+      "name": "findings.md",
+      "bytes": 6111,
+      "sha256": "222e00080f2e59e5ce138295be02789c63d2d862bc2ceb42aa7e29141f14c7f2"
+    },
+    {
+      "name": "pins.json",
+      "bytes": 978,
+      "sha256": "56f64c0432114be76bf3a7f9497afda4608717424f210824f28453750809e598"
+    },
+    {
+      "name": "source-excerpts.json",
+      "bytes": 21089,
+      "sha256": "825974892829e5645853328d27f59ae0e0c505062c58a2a075bab1e09138786e"
+    }
+  ],
+  "scope": "One conditional next expert GU producer mechanism; S116 remains priority. No runtime/compiled candidate proof, forecast, or execution authorization."
+}

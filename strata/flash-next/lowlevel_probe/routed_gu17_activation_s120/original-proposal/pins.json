@@ -1,0 +1,25 @@
+{
+  "source_status": "CURRENT_SOURCE_ONLY_NO_CURRENT_RUNTIME_DISPATCH_PROOF",
+  "files": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp",
+      "bytes": 295028,
+      "sha256": "8bf1489cb53a2de442c051a8a64f577d330eadedbe200fd36ee967f33a29bb6d"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp",
+      "bytes": 223107,
+      "sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/core/geometry.hpp",
+      "bytes": 4805,
+      "sha256": "e9869988fbdc9e18ef3d144dd91e9266c18a190e9ec1a7351ce5c7b858bbd838"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/lowlevel_probe/current_c2_profile_s95/runtime/analysis/gpu/operations.csv",
+      "bytes": 301220,
+      "sha256": "6e7b53de561f54252c5e170ed0e9f45818be3a46e0aea4fdf44b388ac7bdf584"
+    }
+  ]
+}

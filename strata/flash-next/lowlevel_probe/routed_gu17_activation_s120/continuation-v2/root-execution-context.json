@@ -1,0 +1,14 @@
+{
+  "authorization": "Root explicit GO for ONE bounded CPU parser correction/continuation without further permission; stop first new issue, no automatic decoder.",
+  "prior_attempt_reported_by": "root",
+  "prior_terminal_exit": 1,
+  "prior_elapsed_s_reported": 1,
+  "prior_handle": "NOT_PROVIDED_IN_ROOT_MESSAGE",
+  "failure": "IndexError at frozen v1 audit.py line59, literal ze_info name-colon spacing",
+  "preserved_original_prep": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-gu17-existing-audit-prep",
+  "preserved_partial": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-gu17-existing-audit",
+  "partial_selected_image_bytes": 43272,
+  "partial_selected_image_sha256": "e5836dfc76da441a9a5f54afa441997026d0623f1e9660b6aa102677fc29a453",
+  "correction_scope": "Only whitespace-safe exact registered-name metadata block parser, plus reuse saved partial selected image to avoid a new large-main image scan. Strict comparison/source/object/build pins unchanged. Final host metadata re-bound from ELF symtab/name pointer; original selected uniqueness was before saved outputs/failure.",
+  "no_new_runtime_dispatch_or_numerical_claim": true
+}

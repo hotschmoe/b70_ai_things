@@ -1,0 +1,95 @@
+{
+  "status": "FROZEN_ACTUAL_CPU_CONTINUATION_PASS_NO_DECODER_BUILD_GPU",
+  "actual_exit": 0,
+  "elapsed_s": 0.24482904199976474,
+  "CPU_wrapper_reported_s": 1,
+  "exec_chunk_id": "5c1805",
+  "files": [
+    {
+      "path": "routed-gu17-existing-audit-prep-v2/audit.py",
+      "bytes": 7740,
+      "sha256": "22debfad7057766026554cf5a8ce7ebf1ad19a51d00bcfefc12673a7b1ce3524"
+    },
+    {
+      "path": "routed-gu17-existing-audit-prep-v2/compare.py",
+      "bytes": 5197,
+      "sha256": "5d51aabd5cfd29bc5f864c1b1107bd2083427b3bbb8d73e10dde644f0c85570f"
+    },
+    {
+      "path": "routed-gu17-existing-audit-prep-v2/helpers.py",
+      "bytes": 4852,
+      "sha256": "f42d49e8b0d0795ea02568ae79c63b61aa50fee35f576358f3bc2e77090d605e"
+    },
+    {
+      "path": "routed-gu17-existing-audit-prep-v2/pins.json",
+      "bytes": 5550,
+      "sha256": "05cc5b21bb4fc5cf732e78456757166d9b75a22d7537d3ecea40a919042df38d"
+    },
+    {
+      "path": "routed-gu17-existing-audit-prep-v2/root-execution-context.json",
+      "bytes": 1225,
+      "sha256": "0fb136c8e9825dcb58916a4e1890fce330463e3ed519e8e27f60a6501b2fe5e0"
+    },
+    {
+      "path": "routed-gu17-existing-audit-prep-v2/source-validation.json",
+      "bytes": 144,
+      "sha256": "e2a69ec382672ac554998474b9c466d937f7a11b78d9173a6ae75e584129d86f"
+    },
+    {
+      "path": "routed-gu17-existing-audit-prep-v2/vs-v1.diff",
+      "bytes": 3802,
+      "sha256": "c06118bda1705684b8042efa6d0ce686ce11c5701b4ffb739e49ad7afc426647"
+    },
+    {
+      "path": "routed-gu17-existing-audit-v2/comparison.json",
+      "bytes": 5697,
+      "sha256": "f797584d8c165e5391ea7c27b80d362c1d2200f39aa7d6773cc7fb209604d737"
+    },
+    {
+      "path": "routed-gu17-existing-audit-v2/findings.md",
+      "bytes": 3593,
+      "sha256": "1061759657c1a505e54e129e9a860e0a304246173d25ffe4e5c3d5b0b851c000"
+    },
+    {
+      "path": "routed-gu17-existing-audit-v2/isa-reuse.json",
+      "bytes": 6964,
+      "sha256": "991ae40e63a3d323187e5231efd8da98d69a0dd2bc82bdd91a6d8f9ee20c1afb"
+    },
+    {
+      "path": "routed-gu17-existing-audit-v2/raw-section-inventory.json",
+      "bytes": 12089,
+      "sha256": "9c80b8c4f042bfe913b418f7e39f04dfc16dd481f53fd46e17f5876b7e52a448"
+    },
+    {
+      "path": "routed-gu17-existing-audit-v2/retained-K-loop-read-window.txt",
+      "bytes": 27931,
+      "sha256": "76b8470bcefb9fe8a2891a5ae9465eeb5bc3ff995bee2399cfa9c939536d0997"
+    },
+    {
+      "path": "routed-gu17-existing-audit-v2/selected.ze_info",
+      "bytes": 4754,
+      "sha256": "0356e7a01724b200d3684b7070e228c15266231e35a0e91cb5a90a4bb052a47d"
+    },
+    {
+      "path": "routed-gu17-existing-audit-v2/selected.zebin",
+      "bytes": 43272,
+      "sha256": "e5836dfc76da441a9a5f54afa441997026d0623f1e9660b6aa102677fc29a453"
+    },
+    {
+      "path": "routed-gu17-existing-audit-v2/selection.json",
+      "bytes": 9061,
+      "sha256": "c940864d3a7293311591727979fc0ca71157a89bc73b0f117dc18dc5bc0beaec"
+    },
+    {
+      "path": "routed-gu17-existing-audit-v2-execution/audit.log",
+      "bytes": 418,
+      "sha256": "a29c9e4a0ac725419dc46cffcd45e6072a6cca90aae72ed2c884c5c1b28a9789"
+    },
+    {
+      "path": "routed-gu17-existing-audit-v2-execution/result.json",
+      "bytes": 703,
+      "sha256": "96312dce561771a803d3d4978c78129cdfc2463bb586700ad40a554259daf885"
+    }
+  ],
+  "limits": "V1 prep/partial preserved. Original selected executable offset unavailable; no second main image scan or new full hash. Optional byte-offset annotation failed at syntax stage, not retried; no derived addresses. No new kernel, fixture or speed claim."
+}

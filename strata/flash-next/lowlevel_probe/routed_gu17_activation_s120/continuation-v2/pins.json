@@ -1,0 +1,118 @@
+{
+  "status": "SOURCE_ONLY_NO_AUDIT_DECODER_BUILD_GPU",
+  "small_pins": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/iq_kernels.dp.cpp",
+      "bytes": 295028,
+      "sha256": "8bf1489cb53a2de442c051a8a64f577d330eadedbe200fd36ee967f33a29bb6d"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/artifact/gguf_reader.hpp",
+      "bytes": 33690,
+      "sha256": "5ae13b2ef871ef59582a5530cee372b235e3c1ff6b61bea2c3b58974cb06d0f6"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/include/strata/core/geometry.hpp",
+      "bytes": 4805,
+      "sha256": "e9869988fbdc9e18ef3d144dd91e9266c18a190e9ec1a7351ce5c7b858bbd838"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/shared_expert.dp.cpp",
+      "bytes": 35083,
+      "sha256": "c0ed885fbfa1f89b0136d8a5c3f7b8dae7ebcff3c8d1fd2bf06e4df4f7e5430d"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+      "bytes": 192865,
+      "sha256": "ae47a632d0cb3a0fc5a992c335bdd1145d4bbb9210c5b481dd45e53cc3835252"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/sycl/src/core/verify.cpp",
+      "bytes": 223107,
+      "sha256": "e97ce93a3434fa1d4e9a3a3dce99a3fd41d86aac8662fbd3c959a3c78ce0d4b2"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/attn-value-binding-s92-build-audit/host_binding.py",
+      "bytes": 6232,
+      "sha256": "37ecf55c43300319f0a3baaf15bede814934bd3ee1b0a11b32a38dc6066d4aa6"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-audit-prep/audit.py",
+      "bytes": 11402,
+      "sha256": "f6033366052f0967ef6fc04619a551ca66ceee1a4856a932d70fc2e3ef3b984a"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-audit-prep/compare.py",
+      "bytes": 5197,
+      "sha256": "5d51aabd5cfd29bc5f864c1b1107bd2083427b3bbb8d73e10dde644f0c85570f"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/root-build-audit.json",
+      "bytes": 2810,
+      "sha256": "e6e7c14897a8d3f123e7e160306f1d27c98595c30ba49e4d60fd6778fb86c538"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/build-sha256.txt",
+      "bytes": 954,
+      "sha256": "df200c97e86b03a1f7e005a24902d79391bc6f22f986c3a9db66d676f4a85038"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/mtp-parallel-argmax-main-s114-build/build/build-sha256.txt",
+      "bytes": 939,
+      "sha256": "8e97bff427c073e56e91006798e6304abed07e7ddeba1751998bc450972c55f3"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-audit/selection.json",
+      "bytes": 22672,
+      "sha256": "95c0a50aaee965ccc2a50541f3fb3d1243c1593f757cb0d2f70b0f8191f33f3a"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s100-main-audit/host-function-0.asm",
+      "bytes": 101431,
+      "sha256": "7ec82ed7ecaed9168ae8753799c38f2c57fb7a811d913e1549082b6522079c6a"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/report.json",
+      "bytes": 4300,
+      "sha256": "d31f44b59e9c6f2aa9a3ef93508b73535dd6207b14a719093190cc084921b54c"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-multi-s98-public-image-comparison/comparison.json",
+      "bytes": 7520,
+      "sha256": "1afde12f890fdf41b6e48ecde140505e4d6919dd64e94543d4cc55d192fe07a6"
+    },
+    {
+      "path": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/lowlevel_probe/routed_iq2_existing_isa_s97/completed-isa-manifest.json",
+      "bytes": 11559,
+      "sha256": "62ccb5119de28d5a90cdf88b111576f74c67db860200370ef2316ede29ebc675"
+    }
+  ],
+  "exe": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/q6-a4-main-s107-build/build/strata-q6-a4-s107",
+    "retained_sha256": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca",
+    "stat": {
+      "dev": 45,
+      "ino": 24075744,
+      "bytes": 92372200,
+      "mtime_ns": 1792107755228308854
+    },
+    "fresh_hash": false
+  },
+  "object": {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/CMakeFiles/strata_kernels.dir/src/kernels/cuda/iq_kernels.dp.cpp.o",
+    "retained_sha256": "09447b7e983dc8c0299172b6c1a84c09e68a9383f0680b13f658d030e69f73a9",
+    "stat": {
+      "dev": 45,
+      "ino": 24034004,
+      "bytes": 2877296,
+      "mtime_ns": 1792100839197078646
+    },
+    "fresh_hash": false
+  },
+  "archive": {
+    "path": "/mnt/vm_8tb/b70/build/strata-ab/src-ep/build-sycl-ep/libstrata_kernels.a",
+    "retained_sha256": "cf710683aec404599d1cc6173bf8364e6d30731bda82b315df286bf58aed9b38",
+    "fresh_hash_or_walk": false
+  },
+  "helper_derivation": "S92 ELF class only; same four bounded-cstring substitutions as S100; mmap/no implicit whole-image SHA. Three exact AST functions refs_to/bind/elf_at from S100. helpers.final assigned by audit. Unused ELF.target/relocs methods removed; only constructor/symbol/nameptr retained."
+}

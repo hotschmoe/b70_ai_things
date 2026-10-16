@@ -1,0 +1,246 @@
+{
+  "scope": "Primary device whole canonical collection GU-port rows only. Sum total_ms of disjoint recorded events, not sum of medians/reviewed cycles, not criticalpath or speed budget. No rawtrace parse.",
+  "total_ms": 115.37796599999999,
+  "ranked": [
+    {
+      "TG": 21,
+      "count": 377,
+      "total_ms": 30.452648999999997,
+      "original_rows": [
+        {
+          "kind": "gpu",
+          "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+          "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+          "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<21, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<21>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 60; 1} {256; 1; 1}]",
+          "count": "312",
+          "total_ms": "27.646119",
+          "mean_us": "88.60935576923077",
+          "median_us": "86.145",
+          "p95_us": "114.45764999999999",
+          "min_us": "45.937",
+          "max_us": "153.75"
+        },
+        {
+          "kind": "gpu",
+          "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+          "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+          "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<21, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<21>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 30; 1} {256; 1; 1}]",
+          "count": "26",
+          "total_ms": "1.70759",
+          "mean_us": "65.67653846153846",
+          "median_us": "63.176500000000004",
+          "p95_us": "83.2545",
+          "min_us": "50.52",
+          "max_us": "88.02"
+        },
+        {
+          "kind": "gpu",
+          "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+          "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+          "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<21, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<21>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 10; 1} {256; 1; 1}]",
+          "count": "39",
+          "total_ms": "1.09894",
+          "mean_us": "28.177948717948716",
+          "median_us": "28.437",
+          "p95_us": "40.07290000000002",
+          "min_us": "17.812",
+          "max_us": "52.916"
+        }
+      ],
+      "share_of_this_GU_only_collection_service_percent": 26.39381682287587
+    },
+    {
+      "TG": 17,
+      "count": 290,
+      "total_ms": 26.745296,
+      "original_rows": [
+        {
+          "kind": "gpu",
+          "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+          "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+          "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<17, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<17>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 60; 1} {256; 1; 1}]",
+          "count": "240",
+          "total_ms": "24.731565",
+          "mean_us": "103.0481875",
+          "median_us": "98.69749999999999",
+          "p95_us": "151.85349999999994",
+          "min_us": "67.708",
+          "max_us": "198.645"
+        },
+        {
+          "kind": "gpu",
+          "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+          "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+          "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<17, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<17>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 30; 1} {256; 1; 1}]",
+          "count": "20",
+          "total_ms": "1.3721789999999998",
+          "mean_us": "68.60895",
+          "median_us": "70.312",
+          "p95_us": "102.10385",
+          "min_us": "30.833",
+          "max_us": "102.5"
+        },
+        {
+          "kind": "gpu",
+          "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+          "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+          "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<17, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<17>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 10; 1} {256; 1; 1}]",
+          "count": "30",
+          "total_ms": "0.641552",
+          "mean_us": "21.385066666666667",
+          "median_us": "20.884999999999998",
+          "p95_us": "28.478799999999993",
+          "min_us": "13.125",
+          "max_us": "29.791"
+        }
+      ],
+      "share_of_this_GU_only_collection_service_percent": 23.180592384511268
+    },
+    {
+      "TG": 16,
+      "count": 261,
+      "total_ms": 24.550933999999998,
+      "original_rows": [
+        {
+          "kind": "gpu",
+          "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+          "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+          "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<16, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<16>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 60; 1} {256; 1; 1}]",
+          "count": "216",
+          "total_ms": "22.577723",
+          "mean_us": "104.52649537037037",
+          "median_us": "102.604",
+          "p95_us": "145.96325000000002",
+          "min_us": "55.729",
+          "max_us": "212.083"
+        },
+        {
+          "kind": "gpu",
+          "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+          "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+          "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<16, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<16>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 30; 1} {256; 1; 1}]",
+          "count": "18",
+          "total_ms": "1.306138",
+          "mean_us": "72.56322222222222",
+          "median_us": "71.77",
+          "p95_us": "91.24414999999998",
+          "min_us": "35.52",
+          "max_us": "106.562"
+        },
+        {
+          "kind": "gpu",
+          "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+          "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+          "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<16, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<16>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 10; 1} {256; 1; 1}]",
+          "count": "27",
+          "total_ms": "0.667073",
+          "mean_us": "24.706407407407408",
+          "median_us": "24.062",
+          "p95_us": "42.135099999999994",
+          "min_us": "10.0",
+          "max_us": "47.187"
+        }
+      ],
+      "share_of_this_GU_only_collection_service_percent": 21.278702382394226
+    },
+    {
+      "TG": 22,
+      "count": 290,
+      "total_ms": 20.838634,
+      "original_rows": [
+        {
+          "kind": "gpu",
+          "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+          "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+          "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<22, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<22>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 60; 1} {256; 1; 1}]",
+          "count": "240",
+          "total_ms": "18.683445",
+          "mean_us": "77.84768749999999",
+          "median_us": "78.0205",
+          "p95_us": "105.416",
+          "min_us": "30.52",
+          "max_us": "141.77"
+        },
+        {
+          "kind": "gpu",
+          "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+          "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+          "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<22, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<22>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 30; 1} {256; 1; 1}]",
+          "count": "20",
+          "total_ms": "1.224889",
+          "mean_us": "61.24445",
+          "median_us": "60.7805",
+          "p95_us": "74.31755000000001",
+          "min_us": "38.854",
+          "max_us": "95.0"
+        },
+        {
+          "kind": "gpu",
+          "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+          "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+          "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<22, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<22>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 10; 1} {256; 1; 1}]",
+          "count": "30",
+          "total_ms": "0.9302999999999999",
+          "mean_us": "31.009999999999998",
+          "median_us": "28.5935",
+          "p95_us": "53.020649999999996",
+          "min_us": "12.604",
+          "max_us": "54.27"
+        }
+      ],
+      "share_of_this_GU_only_collection_service_percent": 18.0611902969411
+    },
+    {
+      "TG": 18,
+      "count": 174,
+      "total_ms": 12.790453,
+      "original_rows": [
+        {
+          "kind": "gpu",
+          "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+          "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+          "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<18, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<18>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 60; 1} {256; 1; 1}]",
+          "count": "144",
+          "total_ms": "11.595466",
+          "mean_us": "80.52406944444444",
+          "median_us": "77.44749999999999",
+          "p95_us": "107.7808",
+          "min_us": "49.27",
+          "max_us": "120.729"
+        },
+        {
+          "kind": "gpu",
+          "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+          "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+          "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<18, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<18>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 30; 1} {256; 1; 1}]",
+          "count": "12",
+          "total_ms": "0.681557",
+          "mean_us": "56.796416666666666",
+          "median_us": "54.9995",
+          "p95_us": "71.4575",
+          "min_us": "45.416",
+          "max_us": "74.895"
+        },
+        {
+          "kind": "gpu",
+          "process": "DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0",
+          "engine_or_thread": "Thread 467 L0 Compute Engine<0,0>",
+          "operation": "dpct_kernel_name<strata::kernels::(anonymous namespace)::launch_gu_port<18, 8, true>(unsigned int, sycl::_V1::queue*, unsigned long long const*, int const*, int const*, int const*, block_q8_1 const*, strata::kernels::NativeExpertLayout const&, float*, float*)::native_gu_port, dpct_kernel_scalar<18>, dpct_kernel_scalar<8>, dpct_kernel_scalar<1> >[SIMD32 {40; 10; 1} {256; 1; 1}]",
+          "count": "18",
+          "total_ms": "0.5134299999999999",
+          "mean_us": "28.523888888888887",
+          "median_us": "29.2705",
+          "p95_us": "48.1406",
+          "min_us": "13.541",
+          "max_us": "48.229"
+        }
+      ],
+      "share_of_this_GU_only_collection_service_percent": 11.08569811327754
+    }
+  ],
+  "canonical_source_pin_reused": {
+    "path": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/lowlevel_probe/current_c2_profile_s95/runtime/analysis/gpu/operations.csv",
+    "bytes": 301220,
+    "sha256": "6e7b53de561f54252c5e170ed0e9f45818be3a46e0aea4fdf44b388ac7bdf584"
+  }
+}

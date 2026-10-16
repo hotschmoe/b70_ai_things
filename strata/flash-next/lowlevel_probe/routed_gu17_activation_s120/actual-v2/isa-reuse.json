@@ -1,0 +1,155 @@
+{
+  "status": "PASS_S107_GU17_NATIVE_PREFIX_AND_METADATA_REUSE_S97_NO_DECODER_NEEDED",
+  "comparison": {
+    "reference": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/qt17.zebin",
+    "reference_sha256": "37cb80cd3034716da7cb4916cbe2379a35abc375169c171568f8525fe780cd78",
+    "raw_full_image_exact": false,
+    "raw_target_text_exact": false,
+    "computational_prefix_through_EOT_and_alignment_exact": true,
+    "normalizations": "ONLY registered target name in ze_info/string/symbol/section names; explicit post-EOT immediate fields; embedded SPIR-V raw difference separately recorded",
+    "section_comparisons": [
+      {
+        "normalized_section": "",
+        "reference_bytes": 0,
+        "current_bytes": 0,
+        "reference_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "current_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "raw_exact": true
+      },
+      {
+        "normalized_section": ".text.TARGET_KERNEL",
+        "reference_bytes": 7488,
+        "current_bytes": 7488,
+        "reference_sha256": "bfbb475964f034bba8063a2e746a44a1dbef26d97f68ce4c79a99d2a374db2e1",
+        "current_sha256": "aecbb2ebde34ad26fcd0b20e9e7add37f2873a6c0af9072a0e501b98778c78f1",
+        "raw_exact": false,
+        "changed_byte_offsets": [
+          7308,
+          7309,
+          7310,
+          7311,
+          7324,
+          7325,
+          7326,
+          7327
+        ],
+        "exact_prefix_through_EOT_and_alignment_bytes": 7296,
+        "only_allowed_difference": "two previously decoded post-EOT MOV-to-null immediate fields"
+      },
+      {
+        "normalized_section": ".text.Intel_Symbol_Table_Void_Program",
+        "reference_bytes": 320,
+        "current_bytes": 320,
+        "reference_sha256": "957e4318c1055a1c670e6b33694302bb85dfb03db01eec84d437ef5b9b124473",
+        "current_sha256": "45b353378db0ef6595897e60ff64df04a52c4de9ec63c330dbcda2eee3a1e4aa",
+        "raw_exact": false,
+        "changed_byte_offsets": [
+          92,
+          93,
+          94,
+          95,
+          108,
+          109,
+          110,
+          111
+        ],
+        "exact_prefix_through_EOT_and_alignment_bytes": 80,
+        "only_allowed_difference": "two previously decoded post-EOT MOV-to-null immediate fields"
+      },
+      {
+        "normalized_section": ".data.global",
+        "reference_bytes": 4096,
+        "current_bytes": 4096,
+        "reference_sha256": "06e47aaca60b4dc1d9b5a3f34540437058a6b142b4d7a59d5ded769b4d1bf1de",
+        "current_sha256": "06e47aaca60b4dc1d9b5a3f34540437058a6b142b4d7a59d5ded769b4d1bf1de",
+        "raw_exact": true
+      },
+      {
+        "normalized_section": ".symtab",
+        "reference_bytes": 168,
+        "current_bytes": 168,
+        "reference_sha256": "82c3fe8c4203f5106ecbb7aa02091a12309288063d48b283b648b7b3c3d82d26",
+        "current_sha256": "82c3fe8c4203f5106ecbb7aa02091a12309288063d48b283b648b7b3c3d82d26",
+        "raw_exact": true,
+        "normalized_exact": true
+      },
+      {
+        "normalized_section": ".spv",
+        "reference_bytes": 24212,
+        "current_bytes": 24212,
+        "reference_sha256": "bd04a66a25110d9f998fd0d8ef7fd9f0a0ef63c0d6a09eefb575f8f0c5782bb9",
+        "current_sha256": "1fbf6c656c5a9efd17d5a3af58e28a92ec9c0be9adf6d7197e082a13582e1a0c",
+        "raw_exact": false,
+        "classification": "Embedded SPIR-V raw difference recorded; not emitted AOT instruction bytes; no universal semantic-equivalence claim"
+      },
+      {
+        "normalized_section": ".misc.buildOptions",
+        "reference_bytes": 38,
+        "current_bytes": 38,
+        "reference_sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f",
+        "current_sha256": "f4d91f11d41e193deb2e5f3742f5e0eadf54f00660b965f19278f9024729af7f",
+        "raw_exact": true
+      },
+      {
+        "normalized_section": ".note.intelgt.metrics",
+        "reference_bytes": 3,
+        "current_bytes": 3,
+        "reference_sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c",
+        "current_sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c",
+        "raw_exact": true
+      },
+      {
+        "normalized_section": ".rel.text.TARGET_KERNEL",
+        "reference_bytes": 32,
+        "current_bytes": 32,
+        "reference_sha256": "b0127d71458076bb4dd803903e616a4aaa3efd1782cb31dd87377568bbf1a471",
+        "current_sha256": "b0127d71458076bb4dd803903e616a4aaa3efd1782cb31dd87377568bbf1a471",
+        "raw_exact": true
+      },
+      {
+        "normalized_section": ".rel.text.Intel_Symbol_Table_Void_Program",
+        "reference_bytes": 16,
+        "current_bytes": 16,
+        "reference_sha256": "bd1da0a8713733f5398e10fc71a222055d39a6af5a4056174b89747ee5c340a5",
+        "current_sha256": "bd1da0a8713733f5398e10fc71a222055d39a6af5a4056174b89747ee5c340a5",
+        "raw_exact": true
+      },
+      {
+        "normalized_section": ".ze_info",
+        "reference_bytes": 4754,
+        "current_bytes": 4754,
+        "reference_sha256": "0356e7a01724b200d3684b7070e228c15266231e35a0e91cb5a90a4bb052a47d",
+        "current_sha256": "0356e7a01724b200d3684b7070e228c15266231e35a0e91cb5a90a4bb052a47d",
+        "raw_exact": true,
+        "normalized_exact": true
+      },
+      {
+        "normalized_section": ".note.intelgt.compat",
+        "reference_bytes": 172,
+        "current_bytes": 172,
+        "reference_sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1",
+        "current_sha256": "68b452658b2fb87e6b308557a02844aa96e0edb93254e5630b0ed1bb3acc4fb1",
+        "raw_exact": true
+      },
+      {
+        "normalized_section": ".strtab",
+        "reference_bytes": 988,
+        "current_bytes": 988,
+        "reference_sha256": "0376db31d2b90f8434e4b1200645eb8a7154456e2c9d5c0cb46ae541b77855a6",
+        "current_sha256": "0376db31d2b90f8434e4b1200645eb8a7154456e2c9d5c0cb46ae541b77855a6",
+        "raw_exact": true,
+        "normalized_exact": true
+      }
+    ]
+  },
+  "actual_prior_ASM": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-iq2-existing-isa-s97/disasm/.text.s97_qt17.asm",
+  "ASM_sha256": "4a75d3931dc6c810601bcf844ac81101d6c646c725ce84789e42ad697234339a",
+  "next_read": "Map each activation word/half-scale send and address provenance within K loop against IQ2_XS helper; no opcode count -> traffic/saving claim.",
+  "limits": [
+    "TG17 only23.18% of whole-collection GU service, not representative dominant path.",
+    "TG21 IQ3_S26.39% requires preserving existing E4/E2/tail weight reuse; source/compiled audit separate before any pivot.",
+    "SLM/spill/scratch absent UNKNOWN; static counters not dynamic costs.",
+    "Raw full images/text and embedded SPIR-V equality are not implied by prefix reuse.",
+    "No numerical fixture, speed, runtime dispatch or kernel authorization."
+  ]
+}

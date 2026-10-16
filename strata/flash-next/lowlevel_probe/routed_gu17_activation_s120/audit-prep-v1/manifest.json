@@ -1,0 +1,62 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_EXISTING_GU17_AUDIT_NOT_EXECUTED",
+  "files": [
+    {
+      "name": "README.md",
+      "bytes": 2999,
+      "sha256": "a79ee74e77ffe023b1f5feb45d3e2cc966e495ab5d47fdd89285a673f02716f7"
+    },
+    {
+      "name": "S95-GU-format-ranking.json",
+      "bytes": 14126,
+      "sha256": "f35d31e108909257aaa59f654fb0da7ee531ccd8148dc61ad58ad7246bc1f492"
+    },
+    {
+      "name": "audit.py",
+      "bytes": 7280,
+      "sha256": "5ddb7f8492a01ac234236476a19d8f537179a46e489e3c8b335402aec3d8a2b5"
+    },
+    {
+      "name": "compare.py",
+      "bytes": 5197,
+      "sha256": "5d51aabd5cfd29bc5f864c1b1107bd2083427b3bbb8d73e10dde644f0c85570f"
+    },
+    {
+      "name": "correction-and-ranking.md",
+      "bytes": 3176,
+      "sha256": "51d445cd2dbe73435e5c6c951a639eae6b34417d6ab6b23f9a56a1333c201f43"
+    },
+    {
+      "name": "decode_selected.sh",
+      "bytes": 1456,
+      "sha256": "771199827a7e3a8e3f4fb238974e436ec18dab5de6473fa1dfa0d141e06b72e1"
+    },
+    {
+      "name": "helpers.py",
+      "bytes": 4852,
+      "sha256": "f42d49e8b0d0795ea02568ae79c63b61aa50fee35f576358f3bc2e77090d605e"
+    },
+    {
+      "name": "pins.json",
+      "bytes": 5550,
+      "sha256": "05cc5b21bb4fc5cf732e78456757166d9b75a22d7537d3ecea40a919042df38d"
+    },
+    {
+      "name": "prepare_decode.py",
+      "bytes": 1152,
+      "sha256": "cbd8860eca2f625ac1c6e84fe74fcb7226dc96b9b1c1dd7c0bd99be9b762ff5f"
+    },
+    {
+      "name": "run_audit.sh",
+      "bytes": 392,
+      "sha256": "ba52be6b7e3c9c5b72102c11efcd90faee1d308fd2b185897f2368844f1c3927"
+    },
+    {
+      "name": "source-only-validation.json",
+      "bytes": 805,
+      "sha256": "3b6d3af7a9a78cacbc451ccedf0ee123f89289e8d3cf832cc81feedd1a060189"
+    }
+  ],
+  "future_actual_audit_output": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-gu17-existing-audit",
+  "default_next": "Conditional one CPU audit; expect retained S97 native reuse, no decoder. Root priority S116. TG17 calibration not a selected new kernel."
+}

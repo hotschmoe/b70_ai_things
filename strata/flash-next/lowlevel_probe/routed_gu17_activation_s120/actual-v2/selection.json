@@ -1,0 +1,192 @@
+{
+  "status": "EXISTING_S107_GU17_HOST_IMAGE_BOUND_COMPARISON_PENDING",
+  "host": {
+    "object_info": {
+      "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES9_ILi8EES9_ILi1EEEEEE",
+      "bind": 0,
+      "type": 1,
+      "section": 20,
+      "offset": 75776,
+      "size": 88
+    },
+    "object_cache_guard": [
+      {
+        "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+        "bind": 0,
+        "type": 1,
+        "section": 241,
+        "offset": 2144,
+        "size": 8
+      },
+      {
+        "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+        "bind": 0,
+        "type": 1,
+        "section": 241,
+        "offset": 2136,
+        "size": 8
+      }
+    ],
+    "actual_host_relocations": [
+      {
+        "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+        "target_symbol": "",
+        "STT_SECTION": true,
+        "relocation_type": 2,
+        "addend": 2140,
+        "normalized_destination": 2144,
+        "source_section": ".text",
+        "containing_functions": [
+          "_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"
+        ]
+      },
+      {
+        "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+        "target_symbol": "",
+        "STT_SECTION": true,
+        "relocation_type": 2,
+        "addend": 2132,
+        "normalized_destination": 2136,
+        "source_section": ".text",
+        "containing_functions": [
+          "_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"
+        ]
+      },
+      {
+        "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+        "target_symbol": "",
+        "STT_SECTION": true,
+        "relocation_type": 10,
+        "addend": 2144,
+        "normalized_destination": 2144,
+        "source_section": ".text",
+        "containing_functions": [
+          "_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"
+        ]
+      },
+      {
+        "target_metadata": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES9_ILi8EES9_ILi1EEEEEE",
+        "target_symbol": "",
+        "STT_SECTION": true,
+        "relocation_type": 10,
+        "addend": 75776,
+        "normalized_destination": 75776,
+        "source_section": ".text",
+        "containing_functions": [
+          "_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"
+        ]
+      },
+      {
+        "target_metadata": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+        "target_symbol": "",
+        "STT_SECTION": true,
+        "relocation_type": 2,
+        "addend": 2132,
+        "normalized_destination": 2136,
+        "source_section": ".text",
+        "containing_functions": [
+          "_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"
+        ]
+      },
+      {
+        "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+        "target_symbol": "",
+        "STT_SECTION": true,
+        "relocation_type": 10,
+        "addend": 2144,
+        "normalized_destination": 2144,
+        "source_section": ".text",
+        "containing_functions": [
+          "_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"
+        ]
+      },
+      {
+        "target_metadata": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+        "target_symbol": "",
+        "STT_SECTION": true,
+        "relocation_type": 10,
+        "addend": 2144,
+        "normalized_destination": 2144,
+        "source_section": ".text",
+        "containing_functions": [
+          "_ZN6strata7kernels12_GLOBAL__N_19launch_guILi17EEEvN4dpct4dim3EPN4sycl3_V15queueEPKyPKiSC_SC_PK10block_q8_1RKNS0_18NativeExpertLayoutEPfSJ_"
+        ]
+      }
+    ],
+    "final_info": {
+      "name": "_ZN4sycl3_V16detail27compile_time_kernel_info_v121CompileTimeKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES9_ILi8EES9_ILi1EEEEEE",
+      "bind": 0,
+      "type": 1,
+      "section": 16,
+      "offset": 13620608,
+      "size": 88
+    },
+    "final_cache_guard": [
+      {
+        "name": "_ZGVZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+        "bind": 0,
+        "type": 1,
+        "section": 31,
+        "offset": 89538536,
+        "size": 8
+      },
+      {
+        "name": "_ZZN4sycl3_V16detail19getDeviceKernelInfoI16dpct_kernel_nameIJN6strata7kernels12_GLOBAL__N_114native_gu_portE18dpct_kernel_scalarILi17EES8_ILi8EES8_ILi1EEEEEERNS1_16DeviceKernelInfoEvE4Info",
+        "bind": 0,
+        "type": 1,
+        "section": 31,
+        "offset": 89538528,
+        "size": 8
+      }
+    ],
+    "registered_name_pointer": {
+      "pointer": 12348136,
+      "name": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_114launch_gu_portILi17ELi8ELb1EEEvjPN4sycl3_V15queueEPKyPKiSB_SB_PK10block_q8_1RKNS1_18NativeExpertLayoutEPfSI_E14native_gu_port18dpct_kernel_scalarILi17EESK_ILi8EESK_ILi1EEEE"
+    }
+  },
+  "selected": {
+    "kernel": "_ZTS16dpct_kernel_nameIJZN6strata7kernels12_GLOBAL__N_114launch_gu_portILi17ELi8ELb1EEEvjPN4sycl3_V15queueEPKyPKiSB_SB_PK10block_q8_1RKNS1_18NativeExpertLayoutEPfSI_E14native_gu_port18dpct_kernel_scalarILi17EESK_ILi8EESK_ILi1EEEE",
+    "executable_offset": null,
+    "offset_scope": "Not retained by v1 partial; no main image rescan in continuation. v1 source uniqueness assertion passed before saved image/line59 failure.",
+    "image_bytes": 43272,
+    "image_sha256": "e5836dfc76da441a9a5f54afa441997026d0623f1e9660b6aa102677fc29a453",
+    "text_bytes": 7488,
+    "text_sha256": "aecbb2ebde34ad26fcd0b20e9e7add37f2873a6c0af9072a0e501b98778c78f1",
+    "resource_fields": {
+      "grf_count": [
+        "128"
+      ],
+      "simd_size": [
+        "32"
+      ],
+      "eu_thread_count": [
+        "8"
+      ],
+      "slm_size": [],
+      "barrier_count": [],
+      "spill_size": [],
+      "scratch_size": []
+    },
+    "absent_fields": "UNKNOWN, not measured zero"
+  },
+  "context": {
+    "retained_main_sha256": "064b63ce75d7568db541af5cf24eee07f41d0e54ea49813af9958a816d75d5ca",
+    "main_fresh_hash": false,
+    "small_object_sha256_verified": "09447b7e983dc8c0299172b6c1a84c09e68a9383f0680b13f658d030e69f73a9",
+    "archive_identity_reused": "cf710683aec404599d1cc6173bf8364e6d30731bda82b315df286bf58aed9b38",
+    "archive_walk_or_rehash": false,
+    "S114_same_archive_receipt": "mtp-parallel-argmax-main-s114-build/build/build-sha256.txt",
+    "type": "Fmt17 -> IQ2_XS helper; Fmt16 -> IQ2_XXS, not interchangeable",
+    "LN": 8,
+    "rows_per_WG": 32,
+    "source_shape": "N2560/FF640; S95 rowgrid40 matches FF640 under source multiple32 condition. No per-replay argument trace.",
+    "actual_host_ASM_reused": "routed-iq2-multi-s100-main-audit/host-function-0.asm (same IQ object SHA)",
+    "partial_image_reused_from_initial_attempt": "/mnt/vm_8tb/b70/results/flashnext_ista_gsq_rco_iq3xxs_strata_cachefix_20261014/routed-gu17-existing-audit",
+    "initial_failure": "v1 line59 literal-space metadata split; outputs saved before failure",
+    "large_main_image_rescan": false,
+    "all_image_walk": false,
+    "GPU": false,
+    "build": false,
+    "decoder": false
+  }
+}

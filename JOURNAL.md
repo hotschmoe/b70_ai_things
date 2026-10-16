@@ -25157,3 +25157,29 @@ timing population or a saving forecast for the146.468s main AOT link. No
 dedicated relink, cache sweep or GPU test. Evidence:
 strata/flash-next/lowlevel_probe/offline_aot_cache_s119/ and
  docs/20261016_strata_offline_aot_cache_reuse.md.
+
+
+## 2026-10-16 S120: existing routed GU17 activation-load calibration
+
+CONFIG -> Frozen S107 main064b63ce, unchanged IQ object09447b7e/archivecf710.
+TG17 is IQ2_XS, not IQ2_XXS; original incorrect proposal preserved with an
+explicit enum/helper/arithmetic correction. LN8/local256/SG32 existing code.
+COMMAND -> First CPU parser failed after saving selected43272B image/metadata;
+V2 exact-name whitespace correction reuses that image with unchanged strict
+gates. One cpu-run continuation exit0/.244829s; no decoder/build/GPU/model.
+Root full-read findings, comparison scope and bounded operands, verified34
+exact ASCII copies. Null original image offset stays null; no new main scan.
+RESULT -> Actual host Info/cache/guard/name binding and native prefix7296/
+metadata/options/codebook/data/relocations match S97. Raw image/text unequal,
+absent resources UNKNOWN. Compiler already coalesces eight activation words
+into TWO d32x4 load sites at A+4/A+20, plus a separate half-scale load.
+Separate weight decode, eight DP4As and signed integer corrections retained.
+Static sites do not measure actual traffic, cache misses or dynamic latency.
+Whole-collection primary GU TG17 service26.745296ms/23.18%; TG21 is26.39%
+and already reuses weights across E4/E2/tail. These are not wall budgets.
+VERDICT -> Close cheap calibration; no scalar-load defect or new TG17
+kernel selected. Pairing might share vector loads/scale but adds accumulators/
+barriers and fewer WGs; net saving unknown. Primary dense MMVQ source audit
+proceeds independently. No serving/default/promotion/target change. Evidence:
+strata/flash-next/lowlevel_probe/routed_gu17_activation_s120/ and
+ docs/20261016_strata_routed_gu17_activation_audit.md.

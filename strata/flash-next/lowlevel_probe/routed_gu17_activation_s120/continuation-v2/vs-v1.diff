@@ -1,0 +1,47 @@
+--- frozen-v1/audit.py
++++ continuation-v2/audit.py
+@@ -44,22 +44,24 @@
+ assert host['object_cache_guard']==prior['hosts']['OFF']['object_cache_guard']
+ name=host['registered_name_pointer']['name'];assert name==prior['selected']['OFF']['kernel']
+ assert len({x['offset'] for x in host['final_cache_guard']})==2
+-unique={}
+-pattern=re.compile(rb'(?m)^  - name:[ \t]+'+re.escape(name.encode())+rb'[ \t]*\r?$')
+-for match in pattern.finditer(final.data):
+- at=match.start();base=final.data.rfind(b'\x7fELF\x02\x01',max(0,at-4*1024*1024),at)
+- assert base>=0;ss,size=elf_at(base);z=ss['.ze_info'];assert base+z[4]<=at<base+z[4]+z[5]
+- unique[base]=(ss,size)
+-assert len(unique)==1,'Exact target image uniqueness HOLD; no all-image walk'
+-base,(ss,size)=next(iter(unique.items()));image=final.data[base:base+size]
+-z=ss['.ze_info'];ze=image[z[4]:z[4]+z[5]].decode();t=ss['.text.'+name];text=image[t[4]:t[4]+t[5]]
++# Continue from the exact image already selected and saved before v1 line59.
++# Do not rescan the large main or any archive/image directory.
++from compare import sections
++PARTIAL=R/'routed-gu17-existing-audit'
++image=(PARTIAL/'selected.zebin').read_bytes()
++assert sha(image)=='e5836dfc76da441a9a5f54afa441997026d0623f1e9660b6aa102677fc29a453'
++rows,section_names,parsed=sections(image);ss={k:v[0] for k,v in parsed.items()};base=None
++ze=parsed['.ze_info'][1].decode();assert ze==(PARTIAL/'selected.ze_info').read_text()
++text=parsed['.text.'+name][1]
+ names=re.findall(r'^  - name:\s+(\S+)',ze.split('kernels_misc_info:')[0],re.M)
+ assert names==[name,'Intel_Symbol_Table_Void_Program']
+ (O/'selected.zebin').write_bytes(image);(O/'selected.ze_info').write_text(ze,encoding='ascii')
+-block=ze.split('  - name: '+name,1)[1].split('  - name:',1)[0]
++block_match=re.search(r'(?ms)^  - name:[ \t]+'+re.escape(name)+r'[ \t]*\r?\n(.*?)(?=^  - name:|^kernels_misc_info:|\Z)',ze)
++assert block_match is not None,'Exact registered-name metadata block not found'
++block=block_match.group(1)
+ fields={k:re.findall(r'(?m)^\s*'+re.escape(k)+r':\s*(.+)$',block)for k in ['grf_count','simd_size','eu_thread_count','slm_size','barrier_count','spill_size','scratch_size']}
+ selection={'status':'EXISTING_S107_GU17_HOST_IMAGE_BOUND_COMPARISON_PENDING','host':host,
+- 'selected':{'kernel':name,'executable_offset':base,'image_bytes':len(image),'image_sha256':sha(image),
++ 'selected':{'kernel':name,'executable_offset':base,'offset_scope':'Not retained by v1 partial; no main image rescan in continuation. v1 source uniqueness assertion passed before saved image/line59 failure.','image_bytes':len(image),'image_sha256':sha(image),
+  'text_bytes':len(text),'text_sha256':sha(text),'resource_fields':fields,'absent_fields':'UNKNOWN, not measured zero'},
+  'context':{'retained_main_sha256':pins['exe']['retained_sha256'],'main_fresh_hash':False,
+  'small_object_sha256_verified':pins['object']['retained_sha256'],'archive_identity_reused':pins['archive']['retained_sha256'],
+@@ -67,7 +69,7 @@
+  'type':'Fmt17 -> IQ2_XS helper; Fmt16 -> IQ2_XXS, not interchangeable',
+  'LN':8,'rows_per_WG':32,'source_shape':'N2560/FF640; S95 rowgrid40 matches FF640 under source multiple32 condition. No per-replay argument trace.',
+  'actual_host_ASM_reused':'routed-iq2-multi-s100-main-audit/host-function-0.asm (same IQ object SHA)',
+- 'all_image_walk':False,'GPU':False,'build':False,'decoder':False}}
++ 'partial_image_reused_from_initial_attempt':str(PARTIAL),'initial_failure':'v1 line59 literal-space metadata split; outputs saved before failure','large_main_image_rescan':False,'all_image_walk':False,'GPU':False,'build':False,'decoder':False}}
+ save('selection.json',selection)
+ reference=R/'routed-iq2-existing-isa-s97/qt17.zebin'
+ save('raw-section-inventory.json',raw_inventory(reference,O/'selected.zebin',name))

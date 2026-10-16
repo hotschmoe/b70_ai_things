@@ -1,0 +1,31 @@
+{
+  "status": "PASS_AST_BASH_ASCII_EXACT_REUSED_BIND_FUNCTIONS",
+  "checks": [
+    {
+      "name": "audit.py",
+      "AST": "PASS_NO_IMPORT_EXECUTION"
+    },
+    {
+      "name": "compare.py",
+      "AST": "PASS_NO_IMPORT_EXECUTION"
+    },
+    {
+      "name": "decode_selected.sh",
+      "bash_n": "PASS"
+    },
+    {
+      "name": "helpers.py",
+      "AST": "PASS_NO_IMPORT_EXECUTION"
+    },
+    {
+      "name": "prepare_decode.py",
+      "AST": "PASS_NO_IMPORT_EXECUTION"
+    },
+    {
+      "name": "run_audit.sh",
+      "bash_n": "PASS"
+    }
+  ],
+  "audit_decoder_build_GPU_fixture_model_executions": 0,
+  "scope": "Only AST parsing/bash-n and small source text hash/stat/preparation. No ELF object/main/selected image contents read during prep; known object/main identities from retained receipts."
+}
