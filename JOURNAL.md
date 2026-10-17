@@ -25933,3 +25933,14 @@ and hit open-webui's cap; now reasoning_effort medium + 16,384-token thinking bu
 open-webui "think harder" preset (high/xhigh, 32,768 budget, 49,152 max), Pi default medium; open-webui's stale
 sampling defaults removed (max_tokens 49,152 kept).
 VERDICT -> submitted / deployed. Details: docs/20261016_upstream_prs_images_localmaxxing.md.
+
+## 2026-10-17 hotschmoe-dd coding/agentic eval (Claude Sonnet 5.5, client-only; DD untouched)
+
+CONFIG -> live hotschmoe-dd (Strata night-final-v3, IQ3_XXS; /v1/models identity ok; models.yaml entry stale), abfast with Pi
+1.3.0 via ABFAST_PI_DIR overlay (images bake 1.2.0), xhigh thinking, ctx 131072, out 32768; other user on the server (parallel 1
+after the first 9 tasks; timings contended).
+COMMAND -> run_arm.py --tier sysadmin (24) and --tier langs (6-task subset); scripts in evals/results/20261017_dd_nightv3_pi130_coding_agentic/.
+RESULT -> sysadmin 22/24 (fails reg-file-fix, logrotate-not-rotating with an unsafe chmod), langs 5/6 (gotoml fail; gojq-match hit the
+3600 s wall but its final tree passes). Prior: arm B 23/24 sysadmin, arm A 18/24; langs same 6: B 5/6, A 2/6. No server errors.
+VERDICT -> no quality regression vs stock-Strata IQ3 within N=30 noise; not a speed result; longrun / Terminal-Bench not run.
+Summary: evals/results/20261017_dd_nightv3_pi130_coding_agentic/SUMMARY.md.

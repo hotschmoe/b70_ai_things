@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""abfast runner: Pi 1.2.0 in a throwaway docker container per task, hidden-test verifier.
+"""abfast runner: Pi (1.2.0 in the images; ABFAST_PI_DIR overlays another version, e.g. 1.3.0) in a throwaway docker container per task, hidden-test verifier.
 
 Run one arm:   run_arm.py --base-url URL --model hotschmoe-dd --arm-label armA [--api-key-file F]
 Validate tasks (no model): run_arm.py --validate [--write]
@@ -61,12 +61,15 @@ def render_prompt(instruction, thinking):
     return open(os.path.join(TBDIR, f)).read().replace("{{ instruction }}", instruction)
 
 
+# ABFAST_PI_DIR=<dir with node_modules> overlays /opt/pi (Pi upgrade without an image rebuild)
+PI_MOUNT = ["-v", os.environ["ABFAST_PI_DIR"] + ":/opt/pi:ro"] if os.environ.get("ABFAST_PI_DIR") else []
+
 # ---- docker helpers ----
 class Box:
     def __init__(self, name, image):
         self.name = name
         r = sh(["docker", "run", "-d", "--name", name, "--network", os.environ.get("ABFAST_NETWORK", "host"), "--memory", "12g", "--cpus", "6",
-                "--pids-limit", "4096", "-e", "ZIG_GLOBAL_CACHE_DIR=/home/agent/.zigcache", image, "sleep", "infinity"])
+                "--pids-limit", "4096", "-e", "ZIG_GLOBAL_CACHE_DIR=/home/agent/.zigcache"] + PI_MOUNT + [image, "sleep", "infinity"])
         if r.returncode:
             raise RuntimeError(r.stderr)
 

@@ -10,6 +10,7 @@ Verifier protocol: verify.sh sources lib/check.sh and prints "CHECK <name> PASS|
 Names starting with safe_ are non-destruction checks. Verify, fix and lazy scripts never exist in the
 agent's container during the agent phase.
 """
+import os
 import io, json, os, re, shlex, subprocess, tarfile, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -35,6 +36,7 @@ def make_box(Box, name, image, task):
             self.name = name
             cmd = ["docker", "run", "-d", "--name", name, "--init", "--hostname", task.get("hostname", "officepc"),
                    "--memory", "12g", "--cpus", "6", "--pids-limit", "4096"] + list(task.get("docker_args", [])) + \
+                  (["-v", os.environ["ABFAST_PI_DIR"] + ":/opt/pi:ro"] if os.environ.get("ABFAST_PI_DIR") else []) + \
                   [image, "sleep", "infinity"]
             r = subprocess.run(cmd, capture_output=True, text=True)
             if r.returncode:

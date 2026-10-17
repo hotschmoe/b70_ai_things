@@ -1,4 +1,8 @@
-# abfast: small paired agentic-coding eval (Pi 1.2.0, no Harbor)
+# abfast: small paired agentic-coding eval (Pi 1.2.0 baked in images; Pi 1.3.0 via overlay, no Harbor)
+
+Pi upgrade (2026-10-17): images still bake Pi 1.2.0. Set ABFAST_PI_DIR=/mnt/vm_8tb/b70/tooling/pi-1.3.0 (npm install
+of @earendil-works/pi-coding-agent 1.3.0) and run_arm.py / sysadmin/sysrun.py bind-mount it read-only over /opt/pi, so
+containers run Pi 1.3.0 with no image rebuild. Unset = Pi 1.2.0. longrun/ does not honor the variable yet.
 
 Tiers: base (19 commit replays, this section), hard, langs (Rust/Go/Dart), sysadmin,
 longrun (built, not yet run). Pi is called as /opt/pi/node_modules/.bin/pi: the image
