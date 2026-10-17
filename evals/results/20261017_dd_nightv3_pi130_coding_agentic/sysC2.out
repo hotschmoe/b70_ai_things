@@ -1,0 +1,17 @@
+run dir /mnt/vm_8tb/b70/evals/abfast/runs/sysC2-dd-nightv3-pi130-p1-20261016T230212Z
+[cron-backup-never-runs] completed pass=True 8/8 agent=397.9s turns=13 tok=75294/4242
+[git-lost-commits-reflog] completed pass=True 7/7 agent=34.5s turns=9 tok=32235/2375
+[inventory-api-crash] completed pass=True 6/6 agent=29.0s turns=8 tok=30826/1906
+[logrotate-not-rotating] completed pass=False 6/8 agent=69.5s turns=17 tok=210387/5849
+[ps1-backup-script-fix] completed pass=True 8/8 agent=58.6s turns=9 tok=72656/5974
+[python-venv-broken] completed pass=True 5/5 agent=39.1s turns=10 tok=60418/3348
+[scheduled-task-xml-fix] completed pass=True 11/11 agent=39.1s turns=8 tok=34438/4352
+[sshd-wont-start] completed pass=True 9/9 agent=93.7s turns=22 tok=198998/8519
+[wiki-unreachable-from-lan] completed pass=True 6/6 agent=37.8s turns=13 tok=101935/2888
+[apt-broken-offline-install] completed pass=True 7/7 agent=39.3s turns=12 tok=74991/2811
+[bad-gateway-orders-site] completed pass=True 8/8 agent=55.1s turns=11 tok=127194/4525
+[cbs-update-failure-cause] completed pass=True 6/6 agent=22.5s turns=8 tok=81262/1908
+[disk-full-deleted-open-file] completed pass=True 6/6 agent=34.3s turns=10 tok=56769/2390
+[sqlite-hot-journal-perms] completed pass=True 7/7 agent=61.2s turns=8 tok=53521/6207
+[tar-backup-corrupt-recovery] completed pass=True 5/5 agent=98.1s turns=16 tok=314669/9772
+done 15 tasks in 1340.2s; end_health=ok; /mnt/vm_8tb/b70/evals/abfast/runs/sysC2-dd-nightv3-pi130-p1-20261016T230212Z

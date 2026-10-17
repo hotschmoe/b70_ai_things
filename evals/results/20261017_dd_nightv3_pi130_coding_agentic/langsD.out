@@ -1,0 +1,4 @@
+run dir /mnt/vm_8tb/b70/evals/abfast/runs/langsD-dd-nightv3-pi130-p1-20261017T004242Z
+[markdown-linear-link-definitions] completed pass=True 2765/2765 agent=1348.5s turns=95 tok=6536415/72086
+[gotoml-omit-empty-super-tables] completed pass=False 2872/2874 agent=1154.2s turns=54 tok=2223784/28489
+done 2 tasks in 2534.4s; end_health=ok; /mnt/vm_8tb/b70/evals/abfast/runs/langsD-dd-nightv3-pi130-p1-20261017T004242Z

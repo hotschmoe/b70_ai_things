@@ -1,0 +1,10 @@
+run dir /mnt/vm_8tb/b70/evals/abfast/runs/sysC-dd-nightv3-pi130-20261016T225126Z
+[backup-script-permission] completed pass=True 6/6 agent=90.8s turns=5 tok=11922/765
+[disk-full-hidden-cache] completed pass=True 3/3 agent=29.1s turns=9 tok=32333/1997
+[cpu-hog-one-process] completed pass=True 5/5 agent=144.1s turns=8 tok=35453/1877
+[git-detached-head-work] completed pass=True 7/7 agent=8.3s turns=4 tok=8767/735
+[nginx-config-typo] completed pass=True 8/8 agent=39.8s turns=11 tok=67774/2270
+[reg-file-fix] completed pass=False 0/7 agent=62.4s turns=8 tok=35811/4794
+[shared-folder-broken-link] completed pass=True 5/5 agent=22.7s turns=7 tok=43272/1645
+[csv-mixed-encoding] completed pass=True 3/3 agent=44.4s turns=8 tok=41550/3089
+[event-log-reboot-cause] completed pass=True 7/7 agent=28.7s turns=6 tok=27281/3226

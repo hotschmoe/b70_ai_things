@@ -1,0 +1,6 @@
+run dir /mnt/vm_8tb/b70/evals/abfast/runs/langsC-dd-nightv3-pi130-p1-20261016T232433Z
+[yaml-edit-flow-trailing-comma] completed pass=True 9375/9375 agent=322.2s turns=41 tok=1428236/29678
+[gojq-match-empty-after-nonempty] timeout pass=True 1095/1095 agent=3600.1s turns=44 tok=2670063/76200
+[hyperfine-shell-operator-guard] completed pass=True 71/71 agent=330.6s turns=47 tok=2001755/30903
+[fd-sanitize-error-messages] completed pass=True 113/113 agent=329.6s turns=57 tok=2443915/32141
+done 4 tasks in 4657.5s; end_health=ok; /mnt/vm_8tb/b70/evals/abfast/runs/langsC-dd-nightv3-pi130-p1-20261016T232433Z

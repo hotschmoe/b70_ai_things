@@ -1,0 +1,42 @@
+[
+ {
+  "id": "markdown-linear-link-definitions",
+  "repo": "dart-tools",
+  "end_reason": "completed",
+  "pass": true,
+  "agent_wall_s": 1348.5,
+  "pi_rc": 0,
+  "turns": 95,
+  "tool_calls": 98,
+  "prompt_tokens": 6536415,
+  "uncached_prompt_tokens": 35846,
+  "cache_read_tokens": 6500569,
+  "completion_tokens": 72086,
+  "last_stop_reason": "stop",
+  "files_changed": 5,
+  "hidden_rc": 0,
+  "hidden_passed": 2765,
+  "hidden_total": 2765,
+  "task_wall_s": 1360.3
+ },
+ {
+  "id": "gotoml-omit-empty-super-tables",
+  "repo": "go-toml",
+  "end_reason": "completed",
+  "pass": false,
+  "agent_wall_s": 1154.2,
+  "pi_rc": 0,
+  "turns": 54,
+  "tool_calls": 62,
+  "prompt_tokens": 2223784,
+  "uncached_prompt_tokens": 37504,
+  "cache_read_tokens": 2186280,
+  "completion_tokens": 28489,
+  "last_stop_reason": "stop",
+  "files_changed": 4,
+  "hidden_rc": 1,
+  "hidden_passed": 2872,
+  "hidden_total": 2874,
+  "task_wall_s": 1163.1
+ }
+]

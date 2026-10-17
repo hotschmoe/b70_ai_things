@@ -1,0 +1,40 @@
+{
+ "arm": "sysC2-dd-nightv3-pi130-p1",
+ "base_url": "http://192.168.10.5:18080/v1",
+ "model": "hotschmoe-dd",
+ "served_ids": [
+  "hotschmoe-dd",
+  "qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata"
+ ],
+ "thinking": "xhigh",
+ "max_output_tokens": 32768,
+ "context_window": 131072,
+ "parallel": 1,
+ "timeout_s": 3600,
+ "image": "per-task",
+ "tier": "sysadmin",
+ "tasks": [
+  "cron-backup-never-runs",
+  "git-lost-commits-reflog",
+  "inventory-api-crash",
+  "logrotate-not-rotating",
+  "ps1-backup-script-fix",
+  "python-venv-broken",
+  "scheduled-task-xml-fix",
+  "sshd-wont-start",
+  "wiki-unreachable-from-lan",
+  "apt-broken-offline-install",
+  "bad-gateway-orders-site",
+  "cbs-update-failure-cause",
+  "disk-full-deleted-open-file",
+  "sqlite-hot-journal-perms",
+  "tar-backup-corrupt-recovery"
+ ],
+ "started": "20261016T230212Z",
+ "total_wall_s": 1340.2,
+ "end_models": [
+  "hotschmoe-dd",
+  "qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata"
+ ],
+ "end_health": "ok"
+}

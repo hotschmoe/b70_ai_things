@@ -1,0 +1,29 @@
+{
+ "arm": "langsC-dd-nightv3-pi130-p1",
+ "base_url": "http://192.168.10.5:18080/v1",
+ "model": "hotschmoe-dd",
+ "served_ids": [
+  "hotschmoe-dd",
+  "qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata"
+ ],
+ "thinking": "xhigh",
+ "max_output_tokens": 32768,
+ "context_window": 131072,
+ "parallel": 1,
+ "timeout_s": 3600,
+ "image": "per-task",
+ "tier": "langs",
+ "tasks": [
+  "yaml-edit-flow-trailing-comma",
+  "gojq-match-empty-after-nonempty",
+  "hyperfine-shell-operator-guard",
+  "fd-sanitize-error-messages"
+ ],
+ "started": "20261016T232433Z",
+ "total_wall_s": 4657.5,
+ "end_models": [
+  "hotschmoe-dd",
+  "qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata"
+ ],
+ "end_health": "ok"
+}
