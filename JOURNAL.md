@@ -25966,3 +25966,15 @@ recutita/Strata#1 closed into it). #2817 closed (superseded upstream, images ver
 dup of deriknel's #2433 (verified on 0.2.0). #2623 already upstream. #2468 folded into a note on #1798. sglang
 #44561 pinged for review. b70-launcher#4 and lz4#1869 merged. Not touched: teak, zunk, Sky1-Linux, omarchy.
 DD restarted, health ok, identity hotschmoe-dd.
+
+## 2026-10-19 sglang #44561: XPU qwen4 tests (review request)
+
+CONFIG -> airMeng asked to enable the existing qwen4 tests so #44561 can join the XPU bundle #45201. Branch rebased on
+sglang main fdc2dd0d05 (worktree /mnt/vm_8tb/b70/build/sglang-pr44561); env = backend-decision venv (torch 2.14.0+xpu,
+sglang-kernel-xpu 0.4.0) in b70/sglang-main-triton-dense:20260910 with PYTHONPATH on the tree; card 0; DD down
+21:57-22:03 UTC.
+COMMAND -> pytest of the four qwen4 test files on XPU; 4-layer dummy Flash-Next launch_server + e4_client, main vs branch.
+RESULT -> enabling test_qwen4_ple_offload on XPU found a second blocker (PLE prefetch torch.cuda.Stream); fixed with
+torch.get_device_module(). 32 passed / 6 skipped (CUDA-only checks). New unit test (CPU+XPU CI) guards the qwen4_decode
+import. e2e: main fails (No module named 'tvm_ffi'), branch serves C1/C2/C4. Card health ok; DD back, answers 391.
+VERDICT -> pushed 2 commits (3418aff320, 28b71137aa), MERGEABLE; description updated; replied to airMeng.
