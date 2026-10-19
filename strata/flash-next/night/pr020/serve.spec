@@ -1,0 +1,13 @@
+main020 /mnt/vm_8tb/b70/results/pr-20261016/builds/strata-main020 {}
+kreg-off /mnt/vm_8tb/b70/results/pr-20261016/builds/strata-kreg020 {}
+kreg-on /mnt/vm_8tb/b70/results/pr-20261016/builds/strata-kreg020 {"STRATA_MMVQ_KREG":"1"}
+iq-off /mnt/vm_8tb/b70/results/pr-20261016/builds/strata-iq020 {}
+iq-on /mnt/vm_8tb/b70/results/pr-20261016/builds/strata-iq020 {"STRATA_IQ_DECODE_FAST":"1"}
+da-off /mnt/vm_8tb/b70/results/pr-20261016/builds/strata-da020 {}
+da-on /mnt/vm_8tb/b70/results/pr-20261016/builds/strata-da020 {"STRATA_BATCH_QSA_ATTN":"1","STRATA_QSA_TOPK_SCAN":"1","STRATA_QSA_SCORES_TRANSPOSED":"1","STRATA_ATTN_MERGE_ACTIVE":"1"}
+pattn-off /mnt/vm_8tb/b70/results/pr-20261016/builds/strata-pattn020 {}
+pattn-on /mnt/vm_8tb/b70/results/pr-20261016/builds/strata-pattn020 {"STRATA_PROMPT_ATTN_UNION":"1"}
+hcq8-off /mnt/vm_8tb/b70/results/pr-20261016/builds/strata-hcq8020 {}
+hcq8-on /mnt/vm_8tb/b70/results/pr-20261016/builds/strata-hcq8020 {"STRATA_HC_Q8":"1"}
+hcf-off /mnt/vm_8tb/b70/results/pr-20261016/builds/strata-hcf020 {}
+hcf-on /mnt/vm_8tb/b70/results/pr-20261016/builds/strata-hcf020 {"STRATA_GR_FUSED":"1"}

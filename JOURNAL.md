@@ -25944,3 +25944,25 @@ RESULT -> sysadmin 22/24 (fails reg-file-fix, logrotate-not-rotating with an uns
 3600 s wall but its final tree passes). Prior: arm B 23/24 sysadmin, arm A 18/24; langs same 6: B 5/6, A 2/6. No server errors.
 VERDICT -> no quality regression vs stock-Strata IQ3 within N=30 noise; not a speed result; longrun / Terminal-Bench not run.
 Summary: evals/results/20261017_dd_nightv3_pi130_coding_agentic/SUMMARY.md.
+
+## 2026-10-19 Upstream PR review after the Strata 0.2.0-beta tracker reset
+
+CONFIG -> Niko1221/Strata reset closed every open item ("closed does not mean rejected"; reopen = [Area] title +
+template + `/reopen`). Our PRs rebased on 0.2.0-beta main e88ee39d; built with the repo dev image strata-sycl-dev:020
+(IGC 2.41.5) because our pinned build image (IGC 2.36.3) ICEs on 0.2.0's int8 prompt-expert kernels (filed #3219);
+runtime image unchanged (CR 26.22). 2x B70, IQ3_XXS, --layer-split 30, 65536 ctx, C1, two fixed prompts; DD stopped
+18:57-21:16 UTC. Scripts: strata/flash-next/night/pr020/.
+COMMAND -> build_all.sh; parity.sh; pr_validate.sh serve.spec (13 arms); phase2.sh (hcq8 32K, decode-attn C2, EP
+off/reduce/push, #2526/#2511 oracles); ep-prefill-reduce-probe [--push].
+RESULT -> every parity test 0 failures; every flag-off arm = main's output SHAs and draft counts. Verify window
+ms main 39.4/40.0 -> KREG 35.4/35.4, IQ 36.3/36.9 (bitwise output), HC Q8 36.8/36.9 (32K ctx; refuses 310 experts at
+65536), HC fused 37.9/38.2; prompt union 4K/32K 1219/2078 -> 1414/2387; decode-attn +0.3% C1, +1.9% C2 (bitwise).
+#2526: main replays all 10,329 tokens on return, PR 0. #2511: main API 220/312 vs engine 300/435, PR 300/438 =
+engine = metrics. EP 4K/32K prompt 635/720 -> reduce 993/1264 -> push 1148/1514 (still < layer split 2078 at 32K);
+probe 26/26 both modes. 0.2.0 main C1 here is 70.6/73.9 (0.1.x main measured 79.5 on the old harness prompts).
+VERDICT -> #2802 #2804 #2806 #2808 #2810 #2812 #2526 #2511 reopened with [Engine] titles, template bodies, rebased
+branches pushed, all MERGEABLE, no labels. New draft #3273 (EP reduce/PUSH, stacked on #2205, as recutita asked;
+recutita/Strata#1 closed into it). #2817 closed (superseded upstream, images verified on 0.2.0). #2800 closed as
+dup of deriknel's #2433 (verified on 0.2.0). #2623 already upstream. #2468 folded into a note on #1798. sglang
+#44561 pinged for review. b70-launcher#4 and lz4#1869 merged. Not touched: teak, zunk, Sky1-Linux, omarchy.
+DD restarted, health ok, identity hotschmoe-dd.

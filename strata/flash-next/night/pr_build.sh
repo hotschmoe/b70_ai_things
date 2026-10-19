@@ -8,7 +8,7 @@ ref=${1:?git ref}; tag=${2:?tag}; target=${3:-strata}
 REPO=/mnt/vm_8tb/github/b70_ai_things
 AB=/mnt/vm_8tb/b70/build/strata-ab
 WT=$AB/src-pr
-IMAGE=sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2
+IMAGE=${PR_BUILD_IMAGE:-sha256:e41d59c0940e1bd2f6f64c9d5d2d7452b77812b0a8407fac8d67cacec5d7fdd2}
 CACHE=/mnt/vm_8tb/b70/cache/strata-aot-bmg-g31
 OUT=/mnt/vm_8tb/b70/results/pr-20261016/builds
 mkdir -p "$OUT" "$OUT/tmp" "$OUT/cache"
@@ -16,7 +16,7 @@ exec 9>"$AB/src-pr.build.lock"
 flock 9
 git -C "$WT" checkout -q --detach "$ref"
 git -C "$WT" rev-parse HEAD > "$OUT/strata-$tag.head"
-ninja_cmd="ninja -j6 $target && cp $target /out/strata-$tag"
+ninja_cmd="ninja -j${PR_BUILD_JOBS:-6} $target && cp $target /out/strata-$tag"
 [ -n "${PR_BUILD_DRY:-}" ] && ninja_cmd="ninja -n $target | tail -5"
 B70_CPU_LOCK_TIMEOUT=0 B70_AGENT=pr-build "$REPO/bin/cpu-run" docker run --rm --network none --cpus 8 --memory 48g \
   -u "1000:$(id -g)" \
