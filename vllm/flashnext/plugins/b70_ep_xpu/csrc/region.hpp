@@ -11,6 +11,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
 
 namespace b70ep {
@@ -21,6 +22,9 @@ struct Region {
     ze_context_handle_t owner_ctx = nullptr;
     ze_context_handle_t other_ctx = nullptr;
     bool ipc = false;
+    // path 3: sycl::aligned_alloc_device in the shared torch context.
+    bool usm = false;
+    std::optional<sycl::context> usm_ctx;
 };
 
 inline ze_context_handle_t ze_ctx(const sycl::context& c) {
@@ -37,16 +41,38 @@ inline void ze_init_once() {
     zeInit(0);
 }
 
-// path: 1 = IPC, 2 = same-context pointer (remote == local).
+// One extra page past the caller's bytes. A vectorized tail store can
+// touch the next page even when the lane is predicated; on a tight
+// zeMemAllocDevice that faults the peer and the queue comes back
+// DEVICE_LOST. The kernels only index the requested bytes.
+inline size_t region_bytes(size_t bytes) {
+    const size_t padded = bytes + 4096u;
+    return (padded + 4095u) & ~size_t(4095);
+}
+
+// path: 1 = IPC, 2 = same-context ze pointer (remote == local),
+// 3 = same-context sycl::aligned_alloc_device (J.5 EU push allocator).
 inline bool region_alloc(const sycl::queue& owner, const sycl::queue& other, size_t bytes, int path, Region& r,
                          std::string& err) {
     ze_init_once();
     r = Region{};
     r.owner_ctx = ze_ctx(owner.get_context());
     r.other_ctx = ze_ctx(other.get_context());
+    const size_t alloc = region_bytes(bytes);
+    if (path == 3) {
+        void* p = sycl::aligned_alloc_device(4096, alloc, owner);
+        if (p == nullptr) {
+            err = "aligned_alloc_device failed bytes=" + std::to_string(alloc);
+            return false;
+        }
+        r.local = r.remote = p;
+        r.usm = true;
+        r.usm_ctx = owner.get_context();
+        return true;
+    }
     ze_device_mem_alloc_desc_t desc{};
     desc.stype = ZE_STRUCTURE_TYPE_DEVICE_MEM_ALLOC_DESC;
-    ze_result_t z = zeMemAllocDevice(r.owner_ctx, &desc, bytes, 4096, ze_dev(owner.get_device()), &r.local);
+    ze_result_t z = zeMemAllocDevice(r.owner_ctx, &desc, alloc, 4096, ze_dev(owner.get_device()), &r.local);
     if (z != ZE_RESULT_SUCCESS || r.local == nullptr) {
         err = "zeMemAllocDevice failed (" + std::to_string((unsigned)z) + ") bytes=" + std::to_string(bytes);
         return false;
@@ -72,6 +98,11 @@ inline bool region_alloc(const sycl::queue& owner, const sycl::queue& other, siz
 }
 
 inline void region_free(Region& r) {
+    if (r.usm) {
+        if (r.local != nullptr && r.usm_ctx) sycl::free(r.local, *r.usm_ctx);
+        r = Region{};
+        return;
+    }
     if (r.ipc && r.remote != nullptr) zeMemCloseIpcHandle(r.other_ctx, r.remote);
     if (r.local != nullptr && r.owner_ctx != nullptr) zeMemFree(r.owner_ctx, r.local);
     r = Region{};

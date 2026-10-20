@@ -1,0 +1,18 @@
+[project]
+name = "b70_ep_xpu"
+version = "0.1.0"
+description = "Two-card expert sidecar for Flash-Next GGUF MoE. No oneCCL."
+requires-python = ">=3.12"
+
+[project.entry-points."vllm.general_plugins"]
+b70_ep_xpu = "b70_ep_xpu:register"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["b70_ep_xpu*"]
+
+[tool.setuptools.package-data]
+b70_ep_xpu = ["*.so"]

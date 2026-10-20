@@ -370,6 +370,65 @@ class B70LowbitMoEMethod:
             y = self._prefill(layer, x2, topk_weights, topk_ids)
         return y.view(*in_shape[:-1], y.shape[-1])
 
+    def _prefill_matmul(
+        self,
+        layer: torch.nn.Module,
+        x: torch.Tensor,
+        topk_weights: torch.Tensor,
+        topk_ids: torch.Tensor,
+    ) -> torch.Tensor:
+        """Unpack each expert to bf16 and use the vendor GEMM.
+
+        Uniform bits only. One host read of the expert histogram per layer.
+        """
+        t_tokens, hidden = x.shape
+        n13 = layer.w13_weight.shape[1]
+        intermediate = n13 // 2
+        num_experts = layer.w13_weight.shape[0]
+        topk = topk_ids.shape[1]
+        bits = self.bits
+        hi13 = getattr(layer, "w13_weight_plane_hi", None)
+        hi2 = getattr(layer, "w2_weight_plane_hi", None)
+        w13 = ops.unpack_bf16(
+            layer.w13_weight.reshape(num_experts * n13, -1),
+            None if hi13 is None else hi13.reshape(num_experts * n13, -1),
+            layer.w13_weight_scale.reshape(num_experts * n13, -1),
+            bits,
+        ).view(num_experts, n13, hidden)
+        w2 = ops.unpack_bf16(
+            layer.w2_weight.reshape(num_experts * hidden, -1),
+            None if hi2 is None else hi2.reshape(num_experts * hidden, -1),
+            layer.w2_weight_scale.reshape(num_experts * hidden, -1),
+            bits,
+        ).view(num_experts, hidden, intermediate)
+        ids = topk_ids.to(torch.int32)
+        router = topk_weights.to(torch.float32)
+        flat = ids.reshape(-1)
+        key = torch.where(flat >= 0, flat, torch.full_like(flat, num_experts))
+        counts = torch.bincount(key, minlength=num_experts + 1)
+        order = torch.argsort(key, stable=True)
+        counts_cpu = counts.tolist()
+        y = torch.zeros(t_tokens, hidden, dtype=torch.float32, device=x.device)
+        cursor = 0
+        for expert, n_tok in enumerate(counts_cpu[:num_experts]):
+            n_hit = int(n_tok)
+            if n_hit == 0:
+                continue
+            sel = order[cursor : cursor + n_hit]
+            cursor += n_hit
+            tok = torch.div(sel, topk, rounding_mode="floor")
+            xe = x.index_select(0, tok)
+            gu = torch.nn.functional.linear(xe, w13[expert])
+            gate = gu[:, :intermediate]
+            up = gu[:, intermediate:]
+            hid = (torch.nn.functional.silu(gate.float()) * up.float()).to(
+                torch.bfloat16
+            )
+            down = torch.nn.functional.linear(hid, w2[expert])
+            weight = router.reshape(-1)[sel].unsqueeze(-1)
+            y.index_add_(0, tok, down.float() * weight)
+        return y.to(torch.bfloat16)
+
     def _prefill(
         self,
         layer: torch.nn.Module,
@@ -379,6 +438,11 @@ class B70LowbitMoEMethod:
     ) -> torch.Tensor:
         # B70_LOWBIT_PREFILL=grouped is the one-submit-per-projection path.
         # Unset stays the per-expert loop (the measured 116 tok/s path).
+        if (
+            os.environ.get("B70_LOWBIT_PREFILL", "") == "matmul"
+            and self.per_expert is None
+        ):
+            return self._prefill_matmul(layer, x, topk_weights, topk_ids)
         if (
             os.environ.get("B70_LOWBIT_PREFILL", "") == "grouped"
             and self.per_expert is None

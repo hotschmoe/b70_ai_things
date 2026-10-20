@@ -197,3 +197,24 @@ TORCH_LIBRARY_IMPL(b70_gguf, CompositeExplicitAutograd, m) {
     m.impl("prefill_split_us", b70_prefill_split_us_op);
     m.impl("reserve_decode", reserve_decode);
 }
+
+// ---- C10 dequant-then-GEMM. New ops only; moe_layer / prefill signatures unchanged. ----
+#include "dequant_fast.hpp"
+
+TORCH_LIBRARY_FRAGMENT(b70_gguf, m) {
+    m.def("prefill_dequant(Tensor q, int ggml_type, int rows, int cols, Tensor out) -> Tensor");
+    m.def("prefill_group_ids(Tensor ids, int E, Tensor order, Tensor starts, Tensor counts, Tensor cursor) -> Tensor");
+    m.def("prefill_row_gather(Tensor src, Tensor dst, Tensor index, int mv) -> Tensor");
+    m.def("prefill_row_scatter(Tensor src, Tensor dst, Tensor index, int mv) -> Tensor");
+    m.def("prefill_pad_grouped(Tensor xflat, Tensor xpad, Tensor order, Tensor starts, int mv) -> Tensor");
+    m.def("prefill_unpad_scatter(Tensor ypad, Tensor slots, Tensor order, Tensor starts, int mv) -> Tensor");
+}
+
+TORCH_LIBRARY_IMPL(b70_gguf, XPU, m) {
+    m.impl("prefill_dequant", b70_prefill_dequant_op);
+    m.impl("prefill_group_ids", b70_prefill_group_ids_op);
+    m.impl("prefill_row_gather", b70_prefill_row_gather_op);
+    m.impl("prefill_row_scatter", b70_prefill_row_scatter_op);
+    m.impl("prefill_pad_grouped", b70_prefill_pad_grouped_op);
+    m.impl("prefill_unpad_scatter", b70_prefill_unpad_scatter_op);
+}

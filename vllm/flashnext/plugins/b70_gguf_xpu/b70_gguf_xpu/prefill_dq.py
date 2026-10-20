@@ -1,0 +1,247 @@
+"""Dequant-then-oneDNN prefill. Importing this module does not touch the GPU.
+
+Weights are dequantized into a reusable bf16 scratch, then torch.mm / torch.bmm
+(oneDNN) does the GEMM. The scratch is overwritten on the same XPU stream only
+after the GEMM that reads it has been queued.
+
+B70_PREFILL_DQ_GROUPED=bmm|loop selects the expert GEMM. bmm pads each expert
+up to a multiple of 8 rows. loop queues one torch.mm per occupied expert.
+"""
+
+from __future__ import annotations
+
+import os
+
+from b70_gguf_xpu.prefill import load
+from b70_gguf_xpu.types import row_bytes
+
+# Filled by each grouped call so a bench can print mv/mmax outside the timer.
+LAST = {}
+
+# Thresholds are the C10 measured crossover. Env overrides:
+#   B70_PREFILL_DQ_M=off  never,  0 always,  N uses dq when M >= N
+#   B70_PREFILL_DQ_T same for the MoE layer token count.
+# Defaults stay on the fused kernel until the bench writes the crossover.
+DQ_M_MIN = 10**9
+DQ_T_MIN = 10**9
+
+_SCRATCH: dict = {}
+
+
+def _devkey(t):
+    d = t.device
+    return (d.type, d.index)
+
+
+def _scratch(key, shape, dtype, device):
+    import torch
+
+    buf = _SCRATCH.get(key)
+    if (
+        buf is None
+        or buf.dtype != dtype
+        or buf.device != device
+        or buf.shape != torch.Size(shape)
+    ):
+        buf = torch.empty(shape, dtype=dtype, device=device)
+        _SCRATCH[key] = buf
+    return buf
+
+
+def _i32(name, n, device):
+    import torch
+
+    return _scratch(("i32", name, n, _devkey_dev(device)), (n,), torch.int32, device)
+
+
+def _devkey_dev(device):
+    return (device.type, device.index)
+
+
+def dequant(q, ggml_type: int, rows: int, cols: int, dtype=None):
+    """Dequant q into reusable scratch [rows, cols]. dtype bf16 (default) or fp16."""
+    import torch
+
+    load()
+    if dtype is None:
+        dtype = torch.bfloat16
+    buf = _scratch(("dq", int(ggml_type), rows, cols, dtype, _devkey(q)), (rows, cols), dtype, q.device)
+    torch.ops.b70_gguf.prefill_dequant(q, int(ggml_type), int(rows), int(cols), buf)
+    return buf
+
+
+def _as_bf16(x):
+    import torch
+
+    return x if x.dtype == torch.bfloat16 else x.to(torch.bfloat16)
+
+
+def dense_dq(x, q, ggml_type: int, n: int, k: int):
+    """x [M, K] -> fp32 [M, N] via bf16 dequant + torch.mm."""
+    import torch
+
+    xb = _as_bf16(x)
+    w = dequant(q, ggml_type, n, k)
+    return torch.mm(xb, w.t()).float()
+
+
+def _sanitize(ids, e: int):
+    import torch
+
+    flat = ids.reshape(-1).contiguous()
+    if flat.dtype != torch.int32:
+        flat = flat.to(torch.int32)
+    ok = (flat >= 0) & (flat < e)
+    if bool(ok.all()):
+        return flat
+    return torch.where(ok, flat, torch.full_like(flat, -1))
+
+
+class _Group:
+    def __init__(self, flat, e: int):
+        import torch
+
+        m = int(flat.numel())
+        device = flat.device
+        order = _i32("order", m, device)
+        starts = _i32("starts", e + 1, device)
+        counts = _i32("counts", e, device)
+        cursor = _i32("cursor", e, device)
+        torch.ops.b70_gguf.prefill_group_ids(flat, int(e), order, starts, counts, cursor)
+        st = starts.cpu()
+        self.order = order
+        self.starts = starts
+        self.mv = int(st[-1])
+        self.M = m
+        self.E = e
+        self.starts_cpu = [int(st[i]) for i in range(e + 1)]
+        diffs = [self.starts_cpu[i + 1] - self.starts_cpu[i] for i in range(e)]
+        raw = max(diffs) if diffs else 0
+        self.mmax = (max(raw, 1) + 7) & ~7 if self.mv else 0
+        LAST["mv"] = self.mv
+        LAST["mmax"] = self.mmax
+        LAST["M"] = m
+        LAST["E"] = e
+
+
+def _project_bmm(act, group: _Group, w, n: int, k: int):
+    """act [M, K] bf16, w [E, N, K] bf16 (must stay live until this returns). y [M, N] bf16."""
+    import torch
+
+    m = group.M
+    y = torch.empty((m, n), dtype=act.dtype, device=act.device) if group.mv == m else torch.zeros(
+        (m, n), dtype=act.dtype, device=act.device
+    )
+    if group.mv == 0:
+        return y
+    # A pathological expert cluster (every token on one expert) would pad to
+    # E * T * topk rows. Refuse that instead of allocating tens of GB.
+    if group.E * group.mmax * k * 2 > 8_000_000_000:
+        raise RuntimeError(
+            f"bmm pad {group.E}*{group.mmax}*{k} exceeds 8 GB; use how=loop"
+        )
+    xpad = _scratch(("xpad", group.E, group.mmax, k, act.dtype, _devkey(act)), (group.E, group.mmax, k), act.dtype, act.device)
+    xpad.zero_()
+    torch.ops.b70_gguf.prefill_pad_grouped(act, xpad, group.order, group.starts, int(group.mv))
+    # w is [E, N, K]; bmm wants [E, K, N]. The transpose view matches the
+    # torch.mm(x, w.t()) layout that C8 measured at 100-141 TFLOPS.
+    ypad = torch.bmm(xpad, w.transpose(1, 2))
+    torch.ops.b70_gguf.prefill_unpad_scatter(ypad, y, group.order, group.starts, int(group.mv))
+    return y
+
+
+def _project_loop(act, group: _Group, w, n: int, k: int):
+    import torch
+
+    m = group.M
+    y = torch.empty((m, n), dtype=act.dtype, device=act.device) if group.mv == m else torch.zeros(
+        (m, n), dtype=act.dtype, device=act.device
+    )
+    if group.mv == 0:
+        return y
+    packed = _scratch(("packed", group.mv, k, act.dtype, _devkey(act)), (group.mv, k), act.dtype, act.device)
+    outp = _scratch(("packed_y", group.mv, n, act.dtype, _devkey(act)), (group.mv, n), act.dtype, act.device)
+    torch.ops.b70_gguf.prefill_row_gather(act, packed, group.order, int(group.mv))
+    st = group.starts_cpu
+    for e in range(group.E):
+        a, b = st[e], st[e + 1]
+        if b > a:
+            torch.mm(packed[a:b], w[e].t(), out=outp[a:b])
+    torch.ops.b70_gguf.prefill_row_scatter(outp, y, group.order, int(group.mv))
+    return y
+
+
+def _project(act, group: _Group, w, n: int, k: int, how: str):
+    if how == "loop":
+        return _project_loop(act, group, w, n, k)
+    return _project_bmm(act, group, w, n, k)
+
+
+def _reduce(slots, router, t: int, topk: int, h: int):
+    import torch
+
+    acc = slots.view(t, topk, h).float()
+    if router is not None and router.numel() == t * topk:
+        acc = acc * router.reshape(t, topk, 1).float()
+    return acc.sum(1)
+
+
+def grouped_dq(x, q, expert_ids, ggml_type: int, n: int, k: int, how: str | None = None):
+    """x [M, K], expert_ids [M] -> fp32 [M, N]."""
+    import torch
+
+    how = how or os.environ.get("B70_PREFILL_DQ_GROUPED", "bmm")
+    e = int(q.numel() // (n * row_bytes(ggml_type, k)))
+    flat = _sanitize(expert_ids, e)
+    group = _Group(flat, e)
+    xb = _as_bf16(x)
+    w = dequant(q, ggml_type, e * n, k).view(e, n, k)
+    return _project(xb, group, w, n, k, how).float()
+
+
+def moe_dq(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int, h: int, f: int, how: str | None = None):
+    """One prefill MoE layer. x [T, H] -> fp32 [T, H].
+
+    how=bmm|loop dequants every expert. how=hybrid keeps the fused grouped
+    kernel for gate and up and uses dequant + oneDNN only for the K=F down GEMM.
+    """
+    import torch
+
+    how = how or os.environ.get("B70_PREFILL_DQ_GROUPED", "bmm")
+    t = int(x.shape[0])
+    topk = int(ids.shape[1])
+    rb = row_bytes(type_gu, h)
+    e = int(q_gate.numel() // (f * rb))
+    if how == "hybrid":
+        return _moe_hybrid(x, ids, q_gate, q_up, q_down, router, type_gu, type_down, h, f, e, t, topk)
+    flat = _sanitize(ids, e)
+    group = _Group(flat, e)
+    xb = _as_bf16(x)
+    tok = torch.arange(t, device=x.device).unsqueeze(1).expand(t, topk).reshape(-1)
+    act = xb[tok]
+    wg = dequant(q_gate, type_gu, e * f, h).view(e, f, h)
+    g = _project(act, group, wg, f, h, how)
+    wu = dequant(q_up, type_gu, e * f, h).view(e, f, h)
+    u = _project(act, group, wu, f, h, how)
+    hidden = (torch.nn.functional.silu(g) * u).to(act.dtype)
+    wd = dequant(q_down, type_down, e * h, f).view(e, h, f)
+    down = _project(hidden, group, wd, h, f, how)
+    return _reduce(down, router, t, topk, h)
+
+
+def _moe_hybrid(x, ids, q_gate, q_up, q_down, router, type_gu, type_down, h, f, e, t, topk):
+    """Fused GU (prefill_grouped) plus dequant+oneDNN down. Fixes the short-K down path."""
+    import torch
+
+    load()
+    xf = x if x.dtype == torch.float16 else x.to(torch.float16)
+    tok = torch.arange(t, device=x.device).unsqueeze(1).expand(t, topk).reshape(-1)
+    act = xf[tok]
+    flat = ids.reshape(-1).contiguous()
+    if flat.dtype != torch.int32:
+        flat = flat.to(torch.int32)
+    g = torch.ops.b70_gguf.prefill_grouped(act, q_gate, flat, int(type_gu), int(f), int(h), 0)
+    u = torch.ops.b70_gguf.prefill_grouped(act, q_up, flat, int(type_gu), int(f), int(h), 0)
+    hidden = torch.nn.functional.silu(g) * u
+    down = grouped_dq(hidden, q_down, flat, int(type_down), int(h), int(f), how="bmm")
+    return _reduce(down, router, t, topk, h)

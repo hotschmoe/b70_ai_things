@@ -85,6 +85,22 @@ class ParkIndexTest(unittest.TestCase):
             tail_slots={0: 1, 1: 2},
         )
 
+    def test_discard_removes_a_tail_that_never_landed(self) -> None:
+        index = ParkIndex(slots=4, budget_bytes=10_000, block_size=16)
+        stored = self._store(index, b"A", end=40)
+        index.pin(stored.record)
+        with self.assertRaises(ValueError):
+            index.discard(stored.record.key)
+        index.unpin(stored.record)
+        index.discard(stored.record.key)
+        self.assertIsNone(
+            index.lookup_key(
+                stored.record.parent_hash, stored.record.tail_ids, prompt_len=50
+            )
+        )
+        self.assertEqual(len(index), 0)
+        index.discard(stored.record.key)
+
     def test_exact_hit_and_full_prompt_refusal(self) -> None:
         index = ParkIndex(slots=4, budget_bytes=10_000, block_size=16)
         stored = self._store(index, b"A", end=40)

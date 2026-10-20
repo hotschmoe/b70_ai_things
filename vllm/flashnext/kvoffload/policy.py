@@ -7,6 +7,7 @@ eviction takes every evictable chunk of a conversation at once.
 
 from __future__ import annotations
 
+import heapq
 from collections import OrderedDict
 from collections.abc import Iterable
 
@@ -25,6 +26,11 @@ class ConversationCachePolicy(LRUCachePolicy):
         self._conv_of: dict[OffloadKey, bytes] = {}
         self._conv_keys: dict[bytes, set[OffloadKey]] = {}
         self._conv_lru: OrderedDict[bytes, None] = OrderedDict()
+
+    def unbind_conv(self, conv_id: bytes) -> None:
+        """Forget a conversation whose tail store did not allocate."""
+        for key in list(self._conv_keys.get(conv_id, ())):
+            self._unbind_key(key)
 
     def bind(self, conv_id: bytes, keys: Iterable[OffloadKey]) -> None:
         """Remember which conversation a key belongs to. Does not insert it."""
@@ -128,34 +134,39 @@ class ConversationCachePolicy(LRUCachePolicy):
         protected: set[OffloadKey],
         chosen: set[OffloadKey],
     ) -> list[tuple[OffloadKey, ChunkStatus]] | None:
-        """Idle chunks that are not part of a conversation."""
-        picked: list[tuple[OffloadKey, ChunkStatus]] = []
-        deferred: list[tuple[int, OffloadKey]] = []
+        """Idle chunks that are not part of a conversation.
+
+        Heap entries that are not taken are pushed back. A shortfall pushes
+        the taken entries back too, so a failed evict changes nothing.
+        """
+        picked: list[tuple[tuple[int, OffloadKey], ChunkStatus]] = []
+        skipped: list[tuple[int, OffloadKey]] = []
         while self._heap and len(picked) < n:
-            entry = self._heap.pop(0) if False else __import__("heapq").heappop(self._heap)
+            entry = heapq.heappop(self._heap)
             if not self._is_current(entry):
                 continue
             key = entry[1]
-            if key in chosen or key in self._conv_of:
-                continue
-            if key in protected:
-                deferred.append(entry)
-                continue
             chunk = self.chunks[key]
-            if chunk.ref_cnt != 0:
-                deferred.append(entry)
+            if (
+                key in chosen
+                or key in self._conv_of
+                or key in protected
+                or chunk.ref_cnt != 0
+            ):
+                skipped.append(entry)
                 continue
-            picked.append((key, chunk))
+            picked.append((entry, chunk))
             chosen.add(key)
-        import heapq
-
-        for entry in deferred:
-            heapq.heappush(self._heap, entry)
         if len(picked) < n:
-            for key, _chunk in picked:
-                chosen.discard(key)
+            for entry, _chunk in picked:
+                skipped.append(entry)
+                chosen.discard(entry[1])
+            for entry in skipped:
+                heapq.heappush(self._heap, entry)
             return None
-        return picked
+        for entry in skipped:
+            heapq.heappush(self._heap, entry)
+        return [(entry[1], chunk) for entry, chunk in picked]
 
     def _unbind_key(self, key: OffloadKey) -> None:
         conv_id = self._conv_of.pop(key, None)

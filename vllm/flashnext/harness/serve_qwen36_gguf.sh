@@ -24,6 +24,7 @@ NAME="${NAME:-vllm-fn-qwen36-gguf-c${CARD}}"
 FORK=/mnt/vm_8tb/b70/build/vllm-flashnext/vllm
 GGUF_PY=/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/gguf-py
 PLUGIN=/mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/plugins/b70_gguf_xpu
+EP_PLUGIN=/mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/plugins/b70_ep_xpu
 HF=/mnt/cache/b70/devmodel/Qwen/Qwen3.6-35B-A3B
 WEIGHTS=/mnt/cache/b70/devmodel/unsloth/Qwen3.6-35B-A3B-MTP-GGUF/Qwen3.6-35B-A3B-UD-IQ3_XXS.gguf
 ALIAS=qwen3.6-35b-a3b-ud-iq3-xxs
@@ -77,7 +78,7 @@ echo "serve_qwen36_gguf: card=$CARD port=$PORT max_len=$MAX_LEN seqs=$MAX_SEQS g
 echo "serve_qwen36_gguf: ${ARGS[*]}"
 
 ENV_ARGS=()
-for key in B70_XPU_CG_RECLAIM B70_GGUF_SO B70_REPLAY_LOG B70_STEP_LOG B70_COLL_LOG; do
+for key in B70_XPU_CG_RECLAIM B70_GGUF_SO B70_REPLAY_LOG B70_STEP_LOG B70_COLL_LOG B70_EP B70_EP_SPIN B70_EP_MAX_T; do
   if [[ -n "${!key:-}" ]]; then
     ENV_ARGS+=(--env "${key}=${!key}")
   fi
@@ -86,7 +87,7 @@ done
 exec "$HERE/xpu-run.sh" --card "$CARD" --name "$NAME" --port "$PORT" \
   --env B70_GGUF=1 \
   --env "B70_GGUF_PATH=${WEIGHTS}" \
-  --env "PYTHONPATH=${FORK}:${GGUF_PY}:${PLUGIN}" \
+  --env "PYTHONPATH=${FORK}:${GGUF_PY}:${PLUGIN}:${EP_PLUGIN}" \
   --env PYTHONUNBUFFERED=1 \
   --env HF_HUB_OFFLINE=1 \
   --env TRANSFORMERS_OFFLINE=1 \

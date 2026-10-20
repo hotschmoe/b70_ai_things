@@ -1691,6 +1691,77 @@ static torch::Tensor moe_gemv_mixed(
       w2_plane_hi, w2_scale, bits, /*which=*/2, expert_bits.data_ptr<int32_t>());
 }
 
+// One work-item unpacks one group of 128 codes into bf16. The vendor
+// GEMM then does the prefill multiply. This is the measured gap: the
+// ESIMD 8x16 tile is ~10x slower than torch.matmul on the same shape.
+struct UnpackBf16Kernel {
+  const uint8_t* plane2;
+  const uint8_t* plane_hi;
+  const uint16_t* scale;
+  uint16_t* y;
+  int groups;
+  int stride2;
+  int stride_hi;
+  int bits;
+
+  void operator()(sycl::id<1> id) const {
+    const int mg = (int)id[0];
+    const int row = mg / groups;
+    const int g = mg - row * groups;
+    const int k0 = g << 7;
+    const uint8_t* row2 = plane2 + (size_t)row * (size_t)stride2;
+    const uint8_t* rowhi =
+        plane_hi ? plane_hi + (size_t)row * (size_t)stride_hi : nullptr;
+    const float sc = bf16_to_f32_scalar(scale[(size_t)row * (size_t)groups + g]);
+    uint16_t* dst = y + ((size_t)row * (size_t)(groups << 7) + (size_t)k0);
+    const int maxq = 1 << (bits - 1);
+    const int span = maxq << 1;
+    for (int i = 0; i < 128; ++i) {
+      const int k = k0 + i;
+      int code = (row2[k >> 2] >> ((k & 3) * 2)) & 3;
+      if (bits == 3) {
+        code |= ((rowhi[k >> 3] >> (k & 7)) & 1) << 2;
+      } else if (bits == 4) {
+        code |= ((rowhi[k >> 2] >> ((k & 3) * 2)) & 3) << 2;
+      }
+      if (code >= maxq) {
+        code -= span;
+      }
+      dst[i] = f32_to_bf16_scalar(sc * (float)code);
+    }
+  }
+};
+
+static torch::Tensor unpack_bf16(
+    const torch::Tensor& plane2,
+    const torch::Tensor& plane_hi,
+    const torch::Tensor& scale,
+    int64_t bits) {
+  TORCH_CHECK(plane2.dim() == 2, "plane2 [N, stride]");
+  const int64_t n = plane2.size(0);
+  const int64_t k = scale.size(1) * 128;
+  check_planes(plane2, plane_hi, scale, n, k, (int)bits);
+  auto y = torch::empty(
+      {n, k},
+      plane2.options().dtype(at::kBFloat16));
+  record_use(plane2);
+  record_use(plane_hi);
+  record_use(scale);
+  record_use(y);
+  auto& q = c10::xpu::getCurrentXPUStream().queue();
+  UnpackBf16Kernel kern{
+      plane2.data_ptr<uint8_t>(),
+      hi_ptr(plane_hi),
+      reinterpret_cast<const uint16_t*>(scale.data_ptr()),
+      reinterpret_cast<uint16_t*>(y.data_ptr()),
+      (int)(k / 128),
+      (int)plane2.size(1),
+      bits == 2 ? 0 : (int)plane_hi.size(1),
+      (int)bits};
+  q.parallel_for(sycl::range<1>((size_t)n * (size_t)(k / 128)), kern);
+  return y;
+}
+
 TORCH_LIBRARY(b70_lowbit, m) {
   m.def(
       "gemv(Tensor x, Tensor plane2, Tensor plane_hi, Tensor scale, int bits) "
@@ -1714,6 +1785,9 @@ TORCH_LIBRARY(b70_lowbit, m) {
       "Tensor w13_plane_hi, Tensor w13_scale, Tensor w2_plane2, "
       "Tensor w2_plane_hi, Tensor w2_scale, Tensor expert_bits, int bits) "
       "-> Tensor");
+  m.def(
+      "unpack_bf16(Tensor plane2, Tensor plane_hi, Tensor scale, int bits) "
+      "-> Tensor");
 }
 
 TORCH_LIBRARY_IMPL(b70_lowbit, XPU, m) {
@@ -1723,4 +1797,5 @@ TORCH_LIBRARY_IMPL(b70_lowbit, XPU, m) {
   m.impl("prefill_wxa8", &prefill_wxa8);
   m.impl("moe_prefill", &moe_prefill);
   m.impl("moe_gemv_mixed", &moe_gemv_mixed);
+  m.impl("unpack_bf16", &unpack_bf16);
 }

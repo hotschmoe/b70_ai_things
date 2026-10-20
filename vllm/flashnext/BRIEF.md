@@ -89,3 +89,6 @@ tools, so never stop to "wait" or "queue" -- call bin/gpu-run in the FOREGROUND
 (it blocks until the lease is free; use a long tool timeout or loop on it) and
 continue once it returns. Only finish when your deliverable is measured and
 reported, or a real wall is documented.
+Waiting for a lease longer than a tool call allows: start the gpu-run job
+detached (nohup ... &) with B70_GPU_LOCK_TIMEOUT large, then poll in the
+foreground with repeated `sleep 240; tail <log>` calls until it finishes.

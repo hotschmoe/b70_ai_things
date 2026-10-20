@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import torch
 
 from b70_lowbit_xpu import ops
@@ -238,6 +240,11 @@ class B70LowbitLinearMethod:
         m_tok = x2.shape[0]
         if m_tok <= 8 and m_tok * x2.shape[1] <= _GEMV_MAX_ELEMENTS:
             y = ops.gemv(x2, layer.weight, plane_hi, layer.weight_scale, self.bits)
+        elif os.environ.get("B70_LOWBIT_PREFILL", "") == "matmul":
+            weight = ops.unpack_bf16(
+                layer.weight, plane_hi, layer.weight_scale, self.bits
+            )
+            y = torch.nn.functional.linear(x2, weight)
         else:
             y = ops.prefill_wna16(
                 x2, layer.weight, plane_hi, layer.weight_scale, self.bits

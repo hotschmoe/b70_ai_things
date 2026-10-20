@@ -300,6 +300,27 @@ def moe_prefill(
     )
 
 
+def unpack_bf16(
+    plane2: torch.Tensor,
+    plane_hi: torch.Tensor | None,
+    scale: torch.Tensor,
+    bits: int,
+) -> torch.Tensor:
+    """Unpack b70lb1 to bf16 [N, K] for a vendor GEMM. Prefill only."""
+    _load()
+    if not hasattr(torch.ops.b70_lowbit, "unpack_bf16"):
+        raise RuntimeError(
+            "this b70_lowbit library has no unpack_bf16; "
+            "set B70_LOWBIT_SO to a library built with that op"
+        )
+    return torch.ops.b70_lowbit.unpack_bf16(
+        _ready(plane2),
+        _ready(_hi(plane_hi, plane2)),
+        _ready(scale),
+        int(bits),
+    )
+
+
 def prefill_wxa8(
     x: torch.Tensor,
     plane2: torch.Tensor,

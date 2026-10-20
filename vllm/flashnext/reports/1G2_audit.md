@@ -489,3 +489,312 @@ vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so
 is the pre-existing file from pass 1, not a new campaign binary.
 Verdict: OK.
 Suggested fix: none.
+
+## Pass 4 -- 2026-10-20 08:55 UTC
+
+Cursor: JOURNAL.md through the 08:53 G4 CLI entry. G2b, CPU only.
+New since pass 3: E1 grouped serve, grouped-time, matmul probe,
+matmul serve, prefill split; C7 three DP attempts; C10 and H1
+links; G4 parking library and T2 launch; G5 CPU QSA. Fork tip
+2fec939431.
+
+### F23. E1 grouped int3 serve matches the JSON
+
+Claim: JOURNAL 08:15. hotschmoe-dev first, alias ok, both texts
+the int3 landmarks string. C1 ITL 11.29/11.49/11.61 ms, 90.40
+tok/s, TTFT 810.34 ms, n=57. C2 p50 15.59 and 15.66, TTFT
+1157.17 and 1156.72. Prefill 165.05/173.56/175.14 tok/s at TTFT
+6162/47158/187062 ms. Same checkpoint as the per-expert int3
+graph arm (99.33/112.32/115.78). Grouped is 1.55x at 8k. Decode
+ITL matches that arm (11.29 ms). gpu-run exit 0.
+Evidence: e1-grp-bench.json matches those fields (p50 11.289 and
+11.288 on the graph arm). 173.564/112.320 = 1.545. Serve log:
+same model path as e1-int3-graph-serve.log, FULL_DECODE_ONLY,
+FLASH_ATTN, B70_LOWBIT_MOE_LAUNCHES=2, B70_LOWBIT_PREFILL=grouped,
+B70_LOWBIT_SO=libb70_lowbit_xpu_e1.so, B70_XPU_CG_RECLAIM=500,
+bits=3, shapes (256, 192, 1024) and (256, 48, 2048). e1.so is
+1696504 bytes, mtime 06:35, and was not overwritten. gpu-run
+done in 1207s exit 0. The graph arm's docker line does not set
+B70_LOWBIT_SO. ops.py still defaults to libb70_lowbit_xpu.so,
+mtime 04:05. No HEALTH line.
+Verdict: OK for the printed rates, identity, and text. The two
+decode ITLs are the same at 0.01 ms. They are not the same
+library env.
+Suggested fix: name both SO paths next to the 11.29 ms sentence.
+Record xpu-health around the serve.
+
+### F24. Grouped-time and matmul-probe logs match
+
+Claim: JOURNAL 08:20 and 08:26. moe_prefill 63.14/96.05/324.10 ms.
+Forty layers at 8192 would be 13.0 s, about 632 tok/s. Served
+grouped prefill 47.2 s (174 tok/s). One expert wna16 1.118, wxa8
+1.156, matmul 0.113, loop 15.06 ms. Matmul probe: e1mm.so
+2345192 bytes, probe_rc=0, small linear rel_l2 0, 2.3e-7, 3.8e-6
+for bits 2/3/4, large unpack and linear rel_l2 0, 72.659 vs
+0.575 ms (126x). Small M=32 is 0.14 vs 0.23-0.30 ms. The 04:05
+and 06:35 libraries were not overwritten.
+Evidence: e1-grouped-time.log lines 40-46 match, including
+tok/s_if_40layers=631.9 and GROUPED_TIME_OK, exit 0. 40*324.10 ms
+= 12.96 s. Served 8k TTFT is 47158 ms (173.56 tok/s). 1.118/0.113
+= 9.89. e1-matmul-probe.log: bit3 linear rel_l2=0, bit2
+2.3351e-07, bit4 3.8139e-06. Large shape 72.659 and 0.575
+(126.4x). Small unpack+matmul is 0.140-0.141 against wna16
+0.231/0.266/0.299. probe_rc=0, MATMUL_PROBE_OK, exit 0.
+e1-matmul-build.log: 2345192 bytes, cpu-run 65s exit 0. mtimes
+of libb70_lowbit_xpu.so and e1.so are still 04:05 and 06:35.
+No HEALTH line in either probe.
+Verdict: OK. The small-linear list is not in bits 2, 3, 4 order.
+Bit3 is the exact 0.
+Suggested fix: write bit3=0, bit2=2.3e-7, bit4=3.8e-6.
+
+### F25. C7 DP crashes: second and third match; the first log is gone
+
+Claim: JOURNAL 08:22, 08:25, 08:28. First serve segfaulted in
+allgatherv_ll_ring bf16 Rt64_128_PCIE from a one-element
+dist.all_gather. all_reduce 6.460 and 6.118 ms, barrier 0.609
+and 166.562 ms, load about 75 s, collective health 35s.
+Second serve, fork 1fcc7bbd1d, all_gather_into_tensor, same
+segfault inside PersistentDeviceCodeCache::getItemFromDisc.
+all_reduce 0.625 and 0.935, barrier 163.434 and 0.701. Load 49 s.
+Third serve, SYCL_CACHE_PERSISTENT=0, did not segfault.
+is_padding size mismatch, expected 4096. pid 424 coll_ms
+162.166, pid 423 coll_ms 1.542. Load 35 s. SERVE_RC 1. No
+greedy, no ITL. placed 733, 11.64 GiB, shards=1 tensors=753
+ep=0/2 and ep=1/2.
+Evidence: c7-ep-dp-serve.log and c7-ep-dp-serve-nocache.log are
+the same sha256 (ba16de95). c7-coll.log matches c7-coll-nocache.log.
+c7-dp-window.out only contains LAUNCH 08:26:10, HEALTH_RC 0,
+SERVE_RC 1, SCRIPT_EXIT 0. The strings 6.460, 6.118, 0.609, and
+166.562 are not in the logs dir. c7-coll-health.txt is the
+08:26 run: COLLECTIVE_HEALTH_OK world_size=2 shape=4x5120
+compiled_iterations=10 p2p=0, HEALTHY, done in 34s exit 0.
+c7-coll-into.log: pid 422 all_reduce=2/0.625ms barrier=2/163.434ms,
+pid 423 all_reduce=2/0.935ms barrier=2/0.701ms, tokens=2048, no
+execute line. c7-ep-dp-serve-into.log: placed 733 skipped_mtp 20
+q8_dequant 7, 11.64 GiB, load 48.728 and 49.027 s, two
+all_gather_into_tensor deprecation warnings, two segfaults in
+allgatherv_ll_ring<bfloat16, Rt64_128_PCIE> via
+PersistentDeviceCodeCache::getItemFromDisc and
+all_gather_single. c7-coll-nocache.log: pid 424 coll_ms=162.166
+all_reduce=2/0.624ms barrier=2/161.543ms, pid 423 coll_ms=1.542.
+Nocache serve: segfault count 0, RuntimeError is_padding size
+mismatch expected 4096, in-container echo
+SYCL_CACHE_PERSISTENT=0 and SYCL_CACHE_DIR=.../sycl-c7-dp
+(the earlier -e PERSISTENT=1 is overridden). Load 34.653 and
+35.047 s. topk.cpp:880 is the TORCH_CHECK against num_tokens.
+No xe-reset line. No /v1/models body: the serve never became
+ready. Fork 1fcc7bbd1d parent is 2a50cfe2a7, dated 08:22:17.
+Verdict: second and third crashes OK. First-crash timings and
+the one-element stack are UNVERIFIED because that log was
+replaced. Pre-health for the first two windows is also gone.
+Post-health was not run after the segfault.
+Suggested fix: copy the serve log before the next truncation,
+under a name that includes the attempt. Run xpu-health, and
+xe-reset if that health fails, once the cards are free. The
+08:25 entry already says the one-element list was not the cause.
+
+### F26. Padding-mask commit matches the diff; py_compile has no log
+
+Claim: JOURNAL 08:35. Fork 2fec939431, moe_runner.py only.
+PY_COMPILE_OK. The local mask is an extra all_gatherv tensor,
+installed for top-k, and restored after the layer. A shorter
+mask is dropped for that forward.
+Evidence: git show 2fec939431 is that file only, parent
+1fcc7bbd1d, 08:35:37, not pushed. The diff matches the
+description. all2all.py dispatch_router_logits extends
+tensors_to_gather with extra_tensors and returns the tail.
+No py_compile transcript. The run is unmeasured, as the entry
+says. xpu_communicator.py:198 still says the one-element list
+was the 08:19 segfault. The into log shows all_gather_into_tensor
+faulted in the same kernel, and the fresh-cache run returned.
+Verdict: commit contents OK. PY_COMPILE_OK is UNVERIFIED.
+The comment overclaims a cause the next serve rejected.
+Suggested fix: point the comment at the fresh-cache result.
+Save the py_compile stdout.
+
+### F27. C10 and H1 link hashes match
+
+Claim: JOURNAL 08:30 C10 and 08:36 H1. C10 cpu-run 97s exit 0,
+_C.c10.so 8294752 bytes sha 55c154ee..., _C.so sha still
+086595a0..., 120 warnings, no errors. H1 first link failed in
+48s (cannot find -lze_loader). Second cpu-run 159s exit 0.
+b70_ep _C.so 391992 bytes sha b0f8376f..., NEEDED
+libze_loader.so.1 and libsycl.so.9. _C.ep.so same bytes as
+_C.c10.so. nm exports b70_moe_layer and b70_reserve_decode_queue.
+_C.graph.so 6987192 bytes, mtime 06:59, sha 2315bd45....
+Evidence: those sha256 values match. cmp of _C.c10.so and
+_C.ep.so is identical. readelf NEEDED includes both libraries
+plus libtorch. nm defines both symbols. c10-build.log: "120
+warnings generated", error count 0, done in 97s exit 0.
+h1-build.log: done in 159s exit 0. The 48s -lze_loader failure
+is not in that log or the other h1 logs. _C.graph.so stat is
+6987192 bytes at 06:59:04. *.so is gitignored. git diff --cached
+is empty. The August push-allreduce .so is still the only
+unstaged binary, same as pass 1.
+Verdict: OK for the hashes and the successful links. The 48s
+failure is UNVERIFIED.
+Suggested fix: keep the failed link log under a second name.
+
+### F28. G5 CPU QSA numbers reproduce; the agent log was not saved
+
+Claim: JOURNAL 08:30 and reports/1G5_qsa.md. QSA_LAYER_OK.
+Radix top-k matches lexsort through n=2100 width 2051. Park
+slope 15264. rint 0.5->0, 1.5->2, -1.5->-2. Marginal block
+Strata [4,5,6,7,12,13,14], vLLM expand [4,5,6,7]. Pooled keys
+max_abs 1.19e-7. Text mRoPE equals 1D. Spare key ignores
+pos_base. No GPU number.
+Evidence: no g5 transcript under logs/. This pass re-ran
+python3 -m flashnext_ref.test_qsa_layer with bytecode writes
+off. Exit 0. The print is max_abs 1.1920928955078125e-07, park
+bytes 15264, rint [0, 2, -2], and those two id lists, then
+QSA_LAYER_OK. The report says the XPU plugin is not measured.
+No QSA_XPU_OK line is in the journal.
+Verdict: OK on the CPU contract. Strata file:line citations in
+1G5_qsa.md were not re-opened this pass.
+Suggested fix: keep the test stdout next to the journal entry.
+
+### F29. G4 library, import, and the 29-test count
+
+Claim: JOURNAL 08:31 and 08:46. 29 tests OK in 0.003s, including
+ParkIndex.discard. IMPORT_OK. libb70_kvpark.so 90904 bytes,
+compile rc=0 in 45s, ldd clean, schema alloc_host, copy_batch,
+engine_ordinal. Container cap 80g, host pool 32 GiB, port
+18111, four slots. F-A is c38d0a6197. C7 tip at 08:31 was
+1fcc7bbd1d. F-B is the existing ext_tokens assign, with a DSV41
+round-down. turn_test does not send extra flush prompts.
+Evidence: this pass re-ran the three unittest modules: 29 tests,
+OK, 0.001s. The 08:31 0.003s transcript is still absent.
+g4-import.txt: IMPORT_OK, cpu-run 20s exit 0. g4-kvpark-build.txt:
+compile rc=0, 90904 bytes, cpu-run 45s exit 0. Host copy is
+90904 bytes. ldd reports 0 "not found". strings include
+alloc_host(int nbytes), copy_batch, and engine_ordinal.
+CPU_BYTES default 34359738368. run_t2.sh passes MEMORY=80g.
+serve_ornith.sh still defaults MEMORY to 120g. The 08:49 serve
+log shows memory=80g. turn_test.py runs A, salted control, B,
+and C, and the comment says a fifth conversation would evict A.
+scheduler.py:1064 subtracts ext_tokens % block_size when
+prefix_replay_tokens is set. c38d0a6197 and 1fcc7bbd1d match
+the fork log. The 08:46 verdict sentence says card 0; the next
+line and the launch are card 1.
+Verdict: OK. The 0.003s figure is the unsaved run. The card-0
+sentence is the slip.
+Suggested fix: say card 1 in that verdict sentence.
+
+### F30. G4 T2 health matches; the serve then died on the flag
+
+Claim: JOURNAL 08:49. xpu-health card 1 OK in 24s. The serve
+found card 1 held by H1 and would exit rather than take it.
+No T2 measurement.
+Evidence: g4-t2-health-before-c1.txt: HEALTHY cards 1, done in
+24s exit 0. g4-t2-serve-c1.txt starts with the busy wait on
+vllm-fn-h1-m0, then the container starts (mem=80g, port 18111,
+--park-finished-tail, hotschmoe-dev first in the argv). vLLM
+then prints unrecognized arguments: --park-finished-tail and
+gpu-run done in 27s exit 2. Fork CacheConfig.park_finished_tail
+exists (cache.py:197) and the scheduler copies it
+(scheduler.py:348). The process that ran did not accept the
+CLI flag.
+Verdict: WRONG as a description of the finished process. Health
+is OK. There is still no T2 measurement. The process did take
+card 1 after H1 and exited 2 before a model load.
+Suggested fix: append the exit 2. Check that the container's
+vllm import is the fork (vllm.__file__ and hasattr
+CacheConfig.park_finished_tail) before the next T2. Do not
+describe this launch as a yield.
+
+### F31. E1 matmul serve matches; 3.3x is 3.26x
+
+Claim: JOURNAL 08:45. Same int3 checkpoint, e1mm.so,
+PREFILL=matmul. C1 ITL 11.34/11.55/11.63 ms, 89.94 tok/s,
+TTFT 1875.76 ms, n=57. C2 p50 15.84 and 15.84, TTFT 2046.96
+and 2046.12. Prefill 287.93/366.37/385.20 tok/s, TTFT
+3532/22341/85051 ms. Texts are the landmarks string. Grouped
+8k was 173.56, per-expert was 112.32. 3.3x the original 8k
+and 13x short of 5000. One q-proj was 0.575 ms, so 22 s remains.
+gpu-run exit 0.
+Evidence: e1-mm-bench.json and e1-mm-serve.log. Identity first
+id hotschmoe-dev, alias qwen36-w3a16-matmul. Both texts match.
+C1 p50/p90/p99 11.342/11.554/11.631, tok/s 89.943, TTFT
+1875.763, n=57. C2 and prefill rows match the printed digits.
+Serve env is e1mm.so, PREFILL=matmul, LAUNCHES=2, RECLAIM=500,
+FULL_DECODE_ONLY, FLASH_ATTN, same checkpoint path. bits=3.
+gpu-run done in 1022s exit 0. 366.368/112.320 = 3.26.
+5000/366.37 = 13.6. 8k TTFT 22341 ms. moe.py _prefill_matmul
+counts.tolist() is the prefill histogram read. Decode stays
+on gemv when T<=8, and this serve's graph mode is
+FULL_DECODE_ONLY, so that host read is outside the capture.
+No HEALTH line.
+Verdict: OK. The 3.3x and 13x sentences are rounded.
+Suggested fix: quote 3.26x and 13.6x, or show the division.
+Record xpu-health.
+
+### F32. E1 8k layer split matches the log
+
+Claim: JOURNAL 08:48. split_rc=0. w13 unpack 12.93 ms. Expert
+layer 144.64 ms, times 40 is 5.79 s. Dense GEMM 0.655 ms, times
+160 is 0.10 s. moe_gemv 0.168 ms (6.72 ms times 40). gemv 0.098
+ms (15.76 ms times 160). Served 8k prefill was 22.3 s. Kernels
+account for about 5.9 s.
+Evidence: e1-prefill-split.log lines 39-46 are those strings,
+gpu-run done in 24s exit 0, split_rc=0. 5.79+0.10 = 5.89.
+22341 ms is the F31 TTFT. No HEALTH line. The docker line is
+the E1 prefill-split container.
+Verdict: OK. This is a random-plane microbench, which the
+entry already says.
+Suggested fix: none for the numbers. Print xpu-health on the
+next GPU probe.
+
+### F33. H1 M0 lost the device; that result is not in the journal yet
+
+Claim: JOURNAL 08:36 only says the window was requested. No
+success number was claimed.
+Evidence: h1-m0-window.out records xpu-health HEALTHY cards
+0 and 1, done in 28s exit 0, before the probe. h1-m0-probe.log:
+PROBE5 zeMemOpenIpcHandle failed (2013265924), same_ctx=1,
+ipc_store=0, same_store=1, path=2, spin=200000, then
+UR_RESULT_ERROR_DEVICE_LOST (20) in m0_prep. h1-m0-health-before.txt
+and h1-m0-health-after.txt are 0 bytes. probe.cpp m0_prep fills
+the remote region with a parallel_for and then queue.wait.
+Those waits are before begin_recording. m0_card1_replay does
+not wait. kreg.hpp b70_device_slot stores two devices in
+unlocked function-local statics and returns slot 0 when a third
+device appears. b70_device_grow still leaks the old block and
+throws if the queue is recording.
+Verdict: UNVERIFIED as a journal claim, because none was written.
+The raw probe failed and post-health is empty.
+Suggested fix: append the DEVICE_LOST line. Run xpu-health and,
+if it fails, bin/xe-reset before another two-card probe. Do not
+treat the scalar same-context store as proof the parallel_for
+poison fill is safe.
+
+### F34. Repo hygiene
+
+Claim: none new. Checked again.
+Evidence: git diff --cached is empty. vllm/flashnext/.gitignore
+line 2 ignores *.so, and check-ignore matches the new _C.c10.so,
+_C.ep.so, and b70_ep _C.so. No secret-like names in git status.
+No apt or driver change is in these serve logs. They mount host
+libze 1.28.2 and IGC 2.36.3. Fork status is one dirty file,
+vllm/models/qwen4_exp/xpu/model.py, which the C7 and G4 entries
+say they left untouched. This pass did not review that diff.
+Verdict: OK.
+Suggested fix: none.
+
+### F35. The 08:53 entry corrects F30
+
+Claim: JOURNAL 08:53. vllm serve exited in 27s on unrecognized
+--park-finished-tail. The wheel lacks the field. Fork
+e442b4b53f registers the flag and passes it into CacheConfig.
+Default off. Not pushed. qwen4_exp model.py stayed unstaged.
+Evidence: g4-t2-serve-c1.txt is the same exit 2 and the same
+error string as F30, gpu-run 27s. git show e442b4b53f is
+arg_utils.py only, parent 2fec939431, 08:53:41, five lines:
+the field defaults to CacheConfig.park_finished_tail (False in
+cache.py), add_argument("--park-finished-tail"), and the
+CacheConfig constructor keyword. Branch is ahead 14 of
+origin/main. model.py is still the only dirty fork file.
+Verdict: OK. This supersedes the "still waiting" sentence in
+the 08:49 entry. The relaunch itself is not measured yet.
+Suggested fix: none for the writeup. The next T2 log should
+show the flag accepted before any latency number.
+

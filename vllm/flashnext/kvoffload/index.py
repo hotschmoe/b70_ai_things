@@ -339,6 +339,34 @@ class ParkIndex:
             others -= victim[1]
         return chosen
 
+    def discard(self, key: TailKey) -> None:
+        """Remove one tail after a store that did not reach host RAM.
+
+        A pinned tail stays. The second call is a no-op. Keys already
+        freed by an earlier eviction are not put back.
+        """
+        record = self.by_tail.get(key)
+        if record is None:
+            return
+        if record.pinned > 0:
+            raise ValueError("cannot discard a pinned tail")
+        entry = self.by_conv.get(record.conv_id)
+        self._unlink_record(record)
+        if entry is None:
+            return
+        entry.records = [item for item in entry.records if item is not record]
+        if not entry.records:
+            self.by_conv.pop(record.conv_id, None)
+            return
+        kept: set[bytes] = set()
+        total = 0
+        for item in entry.records:
+            kept.update(item.full_keys)
+            kept.update(item.tail_only_keys)
+            total += item.nbytes
+        entry.full_keys = kept
+        entry.nbytes = total
+
     def _drop_conv(self, conv_id: bytes) -> list[bytes]:
         entry = self.by_conv.pop(conv_id)
         for record in entry.records:

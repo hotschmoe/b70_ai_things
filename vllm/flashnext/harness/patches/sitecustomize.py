@@ -35,6 +35,28 @@ if os.environ.get("B70_D2_INT4_LINEAR") == "1":
 
         traceback.print_exc()
 
+# D3: fused GDN decode (conv + delta + RMSNorm). Off unless B70_D3_GDN=1.
+if os.environ.get("B70_D3_GDN") == "1":
+    try:
+        from d3_gdn import install as _d3_gdn_install
+
+        _d3_gdn_install()
+    except Exception:
+        import traceback
+
+        traceback.print_exc()
+
+# D3: paged full-attention decode. Off unless B70_D3_ATTN=1.
+if os.environ.get("B70_D3_ATTN") == "1":
+    try:
+        from d3_attn import install as _d3_attn_install
+
+        _d3_attn_install()
+    except Exception:
+        import traceback
+
+        traceback.print_exc()
+
 # D2: per-region XPU-graph device times inside one decode step.
 if os.environ.get("B70_D2_PROFILE") == "1":
     try:
@@ -97,6 +119,23 @@ if os.environ.get("B70_GGUF") == "1":
             import b70_gguf_xpu
 
             b70_gguf_xpu.register()
+        except Exception:
+            import traceback
+
+            traceback.print_exc()
+            raise
+# H1 EP sidecar. After the GGUF loader so B70EPMoEMethod can subclass it.
+# vLLM stays world size 1 on card 0. The plugin owns card 1.
+if os.environ.get("B70_EP") == "1":
+    try:
+        import torch  # noqa: F401
+    except ImportError:
+        torch = None
+    if torch is not None:
+        try:
+            import b70_ep_xpu
+
+            b70_ep_xpu.register()
         except Exception:
             import traceback
 

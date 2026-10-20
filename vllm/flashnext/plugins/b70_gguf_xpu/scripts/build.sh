@@ -56,7 +56,7 @@ echo "build: SYCL extension (MAX_JOBS=${MAX_JOBS:-1})"
     -DTORCH_EXTENSION_NAME=_C \
     -DTORCH_API_INCLUDE_EXTENSION_H \
     -D_GLIBCXX_USE_CXX11_ABI=1 \
-    "$ROOT/csrc/kernels.cpp" "$ROOT/csrc/grouped_prefill.cpp" "$ROOT/csrc/bind.cpp" \
+    "$ROOT/csrc/kernels.cpp" "$ROOT/csrc/grouped_prefill.cpp" "$ROOT/csrc/dequant_fast.cpp" "$ROOT/csrc/bind.cpp" \
     -L"$TORCH/lib" -L"$VENV/lib" \
     -ltorch_xpu -ltorch_cpu -ltorch -lc10 -lc10_xpu -lsycl \
     -Wl,-rpath,"$TORCH/lib" -Wl,-rpath,"$VENV/lib" -Wl,-rpath,"$ONEAPI/lib" \

@@ -13,6 +13,7 @@
 #include <chrono>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <memory>
 #include <optional>
@@ -102,6 +103,45 @@ std::string bdf_of(const sycl::device& d) {
     std::snprintf(buf, sizeof buf, "%04x:%02x:%02x.%x", pci.address.domain, pci.address.bus, pci.address.device,
                   pci.address.function);
     return buf;
+}
+
+int forced_path() {
+    const char* e = std::getenv("B70_EP_FORCE_PATH");
+    if (e == nullptr || e[0] == 0) return 0;
+    const int p = std::atoi(e);
+    return (p == 1 || p == 2 || p == 3) ? p : 0;
+}
+
+// 256-wide posted store, the ep_push shape. One direction, then a wait.
+// Prints before the launch so a DEVICE_LOST names the size.
+int preflight_push(sycl::queue& writer, sycl::queue& owner, void* remote, void* local, const uint32_t* src,
+                   size_t bytes, const char* dir) {
+    const size_t words = bytes / 4;
+    std::printf("PREFLIGHT begin dir=%s bytes=%zu\n", dir, bytes);
+    std::fflush(stdout);
+    owner.memset(local, 0, bytes).wait();
+    constexpr size_t WG = 256;
+    size_t groups = (words + WG - 1) / WG;
+    if (groups < 1) groups = 1;
+    if (groups > 64) groups = 64;
+    uint32_t* dst = static_cast<uint32_t*>(remote);
+    writer
+        .parallel_for<class b70_m0_preflight_k>(sycl::nd_range<1>(groups * WG, WG),
+                                                [=](sycl::nd_item<1> it) {
+                                                    for (size_t i = it.get_global_id(0); i < words; i += groups * WG)
+                                                        dst[i] = src[i];
+                                                })
+        .wait();
+    uint32_t src0 = 0, srcL = 0, dst0 = 0, dstL = 0;
+    writer.memcpy(&src0, src, 4).wait();
+    writer.memcpy(&srcL, src + (words - 1), 4).wait();
+    owner.memcpy(&dst0, local, 4).wait();
+    owner.memcpy(&dstL, static_cast<uint32_t*>(local) + (words - 1), 4).wait();
+    const int ok = src0 == dst0 && srcL == dstL && src0 != 0;
+    std::printf("PREFLIGHT dir=%s bytes=%zu ok=%d src0=%u dst0=%u srcL=%u dstL=%u\n", dir, bytes, ok, src0, dst0,
+                srcL, dstL);
+    std::fflush(stdout);
+    return ok;
 }
 
 int store4(sycl::queue& writer, void* remote, sycl::queue& owner, void* local) {
@@ -210,8 +250,13 @@ std::vector<int64_t> m0_setup(int spin) {
             same_ok = 0;
         }
     }
-    if (ipc_ok) s.path = 1;
+    const int forced = forced_path();
+    if (forced == 1 && !ipc_ok) throw std::runtime_error("B70_EP_FORCE_PATH=1 but IPC store failed");
+    if (forced == 2 && same_ok != 1) throw std::runtime_error("B70_EP_FORCE_PATH=2 but same-context store failed");
+    if (forced) s.path = forced;
+    else if (ipc_ok) s.path = 1;
     else if (same_ok == 1) s.path = 2;
+    else if (same_ctx) s.path = 3;
     else throw std::runtime_error("probe5: neither IPC nor same-context pointer stored a word");
 
     std::string err;
@@ -259,6 +304,28 @@ std::vector<int64_t> m0_setup(int spin) {
         (int)same_ctx, (int)in0, (int)in1, peer01, peer10, atom01, atom10, ipc_ok, same_ok, s.path, b0.c_str(),
         b1.c_str(), s.spin);
     std::fflush(stdout);
+
+    // Known pattern in the card-0 source. Zero is rejected so a missed
+    // copy cannot look like a match. Copy the pointer out first: a
+    // SYCL lambda must not capture State.
+    uint32_t* pf0 = s.bw_src0;
+    stream0.parallel_for<class b70_m0_pf_src_k>(sycl::range<1>(kBwB / 4), [=](sycl::id<1> i) {
+        pf0[i] = 0x11110000u + (uint32_t)i[0];
+    }).wait();
+    const size_t push_sizes[] = {64, 4096, kPushB, 65536};
+    for (size_t bytes : push_sizes) {
+        if (!preflight_push(stream0, *s.q1, s.bw1.remote, s.bw1.local, pf0, bytes, "0to1"))
+            throw std::runtime_error("preflight 0to1 mismatch");
+    }
+    uint32_t* pf1 = s.rows1;
+    s.q1->parallel_for<class b70_m0_pf_src1_k>(sycl::range<1>(kRetB / 4), [=](sycl::id<1> i) {
+        pf1[i] = 0x22220000u + (uint32_t)i[0];
+    }).wait();
+    if (!preflight_push(*s.q1, stream0, s.parts.remote, s.parts.local, pf1, kRetB, "1to0"))
+        throw std::runtime_error("preflight 1to0 mismatch");
+    std::printf("PREFLIGHT pass\n");
+    std::fflush(stdout);
+
     return { (int64_t)same_ctx, (int64_t)in0, (int64_t)in1, peer01, peer10, atom01, atom10, ipc_ok, same_ok, s.path,
              (int64_t)s.spin };
 }
@@ -272,11 +339,18 @@ void m0_prep(int sample) {
     *s.err0 = 0;
     *s.err1 = 0;
     sycl::queue& a = q0();
-    // Producer poison: the writer is the card that will overwrite the payload.
-    fill(a, static_cast<uint32_t*>(s.inbox.remote), kPushB / 4, kPoison, saltP);
-    fill(a, static_cast<uint32_t*>(s.inbox.remote) + kPushB / 4, kGuardB / 4, kGuard, saltP);
-    fill(*s.q1, static_cast<uint32_t*>(s.parts.remote), kRetB / 4, kPoison, saltR);
-    fill(*s.q1, static_cast<uint32_t*>(s.parts.remote) + kRetB / 4, kGuardB / 4, kGuard, saltR);
+    if (sample == 0) {
+        std::printf("PREP owner-local poison sample=0\n");
+        std::fflush(stdout);
+    }
+    // S28 default --poison owner. The owner writes its own inbox. The
+    // producer overwrites it later through ep_push / ep_send_rows. A
+    // peer range-fill of the 600 KB return poisoned the device on the
+    // first window (UR_RESULT_ERROR_DEVICE_LOST in m0_prep).
+    fill(*s.q1, static_cast<uint32_t*>(s.inbox.local), kPushB / 4, kPoison, saltP);
+    fill(*s.q1, static_cast<uint32_t*>(s.inbox.local) + kPushB / 4, kGuardB / 4, kGuard, saltP);
+    fill(a, static_cast<uint32_t*>(s.parts.local), kRetB / 4, kPoison, saltR);
+    fill(a, static_cast<uint32_t*>(s.parts.local) + kRetB / 4, kGuardB / 4, kGuard, saltR);
     fill(a, s.push_src, kPushB / 4, kPush, saltP);
     fill(*s.q1, s.rows1, kRetB / 4, kRowsk, saltR);
     fill(*s.q1, s.stage1, kPB / 4, kPoison, saltP ^ kStageX);
@@ -284,6 +358,10 @@ void m0_prep(int sample) {
     s.q1->memset(s.done1, 0, 4);
     a.wait();
     s.q1->wait();
+    if (sample == 0) {
+        std::printf("PREP sample=0 waited\n");
+        std::fflush(stdout);
+    }
 }
 
 void m0_submit_card1() {
@@ -498,10 +576,15 @@ void m0_latency() {
         fill(pq0, s.bw_src0, words, kPush, salt);
         pq0.wait();
         auto* dst = static_cast<uint32_t*>(s.bw1.remote);
-        push_words(pq0, dst, s.bw_src0, words, 16).wait();
-        // Publish a flag after the payload is in the queue (in-order).
+        const uint32_t* srcp = s.bw_src0;
         const uint32_t epoch = 900001u;
-        pq0.single_task<class b70_m0_p4_flag_k>([=] { sys_store(f1r, epoch); }).wait();
+        // Payload and flag in one kernel, system-scope barrier, as ep_push.
+        pq0.parallel_for<class b70_m0_p4_pub_k>(sycl::nd_range<1>(256, 256), [=](sycl::nd_item<1> it) {
+                for (size_t i = it.get_global_id(0); i < words; i += 256) dst[i] = srcp[i];
+                sycl::atomic_fence(sycl::memory_order::release, sycl::memory_scope::system);
+                sycl::group_barrier(it.get_group(), sycl::memory_scope::system);
+                if (it.get_local_id(0) == 0) sys_store(f1r, epoch);
+            }).wait();
         ep_wait_value(*s.q1, f1, epoch, s.spin, s.err1, 11);
         uint32_t* plain = s.stage1;
         uint32_t* unc = s.stage1 + words;
@@ -526,7 +609,6 @@ void m0_latency() {
         }
         std::printf("PROBE4 bytes=%zu plain_bad=%zu uncached_bad=%zu plain_us=%.3f uncached_us=%.3f err1=%u\n", bytes,
                     bad_p, bad_u, dev_us(ep2), dev_us(eu2), s.err1 ? *s.err1 : 0u);
-        (void)eu;
     }
     std::fflush(stdout);
 }

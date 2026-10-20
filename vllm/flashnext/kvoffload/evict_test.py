@@ -111,6 +111,8 @@ def complete(
     token_ids: list[int],
     max_tokens: int,
     timeout: float,
+    cache_salt: str | None = None,
+    return_token_ids: bool = False,
 ) -> dict:
     """Stream a greedy completion. Return text, usage, and client TTFT."""
     payload = {
@@ -123,6 +125,10 @@ def complete(
         "stream": True,
         "stream_options": {"include_usage": True},
     }
+    if cache_salt is not None:
+        payload["cache_salt"] = cache_salt
+    if return_token_ids:
+        payload["return_token_ids"] = True
     data = json.dumps(payload).encode("ascii")
     req = urllib.request.Request(
         base + "/v1/completions",
@@ -133,6 +139,7 @@ def complete(
     started = time.monotonic()
     ttft = None
     text_parts: list[str] = []
+    sampled: list[int] = []
     usage = None
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         for raw in resp:
@@ -150,10 +157,13 @@ def complete(
                 if piece and ttft is None:
                     ttft = time.monotonic() - started
                 text_parts.append(piece)
+                for token in choice.get("token_ids") or []:
+                    sampled.append(int(token))
     if ttft is None:
         ttft = time.monotonic() - started
     return {
         "text": "".join(text_parts),
+        "token_ids": sampled,
         "ttft_s": ttft,
         "usage": usage,
         "wall_s": time.monotonic() - started,

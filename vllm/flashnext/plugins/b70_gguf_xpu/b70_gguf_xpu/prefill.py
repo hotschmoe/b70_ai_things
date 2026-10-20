@@ -25,22 +25,58 @@ def load() -> None:
     _LOADED = True
 
 
+def _dq_threshold(env: str, default: int):
+    """None means the fused kernel. 0 means always dequant-then-GEMM."""
+    raw = os.environ.get(env, "").strip().lower()
+    if raw in ("off", "none", "-1"):
+        return None
+    if raw in ("on",):
+        return 0
+    if raw == "":
+        return default
+    return int(raw)
+
+
+def _dq_ready() -> bool:
+    load()
+    import torch
+
+    return hasattr(torch.ops.b70_gguf, "prefill_dequant")
+
+
 def prefill_grouped(x, q, expert_ids, ggml_type: int, n: int, k: int, mode: int = 0):
     """x fp16/bf16 [M, K], expert_ids int32 [M] -> fp32 [M, N] in input order.
 
     mode 0 fp16 DPAS, 1 bf16 DPAS, 2 int8 DPAS. Invalid expert ids leave zeros.
+    mode 0 and M >= B70_PREFILL_DQ_M uses dequant + oneDNN (prefill_dq.grouped_dq).
     """
     load()
     import torch
 
+    from b70_gguf_xpu import prefill_dq
+
+    m = int(x.shape[0])
+    thr = _dq_threshold("B70_PREFILL_DQ_M", prefill_dq.DQ_M_MIN)
+    if mode == 0 and thr is not None and m >= thr and _dq_ready():
+        return prefill_dq.grouped_dq(x, q, expert_ids, int(ggml_type), int(n), int(k))
     return torch.ops.b70_gguf.prefill_grouped(x, q, expert_ids, int(ggml_type), int(n), int(k), int(mode))
 
 
 def prefill_dense(x, q, ggml_type: int, n: int, k: int, mode: int = 0):
-    """x fp16/bf16 [M, K], q one matrix -> fp32 [M, N]."""
+    """x fp16/bf16 [M, K], q one matrix -> fp32 [M, N].
+
+    mode 0 and M >= B70_PREFILL_DQ_M uses dequant + torch.mm. Other modes stay
+    on the fused DPAS kernel.
+    """
     load()
     import torch
 
+    from b70_gguf_xpu import prefill_dq
+
+    m = int(x.shape[0])
+    thr = _dq_threshold("B70_PREFILL_DQ_M", prefill_dq.DQ_M_MIN)
+    if mode == 0 and thr is not None and m >= thr and _dq_ready():
+        return prefill_dq.dense_dq(x, q, int(ggml_type), int(n), int(k))
     return torch.ops.b70_gguf.prefill_dense(x, q, int(ggml_type), int(n), int(k), int(mode))
 
 
@@ -56,6 +92,14 @@ def prefill_moe_layer(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_d
 
     if router is None:
         router = torch.empty(0, dtype=torch.float32, device=x.device)
+    from b70_gguf_xpu import prefill_dq
+
+    t = int(x.shape[0])
+    thr = _dq_threshold("B70_PREFILL_DQ_T", prefill_dq.DQ_T_MIN)
+    if mode == 0 and thr is not None and t >= thr and _dq_ready():
+        return prefill_dq.moe_dq(
+            x, ids, q_gate, q_up, q_down, router, int(type_gu), int(type_down), int(h), int(f)
+        )
     return torch.ops.b70_gguf.prefill_moe_layer(
         x, ids, q_gate, q_up, q_down, router, int(type_gu), int(type_down), int(h), int(f), int(mode)
     )

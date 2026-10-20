@@ -1671,3 +1671,533 @@ vllm-fn-qwen36-gguf-ep. B70_COLL_LOG records collectives. Serve budget
 COMMAND: bash /tmp/c7-dp-window.sh
 RESULT: leases requested immediately after this entry.
 VERDICT: window open.
+
+## 2026-10-20 08:15 E1 -- grouped int3 prefill 174 tok/s at 8k
+
+CONFIG: int3 checkpoint, libb70_lowbit_xpu_e1.so (06:35, the probed
+binary), B70_LOWBIT_PREFILL=grouped, B70_LOWBIT_MOE_LAUNCHES=2,
+FULL_DECODE_ONLY, FLASH_ATTN, B70_XPU_CG_RECLAIM=500, card 1, port
+18084, alias qwen36-w3a16-grouped. Prefill is outside the graph.
+COMMAND: e1_grouped_serve.sh. Bench tag e1-int3-grouped. Logs
+e1-grp-serve.log, e1-grp-bench.json.
+RESULT: Identity hotschmoe-dev first, alias ok. Coherence ok, same,
+paris. Both texts: " Paris, a city renowned for its rich history,
+culture, and iconic landmarks." Decode C1 ITL p50/p90/p99
+11.29/11.49/11.61 ms, 90.40 tok/s, TTFT 810.34 ms, n=57. C2 p50
+15.59 and 15.66 ms, TTFT 1157.17 and 1156.72 ms. Prefill
+1017/8185/32762 tok at 165.05/173.56/175.14 tok/s (TTFT
+6162/47158/187062 ms). The matched per-expert int3 graph arm was
+99.33/112.32/115.78 tok/s. Grouped is 1.55x at 8k. Decode ITL matches
+the templated graph arm (11.29 ms). gpu-run exit 0. Server stopped.
+VERDICT: GROUPED_SERVE_OK and far from the 5000 tok/s 8k target.
+The 64 KiB SLM tile is numerically right and still the prefill floor.
+Next is a one-layer device time against prefill_wxa8 and a bf16 matmul,
+not another full serve, so the kernel change has a measured gap.
+
+## 2026-10-20 08:22 C7 -- DP=2 EP profile allgatherv segfault
+
+CONFIG: both cards, no CCL_TOPO_P2P_ACCESS. Fork 2a50cfe2a7.
+_C.graph.so. Eager Qwen3.6-35B-A3B UD-IQ3_XXS, TP=1, DP=2,
+--enable-expert-parallel, --api-server-count 1, max-model-len 2048,
+max-num-seqs 2, port 18104, container vllm-fn-qwen36-gguf-ep.
+B70_COLL_LOG on. Collective health first.
+COMMAND: bash /tmp/c7-dp-window.sh. Logs c7-dp-window.out,
+c7-coll-health.txt, c7-ep-dp-serve.log, c7-coll.log.
+RESULT: HEALTH_RC 0. COLLECTIVE_HEALTH_OK world_size=2 shape=4x5120
+compiled_iterations=10 p2p=0, gpu-run 35s exit 0. Both workers loaded
+shards=1 tensors=753 ep=0/2 and ep=1/2, placed 733 skipped_mtp 20
+q8_dequant 7, 11.64 GiB, about 75 s. Init collectives flushed on the
+first execute_model (tokens=2048, the profile forward): each rank
+all_reduce=2 (6.460 ms and 6.118 ms) and barrier=2 (0.609 ms and
+166.562 ms). No execute line. Both workers then printed
+"Segfault encountered" in oneCCL allgatherv_ll_ring for bf16
+Rt64_128_PCIE, called from dist.all_gather with a one-element list
+(xpu_communicator.py equal-size branch). EngineCore cancelled at
+determine_available_memory. SERVE_RC 1. No greedy and no ITL.
+Container stopped by 08:19:37. No xe-reset: E1 took card 1 at
+08:19:35. That container was already gone at 08:21 and both owner
+files were empty.
+VERDICT: Expert placement and the GGUF load work at EP=2. The
+equal-size all-gather call is the crash. Next serve uses
+all_gather_into_tensor for that branch.
+
+## 2026-10-20 08:22 C7 -- two-card window retry
+
+CONFIG: same DP=2 EP eager serve. Fork working tree now calls
+dist.all_gather_into_tensor for equal-sized XPU all-gather.
+Collective health runs again. No P2P. Lock timeout 30s.
+COMMAND: bash /tmp/c7-dp-window.sh
+RESULT: leases requested immediately after this entry.
+VERDICT: retry open.
+
+## 2026-10-20 08:20 E1 -- one-layer prefill times, WXA8 is not faster
+
+CONFIG: card 1, libb70_lowbit_xpu_e1.so, random planes, bits=3,
+H=2048 I=512 E=256 top-8. XPU events. Not a serve number.
+COMMAND: tests/grouped_time.py via xpu-run.sh --card 1. Log
+e1-grouped-time.log.
+RESULT: moe_prefill (both projections) T=128/1024/8192 is
+63.14/96.05/324.10 ms. Forty layers at 8192 would be 13.0 s, about
+632 tok/s if nothing else ran. The served grouped prefill was 47.2 s
+(174 tok/s), so the dense trunk GEMMs are in that remainder.
+One expert M=256 K=2048 N=1024: wna16 1.118 ms, wxa8 1.156 ms,
+torch.matmul 0.113 ms. A loop of 256 bf16 matmuls is 15.06 ms.
+VERDICT: GROUPED_TIME_OK. The int8 DPAS tile is not faster than the
+bf16 DPAS tile on this shape. The vendor bf16 GEMM is about 10x the
+ESIMD tile. Next is unpack-to-bf16 plus that GEMM, built into a new
+library so e1.so stays the probed grouped binary.
+
+## 2026-10-20 08:25 C7 -- DP retry still segfaults in allgatherv
+
+CONFIG: fork 1fcc7bbd1d. Same eager DP=2 EP serve. Equal-size path
+now calls dist.all_gather_into_tensor.
+COMMAND: the 08:22 window. Preserved logs c7-ep-dp-serve-into.log
+and c7-coll-into.log.
+RESULT: HEALTH_RC 0 again. placed 733, 11.64 GiB, load 49 s on the
+warm cache. Python warned that all_gather_into_tensor is deprecated
+in favor of all_gather_single, so the new call ran. Both workers
+then segfaulted in the same oneCCL allgatherv_ll_ring bf16
+Rt64_128_PCIE, inside SYCL PersistentDeviceCodeCache::getItemFromDisc.
+Init collectives before that execute: all_reduce=2 (0.625 ms and
+0.935 ms) and barrier=2 (163.434 ms and 0.701 ms). SERVE_RC 1.
+No greedy, no ITL. No xe-reset: the following health check is the
+gate, and the previous retry's health passed after the first crash.
+VERDICT: The one-element list was not the crash. The allgatherv
+kernel faults while reading the SYCL device cache. Next serve sets
+SYCL_CACHE_PERSISTENT=0 and a fresh cache directory.
+
+## 2026-10-20 08:26 C7 -- DP window, fresh SYCL cache
+
+CONFIG: same DP=2 EP eager serve. SYCL_CACHE_PERSISTENT=0.
+SYCL_CACHE_DIR=/mnt/vm_8tb/b70/build/vllm-flashnext/cache/sycl-c7-dp.
+Collective health first. No P2P. Fork 1fcc7bbd1d.
+COMMAND: bash /tmp/c7-dp-window.sh
+RESULT: leases requested immediately after this entry.
+VERDICT: retry open.
+
+## 2026-10-20 08:26 E1 -- unpack plus matmul is 126x on one q-proj
+
+CONFIG: card 1, libb70_lowbit_xpu_e1mm.so (2345192 bytes, built 08:25).
+tests/matmul_probe.py. Gate rel_l2 < 0.02 against prefill_wna16, and
+the unpack against format.dequant rounded to bf16. The 04:05 uniform
+.so and the 06:35 grouped .so were not overwritten.
+COMMAND: build.sh SO_NAME=libb70_lowbit_xpu_e1mm.so, then xpu-run.sh
+--card 1 --memory 24g --env B70_LOWBIT_SO=that library --
+python3 tests/matmul_probe.py. Logs e1-matmul-build.log,
+e1-matmul-probe.log.
+RESULT: probe_rc=0. PASS bits 2/3/4 unpack, small linear rel_l2
+0, 2.3e-7, 3.8e-6. PASS bits 3 M=8192 N=2048 K=2048 unpack rel_l2=0
+and linear rel_l2=0. Time on that shape: wna16 72.659 ms,
+unpack+matmul 0.575 ms (126x). Small M=32 cases are 0.14 ms versus
+0.23-0.30 ms, so the win is the large GEMM.
+VERDICT: MATMUL_PROBE_OK. B70_LOWBIT_PREFILL=matmul on this library
+is the prefill path to serve. Decode stays GEMV.
+
+## 2026-10-20 08:30 C10 -- dequant library linked
+
+CONFIG: icpx 2026.1, same flags as C8 (-fsycl -std=c++20 -O3 -fPIC
+-fexceptions -fsycl-device-code-split=per_kernel). New TU
+csrc/dequant_fast.cpp. build.sh source list adds that TU (shared
+file; additive ops only). Output is _C.c10.so. _C.so is C8's binary
+and is not replaced: sched_moe.hpp is newer than _C.so (C9 decode).
+COMMAND: B70_AGENT=C10 B70_PREFILL_OUT=.../_C.c10.so bin/cpu-run
+vllm/flashnext/plugins/b70_gguf_xpu/scripts/build.sh
+Log /mnt/vm_8tb/b70/build/c10-build.log.
+RESULT: cpu-run done in 97s, exit 0. _C.c10.so 8294752 bytes sha256
+55c154ee90f33bec810d24a2cd6ac0c3b6b1a4e53bdc78aed50a59113e8c9bf0.
+_C.so sha256 still
+086595a01babbc366b3d5366147464ebd24022fba0b65d83b1ff530489c70d55.
+120 existing deprecation warnings, no errors. Card 0 held by C9
+(run_gpu4.sh); card 1 held by E1. Bench will queue on card 0.
+VERDICT: link ok. Speed and crossover not measured yet.
+
+## 2026-10-20 08:30 G5 -- CPU QSA layer matches Strata cell top-k
+
+CONFIG: host CPython, numpy, no GPU. flashnext_ref/qsa_layer.py on top of
+G3's qsa.py (untouched). Small geom (block 4, top_k 4, width cap 7) and
+the Flash-Next width cap 2051. Strata sources: qsa.hpp, qsa.cu
+indexer_key_append_kernel, kv_q8.cu, qsa_select.hpp (open block scores
+the dead key).
+COMMAND: cd vllm/flashnext && PYTHONDONTWRITEBYTECODE=1 python3 -m flashnext_ref.test_qsa_layer
+RESULT: QSA_LAYER_OK. Radix top-k matches lexsort through n=2100 width=2051,
+including ties and +1e9. Chunk prefill matches token-at-a-time ids and
+gated output bit-exact (T=16). int8 group-64 rint ties-to-even
+(0.5->0, 1.5->2, -1.5->-2), zero group stores scale 0. Park slope
+12*(1056+128)+1056 = 15264 B/token. Fixed indexer tail+dead+block_pos
+is (3*128*4)+(128*4)+4 bytes at the real shape. Marginal block:
+Strata cells [4,5,6,7,12,13,14], vLLM whole-block expand [4,5,6,7].
+Pooled keys vs G3 pool_indexer_keys max_abs 1.19e-7. Text mRoPE equals
+1D; a split triple does not. Spare key ignores pos_base.
+VERDICT: CPU reference is the contract for the XPU kernels. Plugin
+b70_qsa_xpu is compiling next (SIMT, graph-sized grids, int8 KV).
+XMX union prefill is not in this library. No commit.
+
+## 2026-10-20 08:31 G4 -- F-A committed, parking connector written
+
+CONFIG: fork /mnt/vm_8tb/b70/build/vllm-flashnext/vllm branch b70/flashnext.
+F-A is c38d0a6197, default-off park_finished_tail, align mode, in-flight
+tokens suppress the offer. Not pushed. C7 tip is now 1fcc7bbd1d on top
+of it. vllm/models/qwen4_exp/xpu/model.py is dirty in that tree and was
+not touched. W5 is not a code change: kv_both is already a producer.
+PLE state is F-D, not part of F-A.
+COMMAND: CPU test of F-A was importlib of
+tests/v1/core/test_single_type_kv_cache_manager.py inside
+vllm-flashnext-xpu:py312 (PARK_TAIL_OK, earlier this session). Host
+unittest of the park index: PYTHONDONTWRITEBYTECODE=1
+PYTHONPATH=vllm/flashnext python3 -m unittest
+kvoffload.tests.test_layout_park kvoffload.tests.test_park_index
+kvoffload.tests.test_metrics -v
+RESULT: 29 tests OK in 0.003s, including ParkIndex.discard.
+ParkingOffloadConnector is in kvoffload/parking.py. It forces
+offload_prompt_only off, binds ConversationCachePolicy, queues the
+exact tail (GDN plus the partial attention page at E) into the next
+step's jobs_to_flush, and refuses a tail whose end is the whole
+prompt so the scheduler's last-token backoff cannot double-apply GDN.
+A failed prepare_store drops the index record. Resident full-block
+keys are pinned for that call. serve_ornith.sh now uses this
+connector, 32 GiB, --shm-size 40g, --memory 120g, slots 4,
+--park-finished-tail, and the fork on PYTHONPATH ahead of the wheel.
+turn_test.py is the T2 client (cache_salt control, host counter,
+greedy token ids). Docker import of the connector has not run: C9
+holds the CPU quiet lock and card 0, E1 holds card 1.
+VERDICT: F-A is in the fork. Connector import and Ornith T2 wait for
+a free card and a free quiet lock. Copy op is next on CPU, compile
+after the quiet window.
+
+## 2026-10-20 08:28 C7 -- DP fresh-cache profile dies in topk padding
+
+CONFIG: fork 1fcc7bbd1d. Eager DP=2 EP, TP=1, max_model_len 2048,
+max_num_seqs 2, 35B UD-IQ3_XXS. SYCL_CACHE_PERSISTENT=0 and
+SYCL_CACHE_DIR=/mnt/vm_8tb/b70/build/vllm-flashnext/cache/sycl-c7-dp.
+No P2P. Collective health first.
+COMMAND: bash /tmp/c7-dp-window.sh (launched 08:26:10). Logs copied to
+c7-ep-dp-serve-nocache.log and c7-coll-nocache.log before the next
+truncation.
+RESULT: HEALTH_RC 0. In-container echo confirmed the cache override.
+placed 733, 11.64 GiB, load 35 s. all_gather_into_tensor ran (the
+deprecation warning printed) and did not segfault. Both workers then
+raised RuntimeError: is_padding size mismatch, expected: 4096, in
+torch.ops._moe_C.topk_softmax during the 2048-token profile forward
+(gpu_worker.py determine_available_memory). 4096 is 2*2048. The XPU
+check is vllm-xpu-kernels csrc/moe/topk.cpp:880 and compares the mask
+to gating rows. Naive dispatch all-gathers activations first
+(moe_runner.py _maybe_dispatch) and leaves the runner mask at the
+local 2048. Init collectives only: all_reduce=2 and barrier=2 per
+rank (pid 424 coll_ms 162.166, pid 423 coll_ms 1.542). No execute
+line. SERVE_RC 1 at 08:28:29. No greedy, no ITL. No xe-reset: C9 took
+card 0 and E1 took card 1 at 08:28:24, and health had passed.
+VERDICT: the fresh cache let equal-size all_gather_into_tensor return.
+The profile still cannot pass top-k. Next commit gathers the local
+padding mask with the dispatch.
+
+## 2026-10-20 08:35 C7 -- padding mask is gathered with naive DP dispatch
+
+CONFIG: fork 2fec939431, not pushed. moe_runner.py only. The other
+dirty file vllm/models/qwen4_exp/xpu/model.py was left untouched.
+COMMAND: py_compile of moe_runner.py. No GPU.
+RESULT: PY_COMPILE_OK. _maybe_dispatch passes the local is_padding
+slice as extra_tensors on the existing all_gatherv, installs the
+gathered mask for top-k, and restores the runner mask after the
+layer. A mask shorter than the local batch is dropped for that
+forward instead of failing the size check.
+VERDICT: unmeasured. The next DP window uses this commit. Cards were
+busy at 08:35 (C9 card 0, E1 card 1).
+
+
+## 2026-10-20 08:36 H1 -- EP sidecar libraries linked
+
+CONFIG: icpx 2026.1, -fsycl -std=c++20 -O3 -fPIC -fexceptions
+-fsycl-device-code-split=per_kernel, gcc toolchain under
+/mnt/vm_8tb/b70/build/gguf-xpu-toolchain. New package
+vllm/flashnext/plugins/b70_ep_xpu. GGUF rebuild uses
+B70_PREFILL_OUT=_C.ep.so so _C.so and _C.graph.so stay put.
+Link is -l:libze_loader.so.1 (the host has the SONAME, not
+libze_loader.so). No rpath on the loader. Scratch in kreg.hpp,
+row_moe.hpp, and sched_moe.hpp is slotted by sycl::device.
+COMMAND: B70_AGENT=H1 MAX_JOBS=4 bin/cpu-run
+plugins/b70_ep_xpu/scripts/build.sh. Log
+/mnt/vm_8tb/b70/build/vllm-flashnext/logs/h1-build.log.
+First attempt failed at link (cannot find -lze_loader) in 48s.
+RESULT: second cpu-run exit 0 in 159s after G5 released the CPU
+lease. plugins/b70_ep_xpu/b70_ep_xpu/_C.so is 391992 bytes, sha256
+b0f8376f608f14a735cd7bd9c0e8ff45389cb479bcc5733d215a8d2e8cab2cde,
+NEEDED libze_loader.so.1 and libsycl.so.9.
+plugins/b70_gguf_xpu/b70_gguf_xpu/_C.ep.so is 8294752 bytes, sha256
+55c154ee90f33bec810d24a2cd6ac0c3b6b1a4e53bdc78aed50a59113e8c9bf0
+(same bytes as C10's _C.c10.so; same sources). nm exports
+b70_moe_layer and b70_reserve_decode_queue.
+_C.graph.so is still 6987192 bytes, mtime 06:59, sha256
+2315bd4593523b569f73067454a4c8867114bc2e99a3f0f87745858474f7201a.
+_C.so sha256 still
+086595a01babbc366b3d5366147464ebd24022fba0b65d83b1ff530489c70d55.
+VERDICT: link ok. CPU import is next, then the two-card M0 window.
+No GPU lease taken for the build.
+
+## 2026-10-20 08:36 H1 -- M0 two-card window announced
+
+CONFIG: both cards, no CCL_TOPO_P2P_ACCESS, no oneCCL. Transport is
+the Strata posted push plus a bounded device flag (spin 200000, not
+2e6). Eager S28 oracle (65 samples) then card-0 torch.xpu.graph plus
+a plugin card-1 command_graph (65 samples). Section 7.5 probes 1-5
+follow. Host alarm 900s. Libraries are the _C.so and _C.ep.so from
+the entry above. Container vllm-fn-h1-m0, memory 8g.
+COMMAND: bin/gpu-run bin/xpu-health, then
+harness/xpu-run.sh --card both python tests/m0_probe.py, then
+bin/gpu-run bin/xpu-health. B70_GPU_LOCK_TIMEOUT=3600 so the request
+queues behind E1 on card 1. Logs h1-m0-health-before.txt,
+h1-m0-probe.log, h1-m0-health-after.txt.
+RESULT: leases requested immediately after this entry.
+VERDICT: window open.
+
+## 2026-10-20 08:45 E1 -- int3 matmul prefill 366 tok/s at 8k
+
+CONFIG: int3 checkpoint, libb70_lowbit_xpu_e1mm.so,
+B70_LOWBIT_PREFILL=matmul, B70_LOWBIT_MOE_LAUNCHES=2, FULL_DECODE_ONLY,
+FLASH_ATTN, B70_XPU_CG_RECLAIM=500, card 1, port 18084, alias
+qwen36-w3a16-matmul. Decode stays GEMV. Prefill unpacks b70lb1 to
+bf16 and calls the vendor GEMM, including one matmul per active expert.
+COMMAND: e1_matmul_serve.sh. Bench tag e1-int3-matmul. Logs
+e1-mm-serve.log, e1-mm-bench.json.
+RESULT: Identity hotschmoe-dev first, alias ok. Coherence ok, same,
+paris. Both texts: " Paris, a city renowned for its rich history,
+culture, and iconic landmarks." C1 ITL p50/p90/p99 11.34/11.55/11.63 ms,
+89.94 tok/s, TTFT 1875.76 ms, n=57. C2 p50 15.84 and 15.84 ms, TTFT
+2046.96 and 2046.12 ms. Prefill 1017/8185/32762 tok at
+287.93/366.37/385.20 tok/s (TTFT 3532/22341/85051 ms). Grouped DPAS
+was 173.56 tok/s at 8k. The per-expert WNA16 path was 112.32.
+gpu-run exit 0. Server stopped.
+VERDICT: MATMUL_SERVE_OK. 3.3x the original 8k prefill and still
+13x short of 5000 tok/s. One q-proj microbench was 0.575 ms, so the
+remaining 22 s is not that single GEMM. Next is a one-layer split of
+the expert loop versus the dense projections.
+
+## 2026-10-20 08:46 G4 -- copy op compiled, T2 client fits 4 slots
+
+CONFIG: libb70_kvpark.so built with icpx 2026.1.0 against torch XPU
+headers. Output /mnt/vm_8tb/b70/build/vllm-flashnext/b70_kvpark/libb70_kvpark.so
+(90904 bytes). Not loaded into the connector. T2 still uses
+swap_blocks_batch. Host pool stays 32 GiB; this run caps the container
+at 80g because the host has 128 GiB and card 1 is live.
+COMMAND: B70_AGENT=g4 bin/cpu-run plugins/b70_kvpark/build.sh.
+Log /mnt/vm_8tb/b70/build/vllm-flashnext/logs/g4-kvpark-build.txt.
+The earlier connector import log is g4-import.txt (IMPORT_OK).
+RESULT: compile rc=0 in 45s, ldd reports no missing libraries, and the
+TORCH_LIBRARY schema for alloc_host, copy_batch, and engine_ordinal is
+in the .so. No bandwidth number: both cards were busy (H1 health on
+card 0, E1 serve on card 1). turn_test no longer sends flush prompts.
+Those extra conversations would be a fifth slot and would evict A
+before the restore. The four slots are A, the salted control, B, and C.
+An eagle KV group, if the model has one while MTP is off, is a
+zero-size copy slot and is not part of the hit.
+VERDICT: library is built and unmeasured. Ornith T2 starts when card 0
+is free. F-B is not a new scheduler change: a non-aligned external
+count is already kept (scheduler.py around the ext_tokens assign)
+except for the DSV41 prefix-replay round-down. F-C and F-D are not
+committed.
+G4 taking card 1 for Ornith T2, about 20 min, port 18111
+
+## 2026-10-20 08:48 E1 -- 8k layer split, expert loop 5.8 s
+
+CONFIG: card 1, libb70_lowbit_xpu_e1mm.so, random int3 planes,
+H=2048 I=512 E=256 top-8, T=8192. XPU events. Not a serve tok/s.
+COMMAND: tests/prefill_split.py. Log e1-prefill-split.log.
+RESULT: split_rc=0. Expert w13 unpack 12.93 ms. Full expert layer
+(both unpacks, 256 matmuls, SiLU, reduce) 144.64 ms, times 40 layers
+is 5.79 s. One dense GEMM M=8192 N=2048 K=2048 is 0.655 ms, times
+160 is 0.10 s. Eager decode moe_gemv 0.168 ms (6.72 ms times 40).
+Eager gemv N=2048 0.098 ms (15.76 ms times 160). The served matmul
+8k prefill was 22.3 s. These kernels account for about 5.9 s of that.
+The eager GEMV sum is larger than the 11.3 ms graph ITL because the
+graph collapses launch overhead. Do not read the eager sum as the ITL.
+VERDICT: PREFILL_SPLIT_OK. The lowbit GEMMs are no longer the bulk of
+the 8k prefill. The next measurement is XPU-event brackets around
+linear_attn, self_attn, and mlp on one real 8k forward. Not Kineto.
+
+## 2026-10-20 08:49 G4 -- T2 health passed, serve yielded to H1
+
+CONFIG: card 1, port 18111, container vllm-fn-g4-kv-c1. Health image
+vllm-xpu-env:int8g-v0251.
+COMMAND: kvoffload/run_t2.sh. Health log g4-t2-health-before-c1.txt.
+Serve log g4-t2-serve-c1.txt.
+RESULT: xpu-health card 1 OK in 24s. The serve then found card 1 held
+by H1 (vllm-fn-h1-m0, both cards) and is waiting up to 180s. It will
+exit rather than take the card out from under that probe.
+VERDICT: no T2 measurement yet.
+
+## 2026-10-20 08:53 G4 -- CLI flag was not registered
+
+CONFIG: fork b70/flashnext. F-A added CacheConfig.park_finished_tail
+but EngineArgs.add_cli_args lists flags by hand.
+COMMAND: CARD=1 kvoffload/run_t2.sh. Health before passed (card 1 OK,
+24s). Serve log g4-t2-serve-c1.txt.
+RESULT: vllm serve exited in 27s: unrecognized arguments
+--park-finished-tail. The wheel does not have the field. The fork
+does, and PYTHONPATH pointed at the fork, but the flag was never
+added to the parser. Commit e442b4b53f registers it and passes it
+into CacheConfig. Default off. Not pushed. qwen4_exp XPU model.py
+stayed unstaged.
+VERDICT: no T2 measurement. Relaunch after this entry.
+
+## 2026-10-20 08:55 G2b -- audit pass 4
+
+CONFIG: CPU only. No GPU. Cursor was JOURNAL.md through the 08:53
+G4 CLI entry. Evidence under /mnt/vm_8tb/b70/build/vllm-flashnext/logs,
+c10-build.log, and fork b70/flashnext. Report
+vllm/flashnext/reports/1G2_audit.md.
+COMMAND: parsed e1-grp-bench.json, e1-mm-bench.json, the C7 serve
+and coll logs, and the G4/H1 transcripts. sha256 of the new .so
+files. Re-ran the QSA module and the 29 kvoffload tests with
+bytecode writes off. git show of 2fec939431 and e442b4b53f.
+RESULT: F23, F24, F27-F29, F31, F32, F34, F35 OK. Grouped int3
+C1 p50 is 11.289 ms and the matmul serve C1 p50 is 11.342 ms.
+Both benches are hotschmoe-dev first and the landmarks string.
+C7's second and third DP logs match the journal. The first crash
+log was overwritten by the nocache run, so its 6.460 ms figures
+are UNVERIFIED (F25). PY_COMPILE_OK and H1's 48s link failure
+have no surviving transcript (F26, F27). H1 M0 raw log is
+DEVICE_LOST in m0_prep; post-health files are empty (F33).
+G4's 08:49 "would exit rather than take the card" is WRONG
+against the finished log (F30). The 08:53 entry corrects it:
+exit 2, unrecognized --park-finished-tail, and commit
+e442b4b53f adds the flag (F35). Matmul "3.3x" is 3.26x
+(366.37/112.32). E1 GPU probes in this window have no xpu-health
+line. git diff --cached is empty. Campaign *.so files stay ignored.
+VERDICT: Pass 4 recorded. Latency numbers checked this pass match.
+One overwritten C7 log and the H1 device-lost probe remain open.
+
+## 2026-10-20 08:58 C7 -- DP window, gathered padding mask
+
+CONFIG: fork 2fec939431. Eager DP=2 EP, TP=1, 35B UD-IQ3_XXS.
+SYCL_CACHE_PERSISTENT=0. Collective health first. No P2P.
+The local is_padding slice is an extra all_gatherv tensor.
+COMMAND: bash /tmp/c7-dp-window.sh
+RESULT: leases requested immediately after this entry.
+VERDICT: retry open.
+
+
+## 2026-10-20 09:01 C7 -- DP=2 EP eager measured
+
+CONFIG: fork e442b4b53f, which contains 2fec939431 (padding mask
+gathered with naive DP dispatch) and G4's default-off
+--park-finished-tail CLI (not passed). Eager DP=2, TP=1,
+--enable-expert-parallel, max_model_len 2048, max_num_seqs 2,
+35B UD-IQ3_XXS, B70_COLL_LOG on, SYCL_CACHE_PERSISTENT=0,
+cache dir sycl-c7-dp. No P2P. Collective health first.
+COMMAND: bash /tmp/c7-dp-window.sh, launched 08:58:00 after both
+owner files were empty. Logs preserved as c7-ep-dp-serve-ok.log,
+c7-coll-ok.log, c7-bench-ep-dp.json, c7-ep-dp-greedy.json.
+RESULT: HEALTH_RC 0. placed 733, skipped_mtp 20, 11.64 GiB, linear
+EP 128/256. READY 09:00:32. Both greedy completions, temperature 0,
+16 tokens, are the C4 Paris string. match_c4 true. Identity
+hotschmoe-dev then qwen3.6-35b-a3b-ud-iq3-xxs. Bench exit 0.
+C1 ITL p50 121.40 ms, p90 143.80, p99 153.09, TTFT 462.42 ms,
+7.86 tok/s, n=32. C2 stream ITL p50 120.73 ms and 120.79 ms,
+TTFT 523.45 ms and 522.66 ms. This serve is eager and the collective
+counter synchronizes each call, so these times are not the one-card
+FULL_DECODE_ONLY 11.11 ms. Steady tokens=1 execute (159 steps, both
+pids): 160 collectives, 120 all_gather_into_tensor (median 15.01 ms)
+and 40 reduce_scatter_tensor (median 5.62 ms), coll median 20.61 ms,
+wall median 119.06 ms. That is 40 MoE layers times 3 all-gathers
+(hidden, router logits, padding mask) plus 1 reduce-scatter. No
+all_reduce on the decode step (TP=1). One first-step warmup on pid
+423 took coll 643.27 ms inside reduce_scatter_tensor. SERVE_RC 0.
+docker stop 09:00:52. No crash, no xe-reset. Post-health was not
+run: C9 took card 0 and G5 took card 1 at 09:01:05.
+VERDICT: DP=2 expert parallel loads, matches the one-card greedy
+string, and issues 160 collectives per decode step. ITL is about
+121 ms eager. Next window is TP=2, which the loader must refuse,
+then Flash-Next IQ3_XXS DP=2 against the recorded 323 and 667 strings.
+
+
+## 2026-10-20 09:02 G4 -- CLI flag parses
+
+CONFIG: fork e442b4b53f on b70/flashnext. Image vllm-flashnext-xpu:py312.
+PYTHONPATH is the fork then the venv site-packages. VLLM_TARGET_DEVICE=cpu.
+ONEAPI_DEVICE_SELECTOR=opencl:cpu. No GPU. Script
+/mnt/vm_8tb/b70/build/vllm-flashnext/logs/g4_cli_parse.py.
+COMMAND: bin/cpu-run docker run --network none --cpus 4 --memory 24g
+--entrypoint /usr/bin/python3.12 vllm-flashnext-xpu:py312 g4_cli_parse.py
+RESULT: PARK_ON True. PARK_OFF False. CLI_PARSE_OK. cpu-run exit 0 in 21s.
+XPU device count zero is the CPU container. MemAvailable was about 76 GiB.
+At 09:01 card 0 is C9 and card 1 is D3, with the CPU lock in quiet mode.
+VERDICT: --park-finished-tail is on the parser and stays default off.
+No T2 number yet. The serve waits for card 1 and a free CPU lock.
+The copy path for that serve is still swap_blocks_batch.
+
+## 2026-10-20 09:05 H1b -- first M0 window lost the device in prep
+
+CONFIG: libraries from the 08:36 link (_C.so sha256 b0f8376f...,
+_C.ep.so sha256 55c154ee...). Both cards, no oneCCL, spin 200000.
+Container vllm-fn-h1-m0, memory 8g. The 08:36 entry said the lease
+was only requested. The window script did run.
+COMMAND: /tmp/h1-m0-window.sh. Logs
+/mnt/vm_8tb/b70/build/vllm-flashnext/logs/h1-m0-window.out and
+h1-m0-probe.log.
+RESULT: Health before passed (HEALTHY cards 0 and 1, 28s). PROBE5:
+zeMemOpenIpcHandle failed 2013265924, which is
+ZE_RESULT_ERROR_INVALID_ARGUMENT. same_ctx=1, both queues in order,
+peer access both ways, peer atomics 0, ipc_store=0, same_store=1,
+path=2, bdf 0000:0b:00.0 and 0000:44:00.0. Torch keeps one context
+for both devices, so an IPC open in that context is rejected. The
+4-byte same-context store matched. m0_prep then raised
+UR_RESULT_ERROR_DEVICE_LOST (20). That prep poisoned the peer
+regions with a range parallel_for, including 153600 words into the
+return buffer. gpu-run exit 1 in 81s at 08:50:34. Health after,
+once card 0 was free, was HEALTHY cards 0 and 1 in 30s
+(h1-m0-window.out). The tee file h1-m0-health-after.txt is empty.
+No xe-reset.
+VERDICT: path 2 is the transport. A scalar store does not make the
+large peer range-fill safe. The next binary pads every region by
+one page, poisons on the owning card (S28 default), and preflights
+the 256-wide push from 64 bytes through the 600 KB return before
+the 65-sample oracle. Rebuild is queued behind D3's CPU quiet lock.
+
+## 2026-10-20 09:06 C7 -- TP=2 window, loader must refuse packed sharding
+
+CONFIG: fork e442b4b53f. Same 35B UD-IQ3_XXS, TP=2,
+--enable-expert-parallel, enforce-eager, max_model_len 2048.
+No packed sharding. No P2P. Collective health first.
+COMMAND: bash /tmp/c7-tp-window.sh
+RESULT: leases requested immediately after this entry.
+VERDICT: window open.
+
+
+## 2026-10-20 09:07 C7 -- TP=2 window lost card 0
+
+CONFIG: the 09:06 TP=2 announce. Collective health, then the eager
+TP=2 serve. No P2P. Loader raise not expected to run if the lease
+is lost.
+COMMAND: bash /tmp/c7-tp-window.sh. Preserved as
+c7-tp-window-race.out and c7-ep-tp-serve-race.log.
+RESULT: HEALTH_RC 0 at 09:06:02. The serve launch at 09:06:30 found
+card 0 held by C9 (pid 3152937, same second). gpu-run waited 30s
+and exited 124. The vLLM process did not start. RAISE:0. No loader
+line. SERVE_RC 124 is the lock timeout, not a model failure. Card 1
+was free again by 09:07. No xe-reset.
+VERDICT: TP=2 is unmeasured. Retry when both owner files are empty.
+Do not treat this 124 as the sharding refusal.
+
+## 2026-10-20 09:09 H1b -- M0 two-card window, padded regions
+
+CONFIG: rebuilt b70_ep_xpu/_C.so sha256
+2248124379c09191a4c77aaff2854b49ab59b6e743a90f2f802eae1e70189fe2
+(445392 bytes). _C.ep.so unchanged. Owner-local poison, one-page
+pad, 256-wide preflight 64 B / 4 KB / 17520 B / 64 KB then the
+600 KB return. Oracle is still 65 eager and 65 graph. Both cards,
+no oneCCL. Host alarm and the window timeout are 900s. Container
+vllm-fn-h1b-m0, memory 8g.
+COMMAND: nohup env B70_AGENT=H1 B70_GPU_LOCK_TIMEOUT=7200 bash
+/tmp/h1b-m0-window.sh. The script calls gpu-run itself (health,
+then xpu-run, then health). An outer gpu-run would deadlock on
+xpu-run's inner flock. Log h1b-m0-window.out.
+RESULT: rebuild exited 0 in 40s under cpu-run. Window requested
+after this entry. Card 0 was busy at 09:08.
+VERDICT: window open.
+
+
+## 2026-10-20 09:08 C10b -- bf16 gate, card 0 bench queued
+
+CONFIG: continuing C10. _C.c10.so sha256 55c154ee90f33bec810d24a2cd6ac0c3b6b1a4e53bdc78aed50a59113e8c9bf0 (08:28, newer than dequant_fast.cpp). Pass bit is dense_dq vs oneDNN bf16 torch.mm within 1 ulp, plus an fp32 matmul of those bf16 weights within 8 ulps. The 5e-2 check vs the fp32 dequant is logged only. Non-finite outputs fail. Card 0. Expected about 40-90 min once the lease is free (correctness, dense M=512/4096/12288, K=640, experts, head).
+COMMAND: B70_AGENT=C10b B70_GPU_LOCK_TIMEOUT=21600 bin/gpu-run --card 0 scripts/c10_run.sh. Log /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c10b-dq-bench.log. CPU quiet lock is taken only after card 0, with a 90s cap so a CPU-then-GPU holder is not deadlocked.
+RESULT: queued. Card 0 was C9 at 09:06. CPU quiet was D3 at 09:07.
+VERDICT: run open.

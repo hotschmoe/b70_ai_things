@@ -49,6 +49,10 @@ def install_reclaim() -> None:
         def __new__(cls, *args, **kwargs):
             return base.__new__(cls, keep_graph=True)
 
+        # Plugin sets _b70_ep_before_replay. This flag tells it the call site
+        # between instantiate and the Level Zero submit is present.
+        _b70_ep_replay_hook = True
+
         def __init__(self, *args, **kwargs):
             super().__init__(keep_graph=True)
 
@@ -63,6 +67,12 @@ def install_reclaim() -> None:
                     sys.stderr.write(
                         f"[d1-graph] instantiate failed: {exc!r}\n"
                     )
+            # EP sidecar submits card 1 after instantiate and before card 0.
+            # Absent unless b70_ep_xpu installed the callback. One-card replay
+            # never sets it.
+            before = getattr(self, "_b70_ep_before_replay", None)
+            if before is not None:
+                before()
             if not log_replay:
                 return orig_replay(self)
             measure_device = (
