@@ -1,0 +1,1005 @@
+// b70 low-bit WNA16 / WXA8 kernels for Intel B70 (BMG G31).
+//
+// Weight layout is b70lb1 (plugins/LOWBIT_FORMAT.md):
+//   plane2  : low 2 bits, 4 codes/byte, 32 bytes per group of 128
+//   plane_hi: int3 = 1 bit (16 B/group), int4 = 2 bits (32 B/group)
+//   scale   : bf16 [N, K/128]
+// Groups are packed tight. The row stride is 64-byte aligned; the kernel
+// indexes group g at byte g*32 (plane2) or g*16 (int3 hi), not g*stride.
+//
+// Decode GEMV is ESIMD. A work-group of kGemvWg owns one activation row
+// in SLM (the WG=1 path measured ~30-100 GB/s, the same band as the
+// NVFP4 WG=1 prototype). Each work-item then streams one output row.
+// Prefill uses ESIMD XMX DPAS (bf16 tile 8x16x16, or int8 tile 8x16x32
+// for WXA8). No queue.wait(); tensors are recordStream'd.
+
+#include <c10/core/DeviceGuard.h>
+#include <c10/xpu/XPUCachingAllocator.h>
+#include <c10/xpu/XPUStream.h>
+#include <sycl/ext/intel/esimd.hpp>
+#include <sycl/ext/oneapi/bfloat16.hpp>
+#include <sycl/sycl.hpp>
+#include <torch/library.h>
+#include <torch/torch.h>
+
+#include <cstdint>
+
+namespace esimd = sycl::ext::intel::esimd;
+using bf16_t = sycl::ext::oneapi::bfloat16;
+
+static void record_use(const torch::Tensor& t) {
+  if (!t.defined() || t.numel() == 0 || !t.is_xpu()) {
+    return;
+  }
+  c10::xpu::XPUCachingAllocator::recordStream(
+      t.storage().data_ptr(), c10::xpu::getCurrentXPUStream());
+}
+
+static int plane2_stride_of(int k) {
+  return (k / 4 + 63) & ~63;
+}
+
+static int plane_hi_stride_of(int k, int bits) {
+  if (bits == 2) {
+    return 0;
+  }
+  int payload = bits == 3 ? k / 8 : k / 4;
+  return (payload + 63) & ~63;
+}
+
+template <int N>
+SYCL_ESIMD_FUNCTION esimd::simd<float, N> bf16_to_f32(esimd::simd<uint16_t, N> u) {
+  esimd::simd<uint32_t, N> x = esimd::convert<uint32_t>(u);
+  x = x << 16;
+  return x.template bit_cast_view<float>();
+}
+
+SYCL_ESIMD_FUNCTION float hsum128(esimd::simd<float, 128> acc) {
+  acc.template select<64, 1>(0) += acc.template select<64, 1>(64);
+  acc.template select<32, 1>(0) += acc.template select<32, 1>(32);
+  acc.template select<16, 1>(0) += acc.template select<16, 1>(16);
+  acc.template select<8, 1>(0) += acc.template select<8, 1>(8);
+  acc.template select<4, 1>(0) += acc.template select<4, 1>(4);
+  acc.template select<2, 1>(0) += acc.template select<2, 1>(2);
+  return (float)acc[0] + (float)acc[1];
+}
+
+SYCL_ESIMD_FUNCTION uint16_t f32_to_bf16_u16(float f) {
+  esimd::simd<float, 1> sf(f);
+  uint32_t bits = sf.template bit_cast_view<uint32_t>()[0];
+  bits += 0x7FFFu + ((bits >> 16) & 1u);
+  return (uint16_t)(bits >> 16);
+}
+
+template <int N>
+SYCL_ESIMD_FUNCTION esimd::simd<uint16_t, N> f32_to_bf16_u16v(
+    esimd::simd<float, N> f) {
+  esimd::simd<uint32_t, N> bits = f.template bit_cast_view<uint32_t>();
+  esimd::simd<uint32_t, N> lsb = (bits >> 16) & 1u;
+  bits += 0x7FFFu + lsb;
+  return esimd::convert<uint16_t>(bits >> 16);
+}
+
+static inline float bf16_to_f32_scalar(uint16_t b) {
+  uint32_t bits = (uint32_t)b << 16;
+  return sycl::bit_cast<float>(bits);
+}
+
+SYCL_ESIMD_FUNCTION float bf16_u16_to_f32(uint16_t b) {
+  esimd::simd<uint16_t, 1> u(b);
+  return bf16_to_f32<1>(u)[0];
+}
+
+static inline uint16_t f32_to_bf16_scalar(float f) {
+  uint32_t bits = sycl::bit_cast<uint32_t>(f);
+  bits += 0x7FFFu + ((bits >> 16) & 1u);
+  return (uint16_t)(bits >> 16);
+}
+
+// Work-group width for decode GEMV. WG=1 left the kernel near 100 GB/s.
+static constexpr int kGemvWg = 16;
+// M<=8, K<=2560 bf16, the Flash-Next square and the Ornith lm_head K.
+static constexpr int kSlmBytes = 8 * 2560 * (int)sizeof(uint16_t);
+static constexpr int kSlmRowBytes = 2560 * (int)sizeof(uint16_t);
+
+// 128 signed codes for one group, as float values times the group scale.
+// ph is the high plane for this group. int3 uses the low 16 bytes.
+template <int BITS>
+SYCL_ESIMD_FUNCTION esimd::simd<float, 128> dequant_regs(
+    esimd::simd<uint8_t, 32> p2,
+    esimd::simd<uint8_t, 32> ph,
+    float scale) {
+  esimd::simd<uint32_t, 32> p2u = esimd::convert<uint32_t>(p2);
+  esimd::simd<int32_t, 128> codes(0);
+  codes.template select<32, 4>(0) = esimd::convert<int32_t>(p2u & 3u);
+  codes.template select<32, 4>(1) = esimd::convert<int32_t>((p2u >> 2) & 3u);
+  codes.template select<32, 4>(2) = esimd::convert<int32_t>((p2u >> 4) & 3u);
+  codes.template select<32, 4>(3) = esimd::convert<int32_t>((p2u >> 6) & 3u);
+
+  if constexpr (BITS == 3) {
+    esimd::simd<uint8_t, 16> ph16 = ph.template select<16, 1>(0);
+    esimd::simd<uint32_t, 16> phu = esimd::convert<uint32_t>(ph16);
+#pragma unroll
+    for (int b = 0; b < 8; ++b) {
+      esimd::simd<int32_t, 16> bit =
+          esimd::convert<int32_t>((phu >> b) & 1u);
+      auto cur = codes.template select<16, 8>(b);
+      codes.template select<16, 8>(b) = cur | (bit << 2);
+    }
+  } else if constexpr (BITS == 4) {
+    esimd::simd<uint32_t, 32> phu = esimd::convert<uint32_t>(ph);
+    codes.template select<32, 4>(0) =
+        codes.template select<32, 4>(0) |
+        (esimd::convert<int32_t>(phu & 3u) << 2);
+    codes.template select<32, 4>(1) =
+        codes.template select<32, 4>(1) |
+        (esimd::convert<int32_t>((phu >> 2) & 3u) << 2);
+    codes.template select<32, 4>(2) =
+        codes.template select<32, 4>(2) |
+        (esimd::convert<int32_t>((phu >> 4) & 3u) << 2);
+    codes.template select<32, 4>(3) =
+        codes.template select<32, 4>(3) |
+        (esimd::convert<int32_t>((phu >> 6) & 3u) << 2);
+  }
+
+  constexpr int maxq = 1 << (BITS - 1);
+  constexpr int span = maxq << 1;
+  esimd::simd<int32_t, 128> neg = codes - span;
+  codes.merge(neg, codes >= maxq);
+  return esimd::convert<float>(codes) * scale;
+}
+
+template <int BITS>
+SYCL_ESIMD_FUNCTION esimd::simd<float, 128> dequant_group(
+    const uint8_t* row2,
+    const uint8_t* rowhi,
+    int g,
+    float scale) {
+  esimd::simd<uint8_t, 32> p2 = esimd::block_load<uint8_t, 32>(
+      row2 + g * 32, esimd::overaligned<32>);
+  esimd::simd<uint8_t, 32> ph(0);
+  if constexpr (BITS == 3) {
+    esimd::simd<uint8_t, 16> ph16 = esimd::block_load<uint8_t, 16>(
+        rowhi + g * 16, esimd::overaligned<16>);
+    ph.template select<16, 1>(0) = ph16;
+  } else if constexpr (BITS == 4) {
+    ph = esimd::block_load<uint8_t, 32>(
+        rowhi + g * 32, esimd::overaligned<32>);
+  }
+  return dequant_regs<BITS>(p2, ph, scale);
+}
+
+SYCL_ESIMD_FUNCTION float dot_slm(int byte_off, esimd::simd<float, 128> wf);
+
+// Two groups, one 64-byte plane2 load. g is even. Writes into acc[m].
+template <int BITS>
+SYCL_ESIMD_FUNCTION void accum_pair(
+    const uint8_t* row2,
+    const uint8_t* rowhi,
+    const uint16_t* scale_row,
+    int g,
+    int K,
+    int nrows,
+    float* acc) {
+  esimd::simd<uint8_t, 64> p2 = esimd::block_load<uint8_t, 64>(
+      row2 + g * 32, esimd::overaligned<64>);
+  esimd::simd<uint8_t, 32> ph0(0);
+  esimd::simd<uint8_t, 32> ph1(0);
+  if constexpr (BITS == 3) {
+    esimd::simd<uint8_t, 32> ph = esimd::block_load<uint8_t, 32>(
+        rowhi + g * 16, esimd::overaligned<32>);
+    ph0.template select<16, 1>(0) = ph.template select<16, 1>(0);
+    ph1.template select<16, 1>(0) = ph.template select<16, 1>(16);
+  } else if constexpr (BITS == 4) {
+    esimd::simd<uint8_t, 64> ph = esimd::block_load<uint8_t, 64>(
+        rowhi + g * 32, esimd::overaligned<64>);
+    ph0 = ph.template select<32, 1>(0);
+    ph1 = ph.template select<32, 1>(32);
+  }
+  float sc0 = bf16_u16_to_f32(scale_row[g]);
+  float sc1 = bf16_u16_to_f32(scale_row[g + 1]);
+  esimd::simd<float, 128> wf = dequant_regs<BITS>(
+      p2.template select<32, 1>(0), ph0, sc0);
+  for (int m = 0; m < nrows; ++m) {
+    acc[m] += dot_slm((m * K + g * 128) * (int)sizeof(uint16_t), wf);
+  }
+  wf = dequant_regs<BITS>(p2.template select<32, 1>(32), ph1, sc1);
+  for (int m = 0; m < nrows; ++m) {
+    acc[m] += dot_slm((m * K + (g + 1) * 128) * (int)sizeof(uint16_t), wf);
+  }
+}
+
+SYCL_ESIMD_FUNCTION void slm_store_group(
+    const uint16_t* src, int byte_off) {
+#pragma unroll
+  for (int s = 0; s < 4; ++s) {
+    esimd::simd<uint16_t, 32> part = esimd::block_load<uint16_t, 32>(
+        src + s * 32, esimd::overaligned<64>);
+    esimd::slm_block_store<uint16_t, 32>(byte_off + s * 64, part);
+  }
+}
+
+SYCL_ESIMD_FUNCTION float dot_slm(
+    int byte_off, esimd::simd<float, 128> wf) {
+  esimd::simd<float, 128> xf;
+#pragma unroll
+  for (int s = 0; s < 4; ++s) {
+    esimd::simd<uint16_t, 32> xu =
+        esimd::slm_block_load<uint16_t, 32>(byte_off + s * 64);
+    xf.template select<32, 1>(s * 32) = bf16_to_f32<32>(xu);
+  }
+  return hsum128(xf * wf);
+}
+
+// One work-group broadcasts x into SLM, then one work-item per output row.
+template <int BITS>
+struct GemvSlmKernel {
+  const uint16_t* x;
+  const uint8_t* plane2;
+  const uint8_t* plane_hi;
+  const uint16_t* scale;
+  uint16_t* y;
+  int M;
+  int N;
+  int K;
+  int groups;
+  int stride2;
+  int stride_hi;
+
+  void operator()(sycl::nd_item<1> it) const SYCL_ESIMD_KERNEL {
+    esimd::slm_init<kSlmBytes>();
+    const int n = (int)it.get_global_id(0);
+    const int lid = (int)it.get_local_id(0);
+    for (int m = 0; m < M; ++m) {
+      for (int g = lid; g < groups; g += kGemvWg) {
+        const uint16_t* src =
+            x + ((size_t)m * (size_t)K + (size_t)g * 128);
+        slm_store_group(src, (m * K + g * 128) * (int)sizeof(uint16_t));
+      }
+    }
+    esimd::barrier();
+    if (n >= N) {
+      return;
+    }
+    const uint8_t* row2 = plane2 + (size_t)n * (size_t)stride2;
+    const uint8_t* rowhi =
+        plane_hi ? plane_hi + (size_t)n * (size_t)stride_hi : row2;
+    float acc[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    const uint16_t* scale_row = scale + (size_t)n * (size_t)groups;
+    int g = 0;
+    for (; g + 1 < groups; g += 2) {
+      accum_pair<BITS>(row2, rowhi, scale_row, g, K, M, acc);
+    }
+    if (g < groups) {
+      float sc = bf16_u16_to_f32(scale_row[g]);
+      esimd::simd<float, 128> wf = dequant_group<BITS>(row2, rowhi, g, sc);
+      for (int m = 0; m < M; ++m) {
+        acc[m] += dot_slm((m * K + g * 128) * (int)sizeof(uint16_t), wf);
+      }
+    }
+    for (int m = 0; m < M; ++m) {
+      y[(size_t)m * (size_t)N + n] = f32_to_bf16_u16(acc[m]);
+    }
+  }
+};
+
+// One work-group per expert slot. x_per_slot selects the activation row.
+template <int BITS>
+struct IndexedGemvSlmKernel {
+  const uint16_t* x;
+  const int32_t* ids;
+  const uint8_t* plane2;
+  const uint8_t* plane_hi;
+  const uint16_t* scale;
+  uint16_t* y;
+  int slots;
+  int N;
+  int K;
+  int groups;
+  int stride2;
+  int stride_hi;
+  int E;
+  int topk;
+  int x_per_slot;
+
+  void operator()(sycl::nd_item<2> it) const SYCL_ESIMD_KERNEL {
+    esimd::slm_init<kSlmRowBytes>();
+    const int slot = (int)it.get_global_id(0);
+    const int n = (int)it.get_global_id(1);
+    const int lid = (int)it.get_local_id(1);
+    if (slot < slots) {
+      const int x_row = x_per_slot ? slot : slot / topk;
+      for (int g = lid; g < groups; g += kGemvWg) {
+        const uint16_t* src =
+            x + ((size_t)x_row * (size_t)K + (size_t)g * 128);
+        slm_store_group(src, g * 128 * (int)sizeof(uint16_t));
+      }
+    }
+    esimd::barrier();
+    if (slot >= slots || n >= N) {
+      return;
+    }
+    const int e = ids[slot];
+    if (e < 0 || e >= E) {
+      y[(size_t)slot * (size_t)N + n] = 0;
+      return;
+    }
+    const size_t row_base = ((size_t)e * (size_t)N + (size_t)n);
+    const uint8_t* row2 = plane2 + row_base * (size_t)stride2;
+    const uint8_t* rowhi =
+        plane_hi ? plane_hi + row_base * (size_t)stride_hi : row2;
+    float acc_box[1] = {0.f};
+    const uint16_t* scale_row = scale + row_base * (size_t)groups;
+    int g = 0;
+    for (; g + 1 < groups; g += 2) {
+      accum_pair<BITS>(row2, rowhi, scale_row, g, K, 1, acc_box);
+    }
+    if (g < groups) {
+      float sc = bf16_u16_to_f32(scale_row[g]);
+      esimd::simd<float, 128> wf = dequant_group<BITS>(row2, rowhi, g, sc);
+      acc_box[0] += dot_slm(g * 128 * (int)sizeof(uint16_t), wf);
+    }
+    float acc = acc_box[0];
+    y[(size_t)slot * (size_t)N + n] = f32_to_bf16_u16(acc);
+  }
+};
+
+struct SiluMulKernel {
+  const uint16_t* gu;
+  uint16_t* hid;
+  int I;
+  void operator()(sycl::id<2> id) const {
+    const int slot = (int)id[0];
+    const int i = (int)id[1];
+    const size_t base = (size_t)slot * (size_t)(I * 2);
+    float g = bf16_to_f32_scalar(gu[base + i]);
+    float u = bf16_to_f32_scalar(gu[base + I + i]);
+    float h = g / (1.f + sycl::exp(-g)) * u;
+    hid[(size_t)slot * (size_t)I + i] = f32_to_bf16_scalar(h);
+  }
+};
+
+struct RouterReduceKernel {
+  const uint16_t* down;
+  const float* router;
+  uint16_t* y;
+  int topk;
+  int H;
+  void operator()(sycl::id<2> id) const {
+    const int t = (int)id[0];
+    const int h = (int)id[1];
+    float acc = 0.f;
+    for (int k = 0; k < topk; ++k) {
+      int slot = t * topk + k;
+      float w = router[slot];
+      float v = bf16_to_f32_scalar(down[(size_t)slot * (size_t)H + h]);
+      acc += w * v;
+    }
+    y[(size_t)t * (size_t)H + h] = f32_to_bf16_scalar(acc);
+  }
+};
+
+// 16 signed codes starting at k0 (multiple of 16).
+SYCL_ESIMD_FUNCTION esimd::simd<int32_t, 16> load_codes16(
+    const uint8_t* row2, const uint8_t* rowhi, int k0, int bits) {
+  esimd::simd<int32_t, 16> codes(0);
+  const uint8_t* p2 = row2 + (k0 >> 2);
+#pragma unroll
+  for (int i = 0; i < 4; ++i) {
+    uint32_t b = p2[i];
+    codes[i * 4 + 0] = (int)(b & 3u);
+    codes[i * 4 + 1] = (int)((b >> 2) & 3u);
+    codes[i * 4 + 2] = (int)((b >> 4) & 3u);
+    codes[i * 4 + 3] = (int)((b >> 6) & 3u);
+  }
+  if (bits == 3) {
+    const uint8_t* ph = rowhi + (k0 >> 3);
+#pragma unroll
+    for (int i = 0; i < 2; ++i) {
+      uint32_t b = ph[i];
+#pragma unroll
+      for (int bit = 0; bit < 8; ++bit) {
+        codes[i * 8 + bit] =
+            codes[i * 8 + bit] | (int)(((b >> bit) & 1u) << 2);
+      }
+    }
+  } else if (bits == 4) {
+    const uint8_t* ph = rowhi + (k0 >> 2);
+#pragma unroll
+    for (int i = 0; i < 4; ++i) {
+      uint32_t b = ph[i];
+      codes[i * 4 + 0] |= (int)((b & 3u) << 2);
+      codes[i * 4 + 1] |= (int)(((b >> 2) & 3u) << 2);
+      codes[i * 4 + 2] |= (int)(((b >> 4) & 3u) << 2);
+      codes[i * 4 + 3] |= (int)(((b >> 6) & 3u) << 2);
+    }
+  }
+  int maxq = 1 << (bits - 1);
+  int span = maxq << 1;
+#pragma unroll
+  for (int i = 0; i < 16; ++i) {
+    int c = (int)codes[i];
+    if (c >= maxq) {
+      c -= span;
+    }
+    codes[i] = c;
+  }
+  return codes;
+}
+
+SYCL_ESIMD_FUNCTION esimd::simd<int32_t, 32> load_codes32(
+    const uint8_t* row2, const uint8_t* rowhi, int k0, int bits) {
+  esimd::simd<int32_t, 32> codes(0);
+  auto lo = load_codes16(row2, rowhi, k0, bits);
+  auto hi = load_codes16(row2, rowhi, k0 + 16, bits);
+  codes.template select<16, 1>(0) = lo;
+  codes.template select<16, 1>(16) = hi;
+  return codes;
+}
+
+// bf16 DPAS. A is 8x16 row-major bf16. B is VNNI-2, matching
+// kernels/prefill_grouped_f16_esimd_v1.hpp: b[(kk/2)*32 + c*2 + (kk%2)].
+struct PrefillBf16Kernel {
+  const uint16_t* x;
+  const uint8_t* plane2;
+  const uint8_t* plane_hi;
+  const uint16_t* scale;
+  uint16_t* y;
+  int M;
+  int N;
+  int K;
+  int groups;
+  int stride2;
+  int stride_hi;
+  int bits;
+  int tiles_n;
+
+  void operator()(sycl::nd_item<1> it) const SYCL_ESIMD_KERNEL {
+    const int tile = (int)it.get_global_id(0);
+    const int tm = tile / tiles_n;
+    const int tn = tile - tm * tiles_n;
+    const int m0 = tm * 8;
+    const int n0 = tn * 16;
+    esimd::simd<float, 128> acc(0.f);
+    for (int g = 0; g < groups; ++g) {
+      float wsc[16];
+#pragma unroll
+      for (int c = 0; c < 16; ++c) {
+        wsc[c] = bf16_u16_to_f32(
+            scale[((size_t)(n0 + c) * (size_t)groups) + g]);
+      }
+#pragma unroll 1
+      for (int step = 0; step < 8; ++step) {
+        const int k0 = g * 128 + step * 16;
+        esimd::simd<uint16_t, 128> az(0);
+        esimd::simd<bf16_t, 128> a = az.template bit_cast_view<bf16_t>();
+#pragma unroll
+        for (int r = 0; r < 8; ++r) {
+          if (m0 + r < M) {
+            esimd::simd<uint16_t, 16> xu = esimd::block_load<uint16_t, 16>(
+                x + ((size_t)(m0 + r) * (size_t)K + k0), esimd::overaligned<32>);
+            esimd::simd<bf16_t, 16> xb = xu.template bit_cast_view<bf16_t>();
+            a.template select<16, 1>(r * 16) = xb;
+          }
+        }
+        esimd::simd<uint16_t, 256> bz(0);
+        esimd::simd<bf16_t, 256> b = bz.template bit_cast_view<bf16_t>();
+#pragma unroll
+        for (int c = 0; c < 16; ++c) {
+          const uint8_t* row2 =
+              plane2 + (size_t)(n0 + c) * (size_t)stride2;
+          const uint8_t* rowhi =
+              plane_hi ? plane_hi + (size_t)(n0 + c) * (size_t)stride_hi
+                       : row2;
+          esimd::simd<int32_t, 16> codes =
+              load_codes16(row2, rowhi, k0, bits);
+          esimd::simd<float, 16> wf = esimd::convert<float>(codes) * wsc[c];
+          esimd::simd<uint16_t, 16> hb = f32_to_bf16_u16v<16>(wf);
+          esimd::simd<bf16_t, 16> hbb = hb.template bit_cast_view<bf16_t>();
+#pragma unroll
+          for (int kk = 0; kk < 16; ++kk) {
+            b[(kk / 2) * 32 + c * 2 + (kk % 2)] = hbb[kk];
+          }
+        }
+        acc = esimd::xmx::dpas<8, 8, float>(acc, b, a);
+      }
+    }
+#pragma unroll
+    for (int r = 0; r < 8; ++r) {
+      if (m0 + r < M) {
+        esimd::simd<float, 16> row = acc.template select<16, 1>(r * 16);
+        esimd::simd<uint16_t, 16> hb = f32_to_bf16_u16v<16>(row);
+        esimd::block_store<uint16_t, 16>(
+            y + ((size_t)(m0 + r) * (size_t)N + n0), hb, esimd::overaligned<32>);
+      }
+    }
+  }
+};
+
+struct ActQuantKernel {
+  const uint16_t* x;
+  int8_t* xq;
+  float* ascale;
+  int K;
+  int groups;
+  void operator()(sycl::id<1> id) const {
+    const int mg = (int)id[0];
+    const int m = mg / groups;
+    const int g = mg - m * groups;
+    const uint16_t* src = x + ((size_t)m * (size_t)K + (size_t)g * 128);
+    float tmp[128];
+    float amax = 0.f;
+#pragma unroll 1
+    for (int i = 0; i < 128; ++i) {
+      float v = bf16_to_f32_scalar(src[i]);
+      tmp[i] = v;
+      float av = v < 0.f ? -v : v;
+      if (av > amax) {
+        amax = av;
+      }
+    }
+    float sc = amax > 0.f ? amax / 127.f : 1.f;
+    ascale[mg] = sc;
+    int8_t* dst = xq + ((size_t)m * (size_t)K + (size_t)g * 128);
+#pragma unroll 1
+    for (int i = 0; i < 128; ++i) {
+      int qv = (int)sycl::rint(tmp[i] / sc);
+      if (qv > 127) {
+        qv = 127;
+      }
+      if (qv < -127) {
+        qv = -127;
+      }
+      dst[i] = (int8_t)qv;
+    }
+  }
+};
+
+// int8 DPAS. A is 8x32 row-major signed char. B is VNNI-4:
+// b[(kk/4)*64 + c*4 + (kk%4)], K=32, N=16, 512 elements.
+// Integer partials are scaled by w_scale * a_scale every group of 128.
+struct PrefillI8Kernel {
+  const int8_t* xq;
+  const float* ascale;
+  const uint8_t* plane2;
+  const uint8_t* plane_hi;
+  const uint16_t* scale;
+  uint16_t* y;
+  int M;
+  int N;
+  int K;
+  int groups;
+  int stride2;
+  int stride_hi;
+  int bits;
+  int tiles_n;
+
+  void operator()(sycl::nd_item<1> it) const SYCL_ESIMD_KERNEL {
+    const int tile = (int)it.get_global_id(0);
+    const int tm = tile / tiles_n;
+    const int tn = tile - tm * tiles_n;
+    const int m0 = tm * 8;
+    const int n0 = tn * 16;
+    esimd::simd<float, 128> facc(0.f);
+    for (int g = 0; g < groups; ++g) {
+      float wsc[16];
+      float asc[8];
+#pragma unroll
+      for (int c = 0; c < 16; ++c) {
+        wsc[c] = bf16_u16_to_f32(
+            scale[((size_t)(n0 + c) * (size_t)groups) + g]);
+      }
+#pragma unroll
+      for (int r = 0; r < 8; ++r) {
+        asc[r] = (m0 + r < M) ? ascale[(size_t)(m0 + r) * (size_t)groups + g]
+                              : 0.f;
+      }
+      esimd::simd<int32_t, 128> iacc(0);
+#pragma unroll 1
+      for (int step = 0; step < 4; ++step) {
+        const int k0 = g * 128 + step * 32;
+        esimd::simd<signed char, 256> a(0);
+#pragma unroll
+        for (int r = 0; r < 8; ++r) {
+          if (m0 + r < M) {
+            esimd::simd<signed char, 32> chunk =
+                esimd::block_load<signed char, 32>(
+                    xq + ((size_t)(m0 + r) * (size_t)K + k0),
+                    esimd::overaligned<32>);
+            a.template select<32, 1>(r * 32) = chunk;
+          }
+        }
+        esimd::simd<signed char, 512> b(0);
+#pragma unroll
+        for (int c = 0; c < 16; ++c) {
+          const uint8_t* row2 =
+              plane2 + (size_t)(n0 + c) * (size_t)stride2;
+          const uint8_t* rowhi =
+              plane_hi ? plane_hi + (size_t)(n0 + c) * (size_t)stride_hi
+                       : row2;
+          esimd::simd<int32_t, 32> codes =
+              load_codes32(row2, rowhi, k0, bits);
+#pragma unroll
+          for (int kk = 0; kk < 32; ++kk) {
+            b[(kk / 4) * 64 + c * 4 + (kk % 4)] = (signed char)codes[kk];
+          }
+        }
+        iacc = esimd::xmx::dpas<8, 8, int32_t>(iacc, b, a);
+      }
+      esimd::simd<float, 128> part = esimd::convert<float>(iacc);
+#pragma unroll
+      for (int r = 0; r < 8; ++r) {
+        float as = asc[r];
+#pragma unroll
+        for (int c = 0; c < 16; ++c) {
+          const int idx = r * 16 + c;
+          facc[idx] = (float)facc[idx] + (float)part[idx] * wsc[c] * as;
+        }
+      }
+    }
+#pragma unroll
+    for (int r = 0; r < 8; ++r) {
+      if (m0 + r < M) {
+        esimd::simd<float, 16> row = facc.template select<16, 1>(r * 16);
+        esimd::simd<uint16_t, 16> hb = f32_to_bf16_u16v<16>(row);
+        esimd::block_store<uint16_t, 16>(
+            y + ((size_t)(m0 + r) * (size_t)N + n0), hb, esimd::overaligned<32>);
+      }
+    }
+  }
+};
+
+static void check_bits(int bits) {
+  TORCH_CHECK(bits == 2 || bits == 3 || bits == 4, "bits must be 2, 3, or 4");
+}
+
+static void check_planes(
+    const torch::Tensor& plane2,
+    const torch::Tensor& plane_hi,
+    const torch::Tensor& scale,
+    int64_t n,
+    int64_t k,
+    int bits) {
+  check_bits(bits);
+  TORCH_CHECK(k > 0 && (k % 128) == 0, "K must be a multiple of 128");
+  TORCH_CHECK(plane2.is_xpu() && plane2.is_contiguous(), "plane2");
+  TORCH_CHECK(plane2.scalar_type() == at::kByte, "plane2 uint8");
+  TORCH_CHECK(plane2.size(0) == n, "plane2 N");
+  TORCH_CHECK(plane2.size(1) == plane2_stride_of((int)k), "plane2 stride");
+  TORCH_CHECK(scale.is_xpu() && scale.is_contiguous(), "scale");
+  TORCH_CHECK(scale.scalar_type() == at::kBFloat16, "scale bf16");
+  TORCH_CHECK(scale.size(0) == n && scale.size(1) == k / 128, "scale shape");
+  if (bits == 2) {
+    TORCH_CHECK(plane_hi.numel() == 0, "int2 has no plane_hi");
+  } else {
+    TORCH_CHECK(plane_hi.is_xpu() && plane_hi.is_contiguous(), "plane_hi");
+    TORCH_CHECK(plane_hi.scalar_type() == at::kByte, "plane_hi uint8");
+    TORCH_CHECK(
+        plane_hi.size(0) == n &&
+            plane_hi.size(1) == plane_hi_stride_of((int)k, bits),
+        "plane_hi stride");
+  }
+}
+
+static const uint8_t* hi_ptr(const torch::Tensor& plane_hi) {
+  return plane_hi.numel() ? plane_hi.data_ptr<uint8_t>() : nullptr;
+}
+
+static torch::Tensor gemv(
+    const torch::Tensor& x,
+    const torch::Tensor& plane2,
+    const torch::Tensor& plane_hi,
+    const torch::Tensor& scale,
+    int64_t bits) {
+  TORCH_CHECK(x.is_xpu() && x.is_contiguous(), "x");
+  TORCH_CHECK(x.scalar_type() == at::kBFloat16 && x.dim() == 2, "x [M,K] bf16");
+  const int M = (int)x.size(0);
+  const int K = (int)x.size(1);
+  const int N = (int)plane2.size(0);
+  TORCH_CHECK(M >= 1 && M <= 8, "gemv M is 1..8");
+  TORCH_CHECK(
+      (int64_t)M * K * (int)sizeof(uint16_t) <= kSlmBytes,
+      "gemv SLM holds M*K bf16 up to 8*2560");
+  check_planes(plane2, plane_hi, scale, N, K, (int)bits);
+  const at::DeviceGuard guard(x.device());
+  auto y = torch::empty({M, N}, x.options());
+  record_use(x);
+  record_use(plane2);
+  record_use(plane_hi);
+  record_use(scale);
+  record_use(y);
+  auto& q = c10::xpu::getCurrentXPUStream().queue();
+  const size_t gN = ((size_t)N + kGemvWg - 1) / kGemvWg * kGemvWg;
+  const auto nd = sycl::nd_range<1>(
+      sycl::range<1>(gN), sycl::range<1>((size_t)kGemvWg));
+  const uint16_t* xp = reinterpret_cast<const uint16_t*>(x.data_ptr());
+  const uint8_t* p2 = plane2.data_ptr<uint8_t>();
+  const uint8_t* ph = hi_ptr(plane_hi);
+  const uint16_t* sc = reinterpret_cast<const uint16_t*>(scale.data_ptr());
+  uint16_t* yp = reinterpret_cast<uint16_t*>(y.data_ptr());
+  const int groups = K / 128;
+  const int stride2 = (int)plane2.size(1);
+  const int stride_hi = bits == 2 ? 0 : (int)plane_hi.size(1);
+  if (bits == 2) {
+    q.parallel_for(
+        nd, GemvSlmKernel<2>{xp, p2, ph, sc, yp, M, N, K, groups, stride2, stride_hi});
+  } else if (bits == 3) {
+    q.parallel_for(
+        nd, GemvSlmKernel<3>{xp, p2, ph, sc, yp, M, N, K, groups, stride2, stride_hi});
+  } else {
+    q.parallel_for(
+        nd, GemvSlmKernel<4>{xp, p2, ph, sc, yp, M, N, K, groups, stride2, stride_hi});
+  }
+  return y;
+}
+
+static torch::Tensor moe_gemv(
+    const torch::Tensor& x,
+    const torch::Tensor& ids,
+    const torch::Tensor& router_w,
+    const torch::Tensor& w13_plane2,
+    const torch::Tensor& w13_plane_hi,
+    const torch::Tensor& w13_scale,
+    const torch::Tensor& w2_plane2,
+    const torch::Tensor& w2_plane_hi,
+    const torch::Tensor& w2_scale,
+    int64_t bits) {
+  TORCH_CHECK(x.is_xpu() && x.is_contiguous(), "x");
+  TORCH_CHECK(x.scalar_type() == at::kBFloat16 && x.dim() == 2, "x [T,H]");
+  TORCH_CHECK(ids.is_xpu() && ids.is_contiguous(), "ids");
+  TORCH_CHECK(ids.scalar_type() == at::kInt && ids.dim() == 2, "ids [T,topk]");
+  TORCH_CHECK(router_w.is_xpu() && router_w.is_contiguous(), "router");
+  TORCH_CHECK(router_w.scalar_type() == at::kFloat, "router fp32");
+  TORCH_CHECK(ids.sizes() == router_w.sizes(), "router shape");
+  const int T = (int)x.size(0);
+  const int H = (int)x.size(1);
+  const int topk = (int)ids.size(1);
+  TORCH_CHECK(ids.size(0) == T, "ids T");
+  TORCH_CHECK(T >= 1 && T <= 8, "moe_gemv T is 1..8");
+  TORCH_CHECK(topk >= 1, "topk");
+  TORCH_CHECK(w13_plane2.dim() == 3 && w2_plane2.dim() == 3, "expert rank");
+  const int E = (int)w13_plane2.size(0);
+  const int N13 = (int)w13_plane2.size(1);
+  TORCH_CHECK(N13 % 2 == 0, "w13 N is 2*I");
+  const int I = N13 / 2;
+  TORCH_CHECK(w2_plane2.size(0) == E, "E");
+  TORCH_CHECK(w2_plane2.size(1) == H, "down N");
+  check_planes(
+      w13_plane2.reshape({(int64_t)E * N13, w13_plane2.size(2)}),
+      bits == 2 ? w13_plane_hi
+                : w13_plane_hi.reshape({(int64_t)E * N13, w13_plane_hi.size(2)}),
+      w13_scale.reshape({(int64_t)E * N13, w13_scale.size(2)}),
+      (int64_t)E * N13,
+      H,
+      (int)bits);
+  check_planes(
+      w2_plane2.reshape({(int64_t)E * H, w2_plane2.size(2)}),
+      bits == 2 ? w2_plane_hi
+                : w2_plane_hi.reshape({(int64_t)E * H, w2_plane_hi.size(2)}),
+      w2_scale.reshape({(int64_t)E * H, w2_scale.size(2)}),
+      (int64_t)E * H,
+      I,
+      (int)bits);
+
+  const int slots = T * topk;
+  const at::DeviceGuard guard(x.device());
+  auto gu = torch::empty({slots, N13}, x.options());
+  auto hid = torch::empty({slots, I}, x.options());
+  auto down = torch::empty({slots, H}, x.options());
+  auto y = torch::empty({T, H}, x.options());
+  for (const torch::Tensor& t :
+       {x, ids, router_w, w13_plane2, w13_plane_hi, w13_scale, w2_plane2,
+        w2_plane_hi, w2_scale, gu, hid, down, y}) {
+    record_use(t);
+  }
+  auto& q = c10::xpu::getCurrentXPUStream().queue();
+  const int32_t* idp = ids.data_ptr<int32_t>();
+  TORCH_CHECK(H <= 2560 && I <= 2560, "moe SLM activation row cap is 2560");
+  const size_t gN13 = ((size_t)N13 + kGemvWg - 1) / kGemvWg * kGemvWg;
+  const size_t gH = ((size_t)H + kGemvWg - 1) / kGemvWg * kGemvWg;
+  const auto nd_up = sycl::nd_range<2>(
+      sycl::range<2>((size_t)slots, gN13),
+      sycl::range<2>(1, (size_t)kGemvWg));
+  const auto nd_dn = sycl::nd_range<2>(
+      sycl::range<2>((size_t)slots, gH),
+      sycl::range<2>(1, (size_t)kGemvWg));
+  auto launch_indexed = [&](auto kernel, sycl::nd_range<2> nd) {
+    q.parallel_for(nd, kernel);
+  };
+  const uint16_t* xp = reinterpret_cast<const uint16_t*>(x.data_ptr());
+  const uint8_t* up2 = w13_plane2.data_ptr<uint8_t>();
+  const uint8_t* uph = hi_ptr(w13_plane_hi);
+  const uint16_t* usc = reinterpret_cast<const uint16_t*>(w13_scale.data_ptr());
+  uint16_t* gup = reinterpret_cast<uint16_t*>(gu.data_ptr());
+  const int up_stride2 = (int)w13_plane2.size(2);
+  const int up_stride_hi = bits == 2 ? 0 : (int)w13_plane_hi.size(2);
+  if (bits == 2) {
+    launch_indexed(
+        IndexedGemvSlmKernel<2>{
+            xp, idp, up2, uph, usc, gup, slots, N13, H, H / 128, up_stride2,
+            up_stride_hi, E, topk, 0},
+        nd_up);
+  } else if (bits == 3) {
+    launch_indexed(
+        IndexedGemvSlmKernel<3>{
+            xp, idp, up2, uph, usc, gup, slots, N13, H, H / 128, up_stride2,
+            up_stride_hi, E, topk, 0},
+        nd_up);
+  } else {
+    launch_indexed(
+        IndexedGemvSlmKernel<4>{
+            xp, idp, up2, uph, usc, gup, slots, N13, H, H / 128, up_stride2,
+            up_stride_hi, E, topk, 0},
+        nd_up);
+  }
+  q.parallel_for(
+      sycl::range<2>((size_t)slots, (size_t)I),
+      SiluMulKernel{
+          reinterpret_cast<const uint16_t*>(gu.data_ptr()),
+          reinterpret_cast<uint16_t*>(hid.data_ptr()),
+          I});
+  const uint16_t* hp = reinterpret_cast<const uint16_t*>(hid.data_ptr());
+  const uint8_t* dp2 = w2_plane2.data_ptr<uint8_t>();
+  const uint8_t* dph = hi_ptr(w2_plane_hi);
+  const uint16_t* dsc = reinterpret_cast<const uint16_t*>(w2_scale.data_ptr());
+  uint16_t* dnp = reinterpret_cast<uint16_t*>(down.data_ptr());
+  const int dn_stride2 = (int)w2_plane2.size(2);
+  const int dn_stride_hi = bits == 2 ? 0 : (int)w2_plane_hi.size(2);
+  if (bits == 2) {
+    launch_indexed(
+        IndexedGemvSlmKernel<2>{
+            hp, idp, dp2, dph, dsc, dnp, slots, H, I, I / 128, dn_stride2,
+            dn_stride_hi, E, topk, 1},
+        nd_dn);
+  } else if (bits == 3) {
+    launch_indexed(
+        IndexedGemvSlmKernel<3>{
+            hp, idp, dp2, dph, dsc, dnp, slots, H, I, I / 128, dn_stride2,
+            dn_stride_hi, E, topk, 1},
+        nd_dn);
+  } else {
+    launch_indexed(
+        IndexedGemvSlmKernel<4>{
+            hp, idp, dp2, dph, dsc, dnp, slots, H, I, I / 128, dn_stride2,
+            dn_stride_hi, E, topk, 1},
+        nd_dn);
+  }
+  q.parallel_for(
+      sycl::range<2>((size_t)T, (size_t)H),
+      RouterReduceKernel{
+          reinterpret_cast<const uint16_t*>(down.data_ptr()),
+          router_w.data_ptr<float>(),
+          reinterpret_cast<uint16_t*>(y.data_ptr()),
+          topk,
+          H});
+  return y;
+}
+
+static int tiles_n_of(int n) {
+  TORCH_CHECK(n > 0 && (n % 16) == 0, "prefill N must be a multiple of 16");
+  return n / 16;
+}
+
+static torch::Tensor prefill_wna16(
+    const torch::Tensor& x,
+    const torch::Tensor& plane2,
+    const torch::Tensor& plane_hi,
+    const torch::Tensor& scale,
+    int64_t bits) {
+  TORCH_CHECK(x.is_xpu() && x.is_contiguous(), "x");
+  TORCH_CHECK(x.scalar_type() == at::kBFloat16 && x.dim() == 2, "x [M,K] bf16");
+  const int M = (int)x.size(0);
+  const int K = (int)x.size(1);
+  const int N = (int)plane2.size(0);
+  TORCH_CHECK(M >= 1, "M");
+  check_planes(plane2, plane_hi, scale, N, K, (int)bits);
+  const int tiles_n = tiles_n_of(N);
+  const int tiles_m = (M + 7) / 8;
+  const at::DeviceGuard guard(x.device());
+  auto y = torch::empty({M, N}, x.options());
+  record_use(x);
+  record_use(plane2);
+  record_use(plane_hi);
+  record_use(scale);
+  record_use(y);
+  PrefillBf16Kernel k{
+      reinterpret_cast<const uint16_t*>(x.data_ptr()),
+      plane2.data_ptr<uint8_t>(),
+      hi_ptr(plane_hi),
+      reinterpret_cast<const uint16_t*>(scale.data_ptr()),
+      reinterpret_cast<uint16_t*>(y.data_ptr()),
+      M,
+      N,
+      K,
+      K / 128,
+      (int)plane2.size(1),
+      bits == 2 ? 0 : (int)plane_hi.size(1),
+      (int)bits,
+      tiles_n};
+  auto& q = c10::xpu::getCurrentXPUStream().queue();
+  const size_t ntiles = (size_t)tiles_m * (size_t)tiles_n;
+  q.parallel_for(
+      sycl::nd_range<1>(sycl::range<1>(ntiles), sycl::range<1>(1)), k);
+  return y;
+}
+
+static torch::Tensor prefill_wxa8(
+    const torch::Tensor& x,
+    const torch::Tensor& plane2,
+    const torch::Tensor& plane_hi,
+    const torch::Tensor& scale,
+    int64_t bits) {
+  TORCH_CHECK(x.is_xpu() && x.is_contiguous(), "x");
+  TORCH_CHECK(x.scalar_type() == at::kBFloat16 && x.dim() == 2, "x [M,K] bf16");
+  const int M = (int)x.size(0);
+  const int K = (int)x.size(1);
+  const int N = (int)plane2.size(0);
+  TORCH_CHECK(M >= 1, "M");
+  check_planes(plane2, plane_hi, scale, N, K, (int)bits);
+  const int groups = K / 128;
+  const int tiles_n = tiles_n_of(N);
+  const int tiles_m = (M + 7) / 8;
+  const at::DeviceGuard guard(x.device());
+  auto xq = torch::empty({M, K}, x.options().dtype(torch::kInt8));
+  auto ascale = torch::empty(
+      {M, groups}, x.options().dtype(torch::kFloat32));
+  auto y = torch::empty({M, N}, x.options());
+  record_use(x);
+  record_use(plane2);
+  record_use(plane_hi);
+  record_use(scale);
+  record_use(xq);
+  record_use(ascale);
+  record_use(y);
+  auto& q = c10::xpu::getCurrentXPUStream().queue();
+  q.parallel_for(
+      sycl::range<1>((size_t)M * (size_t)groups),
+      ActQuantKernel{
+          reinterpret_cast<const uint16_t*>(x.data_ptr()),
+          xq.data_ptr<int8_t>(),
+          ascale.data_ptr<float>(),
+          K,
+          groups});
+  PrefillI8Kernel k{
+      xq.data_ptr<int8_t>(),
+      ascale.data_ptr<float>(),
+      plane2.data_ptr<uint8_t>(),
+      hi_ptr(plane_hi),
+      reinterpret_cast<const uint16_t*>(scale.data_ptr()),
+      reinterpret_cast<uint16_t*>(y.data_ptr()),
+      M,
+      N,
+      K,
+      groups,
+      (int)plane2.size(1),
+      bits == 2 ? 0 : (int)plane_hi.size(1),
+      (int)bits,
+      tiles_n};
+  const size_t ntiles = (size_t)tiles_m * (size_t)tiles_n;
+  q.parallel_for(
+      sycl::nd_range<1>(sycl::range<1>(ntiles), sycl::range<1>(1)), k);
+  return y;
+}
+
+TORCH_LIBRARY(b70_lowbit, m) {
+  m.def(
+      "gemv(Tensor x, Tensor plane2, Tensor plane_hi, Tensor scale, int bits) "
+      "-> Tensor");
+  m.def(
+      "moe_gemv(Tensor x, Tensor ids, Tensor router_w, Tensor w13_plane2, "
+      "Tensor w13_plane_hi, Tensor w13_scale, Tensor w2_plane2, "
+      "Tensor w2_plane_hi, Tensor w2_scale, int bits) -> Tensor");
+  m.def(
+      "prefill_wna16(Tensor x, Tensor plane2, Tensor plane_hi, Tensor scale, "
+      "int bits) -> Tensor");
+  m.def(
+      "prefill_wxa8(Tensor x, Tensor plane2, Tensor plane_hi, Tensor scale, "
+      "int bits) -> Tensor");
+}
+
+TORCH_LIBRARY_IMPL(b70_lowbit, XPU, m) {
+  m.impl("gemv", &gemv);
+  m.impl("moe_gemv", &moe_gemv);
+  m.impl("prefill_wna16", &prefill_wna16);
+  m.impl("prefill_wxa8", &prefill_wxa8);
+}

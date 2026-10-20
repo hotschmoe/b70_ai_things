@@ -1,0 +1,15 @@
+[project]
+name = "b70_lowbit_xpu"
+version = "0.1.0"
+description = "Symmetric int2/int3/int4 WNA16 XPU kernels and a vLLM quant method."
+requires-python = ">=3.12"
+
+[project.entry-points."vllm.general_plugins"]
+b70_lowbit_xpu = "b70_lowbit_xpu:register"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["b70_lowbit_xpu*"]

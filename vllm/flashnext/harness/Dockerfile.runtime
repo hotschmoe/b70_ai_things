@@ -1,0 +1,35 @@
+# Thin runtime for vllm/flashnext/harness/xpu-run.sh.
+# The flashnext venv was created by uv inside ubuntu:24.04 and its
+# python symlink is absolute: /usr/bin/python3.12. The stock ubuntu:24.04
+# image does not ship that interpreter, so this image adds only the
+# userspace the venv needs. It does NOT install a Level Zero loader or
+# a GPU UMD. xpu-run.sh bind-mounts the host 26.22 / libze1 1.28.2 stack.
+# gcc/g++ and python3.12-dev are here because Triton JIT (the Intel
+# XPU backend) compiles a small C++ helper on the first kernel. The
+# DPC++ compiler itself is not in this image; xpu-run puts the on-disk
+# oneAPI 2026.1 icpx on PATH.
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        python3.12 \
+        python3.12-dev \
+        gcc \
+        g++ \
+        ca-certificates \
+        libgomp1 \
+        libnuma1 \
+        libaio1t64 \
+        numactl \
+    && if [ ! -e /usr/lib/x86_64-linux-gnu/libaio.so.1 ] \
+        && [ -e /usr/lib/x86_64-linux-gnu/libaio.so.1t64 ]; then \
+        ln -s libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1; \
+    fi \
+    && ln -sfn python3.12 /usr/bin/python3 \
+    && mkdir -p /host-umd /opt/venv \
+    && rm -rf /var/lib/apt/lists/*
+
+# No default command. xpu-run.sh sets the entrypoint.
+WORKDIR /mnt/vm_8tb/github/b70_ai_things

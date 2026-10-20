@@ -1,0 +1,18 @@
+[project]
+name = "b70_gguf_xpu"
+version = "0.1.0"
+description = "GGUF IQ/K dequant, decode GEMV, MoE GEMV, and grouped prefill GEMM for Intel XPU."
+requires-python = ">=3.12"
+
+[project.entry-points."vllm.general_plugins"]
+b70_gguf_xpu = "b70_gguf_xpu:register"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["b70_gguf_xpu*"]
+
+[tool.setuptools.package-data]
+b70_gguf_xpu = ["*.so"]
