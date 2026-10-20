@@ -61,7 +61,9 @@ acquire() {  # $1=card 0|1 ; $2=fd ; $3=lockfile ; $4=ownerfile
   eval "exec $2>\"$3\"" || { echo "gpu-run: cannot open lock $3" >&2; exit 1; }
   if ! flock -n "$2"; then
     echo "gpu-run: card $1 busy (held by: $(cat "$4" 2>/dev/null || echo unknown)); waiting up to ${TIMEOUT}s ..." >&2
-    if [ "$TIMEOUT" = 0 ]; then flock "$2"; else flock -w "$TIMEOUT" "$2" || { echo "gpu-run: timed out after ${TIMEOUT}s on card $1" >&2; exit 124; }; fi
+    # A signal during the wait makes flock return non-zero. Do not run the
+    # command without the lock; that overlaps the holder on the card.
+    if [ "$TIMEOUT" = 0 ]; then flock "$2" || { echo "gpu-run: card $1 lock wait interrupted" >&2; exit 1; }; else flock -w "$TIMEOUT" "$2" || { echo "gpu-run: timed out after ${TIMEOUT}s on card $1" >&2; exit 124; }; fi
   fi
   printf '%s pid=%s since=%s cmd: %s\n' "$AGENT" "$$" "$(date '+%F %T')" "$CMDLINE" > "$4" 2>/dev/null || true
 }
