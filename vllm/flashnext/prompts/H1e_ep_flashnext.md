@@ -1,0 +1,7 @@
+You are grok agent H1e, continuing H1d (EP sidecar on Flash-Next). Read vllm/flashnext/BRIEF.md and obey it. Read reports/1H1_ep_sidecar.md and the 14:55 H1d JOURNAL entry: Phase A is done. Sidecar _C.so is 5a0a047c (owned maps). The serve script is vllm/flashnext/harness/serve_flashnext_ep.sh, not yet launched.
+
+H1d's run ended because a background wait timed out. Do not rely on a single long tool-level background wait. Poll in a loop instead, with short sleeps of at most 5 minutes per check, until the condition is met.
+
+Phase B: C7b owns both cards for the stock DP=2 Flash-Next graph window. Wait until reports/1C7b_flashnext_serve.md exists, or until both gpu lock owner files have been empty for 10 minutes. Then run your sidecar serve on top of C7b's recipe. Note C7b's fixes: drop the bf16 placeholders, stage the PLE host rows outside the graph, and use util 0.98. The MoE library was just made 2.6x faster (O3, _C.graph.so sha be76661b), so expect a lower ITL.
+Gates: greedy "17*19" -> 323 and "23*29" -> 667. Then C1/C2 ITL under FULL_DECODE_ONLY with harness/bench_latency.py under cpu-run --quiet. The bar is the Strata daily driver at C1 7.09 ms (141 tok/s, with MTP) and C2 10.9 ms per stream. Latency is the top metric. The card-0 KV budget matters: report the KV tokens available, because 2x200K is the target.
+Abort a serve if MemAvailable < 8 GiB. Run discipline: start long jobs detached and poll them. Do not end your run while a job you own is still running. Update reports/1H1_ep_sidecar.md.
