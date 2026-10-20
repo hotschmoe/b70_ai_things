@@ -220,7 +220,7 @@ def main() -> int:
             for sched, mt, rm in ARMS:
                 name = apply_arm(sched, mt, rm)
 
-                def run_dense(name=name, m=m, n=n, k=k, flops=flops):
+                def run_dense(_f=0, name=name, m=m, n=n, k=k, flops=flops):
                     us = elapsed_us(lambda: prefill_dense(x, q, Q4, n, k, 0), warmup=1, iters=3)
                     print(
                         f"BENCH dense {name} Q4_K M={m} N={n} K={k} us={us:.1f} tflops={flops / us / 1e6:.2f}",
@@ -256,7 +256,7 @@ def main() -> int:
             for sched, mt, rm in ARMS:
                 name = apply_arm(sched, mt, rm)
 
-                def run_layer(name=name, t=t, iters=iters):
+                def run_layer(_f=0, name=name, t=t, iters=iters):
                     us = elapsed_us(
                         lambda: prefill_moe_layer(x, ids, gq, uq, dq, router, IQ3, Q2, h, ffn, 0),
                         warmup=1,

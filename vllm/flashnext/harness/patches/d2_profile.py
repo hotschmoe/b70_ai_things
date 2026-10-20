@@ -243,7 +243,12 @@ def _bench_saved(t: int) -> None:
                 stored, dtypes = _param_bytes(mod)
                 active = _active_bytes(name, stored)
 
-                def _run(mod=mod, args=args, kwargs=kwargs):
+                def _run(mod=mod, args=args, kwargs=kwargs, ctx=ctx):
+                    if ctx is not None:
+                        try:
+                            ctx.moe_layer_index = 0
+                        except Exception:
+                            pass
                     return _call(mod, args, kwargs)
 
                 how = "graph"

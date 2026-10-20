@@ -60,6 +60,20 @@ def pack_mixed(weights, expert_bits, storage, device):
     return p2, hi, sc, bits_t
 
 
+def _native_hi(hi_row, bits, k):
+    """prefill_wna16 requires the stride for this bit width.
+
+    Storage can be wider (int3 payload in an int4 row). The bytes that
+    the kernel reads sit at the start of the row.
+    """
+    if bits == 2 or hi_row is None:
+        return None
+    need = plane_hi_stride(k, bits)
+    if hi_row.shape[-1] == need:
+        return hi_row
+    return hi_row[:, :need].contiguous()
+
+
 def ref_loop(x, ids, router, p13, hi13, s13, p2, hi2, s2, expert_bits):
     t_tokens, hidden = x.shape
     n13 = p13.shape[1]
@@ -84,12 +98,14 @@ def ref_loop(x, ids, router, p13, hi13, s13, p2, hi2, s2, expert_bits):
         tok = torch.div(sel, topk, rounding_mode="floor")
         xe = x.index_select(0, tok)
         bits = int(expert_bits[expert])
-        hi_up = None if bits == 2 or hi13 is None else hi13[expert]
+        k13 = int(s13.shape[-1]) * 128
+        k2 = int(s2.shape[-1]) * 128
+        hi_up = _native_hi(None if hi13 is None else hi13[expert], bits, k13)
         gu = ops.prefill_wna16(xe, p13[expert], hi_up, s13[expert], bits)
         gate = gu[:, :intermediate]
         up = gu[:, intermediate:]
         hid = (torch.nn.functional.silu(gate.float()) * up.float()).to(torch.bfloat16)
-        hi_dn = None if bits == 2 or hi2 is None else hi2[expert]
+        hi_dn = _native_hi(None if hi2 is None else hi2[expert], bits, k2)
         down = ops.prefill_wna16(hid, p2[expert], hi_dn, s2[expert], bits)
         weight = router.reshape(-1)[sel].unsqueeze(-1)
         y.index_add_(0, tok, down.float() * weight)
@@ -135,7 +151,9 @@ def main() -> None:
     print("== mixed gemv", flush=True)
     one_case(device, [3, 3, 3, 3], 2, 4, 256, 128, 11, "uniform3")
     one_case(device, [2, 3, 2, 3], 2, 4, 256, 128, 12, "mix-small")
-    one_case(device, [2, 3, 4, 2, 3, 4, 3, 2], 2, 8, 2048, 512, 13, "mix-fullk")
+    # Checkpoint shape: experts are only int2 and int3, K=2048.
+    one_case(device, [2, 3, 2, 3, 3, 2, 2, 3], 2, 8, 2048, 512, 13, "mix-23")
+    one_case(device, [2, 3, 4, 2, 3, 4, 3, 2], 2, 8, 2048, 512, 14, "mix-234")
     if FAILS:
         raise SystemExit("MIXED_PROBE_FAIL " + ",".join(FAILS))
     print("MIXED_PROBE_OK", flush=True)

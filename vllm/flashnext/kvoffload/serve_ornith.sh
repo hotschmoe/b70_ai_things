@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# One-card Ornith GPTQ serve with hybrid CPU KV offload and XPU graphs.
+#
+# Conversation A is parked in pinned host RAM (full-attention KV + GDN
+# state) and restored on the next prefix hit. GPU blocks are capped so
+# two long prompts cannot both stay resident: B and C evict A.
+#
+#   CARD=1 vllm/flashnext/kvoffload/serve_ornith.sh
+#
+# Holds the card lease until vLLM exits. Does not edit the A3 harness.
+# GRAPH=0 falls back to eager. Default is PIECEWISE graphs.
+set -euo pipefail
+
+HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+REPO=$(cd "$HERE/../../.." && pwd)
+HARNESS="$REPO/vllm/flashnext/harness/xpu-run.sh"
+
+CARD="${CARD:-1}"
+PORT="${PORT:-18111}"
+MAX_LEN="${MAX_LEN:-32768}"
+# One ~28-block prompt fits. Two do not, so the second and third
+# conversations evict the first from GPU. The host copy remains.
+NUM_GPU_BLOCKS="${NUM_GPU_BLOCKS:-45}"
+# 16 GiB pinned. Covers three 30K prompts even if every GDN page is stored.
+CPU_BYTES="${CPU_BYTES:-17179869184}"
+GRAPH="${GRAPH:-1}"
+GRAPH_MODE="${GRAPH_MODE:-PIECEWISE}"
+CAPTURE_SIZES="${CAPTURE_SIZES:-1,2,3,4,8}"
+GPU_MEM="${GPU_MEM:-0.90}"
+# PIECEWISE on this image has no ocloc, so inductor autotune dies.
+# D1's working path is compilation mode NONE plus breakable graphs.
+BREAKABLE="${VLLM_USE_BREAKABLE_CUDAGRAPH:-1}"
+RECLAIM="${B70_XPU_CG_RECLAIM:-500}"
+NAME="${NAME:-vllm-fn-g1-kv-c${CARD}}"
+
+MODEL="$REPO/models/files/ornith-1.5-35b-a3b/gptq-int4-mixedcal-v2"
+ALIAS=ornith-1.5-35b-a3b-GPTQ-int4-mixedcal-v2
+
+if [[ ! -f "$MODEL/config.json" ]]; then
+  echo "serve_ornith: missing $MODEL/config.json" >&2
+  exit 1
+fi
+
+KV_JSON=$(printf '%s' \
+  '{"kv_connector":"HybridCPUOffloadConnector","kv_role":"kv_both","kv_connector_module_path":"kvoffload.connector","kv_connector_extra_config":{"cpu_bytes_to_use":'"${CPU_BYTES}"'}}')
+
+ARGS=(
+  vllm serve "$MODEL"
+  --host 0.0.0.0
+  --port "$PORT"
+  --served-model-name hotschmoe-dev "$ALIAS"
+  --tensor-parallel-size 1
+  --dtype float16
+  --max-model-len "$MAX_LEN"
+  --gpu-memory-utilization "$GPU_MEM"
+  --num-gpu-blocks-override "$NUM_GPU_BLOCKS"
+  --language-model-only
+  --max-num-seqs 2
+  --enable-prefix-caching
+  --mamba-cache-mode align
+  --enable-prompt-tokens-details
+  --no-async-scheduling
+  --kv-transfer-config "$KV_JSON"
+)
+
+if [[ "$GRAPH" == "0" ]]; then
+  ARGS+=(--enforce-eager)
+else
+  SIZES_JSON="[${CAPTURE_SIZES}]"
+  case "$GRAPH_MODE" in
+    FULL|FULL_DECODE_ONLY)
+      CFG="{\"mode\":0,\"cudagraph_mode\":\"${GRAPH_MODE}\",\"cudagraph_capture_sizes\":${SIZES_JSON}}"
+      ;;
+    *)
+      if [[ "$BREAKABLE" == "1" ]]; then
+        CFG="{\"mode\":0,\"cudagraph_mode\":\"${GRAPH_MODE}\",\"cudagraph_capture_sizes\":${SIZES_JSON}}"
+      else
+        CFG="{\"cudagraph_mode\":\"${GRAPH_MODE}\",\"cudagraph_capture_sizes\":${SIZES_JSON}}"
+      fi
+      ;;
+  esac
+  ARGS+=(--compilation-config "$CFG")
+fi
+
+echo "g1 serve: card=$CARD port=$PORT max_len=$MAX_LEN blocks=$NUM_GPU_BLOCKS cpu_bytes=$CPU_BYTES graph=$GRAPH mode=$GRAPH_MODE breakable=$BREAKABLE reclaim=$RECLAIM name=$NAME"
+echo "g1 serve: ${ARGS[*]}"
+
+export B70_AGENT="${B70_AGENT:-g1-kv}"
+export VLLM_USE_BREAKABLE_CUDAGRAPH="$BREAKABLE"
+export B70_XPU_CG_RECLAIM="$RECLAIM"
+exec "$HARNESS" --card "$CARD" --name "$NAME" --port "$PORT" \
+  --env "PYTHONPATH=$REPO/vllm/flashnext" \
+  --env PYTHONDONTWRITEBYTECODE=1 \
+  --env "VLLM_USE_BREAKABLE_CUDAGRAPH=$BREAKABLE" \
+  --env "B70_XPU_CG_RECLAIM=$RECLAIM" \
+  -- "${ARGS[@]}"

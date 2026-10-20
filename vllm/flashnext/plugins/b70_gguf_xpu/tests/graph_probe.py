@@ -17,9 +17,28 @@ from b70_gguf_xpu import ops
 
 def _check(name: str, got: torch.Tensor, ref: torch.Tensor) -> None:
     torch.xpu.synchronize()
-    diff = (got.float() - ref.float()).abs()
+    if got.shape != ref.shape or got.dtype != ref.dtype:
+        raise SystemExit(
+            f"FAIL {name} shape {tuple(got.shape)} {got.dtype} "
+            f"vs {tuple(ref.shape)} {ref.dtype}"
+        )
+    nan_got = torch.isnan(got)
+    nan_ref = torch.isnan(ref)
+    if not torch.equal(nan_got, nan_ref):
+        raise SystemExit(f"FAIL {name} NaN mask differs")
+    finite = ~nan_got
+    nfin = int(finite.sum())
+    if nfin == 0:
+        raise SystemExit(f"FAIL {name} all NaN")
+    diff = (got[finite].float() - ref[finite].float()).abs()
     amax = float(diff.max())
-    print(f"{name} max_abs={amax:.3e} shape={tuple(got.shape)}", flush=True)
+    # abs of the replay, so an all-zero kernel is visible in the log.
+    peak = float(got[finite].float().abs().max())
+    print(
+        f"{name} max_abs={amax:.3e} peak={peak:.3e} "
+        f"finite={nfin}/{got.numel()} shape={tuple(got.shape)}",
+        flush=True,
+    )
     if amax > 0.0:
         raise SystemExit(f"FAIL {name} max_abs={amax}")
 
@@ -47,11 +66,19 @@ def _fake_shapes() -> None:
     print("fake ok", flush=True)
 
 
+def _iq4nl_rows(n: int, k: int, device: torch.device) -> torch.Tensor:
+    """IQ4_NL rows with fp16 scale 1. Random bytes can be a NaN scale."""
+    row = 18 * (k // 32)
+    q = torch.full((n, row), 0x11, device=device, dtype=torch.uint8)
+    q[:, 0::18] = 0x00
+    q[:, 1::18] = 0x3C  # fp16 1.0, little endian
+    return q
+
+
 def _capture_gemv() -> None:
     device = torch.device("xpu")
     m, n, k = 2, 4, 32
-    # IQ4_NL row is 18 bytes at K=32.
-    q = torch.randint(0, 256, (n, 18), device=device, dtype=torch.uint8)
+    q = _iq4nl_rows(n, k, device)
     static_x = torch.randn(m, k, device=device, dtype=torch.bfloat16)
     ops.gemv(static_x, q, 20, n, k)
     torch.xpu.synchronize()
@@ -70,10 +97,9 @@ def _capture_gemv() -> None:
 def _capture_moe() -> None:
     device = torch.device("xpu")
     t, topk, e, i_dim, k_dim = 2, 2, 4, 32, 32
-    row = 18  # IQ4_NL, K=32
-    gate = torch.randint(0, 256, (e * i_dim * row,), device=device, dtype=torch.uint8)
-    # down K is I, N is hidden. IQ4_NL row bytes at I=32 is also 18.
-    down = torch.randint(0, 256, (e * k_dim * row,), device=device, dtype=torch.uint8)
+    # gate/up: N=I, K=hidden. down: N=hidden, K=I. IQ4_NL, 18 bytes per 32.
+    gate = _iq4nl_rows(e * i_dim, k_dim, device).reshape(-1)
+    down = _iq4nl_rows(e * k_dim, i_dim, device).reshape(-1)
     static_x = torch.randn(t, k_dim, device=device, dtype=torch.bfloat16)
     static_ids = torch.randint(0, e, (t, topk), device=device, dtype=torch.int32)
     static_ids[0, 1] = -1

@@ -1226,3 +1226,218 @@ Report: vllm/flashnext/reports/1G2_audit.md.
 VERDICT: Pass 1 recorded. One wrong-if-claimed coherence result
 (UMD 26.27 Triton). No other numeric contradiction in the completed
 serve JSON.
+
+## 2026-10-20 07:08 C7 -- fused moe_layer decode, CPU suite green
+
+CONFIG: fork b70/flashnext tip 2583e27239 (parent e3f784ebb2), not
+pushed. Side library
+vllm/flashnext/plugins/b70_gguf_xpu/b70_gguf_xpu/_C.graph.so is
+6987192 bytes, mtime 2026-10-20 06:59:04. _C.so is unchanged at
+6391032 bytes, mtime 2026-10-20 04:32:30. Decode with T<=8 calls
+moe_layer. Expert ids, including -1, stay on device. Scratch never
+waits and never frees; a grow while the SYCL queue is recording
+throws. reserve_decode floors T=8, topk=16, K=I=8192 and runs on
+the first XPU forward. Claude fable-5.1 and claude-5.5 both exit
+unrecognized_model and "Not logged in".
+COMMAND: B70_PREFILL_OUT set to _C.graph.so, bin/cpu-run scripts/build.sh.
+Then bin/cpu-run the 15 mapping tests
+(logs/c7-cpu-mapping.log). Fork commit only.
+RESULT: build exit 0 in 69s, 120 deprecation warnings. CPU suite
+ALL_DONE 0 in 91s. test_linear_and_moe_call_ops sees one moe_layer
+and min id -1. test_expert_map_and_shared_not_added maps global id 1
+to local slot 0. At 07:08 card 0 is free and card 1 is held by E1
+(vllm-fn-lowbit-e1-int4 since 07:04). No serve ITL yet.
+VERDICT: Card 0 next: xpu-health, graph probe on _C.graph.so, then
+FULL_DECODE_ONLY + FLASH_ATTN + B70_XPU_CG_RECLAIM=500 with
+max_num_seqs 4 and max_model_len 33792.
+
+## 2026-10-20 07:08 F1 -- UMD A/B measured; keep host 26.22
+
+CONFIG: card 0 only. Kernel 7.1.0-070100-generic, host UMD not
+replaced. Arms: host 26.22.38646 / IGC 2.36.3 / loader 1.28.2;
+extracted 26.27.39122.11 / IGC 2.38.2 / loader 1.32.0; extracted
+26.35.39758.10 / IGC 2.41.5 / loader 1.32.0 (newest compute-runtime
+release; loader 1.34.0 was not the matching loader). Mounted with
+xpu-run.sh --umd. Ornith GPTQ int4, FULL_DECODE_ONLY, port 18091,
+B70_XPU_CG_RECLAIM=500. Plugin _C.so unchanged (6391032 bytes,
+2026-10-20 04:32). Card 1 left with E1.
+COMMAND: logs/f1_umd_driver.sh. Per arm: sycl-ls + torch.xpu probe,
+serve_ornith_gptq.sh ATTN=FLASH_ATTN then bench_latency.py,
+ATTN=TRITON_ATTN GDN_BACKEND=triton then the same bench, then
+gpu_check.py and moe_layer_bench.py. xpu-health --card 0 around the
+work. 26.35 plugin run retried once after ops.py stopped registering
+a fake for reserve_decode on the default _C.so.
+RESULT: all six serves coherent (Paris, both strings identical,
+hotschmoe-dev first). FlashAttention C1 ITL p50/p99 ms and TTFT ms:
+host 12.80/13.13 and 84.68; 26.27 12.77/13.25 and 89.67; 26.35
+12.60/13.00 and 92.07. Prefill 32k tok/s 6182 / 6171 / 6193. Triton
+C1 ITL p50 13.13 / 13.18 / 12.97 ms. Triton 32k prefill 1224 / 1868 /
+1705 tok/s, with the host cache already warm (ready 106 s) and the
+other two cold (about 450-467 s in container). Engine maps showed
+libigc from /host-umd on every arm, including Triton. Dense GEMV M=1
+Q4_K 129.4 / 132.3 / 128.9 us; Q5_K 810.6 / 809.5 / 835.7 us.
+moe_layer T=8 behind 1408.5 / 1424.8 / 1441 us. T=1 moe_layer is
+scattered (370 / 589 / 254 us) and is not a ranking. Card 0 HEALTHY
+after. No xe-reset. C5 held card 0 for a few minutes between the
+26.27 FlashAttention bench and the Triton serve; that health check
+was skipped, the Triton serve queued, and later health passed.
+Claude fable-5.1 and claude-5.5: unrecognized_model, not logged in.
+VERDICT: Campaign runtime stays on host 26.22 / IGC 2.36.3 / loader
+1.28.2. 26.35 wins FlashAttention C1 ITL by 0.20 ms and loses TTFT
+by about 7 ms. The AOT plugin does not move with the runtime UMD;
+C5's compile-time IGC A/B is the right comparison for _C.so.
+Report: vllm/flashnext/reports/1F1_umd.md.
+
+## 2026-10-20 07:12 G1 -- hybrid offload contract on CPU
+
+CONFIG: No GPU. Package vllm/flashnext/kvoffload. Ornith text layout
+from the GPTQ config: 10 full-attention layers, 30 GDN layers, XPU block
+alignment 64. A parked prefix is valid only with both full-attention KV
+and the GDN boundary state. HybridCPUOffloadConnector subclasses upstream
+OffloadingConnector (pinned host, XPU swap_blocks_batch) and refuses to
+start unless both groups are in the prefix-cacheable offload set.
+supports_divergent_local_hybrid_hits stays false (vLLM issue 52773: the
+flag without a scheduler backfill drops the hit). Copy engine is upstream.
+COMMAND: PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=vllm/flashnext python3 -m
+unittest kvoffload.tests.test_layout_park kvoffload.tests.test_metrics
+RESULT: 16 tests OK. GDN page 2146304 bytes/layer, attention 20480
+bytes/token, scaled block 1088. Checkpoint of 28*1088 tokens is 27*1088
+(the align-mode proof leaves the last token, so an exact multiple loses
+one block). A missing Prometheus host series counts as zero. Host venv
+python points at /usr/bin/python3.12 and does not run outside the
+container; the connector import is part of the XPU serve.
+VERDICT: CPU contract holds. Next serve is card 0, host UMD, port 18111,
+PIECEWISE graphs, num_gpu_blocks_override 45, 16 GiB pinned. Card 1 is
+held by E1 (vllm-fn-lowbit-e1-int4) since 07:04. Expected hold about 30
+minutes: model load, graph capture, three ~30K prompts, greedy check.
+
+## 2026-10-20 07:21 C7 -- one-card GGUF FULL_DECODE_ONLY measured
+
+CONFIG: card 0 only. Fork tip 2583e27239. Image vllm-flashnext-xpu:py312.
+Qwen3.6-35B-A3B UD-IQ3_XXS via --load-format b70_gguf --quantization
+b70_gguf. B70_GGUF_SO=_C.graph.so (6987192 bytes). FULL_DECODE_ONLY,
+FLASH_ATTN, compilation mode 0, capture sizes 1,2,3,4,8,
+B70_XPU_CG_RECLAIM=500, B70_EAGER_QK=0, B70_GGUF_REF=0. max_num_seqs 4,
+max_model_len 33792, gpu_memory_utilization 0.90. Port 18104. Container
+vllm-fn-qwen36-gguf-c0. No CCL_TOPO_P2P_ACCESS. Matched eager baseline
+is C4: C1 ITL p50 87.62 ms, short-prompt TTFT 265 ms, 1017-token
+prefill 177 tok/s.
+COMMAND: harness/serve_qwen36_gguf.sh with the flags above. Then
+harness/bench_latency.py --model hotschmoe-dev --alias
+qwen3.6-35b-a3b-ud-iq3-xxs --decode-tokens 64 --prefill
+1024,8192,32768 --timeout 900. Log
+/mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7-serve-graph.log. Bench
+/mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7-bench-graph.json. Graph
+probe before the serve: plugins/.../tests/graph_probe.py on card 0,
+log c7-graph-probe.log. Teardown docker stop, then bin/xpu-health
+--card 0.
+RESULT: Pre-serve card 0 HEALTHY. Probe replay max_abs=0 on gemv and
+moe_layer (finite IQ4_NL rows), GRAPH_PROBE_OK. Load placed 733,
+skipped_mtp 20, weights 16.96 GiB. reserve_decode on xpu printed before
+capture. V2 runner captured 4 FULL graphs (size 8 dropped). Capture
+1 sec, pool 0.02 GiB. KV 8.92 GiB, 381493 tokens, 11.29x at 33792.
+Identity ids hotschmoe-dev, qwen3.6-35b-a3b-ud-iq3-xxs. Both greedy
+texts, temperature 0, 16 tokens: " Paris.\nThe capital of France is
+Paris.\nThe capital of France is". Same as C4. Bench exit 0. C1 ITL
+p50 11.11 ms, p90 12.41, p99 13.46, 90.16 tok/s, TTFT 174.36 ms, n=64.
+C2 stream0 ITL p50 16.51 ms, 61.34 tok/s, TTFT 830.65 ms, 46 tokens.
+C2 stream1 ITL p50 16.65 ms, 62.01 tok/s, TTFT 867.12 ms, 40 tokens.
+Requested 64; the server usage counts stopped earlier. Prefill tok/s:
+1017 tokens 177.01 (TTFT 5746 ms), 8185 tokens 175.58, 32762 tokens
+173.23 (TTFT 189124 ms). No OOM. Serve shutdown drain, gpu-run exit 0
+in 491 s. Post-health card 0 HEALTHY in 12 s. No xe-reset. Card 1
+still held by E1.
+VERDICT: One-card decode is graph-capturable and matches eager
+greedy text. C1 ITL is 11.11 ms versus C4 eager 87.62 ms on the same
+model and card. Prefill stays on the eager grouped path at about 175
+tok/s through 32K. Next is the two-card window after E1 releases
+card 1: announce, xpu-collective-health, then DP=2 EP eager. Do not
+take card 0 while waiting.
+
+## 2026-10-20 07:23 E1 -- int4 control FULL_DECODE_ONLY, C1 ITL 10.23 ms
+
+CONFIG: same graph flags as the int3 arm. Checkpoint
+/mnt/cache/b70/devmodel/quant/qwen36-w4a16-g128, alias
+qwen36-w4a16-b70-lowbit. Library is the 04:05 libb70_lowbit_xpu.so
+(1442856 bytes). B70_LOWBIT_SO and B70_LOWBIT_PREFILL unset.
+B70_LOWBIT_MOE_LAUNCHES=2, FULL_DECODE_ONLY, FLASH_ATTN,
+B70_XPU_CG_RECLAIM=500, bf16, TP=1, max-len 33792, util 0.90, card 1,
+port 18084. Expert lookup is uniform bits 4. Repack log is bits=4 for
+40 layers, w13 qweight (256, 256, 1024), w2 (256, 64, 2048).
+COMMAND: serve_lowbit.sh, then bin/cpu-run --quiet harness/bench_latency.py
+--tag e1-int4-graph --decode-tokens 64 --timeout 1200, then ppl_serve.py
+on the same 4x512 wikitext windows. Logs:
+.../logs/e1-int4-serve.log, e1-int4-graph-bench.json, e1-int4-ppl.json.
+RESULT: Identity first=hotschmoe-dev first_ok alias_ok. Coherence ok,
+same, paris. Both texts start " Paris, a city renowned for its rich
+history, art, and culture. Sit". Two graph captures, 1 s each. Weight
+load 18.13 GiB in 664 s. KV 7.22 GiB, 308574 tokens, 9.13x concurrency
+at 33792. init engine 19.02 s. gpu-run exit 0. No OOM.
+C1 ITL p50/p90/p99 10.23/10.37/10.48 ms, mean from the json 10.229 ms,
+99.59 tok/s, TTFT 2533.19 ms, n=56. C2 p50 13.65 and 13.61 ms
+(p90 13.88/13.89, p99 13.99/14.04), 75.25 and 76.22 tok/s, TTFT
+3007.19 and 3006.76 ms. Prefill 1017/8185/32762 tok at
+96.90/108.74/112.99 tok/s. Ppl 8.8582, nll 2.1813, tokens 2044.
+Window nll 1.7888, 2.4407, 2.0974, 2.3985.
+Expert bytes per token, full weight read, 8 slots x 40 layers, no
+dedup, trunk excluded: int4 519045120 B (495 MiB), int3 393216000 B
+(375 MiB). The matched int3 graph arm was C1 ITL 11.29 ms and prefill
+99.33/112.32/115.78 tok/s, ppl 9.1199. Int4 moves 32 percent more
+expert bytes and the C1 step is 1.06 ms faster. If the whole step were
+that read, the rates would be about 51 GB/s and 35 GB/s. Both are far
+under a 608 GB/s roof, so this decode step is not expert-bandwidth bound.
+VERDICT: Int4 control is measured on the templated kernel. Server
+stopped. The mixed arm still needs moe_gemv_mixed in
+libb70_lowbit_xpu_e1mix.so, a different binary, so it is not only
+expert bits. d2-profile took card 1 again at 07:23:26.
+
+## 2026-10-20 07:29 G3 -- CPU qwen4_exp reference measured
+
+CONFIG: CPU only. No GPU and no fork edits. uv CPython 3.12.13.
+PYTHONPATH is the fork tree, the vllm-flashnext venv site-packages,
+strata-ab llama-pinned gguf-py, then vllm/flashnext.
+ONEAPI_DEVICE_SELECTOR=opencl:cpu, VLLM_TARGET_DEVICE=cpu. Shard1 is
+the IQ3_XXS GGUF (mmap). Shard2 is the PLE table (mmap, 16 rows
+copied). HF tokenizer and text config:
+/mnt/vm_8tb/b70/build/backend-decision/hf-flashnext. Prompt "Return
+only the integer: 17 * 19." with enable_thinking false and
+add_generation_prompt: 25 ids, matching DD prompt_tokens 25.
+Activations are fp32. The daily driver runs HC at Q8; that rounding
+is outside this compare.
+COMMAND: bin/cpu-run python -m flashnext_ref.compare_layers --stage all.
+Then python flashnext_ref/collect_strata_ref.py (walk only, no lock).
+Evidence: flashnext_ref/last_compare.json. Report:
+reports/1G3_flashnext_model.md. Greedy file:
+harness/strata_reference.json. Tools live under flashnext_ref/.
+RESULT: compare exit 0, 26 s of Python after the cpu-run lock (E1
+held it). PLE multipliers, offsets, and head vocab sizes match the
+GGUF header and the strata ngram transcription. Vocab sizes sum to
+320001446 of 320001536 rows. ple.layers=[1] is the 0-based block; HF
+ple_layer_ids=[2] attaches layer_idx 1. On the 25-id prompt, strata
+rows equal the XPU _compute_rows transcription at eos 248044 (0 of
+400) and equal the NVIDIA int64 remainder (0 of 400; in-vocab
+products stay below 2^63). eos 248046 changes 32 of 400 row ids.
+Fork _compute_rows on the first 4 tokens: 0 of 64. IQ4_NL, 16
+gathered rows versus gguf-py: bit_mismatches 0, max_abs 0. Fork
+HyperConnection.mix after the loader subtracts 1 from the stored
+gamma: max_abs 1.311e-6. The same mix against the raw stored gamma:
+max_abs 1.278. Fork PLE block on blk.1: max_abs 4.77e-7. A second +1
+on the stored PLE gamma moves that block by max_abs 1.46. GGUF RMS
+epsilon is the fp32 spelling of 1e-6. QSA width 2051, per-head ReLU,
+tail +1e9, and GQA integer division pass as formula checks. The XPU
+decoder uses Qwen3NextAttention and leaves the indexer unread. DD
+has no --mtp-hnorm, so the wide pooled RMS is the DD MTP default.
+The Unsloth eh_proj sidecar mean-collapses and broadcasts;
+random-weight wide versus eh_proj max_abs 3.97. Expert pools and the
+GDN qkv split were not dequantized. No Strata hidden-state dump for
+layers 0-2 was found. strata_reference.json holds 14 temperature-0
+texts from 2619 files. Short greedy: 17*19 -> 323, 23*29 -> 667,
+thinking 23*17 -> 391. Prompts longer than 400 characters are stored
+as a 400-character prefix plus sha256.
+VERDICT: Layer-0 HC and layer-1 PLE match Strata's formulas in fp32
+when the loader treats stored norm gamma as (1+w). C7 should serve
+/mnt/vm_8tb/b70/build/backend-decision/hf-flashnext and keep text eos
+at 248044, the PLE cut. 248046 stays a stop id. Draft acceptance
+against the daily driver needs the wide fc in mtp-bf16/rt. Dense GQA
+matches QSA selection only through 2051 tokens. This is a CPU
+localization ladder for the first layers, not a GPU forward.

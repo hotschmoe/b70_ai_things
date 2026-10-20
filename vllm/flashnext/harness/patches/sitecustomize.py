@@ -46,6 +46,17 @@ if os.environ.get("B70_D2_PROFILE") == "1":
 
         traceback.print_exc()
 
+# C7: collective count and time. Off unless B70_COLL_LOG is a path.
+if os.environ.get("B70_COLL_LOG"):
+    try:
+        from c7_collectives import install as _c7_coll_install
+
+        _c7_coll_install()
+    except Exception:
+        import traceback
+
+        traceback.print_exc()
+
 # D1: eager-step timer. The finder does not import torch or vLLM.
 if os.environ.get("B70_STEP_TIMER") == "1":
     try:

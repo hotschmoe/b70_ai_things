@@ -77,7 +77,7 @@ echo "serve_qwen36_gguf: card=$CARD port=$PORT max_len=$MAX_LEN seqs=$MAX_SEQS g
 echo "serve_qwen36_gguf: ${ARGS[*]}"
 
 ENV_ARGS=()
-for key in B70_XPU_CG_RECLAIM B70_GGUF_SO B70_REPLAY_LOG B70_STEP_LOG; do
+for key in B70_XPU_CG_RECLAIM B70_GGUF_SO B70_REPLAY_LOG B70_STEP_LOG B70_COLL_LOG; do
   if [[ -n "${!key:-}" ]]; then
     ENV_ARGS+=(--env "${key}=${!key}")
   fi

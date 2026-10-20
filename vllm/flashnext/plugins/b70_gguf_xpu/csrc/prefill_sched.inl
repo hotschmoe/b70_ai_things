@@ -3,9 +3,9 @@
 // reuse: 2D grid over M tiles and N tiles of 16 columns. The work-group
 // dequants one BN x BK weight panel into SLM once, then every subgroup
 // walks a different strip of the M tile with fp16 DPAS 8x16x16. X stays
-// in global memory. E==1 (dense, or a single expert) uses the 2D grid so
-// row tiles run in parallel. E>1 loops row tiles inside the expert group;
-// Flash-Next prefill has <512 rows per expert, so that loop is one pass.
+// in global memory. Dense (E==1) launches N as the fast axis so a wave
+// shares one M tile's X in L2. E>1 is one group per expert (N fast) and
+// loops row tiles inside that group.
 //
 // s64: Strata night_grouped_expert.inc:235 with SGN=4 (64 columns). Each
 // subgroup owns 16 columns, preloads the next 32-wide block (inc:275),
@@ -190,8 +190,10 @@ void launch_reuse(sycl::queue& q, const GemmArgs& a) {
     const int ntiles = a.N / BN;
     const int mtiles = dense2d ? (a.rows_hint + MTILE - 1) / MTILE : a.E;
     if (mtiles <= 0 || ntiles <= 0) return;
-    const int slow = dense2d ? ntiles : a.E;
-    const int fast = dense2d ? mtiles : ntiles;
+    // group(0) is slow (M tile or expert). group(1) is the N tile, fast,
+    // so consecutive groups reuse the same rows of X.
+    const int slow = dense2d ? mtiles : a.E;
+    const int fast = ntiles;
     const int N = a.N, K = a.K, rb = a.rb, n_wrow = a.n_wrow, gu = a.gu;
     const int rows_hint = a.rows_hint;
     const int dense_flag = dense2d ? 1 : 0;
@@ -209,12 +211,12 @@ void launch_reuse(sycl::queue& q, const GemmArgs& a) {
                 auto sg = it.get_sub_group();
                 const int tid = (int)it.get_local_id(1);
                 const int sgid = tid / kSg;
-                const int ntile = dense_flag ? (int)it.get_group(0) : (int)it.get_group(1);
+                const int ntile = (int)it.get_group(1);
                 const int n0 = ntile * BN;
                 int expert, row_origin, rows_all;
                 if (dense_flag) {
                     expert = 0;
-                    const int mtile = (int)it.get_group(1);
+                    const int mtile = (int)it.get_group(0);
                     row_origin = mtile * MTILE;
                     rows_all = rows_hint - row_origin;
                     if (rows_all > MTILE) rows_all = MTILE;
