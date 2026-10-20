@@ -76,15 +76,17 @@ def _capture_gemv(bits: int) -> None:
     plane_hi = None if plane_hi is None else plane_hi.to(device)
     static_x = torch.randn(m, k, device=device, dtype=torch.bfloat16)
     # Warm the extension and the empty-hi cache outside the capture.
-    ref = ops.gemv(static_x, plane2, plane_hi, scale, bits)
+    # Capture records the SYCL submit and does not publish its output.
+    # The numeric check is the replay against a fresh eager result.
+    ops.gemv(static_x, plane2, plane_hi, scale, bits)
     torch.xpu.synchronize()
     graph = torch.xpu.XPUGraph()
     with torch.xpu.graph(graph):
         captured = ops.gemv(static_x, plane2, plane_hi, scale, bits)
-    _check(f"gemv bits={bits} capture", captured, ref)
     static_x.copy_(torch.randn(m, k, device=device, dtype=torch.bfloat16))
     replay_ref = ops.gemv(static_x, plane2, plane_hi, scale, bits)
     torch.xpu.synchronize()
+    captured.fill_(torch.nan)
     graph.replay()
     torch.xpu.synchronize()
     _check(f"gemv bits={bits} replay", captured, replay_ref)
@@ -101,14 +103,13 @@ def _capture_moe(bits: int) -> None:
     static_x = torch.randn(t, h, device=device, dtype=torch.bfloat16)
     static_ids = torch.randint(0, e, (t, topk), device=device, dtype=torch.int32)
     static_w = torch.rand(t, topk, device=device, dtype=torch.float32)
-    ref = ops.moe_gemv(static_x, static_ids, static_w, p13, h13, s13, p2, h2, s2, bits)
+    ops.moe_gemv(static_x, static_ids, static_w, p13, h13, s13, p2, h2, s2, bits)
     torch.xpu.synchronize()
     graph = torch.xpu.XPUGraph()
     with torch.xpu.graph(graph):
         captured = ops.moe_gemv(
             static_x, static_ids, static_w, p13, h13, s13, p2, h2, s2, bits
         )
-    _check(f"moe bits={bits} capture", captured, ref)
     static_x.copy_(torch.randn(t, h, device=device, dtype=torch.bfloat16))
     static_ids.copy_(torch.randint(0, e, (t, topk), device=device, dtype=torch.int32))
     static_w.copy_(torch.rand(t, topk, device=device, dtype=torch.float32))
@@ -116,6 +117,7 @@ def _capture_moe(bits: int) -> None:
         static_x, static_ids, static_w, p13, h13, s13, p2, h2, s2, bits
     )
     torch.xpu.synchronize()
+    captured.fill_(torch.nan)
     graph.replay()
     torch.xpu.synchronize()
     _check(f"moe bits={bits} replay", captured, replay_ref)
