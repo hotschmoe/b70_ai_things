@@ -4252,6 +4252,25 @@ COMMAND: bash /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7b-fn-graph-window.sh
 RESULT: leases requested immediately after this entry.
 VERDICT: window open.
 
+## 2026-10-20 15:19 C7b -- graph capture rejected the PLE host copy
+
+CONFIG: logs/c7b-fn-graph-window.sh. FULL_DECODE_ONLY, FLASH_ATTN,
+B70_XPU_CG_RECLAIM=500, capture sizes 1,2,3,4,8, util 0.98,
+max_model_len 2048, max_num_seqs 4. HEALTH_RC 0.
+MEM_AVAILABLE_KB 118052504.
+COMMAND: bash /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7b-fn-graph-window.sh
+RESULT: weights loaded, then capture of FULL graphs failed on both
+workers. level_zero error 44 UR_RESULT_ERROR_UNSUPPORTED_FEATURE at
+Qwen4ExpPLE.forward input_ids.to("cpu"), inside torch.cuda.graph
+during profile_cudagraph_memory. SERVE_RC 1 at 15:18:34. No greedy
+and no ITL. Log c7b-graph-serve-ple-d2h.log. No DEVICE_LOST.
+The retry at 15:22 found card 0 held by O3 pid 3358701 since
+15:19:48, container vllm-fn-qwen36-gguf-c0, port 18104. It did
+not start a second serve.
+VERDICT: eager coherence stands. FULL graphs need the PLE gather
+outside the captured region. The staged-row retry waits for both
+locks.
+
 ## 2026-10-20 15:40 O3 -- MoE decode gap closed: misaligned weight loads, serial plan
 CONFIG: card 0 only. Plugin b70_gguf_xpu, fair dumps from C9 (E=10..28
 dense, top-10 + shared, K=2560, I=640, IQ3_S/Q2_0 and IQ2_XS/IQ4_NL).
@@ -4286,3 +4305,329 @@ Strata at T=1..4) met at 0.61-0.73x of the R2 numbers. Next: the same
 aligned-load fix for the float decode32 K-quant path (35B Q2_K/Q3_K/IQ4_XS
 experts), then bandwidth (gate/up ~350 GB/s of ~608). Report:
 reports/2O3_moe_decode.md.
+
+## 2026-10-20 15:39 C7b -- staged PLE passed, FA decode kernel missing
+
+CONFIG: logs/c7b-fn-graph-window.sh. FULL_DECODE_ONLY, FLASH_ATTN,
+B70_XPU_CG_RECLAIM=500, capture sizes 1,2,3,4,8, util 0.98,
+max_model_len 2048, max_num_seqs 4. B70_GGUF_SO=_C.c12.so
+sha256 b3c15e14. PLE rows staged outside the graph. HEALTH_RC 0.
+MEM_AVAILABLE_KB 117993036.
+COMMAND: bash /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7b-fn-graph-window.sh
+RESULT: serve started 15:35:19 and died during FULL capture at
+15:39:23. SERVE_RC 1. No greedy and no ITL. PLE host copy did not
+fire. FlashAttention paged decode is not compiled for
+16,256,64,false,false,false (qgroup,head,page,causal,local,sink).
+The PyTorch fallback then calls cu_seqlens_q.cpu() inside the
+graph and Level Zero returns error 44. Installed package is
+vllm-xpu-kernels 0.1.15.4. The source conf line exists at HEAD
+19c6ddc and is absent from tag v0.1.15. Log
+c7b-graph-serve-fa-missing.log. Locks released. No DEVICE_LOST.
+VERDICT: eager coherence stands. Next is a side build of that
+one Xe2 decode specialization. The shared wheel stays put.
+
+## 2026-10-20 15:34 C7b -- graph window, staged PLE rows
+
+CONFIG: logs/c7b-fn-graph-window.sh. FULL_DECODE_ONLY, FLASH_ATTN,
+B70_XPU_CG_RECLAIM=500, capture sizes 1,2,3,4,8, util 0.98,
+max_model_len 2048, max_num_seqs 4. PLE host gather is staged
+into _graph_emb outside the XPU graph. Uncommitted.
+B70_GGUF_SO is _C.c12.so (sha256 b3c15e14, 10165216 bytes).
+_C.graph.so is O3's later binary and is left in place.
+MemAvailable 117593984 kB. Both locks empty. Port 18104 free.
+COMMAND: bash /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7b-fn-graph-window.sh
+RESULT: leases requested immediately after this entry.
+VERDICT: window open.
+
+## 2026-10-20 15:36 G2b -- audit pass 14
+
+CONFIG: CPU only. No GPU, no systemd, no commit. Findings F139-F147
+append reports/1G2_audit.md after F138. Cursor is the 15:34 C7b
+heading. The 15:13 graph window had already exited.
+COMMAND: Read c7b-fn-serve-kvshort.log, c7b-rss-run3.log,
+c7b-fn-serve-eager98.log, c7b-eager98-greedy.json,
+c7b-fn-eager98-window.out, c7b-rss-eager98-ready.txt,
+c7b-coll-health-eager98.txt, c7b-graph-serve-ple-d2h.log,
+c7b-fn-graph-window-ple-d2h.out, c7b-coll-health-graph.txt,
+h1d-ep-build.log, h1d-ep-build2.log, o3/fair_quiet.log,
+o3/bench_35b.json, o3/models.json, o3/serve_driver.log,
+c12/serve_driver.log. Hash the EP _C.so, _C.ep.so, _C.graph.so,
+_C.o3.so, and _C.c12.so. Read ep_register_map, the dispatch clamp,
+stage_graph_rows, and the torch.cuda.graph capture body.
+RESULT: Eager util 0.98 reached READY 15:09:33, chats 323 and 667
+matched, SERVE_RC 0, KV 0.89 GiB and 6144 tokens, health-before
+only. The KV-short run died on Available KV -1.53 GiB after
+placement, with no XPU OOM string. The 15:13 graph window died at
+15:18:14 inside torch.cuda.graph (forward_fn mode NONE) on
+input_ids.to("cpu"), Level Zero error 44, SERVE_RC 1. The EP
+sidecar on disk is sha 5a0a047c, 499200 bytes, and the source owns
+and clamps the maps. O3's 35B card-0 bench matches identity,
+coherence, C1 p50 9.34 ms, and tok/s 107.03. Installed _C.so,
+_C.graph.so, and _C.o3.so share sha be76661b, 10135104 bytes,
+mtime 15:19:23, after that graph window exited. _C.c12.so is still
+b3c15e14. The 15:34 retry pins _C.c12.so and has started; its
+window file says MEM_AVAILABLE_KB 117993036, not 117593984. Cached
+diff empty. Fork still 0a6170da8c.
+VERDICT: Pass 14 recorded. The 15:10 eager window is coherence,
+not an ITL. The 15:13 graph window is closed and failed. F136's
+dangling map is fixed in the current EP library, and that library
+has not served. The 9.34 ms figure is the 35B serve, not
+Flash-Next. The staged-row window is still open. Open items remain
+C13 bench exit 1, G4 r9 greedy, D2H under 7.5, fair bulk rel, the
+PLE CPU test stdout, and the 46.4 percent hit rate.
+
+## 2026-10-20 15:45 O3 -- short card-0 window (microbench only)
+CONFIG: card 0 only, about 3 minutes, standalone microbench (no serve).
+Checked first: C7b's 15:35 window ended at 15:39 (WINDOW_DONE), both locks
+empty. If a C7b/H1d window is announced it goes first; O3 retries later.
+COMMAND: gpu-run --card 0 o3/run_kq.sh
+RESULT/VERDICT: in the next O3 entry.
+
+## 2026-10-20 15:56 O3 -- card-0 gates window (about 6 minutes)
+CONFIG: card 0 only. C7b holds card 1 for the vllm-xpu-kernels FA build
+(15:52); no graph window is announced. If one is, O3 yields after this run.
+COMMAND: gpu-run --card 0 o3/run_gates_b.sh (_C.o3b.so)
+RESULT/VERDICT: in the next O3 entry.
+
+## 2026-10-20 15:54 X3 -- prefill dispatch audit and probe preparation
+
+CONFIG: CPU only. DD inactive. C7b and H1e retain both-card priority.
+Read BRIEF, AGENTS, bottom 300 journal lines, C10/C11/C12/C13/E2 reports.
+COMMAND: inspected gguf/ops_interface.py, prefill wrappers and serve harness.
+Claude --bare -p --model fable-5.1 and --model claude-5.5 consulted in
+parallel; both exit 1 unrecognized_model and Not logged in. No responding
+model ID and no advice received.
+RESULT: GGUF linear always uses gemv; expert T>8 uses singleton-entry
+legacy grouped_gemm. Neither reaches prefill.py. serve_qwen36_gguf.sh
+also drops all B70_PREFILL_* env. C13 is a smoke-only library lacking
+serve decode ops. Existing 3775.74 ms Flash-Next table is a mixed
+measured/projected GEMM budget, not end-to-end prefill.
+VERDICT: add opt-in B70_PREFILL=1 dispatch, measure missing non-GEMM
+pieces on one card and remeasure 35B serve. X3 plans short card-0
+windows (5 minutes each) once CPU quiet lease and priority runs allow;
+no both-card serve requested. No commit. Report reports/1X3_prefill.md.
+
+## 2026-10-20 15:59 X1 -- MTP sidecar and proxy preparation
+
+CONFIG: CPU only. DD inactive. C7b then H1e retain both-card priority.
+Read BRIEF, AGENTS, bottom 300 journal lines, G3, D2, Shisa overlay,
+Strata MtpDrafter and tools/mtp_rt.py. No commit or service changes.
+COMMAND: inspect fork MTP, GGUF mapping/loader and Strata MTP artifacts;
+claude --bare -p --model fable-5.1 and --model claude-5.5.
+RESULT: both consults exit unrecognized_model / Not logged in; no actual
+responding model ID. Strata has separate mtp-q2_0.gguf plus rt dense.bin,
+dense.txt, experts.bin. Default fc uses pooled wide RMS and independent
+stream projection, not GGUF eh_proj collapse. Solo spec4; batch depth2.
+Added isolated mtp_loader.py and dispatch from B70GGUFModelLoader;
+B70_MTP_RT chooses wide fc with packed quant methods. Proxy nextn block
+is loaded only into drafter, rather than silently skipping its weights.
+VERDICT: implementation in progress, no MTP serving or speed claim yet.
+X1 requests card 0 for short proxy graph windows (about 5 minutes each)
+after priority C7b/H1e windows; all GPU work queues with timeout 7200.
+
+
+## 2026-10-20 16:00 X2 -- header budget and opt-in memory probe
+
+CONFIG: CPU only, no changes to shared fork or existing plugins. New
+b70_memory_xpu general plugin is inert unless B70_MEMORY_FIX=1 or
+B70_MEMORY_REPORT=<directory>. C7b, then H1e retain both-card priority.
+COMMAND: python3 vllm/flashnext/memory/gguf_budget.py <ISTA XXS shard1>
+<shared IQ3_S shard2>. Raw x2/headers.json under build/vllm-flashnext.
+Read current linear loader, dequant scratch cache and memory profiler.
+RESULT: exact routed bytes 42912972800, trunk 4115863040, DP+EP
+canonical weights/card 25572349440. Sidecar 138/374 weights/card
+15682250240 / 31346585600. BF16 KV 24576 bytes/token, INT8
+with per-64 FP16 scales 12672; indexer 768 bytes/token additional.
+Full dense GGUF loads retain a second tensor; merged dense layers
+retain unused placeholders. Dense dequant caches distinct type/shape
+buffers. The opt-in plugin aliases these dense weights and reuses
+one ordered-stream dequant buffer, with JSON storage/profile evidence.
+No GPU result yet. Claude fable-5.1 and claude-5.5 consultation calls
+both returned unrecognized_model (404); no responding model ID.
+VERDICT: measuring real savings next. Do not subtract guessed profiler
+headroom or promote FP8 KV without quality evidence. Other serves are
+unaffected unless they explicitly enable the new plugin flags.
+
+## 2026-10-20 15:58 X1 -- short proxy window announcement
+
+CONFIG: card 0 only, expected 3-5 minutes per serve, FULL_DECODE_ONLY.
+Both owners empty at 15:57; C7b's FA side build exited 1 at 15:56:32,
+no new C7b or H1e serve window is recorded. O3 gates ended. X1 yields
+before the next window if a priority pair serve is announced.
+COMMAND: MTP_TOKENS=0 harness/x1_proxy_window.sh, then MTP_TOKENS=2
+only after rechecking owners and journal. Queue timeout 7200.
+RESULT/VERDICT: pending; exact token-ID comparisons prepared (4 x 96),
+identity first hotschmoe-dd, acceptance and C1/C2 latency diagnostics.
+The earlier X1 heading marked 15:59 was written at about 15:55 UTC.
+
+## 2026-10-20 16:02 C7b -- Xe2 paged-decode 16,256,64 side library
+
+CONFIG: logs/c7b-fa-build.sh. One decode policy
+16,256,64,false,false,false and one chunk-prefill line
+256,true,true,false,false,false. VLLM_CUTLASS_SRC_DIR is local
+sycl-tla 87f6850680. CMPLR_ROOT is oneAPI 2026.1. Host ocloc
+26.22.1 and llvm-foreach are on PATH. Card 1 only. The shared
+vllm-xpu-kernels 0.1.15.4 wheel is not modified.
+COMMAND: bash /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7b-fa-build.sh
+RESULT: BUILD_OK 16:00:05 in 59s (objects were already compiled).
+libattn_kernels_xe_2.so is 11944232 bytes with OFFLOAD_DEVICE_CODE
+10813072 bytes. Enabled trait is decode_policy_q16_h256_p64 with
+causal,local,sink all false. _vllm_fa2_C.abi3.so NEEDs only that
+Xe2 library. Private overlay is
+/mnt/vm_8tb/b70/build/vllm-flashnext/c7b-fa-overlay. Shared wheel
+mtime is still 2026-10-19 22:31. Earlier attempts failed on
+setuptools-scm, /bin/icpx, missing git, and ocloc (logs
+c7b-fa-build-scm.log, c7b-fa-build-compiler.log,
+c7b-fa-build-git.log, c7b-fa-build-ocloc.log).
+VERDICT: the missing decode specialization is linked. Next is
+the both-card graph window logs/c7b-fn-graph-window.sh as soon
+as both gpu.lock owner files are empty. Current card-0 work
+should yield after its current command. C7b will not kill it.
+
+## 2026-10-20 16:01 X1 -- sidecar CPU audit passed, proxy baseline retry
+
+CONFIG: actual Flash-Next MTP, CPU/meta construction and payload placement.
+Card-0 proxy baseline at 15:58 used _C.o3.so be76661b; no-MTP graphs.
+COMMAND: cpu-run uv ... harness/x1_check_sidecar.py; MTP_TOKENS=0
+harness/x1_proxy_window.sh. Logs under build/vllm-flashnext/x1.
+RESULT: sidecar-cpu-r2 exit 0, FLASHNEXT_PAYLOAD_AUDIT_OK and
+WIDE_FC_REFERENCE_OK [2,4,2560]. Additional actual _fc_stage compare
+prepared. Proxy baseline reached HTTP ready around 16:00:24, but an
+X1 edit to the active shell script moved its input offset and caused
+line 42 leanup: command not found. Clean server teardown, no benchmark.
+VERDICT: baseline evidence invalidated. Fixed harness is frozen during
+runs. Owners/journal rechecked: X3 card 0; no new priority pair serve
+announced. Retry queued, timeout 7200; about 3 minutes once acquired.
+C7b FA side build now succeeded; X1 will yield the following window.
+
+## 2026-10-20 16:03 X3 -- additive build and queued one-card budget probe
+
+CONFIG: card 0 only, next window expected 3-5 minutes. No both-card use.
+C7b/H1e retain priority. X1 proxy and O3 health currently take card 0.
+COMMAND: x3/run_ops.sh --part gdn,attention,hc,dense,reduce,ple,expert
+--out ops-basic3.json, detached with pid/log in build/vllm-flashnext/x3.
+RESULT: additive _C.x3wide.so build exit 0 (36s), 898512 bytes.
+CPU hash correctness X3_HASH_OK across 100 ragged trials. Initial probes
+stopped on missing explicit _xpu_C import, then missing standalone vLLM
+config for RMSNormGated. Neither was a kernel crash. Before the second
+stop, 35B T=12288 GDN core measured 7.47 ms median with a declining warm
+sequence; rerun adds warmups and measures both real head geometries.
+Python default dispatch changes are opt-in B70_PREFILL=1. X1 explicitly
+uses 0. Decode is unchanged. Padded scratch now reuses geometry keys.
+VERDICT: no speed claim from the partial probe; complete stage measurements
+and matched 35B A/B next. No reset, no commit, DD stays stopped.
+
+
+## 2026-10-20 16:02 X2 -- allocator split policy candidate, priority wait
+
+CONFIG: CPU only; new opt-in plugin installed editable, inert by default.
+COMMAND: memory plugin test_cpu.py in runtime image with no /dev/dri;
+full register import with no devices; inspect GPUWorker split guard.
+RESULT: CPU_ALIAS_FORWARD_OK STREAM_ARENA_OWNERSHIP_OK; REGISTER_OK.
+Upstream _scoped_allocator_max_split returns immediately on XPU. Added
+an opt-in device-neutral setter wrapper preserving/restoring settings,
+to test whether large pinned allocator segments explain profiler loss.
+The first header pass overcounted dense duplicates by including HC/PLE
+plain _WeightContainer parameters; corrected script estimates 186040320
+bytes of linear duplicates, not 1.42 GiB. No measured GPU savings yet.
+The earlier X2 heading marked 16:00 was written about 15:54 UTC.
+VERDICT: X2 controller waits outside leases for C7b then H1e. After
+their windows, requests BOTH cards about 12 minutes total for matched
+eager current/aliases/capped-FP8 memory probes, no latency benchmark.
+No core fork edits, no existing plugin changes, no commit/service action.
+
+## 2026-10-20 16:04 X3 -- budget probe moves to free card 1
+
+CONFIG: card 1 only, expected 3-5 minutes. Device pin supplied by
+xpu-run --card 1 (ZE_AFFINITY_MASK=1). Card 0 held by O3's 35B serve;
+card 1 owner empty. No new C7b/H1e pair window recorded. Cancelled X3's
+queued card-0 ops3 before it acquired a lease. C7b/H1e still go first.
+COMMAND: X3_CARD=1 x3/run_ops.sh --part
+gdn,attention,hc,dense,reduce,ple,expert --out ops-card1.json.
+RESULT/VERDICT: pending. This avoids waiting behind serial proxy serves.
+
+## 2026-10-20 16:07 X3 -- first missing-op measurements, real-shape budget
+
+CONFIG: actual card-1 window was 16:03:16-16:04:32 (the prior heading's
+16:04 was approximate). T=12288, one-card event median, quiet CPU lease.
+No kernel crash. Ops-rest follow-up now on card 1, expected about 2 minutes.
+COMMAND: x3/ops-card1.log and ops-card1.json; x3/run_ops.sh.
+RESULT: Flash-Next GDN conv/chunk 6.699 ms per layer; full attention
+23.875 ms. HC mix 12.187 ms, combine 2.679 ms. PLE scalar hash 903.32 ms,
+gather including hash 938.01 ms, whole PLE 990.09 ms. Hash replacement
+first tripped on GPU-resident metadata; fixed by tolist(), same convention
+as original. All Python exceptions, not kernel failures; post-health
+HEALTHY. The initial default standalone VllmConfig chose native norm;
+follow-up explicitly uses mode 0 and logs forward_xpu, matching serves:
+35B GDN norm 0.709 ms versus 6.676 ms native. Do not use native norm in
+the mode-0 budget.
+VERDICT: PLE host hash and the 97 HC passes consume material TTFT;
+attention/GDN are now measured. X2 integration note: C13 full-E expert
+scratch alone is 4.6875 GiB, half-E 2.34375 GiB, plus activation/padding.
+The old xpad key retained every mmax across layers; X3 changed it to
+reuse geometry keys. Real-router skew will be measured before a full
+prefill budget is trusted. No commit, no DD, no reset.
+
+## 2026-10-20 16:08 X3 -- completed op probe and 35B A/B window requested
+
+CONFIG: next window CARD 1 ONLY, expected about 4 minutes for one 35B
+load plus matched old/new prefill. Port 18133, vllm-fn-x3-35b. Card 0 O3
+serve, card 1 just completed X3 probe. No later C7b/H1e serve announcement.
+The priority pair serves remain first. No DD service actions.
+COMMAND: x3/serve_window.sh, long lease timeout, watchdog abort under
+8 GiB MemAvailable; FULL_DECODE_ONLY, max batched 12288, SYCL GDN,
+FA, prefix cache disabled. New prefill opt-in; runtime flag file supplies
+matched old/new scheduled requests in the same loaded serve.
+RESULT: op-probe exit 0, post-health underway. At T=12288, Flash-Next
+GDN conv/chunk 6.725 ms and fused norm 0.989 ms; attention 24.155 ms.
+PLE whole 983.97 -> 79.47 ms with numpy hash (hash 902.72 -> 2.91).
+Expert layer 56.89 -> 47.08 ms for real blk.36 weights with fused
+routing reduction; other measured types similar. Reduction max_abs
+1.91e-6 vs original and allclose 1e-5 passes. Raw ops-rest.json/log.
+VERDICT: the per-layer budget now has measurements for the formerly
+missing pieces. PLE and reduction fixes save about 1.38 s per 12288-token
+full-model sum; this is not yet a full-model measured throughput claim.
+
+## 2026-10-20 16:07 X1 -- matched no-MTP proxy baseline measured
+
+CONFIG: card 0, official Qwen3.6 HF config + UD-IQ3_XXS GGUF, BF16,
+TP=1, FULL_DECODE_ONLY sizes 1,2,3,4,6,8, FLASH_ATTN, prefix cache off,
+max_len 2048, max_seqs 2, _C.o3.so be76661b. Stable first hotschmoe-dd,
+research alias qwen3.6-35b-a3b-ud-iq3-xxs-mtp0 registered in eval config.
+COMMAND: MTP_TOKENS=0 harness/x1_proxy_window.sh (frozen harness retry).
+RESULT: identity, coherence pass; 4 x 96 greedy token IDs saved;
+GREEDY_RC=0, BENCH_RC=0. C1 p50 9.27 ms, 108.24 tok/s. C2 p50
+12.48/12.38 ms, 82.34/74.93 tok/s (one slow prefill transition).
+No MTP. Server cleanly down; post-health queued behind O3's post-health.
+Full sidecar CPU r3 also passes actual _fc_stage against independent
+pooled RMS plus Q8 dequant matmul, exit 0 in 25 s.
+VERDICT: valid proxy baseline, not Flash-Next performance. X1 holds no
+new serving window while C7b then H1e have pair priority. Next X1 window
+is card 0, about 3 minutes, MTP=2 exact-token/acceptance/latency gate.
+
+## 2026-10-20 16:10 O3 -- stage 2: K-quants/IQ4_XS on DP4A; bandwidth tries
+CONFIG: plugin iq_dot.hpp only (decode.hpp/host dequant untouched). Q2_K,
+Q3_K, Q4_K, Q5_K, Q6_K, IQ4_XS go through b70_prep as signed-byte words +
+integer scales/mins with aligned-dword loads (ggml vec_dot_*_q8_1 form);
+-DB70_KQ_DP4A=0 restores decode32 + fma. sched_moe R-row dot is generic
+(-DB70_SCHED_RPL, default 2, same code and timing as stage 1). Card 0
+windows only while no C7b/H1 window was announced (15:45, 15:56, 16:03).
+COMMAND: o3/run_kq.sh (synthetic K=2048 I=512 top-10+shared dumps,
+o3/gen_kq.py), o3/run_gates_b.sh, o3/serve_35b.sh (TAG o3b-graph).
+RESULT: microbench graph us T=1 old->new: Q2_K 485.5->49.3, Q3_K
+268.2->79.4, Q4_K 96.8->59.2, Q5_K 119.4->78.7, Q6_K 581.9->88.4, IQ4_XS
+110.5->81.8 (T=4 1179->126, 685->196, 252->149, 302->193, 1397->213,
+280->199); new vs old cos 1.000000. Gates on _C.o3b.so: gpu_check,
+moe_layer_bench sched 1/0, c12_types 12, graph_probe all failures=0;
+compare_cpu 14/14; HEALTHY before/after. c9_fair IQ3_S/Q2_0
+68.4/99.8/141.4/176.8 us (unchanged). 35B graph serve: identity/coherence
+OK, C1 ITL p50 9.30 ms (stage 1 9.34), C2 12.53 ms/stream (12.6); only 6
+of 123 routed tensors are K-quant/IQ4_XS, shared Q6_K runs in the runner.
+Bandwidth push: RPL 4 70.8/115.1/158.2/213.2 vs 69.9/103.7/146.5/190.3,
+unroll 2 and 16 lanes also slower; gate/up stays ~350 GB/s (= Strata night).
+Installed _C.so = _C.graph.so = _C.o3b.so sha256 e9e5282d...91befa1
+(10221368 bytes); _C.o3.so (be76661b) kept for X1's pinned window.
+VERDICT: K-quant decode 1.4x-11x faster per layer, bit-close; 35B C1 flat
+because those types are rare there. Cheap bandwidth knobs exhausted; a
+cooperative superblock block-load is the next (1-2 day) item. Report
+updated: reports/2O3_moe_decode.md.

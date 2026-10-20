@@ -21,7 +21,9 @@ REPO=$(cd "$HERE/../../.." && pwd)
 PORT="${PORT:-18116}"
 MAX_LEN="${MAX_LEN:-2048}"
 MAX_SEQS="${MAX_SEQS:-2}"
-GPU_MEM="${GPU_MEM:-0.90}"
+# 0.90 left no KV on this model (C7b 15:02). 0.98 is the coherent recipe.
+GPU_MEM="${GPU_MEM:-0.98}"
+MAX_BATCHED="${MAX_BATCHED:-}"
 GRAPH="${GRAPH:-0}"
 GRAPH_MODE="${GRAPH_MODE:-FULL_DECODE_ONLY}"
 CAPTURE_SIZES="${CAPTURE_SIZES:-1,2,3,4,8}"
@@ -34,6 +36,16 @@ GGUF_PY=/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/gguf-py
 PLUGIN="$REPO/vllm/flashnext/plugins/b70_gguf_xpu"
 EP_PLUGIN="$REPO/vllm/flashnext/plugins/b70_ep_xpu"
 QSA_PLUGIN="$REPO/vllm/flashnext/plugins/b70_qsa_xpu"
+# C7b's side-built Xe2 paged-decode library. The shared wheel stays put.
+# Empty B70_FA_OVERLAY skips the prefix.
+FA_OVERLAY="${B70_FA_OVERLAY:-/mnt/vm_8tb/b70/build/vllm-flashnext/c7b-fa-overlay}"
+PYPATH="${FORK}:${GGUF_PY}:${PLUGIN}:${EP_PLUGIN}:${QSA_PLUGIN}"
+if [[ -n "$FA_OVERLAY" && -f "$FA_OVERLAY/vllm_xpu_kernels/libattn_kernels_xe_2.so" ]]; then
+  PYPATH="${FA_OVERLAY}:${PYPATH}"
+  echo "serve_flashnext_ep: FA overlay $FA_OVERLAY"
+else
+  echo "serve_flashnext_ep: no FA overlay at ${FA_OVERLAY:-unset}" >&2
+fi
 HF=/mnt/vm_8tb/b70/build/backend-decision/hf-flashnext
 WEIGHTS=/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf
 ALIAS=qwen3.8-flash-next-iq3-xxs
@@ -98,6 +110,9 @@ ARGS=(
   --quantization b70_gguf
   --trust-remote-code
 )
+if [[ -n "$MAX_BATCHED" ]]; then
+  ARGS+=(--max-num-batched-tokens "$MAX_BATCHED")
+fi
 if [[ "$GRAPH" == "0" ]]; then
   ARGS+=(--enforce-eager)
 else
@@ -117,7 +132,7 @@ if [[ -n "$ATTN" ]]; then
 fi
 
 QSA="${B70_QSA:-1}"
-echo "serve_flashnext_ep: port=$PORT max_len=$MAX_LEN seqs=$MAX_SEQS graph=$GRAPH mode=$GRAPH_MODE attn=${ATTN:-default} qsa=$QSA name=$NAME mem=$MEMORY"
+echo "serve_flashnext_ep: port=$PORT max_len=$MAX_LEN seqs=$MAX_SEQS batched=${MAX_BATCHED:-default} gpu_mem=$GPU_MEM graph=$GRAPH mode=$GRAPH_MODE attn=${ATTN:-default} qsa=$QSA name=$NAME mem=$MEMORY"
 echo "serve_flashnext_ep: ${ARGS[*]}"
 
 # Foreground xpu-run. The watchdog is a sibling, not a child of exec.
@@ -160,7 +175,7 @@ fi
   --env "B70_EP_MEM_MIN_KB=${B70_EP_MEM_MIN_KB:-$HARD_KB}" \
   --env "B70_EP_MAX_T=${B70_EP_MAX_T:-8192}" \
   --env "B70_XPU_CG_RECLAIM=${B70_XPU_CG_RECLAIM:-500}" \
-  --env "PYTHONPATH=${FORK}:${GGUF_PY}:${PLUGIN}:${EP_PLUGIN}:${QSA_PLUGIN}" \
+  --env "PYTHONPATH=${PYPATH}" \
   --env PYTHONUNBUFFERED=1 \
   --env HF_HUB_OFFLINE=1 \
   --env TRANSFORMERS_OFFLINE=1 \

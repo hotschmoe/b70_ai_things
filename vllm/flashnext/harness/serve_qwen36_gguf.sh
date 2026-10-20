@@ -42,7 +42,7 @@ ARGS=(
   vllm serve "$HF"
   --host 0.0.0.0
   --port "$PORT"
-  --served-model-name hotschmoe-dev "$ALIAS"
+  --served-model-name "${SERVED_NAME:-hotschmoe-dev}" "$ALIAS"
   --tensor-parallel-size 1
   --dtype bfloat16
   --max-model-len "$MAX_LEN"
@@ -73,6 +73,12 @@ fi
 if [[ -n "${GDN_BACKEND:-}" ]]; then
   ARGS+=(--gdn-prefill-backend "$GDN_BACKEND")
 fi
+if [[ -n "${MAX_BATCHED:-}" ]]; then
+  ARGS+=(--max-num-batched-tokens "$MAX_BATCHED")
+fi
+if [[ "${PREFIX_CACHE:-1}" == "0" ]]; then
+  ARGS+=(--no-enable-prefix-caching)
+fi
 
 echo "serve_qwen36_gguf: card=$CARD port=$PORT max_len=$MAX_LEN seqs=$MAX_SEQS graph=$GRAPH mode=$GRAPH_MODE attn=${ATTN:-default} name=$NAME"
 echo "serve_qwen36_gguf: ${ARGS[*]}"
@@ -82,6 +88,9 @@ for key in B70_XPU_CG_RECLAIM B70_GGUF_SO B70_REPLAY_LOG B70_STEP_LOG B70_COLL_L
   if [[ -n "${!key:-}" ]]; then
     ENV_ARGS+=(--env "${key}=${!key}")
   fi
+done
+for key in ${!B70_PREFILL@}; do
+  ENV_ARGS+=(--env "${key}=${!key}")
 done
 
 exec "$HERE/xpu-run.sh" --card "$CARD" --name "$NAME" --port "$PORT" \

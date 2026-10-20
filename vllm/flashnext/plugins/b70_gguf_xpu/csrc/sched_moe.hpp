@@ -24,7 +24,8 @@
 // Fast path: T<=8, topk<=16, I and K in (0, 8192], multiples of 32, and every
 // live type is Q8_0, Q2_K, Q3_K, Q4_K, Q5_K, Q6_K, IQ2_XXS/XS/S, IQ3_XXS/S,
 // IQ4_NL, IQ4_XS, or Q2_0. Otherwise the old fused kernels run.
-// DP4A types use b70_prep. Q4_K/Q5_K/Q6_K/IQ4_XS/Q2_K/Q3_K use b70_decode32.
+// All 14 types use b70_prep + DP4A (O3 stage 2 added the K-quants and IQ4_XS;
+// -DB70_KQ_DP4A=0 sends those back to b70_decode32 + fma).
 // The plan is a device kernel so expert ids can change under a captured graph.
 // The grid is the host ceiling (T*topk [+ shared]); extra groups exit.
 // Scratch is reserved at that ceiling before capture.
@@ -72,7 +73,12 @@ constexpr int kSchedWg = 256;
 constexpr int kSchedLn = 8;
 constexpr int kSchedSg = 16;
 constexpr int kSchedRb = kSchedWg / kSchedLn; // 32
-constexpr int kSchedRows = kSchedRb * 2;      // 64 virtual rows per work-group
+// Rows per 8-lane rib (Strata RPL). -DB70_SCHED_RPL=4 for the bandwidth A/B.
+#ifndef B70_SCHED_RPL
+#define B70_SCHED_RPL 2
+#endif
+constexpr int kSchedRpl = B70_SCHED_RPL;
+constexpr int kSchedRows = kSchedRb * kSchedRpl; // virtual rows per work-group
 
 struct B70SchedPlan {
     int ng;
@@ -215,94 +221,54 @@ inline void b70_q8s_i8(const B70Q8S* a, int u[8]) {
     for (int i = 0; i < 8; ++i) u[i] = p[i];
 }
 
-// One k-pass. Both rows are always computed (a dead row repeats the live
-// pointer and is not stored). Activation words are loaded once per block.
-// TYPE is DP4A. EC is the only chunk width in this kernel.
-template <int TYPE, int EC>
-inline void b70_sched_pair(sycl::sub_group sg, const uint8_t* row0, const uint8_t* row1, const B70Q8S* const xs[EC],
-                           int nb, int sub, float a0[EC], float a1[EC]) {
-    float s0[EC];
-    float s1[EC];
+// One k-pass over R rows (Strata rows_dot_multi_iq, RPL=R). Dead rows repeat a
+// live pointer and are not stored. Activation words load once per block and
+// are reused across the R rows and EC entries.
+template <int TYPE, int EC, int R>
+inline void b70_sched_rows(sycl::sub_group sg, const uint8_t* const (&rows)[R], const B70Q8S* const (&xs)[EC], int nb,
+                           int sub, float (&out)[R][EC]) {
+    float s[R][EC];
 #pragma unroll
-    for (int e = 0; e < EC; ++e) {
-        s0[e] = 0.f;
-        s1[e] = 0.f;
-    }
+    for (int r = 0; r < R; ++r)
+#pragma unroll
+        for (int e = 0; e < EC; ++e) s[r][e] = 0.f;
     for (int blk = sub; blk < nb; blk += kSchedLn) {
-        int u[EC][8];
-        float d[EC];
+        if constexpr (b70_dp4a_type<TYPE>()) {
+            int u[EC][8];
+            float d[EC];
 #pragma unroll
-        for (int e = 0; e < EC; ++e) {
-            const B70Q8S* a = xs[e] + blk;
-            d[e] = a->d;
-            b70_q8s_i8(a, u[e]);
-        }
-        B70Part m0;
-        B70Part m1;
-        b70_prep<TYPE>(row0, blk, m0);
-        b70_prep<TYPE>(row1, blk, m1);
-#pragma unroll
-        for (int e = 0; e < EC; ++e) {
-            s0[e] += b70_apply_u<TYPE>(m0, u[e], d[e]);
-            s1[e] += b70_apply_u<TYPE>(m1, u[e], d[e]);
-        }
-    }
-#pragma unroll
-    for (int e = 0; e < EC; ++e) {
-        a0[e] = b70_sched_lanes(sg, s0[e]);
-        a1[e] = b70_sched_lanes(sg, s1[e]);
-    }
-}
-
-// Float dot against the 36-byte Q8 block. Same arithmetic as b70_dot32_f
-// (decode 32 weights, fma with the int8 activation, scale by a->d) without
-// the 48-byte B70Q8 struct. TYPE is not a DP4A type.
-template <int TYPE, int EC>
-inline void b70_sched_pair_f(sycl::sub_group sg, const uint8_t* row0, const uint8_t* row1, const B70Q8S* const xs[EC],
-                             int nb, int sub, float a0[EC], float a1[EC]) {
-    float s0[EC];
-    float s1[EC];
-#pragma unroll
-    for (int e = 0; e < EC; ++e) {
-        s0[e] = 0.f;
-        s1[e] = 0.f;
-    }
-    for (int blk = sub; blk < nb; blk += kSchedLn) {
-        float w0[32];
-        float w1[32];
-        b70_decode32<TYPE>(row0, blk, w0);
-        b70_decode32<TYPE>(row1, blk, w1);
-#pragma unroll
-        for (int e = 0; e < EC; ++e) {
-            const B70Q8S* a = xs[e] + blk;
-            const float ad = a->d;
-            const int8_t* qs = a->qs;
-            float d0 = 0.f;
-            float d1 = 0.f;
-#pragma unroll
-            for (int t = 0; t < 32; ++t) {
-                const float q = (float)qs[t];
-                d0 = sycl::fma(w0[t], q, d0);
-                d1 = sycl::fma(w1[t], q, d1);
+            for (int e = 0; e < EC; ++e) {
+                const B70Q8S* a = xs[e] + blk;
+                d[e] = a->d;
+                b70_q8s_i8(a, u[e]);
             }
-            s0[e] += d0 * ad;
-            s1[e] += d1 * ad;
+#pragma unroll
+            for (int r = 0; r < R; ++r) {
+                B70Part m;
+                b70_prep<TYPE>(rows[r], blk, m);
+#pragma unroll
+                for (int e = 0; e < EC; ++e) s[r][e] += b70_apply_u<TYPE>(m, u[e], d[e]);
+            }
+        } else {
+#pragma unroll
+            for (int r = 0; r < R; ++r) {
+                float w[32];
+                b70_decode32<TYPE>(rows[r], blk, w);
+#pragma unroll
+                for (int e = 0; e < EC; ++e) {
+                    const B70Q8S* a = xs[e] + blk;
+                    float acc = 0.f;
+#pragma unroll
+                    for (int t = 0; t < 32; ++t) acc = sycl::fma(w[t], (float)a->qs[t], acc);
+                    s[r][e] += acc * a->d;
+                }
+            }
         }
     }
 #pragma unroll
-    for (int e = 0; e < EC; ++e) {
-        a0[e] = b70_sched_lanes(sg, s0[e]);
-        a1[e] = b70_sched_lanes(sg, s1[e]);
-    }
-}
-
-template <int TYPE, int EC>
-inline void b70_sched_dot_t(sycl::sub_group sg, const uint8_t* row0, const uint8_t* row1, const B70Q8S* const xs[EC],
-                            int nb, int sub, float a0[EC], float a1[EC]) {
-    if constexpr (b70_dp4a_type<TYPE>())
-        b70_sched_pair<TYPE, EC>(sg, row0, row1, xs, nb, sub, a0, a1);
-    else
-        b70_sched_pair_f<TYPE, EC>(sg, row0, row1, xs, nb, sub, a0, a1);
+    for (int r = 0; r < R; ++r)
+#pragma unroll
+        for (int e = 0; e < EC; ++e) out[r][e] = b70_sched_lanes(sg, s[r][e]);
 }
 
 class b70_sched_plan_k;
@@ -660,10 +626,10 @@ inline const uint8_t* b70_sched_gu_ptr(int v, int I, int expert, int grb, int ur
 // One chunk width. Called from the single gate/up kernel for EC 4, then 2, then 1.
 // The slices are disjoint. nchunk is work-group uniform (it depends only on the group).
 template <int TYPE, int EC>
-inline void b70_sched_gu_chunks(sycl::sub_group sg, const B70SchedPlan* plan, const uint8_t* q8x, const uint8_t* row0,
-                                const uint8_t* row1, float* gout, float* uout, int base, int nchunk, int nb, int sub,
-                                int I, bool l0, bool l1, bool up0, bool up1, int r0, int r1) {
-    if (nchunk <= 0) return;
+inline void b70_sched_gu_chunks(sycl::sub_group sg, const B70SchedPlan* plan, const uint8_t* q8x,
+                                const uint8_t* const (&rows)[kSchedRpl], float* gout, float* uout, int base, int nchunk,
+                                int nb, int sub, int I, const bool (&live)[kSchedRpl], const bool (&isup)[kSchedRpl],
+                                const int (&rr)[kSchedRpl]) {
     for (int c = 0; c < nchunk; ++c) {
         const int e = base + c * EC;
         const B70Q8S* xs[EC];
@@ -672,20 +638,17 @@ inline void b70_sched_gu_chunks(sycl::sub_group sg, const B70SchedPlan* plan, co
             const int t = plan->tok[e + j];
             xs[j] = b70_q8s_cptr(q8x, (size_t)t * (size_t)nb);
         }
-        float a0[EC];
-        float a1[EC];
-        b70_sched_dot_t<TYPE, EC>(sg, row0, row1, xs, nb, sub, a0, a1);
+        float o[kSchedRpl][EC];
+        b70_sched_rows<TYPE, EC, kSchedRpl>(sg, rows, xs, nb, sub, o);
         if (sub == 0) {
 #pragma unroll
             for (int j = 0; j < EC; ++j) {
                 const size_t slot = (size_t)(e + j) * (size_t)I;
-                if (l0) {
-                    float* d = up0 ? uout : gout;
-                    d[slot + (size_t)r0] = a0[j];
-                }
-                if (l1) {
-                    float* d = up1 ? uout : gout;
-                    d[slot + (size_t)r1] = a1[j];
+#pragma unroll
+                for (int i = 0; i < kSchedRpl; ++i) {
+                    if (!live[i]) continue;
+                    float* d = isup[i] ? uout : gout;
+                    d[slot + (size_t)rr[i]] = o[i][j];
                 }
             }
         }
@@ -693,12 +656,12 @@ inline void b70_sched_gu_chunks(sycl::sub_group sg, const B70SchedPlan* plan, co
 }
 
 // 3D grid, no use_root_sync. EC 4/2/1 are constexpr passes inside this kernel.
-// That is the binary sha b3c15e14. Separate EC kernels were slower.
+// Each 8-lane rib takes kSchedRpl virtual rows kSchedRb apart (Strata RPL).
 template <int TYPE>
 inline sycl::event b70_sched_gu_one(sycl::queue& q, const B70SchedPlan* plan, const uint8_t* q8x, const uint8_t* gate,
                                     const uint8_t* up, const uint8_t* sgate, const uint8_t* sup, float* gout, float* uout,
                                     int host_groups, int I, int K, const sycl::event* deps, int ndeps) {
-    const int gx = (2 * I) / kSchedRows;
+    const int gx = (2 * I + kSchedRows - 1) / kSchedRows;
     if (gx <= 0 || host_groups <= 0) return sycl::event();
     const int nb = K / 32;
     return q.submit([&](sycl::handler& h) {
@@ -717,45 +680,46 @@ inline sycl::event b70_sched_gu_one(sycl::queue& q, const B70SchedPlan* plan, co
                 const int rib = lid / kSchedLn;
                 const int sub = lid - rib * kSchedLn;
                 auto sg = it.get_sub_group();
-                const int va = row_wg * kSchedRows + rib;
-                const int vb = va + kSchedRb;
-                const bool in0 = va < 2 * I;
-                const bool in1 = vb < 2 * I;
-                const bool up0 = in0 && va >= I;
-                const bool up1 = in1 && vb >= I;
                 const int gtype = plan->gtype[g];
                 const int utype = plan->utype[g];
-                const int ty0 = up0 ? utype : gtype;
-                const int ty1 = up1 ? utype : gtype;
-                const bool l0 = in0 && ty0 == TYPE;
-                const bool l1 = in1 && ty1 == TYPE;
-                if (!l0 && !l1) return;
                 const int expert = plan->expert[g];
                 const int grb = plan->grb[g];
                 const int urb = plan->urb[g];
-                const int va_s = l0 ? va : vb;
-                const int vb_s = l1 ? vb : va;
-                const uint8_t* row0 = b70_sched_gu_ptr(va_s, I, expert, grb, urb, gate, up, sgate, sup);
-                const uint8_t* row1 = b70_sched_gu_ptr(vb_s, I, expert, grb, urb, gate, up, sgate, sup);
-                const int r0 = up0 ? va - I : va;
-                const int r1 = up1 ? vb - I : vb;
+                int vv[kSchedRpl];
+                bool live[kSchedRpl];
+                bool isup[kSchedRpl];
+                int rr[kSchedRpl];
+                int first = -1;
+#pragma unroll
+                for (int i = 0; i < kSchedRpl; ++i) {
+                    const int v = row_wg * kSchedRows + rib + i * kSchedRb;
+                    const bool in = v < 2 * I;
+                    isup[i] = in && v >= I;
+                    const int ty = isup[i] ? utype : gtype;
+                    live[i] = in && ty == TYPE;
+                    rr[i] = isup[i] ? v - I : v;
+                    vv[i] = v;
+                    if (live[i] && first < 0) first = v;
+                }
+                if (first < 0) return;
+                const uint8_t* rows[kSchedRpl];
+#pragma unroll
+                for (int i = 0; i < kSchedRpl; ++i)
+                    rows[i] = b70_sched_gu_ptr(live[i] ? vv[i] : first, I, expert, grb, urb, gate, up, sgate, sup);
                 const int n4 = span / 4;
                 const int n2 = (span % 4) / 2;
                 const int n1 = span % 2;
                 int e = e0;
                 if (n4 > 0) {
-                    b70_sched_gu_chunks<TYPE, 4>(sg, plan, q8x, row0, row1, gout, uout, e, n4, nb, sub, I, l0, l1, up0,
-                                                 up1, r0, r1);
+                    b70_sched_gu_chunks<TYPE, 4>(sg, plan, q8x, rows, gout, uout, e, n4, nb, sub, I, live, isup, rr);
                     e += n4 * 4;
                 }
                 if (n2 > 0) {
-                    b70_sched_gu_chunks<TYPE, 2>(sg, plan, q8x, row0, row1, gout, uout, e, n2, nb, sub, I, l0, l1, up0,
-                                                 up1, r0, r1);
+                    b70_sched_gu_chunks<TYPE, 2>(sg, plan, q8x, rows, gout, uout, e, n2, nb, sub, I, live, isup, rr);
                     e += n2 * 2;
                 }
                 if (n1 > 0) {
-                    b70_sched_gu_chunks<TYPE, 1>(sg, plan, q8x, row0, row1, gout, uout, e, n1, nb, sub, I, l0, l1, up0,
-                                                 up1, r0, r1);
+                    b70_sched_gu_chunks<TYPE, 1>(sg, plan, q8x, rows, gout, uout, e, n1, nb, sub, I, live, isup, rr);
                 }
             });
     });
@@ -804,24 +768,22 @@ inline sycl::event b70_sched_silu(sycl::queue& q, const B70SchedPlan* plan, cons
 }
 
 template <int TYPE, int EC>
-inline void b70_sched_down_chunks(sycl::sub_group sg, const uint8_t* q8h, const uint8_t* row0, const uint8_t* row1,
-                                  float* partial, int base, int nchunk, int nb, int sub, int K, bool l0, bool l1,
-                                  int ra, int rb) {
-    if (nchunk <= 0) return;
+inline void b70_sched_down_chunks(sycl::sub_group sg, const uint8_t* q8h, const uint8_t* const (&rows)[kSchedRpl],
+                                  float* partial, int base, int nchunk, int nb, int sub, int K,
+                                  const bool (&live)[kSchedRpl], const int (&rr)[kSchedRpl]) {
     for (int c = 0; c < nchunk; ++c) {
         const int e = base + c * EC;
         const B70Q8S* xs[EC];
 #pragma unroll
         for (int j = 0; j < EC; ++j) xs[j] = b70_q8s_cptr(q8h, (size_t)(e + j) * (size_t)nb);
-        float a0[EC];
-        float a1[EC];
-        b70_sched_dot_t<TYPE, EC>(sg, row0, row1, xs, nb, sub, a0, a1);
+        float o[kSchedRpl][EC];
+        b70_sched_rows<TYPE, EC, kSchedRpl>(sg, rows, xs, nb, sub, o);
         if (sub == 0) {
 #pragma unroll
-            for (int j = 0; j < EC; ++j) {
-                if (l0) partial[(size_t)(e + j) * (size_t)K + ra] = a0[j];
-                if (l1) partial[(size_t)(e + j) * (size_t)K + rb] = a1[j];
-            }
+            for (int j = 0; j < EC; ++j)
+#pragma unroll
+                for (int i = 0; i < kSchedRpl; ++i)
+                    if (live[i]) partial[(size_t)(e + j) * (size_t)K + rr[i]] = o[i][j];
         }
     }
 }
@@ -851,34 +813,37 @@ inline sycl::event b70_sched_down_one(sycl::queue& q, const B70SchedPlan* plan, 
                 const int rib = lid / kSchedLn;
                 const int sub = lid - rib * kSchedLn;
                 auto sg = it.get_sub_group();
-                const int ra = row_wg * kSchedRows + rib;
-                const int rb = ra + kSchedRb;
-                const bool l0 = ra < K;
-                const bool l1 = rb < K;
-                if (!l0 && !l1) return;
+                const int r0 = row_wg * kSchedRows + rib;
+                if (r0 >= K) return;
                 const int expert = plan->expert[g];
                 const bool sh = expert < 0;
                 const uint8_t* basep = sh ? sdown : down;
                 const int ex = sh ? 0 : expert;
                 const int drb = plan->drb[g];
-                const int r0 = l0 ? ra : rb;
-                const int r1 = l1 ? rb : ra;
-                const uint8_t* row0 = basep + ((size_t)ex * (size_t)K + (size_t)r0) * (size_t)drb;
-                const uint8_t* row1 = basep + ((size_t)ex * (size_t)K + (size_t)r1) * (size_t)drb;
+                bool live[kSchedRpl];
+                int rr[kSchedRpl];
+                const uint8_t* rows[kSchedRpl];
+#pragma unroll
+                for (int i = 0; i < kSchedRpl; ++i) {
+                    const int r = r0 + i * kSchedRb;
+                    live[i] = r < K;
+                    rr[i] = live[i] ? r : r0;
+                    rows[i] = basep + ((size_t)ex * (size_t)K + (size_t)rr[i]) * (size_t)drb;
+                }
                 const int n4 = span / 4;
                 const int n2 = (span % 4) / 2;
                 const int n1 = span % 2;
                 int e = e0;
                 if (n4 > 0) {
-                    b70_sched_down_chunks<TYPE, 4>(sg, q8h, row0, row1, partial, e, n4, nb, sub, K, l0, l1, ra, rb);
+                    b70_sched_down_chunks<TYPE, 4>(sg, q8h, rows, partial, e, n4, nb, sub, K, live, rr);
                     e += n4 * 4;
                 }
                 if (n2 > 0) {
-                    b70_sched_down_chunks<TYPE, 2>(sg, q8h, row0, row1, partial, e, n2, nb, sub, K, l0, l1, ra, rb);
+                    b70_sched_down_chunks<TYPE, 2>(sg, q8h, rows, partial, e, n2, nb, sub, K, live, rr);
                     e += n2 * 2;
                 }
                 if (n1 > 0) {
-                    b70_sched_down_chunks<TYPE, 1>(sg, q8h, row0, row1, partial, e, n1, nb, sub, K, l0, l1, ra, rb);
+                    b70_sched_down_chunks<TYPE, 1>(sg, q8h, rows, partial, e, n1, nb, sub, K, live, rr);
                 }
             });
     });

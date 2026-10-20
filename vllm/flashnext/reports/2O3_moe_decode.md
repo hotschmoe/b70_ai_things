@@ -237,14 +237,90 @@ Flash-Next graph window (`logs/c7b-fn-graph-window.sh`) points at
 `_C.graph.so` and had not started when this was installed. It will load the
 O3 binary.
 
+## Stage 2 (16:05): K-quants and IQ4_XS on DP4A, bandwidth tries
+
+The coordinator committed stage 1 as ad52e8ef. Stage 2 targets the types
+that still went through `b70_decode32` (decode.hpp): byte-wise loads, 32
+floats decoded per part, and 32 fma per entry. Those are Q2_K, Q3_K, Q4_K,
+Q5_K, Q6_K, and IQ4_XS.
+
+Change, `csrc/iq_dot.hpp` only (decode.hpp is shared with the host dequant
+and is untouched):
+
+- `b70_prep` now has those six types. It builds 8 signed-byte words per
+  32-weight part with aligned-dword loads (`b70_ld4_a2`), plus integer
+  per-16 scales, mins, and the fp16 `d`/`dmin`. The byte maps are exact:
+  - Q3_K: `q + 4*hbit - 4` via `(x + 0x7C) ^ 0x80`.
+  - Q6_K: `q6 - 32` via `(x + 0x60) ^ 0x80`.
+  - IQ4_XS: the IQ4_NL mux with `d*(ls-32)`.
+- `b70_apply_u` computes `d*(s0*sc0 + s1*sc1) - dmin*(a0*m0 + a1*m1)`. The
+  `a` sums are dp4a against 0x01010101, as in ggml `vec_dot_*_q8_1`.
+- `b70_dp4a_type` includes them, so the sched path, the C1 fused path
+  (`B70_MOE_SCHED=0`), and the non-KREG dense GEMV all use the DP4A form.
+  `-DB70_KQ_DP4A=0` restores decode32 + fma.
+- `sched_moe.hpp`: the R-row dot is now generic (`b70_sched_rows<TYPE, EC,
+  R>`, `-DB70_SCHED_RPL`). It is the same code at R=2, with the same outputs
+  and timings as stage 1.
+
+Microbench (`o3/kq2.log`). Synthetic K-quant dumps (`o3/gen_kq.py`): K=2048,
+I=512 (the 35B shape), top-10 plus shared, one type for every matrix, ids and
+x from the C9 dumps. Graph replay, us per layer. The old column is the same
+source built with `-DB70_KQ_DP4A=0`. New vs old output cosine is 1.000000
+for every case.
+
+| type | T=1 old | T=1 new | T=4 old | T=4 new |
+|---|---:|---:|---:|---:|
+| Q2_K | 485.5 | 49.3 | 1179.3 | 126.0 |
+| Q3_K | 268.2 | 79.4 | 684.8 | 196.4 |
+| Q4_K | 96.8 | 59.2 | 251.6 | 148.7 |
+| Q5_K | 119.4 | 78.7 | 302.1 | 193.2 |
+| Q6_K | 581.9 | 88.4 | 1396.6 | 213.1 |
+| IQ4_XS | 110.5 | 81.8 | 280.4 | 198.7 |
+
+Gates on `_C.o3b.so` (`o3/gates_b.log`, card 0). gpu_check, moe_layer_bench
+(sched 1 and 0), c12_types (12 cases), and graph_probe all have failures=0.
+compare_cpu is 14/14. Health was HEALTHY before and after. The c9_fair
+IQ3_S/Q2_0 graph is 68.4/99.8/141.4/176.8 us, unchanged from stage 1 as
+expected.
+
+35B UD-IQ3_XXS graph serve, same recipe (`o3/serve_driver_o3b.log`,
+`o3/bench_35b_o3b.json`). Identity and coherence OK. C1 ITL p50 is 9.30 ms
+(107.45 tok/s), and C2 is 12.53/12.54 ms per stream. Stage 1 was 9.34 and
+12.6. The change is within noise: that file has only 6 K-quant/IQ4_XS
+routed tensors (Q2_K x2, Q3_K x1, IQ4_XS x3 of 123), and its Q6_K shared
+expert is applied by the runner, not by `moe_layer`. The gain matters for
+layers and models that are mostly K-quant, such as the 35B shared Q6_K once
+it is fused into `moe_layer`.
+
+Installed: `_C.so` and `_C.graph.so` are `_C.o3b.so`, sha256
+`e9e5282d9d4cc3def64d17516e847021d623735fde357fef690208ab291befa1`
+(10221368 bytes). `_C.o3.so` (be76661b, stage 1) is left as is because X1's
+proxy window pins it. `_C.c12.so` is still b3c15e14.
+
+Gate/up bandwidth push, microbench graph us, IQ3_S/Q2_0, T=1/2/3/4
+(`o3/kq1.log`, `o3/mb3.log`):
+
+| variant | T=1 | T=2 | T=3 | T=4 |
+|---|---:|---:|---:|---:|
+| installed (RPL 2, 8 lanes) | 69.9 | 103.7 | 146.5 | 190.3 |
+| RPL 4 (one wave at T=1) | 70.8 | 115.1 | 158.2 | 213.2 |
+| k-loop unroll 2 | 71.6 | - | - | 195.4 |
+| 16 lanes per row | 76.9 | - | - | 211.5 |
+
+None of the three helps. RPL 4 has no GRF spills (ISA check `o3/isa/r4`,
+flag spills only) and still loses. Gate/up stays at about 44 us for 15.5 MB
+(about 350 GB/s), the same as Strata's best (night gu_n 42.7 us). Going past
+that needs a different load scheme, such as a cooperative subgroup block
+load of whole superblocks plus a shuffle. That is a larger change, not a
+cheap one, so it is left as a work item (estimate: 1-2 days).
+
 ## Next levers (not done)
 
 - Gate/up runs at about 350 GB/s and down at about 310 GB/s; the card peak is
   about 608. Unroll-2 and 16 lanes did not help. Try RPL=4, or software
   prefetch of the next superblock.
-- The float decode32 path (Q2_K, Q3_K, Q4_K-Q6_K, IQ4_XS) still uses byte-wise
-  `b70_ld16`/`b70_ld32` in decode.hpp. The 35B's K-quant expert layers likely
-  carry the same misaligned or byte-load cost. That is the same fix, applied
-  to decode.hpp.
+- Done in stage 2 (above): the K-quants and IQ4_XS on DP4A with aligned loads.
+- Fuse the shared Q6_K expert into `moe_layer` for the 35B. The runner applies
+  it separately today.
 - The reduce is 3.7 us vs Strata's 2.3 us. It could be fused into down for
   T=1.

@@ -187,7 +187,7 @@ def _project_bmm(act, group: _Group, w, n: int, k: int):
         raise RuntimeError(
             f"bmm pad {group.E}*{group.mmax}*{k} exceeds 8 GB; use how=loop"
         )
-    xpad = _scratch(("xpad", group.E, group.mmax, k, act.dtype, _devkey(act)), (group.E, group.mmax, k), act.dtype, act.device)
+    xpad = _scratch(("xpad", group.E, k, act.dtype, _devkey(act)), (group.E, group.mmax, k), act.dtype, act.device)
     xpad.zero_()
     torch.ops.b70_gguf.prefill_pad_grouped(act, xpad, group.order, group.starts, int(group.mv))
     # w is [E, N, K]; bmm wants [E, K, N]. The transpose view matches the
@@ -227,6 +227,10 @@ def _project(act, group: _Group, w, n: int, k: int, how: str):
 def _reduce(slots, router, t: int, topk: int, h: int):
     import torch
 
+    if os.environ.get("B70_PREFILL_REDUCE") == "triton":
+        from .prefill_reduce import reduce_slots
+
+        return reduce_slots(slots, router, t, topk, h)
     acc = slots.view(t, topk, h).float()
     if router is not None and router.numel() == t * topk:
         acc = acc * router.reshape(t, topk, 1).float()
@@ -246,7 +250,7 @@ def grouped_dq(x, q, expert_ids, ggml_type: int, n: int, k: int, how: str | None
     return _project(xb, group, w, n, k, how).float()
 
 
-def moe_dq(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int, h: int, f: int, how: str | None = None):
+def moe_dq(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int, h: int, f: int, how: str | None = None, type_up: int | None = None):
     """One prefill MoE layer. x [T, H] -> fp32 [T, H].
 
     how=bmm|loop dequants every expert. how=hybrid keeps the fused grouped
@@ -255,11 +259,12 @@ def moe_dq(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int, h
     import torch
 
     how = how or os.environ.get("B70_PREFILL_DQ_GROUPED", "bmm")
+    type_up = int(type_gu) if type_up is None else int(type_up)
     t = int(x.shape[0])
     topk = int(ids.shape[1])
     rb = row_bytes(type_gu, h)
     e = int(q_gate.numel() // (f * rb))
-    if how == "hybrid":
+    if how == "hybrid" and type_up == int(type_gu):
         return _moe_hybrid(x, ids, q_gate, q_up, q_down, router, type_gu, type_down, h, f, e, t, topk)
     flat = _sanitize(ids, e)
     group = _Group(flat, e)
@@ -268,7 +273,7 @@ def moe_dq(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int, h
     act = xb[tok]
     wg = dequant(q_gate, type_gu, e * f, h).view(e, f, h)
     g = _project(act, group, wg, f, h, how)
-    wu = dequant(q_up, type_gu, e * f, h).view(e, f, h)
+    wu = dequant(q_up, type_up, e * f, h).view(e, f, h)
     u = _project(act, group, wu, f, h, how)
     hidden = (torch.nn.functional.silu(g) * u).to(act.dtype)
     wd = dequant(q_down, type_down, e * h, f).view(e, h, f)

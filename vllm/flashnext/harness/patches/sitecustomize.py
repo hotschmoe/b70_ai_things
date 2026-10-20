@@ -8,6 +8,11 @@
 
 import os
 
+if os.environ.get("B70_PREFILL_PROFILE"):
+    from x3_prefill_profile import install as _x3_prefill_install
+
+    _x3_prefill_install()
+
 # The loader check runs /usr/bin/python3.12, which has no torch. Skip
 # there. site.py swallows sitecustomize errors, so a failed register in
 # the real interpreter would also be silent; re-raise only when torch

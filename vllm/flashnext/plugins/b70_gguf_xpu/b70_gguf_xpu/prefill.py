@@ -22,6 +22,9 @@ def load() -> None:
     if not so.is_file():
         raise FileNotFoundError(f"missing {so}; run scripts/build.sh")
     torch.ops.load_library(str(so))
+    wide = os.environ.get("B70_PREFILL_WIDE_SO")
+    if wide:
+        torch.ops.load_library(wide)
     _LOADED = True
 
 
@@ -75,7 +78,7 @@ def prefill_dense(x, q, ggml_type: int, n: int, k: int, mode: int = 0):
     from b70_gguf_xpu import prefill_dq
 
     m = int(x.shape[0])
-    if mode == 0 and prefill_dq.dense_wants_dq(m, int(k)) and _dq_ready():
+    if mode == 0 and (int(ggml_type) in (8, 10, 11) or prefill_dq.dense_wants_dq(m, int(k))) and _dq_ready():
         return prefill_dq.dense_dq(x, q, int(ggml_type), int(n), int(k))
     return torch.ops.b70_gguf.prefill_dense(x, q, int(ggml_type), int(n), int(k), int(mode))
 
@@ -98,7 +101,7 @@ def prefill_moe_layer(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_d
     from b70_gguf_xpu import prefill_dq
 
     t = int(x.shape[0])
-    if mode == 0 and prefill_dq.moe_wants_dq(t) and _dq_ready():
+    if mode == 0 and (int(type_gu) in (8, 10, 11) or int(type_down) in (8, 10, 11) or prefill_dq.moe_wants_dq(t)) and _dq_ready():
         from b70_gguf_xpu import prefill_fast
 
         if prefill_fast.wants_fast():

@@ -155,12 +155,31 @@ struct B70Part {
     int b;
     float d;
     int fin;
+    // K-quant / IQ4_XS integer form (O3 stage 2): per-16 scales, per-16
+    // mins, and the min multiplier. Unused by the IQ types.
+    int sc0;
+    int sc1;
+    int mn0;
+    int mn1;
+    float dm;
 };
+
+// O3 stage 2: the float decode32 types (Q2_K, Q3_K, Q4_K, Q5_K, Q6_K,
+// IQ4_XS) as signed-byte words + integer scales, dotted with DP4A like
+// ggml vec_dot_*_q8_1. -DB70_KQ_DP4A=0 keeps the old decode32 + fma path.
+#ifndef B70_KQ_DP4A
+#define B70_KQ_DP4A 1
+#endif
+template <int TYPE>
+inline constexpr bool b70_kq_type() {
+    return B70_KQ_DP4A && (TYPE == B70_Q2_K || TYPE == B70_Q3_K || TYPE == B70_Q4_K || TYPE == B70_Q5_K ||
+                           TYPE == B70_Q6_K || TYPE == B70_IQ4_XS);
+}
 
 template <int TYPE>
 inline constexpr bool b70_dp4a_type() {
     return TYPE == B70_Q8_0 || TYPE == B70_IQ2_XXS || TYPE == B70_IQ2_XS || TYPE == B70_IQ2_S || TYPE == B70_IQ3_XXS ||
-           TYPE == B70_IQ3_S || TYPE == B70_IQ4_NL || TYPE == B70_Q2_0;
+           TYPE == B70_IQ3_S || TYPE == B70_IQ4_NL || TYPE == B70_Q2_0 || b70_kq_type<TYPE>();
 }
 
 template <int TYPE>
@@ -287,11 +306,145 @@ inline void b70_prep(const uint8_t* row, int gi, B70Part& m) {
         for (int i = 0; i < 8; ++i) m.w[i] = (int)b70_q2_spread4((uint32_t)((qq >> (8 * i)) & 0xffu));
         m.d = b70_h2f(b);
         m.fin = 0;
+    } else if constexpr (TYPE == B70_IQ4_XS) {
+        // 136-byte block: d, scales_h (u16), scales_l[4], qs[128]. Part ib = qs[16 ib..16 ib+15].
+        const int ib = gi & 7;
+        const uint8_t* b = row + (size_t)(gi >> 3) * 136;
+        const uint32_t hdr = b70_ld4_a2(b);           // d | scales_h
+        const uint32_t sl = b70_ld4_a2(b + 4);        // scales_l
+        const int ls = (int)((sl >> (4 * ib)) & 0xfu) | (int)(((hdr >> (16 + 2 * ib)) & 3u) << 4);
+        const uint8_t* qs = b + 8 + 16 * ib;
+#pragma unroll
+        for (int i = 0; i < 4; ++i) {
+            const uint32_t q = b70_ld4_a2(qs + 4 * i);
+            m.w[i] = (int)b70_iq4nl_mux4(q & 0x0f0f0f0fu);
+            m.w[4 + i] = (int)b70_iq4nl_mux4((q >> 4) & 0x0f0f0f0fu);
+        }
+        m.d = b70_h2f(b) * (float)(ls - 32);
+        m.fin = 0;
+    } else if constexpr (TYPE == B70_Q2_K) {
+        // 84-byte block: scales[16], qs[64], d, dmin. Part gi8 = half*4 + j, shift 2j.
+        const int gi8 = gi & 7;
+        const int half = gi8 >> 2;
+        const int j = gi8 & 3;
+        const uint8_t* b = row + (size_t)(gi >> 3) * 84;
+        const uint8_t* qs = b + 16 + half * 32;
+#pragma unroll
+        for (int i = 0; i < 8; ++i) m.w[i] = (int)((b70_ld4_a2(qs + 4 * i) >> (2 * j)) & 0x03030303u);
+        const uint32_t sc = b70_ld4_a2(b + half * 8 + 2 * j) & 0xffffu;
+        m.sc0 = (int)(sc & 0xfu);
+        m.mn0 = (int)((sc >> 4) & 0xfu);
+        m.sc1 = (int)((sc >> 8) & 0xfu);
+        m.mn1 = (int)((sc >> 12) & 0xfu);
+        const uint32_t dd = b70_ld4_a2(b + 80);
+        m.d = (float)sycl::bit_cast<sycl::half>((uint16_t)(dd & 0xffffu));
+        m.dm = (float)sycl::bit_cast<sycl::half>((uint16_t)(dd >> 16));
+        m.fin = 5;
+    } else if constexpr (TYPE == B70_Q3_K) {
+        // 110-byte block: hmask[32], qs[64], scales[12], d. Byte = q - 4 + 4*hbit in -4..3.
+        const int gi8 = gi & 7;
+        const int half = gi8 >> 2;
+        const int j = gi8 & 3;
+        const uint8_t* b = row + (size_t)(gi >> 3) * 110;
+        const uint8_t* qs = b + 32 + half * 32;
+#pragma unroll
+        for (int i = 0; i < 8; ++i) {
+            const uint32_t q = (b70_ld4_a2(qs + 4 * i) >> (2 * j)) & 0x03030303u;
+            const uint32_t h = ((b70_ld4_a2(b + 4 * i) >> (half * 4 + j)) & 0x01010101u) << 2;
+            m.w[i] = (int)(((q | h) + 0x7C7C7C7Cu) ^ 0x80808080u);
+        }
+        // b70_q3_scale with aligned word loads (scales at b+96, 2-aligned).
+        const uint32_t a0 = b70_ld4_a2(b + 96);
+        const uint32_t a1 = b70_ld4_a2(b + 100);
+        const uint32_t tmp = b70_ld4_a2(b + 104);
+        const uint32_t o[4] = {(a0 & 0x0f0f0f0fu) | (((tmp >> 0) & 0x03030303u) << 4),
+                               (a1 & 0x0f0f0f0fu) | (((tmp >> 2) & 0x03030303u) << 4),
+                               ((a0 >> 4) & 0x0f0f0f0fu) | (((tmp >> 4) & 0x03030303u) << 4),
+                               ((a1 >> 4) & 0x0f0f0f0fu) | (((tmp >> 6) & 0x03030303u) << 4)};
+        const int is0 = half * 8 + 2 * j;
+        const int is1 = is0 + 1;
+        m.sc0 = (int)(int8_t)((o[is0 >> 2] >> (8 * (is0 & 3))) & 0xffu) - 32;
+        m.sc1 = (int)(int8_t)((o[is1 >> 2] >> (8 * (is1 & 3))) & 0xffu) - 32;
+        m.d = (float)sycl::bit_cast<sycl::half>((uint16_t)(b70_ld4_a2(b + 108) & 0xffffu));
+        m.fin = 6;
+    } else if constexpr (TYPE == B70_Q4_K || TYPE == B70_Q5_K) {
+        // 144 / 176-byte block: d, dmin, scales[12], (qh[32]), qs[128]. Part gi8: nibble half of qs[32 j64..].
+        constexpr int BB = TYPE == B70_Q4_K ? 144 : 176;
+        constexpr int QO = TYPE == B70_Q4_K ? 16 : 48;
+        const int gi8 = gi & 7;
+        const int j64 = gi8 >> 1;
+        const int hi = gi8 & 1;
+        const uint8_t* b = row + (size_t)(gi >> 3) * BB;
+        const uint8_t* q = b + QO + 32 * j64;
+#pragma unroll
+        for (int i = 0; i < 8; ++i) {
+            uint32_t w = (b70_ld4_a2(q + 4 * i) >> (4 * hi)) & 0x0f0f0f0fu;
+            if constexpr (TYPE == B70_Q5_K) w |= ((b70_ld4_a2(b + 16 + 4 * i) >> gi8) & 0x01010101u) << 4;
+            m.w[i] = (int)w;
+        }
+        // get_scale_min_k4 on scales[12] at b+4.
+        const uint32_t s0 = b70_ld4_a2(b + 4);
+        const uint32_t s1 = b70_ld4_a2(b + 8);
+        const uint32_t s2 = b70_ld4_a2(b + 12);
+        auto byte = [](uint32_t w, int k) { return (int)((w >> (8 * k)) & 0xffu); };
+        int sc, mn;
+        if (gi8 < 4) {
+            sc = byte(s0, gi8) & 63;
+            mn = byte(s1, gi8) & 63;
+        } else {
+            sc = (byte(s2, gi8 - 4) & 0xF) | ((byte(s0, gi8 - 4) >> 6) << 4);
+            mn = (byte(s2, gi8 - 4) >> 4) | ((byte(s1, gi8 - 4) >> 6) << 4);
+        }
+        m.sc0 = sc;
+        m.sc1 = sc;
+        m.mn0 = mn;
+        m.mn1 = mn;
+        const uint32_t dd = b70_ld4_a2(b);
+        m.d = (float)sycl::bit_cast<sycl::half>((uint16_t)(dd & 0xffffu));
+        m.dm = (float)sycl::bit_cast<sycl::half>((uint16_t)(dd >> 16));
+        m.fin = 5;
+    } else if constexpr (TYPE == B70_Q6_K) {
+        // 210-byte block: ql[128], qh[64], scales[16] (int8), d. Byte = q6 - 32 in -32..31.
+        const int gi8 = gi & 7;
+        const int n = gi8 >> 2;
+        const int qu = gi8 & 3;
+        const uint8_t* b = row + (size_t)(gi >> 3) * 210;
+        const uint8_t* ql = b + 64 * n + ((qu & 1) ? 32 : 0);
+        const uint8_t* qh = b + 128 + 32 * n;
+#pragma unroll
+        for (int i = 0; i < 8; ++i) {
+            const uint32_t lo = (b70_ld4_a2(ql + 4 * i) >> ((qu >> 1) * 4)) & 0x0f0f0f0fu;
+            const uint32_t h2 = ((b70_ld4_a2(qh + 4 * i) >> (2 * qu)) & 0x03030303u) << 4;
+            m.w[i] = (int)(((lo | h2) + 0x60606060u) ^ 0x80808080u);
+        }
+        const uint32_t sc = b70_ld4_a2(b + 192 + 8 * n + 2 * qu) & 0xffffu;
+        m.sc0 = (int)(int8_t)(sc & 0xffu);
+        m.sc1 = (int)(int8_t)(sc >> 8);
+        m.d = (float)sycl::bit_cast<sycl::half>((uint16_t)(b70_ld4_a2(b + 208) & 0xffffu));
+        m.fin = 6;
     }
 }
 
 template <int TYPE>
 inline float b70_apply_u(const B70Part& m, const int u[8], float ad) {
+    if constexpr (TYPE == B70_Q2_K || TYPE == B70_Q3_K || TYPE == B70_Q4_K || TYPE == B70_Q5_K ||
+                  TYPE == B70_Q6_K) {
+        int s0 = 0, s1 = 0;
+#pragma unroll
+        for (int j = 0; j < 4; ++j) s0 = b70_dp4a(m.w[j], u[j], s0);
+#pragma unroll
+        for (int j = 4; j < 8; ++j) s1 = b70_dp4a(m.w[j], u[j], s1);
+        float r = m.d * (float)(s0 * m.sc0 + s1 * m.sc1);
+        if constexpr (TYPE == B70_Q2_K || TYPE == B70_Q4_K || TYPE == B70_Q5_K) {
+            int a0 = 0, a1 = 0;
+#pragma unroll
+            for (int j = 0; j < 4; ++j) a0 = b70_dp4a(0x01010101, u[j], a0);
+#pragma unroll
+            for (int j = 4; j < 8; ++j) a1 = b70_dp4a(0x01010101, u[j], a1);
+            r -= m.dm * (float)(a0 * m.mn0 + a1 * m.mn1);
+        }
+        return r * ad;
+    }
     int sumi;
     if constexpr (TYPE == B70_IQ2_XS || TYPE == B70_IQ2_S) {
         int s0 = 0, s1 = 0;

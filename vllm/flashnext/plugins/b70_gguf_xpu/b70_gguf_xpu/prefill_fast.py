@@ -124,7 +124,7 @@ def moe_fast(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int,
     else:
         torch.ops.b70_gguf.prefill_dequant_wide(q_down, int(type_down), e * h, f, dn_flat, 0, 0)
         stamp("dq_down")
-    xpad = prefill_dq._scratch(("c13x", e, cap, h, _dev(x)), (e, cap, h), torch.bfloat16, x.device)
+    xpad = prefill_dq._scratch(("c13x", e, h, _dev(x)), (e, cap, h), torch.bfloat16, x.device)
     torch.ops.b70_gguf.prefill_pad_grouped(act, xpad, group.order, group.starts, int(group.mv))
     stamp("pad")
     y = torch.bmm(xpad, w_gu.transpose(1, 2))

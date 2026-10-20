@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "b70-memory-xpu"
+version = "0.1.0"
+description = "Opt-in GGUF storage aliasing and memory evidence for B70"
+requires-python = ">=3.10"
+
+[project.entry-points."vllm.general_plugins"]
+b70_memory_xpu = "b70_memory_xpu:register"

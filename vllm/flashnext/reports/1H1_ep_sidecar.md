@@ -259,3 +259,40 @@ watchdog docker-stops the container if MemAvailable falls under
 Phase B gate, still open: greedy `17 * 19` -> 323 and `23 * 29` ->
 667, then C1/C2 ITL under `FULL_DECODE_ONLY`. Strata C1 reference
 is about 141 tok/s (7.1 ms ITL) with MTP. Latency is the top metric.
+
+## Phase B -- Flash-Next sidecar (H1e)
+
+Status: waiting to launch (2026-10-20 15:52 UTC). No GPU serve yet.
+
+C7b's report `reports/1C7b_flashnext_serve.md` is absent. At 15:51
+card 0 was held by O3 `run_kq.sh` (pid 3373613, since 15:50:29).
+Card 1's owner file was empty. C7b's FlashAttention side build
+exited `BUILD_FAIL` at 15:49:10: cmake could not find git to clone
+cutlass (`logs/c7b-fa-build.log`). The installed
+`libattn_kernels_xe_2.so` is still the wheel that rejected
+`16,256,64,false,false,false` at 15:39. Launch waits until that
+report exists, or until both owner files have stayed empty for
+10 minutes.
+
+Libraries rechecked: `b70_ep_xpu/_C.so`
+`5a0a047c67fc192588007e93b69c22a8ed9c781d2a891056dff200cceab067ac`
+(499200 bytes). `b70_gguf_xpu/_C.graph.so` and `_C.so`
+`be76661bd120aa2f` (10135104 bytes, 15:19:23), which is O3.
+`b70_moe_layer` and `b70_reserve_decode_queue` are both exported.
+`_C.ep.so` stays `55c154ee`. `_C.c12.so` stays `b3c15e14`.
+
+Serve script `harness/serve_flashnext_ep.sh` now defaults
+`gpu_memory_utilization` to 0.98 and accepts `MAX_BATCHED`.
+Window driver (not started):
+`/mnt/vm_8tb/b70/build/vllm-flashnext/logs/h1e-fn-window.sh`.
+It is C7b's graph recipe on the sidecar: world size 1, port
+18116, container `vllm-fn-h1-fn`, util 0.98, max_len 2048,
+max_num_batched_tokens 2048, max_num_seqs 4, `FULL_DECODE_ONLY`,
+`FLASH_ATTN`, capture `1,2,3,4,8`, `B70_XPU_CG_RECLAIM=500`,
+`B70_GGUF_REF=0`, `B70_EAGER_QK=0`, `B70_QSA=0`. QSA is off
+because the 15:10 eager serve that returned 323 and 667 did not
+set it. MTP is not enabled. The fork already drops packed-layer
+bf16 placeholders and stages PLE rows in `_graph_emb` outside
+the graph. MemAvailable under 8 GiB aborts the serve. The bar
+is Strata C1 7.09 ms (141 tok/s, with MTP) and C2 10.9 ms per
+stream. Card-0 KV tokens are recorded from the engine log.

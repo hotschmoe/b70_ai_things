@@ -3813,6 +3813,376 @@ truncates c7-fn-serve.log. Run both-card health after the exit
 when the leases are free. The 418 MiB packed.to(device) needs
 free GPU memory, or it has to stay a host view.
 
+## Pass 14 -- 2026-10-20 15:34 UTC
+
+CPU only. No GPU, no commit. Cursor is the journal after the 14:53
+G2b milestone: the 14:49 through 15:13 C7b headings, the 14:55 H1d
+heading, and the 15:40 O3 heading. The 15:13 graph window had already
+exited when this pass read it.
+
+### F139 -- 14:49 C7b heading repeats the XPU OOM
+
+Claim: the PLE memmap held, then both workers OOM'd on the bf16
+placeholder. Host MemAvailable bottomed at 40042444 kB (anon
+13164496 kB). No kernel oom-kill. Packed experts are about 20 GiB
+per rank. O3 used card 0 for 75 s and left it HEALTHY, then started
+another card-0 run at 14:53:52.
+
+Evidence: the XPU OOM, the 418 MiB packed.to(device), the 31.10 GiB
+allocated figure, SERVE_RC 1, and the 40042444 kB sample are the
+F138 logs (c7b-fn-serve-xpuoom.log, c7b-rss-prev.log). F138 already
+separates that 14:49:08 sample from the load-time low, 43846676 kB
+at 14:48:44. journalctl -k since 14:49:00 has no "oom" line
+(oom_count 0). The logs directory has no "20 GiB" expert total.
+The only hit is a comment in c7-fn-window.sh about a host watermark.
+No log contains "done in 75" or "14:53:52".
+
+Verdict: OK that this heading is the F138 XPU OOM, and that the
+40042444 / 13164496 pair is the trace minimum. WRONG as a placement
+watermark. UNVERIFIED the 20 GiB expert figure, the 75 s duration,
+and the 14:53:52 start. Not an ITL.
+
+Suggested fix: quote 43846676 kB at 14:48:44 as the pre-teardown
+low. Leave the 20 GiB and the O3 times out until a log has them.
+
+### F140 -- 14:54 open, 15:02 KV budget short
+
+Claim: placeholders dropped. Both ranks placed 1224. PLE memmap
+28800138240. Model load about 125 s and 24.9 GiB. Available KV
+-1.53 GiB. util 0.90 requests about 28.70 GiB and the non-KV
+footprint is about 30.23 GiB. No XPU OOM. Host peak AnonPages
+51190084 / MemAvailable 45549788 around 800 tensors. Steady
+AnonPages 12252612 and workers summed 9206088 kB (about 4.4 GiB
+each). The window parent died and timeout pid 3345213 kept the
+serve. Pre-serve MemAvailable 118062644 (14:54) and 118704776
+(15:02).
+
+Evidence: c7b-fn-window-kvshort.out is four lines: health 14:54:56
+HEALTH_RC 0, MEM_AVAILABLE_KB 118704776, serve 14:55:31. It has no
+SERVE_RC and no WINDOW_DONE. c7b-fn-serve-kvshort.log: both workers
+placed 1224 at 14:58:31, both memmap bytes=28800138240, model load
+24.9 GiB in 124.284167 s and 125.110653 s, Available KV cache
+memory: -1.53 GiB once, ValueError "No available memory for the
+cache blocks" four times, OutOfMemory 0, xe-reset 0. gpu-run tag
+is [C7], done in 259s exit 1. Non-default args: enforce_eager,
+served_model_name hotschmoe-dev then qwen3.8-flash-next-iq3-xxs,
+data_parallel_size 2, enable_expert_parallel, gpu_memory_utilization
+0.9, max_model_len 2048, max_num_seqs 2. max_num_batched_tokens is
+absent. c7b-rss-run3.log starts at 14:58:45, after placement. It
+has 14:59:25 avail_kb=48461628 anon_kb=12252612 workers_n_rsskb=2
+9206088. It does not contain 51190084 or 45549788. 9206088/2 is
+4.39 GiB. 0.90*31.89 = 28.701 and 28.701+1.53 = 30.231, using the
+F138 capacity 31.89, which this log does not reprint. The later
+eager log reports a 30.3 GiB device total. No log contains
+118062644 or pid 3345213.
+
+Verdict: OK on placement, the memmap, 24.9 GiB, the two load times,
+-1.53 GiB, the ValueError on both engines, no XPU OOM string, the
+steady anon/RSS pair, and window MEM 118704776. The 28.70 / 30.23
+pair is that reconstruction, not a new measurement. UNVERIFIED
+118062644, 51190084, 45549788, and pid 3345213. The short window
+file is consistent with a parent that never wrote the stop lines.
+Not an ITL. No greedy. No health-after.
+
+Suggested fix: preserve the stop lines in the window file. Sample
+RSS from process start if the placement peak is going to be quoted.
+Say that 31.89 GiB is the prior OOM total.
+
+### F141 -- 14:55 H1d EP sidecar, second library
+
+Claim: first link sha 308cd69d, 495104 bytes, exit 0 in 45 s, stored
+the caller pointer. Second link sha 5a0a047c, 499200 bytes, exit 0
+in 39 s, owns both maps, rejects a bad, duplicate, both, or neither
+slot, and the kernel clamps a bad slot to -1. _C.ep.so stays
+55c154ee / 8294752. The graph library exports b70_moe_layer and
+b70_reserve_decode_queue. test_placement.py printed PLACEMENT_OK
+and PLE_GUARD_OK. Profile counts and MemAvailable 118655020 are as
+written. The serve script was not launched. Phase B has not started.
+
+Evidence: h1d-ep-build.log exit 0 in 45 s, size 495104, and does
+not print a sha. h1d-ep-build2.log exit 0 in 39 s, size 499200.
+The file now on disk is 499200 bytes, sha256
+5a0a047c67fc192588007e93b69c22a8ed9c781d2a891056dff200cceab067ac,
+mtime 14:55:20. _C.ep.so is 8294752 bytes, sha256
+55c154ee90f33bec810d24a2cd6ac0c3b6b1a4e53bdc78aed50a59113e8c9bf0,
+mtime 08:35. moe_ep.cpp ep_register_map mallocs own0/own1, copies
+the caller pointers to host vectors, rejects nexp outside 1..4096,
+rejects a slot outside the local pack, a duplicate, or on0==on1,
+requires the counts to match e0 and e1, then copies the host
+vectors to the owned device pointers. The .wait() calls are in
+register. ep_kernels.cpp dispatch clamps a looked-up slot into
+[0, n0) and [0, e1), else -1. The forward tail returns before
+q0().wait() when cap_on or recording. test_placement.py contains
+the two print strings. No stdout file under logs has PLACEMENT_OK
+or PLE_GUARD_OK. No h1 serve log. h1d-gpu-wait.log shows the wait,
+then C7b holding both cards at 15:04:52. A memcpy throw before the
+free can leak the new device pointers. That is load-time, not the
+F136 dangling map.
+
+Verdict: OK on the second library identity, the build exits, the
+source fix for F136, and the unchanged _C.ep.so hash. UNVERIFIED
+the overwritten first sha 308cd69d (the size 495104 is in the
+log). UNVERIFIED that a process printed PLACEMENT_OK, and
+UNVERIFIED the profile integers and 118655020. Phase B has no
+greedy and no ITL in these logs. The symbol check on the graph
+library is F144, because that file was replaced at 15:19.
+
+Suggested fix: save the test stdout and the first-link sha in the
+build log. Free own0/own1 if the memcpy throws. Do not serve this
+sidecar until Phase B has identity and coherence.
+
+### F142 -- 15:10 eager DP=2 coherent at util 0.98
+
+Claim: health-before OK, MemAvailable 118088084, model load 24.9 GiB,
+Available KV 0.89 GiB, KV cache 6144 tokens, concurrency 3.00x,
+kv lcm block size 1600. HTTP ready 15:09:33. Greedy temperature 0,
+enable_thinking false, prompts 25 tokens, texts "323" and "667",
+4 completion tokens, both match. SERVE_RC 0. Served names
+hotschmoe-dev then qwen3.8-flash-next-iq3-xxs. Ready RSS and the
+15:08:08 anon peak are as written. This is the first coherent
+Flash-Next IQ3_XXS eager serve.
+
+Evidence: c7b-fn-eager98-window.out has those health, READY, CHAT,
+FN_GREEDY_DONE, and SERVE_RC 0 lines. The 15:03 heading's
+118285456 is not in the logs. c7b-eager98-greedy.json matches both
+rows. The JSON has no temperature field. The script sends model
+hotschmoe-dev, temperature 0, enable_thinking false. The ready
+curl discards /v1/models (`>/dev/null`). Serve log non-default
+args list hotschmoe-dev first, enforce_eager, util 0.98,
+max_num_batched_tokens 2048, max_num_seqs 2, DP=2, expert parallel.
+Engine v0.32.1rc1.dev94+g5fd62688f. Load 24.9 GiB in 124.138689 s
+and 124.665807 s. Available KV 0.89 GiB once. KV size 6,144 and
+3.00x twice. "kv lcm block sizes 1600" twice. Also "block size to
+64 for FLASH_ATTN" and "attention block size to 1600 tokens".
+Application startup complete. OutOfMemory 0, error 44 0, xe-reset 0.
+gpu-run [C7b] done in 270s exit 0. c7b-coll-health-eager98.txt:
+COLLECTIVE_HEALTH_OK p2p=0, HEALTHY, gpu-run 35s exit 0. No
+health-after command in the window. c7b-rss-eager98-ready.txt
+matches 47736880, 12847624, RSS 4562356 and 4645336, PSS 4316028
+and 4398933, Anonymous 4136256 and 4219228, Shared_Clean 424892
+and 425088. c7b-rss-eager98.log peak anon_kb=53938904 at 15:08:08.
+12847624 kB is 12.25 GiB. 53938904 kB is 51.44 GiB.
+
+Verdict: OK on health-before, the configured name order, the chat
+accepting hotschmoe-dev, the two matches, the token counts,
+SERVE_RC 0, the KV lines, and the RSS numbers. UNVERIFIED the live
+/v1/models body and health-after. The 15:03 MemAvailable is
+UNVERIFIED. Not an ITL. Not a Strata comparison. The 15:02 run is
+not a matched speed pair: util 0.9 versus 0.98, and
+max_num_batched_tokens 2048 is only in the 0.98 args. Same
+checkpoint path and the same two prompt strings. The 0.9 run never
+answered.
+
+Suggested fix: save the /v1/models body. Run collective health
+after the window exits. Keep this result labeled coherence.
+
+### F143 -- 15:13 graph window died on a capture D2H
+
+Claim: the 15:13 heading says the FULL_DECODE_ONLY window is open,
+MemAvailable 117855916. It does not claim a greedy result.
+
+Evidence: c7b-fn-graph-window.out: health 15:13:23 HEALTH_RC 0,
+MEM_AVAILABLE_KB 118052504 (the journal figure is not in the file),
+serve 15:13:58, "serve exited before ready", stop 15:18:34,
+SERVE_RC 1, WINDOW_DONE. A same-sized copy is
+c7b-fn-graph-window-ple-d2h.out and c7b-graph-serve-ple-d2h.log.
+Health file: COLLECTIVE_HEALTH_OK p2p=0, HEALTHY, gpu-run 35s
+exit 0. No health-after. Serve log: both workers placed 1224,
+memmap 28800138240, load 24.9 GiB in 143.359477 s and 143.529377 s.
+Capturing CUDA graphs (FULL) 0/2 twice. "XPU kernel not compiled
+for this config" four times. Available KV count 0. OutOfMemory 0.
+xe-reset 0. error: 44 count 8. At 15:18:14 Worker_DP1 ple.forward
+(model.py line 433 in the traceback) is `input_ids_cpu =
+input_ids.to("cpu")`, then RuntimeError level_zero error 44
+(UR_RESULT_ERROR_UNSUPPORTED_FEATURE). Both workers show that
+frame. Engine core init failed. gpu-run [C7b] done in 272s exit 1.
+Args: served name hotschmoe-dev first, DP=2, EP, util 0.98,
+max_num_batched_tokens 2048, max_num_seqs 4, FLASH_ATTN,
+cudagraph_mode FULL_DECODE_ONLY, capture sizes 1,2,3,4,8,
+enforce_eager false. o3/fair_quiet.log records this container
+holding card 0 since 15:13:58, so the window had started before
+the 15:19 library install.
+
+The file on disk now is not the file that crashed. model.py mtime
+is 15:24:36 and model_runner.py mtime is 15:24:16, both uncommitted.
+Current forward() does the .to("cpu") only in the else of
+`_xpu_stream_capturing()` (line 555). stage_graph_rows (line 400)
+still does the D2H, and stage_ple_cudagraph calls it. model_runner
+calls that hook before run_fullgraph when the mode is FULL and the
+run is not a dummy. The docstring says host work stays outside the
+graph. The crashing frame was `in forward`, not that hook. The new
+guard has not been through a successful FULL capture.
+
+Verdict: the 15:13 "window open" line was true when written. The
+run died during FULL capture on a host D2H, Level Zero 44, before
+ready. No identity body, no greedy, no health-after, no xe-reset.
+UNVERIFIED MemAvailable 117855916. Not an ITL. This is not the
+15:10 eager result: mode is FULL versus enforce-eager, and this
+one failed. AGENTS.md's xe-reset sentence is for a crashed TP>1
+attempt. This was DP=2. The missing post-health is still a gap
+before the next two-card serve.
+
+Suggested fix: keep the D2H in the pre-replay hook and fail closed
+if the capture detector returns false. Do not replay until a
+capture completes and both-card health is HEALTHY. Preserve the
+ple-d2h log copies.
+
+### F144 -- hygiene, and _C.graph.so replaced at 15:19
+
+Claim: no new staged binary. The serves named _C.graph.so.
+
+Evidence: git diff --cached --stat line count 0. git status
+porcelain was 33 paths. The only modified binary is the
+pre-existing vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so.
+vllm/flashnext/.gitignore ignores *.so, and check-ignore matches
+the EP _C.so and _C.graph.so. Untracked files seen are text; the
+largest new plugin source was sched_moe.hpp at 46847 bytes. Fork
+tip remains 0a6170da8c, ahead 18, with uncommitted embedding.py,
+linear.py, mapping.py, xpu/model.py, and model_runner.py.
+_C.c12.so is still 10165216 bytes, sha256
+b3c15e14ba5811d90dfe8a65e4ccc1353fd67b3f44e4180810fac22b4ed49979.
+At this read, _C.so, _C.graph.so, and _C.o3.so are the same
+10135104 bytes, sha256
+be76661bd120aa2f6c7523ae3c08813ba56d6114660f3d7f31183c32e5e861eb.
+_C.o3.so mtime is 15:05:46. _C.so and _C.graph.so mtime is
+15:19:23, after the graph gpu-run exited at 15:18:30. nm -D on
+the new _C.graph.so still defines b70_moe_layer and
+b70_reserve_decode_queue. The 14:55, 15:02, 15:10, and 15:13
+docker lines set B70_GGUF_SO to that path. None of those logs
+records a digest. Pass 13 hashed the path as b3c15e14 at 14:50.
+No log between 14:50 and 15:18 records a rewrite.
+
+Verdict: OK on staging. The path the closed windows named was
+replaced after they exited, so the digest they mapped is not the
+file now on disk. UNVERIFIED that those processes still had the
+14:50 b3c15e14 bytes. The new digest is the O3 install in F145.
+
+Suggested fix: print sha256 of B70_GGUF_SO into each window log
+before serve. Keep _C.c12.so as the revert copy, which it still is.
+
+### F145 -- 15:40 O3 decode-gap heading
+
+Claim: misaligned weight loads were the gap. Fair graph IQ3_S/Q2_0
+T=1..4 went from 180.1/267.0/385.8/515.8 us to 68.6/100.3/141.4/178.6.
+IQ2_XS/IQ4_NL went from 192.2/281.4/403.8/565.4 to
+81.4/117.4/168.3/216.7. Device-only, ours is 1.07x Strata IQR2 at
+T=1 and 1.01x at T=4. Gate/up 123.1 us versus Strata 45.3, then
+44.4 and down 16.5. Gates failures=0 and health HEALTHY before and
+after each GPU run. The 35B UD-IQ3_XXS FULL serve has identity ok,
+coherence OK, C1 ITL p50 11.02 to 9.34 ms (107.0 tok/s), C2 16.61
+to 12.60 ms/stream. Installed libraries share sha be76661b....e861eb.
+The note says the C7b graph window had not started at the 15:19
+install, so it will load the O3 binary.
+
+Evidence: o3/fair_quiet.log prints the eight after us_graph values
+under `=== FAIR _C.o3.so ===` (68.64, 100.32, 141.41, 178.59 and
+81.36, 117.39, 168.33, 216.73) and the eight before values under
+`=== FAIR _C.so ===` (180.10, 267.01, 385.82, 515.81 and 192.19,
+281.41, 403.84, 565.37). Printed cos and max_abs match across those
+two sections to the printed digits. max_rel_bulk is still high
+(0.17 to 1.12). The log waited on the C7b graph container that had
+held card 0 since 15:13:58, then xpu-health HEALTHY before and
+after, gpu-run 45s exit 0. mb1.log has b70_sched_gu_k<21> avg_us
+123.11. mb2.log has 44.42 and down 16.49. This pass did not open
+the Strata unitrace file, so 45.3 us is the report's figure.
+gates.log has four VERDICT failures=0 lines, covered=12,
+GRAPH_PROBE_OK, and HEALTHY before and after that command.
+o3/models.json first id is hotschmoe-dev, alias
+qwen3.6-35b-a3b-ud-iq3-xxs, root the 35B-A3B path, max_model_len
+33792. o3/serve_driver.log: SERVE_SO is the full be76661b hash,
+health-before HEALTHY card 0, identity first_ok, coherence OK with
+the Paris texts, C1 itl_p50=9.34 tok/s=107.03, C2 12.59 and 12.60.
+bench_35b.json p50 is 9.335601, mean 9.343331, decode_tok_s
+107.028 (1000/mean, not 1000/p50). C2 completion_tokens are 46 and
+40, and stream 0 p99 is 50.48. c12/serve_driver.log has C1 11.02,
+p90 11.23, p99 11.47, tok/s 90.89, C2 16.61/16.61 and 55.24/62.08,
+prefill 1024 tok/s 177.43. The O3 prefill line is 177.14. This O3
+run did not repeat the C12 8192 and 32768 prefills. Health-after
+in serve_driver first says card 0 busy because the serve container
+still holds it, then HEALTHY on the retry. The three installed
+libraries match the printed hash (F144). The C7b note does not:
+the graph window started at 15:13:58 and exited at 15:18:34, and
+the new _C.graph.so mtime is 15:19:23.
+
+Verdict: OK on the fair us_graph table, the 123.11 / 44.42 / 16.49
+plugin times, the gate verdicts, the 35B identity and coherence,
+the C1/C2 driver lines against c12/serve_driver.log and
+bench_35b.json, and the installed hash. The 1.07x and 1.01x ratios
+are the report's kernel sums against its IQR2 column (68.3/63.7
+and 174.1/171.7), not the fair-graph 68.64/112.89 ratio, which is
+0.61x. UNVERIFIED the Strata 45.3 us cell and literal bit-identity
+beyond the printed cos/max_abs. WRONG that the C7b graph window
+had not started at 15:19 and would load the O3 binary. That window
+died on the previous file (F143). The 9.34 ms result is the 35B
+UD-IQ3_XXS card-0 serve, not the Flash-Next DP=2 window. C2 did
+not both finish 64 tokens. The serve's first health-after attempt
+was blocked by its own lease.
+
+Suggested fix: correct the C7b note. The graph window already
+exited on Level Zero 44 before the install. Quote C2 as 12.59 and
+12.60, and say 107.03 tok/s is 1000/mean. Stop the container before
+the health-after probe so the first attempt is the one that counts.
+
+### F146 -- 15:19 C7b heading matches the graph failure
+
+Claim: weights loaded, then FULL capture failed on both workers.
+level_zero error 44 at Qwen4ExpPLE.forward input_ids.to("cpu"),
+inside torch.cuda.graph during profile_cudagraph_memory. SERVE_RC 1
+at 15:18:34. MemAvailable 118052504. No greedy, no ITL, no
+DEVICE_LOST. A retry at 15:22 found card 0 held by O3 pid 3358701
+since 15:19:48, container vllm-fn-qwen36-gguf-c0, port 18104, and
+did not start a second serve.
+
+Evidence: c7b-graph-serve-ple-d2h.log stack is
+determine_available_memory, profile_cudagraph_memory,
+capture_model, cudagraph_utils.py capture line 502
+`forward_fn(CUDAGraphMode.NONE)`, then model.py:433
+`input_ids.to("cpu")`, error 44. Current cudagraph_utils.py still
+has that call inside `with torch.cuda.graph(...)`. The log string
+"torch.cuda.graph" is absent. DEVICE_LOST count is 0.
+profile_cudagraph_memory count is 16. The preserved window out has
+MEM_AVAILABLE_KB 118052504 and SERVE_RC 1 at 15:18:34. o3/serve_driver.log
+shows card 0 held by O3 pid 3358701 since 15:19:48 in container
+vllm-fn-qwen36-gguf-c0. No file under logs/ contains 3358701 or a
+15:22 retry line.
+
+Verdict: OK on the capture frame, the D2H, error 44, SERVE_RC 1,
+the 118052504 kB figure, and no DEVICE_LOST string. The mode
+argument is NONE while the stream is recording, which is why a
+host copy fails here. UNVERIFIED a distinct 15:22 C7b retry log.
+The holder identity matches the O3 35B serve, which is the F145
+run, not a second Flash-Next serve. Eager coherence remains F142.
+Not an ITL.
+
+Suggested fix: keep the preserved ple-d2h log. The staged-row
+retry is F147 and was still open at this read.
+
+### F147 -- 15:34 staged-row graph window is open
+
+Claim: the retry pins B70_GGUF_SO to _C.c12.so (sha256 b3c15e14,
+10165216 bytes) and leaves the O3 _C.graph.so in place. PLE gather
+is staged outside the graph. MemAvailable 117593984. Both locks
+empty. Port 18104 free. Leases requested.
+
+Evidence: c7b-fn-graph-window.sh line 13 sets SO to _C.c12.so and
+passes it as B70_GGUF_SO. _C.c12.so still hashes to
+b3c15e14ba5811d90dfe8a65e4ccc1353fd67b3f44e4180810fac22b4ed49979
+and is 10165216 bytes (F144). The new window out, read while the
+serve was starting, says health 15:34:42 HEALTH_RC 0,
+MEM_AVAILABLE_KB 117993036, serve 15:35:19. It has no READY line
+and no SERVE_RC. 117593984 is not in that file. The script comment
+says O3 replaced _C.graph.so at 15:19, which matches F144. This
+pass did not re-check the lock files or the port.
+
+Verdict: OK that the script pins the C12 binary and that a new
+window has started with health-before OK. UNVERIFIED the journal
+MemAvailable 117593984 (the window file says 117993036). Outcome,
+identity, and coherence are not in yet. Not an ITL.
+
+Suggested fix: quote 117993036 kB from the window file. Print the
+sha of _C.c12.so into the window log before serve. Leave the
+result for the log that contains READY or SERVE_RC.
+
 
 
 
