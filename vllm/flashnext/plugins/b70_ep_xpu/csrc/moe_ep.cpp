@@ -79,7 +79,9 @@ struct State {
     std::vector<Layer> layers;
     bool cap_on = false;
     bool cap_started = false;
+    bool implicit_cap = false;
     int cap_key = -1;
+    int last_ep = -1;
     GraphSlot* active = nullptr;
     std::map<int, std::unique_ptr<GraphSlot>> graphs;
     int calls = 0;
@@ -283,6 +285,7 @@ void ep_register1(int layer, const uint8_t* gate, const uint8_t* up, const uint8
     L.d1 = down;
     L.e1 = e;
     L.ready1 = true;
+    if (layer > s.last_ep) s.last_ep = layer;
     if (L.ready0 && !s.compute_warm) ep_compute_warmup(layer);
 }
 
@@ -353,6 +356,8 @@ void enqueue_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y
     State& s = S();
     Layer& L = s.layers[layer];
     if (s.cap_on && !s.cap_started) {
+        // Profile capture and the real capture reuse token-count keys.
+        s.graphs.erase(s.cap_key);
         auto slot = std::make_unique<GraphSlot>(*s.q1);
         GraphSlot* raw = slot.get();
         s.graphs[s.cap_key] = std::move(slot);
@@ -397,6 +402,10 @@ void enqueue_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y
     s.calls += 1;
 }
 
+bool stream_recording() {
+    return q0().ext_oneapi_get_state() == expg::queue_state::recording;
+}
+
 void ep_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y, int T, int topk, int K, int layer) {
     State& s = S();
     if (!s.up) throw std::runtime_error("moe_ep before init");
@@ -405,12 +414,44 @@ void ep_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y, int
     if (!L.ready0 || !L.ready1) throw std::runtime_error("moe_ep layer not registered");
     if (T < 1 || T > s.max_t || topk < 1 || topk > s.max_topk || K != L.K || (K % 4) != 0)
         throw std::runtime_error("moe_ep shape exceeds the preallocated exchange");
+    // FULL capture calls the model with CUDAGraphMode.NONE, so the Python
+    // hook never sets cap_on. queue.wait inside that capture is Level Zero
+    // error 44 (UR_RESULT_ERROR_UNSUPPORTED_FEATURE).
+    const bool recording = stream_recording();
+    if (recording && !s.cap_on) {
+        s.cap_on = true;
+        s.cap_started = false;
+        s.cap_key = T;
+        s.implicit_cap = true;
+        std::printf("EP capture implicit key=%d\n", T);
+        std::fflush(stdout);
+    }
     if (!s.cap_on && (s.err0[layer] || s.err1[layer])) {
         std::printf("EP previous error layer=%d err0=%u err1=%u\n", layer, s.err0[layer], s.err1[layer]);
         std::fflush(stdout);
         throw std::runtime_error("ep flag timeout on a previous call");
     }
     enqueue_moe(x, w, ids, y, T, topk, K, layer);
+    if (s.cap_on && s.implicit_cap && layer == s.last_ep && s.cap_started) {
+        ep_capture_end(s.cap_key);
+        s.implicit_cap = false;
+    }
+    // ep_capture_end clears cap_on. The card-0 stream is still recording,
+    // so the last layer must not host-wait either.
+    if (s.cap_on || recording) return;
+    // Card 1's next-layer wait is queued as soon as its own previous layer
+    // push finishes, so it would spin through card 0's expert compute.
+    // M2's profile forward left layer 0 clean and layer 1 err1=11. A host
+    // wait here makes the next wait cover only the attention already queued
+    // ahead of that layer's dispatch. Capture records the pipelined chain
+    // and does not execute it.
+    s.q1->wait();
+    q0().wait();
+    if (s.err0[layer] || s.err1[layer]) {
+        std::printf("EP flag timeout layer=%d err0=%u err1=%u\n", layer, s.err0[layer], s.err1[layer]);
+        std::fflush(stdout);
+        throw std::runtime_error("ep flag timeout");
+    }
 }
 
 namespace {

@@ -25,6 +25,7 @@ if [[ "${B70_QSA_INNER:-}" == "1" ]]; then
   # A hung kernel must not keep the card. The second file JITs the batch set.
   timeout --signal=KILL 600 python -u tests/test_qsa_xpu.py
   timeout --signal=KILL 900 python -u tests/test_qsa_batch.py
+  timeout --signal=KILL 900 python -u tests/test_qsa_xmx.py
   exit $?
 fi
 

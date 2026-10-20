@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import time
 
 import torch
 import torch.nn.functional as F
@@ -38,9 +37,25 @@ def _install_param(layer: torch.nn.Module, name: str, data: torch.Tensor) -> Non
 _SCRATCH: dict = {}
 # (name, start_event, end_event) recorded when B70_LOWBIT_FWD_SPLIT=1.
 _TIMER_SPANS: list = []
-# Host time at the end of the last expert bmm. The next request releases
-# cached blocks once; layers inside one forward do not.
-_LAST_BMM_END = 0.0
+# execute_model bumps this once per real step. The first expert tile of
+# that step may return cached blocks. Later layers in the step do not.
+_FORWARD_ID = 0
+# One pad for every layer. Per-layer mmax keys would keep dozens of
+# bmm buffers live and the next request would fail allocating.
+_MMAX_CAP = 128
+
+
+def _mmax_cap(mmax: int) -> int:
+    global _MMAX_CAP
+    need = max(8, int(mmax))
+    if need > 4096:
+        return (need + 7) & ~7
+    if need > _MMAX_CAP:
+        cap = 128
+        while cap < need:
+            cap *= 2
+        _MMAX_CAP = cap
+    return _MMAX_CAP
 
 
 def _prefill_flag() -> str:
@@ -178,19 +193,10 @@ def _unpack_rows(plane2, plane_hi, scale, bits: int):
     return ops.unpack_bf16(p2, ph, sc, bits).view(experts, rows, -1)
 
 
-def _release_cached_blocks_once() -> None:
-    """Return unused XPU blocks before a new prefill, not between layers.
-
-    A full-expert unpack reserved about 1.5 GB. The next request then
-    failed on a tiny sigmoid with UR_RESULT_ERROR_OUT_OF_RESOURCES.
-    One empty_cache at the first layer of a later request drops that
-    reservation. Layers inside one forward stay under the gap.
-    """
-    global _LAST_BMM_END
-    now = time.perf_counter()
-    if _LAST_BMM_END and now - _LAST_BMM_END > 0.5:
-        torch.xpu.empty_cache()
-    _LAST_BMM_END = now
+def note_forward() -> None:
+    """One real execute_model. Dummy and profile runs do not call this."""
+    global _FORWARD_ID
+    _FORWARD_ID += 1
 
 
 def _bmm_tile(num_experts: int, mmax_pad: int, k: int, n: int) -> int:
@@ -226,9 +232,9 @@ def expert_prefill_bmm(
     experts inside a tile stay in that bmm and are not gathered. The
     unpacked bf16 weights live only for that tile. Unpacking all 256
     experts at once reserved ~1.5 GB and the next request failed.
+    bmm outputs are reused scratch, so a later request does not allocate
+    another tile.
     """
-    global _LAST_BMM_END
-    _release_cached_blocks_once()
     t_tokens, hidden = x.shape
     num_experts = int(w13_plane2.shape[0])
     n13 = int(w13_plane2.shape[1])
@@ -239,9 +245,8 @@ def expert_prefill_bmm(
         )
     y = torch.zeros(t_tokens, hidden, dtype=torch.float32, device=x.device)
     if mmax <= 0:
-        _LAST_BMM_END = time.perf_counter()
         return y.to(torch.bfloat16)
-    mmax_pad = (mmax + 7) & ~7
+    mmax_pad = _mmax_cap(mmax)
     starts_cpu = []
     cursor = 0
     for n_hit in active_cpu:
@@ -274,29 +279,53 @@ def expert_prefill_bmm(
         tok_s = tok_v[lo:hi]
         n_e = e1 - e0
         flat = ex.to(torch.int64) * mmax_pad + loc.to(torch.int64)
+        # Scratch is keyed by the full tile shape. 256 / tile is exact
+        # at this model, so every tile matches and the second request
+        # does not allocate another bmm output.
         with _span("unpack_w13"):
-            w13 = _unpack_rows(
+            unpacked = _unpack_rows(
                 w13_plane2[e0:e1],
                 None if w13_plane_hi is None else w13_plane_hi[e0:e1],
                 w13_scale[e0:e1],
                 bits,
             )
+            w13t = _scratch(
+                ("w13t", n_e, hidden, n13, x.dtype, x.device),
+                (n_e, hidden, n13),
+                torch.bfloat16,
+                x.device,
+            )
+            w13t.copy_(unpacked.transpose(1, 2))
+            del unpacked
         with _span("unpack_w2"):
-            w2 = _unpack_rows(
+            unpacked = _unpack_rows(
                 w2_plane2[e0:e1],
                 None if w2_plane_hi is None else w2_plane_hi[e0:e1],
                 w2_scale[e0:e1],
                 bits,
             )
+            w2t = _scratch(
+                ("w2t", n_e, intermediate, hidden, x.dtype, x.device),
+                (n_e, intermediate, hidden),
+                torch.bfloat16,
+                x.device,
+            )
+            w2t.copy_(unpacked.transpose(1, 2))
+            del unpacked
         with _span("pad_x"):
             gathered = x.index_select(0, tok_s)
             xpad = _scatter_rows(
                 gathered, ex, loc, n_e, mmax_pad, hidden
             )
         with _span("bmm_w13"):
-            # xpad is [tile, M, K], weight is [tile, N, K].
-            gu = torch.bmm(xpad, w13.transpose(1, 2))
-            gu = gu.reshape(n_e * mmax_pad, n13).index_select(0, flat)
+            gu_buf = _scratch(
+                ("gu", n_e, mmax_pad, n13, x.dtype, x.device),
+                (n_e, mmax_pad, n13),
+                torch.bfloat16,
+                x.device,
+            )
+            torch.bmm(xpad, w13t, out=gu_buf)
+            gu = gu_buf.reshape(n_e * mmax_pad, n13).index_select(0, flat)
         with _span("silu"):
             gate = gu[:, :intermediate]
             up = gu[:, intermediate:]
@@ -306,13 +335,19 @@ def expert_prefill_bmm(
                 hid, ex, loc, n_e, mmax_pad, intermediate
             )
         with _span("bmm_w2"):
-            down = torch.bmm(hpad, w2.transpose(1, 2))
-            down = down.reshape(n_e * mmax_pad, hidden).index_select(0, flat)
-        del w13, w2
+            down_buf = _scratch(
+                ("down", n_e, mmax_pad, hidden, x.dtype, x.device),
+                (n_e, mmax_pad, hidden),
+                torch.bfloat16,
+                x.device,
+            )
+            torch.bmm(hpad, w2t, out=down_buf)
+            down = down_buf.reshape(n_e * mmax_pad, hidden).index_select(
+                0, flat
+            )
         with _span("reduce"):
             weight = router[order_v[lo:hi]].unsqueeze(-1)
             y.index_add_(0, tok_s.to(torch.int64), down.float() * weight)
-    _LAST_BMM_END = time.perf_counter()
     return y.to(torch.bfloat16)
 
 

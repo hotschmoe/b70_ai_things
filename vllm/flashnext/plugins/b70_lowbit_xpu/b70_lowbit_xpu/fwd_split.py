@@ -210,8 +210,14 @@ def _patch_runner(cls) -> None:
         if kwargs.get("dummy_run") or kwargs.get("is_profile"):
             return orig(self, scheduler_output, *args, **kwargs)
         ntok = int(getattr(scheduler_output, "total_num_scheduled_tokens", 0) or 0)
-        from b70_lowbit_xpu.moe import _split_enabled
+        from b70_lowbit_xpu.moe import _split_enabled, note_forward
 
+        # Bench turns the diagnostic hooks off. The step id still has to
+        # move so the expert path releases cached blocks once per request.
+        note_forward()
+        # Do not empty_cache here. On the first 8k step it surfaced as
+        # level_zero error 40 at torch.cat inside expert grouping, before
+        # any bmm. The KV pool stays in the caching allocator.
         if ntok < _MIN_TOKENS or not _split_enabled():
             return orig(self, scheduler_output, *args, **kwargs)
         _STEP += 1

@@ -5,12 +5,20 @@ vLLM stays one rank on card 0. The plugin owns card 1 and its expert half.
 Transport is a same-context peer store plus device flags. No oneCCL.
 Design: `reports/2O1_ep_design.md` section 6, milestones M0-M3.
 
-Library: `b70_ep_xpu/_C.so` sha256
+Library: `b70_ep_xpu/_C.so`. M0 and M1 used sha256
 `bd4f4aa010c718daa6a2c983e8a93670acdd2e4df1f094c0819ed68517c39594`
-(476912 bytes, built 2026-10-20 09:38). Slotted GGUF library
+(476912 bytes, built 2026-10-20 09:38). M2 uses sha256
+`7f0981fd20a2375965fd89612bb32969a71ca6906ef94bfa9a6d1d0e4926f010`
+(476912 bytes, built 2026-10-20 10:53), which host-waits both queues
+at the end of an eager `ep_moe`. Capture still records the pipelined
+chain. M3 uses sha256
+`e783539c4fa49f774a115a816209201a189a78d8d2c051f5b56c30575eb2c870`
+(481240 bytes, built 2026-10-20 12:07). A recording card-0 stream
+records the card-1 graph, skips that host wait, and finalizes the
+card-1 graph on the last MoE layer. Slotted GGUF library
 `b70_gguf_xpu/_C.ep.so` sha256
 `55c154ee90f33bec810d24a2cd6ac0c3b6b1a4e53bdc78aed50a59113e8c9bf0`
-(not rebuilt for this binary).
+(not rebuilt).
 
 ## M0 -- transport oracle
 
@@ -77,14 +85,97 @@ VERDICT: the split matches one-card `moe_layer` inside FP32 reorder.
 
 ## M2 -- eager serve
 
-Status: not started. Script `/tmp/h1c-m2-window.sh`, port 18114,
-container `vllm-fn-h1-m2`. Gate: `/v1/models` lists `hotschmoe-dev`
-first, greedy 16-token text equals
-` Paris, a city renowned for its rich history, culture, and iconic landmarks.`
+Status: pass (2026-10-20 11:12). Binary sha256 `7f0981fd`.
+
+CONFIG: 35B UD-IQ3_XXS, `B70_EP=1`, world size 1, sidecar owns card 1,
+eager, port 18114, container `vllm-fn-h1-m2`, max_len 2048, spin
+200000, path 2. Greedy gate is the C4/C7 GGUF string, temperature 0,
+16 tokens, prompt "The capital of France is":
+
+` Paris.\nThe capital of France is Paris.\nThe capital of France is`
+
+COMMAND: `bash /tmp/h1c-m2-window.sh`. Logs
+`h1c-m2-window.out`, `h1c-m2-serve.log`, `h1c-m2-greedy.json`,
+`h1c-m2-bench.json`. r1 is kept as `h1c-m2-serve-r1.log` and
+`h1c-m2-window-r1.out`.
+
+RESULT:
+
+- r1 (sha `bd4f4aa0`, 10:42-10:48) split all 40 MoE layers and finished
+  engine init. The greedy request then died: layer 1 `err1=11` because
+  card 1's next wait was queued through card 0's expert compute.
+  Health after HEALTHY. No xe-reset.
+- r2 rebuild host-waits both queues at the end of eager `ep_moe` and
+  throws on that call if a flag timed out. Warmup moe attempt 1
+  layer 0 err0=0 err1=0. Split layer 39 E=256 n0=128 types=21,21,23.
+  No `EP flag timeout`. READY 11:10:45.
+- Both greedy texts equal the C4 loop string. `same=true`, errors
+  empty. The JSON `match_c4` flag is false only because the window
+  script still compared against the int3/int4 landmarks sentence.
+- Identity: first `hotschmoe-dev`, alias
+  `qwen3.6-35b-a3b-ud-iq3-xxs`. Coherence ok, same, paris.
+- Eager C1 ITL p50 81.84 ms, p90 83.19, p99 83.78, 12.60 tok/s,
+  TTFT 217.93 ms, n=32. C2 both streams ITL p50 87.33 ms. C4 eager
+  one-card C1 was 87.62 ms. This number is recorded, not the M2 gate.
+- Health before HEALTHY (11:07:45, queued behind E2 from 10:53).
+  Health after HEALTHY rc 0 at 11:12:23. SERVE_RC=0. No xe-reset.
+
+VERDICT: M2 text and identity gates met. The eager host wait is not
+in the captured graph. M3 is the speed gate.
 
 ## M3 -- FULL_DECODE_ONLY
 
-Status: not started. Script `/tmp/h1c-m3-window.sh`, port 18115,
-container `vllm-fn-h1-m3`, `B70_XPU_CG_RECLAIM=500`. Gate: same text,
-C1/C2 ITL versus one-card 11.11 / 16.5 ms and versus C7 stock DP=2
-eager ITL 121.40 ms.
+Status: pass (2026-10-20 12:57).
+
+CONFIG: both cards, port 18115, container `vllm-fn-h1-m3`, `B70_EP=1`,
+`GRAPH=1`, `GRAPH_MODE=FULL_DECODE_ONLY`, `ATTN=FLASH_ATTN`,
+`MAX_LEN=33792`, `MAX_SEQS=4`, `GPU_MEM=0.90`, `B70_XPU_CG_RECLAIM=500`,
+capture sizes `[1,2,3,4,8]`. `_C.so` sha256
+`e783539c4fa49f774a115a816209201a189a78d8d2c051f5b56c30575eb2c870`.
+`_C.ep.so` sha256
+`55c154ee90f33bec810d24a2cd6ac0c3b6b1a4e53bdc78aed50a59113e8c9bf0`.
+Text gate is the C4 loop string. Speed gate: C1 ITL at most 1.05x the
+one-card 11.11 ms (11.665 ms). C2 is recorded against 16.51 / 16.65 ms
+and against C7 stock DP=2 eager ITL 121.40 ms.
+
+COMMAND: `bash /tmp/h1c-m3-window.sh` PID 3286770. Logs
+`h1c-m3-window-r2.out`, `h1c-m3-serve.log`, `h1c-m3-bench.json`,
+`h1c-m3-greedy.json`.
+
+Two earlier launches are not this measurement. The 11:38 window
+benched G4's Ornith server on port 18115 (`alias_ok=False`). Those
+ITL numbers are discarded (`h1c-m3-*-falseport.*`). The 11:44 window
+loaded the model, then FULL capture raised Level Zero error 44 inside
+`moe_ep` because the eager host wait ran on the recording stream
+(`h1c-m3-serve-capture44.log`). No DEVICE_LOST. That window's
+health-after finished HEALTHY at 12:53:25 (`H1c M3 done rc=1`).
+No xe-reset.
+
+RESULT:
+
+- Queued from 12:12:49. Health-before HEALTHY, rc 0, at 12:55:14.
+- EP init path=2, spin=200000, reclaim=500. Warmup exchange and moe
+  attempt 1 both err0=0 err1=0. Split layers 0-39.
+- Profile capture finalized card-1 graphs for keys 4 and 3. The real
+  FULL capture then finalized keys 4, 3, 2, and 1. No key=8 line.
+  Capture finished in 1 s, pool 0.03 GiB. Same 4-graph set as the
+  one-card C7 run. No error 44. No EP flag timeout.
+- KV cache 14.72 GiB, 630487 tokens, 18.66x at 33792.
+- READY 12:56:40. Identity `hotschmoe-dev` then
+  `qwen3.6-35b-a3b-ud-iq3-xxs`. `first_ok=True`, `alias_ok=True`.
+- Greedy temperature 0, 16 tokens, both runs:
+  ` Paris.\nThe capital of France is Paris.\nThe capital of France is`.
+  `match_c4=true`. Bench coherence OK/OK, same string.
+- C1 ITL p50 11.36 ms, p90 11.62, p99 12.35, 89.50 tok/s, TTFT
+  142.82 ms, completion_tokens 63 (requested 64). 11.36 / 11.11 =
+  1.022, under the 11.665 ms cap.
+- C2 stream0 ITL p50 15.31 ms, p90 16.06, p99 16.39, 71.14 tok/s,
+  TTFT 243.01 ms, 64 tokens. Stream1 ITL p50 15.74 ms, p90 16.12,
+  p99 16.42, 65.97 tok/s, TTFT 242.36 ms, 40 tokens. One-card C7 was
+  16.51 ms (46 tokens) and 16.65 ms (40 tokens). C7 stock DP=2 eager
+  C1 ITL was 121.40 ms.
+- GATE_RC=0. SERVE_RC=0 at 12:56:53. Health-after HEALTHY rc 0 at
+  12:57:23. No xe-reset. Container removed.
+
+VERDICT: M3 text, identity, and C1 speed gates met. C2 ITL is below
+the one-card graph reference on both streams. M0-M3 are closed.

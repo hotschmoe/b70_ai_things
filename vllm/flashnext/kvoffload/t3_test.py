@@ -212,12 +212,20 @@ def _restore_ok(restored: dict, expect: dict, gold_ids: list[int], before: str, 
     computed_ok = restored["computed"] == expect["computed"]
     cached_ok = restored["cached_tokens"] == expect["end"]
     host_ok = int(host) == expect["host"] - int(device) and host > 0
-    greedy = restored["token_ids"] == gold_ids
+    got = [int(x) for x in restored["token_ids"]]
+    gold = [int(x) for x in gold_ids]
+    mismatch = next((i for i, (a, b) in enumerate(zip(got, gold)) if a != b), None)
+    if mismatch is None and len(got) != len(gold):
+        mismatch = min(len(got), len(gold))
+    greedy = mismatch is None and len(got) == len(gold)
     return {
         "computed_ok": computed_ok,
         "cached_ok": cached_ok,
         "host_ok": host_ok,
         "greedy_match": greedy,
+        "mismatch_at": mismatch,
+        "restored_ids": got,
+        "gold_ids": gold,
         "host_delta": host,
         "device_delta": device,
         "ok": bool(computed_ok and cached_ok and host_ok and greedy),
@@ -287,23 +295,32 @@ def phase_itl(args, tokenizer, block: int) -> dict:
             return {"pass": False, "reason": dec.error}
 
     before = _metrics(args.base_url)
-    t0 = time.monotonic()
     restored = run("restored", turn2, "t3-park", args.reply_tokens)
-    t1 = time.monotonic()
+    # The restore window ends at the first new token. The following
+    # decode of this request is a third stream, not the copy.
+    t0 = float(restored.get("t_start") or time.monotonic())
+    t_first = restored.get("t_first")
+    t1 = float(t_first) if t_first is not None else t0 + float(restored["ttft_s"])
     after = _metrics(args.base_url)
     gate = _restore_ok(restored, expect, control["token_ids"], before, after)
+    print(
+        f"t3: gate mismatch_at={gate['mismatch_at']} "
+        f"host={gate['host_delta']} device={gate['device_delta']}",
+        flush=True,
+    )
     itl = {}
     itl_pass = True
     for dec in streams:
         base, window = dec.itls(t0, t1)
         ok, detail = _itl_ok(base, window)
+        detail["gaps_ms"] = [round(g * 1000.0, 3) for g in window]
         itl[dec.name] = detail
         itl_pass = itl_pass and ok
         print(
             f"t3: itl {dec.name} base_n={detail['n_base']} "
             f"win_n={detail['n_window']} p50 {detail['p50_base']} -> "
             f"{detail['p50_window']} p99 {detail['p99_base']} -> "
-            f"{detail['p99_window']} ok={ok}",
+            f"{detail['p99_window']} ok={ok} gaps_ms={detail['gaps_ms']}",
             flush=True,
         )
     alive = all(
@@ -323,7 +340,9 @@ def phase_itl(args, tokenizer, block: int) -> dict:
 
 
 def phase_cycle(args, tokenizer, block: int) -> dict:
-    p1_n = 300
+    # Two blocks so one free GPU page is not a whole conversation.
+    # run_t3.sh sets NUM_GPU_BLOCKS=32 and max_len 20480 for this phase.
+    p1_n = block + 400
     if p1_n % block == 0:
         p1_n += 1
     reply_n = 32
@@ -347,27 +366,52 @@ def phase_cycle(args, tokenizer, block: int) -> dict:
             return {"pass": False, "reason": f"gold reply {i}"}
         replies.append(row["token_ids"])
 
-    golds: list[list[int]] = []
-    turns: list[tuple[int, list[int], dict]] = []
-    for t in range(8):
-        conv = t % 4
-        u2 = _ids(12000 + t * 100, u2_n)
+    # The second visit of a conversation appends the first restore's
+    # reply. A finished restore replaces the parked tail, so the same
+    # prompt is no longer a strict prefix of that tail.
+    turns: list[tuple[int, list[int], dict, list[int]]] = []
+    first_prompts: list[list[int]] = []
+    first_replies: list[list[int]] = []
+    for conv in range(4):
+        u2 = _ids(12000 + conv * 100, u2_n)
         turn2 = prompts[conv] + replies[conv] + u2
         expect = turn2_accounting(p1=p1_n, r1=reply_n, u2=u2_n)
         gold = _row(
-            f"gold-{t}",
+            f"gold-{conv}",
             complete(
                 args.base_url,
                 args.model,
                 turn2,
                 reply_n,
                 args.request_timeout,
-                cache_salt=f"t3-gold-c-{t}",
+                cache_salt=f"t3-gold-c-{conv}",
                 return_token_ids=True,
             ),
         )
-        golds.append(gold["token_ids"])
-        turns.append((conv, turn2, expect))
+        first_prompts.append(turn2)
+        first_replies.append(gold["token_ids"])
+        turns.append((conv, turn2, expect, gold["token_ids"]))
+    for conv in range(4):
+        u3 = _ids(14000 + conv * 100, u2_n)
+        prompt3 = first_prompts[conv] + first_replies[conv] + u3
+        expect = turn2_accounting(
+            p1=len(first_prompts[conv]),
+            r1=len(first_replies[conv]),
+            u2=u2_n,
+        )
+        gold = _row(
+            f"gold-ext-{conv}",
+            complete(
+                args.base_url,
+                args.model,
+                prompt3,
+                reply_n,
+                args.request_timeout,
+                cache_salt=f"t3-gold-x-{conv}",
+                return_token_ids=True,
+            ),
+        )
+        turns.append((conv, prompt3, expect, gold["token_ids"]))
 
     for i, prompt in enumerate(prompts):
         row = _row(
@@ -385,33 +429,64 @@ def phase_cycle(args, tokenizer, block: int) -> dict:
         if row["token_ids"] != replies[i]:
             return {"pass": False, "reason": f"park reply drifted {i}"}
 
-    active_n = min(24 * block, args.max_model_len - 64)
-    streams = []
-    for i in range(2):
-        dec = Decode(f"cycle-active-{i}")
-        dec.start(
-            args.base_url,
-            args.model,
-            build_ids(tokenizer, f"t3-long-{i}", active_n),
-            400,
-            f"t3-long-{i}",
-            args.request_timeout,
-            warmup=1,
-        )
-        streams.append(dec)
-    if not all(dec.ready.wait(args.request_timeout) for dec in streams):
-        return {"pass": False, "reason": "cycle decode did not start"}
+    # A prompt that fills the 32-block pool is not scheduled beside
+    # another request. The restore then waits until that request
+    # finishes, and the finished request takes a host slot. Both
+    # actives use a short prompt and a long decode budget so they are
+    # in decode before the first restore and still running after the
+    # eighth.
+    if block != 1088:
+        return {"pass": False, "reason": f"cycle sizes assume block 1088, got {block}"}
+    active_prompt = 256
+    active_decode = 4000
+    small = Decode("cycle-active-1")
+    small.start(
+        args.base_url,
+        args.model,
+        build_ids(tokenizer, "t3-short-1", active_prompt),
+        active_decode,
+        "t3-short-1",
+        args.request_timeout,
+        warmup=8,
+    )
+    if not small.ready.wait(180):
+        return {"pass": False, "reason": "small active did not start"}
+    big = Decode("cycle-active-0")
+    big.start(
+        args.base_url,
+        args.model,
+        build_ids(tokenizer, "t3-short-0", active_prompt),
+        active_decode,
+        "t3-short-0",
+        args.request_timeout,
+        warmup=8,
+    )
+    if not big.ready.wait(180):
+        return {"pass": False, "reason": "big active did not start"}
+    if big.done.is_set() or small.done.is_set():
+        return {
+            "pass": False,
+            "reason": (
+                "active finished before restore "
+                f"small={len(small.tokens)} big={len(big.tokens)}"
+            ),
+        }
+    print(
+        f"t3: actives small_n={len(small.tokens)} big_n={len(big.tokens)}",
+        flush=True,
+    )
+    streams = [big, small]
 
     results = []
     all_ok = True
-    for t, (conv, turn2, expect) in enumerate(turns):
+    for t, (conv, prompt, expect, gold_ids) in enumerate(turns):
         before = _metrics(args.base_url)
         restored = _row(
             f"cycle-{t}",
             complete(
                 args.base_url,
                 args.model,
-                turn2,
+                prompt,
                 reply_n,
                 args.request_timeout,
                 cache_salt=f"t3-cpark-{conv}",
@@ -419,16 +494,30 @@ def phase_cycle(args, tokenizer, block: int) -> dict:
             ),
         )
         after = _metrics(args.base_url)
-        gate = _restore_ok(restored, expect, golds[t], before, after)
+        gate = _restore_ok(restored, expect, gold_ids, before, after)
         gate["turn"] = t
         gate["conv"] = conv
         results.append(gate)
         all_ok = all_ok and gate["ok"]
-        print(f"t3: cycle turn={t} conv={conv} ok={gate['ok']}", flush=True)
-    alive = all(len(dec.tokens) > 1 and dec.error is None for dec in streams)
+        print(
+            f"t3: cycle turn={t} conv={conv} ok={gate['ok']} "
+            f"mismatch_at={gate['mismatch_at']} host={gate['host_delta']} "
+            f"device={gate['device_delta']} "
+            f"computed_ok={gate['computed_ok']} cached_ok={gate['cached_ok']}",
+            flush=True,
+        )
+    alive = all(
+        dec.error is None and not dec.done.is_set() and len(dec.tokens) > 1
+        for dec in streams
+    )
     passed = bool(all_ok and alive)
     print(f"t3: CYCLE_RESULT pass={passed}", flush=True)
-    return {"pass": passed, "turns": results, "streams_alive": alive, "active_prompt": active_n}
+    return {
+        "pass": passed,
+        "turns": results,
+        "streams_alive": alive,
+        "active_tokens": [len(dec.tokens) for dec in streams],
+    }
 
 
 def main() -> int:

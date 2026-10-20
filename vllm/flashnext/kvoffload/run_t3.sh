@@ -24,7 +24,7 @@ export B70_AGENT=g4
 mkdir -p "$LOGDIR"
 rm -f "$OUT"
 
-echo "T3 health before $(date '+%F %T') card=$CARD phase=$PHASE"
+echo "T3 health before $(date '+%F %T') card=$CARD phase=$PHASE copy=${B70_KVPARK_COPY:-0}"
 B70_GPU_LOCK_TIMEOUT=90 "$REPO/bin/gpu-run" --card "$CARD" \
   "$REPO/bin/xpu-health" --card "$CARD" \
   > "$LOGDIR/g4-t3-health-before-c${CARD}.txt" 2>&1
@@ -32,8 +32,17 @@ echo "T3 health before ok"
 
 echo "T3 serve start $(date '+%F %T')"
 : > "$SERVE_LOG"
+# itl keeps the T2 cap (45) so two short decodes fit beside the restore.
+# cycle uses 32 blocks. The client keeps both actives on short prompts
+# so a parked restore can allocate while they decode.
+# Both phases on one serve stay at 45.
+GPU_BLOCKS=45
+if [[ "$PHASE" == "cycle" ]]; then
+  GPU_BLOCKS=32
+  export MAX_LEN="${MAX_LEN:-27000}"
+fi
 B70_GPU_LOCK_TIMEOUT=180 CARD="$CARD" PORT="$PORT" MEMORY=80g \
-  MAX_NUM_SEQS=4 \
+  MAX_NUM_SEQS=4 NUM_GPU_BLOCKS="$GPU_BLOCKS" \
   "$HERE/serve_ornith.sh" >> "$SERVE_LOG" 2>&1 &
 SPID=$!
 
@@ -69,7 +78,9 @@ fi
 rc=$serve_rc
 if [[ "$serve_rc" == 0 ]]; then
   echo "T3 client $(date '+%F %T') phase=$PHASE"
+  # Quiet CPU only for the timed client. The serve already holds gpu-run.
   set +e
+  B70_CPU_LOCK_TIMEOUT=180 "$REPO/bin/cpu-run" --quiet \
   docker run --rm --network host --cpus 2 --memory 8g \
     -v /mnt/vm_8tb:/mnt/vm_8tb \
     -e PYTHONPATH="${FORK}:${REPO}/vllm/flashnext:${SITE}" \
@@ -99,9 +110,13 @@ wait "$SPID" 2>/dev/null || true
 trap - EXIT
 
 echo "T3 health after $(date '+%F %T')"
+# A lost lock must not replace a passing client exit.
+set +e
 B70_GPU_LOCK_TIMEOUT=90 "$REPO/bin/gpu-run" --card "$CARD" \
   "$REPO/bin/xpu-health" --card "$CARD" \
   > "$LOGDIR/g4-t3-health-after-c${CARD}.txt" 2>&1
-echo "T3 health after rc=$?"
+health_rc=$?
+set -e
+echo "T3 health after rc=$health_rc"
 tail -5 "$LOGDIR/g4-t3-health-after-c${CARD}.txt"
 exit "$rc"

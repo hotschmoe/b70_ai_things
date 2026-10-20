@@ -95,5 +95,43 @@ def install() -> None:
             _BUSY -= 1
 
     CUDAGraphWrapper.__call__ = wrapped
+    _install_full_replay()
     _INSTALLED = True
     print("b70_ep: CUDAGraphWrapper hook installed", flush=True)
+
+
+def _install_full_replay() -> None:
+    """FULL_DECODE_ONLY replays from CudaGraphManager, not the wrapper.
+
+    The manager calls graph.replay() with no forward context. d1's
+    instantiate-then-submit hook reads _PENDING, which this sets first.
+    """
+    from vllm.v1.worker.gpu.cudagraph_utils import CudaGraphManager
+
+    if getattr(CudaGraphManager.run_fullgraph, "_b70_ep", False):
+        return
+    orig = CudaGraphManager.run_fullgraph
+
+    def wrapped(self, desc):
+        nt = int(desc.num_tokens)
+        from . import ops
+
+        ops.replay_prepare(nt)
+        graph = self.graphs.get(desc) if hasattr(self, "graphs") else None
+        hooked = bool(graph is not None and getattr(type(graph), "_b70_ep_replay_hook", False))
+        if hooked:
+            _PENDING["key"] = nt
+            _PENDING["sent"] = False
+            try:
+                return orig(self, desc)
+            finally:
+                if not _PENDING["sent"]:
+                    ops.replay_submit(nt)
+                _PENDING["key"] = None
+                _PENDING["sent"] = False
+        ops.replay_submit(nt)
+        return orig(self, desc)
+
+    wrapped._b70_ep = True  # type: ignore[attr-defined]
+    CudaGraphManager.run_fullgraph = wrapped
+    print("b70_ep: FULL graph replay hook installed", flush=True)

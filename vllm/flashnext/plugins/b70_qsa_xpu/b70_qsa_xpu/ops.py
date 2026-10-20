@@ -119,6 +119,13 @@ def _register_fakes() -> None:
         del q, pages, block_table, seq_slot, ulist, ucount, step, block_size, idx_block, idx_dim, has_pooled
         return attn.new_empty(attn.shape)
 
+    @register_fake("b70_qsa::union_attend_xmx")
+    def _union_attend_xmx_fake(
+        q, pages, block_table, seq_slot, ulist, ucount, attn, step, block_size, idx_block, idx_dim, has_pooled
+    ):
+        del pages, block_table, seq_slot, ulist, ucount, attn, step, block_size, idx_block, idx_dim, has_pooled
+        return torch.empty(1, dtype=torch.int32, device=q.device)
+
     _FAKES = True
 
 
@@ -324,6 +331,27 @@ def gate_batch(attn, q_full, out):
 def union_build(ids, step, ulist, ucount):
     _load()
     return torch.ops.b70_qsa.union_build(_ready(ids), _ready(step), _ready(ulist), _ready(ucount))
+
+
+def union_attend_xmx(
+    q, pages, block_table, seq_slot, ulist, ucount, attn, step, block_size: int, idx_block: int, idx_dim: int, has_pooled: int
+):
+    """Mode-1 XMX union. Returns int32[1]: 1 if the 24/2/256 kernel launched."""
+    _load()
+    return torch.ops.b70_qsa.union_attend_xmx(
+        _ready(q),
+        _ready(pages),
+        _ready(block_table),
+        _ready(seq_slot),
+        _ready(ulist),
+        _ready(ucount),
+        _ready(attn),
+        _ready(step),
+        int(block_size),
+        int(idx_block),
+        int(idx_dim),
+        int(has_pooled),
+    )
 
 
 def union_attend(

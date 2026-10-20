@@ -20,6 +20,7 @@
 #include <cstdio>
 #include <cstring>
 #include <mutex>
+#include <unordered_set>
 #include <vector>
 
 #include <level_zero/ze_api.h>
@@ -29,6 +30,8 @@ namespace {
 struct ZeFns {
   decltype(&zeDeviceGetCommandQueueGroupProperties) get_groups = nullptr;
   decltype(&zeCommandListCreateImmediate) create_imm = nullptr;
+  decltype(&zeMemAllocHost) mem_alloc_host = nullptr;
+  decltype(&zeMemFree) mem_free = nullptr;
 };
 
 bool load_ze(ZeFns* fns) {
@@ -43,7 +46,27 @@ bool load_ze(ZeFns* fns) {
       dlsym(handle, "zeDeviceGetCommandQueueGroupProperties"));
   fns->create_imm = reinterpret_cast<decltype(fns->create_imm)>(
       dlsym(handle, "zeCommandListCreateImmediate"));
+  fns->mem_alloc_host = reinterpret_cast<decltype(fns->mem_alloc_host)>(
+      dlsym(handle, "zeMemAllocHost"));
+  fns->mem_free = reinterpret_cast<decltype(fns->mem_free)>(dlsym(handle, "zeMemFree"));
   return fns->get_groups != nullptr && fns->create_imm != nullptr;
+}
+
+ZeFns& ze_fns() {
+  static ZeFns fns;
+  static std::once_flag once;
+  std::call_once(once, [&] { load_ze(&fns); });
+  return fns;
+}
+
+std::unordered_set<void*>& ze_host_ptrs() {
+  static std::unordered_set<void*> ptrs;
+  return ptrs;
+}
+
+std::mutex& ze_host_mu() {
+  static std::mutex mu;
+  return mu;
 }
 
 struct Engine {
@@ -177,20 +200,66 @@ int64_t alloc_host(int64_t nbytes) {
   return static_cast<int64_t>(reinterpret_cast<uintptr_t>(ptr));
 }
 
+// flags: 0 malloc_host, 1 cached, 2 uncached, 4 write-combined.
+// malloc_host on this stack is fast H2D and about 4.6 GB/s D2H.
+// The flag arm exists so a bench can try a Level Zero host bias.
+int64_t alloc_host_flags(int64_t nbytes, int64_t flags) {
+  TORCH_CHECK(nbytes > 0, "nbytes");
+  if (flags == 0) {
+    return alloc_host(nbytes);
+  }
+  const at::DeviceGuard guard(at::Device(at::kXPU, c10::xpu::current_device()));
+  sycl::queue& probe = c10::xpu::getCurrentXPUStream().queue();
+  ZeFns& fns = ze_fns();
+  TORCH_CHECK(fns.mem_alloc_host != nullptr && fns.mem_free != nullptr, "zeMemAllocHost missing");
+  TORCH_CHECK(
+      probe.get_device().get_backend() == sycl::backend::ext_oneapi_level_zero,
+      "not Level Zero");
+  auto context = sycl::get_native<sycl::backend::ext_oneapi_level_zero>(probe.get_context());
+  ze_host_mem_alloc_desc_t desc;
+  std::memset(&desc, 0, sizeof(desc));
+  desc.stype = ZE_STRUCTURE_TYPE_HOST_MEM_ALLOC_DESC;
+  desc.flags = static_cast<ze_host_mem_alloc_flags_t>(flags);
+  void* ptr = nullptr;
+  ze_result_t rc = fns.mem_alloc_host(context, &desc, static_cast<size_t>(nbytes), 4096, &ptr);
+  TORCH_CHECK(rc == ZE_RESULT_SUCCESS && ptr != nullptr, "zeMemAllocHost failed");
+  {
+    std::lock_guard<std::mutex> lock(ze_host_mu());
+    ze_host_ptrs().insert(ptr);
+  }
+  std::fprintf(
+      stderr, "b70_kvpark: zeMemAllocHost %lld bytes flags=%lld\n",
+      static_cast<long long>(nbytes), static_cast<long long>(flags));
+  return static_cast<int64_t>(reinterpret_cast<uintptr_t>(ptr));
+}
+
 void free_host(int64_t ptr) {
   if (ptr == 0) {
     return;
   }
   const at::DeviceGuard guard(at::Device(at::kXPU, c10::xpu::current_device()));
   sycl::queue& probe = c10::xpu::getCurrentXPUStream().queue();
-  sycl::free(reinterpret_cast<void*>(static_cast<uintptr_t>(ptr)), probe);
+  void* raw = reinterpret_cast<void*>(static_cast<uintptr_t>(ptr));
+  {
+    std::lock_guard<std::mutex> lock(ze_host_mu());
+    if (ze_host_ptrs().erase(raw) != 0) {
+      ZeFns& fns = ze_fns();
+      auto context = sycl::get_native<sycl::backend::ext_oneapi_level_zero>(probe.get_context());
+      TORCH_CHECK(fns.mem_free != nullptr, "zeMemFree missing");
+      fns.mem_free(context, raw);
+      return;
+    }
+  }
+  sycl::free(raw, probe);
 }
 
-int64_t copy_batch(
+int64_t memcpy_batch(
+    sycl::queue& q,
     const torch::Tensor& src,
     const torch::Tensor& dst,
     const torch::Tensor& sizes,
-    bool sync) {
+    bool sync,
+    bool order) {
   TORCH_CHECK(src.is_cpu() && dst.is_cpu() && sizes.is_cpu(), "pointer tensors are CPU");
   TORCH_CHECK(
       src.scalar_type() == torch::kLong && dst.scalar_type() == torch::kLong &&
@@ -198,9 +267,9 @@ int64_t copy_batch(
       "pointer tensors are int64");
   TORCH_CHECK(src.is_contiguous() && dst.is_contiguous() && sizes.is_contiguous(), "contiguous");
   TORCH_CHECK(src.numel() == dst.numel() && src.numel() == sizes.numel(), "equal counts");
-  const at::DeviceGuard guard(at::Device(at::kXPU, c10::xpu::current_device()));
-  sycl::queue& q = copy_queue();
-  order_copy_after_current(q);
+  if (order) {
+    order_copy_after_current(q);
+  }
   const int64_t* src_p = src.data_ptr<int64_t>();
   const int64_t* dst_p = dst.data_ptr<int64_t>();
   const int64_t* sz_p = sizes.data_ptr<int64_t>();
@@ -219,13 +288,34 @@ int64_t copy_batch(
     bytes += static_cast<int64_t>(n);
     any = true;
   }
-  if (any) {
+  if (order && any) {
     order_current_after_copy(q, last);
   }
   if (sync && any) {
     last.wait();
   }
   return bytes;
+}
+
+int64_t copy_batch(
+    const torch::Tensor& src,
+    const torch::Tensor& dst,
+    const torch::Tensor& sizes,
+    bool sync) {
+  const at::DeviceGuard guard(at::Device(at::kXPU, c10::xpu::current_device()));
+  return memcpy_batch(copy_queue(), src, dst, sizes, sync, true);
+}
+
+// Same bytes on the current compute stream. The probe uses this to see
+// whether the 4.6 GB/s D2H cap is the copy engine or the host buffer.
+int64_t copy_compute(
+    const torch::Tensor& src,
+    const torch::Tensor& dst,
+    const torch::Tensor& sizes,
+    bool sync) {
+  const at::DeviceGuard guard(at::Device(at::kXPU, c10::xpu::current_device()));
+  sycl::queue& current = c10::xpu::getCurrentXPUStream().queue();
+  return memcpy_batch(current, src, dst, sizes, sync, false);
 }
 
 int64_t engine_ordinal() {
@@ -243,16 +333,20 @@ int64_t ordered() {
 
 TORCH_LIBRARY(b70_kvpark, m) {
   m.def("alloc_host(int nbytes) -> int");
+  m.def("alloc_host_flags(int nbytes, int flags) -> int");
   m.def("free_host(int ptr) -> ()");
   m.def("copy_batch(Tensor src, Tensor dst, Tensor sizes, bool sync) -> int");
+  m.def("copy_compute(Tensor src, Tensor dst, Tensor sizes, bool sync) -> int");
   m.def("engine_ordinal() -> int");
   m.def("ordered() -> int");
 }
 
 TORCH_LIBRARY_IMPL(b70_kvpark, CompositeExplicitAutograd, m) {
   m.impl("alloc_host", alloc_host);
+  m.impl("alloc_host_flags", alloc_host_flags);
   m.impl("free_host", free_host);
   m.impl("copy_batch", copy_batch);
+  m.impl("copy_compute", copy_compute);
   m.impl("engine_ordinal", engine_ordinal);
   m.impl("ordered", ordered);
 }

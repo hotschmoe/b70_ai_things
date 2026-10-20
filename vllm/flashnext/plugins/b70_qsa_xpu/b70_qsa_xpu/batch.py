@@ -186,10 +186,51 @@ class QsaBatch:
         )
         ops.attend_batch(self.q, self.k_f16, self.v_f16, self.attn, self.step)
         ops.gate_batch(self.attn, self.q_full, self.gated)
+        self._commit_length()
+
+    def _commit_length(self) -> None:
         # Durable length. Inactive rows keep the count they already had.
         # where() writes a scratch buffer so the false branch is not aliased.
         torch.where(self.pos >= 0, self.step[:, 1], self.length, out=self._length_scratch)
         self.length.copy_(self._length_scratch)
+
+    def append_cells(self) -> None:
+        """Append the cell in `pos`. No score and no attention.
+
+        Same page writes as run_decode. Inactive rows (pos < 0) return
+        before the kernel barriers and keep their length.
+        """
+        g = self.geom
+        ops.write_step_batch(self.pos, self.step, g.idx_top_k, g.idx_block)
+        ops.kv_append_batch(
+            self.k,
+            self.v,
+            self.pages,
+            self.block_table,
+            self.step,
+            self.block_size,
+            g.idx_block,
+            g.idx_dim,
+            1 if self.pooled else 0,
+        )
+        if self.pooled:
+            ops.indexer_append_batch(
+                self.raw,
+                self.k_norm,
+                self.tail,
+                self.dead,
+                self.block_pos,
+                self.pages,
+                self.block_table,
+                self.cos,
+                self.sin,
+                self.step,
+                self.mrope,
+                self.pos_base,
+                g.eps,
+                self.block_size,
+            )
+        self._commit_length()
 
     def score_queries(
         self,
@@ -275,6 +316,103 @@ class QsaBatch:
             self.geom.idx_dim,
             1 if self.pooled else 0,
         )
+
+    def _union_tile(
+        self,
+        q: torch.Tensor,
+        ids: torch.Tensor,
+        step: torch.Tensor,
+        seq_slot: torch.Tensor,
+        attn: torch.Tensor,
+    ) -> bool:
+        """Attend one tile of at most 8 queries. Returns True if XMX wrote attn.
+
+        The tile is one sequence. Mode-1 XMX launches only for 24/2/256
+        pooled pages. Any other shape, or ok=0, uses the SIMT union.
+        Host read of the launch flag: eager prefill only.
+        """
+        n_q = int(q.shape[0])
+        if n_q < 1 or n_q > 8:
+            raise RuntimeError("B70_QSA union tile is 1..8 queries of one sequence")
+        cap = int(ids.shape[1])
+        ulist = torch.empty(1, 8 * cap, dtype=torch.int32, device=self.device)
+        ucount = torch.empty(1, dtype=torch.int32, device=self.device)
+        ops.union_build(ids, step, ulist, ucount)
+        g = self.geom
+        pooled = 1 if self.pooled else 0
+        if g.n_head == 24 and g.head_dim == 256 and g.n_kv == 2 and self.pooled:
+            ok = ops.union_attend_xmx(
+                q,
+                self.pages,
+                self.block_table,
+                seq_slot,
+                ulist,
+                ucount,
+                attn,
+                step,
+                self.block_size,
+                g.idx_block,
+                g.idx_dim,
+                pooled,
+            )
+            if int(ok.item()) == 1:
+                return True
+        ops.union_attend(
+            q,
+            self.pages,
+            self.block_table,
+            seq_slot,
+            ulist,
+            ucount,
+            attn,
+            step,
+            self.block_size,
+            g.idx_block,
+            g.idx_dim,
+            pooled,
+        )
+        return False
+
+    def prefill_chunk(
+        self,
+        seq: int,
+        q: torch.Tensor,
+        q_idx: torch.Tensor,
+        q_full: torch.Tensor,
+        pos: torch.Tensor,
+    ) -> torch.Tensor:
+        """Union-attend one sequence after its cells are appended.
+
+        Each query carries its own position, so n_kv is that token's
+        count, not the end of the chunk. Tiles of 8 share `seq`. Returns
+        fp16 gated [n, heads, dim]. `union_xmx` is True if any tile
+        launched the mode-1 kernel. Eager only.
+        """
+        if not self.pooled:
+            raise RuntimeError("draft prefill uses caller ids, not the union")
+        n = int(q.shape[0])
+        if int(q_idx.shape[0]) != n or int(q_full.shape[0]) != n or int(pos.shape[0]) != n:
+            raise RuntimeError("B70_QSA prefill chunk is ragged")
+        g = self.geom
+        dev = self.device
+        cap = g.width_cap()
+        gated = torch.empty(n, g.n_head, g.head_dim, dtype=torch.float16, device=dev)
+        self.union_xmx = False
+        seq_i = int(seq)
+        for tile in range(0, n, 8):
+            stop = min(tile + 8, n)
+            nt = stop - tile
+            scores = torch.empty(nt, self.max_cells, dtype=torch.float32, device=dev)
+            ids = torch.empty(nt, cap, dtype=torch.int32, device=dev)
+            step = torch.empty(nt, 4, dtype=torch.int32, device=dev)
+            attn = torch.empty(nt, g.n_head, g.head_dim, dtype=torch.float32, device=dev)
+            slot = torch.full((nt,), seq_i, dtype=torch.int32, device=dev)
+            sl = slice(tile, stop)
+            self.score_queries(q_idx[sl], pos[sl], slot, scores, ids, step)
+            if self._union_tile(q[sl], ids, step, slot, attn):
+                self.union_xmx = True
+            ops.gate_batch(attn, q_full[sl], gated[sl])
+        return gated
 
     def export_seq(self, seq: int) -> dict:
         """CPU copy of one sequence. Pages are in logical-block order."""

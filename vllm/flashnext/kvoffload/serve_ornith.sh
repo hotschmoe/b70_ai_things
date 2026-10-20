@@ -64,7 +64,6 @@ ARGS=(
   --dtype float16
   --max-model-len "$MAX_LEN"
   --gpu-memory-utilization "$GPU_MEM"
-  --num-gpu-blocks-override "$NUM_GPU_BLOCKS"
   --language-model-only
   --max-num-seqs "$MAX_NUM_SEQS"
   --enable-prefix-caching
@@ -74,6 +73,10 @@ ARGS=(
   --park-finished-tail
   --kv-transfer-config "$KV_JSON"
 )
+# 0 leaves the profiled pool. The default 45 is the T2 and T3 cap.
+if [[ "$NUM_GPU_BLOCKS" != "0" ]]; then
+  ARGS+=(--num-gpu-blocks-override "$NUM_GPU_BLOCKS")
+fi
 
 if [[ "$GRAPH" == "0" ]]; then
   ARGS+=(--enforce-eager)

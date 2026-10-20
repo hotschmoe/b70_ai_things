@@ -13,6 +13,7 @@ IMG="${IMG:-b70/flashnext-llamacpp-build:oneapi2026.1-de7fa0a}"
 
 mkdir -p "$OUT"
 test -f "$SRC/qsa_kernels.cpp"
+test -f "$SRC/qsa_xmx.cpp"
 test -f "$TORCH/include/c10/xpu/XPUStream.h"
 test -f "$PYINC/Python.h"
 SO_NAME="${SO_NAME:-libb70_qsa_xpu.so}"
@@ -74,6 +75,7 @@ icpx -fsycl -fPIC -shared -std=c++20 -O2 \
   -I/pyinc \
   /src/qsa_kernels.cpp \
   /src/qsa_batch.cpp \
+  /src/qsa_xmx.cpp \
   -L/torch/lib -L/venvlib \
   -Wl,-rpath,"$RPATH_VENV" \
   -Wl,-rpath,"$RPATH_TORCH" \

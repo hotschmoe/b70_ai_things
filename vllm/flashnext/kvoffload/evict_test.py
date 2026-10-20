@@ -138,6 +138,7 @@ def complete(
     )
     started = time.monotonic()
     ttft = None
+    t_first = None
     text_parts: list[str] = []
     sampled: list[int] = []
     usage = None
@@ -157,7 +158,8 @@ def complete(
             for choice in event.get("choices") or []:
                 piece = choice.get("text") or ""
                 if piece and ttft is None:
-                    ttft = time.monotonic() - started
+                    t_first = time.monotonic()
+                    ttft = t_first - started
                 text_parts.append(piece)
                 for token in choice.get("token_ids") or []:
                     sampled.append(int(token))
@@ -167,6 +169,8 @@ def complete(
         "text": "".join(text_parts),
         "token_ids": sampled,
         "ttft_s": ttft,
+        "t_start": started,
+        "t_first": t_first,
         "usage": usage,
         "wall_s": time.monotonic() - started,
     }

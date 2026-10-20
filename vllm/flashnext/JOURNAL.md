@@ -2822,3 +2822,1183 @@ T3 client is written (t3_test.py, run_t3.sh) and has not run.
 
 VERDICT: W8 has no bandwidth number. T2 on swap_blocks_batch stands
 (2.063 GB/s host load, gate pass). Direct copy stays off.
+
+## 2026-10-20 10:52 E2 -- one-chunk 8k split, dense path was still WNA16
+
+CONFIG: card 1, port 18084, container vllm-fn-lowbit-e2,
+libb70_lowbit_xpu_e2u.so (not rebuilt), int3 experts / int4 trunk,
+FULL_DECODE_ONLY, FLASH_ATTN, bf16, MOE_LAUNCHES=2, GEMV_ROWS unset,
+max_num_batched_tokens=16384, PREFIX_CACHE=0, B70_XPU_CG_RECLAIM=500.
+Env B70_LOWBIT_PREFILL=bmm with the mode file starting at matmul.
+fwd_split patched both GPUModelRunner classes. Hooks on for the diag.
+C10b (09:16) dequant + oneDNN bmm is the same expert shape on a
+different checkpoint; this entry is the served lowbit plugin.
+COMMAND: logs/e2_serve_driver.sh second launch. Split log
+e2-fwd-split.log. Serve log e2-serve.log (this run only).
+RESULT: Identity hotschmoe-dev first, alias qwen36-w3a16-b70-lowbit.
+Coherence both times the Paris sentence, TTFT 92 ms and 71 ms.
+Unique 8186-token prompts, one step each. MATMUL_1 TTFT 31352 ms,
+261 tok/s. MATMUL_2 TTFT 31299 ms, 262 tok/s. Warm matmul split
+(step 2): forward 31263 ms, linear_attn 19519 ms (n=30), self_attn
+5312 ms (n=10), mlp 6395 ms, experts 6390 ms, shared_expert 2272 ms
+(n=80), router 4.4 ms, norm 22 ms. host_sync item 7, tolist 44,
+synchronize 1. BMM_1 TTFT 35950 ms, 228 tok/s. Step 3: forward
+35754 ms, linear_attn 19592, self_attn 5329, experts 10794.
+lowbit spans: group 3687, bmm_w13 1692, bmm_w2 1281, pad_x 441,
+reduce 372, unpack_w13 135, unpack_w2 68. BMM_2 returned no usage.
+Engine died at 10:39:48 on F.sigmoid of the shared-expert gate,
+level_zero error 40 UR_RESULT_ERROR_OUT_OF_RESOURCES. Diag still
+wrote the off file and returned 0. bench_latency coherence then
+HTTP 500 EngineDeadError. Container stopped. xpu-health --card 1
+rc 0 at 10:40:41. The XPU GDN logger returns immediately on XPU, so
+the missing "Using SYCL GDN" line does not identify the backend.
+linear.py only unpacked for env exactly "matmul", so env "bmm" sent
+every dense projection through prefill_wna16.
+VERDICT: The ~25 s outside the expert loop is dense WNA16 inside
+linear_attn, self_attn, and the shared expert, not a host sync.
+E1's 0.1 s dense figure was the unpack + F.linear path. The tiled
+bmm still unpacked all 256 experts (~1.5 GB) and the second 8k
+request OOM'd. Not a 5000 tok/s result. Next serve: dense matmul
+and bmm both use unpack + F.linear, bmm unpacks one tile, explicit
+--gdn-prefill-backend sycl, diag fails closed before the bench.
+GEMV_ROWS stays unset (rows=2 int4 max_abs 1.0 on the earlier probe).
+
+## 2026-10-20 10:53 H1c -- M2 r1 layer-1 flag timeout, eager wait rebuilt
+
+CONFIG: _C.so was bd4f4aa0. Eager B70_EP=1, both cards, port 18114, container vllm-fn-h1-m2, max_len 2048. Spin 200000. nlayers=64.
+COMMAND: bash /tmp/h1c-m2-window.sh. Logs kept as h1c-m2-serve-r1.log and h1c-m2-window-r1.out. Rebuild: B70_EP_SKIP_GGUF=1 bin/cpu-run plugins/b70_ep_xpu/scripts/build.sh.
+RESULT: Health before HEALTHY. Transport and compute warmup passed on attempt 1. All 40 MoE layers split 128/128. Engine init finished in 11.56 s, so the profile forward returned. The greedy request then died in method.py apply: "EP previous error layer=1 err0=0 err1=11" and RuntimeError ep flag timeout on a previous call. Layer 0 had no stored error. Card 1s layer-1 wait is queued right after its own layer-0 push, so it spins through card 0s expert compute. Connection reset on the client. SERVE stopped. Health after HEALTHY rc 0 at 10:48:44. No xe-reset. New _C.so sha256 7f0981fd20a2375965fd89612bb32969a71ca6906ef94bfa9a6d1d0e4926f010 (476912 bytes). Eager ep_moe now host-waits both queues before returning, and throws on that call if a flag timed out. Capture still records the pipelined chain.
+VERDICT: r1 text was not measured. The rerun uses the eager host wait.
+
+## 2026-10-20 10:43 C7 -- TP=2 loader refuses packed sharding
+
+CONFIG: fork e442b4b53f at launch (later tip 35da272b61 does not
+change this raise). 35B UD-IQ3_XXS, TP=2, --enable-expert-parallel,
+enforce-eager, max_model_len 2048. No P2P. No packed sharding.
+COMMAND: bash /tmp/c7-tp-window.sh at 10:41:34. Logs
+c7-tp-window-raise.out and c7-ep-tp-serve-raise.log.
+RESULT: HEALTH_RC 0. Both workers raised at serve_loader.py:337:
+tensor parallel size is 2. Packed attention, shared expert, and
+vocab sharding are not implemented. RAISE:1 at 10:43:25. SERVE_RC
+137 is docker stop after the Python exception, not a GPU fault.
+The following Flash-Next window's collective health passed, so no
+xe-reset was required.
+VERDICT: TP=2 is the expected loader refusal. EP for this GGUF
+stays DP=2 with TP=1, which was measured at 09:01.
+
+## 2026-10-20 10:51 C7 -- Flash-Next load dies on indexer K
+
+CONFIG: fork e442b4b53f. qwen4_exp IQ3_XXS, DP=2 TP=1,
+--enable-expert-parallel, enforce-eager, language-model-only,
+max_model_len 2048, memory 100g, SYCL_CACHE_PERSISTENT=0. No P2P.
+No hotschmoe-dd.
+COMMAND: bash /tmp/c7-fn-window.sh at 10:48:48. Logs
+c7-fn-window-index.out and c7-fn-serve-index.log.
+RESULT: HEALTH_RC 0. Shards=2, tensors=1224, root
+Qwen4ExpForCausalLM, EP 256/512, qk_rows=4096. placed 100, then
+both workers IndexError in serve_loader.py _check_linear:
+sizes[_SHARD_INDEX[shard]]. The next linear is
+blk.3.indexer.k_proj.weight, ggml shape (2560, 128), shard k.
+index_qk_proj is one ReplicatedLinear of 512+128. Q is (2560, 512).
+SERVE_RC 1. No greedy. No xe-reset. G4 took card 1 at 10:51:26.
+VERDICT: loader check, not a collective failure. Next commit sums
+the split shards against the one partition.
+
+## 2026-10-20 10:55 C7 -- indexer Q and K share one linear
+
+CONFIG: fork 35da272b61, not pushed. serve_loader.py only.
+COMMAND: py_compile. Metadata read of the IQ3_XXS shard: Q rows
+512, K rows 128, hidden 2560, indexer heads 4 and 1, head dim 128.
+RESULT: PY_COMPILE_OK. A one-partition module records each named
+shard and checks the row sum after the load. 512+128 equals the
+ReplicatedLinear output.
+VERDICT: unmeasured. The next Flash-Next window uses this commit.
+
+
+## 2026-10-20 10:56 G4 -- W8 H2D 14.0 GB/s, D2H 4.58 GB/s
+
+CONFIG: card 1, one process, cpu-run --quiet around the copies.
+Library libb70_kvpark_ordered.so, 95512 bytes, ordered()=1,
+engine group 1. Host buffers sycl::malloc_host. Sizes 16 MiB,
+64 MiB, 256 MiB, 1 GiB. Decimal GB/s over the sync wait.
+swap_blocks_batch timed on the same pointers. xpu-health before
+and after. B70_KVPARK_COPY stays 0. No serve.
+
+COMMAND: /tmp/g4-launch-copy-r2.sh then
+B70_KVPARK_SO=libb70_kvpark_ordered.so CARD=1
+vllm/flashnext/kvoffload/run_copy_bench.sh.
+Log g4-copy-driver-r2.txt. An earlier run of the 08:41 library
+(g4-copy-driver.txt, 10:40) died in torch.tensor of a device
+pointer above 2^63-1. Pointers are now packed uint64 viewed as
+int64. dev_ptr on this run was 0xffffd556b7400000.
+
+RESULT: bad=0 at every size. H2D 13.344 / 14.031 / 14.223 / 14.037.
+D2H 4.636 / 4.583 / 4.659 / 4.670. 1 MiB fragments about 13.4 GB/s
+H2D. swap H2D 8.853 / 8.110 / 6.042 / 4.119. swap D2H about 4.66.
+worst one-buffer 4.583. COPY_BENCH printed. Exit 1, the gate wants
+both directions at or above 7.5. Health after 10:52:09 HEALTHY
+card 1, exit 0. No xe-reset.
+
+VERDICT: H2D on the copy queue clears the 7.5 GB/s bar and the
+8.5 GB/s Strata probe. D2H stays at the swap_blocks_batch rate.
+The op is not wired into a serve. A host-bias probe is next.
+
+## 2026-10-20 10:55 G5b -- batch QSA matches the CPU page
+
+CONFIG: libb70_qsa_xpu.so 817928 bytes, mtime 10:16, icpx 2026.1. No
+rebuild between the two GPU runs. Image vllm-flashnext-xpu:py312, host
+UMD via harness/xpu-run.sh. tests/run_gpu.sh.
+
+COMMAND: Card 0, B70_AGENT=G5b, B70_GPU_LOCK_TIMEOUT=7200, log
+logs/g5b-qsa-batch.log, container 10:40:23. Then the graph compare was
+narrowed to ids[:, :width]. Card 1, same agent, timeout 14400, log
+logs/g5b-qsa-batch-r2.log, launcher 10:46:43.
+
+RESULT: Card 0 printed QSA_XPU_OK. Eager batch passed block 4, block 8,
+pos_base, mrope, inactive, chunked prefill, SIMT union (words exact,
+attn max_abs 7.007e-4), draft, and export/import. Graph replay of
+pages, tail, dead, block_pos, and length was exact, then "FAIL graph
+ids mismatch". topk does not write past width. The check compared the
+whole buffer after fill_(-1), and the snap tail was still the
+allocation zero. Health after HEALTHY, rc 0. RUN_EXIT:1. No xe-reset.
+
+Card 1 health before HEALTHY (27s). QSA_XPU_OK, single-seq graph ids
+exact at widths 5, 6, and 7. QSA_BATCH_OK. Graph pos 4 and pos 5:
+pages, tail, dead, block_pos, length, attn, and gated exact, id prefix
+exact. Slot-3 completion on seq 0 with seq 1 inactive: seq 0 pages and
+ids exact, attn and gated max_abs 0, inactive pages, tail, and dead
+exact. gpu-run done in 24s, exit 0. Health after HEALTHY. RUN_EXIT:0.
+Codes, scales, and ids exact on the eager rows. Pooled inside 1e-5,
+scores inside 1e-4, attn inside 2e-3. Not a speed claim.
+
+VERDICT: SIMT batch decode, chunked multi-query index, SIMT union
+prefill, draft int8 pages, and park export/import match the CPU page
+on card 1, including graph replay. XMX mode 1 is compiling to
+libb70_qsa_xpu_next.so and is not measured. The hook prefill is still
+the host token loop. Greedy prompts past 4K stay blocked until
+Flash-Next serves. C7: call mark_draft on each MTP decoder layer before
+KV spec collection, and set_draft_ids before the draft forward. G5b
+will not edit mtp.py.
+
+## 2026-10-20 11:00 G2b -- audit pass 7
+
+CONFIG: CPU only. No GPU, no systemd, no commit. Cursor is the 10:55 G5b heading (JOURNAL line 2981). Findings F69-F76 append reports/1G2_audit.md after F68. F58-F68 were already on disk from the start of this pass.
+COMMAND: Read headings from 10:52 E2 through 10:55 G5b. Check e2-driver.log, the pre-overwrite split log and serve traceback, h1c-m2 logs, c7 raise and index logs, g4-copy-driver-r2.txt, both g5b batch logs, fork commits 35da272b61 and e442b4b53f, moe_ep.cpp, linear.py, and serve_loader.py. git status in /mnt/vm_8tb/github/b70_ai_things and the fork.
+RESULT: E2 identity, coherence TTFTs 92.2/71.4 ms, and the rounded 8k split times match. Diag rc 0, then bench rc 1. The second OOR is F.sigmoid in qwen2_moe.py:121, so F59's torch.bmm sentence for that crash is wrong. The split file was truncated by the 10:52 serve (F69). H1 M2 r1 died on ep flag layer=1 err1=11, health after HEALTHY, GREEDY_RC=0 with empty HTTP 500 (F70). C7 TP=2 is the packed-loader refusal, SERVE_RC 137 (F71). C7 DP=2 load IndexError matches the pre-commit sizes[] index; the tensor name is not in the log (F72). Commit 35da272b61 is loader-only, ahead 17, unmeasured (F73). G4 ordered copy bad=0, H2D about 14 GB/s, worst D2H 4.583, exit 1, health after HEALTHY (F74). G5b card 0 FAIL graph ids mismatch and RUN_EXIT 1; card 1 QSA_BATCH_OK and RUN_EXIT 0 (F75). Cached diff empty. No new staged binary.
+VERDICT: Pass 7 recorded. Latency numbers checked this pass match the cited logs. Open items: the third E2 serve was still loading at 10:57 and is not scored, the 1.5 GB unpack claim and the 46.4 percent hit rate stay unverified, C12 device gates remain unjournaled, H1 M2 has no passing greedy text, and G4 D2H is under the 7.5 GB/s gate.
+
+## 2026-10-20 11:02 C12 -- per-type schedule passes gates, graph time flat vs C9
+
+CONFIG: card 0, ZE_AFFINITY_MASK=0, plugin side build
+b70_gguf_xpu/_C.c12.so sha256
+d46f80175c67a10681e09e7642b5293eedec0d3f98517b5fe7ba4c9662b70112
+(10120096 bytes, mtime 10:28). Copy kept at
+/mnt/vm_8tb/b70/build/vllm-flashnext/c12/_C.c12.measured.so.
+Not installed over _C.so or _C.graph.so. One templated GU kernel per
+distinct gate/up type and one DOWN kernel per distinct down type.
+Fast-path types: Q8_0, Q2_K, Q3_K, Q4_K, Q5_K, Q6_K, IQ2_XXS, IQ2_XS,
+IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, Q2_0. Shared experts are
+accepted when the caller passes the tensors. The live 35B serve still
+passes empty shared tensors, so the runner GEMV still owns shared.
+B70_MOE_PHASE prints host submit plus wait, not device time. Fair
+graph is tests/c9_fair.py with B70_MOE_PHASE unset. That window was
+not under cpu-run --quiet.
+
+COMMAND: bin/gpu-run --card 0
+/mnt/vm_8tb/b70/build/vllm-flashnext/c12/run_gates.sh
+(log c12/gates.log, 340s, exit 0). Host dequant earlier:
+c12/compare_cpu.log, failures=0 types=14/14.
+
+RESULT: xpu-health HEALTHY card 0 before and after. gpu_check
+VERDICT failures=0 (atol 5e-2). moe_layer_bench VERDICT failures=0
+(atol 8e-2). c12_types VERDICT failures=0 covered=12, including Q8_0
+dequant mismatches=0. Fair graph us/call, median of 5:
+IQ3_S/Q2_0 (gu=21 dt=42) 186.95 / 277.77 / 398.45 / 535.64 at T=1..4,
+cosine 0.99999. IQ2_XS/IQ4_NL (gu=17 dt=20) 198.51 / 288.44 / 414.10 /
+571.82, cosine 0.99999. Strata R2 IQ3 reference remains
+112.89 / 148.10 / 202.93 / 261.64. Ratio about 1.66x at T=1 and 2.05x
+at T=4. No xe-reset.
+
+VERDICT: type coverage is in that candidate and the graph time matches
+C9. One kernel per type did not close the gap. A second binary is
+linked and not measured yet: same path, sha256
+457a262da74b9477ebf34922be18d481c8c5fb224db5b50f2d3277f014d4762f
+(11266352 bytes, mtime 10:59). It uses the 3D grid, use_root_sync,
+separate EC 4/2/1 launches, and a branchless two-row k-loop. Shipped
+_C.so and _C.graph.so are unchanged.
+
+## 2026-10-20 11:10 G4 -- D2H stays 4.7 GB/s on every host bias
+
+CONFIG: card 1, 256 MiB, four timed copies after one warmup.
+Library libb70_kvpark_flags.so, 106584 bytes, compile rc=0 at
+11:00:56. ordered()=1, engine group 1. Arms: compute stream with
+sycl::malloc_host, and the copy queue with Level Zero host flags
+cached, uncached, and write-combined. Decimal GB/s. bad counts
+bytes that differ every 4096. xpu-health before and after.
+
+COMMAND: /tmp/g4-launch-flags.sh. Log g4-flags-driver.txt.
+B70_KVPARK_PROBE_ONLY=1. B70_KVPARK_COPY stays 0.
+
+RESULT: compute h2d=13.812 d2h=4.687. cached h2d=14.205 d2h=4.690.
+uncached h2d=14.014 d2h=4.663. write-combined h2d=14.165 d2h=4.649.
+bad=0 on all four. Health after 11:08:52 HEALTHY card 1, exit 0.
+FLAGS_DRIVER_EXIT 0 is the probe returning, not a 7.5 GB/s pass.
+H1 took both cards at 11:09:24 (vllm-fn-h1-m2).
+
+VERDICT: D2H is about 4.7 GB/s on the copy engine, on the compute
+stream, and on every host cache mode tried. H2D stays about 14.
+The store path does not reach 7.5 GB/s. The next measurement is
+the same op on an mmap of /dev/shm, which is the serve pool.
+
+## 2026-10-20 11:12 C12 -- EC-split graph does not instantiate
+
+CONFIG: card 0, quiet CPU not held. Side build _C.c12.so sha256
+457a262da74b9477ebf34922be18d481c8c5fb224db5b50f2d3277f014d4762f
+(11266352 bytes). 3D grid, use_root_sync, three launches per type
+(EC 4, then 2, then 1), branchless two-row dot. B70_MOE_PHASE unset
+for c9_fair. Copy of that .so kept at c12/_C.c12.ec3.so once the
+next link starts. Not installed.
+
+COMMAND: bin/gpu-run --card 0 c12/run_fair.sh. Log c12/fair2.log.
+gpu-run done in 83s, exit 1. Health before HEALTHY card 0.
+
+RESULT: moe_layer_bench VERDICT failures=0. c12_types VERDICT
+failures=0 covered=12, sched=1, Q8_0 dequant mismatches=0. Eager
+cosine-level max_abs stayed under 2e-3 on the cropped cases.
+c9_fair then died in torch.xpu.graph capture_end:
+RuntimeError: Failed to instantiate native UR executable graph.
+No OURS us_graph line. No xe-reset. The 48-call graph previously
+captured the one-kernel-per-type schedule (about 7 kernels per
+call). Three EC launches raise that to about 11, and 48 * 11 is
+528 graph nodes.
+
+VERDICT: correctness of the 3D schedule holds in eager mode. The
+separate EC launches are not a graph-serve candidate. Strata keeps
+EC 4/2/1 as constexpr passes inside one kernel. That shape is
+rebuilding. Shipped _C.so and _C.graph.so are unchanged.
+
+## 2026-10-20 11:12 C7 -- Flash-Next DP=2 retry
+
+CONFIG: fork 35da272b61. qwen4_exp IQ3_XXS, DP=2 TP=1,
+--enable-expert-parallel, enforce-eager, language-model-only,
+max_model_len 2048, memory 100g, SYCL_CACHE_PERSISTENT=0.
+No P2P. No hotschmoe-dd. Collective health first.
+Greedy chat vs recorded Strata texts 323 and 667.
+COMMAND: bash /tmp/c7-fn-window.sh
+RESULT: leases requested immediately after this entry.
+VERDICT: window open.
+
+
+## 2026-10-20 11:14 G4 -- mmap pool copies at 9.4 GB/s H2D
+
+CONFIG: card 1, 256 MiB /dev/shm mapping, four runs after one warmup.
+Library libb70_kvpark_flags.so. ordered()=1, engine group 1.
+Decimal GB/s. bad is mismatches every 4096 bytes. xpu-health
+before and after. B70_KVPARK_COPY stays 0. No serve.
+
+COMMAND: /tmp/g4-launch-mmap.sh. Log g4-mmap-driver.txt.
+B70_KVPARK_MMAP_ONLY=1.
+
+RESULT: h2d=9.435 d2h=4.451 bad=0. Health after 11:12:37 HEALTHY
+card 1, exit 0. MMAP_DRIVER_EXIT 0 is the probe returning.
+USM-host H2D on the same op was about 14 GB/s. D2H stays about 4.5.
+C7 took both cards at 11:13:08 for vllm-fn-flashnext-gguf-ep.
+
+VERDICT: The serve pool pointer clears 7.5 GB/s host-to-device.
+Device-to-host does not. The next run is T2 with
+B70_KVPARK_COPY=1 on libb70_kvpark_flags.so, logs tagged copy,
+after that Flash-Next container releases a card. qwen4_exp was
+not edited.
+
+## 2026-10-20 11:15 E2 -- dense vendor GEMM, expert loop still 4.1 s
+
+CONFIG: card 1, port 18084, vllm-fn-lowbit-e2, libb70_lowbit_xpu_e2u.so,
+int3 experts / int4 trunk, FULL_DECODE_ONLY, FLASH_ATTN, bf16,
+MOE_LAUNCHES=2, GEMV_ROWS unset, max_num_batched_tokens=16384,
+PREFIX_CACHE=0, --gdn-prefill-backend sycl. Mode file started as
+matmul. linear.py unpacks for both matmul and bmm. Expert bmm
+unpacks one tile. The worker imported that code at model init.
+C10b's dequant+bmm note still stands; this is the served plugin.
+COMMAND: logs/e2_serve_driver.sh third launch. Split e2-fwd-split.log.
+RESULT: Repack finished, server up 11:06:45. Identity hotschmoe-dev
+first. Coherence Paris, TTFT 88 ms and 69 ms. Unique 8186-token
+prompts. MATMUL_1 TTFT 4906 ms, 1668 tok/s. MATMUL_2 TTFT 4555 ms,
+1797 tok/s. Warm split step 2: forward 4521 ms, linear_attn 242 ms
+(n=30), self_attn 126 ms (n=10), experts 4110 ms, shared_expert 35 ms
+(n=80), router 4.5 ms, norm 22 ms. BMM_1 TTFT 10648 ms, 769 tok/s.
+Step 3 experts 9936 ms: group 4695, bmm_w13 1687, bmm_w2 1071,
+pad_x 453, unpack_w13 264, unpack_w2 260, reduce 315. BMM_2 died
+at torch.bmm of the down tile, level_zero error 40. Diag returned 1
+before the bench. Container stopped. No health after: C7 took both
+cards at 11:13:08 (vllm-fn-flashnext-gguf-ep). No xe-reset.
+VERDICT: The 19.5 s linear_attn was dense prefill_wna16. Vendor
+GEMM plus the requested SYCL GDN flag drops it to 242 ms, and
+self_attn to 126 ms. The 8k step is now the per-expert F.linear
+loop at 4.1 s, 1797 tok/s. Not 5000. The tiled bmm is slower on
+the first request and the second request still runs out of device
+memory. Next serve reuses one bmm scratch (fixed pad cap) and
+releases cached blocks once per large step. It waits behind C7.
+GEMV_ROWS stays unset.
+
+## 2026-10-20 11:16 C13 -- wide dequant library build started
+CONFIG: new TU csrc/dequant_wide.cpp + csrc/c13_bind.cpp, plus the C11 smoke
+objects grouped_prefill.cpp and dequant_fast.cpp. Output
+plugins/b70_gguf_xpu/b70_gguf_xpu/_C.c13.so. Does not replace _C.so,
+_C.c10.so, _C.c11.so, _C.c11b.so, or _C.c12.so (C12 .so is 10169704 bytes,
+11:14). Shared edit is prefill.py dispatch only: T>=DQ_T_MIN and
+prefill_dequant_wide present and B70_PREFILL_DQ_LAYER not in
+bmm/off/0/c10. decode.hpp (10:26), dequant_fast.cpp (10:13),
+grouped_prefill.cpp (10:02), kernels.cpp, bind.cpp untouched.
+icpx -fsycl -std=c++20 -O3 -fPIC -DB70_PREFILL_SMOKE=1
+-fsycl-device-code-split=per_kernel -fsycl-max-parallel-link-jobs=4.
+COMMAND: B70_AGENT=C13 B70_CPU_LOCK_TIMEOUT=7200 bin/cpu-run -- bash
+vllm/flashnext/plugins/b70_gguf_xpu/scripts/c13_build.sh
+RESULT: CPU lease was free. Log
+/mnt/vm_8tb/b70/build/vllm-flashnext/logs/c13-build.log.
+VERDICT: build in progress.
+
+## 2026-10-20 11:17 G5b -- XMX union matches SIMT and the CPU page
+
+CONFIG: Mode-1 port of Strata union_attn in csrc/qsa_xmx.cpp. No
+Strata headers and no dpct. Page-local K and V. icpx 2026.1,
+intel_gpu_bmg_g31, per-kernel split. Installed library
+libb70_qsa_xpu.so is 962040 bytes, mtime 10:57:30. SIMT backup is
+libb70_qsa_xpu.so.simt-817928 (817928 bytes). Image
+vllm-flashnext-xpu:py312. Card 0. 24/2/256, 64 tokens, 8 queries,
+hand-built width 16, union 58 cells. Atol 2e-2 vs SIMT and 5e-2 vs
+CPU. Q, K, V, and P enter the products as fp16, so this is not a
+bitwise compare.
+
+COMMAND: Build under bin/cpu-run, SO_NAME=libb70_qsa_xpu_next.so,
+log logs/g5b-qsa-xmx-build.log. GPU: CARD=0 B70_AGENT=G5b
+B70_GPU_LOCK_TIMEOUT=14400 bash tests/run_gpu.sh. Log
+logs/g5b-qsa-xmx.log. Launcher 3245496 at 10:58:20.
+
+RESULT: compile rc=0, BUILD_EXIT:0. Health before HEALTHY (16s).
+Container vllm-fn-g5-qsa done in 32s, exit 0. QSA_XPU_OK.
+QSA_BATCH_OK. PASS xmx refuse (ok=0). xmx ok=1, union_cells=58.
+xmx vs simt max_abs=9.710e-04. xmx vs cpu max_abs=5.405e-04.
+PASS xmx. QSA_XMX_OK. Health after HEALTHY, rc 0. RUN_EXIT:0.
+No xe-reset. The suite waited behind H1 (both-card health holding
+card 0 while blocked on card 1) and then behind C12 run_fair.sh.
+
+VERDICT: Mode-1 XMX union attention matches the SIMT union and the
+CPU page inside those atols on card 0. The installed library stays
+the 962040-byte build. Hook prefill now appends with append_cells
+and union-attends each request in tiles of 8 (XMX when ok is 1,
+else SIMT). That composition is queued on card 0 behind C7's
+both-card Flash-Next serve (max_model_len 2048). Log
+logs/g5b-qsa-prefill.log. The hook forward itself is not the test.
+Greedy past 4K stays blocked: 2048 is under the 2051 identity
+bound, and G5b will not start hotschmoe-dd. The C7 mark_draft ask
+from 10:38 and 10:55 still stands. G5b will not edit mtp.py.
+
+
+## 2026-10-20 11:19 C13 -- _C.c13.so linked, card 0 bench queued
+CONFIG: icpx -fsycl -std=c++20 -O3 -fPIC -DB70_PREFILL_SMOKE=1
+-fsycl-device-code-split=per_kernel -fsycl-max-parallel-link-jobs=4.
+Sources grouped_prefill.cpp dequant_fast.cpp dequant_wide.cpp c13_bind.cpp.
+Output _C.c13.so only.
+COMMAND: B70_AGENT=C13 B70_CPU_LOCK_TIMEOUT=7200 bin/cpu-run -- bash
+vllm/flashnext/plugins/b70_gguf_xpu/scripts/c13_build.sh
+RESULT: cpu-run done in 139s exit 0. _C.c13.so is 2635416 bytes at 11:19.
+_C.so stays 7574840 bytes (07:40). _C.c12.so stays 10169704 bytes (11:14).
+Log /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c13-build.log ends C13_BUILD_OK.
+Warnings only (deprecated parallel_for). Card 0 is held by C12
+(run_fair.sh since 11:18). Bench waits on that lease.
+VERDICT: library linked. Measurement not started.
+
+## 2026-10-20 11:12 H1c -- M2 eager serve matches the C4 string
+
+CONFIG: _C.so sha256 7f0981fd20a2375965fd89612bb32969a71ca6906ef94bfa9a6d1d0e4926f010 (476912 bytes, 10:53). Eager B70_EP=1, both cards, port 18114, container vllm-fn-h1-m2, max_len 2048, spin 200000, path 2. _C.ep.so still 55c154ee. Greedy temperature 0, 16 tokens, prompt "The capital of France is". The C4/C7 GGUF string is " Paris.\nThe capital of France is Paris.\nThe capital of France is".
+COMMAND: bash /tmp/h1c-m2-window.sh from 10:53:34. Logs h1c-m2-window.out, h1c-m2-serve.log, h1c-m2-greedy.json, h1c-m2-bench.txt.
+RESULT: Queued behind E2 until health-before HEALTHY at 11:07:45. Warmup moe attempt 1 layer 0 err0=0 err1=0. Split layers 0-39, layer 39 types 21,21,23. Application startup complete. No EP flag timeout. READY 11:10:45. Both greedy texts equal the C4 loop string, errors empty. The window JSON match_c4 is false only because that script still compared the landmarks sentence. Identity first hotschmoe-dev, alias qwen3.6-35b-a3b-ud-iq3-xxs, coherence OK/OK. C1 ITL p50 81.84 ms p90 83.19 p99 83.78, 12.60 tok/s, TTFT 217.93 ms, n=32. C2 both streams ITL p50 87.33 ms. BENCH_RC=0 GREEDY_RC=0. SERVE_RC=0 at 11:11:06. Health after HEALTHY rc 0 at 11:12:23. No xe-reset.
+VERDICT: M2 gate met. Eager ITL is recorded, not a gate (C4 eager one-card C1 was 87.62 ms). The host wait is eager-only. M3 graph window is next.
+
+
+## 2026-10-20 11:20 H1c -- M3 FULL_DECODE_ONLY window open
+
+CONFIG: both cards, port 18115, container vllm-fn-h1-m3, GRAPH=1, GRAPH_MODE=FULL_DECODE_ONLY, ATTN=FLASH_ATTN, MAX_LEN=33792, B70_XPU_CG_RECLAIM=500, B70_EP=1, _C.so 7f0981fd, _C.ep.so 55c154ee. Text gate is the C4 loop string. xe-reset only if the serve log contains DEVICE_LOST.
+COMMAND: nohup env B70_AGENT=H1 B70_GPU_LOCK_TIMEOUT=7200 bash /tmp/h1c-m3-window.sh. PID 3262526. Log logs/h1c-m3-window.out.
+RESULT: queued at 11:20:08. Card 0 held by G5b. Waiting for both cards.
+VERDICT: window is in the lock queue. Not measured yet.
+
+## 2026-10-20 11:21 C12 -- fused EC still fails graph instantiate
+
+CONFIG: card 0. Side build _C.c12.so sha256
+6a2e412bfde900fc086d3fc6b1b7bf46a4fd4c36db8527efe0afe285046a285c
+(10169704 bytes, mtime 11:14). Copy at c12/_C.c12.fused.so.
+3D grid, use_root_sync, EC 4/2/1 constexpr inside one kernel,
+branchless two-row dot. Not installed.
+
+COMMAND: bin/gpu-run --card 0 c12/run_fair.sh. Log c12/fair3.log.
+gpu-run done in 93s, exit 1. Health before HEALTHY card 0.
+
+RESULT: moe_layer_bench VERDICT failures=0. c12_types VERDICT
+failures=0 covered=12, sched=1. c9_fair capture_end again:
+RuntimeError: Failed to instantiate native UR executable graph.
+No us_graph line. No xe-reset. Node count is back to one GU kernel
+and one down kernel per call, so the extra EC launches were not
+the cause. The shared difference from the capturing schedule is
+use_root_sync plus the 3D grid.
+
+VERDICT: eager layer checks pass. This binary is not a graph-serve
+candidate. The next link drops use_root_sync and keeps the 3D grid.
+Shipped _C.so and _C.graph.so are unchanged.
+
+
+## 2026-10-20 11:21 G5b -- prefill union matches the CPU page
+
+CONFIG: Same 962040-byte library. Card 0. append_cells writes the
+page without attending. prefill_chunk scores each query at its own
+position and union-attends tiles of 8. Small geom (4/2/64) stays on
+SIMT. 24/2/256 launches mode-1 XMX. Atol 2e-3 on SIMT gated output
+and 5e-2 on the XMX gated output. Decode graph path is unchanged.
+
+COMMAND: CARD=0 B70_AGENT=G5b B70_GPU_LOCK_TIMEOUT=14400 bash
+vllm/flashnext/plugins/b70_qsa_xpu/tests/run_gpu.sh. Log
+logs/g5b-qsa-prefill.log. Launcher 3259840 at 11:17:05. Queued
+behind C7's both-card serve, which had released before health.
+
+RESULT: Health before HEALTHY (13s). QSA_XPU_OK. PASS prefill
+tiles: append_cells cache matched the CPU page, neighbor pages
+stayed empty, ids exact, gated worst max_abs=1.953e-03 (queries
+0 and 1), XMX did not launch. QSA_BATCH_OK. Hand-built XMX union
+again ok=1, 58 cells, vs SIMT 9.710e-04, vs CPU 5.405e-04.
+PASS prefill xmx: 16 appended cells, 10 queries (tiles 8 and 2),
+XMX launched, gated vs CPU max_abs=9.766e-04. QSA_XMX_OK.
+Container done in 26s, exit 0. Health after HEALTHY, rc 0.
+RUN_EXIT:0. No xe-reset. No speed claim.
+
+VERDICT: Chunked prefill through append_cells plus union tiles
+matches the CPU page on card 0. SIMT is the small-shape path.
+Mode-1 XMX is the 24/2/256 path. QsaRunner.forward itself was
+not called. Greedy prompts past 4K stay blocked until a
+Flash-Next serve uses max_model_len above 2051. G5b will not
+start hotschmoe-dd.
+
+## 2026-10-20 11:35 C12 -- 3D grid captures, about 4 percent faster
+
+CONFIG: card 0, not under cpu-run --quiet. Side build _C.c12.so
+sha256 b3c15e14ba5811d90dfe8a65e4ccc1353fd67b3f44e4180810fac22b4ed49979
+(10165216 bytes, mtime 11:22). 3D grid, no use_root_sync, EC 4/2/1
+inside one kernel, branchless two-row dot. B70_MOE_PHASE unset.
+Not installed. Copy will be c12/_C.c12.noroot.so before the next link.
+
+COMMAND: bin/gpu-run --card 0 c12/run_fair.sh. Log c12/fair4.log.
+gpu-run done in 84s, exit 0. Health before and after HEALTHY card 0.
+
+RESULT: moe_layer_bench failures=0. c12_types failures=0 covered=12.
+Fair graph us/call, median of 5, cosine 0.99999:
+IQ3_S/Q2_0 180.17 / 267.04 / 385.36 / 515.13 at T=1..4.
+IQ2_XS/IQ4_NL 191.86 / 280.62 / 402.88 / 560.55.
+Prior one-kernel 1D schedule was 186.95 / 277.77 / 398.45 / 535.64
+and 198.51 / 288.44 / 414.10 / 571.82. Strata R2 IQ3 remains
+112.89 / 148.10 / 202.93 / 261.64. Ratio about 1.60x at T=1 and
+1.97x at T=4. No xe-reset.
+
+VERDICT: dropping use_root_sync lets the 3D schedule capture.
+The graph is a few percent under the C9 number and does not close
+the gap. Next link is one kernel per entry width, still without
+use_root_sync, to test the EC=1 register file at T=1. Shipped
+_C.so and _C.graph.so are unchanged.
+
+
+## 2026-10-20 11:22 C13 -- bench lost the CPU lock, requeued
+CONFIG: card 0 via bin/gpu-run --card 0, B70_GPU_LOCK_TIMEOUT=21600,
+B70_PREFILL_TIMEOUT=7200, inner cpu-run --quiet default wait 90s.
+COMMAND: bin/gpu-run --card 0 scripts/c13_run.sh
+RESULT: G5b released card 0. Health before rc=0. cpu-run --quiet then
+waited on C12 build.sh (heavy, since 11:20:18) and exited 124 at 90s.
+The script printed "FAIL python timed out" for that CPU-lock miss.
+No kernel ran. Health after rc=0. gpu-run done in 129s exit 124.
+CPU lease is free again. Next run waits up to 1800s for the quiet lock.
+VERDICT: no measurement. Requeue.
+
+## 2026-10-20 11:32 C7 -- Flash-Next DP=2 load global-OOM on the PLE copy
+
+CONFIG: fork 35da272b61. Same window as the 11:12 announce. qwen4_exp
+IQ3_XXS, DP=2 TP=1, --enable-expert-parallel, enforce-eager,
+language-model-only, max_model_len 2048, docker memory 100g,
+SYCL_CACHE_PERSISTENT=0. No P2P. No B70_QSA. No hotschmoe-dd.
+Collective health first.
+COMMAND: bash /tmp/c7-fn-window.sh. Preserved logs
+c7-fn-serve-oom.log and c7-fn-window-oom.out.
+RESULT: HEALTH_RC 0 at 11:12:39. Serve launched 11:13:08. Both workers
+logged placed 1200 tensors at 11:17:22 (Worker_DP0 pid 493,
+Worker_DP1 pid 475). No Python traceback from the worker. Kernel
+11:17:41: oom-kill constraint CONSTRAINT_NONE, global_oom, task
+VLLM::Worker_DP pid 3258155, total-vm 129572252 kB, anon-rss
+46915752 kB, file-rss 12 kB. Mem-Info: active_anon 70711248 kB,
+inactive_anon 26628912 kB, active_file 0, gpu_active 22211584 kB,
+all_unreclaimable, Normal free about 195 MB. Reaped 11:17:44.
+Engine core initialization failed. Stop 11:18:06, SERVE_RC 1.
+Cards then held by C12 (card 0) and E2 (card 1). No xe-reset.
+The death is a host OOM, not an XPU wedge. No greedy text.
+VERDICT: the load died while copying per_layer_token_embd.weight
+(IQ4_NL, 28800138240 bytes, uint8 shape (320001536, 90)). A second
+private copy of that table does not fit.
+
+## 2026-10-20 11:32 C7 -- PLE table is a memmap view, retry not started
+
+CONFIG: fork 0a6170da8c, not pushed. Host tables skip _owning_uint8.
+A non-contiguous or non-memmap source raises. HostPackedTable.owner
+keeps the numpy view alive after load_weights drops the GGUFReader.
+The 09:01 collective note "median 15.01 ms" is the sum of the 120
+all_gather_into_tensor calls on a steady step (c7_collectives.py
+writes count/sum_ms), about 0.13 ms each after warmup, plus 40
+reduce_scatter_tensor calls summing about 5.6 ms.
+COMMAND: B70_AGENT=C7 bin/cpu-run python -P /tmp/c7-ple-view-test.py.
+RESULT: cpu-run exit 0 in 12 s. HOST_TABLE_TEST_OK. PY_COMPILE_OK.
+IQ3_XXS and IQ3_S shard-2 PLE tensors are C-contiguous uint8 memmaps,
+ggml ne (160, 320001536), nbytes 28800138240. At 11:32 card 0 is held
+by H1 (xpu-health since 11:22) with C12 and C13 queued behind it, and
+card 1 is held by E2 (vllm-fn-lowbit-e2 since 11:18). MemAvailable is
+about 108 GiB. No C7 container and no C7 waiter.
+VERDICT: the 27 GiB anon copy is gone on CPU. The DP=2 greedy compare
+against recorded Strata texts 323 and 667 is not measured. Next step,
+only when both gpu.lock owner files are empty and MemAvailable is at
+least 100 GiB: append a window line here, then run
+logs/c7-fn-window.sh in that same shell. The script refuses a short
+host, runs collective health, and docker-stops the container if
+MemAvailable falls under 8 GiB. Do not queue gpu-run without --card
+while one card is held. Do not start hotschmoe-dd. Do not set B70_QSA.
+Do not set CCL_TOPO_P2P_ACCESS.
+
+## 2026-10-20 11:35 E2 -- empty_cache before the 8k step kills grouping
+
+CONFIG: same int3 serve as 11:15, plus one shared bmm scratch and
+torch.xpu.empty_cache at the start of each large execute_model.
+Card 1 after C7 released it. Mode file switched to bmm before any
+8k matmul. GEMV_ROWS unset. e2u.so not rebuilt.
+COMMAND: logs/e2_serve_driver.sh fourth launch.
+RESULT: Server up 11:33:27. Identity and both Paris coherence
+calls passed (TTFT 99 ms and 70 ms). BMM_1 returned no usage.
+Engine died at 11:33:38 in _group_slots at torch.cat, level_zero
+error 40, before any expert bmm. Split log has the config only.
+Container stopped. H1 took card 1 at 11:33:44 for xpu-health.
+No xe-reset.
+VERDICT: empty_cache before the forward is not safe next to the
+KV pool. Removed. The matmul bench is queued behind G4
+(vllm-fn-g4-kv-c1). The bmm trial runs only after that bench
+json is on disk.
+
+## 2026-10-20 11:41 G2b -- audit pass 8
+
+CONFIG: CPU only. No GPU, no systemd, no commit. Cursor is the 11:35 E2 heading (JOURNAL line 3384 at write time) plus the unjournaled H1 M3 window that stopped at 11:38:08. Findings F77-F96 append reports/1G2_audit.md after F76.
+COMMAND: Read headings from 11:02 C12 through 11:35 E2. Check c12/gates.log, fair2.log, fair3.log, fair4.log, g4-flags-driver.txt, g4-mmap-driver.txt, e2-driver.log, g5b-qsa-xmx.log, g5b-qsa-prefill.log, c13-build.log, c13-bench.log, h1c-m2-bench.json, h1c-m3-window.out, h1c-m3-bench.json, h1c-m3-serve.log, c7-fn-window-oom.out, c7-fn-serve-oom.log, and /var/log/kern.log. Hash the c12 side libraries. git status in /mnt/vm_8tb/github/b70_ai_things and the fork. Scan dequant_wide.cpp, c13_bind.cpp, and qsa_xmx.cpp for host sync.
+RESULT: C12 11:02 microseconds, health, and verdicts match; bulk rel on gu=17 T=2 is 1.1534 and the type names are not on the OURS lines (F77). G4 flags and mmap match, and D2H stays near 4.5-4.7 (F78, F81). Fair2 and fair3 die at UR graph instantiate with no us_graph and no health after (F79, F87). Fair4 captures, 84s exit 0, and the microseconds match; the numeric error is unchanged (F93). E2 third-serve TTFTs match and the split table is gone (F82). E2 fourth serve identity and coherence match, BMM_1 is empty, and the _group_slots frame is not in the surviving log (F92). G5b XMX and prefill PASS lines match (F83, F88). C13 linked (F84). The 11:22 exit-124 line is not in c13-bench.log; the file is now a gguf import failure, exit 1, with health before and after (F89). C7 DP=2 is a host global OOM; kern.log matches the counters; the PLE tensor name is not in that log (F90). Commit 0a6170da8c is ahead 18 and the HOST_TABLE_TEST_OK line was not found on disk (F91). H1 M2 identity, C4 texts, and ITL match (F85). H1 M3 bench JSON matches the window, alias_ok is false, and the second id is ornith-1.5-35b-a3b-GPTQ-int4-mixedcal-v2 while the launcher was still waiting on the cards (F94). Cached diff empty. No new staged binary (F95).
+VERDICT: Pass 8 recorded. Latency numbers checked this pass match the cited logs. Open items: H1 M3 is not a Qwen graph ITL until alias_ok is true and the container acquire is in the serve log; E2 fifth serve was still loading at the driver snapshot; C13 exit 124 is unverified; G4 D2H is still under 7.5; fair graph bulk rel is still high; the PLE CPU test log is missing; the 46.4 percent hit rate and the 1.5 GB unpack claim stay unverified.
+
+## 2026-10-20 11:35 C13 -- first bench, dequant still ~280 GB/s
+CONFIG: _C.c13.so 2635416 bytes. Card 0 after H1's health check.
+B70_CPU_LOCK_TIMEOUT=1800. B70_PREFILL_TIMEOUT=7200. SYCL subgroup
+kernel, one subgroup per 512 outputs, SLM fill, 64-byte store.
+COMMAND: bin/gpu-run --card 0 scripts/c13_run.sh
+RESULT: health before/after rc=0. Wide dequant is bit-exact vs
+prefill_dequant on IQ3_XXS, IQ3_S, IQ2_XXS, IQ2_XS, IQ2_S, Q2_0,
+IQ4_NL, including the fused gate+up layout (0 mismatches). Full-expert
+event GB/s: IQ3_XXS 285.0 (old 256.2), IQ3_S 286.3, IQ2_XXS 272.9,
+IQ2_XS 275.0, IQ2_S 279.2, Q2_0 270.5 (old 259.2), IQ4_NL 280.9.
+bf16 copy of one gate 1154.7 GB/s. Small fast layer max_rel 1.19e-2
+against the bf16 mv reference. Fused SGN=4 vs that reference on the
+scale-1 pack: max_rel 1.8625, frac_gate 0.9476, sig_max_rel 1.8625,
+worst element got=-2.06 ref=1.77. Python then died importing gguf
+(not on PYTHONPATH). No T=4096/12288 layer time. gpu-run exit 1.
+VERDICT: correctness of the wide dequant holds. Bandwidth does not.
+Rebuilding with ESIMD flat loads and 64-byte block stores. gguf-py
+added to the bench path.
+
+## 2026-10-20 11:43 C13 -- ESIMD dequant linked, bench queued
+CONFIG: dequant_wide.cpp ESIMD kernel, one thread per 512 outputs,
+aligned flat load, 64-byte block stores. gguf-py on PYTHONPATH.
+Output _C.c13.so 2822840 bytes at 11:43. Does not replace _C.so or
+_C.c12.so. Card 0 held by C12 run_fair.sh since 11:42.
+COMMAND: B70_AGENT=C13 B70_CPU_LOCK_TIMEOUT=7200 bin/cpu-run -- bash scripts/c13_build.sh
+then bin/gpu-run --card 0 scripts/c13_run.sh with CPU wait 1800s and python limit 7200s.
+RESULT: build exit 0 in 96s. Log c13-build2.log ends C13_BUILD_OK.
+Bench waits on card 0. Log c13-bench2.log.
+VERDICT: library linked. Measurement queued.
+
+## 2026-10-20 11:42 H1c -- M3 first window benched the wrong server
+
+CONFIG: port 18115, container vllm-fn-h1-m3, FULL_DECODE_ONLY, B70_EP=1. The ready check was any HTTP 200 on /v1/models.
+COMMAND: bash /tmp/h1c-m3-window.sh PID 3262526. Preserved logs h1c-m3-window-falseport.out, h1c-m3-serve-falseport.log, h1c-m3-bench-falseport.txt, h1c-m3-greedy-falseport.json.
+RESULT: Health before HEALTHY at 11:34:13. Our gpu-run was still waiting on card 1. At 11:38:03 port 18115 answered. That was G4's Ornith serve (served name hotschmoe-dev, alias ornith-1.5-35b-a3b-GPTQ-int4-mixedcal-v2, port 18115 in the gpu-run wait line). Bench alias_ok=False, text happened to be the C4 loop, C1 ITL 16.51 ms. Those numbers are not the EP sidecar. docker stop ran before our container existed, so the still-queued gpu-run would have started a server nothing would stop. The process tree was SIGTERM'd at 11:42. Card 0 released. No xe-reset. Our container never started.
+VERDICT: discarded. The next window accepts ready only when container vllm-fn-h1-m3 lists alias qwen3.6-35b-a3b-ud-iq3-xxs, and the wait covers the lock timeout.
+
+## 2026-10-20 11:45 G4 -- copy_batch T2 restored the second turn
+
+CONFIG: card 1, port 18115, tag=copy, B70_KVPARK_COPY=1,
+libb70_kvpark_flags.so. Ornith GPTQ, 45 GPU blocks, 32 GiB pool,
+4 slots, offload_prompt_only false, shm 40g, memory 80g. Identity
+hotschmoe-dev then ornith-1.5-35b-a3b-GPTQ-int4-mixedcal-v2.
+Health before HEALTHY. Worker stderr: b70_kvpark: copy queue group 1.
+The pool stayed the pinned mmap. Script default for B70_KVPARK_COPY
+stays 0.
+
+COMMAND: TAG=copy PORT=18115 B70_KVPARK_COPY=1
+B70_KVPARK_SO=/mnt/vm_8tb/b70/build/vllm-flashnext/b70_kvpark/libb70_kvpark_flags.so
+CARD=1 vllm/flashnext/kvoffload/run_t2.sh.
+Logs g4-t2-serve-c1-copy.txt, g4-t2-turn-c1-copy.json,
+g4-t2-copy-driver.txt.
+
+RESULT: pass=True. host_delta=3063, device_delta=0, computed=18,
+cached=3063, greedy and text match. control TTFT 0.414 s, restored
+TTFT 0.124 s. Load delta 131235840 bytes in 0.009678 s = 13.560 GB/s,
+load_size_count=1. Pre-shutdown store counter 1369210880 bytes in
+0.298174 s = 4.592 GB/s. The 11:38:42 scrape (440729600 bytes) is a
+reset during SIGTERM. H1c's M3 bench posted to this port and had
+finished by the 11:38:12 line (Running: 0). The first tail was queued
+at 11:38:16 and the restore at 11:38:28. No EngineDead. Serve gpu-run
+exit 0. Health after timed out at 90 s because E2 took card 1 at
+11:38:53 (vllm-fn-lowbit-e2). g4-t2-health-after-c1-copy.txt is that
+timeout. The retry launcher was killed before a second serve.
+
+VERDICT: Direct copy restores the second turn. Host-to-device on the
+pinned mmap pool is 13.560 GB/s. Device-to-host on the pre-shutdown
+counter is 4.592 GB/s, in line with the 4.6 GB/s microbench, and
+under 7.5. Card 1 post-health is still owed. qwen4_exp was not
+edited. The fork was not pushed.
+
+## 2026-10-20 11:56 G4 -- card 1 healthy after the copy T2
+
+CONFIG: card 1, after E2 released vllm-fn-lowbit-e2. No serve.
+COMMAND: bin/gpu-run --card 1 bin/xpu-health --card 1.
+Log g4-t2-health-after-c1-copy-late.txt. The 11:40 timeout file
+was left as it was.
+RESULT: HEALTHY, exit 0, 18 s, 11:56:16. Card 0 was C13's.
+VERDICT: The copy-path T2 has a post-health. Next is T3 ITL on
+card 1, port 18112, container vllm-fn-g4-kv-c1, B70_KVPARK_COPY=1,
+libb70_kvpark_flags.so. Expected hold is the Ornith load plus the
+two-decode client, on the order of 15 minutes. qwen4_exp was not
+edited.
+
+## 2026-10-20 11:57 G4 -- T3 not started, H1 holds both cards
+
+CONFIG: card 1 was healthy at 11:56:16. No G4 container was started.
+COMMAND: none. gpu-run --status at 11:57:12.
+RESULT: card 0 and card 1 both HELD by H1 pid 3278138 since 11:56:08
+and 11:56:16, container vllm-fn-h1-m3. T3 was not launched.
+VERDICT: Waiting. The next T3 is still port 18112, copy path on,
+one card, after that container releases one.
+
+## 2026-10-20 11:50 C12 -- per-EC kernels slower; 3D binary installed
+
+CONFIG: card 0. Per-EC binary sha256
+cd2882dce7964770701c31f3c8eef77dbd4166005b47a54541c219b01fc45cca
+(11297864 bytes). Copy at c12/_C.c12.ecsplit.so. 3D grid, no
+use_root_sync, one kernel per entry width. Not the installed file.
+The installed file is the fused-EC 3D binary sha256
+b3c15e14ba5811d90dfe8a65e4ccc1353fd67b3f44e4180810fac22b4ed49979
+(10165216 bytes), copied onto _C.so, _C.graph.so, and _C.c12.so.
+Nothing had those files mapped. Fair window was not under
+cpu-run --quiet.
+
+COMMAND: bin/gpu-run --card 0 c12/run_fair.sh. Log c12/fair5.log.
+gpu-run done in 107s, exit 0. Health before and after HEALTHY card 0.
+
+RESULT: moe_layer_bench failures=0. c12_types failures=0 covered=12.
+Fair graph us/call, cosine 0.99999:
+IQ3_S/Q2_0 185.76 / 320.79 / 378.78 / 595.23 at T=1..4.
+IQ2_XS/IQ4_NL 197.79 / 329.97 / 403.33 / 626.23.
+The fused 3D binary was 180.17 / 267.04 / 385.36 / 515.13 and
+191.86 / 280.62 / 402.88 / 560.55. Separate entry-width launches
+are slower at T=1, T=2, and T=4. No xe-reset.
+
+VERDICT: keep the fused 3D schedule. It is installed as _C.so and
+_C.graph.so. The 35B UD-IQ3_XXS graph serve (C7 recipe, port 18104,
+B70_GGUF_SO=_C.graph.so) is queued behind H1's both-card health,
+which holds card 0 while waiting on card 1. ITL is not measured yet.
+
+## 2026-10-20 12:50 C12 -- 35B graph C1 ITL 11.02 ms
+
+CONFIG: card 0, container vllm-fn-qwen36-gguf-c0, port 18104.
+_C.graph.so sha256
+b3c15e14ba5811d90dfe8a65e4ccc1353fd67b3f44e4180810fac22b4ed49979.
+GRAPH=1 FULL_DECODE_ONLY FLASH_ATTN mode 0 capture 1,2,3,4,8.
+B70_XPU_CG_RECLAIM=500 B70_EAGER_QK=0 B70_GGUF_REF=0.
+max_model_len 33792 max_num_seqs 4 gpu_mem 0.90.
+Model Qwen3.6-35B-A3B UD-IQ3_XXS. Bench under cpu-run --quiet.
+
+COMMAND: c12/serve_35b.sh. Logs c12/serve_driver.log,
+c12/serve_35b.log, c12/bench_35b.json.
+
+RESULT: Health before HEALTHY card 0 (23s). Startup complete,
+graph capture finished, no DEVICE_LOST. Identity hotschmoe-dev
+first, alias qwen3.6-35b-a3b-ud-iq3-xxs. Coherence OK/OK, both
+texts " Paris.\nThe capital of France is Paris.\nThe capital of France is".
+C1 ITL p50 11.019 ms p90 11.229 p99 11.469, 90.89 tok/s,
+TTFT 169.3 ms, n=64. C2 ITL p50 16.606 / 16.607 ms, tok/s
+55.24 / 62.08. Stream 0 p99 75.01 ms. Prefill tok/s 177.4
+(1017), 175.4 (8185), 173.1 (32762). MTP off. cpu-run quiet
+done in 246s exit 0. BENCH_RC=0. Container docker-stopped
+after the bench. Post-health waited behind that lease and then
+behind H1, then HEALTHY card 0 in 13s. SERVE_DONE, DRIVER_RC=0.
+No xe-reset.
+
+VERDICT: end-to-end C1 matches C7's 11.11 ms on the old graph.so.
+The 4 percent fair-layer gain does not move this 35B ITL. The
+layer remains about 1.60x Strata R2 at T=1.
+
+
+## 2026-10-20 11:46 C13 -- ESIMD kernel tripped IGC, block-write rebuild
+CONFIG: _C.c13.so 2822840 bytes, ESIMD flat load plus 64-byte block_store.
+Card 0 after C12 run_fair.sh. Health before the launch.
+COMMAND: bin/gpu-run --card 0 scripts/c13_run.sh
+RESULT: wants_fast=1. First prefill_dequant_wide JIT failed:
+IGC Internal Compiler Error, floating point exception.
+Health after rc=0. gpu-run exit 1 in 31s. No bandwidth number.
+VERDICT: ESIMD kernel is not usable on this IGC. Rebuilding the tuned
+path as a SYCL subgroup kernel with SubgroupBlockWrite of 8 bf16 per lane.
+
+## 2026-10-20 11:55 E2 -- official matmul bench, 8k is 1961 tok/s
+
+CONFIG: card 1, port 18084, vllm-fn-lowbit-e2, e2u.so, int3 experts /
+int4 trunk, FULL_DECODE_ONLY, FLASH_ATTN, bf16,
+--gdn-prefill-backend sycl, max batched tokens 16384, prefix cache
+off, MOE_LAUNCHES=2, GEMV_ROWS unset. Mode file matmul for the bench.
+empty_cache removed. Dense matmul and bmm both use unpack + F.linear.
+C10b dequant+bmm remains their GGUF path; this bench is the lowbit
+plugin. No xe-reset.
+COMMAND: logs/e2_serve_driver.sh. Bench
+vllm/flashnext/harness/bench_latency.py tag e2-int3-matmul-fdo,
+out logs/e2-bench.json. Then a bmm trial. Then xpu-health --card 1.
+RESULT: Server up 11:53:47. Identity hotschmoe-dev first. Coherence
+Paris both times. Warm instrumented 8186-token step: forward 4479 ms,
+linear_attn 243 ms (n=30), self_attn 126 ms (n=10), experts 4067 ms,
+shared_expert 35 ms. Official bench rc 0, sync off: 1017 tok TTFT
+2945 ms = 345 tok/s; 8185 tok TTFT 4173 ms = 1961 tok/s; 32762 tok
+TTFT 9664 ms = 3390 tok/s (two 16384 chunks). C1 ITL p50/p90/p99
+11.34/11.54/11.70 ms, 89.9 tok/s. C2 ITL p50 15.76 ms both streams.
+BMM trial after the bench returned no usage. Engine died at
+y.index_add_ in expert_prefill_bmm, level_zero error 40. Container
+stopped. Health card 1 HEALTHY, rc 0, 11:55:30.
+VERDICT: 5000 tok/s not met. The dense WNA16 span is gone (linear_attn
+0.24 s). The 8k step is the 256-launch expert loop. Report
+reports/1E2_lowbit_prefill.md. Grouped bmm is still not a serve path
+next to the KV cache. GEMV rows=2 stays unshipped (max_abs 1.0).
+
+## 2026-10-20 11:55 C13 -- block write scrambled outputs
+CONFIG: _C.c13.so 2647704 bytes. SubgroupBlockWrite of 8 bf16 per lane,
+values packed as if the write were blocked (lane i owns out[i*8, i*8+8)).
+COMMAND: bin/gpu-run --card 0 scripts/c13_run.sh
+RESULT: health before/after rc=0. Generic path (IQ4_NL 3x64, not a
+multiple of 512) mismatches=0. Tuned path mismatches: IQ3 128x2560
+314956, IQ3 2560x2560 6299964, Q2 4x640 1875, Q2 8x640 3757, IQ4 64x256
+15126, IQ2_XXS 75878, IQ2_XS 78065, IQ2_S 78257, IQ3_S 78729, fused
+layout 12599687. failures=10, layer timing skipped. gpu-run exit 1.
+VERDICT: the block write is striped (sub_group.hpp N==16 split advances
+by 8 * subgroup size). Rebuilding with an SLM stage and striped pickup.
+
+## 2026-10-20 11:58 G4 -- T3 ITL started on card 1
+
+CONFIG: card 1, port 18112, container vllm-fn-g4-kv-c1,
+B70_KVPARK_COPY=1, libb70_kvpark_flags.so, phase=itl, 45 GPU blocks,
+max_num_seqs 4. Card 0 is C12's vllm-fn-qwen36-gguf-c0. CPU lock is
+C13's c13_build.sh. The client waits up to 180 s for a quiet CPU.
+COMMAND: /tmp/g4-launch-t3.sh 1. Log g4-t3-driver-c1.txt.
+RESULT: health-before acquired card 1 at 11:58:47. Serve not ready yet.
+VERDICT: In progress. One card, about 15 minutes. qwen4_exp was not
+edited.
+
+## 2026-10-20 12:04 G4 -- T3 restore counts passed, greedy and p99 did not
+
+CONFIG: card 1, port 18112, B70_KVPARK_COPY=1, libb70_kvpark_flags.so,
+phase=itl, 45 GPU blocks, PIECEWISE. Identity hotschmoe-dev then
+ornith-1.5-35b-a3b-GPTQ-int4-mixedcal-v2. Logs preserved as
+g4-t3-*-c1-r1.*.
+COMMAND: /tmp/g4-launch-t3.sh 1. The client waited on C12's quiet
+bench, then held the quiet lock for 33 s.
+RESULT: restored cached=3063 computed=18 host_delta=3063
+device_delta=0 ttft=0.146 s against control 0.415 s. Load 131235840
+bytes in 0.009508 s = 13.803 GB/s, one load. greedy_match=false.
+The ITL window covered the whole 64-token reply (win_n=68). p50
+17.3 ms to 19.0 ms. p99 17.7 ms and 32.4 ms to 51.0 ms. Health
+after HEALTHY, exit 0, 12:04:39. No EngineDead.
+VERDICT: Token accounting and the copy rate hold under two live
+decodes. Greedy did not match the solo control, and the stall
+window included the later three-way decode. Rerun on card 1 at
+12:07:41 records the first mismatched token and the gaps until
+the first restored token. qwen4_exp was not edited.
+
+## 2026-10-20 12:11 G4 -- T3 first-token gaps and a late stutter
+
+CONFIG: card 1, port 18112, B70_KVPARK_COPY=1, libb70_kvpark_flags.so,
+phase=itl, 45 blocks. The ITL window now ends at the restored
+request's first token. Logs g4-t3-*-c1-r2.*.
+COMMAND: /tmp/g4-launch-t3.sh 1. Quiet CPU acquired at once.
+RESULT: cached=3063 computed=18 host=3063 device=0. Load 131235840
+bytes in 0.009544 s = 13.750 GB/s. TTFT 0.144 s. Greedy matched 50
+of 64, then stuttered the bigram (18, 2195) inside a repeating loop.
+Gaps ms, stream 0: 17.6 17.9 17.8 24.1 83.2 35.5. Stream 1: 17.7
+17.9 17.8 24.1 83.0 35.8. Baseline p50 17.4 ms. Health after
+HEALTHY, 15 s, 12:11:17.
+VERDICT: The three gaps on the copy stay within 3 percent of 17.4 ms.
+The 83 ms gap is the 18-token prefill, so the literal 10 percent
+p99 on that window fails. The stutter is at token 50 of a loop, after
+an exact prefix. Solo T2 matched all 64. Next is the 4-slot cycle on
+card 1, port 18113, 32 GPU blocks. qwen4_exp was not edited.
+
+## 2026-10-20 12:07 H1c -- M3 capture host-wait is Level Zero 44
+
+CONFIG: FULL_DECODE_ONLY, FLASH_ATTN, max_len 33792, B70_XPU_CG_RECLAIM=500, B70_EP=1, port 18115, container vllm-fn-h1-m3. _C.so was 7f0981fd. _C.ep.so 55c154ee. Ready check requires container vllm-fn-h1-m3 and alias qwen3.6-35b-a3b-ud-iq3-xxs.
+COMMAND: bash /tmp/h1c-m3-window.sh PID 3274080. Log h1c-m3-serve-capture44.log.
+RESULT: Health before HEALTHY at 11:55:06. EP warmup moe attempt 1 err 0. Split through layer 39. Capture of FULL graphs then raised RuntimeError level_zero backend error 44 (UR_RESULT_ERROR_UNSUPPORTED_FEATURE) inside moe_ep, from profile_cudagraph_memory. FULL capture calls the model with CUDAGraphMode.NONE, so cap_on stayed false and eager ep_moe host-waited on the recording stream. No DEVICE_LOST. No xe-reset. SERVE_RC=1 at 11:57:49. Health-after was still queued at 12:08 (C12 on card 0, g4 on card 1).
+VERDICT: not an M3 measurement. New _C.so sha256 e783539c4fa49f774a115a816209201a189a78d8d2c051f5b56c30575eb2c870 (481240 bytes, 12:07). A recording card-0 stream now records the card-1 graph and does not host-wait. The graph is finalized on the last MoE layer. FULL replay submits that graph from CudaGraphManager via the d1 hook. Next window uses this binary.
+
+## 2026-10-20 12:16 G2b -- audit pass 9
+
+CONFIG: CPU only. No GPU, no systemd, no commit. Cursor is the 12:11 G4 heading and the 12:07 H1c heading. Findings F97-F110 append reports/1G2_audit.md after F96.
+COMMAND: Read headings from 11:35 C13 through 12:11 G4. Check c13-bench.log, c13-bench2.log, c13-bench3.log, c13-build2.log, c13-build3.log, fair5.log, e2-bench.json, e2-driver.log, e2-fwd-split.log, e2-serve.log, g4-t2-turn-c1-copy.json, g4-t2-serve-c1-copy.txt, g4-t3-itl-c1-r1.json, g4-t3-itl-c1-r2.json, g4-t3-serve-c1-r1.txt, g4-t3-serve-c1-r2.txt, h1c-m3-serve-capture44.log, h1c-m3-window.out, c12/bench_35b.json, and c12/serve_driver.log. Hash the installed gguf and EP libraries. git status in /mnt/vm_8tb/github/b70_ai_things and the fork.
+RESULT: C13 wide-dequant GB/s and exact mismatches match, then the gguf import exits 1 (F97). ESIMD link is 2822840 bytes and the bench dies in IGC (F98, F103). Block-write mismatches match and exit 1 (F105). H1's false-port bench is the Ornith server already in F94 (F99). G4 copy T2 pass is true, H2D 13.560 GB/s, pre-shutdown D2H 4.592, health-after timed out, and the late health is HEALTHY (F100, F101). Fair5 microseconds match and the fused sha b3c15e14 is installed on _C.so and _C.graph.so (F102). E2 bench is 1961 tok/s at 8185 tokens, identity and coherence match, and the bmm trial is index_add error 40 (F104). G4 T3 r1 and r2 restore counts match; greedy fails, including mismatch_at 50 on r2; health after ran (F106, F108). H1 capture error 44 is inside moe_ep, SERVE_RC 1, and the new EP _C.so hash matches (F107). c12/bench_35b.json is unjournaled: identity and coherence match, C1 ITL p50 11.02 ms, prefill about 175 tok/s, health before HEALTHY, health after still waiting on its own container (F109). Cached diff empty. Fork still 0a6170da8c, ahead 18 (F110).
+VERDICT: Pass 9 recorded. Latency numbers checked this pass match the cited logs. Open items: the C12 35B graph bench has no health-after line; H1 M3 has no ITL; G4 D2H is still about 4.6 GB/s; fair bulk rel is unchanged; C13 block-write and ESIMD are not serve candidates; the PLE CPU test log and the 46.4 percent hit rate stay unverified.
+
+## 2026-10-20 12:16 G4 -- cycle serve refused 32768 on 32 blocks
+
+CONFIG: card 1, port 18113, 32 GPU blocks, max_model_len 32768,
+B70_KVPARK_COPY=1. Logs g4-t3-serve-c1-cycle-maxlen.txt and
+g4-t3-cycle-driver-c1-maxlen.txt.
+COMMAND: /tmp/g4-launch-t3-cycle.sh 1.
+RESULT: Engine init ValueError. 32 blocks are 0.64 GiB. A 32768
+context wants 0.77 GiB. The estimated fit is 27200 tokens. Health
+after HEALTHY, 12 s, 12:16:04. No xe-reset.
+VERDICT: Not a GPU fault. The retry sets MAX_LEN=20480. The longest
+cycle prompt is 17344 tokens. qwen4_exp was not edited.
+
+## 2026-10-20 12:20 G4 -- cycle restores missed because actives finished
+
+CONFIG: card 1, port 18113, max_len 20480, 32 blocks, 4 slots,
+B70_KVPARK_COPY=1. Logs g4-t3-cycle-c1-r1.json,
+g4-t3-cycle-driver-c1-r1.txt, g4-t3-serve-c1-cycle-r1.txt.
+COMMAND: /tmp/g4-launch-t3-cycle.sh 1.
+RESULT: Eight restores. cached was 0 on five and 1088 on three.
+No G4 load tail. Park tails were queued at end=1519. Both actives
+then finished (ends 17407 and 16319) and took park slots. Greedy
+matched because the misses recomputed. Health after HEALTHY,
+12:20:33.
+VERDICT: A finished active is a fifth conversation, and the 4-slot
+index drops a park before the lookup. The next run keeps each active
+inside its blocks for 1024 decode tokens. qwen4_exp was not edited.
+
+## 2026-10-20 12:28 G4 -- long decode still finished during the other prefill
+
+CONFIG: card 1, port 18113, max_len 20480, 32 blocks, 4 slots,
+active max_tokens 1024. Logs g4-t3-cycle-driver-c1-r2.txt and
+g4-t3-serve-c1-cycle-r2.txt.
+COMMAND: /tmp/g4-launch-t3-cycle.sh 1.
+RESULT: One active still queued a tail at end=17407 before the first
+restore. Five restores cached 0 and three cached 1088. No load tail.
+Each miss then stored and dropped the next park. Health after
+HEALTHY, 12:28:14.
+VERDICT: 1024 decode steps fit inside the other 16k-token prefill.
+The retry uses 8 GPU blocks and max_len 4096. The actives are 4 and
+3 blocks with 1024 decode tokens, and the other prefill is only a
+few thousand tokens. qwen4_exp was not edited.
+
+## 2026-10-20 12:33 G4 -- 8 GPU blocks only fit 1088 tokens
+
+CONFIG: card 1, port 18113, num_gpu_blocks 8, max_len 4096.
+Logs g4-t3-serve-c1-cycle-8block.txt.
+COMMAND: /tmp/g4-launch-t3-cycle.sh 1.
+RESULT: ValueError at init. Available KV 0.15 GiB, 4096 tokens need
+0.21 GiB, estimated max len 1088. Health after HEALTHY, 13 s,
+12:33:27. The 32-block serve had estimated max 27200, which is
+(32-7)*1088. Eight blocks is (8-7)*1088.
+VERDICT: Not a GPU fault. The next cycle is 32 blocks, max_len 20480,
+prompts 15000 and 16000, decode budget 3072. qwen4_exp was not edited.
+
+## 2026-10-20 12:40 G4 -- waiter never admitted beside the runner
+
+CONFIG: card 1, port 18113, 32 blocks, max_len 20480, prompts 15000
+and 16000, decode budget 3072. Logs g4-t3-cycle-driver-c1-r3.txt
+and g4-t3-serve-c1-cycle-r3.txt.
+COMMAND: /tmp/g4-launch-t3-cycle.sh 1.
+RESULT: From 12:38:49 to 12:39:39 the engine had Running 1, Waiting 1,
+prompt throughput 0, KV usage 58 to 64 percent. The runner then
+queued a tail at end=18071. Restores cached 0 or 1088. No load tail.
+Health after HEALTHY, 12:40:29.
+VERDICT: About 11 blocks were free and the waiter needed 15, so it
+sat until the runner finished and took a park slot. The retry uses
+prompts 26400 and 6000 with max_len 27000. 26400 tokens is 25 blocks,
+6000 is 6, and 7 blocks remain. qwen4_exp was not edited.
+
+## 2026-10-20 12:48 G4 -- 6000-token partner still waited at 90 percent
+
+CONFIG: card 1, port 18113, 32 blocks, max_len 27000, prompts 26400
+and 6000, decode budget 512. Logs g4-t3-cycle-driver-c1-r4.txt and
+g4-t3-serve-c1-cycle-r4.txt.
+COMMAND: /tmp/g4-launch-t3-cycle.sh 1.
+RESULT: At 12:47:30 Running 1, Waiting 1, KV 90.3 percent, prompt
+throughput 2640 tok/s. The runner queued end=26911 at 12:47:34.
+Restores cached 0, then device 1088. No load tail. Health after
+HEALTHY, 12:48:14. KV cache on this serve is 27870 tokens.
+VERDICT: 90 percent full leaves about 3 blocks. The 6000-token
+partner did not fit, so the runner finished and took a slot. The
+retry partner is 1024 tokens. qwen4_exp was not edited.
+
+## 2026-10-20 12:53 G4 -- 1024-token partner also waited out the runner
+
+CONFIG: card 1, port 18113, 32 blocks, max_len 27000, prompts 26400
+and 1024, decode budget 580. Logs g4-t3-cycle-driver-c1-r5.txt and
+g4-t3-serve-c1-cycle-r5.txt.
+COMMAND: /tmp/g4-launch-t3-cycle.sh 1.
+RESULT: At 12:52:24 Running 1, Waiting 1, KV 90.3 percent. The runner
+queued end=26979 at 12:52:33. Restores cached 0, then device 1088.
+No load tail. Health after HEALTHY, 12:53:45.
+VERDICT: A running prefill keeps the token budget, so the partner is
+not admitted until that prefill ends, and by then the free blocks are
+too few. Card 1 was taken by H1 after this health check. The next
+attempt starts the 1024-token request first, then the 24000-token
+prefill. qwen4_exp was not edited.
+
+## 2026-10-20 12:58 G4 -- cycle retry, small request first
+
+CONFIG: card 1, port 18113, 32 blocks, max_len 27000. The 1024-token
+request starts and reaches one token, then the 24000-token prefill
+starts. Decode budgets 8000 and 2000.
+COMMAND: /tmp/g4-launch-t3-cycle.sh 1. Health-before took the card
+at 12:58:00.
+RESULT: serve not ready yet.
+VERDICT: In progress. qwen4_exp was not edited.
+
+## 2026-10-20 13:02 G4 -- one cycle restore hit from host
+
+CONFIG: card 1, port 18113, 32 blocks, max_len 27000. Small request
+started first (1024 tokens, 8000 decode), then the 24000-token
+prefill (2000 decode). Logs g4-t3-cycle-driver-c1-r6.txt,
+g4-t3-serve-c1-cycle-r6.txt, g4-t3-cycle-c1-r6.json.
+COMMAND: /tmp/g4-launch-t3-cycle.sh 1.
+RESULT: Turn 0 passed. host=1519 device=0 computed and cached match,
+greedy mismatch_at null. Serve log: G4 load tail end=1519 local=0
+keys=5, same second as the long request queued end=25999. Turns 1-3
+then missed. Health after HEALTHY, 13:02:54.
+VERDICT: The host tail restore works while a second request is
+running. The long stream's first event arrived as that request
+finished, so the later turns saw a fifth conversation. The retry
+waits 15 s after submitting the long prefill instead of waiting on
+that event, and the decode budget is 2800. qwen4_exp was not edited.
+
+## 2026-10-20 12:56 G2b -- audit pass 10
+
+CONFIG: CPU only. No GPU, no systemd, no commit. Cursor is the 12:53
+G4 heading. The 12:50 C12 heading sits above the 11:46 C13 entry.
+Findings F111-F121 append reports/1G2_audit.md after F110.
+COMMAND: Read headings from 12:16 G4 through 12:53 G4, plus the
+inserted 12:50 C12 heading. Check the cycle maxlen, 8-block, r1, r2,
+r3, r4, and r5 logs, c12/bench_35b.json, and c12/serve_driver.log.
+git diff --cached in /mnt/vm_8tb/github/b70_ai_things.
+RESULT: The 32768 and 4096 refusals match, with estimates 27200 and
+1088 (F111, F114). r1 cached is 0 on five turns and 1088 on three.
+r2 and r3 are four and four. Greedy is true and cycle pass is false.
+load_bytes is 86671360, then 346685440, then 346685440 (F112, F113,
+F115). r4 and r5 are also four and four, host 0, device 1088 only on
+the cached-1088 turns, and pass false (F118, F120). r4 end=26911 and
+r5 end=26979 match 26400 plus the decode budget minus 1. The 6000
+length is not printed. Both serves show Waiting 1 at KV 90.3 percent,
+then Running 2 after the park. load_bytes is absent there and store
+bytes are non-zero. Health after is HEALTHY on card 1. C12 json C1
+ITL p50 is 11.0188 ms, 90.893 tok/s, coherence texts match, health
+before is 23 s, and serve_driver.log still has no HEALTHY-after line.
+The container is gone from docker ps (F119). Cached diff was empty.
+The only modified binary is the pre-existing push-allreduce .so.
+VERDICT: Pass 10 recorded. Greedy text matches and a device delta of
+1088 are not restore passes. Open items: C12 35B health after is still
+missing; H1 M3 still has no ITL; G4 load_bytes is not printed on r4 or
+r5; fair bulk rel is high; C13 block-write and ESIMD are not
+candidates; the PLE CPU test log and the 46.4 percent hit rate stay
+unverified.
+
+
+## 2026-10-20 13:01 H1c -- M3 FULL_DECODE_ONLY passes
+
+CONFIG: both cards. FULL_DECODE_ONLY, FLASH_ATTN, max_len 33792, max_num_seqs 4, gpu_memory_utilization 0.90, capture sizes 1,2,3,4,8, B70_XPU_CG_RECLAIM=500, B70_EP=1, port 18115, container vllm-fn-h1-m3. _C.so sha256 e783539c4fa49f774a115a816209201a189a78d8d2c051f5b56c30575eb2c870 (481240 bytes, 12:07). _C.ep.so 55c154ee. World size 1. Sidecar owns card 1.
+COMMAND: bash /tmp/h1c-m3-window.sh PID 3286770. Logs h1c-m3-window-r2.out, h1c-m3-serve.log, h1c-m3-bench.json, h1c-m3-greedy.json.
+RESULT: Queued from 12:12:49 behind C12, then C13. Health-before HEALTHY rc 0 at 12:55:14. EP warmup exchange and moe attempt 1 err0=0 err1=0. Split layers 0-39. Profile capture finalized card-1 keys 4 and 3. Real FULL capture finalized keys 4, 3, 2, 1 (no key=8; 4 graphs, same as C7). No error 44. No EP flag timeout. KV 14.72 GiB, 630487 tokens, 18.66x at 33792. READY 12:56:40. Identity hotschmoe-dev then qwen3.6-35b-a3b-ud-iq3-xxs, first_ok and alias_ok true. Both greedy texts, temperature 0, 16 tokens: " Paris.\nThe capital of France is Paris.\nThe capital of France is". match_c4 true. Bench coherence OK/OK. C1 ITL p50 11.36 ms, p90 11.62, p99 12.35, 89.50 tok/s, TTFT 142.82 ms, n=63. Gate is 1.05x 11.11 ms = 11.665 ms. C2 stream0 15.31 ms (64 tokens, 71.14 tok/s, TTFT 243.01) and stream1 15.74 ms (40 tokens, 65.97 tok/s, TTFT 242.36), against one-card 16.51 / 16.65 ms and C7 stock DP=2 eager 121.40 ms. GATE_RC=0. SERVE_RC=0 at 12:56:53. Health-after HEALTHY rc 0 at 12:57:23. No xe-reset. The earlier capture-44 window health-after also finished HEALTHY at 12:53:25 with done rc=1 and no xe-reset.
+VERDICT: M3 pass. Text matches the C4 string. C1 ITL is 1.022x the one-card graph. M0-M3 are closed.
+
+## 2026-10-20 13:02 C13 -- one-layer expert prefill measured
+CONFIG: _C.c13.so 2635416 bytes (12:59). Card 0. E=512 top-10 H=2560
+F=640, gate/up IQ3_XXS, down Q2_0. DQ_T_MIN stays 12288.
+B70_PREFILL_DQ_LAYER=bmm keeps C10. Daily _C.so is unchanged.
+COMMAND: B70_AGENT=C13 B70_GPU_LOCK_TIMEOUT=21600 B70_PREFILL_TIMEOUT=7200
+B70_CPU_LOCK_TIMEOUT=1800 bin/gpu-run --card 0 scripts/c13_run.sh
+Log /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c13-bench5.log.
+RESULT: health before/after rc=0. Wide dequant bit-exact vs
+prefill_dequant. GB/s: IQ3_XXS 285.0 (old 255.8), IQ3_S 286.4,
+IQ2_XXS 272.6, IQ2_XS 273.9, IQ2_S 279.0, Q2_0 270.3 (old 258.8),
+IQ4_NL 281.0. bf16 copy 1147 GB/s. Layer event ms: T=4096 fast 40.13
+(seq 40.13, C10 bmm 45.12, mmax 109); T=12288 fast 56.97 (seq 56.92,
+C10 bmm 66.16, mmax 287). Overlap saves ~0. Profile at T=12288 ms:
+group 1.80, dq 8.94+7.11+7.15, pad 2.89, bmm_gu 8.45, silu 1.50,
+bmm_dn 4.67, unpad 3.15, reduce 11.47. Dispatch matches moe_fast
+(0 mismatches). GEMM-only at T=12288: 3775.74 ms, 3255 tok/s.
+Attention not timed. 2-layer bf16 scratch is 9.375 GiB and does not
+fit the 2x200K headroom. 5e-2 gate unchanged. Synthetic fused max_rel
+1.96 at magnitude ~2.8 (sign disagreement). Real blk.36 strict
+max_rel misses are lanes near 1e-4 with frac_gate 1. Logged
+failures=1 is that strict check on the new layer at x1.
+VERDICT: T>=12288 one-layer path is 56.97 ms. Dequant is ~280 GB/s.
+Report reports/1C13_expert_prefill2.md.
+
+## 2026-10-20 13:15 G4 -- cycle restore waited out the long prefill
+
+CONFIG: card 1, port 18113, B70_KVPARK_COPY=1, libb70_kvpark_flags.so,
+32 GPU blocks, max_len 27000, PIECEWISE, 4 slots, 32 GiB host.
+Client slept 15 s after submitting a 24000-token prefill (decode
+budget 2800) and a 1024-token partner (decode budget 8000).
+COMMAND: bash /tmp/g4-launch-t3-cycle.sh 1. Logs
+g4-t3-cycle-driver-c1-r7.txt, g4-t3-serve-c1-cycle-r7.txt.
+RESULT: health before ok. READY 13:06:31. At restore start
+small_n=522 big_n=0. Engine 13:07:09-13:08:09 Running 1 Waiting 2,
+KV 83.9-93.5 percent. 13:08:12 stored end=26799 and loaded tail
+end=1519 local=0 keys=5. Turn 0 host 1519 device 0 greedy match.
+Turns 1-7 missed (host 0, or host/device 1088 with no load tail).
+Health after rc 0 at 13:08:51. No xe-reset. Client then hit
+NameError active_n; the result line was already printed.
+VERDICT: the copy landed, and the restored request was not scheduled
+until the pool-filling request finished and took a host slot. Next
+cycle keeps both actives at a 256-token prompt and a 4000-token
+decode budget.
+
+## 2026-10-20 13:22 G4 -- four parked restores under two live decodes
+
+CONFIG: card 1, port 18113, B70_KVPARK_COPY=1, libb70_kvpark_flags.so,
+32 GPU blocks, max_len 27000, PIECEWISE, 4 slots. Active prompts 256
+tokens, decode budget 4000. Parks end at 1519.
+COMMAND: bash /tmp/g4-launch-t3-cycle.sh 1. Logs
+g4-t3-cycle-driver-c1-r8.txt, g4-t3-serve-c1-cycle-r8.txt,
+g4-t3-cycle-c1-r8.json.
+RESULT: health before ok, health after rc 0. Actives at restore start
+17 and 8 tokens; at the end 287 and 296, streams_alive true. Engine
+Running 3, KV 41.9 percent. Turns 0-3: load tail end=1519 local=1088
+keys=4, host 431, device 1088, greedy match. Turns 4-7: host 0,
+device 1088, computed 441. No xe-reset.
+VERDICT: the first visit of each parked conversation restored the
+tail from host while two requests decoded. The second visit reused a
+same-length prompt after the tail had been replaced at end=1560.
+Next cycle appends that reply and a new user span.
+
+## 2026-10-20 13:27 G4 -- cycle cache gate passed, one late greedy miss
+
+CONFIG: card 1, port 18113, B70_KVPARK_COPY=1, libb70_kvpark_flags.so,
+32 GPU blocks, max_len 27000, PIECEWISE. Four parks. Second visit
+appends the first reply and 9 new tokens. Actives are 256-token
+prompts with a 4000-token decode budget.
+COMMAND: bash /tmp/g4-launch-t3-cycle.sh 1. Logs
+g4-t3-cycle-driver-c1-r9.txt, g4-t3-serve-c1-cycle-r9.txt,
+g4-t3-cycle-c1-r9.json.
+RESULT: health before ok, health after rc 0. streams_alive true,
+active tokens 289 and 298. Running 3, KV 41.9 percent. Eight load
+tails, local=1088 keys=4. Turns 0-3 host 431 device 1088 cached 1519
+computed 10. Turns 4-7 host 472 device 1088 cached 1560 computed 10.
+Greedy exact on turns 0-6. Turn 7 matched 29 of 32, then 40822
+against gold 14308 inside a 5-token loop. TTFT 0.126-0.139 s.
+No xe-reset.
+VERDICT: host accounting holds for every parked restore under two
+live decodes. Strict greedy fails on three trailing tokens of one
+turn. Next is FULL_DECODE_ONLY T2. Not rerunning the cycle.
+
+## 2026-10-20 13:33 G2b -- audit pass 11
+
+CONFIG: CPU only. No GPU, no systemd, no commit. Cursor is the 13:27
+G4 heading. Findings F122-F129 append reports/1G2_audit.md after F121.
+COMMAND: Read headings from 12:58 G4 through 13:27 G4, plus 13:01 H1c
+and 13:02 C13. Check h1c-m3-window-r2.out, h1c-m3-bench.json,
+h1c-m3-greedy.json, h1c-m3-serve.log, c13-bench5.log, the G4 r6
+through r9 drivers, serves, and json, and c12/serve_driver.log.
+Hash the EP and C13 libraries. git diff --cached and the fork log -1.
+RESULT: H1 M3 identity, coherence, health, and ITL match the json.
+C1 p50 is 11.359 ms, n_chunks 62, completion 63. Capture keys are 4
+and 3, then 4, 3, 2, 1. No error 44. The 121.40 comparison is the
+eager max_len 2048 citation (F122). C13 GB/s and layer ms match.
+gemm_ms is 3775.5, not 3775.74. The single FAIL is fast real x1
+(F123). G4 r6 turn 0 is host 1519 device 0, and the cycle json has
+the active_n NameError (F124). r7's 13:07:09 sample is Waiting 1,
+and turn 4 is host 1088 device 0 (F125). r8 and r9 cache flags match.
+r9 turn 7 mismatch_at 29 is 40822 against gold 14308, and pass is
+false (F126, F127). c12/serve_driver.log now has HEALTHY card 0,
+SERVE_DONE, and DRIVER_RC=0 (F128). Cached diff empty. Fork still
+0a6170da8c, ahead 18. EP waits return when the stream is recording
+(F129).
+VERDICT: Pass 11 recorded. H1 M3 is a measured ITL with identity,
+coherence, and health on both sides. G4 cycle pass stays false.
+Open items: the C13 bench exits 1; G4 r9 greedy misses three tokens;
+fair bulk rel is high; the PLE CPU test log and the 46.4 percent hit
+rate stay unverified.
+
+
+## 2026-10-20 13:33 G4 -- FULL_DECODE_ONLY T2 passed
+
+CONFIG: card 1, port 18116, B70_KVPARK_COPY=1, libb70_kvpark_flags.so,
+45 GPU blocks, max_len 32768, max_num_seqs 2. compilation-config mode 0,
+cudagraph_mode FULL_DECODE_ONLY, sizes 1,2,3,4,8. Engine log
+CUDAGraphMode.FULL_DECODE_ONLY (2, 0). Capture "FULL" 2/2 in 1 s.
+COMMAND: bash /tmp/g4-launch-t2-graph.sh 1. Logs
+g4-t2-graph-driver-c1.txt, g4-t2-serve-c1-graph.txt,
+g4-t2-turn-c1-graph.json.
+RESULT: health before ok. Health after HEALTHY rc 0, 12 s.
+pass=True. host 3063, device 0, computed 18, greedy and text match.
+Load tail end=3063 local=0 keys=6. Load 131235840 bytes in 0.009645 s
+= 13.607 GB/s. Restored TTFT 0.120 s, control 0.412 s. No xe-reset.
+VERDICT: parking the real second turn works under the full decode
+graph. Next is the largest Ornith context. Flash-Next is not serving.
+Ornith text max_position_embeddings is 262144. The 45-block pool held
+39852 tokens; the profiler wanted 244 blocks.
+
+## 2026-10-20 13:36 G2b -- audit pass 11 addendum
+
+CONFIG: CPU only. No GPU, no systemd, no commit. The 13:33 G4 T2
+heading landed after the pass 11 milestone. Finding F130 appends
+reports/1G2_audit.md after F129.
+COMMAND: Check g4-t2-graph-driver-c1.txt, g4-t2-serve-c1-graph.txt,
+g4-t2-turn-c1-graph.json, and the Ornith GPTQ config.json.
+RESULT: pass=True, host 3063, device 0, computed 18, greedy and text
+match. Load 131235840 bytes in 0.009645 s is 13.607 GB/s. Restored
+TTFT 0.120 s, control 0.412 s. Health after HEALTHY, 12 s, driver
+exit 0. KV size 39852 and the 244-to-45 override match. Capture ran
+2/2. max_position_embeddings 262144 is in the checkpoint config, not
+the serve log (F130).
+VERDICT: The T2 client gate passed with a real load and device delta
+0. It is not a cycle pass. Open items from pass 11 are unchanged.
+
+
+## 2026-10-20 13:42 G4 -- Ornith 200063-token restore passed
+
+CONFIG: card 1, port 18117, B70_KVPARK_COPY=1, libb70_kvpark_flags.so,
+profiled KV pool, max_len 204800, PIECEWISE, 4 slots, 32 GiB host.
+Ornith GPTQ int4, not Flash-Next. P1=200000. KV cache 257312 tokens,
+concurrency 1.26x at 204800.
+COMMAND: bash /tmp/g4-launch-t4.sh 1. Logs g4-t4-driver-c1.txt,
+g4-t2-serve-c1-t4.txt, g4-t2-turn-c1-t4.json, g4-t4-mem-c1.txt.
+RESULT: health before ok. Health after HEALTHY rc 0, 12 s. pass=True.
+host 200063, device 0, computed 18, greedy and text match. Load tail
+end=200063 local=0 keys=187. Load 4164321280 bytes in 0.299164 s
+= 13.920 GB/s. Restored TTFT 0.833 s, control 84.788 s. Four slots
+held two ~200K conversations and two 30464 fillers. The cold fifth
+evicted one slot after the restore. MemAvailable minimum 78051432 kB.
+No xe-reset.
+VERDICT: the Ornith stand-in for T4 meets the 0.42 s copy target.
+Flash-Next 200K and T6 are still waiting on that model serving.
+
+## 2026-10-20 14:08 G2b -- audit pass 12
+
+CONFIG: CPU only. No GPU, no systemd, no commit. Cursor is the 13:42
+G4 heading. Findings F131-F132 append reports/1G2_audit.md after F130.
+COMMAND: Check g4-t4-driver-c1.txt, g4-t2-serve-c1-t4.txt,
+g4-t2-turn-c1-t4.json, g4-t4-mem-c1.txt, and the Ornith section of
+reports/1G4_kv_parking.md. git diff --cached and the fork log -1.
+RESULT: pass=True, host 200063, device 0, computed 18, greedy and
+text match. Load 4164321280 bytes in 0.299164 s is 13.920 GB/s.
+Restored TTFT 0.833 s, control 84.788 s. KV line is 257312 tokens,
+1.26x at 204800. Mode is PIECEWISE. Health after HEALTHY, 12 s,
+driver exit 0. MemAvailable minimum is 78051432 kB. One evict
+end=30464 is at 13:40:26, after the load at 13:40:19. keys=187.
+183*1088+959=200063. Cached diff empty. Fork still 0a6170da8c,
+ahead 18 (F131, F132).
+VERDICT: Pass 12 recorded. The Ornith copy gate passed with device
+delta 0. It is not a Flash-Next 200K result. Open items: C13 bench
+exits 1; G4 r9 greedy misses three tokens; D2H stays under 7.5;
+fair bulk rel is high; the PLE CPU test log and the 46.4 percent
+hit rate stay unverified.
+

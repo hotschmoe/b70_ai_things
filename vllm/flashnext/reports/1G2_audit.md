@@ -1556,3 +1556,2052 @@ Verdict: OK.
 
 Suggested fix: none. Leave the pre-existing .so unstaged. Do not push.
 
+## Pass 7 -- 2026-10-20 10:55 UTC
+
+Cursor at write: JOURNAL.md ended at the 10:50 G4 heading (line 2824).
+Headings checked: 10:21 E2 through 10:50 G4. The 10:41 and 10:48 C7
+entries are window announcements only.
+
+### F58 -- E2 first bmm OOR
+
+Claim: the 10:21 E2 heading. Identity hotschmoe-dev first. Coherence
+is the landmarks sentence. MATMUL_1 TTFT 33212 ms, 247 tok/s.
+MATMUL_2 TTFT 4311 ms, 1903 tok/s, with a 46.4 percent prefix-cache
+hit, so it is not a full 8k prefill. BMM then dies in
+expert_prefill_bmm. The dumped step has 588 scheduled tokens and
+7616 prefix hits. No post-crash health, because G4 took card 1.
+
+Evidence: logs/e2-driver.log lines 8-15. Identity first_ok true,
+alias qwen36-w3a16-b70-lowbit. Both coherence texts start
+" Paris, a city renowned for its rich history, culture, and iconic
+landmarks." MATMUL_1 33212.096 ms and 247.018 tok/s. MATMUL_2
+4310.564 ms and 1903.231 tok/s. BMM_1 is empty and the client raises
+HTTP 500 at 10:14:26. Pass 6 had already read the then-current
+e2-serve.log dump: prompt_token_ids_len=8204 and
+num_computed_tokens=7616, dying in moe.py:232 torch.bmm with
+UR_RESULT_ERROR_OUT_OF_RESOURCES. 588 is 8204-7616. That dump is
+no longer in the file. The live e2-serve.log is a later serve (one
+Application startup, one OOR at 10:39). The string 46.4 is in
+neither the driver nor the current serve log.
+
+Verdict: OK on identity, coherence, the two matmul times, and the
+HTTP 500. The 588 figure matches the overwritten dump's arithmetic.
+UNVERIFIED the 46.4 percent hit rate.
+
+Suggested fix: keep the first serve log under its own name. Cite the
+metrics line that prints the hit rate.
+
+### F59 -- E2 second serve, unjournaled
+
+Claim: no heading through 10:50 owns a second lowbit serve.
+
+Evidence: the same e2-driver.log continues at 10:22. Identity and
+the landmarks coherence pass again. MATMUL_1 and MATMUL_2 on 8186
+tokens are 31352 ms / 261.1 tok/s and 31299 ms / 261.5 tok/s.
+BMM_1 returns 35950 ms / 227.7 tok/s. BMM_2 is empty. The live
+e2-serve.log OOR at 10:39:48 has total_num_scheduled_tokens=8186
+and num_computed_tokens=0, same torch.bmm error 40. e2-driver.status
+is FAILED bench_rc=1 health_rc=0. e2-health.log is HEALTHY card 1,
+gpu-run exit 0. Mode file is the four bytes "bmm". No bench JSON.
+
+Verdict: UNVERIFIED as a journal claim. The second bmm prefill did
+return a TTFT, and the following request killed the engine. Do not
+read 228 tok/s as a prefill win. Health after this second death is
+HEALTHY.
+
+Suggested fix: a heading for the second serve that separates BMM_1
+from the BMM_2 OOR.
+
+### F60 -- H1c M1 r2 passes, health closed later
+
+Claim: the 10:22 heading, closed by the 10:42 health line. Gate is
+bitwise, cosine, and max|dy| / max|y| < 1e-2. full_rel T=1/2/4/8/4096
+is 5.9e-8, 6.6e-8, 1.4e-7, 1.2e-7, 8.9e-8. T=4096 abs max 3.0e-8.
+elem_rel 7.5e-2 is not the gate. TIME 500 vs 410 us and 592 vs 818 us.
+M1_RC=0. No xe-reset. Health after rc 0 at 10:40:23.
+
+Evidence: h1c-m1-layer-r2.log. Warmup exchange attempt=1 err0=0
+err1=0. Printed full_rel 5.878e-08, 6.550e-08, 1.439e-07, 1.182e-07,
+8.923e-08. full_max at T=4096 is 2.980e-08. elem_rel 7.515e-02.
+TIME 500.4/410.0 and 592.3/817.6. PASS m1. h1c-m1-window.out:
+health-before rc=0 at 10:15:00, M1_RC=0 at 10:21:40, no xe-reset
+line, HEALTH_AFTER_RC=0 at 10:40:23, both cards HEALTHY. The wait
+was E2's second card-1 serve.
+
+Verdict: OK. The 10:22 sentence that health-after was still waiting
+was true at that time. The 10:42 heading's close matches the window.
+
+Suggested fix: none for the gate. Keep quoting full_rel, not elem_rel.
+
+### F61 -- C11 stays slower than C10 bmm
+
+Claim: the 10:26 C11 heading. SGN and XSLM match SGN=4. bf16 ref
+fails. Empty experts 0. The event-ms table, XSLM 14.80/28.97/70.02,
+down 18.98 to 11.94, C10 bmm 66.97, dequant about 7.8 ms at
+255-259 GB/s, copy 6.35 ms at 529 GB/s, uniform bmm 4.72/7.86/4.65 ms,
+grouped_mm 21.53 ms, dense ceiling 3.24 ms, two streams 636/124/727 us.
+BUDGET best is xslm512 at 70.02 ms and 2791 tok/s, slower than C10.
+Health 0. No xe-reset. Dispatch unchanged.
+
+Evidence: c11-xslm.log. SGN vs SGN=4 max_abs 0, xslm vs sgn=4 max_abs 0.
+ROUTE empty=0 at T=512/4096/12288. Event us matches the heading's ms
+(T=512 sgn 9998.5/10117.2/10001.7, T=4096 28261.5/27872.6/27980.3,
+T=12288 77775.2/76539.9/76282.2, xslm 14798.9/28974.0/70018.8).
+SGN=40 at T=512 is 14759.7 us. T=12288 sgn=4 down_us=18976.1 and
+xslm down_us=11936.3. c10_ms=66.97 is printed. BUDGET line matches.
+HEALTH_BEFORE and HEALTH_AFTER 0, C11_GPU_RC 0. c11-dnn.log REF bf16
+max_abs 2.5277e+01 max_rel 1.9815 frac_gate 0.9368; fp32 and fp16 also
+miss. Dequant 7827.5/7820.2/7396.9 us at 255.4/255.6/258.7 GB/s.
+Copy 6347.6 us at 528.6 GB/s. Uniform bmm T=12288 gate/gateup/down
+4719.2/7860.8/4649.4 us. grouped_mm gate T=12288 21525.6 us and
+T=4096 21979.7 us. Health 0 on that run too. The strings for a
+3.24 ms dense ceiling and for 636/124/727 us streams are not in the
+c11 logs. Kernel-sum arithmetic 7.83+7.82+7.40+7.86+4.65 = 35.56
+(heading 35.55) and the T=4096 sum 33.12 matches the same dequant
+plus the T=4096 bmm rows. Those sums are not a single layer launch.
+
+Verdict: OK on the bench table and on "XSLM is slower than C10 bmm".
+UNVERIFIED the dense ceiling and the two-stream lines.
+
+Suggested fix: point those two sentences at the log line, or drop them.
+Keep dispatch on the C10 split.
+
+### F62 -- G4 T2 host restore passed
+
+Claim: the 10:28 G4 heading. Attempt 1 rc 124. Attempt 2 ready
+10:20:05, pass=True, cached=3063, computed=18, host_delta=3063,
+device_delta=0, restored TTFT 0.1753 s, control 0.4166 s, cold
+4.934 s, load 131235840 bytes in 0.063618 s = 2.063 GB/s, first
+store 391249920 bytes in 0.089957 s = 4.35 GB/s, both copies
+swap_blocks_batch. Health after HEALTHY. No xe-reset.
+
+Evidence: g4-t2-driver-c1-r3.txt still starts with attempt 1 rc=124
+(card held by H1, timeout 180s) and then attempt 2. Ready 10:20:05.
+Identity hotschmoe-dev then the Ornith alias. Restored text matches
+the control text, out=64, cached=3063, computed=18, ttft 0.175 s.
+Control ttft 0.417 s. Cold 4.934 s. pass=True. JSON agrees:
+host_delta 3063, device_delta 0, load_bytes 131235840,
+load_time_s 0.063618073, greedy_match true, restored ttft
+0.175267 s, control 0.416552 s. Serve log: mmap 34.36 GB, slots=4
+chunks=1542, "G4 load tail end=3063 local=0 keys=6". Metrics:
+store_bytes 391249920, store_time 0.08995698, then load_bytes
+131235840 and load_time 0.063618073. 131235840/0.063618073 = 2.063
+GB/s. 391249920/0.08995698 = 4.35 GB/s. Health after in the driver
+is HEALTHY card 1, 26 s, exit 0. T2_DRIVER_EXIT 0. No xe-reset.
+The string swap_blocks_batch is not in the g4 logs searched.
+
+Verdict: OK on the gate numbers, identity, greedy match, and health.
+UNVERIFIED the swap_blocks_batch op name. This is not a Paris
+coherence run. The 10:50 heading's repeat of 2.063 GB/s matches.
+
+Suggested fix: log the copy kernel name next to the byte counters.
+
+### F63 -- G4 F-B CPU test
+
+Claim: the 10:38 G4 heading. Fork 765993c197, CPU only, F_B_OK,
+block=16, external hit=23, prompt=64, scheduled=41, computed after
+schedule is 64.
+
+Evidence: g4-fb-test-r3.txt. docker run with VLLM_TARGET_DEVICE=cpu,
+HF_HUB_OFFLINE=1, --network none, --cpus 4, --memory 16g. Printed
+"scheduled=41 computed=64 hits=23" and F_B_OK. cpu-run done in 29s
+exit 0. No /dev/dri in the command. The log does not print block=16
+or prompt=64. Fork tip is 765993c197, parent 9761b7b48a, ahead 16,
+not pushed.
+
+Verdict: OK on F_B_OK and the 41/64/23 line. UNVERIFIED block=16
+from this log.
+
+Suggested fix: print block and prompt on the F_B_OK line.
+
+### F64 -- C12 host dequant, then an unjournaled gate run
+
+Claim: the 10:39 and 10:43 C12 headings. _C.c12.so sha256
+d46f80175c67a106, 10120096 bytes, 10:28. compare_cpu 14/14 including
+Q8_0 mismatches=0. First link failed in 0.3 s. The gate script was
+mode 644, exit 126, then requeued. At 10:43 device gates had not
+started. Crop probe five CROP_OK and Q8_0 mismatches=0.
+
+Evidence: sha256 and size match the file on disk at 10:28:57.
+c12/compare_cpu.log VERDICT failures=0 types=14/14, Q8_0
+blk.39.attn_k.weight mismatches=0. c12/build.log is the successful
+link, cpu-run 125s exit 0. The 0.3 s failure is not in that log.
+c12/crop_probe.log has five CROP_OK lines and Q8_0 mismatches=0.
+run_gates.sh is now mode 775. No EACCES or exit 126 string remains
+under c12/. c12/gates.log, after the 10:43 heading, acquired card 0,
+health before HEALTHY, three VERDICT failures=0 lines (the third
+covered=12), C9_FAIR cosine 0.999992 to 0.999999 with max_rel_bulk
+up to 1.1534, then C12_PHASE. The first phase rows before that
+verdict include gu=2464520 us. Later T=1 rows are about 180-220 us.
+GATES_DONE, gpu-run done in 150s exit 0, health after HEALTHY.
+No journal heading owns those device numbers. No serve and no ITL.
+
+Verdict: OK on the hash and the host compare. UNVERIFIED the 0.3 s
+link failure and the EACCES exit. The device gate completion is real
+and unjournaled. Do not quote the 2.5 s phase row as steady state.
+
+Suggested fix: a heading that cites gates.log, separates the warmup
+phase row, and keeps the bulk-rel miss next to the cosine.
+
+### F65 -- G5b hook commit, batch result not in the heading
+
+Claim: the 10:38 G5b heading. Commit 9761b7b48a, model.py clean.
+QSA_SPEC_OK and QSA_SERVE_OK. Library 817928 bytes at 10:16.
+Card 0 health-before HEALTHY. No QSA_BATCH_OK yet. No xe-reset.
+
+Evidence: fork log shows 9761b7b48a with that subject, and the tree
+was clean at the pass-6 check. libb70_qsa_xpu.so is 817928 bytes,
+mtime 10:16:22. g5b-qsa-batch.log health-before is HEALTHY card 0.
+QSA_SPEC_OK and QSA_SERVE_OK are not in the logs or the flashnext
+tree search. g5b-qsa-batch-r2.log, after the heading, is card 1:
+health before HEALTHY, QSA_BATCH_OK, gpu-run done in 24s exit 0,
+health after HEALTHY. No xe-reset line in that tail.
+
+Verdict: OK on the commit, the library size, and the card-0
+health-before. UNVERIFIED the two CPU ok-tokens. The card-1
+QSA_BATCH_OK run is unjournaled. It is not a serve and not an ITL.
+
+Suggested fix: save the CPU test stdout next to the GPU log, and
+journal the card-1 QSA_BATCH_OK line with health before and after.
+
+### F66 -- H1 M2 died after the window heading
+
+Claim: the 10:42 heading says M2 is waiting. It does not claim a
+greedy result.
+
+Evidence: h1c-m2-window.out got the lease after C7, health-before
+rc=0 at 10:42:32, both cards HEALTHY, READY 10:45:37. Greedy JSON
+texts are empty, both errors HTTP 500, same=false, match_c4=false.
+The window still prints GREEDY_RC=0 and BENCH_RC=1. h1c-m2-serve.log
+serves hotschmoe-dev then qwen3.6-35b-a3b-ud-iq3-xxs, eager, port
+18114, both cards. At 10:45:38 the engine dies with
+"RuntimeError: ep flag timeout on a previous call" and both
+completion posts return 500. No health-after line in the window
+head that was read.
+
+Verdict: the 10:42 "window open" sentence was true when written.
+The later greedy failure is unjournaled. GREEDY_RC=0 does not match
+the empty HTTP 500 JSON.
+
+Suggested fix: set GREEDY_RC from match_c4, and journal the flag
+timeout with health after. This is not a coherence pass.
+
+### F67 -- G4 W8 pointer overflow
+
+Claim: the 10:50 heading. COPY_START 10:40:42, ValueError overflow,
+no GB/s, gpu-run exit 1 in 15s, health after 10:41:34 HEALTHY,
+no xe-reset. libb70_kvpark.so 90904 bytes from 08:41.
+libb70_kvpark_ordered.so 95512 bytes at 10:47, not loaded.
+
+Evidence: g4-copy-driver.txt COPY_START 10:40:42 card 1, malloc_host
+type=host, ValueError at bench_copy.py:38 torch.tensor([dst],
+dtype=torch.int64), gpu-run done in 15s exit 1, COPY_DRIVER_EXIT 1.
+Health-after file is HEALTHY card 1, and the driver records rc=0 at
+10:41:34. No COPY_BENCH line. The two libraries are 90904 bytes at
+08:41:34 and 95512 bytes at 10:47:48. g4-copy-driver-r2.txt only
+shows a later launch line at 10:50:12 naming the ordered .so. No
+result in that file yet.
+
+Verdict: OK. No bandwidth number.
+
+Suggested fix: none beyond the uint64 pack the heading already
+describes. Do not quote a GB/s until COPY_BENCH prints one.
+
+### F68 -- hygiene at 10:55 UTC
+
+Claim: no new staged binary, fork not pushed, no host UMD change
+in this window.
+
+Evidence: git diff --cached is empty. git status still flags only
+the pre-existing modified
+vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so
+as a binary. Fork b70/flashnext is 765993c197, ahead 16 of
+origin/main. Serve and probe logs in this window still show host
+libze_loader.so.1.28.2. No heading claims an apt or driver change.
+c7-ep-tp-serve.log from the 10:41 window was not scored.
+
+Verdict: OK on staging and the fork tip.
+
+Suggested fix: none. Leave the .so unstaged. Do not push.
+
+Cursor extended before the pass-7 journal line. Headings after the
+10:50 G4 entry are F69 through F76. F58-F68 are unchanged.
+
+### F69 -- E2 8k split, second crash is F.sigmoid
+
+Claim: the 10:52 E2 heading. Identity hotschmoe-dev first. Coherence
+TTFT 92 ms and 71 ms, landmarks sentence. MATMUL 31352 ms / 261 tok/s
+and 31299 ms / 262 tok/s. Warm step 2: forward 31263, linear_attn
+19519 (n=30), self_attn 5312 (n=10), mlp 6395, experts 6390,
+shared_expert 2272 (n=80), router 4.4, norm 22, host_sync item 7,
+tolist 44, synchronize 1. BMM_1 35950 ms / 228 tok/s. Step 3: forward
+35754, linear_attn 19592, self_attn 5329, experts 10794, group 3687,
+bmm_w13 1692, bmm_w2 1281, pad_x 441, reduce 372, unpack_w13 135,
+unpack_w2 68. BMM_2 empty. Engine died at 10:39:48 on F.sigmoid of
+the shared-expert gate, error 40. Diag returned 0, then bench
+HTTP 500. Health rc 0 at 10:40:41. Dense time is WNA16 because
+linear.py unpacked only for env exactly matmul. Tiled bmm unpacked
+all 256 experts (~1.5 GB). Not a 5000 tok/s result.
+
+Evidence: e2-driver.log lines 78-91 and 130-135. Identity first_ok.
+COHERENCE ttft 92.205 and 71.437, both landmarks sentences.
+MATMUL_1 31351.952 / 261.100, MATMUL_2 31298.939 / 261.542,
+BMM_1 35950.258 / 227.704, BMM_2 empty. OFF_FILE_SET. PHASE
+10:39:48 diag rc 0, split log lines 50, bench rc 1. PHASE 10:40:41
+health rc 0. e2-health.log HEALTHY card 1, gpu-run exit 0.
+e2-bench.json was not written. The 50-line split file was read
+before the 10:52:15 serve truncated it to the two install lines.
+Step 2 and step 3 matched the heading's rounded milliseconds,
+including host_sync item 7 tolist 44 synchronize 1. prefill_flag
+on that file was the string matmul (printed once at install).
+The serve log of that run, read before the same overwrite, died
+at 10:39:48 in qwen2_moe.py:121
+`out = F.sigmoid(self.expert_gate(x)[0]) * out`, UR error 40.
+F59's sentence that this second OOR is torch.bmm is wrong. The
+first crash (F58) remains the overwritten torch.bmm dump.
+The second serve command omitted --gdn-prefill-backend. On XPU,
+qwen_gdn_linear_attn.py:274 logs "Using {backend} GDN prefill
+kernel" and returns, so a missing "Using SYCL GDN" line is the
+CUDA label, not proof of the backend. linear.py now returns true
+for both matmul and bmm, and its comment says env bmm used to
+fall through to prefill_wna16. Step 3 linear_attn stayed 19591.56
+ms, the same class as step 2. The 1.5 GB / 256-expert unpack size
+is not in the split log. E1's 0.1 s dense figure was not re-opened.
+A third serve started at 10:52:15 with --gdn-prefill-backend sycl
+and was still in weight load at 10:57. Not scored.
+
+Verdict: OK on identity, the short coherence TTFTs, the rounded
+step times, diag rc 0, the sigmoid OOR, health, and "not 5000
+tok/s". UNVERIFIED the 1.5 GB figure. The live split and serve
+logs no longer contain this run.
+
+Suggested fix: keep each serve's split log and traceback under a
+run id. Correct any later cite of the second crash to F.sigmoid.
+Do not quote 228 tok/s as a prefill win: bench_rc=1.
+
+### F70 -- H1 M2 r1 flag timeout, health closed
+
+Claim: the 10:53 H1c heading. Health before HEALTHY. Warmup attempt
+1. All 40 MoE layers split 128/128. Init 11.56 s. Greedy died in
+method.py apply with "EP previous error layer=1 err0=0 err1=11"
+and ep flag timeout. Layer 0 had no stored error. Connection reset.
+Health after HEALTHY rc 0 at 10:48:44. No xe-reset. New _C.so
+sha256 7f0981fd20a2375965fd89612bb32969a71ca6906ef94bfa9a6d1d0e4926f010,
+476912 bytes. Eager ep_moe host-waits both queues. Capture still
+records the pipelined chain.
+
+Evidence: h1c-m2-window-r1.out is the 10:42 window. Health-before
+rc 0 at 10:42:32, both cards HEALTHY. READY 10:45:37. Greedy texts
+empty, both HTTP 500, match_c4 false, BENCH_RC=1, GREEDY_RC=0.
+ConnectionResetError 104. SERVE_RC=0 at 10:45:43 (the stop wait).
+Window done rc=1. HEALTH_AFTER_RC=0 at 10:48:44, HEALTHY both
+cards. No xe-reset string. h1c-m2-serve-r1.log: hotschmoe-dev then
+qwen3.6-35b-a3b-ud-iq3-xxs, eager, port 18114, B70_EP=1.
+EP init nlayers=64 spin=200000. Warmup exchange and moe attempt=1
+err0=0 err1=0. Split lines are layers 0-39, each n0=128.
+Init engine took 11.56 s. Trace ends at method.py:125
+`y = torch.ops.b70_ep.moe_ep(...)` and core.py RuntimeError ep
+flag timeout. The only "EP previous error" line is layer=1
+err0=0 err1=11. _C.so sha256 and size match the file on disk.
+moe_ep.cpp:408 prints that line when the layer's saved flag is
+set. ep_wait for card 1's flag_in passes error code 11.
+enqueue returns before any host wait when cap_on is set
+(moe_ep.cpp:414). The eager path then calls q1->wait() and
+q0().wait() (lines 421-422). That host sync is outside capture.
+
+Verdict: OK. GREEDY_RC=0 still does not match the empty HTTP 500
+body. SERVE_RC=0 is the container stop, and the window rc is 1.
+This is not a coherence pass. r1 text was not measured.
+
+Suggested fix: set GREEDY_RC from match_c4. The eager host wait
+matches the failure mode. Keep it off the capture path.
+
+### F71 -- C7 TP=2 loader refusal
+
+Claim: the 10:43 C7 heading. Fork e442b4b53f. HEALTH_RC 0. Both
+workers raised at serve_loader.py:337, packed sharding not
+implemented. RAISE:1 at 10:43:25. SERVE_RC 137. No xe-reset.
+Later commit 35da272b61 does not change this raise.
+
+Evidence: c7-tp-window-raise.out. Collective-health label,
+HEALTH_RC:0, RAISE_SEEN 10:43:25, SERVE_RC:137, RAISE:1. Both
+worker tracebacks at 10:43:23 carry the packed-attention
+RuntimeError. At e442 the f-string is line 338, so the raise
+statement is the line above it. 35da272b61 touches only
+_check_linear and adds _check_split_shards. The raise text is
+unchanged. The window has no /v1/models line and no greedy.
+The HEALTHY banner is not in the window file, only HEALTH_RC:0.
+The 09:01 DP=2 measurement was not re-opened.
+
+Verdict: OK on the refusal, both workers, and SERVE_RC 137.
+UNVERIFIED the 09:01 citation this pass. Not a speed result.
+
+Suggested fix: none for the refusal. Keep TP=1 for this packed
+GGUF until a shard exists.
+
+### F72 -- C7 Flash-Next load IndexError
+
+Claim: the 10:51 C7 heading. HEALTH_RC 0. Shards=2, tensors=1224,
+root Qwen4ExpForCausalLM, EP 256/512, qk_rows=4096, placed 100.
+Both workers IndexError in _check_linear on
+sizes[_SHARD_INDEX[shard]]. Next tensor is
+blk.3.indexer.k_proj.weight, ggml (2560, 128). SERVE_RC 1.
+No greedy. No xe-reset. G4 took card 1 at 10:51:26.
+
+Evidence: c7-fn-window-index.out HEALTH_RC:0, serve exited before
+ready, stop 10:51:11, SERVE_RC:1. c7-fn-serve-index.log: DP=2
+TP=1, eager, max_seq_len 2048, model hf-flashnext. Load line
+shards=2 tensors=1224 root=Qwen4ExpForCausalLM ep=0/2 and ep=1/2,
+qk_rows=4096. expert_map_manager prints local/global experts
+256/512. placed 100 tensors. Both workers IndexError at the
+pre-commit line `expect = sizes[_SHARD_INDEX[shard]]`
+(serve_loader.py:260 in that build). The log does not name
+blk.3.indexer.k_proj.weight or the ggml shape. G4's copy driver
+prints COPY bench start 10:51:25, then the card-1 acquire.
+No greedy line. No xe-reset string.
+
+Verdict: OK on the load counters, the IndexError site, SERVE_RC 1,
+and health rc 0. UNVERIFIED the tensor name and the ggml shape.
+The server never reached /v1/models.
+
+Suggested fix: the 10:55 commit is the proposed guard. Do not
+call this load a collective failure.
+
+### F73 -- C7 indexer commit is unmeasured
+
+Claim: the 10:55 C7 heading. Fork 35da272b61, serve_loader.py
+only, not pushed. PY_COMPILE_OK. Q rows 512, K rows 128, hidden
+2560, indexer heads 4 and 1, head dim 128. 512+128 equals the
+ReplicatedLinear output. Unmeasured.
+
+Evidence: fork tip is 35da272b61, ahead 17 of origin/main, status
+shows ahead and not a push. The commit adds 37 lines to
+serve_loader.py. A one-partition module records shard rows and
+_check_split_shards compares the sum to b70_output_sizes.
+py_compile of that file in this pass returned rc 0. No saved
+PY_COMPILE_OK line and no saved GGUF metadata dump were found.
+The 512 and 128 figures are the commit message.
+
+Verdict: OK that the commit exists, is loader-only, and is
+unmeasured. UNVERIFIED the metadata row counts against the GGUF.
+The heading's own verdict says unmeasured.
+
+Suggested fix: save the metadata print next to the next window.
+Do not treat py_compile as a serve.
+
+### F74 -- G4 ordered copy, D2H misses 7.5 GB/s
+
+Claim: the 10:56 G4 heading. bad=0. H2D 13.344 / 14.031 / 14.223 /
+14.037. D2H 4.636 / 4.583 / 4.659 / 4.670. Fragments about 13.4.
+swap H2D 8.853 / 8.110 / 6.042 / 4.119. swap D2H about 4.66.
+worst 4.583. Exit 1 because the gate wants 7.5. Health after
+10:52:09 HEALTHY. dev_ptr 0xffffd556b7400000. ordered=1.
+No xe-reset.
+
+Evidence: g4-copy-driver-r2.txt. ordered=1, malloc_host type=host.
+The four byte rows match those GB/s figures and bad=0. Fragments
+13.372 / 13.469 / 13.488 / 13.442. swap D2H 4.661 / 4.677 /
+4.680 / 4.656. worst_one_buffer=4.583 COPY_BENCH. gpu-run exit 1
+in 28s. bench_copy.py returns 1 when worst < 7.5. Health-after
+file is HEALTHY card 1, and the driver records rc 0 at 10:52:09.
+dev_ptr on the 16 MiB row is 0xffffd556b7400000. No xe-reset
+string. Library size 95512 was checked at the 10:50 entry.
+The 8.5 GB/s Strata probe was not re-opened. B70_KVPARK_COPY is
+not printed. This supersedes F67's "r2 has no result yet".
+
+Verdict: OK. H2D is above 7.5 on these four sizes. D2H and the
+worst one-buffer number are not. bad=0. Not a serve and not an ITL.
+
+Suggested fix: keep quoting worst_one_buffer next to the gate.
+Do not wire the copy in until D2H is explained.
+
+### F75 -- G5b card 0 graph ids fail, card 1 batch passes
+
+Claim: the 10:55 G5b heading. Same 817928-byte library. Card 0
+QSA_XPU_OK, eager batch sections pass, union attn max_abs
+7.007e-4, then FAIL graph ids mismatch. RUN_EXIT 1. Health after
+HEALTHY. Card 1 health before HEALTHY (27s). QSA_XPU_OK, graph
+ids exact at widths 5, 6, and 7. QSA_BATCH_OK. Graph pos 4 and
+pos 5 exact, slot-3 seq 0 attn and gated max_abs 0, inactive
+pages exact. gpu-run 24s exit 0. RUN_EXIT 0. Pooled inside 1e-5,
+scores inside 1e-4, attn inside 2e-3. Not a speed claim.
+
+Evidence: g5b-qsa-batch.log. Health before HEALTHY card 0.
+Sections include block 4, block 8, pos_base, mrope, inactive,
+chunked prefill, union attend (union q1 attn max_abs=7.007e-04),
+draft, export import. QSA_XPU_OK at line 700, before the graph
+replay that prints FAIL graph ids mismatch. gpu-run exit 1 in
+28s. Health after HEALTHY card 0, rc 0, RUN_EXIT:1. No xe-reset
+string. g5b-qsa-batch-r2.log. Health before HEALTHY card 1,
+gpu-run 27s exit 0. Single-seq graph: "graph replay pos 4 ids
+exact (5,)", pos 5 ids exact (6,), pos 7 ids exact (7,), with
+attn and gated max_abs 0. Batch graph: pages, tail, dead,
+block_pos, length, attn, gated exact, then "graph pos 4 ids
+exact" and "graph pos 5 ids exact". Slot-3 lines: graph seq0
+pages exact, ids exact (7,), attn max_abs 0, gated max_abs 0,
+inactive pages exact, inactive tail and dead max_abs 0.
+QSA_BATCH_OK. gpu-run 24s exit 0. Health after HEALTHY.
+RUN_EXIT:0. Printed atols are 1e-5 pooled, 1e-4 scores, 2e-3
+attn, and QSA_BATCH_OK means those checks passed. test_qsa_xpu.py
+now fill_(-1) and compares ids[:width]. The comment in
+test_qsa_batch.py says topk does not write ids past width.
+F65's missing QSA_XPU_OK is this card-0 line. Not a serve and
+not an ITL. The libb70_qsa_xpu_next.so compile and the MTP
+mark_draft note were not checked.
+
+Verdict: OK on both GPU logs, including card 0's graph ids miss
+and card 1's pass. UNVERIFIED the XMX next-library sentence.
+
+Suggested fix: keep the prefix compare. Card 0's RUN_EXIT 1
+stays the record of the old whole-buffer check.
+
+### F76 -- code and hygiene at 11:00 UTC
+
+Claim: no new staged binary. Host waits added for the eager EP
+path stay off capture. The ordered copy wait is gated by the
+sync flag. No host UMD change.
+
+Evidence: git diff --cached is empty. git status still flags only
+the pre-existing modified
+vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so
+as a binary. New untracked paths checked this pass are small
+source files (qsa_xmx.cpp 20703 bytes, the largest). Fork
+b70/flashnext is 35da272b61, ahead 17, not pushed. g4-copy r2
+still resolves libze_loader.so.1.28.2. moe_ep.cpp returns before
+q1->wait() and q0().wait() when cap_on is set. copy_batch.cpp
+calls last.wait() only when sync is true. qsa_xmx.cpp has no
+synchronize, .item, or wait. moe.py's synchronize mentions are
+the diagnostic-span comments, not a new capture sync. linear.py
+now treats prefill flag bmm like matmul.
+
+Verdict: OK on staging and on the capture guard. The copy wait
+is safe only while graph replay calls it with sync false. That
+caller was not traced this pass.
+
+Suggested fix: none for staging. Leave the .so unstaged. Do not
+push. If a serve path passes sync true inside capture, drop the
+wait on that path.
+
+## Pass 8 -- 2026-10-20 11:40 UTC
+
+CPU only. Cursor is the 11:35 E2 heading (JOURNAL line 3368) plus
+the H1 M3 window, which finished at 11:38:08 and is not in the
+journal yet. F1-F76 are unchanged.
+
+### F77 -- C12 11:02 graph times match, bulk error does not
+
+Claim: the 11:02 C12 heading. Health before and after HEALTHY
+card 0. Three VERDICT failures=0, the third covered=12. Fair
+us_graph gu=21 dt=42 is 186.95 / 277.77 / 398.45 / 535.64 and
+gu=17 dt=20 is 198.51 / 288.44 / 414.10 / 571.82. Cosine 0.99999.
+Strata 112.89 / 148.10 / 202.93 / 261.64, ratio about 1.66x and
+2.05x. Second binary 457a262d, 11266352 bytes, not measured yet.
+
+Evidence: c12/gates.log lines 7 and 251 are HEALTHY card 0.
+VERDICT failures=0 at lines 150, 167, and 187 (covered=12).
+OURS lines 189-196 match those microseconds. Cosine on the lines
+is 0.999992 to 0.999999. gu=17 T=1 max_abs is 1.4664e+01.
+gu=17 T=2 max_rel_bulk is 1.1534. The OURS lines do not name
+IQ3_S, Q2_0, IQ2_XS, or IQ4_NL. 186.95/112.89 is 1.656 and
+535.64/261.64 is 2.047. The Strata row is the citation already
+in JOURNAL line 2403. Measured copy
+c12/_C.c12.measured.so is 10120096 bytes, sha256
+d46f80175c67a10681e09e7642b5293eedec0d3f98517b5fe7ba4c9662b70112.
+c12/_C.c12.ec3.so is 11266352 bytes, sha256
+457a262da74b9477ebf34922be18d481c8c5fb224db5b50f2d3277f014d4762f.
+Fair2 later ran that second binary and it did not capture (F79).
+
+Verdict: OK on the microseconds, the health lines, and the
+verdict lines. The cosine heading is rounding. The gu/dt type
+names are UNVERIFIED. max_rel_bulk is not an 8e-2 pass. Not an
+ITL.
+
+Suggested fix: print the ggml type names on the OURS line. Keep
+max_rel_bulk next to the microsecond row.
+
+### F78 -- G4 flags probe, D2H stays under 7.5
+
+Claim: the 11:10 G4 heading. 256 MiB. Compute 13.812 / 4.687.
+Cached 14.205 / 4.690. Uncached 14.014 / 4.663. Write-combined
+14.165 / 4.649. bad=0. Health after 11:08:52 HEALTHY.
+FLAGS_DRIVER_EXIT 0 is the probe return, not a 7.5 GB/s pass.
+Library 106584 bytes.
+
+Evidence: logs/g4-flags-driver.txt contains those six GB/s
+figures, bad=0, FLAGS_DRIVER_EXIT, and the health-after rc.
+libb70_kvpark_flags.so is 106584 bytes. bench_copy.py returns 1
+only when worst_one_buffer is under 7.5. This driver exited 0,
+so the script did not apply that gate. D2H on every arm is about
+4.65 to 4.69. No serve. The 11:00:56 compile clock was not
+re-stated. No xe-reset string in the extract.
+
+Verdict: OK. H2D clears 7.5. D2H does not. Exit 0 is not a pass
+of the 7.5 gate.
+
+Suggested fix: keep printing the gate next to FLAGS_DRIVER_EXIT.
+
+### F79 -- C12 EC-split graph does not instantiate
+
+Claim: the 11:12 C12 fair2 heading. Eager failures=0 covered=12,
+Q8_0 mismatches=0, cropped max_abs under 2e-3. capture_end
+RuntimeError Failed to instantiate native UR executable graph.
+gpu-run 83s exit 1. No us_graph. No xe-reset. Health before
+HEALTHY. Binary 457a262d, 11266352 bytes.
+
+Evidence: c12/fair2.log. Health before HEALTHY card 0. VERDICT
+failures=0 and VERDICT failures=0 covered=12. Q8_0 mismatches=0
+on blk.39.attn_k.weight. Cropped rows max_abs 1.936e-03,
+9.458e-04, 2.194e-04, 3.684e-04, 1.059e-04. moe_layer max_abs is
+4.673e-03, 1.314e-02, and 9.073e-03, so those rows are not the
+cropped cases. graphs.py capture_end raises the UR instantiate
+error. gpu-run done in 83s exit 1. No second HEALTHY line.
+c12/_C.c12.ec3.so matches the sha256 and size. 48*11=528 is
+arithmetic, not a log line.
+
+Verdict: OK that eager cropped checks passed and the graph did
+not instantiate. No speed result. No health after.
+
+Suggested fix: record health after an exit-1 graph run. Do not
+quote this binary as a graph candidate.
+
+### F80 -- C7 11:12 window was only an announcement
+
+Claim: the 11:12 C7 heading says the Flash-Next DP=2 window is
+open. Leases requested. No result in that heading.
+
+Evidence: the heading stops at VERDICT: window open. The window
+file later ended SERVE_RC 1. That result is the 11:32 heading,
+checked in F90. No tok/s in the 11:12 entry.
+
+Verdict: OK as a window announcement. It is not a measurement.
+
+Suggested fix: none. The result belongs on the 11:32 entry.
+
+### F81 -- G4 mmap H2D 9.435, D2H 4.451
+
+Claim: the 11:14 G4 heading. h2d=9.435 d2h=4.451 bad=0. Health
+after 11:12:37 HEALTHY. MMAP_DRIVER_EXIT 0. C7 held both cards
+from 11:13:08.
+
+Evidence: logs/g4-mmap-driver.txt contains h2d=9.435, d2h=4.451,
+bad=0, MMAP_DRIVER_EXIT, and the health-after rc. c12/fair3.log
+line 1 says card 0 was held by C7 since 11:13:08, name
+vllm-fn-flashnext-gguf-ep. D2H 4.451 is under 7.5. H2D 9.435 is
+over 7.5. Not a serve. B70_KVPARK_COPY is not printed.
+
+Verdict: OK. The pool pointer clears 7.5 only in the H2D
+direction.
+
+Suggested fix: same as F78. Do not treat MMAP_DRIVER_EXIT 0 as
+the bandwidth gate.
+
+### F82 -- E2 third serve TTFTs match; split table is gone
+
+Claim: the 11:15 E2 heading. Server up 11:06:45. Identity
+hotschmoe-dev. Coherence TTFT 88 and 69 ms. MATMUL_1 4906 ms
+and 1668 tok/s. MATMUL_2 4555 ms and 1797 tok/s. Warm split
+step 2: forward 4521, linear_attn 242, experts 4110. BMM_1
+10648 ms and 769 tok/s. BMM_2 died at torch.bmm, error 40.
+Diag rc 1. No health after.
+
+Evidence: logs/e2-driver.log. PHASE 11:06:45 server up.
+first_ok true, ids hotschmoe-dev then qwen36-w3a16-b70-lowbit.
+COHERENCE 88.331 and 69.121. MATMUL_1 4906.205 / 1668.499.
+MATMUL_2 4554.704 / 1797.263. BMM_1 10648.473 / 768.749.
+BMM_2 EMPTY. PHASE 11:07:11 diag rc 1, split log lines 50,
+FAILED. The saved traceback in the driver is EngineDeadError
+from async_llm.py and serving.py. e2-fwd-split.log is 0 bytes
+now; a later serve truncated it. No e2 log still contains
+"4521", "linear_attn", or "torch.bmm". No health phase between
+FAILED and the 11:14:55 restart.
+
+Verdict: OK on identity, the coherence TTFTs, the matmul and
+bmm TTFTs, and diag rc 1. UNVERIFIED the internal millisecond
+table and the torch.bmm / error-40 site. 1797 tok/s is not
+5000, and the run died. Not a qualified prefill result.
+
+Suggested fix: copy the split log aside before the next serve
+truncates it. Keep the worker frame, not only EngineDeadError.
+
+### F83 -- G5b XMX union matches within the stated atols
+
+Claim: the 11:17 G5b heading. Library 962040 bytes. Health
+before and after HEALTHY. QSA_XPU_OK, QSA_BATCH_OK, PASS xmx
+refuse, xmx ok=1 union_cells=58, vs SIMT 9.710e-04, vs CPU
+5.405e-04, PASS xmx, QSA_XMX_OK, RUN_EXIT 0. Not an ITL.
+
+Evidence: logs/g5b-qsa-xmx.log contains those strings, gpu-run
+done in 32s exit 0, and HEALTHY card 0 before and after.
+libb70_qsa_xpu.so and libb70_qsa_xpu_next.so are both 962040
+bytes, sha256
+2ee734458f9ed0ac0ebd827c409c3771ba315fab15dfdf004bd19da24f67bf71.
+The SIMT backup libb70_qsa_xpu.so.simt-817928 is 817928 bytes.
+qsa_xmx.cpp has no synchronize, .item, or wait. Not a serve.
+
+Verdict: OK. The atols are 2e-2 and 5e-2. This is not a decode
+ITL.
+
+Suggested fix: none for the numeric lines. Do not quote it as
+serve latency.
+
+### F84 -- C13 library linked
+
+Claim: the 11:19 C13 heading. cpu-run 139s exit 0.
+_C.c13.so is 2635416 bytes. _C.so stays 7574840.
+C13_BUILD_OK. Warnings only. Measurement not started.
+
+Evidence: logs/c13-build.log ends with C13_BUILD_OK and cpu-run
+done in 139s exit 0. _C.c13.so is 2635416 bytes, sha256
+0efe261a8cc200d9d2b2dabf47b5a7008c848dec565b0a41040699cee04a1510.
+_C.so is 7574840 bytes. The heading's _C.c12.so size 10169704
+matches c12/_C.c12.fused.so. The live plugin _C.c12.so is now
+the later 10165216-byte link (F93). dequant_wide.cpp and
+c13_bind.cpp have no synchronize, .item, or wait.
+
+Verdict: OK that the library linked. The bench in this log is
+not a result. The later bench is F89.
+
+Suggested fix: none for the link.
+
+### F85 -- H1 M2 eager ITL is a real serve
+
+Claim: the 11:12 H1c heading. Identity first hotschmoe-dev.
+Greedy texts equal the C4 loop string. match_c4 is false only
+because the script still compared the landmarks sentence.
+Coherence OK. C1 ITL p50 81.84 / p90 83.19 / p99 83.78, 12.60
+tok/s, TTFT 217.93, n=32. C2 both streams p50 87.33. BENCH_RC 0,
+GREEDY_RC 0, SERVE_RC 0. Health before 11:07:45 and after
+11:12:23.
+
+Evidence: logs/h1c-m2-bench.json. identity first_ok true,
+ids hotschmoe-dev then qwen3.6-35b-a3b-ud-iq3-xxs. model field
+hotschmoe-dev. Coherence texts are both the C4 loop string,
+ok true, same true. C1 itl_p50_ms 81.8448, p90 83.1874, p99
+83.7825, decode_tok_s 12.6037, ttft_ms 217.932, completion
+tokens 32. C2 itl_p50_ms 87.3274 and 87.3306. The window file
+from this pass's earlier read has READY 11:10:45, health-before
+rc 0 at 11:07:45, health-after rc 0 at 11:12:23, and SERVE_RC 0.
+The r1 file is a different run and still has an empty HTTP 500.
+C4's 87.62 ms citation was not re-opened.
+
+Verdict: OK on identity, the texts, coherence, the ITL, and
+health. GREEDY_RC 0 here is a text match. The landmarks
+comparator is a script bug and is not the text. Not a graph
+result. The C4 comparison is UNVERIFIED this pass.
+
+Suggested fix: point match_c4 at the C4 loop string, as the M3
+script later did.
+
+### F86 -- H1 M3 window was open, then finished unjournaled
+
+Claim: the 11:20 H1c heading. Window queued. Card 0 held by
+G5b. Not measured yet.
+
+Evidence: that heading has no bench numbers. logs/h1c-m3-window.out
+later reached READY. The finished window is F94, and it is not
+in JOURNAL.md. The 11:20 text was true when written.
+
+Verdict: OK as an announcement. Do not read it as an ITL.
+
+Suggested fix: append the finished window before quoting it.
+
+### F87 -- C12 fused graph also fails instantiate
+
+Claim: the 11:21 C12 fair3 heading. Same UR instantiate error.
+Eager failures=0 covered=12. gpu-run 93s exit 1. No us_graph.
+Health before HEALTHY. Binary sha256 6a2e412b, 10169704 bytes.
+
+Evidence: c12/fair3.log contains the UR instantiate error and
+gpu-run exit 1. c12/_C.c12.fused.so is 10169704 bytes, sha256
+6a2e412bfde900fc086d3fc6b1b7bf46a4fd4c36db8527efe0afe285046a285c.
+No us_graph line in the spot check. The use_root_sync diagnosis
+is the heading's reading, not a log field. No health-after line
+was part of the captured tail.
+
+Verdict: OK that this binary failed graph instantiate after
+eager checks. Not a speed result.
+
+Suggested fix: same as F79.
+
+### F88 -- G5b prefill numbers match; some prose is not in the log
+
+Claim: the 11:21 G5b heading. PASS prefill tiles, gated worst
+1.953e-03, XMX did not launch. PASS prefill xmx, 16 appended
+cells, 10 queries, gated vs CPU 9.766e-04. QSA_XMX_OK.
+RUN_EXIT 0. Health before and after. 26s exit 0.
+
+Evidence: logs/g5b-qsa-prefill.log contains PASS prefill tiles,
+1.953e-03, PASS prefill xmx, prefill xmx gated vs cpu
+max_abs=9.766e-04, QSA_XMX_OK, QSA_BATCH_OK, xmx vs simt
+9.710e-04, xmx vs cpu 5.405e-04, gpu-run done in 26s exit 0,
+HEALTHY card 0 before and after, RUN_EXIT:0. The strings
+"XMX did not launch", "16 appended", and "10 queries" are not
+in the log. Neighbor-page and id lines were not re-listed.
+Not a serve and not an ITL. No xe-reset line in the extract.
+
+Verdict: OK on the max_abs lines, the PASS lines, health, and
+RUN_EXIT 0. UNVERIFIED the three prose phrases as log text.
+
+Suggested fix: quote the printed line. The test still does not
+call QsaRunner.forward.
+
+### F89 -- C13 exit 124 is not in the surviving bench log
+
+Claim: the 11:22 C13 heading. Health before rc 0. cpu-run
+--quiet exited 124 at 90s. The script printed "FAIL python
+timed out". No kernel ran. Health after rc 0. gpu-run 129s
+exit 124.
+
+Evidence: a search of the flashnext tree found no "FAIL python
+timed out" and no "exit 124" in the bench log. logs/c13-bench.log
+was overwritten. The file now is a later run: gpu-run acquired
+card 0, xpu-health HEALTHY, HEALTH_BEFORE:0, several "OK exact"
+rows, then ModuleNotFoundError: No module named gguf in
+c13_bench.py load_real_experts. cpu-run done in 13s exit 1.
+HEALTH_AFTER:0. gpu-run done in 43s exit 1. That later run is
+not in the journal.
+
+Verdict: UNVERIFIED the exit-124 claim, because the log it
+names was replaced. The surviving run is a real exit 1 with
+health before and after, and it is not a kernel timing.
+
+Suggested fix: keep the timed-out log under a distinct name.
+Install gguf in the bench environment before the next card run.
+
+### F90 -- C7 DP=2 death is a host global OOM
+
+Claim: the 11:32 C7 heading. HEALTH_RC 0 at 11:12:39. Serve
+11:13:08. Both workers placed 1200 tensors at 11:17:22. No
+Python traceback. Kernel 11:17:41 oom-kill CONSTRAINT_NONE
+global_oom pid 3258155, total-vm 129572252 kB, anon-rss
+46915752 kB, file-rss 12 kB. Mem-Info active_anon 70711248 kB,
+inactive_anon 26628912 kB, active_file 0, gpu_active 22211584
+kB, all_unreclaimable, Normal free about 195 MB. Reaped
+11:17:44. SERVE_RC 1 at 11:18:06. Died while copying
+per_layer_token_embd.weight, 28800138240 bytes. No greedy.
+No xe-reset.
+
+Evidence: logs/c7-fn-window-oom.out is the seven-line window:
+HEALTH_RC:0, serve 11:13:08, serve exited before ready, stop
+11:18:06, SERVE_RC:1. logs/c7-fn-serve-oom.log shows both
+workers placed 1200 tensors at 11:17:22, then EngineCore_DP1
+at 11:17:44 "WorkerProc initialization failed" and
+RuntimeError engine core initialization failed. The worker
+root frame is not in that file. /var/log/kern.log at
+11:17:41 matches the oom-kill line, the pid, total-vm,
+anon-rss, file-rss, active_anon, inactive_anon, active_file
+0, gpu_active 22211584kB, all_unreclaimable? yes, and Node 0
+Normal free 194852kB. Reaped 11:17:44. The kernel log and the
+serve log do not name per_layer_token_embd.weight. That name
+and the 28800138240-byte size are the shard description in
+reports/1C7_gguf_graph_ep.md. No /v1/models line. No xe-reset
+string.
+
+Verdict: OK on the host OOM, the counters, and SERVE_RC 1.
+UNVERIFIED that the in-flight tensor was the PLE table. Not
+an XPU wedge and not a greedy result. The serve never became
+ready.
+
+Suggested fix: the memmap view is the right next step. Say
+"inferred next tensor" until a loader line names it.
+
+### F91 -- PLE memmap commit exists; the CPU test log does not
+
+Claim: the second 11:32 C7 heading. Fork 0a6170da8c, not
+pushed. Host tables skip _owning_uint8 and raise on a
+non-memmap source. cpu-run exit 0 in 12 s. HOST_TABLE_TEST_OK.
+PY_COMPILE_OK. Both shard-2 PLE tensors are C-contiguous uint8
+memmaps of 28800138240 bytes. MemAvailable about 108 GiB.
+Greedy 323 / 667 is not measured.
+
+Evidence: fork b70/flashnext is 0a6170da8c, ahead 18 of
+origin/main, status ahead and not a push. The commit touches
+serve_loader.py, ple.py, loader.py, and a mapping test.
+_host_table_payload uses torch.from_numpy on a C-contiguous
+uint8 view, walks .base for a memmap, and raises if the walk
+fails. _owning_uint8 is still the path for other payloads.
+A scan of /tmp, the flashnext logs, and the build tree found
+no file containing HOST_TABLE_TEST_OK. MemAvailable was not
+sampled from a saved file. No second serve log exists.
+
+Verdict: OK that the commit matches the stated guard and is
+unmeasured on a GPU. UNVERIFIED HOST_TABLE_TEST_OK,
+PY_COMPILE_OK, and the 108 GiB figure. The 323 / 667 compare
+did not run.
+
+Suggested fix: save the cpu-run stdout next to the commit.
+Do not treat the commit as a serve.
+
+### F92 -- E2 fourth serve died before a prefill number
+
+Claim: the 11:35 E2 heading. Server up 11:33:27. Identity and
+both Paris calls passed, TTFT 99 ms and 70 ms. BMM_1 returned
+no usage. Engine died at 11:33:38 in _group_slots at torch.cat,
+level_zero error 40, before any expert bmm. Split log has the
+config only. H1 took card 1 at 11:33:44. No xe-reset.
+
+Evidence: logs/e2-driver.log. PHASE 11:33:27 server up.
+first_ok true. COHERENCE 99.349 and 70.052, landmarks text.
+BMM_1 EMPTY. PHASE 11:33:38 diag rc 1, split log lines 11,
+FAILED. The driver traceback is EngineDeadError only. No e2
+log contains _group_slots, torch.cat, or error 40. The split
+file is 0 bytes after the next launch. H1's health gpu-run
+finished at 11:34:13 and took 29s, which is 11:33:44 by
+subtraction. The stamp is not printed. No xe-reset string.
+A fifth serve prints PHASE 11:35:47 start and was still
+waiting on weights at the last driver line. That run is not
+scored. vllm-fn-g4-kv-c1 is named in h1c-m3-serve.log as the
+card-1 holder from 11:34:44.
+
+Verdict: OK on identity, coherence, the empty BMM_1, and diag
+rc 1. UNVERIFIED the _group_slots / torch.cat / error-40 site.
+Not a prefill tok/s. The fifth serve is in progress in the
+driver snapshot.
+
+Suggested fix: preserve the worker frame and the split log
+before the next truncation. empty_cache next to the KV pool
+stays off until that frame is on disk.
+
+### F93 -- C12 no-root-sync graph times match
+
+Claim: the 11:35 C12 heading. sha256 b3c15e14, 10165216 bytes.
+Health before and after. Eager failures=0 covered=12. Fair
+us_graph 180.17 / 267.04 / 385.36 / 515.13 and 191.86 /
+280.62 / 402.88 / 560.55. Cosine 0.99999. About 4 percent
+under the 11:02 rows. Ratio about 1.60x and 1.97x. gpu-run
+84s exit 0. No xe-reset.
+
+Evidence: c12/fair4.log. HEALTHY card 0 before and after.
+VERDICT failures=0 and covered=12. Q8_0 mismatches=0. OURS
+lines match those microseconds. Cosine is 0.999992 to
+0.999999. max_abs on gu=17 T=1 is still 1.4664e+01 and
+max_rel_bulk on gu=17 T=2 is still 1.1534, the same values
+as gates.log. gpu-run done in 84s exit 0.
+c12/_C.c12.noroot.so and the live plugin _C.c12.so are both
+10165216 bytes, sha256
+b3c15e14ba5811d90dfe8a65e4ccc1353fd67b3f44e4180810fac22b4ed49979.
+180.17/112.89 is 1.596. 515.13/261.64 is 1.969.
+(186.95-180.17)/186.95 is 3.6 percent. The IQ2 T=4 pair is
+about 2 percent (571.82 to 560.55). Type names are still not
+on the OURS lines. Strata remains the old citation.
+
+Verdict: OK on the capture, the microseconds, health, and
+exit 0. The "about 4 percent" title is the IQ3 rows, not
+every row. Bulk relative error is unchanged. Not an ITL.
+Shipped _C.so was not replaced by this file.
+
+Suggested fix: keep this binary as a graph candidate only
+for schedule time. The numeric gap to the reference row is
+unchanged.
+
+### F94 -- H1 M3 bench hit a server whose alias is Ornith
+
+Claim: no journal heading owns this yet. The 11:20 window
+later printed a bench.
+
+Evidence: logs/h1c-m3-window.out. Health-before rc 0 at
+11:34:13, HEALTHY cards 0 and 1. Serve line 11:34:13. READY
+11:38:03. Greedy texts both equal the C4 loop string,
+same true, match_c4 true. BENCH_RC=0 GREEDY_RC=0 at
+11:38:08. Window text: identity first hotschmoe-dev,
+first_ok true, alias_ok false. Coherence ok true.
+C1 itl_p50 16.51, p90 16.78, p99 16.95, 60.62 tok/s,
+TTFT 87.19, n=64. C2 p50 17.37 and 17.34. Stop 11:38:08.
+logs/h1c-m3-bench.json matches those figures.
+identity.ids is hotschmoe-dev then
+ornith-1.5-35b-a3b-GPTQ-int4-mixedcal-v2.
+expect_alias is qwen3.6-35b-a3b-ud-iq3-xxs. alias_ok false.
+base_url is http://127.0.0.1:18115. The serve log is five
+lines: the intended command is Qwen3.6-35B-A3B, GGUF,
+FULL_DECODE_ONLY, port 18115, served names hotschmoe-dev
+then the Qwen alias. It then waits because card 0 is held
+by C12 run_fair.sh since 11:34:13 and card 1 is held by
+vllm-fn-g4-kv-c1 since 11:34:44. No "Application startup
+complete". No HEALTH_AFTER. No SERVE_RC. No xe-reset.
+No DEVICE_LOST.
+
+Verdict: WRONG to treat 60.62 tok/s as the Qwen M3 graph
+serve. The first id is hotschmoe-dev, and the second id is
+a different model. The launcher had not acquired the cards.
+Health after is absent. The text match and the JSON
+arithmetic are real for whichever server answered on 18115.
+
+Suggested fix: fail the window when alias_ok is false.
+Do not start the bench until gpu-run prints the acquire
+for vllm-fn-h1-m3. Record health after.
+
+### F95 -- hygiene at 11:40 UTC
+
+Claim: no new staged binary and no secret file. Fork not
+pushed. No host UMD change in the logs checked.
+
+Evidence: git diff --cached in /mnt/vm_8tb/github/b70_ai_things
+is empty. git status still shows the pre-existing modified
+vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so.
+New untracked paths checked for size are source files and two
+small directories (guard_candidate 16K, ornith15_s2b 44K).
+No status line matched a secret-like name. Fork
+b70/flashnext is 0a6170da8c, ahead 18. Docker command lines
+still bind libze_loader.so.1.28.2. .gitignore was not
+re-opened.
+
+Verdict: OK on staging. The push-allreduce .so remains a
+dirty worktree binary and is not a new staged object.
+
+Suggested fix: leave that .so unstaged. Do not push.
+
+### F96 -- new plugin code has no host sync in the files scanned
+
+Claim: review of plugins added this pass for races, strides,
+bounds, and host sync inside capture.
+
+Evidence: dequant_wide.cpp, c13_bind.cpp, and qsa_xmx.cpp have
+no synchronize, .item, or wait. dequant_wide.hpp is
+declarations only and documents dst_mode 0, 1, and 2.
+_host_table_payload refuses a non-contiguous or non-memmap
+PLE source instead of copying. moe_ep.cpp and copy_batch.cpp
+were not re-walked; F76 still covers those waits. A full
+stride proof of the wide dequant kernel was not done.
+
+Verdict: OK that the three new C++ files scanned do not add
+a host sync. UNVERIFIED a bounds or stride bug in
+dequant_wide.cpp beyond that scan. The PLE path is a loader
+change, not a graph op.
+
+Suggested fix: none from this scan. The next pass should
+read the wide kernel's row index against rows and cols if
+that bench starts producing numbers.
+
+## Pass 9 -- 2026-10-20 12:16 UTC
+
+CPU only. Cursor is the 12:11 G4 heading and the 12:07 H1c
+heading (JOURNAL lines 3596 and 3613). F1-F96 are unchanged.
+The C12 35B graph bench finished and is not in the journal.
+
+### F97 -- C13 first wide-dequant bench
+
+Claim: the 11:35 C13 heading. Bit-exact vs prefill_dequant,
+0 mismatches, including fused layout. Event GB/s IQ3_XXS
+285.0 (old 256.2), IQ3_S 286.3, IQ2_XXS 272.9, IQ2_XS 275.0,
+IQ2_S 279.2, Q2_0 270.5 (old 259.2), IQ4_NL 280.9. bf16 copy
+1154.7. Small fast layer max_rel 1.19e-2. Fused synth max_rel
+1.8625, frac_gate 0.9476, worst got -2.06 ref 1.77. Then
+gguf import died. gpu-run exit 1. Health before and after.
+
+Evidence: logs/c13-bench.log. HEALTH_BEFORE:0 and
+HEALTH_AFTER:0, both HEALTHY card 0. Exact rows mismatches=0
+for types 18, 42, 20, 16, 17, 22, 21 and fused-layout E=4.
+DQ lines match the GB/s figures, including DQ_OLD 256.2 and
+259.2. COPY gate_bf16 GBps=1154.7. STAT fast max_rel=1.1900e-02.
+STAT fused max_rel=1.8625e+00, frac_gate=0.9476,
+maxrel_got=-2.0558, maxrel_ref=1.7732. ModuleNotFoundError
+gguf. cpu-run exit 1 in 13s. gpu-run exit 1 in 43s. The
+type numbers are not spelled as ggml names on the exact rows.
+The DQ lines do name the types.
+
+Verdict: OK on the bandwidth, the mismatch counts, health,
+and the gguf failure. Not an ITL. The fused relative error
+is not a tight pass.
+
+Suggested fix: keep the gguf import on the path that already
+finished the bandwidth rows, and print type names on the
+exact lines.
+
+### F98 -- C13 ESIMD library linked
+
+Claim: the 11:43 C13 heading. Build exit 0 in 96s.
+_C.c13.so 2822840 bytes. C13_BUILD_OK. Bench queued.
+
+Evidence: logs/c13-build2.log ends with that size, the
+11:43 timestamp, C13_BUILD_OK, and cpu-run done in 96s
+exit 0. c13-bench2.log is the later run, owned by F104.
+The queued sentence was true when written.
+
+Verdict: OK. A link is not a bandwidth result.
+
+Suggested fix: none.
+
+### F99 -- H1 M3 first window benched G4's Ornith server
+
+Claim: the 11:42 H1c heading. Port 18115 answered while
+gpu-run was still waiting. Alias was the Ornith GPTQ id.
+C1 ITL 16.51 ms. alias_ok false. Text was the C4 loop.
+Container never started. Discarded.
+
+Evidence: this is the same window as F94.
+logs/h1c-m3-bench-falseport.json identity.ids is
+hotschmoe-dev then ornith-1.5-35b-a3b-GPTQ-int4-mixedcal-v2,
+alias_ok false. C1 itl_p50_ms 16.5068. Greedy texts are the
+C4 loop string. logs/h1c-m3-serve-falseport.log never
+acquires; it waits on C12 and on vllm-fn-g4-kv-c1.
+logs/g4-t2-serve-c1-copy.txt is that Ornith serve on port
+18115, ready 11:38:02. No DEVICE_LOST in the preserved
+window.
+
+Verdict: OK. Those ITL numbers are not the EP sidecar.
+F94 stands.
+
+Suggested fix: the heading's ready check is the right
+gate. Keep alias_ok false as a hard stop.
+
+### F100 -- G4 copy T2 restored the second turn
+
+Claim: the 11:45 G4 heading. pass true. host_delta 3063,
+device_delta 0, computed 18, cached 3063. Control TTFT
+0.414 s, restored 0.124 s. Load 131235840 bytes in
+0.009678 s = 13.560 GB/s, one load. Store 1369210880 bytes
+in 0.298174 s = 4.592 GB/s. The 11:38:42 scrape is
+440729600 during SIGTERM. Health after timed out at 90 s
+because E2 held card 1 from 11:38:53. Identity Ornith.
+No EngineDead.
+
+Evidence: logs/g4-t2-turn-c1-copy.json. pass true,
+greedy_match true, text_match true, host_delta 3063,
+device_delta 0, computed 18, cached 3063, control ttft
+0.4136, restored ttft 0.1242, load_bytes 131235840,
+load_time_s 0.009678177. Identity is hotschmoe-dev then
+the Ornith alias. logs/g4-t2-serve-c1-copy.txt: port
+18115, copy queue group 1, store metrics 1369210880 bytes
+and 0.298174322 s at 11:38:32, then 440729600 at 11:38:42
+with SIGTERM. Running: 0 at 11:38:12. Driver
+T2COPY_DRIVER_EXIT 124. Health-after file shows E2's
+vllm-fn-lowbit-e2 since 11:38:53 and a 90 s timeout.
+131235840/0.009678177 is 13.560 GB/s.
+1369210880/0.298174322 is 4.592 GB/s.
+
+Verdict: OK. H2D on this restore is above 7.5. The
+pre-shutdown D2H counter is not. Exit 124 is the health
+timeout, not a failed restore. Not a decode-ITL gate.
+
+Suggested fix: quote the 90 s timeout next to pass=true
+so the two exits stay distinct.
+
+### F101 -- G4 card 1 health after the copy T2
+
+Claim: the 11:56 G4 heading. HEALTHY, exit 0, 18 s,
+11:56:16. No serve.
+
+Evidence: logs/g4-t2-health-after-c1-copy-late.txt.
+xpu-health HEALTHY card 1, gpu-run done in 18s exit 0.
+File mtime is 2026-10-20T11:56:16. The file does not name
+card 0's holder.
+
+Verdict: OK on card 1 health. The card-0 sentence is
+UNVERIFIED in this file.
+
+Suggested fix: none for the health line.
+
+### F102 -- C12 per-EC graph is slower; fused binary is installed
+
+Claim: the 11:50 C12 heading. Per-EC sha256 cd2882dc,
+11297864 bytes. Fair us_graph 185.76 / 320.79 / 378.78 /
+595.23 and 197.79 / 329.97 / 403.33 / 626.23. gpu-run
+107s exit 0. Health before and after. Installed file is
+b3c15e14, 10165216 bytes, copied onto _C.so, _C.graph.so,
+and _C.c12.so. ITL not measured in this heading.
+
+Evidence: c12/fair5.log. HEALTHY card 0 before and after.
+VERDICT failures=0 covered=12. Q8_0 mismatches=0. OURS
+lines match those microseconds. Cosine 0.999992 to
+0.999999. max_rel_bulk on gu=17 T=2 is still 1.1534.
+gpu-run done in 107s exit 0.
+c12/_C.c12.ecsplit.so is 11297864 bytes and its sha256
+starts with cd2882dce7964770. _C.so, _C.graph.so, and
+_C.c12.so are each 10165216 bytes, sha256
+b3c15e14ba5811d90dfe8a65e4ccc1353fd67b3f44e4180810fac22b4ed49979.
+Type names are still not on the OURS lines. The 35B ITL
+is F111, not this heading.
+
+Verdict: OK on the microseconds, health, exit 0, and the
+install hashes. Separate entry-width launches are slower
+than fair4 at T=1, T=2, and T=4. Bulk relative error is
+unchanged. Not an ITL by itself.
+
+Suggested fix: keep fair4's fused schedule as the installed
+graph binary. Do not read this row as a serve result.
+
+### F103 -- C13 ESIMD kernel hits an IGC fault
+
+Claim: the 11:46 C13 heading. First wide kernel JIT failed
+with IGC Internal Compiler Error, floating point exception.
+Health after rc 0. gpu-run exit 1 in 31s. No bandwidth.
+
+Evidence: logs/c13-bench2.log. HEALTH_BEFORE:0, wants_fast=1,
+RuntimeError with that IGC sentence, cpu-run exit 1 in 3s,
+HEALTH_AFTER:0, gpu-run done in 31s exit 1.
+
+Verdict: OK. No bandwidth number exists. Not a serve.
+
+Suggested fix: keep this binary off the serve path.
+
+### F104 -- E2 official matmul bench is 1961 tok/s at 8k
+
+Claim: the 11:55 E2 heading. Server up 11:53:47. Identity
+hotschmoe-dev. Coherence Paris. Warm step forward 4479 ms,
+linear_attn 243, self_attn 126, experts 4067, shared 35.
+Bench rc 0: 1017 tok TTFT 2945 ms = 345 tok/s; 8185 tok
+TTFT 4173 ms = 1961 tok/s; 32762 tok TTFT 9664 ms = 3390
+tok/s. C1 ITL 11.34 / 11.54 / 11.70 ms, 89.9 tok/s. C2
+p50 15.76 both streams. BMM trial died at y.index_add_
+in expert_prefill_bmm, level_zero error 40. Health card 1
+rc 0 at 11:55:30.
+
+Evidence: logs/e2-bench.json tag e2-int3-matmul-fdo.
+identity first_ok and alias_ok true. Coherence ok and same.
+Prefill rows: 1017 tokens, ttft 2945.24, 345.30 tok/s;
+8185 tokens, ttft 4173.35, 1961.25 tok/s; 32762 tokens,
+ttft 9663.61, 3390.24 tok/s. Each prefill row has
+n_chunks=1. C1 itl 11.339 / 11.541 / 11.700, decode_tok_s
+89.912. C2 p50 15.760 and 15.761. logs/e2-driver.log:
+server up 11:53:47, diag rc 0, bench rc 0, BMM_1 EMPTY,
+bmm trial rc 1, health rc 0 at 11:55:30.
+logs/e2-fwd-split.log step 2: forward 4479.28, linear_attn
+243.42 n=30, self_attn 126.26 n=10, experts 4066.91,
+shared_expert 34.64. logs/e2-serve.log at 11:54:33:
+expert_prefill_bmm calls y.index_add_ and Level Zero
+error 40 UR_RESULT_ERROR_OUT_OF_RESOURCES. The client
+json does not say the 32762-token prefill was two chunks.
+
+Verdict: OK on identity, coherence, the bench numbers,
+the split step, the index_add frame, and health after.
+5000 tok/s is not met. The two-chunk sentence is
+UNVERIFIED. The BMM trial is not a serve path.
+
+Suggested fix: keep the official bench next to the split
+log. Leave grouped bmm off until error 40 is explained.
+
+### F105 -- C13 block-write outputs do not match
+
+Claim: the 11:55 C13 heading. Generic IQ4_NL 3x64
+mismatches=0. Tuned mismatches: IQ3 128x2560 314956,
+IQ3 2560x2560 6299964, Q2 4x640 1875, Q2 8x640 3757,
+IQ4 64x256 15126, IQ2_XXS 75878, IQ2_XS 78065, IQ2_S
+78257, IQ3_S 78729, fused 12599687. failures=10.
+Health before and after. gpu-run exit 1.
+_C.c13.so was 2647704 bytes.
+
+Evidence: logs/c13-bench3.log. Those mismatch counts and
+VERDICT failures=10. type=20 rows=3 cols=64 mismatches=0.
+HEALTH_BEFORE:0 and HEALTH_AFTER:0. gpu-run done in 39s
+exit 1. logs/c13-build3.log shows _C.c13.so 2647704 at
+11:51 and C13_BUILD_OK. The exact lines use type numbers.
+A later build4 linked 2643608 bytes. logs/c13-bench4.log
+is still one wait line on C12's container. That later
+bench has no number.
+
+Verdict: OK that the block-write kernel failed exact
+match and the process exited 1 with health on both sides.
+Not a bandwidth result. The SLM rebuild is not measured
+in the surviving bench4 log.
+
+Suggested fix: do not install this .so. Keep the mismatch
+list next to the rebuild.
+
+### F106 -- G4 T3 r1 restore counts passed, greedy did not
+
+Claim: the 12:04 G4 heading. cached 3063, computed 18,
+host 3063, device 0, restored TTFT 0.146 s, control
+0.415 s. Load 131235840 bytes in 0.009508 s = 13.803
+GB/s, one load. greedy_match false. win_n=68. p50
+17.3 to 19.0 ms. p99 17.7 and 32.4 to 51.0. Health
+after HEALTHY, exit 0, 12:04:39. No EngineDead.
+
+Evidence: logs/g4-t3-itl-c1-r1.json. pass false.
+host_delta 3063, device_delta 0, cached 3063, computed
+18, restored ttft 0.14600, control ttft 0.41495,
+greedy_match false. active-0 and active-1 n_window=68.
+p50_base about 0.01733 and 0.01735, p50_window about
+0.01900. p99_base 0.03242 and 0.01772. p99_window
+0.05101. logs/g4-t3-serve-c1-r1.txt load_bytes
+131235840, load_time 0.009507656, size_count 1.
+131235840/0.009507656 is 13.803 GB/s.
+logs/g4-t3-driver-c1-r1.txt: client rc 1 at 12:04:11,
+health after rc 0, HEALTHY card 1, gpu-run 13s exit 0,
+T3_DRIVER_EXIT 1 at 12:04:39. Identity Ornith, port
+18112. The quiet-lock wait names C12's bench on port
+18104.
+
+Verdict: OK. Token accounting and the copy rate match.
+Greedy did not. The driver exit is 1. Health after ran.
+This is not a passing ITL gate.
+
+Suggested fix: keep pass=false in the heading result
+line. The 12:11 rerun is F109.
+
+### F107 -- H1 M3 capture dies on Level Zero 44
+
+Claim: the 12:07 H1c heading. Health before 11:55:06.
+EP warmup err 0. Split through layer 39. FULL capture
+raises level_zero error 44 inside moe_ep from
+profile_cudagraph_memory. SERVE_RC 1 at 11:57:49.
+No DEVICE_LOST. No xe-reset. New _C.so sha256 e783539c,
+481240 bytes. A recording stream does not host-wait.
+
+Evidence: logs/h1c-m3-window.out. HEALTHY cards 0 and 1,
+health-before rc 0 at 11:55:06, SERVE_DIED_BEFORE_READY,
+SERVE_RC=1 at 11:57:49, no DEVICE_LOST, no xe-reset.
+logs/h1c-m3-serve-capture44.log: EP WARMUP moe attempt=1
+layer=0 err0=0 err1=0, split layer 39, then
+profile_cudagraph_memory calls moe_ep and Level Zero
+error 44 UR_RESULT_ERROR_UNSUPPORTED_FEATURE. The
+window's health-after line is started and has no HEALTHY
+result. The 12:08 queue stamp is not in that file.
+plugins/b70_ep_xpu/b70_ep_xpu/_C.so is 481240 bytes,
+sha256
+e783539c4fa49f774a115a816209201a189a78d8d2c051f5b56c30575eb2c870.
+moe_ep.cpp stream_recording() sets cap_on and the enqueue
+path returns before q1->wait() and q0().wait() when the
+queue is recording. Other functions in the file still
+call wait. CUDAGraphMode.NONE was not re-read.
+
+Verdict: OK on the error site, the warmup line, SERVE_RC
+1, and the new binary hash. UNVERIFIED the 12:08
+health-after queue and the CUDAGraphMode.NONE sentence.
+Not an M3 ITL. The recording guard is in the source and
+was not run.
+
+Suggested fix: record health after when the queue clears.
+The next window has to show the container acquire and
+alias_ok before any ITL.
+
+### F108 -- G4 T3 r2 gaps match; greedy breaks at token 50
+
+Claim: the 12:11 G4 heading. cached 3063, computed 18,
+host 3063, device 0. Load 131235840 bytes in 0.009544 s
+= 13.750 GB/s. TTFT 0.144 s. Greedy matched 50 of 64,
+then bigram (18, 2195). Gaps match the printed lists.
+Baseline p50 17.4 ms. Health after HEALTHY, 15 s,
+12:11:17.
+
+Evidence: logs/g4-t3-itl-c1-r2.json. mismatch_at=50,
+greedy_match false, pass false, host_delta 3063,
+device_delta 0, restored ttft 0.14410, n_out 64.
+p50_base 0.017414 and 0.017362. gaps_ms are the two
+lists in the heading, to three decimals. Identity
+hotschmoe-dev then the Ornith alias.
+logs/g4-t3-serve-c1-r2.txt load_time 0.009544218,
+load_bytes 131235840, which is 13.750 GB/s.
+logs/g4-t3-driver-c1-r2.txt launch 12:07:41, port 18112,
+client rc 1, health after rc 0, HEALTHY, gpu-run 15s
+exit 0, T3_DRIVER_EXIT 1 at 12:11:17. control_ttft_s
+in the json is 2.235, which the heading does not quote.
+The ordered pair (18, 2195) is not a short json field.
+The integer 2195 is in the file. The 83 ms gap is in
+the list. The log does not label it as the 18-token
+prefill.
+
+Verdict: OK on the counts, the load rate, the gap list,
+mismatch_at=50, and health after. The run's pass flag
+is false. The bigram pair and the 83 ms label are
+UNVERIFIED as log fields. Control TTFT on this run is
+2.235 s.
+
+Suggested fix: quote control TTFT next to restored TTFT.
+Keep pass=false.
+
+### F109 -- C12 35B graph bench is real and unjournaled
+
+Claim: no journal heading owns c12/bench_35b.json. The
+11:50 heading said the ITL was not measured yet.
+
+Evidence: c12/serve_driver.log. SERVE_SO sha256
+b3c15e14, the installed _C.graph.so. Health before
+HEALTHY card 0. MODEL_IDS hotschmoe-dev and
+qwen3.6-35b-a3b-ud-iq3-xxs. Bench identity first_ok
+and alias_ok true. cpu-run done in 246s exit 0.
+BENCH_RC=0. c12/bench_35b.json: C1 itl_p50 11.0188 ms,
+p90 11.2288, p99 11.4693, 90.893 tok/s, TTFT 169.32 ms,
+n=64. Coherence ok and same. Prefill 1017 tokens
+177.43 tok/s TTFT 5731.68 ms; 8185 tokens 175.43 tok/s
+TTFT 46656.35 ms; 32762 tokens 173.05 tok/s TTFT
+189322.73 ms. The driver also prints C2 p50 16.61 ms
+on both streams, with stream0 p99 75.01. Health after
+has started and is waiting because card 0 is still
+held by vllm-fn-qwen36-gguf-c0. No HEALTHY-after line.
+
+Verdict: the identity, coherence, and bench numbers
+match the files. Health after did not finish. This is
+not a closed serve result until teardown is in the log.
+Prefill is about 175 tok/s on this run. Do not promote
+it against the Strata prefill row.
+
+Suggested fix: stop the container, then record health
+after, before quoting the ITL as qualified.
+
+### F110 -- hygiene at 12:16 UTC
+
+Claim: no new staged binary. Fork not pushed.
+
+Evidence: git diff --cached is empty. git status still
+shows the pre-existing modified
+libxpu_push_ar_graph.so. The new C13 sources are
+untracked text. Fork b70/flashnext is 0a6170da8c,
+ahead 18. The installed gguf _C.so and _C.graph.so
+are not status lines. No secret-like name in the
+status list checked.
+
+Verdict: OK on staging. The installed graph libraries
+are a worktree change under the plugin tree and are
+not staged.
+
+Suggested fix: leave the push-allreduce .so unstaged.
+Do not push.
+
+## Pass 10 -- 2026-10-20 12:49 UTC
+
+CPU only. Cursor is the 12:40 G4 heading. F1-F110 are unchanged.
+A later cycle driver finished at 12:48:14 and is not in the journal.
+The C12 35B health-after line is still the wait from F109.
+
+### F111 -- 32 blocks refuse max_len 32768
+
+Claim: the 12:16 G4 heading. ValueError. 32 blocks are 0.64 GiB.
+A 32768 context wants 0.77 GiB. Estimated fit is 27200. Health
+after HEALTHY, 12 s, 12:16:04. No xe-reset.
+
+Evidence: logs/g4-t3-serve-c1-cycle-maxlen.txt. Port 18113,
+num_gpu_blocks_override=32, served names hotschmoe-dev then the
+Ornith alias. ValueError text is 32768, 0.77 GiB, 0.64 GiB, and
+estimated maximum model length 27200. logs/g4-t3-cycle-driver-c1-maxlen.txt:
+gpu-run exit 1, health after rc 0, HEALTHY card 1, health gpu-run
+12s exit 0, T3_CYCLE_DRIVER_EXIT 1 at 12:16:04. No xe-reset string.
+(32-7)*1088 is 27200. The engine never reached /v1/models.
+
+Verdict: OK. This is an init refusal, not a restore and not an ITL.
+
+Suggested fix: none. The 20480 retry is the next heading.
+
+### F112 -- r1 cycle greedy matches and the restore gate does not
+
+Claim: the 12:20 G4 heading. Eight restores. cached 0 on five and
+1088 on three. Park tail end=1519. Actives ended at 17407 and
+16319. Greedy matched. Health after HEALTHY at 12:20:33.
+No G4 load tail.
+
+Evidence: logs/g4-t3-cycle-c1-r1.json. Eight turns. cached_tokens
+is 0 on turns 0-4 and 1088 on turns 5-7. greedy_match true on all
+eight. cycle pass is false. Each turn has cached_ok false and
+ok false. Identity is hotschmoe-dev then the Ornith alias.
+logs/g4-t3-serve-c1-cycle-r1.txt has queued tail end=1519 at
+12:19:37, end=17407 at 12:19:52, and end=16319 at 12:19:56.
+Driver exit 1 at 12:20:33, HEALTHY card 1. The same serve log's
+metrics line has kv_offload_load_bytes=86671360 and load_time
+0.00639073 s.
+
+Verdict: OK on the 5/3 cached split, the three end tokens, greedy
+true, and health. The cycle pass flag is false. WRONG that there
+was no load: the counter moved 86.7 MB.
+
+Suggested fix: quote load_bytes. Keep cycle pass=false next to
+greedy_match true. A text match on a full recompute is not a
+restore.
+
+### F113 -- r2 cached split is four and four
+
+Claim: the 12:28 G4 heading. One active queued end=17407 before
+the first restore. Five restores cached 0 and three cached 1088.
+No load tail. Health after HEALTHY at 12:28:14.
+
+Evidence: logs/g4-t3-serve-c1-cycle-r2.txt has queued tail
+end=17407 at 12:27:33 and end=1519 at 12:27:00. The driver has
+no per-turn clock, so "before the first restore" is not a
+driver field. logs/g4-t3-cycle-c1-r2.json has eight turns:
+cached 0 on turns 0-3 and 1088 on turns 4-7. That is four and
+four, not five and three. greedy_match is true on all eight.
+cycle pass is false. Metrics kv_offload_load_bytes=346685440,
+load_time 0.025204 s. Driver exit 1 at 12:28:14, HEALTHY card 1.
+
+Verdict: WRONG on the five-and-three count. OK on health and on
+the end=17407 line. The load counter is not zero. Greedy true
+does not make the cycle pass.
+
+Suggested fix: recount the json. Print load_bytes. The r1 5/3
+split does not carry forward.
+
+### F114 -- 8 blocks refuse max_len 4096
+
+Claim: the 12:33 G4 heading. ValueError. Available KV 0.15 GiB,
+4096 tokens need 0.21 GiB, estimated max len 1088. Health after
+HEALTHY, 13 s, 12:33:27. (32-7)*1088 is 27200. (8-7)*1088 is 1088.
+
+Evidence: logs/g4-t3-serve-c1-cycle-8block.txt ValueError text
+matches 4096, 0.21 GiB, 0.15 GiB, and estimated length 1088.
+logs/g4-t3-cycle-driver-c1-8block.txt: health gpu-run 13s exit 0,
+HEALTHY card 1, T3_CYCLE_DRIVER_EXIT 1 at 12:33:27. Both
+products of 1088 are exact. No /v1/models line.
+
+Verdict: OK. Not a GPU fault and not a restore.
+
+Suggested fix: none.
+
+### F115 -- r3 waiter samples and the block remainder
+
+Claim: the 12:40 G4 heading. From 12:38:49 to 12:39:39 the engine
+had Running 1, Waiting 1, prompt throughput 0, KV 58 to 64
+percent. Tail end=18071. Restores cached 0 or 1088. No load tail.
+Health after HEALTHY at 12:40:29. 26400 tokens is 25 blocks,
+6000 is 6, and 7 blocks remain.
+
+Evidence: logs/g4-t3-serve-c1-cycle-r3.txt. The 12:38:49 sample
+is Running 1, Waiting 1, prompt throughput 1665.4 tok/s, KV
+48.4%. Later samples in that window are prompt throughput 0.0
+with KV 58.1%, 61.3%, and 64.5%, still Running 1 and Waiting 1.
+A later sample is Running 1 and Waiting 0. Queued tail end=18071
+at 12:39:48. Driver restores: cached 0 on four turns and 1088
+on four turns. Metrics load_bytes=346685440, load_time 0.025158 s.
+Driver exit 1 at 12:40:29, HEALTHY card 1. 26400/1088 ceilings
+to 25. 6000/1088 ceilings to 6. 32-25-6 is 1, not 7. The 7 is
+the reserve in (32-7)*1088. The log does not print "11 free" or
+"needs 15". 64.5% of 32 blocks is about 11 blocks free, and
+16000/1088 ceilings to 15.
+
+Verdict: OK that a waiter sat beside a runner and that restores
+were only full misses or one block. The 12:38:49 sample itself
+still has prompt throughput. WRONG that 7 blocks remain after
+prompts of 25 and 6 blocks. The load counter is not zero.
+"About 11 free and 15 needed" is arithmetic on the 64.5% line,
+not a log field.
+
+Suggested fix: say one block is left after 25+6 on a 32-block
+pool, and keep the 7-block reserve as a separate sentence.
+Quote load_bytes.
+
+### F116 -- a later cycle finished after the 12:40 heading
+
+Claim: no journal heading owns the driver that launched at
+12:44:16.
+
+Evidence: logs/g4-t3-cycle-driver-c1.txt. Launch 12:44:16, port
+18113, health before ok, READY 12:46:55. The captured tail had
+cycle turns 6 and 7 with cached=1088 and device delta 1088,
+then CYCLE_RESULT pass=False. Health after rc 0, HEALTHY card 1,
+gpu-run 14s exit 0, T3_CYCLE_DRIVER_EXIT 1 at 12:48:14. The
+restore histogram was not re-counted after the file grew.
+
+Verdict: UNVERIFIED as a full restore table. The exit, the pass
+flag, and health after are in the file. Not an ITL. Do not fold
+it into F115.
+
+Suggested fix: preserve this driver under its own name before
+the next launch.
+
+### F117 -- hygiene at 12:49 UTC
+
+Claim: no new commit and no staged binary since F110.
+
+Evidence: git diff --cached is empty. Fork b70/flashnext is
+still 0a6170da8c, ahead 18. These five headings do not name a
+new plugin source file. c12/serve_driver.log is still 31 lines
+and still waiting on its own container for health after.
+
+Verdict: OK on staging. The C12 teardown from F109 is unchanged.
+
+Suggested fix: none for git. Stop the C12 container before
+treating that bench as closed.
+
+### F118 -- 12:48 G4 r4, 90.3 percent and end=26911
+
+Claim: at 12:47:30 the engine had Running 1, Waiting 1, KV 90.3
+percent, and prompt throughput 2640 tok/s. The runner queued
+end=26911 at 12:47:34. Restores were cached 0, then device 1088.
+No load tail. Health after was HEALTHY at 12:48:14. KV cache is
+27870 tokens. Prompts were 26400 and 6000 with decode budget 512.
+About 3 blocks were free, so the 6000-token partner did not fit.
+
+Evidence: logs/g4-t3-serve-c1-cycle-r4.txt line 251 is
+12:47:30, prompt 2640.0 tok/s, Running 1, Waiting 1, XPU KV
+90.3%. Line 253 is 12:47:34 end=26911 tail=799 full_keys=24.
+Line 125 is "XPU KV cache size: 27,870 tokens" for max 27,000.
+Line 287 at 12:47:40 is Running 2, Waiting 0, KV 45.2%.
+logs/g4-t3-cycle-driver-c1-r4.txt: identity hotschmoe-dev then
+ornith-1.5-35b-a3b-GPTQ-int4-mixedcal-v2, block=1088. Cycle
+turns 0-3 are cached=0 host=0 device=0. Turns 4-7 are
+cached=1088 host=0 device=1088 computed=441. Every turn has
+ok=False and cached_ok=False. CYCLE_RESULT pass=False. Health
+after rc 0, HEALTHY card 1, T3_CYCLE_DRIVER_EXIT 1 at
+12:48:14. Serve metrics have store_bytes up to 2211348480 and
+no kv_offload_load_bytes key. g4-t3-cycle-c1.json is absent.
+The string 26400 is not in the serve log. The only "6000" hit
+is inside a libc map address. 26911 = 26400 + 512 - 1, and
+tail 799 = (26400 - 24*1088) + 511. (1 - 0.903) * 32 = 3.10.
+This preserved driver is the run F116 saw under the live name.
+
+Verdict: OK on the 12:47:30 sample, end=26911, the 27870-token
+line, identity, and health after. WRONG as a restore summary:
+device 1088 is only on the four cached=1088 turns, host stays
+0, and pass is false. UNVERIFIED that load_bytes was 0, and
+UNVERIFIED that the waiter was 6000 tokens. The 26400 length
+fits the end, tail, and full_keys arithmetic and is not printed.
+Not an ITL. Not a restore pass.
+
+Suggested fix: quote pass=False, the 4/4 split, and host=0.
+Keep the 12:47:40 Running 2 line next to the wait. Preserve the
+cycle json so load_bytes can be checked.
+
+### F119 -- 12:50 C12 35B graph ITL, journal of the F109 bench
+
+Claim: health before HEALTHY card 0 in 23 s. Identity
+hotschmoe-dev first, alias qwen3.6-35b-a3b-ud-iq3-xxs.
+Coherence OK/OK with both texts " Paris.\nThe capital of France
+is Paris.\nThe capital of France is". C1 ITL p50 11.019 ms,
+p90 11.229, p99 11.469, 90.89 tok/s, TTFT 169.3 ms, n=64. C2
+p50 16.606 / 16.607 ms, tok/s 55.24 / 62.08, stream 0 p99 75.01
+ms. Prefill 177.4, 175.4, and 173.1 tok/s at 1017, 8185, and
+32762 tokens. MTP off. cpu-run 246 s exit 0. BENCH_RC=0.
+Container docker-stopped. Post-health had not run. C1 matches
+C7's 11.11 ms. The 4 percent fair-layer gain does not move
+this ITL.
+
+Evidence: c12/bench_35b.json measured C1 itl_p50_ms
+11.018843040801585, p90 11.228842800483108, p99
+11.469298214651644, decode_tok_s 90.89271395464053, ttft_ms
+169.31546805426478, n_chunks 64. C2 stream0 itl_p50_ms
+16.60554698901251, tok/s 55.24457023209998, p99
+75.0051165185869. Stream1 itl_p50_ms 16.60694449674338, tok/s
+62.0815018303185. Coherence texts match the heading, ok and
+same true, verdicts OK/OK. identity first_ok and alias_ok
+true. mtp.enabled false. c12/serve_driver.log prints the same
+C1 row as 11.02 / 11.23 / 11.47 / 90.89 / 169.32, prefill
+177.43 / 175.43 / 173.05, health before done in 23 s, HEALTHY
+card 0, cpu-run 246 s exit 0, BENCH_RC=0. The docker command
+has FULL_DECODE_ONLY, FLASH_ATTN, mode 0, capture sizes
+1,2,3,4,8, max_model_len 33792, gpu 0.90, max_num_seqs 4,
+B70_EAGER_QK=0, B70_GGUF_REF=0, B70_XPU_CG_RECLAIM=500, and
+SERVE_SO b3c15e14. At 12:55 the driver file is still 31 lines,
+mtime 12:03:38, and still ends on the health-after wait. That
+container name is not in docker ps. Pids 3278640 and 3278743
+are not running. No HEALTHY-after line exists. The C7 11.11 ms
+figure is an earlier journal citation, not a row in this json.
+There is no second 35B ITL on the old graph.so in this entry.
+reports/1C12_moe_decode2.md contains one U+2026.
+
+Verdict: OK on identity, coherence, MTP off, the rounded
+latency numbers, and health before. The raw prefill rates are
+177.43, 175.43, and 173.05. WRONG to treat the serve as closed:
+health after never printed. UNVERIFIED that post-health queued
+behind H1. UNVERIFIED that the fair-layer gain did not move
+35B ITL, because this is one bench. Not a Strata comparison.
+The strata_dd block in the json is still the old citation.
+
+Suggested fix: record a HEALTHY-after line before calling the
+bench closed. Replace the ellipsis in 1C12_moe_decode2.md with
+three ASCII dots.
+
+### F120 -- 12:53 G4 r5, 1024 partner, end=26979
+
+Claim: at 12:52:24 Running 1, Waiting 1, KV 90.3 percent. The
+runner queued end=26979 at 12:52:33. Restores cached 0, then
+device 1088. No load tail. Health after HEALTHY at 12:53:45.
+Prompts 26400 and 1024, decode budget 580. Card 1 was taken by
+H1 after this health check.
+
+Evidence: logs/g4-t3-serve-c1-cycle-r5.txt line 249 is
+12:52:24, prompt 3388.1 tok/s, Running 1, Waiting 1, KV 90.3%.
+Line 251 is 12:52:33 end=26979 tail=867 full_keys=24. Line 254
+at 12:52:34 is Running 2, Waiting 0, KV 29.0%. KV cache size
+line is 27,870 tokens. Store bytes are present (max
+1820098560) and kv_offload_load_bytes is absent.
+logs/g4-t3-cycle-driver-c1-r5.txt: launch 12:49:21, port
+18113, health before ok, READY 12:51:54, identity
+hotschmoe-dev then the Ornith alias, block=1088. Turns 0-3
+cached=0 device=0 host=0. Turns 4-7 cached=1088 device=1088
+host=0 computed=441. All eight ok=False and cached_ok=False.
+CYCLE_RESULT pass=False. Health after rc 0, HEALTHY card 1,
+T3_CYCLE_DRIVER_EXIT 1 at 12:53:45. 26979 = 26400 + 580 - 1.
+tail 867 = (26400 - 24*1088) + 579. kvoffload/t3_test.py
+mtime 12:49:11 has active_n = [26400, 1024] and
+active_decode = 580, which is before READY. The serve log
+does not print 1024. The driver does not name an H1 lease
+after the health check.
+
+Verdict: OK on the 12:52:24 sample, end=26979, identity, and
+health after. The partner was admitted by 12:52:34. WRONG as
+a restore summary, same 4/4 split as F118, pass false. 
+UNVERIFIED that load_bytes was 0. The 1024 length is the
+source constant, not a log field. UNVERIFIED that H1 took
+card 1 after the check. Not an ITL. Not a restore pass.
+
+Suggested fix: quote pass=False and the 12:52:34 Running 2
+line. Name the H1 lease line if card 1 moved.
+
+### F121 -- hygiene at 12:54 UTC
+
+Claim: no new staged binary since F117.
+
+Evidence: git diff --cached --stat had line count 0. git
+status still marks only
+vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so
+as a modified binary. t3_test.py is modified text. The fork
+tip was not re-read after F117.
+
+Verdict: OK on staging. The C12 report ellipsis is in F119.
+
+Suggested fix: leave the push-allreduce .so unstaged. Do not
+push.
+
+## Pass 11 -- 2026-10-20 13:32 UTC
+
+Cursor: headings after the 12:56 G2b milestone, including the 12:58
+and 13:02 G4 entries that sit above that milestone. CPU only.
+
+### F122 -- 13:01 H1c M3 FULL_DECODE_ONLY
+
+Claim: both cards, port 18115, container vllm-fn-h1-m3,
+FULL_DECODE_ONLY, FLASH_ATTN, max_len 33792, seqs 4, gpu 0.90,
+capture sizes 1,2,3,4,8, B70_XPU_CG_RECLAIM=500, B70_EP=1.
+EP _C.so sha e783539c, 481240 bytes. _C.ep.so prefix 55c154ee.
+World size 1. Health before and after HEALTHY. Identity
+hotschmoe-dev then qwen3.6-35b-a3b-ud-iq3-xxs. Greedy texts match
+the C4 string, match_c4 true. C1 ITL p50 11.36 ms, p90 11.62,
+p99 12.35, 89.50 tok/s, TTFT 142.82 ms, n=63. C2 15.31 ms / 64
+tokens / 71.14 tok/s and 15.74 ms / 40 tokens / 65.97 tok/s.
+GATE_RC=0. SERVE_RC=0. No error 44. KV 14.72 GiB, 630487 tokens,
+18.66x. Capture keys 4,3 then 4,3,2,1. No xe-reset.
+
+Evidence: logs/h1c-m3-window-r2.out and h1c-m3-bench.json.
+Health-before rc 0 at 12:55:14 after a wait that names the C12
+container. READY 12:56:40. Identity ids are hotschmoe-dev then
+the qwen alias, first_ok and alias_ok true. Coherence ok, same,
+verdicts OK/OK, both texts the C4 string. match_c4 true in
+h1c-m3-greedy.json. C1 measured itl_p50_ms 11.359105934388936,
+p90 11.61808893084526, p99 12.35144732054323, decode_tok_s
+89.49583501515579, ttft_ms 142.81834405846894, completion_tokens
+63, n_chunks 62. C2 stream0 itl_p50 15.310816001147032,
+completion 64, tok/s 71.14396741041058, ttft 243.01356601063162.
+Stream1 itl_p50 15.741902985610068, completion 40, tok/s
+65.96864075053873, json ttft_ms 242.35916906036437. The window
+prints ttft_ms=242.36. GATE_RC=0 and
+SERVE_RC=0 at 12:56:44 and 12:56:53. Health-after HEALTHY both
+cards, rc 0 at 12:57:23. Serve log: world_size=1, B70_EP=1,
+B70_XPU_CG_RECLAIM=500, capture sizes [1,2,3,4,8], profile FULL
+keys 4 and 3, real FULL keys 4, 3, 2, 1, zero "error 44" and
+zero "Level Zero". KV line is 14.72 GiB and 630,487 tokens,
+18.66x at 33,792. EP _C.so sha256 is
+e783539c4fa49f774a115a816209201a189a78d8d2c051f5b56c30575eb2c870,
+481240 bytes. _C.ep.so is the gguf plugin file, 8294752 bytes,
+sha256 55c154ee90f33bec810d24a2cd6ac0c3b6b1a4e53bdc78aed50a59113e8c9bf0.
+The earlier capture-44 window.out now ends HEALTHY at 12:53:25
+with done rc=1. 1.05 * 11.11 = 11.665 and 11.359 / 11.11 = 1.022.
+The window text does not name C13. The greedy json has no
+temperature field.
+
+Verdict: OK on identity, coherence, health both sides, the
+rounded ITL rows, the capture keys, the KV line, and the library
+hashes. n=63 is completion_tokens; n_chunks is 62. The 11.11,
+16.51, 16.65, and 121.40 figures are earlier journal citations.
+The 121.40 run was eager DP=2 at max_len 2048 with the collective
+counter on, so it is not a matched A/B with this M3. UNVERIFIED
+that the queue also waited on C13, and UNVERIFIED that this
+greedy call set temperature 0 and 16 tokens. Not a Strata
+prefill result. This bench has no prefill section.
+
+Suggested fix: quote n_chunks 62 next to n=63. Keep the eager
+121.40 comparison labeled with max_len 2048.
+
+### F123 -- 13:02 C13 one-layer prefill bench
+
+Claim: _C.c13.so 2635416 bytes at 12:59. Health before and after
+rc 0. Dequant GB/s IQ3_XXS 285.0 (old 255.8), IQ3_S 286.4,
+IQ2_XXS 272.6, IQ2_XS 273.9, IQ2_S 279.0, Q2_0 270.3 (old 258.8),
+IQ4_NL 281.0, copy 1147. Layer ms T=4096 fast 40.13, seq 40.13,
+C10 bmm 45.12, mmax 109. T=12288 fast 56.97, seq 56.92, C10 bmm
+66.16, mmax 287. Profile group 1.80, dq 8.94+7.11+7.15, pad 2.89,
+bmm_gu 8.45, silu 1.50, bmm_dn 4.67, unpad 3.15, reduce 11.47.
+Dispatch mismatches 0. GEMM-only 3775.74 ms and 3255 tok/s.
+Scratch two-layer 9.375 GiB. failures=1 is the strict x1 check.
+Synthetic fused max_rel 1.96.
+
+Evidence: logs/c13-bench5.log. Those GB/s, layer, profile, and
+DQ_OLD lines match the log. Copy is 1147.4. HEALTH_BEFORE:0 and
+HEALTH_AFTER:0, both HEALTHY card 0. cpu-run exit 1, gpu-run
+exit 1, VERDICT failures=1. The only FAIL line is "FAIL fast
+real x1 max_rel=3.6478e-01". Fused real x1 is a STAT line,
+max_rel 1.9925, frac_gate 1, sig_max_rel 0, lane values
+1.3378e-04 and -1.3479e-04. BUDGET prints gemm_ms=3775.5 and
+gemm_tok_s=3255. two_GiB=9.3750. GATE_THRESHOLD unchanged 5e-2.
+LAYER lines say overlap=1. Fast 56.97 versus seq 56.92. Dispatch
+mismatches=0. _C.c13.so mtime 12:59:33, 2635416 bytes, sha256
+prefix ffb059d0494ace0d. Daily _C.so is still 10165216 bytes,
+prefix b3c15e14. REAL blk.36 gshape=(2560, 640, 512), gate=18,
+up=18, down=42.
+
+Verdict: OK on the GB/s, the layer milliseconds, the profile,
+health, the 9.375 GiB scratch, and failures=1 as a count.
+WRONG that gemm time is 3775.74 ms; the log says 3775.5.
+WRONG to pin the single FAIL on the fused strict row; that FAIL
+is the fast x1 row. The fused lane magnitudes are about 1e-4 and
+frac_gate is 1. Not an ITL. Not a model prefill.
+
+Suggested fix: quote gemm_ms=3775.5 and the FAIL fast real x1
+line. Keep 3255 tok/s labeled as the budget GEMM rate.
+
+### F124 -- 12:58 and 13:02 G4 r6, one host hit
+
+Claim: health-before took card 1 at 12:58:00. Turn 0 passed with
+host=1519, device=0, greedy mismatch null. A load tail end=1519
+local=0 keys=5 shares the second with queued end=25999. Turns
+1-3 missed. Health after HEALTHY at 13:02:54.
+
+Evidence: logs/g4-t3-cycle-driver-c1-r6.txt launches 12:58:00,
+health before ok, READY 13:00:45, identity hotschmoe-dev then
+the Ornith alias. Turn 0 ok=True, host=1519, device=0,
+computed_ok and cached_ok true, mismatch_at null, ttft 36.943 s.
+Turns 1-3 are host 0 device 0. Turn 4 is host 1088 device 0.
+Turns 5-7 are host 0 device 1088. All of 1-7 are ok=False.
+CYCLE_RESULT pass=False. The next line is
+"error name 'active_n' is not defined". The r6 json repeats that
+error and pass false. Serve log 13:02:14 has queued tail
+end=25999 tail=975 full_keys=23 and load tail end=1519 local=0
+keys=5. The 13:02:05 sample is Running 1 Waiting 2. Health after
+rc 0, HEALTHY card 1, driver exit 1 at 13:02:54.
+25999 = 24000 + 2000 - 1.
+
+Verdict: OK on the launch stamp, turn 0's client gate, the
+same-second load and end=25999, identity, and health after.
+The 12:58 "not ready" note matches this launch before READY.
+Turns 4-7 also missed, and the json records the NameError.
+Device delta on the passing turn is 0. Cycle pass is false.
+Not an ITL.
+
+Suggested fix: quote pass=False, the NameError, and turns 4-7.
+Do not read device 0 as a device restore.
+
+### F125 -- 13:15 G4 r7, long prefill then one load
+
+Claim: READY 13:06:31. small_n=522 big_n=0. From 13:07:09 to
+13:08:09 Running 1 Waiting 2, KV 83.9 to 93.5 percent. At
+13:08:12 stored end=26799 and loaded tail end=1519 local=0
+keys=5. Turn 0 host 1519 device 0 greedy match. Turns 1-7
+missed as host 0 or host/device 1088. Health after rc 0 at
+13:08:51. NameError active_n. No xe-reset.
+
+Evidence: logs/g4-t3-cycle-driver-c1-r7.txt. READY 13:06:31.
+small_n=522 big_n=0. Turn 0 ok=True host=1519 device=0. Turns
+1-3 host 0 device 0. Turn 4 host 1088 device 0. Turns 5-7 host
+0 device 1088. All of 1-7 ok=False. CYCLE_RESULT pass=False,
+then the active_n NameError. Health after rc 0, HEALTHY card 1,
+exit 1 at 13:08:51. Serve samples: 13:07:09 is Running 1
+Waiting 1 KV 93.5%. Waiting 2 starts at 13:07:19. Later KV
+values are 93.5, 83.9, 87.1, and 90.3. At 13:08:12 the log says
+"queued tail" end=26799 tail=687 full_keys=24 and "load tail"
+end=1519 local=0 keys=5. No xe-reset line. 26799 = 24000 + 2800
+- 1. Identity is hotschmoe-dev then Ornith.
+
+Verdict: OK on READY, the active counts, turn 0, the 13:08:12
+pair, the NameError, and health. WRONG that the whole
+13:07:09-13:08:09 window is Waiting 2; the 13:07:09 sample is
+Waiting 1. WRONG that every miss is host 0 or host/device 1088;
+turn 4 is host 1088 and device 0. Cycle pass is false. The
+passing turn still has device delta 0.
+
+Suggested fix: split the 13:07:09 sample from the Waiting 2
+stretch, and quote turn 4's host 1088 device 0.
+
+### F126 -- 13:22 G4 r8, four first-visit loads
+
+Claim: health before ok and health after rc 0. Actives 17 and 8
+at the start, 287 and 296 at the end, streams_alive true.
+Running 3, KV 41.9 percent. Turns 0-3 load tail end=1519
+local=1088 keys=4, host 431, device 1088, greedy match. Turns
+4-7 host 0, device 1088, computed 441. Launch short prompt 256.
+
+Evidence: logs/g4-t3-cycle-driver-c1-r8.txt launch line
+short_prompt=256, health before ok, identity hotschmoe-dev then
+Ornith. small_n=17 big_n=8. Turns 0-3 ok=True host=431
+device=1088 cached=1519 computed=10. Turns 4-7 ok=False host=0
+device=1088 computed=441. g4-t3-cycle-c1-r8.json cycle pass
+false, streams_alive true, active_tokens [287, 296]. All eight
+turns have greedy_match true, including the four failures.
+Serve log has four "load tail" lines end=1519 local=1088
+keys=4, then queued end=1560. Engine 13:19:14 Running 3 Waiting
+0 KV 41.9%. Health after rc 0, HEALTHY card 1, exit 1 at
+13:19:50. t3_test.py mtime 13:22:25 is after this exit, so the
+4000-token constant in the current source is not this run's
+saved file.
+
+Verdict: OK on the 4/4 split, the load lines, the active token
+counts, identity, and health. Greedy is also true on the failed
+second visits. Cycle pass is false. Not an ITL.
+
+Suggested fix: say greedy_match stayed true on turns 4-7 while
+host_ok and cached_ok were false.
+
+### F127 -- 13:27 G4 r9, cache flags pass, one greedy miss
+
+Claim: eight load tails, local=1088 keys=4. Turns 0-3 host 431
+device 1088 cached 1519 computed 10. Turns 4-7 host 472 device
+1088 cached 1560 computed 10. Greedy exact on turns 0-6. Turn 7
+matched 29 of 32, then 40822 against gold 14308. TTFT 0.126 to
+0.139 s. active tokens 289 and 298. streams_alive true. Running
+3, KV 41.9 percent. Health before ok, health after rc 0.
+Second visit adds the 32-token reply and 9 new tokens.
+
+Evidence: logs/g4-t3-cycle-driver-c1-r9.txt launch 13:22:45
+short_prompt=256 extended=1, READY 13:25:19, identity
+hotschmoe-dev then Ornith. small_n=17 big_n=8 at restore start.
+Turns 0-6 ok=True. Turn 7 ok=False mismatch_at=29, host=472,
+device=1088, cached_ok and computed_ok true. Cached and computed
+match the heading. TTFT values run from 0.126 to 0.139. json
+active_tokens [289, 298], streams_alive true, pass false.
+Turn 7 restored_ids at the mismatch is 40822 and gold_ids is
+14308. The next two also differ: 198 vs 25033, and 14306 vs
+198. Gold prefix repeats 79593, 198, 14306, 14307, 14308.
+Gold index 30 is 25033. Serve log has eight load tails, four
+end=1519 and four end=1560, all local=1088 keys=4. Engine
+13:25:45 Running 3 KV 41.9%. Prompt 1570 - 1529 - 32 = 9.
+Health after rc 0, HEALTHY card 1, exit 1 at 13:26:22.
+Source mtime 13:22:25, before this launch, contains
+active_prompt=256 and active_decode=4000.
+
+Verdict: OK on the cache flags, the eight loads, the token ids,
+the TTFT span, identity, and health. CYCLE_RESULT pass=False
+because turn 7 greedy fails. Host and cached flags are true on
+that turn too. The 5-token period covers the prefix and index
+29. Index 30 is outside that period. Not a whole-cycle pass.
+
+Suggested fix: keep pass=False beside the cache-flag sentence,
+and quote the two tokens after 40822.
+
+### F128 -- C12 35B driver health-after closed
+
+Claim: at pass 10 the C12 driver still had no HEALTHY-after line.
+
+Evidence: c12/serve_driver.log is now 38 lines, mtime 12:54:44
+UTC. After the old wait it records health probe card 0 OK,
+HEALTHY card 0, gpu-run done in 13 s exit 0, SERVE_DONE,
+DRIVER_RC=0. BENCH_RC=0 is unchanged above that.
+
+Verdict: OK that the driver now has health after. F119's
+"still 31 lines" was the earlier read. This does not change the
+prefill rates or make a Strata comparison.
+
+Suggested fix: cite SERVE_DONE and DRIVER_RC=0 when calling that
+bench closed.
+
+### F129 -- hygiene and the new host waits
+
+Claim: no staged binary. New plugin edits do not put a queue
+wait inside the EP capture path.
+
+Evidence: git diff --cached --stat line count 0. Fork
+b70/flashnext is 0a6170da8c, ahead 18. The only modified binary
+in git status is the pre-existing push-allreduce .so. No
+secret-like names. moe_ep.cpp returns before s.q1->wait() and
+q0().wait() when cap_on or stream_recording() is set. It does
+printf and fflush when an implicit capture starts. New
+torch.xpu.synchronize calls in the diff are in bench_copy.py
+and test_qsa_batch.py. batch.py adds ok.item() next to an
+existing length.item().
+
+Verdict: OK on staging. The EP waits are outside the capture
+return. The new .item() is a host read in the QSA batch helper.
+This pass did not trace that helper into a graph replay.
+
+Suggested fix: keep device .item() off a captured replay path.
+Leave the push-allreduce .so unstaged.
+
+### F130 -- 13:33 G4 FULL_DECODE_ONLY T2
+
+Claim: card 1, port 18116, 45 blocks, max_len 32768, max_num_seqs
+2, FULL_DECODE_ONLY, capture sizes 1,2,3,4,8. Capture FULL 2/2 in
+1 s. pass=True. host 3063, device 0, computed 18, greedy and text
+match. Load tail end=3063 local=0 keys=6. Load 131235840 bytes in
+0.009645 s, 13.607 GB/s. Restored TTFT 0.120 s, control 0.412 s.
+Health after HEALTHY in 12 s. The 45-block pool held 39852 tokens.
+The profiler wanted 244 blocks. Ornith text
+max_position_embeddings is 262144.
+
+Evidence: logs/g4-t2-graph-driver-c1.txt. Launch 13:27:41, port
+18116, flags .so, health before ok, READY 13:30:15. Identity
+hotschmoe-dev then ornith-1.5-35b-a3b-GPTQ-int4-mixedcal-v2.
+pass=True, host=3063, device=0, computed=18, greedy=True, client
+rc 0. Health after rc 0, HEALTHY card 1, gpu-run 12 s exit 0,
+T2_GRAPH_DRIVER_EXIT 0 at 13:31:19. json restored ttft_s
+0.12025012902449816, control_ttft_s 0.411765166092664,
+load_bytes 131235840, load_time_s 0.009644792, text_match true,
+greedy_match true, cached_ok true. 131235840 / 0.009644792 =
+13.607 GB/s using 1e9. Serve line 1 is blocks=45 max_len=32768
+seqs=2 mode=FULL_DECODE_ONLY. Capture bars are 2/2, finished in
+1 sec, twice. CUDAGraphMode.FULL_DECODE_ONLY: (2, 0). Capture
+sizes in the command are [1,2,3,4,8]. Load tail at 13:30:42 is
+end=3063 local=0 keys=6. KV line is 39,852 tokens. Override is
+num_gpu_blocks=244 replaced by 45. config.json for this
+checkpoint has max_position_embeddings 262144. That string is
+not in the serve log. No error 44 and no xe-reset in the serve
+log. docker ps at the addendum showed vllm-fn-g4-kv-c1 up.
+
+Verdict: OK on the client gate, identity, the load bytes, the
+TTFT rounding, the KV lines, and health. device_delta is 0, so
+the device counter did not move. The load itself is non-zero.
+Only two graphs were captured. The 262144 figure is the
+checkpoint config, not a serve-log field. Not a cycle pass and
+not a Strata comparison.
+
+Suggested fix: keep device=0 next to pass=True. Say the capture
+that ran was 2/2 even though the size list includes 8.
+
+## Pass 12 -- 2026-10-20 14:08 UTC
+
+Cursor: the 13:42 G4 heading after the pass 11 addendum. CPU only.
+
+### F131 -- 13:42 G4 Ornith 200063-token restore
+
+Claim: card 1, port 18117, PIECEWISE, max_len 204800, profiled
+pool, 4 slots, 32 GiB host, P1=200000. KV 257312 tokens, 1.26x
+at 204800. pass=True. host 200063, device 0, computed 18, greedy
+and text match. Load tail end=200063 local=0 keys=187. Load
+4164321280 bytes in 0.299164 s = 13.920 GB/s. Restored TTFT
+0.833 s, control 84.788 s. Health after HEALTHY in 12 s.
+MemAvailable minimum 78051432 kB. The copy is under a 0.42 s
+target. This is Ornith, not Flash-Next.
+
+Evidence: logs/g4-t4-driver-c1.txt. Launch 13:34:31, port 18117,
+max_len=204800, p1=200000, blocks=profiled, flags .so. Identity
+hotschmoe-dev then ornith-1.5-35b-a3b-GPTQ-int4-mixedcal-v2.
+pass=True, host=200063, device=0, computed=18, greedy=True,
+client rc 0. Control ttft 84.788 s, prompt 200081. Restored
+ttft 0.833 s, cached 200063, computed 18. Turn 1 ttft 84.339 s,
+prompt 200000. Fillers B and C and the cold request are prompt
+30464. Health after rc 0, HEALTHY card 1, gpu-run 12 s exit 0,
+T4_DRIVER_EXIT 0 at 13:40:58. json load_time_s 0.299163593,
+load_bytes 4164321280, text_match true, greedy_match true,
+expect.replay 0, replay_ok true. 4164321280 / 0.299163593 =
+13.920 GB/s using 1e9. Serve banner is PIECEWISE, blocks=0,
+slots=4, seqs=2, cpu_bytes=34359738368. KV line is 257,312
+tokens, 1.26x at 204,800. Load tail 13:40:19 end=200063 local=0
+keys=187. Park evict 13:40:26 end=30464 n=1. Serve log also has
+end=200144, which is 200081+64-1. floor(200063/1088)=183 and
+200063-183*1088=959. g4-t4-mem-c1.txt is MemAvailable kB from
+the launcher awk, minimum 78051432. 78051432/1024/1024=74.43.
+No xe-reset in the driver. 0.42 is not in BRIEF.md. 0.299 is
+under 0.42. The restored json ttft_s is 0.8326086619636044.
+
+Verdict: OK on identity, the client gate, the load bytes, the
+KV line, the evict time, health, and the MemAvailable minimum.
+device_delta is 0. The mode is PIECEWISE, not the FULL capture
+in F130. The 183/959 split is arithmetic on block 1088; the
+printed key count is 187. The 0.42 s figure is the report's
+target, not a BRIEF number, and the measured copy is under it.
+Not a Flash-Next 200K result.
+
+Suggested fix: keep device=0 and PIECEWISE next to pass=True.
+Quote keys=187 separately from the 183-block remainder.
+
+### F132 -- hygiene at 14:08 UTC
+
+Claim: no new staged binary since F129.
+
+Evidence: git diff --cached --stat line count 0. Fork
+b70/flashnext is still 0a6170da8c, ahead 18. git status still
+marks only the pre-existing push-allreduce .so as a modified
+binary. The 13:42 heading does not name a new plugin source.
+
+Verdict: OK on staging.
+
+Suggested fix: leave the push-allreduce .so unstaged. Do not
+push.
+
+
+
+
+

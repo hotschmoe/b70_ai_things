@@ -497,6 +497,13 @@ class ParkingScheduler(OffloadingConnectorScheduler):
         except ValueError as exc:
             logger.warning("G4 tail %s does not fit the park: %s", item.req_id, exc)
             return None
+        if stored.evicted:
+            logger.info(
+                "G4 park evict req=%s end=%s n=%d",
+                item.req_id,
+                item.end,
+                len(stored.evicted),
+            )
         self._release(stored.released_keys)
         self._plans = {
             key: plan for key, plan in self._plans.items() if key in self.park.by_tail

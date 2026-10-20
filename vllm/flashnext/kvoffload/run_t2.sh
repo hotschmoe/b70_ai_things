@@ -12,8 +12,13 @@ CARD="${CARD:-0}"
 PORT="${PORT:-18111}"
 NAME="vllm-fn-g4-kv-c${CARD}"
 LOGDIR=/mnt/vm_8tb/b70/build/vllm-flashnext/logs
-SERVE_LOG="$LOGDIR/g4-t2-serve-c${CARD}.txt"
-OUT="$LOGDIR/g4-t2-turn-c${CARD}.json"
+TAG="${TAG:-}"
+SFX=""
+if [[ -n "$TAG" ]]; then
+  SFX="-${TAG}"
+fi
+SERVE_LOG="$LOGDIR/g4-t2-serve-c${CARD}${SFX}.txt"
+OUT="$LOGDIR/g4-t2-turn-c${CARD}${SFX}.json"
 FORK=/mnt/vm_8tb/b70/build/vllm-flashnext/vllm
 SITE=/mnt/vm_8tb/b70/build/vllm-flashnext/venv/lib/python3.12/site-packages
 MODEL="$REPO/models/files/ornith-1.5-35b-a3b/gptq-int4-mixedcal-v2"
@@ -24,10 +29,10 @@ export B70_AGENT=g4
 mkdir -p "$LOGDIR"
 rm -f "$OUT"
 
-echo "T2 health before $(date '+%F %T') card=$CARD"
+echo "T2 health before $(date '+%F %T') card=$CARD tag=${TAG:-swap} copy=${B70_KVPARK_COPY:-0}"
 B70_GPU_LOCK_TIMEOUT=90 "$REPO/bin/gpu-run" --card "$CARD" \
   "$REPO/bin/xpu-health" --card "$CARD" \
-  > "$LOGDIR/g4-t2-health-before-c${CARD}.txt" 2>&1
+  > "$LOGDIR/g4-t2-health-before-c${CARD}${SFX}.txt" 2>&1
 echo "T2 health before ok"
 
 echo "T2 serve start $(date '+%F %T')"
@@ -75,6 +80,12 @@ rc=$serve_rc
 if [[ "$serve_rc" == 0 ]]; then
 echo "T2 client $(date '+%F %T')"
 set +e
+CLIENT_MAX_LEN="${CLIENT_MAX_LEN:-32768}"
+REQUEST_TIMEOUT="${REQUEST_TIMEOUT:-900}"
+P1_ARGS=()
+if [[ -n "${P1_TOKENS:-}" ]]; then
+  P1_ARGS+=(--p1-tokens "$P1_TOKENS")
+fi
 docker run --rm --network host --cpus 2 --memory 8g \
   -v /mnt/vm_8tb:/mnt/vm_8tb \
   -e PYTHONPATH="${FORK}:${REPO}/vllm/flashnext:${SITE}" \
@@ -88,7 +99,9 @@ docker run --rm --network host --cpus 2 --memory 8g \
   --serve-log "$SERVE_LOG" \
   --tokenizer "$MODEL" \
   --out "$OUT" \
-  --max-model-len 32768
+  --max-model-len "$CLIENT_MAX_LEN" \
+  --request-timeout "$REQUEST_TIMEOUT" \
+  "${P1_ARGS[@]}"
 rc=$?
 set -e
 echo "T2 client rc=$rc $(date '+%F %T')"
@@ -103,9 +116,14 @@ wait "$SPID" 2>/dev/null || true
 trap - EXIT
 
 echo "T2 health after $(date '+%F %T')"
+# A lost lock must not replace a passing client exit. The printed
+# rc is the health command. The script exit stays the client's.
+set +e
 B70_GPU_LOCK_TIMEOUT=90 "$REPO/bin/gpu-run" --card "$CARD" \
   "$REPO/bin/xpu-health" --card "$CARD" \
-  > "$LOGDIR/g4-t2-health-after-c${CARD}.txt" 2>&1
-echo "T2 health after rc=$? "
-tail -5 "$LOGDIR/g4-t2-health-after-c${CARD}.txt"
+  > "$LOGDIR/g4-t2-health-after-c${CARD}${SFX}.txt" 2>&1
+health_rc=$?
+set -e
+echo "T2 health after rc=$health_rc"
+tail -5 "$LOGDIR/g4-t2-health-after-c${CARD}${SFX}.txt"
 exit "$rc"

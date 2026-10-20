@@ -34,6 +34,8 @@ B70_GPU_LOCK_TIMEOUT=120 B70_CPU_LOCK_TIMEOUT=90 \
   --card "$CARD" --memory 16g --shm-size 4g --name "$NAME" \
   --env "PYTHONPATH=${PLUGIN}:${FORK}:${SITE}" \
   --env "B70_KVPARK_SO=${SO}" \
+  --env "B70_KVPARK_PROBE_ONLY=${B70_KVPARK_PROBE_ONLY:-0}" \
+  --env "B70_KVPARK_MMAP_ONLY=${B70_KVPARK_MMAP_ONLY:-0}" \
   -- python3 "$BENCH"
 rc=$?
 set -e

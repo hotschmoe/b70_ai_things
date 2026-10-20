@@ -211,5 +211,22 @@ A grow while the queue is recording throws. The C9 build writes
 `b70_gguf_xpu/_C.c9.so` and does not itself replace `_C.so`. C8's later full
 link of this kernels.cpp installed the same schedule into the default
 `_C.so` (sha 086595a0, 2026-10-20 07:40). `B70_MOE_SCHED=0` still selects
-the C1 kernels. Q6_K, Q2_K, Q3_K, and IQ4_XS stay on those kernels, so a
-layer whose shared expert is one of those types does not take this path.
+the C1 kernels.
+
+## C12 addition -- 2026-10-20
+
+The fast path also accepts Q8_0, Q2_K, Q3_K, Q4_K, Q5_K, Q6_K, and IQ4_XS.
+Q8_0, and the seven C9 types, use DP4A. The K-quants and IQ4_XS decode to
+float and fma against the same 36-byte Q8 block. One gate/up kernel per
+distinct type and one down kernel per distinct type. Entry widths 4, 2, and
+1 are constexpr passes inside that kernel. The launch is a 3D nd_range
+(group, row tile, local 256) with reqd_sub_group_size(16). use_root_sync is
+not set: torch's UR graph failed to instantiate with it. Separate kernels
+per entry width captured, and were slower.
+
+Installed bytes, identical in `_C.so`, `_C.graph.so`, and `_C.c12.so`:
+sha256 b3c15e14ba5811d90dfe8a65e4ccc1353fd67b3f44e4180810fac22b4ed49979
+(10165216 bytes). The live 35B runner still passes empty shared tensors
+into `moe_layer`, so shared Q6_K/Q8_0 stay on the runner GEMV unless that
+call starts passing them. Passing them into `moe_layer` while the runner
+also applies shared would double-count.

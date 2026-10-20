@@ -497,6 +497,65 @@ def test_union_attend(cpu, gpu, tokens, device) -> None:
     print("PASS union attend", flush=True)
 
 
+def test_prefill_tiles(cpu_geom, gpu_geom, device) -> None:
+    """append_cells then union tiles of 8 and 2. Small geom stays on SIMT."""
+    print("=== prefill tiles ===", flush=True)
+    rng = np.random.default_rng(17)
+    n_tok = 10
+    tokens = [_make_tok(rng, cpu_geom) for _ in range(n_tok)]
+    table = _table(2, 4, rng)
+    k_norm = _gamma(cpu_geom.idx_dim)
+    cpu = QsaPaged.create(cpu_geom, table, 8, pooled=True)
+    gpu = _make_batch(gpu_geom, table, 8, device, pooled=True)
+    _bind(gpu, k_norm, None)
+    for pos, tok in enumerate(tokens):
+        cpu.append_token(0, tok["k"], tok["v"], tok["raw"], k_norm, pos)
+        gpu.pos.fill_(-1)
+        _load(gpu, 0, tok, pos)
+        gpu.append_cells()
+    _compare_cache(cpu, gpu, 0, n_tok)
+    if int(gpu.length[1].detach().cpu()) != 0:
+        raise SystemExit("FAIL prefill neighbor length")
+    src = gpu.pages.detach().cpu().numpy()
+    for phys in table[1].tolist():
+        if int(src[int(phys)].max()) != 0:
+            raise SystemExit(f"FAIL prefill neighbor page {phys}")
+    print("  neighbor pages empty", flush=True)
+    dev = device
+    q = torch.zeros(n_tok, cpu_geom.n_head, cpu_geom.head_dim, dtype=torch.float32, device=dev)
+    q_idx = torch.zeros(n_tok, cpu_geom.idx_n_head, cpu_geom.idx_dim, dtype=torch.float32, device=dev)
+    q_full = torch.zeros(n_tok, cpu_geom.n_head, cpu_geom.head_dim * 2, dtype=torch.float32, device=dev)
+    for i, tok in enumerate(tokens):
+        q[i].copy_(_to(tok["q"], dev))
+        q_idx[i].copy_(_to(tok["q_idx"], dev))
+        q_full[i].copy_(_to(tok["q_full"], dev))
+    pos = torch.arange(n_tok, dtype=torch.int32, device=dev)
+    cap = gpu_geom.width_cap()
+    scores = torch.empty(n_tok, gpu.max_cells, dtype=torch.float32, device=dev)
+    ids = torch.empty(n_tok, cap, dtype=torch.int32, device=dev)
+    step = torch.empty(n_tok, 4, dtype=torch.int32, device=dev)
+    slot = torch.zeros(n_tok, dtype=torch.int32, device=dev)
+    gpu.score_queries(q_idx, pos, slot, scores, ids, step)
+    torch.xpu.synchronize()
+    for i, tok in enumerate(tokens):
+        width = cpu_geom.width_at(i + 1)
+        _check_equal(
+            f"prefill {i} ids",
+            ids[i, :width].detach().cpu().numpy(),
+            cpu.select(0, tok["q_idx"], i + 1),
+        )
+    gated = gpu.prefill_chunk(0, q, q_idx, q_full, pos)
+    torch.xpu.synchronize()
+    if gpu.union_xmx:
+        raise SystemExit("FAIL small geom launched XMX")
+    got = gated.detach().cpu().numpy()
+    for i, tok in enumerate(tokens):
+        attn = cpu.attend_ids(0, tok["q"], cpu.select(0, tok["q_idx"], i + 1))
+        ref = gate_fp16(attn, tok["q_full"])
+        _check_close(f"prefill q{i} gated", got[i], ref, 2.0e-3)
+    print("PASS prefill tiles", flush=True)
+
+
 def test_draft(cpu_geom, gpu_geom, device) -> None:
     print("=== draft ===", flush=True)
     rng = np.random.default_rng(14)
@@ -789,6 +848,7 @@ def main() -> None:
     test_inactive(cpu_geom, gpu_geom, device)
     cpu_chunk, gpu_chunk, chunk_tokens = test_chunk(cpu_geom, gpu_geom, device)
     test_union_attend(cpu_chunk, gpu_chunk, chunk_tokens, device)
+    test_prefill_tiles(cpu_geom, gpu_geom, device)
     test_draft(cpu_geom, gpu_geom, device)
     test_export(cpu_geom, gpu_geom, device)
     test_graph(cpu_geom, gpu_geom, device)

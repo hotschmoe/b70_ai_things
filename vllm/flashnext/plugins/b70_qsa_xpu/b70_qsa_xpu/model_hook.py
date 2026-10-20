@@ -8,8 +8,10 @@ one-sequence pool and logs once.
 
 TP=1. The first forward allocates. Do not capture that forward.
 Decode (one token per request) is graph-capturable. A chunked prefill
-appends on the host, one token at a time, then the open block is the
-dead key. Draft pages have no pooled rows; the caller passes ids.
+appends on the host, one token at a time, then union-attends that
+request in tiles of 8. Mode-1 XMX writes the tile when the 24/2/256
+kernel launches. Otherwise the SIMT union does. Decode is not the
+union path. Draft pages have no pooled rows; the caller passes ids.
 
 Indexer K gamma passed into the kernel is (1 + GemmaRMSNorm.weight). The
 GGUF loader stores w after subtracting 1, and GemmaRMSNorm adds it back.
@@ -462,10 +464,7 @@ class QsaRunner:
         gate_i = gate[sl].reshape(n, g.n_head, g.head_dim).float()
         self.batch.q_full[dst, :, : g.head_dim].copy_(self.batch.q[dst])
         self.batch.q_full[dst, :, g.head_dim :].copy_(gate_i)
-        iq_i = iq[sl].reshape(n, g.idx_n_head, g.idx_dim).float()
-        var = iq_i.pow(2).mean(dim=-1, keepdim=True)
-        iq_i = iq_i * torch.rsqrt(var + g.eps) * self._q_gamma
-        self._rope_rows(iq_i, positions, token0, n)
+        iq_i = self._indexer_queries(iq, positions, token0, n)
         self.batch.q_idx[dst].copy_(iq_i)
         raw_i = raw[sl].reshape(n, int(self.indexer.index_kv_heads), g.idx_dim)[:, 0, :]
         self.batch.raw[dst].copy_(raw_i.float())
@@ -510,6 +509,24 @@ class QsaRunner:
         out, _ = self.attn.o_proj(y)
         return out
 
+    def _indexer_queries(self, iq, positions, token0: int, n: int) -> torch.Tensor:
+        g = self.batch.geom
+        iq_i = iq[token0 : token0 + n].reshape(n, g.idx_n_head, g.idx_dim).float()
+        var = iq_i.pow(2).mean(dim=-1, keepdim=True)
+        iq_i = iq_i * torch.rsqrt(var + g.eps) * self._q_gamma
+        self._rope_rows(iq_i, positions, token0, n)
+        return iq_i
+
+    def _append_request(self, s: int, t0: int, t1: int, q, k, v, gate, iq, raw, positions, pos_cpu, nreq: int) -> None:
+        for t in range(t0, t1):
+            self.batch.pos.fill_(-1)
+            self.batch.pos[s] = int(pos_cpu[t])
+            self._load_rows(q, k, v, gate, iq, raw, positions, 1, row0=s, token0=t)
+            self._note_mrope(positions, 1, s, t)
+            self._prepare_side(nreq)
+            self.batch.append_cells()
+            self._store_side(nreq)
+
     def _prefill(self, q, k, v, gate, iq, raw, positions, meta, hidden):
         qsl = meta.query_start_loc.detach().to("cpu").tolist()
         nreq = int(meta.num_reqs)
@@ -523,20 +540,40 @@ class QsaRunner:
         t_total = int(hidden.shape[0])
         g = self.batch.geom
         y = torch.empty(t_total, g.n_head * g.head_dim, dtype=hidden.dtype, device=hidden.device)
+        if not self.pooled:
+            for s in range(nreq):
+                t0 = int(qsl[s])
+                t1 = int(qsl[s + 1])
+                for t in range(t0, t1):
+                    self.batch.pos.fill_(-1)
+                    self.batch.pos[s] = int(pos_cpu[t])
+                    self._load_rows(q, k, v, gate, iq, raw, positions, 1, row0=s, token0=t)
+                    self._note_mrope(positions, 1, s, t)
+                    self._copy_draft_ids(nreq)
+                    self._prepare_side(nreq)
+                    self.batch.run_decode()
+                    self._store_side(nreq)
+                    y[t].copy_(self.batch.gated[s].reshape(-1).to(dtype=hidden.dtype))
+            out, _ = self.attn.o_proj(y)
+            return out
+        if _capturing():
+            raise RuntimeError("B70_QSA chunked prefill is eager")
         for s in range(nreq):
             t0 = int(qsl[s])
             t1 = int(qsl[s + 1])
-            for t in range(t0, t1):
-                self.batch.pos.fill_(-1)
-                self.batch.pos[s] = int(pos_cpu[t])
-                self._load_rows(q, k, v, gate, iq, raw, positions, 1, row0=s, token0=t)
-                self._note_mrope(positions, 1, s, t)
-                if not self.pooled:
-                    self._copy_draft_ids(nreq)
-                self._prepare_side(nreq)
-                self.batch.run_decode()
-                self._store_side(nreq)
-                y[t].copy_(self.batch.gated[s].reshape(-1).to(dtype=hidden.dtype))
+            n = t1 - t0
+            if n <= 0:
+                continue
+            self._append_request(s, t0, t1, q, k, v, gate, iq, raw, positions, pos_cpu, nreq)
+            q_i = q[t0:t1].reshape(n, g.n_head, g.head_dim).float()
+            gate_i = gate[t0:t1].reshape(n, g.n_head, g.head_dim).float()
+            q_full = torch.empty(n, g.n_head, g.head_dim * 2, dtype=torch.float32, device=hidden.device)
+            q_full[:, :, : g.head_dim].copy_(q_i)
+            q_full[:, :, g.head_dim :].copy_(gate_i)
+            iq_i = self._indexer_queries(iq, positions, t0, n)
+            pos_t = pos_src[t0:t1].to(device=hidden.device, dtype=torch.int32)
+            gated = self.batch.prefill_chunk(s, q_i, iq_i, q_full, pos_t)
+            y[t0:t1].copy_(gated.reshape(n, -1).to(dtype=hidden.dtype))
         out, _ = self.attn.o_proj(y)
         return out
 

@@ -86,9 +86,9 @@ def prefill_moe_layer(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_d
     ids int32 [T, topk]. router fp32 [T, topk], or an empty fp32 tensor for ones.
     Gate and up are separate packs with the same type. One launch covers gate+up
     (interleaved), then swiglu, then one launch for down.
-    mode 0 and T >= DQ_T_MIN uses dequant + oneDNN bmm. B70_PREFILL_DQ_T overrides.
-    C11 (reports/1C11_expert_prefill.md): wider SGN and the SLM X kernel
-    (B70_PREFILL_XSLM=1) did not beat that split. Leave the threshold.
+    mode 0 and T >= DQ_T_MIN uses the C13 one-layer path when this .so has
+    prefill_dequant_wide (B70_PREFILL_DQ_LAYER=bmm keeps the C10 bmm split).
+    B70_PREFILL_DQ_T overrides the token threshold.
     """
     load()
     import torch
@@ -99,6 +99,12 @@ def prefill_moe_layer(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_d
 
     t = int(x.shape[0])
     if mode == 0 and prefill_dq.moe_wants_dq(t) and _dq_ready():
+        from b70_gguf_xpu import prefill_fast
+
+        if prefill_fast.wants_fast():
+            return prefill_fast.moe_fast(
+                x, ids, q_gate, q_up, q_down, router, int(type_gu), int(type_down), int(h), int(f)
+            )
         return prefill_dq.moe_dq(
             x, ids, q_gate, q_up, q_down, router, int(type_gu), int(type_down), int(h), int(f)
         )

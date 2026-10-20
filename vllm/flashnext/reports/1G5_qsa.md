@@ -546,3 +546,106 @@ hotschmoe-dd for it.
 | MTP draft call from C7 plus a GPU draft check | S + the queued test | mark_draft and set_draft_ids exist |
 | greedy >4K vs strata_reference.json | S once a serve exists | not a kernel gap |
 | park GPU round trip | S | CPU remap passed; GPU is in test_qsa_batch.py |
+
+## 2026-10-20 10:55 G5b -- SIMT batch measured
+
+The 10:38 line that xpu-run was still waiting is stale. Card 0 ran
+the suite at 10:40. QSA_XPU_OK. Every eager batch check passed,
+including chunked prefill, SIMT union attend (words exact, attn
+max_abs 7.007e-4), draft pages, and export/import. Graph replay of
+the page, tail, dead, block_pos, and length was exact. The run then
+failed "FAIL graph ids mismatch" because the compare included the
+unwritten id tail after fill_(-1). Health after was HEALTHY. No
+xe-reset. Log logs/g5b-qsa-batch.log. RUN_EXIT:1.
+
+The compare is now the live prefix, ids[:, :width], matching the
+single-sequence graph test. Card 1 rerun, launcher 10:46:43, log
+logs/g5b-qsa-batch-r2.log:
+
+- QSA_XPU_OK. Single-seq graph ids exact at widths 5, 6, and 7.
+- QSA_BATCH_OK. Graph pos 4 and pos 5 exact on pages, tail, dead,
+  block_pos, length, attn, gated, and the id prefix.
+- Inactive seq 1 during a slot-3 completion kept its pages, tail,
+  and dead. Seq 0 ids exact, attn and gated max_abs 0.
+- Health before and after HEALTHY. gpu-run 24s, RUN_EXIT:0.
+
+Codes, scales, and ids were exact. Pooled stayed inside 1e-5,
+scores inside 1e-4, attn inside 2e-3. Not a speed claim.
+
+XMX mode 1 (Strata union_attn, page-local addressing, no dpct) is
+compiling to libb70_qsa_xpu_next.so. It is not measured. The 817928
+byte library is unchanged. The hook prefill is still the host token
+loop. Greedy prompts past 4K stay blocked until Flash-Next serves.
+
+### Work left at 10:55
+
+| item | size | note |
+| --- | --- | --- |
+| XMX union vs SIMT, 24/2/256, atol 2e-2 | M, compiling | mode 1 only; drop the TU if it will not match |
+| hook prefill uses score + union | S | host loop is still the prefill |
+| MTP mark_draft from C7 | S | API and GPU draft check passed |
+| greedy >4K vs strata_reference.json | S once a serve exists | not a kernel gap |
+
+## 2026-10-20 11:17 G5b -- XMX mode 1 measured
+
+Card 0, log logs/g5b-qsa-xmx.log. Library 962040 bytes (the SIMT
+817928-byte file is libb70_qsa_xpu.so.simt-817928). Health before
+and after HEALTHY. Container 32s, exit 0. RUN_EXIT:0.
+
+- QSA_XPU_OK and QSA_BATCH_OK still printed on this library.
+- PASS xmx refuse: a 4/64 shape returns ok=0 and does not launch.
+- 24/2/256, union of 58 cells, ok=1.
+- vs SIMT max_abs 9.710e-04 (atol 2e-2).
+- vs CPU attend_ids max_abs 5.405e-04 (atol 5e-2).
+- QSA_XMX_OK. Not bitwise. No speed claim. No xe-reset.
+
+The 10:55 sentence that XMX was still compiling is stale. Mode 1
+stays. Mode 2 is not ported.
+
+Hook prefill for pooled pages now appends one token at a time
+(append_cells) and then union-attends that request in tiles of 8.
+XMX runs when ok is 1. SIMT covers every other shape. Decode stays
+the graph path and does not call the union. Draft prefill still
+uses the caller-supplied ids. The composition test is queued
+(logs/g5b-qsa-prefill.log) behind C7's both-card serve. The hook
+class itself has not been executed on a GPU.
+
+Greedy prompts past 4K remain unmeasured. C7's current window is
+max_model_len 2048, which is under the 2051 selection bound.
+G5b will not start hotschmoe-dd.
+
+### Work left at 11:17
+
+| item | size | note |
+| --- | --- | --- |
+| prefill_chunk GPU vs CPU, tiles 8+2 | M, queued | card 0 behind C7 |
+| hook forward on a live model | S once a QSA serve exists | composition test does not call QsaRunner |
+| MTP mark_draft from C7 | S | API and the earlier GPU draft check passed |
+| greedy >4K vs strata_reference.json | S once max_model_len > 2051 | not a kernel gap |
+
+## 2026-10-20 11:21 G5b -- prefill tiles measured
+
+The 11:17 line that the composition test was still queued is stale.
+Card 0, log logs/g5b-qsa-prefill.log. Health before and after
+HEALTHY. Container 26s, exit 0. RUN_EXIT:0.
+
+- QSA_XPU_OK, QSA_BATCH_OK, QSA_XMX_OK on the same run.
+- Small geom, 10 queries, tiles of 8 and 2: append_cells matched
+  the CPU page, the other request's pages stayed empty, ids exact,
+  SIMT gated worst max_abs 1.953e-3 (atol 2e-3). XMX did not launch.
+- 24/2/256, 16 cells, 10 queries: XMX launched. Gated vs CPU
+  max_abs 9.766e-4 (atol 5e-2). The hand-built 58-cell union
+  repeated at 9.710e-4 vs SIMT and 5.405e-4 vs CPU.
+- Not bitwise. No speed claim. No xe-reset.
+
+Pooled hook prefill calls this path. Decode stays on run_decode
+inside the graph. Draft prefill still uses caller ids. The runner
+class was not executed on the device.
+
+### Work left at 11:21
+
+| item | size | note |
+| --- | --- | --- |
+| QsaRunner.forward on a live model | S once a QSA serve exists | the GPU test calls QsaBatch |
+| MTP mark_draft from C7 | S | API and the GPU draft check already passed |
+| greedy >4K vs strata_reference.json | S once max_model_len > 2051 | not a kernel gap |

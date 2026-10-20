@@ -93,6 +93,103 @@ def _time_swap(src: int, dst: int, nbytes: int, runs: int) -> float:
     return nbytes * runs / elapsed / 1e9
 
 
+def _time_compute(src: int, dst: int, nbytes: int, runs: int) -> float:
+    src_t = _ptrs([src])
+    dst_t = _ptrs([dst])
+    sz_t = torch.tensor([nbytes], dtype=torch.int64)
+    torch.xpu.synchronize()
+    torch.ops.b70_kvpark.copy_compute(src_t, dst_t, sz_t, True)
+    torch.xpu.synchronize()
+    start = time.perf_counter()
+    for _ in range(runs):
+        torch.ops.b70_kvpark.copy_compute(src_t, dst_t, sz_t, True)
+    elapsed = time.perf_counter() - start
+    return nbytes * runs / elapsed / 1e9
+
+
+def _probe_mmap() -> None:
+    """256 MiB through a /dev/shm mapping, which is the serve pool."""
+    import mmap
+
+    nbytes = 256 << 20
+    runs = 4
+    dev = torch.empty(nbytes, dtype=torch.uint8, device="xpu")
+    dev_ptr = dev.data_ptr()
+    maps = []
+    ptrs = []
+    try:
+        for name in ("a", "b"):
+            path = f"/dev/shm/g4-kvpark-mmap-{name}"
+            fd = os.open(path, os.O_CREAT | os.O_RDWR, 0o600)
+            os.ftruncate(fd, nbytes)
+            mm = mmap.mmap(fd, nbytes)
+            os.close(fd)
+            maps.append(mm)
+            ptrs.append(ctypes.addressof(ctypes.c_char.from_buffer(mm)))
+        _fill(ptrs[0], nbytes, 11)
+        h2d = _time_copy(ptrs[0], dev_ptr, nbytes, runs, True)
+        d2h = _time_copy(dev_ptr, ptrs[1], nbytes, runs, True)
+        bad = _check(ptrs[1], nbytes, 11)
+        print(
+            f"bench_copy: mmap bytes={nbytes} h2d={h2d:.3f} "
+            f"d2h={d2h:.3f} bad={bad}",
+            flush=True,
+        )
+    finally:
+        for mm in maps:
+            mm.close()
+        del dev
+        torch.xpu.synchronize()
+
+
+def _probe_host_flags() -> None:
+    """256 MiB on the compute stream, then Level Zero host biases."""
+    nbytes = 256 << 20
+    runs = 4
+    dev = torch.empty(nbytes, dtype=torch.uint8, device="xpu")
+    dev_ptr = dev.data_ptr()
+    host = int(torch.ops.b70_kvpark.alloc_host(nbytes)) & 0xFFFFFFFFFFFFFFFF
+    back = int(torch.ops.b70_kvpark.alloc_host(nbytes)) & 0xFFFFFFFFFFFFFFFF
+    try:
+        _fill(host, nbytes, 3)
+        h2d = _time_compute(host, dev_ptr, nbytes, runs)
+        d2h = _time_compute(dev_ptr, back, nbytes, runs)
+        bad = _check(back, nbytes, 3)
+        print(
+            f"bench_copy: compute bytes={nbytes} h2d={h2d:.3f} "
+            f"d2h={d2h:.3f} bad={bad}",
+            flush=True,
+        )
+    except Exception as exc:
+        print(f"bench_copy: compute_skip {exc}", flush=True)
+    finally:
+        torch.ops.b70_kvpark.free_host(host)
+        torch.ops.b70_kvpark.free_host(back)
+    for flags, name in ((1, "cached"), (2, "uncached"), (4, "write_combined")):
+        host = back = 0
+        try:
+            host = int(torch.ops.b70_kvpark.alloc_host_flags(nbytes, flags)) & 0xFFFFFFFFFFFFFFFF
+            back = int(torch.ops.b70_kvpark.alloc_host_flags(nbytes, flags)) & 0xFFFFFFFFFFFFFFFF
+            _fill(host, nbytes, 9)
+            h2d = _time_copy(host, dev_ptr, nbytes, runs, True)
+            d2h = _time_copy(dev_ptr, back, nbytes, runs, True)
+            bad = _check(back, nbytes, 9)
+            print(
+                f"bench_copy: flags={flags} name={name} bytes={nbytes} "
+                f"h2d={h2d:.3f} d2h={d2h:.3f} bad={bad}",
+                flush=True,
+            )
+        except Exception as exc:
+            print(f"bench_copy: flag_skip name={name} {exc}", flush=True)
+        finally:
+            if host:
+                torch.ops.b70_kvpark.free_host(host)
+            if back:
+                torch.ops.b70_kvpark.free_host(back)
+    del dev
+    torch.xpu.synchronize()
+
+
 def main() -> int:
     so = os.environ.get("B70_KVPARK_SO", DEFAULT_SO)
     print(f"bench_copy: so={so}", flush=True)
@@ -107,6 +204,14 @@ def main() -> int:
     print(f"bench_copy: engine_ordinal={ordinal} ordered={ordered}", flush=True)
     if ordinal < 0:
         print("bench_copy: copy engine missing", flush=True)
+    if os.environ.get("B70_KVPARK_MMAP_ONLY") == "1":
+        _probe_mmap()
+        print("bench_copy: MMAP_DONE", flush=True)
+        return 0
+    if os.environ.get("B70_KVPARK_PROBE_ONLY") == "1":
+        _probe_host_flags()
+        print("bench_copy: PROBE_DONE", flush=True)
+        return 0
     sizes = [16 << 20, 64 << 20, 256 << 20, 1 << 30]
     runs_for = {16 << 20: 20, 64 << 20: 10, 256 << 20: 4, 1 << 30: 2}
     worst = 1e9
@@ -140,6 +245,10 @@ def main() -> int:
         torch.ops.b70_kvpark.free_host(back)
         del dev
         torch.xpu.synchronize()
+    try:
+        _probe_host_flags()
+    except Exception as exc:
+        print(f"bench_copy: flag_probe_failed {exc}", flush=True)
     print(f"bench_copy: worst_one_buffer={worst:.3f} COPY_BENCH", flush=True)
     if so.endswith("libb70_kvpark_ordered.so") and ordered != 1:
         print("bench_copy: ordered library did not export ordered()", flush=True)
